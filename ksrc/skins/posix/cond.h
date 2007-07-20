@@ -26,6 +26,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex,
 				  unsigned *count_ptr,
+				  int timed,
 				  xnticks_t to);
 
 int pse51_cond_timedwait_epilogue(xnthread_t *cur,

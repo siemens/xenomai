@@ -800,7 +800,7 @@ int pthread_sigmask(int how, const sigset_t * set, sigset_t * oset)
 }
 
 static int pse51_sigtimedwait_inner(const sigset_t * set,
-				    siginfo_t * si, xnticks_t to)
+				    siginfo_t * si, int timed, xnticks_t to)
 {
 	pse51_sigset_t non_blocked, *pse51_set = user2pse51_sigset(set);
 	pse51_siginfo_t *received;
@@ -824,18 +824,11 @@ static int pse51_sigtimedwait_inner(const sigset_t * set,
 	received = pse51_getsigq(&thread->blocked_received, pse51_set, NULL);
 
 	if (!received) {
-		err = clock_adjust_timeout(&to, CLOCK_MONOTONIC);
-
-		if (err) {
-			if (err == ETIMEDOUT)
-				err = EAGAIN;
-
-			goto unlock_and_ret;
-		}
-
 		thread_cancellation_point(&thread->threadbase);
 
-		xnpod_suspend_thread(&thread->threadbase, XNDELAY, to, XN_RELATIVE, NULL);
+		xnpod_suspend_thread(&thread->threadbase, XNDELAY,
+				     timed ? to : XN_INFINITE,
+				     XN_RELATIVE, NULL);
 
 		thread_cancellation_point(&thread->threadbase);
 
@@ -901,7 +894,7 @@ int sigwait(const sigset_t * set, int *sig)
 	int err;
 
 	do {
-		err = pse51_sigtimedwait_inner(set, &info, XN_INFINITE);
+		err = pse51_sigtimedwait_inner(set, &info, 0, XN_INFINITE);
 	}
 	while (err == EINTR);
 
@@ -946,7 +939,7 @@ int sigwaitinfo(const sigset_t * __restrict__ set,
 		info = &loc_info;
 
 	do {
-		err = pse51_sigtimedwait_inner(set, info, XN_INFINITE);
+		err = pse51_sigtimedwait_inner(set, info, 0, XN_INFINITE);
 	}
 	while (err == EINTR);
 
@@ -993,7 +986,7 @@ int sigtimedwait(const sigset_t * __restrict__ set,
 		 siginfo_t * __restrict__ info,
 		 const struct timespec *__restrict__ timeout)
 {
-	xnticks_t abs_timeout;
+	xnticks_t to;
 	int err;
 
 	if (timeout) {
@@ -1002,14 +995,15 @@ int sigtimedwait(const sigset_t * __restrict__ set,
 			goto out;
 		}
 
-		abs_timeout =
-		    clock_get_ticks(CLOCK_MONOTONIC) + ts2ticks_ceil(timeout) +
-		    1;
-	} else
-		abs_timeout = XN_INFINITE;
+		to = ts2ticks_ceil(timeout) + 1;
+	}
 
 	do {
-		err = pse51_sigtimedwait_inner(set, info, abs_timeout);
+		if (timeout)
+			err = pse51_sigtimedwait_inner(set, info, 1, to);
+		else
+			err = pse51_sigtimedwait_inner(set, info,
+						       0, XN_INFINITE);
 	}
 	while (err == EINTR);
 

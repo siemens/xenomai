@@ -161,20 +161,22 @@ static inline xnticks_t clock_get_ticks(clockid_t clock_id)
         return xntbase_ns2ticks(pse51_tbase, xnpod_get_cpu_time());
 }
 
-/* Convert an absolute timeout for clock clock_id to a relative timeout. */
-static inline int clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
+static inline int clock_flag(int flag, clockid_t clock_id)
 {
-    xnsticks_t delay;
+	switch(flag & TIMER_ABSTIME) {
+	case 0:
+		return XN_RELATIVE;
 
-    if(*timeoutp == XN_INFINITE)
-        return 0;
+	case TIMER_ABSTIME:
+		switch(clock_id) {
+		case CLOCK_MONOTONIC:
+			return XN_ABSOLUTE;
 
-    delay = *timeoutp - clock_get_ticks(clock_id);
-    if(delay <= 0)
-        return ETIMEDOUT;
-
-    *timeoutp = delay;
-    return 0;
+		case CLOCK_REALTIME:
+			return XN_REALTIME;
+		}
+	}
+	return -EINVAL;
 }
 
 #endif /* !_POSIX_INTERNAL_H */

@@ -198,7 +198,8 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	return 0;
 }
 
-int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t abs_to)
+int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
+				int timed, xnticks_t abs_to)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	pse51_mutex_t *mutex;
@@ -207,59 +208,56 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow, xnticks_t abs_to)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	err = pse51_mutex_timedlock_internal(cur, shadow, 1, abs_to);
+	err = pse51_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
+	if (err != EBUSY)
+		goto unlock_and_return;
 
-	if (err == EBUSY) {
-		mutex = shadow->mutex;
+	mutex = shadow->mutex;
 
-		switch (mutex->attr.type) {
-		case PTHREAD_MUTEX_NORMAL:
-			/* Attempting to relock a normal mutex, deadlock. */
-			for (;;) {
-				xnticks_t to = abs_to;
+	switch (mutex->attr.type) {
+	case PTHREAD_MUTEX_NORMAL:
+		/* Attempting to relock a normal mutex, deadlock. */
+		for (;;) {
+			if (timed)
+				xnsynch_sleep_on(&mutex->synchbase,
+						 abs_to, XN_REALTIME);
+			else
+				xnsynch_sleep_on(&mutex->synchbase,
+						 XN_INFINITE, XN_RELATIVE);
 
-				err = clock_adjust_timeout(&to, CLOCK_REALTIME);
-
-				if (err)
-					break;
-
-				xnsynch_sleep_on(&mutex->synchbase, to, XN_RELATIVE);
-
-				if (xnthread_test_info(cur, XNBREAK)) {
-					err = EINTR;
-					break;
-				}
-
-				if (xnthread_test_info(cur, XNTIMEO)) {
-					err = ETIMEDOUT;
-					break;
-				}
-
-				if (xnthread_test_info(cur, XNRMID)) {
-					err = EINVAL;
-					break;
-				}
-			}
-
-			break;
-
-		case PTHREAD_MUTEX_ERRORCHECK:
-
-			err = EDEADLK;
-			break;
-
-		case PTHREAD_MUTEX_RECURSIVE:
-
-			if (mutex->count == UINT_MAX) {
-				err = EAGAIN;
+			if (xnthread_test_info(cur, XNBREAK)) {
+				err = EINTR;
 				break;
 			}
 
-			++mutex->count;
-			err = 0;
+			if (xnthread_test_info(cur, XNTIMEO)) {
+				err = ETIMEDOUT;
+				break;
+			}
+
+			if (xnthread_test_info(cur, XNRMID)) {
+				err = EINVAL;
+				break;
+			}
 		}
+
+		break;
+
+	case PTHREAD_MUTEX_ERRORCHECK:
+		err = EDEADLK;
+		break;
+
+	case PTHREAD_MUTEX_RECURSIVE:
+		if (mutex->count == UINT_MAX) {
+			err = EAGAIN;
+			break;
+		}
+
+		++mutex->count;
+		err = 0;
 	}
 
+  unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -363,7 +361,7 @@ int pthread_mutex_lock(pthread_mutex_t * mx)
 	int err;
 
 	do {
-		err = pse51_mutex_timedlock_break(shadow, XN_INFINITE);
+		err = pse51_mutex_timedlock_break(shadow, 0, XN_INFINITE);
 	} while (err == EINTR);
 
 	return err;
@@ -408,8 +406,8 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
 	int err;
 
 	do {
-		err =
-		    pse51_mutex_timedlock_break(shadow, ts2ticks_ceil(to) + 1);
+		err = pse51_mutex_timedlock_break(shadow, 1,
+						  ts2ticks_ceil(to) + 1);
 	} while (err == EINTR);
 
 	return err;

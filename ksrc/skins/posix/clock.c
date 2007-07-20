@@ -32,9 +32,6 @@
  * sleeping (with clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution
  * of one system clock tick, like the CLOCK_REALTIME clock.
  *
- * Setting any of the two clocks with clock_settime() is currently not
- * supported.
- *
  * Timer objects may be created with the timer_create() service using either of
  * the two clocks, but the resolution of these timers is one system clock tick,
  * as is the case for clock_nanosleep().
@@ -140,7 +137,17 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 /**
  * Set the specified clock.
  *
- * This service is not supported.
+ * This allow setting the CLOCK_REALTIME clock.
+ *
+ * @param clock_id, the id of the clock to be set, only CLOCK_REALTIME is
+ * supported.
+ *
+ * @param tp, the address of a struct timespec specifying the new date.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a clock_id is not CLOCK_REALTIME;
+ * - EINVAL, the date specified by @a tp is invalid.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
@@ -149,14 +156,23 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
  */
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
+	xnticks_t now, new_date;
+	spl_t s;
+
 	if (clock_id != CLOCK_REALTIME
 	    || (unsigned long)tp->tv_nsec >= ONE_BILLION) {
 		thread_set_errno(EINVAL);
 		return -1;
 	}
 
-	thread_set_errno(ENOTSUP);
-	return -1;
+	new_date = ts2ticks_floor(tp);
+
+	xnlock_get_irqsave(&nklock, s);
+	now = xntbase_get_time(pse51_tbase);
+	xntbase_adjust_time(pse51_tbase, (xnsticks_t) (new_date - now));
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
 }
 
 /**
@@ -206,7 +222,6 @@ int clock_nanosleep(clockid_t clock_id,
 		    int flags,
 		    const struct timespec *rqtp, struct timespec *rmtp)
 {
-	xnticks_t start, timeout;
 	xnthread_t *cur;
 	spl_t s;
 	int err = 0;
@@ -220,46 +235,34 @@ int clock_nanosleep(clockid_t clock_id,
 	if ((unsigned long)rqtp->tv_nsec >= ONE_BILLION)
 		return EINVAL;
 
+	if (flags & ~TIMER_ABSTIME)
+		return EINVAL;
+
 	cur = xnpod_current_thread();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	start = clock_get_ticks(clock_id);
-	timeout = ts2ticks_ceil(rqtp);
-
-	switch (flags) {
-	default:
-		err = EINVAL;
-		goto unlock_and_return;
-
-	case TIMER_ABSTIME:
-		timeout -= start;
-		if ((xnsticks_t)timeout < 0) {
-			err = 0;
-			goto unlock_and_return;
-		}
-
-		break;
-
-	case 0:
-		break;
-	}
-
 	thread_cancellation_point(cur);
 
-	xnpod_suspend_thread(cur, XNDELAY, timeout + 1, XN_RELATIVE, NULL);
+	xnpod_suspend_thread(cur, XNDELAY, ts2ticks_ceil(rqtp) + 1,
+			     clock_flag(flags, clock_id), NULL);
 
 	thread_cancellation_point(cur);
 
 	if (xnthread_test_info(cur, XNBREAK)) {
-		xnlock_put_irqrestore(&nklock, s);
 
 		if (flags == 0 && rmtp) {
-			xnsticks_t rem =
-			    timeout - (clock_get_ticks(clock_id) - start);
+			xnticks_t now, expiry;
+			xnsticks_t rem;
+
+			now = clock_get_ticks(clock_id);
+			expiry = xntimer_get_date(&cur->rtimer);
+			xnlock_put_irqrestore(&nklock, s);
+			rem = expiry - now;
 
 			ticks2ts(rmtp, rem > 0 ? rem : 0);
-		}
+		} else
+			xnlock_put_irqrestore(&nklock, s);
 
 		return EINTR;
 	}

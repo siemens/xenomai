@@ -388,21 +388,26 @@ int timer_settime(timer_t timerid,
 		timer->owner = NULL;
 	} else {
 		xnticks_t start = ts2ticks_ceil(&value->it_value) + 1;
-
-		if (flags & TIMER_ABSTIME)
-			/* If the initial delay has already passed, the call shall suceed. */
-			if (clock_adjust_timeout(&start, timer->clockid))
-				/* clock_adjust timeout returns an error if start time has
-				   already passed, in which case timer_settime is expected not
-				   to return an error but schedule the timer ASAP. */
-				/* FIXME: when passing 0 tick, xntimer_start disables the
-				   timer, we pass 1. */
-				start = 1;
+		xnticks_t period = ts2ticks_ceil(&value->it_interval);
 
 		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
-		xntimer_start(&timer->timerbase,
-			      start, ts2ticks_ceil(&value->it_interval),
-			      XN_RELATIVE);
+		if (xntimer_start(&timer->timerbase, start, period,
+				  clock_flag(flags, timer->clockid))) {
+			/* If the initial delay has already passed, the call
+			   shall suceed, so, let us tweak the start time. */
+			xnticks_t now = clock_get_ticks(timer->clockid);
+			if (period) {
+				do {
+					start += period;
+				} while ((xnsticks_t) (start - now) <= 0);
+			} else
+				start = now + xntbase_ns2ticks
+					(pse51_tbase,
+					 xnarch_tsc_to_ns(nklatency));
+			xntimer_start(&timer->timerbase, start, period,
+				      clock_flag(flags, timer->clockid));
+		}
+
 		timer->pexpect = xntbase_get_rawclock(pse51_tbase) + start;
 		timer->owner = cur;
 		inith(&timer->tlink);

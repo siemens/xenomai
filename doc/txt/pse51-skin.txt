@@ -34,10 +34,8 @@ kernel modules, or inside regular applications in user-space.
 Known variations from the POSIX specification.
 ===============================================
 
-The Xenomai PSE51 skin was implemented following as closely as
-possible the single unix specification V3, which can hence serve as a
-documentation for its API. This specification can be accessed at the
-following URL :
+The Xenomai PSE51 skin was implemented following as closely as possible the
+single unix specification V3, which can be accessed at the following URL :
 
 http://www.unix.org/single_unix_specification
 
@@ -55,7 +53,8 @@ described in this specification. Here are the known ones :
 - thread attributes contain non portable extensions : 
   . pthread_attr_set/getfp_np to control whether the thread to be created will
   use the FPU,
-  . pthread_attr_set/getname to choose the name of threads,
+  . pthread_attr_set/getname to choose the name of threads (exclusively in
+  kernel-space, in user-space, use pthread_set_name_np),
   . pthread_attr_set/getaffinity to set the threads processor affinity ;
 
 - priority ceiling protocol is not supported, use priority inheritance instead ;
@@ -151,12 +150,10 @@ being "undefined", but some implementation decisions had to be made :
 TODO List
 ==========
 
-The PSE51 skin is still a work in progress, it lacks some features which will be 
-added gradually :
+The PSE51 skin still lacks some features which will be added gradually :
 - spinlocks/rwlocks/barriers ;
-- add support for real-time signals for user-space threads.
-- dimensioning constants are scattered all over the skin sources, they should be
-  centralized, and made configurable through configure.
+- real-time signals in primary mode for user-space threads.
+- dimensioning constants configurable through kernel configuration menu.
 
 
 Module parameters
