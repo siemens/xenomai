@@ -1527,12 +1527,14 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &count,
+						    timed,
 						    ts2ticks_ceil(&ts) + 1);
 	} else
 		err = pse51_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
 						    &count,
+						    timed,
 						    XN_INFINITE);
 
 	if (err == EINTR) {

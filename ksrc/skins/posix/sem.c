@@ -533,7 +533,7 @@ int sem_trywait(sem_t * sm)
 }
 
 static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
-					 xnticks_t to)
+					 int timed, xnticks_t to)
 {
 	pse51_sem_t *sem = shadow->sem;
 	xnthread_t *cur;
@@ -547,12 +547,12 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
 	if ((err = sem_trywait_internal(shadow)) != EAGAIN)
 		return err;
 
-	if ((err = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-		return err;
-
 	thread_cancellation_point(cur);
 
-	xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
+	if (timed)
+		xnsynch_sleep_on(&sem->synchbase, to, XN_REALTIME);
+	else
+		xnsynch_sleep_on(&sem->synchbase, XN_INFINITE, XN_RELATIVE);
 
 	/* Handle cancellation requests. */
 	thread_cancellation_point(cur);
@@ -607,7 +607,7 @@ int sem_wait(sem_t * sm)
 	int err;
 
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(shadow, XN_INFINITE);
+	err = sem_timedwait_internal(shadow, 0, XN_INFINITE);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err) {
@@ -654,10 +654,16 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 	spl_t s;
 	int err;
 
+	if (abs_timeout->tv_nsec > ONE_BILLION) {
+		err = EINVAL;
+		goto error;
+	}
+
 	xnlock_get_irqsave(&nklock, s);
-	err = sem_timedwait_internal(shadow, ts2ticks_ceil(abs_timeout) + 1);
+	err = sem_timedwait_internal(shadow, 1, ts2ticks_ceil(abs_timeout) + 1);
 	xnlock_put_irqrestore(&nklock, s);
 
+  error:
 	if (err) {
 		thread_set_errno(err);
 		return -1;

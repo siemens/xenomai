@@ -459,13 +459,6 @@ int mq_unlink(const char *name)
 	return 0;
 }
 
-static inline xnthread_t *xnsynch_first_sleeper(xnsynch_t *synch)
-{
-	xnpholder_t *holder = getheadpq(&synch->pendq);
-	return holder ? link2thread(holder, plink) : NULL;
-}
-
-
 static int
 pse51_mq_trysend(pse51_direct_msg_t *msgp, pse51_desc_t *desc, size_t len)
 {
@@ -561,19 +554,18 @@ int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 				return EINVAL;
 
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
+		}
 
-			if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-				return rc;
-		} else
-			to = XN_INFINITE;
-		
 		mq = node2mq(pse51_desc_node(desc));
 
 		cur = xnpod_current_thread();
 
 		thread_cancellation_point(cur);
 
-		xnsynch_sleep_on(&mq->senders, to, XN_RELATIVE);
+		if (abs_timeoutp)
+			xnsynch_sleep_on(&mq->senders, to, XN_REALTIME);
+		else
+			xnsynch_sleep_on(&mq->senders, XN_INFINITE, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 
@@ -644,12 +636,8 @@ int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 				return EINVAL;
 
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
+		}
 
-			if ((rc = clock_adjust_timeout(&to, CLOCK_REALTIME)))
-				return rc;
-		} else
-			to = XN_INFINITE;
-		
 		mq = node2mq(pse51_desc_node(desc));
 
 		thread = thread2pthread(cur);
@@ -662,7 +650,11 @@ int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		xnsynch_sleep_on(&mq->receivers, to, XN_RELATIVE);
+		if (abs_timeoutp)
+			xnsynch_sleep_on(&mq->receivers, to, XN_REALTIME);
+		else
+			xnsynch_sleep_on(&mq->receivers,
+					 XN_INFINITE, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 

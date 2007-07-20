@@ -1,3 +1,10 @@
+2007-07-20  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/clock.c (clock_settime): Implement
+	clock_settime.
+	* ksrc/skins/posix/*.c (timed services): pass the correct timer
+	mode to nucleus timed services instead of using XN_RELATIVE.
+
 2007-07-19  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/timer.c (xntimer_tick_aperiodic): Keep processing

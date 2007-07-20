@@ -240,7 +240,8 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,
 				  struct __shadow_mutex *mutex,
 				  unsigned *count_ptr,
-				  xnticks_t to)
+				  int timed,
+				  xnticks_t abs_to)
 {
 	pse51_cond_t *cond;
 	spl_t s;
@@ -265,11 +266,6 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 		goto unlock_and_return;
 	}
 
-	err = clock_adjust_timeout(&to, cond->attr.clock);
-
-	if (err)
-		goto unlock_and_return;
-
 	/* Unlock mutex, with its previous recursive lock count stored
 	   in "*count_ptr". */
 	err = mutex_save_count(cur, mutex, count_ptr);
@@ -284,7 +280,11 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	}
 
 	/* Wait for another thread to signal the condition. */
-	xnsynch_sleep_on(&cond->synchbase, to, XN_RELATIVE);
+	if (timed)
+		xnsynch_sleep_on(&cond->synchbase, abs_to,
+				 clock_flag(TIMER_ABSTIME, cond->attr.clock));
+	else
+		xnsynch_sleep_on(&cond->synchbase, XN_INFINITE, XN_RELATIVE);
 
 	/* There are four possible wakeup conditions :
 	   - cond_signal / cond_broadcast, no status bit is set, and the function
@@ -327,7 +327,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
 
 	cond = shadow->cond;
 
-	err = pse51_mutex_timedlock_internal(cur, mutex, count, XN_INFINITE);
+	err = pse51_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
 
 	if (err == EINTR)
 		goto unlock_and_return;
@@ -408,7 +408,7 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	int err;
 
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
-					    &count, XN_INFINITE);
+					    &count, 0, XN_INFINITE);
 
 	if (!err || err == EINTR)
 		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
@@ -464,7 +464,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	unsigned count;
 	int err;
 
-	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count,
+	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ticks_ceil(abstime) + 1);
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
