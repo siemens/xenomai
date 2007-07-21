@@ -535,7 +535,7 @@ int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 		pse51_desc_t *desc;
 		xnthread_t *cur;
 		pse51_mq_t *mq;
-		xnticks_t to;
+		xnticks_t to = XN_INFINITE;
 
 		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
 			return rc;
@@ -565,7 +565,7 @@ int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->senders, to, XN_REALTIME);
 		else
-			xnsynch_sleep_on(&mq->senders, XN_INFINITE, XN_RELATIVE);
+			xnsynch_sleep_on(&mq->senders, to, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 
@@ -613,7 +613,7 @@ int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 	int rc;
 
 	for (;;) {
-		xnticks_t to;
+		xnticks_t to = XN_INFINITE;
 		pse51_desc_t *desc;
 		pthread_t thread;
 		pse51_mq_t *mq;
@@ -653,8 +653,7 @@ int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 		if (abs_timeoutp)
 			xnsynch_sleep_on(&mq->receivers, to, XN_REALTIME);
 		else
-			xnsynch_sleep_on(&mq->receivers,
-					 XN_INFINITE, XN_RELATIVE);
+			xnsynch_sleep_on(&mq->receivers, to, XN_RELATIVE);
 
 		thread_cancellation_point(cur);
 

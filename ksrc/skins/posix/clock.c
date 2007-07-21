@@ -267,7 +267,6 @@ int clock_nanosleep(clockid_t clock_id,
 		return EINTR;
 	}
 
-      unlock_and_return:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
