@@ -1161,7 +1161,7 @@ static int __pthread_mutex_lock(struct task_struct *curr, struct pt_regs *regs)
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	return -pse51_mutex_timedlock_break(&mx.shadow_mutex, XN_INFINITE);
+	return -pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
 }
 
 static int __pthread_mutex_timedlock(struct task_struct *curr,
@@ -1189,7 +1189,7 @@ static int __pthread_mutex_timedlock(struct task_struct *curr,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(ts));
 
 	return -pse51_mutex_timedlock_break(&mx.shadow_mutex,
-					    ts2ticks_ceil(&ts) + 1);
+					    1, ts2ticks_ceil(&ts) + 1);
 }
 
 static int __pthread_mutex_trylock(struct task_struct *curr,

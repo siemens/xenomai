@@ -851,7 +851,6 @@ static int pse51_sigtimedwait_inner(const sigset_t * set,
 		/* Nothing to be done for SI_MESQ. */
 	}
 
-      unlock_and_ret:
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -986,7 +985,7 @@ int sigtimedwait(const sigset_t * __restrict__ set,
 		 siginfo_t * __restrict__ info,
 		 const struct timespec *__restrict__ timeout)
 {
-	xnticks_t to;
+	xnticks_t to = XN_INFINITE;
 	int err;
 
 	if (timeout) {
@@ -999,11 +998,7 @@ int sigtimedwait(const sigset_t * __restrict__ set,
 	}
 
 	do {
-		if (timeout)
-			err = pse51_sigtimedwait_inner(set, info, 1, to);
-		else
-			err = pse51_sigtimedwait_inner(set, info,
-						       0, XN_INFINITE);
+		err = pse51_sigtimedwait_inner(set, info, !!timeout, to);
 	}
 	while (err == EINTR);
 
