@@ -33,7 +33,6 @@ struct pse51_timer {
 
 	unsigned queued;
 	unsigned overruns;
-	xnticks_t pexpect;
 
 	xnholder_t link; /* link in process or global timers queue. */
 
@@ -67,7 +66,7 @@ static void pse51_base_timer_handler(xntimer_t *xntimer)
 void pse51_timer_notified(pse51_siginfo_t * si)
 {
 	struct pse51_timer *timer = link2tm(si, si);
-	xnticks_t period, now;
+	xnticks_t now;
 
 	timer->queued = 0;
 	/* We need this two staged overruns count. The overruns count returned by
@@ -79,36 +78,14 @@ void pse51_timer_notified(pse51_siginfo_t * si)
 	   be queued again, and later overruns should count for that new
 	   notification, not the one the application is currently handling. */
 
-	period = xntimer_interval(&timer->timerbase);
-
-	if (!period) {
+	if (!xntimer_interval(&timer->timerbase)) {
 		timer->overruns = 0;
 		return;
 	}
 
 	now = xntbase_get_rawclock(pse51_tbase);
 
-	if (unlikely(now >= timer->pexpect + period)) {
-		xnsticks_t missed = now - timer->pexpect;
-#if BITS_PER_LONG < 64 && defined(__KERNEL__)
-		/* Slow (error) path, without resorting to 64 bit divide in
-		   kernel space unless the period fits in 32 bit. */
-		if (likely(period <= 0xffffffffLL))
-			timer->overruns = xnarch_uldiv(missed, period);
-		else {
-			timer->overruns = 0;
-		      divide:
-			++timer->overruns;
-			missed -= period;
-			if (missed >= period)
-				goto divide;
-		}
-#else /* BITS_PER_LONG >= 64 */
-		timer->overruns = missed / period;
-#endif /* BITS_PER_LONG < 64 */
-		timer->pexpect += period * timer->overruns;
-	}
-	timer->pexpect += period;
+	timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 }
 
 /**
@@ -408,7 +385,6 @@ int timer_settime(timer_t timerid,
 				      clock_flag(flags, timer->clockid));
 		}
 
-		timer->pexpect = xntbase_get_rawclock(pse51_tbase) + start;
 		timer->owner = cur;
 		inith(&timer->tlink);
 		appendq(&timer->owner->timersq, &timer->tlink);

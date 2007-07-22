@@ -494,7 +494,7 @@ EXPORT_SYMBOL(xntbase_tick);
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 /*! 
- * \fn void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
+ * \fn void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
  * \brief Adjust the clock time for the system.
  *
  * Xenomai tracks the current time as a monotonously increasing count
@@ -525,7 +525,7 @@ EXPORT_SYMBOL(xntbase_tick);
  * Rescheduling: never.
  */
 
-void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
+void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 {
 	xnticks_t now;
 	xnholder_t *holder;
@@ -535,10 +535,13 @@ void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
 		/* Only update the specified isolated base. */
 		base->wallclock_offset += delta;
 		__setbits(base->status, XNTBSET);
+		xntslave_adjust(base2slave(base), delta);
+
 	} else {
 		/* Update all non-isolated bases in the system. */
 		nktbase.wallclock_offset += xntbase_ticks2ns(base, delta);
 		now = xnarch_get_cpu_time() + nktbase.wallclock_offset;
+		xntimer_adjust_all_aperiodic(xntbase_ticks2ns(base, delta));
 
 		for (holder = getheadq(&nktimebaseq);
 		     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
@@ -549,6 +552,7 @@ void xntbase_adjust_time(xntbase_t *base, xnticks_t delta)
 			tbase->wallclock_offset =
 				xntbase_ns2ticks(tbase, now) -
 				xntbase_get_jiffies(tbase);
+			xntslave_adjust(base2slave(tbase), delta);
 		}
 	}
 

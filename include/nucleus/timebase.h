@@ -341,7 +341,7 @@ static inline xnticks_t xntbase_get_time(xntbase_t *base)
 	return xntbase_get_jiffies(base) + base->wallclock_offset;
 }
 
-void xntbase_adjust_time(xntbase_t *base, xnticks_t newtime);
+void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta);
 
 #ifdef __cplusplus
 }

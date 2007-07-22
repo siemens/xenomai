@@ -43,6 +43,7 @@
 #include <asm/irq.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
+#include <asm/bitops.h>
 #include <asm/xenomai/hal.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
@@ -907,6 +908,26 @@ void rthal_exit(void)
     rthal_arch_cleanup();
 }
 
+unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
+						 unsigned long long b,
+						 unsigned long long *rem)
+{
+	unsigned long long q = 0, r = a;
+	int i;
+
+	for (i = fls(a >> 32) - fls(b >> 32), b <<= i; i >= 0; i--, b >>= 1) {
+		q <<= 1;
+		if (b <= r) {
+			r -= b;
+			q++;
+		}
+	}
+
+	if (rem)
+		*rem = r;
+	return q;
+}
+
 /**
  * @fn int rthal_irq_enable(unsigned irq)
  *                           
@@ -1061,3 +1082,4 @@ EXPORT_SYMBOL(rthal_proc_root);
 
 EXPORT_SYMBOL(rthal_init);
 EXPORT_SYMBOL(rthal_exit);
+EXPORT_SYMBOL(__rthal_generic_full_divmod64);

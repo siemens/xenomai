@@ -109,6 +109,42 @@ static inline unsigned long long __rthal_generic_ulldiv (unsigned long long ull,
 #define rthal_uldivrem(ull,ul,rp) ((unsigned) rthal_ulldiv((ull),(ul),(rp)))
 #endif /* !rthal_uldivrem */
 
+#ifndef rthal_divmod64
+static inline unsigned long long
+__rthal_generic_divmod64(unsigned long long a,
+			 unsigned long long b,
+			 unsigned long long *rem)
+{
+	unsigned long long q;
+#if defined(__KERNEL__) && BITS_PER_LONG < 64
+	if (b <= 0xffffffffULL) {
+		unsigned long r;
+		q = rthal_ulldiv(a, b, &r);
+		if (rem)
+			*rem = r;
+	} else {
+		extern unsigned long long
+			__rthal_generic_full_divmod64(unsigned long long a,
+						      unsigned long long b,
+						      unsigned long long *rem);
+		if (a < b) {
+			if (rem)
+				*rem = a;
+			return 0;
+		}
+
+		return __rthal_generic_full_divmod64(a, b, rem);
+	}
+#else /* BITS_PER_LONG >= 64 */
+	q = a / b;
+	if (rem)
+		*rem = a % b;
+#endif /* BITS_PER_LONG < 64 */
+	return q;
+}
+#define rthal_divmod64(a,b,rp) __rthal_generic_divmod64((a),(b),(rp))
+#endif /* !rthal_divmod64 */
+
 #ifndef rthal_imuldiv
 static inline __attribute__((__const__)) int __rthal_generic_imuldiv (int i,
 								  int mult,
@@ -234,6 +270,10 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 #define xnarch_ullmul                rthal_ullmul
 #define xnarch_uldivrem              rthal_uldivrem
 #define xnarch_ulldiv                rthal_ulldiv
+#define xnarch_divmod64              rthal_divmod64
+#define xnarch_div64(a,b)            rthal_divmod64((a),(b),NULL)
+#define xnarch_mod64(a,b)            ({ unsigned long long _rem; \
+			                rthal_divmod64((a),(b),&_rem); _rem; })
 #define xnarch_imuldiv               rthal_imuldiv
 #define xnarch_llimd                 rthal_llimd
 #define xnarch_llmulshft             rthal_llmulshft
