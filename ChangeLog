@@ -1,5 +1,8 @@
 2007-07-22  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* include/asm-sim/bits/timer.h (xnarch_program_timer_shot): Take
+	care of null delays.
+
 	* include/nucleus/timer.h, ksrc/nucleus/timer.c (xntimer_tick_aperiodic,
 	xntimer_tick_periodic): Take care for dates wrap around in timers
 	data structures.
