@@ -234,6 +234,8 @@ static inline void atomic_clear_mask(unsigned long mask, unsigned long *addr)
 #define xnarch_atomic_clear_mask(pflags,mask)   atomic_clear_mask(mask,pflags)
 
 #define cpu_relax()                             xnarch_memory_barrier()
+#define xnarch_read_memory_barrier()		xnarch_memory_barrier()
+#define xnarch_write_memory_barrier()		xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
 

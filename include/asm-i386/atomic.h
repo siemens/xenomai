@@ -63,6 +63,10 @@ static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 
 #define xnarch_memory_barrier()  __asm__ __volatile__("": : :"memory")
 
+#define xnarch_read_memory_barrier() \
+	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
+#define xnarch_write_memory_barrier()	xnarch_memory_barrier()
+
 #endif /* __KERNEL__ */
 
 typedef unsigned long atomic_flags_t;

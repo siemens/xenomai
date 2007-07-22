@@ -1,3 +1,9 @@
+2007-07-22  Jan Kiszka  <jan.kiszka@web.de>
+
+	* src/librtdk: A collection of utilities aimed at forming a
+	Real-Time Development Kit for userland usage. Starts with a set of
+	non-intrusive (latency-wise) *printf() services.
+	
 2007-07-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.1-00.

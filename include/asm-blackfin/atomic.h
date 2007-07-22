@@ -53,7 +53,9 @@ static __inline__ unsigned long xnarch_atomic_xchg(unsigned long *ptr, unsigned 
 
 #define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
 
-#define cpu_relax()  xnarch_memory_barrier()
+#define cpu_relax()			xnarch_memory_barrier()
+#define xnarch_read_memory_barrier()	xnarch_memory_barrier()
+#define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
 

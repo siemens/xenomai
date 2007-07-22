@@ -1,3 +1,8 @@
+includedir = $(prefix)/include
+
+include_HEADERS = \
+	rtdk.h
+
 nodist_include_HEADERS=$(CONFIG_HEADER)
 
 SUBDIRS = \

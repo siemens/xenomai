@@ -702,6 +702,7 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-load \
 	scripts/xeno-test \
 	src/Makefile \
+	src/librtdk/Makefile \
 	src/skins/Makefile \
        	src/skins/posix/Makefile \
        	src/skins/native/Makefile \
