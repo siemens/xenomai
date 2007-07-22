@@ -22,7 +22,7 @@
 static inline void xnarch_program_timer_shot (unsigned long delay)
 {
     /* 1 tsc unit of the virtual CPU == 1 ns. */
-    mvm_program_timer(delay);
+    mvm_program_timer(delay ?: 1);
 }
 
 static inline int xnarch_send_timer_ipi (xnarch_cpumask_t mask)
