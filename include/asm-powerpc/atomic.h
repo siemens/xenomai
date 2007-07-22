@@ -163,9 +163,10 @@ static __inline__ unsigned long
 	(__typeof__(*(ptr))) __xchg((ptr), (unsigned long)_x_, sizeof(*(ptr)));\
     })
 
-#define xnarch_memory_barrier()     __asm__ __volatile__("": : :"memory")
-
-#define cpu_relax()  xnarch_memory_barrier()
+#define xnarch_memory_barrier()		__asm__ __volatile__ ("sync" : : : "memory")
+#define xnarch_read_memory_barrier()	xnarch_memory_barrier()	/* lwsync would do */
+#define xnarch_write_memory_barrier()	xnarch_memory_barrier()
+#define cpu_relax()			xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
 

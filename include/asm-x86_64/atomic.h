@@ -54,7 +54,9 @@ static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 	return x;
 }
 
-#define xnarch_memory_barrier()  __asm__ __volatile__("": : :"memory")
+#define xnarch_memory_barrier()		asm volatile("mfence":::"memory")
+#define xnarch_read_memory_barrier()	asm volatile("lfence":::"memory")
+#define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
 

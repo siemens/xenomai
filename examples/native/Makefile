@@ -1,7 +1,7 @@
 ###### CONFIGURATION ######
 
 ### List of applications to be build
-APPLICATIONS = trivial-periodic sigxcpu
+APPLICATIONS = trivial-periodic sigxcpu rtprint
 
 ### Note: to override the search path for the xeno-config script, use "make XENO=..."
 
@@ -47,6 +47,12 @@ clean::
 
 endif
 endif
+
+
+
+###### SPECIAL TARGET RULES ######
+rtprint: rtprint.c
+	$(CC) $(CFLAGS) $? $(LDFLAGS) -lrtdk -o $@
 
 
 

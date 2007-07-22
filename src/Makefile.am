@@ -1,2 +1,2 @@
 
-SUBDIRS = include skins testsuite utils
+SUBDIRS = include librtdk skins testsuite utils
