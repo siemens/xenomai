@@ -2150,11 +2150,6 @@ static inline void do_sigwake_event(struct task_struct *p)
 	if (!thread)
 		return;
 
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
-		xnpod_fatal("do_sigwake_event() invoked "
-			    "with shadow thread marked as ROOT?!");
-		);
-
 	xnlock_get_irqsave(&nklock, s);
 
 	if ((p->ptrace & PT_PTRACED) && !xnthread_test_info(thread, XNDEBUG)) {
