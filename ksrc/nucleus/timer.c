@@ -212,7 +212,8 @@ void xntimer_tick_aperiodic(void)
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
 
-		if (xntimerh_date(&timer->aplink) - nklatency > now)
+		if ((xnsticks_t) (xntimerh_date(&timer->aplink) - now)
+		    > nklatency)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
 			break;
@@ -254,6 +255,7 @@ void xntimer_tick_aperiodic(void)
 		xntimer_enqueue_aperiodic(timer);
 	}
 
+out:
 	__clrbits(sched->status, XNINTCK);
 
 	xntimer_next_local_shot(sched);
@@ -406,7 +408,8 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 	while ((holder = xntlist_head(timerq)) != NULL) {
 		timer = plink2timer(holder);
 
-		if (xntlholder_date(&timer->plink) > base->jiffies)
+		if ((xnsticks_t) (xntlholder_date(&timer->plink)
+				  - base->jiffies) > 0)
 			break;
 
 		xntimer_dequeue_periodic(timer);
