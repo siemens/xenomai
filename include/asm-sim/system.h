@@ -119,6 +119,11 @@ typedef unsigned long xnarch_cpumask_t;
 #define xnarch_uldiv(ull, d)         xnarch_uldivrem(ull, d, NULL)
 #define xnarch_ulmod(ull, d)         ({ u_long _rem;                    \
                                         xnarch_uldivrem(ull,d,&_rem); _rem; })
+#define xnarch_divmod64(a,b,r)       ({ if (r) \
+				                *r = (a) % (b);		\
+			                (a) / (b); })
+#define xnarch_div64(a,b)            ((a) / (b))
+#define xnarch_mod64(a,b)            ((a) % (b))
 
 static inline int xnarch_imuldiv(int i, int mult, int div)
 {

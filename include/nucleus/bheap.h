@@ -87,6 +87,26 @@ static inline bheaph_t *__internal_bheap_gethead(bheap_t *heap)
 	return heap->elems[1];
 }
 
+#define bheap_next(heap, holder)			\
+	({						\
+		bheap_t *_bheap = &(heap)->bheap;	\
+		BHEAP_CHECK(_bheap);			\
+		__internal_bheap_next(_bheap, holder);	\
+	})
+
+static inline bheaph_t *__internal_bheap_next(bheap_t *heap, bheaph_t *holder)
+{
+	unsigned pos;
+
+	if (unlikely(bheaph_pos(holder) >= heap->last
+		     || heap->elems[bheaph_pos(holder)] != holder))
+		return (bheaph_t *) ERR_PTR(-EINVAL);
+
+	pos = bheaph_pos(holder) + 1;
+
+	return likely(pos < heap->last) ? heap->elems[pos] : NULL;
+}
+
 static inline bheaph_t *bheaph_parent(bheap_t *heap, bheaph_t *holder)
 {
 	const unsigned pos = holder->pos;
@@ -185,7 +205,8 @@ static inline int __internal_bheap_delete(bheap_t *heap, bheaph_t *holder)
 {
 	bheaph_t *lasth;
 
-	if (bheaph_pos(holder) >= heap->last)
+	if (unlikely(bheaph_pos(holder) >= heap->last
+		     || heap->elems[bheaph_pos(holder)] != holder))
 		return EINVAL;
 
 	--heap->last;

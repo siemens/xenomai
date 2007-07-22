@@ -40,6 +40,7 @@
 #define XNTIMER_KILLED    0x00000002
 #define XNTIMER_PERIODIC  0x00000004
 #define XNTIMER_REALTIME  0x00000008
+#define XNTIMER_FIRED     0x00000010
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000
@@ -76,6 +77,11 @@ typedef struct {
 		!_h ? NULL : link2tlholder(_h);	\
 	})
 
+#define xntlist_next(q, h) \
+	({ xnholder_t *_h = nextq(q, &(h)->link);	\
+		!_h ? NULL : link2tlholder(_h);		\
+	})
+
 static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 {
 	xnholder_t *p;
@@ -102,17 +108,22 @@ static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 
 typedef bheaph_t xntimerh_t;
 
-#define xntimerh_date(h)       bheaph_key(h)
-#define xntimerh_prio(h)       bheaph_prio(h)
-#define xntimerh_init(h)       bheaph_init(h)
+#define xntimerh_date(h)          bheaph_key(h)
+#define xntimerh_prio(h)          bheaph_prio(h)
+#define xntimerh_init(h)          bheaph_init(h)
 
 typedef DECLARE_BHEAP_CONTAINER(xntimerq_t, CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY);
 
-#define xntimerq_init(q)       bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
-#define xntimerq_destroy(q)    bheap_destroy(q)
-#define xntimerq_head(q)       bheap_gethead(q)
-#define xntimerq_insert(q, h)  bheap_insert((q),(h))
-#define xntimerq_remove(q, h)  bheap_delete((q),(h))
+#define xntimerq_init(q)          bheap_init((q), CONFIG_XENO_OPT_TIMER_HEAP_CAPACITY)
+#define xntimerq_destroy(q)       bheap_destroy(q)
+#define xntimerq_head(q)          bheap_gethead(q)
+#define xntimerq_insert(q, h)     bheap_insert((q),(h))
+#define xntimerq_remove(q, h)     bheap_delete((q),(h))
+
+typedef struct {} xntimerq_it_t;
+
+#define xntimerq_it_begin(q, i)   ((void) (i), bheap_gethead(q))
+#define xntimerq_it_next(q, i, h) ((void) (i), bheap_next((q),(h)))
 
 #elif defined(CONFIG_XENO_OPT_TIMER_WHEEL)
 
@@ -128,6 +139,10 @@ typedef struct {
 	unsigned long long shot_wrap;
 	xnqueue_t bucket[XNTIMER_WHEELSIZE];
 } xntimerq_t;
+
+typedef struct {
+	unsigned bucket;
+} xntimerq_it_t;
 
 static inline void xntimerq_init(xntimerq_t *q)
 {
@@ -205,21 +220,50 @@ static inline void xntimerq_remove(xntimerq_t *q, xntimerh_t *h)
 	/* Do not attempt to update q->next_shot, xntimerq_head will recover. */
 }
 
+static inline xntimerh_t *xntimerq_it_begin(xntimerq_t *q, xntimerq_it_t *it)
+{
+	xntimerh_t *holder = NULL;
+
+	for (it->bucket = 0; it->bucket < XNTIMER_WHEELSIZE; it->bucket++)
+		if ((holder = xntlist_head(&q->bucket[it->bucket])))
+			break;
+
+	return holder;
+}
+
+static inline xntimerh_t *
+xntimerq_it_next(xntimerq_t *q, xntimerq_it_t *it, xntimerh_t *holder)
+{
+	xntimerh_t *next = xntlist_next(&q->bucket[it->bucket], holder);
+
+	if (!next)
+		for(it->bucket++; it->bucket < XNTIMER_WHEELSIZE; it->bucket++)
+			if ((next = xntlist_head(&q->bucket[it->bucket])))
+				break;
+
+	return next;
+}
+
 #else /* CONFIG_XENO_OPT_TIMER_LIST */
 
 typedef xntlholder_t xntimerh_t;
 
-#define xntimerh_date(h)       xntlholder_date(h)
-#define xntimerh_prio(h)       xntlholder_prio(h)
-#define xntimerh_init(h)       xntlholder_init(h)
+#define xntimerh_date(h)        xntlholder_date(h)
+#define xntimerh_prio(h)        xntlholder_prio(h)
+#define xntimerh_init(h)        xntlholder_init(h)
 
 typedef xnqueue_t xntimerq_t;
 
-#define xntimerq_init(q)       xntlist_init(q)
-#define xntimerq_destroy(q)    do { } while (0)
-#define xntimerq_head(q)       xntlist_head(q)
-#define xntimerq_insert(q,h)   xntlist_insert((q),(h))
-#define xntimerq_remove(q, h)  xntlist_remove((q),(h))
+#define xntimerq_init(q)        xntlist_init(q)
+#define xntimerq_destroy(q)     do { } while (0)
+#define xntimerq_head(q)        xntlist_head(q)
+#define xntimerq_insert(q,h)    xntlist_insert((q),(h))
+#define xntimerq_remove(q, h)   xntlist_remove((q),(h))
+
+typedef struct {} xntimerq_it_t;
+
+#define xntimerq_it_begin(q,i)  ((void) (i), xntlist_head(q))
+#define xntimerq_it_next(q,i,h) ((void) (i), xntlist_next((q),(h)))
 
 #endif /* CONFIG_XENO_OPT_TIMER_LIST */
 
@@ -229,19 +273,25 @@ typedef struct xntimer {
 
 	xntimerh_t aplink;	/* Link in aperiodic timers list. */
 
-#define aplink2timer(ln)	container_of(ln, xntimer_t, aplink)
+#define aplink2timer(ln) container_of(ln, xntimer_t, aplink)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 	xntbase_t *base;	/* Time base. */
 
 	xntlholder_t plink;	/* Link in periodic timers wheel. */
 
-#define plink2timer(ln)	container_of(ln, xntimer_t, plink)
+#define plink2timer(ln) container_of(ln, xntimer_t, plink)
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+
+	xnholder_t adjlink;
+
+#define adjlink2timer(ln) container_of(ln, xntimer_t, adjlink)
 
 	xnflags_t status;	/* !< Timer status. */
 
 	xnticks_t interval;	/* !< Periodic interval (in ticks, 0 == one shot). */
+
+	xnticks_t pexpect;	/* !< Date of next periodic release point (raw ticks). */
 
 	struct xnsched *sched;	/* !< Sched structure to which the timer is
 				   attached. */
@@ -289,6 +339,8 @@ typedef struct xntimed_slave {
 #endif /* !CONFIG_SMP */
 #define xntimer_interval(t)	((t)->interval)
 #define xntimer_set_cookie(t,c)	((t)->cookie = (c))
+#define xntimer_pexpect(t)      ((t)->pexpect)
+#define xntimer_pexpect_forward(t,delta) ((t)->pexpect += delta)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 #define xntimer_base(t)		((t)->base)
@@ -588,6 +640,8 @@ void xntslave_start(xntslave_t *slave,
 
 void xntslave_stop(xntslave_t *slave);
 
+void xntslave_adjust(xntslave_t *slave, xnsticks_t delta);
+
 #else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 int xntimer_start_aperiodic(xntimer_t *timer,
@@ -648,11 +702,15 @@ static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
 
 /*@}*/
 
+unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now);
+
 void xntimer_freeze(void);
 
 void xntimer_tick_aperiodic(void);
 
 void xntimer_tick_periodic(xntimer_t *timer);
+
+void xntimer_adjust_all_aperiodic(xnsticks_t delta);
 
 #ifdef CONFIG_SMP
 int xntimer_migrate(xntimer_t *timer,

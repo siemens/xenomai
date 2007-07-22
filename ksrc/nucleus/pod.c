@@ -3125,8 +3125,6 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 	if (idate == XN_INFINITE) {
 		xntimer_start(&thread->ptimer, period, period, XN_RELATIVE);
-		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer)
-		    + xntimer_interval(&thread->ptimer);
 	} else {
 		idate -= xntbase_get_wallclock_offset(
 			xntimer_base(&thread->ptimer));
@@ -3135,8 +3133,12 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 		if (err)
 			goto unlock_and_exit;
 
-		thread->pexpect = xntimer_get_raw_expiry(&thread->ptimer) +
-			xntimer_interval(&thread->ptimer);
+		/* We could call xntimer_get_overruns after
+		   xnpod_suspend_thread, but we would need to return the count
+		   of overruns to the caller, otherwise, these overruns
+		   would be lost. */
+		xntimer_pexpect_forward(&thread->ptimer,
+					xntimer_interval(&thread->ptimer));
 		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE,
 				     XN_RELATIVE, NULL);
 	}
@@ -3192,8 +3194,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 int xnpod_wait_thread_period(unsigned long *overruns_r)
 {
-	xnticks_t now, period;
-	xnsticks_t delta;
+	xnticks_t now;
 	unsigned long overruns = 0;
 	xnthread_t *thread;
 	xntbase_t *tbase;
@@ -3215,7 +3216,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	tbase = xnthread_time_base(thread);
 	now = xntbase_get_rawclock(tbase);
 
-	if (likely((xnsticks_t)(now - thread->pexpect) < 0)) {
+	if (likely((xnsticks_t)(now - xntimer_pexpect(&thread->ptimer)) < 0)) {
 		xnpod_suspend_thread(thread, XNDELAY, XN_INFINITE, XN_RELATIVE, NULL);
 
 		if (unlikely(xnthread_test_info(thread, XNBREAK))) {
@@ -3226,30 +3227,9 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 		now = xntbase_get_rawclock(tbase);
 	}
 
-	period = xntimer_interval(&thread->ptimer);
-
-	delta = now - thread->pexpect;
-	if (unlikely(delta >= (xnsticks_t)period)) {
-#if BITS_PER_LONG < 64 && defined(__KERNEL__)
-		/* Slow (error) path, without resorting to 64 bit divide in
-		   kernel space unless the period fits in 32 bit. */
-		if (likely(period <= 0xffffffffLL))
-			overruns = xnarch_uldiv(delta, period);
-		else {
-		      divide:
-			++overruns;
-			delta -= period;
-			if (delta >= period)
-				goto divide;
-		}
-#else /* BITS_PER_LONG >= 64 */
-		overruns = delta / period;
-#endif /* BITS_PER_LONG < 64 */
-		thread->pexpect += period * overruns;
+	overruns = xntimer_get_overruns(&thread->ptimer, now);
+	if (overruns)
 		err = -ETIMEDOUT;
-	}
-
-	thread->pexpect += period;
 
 	if (likely(overruns_r != NULL))
 		*overruns_r = overruns;
@@ -3296,3 +3276,4 @@ EXPORT_SYMBOL(nkpod_struct);
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(nklock);
 #endif /* CONFIG_SMP */
+EXPORT_SYMBOL(nklatency);

@@ -1,5 +1,8 @@
 2007-07-22  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/nucleus/timebase.c (xntbase_adjust_time): Re-adjust
+	(real-time absolute) timers when adjusting time.
+
 	* include/asm-sim/bits/timer.h (xnarch_program_timer_shot): Take
 	care of null delays.
 

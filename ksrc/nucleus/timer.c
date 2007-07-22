@@ -89,6 +89,81 @@ static inline void xntimer_next_remote_shot(xnsched_t *sched)
 	xnarch_send_timer_ipi(xnarch_cpumask_of_cpu(xnsched_cpu(sched)));
 }
 
+static void
+xntimer_adjust_aperiodic(xntimer_t *timer, xnsticks_t delta)
+{
+
+	xntimerh_date(&timer->aplink) -= delta;
+
+	if (testbits(timer->status, XNTIMER_PERIODIC)) {
+		xnticks_t period = xntimer_interval(timer);
+		xnsticks_t diff;
+		xnticks_t mod;
+
+		timer->pexpect -= delta;
+		diff = xnarch_get_cpu_tsc() - xntimerh_date(&timer->aplink);
+
+		if ((xnsticks_t) (diff - period) >= 0) {
+			/* timer should tick several times before now, instead
+			 of calling timer->handler several times, we change
+			 the timer date without changing its pexpect, so that
+			 timer will tick only once and the lost ticks will be
+			 counted as overruns. */
+			mod = xnarch_mod64(diff, period);
+			xntimerh_date(&timer->aplink) += diff - mod;
+		} else if (delta < 0
+			   && testbits(timer->status, XNTIMER_FIRED)
+			   && (xnsticks_t) (diff + period) <= 0) {
+			/* timer is periodic and NOT waiting for its first shot,
+			   so we make it tick sooner than its original date in
+			   order to avoid the case where by adjusting time to a
+			   sooner date, real-time periodic timers do not tick
+			   until the original date has passed. */
+			mod = xnarch_mod64(-diff, period);
+			xntimerh_date(&timer->aplink) += diff + mod;
+			timer->pexpect += diff + mod;
+		}
+	}
+
+	xntimer_enqueue_aperiodic(timer);
+}
+
+void xntimer_adjust_all_aperiodic(xnsticks_t delta)
+{
+	unsigned cpu, nr_cpus;
+	xnqueue_t adjq;
+
+	initq(&adjq);
+	delta = xnarch_ns_to_tsc(delta);
+	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
+		xnsched_t *sched = xnpod_sched_slot(cpu);
+		xntimerq_t *q = &sched->timerqueue;
+		xnholder_t *adjholder;
+		xntimerh_t *holder;
+		xntimerq_it_t it;
+
+		for (holder = xntimerq_it_begin(q, &it); holder;
+		     holder = xntimerq_it_next(q, &it, holder)) {
+			xntimer_t *timer = aplink2timer(holder);
+			if (testbits(timer->status, XNTIMER_REALTIME)) {
+				inith(&timer->adjlink);
+				appendq(&adjq, &timer->adjlink);
+			}
+		}
+
+		while ((adjholder = getq(&adjq))) {
+			xntimer_t *timer = adjlink2timer(adjholder);
+			xntimer_dequeue_aperiodic(timer);
+			xntimer_adjust_aperiodic(timer, delta);
+		}
+
+		if (sched != xnpod_current_sched())
+			xntimer_next_remote_shot(sched);
+		else
+			xntimer_next_local_shot(sched);
+	}
+}
+
 int xntimer_start_aperiodic(xntimer_t *timer,
 			    xnticks_t value, xnticks_t interval,
 			    xntmode_t mode)
@@ -100,30 +175,31 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 
 	now = xnarch_get_cpu_tsc();
 
+	__clrbits(timer->status,
+		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
 	switch (mode) {
 	case XN_RELATIVE:
 		if ((xnsticks_t)value < 0)
 			return -ETIMEDOUT;
 		date = xnarch_ns_to_tsc(value) + now;
-		__clrbits(timer->status, XNTIMER_REALTIME);
 		break;
 	case XN_REALTIME:
+		__setbits(timer->status, XNTIMER_REALTIME);
 		value -= nktbase.wallclock_offset;
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
 		date = xnarch_ns_to_tsc(value);
 		if ((xnsticks_t)(date - now) <= 0)
 			return -ETIMEDOUT;
-		__setbits(timer->status, XNTIMER_REALTIME);
 		break;
 	}
 
 	xntimerh_date(&timer->aplink) = date;
-	if (interval == XN_INFINITE) {
-		timer->interval = XN_INFINITE;
-		__clrbits(timer->status, XNTIMER_PERIODIC);
-	} else {
+
+	timer->interval = XN_INFINITE;
+	if (interval != XN_INFINITE) {
 		timer->interval = xnarch_ns_to_tsc(interval);
+		timer->pexpect = date;
 		__setbits(timer->status, XNTIMER_PERIODIC);
 	}
 
@@ -232,6 +308,7 @@ void xntimer_tick_aperiodic(void)
 				   attempt to re-enqueue it for the next shot. */
 				if (!xntimer_reload_p(timer))
 					continue;
+				__setbits(timer->status, XNTIMER_FIRED);
 			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
 				/* Postpone the next tick to a reasonable date in
 				   the future, waiting for the timebase to be unlocked
@@ -255,7 +332,6 @@ void xntimer_tick_aperiodic(void)
 		xntimer_enqueue_aperiodic(timer);
 	}
 
-out:
 	__clrbits(sched->status, XNINTCK);
 
 	xntimer_next_local_shot(sched);
@@ -298,29 +374,30 @@ static int xntimer_start_periodic(xntimer_t *timer,
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
+	__clrbits(timer->status,
+		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
 	switch (mode) {
 	case XN_RELATIVE:
 		if ((xnsticks_t)value < 0)
 			return -ETIMEDOUT;
 		value += timer->base->jiffies;
-		__clrbits(timer->status, XNTIMER_REALTIME);
 		break;
 	case XN_REALTIME:
+		__setbits(timer->status, XNTIMER_REALTIME);
 		value -= timer->base->wallclock_offset;
 		/* fall through */
 	default: /* XN_ABSOLUTE || XN_REALTIME */
 		if ((xnsticks_t)(value - timer->base->jiffies) <= 0)
 			return -ETIMEDOUT;
-		__setbits(timer->status, XNTIMER_REALTIME);
 		break;
 	}
 
 	xntlholder_date(&timer->plink) = value;
 	timer->interval = interval;
-	if (interval != XN_INFINITE)
+	if (interval != XN_INFINITE) {
 		__setbits(timer->status, XNTIMER_PERIODIC);
-	else
-		__clrbits(timer->status, XNTIMER_PERIODIC);
+		timer->pexpect = value;
+	}
 
 	xntimer_enqueue_periodic(timer);
 
@@ -419,7 +496,7 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 
 		if (!xntimer_reload_p(timer))
 			continue;
-
+		__setbits(timer->status, XNTIMER_FIRED);
 		xntlholder_date(&timer->plink) = base->jiffies + timer->interval;
 		xntimer_enqueue_periodic(timer);
 	}
@@ -428,6 +505,55 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 
 	if (base->hook)
 		base->hook();
+}
+
+static void
+xntimer_adjust_periodic(xntimer_t *timer, xnsticks_t delta)
+{
+	xnticks_t now = timer->base->jiffies;
+	xnsticks_t diff;
+	xntlholder_date(&timer->plink) -= delta;
+	diff = now - xntlholder_date(&timer->plink);
+
+	if (testbits(timer->status, XNTIMER_PERIODIC)) {
+		xnticks_t period = xntimer_interval(timer);
+		xnticks_t mod;
+
+		timer->pexpect -= delta;
+
+		if ((xnsticks_t) (diff - period) >= 0) {
+			/* timer should tick several times before now, instead
+			 of calling timer->handler several times, we change
+			 the timer date without changing its pexpect, so that
+			 timer we can call timer->handler only once and the lost
+			 ticks will be counted as overruns. */
+			mod = xnarch_mod64(diff, period);
+			xntimerh_date(&timer->aplink) += diff - mod;
+		} else if (delta < 0
+			   && testbits(timer->status, XNTIMER_FIRED)
+			   && (xnsticks_t) (diff + period) <= 0) {
+			/* timer is periodic and NOT waiting for its first shot,
+			   so we make it tick sooner than its original date in
+			   order to avoid the case where by adjusting time to a
+			   sooner date, real-time periodic timers do not tick
+			   until the original date has passed. */
+			mod = xnarch_mod64(-diff, period);
+			xntimerh_date(&timer->aplink) += diff + mod;
+			timer->pexpect += diff + mod;
+		}
+	}
+
+	if (diff >= 0) {
+		xnstat_counter_inc(&timer->fired);
+		timer->handler(timer);
+
+		if (!xntimer_reload_p(timer))
+			return;
+
+		xntlholder_date(&timer->plink) += timer->interval;
+	}
+
+	xntimer_enqueue_periodic(timer);
 }
 
 void xntslave_init(xntslave_t *slave)
@@ -515,6 +641,38 @@ void xntslave_stop(xntslave_t *slave)
 		xnlock_get_irqsave(&nklock, s);
 		xntimer_stop(&pc->timer);
 		xnlock_put_irqrestore(&nklock, s);
+	}
+}
+
+void xntslave_adjust(xntslave_t *slave, xnsticks_t delta)
+{
+	int nr_cpus, cpu, n;
+	xnqueue_t adjq;
+
+	initq(&adjq);
+	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
+		struct percpu_cascade *pc = &slave->cascade[cpu];
+		xnholder_t *adjholder;
+
+		for (n = 0; n < XNTIMER_WHEELSIZE; n++) {
+			xnqueue_t *q = &pc->wheel[n];
+			xntlholder_t *holder;
+
+			for (holder = xntlist_head(q); holder;
+			     holder = xntlist_next(q, holder)) {
+				xntimer_t *timer = plink2timer(holder);
+				if (testbits(timer->status, XNTIMER_REALTIME)) {
+					inith(&timer->adjlink);
+					appendq(&adjq, &timer->adjlink);
+				}
+			}
+		}
+
+		while ((adjholder = getq(&adjq))) {
+			xntimer_t *timer = adjlink2timer(adjholder);
+			xntimer_dequeue_periodic(timer);
+			xntimer_adjust_periodic(timer, delta);
+		}
 	}
 }
 
@@ -715,6 +873,34 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 }
 #endif /* CONFIG_SMP */
 
+/**
+ * Get the count of overruns for the last tick.
+ *
+ * This service returns the count of pending overruns for the last tick of a
+ * given timer, as measured by the difference between the expected expiry date
+ * of the timer and the date @a now passed as argument.
+ *
+ * @param timer The address of a valid timer descriptor.
+ *
+ * @param now current date (in the monotonic time base)
+ *
+ * @return the number of overruns of @a timer at date @a now
+ */
+unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now)
+{
+	xnticks_t period = xntimer_interval(timer);
+	xnsticks_t delta = now - timer->pexpect;
+	unsigned long overruns = 0;
+
+	if (unlikely(delta >= (xnsticks_t) period)) {
+		overruns = xnarch_div64(delta, period);
+		timer->pexpect += period * overruns;
+	}
+
+	timer->pexpect += period;
+	return overruns;
+}
+
 /*!
  * @internal
  * \fn void xntimer_freeze(void)
@@ -785,6 +971,7 @@ EXPORT_SYMBOL(xntimer_destroy);
 EXPORT_SYMBOL(xntimer_freeze);
 EXPORT_SYMBOL(xntimer_get_date);
 EXPORT_SYMBOL(xntimer_get_timeout);
+EXPORT_SYMBOL(xntimer_get_overruns);
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(xntimer_migrate);
 #endif /* CONFIG_SMP */
