@@ -86,7 +86,7 @@ static inline void xntlist_insert(xnqueue_t *q, xntlholder_t *holder)
 	   increased flexibility... */
 
 	for (p = q->head.last; p != &q->head; p = p->last)
-		if (holder->key > link2tlholder(p)->key ||
+		if ((xnsticks_t) (holder->key - link2tlholder(p)->key) > 0 ||
 		    (holder->key == link2tlholder(p)->key &&
 		     holder->prio <= link2tlholder(p)->prio))
 			break;
@@ -174,8 +174,8 @@ static inline xntlholder_t *xntimerq_head(xntimerq_t *q)
 		if ((xntlholder_date(candidate) >> q->date_shift) == q->next_shot)
 			return candidate;
 
-		if (!result
-		    || xntlholder_date(candidate) < xntlholder_date(result))
+		if (!result || (xnsticks_t) (xntlholder_date(candidate)
+					     - xntlholder_date(result)) < 0)
 			result = candidate;
 	}
 
@@ -191,7 +191,7 @@ static inline void xntimerq_insert(xntimerq_t *q, xntimerh_t *h)
 	unsigned long long shifted_date = xntlholder_date(h) >> q->date_shift;
 	unsigned bucket = ((unsigned) shifted_date) & XNTIMER_WHEELMASK;
 
-	if (shifted_date < q->next_shot)
+	if ((long long) (shifted_date - q->next_shot) < 0)
 		q->next_shot = shifted_date;
 	xntlist_insert(&q->bucket[bucket], h);
 }
