@@ -581,29 +581,6 @@ int rt_task_delete(RT_TASK *task)
 	if (err)
 		goto unlock_and_exit;
 
-#if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	/* rt_task_delete() might be called for cleaning up a just
-	   created shadow task which has not been successfully mapped,
-	   so make sure we have an associated Linux mate before trying
-	   to send it a signal. This will also prevent any action on
-	   kernel-based Xenomai threads for which the user TCB
-	   extension is always NULL.
-	   We don't send any signal to dormant threads because GDB
-	   (6.x) has some problems dealing with vanishing threads
-	   under some circumstances, likely when asynchronous
-	   cancellation is in effect. In most cases, this is a
-	   non-issue since pthread_cancel() is requested from the skin
-	   interface library in parallel on the target thread, but
-	   when calling rt_task_delete() from kernel space against a
-	   created but unstarted user-space task, the Linux thread
-	   mated to the Xenomai shadow might linger unexpectedly on
-	   the startup barrier. */
-	if (xnthread_user_task(&task->thread_base) != NULL
-	    && !xnthread_test_state(&task->thread_base,XNDORMANT)
-	    && (!xnpod_primary_p() || task != xeno_current_task()))
-		xnshadow_send_sig(&task->thread_base, SIGKILL, 1);
-#endif /* __KERNEL__ && CONFIG_XENO_OPT_PERVASIVE */
-
 	/* Does not return if task is current. */
 	xnpod_delete_thread(&task->thread_base);
 
