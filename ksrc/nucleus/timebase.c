@@ -531,6 +531,7 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 	xnholder_t *holder;
 	xntbase_t *tbase;
 
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 	if (xntbase_isolated_p(base)) {
 		/* Only update the specified isolated base. */
 		base->wallclock_offset += delta;
@@ -538,11 +539,13 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 		xntslave_adjust(base2slave(base), delta);
 
 	} else {
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 		/* Update all non-isolated bases in the system. */
 		nktbase.wallclock_offset += xntbase_ticks2ns(base, delta);
 		now = xnarch_get_cpu_time() + nktbase.wallclock_offset;
 		xntimer_adjust_all_aperiodic(xntbase_ticks2ns(base, delta));
 
+#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 		for (holder = getheadq(&nktimebaseq);
 		     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
 			tbase = link2tbase(holder);
@@ -555,6 +558,7 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 			xntslave_adjust(base2slave(tbase), delta);
 		}
 	}
+#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
 	/* xnltt_log_event(xeno_ev_timeadjust, base->name, delta); */
 }
