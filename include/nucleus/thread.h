@@ -168,9 +168,7 @@ typedef struct xnthread {
 
     xnholder_t glink;		/* Thread holder in global queue */
 
-/* We don't want side-effects on laddr here! */
-#define link2thread(laddr,link) \
-((xnthread_t *)(((char *)laddr) - (int)(&((xnthread_t *)0)->link)))
+#define link2thread(ln, fld)	container_of(ln, xnthread_t, fld)
 
     xnpqueue_t claimq;		/* Owned resources claimed by others (PIP) */
 
