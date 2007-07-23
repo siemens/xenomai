@@ -363,6 +363,11 @@ static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
     return rthal_send_ipi(RTHAL_SERVICE_IPI0, cpumask);
 }
 
+static inline int xnlock_is_owner(xnlock_t *lock)
+{
+	return atomic_read(&lock->owner) == xnarch_current_cpu();
+}
+
 #else /* !CONFIG_SMP */
 
 #define xnlock_init(lock)              do { } while(0)
@@ -372,6 +377,7 @@ static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
 #define xnlock_put_irqrestore(lock,x)  rthal_local_irq_restore(x)
 #define xnlock_clear_irqoff(lock)      rthal_local_irq_disable()
 #define xnlock_clear_irqon(lock)       rthal_local_irq_enable()
+#define xnlock_is_owner(lock)	       1
 
 static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
 {
