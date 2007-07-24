@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <limits.h>
+#include <asm/xenomai/system.h>
 #include <uitron/uitron.h>
 
 extern int __uitron_muxid;
