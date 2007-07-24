@@ -70,6 +70,7 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
 #else /* !__KERNEL__ */
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #define fls(x) generic_fls(x)
 
