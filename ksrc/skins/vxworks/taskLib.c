@@ -295,13 +295,6 @@ STATUS taskDelete(TASK_ID task_id)
 		goto error;
 	}
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_user_task(&task->threadbase) != NULL
-	    && !xnthread_test_state(&task->threadbase,XNDORMANT)
-	    && (!xnpod_primary_p() || task != wind_current_task()))
-		xnshadow_send_sig(&task->threadbase, SIGKILL, 1);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
 	xnpod_delete_thread(&task->threadbase);
 	xnlock_put_irqrestore(&nklock, s);
 
