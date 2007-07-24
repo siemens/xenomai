@@ -1,3 +1,8 @@
+2007-07-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-00, powerpc/
+	tree.
+
 2007-07-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/queue.h (XENO_DEBUG_CHECK_QUEUE): Output the
