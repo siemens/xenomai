@@ -312,6 +312,11 @@ static inline void xnpod_renice_root(int prio)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+static inline int xnpod_root_priority(void)
+{
+	return xnthread_current_priority(xnpod_current_root());
+}
+
 int xnpod_init(void);
 
 int xnpod_enable_timesource(void);

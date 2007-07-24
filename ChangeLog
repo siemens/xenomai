@@ -1,3 +1,29 @@
+2007-07-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/queue.h (XENO_DEBUG_CHECK_QUEUE): Output the
+	actual and expected number of elements from a corrupted queue.
+
+2007-07-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c: Make the RPI lock a per-CPU lock, to
+	solve the deadlock issue introduced by holding both the nklock and
+	the rpilock.  Address the issues raised by Linux task migrations
+	for the RPI scheme.
+
+	(xnshadow_harden) Conservatively assume that we might migrate
+	while waiting for the gatekeeper request token. Handle the case
+	where the shadowed task might have been migrated by the Linux load
+	balancer while in flight to primary mode.
+	
+	(rpi_switch): Do not consider a blocked thread linked to another
+	processor's RPI list for removal, since this may happen if such
+	thread immediately resumes on the remote CPU. Make sure dormant
+	threads are not pushed to the RPI list.
+
+	(rpi_pop): Do not consider a shadow thread linked to another
+	processor's RPI list for removal, since this may happen if such
+	thread moved to another CPU while in flight to primary mode.
+
 2007-07-22  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/nucleus/timebase.c (xntbase_adjust_time): Re-adjust
