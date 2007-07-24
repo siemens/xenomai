@@ -1117,9 +1117,51 @@ void xnpod_delete_thread(xnthread_t *thread)
 	if (xnthread_test_state(thread, XNZOMBIE))
 		goto unlock_and_exit;	/* No double-deletion. */
 
-	xnltt_log_event(xeno_ev_thrdelete, thread->name);
-
 	sched = thread->sched;
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	/*
+	 * This block serves two purposes:
+	 *
+	 * 1) Make sure Linux counterparts of shadow threads do exit
+	 * upon deletion request from the nucleus through a call to
+	 * xnpod_delete_thread().
+	 *
+	 * 2) Make sure shadow threads are removed from the system on
+	 * behalf of their own context, by sending them a lethal
+	 * signal when it is not the case instead of wiping out their
+	 * TCB. In such a case, the deletion is asynchronous, and
+	 * killed thread will later enter xnpod_delete_thread() from
+	 * the exit notification handler (I-pipe).
+	 *
+	 * Sidenote: xnpod_delete_thread() might be called for
+	 * cleaning up a just created shadow task which has not been
+	 * successfully mapped, so we need to make sure that we have
+	 * an associated Linux mate before trying to send it a signal
+	 * (i.e. user_task extension != NULL). This will also prevent
+	 * any action on kernel-based Xenomai threads for which the
+	 * user TCB extension is always NULL.  We don't send any
+	 * signal to dormant threads because GDB (6.x) has some
+	 * problems dealing with vanishing threads under some
+	 * circumstances, likely when asynchronous cancellation is in
+	 * effect. In most cases, this is a non-issue since
+	 * pthread_cancel() is requested from the skin interface
+	 * library in parallel on the target thread. In the rare case
+	 * of calling xnpod_delete_thread() from kernel space against
+	 * a created but unstarted user-space task, the Linux thread
+	 * mated to the Xenomai shadow might linger unexpectedly on
+	 * the startup barrier.
+	 */
+
+	if (xnthread_user_task(thread) != NULL &&
+	    !xnthread_test_state(thread, XNDORMANT) &&
+	    thread != sched->runthread) {
+		xnshadow_send_sig(thread, SIGKILL, 1);
+		goto unlock_and_exit;
+	}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+	xnltt_log_event(xeno_ev_thrdelete, thread->name);
 
 	removeq(&nkpod->threadq, &thread->glink);
 	nkpod->threadq_rev++;
