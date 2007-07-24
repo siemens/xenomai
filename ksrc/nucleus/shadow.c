@@ -386,10 +386,12 @@ static inline void rpi_switch(struct task_struct *next)
 	 * the gatekeeper's RPI slot for the current CPU. */
 
 	if (unlikely(threadin->rpi == NULL)) {
-		xnlock_get_irqsave(&rpislot->lock, s);
-		sched_insertpqf(&rpislot->threadq, &threadin->xlink, newprio);
-		threadin->rpi = rpislot;
-		xnlock_put_irqrestore(&rpislot->lock, s);
+		if (!xnthread_test_state(threadin, XNDORMANT)) {
+			xnlock_get_irqsave(&rpislot->lock, s);
+			sched_insertpqf(&rpislot->threadq, &threadin->xlink, newprio);
+			threadin->rpi = rpislot;
+			xnlock_put_irqrestore(&rpislot->lock, s);
+		}
 	} else if (unlikely(threadin->rpi != rpislot))
 		/* We hold no lock here. */
 		rpi_migrate(threadin);

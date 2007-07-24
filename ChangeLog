@@ -17,7 +17,8 @@
 	
 	(rpi_switch): Do not consider a blocked thread linked to another
 	processor's RPI list for removal, since this may happen if such
-	thread immediately resumes on the remote CPU.
+	thread immediately resumes on the remote CPU. Make sure dormant
+	threads are not pushed to the RPI list.
 
 	(rpi_pop): Do not consider a shadow thread linked to another
 	processor's RPI list for removal, since this may happen if such
