@@ -2179,8 +2179,8 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	if (xnthread_current_priority(thread) != priority) {
 		xnpod_renice_thread_inner(thread, priority, 0);
 		if (xnsched_resched_p()) {
-			if (p == current)
-				/* Implies xnthread_sched(thread) == current_sched */
+			if (p == current &&
+			    xnthread_sched(thread) == xnpod_current_sched())
 				rpi_update(thread);
 			/*
 			 * rpi_switch() will fix things properly
