@@ -95,7 +95,7 @@ static inline void initq(xnqueue_t *qslot)
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#define XENO_DEBUG_CHECK_QUEUE(__qslot)				\
+#define XENO_DEBUG_CHECK_QUEUE(__qslot)					\
 	do {								\
 		xnholder_t *curr;					\
 		spl_t s;						\
@@ -105,7 +105,8 @@ static inline void initq(xnqueue_t *qslot)
 		while (curr != &(__qslot)->head && nelems < (__qslot)->elems) \
 			curr = curr->last, nelems++;			\
 		if (curr != &(__qslot)->head || nelems != (__qslot)->elems) \
-			xnpod_fatal("corrupted queue, qslot->elems=%d, qslot=%p at %s:%d", \
+			xnpod_fatal("corrupted queue, qslot->elems=%d/%d, qslot=%p at %s:%d", \
+				    nelems,				\
 				    (__qslot)->elems,			\
 				    __qslot,				\
 				    __FILE__,__LINE__);			\
@@ -743,14 +744,22 @@ static inline xnpholder_t *findmlqh(xnmlqueue_t *mlqslot, int prio)
 
 static inline xnpholder_t *getheadmlq(xnmlqueue_t *mlqslot)
 {
+	xnpholder_t *holder;
 	xnqueue_t *queue;
 
 	if (emptymlq_p(mlqslot))
 		return NULL;
 
 	queue = &mlqslot->queue[ffsmlq(mlqslot)];
+	holder = (xnpholder_t *)getheadq(queue);
 
-	return (xnpholder_t *)getheadq(queue);
+	XENO_ASSERT(QUEUES, holder,
+		    xnpod_fatal
+		    ("corrupted multi-level queue, qslot=%p at %s:%d", mlqslot,
+		     __FILE__, __LINE__);
+		);
+
+	return holder;
 }
 
 static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
@@ -772,12 +781,11 @@ static inline xnpholder_t *getmlq(xnmlqueue_t *mlqslot)
 		     __FILE__, __LINE__);
 	    );
 
-	hi = idx / BITS_PER_LONG;
-	lo = idx % BITS_PER_LONG;
-
 	mlqslot->elems--;
 
 	if (emptyq_p(queue)) {
+		hi = idx / BITS_PER_LONG;
+		lo = idx % BITS_PER_LONG;
 		__clrbits(mlqslot->lomap[hi], 1UL << lo);
 		if (mlqslot->lomap[hi] == 0)
 			__clrbits(mlqslot->himap, 1UL << hi);
