@@ -301,7 +301,7 @@ $ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root xconfig/gconfig/menuconfig
 $ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root bzImage modules
 # [manually install the kernel image, system map and modules to the proper location]
 $ cd $build_root
-$ $xenomai_root/configure --build=i686-linux --host=ppc CC=ppc_4xx-gcc \
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu CC=ppc_4xx-gcc \
   CXX=ppc_4xx-g++ LD=ppc_4xx-ld
 $ make DESTDIR=$staging_dir install
 
