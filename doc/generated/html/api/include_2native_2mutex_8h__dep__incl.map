@@ -1,0 +1,6 @@
+base referer
+rect $include_2native_2cond_8h.html 246,107 414,133
+rect $ksrc_2skins_2native_2cond_8c.html 484,19 668,45
+rect $skins_2native_2module_8c.html 476,95 676,121
+rect $native_2syscall_8c.html 479,145 674,172
+rect $ksrc_2skins_2native_2mutex_8c.html 234,208 426,235

@@ -1,0 +1,14 @@
+base referer
+rect $task_8h.html 236,284 399,311
+rect $skins_2native_2module_8c.html 460,462 660,488
+rect $native_2syscall_8c.html 463,512 658,539
+rect $ksrc_2skins_2native_2timer_8c.html 226,563 410,590
+rect $ksrc_2skins_2native_2alarm_8c.html 466,310 655,336
+rect $ksrc_2skins_2native_2cond_8c.html 468,360 652,387
+rect $ksrc_2skins_2native_2event_8c.html 466,411 655,438
+rect $ksrc_2skins_2native_2heap_8c.html 468,6 652,32
+rect $ksrc_2skins_2native_2intr_8c.html 475,56 646,83
+rect $ksrc_2skins_2native_2mutex_8c.html 464,107 656,134
+rect $ksrc_2skins_2native_2queue_8c.html 464,158 656,184
+rect $ksrc_2skins_2native_2sem_8c.html 471,208 650,235
+rect $ksrc_2skins_2native_2task_8c.html 471,259 650,286

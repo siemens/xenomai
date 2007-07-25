@@ -1,0 +1,15 @@
+base referer
+rect $pod_8c.html 276,5 423,32
+rect $nucleus_2registry_8c.html 264,56 435,83
+rect $ksrc_2skins_2native_2alarm_8c.html 255,107 444,133
+rect $ksrc_2skins_2native_2cond_8c.html 257,157 441,184
+rect $ksrc_2skins_2native_2event_8c.html 255,208 444,235
+rect $ksrc_2skins_2native_2heap_8c.html 257,259 441,285
+rect $ksrc_2skins_2native_2intr_8c.html 264,309 435,336
+rect $skins_2native_2module_8c.html 249,360 449,387
+rect $ksrc_2skins_2native_2mutex_8c.html 253,411 445,437
+rect $ksrc_2skins_2native_2pipe_8c.html 260,461 439,488
+rect $ksrc_2skins_2native_2queue_8c.html 253,512 445,539
+rect $ksrc_2skins_2native_2sem_8c.html 260,563 439,589
+rect $native_2syscall_8c.html 252,613 447,640
+rect $ksrc_2skins_2native_2task_8c.html 260,664 439,691
