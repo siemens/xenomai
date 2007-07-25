@@ -2,6 +2,10 @@
 
 	* RELEASE: Xenomai 2.3.3 (Summer Song)
 
+2007-07-25  Stelian Pop  <stelian.pop@openwide.fr>
+
+	* include/asm-arm/syscall.h: Add EABI support.
+
 2007-07-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/system.h (xnarch_cpu_*): Prevent issues

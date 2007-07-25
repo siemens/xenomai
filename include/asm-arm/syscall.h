@@ -24,11 +24,12 @@
 #define _XENO_ASM_ARM_SYSCALL_H
 
 #include <asm-generic/xenomai/syscall.h>
+#include <asm/xenomai/features.h>
 
 #define __xn_mux_code(shifted_id,op) ((op << 24)|shifted_id|(__xn_sys_mux & 0xffff))
 #define __xn_mux_shifted_id(id) ((id << 16) & 0xff0000)
 
-#define XENO_ARM_SYSCALL        0x009F0042	/* carefully chosen... */
+#define XENO_ARM_SYSCALL        0x000F0042	/* carefully chosen... */
 
 #ifdef __KERNEL__
 
@@ -46,7 +47,13 @@
 #define __xn_reg_arg4(regs)     ((regs)->ARM_r4)
 #define __xn_reg_arg5(regs)     ((regs)->ARM_r5)
 
-#define __xn_reg_mux_p(regs)    ((regs)->ARM_r7 == XENO_ARM_SYSCALL)
+/* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
+#ifdef CONFIG_OABI_COMPAT
+#define __xn_reg_mux_p(regs)    ( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
+                                  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL) )
+#else
+#define __xn_reg_mux_p(regs)      ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
+#endif
 
 #define __xn_mux_id(regs)       ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)       ((__xn_reg_mux(regs) >> 24) & 0xff)
@@ -135,17 +142,29 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define __sys2(x)	#x
 #define __sys1(x)	__sys2(x)
 
+#ifdef CONFIG_XENO_ARM_EABI
+#define __SYS_REG register unsigned long __r7 __asm__ ("r7") = XENO_ARM_SYSCALL;
+#define __SYS_REG_LIST ,"r" (__r7)
+#define __syscall "swi\t0"
+#else
+#define __SYS_REG
+#define __SYS_REG_LIST
+#define __NR_OABI_SYSCALL_BASE	0x900000
+#define __syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
+#endif
+
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
   ({								\
         unsigned long __res;					\
 	register unsigned long __res_r0 __asm__ ("r0");		\
    	ASM_INDECL_##nr;					\
+    __SYS_REG;                          \
 								\
 	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
-	__asm__ __volatile__ (					\
-"       swi " __sys1(XENO_ARM_SYSCALL)				\
+	__asm__ __volatile__ (				\
+        __syscall                       \
 		: "=r" (__res_r0)				\
-		: ASM_INPUT_##nr				\
+		: ASM_INPUT_##nr __SYS_REG_LIST	\
 		: "memory");					\
    	__res = __res_r0;					\
    	(int) __res;						\
