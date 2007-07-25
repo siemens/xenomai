@@ -1,5 +1,8 @@
 2007-07-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/timer.c (xntimer_tick_aperiodic): Fix signedness in
+	64bit comparison (regression introduced by commit #2776).
+
 	* ksrc/nucleus/shadow.c (xnshadow_rpi_check): Flatten locking
 	sequence.
 
