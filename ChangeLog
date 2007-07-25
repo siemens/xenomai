@@ -2,6 +2,12 @@
 
 	* RELEASE: Xenomai 2.3.3 (Summer Song)
 
+2007-07-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/system.h (xnarch_cpu_*): Prevent issues
+	involving the comma operator priority along with aggregate
+	initializers used in mask expressions.
+
 2007-07-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-00, powerpc/
