@@ -139,15 +139,15 @@ typedef cpumask_t xnarch_cpumask_t;
 #define xnarch_cpu_online_map		 cpumask_of_cpu(0)
 #endif
 #define xnarch_num_online_cpus()          num_online_cpus()
-#define xnarch_cpu_set(cpu, mask)         cpu_set(cpu, mask)
-#define xnarch_cpu_clear(cpu, mask)       cpu_clear(cpu, mask)
+#define xnarch_cpu_set(cpu, mask)         cpu_set(cpu, (mask))
+#define xnarch_cpu_clear(cpu, mask)       cpu_clear(cpu, (mask))
 #define xnarch_cpus_clear(mask)           cpus_clear(mask)
-#define xnarch_cpu_isset(cpu, mask)       cpu_isset(cpu, mask)
-#define xnarch_cpus_and(dst, src1, src2)  cpus_and(dst, src1, src2)
-#define xnarch_cpus_equal(mask1, mask2)   cpus_equal(mask1, mask2)
+#define xnarch_cpu_isset(cpu, mask)       cpu_isset(cpu, (mask))
+#define xnarch_cpus_and(dst, src1, src2)  cpus_and((dst), (src1), (src2))
+#define xnarch_cpus_equal(mask1, mask2)   cpus_equal((mask1), (mask2))
 #define xnarch_cpus_empty(mask)           cpus_empty(mask)
 #define xnarch_cpumask_of_cpu(cpu)        cpumask_of_cpu(cpu)
-#define xnarch_cpu_test_and_set(cpu,mask) cpu_test_and_set(cpu,mask)
+#define xnarch_cpu_test_and_set(cpu,mask) cpu_test_and_set(cpu, (mask))
 
 #define xnarch_first_cpu(mask)            first_cpu(mask)
 #define XNARCH_CPU_MASK_ALL               CPU_MASK_ALL
