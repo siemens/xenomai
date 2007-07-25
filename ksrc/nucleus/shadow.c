@@ -476,17 +476,20 @@ static inline void rpi_clear_local(xnthread_t *thread)
 
 void xnshadow_rpi_check(void)
 {
+	/*
+	 * BIG FAT WARNING: interrupts should be off on entry,
+	 * otherwise, we would have to mask them while testing the
+	 * queue for emptiness _and_ demoting the boost level.
+	 */
 	struct xnrpi *rpislot = &gatekeeper[rthal_processor_id()].rpislot;
- 	spl_t s;
+	int norpi;
  
- 	xnlock_get_irqsave(&rpislot->lock, s);
- 
- 	if (sched_emptypq_p(&rpislot->threadq)) {
- 		if (xnpod_root_priority() != XNCORE_IDLE_PRIO)
- 			xnpod_renice_root(XNCORE_IDLE_PRIO);
- 	}
- 
- 	xnlock_put_irqrestore(&rpislot->lock, s);
+ 	xnlock_get(&rpislot->lock);
+ 	norpi = sched_emptypq_p(&rpislot->threadq);
+ 	xnlock_put(&rpislot->lock);
+
+	if (norpi && xnpod_root_priority() != XNCORE_IDLE_PRIO)
+		xnpod_renice_root(XNCORE_IDLE_PRIO);
 }
 
 #endif	/* CONFIG_SMP */
