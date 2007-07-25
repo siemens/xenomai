@@ -9,3 +9,5 @@ librtdk_la_SOURCES = \
 librtdk_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+noinst_HEADERS = internal.h
