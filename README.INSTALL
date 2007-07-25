@@ -158,13 +158,32 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
 		    You must have TSC for this.
 
+--enable-arm-mach   Select ARM machine for the	     none
+		    current build tree, valid
+		    values are:
+		    - at91rm9200
+		    - at91sam926x
+		    - integrator
+ 		    - ixp4xx
+                    - pxa
+                    - s3c2410
+                    - sa1100
+		    Passing this option is 
+		    mandatory when compiling 
+		    Xenomai for ARM
+
 --enable-arm-arch   Define version of the target     strong,"4"
-                    ARM core architecture
+                    ARM core architecture. Using
+                    this option is only necessary
+		    if enable-arm-mach is 
+		    integrator.
 
 --enable-arm-sa1100 Enable SA1100 specific           strong,disabled
                     workarounds
 
 --enable-arm-eabi   Enable ARM EABI interface        weak,disabled
+
+--enable-arm-tsc    Enable ARM TSC emulation	     strong,disabled
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
@@ -365,3 +384,20 @@ $ make install
 When "make install" is finished, you should find the patched kernel installed
 in /boot, its module under /lib/modules, and Xenomai user-space libraries
 and tools under /usr/xenomai.
+
+2.6 Building for ARM
+--------------------
+
+If the ARM cross-compiler is called arm-linux-gcc and compiling for a
+CSB637 board (AT91RM9200 based), a typical compilation will look like:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
+  --adeos=$xenomai_root/ksrc/arch/arm/patches/adeos-ipipe-2.6.20-arm-* \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=arm CROSS_COMPILE=arm-linux- O=$build_root csb637_defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-linux- O=$build_root bzImage modules
+# [manually install the kernel image, system map and modules to the proper location]
+$ cd $build_root
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=arm-linux --enable-arm-mach=at91rm9200 --enable-arm-tsc
+$ make DESTDIR=$staging_dir install
