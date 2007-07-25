@@ -1,3 +1,7 @@
+2007-07-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* RELEASE: Xenomai 2.3.3 (Summer Song)
+
 2007-07-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-00, powerpc/
