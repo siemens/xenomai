@@ -289,7 +289,7 @@ void xntimer_tick_aperiodic(void)
 		timer = aplink2timer(holder);
 
 		if ((xnsticks_t) (xntimerh_date(&timer->aplink) - now)
-		    > nklatency)
+		    > (xnsticks_t)nklatency)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
 			break;
