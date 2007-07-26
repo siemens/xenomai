@@ -152,9 +152,17 @@ int __native_task_pkg_init(void)
 void __native_task_pkg_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-	while ((holder = getheadq(&__xeno_task_q)) != NULL)
-		rt_task_delete(link2rtask(holder));
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&__xeno_task_q)) != NULL) {
+		RT_TASK *task = link2rtask(holder);
+		xnpod_abort_thread(&task->thread_base);
+		xnlock_sync_irq(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__task_delete_hook);
 }

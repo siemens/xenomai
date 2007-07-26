@@ -66,9 +66,17 @@ int uitask_init(void)
 void uitask_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-	while ((holder = getheadq(&uitaskq)) != NULL)
-		del_tsk(link2uitask(holder)->id);
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&uitaskq)) != NULL) {
+		uitask_t *task = link2uitask(holder);
+		xnpod_abort_thread(&task->threadbase);
+		xnlock_sync_irq(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, uitask_delete_hook);
 	xnmap_delete(ui_task_idmap);
