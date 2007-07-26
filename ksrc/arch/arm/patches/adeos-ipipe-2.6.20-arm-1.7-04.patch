@@ -1,3 +1,19 @@
+diff --git a/.gitignore b/.gitignore
+index 060a71d..0d24dce 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -15,6 +15,9 @@
+ *.i
+ *.lst
+ *.symtypes
++*~
++*.orig
++*.rej
+ 
+ #
+ # Top-level generic files
+diff --git a/Makefile b/Makefile
+index 7e2750f..055ab06 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -490,6 +490,10 @@ endif
@@ -1244,7 +1260,7 @@ index a92e9a4..db25e51 100644
  
  void __init at91rm9200_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91rm9200/at91rm9200_time.c b/arch/arm/mach-at91rm9200/at91rm9200_time.c
-index b999e19..f751bd5 100644
+index b999e19..7b2d711 100644
 --- a/arch/arm/mach-at91rm9200/at91rm9200_time.c
 +++ b/arch/arm/mach-at91rm9200/at91rm9200_time.c
 @@ -34,6 +34,62 @@
@@ -1328,7 +1344,7 @@ index b999e19..f751bd5 100644
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -144,3 +202,238 @@ struct sys_timer at91rm9200_timer = {
+@@ -144,3 +202,242 @@ struct sys_timer at91rm9200_timer = {
  	.resume		= at91rm9200_timer_reset,
  };
  
@@ -1514,6 +1530,10 @@ index b999e19..f751bd5 100644
 +{
 +	unsigned long v;
 +	
++	/* Disable all timer interrupts */
++	at91_sys_write(AT91_ST_IDR, AT91_ST_PITS | AT91_ST_WDOVF | AT91_ST_RTTINC | AT91_ST_ALMS);
++	(void) at91_sys_read(AT91_ST_SR);	/* Clear any pending interrupts */
++
 +	if (clk_get_rate(clk_get(NULL, "mck")) != CONFIG_IPIPE_AT91_MCK)
 +		at91rm9200_timer_irq.handler = &at91rm9200_bad_freq;
 +
@@ -1706,7 +1726,7 @@ index d242bb8..038eafe 100644
  
  void __init at91sam9261_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91rm9200/at91sam926x_time.c b/arch/arm/mach-at91rm9200/at91sam926x_time.c
-index 99df5f6..e4c4440 100644
+index 99df5f6..100a035 100644
 --- a/arch/arm/mach-at91rm9200/at91sam926x_time.c
 +++ b/arch/arm/mach-at91rm9200/at91sam926x_time.c
 @@ -22,10 +22,87 @@
@@ -1797,7 +1817,7 @@ index 99df5f6..e4c4440 100644
  /*
   * Returns number of microseconds since last timer interrupt.  Note that interrupts
   * will have been disabled by do_gettimeofday()
-@@ -112,3 +189,238 @@ struct sys_timer at91sam926x_timer = {
+@@ -112,3 +189,244 @@ struct sys_timer at91sam926x_timer = {
  	.resume		= at91sam926x_timer_reset,
  };
  
@@ -1983,6 +2003,12 @@ index 99df5f6..e4c4440 100644
 +{
 +	unsigned long v;
 +	
++	/* Disable timer */
++	at91_sys_write(AT91_PIT_MR, 0);
++
++	/* Clear any pending interrupts */
++	(void) at91_sys_read(AT91_PIT_PIVR);
++
 +	if (clk_get_rate(clk_get(NULL, "mck")) != CONFIG_IPIPE_AT91_MCK)
 +		at91sam926x_timer_irq.handler = &at91sam926x_bad_freq;
 +
@@ -2931,14 +2957,14 @@ index ee2beb4..429ed20 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-s3c2410/irq.c b/arch/arm/mach-s3c2410/irq.c
-index 3c0ed78..77c79e1 100644
+index 3c0ed78..a677f4c 100644
 --- a/arch/arm/mach-s3c2410/irq.c
 +++ b/arch/arm/mach-s3c2410/irq.c
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
   *	Ben Dooks <ben@simtec.co.uk>
   *
-+ * Copyright (C) 2006 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
++ * Copyright (C) 2006, 2007 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
 + *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -2978,7 +3004,7 @@ index 3c0ed78..77c79e1 100644
  /* wakeup irq control */
  
  #ifdef CONFIG_PM
-@@ -653,6 +667,79 @@ int s3c24xx_irq_resume(struct sys_device *dev)
+@@ -653,6 +667,107 @@ int s3c24xx_irq_resume(struct sys_device *dev)
  #define s3c24xx_irq_resume  NULL
  #endif
  
@@ -3016,6 +3042,26 @@ index 3c0ed78..77c79e1 100644
 +	}
 +}
 +
++static void __ipipe_s3c_irq_demux_extint(unsigned long mask,
++						struct pt_regs *regs)
++{
++	unsigned int irq;
++	unsigned long eintpnd = __raw_readl(S3C24XX_EINTPEND);
++	unsigned long eintmsk = __raw_readl(S3C24XX_EINTMASK);
++
++	eintpnd &= ~eintmsk;
++	eintpnd &= mask;
++
++	while (eintpnd) {
++		irq = __ffs(eintpnd);
++		eintpnd &= ~(1<<irq);
++
++		irq += (IRQ_EINT4 - 4);
++
++		__ipipe_handle_irq(irq, regs);
++	}
++}
++
 +void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
 +{
 +	unsigned int subsrc, submsk;
@@ -3041,14 +3087,22 @@ index 3c0ed78..77c79e1 100644
 +	case IRQ_ADCPARENT:
 +		__ipipe_s3c_irq_demux_adc(subsrc, regs);
 +		break;
++	case IRQ_EINT4t7:
++		__ipipe_s3c_irq_demux_extint(0xff, regs);
++		break;
++	case IRQ_EINT8t23:
++		__ipipe_s3c_irq_demux_extint(0xffffff00, regs);
++		break;
 +#ifdef CONFIG_CPU_S3C2440
 +	case IRQ_WDT:
 +		__ipipe_s3c_irq_demux_wdtac97(subsrc, regs);
 +		break;
++#endif /* CONFIG_CPU_S3C2440 */
++#ifdef CONFIG_CPU_S3C244X
 +	case IRQ_CAM:
 +		__ipipe_s3c_irq_demux_cam(subsrc, regs);
 +		break;
-+#endif /* CONFIG_CPU_S3C2440 */
++#endif /* CONFIG_CPU_S3C244X */
 +	}
 +
 +	desc_unused->chip->unmask(irq);
@@ -3059,14 +3113,14 @@ index 3c0ed78..77c79e1 100644
   *
   * Initialise S3C2410 IRQ system
 diff --git a/arch/arm/mach-s3c2410/s3c2440-irq.c b/arch/arm/mach-s3c2410/s3c2440-irq.c
-index 1ba19b2..da74c73 100644
+index 1ba19b2..87e96e1 100644
 --- a/arch/arm/mach-s3c2410/s3c2440-irq.c
 +++ b/arch/arm/mach-s3c2410/s3c2440-irq.c
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
   *	Ben Dooks <ben@simtec.co.uk>
   *
-+ * Copyright (C) 2006 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
++ * Copyright (C) 2006, 2007 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
 + *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -3079,7 +3133,7 @@ index 1ba19b2..da74c73 100644
  
  #include <asm/hardware.h>
  #include <asm/irq.h>
-@@ -96,6 +99,34 @@ static struct irq_chip s3c_irq_wdtac97 = {
+@@ -96,6 +99,21 @@ static struct irq_chip s3c_irq_wdtac97 = {
  	.ack	    = s3c_irq_wdtac97_ack,
  };
  
@@ -3096,7 +3150,29 @@ index 1ba19b2..da74c73 100644
 +			__ipipe_handle_irq(IRQ_S3C2440_AC97, regs);
 +	}
 +}
++#endif /* CONFIG_IPIPE */
 +
+ static int s3c2440_irq_add(struct sys_device *sysdev)
+ {
+ 	unsigned int irqno;
+diff --git a/arch/arm/mach-s3c2410/s3c244x-irq.c b/arch/arm/mach-s3c2410/s3c244x-irq.c
+index ede9463..73e6779 100644
+--- a/arch/arm/mach-s3c2410/s3c244x-irq.c
++++ b/arch/arm/mach-s3c2410/s3c244x-irq.c
+@@ -3,6 +3,8 @@
+  * Copyright (c) 2003,2004 Simtec Electronics
+  *	Ben Dooks <ben@simtec.co.uk>
+  *
++ * Copyright (C) 2007 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
+@@ -95,6 +97,21 @@ static struct irq_chip s3c_irq_cam = {
+ 	.ack	    = s3c_irq_cam_ack,
+ };
+ 
++#ifdef CONFIG_IPIPE
 +void __ipipe_s3c_irq_demux_cam(unsigned int subsrc, struct pt_regs *regs)
 +{
 +	subsrc >>= 11;
@@ -3111,18 +3187,18 @@ index 1ba19b2..da74c73 100644
 +}
 +#endif /* CONFIG_IPIPE */
 +
- static int s3c2440_irq_add(struct sys_device *sysdev)
+ static int s3c244x_irq_add(struct sys_device *sysdev)
  {
  	unsigned int irqno;
 diff --git a/arch/arm/mach-s3c2410/time.c b/arch/arm/mach-s3c2410/time.c
-index 9910bf0..e7b3d00 100644
+index 9910bf0..622ed34 100644
 --- a/arch/arm/mach-s3c2410/time.c
 +++ b/arch/arm/mach-s3c2410/time.c
 @@ -3,6 +3,8 @@
   * Copyright (C) 2003-2005 Simtec Electronics
   *	Ben Dooks, <ben@simtec.co.uk>
   *
-+ * Copyright (C) 2006 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
++ * Copyright (C) 2006, 2007 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
 + *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License as published by
@@ -3143,7 +3219,7 @@ index 9910bf0..e7b3d00 100644
  static unsigned long timer_usec_ticks;
  
  #define TIMER_USEC_SHIFT 16
-@@ -55,6 +57,29 @@ static unsigned long timer_usec_ticks;
+@@ -55,6 +57,34 @@ static unsigned long timer_usec_ticks;
   * Original patch by Dimitry Andric, updated by Ben Dooks
  */
  
@@ -3152,6 +3228,11 @@ index 9910bf0..e7b3d00 100644
 +static unsigned long timer_lxlost = 0;
 +
 +#ifdef CONFIG_IPIPE
++
++#ifdef CONFIG_NO_IDLE_HZ
++#error "dynamic tick timer not yet supported with IPIPE"
++#endif /* CONFIG_NO_IDLE_HZ */
++
 +unsigned int __ipipe_mach_ticks_per_jiffy;
 +EXPORT_SYMBOL(__ipipe_mach_ticks_per_jiffy);
 +
@@ -3173,7 +3254,7 @@ index 9910bf0..e7b3d00 100644
  
  /* timer_mask_usec_ticks
   *
-@@ -85,44 +110,46 @@ static inline unsigned long timer_ticks_to_usec(unsigned long ticks)
+@@ -85,44 +115,46 @@ static inline unsigned long timer_ticks_to_usec(unsigned long ticks)
  	return res >> TIMER_USEC_SHIFT;
  }
  
@@ -3248,7 +3329,7 @@ index 9910bf0..e7b3d00 100644
  
  /*
   * IRQ handler for the timer
-@@ -131,6 +158,14 @@ static irqreturn_t
+@@ -131,6 +163,14 @@ static irqreturn_t
  s3c2410_timer_interrupt(int irq, void *dev_id)
  {
  	write_seqlock(&xtime_lock);
@@ -3263,7 +3344,7 @@ index 9910bf0..e7b3d00 100644
  	timer_tick();
  	write_sequnlock(&xtime_lock);
  	return IRQ_HANDLED;
-@@ -149,10 +184,10 @@ static struct irqaction s3c2410_timer_irq = {
+@@ -149,10 +189,10 @@ static struct irqaction s3c2410_timer_irq = {
  	machine_is_osiris() )
  
  /*
@@ -3277,7 +3358,7 @@ index 9910bf0..e7b3d00 100644
   */
  static void s3c2410_timer_setup (void)
  {
-@@ -160,6 +195,7 @@ static void s3c2410_timer_setup (void)
+@@ -160,6 +200,7 @@ static void s3c2410_timer_setup (void)
  	unsigned long tcnt;
  	unsigned long tcfg1;
  	unsigned long tcfg0;
@@ -3285,7 +3366,7 @@ index 9910bf0..e7b3d00 100644
  
  	tcnt = 0xffff;  /* default value for tcnt */
  
-@@ -176,8 +212,8 @@ static void s3c2410_timer_setup (void)
+@@ -176,8 +217,8 @@ static void s3c2410_timer_setup (void)
  		timer_usec_ticks = timer_mask_usec_ticks(1, 12000000);
  		tcnt = 12000000 / HZ;
  
@@ -3296,7 +3377,7 @@ index 9910bf0..e7b3d00 100644
  	} else {
  		unsigned long pclk;
  		struct clk *clk;
-@@ -205,8 +241,8 @@ static void s3c2410_timer_setup (void)
+@@ -205,8 +246,8 @@ static void s3c2410_timer_setup (void)
  
  		timer_usec_ticks = timer_mask_usec_ticks(6, pclk);
  
@@ -3307,7 +3388,7 @@ index 9910bf0..e7b3d00 100644
  
  		tcfg0 &= ~S3C2410_TCFG_PRESCALER1_MASK;
  		tcfg0 |= ((6 - 1) / 2) << S3C2410_TCFG_PRESCALER1_SHIFT;
-@@ -214,6 +250,10 @@ static void s3c2410_timer_setup (void)
+@@ -214,6 +255,10 @@ static void s3c2410_timer_setup (void)
  		tcnt = (pclk / 6) / HZ;
  	}
  
@@ -3318,7 +3399,7 @@ index 9910bf0..e7b3d00 100644
  	/* timers reload after counting zero, so reduce the count by 1 */
  
  	tcnt--;
-@@ -230,23 +270,37 @@ static void s3c2410_timer_setup (void)
+@@ -230,23 +275,37 @@ static void s3c2410_timer_setup (void)
  	__raw_writel(tcfg1, S3C2410_TCFG1);
  	__raw_writel(tcfg0, S3C2410_TCFG0);
  
@@ -3367,7 +3448,7 @@ index 9910bf0..e7b3d00 100644
  }
  
  static void __init s3c2410_timer_init (void)
-@@ -260,3 +314,58 @@ struct sys_timer s3c24xx_timer = {
+@@ -260,3 +319,58 @@ struct sys_timer s3c24xx_timer = {
  	.offset		= s3c2410_gettimeoffset,
  	.resume		= s3c2410_timer_setup
  };
@@ -4074,19 +4155,19 @@ index 67ed436..77772a3 100644
  #define PXA_LAST_GPIO	84
  #elif defined(CONFIG_PXA27x)
 diff --git a/include/asm-arm/arch-s3c2410/irqs.h b/include/asm-arm/arch-s3c2410/irqs.h
-index 4b7cff4..717be01 100644
+index 4b7cff4..988406d 100644
 --- a/include/asm-arm/arch-s3c2410/irqs.h
 +++ b/include/asm-arm/arch-s3c2410/irqs.h
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003-2005 Simtec Electronics
   *   Ben Dooks <ben@simtec.co.uk>
   *
-+ * Copyright (C) 2006 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
++ * Copyright (C) 2006, 2007 Sebastian Smolorz <ssmolorz@emlix.com>, emlix GmbH
 + *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
   * published by the Free Software Foundation.
-@@ -119,4 +121,26 @@
+@@ -119,4 +121,38 @@
  #define NR_IRQS (IRQ_S3C2440_AC97+1)
  
  
@@ -4099,13 +4180,25 @@ index 4b7cff4..717be01 100644
 +				 __ipipe_irqbit(IRQ_UART2)	|	\
 +				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
 +				 __ipipe_irqbit(IRQ_WDT)	|	\
-+				 __ipipe_irqbit(IRQ_CAM))
-+#else /* !CONFIG_CPU_S3C2440 */
++				 __ipipe_irqbit(IRQ_CAM)	|	\
++				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
++				 __ipipe_irqbit(IRQ_EINT8t23))
++#elif defined CONFIG_CPU_S3C244X
 +#define __ipipe_muxed_irqmask	(__ipipe_irqbit(IRQ_UART0)	|	\
 +				 __ipipe_irqbit(IRQ_UART1)	|	\
 +				 __ipipe_irqbit(IRQ_UART2)	|	\
-+				 __ipipe_irqbit(IRQ_ADCPARENT))
-+#endif /* CONFIG_CPU_S3C2440 */
++				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
++				 __ipipe_irqbit(IRQ_CAM)	|	\
++				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
++				 __ipipe_irqbit(IRQ_EINT8t23))
++#else
++#define __ipipe_muxed_irqmask	(__ipipe_irqbit(IRQ_UART0)	|	\
++				 __ipipe_irqbit(IRQ_UART1)	|	\
++				 __ipipe_irqbit(IRQ_UART2)	|	\
++				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
++				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
++				 __ipipe_irqbit(IRQ_EINT8t23))
++#endif
 +
 +#define __ipipe_mach_irq_mux_p(irq)	((irq) <= IRQ_ADCPARENT  &&	\
 +					 (__ipipe_irqbit(irq) &		\
@@ -4277,7 +4370,7 @@ index b41831b..46b169e 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..b3d62bf
+index 0000000..9e4f260
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,231 @@
@@ -4311,10 +4404,10 @@ index 0000000..b3d62bf
 +#include <asm/irq.h>
 +#include <asm/percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-03"
++#define IPIPE_ARCH_STRING	"1.7-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 25 for 32bits arch. */
@@ -4513,7 +4606,7 @@ index 0000000..b3d62bf
 +
 +#endif	/* !__ARM_IPIPE_H */
 diff --git a/include/asm-arm/irqflags.h b/include/asm-arm/irqflags.h
-index 6d09974..d0534b9 100644
+index 6d09974..f627749 100644
 --- a/include/asm-arm/irqflags.h
 +++ b/include/asm-arm/irqflags.h
 @@ -10,30 +10,30 @@
@@ -4625,7 +4718,7 @@ index 6d09974..d0534b9 100644
  	:							\
  	: "r" (x)						\
  	: "memory", "cc")
-@@ -128,5 +128,90 @@
+@@ -128,5 +128,99 @@
  	(int)((flags) & PSR_I_BIT);	\
  })
  
@@ -4635,7 +4728,20 @@ index 6d09974..d0534b9 100644
 +	local_save_flags_hw(flags);		\
 +	raw_irqs_disabled_flags(flags);		\
 +})
-+			
++
++static inline unsigned long raw_mangle_irq_bits(int virt, unsigned long real)
++{
++	/* Merge virtual and real interrupt mask bits into a single
++	   32bit word. */
++	return real | (virt << 8);
++}
++
++static inline int raw_demangle_irq_bits(unsigned long *x)
++{
++	int virt = (*x & (1 << 8)) != 0;
++	*x &= ~(1L << 8);
++	return virt;
++}
 +
 +#ifdef CONFIG_IPIPE
 +
@@ -4650,8 +4756,6 @@ index 6d09974..d0534b9 100644
 +#define local_fiq_disable()		__ipipe_stall_root()
 +#define raw_local_save_flags(flags)	((flags) = __ipipe_test_root() << 7)
 +#define raw_local_irq_restore(flags)	__ipipe_restore_root(flags & (1 << 7))
-+
-+#define raw_irqs_disabled()		__ipipe_test_root()
 +
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +
@@ -4671,13 +4775,13 @@ index 6d09974..d0534b9 100644
 +} while (0)
 +#define local_irq_save_hw(x) do { \
 +	local_save_flags_hw(x); \
-+	if (raw_irqs_disabled_flags(x)) { \
++	if (!raw_irqs_disabled_flags(x)) { \
 +		local_irq_disable_hw_notrace(); \
 +		ipipe_trace_begin(0x80000001); \
 +	} \
 +} while (0)
 +#define local_irq_restore_hw(x) do { \
-+	if (raw_irqs_disabled_flags(x)) \
++	if (!raw_irqs_disabled_flags(x)) \
 +		ipipe_trace_end(0x80000001); \
 +	local_irq_restore_hw_notrace(x); \
 +} while (0)
@@ -4709,8 +4813,6 @@ index 6d09974..d0534b9 100644
 +#define local_fiq_enable_hw()		local_fiq_enable_hw_notrace()
 +#define local_fiq_disable_hw()		local_fiq_disable_hw_notrace()
 +#define local_irq_restore_hw(flags)	local_irq_restore_hw_notrace(flags)
-+
-+#define irqs_disabled()		irqs_disabled_hw()
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -5851,10 +5953,10 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..513471e 100644
+index 94b767d..57517c3 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
-@@ -172,7 +172,97 @@ do {								\
+@@ -172,7 +172,90 @@ do {								\
  #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
  #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
  
@@ -5882,8 +5984,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQ(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_disable_hw();					\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_lock_irq((spinlock_t *)(lock));			\
 +} while (0)
@@ -5891,8 +5992,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQ(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_enable_hw();					\
++		__ipipe_spin_unlock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_unlock_irq((spinlock_t *)(lock));			\
 +} while (0)
@@ -5900,8 +6000,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQ_RAW(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_disable_hw();					\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		local_irq_disable();					\
 +		__raw_spin_lock(&((spinlock_t *)(lock))->raw_lock);	\
@@ -5910,8 +6009,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQ_RAW(lock)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_enable_hw();				\
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		__raw_spin_unlock(&((spinlock_t *)(lock))->raw_lock);	\
 +		local_irq_enable();					\
@@ -5923,8 +6021,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQSAVE(lock, flags)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_save_hw(flags);				\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		(flags) = __ipipe_spin_lock_irqsave(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		flags = _spin_lock_irqsave((spinlock_t *)(lock));	\
 +	else __bad_spinlock_type();					\
@@ -5933,8 +6030,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQSAVE(lock, flags)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_save_hw(flags);				\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		(flags) = __ipipe_spin_lock_irqsave(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_lock_irqsave((spinlock_t *)(lock), flags);	\
 +} while (0)
@@ -5943,8 +6039,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQRESTORE(lock, flags)			\
 +	do {								\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_restore_hw(flags);				\
++		__ipipe_spin_unlock_irqrestore(&((__ipipe_spinlock_t *)(lock))->__raw_lock, flags); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_unlock_irqrestore((spinlock_t *)(lock), flags);	\
 +} while (0)
@@ -5953,7 +6048,7 @@ index 94b767d..513471e 100644
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  # define spin_lock_nested(lock, subclass) _spin_lock_nested(lock, subclass)
-@@ -185,7 +275,7 @@ do {								\
+@@ -185,7 +268,7 @@ do {								\
  
  #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
  
@@ -5962,7 +6057,7 @@ index 94b767d..513471e 100644
  #define read_lock_irqsave(lock, flags)	flags = _read_lock_irqsave(lock)
  #define write_lock_irqsave(lock, flags)	flags = _write_lock_irqsave(lock)
  
-@@ -199,7 +289,7 @@ do {								\
+@@ -199,7 +282,7 @@ do {								\
  
  #else
  
@@ -5971,7 +6066,7 @@ index 94b767d..513471e 100644
  #define read_lock_irqsave(lock, flags)	_read_lock_irqsave(lock, flags)
  #define write_lock_irqsave(lock, flags)	_write_lock_irqsave(lock, flags)
  #define spin_lock_irqsave_nested(lock, flags, subclass)	\
-@@ -207,7 +297,7 @@ do {								\
+@@ -207,7 +290,7 @@ do {								\
  
  #endif
  
@@ -5980,7 +6075,7 @@ index 94b767d..513471e 100644
  #define spin_lock_bh(lock)		_spin_lock_bh(lock)
  
  #define read_lock_irq(lock)		_read_lock_irq(lock)
-@@ -221,26 +311,25 @@ do {								\
+@@ -221,26 +304,25 @@ do {								\
   */
  #if defined(CONFIG_DEBUG_SPINLOCK) || defined(CONFIG_PREEMPT) || \
  	!defined(CONFIG_SMP)
@@ -6015,11 +6110,16 @@ index 94b767d..513471e 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -287,4 +376,16 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -287,4 +369,25 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
 +#ifdef CONFIG_IPIPE
++void fastcall __ipipe_spin_lock_irq(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irq(raw_spinlock_t *lock);
++unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
++					     unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock,flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -6029,6 +6129,10 @@ index 94b767d..513471e 100644
 +	do { (void)(flags); spin_lock(lock); } while(0)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
 +	spin_unlock(lock)
++#define __ipipe_spin_lock_irq(lock)		do { } while(0)
++#define __ipipe_spin_unlock_irq(lock)		do { } while(0)
++#define __ipipe_spin_lock_irqsave(lock)		0
++#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while(0)
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
@@ -6289,10 +6393,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..2e7463d
+index 0000000..6321902
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1445 @@
+@@ -0,0 +1,1502 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -6546,6 +6650,59 @@ index 0000000..2e7463d
 +#endif	/* CONFIG_SMP */
 +
 +	return s;
++}
++
++void fastcall __ipipe_spin_lock_irq(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	local_irq_disable_hw();
++	__raw_spin_lock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++}
++
++void fastcall __ipipe_spin_unlock_irq(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	__raw_spin_unlock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_enable_hw();
++}
++
++unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++	unsigned long flags;
++	int s;
++
++	local_irq_save_hw(flags);
++	__raw_spin_lock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	s = __test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++
++	return raw_mangle_irq_bits(s, flags);
++}
++
++void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	__raw_spin_unlock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	if (!raw_demangle_irq_bits(&x))
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_restore_hw(x);
 +}
 +
 +/*
@@ -7725,6 +7882,10 @@ index 0000000..2e7463d
 +EXPORT_SYMBOL(__ipipe_test_root);
 +EXPORT_SYMBOL(__ipipe_test_and_stall_root);
 +#endif /* CONFIG_SMP */
++EXPORT_SYMBOL(__ipipe_spin_lock_irq);
++EXPORT_SYMBOL(__ipipe_spin_unlock_irq);
++EXPORT_SYMBOL(__ipipe_spin_lock_irqsave);
++EXPORT_SYMBOL(__ipipe_spin_unlock_irqrestore);
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
