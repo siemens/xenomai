@@ -4,6 +4,8 @@
 
 2007-07-26  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-01.
+
 	* ksrc/skins: Sanitize thread cleanup routines.
 
 	* ksrc/nucleus/pod.c (xnpod_abort_thread): Add forced thread
