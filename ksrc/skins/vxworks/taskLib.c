@@ -54,9 +54,17 @@ void wind_task_init(void)
 void wind_task_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-	while ((holder = getheadq(&wind_tasks_q)) != NULL)
-		taskDeleteForce((TASK_ID) link2wind_task(holder));
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&wind_tasks_q)) != NULL) {
+		WIND_TCB *pTcb = link2wind_task(holder);
+		xnpod_abort_thread(&pTcb->threadbase);
+		xnlock_sync_irq(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, wind_task_delete_hook);
 }

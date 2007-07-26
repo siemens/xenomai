@@ -80,9 +80,17 @@ void psostask_init(u_long rrperiod)
 void psostask_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-	while ((holder = getheadq(&psostaskq)) != NULL)
-		t_delete((u_long)link2psostask(holder));
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&psostaskq)) != NULL) {
+		psostask_t *task = link2psostask(holder);
+		xnpod_abort_thread(&task->threadbase);
+		xnlock_sync_irq(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, psostask_delete_hook);
 }

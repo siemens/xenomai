@@ -81,9 +81,16 @@ int vrtxtask_init(u_long stacksize)
 void vrtxtask_cleanup(void)
 {
 	xnholder_t *holder;
+	spl_t s;
 
-	while ((holder = getheadq(&vrtx_task_q)) != NULL)
-		xnpod_delete_thread(&link2vrtxtask(holder)->threadbase);
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&vrtx_task_q)) != NULL) {
+		xnpod_abort_thread(&link2vrtxtask(holder)->threadbase);
+		xnlock_sync_irq(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, vrtxtask_delete_hook);
 	xnmap_delete(vrtx_task_idmap);
