@@ -56,7 +56,7 @@ static inline xnholder_t *gettailq (xnqueue_t *qslot) {
 }
 
 /* 30 seconds */
-#define test_timeout 30
+#define test_timeout 400
 
 static inline int strings_differ(const char *str1, const char *str2)
 {
@@ -182,6 +182,7 @@ void xntest_check_seq(int next, ...)
         }
         next = va_arg(args, int);
     }
+
     xnlock_put_irqrestore(&test_lock, s);
     va_end(args);
 }
