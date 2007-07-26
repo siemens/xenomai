@@ -1,3 +1,8 @@
+2007-07-26  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* configure.in: separate at91rm9200 (armv4) from at91sam926x
+	(armv5).
+
 2007-07-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins: Sanitize thread cleanup routines.
