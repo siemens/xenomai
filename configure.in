@@ -172,9 +172,13 @@ if test $XENO_TARGET_ARCH = arm ; then
   AC_MSG_CHECKING(for ARM machine)
   AC_ARG_ENABLE(arm-mach,
 	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
-compiling. Valid machines are at91, integrator, ixp4xx, pxa, s3c2410, sa1100.]),
+compiling. Valid machines are at91rm9200, at91sam926x, integrator, ixp4xx, pxa,
+s3c2410, sa1100.]),
 	[case "$enableval" in
-	at91)   	arch=4
+	at91rm9200)   	arch=4
+	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	at91sam926x)   	arch=5
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	integrator) 	arch=choose;;
