@@ -386,6 +386,12 @@ static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
 
 #endif /* !CONFIG_SMP */
 
+#define xnlock_sync_irq(lock, x)			\
+	do {						\
+		xnlock_put_irqrestore(lock, x);		\
+		xnlock_get_irqsave(lock, x);		\
+	} while(0)
+
 static inline int xnarch_remap_vm_page(struct vm_area_struct *vma,
 				       unsigned long from,
 				       unsigned long to)

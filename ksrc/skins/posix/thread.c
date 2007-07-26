@@ -703,6 +703,9 @@ void pse51_threadq_cleanup(pse51_kqueues_t *q)
 	while ((holder = getheadq(&q->threadq)) != NULL) {
 		pthread_t thread = link2pthread(holder);
 
+		/* Raise the abort condition (see xnpod_abort_thread()). */
+		xnthread_set_state(&thread->threadbase, XNDORMANT);
+
 		if (pse51_obj_active
 		    (thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
 			/* Remaining running thread. */
