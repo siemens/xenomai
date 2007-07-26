@@ -16,10 +16,12 @@ guides at the top of the Xenomai tree for more information.
 
 -- supported boards
 
-o Integrator/CP ARM 1136
-o PXA
-o SA1100-based
+o ARM Integrator/CP ARM 1136
+o Atmel AT91 (AT91RM9200 and AT91SAM926x)
 o Freescale iMX21/csb535fs [see imx21/ directory]
-o Atmel AT91 (tested on CSB637) [see at91/ directory]
+o Intel IXP4XX based
+o Intel PXA based
+o Intel SA1100-based
+o Samsung S3C2410
 
 [1] http://www.gna.org/projects/adeos/
