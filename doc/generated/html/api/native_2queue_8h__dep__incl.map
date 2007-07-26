@@ -1,4 +1,4 @@
 base referer
-rect $skins_2native_2module_8c.html 233,6 433,32
-rect $ksrc_2skins_2native_2queue_8c.html 237,56 429,83
-rect $native_2syscall_8c.html 236,107 431,134
+rect $skins_2native_2module_8c.html 210,8 389,32
+rect $ksrc_2skins_2native_2queue_8c.html 214,56 385,80
+rect $native_2syscall_8c.html 213,104 386,128
