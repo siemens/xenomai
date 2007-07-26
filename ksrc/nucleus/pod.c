@@ -1289,7 +1289,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	if (xnthread_user_task(thread) != NULL &&
 	    !xnthread_test_state(thread, XNDORMANT) &&
-	    thread != sched->runthread) {
+	    !xnpod_current_p(thread)) {
 		xnshadow_send_sig(thread, SIGKILL, 1);
 		goto unlock_and_exit;
 	}
