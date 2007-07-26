@@ -423,6 +423,8 @@ void xnpod_restart_thread(xnthread_t *thread);
 
 void xnpod_delete_thread(xnthread_t *thread);
 
+void xnpod_abort_thread(xnthread_t *thread);
+
 xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 				xnflags_t clrmask, xnflags_t setmask);
 
