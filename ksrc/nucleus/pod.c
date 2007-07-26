@@ -1079,6 +1079,12 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
  *
  * @param thread The descriptor address of the terminated thread.
  *
+ * The target thread's resources may not be immediately removed if
+ * this is an active shadow thread running in user-space. In such a
+ * case, the mated Linux task is sent a termination signal instead,
+ * and the actual deletion is deferred until the task exit event is
+ * called.
+ *
  * The DELETE hooks are called on behalf of the calling context (if
  * any). The information stored in the thread control block remains
  * valid until all hooks have been called.
@@ -1214,6 +1220,39 @@ void xnpod_delete_thread(xnthread_t *thread)
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
+}
+
+/*! 
+ * \fn void xnpod_abort_thread(xnthread_t *thread)
+ *
+ * \brief Abort a thread.
+ *
+ * Unconditionally terminates a thread and releases all the nucleus
+ * resources it currently holds, regardless of whether the target
+ * thread is currently active in kernel or user-space.
+ * xnpod_abort_thread() should be reserved for use by skin cleanup
+ * routines; xnpod_delete_thread() should be preferred as the common
+ * method for removing threads from a running system.
+ *
+ * @param thread The descriptor address of the terminated thread.
+ *
+ * This service forces a call to xnpod_delete_thread() for the target
+ * thread.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: possible if the current thread self-deletes.
+ */
+void xnpod_abort_thread(xnthread_t *thread)
+{
+	xnthread_set_state(thread, XNDORMANT);
+	xnpod_delete_thread(thread);
 }
 
 /*!
@@ -3290,6 +3329,7 @@ EXPORT_SYMBOL(xnpod_add_hook);
 EXPORT_SYMBOL(xnpod_check_context);
 EXPORT_SYMBOL(xnpod_deactivate_rr);
 EXPORT_SYMBOL(xnpod_delete_thread);
+EXPORT_SYMBOL(xnpod_abort_thread);
 EXPORT_SYMBOL(xnpod_fatal_helper);
 EXPORT_SYMBOL(xnpod_init);
 EXPORT_SYMBOL(xnpod_init_thread);
