@@ -1,5 +1,7 @@
 2007-07-26  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-04.
+
 	* ksrc/arch/arm/patches: Replace the imx21 directory with a unique
 	patch. Remove the at91 directory completely.
 
