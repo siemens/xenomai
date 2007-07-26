@@ -1379,8 +1379,13 @@ void xnpod_delete_thread(xnthread_t *thread)
  */
 void xnpod_abort_thread(xnthread_t *thread)
 {
-	xnthread_set_state(thread, XNDORMANT);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	if (!xnpod_current_p(thread))
+		xnpod_suspend_thread(thread, XNDORMANT, XN_INFINITE, NULL);
 	xnpod_delete_thread(thread);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /*!
