@@ -14,7 +14,7 @@ v2.4 and v2.6 Linux kernel series, for which the appropriate Adeos
 patches exist. The v2.4 kernel tree of reference for Xenomai/PowerPC
 is available from Denx's public CVS tree as the "linuxppc_2_4_devel"
 branch [2]. For the v2.6 series, Adeos patches are based on releases
-from kernel.org, the, validated against Denx's public git repository
+from kernel.org, then validated against Denx's public git repository
 [3] as well.
 
 As of 2.6.20, Adeos patches are based on the powerpc/ tree, instead of
