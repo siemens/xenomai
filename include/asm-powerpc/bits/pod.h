@@ -82,12 +82,12 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask))
 			cpu_set(smp_processor_id(), mm->cpu_vm_mask);
 
-		if (cur_cpu_spec->cpu_features & CPU_FTR_SLB)
+		if (cpu_has_feature(CPU_FTR_SLB))
 			switch_slb(next, mm);
 		else
 			switch_stab(next, mm);
 
-		flush_tlb_pending();
+		arch_leave_lazy_mmu_mode();
 #else /* !CONFIG_PPC64 */
 		next->thread.pgdir = mm->pgd;
 		get_mmu_context(mm);

@@ -74,30 +74,6 @@ static struct {
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
 #ifdef CONFIG_SMP
-/* the following function is very much alike to the I-pipe tune_timer
- * implementation, but tuned for critical_enter/exit usage
- * 
- * rthal_set_local_timer might come useful with processor hotplug events
- */
-static void rthal_set_local_cpu_timer(void)
-{
-    rthal_declare_cpuid;
-    long ticks;
-
-    rthal_load_cpuid();
-
-    disarm_decr[cpuid] = (__ipipe_decr_ticks != tb_ticks_per_jiffy);
-#ifdef CONFIG_40x
-    /* Enable and set auto-reload. */
-    ticks = __ipipe_decr_ticks;
-    mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE);
-    mtspr(SPRN_PIT, ticks);
-#else /* !CONFIG_40x */
-    ticks = (long)(__ipipe_decr_next[cpuid] - __ipipe_read_timebase());
-    set_dec(ticks > 0 ? ticks : 0);
-#endif /* CONFIG_40x */
-    DBG("rthal_set_local_cpu_timer(%d): %ld\n", cpuid, ticks);
-}
 
 static void rthal_critical_sync(void)
 {
