@@ -32,8 +32,7 @@ typedef struct psossem {
 
     xnholder_t link;		/* Link in psossemq */
 
-#define link2psossem(laddr) \
-((psossem_t *)(((char *)laddr) - (int)(&((psossem_t *)0)->link)))
+#define link2psossem(ln) container_of(ln, psossem_t, link)
 
     char name[XNOBJECT_NAME_LEN]; /* Name of semaphore */
 

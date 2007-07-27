@@ -60,8 +60,8 @@ typedef struct {
 	void *arg;
 	xnholder_t link;
 
-#define link2cleanup_handler(laddr) \
-((cleanup_handler_t *)(((char *)laddr)-(int)(&((cleanup_handler_t *)0)->link)))
+#define link2cleanup_handler(laddr) container_of(laddr, cleanup_handler_t, link)
+
 } cleanup_handler_t;
 
 /**

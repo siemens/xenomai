@@ -24,8 +24,7 @@ typedef struct wind_hook {
 	FUNCPTR function;
 	xnholder_t link;
 
-#define link2wind_hook(laddr)                                           \
-((wind_hook_t *)(((char *)laddr) - (int)(&((wind_hook_t *)0)->link)))
+#define link2wind_hook(ln) container_of(ln, wind_hook_t, link)
 
 } wind_hook_t;
 

@@ -27,8 +27,7 @@ typedef struct vrtxmx {
 
     xnholder_t link;
 
-#define link2vrtxmx(laddr) \
-((vrtxmx_t *)(((char *)laddr) - (int)(&((vrtxmx_t *)0)->link)))
+#define link2vrtxmx(ln) container_of(ln, vrtxmx_t, link)
 
     int mid;
 
