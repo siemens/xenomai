@@ -24,8 +24,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <linux/config.h> 
 #include <asm/processor.h>
+#include <asm/thread_info.h>
 #include <asm/cputable.h>
 #include <asm/ppc_asm.h>
 #include <asm/asm-offsets.h>
