@@ -238,8 +238,7 @@ typedef struct xnhook {
 
     xnholder_t link;
 
-#define link2hook(laddr) \
-((xnhook_t *)(((char *)laddr) - (int)(&((xnhook_t *)0)->link)))
+#define link2hook(ln)		container_of(ln, xnhook_t, link)
 
     void (*routine)(xnthread_t *thread);
 

@@ -63,13 +63,11 @@ struct wind_sem {
 
     xnholder_t link;
 
-#define link2wind_sem(laddr) \
-((wind_sem_t *)(((char *)laddr) - (int)(&((wind_sem_t *)0)->link)))
+#define link2wind_sem(ln) container_of(ln, wind_sem_t, link)
 
     xnsynch_t synchbase;
 
-#define synch2wind_sem(saddr) \
-((wind_sem_t *)(((char *)saddr) - (int)(&((wind_sem_t *)0)->synchbase)))
+#define synch2wind_sem(syncb) container_of(syncb, wind_sem_t, synchbase)
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
@@ -93,8 +91,7 @@ typedef struct wind_msg {
 
     xnholder_t link;
 
-#define link2wind_msg(laddr) \
-((wind_msg_t *)(((char *)laddr) - (int)(&((wind_msg_t *)0)->link)))
+#define link2wind_msg(ln) container_of(ln, wind_msg_t, link)
 
     unsigned int length;
     
@@ -114,8 +111,7 @@ typedef struct wind_msgq {
 
     xnholder_t link;            /* link in wind_msgq_t */
 
-#define link2wind_msgq(laddr) \
-((wind_msgq_t *)(((char *)laddr) - (int)(&((wind_msgq_t *)0)->link)))
+#define link2wind_msgq(ln) container_of(ln, wind_msgq_t, link)
 
     xnsynch_t synchbase;        /* pended readers or writers */
 
@@ -134,8 +130,7 @@ typedef struct wind_wd {
 
     xnholder_t link;
 
-#define link2wind_wd(laddr) \
-((wind_wd_t *)(((char *)laddr) - (int)(&((wind_wd_t *)0)->link)))
+#define link2wind_wd(ln) container_of(ln, wind_wd_t, link)
 
     xntimer_t timerbase;
 

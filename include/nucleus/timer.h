@@ -55,8 +55,7 @@ typedef struct {
     xnticks_t key;
     int prio;
 
-#define link2tlholder(laddr) \
-    ((xntlholder_t *)(((char *)laddr) - offsetof(xntlholder_t, link)))
+#define link2tlholder(ln)	container_of(ln, xntlholder_t, link)
 
 } xntlholder_t;
 #define xntlholder_date(h)      ((h)->key)
@@ -209,14 +208,12 @@ typedef struct xntimer {
 
     xntimerh_t aplink;          /* Link in aperiodic timers list. */
 
-#define aplink2timer(laddr) \
-    ((xntimer_t *)(((char *)(laddr)) - (int)(&((xntimer_t *)0)->aplink)))
+#define aplink2timer(ln) container_of(ln, xntimer_t, aplink)
 
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
     xntlholder_t plink;         /* Link in periodic timers wheel. */
 
-#define plink2timer(laddr) \
-    ((xntimer_t *)(((char *)(laddr)) - (int)(&((xntimer_t *)0)->plink)))
+#define plink2timer(ln) container_of(ln, xntimer_t, plink)
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
     xnflags_t status;		/* !< Timer status. */

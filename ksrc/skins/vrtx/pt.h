@@ -46,8 +46,7 @@ typedef struct vrtxptext {
 
     xnholder_t link;	/* Link in vrtxpt->extq */
 
-#define link2vrtxptext(laddr) \
-((vrtxptext_t *)(((char *)laddr) - (int)(&((vrtxptext_t *)0)->link)))
+#define link2vrtxptext(ln) container_of(ln, vrtxptext_t, link)
 
     void *freelist;	/* Free block list head */
 
@@ -72,8 +71,7 @@ typedef struct vrtxpt {
 
     xnqueue_t extq;   /* Linked list of active extents */
 
-#define link2vrtxpt(laddr) \
-((vrtxpt_t *)(((char *)laddr) - (int)(&((vrtxpt_t *)0)->link)))
+#define link2vrtxpt(ln) container_of(ln, vrtxpt_t, link)
 
     int pid;		/* Partition identifier */
 

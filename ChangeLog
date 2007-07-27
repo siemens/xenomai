@@ -1,6 +1,12 @@
-2007-07-26  Philippe Gerum  <rpm@xenomai.org>
+2007-07-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.3.3 (Summer Song)
+
+2007-07-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/: Fix remaining 64bit warnings. Always use
+	container_of() when applicable to prevent integer/pointer size
+	conflicts.
 
 2007-07-26  Philippe Gerum  <rpm@xenomai.org>
 

@@ -29,8 +29,7 @@ typedef struct uimbx {
 
     xnholder_t link;	/* Link in uimbxq */
 
-#define link2uimbx(laddr) \
-((uimbx_t *)(((char *)laddr) - (int)(&((uimbx_t *)0)->link)))
+#define link2uimbx(ln) container_of(ln, uimbx_t, link)
 
     ID mbxid;
 

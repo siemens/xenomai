@@ -178,8 +178,7 @@ typedef struct wind_tcb {
 
     xnholder_t link;        /* Link in wind_taskq */
 
-#define link2wind_task(laddr)                                           \
-((wind_task_t *)(((char *)laddr) - (int)(&((wind_task_t *)0)->link)))
+#define link2wind_task(ln) container_of(ln, wind_task_t, link)
 
     long arg0;
     long arg1;
@@ -201,7 +200,7 @@ typedef struct wind_tcb {
 
 static inline WIND_TCB *thread2wind_task(xnthread_t *t)
 {
-    return t ? ((WIND_TCB *)(((char *)t) - (int)(&((WIND_TCB *)0)->threadbase))) : NULL;
+    return t ? container_of(t, WIND_TCB, threadbase) : NULL;
 }
 
 typedef void (*wind_create_hook)(WIND_TCB *);

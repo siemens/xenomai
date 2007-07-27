@@ -33,8 +33,7 @@ struct pse51_interrupt {
 
     xnholder_t link;	/* !< Link in pse51_intrq */
 
-#define link2intr(laddr) \
-((struct pse51_interrupt *)(((char *)laddr) - (int)(&((struct pse51_interrupt *)0)->link)))
+#define link2intr(ln) container_of(ln, struct pse51_interrupt, link)
 
 #if defined(__KERNEL__) && defined(CONFIG_XENO_OPT_PERVASIVE)
 

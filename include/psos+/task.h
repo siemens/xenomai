@@ -32,8 +32,7 @@ typedef struct psostask {
 
     xnholder_t link;	/* Link in psostaskq */
 
-#define link2psostask(laddr) \
-((psostask_t *)(((char *)laddr) - (int)(&((psostask_t *)0)->link)))
+#define link2psostask(ln) container_of(ln, psostask_t, link)
 
     char name[XNOBJECT_NAME_LEN];
 
@@ -67,9 +66,9 @@ typedef struct psostask {
 
 } psostask_t;
 
-static inline psostask_t *thread2psostask (xnthread_t *t)
+static inline psostask_t *thread2psostask(xnthread_t *t)
 {
-    return t ? ((psostask_t *)(((char *)(t)) - (int)(&((psostask_t *)0)->threadbase))) : NULL;
+    return t ? container_of(t, psostask_t, threadbase) : NULL;
 }
 
 #define psos_current_task() thread2psostask(xnpod_current_thread())

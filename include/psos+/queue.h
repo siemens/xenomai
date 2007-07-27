@@ -39,8 +39,7 @@ typedef struct psosmbuf {
 
     xnholder_t link;
 
-#define link2psosmbuf(laddr) \
-((psosmbuf_t *)(((char *)laddr) - (int)(&((psosmbuf_t *)0)->link)))
+#define link2psosmbuf(ln) container_of(ln, psosmbuf_t, link)
 
     u_long len;
 
@@ -60,15 +59,13 @@ typedef struct psosqueue {
     xnhandle_t handle;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-#define link2psosqueue(laddr) \
-((psosqueue_t *)(((char *)laddr) - (int)(&((psosqueue_t *)0)->link)))
+#define link2psosqueue(ln) container_of(ln, psosqueue_t, link)
 
     xnqueue_t chunkq;	/* Chunks used for the private queue */
 
     xnsynch_t synchbase;
 
-#define synch2psosqueue(saddr) \
-((saddr) ? ((psosqueue_t *)(((char *)(saddr)) - (int)(&((psosqueue_t *)0)->synchbase))) : NULL)
+#define synch2psosqueue(ln)  ((ln) ? container_of(ln, psosqueue_t, synchbase) : NULL)
 
     u_long maxnum,
 	   maxlen;

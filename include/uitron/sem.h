@@ -29,8 +29,7 @@ typedef struct uisem {
 
     xnholder_t link;	/* Link in uisemq */
 
-#define link2uisem(laddr) \
-((uisem_t *)(((char *)laddr) - (int)(&((uisem_t *)0)->link)))
+#define link2uisem(ln) container_of(ln, uisem_t, link)
 
     ID semid;
 

@@ -33,8 +33,7 @@ typedef struct psostm {
 
     xnholder_t link;
 
-#define link2psostm(laddr) \
-((psostm_t *)(((char *)laddr) - (int)(&((psostm_t *)0)->link)))
+#define link2psostm(ln)  container_of(ln, psostm_t, link)
 
     u_long events;	/* Event flags */
 

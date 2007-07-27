@@ -68,8 +68,7 @@ typedef struct rt_intr {
 
     xnholder_t link;	/* !< Link in global interrupt queue. */
 
-#define link2intr(laddr) \
-((RT_INTR *)(((char *)laddr) - (int)(&((RT_INTR *)0)->link)))
+#define link2intr(ln)		container_of(ln, RT_INTR, link)
 
     xnintr_t intr_base;   /* !< Base interrupt object. */
 

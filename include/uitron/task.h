@@ -32,11 +32,10 @@ typedef struct uitask {
 
     xnholder_t link;	/* Link in uitaskq */
 
-#define link2uitask(laddr) \
-((uitask_t *)(((char *)laddr) - (int)(&((uitask_t *)0)->link)))
+#define link2uitask(ln) container_of(ln, uitask_t, link)
 
-#define thread2uitask(taddr) \
-((taddr) ? ((uitask_t *)(((char *)(taddr)) - (int)(&((uitask_t *)0)->threadbase))) : NULL)
+#define thread2uitask(ln) \
+  ((ln) ? container_of(ln, uitask_t, threadbase) : NULL)
 
     ID tskid;
 

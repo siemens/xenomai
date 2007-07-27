@@ -105,8 +105,7 @@ typedef struct rt_queue_msg {
 
     xnholder_t link;
 
-#define link2rtmsg(laddr) \
-((rt_queue_msg_t *)(((char *)laddr) - (int)(&((rt_queue_msg_t *)0)->link)))
+#define link2rtmsg(ln)		container_of(ln, rt_queue_msg_t, link)
 
 } rt_queue_msg_t;
 

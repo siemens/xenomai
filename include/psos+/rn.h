@@ -36,8 +36,7 @@ typedef struct psosrn {
 
     xnholder_t link;  /* Link in psosrnq */
 
-#define link2psosrn(laddr) \
-((psosrn_t *)(((char *)laddr) - (int)(&((psosrn_t *)0)->link)))
+#define link2psosrn(ln) container_of(ln, psosrn_t, link)
 
     char name[XNOBJECT_NAME_LEN]; /* Name of region */
 

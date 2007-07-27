@@ -45,8 +45,7 @@ typedef struct vrtxheap {
 
     xnholder_t link;  /* Link in vrtxheapq */
 
-#define link2vrtxheap(laddr) \
-((vrtxheap_t *)(((char *)laddr) - (int)(&((vrtxheap_t *)0)->link)))
+#define link2vrtxheap(ln) container_of(ln, vrtxheap_t, link)
 
     int hid;		/* VRTX identifier */
 

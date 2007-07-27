@@ -27,8 +27,7 @@ typedef struct vrtxmb {
 
     xnholder_t link;
 
-#define link2vrtxmb(laddr) \
-((vrtxmb_t *)(((char *)laddr) - (int)(&((vrtxmb_t *)0)->link)))
+#define link2vrtxmb(ln) container_of(ln, vrtxmb_t, link)
 
     xnsynch_t  synchbase;
 

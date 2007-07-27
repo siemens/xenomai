@@ -29,8 +29,7 @@ typedef struct uiflag {
 
     xnholder_t link;	/* Link in uiflagq */
 
-#define link2uiflag(laddr) \
-((uiflag_t *)(((char *)laddr) - (int)(&((uiflag_t *)0)->link)))
+#define link2uiflag(ln) container_of(ln, uiflag_t, link)
 
     ID flgid;
 
