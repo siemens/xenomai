@@ -42,11 +42,14 @@
 #ifdef CONFIG_PPC64
 #define wrap_range_ok(task,addr,size) \
     __access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+#define arch_leave_lazy_mmu_mode()  flush_tlb_pending()
+#endif
+#else /* !CONFIG_PPC64 */
 #define wrap_range_ok(task,addr,size) \
     ((unsigned long)(addr) <= (task)->thread.fs.seg			\
      && ((size) == 0 || (size) - 1 <= (task)->thread.fs.seg - (unsigned long)(addr)))
-#endif
+#endif /* !CONFIG_PPC64 */
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 

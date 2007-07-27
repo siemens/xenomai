@@ -4,6 +4,10 @@
 
 2007-07-27  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-powerpc/bits/pod.h, include/asm-powerpc/wrappers.h,
+	ksrc/arch/powerpc/switch_64.S: Preliminary updates for
+	2.6.22/powerpc.
+
 	* include/: Fix remaining 64bit warnings. Always use
 	container_of() when applicable to prevent integer/pointer size
 	conflicts.
