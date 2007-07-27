@@ -31,8 +31,7 @@ typedef struct vrtxqueue {
 
     xnholder_t link;
 
-#define link2vrtxqueue(laddr) \
-((vrtxqueue_t *)(((char *)laddr) - (int)(&((vrtxqueue_t *)0)->link)))
+#define link2vrtxqueue(ln) container_of(ln, vrtxqueue_t, link)
 
     int qid;
 

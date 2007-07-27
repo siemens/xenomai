@@ -1,3 +1,9 @@
+2007-07-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/: Fix remaining 64bit warnings. Always use
+	container_of() when applicable to prevent integer/pointer size
+	conflicts.
+
 2007-07-26  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-04.

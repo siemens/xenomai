@@ -49,8 +49,7 @@ typedef struct psospt {
 
     xnholder_t link;  /* Link in psosptq */
 
-#define link2psospt(laddr) \
-((psospt_t *)(((char *)laddr) - (int)(&((psospt_t *)0)->link)))
+#define link2psospt(ln) container_of(ln, psospt_t, link)
 
     char name[XNOBJECT_NAME_LEN]; /* Symbolic name of partition */
 

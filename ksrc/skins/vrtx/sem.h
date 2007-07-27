@@ -32,8 +32,7 @@ typedef struct vrtxsem {
 
     xnholder_t link;  /* Link in vrtxsemq */
 
-#define link2vrtxsem(laddr) \
-((vrtxsem_t *)(((char *)laddr) - (int)(&((vrtxsem_t *)0)->link)))
+#define link2vrtxsem(ln) container_of(ln, vrtxsem_t, link)
 
     int semid;		/* VRTX identifier */
 

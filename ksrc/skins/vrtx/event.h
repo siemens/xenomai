@@ -31,8 +31,7 @@ typedef struct vrtxevent {
 
     xnholder_t link;
 
-#define link2vrtxevent(laddr) \
-((vrtxevent_t *)(((char *)laddr) - (int)(&((vrtxevent_t *)0)->link)))
+#define link2vrtxevent(ln) container_of(ln, vrtxevent_t, link)
 
     int evid;		/* VRTX identifier */
 

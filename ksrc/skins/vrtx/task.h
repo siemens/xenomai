@@ -31,13 +31,11 @@ typedef struct vrtxtask {
 
     xnholder_t link;	/* Link in vrtxtaskq */
 
-#define link2vrtxtask(laddr) \
-((vrtxtask_t *)(((char *)laddr) - (int)(&((vrtxtask_t *)0)->link)))
+#define link2vrtxtask(ln) container_of(ln, vrtxtask_t, link)
 
     xnthread_t threadbase;
 
-#define thread2vrtxtask(taddr) \
-((taddr) ? ((vrtxtask_t *)(((char *)taddr) - (int)(&((vrtxtask_t *)0)->threadbase))) : NULL)
+#define thread2vrtxtask(t) ((t) ? container_of(t, vrtxtask_t, threadbase) : NULL)
 
     int tid;
 

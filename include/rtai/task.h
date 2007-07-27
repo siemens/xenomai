@@ -43,8 +43,7 @@ typedef struct rt_task_struct {
 
     xnholder_t link;
 
-#define link2rtask(laddr) \
-((RT_TASK *)(((char *)laddr) - (int)(&((RT_TASK *)0)->link)))
+#define link2rtask(ln) container_of(ln, RT_TASK, link)
 
     xntimer_t timer;
 
@@ -64,7 +63,7 @@ typedef struct rt_task_struct {
 
 static inline RT_TASK *thread2rtask (xnthread_t *t)
 {
-    return t ? ((RT_TASK *)(((char *)(t)) - (int)(&((RT_TASK *)0)->thread_base))) : NULL;
+    return t ? container_of(t, RT_TASK, thread_base) : NULL;
 }
 
 #define rtai_current_task() thread2rtask(xnpod_current_thread())
