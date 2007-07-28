@@ -2292,7 +2292,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..2fbe024
+index 0000000..4770869
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,267 @@
@@ -2325,10 +2325,10 @@ index 0000000..2fbe024
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-05"
++#define IPIPE_ARCH_STRING	"1.8-06"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -2564,7 +2564,7 @@ index 0000000..2fbe024
 +
 +#endif	/* !__I386_IPIPE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
-index 17b18cf..cf9ffa8 100644
+index 17b18cf..fc47541 100644
 --- a/include/asm-i386/irqflags.h
 +++ b/include/asm-i386/irqflags.h
 @@ -15,37 +15,61 @@
@@ -2708,7 +2708,7 @@ index 17b18cf..cf9ffa8 100644
 +{
 +	/* Merge virtual and real interrupt mask bits into a single
 +	   32bit word. */
-+	return real | (virt << 31);
++	return (real & ~(1 << 31)) | ((virt != 0) << 31);
 +}
 +
 +static inline int raw_demangle_irq_bits(unsigned long *x)
@@ -3890,10 +3890,10 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..513471e 100644
+index 94b767d..57517c3 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
-@@ -172,7 +172,97 @@ do {								\
+@@ -172,7 +172,90 @@ do {								\
  #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
  #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
  
@@ -3921,8 +3921,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQ(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_disable_hw();					\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_lock_irq((spinlock_t *)(lock));			\
 +} while (0)
@@ -3930,8 +3929,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQ(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_enable_hw();					\
++		__ipipe_spin_unlock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_unlock_irq((spinlock_t *)(lock));			\
 +} while (0)
@@ -3939,8 +3937,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQ_RAW(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_disable_hw();					\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		local_irq_disable();					\
 +		__raw_spin_lock(&((spinlock_t *)(lock))->raw_lock);	\
@@ -3949,8 +3946,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQ_RAW(lock)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_enable_hw();				\
++		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		__raw_spin_unlock(&((spinlock_t *)(lock))->raw_lock);	\
 +		local_irq_enable();					\
@@ -3962,8 +3958,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQSAVE(lock, flags)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_save_hw(flags);				\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		(flags) = __ipipe_spin_lock_irqsave(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		flags = _spin_lock_irqsave((spinlock_t *)(lock));	\
 +	else __bad_spinlock_type();					\
@@ -3972,8 +3967,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINLOCK_IRQSAVE(lock, flags)				\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		local_irq_save_hw(flags);				\
-+		__raw_spin_lock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		(flags) = __ipipe_spin_lock_irqsave(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_lock_irqsave((spinlock_t *)(lock), flags);	\
 +} while (0)
@@ -3982,8 +3976,7 @@ index 94b767d..513471e 100644
 +#define PICK_SPINUNLOCK_IRQRESTORE(lock, flags)			\
 +	do {								\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__raw_spin_unlock(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
-+		local_irq_restore_hw(flags);				\
++		__ipipe_spin_unlock_irqrestore(&((__ipipe_spinlock_t *)(lock))->__raw_lock, flags); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		_spin_unlock_irqrestore((spinlock_t *)(lock), flags);	\
 +} while (0)
@@ -3992,7 +3985,7 @@ index 94b767d..513471e 100644
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  # define spin_lock_nested(lock, subclass) _spin_lock_nested(lock, subclass)
-@@ -185,7 +275,7 @@ do {								\
+@@ -185,7 +268,7 @@ do {								\
  
  #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
  
@@ -4001,7 +3994,7 @@ index 94b767d..513471e 100644
  #define read_lock_irqsave(lock, flags)	flags = _read_lock_irqsave(lock)
  #define write_lock_irqsave(lock, flags)	flags = _write_lock_irqsave(lock)
  
-@@ -199,7 +289,7 @@ do {								\
+@@ -199,7 +282,7 @@ do {								\
  
  #else
  
@@ -4010,7 +4003,7 @@ index 94b767d..513471e 100644
  #define read_lock_irqsave(lock, flags)	_read_lock_irqsave(lock, flags)
  #define write_lock_irqsave(lock, flags)	_write_lock_irqsave(lock, flags)
  #define spin_lock_irqsave_nested(lock, flags, subclass)	\
-@@ -207,7 +297,7 @@ do {								\
+@@ -207,7 +290,7 @@ do {								\
  
  #endif
  
@@ -4019,7 +4012,7 @@ index 94b767d..513471e 100644
  #define spin_lock_bh(lock)		_spin_lock_bh(lock)
  
  #define read_lock_irq(lock)		_read_lock_irq(lock)
-@@ -221,26 +311,25 @@ do {								\
+@@ -221,26 +304,25 @@ do {								\
   */
  #if defined(CONFIG_DEBUG_SPINLOCK) || defined(CONFIG_PREEMPT) || \
  	!defined(CONFIG_SMP)
@@ -4054,11 +4047,16 @@ index 94b767d..513471e 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -287,4 +376,16 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -287,4 +369,25 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
 +#ifdef CONFIG_IPIPE
++void fastcall __ipipe_spin_lock_irq(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irq(raw_spinlock_t *lock);
++unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
++					     unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock,flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -4068,6 +4066,10 @@ index 94b767d..513471e 100644
 +	do { (void)(flags); spin_lock(lock); } while(0)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
 +	spin_unlock(lock)
++#define __ipipe_spin_lock_irq(lock)		do { } while(0)
++#define __ipipe_spin_unlock_irq(lock)		do { } while(0)
++#define __ipipe_spin_lock_irqsave(lock)		0
++#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while(0)
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
@@ -4328,10 +4330,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..e9a16e0
+index 0000000..4c0d1e8
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1443 @@
+@@ -0,0 +1,1500 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4584,6 +4586,59 @@ index 0000000..e9a16e0
 +#endif	/* CONFIG_SMP */
 +
 +	return s;
++}
++
++void fastcall __ipipe_spin_lock_irq(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	local_irq_disable_hw();
++	__raw_spin_lock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	__set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++}
++
++void fastcall __ipipe_spin_unlock_irq(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	__raw_spin_unlock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_enable_hw();
++}
++
++unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++	unsigned long flags;
++	int s;
++
++	local_irq_save_hw(flags);
++	__raw_spin_lock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	s = __test_and_set_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++
++	return raw_mangle_irq_bits(s, flags);
++}
++
++void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	__raw_spin_unlock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	if (!raw_demangle_irq_bits(&x))
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_restore_hw(x);
 +}
 +
 +/*
@@ -5762,6 +5817,10 @@ index 0000000..e9a16e0
 +EXPORT_SYMBOL(__ipipe_test_root);
 +EXPORT_SYMBOL(__ipipe_test_and_stall_root);
 +#endif /* CONFIG_SMP */
++EXPORT_SYMBOL(__ipipe_spin_lock_irq);
++EXPORT_SYMBOL(__ipipe_spin_unlock_irq);
++EXPORT_SYMBOL(__ipipe_spin_lock_irqsave);
++EXPORT_SYMBOL(__ipipe_spin_unlock_irqrestore);
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
@@ -7261,12 +7320,12 @@ index d27b258..67e4bf9 100644
  	desc->handle_irq = handle;
  	desc->name = name;
 diff --git a/kernel/printk.c b/kernel/printk.c
-index c770e1a..6b49827 100644
+index c770e1a..a50b8ea 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -499,6 +499,78 @@ static int have_callable_console(void)
-  * printf(3)
-  */
+@@ -479,6 +479,41 @@ static int have_callable_console(void)
+ 	return 0;
+ }
  
 +#ifdef CONFIG_IPIPE
 +
@@ -7303,8 +7362,13 @@ index c770e1a..6b49827 100644
 +	spin_unlock_irqrestore(&__ipipe_printk_lock, flags);
 +}
 +
-+asmlinkage int printk(const char *fmt, ...)
-+{
+ /**
+  * printk - print a kernel message
+  * @fmt: format string
+@@ -501,6 +536,43 @@ static int have_callable_console(void)
+ 
+ asmlinkage int printk(const char *fmt, ...)
+ {
 +	int r, fbytes, oldcount;
 +    	unsigned long flags;
 +	va_list args;
@@ -7340,9 +7404,11 @@ index c770e1a..6b49827 100644
 +	return r;
 +}
 +#else /* !CONFIG_IPIPE */
- asmlinkage int printk(const char *fmt, ...)
- {
++asmlinkage int printk(const char *fmt, ...)
++{
  	va_list args;
+ 	int r;
+ 
 @@ -510,6 +582,7 @@ asmlinkage int printk(const char *fmt, ...)
  
  	return r;
