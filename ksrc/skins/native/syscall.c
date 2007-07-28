@@ -147,7 +147,7 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	if (bulk.a2) {
 		if (!__xn_access_ok(curr, VERIFY_READ, bulk.a2, sizeof(name))) {
 			err = -EFAULT;
-			got fail;
+			goto fail;
 		}
 
 		__xn_strncpy_from_user(curr, name, (const char __user *)bulk.a2,
