@@ -128,18 +128,27 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	int err, prio, mode;
 	RT_TASK *task;
 
-	if (xnshadow_thread(curr))
-		return -EBUSY;
+	/* Completion descriptor our parent thread is pending on -- may be NULL. */
+	u_completion = (xncompletion_t __user *)__xn_reg_arg2(regs);
+
+	if (xnshadow_thread(curr)) {
+		err = -EBUSY;
+		goto fail;
+	}
 
 	__xn_copy_from_user(curr, &bulk, (void __user *)__xn_reg_arg1(regs),
 			    sizeof(bulk));
 
-	if (!__xn_access_ok(curr, VERIFY_WRITE, bulk.a1, sizeof(ph)))
-		return -EFAULT;
+	if (!__xn_access_ok(curr, VERIFY_WRITE, bulk.a1, sizeof(ph))) {
+		err = -EFAULT;
+		goto fail;
+	}
 
 	if (bulk.a2) {
-		if (!__xn_access_ok(curr, VERIFY_READ, bulk.a2, sizeof(name)))
-			return -EFAULT;
+		if (!__xn_access_ok(curr, VERIFY_READ, bulk.a2, sizeof(name))) {
+			err = -EFAULT;
+			got fail;
+		}
 
 		__xn_strncpy_from_user(curr, name, (const char __user *)bulk.a2,
 				       sizeof(name) - 1);
@@ -153,13 +162,13 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	prio = bulk.a3;
 	/* Task init mode & CPU affinity. */
 	mode = bulk.a4 & (T_CPUMASK | T_SUSP | T_SHIELD);
-	/* Completion descriptor our parent thread is pending on -- may be NULL. */
-	u_completion = (xncompletion_t __user *)__xn_reg_arg2(regs);
 
 	task = (RT_TASK *)xnmalloc(sizeof(*task));
 
-	if (!task)
-		return -ENOMEM;
+	if (!task) {
+		err = -ENOMEM;
+		goto fail;
+	}
 
 	/* Force FPU support in user-space. This will lead to a no-op if
 	   the platform does not support it. */
@@ -179,7 +188,7 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	} else {
 		xnfree(task);
 		/* Unblock and pass back error code. */
-
+fail:
 		if (u_completion)
 			xnshadow_signal_completion(u_completion, err);
 	}
