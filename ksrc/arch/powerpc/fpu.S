@@ -31,11 +31,13 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
 #define	SYNC
 #endif /* CONFIG_PPC601_SYNC_FIX */
 
+#ifndef MTMSRD
 #if defined(CONFIG_PPC64) || defined(CONFIG_PPC64BRIDGE)
 #define MTMSRD(r)	.long	(0x7c000164 + ((r) << 21))	/* mtmsrd */
 #else
 #define MTMSRD(r)	mtmsr	r
 #endif /* CONFIG_PPC64 || CONFIG_PPC64BRIDGE */
+#endif
 
 #define RTHAL_FPSAVE(n, base)	stfd n,8*(n)(base)
 #define RTHAL_FPSAVE2(n, base)	RTHAL_FPSAVE(n, base); RTHAL_FPSAVE(n+1, base)
