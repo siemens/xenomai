@@ -1,3 +1,4 @@
+diff --git a/Makefile b/Makefile
 index 7e2750f..055ab06 100644
 --- a/Makefile
 +++ b/Makefile
@@ -1659,7 +1660,7 @@ index 3c4b6c2..f96a049 100644
  /* UART Driver                                                              */
  /* ======================================================================== */
 diff --git a/include/asm-powerpc/hw_irq.h b/include/asm-powerpc/hw_irq.h
-index 9e4dd98..a26a2a5 100644
+index 9e4dd98..2168d31 100644
 --- a/include/asm-powerpc/hw_irq.h
 +++ b/include/asm-powerpc/hw_irq.h
 @@ -16,6 +16,10 @@ extern void timer_interrupt(struct pt_regs *);
@@ -1684,7 +1685,7 @@ index 9e4dd98..a26a2a5 100644
 +{
 +	/* Merge virtual and real interrupt mask bits into a single
 +	   32bit word. */
-+	return real | (virt << 31);
++	return (real & ~(1 << 31)) | ((virt != 0) << 31);
 +}
  
 +static inline int raw_demangle_irq_bits(unsigned long *x)
@@ -1847,7 +1848,7 @@ index 9e4dd98..a26a2a5 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..3224e1e
+index 0000000..d077d5a
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,219 @@
@@ -1885,10 +1886,10 @@ index 0000000..3224e1e
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.6-01"
++#define IPIPE_ARCH_STRING	"1.6-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 2^5 for 32bits arch. */
