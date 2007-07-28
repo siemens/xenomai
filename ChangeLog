@@ -4,6 +4,8 @@
 
 2007-07-28  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-02.
+
 	* ksrc/skins/native/syscall.c (__rt_task_create): Pass the error
 	code back through the completion variable in all error cases.
 
