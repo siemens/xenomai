@@ -1,3 +1,7 @@
+2007-07-29  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/shadow.c: Fix RPI-disabled build.
+	
 2007-07-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4-rc1
