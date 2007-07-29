@@ -443,6 +443,7 @@ void xnshadow_rpi_check(void)
  
 #else
 
+#define rpi_p(t)		(0)
 #define rpi_init_gk(gk)		do { } while(0)
 #define rpi_clear_local(t)	do { } while(0)
 #define rpi_clear_remote(t)	do { } while(0)
