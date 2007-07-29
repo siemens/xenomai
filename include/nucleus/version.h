@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"Bells Of Lal"
 
-#define XENO_VERSION_STRING	"2.4-devel"
+#define XENO_VERSION_STRING	"2.4-rc1"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
