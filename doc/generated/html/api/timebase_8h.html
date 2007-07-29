@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -48,13 +49,17 @@ Include dependency graph for timebase.h:<p><center><img src="timebase_8h__incl.p
 <p>
 This graph shows which files directly or indirectly include this file:<p><center><img src="timebase_8h__dep__incl.png" border="0" usemap="#include/nucleus/timebase.hdep_map" alt=""></center>
 <map name="include/nucleus/timebase.hdep_map">
-<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="240,130,397,154" alt="">
-<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="446,8,612,32" alt="">
-<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="662,33,801,57" alt="">
-<area href="pod_8c.html" shape="rect" coords="462,106,596,130" alt="">
-<area href="timebase_8c.html" shape="rect" coords="446,154,612,178" alt="">
-<area href="alarm_8h.html" shape="rect" coords="453,202,605,226" alt="">
-<area href="include_2native_2timer_8h.html" shape="rect" coords="456,250,602,274" alt="">
+<area href="module_8h-source.html" shape="rect" coords="241,130,412,154" alt="">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="248,250,405,274" alt="">
+<area href="xenomai_8h-source.html" shape="rect" coords="461,8,640,32" alt="">
+<area href="pod_8c.html" shape="rect" coords="484,202,617,226" alt="">
+<area href="shadow_8c.html" shape="rect" coords="473,106,628,130" alt="">
+<area href="synch_8c.html" shape="rect" coords="689,202,833,226" alt="">
+<area href="timebase_8c.html" shape="rect" coords="468,154,633,178" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="468,250,633,274" alt="">
+<area href="ksrc_2nucleus_2timer_8c.html" shape="rect" coords="692,298,830,322" alt="">
+<area href="alarm_8h.html" shape="rect" coords="474,298,626,322" alt="">
+<area href="include_2native_2timer_8h.html" shape="rect" coords="477,346,624,370" alt="">
 </map>
 
 <p>
@@ -64,9 +69,9 @@ This graph shows which files directly or indirectly include this file:<p><center
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g61ff1abcbe816dd7ce6be2e2c7f2e44b">xntbase_convert</a> (xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert a clock value into another time base.  <a href="group__timebase.html#g61ff1abcbe816dd7ce6be2e2c7f2e44b"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a">xntbase_alloc</a> (const char *name, u_long period, xntbase_t **basep)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#gfcb0a76ac26eaaa768db89cb54e3f24a">xntbase_alloc</a> (const char *name, u_long period, u_long flags, xntbase_t **basep)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a time base.  <a href="group__timebase.html#g44412f2f0a481d351695f540c1e4750a"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate a time base.  <a href="group__timebase.html#gfcb0a76ac26eaaa768db89cb54e3f24a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e">xntbase_free</a> (xntbase_t *base)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a time base.  <a href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e"></a><br></td></tr>
@@ -88,11 +93,11 @@ This graph shows which files directly or indirectly include this file:<p><center
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static xnticks_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda">xntbase_get_time</a> (xntbase_t *base)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the clock time for a given time base.  <a href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748">xntbase_set_time</a> (xntbase_t *base, xnticks_t newtime)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timebase.html#gd5b8cfb5270e9f8b73c167d1c7f7d1b2">xntbase_adjust_time</a> (xntbase_t *base, xnsticks_t delta)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the clock time for a given time base.  <a href="group__timebase.html#g2429ebe0dcf2493211a93de41f154748"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Adjust the clock time for the system.  <a href="group__timebase.html#gd5b8cfb5270e9f8b73c167d1c7f7d1b2"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:59 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:24 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

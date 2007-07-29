@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -31,7 +32,7 @@
 <h1>ksrc/skins/rtdm/drvlib.c File Reference</h1><hr><a name="_details"></a><h2>Detailed Description</h2>
 Real-Time Driver Model for Xenomai, driver library. 
 <p>
-<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
+<dl compact><dt><b>Note:</b></dt><dd>Copyright (C) 2005-2007 Jan Kiszka &lt;<a href="mailto:jan.kiszka@web.de">jan.kiszka@web.de</a>&gt; <p>
 Copyright (C) 2005 Joerg Langenberg &lt;<a href="mailto:joerg.langenberg@gmx.net">joerg.langenberg@gmx.net</a>&gt;</dd></dl>
 Xenomai is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 Xenomai is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
@@ -117,6 +118,9 @@ Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__clock.html#g6cca1db0fd4c207ad92cdc9e9442afa5">rtdm_clock_read</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get system time.  <a href="group__clock.html#g6cca1db0fd4c207ad92cdc9e9442afa5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__clock.html#g861a79090031b981c627107248cf2d14">rtdm_clock_read_monotonic</a> (void)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get monotonic time.  <a href="group__clock.html#g861a79090031b981c627107248cf2d14"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_task_init</a> (rtdm_task_t *task, const char *name, <a class="el" href="group__rtdmtask.html#ga3cb481ab12462f5e54ff6fee12813e5">rtdm_task_proc_t</a> task_proc, void *arg, int priority, <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> period)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intialise and start a real-time task.  <a href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371"></a><br></td></tr>
@@ -138,18 +142,39 @@ Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">rtdm_task_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#gfd58b762de7269549d1e54699ceebc0d">rtdm_task_current</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get current real-time task.  <a href="group__rtdmtask.html#gfd58b762de7269549d1e54699ceebc0d"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#gbfae53746165a83a75965b7b0f6710a0">rtdm_task_sleep</a> (<a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep a specified amount of time.  <a href="group__rtdmtask.html#gbfae53746165a83a75965b7b0f6710a0"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g741998821c05483db33f17d77c733d99">rtdm_task_sleep_until</a> (<a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> wakeup_time)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="group__rtdmtask.html#g741998821c05483db33f17d77c733d99"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g1763346568d041f9c66d68224816d15b">rtdm_task_sleep_abs</a> (<a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> wakeup_time, enum <a class="el" href="group__rtdmtimer.html#gd0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sleep until a specified absolute time.  <a href="group__rtdmtask.html#g1763346568d041f9c66d68224816d15b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc">rtdm_task_join_nrt</a> (rtdm_task_t *task, unsigned int poll_delay)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on a real-time task to terminate.  <a href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac">rtdm_task_busy_sleep</a> (<a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> delay)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy-wait a specified amount of time.  <a href="group__rtdmtask.html#ga3940cfff7cc72d7bc064a3e279d74ac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#gc4a94f7eb99216365d5d19f39b6ccb02">rtdm_timer_init</a> (rtdm_timer_t *timer, <a class="el" href="group__rtdmtimer.html#g31b7b9a042260702a110bfe2c9bcac61">rtdm_timer_handler_t</a> handler, const char *name)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialise a timer.  <a href="group__rtdmtimer.html#gc4a94f7eb99216365d5d19f39b6ccb02"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326">rtdm_timer_destroy</a> (rtdm_timer_t *timer)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy a timer.  <a href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#g429ca4935762583edb6e1ebc955fe958">rtdm_timer_start</a> (rtdm_timer_t *timer, <a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> expiry, <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> interval, enum <a class="el" href="group__rtdmtimer.html#gd0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start a timer.  <a href="group__rtdmtimer.html#g429ca4935762583edb6e1ebc955fe958"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94">rtdm_timer_stop</a> (rtdm_timer_t *timer)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop a timer.  <a href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#gf585049063aa6ffb2f79511c0a091119">rtdm_timer_start_in_handler</a> (rtdm_timer_t *timer, <a class="el" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> expiry, <a class="el" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> interval, enum <a class="el" href="group__rtdmtimer.html#gd0bffecd0182d68967ebb5b47df0bcd0">rtdm_timer_mode</a> mode)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Start a timer from inside a timer handler.  <a href="group__rtdmtimer.html#gf585049063aa6ffb2f79511c0a091119"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmtimer.html#gf76e21cc3429370612b76493fdb6d23e">rtdm_timer_stop_in_handler</a> (rtdm_timer_t *timer)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Stop a timer from inside a timer handler.  <a href="group__rtdmtimer.html#gf76e21cc3429370612b76493fdb6d23e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">rtdm_irq_request</a> (rtdm_irq_t *irq_handle, unsigned int irq_no, <a class="el" href="group__rtdmirq.html#gdabd8f3473098ae9128ef449a83fe3c2">rtdm_irq_handler_t</a> handler, unsigned long flags, const char *device_name, void *arg)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register an interrupt handler.  <a href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073"></a><br></td></tr>
@@ -214,7 +239,7 @@ Include dependency graph for drvlib.c:<p><center><img src="drvlib_8c__incl.png" 
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="group__util.html#g8f9fcd0e274324096628dfede6fb10f2"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:59 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:24 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

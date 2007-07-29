@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -44,7 +45,7 @@
 <a name="l00019"></a>00019     <span class="keywordflow">for</span> (;;) {
 <a name="l00020"></a>00020 
 <a name="l00021"></a>00021        <span class="comment">/* Wait for the next alarm to trigger. */</span>
-<a name="l00022"></a>00022        err = <a name="a179"></a><a class="code" href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a>(&amp;alarm_desc);
+<a name="l00022"></a>00022        err = <a name="a175"></a><a class="code" href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76">rt_alarm_wait</a>(&amp;alarm_desc);
 <a name="l00023"></a>00023 
 <a name="l00024"></a>00024        <span class="keywordflow">if</span> (!err) {
 <a name="l00025"></a>00025            <span class="comment">/* Process the alarm shot. */</span>
@@ -61,20 +62,20 @@
 <a name="l00036"></a>00036 
 <a name="l00037"></a>00037     <span class="comment">/* ... */</span>
 <a name="l00038"></a>00038 
-<a name="l00039"></a>00039     err = <a name="a180"></a><a class="code" href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028">rt_alarm_create</a>(&amp;alarm_desc,<span class="stringliteral">"MyAlarm"</span>);
+<a name="l00039"></a>00039     err = <a name="a176"></a><a class="code" href="group__alarm.html#g22353f79379121bbebfa0e72bbde5028">rt_alarm_create</a>(&amp;alarm_desc,<span class="stringliteral">"MyAlarm"</span>);
 <a name="l00040"></a>00040 
-<a name="l00041"></a>00041     err = <a name="a181"></a><a class="code" href="group__alarm.html#g0d9cb8ae623be0f7224ac47b10a0b542">rt_alarm_start</a>(&amp;alarm_desc,
+<a name="l00041"></a>00041     err = <a name="a177"></a><a class="code" href="group__alarm.html#g0d9cb8ae623be0f7224ac47b10a0b542">rt_alarm_start</a>(&amp;alarm_desc,
 <a name="l00042"></a>00042                          ALARM_VALUE,
 <a name="l00043"></a>00043                          ALARM_INTERVAL);
 <a name="l00044"></a>00044     <span class="comment">/* ... */</span>
 <a name="l00045"></a>00045 
-<a name="l00046"></a>00046     err = <a name="a182"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;server_desc,
+<a name="l00046"></a>00046     err = <a name="a178"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;server_desc,
 <a name="l00047"></a>00047                          <span class="stringliteral">"MyAlarmServer"</span>,
 <a name="l00048"></a>00048                          TASK_STKSZ,
 <a name="l00049"></a>00049                          TASK_PRIO,
 <a name="l00050"></a>00050                          TASK_MODE);
 <a name="l00051"></a>00051     <span class="keywordflow">if</span> (!err)
-<a name="l00052"></a>00052         <a name="a183"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;server_desc,&amp;alarm_server,NULL);
+<a name="l00052"></a>00052         <a name="a179"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;server_desc,&amp;alarm_server,NULL);
 <a name="l00053"></a>00053 
 <a name="l00054"></a>00054     <span class="comment">/* ... */</span>
 <a name="l00055"></a>00055 }
@@ -82,10 +83,10 @@
 <a name="l00057"></a>00057 <span class="keywordtype">void</span> cleanup (<span class="keywordtype">void</span>)
 <a name="l00058"></a>00058 
 <a name="l00059"></a>00059 {
-<a name="l00060"></a>00060     <a name="a184"></a><a class="code" href="group__alarm.html#gf00e05b47b1183816480e270d326f9ac">rt_alarm_delete</a>(&amp;alarm_desc);
-<a name="l00061"></a>00061     <a name="a185"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;server_desc);
+<a name="l00060"></a>00060     <a name="a180"></a><a class="code" href="group__alarm.html#gf00e05b47b1183816480e270d326f9ac">rt_alarm_delete</a>(&amp;alarm_desc);
+<a name="l00061"></a>00061     <a name="a181"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;server_desc);
 <a name="l00062"></a>00062 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

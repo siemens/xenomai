@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -230,7 +231,7 @@ This service can be called from:<p>
 Rescheduling: possible.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The interrupt source associated to the interrupt descriptor remains masked upon creation. <a class="el" href="group__interrupt.html#gc712ee67f90d053a21bdb0041a63e17c">rt_intr_enable()</a> should be called for the new interrupt object to unmask it. </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="user__irq_8c-example.html#a187">user_irq.c</a>.</dl>    </td>
+<a class="el" href="user__irq_8c-example.html#a183">user_irq.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="ga0a9d98556ec838008f408a56e79d304"></a><!-- doxytag: member="intr.c::rt_intr_create" ref="ga0a9d98556ec838008f408a56e79d304" args="(RT_INTR *intr, const char *name, unsigned irq, rt_isr_t isr, rt_iack_t iack, int mode)" --><p>
@@ -662,10 +663,10 @@ This service can be called from:<p>
 Rescheduling: always, unless an interrupt is already pending on entry.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="user__irq_8c-example.html#a186">user_irq.c</a>.</dl>    </td>
+<a class="el" href="user__irq_8c-example.html#a182">user_irq.c</a>.</dl>    </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:03 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:27 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

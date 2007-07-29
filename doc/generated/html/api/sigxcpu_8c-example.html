@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -38,12 +39,12 @@
 <a name="l00013"></a>00013 
 <a name="l00014"></a>00014 {
 <a name="l00015"></a>00015     <span class="comment">/* Ask Xenomai to warn us upon switches to secondary mode. */</span>
-<a name="l00016"></a>00016     <a name="a168"></a><a class="code" href="group__task.html#g915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode</a>(0, <a name="a169"></a><a class="code" href="group__native__task__status.html#g725324cb26d8b5835c0818acb738bfe6">T_WARNSW</a>, NULL);
+<a name="l00016"></a>00016     <a name="a165"></a><a class="code" href="group__task.html#g915e7edfb0aaddb643794d7abc7093bf">rt_task_set_mode</a>(0, <a name="a166"></a><a class="code" href="group__native__task__status.html#g725324cb26d8b5835c0818acb738bfe6">T_WARNSW</a>, NULL);
 <a name="l00017"></a>00017 
 <a name="l00018"></a>00018     <span class="comment">/* A real-time task always starts in primary mode. */</span>
 <a name="l00019"></a>00019 
 <a name="l00020"></a>00020     <span class="keywordflow">for</span> (;;) {
-<a name="l00021"></a>00021         <a name="a170"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep</a>(1000000000);
+<a name="l00021"></a>00021         <a name="a167"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep</a>(1000000000);
 <a name="l00022"></a>00022         <span class="comment">/* Running in primary mode... */</span>
 <a name="l00023"></a>00023         printf(<span class="stringliteral">"Switched to secondary mode\n"</span>);
 <a name="l00024"></a>00024         <span class="comment">/* ...printf() =&gt; write(2): we have just switched to secondary</span>
@@ -70,7 +71,7 @@
 <a name="l00045"></a>00045 
 <a name="l00046"></a>00046     signal(SIGXCPU, warn_upon_switch);
 <a name="l00047"></a>00047 
-<a name="l00048"></a>00048     err = <a name="a171"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task,<span class="stringliteral">"mytask"</span>,0,1,T_FPU);
+<a name="l00048"></a>00048     err = <a name="a168"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task,<span class="stringliteral">"mytask"</span>,0,1,T_FPU);
 <a name="l00049"></a>00049 
 <a name="l00050"></a>00050     <span class="keywordflow">if</span> (err)
 <a name="l00051"></a>00051         {
@@ -78,7 +79,7 @@
 <a name="l00053"></a>00053         <span class="keywordflow">return</span> 0;
 <a name="l00054"></a>00054         }
 <a name="l00055"></a>00055 
-<a name="l00056"></a>00056     err = <a name="a172"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task,&amp;task_body,NULL);
+<a name="l00056"></a>00056     err = <a name="a169"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task,&amp;task_body,NULL);
 <a name="l00057"></a>00057 
 <a name="l00058"></a>00058     <span class="keywordflow">if</span> (err)
 <a name="l00059"></a>00059         {
@@ -90,7 +91,7 @@
 <a name="l00065"></a>00065 
 <a name="l00066"></a>00066     <span class="keywordflow">return</span> 0;
 <a name="l00067"></a>00067 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

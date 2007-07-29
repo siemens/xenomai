@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -63,38 +64,37 @@
 <a name="l00033"></a>00033 
 <a name="l00034"></a>00034     xnholder_t link;    <span class="comment">/* !&lt; Link in pse51_intrq */</span>
 <a name="l00035"></a>00035 
-<a name="l00036"></a>00036 <span class="preprocessor">#define link2intr(laddr) \</span>
-<a name="l00037"></a>00037 <span class="preprocessor">((struct pse51_interrupt *)(((char *)laddr) - (int)(&amp;((struct pse51_interrupt *)0)-&gt;link)))</span>
-<a name="l00038"></a>00038 <span class="preprocessor"></span>
-<a name="l00039"></a>00039 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
-<a name="l00040"></a>00040 <span class="preprocessor"></span>
-<a name="l00041"></a>00041     <span class="keywordtype">int</span> mode;           <span class="comment">/* !&lt; Interrupt control mode. */</span>
-<a name="l00042"></a>00042 
-<a name="l00043"></a>00043     <span class="keywordtype">int</span> pending;        <span class="comment">/* !&lt; Pending hits to process. */</span>
-<a name="l00044"></a>00044 
-<a name="l00045"></a>00045     xnsynch_t synch_base; <span class="comment">/* !&lt; Base synchronization object. */</span>
-<a name="l00046"></a>00046 
-<a name="l00047"></a>00047 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00048"></a>00048 };
-<a name="l00049"></a>00049 
-<a name="l00050"></a>00050 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00051"></a>00051 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-<a name="l00052"></a>00052 <span class="preprocessor">#endif</span>
-<a name="l00053"></a>00053 <span class="preprocessor"></span>
-<a name="l00054"></a>00054 <span class="keywordtype">void</span> pse51_intrq_cleanup(pse51_kqueues_t *q);
-<a name="l00055"></a>00055 
-<a name="l00056"></a>00056 <span class="keywordtype">void</span> pse51_intr_pkg_init(<span class="keywordtype">void</span>);
-<a name="l00057"></a>00057 
-<a name="l00058"></a>00058 <span class="keywordtype">void</span> pse51_intr_pkg_cleanup(<span class="keywordtype">void</span>);
-<a name="l00059"></a>00059 
-<a name="l00060"></a>00060 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00061"></a>00061 <span class="preprocessor"></span>}
-<a name="l00062"></a>00062 <span class="preprocessor">#endif</span>
-<a name="l00063"></a>00063 <span class="preprocessor"></span>
-<a name="l00064"></a>00064 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-<a name="l00065"></a>00065 
-<a name="l00066"></a>00066 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTR_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+<a name="l00036"></a>00036 <span class="preprocessor">#define link2intr(ln) container_of(ln, struct pse51_interrupt, link)</span>
+<a name="l00037"></a>00037 <span class="preprocessor"></span>
+<a name="l00038"></a>00038 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
+<a name="l00039"></a>00039 <span class="preprocessor"></span>
+<a name="l00040"></a>00040     <span class="keywordtype">int</span> mode;           <span class="comment">/* !&lt; Interrupt control mode. */</span>
+<a name="l00041"></a>00041 
+<a name="l00042"></a>00042     <span class="keywordtype">int</span> pending;        <span class="comment">/* !&lt; Pending hits to process. */</span>
+<a name="l00043"></a>00043 
+<a name="l00044"></a>00044     xnsynch_t synch_base; <span class="comment">/* !&lt; Base synchronization object. */</span>
+<a name="l00045"></a>00045 
+<a name="l00046"></a>00046 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00047"></a>00047 };
+<a name="l00048"></a>00048 
+<a name="l00049"></a>00049 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00050"></a>00050 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+<a name="l00051"></a>00051 <span class="preprocessor">#endif</span>
+<a name="l00052"></a>00052 <span class="preprocessor"></span>
+<a name="l00053"></a>00053 <span class="keywordtype">void</span> pse51_intrq_cleanup(pse51_kqueues_t *q);
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055 <span class="keywordtype">void</span> pse51_intr_pkg_init(<span class="keywordtype">void</span>);
+<a name="l00056"></a>00056 
+<a name="l00057"></a>00057 <span class="keywordtype">void</span> pse51_intr_pkg_cleanup(<span class="keywordtype">void</span>);
+<a name="l00058"></a>00058 
+<a name="l00059"></a>00059 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00060"></a>00060 <span class="preprocessor"></span>}
+<a name="l00061"></a>00061 <span class="preprocessor">#endif</span>
+<a name="l00062"></a>00062 <span class="preprocessor"></span>
+<a name="l00063"></a>00063 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00064"></a>00064 
+<a name="l00065"></a>00065 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTR_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

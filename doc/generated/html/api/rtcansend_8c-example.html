@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -67,9 +68,9 @@
 <a name="l00042"></a>00042 <span class="keyword">static</span> <span class="keywordtype">int</span> s=-1, dlc=0, rtr=0, extended=0, verbose=0, loops=1;
 <a name="l00043"></a>00043 <span class="keyword">static</span> SRTIME delay=1000000;
 <a name="l00044"></a>00044 <span class="keyword">static</span> <span class="keywordtype">int</span> count=0, print=1, use_send=0, loopback=-1;
-<a name="l00045"></a>00045 <span class="keyword">static</span> <a name="a142"></a><a class="code" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout = 0;
-<a name="l00046"></a>00046 <span class="keyword">static</span> <span class="keyword">struct </span><a name="_a143"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;
-<a name="l00047"></a>00047 <span class="keyword">static</span> <span class="keyword">struct </span><a name="_a144"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> to_addr;
+<a name="l00045"></a>00045 <span class="keyword">static</span> <a name="a140"></a><a class="code" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout = 0;
+<a name="l00046"></a>00046 <span class="keyword">static</span> <span class="keyword">struct </span><a name="_a141"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;
+<a name="l00047"></a>00047 <span class="keyword">static</span> <span class="keyword">struct </span><a name="_a142"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> to_addr;
 <a name="l00048"></a>00048 
 <a name="l00049"></a>00049 
 <a name="l00050"></a>00050 <span class="keywordtype">void</span> cleanup(<span class="keywordtype">void</span>)
@@ -87,7 +88,7 @@
 <a name="l00062"></a>00062         <span class="keywordflow">if</span> (ret) {
 <a name="l00063"></a>00063             fprintf(stderr, <span class="stringliteral">"rt_dev_close: %s\n"</span>, strerror(-ret));
 <a name="l00064"></a>00064         }
-<a name="l00065"></a>00065         <a name="a145"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;rt_task_desc);
+<a name="l00065"></a>00065         <a name="a143"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;rt_task_desc);
 <a name="l00066"></a>00066     }
 <a name="l00067"></a>00067 }
 <a name="l00068"></a>00068 
@@ -104,7 +105,7 @@
 <a name="l00079"></a>00079     <span class="keywordtype">int</span> i, j, ret;
 <a name="l00080"></a>00080 
 <a name="l00081"></a>00081     <span class="keywordflow">for</span> (i = 0; i &lt; loops; i++) {
-<a name="l00082"></a>00082         <a name="a146"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep</a>(<a name="a147"></a><a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a>(delay));
+<a name="l00082"></a>00082         <a name="a144"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366">rt_task_sleep</a>(rt_timer_ns2ticks(delay));
 <a name="l00083"></a>00083         <span class="keywordflow">if</span> (count)
 <a name="l00084"></a>00084             memcpy(&amp;frame.data[0], &amp;i, <span class="keyword">sizeof</span>(i));
 <a name="l00085"></a>00085         <span class="comment">/* Note: sendto avoids the definiton of a receive filter list */</span>
@@ -131,10 +132,10 @@
 <a name="l00106"></a>00106             <span class="keywordflow">break</span>;
 <a name="l00107"></a>00107         }
 <a name="l00108"></a>00108         <span class="keywordflow">if</span> (verbose &amp;&amp; (i % print) == 0) {
-<a name="l00109"></a>00109             <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a148"></a><a class="code" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>)
-<a name="l00110"></a>00110                 printf(<span class="stringliteral">"&lt;0x%08x&gt;"</span>, frame.can_id &amp; <a name="a149"></a><a class="code" href="group__rtcan.html#g83b943dca61d0aad5b07ec01c3317572">CAN_EFF_MASK</a>);
+<a name="l00109"></a>00109             <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a145"></a><a class="code" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>)
+<a name="l00110"></a>00110                 printf(<span class="stringliteral">"&lt;0x%08x&gt;"</span>, frame.can_id &amp; <a name="a146"></a><a class="code" href="group__rtcan.html#g83b943dca61d0aad5b07ec01c3317572">CAN_EFF_MASK</a>);
 <a name="l00111"></a>00111             <span class="keywordflow">else</span>
-<a name="l00112"></a>00112                 printf(<span class="stringliteral">"&lt;0x%03x&gt;"</span>, frame.can_id &amp; <a name="a150"></a><a class="code" href="group__rtcan.html#gfe4fc3f9cab58aeeb463861289e8ce93">CAN_SFF_MASK</a>);
+<a name="l00112"></a>00112                 printf(<span class="stringliteral">"&lt;0x%03x&gt;"</span>, frame.can_id &amp; <a name="a147"></a><a class="code" href="group__rtcan.html#gfe4fc3f9cab58aeeb463861289e8ce93">CAN_SFF_MASK</a>);
 <a name="l00113"></a>00113             printf(<span class="stringliteral">" [%d]"</span>, frame.can_dlc);
 <a name="l00114"></a>00114             <span class="keywordflow">for</span> (j = 0; j &lt; frame.can_dlc; j++) {
 <a name="l00115"></a>00115                 printf(<span class="stringliteral">" %02x"</span>, frame.data[j]);
@@ -242,7 +243,7 @@
 <a name="l00217"></a>00217     <span class="keywordflow">if</span> (verbose)
 <a name="l00218"></a>00218         printf(<span class="stringliteral">"interface %s\n"</span>, argv[optind]);
 <a name="l00219"></a>00219 
-<a name="l00220"></a>00220     ret = rt_dev_socket(<a name="a151"></a><a class="code" href="group__rtcan.html#geac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a152"></a><a class="code" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);
+<a name="l00220"></a>00220     ret = rt_dev_socket(<a name="a148"></a><a class="code" href="group__rtcan.html#geac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a149"></a><a class="code" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);
 <a name="l00221"></a>00221     <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00222"></a>00222         fprintf(stderr, <span class="stringliteral">"rt_dev_socket: %s\n"</span>, strerror(-ret));
 <a name="l00223"></a>00223         <span class="keywordflow">return</span> -1;
@@ -250,7 +251,7 @@
 <a name="l00225"></a>00225     s = ret;
 <a name="l00226"></a>00226 
 <a name="l00227"></a>00227     <span class="keywordflow">if</span> (loopback &gt;= 0) {
-<a name="l00228"></a>00228         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a name="a153"></a><a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a154"></a><a class="code" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>,
+<a name="l00228"></a>00228         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a name="a150"></a><a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a151"></a><a class="code" href="group__rtcan.html#ga7eb7dc3aa940a0aca20d3a564a147d9">CAN_RAW_LOOPBACK</a>,
 <a name="l00229"></a>00229                                 &amp;loopback, <span class="keyword">sizeof</span>(loopback));
 <a name="l00230"></a>00230         <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00231"></a>00231             fprintf(stderr, <span class="stringliteral">"rt_dev_setsockopt: %s\n"</span>, strerror(-ret));
@@ -264,7 +265,7 @@
 <a name="l00239"></a>00239     <span class="keywordflow">if</span> (verbose)
 <a name="l00240"></a>00240         printf(<span class="stringliteral">"s=%d, ifr_name=%s\n"</span>, s, ifr.ifr_name);
 <a name="l00241"></a>00241 
-<a name="l00242"></a>00242     ret = rt_dev_ioctl(s, <a name="a155"></a><a class="code" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);
+<a name="l00242"></a>00242     ret = rt_dev_ioctl(s, <a name="a152"></a><a class="code" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);
 <a name="l00243"></a>00243     <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00244"></a>00244         fprintf(stderr, <span class="stringliteral">"rt_dev_ioctl: %s\n"</span>, strerror(-ret));
 <a name="l00245"></a>00245         <span class="keywordflow">goto</span> failure;
@@ -272,10 +273,10 @@
 <a name="l00247"></a>00247 
 <a name="l00248"></a>00248     memset(&amp;to_addr, 0, <span class="keyword">sizeof</span>(to_addr));
 <a name="l00249"></a>00249     to_addr.can_ifindex = ifr.ifr_ifindex;
-<a name="l00250"></a>00250     to_addr.can_family = <a name="a156"></a><a class="code" href="group__rtcan.html#g546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;
+<a name="l00250"></a>00250     to_addr.can_family = <a name="a153"></a><a class="code" href="group__rtcan.html#g546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;
 <a name="l00251"></a>00251     <span class="keywordflow">if</span> (use_send) {
 <a name="l00252"></a>00252         <span class="comment">/* Suppress definiton of a default receive filter list */</span>
-<a name="l00253"></a>00253         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a157"></a><a class="code" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>, NULL, 0);
+<a name="l00253"></a>00253         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a154"></a><a class="code" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>, NULL, 0);
 <a name="l00254"></a>00254         <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00255"></a>00255             fprintf(stderr, <span class="stringliteral">"rt_dev_setsockopt: %s\n"</span>, strerror(-ret));
 <a name="l00256"></a>00256             <span class="keywordflow">goto</span> failure;
@@ -301,7 +302,7 @@
 <a name="l00276"></a>00276     }
 <a name="l00277"></a>00277 
 <a name="l00278"></a>00278     <span class="keywordflow">if</span> (rtr)
-<a name="l00279"></a>00279         frame.can_id |= <a name="a158"></a><a class="code" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>;
+<a name="l00279"></a>00279         frame.can_id |= <a name="a155"></a><a class="code" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>;
 <a name="l00280"></a>00280 
 <a name="l00281"></a>00281     if (extended)
 <a name="l00282"></a>00282         frame.can_id |= <a class="code" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>;
@@ -309,7 +310,7 @@
 <a name="l00284"></a>00284     if (timeout) {
 <a name="l00285"></a>00285         <span class="keywordflow">if</span> (verbose)
 <a name="l00286"></a>00286             printf(<span class="stringliteral">"Timeout: %lld ns\n"</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timeout);
-<a name="l00287"></a>00287         ret = rt_dev_ioctl(s, <a name="a159"></a><a class="code" href="group__rtcan.html#gd3758528585b2779e8949df671f1cf6c">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);
+<a name="l00287"></a>00287         ret = rt_dev_ioctl(s, <a name="a156"></a><a class="code" href="group__rtcan.html#gd3758528585b2779e8949df671f1cf6c">RTCAN_RTIOC_SND_TIMEOUT</a>, &amp;timeout);
 <a name="l00288"></a>00288         <span class="keywordflow">if</span> (ret) {
 <a name="l00289"></a>00289             fprintf(stderr, <span class="stringliteral">"rt_dev_ioctl SND_TIMEOUT: %s\n"</span>, strerror(-ret));
 <a name="l00290"></a>00290             <span class="keywordflow">goto</span> failure;
@@ -317,7 +318,7 @@
 <a name="l00292"></a>00292     }
 <a name="l00293"></a>00293 
 <a name="l00294"></a>00294     snprintf(name, <span class="keyword">sizeof</span>(name), <span class="stringliteral">"rtcansend-%d"</span>, getpid());
-<a name="l00295"></a>00295     ret = <a name="a160"></a><a class="code" href="group__task.html#g72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);
+<a name="l00295"></a>00295     ret = <a name="a157"></a><a class="code" href="group__task.html#g72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 1, 0);
 <a name="l00296"></a>00296     <span class="keywordflow">if</span> (ret) {
 <a name="l00297"></a>00297         fprintf(stderr, <span class="stringliteral">"rt_task_shadow: %s\n"</span>, strerror(-ret));
 <a name="l00298"></a>00298         <span class="keywordflow">goto</span> failure;
@@ -332,7 +333,7 @@
 <a name="l00307"></a>00307     cleanup();
 <a name="l00308"></a>00308     <span class="keywordflow">return</span> -1;
 <a name="l00309"></a>00309 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

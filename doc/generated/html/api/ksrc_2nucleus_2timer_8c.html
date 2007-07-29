@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -38,13 +39,13 @@ You should have received a copy of the GNU General Public License along with Xen
 <p>
 Include dependency graph for timer.c:<p><center><img src="ksrc_2nucleus_2timer_8c__incl.png" border="0" usemap="#ksrc/nucleus/timer.c_map" alt=""></center>
 <map name="ksrc/nucleus/timer.c_map">
-<area href="pod_8h.html" shape="rect" coords="230,7,334,31" alt="">
-<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="417,57,537,81" alt="">
-<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="588,106,700,130" alt="">
-<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="428,9,526,33" alt="">
-<area href="stat_8h-source.html" shape="rect" coords="592,57,696,81" alt="">
-<area href="timebase_8h.html" shape="rect" coords="750,106,886,130" alt="">
-<area href="nucleus_2types_8h-source.html" shape="rect" coords="586,9,701,33" alt="">
+<area href="pod_8h.html" shape="rect" coords="230,109,334,133" alt="">
+<area href="include_2nucleus_2thread_8h-source.html" shape="rect" coords="417,60,537,84" alt="">
+<area href="include_2nucleus_2timer_8h.html" shape="rect" coords="588,9,700,33" alt="">
+<area href="include_2nucleus_2intr_8h-source.html" shape="rect" coords="428,109,526,133" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="766,58,870,82" alt="">
+<area href="timebase_8h.html" shape="rect" coords="750,9,886,33" alt="">
+<area href="nucleus_2types_8h-source.html" shape="rect" coords="586,158,701,182" alt="">
 </map>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
@@ -61,11 +62,14 @@ Include dependency graph for timer.c:<p><center><img src="ksrc_2nucleus_2timer_8
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#g782e10b2cd24a5c303b316375940ca15">xntimer_destroy</a> (xntimer_t *timer)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a timer object.  <a href="group__timer.html#g782e10b2cd24a5c303b316375940ca15"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#g5609dd2602efe2c5b04eda28b22b9720">xntimer_get_overruns</a> (xntimer_t *timer, xnticks_t now)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the count of overruns for the last tick.  <a href="group__timer.html#g5609dd2602efe2c5b04eda28b22b9720"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71">xntimer_freeze</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Freeze all timers (from every time bases).  <a href="group__timer.html#g5cad677279089ef19d3710b1b6452a71"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:59 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:24 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

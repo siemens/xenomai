@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -42,14 +43,14 @@
 <a name="l00017"></a>00017 <span class="comment">       some pre-existing object, using rt_event_bind() instead of</span>
 <a name="l00018"></a>00018 <span class="comment">       creating it. */</span>
 <a name="l00019"></a>00019 
-<a name="l00020"></a>00020     err = <a name="a22"></a><a class="code" href="group__event.html#g8b0fbb2b816c62081afe86bf897c503c">rt_event_create</a>(&amp;ev_desc,
+<a name="l00020"></a>00020     err = <a name="a20"></a><a class="code" href="group__event.html#g8b0fbb2b816c62081afe86bf897c503c">rt_event_create</a>(&amp;ev_desc,
 <a name="l00021"></a>00021                           <span class="stringliteral">"MyEventFlagGroup"</span>,
 <a name="l00022"></a>00022                           EVENT_INIT,
 <a name="l00023"></a>00023                           EVENT_MODE);
 <a name="l00024"></a>00024 
 <a name="l00025"></a>00025     <span class="comment">/* Now, wait for some task to post some event flags... */</span>
 <a name="l00026"></a>00026 
-<a name="l00027"></a>00027     err = <a name="a23"></a><a class="code" href="group__event.html#g6e9f775275661d9258f8b1eb02fe4681">rt_event_wait</a>(&amp;ev_desc,
+<a name="l00027"></a>00027     err = <a name="a21"></a><a class="code" href="group__event.html#g6e9f775275661d9258f8b1eb02fe4681">rt_event_wait</a>(&amp;ev_desc,
 <a name="l00028"></a>00028                         EVENT_WAIT_MASK,
 <a name="l00029"></a>00029                         &amp;mask_ret,
 <a name="l00030"></a>00030                         EV_ANY, <span class="comment">/* Disjunctive wait */</span>
@@ -64,7 +65,7 @@
 <a name="l00039"></a>00039 
 <a name="l00040"></a>00040     <span class="comment">/* Post some events. */</span>
 <a name="l00041"></a>00041 
-<a name="l00042"></a>00042     <a name="a24"></a><a class="code" href="group__event.html#gfda4c544f2429005c4b15de3a7ffc902">rt_event_signal</a>(&amp;ev_desc,EVENT_SIGNAL_MASK);
+<a name="l00042"></a>00042     <a name="a22"></a><a class="code" href="group__event.html#gfda4c544f2429005c4b15de3a7ffc902">rt_event_signal</a>(&amp;ev_desc,EVENT_SIGNAL_MASK);
 <a name="l00043"></a>00043 
 <a name="l00044"></a>00044     <span class="comment">/* ... */</span>
 <a name="l00045"></a>00045 }
@@ -72,9 +73,9 @@
 <a name="l00047"></a>00047 <span class="keywordtype">void</span> cleanup (<span class="keywordtype">void</span>)
 <a name="l00048"></a>00048 
 <a name="l00049"></a>00049 {
-<a name="l00050"></a>00050     <a name="a25"></a><a class="code" href="group__event.html#gbccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a>(&amp;ev_desc);
+<a name="l00050"></a>00050     <a name="a23"></a><a class="code" href="group__event.html#gbccfea1cd018493ef5a28c6fe8e90d7c">rt_event_delete</a>(&amp;ev_desc);
 <a name="l00051"></a>00051 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

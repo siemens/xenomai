@@ -6,4 +6,4 @@ rect $compiler_8h-source.html 745,104 876,128
 rect $assert_8h-source.html 750,152 870,176
 rect $nucleus_2queue_8h-source.html 400,152 520,176
 rect $include_2nucleus_2timer_8h.html 404,200 516,224
-rect $stat_8h-source.html 408,248 512,272
+rect $stat_8h-source.html 573,225 677,249

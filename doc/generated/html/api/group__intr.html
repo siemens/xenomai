@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -159,6 +160,7 @@ Attach an interrupt object previously initialized by <a class="el" href="group__
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise, -EINVAL is returned if a low-level error occurred while attaching the interrupt. -EBUSY is specifically returned if the interrupt object was already attached.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The caller <b>must not</b> hold nklock when invoking this service, this would cause deadlocks.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -245,6 +247,7 @@ Detach an interrupt object previously attached by <a class="el" href="group__int
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise, -EINVAL is returned if a low-level error occurred while detaching the interrupt. Detaching a non-attached interrupt object leads to a null-effect and returns 0.</dd></dl>
+<dl compact><dt><b>Note:</b></dt><dd>The caller <b>must not</b> hold nklock when invoking this service, this would cause deadlocks.</dd></dl>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -441,7 +444,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:25 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

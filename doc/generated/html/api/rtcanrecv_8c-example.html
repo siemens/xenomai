@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -57,14 +58,14 @@
 <a name="l00032"></a>00032 <span class="keyword">extern</span> <span class="keywordtype">int</span> optind, opterr, optopt;
 <a name="l00033"></a>00033 
 <a name="l00034"></a>00034 <span class="keyword">static</span> <span class="keywordtype">int</span> s = -1, verbose = 0, print = 1;
-<a name="l00035"></a>00035 <span class="keyword">static</span> <a name="a114"></a><a class="code" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout = 0, with_timestamp = 0, timestamp_rel = 0;
+<a name="l00035"></a>00035 <span class="keyword">static</span> <a name="a112"></a><a class="code" href="group__rtdm.html#gededf91e760e3268235351dcc9d9dcda">nanosecs_rel_t</a> timeout = 0, with_timestamp = 0, timestamp_rel = 0;
 <a name="l00036"></a>00036 
 <a name="l00037"></a>00037 RT_TASK rt_task_desc;
 <a name="l00038"></a>00038 
 <a name="l00039"></a>00039 <span class="preprocessor">#define BUF_SIZ 255</span>
 <a name="l00040"></a>00040 <span class="preprocessor"></span><span class="preprocessor">#define MAX_FILTER 16</span>
 <a name="l00041"></a>00041 <span class="preprocessor"></span>
-<a name="l00042"></a>00042 <span class="keyword">struct </span><a name="_a115"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> recv_addr;
+<a name="l00042"></a>00042 <span class="keyword">struct </span><a name="_a113"></a><a class="code" href="structsockaddr__can.html">sockaddr_can</a> recv_addr;
 <a name="l00043"></a>00043 <span class="keyword">struct </span>can_filter recv_filter[MAX_FILTER];
 <a name="l00044"></a>00044 <span class="keyword">static</span> <span class="keywordtype">int</span> filter_count = 0;
 <a name="l00045"></a>00045 
@@ -72,8 +73,8 @@
 <a name="l00047"></a>00047 {
 <a name="l00048"></a>00048     <span class="keywordflow">if</span> (filter_count &gt;= MAX_FILTER)
 <a name="l00049"></a>00049         <span class="keywordflow">return</span> -1;
-<a name="l00050"></a>00050     recv_filter[filter_count].<a name="a116"></a><a class="code" href="structcan__filter.html#ac0f27fee94e90063d8a80f4928e1298">can_id</a> = id;
-<a name="l00051"></a>00051     recv_filter[filter_count].<a name="a117"></a><a class="code" href="structcan__filter.html#fa419227fe42bf1ce84a7c41600f1f90">can_mask</a> = mask;
+<a name="l00050"></a>00050     recv_filter[filter_count].<a name="a114"></a><a class="code" href="structcan__filter.html#ac0f27fee94e90063d8a80f4928e1298">can_id</a> = id;
+<a name="l00051"></a>00051     recv_filter[filter_count].<a name="a115"></a><a class="code" href="structcan__filter.html#fa419227fe42bf1ce84a7c41600f1f90">can_mask</a> = mask;
 <a name="l00052"></a>00052     printf(<span class="stringliteral">"Filter #%d: id=0x%08x mask=0x%08x\n"</span>, filter_count, <span class="keywordtype">id</span>, mask);
 <a name="l00053"></a>00053     filter_count++;
 <a name="l00054"></a>00054     <span class="keywordflow">return</span> 0;
@@ -92,7 +93,7 @@
 <a name="l00067"></a>00067         <span class="keywordflow">if</span> (ret) {
 <a name="l00068"></a>00068             fprintf(stderr, <span class="stringliteral">"rt_dev_close: %s\n"</span>, strerror(-ret));
 <a name="l00069"></a>00069         }
-<a name="l00070"></a>00070         <a name="a118"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;rt_task_desc);
+<a name="l00070"></a>00070         <a name="a116"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;rt_task_desc);
 <a name="l00071"></a>00071     }
 <a name="l00072"></a>00072     }
 <a name="l00073"></a>00073 
@@ -107,12 +108,12 @@
 <a name="l00082"></a>00082 <span class="keywordtype">void</span> rt_task(<span class="keywordtype">void</span>)
 <a name="l00083"></a>00083 {
 <a name="l00084"></a>00084     <span class="keywordtype">int</span> i, ret, count = 0;
-<a name="l00085"></a>00085     <span class="keyword">struct </span><a name="_a119"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;
+<a name="l00085"></a>00085     <span class="keyword">struct </span><a name="_a117"></a><a class="code" href="structcan__frame.html">can_frame</a> frame;
 <a name="l00086"></a>00086     <span class="keyword">struct </span><a class="code" href="structsockaddr__can.html">sockaddr_can</a> addr;
 <a name="l00087"></a>00087     socklen_t addrlen = <span class="keyword">sizeof</span>(addr);
 <a name="l00088"></a>00088     <span class="keyword">struct </span>msghdr msg;
 <a name="l00089"></a>00089     <span class="keyword">struct </span>iovec iov;
-<a name="l00090"></a>00090     <a name="a120"></a><a class="code" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> timestamp, timestamp_prev = 0;
+<a name="l00090"></a>00090     <a name="a118"></a><a class="code" href="group__rtdm.html#gd3b24c25feabadba465f8797d8c7fe27">nanosecs_abs_t</a> timestamp, timestamp_prev = 0;
 <a name="l00091"></a>00091 
 <a name="l00092"></a>00092     <span class="keywordflow">if</span> (with_timestamp) {
 <a name="l00093"></a>00093         msg.msg_iov = &amp;iov;
@@ -148,7 +149,7 @@
 <a name="l00123"></a>00123         }
 <a name="l00124"></a>00124 
 <a name="l00125"></a>00125         <span class="keywordflow">if</span> (print &amp;&amp; (count % print) == 0) {
-<a name="l00126"></a>00126             printf(<span class="stringliteral">"#%d: (%d) "</span>, count, addr.<a name="a121"></a><a class="code" href="structsockaddr__can.html#f1586f4d4c039a7941f07c0d746a73a7">can_ifindex</a>);
+<a name="l00126"></a>00126             printf(<span class="stringliteral">"#%d: (%d) "</span>, count, addr.<a name="a119"></a><a class="code" href="structsockaddr__can.html#f1586f4d4c039a7941f07c0d746a73a7">can_ifindex</a>);
 <a name="l00127"></a>00127             <span class="keywordflow">if</span> (with_timestamp &amp;&amp; msg.msg_controllen) {
 <a name="l00128"></a>00128                 <span class="keywordflow">if</span> (timestamp_rel) {
 <a name="l00129"></a>00129                 printf(<span class="stringliteral">"%lldns "</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)(timestamp - timestamp_prev));
@@ -156,23 +157,23 @@
 <a name="l00131"></a>00131                 } <span class="keywordflow">else</span>
 <a name="l00132"></a>00132                     printf(<span class="stringliteral">"%lldns "</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timestamp);
 <a name="l00133"></a>00133             }
-<a name="l00134"></a>00134             <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a122"></a><a class="code" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>)
-<a name="l00135"></a>00135                 printf(<span class="stringliteral">"!0x%08x!"</span>, frame.can_id &amp; <a name="a123"></a><a class="code" href="group__rtcan.html#gd4061a08b8c5aa6de3bb390efd3b6bd6">CAN_ERR_MASK</a>);
-<a name="l00136"></a>00136             <span class="keywordflow">else</span> <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a124"></a><a class="code" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>)
-<a name="l00137"></a>00137                 printf(<span class="stringliteral">"&lt;0x%08x&gt;"</span>, frame.can_id &amp; <a name="a125"></a><a class="code" href="group__rtcan.html#g83b943dca61d0aad5b07ec01c3317572">CAN_EFF_MASK</a>);
+<a name="l00134"></a>00134             <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a120"></a><a class="code" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>)
+<a name="l00135"></a>00135                 printf(<span class="stringliteral">"!0x%08x!"</span>, frame.can_id &amp; <a name="a121"></a><a class="code" href="group__rtcan.html#gd4061a08b8c5aa6de3bb390efd3b6bd6">CAN_ERR_MASK</a>);
+<a name="l00136"></a>00136             <span class="keywordflow">else</span> <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a122"></a><a class="code" href="group__rtcan.html#g5ae55ab3741140024858bd7b8762ea42">CAN_EFF_FLAG</a>)
+<a name="l00137"></a>00137                 printf(<span class="stringliteral">"&lt;0x%08x&gt;"</span>, frame.can_id &amp; <a name="a123"></a><a class="code" href="group__rtcan.html#g83b943dca61d0aad5b07ec01c3317572">CAN_EFF_MASK</a>);
 <a name="l00138"></a>00138             <span class="keywordflow">else</span>
-<a name="l00139"></a>00139                 printf(<span class="stringliteral">"&lt;0x%03x&gt;"</span>, frame.can_id &amp; <a name="a126"></a><a class="code" href="group__rtcan.html#gfe4fc3f9cab58aeeb463861289e8ce93">CAN_SFF_MASK</a>);
+<a name="l00139"></a>00139                 printf(<span class="stringliteral">"&lt;0x%03x&gt;"</span>, frame.can_id &amp; <a name="a124"></a><a class="code" href="group__rtcan.html#gfe4fc3f9cab58aeeb463861289e8ce93">CAN_SFF_MASK</a>);
 <a name="l00140"></a>00140 
 <a name="l00141"></a>00141             printf(<span class="stringliteral">" [%d]"</span>, frame.can_dlc);
-<a name="l00142"></a>00142             <span class="keywordflow">if</span> (!(frame.can_id &amp; <a name="a127"></a><a class="code" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>))
+<a name="l00142"></a>00142             <span class="keywordflow">if</span> (!(frame.can_id &amp; <a name="a125"></a><a class="code" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>))
 <a name="l00143"></a>00143                 <span class="keywordflow">for</span> (i = 0; i &lt; frame.can_dlc; i++) {
 <a name="l00144"></a>00144                     printf(<span class="stringliteral">" %02x"</span>, frame.data[i]);
 <a name="l00145"></a>00145                 }
 <a name="l00146"></a>00146             <span class="keywordflow">if</span> (frame.can_id &amp; <a class="code" href="group__rtcan.html#g24df2eae50a2cef0f7f08c73a246a012">CAN_ERR_FLAG</a>) {
 <a name="l00147"></a>00147                 printf(<span class="stringliteral">" ERROR "</span>);
-<a name="l00148"></a>00148                 <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a128"></a><a class="code" href="group__rtcan.html#g8b0903e35c75de100b97a7b3e368b269">CAN_ERR_BUSOFF</a>)
+<a name="l00148"></a>00148                 <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a126"></a><a class="code" href="group__rtcan.html#g8b0903e35c75de100b97a7b3e368b269">CAN_ERR_BUSOFF</a>)
 <a name="l00149"></a>00149                     printf(<span class="stringliteral">"bus-off"</span>);
-<a name="l00150"></a>00150                 <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a129"></a><a class="code" href="group__rtcan.html#g8086092a2e40c1b0429caaad3b2c8675">CAN_ERR_CRTL</a>)
+<a name="l00150"></a>00150                 <span class="keywordflow">if</span> (frame.can_id &amp; <a name="a127"></a><a class="code" href="group__rtcan.html#g8086092a2e40c1b0429caaad3b2c8675">CAN_ERR_CRTL</a>)
 <a name="l00151"></a>00151                     printf(<span class="stringliteral">"controller problem"</span>);
 <a name="l00152"></a>00152             } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (frame.can_id &amp; <a class="code" href="group__rtcan.html#gf324d65226057755175038a15d9bbd75">CAN_RTR_FLAG</a>)
 <a name="l00153"></a>00153                 printf(<span class="stringliteral">" remote request"</span>);
@@ -261,7 +262,7 @@
 <a name="l00236"></a>00236         }
 <a name="l00237"></a>00237     }
 <a name="l00238"></a>00238 
-<a name="l00239"></a>00239     ret = rt_dev_socket(<a name="a130"></a><a class="code" href="group__rtcan.html#geac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a131"></a><a class="code" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);
+<a name="l00239"></a>00239     ret = rt_dev_socket(<a name="a128"></a><a class="code" href="group__rtcan.html#geac0c3db7a1e021f17987bcc76893849">PF_CAN</a>, SOCK_RAW, <a name="a129"></a><a class="code" href="group__rtcan.html#g57682d9a1e4f4d90943dbaa683582bf5">CAN_RAW</a>);
 <a name="l00240"></a>00240     <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00241"></a>00241         fprintf(stderr, <span class="stringliteral">"rt_dev_socket: %s\n"</span>, strerror(-ret));
 <a name="l00242"></a>00242         <span class="keywordflow">return</span> -1;
@@ -281,7 +282,7 @@
 <a name="l00256"></a>00256         <span class="keywordflow">if</span> (verbose)
 <a name="l00257"></a>00257             printf(<span class="stringliteral">"s=%d, ifr_name=%s\n"</span>, s, ifr.ifr_name);
 <a name="l00258"></a>00258 
-<a name="l00259"></a>00259         ret = rt_dev_ioctl(s, <a name="a132"></a><a class="code" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);
+<a name="l00259"></a>00259         ret = rt_dev_ioctl(s, <a name="a130"></a><a class="code" href="group__rtcan.html#gee74ae50c8ea0a6aee277c6f124a3866">SIOCGIFINDEX</a>, &amp;ifr);
 <a name="l00260"></a>00260         <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00261"></a>00261             fprintf(stderr, <span class="stringliteral">"rt_dev_ioctl GET_IFINDEX: %s\n"</span>, strerror(-ret));
 <a name="l00262"></a>00262             <span class="keywordflow">goto</span> failure;
@@ -289,7 +290,7 @@
 <a name="l00264"></a>00264     }
 <a name="l00265"></a>00265 
 <a name="l00266"></a>00266     <span class="keywordflow">if</span> (err_mask) {
-<a name="l00267"></a>00267         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a name="a133"></a><a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a134"></a><a class="code" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>,
+<a name="l00267"></a>00267         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a name="a131"></a><a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a132"></a><a class="code" href="group__rtcan.html#g451ba35aa4d0bef48cb7b0416f5b4367">CAN_RAW_ERR_FILTER</a>,
 <a name="l00268"></a>00268                                 &amp;err_mask, <span class="keyword">sizeof</span>(err_mask));
 <a name="l00269"></a>00269         <span class="keywordflow">if</span> (ret &lt; 0) {
 <a name="l00270"></a>00270             fprintf(stderr, <span class="stringliteral">"rt_dev_setsockopt: %s\n"</span>, strerror(-ret));
@@ -300,7 +301,7 @@
 <a name="l00275"></a>00275     }
 <a name="l00276"></a>00276 
 <a name="l00277"></a>00277     <span class="keywordflow">if</span> (filter_count) {
-<a name="l00278"></a>00278         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a135"></a><a class="code" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>,
+<a name="l00278"></a>00278         ret = <a class="code" href="group__userapi.html#gada2561361357285840c5b054fe20681">rt_dev_setsockopt</a>(s, <a class="code" href="group__rtcan.html#gd981aa82a29d828882a2fb4c35c1cdd7">SOL_CAN_RAW</a>, <a name="a133"></a><a class="code" href="group__rtcan.html#g87313c6e632294aa4582899a3bbc89e4">CAN_RAW_FILTER</a>,
 <a name="l00279"></a>00279                                 &amp;recv_filter, filter_count *
 <a name="l00280"></a>00280                                 <span class="keyword">sizeof</span>(<span class="keyword">struct</span> can_filter));
 <a name="l00281"></a>00281         <span class="keywordflow">if</span> (ret &lt; 0) {
@@ -309,7 +310,7 @@
 <a name="l00284"></a>00284         }
 <a name="l00285"></a>00285     }
 <a name="l00286"></a>00286 
-<a name="l00287"></a>00287     recv_addr.<a name="a136"></a><a class="code" href="structsockaddr__can.html#e9d8c789193e516c282a707d5a118ebc">can_family</a> = <a name="a137"></a><a class="code" href="group__rtcan.html#g546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;
+<a name="l00287"></a>00287     recv_addr.<a name="a134"></a><a class="code" href="structsockaddr__can.html#e9d8c789193e516c282a707d5a118ebc">can_family</a> = <a name="a135"></a><a class="code" href="group__rtcan.html#g546620c7e758f003b24b7fdae4f97bd4">AF_CAN</a>;
 <a name="l00288"></a>00288     recv_addr.<a class="code" href="structsockaddr__can.html#f1586f4d4c039a7941f07c0d746a73a7">can_ifindex</a> = ifr.ifr_ifindex;
 <a name="l00289"></a>00289     ret = <a class="code" href="group__userapi.html#g5442e4f8737560e3294bd5bab61ad3fd">rt_dev_bind</a>(s, (<span class="keyword">struct</span> sockaddr *)&amp;recv_addr,
 <a name="l00290"></a>00290                       <span class="keyword">sizeof</span>(<span class="keyword">struct</span> <a class="code" href="structsockaddr__can.html">sockaddr_can</a>));
@@ -321,7 +322,7 @@
 <a name="l00296"></a>00296     <span class="keywordflow">if</span> (timeout) {
 <a name="l00297"></a>00297         <span class="keywordflow">if</span> (verbose)
 <a name="l00298"></a>00298             printf(<span class="stringliteral">"Timeout: %lld ns\n"</span>, (<span class="keywordtype">long</span> <span class="keywordtype">long</span>)timeout);
-<a name="l00299"></a>00299         ret = rt_dev_ioctl(s, <a name="a138"></a><a class="code" href="group__rtcan.html#gd8af08ea3624e8e9c464ff143fcb66c0">RTCAN_RTIOC_RCV_TIMEOUT</a>, &amp;timeout);
+<a name="l00299"></a>00299         ret = rt_dev_ioctl(s, <a name="a136"></a><a class="code" href="group__rtcan.html#gd8af08ea3624e8e9c464ff143fcb66c0">RTCAN_RTIOC_RCV_TIMEOUT</a>, &amp;timeout);
 <a name="l00300"></a>00300         <span class="keywordflow">if</span> (ret) {
 <a name="l00301"></a>00301             fprintf(stderr, <span class="stringliteral">"rt_dev_ioctl RCV_TIMEOUT: %s\n"</span>, strerror(-ret));
 <a name="l00302"></a>00302             <span class="keywordflow">goto</span> failure;
@@ -329,7 +330,7 @@
 <a name="l00304"></a>00304     }
 <a name="l00305"></a>00305 
 <a name="l00306"></a>00306     <span class="keywordflow">if</span> (with_timestamp) {
-<a name="l00307"></a>00307         ret = rt_dev_ioctl(s, <a name="a139"></a><a class="code" href="group__rtcan.html#gedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a>, <a name="a140"></a><a class="code" href="group__rtcan.html#ge39894e7e6d107d4bab150cc0ef993c8">RTCAN_TAKE_TIMESTAMPS</a>);
+<a name="l00307"></a>00307         ret = rt_dev_ioctl(s, <a name="a137"></a><a class="code" href="group__rtcan.html#gedd7bd75a1983735052fed62e101e5ce">RTCAN_RTIOC_TAKE_TIMESTAMP</a>, <a name="a138"></a><a class="code" href="group__rtcan.html#ge39894e7e6d107d4bab150cc0ef993c8">RTCAN_TAKE_TIMESTAMPS</a>);
 <a name="l00308"></a>00308         <span class="keywordflow">if</span> (ret) {
 <a name="l00309"></a>00309             fprintf(stderr, <span class="stringliteral">"rt_dev_ioctl TAKE_TIMESTAMP: %s\n"</span>, strerror(-ret));
 <a name="l00310"></a>00310             <span class="keywordflow">goto</span> failure;
@@ -337,7 +338,7 @@
 <a name="l00312"></a>00312     }
 <a name="l00313"></a>00313 
 <a name="l00314"></a>00314     snprintf(name, <span class="keyword">sizeof</span>(name), <span class="stringliteral">"rtcanrecv-%d"</span>, getpid());
-<a name="l00315"></a>00315     ret = <a name="a141"></a><a class="code" href="group__task.html#g72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 0, 0);
+<a name="l00315"></a>00315     ret = <a name="a139"></a><a class="code" href="group__task.html#g72e0a9355d06c346a95bf88b857a9749">rt_task_shadow</a>(&amp;rt_task_desc, name, 0, 0);
 <a name="l00316"></a>00316     <span class="keywordflow">if</span> (ret) {
 <a name="l00317"></a>00317         fprintf(stderr, <span class="stringliteral">"rt_task_shadow: %s\n"</span>, strerror(-ret));
 <a name="l00318"></a>00318         <span class="keywordflow">goto</span> failure;
@@ -350,7 +351,7 @@
 <a name="l00325"></a>00325     cleanup();
 <a name="l00326"></a>00326     <span class="keywordflow">return</span> -1;
 <a name="l00327"></a>00327 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

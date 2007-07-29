@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -164,7 +165,7 @@
 <a name="l00139"></a>00139         ssize_t written = 0;
 <a name="l00140"></a>00140 
 <a name="l00141"></a>00141         err = <a name="a12"></a><a class="code" href="group__task.html#gbabee94264156693cd4f5b9b70d3c5a1">rt_task_set_periodic</a>(NULL, TM_NOW,
-<a name="l00142"></a>00142                                    <a name="a13"></a><a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a>(write_task_period_ns));
+<a name="l00142"></a>00142                                    rt_timer_ns2ticks(write_task_period_ns));
 <a name="l00143"></a>00143         <span class="keywordflow">if</span> (err) {
 <a name="l00144"></a>00144                 printf(WTASK_PREFIX <span class="stringliteral">"error on set periodic, %s\n"</span>,
 <a name="l00145"></a>00145                        strerror(-err));
@@ -172,7 +173,7 @@
 <a name="l00147"></a>00147         }
 <a name="l00148"></a>00148 
 <a name="l00149"></a>00149         <span class="keywordflow">while</span> (1) {
-<a name="l00150"></a>00150                 err = <a name="a14"></a><a class="code" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">rt_task_wait_period</a>(NULL);
+<a name="l00150"></a>00150                 err = <a name="a13"></a><a class="code" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">rt_task_wait_period</a>(NULL);
 <a name="l00151"></a>00151                 <span class="keywordflow">if</span> (err) {
 <a name="l00152"></a>00152                         printf(WTASK_PREFIX
 <a name="l00153"></a>00153                                <span class="stringliteral">"error on rt_task_wait_period, %s\n"</span>,
@@ -180,7 +181,7 @@
 <a name="l00155"></a>00155                         <span class="keywordflow">break</span>;
 <a name="l00156"></a>00156                 }
 <a name="l00157"></a>00157         
-<a name="l00158"></a>00158                 write_time = <a name="a15"></a><a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a>();
+<a name="l00158"></a>00158                 write_time = rt_timer_read();
 <a name="l00159"></a>00159 
 <a name="l00160"></a>00160                 written = rt_dev_write(write_fd, &amp;write_time, sz);
 <a name="l00161"></a>00161                 <span class="keywordflow">if</span> (written &lt; 0 ) {
@@ -211,7 +212,7 @@
 <a name="l00186"></a>00186         RTIME irq_time   = 0;
 <a name="l00187"></a>00187         ssize_t sz = <span class="keyword">sizeof</span>(RTIME);
 <a name="l00188"></a>00188         ssize_t read = 0;
-<a name="l00189"></a>00189         <span class="keyword">struct </span><a name="_a16"></a><a class="code" href="structrtser__event.html">rtser_event</a> rx_event;
+<a name="l00189"></a>00189         <span class="keyword">struct </span><a name="_a14"></a><a class="code" href="structrtser__event.html">rtser_event</a> rx_event;
 <a name="l00190"></a>00190         
 <a name="l00191"></a>00191         printf(<span class="stringliteral">" Nr |   write-&gt;irq    |    irq-&gt;read    |   write-&gt;read   |\n"</span>);
 <a name="l00192"></a>00192         printf(<span class="stringliteral">"-----------------------------------------------------------\n"</span>);
@@ -224,7 +225,7 @@
 <a name="l00199"></a>00199 
 <a name="l00200"></a>00200         <span class="keywordflow">while</span> (1) {
 <a name="l00201"></a>00201                 <span class="comment">/* waiting for event */</span>
-<a name="l00202"></a>00202                 err = rt_dev_ioctl(read_fd, <a name="a17"></a><a class="code" href="group__rtserial.html#g3e3c22ccee4a2f49481e7084246c06ff">RTSER_RTIOC_WAIT_EVENT</a>, &amp;rx_event);
+<a name="l00202"></a>00202                 err = rt_dev_ioctl(read_fd, <a name="a15"></a><a class="code" href="group__rtserial.html#g3e3c22ccee4a2f49481e7084246c06ff">RTSER_RTIOC_WAIT_EVENT</a>, &amp;rx_event);
 <a name="l00203"></a>00203                 <span class="keywordflow">if</span> (err) {
 <a name="l00204"></a>00204                         printf(RTASK_PREFIX
 <a name="l00205"></a>00205                                <span class="stringliteral">"error on RTSER_RTIOC_WAIT_EVENT, %s\n"</span>,
@@ -234,10 +235,10 @@
 <a name="l00209"></a>00209                         <span class="keywordflow">break</span>;
 <a name="l00210"></a>00210                 }
 <a name="l00211"></a>00211 
-<a name="l00212"></a>00212                 irq_time = rx_event.<a name="a18"></a><a class="code" href="structrtser__event.html#f1679e9a36c9df41ea8f36ab5c914703">rxpend_timestamp</a>;
+<a name="l00212"></a>00212                 irq_time = rx_event.<a name="a16"></a><a class="code" href="structrtser__event.html#f1679e9a36c9df41ea8f36ab5c914703">rxpend_timestamp</a>;
 <a name="l00213"></a>00213                 read = rt_dev_read(read_fd, &amp;write_time, sz);
 <a name="l00214"></a>00214                 <span class="keywordflow">if</span> (read == sz) {
-<a name="l00215"></a>00215                         read_time = <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a>();
+<a name="l00215"></a>00215                         read_time = rt_timer_read();
 <a name="l00216"></a>00216                         printf(<span class="stringliteral">"%3d |%16llu |%16llu |%16llu\n"</span>, nr,
 <a name="l00217"></a>00217                                irq_time  - write_time,
 <a name="l00218"></a>00218                                read_time - irq_time,
@@ -282,7 +283,7 @@
 <a name="l00257"></a>00257         printf(MAIN_PREFIX <span class="stringliteral">"write-file opened\n"</span>);
 <a name="l00258"></a>00258 
 <a name="l00259"></a>00259         <span class="comment">/* writing write-config */</span>
-<a name="l00260"></a>00260         err = rt_dev_ioctl(write_fd, <a name="a19"></a><a class="code" href="group__rtserial.html#g138321c1f5bba234c8a7d7fc912aaaf8">RTSER_RTIOC_SET_CONFIG</a>, &amp;write_config);
+<a name="l00260"></a>00260         err = rt_dev_ioctl(write_fd, <a name="a17"></a><a class="code" href="group__rtserial.html#g138321c1f5bba234c8a7d7fc912aaaf8">RTSER_RTIOC_SET_CONFIG</a>, &amp;write_config);
 <a name="l00261"></a>00261         <span class="keywordflow">if</span> (err) {
 <a name="l00262"></a>00262                 printf(MAIN_PREFIX <span class="stringliteral">"error while RTSER_RTIOC_SET_CONFIG, %s\n"</span>,
 <a name="l00263"></a>00263                        strerror(-err));
@@ -310,7 +311,7 @@
 <a name="l00285"></a>00285         printf(MAIN_PREFIX <span class="stringliteral">"read-config written\n"</span>);
 <a name="l00286"></a>00286 
 <a name="l00287"></a>00287         <span class="comment">/* create write_task */</span>
-<a name="l00288"></a>00288         err = <a name="a20"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;write_task, <span class="stringliteral">"write_task"</span>, 0, 50, 0);
+<a name="l00288"></a>00288         err = <a name="a18"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;write_task, <span class="stringliteral">"write_task"</span>, 0, 50, 0);
 <a name="l00289"></a>00289         <span class="keywordflow">if</span> (err) {
 <a name="l00290"></a>00290                 printf(MAIN_PREFIX <span class="stringliteral">"failed to create write_task, %s\n"</span>,
 <a name="l00291"></a>00291                        strerror(-err));
@@ -331,7 +332,7 @@
 <a name="l00306"></a>00306 
 <a name="l00307"></a>00307         <span class="comment">/* start write_task */</span>
 <a name="l00308"></a>00308         printf(MAIN_PREFIX <span class="stringliteral">"starting write-task\n"</span>);
-<a name="l00309"></a>00309         err = <a name="a21"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;write_task, &amp;write_task_proc, NULL);
+<a name="l00309"></a>00309         err = <a name="a19"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;write_task, &amp;write_task_proc, NULL);
 <a name="l00310"></a>00310         <span class="keywordflow">if</span> (err) {
 <a name="l00311"></a>00311                 printf(MAIN_PREFIX <span class="stringliteral">"failed to start write_task, %s\n"</span>,
 <a name="l00312"></a>00312                        strerror(-err));
@@ -354,7 +355,7 @@
 <a name="l00329"></a>00329         cleanup_all();
 <a name="l00330"></a>00330         <span class="keywordflow">return</span> err;
 <a name="l00331"></a>00331 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
