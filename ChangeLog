@@ -387,7 +387,7 @@
 	* ksrc/skins/psos+: Lift the limitation on name length for pSOS
 	objects. Enforcing silly things is definitely not part of a proper
 	emulation.
-	
+
 2007-06-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.19-1.5-02.
