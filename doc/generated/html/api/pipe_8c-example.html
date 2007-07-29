@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -60,7 +61,7 @@
 <a name="l00035"></a>00035 <span class="keywordtype">void</span> cleanup (<span class="keywordtype">void</span>)
 <a name="l00036"></a>00036 
 <a name="l00037"></a>00037 {
-<a name="l00038"></a>00038     <a name="a44"></a><a class="code" href="group__posix__shm.html#gafbcde67669a1b96577e735ddebd8634">close</a>(pipe_fd);
+<a name="l00038"></a>00038     <a name="a42"></a><a class="code" href="group__posix__shm.html#gafbcde67669a1b96577e735ddebd8634">close</a>(pipe_fd);
 <a name="l00039"></a>00039 }
 <a name="l00040"></a>00040 
 <a name="l00041"></a>00041 <span class="comment">/* Kernel-side */</span>
@@ -87,7 +88,7 @@
 <a name="l00062"></a>00062 <span class="comment">       continuous stream of bytes is also possible using</span>
 <a name="l00063"></a>00063 <span class="comment">       rt_pipe_stream(), in which case no message buffer needs to be</span>
 <a name="l00064"></a>00064 <span class="comment">       preallocated. */</span>
-<a name="l00065"></a>00065     msgout = <a name="a45"></a><a class="code" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc</a>(len);
+<a name="l00065"></a>00065     msgout = <a name="a43"></a><a class="code" href="group__pipe.html#g40f294bf6254d2e1b66b8b6b400fc2e5">rt_pipe_alloc</a>(len);
 <a name="l00066"></a>00066 
 <a name="l00067"></a>00067     <span class="keywordflow">if</span> (!msgout)
 <a name="l00068"></a>00068         fail();
@@ -95,13 +96,13 @@
 <a name="l00070"></a>00070     <span class="comment">/* Send prompt message "Hello" (the output buffer will be freed</span>
 <a name="l00071"></a>00071 <span class="comment">       automatically)... */</span>
 <a name="l00072"></a>00072     strcpy(RT_PIPE_MSGPTR(msgout),<span class="stringliteral">"Hello"</span>);
-<a name="l00073"></a>00073     <a name="a46"></a><a class="code" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send</a>(&amp;pipe_desc,msgout,len,P_NORMAL);
+<a name="l00073"></a>00073     <a name="a44"></a><a class="code" href="group__pipe.html#gf40b20cad1dcd7bedcda72beaa16c057">rt_pipe_send</a>(&amp;pipe_desc,msgout,len,P_NORMAL);
 <a name="l00074"></a>00074 
 <a name="l00075"></a>00075     <span class="comment">/* Then wait for the reply string "World": */</span>
-<a name="l00076"></a>00076     <a name="a47"></a><a class="code" href="group__pipe.html#g731e5ef18007dcd58a9346bea66abbc6">rt_pipe_receive</a>(&amp;pipe_desc,&amp;msgin,TM_INFINITE);
+<a name="l00076"></a>00076     <a name="a45"></a><a class="code" href="group__pipe.html#g731e5ef18007dcd58a9346bea66abbc6">rt_pipe_receive</a>(&amp;pipe_desc,&amp;msgin,TM_INFINITE);
 <a name="l00077"></a>00077     printf(<span class="stringliteral">"received msg&gt; %s, size=%d\n"</span>,P_MSGPTR(msg),P_MSGSIZE(msg));
 <a name="l00078"></a>00078     <span class="comment">/* Free the received message buffer. */</span>
-<a name="l00079"></a>00079     <a name="a48"></a><a class="code" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free</a>(&amp;pipe_desc,msgin);
+<a name="l00079"></a>00079     <a name="a46"></a><a class="code" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free</a>(&amp;pipe_desc,msgin);
 <a name="l00080"></a>00080 
 <a name="l00081"></a>00081     <span class="comment">/* ... */</span>
 <a name="l00082"></a>00082 }
@@ -111,20 +112,20 @@
 <a name="l00086"></a>00086 {
 <a name="l00087"></a>00087     <span class="keywordtype">int</span> err;
 <a name="l00088"></a>00088 
-<a name="l00089"></a>00089     err = <a name="a49"></a><a class="code" href="group__pipe.html#g29521cc898afa0069963964955167aa5">rt_pipe_create</a>(&amp;pipe_desc,NULL,PIPE_MINOR);
+<a name="l00089"></a>00089     err = <a name="a47"></a><a class="code" href="group__pipe.html#g29521cc898afa0069963964955167aa5">rt_pipe_create</a>(&amp;pipe_desc,NULL,PIPE_MINOR);
 <a name="l00090"></a>00090 
 <a name="l00091"></a>00091     <span class="keywordflow">if</span> (err)
 <a name="l00092"></a>00092         fail();
 <a name="l00093"></a>00093 
 <a name="l00094"></a>00094     <span class="comment">/* ... */</span>
 <a name="l00095"></a>00095 
-<a name="l00096"></a>00096     err = <a name="a50"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task_desc,
+<a name="l00096"></a>00096     err = <a name="a48"></a><a class="code" href="group__task.html#g03387550693c21d0223f739570ccd992">rt_task_create</a>(&amp;task_desc,
 <a name="l00097"></a>00097                          <span class="stringliteral">"MyTaskName"</span>,
 <a name="l00098"></a>00098                          TASK_STKSZ,
 <a name="l00099"></a>00099                          TASK_PRIO,
 <a name="l00100"></a>00100                          TASK_MODE);
 <a name="l00101"></a>00101     <span class="keywordflow">if</span> (!err)
-<a name="l00102"></a>00102         <a name="a51"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task_desc,&amp;task_body,NULL);
+<a name="l00102"></a>00102         <a name="a49"></a><a class="code" href="group__task.html#gc9638918b8310a430088f5c9a04d2bb7">rt_task_start</a>(&amp;task_desc,&amp;task_body,NULL);
 <a name="l00103"></a>00103 
 <a name="l00104"></a>00104     <span class="comment">/* ... */</span>
 <a name="l00105"></a>00105 }
@@ -132,10 +133,10 @@
 <a name="l00107"></a>00107 <span class="keywordtype">void</span> cleanup_module (<span class="keywordtype">void</span>)
 <a name="l00108"></a>00108 
 <a name="l00109"></a>00109 {
-<a name="l00110"></a>00110     <a name="a52"></a><a class="code" href="group__pipe.html#g1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a>(&amp;pipe_desc);
-<a name="l00111"></a>00111     <a name="a53"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;task_desc);
+<a name="l00110"></a>00110     <a name="a50"></a><a class="code" href="group__pipe.html#g1d84976a1b9b668366261ca9b836b677">rt_pipe_delete</a>(&amp;pipe_desc);
+<a name="l00111"></a>00111     <a name="a51"></a><a class="code" href="group__task.html#gb6e0d411830710e8cc82d77b9df19510">rt_task_delete</a>(&amp;task_desc);
 <a name="l00112"></a>00112 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

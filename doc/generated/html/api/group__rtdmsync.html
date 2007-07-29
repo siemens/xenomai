@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -159,12 +160,10 @@ typedef unsigned long&nbsp;</td><td class="memItemRight" valign="bottom"><a clas
     <td>
 
 <p>
-<b>Value:</b><div class="fragment"><pre class="fragment">{                                                                           \
-    spl_t   s;                                                              \
-                                                                            \
-    xnlock_get_irqsave(&amp;nklock, s);                                         \
-    code_block;                                                             \
-    xnlock_put_irqrestore(&amp;nklock, s);                                      \
+<b>Value:</b><div class="fragment"><pre class="fragment">{                                               \
+    &lt;ENTER_ATOMIC_SECTION&gt;                      \
+    code_block;                                 \
+    &lt;LEAVE_ATOMIC_SECTION&gt;                      \
 }
 </pre></div>Execute code block atomically. 
 <p>
@@ -731,7 +730,7 @@ This function waits or tests for the occurence of the given event, taking the pr
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>event</em>&nbsp;</td><td>Event handle as returned by <a class="el" href="group__rtdmsync.html#gddf08d8ba5a44668bb360070a114fb19">rtdm_event_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -982,7 +981,7 @@ This function tries to acquire the given mutex. If it is not available, the call
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>mutex</em>&nbsp;</td><td>Mutex handle as returned by <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_mutex_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -1235,7 +1234,7 @@ This function tries to decrement the given semphore's value if it is positive on
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>sem</em>&nbsp;</td><td>Semaphore handle as returned by <a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">rtdm_sem_init()</a> </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>timeout</em>&nbsp;</td><td>Relative timeout in nanoseconds, see <a class="el" href="group__rtdm.html#RTDM_TIMEOUT_xxx">RTDM_TIMEOUT_xxx</a> for special values </td></tr>
-    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or rtdm_toseq_absinit(), or NULL</td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>timeout_seq</em>&nbsp;</td><td>Handle of a timeout sequence as returned by <a class="el" href="group__rtdmsync.html#g531ddf80690059302409f760bd7f14d4">rtdm_toseq_init()</a> or NULL</td></tr>
   </table>
 </dl>
 <dl compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
@@ -1372,7 +1371,7 @@ This service can be called from:<p>
 Rescheduling: never.     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:07 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:32 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

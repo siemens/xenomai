@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -39,20 +40,20 @@
 <a name="l00014"></a>00014     <span class="comment">/* Create a 256Kb heap usable for dynamic memory allocation of</span>
 <a name="l00015"></a>00015 <span class="comment">       variable-size blocks in kernel space. */</span>
 <a name="l00016"></a>00016 
-<a name="l00017"></a>00017     err = <a name="a29"></a><a class="code" href="group__native__heap.html#g1d19ad24dc9f94b969aa0f574170bdc4">rt_heap_create</a>(&amp;heap_desc,<span class="stringliteral">"MyHeapName"</span>,HEAP_SIZE,HEAP_MODE);
+<a name="l00017"></a>00017     err = <a name="a27"></a><a class="code" href="group__native__heap.html#g1d19ad24dc9f94b969aa0f574170bdc4">rt_heap_create</a>(&amp;heap_desc,<span class="stringliteral">"MyHeapName"</span>,HEAP_SIZE,HEAP_MODE);
 <a name="l00018"></a>00018 
 <a name="l00019"></a>00019     <span class="keywordflow">if</span> (err)
 <a name="l00020"></a>00020         fail();
 <a name="l00021"></a>00021 
 <a name="l00022"></a>00022     <span class="comment">/* Request a 16-bytes block, asking for a non-blocking call since</span>
 <a name="l00023"></a>00023 <span class="comment">       only Xenomai tasks may block. */</span>
-<a name="l00024"></a>00024     err = <a name="a30"></a><a class="code" href="group__native__heap.html#g52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc</a>(&amp;heap_desc,16,TM_NONBLOCK,&amp;block);
+<a name="l00024"></a>00024     err = <a name="a28"></a><a class="code" href="group__native__heap.html#g52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc</a>(&amp;heap_desc,16,TM_NONBLOCK,&amp;block);
 <a name="l00025"></a>00025 
 <a name="l00026"></a>00026     <span class="keywordflow">if</span> (err)
 <a name="l00027"></a>00027         <span class="keywordflow">goto</span> no_memory;
 <a name="l00028"></a>00028 
 <a name="l00029"></a>00029     <span class="comment">/* Free the block: */</span>
-<a name="l00030"></a>00030     <a name="a31"></a><a class="code" href="group__native__heap.html#g300ca8c868d02dad99790fe39b443f6f">rt_heap_free</a>(&amp;heap_desc,block);
+<a name="l00030"></a>00030     <a name="a29"></a><a class="code" href="group__native__heap.html#g300ca8c868d02dad99790fe39b443f6f">rt_heap_free</a>(&amp;heap_desc,block);
 <a name="l00031"></a>00031    
 <a name="l00032"></a>00032     <span class="comment">/* ... */</span>
 <a name="l00033"></a>00033 }
@@ -60,9 +61,9 @@
 <a name="l00035"></a>00035 <span class="keywordtype">void</span> cleanup_module (<span class="keywordtype">void</span>)
 <a name="l00036"></a>00036 
 <a name="l00037"></a>00037 {
-<a name="l00038"></a>00038     <a name="a32"></a><a class="code" href="group__native__heap.html#g08f8d244a545fd6a5719ad5708552552">rt_heap_delete</a>(&amp;heap_desc);
+<a name="l00038"></a>00038     <a name="a30"></a><a class="code" href="group__native__heap.html#g08f8d244a545fd6a5719ad5708552552">rt_heap_delete</a>(&amp;heap_desc);
 <a name="l00039"></a>00039 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

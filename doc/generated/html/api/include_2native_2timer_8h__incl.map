@@ -3,3 +3,4 @@ rect $native_2types_8h.html 206,8 310,32
 rect $include_2nucleus_2timer_8h.html 202,56 314,80
 rect $nucleus_2types_8h-source.html 374,8 489,32
 rect $timebase_8h.html 363,56 499,80
+rect $stat_8h-source.html 379,104 483,128

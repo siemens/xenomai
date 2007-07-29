@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -38,7 +39,6 @@ Clocks and timers services.
 Xenomai POSIX skin supports two clocks:<p>
 CLOCK_REALTIME maps to the nucleus system clock, keeping time as the amount of time since the Epoch, with a resolution of one system clock tick.<p>
 CLOCK_MONOTONIC maps to an architecture-dependent high resolution counter, so is suitable for measuring short time intervals. However, when used for sleeping (with <a class="el" href="group__posix__time.html#g924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>), the CLOCK_MONOTONIC clock has a resolution of one system clock tick, like the CLOCK_REALTIME clock.<p>
-Setting any of the two clocks with <a class="el" href="group__posix__time.html#gb0dbabb3e47efe9483b81235fdd0c297">clock_settime()</a> is currently not supported.<p>
 Timer objects may be created with the <a class="el" href="group__posix__time.html#g8a24ab6b0901162bbbbbca4f5205abd0">timer_create()</a> service using either of the two clocks, but the resolution of these timers is one system clock tick, as is the case for <a class="el" href="group__posix__time.html#g924d51d78cdcd9d7dee2613fb3a33cd1">clock_nanosleep()</a>.<p>
 <dl compact><dt><b>Note:</b></dt><dd>The duration of the POSIX clock tick depends on the active time base (configurable at compile-time with the constant <em>CONFIG_XENO_OPT_POSIX_PERIOD</em>, and at run-time with the <em>xeno_posix</em> module parameter <em>tick_arg</em>). When the time base is aperiodic (which is the default) the system clock tick is one nanosecond.</dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_08.html#tag_02_08_05">Specification.</a> </dd></dl>
@@ -190,7 +190,7 @@ This service returns, at the address <em>tp</em> the current value of the clock 
 </dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a60">rtcan_rtt.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a58">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="g924d51d78cdcd9d7dee2613fb3a33cd1"></a><!-- doxytag: member="clock.c::clock_nanosleep" ref="g924d51d78cdcd9d7dee2613fb3a33cd1" args="(clockid_t clock_id, int flags, const struct timespec *rqtp, struct timespec *rmtp)" --><p>
@@ -263,7 +263,7 @@ an error number if:<ul>
 </dd></dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
-<a class="el" href="rtcan__rtt_8c-example.html#a61">rtcan_rtt.c</a>.</dl>    </td>
+<a class="el" href="rtcan__rtt_8c-example.html#a59">rtcan_rtt.c</a>.</dl>    </td>
   </tr>
 </table>
 <a class="anchor" name="gb0dbabb3e47efe9483b81235fdd0c297"></a><!-- doxytag: member="clock.c::clock_settime" ref="gb0dbabb3e47efe9483b81235fdd0c297" args="(clockid_t clock_id, const struct timespec *tp)" --><p>
@@ -302,7 +302,21 @@ an error number if:<ul>
 <p>
 Set the specified clock. 
 <p>
-This service is not supported.<p>
+This allow setting the CLOCK_REALTIME clock.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>clock_id,the</em>&nbsp;</td><td>id of the clock to be set, only CLOCK_REALTIME is supported.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>tp,the</em>&nbsp;</td><td>address of a struct timespec specifying the new date.</td></tr>
+  </table>
+</dl>
+<dl compact><dt><b>Return values:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>on success; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-1</em>&nbsp;</td><td>with <em>errno</em> set if:<ul>
+<li>EINVAL, <em>clock_id</em> is not CLOCK_REALTIME;</li><li>EINVAL, the date specified by <em>tp</em> is invalid.</li></ul>
+</td></tr>
+  </table>
+</dl>
 <dl compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">Specification.</a> </dd></dl>
     </td>
   </tr>
@@ -648,7 +662,7 @@ Expiration date and reload value are rounded to an integer count of system clock
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:08 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:34 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

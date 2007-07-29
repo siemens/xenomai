@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -46,14 +47,14 @@
 <a name="l00021"></a>00021 <span class="comment">       thread. The heap should have been created with the H_SHARED</span>
 <a name="l00022"></a>00022 <span class="comment">       mode set. */</span>
 <a name="l00023"></a>00023 
-<a name="l00024"></a>00024     err = <a name="a165"></a><a class="code" href="group__native__heap.html#ge17a8784a83d2eec94089a86a831a833">rt_heap_bind</a>(&amp;heap_desc,<span class="stringliteral">"SomeShmName"</span>,TM_NONBLOCK);
+<a name="l00024"></a>00024     err = <a name="a162"></a><a class="code" href="group__native__heap.html#ge17a8784a83d2eec94089a86a831a833">rt_heap_bind</a>(&amp;heap_desc,<span class="stringliteral">"SomeShmName"</span>,TM_NONBLOCK);
 <a name="l00025"></a>00025 
 <a name="l00026"></a>00026     <span class="keywordflow">if</span> (err)
 <a name="l00027"></a>00027         fail();
 <a name="l00028"></a>00028 
 <a name="l00029"></a>00029     <span class="comment">/* Get the address of the shared memory segment. The "size" and</span>
 <a name="l00030"></a>00030 <span class="comment">       "timeout" arguments are unused here. */</span>
-<a name="l00031"></a>00031     <a name="a166"></a><a class="code" href="group__native__heap.html#g52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc</a>(&amp;heap_desc,0,TM_NONBLOCK,&amp;shared_mem);
+<a name="l00031"></a>00031     <a name="a163"></a><a class="code" href="group__native__heap.html#g52678149ff2b66e47aa8cdcddab653a4">rt_heap_alloc</a>(&amp;heap_desc,0,TM_NONBLOCK,&amp;shared_mem);
 <a name="l00032"></a>00032 
 <a name="l00033"></a>00033     <span class="comment">/* ... */</span>
 <a name="l00034"></a>00034 }
@@ -64,9 +65,9 @@
 <a name="l00039"></a>00039     <span class="comment">/* We need to unbind explicitly from the heap in order to</span>
 <a name="l00040"></a>00040 <span class="comment">       properly release the underlying memory mapping. Exiting the</span>
 <a name="l00041"></a>00041 <span class="comment">       process unbinds all mappings automatically. */</span>
-<a name="l00042"></a>00042     <a name="a167"></a><a class="code" href="group__native__heap.html#gea086656fe119a563e8c0b6d44f83c8e">rt_heap_unbind</a>(&amp;heap_desc);
+<a name="l00042"></a>00042     <a name="a164"></a><a class="code" href="group__native__heap.html#gea086656fe119a563e8c0b6d44f83c8e">rt_heap_unbind</a>(&amp;heap_desc);
 <a name="l00043"></a>00043 }
-</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

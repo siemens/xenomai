@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -191,24 +192,26 @@
 <a name="l00161"></a>00161         <span class="keywordflow">return</span> xntbase_ns2ticks(pse51_tbase, xnpod_get_cpu_time());
 <a name="l00162"></a>00162 }
 <a name="l00163"></a>00163 
-<a name="l00164"></a>00164 <span class="comment">/* Convert an absolute timeout for clock clock_id to a relative timeout. */</span>
-<a name="l00165"></a>00165 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_adjust_timeout(xnticks_t *timeoutp, clockid_t clock_id)
-<a name="l00166"></a>00166 {
-<a name="l00167"></a>00167     xnsticks_t delay;
-<a name="l00168"></a>00168 
-<a name="l00169"></a>00169     <span class="keywordflow">if</span>(*timeoutp == XN_INFINITE)
-<a name="l00170"></a>00170         <span class="keywordflow">return</span> 0;
-<a name="l00171"></a>00171 
-<a name="l00172"></a>00172     delay = *timeoutp - clock_get_ticks(clock_id);
-<a name="l00173"></a>00173     <span class="keywordflow">if</span>(delay &lt;= 0)
-<a name="l00174"></a>00174         <span class="keywordflow">return</span> ETIMEDOUT;
-<a name="l00175"></a>00175 
-<a name="l00176"></a>00176     *timeoutp = delay;
-<a name="l00177"></a>00177     <span class="keywordflow">return</span> 0;
-<a name="l00178"></a>00178 }
-<a name="l00179"></a>00179 
-<a name="l00180"></a>00180 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:58 2007 for Xenomai API by&nbsp;
+<a name="l00164"></a>00164 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> clock_flag(<span class="keywordtype">int</span> flag, clockid_t clock_id)
+<a name="l00165"></a>00165 {
+<a name="l00166"></a>00166         <span class="keywordflow">switch</span>(flag &amp; TIMER_ABSTIME) {
+<a name="l00167"></a>00167         <span class="keywordflow">case</span> 0:
+<a name="l00168"></a>00168                 <span class="keywordflow">return</span> XN_RELATIVE;
+<a name="l00169"></a>00169 
+<a name="l00170"></a>00170         <span class="keywordflow">case</span> TIMER_ABSTIME:
+<a name="l00171"></a>00171                 <span class="keywordflow">switch</span>(clock_id) {
+<a name="l00172"></a>00172                 <span class="keywordflow">case</span> CLOCK_MONOTONIC:
+<a name="l00173"></a>00173                         <span class="keywordflow">return</span> XN_ABSOLUTE;
+<a name="l00174"></a>00174 
+<a name="l00175"></a>00175                 <span class="keywordflow">case</span> CLOCK_REALTIME:
+<a name="l00176"></a>00176                         <span class="keywordflow">return</span> XN_REALTIME;
+<a name="l00177"></a>00177                 }
+<a name="l00178"></a>00178         }
+<a name="l00179"></a>00179         <span class="keywordflow">return</span> -EINVAL;
+<a name="l00180"></a>00180 }
+<a name="l00181"></a>00181 
+<a name="l00182"></a>00182 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_INTERNAL_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li id="current"><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -44,6 +45,7 @@ Include dependency graph for timer.h:<p><center><img src="include_2native_2timer
 <area href="include_2nucleus_2timer_8h.html" shape="rect" coords="202,56,314,80" alt="">
 <area href="nucleus_2types_8h-source.html" shape="rect" coords="374,8,489,32" alt="">
 <area href="timebase_8h.html" shape="rect" coords="363,56,499,80" alt="">
+<area href="stat_8h-source.html" shape="rect" coords="379,104,483,128" alt="">
 </map>
 
 <p>
@@ -60,27 +62,9 @@ This graph shows which files directly or indirectly include this file:<p><center
 <a href="include_2native_2timer_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f">rt_timer_ns2ticks</a> (SRTIME ns)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to internal clock ticks.  <a href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48">rt_timer_ticks2ns</a> (SRTIME ticks)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert internal clock ticks to nanoseconds.  <a href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181">rt_timer_ns2tsc</a> (SRTIME ns)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert nanoseconds to local CPU clock ticks.  <a href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">SRTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541">rt_timer_tsc2ns</a> (SRTIME ticks)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert local CPU clock ticks to nanoseconds.  <a href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#g66f026b0ac68ef3acde0e6d1bdb6baaf">rt_timer_inquire</a> (RT_TIMER_INFO *info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about the timer.  <a href="group__native__timer.html#g66f026b0ac68ef3acde0e6d1bdb6baaf"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285">rt_timer_read</a> (void)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current system time.  <a href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">RTIME&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8">rt_timer_tsc</a> (void)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return the current TSC value.  <a href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__timer.html#g7d3f782ce7b642a2759c62649777d2c7">rt_timer_spin</a> (RTIME ns)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Busy wait burning CPU cycles.  <a href="group__native__timer.html#g7d3f782ce7b642a2759c62649777d2c7"></a><br></td></tr>
@@ -88,7 +72,7 @@ This graph shows which files directly or indirectly include this file:<p><center
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the system clock rate.  <a href="group__native__timer.html#gffcb5eaef6c3a64a05445f6dafdbb155"></a><br></td></tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:34:59 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:24 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>

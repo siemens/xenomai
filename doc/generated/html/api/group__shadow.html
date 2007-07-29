@@ -11,6 +11,7 @@
     <li><a href="modules.html"><span>Modules</span></a></li>
     <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
+    <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
     <li><a href="examples.html"><span>Examples</span></a></li>
     <li>
       <form action="search.php" method="get">
@@ -149,6 +150,9 @@ This call maps a nucleus thread to the "current" Linux task. The priority of the
 <ul>
 <li>-EPERM is returned if the shadow thread has been killed before the current task had a chance to return to the caller. In such a case, the real-time mapping operation has failed globally, and no Xenomai resource remains attached to it.</li></ul>
 <p>
+<ul>
+<li>-EINVAL is returned if the thread control block does not bear the XNSHADOW bit, or if the thread has already been mapped.</li></ul>
+<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
@@ -226,7 +230,7 @@ Switch a shadow thread back to the Linux domain.
 <p>
 <p><b>For internal use only.</b></p>
 <p>
-This service yields the control of the running shadow back to Linux. This is obtained by suspending the shadow and scheduling a wake up call for the mated user task inside the Linux domain. The Linux task will resume on return from <a class="el" href="group__pod.html#g61d22a7f0c5fafc26971b19177ed4a03">xnpod_suspend_thread()</a> on behalf of the root thread.<p>
+This service yields the control of the running shadow back to Linux. This is obtained by suspending the shadow and scheduling a wake up call for the mated user task inside the Linux domain. The Linux task will resume on return from <a class="el" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a">xnpod_suspend_thread()</a> on behalf of the root thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>notify</em>&nbsp;</td><td>A boolean flag indicating whether threads monitored from secondary mode switches should be sent a SIGXCPU signal. For instance, some internal operations like task exit should not trigger such signal.</td></tr>
@@ -243,7 +247,7 @@ Rescheduling: always.<p>
     </td>
   </tr>
 </table>
-<hr size="1"><address style="align: right;"><small>Generated on Mon May 28 14:35:01 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Sun Jul 29 13:43:26 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.4.6 </small></address>
 </body>
