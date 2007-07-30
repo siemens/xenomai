@@ -325,6 +325,23 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   fi
   AC_SUBST(ADEOS_PATCH)
 
+  unset LNDIR
+  AC_CHECK_PROG(LNDIR, lndir, lndir)
+  if test "x$LNDIR" != "x"; then
+    AC_MSG_CHECKING(if lndir supports the -silent -ignorelinks options)
+    if mkdir conftest1.dir && : > conftest1.dir/foo && mkdir conftest2.dir; then
+	  cd conftest2.dir && $LNDIR -silent -ignorelinks ../conftest1.dir \
+		&& cd ..
+	  test -e conftest2.dir/foo && LNDIR="$LNDIR -silent -ignorelinks"
+	  rm -Rf contest1.dir conftest2.dir
+    fi
+    if test "x$LNDIR" = "xlndir"; then
+	AC_MSG_RESULT(no)
+    else
+	AC_MSG_RESULT(yes)
+    fi
+  fi
+
   AC_CONFIG_COMMANDS(linux, [
      if test -e linux/.xenomai-prepared ; then
         . linux/.xenomai-prepared
@@ -348,11 +365,15 @@ patch. Default is to infer the patch name from Linux kernel version.]),
                fi
                mkdir linux
                echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C" 
-               cd $XENO_LINUX_SRCDIR
-               find . -! -type d | while read f ; do
-                   d=$targetdir/`dirname $f`
-                   mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
-               done
+	       if test -z "$LNDIR"; then
+	           cd $XENO_LINUX_SRCDIR
+                   find . -! -type d | while read f ; do
+                       d=$targetdir/`dirname $f`
+                       mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
+                   done
+               else
+		   cd $targetdir && $LNDIR $XENO_LINUX_SRCDIR
+	       fi
                echo "${ECHO_T}done."
            fi
            cd $targetdir
@@ -386,7 +407,8 @@ EOF
            XENO_TARGET_ARCH=$XENO_TARGET_ARCH
            XENO_LINUX_ARCH=$XENO_LINUX_ARCH
            XENO_LINUX_VERSION=$linux_full_version
-         ADEOS_PATCH=$ADEOS_PATCH])
+           ADEOS_PATCH=$ADEOS_PATCH
+	   LNDIR="$LNDIR"])
 fi
 AM_CONDITIONAL(XENO_BUILD_LINUX, [test \! x"$XENO_LINUX_SRCDIR" = x])
 
