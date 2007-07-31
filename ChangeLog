@@ -1,3 +1,7 @@
+2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c: Name IPIs in /proc output.
+	
 2007-07-30  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* configure.in: Use lndir if available for the implementation of
