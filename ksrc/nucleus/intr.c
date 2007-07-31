@@ -296,15 +296,15 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		s |= ret;
 
 		if (code == XN_ISR_HANDLED) {
-		       end = NULL;
+			end = NULL;
 			xnstat_counter_inc(
 				&intr->stat[xnsched_cpu(sched)].hits);
 			xnstat_runtime_lazy_switch(sched,
 				&intr->stat[xnsched_cpu(sched)].account,
 				start);
 			start = xnstat_runtime_now();
-	       } else if (code == XN_ISR_NONE && end == NULL)
-		       end = intr;
+		} else if (code == XN_ISR_NONE && end == NULL)
+			end = intr;
 
 		if (counter++ > MAX_EDGEIRQ_COUNTER)
 			break;
