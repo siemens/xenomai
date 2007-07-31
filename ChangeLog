@@ -1,4 +1,4 @@
-2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
+2007-07-31  Jan Kiszka  <jan.kiszka@web.de>, <Daniel.Simon@inrialpes.fr>
 
 	* include/nucleus/{stat.h,thread.h}, ksrc/nucleus/{pod.c,module.c,
 	thread.c}: Make xnthread_t::stat::account persistent across dumps
@@ -10,6 +10,8 @@
 
 	* include/nucleus, ksrc/nucleus, ksrc/skins/native/task.c:
 	Refactor [xnstat_]runtime to [xnstat_]exectime.
+
+2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/intr.c: Annotate IPIs in /proc/xenomai/irq.
 
