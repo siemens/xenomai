@@ -1,3 +1,8 @@
+2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c: (xnintr_edge_shirq_handler): Revert broken
+	optimization.
+
 2007-07-31  Jan Kiszka  <jan.kiszka@web.de>, <Daniel.Simon@inrialpes.fr>
 
 	* include/nucleus/{stat.h,thread.h}, ksrc/nucleus/{pod.c,module.c,
