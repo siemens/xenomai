@@ -1,3 +1,7 @@
+2007-07-31  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-03.
+
 2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/intr.c: (xnintr_edge_shirq_handler): Revert broken

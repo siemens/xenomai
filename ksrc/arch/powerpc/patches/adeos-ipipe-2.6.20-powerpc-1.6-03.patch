@@ -1533,7 +1533,7 @@ index 746f78c..0e57eb3 100644
  static struct ipic_info ipic_info[] = {
  	[9] = {
 diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
-index d01ced1..92ed7e6 100644
+index d01ced1..887b874 100644
 --- a/arch/powerpc/sysdev/mpic.c
 +++ b/arch/powerpc/sysdev/mpic.c
 @@ -44,7 +44,7 @@
@@ -1545,6 +1545,85 @@ index d01ced1..92ed7e6 100644
  
  #ifdef CONFIG_PPC32	/* XXX for now */
  #ifdef CONFIG_IRQ_ALL_CPUS
+@@ -555,19 +555,24 @@ static void mpic_unmask_irq(unsigned int irq)
+ 	unsigned int loops = 100000;
+ 	struct mpic *mpic = mpic_from_irq(irq);
+ 	unsigned int src = mpic_irq_to_hw(irq);
++	unsigned long flags;
+ 
+ 	DBG("%p: %s: enable_irq: %d (src %d)\n", mpic, mpic->name, irq, src);
+ 
++	local_irq_save_hw_cond(flags);
++
+ 	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
+ 		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) &
+ 		       ~MPIC_VECPRI_MASK);
+ 	/* make sure mask gets to controller before we return to user */
+ 	do {
+ 		if (!loops--) {
+-			printk(KERN_ERR "mpic_enable_irq timeout\n");
++			printk(KERN_ERR "mpic_unmask_irq timeout\n");
+ 			break;
+ 		}
+ 	} while(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK);
++
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static void mpic_mask_irq(unsigned int irq)
+@@ -575,9 +580,12 @@ static void mpic_mask_irq(unsigned int irq)
+ 	unsigned int loops = 100000;
+ 	struct mpic *mpic = mpic_from_irq(irq);
+ 	unsigned int src = mpic_irq_to_hw(irq);
++	unsigned long flags;
+ 
+ 	DBG("%s: disable_irq: %d (src %d)\n", mpic->name, irq, src);
+ 
++	local_irq_save_hw_cond(flags);
++
+ 	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
+ 		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) |
+ 		       MPIC_VECPRI_MASK);
+@@ -585,10 +593,12 @@ static void mpic_mask_irq(unsigned int irq)
+ 	/* make sure mask gets to controller before we return to user */
+ 	do {
+ 		if (!loops--) {
+-			printk(KERN_ERR "mpic_enable_irq timeout\n");
++			printk(KERN_ERR "mpic_mask_irq timeout\n");
+ 			break;
+ 		}
+ 	} while(!(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK));
++
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static void mpic_end_irq(unsigned int irq)
+@@ -730,6 +740,7 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+ 	unsigned int src = mpic_irq_to_hw(virq);
+ 	struct irq_desc *desc = get_irq_desc(virq);
+ 	unsigned int vecpri, vold, vnew;
++	unsigned long flags;
+ 
+ 	DBG("mpic: set_irq_type(mpic:@%p,virq:%d,src:0x%x,type:0x%x)\n",
+ 	    mpic, virq, src, flow_type);
+@@ -754,6 +765,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+ 	else
+ 		vecpri = mpic_type_to_vecpri(mpic, flow_type);
+ 
++	local_irq_save_hw_cond(flags);
++
+ 	vold = mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI));
+ 	vnew = vold & ~(MPIC_INFO(VECPRI_POLARITY_MASK) |
+ 			MPIC_INFO(VECPRI_SENSE_MASK));
+@@ -761,6 +774,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+ 	if (vold != vnew)
+ 		mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI), vnew);
+ 
++	local_irq_restore_hw_cond(flags);
++
+ 	return 0;
+ }
+ 
 diff --git a/arch/powerpc/sysdev/tsi108_pci.c b/arch/powerpc/sysdev/tsi108_pci.c
 index ae249c6..cde8ae9 100644
 --- a/arch/powerpc/sysdev/tsi108_pci.c
@@ -1848,7 +1927,7 @@ index 9e4dd98..2168d31 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..d077d5a
+index 0000000..2132ee3
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,219 @@
@@ -1886,10 +1965,10 @@ index 0000000..d077d5a
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.6-02"
++#define IPIPE_ARCH_STRING	"1.6-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 2^5 for 32bits arch. */
