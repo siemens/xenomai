@@ -860,6 +860,14 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 	} else if (irq == XNARCH_TIMER_IRQ) {
 		p += sprintf(p, "         [timer]");
 		return p - str;
+#ifdef CONFIG_SMP
+	} else if (irq == RTHAL_SERVICE_IPI0) {
+		p += sprintf(p, "         [IPI]");
+		return p - str;
+	} else if (irq == RTHAL_CRITICAL_IPI) {
+		p += sprintf(p, "         [critical sync]");
+		return p - str;
+#endif /* CONFIG_SMP */
 	}
 
 	xnlock_get_irqsave(&intrlock, s);
