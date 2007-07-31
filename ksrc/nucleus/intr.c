@@ -12,7 +12,7 @@
  *
  * Xenomai is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -296,15 +296,15 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		s |= ret;
 
 		if (code == XN_ISR_HANDLED) {
-                       end = NULL;
+		       end = NULL;
 			xnstat_counter_inc(
 				&intr->stat[xnsched_cpu(sched)].hits);
 			xnstat_runtime_lazy_switch(sched,
 				&intr->stat[xnsched_cpu(sched)].account,
 				start);
 			start = xnstat_runtime_now();
-               } else if (code == XN_ISR_NONE && end == NULL)
-                       end = intr;
+	       } else if (code == XN_ISR_NONE && end == NULL)
+		       end = intr;
 
 		if (counter++ > MAX_EDGEIRQ_COUNTER)
 			break;
@@ -323,7 +323,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++shirq->unhandled == XNINTR_MAX_UNHANDLED) {
 			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
-			         "line.\n", __FUNCTION__, irq);
+				 "line.\n", __FUNCTION__, irq);
 			s |= XN_ISR_NOENABLE;
 		}
 	} else
@@ -454,7 +454,7 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 	int irq = intr->irq, err;
  
 	xnlock_get(&xnirqs[irq].lock);
- 	err = xnarch_release_irq(irq);
+	err = xnarch_release_irq(irq);
 	xnlock_put(&xnirqs[irq].lock);
 
 	xnintr_sync_stat_references(intr);
@@ -523,7 +523,7 @@ int xnintr_mount(void)
  * an indication of interrupt activity only.
  *
  * @param intr The address of a interrupt object descriptor the
- * nucleus will use to store the object-specific data.  This
+ * nucleus will use to store the object-specific data.	This
  * descriptor must always be valid while the object is active
  * therefore it must be allocated in permanent memory.
  *
@@ -822,10 +822,10 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 	spl_t s;
 
 	if (rthal_virtual_irq_p(irq)) {
-		p += sprintf(p, "         [virtual]");
+		p += sprintf(p, "	  [virtual]");
 		return p - str;
 	} else if (irq == XNARCH_TIMER_IRQ) {
-		p += sprintf(p, "         %s", nkclock.name);
+		p += sprintf(p, "	  %s", nkclock.name);
 		return p - str;
 	}
 
@@ -834,7 +834,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	intr = xnirqs[irq].handlers;
 	if (intr) {
-		strcpy(p, "        "); p += 8;
+		strcpy(p, "	   "); p += 8;
 
 		do {
 			*p = ' '; p += 1;
@@ -846,7 +846,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 #else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
 	intr = rthal_irq_cookie(&rthal_domain, irq);
 	if (intr) {
-		strcpy(p, "         "); p += 9;
+		strcpy(p, "	    "); p += 9;
 		strcpy(p, intr->name); p += strlen(intr->name);
 	}
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */
@@ -906,7 +906,7 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 
 	last_switch = xnpod_sched_slot(cpu_no)->last_account_switch;
 
-	*runtime        = intr->stat[cpu_no].account.total;
+	*runtime	= intr->stat[cpu_no].account.total;
 	*account_period = last_switch - intr->stat[cpu_no].account.start;
 
 	intr->stat[cpu_no].account.total  = 0;
