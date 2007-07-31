@@ -407,7 +407,7 @@ int xnpod_init(void)
 
 		sched->rootcb.affinity = xnarch_cpumask_of_cpu(cpu);
 
-		xnstat_runtime_set_current(sched, &sched->rootcb.stat.account);
+		xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
 	}
 
 	xnarch_hook_ipi(&xnpod_schedule_handler);
@@ -572,7 +572,7 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 
 	xnthread_cleanup_tcb(threadout);
 
-	xnstat_runtime_finalize(sched, &threadin->stat.account);
+	xnstat_exectime_finalize(sched, &threadin->stat.account);
 
 	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
 				   xnthread_archtcb(threadin));
@@ -832,7 +832,6 @@ int xnpod_start_thread(xnthread_t *thread,
 	thread->imode = (mode & XNTHREAD_MODE_BITS);
 	thread->entry = entry;
 	thread->cookie = cookie;
-	thread->stime = xnarch_get_cpu_time();
 
 	if (xnthread_test_state(thread, XNRRB))
 		thread->rrcredit = thread->rrperiod;
@@ -1867,8 +1866,9 @@ int xnpod_migrate_thread(int cpu)
 
 	xnpod_schedule();
 
-	/* Reset execution time stats due to unsync'ed TSCs */
-	xnstat_runtime_reset_stats(&thread->stat.account);
+	/* Reset execution time measurement period so that we don't mess up
+	   per-CPU statistics. */
+	xnstat_exectime_reset_stats(&thread->stat.lastperiod);
 
       unlock_and_exit:
 
@@ -2462,7 +2462,7 @@ void xnpod_schedule(void)
 		xnarch_enter_root(xnthread_archtcb(threadin));
 	}
 
-	xnstat_runtime_switch(sched, &threadin->stat.account);
+	xnstat_exectime_switch(sched, &threadin->stat.account);
 	xnstat_counter_inc(&threadin->stat.csw);
 
 	xnarch_switch_to(xnthread_archtcb(threadout),
@@ -2637,7 +2637,7 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 		nkpod->schedhook(runthread, XNREADY);
 #endif /* __XENO_SIM__ */
 
-	xnstat_runtime_switch(sched, &threadin->stat.account);
+	xnstat_exectime_switch(sched, &threadin->stat.account);
 	xnstat_counter_inc(&threadin->stat.csw);
 
 	xnarch_switch_to(xnthread_archtcb(runthread),

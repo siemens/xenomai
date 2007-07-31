@@ -103,7 +103,6 @@ int xnthread_init(xnthread_t *thread,
 	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = 0;
-	thread->stime = 0;
 	thread->ops = ops;
 
 	inith(&thread->glink);

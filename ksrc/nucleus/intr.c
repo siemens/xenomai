@@ -90,11 +90,11 @@ static void xnintr_irq_handler(unsigned irq, void *cookie);
 void xnintr_clock_handler(void)
 {
 	xnsched_t *sched = xnpod_current_sched();
-	xnstat_runtime_t *prev;
+	xnstat_exectime_t *prev;
 	xnticks_t start;
 
-	prev  = xnstat_runtime_get_current(sched);
-	start = xnstat_runtime_now();
+	prev  = xnstat_exectime_get_current(sched);
+	start = xnstat_exectime_now();
 
 	xnarch_announce_tick();
 
@@ -109,7 +109,7 @@ void xnintr_clock_handler(void)
 	xnlock_put(&nklock);
 
 	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
-	xnstat_runtime_lazy_switch(sched,
+	xnstat_exectime_lazy_switch(sched,
 		&nkclock.stat[xnsched_cpu(sched)].account, start);
 
 	if (--sched->inesting == 0 && xnsched_resched_p())
@@ -125,7 +125,7 @@ void xnintr_clock_handler(void)
 	}
 
 	xnltt_log_event(xeno_ev_iexit, XNARCH_TIMER_IRQ);
-	xnstat_runtime_switch(sched, prev);
+	xnstat_exectime_switch(sched, prev);
 }
 
 /* Optional support for shared interrupts. */
@@ -160,14 +160,14 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
-	xnstat_runtime_t *prev;
+	xnstat_exectime_t *prev;
 	xnticks_t start;
 	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnintr_t *intr;
 	int s = 0;
 
-	prev  = xnstat_runtime_get_current(sched);
-	start = xnstat_runtime_now();
+	prev  = xnstat_exectime_get_current(sched);
+	start = xnstat_exectime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
@@ -184,10 +184,10 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		if (ret & XN_ISR_HANDLED) {
 			xnstat_counter_inc(
 				&intr->stat[xnsched_cpu(sched)].hits);
-			xnstat_runtime_lazy_switch(sched,
+			xnstat_exectime_lazy_switch(sched,
 				&intr->stat[xnsched_cpu(sched)].account,
 				start);
-			start = xnstat_runtime_now();
+			start = xnstat_exectime_now();
 		}
 
 		intr = intr->next;
@@ -213,7 +213,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 		xnpod_schedule();
 
 	xnltt_log_event(xeno_ev_iexit, irq);
-	xnstat_runtime_switch(sched, prev);
+	xnstat_exectime_switch(sched, prev);
 }
 
 /*
@@ -225,14 +225,14 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	const int MAX_EDGEIRQ_COUNTER = 128;
 
 	xnsched_t *sched = xnpod_current_sched();
-	xnstat_runtime_t *prev;
+	xnstat_exectime_t *prev;
 	xnticks_t start;
 	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnintr_t *intr, *end = NULL;
 	int s = 0, counter = 0;
 
-	prev  = xnstat_runtime_get_current(sched);
-	start = xnstat_runtime_now();
+	prev  = xnstat_exectime_get_current(sched);
+	start = xnstat_exectime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
@@ -243,7 +243,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	while (intr != end) {
 		int ret, code;
 
-		xnstat_runtime_switch(sched,
+		xnstat_exectime_switch(sched,
 			&intr->stat[xnsched_cpu(sched)].account);
 
 		ret = intr->isr(intr);
@@ -255,10 +255,10 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 				end = shirq->handlers;
 			xnstat_counter_inc(
 				&intr->stat[xnsched_cpu(sched)].hits);
-			xnstat_runtime_lazy_switch(sched,
+			xnstat_exectime_lazy_switch(sched,
 				&intr->stat[xnsched_cpu(sched)].account,
 				start);
-			start = xnstat_runtime_now();
+			start = xnstat_exectime_now();
 		}
 
 		if (counter++ > MAX_EDGEIRQ_COUNTER)
@@ -293,7 +293,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 		xnpod_schedule();
 
 	xnltt_log_event(xeno_ev_iexit, irq);
-	xnstat_runtime_switch(sched, prev);
+	xnstat_exectime_switch(sched, prev);
 }
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
@@ -437,12 +437,12 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xnintr_t *intr;
-	xnstat_runtime_t *prev;
+	xnstat_exectime_t *prev;
 	xnticks_t start;
 	int s;
 
-	prev  = xnstat_runtime_get_current(sched);
-	start = xnstat_runtime_now();
+	prev  = xnstat_exectime_get_current(sched);
+	start = xnstat_exectime_now();
 	xnltt_log_event(xeno_ev_ienter, irq);
 
 	++sched->inesting;
@@ -471,7 +471,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 		}
 	} else {
 		xnstat_counter_inc(&intr->stat[xnsched_cpu(sched)].hits);
-		xnstat_runtime_lazy_switch(sched,
+		xnstat_exectime_lazy_switch(sched,
 			&intr->stat[xnsched_cpu(sched)].account,
 			start);
 		intr->unhandled = 0;
@@ -491,7 +491,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 		xnpod_schedule();
 
 	xnltt_log_event(xeno_ev_iexit, irq);
-	xnstat_runtime_switch(sched, prev);
+	xnstat_exectime_switch(sched, prev);
 }
 
 int xnintr_mount(void)
@@ -892,7 +892,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
-		 unsigned long *hits, xnticks_t *runtime,
+		 unsigned long *hits, xnticks_t *exectime,
 		 xnticks_t *account_period)
 {
 	xnintr_t *intr;
@@ -930,7 +930,7 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 
 	last_switch = xnpod_sched_slot(cpu_no)->last_account_switch;
 
-	*runtime        = intr->stat[cpu_no].account.total;
+	*exectime       = intr->stat[cpu_no].account.total;
 	*account_period = last_switch - intr->stat[cpu_no].account.start;
 
 	intr->stat[cpu_no].account.total  = 0;

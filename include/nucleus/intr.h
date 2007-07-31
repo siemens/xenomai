@@ -65,7 +65,7 @@ typedef struct xnintr {
 
     struct {
 	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
-	xnstat_runtime_t account; /* !< Runtime accounting entity */
+	xnstat_exectime_t account; /* !< Runtime accounting entity */
     } stat[XNARCH_NR_CPUS];
 
 } xnintr_t;
@@ -110,7 +110,7 @@ xnarch_cpumask_t xnintr_affinity(xnintr_t *intr,
                                  xnarch_cpumask_t cpumask);
 
 int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
-		 unsigned long *hits, xnticks_t *runtime,
+		 unsigned long *hits, xnticks_t *exectime,
 		 xnticks_t *account_period);
 
 #ifdef __cplusplus

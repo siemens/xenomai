@@ -25,20 +25,20 @@
 
 #include <nucleus/types.h>
 
-typedef struct xnstat_runtime {
+typedef struct xnstat_exectime {
 
 	xnticks_t start;   /* Start of execution time accumulation */
 
 	xnticks_t total; /* Accumulated execution time */
 
-} xnstat_runtime_t;
+} xnstat_exectime_t;
 
 /* Return current date which can be passed to other xnstat services for
    immediate or lazy accounting. */
-#define xnstat_runtime_now() xnarch_get_cpu_tsc()
+#define xnstat_exectime_now() xnarch_get_cpu_tsc()
 
-/* Accumulate runtime of the current account until the given date. */
-#define xnstat_runtime_update(sched, date) \
+/* Accumulate exectime of the current account until the given date. */
+#define xnstat_exectime_update(sched, date) \
 do { \
 	(sched)->current_account->total += \
 		date - (sched)->last_account_switch; \
@@ -49,27 +49,34 @@ do { \
 } while (0)
 
 /* Update the current account reference, returning the previous one. */
-#define xnstat_runtime_set_current(sched, new_account) \
+#define xnstat_exectime_set_current(sched, new_account) \
 ({ \
-	xnstat_runtime_t *__prev; \
+	xnstat_exectime_t *__prev; \
 	__prev = xnarch_atomic_xchg(&(sched)->current_account, (new_account)); \
 	__prev; \
 })
 
 /* Return the currently active accounting entity. */
-#define xnstat_runtime_get_current(sched) ((sched)->current_account)
+#define xnstat_exectime_get_current(sched) ((sched)->current_account)
 
-/* Finalize an account (no need to accumulate the runtime, just mark the
+/* Finalize an account (no need to accumulate the exectime, just mark the
    switch date and set the new account). */
-#define xnstat_runtime_finalize(sched, new_account) \
+#define xnstat_exectime_finalize(sched, new_account) \
 do { \
 	(sched)->last_account_switch = xnarch_get_cpu_tsc(); \
 	(sched)->current_account = (new_account); \
 } while (0)
 
+/* Obtain content of xnstat_exectime_t */
+#define xnstat_exectime_get_start(account)	((account)->start)
+#define xnstat_exectime_get_total(account)	((account)->total)
+
+/* Obtain last account switch date of considered sched */
+#define xnstat_exectime_get_last_switch(sched)	((sched)->last_account_switch)
+
 /* Reset statistics from inside the accounted entity (e.g. after CPU
    migration). */
-#define xnstat_runtime_reset_stats(stat) \
+#define xnstat_exectime_reset_stats(stat) \
 do { \
 	(stat)->total = 0; \
 	(stat)->start = xnarch_get_cpu_tsc(); \
@@ -96,18 +103,21 @@ static inline void xnstat_counter_set(xnstat_counter_t *c, int value)
 }
 
 #else /* !CONFIG_XENO_OPT_STATS */
-typedef struct xnstat_runtime {
+typedef struct xnstat_exectime {
 #ifdef __XENO_SIM__
     int dummy;
 #endif /* __XENO_SIM__ */
-} xnstat_runtime_t;
+} xnstat_exectime_t;
 
-#define xnstat_runtime_now()					({ 0; })
-#define xnstat_runtime_update(sched, date)			do { } while (0)
-#define xnstat_runtime_set_current(sched, new_account)	({ (void)sched; NULL; })
-#define xnstat_runtime_get_current(sched)			({ (void)sched; NULL; })
-#define xnstat_runtime_finalize(sched, new_account)		do { } while (0)
-#define xnstat_runtime_reset_stats(account)			do { } while (0)
+#define xnstat_exectime_now()					({ 0; })
+#define xnstat_exectime_update(sched, date)			do { } while (0)
+#define xnstat_exectime_set_current(sched, new_account)		({ (void)sched; NULL; })
+#define xnstat_exectime_get_current(sched)			({ (void)sched; NULL; })
+#define xnstat_exectime_finalize(sched, new_account)		do { } while (0)
+#define xnstat_exectime_get_start(account)			({ 0; })
+#define xnstat_exectime_get_total(account)			({ 0; })
+#define xnstat_exectime_get_last_switch(sched)			({ 0; })
+#define xnstat_exectime_reset_stats(account)			do { } while (0)
 
 typedef struct xnstat_counter {
 #ifdef __XENO_SIM__
@@ -120,20 +130,20 @@ typedef struct xnstat_counter {
 #define xnstat_counter_set(c, value) do { } while (0)
 #endif /* CONFIG_XENO_OPT_STATS */
 
-/* Account the runtime of the current account until now, switch to
+/* Account the exectime of the current account until now, switch to
    new_account, and return the previous one. */
-#define xnstat_runtime_switch(sched, new_account) \
+#define xnstat_exectime_switch(sched, new_account) \
 ({ \
-	xnstat_runtime_update(sched, xnstat_runtime_now()); \
-	xnstat_runtime_set_current(sched, new_account); \
+	xnstat_exectime_update(sched, xnstat_exectime_now()); \
+	xnstat_exectime_set_current(sched, new_account); \
 })
 
-/* Account the runtime of the current account until given start time, switch
+/* Account the exectime of the current account until given start time, switch
    to new_account, and return the previous one. */
-#define xnstat_runtime_lazy_switch(sched, new_account, date) \
+#define xnstat_exectime_lazy_switch(sched, new_account, date) \
 ({ \
-	xnstat_runtime_update(sched, date); \
-	xnstat_runtime_set_current(sched, new_account); \
+	xnstat_exectime_update(sched, date); \
+	xnstat_exectime_set_current(sched, new_account); \
 })
 
 #endif /* !_XENO_NUCLEUS_STAT_H */

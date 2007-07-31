@@ -272,7 +272,7 @@ struct stat_seq_iterator {
 		unsigned long ssw;
 		unsigned long csw;
 		unsigned long pf;
-		xnticks_t runtime;
+		xnticks_t exectime;
 		xnticks_t account_period;
 	} stat_info[1];
 };
@@ -319,11 +319,11 @@ static int stat_seq_show(struct seq_file *seq, void *v)
 
 		if (p->account_period) {
 			while (p->account_period > 0xFFFFFFFF) {
-				p->runtime >>= 16;
+				p->exectime >>= 16;
 				p->account_period >>= 16;
 			}
 			usage =
-			    xnarch_ulldiv(p->runtime * 1000LL +
+			    xnarch_ulldiv(p->exectime * 1000LL +
 					  (p->account_period >> 1),
 					  p->account_period, NULL);
 		}
@@ -421,16 +421,17 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 		stat_info->csw = xnstat_counter_get(&thread->stat.csw);
 		stat_info->pf = xnstat_counter_get(&thread->stat.pf);
 
-		period = sched->last_account_switch - thread->stat.account.start;
+		period = sched->last_account_switch - thread->stat.lastperiod.start;
 		if (!period && thread == sched->runthread) {
-			stat_info->runtime = 1;
+			stat_info->exectime = 1;
 			stat_info->account_period = 1;
 		} else {
-			stat_info->runtime = thread->stat.account.total;
+			stat_info->exectime = thread->stat.account.total -
+				thread->stat.lastperiod.total;
 			stat_info->account_period = period;
 		}
-		thread->stat.account.total = 0;
-		thread->stat.account.start = sched->last_account_switch;
+		thread->stat.lastperiod.total = thread->stat.account.total;
+		thread->stat.lastperiod.start = sched->last_account_switch;
 
 		holder = nextq(&nkpod->threadq, holder);
 
@@ -451,7 +452,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 			err = xnintr_query(irq, &cpu, &prev, intr_rev,
 					   stat_info->name,
 					   &stat_info->csw,
-					   &stat_info->runtime,
+					   &stat_info->exectime,
 					   &stat_info->account_period);
 			if (err == -EAGAIN)
 				goto restart_unlocked;
