@@ -1,3 +1,8 @@
+2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/intr.c: (xnintr_edge_shirq_handler): Revert broken
+	optimization.
+
 2007-07-29  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/shadow.c: Fix RPI-disabled build.
