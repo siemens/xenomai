@@ -203,7 +203,8 @@ typedef struct xnthread {
 	xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
 	xnstat_counter_t csw;	/* Context switches (includes secondary -> primary switches) */
 	xnstat_counter_t pf;	/* Number of page faults */
-	xnstat_runtime_t account; /* Runtime accounting entity */
+	xnstat_exectime_t account; /* Execution time accounting entity */
+	xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
     } stat;
 
     int errcode;		/* Local errno */
@@ -232,8 +233,6 @@ typedef struct xnthread {
     xnthrops_t *ops;		/* Thread class operations. */
 
     char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
-
-    xnticks_t stime;		/* Start time */
 
     void (*entry)(void *cookie); /* Thread entry routine */
 
@@ -292,6 +291,8 @@ typedef struct xnhook {
     0 : xnarch_user_pid(xnthread_archtcb(thread)))
 #define xnthread_affinity(thread)          ((thread)->affinity)
 #define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
+#define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
+#define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
 
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(xnthread_t *t)

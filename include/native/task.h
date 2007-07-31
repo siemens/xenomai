@@ -90,6 +90,14 @@ typedef struct rt_task_info {
     
     char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
 
+    RTIME exectime; /**< Execution time in primary mode in nanoseconds. */
+
+    int modeswitches; /**< Number of primary->secondary mode switches. */
+
+    int ctxswitches; /**< Number of context switches. */
+
+    int pagefaults; /**< Number of triggered page faults. */
+
 } RT_TASK_INFO;
 
 #define RT_MCB_FSTORE_LIMIT  64

@@ -134,7 +134,7 @@ typedef struct xnsched {
 #ifdef CONFIG_XENO_OPT_STATS
 	xnticks_t last_account_switch;	/*!< Last account switch date (ticks). */
 
-	xnstat_runtime_t *current_account;	/*!< Currently active account */
+	xnstat_exectime_t *current_account;	/*!< Currently active account */
 #endif	/* CONFIG_XENO_OPT_STATS */
 
 	xntimer_t htimer;	/*!< Host timer. */

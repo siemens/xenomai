@@ -1,7 +1,18 @@
 2007-07-31  Jan Kiszka  <jan.kiszka@web.de>
 
-	* ksrc/nucleus/intr.c: Name IPIs in /proc output.
-	
+	* include/nucleus/{stat.h,thread.h}, ksrc/nucleus/{pod.c,module.c,
+	thread.c}: Make xnthread_t::stat::account persistent across dumps
+	of /proc/xenomai/stat. Remove unused xnthread_t::stime.
+
+	* include/native/task.h, ksrc/skins/native/task.c: Add task
+	exectime, context and mode switches, as well as page faults to
+	RT_TASK_INFO.
+
+	* include/nucleus, ksrc/nucleus, ksrc/skins/native/task.c:
+	Refactor [xnstat_]runtime to [xnstat_]exectime.
+
+	* ksrc/nucleus/intr.c: Annotate IPIs in /proc/xenomai/irq.
+
 2007-07-30  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* configure.in: Use lndir if available for the implementation of

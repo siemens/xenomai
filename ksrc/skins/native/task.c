@@ -1106,6 +1106,7 @@ int rt_task_unblock(RT_TASK *task)
 int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
 	int err = 0;
+	xnticks_t raw_exectime;
 	spl_t s;
 
 	if (!task) {
@@ -1129,6 +1130,14 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	info->cprio = xnthread_current_priority(&task->thread_base);
 	info->status = xnthread_state_flags(&task->thread_base);
 	info->relpoint = xntimer_get_date(&task->thread_base.ptimer);
+	raw_exectime = xnthread_get_exectime(&task->thread_base);
+	if (task->thread_base.sched->runthread == &task->thread_base)
+		raw_exectime += xnstat_exectime_now() -
+			xnthread_get_lastswitch(&task->thread_base);
+	info->exectime = xnarch_tsc_to_ns(raw_exectime);
+	info->modeswitches = xnstat_counter_get(&task->thread_base.stat.ssw);
+	info->ctxswitches = xnstat_counter_get(&task->thread_base.stat.csw);
+	info->pagefaults = xnstat_counter_get(&task->thread_base.stat.pf);
 
       unlock_and_exit:
 
