@@ -2159,7 +2159,7 @@ index a7c75ea..c54f337 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86_64/ipipe.h b/include/asm-x86_64/ipipe.h
 new file mode 100644
-index 0000000..5b68bb5
+index 0000000..0f66e6f
 --- /dev/null
 +++ b/include/asm-x86_64/ipipe.h
 @@ -0,0 +1,237 @@
@@ -2191,10 +2191,10 @@ index 0000000..5b68bb5
 +
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.1-01"
++#define IPIPE_ARCH_STRING	"1.1-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +/* Local APIC is always compiled in on x86_64.  Reserve 32 IRQs for
 +   APIC interrupts, we don't want them to mess with the normally
@@ -3585,7 +3585,7 @@ index 0000000..d38a59b
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..b6bf6cf
+index 0000000..9f5e1b2
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
 @@ -0,0 +1,53 @@
@@ -3627,6 +3627,8 @@ index 0000000..b6bf6cf
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
 +
++#endif /* CONFIG_IPIPE */
++
 +#ifdef CONFIG_IPIPE_TRACE_PANIC
 +
 +void ipipe_trace_panic_freeze(void);
@@ -3638,8 +3640,6 @@ index 0000000..b6bf6cf
 +static inline void ipipe_trace_panic_dump(void) { }
 +
 +#endif /* !CONFIG_IPIPE_TRACE_PANIC */
-+
-+#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
@@ -3822,7 +3822,7 @@ index 96ac21f..33b1f0c 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index a946176..8f9de5a 100644
+index a946176..dece139 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -172,7 +172,90 @@ do {								\
@@ -4011,7 +4011,7 @@ index a946176..8f9de5a 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -339,4 +430,25 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -339,4 +430,29 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -4021,6 +4021,8 @@ index a946176..8f9de5a 100644
 +unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
 +					     unsigned long x);
++void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock, flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -4034,6 +4036,8 @@ index a946176..8f9de5a 100644
 +#define __ipipe_spin_unlock_irq(lock)		do { } while(0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while(0)
++#define __ipipe_spin_unlock_irqbegin(lock)	do { } while(0)
++#define __ipipe_spin_unlock_irqcomplete(x)	do { (void)(x); } while(0)
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
@@ -4294,10 +4298,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..fbbcb4c
+index 0000000..6790d9f
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1616 @@
+@@ -0,0 +1,1633 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4812,6 +4816,23 @@ index 0000000..fbbcb4c
 +	ipipe_declare_cpuid;
 +
 +	__raw_spin_unlock(lock);
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	if (!raw_demangle_irq_bits(&x))
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_restore_hw(x);
++}
++
++void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock)
++{
++	__raw_spin_unlock(lock);
++}
++
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
 +	ipipe_load_cpuid();
 +	ipd = per_cpu(ipipe_percpu_domain, cpuid);
 +	if (!raw_demangle_irq_bits(&x))
@@ -5916,7 +5937,7 @@ index 0000000..fbbcb4c
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..5ca2d2d
+index 0000000..b254952
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
 @@ -0,0 +1,1294 @@
@@ -6365,7 +6386,7 @@ index 0000000..5ca2d2d
 +	struct ipipe_trace_path *tp;
 +
 +	/* release spinlock first - it's not involved in the NMI issue */
-+	spin_unlock(&global_path_lock);
++	__ipipe_spin_unlock_irqbegin(&global_path_lock);
 +
 +	cpu_id = ipipe_processor_id();
 +	tp = &trace_paths[cpu_id][active_path[cpu_id]];
@@ -6378,7 +6399,7 @@ index 0000000..5ca2d2d
 +		              tp->nmi_saved_parent_eip, tp->nmi_saved_v);
 +
 +	/* See __ipipe_spin_lock_irqsave() and friends. */
-+	ipipe_restore_pipeline(raw_demangle_irq_bits(&flags));
++	__ipipe_spin_unlock_irqcomplete(flags);
 +}
 +
 +void notrace ipipe_trace_begin(unsigned long v)
@@ -7163,7 +7184,7 @@ index 0000000..5ca2d2d
 +	for_each_possible_cpu(cpu) {
 +		trace_paths[cpu] = vmalloc(
 +			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
-+		if (!trace_paths) {
++		if (trace_paths[cpu] == NULL) {
 +			printk(KERN_ERR "I-pipe: "
 +			       "insufficient memory for trace buffer.\n");
 +			return;
