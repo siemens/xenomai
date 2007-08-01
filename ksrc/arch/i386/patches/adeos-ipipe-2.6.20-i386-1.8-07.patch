@@ -2292,7 +2292,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..4770869
+index 0000000..bcf2466
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,267 @@
@@ -2325,10 +2325,10 @@ index 0000000..4770869
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-06"
++#define IPIPE_ARCH_STRING	"1.8-07"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	7
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -3890,7 +3890,7 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..57517c3 100644
+index 94b767d..491282b 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -172,7 +172,90 @@ do {								\
@@ -4047,7 +4047,7 @@ index 94b767d..57517c3 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -287,4 +369,25 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -287,4 +369,29 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -4057,6 +4057,8 @@ index 94b767d..57517c3 100644
 +unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
 +					     unsigned long x);
++void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock,flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -4070,6 +4072,8 @@ index 94b767d..57517c3 100644
 +#define __ipipe_spin_unlock_irq(lock)		do { } while(0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while(0)
++#define __ipipe_spin_unlock_irqbegin(lock)	do { } while(0)
++#define __ipipe_spin_unlock_irqcomplete(x)	do { (void)(x); } while(0)
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
@@ -4330,10 +4334,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..4c0d1e8
+index 0000000..089f026
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1500 @@
+@@ -0,0 +1,1517 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4745,6 +4749,23 @@ index 0000000..4c0d1e8
 +		}
 +		local_irq_enable_hw();
 +	}
++}
++
++void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock)
++{
++	__raw_spin_unlock(lock);
++}
++
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	if (!raw_demangle_irq_bits(&x))
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_restore_hw(x);
 +}
 +
 +/* __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
@@ -5836,10 +5857,10 @@ index 0000000..4c0d1e8
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..de08cb1
+index 0000000..2294597
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1291 @@
+@@ -0,0 +1,1292 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -6285,7 +6306,7 @@ index 0000000..de08cb1
 +	struct ipipe_trace_path *tp;
 +
 +	/* release spinlock first - it's not involved in the NMI issue */
-+	spin_unlock(&global_path_lock);
++	__ipipe_spin_unlock_irqbegin(&global_path_lock);
 +
 +	cpu_id = ipipe_processor_id();
 +	tp = &trace_paths[cpu_id][active_path[cpu_id]];
@@ -6297,7 +6318,8 @@ index 0000000..de08cb1
 +		__ipipe_trace(IPIPE_TRACE_FREEZE, tp->nmi_saved_eip,
 +		              tp->nmi_saved_parent_eip, tp->nmi_saved_v);
 +
-+	local_irq_restore_hw(flags);
++  	/* See __ipipe_spin_lock_irqsave() and friends. */
++ 	__ipipe_spin_unlock_irqcomplete(flags);
 +}
 +
 +void notrace ipipe_trace_begin(unsigned long v)
@@ -7080,7 +7102,7 @@ index 0000000..de08cb1
 +	for_each_possible_cpu(cpu) {
 +		trace_paths[cpu] = vmalloc(
 +			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
-+		if (!trace_paths) {
++		if (trace_paths[cpu] == NULL) {
 +			printk(KERN_ERR "I-pipe: "
 +			       "insufficient memory for trace buffer.\n");
 +			return;
