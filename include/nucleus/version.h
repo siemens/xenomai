@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"Summer Song"
 
-#define XENO_VERSION_STRING	"2.3.3"
+#define XENO_VERSION_STRING	"2.3.3.1"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
