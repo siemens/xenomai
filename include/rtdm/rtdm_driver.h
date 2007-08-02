@@ -810,7 +810,8 @@ typedef unsigned                    rtdm_nrtsig_t;
 /**
  * Non-real-time signal handler
  *
- * @param[in] nrt_sig signal handle as returned by rtdm_nrtsig_init()
+ * @param[in] nrt_sig Signal handle as returned by rtdm_nrtsig_init()
+ * @param[in] arg Argument as passed to rtdm_nrtsig_init()
  *
  * @note The signal handler will run in soft-IRQ context of the non-real-time
  * subsystem. Note the implications of this context, e.g. no invocation of

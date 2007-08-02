@@ -1582,6 +1582,7 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
  *
  * @param[in,out] nrt_sig Signal handle
  * @param[in] handler Non-real-time signal handler
+ * @param[in] arg Custom argument passed to @c handler() on each invocation
  *
  * @return 0 on success, otherwise:
  *
@@ -1597,7 +1598,8 @@ int rtdm_irq_disable(rtdm_irq_t *irq_handle);
  *
  * Rescheduling: never.
  */
-int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig, rtdm_nrtsig_handler_t handler);
+int rtdm_nrtsig_init(rtdm_nrtsig_t *nrt_sig, rtdm_nrtsig_handler_t handler,
+                     void *arg);
 
 /**
  * @brief Release a non-realtime signal handler
