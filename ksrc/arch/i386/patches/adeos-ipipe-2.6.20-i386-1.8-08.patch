@@ -2292,7 +2292,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..bcf2466
+index 0000000..e421b71
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,267 @@
@@ -2325,10 +2325,10 @@ index 0000000..bcf2466
 +#include <linux/threads.h>
 +#include <irq_vectors.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-07"
++#define IPIPE_ARCH_STRING	"1.8-08"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
 +/* System interrupts are mapped beyond the last defined external IRQ
@@ -3890,7 +3890,7 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..491282b 100644
+index 94b767d..1f43051 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -172,7 +172,90 @@ do {								\
@@ -4057,7 +4057,7 @@ index 94b767d..491282b 100644
 +unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
 +					     unsigned long x);
-+void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqbegin(ipipe_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock,flags)
@@ -4334,7 +4334,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..089f026
+index 0000000..d2851a4
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1517 @@
@@ -4751,9 +4751,9 @@ index 0000000..089f026
 +	}
 +}
 +
-+void fastcall __ipipe_spin_unlock_irqbegin(raw_spinlock_t *lock)
++void fastcall __ipipe_spin_unlock_irqbegin(ipipe_spinlock_t *lock)
 +{
-+	__raw_spin_unlock(lock);
++	__raw_spin_unlock(&lock->__raw_lock);
 +}
 +
 +void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x)
