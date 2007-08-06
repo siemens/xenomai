@@ -1,3 +1,8 @@
+2007-08-06  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/demos, examples/posix: move the satch example
+	to the examples sub-directory.
+
 2007-08-06  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/hal.h (rthal_nmi_release): Define as nop
