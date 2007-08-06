@@ -1,3 +1,8 @@
+2007-07-19  Sebastian Smolorz  <ssm@emlix.com>
+
+	* include/asm-arm/syscall.h: Add user-space access to
+	tsc emulation for decrementing counters.
+
 2007-08-06  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/demos, examples/posix: move the satch example

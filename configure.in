@@ -186,7 +186,8 @@ s3c2410, sa1100.]),
 	ixp4xx|pxa) 	arch=5
 	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	s3c2410) 	arch=4;;
+	s3c2410) 	arch=4
+			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
 
 	sa1100) 	arch=4
 			CONFIG_XENO_ARM_SA1100=y
