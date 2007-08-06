@@ -1,3 +1,7 @@
+2007-08-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.23-rc2-1.9-03.
+
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-05.
