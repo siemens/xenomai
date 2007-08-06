@@ -3,7 +3,7 @@
 # (accuracy_rt) compared to those available from the native
 # NPTL/LinuxThreads supports (accuracy).
 
-bin_PROGRAMS= accuracy accuracy_rt satch_rt
+bin_PROGRAMS= accuracy accuracy_rt
 
 all: $(bin_PROGRAMS)
 
@@ -26,8 +26,6 @@ LDFLAGS= -lpthread -lrt
 accuracy: CFLAGS+=-DSPERIOD=2000
 
 accuracy_rt.o: CFLAGS_RT=-DSPERIOD=100
-
-satch_rt.o: CFLAGS_RT+=-DCONSUMER
 
 %_rt.o: %.c
 	$(CC) $(CFLAGS_RT) $< -c -o $@
