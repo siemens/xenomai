@@ -45,6 +45,10 @@ D: janitor. SMP support. ia64 port. Fixes and improvements all over
 D: the map.
 D: ARM port maintainer.
 
+N: Paul Corner
+E: paul_c@gna.org
+D: Debianization.
+
 N: Jim Cromie
 E: jim.cromie@gmail.com
 D: Comprehensive statistics collection for the testsuite.
