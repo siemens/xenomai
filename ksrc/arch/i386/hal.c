@@ -331,9 +331,7 @@ void rthal_timer_release(int cpu)
 	if (cpu > 0)
 		return;
 
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 	rthal_nmi_release();
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 	flags = rthal_critical_enter(&rthal_critical_sync);
 
