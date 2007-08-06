@@ -1533,7 +1533,7 @@ index 746f78c..0e57eb3 100644
  static struct ipic_info ipic_info[] = {
  	[9] = {
 diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
-index d01ced1..887b874 100644
+index d01ced1..bd351c0 100644
 --- a/arch/powerpc/sysdev/mpic.c
 +++ b/arch/powerpc/sysdev/mpic.c
 @@ -44,7 +44,7 @@
@@ -1562,7 +1562,7 @@ index d01ced1..887b874 100644
  	do {
  		if (!loops--) {
 -			printk(KERN_ERR "mpic_enable_irq timeout\n");
-+			printk(KERN_ERR "mpic_unmask_irq timeout\n");
++			printk(KERN_ERR "mpic_unmask_irq timeout (irq %u)\n", irq);
  			break;
  		}
  	} while(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK);
@@ -1571,7 +1571,7 @@ index d01ced1..887b874 100644
  }
  
  static void mpic_mask_irq(unsigned int irq)
-@@ -575,9 +580,12 @@ static void mpic_mask_irq(unsigned int irq)
+@@ -575,20 +580,24 @@ static void mpic_mask_irq(unsigned int irq)
  	unsigned int loops = 100000;
  	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
@@ -1584,12 +1584,12 @@ index d01ced1..887b874 100644
  	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
  		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) |
  		       MPIC_VECPRI_MASK);
-@@ -585,10 +593,12 @@ static void mpic_mask_irq(unsigned int irq)
+-
  	/* make sure mask gets to controller before we return to user */
  	do {
  		if (!loops--) {
 -			printk(KERN_ERR "mpic_enable_irq timeout\n");
-+			printk(KERN_ERR "mpic_mask_irq timeout\n");
++			printk(KERN_ERR "mpic_mask_irq timeout (irq=%u)\n", irq);
  			break;
  		}
  	} while(!(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK));
@@ -1598,7 +1598,7 @@ index d01ced1..887b874 100644
  }
  
  static void mpic_end_irq(unsigned int irq)
-@@ -730,6 +740,7 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -730,6 +739,7 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	unsigned int src = mpic_irq_to_hw(virq);
  	struct irq_desc *desc = get_irq_desc(virq);
  	unsigned int vecpri, vold, vnew;
@@ -1606,7 +1606,7 @@ index d01ced1..887b874 100644
  
  	DBG("mpic: set_irq_type(mpic:@%p,virq:%d,src:0x%x,type:0x%x)\n",
  	    mpic, virq, src, flow_type);
-@@ -754,6 +765,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -754,6 +764,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	else
  		vecpri = mpic_type_to_vecpri(mpic, flow_type);
  
@@ -1615,7 +1615,7 @@ index d01ced1..887b874 100644
  	vold = mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI));
  	vnew = vold & ~(MPIC_INFO(VECPRI_POLARITY_MASK) |
  			MPIC_INFO(VECPRI_SENSE_MASK));
-@@ -761,6 +774,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -761,6 +773,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	if (vold != vnew)
  		mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI), vnew);
  
@@ -1739,7 +1739,7 @@ index 3c4b6c2..f96a049 100644
  /* UART Driver                                                              */
  /* ======================================================================== */
 diff --git a/include/asm-powerpc/hw_irq.h b/include/asm-powerpc/hw_irq.h
-index 9e4dd98..2168d31 100644
+index 9e4dd98..2e8e12b 100644
 --- a/include/asm-powerpc/hw_irq.h
 +++ b/include/asm-powerpc/hw_irq.h
 @@ -16,6 +16,10 @@ extern void timer_interrupt(struct pt_regs *);
@@ -1774,20 +1774,20 @@ index 9e4dd98..2168d31 100644
 +	return virt;
 +}
 +
-+#define local_save_flags_hw(flags)		((flags) = mfmsr())
++#define local_save_flags_hw(x)			((x) = mfmsr())
 +#define local_test_iflag_hw(x)			((x) & MSR_EE)
 +#define irqs_disabled_hw()			((mfmsr() & MSR_EE) == 0)
-+#define local_irq_save_hw_notrace(flags)	local_irq_save_ptr_hw(&flags)
-+#define raw_irqs_disabled_flags(flags)		(!local_test_iflag_hw(flags))
++#define local_irq_save_hw_notrace(x)		local_irq_save_ptr_hw(&(x))
++#define raw_irqs_disabled_flags(x)		(!local_test_iflag_hw(x))
  #if defined(CONFIG_BOOKE)
 -#define SET_MSR_EE(x)	mtmsr(x)
 -#define local_irq_restore(flags)	__asm__ __volatile__("wrtee %0" : : "r" (flags) : "memory")
-+#define local_irq_restore_hw_notrace(flags)	\
-+	__asm__ __volatile__("wrtee %0" : : "r" (flags) : "memory")
++#define local_irq_restore_hw_notrace(x)	\
++	__asm__ __volatile__("wrtee %0" : : "r" (x) : "memory")
  #else
  #define SET_MSR_EE(x)	mtmsr(x)
 -#define local_irq_restore(flags)	mtmsr(flags)
-+#define local_irq_restore_hw_notrace(flags)	mtmsr(flags)
++#define local_irq_restore_hw_notrace(x)	mtmsr(x)
  #endif
  
 -static inline void local_irq_disable(void)
@@ -1804,15 +1804,20 @@ index 9e4dd98..2168d31 100644
  {
  #ifdef CONFIG_BOOKE
  	__asm__ __volatile__("wrteei 1": : :"memory");
-@@ -85,7 +108,7 @@ static inline void local_irq_enable(void)
+@@ -85,11 +108,11 @@ static inline void local_irq_enable(void)
  #endif
  }
  
 -static inline void local_irq_save_ptr(unsigned long *flags)
-+static inline void local_irq_save_ptr_hw(unsigned long *flags)
++static inline void local_irq_save_ptr_hw(unsigned long *x)
  {
  	unsigned long msr;
  	msr = mfmsr();
+-	*flags = msr;
++	*x = msr;
+ #ifdef CONFIG_BOOKE
+ 	__asm__ __volatile__("wrteei 0": : :"memory");
+ #else
 @@ -98,9 +121,108 @@ static inline void local_irq_save_ptr(unsigned long *flags)
  	__asm__ __volatile__("": : :"memory");
  }
@@ -1844,19 +1849,19 @@ index 9e4dd98..2168d31 100644
 +	}
 +}
 +
-+#define local_irq_save_hw(flags) \
++#define local_irq_save_hw(x) \
 +do {						       \
-+	local_irq_save_ptr_hw(&(flags));	       \
-+	if (local_test_iflag_hw(flags))		       \
++	local_irq_save_ptr_hw(&(x));		       \
++	if (local_test_iflag_hw())		       \
 +		ipipe_trace_begin(0x80000001);	       \
 +} while(0)
 +
-+static inline void local_irq_restore_hw(unsigned long flags)
++static inline void local_irq_restore_hw(unsigned long x)
 +{
-+	if (local_test_iflag_hw(flags))
++	if (local_test_iflag_hw(x))
 +		ipipe_trace_end(0x80000001);
 +
-+	local_irq_restore_hw_notrace(flags);
++	local_irq_restore_hw_notrace(x);
 +}
 +
 +#else /* !CONFIG_IPIPE_TRACE_IRQSOFF */
@@ -1881,28 +1886,28 @@ index 9e4dd98..2168d31 100644
 +	__ipipe_unstall_root();
 +}
 +
-+static inline void local_irq_save_ptr(unsigned long *flags)
++static inline void local_irq_save_ptr(unsigned long *x)
 +{
-+	*flags = (!__ipipe_test_and_stall_root()) << 15;
++	*x = (!__ipipe_test_and_stall_root()) << MSR_EE_LG;
 +	barrier();
 +}
 +
-+static inline void local_irq_restore(unsigned long flags)
++static inline void local_irq_restore(unsigned long x)
 +{
 +	barrier();
-+	__ipipe_restore_root(!(flags & MSR_EE));
++	__ipipe_restore_root(!(x & MSR_EE));
 +}
 +
-+#define local_save_flags(flags)		\
++#define local_save_flags(x)			\
 +do {						\
-+	(flags) = (!__ipipe_test_root()) << 15;	\
++	(x) = (!__ipipe_test_root()) << MSR_EE_LG;	\
 +	barrier();				\
 +} while(0)
 +
-+#define local_irq_save(flags)			\
++#define local_irq_save(x)			\
 +do {						\
 +	ipipe_check_context(ipipe_root_domain);	\
-+	local_irq_save_ptr(&flags);		\
++	local_irq_save_ptr(&(x));		\
 +} while(0)
 +
 +#define irqs_disabled()		__ipipe_test_root()
@@ -1913,13 +1918,13 @@ index 9e4dd98..2168d31 100644
 +#define local_irq_enable_hw     	local_irq_enable_hw_notrace
 +#define local_irq_save_hw       	local_irq_save_hw_notrace
 +#define local_irq_restore_hw    	local_irq_restore_hw_notrace
-+#define local_irq_restore(flags)	local_irq_restore_hw(flags)
++#define local_irq_restore(x)		local_irq_restore_hw(x)
 +#define local_irq_disable()		local_irq_disable_hw()
 +#define local_irq_enable()		local_irq_enable_hw()
-+#define local_irq_save_ptr(flags)	local_irq_save_ptr_hw(flags)
++#define local_irq_save_ptr(x)		local_irq_save_ptr_hw(x)
 +#define irqs_disabled()			irqs_disabled_hw()
-+#define local_save_flags(flags)		local_save_flags_hw(flags)
-+#define local_irq_save(flags)  		local_irq_save_hw(flags)
++#define local_save_flags(x)		local_save_flags_hw(x)
++#define local_irq_save(x)  		local_irq_save_hw(x)
 +
 +#endif /* !CONFIG_IPIPE */
  
@@ -1927,7 +1932,7 @@ index 9e4dd98..2168d31 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..2132ee3
+index 0000000..f315e8a
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,219 @@
@@ -1965,10 +1970,10 @@ index 0000000..2132ee3
 +#include <linux/cpumask.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.6-03"
++#define IPIPE_ARCH_STRING	"1.6-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define IPIPE_NR_XIRQS		NR_IRQS
 +#define IPIPE_IRQ_ISHIFT	5	/* 2^5 for 32bits arch. */
@@ -3229,7 +3234,7 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..57517c3 100644
+index 94b767d..1f43051 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -172,7 +172,90 @@ do {								\
@@ -3386,7 +3391,7 @@ index 94b767d..57517c3 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -287,4 +369,25 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -287,4 +369,29 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -3396,6 +3401,8 @@ index 94b767d..57517c3 100644
 +unsigned long fastcall __ipipe_spin_lock_irqsave(raw_spinlock_t *lock);
 +void fastcall __ipipe_spin_unlock_irqrestore(raw_spinlock_t *lock,
 +					     unsigned long x);
++void fastcall __ipipe_spin_unlock_irqbegin(ipipe_spinlock_t *lock);
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x);
 +#define spin_lock_irqsave_cond(lock, flags) \
 +	spin_lock_irqsave(lock,flags)
 +#define spin_unlock_irqrestore_cond(lock, flags) \
@@ -3409,6 +3416,8 @@ index 94b767d..57517c3 100644
 +#define __ipipe_spin_unlock_irq(lock)		do { } while(0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while(0)
++#define __ipipe_spin_unlock_irqbegin(lock)	do { } while(0)
++#define __ipipe_spin_unlock_irqcomplete(x)	do { (void)(x); } while(0)
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
@@ -3669,10 +3678,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..4c0d1e8
+index 0000000..d2851a4
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1500 @@
+@@ -0,0 +1,1517 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4084,6 +4093,23 @@ index 0000000..4c0d1e8
 +		}
 +		local_irq_enable_hw();
 +	}
++}
++
++void fastcall __ipipe_spin_unlock_irqbegin(ipipe_spinlock_t *lock)
++{
++	__raw_spin_unlock(&lock->__raw_lock);
++}
++
++void fastcall __ipipe_spin_unlock_irqcomplete(unsigned long x)
++{
++	struct ipipe_domain *ipd;
++	ipipe_declare_cpuid;
++
++	ipipe_load_cpuid();
++	ipd = per_cpu(ipipe_percpu_domain, cpuid);
++	if (!raw_demangle_irq_bits(&x))
++		__clear_bit(IPIPE_STALL_FLAG, &ipd->cpudata[cpuid].status);
++	local_irq_restore_hw(x);
 +}
 +
 +/* __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
@@ -5175,10 +5201,10 @@ index 0000000..4c0d1e8
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..de08cb1
+index 0000000..2294597
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1291 @@
+@@ -0,0 +1,1292 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -5624,7 +5650,7 @@ index 0000000..de08cb1
 +	struct ipipe_trace_path *tp;
 +
 +	/* release spinlock first - it's not involved in the NMI issue */
-+	spin_unlock(&global_path_lock);
++	__ipipe_spin_unlock_irqbegin(&global_path_lock);
 +
 +	cpu_id = ipipe_processor_id();
 +	tp = &trace_paths[cpu_id][active_path[cpu_id]];
@@ -5636,7 +5662,8 @@ index 0000000..de08cb1
 +		__ipipe_trace(IPIPE_TRACE_FREEZE, tp->nmi_saved_eip,
 +		              tp->nmi_saved_parent_eip, tp->nmi_saved_v);
 +
-+	local_irq_restore_hw(flags);
++  	/* See __ipipe_spin_lock_irqsave() and friends. */
++ 	__ipipe_spin_unlock_irqcomplete(flags);
 +}
 +
 +void notrace ipipe_trace_begin(unsigned long v)
@@ -6419,7 +6446,7 @@ index 0000000..de08cb1
 +	for_each_possible_cpu(cpu) {
 +		trace_paths[cpu] = vmalloc(
 +			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
-+		if (!trace_paths) {
++		if (trace_paths[cpu] == NULL) {
 +			printk(KERN_ERR "I-pipe: "
 +			       "insufficient memory for trace buffer.\n");
 +			return;

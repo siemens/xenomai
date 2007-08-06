@@ -1,5 +1,10 @@
 2007-08-06  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-generic/hal.h (rthal_nmi_release): Define as nop
+	when CONFIG_XENO_HW_NMI_DEBUG_LATENCY is disabled.
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-04.
+
 	* ksrc/arch/i386/patches: Upgrade to 2.6.23-rc2-1.9-03.
 
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
