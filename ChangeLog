@@ -1,5 +1,7 @@
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-04.
+
 	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-05.
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.8-08.
