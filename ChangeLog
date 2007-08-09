@@ -1,5 +1,9 @@
 2007-08-09  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/drivers/serial/16550A.c: Refactor locking of
+	rt_16550_close() to avoid racy use of volatile variables. Remove
+	unneeded "volatile" from rt_16550_context::ioc_events.
+
 	* ksrc/skins/rtdm/core.c (_rtdm_close): Fix up asymmetric close()
 	invocations silently by switching to NRT mode (we can now rely on
 	close_nrt being always available).
