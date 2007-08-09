@@ -1,3 +1,9 @@
+2007-08-09  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/core.c (_rtdm_close): Fix up asymmetric close()
+	invocations silently by switching to NRT mode (we can now rely on
+	close_nrt being always available).
+
 2007-07-19  Sebastian Smolorz  <ssm@emlix.com>
 
 	* include/asm-arm/syscall.h: Add user-space access to
