@@ -36,7 +36,7 @@
 #endif
 
 /*
- * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ * struct task_struct *rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
