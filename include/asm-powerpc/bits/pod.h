@@ -100,8 +100,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 #endif /* CONFIG_PPC64 */
 	}
 #ifdef CONFIG_PPC64
-	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp,
-			    in_tcb->user_task == NULL ? 1 : 0);
+	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next);
 #else /* !CONFIG_PPC64 */
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 #endif /* CONFIG_PPC64 */
