@@ -68,8 +68,8 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 #endif /* CONFIG_SMP */
 
 	ld	r8,KSP(r4)	/* new stack pointer */
+	ld	r3,PACACURRENT(r13) /* we must return "prev" when paired to switch_to() */
 
-	mr	r3,r2
 	cmpwi	cr5,r5,0	/* is the next thread a kernel one */
         beq-	cr5,10f		/* if so, don't touch 'current' */
 
