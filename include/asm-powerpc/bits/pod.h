@@ -79,8 +79,8 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 #endif /* CONFIG_ALTIVEC */
 
 #ifdef CONFIG_PPC64
-		if (!cpu_isset(smp_processor_id(), mm->cpu_vm_mask))
-			cpu_set(smp_processor_id(), mm->cpu_vm_mask);
+		if (!cpu_isset(rthal_processor_id(), mm->cpu_vm_mask))
+			cpu_set(rthal_processor_id(), mm->cpu_vm_mask);
 
 		if (cpu_has_feature(CPU_FTR_SLB))
 			switch_slb(next, mm);
