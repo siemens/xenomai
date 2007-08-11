@@ -1,3 +1,12 @@
+2007-08-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Pass the next
+	task pointer directly to rthal_thread_switch() (64bit mode).
+
+	* ksrc/arch/powerpc/switch_64.S: Make sure rthal_thread_switch()
+	returns the previous task pointer, so that it is properly paired
+	with Linux's switch_to().
+
 2007-08-09  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/serial/16550A.c: Refactor locking of
@@ -27,6 +36,7 @@
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.23-rc2-1.9-03.
 
+>>>>>>> .r2906
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.20-1.7-05.
