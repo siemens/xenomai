@@ -10,7 +10,7 @@ xeno_hal-$(CONFIG_XENO_HW_FPU) += fpu.o
 ifeq ($(CONFIG_PPC64),y)
 xeno_hal-$(CONFIG_PPC64) += switch_64.o
 else
-xeno_hal-$(CONFIG_PPC) += switch.o
+xeno_hal-$(CONFIG_PPC) += switch_32.o
 endif
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
@@ -29,7 +29,7 @@ obj-$(CONFIG_XENO_HW_FPU) += fpu.o
 ifeq ($(CONFIG_PPC64),y)
 obj-y += switch_64.o
 else
-obj-y += switch.o
+obj-y += switch_32.o
 endif
 
 export-objs := hal.o
