@@ -1,3 +1,9 @@
+2007-08-12  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* include/asm-arm/syscall.h (__xn_rdtsc): Rework user-space access
+	to tsc emulation for free-running counters to use the LDM
+	instruction.
+
 2007-08-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
