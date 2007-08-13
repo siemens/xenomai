@@ -1,3 +1,9 @@
+2007-08-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/switch_64.S: Make sure rthal_thread_switch()
+	returns the previous task pointer, so that it is properly paired
+	with Linux's switch_to().
+
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-04.
