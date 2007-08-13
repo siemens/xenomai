@@ -86,8 +86,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			switch_slb(next, mm);
 		else
 			switch_stab(next, mm);
-
-		arch_leave_lazy_mmu_mode();
 #else /* !CONFIG_PPC64 */
 		next->thread.pgdir = mm->pgd;
 		get_mmu_context(mm);

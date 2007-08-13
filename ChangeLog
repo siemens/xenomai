@@ -1,3 +1,8 @@
+2007-08-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Do not flush
+	the mmu batch entries (powerpc64).
+
 2007-08-12  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* include/asm-arm/syscall.h (__xn_rdtsc): Rework user-space access
@@ -5,6 +10,9 @@
 	instruction.
 
 2007-08-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Use
+	rthal_processor_id() instead of smp_processor_id().
 
 	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
 	Start per-platform picker for default calibration values.
