@@ -17,9 +17,6 @@
 	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
 	Start per-platform picker for default calibration values.
 
-	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Pass the next
-	task pointer directly to rthal_thread_switch() (64bit mode).
-
 	* ksrc/arch/powerpc/switch_64.S: Make sure rthal_thread_switch()
 	returns the previous task pointer, so that it is properly paired
 	with Linux's switch_to().
