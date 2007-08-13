@@ -70,15 +70,10 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	if (next && next != prev) {	/* Switch to new user-space thread? */
 		struct mm_struct *mm = next->active_mm;
 		/* Switch the mm context. */
-#ifdef CONFIG_ALTIVEC
-		asm volatile ("dssall;\n"
-#if !defined(CONFIG_POWER4) && !defined(CONFIG_PPC64)
-			      "sync;\n"
-#endif
-			      ::);
-#endif /* CONFIG_ALTIVEC */
-
 #ifdef CONFIG_PPC64
+#ifdef CONFIG_ALTIVEC
+		asm volatile ("dssall;\n" :/*empty*/:);
+#endif
 		if (!cpu_isset(rthal_processor_id(), mm->cpu_vm_mask))
 			cpu_set(rthal_processor_id(), mm->cpu_vm_mask);
 
@@ -86,7 +81,18 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			switch_slb(next, mm);
 		else
 			switch_stab(next, mm);
-#else /* !CONFIG_PPC64 */
+        }
+	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
+	if (prev->mm)
+		__hash_page_4K(0, _PAGE_USER|_PAGE_RW, get_vsid(prev->mm->context.id, 0), &prev->zero_pte, 0x300, 1);
+#else /* PPC32 */
+#ifdef CONFIG_ALTIVEC
+		asm volatile ("dssall;\n"
+#ifndef CONFIG_POWER4
+			      "sync;\n"
+#endif
+			      :/*empty*/:);
+#endif /* CONFIG_ALTIVEC */
 		next->thread.pgdir = mm->pgd;
 		get_mmu_context(mm);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
@@ -95,13 +101,9 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		set_context(mm->context.id, mm->pgd);
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 		current = prev;	/* Make sure r2 is valid. */
-#endif /* CONFIG_PPC64 */
 	}
-#ifdef CONFIG_PPC64
-	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next);
-#else /* !CONFIG_PPC64 */
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
-#endif /* CONFIG_PPC64 */
+#endif	/* PPC32 */
 
 	barrier();
 }
