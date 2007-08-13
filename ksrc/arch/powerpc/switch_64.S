@@ -33,8 +33,7 @@
 #include <asm/mmu.h>
 
 /*
- * struct task_struct *rthal_thread_switch(struct thread_struct *prev_t, struct thread_struct *next_t,
- *					   struct thread_struct *next)
+ * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next, int kthreadp)
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
@@ -70,8 +69,8 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	ld	r8,KSP(r4)	/* new stack pointer */
 	ld	r3,PACACURRENT(r13) /* we must return "prev" when paired to switch_to() */
 
-	cmpwi	cr5,r5,0	/* is the next thread a kernel one */
-        beq-	cr5,10f		/* if so, don't touch 'current' */
+	cmpwi	cr5,r5,0	/* is it a kernel thread */
+        bne-	cr5,10f		/* if so, don't touch 'current' */
 
 	addi	r6,r4,-THREAD	/* Convert THREAD to 'current' */
 	std	r6,PACACURRENT(r13)	/* Set new 'current' */
@@ -95,7 +94,7 @@ BEGIN_FTR_SECTION
 
 2:
 END_FTR_SECTION_IFSET(CPU_FTR_SLB)
-	beq-	cr5,11f			/* kernel thread: don't touch 'current' */
+	bne-	cr5,11f		/* kernel thread: don't touch 'current' */
 	clrrdi	r7,r8,THREAD_SHIFT	/* base of new stack */
 	/* Note: this uses SWITCH_FRAME_SIZE rather than INT_FRAME_SIZE
 	   because we don't need to leave the 288-byte ABI gap at the

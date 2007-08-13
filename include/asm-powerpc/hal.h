@@ -87,7 +87,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 #ifdef CONFIG_PPC64
 asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev_t,
 						   struct thread_struct *next_t,
-						   struct task_struct *next);
+						   int kthreadp);
 #else /* !CONFIG_PPC64 */
 asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev,
 						   struct thread_struct *next);
