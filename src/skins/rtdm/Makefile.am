@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = librtdm.la
 
-librtdm_la_LDFLAGS = -version-info 0:0:0
+librtdm_la_LDFLAGS = -version-info 1:0:0
 
 librtdm_la_SOURCES = \
 	core.c \
