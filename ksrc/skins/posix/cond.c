@@ -59,6 +59,7 @@ typedef struct pse51_cond {
 
 	pthread_condattr_t attr;
 	struct pse51_mutex *mutex;
+	pse51_kqueues_t *owningq;
 } pse51_cond_t;
 
 static pthread_condattr_t default_cond_attr;
@@ -145,6 +146,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	inith(&cond->link);
 	cond->attr = *attr;
 	cond->mutex = NULL;
+	cond->owningq = pse51_kqueues(attr->pshared);
 
 	appendq(condq, &cond->link);
 
@@ -170,6 +172,8 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
  * @return 0 on succes,
  * @return an error number if:
  * - EINVAL, the condition variable @a cnd is invalid;
+ * - EPERM, the condition variable is not process-shared and does not belong to
+ *   the current process;
  * - EBUSY, some thread is currently using the condition variable.
  *
  * @see
@@ -191,6 +195,10 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 	}
 
 	cond = shadow->cond;
+	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EPERM;
+	}
 
 	if (xnsynch_nsleepers(&cond->synchbase) || cond->mutex) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -263,6 +271,11 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
 	    || (cond->mutex && cond->mutex != mutex->mutex)) {
 		err = EINVAL;
+		goto unlock_and_return;
+	}
+
+	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+		err = EPERM;
 		goto unlock_and_return;
 	}
 
@@ -383,8 +396,10 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
  *
  * @return 0 on success,
  * @return an error number if:
- * - EINVAL, the specified condition variable or mutex is invalid;
  * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified condition variable or mutex is invalid;
+ * - EPERM, the specified condition variable is not process-shared and does not
+ *   belong to the current process;
  * - EINVAL, another thread is currently blocked on @a cnd using another mutex
  *   than @a mx;
  * - EPERM, the specified mutex is not owned by the caller.
@@ -438,8 +453,10 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
  *
  * @return 0 on success,
  * @return an error number if:
- * - EINVAL, the specified condition variable, mutex or timeout is invalid;
  * - EPERM, the caller context is invalid;
+ * - EPERM, the specified condition variable is not process-shared and does not
+ *   belong to the current process;
+ * - EINVAL, the specified condition variable, mutex or timeout is invalid;
  * - EINVAL, another thread is currently blocked on @a cnd using another mutex
  *   than @a mx;
  * - EPERM, the specified mutex is not owned by the caller;
@@ -487,7 +504,9 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
  *
  * @return 0 on succes,
  * @return an error number if:
- * - EINVAL, the condition variable is invalid.
+ * - EINVAL, the condition variable is invalid;
+ * - EPERM, the condition variable is not process-shared and does not belong to
+ *   the current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
@@ -508,6 +527,10 @@ int pthread_cond_signal(pthread_cond_t * cnd)
 	}
 
 	cond = shadow->cond;
+	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EPERM;
+	}
 
 	/* FIXME: If the mutex associated with cnd is owned by the current
 	   thread, we could postpone rescheduling until pthread_mutex_unlock is
@@ -529,7 +552,9 @@ int pthread_cond_signal(pthread_cond_t * cnd)
  *
  * @return 0 on succes,
  * @return an error number if:
- * - EINVAL, the condition variable is invalid.
+ * - EINVAL, the condition variable is invalid;
+ * - EPERM, the condition variable is not process-shared and does not belong to
+ *   the current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
@@ -550,6 +575,10 @@ int pthread_cond_broadcast(pthread_cond_t * cnd)
 	}
 
 	cond = shadow->cond;
+	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EPERM;
+	}
 
 	if (xnsynch_flush(&cond->synchbase, 0) == XNSYNCH_RESCHED)
 		xnpod_schedule();

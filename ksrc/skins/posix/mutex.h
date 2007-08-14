@@ -33,6 +33,7 @@ typedef struct pse51_mutex {
 	unsigned count;             /* lock count. */
 	unsigned condvars;          /* count of condition variables using this
 				       mutex. */
+	pse51_kqueues_t *owningq;
 } pse51_mutex_t;
 
 void pse51_mutexq_cleanup(pse51_kqueues_t *q);
@@ -57,6 +58,9 @@ static inline int pse51_mutex_trylock_internal(xnthread_t *cur,
 
 	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
 		return EINVAL;
+
+	if (mutex->owningq != pse51_kqueues(mutex->attr.pshared))
+		return EPERM;
 
 	if (mutex->count)
 		return EBUSY;

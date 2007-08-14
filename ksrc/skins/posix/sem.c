@@ -48,6 +48,7 @@ typedef struct pse51_sem {
 	int value;
 	unsigned pshared;
 	unsigned is_named;
+	pse51_kqueues_t *owningq;
 } pse51_sem_t;
 
 typedef struct pse51_named_sem {
@@ -103,6 +104,7 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
 	sem->value = value;
 	sem->pshared = pshared;
 	sem->is_named = 0;
+	sem->owningq = pse51_kqueues(pshared);
 
 	return 0;
 }
@@ -199,7 +201,9 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
  *
  * @retval 0 on success,
  * @retval -1 with @a errno set if:
- * - EINVAL, the semaphore @a sm is invalid or a named semaphore.
+ * - EINVAL, the semaphore @a sm is invalid or a named semaphore;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
@@ -214,6 +218,11 @@ int sem_destroy(sem_t * sm)
 	xnlock_get_irqsave(&nklock, s);
 	if (shadow->magic != PSE51_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
+		goto error;
+	}
+
+	if (pse51_kqueues(shadow->sem->pshared) != shadow->sem->owningq) {
+		thread_set_errno(EPERM);
 		goto error;
 	}
 
@@ -485,6 +494,9 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 
 	sem = shadow->sem;
 
+	if (sem->owningq != pse51_kqueues(sem->pshared))
+		return EPERM;
+
 	if (sem->value == 0)
 		return EAGAIN;
 
@@ -505,6 +517,8 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, the specified semaphore is invalid or uninitialized;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process;
  * - EAGAIN, the specified semaphore is currently locked.
  *
  * * @see
@@ -588,6 +602,8 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
  * @retval -1 with @a errno set if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the semaphore is invalid or uninitialized;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process;
  * - EINTR, the caller was interrupted by a signal while blocked in this
  *   service.
  *
@@ -634,6 +650,8 @@ int sem_wait(sem_t * sm)
  * - EPERM, the caller context is invalid;
  * - EINVAL, the semaphore is invalid or uninitialized;
  * - EINVAL, the specified timeout is invalid;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process;
  * - EINTR, the caller was interrupted by a signal while blocked in this
  *   service;
  * - ETIMEDOUT, the semaphore could not be locked and the specified timeout
@@ -685,6 +703,8 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
  * @retval 0 on success;
  * @retval -1 with errno set if:
  * - EINVAL, the specified semaphore is invalid or uninitialized;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process;
  * - EAGAIN, the semaphore count is @a SEM_VALUE_MAX.
  *
  * @see
@@ -707,6 +727,11 @@ int sem_post(sem_t * sm)
 	}
 
 	sem = shadow->sem;
+
+	if (sem->owningq != pse51_kqueues(sem->pshared)) {
+		thread_set_errno(EPERM);
+		goto error;
+	}
 
 	if (sem->value == SEM_VALUE_MAX) {
 		thread_set_errno(EAGAIN);
@@ -743,7 +768,9 @@ int sem_post(sem_t * sm)
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
- * - EINVAL, the semaphore is invalid or uninitialized.
+ * - EINVAL, the semaphore is invalid or uninitialized;
+ * - EPERM, the semaphore @a sm is not process-shared and does not belong to the
+ *   current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">
@@ -766,6 +793,12 @@ int sem_getvalue(sem_t * sm, int *value)
 	}
 
 	sem = shadow->sem;
+
+	if (sem->owningq != pse51_kqueues(sem->pshared)) {
+		xnlock_put_irqrestore(&nklock, s);
+		thread_set_errno(EPERM);
+		return -1;
+	}
 
 	*value = sem->value;
 
