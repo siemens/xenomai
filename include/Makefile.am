@@ -1,5 +1,3 @@
-includedir = $(prefix)/include
-
 include_HEADERS = \
 	rtdk.h
 

@@ -1,3 +1,11 @@
+2007-08-14  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/rtdm/Makefile.am (librtdm_la_LDFLAGS),
+	  src/skins/posix/Makefile.am (libpthread_rt_la_LDFLAGS),
+	  src/skins/native/Makefile.am (libnative_la_LDFLAGS): Increase
+	library API revision, in order to avoid problems due to
+	discrepancies between binaries and libraries used.
+
 2007-08-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Do not flush

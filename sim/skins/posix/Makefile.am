@@ -1,6 +1,6 @@
 vpath %.c $(top_srcdir)/../ksrc/skins/posix
 
-includedir = $(prefix)/include/asm-sim
+includesubdir = $(prefix)/include/asm-sim
 
 CC = $(top_builddir)/gcic/gcic
 
@@ -42,7 +42,7 @@ nodist_libposix_sim_a_SOURCES = \
 	shm.c \
 	module.c
 
-include_HEADERS = \
+includesub_HEADERS = \
 	posix_overrides.h
 
 SUBDIRS = . testsuite demos
