@@ -34,7 +34,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = skins/posix
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -50,7 +50,7 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesubdir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 ARFLAGS = cru
@@ -84,8 +84,8 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
-includeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(include_HEADERS)
+includesubHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(includesub_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 ETAGS = etags
@@ -220,7 +220,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-includedir = $(prefix)/include/asm-sim
+includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
@@ -242,6 +242,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+includesubdir = $(prefix)/include/asm-sim
 @CONFIG_XENO_MVM_ATOMIC_CORE_TRUE@atomic_core := --no-inst -O2
 AM_CPPFLAGS = \
 	-D_GNU_SOURCE -D__IN_XENO__ \
@@ -274,7 +275,7 @@ nodist_libposix_sim_a_SOURCES = \
 	shm.c \
 	module.c
 
-include_HEADERS = \
+includesub_HEADERS = \
 	posix_overrides.h
 
 SUBDIRS = . testsuite demos
@@ -397,22 +398,22 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-includesubHEADERS: $(includesub_HEADERS)
 	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
-	@list='$(include_HEADERS)'; for p in $$list; do \
+	test -z "$(includesubdir)" || $(MKDIR_P) "$(DESTDIR)$(includesubdir)"
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	  echo " $(includesubHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  $(includesubHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includesubdir)/$$f"; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-includesubHEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; for p in $$list; do \
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includesubdir)/$$f"; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -594,7 +595,7 @@ check: check-recursive
 all-am: Makefile $(LIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includesubdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -642,7 +643,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-includesubHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -678,7 +679,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLIBRARIES
+uninstall-am: uninstall-includesubHEADERS uninstall-libLIBRARIES
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-strip
@@ -691,14 +692,14 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLIBRARIES
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
+	install-includesubHEADERS install-info install-info-am \
 	install-libLIBRARIES install-man install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am \
-	uninstall-includeHEADERS uninstall-libLIBRARIES
+	uninstall-includesubHEADERS uninstall-libLIBRARIES
 
 vpath %.c $(top_srcdir)/../ksrc/skins/posix
 

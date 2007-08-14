@@ -146,6 +146,7 @@ LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LNDIR = @LNDIR@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -234,7 +235,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libnative.la
-libnative_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libnative_la_LDFLAGS = -version-info 1:0:0 -lpthread
 libnative_la_SOURCES = \
 	alarm.c \
 	cond.c \
