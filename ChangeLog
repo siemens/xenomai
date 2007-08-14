@@ -1,5 +1,8 @@
 2007-08-14  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/skins/posix/*.[ch]: Forbid use of non process-shared
+	objects outside of the process to which they belong.
+
 	* src/skins/rtdm/Makefile.am (librtdm_la_LDFLAGS),
 	  src/skins/posix/Makefile.am (libpthread_rt_la_LDFLAGS),
 	  src/skins/native/Makefile.am (libnative_la_LDFLAGS): Increase

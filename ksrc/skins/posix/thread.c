@@ -638,7 +638,6 @@ int pthread_set_mode_np(int clrmask, int setmask)
 {
 	xnthread_t *cur = xnpod_current_thread();
 	xnflags_t valid_flags = XNLOCK;
-	int err;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW))
@@ -650,16 +649,16 @@ int pthread_set_mode_np(int clrmask, int setmask)
 	if ((clrmask & ~valid_flags) != 0 || (setmask & ~valid_flags) != 0)
 		return EINVAL;
 
-	err = -xnpod_set_thread_mode(cur,
-				     clrmask & ~XNTHREAD_STATE_SPARE1,
-				     setmask & ~XNTHREAD_STATE_SPARE1);
+	xnpod_set_thread_mode(cur,
+			      clrmask & ~XNTHREAD_STATE_SPARE1,
+			      setmask & ~XNTHREAD_STATE_SPARE1);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-	return err;
+	return 0;
 }
 
 /**

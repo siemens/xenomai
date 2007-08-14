@@ -137,6 +137,7 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
 	mutex->attr = *attr;
 	mutex->count = 0;
 	mutex->condvars = 0;
+	mutex->owningq = pse51_kqueues(attr->pshared);
 
 	appendq(mutexq, &mutex->link);
 
@@ -162,6 +163,8 @@ int pthread_mutex_init(pthread_mutex_t * mx, const pthread_mutexattr_t * attr)
  * @return 0 on success,
  * @return an error number if:
  * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
  * - EBUSY, the mutex is locked, or used by a condition variable.
  *
  * @see
@@ -184,6 +187,10 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	}
 
 	mutex = shadow->mutex;
+	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EPERM;
+	}
 
 	if (mutex->count || mutex->condvars) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -276,6 +283,8 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
  * @return an error number if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the mutex is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
  * - EBUSY, the mutex was locked by another thread than the current one;
  * - EAGAIN, the mutex is recursive, and the maximum number of recursive locks
  *   has been exceeded.
@@ -340,8 +349,10 @@ int pthread_mutex_trylock(pthread_mutex_t * mx)
  * @return an error number if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the mutex @a mx is invalid;
- * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex
- *   was already locked by the current thread;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
+ * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and was
+ *   already locked by the current thread;
  * - EAGAIN, the mutex is of the @a PTHREAD_MUTEX_RECURSIVE type and the maximum
  *   number of recursive locks has been exceeded.
  *
@@ -383,6 +394,8 @@ int pthread_mutex_lock(pthread_mutex_t * mx)
  * @return an error number if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the mutex @a mx is invalid;
+ * - EPERM, the mutex is not process-shared and does not belong to the current
+ *   process;
  * - ETIMEDOUT, the mutex could not be locked and the specified timeout
  *   expired;
  * - EDEADLK, the mutex is of the @a PTHREAD_MUTEX_ERRORCHECK type and the mutex

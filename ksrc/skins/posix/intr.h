@@ -44,6 +44,7 @@ struct pse51_interrupt {
     xnsynch_t synch_base; /* !< Base synchronization object. */
 
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+    pse51_kqueues_t *owningq;
 };
 
 #ifdef __cplusplus

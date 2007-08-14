@@ -45,6 +45,7 @@ struct pse51_timer {
 
 	clockid_t clockid;
 	pthread_t owner;
+	pse51_kqueues_t *owningq;
 };
 
 static xnqueue_t timer_freeq;
@@ -177,6 +178,7 @@ int timer_create(clockid_t clockid,
 	timer->overruns = 0;
 	timer->owner = NULL;
 	timer->clockid = clockid;
+	timer->owningq = pse51_kqueues(0);
 	inith(&timer->link);
 	appendq(&pse51_kqueues(0)->timerq, &timer->link);
 	xnlock_put_irqrestore(&nklock, s);
@@ -196,16 +198,26 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 {
 	struct pse51_timer *timer;
 	spl_t s;
+	int err;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX)
-		goto einval;
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	if (!xntimer_active_p(&timer->timerbase))
-		goto unlock_and_einval;
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
 
 	removeq(&q->timerq, &timer->link);
 
@@ -225,10 +237,10 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 
 	return 0;
 
-      unlock_and_einval:
+      unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      einval:
-	thread_set_errno(EINVAL);
+      error:
+	thread_set_errno(err);
 	return -1;
 }
 
@@ -241,7 +253,8 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid.
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
@@ -305,7 +318,8 @@ static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
  * @retval -1 with @a errno set if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, the specified timer identifier, expiration date or reload value is
- *   invalid.
+ *   invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
  *
  * @par Valid contexts:
  * - Xenomai kernel-space POSIX skin thread,
@@ -333,20 +347,31 @@ int timer_settime(timer_t timerid,
 		goto error;
 	}
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX)
-		goto einval;
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
 
 	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
 	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
-	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0)))
-		goto einval;
+	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0))) {
+		err = EINVAL;
+		goto error;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	if (!xntimer_active_p(&timer->timerbase))
-		goto unlock_and_einval;
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
 
 	if (ovalue)
 		pse51_timer_gettime_inner(timer, ovalue);
@@ -394,10 +419,8 @@ int timer_settime(timer_t timerid,
 
 	return 0;
 
-      unlock_and_einval:
+      unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      einval:
-	err = EINVAL;
       error:
 	thread_set_errno(err);
 	return -1;
@@ -421,7 +444,8 @@ int timer_settime(timer_t timerid,
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid.
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
@@ -432,16 +456,26 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
 	struct pse51_timer *timer;
 	spl_t s;
+	int err;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX)
-		goto einval;
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	if (!xntimer_active_p(&timer->timerbase))
-		goto unlock_and_einval;
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
 
 	pse51_timer_gettime_inner(timer, value);
 
@@ -449,10 +483,10 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 
 	return 0;
 
-      unlock_and_einval:
+      unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      einval:
-	thread_set_errno(EINVAL);
+      error:
+	thread_set_errno(err);
 	return -1;
 }
 
@@ -468,7 +502,8 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
  *
  * @return the overruns count on success;
  * @return -1 with @a errno set if:
- * - EINVAL, @a timerid is invalid.
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
@@ -478,18 +513,27 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 int timer_getoverrun(timer_t timerid)
 {
 	struct pse51_timer *timer;
-	int overruns;
+	int overruns, err;
 	spl_t s;
 
-	if ((unsigned)timerid >= PSE51_TIMER_MAX)
-		goto einval;
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}  
 
 	xnlock_get_irqsave(&nklock, s);
 
 	timer = &timer_pool[(unsigned long)timerid];
 
-	if (!xntimer_active_p(&timer->timerbase))
-		goto unlock_and_einval;
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
 
 	overruns = timer->overruns;
 
@@ -497,10 +541,10 @@ int timer_getoverrun(timer_t timerid)
 
 	return overruns;
 
-      unlock_and_einval:
+  unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
-      einval:
-	thread_set_errno(EINVAL);
+  error:
+	thread_set_errno(err);
 	return -1;
 }
 

@@ -2166,6 +2166,11 @@ static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
 		return -EINVAL;
 	}
 
+	if (intr->owningq != pse51_kqueues(0)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EPERM;
+	}
+
 	if (!intr->pending) {
 		thread = xnpod_current_thread();
 
