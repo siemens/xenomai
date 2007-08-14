@@ -54,10 +54,10 @@
 #include <linux/sched.h>
 #include <linux/socket.h>
 
-typedef size_t                      socklen_t;
-typedef struct task_struct          rtdm_user_info_t;
+typedef size_t socklen_t;
+typedef struct task_struct rtdm_user_info_t;
 
-#else  /* !__KERNEL__ */
+#else /* !__KERNEL__ */
 
 #include <fcntl.h>
 #include <stdint.h>
@@ -65,7 +65,6 @@ typedef struct task_struct          rtdm_user_info_t;
 #include <sys/socket.h>
 
 #endif /* !__KERNEL__ */
-
 
 /*!
  * @addtogroup rtdm
@@ -76,36 +75,33 @@ typedef struct task_struct          rtdm_user_info_t;
  * @anchor api_versioning @name API Versioning
  * @{ */
 /** Common user and driver API version */
-#define RTDM_API_VER                6
+#define RTDM_API_VER			6
 
 /** Minimum API revision compatible with the current release */
-#define RTDM_API_MIN_COMPAT_VER     6
+#define RTDM_API_MIN_COMPAT_VER		6
 /** @} API Versioning */
-
 
 /** RTDM type for representing absolute dates. Its base type is a 64 bit
  *  unsigned integer. The unit is 1 nanosecond. */
-typedef uint64_t                    nanosecs_abs_t;
+typedef uint64_t nanosecs_abs_t;
 
 /** RTDM type for representing relative intervals. Its base type is a 64 bit
  *  signed integer. The unit is 1 nanosecond. Relative intervals can also
  *  encode the special timeouts "infinite" and "non-blocking", see
  *  @ref RTDM_TIMEOUT_xxx. */
-typedef int64_t                     nanosecs_rel_t;
-
+typedef int64_t nanosecs_rel_t;
 
 /*!
  * @anchor RTDM_TIMEOUT_xxx @name RTDM_TIMEOUT_xxx
  * Special timeout values
  * @{ */
 /** Block forever. */
-#define RTDM_TIMEOUT_INFINITE       0
+#define RTDM_TIMEOUT_INFINITE		0
 
 /** Any negative timeout means non-blocking. */
-#define RTDM_TIMEOUT_NONE           (-1)
+#define RTDM_TIMEOUT_NONE		(-1)
 /** @} RTDM_TIMEOUT_xxx */
 /** @} rtdm */
-
 
 /*!
  * @addtogroup profiles
@@ -116,62 +112,61 @@ typedef int64_t                     nanosecs_rel_t;
  * @anchor RTDM_CLASS_xxx   @name RTDM_CLASS_xxx
  * Device classes
  * @{ */
-#define RTDM_CLASS_PARPORT          1
-#define RTDM_CLASS_SERIAL           2
-#define RTDM_CLASS_CAN              3
-#define RTDM_CLASS_NETWORK          4
-#define RTDM_CLASS_RTMAC            5
-#define RTDM_CLASS_TESTING          6
+#define RTDM_CLASS_PARPORT		1
+#define RTDM_CLASS_SERIAL		2
+#define RTDM_CLASS_CAN			3
+#define RTDM_CLASS_NETWORK		4
+#define RTDM_CLASS_RTMAC		5
+#define RTDM_CLASS_TESTING		6
 /*
-#define RTDM_CLASS_USB              ?
-#define RTDM_CLASS_FIREWIRE         ?
-#define RTDM_CLASS_INTERBUS         ?
-#define RTDM_CLASS_PROFIBUS         ?
+#define RTDM_CLASS_USB			?
+#define RTDM_CLASS_FIREWIRE		?
+#define RTDM_CLASS_INTERBUS		?
+#define RTDM_CLASS_PROFIBUS		?
 #define ...
 */
-#define RTDM_CLASS_EXPERIMENTAL     224
-#define RTDM_CLASS_MAX              255
+#define RTDM_CLASS_EXPERIMENTAL		224
+#define RTDM_CLASS_MAX			255
 /** @} RTDM_CLASS_xxx */
 
+#define RTDM_SUBCLASS_GENERIC		(-1)
 
-#define RTDM_SUBCLASS_GENERIC       (-1)
-
-#define RTIOC_TYPE_COMMON           0
-
+#define RTIOC_TYPE_COMMON		0
 
 /*!
  * @anchor device_naming    @name Device Naming
  * Maximum length of device names (excluding the final null character)
  * @{
  */
-#define RTDM_MAX_DEVNAME_LEN        31
+#define RTDM_MAX_DEVNAME_LEN		31
 /** @} Device Naming */
-
 
 /**
  * Device information
  */
 typedef struct rtdm_device_info {
-    /** Device flags, see @ref dev_flags "Device Flags" for details */
-    int device_flags;
-    /** Device class ID, see @ref RTDM_CLASS_xxx */
-    int device_class;
-    /** Device sub-class, either RTDM_SUBCLASS_GENERIC or a RTDM_SUBCLASS_xxx
-     *  definition of the related @ref profiles "Device Profile" */
-    int device_sub_class;
-    /** Supported device profile version */
-    int profile_version;
-} rtdm_device_info_t;
+	/** Device flags, see @ref dev_flags "Device Flags" for details */
+	int device_flags;
 
+	/** Device class ID, see @ref RTDM_CLASS_xxx */
+	int device_class;
+
+	/** Device sub-class, either RTDM_SUBCLASS_GENERIC or a
+	 *  RTDM_SUBCLASS_xxx definition of the related @ref profiles
+	 *  "Device Profile" */
+	int device_sub_class;
+
+	/** Supported device profile version */
+	int profile_version;
+} rtdm_device_info_t;
 
 /*!
  * @anchor RTDM_PURGE_xxx_BUFFER    @name RTDM_PURGE_xxx_BUFFER
  * Flags selecting buffers to be purged
  * @{ */
-#define RTDM_PURGE_RX_BUFFER        0x0001
-#define RTDM_PURGE_TX_BUFFER        0x0002
+#define RTDM_PURGE_RX_BUFFER		0x0001
+#define RTDM_PURGE_TX_BUFFER		0x0002
 /** @} RTDM_PURGE_xxx_BUFFER*/
-
 
 /*!
  * @anchor common_IOCTLs    @name Common IOCTLs
@@ -183,80 +178,76 @@ typedef struct rtdm_device_info {
  * Retrieve information about a device or socket.
  * @param[out] arg Pointer to information buffer (struct rtdm_device_info)
  */
-#define RTIOC_DEVICE_INFO       \
-    _IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)
+#define RTIOC_DEVICE_INFO \
+	_IOR(RTIOC_TYPE_COMMON, 0x00, struct rtdm_device_info)
 
 /**
  * Purge internal device or socket buffers.
  * @param[in] arg Purge mask, see @ref RTDM_PURGE_xxx_BUFFER
  */
-#define RTIOC_PURGE                 _IOW(RTIOC_TYPE_COMMON, 0x10, int)
+#define RTIOC_PURGE		_IOW(RTIOC_TYPE_COMMON, 0x10, int)
 /** @} Common IOCTLs */
 /** @} rtdm */
 
-
 /* Internally used for mapping socket functions on IOCTLs */
 struct _rtdm_getsockopt_args {
-    int                             level;
-    int                             optname;
-    void                            *optval;
-    socklen_t                       *optlen;
+	int level;
+	int optname;
+	void *optval;
+	socklen_t *optlen;
 };
 
 struct _rtdm_setsockopt_args {
-    int                             level;
-    int                             optname;
-    const void                      *optval;
-    socklen_t                       optlen;
+	int level;
+	int optname;
+	const void *optval;
+	socklen_t optlen;
 };
 
 struct _rtdm_getsockaddr_args {
-    struct sockaddr                 *addr;
-    socklen_t                       *addrlen;
+	struct sockaddr *addr;
+	socklen_t *addrlen;
 };
 
 struct _rtdm_setsockaddr_args {
-    const struct sockaddr           *addr;
-    socklen_t                       addrlen;
+	const struct sockaddr *addr;
+	socklen_t addrlen;
 };
 
-#define _RTIOC_GETSOCKOPT          _IOW(RTIOC_TYPE_COMMON, 0x20,        \
-                                        struct _rtdm_getsockopt_args)
-#define _RTIOC_SETSOCKOPT          _IOW(RTIOC_TYPE_COMMON, 0x21,        \
-                                        struct _rtdm_setsockopt_args)
-#define _RTIOC_BIND                _IOW(RTIOC_TYPE_COMMON, 0x22,        \
-                                        struct _rtdm_setsockaddr_args)
-#define _RTIOC_CONNECT             _IOW(RTIOC_TYPE_COMMON, 0x23,        \
-                                        struct _rtdm_setsockaddr_args)
-#define _RTIOC_LISTEN              _IOW(RTIOC_TYPE_COMMON, 0x24,        \
-                                        int)
-#define _RTIOC_ACCEPT              _IOW(RTIOC_TYPE_COMMON, 0x25,        \
-                                        struct _rtdm_getsockaddr_args)
-#define _RTIOC_GETSOCKNAME         _IOW(RTIOC_TYPE_COMMON, 0x26,        \
-                                        struct _rtdm_getsockaddr_args)
-#define _RTIOC_GETPEERNAME         _IOW(RTIOC_TYPE_COMMON, 0x27,        \
-                                        struct _rtdm_getsockaddr_args)
-#define _RTIOC_SHUTDOWN            _IOW(RTIOC_TYPE_COMMON, 0x28,        \
-                                        int)
-
+#define _RTIOC_GETSOCKOPT	_IOW(RTIOC_TYPE_COMMON, 0x20,		\
+				     struct _rtdm_getsockopt_args)
+#define _RTIOC_SETSOCKOPT	_IOW(RTIOC_TYPE_COMMON, 0x21,		\
+				     struct _rtdm_setsockopt_args)
+#define _RTIOC_BIND		_IOW(RTIOC_TYPE_COMMON, 0x22,		\
+				     struct _rtdm_setsockaddr_args)
+#define _RTIOC_CONNECT		_IOW(RTIOC_TYPE_COMMON, 0x23,		\
+				     struct _rtdm_setsockaddr_args)
+#define _RTIOC_LISTEN		_IOW(RTIOC_TYPE_COMMON, 0x24,		\
+				     int)
+#define _RTIOC_ACCEPT		_IOW(RTIOC_TYPE_COMMON, 0x25,		\
+				     struct _rtdm_getsockaddr_args)
+#define _RTIOC_GETSOCKNAME	_IOW(RTIOC_TYPE_COMMON, 0x26,		\
+				     struct _rtdm_getsockaddr_args)
+#define _RTIOC_GETPEERNAME	_IOW(RTIOC_TYPE_COMMON, 0x27,		\
+				     struct _rtdm_getsockaddr_args)
+#define _RTIOC_SHUTDOWN		_IOW(RTIOC_TYPE_COMMON, 0x28,		\
+				     int)
 
 #ifdef __KERNEL__
-int     _rtdm_open   (rtdm_user_info_t *user_info, const char *path,
-                      int oflag);
-int     _rtdm_socket (rtdm_user_info_t *user_info, int protocol_family,
-                      int socket_type, int protocol);
-int     _rtdm_close  (rtdm_user_info_t *user_info, int fd);
-int     _rtdm_ioctl  (rtdm_user_info_t *user_info, int fd, int request, ...);
-ssize_t _rtdm_read   (rtdm_user_info_t *user_info, int fd, void *buf,
-                      size_t nbyte);
-ssize_t _rtdm_write  (rtdm_user_info_t *user_info, int fd, const void *buf,
-                      size_t nbyte);
-ssize_t _rtdm_recvmsg(rtdm_user_info_t *user_info, int fd, struct msghdr *msg,
-                      int flags);
-ssize_t _rtdm_sendmsg(rtdm_user_info_t *user_info, int fd,
-                      const struct msghdr *msg, int flags);
+int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag);
+int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
+		    int socket_type, int protocol);
+int __rt_dev_close(rtdm_user_info_t *user_info, int fd);
+int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...);
+ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
+		      size_t nbyte);
+ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
+		       size_t nbyte);
+ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
+			 struct msghdr *msg, int flags);
+ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
+			 const struct msghdr *msg, int flags);
 #endif /* __KERNEL__ */
-
 
 /* Define RTDM_NO_DEFAULT_USER_API to switch off the default rt_dev_xxx
  * interface when providing a customised user API */
@@ -264,73 +255,71 @@ ssize_t _rtdm_sendmsg(rtdm_user_info_t *user_info, int fd,
 
 #ifdef __KERNEL__
 
-#define rt_dev_open(path, oflag, ...)                           \
-    _rtdm_open(NULL, path, oflag)
+#define rt_dev_open(path, oflag, ...)				\
+	__rt_dev_open(NULL, path, oflag)
 
-#define rt_dev_socket(protocol_family, socket_type, protocol)   \
-    _rtdm_socket(NULL, protocol_family, socket_type, protocol)
+#define rt_dev_socket(protocol_family, socket_type, protocol)	\
+	__rt_dev_socket(NULL, protocol_family, socket_type, protocol)
 
-#define rt_dev_close(fd)                                        \
-    _rtdm_close(NULL, fd)
+#define rt_dev_close(fd)					\
+	__rt_dev_close(NULL, fd)
 
-#define rt_dev_ioctl(fd, request, ...)                          \
-    _rtdm_ioctl(NULL, fd, request, __VA_ARGS__)
+#define rt_dev_ioctl(fd, request, ...)				\
+	__rt_dev_ioctl(NULL, fd, request, __VA_ARGS__)
 
-#define rt_dev_read(fd, buf, nbyte)                             \
-    _rtdm_read(NULL, fd, buf, nbyte)
+#define rt_dev_read(fd, buf, nbyte)				\
+	__rt_dev_read(NULL, fd, buf, nbyte)
 
-#define rt_dev_write(fd, buf, nbyte)                            \
-    _rtdm_write(NULL, fd, buf, nbyte)
+#define rt_dev_write(fd, buf, nbyte)				\
+	__rt_dev_write(NULL, fd, buf, nbyte)
 
-#define rt_dev_recvmsg(fd, msg, flags)                          \
-    _rtdm_recvmsg(NULL, fd, msg, flags)
+#define rt_dev_recvmsg(fd, msg, flags)				\
+	__rt_dev_recvmsg(NULL, fd, msg, flags)
 
-#define rt_dev_sendmsg(fd, msg, flags)                          \
-    _rtdm_sendmsg(NULL, fd, msg, flags)
-
+#define rt_dev_sendmsg(fd, msg, flags)				\
+	__rt_dev_sendmsg(NULL, fd, msg, flags)
 
 static inline ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
-                                      struct sockaddr *from,
-                                      socklen_t *fromlen)
+				      struct sockaddr *from,
+				      socklen_t *fromlen)
 {
-    struct iovec iov;
-    struct msghdr msg;
-    int ret;
+	struct iovec iov;
+	struct msghdr msg;
+	int ret;
 
-    iov.iov_base = buf;
-    iov.iov_len = len;
+	iov.iov_base = buf;
+	iov.iov_len = len;
 
-    msg.msg_name = from;
-    msg.msg_namelen = from ? *fromlen : 0;
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
+	msg.msg_name = from;
+	msg.msg_namelen = from ? *fromlen : 0;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_control = NULL;
+	msg.msg_controllen = 0;
 
-    ret = rt_dev_recvmsg(fd, &msg, flags);
-    if (ret >= 0 && from)
-        *fromlen = msg.msg_namelen;
-    return ret;
+	ret = rt_dev_recvmsg(fd, &msg, flags);
+	if (ret >= 0 && from)
+		*fromlen = msg.msg_namelen;
+	return ret;
 }
 
-#else  /* !__KERNEL__ */
+#else /* !__KERNEL__ */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int     rt_dev_open   (const char *path, int oflag, ...);
-int     rt_dev_socket (int protocol_family, int socket_type, int protocol);
-int     rt_dev_close  (int fd);
-int     rt_dev_ioctl  (int fd, int request, ...);
-ssize_t rt_dev_read   (int fd, void *buf, size_t nbyte);
-ssize_t rt_dev_write  (int fd, const void *buf, size_t nbyte);
+int rt_dev_open(const char *path, int oflag, ...);
+int rt_dev_socket(int protocol_family, int socket_type, int protocol);
+int rt_dev_close(int fd);
+int rt_dev_ioctl(int fd, int request, ...);
+ssize_t rt_dev_read(int fd, void *buf, size_t nbyte);
+ssize_t rt_dev_write(int fd, const void *buf, size_t nbyte);
 ssize_t rt_dev_recvmsg(int fd, struct msghdr *msg, int flags);
 ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags);
 
 ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
-                        struct sockaddr *from,
-                        socklen_t *fromlen);
+			struct sockaddr *from, socklen_t *fromlen);
 
 #ifdef __cplusplus
 }
@@ -344,110 +333,101 @@ extern "C" {
 
 static inline ssize_t rt_dev_recv(int fd, void *buf, size_t len, int flags)
 {
-    return rt_dev_recvfrom(fd, buf, len, flags, NULL, NULL);
+	return rt_dev_recvfrom(fd, buf, len, flags, NULL, NULL);
 }
-
 
 static inline ssize_t rt_dev_sendto(int fd, const void *buf, size_t len,
-                                    int flags, const struct sockaddr *to,
-                                    socklen_t tolen)
+				    int flags, const struct sockaddr *to,
+				    socklen_t tolen)
 {
-    struct iovec iov;
-    struct msghdr msg;
+	struct iovec iov;
+	struct msghdr msg;
 
-    iov.iov_base = (void *)buf;
-    iov.iov_len = len;
+	iov.iov_base = (void *)buf;
+	iov.iov_len = len;
 
-    msg.msg_name = (struct sockaddr *)to;
-    msg.msg_namelen = tolen;
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
+	msg.msg_name = (struct sockaddr *)to;
+	msg.msg_namelen = tolen;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_control = NULL;
+	msg.msg_controllen = 0;
 
-    return rt_dev_sendmsg(fd, &msg, flags);
+	return rt_dev_sendmsg(fd, &msg, flags);
 }
-
 
 static inline ssize_t rt_dev_send(int fd, const void *buf, size_t len,
-                                  int flags)
+				  int flags)
 {
-    return rt_dev_sendto(fd, buf, len, flags, NULL, 0);
+	return rt_dev_sendto(fd, buf, len, flags, NULL, 0);
 }
-
 
 static inline int rt_dev_getsockopt(int fd, int level, int optname,
-                                    void *optval, socklen_t *optlen)
+				    void *optval, socklen_t *optlen)
 {
-    struct _rtdm_getsockopt_args args = {level, optname, optval, optlen};
+	struct _rtdm_getsockopt_args args =
+		{ level, optname, optval, optlen };
 
-    return rt_dev_ioctl(fd, _RTIOC_GETSOCKOPT, &args);
+	return rt_dev_ioctl(fd, _RTIOC_GETSOCKOPT, &args);
 }
-
 
 static inline int rt_dev_setsockopt(int fd, int level, int optname,
-                                    const void *optval, socklen_t optlen)
+				    const void *optval, socklen_t optlen)
 {
-    struct _rtdm_setsockopt_args args =
-    {level, optname, (void *)optval, optlen};
+	struct _rtdm_setsockopt_args args =
+		{ level, optname, (void *)optval, optlen };
 
-    return rt_dev_ioctl(fd, _RTIOC_SETSOCKOPT, &args);
+	return rt_dev_ioctl(fd, _RTIOC_SETSOCKOPT, &args);
 }
-
 
 static inline int rt_dev_bind(int fd, const struct sockaddr *my_addr,
-                              socklen_t addrlen)
+			      socklen_t addrlen)
 {
-    struct _rtdm_setsockaddr_args args = {my_addr, addrlen};
+	struct _rtdm_setsockaddr_args args = { my_addr, addrlen };
 
-    return rt_dev_ioctl(fd, _RTIOC_BIND, &args);
+	return rt_dev_ioctl(fd, _RTIOC_BIND, &args);
 }
-
 
 static inline int rt_dev_connect(int fd, const struct sockaddr *serv_addr,
-                                 socklen_t addrlen)
+				 socklen_t addrlen)
 {
-    struct _rtdm_setsockaddr_args args = {serv_addr, addrlen};
+	struct _rtdm_setsockaddr_args args = { serv_addr, addrlen };
 
-    return rt_dev_ioctl(fd, _RTIOC_CONNECT, &args);
+	return rt_dev_ioctl(fd, _RTIOC_CONNECT, &args);
 }
-
 
 static inline int rt_dev_listen(int fd, int backlog)
 {
-    return rt_dev_ioctl(fd, _RTIOC_LISTEN, backlog);
+	return rt_dev_ioctl(fd, _RTIOC_LISTEN, backlog);
 }
-
 
 static inline int rt_dev_accept(int fd, struct sockaddr *addr,
-                                socklen_t *addrlen)
+				socklen_t *addrlen)
 {
-    struct _rtdm_getsockaddr_args args = {addr, addrlen};
+	struct _rtdm_getsockaddr_args args = { addr, addrlen };
 
-    return rt_dev_ioctl(fd, _RTIOC_ACCEPT, &args);
+	return rt_dev_ioctl(fd, _RTIOC_ACCEPT, &args);
 }
-
 
 static inline int rt_dev_getsockname(int fd, struct sockaddr *name,
-                                     socklen_t *namelen)
+				     socklen_t *namelen)
 {
-    struct _rtdm_getsockaddr_args args = {name, namelen};
+	struct _rtdm_getsockaddr_args args = { name, namelen };
 
-    return rt_dev_ioctl(fd, _RTIOC_GETSOCKNAME, &args);
+	return rt_dev_ioctl(fd, _RTIOC_GETSOCKNAME, &args);
 }
 
-
 static inline int rt_dev_getpeername(int fd, struct sockaddr *name,
-                                     socklen_t *namelen)
+				     socklen_t *namelen)
 {
-    struct _rtdm_getsockaddr_args args = {name, namelen};
+	struct _rtdm_getsockaddr_args args = { name, namelen };
 
-    return rt_dev_ioctl(fd, _RTIOC_GETPEERNAME, &args);
+	return rt_dev_ioctl(fd, _RTIOC_GETPEERNAME, &args);
 }
 
 static inline int rt_dev_shutdown(int fd, int how)
 {
-    return rt_dev_ioctl(fd, _RTIOC_SHUTDOWN, how);
+	return rt_dev_ioctl(fd, _RTIOC_SHUTDOWN, how);
 }
 
 #ifdef __cplusplus
