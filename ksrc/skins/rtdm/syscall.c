@@ -23,149 +23,136 @@
 
 #include "rtdm/internal.h"
 
-
 int __rtdm_muxid;
-
 
 static int sys_rtdm_fdcount(struct task_struct *curr, struct pt_regs *regs)
 {
-    return RTDM_FD_MAX;
+	return RTDM_FD_MAX;
 }
-
 
 static int sys_rtdm_open(struct task_struct *curr, struct pt_regs *regs)
 {
-    char    krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
+	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
 
+	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs),
+				     sizeof(krnl_path))))
+		return -EFAULT;
 
-    if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs),
-                                 sizeof(krnl_path))))
-        return -EFAULT;
+	__xn_copy_from_user(curr, krnl_path,
+			    (const char __user *)__xn_reg_arg1(regs),
+			    sizeof(krnl_path) - 1);
+	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
-    __xn_copy_from_user(curr, krnl_path,
-        (const char __user *)__xn_reg_arg1(regs), sizeof(krnl_path)-1);
-    krnl_path[sizeof(krnl_path)-1] = '\0';
-
-    return _rtdm_open(curr, (const char *)krnl_path, __xn_reg_arg2(regs));
+	return __rt_dev_open(curr, (const char *)krnl_path,
+			     __xn_reg_arg2(regs));
 }
-
 
 static int sys_rtdm_socket(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_socket(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
-                        __xn_reg_arg3(regs));
+	return __rt_dev_socket(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
+			       __xn_reg_arg3(regs));
 }
-
 
 static int sys_rtdm_close(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_close(curr, __xn_reg_arg1(regs));
+	return __rt_dev_close(curr, __xn_reg_arg1(regs));
 }
-
 
 static int sys_rtdm_ioctl(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_ioctl(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
-                       (void *)__xn_reg_arg3(regs));
+	return __rt_dev_ioctl(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
+			      (void *)__xn_reg_arg3(regs));
 }
-
 
 static int sys_rtdm_read(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_read(curr, __xn_reg_arg1(regs), (void *)__xn_reg_arg2(regs),
-                      __xn_reg_arg3(regs));
+	return __rt_dev_read(curr, __xn_reg_arg1(regs),
+			     (void *)__xn_reg_arg2(regs), __xn_reg_arg3(regs));
 }
-
 
 static int sys_rtdm_write(struct task_struct *curr, struct pt_regs *regs)
 {
-    return _rtdm_write(curr, __xn_reg_arg1(regs),
-                       (const void *)__xn_reg_arg2(regs),
-                       __xn_reg_arg3(regs));
+	return __rt_dev_write(curr, __xn_reg_arg1(regs),
+			      (const void *)__xn_reg_arg2(regs),
+			      __xn_reg_arg3(regs));
 }
-
 
 static int sys_rtdm_recvmsg(struct task_struct *curr, struct pt_regs *regs)
 {
-    struct msghdr   krnl_msg;
-    int             ret;
+	struct msghdr krnl_msg;
+	int ret;
 
+	if (unlikely(!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs),
+				     sizeof(krnl_msg))))
+		return -EFAULT;
 
-    if (unlikely(!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs),
-                                 sizeof(krnl_msg))))
-        return -EFAULT;
+	__xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(krnl_msg));
 
-    __xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
-                        sizeof(krnl_msg));
+	ret = __rt_dev_recvmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
+			       __xn_reg_arg3(regs));
+	if (ret >= 0)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				  &krnl_msg, sizeof(krnl_msg));
 
-    ret = _rtdm_recvmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
-                        __xn_reg_arg3(regs));
-    if (ret >= 0)
-        __xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &krnl_msg,
-                          sizeof(krnl_msg));
-
-    return ret;
+	return ret;
 }
-
 
 static int sys_rtdm_sendmsg(struct task_struct *curr, struct pt_regs *regs)
 {
-    struct msghdr   krnl_msg;
+	struct msghdr krnl_msg;
 
+	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs),
+				     sizeof(krnl_msg))))
+		return -EFAULT;
 
-    if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs),
-                                 sizeof(krnl_msg))))
-        return -EFAULT;
+	__xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(krnl_msg));
 
-    __xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
-                        sizeof(krnl_msg));
-
-    return _rtdm_sendmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
-                         __xn_reg_arg3(regs));
+	return __rt_dev_sendmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
+				__xn_reg_arg3(regs));
 }
-
 
 static void *rtdm_skin_callback(int event, void *data)
 {
-    struct rtdm_process *process;
+	struct rtdm_process *process;
 
-    switch(event) {
-        case XNSHADOW_CLIENT_ATTACH:
-            process = xnarch_alloc_host_mem(sizeof(*process));
-            if (!process)
-                return ERR_PTR(-ENOSPC);
+	switch (event) {
+	case XNSHADOW_CLIENT_ATTACH:
+		process = xnarch_alloc_host_mem(sizeof(*process));
+		if (!process)
+			return ERR_PTR(-ENOSPC);
 
 #ifdef CONFIG_PROC_FS
-            memcpy(process->name, current->comm, sizeof(process->name));
-            process->pid = current->pid;
+		memcpy(process->name, current->comm, sizeof(process->name));
+		process->pid = current->pid;
 #endif /* CONFIG_PROC_FS */
 
-            return &process->ppd;
+		return &process->ppd;
 
-        case XNSHADOW_CLIENT_DETACH:
-            process = container_of((xnshadow_ppd_t *)data,
-                                   struct rtdm_process, ppd);
+	case XNSHADOW_CLIENT_DETACH:
+		process = container_of((xnshadow_ppd_t *) data,
+				       struct rtdm_process, ppd);
 
-            cleanup_owned_contexts(process);
+		cleanup_owned_contexts(process);
 
-            xnarch_free_host_mem(process, sizeof(*process));
+		xnarch_free_host_mem(process, sizeof(*process));
 
-            break;
-    }
-    return NULL;
+		break;
+	}
+	return NULL;
 }
 
-
 static xnsysent_t __systab[] = {
-    [__rtdm_fdcount] = { sys_rtdm_fdcount, __xn_exec_any },
-    [__rtdm_open]    = { sys_rtdm_open,    __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_socket]  = { sys_rtdm_socket,  __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_close]   = { sys_rtdm_close,   __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_ioctl]   = { sys_rtdm_ioctl,   __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_read]    = { sys_rtdm_read,    __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_write]   = { sys_rtdm_write,   __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_recvmsg] = { sys_rtdm_recvmsg, __xn_exec_current|__xn_exec_adaptive },
-    [__rtdm_sendmsg] = { sys_rtdm_sendmsg, __xn_exec_current|__xn_exec_adaptive },
+	[__rtdm_fdcount] = {sys_rtdm_fdcount, __xn_exec_any},
+	[__rtdm_open]    = {sys_rtdm_open,    __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_socket]  = {sys_rtdm_socket,  __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_close]   = {sys_rtdm_close,   __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_ioctl]   = {sys_rtdm_ioctl,   __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_read]    = {sys_rtdm_read,    __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_write]   = {sys_rtdm_write,   __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_recvmsg] = {sys_rtdm_recvmsg, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_sendmsg] = {sys_rtdm_sendmsg, __xn_exec_current | __xn_exec_adaptive},
 };
 
 static struct xnskin_props __props = {
@@ -178,13 +165,12 @@ static struct xnskin_props __props = {
 	.module = THIS_MODULE
 };
 
-
 int __init rtdm_syscall_init(void)
 {
-    __rtdm_muxid = xnshadow_register_interface(&__props);
+	__rtdm_muxid = xnshadow_register_interface(&__props);
 
-    if (__rtdm_muxid < 0)
-        return -ENOSYS;
+	if (__rtdm_muxid < 0)
+		return -ENOSYS;
 
-    return 0;
+	return 0;
 }

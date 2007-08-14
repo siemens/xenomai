@@ -1,3 +1,11 @@
+2007-08-14  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/*, include/rtdm/*: Lindention and several sparse
+	pacifications.
+
+	* ksrc/drivers/testing/{timerbench.c,irqbench.c}: Refactor,
+	lindent, address sparse warning.
+
 2007-08-14  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/*.[ch]: Forbid use of non process-shared
