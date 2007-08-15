@@ -1,3 +1,10 @@
+2007-08-15  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/sja1000/Kconfig, ksrc/drivers/can/sja1000/Config.in,
+	ksrc/drivers/can/sja1000/{rtcan_isa.c,rtcan_mem.c}: Remove config
+	options XENO_DRIVERS_CAN_SJA1000_*_MAX_DEV to avoid problems with
+	defining module parameters with Linux 2.4.
+
 2007-08-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/switch_64.S: Make sure rthal_thread_switch()
