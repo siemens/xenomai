@@ -44,7 +44,7 @@
 #define RTCAN_DEV_NAME    "rtcan%d"
 #define RTCAN_DRV_NAME    "sja1000-mem"
 
-#define RTCAN_MEM_MAX_DEV CONFIG_XENO_DRIVERS_CAN_SJA1000_MEM_MAX_DEV
+#define RTCAN_MEM_MAX_DEV 4
 
 static char *mem_board_name = "mem mapped";
 

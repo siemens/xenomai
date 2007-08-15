@@ -12,11 +12,6 @@ config XENO_DRIVERS_CAN_SJA1000_ISA
 	or a PC/104 system. The I/O port, interrupt number and a few other
 	hardware specific parameters can be defined via module parameters.
 
-config XENO_DRIVERS_CAN_SJA1000_ISA_MAX_DEV
-	depends on XENO_DRIVERS_CAN_SJA1000_ISA
-	int "Maximum number of controllers"
-	default 4
-
 config XENO_DRIVERS_CAN_SJA1000_MEM
 	depends on XENO_DRIVERS_CAN_SJA1000
 	tristate "Memory mapped controllers"
@@ -25,11 +20,6 @@ config XENO_DRIVERS_CAN_SJA1000_MEM
 	This driver is for memory mapped CAN devices. The memory address,
 	interrupt number and a few other hardware specific parameters can
 	be defined via module parameters.
-
-config XENO_DRIVERS_CAN_SJA1000_MEM_MAX_DEV
-	depends on XENO_DRIVERS_CAN_SJA1000_MEM
-	int "Maximum number of controllers"
-	default 4
 
 config XENO_DRIVERS_CAN_SJA1000_PEAK_PCI
 	depends on XENO_DRIVERS_CAN_SJA1000
