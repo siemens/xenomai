@@ -494,8 +494,10 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 
 	sem = shadow->sem;
 
+#if XENO_DEBUG(POSIX)
 	if (sem->owningq != pse51_kqueues(sem->pshared))
 		return EPERM;
+#endif /* XENO_DEBUG(POSIX) */
 
 	if (sem->value == 0)
 		return EAGAIN;
@@ -728,10 +730,12 @@ int sem_post(sem_t * sm)
 
 	sem = shadow->sem;
 
+#if XENO_DEBUG(POSIX)
 	if (sem->owningq != pse51_kqueues(sem->pshared)) {
 		thread_set_errno(EPERM);
 		goto error;
 	}
+#endif /* XENO_DEBUG(POSIX) */
 
 	if (sem->value == SEM_VALUE_MAX) {
 		thread_set_errno(EAGAIN);

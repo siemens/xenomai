@@ -527,10 +527,12 @@ int pthread_cond_signal(pthread_cond_t * cnd)
 	}
 
 	cond = shadow->cond;
+#if XENO_DEBUG(POSIX)
 	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;
 	}
+#endif /* XENO_DEBUG(POSIX) */
 
 	/* FIXME: If the mutex associated with cnd is owned by the current
 	   thread, we could postpone rescheduling until pthread_mutex_unlock is

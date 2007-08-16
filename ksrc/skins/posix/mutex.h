@@ -59,8 +59,10 @@ static inline int pse51_mutex_trylock_internal(xnthread_t *cur,
 	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
 		return EINVAL;
 
+#if XENO_DEBUG(POSIX)
 	if (mutex->owningq != pse51_kqueues(mutex->attr.pshared))
 		return EPERM;
+#endif /* XENO_DEBUG(POSIX) */
 
 	if (mutex->count)
 		return EBUSY;

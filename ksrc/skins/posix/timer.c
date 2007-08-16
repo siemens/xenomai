@@ -368,10 +368,12 @@ int timer_settime(timer_t timerid,
 		goto unlock_and_error;
 	}
 
+#if XENO_DEBUG(POSIX)
 	if (timer->owningq != pse51_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
+#endif /* XENO_DEBUG(POSIX) */
 
 	if (ovalue)
 		pse51_timer_gettime_inner(timer, ovalue);
@@ -472,10 +474,12 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
 		goto unlock_and_error;
 	}
 
+#if XENO_DEBUG(POSIX)
 	if (timer->owningq != pse51_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
+#endif /* XENO_DEBUG(POSIX) */
 
 	pse51_timer_gettime_inner(timer, value);
 
@@ -530,10 +534,12 @@ int timer_getoverrun(timer_t timerid)
 		goto unlock_and_error;
 	}
 
+#if XENO_DEBUG(POSIX)
 	if (timer->owningq != pse51_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
+#endif /* XENO_DEBUG(POSIX) */
 
 	overruns = timer->overruns;
 
