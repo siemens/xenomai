@@ -20,6 +20,9 @@ from kernel.org, then validated against Denx's public git repository
 As of 2.6.20, Adeos patches are based on the powerpc/ tree, instead of
 the deprecated ppc/ tree.
 
+On the PowerPC 64bit architecture, the reference tree is Denx's public
+git repository [3].
+
 Just apply one of those patches against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at
 the top of the Xenomai tree for more information.
