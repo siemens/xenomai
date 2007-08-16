@@ -1,5 +1,8 @@
 2007-08-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Add support for the PA6T (dual core
+	64bit).
+
 	* include/asm-powerpc/bits/intr.h (xnarch_relay_tick): Relay timer
 	tick using the pipeline IRQ scheduling service for the local CPU;
 	this saves some precious cycles re-entering the kernel via the
