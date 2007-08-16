@@ -55,6 +55,25 @@ do {				  \
 
 #define wrap_strncpy_from_user(dstP,srcP,n) __strncpy_from_user(dstP,srcP,n)
 
+/**
+ * fls - find last bit set
+ * @x: the word to search
+ *
+ * This is defined the same way as
+ * the libc and compiler builtin ffs routines, therefore
+ * differs in spirit from ffz (man ffs).
+ */
+static inline int fls(int x)
+{
+	int r;
+
+	__asm__("bsrl %1,%0\n\t"
+		"jnz 1f\n\t"
+		"movl $-1,%0\n"
+		"1:" : "=r" (r) : "rm" (x));
+	return r+1;
+}
+
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #define wrap_range_ok(task,addr,size) ({ \
