@@ -1,3 +1,10 @@
+2007-08-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/intr.h (xnarch_relay_tick): Relay timer
+	tick using the pipeline IRQ scheduling service for the local CPU;
+	this saves some precious cycles re-entering the kernel via the
+	hardware interrupt entry.
+
 2007-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/*.[ch]: Only enable process check for

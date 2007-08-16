@@ -39,12 +39,17 @@ static inline unsigned long xnarch_get_sched_latency(void)
 
 
 #if defined(CONFIG_PPC_PASEMI)
-#define __sched_latency 8000
+#ifdef CONFIG_SMP
+#define __sched_latency 7000
+#else
+#define __sched_latency 4000
+#endif
 #elif defined(CONFIG_PPC_MPC52xx)
 #define __sched_latency 7500
 #endif
 
-#ifndef __sched_latency	/* Platform is unknown: pick a default value. */
+#ifndef __sched_latency
+/* Platform is unknown: pick a default value. */
 #ifdef CONFIG_PPC64
 #define __sched_latency 1000
 #else

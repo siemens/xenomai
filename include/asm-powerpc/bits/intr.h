@@ -28,10 +28,11 @@
 static inline void xnarch_relay_tick(void)
 {
 #ifdef CONFIG_SMP
-	rthal_send_ipi(RTHAL_HOST_TIMER_IPI, cpu_online_map);
-#else /* !CONFIG_SMP */
-	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+	cpumask_t mask = cpu_online_map;
+	cpu_clear(rthal_processor_id(), mask);
+	rthal_send_ipi(RTHAL_HOST_TIMER_IPI, mask);
 #endif /* CONFIG_SMP */
+	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
 
 static inline void xnarch_announce_tick(void)
