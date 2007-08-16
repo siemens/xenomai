@@ -37,6 +37,18 @@
 #define wrap_range_ok(task,addr,size) \
     (segment_eq((task)->thread.fs, KERNEL_DS) || __user_ok((unsigned long)(addr),(size)))
 
+/*
+ * fls: find last (most-significant) bit set.
+ * Note fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32.
+ */
+static __inline__ int fls(unsigned int x)
+{
+	int lz;
+
+	asm ("cntlzw %0,%1" : "=r" (lz) : "r" (x));
+	return 32 - lz;
+}
+
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #ifdef CONFIG_PPC64
