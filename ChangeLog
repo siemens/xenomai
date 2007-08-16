@@ -1,3 +1,8 @@
+2007-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/*.[ch]: Only enable process check for
+	performance critical functions if posix debugging is enabled.
+
 2007-08-15  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/Kconfig,
