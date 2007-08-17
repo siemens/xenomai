@@ -82,6 +82,10 @@
 	* include/asm-arm/syscall.h: Add user-space access to
 	tsc emulation for decrementing counters.
 
+2007-08-07  Benjamin ZORES <benjamin.zores@alcatel-lucent.fr>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.6-04.
+
 2007-08-06  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/demos, examples/posix: move the satch example
