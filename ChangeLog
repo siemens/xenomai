@@ -1,3 +1,8 @@
+2007-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* scripts/xeno-test.in: Forward runtime options to switchbench
+	(and particularly -p).
+	
 2007-08-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Add support for the PA6T (dual core

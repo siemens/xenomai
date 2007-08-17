@@ -191,23 +191,37 @@ boxstatus() {     # get dynamic status
 
 
 run_w_load() {
-    local opts="$*";
-    [ "$opts"  = '' ] && opts='-sh -T 120'
+    local latpass
+    local sbpass
+
+    while :; do 
+	case $1 in
+	*=*)
+	    eval $1
+	    shift;;
+	*)
+	    break;;
+	esac
+    done
+
+    latpass="$*";
+    [ "$latpass" = '' ] && latpass='-sh -T 120'
+    [ "$sbpass" = '' ] && sbpass='-h'
 
     boxinfo
     loudly generate_loads $workload
     boxstatus
     (
         cd $pkgdatadir/testsuite/latency
-	loudly ./run -- $XENOT_LATENCY $opts -t0 '# latency'
-	loudly ./run -- $XENOT_LATENCY $opts -t1 '# latency'
-	loudly ./run -- $XENOT_LATENCY $opts -t2 '# latency'
+	loudly ./run -- $XENOT_LATENCY $latpass -t0 '# latency'
+	loudly ./run -- $XENOT_LATENCY $latpass -t1 '# latency'
+	loudly ./run -- $XENOT_LATENCY $latpass -t2 '# latency'
     )
     (	cd $pkgdatadir/testsuite/switchtest
 	loudly ./run -- -T 120 $XENOT_SWITCHTEST '# switchtest'
     )
     (	cd $pkgdatadir/testsuite/switchbench
-	loudly ./run -- -h $XENOT_SWITCHBENCH '# switchbench'
+	loudly ./run -- $XENOT_SWITCHBENCH $sbpass '# switchbench'
     )
     (	cd $pkgdatadir/testsuite/cyclic
 	loudly ./run -- -p 10 -n -l 1000 $XENOT_CYCLIC '# cyclictest'
@@ -243,7 +257,8 @@ fi
 workload=1	# default = 1 job
 
 # *pass get all legit options, except -N, -L
-pass=		# pass thru to latency
+latpass=	# pass thru to latency
+sbpass=         # pass thru to switchbench
 loadpass=	# pass thru to subshell, not to actual tests
 
 logging=	# no logging by default
@@ -280,11 +295,18 @@ sendit() {
 handle_options() {	# called for XENOTEST_OPTS, ARGV
     case $FOO in
 
-	# latency passthrus
-	s|h|q)
-	    pass="$pass -$FOO" ;;
-	T|l|H|B|p)
-	    pass="$pass -$FOO $OPTARG" ;;
+	# latency & switchbench passthrus
+	h)
+	    latpass="$pass -$FOO"
+	    sbpass="$sbpass -$FOO" ;;
+	p)
+	    latpass="$pass -$FOO $OPTARG"
+	    sbpass="$sbpass -$FOO $OPTARG" ;;
+	# latency only passthrus
+	s|q)
+	    latpass="$latpass -$FOO" ;;
+	T|l|H|B)
+	    latpass="$latpass -$FOO $OPTARG" ;;
 
 	# workload related
 	d) 
@@ -354,7 +376,7 @@ echo "xeno-test: running tests"
 wfile=$logprefix$logfile-`date $dateargs`
 if test "$logging" != "" ; then
     # restart inside a script invocation, passing appropriate args
-    script -c "`dirname $0`/xeno-test $loadpass $pass $*" $wfile
+    script -c "`dirname $0`/xeno-test $loadpass $latpass $*" $wfile
     res="$?"
     if test "$res" == "0" ; then
 	sendit $wfile
@@ -363,7 +385,7 @@ else
     if test "$altwork" != "" ; then
 	mkload() { exec $altwork; }
     fi
-    run_w_load $pass $* 2>&1 | tee $wfile
+    run_w_load sbpass="$sbpass" $latpass $* 2>&1 | tee $wfile
     res="$?"
     if test "$sendit" != '' && test $res -eq 0  ; then
        sendit $wfile
