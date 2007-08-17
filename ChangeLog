@@ -1,3 +1,7 @@
+2007-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Update to 2.6.20-1.7-06.
+
 2007-08-15  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/Kconfig, ksrc/drivers/can/sja1000/Config.in,
