@@ -11,6 +11,10 @@
 	returns the previous task pointer, so that it is properly paired
 	with Linux's switch_to().
 
+2007-08-07  Benjamin ZORES <benjamin.zores@alcatel-lucent.fr>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.6-04.
+
 2007-08-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.6-04.
