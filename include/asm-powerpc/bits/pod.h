@@ -83,8 +83,12 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 			switch_stab(next, mm);
         }
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
+#ifdef CONFIG_PPC_PASEMI
 	if (prev->mm)
-		__hash_page_4K(0, _PAGE_USER|_PAGE_RW, get_vsid(prev->mm->context.id, 0), &prev->zero_pte, 0x300, 1);
+		__hash_page_4K(0, _PAGE_USER|_PAGE_RW,
+			       get_vsid(prev->mm->context.id, 0),
+			       &prev->zero_pte, 0x300, 1);
+#endif
 #else /* PPC32 */
 #ifdef CONFIG_ALTIVEC
 		asm volatile ("dssall;\n"
