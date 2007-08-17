@@ -1,3 +1,7 @@
+2007-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Update to 2.6.20-1.7-06.
+
 2007-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* scripts/xeno-test.in: Forward runtime options to switchbench
