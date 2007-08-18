@@ -1,3 +1,3 @@
-includedir = $(prefix)/include/asm-sim
+includesubdir = $(prefix)/include/asm-sim
 
-nodist_include_HEADERS=$(CONFIG_HEADER)
+nodist_includesub_HEADERS=$(CONFIG_HEADER)
