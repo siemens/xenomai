@@ -176,6 +176,12 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			info.u.fr.tsc = ipipe_info.archdep.tsc.u.fr.tsc;
 			break;
 		case IPIPE_TSC_TYPE_DECREMENTER:
+			info.type = __XN_TSC_TYPE_DECREMENTER,
+			info.u.dec.counter = ipipe_info.archdep.tsc.u.dec.counter;
+			info.u.dec.mask = ipipe_info.archdep.tsc.u.dec.mask;
+			info.u.dec.last_cnt = ipipe_info.archdep.tsc.u.dec.last_cnt;
+			info.u.dec.tsc = ipipe_info.archdep.tsc.u.dec.tsc;
+			break;
 		case IPIPE_TSC_TYPE_NONE:
 			return -ENOSYS;
 			

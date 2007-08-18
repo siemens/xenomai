@@ -4,6 +4,9 @@
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
  *
+ * Copyright (C) 2007 Sebastian Smolorz <ssm@emlix.com>
+ *	Support for TSC emulation in user space for decrementing counters
+ *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
@@ -205,6 +208,10 @@ struct __xn_tscinfo {
                         volatile unsigned long long *tsc;
                 } fr;
                 struct {
+			volatile unsigned *counter;
+			unsigned mask;
+			volatile unsigned *last_cnt;
+			volatile unsigned long long *tsc;
                 } dec;
         } u;
 };
@@ -248,7 +255,29 @@ static inline unsigned long long __xn_rdtsc(void)
 	if ((counter & mask) < (before & mask))
 		before += mask + 1;
 	return (before & ~mask) | (counter & mask);
-#endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING */
+
+#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
+	const unsigned mask = __xn_tscinfo.u.dec.mask;
+	unsigned long long after, before;
+	unsigned counter, last_cnt;
+
+	do {
+		before = *__xn_tscinfo.u.dec.tsc;
+		counter = *__xn_tscinfo.u.dec.counter;
+		last_cnt = *__xn_tscinfo.u.dec.last_cnt;
+		/* compiler barrier. */
+		asm("" : /* */ : /* */ : "memory");
+
+		after = *__xn_tscinfo.u.dec.tsc;
+	} while (after != before);
+
+	counter &= mask;
+	last_cnt &= mask;
+	if (counter > last_cnt)
+		before += mask + 1;
+	return (before + last_cnt - counter);
+
+#endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
 }
 
 static inline void xeno_arm_features_check(void)
@@ -280,7 +309,7 @@ static inline void xeno_arm_features_check(void)
 
 	switch(__xn_tscinfo.type) {
 #if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
-	case __XN_TSC_TYPE_FREERUNNING:{
+	case __XN_TSC_TYPE_FREERUNNING: {
 		unsigned long phys_addr;
 
 		phys_addr = (unsigned long) __xn_tscinfo.u.fr.counter;
@@ -296,7 +325,24 @@ static inline void xeno_arm_features_check(void)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
 		break;
 	}
-#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING */
+#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
+	case __XN_TSC_TYPE_DECREMENTER: {
+		unsigned long phys_addr;
+
+		phys_addr = (unsigned long) __xn_tscinfo.u.dec.counter;
+		addr = mmap(NULL, page_size, PROT_READ, MAP_SHARED,
+			    fd, phys_addr & ~(page_size - 1));
+		if (addr == MAP_FAILED) {
+			perror("Xenomai init: mmap(/dev/mem)");
+			exit(EXIT_FAILURE);
+		}
+
+		__xn_tscinfo.u.dec.counter = 
+			((volatile unsigned *)
+			 ((char *) addr + (phys_addr & (page_size - 1))));
+		break;
+	}
+#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 		goto error;
 		
