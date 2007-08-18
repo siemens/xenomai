@@ -239,22 +239,18 @@ static inline unsigned long long __xn_rdtsc(void)
 {
 #if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
 	const unsigned long long mask = __xn_tscinfo.u.fr.mask;
-	static unsigned long long after = 0;
-	unsigned long long before;
+	unsigned long long result;
 	unsigned counter;
 
-	do {
-		before = after;
-		counter = *__xn_tscinfo.u.fr.counter;
-		/* compiler barrier. */
-		asm("" : /* */ : /* */ : "memory");
-		
-		after = *__xn_tscinfo.u.fr.tsc;
-	} while ((after & ~mask) != (before & ~mask));
-	
-	if ((counter & mask) < (before & mask))
-		before += mask + 1;
-	return (before & ~mask) | (counter & mask);
+	__asm__ ("ldmia %1, %M0\n"
+		 : "=r"(result), "+&r"(__xn_tscinfo.u.fr.tsc)
+		 : "m"(*__xn_tscinfo.u.fr.tsc));
+	__asm__ ("" : /* */ : /* */ : "memory");
+	counter = *__xn_tscinfo.u.fr.counter;
+
+	if ((counter & mask) < (result & mask))
+		result += mask + 1;
+	return (result & ~mask) | (counter & mask);
 
 #elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
 	const unsigned mask = __xn_tscinfo.u.dec.mask;

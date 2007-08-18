@@ -1,3 +1,9 @@
+2007-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* include/asm-arm/syscall.h (__xn_rdtsc): Rework user-space access
+	to tsc emulation for free-running counters to use the LDM
+	instruction.
+
 2007-08-18  Sebastian Smolorz  <ssm@emlix.com>
 
 	* include/asm-arm/syscall.h: Add user-space access to
