@@ -1,7 +1,7 @@
 #ifndef __XENO_SIM__
 #ifndef __KERNEL__
 #include <stdio.h>
-#define xnprintf printf
+#define xnarch_printf printf
 #endif
 
 #include <time.h>
@@ -358,7 +358,8 @@ int __xeno_user_init (void)
   out:
     rc = -rc ?: -errno;
     if (close(fd))
-        xnprintf("close: %d (%s)\n", errno, strerror(errno));
+	    
+        xnprintf("close: %d\n", errno);
   err:
     __xeno_user_exit();
     return rc;
