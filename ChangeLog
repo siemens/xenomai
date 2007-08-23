@@ -1,3 +1,10 @@
+2007-08-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/hal.c (rthal_timer_release): Release tick device
+	in the non-LAPIC case. This bug would have cause repeatable
+	crashes upon unloading of the last skin from a statically built
+	nucleus (i.e. xnpod_shutdown called).
+
 2007-08-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4-rc2

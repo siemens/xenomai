@@ -437,6 +437,9 @@ void rthal_timer_release(int cpu)
 {
 	unsigned long flags;
 
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	ipipe_release_tickdev(cpu);
+#endif
 	flags = rthal_critical_enter(NULL);
 
 	outb(0x34, PIT_MODE);
