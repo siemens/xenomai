@@ -1,3 +1,8 @@
+2007-08-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
+	Add default calibration value for 405GPr boards.
+
 2007-08-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/hal.c (rthal_timer_release): Release tick device

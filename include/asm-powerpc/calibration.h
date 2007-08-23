@@ -46,6 +46,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #endif
 #elif defined(CONFIG_PPC_MPC52xx)
 #define __sched_latency 7500
+#elif defined(CONFIG_405GPR)
+#define __sched_latency 9000
 #endif
 
 #ifndef __sched_latency
