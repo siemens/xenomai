@@ -1,3 +1,8 @@
+2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_socket.c: protect the list of RTCAN
+	sockets properly when adding or deleting sockets.
+
 2007-08-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
