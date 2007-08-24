@@ -1,5 +1,11 @@
 2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
 
+	* ksrc/drivers/can/sja1000: Add the RT-Socket-CAN SJA1000 driver
+	rtcan_ems_pci.c for the EMS CPC PCI card from EMS Dr. Thomas
+	Wuensche (http://www.ems-wuensche.de).
+
+2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
+
 	* ksrc/drivers/can/rtcan_socket.c: protect the list of RTCAN
 	sockets properly when adding or deleting sockets.
 

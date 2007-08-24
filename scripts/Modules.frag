@@ -20,4 +20,5 @@ DRIVERS-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_MEM) += drivers/xenomai/can/sja1000/xe
 DRIVERS-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_PCI) += drivers/xenomai/can/sja1000/xeno_can_peak_pci.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_PEAK_DNG) += drivers/xenomai/can/sja1000/xeno_can_peak_dng.o
 DRIVERS-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI) += drivers/xenomai/can/sja1000/xeno_can_ixxat_pci.o
+DRIVERS-$(CONFIG_XENO_DRIVERS_CAN_SJA1000_EMS_PCI) += drivers/xenomai/can/sja1000/xeno_can_ems_pci.o
 

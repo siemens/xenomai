@@ -42,6 +42,16 @@ config XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI
 	must be enabled.
 
 
+config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
+	depends on XENO_DRIVERS_CAN_SJA1000
+	tristate "EMS CPC PCI Card"
+	help
+
+	This driver is for the 2 channel CPC PCI card from EMS Dr. Thomas
+	Wünsche (http://www.ems-wuensche.de). To get the second channel
+	working, Xenomai's shared interrupt support must be enabled.
+
+
 config XENO_DRIVERS_CAN_SJA1000_PEAK_DNG
 	depends on XENO_DRIVERS_CAN_SJA1000
 	tristate "PEAK Parallel Port Dongle"
