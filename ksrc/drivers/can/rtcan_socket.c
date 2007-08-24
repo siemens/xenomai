@@ -37,6 +37,7 @@ LIST_HEAD(rtcan_socket_list);
 void rtcan_socket_init(struct rtdm_dev_context *context)
 {
     struct rtcan_socket *sock = (struct rtcan_socket *)&context->dev_private;
+    rtdm_lockctx_t lock_ctx;
 
 
     rtdm_sem_init(&sock->recv_sem, 0);
@@ -56,7 +57,10 @@ void rtcan_socket_init(struct rtdm_dev_context *context)
     sock->rx_timeout = RTDM_TIMEOUT_INFINITE;
 
     INIT_LIST_HEAD(&sock->tx_wait_head);
+
+    rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
     list_add(&sock->socket_list, &rtcan_socket_list);
+    rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 }
 
 
@@ -64,6 +68,7 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
 {
     struct rtcan_socket *sock = (struct rtcan_socket *)&context->dev_private;
     struct tx_wait_queue *tx_waiting;
+    rtdm_lockctx_t lock_ctx;
     int tx_list_empty;
 
 
@@ -91,5 +96,8 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
     } while (!tx_list_empty);
 
     rtdm_sem_destroy(&sock->recv_sem);
+
+    rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
     list_del(&sock->socket_list);
+    rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 }

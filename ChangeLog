@@ -1,3 +1,8 @@
+2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_socket.c: protect the list of RTCAN
+	sockets properly when adding or deleting sockets.
+
 2007-08-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* include/asm-arm/syscall.h (__xn_rdtsc): Rework user-space access
