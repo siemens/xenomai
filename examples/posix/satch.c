@@ -1,7 +1,7 @@
 #ifndef __XENO_SIM__
 #ifndef __KERNEL__
 #include <stdio.h>
-#define xnarch_printf printf
+#define xnprintf printf
 #endif
 
 #include <time.h>
