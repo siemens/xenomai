@@ -1,3 +1,14 @@
+2007-08-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc, include: Get rid of rthal_get/lock_cpu,
+	rthal_put/unlock_cpu, rthal_declare_cpuid. Replace by explicit
+	interrupt locking when applicable.
+
+2007-08-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency):
+	Reduce default calibration value for lite52xx boards.
+
 2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000: Add the RT-Socket-CAN SJA1000 driver

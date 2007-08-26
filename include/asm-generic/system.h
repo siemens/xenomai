@@ -192,10 +192,6 @@ static inline unsigned xnarch_current_cpu(void)
     return rthal_processor_id();
 }
 
-#define xnarch_declare_cpuid  rthal_declare_cpuid
-#define xnarch_get_cpu(flags) rthal_get_cpu(flags)
-#define xnarch_put_cpu(flags) rthal_put_cpu(flags)
-
 #define xnarch_halt(emsg) \
 do { \
     rthal_emergency_console(); \
@@ -251,17 +247,14 @@ static inline int __xnlock_get (xnlock_t *lock,
 static inline int __xnlock_get (xnlock_t *lock)
 {
 #endif /* !XENO_DEBUG(NUCLEUS) */
-    rthal_declare_cpuid;
     int recursing;
 
-    rthal_load_cpuid();
-
-    recursing = (atomic_read(&lock->owner) == cpuid);
+    recursing = (atomic_read(&lock->owner) == rthal_processor_id());
     if (!recursing) {
 #if XENO_DEBUG(NUCLEUS)
 	    unsigned long long lock_date = rthal_rdtsc();
 #endif /* XENO_DEBUG(NUCLEUS) */
-	    while(atomic_cmpxchg(&lock->owner, ~0, cpuid) != ~0)
+	    while(atomic_cmpxchg(&lock->owner, ~0, rthal_processor_id()) != ~0)
 		    do {
 			    cpu_relax();
 
@@ -272,7 +265,7 @@ static inline int __xnlock_get (xnlock_t *lock)
 					   "Xenomai: stuck on nucleus lock %p\n"
 					   "       waiter = %s:%u (%s(), CPU #%d)\n"
 					   "       owner  = %s:%u (%s(), CPU #%d)\n",
-					   lock,file,line,function,cpuid,
+					   lock,file,line,function,rthal_processor_id(),
 					   lock->file,lock->line,lock->function,lock->cpu);
 				    show_stack(NULL,NULL);
 				    for (;;)
@@ -287,7 +280,7 @@ static inline int __xnlock_get (xnlock_t *lock)
 	    lock->file = file;
 	    lock->function = function;
 	    lock->line = line;
-	    lock->cpu = cpuid;
+	    lock->cpu = rthal_processor_id();
 #endif /* XENO_DEBUG(NUCLEUS) */
         }
 
@@ -296,22 +289,20 @@ static inline int __xnlock_get (xnlock_t *lock)
 
 static inline void xnlock_put (xnlock_t *lock)
 {
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
-    if (likely(atomic_read(&lock->owner) == cpuid)) {
+	if (likely(atomic_read(&lock->owner) == rthal_processor_id())) {
 
 #if XENO_DEBUG(NUCLEUS)
 	    extern xnlockinfo_t xnlock_stats[];
 
 	    unsigned long long lock_time = rthal_rdtsc() - lock->lock_date;
+	    int cpu = rthal_processor_id();
 
-	    if (lock_time > xnlock_stats[cpuid].lock_time) {
-		    xnlock_stats[cpuid].lock_time = lock_time;
-		    xnlock_stats[cpuid].spin_time = lock->spin_time;
-		    xnlock_stats[cpuid].file = lock->file;
-		    xnlock_stats[cpuid].function = lock->function;
-		    xnlock_stats[cpuid].line = lock->line;
+	    if (lock_time > xnlock_stats[cpu].lock_time) {
+		    xnlock_stats[cpu].lock_time = lock_time;
+		    xnlock_stats[cpu].spin_time = lock->spin_time;
+		    xnlock_stats[cpu].file = lock->file;
+		    xnlock_stats[cpu].function = lock->function;
+		    xnlock_stats[cpu].line = lock->line;
 	    }
 #endif /* XENO_DEBUG(NUCLEUS) */
 	    atomic_set(&lock->owner, ~0);

@@ -184,12 +184,8 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
-	rthal_declare_cpuid;
-
-	rthal_load_cpuid();
-
 	if (domid == RTHAL_DOMAIN_ID) {
-		rthal_realtime_faults[cpuid][event]++;
+		rthal_realtime_faults[rthal_processor_id()][event]++;
 
 		if (rthal_trap_handler != NULL &&
 		    rthal_trap_handler(event, domid, data) != 0)

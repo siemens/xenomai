@@ -518,11 +518,13 @@ static unsigned long shield_sync;
 static void engage_irq_shield(void)
 {
 	unsigned long flags;
-	rthal_declare_cpuid;
+	int cpu;
 
-	rthal_lock_cpu(flags);
+	rthal_local_irq_save_hw(flags);
 
-	if (xnarch_cpu_test_and_set(cpuid, shielded_cpus))
+	cpu = rthal_processor_id();
+
+	if (xnarch_cpu_test_and_set(cpu, shielded_cpus))
 		goto unmask_and_exit;
 
 	while (test_bit(0, &shield_sync))
@@ -530,23 +532,25 @@ static void engage_irq_shield(void)
 		 * long, so we spin IRQS off. */
 		cpu_relax();
 
-	xnarch_cpu_clear(cpuid, unshielded_cpus);
+	xnarch_cpu_clear(cpu, unshielded_cpus);
 
-	xnarch_lock_xirqs(&irq_shield, cpuid);
+	xnarch_lock_xirqs(&irq_shield, cpu);
 
       unmask_and_exit:
 
-	rthal_unlock_cpu(flags);
+	rthal_local_irq_restore_hw(flags);
 }
 
 static void disengage_irq_shield(void)
 {
 	unsigned long flags;
-	rthal_declare_cpuid;
+	int cpu;
 
-	rthal_lock_cpu(flags);
+	rthal_local_irq_save_hw(flags);
 
-	if (xnarch_cpu_test_and_set(cpuid, unshielded_cpus))
+	cpu = rthal_processor_id();
+
+	if (xnarch_cpu_test_and_set(cpu, unshielded_cpus))
 		goto unmask_and_exit;
 
 	/* Prevent other CPUs from engaging the shield while we
@@ -554,7 +558,7 @@ static void disengage_irq_shield(void)
 	set_bit(0, &shield_sync);
 
 	/* Ok, this one is now unshielded. */
-	xnarch_cpu_clear(cpuid, shielded_cpus);
+	xnarch_cpu_clear(cpu, shielded_cpus);
 
 	smp_mb__after_clear_bit();
 
@@ -572,12 +576,12 @@ static void disengage_irq_shield(void)
 	   the shield stage on the local CPU in order to flush it the same
 	   way. */
 
-	xnarch_unlock_xirqs(&irq_shield, cpuid);
+	xnarch_unlock_xirqs(&irq_shield, cpu);
 
 #ifdef CONFIG_SMP
 	{
 		cpumask_t other_cpus = xnarch_cpu_online_map;
-		xnarch_cpu_clear(cpuid, other_cpus);
+		xnarch_cpu_clear(cpu, other_cpus);
 		rthal_send_ipi(RTHAL_SERVICE_IPI1, other_cpus);
 	}
 #endif /* CONFIG_SMP */
@@ -592,7 +596,7 @@ clear_sync:
 
 unmask_and_exit:
 
-	rthal_unlock_cpu(flags);
+	rthal_local_irq_restore_hw(flags);
 }
 
 static void shield_handler(unsigned irq, void *cookie)
@@ -870,8 +874,8 @@ static void xnshadow_dereference_skin(unsigned magic)
 
 static void lostage_handler(void *cookie)
 {
-	int cpuid = smp_processor_id(), reqnum, sig;
-	struct __lostagerq *rq = &lostagerq[cpuid];
+	int cpu = smp_processor_id(), reqnum, sig;
+	struct __lostagerq *rq = &lostagerq[cpu];
 
 	while ((reqnum = rq->out) != rq->in) {
 		struct task_struct *p = rq->req[reqnum].task;
@@ -934,8 +938,8 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 {
 	/* Do _not_ use smp_processor_id() here so we don't trigger Linux
 	   preemption debug traps inadvertently (see lib/smp_processor_id.c). */
-	int cpuid = rthal_processor_id(), reqnum;
-	struct __lostagerq *rq = &lostagerq[cpuid];
+	int cpu = rthal_processor_id(), reqnum;
+	struct __lostagerq *rq = &lostagerq[cpu];
 	spl_t s;
 
 	XENO_ASSERT(NUCLEUS, p,
@@ -951,7 +955,7 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 	if (XENO_DEBUG(NUCLEUS) &&
 	    ((reqnum + 1) & (LO_MAX_REQUESTS - 1)) == rq->out)
 	    xnpod_fatal("lostage queue overflow on CPU %d! "
-			"Increase LO_MAX_REQUESTS", cpuid);
+			"Increase LO_MAX_REQUESTS", cpu);
 
 	rq->req[reqnum].type = type;
 	rq->req[reqnum].task = p;
@@ -2160,7 +2164,6 @@ static inline void do_schedule_event(struct task_struct *next)
 {
 	struct task_struct *prev;
 	xnthread_t *threadin;
-	rthal_declare_cpuid;
 
 	if (!xnpod_active_p())
 		return;
@@ -2168,7 +2171,6 @@ static inline void do_schedule_event(struct task_struct *next)
 	prev = current;
 	threadin = xnshadow_thread(next);
 	set_switch_lock_owner(prev);
-	rthal_load_cpuid();
 
 	if (threadin) {
 		/* Check whether we need to unlock the timers, each time a
@@ -2222,7 +2224,7 @@ static inline void do_schedule_event(struct task_struct *next)
 		}
 
 		ishield_reset(threadin);
-	} else if (next != gatekeeper[cpuid].server)
+	} else if (next != gatekeeper[rthal_processor_id()].server)
 		ishield_off();
 
 	rpi_switch(next);

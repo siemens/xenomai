@@ -576,8 +576,6 @@ int rthal_irq_end(unsigned irq)
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
-	rthal_declare_cpuid;
-
 	/* Notes:
 
 	   1) GPF needs to be propagated downstream whichever domain caused
@@ -600,10 +598,8 @@ static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 	   to refer to an LDT-indexed descriptor above this value would cause
 	   a GPF.  2) NMI is not pipelined. */
 
-	rthal_load_cpuid();
-
 	if (domid == RTHAL_DOMAIN_ID) {
-		rthal_realtime_faults[cpuid][event]++;
+		rthal_realtime_faults[rthal_processor_id()][event]++;
 
 		if (rthal_trap_handler != NULL &&
 		    rthal_trap_handler(event, domid, data) != 0)
