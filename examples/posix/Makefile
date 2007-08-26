@@ -71,6 +71,7 @@ EXTRA_CFLAGS := -DPRODUCER -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/p
 
 all::
 	$(MAKE) -C $(KSRC) SUBDIRS=$(PWD) modules
+	$(RM) *.o
 
 ### Kernel 2.4
 else
