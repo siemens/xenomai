@@ -376,10 +376,12 @@ void xnpod_dispatch_signals(void);
 
 static inline void xnpod_lock_sched(void)
 {
-	xnthread_t *runthread = xnpod_current_sched()->runthread;
+	xnthread_t *runthread;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
+	runthread = xnpod_current_sched()->runthread;
 
 	if (xnthread_lock_count(runthread)++ == 0)
 		xnthread_set_state(runthread, XNLOCK);
@@ -389,10 +391,12 @@ static inline void xnpod_lock_sched(void)
 
 static inline void xnpod_unlock_sched(void)
 {
-	xnthread_t *runthread = xnpod_current_sched()->runthread;
+	xnthread_t *runthread;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
+	runthread = xnpod_current_sched()->runthread;
 
 	if (--xnthread_lock_count(runthread) == 0) {
 		xnthread_clear_state(runthread, XNLOCK);

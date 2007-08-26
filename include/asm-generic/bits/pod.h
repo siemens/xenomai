@@ -60,10 +60,11 @@
 
 static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device *tdev)
 {
-	xnsched_t *sched = xnpod_current_sched();
+	xnsched_t *sched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+	sched = xnpod_current_sched();
 	xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -125,9 +126,9 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_ti
 		return;
 	}
 
-	sched = xnpod_current_sched();
-
 	xnlock_get_irqsave(&nklock, s);
+
+	sched = xnpod_current_sched();
 
 	switch (mode) {
 	case CLOCK_EVT_MODE_PERIODIC:
