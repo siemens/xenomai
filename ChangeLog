@@ -1,5 +1,9 @@
 2007-08-26  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/pod.h, include/asm-generic/bits/pod.h
+	(xnarch_switch_htick_mode, xnarch_switch_htick_shot): Get sched
+	pointer inside migration-free section.
+
 	* ksrc, include: Get rid of rthal_get/lock_cpu,
 	rthal_put/unlock_cpu, rthal_declare_cpuid. Replace by explicit
 	interrupt locking when applicable.
