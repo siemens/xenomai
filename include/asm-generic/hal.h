@@ -98,17 +98,17 @@ typedef spinlock_t rthal_spinlock_t;
 #define RTHAL_XENO_PRIO			IPIPE_HEAD_PRIORITY
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_head()
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_head()
-#define rthal_local_irq_save(x)	((x) = ipipe_test_and_stall_pipeline_head() & 1)
+#define rthal_local_irq_save(x)		((x) = ipipe_test_and_stall_pipeline_head() & 1)
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_head(x)
 #else /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
 #define RTHAL_XENO_PRIO			(RTHAL_ROOT_PRIO + 100)
 #define rthal_local_irq_disable()	ipipe_stall_pipeline_from(&rthal_domain)
 #define rthal_local_irq_enable()	ipipe_unstall_pipeline_from(&rthal_domain)
-#define rthal_local_irq_save(x)	((x) = ipipe_test_and_stall_pipeline_from(&rthal_domain) & 1)
+#define rthal_local_irq_save(x)		((x) = ipipe_test_and_stall_pipeline_from(&rthal_domain) & 1)
 #define rthal_local_irq_restore(x)	ipipe_restore_pipeline_from(&rthal_domain,(x))
 #endif /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
 #define rthal_local_irq_flags(x)	((x) = ipipe_test_pipeline_from(&rthal_domain) & 1)
-#define rthal_local_irq_test()	ipipe_test_pipeline_from(&rthal_domain)
+#define rthal_local_irq_test()		ipipe_test_pipeline_from(&rthal_domain)
 #define rthal_stage_irq_enable(dom)	ipipe_unstall_pipeline_from(dom)
 #define rthal_local_irq_save_hw(x)	local_irq_save_hw(x)
 #define rthal_local_irq_restore_hw(x)	local_irq_restore_hw(x)
@@ -119,19 +119,17 @@ typedef spinlock_t rthal_spinlock_t;
 #ifdef spin_lock_hw
 #define rthal_spin_lock_init(lock)	spin_lock_init(lock)
 #define rthal_spin_lock(lock)		spin_lock_hw(lock)
-#define rthal_spin_unlock(lock)	spin_unlock_hw(lock)
+#define rthal_spin_unlock(lock)		spin_unlock_hw(lock)
 #else /* !spin_lock_hw */
 #define rthal_spin_lock_init(lock)	*(lock) = IPIPE_SPIN_LOCK_UNLOCKED
 #define rthal_spin_lock(lock)		spin_lock(lock)
-#define rthal_spin_unlock(lock)	spin_unlock(lock)
+#define rthal_spin_unlock(lock)		spin_unlock(lock)
 #endif /* !spin_lock_hw */
 
 #define rthal_root_domain		ipipe_root_domain
 #define rthal_current_domain		ipipe_current_domain
-#define rthal_declare_cpuid		ipipe_declare_cpuid
 
-#define rthal_load_cpuid()		ipipe_load_cpuid()
-#define rthal_suspend_domain()	ipipe_suspend_domain()
+#define rthal_suspend_domain()		ipipe_suspend_domain()
 #define rthal_grab_superlock(syncfn)	ipipe_critical_enter(syncfn)
 #define rthal_release_superlock(x)	ipipe_critical_exit(x)
 #define rthal_propagate_irq(irq)	ipipe_propagate_irq(irq)
@@ -141,18 +139,14 @@ typedef spinlock_t rthal_spinlock_t;
     ipipe_virtualize_irq(dom,irq,isr,cookie,ackfn,mode)
 #define rthal_alloc_virq()		ipipe_alloc_virq()
 #define rthal_free_virq(irq)		ipipe_free_virq(irq)
-#define rthal_trigger_irq(irq)	ipipe_trigger_irq(irq)
-#define rthal_get_sysinfo(ibuf)	ipipe_get_sysinfo(ibuf)
+#define rthal_trigger_irq(irq)		ipipe_trigger_irq(irq)
+#define rthal_get_sysinfo(ibuf)		ipipe_get_sysinfo(ibuf)
 #define rthal_alloc_ptdkey()		ipipe_alloc_ptdkey()
-#define rthal_free_ptdkey(key)	ipipe_free_ptdkey(key)
+#define rthal_free_ptdkey(key)		ipipe_free_ptdkey(key)
 #define rthal_send_ipi(irq,cpus)	ipipe_send_ipi(irq,cpus)
 #define rthal_lock_irq(dom,cpu,irq)	__ipipe_lock_irq(dom,cpu,irq)
 #define rthal_unlock_irq(dom,irq)	__ipipe_unlock_irq(dom,irq)
 
-#define rthal_lock_cpu(x)		ipipe_lock_cpu(x)
-#define rthal_unlock_cpu(x)		ipipe_unlock_cpu(x)
-#define rthal_get_cpu(x)		ipipe_get_cpu(x)
-#define rthal_put_cpu(x)		ipipe_put_cpu(x)
 #define rthal_processor_id()		ipipe_processor_id()
 
 #define rthal_setsched_root(t,pol,prio)	ipipe_setscheduler_root(t,pol,prio)

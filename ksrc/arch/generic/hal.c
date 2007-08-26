@@ -394,11 +394,11 @@ rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler)
 static void rthal_apc_handler(unsigned virq, void *arg)
 {
     void (*handler) (void *), *cookie;
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
+    int cpu;
 
     rthal_spin_lock(&rthal_apc_lock);
+
+    cpu = rthal_processor_id();
 
     /* <!> This loop is not protected against a handler becoming
        unavailable while processing the pending queue; the software
@@ -408,12 +408,12 @@ static void rthal_apc_handler(unsigned virq, void *arg)
        invoked on the same CPU than the code which called
        rthal_apc_schedule(). */
 
-    while (rthal_apc_pending[cpuid] != 0) {
-        int apc = ffnz(rthal_apc_pending[cpuid]);
-        clear_bit(apc, &rthal_apc_pending[cpuid]);
+    while (rthal_apc_pending[cpu] != 0) {
+        int apc = ffnz(rthal_apc_pending[cpu]);
+        clear_bit(apc, &rthal_apc_pending[cpu]);
         handler = rthal_apc_table[apc].handler;
         cookie = rthal_apc_table[apc].cookie;
-        rthal_apc_table[apc].hits[cpuid]++;
+        rthal_apc_table[apc].hits[cpu]++;
         rthal_spin_unlock(&rthal_apc_lock);
         handler(cookie);
         rthal_spin_lock(&rthal_apc_lock);
@@ -599,7 +599,6 @@ int rthal_apc_free(int apc)
 
 int rthal_apc_schedule(int apc)
 {
-    rthal_declare_cpuid;
     unsigned long flags;
 
     if (apc < 0 || apc >= RTHAL_NR_APCS)
@@ -607,10 +606,8 @@ int rthal_apc_schedule(int apc)
 
     rthal_local_irq_save(flags);
 
-    rthal_load_cpuid();
-
-    if (!__test_and_set_bit(apc, &rthal_apc_pending[cpuid]))
-        rthal_schedule_irq(rthal_apc_virq);
+    if (!__test_and_set_bit(apc, &rthal_apc_pending[rthal_processor_id()]))
+	    rthal_schedule_irq(rthal_apc_virq);
 
     rthal_local_irq_restore(flags);
 

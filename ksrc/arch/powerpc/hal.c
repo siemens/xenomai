@@ -77,24 +77,21 @@ static struct {
 
 static void rthal_critical_sync(void)
 {
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
     switch (rthal_sync_op) {
         case 1:
-            /* timer_request */
-	    disarm_decr[cpuid] = 1;
+		/* timer_request */
+		disarm_decr[rthal_processor_id()] = 1;
             break;
         case 2:
-            /* timer_release */
-	    disarm_decr[cpuid] = 0;
-            set_dec(tb_ticks_per_jiffy);
+		/* timer_release */
+		disarm_decr[rthal_processor_id()] = 0;
+		set_dec(tb_ticks_per_jiffy);
 
             break;
         case 3:
-            /* cancel action */
-            disarm_decr[cpuid] = 0;
-            break;
+		/* cancel action */
+		disarm_decr[rthal_processor_id()] = 0;
+		break;
     }
 }
 #else /* CONFIG_SMP */
@@ -113,7 +110,6 @@ static void rthal_smp_relay_tick(unsigned irq, void *cookie)
 int rthal_timer_request(void (*handler)(void), int cpu)
 {
     unsigned long flags;
-    rthal_declare_cpuid;
     int err = 0;
 
     if (cpu > 0)
@@ -127,8 +123,6 @@ int rthal_timer_request(void (*handler)(void), int cpu)
     mtspr(SPRN_TCR, mfspr(SPRN_TCR) & ~TCR_ARE);    /* Auto-reload off. */
 #endif /* CONFIG_40x */
     rthal_timer_program_shot(tb_ticks_per_jiffy);
-
-    rthal_load_cpuid();
 
     if (err)
         goto out;
@@ -155,13 +149,13 @@ int rthal_timer_request(void (*handler)(void), int cpu)
     }
 #endif /* CONFIG_SMP */
 
-    disarm_decr[cpuid] = 1;
+    disarm_decr[rthal_processor_id()] = 1;
 
 out:
     if (err) {
         rthal_sync_op = 3;
         __ipipe_decr_ticks = tb_ticks_per_jiffy;
-        disarm_decr[cpuid] = 0;
+        disarm_decr[rthal_processor_id()] = 0;
     }
     rthal_critical_exit(flags);
 
@@ -173,7 +167,6 @@ done:
 void rthal_timer_release(int cpu)
 {
     unsigned long flags;
-    rthal_declare_cpuid;
 
     if (cpu > 0)
 	    return;
@@ -181,8 +174,6 @@ void rthal_timer_release(int cpu)
     flags = rthal_critical_enter(&rthal_critical_sync);
 
     rthal_sync_op = 2;
-
-    rthal_load_cpuid();
 
 #ifdef CONFIG_40x
     mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE); /* Auto-reload on. */
@@ -197,7 +188,7 @@ void rthal_timer_release(int cpu)
 #endif /* CONFIG_SMP */
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
-    disarm_decr[cpuid] = 0;
+    disarm_decr[rthal_processor_id()] = 0;
 
     rthal_critical_exit(flags);
 }
@@ -278,16 +269,12 @@ int rthal_irq_end(unsigned irq)
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
-
     if (domid == RTHAL_DOMAIN_ID) {
-        rthal_realtime_faults[cpuid][event]++;
+	    rthal_realtime_faults[rthal_processor_id()][event]++;
 
-        if (rthal_trap_handler != NULL &&
-            rthal_trap_handler(event, domid, data) != 0)
-            return RTHAL_EVENT_STOP;
+	    if (rthal_trap_handler != NULL &&
+		rthal_trap_handler(event, domid, data) != 0)
+		    return RTHAL_EVENT_STOP;
     }
 
     return RTHAL_EVENT_PROPAGATE;

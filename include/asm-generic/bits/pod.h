@@ -189,9 +189,8 @@ static void xnarch_finalize_cpu(unsigned irq)
 static inline void xnarch_notify_halt(void)
 {
     xnarch_cpumask_t other_cpus = cpu_online_map;
-    unsigned cpu, nr_cpus = num_online_cpus();
+    int cpu, nr_cpus = num_online_cpus();
     unsigned long flags;
-    rthal_declare_cpuid;
 
     sema_init(&xnarch_finalize_sync,0);
 
@@ -206,10 +205,10 @@ static inline void xnarch_notify_halt(void)
 			 NULL,
 			 IPIPE_HANDLE_MASK);
 
-    rthal_lock_cpu(flags);
-    cpu_clear(cpuid, other_cpus);
+    rthal_local_irq_save_hw(flags);
+    cpu_clear(rthal_processor_id(), other_cpus);
     rthal_send_ipi(RTHAL_SERVICE_IPI2, other_cpus);
-    rthal_unlock_cpu(flags);
+    rthal_local_irq_restore_hw(flags);
 
     for(cpu=0; cpu < nr_cpus-1; ++cpu)
         down(&xnarch_finalize_sync);

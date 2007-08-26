@@ -430,9 +430,6 @@ static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
 }
 
 #define xnarch_current_cpu()  0
-#define xnarch_declare_cpuid  const int cpuid = 0
-#define xnarch_get_cpu(x)     do  { (x) = (x); } while(0)
-#define xnarch_put_cpu(x)     do { } while(0)
 
 #define cpu_relax()           do { } while(0)
 

@@ -571,7 +571,7 @@ xntbase_t nktbase = {
 	.wallclock_offset = 0,
 	.tickvalue = 1,
 	.ticks2sec = 1000000000UL,
-	.status = XNTBRUN|XNTBSET,
+	.status = XNTBSET,
 	.name = "master",
 #ifdef CONFIG_XENO_OPT_STATS
 	.timerq = XNQUEUE_INITIALIZER(nktbase.timerq),
