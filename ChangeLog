@@ -1,3 +1,23 @@
+2007-08-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-00.
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.22-1.10-00.
+
+	* include/asm-powerpc/calibration.h (xnarch_get_sched_latency): 
+	Reduce default calibration value for lite52xx boards.
+
+2007-08-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/pod.h (xnarch_switch_to): Do not hash
+	the zero page.
+
+	* include/asm-powerpc/system.h (xnarch_fault_bp_p): Remove check
+	for deprecated perfmon trap.
+
+	* include/asm-powerpc/hal.h: Adjust fault labels to the
+	layout of the I-pipe/powerpc 1.7 series and beyond.
+
 2007-08-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/pod.h, include/asm-generic/bits/pod.h
