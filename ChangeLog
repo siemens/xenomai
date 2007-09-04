@@ -1,3 +1,7 @@
+2007-09-04  Benjamin ZORES <benjamin.zores@alcatel-lucent.fr>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-00.
+
 2007-08-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-00.
