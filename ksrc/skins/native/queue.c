@@ -1054,7 +1054,10 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
  *
  * - -EPERM is returned if this service should block, but was called
  * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * scheduler locked). This error may also be returned whenever the
+ * call attempts to bind from a user-space application to a local
+ * queue defined from kernel space (i.e. Q_SHARED was not passed to
+ * rt_queue_create()).
  *
  * - -ENOENT is returned if the special file /dev/rtheap
  * (character-mode, major 10, minor 254) is not available from the
