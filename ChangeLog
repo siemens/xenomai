@@ -1,3 +1,8 @@
+2007-09-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-i386/calibration.h (xnarch_get_sched_latency): 
+	Reduce a few default calibration values.
+
 2007-09-04  Benjamin ZORES <benjamin.zores@alcatel-lucent.fr>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-00.
