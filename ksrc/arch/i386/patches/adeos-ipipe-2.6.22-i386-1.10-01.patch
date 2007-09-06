@@ -811,7 +811,7 @@ index 7f8b7af..c2c3f7b 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..8472546
+index 0000000..121d8c5
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
 @@ -0,0 +1,808 @@
@@ -942,7 +942,7 @@ index 0000000..8472546
 +	return 1;
 +}
 +
-+void __ipipe_enable_irqdesc(unsigned irq)
++void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
 +{
 +	irq_desc[irq].status &= ~IRQ_DISABLED;
 +}
@@ -1257,7 +1257,7 @@ index 0000000..8472546
 +	 * pipeline state for the root stage upon exit.
 +	 */
 +
-+	if (test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++	if (test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +		regs->eflags &= ~X86_EFLAGS_IF;
 +	else
 +		regs->eflags |= X86_EFLAGS_IF;
@@ -1271,7 +1271,7 @@ index 0000000..8472546
 +
 +asmlinkage int __ipipe_kpreempt_root(struct pt_regs regs)
 +{
-+	if (test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++	if (test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +		/* Root stage is stalled: rescheduling denied. */
 +		return 0;
 +
@@ -1292,19 +1292,19 @@ index 0000000..8472546
 +	   emulation. */
 +
 +	if (!(regs.eflags & X86_EFLAGS_IF)) {
-+		if (!__test_and_set_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status)))
++		if (!__test_and_set_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			trace_hardirqs_off();
 +		regs.eflags |= X86_EFLAGS_IF;
 +	} else {
-+		if (test_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status))) {
++		if (test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status))) {
 +			trace_hardirqs_on();
-+			__clear_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++			__clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +		}
 +
 +		/* Only sync virtual IRQs here, so that we don't recurse
 +		   indefinitely in case of an external interrupt flood. */
 +
-+		if ((ipipe_cpudom_var(ipipe_root_domain, irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
++		if ((ipipe_root_cpudom_var(irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
 +			__ipipe_sync_pipeline(IPIPE_IRQMASK_VIRT);
 +	}
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
@@ -1340,7 +1340,7 @@ index 0000000..8472546
 +		if (ipipe_root_domain_p && !in_atomic()) {
 +			/* Sync pending VIRQs before _TIF_NEED_RESCHED is tested. */
 +			local_irq_save_hw(flags);
-+			if ((ipipe_this_cpudom_var(irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
++			if ((ipipe_root_cpudom_var(irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
 +				__ipipe_sync_pipeline(IPIPE_IRQMASK_VIRT);
 +			local_irq_restore_hw(flags);
 +			return -1;
@@ -1585,7 +1585,7 @@ index 0000000..8472546
 +finalize_nosync:
 +
 +	if (!ipipe_root_domain_p ||
-+	    test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++	    test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +		return 0;
 +
 +#ifdef CONFIG_SMP
@@ -1595,7 +1595,7 @@ index 0000000..8472546
 +	 * ret_from_intr.
 +	 */
 +	if ((long)regs.orig_eax < 0)
-+		__set_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++		__set_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +#endif	/* CONFIG_SMP */
 +
 +	return 1;
@@ -2146,10 +2146,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..24336a5
+index 0000000..b97ab57
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,202 @@
+@@ -0,0 +1,201 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2176,10 +2176,10 @@ index 0000000..24336a5
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-00"
++#define IPIPE_ARCH_STRING	"1.10-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2198,8 +2198,8 @@ index 0000000..24336a5
 +} while(0)
 +
 +#define task_hijacked(p)						\
-+	({ int x = ipipe_current_domain != ipipe_root_domain;		\
-+	__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status)); \
++	({ int x = !ipipe_root_domain_p; \
++	__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status));	\
 +	local_irq_enable_hw(); x; })
 +
 +struct ipipe_domain;
@@ -2236,12 +2236,9 @@ index 0000000..24336a5
 +
 +/* Private interface -- Internal use only */
 +
-+#define __ipipe_check_platform() do { } while(0)
-+
-+#define __ipipe_init_platform() do { } while(0)
-+
-+#define __ipipe_enable_irq(irq)	irq_desc[irq].chip->enable(irq)
-+
++#define __ipipe_check_platform()	do { } while(0)
++#define __ipipe_init_platform()		do { } while(0)
++#define __ipipe_enable_irq(irq)		irq_desc[irq].chip->enable(irq)
 +#define __ipipe_disable_irq(irq)	irq_desc[irq].chip->disable(irq)
 +
 +#ifdef CONFIG_SMP
@@ -2250,7 +2247,9 @@ index 0000000..24336a5
 +#define __ipipe_hook_critical_ipi(ipd) do { } while(0)
 +#endif
 +
-+void __ipipe_enable_irqdesc(unsigned irq);
++#define __ipipe_disable_irqdesc(ipd, irq)	do { } while(0)
++
++void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq);
 +
 +void __ipipe_enable_pipeline(void);
 +
@@ -2333,9 +2332,9 @@ index 0000000..24336a5
 +			__ipipe_finalize_root_virq_handler();	 \
 +		}						\
 +	} else {						\
-+		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status)); \
++		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);	\
-+		__set_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status)); \
++		__set_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +	}							\
 +	local_irq_disable_nohead(ipd);				\
 +} while(0)
@@ -2354,10 +2353,10 @@ index 0000000..24336a5
 +#endif	/* !__I386_IPIPE_H */
 diff --git a/include/asm-i386/ipipe_base.h b/include/asm-i386/ipipe_base.h
 new file mode 100644
-index 0000000..2f6ab1f
+index 0000000..4d02a7d
 --- /dev/null
 +++ b/include/asm-i386/ipipe_base.h
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,176 @@
 +/* -*- linux-c -*-
 + * include/asm-i386/ipipe_base.h
 + *
@@ -2446,9 +2445,96 @@ index 0000000..2f6ab1f
 +#define IPIPE_LAST_EVENT	IPIPE_EVENT_CLEANUP
 +#define IPIPE_NR_EVENTS		(IPIPE_LAST_EVENT + 1)
 +
++#ifndef __ASSEMBLY__
++
++#include <asm/alternative.h>
++
++#ifdef CONFIG_SMP
++
++#define GET_ROOT_STATUS_ADDR					\
++	"pushfl; cli;"						\
++	"movl %%fs:per_cpu__this_cpu_off, %%eax;"		\
++	"lea per_cpu__ipipe_percpu_darray(%%eax), %%eax;"
++#define PUT_ROOT_STATUS_ADDR	"popfl;"
++
++static inline void __ipipe_stall_root(void)
++{
++	__asm__ __volatile__(GET_ROOT_STATUS_ADDR
++			     LOCK_PREFIX
++			     "btsl $0,(%%eax);"
++			     PUT_ROOT_STATUS_ADDR
++			     : : : "eax", "memory");
++}
++
++static inline unsigned long __ipipe_test_and_stall_root(void)
++{
++	int oldbit;
++
++	__asm__ __volatile__(GET_ROOT_STATUS_ADDR
++			     LOCK_PREFIX
++			     "btsl $0,(%%eax);"
++			     "sbbl %0,%0;"
++			     PUT_ROOT_STATUS_ADDR
++			     :"=r" (oldbit)
++			     : : "eax", "memory");
++	return oldbit;
++}
++
++static inline unsigned long __ipipe_test_root(void)
++{
++	int oldbit;
++
++	__asm__ __volatile__(GET_ROOT_STATUS_ADDR
++			     "btl $0,(%%eax);"
++			     "sbbl %0,%0;"
++			     PUT_ROOT_STATUS_ADDR
++			     :"=r" (oldbit)
++			     : : "eax");
++	return oldbit;
++}
++
++#else /* ! CONFIG_SMP */
++
++extern unsigned long __ipipe_root_status;
++
++static inline void __ipipe_stall_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	__asm__ __volatile__("btsl $0,%0;"
++			     :"+m" (*p) : : "memory");
++}
++
++static inline unsigned long __ipipe_test_and_stall_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	int oldbit;
++
++	__asm__ __volatile__("btsl $0,%1;"
++			     "sbbl %0,%0;"
++			     :"=r" (oldbit), "+m" (*p)
++			     : : "memory");
++	return oldbit;
++}
++
++static inline unsigned long __ipipe_test_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	int oldbit;
++
++	__asm__ __volatile__("btl $0,%1;"
++			     "sbbl %0,%0;"
++			     :"=r" (oldbit)
++			     :"m" (*p));
++	return oldbit;
++}
++
++#endif	/* CONFIG_SMP */
++
++#endif /* !__ASSEMBLY__ */
++
 +#endif	/* !__I386_IPIPE_BASE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
-index eff8585..d3f2163 100644
+index eff8585..c8e9278 100644
 --- a/include/asm-i386/irqflags.h
 +++ b/include/asm-i386/irqflags.h
 @@ -12,32 +12,62 @@
@@ -2533,7 +2619,7 @@ index eff8585..d3f2163 100644
  #else
 +
 +#ifdef CONFIG_IPIPE
-+#define DISABLE_INTERRUPTS(clobbers)	call __ipipe_stall_root; sti
++#define DISABLE_INTERRUPTS(clobbers)	PER_CPU(ipipe_percpu_darray, %eax); btsl $0,(%eax); sti
 +#define ENABLE_INTERRUPTS(clobbers)	call __ipipe_unstall_root
 +#define ENABLE_INTERRUPTS_HW_COND	sti
 +#define DISABLE_INTERRUPTS_HW(clobbers)	cli
@@ -2703,10 +2789,10 @@ index 7803014..49fd51e 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..be936bd
+index 0000000..4d40222
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,556 @@
+@@ -0,0 +1,557 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2737,6 +2823,7 @@ index 0000000..be936bd
 +#include <linux/mutex.h>
 +#include <linux/linkage.h>
 +#include <linux/ipipe_base.h>
++#include <linux/ipipe_compat.h>
 +#include <asm/ipipe.h>
 +
 +#ifdef CONFIG_IPIPE
@@ -2839,7 +2926,7 @@ index 0000000..be936bd
 +};
 +
 +#ifdef CONFIG_SMP
-+/* These ops must start and complete on the current CPU: care for
++/* These ops must start and complete on the same CPU: care for
 + * migration. */
 +#define set_bit_safe(b, a)						\
 +		({ unsigned long __flags;				\
@@ -3265,10 +3352,10 @@ index 0000000..be936bd
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..1bbd105
+index 0000000..797ab74
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,77 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -3323,12 +3410,6 @@ index 0000000..1bbd105
 +
 +#define ipipe_root_domain (&ipipe_root)
 +
-+void __ipipe_stall_root(void);
-+
-+unsigned long __ipipe_test_root(void);
-+
-+unsigned long __ipipe_test_and_stall_root(void);
-+
 +void __ipipe_unstall_root(void);
 +
 +void __ipipe_restore_root(unsigned long x);
@@ -3352,12 +3433,72 @@ index 0000000..1bbd105
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_BASE_H */
+diff --git a/include/linux/ipipe_compat.h b/include/linux/ipipe_compat.h
+new file mode 100644
+index 0000000..50a245c
+--- /dev/null
++++ b/include/linux/ipipe_compat.h
+@@ -0,0 +1,54 @@
++/* -*- linux-c -*-
++ * include/linux/ipipe_compat.h
++ *
++ * Copyright (C) 2007 Philippe Gerum.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
++ * USA; either version 2 of the License, or (at your option) any later
++ * version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __LINUX_IPIPE_COMPAT_H
++#define __LINUX_IPIPE_COMPAT_H
++
++#ifdef CONFIG_IPIPE_COMPAT
++/*
++ * OBSOLETE: defined only for backward compatibility. Will be removed
++ * in future releases, please update client code accordingly.
++ */
++
++#ifdef CONFIG_SMP
++#define ipipe_declare_cpuid	int cpuid
++#define ipipe_load_cpuid()	do { \
++					cpuid = ipipe_processor_id();	\
++				} while(0)
++#define ipipe_lock_cpu(flags)	do { \
++					local_irq_save_hw(flags); \
++					cpuid = ipipe_processor_id(); \
++				} while(0)
++#define ipipe_unlock_cpu(flags)	local_irq_restore_hw(flags)
++#define ipipe_get_cpu(flags)	ipipe_lock_cpu(flags)
++#define ipipe_put_cpu(flags)	ipipe_unlock_cpu(flags)
++#else /* !CONFIG_SMP */
++#define ipipe_declare_cpuid	const int cpuid = 0
++#define ipipe_load_cpuid()	do { } while(0)
++#define ipipe_lock_cpu(flags)	local_irq_save_hw(flags)
++#define ipipe_unlock_cpu(flags)	local_irq_restore_hw(flags)
++#define ipipe_get_cpu(flags)	do { (void)(flags); } while(0)
++#define ipipe_put_cpu(flags)	do { } while(0)
++#endif /* CONFIG_SMP */
++
++#endif /* CONFIG_IPIPE_COMPAT */
++
++#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..f7e0be8
+index 0000000..06bbfe5
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,66 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -3382,7 +3523,7 @@ index 0000000..f7e0be8
 +#ifndef __LINUX_IPIPE_PERCPU_H
 +#define __LINUX_IPIPE_PERCPU_H
 +
-+#include <linux/percpu.h>
++#include <asm/percpu.h>
 +#include <asm/ptrace.h>
 +
 +struct ipipe_domain;
@@ -3396,6 +3537,8 @@ index 0000000..f7e0be8
 +	u64 evsync;
 +};
 +
++DECLARE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
++
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]);
 +
 +DECLARE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain);
@@ -3404,19 +3547,22 @@ index 0000000..f7e0be8
 +DECLARE_PER_CPU(int, ipipe_percpu_context_check);
 +#endif
 +
-+#define __ipipe_dslot(ipd)		((ipd)->slot)
-+
 +#define ipipe_percpu(var, cpu)		per_cpu(var, cpu)
 +#define ipipe_cpu_var(var)		__raw_get_cpu_var(var)
 +
++#define ipipe_percpu_domptr(ipd, cpu)	per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot]
++
 +#define ipipe_percpudom(ipd, var, cpu) \
-+	per_cpu(ipipe_percpu_darray, cpu)[__ipipe_dslot(ipd)].var
++	ipipe_percpu_domptr(ipd, cpu)->var
 +
 +#define ipipe_cpudom_var(ipd, var)	\
-+	__raw_get_cpu_var(ipipe_percpu_darray)[__ipipe_dslot(ipd)].var
++	__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot]->var
++
++#define ipipe_root_cpudom_var(var)	\
++	__raw_get_cpu_var(ipipe_percpu_darray)[0].var
 +
 +#define ipipe_this_cpudom_var(var)	\
-+	ipipe_cpudom_var(ipipe_current_domain, var) /* XX: may be optimized in keeping the domain slot apart */
++	ipipe_cpudom_var(ipipe_current_domain, var)
 +
 +#endif	/* !__LINUX_IPIPE_PERCPU_H */
 diff --git a/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
@@ -3482,10 +3628,10 @@ index 0000000..d38a59b
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..9f5e1b2
+index 0000000..5d6be15
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,65 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
 + *
@@ -3523,6 +3669,18 @@ index 0000000..9f5e1b2
 +
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
++
++#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
++#define ipipe_trace_irq_entry(irq)	ipipe_trace_begin(irq)
++#define ipipe_trace_irq_exit(irq)	ipipe_trace_end(irq)
++#define ipipe_trace_irqsoff()		ipipe_trace_begin(0x80000000UL)
++#define ipipe_trace_irqson()		ipipe_trace_end(0x80000000UL)
++#else
++#define ipipe_trace_irq_entry(irq)	do { } while(0)
++#define ipipe_trace_irq_exit(irq)	do { } while(0)
++#define ipipe_trace_irqsoff()		do { } while(0)
++#define ipipe_trace_irqson()		do { } while(0)
++#endif
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -4080,10 +4238,10 @@ index 73ad5cd..caf49aa 100644
  bad_fork_cleanup_namespaces:
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..9a820f1
+index 0000000..d523b18
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,25 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -4097,6 +4255,18 @@ index 0000000..9a820f1
 +	default 4
 +	---help---
 +	The maximum number of I-pipe domains to run concurrently.
++
++config IPIPE_COMPAT
++	bool "Maintain code compatibility with older releases"
++	depends on IPIPE
++	default y
++	---help---
++	Activate this option if you want the compatibility code to be
++	defined, so that older I-pipe clients may use obsolete
++	constructs. WARNING: obsolete code will be eventually
++	deprecated in future I-pipe releases, and removed from the
++	compatibility support as time passes. Please fix I-pipe
++	clients to get rid of such uses as soon as possible.
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
 index 0000000..64a692c
@@ -4202,10 +4372,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..20b0482
+index 0000000..718290e
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1591 @@
+@@ -0,0 +1,1604 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4253,6 +4423,8 @@ index 0000000..20b0482
 +static unsigned long __ipipe_domain_slot_map;
 +
 +struct ipipe_domain ipipe_root;
++
++DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
 +
 +DEFINE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]) =
 +{ [0] = { .status = IPIPE_STALL_MASK } }; /* Root domain stalled on each CPU at startup. */
@@ -4383,6 +4555,7 @@ index 0000000..20b0482
 +void ipipe_init(void)
 +{
 +	struct ipipe_domain *ipd = &ipipe_root;
++	int cpu;
 +
 +	__ipipe_check_platform();	/* Do platform dependent checks first. */
 +
@@ -4395,6 +4568,9 @@ index 0000000..20b0482
 +	/* Reserve percpu data slot #0 for the root domain. */
 +	ipd->slot = 0;
 +	set_bit(0, &__ipipe_domain_slot_map);
++
++	for_each_online_cpu(cpu)
++		per_cpu(ipipe_percpu_daddr, cpu)[0] = &per_cpu(ipipe_percpu_darray, cpu)[0];
 +
 +	ipd->name = "Linux";
 +	ipd->domid = IPIPE_ROOT_ID;
@@ -4457,42 +4633,32 @@ index 0000000..20b0482
 +
 +void __ipipe_cleanup_domain(struct ipipe_domain *ipd)
 +{
-+	ipipe_unstall_pipeline_from(ipd);
-+#ifdef CONFIG_SMP
-+	{
-+		int cpu;
++	int cpu;
 +
-+		for_each_online_cpu(cpu) {
-+			while (ipipe_percpudom(ipd, irqpend_himask, cpu) != 0)
-+				cpu_relax();
-+		}
++	ipipe_unstall_pipeline_from(ipd);
++
++#ifdef CONFIG_SMP
++	for_each_online_cpu(cpu) {
++		while (ipipe_percpudom(ipd, irqpend_himask, cpu) != 0)
++			cpu_relax();
 +	}
 +#endif	/* CONFIG_SMP */
++
 +	clear_bit(ipd->slot, &__ipipe_domain_slot_map);
-+}
 +
-+void __ipipe_stall_root(void)
-+{
-+	set_bit_safe(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
-+}
-+
-+unsigned long __ipipe_test_and_stall_root(void)
-+{
-+	return test_and_set_bit_safe(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
-+}
-+
-+unsigned long __ipipe_test_root(void)
-+{
-+	return test_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++	for_each_online_cpu(cpu)
++		per_cpu(ipipe_percpu_daddr, cpu)[ipd->slot] = NULL;
 +}
 +
 +void __ipipe_unstall_root(void)
 +{
++	BUG_ON(!ipipe_root_domain_p);
++
 +        local_irq_disable_hw();
 +
-+        __clear_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++        __clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +
-+        if (unlikely(ipipe_cpudom_var(ipipe_root_domain, irqpend_himask) != 0))
++        if (unlikely(ipipe_root_cpudom_var(irqpend_himask) != 0))
 +                __ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
 +        local_irq_enable_hw();
@@ -4500,6 +4666,8 @@ index 0000000..20b0482
 +
 +void __ipipe_restore_root(unsigned long x)
 +{
++	BUG_ON(!ipipe_root_domain_p);
++
 +	if (x)
 +		__ipipe_stall_root();
 +	else
@@ -4859,7 +5027,6 @@ index 0000000..20b0482
 +	spin_lock_irqsave(&__ipipe_pipelock, flags);
 +
 +	if (handler != NULL) {
-+
 +		if (handler == IPIPE_SAME_HANDLER) {
 +			handler = ipd->irqs[irq].handler;
 +			cookie = ipd->irqs[irq].cookie;
@@ -4904,7 +5071,7 @@ index 0000000..20b0482
 +	ipd->irqs[irq].control = modemask;
 +
 +	if (irq < NR_IRQS && handler != NULL && !ipipe_virtual_irq_p(irq)) {
-+		__ipipe_enable_irqdesc(irq);
++		__ipipe_enable_irqdesc(ipd, irq);
 +
 +		if ((modemask & IPIPE_ENABLE_MASK) != 0) {
 +			if (ipd != ipipe_current_domain) {
@@ -4916,7 +5083,6 @@ index 0000000..20b0482
 +				err = -EPERM;
 +				goto unlock_and_exit;
 +			}
-+
 +			__ipipe_enable_irq(irq);
 +		}
 +	}
@@ -5193,8 +5359,9 @@ index 0000000..20b0482
 +	struct ipipe_domain *_ipd;
 +	struct list_head *pos;
 +	unsigned long flags;
++	int cpu;
 +
-+	if (ipipe_current_domain != ipipe_root_domain) {
++	if (!ipipe_root_domain_p) {
 +		printk(KERN_WARNING
 +		       "I-pipe: Only the root domain may register a new domain.\n");
 +		return -EPERM;
@@ -5209,7 +5376,7 @@ index 0000000..20b0482
 +	pos = NULL;
 +	ipd->slot = ffz(__ipipe_domain_slot_map);
 +
-+	if (__ipipe_dslot(ipd) < CONFIG_IPIPE_DOMAINS) {
++	if (ipd->slot < CONFIG_IPIPE_DOMAINS) {
 +		set_bit(ipd->slot, &__ipipe_domain_slot_map);
 +		list_for_each(pos, &__ipipe_pipeline) {
 +			_ipd = list_entry(pos, struct ipipe_domain, p_link);
@@ -5225,6 +5392,15 @@ index 0000000..20b0482
 +			clear_bit(ipd->slot, &__ipipe_domain_slot_map);
 +		return -EBUSY;
 +	}
++
++	/*
++	 * Set up the perdomain pointers for direct access to the
++	 * percpu domain data. This saves a costly multiply each time
++	 * we need to refer to the contents of the percpu domain data
++	 * array.
++	 */
++	for_each_online_cpu(cpu)
++		per_cpu(ipipe_percpu_daddr, cpu)[ipd->slot] = &per_cpu(ipipe_percpu_darray, cpu)[ipd->slot];
 +
 +	ipd->name = attr->name;
 +	ipd->domid = attr->domid;
@@ -5272,8 +5448,8 @@ index 0000000..20b0482
 +
 +		local_irq_save_hw(flags);
 +
-+		if (ipipe_this_cpudom_var(irqpend_himask) != 0 &&
-+		    !test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++		if (ipipe_root_cpudom_var(irqpend_himask) != 0 &&
++		    !test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
 +		local_irq_restore_hw(flags);
@@ -5288,7 +5464,7 @@ index 0000000..20b0482
 +{
 +	unsigned long flags;
 +
-+	if (ipipe_current_domain != ipipe_root_domain) {
++	if (!ipipe_root_domain_p) {
 +		printk(KERN_WARNING
 +		       "I-pipe: Only the root domain may unregister a domain.\n");
 +		return -EPERM;
@@ -5770,9 +5946,6 @@ index 0000000..20b0482
 +EXPORT_SYMBOL(__ipipe_restore_pipeline_head);
 +EXPORT_SYMBOL(__ipipe_unstall_root);
 +EXPORT_SYMBOL(__ipipe_restore_root);
-+EXPORT_SYMBOL(__ipipe_stall_root);
-+EXPORT_SYMBOL(__ipipe_test_root);
-+EXPORT_SYMBOL(__ipipe_test_and_stall_root);
 +EXPORT_SYMBOL(__ipipe_spin_lock_irq);
 +EXPORT_SYMBOL(__ipipe_spin_unlock_irq);
 +EXPORT_SYMBOL(__ipipe_spin_lock_irqsave);
@@ -5796,6 +5969,16 @@ index 0000000..20b0482
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
 +EXPORT_SYMBOL(ipipe_request_tickdev);
 +EXPORT_SYMBOL(ipipe_release_tickdev);
++#endif
++#ifndef CONFIG_SMP
++/*
++ * Create an alias to the unique root status, so that arch-dep code
++ * may get simple and easy access to this percpu variable.
++ */
++#define __rstatus_name(s)	#s
++#define _rstatus_name(s)	__rstatus_name(s)
++extern unsigned long __ipipe_root_status
++__attribute__((alias(_rstatus_name(__raw_get_cpu_var(ipipe_percpu_darray)))));
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
