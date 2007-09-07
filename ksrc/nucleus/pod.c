@@ -166,7 +166,7 @@ void xnpod_watchdog_handler(xntimer_t *timer)
 		return;
 	}
 		
-	if (unlikely(++sched->wdcount >= 4)) {
+	if (unlikely(++sched->wdcount >= CONFIG_XENO_OPT_WATCHDOG_TIMEOUT)) {
 		xnltt_log_event(xeno_ev_watchdog, thread->name);
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
 			 thread->name);
