@@ -148,6 +148,8 @@ static inline xnticks_t xntbase_ns2ticks(xntbase_t *base, xntime_t t)
 	return xnarch_ulldiv(t, xntbase_get_tickval(base), NULL);
 }
 
+xnticks_t xntbase_ns2ticks_ceil(xntbase_t *base, xntime_t t);
+
 static inline int xntbase_master_p(xntbase_t *base)
 {
 	return base == &nktbase;
@@ -243,6 +245,11 @@ static inline xntime_t xntbase_ticks2ns(xntbase_t *base, xnticks_t ticks)
 }
 
 static inline xnticks_t xntbase_ns2ticks(xntbase_t *base, xntime_t t)
+{
+	return t;
+}
+
+static inline xnticks_t xntbase_ns2ticks_ceil(xntbase_t *base, xntime_t t)
 {
 	return t;
 }

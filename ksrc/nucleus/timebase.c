@@ -483,6 +483,12 @@ void xntbase_tick(xntbase_t *base)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+xnticks_t xntbase_ns2ticks_ceil(xntbase_t *base, xntime_t t)
+{
+	return xnarch_ulldiv(t + xntbase_get_tickval(base) - 1,
+			     xntbase_get_tickval(base), NULL);
+}
+
 EXPORT_SYMBOL(xntbase_alloc);
 EXPORT_SYMBOL(xntbase_free);
 EXPORT_SYMBOL(xntbase_update);
@@ -490,6 +496,7 @@ EXPORT_SYMBOL(xntbase_switch);
 EXPORT_SYMBOL(xntbase_start);
 EXPORT_SYMBOL(xntbase_stop);
 EXPORT_SYMBOL(xntbase_tick);
+EXPORT_SYMBOL(xntbase_ns2ticks_ceil);
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 

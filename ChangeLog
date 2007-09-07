@@ -15,6 +15,11 @@
 
 2007-08-30  Jan Kiszka  <jan.kiszka@web.de>
 
+	* ksrc/nucleus/timebase.c: Introduce a round-up-variant of
+	xntbase_ns2ticks().
+
+2007-08-30  Jan Kiszka  <jan.kiszka@web.de>
+
 	* include/asm-*/bits/pod.h (xnarch_tsc_to_ns): Fix redefine
 	warning in 2.4 builds.
 	
