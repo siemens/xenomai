@@ -165,12 +165,23 @@ config XENO_OPT_WATCHDOG
 	help
 
 	This option activates a watchdog aimed at detecting runaway
-	real-time threads. If enabled, the watchdog triggers after 4
-	seconds of uninterrupted real-time activity without Linux
-	interaction; in such event, the current real-time thread is
-	forcibly suspended. The built-in watchdog support operates on
-	behalf of the timer tick handler, thus is only active after
-	the timer has been started.
+	real-time threads. If enabled, the watchdog triggers after
+	a given period of uninterrupted real-time activity has elapsed
+	without Linux interaction in the meantime; in such event, the
+	current real-time thread is killed. The built-in watchdog
+	support operates on behalf of the timer tick handler,
+	thus is only active after the timer has been started. The
+	timeout value of the watchdog can be set using the
+	XENO_OPT_WATCHDOG_TIMEOUT parameter.
+
+config XENO_OPT_WATCHDOG_TIMEOUT
+	depends on XENO_OPT_WATCHDOG
+	int "Watchdog timeout"
+	default 4
+	range 1 60
+	help
+
+	Watchdog timeout value (in seconds).
 
 menu "Timing"
 

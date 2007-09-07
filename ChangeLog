@@ -1,3 +1,7 @@
+2007-09-04  Johan Borkhuis <j.borkhuis@dutchspace.nl>
+
+	* ksrc/nucleus/pod.c: Make the watchdog timeout value configurable.
+
 2007-08-24  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/rtcan_socket.c: protect the list of RTCAN
