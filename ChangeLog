@@ -1,3 +1,7 @@
+2007-09-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-01.
+
 2007-09-06  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-i386/calibration.h (xnarch_get_sched_latency): 
