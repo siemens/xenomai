@@ -13,9 +13,13 @@
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-00.
 
+2007-09-04  Johan Borkhuis <j.borkhuis@dutchspace.nl>
+
+	* ksrc/nucleus/pod.c: Make the watchdog timeout value configurable.
+
 2007-08-30  Jan Kiszka  <jan.kiszka@web.de>
 
-	* ksrc/skins/rtdm/drvlib.c: Tound up when nanoseconds are to be
+	* ksrc/skins/rtdm/drvlib.c: Round up when nanoseconds are to be
 	converted to ticks (periodic timebase only).
 
 	* ksrc/nucleus/timebase.c: Introduce a round-up-variant of
