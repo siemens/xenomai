@@ -13,6 +13,11 @@
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-00.
 
+2007-08-30  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-*/bits/pod.h (xnarch_tsc_to_ns): Fix redefine
+	warning in 2.4 builds.
+	
 2007-08-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-00.
