@@ -2146,7 +2146,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..b97ab57
+index 0000000..7d9ae53
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2176,10 +2176,10 @@ index 0000000..b97ab57
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-01"
++#define IPIPE_ARCH_STRING	"1.10-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifndef __ASSEMBLY__
 +
@@ -3495,10 +3495,10 @@ index 0000000..50a245c
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..06bbfe5
+index 0000000..4b4d1f5
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,69 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -3537,7 +3537,18 @@ index 0000000..06bbfe5
 +	u64 evsync;
 +};
 +
++#ifdef CONFIG_SMP
++#define ipipe_percpudom(ipd, var, cpu)	\
++	(per_cpu(ipipe_percpu_darray, cpu)[(ipd)->slot].var)
++#define ipipe_cpudom_var(ipd, var)	\
++	(__raw_get_cpu_var(ipipe_percpu_darray)[(ipd)->slot].var)
++#else
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
++#define ipipe_percpudom(ipd, var, cpu)	\
++	(per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot]->var)
++#define ipipe_cpudom_var(ipd, var)	\
++	(__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot]->var)
++#endif
 +
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]);
 +
@@ -3549,14 +3560,6 @@ index 0000000..06bbfe5
 +
 +#define ipipe_percpu(var, cpu)		per_cpu(var, cpu)
 +#define ipipe_cpu_var(var)		__raw_get_cpu_var(var)
-+
-+#define ipipe_percpu_domptr(ipd, cpu)	per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot]
-+
-+#define ipipe_percpudom(ipd, var, cpu) \
-+	ipipe_percpu_domptr(ipd, cpu)->var
-+
-+#define ipipe_cpudom_var(ipd, var)	\
-+	__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot]->var
 +
 +#define ipipe_root_cpudom_var(var)	\
 +	__raw_get_cpu_var(ipipe_percpu_darray)[0].var
@@ -4372,10 +4375,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..718290e
+index 0000000..4d5bf61
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1604 @@
+@@ -0,0 +1,1616 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4424,7 +4427,29 @@ index 0000000..718290e
 +
 +struct ipipe_domain ipipe_root;
 +
-+DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
++extern unsigned long __ipipe_root_status;
++
++#ifndef CONFIG_SMP
++/*
++ * Create an alias to the unique root status, so that arch-dep code
++ * may get simple and easy access to this percpu variable.
++ */
++#define __rstatus_name(s)	#s
++#define _rstatus_name(s)	__rstatus_name(s)
++extern unsigned long __ipipe_root_status
++__attribute__((alias(_rstatus_name(__raw_get_cpu_var(ipipe_percpu_darray)))));
++
++/*
++ * Create an array of pointers to the percpu domain data; this tends
++ * to produce a better code when reaching non-root domains. We make
++ * sure that the early boot code would be able to dereference the
++ * pointer to the root domain data safely by statically initializing
++ * its value (local_irq*() routines depend on this).
++ */
++DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]) =
++{ [0] = (struct ipipe_percpu_domain_data *)&__ipipe_root_status };
++
++#endif
 +
 +DEFINE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]) =
 +{ [0] = { .status = IPIPE_STALL_MASK } }; /* Root domain stalled on each CPU at startup. */
@@ -4555,7 +4580,6 @@ index 0000000..718290e
 +void ipipe_init(void)
 +{
 +	struct ipipe_domain *ipd = &ipipe_root;
-+	int cpu;
 +
 +	__ipipe_check_platform();	/* Do platform dependent checks first. */
 +
@@ -4568,9 +4592,6 @@ index 0000000..718290e
 +	/* Reserve percpu data slot #0 for the root domain. */
 +	ipd->slot = 0;
 +	set_bit(0, &__ipipe_domain_slot_map);
-+
-+	for_each_online_cpu(cpu)
-+		per_cpu(ipipe_percpu_daddr, cpu)[0] = &per_cpu(ipipe_percpu_darray, cpu)[0];
 +
 +	ipd->name = "Linux";
 +	ipd->domid = IPIPE_ROOT_ID;
@@ -4633,21 +4654,22 @@ index 0000000..718290e
 +
 +void __ipipe_cleanup_domain(struct ipipe_domain *ipd)
 +{
-+	int cpu;
-+
 +	ipipe_unstall_pipeline_from(ipd);
 +
 +#ifdef CONFIG_SMP
-+	for_each_online_cpu(cpu) {
-+		while (ipipe_percpudom(ipd, irqpend_himask, cpu) != 0)
-+			cpu_relax();
++	{
++		int cpu;
++
++		for_each_online_cpu(cpu) {
++			while (ipipe_percpudom(ipd, irqpend_himask, cpu) != 0)
++				cpu_relax();
++		}
 +	}
-+#endif	/* CONFIG_SMP */
++#else
++	__raw_get_cpu_var(ipipe_percpu_daddr)[ipd->slot] = NULL;
++#endif
 +
 +	clear_bit(ipd->slot, &__ipipe_domain_slot_map);
-+
-+	for_each_online_cpu(cpu)
-+		per_cpu(ipipe_percpu_daddr, cpu)[ipd->slot] = NULL;
 +}
 +
 +void __ipipe_unstall_root(void)
@@ -5359,7 +5381,6 @@ index 0000000..718290e
 +	struct ipipe_domain *_ipd;
 +	struct list_head *pos;
 +	unsigned long flags;
-+	int cpu;
 +
 +	if (!ipipe_root_domain_p) {
 +		printk(KERN_WARNING
@@ -5393,14 +5414,15 @@ index 0000000..718290e
 +		return -EBUSY;
 +	}
 +
++#ifndef CONFIG_SMP
 +	/*
 +	 * Set up the perdomain pointers for direct access to the
 +	 * percpu domain data. This saves a costly multiply each time
 +	 * we need to refer to the contents of the percpu domain data
 +	 * array.
 +	 */
-+	for_each_online_cpu(cpu)
-+		per_cpu(ipipe_percpu_daddr, cpu)[ipd->slot] = &per_cpu(ipipe_percpu_darray, cpu)[ipd->slot];
++	__raw_get_cpu_var(ipipe_percpu_daddr)[ipd->slot] = &__raw_get_cpu_var(ipipe_percpu_darray)[ipd->slot];
++#endif
 +
 +	ipd->name = attr->name;
 +	ipd->domid = attr->domid;
@@ -5954,6 +5976,9 @@ index 0000000..718290e
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
 +EXPORT_SYMBOL(__ipipe_lock_irq);
 +EXPORT_SYMBOL(__ipipe_unlock_irq);
++#ifndef CONFIG_SMP
++EXPORT_SYMBOL(__ipipe_root_status);
++#endif
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
 +EXPORT_SYMBOL(ipipe_free_virq);
@@ -5969,16 +5994,6 @@ index 0000000..718290e
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
 +EXPORT_SYMBOL(ipipe_request_tickdev);
 +EXPORT_SYMBOL(ipipe_release_tickdev);
-+#endif
-+#ifndef CONFIG_SMP
-+/*
-+ * Create an alias to the unique root status, so that arch-dep code
-+ * may get simple and easy access to this percpu variable.
-+ */
-+#define __rstatus_name(s)	#s
-+#define _rstatus_name(s)	__rstatus_name(s)
-+extern unsigned long __ipipe_root_status
-+__attribute__((alias(_rstatus_name(__raw_get_cpu_var(ipipe_percpu_darray)))));
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
