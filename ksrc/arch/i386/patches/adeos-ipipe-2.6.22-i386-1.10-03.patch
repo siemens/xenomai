@@ -2146,7 +2146,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..7d9ae53
+index 0000000..c4656c3
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2176,10 +2176,10 @@ index 0000000..7d9ae53
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-02"
++#define IPIPE_ARCH_STRING	"1.10-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifndef __ASSEMBLY__
 +
@@ -4375,10 +4375,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..4d5bf61
+index 0000000..08f4c33
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1616 @@
+@@ -0,0 +1,1618 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -5958,6 +5958,7 @@ index 0000000..4d5bf61
 +EXPORT_SYMBOL(ipipe_suspend_domain);
 +EXPORT_SYMBOL(ipipe_alloc_virq);
 +EXPORT_PER_CPU_SYMBOL(ipipe_percpu_domain);
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu_darray);
 +EXPORT_SYMBOL(ipipe_root);
 +EXPORT_SYMBOL(ipipe_stall_pipeline_from);
 +EXPORT_SYMBOL(ipipe_test_and_stall_pipeline_from);
@@ -5978,6 +5979,7 @@ index 0000000..4d5bf61
 +EXPORT_SYMBOL(__ipipe_unlock_irq);
 +#ifndef CONFIG_SMP
 +EXPORT_SYMBOL(__ipipe_root_status);
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu_daddr);
 +#endif
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
