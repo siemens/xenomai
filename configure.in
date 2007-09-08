@@ -381,11 +381,12 @@ patch. Default is to infer the patch name from Linux kernel version.]),
 
            if test -e $XENO_LINUX_SRCDIR/.config ; then
               . $XENO_LINUX_SRCDIR/.config
-              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
-              test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
-              test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
-              test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
+	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
+              test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
+              test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
+              test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
+              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
               if test $cfg_arch = $XENO_TARGET_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
