@@ -13,15 +13,15 @@ On the PowerPC 32bit architecture, Xenomai is supported on both the
 v2.4 and v2.6 Linux kernel series, for which the appropriate Adeos
 patches exist. The v2.4 kernel tree of reference for Xenomai/PowerPC
 is available from Denx's public CVS tree as the "linuxppc_2_4_devel"
-branch [2]. For the v2.6 series, Adeos patches are based on releases
-from kernel.org, then validated against Denx's public git repository
-[3] as well.
+branch [2]. For the v2.6 series, Adeos patches are currently based on
+releases from Denx's public GIT tree.
 
 As of 2.6.20, Adeos patches are based on the powerpc/ tree, instead of
-the deprecated ppc/ tree.
+the deprecated ppc/ tree. Patches up to kernel 2.6.21 apply against
+vanilla releases from kernel.org.
 
-On the PowerPC 64bit architecture, the reference tree is Denx's public
-git repository [3].
+Patches from kernel 2.6.22 and on apply against milestones from Denx's
+public GIT tree [3].
 
 Just apply one of those patches against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at

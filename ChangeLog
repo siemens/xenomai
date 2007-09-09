@@ -1,5 +1,8 @@
 2007-09-09  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to combined 32/64bit powerpc
+	2.0 series (2.6.22, 2.6.23-rc5, DENX git tree).
+
 	* ksrc/arch/{generic, i386, x86_64}/hal.c: Include linux/bitops.h
 	instead of asm/bitops.h.
 
