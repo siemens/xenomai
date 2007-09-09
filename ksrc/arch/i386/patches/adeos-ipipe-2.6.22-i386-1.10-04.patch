@@ -811,10 +811,10 @@ index 7f8b7af..c2c3f7b 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..121d8c5
+index 0000000..d1d8657
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,808 @@
+@@ -0,0 +1,807 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1606,7 +1606,6 @@ index 0000000..121d8c5
 +EXPORT_SYMBOL(ipipe_critical_exit);
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
-+EXPORT_PER_CPU_SYMBOL(ipipe_percpu_darray);
 +
 +EXPORT_SYMBOL_GPL(irq_desc);
 +EXPORT_SYMBOL_GPL(__switch_to);
@@ -2146,7 +2145,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..c4656c3
+index 0000000..2853c68
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2176,10 +2175,10 @@ index 0000000..c4656c3
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-03"
++#define IPIPE_ARCH_STRING	"1.10-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#ifndef __ASSEMBLY__
 +
