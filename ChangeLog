@@ -1,3 +1,8 @@
+2007-09-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/{generic, i386, x86_64}/hal.c: Include linux/bitops.h
+	instead of asm/bitops.h.
+
 2007-09-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-03.

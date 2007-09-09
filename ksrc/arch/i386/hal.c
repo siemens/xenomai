@@ -43,6 +43,7 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/console.h>
+#include <linux/bitops.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/desc.h>
@@ -51,7 +52,6 @@
 #include <asm/unistd.h>
 #ifdef CONFIG_X86_LOCAL_APIC
 #include <asm/fixmap.h>
-#include <asm/bitops.h>
 #include <asm/mpspec.h>
 #ifdef CONFIG_X86_IO_APIC
 #include <asm/io_apic.h>

@@ -36,6 +36,7 @@
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/console.h>
+#include <linux/bitops.h>
 #include <asm/system.h>
 #include <asm/hardirq.h>
 #include <asm/desc.h>
@@ -43,7 +44,6 @@
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
 #include <asm/fixmap.h>
-#include <asm/bitops.h>
 #include <asm/mpspec.h>
 #include <asm/io_apic.h>
 #include <asm/apic.h>

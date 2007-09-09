@@ -34,6 +34,7 @@
 #include <linux/module.h>
 #include <linux/console.h>
 #include <linux/kallsyms.h>
+#include <linux/bitops.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/hardirq.h>
 #else
@@ -43,7 +44,6 @@
 #include <asm/irq.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
-#include <asm/bitops.h>
 #include <asm/xenomai/hal.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
