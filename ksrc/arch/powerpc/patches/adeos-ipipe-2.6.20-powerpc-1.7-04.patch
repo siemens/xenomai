@@ -2032,7 +2032,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..45eee53
+index 0000000..952d8a4
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2075,10 +2075,10 @@ index 0000000..45eee53
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-03"
++#define IPIPE_ARCH_STRING	"1.7-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -2220,10 +2220,10 @@ index 0000000..45eee53
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git a/include/asm-powerpc/ipipe_base.h b/include/asm-powerpc/ipipe_base.h
 new file mode 100644
-index 0000000..8299235
+index 0000000..6d5db8f
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe_base.h
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,146 @@
 +/* -*- linux-c -*-
 + * include/asm-powerpc/ipipe_base.h
 + *
@@ -2337,9 +2337,15 @@ index 0000000..8299235
 +
 +#else /* !CONFIG_SMP */
 +
-+#include <asm/bitops.h>
++#include <linux/bitops.h>
 +
-+extern unsigned long __ipipe_root_status; /* Alias to ipipe_root_cpudom_var(status) */
++#if __GNUC__ >= 4
++/* Alias to ipipe_root_cpudom_var(status) */
++extern unsigned long __ipipe_root_status;
++#else
++extern unsigned long *const __ipipe_root_status_addr;
++#define __ipipe_root_status	(*__ipipe_root_status_addr)
++#endif
 +
 +static __inline__ void __ipipe_stall_root(void)
 +{
@@ -3911,7 +3917,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..5780b9b
+index 0000000..ad31339
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1513 @@
@@ -3961,29 +3967,33 @@ index 0000000..5780b9b
 +
 +struct ipipe_domain ipipe_root;
 +
-+extern unsigned long __ipipe_root_status;
-+
 +#ifndef CONFIG_SMP
 +/*
 + * Create an alias to the unique root status, so that arch-dep code
-+ * may get simple and easy access to this percpu variable.
-+ */
-+#define __rstatus_name(s)	#s
-+#define _rstatus_name(s)	__rstatus_name(s)
-+extern unsigned long __ipipe_root_status
-+__attribute__((alias(_rstatus_name(__raw_get_cpu_var(ipipe_percpu_darray)))));
-+
-+/*
-+ * Create an array of pointers to the percpu domain data; this tends
++ * may get simple and easy access to this percpu variable.  We also
++ * create an array of pointers to the percpu domain data; this tends
 + * to produce a better code when reaching non-root domains. We make
 + * sure that the early boot code would be able to dereference the
 + * pointer to the root domain data safely by statically initializing
 + * its value (local_irq*() routines depend on this).
 + */
-+DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]) =
-+{ [0] = (struct ipipe_percpu_domain_data *)&__ipipe_root_status };
++#if __GNUC__ >= 4
++extern unsigned long __ipipe_root_status
++__attribute__((alias(__stringify(__raw_get_cpu_var(ipipe_percpu_darray)))));
++EXPORT_SYMBOL(__ipipe_root_status);
++#else /* __GNUC__ < 4 */
++/*
++ * Work around a GCC 3.x issue making alias symbols unusable as
++ * constant initializers.
++ */
++unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray);
++EXPORT_SYMBOL(__ipipe_root_status_addr);
++#endif /* __GNUC__ < 4 */
 +
-+#endif
++DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]) =
++{ [0] = (struct ipipe_percpu_domain_data *)&__raw_get_cpu_var(ipipe_percpu_darray) };
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu_daddr);
++#endif /* !CONFIG_SMP */
 +
 +DEFINE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]) =
 +{ [0] = { .status = IPIPE_STALL_MASK } }; /* Root domain stalled on each CPU at startup. */
@@ -5408,10 +5418,6 @@ index 0000000..5780b9b
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
 +EXPORT_SYMBOL(__ipipe_lock_irq);
 +EXPORT_SYMBOL(__ipipe_unlock_irq);
-+#ifndef CONFIG_SMP
-+EXPORT_SYMBOL(__ipipe_root_status);
-+EXPORT_PER_CPU_SYMBOL(ipipe_percpu_daddr);
-+#endif
 +EXPORT_SYMBOL(ipipe_register_domain);
 +EXPORT_SYMBOL(ipipe_unregister_domain);
 +EXPORT_SYMBOL(ipipe_free_virq);
