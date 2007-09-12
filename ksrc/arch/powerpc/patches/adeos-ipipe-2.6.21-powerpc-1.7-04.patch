@@ -1,6 +1,6 @@
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/boot/Makefile linux-2.6.21.7/arch/powerpc/boot/Makefile
---- linux-2.6.21.7.orig/arch/powerpc/boot/Makefile	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/boot/Makefile	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/boot/Makefile	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/boot/Makefile	2007-09-12 09:47:45.000000000 +0200
 @@ -27,6 +27,14 @@
  		   $(shell $(CROSS32CC) -print-file-name=include) -fPIC
  BOOTAFLAGS	:= -D__ASSEMBLY__ $(BOOTCFLAGS) -traditional -nostdinc
@@ -17,8 +17,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/boot/Makefile linux-2.6.21.7/arch/po
  BOOTCFLAGS	+= -fno-stack-protector
  endif
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/Kconfig linux-2.6.21.7/arch/powerpc/Kconfig
---- linux-2.6.21.7.orig/arch/powerpc/Kconfig	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/Kconfig	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/Kconfig	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/Kconfig	2007-09-12 09:47:45.000000000 +0200
 @@ -758,6 +758,8 @@
  
  menu "Kernel options"
@@ -29,8 +29,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/Kconfig linux-2.6.21.7/arch/powerpc/
  	bool "High memory support"
  	depends on PPC32
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/cputable.c linux-2.6.21.7/arch/powerpc/kernel/cputable.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/cputable.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/cputable.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/cputable.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/cputable.c	2007-09-12 09:47:45.000000000 +0200
 @@ -1255,7 +1255,7 @@
  #endif /* CONFIG_PPC32 */
  };
@@ -50,8 +50,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/cputable.c linux-2.6.21.7/arc
  	struct fixup_entry {
  		unsigned long	mask;
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/entry_32.S linux-2.6.21.7/arch/powerpc/kernel/entry_32.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/entry_32.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/entry_32.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/entry_32.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/entry_32.S	2007-09-12 09:47:45.000000000 +0200
 @@ -132,8 +132,23 @@
           * check for stack overflow
           */
@@ -198,8 +198,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/entry_32.S linux-2.6.21.7/arc
   * PROM code for specific machines follows.  Put it
   * here so it's easy to add arch-specific sections later.
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_32.S linux-2.6.21.7/arch/powerpc/kernel/head_32.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_32.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_32.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_32.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_32.S	2007-09-12 09:47:45.000000000 +0200
 @@ -329,6 +329,12 @@
  	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
  			  ret_from_except_full)
@@ -238,8 +238,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_32.S linux-2.6.21.7/arch
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_44x.S linux-2.6.21.7/arch/powerpc/kernel/head_44x.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_44x.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_44x.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_44x.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_44x.S	2007-09-12 09:47:45.000000000 +0200
 @@ -424,8 +424,11 @@
  	/* Instruction Storage Interrupt */
  	INSTRUCTION_STORAGE_EXCEPTION
@@ -255,8 +255,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_44x.S linux-2.6.21.7/arc
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_4xx.S linux-2.6.21.7/arch/powerpc/kernel/head_4xx.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_4xx.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_4xx.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_4xx.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_4xx.S	2007-09-12 09:47:45.000000000 +0200
 @@ -228,6 +228,12 @@
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
  			  ret_from_except_full)
@@ -295,8 +295,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_4xx.S linux-2.6.21.7/arc
  #if 0
  /* NOTE:
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_8xx.S linux-2.6.21.7/arch/powerpc/kernel/head_8xx.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_8xx.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_8xx.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_8xx.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_8xx.S	2007-09-12 09:47:45.000000000 +0200
 @@ -187,6 +187,12 @@
  	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
  			  ret_from_except_full)
@@ -335,8 +335,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_8xx.S linux-2.6.21.7/arc
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_booke.h linux-2.6.21.7/arch/powerpc/kernel/head_booke.h
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_booke.h	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_booke.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_booke.h	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_booke.h	2007-09-12 09:47:45.000000000 +0200
 @@ -187,6 +187,12 @@
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
  			  ret_from_except_full)
@@ -375,8 +375,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_booke.h linux-2.6.21.7/a
  #define FP_UNAVAILABLE_EXCEPTION					      \
  	START_EXCEPTION(FloatingPointUnavailable)			      \
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_fsl_booke.S linux-2.6.21.7/arch/powerpc/kernel/head_fsl_booke.S
---- linux-2.6.21.7.orig/arch/powerpc/kernel/head_fsl_booke.S	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/head_fsl_booke.S	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/head_fsl_booke.S	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/head_fsl_booke.S	2007-09-12 09:47:45.000000000 +0200
 @@ -529,7 +529,11 @@
  	INSTRUCTION_STORAGE_EXCEPTION
  
@@ -390,8 +390,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/head_fsl_booke.S linux-2.6.21
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/idle.c linux-2.6.21.7/arch/powerpc/kernel/idle.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/idle.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/idle.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/idle.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/idle.c	2007-09-12 09:47:45.000000000 +0200
 @@ -58,6 +58,7 @@
  	while (1) {
  		while (!need_resched() && !cpu_should_die()) {
@@ -417,8 +417,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/idle.c linux-2.6.21.7/arch/po
  
  			} else {
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/io.c linux-2.6.21.7/arch/powerpc/kernel/io.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/io.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/io.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/io.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/io.c	2007-09-12 09:47:45.000000000 +0200
 @@ -120,7 +120,7 @@
  
  #define IO_CHECK_ALIGN(v,a) ((((unsigned long)(v)) & ((a) - 1)) == 0)
@@ -430,8 +430,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/io.c linux-2.6.21.7/arch/powe
  	u32 lc = c;
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/powerpc/kernel/ipipe.c
 --- linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/arch/powerpc/kernel/ipipe.c	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,703 @@
++++ linux-2.6.21.7/arch/powerpc/kernel/ipipe.c	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,728 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -610,6 +610,21 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +	local_irq_restore_hw(flags);
 +
 +	return 0;
++}
++
++void __ipipe_stall_root(void)
++{
++	set_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++}
++
++unsigned long __ipipe_test_and_stall_root(void)
++{
++	return test_and_set_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++}
++
++unsigned long __ipipe_test_root(void)
++{
++	return test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +}
 +
 +#endif	/* CONFIG_SMP */
@@ -928,7 +943,7 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +		if (test_and_clear_bit(TLF_NAPPING, &ti->local_flags))
 +			regs->nip = regs->link;
 +#endif
-+		if (!test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++		if (!test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			return 1;
 +	}
 +
@@ -1032,7 +1047,7 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +		if (test_and_clear_bit(TLF_NAPPING, &ti->local_flags))
 +			regs->nip = regs->link;
 +#endif
-+		if (!test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++		if (!test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			return 1;
 +	}
 +
@@ -1044,9 +1059,14 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +	return ipipe_root_domain_p;
 +}
 +
++notrace void __ipipe_fast_stall_root(void)
++{
++	set_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++}
++
 +notrace void __ipipe_fast_unstall_root(void)
 +{
-+	clear_bit_safe(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++	clear_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +}
 +
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
@@ -1091,7 +1111,7 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +			 * is tested.							     
 +			 */
 +			local_irq_disable_hw();
-+			if ((ipipe_cpudom_var(ipipe_root_domain, irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
++			if ((ipipe_root_cpudom_var(irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
 +				__ipipe_sync_pipeline(IPIPE_IRQMASK_VIRT);
 +			local_irq_enable_hw();
 +			return -1;
@@ -1115,6 +1135,11 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +EXPORT_SYMBOL(ipipe_critical_exit);
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
++#ifdef CONFIG_SMP
++EXPORT_SYMBOL(__ipipe_stall_root);
++EXPORT_SYMBOL(__ipipe_test_root);
++EXPORT_SYMBOL(__ipipe_test_and_stall_root);
++#endif
 +
 +EXPORT_SYMBOL(disarm_decr);
 +EXPORT_SYMBOL_GPL(__switch_to);
@@ -1136,8 +1161,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/ipipe.c linux-2.6.21.7/arch/p
 +EXPORT_SYMBOL(_mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/irq.c linux-2.6.21.7/arch/powerpc/kernel/irq.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/irq.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/irq.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/irq.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/irq.c	2007-09-12 09:47:45.000000000 +0200
 @@ -70,7 +70,7 @@
  #endif
  
@@ -1148,8 +1173,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/irq.c linux-2.6.21.7/arch/pow
  #ifdef CONFIG_PPC32
  EXPORT_SYMBOL(__irq_offset_value);
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/Makefile linux-2.6.21.7/arch/powerpc/kernel/Makefile
---- linux-2.6.21.7.orig/arch/powerpc/kernel/Makefile	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/Makefile	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/Makefile	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/Makefile	2007-09-12 09:47:45.000000000 +0200
 @@ -57,6 +57,8 @@
  obj-$(CONFIG_MODULES)		+= ppc_ksyms.o
  obj-$(CONFIG_BOOTX_TEXT)	+= btext.o
@@ -1161,7 +1186,7 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/Makefile linux-2.6.21.7/arch/
  
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/mcount.S linux-2.6.21.7/arch/powerpc/kernel/mcount.S
 --- linux-2.6.21.7.orig/arch/powerpc/kernel/mcount.S	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/arch/powerpc/kernel/mcount.S	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/mcount.S	2007-09-12 09:47:45.000000000 +0200
 @@ -0,0 +1,75 @@
 +/*
 + *  linux/arch/powerpc/kernel/mcount.S
@@ -1238,9 +1263,30 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/mcount.S linux-2.6.21.7/arch/
 + /* ...unwind the stack frame, and return to your usual programming.  */
 +	addi	r1,r1,48
 +	bctr
+diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/process.c linux-2.6.21.7/arch/powerpc/kernel/process.c
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/process.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/process.c	2007-09-12 09:47:45.000000000 +0200
+@@ -326,7 +326,7 @@
+ 	}
+ #endif
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	account_system_vtime(current);
+ 	account_process_vtime(current);
+@@ -334,7 +334,7 @@
+ 
+ 	last = _switch(old_thread, new_thread);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 
+ 	return last;
+ }
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/setup_32.c linux-2.6.21.7/arch/powerpc/kernel/setup_32.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/setup_32.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/setup_32.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/setup_32.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/setup_32.c	2007-09-12 09:47:45.000000000 +0200
 @@ -85,7 +85,7 @@
   * from the address that it was linked at, so we must use RELOC/PTRRELOC
   * to access static data (including strings).  -- paulus
@@ -1251,8 +1297,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/setup_32.c linux-2.6.21.7/arc
  	unsigned long offset = reloc_offset();
  	struct cpu_spec *spec;
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/time.c linux-2.6.21.7/arch/powerpc/kernel/time.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/time.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/time.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/time.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/time.c	2007-09-12 09:47:45.000000000 +0200
 @@ -74,6 +74,8 @@
  #endif
  #include <asm/smp.h>
@@ -1305,8 +1351,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/time.c linux-2.6.21.7/arch/po
  }
  
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/traps.c linux-2.6.21.7/arch/powerpc/kernel/traps.c
---- linux-2.6.21.7.orig/arch/powerpc/kernel/traps.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/kernel/traps.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/kernel/traps.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/kernel/traps.c	2007-09-12 09:47:45.000000000 +0200
 @@ -319,6 +319,9 @@
  	int recover = 0;
  	unsigned long reason = get_mc_reason(regs);
@@ -1472,8 +1518,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/kernel/traps.c linux-2.6.21.7/arch/p
  }
  
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/mm/fault.c linux-2.6.21.7/arch/powerpc/mm/fault.c
---- linux-2.6.21.7.orig/arch/powerpc/mm/fault.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/mm/fault.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/mm/fault.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/mm/fault.c	2007-09-12 09:47:45.000000000 +0200
 @@ -160,6 +160,9 @@
  	int trap = TRAP(regs);
   	int is_exec = trap == 0x400;
@@ -1485,8 +1531,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/mm/fault.c linux-2.6.21.7/arch/power
  	/*
  	 * Fortunately the bit assignments in SRR1 for an instruction
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/iseries/irq.c linux-2.6.21.7/arch/powerpc/platforms/iseries/irq.c
---- linux-2.6.21.7.orig/arch/powerpc/platforms/iseries/irq.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/platforms/iseries/irq.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/platforms/iseries/irq.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/platforms/iseries/irq.c	2007-09-12 09:47:45.000000000 +0200
 @@ -81,7 +81,7 @@
  	} data;
  };
@@ -1497,8 +1543,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/iseries/irq.c linux-2.6.21
  static int pending_irqs[NR_IRQS];
  
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/powermac/pic.c linux-2.6.21.7/arch/powerpc/platforms/powermac/pic.c
---- linux-2.6.21.7.orig/arch/powerpc/platforms/powermac/pic.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/platforms/powermac/pic.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/platforms/powermac/pic.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/platforms/powermac/pic.c	2007-09-12 09:47:45.000000000 +0200
 @@ -63,7 +63,7 @@
  static int max_real_irqs;
  static u32 level_mask[4];
@@ -1509,8 +1555,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/powermac/pic.c linux-2.6.2
  #define NR_MASK_WORDS	((NR_IRQS + 31) / 32)
  static unsigned long ppc_lost_interrupts[NR_MASK_WORDS];
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/ps3/interrupt.c linux-2.6.21.7/arch/powerpc/platforms/ps3/interrupt.c
---- linux-2.6.21.7.orig/arch/powerpc/platforms/ps3/interrupt.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/platforms/ps3/interrupt.c	2007-09-03 15:54:30.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/platforms/ps3/interrupt.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/platforms/ps3/interrupt.c	2007-09-12 09:47:45.000000000 +0200
 @@ -71,7 +71,7 @@
  		u64 unused_2[3];
  	};
@@ -1521,8 +1567,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/platforms/ps3/interrupt.c linux-2.6.
  
  /**
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/i8259.c linux-2.6.21.7/arch/powerpc/sysdev/i8259.c
---- linux-2.6.21.7.orig/arch/powerpc/sysdev/i8259.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/sysdev/i8259.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/sysdev/i8259.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/sysdev/i8259.c	2007-09-12 09:47:45.000000000 +0200
 @@ -23,7 +23,7 @@
  #define cached_A1 (cached_8259[0])
  #define cached_21 (cached_8259[1])
@@ -1533,8 +1579,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/i8259.c linux-2.6.21.7/arch/p
  static struct device_node *i8259_node;
  static struct irq_host *i8259_host;
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/ipic.c linux-2.6.21.7/arch/powerpc/sysdev/ipic.c
---- linux-2.6.21.7.orig/arch/powerpc/sysdev/ipic.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/sysdev/ipic.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/sysdev/ipic.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/sysdev/ipic.c	2007-09-12 09:47:45.000000000 +0200
 @@ -30,7 +30,7 @@
  #include "ipic.h"
  
@@ -1545,8 +1591,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/ipic.c linux-2.6.21.7/arch/po
  static struct ipic_info ipic_info[] = {
  	[9] = {
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/mpic.c linux-2.6.21.7/arch/powerpc/sysdev/mpic.c
---- linux-2.6.21.7.orig/arch/powerpc/sysdev/mpic.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/sysdev/mpic.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/sysdev/mpic.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/sysdev/mpic.c	2007-09-12 09:47:45.000000000 +0200
 @@ -44,7 +44,7 @@
  
  static struct mpic *mpics;
@@ -1636,8 +1682,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/mpic.c linux-2.6.21.7/arch/po
  }
  
 diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/tsi108_pci.c linux-2.6.21.7/arch/powerpc/sysdev/tsi108_pci.c
---- linux-2.6.21.7.orig/arch/powerpc/sysdev/tsi108_pci.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/arch/powerpc/sysdev/tsi108_pci.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/arch/powerpc/sysdev/tsi108_pci.c	2007-09-12 09:46:12.000000000 +0200
++++ linux-2.6.21.7/arch/powerpc/sysdev/tsi108_pci.c	2007-09-12 09:47:45.000000000 +0200
 @@ -249,7 +249,9 @@
  {
  	u_int irp_cfg;
@@ -1691,8 +1737,8 @@ diff -Naur linux-2.6.21.7.orig/arch/powerpc/sysdev/tsi108_pci.c linux-2.6.21.7/a
  }
  
 diff -Naur linux-2.6.21.7.orig/drivers/pci/htirq.c linux-2.6.21.7/drivers/pci/htirq.c
---- linux-2.6.21.7.orig/drivers/pci/htirq.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/drivers/pci/htirq.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/drivers/pci/htirq.c	2007-09-12 09:46:28.000000000 +0200
++++ linux-2.6.21.7/drivers/pci/htirq.c	2007-09-12 09:47:45.000000000 +0200
 @@ -21,7 +21,7 @@
   * With multiple simultaneous hypertransport irq devices it might pay
   * to make this more fine grained.  But start with simple, stupid, and correct.
@@ -1703,8 +1749,8 @@ diff -Naur linux-2.6.21.7.orig/drivers/pci/htirq.c linux-2.6.21.7/drivers/pci/ht
  struct ht_irq_cfg {
  	struct pci_dev *dev;
 diff -Naur linux-2.6.21.7.orig/drivers/serial/mpc52xx_uart.c linux-2.6.21.7/drivers/serial/mpc52xx_uart.c
---- linux-2.6.21.7.orig/drivers/serial/mpc52xx_uart.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/drivers/serial/mpc52xx_uart.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/drivers/serial/mpc52xx_uart.c	2007-09-12 09:46:30.000000000 +0200
++++ linux-2.6.21.7/drivers/serial/mpc52xx_uart.c	2007-09-12 09:47:45.000000000 +0200
 @@ -803,6 +803,40 @@
  #endif
  
@@ -1747,8 +1793,8 @@ diff -Naur linux-2.6.21.7.orig/drivers/serial/mpc52xx_uart.c linux-2.6.21.7/driv
  /* UART Driver                                                              */
  /* ======================================================================== */
 diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/hw_irq.h linux-2.6.21.7/include/asm-powerpc/hw_irq.h
---- linux-2.6.21.7.orig/include/asm-powerpc/hw_irq.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/asm-powerpc/hw_irq.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/asm-powerpc/hw_irq.h	2007-09-12 09:46:40.000000000 +0200
++++ linux-2.6.21.7/include/asm-powerpc/hw_irq.h	2007-09-12 09:47:45.000000000 +0200
 @@ -16,6 +16,10 @@
  #ifdef CONFIG_PPC64
  #include <asm/paca.h>
@@ -1938,8 +1984,8 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/hw_irq.h linux-2.6.21.7/inclu
  #define hard_irq_disable()	local_irq_disable()
 diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe_base.h linux-2.6.21.7/include/asm-powerpc/ipipe_base.h
 --- linux-2.6.21.7.orig/include/asm-powerpc/ipipe_base.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/asm-powerpc/ipipe_base.h	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,102 @@
++++ linux-2.6.21.7/include/asm-powerpc/ipipe_base.h	2007-09-12 09:50:37.000000000 +0200
+@@ -0,0 +1,146 @@
 +/* -*- linux-c -*-
 + * include/asm-powerpc/ipipe_base.h
 + *
@@ -2041,10 +2087,54 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe_base.h linux-2.6.21.7/i
 +#define IPIPE_LAST_EVENT		IPIPE_EVENT_CLEANUP
 +#define IPIPE_NR_EVENTS			(IPIPE_LAST_EVENT + 1)
 +
++#ifndef __ASSEMBLY__
++
++#ifdef CONFIG_SMP
++
++void __ipipe_stall_root(void);
++
++unsigned long __ipipe_test_and_stall_root(void);
++
++unsigned long __ipipe_test_root(void);
++
++#else /* !CONFIG_SMP */
++
++#include <linux/bitops.h>
++
++#if __GNUC__ >= 4
++/* Alias to ipipe_root_cpudom_var(status) */
++extern unsigned long __ipipe_root_status;
++#else
++extern unsigned long *const __ipipe_root_status_addr;
++#define __ipipe_root_status   (*__ipipe_root_status_addr)
++#endif
++
++static __inline__ void __ipipe_stall_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	set_bit(0, p);
++}
++
++static __inline__ unsigned long __ipipe_test_and_stall_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	return test_and_set_bit(0, p);
++}
++
++static __inline__ unsigned long __ipipe_test_root(void)
++{
++	volatile unsigned long *p = &__ipipe_root_status;
++	return test_bit(0, p);
++}
++
++#endif /* !CONFIG_SMP */
++
++#endif /* !__ASSEMBLY__ */
++
 +#endif	/* !__ASM_POWERPC_IPIPE_BASE_H */
 diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h linux-2.6.21.7/include/asm-powerpc/ipipe.h
 --- linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/asm-powerpc/ipipe.h	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/include/asm-powerpc/ipipe.h	2007-09-12 09:55:11.000000000 +0200
 @@ -0,0 +1,182 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
@@ -2085,10 +2175,10 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h linux-2.6.21.7/includ
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-00"
++#define IPIPE_ARCH_STRING	"1.7-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -2098,8 +2188,8 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h linux-2.6.21.7/includ
 +
 +#define task_hijacked(p)						\
 +	( {								\
-+		int x = ipipe_current_domain != ipipe_root_domain;	\
-+		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status)); \
++		int x = !ipipe_root_domain_p;				\
++		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status)); \
 +		local_irq_enable_hw(); x;				\
 +	} )
 +
@@ -2211,9 +2301,9 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h linux-2.6.21.7/includ
 +			irq_exit();					\
 +		}							\
 +	else {								\
-+		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status)); \
++		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);	\
-+		__set_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status)); \
++		__set_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +	}								\
 +	local_irq_disable_nohead(ipd);					\
 +} while(0)
@@ -2229,8 +2319,8 @@ diff -Naur linux-2.6.21.7.orig/include/asm-powerpc/ipipe.h linux-2.6.21.7/includ
 +
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff -Naur linux-2.6.21.7.orig/include/asm-ppc/mmu_context.h linux-2.6.21.7/include/asm-ppc/mmu_context.h
---- linux-2.6.21.7.orig/include/asm-ppc/mmu_context.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/asm-ppc/mmu_context.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/asm-ppc/mmu_context.h	2007-09-12 09:46:40.000000000 +0200
++++ linux-2.6.21.7/include/asm-ppc/mmu_context.h	2007-09-12 09:47:45.000000000 +0200
 @@ -153,7 +153,10 @@
   */
  static inline void destroy_context(struct mm_struct *mm)
@@ -2266,8 +2356,8 @@ diff -Naur linux-2.6.21.7.orig/include/asm-ppc/mmu_context.h linux-2.6.21.7/incl
  extern void mmu_context_init(void);
  
 diff -Naur linux-2.6.21.7.orig/include/linux/hardirq.h linux-2.6.21.7/include/linux/hardirq.h
---- linux-2.6.21.7.orig/include/linux/hardirq.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/hardirq.h	2007-09-03 15:52:46.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/hardirq.h	2007-09-12 09:46:41.000000000 +0200
++++ linux-2.6.21.7/include/linux/hardirq.h	2007-09-12 09:47:45.000000000 +0200
 @@ -133,7 +133,7 @@
   */
  extern void irq_exit(void);
@@ -2275,13 +2365,13 @@ diff -Naur linux-2.6.21.7.orig/include/linux/hardirq.h linux-2.6.21.7/include/li
 -#define nmi_enter()		do { lockdep_off(); __irq_enter(); } while (0)
 -#define nmi_exit()		do { __irq_exit(); lockdep_on(); } while (0)
 +#define nmi_enter()		do { if (ipipe_root_domain_p) { lockdep_off(); __irq_enter(); } } while (0)
-+#define nmi_exit()		do { if (ipipe_root_domain_p) { __irq_exit(); lockdep_on(); } } while (0)
++#define nmi_exit()		do { if (ipipe_root_domain_p) { __irq_exit(); lockdep_on(); } ] while (0)
  
  #endif /* LINUX_HARDIRQ_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_base.h linux-2.6.21.7/include/linux/ipipe_base.h
 --- linux-2.6.21.7.orig/include/linux/ipipe_base.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/linux/ipipe_base.h	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,83 @@
++++ linux-2.6.21.7/include/linux/ipipe_base.h	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,77 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -2336,12 +2426,6 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_base.h linux-2.6.21.7/include
 +
 +#define ipipe_root_domain (&ipipe_root)
 +
-+void __ipipe_stall_root(void);
-+
-+unsigned long __ipipe_test_root(void);
-+
-+unsigned long __ipipe_test_and_stall_root(void);
-+
 +void __ipipe_unstall_root(void);
 +
 +void __ipipe_restore_root(unsigned long x);
@@ -2365,10 +2449,68 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_base.h linux-2.6.21.7/include
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_BASE_H */
+diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_compat.h linux-2.6.21.7/include/linux/ipipe_compat.h
+--- linux-2.6.21.7.orig/include/linux/ipipe_compat.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-2.6.21.7/include/linux/ipipe_compat.h	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,54 @@
++/* -*- linux-c -*-
++ * include/linux/ipipe_compat.h
++ *
++ * Copyright (C) 2007 Philippe Gerum.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge MA 02139,
++ * USA; either version 2 of the License, or (at your option) any later
++ * version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __LINUX_IPIPE_COMPAT_H
++#define __LINUX_IPIPE_COMPAT_H
++
++#ifdef CONFIG_IPIPE_COMPAT
++/*
++ * OBSOLETE: defined only for backward compatibility. Will be removed
++ * in future releases, please update client code accordingly.
++ */
++
++#ifdef CONFIG_SMP
++#define ipipe_declare_cpuid	int cpuid
++#define ipipe_load_cpuid()	do { \
++					cpuid = ipipe_processor_id();	\
++				} while(0)
++#define ipipe_lock_cpu(flags)	do { \
++					local_irq_save_hw(flags); \
++					cpuid = ipipe_processor_id(); \
++				} while(0)
++#define ipipe_unlock_cpu(flags)	local_irq_restore_hw(flags)
++#define ipipe_get_cpu(flags)	ipipe_lock_cpu(flags)
++#define ipipe_put_cpu(flags)	ipipe_unlock_cpu(flags)
++#else /* !CONFIG_SMP */
++#define ipipe_declare_cpuid	const int cpuid = 0
++#define ipipe_load_cpuid()	do { } while(0)
++#define ipipe_lock_cpu(flags)	local_irq_save_hw(flags)
++#define ipipe_unlock_cpu(flags)	local_irq_restore_hw(flags)
++#define ipipe_get_cpu(flags)	do { (void)(flags); } while(0)
++#define ipipe_put_cpu(flags)	do { } while(0)
++#endif /* CONFIG_SMP */
++
++#endif /* CONFIG_IPIPE_COMPAT */
++
++#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/ipipe.h linux-2.6.21.7/include/linux/ipipe.h
 --- linux-2.6.21.7.orig/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/linux/ipipe.h	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,556 @@
++++ linux-2.6.21.7/include/linux/ipipe.h	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,557 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2399,6 +2541,7 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe.h linux-2.6.21.7/include/linu
 +#include <linux/mutex.h>
 +#include <linux/linkage.h>
 +#include <linux/ipipe_base.h>
++#include <linux/ipipe_compat.h>
 +#include <asm/ipipe.h>
 +
 +#ifdef CONFIG_IPIPE
@@ -2501,7 +2644,7 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe.h linux-2.6.21.7/include/linu
 +};
 +
 +#ifdef CONFIG_SMP
-+/* These ops must start and complete on the current CPU: care for
++/* These ops must start and complete on the same CPU: care for
 + * migration. */
 +#define set_bit_safe(b, a)						\
 +		({ unsigned long __flags;				\
@@ -2927,8 +3070,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe.h linux-2.6.21.7/include/linu
 +#endif	/* !__LINUX_IPIPE_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_percpu.h linux-2.6.21.7/include/linux/ipipe_percpu.h
 --- linux-2.6.21.7.orig/include/linux/ipipe_percpu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/linux/ipipe_percpu.h	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,61 @@
++++ linux-2.6.21.7/include/linux/ipipe_percpu.h	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,69 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -2953,7 +3096,7 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_percpu.h linux-2.6.21.7/inclu
 +#ifndef __LINUX_IPIPE_PERCPU_H
 +#define __LINUX_IPIPE_PERCPU_H
 +
-+#include <linux/percpu.h>
++#include <asm/percpu.h>
 +#include <asm/ptrace.h>
 +
 +struct ipipe_domain;
@@ -2967,6 +3110,19 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_percpu.h linux-2.6.21.7/inclu
 +	u64 evsync;
 +};
 +
++#ifdef CONFIG_SMP
++#define ipipe_percpudom(ipd, var, cpu)	\
++	(per_cpu(ipipe_percpu_darray, cpu)[(ipd)->slot].var)
++#define ipipe_cpudom_var(ipd, var)	\
++	(__raw_get_cpu_var(ipipe_percpu_darray)[(ipd)->slot].var)
++#else
++DECLARE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
++#define ipipe_percpudom(ipd, var, cpu)	\
++	(per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot]->var)
++#define ipipe_cpudom_var(ipd, var)	\
++	(__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot]->var)
++#endif
++
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]);
 +
 +DECLARE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain);
@@ -2975,24 +3131,19 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_percpu.h linux-2.6.21.7/inclu
 +DECLARE_PER_CPU(int, ipipe_percpu_context_check);
 +#endif
 +
-+#define __ipipe_dslot(ipd)		((ipd)->slot)
-+
 +#define ipipe_percpu(var, cpu)		per_cpu(var, cpu)
 +#define ipipe_cpu_var(var)		__raw_get_cpu_var(var)
 +
-+#define ipipe_percpudom(ipd, var, cpu) \
-+	per_cpu(ipipe_percpu_darray, cpu)[__ipipe_dslot(ipd)].var
-+
-+#define ipipe_cpudom_var(ipd, var)	\
-+	__raw_get_cpu_var(ipipe_percpu_darray)[__ipipe_dslot(ipd)].var
++#define ipipe_root_cpudom_var(var)	\
++	__raw_get_cpu_var(ipipe_percpu_darray)[0].var
 +
 +#define ipipe_this_cpudom_var(var)	\
-+	ipipe_cpudom_var(ipipe_current_domain, var) /* XX: may be optimized in keeping the domain slot apart */
++	ipipe_cpudom_var(ipipe_current_domain, var)
 +
 +#endif	/* !__LINUX_IPIPE_PERCPU_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_trace.h linux-2.6.21.7/include/linux/ipipe_trace.h
 --- linux-2.6.21.7.orig/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/include/linux/ipipe_trace.h	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/include/linux/ipipe_trace.h	2007-09-12 09:47:45.000000000 +0200
 @@ -0,0 +1,65 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
@@ -3060,8 +3211,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/ipipe_trace.h linux-2.6.21.7/includ
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/irq.h linux-2.6.21.7/include/linux/irq.h
---- linux-2.6.21.7.orig/include/linux/irq.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/irq.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/irq.h	2007-09-12 09:46:41.000000000 +0200
++++ linux-2.6.21.7/include/linux/irq.h	2007-09-12 09:47:45.000000000 +0200
 @@ -151,6 +151,12 @@
   * Pad this out to 32 bytes for cache and indexing reasons.
   */
@@ -3076,8 +3227,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/irq.h linux-2.6.21.7/include/linux/
  	struct irq_chip		*chip;
  	struct msi_desc		*msi_desc;
 diff -Naur linux-2.6.21.7.orig/include/linux/kernel.h linux-2.6.21.7/include/linux/kernel.h
---- linux-2.6.21.7.orig/include/linux/kernel.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/kernel.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/kernel.h	2007-09-12 09:46:41.000000000 +0200
++++ linux-2.6.21.7/include/linux/kernel.h	2007-09-12 09:47:45.000000000 +0200
 @@ -14,6 +14,7 @@
  #include <linux/compiler.h>
  #include <linux/bitops.h>
@@ -3102,8 +3253,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/kernel.h linux-2.6.21.7/include/lin
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
 diff -Naur linux-2.6.21.7.orig/include/linux/linkage.h linux-2.6.21.7/include/linux/linkage.h
---- linux-2.6.21.7.orig/include/linux/linkage.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/linkage.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/linkage.h	2007-09-12 09:46:41.000000000 +0200
++++ linux-2.6.21.7/include/linux/linkage.h	2007-09-12 09:47:45.000000000 +0200
 @@ -64,4 +64,8 @@
  #define fastcall
  #endif
@@ -3114,8 +3265,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/linkage.h linux-2.6.21.7/include/li
 +
  #endif
 diff -Naur linux-2.6.21.7.orig/include/linux/mm.h linux-2.6.21.7/include/linux/mm.h
---- linux-2.6.21.7.orig/include/linux/mm.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/mm.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/mm.h	2007-09-12 09:46:41.000000000 +0200
++++ linux-2.6.21.7/include/linux/mm.h	2007-09-12 09:47:45.000000000 +0200
 @@ -169,6 +169,7 @@
  #define VM_MAPPED_COPY	0x01000000	/* T if mapped copy of data (nommu mmap) */
  #define VM_INSERTPAGE	0x02000000	/* The vma has had "vm_insert_page()" done on it */
@@ -3125,8 +3276,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/mm.h linux-2.6.21.7/include/linux/m
  #ifndef VM_STACK_DEFAULT_FLAGS		/* arch can override this */
  #define VM_STACK_DEFAULT_FLAGS VM_DATA_DEFAULT_FLAGS
 diff -Naur linux-2.6.21.7.orig/include/linux/preempt.h linux-2.6.21.7/include/linux/preempt.h
---- linux-2.6.21.7.orig/include/linux/preempt.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/preempt.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/preempt.h	2007-09-12 09:46:43.000000000 +0200
++++ linux-2.6.21.7/include/linux/preempt.h	2007-09-12 09:47:45.000000000 +0200
 @@ -8,6 +8,7 @@
  
  #include <linux/thread_info.h>
@@ -3173,8 +3324,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/preempt.h linux-2.6.21.7/include/li
  #endif
  
 diff -Naur linux-2.6.21.7.orig/include/linux/sched.h linux-2.6.21.7/include/linux/sched.h
---- linux-2.6.21.7.orig/include/linux/sched.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/sched.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/sched.h	2007-09-12 09:46:43.000000000 +0200
++++ linux-2.6.21.7/include/linux/sched.h	2007-09-12 09:47:45.000000000 +0200
 @@ -54,6 +54,7 @@
  #include <linux/cpumask.h>
  #include <linux/errno.h>
@@ -3220,8 +3371,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/sched.h linux-2.6.21.7/include/linu
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
 diff -Naur linux-2.6.21.7.orig/include/linux/smp.h linux-2.6.21.7/include/linux/smp.h
---- linux-2.6.21.7.orig/include/linux/smp.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/smp.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/smp.h	2007-09-12 09:46:43.000000000 +0200
++++ linux-2.6.21.7/include/linux/smp.h	2007-09-12 09:47:45.000000000 +0200
 @@ -109,6 +109,8 @@
  
  #endif /* !SMP */
@@ -3232,8 +3383,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/smp.h linux-2.6.21.7/include/linux/
   * smp_processor_id(): get the current CPU ID.
   *
 diff -Naur linux-2.6.21.7.orig/include/linux/spinlock.h linux-2.6.21.7/include/linux/spinlock.h
---- linux-2.6.21.7.orig/include/linux/spinlock.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/spinlock.h	2007-09-03 15:51:26.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/spinlock.h	2007-09-12 09:46:43.000000000 +0200
++++ linux-2.6.21.7/include/linux/spinlock.h	2007-09-12 09:47:45.000000000 +0200
 @@ -172,7 +172,90 @@
  #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
  #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
@@ -3353,7 +3504,7 @@ diff -Naur linux-2.6.21.7.orig/include/linux/spinlock.h linux-2.6.21.7/include/l
  #define spin_lock_bh(lock)		_spin_lock_bh(lock)
  
  #define read_lock_irq(lock)		_read_lock_irq(lock)
-@@ -221,24 +304,23 @@
+@@ -221,22 +304,22 @@
   */
  #if defined(CONFIG_DEBUG_SPINLOCK) || defined(CONFIG_PREEMPT) || \
  	!defined(CONFIG_SMP)
@@ -3376,13 +3527,11 @@ diff -Naur linux-2.6.21.7.orig/include/linux/spinlock.h linux-2.6.21.7/include/l
  # define spin_unlock_irq(lock)			\
  do {						\
 -	__raw_spin_unlock(&(lock)->raw_lock);	\
-+	PICK_SPINUNLOCK_IRQ_RAW(lock)	        \
++	PICK_SPINUNLOCK_IRQ_RAW(lock);   	\
  	__release(lock);			\
--	local_irq_enable();			\
+ 	local_irq_enable();			\
  } while (0)
- # define read_unlock_irq(lock)			\
- do {						\
-@@ -255,7 +337,7 @@
+@@ -255,7 +338,7 @@
  #endif
  
  #define spin_unlock_irqrestore(lock, flags) \
@@ -3391,7 +3540,7 @@ diff -Naur linux-2.6.21.7.orig/include/linux/spinlock.h linux-2.6.21.7/include/l
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -339,4 +421,29 @@
+@@ -339,4 +422,29 @@
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -3422,8 +3571,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/spinlock.h linux-2.6.21.7/include/l
 +
  #endif /* __LINUX_SPINLOCK_H */
 diff -Naur linux-2.6.21.7.orig/include/linux/spinlock_types.h linux-2.6.21.7/include/linux/spinlock_types.h
---- linux-2.6.21.7.orig/include/linux/spinlock_types.h	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/include/linux/spinlock_types.h	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/include/linux/spinlock_types.h	2007-09-12 09:46:43.000000000 +0200
++++ linux-2.6.21.7/include/linux/spinlock_types.h	2007-09-12 09:47:45.000000000 +0200
 @@ -31,6 +31,10 @@
  #endif
  } spinlock_t;
@@ -3456,8 +3605,8 @@ diff -Naur linux-2.6.21.7.orig/include/linux/spinlock_types.h linux-2.6.21.7/inc
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
 diff -Naur linux-2.6.21.7.orig/init/Kconfig linux-2.6.21.7/init/Kconfig
---- linux-2.6.21.7.orig/init/Kconfig	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/init/Kconfig	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/init/Kconfig	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/init/Kconfig	2007-09-12 09:47:45.000000000 +0200
 @@ -67,6 +67,7 @@
  
  config LOCALVERSION
@@ -3467,8 +3616,8 @@ diff -Naur linux-2.6.21.7.orig/init/Kconfig linux-2.6.21.7/init/Kconfig
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
 diff -Naur linux-2.6.21.7.orig/init/main.c linux-2.6.21.7/init/main.c
---- linux-2.6.21.7.orig/init/main.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/init/main.c	2007-09-03 15:40:54.000000000 +0200
+--- linux-2.6.21.7.orig/init/main.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/init/main.c	2007-09-12 09:47:45.000000000 +0200
 @@ -513,7 +513,7 @@
  	unwind_init();
  	lockdep_init();
@@ -3495,14 +3644,14 @@ diff -Naur linux-2.6.21.7.orig/init/main.c linux-2.6.21.7/init/main.c
  	driver_init();
  	init_irq_proc();
 -	do_initcalls();
-+        ipipe_init_proc();
++	ipipe_init_proc();
 +        do_initcalls();
  }
  
  static void __init do_pre_smp_initcalls(void)
 diff -Naur linux-2.6.21.7.orig/kernel/exit.c linux-2.6.21.7/kernel/exit.c
---- linux-2.6.21.7.orig/kernel/exit.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/exit.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/exit.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/exit.c	2007-09-12 09:47:45.000000000 +0200
 @@ -939,6 +939,7 @@
  
  	if (group_dead)
@@ -3512,8 +3661,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/exit.c linux-2.6.21.7/kernel/exit.c
  	__exit_files(tsk);
  	__exit_fs(tsk);
 diff -Naur linux-2.6.21.7.orig/kernel/fork.c linux-2.6.21.7/kernel/fork.c
---- linux-2.6.21.7.orig/kernel/fork.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/fork.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/fork.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/fork.c	2007-09-12 09:47:45.000000000 +0200
 @@ -387,6 +387,7 @@
  	if (atomic_dec_and_test(&mm->mm_users)) {
  		exit_aio(mm);
@@ -3548,8 +3697,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/fork.c linux-2.6.21.7/kernel/fork.c
  bad_fork_cleanup_namespaces:
 diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/core.c
 --- linux-2.6.21.7.orig/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/kernel/ipipe/core.c	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,1484 @@
++++ linux-2.6.21.7/kernel/ipipe/core.c	2007-09-12 09:55:01.000000000 +0200
+@@ -0,0 +1,1513 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -3595,6 +3744,34 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +static unsigned long __ipipe_domain_slot_map;
 +
 +struct ipipe_domain ipipe_root;
++
++#ifndef CONFIG_SMP
++/*
++ * Create an alias to the unique root status, so that arch-dep code
++ * may get simple and easy access to this percpu variable.  We also
++ * create an array of pointers to the percpu domain data; this tends
++ * to produce a better code when reaching non-root domains. We make
++ * sure that the early boot code would be able to dereference the
++ * pointer to the root domain data safely by statically initializing
++ * its value (local_irq*() routines depend on this).
++ */
++#if __GNUC__ >= 4
++extern unsigned long __ipipe_root_status
++__attribute__((alias(__stringify(__raw_get_cpu_var(ipipe_percpu_darray)))));
++EXPORT_SYMBOL(__ipipe_root_status);
++#else /* __GNUC__ < 4 */
++/*
++ * Work around a GCC 3.x issue making alias symbols unusable as
++ * constant initializers.
++ */
++unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray);
++EXPORT_SYMBOL(__ipipe_root_status_addr);
++#endif /* __GNUC__ < 4 */
++
++DEFINE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]) =
++{ [0] = (struct ipipe_percpu_domain_data *)&__raw_get_cpu_var(ipipe_percpu_darray) };
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu_daddr);
++#endif /* !CONFIG_SMP */
 +
 +DEFINE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]) =
 +{ [0] = { .status = IPIPE_STALL_MASK } }; /* Root domain stalled on each CPU at startup. */
@@ -3695,6 +3872,7 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +void __ipipe_cleanup_domain(struct ipipe_domain *ipd)
 +{
 +	ipipe_unstall_pipeline_from(ipd);
++
 +#ifdef CONFIG_SMP
 +	{
 +		int cpu;
@@ -3704,32 +3882,22 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +				cpu_relax();
 +		}
 +	}
-+#endif	/* CONFIG_SMP */
++#else
++	__raw_get_cpu_var(ipipe_percpu_daddr)[ipd->slot] = NULL;
++#endif
++
 +	clear_bit(ipd->slot, &__ipipe_domain_slot_map);
-+}
-+
-+void __ipipe_stall_root(void)
-+{
-+	set_bit_safe(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
-+}
-+
-+unsigned long __ipipe_test_and_stall_root(void)
-+{
-+	return test_and_set_bit_safe(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
-+}
-+
-+unsigned long __ipipe_test_root(void)
-+{
-+	return test_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
 +}
 +
 +void __ipipe_unstall_root(void)
 +{
++	BUG_ON(!ipipe_root_domain_p);
++
 +        local_irq_disable_hw();
 +
-+        __clear_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(ipipe_root_domain, status));
++        __clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +
-+        if (unlikely(ipipe_cpudom_var(ipipe_root_domain, irqpend_himask) != 0))
++        if (unlikely(ipipe_root_cpudom_var(irqpend_himask) != 0))
 +                __ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
 +        local_irq_enable_hw();
@@ -3737,6 +3905,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +
 +void __ipipe_restore_root(unsigned long x)
 +{
++	BUG_ON(!ipipe_root_domain_p);
++
 +	if (x)
 +		__ipipe_stall_root();
 +	else
@@ -4431,7 +4601,7 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +	struct list_head *pos;
 +	unsigned long flags;
 +
-+	if (ipipe_current_domain != ipipe_root_domain) {
++	if (!ipipe_root_domain_p) {
 +		printk(KERN_WARNING
 +		       "I-pipe: Only the root domain may register a new domain.\n");
 +		return -EPERM;
@@ -4446,7 +4616,7 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +	pos = NULL;
 +	ipd->slot = ffz(__ipipe_domain_slot_map);
 +
-+	if (__ipipe_dslot(ipd) < CONFIG_IPIPE_DOMAINS) {
++	if (ipd->slot < CONFIG_IPIPE_DOMAINS) {
 +		set_bit(ipd->slot, &__ipipe_domain_slot_map);
 +		list_for_each(pos, &__ipipe_pipeline) {
 +			_ipd = list_entry(pos, struct ipipe_domain, p_link);
@@ -4462,6 +4632,16 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +			clear_bit(ipd->slot, &__ipipe_domain_slot_map);
 +		return -EBUSY;
 +	}
++
++#ifndef CONFIG_SMP
++	/*
++	 * Set up the perdomain pointers for direct access to the
++	 * percpu domain data. This saves a costly multiply each time
++	 * we need to refer to the contents of the percpu domain data
++	 * array.
++	 */
++	__raw_get_cpu_var(ipipe_percpu_daddr)[ipd->slot] = &__raw_get_cpu_var(ipipe_percpu_darray)[ipd->slot];
++#endif
 +
 +	ipd->name = attr->name;
 +	ipd->domid = attr->domid;
@@ -4509,8 +4689,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +
 +		local_irq_save_hw(flags);
 +
-+		if (ipipe_this_cpudom_var(irqpend_himask) != 0 &&
-+		    !test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++		if (ipipe_root_cpudom_var(irqpend_himask) != 0 &&
++		    !test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
 +		local_irq_restore_hw(flags);
@@ -4525,7 +4705,7 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +{
 +	unsigned long flags;
 +
-+	if (ipipe_current_domain != ipipe_root_domain) {
++	if (!ipipe_root_domain_p) {
 +		printk(KERN_WARNING
 +		       "I-pipe: Only the root domain may unregister a domain.\n");
 +		return -EPERM;
@@ -4997,6 +5177,7 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +EXPORT_SYMBOL(ipipe_suspend_domain);
 +EXPORT_SYMBOL(ipipe_alloc_virq);
 +EXPORT_PER_CPU_SYMBOL(ipipe_percpu_domain);
++EXPORT_PER_CPU_SYMBOL(ipipe_percpu_darray);
 +EXPORT_SYMBOL(ipipe_root);
 +EXPORT_SYMBOL(ipipe_stall_pipeline_from);
 +EXPORT_SYMBOL(ipipe_test_and_stall_pipeline_from);
@@ -5007,9 +5188,6 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +EXPORT_SYMBOL(__ipipe_restore_pipeline_head);
 +EXPORT_SYMBOL(__ipipe_unstall_root);
 +EXPORT_SYMBOL(__ipipe_restore_root);
-+EXPORT_SYMBOL(__ipipe_stall_root);
-+EXPORT_SYMBOL(__ipipe_test_root);
-+EXPORT_SYMBOL(__ipipe_test_and_stall_root);
 +EXPORT_SYMBOL(__ipipe_spin_lock_irq);
 +EXPORT_SYMBOL(__ipipe_spin_unlock_irq);
 +EXPORT_SYMBOL(__ipipe_spin_lock_irqsave);
@@ -5036,8 +5214,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/core.c linux-2.6.21.7/kernel/ipipe/c
 +#endif
 diff -Naur linux-2.6.21.7.orig/kernel/ipipe/Kconfig linux-2.6.21.7/kernel/ipipe/Kconfig
 --- linux-2.6.21.7.orig/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/kernel/ipipe/Kconfig	2007-09-03 15:37:45.000000000 +0200
-@@ -0,0 +1,13 @@
++++ linux-2.6.21.7/kernel/ipipe/Kconfig	2007-09-12 09:47:45.000000000 +0200
+@@ -0,0 +1,25 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -5051,9 +5229,21 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/Kconfig linux-2.6.21.7/kernel/ipipe/
 +	default 4
 +	---help---
 +	The maximum number of I-pipe domains to run concurrently.
++
++config IPIPE_COMPAT
++	bool "Maintain code compatibility with older releases"
++	depends on IPIPE
++	default y
++	---help---
++	Activate this option if you want the compatibility code to be
++	defined, so that older I-pipe clients may use obsolete
++	constructs. WARNING: obsolete code will be eventually
++	deprecated in future I-pipe releases, and removed from the
++	compatibility support as time passes. Please fix I-pipe
++	clients to get rid of such uses as soon as possible.
 diff -Naur linux-2.6.21.7.orig/kernel/ipipe/Kconfig.debug linux-2.6.21.7/kernel/ipipe/Kconfig.debug
 --- linux-2.6.21.7.orig/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/kernel/ipipe/Kconfig.debug	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/kernel/ipipe/Kconfig.debug	2007-09-12 09:47:45.000000000 +0200
 @@ -0,0 +1,88 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
@@ -5145,14 +5335,14 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/Kconfig.debug linux-2.6.21.7/kernel/
 +endif
 diff -Naur linux-2.6.21.7.orig/kernel/ipipe/Makefile linux-2.6.21.7/kernel/ipipe/Makefile
 --- linux-2.6.21.7.orig/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/kernel/ipipe/Makefile	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/kernel/ipipe/Makefile	2007-09-12 09:47:45.000000000 +0200
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff -Naur linux-2.6.21.7.orig/kernel/ipipe/tracer.c linux-2.6.21.7/kernel/ipipe/tracer.c
 --- linux-2.6.21.7.orig/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6.21.7/kernel/ipipe/tracer.c	2007-09-03 15:37:45.000000000 +0200
++++ linux-2.6.21.7/kernel/ipipe/tracer.c	2007-09-12 09:47:45.000000000 +0200
 @@ -0,0 +1,1294 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
@@ -6449,8 +6639,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/ipipe/tracer.c linux-2.6.21.7/kernel/ipipe
 +	                              &ipipe_trace_enable);
 +}
 diff -Naur linux-2.6.21.7.orig/kernel/irq/chip.c linux-2.6.21.7/kernel/irq/chip.c
---- linux-2.6.21.7.orig/kernel/irq/chip.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/irq/chip.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/irq/chip.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/irq/chip.c	2007-09-12 09:47:45.000000000 +0200
 @@ -337,7 +337,9 @@
  	irqreturn_t action_ret;
  
@@ -6652,8 +6842,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/irq/chip.c linux-2.6.21.7/kernel/irq/chip.
  	desc->handle_irq = handle;
  	desc->name = name;
 diff -Naur linux-2.6.21.7.orig/kernel/Makefile linux-2.6.21.7/kernel/Makefile
---- linux-2.6.21.7.orig/kernel/Makefile	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/Makefile	2007-09-03 15:40:08.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/Makefile	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/Makefile	2007-09-12 09:47:45.000000000 +0200
 @@ -47,6 +47,7 @@
  obj-$(CONFIG_SECCOMP) += seccomp.o
  obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
@@ -6663,8 +6853,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/Makefile linux-2.6.21.7/kernel/Makefile
  obj-$(CONFIG_UTS_NS) += utsname.o
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
 diff -Naur linux-2.6.21.7.orig/kernel/printk.c linux-2.6.21.7/kernel/printk.c
---- linux-2.6.21.7.orig/kernel/printk.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/printk.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/printk.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/printk.c	2007-09-12 09:47:45.000000000 +0200
 @@ -479,6 +479,41 @@
  	return 0;
  }
@@ -6765,8 +6955,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/printk.c linux-2.6.21.7/kernel/printk.c
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff -Naur linux-2.6.21.7.orig/kernel/sched.c linux-2.6.21.7/kernel/sched.c
---- linux-2.6.21.7.orig/kernel/sched.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/sched.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/sched.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/sched.c	2007-09-12 09:47:45.000000000 +0200
 @@ -1419,7 +1419,7 @@
  
  	rq = task_rq_lock(p, &flags);
@@ -6902,8 +7092,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/sched.c linux-2.6.21.7/kernel/sched.c
 +
 +#endif /* CONFIG_IPIPE */
 diff -Naur linux-2.6.21.7.orig/kernel/signal.c linux-2.6.21.7/kernel/signal.c
---- linux-2.6.21.7.orig/kernel/signal.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/signal.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/signal.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/signal.c	2007-09-12 09:47:45.000000000 +0200
 @@ -532,6 +532,7 @@
  	unsigned int mask;
  
@@ -6913,8 +7103,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/signal.c linux-2.6.21.7/kernel/signal.c
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
 diff -Naur linux-2.6.21.7.orig/kernel/spinlock.c linux-2.6.21.7/kernel/spinlock.c
---- linux-2.6.21.7.orig/kernel/spinlock.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/spinlock.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/spinlock.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/spinlock.c	2007-09-12 09:47:45.000000000 +0200
 @@ -88,7 +88,7 @@
  	 * _raw_spin_lock_flags() code, because lockdep assumes
  	 * that interrupts are not re-enabled during lock-acquire:
@@ -6934,8 +7124,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/spinlock.c linux-2.6.21.7/kernel/spinlock.
  #else
  	_raw_spin_lock_flags(lock, &flags);
 diff -Naur linux-2.6.21.7.orig/kernel/sys.c linux-2.6.21.7/kernel/sys.c
---- linux-2.6.21.7.orig/kernel/sys.c	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/kernel/sys.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/kernel/sys.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/kernel/sys.c	2007-09-12 09:47:45.000000000 +0200
 @@ -227,9 +227,11 @@
  {
  	int ret;
@@ -6951,8 +7141,8 @@ diff -Naur linux-2.6.21.7.orig/kernel/sys.c linux-2.6.21.7/kernel/sys.c
  }
  
 diff -Naur linux-2.6.21.7.orig/lib/bust_spinlocks.c linux-2.6.21.7/lib/bust_spinlocks.c
---- linux-2.6.21.7.orig/lib/bust_spinlocks.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/lib/bust_spinlocks.c	2007-09-03 15:39:25.000000000 +0200
+--- linux-2.6.21.7.orig/lib/bust_spinlocks.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/lib/bust_spinlocks.c	2007-09-12 09:47:45.000000000 +0200
 @@ -12,13 +12,16 @@
  #include <linux/tty.h>
  #include <linux/wait.h>
@@ -6963,17 +7153,16 @@ diff -Naur linux-2.6.21.7.orig/lib/bust_spinlocks.c linux-2.6.21.7/lib/bust_spin
  void __attribute__((weak)) bust_spinlocks(int yes)
  {
  	if (yes) {
--		oops_in_progress = 1;
-+                ipipe_trace_panic_freeze();
-+                oops_in_progress = 1;
++		ipipe_trace_panic_freeze();
+ 		oops_in_progress = 1;
  	} else {
-+                ipipe_trace_panic_dump();
++		ipipe_trace_panic_dump();
  #ifdef CONFIG_VT
  		unblank_screen();
  #endif
 diff -Naur linux-2.6.21.7.orig/lib/ioremap.c linux-2.6.21.7/lib/ioremap.c
---- linux-2.6.21.7.orig/lib/ioremap.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/lib/ioremap.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/lib/ioremap.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/lib/ioremap.c	2007-09-12 09:47:45.000000000 +0200
 @@ -84,8 +84,8 @@
  		if (err)
  			break;
@@ -6986,8 +7175,8 @@ diff -Naur linux-2.6.21.7.orig/lib/ioremap.c linux-2.6.21.7/lib/ioremap.c
  	return err;
  }
 diff -Naur linux-2.6.21.7.orig/lib/Kconfig.debug linux-2.6.21.7/lib/Kconfig.debug
---- linux-2.6.21.7.orig/lib/Kconfig.debug	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/lib/Kconfig.debug	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/lib/Kconfig.debug	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/lib/Kconfig.debug	2007-09-12 09:47:45.000000000 +0200
 @@ -71,6 +71,8 @@
  	  exported to $(INSTALL_HDR_PATH) (usually 'usr/include' in
  	  your build tree), to make sure they're suitable.
@@ -6998,8 +7187,8 @@ diff -Naur linux-2.6.21.7.orig/lib/Kconfig.debug linux-2.6.21.7/lib/Kconfig.debu
  	bool "Kernel debugging"
  	help
 diff -Naur linux-2.6.21.7.orig/lib/smp_processor_id.c linux-2.6.21.7/lib/smp_processor_id.c
---- linux-2.6.21.7.orig/lib/smp_processor_id.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/lib/smp_processor_id.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/lib/smp_processor_id.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/lib/smp_processor_id.c	2007-09-12 09:47:45.000000000 +0200
 @@ -13,6 +13,9 @@
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
@@ -7011,8 +7200,8 @@ diff -Naur linux-2.6.21.7.orig/lib/smp_processor_id.c linux-2.6.21.7/lib/smp_pro
  		goto out;
  
 diff -Naur linux-2.6.21.7.orig/lib/spinlock_debug.c linux-2.6.21.7/lib/spinlock_debug.c
---- linux-2.6.21.7.orig/lib/spinlock_debug.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/lib/spinlock_debug.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/lib/spinlock_debug.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/lib/spinlock_debug.c	2007-09-12 09:47:45.000000000 +0200
 @@ -133,6 +133,8 @@
  	debug_spin_lock_after(lock);
  }
@@ -7088,8 +7277,8 @@ diff -Naur linux-2.6.21.7.orig/lib/spinlock_debug.c linux-2.6.21.7/lib/spinlock_
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff -Naur linux-2.6.21.7.orig/Makefile linux-2.6.21.7/Makefile
---- linux-2.6.21.7.orig/Makefile	2007-09-03 15:33:51.000000000 +0200
-+++ linux-2.6.21.7/Makefile	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/Makefile	2007-09-12 09:46:09.000000000 +0200
++++ linux-2.6.21.7/Makefile	2007-09-12 09:47:45.000000000 +0200
 @@ -490,6 +490,10 @@
  
  include $(srctree)/arch/$(ARCH)/Makefile
@@ -7102,8 +7291,8 @@ diff -Naur linux-2.6.21.7.orig/Makefile linux-2.6.21.7/Makefile
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
 diff -Naur linux-2.6.21.7.orig/mm/memory.c linux-2.6.21.7/mm/memory.c
---- linux-2.6.21.7.orig/mm/memory.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/mm/memory.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/mm/memory.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/mm/memory.c	2007-09-12 09:47:45.000000000 +0200
 @@ -50,6 +50,7 @@
  #include <linux/delayacct.h>
  #include <linux/init.h>
@@ -7385,8 +7574,8 @@ diff -Naur linux-2.6.21.7.orig/mm/memory.c linux-2.6.21.7/mm/memory.c
 +
 +#endif
 diff -Naur linux-2.6.21.7.orig/mm/mlock.c linux-2.6.21.7/mm/mlock.c
---- linux-2.6.21.7.orig/mm/mlock.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/mm/mlock.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/mm/mlock.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/mm/mlock.c	2007-09-12 09:47:45.000000000 +0200
 @@ -162,10 +162,10 @@
  static int do_mlockall(int flags)
  {
@@ -7401,8 +7590,8 @@ diff -Naur linux-2.6.21.7.orig/mm/mlock.c linux-2.6.21.7/mm/mlock.c
  	if (flags == MCL_FUTURE)
  		goto out;
 diff -Naur linux-2.6.21.7.orig/mm/vmalloc.c linux-2.6.21.7/mm/vmalloc.c
---- linux-2.6.21.7.orig/mm/vmalloc.c	2007-09-03 15:33:50.000000000 +0200
-+++ linux-2.6.21.7/mm/vmalloc.c	2007-09-03 15:37:45.000000000 +0200
+--- linux-2.6.21.7.orig/mm/vmalloc.c	2007-09-12 09:46:44.000000000 +0200
++++ linux-2.6.21.7/mm/vmalloc.c	2007-09-12 09:47:45.000000000 +0200
 @@ -156,6 +156,7 @@
  		if (err)
  			break;
