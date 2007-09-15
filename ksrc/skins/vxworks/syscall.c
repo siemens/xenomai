@@ -111,6 +111,8 @@ static int __wind_task_init(struct task_struct *curr, struct pt_regs *regs)
 		return -ENOMEM;
 	}
 
+	xnthread_clear_state(&task->threadbase, XNZOMBIE);
+
 	/* Force FPU support in user-space. This will lead to a no-op if
 	   the platform does not support it. */
 
@@ -132,7 +134,7 @@ static int __wind_task_init(struct task_struct *curr, struct pt_regs *regs)
 			xnshadow_signal_completion(u_completion, err);
 	}
 
-	if (err)
+	if (err && !xnthread_test_state(&task->threadbase, XNZOMBIE))
 		xnfree(task);
 
 	return err;

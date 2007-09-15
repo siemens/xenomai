@@ -1,3 +1,19 @@
+2007-09-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/syscall.c (__sc_tecreate): 
+	* ksrc/skins/vxworks/syscall.c (__wind_task_init): 
+	* ksrc/skins/native/syscall.c (__rt_task_create): Protect against
+	duplicate TCB memory release (first issued by the deletion hook)
+	upon task creation error.
+	
+	* ksrc/skins/native/syscall.c (__rt_task_create): Make sure we
+	attempt to release the TCB memory after any failure to shadow the
+	task.
+
+	* ksrc/skins/native/task.c (rt_task_create): Get out faster from
+	the error case by calling xnpod_delete_thread() upon registration
+	failure.
+
 2007-09-04  Benjamin ZORES <benjamin.zores@alcatel-lucent.fr>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-04.
