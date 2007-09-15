@@ -170,6 +170,8 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 		goto fail;
 	}
 
+	xnthread_clear_state(&task->thread_base, XNZOMBIE);
+
 	/* Force FPU support in user-space. This will lead to a no-op if
 	   the platform does not support it. */
 
@@ -183,12 +185,20 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 				  sizeof(ph));
 		err = xnshadow_map(&task->thread_base, u_completion);
 	} else {
-		xnfree(task);
 		/* Unblock and pass back error code. */
 fail:
 		if (u_completion)
 			xnshadow_signal_completion(u_completion, err);
 	}
+
+	/* Task memory could have been released by an indirect call to
+	 * the deletion hook, after xnpod_delete_thread() has been
+	 * issued from rt_task_create() (e.g. upon registration
+	 * error). We avoid double memory release when the XNZOMBIE
+	 * flag is raised, meaning the deletion hook has run, and the
+	 * TCB memory is already scheduled for release. */
+	if (err && !xnthread_test_state(&task->thread_base, XNZOMBIE))
+		xnfree(task);
 
 	return err;
 }

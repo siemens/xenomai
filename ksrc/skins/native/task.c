@@ -286,7 +286,7 @@ int rt_task_create(RT_TASK *task,
 				       &xnthread_handle(&task->thread_base),
 				       NULL);
 		if (err)
-			rt_task_delete(task);
+			xnpod_delete_thread(&task->thread_base);
 		else if (!*name)
 			/* /proc/xenomai/sched will dump no name for the anonymous
 			   task, but the registry still has a stable reference
