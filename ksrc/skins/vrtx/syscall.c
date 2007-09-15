@@ -86,6 +86,8 @@ static int __sc_tecreate(struct task_struct *curr, struct pt_regs *regs)
 		goto done;
 	}
 
+	xnthread_clear_state(&task->threadbase, XNZOMBIE);
+
 	tid =
 	    sc_tecreate_inner(task, NULL, tid, prio, mode, 0, 0, NULL, 0, &err);
 
@@ -98,7 +100,7 @@ static int __sc_tecreate(struct task_struct *curr, struct pt_regs *regs)
 		err = xnshadow_map(&task->threadbase, u_completion);
 	}
 
-	if (err)
+	if (err && !xnthread_test_state(&task->threadbase, XNZOMBIE))
 		xnfree(task);
 
       done:
