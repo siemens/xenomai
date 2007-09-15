@@ -125,8 +125,8 @@ static int __rt_task_create(struct task_struct *curr, struct pt_regs *regs)
 	char name[XNOBJECT_NAME_LEN];
 	struct rt_arg_bulk bulk;
 	RT_TASK_PLACEHOLDER ph;
+	RT_TASK *task = NULL;
 	int err, prio, mode;
-	RT_TASK *task;
 
 	/* Completion descriptor our parent thread is pending on -- may be NULL. */
 	u_completion = (xncompletion_t __user *)__xn_reg_arg2(regs);
@@ -197,7 +197,7 @@ fail:
 	 * error). We avoid double memory release when the XNZOMBIE
 	 * flag is raised, meaning the deletion hook has run, and the
 	 * TCB memory is already scheduled for release. */
-	if (err && !xnthread_test_state(&task->thread_base, XNZOMBIE))
+	if (err && task != NULL && !xnthread_test_state(&task->thread_base, XNZOMBIE))
 		xnfree(task);
 
 	return err;
