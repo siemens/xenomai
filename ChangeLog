@@ -1,8 +1,7 @@
 2007-09-16  Philippe Gerum  <rpm@xenomai.org>
 
-	* RELEASE: Xenomai 2.3.4 (Cool #9)
-
-2007-09-16  Philippe Gerum  <rpm@xenomai.org>
+	* ksrc/nucleus/pod.c (xnpod_preempt_current_thread): Sanitize
+	link2thread() call args.
 
 	* include/asm-sim/system.h (____cacheline_aligned_in_smp): Provide a placeholder.
 
