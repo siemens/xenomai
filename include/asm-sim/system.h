@@ -76,6 +76,11 @@ typedef unsigned long xnlock_t;
 #define xnlock_put_irqrestore(lock,x)  mvm_set_irqmask(x)
 #define xnlock_clear_irqoff(lock)      mvm_set_irqmask(-1)
 #define xnlock_clear_irqon(lock)       mvm_set_irqmask(0)
+#define xnlock_sync_irq(lock, x)			\
+	do {						\
+		xnlock_put_irqrestore(lock, x);		\
+		xnlock_get_irqsave(lock, x);		\
+	} while(0)
 
 #define XNARCH_NR_CPUS              1
 
