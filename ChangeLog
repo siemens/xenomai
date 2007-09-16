@@ -2,6 +2,12 @@
 
 	* RELEASE: Xenomai 2.3.4 (Cool #9)
 
+2007-09-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/event.c (ev_init, ev_destroy): Renamed to
+	taskev_init, taskev_destroy to avoid a conflict with
+	drivers/net/skfp.
+
 2007-09-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/syscall.c (__sc_tecreate): 

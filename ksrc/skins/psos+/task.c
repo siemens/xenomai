@@ -48,7 +48,7 @@ static void psostask_delete_hook(xnthread_t *thread)
 	while ((tm = (psostm_t *)getgq(&task->alarmq)) != NULL)
 		tm_destroy_internal(tm);
 
-	ev_destroy(&task->evgroup);
+	taskev_destroy(&task->evgroup);
 	xnarch_delete_display(&task->threadbase);
 	psos_mark_deleted(task);
 
@@ -135,7 +135,7 @@ u_long t_create(char name[4],
 	xnthread_set_magic(&task->threadbase, PSOS_SKIN_MAGIC);
 	xnthread_time_slice(&task->threadbase) = psos_time_slice;
 
-	ev_init(&task->evgroup);
+	taskev_init(&task->evgroup);
 	inith(&task->link);
 
 	for (n = 0; n < PSOSTASK_NOTEPAD_REGS; n++)
