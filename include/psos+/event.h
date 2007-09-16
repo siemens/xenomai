@@ -35,9 +35,9 @@ typedef struct psosevent {
 extern "C" {
 #endif
 
-void ev_init(psosevent_t *evgroup);
+void taskev_init(psosevent_t *evgroup);
 
-void ev_destroy(psosevent_t *evgroup);
+void taskev_destroy(psosevent_t *evgroup);
 
 #ifdef __cplusplus
 }

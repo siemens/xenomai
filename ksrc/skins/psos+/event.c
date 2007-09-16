@@ -19,13 +19,13 @@
 
 #include "psos+/task.h"
 
-void ev_init(psosevent_t *evgroup)
+void taskev_init(psosevent_t *evgroup)
 {
 	xnsynch_init(&evgroup->synchbase, XNSYNCH_FIFO);
 	evgroup->events = 0;
 }
 
-void ev_destroy(psosevent_t *evgroup)
+void taskev_destroy(psosevent_t *evgroup)
 {
 	if (xnsynch_destroy(&evgroup->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
