@@ -4,6 +4,8 @@
 
 2007-09-16  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-sim/system.h (____cacheline_aligned_in_smp): Provide a placeholder.
+
 	* ksrc/skins/psos+/event.c (ev_init, ev_destroy): Renamed to
 	taskev_init, taskev_destroy to avoid a conflict with
 	drivers/net/skfp.
