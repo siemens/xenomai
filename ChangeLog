@@ -1,5 +1,8 @@
 2007-09-22  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/vxworks/vxworks.h, include/nucleus/types.h: Move
+	__natural_word_type definition where it belongs.
+
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-05.
 
 2007-09-20  Philippe Gerum  <rpm@xenomai.org>
