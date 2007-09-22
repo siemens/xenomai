@@ -2032,7 +2032,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..952d8a4
+index 0000000..55362d7
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2075,10 +2075,10 @@ index 0000000..952d8a4
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-04"
++#define IPIPE_ARCH_STRING	"1.7-05"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -3917,7 +3917,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ad31339
+index 0000000..b259d9d
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1513 @@
@@ -4709,6 +4709,7 @@ index 0000000..ad31339
 +	old = ipipe_current_domain;
 +	ipipe_current_domain = head_domain; /* Switch to the head domain. */
 +
++	ipipe_cpudom_var(head_domain, irqall)[irq]++;
 +	__set_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(head_domain, status));
 +	head_domain->irqs[irq].handler(irq, head_domain->irqs[irq].cookie); /* Call the ISR. */
 +	__ipipe_run_irqtail();
@@ -5415,7 +5416,6 @@ index 0000000..ad31339
 +EXPORT_SYMBOL(__ipipe_spin_lock_irqsave);
 +EXPORT_SYMBOL(__ipipe_spin_unlock_irqrestore);
 +EXPORT_SYMBOL(__ipipe_pipeline);
-+EXPORT_SYMBOL(__ipipe_set_irq_pending);
 +EXPORT_SYMBOL(__ipipe_lock_irq);
 +EXPORT_SYMBOL(__ipipe_unlock_irq);
 +EXPORT_SYMBOL(ipipe_register_domain);
