@@ -194,7 +194,7 @@ int timer_create(clockid_t clockid,
 	return -1;
 }
 
-int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
+int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
 {
 	struct pse51_timer *timer;
 	spl_t s;
@@ -214,7 +214,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
 		goto unlock_and_error;
 	}
 
-	if (timer->owningq != pse51_kqueues(0)) {
+	if (!force && timer->owningq != pse51_kqueues(0)) {
 		err = EPERM;
 		goto unlock_and_error;
 	}
@@ -263,7 +263,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q)
  */
 int timer_delete(timer_t timerid)
 {
-	return pse51_timer_delete_inner(timerid, pse51_kqueues(0));
+	return pse51_timer_delete_inner(timerid, pse51_kqueues(0), 0);
 }
 
 static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
@@ -579,7 +579,7 @@ void pse51_timerq_cleanup(pse51_kqueues_t *q)
 
 	while ((holder = getheadq(&q->timerq))) {
 		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
-		pse51_timer_delete_inner(tm, q);
+		pse51_timer_delete_inner(tm, q, 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
