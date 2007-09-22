@@ -1,6 +1,20 @@
+2007-09-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/{intr.c, timer.c}: Introduce a forced cleanup
+	flag to prevent the cleanup routine from getting denied to destroy
+	objects by the inner deletion code before entering a runaway loop
+	because of this. Rationale: obj->owningq may be different from
+	pse51_kqueues(0) during process cleanup, since all per-process
+	data related to a given mm may have been previously removed in a
+	row before the last lingering thread from the exiting process runs
+	this code. In any case, we definitely want all lingering objects
+	attached to the exiting process to be wiped out by the cleanup
+	handler, no matter what.
+
 2007-09-16  Philippe Gerum  <rpm@xenomai.org>
 
-	* include/asm-sim/system.h (____cacheline_aligned_in_smp): Provide a placeholder.
+	* include/asm-sim/system.h (____cacheline_aligned_in_smp): Provide
+	a placeholder.
 	(xnlock_sync_irq): Add missing.
 
 	* ksrc/skins/psos+/event.c (ev_init, ev_destroy): Renamed to

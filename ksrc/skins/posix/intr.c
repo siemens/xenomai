@@ -136,7 +136,7 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 	return -1;
 }
 
-int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q)
+static int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q, int force)
 {
 	int rc = XNSYNCH_DONE;
 	spl_t s;
@@ -148,7 +148,7 @@ int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q)
 		thread_set_errno(EINVAL);
 		return -1;
 	}
-	if (intr->owningq != pse51_kqueues(0)) {
+	if (!force && intr->owningq != pse51_kqueues(0)) {
 		xnlock_put_irqrestore(&nklock, s);
 		thread_set_errno(EPERM);
 		return -1;
@@ -199,7 +199,7 @@ int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q)
  */
 int pthread_intr_detach_np(pthread_intr_t intr)
 {
-	return pse51_intr_detach_inner(intr, pse51_kqueues(0));
+	return pse51_intr_detach_inner(intr, pse51_kqueues(0), 0);
 }
 
 /**
@@ -273,7 +273,7 @@ void pse51_intrq_cleanup(pse51_kqueues_t *q)
 	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getheadq(&q->intrq)) != NULL) {
-		pthread_intr_detach_np(link2intr(holder));
+		pse51_intr_detach_inner(link2intr(holder), pse51_kqueues(0), 1);
 		xnlock_put_irqrestore(&nklock, s);
 #if XENO_DEBUG(POSIX)
 		xnprintf("Posix interruption handler %p was not destroyed, "
