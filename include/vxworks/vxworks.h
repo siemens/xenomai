@@ -96,12 +96,6 @@ typedef int BOOL;
 #define NO_WAIT (0)
 #define WAIT_FOREVER (-1)
 
-#if BITS_PER_LONG == 32
-#define __natural_word_type int
-#else  /* defaults to long otherwise */
-#define __natural_word_type long
-#endif
-
 typedef __natural_word_type SEM_ID;
 
 /*for binary semaphores */
@@ -115,8 +109,6 @@ typedef __natural_word_type WDOG_ID;
 typedef __natural_word_type MSG_Q_ID;
 
 typedef __natural_word_type TASK_ID;
-
-#undef __natural_word_type
 
 #define MSG_PRI_NORMAL   0
 #define MSG_PRI_URGENT   1
