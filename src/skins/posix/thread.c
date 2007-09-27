@@ -170,7 +170,7 @@ int __wrap_pthread_create(pthread_t *tid,
 	iargs.ret = EAGAIN;
 	__real_sem_init(&iargs.sync, 0, 0);
 
-	err = __real_pthread_create(&ltid, &iattr, &__pthread_trampoline, &iargs);
+	err = __real_pthread_create(&ltid, attr, &__pthread_trampoline, &iargs);
 	if (!err)
 		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
 	__real_sem_destroy(&iargs.sync);
