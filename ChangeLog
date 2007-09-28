@@ -1,3 +1,8 @@
+2007-09-28  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/drivers/testing/timerbench.c: Take care of overflows also in
+	timer handler test. Avoid races during timer setup.
+
 2007-09-26  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* src/skins/posix/thread.c (__wrap_pthread_create): Use the correct
