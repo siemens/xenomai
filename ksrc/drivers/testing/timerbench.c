@@ -94,8 +94,9 @@ static void eval_inner_loop(struct rt_tmbench_context *ctx, long dt)
 	if (!ctx->warmup && ctx->histogram_size)
 		add_histogram(ctx, ctx->histogram_avg, dt);
 
-	/* Evaluate overruns and adjust next release date */
-	while (dt > ctx->period) {
+	/* Evaluate overruns and adjust next release date.
+	   Beware of signedness! */
+	while (dt > 0 && (unsigned long)dt > ctx->period) {
 		ctx->curr.overruns++;
 		ctx->date += ctx->period;
 		dt -= ctx->period;
