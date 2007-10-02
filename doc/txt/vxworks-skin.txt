@@ -94,6 +94,9 @@ list. Here are the known variations:
   sleep. This is for instance the case whenever the caller is not a
   VxWorks task, or the scheduler is locked.
 
+- wdStart() returns S_objLib_OBJ_UNAVAILABLE when a userland caller
+  attempts to start a watchdog created from a different process.
+
 - In case the documented VxWorks API does not explicitly handle the
   case, calling blocking services outside of any VxWorks task context or
   under scheduler lock, might return the POSIX error value "EPERM".

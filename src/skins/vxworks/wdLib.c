@@ -22,18 +22,17 @@
 
 extern int __vxworks_muxid;
 
-static inline int __wdWait(WDOG_ID wdog_id, wind_wd_utarget_t *wdt)
+static inline int __wdWait(wind_wd_utarget_t *wdt)
 {
-	return XENOMAI_SKINCALL2(__vxworks_muxid, __vxworks_wd_wait, wdog_id,
-				 wdt);
+	return XENOMAI_SKINCALL1(__vxworks_muxid, __vxworks_wd_wait, wdt);
 }
 
-static void wdServer(WDOG_ID wdog_id)
+static void wdServer(void)
 {
 	wind_wd_utarget_t wdt;
 
 	for (;;) {
-		switch (__wdWait(wdog_id, &wdt)) {
+		switch (__wdWait(&wdt)) {
 		case 0:
 			wdt.handler(wdt.arg);
 		case -EINTR:
@@ -55,15 +54,6 @@ WDOG_ID wdCreate(void)
 		return 0;
 	}
 
-	/* Start a watchdog server in user-space which will fire the
-	   handler as needed. */
-
-	if (taskSpawn("wdserver", 0, 0, 0, (FUNCPTR) & wdServer,
-		      wdog_id, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
-		wdCancel(wdog_id);
-		return 0;
-	}
-
 	return wdog_id;
 }
 
@@ -82,13 +72,23 @@ STATUS wdDelete(WDOG_ID wdog_id)
 
 STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 {
+	long start_server;
 	int err;
 
-	err = XENOMAI_SKINCALL4(__vxworks_muxid,
+	err = XENOMAI_SKINCALL5(__vxworks_muxid,
 				__vxworks_wd_start, wdog_id, timeout, handler,
-				arg);
+				arg, &start_server);
 	if (err) {
 		errno = abs(err);
+		return ERROR;
+	}
+
+	/* Upon creation of the first watchdog, start a server task
+	   which will fire the watchdog handlers as needed. */
+
+	if (start_server && taskSpawn("wdserver", 0, 0, 0, (FUNCPTR) & wdServer,
+				      wdog_id, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
+		fprintf(stderr, "VxWorks: failed to start the watchdog server (err %d)\n", errno);
 		return ERROR;
 	}
 

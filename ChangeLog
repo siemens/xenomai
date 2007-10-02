@@ -1,3 +1,8 @@
+2007-10-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/{syscall.c, wdLib.c}, src/skins/vxworks: Fix
+	implementation for concurrent watchdog support.
+
 2007-09-28  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/drivers/testing/timerbench.c: Take care of overflows also in

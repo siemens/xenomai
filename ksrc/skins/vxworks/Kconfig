@@ -7,8 +7,9 @@ menuconfig XENO_SKIN_VXWORKS
 
 	This API skin emulates WindRiver's VxWorks operating system.
 
+if XENO_SKIN_VXWORKS
+
 config XENO_OPT_VXWORKS_PERIOD
-	depends on XENO_SKIN_VXWORKS
 	int "Base period (us)"
 	default 1000
 	help
@@ -20,3 +21,14 @@ config XENO_OPT_VXWORKS_PERIOD
 
 	The base period can be overriden at runtime using the
 	"tick_arg" module parameter when loading the VxWorks skin.
+
+config XENO_OPT_DEBUG_VXWORKS
+	bool "Debugging support"
+	depends on XENO_OPT_DEBUG
+	default y
+	help
+
+	When enabled, this option makes the skin warn about
+	auto-clean operations executed upon process termination.
+
+endif
