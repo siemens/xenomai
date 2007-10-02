@@ -75,7 +75,6 @@ typedef struct pse51_uptr {
 } pse51_uptr_t;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-/* Called with nklock locked, irqs off. */
 static void sem_destroy_inner(pse51_sem_t * sem, pse51_kqueues_t *q)
 {
 	spl_t s;
