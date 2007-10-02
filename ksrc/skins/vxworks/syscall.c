@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2006 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2006,2007 Philippe Gerum <rpm@xenomai.org> 
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -40,7 +40,7 @@
  * actually targeting a proper VxWorks object.
  */
 
-static int __muxid;
+int __wind_muxid;
 
 static WIND_TCB *__wind_task_current(struct task_struct *curr)
 {
@@ -1045,6 +1045,7 @@ static int __wind_wd_create(struct task_struct *curr, struct pt_regs *regs)
 	if (!wd)
 		return wind_errnoget();
 
+	wd->rh = wind_get_rholder();
 	wdog_id = wd->handle;
 	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &wdog_id,
 			  sizeof(wdog_id));
@@ -1073,25 +1074,35 @@ static int __wind_wd_delete(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __wind_wd_start(WDOG_ID wdog_id)
+ * int __wind_wd_start(WDOG_ID wdog_id,
  *		       int timeout,
  *                     wind_timer_t timer,
- *                     long arg)
+ *                     long arg,
+ *                     *long start_serverp)
  */
 
 void __wind_wd_handler(void *cookie)
 {
 	wind_wd_t *wd = (wind_wd_t *)cookie;
-	/* Wake the server task waiting on the watchdog sync. */
-	xnsynch_flush(&wd->synchbase, 0);
+
+	if (wd->plink.last == wd->plink.next) {	/* Not linked? */
+		appendq(&wd->rh->wdpending, &wd->plink);
+		if (countq(&wd->rh->wdpending) == 1)
+			xnsynch_flush(&wd->rh->wdsynch, 0);
+	}
 }
 
 static int __wind_wd_start(struct task_struct *curr, struct pt_regs *regs)
 {
+	wind_rholder_t *rh;
+	long start_server;
 	xnhandle_t handle;
 	wind_wd_t *wd;
 	int timeout;
 	spl_t s;
+
+	if (!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(start_server)))
+		return -EFAULT;
 
 	handle = __xn_reg_arg1(regs);
 
@@ -1099,6 +1110,15 @@ static int __wind_wd_start(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!wd)
 		return S_objLib_OBJ_ID_ERROR;
+
+	rh = wind_get_rholder();
+
+	if (wd->rh != rh)
+		/*
+		 * User may not fiddle with watchdogs created from
+		 * other processes.
+		 */
+		return S_objLib_OBJ_UNAVAILABLE;
 
 	timeout = __xn_reg_arg2(regs);
 
@@ -1113,8 +1133,12 @@ static int __wind_wd_start(struct task_struct *curr, struct pt_regs *regs)
 
 	wd->wdt.handler = (wind_timer_t) __xn_reg_arg3(regs);
 	wd->wdt.arg = (long)__xn_reg_arg4(regs);
+	start_server = rh->wdcount++ == 0;
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &start_server,
+			  sizeof(start_server));
 
 	return 0;
 }
@@ -1140,29 +1164,28 @@ static int __wind_wd_cancel(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
- * int __wind_wd_wait(WDOG_ID wdog_id, wind_wd_utarget_t *pwdt)
+ * int __wind_wd_wait(wind_wd_utarget_t *pwdt)
  */
 
 static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 {
-	xnhandle_t handle = __xn_reg_arg1(regs);
+	xnholder_t *holder;
+	wind_rholder_t *rh;
 	WIND_TCB *pTcb;
 	wind_wd_t *wd;
 	int err = 0;
 	spl_t s;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(wd->wdt)))
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(wd->wdt)))
 		return -EFAULT;
+
+	rh = wind_get_rholder();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	wd = (wind_wd_t *)xnregistry_fetch(handle);
-
-	if (!wd) {
-		err = S_objLib_OBJ_ID_ERROR;
-		goto unlock_and_exit;
-	}
+	if (!emptyq_p(&rh->wdpending))
+		goto pull_event;
 
 	pTcb = __wind_task_current(curr);
 
@@ -1170,17 +1193,33 @@ static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 		/* Renice the waiter above all regular tasks if needed. */
 		xnpod_renice_thread(&pTcb->threadbase, XNCORE_IRQ_PRIO);
 
-	xnsynch_sleep_on(&wd->synchbase, XN_INFINITE, XN_RELATIVE);
+	xnsynch_sleep_on(&rh->wdsynch, XN_INFINITE, XN_RELATIVE);
 
-	if (xnthread_test_info(&pTcb->threadbase, XNBREAK))
+	if (xnthread_test_info(&pTcb->threadbase, XNBREAK)) {
 		err = -EINTR;	/* Unblocked. */
-	else if (xnthread_test_info(&pTcb->threadbase, XNRMID))
+		goto unlock_and_exit;
+	}
+	
+	if (xnthread_test_info(&pTcb->threadbase, XNRMID)) {
 		err = -EIDRM;	/* Watchdog deleted while pending. */
-	else
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
-				  &wd->wdt, sizeof(wd->wdt));
+		goto unlock_and_exit;
+	}
 
-      unlock_and_exit:
+ pull_event:
+
+	holder = getq(&rh->wdpending);
+
+	if (holder) {
+		wd = link2wind_wd(holder);
+		/* We need the following to mark the watchdog as unqueued. */
+		inith(holder);
+		xnlock_put_irqrestore(&nklock, s);
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+				  &wd->wdt, sizeof(wd->wdt));
+		return 0;
+	}
+
+ unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1196,6 +1235,42 @@ static int __wind_int_context(struct task_struct *curr, struct pt_regs *regs)
 	WIND_TCB *pTcb = __wind_task_current(curr);
 	return pTcb
 	    && xnthread_base_priority(&pTcb->threadbase) == XNCORE_IRQ_PRIO;
+}
+
+static void *__wind_shadow_eventcb(int event, void *data)
+{
+	struct wind_resource_holder *rh;
+	switch(event) {
+
+	case XNSHADOW_CLIENT_ATTACH:
+
+		rh = (struct wind_resource_holder *) xnarch_alloc_host_mem(sizeof(*rh));
+		if (!rh)
+			return ERR_PTR(-ENOMEM);
+
+		initq(&rh->wdq);
+
+		/* A single server thread pends on this. */
+		xnsynch_init(&rh->wdsynch, XNSYNCH_FIFO);
+		initq(&rh->wdpending);
+		rh->wdcount = 0;
+
+		return &rh->ppd;
+
+	case XNSHADOW_CLIENT_DETACH:
+
+		rh = ppd2rholder((xnshadow_ppd_t *) data);
+		wind_wd_flush_rq(&rh->wdq);
+
+		xnsynch_destroy(&rh->wdsynch);
+		/* No need to reschedule: all our threads have been zapped. */
+
+		xnarch_free_host_mem(rh, sizeof(*rh));
+
+		return NULL;
+	}
+
+	return ERR_PTR(-EINVAL);
 }
 
 static xnsysent_t __systab[] = {
@@ -1258,7 +1333,7 @@ static struct xnskin_props __props = {
 	.magic = VXWORKS_SKIN_MAGIC,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = NULL,
+	.eventcb = __wind_shadow_eventcb,
 	.timebasep = &wind_tbase,
 	.module = THIS_MODULE
 };
@@ -1272,9 +1347,9 @@ static void __shadow_delete_hook(xnthread_t *thread)
 
 int wind_syscall_init(void)
 {
-	__muxid = xnshadow_register_interface(&__props);
+	__wind_muxid = xnshadow_register_interface(&__props);
 
-	if (__muxid < 0)
+	if (__wind_muxid < 0)
 		return -ENOSYS;
 
 	xnpod_add_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
@@ -1285,5 +1360,5 @@ int wind_syscall_init(void)
 void wind_syscall_cleanup(void)
 {
 	xnpod_remove_hook(XNHOOK_THREAD_DELETE, &__shadow_delete_hook);
-	xnshadow_unregister_interface(__muxid);
+	xnshadow_unregister_interface(__wind_muxid);
 }

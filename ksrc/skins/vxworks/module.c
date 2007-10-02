@@ -37,6 +37,8 @@ MODULE_PARM_DESC(sync_time, "Set non-zero to synchronize on master time base");
 
 xntbase_t *wind_tbase;
 
+wind_rholder_t __wind_global_rholder;
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 xnptree_t __vxworks_ptree = {
 
@@ -49,6 +51,15 @@ xnptree_t __vxworks_ptree = {
 int SKIN_INIT(vxworks)
 {
 	int err;
+
+	initq(&__wind_global_rholder.wdq);
+
+	/* The following fields are unused in the global holder;
+	   still, we initialize them not to leave such data in an
+	   invalid state. */
+	xnsynch_init(&__wind_global_rholder.wdsynch, XNSYNCH_FIFO);
+	initq(&__wind_global_rholder.wdpending);
+	__wind_global_rholder.wdcount = 0;
 
 	err = xnpod_init();
 

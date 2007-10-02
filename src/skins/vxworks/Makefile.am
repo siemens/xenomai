@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libvxworks.la
 
-libvxworks_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libvxworks_la_LDFLAGS = -version-info 1:0:0 -lpthread
 
 libvxworks_la_SOURCES = \
 	errnoLib.c \

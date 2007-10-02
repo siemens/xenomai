@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
  * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
- * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2003,2007 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <nucleus/xenomai.h>
 #include <nucleus/registry.h>
 #include <vxworks/vxworks.h>
+#include <vxworks/ppd.h>
 
 #define WIND_MAGIC(n) (0x8383##n##n)
 #define WIND_TASK_MAGIC WIND_MAGIC(01)
@@ -126,11 +127,7 @@ typedef struct wind_tcb wind_task_t;
 
 typedef struct wind_wd {
 
-    unsigned magic;   /* Magic code - must be first */
-
-    xnholder_t link;
-
-#define link2wind_wd(ln) container_of(ln, wind_wd_t, link)
+    unsigned magic;		/* Magic code - must be first */
 
     xntimer_t timerbase;
 
@@ -143,11 +140,23 @@ typedef struct wind_wd {
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-    xnsynch_t synchbase;
-    wind_wd_utarget_t wdt;
+    wind_rholder_t *rh;		/* !< Resource holder of owner. */
+    wind_wd_utarget_t wdt;	/* !< User-space handler and arg. */
+    xnholder_t plink;		/* !< Link in owner's pending queue. */
+#define link2wind_wd(ln) container_of(ln, wind_wd_t, plink)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+#define rlink2wd(ln)		container_of(ln, wind_wd_t, rlink)
+
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
 } wind_wd_t;
+
+static inline void wind_wd_flush_rq(xnqueue_t *rq)
+{
+	wind_flush_rq(wind_wd_t, rq, wd);
+}
 
 /* Internal flag marking a user-space task. */
 #define VX_SHADOW 0x8000
