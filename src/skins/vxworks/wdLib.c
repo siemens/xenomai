@@ -17,6 +17,8 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <vxworks/vxworks.h>
 
@@ -86,10 +88,14 @@ STATUS wdStart(WDOG_ID wdog_id, int timeout, wind_timer_t handler, long arg)
 	/* Upon creation of the first watchdog, start a server task
 	   which will fire the watchdog handlers as needed. */
 
-	if (start_server && taskSpawn("wdserver", 0, 0, 0, (FUNCPTR) & wdServer,
-				      wdog_id, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
-		fprintf(stderr, "VxWorks: failed to start the watchdog server (err %d)\n", errno);
-		return ERROR;
+	if (start_server) {
+		char name[XNOBJECT_NAME_LEN];
+		snprintf(name, XNOBJECT_NAME_LEN - 1, "wdserver-%d", getpid());
+		if (taskSpawn(name, 0, 0, 0, (FUNCPTR) & wdServer,
+			      0, 0, 0, 0, 0, 0, 0, 0, 0, 0) == ERROR) {
+			fprintf(stderr, "VxWorks: failed to start the watchdog server (err %d)\n", errno);
+			return ERROR;
+		}
 	}
 
 	return OK;
