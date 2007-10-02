@@ -1184,14 +1184,14 @@ static int __wind_wd_wait(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!emptyq_p(&rh->wdpending))
-		goto pull_event;
-
 	pTcb = __wind_task_current(curr);
 
 	if (xnthread_base_priority(&pTcb->threadbase) != XNCORE_IRQ_PRIO)
 		/* Renice the waiter above all regular tasks if needed. */
 		xnpod_renice_thread(&pTcb->threadbase, XNCORE_IRQ_PRIO);
+
+	if (!emptyq_p(&rh->wdpending))
+		goto pull_event;
 
 	xnsynch_sleep_on(&rh->wdsynch, XN_INFINITE, XN_RELATIVE);
 
