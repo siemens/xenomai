@@ -633,6 +633,14 @@ typedef struct can_frame {
  */
 #define CAN_RAW_LOOPBACK	0x3
 
+/**
+ * CAN receive own messages
+ *
+ * Not supported by RT-Socket-CAN, but defined for compatibility with
+ * Socket-CAN.
+ */
+#define CAN_RAW_RECV_OWN_MSGS   0x4
+
 /** @} */
 
 /*!
