@@ -1,3 +1,10 @@
+2007-10-06  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/{rtcan_mscan.c, rtcan_mscan_regs.h}: Support the
+	new resource management of "arch/powerpc" properly and fix problems
+	with the module parameter "port". Rorts are now enabled according
+	to their position in the port list: port=1,1 or 0,1 or 0,1.
+
 2007-10-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.22-2.0-02.
