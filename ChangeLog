@@ -1,5 +1,10 @@
 2007-10-06  Wolfgang Grandegger  <wg@grandegger.com>
 
+	* include/rtdm/rtcan.h: Add CAN_RAW_RECV_OWN_MSGS for compatibility
+	with Socket-CAN. It is not supported by RT-Socket-CAN.
+
+2007-10-06  Wolfgang Grandegger  <wg@grandegger.com>
+
 	* ksrc/drivers/can/{rtcan_mscan.c, rtcan_mscan_regs.h}: Supports the
 	new resource management of "arch/powerpc" properly and fixes problems
 	with the module parameter "port". Ports are now enabled according
