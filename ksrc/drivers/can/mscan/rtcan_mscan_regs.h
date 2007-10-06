@@ -25,7 +25,13 @@
 #ifndef __RTCAN_MSCAN_REGS_H_
 #define __RTCAN_MSCAN_REGS_H_
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
+#include <sysdev/fsl_soc.h>
+#include <asm/of_platform.h>
+#include <asm/mpc52xx.h>
+#define MPC5xxx_GPIO    mpc52xx_find_and_map("mpc5200-gpio")
+#define mpc5xxx_gpio	mpc52xx_gpio
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
 #include <asm/mpc5xxx.h>
 #define MSCAN_MBAR	MPC5xxx_MBAR
 #define MSCAN_CAN1_IRQ	MPC5xxx_CAN1_IRQ
@@ -35,12 +41,13 @@
 #define MSCAN_MBAR	MPC52xx_MBAR
 #define MSCAN_CAN1_IRQ	MPC52xx_MSCAN1_IRQ
 #define MSCAN_CAN2_IRQ	MPC52xx_MSCAN2_IRQ
-#define MPC5xxx_GPIO	MPC52xx_VA(MPC52xx_GPIO_OFFSET) 
+#define MPC5xxx_GPIO	MPC52xx_VA(MPC52xx_GPIO_OFFSET)
 #define mpc5xxx_gpio	mpc52xx_gpio
 #endif
 
 #define MSCAN_CAN1_ADDR	(MSCAN_MBAR + 0x0900) /* MSCAN Module 1 */
 #define MSCAN_CAN2_ADDR	(MSCAN_MBAR + 0x0980) /* MSCAN Module 2 */
+#define MSCAN_SIZE      0x80
 
 /* MSCAN control register 0 (CANCTL0) bits */
 #define MSCAN_RXFRM	0x80

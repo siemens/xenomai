@@ -1,3 +1,10 @@
+2007-10-06  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/{rtcan_mscan.c, rtcan_mscan_regs.h}: Supports the
+	new resource management of "arch/powerpc" properly and fixes problems
+	with the module parameter "port". Ports are now enabled according
+	to their position in the port list: port=1,1 or 0,1 or 0,1.
+
 2007-09-26  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* src/skins/posix/thread.c (__wrap_pthread_create): Use the correct
