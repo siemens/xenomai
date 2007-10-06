@@ -1,3 +1,7 @@
+2007-10-06  Stelian Pop  <stelian@popies.net>
+
+	* ksrc/arch/i386/smi.c: Detect ICH8 rev4 chipsets.
+
 2007-10-06  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* include/rtdm/rtcan.h: Add CAN_RAW_RECV_OWN_MSGS for compatibility
