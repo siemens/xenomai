@@ -1,3 +1,8 @@
+2007-10-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/bits/bind.h (xeno_bind_skin): Clarify the
+	error message sent upon feature conflict/mismatch.
+
 2007-10-06  Stelian Pop  <stelian@popies.net>
 
 	* ksrc/arch/i386/smi.c: Detect ICH8 rev4 chipsets.
