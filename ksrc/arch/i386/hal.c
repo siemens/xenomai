@@ -241,7 +241,7 @@ int rthal_timer_request(
 {
 	long long sync_time;
 	unsigned long flags;
-	int tickval;
+	int tickval, err;
 
 	/* This code works both for UP+LAPIC and SMP configurations. */
 
@@ -285,24 +285,30 @@ int rthal_timer_request(
 	if (cpu > 0)
 		goto out;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
+	if (tickval) {
+		/*
+		 * Force oneshot mode on all LAPIC timers, only if the
+		 * kernel was found to be undergoing a periodic timing
+		 * on the same device, so that we won't accidentally
+		 * lose the latest pending oneshot tick programmed by
+		 * the clockevent core.
+		 */
+		flags = rthal_critical_enter(rthal_critical_sync);
+		rthal_sync_op = 1;
+		rthal_timers_sync_time = rthal_rdtsc() +
+			rthal_imuldiv(LATCH, RTHAL_CPU_FREQ, CLOCK_TICK_RATE);
+		sync_time = rthal_timers_sync_time;
+		while (rthal_rdtsc() < sync_time)
+			;
+		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
+		rthal_critical_exit(flags);
+	}
 
-	rthal_sync_op = 1;
-
-	rthal_timers_sync_time = rthal_rdtsc() +
-	    rthal_imuldiv(LATCH, RTHAL_CPU_FREQ, CLOCK_TICK_RATE);
-
-	sync_time = rthal_timers_sync_time;
-
-	while (rthal_rdtsc() < sync_time)
-		;
-
-	rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
-
-	rthal_irq_request(RTHAL_APIC_TIMER_IPI,
+	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
 
-	rthal_critical_exit(flags);
+	if (err)
+		return err;
 
 #ifndef CONFIG_GENERIC_CLOCKEVENTS
 	rthal_irq_host_request(RTHAL_BCAST_TICK_IRQ,
@@ -419,24 +425,32 @@ int rthal_timer_request(
 	tickval = 1000000000UL / HZ;
 #endif /* !CONFIG_GENERIC_CLOCKEVENTS */
 
-	/* No APIC means that we can't be running in SMP mode, so this
-	 * routine will be called only once, for CPU #0. */
+	/*
+	 * No APIC means that we can't be running in SMP mode, so this
+	 * routine will be called only once, for CPU #0. For the same
+	 * reason, we only need local interrupt masking when fiddling
+	 * with the timer device.
+	 */
 
-	flags = rthal_critical_enter(NULL);
-
-	/* Oneshot setup for 8254 channel #0. */
-	outb(0x30, PIT_MODE);
-	outb(LATCH & 0xff, PIT_CH0);
-	outb(LATCH >> 8, PIT_CH0);
-
-	rthal_irq_release(RTHAL_TIMER_IRQ);
+	if (tickval) {
+		/*
+		 * Force oneshot mode for 8254 channel #0, only if the
+		 * kernel was found to be undergoing a periodic timing
+		 * on the same device, so that we won't accidentally
+		 * lose the latest pending oneshot tick programmed by
+		 * the clockevent core.
+		 */
+		rthal_local_irq_save_hw(flags);
+		outb(0x30, PIT_MODE);
+		outb(LATCH & 0xff, PIT_CH0);
+		outb(LATCH >> 8, PIT_CH0);
+		rthal_local_irq_restore_hw(flags);
+	}
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t)tick_handler, NULL, NULL);
 
-	rthal_critical_exit(flags);
-
-	return tickval;
+	return err ?: tickval;
 }
 
 void rthal_timer_release(int cpu)
