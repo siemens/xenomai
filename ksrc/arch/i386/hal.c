@@ -261,6 +261,9 @@ int rthal_timer_request(
 		tickval = 0;
 		break;
 
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENOSYS;
+
 	default:
 		return err;
 	}
@@ -401,6 +404,9 @@ int rthal_timer_request(
 	case CLOCK_EVT_MODE_ONESHOT:
 		tickval = 0;
 		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENOSYS;
 
 	default:
 		return err;
