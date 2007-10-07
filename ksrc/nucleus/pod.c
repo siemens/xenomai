@@ -3067,10 +3067,18 @@ int xnpod_enable_timesource(void)
 		 *
 		 * - we must not hold the nklock across calls to
 		 * xnarch_start_timer().
+		 *
+		 * - in the oneshot case, we must account for the
+		 * latest tick being in flight as scheduled by the
+		 * kernel: we set the XNHTICK bit so that the next
+		 * clock interrupt will be propagated to Linux as
+		 * needed.
 		 */
 
 		if (htickval)
 			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
+		else
+			__setbits(sched->status, XNHTICK);
 
 #if defined(CONFIG_XENO_OPT_WATCHDOG)
 		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
