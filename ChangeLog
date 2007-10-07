@@ -1,7 +1,10 @@
 2007-10-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/hal.c (rthal_timer_request): Return -ENOSYS if
-	the timer hardware was found to be unusable by the kernel.
+	the timer hardware was found to be unusable by the kernel.  Make
+	sure we won't accidentally lose the latest pending oneshot tick
+	programmed by the clockevent core when switching the timer device
+	to oneshot mode.
 
 	* include/asm-generic/bits/bind.h (xeno_bind_skin): Clarify the
 	error message sent upon feature conflict/mismatch.
