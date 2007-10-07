@@ -1,5 +1,8 @@
 2007-10-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/hal.c (rthal_timer_request): Return -ENOSYS if
+	the timer hardware was found to be unusable by the kernel.
+
 	* include/asm-generic/bits/bind.h (xeno_bind_skin): Clarify the
 	error message sent upon feature conflict/mismatch.
 
