@@ -1,5 +1,10 @@
 2007-10-07  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/pod.c (xnpod_enable_timesource): In the oneshot
+	case, account for the latest tick being in flight as scheduled by
+	the kernel: set the XNHTICK bit so that the next clock
+	interrupt will be propagated to Linux as needed.
+
 	* ksrc/arch/i386/hal.c (rthal_timer_request): Return -ENOSYS if
 	the timer hardware was found to be unusable by the kernel.  Make
 	sure we won't accidentally lose the latest pending oneshot tick
