@@ -1,3 +1,9 @@
+2007-10-08  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* include/rtdm/rtcan.h: Add CAN_RAW_LOOPBACK for compatibility
+	with Socket-CAN. The old name CAN_RAW_TX_LOOPBACK is kept for
+	backward-compatibility.
+
 2007-10-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/bits/bind.h (xeno_bind_skin): Clarify the

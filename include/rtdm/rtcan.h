@@ -120,7 +120,7 @@
  * - Level @b SOL_CAN_RAW : CAN RAW protocol (see @ref CAN_PROTO_RAW)
  *   - Option @ref CAN_RAW_FILTER : CAN filter list
  *   - Option @ref CAN_RAW_ERR_FILTER : CAN error mask
- *   - Option @ref CAN_RAW_TX_LOOPBACK : CAN TX loopback to local sockets
+ *   - Option @ref CAN_RAW_LOOPBACK : CAN TX loopback to local sockets
  *   .
  * .
  * @n
@@ -605,7 +605,7 @@ typedef struct can_frame {
  * @n
  * @param [in] level @b SOL_CAN_RAW
  *
- * @param [in] optname @b CAN_RAW_TX_LOOPBACK
+ * @param [in] optname @b CAN_RAW_LOOPBACK
  *
  * @param [in] optval Pointer to integer value.
  *
@@ -619,7 +619,8 @@ typedef struct can_frame {
  * - -EINVAL (Invalid length "optlen")
  * - -EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters).
  */
-#define CAN_RAW_TX_LOOPBACK  0x3
+#define CAN_RAW_LOOPBACK     0x3
+#define CAN_RAW_TX_LOOPBACK  CAN_RAW_LOOPBACK /* for backward-compatibility */
 
 /**
  * CAN receive own messages
