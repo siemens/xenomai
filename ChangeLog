@@ -1,5 +1,7 @@
 2007-10-10  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/i386/patches: Upgrade to 2.6.22-1.10-06.
+
 	* ksrc/arch/i386, include/asm-i386, include/asm-generic,
 	ksrc/nucleus/pod.c: Rework handling of timing mode changes over
 	kernels featuring high-resolution timers and dynamic ticks support
