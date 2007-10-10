@@ -1026,7 +1026,7 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * grabbed.  rthal_timer_request() must be issued before
  * rthal_timer_request() is called again.
  *
- * - -ENOSYS is returned if the hardware timer cannot be used.  This
+ * - -ENODEV is returned if the hardware timer cannot be used.  This
  * situation may occur after the kernel disabled the timer due to
  * invalid calibration results; in such a case, such hardware is
  * unusable for any timing duties.
