@@ -431,12 +431,19 @@ rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler);
 
 unsigned long rthal_timer_calibrate(void);
 
-int rthal_timer_request(void (*tick_handler)(void),
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
+int rthal_timer_request(void (*tick_handler)(void),
 			void (*mode_emul)(enum clock_event_mode mode, struct ipipe_tick_device *tdev),
 			int (*tick_emul) (unsigned long delay, struct ipipe_tick_device *tdev),
-#endif
 			int cpu);
+
+void rthal_timer_notify_switch(enum clock_event_mode mode,
+			       struct ipipe_tick_device *tdev);
+
+#else
+int rthal_timer_request(void (*tick_handler)(void),
+			int cpu);
+#endif
 
 void rthal_timer_release(int cpu);
 
@@ -445,11 +452,11 @@ void rthal_timer_release(int cpu);
 
 extern struct proc_dir_entry *rthal_proc_root;
 
-struct proc_dir_entry *__rthal_add_proc_leaf (const char *name,
-					      read_proc_t rdproc,
-					      write_proc_t wrproc,
-					      void *data,
-					      struct proc_dir_entry *parent);
+struct proc_dir_entry *__rthal_add_proc_leaf(const char *name,
+					     read_proc_t rdproc,
+					     write_proc_t wrproc,
+					     void *data,
+					     struct proc_dir_entry *parent);
 #endif /* CONFIG_PROC_FS */
 
 #ifdef CONFIG_IPIPE_TRACE

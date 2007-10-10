@@ -1,3 +1,10 @@
+2007-10-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386, include/asm-i386, include/asm-generic,
+	ksrc/nucleus/pod.c: Rework handling of timing mode changes over
+	kernels featuring high-resolution timers and dynamic ticks support
+	(CONFIG_GENERIC_CLOCKEVENTS). Currently only affects x86.
+
 2007-10-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_enable_timesource): In the oneshot
