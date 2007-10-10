@@ -137,8 +137,8 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	if (!delay)
 		rthal_trigger_irq(RTHAL_TIMER_IRQ);
 	else {
-		outb(delay & 0xff, 0x40);
-		outb(delay >> 8, 0x40);
+		outb(delay & 0xff, PIT_CH0);
+		outb(delay >> 8, PIT_CH0);
 	}
 #endif /* CONFIG_X86_LOCAL_APIC */
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
