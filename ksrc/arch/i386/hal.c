@@ -159,7 +159,7 @@ unsigned long rthal_timer_calibrate(void)
 		apic_write_around(APIC_TMICT, v);
 	}
 
-	dt = rthal_rdtsc() - t;
+	dt = (rthal_rdtsc() - t) / 2;
 
 	rthal_critical_exit(flags);
 
