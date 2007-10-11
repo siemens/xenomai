@@ -668,7 +668,7 @@ index 0499cbe..89bbea6 100644
  
  handle_real_irq:
 diff --git a/arch/i386/kernel/io_apic.c b/arch/i386/kernel/io_apic.c
-index 7f8b7af..d14c91d 100644
+index 7f8b7af..2a57a11 100644
 --- a/arch/i386/kernel/io_apic.c
 +++ b/arch/i386/kernel/io_apic.c
 @@ -56,8 +56,8 @@ atomic_t irq_mis_count;
@@ -756,7 +756,7 @@ index 7f8b7af..d14c91d 100644
  
  	if (!(v & (1 << (i & 0x1f)))) {
  		atomic_inc(&irq_mis_count);
-@@ -2012,6 +2022,15 @@ static void ack_ioapic_quirk_irq(unsigned int irq)
+@@ -2012,6 +2022,17 @@ static void ack_ioapic_quirk_irq(unsigned int irq)
  		__unmask_and_level_IO_APIC_irq(irq);
  		spin_unlock(&ioapic_lock);
  	}
@@ -767,12 +767,14 @@ index 7f8b7af..d14c91d 100644
 + * being delayed, waiting for a high priority interrupt handler
 + * running in a low priority domain to complete.
 + */
++	spin_lock(&ioapic_lock);
 +	__mask_IO_APIC_irq(irq);
++	spin_unlock(&ioapic_lock);
 +#endif
  }
  
  static int ioapic_retrigger_irq(unsigned int irq)
-@@ -2073,23 +2092,29 @@ static inline void init_IO_APIC_traps(void)
+@@ -2073,23 +2094,29 @@ static inline void init_IO_APIC_traps(void)
  
  static void ack_apic(unsigned int irq)
  {
@@ -2124,7 +2126,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..3b98336
+index 0000000..bd7aa1a
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,205 @@
@@ -2154,10 +2156,10 @@ index 0000000..3b98336
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-06"
++#define IPIPE_ARCH_STRING	"1.10-07"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	7
 +
 +#ifndef __ASSEMBLY__
 +
@@ -5974,15 +5976,15 @@ index 0000000..250a7ae
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..c6dfbd6
+index 0000000..2326706
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1294 @@
+@@ -0,0 +1,1342 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005, 2006 Jan Kiszka.
++ *               2005-2007 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -6023,7 +6025,7 @@ index 0000000..c6dfbd6
 +
 +#define IPIPE_DEFAULT_PRE_TRACE     10
 +#define IPIPE_DEFAULT_POST_TRACE    10
-+#define IPIPE_DEFAULT_BACK_TRACE    30
++#define IPIPE_DEFAULT_BACK_TRACE    100
 +
 +#define IPIPE_DELAY_NOTE            1000  /* in nanoseconds */
 +#define IPIPE_DELAY_WARN            10000 /* in nanoseconds */
@@ -6107,8 +6109,11 @@ index 0000000..c6dfbd6
 +static int pre_trace = IPIPE_DEFAULT_PRE_TRACE;
 +static int post_trace = IPIPE_DEFAULT_POST_TRACE;
 +static int back_trace = IPIPE_DEFAULT_BACK_TRACE;
-+static int verbose_trace;
++static int verbose_trace = 1;
 +static unsigned long trace_overhead;
++
++static unsigned long trigger_begin;
++static unsigned long trigger_end;
 +
 +static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
@@ -6232,7 +6237,7 @@ index 0000000..c6dfbd6
 +	active = __ipipe_get_free_trace_path(active, cpu_id);
 +
 +	/* check if this is the first frozen path */
-+	for_each_online_cpu(i) {
++	for (i = 0; i < NR_CPUS; i++) {
 +		if ((i != cpu_id) &&
 +		    (trace_paths[i][frozen_path[i]].end >= 0))
 +			tp->end = -1;
@@ -6327,7 +6332,9 @@ index 0000000..c6dfbd6
 +		tp->post_trace = post_trace + 1;
 +
 +	/* freeze only if the slot is free and we are not already freezing */
-+	if (unlikely(type == IPIPE_TRACE_FREEZE) &&
++	if ((unlikely(type == IPIPE_TRACE_FREEZE) ||
++	     (unlikely(eip >= trigger_begin && eip <= trigger_end) &&
++	     type == IPIPE_TRACE_FUNC)) &&
 +	    (trace_paths[cpu_id][frozen_path[cpu_id]].begin < 0) &&
 +	    !(tp->flags & IPIPE_TFLG_FREEZING)) {
 +		tp->post_trace = post_trace + 1;
@@ -6495,7 +6502,7 @@ index 0000000..c6dfbd6
 +
 +	flags = __ipipe_global_path_lock();
 +
-+	for_each_online_cpu(cpu_id) {
++	for (cpu_id = 0; cpu_id < NR_CPUS; cpu_id++) {
 +		path = &trace_paths[cpu_id][max_path[cpu_id]];
 +
 +		if (path->dump_lock) {
@@ -6811,27 +6818,6 @@ index 0000000..c6dfbd6
 +	}
 +}
 +
-+#if defined(CONFIG_XENO_OPT_DEBUG) || defined(CONFIG_DEBUG_PREEMPT)
-+static void __ipipe_print_dbgwarning(struct seq_file *m)
-+{
-+	seq_puts(m, "\n******** WARNING ********\n"
-+		"The following debugging options will increase the observed "
-+		"latencies:\n"
-+#ifdef CONFIG_XENO_OPT_DEBUG
-+		" o CONFIG_XENO_OPT_DEBUG\n"
-+#endif /* CONFIG_XENO_OPT_DEBUG */
-+#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
-+		" o CONFIG_XENO_OPT_DEBUG_QUEUES (very costly)\n"
-+#endif /* CONFIG_XENO_OPT_DEBUG */
-+#ifdef CONFIG_DEBUG_PREEMPT
-+		" o CONFIG_DEBUG_PREEMPT\n"
-+#endif /* CONFIG_DEBUG_PREEMPT */
-+		"\n");
-+}
-+#else /* !WARN_ON_DEBUGGING_LATENCIES */
-+# define __ipipe_print_dbgwarning(m)
-+#endif /* WARN_ON_DEBUGGING_LATENCIES */
-+
 +static void __ipipe_print_headline(struct seq_file *m)
 +{
 +	seq_printf(m, "Calibrated minimum trace-point overhead: %lu.%03lu "
@@ -6887,7 +6873,7 @@ index 0000000..c6dfbd6
 +	if (!n) {
 +		struct ipipe_trace_path *path;
 +		unsigned long length_usecs;
-+		int points, i;
++		int points, cpu;
 +		unsigned long flags;
 +
 +		/* protect against max_path/frozen_path updates while we
@@ -6897,11 +6883,13 @@ index 0000000..c6dfbd6
 +
 +		/* find the longest of all per-cpu paths */
 +		print_path = NULL;
-+		for_each_online_cpu(i) {
-+			path = &trace_paths[i][max_path[i]];
++		for_each_online_cpu(cpu) {
++			path = &trace_paths[cpu][max_path[cpu]];
 +			if ((print_path == NULL) ||
-+			    (path->length > print_path->length))
++			    (path->length > print_path->length)) {
 +				print_path = path;
++				break;
++			}
 +		}
 +		print_path->dump_lock = 1;
 +
@@ -6928,10 +6916,9 @@ index 0000000..c6dfbd6
 +		seq_printf(m, "I-pipe worst-case tracing service on %s/ipipe-%s\n"
 +			"------------------------------------------------------------\n",
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
-+		__ipipe_print_dbgwarning(m);
-+		seq_printf(m, "Begin: %lld cycles, Trace Points: %d (-%d/+%d), "
-+			"Length: %lu us\n",
-+			print_path->point[print_path->begin].timestamp,
++		seq_printf(m, "CPU: %d, Begin: %lld cycles, Trace Points: "
++			"%d (-%d/+%d), Length: %lu us\n",
++			cpu, print_path->point[print_path->begin].timestamp,
 +			points, print_pre_trace, print_post_trace, length_usecs);
 +		__ipipe_print_headline(m);
 +	}
@@ -7048,7 +7035,7 @@ index 0000000..c6dfbd6
 +
 +	if (!n) {
 +		struct ipipe_trace_path *path;
-+		int i;
++		int cpu;
 +		unsigned long flags;
 +
 +		/* protect against max_path/frozen_path updates while we
@@ -7058,10 +7045,12 @@ index 0000000..c6dfbd6
 +
 +		/* find the first of all per-cpu frozen paths */
 +		print_path = NULL;
-+		for_each_online_cpu(i) {
-+			path = &trace_paths[i][frozen_path[i]];
-+			if (path->end >= 0)
++		for_each_online_cpu(cpu) {
++			path = &trace_paths[cpu][frozen_path[cpu]];
++			if (path->end >= 0) {
 +				print_path = path;
++				break;
++			}
 +		}
 +		if (print_path)
 +			print_path->dump_lock = 1;
@@ -7085,9 +7074,8 @@ index 0000000..c6dfbd6
 +			"------------------------------------------------------"
 +			"------\n",
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
-+		__ipipe_print_dbgwarning(m);
-+		seq_printf(m, "Freeze: %lld cycles, Trace Points: %d (+%d)\n",
-+			print_path->point[print_path->begin].timestamp,
++		seq_printf(m, "CPU: %d, Freeze: %lld cycles, Trace Points: %d (+%d)\n",
++			cpu, print_path->point[print_path->begin].timestamp,
 +			print_pre_trace+1, print_post_trace);
 +		__ipipe_print_headline(m);
 +	}
@@ -7192,6 +7180,61 @@ index 0000000..c6dfbd6
 +	return count;
 +}
 +
++static int __ipipe_rd_trigger(char *page, char **start, off_t off, int count,
++			      int *eof, void *data)
++{
++	int len;
++
++	if (!trigger_begin)
++		return 0;
++
++	len = sprint_symbol(page, trigger_begin);
++	page[len++] = '\n';
++
++	len -= off;
++	if (len <= off + count)
++		*eof = 1;
++	*start = page + off;
++	if (len > count)
++		len = count;
++	if (len < 0)
++		len = 0;
++
++	return len;
++}
++
++static int __ipipe_wr_trigger(struct file *file, const char __user *buffer,
++			      unsigned long count, void *data)
++{
++	char buf[KSYM_SYMBOL_LEN];
++	unsigned long begin, end;
++
++	if (count > sizeof(buf) - 1)
++		count = sizeof(buf) - 1;
++	if (copy_from_user(buf, buffer, count) < 0)
++		return -EFAULT;
++	buf[count] = 0;
++	if (buf[count-1] == '\n')
++		buf[count-1] = 0;
++
++	begin = kallsyms_lookup_name(buf);
++	if (!begin || !kallsyms_lookup_size_offset(begin, &end, NULL))
++		return -ENOENT;
++	end += begin - 1;
++
++	mutex_lock(&out_mutex);
++	/* invalidate the current range before setting a new one */
++	trigger_end = 0;
++	wmb();
++	/* set new range */
++	trigger_begin = begin;
++	wmb();
++	trigger_end = end;
++	mutex_unlock(&out_mutex);
++
++	return count;
++}
++
 +extern struct proc_dir_entry *ipipe_proc_root;
 +
 +static void __init
@@ -7260,6 +7303,13 @@ index 0000000..c6dfbd6
 +	entry = create_proc_entry("frozen", 0644, trace_dir);
 +	if (entry)
 +		entry->proc_fops = &__ipipe_frozen_prtrace_fops;
++
++	entry = create_proc_entry("trigger", 0644, trace_dir);
++	if (entry) {
++		entry->read_proc = __ipipe_rd_trigger;
++		entry->write_proc = __ipipe_wr_trigger;
++		entry->owner = THIS_MODULE;
++	}
 +
 +	__ipipe_create_trace_proc_val(trace_dir, "pre_trace_points",
 +	                              &pre_trace);
