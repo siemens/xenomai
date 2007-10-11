@@ -2,6 +2,7 @@
 
 	* ksrc/arch/x86_64/hal.c (rthal_timer_request): Discard the TSC
 	sync loop.
+	(rthal_timer_calibrate): Sanitize APIC write calibration.
 
 2007-10-10  Philippe Gerum  <rpm@xenomai.org>
 
