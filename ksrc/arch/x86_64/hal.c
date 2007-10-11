@@ -93,7 +93,7 @@ irqreturn_t rthal_broadcast_to_local_timers(int irq, void *dev_id)
 
 unsigned long rthal_timer_calibrate(void)
 {
-	unsigned long flags;
+	unsigned long v, flags;
 	rthal_time_t t, dt;
 	int i;
 
@@ -101,10 +101,9 @@ unsigned long rthal_timer_calibrate(void)
 
 	t = rthal_rdtsc();
 
-	for (i = 0; i < 10000; i++) {
-		apic_write(APIC_LVTT,
-			   APIC_LVT_TIMER_PERIODIC | LOCAL_TIMER_VECTOR);
-		apic_write(APIC_TMICT, RTHAL_APIC_ICOUNT);
+	for (i = 0; i < 20; i++) {
+		v = apic_read(APIC_TMICT);
+		apic_write(APIC_TMICT, v);
 	}
 
 	dt = (rthal_rdtsc() - t) / 2;
@@ -112,11 +111,11 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_critical_exit(flags);
 
 #ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-	/* reset the max trace, it contains the excessive calibration now */
+	/* Reset the max trace, since it contains the calibration time now. */
 	rthal_trace_max_reset();
 #endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
 
-	return rthal_imuldiv(dt, 100000, RTHAL_CPU_FREQ);
+	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }
 
 int rthal_timer_request(void (*handler)(void), int cpu)
