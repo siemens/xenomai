@@ -1,3 +1,9 @@
+2007-10-11  Jan Kiszka  <jan.kiszka@siemens.com>
+	
+	* ksrc/arch/i386/hal.c (rthal_timer_request): Always turn on the
+	oneshot mode for the timer device, regardless of the current timing
+	mode undergone by the kernel (i.e. periodic/oneshot).
+
 2007-10-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86_64/hal.c (rthal_timer_request): Discard the TSC

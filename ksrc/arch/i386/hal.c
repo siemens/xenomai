@@ -295,15 +295,7 @@ int rthal_timer_request(
 	if (cpu > 0)
 		goto out;
 
-	if (tickval)
-		/*
-		 * Force oneshot mode on all LAPIC timers, only if the
-		 * kernel was found to be undergoing a periodic timing
-		 * on the same device, so that we won't accidentally
-		 * lose the latest pending oneshot tick programmed by
-		 * the clockevent core.
-		 */
-		rthal_timer_set_oneshot();
+	rthal_timer_set_oneshot();
 
 	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
@@ -482,15 +474,7 @@ int rthal_timer_request(
 	 * routine will be called only once, for CPU #0.
 	 */
 
-	if (tickval)
-		/*
-		 * Force oneshot mode on the timer hardware, only if
-		 * the kernel was found to be undergoing a periodic
-		 * timing on the same device, so that we won't
-		 * accidentally lose the latest pending oneshot tick
-		 * programmed by the clockevent core.
-		 */
-		rthal_timer_set_oneshot();
+	rthal_timer_set_oneshot();
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t)tick_handler, NULL, NULL);
