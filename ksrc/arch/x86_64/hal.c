@@ -52,13 +52,9 @@
 #include <stdarg.h>
 
 static struct {
-
 	unsigned long flags;
 	int count;
-
 } rthal_linux_irq[IPIPE_NR_XIRQS];
-
-static long long rthal_timers_sync_time;
 
 static inline void rthal_setup_periodic_apic(int count, int vector)
 {
@@ -73,21 +69,14 @@ static inline void rthal_setup_oneshot_apic(int vector)
 
 static void rthal_critical_sync(void)
 {
-	long long sync_time;
-
 	switch (rthal_sync_op) {
 	case 1:
-		sync_time = rthal_timers_sync_time;
-
-		while (rthal_rdtsc() < sync_time) ;
-
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
 
 	case 2:
 
-		rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT,
-					  LOCAL_TIMER_VECTOR);
+		rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
 		break;
 	}
 }
@@ -132,7 +121,6 @@ unsigned long rthal_timer_calibrate(void)
 
 int rthal_timer_request(void (*handler)(void), int cpu)
 {
-	long long sync_time;
 	unsigned long flags;
 
 	if (cpu > 0)
@@ -141,13 +129,6 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 	flags = rthal_critical_enter(rthal_critical_sync);
 
 	rthal_sync_op = 1;
-
-	rthal_timers_sync_time = rthal_rdtsc() +
-	    rthal_imuldiv(LATCH, RTHAL_CPU_FREQ, CLOCK_TICK_RATE);
-
-	sync_time = rthal_timers_sync_time;
-
-	while (rthal_rdtsc() < sync_time) ;
 
 	rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 
