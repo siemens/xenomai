@@ -3076,10 +3076,10 @@ int xnpod_enable_timesource(void)
 		 * Linux as needed.
 		 */
 
-		if (htickval)
+		if (htickval > 1)
 			xntimer_start(&sched->htimer, htickval, htickval, XN_RELATIVE);
-
-		__setbits(sched->status, XNHTICK);
+		else
+			xntimer_start(&sched->htimer, 0, 0, XN_RELATIVE);
 
 #if defined(CONFIG_XENO_OPT_WATCHDOG)
 		xntimer_start(&sched->wdtimer, 1000000000UL, 1000000000UL, XN_RELATIVE);
