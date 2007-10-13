@@ -5,7 +5,8 @@
 
 2007-10-11  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/i386/patches: Upgrade to 2.6.22-1.10-07.
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-06,
+	2.6.22-1.10-07.
 
 	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-00.
 
