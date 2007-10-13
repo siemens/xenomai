@@ -1,4 +1,4 @@
-f2007-10-12  Jan Kiszka  <jan.kiszka@siemens.com>
+2007-10-12  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/arch/i386/hal.c, ksrc/nucleus/pod.c: Complete timer/x86
 	fixage.
