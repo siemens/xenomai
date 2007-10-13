@@ -1,3 +1,8 @@
+f2007-10-12  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/arch/i386/hal.c, ksrc/nucleus/pod.c: Complete timer/x86
+	fixage.
+	
 2007-10-11  Johan Borkhuis  <j.borkhuis@dutchspace.nl>
 
 	* include/rtdm/rtdm_driver.h: Add private data pointer to rtdm_device
