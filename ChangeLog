@@ -1,3 +1,8 @@
+2007-10-11  Johan Borkhuis  <j.borkhuis@dutchspace.nl>
+
+	* include/rtdm/rtdm_driver.h: Add private data pointer to rtdm_device
+	structure.
+
 2007-10-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.22-1.10-07.

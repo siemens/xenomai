@@ -417,6 +417,8 @@ struct rtdm_device {
 
 	/** Driver definable device ID */
 	int device_id;
+	/** Driver definable device data */
+	void *device_data;
 
 	/** Data stored by RTDM inside a registered device (internal use only) */
 	struct rtdm_dev_reserved reserved;
