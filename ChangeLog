@@ -1,10 +1,10 @@
 2007-10-15  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-07,
-	2.6.22-1.10-08, 2.6.23-1.10-08.
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-08,
+	2.6.22-1.10-09, 2.6.23-1.10-09.
 
-	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-01,
-	2.6.23-1.2-01.
+	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-02,
+	2.6.23-1.2-02.
 
 2007-10-14  Jan Kiszka <jan.kiszka@siemens.com>
 
