@@ -363,7 +363,7 @@ do {						\
 
 #define xntbase_umount()			\
 do {						\
-	xnpod_declare_tbase_proc(&nktbase);	\
+	xnpod_discard_tbase_proc(&nktbase);	\
 	removeq(&nktimebaseq, &nktbase.link);	\
 } while (0)
 

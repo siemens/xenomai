@@ -1,3 +1,8 @@
+2007-10-14  Jan Kiszka <jan.kiszka@siemens.com>
+
+	* include/nucleus/timebase.h, ksrc/nucleus/modules.c: Fix cleanup
+	of timebase proc entries.
+
 2007-10-13  Jan Kiszka  <jan.kiszka@siemens.com>, Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/Kconfig.frag: Prevent combined selection of

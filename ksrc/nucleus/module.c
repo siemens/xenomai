@@ -1082,18 +1082,10 @@ void xnpod_delete_proc(void)
 	remove_proc_entry("latency", rthal_proc_root);
 	remove_proc_entry("sched", rthal_proc_root);
 #ifdef CONFIG_XENO_OPT_STATS
-	{
-		xnholder_t *holder;
-		xntbase_t *tbase;
-
-		for (holder = getheadq(&nktimebaseq);
-		     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
-			tbase = link2tbase(holder);
-			remove_proc_entry(tbase->name, tmstat_proc_root);
-		}
-		remove_proc_entry("timerstat", rthal_proc_root);
-		remove_proc_entry("stat", rthal_proc_root);
-	}
+	/* All timebases must have been deregistered now. */
+	XENO_ASSERT(NUCLEUS, !getheadq(&nktimebaseq), ;);
+	remove_proc_entry("timerstat", rthal_proc_root);
+	remove_proc_entry("stat", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_STATS */
 #if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
 	remove_proc_entry("lock", rthal_proc_root);
@@ -1242,6 +1234,8 @@ void __exit __xeno_sys_exit(void)
 	xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+	xntbase_umount();
+
 #if defined(__KERNEL__) &&  defined(CONFIG_PROC_FS)
 	xnpod_delete_proc();
 #endif /* __KERNEL__ && CONFIG_PROC_FS */
@@ -1259,8 +1253,6 @@ void __exit __xeno_sys_exit(void)
 	xnltt_umount();
 #endif /* CONFIG_LTT */
 #endif /* __KERNEL__ */
-
-	xntbase_umount();
 
 	if (nkmsgbuf)
 		xnarch_free_host_mem(nkmsgbuf, XNPOD_FATAL_BUFSZ);
