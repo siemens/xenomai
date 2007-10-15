@@ -34,6 +34,9 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 		bool 'Nucleus Debugging support' CONFIG_XENO_OPT_DEBUG_NUCLEUS
 		bool 'Queue Debugging support' CONFIG_XENO_OPT_DEBUG_QUEUES
 		bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
+		if [ "$CONFIG_XENO_OPT_WATCHDOG" = "y" ]; then
+			int 'Watchdog timeout (seconds)' CONFIG_XENO_OPT_WATCHDOG_TIMEOUT 4
+		fi
 	fi
 
 	bool 'Enable periodic timer support' CONFIG_XENO_OPT_TIMING_PERIODIC
