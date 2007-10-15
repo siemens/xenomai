@@ -51,6 +51,17 @@
 #include <asm/mach_apic.h>
 #include <stdarg.h>
 
+#define RTHAL_SET_ONESHOT_XENOMAI	1
+#define RTHAL_SET_ONESHOT_LINUX		2
+#define RTHAL_SET_PERIODIC		3
+
+static enum { /* <!> Must follow enum clock_event_mode */
+	KTIMER_MODE_UNUSED = 0,
+	KTIMER_MODE_SHUTDOWN,
+	KTIMER_MODE_PERIODIC,
+	KTIMER_MODE_ONESHOT,
+} rthal_ktimer_saved_mode;
+
 static struct {
 	unsigned long flags;
 	int count;
@@ -70,12 +81,17 @@ static inline void rthal_setup_oneshot_apic(int vector)
 static void rthal_critical_sync(void)
 {
 	switch (rthal_sync_op) {
-	case 1:
+	case RTHAL_SET_ONESHOT_XENOMAI:
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
 
-	case 2:
+	case RTHAL_SET_ONESHOT_LINUX:
+		rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
+		/* We need to keep the timing cycle alive for the kernel. */
+		rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+		break;
 
+	case RTHAL_SET_PERIODIC:
 		rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
 		break;
 	}
@@ -118,50 +134,157 @@ unsigned long rthal_timer_calibrate(void)
 	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }
 
-int rthal_timer_request(void (*handler)(void), int cpu)
+static void rthal_timer_set_oneshot(int rt_mode)
 {
 	unsigned long flags;
 
+	flags = rthal_critical_enter(rthal_critical_sync);
+	if (rt_mode) {
+		rthal_sync_op = RTHAL_SET_ONESHOT_XENOMAI;
+		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
+	} else {
+		rthal_sync_op = RTHAL_SET_ONESHOT_LINUX;
+		rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
+		/* We need to keep the timing cycle alive for the kernel. */
+		rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+	}
+	rthal_critical_exit(flags);
+}
+
+static void rthal_timer_set_periodic(void)
+{
+	unsigned long flags;
+
+	flags = rthal_critical_enter(&rthal_critical_sync);
+	rthal_sync_op = RTHAL_SET_PERIODIC;
+	rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
+	rthal_critical_exit(flags);
+}
+
+int rthal_timer_request(
+	void (*tick_handler)(void),
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	void (*mode_emul)(enum clock_event_mode mode,
+			  struct ipipe_tick_device *tdev),
+	int (*tick_emul)(unsigned long delay,
+			 struct ipipe_tick_device *tdev),
+#endif
+	int cpu)
+{
+	int tickval, err;
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	err = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu);
+
+	switch (err) {
+	case CLOCK_EVT_MODE_PERIODIC:
+		/* oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick. */
+		tickval = 1000000000UL / HZ;
+		break;
+
+	case CLOCK_EVT_MODE_ONESHOT:
+		/* oneshot tick emulation */
+		tickval = 1;
+		break;
+
+	case CLOCK_EVT_MODE_UNUSED:
+		/* we don't need to emulate the tick at all. */
+		tickval = 0;
+		break;
+
+	case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENODEV;
+
+	default:
+		return err;
+	}
+
+	rthal_ktimer_saved_mode = err;
+#else /* !CONFIG_GENERIC_CLOCKEVENTS */
+	/*
+	 * When the local APIC is enabled for kernels lacking generic
+	 * support for clock events, we do not need to relay the host tick
+	 * since 8254 interrupts are already flowing normally to Linux
+	 * (i.e. the nucleus does not intercept them, but uses a dedicated
+	 * APIC-based timer interrupt instead, i.e. RTHAL_APIC_TIMER_IPI).
+	 */
+	tickval = 0;
+	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
+#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
+
+	/*
+	 * The rest of the initialization should only be performed
+	 * once by a single CPU.
+	 */
 	if (cpu > 0)
 		goto out;
 
-	flags = rthal_critical_enter(rthal_critical_sync);
+	rthal_timer_set_oneshot(1);
 
-	rthal_sync_op = 1;
+	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
+				(rthal_irq_handler_t) tick_handler, NULL, NULL);
 
-	rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
+	if (err)
+		return err;
 
-	rthal_irq_request(RTHAL_APIC_TIMER_IPI,
-			  (rthal_irq_handler_t) handler, NULL, NULL);
-
-	rthal_critical_exit(flags);
-
-	rthal_irq_host_request(RTHAL_8254_IRQ,
+#ifndef CONFIG_GENERIC_CLOCKEVENTS
+	rthal_irq_host_request(RTHAL_BCAST_TICK_IRQ,
 			       &rthal_broadcast_to_local_timers,
 			       "rthal_broadcast_timer",
 			       &rthal_broadcast_to_local_timers);
+#endif
+
+	rthal_nmi_init(&rthal_latency_above_max);
 out:
-	return 0;
+	return tickval;
 }
 
 void rthal_timer_release(int cpu)
 {
-	unsigned long flags;
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	ipipe_release_tickdev(cpu);
+#else
+	rthal_irq_host_release(RTHAL_BCAST_TICK_IRQ,
+			       &rthal_broadcast_to_local_timers);
+#endif
 
+	/*
+	 * The rest of the cleanup work should only be performed once
+	 * by a single CPU.
+	 */
 	if (cpu > 0)
 		return;
 
-	rthal_irq_host_release(RTHAL_8254_IRQ,
-			       &rthal_broadcast_to_local_timers);
+	rthal_nmi_release();
 
-	flags = rthal_critical_enter(&rthal_critical_sync);
-
-	rthal_sync_op = 2;
-	rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
 	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
 
-	rthal_critical_exit(flags);
+	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
+		rthal_timer_set_periodic();
+	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
+		rthal_timer_set_oneshot(0);
 }
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+
+void rthal_timer_notify_switch(enum clock_event_mode mode,
+			       struct ipipe_tick_device *tdev)
+{
+	if (rthal_processor_id() > 0)
+		/*
+		 * We assume all CPUs switch the same way, so we only
+		 * track mode switches from the boot CPU.
+		 */
+		return;
+
+	rthal_ktimer_saved_mode = mode;
+}
+
+EXPORT_SYMBOL(rthal_timer_notify_switch);
+
+#endif	/* CONFIG_GENERIC_CLOCKEVENTS */
 
 int rthal_irq_host_request(unsigned irq,
 			   rthal_irq_host_handler_t handler,

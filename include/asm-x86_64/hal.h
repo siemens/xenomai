@@ -50,7 +50,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_APIC_ICOUNT		((RTHAL_TIMER_FREQ + HZ/2)/HZ)
 #define RTHAL_TIMER_IRQ			RTHAL_APIC_TIMER_IPI
 #define RTHAL_NMICLK_FREQ		RTHAL_CPU_FREQ
-#define RTHAL_8254_IRQ			0
+#define RTHAL_BCAST_TICK_IRQ		0
 
 static inline void rthal_grab_control(void)
 {
