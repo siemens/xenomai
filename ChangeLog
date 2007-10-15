@@ -2,6 +2,9 @@
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-08.
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.21-1.7-05,
+	2.6.20-1.7-06.
+
 2007-10-13  Jan Kiszka  <jan.kiszka@siemens.com>, Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/Kconfig.frag: Prevent combined selection of
