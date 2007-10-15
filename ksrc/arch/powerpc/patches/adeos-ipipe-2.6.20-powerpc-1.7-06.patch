@@ -470,10 +470,10 @@ index 34ae114..10ea724 100644
  	u32 lc = c;
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..e4b21d4
+index 0000000..c99bb5a
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,728 @@
+@@ -0,0 +1,726 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -800,7 +800,7 @@ index 0000000..e4b21d4
 +	desc->ipipe_end(irq, desc);
 +}
 +
-+void __ipipe_enable_irqdesc(unsigned irq)
++void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
 +{
 +	irq_desc[irq].status &= ~IRQ_DISABLED;
 +}
@@ -1164,11 +1164,9 @@ index 0000000..e4b21d4
 +	return 0;
 +}
 +
-+int __ipipe_pin_range_mapping(struct mm_struct *mm,
-+			      unsigned long start, unsigned long end)
++void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
 +{
-+	/* We don't support this, yet. */
-+	return 0;
++	/* We don't support this. */
 +}
 +
 +EXPORT_SYMBOL(__ipipe_decr_ticks);
@@ -2032,7 +2030,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..55362d7
+index 0000000..7df637a
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2075,10 +2073,10 @@ index 0000000..55362d7
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-05"
++#define IPIPE_ARCH_STRING	"1.7-06"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -2147,7 +2145,7 @@ index 0000000..55362d7
 +#define __ipipe_enable_irq(irq)		enable_irq(irq)
 +#define __ipipe_disable_irq(irq)	disable_irq(irq)
 +
-+void __ipipe_enable_irqdesc(unsigned irq);
++void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq);
 +
 +void __ipipe_init_platform(void);
 +
@@ -2424,10 +2422,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..4d40222
+index 0000000..859c766
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,557 @@
+@@ -0,0 +1,554 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2653,11 +2651,6 @@ index 0000000..4d40222
 +	__ipipe_unlock_irq(ipipe_current_domain, irq);
 +}
 +
-+struct mm_struct;
-+
-+int __ipipe_pin_range_mapping(struct mm_struct *mm,
-+			      unsigned long start, unsigned long end);
-+
 +#ifndef __ipipe_sync_pipeline
 +#define __ipipe_sync_pipeline(syncmask) __ipipe_sync_stage(syncmask)
 +#endif
@@ -2727,6 +2720,8 @@ index 0000000..4d40222
 +	if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))
 +		__ipipe_dispatch_event(IPIPE_EVENT_INIT,p);
 +}
++
++struct mm_struct;
 +
 +static inline void ipipe_cleanup_notify(struct mm_struct *mm)
 +{
@@ -3917,7 +3912,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..b259d9d
+index 0000000..e249074
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1513 @@
@@ -4533,7 +4528,7 @@ index 0000000..b259d9d
 +	ipd->irqs[irq].control = modemask;
 +
 +	if (irq < NR_IRQS && handler != NULL && !ipipe_virtual_irq_p(irq)) {
-+		__ipipe_enable_irqdesc(irq);
++		__ipipe_enable_irqdesc(ipd, irq);
 +
 +		if ((modemask & IPIPE_ENABLE_MASK) != 0) {
 +			if (ipd != ipipe_current_domain) {
@@ -5436,15 +5431,15 @@ index 0000000..b259d9d
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..c6dfbd6
+index 0000000..8ecbe1a
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1294 @@
+@@ -0,0 +1,1342 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005, 2006 Jan Kiszka.
++ *               2005-2007 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -5485,7 +5480,7 @@ index 0000000..c6dfbd6
 +
 +#define IPIPE_DEFAULT_PRE_TRACE     10
 +#define IPIPE_DEFAULT_POST_TRACE    10
-+#define IPIPE_DEFAULT_BACK_TRACE    30
++#define IPIPE_DEFAULT_BACK_TRACE    100
 +
 +#define IPIPE_DELAY_NOTE            1000  /* in nanoseconds */
 +#define IPIPE_DELAY_WARN            10000 /* in nanoseconds */
@@ -5569,8 +5564,11 @@ index 0000000..c6dfbd6
 +static int pre_trace = IPIPE_DEFAULT_PRE_TRACE;
 +static int post_trace = IPIPE_DEFAULT_POST_TRACE;
 +static int back_trace = IPIPE_DEFAULT_BACK_TRACE;
-+static int verbose_trace;
++static int verbose_trace = 1;
 +static unsigned long trace_overhead;
++
++static unsigned long trigger_begin;
++static unsigned long trigger_end;
 +
 +static DEFINE_MUTEX(out_mutex);
 +static struct ipipe_trace_path *print_path;
@@ -5694,7 +5692,7 @@ index 0000000..c6dfbd6
 +	active = __ipipe_get_free_trace_path(active, cpu_id);
 +
 +	/* check if this is the first frozen path */
-+	for_each_online_cpu(i) {
++	for (i = 0; i < NR_CPUS && trace_paths[i] != NULL; i++) {
 +		if ((i != cpu_id) &&
 +		    (trace_paths[i][frozen_path[i]].end >= 0))
 +			tp->end = -1;
@@ -5789,7 +5787,9 @@ index 0000000..c6dfbd6
 +		tp->post_trace = post_trace + 1;
 +
 +	/* freeze only if the slot is free and we are not already freezing */
-+	if (unlikely(type == IPIPE_TRACE_FREEZE) &&
++	if ((unlikely(type == IPIPE_TRACE_FREEZE) ||
++	     (unlikely(eip >= trigger_begin && eip <= trigger_end) &&
++	     type == IPIPE_TRACE_FUNC)) &&
 +	    (trace_paths[cpu_id][frozen_path[cpu_id]].begin < 0) &&
 +	    !(tp->flags & IPIPE_TFLG_FREEZING)) {
 +		tp->post_trace = post_trace + 1;
@@ -5957,7 +5957,7 @@ index 0000000..c6dfbd6
 +
 +	flags = __ipipe_global_path_lock();
 +
-+	for_each_online_cpu(cpu_id) {
++	for (cpu_id = 0; cpu_id < NR_CPUS && trace_paths[cpu_id] != NULL; cpu_id++) {
 +		path = &trace_paths[cpu_id][max_path[cpu_id]];
 +
 +		if (path->dump_lock) {
@@ -6273,27 +6273,6 @@ index 0000000..c6dfbd6
 +	}
 +}
 +
-+#if defined(CONFIG_XENO_OPT_DEBUG) || defined(CONFIG_DEBUG_PREEMPT)
-+static void __ipipe_print_dbgwarning(struct seq_file *m)
-+{
-+	seq_puts(m, "\n******** WARNING ********\n"
-+		"The following debugging options will increase the observed "
-+		"latencies:\n"
-+#ifdef CONFIG_XENO_OPT_DEBUG
-+		" o CONFIG_XENO_OPT_DEBUG\n"
-+#endif /* CONFIG_XENO_OPT_DEBUG */
-+#ifdef CONFIG_XENO_OPT_DEBUG_QUEUES
-+		" o CONFIG_XENO_OPT_DEBUG_QUEUES (very costly)\n"
-+#endif /* CONFIG_XENO_OPT_DEBUG */
-+#ifdef CONFIG_DEBUG_PREEMPT
-+		" o CONFIG_DEBUG_PREEMPT\n"
-+#endif /* CONFIG_DEBUG_PREEMPT */
-+		"\n");
-+}
-+#else /* !WARN_ON_DEBUGGING_LATENCIES */
-+# define __ipipe_print_dbgwarning(m)
-+#endif /* WARN_ON_DEBUGGING_LATENCIES */
-+
 +static void __ipipe_print_headline(struct seq_file *m)
 +{
 +	seq_printf(m, "Calibrated minimum trace-point overhead: %lu.%03lu "
@@ -6349,7 +6328,7 @@ index 0000000..c6dfbd6
 +	if (!n) {
 +		struct ipipe_trace_path *path;
 +		unsigned long length_usecs;
-+		int points, i;
++		int points, cpu;
 +		unsigned long flags;
 +
 +		/* protect against max_path/frozen_path updates while we
@@ -6359,11 +6338,13 @@ index 0000000..c6dfbd6
 +
 +		/* find the longest of all per-cpu paths */
 +		print_path = NULL;
-+		for_each_online_cpu(i) {
-+			path = &trace_paths[i][max_path[i]];
++		for_each_online_cpu(cpu) {
++			path = &trace_paths[cpu][max_path[cpu]];
 +			if ((print_path == NULL) ||
-+			    (path->length > print_path->length))
++			    (path->length > print_path->length)) {
 +				print_path = path;
++				break;
++			}
 +		}
 +		print_path->dump_lock = 1;
 +
@@ -6390,10 +6371,9 @@ index 0000000..c6dfbd6
 +		seq_printf(m, "I-pipe worst-case tracing service on %s/ipipe-%s\n"
 +			"------------------------------------------------------------\n",
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
-+		__ipipe_print_dbgwarning(m);
-+		seq_printf(m, "Begin: %lld cycles, Trace Points: %d (-%d/+%d), "
-+			"Length: %lu us\n",
-+			print_path->point[print_path->begin].timestamp,
++		seq_printf(m, "CPU: %d, Begin: %lld cycles, Trace Points: "
++			"%d (-%d/+%d), Length: %lu us\n",
++			cpu, print_path->point[print_path->begin].timestamp,
 +			points, print_pre_trace, print_post_trace, length_usecs);
 +		__ipipe_print_headline(m);
 +	}
@@ -6510,7 +6490,7 @@ index 0000000..c6dfbd6
 +
 +	if (!n) {
 +		struct ipipe_trace_path *path;
-+		int i;
++		int cpu;
 +		unsigned long flags;
 +
 +		/* protect against max_path/frozen_path updates while we
@@ -6520,10 +6500,12 @@ index 0000000..c6dfbd6
 +
 +		/* find the first of all per-cpu frozen paths */
 +		print_path = NULL;
-+		for_each_online_cpu(i) {
-+			path = &trace_paths[i][frozen_path[i]];
-+			if (path->end >= 0)
++		for_each_online_cpu(cpu) {
++			path = &trace_paths[cpu][frozen_path[cpu]];
++			if (path->end >= 0) {
 +				print_path = path;
++				break;
++			}
 +		}
 +		if (print_path)
 +			print_path->dump_lock = 1;
@@ -6547,9 +6529,8 @@ index 0000000..c6dfbd6
 +			"------------------------------------------------------"
 +			"------\n",
 +			UTS_RELEASE, IPIPE_ARCH_STRING);
-+		__ipipe_print_dbgwarning(m);
-+		seq_printf(m, "Freeze: %lld cycles, Trace Points: %d (+%d)\n",
-+			print_path->point[print_path->begin].timestamp,
++		seq_printf(m, "CPU: %d, Freeze: %lld cycles, Trace Points: %d (+%d)\n",
++			cpu, print_path->point[print_path->begin].timestamp,
 +			print_pre_trace+1, print_post_trace);
 +		__ipipe_print_headline(m);
 +	}
@@ -6654,6 +6635,61 @@ index 0000000..c6dfbd6
 +	return count;
 +}
 +
++static int __ipipe_rd_trigger(char *page, char **start, off_t off, int count,
++			      int *eof, void *data)
++{
++	int len;
++
++	if (!trigger_begin)
++		return 0;
++
++	len = sprint_symbol(page, trigger_begin);
++	page[len++] = '\n';
++
++	len -= off;
++	if (len <= off + count)
++		*eof = 1;
++	*start = page + off;
++	if (len > count)
++		len = count;
++	if (len < 0)
++		len = 0;
++
++	return len;
++}
++
++static int __ipipe_wr_trigger(struct file *file, const char __user *buffer,
++			      unsigned long count, void *data)
++{
++	char buf[KSYM_SYMBOL_LEN];
++	unsigned long begin, end;
++
++	if (count > sizeof(buf) - 1)
++		count = sizeof(buf) - 1;
++	if (copy_from_user(buf, buffer, count) < 0)
++		return -EFAULT;
++	buf[count] = 0;
++	if (buf[count-1] == '\n')
++		buf[count-1] = 0;
++
++	begin = kallsyms_lookup_name(buf);
++	if (!begin || !kallsyms_lookup_size_offset(begin, &end, NULL))
++		return -ENOENT;
++	end += begin - 1;
++
++	mutex_lock(&out_mutex);
++	/* invalidate the current range before setting a new one */
++	trigger_end = 0;
++	wmb();
++	/* set new range */
++	trigger_begin = begin;
++	wmb();
++	trigger_end = end;
++	mutex_unlock(&out_mutex);
++
++	return count;
++}
++
 +extern struct proc_dir_entry *ipipe_proc_root;
 +
 +static void __init
@@ -6723,6 +6759,13 @@ index 0000000..c6dfbd6
 +	if (entry)
 +		entry->proc_fops = &__ipipe_frozen_prtrace_fops;
 +
++	entry = create_proc_entry("trigger", 0644, trace_dir);
++	if (entry) {
++		entry->read_proc = __ipipe_rd_trigger;
++		entry->write_proc = __ipipe_wr_trigger;
++		entry->owner = THIS_MODULE;
++	}
++
 +	__ipipe_create_trace_proc_val(trace_dir, "pre_trace_points",
 +	                              &pre_trace);
 +	__ipipe_create_trace_proc_val(trace_dir, "post_trace_points",
@@ -6735,7 +6778,7 @@ index 0000000..c6dfbd6
 +	                              &ipipe_trace_enable);
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index d27b258..fa7e006 100644
+index d27b258..96723be 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -308,7 +308,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
@@ -6754,9 +6797,9 @@ index d27b258..fa7e006 100644
  	desc->status &= ~IRQ_INPROGRESS;
 +#ifdef CONFIG_IPIPE
 +	desc->chip->unmask(irq);
-+#endif
++out:
++#else
  out:
-+#ifndef CONFIG_IPIPE
  	desc->chip->eoi(irq);
 +#endif
  
@@ -6773,7 +6816,7 @@ index d27b258..fa7e006 100644
  
  	/* Mark the IRQ currently in progress.*/
  	desc->status |= IRQ_INPROGRESS;
-@@ -472,6 +481,70 @@ out_unlock:
+@@ -472,6 +481,69 @@ out_unlock:
  	spin_unlock(&desc->lock);
  }
  
@@ -6800,7 +6843,6 @@ index d27b258..fa7e006 100644
 +
 +void fastcall __ipipe_ack_fasteoi_irq(unsigned irq, struct irq_desc *desc)
 +{
-+	desc->chip->mask(irq);
 +	desc->chip->eoi(irq);
 +}
 +
@@ -6844,7 +6886,7 @@ index d27b258..fa7e006 100644
  #ifdef CONFIG_SMP
  /**
   *	handle_percpu_IRQ - Per CPU local irq handler
-@@ -487,8 +560,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -487,8 +559,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_this_cpu.irqs[irq]++;
  
@@ -6855,7 +6897,7 @@ index d27b258..fa7e006 100644
  
  	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -498,6 +573,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -498,6 +572,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  		desc->chip->eoi(irq);
  }
  
@@ -6878,7 +6920,7 @@ index d27b258..fa7e006 100644
  #endif /* CONFIG_SMP */
  
  void
-@@ -517,6 +608,30 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -517,6 +607,30 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  
  	if (!handle)
  		handle = handle_bad_irq;
@@ -6909,7 +6951,7 @@ index d27b258..fa7e006 100644
  	else if (desc->chip == &no_irq_chip) {
  		printk(KERN_WARNING "Trying to install %sinterrupt handler "
  		       "for IRQ%d\n", is_chained ? "chained " : "", irq);
-@@ -528,7 +643,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -528,7 +642,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		 * dummy_irq_chip for easy transition.
  		 */
  		desc->chip = &dummy_irq_chip;
@@ -6927,7 +6969,7 @@ index d27b258..fa7e006 100644
  
  	spin_lock_irqsave(&desc->lock, flags);
  
-@@ -540,6 +665,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -540,6 +664,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		}
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
@@ -6938,6 +6980,42 @@ index d27b258..fa7e006 100644
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
+diff --git a/kernel/power/swsusp.c b/kernel/power/swsusp.c
+index 31aa039..69376db 100644
+--- a/kernel/power/swsusp.c
++++ b/kernel/power/swsusp.c
+@@ -268,6 +268,7 @@ int swsusp_suspend(void)
+ 		return error;
+ 
+ 	local_irq_disable();
++	local_irq_disable_hw_cond();
+ 	/* At this point, device_suspend() has been called, but *not*
+ 	 * device_power_down(). We *must* device_power_down() now.
+ 	 * Otherwise, drivers for some devices (e.g. interrupt controllers)
+@@ -289,6 +290,7 @@ int swsusp_suspend(void)
+ 	 */
+ 	device_power_up();
+  Enable_irqs:
++	local_irq_enable_hw_cond();
+ 	local_irq_enable();
+ 	return error;
+ }
+@@ -298,6 +300,7 @@ int swsusp_resume(void)
+ 	int error;
+ 
+ 	local_irq_disable();
++	local_irq_disable_hw_cond();
+ 	/* NOTE:  device_power_down() is just a suspend() with irqs off;
+ 	 * it has no special "power things down" semantics
+ 	 */
+@@ -324,6 +327,7 @@ int swsusp_resume(void)
+ 	restore_processor_state();
+ 	touch_softlockup_watchdog();
+ 	device_power_up();
++	local_irq_enable_hw_cond();
+ 	local_irq_enable();
+ 	return error;
+ }
 diff --git a/kernel/printk.c b/kernel/printk.c
 index c770e1a..f077940 100644
 --- a/kernel/printk.c
@@ -7376,7 +7454,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index ef09f0a..a8f8954 100644
+index ef09f0a..53d10ff 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -7541,7 +7619,7 @@ index ef09f0a..a8f8954 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2692,3 +2735,117 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2692,3 +2735,104 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
@@ -7644,19 +7722,6 @@ index ef09f0a..a8f8954 100644
 +}
 +
 +EXPORT_SYMBOL(ipipe_disable_ondemand_mappings);
-+
-+void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
-+{
-+	struct task_struct *p;
-+
-+	read_lock(&tasklist_lock);
-+
-+	for_each_process(p)
-+		if (p->mm)
-+			__ipipe_pin_range_mapping(p->mm, start, end);
-+
-+	read_unlock(&tasklist_lock);
-+}
 +
 +#endif
 diff --git a/mm/mlock.c b/mm/mlock.c
