@@ -1,3 +1,21 @@
+2007-10-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-07.
+
+2007-10-13  Jan Kiszka  <jan.kiszka@siemens.com>, Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/Kconfig.frag: Prevent combined selection of
+	X86_LOCAL_APIC and HPET_TIMER. This setup won't work for us since
+	the HPET will override the PIT, and we use the i8253 as our tick
+	device when running in LAPIC-disabled mode.
+
+2007-10-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/Config.in: Add missing
+	CONFIG_XENO_OPT_WATCHDOG_TIMEOUT value.
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-06.
+
 2007-10-08  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* include/rtdm/rtcan.h: Add CAN_RAW_LOOPBACK for compatibility
