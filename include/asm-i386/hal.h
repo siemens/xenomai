@@ -64,6 +64,10 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #ifdef CONFIG_X86_LOCAL_APIC
 #include <asm/fixmap.h>
 #include <asm/apic.h>
+#else
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
+#include <asm/i8253.h>
+#endif
 #endif /* CONFIG_X86_LOCAL_APIC */
 #include <asm/msr.h>
 #include <asm/xenomai/atomic.h>
