@@ -1,3 +1,26 @@
+2007-10-13  Jan Kiszka  <jan.kiszka@siemens.com>, Philippe Gerum  <rpm@xenomai.org>
+
+	* scripts/Kconfig.frag: Prevent combined selection of
+	X86_LOCAL_APIC and HPET_TIMER. This setup won't work for us since
+	the HPET will override the PIT, and we use the i8253 as our tick
+	device when running in LAPIC-disabled mode.
+
+2007-10-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/Config.in: Add missing
+	CONFIG_XENO_OPT_WATCHDOG_TIMEOUT value.
+
+	* ksrc/arch/i386/smi.c: Prevent multiple notices to be sent about
+	enabling the SMI workaround.
+
+	* ksrc/arch/x86_64/hal.c, include/asm-x86_64/bits/intr.h,
+	include/asm-x86_64/hal.h: Adapt to the generic clock events
+	infrastructure.
+
+	* include/asm-i386/hal.h: Include <asm/i8253.h> in the
+	LAPIC-disabled case to get I/O port definitions for the PIT
+	(2.6.23).
+
 2007-10-12  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/arch/i386/hal.c, ksrc/nucleus/pod.c: Complete timer/x86
