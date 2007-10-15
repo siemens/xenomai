@@ -77,7 +77,7 @@ static struct {
 	int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-static enum {
+static enum { /* <!> Must follow enum clock_event_mode */
 	KTIMER_MODE_UNUSED = 0,
 	KTIMER_MODE_SHUTDOWN,
 	KTIMER_MODE_PERIODIC,
@@ -108,14 +108,14 @@ static inline void rthal_setup_oneshot_apic(int vector)
 	apic_write_around(APIC_LVTT, rthal_set_apic_base(vector));
 }
 
-#define RTHAL_SET_ONESHOT_RT		1
+#define RTHAL_SET_ONESHOT_XENOMAI	1
 #define RTHAL_SET_ONESHOT_LINUX		2
 #define RTHAL_SET_PERIODIC		3
 
 static void rthal_critical_sync(void)
 {
 	switch (rthal_sync_op) {
-	case RTHAL_SET_ONESHOT_RT:
+	case RTHAL_SET_ONESHOT_XENOMAI:
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 		break;
 
@@ -238,7 +238,7 @@ static void rthal_timer_set_oneshot(int rt_mode)
 
 	flags = rthal_critical_enter(rthal_critical_sync);
 	if (rt_mode) {
-		rthal_sync_op = RTHAL_SET_ONESHOT_RT;
+		rthal_sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
 	} else {
 		rthal_sync_op = RTHAL_SET_ONESHOT_LINUX;
