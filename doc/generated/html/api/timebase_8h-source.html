@@ -311,14 +311,14 @@
 <a name="l00363"></a>00363 <span class="preprocessor"></span>
 <a name="l00364"></a>00364 <span class="preprocessor">#define xntbase_umount()                        \</span>
 <a name="l00365"></a>00365 <span class="preprocessor">do {                                            \</span>
-<a name="l00366"></a>00366 <span class="preprocessor">        xnpod_declare_tbase_proc(&amp;nktbase);     \</span>
+<a name="l00366"></a>00366 <span class="preprocessor">        xnpod_discard_tbase_proc(&amp;nktbase);     \</span>
 <a name="l00367"></a>00367 <span class="preprocessor">        removeq(&amp;nktimebaseq, &amp;nktbase.link);   \</span>
 <a name="l00368"></a>00368 <span class="preprocessor">} while (0)</span>
 <a name="l00369"></a>00369 <span class="preprocessor"></span>
 <a name="l00370"></a>00370 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 <a name="l00371"></a>00371 
 <a name="l00374"></a>00374 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMEBASE_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 9 22:42:44 2007 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 15 23:25:37 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1 </small></address>
 </body>

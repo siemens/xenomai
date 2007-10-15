@@ -178,111 +178,113 @@
 <a name="l00607"></a>00607 <span class="preprocessor"></span>
 <a name="l00634"></a><a class="code" href="group__rtcan.html#g7ecbe43287e7909c2e3fce4859d945d2">00634</a> <span class="preprocessor">#define CAN_RAW_LOOPBACK        0x3</span>
 <a name="l00635"></a>00635 <span class="preprocessor"></span>
-<a name="l00668"></a>00668 <span class="preprocessor">#ifdef DOXYGEN_CPP </span><span class="comment">/* For Doxygen only, already defined by kernel headers */</span>
-<a name="l00669"></a><a class="code" href="group__rtcan.html#g1494c47a323d2f81cff2feaa44a10423">00669</a> <span class="preprocessor">#define SIOCGIFINDEX defined_by_kernel_header_file</span>
-<a name="l00670"></a>00670 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
-<a name="l00671"></a>00671 <span class="preprocessor"></span>
-<a name="l00706"></a><a class="code" href="group__rtcan.html#g6653c6fc7d4f2a5d71447e9ccfc1ada4">00706</a> <span class="preprocessor">#define SIOCSCANBAUDRATE        _IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</span>
-<a name="l00707"></a>00707 <span class="preprocessor"></span>
-<a name="l00733"></a><a class="code" href="group__rtcan.html#ge6b04f89004d4cfd381c4fac8bdece27">00733</a> <span class="preprocessor">#define SIOCGCANBAUDRATE        _IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</span>
-<a name="l00734"></a>00734 <span class="preprocessor"></span>
-<a name="l00767"></a><a class="code" href="group__rtcan.html#g37b0c2bfc5120504d2c336bd5cb0ae60">00767</a> <span class="preprocessor">#define SIOCSCANCUSTOMBITTIME   _IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</span>
-<a name="l00768"></a>00768 <span class="preprocessor"></span>
-<a name="l00794"></a><a class="code" href="group__rtcan.html#gf02920b8e67f88057eb48db7cb582d30">00794</a> <span class="preprocessor">#define SIOCGCANCUSTOMBITTIME   _IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</span>
-<a name="l00795"></a>00795 <span class="preprocessor"></span>
-<a name="l00837"></a><a class="code" href="group__rtcan.html#gaaae6fcf6a549abaaa81e263ab3f1a5d">00837</a> <span class="preprocessor">#define SIOCSCANMODE            _IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</span>
-<a name="l00838"></a>00838 <span class="preprocessor"></span>
-<a name="l00871"></a><a class="code" href="group__rtcan.html#g64d2131d73bdd69ac50ec76bf85c4849">00871</a> <span class="preprocessor">#define SIOCGCANSTATE           _IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</span>
-<a name="l00872"></a>00872 <span class="preprocessor"></span>
-<a name="l00905"></a><a class="code" href="group__rtcan.html#gc2158cdd738161850bc09c4eb02625d6">00905</a> <span class="preprocessor">#define SIOCSCANCTRLMODE        _IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</span>
-<a name="l00906"></a>00906 <span class="preprocessor"></span>
-<a name="l00933"></a><a class="code" href="group__rtcan.html#gbddcce97c5a1e5ff9cedd7ca3bf37b1e">00933</a> <span class="preprocessor">#define SIOCGCANCTRLMODE        _IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</span>
-<a name="l00934"></a>00934 <span class="preprocessor"></span>
-<a name="l00960"></a><a class="code" href="group__rtcan.html#g82f2d262750e6db8f454efaa62dbdad9">00960</a> <span class="preprocessor">#define RTCAN_RTIOC_TAKE_TIMESTAMP _IOW(RTIOC_TYPE_CAN, 0x09, int)</span>
-<a name="l00961"></a>00961 <span class="preprocessor"></span>
-<a name="l00993"></a><a class="code" href="group__rtcan.html#gf52f080fe44c179a79758d65aa5eeda6">00993</a> <span class="preprocessor">#define RTCAN_RTIOC_RCV_TIMEOUT _IOW(RTIOC_TYPE_CAN, 0x0A, nanosecs_rel_t)</span>
-<a name="l00994"></a>00994 <span class="preprocessor"></span>
-<a name="l01026"></a><a class="code" href="group__rtcan.html#g71187a2464908636121577df5970feb8">01026</a> <span class="preprocessor">#define RTCAN_RTIOC_SND_TIMEOUT _IOW(RTIOC_TYPE_CAN, 0x0B, nanosecs_rel_t)</span>
-<a name="l01027"></a>01027 <span class="preprocessor"></span>
-<a name="l01029"></a>01029 <span class="preprocessor">#define CAN_ERR_DLC  8  </span><span class="comment">/* dlc for error frames */</span>
-<a name="l01030"></a>01030 
-<a name="l01051"></a><a class="code" href="group__rtcan.html#gca6a26f0b953c4e3abe43e8d4cd7e148">01051</a> <span class="preprocessor">#define CAN_ERR_TX_TIMEOUT      0x00000001U</span>
-<a name="l01052"></a>01052 <span class="preprocessor"></span>
-<a name="l01054"></a><a class="code" href="group__rtcan.html#g6555edd591351a04b6ec22ad6f859a64">01054</a> <span class="preprocessor">#define CAN_ERR_LOSTARB         0x00000002U</span>
-<a name="l01055"></a>01055 <span class="preprocessor"></span>
-<a name="l01057"></a><a class="code" href="group__rtcan.html#ga4294198996f3977b0055d3112382e41">01057</a> <span class="preprocessor">#define CAN_ERR_CRTL            0x00000004U</span>
-<a name="l01058"></a>01058 <span class="preprocessor"></span>
-<a name="l01061"></a><a class="code" href="group__rtcan.html#ga6765d4fbc6610de1bf901a876a73928">01061</a> <span class="preprocessor">#define CAN_ERR_PROT            0x00000008U</span>
-<a name="l01062"></a>01062 <span class="preprocessor"></span>
-<a name="l01064"></a><a class="code" href="group__rtcan.html#g84c66c38a089cbe227becacd4176599d">01064</a> <span class="preprocessor">#define CAN_ERR_TRX             0x00000010U</span>
-<a name="l01065"></a>01065 <span class="preprocessor"></span>
-<a name="l01067"></a><a class="code" href="group__rtcan.html#g68176b60452158fe029ccca755c655ff">01067</a> <span class="preprocessor">#define CAN_ERR_ACK             0x00000020U</span>
-<a name="l01068"></a>01068 <span class="preprocessor"></span>
-<a name="l01070"></a><a class="code" href="group__rtcan.html#g84b8cd7d82f561425b3deefb72e57522">01070</a> <span class="preprocessor">#define CAN_ERR_BUSOFF          0x00000040U</span>
-<a name="l01071"></a>01071 <span class="preprocessor"></span>
-<a name="l01073"></a><a class="code" href="group__rtcan.html#g013bcf63b6df049862340041600c8bb8">01073</a> <span class="preprocessor">#define CAN_ERR_BUSERROR        0x00000080U</span>
-<a name="l01074"></a>01074 <span class="preprocessor"></span>
-<a name="l01076"></a><a class="code" href="group__rtcan.html#g1d69151f05994cbe4f13d92b3d98f0c6">01076</a> <span class="preprocessor">#define CAN_ERR_RESTARTED       0x00000100U</span>
-<a name="l01077"></a>01077 <span class="preprocessor"></span>
-<a name="l01079"></a><a class="code" href="group__rtcan.html#gece4c476f7a057ac919921561a4ead1b">01079</a> <span class="preprocessor">#define CAN_ERR_MASK            0x1FFFFFFFU</span>
-<a name="l01080"></a>01080 <span class="preprocessor"></span>
-<a name="l01087"></a>01087 <span class="comment">/* arbitration lost in bit ... / data[0] */</span>
-<a name="l01088"></a><a class="code" href="group__rtcan.html#g0907dd1ed7a46192689ffa8bcc24bac7">01088</a> <span class="preprocessor">#define CAN_ERR_LOSTARB_UNSPEC  0x00 </span>
-<a name="l01096"></a>01096 <span class="preprocessor"></span><span class="comment">/* error status of CAN-controller / data[1] */</span>
-<a name="l01097"></a><a class="code" href="group__rtcan.html#g2cb8723f95e4ec585495c802186353e0">01097</a> <span class="preprocessor">#define CAN_ERR_CRTL_UNSPEC      0x00 </span>
-<a name="l01098"></a><a class="code" href="group__rtcan.html#ga09838c604a1ed6e151897ac8ef69245">01098</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_OVERFLOW 0x01 </span>
-<a name="l01099"></a><a class="code" href="group__rtcan.html#g1a4489a7989a5b7028418d5bf21e1424">01099</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_OVERFLOW 0x02 </span>
-<a name="l01100"></a><a class="code" href="group__rtcan.html#g9fd6156f8da9dc26e341e5d54ff57057">01100</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_WARNING  0x04 </span>
-<a name="l01101"></a><a class="code" href="group__rtcan.html#gcabf596907c31696815e795746e54205">01101</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_WARNING  0x08 </span>
-<a name="l01102"></a><a class="code" href="group__rtcan.html#g8987015738205340d471765acab4eef1">01102</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_PASSIVE  0x10 </span>
-<a name="l01103"></a><a class="code" href="group__rtcan.html#gcc60f9fd58621ab685a8609f05d2e416">01103</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_PASSIVE  0x20 </span>
-<a name="l01110"></a>01110 <span class="preprocessor"></span><span class="comment">/* error in CAN protocol (type) / data[2] */</span>
-<a name="l01111"></a><a class="code" href="group__rtcan.html#ga47b9c845f02565eae406fd39d291be0">01111</a> <span class="preprocessor">#define CAN_ERR_PROT_UNSPEC     0x00 </span>
-<a name="l01112"></a><a class="code" href="group__rtcan.html#g6e0e440e5eed59b3b027dc7c00399976">01112</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT        0x01 </span>
-<a name="l01113"></a><a class="code" href="group__rtcan.html#gb1a0bcd021a1e4d9217de586e39f805e">01113</a> <span class="preprocessor">#define CAN_ERR_PROT_FORM       0x02 </span>
-<a name="l01114"></a><a class="code" href="group__rtcan.html#ge3899d62fa7245398bcd5d268f21e2c9">01114</a> <span class="preprocessor">#define CAN_ERR_PROT_STUFF      0x04 </span>
-<a name="l01115"></a><a class="code" href="group__rtcan.html#g5df456321d611a561f84a5ff43912b97">01115</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT0       0x08 </span>
-<a name="l01116"></a><a class="code" href="group__rtcan.html#g86537f57c2a2983cfcf4d8e62f845c5e">01116</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT1       0x10 </span>
-<a name="l01117"></a><a class="code" href="group__rtcan.html#g4c5e4423cdab34a2b31671cb0b8a2f8c">01117</a> <span class="preprocessor">#define CAN_ERR_PROT_OVERLOAD   0x20 </span>
-<a name="l01118"></a><a class="code" href="group__rtcan.html#g377cb92cd0871bdb5a911997347da250">01118</a> <span class="preprocessor">#define CAN_ERR_PROT_ACTIVE     0x40 </span>
-<a name="l01119"></a><a class="code" href="group__rtcan.html#g31f030e59948651391f6529cded6cb16">01119</a> <span class="preprocessor">#define CAN_ERR_PROT_TX         0x80 </span>
-<a name="l01126"></a>01126 <span class="preprocessor"></span><span class="comment">/* error in CAN protocol (location) / data[3] */</span>
-<a name="l01127"></a><a class="code" href="group__rtcan.html#ge2ac6fc3601a47c5f308536eb4dc8e67">01127</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_UNSPEC  0x00 </span>
-<a name="l01128"></a><a class="code" href="group__rtcan.html#g7245c2e2de967dce06d70198a172e685">01128</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_SOF     0x03 </span>
-<a name="l01129"></a><a class="code" href="group__rtcan.html#g9825115294b77e1df34ef14edcad7a79">01129</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID28_21 0x02 </span>
-<a name="l01130"></a><a class="code" href="group__rtcan.html#g3753d6854891b0b5d3fc57980a715114">01130</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID20_18 0x06 </span>
-<a name="l01131"></a><a class="code" href="group__rtcan.html#gc501f7e6c40c1943fa6350f00e26cc83">01131</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_SRTR    0x04 </span>
-<a name="l01132"></a><a class="code" href="group__rtcan.html#ga00664e7c461def41f44055e8a35bddf">01132</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_IDE     0x05 </span>
-<a name="l01133"></a><a class="code" href="group__rtcan.html#g066eb37bb1b92344d325da406b4b603b">01133</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID17_13 0x07 </span>
-<a name="l01134"></a><a class="code" href="group__rtcan.html#g67e55f1b821db472cac162f2feecda6a">01134</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID12_05 0x0F </span>
-<a name="l01135"></a><a class="code" href="group__rtcan.html#gd1a3b7af3a19cacd1a8c12d4f5489750">01135</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID04_00 0x0E </span>
-<a name="l01136"></a><a class="code" href="group__rtcan.html#g4628e97b616111506ddd0fffc478ad4c">01136</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RTR     0x0C </span>
-<a name="l01137"></a><a class="code" href="group__rtcan.html#gdac0399aeba887612ec1051b888ba242">01137</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RES1    0x0D </span>
-<a name="l01138"></a><a class="code" href="group__rtcan.html#g8fdac99c4ee4fc182423fcc3bfe483a5">01138</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RES0    0x09 </span>
-<a name="l01139"></a><a class="code" href="group__rtcan.html#g9f71f0a09b5c240bcc59e1b6e11c5939">01139</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_DLC     0x0B </span>
-<a name="l01140"></a><a class="code" href="group__rtcan.html#g157e894ddc6416fc60a29eed677ddef5">01140</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_DATA    0x0A </span>
-<a name="l01141"></a><a class="code" href="group__rtcan.html#g7e3b7f7605ac54efe4d4fa3a24d5db1e">01141</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_CRC_SEQ 0x08 </span>
-<a name="l01142"></a><a class="code" href="group__rtcan.html#g3786ff719d2fe4d6ce4c5d41024b17ff">01142</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_CRC_DEL 0x18 </span>
-<a name="l01143"></a><a class="code" href="group__rtcan.html#g3e8f7f8397d3fa2d6969eb1630406c08">01143</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ACK     0x19 </span>
-<a name="l01144"></a><a class="code" href="group__rtcan.html#gba13ac8cdea680a62429d172aa6e4efc">01144</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ACK_DEL 0x1B </span>
-<a name="l01145"></a><a class="code" href="group__rtcan.html#gc8eecac5cdfa8918d854d5d5dcfd96dd">01145</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_EOF     0x1A </span>
-<a name="l01146"></a><a class="code" href="group__rtcan.html#g5be0c73dc4f2843748197964fbef90ee">01146</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_INTERM  0x12 </span>
-<a name="l01153"></a>01153 <span class="preprocessor"></span><span class="comment">/* error status of CAN-transceiver / data[4] */</span>
-<a name="l01154"></a>01154 <span class="comment">/*                                               CANH CANL */</span>
-<a name="l01155"></a><a class="code" href="group__rtcan.html#gc2e41aff6604f44fb45f2f1fcd530767">01155</a> <span class="preprocessor">#define CAN_ERR_TRX_UNSPEC              0x00 </span>
-<a name="l01156"></a><a class="code" href="group__rtcan.html#g98f193ee9613a4e093920164d8575e03">01156</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_NO_WIRE        0x04 </span>
-<a name="l01157"></a><a class="code" href="group__rtcan.html#gc56483fcf441c29a7e4028755f3156ad">01157</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_BAT   0x05 </span>
-<a name="l01158"></a><a class="code" href="group__rtcan.html#gee82965e522715bd3fe9ac40434f33cc">01158</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_VCC   0x06 </span>
-<a name="l01159"></a><a class="code" href="group__rtcan.html#g74a6f58b392d6f311e41c4b050f1712a">01159</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_GND   0x07 </span>
-<a name="l01160"></a><a class="code" href="group__rtcan.html#g3f8f22657291622a87cfe26d7c3df285">01160</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_NO_WIRE        0x40 </span>
-<a name="l01161"></a><a class="code" href="group__rtcan.html#gab06d5c5c5143a87940ddb9ccffa7ba8">01161</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_BAT   0x50 </span>
-<a name="l01162"></a><a class="code" href="group__rtcan.html#g0ca1a16f67bc0d55b630494051f4f08f">01162</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_VCC   0x60 </span>
-<a name="l01163"></a><a class="code" href="group__rtcan.html#gae65667acae271f584afa1ee7d7fc6ab">01163</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_GND   0x70 </span>
-<a name="l01164"></a><a class="code" href="group__rtcan.html#g43b89ec65d2abec504f0b60e90070966">01164</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_CANH  0x80 </span>
-<a name="l01167"></a>01167 <span class="preprocessor"></span><span class="comment">/* controller specific additional information / data[5..7] */</span>
-<a name="l01168"></a>01168 
-<a name="l01182"></a>01182 <span class="preprocessor">#endif </span><span class="comment">/* _RTCAN_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 9 22:42:44 2007 for Xenomai API by&nbsp;
+<a name="l00642"></a><a class="code" href="group__rtcan.html#g08c7e070a70d90ca0a73928317175e07">00642</a> <span class="preprocessor">#define CAN_RAW_RECV_OWN_MSGS   0x4</span>
+<a name="l00643"></a>00643 <span class="preprocessor"></span>
+<a name="l00676"></a>00676 <span class="preprocessor">#ifdef DOXYGEN_CPP </span><span class="comment">/* For Doxygen only, already defined by kernel headers */</span>
+<a name="l00677"></a><a class="code" href="group__rtcan.html#g1494c47a323d2f81cff2feaa44a10423">00677</a> <span class="preprocessor">#define SIOCGIFINDEX defined_by_kernel_header_file</span>
+<a name="l00678"></a>00678 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+<a name="l00679"></a>00679 <span class="preprocessor"></span>
+<a name="l00714"></a><a class="code" href="group__rtcan.html#g6653c6fc7d4f2a5d71447e9ccfc1ada4">00714</a> <span class="preprocessor">#define SIOCSCANBAUDRATE        _IOW(RTIOC_TYPE_CAN, 0x01, struct ifreq)</span>
+<a name="l00715"></a>00715 <span class="preprocessor"></span>
+<a name="l00741"></a><a class="code" href="group__rtcan.html#ge6b04f89004d4cfd381c4fac8bdece27">00741</a> <span class="preprocessor">#define SIOCGCANBAUDRATE        _IOWR(RTIOC_TYPE_CAN, 0x02, struct ifreq)</span>
+<a name="l00742"></a>00742 <span class="preprocessor"></span>
+<a name="l00775"></a><a class="code" href="group__rtcan.html#g37b0c2bfc5120504d2c336bd5cb0ae60">00775</a> <span class="preprocessor">#define SIOCSCANCUSTOMBITTIME   _IOW(RTIOC_TYPE_CAN, 0x03, struct ifreq)</span>
+<a name="l00776"></a>00776 <span class="preprocessor"></span>
+<a name="l00802"></a><a class="code" href="group__rtcan.html#gf02920b8e67f88057eb48db7cb582d30">00802</a> <span class="preprocessor">#define SIOCGCANCUSTOMBITTIME   _IOWR(RTIOC_TYPE_CAN, 0x04, struct ifreq)</span>
+<a name="l00803"></a>00803 <span class="preprocessor"></span>
+<a name="l00845"></a><a class="code" href="group__rtcan.html#gaaae6fcf6a549abaaa81e263ab3f1a5d">00845</a> <span class="preprocessor">#define SIOCSCANMODE            _IOW(RTIOC_TYPE_CAN, 0x05, struct ifreq)</span>
+<a name="l00846"></a>00846 <span class="preprocessor"></span>
+<a name="l00879"></a><a class="code" href="group__rtcan.html#g64d2131d73bdd69ac50ec76bf85c4849">00879</a> <span class="preprocessor">#define SIOCGCANSTATE           _IOWR(RTIOC_TYPE_CAN, 0x06, struct ifreq)</span>
+<a name="l00880"></a>00880 <span class="preprocessor"></span>
+<a name="l00913"></a><a class="code" href="group__rtcan.html#gc2158cdd738161850bc09c4eb02625d6">00913</a> <span class="preprocessor">#define SIOCSCANCTRLMODE        _IOW(RTIOC_TYPE_CAN, 0x07, struct ifreq)</span>
+<a name="l00914"></a>00914 <span class="preprocessor"></span>
+<a name="l00941"></a><a class="code" href="group__rtcan.html#gbddcce97c5a1e5ff9cedd7ca3bf37b1e">00941</a> <span class="preprocessor">#define SIOCGCANCTRLMODE        _IOWR(RTIOC_TYPE_CAN, 0x08, struct ifreq)</span>
+<a name="l00942"></a>00942 <span class="preprocessor"></span>
+<a name="l00968"></a><a class="code" href="group__rtcan.html#g82f2d262750e6db8f454efaa62dbdad9">00968</a> <span class="preprocessor">#define RTCAN_RTIOC_TAKE_TIMESTAMP _IOW(RTIOC_TYPE_CAN, 0x09, int)</span>
+<a name="l00969"></a>00969 <span class="preprocessor"></span>
+<a name="l01001"></a><a class="code" href="group__rtcan.html#gf52f080fe44c179a79758d65aa5eeda6">01001</a> <span class="preprocessor">#define RTCAN_RTIOC_RCV_TIMEOUT _IOW(RTIOC_TYPE_CAN, 0x0A, nanosecs_rel_t)</span>
+<a name="l01002"></a>01002 <span class="preprocessor"></span>
+<a name="l01034"></a><a class="code" href="group__rtcan.html#g71187a2464908636121577df5970feb8">01034</a> <span class="preprocessor">#define RTCAN_RTIOC_SND_TIMEOUT _IOW(RTIOC_TYPE_CAN, 0x0B, nanosecs_rel_t)</span>
+<a name="l01035"></a>01035 <span class="preprocessor"></span>
+<a name="l01037"></a>01037 <span class="preprocessor">#define CAN_ERR_DLC  8  </span><span class="comment">/* dlc for error frames */</span>
+<a name="l01038"></a>01038 
+<a name="l01059"></a><a class="code" href="group__rtcan.html#gca6a26f0b953c4e3abe43e8d4cd7e148">01059</a> <span class="preprocessor">#define CAN_ERR_TX_TIMEOUT      0x00000001U</span>
+<a name="l01060"></a>01060 <span class="preprocessor"></span>
+<a name="l01062"></a><a class="code" href="group__rtcan.html#g6555edd591351a04b6ec22ad6f859a64">01062</a> <span class="preprocessor">#define CAN_ERR_LOSTARB         0x00000002U</span>
+<a name="l01063"></a>01063 <span class="preprocessor"></span>
+<a name="l01065"></a><a class="code" href="group__rtcan.html#ga4294198996f3977b0055d3112382e41">01065</a> <span class="preprocessor">#define CAN_ERR_CRTL            0x00000004U</span>
+<a name="l01066"></a>01066 <span class="preprocessor"></span>
+<a name="l01069"></a><a class="code" href="group__rtcan.html#ga6765d4fbc6610de1bf901a876a73928">01069</a> <span class="preprocessor">#define CAN_ERR_PROT            0x00000008U</span>
+<a name="l01070"></a>01070 <span class="preprocessor"></span>
+<a name="l01072"></a><a class="code" href="group__rtcan.html#g84c66c38a089cbe227becacd4176599d">01072</a> <span class="preprocessor">#define CAN_ERR_TRX             0x00000010U</span>
+<a name="l01073"></a>01073 <span class="preprocessor"></span>
+<a name="l01075"></a><a class="code" href="group__rtcan.html#g68176b60452158fe029ccca755c655ff">01075</a> <span class="preprocessor">#define CAN_ERR_ACK             0x00000020U</span>
+<a name="l01076"></a>01076 <span class="preprocessor"></span>
+<a name="l01078"></a><a class="code" href="group__rtcan.html#g84b8cd7d82f561425b3deefb72e57522">01078</a> <span class="preprocessor">#define CAN_ERR_BUSOFF          0x00000040U</span>
+<a name="l01079"></a>01079 <span class="preprocessor"></span>
+<a name="l01081"></a><a class="code" href="group__rtcan.html#g013bcf63b6df049862340041600c8bb8">01081</a> <span class="preprocessor">#define CAN_ERR_BUSERROR        0x00000080U</span>
+<a name="l01082"></a>01082 <span class="preprocessor"></span>
+<a name="l01084"></a><a class="code" href="group__rtcan.html#g1d69151f05994cbe4f13d92b3d98f0c6">01084</a> <span class="preprocessor">#define CAN_ERR_RESTARTED       0x00000100U</span>
+<a name="l01085"></a>01085 <span class="preprocessor"></span>
+<a name="l01087"></a><a class="code" href="group__rtcan.html#gece4c476f7a057ac919921561a4ead1b">01087</a> <span class="preprocessor">#define CAN_ERR_MASK            0x1FFFFFFFU</span>
+<a name="l01088"></a>01088 <span class="preprocessor"></span>
+<a name="l01095"></a>01095 <span class="comment">/* arbitration lost in bit ... / data[0] */</span>
+<a name="l01096"></a><a class="code" href="group__rtcan.html#g0907dd1ed7a46192689ffa8bcc24bac7">01096</a> <span class="preprocessor">#define CAN_ERR_LOSTARB_UNSPEC  0x00 </span>
+<a name="l01104"></a>01104 <span class="preprocessor"></span><span class="comment">/* error status of CAN-controller / data[1] */</span>
+<a name="l01105"></a><a class="code" href="group__rtcan.html#g2cb8723f95e4ec585495c802186353e0">01105</a> <span class="preprocessor">#define CAN_ERR_CRTL_UNSPEC      0x00 </span>
+<a name="l01106"></a><a class="code" href="group__rtcan.html#ga09838c604a1ed6e151897ac8ef69245">01106</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_OVERFLOW 0x01 </span>
+<a name="l01107"></a><a class="code" href="group__rtcan.html#g1a4489a7989a5b7028418d5bf21e1424">01107</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_OVERFLOW 0x02 </span>
+<a name="l01108"></a><a class="code" href="group__rtcan.html#g9fd6156f8da9dc26e341e5d54ff57057">01108</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_WARNING  0x04 </span>
+<a name="l01109"></a><a class="code" href="group__rtcan.html#gcabf596907c31696815e795746e54205">01109</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_WARNING  0x08 </span>
+<a name="l01110"></a><a class="code" href="group__rtcan.html#g8987015738205340d471765acab4eef1">01110</a> <span class="preprocessor">#define CAN_ERR_CRTL_RX_PASSIVE  0x10 </span>
+<a name="l01111"></a><a class="code" href="group__rtcan.html#gcc60f9fd58621ab685a8609f05d2e416">01111</a> <span class="preprocessor">#define CAN_ERR_CRTL_TX_PASSIVE  0x20 </span>
+<a name="l01118"></a>01118 <span class="preprocessor"></span><span class="comment">/* error in CAN protocol (type) / data[2] */</span>
+<a name="l01119"></a><a class="code" href="group__rtcan.html#ga47b9c845f02565eae406fd39d291be0">01119</a> <span class="preprocessor">#define CAN_ERR_PROT_UNSPEC     0x00 </span>
+<a name="l01120"></a><a class="code" href="group__rtcan.html#g6e0e440e5eed59b3b027dc7c00399976">01120</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT        0x01 </span>
+<a name="l01121"></a><a class="code" href="group__rtcan.html#gb1a0bcd021a1e4d9217de586e39f805e">01121</a> <span class="preprocessor">#define CAN_ERR_PROT_FORM       0x02 </span>
+<a name="l01122"></a><a class="code" href="group__rtcan.html#ge3899d62fa7245398bcd5d268f21e2c9">01122</a> <span class="preprocessor">#define CAN_ERR_PROT_STUFF      0x04 </span>
+<a name="l01123"></a><a class="code" href="group__rtcan.html#g5df456321d611a561f84a5ff43912b97">01123</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT0       0x08 </span>
+<a name="l01124"></a><a class="code" href="group__rtcan.html#g86537f57c2a2983cfcf4d8e62f845c5e">01124</a> <span class="preprocessor">#define CAN_ERR_PROT_BIT1       0x10 </span>
+<a name="l01125"></a><a class="code" href="group__rtcan.html#g4c5e4423cdab34a2b31671cb0b8a2f8c">01125</a> <span class="preprocessor">#define CAN_ERR_PROT_OVERLOAD   0x20 </span>
+<a name="l01126"></a><a class="code" href="group__rtcan.html#g377cb92cd0871bdb5a911997347da250">01126</a> <span class="preprocessor">#define CAN_ERR_PROT_ACTIVE     0x40 </span>
+<a name="l01127"></a><a class="code" href="group__rtcan.html#g31f030e59948651391f6529cded6cb16">01127</a> <span class="preprocessor">#define CAN_ERR_PROT_TX         0x80 </span>
+<a name="l01134"></a>01134 <span class="preprocessor"></span><span class="comment">/* error in CAN protocol (location) / data[3] */</span>
+<a name="l01135"></a><a class="code" href="group__rtcan.html#ge2ac6fc3601a47c5f308536eb4dc8e67">01135</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_UNSPEC  0x00 </span>
+<a name="l01136"></a><a class="code" href="group__rtcan.html#g7245c2e2de967dce06d70198a172e685">01136</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_SOF     0x03 </span>
+<a name="l01137"></a><a class="code" href="group__rtcan.html#g9825115294b77e1df34ef14edcad7a79">01137</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID28_21 0x02 </span>
+<a name="l01138"></a><a class="code" href="group__rtcan.html#g3753d6854891b0b5d3fc57980a715114">01138</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID20_18 0x06 </span>
+<a name="l01139"></a><a class="code" href="group__rtcan.html#gc501f7e6c40c1943fa6350f00e26cc83">01139</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_SRTR    0x04 </span>
+<a name="l01140"></a><a class="code" href="group__rtcan.html#ga00664e7c461def41f44055e8a35bddf">01140</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_IDE     0x05 </span>
+<a name="l01141"></a><a class="code" href="group__rtcan.html#g066eb37bb1b92344d325da406b4b603b">01141</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID17_13 0x07 </span>
+<a name="l01142"></a><a class="code" href="group__rtcan.html#g67e55f1b821db472cac162f2feecda6a">01142</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID12_05 0x0F </span>
+<a name="l01143"></a><a class="code" href="group__rtcan.html#gd1a3b7af3a19cacd1a8c12d4f5489750">01143</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ID04_00 0x0E </span>
+<a name="l01144"></a><a class="code" href="group__rtcan.html#g4628e97b616111506ddd0fffc478ad4c">01144</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RTR     0x0C </span>
+<a name="l01145"></a><a class="code" href="group__rtcan.html#gdac0399aeba887612ec1051b888ba242">01145</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RES1    0x0D </span>
+<a name="l01146"></a><a class="code" href="group__rtcan.html#g8fdac99c4ee4fc182423fcc3bfe483a5">01146</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_RES0    0x09 </span>
+<a name="l01147"></a><a class="code" href="group__rtcan.html#g9f71f0a09b5c240bcc59e1b6e11c5939">01147</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_DLC     0x0B </span>
+<a name="l01148"></a><a class="code" href="group__rtcan.html#g157e894ddc6416fc60a29eed677ddef5">01148</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_DATA    0x0A </span>
+<a name="l01149"></a><a class="code" href="group__rtcan.html#g7e3b7f7605ac54efe4d4fa3a24d5db1e">01149</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_CRC_SEQ 0x08 </span>
+<a name="l01150"></a><a class="code" href="group__rtcan.html#g3786ff719d2fe4d6ce4c5d41024b17ff">01150</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_CRC_DEL 0x18 </span>
+<a name="l01151"></a><a class="code" href="group__rtcan.html#g3e8f7f8397d3fa2d6969eb1630406c08">01151</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ACK     0x19 </span>
+<a name="l01152"></a><a class="code" href="group__rtcan.html#gba13ac8cdea680a62429d172aa6e4efc">01152</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_ACK_DEL 0x1B </span>
+<a name="l01153"></a><a class="code" href="group__rtcan.html#gc8eecac5cdfa8918d854d5d5dcfd96dd">01153</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_EOF     0x1A </span>
+<a name="l01154"></a><a class="code" href="group__rtcan.html#g5be0c73dc4f2843748197964fbef90ee">01154</a> <span class="preprocessor">#define CAN_ERR_PROT_LOC_INTERM  0x12 </span>
+<a name="l01161"></a>01161 <span class="preprocessor"></span><span class="comment">/* error status of CAN-transceiver / data[4] */</span>
+<a name="l01162"></a>01162 <span class="comment">/*                                               CANH CANL */</span>
+<a name="l01163"></a><a class="code" href="group__rtcan.html#gc2e41aff6604f44fb45f2f1fcd530767">01163</a> <span class="preprocessor">#define CAN_ERR_TRX_UNSPEC              0x00 </span>
+<a name="l01164"></a><a class="code" href="group__rtcan.html#g98f193ee9613a4e093920164d8575e03">01164</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_NO_WIRE        0x04 </span>
+<a name="l01165"></a><a class="code" href="group__rtcan.html#gc56483fcf441c29a7e4028755f3156ad">01165</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_BAT   0x05 </span>
+<a name="l01166"></a><a class="code" href="group__rtcan.html#gee82965e522715bd3fe9ac40434f33cc">01166</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_VCC   0x06 </span>
+<a name="l01167"></a><a class="code" href="group__rtcan.html#g74a6f58b392d6f311e41c4b050f1712a">01167</a> <span class="preprocessor">#define CAN_ERR_TRX_CANH_SHORT_TO_GND   0x07 </span>
+<a name="l01168"></a><a class="code" href="group__rtcan.html#g3f8f22657291622a87cfe26d7c3df285">01168</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_NO_WIRE        0x40 </span>
+<a name="l01169"></a><a class="code" href="group__rtcan.html#gab06d5c5c5143a87940ddb9ccffa7ba8">01169</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_BAT   0x50 </span>
+<a name="l01170"></a><a class="code" href="group__rtcan.html#g0ca1a16f67bc0d55b630494051f4f08f">01170</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_VCC   0x60 </span>
+<a name="l01171"></a><a class="code" href="group__rtcan.html#gae65667acae271f584afa1ee7d7fc6ab">01171</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_GND   0x70 </span>
+<a name="l01172"></a><a class="code" href="group__rtcan.html#g43b89ec65d2abec504f0b60e90070966">01172</a> <span class="preprocessor">#define CAN_ERR_TRX_CANL_SHORT_TO_CANH  0x80 </span>
+<a name="l01175"></a>01175 <span class="preprocessor"></span><span class="comment">/* controller specific additional information / data[5..7] */</span>
+<a name="l01176"></a>01176 
+<a name="l01190"></a>01190 <span class="preprocessor">#endif </span><span class="comment">/* _RTCAN_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 15 23:25:37 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1 </small></address>
 </body>

@@ -244,6 +244,9 @@ Currently only the RAW protocol is supported. <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g7ecbe43287e7909c2e3fce4859d945d2">CAN_RAW_LOOPBACK</a>&nbsp;&nbsp;&nbsp;0x3</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN TX loopback.  <a href="#g7ecbe43287e7909c2e3fce4859d945d2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g08c7e070a70d90ca0a73928317175e07">CAN_RAW_RECV_OWN_MSGS</a>&nbsp;&nbsp;&nbsp;0x4</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CAN receive own messages.  <a href="#g08c7e070a70d90ca0a73928317175e07"></a><br></td></tr>
 <tr><td colspan="2"><br><h2>IOCTLs</h2></td></tr>
 <tr><td colspan="2"><a class="anchor" name="CANIOCTLs"></a> CAN device IOCTLs <br><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtcan.html#g1494c47a323d2f81cff2feaa44a10423">SIOCGIFINDEX</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
@@ -711,6 +714,23 @@ Environments: non-RT (RT optional)<br>
 <li>-EFAULT (It was not possible to access user space memory area at the specified address.)</li><li>-EINVAL (Invalid length "optlen")</li><li>-EOPNOTSUPP (not supported, check RT-Socket-CAN kernel parameters). </li></ul>
 <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcansend_8c-example.html#a11">rtcansend.c</a>.</dl>
+</div>
+</div><p>
+<a class="anchor" name="g08c7e070a70d90ca0a73928317175e07"></a><!-- doxytag: member="rtcan.h::CAN_RAW_RECV_OWN_MSGS" ref="g08c7e070a70d90ca0a73928317175e07" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define CAN_RAW_RECV_OWN_MSGS&nbsp;&nbsp;&nbsp;0x4          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+CAN receive own messages. 
+<p>
+Not supported by RT-Socket-CAN, but defined for compatibility with Socket-CAN. 
 </div>
 </div><p>
 <a class="anchor" name="gf52f080fe44c179a79758d65aa5eeda6"></a><!-- doxytag: member="rtcan.h::RTCAN_RTIOC_RCV_TIMEOUT" ref="gf52f080fe44c179a79758d65aa5eeda6" args="" -->
@@ -1247,7 +1267,7 @@ CAN controller is in Sleep mode. </td></tr>
 
 </div>
 </div><p>
-<hr size="1"><address style="align: right;"><small>Generated on Sun Sep 9 22:42:51 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Mon Oct 15 23:25:39 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1 </small></address>
 </body>
