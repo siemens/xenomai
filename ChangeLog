@@ -6,7 +6,8 @@
 	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-02,
 	2.6.23-1.2-02.
 
-	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-06.
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-06,
+	2.6.23-DENX-2.0-02.
 
 2007-10-14  Jan Kiszka <jan.kiszka@siemens.com>
 
