@@ -43,23 +43,23 @@
 #endif
 
 static struct pci_device_id rthal_smi_pci_tbl[] = {
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_10) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801E_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_12) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_12) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_1) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_2) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_0) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_1) },
-{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH8_4) },
-{ 0, },
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_10)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801E_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_12)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_12)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_1)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_2)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_0)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_1)},
+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH8_4)},
+	{0,},
 };
 
 /* FIXME: Probably crippled too, need to be checked :
@@ -70,7 +70,7 @@ pci.ids database, ICH5-M ?)
 
 */
 
-#define DEVFN        0xf8 /* device 31, function 0 */
+#define DEVFN        0xf8	/* device 31, function 0 */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 #define pci_get_device(v,d,f) pci_find_device((v),(d),(f))
@@ -78,7 +78,7 @@ pci.ids database, ICH5-M ?)
 #endif
 
 #ifdef CONFIG_XENO_HW_SMI_WORKAROUND
-    
+
 #define PMBASE_B0    0x40
 #define PMBASE_B1    0x41
 
@@ -87,9 +87,9 @@ pci.ids database, ICH5-M ?)
 #define SMI_MON_ADDR     0x40
 
 /* SMI_EN register: ICH[0](16 bits), ICH[2-5](32 bits) */
-#define INTEL_USB2_EN_BIT   (0x01 << 18) /* ICH4, ... */
-#define LEGACY_USB2_EN_BIT  (0x01 << 17) /* ICH4, ... */
-#define PERIODIC_EN_BIT     (0x01 << 14) /* called 1MIN_ in ICH0 */
+#define INTEL_USB2_EN_BIT   (0x01 << 18)	/* ICH4, ... */
+#define LEGACY_USB2_EN_BIT  (0x01 << 17)	/* ICH4, ... */
+#define PERIODIC_EN_BIT     (0x01 << 14)	/* called 1MIN_ in ICH0 */
 #define TCO_EN_BIT          (0x01 << 13)
 #define MCSMI_EN_BIT        (0x01 << 11)
 #define SWSMI_TMR_EN_BIT    (0x01 << 6)
@@ -97,42 +97,34 @@ pci.ids database, ICH5-M ?)
 #define SLP_EN_BIT          (0x01 << 4)
 #define LEGACY_USB_EN_BIT   (0x01 << 3)
 #define BIOS_EN_BIT         (0x01 << 2)
-#define GBL_SMI_EN_BIT      (0x01) /* This is reset by a PCI reset event! */
+#define GBL_SMI_EN_BIT      (0x01)	/* This is reset by a PCI reset event! */
 
 static const unsigned rthal_smi_masked_bits =
 #ifdef CONFIG_XENO_HW_SMI_ALL
     GBL_SMI_EN_BIT;
 #else /* !defined(CONFIG_XENO_HW_SMI_ALL) */
-
     0
 #ifndef CONFIG_XENO_HW_SMI_INTEL_USB2
     | INTEL_USB2_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_INTEL_USB2) */
-
 #ifndef CONFIG_XENO_HW_SMI_LEGACY_USB2
     | LEGACY_USB2_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_LEGACY_USB2) */
-
 #ifndef CONFIG_XENO_HW_SMI_PERIODIC
     | PERIODIC_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_PERIODC) */
-
 #ifndef CONFIG_XENO_HW_SMI_TCO
     | TCO_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_TCO) */
-
 #ifndef CONFIG_XENO_HW_SMI_MC
     | MCSMI_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_MCSMI) */
-
 #ifndef CONFIG_XENO_HW_SMI_APMC
     | APMC_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_APMC) */
-
 #ifndef CONFIG_XENO_HW_SMI_LEGACY_USB
     | LEGACY_USB_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_LEGACY_USB) */
-
 #ifndef CONFIG_XENO_HW_SMI_BIOS
     | BIOS_EN_BIT
 #endif /* !defined(CONFIG_XENO_HW_SMI_BIOS) */
@@ -149,81 +141,84 @@ static unsigned short rthal_smi_en_addr;
 static int rthal_smi_reboot(struct notifier_block *nb, ulong event, void *buf);
 
 static struct notifier_block rthal_smi_notifier = {
-    .notifier_call = rthal_smi_reboot
+	.notifier_call = rthal_smi_reboot
 };
 
 static int rthal_smi_reboot(struct notifier_block *nb, ulong event, void *buf)
 {
-    if (((event == SYS_RESTART) || (event == SYS_HALT) ||
-         (event == SYS_POWER_OFF)) && rthal_smi_en_addr)
-        set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
+	if (((event == SYS_RESTART) || (event == SYS_HALT) ||
+	     (event == SYS_POWER_OFF)) && rthal_smi_en_addr)
+		set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
 
-    return NOTIFY_DONE;
+	return NOTIFY_DONE;
 }
 
 void rthal_smi_disable(void)
 {
-    if(!rthal_smi_en_addr)
-        return;
+	if (!rthal_smi_en_addr)
+		return;
 
-    rthal_smi_saved_bits = inl(rthal_smi_en_addr) & rthal_smi_masked_bits;
-    mask_bits(rthal_smi_masked_bits, rthal_smi_en_addr);
+	rthal_smi_saved_bits = inl(rthal_smi_en_addr) & rthal_smi_masked_bits;
+	mask_bits(rthal_smi_masked_bits, rthal_smi_en_addr);
 
-    if (inl(rthal_smi_en_addr) & rthal_smi_masked_bits)
-        printk("Xenomai: SMI workaround failed!\n");
+	if (inl(rthal_smi_en_addr) & rthal_smi_masked_bits)
+		printk("Xenomai: SMI workaround failed!\n");
+	else
+		printk("Xenomai: SMI workaround enabled\n");
 
-    register_reboot_notifier(&rthal_smi_notifier);
+	register_reboot_notifier(&rthal_smi_notifier);
 }
 
 void rthal_smi_restore(void)
 {
-    if(!rthal_smi_en_addr)
-        return;
+	if (!rthal_smi_en_addr)
+		return;
 
-    set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
+	printk("Xenomai: SMI configuration restored\n");
 
-    unregister_reboot_notifier(&rthal_smi_notifier);
+	set_bits(rthal_smi_saved_bits, rthal_smi_en_addr);
+
+	unregister_reboot_notifier(&rthal_smi_notifier);
 }
 
 static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
 {
-    u_int8_t byte0, byte1;
+	u_int8_t byte0, byte1;
 
-    pci_read_config_byte (dev, PMBASE_B0, &byte0);
-    pci_read_config_byte (dev, PMBASE_B1, &byte1);
-    return SMI_CTRL_ADDR + (((byte1 << 1) | (byte0 >> 7)) << 7); // bits 7-15
+	pci_read_config_byte(dev, PMBASE_B0, &byte0);
+	pci_read_config_byte(dev, PMBASE_B1, &byte1);
+	return SMI_CTRL_ADDR + (((byte1 << 1) | (byte0 >> 7)) << 7);	// bits 7-15
 }
 
 #endif /* CONFIG_XENO_HW_SMI_WORKAROUND */
 
 void rthal_smi_init(void)
 {
-    struct pci_dev *dev = NULL;
-    struct pci_device_id *id;
+	struct pci_dev *dev = NULL;
+	struct pci_device_id *id;
 
-    /*
-     * Do not use pci_register_driver, pci_enable_device, ...
-     * Just register the used ports.
-     */
-    for(id = &rthal_smi_pci_tbl[0]; dev == NULL && id->vendor != 0; id++)
-        dev = pci_get_device(id->vendor, id->device, NULL);
+	/*
+	 * Do not use pci_register_driver, pci_enable_device, ...
+	 * Just register the used ports.
+	 */
+	for (id = &rthal_smi_pci_tbl[0]; dev == NULL && id->vendor != 0; id++)
+		dev = pci_get_device(id->vendor, id->device, NULL);
 
-    if(dev == NULL || dev->bus->number || dev->devfn != DEVFN)
-        {
-        pci_dev_put(dev);
-        return ;
-        }
-
+	if (dev == NULL || dev->bus->number || dev->devfn != DEVFN) {
+		pci_dev_put(dev);
+		return;
+	}
 #ifdef CONFIG_XENO_HW_SMI_WORKAROUND
-    printk("Xenomai: SMI-enabled chipset found, enabling SMI workaround.\n");
-    rthal_smi_en_addr = get_smi_en_addr(dev);
+	printk("Xenomai: SMI-enabled chipset found\n");
+	rthal_smi_en_addr = get_smi_en_addr(dev);
 #else /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
-    printk("Xenomai: SMI-enabled chipset found but SMI workaround not enabled (check\n"
-           "         CONFIG_XENO_HW_SMI_WORKAROUND). You may encounter high\n"
-           "         interrupt latencies!\n");
+	printk
+	    ("Xenomai: SMI-enabled chipset found, but SMI workaround disabled\n"
+	     "         (check CONFIG_XENO_HW_SMI_WORKAROUND). You may encounter\n"
+	     "         high interrupt latencies!\n");
 #endif /* ! CONFIG_XENO_HW_SMI_WORKAROUND */
 
-   pci_dev_put(dev);
+	pci_dev_put(dev);
 }
 
 #ifdef CONFIG_XENO_HW_SMI_DETECT
