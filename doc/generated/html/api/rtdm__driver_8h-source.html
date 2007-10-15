@@ -192,486 +192,487 @@
 <a name="l00416"></a><a class="code" href="structrtdm__device.html#32ae26b86105b98cfd2fffa1023983ab">00416</a>         <span class="keyword">struct </span>proc_dir_entry *<a class="code" href="structrtdm__device.html#32ae26b86105b98cfd2fffa1023983ab">proc_entry</a>;
 <a name="l00417"></a>00417 
 <a name="l00419"></a><a class="code" href="structrtdm__device.html#af0229c02ee80345a751846e19da3be6">00419</a>         <span class="keywordtype">int</span> <a class="code" href="structrtdm__device.html#af0229c02ee80345a751846e19da3be6">device_id</a>;
-<a name="l00420"></a>00420 
-<a name="l00422"></a><a class="code" href="structrtdm__device.html#1198d3cfcf678093d655898055ec4f38">00422</a>         <span class="keyword">struct </span>rtdm_dev_reserved <a class="code" href="structrtdm__device.html#1198d3cfcf678093d655898055ec4f38">reserved</a>;
-<a name="l00423"></a>00423 };
-<a name="l00426"></a>00426 <span class="comment">/* --- device registration --- */</span>
-<a name="l00427"></a>00427 
-<a name="l00428"></a>00428 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#g6834ca7905bb34a5e1460e8fc9b986e6">rtdm_dev_register</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);
-<a name="l00429"></a>00429 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#gfc4962d857c067cbbbbfa3175d2d8e3f">rtdm_dev_unregister</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
-<a name="l00430"></a>00430 
-<a name="l00431"></a>00431 <span class="comment">/* --- inter-driver API --- */</span>
+<a name="l00421"></a><a class="code" href="structrtdm__device.html#d044dd99ee7786a8bacedb83a5759dfb">00421</a>         <span class="keywordtype">void</span> *<a class="code" href="structrtdm__device.html#d044dd99ee7786a8bacedb83a5759dfb">device_data</a>;
+<a name="l00422"></a>00422 
+<a name="l00424"></a><a class="code" href="structrtdm__device.html#1198d3cfcf678093d655898055ec4f38">00424</a>         <span class="keyword">struct </span>rtdm_dev_reserved <a class="code" href="structrtdm__device.html#1198d3cfcf678093d655898055ec4f38">reserved</a>;
+<a name="l00425"></a>00425 };
+<a name="l00428"></a>00428 <span class="comment">/* --- device registration --- */</span>
+<a name="l00429"></a>00429 
+<a name="l00430"></a>00430 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#g6834ca7905bb34a5e1460e8fc9b986e6">rtdm_dev_register</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device);
+<a name="l00431"></a>00431 <span class="keywordtype">int</span> <a class="code" href="group__devregister.html#gfc4962d857c067cbbbbfa3175d2d8e3f">rtdm_dev_unregister</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html">rtdm_device</a> *device, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
 <a name="l00432"></a>00432 
-<a name="l00433"></a>00433 <span class="preprocessor">#define rtdm_open               rt_dev_open</span>
-<a name="l00434"></a>00434 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_socket             rt_dev_socket</span>
-<a name="l00435"></a>00435 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_close              rt_dev_close</span>
-<a name="l00436"></a>00436 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_ioctl              rt_dev_ioctl</span>
-<a name="l00437"></a>00437 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read               rt_dev_read</span>
-<a name="l00438"></a>00438 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_write              rt_dev_write</span>
-<a name="l00439"></a>00439 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvmsg            rt_dev_recvmsg</span>
-<a name="l00440"></a>00440 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recv               rt_dev_recv</span>
-<a name="l00441"></a>00441 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvfrom           rt_dev_recvfrom</span>
-<a name="l00442"></a>00442 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendmsg            rt_dev_sendmsg</span>
-<a name="l00443"></a>00443 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_send               rt_dev_send</span>
-<a name="l00444"></a>00444 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendto             rt_dev_sendto</span>
-<a name="l00445"></a>00445 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_bind               rt_dev_bind</span>
-<a name="l00446"></a>00446 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_listen             rt_dev_listen</span>
-<a name="l00447"></a>00447 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_accept             rt_dev_accept</span>
-<a name="l00448"></a>00448 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockopt         rt_dev_getsockopt</span>
-<a name="l00449"></a>00449 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_setsockopt         rt_dev_setsockopt</span>
-<a name="l00450"></a>00450 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockname        rt_dev_getsockname</span>
-<a name="l00451"></a>00451 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getpeername        rt_dev_getpeername</span>
-<a name="l00452"></a>00452 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_shutdown           rt_dev_shutdown</span>
-<a name="l00453"></a>00453 <span class="preprocessor"></span>
-<a name="l00454"></a>00454 <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *<a class="code" href="group__interdrv.html#gedfcde40c44e237ec767f36e6b0583a9">rtdm_context_get</a>(<span class="keywordtype">int</span> <a class="code" href="structrtdm__dev__context.html#cd280f96d74cece3a5bd07cf6d439416">fd</a>);
-<a name="l00455"></a>00455 
-<a name="l00456"></a>00456 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l00457"></a>00457 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__interdrv.html#ge4a718f70bf6a3cfa91031f284a702ab">rtdm_context_lock</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
-<a name="l00458"></a>00458 {
-<a name="l00459"></a>00459         atomic_inc(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#1f9b421aba255f4ab62350445749eae1">close_lock_count</a>);
-<a name="l00460"></a>00460 }
-<a name="l00461"></a>00461 
-<a name="l00462"></a>00462 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__interdrv.html#gad5b748d4b5b3cb74a5089a566f12034">rtdm_context_unlock</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
-<a name="l00463"></a>00463 {
-<a name="l00464"></a>00464         atomic_dec(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#1f9b421aba255f4ab62350445749eae1">close_lock_count</a>);
-<a name="l00465"></a>00465 }
-<a name="l00466"></a>00466 
-<a name="l00467"></a>00467 <span class="comment">/* --- clock services --- */</span>
-<a name="l00468"></a>00468 <span class="keyword">struct </span>xntbase;
-<a name="l00469"></a>00469 <span class="keyword">extern</span> <span class="keyword">struct </span>xntbase *rtdm_tbase;
-<a name="l00470"></a>00470 
-<a name="l00471"></a>00471 <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> <a class="code" href="group__clock.html#g395d5ae3ce2cc8315369c5c39580df57">rtdm_clock_read</a>(<span class="keywordtype">void</span>)
-<a name="l00472"></a>00472 {
-<a name="l00473"></a>00473         <span class="keywordflow">return</span> xntbase_ticks2ns(rtdm_tbase, <a class="code" href="group__timebase.html#gedd3ccb7c998cfe35f946b1806d3eac8">xntbase_get_time</a>(rtdm_tbase));
-<a name="l00474"></a>00474 }
-<a name="l00475"></a>00475 
-<a name="l00476"></a>00476 <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> <a class="code" href="group__clock.html#g4b882f2dcb932e9bbd6e3b7c964cba55">rtdm_clock_read_monotonic</a>(<span class="keywordtype">void</span>)
-<a name="l00477"></a>00477 {
-<a name="l00478"></a>00478         <span class="keywordflow">return</span> xntbase_ticks2ns(rtdm_tbase, xntbase_get_jiffies(rtdm_tbase));
-<a name="l00479"></a>00479 }
-<a name="l00480"></a>00480 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00481"></a>00481 
-<a name="l00482"></a>00482 <span class="comment">/* --- spin lock services --- */</span>
-<a name="l00525"></a>00525 <span class="preprocessor">#ifdef DOXYGEN_CPP </span><span class="comment">/* Beautify doxygen output */</span>
-<a name="l00526"></a><a class="code" href="group__rtdmsync.html#gd3e900106e3bf800d1728b91f06a645a">00526</a> <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)     \</span>
-<a name="l00527"></a>00527 <span class="preprocessor">{                                               \</span>
-<a name="l00528"></a>00528 <span class="preprocessor">        &lt;ENTER_ATOMIC_SECTION&gt;                  \</span>
-<a name="l00529"></a>00529 <span class="preprocessor">        code_block;                             \</span>
-<a name="l00530"></a>00530 <span class="preprocessor">        &lt;LEAVE_ATOMIC_SECTION&gt;                  \</span>
-<a name="l00531"></a>00531 <span class="preprocessor">}</span>
-<a name="l00532"></a>00532 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* This is how it really works */</span>
-<a name="l00533"></a>00533 <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)     \</span>
-<a name="l00534"></a>00534 <span class="preprocessor">{                                               \</span>
-<a name="l00535"></a>00535 <span class="preprocessor">        spl_t s;                                \</span>
-<a name="l00536"></a>00536 <span class="preprocessor">                                                \</span>
-<a name="l00537"></a>00537 <span class="preprocessor">        xnlock_get_irqsave(&amp;nklock, s);         \</span>
-<a name="l00538"></a>00538 <span class="preprocessor">        code_block;                             \</span>
-<a name="l00539"></a>00539 <span class="preprocessor">        xnlock_put_irqrestore(&amp;nklock, s);      \</span>
-<a name="l00540"></a>00540 <span class="preprocessor">}</span>
-<a name="l00541"></a>00541 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
-<a name="l00542"></a>00542 <span class="preprocessor"></span>
-<a name="l00552"></a><a class="code" href="group__rtdmsync.html#g631c47f6ea18fae1d7f2f3964f798b86">00552</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED      RTHAL_SPIN_LOCK_UNLOCKED</span>
-<a name="l00553"></a>00553 <span class="preprocessor"></span>
-<a name="l00555"></a><a class="code" href="group__rtdmsync.html#g59d0e250e504c3444b73bd6d90fe34e9">00555</a> <span class="keyword">typedef</span> rthal_spinlock_t <a class="code" href="group__rtdmsync.html#g59d0e250e504c3444b73bd6d90fe34e9">rtdm_lock_t</a>;
-<a name="l00556"></a>00556 
-<a name="l00558"></a><a class="code" href="group__rtdmsync.html#g99eb122401cdb2f71dcfb3bc3251ee34">00558</a> <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__rtdmsync.html#g99eb122401cdb2f71dcfb3bc3251ee34">rtdm_lockctx_t</a>;
-<a name="l00559"></a>00559 
-<a name="l00575"></a><a class="code" href="group__rtdmsync.html#gf953c620d4412731ece033fb73ffaebe">00575</a> <span class="preprocessor">#define rtdm_lock_init(lock)    rthal_spin_lock_init(lock)</span>
-<a name="l00576"></a>00576 <span class="preprocessor"></span>
-<a name="l00593"></a><a class="code" href="group__rtdmsync.html#g3fd167e878cd3f86610f893cb5b3520d">00593</a> <span class="preprocessor">#define rtdm_lock_get(lock)     rthal_spin_lock(lock)</span>
-<a name="l00594"></a>00594 <span class="preprocessor"></span>
-<a name="l00611"></a><a class="code" href="group__rtdmsync.html#g3ade6adeceea2f7369951f26230e58c2">00611</a> <span class="preprocessor">#define rtdm_lock_put(lock)     rthal_spin_unlock(lock)</span>
-<a name="l00612"></a>00612 <span class="preprocessor"></span>
-<a name="l00630"></a><a class="code" href="group__rtdmsync.html#g937bead52d80e4130bdd86d3254a13e6">00630</a> <span class="preprocessor">#define rtdm_lock_get_irqsave(lock, context)    \</span>
-<a name="l00631"></a>00631 <span class="preprocessor">        rthal_spin_lock_irqsave(lock, context)</span>
-<a name="l00632"></a>00632 <span class="preprocessor"></span>
-<a name="l00650"></a><a class="code" href="group__rtdmsync.html#gbe6e26c571207ac7854dac86303ca9e0">00650</a> <span class="preprocessor">#define rtdm_lock_put_irqrestore(lock, context) \</span>
-<a name="l00651"></a>00651 <span class="preprocessor">        rthal_spin_unlock_irqrestore(lock, context)</span>
-<a name="l00652"></a>00652 <span class="preprocessor"></span>
-<a name="l00669"></a><a class="code" href="group__rtdmsync.html#g03caaf21b51934288f52b2f146385caa">00669</a> <span class="preprocessor">#define rtdm_lock_irqsave(context)      \</span>
-<a name="l00670"></a>00670 <span class="preprocessor">        rthal_local_irq_save(context)</span>
-<a name="l00671"></a>00671 <span class="preprocessor"></span>
-<a name="l00688"></a><a class="code" href="group__rtdmsync.html#g01e047afa048dbb3bd77fb190d755ca7">00688</a> <span class="preprocessor">#define rtdm_lock_irqrestore(context)   \</span>
-<a name="l00689"></a>00689 <span class="preprocessor">        rthal_local_irq_restore(context)</span>
-<a name="l00690"></a>00690 <span class="preprocessor"></span>
-<a name="l00694"></a>00694 <span class="comment">/* --- Interrupt management services --- */</span>
-<a name="l00700"></a>00700 <span class="keyword">typedef</span> xnintr_t rtdm_irq_t;
-<a name="l00701"></a>00701 
-<a name="l00708"></a><a class="code" href="group__rtdmirq.html#g6c001775a84b1b5c05563876810df8ed">00708</a> <span class="preprocessor">#define RTDM_IRQTYPE_SHARED             XN_ISR_SHARED</span>
-<a name="l00709"></a>00709 <span class="preprocessor"></span>
-<a name="l00711"></a><a class="code" href="group__rtdmirq.html#g3d4313530de41cfb8772a552146dbfca">00711</a> <span class="preprocessor">#define RTDM_IRQTYPE_EDGE               XN_ISR_EDGE</span>
-<a name="l00712"></a>00712 <span class="preprocessor"></span>
-<a name="l00721"></a><a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">00721</a> <span class="keyword">typedef</span> int (*<a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">rtdm_irq_handler_t</a>)(rtdm_irq_t *irq_handle);
-<a name="l00722"></a>00722 
-<a name="l00729"></a><a class="code" href="group__rtdmirq.html#gc8032c73975489a2e8067c54aeb0180c">00729</a> <span class="preprocessor">#define RTDM_IRQ_NONE                   XN_ISR_NONE</span>
-<a name="l00730"></a>00730 <span class="preprocessor"></span>
-<a name="l00731"></a><a class="code" href="group__rtdmirq.html#g844faeb4943f216e61919261da5e8b19">00731</a> <span class="preprocessor">#define RTDM_IRQ_HANDLED                XN_ISR_HANDLED</span>
+<a name="l00433"></a>00433 <span class="comment">/* --- inter-driver API --- */</span>
+<a name="l00434"></a>00434 
+<a name="l00435"></a>00435 <span class="preprocessor">#define rtdm_open               rt_dev_open</span>
+<a name="l00436"></a>00436 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_socket             rt_dev_socket</span>
+<a name="l00437"></a>00437 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_close              rt_dev_close</span>
+<a name="l00438"></a>00438 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_ioctl              rt_dev_ioctl</span>
+<a name="l00439"></a>00439 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read               rt_dev_read</span>
+<a name="l00440"></a>00440 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_write              rt_dev_write</span>
+<a name="l00441"></a>00441 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvmsg            rt_dev_recvmsg</span>
+<a name="l00442"></a>00442 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recv               rt_dev_recv</span>
+<a name="l00443"></a>00443 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_recvfrom           rt_dev_recvfrom</span>
+<a name="l00444"></a>00444 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendmsg            rt_dev_sendmsg</span>
+<a name="l00445"></a>00445 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_send               rt_dev_send</span>
+<a name="l00446"></a>00446 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_sendto             rt_dev_sendto</span>
+<a name="l00447"></a>00447 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_bind               rt_dev_bind</span>
+<a name="l00448"></a>00448 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_listen             rt_dev_listen</span>
+<a name="l00449"></a>00449 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_accept             rt_dev_accept</span>
+<a name="l00450"></a>00450 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockopt         rt_dev_getsockopt</span>
+<a name="l00451"></a>00451 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_setsockopt         rt_dev_setsockopt</span>
+<a name="l00452"></a>00452 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getsockname        rt_dev_getsockname</span>
+<a name="l00453"></a>00453 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_getpeername        rt_dev_getpeername</span>
+<a name="l00454"></a>00454 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_shutdown           rt_dev_shutdown</span>
+<a name="l00455"></a>00455 <span class="preprocessor"></span>
+<a name="l00456"></a>00456 <span class="keyword">struct </span><a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *<a class="code" href="group__interdrv.html#gedfcde40c44e237ec767f36e6b0583a9">rtdm_context_get</a>(<span class="keywordtype">int</span> <a class="code" href="structrtdm__dev__context.html#cd280f96d74cece3a5bd07cf6d439416">fd</a>);
+<a name="l00457"></a>00457 
+<a name="l00458"></a>00458 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l00459"></a>00459 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__interdrv.html#ge4a718f70bf6a3cfa91031f284a702ab">rtdm_context_lock</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
+<a name="l00460"></a>00460 {
+<a name="l00461"></a>00461         atomic_inc(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#1f9b421aba255f4ab62350445749eae1">close_lock_count</a>);
+<a name="l00462"></a>00462 }
+<a name="l00463"></a>00463 
+<a name="l00464"></a>00464 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__interdrv.html#gad5b748d4b5b3cb74a5089a566f12034">rtdm_context_unlock</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)
+<a name="l00465"></a>00465 {
+<a name="l00466"></a>00466         atomic_dec(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#1f9b421aba255f4ab62350445749eae1">close_lock_count</a>);
+<a name="l00467"></a>00467 }
+<a name="l00468"></a>00468 
+<a name="l00469"></a>00469 <span class="comment">/* --- clock services --- */</span>
+<a name="l00470"></a>00470 <span class="keyword">struct </span>xntbase;
+<a name="l00471"></a>00471 <span class="keyword">extern</span> <span class="keyword">struct </span>xntbase *rtdm_tbase;
+<a name="l00472"></a>00472 
+<a name="l00473"></a>00473 <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> <a class="code" href="group__clock.html#g395d5ae3ce2cc8315369c5c39580df57">rtdm_clock_read</a>(<span class="keywordtype">void</span>)
+<a name="l00474"></a>00474 {
+<a name="l00475"></a>00475         <span class="keywordflow">return</span> xntbase_ticks2ns(rtdm_tbase, <a class="code" href="group__timebase.html#gedd3ccb7c998cfe35f946b1806d3eac8">xntbase_get_time</a>(rtdm_tbase));
+<a name="l00476"></a>00476 }
+<a name="l00477"></a>00477 
+<a name="l00478"></a>00478 <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> <a class="code" href="group__clock.html#g4b882f2dcb932e9bbd6e3b7c964cba55">rtdm_clock_read_monotonic</a>(<span class="keywordtype">void</span>)
+<a name="l00479"></a>00479 {
+<a name="l00480"></a>00480         <span class="keywordflow">return</span> xntbase_ticks2ns(rtdm_tbase, xntbase_get_jiffies(rtdm_tbase));
+<a name="l00481"></a>00481 }
+<a name="l00482"></a>00482 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l00483"></a>00483 
+<a name="l00484"></a>00484 <span class="comment">/* --- spin lock services --- */</span>
+<a name="l00527"></a>00527 <span class="preprocessor">#ifdef DOXYGEN_CPP </span><span class="comment">/* Beautify doxygen output */</span>
+<a name="l00528"></a><a class="code" href="group__rtdmsync.html#gd3e900106e3bf800d1728b91f06a645a">00528</a> <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)     \</span>
+<a name="l00529"></a>00529 <span class="preprocessor">{                                               \</span>
+<a name="l00530"></a>00530 <span class="preprocessor">        &lt;ENTER_ATOMIC_SECTION&gt;                  \</span>
+<a name="l00531"></a>00531 <span class="preprocessor">        code_block;                             \</span>
+<a name="l00532"></a>00532 <span class="preprocessor">        &lt;LEAVE_ATOMIC_SECTION&gt;                  \</span>
+<a name="l00533"></a>00533 <span class="preprocessor">}</span>
+<a name="l00534"></a>00534 <span class="preprocessor"></span><span class="preprocessor">#else </span><span class="comment">/* This is how it really works */</span>
+<a name="l00535"></a>00535 <span class="preprocessor">#define RTDM_EXECUTE_ATOMICALLY(code_block)     \</span>
+<a name="l00536"></a>00536 <span class="preprocessor">{                                               \</span>
+<a name="l00537"></a>00537 <span class="preprocessor">        spl_t s;                                \</span>
+<a name="l00538"></a>00538 <span class="preprocessor">                                                \</span>
+<a name="l00539"></a>00539 <span class="preprocessor">        xnlock_get_irqsave(&amp;nklock, s);         \</span>
+<a name="l00540"></a>00540 <span class="preprocessor">        code_block;                             \</span>
+<a name="l00541"></a>00541 <span class="preprocessor">        xnlock_put_irqrestore(&amp;nklock, s);      \</span>
+<a name="l00542"></a>00542 <span class="preprocessor">}</span>
+<a name="l00543"></a>00543 <span class="preprocessor"></span><span class="preprocessor">#endif</span>
+<a name="l00544"></a>00544 <span class="preprocessor"></span>
+<a name="l00554"></a><a class="code" href="group__rtdmsync.html#g631c47f6ea18fae1d7f2f3964f798b86">00554</a> <span class="preprocessor">#define RTDM_LOCK_UNLOCKED      RTHAL_SPIN_LOCK_UNLOCKED</span>
+<a name="l00555"></a>00555 <span class="preprocessor"></span>
+<a name="l00557"></a><a class="code" href="group__rtdmsync.html#g59d0e250e504c3444b73bd6d90fe34e9">00557</a> <span class="keyword">typedef</span> rthal_spinlock_t <a class="code" href="group__rtdmsync.html#g59d0e250e504c3444b73bd6d90fe34e9">rtdm_lock_t</a>;
+<a name="l00558"></a>00558 
+<a name="l00560"></a><a class="code" href="group__rtdmsync.html#g99eb122401cdb2f71dcfb3bc3251ee34">00560</a> <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__rtdmsync.html#g99eb122401cdb2f71dcfb3bc3251ee34">rtdm_lockctx_t</a>;
+<a name="l00561"></a>00561 
+<a name="l00577"></a><a class="code" href="group__rtdmsync.html#gf953c620d4412731ece033fb73ffaebe">00577</a> <span class="preprocessor">#define rtdm_lock_init(lock)    rthal_spin_lock_init(lock)</span>
+<a name="l00578"></a>00578 <span class="preprocessor"></span>
+<a name="l00595"></a><a class="code" href="group__rtdmsync.html#g3fd167e878cd3f86610f893cb5b3520d">00595</a> <span class="preprocessor">#define rtdm_lock_get(lock)     rthal_spin_lock(lock)</span>
+<a name="l00596"></a>00596 <span class="preprocessor"></span>
+<a name="l00613"></a><a class="code" href="group__rtdmsync.html#g3ade6adeceea2f7369951f26230e58c2">00613</a> <span class="preprocessor">#define rtdm_lock_put(lock)     rthal_spin_unlock(lock)</span>
+<a name="l00614"></a>00614 <span class="preprocessor"></span>
+<a name="l00632"></a><a class="code" href="group__rtdmsync.html#g937bead52d80e4130bdd86d3254a13e6">00632</a> <span class="preprocessor">#define rtdm_lock_get_irqsave(lock, context)    \</span>
+<a name="l00633"></a>00633 <span class="preprocessor">        rthal_spin_lock_irqsave(lock, context)</span>
+<a name="l00634"></a>00634 <span class="preprocessor"></span>
+<a name="l00652"></a><a class="code" href="group__rtdmsync.html#gbe6e26c571207ac7854dac86303ca9e0">00652</a> <span class="preprocessor">#define rtdm_lock_put_irqrestore(lock, context) \</span>
+<a name="l00653"></a>00653 <span class="preprocessor">        rthal_spin_unlock_irqrestore(lock, context)</span>
+<a name="l00654"></a>00654 <span class="preprocessor"></span>
+<a name="l00671"></a><a class="code" href="group__rtdmsync.html#g03caaf21b51934288f52b2f146385caa">00671</a> <span class="preprocessor">#define rtdm_lock_irqsave(context)      \</span>
+<a name="l00672"></a>00672 <span class="preprocessor">        rthal_local_irq_save(context)</span>
+<a name="l00673"></a>00673 <span class="preprocessor"></span>
+<a name="l00690"></a><a class="code" href="group__rtdmsync.html#g01e047afa048dbb3bd77fb190d755ca7">00690</a> <span class="preprocessor">#define rtdm_lock_irqrestore(context)   \</span>
+<a name="l00691"></a>00691 <span class="preprocessor">        rthal_local_irq_restore(context)</span>
+<a name="l00692"></a>00692 <span class="preprocessor"></span>
+<a name="l00696"></a>00696 <span class="comment">/* --- Interrupt management services --- */</span>
+<a name="l00702"></a>00702 <span class="keyword">typedef</span> xnintr_t rtdm_irq_t;
+<a name="l00703"></a>00703 
+<a name="l00710"></a><a class="code" href="group__rtdmirq.html#g6c001775a84b1b5c05563876810df8ed">00710</a> <span class="preprocessor">#define RTDM_IRQTYPE_SHARED             XN_ISR_SHARED</span>
+<a name="l00711"></a>00711 <span class="preprocessor"></span>
+<a name="l00713"></a><a class="code" href="group__rtdmirq.html#g3d4313530de41cfb8772a552146dbfca">00713</a> <span class="preprocessor">#define RTDM_IRQTYPE_EDGE               XN_ISR_EDGE</span>
+<a name="l00714"></a>00714 <span class="preprocessor"></span>
+<a name="l00723"></a><a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">00723</a> <span class="keyword">typedef</span> int (*<a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">rtdm_irq_handler_t</a>)(rtdm_irq_t *irq_handle);
+<a name="l00724"></a>00724 
+<a name="l00731"></a><a class="code" href="group__rtdmirq.html#gc8032c73975489a2e8067c54aeb0180c">00731</a> <span class="preprocessor">#define RTDM_IRQ_NONE                   XN_ISR_NONE</span>
 <a name="l00732"></a>00732 <span class="preprocessor"></span>
-<a name="l00751"></a><a class="code" href="group__rtdmirq.html#g987a3bbc46ca5ebdb3852e20df6d0e38">00751</a> <span class="preprocessor">#define rtdm_irq_get_arg(irq_handle, type)      ((type *)irq_handle-&gt;cookie)</span>
-<a name="l00752"></a>00752 <span class="preprocessor"></span>
-<a name="l00754"></a>00754 <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g346d75be8e671a2bdd8f9d0edb4c4b94">rtdm_irq_request</a>(rtdm_irq_t *irq_handle, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq_no,
-<a name="l00755"></a>00755                      <a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">rtdm_irq_handler_t</a> handler, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags,
-<a name="l00756"></a>00756                      <span class="keyword">const</span> <span class="keywordtype">char</span> *device_name, <span class="keywordtype">void</span> *arg);
-<a name="l00757"></a>00757 
-<a name="l00758"></a>00758 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l00759"></a>00759 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g169244a372189963e7e8882c1bdd10a4">rtdm_irq_free</a>(rtdm_irq_t *irq_handle)
-<a name="l00760"></a>00760 {
-<a name="l00761"></a>00761         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g03f5fa185b92179226f4833e3c63c7d7">xnintr_detach</a>(irq_handle);
-<a name="l00762"></a>00762 }
-<a name="l00763"></a>00763 
-<a name="l00764"></a>00764 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#gb943c7b1ea765cc59fa5671daaedebaa">rtdm_irq_enable</a>(rtdm_irq_t *irq_handle)
-<a name="l00765"></a>00765 {
-<a name="l00766"></a>00766         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g75afffe32c35a0faa8d5ece37cdbec0b">xnintr_enable</a>(irq_handle);
-<a name="l00767"></a>00767 }
-<a name="l00768"></a>00768 
-<a name="l00769"></a>00769 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g4e44d8f5bdfe3aab7d898e1c09a3369d">rtdm_irq_disable</a>(rtdm_irq_t *irq_handle)
-<a name="l00770"></a>00770 {
-<a name="l00771"></a>00771         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g446b439e7b470cc077d477693f9af0e2">xnintr_disable</a>(irq_handle);
-<a name="l00772"></a>00772 }
-<a name="l00773"></a>00773 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00774"></a>00774 
-<a name="l00775"></a>00775 <span class="comment">/* --- non-real-time signalling services --- */</span>
+<a name="l00733"></a><a class="code" href="group__rtdmirq.html#g844faeb4943f216e61919261da5e8b19">00733</a> <span class="preprocessor">#define RTDM_IRQ_HANDLED                XN_ISR_HANDLED</span>
+<a name="l00734"></a>00734 <span class="preprocessor"></span>
+<a name="l00753"></a><a class="code" href="group__rtdmirq.html#g987a3bbc46ca5ebdb3852e20df6d0e38">00753</a> <span class="preprocessor">#define rtdm_irq_get_arg(irq_handle, type)      ((type *)irq_handle-&gt;cookie)</span>
+<a name="l00754"></a>00754 <span class="preprocessor"></span>
+<a name="l00756"></a>00756 <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g346d75be8e671a2bdd8f9d0edb4c4b94">rtdm_irq_request</a>(rtdm_irq_t *irq_handle, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> irq_no,
+<a name="l00757"></a>00757                      <a class="code" href="group__rtdmirq.html#g8907f1e582e2e418e4e7585d6304de81">rtdm_irq_handler_t</a> handler, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> flags,
+<a name="l00758"></a>00758                      <span class="keyword">const</span> <span class="keywordtype">char</span> *device_name, <span class="keywordtype">void</span> *arg);
+<a name="l00759"></a>00759 
+<a name="l00760"></a>00760 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l00761"></a>00761 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g169244a372189963e7e8882c1bdd10a4">rtdm_irq_free</a>(rtdm_irq_t *irq_handle)
+<a name="l00762"></a>00762 {
+<a name="l00763"></a>00763         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g03f5fa185b92179226f4833e3c63c7d7">xnintr_detach</a>(irq_handle);
+<a name="l00764"></a>00764 }
+<a name="l00765"></a>00765 
+<a name="l00766"></a>00766 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#gb943c7b1ea765cc59fa5671daaedebaa">rtdm_irq_enable</a>(rtdm_irq_t *irq_handle)
+<a name="l00767"></a>00767 {
+<a name="l00768"></a>00768         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g75afffe32c35a0faa8d5ece37cdbec0b">xnintr_enable</a>(irq_handle);
+<a name="l00769"></a>00769 }
+<a name="l00770"></a>00770 
+<a name="l00771"></a>00771 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmirq.html#g4e44d8f5bdfe3aab7d898e1c09a3369d">rtdm_irq_disable</a>(rtdm_irq_t *irq_handle)
+<a name="l00772"></a>00772 {
+<a name="l00773"></a>00773         <span class="keywordflow">return</span> <a class="code" href="group__intr.html#g446b439e7b470cc077d477693f9af0e2">xnintr_disable</a>(irq_handle);
+<a name="l00774"></a>00774 }
+<a name="l00775"></a>00775 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00776"></a>00776 
-<a name="l00782"></a>00782 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> rtdm_nrtsig_t;
-<a name="l00783"></a>00783 
-<a name="l00794"></a><a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">00794</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig, <span class="keywordtype">void</span> *arg);
-<a name="l00797"></a>00797 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l00798"></a>00798 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__nrtsignal.html#ga79cb1e618872f09c9189d5a88794656">rtdm_nrtsig_init</a>(rtdm_nrtsig_t *nrt_sig,
-<a name="l00799"></a>00799                                    <a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">rtdm_nrtsig_handler_t</a> handler, <span class="keywordtype">void</span> *arg)
-<a name="l00800"></a>00800 {
-<a name="l00801"></a>00801         *nrt_sig = rthal_alloc_virq();
-<a name="l00802"></a>00802 
-<a name="l00803"></a>00803         <span class="keywordflow">if</span> (*nrt_sig == 0)
-<a name="l00804"></a>00804                 <span class="keywordflow">return</span> -EAGAIN;
-<a name="l00805"></a>00805 
-<a name="l00806"></a>00806         rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, arg, NULL,
-<a name="l00807"></a>00807                              IPIPE_HANDLE_MASK);
-<a name="l00808"></a>00808         <span class="keywordflow">return</span> 0;
-<a name="l00809"></a>00809 }
-<a name="l00810"></a>00810 
-<a name="l00811"></a>00811 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#gac74abdaf638340a6cc7314685b8ea71">rtdm_nrtsig_destroy</a>(rtdm_nrtsig_t *nrt_sig)
-<a name="l00812"></a>00812 {
-<a name="l00813"></a>00813         rthal_free_virq(*nrt_sig);
-<a name="l00814"></a>00814 }
-<a name="l00815"></a>00815 
-<a name="l00816"></a>00816 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#gec2aeb00d184c8e5b4cd4f47ea8412e1">rtdm_nrtsig_pend</a>(rtdm_nrtsig_t *nrt_sig)
-<a name="l00817"></a>00817 {
-<a name="l00818"></a>00818         rthal_trigger_irq(*nrt_sig);
-<a name="l00819"></a>00819 }
-<a name="l00820"></a>00820 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00821"></a>00821 
-<a name="l00822"></a>00822 <span class="comment">/* --- timer services --- */</span>
+<a name="l00777"></a>00777 <span class="comment">/* --- non-real-time signalling services --- */</span>
+<a name="l00778"></a>00778 
+<a name="l00784"></a>00784 <span class="keyword">typedef</span> <span class="keywordtype">unsigned</span> rtdm_nrtsig_t;
+<a name="l00785"></a>00785 
+<a name="l00796"></a><a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">00796</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">rtdm_nrtsig_handler_t</a>)(rtdm_nrtsig_t nrt_sig, <span class="keywordtype">void</span> *arg);
+<a name="l00799"></a>00799 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l00800"></a>00800 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__nrtsignal.html#ga79cb1e618872f09c9189d5a88794656">rtdm_nrtsig_init</a>(rtdm_nrtsig_t *nrt_sig,
+<a name="l00801"></a>00801                                    <a class="code" href="group__nrtsignal.html#gcd319eb21d6b05542cbf1469d59c54ef">rtdm_nrtsig_handler_t</a> handler, <span class="keywordtype">void</span> *arg)
+<a name="l00802"></a>00802 {
+<a name="l00803"></a>00803         *nrt_sig = rthal_alloc_virq();
+<a name="l00804"></a>00804 
+<a name="l00805"></a>00805         <span class="keywordflow">if</span> (*nrt_sig == 0)
+<a name="l00806"></a>00806                 <span class="keywordflow">return</span> -EAGAIN;
+<a name="l00807"></a>00807 
+<a name="l00808"></a>00808         rthal_virtualize_irq(rthal_root_domain, *nrt_sig, handler, arg, NULL,
+<a name="l00809"></a>00809                              IPIPE_HANDLE_MASK);
+<a name="l00810"></a>00810         <span class="keywordflow">return</span> 0;
+<a name="l00811"></a>00811 }
+<a name="l00812"></a>00812 
+<a name="l00813"></a>00813 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#gac74abdaf638340a6cc7314685b8ea71">rtdm_nrtsig_destroy</a>(rtdm_nrtsig_t *nrt_sig)
+<a name="l00814"></a>00814 {
+<a name="l00815"></a>00815         rthal_free_virq(*nrt_sig);
+<a name="l00816"></a>00816 }
+<a name="l00817"></a>00817 
+<a name="l00818"></a>00818 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__nrtsignal.html#gec2aeb00d184c8e5b4cd4f47ea8412e1">rtdm_nrtsig_pend</a>(rtdm_nrtsig_t *nrt_sig)
+<a name="l00819"></a>00819 {
+<a name="l00820"></a>00820         rthal_trigger_irq(*nrt_sig);
+<a name="l00821"></a>00821 }
+<a name="l00822"></a>00822 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00823"></a>00823 
-<a name="l00829"></a>00829 <span class="keyword">typedef</span> xntimer_t rtdm_timer_t;
-<a name="l00830"></a>00830 
-<a name="l00836"></a><a class="code" href="group__rtdmtimer.html#g1635fd9844b628d2902e20838d4b3927">00836</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtimer.html#g1635fd9844b628d2902e20838d4b3927">rtdm_timer_handler_t</a>)(rtdm_timer_t *timer);
-<a name="l00837"></a>00837 
-<a name="l00843"></a><a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">00843</a> <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> {
-<a name="l00845"></a>00845         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c05f102c9b75ced6f9666f19aa83181323">RTDM_TIMERMODE_RELATIVE</a> = XN_RELATIVE,
-<a name="l00846"></a>00846 
-<a name="l00848"></a>00848         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c0bd99aca778076edd86b21a8846c95218">RTDM_TIMERMODE_ABSOLUTE</a> = XN_ABSOLUTE,
-<a name="l00849"></a>00849 
-<a name="l00851"></a>00851         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c00259c202353e8512f404f7e3e581af6b">RTDM_TIMERMODE_REALTIME</a> = XN_REALTIME
-<a name="l00852"></a>00852 };
-<a name="l00857"></a>00857 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid broken doxygen output */</span>
-<a name="l00858"></a>00858 <span class="preprocessor">#define rtdm_timer_init(timer, handler, name)           \</span>
-<a name="l00859"></a>00859 <span class="preprocessor">({                                                      \</span>
-<a name="l00860"></a>00860 <span class="preprocessor">        xntimer_init((timer), rtdm_tbase, handler);     \</span>
-<a name="l00861"></a>00861 <span class="preprocessor">        xntimer_set_name((timer), (name));              \</span>
-<a name="l00862"></a>00862 <span class="preprocessor">        0;                                              \</span>
-<a name="l00863"></a>00863 <span class="preprocessor">})</span>
-<a name="l00864"></a>00864 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00865"></a>00865 
-<a name="l00866"></a>00866 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#ge531b3ebd5801de8c4951ab228c5b463">rtdm_timer_destroy</a>(rtdm_timer_t *timer);
+<a name="l00824"></a>00824 <span class="comment">/* --- timer services --- */</span>
+<a name="l00825"></a>00825 
+<a name="l00831"></a>00831 <span class="keyword">typedef</span> xntimer_t rtdm_timer_t;
+<a name="l00832"></a>00832 
+<a name="l00838"></a><a class="code" href="group__rtdmtimer.html#g1635fd9844b628d2902e20838d4b3927">00838</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtimer.html#g1635fd9844b628d2902e20838d4b3927">rtdm_timer_handler_t</a>)(rtdm_timer_t *timer);
+<a name="l00839"></a>00839 
+<a name="l00845"></a><a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">00845</a> <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> {
+<a name="l00847"></a>00847         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c05f102c9b75ced6f9666f19aa83181323">RTDM_TIMERMODE_RELATIVE</a> = XN_RELATIVE,
+<a name="l00848"></a>00848 
+<a name="l00850"></a>00850         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c0bd99aca778076edd86b21a8846c95218">RTDM_TIMERMODE_ABSOLUTE</a> = XN_ABSOLUTE,
+<a name="l00851"></a>00851 
+<a name="l00853"></a>00853         <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c00259c202353e8512f404f7e3e581af6b">RTDM_TIMERMODE_REALTIME</a> = XN_REALTIME
+<a name="l00854"></a>00854 };
+<a name="l00859"></a>00859 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid broken doxygen output */</span>
+<a name="l00860"></a>00860 <span class="preprocessor">#define rtdm_timer_init(timer, handler, name)           \</span>
+<a name="l00861"></a>00861 <span class="preprocessor">({                                                      \</span>
+<a name="l00862"></a>00862 <span class="preprocessor">        xntimer_init((timer), rtdm_tbase, handler);     \</span>
+<a name="l00863"></a>00863 <span class="preprocessor">        xntimer_set_name((timer), (name));              \</span>
+<a name="l00864"></a>00864 <span class="preprocessor">        0;                                              \</span>
+<a name="l00865"></a>00865 <span class="preprocessor">})</span>
+<a name="l00866"></a>00866 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00867"></a>00867 
-<a name="l00868"></a>00868 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#gdc2ecadff481fba4516117e534a6407a">rtdm_timer_start</a>(rtdm_timer_t *timer, <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> expiry,
-<a name="l00869"></a>00869                      <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> interval, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode);
-<a name="l00870"></a>00870 
-<a name="l00871"></a>00871 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#g17f47742bdb83d80d6e1882dc5e1045d">rtdm_timer_stop</a>(rtdm_timer_t *timer);
+<a name="l00868"></a>00868 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#ge531b3ebd5801de8c4951ab228c5b463">rtdm_timer_destroy</a>(rtdm_timer_t *timer);
+<a name="l00869"></a>00869 
+<a name="l00870"></a>00870 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#gdc2ecadff481fba4516117e534a6407a">rtdm_timer_start</a>(rtdm_timer_t *timer, <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> expiry,
+<a name="l00871"></a>00871                      <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> interval, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode);
 <a name="l00872"></a>00872 
-<a name="l00873"></a>00873 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l00874"></a>00874 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#g2c05ad6fc352b7efe285f71542c81c12">rtdm_timer_start_in_handler</a>(rtdm_timer_t *timer,
-<a name="l00875"></a>00875                                               <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> expiry,
-<a name="l00876"></a>00876                                               <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> interval,
-<a name="l00877"></a>00877                                               <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode)
-<a name="l00878"></a>00878 {
-<a name="l00879"></a>00879         <span class="keywordflow">return</span> <a class="code" href="group__timer.html#g0d9ee64879bfc01d1446a740278ce3d0">xntimer_start</a>(timer, xntbase_ns2ticks_ceil(rtdm_tbase, expiry),
-<a name="l00880"></a>00880                              xntbase_ns2ticks_ceil(rtdm_tbase, interval),
-<a name="l00881"></a>00881                              (xntmode_t)mode);
-<a name="l00882"></a>00882 }
-<a name="l00883"></a>00883 
-<a name="l00884"></a>00884 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#g925725054c6a96dd41aa0a4f1892be07">rtdm_timer_stop_in_handler</a>(rtdm_timer_t *timer)
-<a name="l00885"></a>00885 {
-<a name="l00886"></a>00886         <a class="code" href="group__timer.html#g45eada4d1d8b091d6b8faf5a750748e2">xntimer_stop</a>(timer);
-<a name="l00887"></a>00887 }
-<a name="l00888"></a>00888 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00889"></a>00889 
-<a name="l00890"></a>00890 <span class="comment">/* --- task services --- */</span>
-<a name="l00896"></a>00896 <span class="keyword">typedef</span> xnthread_t rtdm_task_t;
-<a name="l00897"></a>00897 
-<a name="l00903"></a><a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">00903</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
-<a name="l00904"></a>00904 
-<a name="l00909"></a>00909 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY       XNCORE_LOW_PRIO</span>
-<a name="l00910"></a>00910 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY      XNCORE_HIGH_PRIO</span>
-<a name="l00911"></a>00911 <span class="preprocessor"></span>
-<a name="l00917"></a>00917 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY        (+1)</span>
-<a name="l00918"></a>00918 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY        (-1)</span>
-<a name="l00919"></a>00919 <span class="preprocessor"></span>
-<a name="l00923"></a>00923 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g409aad14df0329416298aea38a0245dc">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
-<a name="l00924"></a>00924                    <a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
-<a name="l00925"></a>00925                    <span class="keywordtype">int</span> priority, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> period);
-<a name="l00926"></a>00926 <span class="keywordtype">int</span> __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode);
-<a name="l00927"></a>00927 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g9206c8fed29faec55805bff00ff0713f">rtdm_task_busy_sleep</a>(<a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> delay);
-<a name="l00928"></a>00928 
-<a name="l00929"></a>00929 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l00930"></a>00930 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g7ea83d4d0eb099dd070e23508adfa3d4">rtdm_task_destroy</a>(rtdm_task_t *task)
-<a name="l00931"></a>00931 {
-<a name="l00932"></a>00932         <a class="code" href="group__pod.html#g8d0f583ac2b5fa24ad9285a62fdd444e">xnpod_delete_thread</a>(task);
-<a name="l00933"></a>00933 }
-<a name="l00934"></a>00934 
-<a name="l00935"></a>00935 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g96a5791aacc2ee904ae590a3efc43c1b">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
+<a name="l00873"></a>00873 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#g17f47742bdb83d80d6e1882dc5e1045d">rtdm_timer_stop</a>(rtdm_timer_t *timer);
+<a name="l00874"></a>00874 
+<a name="l00875"></a>00875 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l00876"></a>00876 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtimer.html#g2c05ad6fc352b7efe285f71542c81c12">rtdm_timer_start_in_handler</a>(rtdm_timer_t *timer,
+<a name="l00877"></a>00877                                               <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> expiry,
+<a name="l00878"></a>00878                                               <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> interval,
+<a name="l00879"></a>00879                                               <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode)
+<a name="l00880"></a>00880 {
+<a name="l00881"></a>00881         <span class="keywordflow">return</span> <a class="code" href="group__timer.html#g0d9ee64879bfc01d1446a740278ce3d0">xntimer_start</a>(timer, xntbase_ns2ticks_ceil(rtdm_tbase, expiry),
+<a name="l00882"></a>00882                              xntbase_ns2ticks_ceil(rtdm_tbase, interval),
+<a name="l00883"></a>00883                              (xntmode_t)mode);
+<a name="l00884"></a>00884 }
+<a name="l00885"></a>00885 
+<a name="l00886"></a>00886 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtimer.html#g925725054c6a96dd41aa0a4f1892be07">rtdm_timer_stop_in_handler</a>(rtdm_timer_t *timer)
+<a name="l00887"></a>00887 {
+<a name="l00888"></a>00888         <a class="code" href="group__timer.html#g45eada4d1d8b091d6b8faf5a750748e2">xntimer_stop</a>(timer);
+<a name="l00889"></a>00889 }
+<a name="l00890"></a>00890 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l00891"></a>00891 
+<a name="l00892"></a>00892 <span class="comment">/* --- task services --- */</span>
+<a name="l00898"></a>00898 <span class="keyword">typedef</span> xnthread_t rtdm_task_t;
+<a name="l00899"></a>00899 
+<a name="l00905"></a><a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">00905</a> <span class="keyword">typedef</span> void (*<a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">rtdm_task_proc_t</a>)(<span class="keywordtype">void</span> *arg);
+<a name="l00906"></a>00906 
+<a name="l00911"></a>00911 <span class="preprocessor">#define RTDM_TASK_LOWEST_PRIORITY       XNCORE_LOW_PRIO</span>
+<a name="l00912"></a>00912 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_HIGHEST_PRIORITY      XNCORE_HIGH_PRIO</span>
+<a name="l00913"></a>00913 <span class="preprocessor"></span>
+<a name="l00919"></a>00919 <span class="preprocessor">#define RTDM_TASK_RAISE_PRIORITY        (+1)</span>
+<a name="l00920"></a>00920 <span class="preprocessor"></span><span class="preprocessor">#define RTDM_TASK_LOWER_PRIORITY        (-1)</span>
+<a name="l00921"></a>00921 <span class="preprocessor"></span>
+<a name="l00925"></a>00925 <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g409aad14df0329416298aea38a0245dc">rtdm_task_init</a>(rtdm_task_t *task, <span class="keyword">const</span> <span class="keywordtype">char</span> *name,
+<a name="l00926"></a>00926                    <a class="code" href="group__rtdmtask.html#g93e0efaf3c295224287bbf9a37d1dba6">rtdm_task_proc_t</a> task_proc, <span class="keywordtype">void</span> *arg,
+<a name="l00927"></a>00927                    <span class="keywordtype">int</span> priority, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> period);
+<a name="l00928"></a>00928 <span class="keywordtype">int</span> __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode);
+<a name="l00929"></a>00929 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g9206c8fed29faec55805bff00ff0713f">rtdm_task_busy_sleep</a>(<a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> delay);
+<a name="l00930"></a>00930 
+<a name="l00931"></a>00931 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l00932"></a>00932 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g7ea83d4d0eb099dd070e23508adfa3d4">rtdm_task_destroy</a>(rtdm_task_t *task)
+<a name="l00933"></a>00933 {
+<a name="l00934"></a>00934         <a class="code" href="group__pod.html#g8d0f583ac2b5fa24ad9285a62fdd444e">xnpod_delete_thread</a>(task);
+<a name="l00935"></a>00935 }
 <a name="l00936"></a>00936 
-<a name="l00937"></a>00937 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#gfc1ab7cb93060fd959e49d6fcb25b567">rtdm_task_set_priority</a>(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
-<a name="l00938"></a>00938 {
-<a name="l00939"></a>00939         <a class="code" href="group__pod.html#gaac7e281d1518b23d8ca03d5c5af26e9">xnpod_renice_thread</a>(task, priority);
-<a name="l00940"></a>00940         <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
-<a name="l00941"></a>00941 }
-<a name="l00942"></a>00942 
-<a name="l00943"></a>00943 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gfde96c48493485a42e7c9f2afb97b4df">rtdm_task_set_period</a>(rtdm_task_t *task,
-<a name="l00944"></a>00944                                        <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> period)
-<a name="l00945"></a>00945 {
-<a name="l00946"></a>00946         <span class="keywordflow">if</span> (period &lt; 0)
-<a name="l00947"></a>00947                 period = 0;
-<a name="l00948"></a>00948         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#g43c9d5f1cb127fd84cc7fb74c22b9879">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
-<a name="l00949"></a>00949                                          xntbase_ns2ticks_ceil
-<a name="l00950"></a>00950                                          (xnthread_time_base(task), period));
-<a name="l00951"></a>00951 }
-<a name="l00952"></a>00952 
-<a name="l00953"></a>00953 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g0e3de3056795f7dc21789b8859c68fb7">rtdm_task_unblock</a>(rtdm_task_t *task)
-<a name="l00954"></a>00954 {
-<a name="l00955"></a>00955         <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#ga591b675aa433190b4cdf3056380718d">xnpod_unblock_thread</a>(task);
-<a name="l00956"></a>00956 
-<a name="l00957"></a>00957         <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
-<a name="l00958"></a>00958         <span class="keywordflow">return</span> res;
-<a name="l00959"></a>00959 }
-<a name="l00960"></a>00960 
-<a name="l00961"></a>00961 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *<a class="code" href="group__rtdmtask.html#g62f9a2955145e76b5958925c472a8a36">rtdm_task_current</a>(<span class="keywordtype">void</span>)
-<a name="l00962"></a>00962 {
-<a name="l00963"></a>00963         <span class="keywordflow">return</span> xnpod_current_thread();
-<a name="l00964"></a>00964 }
-<a name="l00965"></a>00965 
-<a name="l00966"></a>00966 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g52e4ea6224a4f0b04291f27d86148206">rtdm_task_wait_period</a>(<span class="keywordtype">void</span>)
-<a name="l00967"></a>00967 {
-<a name="l00968"></a>00968         XENO_ASSERT(RTDM, !xnpod_unblockable_p(), <span class="keywordflow">return</span> -EPERM;);
-<a name="l00969"></a>00969         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#g603ef7d673e880d9c8b54baf86bcca09">xnpod_wait_thread_period</a>(NULL);
-<a name="l00970"></a>00970 }
-<a name="l00971"></a>00971 
-<a name="l00972"></a>00972 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gc790e50bab724df7d22e7c5c8d93bd74">rtdm_task_sleep</a>(<a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> delay)
-<a name="l00973"></a>00973 {
-<a name="l00974"></a>00974         <span class="keywordflow">return</span> __rtdm_task_sleep(delay, XN_RELATIVE);
-<a name="l00975"></a>00975 }
-<a name="l00976"></a>00976 
-<a name="l00977"></a>00977 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
-<a name="l00978"></a>00978 <a class="code" href="group__rtdmtask.html#gef4b4defcd745ceebb496d9c6e25fd14">rtdm_task_sleep_abs</a>(<a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> wakeup_date, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode)
-<a name="l00979"></a>00979 {
-<a name="l00980"></a>00980         <span class="comment">/* For the sake of a consistent API usage... */</span>
-<a name="l00981"></a>00981         <span class="keywordflow">if</span> (mode != <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c0bd99aca778076edd86b21a8846c95218">RTDM_TIMERMODE_ABSOLUTE</a> &amp;&amp; mode != <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c00259c202353e8512f404f7e3e581af6b">RTDM_TIMERMODE_REALTIME</a>)
-<a name="l00982"></a>00982                 <span class="keywordflow">return</span> -EINVAL;
-<a name="l00983"></a>00983         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_date, (xntmode_t)mode);
-<a name="l00984"></a>00984 }
-<a name="l00985"></a>00985 
-<a name="l00986"></a>00986 <span class="comment">/* rtdm_task_sleep_abs shall be used instead */</span>
-<a name="l00987"></a>00987 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated <a class="code" href="group__rtdmtask.html#gd73f4a2104273d5781913bf2ee6f04a2">rtdm_task_sleep_until</a>(<a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> wakeup_time)
-<a name="l00988"></a>00988 {
-<a name="l00989"></a>00989         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_time, XN_REALTIME);
-<a name="l00990"></a>00990 }
-<a name="l00991"></a>00991 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00992"></a>00992 
-<a name="l00993"></a>00993 <span class="comment">/* --- timeout sequences */</span>
+<a name="l00937"></a>00937 <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g96a5791aacc2ee904ae590a3efc43c1b">rtdm_task_join_nrt</a>(rtdm_task_t *task, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> poll_delay);
+<a name="l00938"></a>00938 
+<a name="l00939"></a>00939 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#gfc1ab7cb93060fd959e49d6fcb25b567">rtdm_task_set_priority</a>(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
+<a name="l00940"></a>00940 {
+<a name="l00941"></a>00941         <a class="code" href="group__pod.html#gaac7e281d1518b23d8ca03d5c5af26e9">xnpod_renice_thread</a>(task, priority);
+<a name="l00942"></a>00942         <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
+<a name="l00943"></a>00943 }
+<a name="l00944"></a>00944 
+<a name="l00945"></a>00945 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gfde96c48493485a42e7c9f2afb97b4df">rtdm_task_set_period</a>(rtdm_task_t *task,
+<a name="l00946"></a>00946                                        <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> period)
+<a name="l00947"></a>00947 {
+<a name="l00948"></a>00948         <span class="keywordflow">if</span> (period &lt; 0)
+<a name="l00949"></a>00949                 period = 0;
+<a name="l00950"></a>00950         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#g43c9d5f1cb127fd84cc7fb74c22b9879">xnpod_set_thread_periodic</a>(task, XN_INFINITE,
+<a name="l00951"></a>00951                                          xntbase_ns2ticks_ceil
+<a name="l00952"></a>00952                                          (xnthread_time_base(task), period));
+<a name="l00953"></a>00953 }
+<a name="l00954"></a>00954 
+<a name="l00955"></a>00955 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g0e3de3056795f7dc21789b8859c68fb7">rtdm_task_unblock</a>(rtdm_task_t *task)
+<a name="l00956"></a>00956 {
+<a name="l00957"></a>00957         <span class="keywordtype">int</span> res = <a class="code" href="group__pod.html#ga591b675aa433190b4cdf3056380718d">xnpod_unblock_thread</a>(task);
+<a name="l00958"></a>00958 
+<a name="l00959"></a>00959         <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
+<a name="l00960"></a>00960         <span class="keywordflow">return</span> res;
+<a name="l00961"></a>00961 }
+<a name="l00962"></a>00962 
+<a name="l00963"></a>00963 <span class="keyword">static</span> <span class="keyword">inline</span> rtdm_task_t *<a class="code" href="group__rtdmtask.html#g62f9a2955145e76b5958925c472a8a36">rtdm_task_current</a>(<span class="keywordtype">void</span>)
+<a name="l00964"></a>00964 {
+<a name="l00965"></a>00965         <span class="keywordflow">return</span> xnpod_current_thread();
+<a name="l00966"></a>00966 }
+<a name="l00967"></a>00967 
+<a name="l00968"></a>00968 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#g52e4ea6224a4f0b04291f27d86148206">rtdm_task_wait_period</a>(<span class="keywordtype">void</span>)
+<a name="l00969"></a>00969 {
+<a name="l00970"></a>00970         XENO_ASSERT(RTDM, !xnpod_unblockable_p(), <span class="keywordflow">return</span> -EPERM;);
+<a name="l00971"></a>00971         <span class="keywordflow">return</span> <a class="code" href="group__pod.html#g603ef7d673e880d9c8b54baf86bcca09">xnpod_wait_thread_period</a>(NULL);
+<a name="l00972"></a>00972 }
+<a name="l00973"></a>00973 
+<a name="l00974"></a>00974 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__rtdmtask.html#gc790e50bab724df7d22e7c5c8d93bd74">rtdm_task_sleep</a>(<a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> delay)
+<a name="l00975"></a>00975 {
+<a name="l00976"></a>00976         <span class="keywordflow">return</span> __rtdm_task_sleep(delay, XN_RELATIVE);
+<a name="l00977"></a>00977 }
+<a name="l00978"></a>00978 
+<a name="l00979"></a>00979 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span>
+<a name="l00980"></a>00980 <a class="code" href="group__rtdmtask.html#gef4b4defcd745ceebb496d9c6e25fd14">rtdm_task_sleep_abs</a>(<a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> wakeup_date, <span class="keyword">enum</span> <a class="code" href="group__rtdmtimer.html#gd6fe851fbe5a8f972c8fba40608e32c0">rtdm_timer_mode</a> mode)
+<a name="l00981"></a>00981 {
+<a name="l00982"></a>00982         <span class="comment">/* For the sake of a consistent API usage... */</span>
+<a name="l00983"></a>00983         <span class="keywordflow">if</span> (mode != <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c0bd99aca778076edd86b21a8846c95218">RTDM_TIMERMODE_ABSOLUTE</a> &amp;&amp; mode != <a class="code" href="group__rtdmtimer.html#ggd6fe851fbe5a8f972c8fba40608e32c00259c202353e8512f404f7e3e581af6b">RTDM_TIMERMODE_REALTIME</a>)
+<a name="l00984"></a>00984                 <span class="keywordflow">return</span> -EINVAL;
+<a name="l00985"></a>00985         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_date, (xntmode_t)mode);
+<a name="l00986"></a>00986 }
+<a name="l00987"></a>00987 
+<a name="l00988"></a>00988 <span class="comment">/* rtdm_task_sleep_abs shall be used instead */</span>
+<a name="l00989"></a>00989 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __deprecated <a class="code" href="group__rtdmtask.html#gd73f4a2104273d5781913bf2ee6f04a2">rtdm_task_sleep_until</a>(<a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> wakeup_time)
+<a name="l00990"></a>00990 {
+<a name="l00991"></a>00991         <span class="keywordflow">return</span> __rtdm_task_sleep(wakeup_time, XN_REALTIME);
+<a name="l00992"></a>00992 }
+<a name="l00993"></a>00993 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l00994"></a>00994 
-<a name="l00995"></a>00995 <span class="keyword">typedef</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> rtdm_toseq_t;
+<a name="l00995"></a>00995 <span class="comment">/* --- timeout sequences */</span>
 <a name="l00996"></a>00996 
-<a name="l00997"></a>00997 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g4ec77a583350875a2c92a768a8a2ad74">rtdm_toseq_init</a>(rtdm_toseq_t *timeout_seq, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout);
+<a name="l00997"></a>00997 <span class="keyword">typedef</span> <a class="code" href="group__rtdm.html#gb0a4c33f76102826b23e93efd2cfaae7">nanosecs_abs_t</a> rtdm_toseq_t;
 <a name="l00998"></a>00998 
-<a name="l00999"></a>00999 <span class="comment">/* --- event services --- */</span>
+<a name="l00999"></a>00999 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g4ec77a583350875a2c92a768a8a2ad74">rtdm_toseq_init</a>(rtdm_toseq_t *timeout_seq, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout);
 <a name="l01000"></a>01000 
-<a name="l01001"></a>01001 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01002"></a>01002         xnsynch_t synch_base;
-<a name="l01003"></a>01003 } rtdm_event_t;
-<a name="l01004"></a>01004 
-<a name="l01005"></a>01005 <span class="preprocessor">#define RTDM_EVENT_PENDING              XNSYNCH_SPARE1</span>
-<a name="l01006"></a>01006 <span class="preprocessor"></span>
-<a name="l01007"></a>01007 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gb3788e5d6ef9534e6e02a3fbbba76c33">rtdm_event_init</a>(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending);
-<a name="l01008"></a>01008 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gade4ed25a96db52c9dde221644929a35">rtdm_event_wait</a>(rtdm_event_t *event);
-<a name="l01009"></a>01009 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ge65d5973eecb040df8838ccb7131b519">rtdm_event_timedwait</a>(rtdm_event_t *event, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
-<a name="l01010"></a>01010                          rtdm_toseq_t *timeout_seq);
-<a name="l01011"></a>01011 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga5d309fd2a3a063b23a8e5fe004be291">rtdm_event_signal</a>(rtdm_event_t *event);
-<a name="l01012"></a>01012 
-<a name="l01013"></a>01013 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g2962000a686a4a65f9e75552cf7cd1aa">rtdm_event_clear</a>(rtdm_event_t *event);
+<a name="l01001"></a>01001 <span class="comment">/* --- event services --- */</span>
+<a name="l01002"></a>01002 
+<a name="l01003"></a>01003 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01004"></a>01004         xnsynch_t synch_base;
+<a name="l01005"></a>01005 } rtdm_event_t;
+<a name="l01006"></a>01006 
+<a name="l01007"></a>01007 <span class="preprocessor">#define RTDM_EVENT_PENDING              XNSYNCH_SPARE1</span>
+<a name="l01008"></a>01008 <span class="preprocessor"></span>
+<a name="l01009"></a>01009 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gb3788e5d6ef9534e6e02a3fbbba76c33">rtdm_event_init</a>(rtdm_event_t *event, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pending);
+<a name="l01010"></a>01010 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gade4ed25a96db52c9dde221644929a35">rtdm_event_wait</a>(rtdm_event_t *event);
+<a name="l01011"></a>01011 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ge65d5973eecb040df8838ccb7131b519">rtdm_event_timedwait</a>(rtdm_event_t *event, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
+<a name="l01012"></a>01012                          rtdm_toseq_t *timeout_seq);
+<a name="l01013"></a>01013 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#ga5d309fd2a3a063b23a8e5fe004be291">rtdm_event_signal</a>(rtdm_event_t *event);
 <a name="l01014"></a>01014 
-<a name="l01015"></a>01015 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01016"></a>01016 <span class="keywordtype">void</span> __rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
-<a name="l01017"></a>01017 
-<a name="l01018"></a>01018 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g1b41fc63e1652e368a116adfee1c37e2">rtdm_event_pulse</a>(rtdm_event_t *event)
-<a name="l01019"></a>01019 {
-<a name="l01020"></a>01020         __rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
-<a name="l01021"></a>01021 }
-<a name="l01022"></a>01022 
-<a name="l01023"></a>01023 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g053ac93d7076156fc335311ee275d5a9">rtdm_event_destroy</a>(rtdm_event_t *event)
-<a name="l01024"></a>01024 {
-<a name="l01025"></a>01025         __rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
-<a name="l01026"></a>01026 }
-<a name="l01027"></a>01027 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01028"></a>01028 
-<a name="l01029"></a>01029 <span class="comment">/* --- semaphore services --- */</span>
+<a name="l01015"></a>01015 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g2962000a686a4a65f9e75552cf7cd1aa">rtdm_event_clear</a>(rtdm_event_t *event);
+<a name="l01016"></a>01016 
+<a name="l01017"></a>01017 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01018"></a>01018 <span class="keywordtype">void</span> __rtdm_synch_flush(xnsynch_t *synch, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reason);
+<a name="l01019"></a>01019 
+<a name="l01020"></a>01020 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g1b41fc63e1652e368a116adfee1c37e2">rtdm_event_pulse</a>(rtdm_event_t *event)
+<a name="l01021"></a>01021 {
+<a name="l01022"></a>01022         __rtdm_synch_flush(&amp;event-&gt;synch_base, 0);
+<a name="l01023"></a>01023 }
+<a name="l01024"></a>01024 
+<a name="l01025"></a>01025 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g053ac93d7076156fc335311ee275d5a9">rtdm_event_destroy</a>(rtdm_event_t *event)
+<a name="l01026"></a>01026 {
+<a name="l01027"></a>01027         __rtdm_synch_flush(&amp;event-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
+<a name="l01028"></a>01028 }
+<a name="l01029"></a>01029 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01030"></a>01030 
-<a name="l01031"></a>01031 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01032"></a>01032         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value;
-<a name="l01033"></a>01033         xnsynch_t synch_base;
-<a name="l01034"></a>01034 } rtdm_sem_t;
-<a name="l01035"></a>01035 
-<a name="l01036"></a>01036 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g52dc28ff00292c2c1b44b5dcc5c76216">rtdm_sem_init</a>(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value);
-<a name="l01037"></a>01037 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#g8c0bb7c23e0a70b4f22d695d953ce1de">rtdm_sem_down</a>(rtdm_sem_t *sem);
-<a name="l01038"></a>01038 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gb6787d9bf1a3586c1667f6619005b85b">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
-<a name="l01039"></a>01039                        rtdm_toseq_t *timeout_seq);
-<a name="l01040"></a>01040 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gcd4fefc430f0381cb3e949693368c6ac">rtdm_sem_up</a>(rtdm_sem_t *sem);
-<a name="l01041"></a>01041 
-<a name="l01042"></a>01042 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01043"></a>01043 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gd4b38d6ee8728d27cdc2a6eaa16372e6">rtdm_sem_destroy</a>(rtdm_sem_t *sem)
-<a name="l01044"></a>01044 {
-<a name="l01045"></a>01045         __rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
-<a name="l01046"></a>01046 }
-<a name="l01047"></a>01047 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01048"></a>01048 
-<a name="l01049"></a>01049 <span class="comment">/* --- mutex services --- */</span>
+<a name="l01031"></a>01031 <span class="comment">/* --- semaphore services --- */</span>
+<a name="l01032"></a>01032 
+<a name="l01033"></a>01033 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01034"></a>01034         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value;
+<a name="l01035"></a>01035         xnsynch_t synch_base;
+<a name="l01036"></a>01036 } rtdm_sem_t;
+<a name="l01037"></a>01037 
+<a name="l01038"></a>01038 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g52dc28ff00292c2c1b44b5dcc5c76216">rtdm_sem_init</a>(rtdm_sem_t *sem, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value);
+<a name="l01039"></a>01039 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#g8c0bb7c23e0a70b4f22d695d953ce1de">rtdm_sem_down</a>(rtdm_sem_t *sem);
+<a name="l01040"></a>01040 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#gb6787d9bf1a3586c1667f6619005b85b">rtdm_sem_timeddown</a>(rtdm_sem_t *sem, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
+<a name="l01041"></a>01041                        rtdm_toseq_t *timeout_seq);
+<a name="l01042"></a>01042 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gcd4fefc430f0381cb3e949693368c6ac">rtdm_sem_up</a>(rtdm_sem_t *sem);
+<a name="l01043"></a>01043 
+<a name="l01044"></a>01044 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01045"></a>01045 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gd4b38d6ee8728d27cdc2a6eaa16372e6">rtdm_sem_destroy</a>(rtdm_sem_t *sem)
+<a name="l01046"></a>01046 {
+<a name="l01047"></a>01047         __rtdm_synch_flush(&amp;sem-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
+<a name="l01048"></a>01048 }
+<a name="l01049"></a>01049 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01050"></a>01050 
-<a name="l01051"></a>01051 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
-<a name="l01052"></a>01052         xnsynch_t synch_base;
-<a name="l01053"></a>01053 } rtdm_mutex_t;
-<a name="l01054"></a>01054 
-<a name="l01055"></a>01055 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g7f979f7f1a463b05ada27b1a4123e79c">rtdm_mutex_init</a>(rtdm_mutex_t *mutex);
-<a name="l01056"></a>01056 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga5c1afce1935c054f2773afe19c1dc76">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
-<a name="l01057"></a>01057 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#g2e7455c1ebfebc73454dee0aa11ec7c6">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
-<a name="l01058"></a>01058                          rtdm_toseq_t *timeout_seq);
-<a name="l01059"></a>01059 
-<a name="l01060"></a>01060 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01061"></a>01061 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gbfc38c0c9bca9aabd06b916dc26f7e92">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex)
-<a name="l01062"></a>01062 {
-<a name="l01063"></a>01063         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span>;);
-<a name="l01064"></a>01064 
-<a name="l01065"></a>01065         <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#g7b9bb4892c0d7e68d6ae94a3f2a1bdc7">xnsynch_wakeup_one_sleeper</a>(&amp;mutex-&gt;synch_base) != NULL))
-<a name="l01066"></a>01066                 <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
-<a name="l01067"></a>01067 }
-<a name="l01068"></a>01068 
-<a name="l01069"></a>01069 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g880cfdccbdafab82eb613c72ee13082b">rtdm_mutex_destroy</a>(rtdm_mutex_t *mutex)
-<a name="l01070"></a>01070 {
-<a name="l01071"></a>01071         __rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
-<a name="l01072"></a>01072 }
-<a name="l01073"></a>01073 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01074"></a>01074 
-<a name="l01075"></a>01075 <span class="comment">/* --- utility functions --- */</span>
+<a name="l01051"></a>01051 <span class="comment">/* --- mutex services --- */</span>
+<a name="l01052"></a>01052 
+<a name="l01053"></a>01053 <span class="keyword">typedef</span> <span class="keyword">struct </span>{
+<a name="l01054"></a>01054         xnsynch_t synch_base;
+<a name="l01055"></a>01055 } rtdm_mutex_t;
+<a name="l01056"></a>01056 
+<a name="l01057"></a>01057 <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g7f979f7f1a463b05ada27b1a4123e79c">rtdm_mutex_init</a>(rtdm_mutex_t *mutex);
+<a name="l01058"></a>01058 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#ga5c1afce1935c054f2773afe19c1dc76">rtdm_mutex_lock</a>(rtdm_mutex_t *mutex);
+<a name="l01059"></a>01059 <span class="keywordtype">int</span> <a class="code" href="group__rtdmsync.html#g2e7455c1ebfebc73454dee0aa11ec7c6">rtdm_mutex_timedlock</a>(rtdm_mutex_t *mutex, <a class="code" href="group__rtdm.html#g21e5d9f8f290011d4ff12706a7f2c4a1">nanosecs_rel_t</a> timeout,
+<a name="l01060"></a>01060                          rtdm_toseq_t *timeout_seq);
+<a name="l01061"></a>01061 
+<a name="l01062"></a>01062 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01063"></a>01063 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#gbfc38c0c9bca9aabd06b916dc26f7e92">rtdm_mutex_unlock</a>(rtdm_mutex_t *mutex)
+<a name="l01064"></a>01064 {
+<a name="l01065"></a>01065         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span>;);
+<a name="l01066"></a>01066 
+<a name="l01067"></a>01067         <span class="keywordflow">if</span> (unlikely(<a class="code" href="group__synch.html#g7b9bb4892c0d7e68d6ae94a3f2a1bdc7">xnsynch_wakeup_one_sleeper</a>(&amp;mutex-&gt;synch_base) != NULL))
+<a name="l01068"></a>01068                 <a class="code" href="group__pod.html#g6186cd572382e52f580f0167cfae9af0">xnpod_schedule</a>();
+<a name="l01069"></a>01069 }
+<a name="l01070"></a>01070 
+<a name="l01071"></a>01071 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmsync.html#g880cfdccbdafab82eb613c72ee13082b">rtdm_mutex_destroy</a>(rtdm_mutex_t *mutex)
+<a name="l01072"></a>01072 {
+<a name="l01073"></a>01073         __rtdm_synch_flush(&amp;mutex-&gt;synch_base, <a class="code" href="group__nucleus__info__flags.html#g1c4dc03a919401a3b04c0820282e843f">XNRMID</a>);
+<a name="l01074"></a>01074 }
+<a name="l01075"></a>01075 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
 <a name="l01076"></a>01076 
-<a name="l01077"></a>01077 <span class="preprocessor">#define rtdm_printk(format, ...)        printk(format, ##__VA_ARGS__)</span>
-<a name="l01078"></a>01078 <span class="preprocessor"></span>
-<a name="l01079"></a>01079 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
-<a name="l01080"></a>01080 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *<a class="code" href="group__util.html#gd7b8810ebe6f1aeda8bcc6160491608f">rtdm_malloc</a>(size_t size)
-<a name="l01081"></a>01081 {
-<a name="l01082"></a>01082         <span class="keywordflow">return</span> xnmalloc(size);
-<a name="l01083"></a>01083 }
-<a name="l01084"></a>01084 
-<a name="l01085"></a>01085 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__util.html#g979ea7025a52702e031a749966c48be3">rtdm_free</a>(<span class="keywordtype">void</span> *ptr)
-<a name="l01086"></a>01086 {
-<a name="l01087"></a>01087         xnfree(ptr);
-<a name="l01088"></a>01088 }
-<a name="l01089"></a>01089 
-<a name="l01090"></a>01090 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
-<a name="l01091"></a>01091 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__util.html#gddd91c94e2d4a77f8f452fd0bb77617a">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01092"></a>01092                       <span class="keywordtype">void</span> *src_addr, size_t len,
-<a name="l01093"></a>01093                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
-<a name="l01094"></a>01094                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
-<a name="l01095"></a>01095                       <span class="keywordtype">void</span> *vm_private_data);
-<a name="l01096"></a>01096 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gdfc62869248fb73f368af99b6b1b4f60">rtdm_iomap_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01097"></a>01097                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> src_addr, size_t len,
-<a name="l01098"></a>01098                        <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
-<a name="l01099"></a>01099                        <span class="keyword">struct</span> vm_operations_struct *vm_ops,
-<a name="l01100"></a>01100                        <span class="keywordtype">void</span> *vm_private_data);
-<a name="l01101"></a>01101 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gbe634554c9ad1b720c7c3f3ea18d0ae2">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, size_t len);
-<a name="l01102"></a>01102 
-<a name="l01103"></a>01103 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ge8ffdaef80479a12ddcdc283bf49d714">rtdm_read_user_ok</a>(rtdm_user_info_t *user_info,
-<a name="l01104"></a>01104                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
-<a name="l01105"></a>01105 {
-<a name="l01106"></a>01106         <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_READ, ptr, size);
-<a name="l01107"></a>01107 }
-<a name="l01108"></a>01108 
-<a name="l01109"></a>01109 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g40062cf5c5b2c5846cb68fd55c36ebda">rtdm_rw_user_ok</a>(rtdm_user_info_t *user_info,
-<a name="l01110"></a>01110                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
-<a name="l01111"></a>01111 {
-<a name="l01112"></a>01112         <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_WRITE, ptr, size);
-<a name="l01113"></a>01113 }
-<a name="l01114"></a>01114 
-<a name="l01115"></a>01115 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#gdefb10c377b317c8f36b2942388982e6">rtdm_copy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01116"></a>01116                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
-<a name="l01117"></a>01117                                       size_t size)
-<a name="l01118"></a>01118 {
-<a name="l01119"></a>01119         <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size) ? -EFAULT : 0;
-<a name="l01120"></a>01120 }
-<a name="l01121"></a>01121 
-<a name="l01122"></a>01122 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g22ff7a8e706880444ed64924eb0f2a72">rtdm_safe_copy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01123"></a>01123                                            <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
-<a name="l01124"></a>01124                                            size_t size)
-<a name="l01125"></a>01125 {
-<a name="l01126"></a>01126         <span class="keywordflow">return</span> (!__xn_access_ok(user_info, VERIFY_READ, src, size) ||
-<a name="l01127"></a>01127                 __xn_copy_from_user(user_info, dst, src, size)) ? -EFAULT : 0;
-<a name="l01128"></a>01128 }
-<a name="l01129"></a>01129 
-<a name="l01130"></a>01130 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga871430dac90e0fb951e2248d9eb2c64">rtdm_copy_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01131"></a>01131                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-<a name="l01132"></a>01132                                     size_t size)
-<a name="l01133"></a>01133 {
-<a name="l01134"></a>01134         <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size) ? -EFAULT : 0;
-<a name="l01135"></a>01135 }
-<a name="l01136"></a>01136 
-<a name="l01137"></a>01137 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga86f927806ae44bae2664349213d76d6">rtdm_safe_copy_to_user</a>(rtdm_user_info_t *user_info,
-<a name="l01138"></a>01138                                          <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
-<a name="l01139"></a>01139                                          size_t size)
-<a name="l01140"></a>01140 {
-<a name="l01141"></a>01141         <span class="keywordflow">return</span> (!__xn_access_ok(user_info, VERIFY_WRITE, dst, size) ||
-<a name="l01142"></a>01142                 __xn_copy_to_user(user_info, dst, src, size)) ? -EFAULT : 0;
-<a name="l01143"></a>01143 }
-<a name="l01144"></a>01144 
-<a name="l01145"></a>01145 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g9ce418051ccb7dd2366128efb8674262">rtdm_strncpy_from_user</a>(rtdm_user_info_t *user_info,
-<a name="l01146"></a>01146                                          <span class="keywordtype">char</span> *dst,
-<a name="l01147"></a>01147                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src, size_t count)
-<a name="l01148"></a>01148 {
-<a name="l01149"></a>01149         <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
-<a name="l01150"></a>01150                 <span class="keywordflow">return</span> -EFAULT;
-<a name="l01151"></a>01151         <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
-<a name="l01152"></a>01152 }
-<a name="l01153"></a>01153 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01154"></a>01154 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
-<a name="l01155"></a>01155 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01156"></a>01156 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
-<a name="l01157"></a>01157 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
-<a name="l01158"></a>01158 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
-<a name="l01159"></a>01159 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
-<a name="l01160"></a>01160 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
-<a name="l01161"></a>01161 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01162"></a>01162 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
-<a name="l01163"></a>01163 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
-<a name="l01164"></a>01164 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01165"></a>01165 
-<a name="l01166"></a>01166 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g7786a1937ac61ec93baca8844c944000">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
-<a name="l01167"></a>01167 {
-<a name="l01168"></a>01168         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
-<a name="l01169"></a>01169 }
-<a name="l01170"></a>01170 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l01171"></a>01171 
-<a name="l01172"></a>01172 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
-<a name="l01173"></a>01173                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
-<a name="l01174"></a>01174                     rtdm_rt_handler_t handler);
-<a name="l01175"></a>01175 
-<a name="l01176"></a>01176 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
-</pre></div><hr size="1"><address style="align: right;"><small>Generated on Sun Sep 9 22:42:44 2007 for Xenomai API by&nbsp;
+<a name="l01077"></a>01077 <span class="comment">/* --- utility functions --- */</span>
+<a name="l01078"></a>01078 
+<a name="l01079"></a>01079 <span class="preprocessor">#define rtdm_printk(format, ...)        printk(format, ##__VA_ARGS__)</span>
+<a name="l01080"></a>01080 <span class="preprocessor"></span>
+<a name="l01081"></a>01081 <span class="preprocessor">#ifndef DOXYGEN_CPP </span><span class="comment">/* Avoid static inline tags for RTDM in doxygen */</span>
+<a name="l01082"></a>01082 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *<a class="code" href="group__util.html#gd7b8810ebe6f1aeda8bcc6160491608f">rtdm_malloc</a>(size_t size)
+<a name="l01083"></a>01083 {
+<a name="l01084"></a>01084         <span class="keywordflow">return</span> xnmalloc(size);
+<a name="l01085"></a>01085 }
+<a name="l01086"></a>01086 
+<a name="l01087"></a>01087 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__util.html#g979ea7025a52702e031a749966c48be3">rtdm_free</a>(<span class="keywordtype">void</span> *ptr)
+<a name="l01088"></a>01088 {
+<a name="l01089"></a>01089         xnfree(ptr);
+<a name="l01090"></a>01090 }
+<a name="l01091"></a>01091 
+<a name="l01092"></a>01092 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_PERVASIVE</span>
+<a name="l01093"></a>01093 <span class="preprocessor"></span><span class="keywordtype">int</span> <a class="code" href="group__util.html#gddd91c94e2d4a77f8f452fd0bb77617a">rtdm_mmap_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01094"></a>01094                       <span class="keywordtype">void</span> *src_addr, size_t len,
+<a name="l01095"></a>01095                       <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
+<a name="l01096"></a>01096                       <span class="keyword">struct</span> vm_operations_struct *vm_ops,
+<a name="l01097"></a>01097                       <span class="keywordtype">void</span> *vm_private_data);
+<a name="l01098"></a>01098 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gdfc62869248fb73f368af99b6b1b4f60">rtdm_iomap_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01099"></a>01099                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> src_addr, size_t len,
+<a name="l01100"></a>01100                        <span class="keywordtype">int</span> prot, <span class="keywordtype">void</span> **pptr,
+<a name="l01101"></a>01101                        <span class="keyword">struct</span> vm_operations_struct *vm_ops,
+<a name="l01102"></a>01102                        <span class="keywordtype">void</span> *vm_private_data);
+<a name="l01103"></a>01103 <span class="keywordtype">int</span> <a class="code" href="group__util.html#gbe634554c9ad1b720c7c3f3ea18d0ae2">rtdm_munmap</a>(rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *ptr, size_t len);
+<a name="l01104"></a>01104 
+<a name="l01105"></a>01105 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ge8ffdaef80479a12ddcdc283bf49d714">rtdm_read_user_ok</a>(rtdm_user_info_t *user_info,
+<a name="l01106"></a>01106                                     <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
+<a name="l01107"></a>01107 {
+<a name="l01108"></a>01108         <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_READ, ptr, size);
+<a name="l01109"></a>01109 }
+<a name="l01110"></a>01110 
+<a name="l01111"></a>01111 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g40062cf5c5b2c5846cb68fd55c36ebda">rtdm_rw_user_ok</a>(rtdm_user_info_t *user_info,
+<a name="l01112"></a>01112                                   <span class="keyword">const</span> <span class="keywordtype">void</span> __user *ptr, size_t size)
+<a name="l01113"></a>01113 {
+<a name="l01114"></a>01114         <span class="keywordflow">return</span> __xn_access_ok(user_info, VERIFY_WRITE, ptr, size);
+<a name="l01115"></a>01115 }
+<a name="l01116"></a>01116 
+<a name="l01117"></a>01117 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#gdefb10c377b317c8f36b2942388982e6">rtdm_copy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01118"></a>01118                                       <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+<a name="l01119"></a>01119                                       size_t size)
+<a name="l01120"></a>01120 {
+<a name="l01121"></a>01121         <span class="keywordflow">return</span> __xn_copy_from_user(user_info, dst, src, size) ? -EFAULT : 0;
+<a name="l01122"></a>01122 }
+<a name="l01123"></a>01123 
+<a name="l01124"></a>01124 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g22ff7a8e706880444ed64924eb0f2a72">rtdm_safe_copy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01125"></a>01125                                            <span class="keywordtype">void</span> *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> __user *src,
+<a name="l01126"></a>01126                                            size_t size)
+<a name="l01127"></a>01127 {
+<a name="l01128"></a>01128         <span class="keywordflow">return</span> (!__xn_access_ok(user_info, VERIFY_READ, src, size) ||
+<a name="l01129"></a>01129                 __xn_copy_from_user(user_info, dst, src, size)) ? -EFAULT : 0;
+<a name="l01130"></a>01130 }
+<a name="l01131"></a>01131 
+<a name="l01132"></a>01132 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga871430dac90e0fb951e2248d9eb2c64">rtdm_copy_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01133"></a>01133                                     <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+<a name="l01134"></a>01134                                     size_t size)
+<a name="l01135"></a>01135 {
+<a name="l01136"></a>01136         <span class="keywordflow">return</span> __xn_copy_to_user(user_info, dst, src, size) ? -EFAULT : 0;
+<a name="l01137"></a>01137 }
+<a name="l01138"></a>01138 
+<a name="l01139"></a>01139 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#ga86f927806ae44bae2664349213d76d6">rtdm_safe_copy_to_user</a>(rtdm_user_info_t *user_info,
+<a name="l01140"></a>01140                                          <span class="keywordtype">void</span> __user *dst, <span class="keyword">const</span> <span class="keywordtype">void</span> *src,
+<a name="l01141"></a>01141                                          size_t size)
+<a name="l01142"></a>01142 {
+<a name="l01143"></a>01143         <span class="keywordflow">return</span> (!__xn_access_ok(user_info, VERIFY_WRITE, dst, size) ||
+<a name="l01144"></a>01144                 __xn_copy_to_user(user_info, dst, src, size)) ? -EFAULT : 0;
+<a name="l01145"></a>01145 }
+<a name="l01146"></a>01146 
+<a name="l01147"></a>01147 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g9ce418051ccb7dd2366128efb8674262">rtdm_strncpy_from_user</a>(rtdm_user_info_t *user_info,
+<a name="l01148"></a>01148                                          <span class="keywordtype">char</span> *dst,
+<a name="l01149"></a>01149                                          <span class="keyword">const</span> <span class="keywordtype">char</span> __user *src, size_t count)
+<a name="l01150"></a>01150 {
+<a name="l01151"></a>01151         <span class="keywordflow">if</span> (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
+<a name="l01152"></a>01152                 <span class="keywordflow">return</span> -EFAULT;
+<a name="l01153"></a>01153         <span class="keywordflow">return</span> __xn_strncpy_from_user(user_info, dst, src, count);
+<a name="l01154"></a>01154 }
+<a name="l01155"></a>01155 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01156"></a>01156 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
+<a name="l01157"></a>01157 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01158"></a>01158 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
+<a name="l01159"></a>01159 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
+<a name="l01160"></a>01160 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
+<a name="l01161"></a>01161 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
+<a name="l01162"></a>01162 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
+<a name="l01163"></a>01163 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01164"></a>01164 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
+<a name="l01165"></a>01165 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
+<a name="l01166"></a>01166 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01167"></a>01167 
+<a name="l01168"></a>01168 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g7786a1937ac61ec93baca8844c944000">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
+<a name="l01169"></a>01169 {
+<a name="l01170"></a>01170         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
+<a name="l01171"></a>01171 }
+<a name="l01172"></a>01172 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l01173"></a>01173 
+<a name="l01174"></a>01174 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context,
+<a name="l01175"></a>01175                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
+<a name="l01176"></a>01176                     rtdm_rt_handler_t handler);
+<a name="l01177"></a>01177 
+<a name="l01178"></a>01178 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
+</pre></div><hr size="1"><address style="align: right;"><small>Generated on Mon Oct 15 23:25:37 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1 </small></address>
 </body>
