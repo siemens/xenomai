@@ -641,7 +641,7 @@ index 9a0060b..dad53b6 100644
          /*
  	 * Although our caller may have the read side of xtime_lock,
 diff --git a/arch/i386/kernel/i8259.c b/arch/i386/kernel/i8259.c
-index c8d4582..d76a1d1 100644
+index c8d4582..a6902b8 100644
 --- a/arch/i386/kernel/i8259.c
 +++ b/arch/i386/kernel/i8259.c
 @@ -35,7 +35,7 @@
@@ -694,7 +694,7 @@ index c8d4582..d76a1d1 100644
 +	if (irq == 0) {
 +	    /* Fast timer ack -- don't mask (unless supposedly
 +	      spurious) */
-+	    outb(0x20,PIC_MASTER_CMD);
++	    outb(0x60,PIC_MASTER_CMD);
 +	    spin_unlock_irqrestore(&i8259A_lock, flags);
 +	    return;
 +	}
@@ -2280,7 +2280,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..3fb69fe
+index 0000000..aa6d93c
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2310,10 +2310,10 @@ index 0000000..3fb69fe
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-06"
++#define IPIPE_ARCH_STRING	"1.10-07"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	7
 +
 +#ifndef __ASSEMBLY__
 +
