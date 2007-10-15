@@ -606,7 +606,7 @@ index f8a3c40..0e7a88b 100644
  	/*
  	 * Although our caller may have the read side of xtime_lock,
 diff --git a/arch/i386/kernel/i8259.c b/arch/i386/kernel/i8259.c
-index 0499cbe..89bbea6 100644
+index 0499cbe..b5845b8 100644
 --- a/arch/i386/kernel/i8259.c
 +++ b/arch/i386/kernel/i8259.c
 @@ -34,7 +34,7 @@
@@ -651,22 +651,39 @@ index 0499cbe..89bbea6 100644
  	spin_unlock_irqrestore(&i8259A_lock, flags);
  }
  
-@@ -170,6 +174,15 @@ static void mask_and_ack_8259A(unsigned int irq)
+@@ -170,9 +174,24 @@ static void mask_and_ack_8259A(unsigned int irq)
  	 */
  	if (cached_irq_mask & irqmask)
  		goto spurious_8259A_irq;
 +#ifdef CONFIG_IPIPE
 +	if (irq == 0) {
-+	    /* Fast timer ack -- don't mask (unless supposedly
-+	      spurious) */
-+	    outb(0x60, PIC_MASTER_CMD);	/* Specific EOI to master. */
-+	    spin_unlock_irqrestore(&i8259A_lock, flags);
-+	    return;
++		/*
++		 * Fast timer ack -- don't mask (unless supposedly
++		 * spurious). We trace outb's in order to detect
++		 * broken hardware inducing large delays.
++		 */
++		ipipe_trace_special('o', irq);
++		outb(0x60, PIC_MASTER_CMD);	/* Specific EOI to master. */
++		ipipe_trace_special('x', irq);
++		spin_unlock_irqrestore(&i8259A_lock, flags);
++		return;
 +	}
 +#endif /* CONFIG_IPIPE */
  	cached_irq_mask |= irqmask;
  
  handle_real_irq:
++	ipipe_trace_special('o', irq);
+ 	if (irq & 8) {
+ 		inb(PIC_SLAVE_IMR);	/* DUMMY - (do we need this?) */
+ 		outb(cached_slave_mask, PIC_SLAVE_IMR);
+@@ -183,6 +202,7 @@ handle_real_irq:
+ 		outb(cached_master_mask, PIC_MASTER_IMR);
+ 		outb(0x60+irq,PIC_MASTER_CMD);	/* 'Specific EOI to master */
+ 	}
++	ipipe_trace_special('x', irq);
+ 	spin_unlock_irqrestore(&i8259A_lock, flags);
+ 	return;
+ 
 diff --git a/arch/i386/kernel/io_apic.c b/arch/i386/kernel/io_apic.c
 index 7f8b7af..2a57a11 100644
 --- a/arch/i386/kernel/io_apic.c
@@ -809,10 +826,10 @@ index 7f8b7af..2a57a11 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..4dc3014
+index 0000000..8327882
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,817 @@
+@@ -0,0 +1,826 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1457,8 +1474,17 @@ index 0000000..4dc3014
 +#endif /* CONFIG_KGDB */
 +
 +	if (!ipipe_trap_notify(vector, regs)) {
-+		__ipipe_exptr handler = __ipipe_std_extable[vector];
-+		handler(regs,error_code);
++#ifdef CONFIG_IPIPE_DEBUG
++		if (!ipipe_root_domain_p) {
++			/* Fix up domain so that Linux can handle this. */
++			ipipe_current_domain = ipipe_root_domain;
++			ipipe_trace_panic_freeze();
++			printk(KERN_ERR "BUG: Unhandled exception over domain"
++					" %s - switching to ROOT\n",
++					ipipe_current_domain->name);
++		}
++#endif /* CONFIG_IPIPE_DEBUG */
++		__ipipe_std_extable[vector](regs, error_code);
 +		local_irq_restore(flags);
 +		__fixup_if(regs);
 +		return 0;
@@ -2126,7 +2152,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..bd7aa1a
+index 0000000..3e24ab4
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,205 @@
@@ -2156,10 +2182,10 @@ index 0000000..bd7aa1a
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-07"
++#define IPIPE_ARCH_STRING	"1.10-08"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +
 +#ifndef __ASSEMBLY__
 +
@@ -3616,10 +3642,10 @@ index 0000000..d38a59b
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..5d6be15
+index 0000000..815b5ad
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,70 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
 + *
@@ -3645,7 +3671,7 @@ index 0000000..5d6be15
 +#ifndef _LINUX_IPIPE_TRACE_H
 +#define _LINUX_IPIPE_TRACE_H
 +
-+#ifdef CONFIG_IPIPE
++#ifdef CONFIG_IPIPE_TRACE
 +
 +#include <linux/types.h>
 +
@@ -3654,9 +3680,28 @@ index 0000000..5d6be15
 +void ipipe_trace_freeze(unsigned long v);
 +void ipipe_trace_special(unsigned char special_id, unsigned long v);
 +void ipipe_trace_pid(pid_t pid, short prio);
-+
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
++
++#else /* !CONFIG_IPIPE_TRACE */
++
++#define ipipe_trace_begin(v)		do { (void)(v); } while(0)
++#define ipipe_trace_end(v)		do { (void)(v); } while(0)
++#define ipipe_trace_freeze(v)		do { (void)(v); } while(0)
++#define ipipe_trace_special(id, v)	do { (void)(id); (void)(v); } while(0)
++#define ipipe_trace_pid(pid, prio)	do { (void)(pid); (void)(prio); } while(0)
++#define ipipe_trace_max_reset()		do { } while(0)
++#define ipipe_trace_froze_reset()	do { } while(0)
++
++#endif /* !CONFIG_IPIPE_TRACE */
++
++#ifdef CONFIG_IPIPE_TRACE_PANIC
++void ipipe_trace_panic_freeze(void);
++void ipipe_trace_panic_dump(void);
++#else
++static inline void ipipe_trace_panic_freeze(void) { }
++static inline void ipipe_trace_panic_dump(void) { }
++#endif
 +
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +#define ipipe_trace_irq_entry(irq)	ipipe_trace_begin(irq)
@@ -3664,27 +3709,13 @@ index 0000000..5d6be15
 +#define ipipe_trace_irqsoff()		ipipe_trace_begin(0x80000000UL)
 +#define ipipe_trace_irqson()		ipipe_trace_end(0x80000000UL)
 +#else
-+#define ipipe_trace_irq_entry(irq)	do { } while(0)
-+#define ipipe_trace_irq_exit(irq)	do { } while(0)
++#define ipipe_trace_irq_entry(irq)	do { (void)(irq);} while(0)
++#define ipipe_trace_irq_exit(irq)	do { (void)(irq);} while(0)
 +#define ipipe_trace_irqsoff()		do { } while(0)
 +#define ipipe_trace_irqson()		do { } while(0)
 +#endif
 +
-+#endif /* CONFIG_IPIPE */
-+
-+#ifdef CONFIG_IPIPE_TRACE_PANIC
-+
-+void ipipe_trace_panic_freeze(void);
-+void ipipe_trace_panic_dump(void);
-+
-+#else /* !CONFIG_IPIPE_TRACE_PANIC */
-+
-+static inline void ipipe_trace_panic_freeze(void) { }
-+static inline void ipipe_trace_panic_dump(void) { }
-+
-+#endif /* !CONFIG_IPIPE_TRACE_PANIC */
-+
-+#endif	/* !__LINUX_IPIPE_H */
++#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
 index 1695054..498249f 100644
 --- a/include/linux/irq.h
