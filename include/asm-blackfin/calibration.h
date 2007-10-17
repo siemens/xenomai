@@ -33,7 +33,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #ifdef CONFIG_BF533
 #define __sched_latency 20000
 #elif defined(CONFIG_BF537)
-#define __sched_latency 8500
+#define __sched_latency 7500
 #elif defined(CONFIG_BF561)
 #define __sched_latency 3000
 #else
