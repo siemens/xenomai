@@ -32,10 +32,12 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #else
 #ifdef CONFIG_BF533
 #define __sched_latency 20000
-#elif CONFIG_BF537
-#define __sched_latency 16500
+#elif defined(CONFIG_BF537)
+#define __sched_latency 7500
+#elif defined(CONFIG_BF561)
+#define __sched_latency 3000
 #else
-#define __sched_latency 1000	/* Default */
+#error "unsupported Blackfin processor"
 #endif
 #endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
 
