@@ -1,6 +1,9 @@
 2007-10-17  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrrc/nucleus/pod.c, ksrc/nucleus/shadow.c: Enforce CPU affinity
+	* ksrc/arch/blackfin/patches: Upgrade to 2.6.23-1.7-00. Includes a
+	port to the bf561.
+
+	* ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c: Enforce CPU affinity
 	unconditionally.
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-07.
