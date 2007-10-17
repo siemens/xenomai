@@ -1297,7 +1297,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int prio, err, cpu;
+	int prio, err;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
 		return -EINVAL;
@@ -1347,13 +1347,9 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
-	/* Restrict affinity to a single CPU of nkaffinity or
-	   the current set. */
-	if (xnarch_cpus_equal(current->cpus_allowed, XNPOD_ALL_CPUS))
-		cpu = xnarch_first_cpu(nkaffinity);
-	else
-		cpu = xnarch_first_cpu(current->cpus_allowed);
-	affinity = xnarch_cpumask_of_cpu(cpu);
+	/* Restrict affinity to a single CPU of nkaffinity & current set. */
+	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
+	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
 	set_cpus_allowed(current, affinity);
 
 	if (u_completion) {

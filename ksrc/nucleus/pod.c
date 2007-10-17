@@ -801,8 +801,7 @@ int xnpod_start_thread(xnthread_t *thread,
 	if (!xnthread_test_state(thread, XNDORMANT))
 		return -EBUSY;
 
-	if (xnarch_cpus_equal(affinity, XNPOD_ALL_CPUS))
-		affinity = nkaffinity;
+	xnarch_cpus_and(affinity, affinity, nkaffinity);
 
 	xnlock_get_irqsave(&nklock, s);
 
