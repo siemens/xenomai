@@ -1981,40 +1981,6 @@ index 0efad8a..7687fbc 100644
  }
  
  #ifndef CONFIG_MATH_EMULATION
-diff --git a/arch/i386/kernel/vm86.c b/arch/i386/kernel/vm86.c
-index be2f96e..50e0415 100644
---- a/arch/i386/kernel/vm86.c
-+++ b/arch/i386/kernel/vm86.c
-@@ -148,12 +148,14 @@ struct pt_regs * fastcall save_v86_state(struct kernel_vm86_regs * regs)
- 		do_exit(SIGSEGV);
- 	}
- 
-+	local_irq_disable_hw_cond();
- 	tss = &per_cpu(init_tss, get_cpu());
- 	current->thread.esp0 = current->thread.saved_esp0;
- 	current->thread.sysenter_cs = __KERNEL_CS;
- 	load_esp0(tss, &current->thread);
- 	current->thread.saved_esp0 = 0;
- 	put_cpu();
-+	local_irq_enable_hw_cond();
- 
- 	ret = KVM86->regs32;
- 
-@@ -324,12 +326,14 @@ static void do_sys_vm86(struct kernel_vm86_struct *info, struct task_struct *tsk
- 	savesegment(fs, tsk->thread.saved_fs);
- 	tsk->thread.saved_gs = info->regs32->xgs;
- 
-+	local_irq_disable_hw_cond();
- 	tss = &per_cpu(init_tss, get_cpu());
- 	tsk->thread.esp0 = (unsigned long) &info->VM86_TSS_ESP0;
- 	if (cpu_has_sep)
- 		tsk->thread.sysenter_cs = 0;
- 	load_esp0(tss, &tsk->thread);
- 	put_cpu();
-+	local_irq_enable_hw_cond();
- 
- 	tsk->thread.screen_bitmap = info->screen_bitmap;
- 	if (info->flags & VM86_SCREEN_BITMAP)
 diff --git a/arch/i386/lib/mmx.c b/arch/i386/lib/mmx.c
 index 28084d2..28c5645 100644
 --- a/arch/i386/lib/mmx.c
@@ -2677,7 +2643,7 @@ index 0000000..ccb19e3
 +
 +#endif	/* !__I386_IPIPE_BASE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
-index 17b18cf..25d011b 100644
+index 17b18cf..77f26d6 100644
 --- a/include/asm-i386/irqflags.h
 +++ b/include/asm-i386/irqflags.h
 @@ -15,37 +15,61 @@
@@ -2755,7 +2721,7 @@ index 17b18cf..25d011b 100644
  	__asm__ __volatile__("sti; hlt" : : : "memory");
  }
  
-@@ -71,16 +101,42 @@ static inline void halt(void)
+@@ -71,16 +101,41 @@ static inline void halt(void)
   */
  static inline unsigned long __raw_local_irq_save(void)
  {
@@ -2776,15 +2742,14 @@ index 17b18cf..25d011b 100644
 +
 +#ifdef CONFIG_IPIPE
 +#ifdef CONFIG_SMP
-+#define __load_cpu_number(reg)		movl %gs:4, reg
++#define __ipipe_load_cpunum(reg)	movl %gs:4, reg
 +#else
-+#define __load_cpu_number(reg)
++#define __ipipe_load_cpunum(reg)
 +#endif
-+#define DISABLE_INTERRUPTS(clobbers)	__load_cpu_number(%eax); \
++#define DISABLE_INTERRUPTS(clobbers)	__ipipe_load_cpunum(%eax); \
 +  					PER_CPU(ipipe_percpu_darray, %eax); \
 +  					btsl $0,(%eax); \
 +  					sti
-+#undef __load_cpu_number
 +#define ENABLE_INTERRUPTS(clobbers)	call __ipipe_unstall_root
 +#define ENABLE_INTERRUPTS_HW_COND	sti
 +#define DISABLE_INTERRUPTS_HW(clobbers)	cli
@@ -2799,7 +2764,7 @@ index 17b18cf..25d011b 100644
  #define ENABLE_INTERRUPTS_SYSEXIT	sti; sysexit
  #define INTERRUPT_RETURN		iret
  #define GET_CR0_INTO_EAX		movl %cr0, %eax
-@@ -91,8 +147,10 @@ static inline unsigned long __raw_local_irq_save(void)
+@@ -91,8 +146,10 @@ static inline unsigned long __raw_local_irq_save(void)
  #define raw_local_save_flags(flags) \
  		do { (flags) = __raw_local_save_flags(); } while (0)
  
@@ -2812,7 +2777,7 @@ index 17b18cf..25d011b 100644
  
  static inline int raw_irqs_disabled_flags(unsigned long flags)
  {
-@@ -105,6 +163,70 @@ static inline int raw_irqs_disabled(void)
+@@ -105,6 +162,70 @@ static inline int raw_irqs_disabled(void)
  
  	return raw_irqs_disabled_flags(flags);
  }
@@ -2965,10 +2930,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..2c313a0
+index 0000000..859c766
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,552 @@
+@@ -0,0 +1,554 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3263,6 +3228,8 @@ index 0000000..2c313a0
 +	if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))
 +		__ipipe_dispatch_event(IPIPE_EVENT_INIT,p);
 +}
++
++struct mm_struct;
 +
 +static inline void ipipe_cleanup_notify(struct mm_struct *mm)
 +{
@@ -5972,10 +5939,10 @@ index 0000000..e249074
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..8ecbe1a
+index 0000000..3abbc12
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1342 @@
+@@ -0,0 +1,1362 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -7176,6 +7143,26 @@ index 0000000..8ecbe1a
 +	return count;
 +}
 +
++/* Look up a kernel symbol and return it in a text buffer. */
++static int sprint_symbol(char *buffer, unsigned long address)
++{
++	char *modname;
++	const char *name;
++	unsigned long offset, size;
++	char namebuf[KSYM_NAME_LEN+1];
++
++	name = kallsyms_lookup(address, &size, &offset, &modname, namebuf);
++	if (!name)
++		return sprintf(buffer, "0x%lx", address);
++	else {
++		if (modname)
++			return sprintf(buffer, "%s+%#lx/%#lx [%s]", name, offset,
++				size, modname);
++		else
++			return sprintf(buffer, "%s+%#lx/%#lx", name, offset, size);
++	}
++}
++
 +static int __ipipe_rd_trigger(char *page, char **start, off_t off, int count,
 +			      int *eof, void *data)
 +{
@@ -7202,7 +7189,7 @@ index 0000000..8ecbe1a
 +static int __ipipe_wr_trigger(struct file *file, const char __user *buffer,
 +			      unsigned long count, void *data)
 +{
-+	char buf[KSYM_SYMBOL_LEN];
++	char buf[KSYM_NAME_LEN+1];
 +	unsigned long begin, end;
 +
 +	if (count > sizeof(buf) - 1)
