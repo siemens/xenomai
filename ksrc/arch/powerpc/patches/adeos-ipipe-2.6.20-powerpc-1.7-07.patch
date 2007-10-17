@@ -2030,7 +2030,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..7df637a
+index 0000000..f2f4180
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2073,10 +2073,10 @@ index 0000000..7df637a
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-06"
++#define IPIPE_ARCH_STRING	"1.7-07"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	7
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -5431,10 +5431,10 @@ index 0000000..e249074
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..8ecbe1a
+index 0000000..3abbc12
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1342 @@
+@@ -0,0 +1,1362 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -6635,6 +6635,26 @@ index 0000000..8ecbe1a
 +	return count;
 +}
 +
++/* Look up a kernel symbol and return it in a text buffer. */
++static int sprint_symbol(char *buffer, unsigned long address)
++{
++	char *modname;
++	const char *name;
++	unsigned long offset, size;
++	char namebuf[KSYM_NAME_LEN+1];
++
++	name = kallsyms_lookup(address, &size, &offset, &modname, namebuf);
++	if (!name)
++		return sprintf(buffer, "0x%lx", address);
++	else {
++		if (modname)
++			return sprintf(buffer, "%s+%#lx/%#lx [%s]", name, offset,
++				size, modname);
++		else
++			return sprintf(buffer, "%s+%#lx/%#lx", name, offset, size);
++	}
++}
++
 +static int __ipipe_rd_trigger(char *page, char **start, off_t off, int count,
 +			      int *eof, void *data)
 +{
@@ -6661,7 +6681,7 @@ index 0000000..8ecbe1a
 +static int __ipipe_wr_trigger(struct file *file, const char __user *buffer,
 +			      unsigned long count, void *data)
 +{
-+	char buf[KSYM_SYMBOL_LEN];
++	char buf[KSYM_NAME_LEN+1];
 +	unsigned long begin, end;
 +
 +	if (count > sizeof(buf) - 1)

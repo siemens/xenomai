@@ -1,5 +1,10 @@
 2007-10-17  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-07.
+	
+	* include/asm-blackfin/calibration.h (__sched_latency): 
+	Decrease default calibration value for the bf537.
+
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-09.
 
 2007-10-16  Philippe Gerum  <rpm@xenomai.org>
