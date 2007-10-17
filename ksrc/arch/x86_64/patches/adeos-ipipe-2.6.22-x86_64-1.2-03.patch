@@ -800,10 +800,10 @@ index 1c6c6f7..8bbddbc 100644
 +#endif
 diff --git a/arch/x86_64/kernel/ipipe.c b/arch/x86_64/kernel/ipipe.c
 new file mode 100644
-index 0000000..3468dc4
+index 0000000..d6f841b
 --- /dev/null
 +++ b/arch/x86_64/kernel/ipipe.c
-@@ -0,0 +1,784 @@
+@@ -0,0 +1,792 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86_64/kernel/ipipe.c
 + *
@@ -853,6 +853,8 @@ index 0000000..3468dc4
 +asmlinkage void preempt_schedule_irq(void);
 +
 +int __ipipe_tick_irq;		/* =0: 8254 */
++
++DEFINE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
 +
 +#ifdef CONFIG_SMP
 +
@@ -1528,8 +1530,14 @@ index 0000000..3468dc4
 +
 +finalize:
 +
-+	if (irq == __ipipe_tick_irq)
-+		set_irq_regs(regs);
++	if (irq == __ipipe_tick_irq) {
++		__raw_get_cpu_var(__ipipe_tick_regs).rip = regs->rip;
++		__raw_get_cpu_var(__ipipe_tick_regs).cs = regs->cs;
++		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs->eflags;
++		__raw_get_cpu_var(__ipipe_tick_regs).rbp = regs->rbp;
++		__raw_get_cpu_var(__ipipe_tick_regs).rsp = regs->rsp;
++		__raw_get_cpu_var(__ipipe_tick_regs).ss = regs->ss;
++	}
 +
 +	/*
 +	 * Now walk the pipeline, yielding control to the highest
@@ -2146,10 +2154,10 @@ index a7c75ea..c54f337 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86_64/ipipe.h b/include/asm-x86_64/ipipe.h
 new file mode 100644
-index 0000000..1e33166
+index 0000000..d9cdf4b
 --- /dev/null
 +++ b/include/asm-x86_64/ipipe.h
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,172 @@
 +/*   -*- linux-c -*-
 + *   include/asm-x86_64/ipipe.h
 + *
@@ -2264,6 +2272,8 @@ index 0000000..1e33166
 +
 +extern int __ipipe_tick_irq;
 +
++DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
++
 +unsigned __ipipe_get_irq_vector(int irq);
 +
 +asmlinkage void __ipipe_root_xirq_thunk(unsigned irq,
@@ -2280,15 +2290,20 @@ index 0000000..1e33166
 +      return ul;
 +}
 +
-+/* When running handlers, enable hw interrupts for all domains but the
++/*
++ * When running handlers, enable hw interrupts for all domains but the
 + * one heading the pipeline, so that IRQs can never be significantly
-+ * deferred for the latter. */
++ * deferred for the latter.
++ */
 +#define __ipipe_run_isr(ipd, irq)					\
 +	do {								\
 +		local_irq_enable_nohead(ipd);				\
 +		if (ipd == ipipe_root_domain) {				\
 +			if (likely(!ipipe_virtual_irq_p(irq))) {	\
++				struct pt_regs *old_regs;		\
++				old_regs = set_irq_regs(&__raw_get_cpu_var(__ipipe_tick_regs)); \
 +				__ipipe_root_xirq_thunk(~__ipipe_get_irq_vector(irq), (ipd)->irqs[irq].handler); \
++				set_irq_regs(old_regs);			\
 +			} else {					\
 +				irq_enter();				\
 +				__ipipe_root_virq_thunk(		\
