@@ -800,10 +800,10 @@ index 966fa10..6572fea 100644
 +#endif
 diff --git a/arch/x86_64/kernel/ipipe.c b/arch/x86_64/kernel/ipipe.c
 new file mode 100644
-index 0000000..3468dc4
+index 0000000..d6f841b
 --- /dev/null
 +++ b/arch/x86_64/kernel/ipipe.c
-@@ -0,0 +1,784 @@
+@@ -0,0 +1,792 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86_64/kernel/ipipe.c
 + *
@@ -853,6 +853,8 @@ index 0000000..3468dc4
 +asmlinkage void preempt_schedule_irq(void);
 +
 +int __ipipe_tick_irq;		/* =0: 8254 */
++
++DEFINE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
 +
 +#ifdef CONFIG_SMP
 +
@@ -1528,8 +1530,14 @@ index 0000000..3468dc4
 +
 +finalize:
 +
-+	if (irq == __ipipe_tick_irq)
-+		set_irq_regs(regs);
++	if (irq == __ipipe_tick_irq) {
++		__raw_get_cpu_var(__ipipe_tick_regs).rip = regs->rip;
++		__raw_get_cpu_var(__ipipe_tick_regs).cs = regs->cs;
++		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs->eflags;
++		__raw_get_cpu_var(__ipipe_tick_regs).rbp = regs->rbp;
++		__raw_get_cpu_var(__ipipe_tick_regs).rsp = regs->rsp;
++		__raw_get_cpu_var(__ipipe_tick_regs).ss = regs->ss;
++	}
 +
 +	/*
 +	 * Now walk the pipeline, yielding control to the highest
@@ -2158,10 +2166,10 @@ index a7c75ea..c54f337 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86_64/ipipe.h b/include/asm-x86_64/ipipe.h
 new file mode 100644
-index 0000000..1e33166
+index 0000000..2f0f670
 --- /dev/null
 +++ b/include/asm-x86_64/ipipe.h
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,172 @@
 +/*   -*- linux-c -*-
 + *   include/asm-x86_64/ipipe.h
 + *
@@ -2188,10 +2196,10 @@ index 0000000..1e33166
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.2-02"
++#define IPIPE_ARCH_STRING	"1.2-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2276,6 +2284,8 @@ index 0000000..1e33166
 +
 +extern int __ipipe_tick_irq;
 +
++DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
++
 +unsigned __ipipe_get_irq_vector(int irq);
 +
 +asmlinkage void __ipipe_root_xirq_thunk(unsigned irq,
@@ -2292,15 +2302,20 @@ index 0000000..1e33166
 +      return ul;
 +}
 +
-+/* When running handlers, enable hw interrupts for all domains but the
++/*
++ * When running handlers, enable hw interrupts for all domains but the
 + * one heading the pipeline, so that IRQs can never be significantly
-+ * deferred for the latter. */
++ * deferred for the latter.
++ */
 +#define __ipipe_run_isr(ipd, irq)					\
 +	do {								\
 +		local_irq_enable_nohead(ipd);				\
 +		if (ipd == ipipe_root_domain) {				\
 +			if (likely(!ipipe_virtual_irq_p(irq))) {	\
++				struct pt_regs *old_regs;		\
++				old_regs = set_irq_regs(&__raw_get_cpu_var(__ipipe_tick_regs)); \
 +				__ipipe_root_xirq_thunk(~__ipipe_get_irq_vector(irq), (ipd)->irqs[irq].handler); \
++				set_irq_regs(old_regs);			\
 +			} else {					\
 +				irq_enter();				\
 +				__ipipe_root_virq_thunk(		\
@@ -2852,10 +2867,10 @@ index 8d30229..74b355d 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..2c313a0
+index 0000000..859c766
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,552 @@
+@@ -0,0 +1,554 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3150,6 +3165,8 @@ index 0000000..2c313a0
 +	if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))
 +		__ipipe_dispatch_event(IPIPE_EVENT_INIT,p);
 +}
++
++struct mm_struct;
 +
 +static inline void ipipe_cleanup_notify(struct mm_struct *mm)
 +{
@@ -3764,22 +3781,39 @@ index 0000000..815b5ad
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
-index efc8853..0762988 100644
+index efc8853..617bfa2 100644
 --- a/include/linux/irq.h
 +++ b/include/linux/irq.h
-@@ -150,6 +150,12 @@ struct irq_chip {
+@@ -150,6 +150,14 @@ struct irq_chip {
   * @name:		flow handler name for /proc/interrupts output
   */
  struct irq_desc {
 +#ifdef CONFIG_IPIPE
 +	void			fastcall (*ipipe_ack)(unsigned int irq,
 +						      struct irq_desc *desc);
++	void			fastcall (*ipipe_demux)(unsigned int irq,
++							struct irq_desc *desc);
 +	void			fastcall (*ipipe_end)(unsigned int irq,
 +						      struct irq_desc *desc);
 +#endif /* CONFIG_IPIPE */
  	irq_flow_handler_t	handle_irq;
  	struct irq_chip		*chip;
  	struct msi_desc		*msi_desc;
+@@ -360,6 +368,14 @@ set_irq_chained_handler(unsigned int irq,
+ 	__set_irq_handler(irq, handle, 1, NULL);
+ }
+ 
++#ifdef CONFIG_IPIPE
++extern void
++__set_irq_demux_handler(unsigned int irq,
++			void fastcall (*decode)(unsigned int, struct irq_desc *),
++			int is_chained,
++			const char *name);
++#endif /* CONFIG_IPIPE */
++
+ /* Handle dynamic irq creation and destruction */
+ extern int create_irq(void);
+ extern void destroy_irq(unsigned int irq);
 diff --git a/include/linux/kernel.h b/include/linux/kernel.h
 index 47160fe..95cc205 100644
 --- a/include/linux/kernel.h
@@ -7403,7 +7437,7 @@ index 0000000..8ecbe1a
 +	                              &ipipe_trace_enable);
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index f1a73f0..7c4a556 100644
+index f1a73f0..5a188ca 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -340,7 +340,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
@@ -7441,7 +7475,7 @@ index f1a73f0..7c4a556 100644
  
  	/* Mark the IRQ currently in progress.*/
  	desc->status |= IRQ_INPROGRESS;
-@@ -503,6 +512,69 @@ out_unlock:
+@@ -503,6 +512,108 @@ out_unlock:
  	spin_unlock(&desc->lock);
  }
  
@@ -7485,6 +7519,45 @@ index f1a73f0..7c4a556 100644
 +{
 +}
 +
++void fastcall __ipipe_ack_demux_irq(unsigned irq, struct irq_desc *desc)
++{
++	/*
++	 * Handling is delegated to some demultiplexer routine,
++	 * e.g. GPIO. We mask_ack it, then call back into the demux
++	 * handler, which should decode the interrupt and feed the
++	 * pipeline as needed.
++	 */
++	if (desc->chip->mask)
++		desc->chip->mask(irq);
++	desc->ipipe_demux(irq, desc);
++}
++
++void fastcall __ipipe_end_demux_irq(unsigned irq, struct irq_desc *desc)
++{
++	if (desc->chip->unmask)
++		desc->chip->unmask(irq);
++}
++
++void fastcall
++handle_demux_irq(unsigned int irq, struct irq_desc *desc)
++{
++	/*
++	 * The regular IRQ handler will run last of all GPIO handlers,
++	 * to unmask the demux IRQ.
++	 */
++	__ipipe_end_demux_irq(irq, desc);
++}
++
++void __set_irq_demux_handler(unsigned int irq,
++			     void fastcall (*decode)(unsigned int, struct irq_desc *),
++			     int is_chained,
++			     const char *name)
++{
++	struct irq_desc *desc = irq_desc + irq;
++	__set_irq_handler(irq, &handle_demux_irq, is_chained, name);
++	desc->ipipe_demux = decode;
++}
++
 +void fastcall __ipipe_ack_bad_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	static int done;
@@ -7511,7 +7584,7 @@ index f1a73f0..7c4a556 100644
  #ifdef CONFIG_SMP
  /**
   *	handle_percpu_IRQ - Per CPU local irq handler
-@@ -518,8 +590,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -518,8 +629,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_this_cpu.irqs[irq]++;
  
@@ -7522,7 +7595,7 @@ index f1a73f0..7c4a556 100644
  
  	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -529,6 +603,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -529,6 +642,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  		desc->chip->eoi(irq);
  }
  
@@ -7545,7 +7618,7 @@ index f1a73f0..7c4a556 100644
  #endif /* CONFIG_SMP */
  
  void
-@@ -548,6 +638,30 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -548,6 +677,34 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  
  	if (!handle)
  		handle = handle_bad_irq;
@@ -7572,11 +7645,15 @@ index f1a73f0..7c4a556 100644
 +		desc->ipipe_end = &__ipipe_end_percpu_irq;
 +	}
 +#endif /* CONFIG_SMP */
++	else if (handle == &handle_demux_irq) {
++		desc->ipipe_ack = &__ipipe_ack_demux_irq;
++		desc->ipipe_end = &__ipipe_end_demux_irq;
++	}
 +#endif /* CONFIG_IPIPE */
  	else if (desc->chip == &no_irq_chip) {
  		printk(KERN_WARNING "Trying to install %sinterrupt handler "
  		       "for IRQ%d\n", is_chained ? "chained " : "", irq);
-@@ -559,7 +673,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -559,7 +716,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		 * dummy_irq_chip for easy transition.
  		 */
  		desc->chip = &dummy_irq_chip;
@@ -7594,7 +7671,7 @@ index f1a73f0..7c4a556 100644
  
  	spin_lock_irqsave(&desc->lock, flags);
  
-@@ -569,6 +693,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -569,6 +736,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  			mask_ack_irq(desc, irq);
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
