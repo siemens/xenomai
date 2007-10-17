@@ -2246,7 +2246,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..447d10f
+index 0000000..041f29e
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2276,10 +2276,10 @@ index 0000000..447d10f
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-08"
++#define IPIPE_ARCH_STRING	"1.10-09"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	8
++#define IPIPE_PATCH_NUMBER	9
 +
 +#ifndef __ASSEMBLY__
 +
