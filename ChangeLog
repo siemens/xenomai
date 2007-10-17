@@ -1,5 +1,8 @@
 2007-10-17  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrrc/nucleus/pod.c, ksrc/nucleus/shadow.c: Enforce CPU affinity
+	unconditionally.
+
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-07.
 	
 	* include/asm-blackfin/calibration.h (__sched_latency): 
