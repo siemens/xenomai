@@ -331,3 +331,11 @@ ER ref_sem(T_RSEM *pk_rsem, ID semid)
 
 	return E_OK;
 }
+
+EXPORT_SYMBOL(cre_sem);
+EXPORT_SYMBOL(del_sem);
+EXPORT_SYMBOL(sig_sem);
+EXPORT_SYMBOL(wai_sem);
+EXPORT_SYMBOL(preq_sem);
+EXPORT_SYMBOL(twai_sem);
+EXPORT_SYMBOL(ref_sem);
