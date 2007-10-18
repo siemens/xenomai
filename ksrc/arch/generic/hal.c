@@ -173,7 +173,7 @@ int rthal_irq_request(unsigned irq,
 
 /**
  * @fn int rthal_irq_release(unsigned irq)
- *                           
+ *
  * @brief Uninstall a real-time interrupt handler.
  *
  * Uninstalls an interrupt handler previously attached using the
@@ -208,7 +208,7 @@ int rthal_irq_release(unsigned irq)
 
 /**
  * @fn int rthal_irq_host_request(unsigned irq,rthal_irq_host_handler_t handler,char *name,void *dev_id)
- *                           
+ *
  * @brief Install a shared Linux interrupt handler.
  *
  * Installs a shared interrupt handler in the Linux domain for the
@@ -244,7 +244,7 @@ int rthal_irq_release(unsigned irq)
 
 /**
  * @fn int rthal_irq_host_release (unsigned irq,void *dev_id)
- *                           
+ *
  * @brief Uninstall a shared Linux interrupt handler.
  *
  * Uninstalls a shared interrupt handler from the Linux domain for the
@@ -274,7 +274,7 @@ int rthal_irq_release(unsigned irq)
 
 /**
  * @fn int rthal_irq_host_pend (unsigned irq)
- *                           
+ *
  * @brief Propagate an IRQ event to Linux.
  *
  * Causes the given IRQ to be propagated down to the Adeos pipeline to
@@ -304,13 +304,13 @@ int rthal_irq_host_pend(unsigned irq)
 
 /**
  * @fn int rthal_irq_affinity (unsigned irq,cpumask_t cpumask,cpumask_t *oldmask)
- *                           
+ *
  * @brief Set/Get processor affinity for external interrupt.
  *
  * On SMP systems, this service ensures that the given interrupt is
  * preferably dispatched to the specified set of processors. The
  * previous affinity mask is returned by this service.
- * 
+ *
  * @param irq The interrupt source whose processor affinity is
  * affected by the operation. Only external interrupts can have their
  * affinity changed/queried, thus virtual interrupt numbers allocated
@@ -320,7 +320,7 @@ int rthal_irq_host_pend(unsigned irq)
  * representing the new affinity for this interrupt. A zero value
  * cause this service to return the current affinity mask without
  * changing it.
- * 
+ *
  * @param oldmask If non-NULL, a pointer to a memory area which will
  * bve overwritten by the previous affinity mask used for this
  * interrupt source, or a zeroed mask if an error occurred.  This
@@ -365,7 +365,7 @@ int rthal_irq_affinity(unsigned irq, cpumask_t cpumask, cpumask_t *oldmask)
 
 /**
  * @fn int rthal_trap_catch (rthal_trap_handler_t handler)
- *                           
+ *
  * @brief Installs a fault handler.
  *
  * The HAL attempts to invoke a fault handler whenever an uncontrolled
@@ -927,7 +927,7 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 
 /**
  * @fn int rthal_irq_enable(unsigned irq)
- *                           
+ *
  * @brief Enable an interrupt source.
  *
  * Enables an interrupt source at PIC level. Since Adeos masks and
@@ -958,7 +958,7 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 
 /**
  * @fn int rthal_irq_disable(unsigned irq)
- *                           
+ *
  * @brief Disable an interrupt source.
  *
  * Disables an interrupt source at PIC level. After this call has
@@ -983,8 +983,10 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * - Any domain context.
  */
 
-/*! 
- * \fn int rthal_timer_request(void (*tick_handler) (void), void (*mode_emul)(int mode, void *tdev), int (*tick_emul)(unsigned long delay, void *tdev), int cpu)
+/**
+ * \fn int rthal_timer_request(void (*tick_handler)(void),
+ *             void (*mode_emul)(enum clock_event_mode mode, struct ipipe_tick_device *tdev),
+ *             int (*tick_emul)(unsigned long delay, struct ipipe_tick_device *tdev), int cpu)
  * \brief Grab the hardware timer.
  *
  * rthal_timer_request() grabs and tunes the hardware timer in oneshot
@@ -1038,14 +1040,16 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * - Linux domain context.
  */
 
-/*! 
- * \fn void rthal_timer_release(void)
+/**
+ * \fn void rthal_timer_release(int cpu)
  * \brief Release the hardware timer.
  *
  * Releases the hardware timer, thus reverting the effect of a
  * previous call to rthal_timer_request(). In case the timer hardware
  * is shared with Linux, a periodic setup suitable for the Linux
  * kernel will be reset.
+ *
+ * @param cpu The CPU number the timer was grabbed from.
  *
  * Environments:
  *

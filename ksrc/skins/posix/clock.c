@@ -139,10 +139,10 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
  *
  * This allow setting the CLOCK_REALTIME clock.
  *
- * @param clock_id, the id of the clock to be set, only CLOCK_REALTIME is
+ * @param clock_id the id of the clock to be set, only CLOCK_REALTIME is
  * supported.
  *
- * @param tp, the address of a struct timespec specifying the new date.
+ * @param tp the address of a struct timespec specifying the new date.
  *
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
