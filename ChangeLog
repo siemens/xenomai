@@ -1,5 +1,7 @@
 2007-10-18  Philippe Gerum  <rpm@xenomai.org>
-	
+
+	* ksrc/skins: Export various timebase objects.
+
 	* ksrc/nucleus/timer.c, ksrc/nucleus/timebase.c: Provide a mean to
 	implement a daisy chain of tick handlers. The most significant
 	change to the internal interface now requires the user-defined

@@ -134,6 +134,8 @@ void SKIN_EXIT(vrtx)
 module_init(__vrtx_skin_init);
 module_exit(__vrtx_skin_exit);
 
+EXPORT_SYMBOL(vrtx_tbase);
+
 EXPORT_SYMBOL(sc_accept);
 EXPORT_SYMBOL(sc_adelay);
 EXPORT_SYMBOL(sc_delay);

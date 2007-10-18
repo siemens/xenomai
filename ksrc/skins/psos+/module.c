@@ -133,6 +133,8 @@ void SKIN_EXIT(psos)
 module_init(__psos_skin_init);
 module_exit(__psos_skin_exit);
 
+EXPORT_SYMBOL(psos_tbase);
+
 EXPORT_SYMBOL(as_catch);
 EXPORT_SYMBOL(as_send);
 EXPORT_SYMBOL(ev_receive);

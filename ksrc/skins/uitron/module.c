@@ -142,3 +142,5 @@ void SKIN_EXIT(uitron)
 
 module_init(__uitron_skin_init);
 module_exit(__uitron_skin_exit);
+
+EXPORT_SYMBOL(ui_tbase);

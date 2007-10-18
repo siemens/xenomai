@@ -111,6 +111,7 @@ module_exit(__vxworks_skin_exit);
 /* exported API : */
 
 EXPORT_SYMBOL(wind_current_context_errno);
+EXPORT_SYMBOL(wind_tbase);
 EXPORT_SYMBOL(printErrno);
 EXPORT_SYMBOL(errnoSet);
 EXPORT_SYMBOL(errnoGet);
