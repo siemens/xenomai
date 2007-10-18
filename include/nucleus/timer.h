@@ -710,6 +710,8 @@ void xntimer_tick_aperiodic(void);
 
 void xntimer_tick_periodic(xntimer_t *timer);
 
+void xntimer_tick_periodic_inner(xntslave_t *slave);
+
 void xntimer_adjust_all_aperiodic(xnsticks_t delta);
 
 #ifdef CONFIG_SMP
