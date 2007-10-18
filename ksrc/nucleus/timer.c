@@ -465,9 +465,8 @@ static void xntimer_move_periodic(xntimer_t *timer)
  * @note Only active timers are inserted into the timer wheel.
  */
 
-void xntimer_tick_periodic(xntimer_t *mtimer)
+void xntimer_tick_periodic_inner(xntslave_t *slave)
 {
-	xntslave_t *slave = timer2slave(mtimer);
 	xnsched_t *sched = xnpod_current_sched();
 	xntbase_t *base = &slave->base;
 	xntlholder_t *holder;
@@ -502,9 +501,17 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 	}
 
 	xnpod_do_rr();		/* Do round-robin management. */
+}
 
-	if (base->hook)
+void xntimer_tick_periodic(xntimer_t *mtimer)
+{
+	xntslave_t *slave = timer2slave(mtimer);
+	xntbase_t *base = &slave->base;
+
+	if (unlikely(base->hook))
 		base->hook();
+	else
+		xntimer_tick_periodic_inner(slave);
 }
 
 static void

@@ -475,9 +475,8 @@ void xntbase_tick(xntbase_t *base)
 	if (base == &nktbase)
 		xntimer_tick_aperiodic();
 	else {
-		unsigned cpu = xnarch_current_cpu();
-		struct percpu_cascade *pc = &base2slave(base)->cascade[cpu];
-		xntimer_tick_periodic(&pc->timer);
+		xntslave_t *slave = base2slave(base);
+		xntimer_tick_periodic_inner(slave);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

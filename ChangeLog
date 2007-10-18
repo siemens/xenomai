@@ -1,3 +1,13 @@
+2007-10-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/timer.c, ksrc/nucleus/timebase.c: Provide a mean to
+	implement a daisy chain of tick handlers. The most significant
+	change to the internal interface now requires the user-defined
+	hook to a periodic timebase (xntbase_set_hook()) to call into
+	xntbase_tick() in order to propagate the incoming clock tick,
+	i.e. this is no more systematically done by the inner Xenomai
+	code.
+
 2007-10-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin/patches: Upgrade to 2.6.23-1.7-00. Includes a
