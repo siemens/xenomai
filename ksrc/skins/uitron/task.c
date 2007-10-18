@@ -821,3 +821,24 @@ unlock_and_exit:
 
 	return err;
 }
+
+EXPORT_SYMBOL(cre_tsk);
+EXPORT_SYMBOL(del_tsk);
+EXPORT_SYMBOL(sta_tsk);
+EXPORT_SYMBOL(ext_tsk);
+EXPORT_SYMBOL(exd_tsk);
+EXPORT_SYMBOL(ter_tsk);
+EXPORT_SYMBOL(dis_dsp);
+EXPORT_SYMBOL(ena_dsp);
+EXPORT_SYMBOL(chg_pri);
+EXPORT_SYMBOL(rot_rdq);
+EXPORT_SYMBOL(rel_wai);
+EXPORT_SYMBOL(get_tid);
+EXPORT_SYMBOL(ref_tsk);
+EXPORT_SYMBOL(sus_tsk);
+EXPORT_SYMBOL(rsm_tsk);
+EXPORT_SYMBOL(frsm_tsk);
+EXPORT_SYMBOL(slp_tsk);
+EXPORT_SYMBOL(tslp_tsk);
+EXPORT_SYMBOL(wup_tsk);
+EXPORT_SYMBOL(can_wup);

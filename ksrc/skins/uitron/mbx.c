@@ -361,3 +361,11 @@ unlock_and_exit:
 
 	return err;
 }
+
+EXPORT_SYMBOL(cre_mbx);
+EXPORT_SYMBOL(del_mbx);
+EXPORT_SYMBOL(snd_msg);
+EXPORT_SYMBOL(rcv_msg);
+EXPORT_SYMBOL(prcv_msg);
+EXPORT_SYMBOL(trcv_msg);
+EXPORT_SYMBOL(ref_mbx);

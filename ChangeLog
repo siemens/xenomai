@@ -1,5 +1,7 @@
 2007-10-18  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/uitron: Export services.
+
 	* ksrc/skins: Export various timebase objects.
 
 	* ksrc/nucleus/timer.c, ksrc/nucleus/timebase.c: Provide a mean to
