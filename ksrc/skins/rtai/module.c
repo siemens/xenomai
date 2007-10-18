@@ -176,3 +176,5 @@ void SKIN_EXIT(rtai)
 
 module_init(__rtai_skin_init);
 module_exit(__rtai_skin_exit);
+
+EXPORT_SYMBOL(rtai_tbase);
