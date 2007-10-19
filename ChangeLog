@@ -1,6 +1,12 @@
+2007-10-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-05,
+	2.6.23-1.2-05.
+
 2007-10-18  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/x86_64/patches: Upgrade to 2.6.23-1.2-04.
+	* ksrc/arch/x86_64/patches: Upgrade to 2.6.22-1.2-04,
+	2.6.23-1.2-04.
 	
 	* ksrc/skins/uitron: Export services.
 
