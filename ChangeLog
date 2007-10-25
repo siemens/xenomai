@@ -1,3 +1,8 @@
+2007-10-25  Philippe Gerum  <rpm@eclipse>
+
+	* include/asm-i386/hal: Add guard code for kernel version (i.e. <=
+	2.6.20).
+
 2007-10-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin/patches: Upgrade to 2.6.23-1.7-00. Includes a

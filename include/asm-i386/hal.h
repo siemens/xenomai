@@ -41,6 +41,11 @@
 
 #include <asm-generic/xenomai/hal.h>    /* Read the generic bits. */
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
+#error "Xenomai v2.3.x/x86 will only support kernels up to 2.6.20"
+#error "Upgrading to Xenomai v2.4 is required to use later kernels"
+#endif
+
 #ifndef CONFIG_X86_WP_WORKS_OK
 #error "Xenomai has to rely on the WP bit, CONFIG_M486 or better required"
 #endif /* CONFIG_X86_WP_WORKS_OK */
