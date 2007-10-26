@@ -39,7 +39,7 @@ config XENO_HW_NMI_DEBUG_LATENCY
         not meant for debugging applications.
 
 config XENO_HW_NMI_DEBUG_LATENCY_MAX
-        depends XENO_HW_NMI_DEBUG_LATENCY
+        depends on XENO_HW_NMI_DEBUG_LATENCY
         int "NMI watchdog latency threshold (us)"
         default 100
         help
