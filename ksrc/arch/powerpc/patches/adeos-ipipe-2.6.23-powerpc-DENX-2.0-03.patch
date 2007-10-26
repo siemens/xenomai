@@ -3072,6 +3072,19 @@ index 90db8a7..84e75c5 100644
  	mb();
  }
  
+diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
+index eeb38e2..5a38086 100644
+--- a/arch/powerpc/sysdev/uic.c
++++ b/arch/powerpc/sysdev/uic.c
+@@ -48,7 +48,7 @@ struct uic {
+ 	int index;
+ 	int dcrbase;
+ 
+-	spinlock_t lock;
++	ipipe_spinlock_t lock;
+ 
+ 	/* The remapper for this UIC */
+ 	struct irq_host	*irqhost;
 diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index 279c940..daabf90 100644
 --- a/drivers/pci/htirq.c
@@ -3457,7 +3470,7 @@ index a7b60bf..22dcb01 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..1b8ea9f
+index 0000000..69e95ca
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,205 @@
@@ -3507,10 +3520,10 @@ index 0000000..1b8ea9f
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.0-02"
++#define IPIPE_ARCH_STRING	"2.0-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -3972,10 +3985,10 @@ index 8d30229..74b355d 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..2c313a0
+index 0000000..859c766
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,552 @@
+@@ -0,0 +1,554 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -4270,6 +4283,8 @@ index 0000000..2c313a0
 +	if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))
 +		__ipipe_dispatch_event(IPIPE_EVENT_INIT,p);
 +}
++
++struct mm_struct;
 +
 +static inline void ipipe_cleanup_notify(struct mm_struct *mm)
 +{
@@ -4884,22 +4899,39 @@ index 0000000..815b5ad
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
-index efc8853..0762988 100644
+index efc8853..617bfa2 100644
 --- a/include/linux/irq.h
 +++ b/include/linux/irq.h
-@@ -150,6 +150,12 @@ struct irq_chip {
+@@ -150,6 +150,14 @@ struct irq_chip {
   * @name:		flow handler name for /proc/interrupts output
   */
  struct irq_desc {
 +#ifdef CONFIG_IPIPE
 +	void			fastcall (*ipipe_ack)(unsigned int irq,
 +						      struct irq_desc *desc);
++	void			fastcall (*ipipe_demux)(unsigned int irq,
++							struct irq_desc *desc);
 +	void			fastcall (*ipipe_end)(unsigned int irq,
 +						      struct irq_desc *desc);
 +#endif /* CONFIG_IPIPE */
  	irq_flow_handler_t	handle_irq;
  	struct irq_chip		*chip;
  	struct msi_desc		*msi_desc;
+@@ -360,6 +368,14 @@ set_irq_chained_handler(unsigned int irq,
+ 	__set_irq_handler(irq, handle, 1, NULL);
+ }
+ 
++#ifdef CONFIG_IPIPE
++extern void
++__set_irq_demux_handler(unsigned int irq,
++			void fastcall (*decode)(unsigned int, struct irq_desc *),
++			int is_chained,
++			const char *name);
++#endif /* CONFIG_IPIPE */
++
+ /* Handle dynamic irq creation and destruction */
+ extern int create_irq(void);
+ extern void destroy_irq(unsigned int irq);
 diff --git a/include/linux/kernel.h b/include/linux/kernel.h
 index 47160fe..95cc205 100644
 --- a/include/linux/kernel.h
@@ -5050,18 +5082,57 @@ index 77b6a8b..7bd4b6c 100644
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index c376f3b..e47c0e5 100644
+index c376f3b..73a74c6 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
-@@ -172,7 +172,90 @@ do {								\
- #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
- #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
+@@ -89,10 +89,14 @@ extern int __lockfunc generic__raw_read_trylock(raw_rwlock_t *lock);
+ # include <linux/spinlock_up.h>
+ #endif
  
--#define spin_lock(lock)			_spin_lock(lock)
 +#undef TYPE_EQUAL
 +#define TYPE_EQUAL(lock, type) \
 +	__builtin_types_compatible_p(typeof(lock), type *)
 +
+ #ifdef CONFIG_DEBUG_SPINLOCK
+   extern void __spin_lock_init(spinlock_t *lock, const char *name,
+ 			       struct lock_class_key *key);
+-# define spin_lock_init(lock)					\
++# define _spin_lock_init(lock)				\
+ do {								\
+ 	static struct lock_class_key __key;			\
+ 								\
+@@ -100,10 +104,25 @@ do {								\
+ } while (0)
+ 
+ #else
+-# define spin_lock_init(lock)					\
++# define _spin_lock_init(lock)				\
+ 	do { *(lock) = SPIN_LOCK_UNLOCKED; } while (0)
+ #endif
+ 
++#ifdef CONFIG_IPIPE
++# define spin_lock_init(lock)						\
++	do {								\
++		if (TYPE_EQUAL((lock), __ipipe_spinlock_t))		\
++			do {						\
++				IPIPE_DEFINE_SPINLOCK(__lock__);	\
++				*((__ipipe_spinlock_t *)lock) = __lock__; \
++			} while(0);					\
++		else							\
++			_spin_lock_init((spinlock_t *)lock);		\
++	} while(0)
++#else
++# define spin_lock_init(lock)	_spin_lock_init(lock)
++#endif
++
+ #ifdef CONFIG_DEBUG_SPINLOCK
+   extern void __rwlock_init(rwlock_t *lock, const char *name,
+ 			    struct lock_class_key *key);
+@@ -172,7 +191,86 @@ do {								\
+ #define read_trylock(lock)		__cond_lock(lock, _read_trylock(lock))
+ #define write_trylock(lock)		__cond_lock(lock, _write_trylock(lock))
+ 
+-#define spin_lock(lock)			_spin_lock(lock)
 +#define PICK_SPINOP(op, lock)						\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t))			\
@@ -5145,7 +5216,7 @@ index c376f3b..e47c0e5 100644
  
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
  # define spin_lock_nested(lock, subclass) _spin_lock_nested(lock, subclass)
-@@ -185,7 +268,7 @@ do {								\
+@@ -185,7 +283,7 @@ do {								\
  
  #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
  
@@ -5154,7 +5225,7 @@ index c376f3b..e47c0e5 100644
  #define read_lock_irqsave(lock, flags)	flags = _read_lock_irqsave(lock)
  #define write_lock_irqsave(lock, flags)	flags = _write_lock_irqsave(lock)
  
-@@ -199,7 +282,7 @@ do {								\
+@@ -199,7 +297,7 @@ do {								\
  
  #else
  
@@ -5163,7 +5234,7 @@ index c376f3b..e47c0e5 100644
  #define read_lock_irqsave(lock, flags)	_read_lock_irqsave(lock, flags)
  #define write_lock_irqsave(lock, flags)	_write_lock_irqsave(lock, flags)
  #define spin_lock_irqsave_nested(lock, flags, subclass)	\
-@@ -207,7 +290,7 @@ do {								\
+@@ -207,7 +305,7 @@ do {								\
  
  #endif
  
@@ -5172,7 +5243,7 @@ index c376f3b..e47c0e5 100644
  #define spin_lock_bh(lock)		_spin_lock_bh(lock)
  
  #define read_lock_irq(lock)		_read_lock_irq(lock)
-@@ -221,32 +304,40 @@ do {								\
+@@ -221,32 +319,40 @@ do {								\
   */
  #if defined(CONFIG_DEBUG_SPINLOCK) || defined(CONFIG_PREEMPT) || \
  	!defined(CONFIG_SMP)
@@ -5228,7 +5299,7 @@ index c376f3b..e47c0e5 100644
  do {						\
  	__raw_write_unlock(&(lock)->raw_lock);	\
  	__release(lock);			\
-@@ -254,8 +345,8 @@ do {						\
+@@ -254,8 +360,8 @@ do {						\
  } while (0)
  #endif
  
@@ -5239,7 +5310,7 @@ index c376f3b..e47c0e5 100644
  #define spin_unlock_bh(lock)		_spin_unlock_bh(lock)
  
  #define read_unlock_irqrestore(lock, flags) \
-@@ -346,4 +437,29 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+@@ -346,4 +452,29 @@ extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
   */
  #define spin_can_lock(lock)	(!spin_is_locked(lock))
  
@@ -8523,7 +8594,7 @@ index 0000000..8ecbe1a
 +	                              &ipipe_trace_enable);
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index f1a73f0..7c4a556 100644
+index f1a73f0..5a188ca 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -340,7 +340,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
@@ -8561,7 +8632,7 @@ index f1a73f0..7c4a556 100644
  
  	/* Mark the IRQ currently in progress.*/
  	desc->status |= IRQ_INPROGRESS;
-@@ -503,6 +512,69 @@ out_unlock:
+@@ -503,6 +512,108 @@ out_unlock:
  	spin_unlock(&desc->lock);
  }
  
@@ -8605,6 +8676,45 @@ index f1a73f0..7c4a556 100644
 +{
 +}
 +
++void fastcall __ipipe_ack_demux_irq(unsigned irq, struct irq_desc *desc)
++{
++	/*
++	 * Handling is delegated to some demultiplexer routine,
++	 * e.g. GPIO. We mask_ack it, then call back into the demux
++	 * handler, which should decode the interrupt and feed the
++	 * pipeline as needed.
++	 */
++	if (desc->chip->mask)
++		desc->chip->mask(irq);
++	desc->ipipe_demux(irq, desc);
++}
++
++void fastcall __ipipe_end_demux_irq(unsigned irq, struct irq_desc *desc)
++{
++	if (desc->chip->unmask)
++		desc->chip->unmask(irq);
++}
++
++void fastcall
++handle_demux_irq(unsigned int irq, struct irq_desc *desc)
++{
++	/*
++	 * The regular IRQ handler will run last of all GPIO handlers,
++	 * to unmask the demux IRQ.
++	 */
++	__ipipe_end_demux_irq(irq, desc);
++}
++
++void __set_irq_demux_handler(unsigned int irq,
++			     void fastcall (*decode)(unsigned int, struct irq_desc *),
++			     int is_chained,
++			     const char *name)
++{
++	struct irq_desc *desc = irq_desc + irq;
++	__set_irq_handler(irq, &handle_demux_irq, is_chained, name);
++	desc->ipipe_demux = decode;
++}
++
 +void fastcall __ipipe_ack_bad_irq(unsigned irq, struct irq_desc *desc)
 +{
 +	static int done;
@@ -8631,7 +8741,7 @@ index f1a73f0..7c4a556 100644
  #ifdef CONFIG_SMP
  /**
   *	handle_percpu_IRQ - Per CPU local irq handler
-@@ -518,8 +590,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -518,8 +629,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_this_cpu.irqs[irq]++;
  
@@ -8642,7 +8752,7 @@ index f1a73f0..7c4a556 100644
  
  	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -529,6 +603,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -529,6 +642,22 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  		desc->chip->eoi(irq);
  }
  
@@ -8665,7 +8775,7 @@ index f1a73f0..7c4a556 100644
  #endif /* CONFIG_SMP */
  
  void
-@@ -548,6 +638,30 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -548,6 +677,34 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  
  	if (!handle)
  		handle = handle_bad_irq;
@@ -8692,11 +8802,15 @@ index f1a73f0..7c4a556 100644
 +		desc->ipipe_end = &__ipipe_end_percpu_irq;
 +	}
 +#endif /* CONFIG_SMP */
++	else if (handle == &handle_demux_irq) {
++		desc->ipipe_ack = &__ipipe_ack_demux_irq;
++		desc->ipipe_end = &__ipipe_end_demux_irq;
++	}
 +#endif /* CONFIG_IPIPE */
  	else if (desc->chip == &no_irq_chip) {
  		printk(KERN_WARNING "Trying to install %sinterrupt handler "
  		       "for IRQ%d\n", is_chained ? "chained " : "", irq);
-@@ -559,7 +673,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -559,7 +716,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		 * dummy_irq_chip for easy transition.
  		 */
  		desc->chip = &dummy_irq_chip;
@@ -8714,7 +8828,7 @@ index f1a73f0..7c4a556 100644
  
  	spin_lock_irqsave(&desc->lock, flags);
  
-@@ -569,6 +693,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -569,6 +736,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  			mask_ack_irq(desc, irq);
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
