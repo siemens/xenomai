@@ -332,11 +332,21 @@ while : ; do
    fi
 done
 
+top_arch=$linux_arch
+
 # Post-2005R3 RC3 blackfin kernels use "blackfin" instead of
 # "bfinnommu": canonicalize if needed.
 
 if test "$xenomai_arch" = blackfin -a -d $linux_tree/arch/blackfin; then
    linux_arch=blackfin
+fi
+
+# i386 and x86_64 architectures were merged in 2.6.24-rc1. The resulting
+# combo is available from arch/x86 when present.
+
+if test \( "$xenomai_arch" = i386 -o "$xenomai_arch" = x86_64 \) -a -d $linux_tree/arch/x86; then
+   linux_arch=x86
+   top_arch=$xenomai_arch
 fi
 
 foo=`grep '^KERNELSRC    := ' $linux_tree/Makefile | cut -d= -f2`
@@ -427,9 +437,9 @@ case $linux_VERSION.$linux_PATCHLEVEL in
             patch_append init/Kconfig
     fi
 
-    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
+    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$top_arch/Makefile; then
 	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
-	( echo ; echo $p ) | patch_append arch/$linux_arch/Makefile
+	( echo ; echo $p ) | patch_append arch/$top_arch/Makefile
     fi
 
     patch_architecture_specific="n"
