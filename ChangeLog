@@ -1,3 +1,7 @@
+2007-10-26  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-10.
+
 2007-10-25  Philippe Gerum  <rpm@eclipse>
 
 	* include/asm-i386/hal: Add guard code for kernel version (i.e. <=
