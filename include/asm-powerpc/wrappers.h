@@ -150,8 +150,24 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 		__err__;							\
 	})
 #else /* > 2.6.19 */
-#define rthal_irq_chip_enable(irq)   ({ rthal_irq_handlerp(irq)->unmask(irq); 0; })
-#define rthal_irq_chip_disable(irq)  ({ rthal_irq_handlerp(irq)->mask(irq); 0; })
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (unlikely(rthal_irq_handlerp(irq)->unmask == NULL))	\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_handlerp(irq)->unmask(irq);		\
+		__err__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		int __err__ = 0;					\
+		if (rthal_irq_handlerp(irq)->mask == NULL)		\
+			__err__ = -ENODEV;				\
+		else							\
+			rthal_irq_handlerp(irq)->mask(irq);		\
+		__err__;						\
+	})
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 #endif
 
