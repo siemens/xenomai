@@ -735,10 +735,10 @@ int rthal_arch_init(void)
 	}
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 	if (nmi_watchdog == NMI_IO_APIC) {
-		printk("Xenomai: NMI kernel watchdog set to NMI_IO_APIC (nmi_watchdog=2).\n"
+		printk("Xenomai: NMI kernel watchdog set to NMI_IO_APIC (nmi_watchdog=1).\n"
 		       "         This will disable the LAPIC as a clock device, and\n"
 		       "         cause Xenomai to fail providing any timing service.\n"
-		       "         Use NMI_LOCAL_APIC (nmi_watchdog=1), or disable the\n"
+		       "         Use NMI_LOCAL_APIC (nmi_watchdog=2), or disable the\n"
 		       "         NMI support entirely (nmi_watchdog=0).");
 		return -ENODEV;
 	}
