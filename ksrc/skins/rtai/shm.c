@@ -150,8 +150,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 	/* Account for the overhead so that the actual free space is
 	   large enough to match the requested size. */
 
-	heapsize += xnheap_overhead(heapsize, XNCORE_PAGE_SIZE);
-	heapsize = XNCORE_PAGE_ALIGN(heapsize);
+	heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = xnheap_init_mapped(p->heap,
