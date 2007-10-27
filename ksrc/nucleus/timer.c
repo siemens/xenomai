@@ -508,7 +508,7 @@ void xntimer_tick_periodic(xntimer_t *mtimer)
 	xntslave_t *slave = timer2slave(mtimer);
 	xntbase_t *base = &slave->base;
 
-	if (unlikely(base->hook))
+	if (unlikely(base->hook != NULL))
 		base->hook();
 	else
 		xntimer_tick_periodic_inner(slave);
