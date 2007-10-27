@@ -1,8 +1,7 @@
-base referer
-rect $synch_8h-source.html 220,157 351,184
-rect $native_2types_8h.html 410,107 527,133
-rect $nucleus_2queue_8h-source.html 402,157 535,184
-rect $nucleus_2types_8h-source.html 586,107 714,133
-rect $assert_8h-source.html 786,157 919,184
-rect $core_8h-source.html 590,208 710,235
-rect $compiler_8h-source.html 778,107 927,133
+<area shape="rect" href="$synch_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="473,84,596,111">
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="348,161,460,188">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="484,161,609,188">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="344,239,464,265">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,316,616,343">
+<area shape="rect" href="$core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="584,239,696,265">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="328,316,467,343">
