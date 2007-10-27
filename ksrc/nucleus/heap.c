@@ -1103,7 +1103,7 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	spl_t s;
 	int err;
 
-	heapsize = PAGE_ALIGN(heapsize);
+	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 	heapbase = __alloc_and_reserve_heap(heapsize, memflags);
 
 	if (!heapbase)
