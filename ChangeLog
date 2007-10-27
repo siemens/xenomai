@@ -1,5 +1,9 @@
 2007-10-27  Philippe Gerum  <rpm@eclipse>
 
+	* RELEASE: Xenomai 2.4-rc5
+
+2007-10-27  Philippe Gerum  <rpm@eclipse>
+
 	* ksrc/nucleus/heap.c (xnheap_init_mapped): Apply proper rounding
 	to PAGE_SIZE, with a minimum size of 2 * PAGE_SIZE + incurred
 	overhead.
