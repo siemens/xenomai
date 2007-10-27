@@ -1,10 +1,15 @@
-base referer
-rect $pod_8h.html 230,107 347,133
-rect $include_2nucleus_2thread_8h-source.html 418,56 554,83
-rect $synch_8h-source.html 420,157 551,184
-rect $module_8h-source.html 218,208 359,235
-rect $ltt_8h-source.html 626,284 732,311
-rect $include_2nucleus_2intr_8h-source.html 623,132 735,159
-rect $nucleus_2types_8h-source.html 796,208 924,235
-rect $nucleus_2queue_8h-source.html 612,208 746,235
-rect $timebase_8h.html 408,259 563,285
+<area shape="rect" title="Thread synchronization services." alt="" coords="233,84,308,111">
+<area shape="rect" href="$pod_8h.html" title="Thread synchronization services." alt="" coords="383,84,492,111">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="429,161,557,188">
+<area shape="rect" href="$synch_8h&#45;source.html" title="Thread synchronization services." alt="" coords="711,161,833,188">
+<area shape="rect" href="$module_8h&#45;source.html" title="Thread synchronization services." alt="" coords="616,239,749,265">
+<area shape="rect" href="$ltt_8h&#45;source.html" title="Thread synchronization services." alt="" coords="211,161,309,188">
+<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="296,239,400,265">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="475,239,592,265">
+<area shape="rect" href="$stat_8h&#45;source.html" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="383,316,492,343">
+<area shape="rect" href="$timebase_8h.html" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="516,316,660,343">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="Copyright (C) 2006,2007 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="525,393,651,420">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="289,471,409,497">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,548,616,575">
+<area shape="rect" href="$core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="439,471,551,497">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="5,548,144,575">
