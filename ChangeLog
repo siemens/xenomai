@@ -1,5 +1,8 @@
 2007-10-27  Philippe Gerum  <rpm@eclipse>
 
+	include/asm-x86_64/bits/shadow.h: Fix various tests on irq numbers
+	by introducing proper vector->irq mapping.
+
 	* include/asm-powerpc/wrappers.h: Make
 	rthal_irq_chip_enable/disable bullet-proof with recent kernels (>
 	2.6.19).

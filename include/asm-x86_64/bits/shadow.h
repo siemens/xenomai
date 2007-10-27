@@ -60,8 +60,8 @@ static inline void xnarch_lock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 		switch (irq) {
 #ifdef CONFIG_SMP
 		case RTHAL_CRITICAL_IPI:
-		case IPIPE_FIRST_APIC_IRQ + CALL_FUNCTION_VECTOR - FIRST_SYSTEM_VECTOR:
-		case IPIPE_FIRST_APIC_IRQ + RESCHEDULE_VECTOR - FIRST_SYSTEM_VECTOR:
+		case ipipe_apic_vector_irq(CALL_FUNCTION_VECTOR):
+		case ipipe_apic_vector_irq(RESCHEDULE_VECTOR):
 
 			/* Never lock out these ones. */
 			continue;
@@ -69,8 +69,8 @@ static inline void xnarch_lock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 
 		default:
 
-			if (irq >= INVALIDATE_TLB_VECTOR_START &&
-			    irq <= INVALIDATE_TLB_VECTOR_END)
+			if (irq >= ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR_START) &&
+			    irq <= ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR_END))
 				/* Don't lock TLB invalidate vectors either */
 				continue;
 
