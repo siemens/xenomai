@@ -415,6 +415,13 @@ void sighand(int sig __attribute__ ((unused)))
 	finished = 1;
 }
 
+void faulthand(int sig)
+{
+	xntrace_user_freeze(0, 1);
+	signal(sig, SIG_DFL);
+	kill(getpid(), sig);
+}
+
 int main(int argc, char **argv)
 {
 	int c, err;
@@ -538,6 +545,13 @@ int main(int argc, char **argv)
 	signal(SIGTERM, sighand);
 	signal(SIGHUP, sighand);
 	signal(SIGALRM, sighand);
+
+	if (freeze_max) {
+		/* If something goes wrong, we want to freeze the current
+		   trace path to help debugging. */
+		signal(SIGSEGV, faulthand);
+		signal(SIGBUS, faulthand);
+	}
 
 	setlinebuf(stdout);
 
