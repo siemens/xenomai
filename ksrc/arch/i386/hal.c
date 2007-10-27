@@ -62,7 +62,8 @@
 #include <asm/xenomai/hal.h>
 #include <stdarg.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#if !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
 #include <linux/vt_kern.h>
 
 static void (*old_mksound) (unsigned int hz, unsigned int ticks);
@@ -70,7 +71,10 @@ static void (*old_mksound) (unsigned int hz, unsigned int ticks);
 static void dummy_mksound(unsigned int hz, unsigned int ticks)
 {
 }
-#endif /* Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
+#endif /* !CONFIG_X86_TSC && CONFIG_VT */
+#else /* Linux < 2.6 */
+#include <asm/nmi.h>
+#endif
 
 static struct {
 	unsigned long flags;
@@ -131,7 +135,7 @@ static void rthal_critical_sync(void)
 	}
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 #include <asm/smpboot.h>
 static inline void send_IPI_all(int vector)
 {
@@ -212,8 +216,6 @@ void die_nmi(struct pt_regs *regs, const char *msg)
 	do_exit(SIGSEGV);
 }
 
-#else /* Linux >= 2.6 */
-#include <asm/nmi.h>
 #endif /* Linux < 2.6 */
 
 static void rthal_latency_above_max(struct pt_regs *regs)
