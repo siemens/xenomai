@@ -1,3 +1,16 @@
+2007-10-27  Philippe Gerum  <rpm@eclipse>
+
+	* include/asm-powerpc/wrappers.h: Make
+	rthal_irq_chip_enable/disable bullet-proof with recent kernels (>
+	2.6.19).
+
+	* src/testsuite/latency/latency.c: Attempt to freeze the current
+	trace path upon receipt of a fault signal.
+
+	* ksrc/arch/i386/hal.c (rthal_arch_init): Whine when
+	nmi_watchdog=NMI_IO_APIC, and we are asked to use the LAPIC for
+	timing (CONFIG_X86_LOCAL_APIC+CONFIG_GENERIC_CLOCKEVENTS only).
+
 2007-10-26  Philippe Gerum  <rpm@eclipse>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.23-DENX-2.0-02.
