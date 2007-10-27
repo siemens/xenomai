@@ -1,5 +1,9 @@
 2007-10-27  Philippe Gerum  <rpm@eclipse>
 
+	* ksrc/nucleus/heap.c (xnheap_init_mapped): Apply proper rounding
+	to PAGE_SIZE, with a minimum size of 2 * PAGE_SIZE + incurred
+	overhead.
+
 	include/asm-x86_64/bits/shadow.h: Fix various tests on irq numbers
 	by introducing proper vector->irq mapping.
 
