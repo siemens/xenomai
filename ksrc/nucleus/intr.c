@@ -57,7 +57,9 @@ typedef struct xnintr_irq {
 #endif
 } ____cacheline_aligned_in_smp xnintr_irq_t;
 
+#if defined(CONFIG_SMP) || defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 static xnintr_irq_t xnirqs[XNARCH_NR_IRQS];
+#endif
 
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
