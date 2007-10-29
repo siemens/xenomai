@@ -33,9 +33,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = include
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in COPYING
+subdir = include/asm-x86
+DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
@@ -60,10 +60,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"
-includeHEADERS_INSTALL = $(INSTALL_HEADER)
-nodist_includeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(include_HEADERS) $(nodist_include_HEADERS)
+am__installdirs = "$(DESTDIR)$(includesubdir)"
+includesubHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(includesub_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 ETAGS = etags
@@ -224,29 +223,37 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-include_HEADERS = \
-	rtdk.h
+includesubdir = $(includedir)/asm-x86
+includesub_HEADERS = \
+	arith_32.h	\
+	arith_64.h	\
+	arith.h	\
+	atomic_32.h	\
+	atomic_64.h	\
+	atomic.h	\
+	calibration.h	\
+	features_32.h	\
+	features_64.h	\
+	features.h	\
+	fptest.h	\
+	hal_32.h	\
+	hal_64.h	\
+	hal.h		\
+	smi.h		\
+	switch_32.h	\
+	switch_64.h	\
+	switch.h	\
+	syscall_32.h	\
+	syscall_64.h	\
+	syscall.h	\
+	system_32.h	\
+	system_64.h	\
+	system.h	\
+	wrappers_32.h	\
+	wrappers_64.h	\
+	wrappers.h
 
-nodist_include_HEADERS = $(CONFIG_HEADER)
-SUBDIRS = \
-	asm-generic \
-	asm-blackfin \
-	asm-x86 \
-	asm-ia64 \
-	asm-powerpc \
-	asm-arm \
-	asm-sim \
-	native \
-	nucleus \
-	posix \
-	psos+ \
-	rtai \
-	rtdm \
-	uitron \
-	vrtx \
-	vxworks
-
-EXTRA_DIST = compat
+SUBDIRS = bits
 all: all-recursive
 
 .SUFFIXES:
@@ -259,9 +266,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  include/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  include/asm-x86/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  include/Makefile
+	  $(AUTOMAKE) --foreign  include/asm-x86/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -285,39 +292,22 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-includesubHEADERS: $(includesub_HEADERS)
 	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
-	@list='$(include_HEADERS)'; for p in $$list; do \
+	test -z "$(includesubdir)" || $(MKDIR_P) "$(DESTDIR)$(includesubdir)"
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	  echo " $(includesubHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  $(includesubHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includesubdir)/$$f"; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-includesubHEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; for p in $$list; do \
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
-	done
-install-nodist_includeHEADERS: $(nodist_include_HEADERS)
-	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
-	@list='$(nodist_include_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(nodist_includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	  $(nodist_includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
-	done
-
-uninstall-nodist_includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nodist_include_HEADERS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includesubdir)/$$f"; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -494,15 +484,12 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
 check: check-recursive
 all-am: Makefile $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(includesubdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -547,8 +534,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-data-local install-includeHEADERS \
-	install-nodist_includeHEADERS
+install-data-am: install-includesubHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -582,48 +568,26 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-local \
-	uninstall-nodist_includeHEADERS
+uninstall-am: uninstall-includesubHEADERS
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-strip
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-generic clean-libtool \
-	ctags ctags-recursive dist-hook distclean distclean-generic \
+	ctags ctags-recursive distclean distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-data-local install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-man install-nodist_includeHEADERS install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
-	uninstall-includeHEADERS uninstall-local \
-	uninstall-nodist_includeHEADERS
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am \
+	install-includesubHEADERS install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-includesubHEADERS
 
-
-install-data-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	$(LN_S) asm-@XENO_TARGET_ARCH@ $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-generic/xenomai
-
-uninstall-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-
-dist-hook:
-	find $(distdir)/compat -name .svn -depth -exec rm -fr \{\} \;
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

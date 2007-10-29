@@ -33,10 +33,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-bin_PROGRAMS = irqloop$(EXEEXT) $(am__EXEEXT_1)
-@XENO_LINUX_ARCH_I386_TRUE@am__append_1 = irqbench
-subdir = src/testsuite/irqbench
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = include/asm-x86/bits
+DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
@@ -46,36 +45,17 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-@XENO_LINUX_ARCH_I386_TRUE@am__EXEEXT_1 = irqbench$(EXEEXT)
-am__installdirs = "$(DESTDIR)$(bindir)"
-binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(bin_PROGRAMS)
-am_irqbench_OBJECTS = irqbench-irqbench.$(OBJEXT)
-irqbench_OBJECTS = $(am_irqbench_OBJECTS)
-irqbench_LDADD = $(LDADD)
-irqbench_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(irqbench_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_irqloop_OBJECTS = irqloop-irqloop.$(OBJEXT)
-irqloop_OBJECTS = $(am_irqloop_OBJECTS)
-irqloop_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
-irqloop_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(irqloop_LDFLAGS) \
-	$(LDFLAGS) -o $@
-DEFAULT_INCLUDES = -I. -I$(top_builddir)/src/include@am__isrc@
-depcomp = $(SHELL) $(top_srcdir)/config/depcomp
-am__depfiles_maybe = depfiles
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-SOURCES = $(irqbench_SOURCES) $(irqloop_SOURCES)
-DIST_SOURCES = $(irqbench_SOURCES) $(irqloop_SOURCES)
+SOURCES =
+DIST_SOURCES =
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(includesubdir)"
+includesubHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(includesub_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -233,31 +213,27 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-testdir = $(exec_prefix)/share/xenomai/testsuite/irqbench
-irqloop_SOURCES = irqloop.c
-irqloop_CPPFLAGS = \
-	-I$(top_srcdir)/include/posix \
-	$(XENO_USER_CFLAGS) \
-	-I$(top_srcdir)/include
+includesubdir = $(includedir)/asm-x86/bits
+includesub_HEADERS = \
+	heap.h		\
+	init_32.h	\
+	init_64.h	\
+	init.h		\
+	intr.h		\
+	pod_32.h	\
+	pod_64.h	\
+	pod.h		\
+	shadow_32.h	\
+	shadow_64.h	\
+	shadow.h	\
+	thread_32.h	\
+	thread_64.h	\
+	thread.h	\
+	timer.h
 
-irqloop_LDFLAGS = \
-	$(XENO_POSIX_WRAPPERS) \
-	$(XENO_USER_LDFLAGS)
-
-irqloop_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
-
-irqbench_SOURCES = irqbench.c
-irqbench_CPPFLAGS = \
-	$(XENO_USER_CFLAGS) \
-	-I$(top_srcdir)/include
-
-irqbench_LDFLAGS = $(XENO_USER_LDFLAGS)
-EXTRA_DIST = runinfo.in
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -267,9 +243,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/testsuite/irqbench/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  include/asm-x86/bits/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/testsuite/irqbench/Makefile
+	  $(AUTOMAKE) --foreign  include/asm-x86/bits/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -287,104 +263,29 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
-
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
-	done
-
-clean-binPROGRAMS:
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
-	done
-irqbench$(EXEEXT): $(irqbench_OBJECTS) $(irqbench_DEPENDENCIES) 
-	@rm -f irqbench$(EXEEXT)
-	$(irqbench_LINK) $(irqbench_OBJECTS) $(irqbench_LDADD) $(LIBS)
-irqloop$(EXEEXT): $(irqloop_OBJECTS) $(irqloop_DEPENDENCIES) 
-	@rm -f irqloop$(EXEEXT)
-	$(irqloop_LINK) $(irqloop_OBJECTS) $(irqloop_LDADD) $(LIBS)
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT)
-
-distclean-compile:
-	-rm -f *.tab.c
-
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/irqbench-irqbench.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/irqloop-irqloop.Po@am__quote@
-
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-.c.lo:
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-irqbench-irqbench.o: irqbench.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqbench_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT irqbench-irqbench.o -MD -MP -MF $(DEPDIR)/irqbench-irqbench.Tpo -c -o irqbench-irqbench.o `test -f 'irqbench.c' || echo '$(srcdir)/'`irqbench.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/irqbench-irqbench.Tpo $(DEPDIR)/irqbench-irqbench.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='irqbench.c' object='irqbench-irqbench.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqbench_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o irqbench-irqbench.o `test -f 'irqbench.c' || echo '$(srcdir)/'`irqbench.c
-
-irqbench-irqbench.obj: irqbench.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqbench_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT irqbench-irqbench.obj -MD -MP -MF $(DEPDIR)/irqbench-irqbench.Tpo -c -o irqbench-irqbench.obj `if test -f 'irqbench.c'; then $(CYGPATH_W) 'irqbench.c'; else $(CYGPATH_W) '$(srcdir)/irqbench.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/irqbench-irqbench.Tpo $(DEPDIR)/irqbench-irqbench.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='irqbench.c' object='irqbench-irqbench.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqbench_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o irqbench-irqbench.obj `if test -f 'irqbench.c'; then $(CYGPATH_W) 'irqbench.c'; else $(CYGPATH_W) '$(srcdir)/irqbench.c'; fi`
-
-irqloop-irqloop.o: irqloop.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqloop_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT irqloop-irqloop.o -MD -MP -MF $(DEPDIR)/irqloop-irqloop.Tpo -c -o irqloop-irqloop.o `test -f 'irqloop.c' || echo '$(srcdir)/'`irqloop.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/irqloop-irqloop.Tpo $(DEPDIR)/irqloop-irqloop.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='irqloop.c' object='irqloop-irqloop.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqloop_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o irqloop-irqloop.o `test -f 'irqloop.c' || echo '$(srcdir)/'`irqloop.c
-
-irqloop-irqloop.obj: irqloop.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqloop_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT irqloop-irqloop.obj -MD -MP -MF $(DEPDIR)/irqloop-irqloop.Tpo -c -o irqloop-irqloop.obj `if test -f 'irqloop.c'; then $(CYGPATH_W) 'irqloop.c'; else $(CYGPATH_W) '$(srcdir)/irqloop.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/irqloop-irqloop.Tpo $(DEPDIR)/irqloop-irqloop.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='irqloop.c' object='irqloop-irqloop.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(irqloop_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o irqloop-irqloop.obj `if test -f 'irqloop.c'; then $(CYGPATH_W) 'irqloop.c'; else $(CYGPATH_W) '$(srcdir)/irqloop.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-includesubHEADERS: $(includesub_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(includesubdir)" || $(MKDIR_P) "$(DESTDIR)$(includesubdir)"
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(includesubHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  $(includesubHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includesubdir)/$$f"; \
+	done
+
+uninstall-includesubHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(includesub_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(includesubdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includesubdir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -462,9 +363,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(includesubdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -493,13 +394,11 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-tags
+distclean-am: clean-am distclean-generic distclean-tags
 
 dvi: dvi-am
 
@@ -511,11 +410,11 @@ info: info-am
 
 info-am:
 
-install-data-am: install-data-local
+install-data-am: install-includesubHEADERS
 
 install-dvi: install-dvi-am
 
-install-exec-am: install-binPROGRAMS
+install-exec-am:
 
 install-html: install-html-am
 
@@ -530,14 +429,12 @@ install-ps: install-ps-am
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -547,37 +444,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-local
+uninstall-am: uninstall-includesubHEADERS
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool ctags distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am \
-	install-data-local install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-local
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
+	clean-libtool ctags distclean distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am \
+	install-includesubHEADERS install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am tags uninstall uninstall-am \
+	uninstall-includesubHEADERS
 
-
-install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(testdir)
-	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(testdir)/.runinfo
-	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" > $(DESTDIR)$(testdir)/run
-	@chmod +x $(DESTDIR)$(testdir)/run
-
-uninstall-local:
-	$(RM) $(DESTDIR)$(testdir)/.runinfo $(DESTDIR)$(testdir)/run
-
-run: all
-	@$(top_srcdir)/scripts/xeno-load --verbose
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

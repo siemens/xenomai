@@ -6,11 +6,10 @@ nodist_include_HEADERS=$(CONFIG_HEADER)
 SUBDIRS = \
 	asm-generic \
 	asm-blackfin \
-	asm-i386 \
+	asm-x86 \
 	asm-ia64 \
 	asm-powerpc \
 	asm-arm \
-	asm-x86_64 \
 	asm-sim \
 	native \
 	nucleus \
