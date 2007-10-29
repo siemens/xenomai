@@ -1,5 +1,8 @@
 2007-10-28  Philippe Gerum  <rpm@eclipse>
 
+	* include/asm-x86/hal_64.h: Relay the host tick through to the
+	local timer interrupt (instead of IRQ0).
+
 	* ksrc/arch/x86, include/asm-x86: Merge former i386 and x86_64
 	branches.
 
