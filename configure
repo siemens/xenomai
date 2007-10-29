@@ -899,8 +899,8 @@ am__fastdepCCAS_FALSE
 LEX
 LEX_OUTPUT_ROOT
 LEXLIB
-XENO_TARGET_ARCH_I386_TRUE
-XENO_TARGET_ARCH_I386_FALSE
+XENO_LINUX_ARCH_I386_TRUE
+XENO_LINUX_ARCH_I386_FALSE
 XENO_LINUX_ALL_TARGETS
 XENO_LINUX_INSTALL_TARGET
 XENO_LINUX_IMAGE
@@ -20871,7 +20871,7 @@ echo $ECHO_N "checking for target architecture... $ECHO_C" >&6; }
 
 case "$host" in
  i*86*-*)
-	XENO_TARGET_ARCH=i386
+	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
@@ -20894,7 +20894,7 @@ case "$host" in
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
-        XENO_LINUX_ARCH=bfinnommu
+        XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
  arm-*)
@@ -20904,7 +20904,7 @@ case "$host" in
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
 	;;
  x86_64-*|amd64-*)
-	XENO_TARGET_ARCH=x86_64
+	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
@@ -20918,12 +20918,12 @@ esac
 
 { echo "$as_me:$LINENO: result: $XENO_TARGET_ARCH" >&5
 echo "${ECHO_T}$XENO_TARGET_ARCH" >&6; }
- if test $XENO_TARGET_ARCH = i386; then
-  XENO_TARGET_ARCH_I386_TRUE=
-  XENO_TARGET_ARCH_I386_FALSE='#'
+ if test $XENO_LINUX_ARCH = i386; then
+  XENO_LINUX_ARCH_I386_TRUE=
+  XENO_LINUX_ARCH_I386_FALSE='#'
 else
-  XENO_TARGET_ARCH_I386_TRUE='#'
-  XENO_TARGET_ARCH_I386_FALSE=
+  XENO_LINUX_ARCH_I386_TRUE='#'
+  XENO_LINUX_ARCH_I386_FALSE=
 fi
 
 
@@ -20962,7 +20962,7 @@ echo "${ECHO_T}${CONFIG_SMP:-no}" >&6; }
 CONFIG_XENO_X86_SEP=
 CONFIG_X86_TSC=y
 
-if test $XENO_TARGET_ARCH = i386; then
+if test $XENO_TARGET_ARCH = x86; then
   { echo "$as_me:$LINENO: checking for x86 SEP instructions in syscalls" >&5
 echo $ECHO_N "checking for x86 SEP instructions in syscalls... $ECHO_C" >&6; }
   # Check whether --enable-x86-sep was given.
@@ -22127,7 +22127,7 @@ XENO_USER_APP_CFLAGS=$XENO_USER_CFLAGS
 XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 case $XENO_TARGET_ARCH in
- i386)
+ x86)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
         ;;
  powerpc)
@@ -22143,9 +22143,6 @@ case $XENO_TARGET_ARCH in
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"
-        ;;
- x86_64)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
         ;;
 esac
 
@@ -22408,7 +22405,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/utils/Makefile src/utils/can/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-i386/Makefile include/asm-i386/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-x86_64/Makefile include/asm-x86_64/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/utils/Makefile src/utils/can/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -22547,10 +22544,10 @@ echo "$as_me: error: conditional \"am__fastdepCCAS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${XENO_TARGET_ARCH_I386_TRUE}" && test -z "${XENO_TARGET_ARCH_I386_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"XENO_TARGET_ARCH_I386\" was never defined.
+if test -z "${XENO_LINUX_ARCH_I386_TRUE}" && test -z "${XENO_LINUX_ARCH_I386_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"XENO_LINUX_ARCH_I386\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"XENO_TARGET_ARCH_I386\" was never defined.
+echo "$as_me: error: conditional \"XENO_LINUX_ARCH_I386\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23096,16 +23093,14 @@ do
     "include/asm-generic/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-generic/bits/Makefile" ;;
     "include/asm-blackfin/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-blackfin/Makefile" ;;
     "include/asm-blackfin/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-blackfin/bits/Makefile" ;;
-    "include/asm-i386/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-i386/Makefile" ;;
-    "include/asm-i386/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-i386/bits/Makefile" ;;
+    "include/asm-x86/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/Makefile" ;;
+    "include/asm-x86/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/bits/Makefile" ;;
     "include/asm-powerpc/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
     "include/asm-powerpc/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/bits/Makefile" ;;
     "include/asm-ia64/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-ia64/Makefile" ;;
     "include/asm-ia64/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-ia64/bits/Makefile" ;;
     "include/asm-arm/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/Makefile" ;;
     "include/asm-arm/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/bits/Makefile" ;;
-    "include/asm-x86_64/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86_64/Makefile" ;;
-    "include/asm-x86_64/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86_64/bits/Makefile" ;;
     "include/asm-sim/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
     "include/asm-sim/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/bits/Makefile" ;;
     "include/native/Makefile") CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;
@@ -23376,8 +23371,8 @@ am__fastdepCCAS_FALSE!$am__fastdepCCAS_FALSE$ac_delim
 LEX!$LEX$ac_delim
 LEX_OUTPUT_ROOT!$LEX_OUTPUT_ROOT$ac_delim
 LEXLIB!$LEXLIB$ac_delim
-XENO_TARGET_ARCH_I386_TRUE!$XENO_TARGET_ARCH_I386_TRUE$ac_delim
-XENO_TARGET_ARCH_I386_FALSE!$XENO_TARGET_ARCH_I386_FALSE$ac_delim
+XENO_LINUX_ARCH_I386_TRUE!$XENO_LINUX_ARCH_I386_TRUE$ac_delim
+XENO_LINUX_ARCH_I386_FALSE!$XENO_LINUX_ARCH_I386_FALSE$ac_delim
 XENO_LINUX_ALL_TARGETS!$XENO_LINUX_ALL_TARGETS$ac_delim
 XENO_LINUX_INSTALL_TARGET!$XENO_LINUX_INSTALL_TARGET$ac_delim
 XENO_LINUX_IMAGE!$XENO_LINUX_IMAGE$ac_delim
@@ -24055,9 +24050,9 @@ done
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
-              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
-              if test $cfg_arch = $XENO_TARGET_ARCH ; then
+              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
+              if test $cfg_arch = $XENO_LINUX_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
               echo "Cleaning linux directory..."

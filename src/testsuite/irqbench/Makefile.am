@@ -2,7 +2,7 @@ testdir = $(exec_prefix)/share/xenomai/testsuite/irqbench
 
 bin_PROGRAMS = irqloop
 
-if XENO_TARGET_ARCH_I386
+if XENO_LINUX_ARCH_I386
 bin_PROGRAMS += irqbench
 endif
 
