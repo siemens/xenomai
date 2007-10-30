@@ -139,6 +139,9 @@ int rt_task_init(RT_TASK *task,
 	task->body = body;
 	task->sigfn = sigfn;
 
+	if (xnarch_cpus_empty(task->affinity))
+		task->affinity = XNPOD_ALL_CPUS;
+	
 	xnlock_get_irqsave(&nklock, s);
 
 	err = xnpod_start_thread(&task->thread_base, XNSUSP,	/* Suspend on startup. */
