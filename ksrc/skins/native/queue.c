@@ -221,11 +221,11 @@ int rt_queue_create(RT_QUEUE *q,
 	/* Make sure we won't hit trivial argument errors when calling
 	   xnheap_init(). */
 
-	if (poolsize < 2 * XNCORE_PAGE_SIZE)
-		poolsize = 2 * XNCORE_PAGE_SIZE;
-
-	/* Account for the overhead so that the actual free space is large
-	   enough to match the requested size. */
+	/*
+	 * Account for the minimum heap size and overhead so that the
+	 * actual free space is large enough to match the requested
+	 * size.
+	 */
 
 	poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
 

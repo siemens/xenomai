@@ -240,11 +240,9 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 
 		poolsize += streamsz;
 
-		if (poolsize < 2 * XNCORE_PAGE_SIZE)
-			poolsize = 2 * XNCORE_PAGE_SIZE;
-
-		/* Account for the overhead so that the actual free space is large
-		   enough to match the requested size. */
+		/* Account for the minimum heap size and overhead so
+		   that the actual free space is large enough to match
+		   the requested size. */
 
 		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
 		poolmem = xnarch_alloc_host_mem(poolsize);
