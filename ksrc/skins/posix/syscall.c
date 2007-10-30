@@ -1549,7 +1549,7 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 	}
 
 
-	if (!err || err == EINTR)
+	if (!err || err == EINTR || err == ETIMEDOUT)
 		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
 				  &count, sizeof(count));
 
