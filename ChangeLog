@@ -1,3 +1,12 @@
+2007-10-30  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/posix/cond.c (__wrap_pthread_cond_wait,
+	__wrap_pthread_cond_timedwait): Do not leave without poping the
+	cleanup handler.
+
+	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue): Copy
+	the mutex recursion count to user-space upon timeout.
+
 2007-10-30  Philippe Gerum  <rpm@eclipse>
 
 	* ksrc/skins/native/heap.c (rt_heap_create): Record the
