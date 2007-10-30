@@ -126,12 +126,16 @@ extern xnheap_t kheap;
 
 static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
 {
-	/* Account for the overhead so that the actual heap space is
-	   large enough to match the requested size. Using a small
-	   page size for large single-block heaps might reserve a lot
-	   of useless page map memory, but this should never get
-	   pathological anyway, since we are only consuming 1 byte per
-	   page. */
+	/*
+	 * Account for the minimum heap size (i.e. 2 * page size) plus
+	 * overhead so that the actual heap space is large enough to
+	 * match the requested size. Using a small page size for large
+	 * single-block heaps might reserve a lot of useless page map
+	 * memory, but this should never get pathological anyway,
+	 * since we are only consuming 1 byte per page.
+	 */
+	if (hsize < 2 * psize)
+		hsize = 2 * psize;
 	hsize = xnheap_align(hsize,psize) + xnheap_overhead(hsize,psize);
 	return xnheap_align(hsize,psize);
 }

@@ -144,11 +144,11 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 	/* Make sure we won't hit trivial argument errors when calling
 	   xnheap_init(). */
 
-	if (heapsize < 2 * XNCORE_PAGE_SIZE)
-		heapsize = 2 * XNCORE_PAGE_SIZE;
-
-	/* Account for the overhead so that the actual free space is
-	   large enough to match the requested size. */
+	/*
+	 * Account for the minimum heap size and overhead so that the
+	 * actual free space is large enough to match the requested
+	 * size.
+	 */
 
 	heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
 

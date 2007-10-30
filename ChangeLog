@@ -1,5 +1,8 @@
 2007-10-30  Philippe Gerum  <rpm@eclipse>
 
+	* ksrc/skins/rtai/task.c (rt_task_init): Set up default CPU
+	affinity.
+
 	* ksrc/skins/native/heap.c (rt_heap_create): Record the
 	user-defined heap size value before any rounding is applied.
 
