@@ -92,7 +92,7 @@ static void rthal_set_local_cpu_timer(void)
     mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE);
     mtspr(SPRN_PIT, ticks);
 #else /* !CONFIG_40x */
-    ticks = (long)(__ipipe_decr_next[cpuid] - __ipipe_read_timebase());
+    ticks = (long)(per_cpu(__ipipe_decr_next, cpuid) - __ipipe_read_timebase());
     set_dec(ticks > 0 ? ticks : 0);
 #endif /* CONFIG_40x */
     DBG("rthal_set_local_cpu_timer(%d): %ld\n", cpuid, ticks);
@@ -125,11 +125,11 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
         offset);
 
     previous_tb = __ipipe_read_timebase() + ticks;
-    __ipipe_decr_next[cpuid] = previous_tb;
+    per_cpu(__ipipe_decr_next, cpuid) = previous_tb;
     for_each_online_cpu(i) {
         if (i != cpuid) {
-            __ipipe_decr_next[i] = previous_tb + offset;
-            previous_tb = __ipipe_decr_next[i];
+	    per_cpu(__ipipe_decr_next, i) = previous_tb + offset;
+            previous_tb = per_cpu(__ipipe_decr_next, i);
         }
     }
     __ipipe_decr_ticks = ticks;
