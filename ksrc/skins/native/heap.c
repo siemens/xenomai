@@ -241,10 +241,10 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	/* Make sure we won't hit trivial argument errors when calling
 	   xnheap_init(). */
 
+	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
+
 	if (heapsize < 2 * PAGE_SIZE)
 		heapsize = 2 * PAGE_SIZE;
-
-	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
 	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 

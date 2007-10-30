@@ -1,3 +1,8 @@
+2007-10-30  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/skins/native/heap.c (rt_heap_create): Record the
+	user-defined heap size value before any rounding is applied.
+
 2007-10-26  Philippe Gerum  <rpm@eclipse>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-10.
