@@ -197,7 +197,7 @@ run_w_load() {
     while :; do 
 	case $1 in
 	*=*)
-	    eval $1
+	    eval "$1"
 	    shift;;
 	*)
 	    break;;
@@ -297,11 +297,12 @@ handle_options() {	# called for XENOTEST_OPTS, ARGV
 
 	# latency & switchbench passthrus
 	h)
-	    latpass="$pass -$FOO"
+	    latpass="$latpass -$FOO"
 	    sbpass="$sbpass -$FOO" ;;
 	p)
-	    latpass="$pass -$FOO $OPTARG"
+	    latpass="$latpass -$FOO $OPTARG"
 	    sbpass="$sbpass -$FOO $OPTARG" ;;
+
 	# latency only passthrus
 	s|q)
 	    latpass="$latpass -$FOO" ;;
