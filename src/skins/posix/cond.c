@@ -116,10 +116,12 @@ int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
 
 	pthread_setcanceltype(oldtype, NULL);
 
+	pthread_cleanup_pop(0);
+
 	if (err)
 		return err;
 
-	pthread_cleanup_pop(1);
+	__pthread_cond_cleanup(&c);
 
 	pthread_testcancel();
 
@@ -149,10 +151,12 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 
 	pthread_setcanceltype(oldtype, NULL);
 
+	pthread_cleanup_pop(0);
+
 	if (err && err != ETIMEDOUT)
 		return err;
 
-	pthread_cleanup_pop(1);
+	__pthread_cond_cleanup(&c);
 
 	pthread_testcancel();
 
