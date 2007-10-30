@@ -1,3 +1,8 @@
+2007-10-30  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/skins/native/heap.c (rt_heap_create): Record the
+	user-defined heap size value before any rounding is applied.
+
 2007-10-28  Philippe Gerum  <rpm@eclipse>
 
 	* include/asm-x86/hal_64.h: Relay the host tick through to the
