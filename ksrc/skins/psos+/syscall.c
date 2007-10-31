@@ -1071,6 +1071,26 @@ static int __tm_getm(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
+ * u_long tm_getc(u_long_long *ticks_r)
+ */
+
+static int __tm_getc(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnticks_t ticks;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ticks)))
+		return -EFAULT;
+
+	ticks = xntbase_get_jiffies(psos_tbase);
+
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &ticks,
+			  sizeof(ticks));
+
+	return 0;
+}
+
+/*
  * u_long tm_signal(u_long value, u_long interval, int signo, u_long *tmid_r)
  */
 
@@ -1503,6 +1523,7 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_getm] = {&__tm_getm, __xn_exec_any},
 	[__psos_tm_signal] = {&__tm_signal, __xn_exec_primary},
 	[__psos_as_send] = {&__as_send, __xn_exec_conforming},
+	[__psos_tm_getc] = {&__tm_getc, __xn_exec_any},
 };
 
 extern xntbase_t *psos_tbase;

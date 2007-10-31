@@ -83,3 +83,8 @@ u_long tm_signal(u_long value, u_long interval, int signo, u_long *tmid_r) /* Xe
 {
 	return XENOMAI_SKINCALL4(__psos_muxid, __psos_tm_signal, value, interval, signo, tmid_r);
 }
+
+u_long tm_getc(unsigned long long *ticks_r) /* Xenomai extension. */
+{
+	return XENOMAI_SKINCALL1(__psos_muxid, __psos_tm_getc, ticks_r);
+}
