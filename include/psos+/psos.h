@@ -419,6 +419,8 @@ u_long tm_signal(u_long value,	/* Xenomai extension. */
 		 int signo,
 		 u_long *tmid_r);
 
+u_long tm_getc(unsigned long long *ticks_r); /* Xenomai extension. */
+
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

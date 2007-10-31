@@ -1,3 +1,8 @@
+2007-10-31  Philippe Gerum  <rpm@eclipse>
+
+	* [k]src/skins/psos+/syscall.c: Provide tm_getc() extension
+	returning the elapsed count of jiffies for the pSOS timebase.
+
 2007-10-30  Philippe Gerum  <rpm@eclipse>
 
 	* ksrc/skins/rtai/task.c (rt_task_init): Set up default CPU

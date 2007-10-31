@@ -71,6 +71,8 @@
 /* Xenomai extension: send a Linux signal after a specified time */
 #define __psos_tm_signal    44
 #define __psos_as_send      45
+/* Xenomai extension: get raw count of jiffies */
+#define __psos_tm_getc      46
 
 #ifdef __KERNEL__
 
