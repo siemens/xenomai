@@ -200,7 +200,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_XCHG			3
 
 struct __xn_tscinfo {
-        unsigned type;
+        unsigned type;		/* Must remain first member */
         union {
                 struct {
                         volatile unsigned *counter;
@@ -232,7 +232,7 @@ struct __xn_tscinfo {
 #include <limits.h>
 
 __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
-	.type = -1
+	type: -1
 };
 
 static inline unsigned long long __xn_rdtsc(void)

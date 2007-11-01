@@ -1,3 +1,8 @@
+2007-11-01  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* include/asm-arm/syscall.h: Change struct initializer for
+	C++ compilation.
+
 2007-10-30  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/posix/cond.c (__wrap_pthread_cond_wait,
