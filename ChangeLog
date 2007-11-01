@@ -1,7 +1,21 @@
+2007-11-01  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* include/asm-arm/syscall.h: Change struct initializer for
+	C++ compilation.
+
 2007-10-31  Philippe Gerum  <rpm@eclipse>
 
 	* [k]src/skins/psos+/syscall.c: Provide tm_getc() extension
 	returning the elapsed count of jiffies for the pSOS timebase.
+
+2007-10-30  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/posix/cond.c (__wrap_pthread_cond_wait,
+	__wrap_pthread_cond_timedwait): Do not leave without poping the
+	cleanup handler.
+
+	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue): Copy
+	the mutex recursion count to user-space upon timeout.
 
 2007-10-30  Philippe Gerum  <rpm@eclipse>
 
