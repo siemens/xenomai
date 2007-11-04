@@ -505,8 +505,8 @@ static int __rt_task_inquire(struct task_struct *curr, struct pt_regs *regs)
 	RT_TASK *task;
 	int err;
 
-	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(info)))
+	if (__xn_reg_arg2(regs) != NULL &&
+	    !__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(info)))
 		return -EFAULT;
 
 	if (__xn_reg_arg1(regs)) {
@@ -524,6 +524,10 @@ static int __rt_task_inquire(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!task)
 		return -ESRCH;
+
+	if (unlikely(__xn_reg_arg2(regs) == NULL))
+		/* Probe for existence. */
+		return 0;
 
 	err = rt_task_inquire(task, &info);
 
