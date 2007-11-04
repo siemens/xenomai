@@ -65,7 +65,9 @@
 	        :"1" (addr),"g" ((long)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
-#define __xn_access_ok(task,type,addr,size)	(__xn_range_ok(task,addr,size))
+/* We consider any address lower than the natural page size as spurious. */
+#define __xn_access_ok(task,type,addr,size)    ((unsigned long)(addr) >= PAGE_OFFSET && \
+						__xn_range_ok(task, addr, size))
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
