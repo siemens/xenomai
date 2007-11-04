@@ -1,5 +1,8 @@
 2007-11-04  Philippe Gerum  <rpm@eclipse>
 
+	* ksrc/skins/native/{syscall.c, task.c}: Allow rt_task_inquire()
+	to only probe for the existence of a task.
+
 	* include/asm-x86/syscall_{32,64}.h: Make __xn_access_ok() return
 	false for addresses lower than the natural page size.
 

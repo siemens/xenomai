@@ -1077,10 +1077,12 @@ int rt_task_unblock(RT_TASK *task)
  * is NULL, the current task is inquired.
  *
  * @param info The address of a structure the task information will be
- * written to.
+ * written to. Passing NULL is valid, in which case the system is only
+ * probed for existence of the specified task.
 
- * @return 0 is returned and status information is written to the
- * structure pointed at by @a info upon success. Otherwise:
+ * @return 0 is returned if the task exists, and status information is
+ * written to the structure pointed at by @a info if
+ * non-NULL. Otherwise:
  *
  * - -EINVAL is returned if @a task is not a task descriptor.
  *
@@ -1105,8 +1107,8 @@ int rt_task_unblock(RT_TASK *task)
 
 int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 {
-	int err = 0;
 	xnticks_t raw_exectime;
+	int err = 0;
 	spl_t s;
 
 	if (!task) {
@@ -1124,6 +1126,9 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 		err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
 		goto unlock_and_exit;
 	}
+
+	if (unlikely(info == NULL))
+		goto unlock_and_exit;
 
 	strcpy(info->name, xnthread_name(&task->thread_base));
 	info->bprio = xnthread_base_priority(&task->thread_base);

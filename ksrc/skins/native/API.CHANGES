@@ -153,3 +153,11 @@ ___________________________________________________________________
 
 	o rt_pipe_flush() has been reinstated, allowing to flush the
 	kernel endpoint i/o queues of a message pipe.
+
+___________________________________________________________________
+
+
+2.4-rc5 -> 2.4-rc6
+
+	o Allow rt_task_inquire() to only probe for the existence of a
+	task, by passing a NULL info pointer.
