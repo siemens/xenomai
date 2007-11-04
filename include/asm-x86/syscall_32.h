@@ -60,26 +60,32 @@
 
 #define __xn_range_ok(task,addr,size)    wrap_range_ok(task,addr,size)
 /* WP bit must work for using the shadow support, so we only need
-   trivial range checking here. */
-#define __xn_access_ok(task,type,addr,size)    (__xn_range_ok(task,addr,size))
+   trivial range checking here. Note: we consider any address lower
+   than the natural page size as spurious. */
+#define __xn_access_ok(task,type,addr,size)    ((unsigned long)(addr) >= PAGE_OFFSET && \
+						__xn_range_ok(task, addr, size))
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
 
-static inline void __xn_success_return(struct pt_regs *regs, int v) {
-    __xn_reg_rval(regs) = v;
+static inline void __xn_success_return(struct pt_regs *regs, int v)
+{
+	__xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_error_return(struct pt_regs *regs, int v) {
-    __xn_reg_rval(regs) = v;
+static inline void __xn_error_return(struct pt_regs *regs, int v)
+{
+	__xn_reg_rval(regs) = v;
 }
 
-static inline void __xn_status_return(struct pt_regs *regs, int v) {
-    __xn_reg_rval(regs) = v;
+static inline void __xn_status_return(struct pt_regs *regs, int v)
+{
+	__xn_reg_rval(regs) = v;
 }
 
-static inline int __xn_interrupted_p(struct pt_regs *regs) {
-    return __xn_reg_rval(regs) == -EINTR;
+static inline int __xn_interrupted_p(struct pt_regs *regs)
+{
+	return __xn_reg_rval(regs) == -EINTR;
 }
 
 #else /* !__KERNEL__ */
