@@ -505,7 +505,7 @@ static int __rt_task_inquire(struct task_struct *curr, struct pt_regs *regs)
 	RT_TASK *task;
 	int err;
 
-	if (__xn_reg_arg2(regs) != NULL &&
+	if (__xn_reg_arg2(regs) &&
 	    !__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(info)))
 		return -EFAULT;
 
@@ -525,7 +525,7 @@ static int __rt_task_inquire(struct task_struct *curr, struct pt_regs *regs)
 	if (!task)
 		return -ESRCH;
 
-	if (unlikely(__xn_reg_arg2(regs) == NULL))
+	if (unlikely(!__xn_reg_arg2(regs)))
 		/* Probe for existence. */
 		return 0;
 

@@ -62,7 +62,7 @@
 /* WP bit must work for using the shadow support, so we only need
    trivial range checking here. Note: we consider any address lower
    than the natural page size as spurious. */
-#define __xn_access_ok(task,type,addr,size)    ((unsigned long)(addr) >= PAGE_SIZE && \
+#define __xn_access_ok(task,type,addr,size)    (/*(unsigned long)(addr) >= PAGE_SIZE && */ \
 						__xn_range_ok(task, addr, size))
 
 /* Purposedly used inlines and not macros for the following routines
