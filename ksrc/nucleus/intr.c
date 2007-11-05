@@ -494,7 +494,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	xnstat_exectime_switch(sched, prev);
 }
 
-int xnintr_mount(void)
+int __init xnintr_mount(void)
 {
 	int i;
 	for (i = 0; i < XNARCH_NR_IRQS; ++i)
