@@ -318,8 +318,9 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
-	if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
-		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_TARGET_ARCH-*
+	if test ! -e $ADEOS_PATCH; then
+		XENO_LINUX_ARCH=$XENO_TARGET_ARCH
+		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
 		ADEOS_PATCH=$1
 	fi
   fi
@@ -401,7 +402,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
            fi
            cd ..
            $srcdir/scripts/prepare-kernel.sh \
-             --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
+             --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH	
            test -e .xenomai.config && mv .xenomai.config linux/.config || :
            cat > linux/.xenomai-prepared.tmp <<EOF
 PREPARED_LINUX_VERSION=$XENO_LINUX_VERSION
