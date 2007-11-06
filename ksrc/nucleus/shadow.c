@@ -1878,8 +1878,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	if (!xnpod_active_p())
 		goto no_skin;
 
-	if (xnsched_resched_p())
-		xnpod_schedule();
+	xnarch_hisyscall_entry();
 
 	p = current;
 	thread = xnshadow_thread(p);

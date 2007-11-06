@@ -95,6 +95,13 @@ static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
     kfree(chunk);
 }
 
+static inline void __xnarch_hisyscall_entry(void)
+{
+	if (xnsched_resched_p())
+		xnpod_schedule();
+}
+#define xnarch_hisyscall_entry	__xnarch_hisyscall_entry
+
 #ifdef __cplusplus
 }
 #endif

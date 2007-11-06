@@ -410,6 +410,10 @@ static inline int xnarch_remap_io_page_range(struct vm_area_struct *vma,
     return wrap_remap_io_page_range(vma,from,to,size,prot);
 }
 
+#ifndef xnarch_hisyscall_entry
+static inline void xnarch_hisyscall_entry(void)	{ }
+#endif
+
 #ifdef __cplusplus
 }
 #endif
