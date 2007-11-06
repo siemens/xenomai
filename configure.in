@@ -318,6 +318,10 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
+	if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH; then
+		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_TARGET_ARCH-*
+		ADEOS_PATCH=$1
+	fi
   fi
   if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
