@@ -14,6 +14,7 @@ dist-hook:
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
+        $(mkinstalldirs) $(DESTDIR)/dev ; \
 	@if test x`id -u` = x0; then \
            sudo= ; \
         else if test \! "x`type $(SUDO)`" = x ; then \
@@ -39,7 +40,6 @@ echo '*** privileges.' ; \
            $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
            done ; \
 	fi ; \
-        $(mkinstalldirs) $(DESTDIR)/dev ; \
 	for n in `seq 0 31` ; do \
            f="$(DESTDIR)/dev/rtp$$n" ; \
            if test \! -c $$f ; then \
