@@ -319,8 +319,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
 	if test ! -e $ADEOS_PATCH; then
-		XENO_LINUX_ARCH=$XENO_TARGET_ARCH
-		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
+		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_TARGET_ARCH-*
 		ADEOS_PATCH=$1
 	fi
   fi
@@ -329,6 +328,9 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   else
      AC_MSG_RESULT([$ADEOS_PATCH])
   fi
+  case "$ADEOS_PATCH" in
+	*-powerpc-*) XENO_LINUX_ARCH=powerpc;;
+  esac
   AC_SUBST(ADEOS_PATCH)
 
   unset LNDIR
