@@ -278,7 +278,7 @@ unsigned long __va_to_kva(unsigned long va);
 #if defined(CONFIG_MARKERS) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
 #include <linux/marker.h>
 #else /* !CONFIG_MARKERS */
-#define xnltt_log_event(ev, fmt, args...)	do { } while (0)
+#define trace_mark(ev, fmt, args...)	do { } while (0)
 #endif /* CONFIG_MARKERS */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
