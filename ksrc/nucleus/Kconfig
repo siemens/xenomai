@@ -339,40 +339,4 @@ config XENO_OPT_TIMER_WHEEL_STEP
 
 endmenu
 
-menu "LTT tracepoints filtering"
-
-	depends on LTT
-
-config XENO_OPT_FILTER_EVIRQ
-	bool "Disable IRQ-related tracepoints"
-	default y if XENO_OPT_FILTER_EVALL=y
-	help
-
-	When LTT support is active, this option disables tracepoints
-	inside real-time interrupt handlers.
-
-config XENO_OPT_FILTER_EVTHR
-	bool "Disable thread-related tracepoints"
-	default y if XENO_OPT_FILTER_EVALL=y
-	help
-
-	When LTT support is active, this option disables tracepoints
-	inside most thread-related services.
-
-config XENO_OPT_FILTER_EVSYS
-	bool "Disable syscall-related tracepoints"
-	default y if XENO_OPT_FILTER_EVALL=y
-	help
-
-	When LTT support is active, this option disables tracepoints
-	inside the shadow syscall dispatcher.
-
-config XENO_OPT_FILTER_EVALL
-	bool "Disable all tracepoints"
-	help
-
-	This option disables all LTT tracepoints inside Xenomai.
-
-endmenu
-
 endif

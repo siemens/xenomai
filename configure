@@ -20897,7 +20897,7 @@ case "$host" in
         XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
- arm-*)
+ arm*-*)
  	XENO_TARGET_ARCH=arm
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
@@ -21183,6 +21183,10 @@ fi
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
         set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
+	if test ! -e $ADEOS_PATCH; then
+		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_TARGET_ARCH-*
+		ADEOS_PATCH=$1
+	fi
   fi
   if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      { { echo "$as_me:$LINENO: error: Unable to find Adeos patch, please use --with-adeos-patch" >&5
@@ -21192,6 +21196,9 @@ echo "$as_me: error: Unable to find Adeos patch, please use --with-adeos-patch" 
      { echo "$as_me:$LINENO: result: $ADEOS_PATCH" >&5
 echo "${ECHO_T}$ADEOS_PATCH" >&6; }
   fi
+  case "$ADEOS_PATCH" in
+	*-powerpc-*) XENO_LINUX_ARCH=powerpc;;
+  esac
 
 
   unset LNDIR

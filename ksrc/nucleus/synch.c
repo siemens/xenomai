@@ -35,7 +35,6 @@
 #include <nucleus/synch.h>
 #include <nucleus/thread.h>
 #include <nucleus/module.h>
-#include <nucleus/ltt.h>
 
 /*! 
  * \fn void xnsynch_init(xnsynch_t *synch, xnflags_t flags);
@@ -174,7 +173,9 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_sleepon, thread->name, synch);
+	trace_mark(xn_nucleus_synch_sleepon,
+		   "thread %p thread_name %s sync %p",
+		   thread, xnthread_name(thread), synch);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
@@ -388,7 +389,9 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 		thread->wchan = NULL;
 		synch->owner = thread;
 		xnthread_set_info(thread, XNWAKEN);
-		xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
+		trace_mark(xn_nucleus_synch_wakeup_one,
+			   "thread %p thread_name %s sync %p",
+			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
 	} else
 		synch->owner = NULL;
@@ -461,7 +464,9 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	thread->wchan = NULL;
 	synch->owner = thread;
 	xnthread_set_info(thread, XNWAKEN);
-	xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
+	trace_mark(xn_nucleus_synch_wakeup_all,
+		   "thread %p thread_name %s synch %p",
+		   thread, xnthread_name(thread), synch);
 	xnpod_resume_thread(thread, XNPEND);
 
 	if (testbits(synch->status, XNSYNCH_CLAIMED))
@@ -531,7 +536,8 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_syncflush, synch, reason);
+	trace_mark(xn_nucleus_synch_flush, "synch %p reason %lu",
+		   synch, reason);
 
 	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
 
@@ -577,7 +583,9 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 {
 	xnsynch_t *synch = thread->wchan;
 
-	xnltt_log_event(xeno_ev_syncforget, thread->name, synch);
+	trace_mark(xn_nucleus_synch_forget,
+		   "thread %p thread_name %s synch %p",
+		   thread, xnthread_name(thread), synch);
 
 	xnthread_clear_state(thread, XNPEND);
 	thread->wchan = NULL;

@@ -261,6 +261,9 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
 #define __init
 #define __exit
 
+/* Kernel markers */
+#define trace_mark(...);
+
 #define container_of(ptr, type, member) ({                      \
         const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
         (type *)( (char *)__mptr - offsetof(type,member) );})

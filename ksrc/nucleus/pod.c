@@ -40,7 +40,6 @@
 #include <nucleus/intr.h>
 #include <nucleus/registry.h>
 #include <nucleus/module.h>
-#include <nucleus/ltt.h>
 #include <nucleus/stat.h>
 #include <asm/xenomai/bits/pod.h>
 
@@ -167,9 +166,10 @@ void xnpod_watchdog_handler(xntimer_t *timer)
 	}
 		
 	if (unlikely(++sched->wdcount >= CONFIG_XENO_OPT_WATCHDOG_TIMEOUT)) {
-		xnltt_log_event(xeno_ev_watchdog, thread->name);
+		trace_mark(xn_nucleus_watchdog, "thread %p thread_name %s",
+			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
-			 thread->name);
+			 xnthread_name(thread));
 		xnpod_delete_thread(thread);
 		xnpod_reset_watchdog(sched);
 	}
@@ -181,7 +181,7 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
 	xnsched_t *sched = xnpod_current_sched();
 
-	xnltt_log_event(xeno_ev_smpsched);
+	trace_mark(xe_nucleus_sched_remote, MARK_NOARGS);
 #if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
 	if (testbits(sched->status, XNRPICK)) {
 		clrbits(sched->status, XNRPICK);
@@ -549,11 +549,16 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 	int shadow = xnthread_test_state(threadout, XNSHADOW);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-	xnltt_log_event(xeno_ev_finalize, threadout->name, threadin->name);
+	trace_mark(xn_nucleus_sched_finalize,
+		   "thread_out %p thread_out_name %s "
+		   "thread_in %p thread_in_name %s",
+		   threadout, xnthread_name(threadout),
+		   threadin, xnthread_name(threadin));
 
 	if (!emptyq_p(&nkpod->tdeleteq) && !xnthread_test_state(threadout, XNROOT)) {
-		xnltt_log_event(xeno_ev_callout, "SELF-DELETE",
-				threadout->name);
+		trace_mark(xn_nucleus_thread_callout,
+			   "thread %p thread_name %s hook %s",
+			   threadout, xnthread_name(threadout), "DELETE");
 		xnpod_fire_callouts(&nkpod->tdeleteq, threadout);
 	}
 
@@ -703,7 +708,9 @@ int xnpod_init_thread(xnthread_t *thread,
 	if (err)
 		return err;
 
-	xnltt_log_event(xeno_ev_thrinit, thread->name, flags);
+	trace_mark(xn_nucleus_thread_init,
+		   "thread %p thread_name %s flags %lu priority %d",
+		   thread, xnthread_name(thread), flags, prio);
 
 	xnlock_get_irqsave(&nklock, s);
 	thread->sched = xnpod_current_sched();
@@ -835,7 +842,8 @@ int xnpod_start_thread(xnthread_t *thread,
 	if (xnthread_test_state(thread, XNRRB))
 		thread->rrcredit = thread->rrperiod;
 
-	xnltt_log_event(xeno_ev_thrstart, thread->name);
+	trace_mark(xn_nucleus_thread_start, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNSHADOW)) {
@@ -859,7 +867,9 @@ int xnpod_start_thread(xnthread_t *thread,
 #endif /* __XENO_SIM__ */
 
 	if (!emptyq_p(&nkpod->tstartq) && !xnthread_test_state(thread, XNROOT)) {
-		xnltt_log_event(xeno_ev_callout, "START", thread->name);
+		trace_mark(xn_nucleus_thread_callout,
+			   "thread %p thread_name %s hook %s",
+			   thread, xnthread_name(thread), "START");
 		xnpod_fire_callouts(&nkpod->tstartq, thread);
 	}
 
@@ -916,7 +926,8 @@ void xnpod_restart_thread(xnthread_t *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_threstart, thread->name);
+	trace_mark(xn_nucleus_thread_restart, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 	/* Break the thread out of any wait it is currently in. */
 	xnpod_unblock_thread(thread);
@@ -1032,7 +1043,9 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_thrsetmode, thread->name, clrmask, setmask);
+	trace_mark(xn_nucleus_thread_setmode,
+		   "thread %p thread_name %s clrmask %lu setmask %lu",
+		   thread, xnthread_name(thread), clrmask, setmask);
 
 #ifndef CONFIG_XENO_OPT_ISHIELD
 	setmask &= ~XNSHIELD;
@@ -1165,7 +1178,8 @@ void xnpod_delete_thread(xnthread_t *thread)
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-	xnltt_log_event(xeno_ev_thrdelete, thread->name);
+	trace_mark(xn_nucleus_thread_delete, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 	removeq(&nkpod->threadq, &thread->glink);
 	nkpod->threadq_rev++;
@@ -1202,8 +1216,9 @@ void xnpod_delete_thread(xnthread_t *thread)
 	} else {
 		if (!emptyq_p(&nkpod->tdeleteq)
 		    && !xnthread_test_state(thread, XNROOT)) {
-			xnltt_log_event(xeno_ev_callout, "DELETE",
-					thread->name);
+			trace_mark(xn_nucleus_thread_callout,
+				   "thread %p thread_name %s hook %s",
+				   thread, xnthread_name(thread), "DELETE");
 			xnpod_fire_callouts(&nkpod->tdeleteq, thread);
 		}
 
@@ -1350,7 +1365,11 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_thrsuspend, thread->name, mask, timeout, wchan);
+	trace_mark(xn_nucleus_thread_suspend,
+		   "thread %p thread_name %s mask %lu timeout %Lu "
+		   "timeout_mode %d wchan %p",
+		   thread, xnthread_name(thread), mask, timeout,
+		   timeout_mode, wchan);
 
 	sched = thread->sched;
 
@@ -1530,7 +1549,9 @@ void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_thresume, thread->name, mask);
+	trace_mark(xn_nucleus_thread_resume,
+		   "thread %p thread_name %s mask %lu",
+		   thread, xnthread_name(thread), mask);
 	xnarch_trace_pid(xnthread_user_task(thread) ?
 			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
 			 xnthread_current_priority(thread));
@@ -1671,7 +1692,10 @@ int xnpod_unblock_thread(xnthread_t *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_thrunblock, xnthread_name(thread), xnthread_state_flags(thread));
+	trace_mark(xn_nucleus_thread_unblock,
+		   "thread %p thread_name %s state %lu",
+		   thread, xnthread_name(thread),
+		   xnthread_state_flags(thread));
 
 	if (xnthread_test_state(thread, XNDELAY))
 		xnpod_resume_thread(thread, XNDELAY);
@@ -1754,7 +1778,9 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_threnice, thread->name, prio);
+	trace_mark(xn_nucleus_thread_renice,
+		   "thread %p thread_nmae %s priority %d",
+		   thread, xnthread_name(thread), prio);
 
 	oldprio = thread->cprio;
 
@@ -1835,7 +1861,9 @@ int xnpod_migrate_thread(int cpu)
 	if (cpu == xnarch_current_cpu())
 		goto unlock_and_exit;
 
-	xnltt_log_event(xeno_ev_cpumigrate, thread->name, cpu);
+	trace_mark(xn_nucleus_thread_migrate,
+		   "thread %p thread_name %s cpu %d",
+		   thread, xnthread_name(thread), cpu);
 
 #ifdef CONFIG_XENO_HW_FPU
 	if (xnthread_test_state(thread, XNFPU)) {
@@ -1920,7 +1948,7 @@ void xnpod_rotate_readyq(int prio)
 	if (sched_emptypq_p(&sched->readyq))
 		goto unlock_and_exit;	/* Nobody is ready. */
 
-	xnltt_log_event(xeno_ev_rdrotate, sched->runthread, prio);
+	trace_mark(xn_nucleus_sched_rotate, "priority %d", prio);
 
 	/* There is _always_ a running thread, ultimately the root
 	   one. Use the base priority, not the priority boost. */
@@ -1974,7 +2002,7 @@ void xnpod_activate_rr(xnticks_t quantum)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_rractivate, quantum);
+	trace_mark(xn_nucleus_sched_rractivate, "quantum %Lu", quantum);
 
 	holder = getheadq(&nkpod->threadq);
 
@@ -2019,7 +2047,7 @@ void xnpod_deactivate_rr(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_rrdeactivate);
+	trace_mark(xn_nucleus_sched_rrdeactivate, MARK_NOARGS);
 
 	holder = getheadq(&nkpod->threadq);
 
@@ -2061,7 +2089,8 @@ void xnpod_dispatch_signals(void)
 	    || thread->asr == XNTHREAD_INVALID_ASR)
 		return;
 
-	xnltt_log_event(xeno_ev_sigdispatch, thread->name, thread->signals);
+	trace_mark(xn_nucleus_sched_sigdispatch, "signals %lu",
+		   thread->signals);
 
 	/* Start the asynchronous service routine */
 	oldmode = xnthread_test_state(thread, XNTHREAD_MODE_BITS);
@@ -2102,7 +2131,8 @@ void xnpod_dispatch_signals(void)
 
 void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
-	xnltt_log_event(xeno_ev_thrboot, thread->name);
+	trace_mark(xn_nucleus_thread_boot, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 	xnarch_trace_pid(-1, xnthread_current_priority(thread));
 
@@ -2345,8 +2375,6 @@ void xnpod_schedule(void)
 
 	if (xnarch_escalate())
 		return;
-
-	xnltt_log_event(xeno_ev_resched);
 #endif /* __KERNEL__ */
 
 	/* No immediate rescheduling is possible if an ISR or callout
@@ -2354,6 +2382,8 @@ void xnpod_schedule(void)
 
 	if (xnpod_callout_p() || xnpod_interrupt_p())
 		return;
+
+	trace_mark(xn_nucleus_sched, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -2442,7 +2472,11 @@ void xnpod_schedule(void)
 	    !xnthread_test_state(threadout, XNRESTART))
 		goto signal_unlock_and_exit;
 
-	xnltt_log_event(xeno_ev_switch, threadout->name, threadin->name);
+	trace_mark(xn_nucleus_sched_switch,
+		   "thread_out %p thread_out_name %s "
+		   "thread_in %p thread_in_name %s",
+		   threadout, xnthread_name(threadout),
+		   threadin, xnthread_name(threadin));
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	shadow = xnthread_test_state(threadout, XNSHADOW);
@@ -2509,7 +2543,9 @@ void xnpod_schedule(void)
 #endif /* __XENO_SIM__ */
 
 	if (!emptyq_p(&nkpod->tswitchq) && !xnthread_test_state(runthread, XNROOT)) {
-		xnltt_log_event(xeno_ev_callout, "SWITCH", runthread->name);
+		trace_mark(xn_nucleus_thread_callout,
+			   "thread %p thread_name %s hook %s",
+			   runthread, xnthread_name(runthread), "SWITCH");
 		xnpod_fire_callouts(&nkpod->tswitchq, runthread);
 	}
 
@@ -2553,7 +2589,7 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	xnsched_t *sched = thread->sched;
 	xnthread_t *runthread = sched->runthread, *threadin;
 
-	xnltt_log_event(xeno_ev_fastsched);
+	trace_mark(xn_nucleus_sched_fast, MARK_NOARGS);
 	xnarch_trace_pid(xnthread_user_task(thread) ?
 			 xnarch_user_pid(xnthread_archtcb(thread)) : -1,
 			 xnthread_current_priority(thread));
@@ -2719,7 +2755,8 @@ int xnpod_add_hook(int type, void (*routine) (xnthread_t *))
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_addhook, type, routine);
+	trace_mark(xn_nucleus_sched_addhook, "type %d routine %p",
+		   type, routine);
 
 	switch (type) {
 	case XNHOOK_THREAD_START:
@@ -2789,7 +2826,8 @@ int xnpod_remove_hook(int type, void (*routine) (xnthread_t *))
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_remhook, type, routine);
+	trace_mark(xn_nucleus_sched_removehook, "type %d routine %p",
+		   type, routine);
 
 	switch (type) {
 	case XNHOOK_THREAD_START:
@@ -2873,9 +2911,10 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 	thread = xnpod_current_thread();
 
-	xnltt_log_event(xeno_ev_fault,
-			thread->name,
-			xnarch_fault_pc(fltinfo), xnarch_fault_trap(fltinfo));
+	trace_mark(xn_nucleus_thread_fault,
+		   "thread %p thread_name %s address %lu type %d",
+		   thread, xnthread_name(thread), xnarch_fault_pc(fltinfo),
+		   xnarch_fault_trap(fltinfo));
 
 #ifdef __KERNEL__
 	if (xnarch_fault_fpu_p(fltinfo)) {
@@ -3012,7 +3051,7 @@ int xnpod_enable_timesource(void)
 		return err;
 	}
 
-	xnltt_log_event(xeno_ev_tsenable);
+	trace_mark(xn_nucleus_tbase_start, "base %s", nktbase.name);
 
 #ifdef CONFIG_XENO_OPT_STATS
 	/*
@@ -3111,7 +3150,7 @@ void xnpod_disable_timesource(void)
 	spl_t s;
 	int cpu;
 
-	xnltt_log_event(xeno_ev_tsdisable);
+	trace_mark(xn_nucleus_tbase_stop, "base %s", nktbase.name);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -3201,7 +3240,10 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_thrperiodic, thread->name, idate, period);
+	trace_mark(xn_nucleus_thread_setperiodic,
+		   "thread %p thread_name %s idate %Lu period %Lu timer %p",
+		   thread, xnthread_name(thread), idate, period,
+		   &thread->ptimer);
 
 	if (period == XN_INFINITE) {
 		if (xntimer_running_p(&thread->ptimer))
@@ -3304,7 +3346,8 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 		goto unlock_and_exit;
 	}
 
-	xnltt_log_event(xeno_ev_thrwait, thread->name);
+	trace_mark(xn_nucleus_thread_waitperiod, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 	/* Work with either TSC or periodic ticks. */
 	tbase = xnthread_time_base(thread);
@@ -3322,8 +3365,13 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	}
 
 	overruns = xntimer_get_overruns(&thread->ptimer, now);
-	if (overruns)
+	if (overruns) {
 		err = -ETIMEDOUT;
+
+		trace_mark(xn_nucleus_thread_missedperiod,
+			   "thread %p thread_name %s overruns %lu",
+			   thread, xnthread_name(thread), overruns);
+	}
 
 	if (likely(overruns_r != NULL))
 		*overruns_r = overruns;
