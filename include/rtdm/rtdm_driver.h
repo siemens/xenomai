@@ -1019,11 +1019,13 @@ void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason);
 
 static inline void rtdm_event_pulse(rtdm_event_t *event)
 {
+	trace_mark(xn_rtdm_event_pulse, "event %p", event);
 	__rtdm_synch_flush(&event->synch_base, 0);
 }
 
 static inline void rtdm_event_destroy(rtdm_event_t *event)
 {
+	trace_mark(xn_rtdm_event_destroy, "event %p", event);
 	__rtdm_synch_flush(&event->synch_base, XNRMID);
 }
 #endif /* !DOXYGEN_CPP */
@@ -1044,6 +1046,7 @@ void rtdm_sem_up(rtdm_sem_t *sem);
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 {
+	trace_mark(xn_rtdm_sem_destroy, "sem %p", sem);
 	__rtdm_synch_flush(&sem->synch_base, XNRMID);
 }
 #endif /* !DOXYGEN_CPP */
@@ -1064,12 +1067,16 @@ static inline void rtdm_mutex_unlock(rtdm_mutex_t *mutex)
 {
 	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return;);
 
+	trace_mark(xn_rtdm_mutex_unlock, "mutex %p", mutex);
+
 	if (unlikely(xnsynch_wakeup_one_sleeper(&mutex->synch_base) != NULL))
 		xnpod_schedule();
 }
 
 static inline void rtdm_mutex_destroy(rtdm_mutex_t *mutex)
 {
+	trace_mark(xn_rtdm_mutex_destroy, "mutex %p", mutex);
+
 	__rtdm_synch_flush(&mutex->synch_base, XNRMID);
 }
 #endif /* !DOXYGEN_CPP */

@@ -34,7 +34,6 @@
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 #include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-#include <nucleus/ltt.h>
 #include <asm/xenomai/bits/init.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
@@ -1156,10 +1155,6 @@ int __init __xeno_sys_init(void)
 
 	xnintr_mount();
 
-#ifdef CONFIG_LTT
-	xnltt_mount();
-#endif /* CONFIG_LTT */
-
 #ifdef CONFIG_XENO_OPT_PIPE
 	err = xnpipe_mount();
 
@@ -1249,9 +1244,6 @@ void __exit __xeno_sys_exit(void)
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
 #endif /* CONFIG_XENO_OPT_PIPE */
-#ifdef CONFIG_LTT
-	xnltt_umount();
-#endif /* CONFIG_LTT */
 #endif /* __KERNEL__ */
 
 	if (nkmsgbuf)

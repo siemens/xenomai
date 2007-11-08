@@ -14,8 +14,6 @@ xeno_nucleus-$(CONFIG_XENO_OPT_MAP) += map.o
 
 xeno_nucleus-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
 
-xeno_nucleus-$(CONFIG_LTT) += ltt.o
-
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
@@ -35,7 +33,6 @@ opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o
 opt_objs-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 opt_objs-$(CONFIG_XENO_OPT_MAP) += map.o
 opt_objs-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
-opt_objs-$(CONFIG_LTT) += ltt.o
 
 xeno_nucleus-objs += $(opt_objs-y)
 

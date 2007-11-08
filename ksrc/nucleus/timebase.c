@@ -53,7 +53,6 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
-#include <nucleus/ltt.h>
 #include <nucleus/module.h>
 
 DEFINE_XNQUEUE(nktimebaseq);
@@ -378,19 +377,21 @@ void xntbase_start(xntbase_t *base)
 	xnticks_t start_date;
 	spl_t s;
 
- 	if (base == &nktbase || xntbase_enabled_p(base))
+	if (base == &nktbase || xntbase_enabled_p(base))
 		return;
+
+	trace_mark(xn_nucleus_tbase_start, "base %s", base->name);
 
 	xnlock_get_irqsave(&nklock, s);
 
-  	start_date = xnarch_get_cpu_time();
+	start_date = xnarch_get_cpu_time();
 
- 	/* Only synchronise non-isolated time bases on the master base. */
- 	if (!xntbase_isolated_p(base)) {
- 		base->wallclock_offset = xntbase_ns2ticks(base,
- 			start_date + nktbase.wallclock_offset);
- 		__setbits(base->status, XNTBSET);
- 	}
+	/* Only synchronise non-isolated time bases on the master base. */
+	if (!xntbase_isolated_p(base)) {
+		base->wallclock_offset = xntbase_ns2ticks(base,
+			start_date + nktbase.wallclock_offset);
+		__setbits(base->status, XNTBSET);
+	}
 
 	start_date += base->tickvalue;
 
@@ -433,6 +434,8 @@ void xntbase_stop(xntbase_t *base)
 
 	xntslave_stop(base2slave(base));
 	__clrbits(base->status, XNTBRUN | XNTBSET);
+
+	trace_mark(xn_nucleus_tbase_stop, "base %s", base->name);
 }
 
 /*!
@@ -469,8 +472,7 @@ void xntbase_tick(xntbase_t *base)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnltt_log_event(xeno_ev_tstick, base->name,
-			xnpod_current_thread()->name);
+	trace_mark(xn_nucleus_tbase_tick, "base %s", base->name);
 
 	if (base == &nktbase)
 		xntimer_tick_aperiodic();
@@ -565,7 +567,8 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 	}
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-	/* xnltt_log_event(xeno_ev_timeadjust, base->name, delta); */
+	trace_mark(xn_nucleus_tbase_adjust, "base %s delta %Lu",
+		   base->name, delta);
 }
 
 /* The master time base - the most precise one, aperiodic, always valid. */

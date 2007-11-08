@@ -46,7 +46,6 @@
 #include <nucleus/module.h>
 #include <nucleus/shadow.h>
 #include <nucleus/core.h>
-#include <nucleus/ltt.h>
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
@@ -881,7 +880,8 @@ static void lostage_handler(void *cookie)
 		struct task_struct *p = rq->req[reqnum].task;
 		rq->out = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
 
-		xnltt_log_event(xeno_ev_lohandler, reqnum, p->comm, p->pid);
+		trace_mark(xn_nucleus_lostage_work, "reqnum %d comm %s pid %d",
+			   reqnum, p->comm, p->pid);
 
 		switch (rq->req[reqnum].type) {
 		case LO_UNMAP_REQ:
@@ -1094,7 +1094,9 @@ redo:
 	   preemption and using the TASK_ATOMICSWITCH cumulative state
 	   provided by Adeos to Linux tasks. */
 
-	xnltt_log_event(xeno_ev_primarysw, this_task->comm);
+	trace_mark(xn_nucleus_shadow_gohard,
+		   "thread %p thread_name %s comm %s",
+		   thread, xnthread_name(thread), this_task->comm);
 
 	gk->thread = thread;
 	xnthread_set_info(thread, XNATOMIC);
@@ -1141,7 +1143,8 @@ redo:
 	if (rpi_p(thread))
 		rpi_clear_remote(thread);
 
-	xnltt_log_event(xeno_ev_primary, thread->name);
+	trace_mark(xn_nucleus_shadow_hardened, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 
 	return 0;
 }
@@ -1186,7 +1189,8 @@ void xnshadow_relax(int notify)
 	   domain to the Linux domain.  This will cause the Linux task
 	   to resume using the register state of the shadow thread. */
 
-	xnltt_log_event(xeno_ev_secondarysw, thread->name);
+	trace_mark(xn_nucleus_shadow_gorelax, "thread %p thread_name %s",
+		  thread, xnthread_name(thread));
 
 	ishield_on(thread);
 
@@ -1231,7 +1235,9 @@ void xnshadow_relax(int notify)
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
-	xnltt_log_event(xeno_ev_secondary, current->comm);
+	trace_mark(xn_nucleus_shadow_relaxed,
+		  "thread %p thread_name %s comm %s",
+		  thread, xnthread_name(thread), current->comm);
 }
 
 void xnshadow_exit(void)
@@ -1327,9 +1333,10 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 		}
 	}
 
-	xnltt_log_event(xeno_ev_shadowmap,
-			thread->name, current->pid,
-			xnthread_base_priority(thread));
+	trace_mark(xn_nucleus_shadow_map,
+		   "thread %p thread_name %s pid %d priority %d",
+		   thread, xnthread_name(thread), current->pid,
+		   xnthread_base_priority(thread));
 
 	/* Switch on propagation of normal kernel events for the bound
 	   task. This is basically a per-task event filter which
@@ -1387,7 +1394,9 @@ void xnshadow_unmap(xnthread_t *thread)
 	xnthread_clear_state(thread, XNMAPPED);
 	rpi_pop(thread);
 
-	xnltt_log_event(xeno_ev_shadowunmap, thread->name, p ? p->pid : -1);
+	trace_mark(xn_nucleus_shadow_unmap,
+		   "thread %p thread_name %s pid %d",
+		   thread, xnthread_name(thread), p ? p->pid : -1);
 
 	if (!p)
 		return;
@@ -1450,7 +1459,8 @@ void xnshadow_start(xnthread_t *thread)
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 
 	rpi_push(thread);	/* A shadow always starts in relaxed mode. */
-	xnltt_log_event(xeno_ev_shadowstart, thread->name);
+	trace_mark(xn_nucleus_shadow_start, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 	xnpod_resume_thread(thread, XNDORMANT);
 
 	if (p->state == TASK_INTERRUPTIBLE)
@@ -1897,7 +1907,10 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	xnltt_log_event(xeno_ev_syscall, thread->name, muxid, muxop);
+	trace_mark(xn_nucleus_syscall_histage,
+		   "thread %p thread_name %s muxid %d muxop %d",
+		   thread, thread ? xnthread_name(thread) : NULL,
+		   muxid, muxop);
 
 	if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
 	    muxop < 0 || muxop >= muxtable[muxid].props->nrcalls) {
@@ -2072,9 +2085,11 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	xnltt_log_event(xeno_ev_syscall,
-			xnpod_active_p() ? xnpod_current_thread()->name : "<system>",
-			muxid, muxop);
+	trace_mark(xn_nucleus_syscall_lostage,
+		   "thread %p thread_name %s muxid %d muxop %d",
+		   xnpod_active_p() ? xnpod_current_thread() : NULL,
+		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
+		   muxid, muxop);
 
 	/* Processing a real-time skin syscall. */
 
@@ -2150,7 +2165,8 @@ static inline void do_taskexit_event(struct task_struct *p)
 	xnpod_schedule();
 
 	xnshadow_dereference_skin(magic);
-	xnltt_log_event(xeno_ev_shadowexit, thread->name);
+	trace_mark(xn_nucleus_shadow_exit, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
 }
 
 RTHAL_DECLARE_EXIT_EVENT(taskexit_event);

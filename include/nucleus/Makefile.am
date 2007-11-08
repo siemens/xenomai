@@ -8,7 +8,6 @@ includesub_HEADERS = \
 	heap.h \
 	intr.h \
 	jhash.h \
-	ltt.h \
 	map.h \
 	module.h \
 	pipe.h \

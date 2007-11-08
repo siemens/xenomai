@@ -170,6 +170,10 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 {
 	xnticks_t date, now;
 
+	trace_mark(xn_nucleus_timer_start,
+		   "timer %p base %s value %Lu interval %Lu mode %u",
+		   timer, xntimer_base(timer)->name, value, interval, mode);
+
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_aperiodic(timer);
 
@@ -217,6 +221,8 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 void xntimer_stop_aperiodic(xntimer_t *timer)
 {
 	int heading;
+
+	trace_mark(xn_nucleus_timer_stop, "timer %p", timer);
 
 	heading = xntimer_heading_p(timer);
 	xntimer_dequeue_aperiodic(timer);
@@ -293,6 +299,8 @@ void xntimer_tick_aperiodic(void)
 			/* No need to continue in aperiodic mode since timeout
 			   dates are ordered by increasing values. */
 			break;
+
+		trace_mark(xn_nucleus_timer_expire, "timer %p", timer);
 
 		xntimer_dequeue_aperiodic(timer);
 		xnstat_counter_inc(&timer->fired);
@@ -371,6 +379,10 @@ static int xntimer_start_periodic(xntimer_t *timer,
 				  xnticks_t value, xnticks_t interval,
 				  xntmode_t mode)
 {
+	trace_mark(xn_nucleus_timer_start,
+		   "timer %p base %s value %Lu interval %Lu mode %u", timer,
+		   xntimer_base(timer)->name->name, value, interval, mode);
+
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
 
@@ -406,6 +418,8 @@ static int xntimer_start_periodic(xntimer_t *timer,
 
 static void xntimer_stop_periodic(xntimer_t *timer)
 {
+	trace_mark(xn_nucleus_timer_stop, "timer %p", timer);
+
 	xntimer_dequeue_periodic(timer);
 }
 
@@ -487,6 +501,8 @@ void xntimer_tick_periodic_inner(xntslave_t *slave)
 		if ((xnsticks_t) (xntlholder_date(&timer->plink)
 				  - base->jiffies) > 0)
 			break;
+
+		trace_mark(xn_nucleus_timer_expire, "timer %p", timer);
 
 		xntimer_dequeue_periodic(timer);
 		xnstat_counter_inc(&timer->fired);
@@ -625,6 +641,8 @@ void xntslave_start(xntslave_t *slave, xnticks_t start, xnticks_t interval)
 	int nr_cpus, cpu;
 	spl_t s;
 
+	trace_mark(xn_nucleus_tbase_start, "base %s", slave->base.name);
+
 	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
 
 		struct percpu_cascade *pc = &slave->cascade[cpu];
@@ -641,6 +659,8 @@ void xntslave_stop(xntslave_t *slave)
 {
 	int nr_cpus, cpu;
 	spl_t s;
+
+	trace_mark(xn_nucleus_tbase_stop, "base %s", slave->base.name);
 
 	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
 
@@ -837,6 +857,9 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 	int queued;
 	spl_t s;
 
+	trace_mark(xn_nucleus_timer_migrate, "timer %p cpu %d",
+		   timer, xnsched_cpu(sched));
+
 	xnlock_get_irqsave(&nklock, s);
 
 	if (sched == timer->sched)
@@ -931,6 +954,8 @@ void xntimer_freeze(void)
 {
 	int nr_cpus, cpu;
 	spl_t s;
+
+	trace_mark(xn_nucleus_timer_freeze, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
 
