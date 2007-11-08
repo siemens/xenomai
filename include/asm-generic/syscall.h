@@ -89,7 +89,7 @@ typedef struct _xnsysent {
 #define __xn_exec_adaptive   0x40
 /* Do not restart syscall upon signal receipt. */
 #define __xn_exec_norestart  0x80
-/* Context-agnostic syscall. */
+/* Context-agnostic syscall. Will actually run in Xenomai domain. */
 #define __xn_exec_any        0x0
 /* Short-hand for shadow init syscall. */
 #define __xn_exec_init       __xn_exec_lostage
