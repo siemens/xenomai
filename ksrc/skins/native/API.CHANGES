@@ -161,3 +161,20 @@ ___________________________________________________________________
 
 	o Allow rt_task_inquire() to only probe for the existence of a
 	task, by passing a NULL info pointer.
+
+	o rt_pipe_receive() and rt_pipe_read() now return 0 whenever
+	the peer closes the connection while reading from the pipe. It
+	should have been this way for POSIX conformance reasons, so
+	this is more a bugfix than an arbitrary API change actually.
+	Applications calling rt_pipe_receive() may want to check the
+	value of the message pointer returned to them, and branch
+	according to the following rules:
+	  - (nbytes == 0 && msg == NULL): pipe closed by peer while
+            reading
+	  - (nbytes < 0): error
+	  - (nbytes >= 0 && msg != NULL): valid message, possibly
+            zero-sized.
+	In the particular case of rt_pipe_read(), there is no mean
+	to distinguish a "closed by peer" situation from a zero-sized
+	message being received. One should use rt_pipe_receive()
+	instead to be able to make such distinction.

@@ -420,7 +420,9 @@ int rt_pipe_delete(RT_PIPE *pipe)
  * consumed, the message space should be freed using rt_pipe_free().
  * The application code can retrieve the actual data and size carried
  * by the message by respectively using the P_MSGPTR() and P_MSGSIZE()
- * macros.
+ * macros. *msgp is set to NULL and zero is returned to the caller, in
+ * case the peer closed the channel while rt_pipe_receive() was
+ * reading from it.
  *
  * @param timeout The number of clock ticks to wait for some message
  * to arrive (see note). Passing TM_INFINITE causes the caller to
@@ -432,9 +434,14 @@ int rt_pipe_delete(RT_PIPE *pipe)
  * message is returned upon success; this value will be equal to
  * P_MSGSIZE(*msgp). Otherwise:
  *
+ * - 0 is returned and *msgp is set to NULL if the peer closed the
+ * channel while rt_pipe_receive() was reading from it. This is to be
+ * distinguished from an empty message return, where *msgp points to a
+ * valid - albeit empty - message block (i.e. P_MSGSIZE(*msgp) == 0).
+ *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
- * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ * - -EIDRM is returned if @a pipe was closed while reading.
  *
  * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
  *
@@ -489,6 +496,11 @@ ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
 
 	n = xnpipe_recv(pipe->minor, msgp, timeout);
 
+	if (n == -EIDRM) {
+		*msgp = NULL;
+		n = 0;	/* Remap to POSIX semantics. */
+	}
+
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -532,6 +544,12 @@ ssize_t rt_pipe_receive(RT_PIPE *pipe, RT_PIPE_MSG **msgp, RTIME timeout)
  *
  * @return The number of read bytes copied to the @a buf is returned
  * upon success. Otherwise:
+ *
+ * - 0 is returned if the peer closed the channel while rt_pipe_read()
+ * was reading from it. There is no way to distinguish this situation
+ * from an empty message return using rt_pipe_read(). One should
+ * rather call rt_pipe_receive() whenever this information is
+ * required.
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
@@ -587,6 +605,9 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
 
 	if (nbytes < 0)
 		return nbytes;
+
+	if (msg == NULL)	/* Closed by peer? */
+		return 0;
 
 	if (size < P_MSGSIZE(msg))
 		nbytes = -ENOBUFS;

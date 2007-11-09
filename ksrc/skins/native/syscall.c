@@ -3511,6 +3511,9 @@ static int __rt_pipe_read(struct task_struct *curr, struct pt_regs *regs)
 	if (err < 0)
 		return err;
 
+	if (msg == NULL)	/* Closed by peer? */
+		return 0;
+
 	if (size < P_MSGSIZE(msg))
 		err = -ENOBUFS;
 	else if (P_MSGSIZE(msg) > 0)
