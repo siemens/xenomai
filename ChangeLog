@@ -1,3 +1,10 @@
+2007-11-09  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/skins/native/pipe.c,
+	ksrc/skins/native/syscall.c (rt_pipe_receive, rt_pipe_read,
+	__rt_pipe_read): Conform to the POSIX semantics when the channel
+	is closed by the peer while reading: i.e. return 0.
+
 2007-11-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus, ksrc/include, ksrc/skins/rtdm: Overhaul the LTT

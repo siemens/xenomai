@@ -305,7 +305,7 @@ int rtf_get(unsigned minor, void *buf, int count)
 	nbytes = xnpipe_recv(minor, &msg, XN_NONBLOCK);
 
 	if (nbytes < 0) {
-		if (nbytes == -EWOULDBLOCK)
+		if (nbytes == -EWOULDBLOCK || nbytes == -EIDRM)
 			nbytes = 0;
 
 		goto unlock_and_exit;
