@@ -178,3 +178,14 @@ ___________________________________________________________________
 	to distinguish a "closed by peer" situation from a zero-sized
 	message being received. One should use rt_pipe_receive()
 	instead to be able to make such distinction.
+
+	o rt_misc_get/put_io_region() now both take a 64bit argument
+	to hold the start address of the region, in order to cope with
+	architectures where I/O memory lives beyond the 4GB limit.
+
+	o rt_misc_put_io_region() has been changed to void type, since
+	the kernel does not return any error code from
+	release_region(), but rather sends a warning to the kernel
+	log. Having rt_misc_put_io_region() always return zero as a
+	status albeit a failure message may have appeared in the
+	kernel log was disturbing.
