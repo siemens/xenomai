@@ -858,7 +858,7 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 	spl_t s;
 
 	trace_mark(xn_nucleus_timer_migrate, "timer %p cpu %d",
-		   timer, xnsched_cpu(sched));
+		   timer, (int)xnsched_cpu(sched));
 
 	xnlock_get_irqsave(&nklock, s);
 
