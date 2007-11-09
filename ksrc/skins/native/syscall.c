@@ -3656,7 +3656,7 @@ static int __rt_pipe_stream(struct task_struct *curr, struct pt_regs *regs)
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
 /*
- * int __rt_misc_get_io_region(unsigned long start,
+ * int __rt_misc_get_io_region(uint64_t *start,
  *                             unsigned long len,
  *                             const char *label)
  */
@@ -3664,35 +3664,49 @@ static int __rt_pipe_stream(struct task_struct *curr, struct pt_regs *regs)
 static int __rt_misc_get_io_region(struct task_struct *curr,
 				   struct pt_regs *regs)
 {
-	unsigned long start, len;
+	unsigned long len;
+	uint64_t start;
 	char label[64];
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(start)))
+		return -EFAULT;
 
 	if (!__xn_access_ok
 	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(label)))
 		return -EFAULT;
+
+	__xn_copy_from_user(curr, &start, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(start));
 
 	__xn_strncpy_from_user(curr, label,
 			       (const char __user *)__xn_reg_arg3(regs),
 			       sizeof(label) - 1);
 	label[sizeof(label) - 1] = '\0';
 
-	start = __xn_reg_arg1(regs);
 	len = __xn_reg_arg2(regs);
 
 	return request_region(start, len, label) ? 0 : -EBUSY;
 }
 
 /*
- * int __rt_misc_put_io_region(unsigned long start,
+ * int __rt_misc_put_io_region(uint64_t *start,
  *                             unsigned long len)
  */
 
 static int __rt_misc_put_io_region(struct task_struct *curr,
 				   struct pt_regs *regs)
 {
-	unsigned long start, len;
+	unsigned long len;
+	uint64_t start;
 
-	start = __xn_reg_arg1(regs);
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(start)))
+		return -EFAULT;
+
+	__xn_copy_from_user(curr, &start, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(start));
+
 	len = __xn_reg_arg2(regs);
 	release_region(start, len);
 

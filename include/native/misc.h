@@ -32,12 +32,12 @@ extern "C" {
 
 /* Public interface. */
 
-int rt_misc_get_io_region(unsigned long start,
+int rt_misc_get_io_region(uint64_t start,
 			  unsigned long len,
 			  const char *label);
 
-int rt_misc_put_io_region(unsigned long start,
-			  unsigned long len);
+void rt_misc_put_io_region(uint64_t start,
+			   unsigned long len);
 
 #ifdef __cplusplus
 }

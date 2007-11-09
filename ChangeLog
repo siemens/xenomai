@@ -1,5 +1,13 @@
 2007-11-09  Philippe Gerum  <rpm@eclipse>
 
+	* ksrc/skins/native/syscall.c,
+	src/skins/native/misc.c (rt_misc_get_io_region,
+	rt_misc_put_io_region): Use a 64bit argument to hold the start
+	address of the region, in order to cope with architectures where
+	I/O memory lives beyond the 4GB limit.
+
+	* include/asm-x86/hal_32.h: Always include asm/i8253.h.
+
 	* ksrc/skins/native/pipe.c,
 	ksrc/skins/native/syscall.c (rt_pipe_receive, rt_pipe_read,
 	__rt_pipe_read): Conform to the POSIX semantics when the channel
