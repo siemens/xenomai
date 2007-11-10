@@ -16,22 +16,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include <stdio.h>
 #include <native/syscall.h>
-#include <native/intr.h>
+#include <native/misc.h>
 
 extern int __native_muxid;
 
-int rt_misc_get_io_region(uint64_t start,
-			  unsigned long len, const char *label)
+int rt_io_get_region(RT_IOREGION *iorn, const char *name,
+		     uint64_t start, uint64_t len, int flags)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_misc_get_io_region, &start, len,
-				 label);
+	return XENOMAI_SKINCALL5(__native_muxid,
+				 __native_io_get_region, iorn, name,
+				 &start, &len, flags);
 }
 
-void rt_misc_put_io_region(uint64_t start, unsigned long len)
+int rt_io_put_region(RT_IOREGION *iorn)
 {
-	XENOMAI_SKINCALL2(__native_muxid,
-			  __native_misc_put_io_region, &start, len);
+	return XENOMAI_SKINCALL1(__native_muxid,
+				 __native_io_put_region, iorn);
 }

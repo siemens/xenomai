@@ -1,4 +1,19 @@
-2007-11-09  Philippe Gerum  <rpm@eclipse>
+2007-11-10  Steven A. Falco <sfalco@harris.com>
+
+	* ksrc/skins/native/syscalls.c (rt_io_get/put_region): Provide
+	support for requesting MMIO regions through request_mem_region().
+
+2007-11-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native, include/native, src/skins/native: Introduce
+	I/O region descriptors, for new rt_io_get/put_region calls,
+	replacing deprecated rt_misc_get/put_io_region services. Provide
+	for auto-cleanup of I/O region resources.
+	
+	* ksrc/nucleus/pipe.c: Raise the XNRMID condition for kernel-space
+	waiters from xnpipe_release().
+
+2007-11-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c,
 	src/skins/native/misc.c (rt_misc_get_io_region,
@@ -24,7 +39,7 @@
 	ksrc/nucleus/shadow.c: Provide for arch-dependent syscall prologue
 	in high stage.
 
-2007-11-04  Philippe Gerum  <rpm@eclipse>
+2007-11-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/{syscall.c, task.c}: Allow rt_task_inquire()
 	to only probe for the existence of a task.
@@ -37,7 +52,7 @@
 	* include/asm-arm/syscall.h: Change struct initializer for
 	C++ compilation.
 
-2007-10-31  Philippe Gerum  <rpm@eclipse>
+2007-10-31  Philippe Gerum  <rpm@xenomai.org>
 
 	* [k]src/skins/psos+/syscall.c: Provide tm_getc() extension
 	returning the elapsed count of jiffies for the pSOS timebase.
@@ -51,7 +66,7 @@
 	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue): Copy
 	the mutex recursion count to user-space upon timeout.
 
-2007-10-30  Philippe Gerum  <rpm@eclipse>
+2007-10-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/rtai/task.c (rt_task_init): Set up default CPU
 	affinity.
@@ -59,7 +74,7 @@
 	* ksrc/skins/native/heap.c (rt_heap_create): Record the
 	user-defined heap size value before any rounding is applied.
 
-2007-10-28  Philippe Gerum  <rpm@eclipse>
+2007-10-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-x86/hal_64.h: Relay the host tick through to the
 	local timer interrupt (instead of IRQ0).
@@ -67,11 +82,11 @@
 	* ksrc/arch/x86, include/asm-x86: Merge former i386 and x86_64
 	branches.
 
-2007-10-27  Philippe Gerum  <rpm@eclipse>
+2007-10-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4-rc5
 
-2007-10-27  Philippe Gerum  <rpm@eclipse>
+2007-10-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/heap.c (xnheap_init_mapped): Apply proper rounding
 	to PAGE_SIZE, with a minimum size of 2 * PAGE_SIZE + incurred
@@ -91,7 +106,7 @@
 	nmi_watchdog=NMI_IO_APIC, and we are asked to use the LAPIC for
 	timing (CONFIG_X86_LOCAL_APIC+CONFIG_GENERIC_CLOCKEVENTS only).
 
-2007-10-26  Philippe Gerum  <rpm@eclipse>
+2007-10-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.23-DENX-2.0-02.
 

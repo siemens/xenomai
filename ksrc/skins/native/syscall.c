@@ -36,6 +36,7 @@
 #include <native/alarm.h>
 #include <native/intr.h>
 #include <native/pipe.h>
+#include <native/misc.h>
 
 /* This file implements the Xenomai syscall wrappers;
  *
@@ -3656,59 +3657,177 @@ static int __rt_pipe_stream(struct task_struct *curr, struct pt_regs *regs)
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
 /*
- * int __rt_misc_get_io_region(uint64_t *start,
- *                             unsigned long len,
- *                             const char *label)
+ * int __rt_io_get_region(RT_IOREGION_PLACEHOLDER *ph,
+ *                        const char *name,
+ *                        uint64_t *startp,
+ *                        uint64_t *lenp,
+ *                        int flags)
  */
 
-static int __rt_misc_get_io_region(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __rt_io_get_region(struct task_struct *curr,
+			      struct pt_regs *regs)
 {
-	unsigned long len;
-	uint64_t start;
-	char label[64];
+	RT_IOREGION_PLACEHOLDER ph;
+	uint64_t start, len;
+	RT_IOREGION *iorn;
+	int err, flags;
+	spl_t s;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(start)))
+	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ph)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(label)))
+	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(iorn->name)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &start, (void __user *)__xn_reg_arg1(regs),
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(start)))
+		return -EFAULT;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_READ, __xn_reg_arg4(regs), sizeof(len)))
+		return -EFAULT;
+
+	iorn = (RT_IOREGION *)xnmalloc(sizeof(*iorn));
+
+	if (!iorn)
+		return -ENOMEM;
+
+	__xn_strncpy_from_user(curr, iorn->name,
+			       (const char __user *)__xn_reg_arg2(regs),
+			       sizeof(iorn->name) - 1);
+	iorn->name[sizeof(iorn->name) - 1] = '\0';
+
+	err = xnregistry_enter(iorn->name, iorn, &iorn->handle, NULL);
+
+	if (err)
+		goto fail;
+
+	__xn_copy_from_user(curr, &start, (void __user *)__xn_reg_arg3(regs),
 			    sizeof(start));
 
-	__xn_strncpy_from_user(curr, label,
-			       (const char __user *)__xn_reg_arg3(regs),
-			       sizeof(label) - 1);
-	label[sizeof(label) - 1] = '\0';
+	__xn_copy_from_user(curr, &len, (void __user *)__xn_reg_arg4(regs),
+			    sizeof(len));
 
-	len = __xn_reg_arg2(regs);
+	flags = __xn_reg_arg5(regs);
 
-	return request_region(start, len, label) ? 0 : -EBUSY;
+	if (flags & IORN_IOPORT)
+		err = request_region(start, len, iorn->name) ? 0 : -EBUSY;
+	else if (flags & IORN_MEMORY)
+		err = request_mem_region(start, len, iorn->name) ? 0 : -EBUSY;
+	else
+		err = -EINVAL;
+
+	if (unlikely(err != 0))
+		goto fail;
+
+	iorn->magic = XENO_IOREGION_MAGIC;
+	iorn->start = start;
+	iorn->len = len;
+	iorn->flags = flags;
+	inith(&iorn->rlink);
+	iorn->rqueue = &xeno_get_rholder()->ioregionq;
+	xnlock_get_irqsave(&nklock, s);
+	appendq(iorn->rqueue, &iorn->rlink);
+	xnlock_put_irqrestore(&nklock, s);
+	iorn->cpid = curr->pid;
+	/* Copy back the registry handle to the ph struct. */
+	ph.opaque = iorn->handle;
+	ph.start = start;
+	ph.len = len;
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph));
+
+	return 0;
+
+fail:
+	xnfree(iorn);
+
+	return err;
+}
+
+/* Provided for auto-cleanup support. */
+int rt_ioregion_delete(RT_IOREGION *iorn)
+{
+	uint64_t start, len;
+	int flags;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	flags = iorn->flags;
+	start = iorn->start;
+	len = iorn->len;
+	removeq(iorn->rqueue, &iorn->rlink);
+	xnregistry_remove(iorn->handle);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (flags & IORN_IOPORT)
+		release_region(start, len);
+	else if (flags & IORN_MEMORY)
+		release_mem_region(start, len);
+
+	return 0;
 }
 
 /*
- * int __rt_misc_put_io_region(uint64_t *start,
- *                             unsigned long len)
+ * int __rt_io_put_region(RT_IOREGION_PLACEHOLDER *ph)
  */
 
-static int __rt_misc_put_io_region(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __rt_io_put_region(struct task_struct *curr,
+			      struct pt_regs *regs)
 {
-	unsigned long len;
-	uint64_t start;
+	RT_IOREGION_PLACEHOLDER ph;
+	uint64_t start, len;
+	RT_IOREGION *iorn;
+	int flags;
+	spl_t s;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(start)))
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(ph)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &start, (void __user *)__xn_reg_arg1(regs),
-			    sizeof(start));
+	__xn_copy_from_user(curr, &ph, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(ph));
 
-	len = __xn_reg_arg2(regs);
-	release_region(start, len);
+	xnlock_get_irqsave(&nklock, s);
+
+	if (unlikely(ph.opaque == XN_NO_HANDLE)) { /* Legacy compat. */
+		xnqueue_t *rq = &xeno_get_rholder()->ioregionq;
+		RT_IOREGION *_iorn;
+		xnholder_t *holder;
+
+		for (holder = getheadq(rq), iorn = NULL;
+		     holder; holder = nextq(rq, holder)) {
+			_iorn = rlink2ioregion(holder);
+			if (_iorn->start == ph.start && _iorn->len == ph.len) {
+				iorn = _iorn;
+				break;
+			}
+		}
+	} else
+		iorn = (RT_IOREGION *)xnregistry_fetch(ph.opaque);
+
+	if (iorn == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -ESRCH;
+	}
+
+	flags = iorn->flags;
+	start = iorn->start;
+	len = iorn->len;
+	removeq(iorn->rqueue, &iorn->rlink);
+	xnregistry_remove(iorn->handle);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnfree(iorn);
+
+	if (flags & IORN_IOPORT)
+		release_region(start, len);
+	else if (flags & IORN_MEMORY)
+		release_mem_region(start, len);
 
 	return 0;
 }
@@ -3746,6 +3865,7 @@ static void *__shadow_eventcb(int event, void *data)
 		initq(&rh->pipeq);
 		initq(&rh->queueq);
 		initq(&rh->semq);
+		initq(&rh->ioregionq);
 
 		return &rh->ppd;
 
@@ -3761,6 +3881,7 @@ static void *__shadow_eventcb(int event, void *data)
 		__native_pipe_flush_rq(&rh->pipeq);
 		__native_queue_flush_rq(&rh->queueq);
 		__native_sem_flush_rq(&rh->semq);
+		__native_ioregion_flush_rq(&rh->ioregionq);
 
 		xnarch_free_host_mem(rh, sizeof(*rh));
 
@@ -3867,10 +3988,10 @@ static xnsysent_t __systab[] = {
 	[__native_pipe_write] = {&__rt_pipe_write, __xn_exec_any},
 	[__native_pipe_stream] = {&__rt_pipe_stream, __xn_exec_any},
 	[__native_unimp_89] = {&__rt_call_not_available, __xn_exec_any},
-	[__native_misc_get_io_region] =
-	    {&__rt_misc_get_io_region, __xn_exec_lostage},
-	[__native_misc_put_io_region] =
-	    {&__rt_misc_put_io_region, __xn_exec_lostage},
+	[__native_io_get_region] =
+	    {&__rt_io_get_region, __xn_exec_lostage},
+	[__native_io_put_region] =
+	    {&__rt_io_put_region, __xn_exec_lostage},
 	[__native_timer_ns2tsc] = {&__rt_timer_ns2tsc, __xn_exec_any},
 	[__native_timer_tsc2ns] = {&__rt_timer_tsc2ns, __xn_exec_any},
 };
