@@ -712,7 +712,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 		   it up now. */
 
 		if (xnsynch_nsleepers(&state->synchbase) > 0) {
-			xnsynch_flush(&state->synchbase, XNBREAK);
+			xnsynch_flush(&state->synchbase, XNRMID);
 			xnpod_schedule();
 		}
 
