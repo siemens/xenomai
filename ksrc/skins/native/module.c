@@ -45,6 +45,7 @@
 #include <native/heap.h>
 #include <native/alarm.h>
 #include <native/intr.h>
+#include <native/misc.h>
 
 MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -80,6 +81,7 @@ int SKIN_INIT(native)
 	initq(&__native_global_rholder.pipeq);
 	initq(&__native_global_rholder.queueq);
 	initq(&__native_global_rholder.semq);
+	initq(&__native_global_rholder.ioregionq);
 
 	err = xnpod_init();
 
@@ -93,10 +95,15 @@ int SKIN_INIT(native)
 
 	xntbase_start(__native_tbase);
 
-	err = __native_task_pkg_init();
+	err = __native_misc_pkg_init();
 
 	if (err)
 		goto cleanup_pod;
+
+	err = __native_task_pkg_init();
+
+	if (err)
+		goto cleanup_misc;
 
 	err = __native_sem_pkg_init();
 
@@ -192,6 +199,10 @@ int SKIN_INIT(native)
 
 	__native_task_pkg_cleanup();
 
+      cleanup_misc:
+
+	__native_misc_pkg_cleanup();
+
       cleanup_pod:
 
 	xntbase_free(__native_tbase);
@@ -219,6 +230,7 @@ void SKIN_EXIT(native)
 	__native_event_pkg_cleanup();
 	__native_sem_pkg_cleanup();
 	__native_task_pkg_cleanup();
+	__native_misc_pkg_cleanup();
 	__native_syscall_cleanup();
 
 	xntbase_free(__native_tbase);
