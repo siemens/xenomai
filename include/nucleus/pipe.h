@@ -60,48 +60,44 @@
 
 typedef struct xnpipe_mh {
 
-    xnholder_t link;
-    unsigned size;
-    unsigned rdoff;
-    
+	xnholder_t link;
+	unsigned size;
+	unsigned rdoff;
+
 } xnpipe_mh_t;
 
 static inline xnpipe_mh_t *link2mh(xnholder_t *ln)
 {
-    return ln ? container_of(ln, xnpipe_mh_t, link) : NULL;
+	return ln ? container_of(ln, xnpipe_mh_t, link) : NULL;
 }
 
-typedef int xnpipe_io_handler(int minor,
-			      struct xnpipe_mh *mh,
-			      int retval,
-			      void *cookie);
+typedef int xnpipe_io_handler (int minor,
+			       struct xnpipe_mh *mh, int retval, void *cookie);
 
-typedef int xnpipe_session_handler(int minor,
-				   void *cookie);
+typedef int xnpipe_session_handler (int minor, void *cookie);
 
-typedef void *xnpipe_alloc_handler(int minor,
-				   size_t size,
-				   void *cookie);
+typedef void *xnpipe_alloc_handler (int minor, size_t size, void *cookie);
+
 typedef struct xnpipe_state {
 
-    xnholder_t slink;	/* Link on sleep queue */
-    xnholder_t alink;	/* Link on async queue */
+	xnholder_t slink;	/* Link on sleep queue */
+	xnholder_t alink;	/* Link on async queue */
 #define link2xnpipe(ln, fld)	container_of(ln, xnpipe_state_t, fld)
 
-    xnqueue_t inq;	/* From user-space to kernel */
-    xnqueue_t outq;	/* From kernel to user-space */
-    xnpipe_io_handler *output_handler;
-    xnpipe_io_handler *input_handler;
-    xnpipe_alloc_handler *alloc_handler;
-    xnsynch_t synchbase;
-    void *cookie;
+	xnqueue_t inq;		/* From user-space to kernel */
+	xnqueue_t outq;		/* From kernel to user-space */
+	xnpipe_io_handler *output_handler;
+	xnpipe_io_handler *input_handler;
+	xnpipe_alloc_handler *alloc_handler;
+	xnsynch_t synchbase;
+	void *cookie;
 
-    /* Linux kernel part */
-    xnflags_t status;
-    struct fasync_struct *asyncq;
-    wait_queue_head_t readq;		/* open/read/poll waiters */
-    wait_queue_head_t syncq;		/* sync waiters */
-    size_t ionrd;
+	/* Linux kernel part */
+	xnflags_t status;
+	struct fasync_struct *asyncq;
+	wait_queue_head_t readq;	/* open/read/poll waiters */
+	wait_queue_head_t syncq;	/* sync waiters */
+	size_t ionrd;
 
 } xnpipe_state_t;
 
@@ -111,7 +107,7 @@ extern xnpipe_state_t xnpipe_states[];
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif				/* __cplusplus */
 
 int xnpipe_mount(void);
 
@@ -125,28 +121,21 @@ void xnpipe_setup(xnpipe_session_handler *open_handler,
 int xnpipe_connect(int minor,
 		   xnpipe_io_handler *output_handler,
 		   xnpipe_io_handler *input_handler,
-		   xnpipe_alloc_handler *alloc_handler,
-		   void *cookie);
+		   xnpipe_alloc_handler *alloc_handler, void *cookie);
 
 int xnpipe_disconnect(int minor);
 
 ssize_t xnpipe_send(int minor,
-		    struct xnpipe_mh *mh,
-		    size_t size,
-		    int flags);
+		    struct xnpipe_mh *mh, size_t size, int flags);
 
-ssize_t xnpipe_mfixup(int minor,
-		      struct xnpipe_mh *mh,
-		      ssize_t size);
+ssize_t xnpipe_mfixup(int minor, struct xnpipe_mh *mh, ssize_t size);
 
 ssize_t xnpipe_recv(int minor,
-		    struct xnpipe_mh **pmh,
-		    xnticks_t timeout);
+		    struct xnpipe_mh **pmh, xnticks_t timeout);
 
 int xnpipe_inquire(int minor);
 
-int xnpipe_flush(int minor,
-		 int mode);
+int xnpipe_flush(int minor, int mode);
 
 #ifdef __cplusplus
 }
@@ -154,12 +143,12 @@ int xnpipe_flush(int minor,
 
 static inline xnholder_t *xnpipe_m_link(xnpipe_mh_t *mh)
 {
-    return &mh->link;
+	return &mh->link;
 }
 
 static inline char *xnpipe_m_data(xnpipe_mh_t *mh)
 {
-    return (char *)(mh + 1);
+	return (char *)(mh + 1);
 }
 
 #define xnpipe_m_size(mh) ((mh)->size)
