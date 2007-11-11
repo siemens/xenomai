@@ -97,8 +97,6 @@ static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 		__setbits(state->status, mask);
 	}
 
-	state->nwait++;
-
 	xnlock_put_irqrestore(&nklock, s);
 }
 
@@ -135,7 +133,7 @@ static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (--state->nwait == 0) {
+	if (testbits(state->status, mask)) {
 		__clrbits(state->status, mask);
 		removeq(&xnpipe_sleepq, &state->slink);
 	}
@@ -635,7 +633,6 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 	file->private_data = state;
 	init_waitqueue_head(&state->readq);
 	init_waitqueue_head(&state->syncq);
-	state->nwait = 0;
 
 	__clrbits(state->status,
 		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY | XNPIPE_USER_SIGIO);
@@ -699,11 +696,8 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (testbits(state->status, XNPIPE_USER_WREAD))
-		xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
-
-	if (testbits(state->status, XNPIPE_USER_WSYNC))
-		xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
+	if (testbits(state->status, XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC))
+		xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC);
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
 		int minor = xnminor_from_state(state);
