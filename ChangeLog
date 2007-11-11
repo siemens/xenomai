@@ -1,3 +1,10 @@
+2007-11-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c: Fix select() breakage on a message pipe due
+	to multiple insertions into the sleep queue. Remove broken nwait
+	counter which also happened to be useless since WREAD
+	conditions are mutually exclusive.
+
 2007-11-01  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* include/asm-arm/syscall.h: Change struct initializer for
@@ -13,6 +20,11 @@
 	the mutex recursion count to user-space upon timeout.
 
 2007-10-30  Philippe Gerum  <rpm@eclipse>
+
+	* include/nucleus/heap.h, ksrc/skins/rtai/shm.c,
+	ksrc/skins/native/queue.c, ksrc/skins/native/pipe.c: Make
+	xnheap_rounded_size() round the requested heap size to two times
+	the given page size.
 
 	* ksrc/skins/native/heap.c (rt_heap_create): Record the
 	user-defined heap size value before any rounding is applied.

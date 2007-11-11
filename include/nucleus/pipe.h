@@ -95,7 +95,6 @@ typedef struct xnpipe_state {
     xnflags_t status;
     struct fasync_struct *asyncq;
     wait_queue_head_t readq;		/* read waiters and an open waiter */
-    unsigned int readw;
     size_t ionrd;
 
 } xnpipe_state_t;
