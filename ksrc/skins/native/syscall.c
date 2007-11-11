@@ -3714,7 +3714,7 @@ static int __rt_io_get_region(struct task_struct *curr,
 
 	if (flags & IORN_IOPORT)
 		err = request_region(start, len, iorn->name) ? 0 : -EBUSY;
-	else if (flags & IORN_MEMORY)
+	else if (flags & IORN_IOMEM)
 		err = request_mem_region(start, len, iorn->name) ? 0 : -EBUSY;
 	else
 		err = -EINVAL;
@@ -3765,7 +3765,7 @@ int rt_ioregion_delete(RT_IOREGION *iorn)
 
 	if (flags & IORN_IOPORT)
 		release_region(start, len);
-	else if (flags & IORN_MEMORY)
+	else if (flags & IORN_IOMEM)
 		release_mem_region(start, len);
 
 	return 0;
@@ -3826,7 +3826,7 @@ static int __rt_io_put_region(struct task_struct *curr,
 
 	if (flags & IORN_IOPORT)
 		release_region(start, len);
-	else if (flags & IORN_MEMORY)
+	else if (flags & IORN_IOMEM)
 		release_mem_region(start, len);
 
 	return 0;

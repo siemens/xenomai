@@ -25,7 +25,7 @@
 #include <native/types.h>
 
 #define IORN_IOPORT	0x1
-#define IORN_MEMORY	0x2
+#define IORN_IOMEM	0x2
 
 typedef struct rt_ioregion_placeholder {
 	xnhandle_t opaque;
