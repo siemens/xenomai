@@ -1,3 +1,8 @@
+2007-11-11  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/syscall.c: Fix remaining spots where invalid user
+	pointers were not reported via appropriate return codes.
+
 2007-11-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Fix select() breakage on a message pipe due

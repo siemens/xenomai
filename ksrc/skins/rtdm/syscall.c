@@ -35,12 +35,11 @@ static int sys_rtdm_open(struct task_struct *curr, struct pt_regs *regs)
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
 
 	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs),
-				     sizeof(krnl_path))))
+				     sizeof(krnl_path)) ||
+		     __xn_strncpy_from_user(curr, krnl_path,
+					    (const char __user *)__xn_reg_arg1(regs),
+					    sizeof(krnl_path) - 1) < 0))
 		return -EFAULT;
-
-	__xn_copy_from_user(curr, krnl_path,
-			    (const char __user *)__xn_reg_arg1(regs),
-			    sizeof(krnl_path) - 1);
 	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
 	return __rt_dev_open(curr, (const char *)krnl_path,
@@ -83,17 +82,20 @@ static int sys_rtdm_recvmsg(struct task_struct *curr, struct pt_regs *regs)
 	int ret;
 
 	if (unlikely(!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs),
-				     sizeof(krnl_msg))))
+				     sizeof(krnl_msg)) ||
+		     __xn_copy_from_user(curr, &krnl_msg,
+					 (void __user *)__xn_reg_arg2(regs),
+					 sizeof(krnl_msg))))
 		return -EFAULT;
-
-	__xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
-			    sizeof(krnl_msg));
 
 	ret = __rt_dev_recvmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
 			       __xn_reg_arg3(regs));
-	if (ret >= 0)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
-				  &krnl_msg, sizeof(krnl_msg));
+	if (unlikely(ret < 0))
+		return ret;
+
+	if (unlikely(__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+				       &krnl_msg, sizeof(krnl_msg))))
+		return -EFAULT;
 
 	return ret;
 }
@@ -103,11 +105,11 @@ static int sys_rtdm_sendmsg(struct task_struct *curr, struct pt_regs *regs)
 	struct msghdr krnl_msg;
 
 	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs),
-				     sizeof(krnl_msg))))
+				     sizeof(krnl_msg)) ||
+		     __xn_copy_from_user(curr, &krnl_msg,
+					 (void __user *)__xn_reg_arg2(regs),
+					 sizeof(krnl_msg))))
 		return -EFAULT;
-
-	__xn_copy_from_user(curr, &krnl_msg, (void __user *)__xn_reg_arg2(regs),
-			    sizeof(krnl_msg));
 
 	return __rt_dev_sendmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
 				__xn_reg_arg3(regs));
