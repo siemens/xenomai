@@ -392,6 +392,9 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>The number of read bytes copied to the <em>buf</em> is returned upon success. Otherwise:</dd></dl>
 <ul>
+<li>0 is returned if the peer closed the channel while <a class="el" href="group__pipe.html#g62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read()</a> was reading from it. There is no way to distinguish this situation from an empty message return using <a class="el" href="group__pipe.html#g62cb64807c2c843f8e8eebb2dc3a7d4e">rt_pipe_read()</a>. One should rather call <a class="el" href="group__pipe.html#g731e5ef18007dcd58a9346bea66abbc6">rt_pipe_receive()</a> whenever this information is required.</li></ul>
+<p>
+<ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
@@ -466,16 +469,19 @@ Unless otherwise specified, the caller is blocked for a given amount of time if 
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pipe</em>&nbsp;</td><td>The descriptor address of the pipe to receive from.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>msgp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the received message. Once consumed, the message space should be freed using <a class="el" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free()</a>. The application code can retrieve the actual data and size carried by the message by respectively using the P_MSGPTR() and P_MSGSIZE() macros.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>msgp</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the address of the received message. Once consumed, the message space should be freed using <a class="el" href="group__pipe.html#g8face1c57df99cf43b029b3e3b6a05c6">rt_pipe_free()</a>. The application code can retrieve the actual data and size carried by the message by respectively using the P_MSGPTR() and P_MSGSIZE() macros. *msgp is set to NULL and zero is returned to the caller, in case the peer closed the channel while <a class="el" href="group__pipe.html#g731e5ef18007dcd58a9346bea66abbc6">rt_pipe_receive()</a> was reading from it.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for some message to arrive (see note). Passing TM_INFINITE causes the caller to block indefinitely until some data is eventually available. Passing TM_NONBLOCK causes the service to return immediately without waiting if no data is available on entry.</td></tr>
   </table>
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>The number of read bytes available from the received message is returned upon success; this value will be equal to P_MSGSIZE(*msgp). Otherwise:</dd></dl>
 <ul>
+<li>0 is returned and *msgp is set to NULL if the peer closed the channel while <a class="el" href="group__pipe.html#g731e5ef18007dcd58a9346bea66abbc6">rt_pipe_receive()</a> was reading from it. This is to be distinguished from an empty message return, where *msgp points to a valid - albeit empty - message block (i.e. P_MSGSIZE(*msgp) == 0).</li></ul>
+<p>
+<ul>
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
-<li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
+<li>-EIDRM is returned if <em>pipe</em> was closed while reading.</li></ul>
 <p>
 <ul>
 <li>-ENODEV or -EBADF are returned if <em>pipe</em> is scrambled.</li></ul>
@@ -724,7 +730,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Oct 30 18:01:08 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Nov 13 18:14:56 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
