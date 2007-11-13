@@ -873,10 +873,10 @@ index 6a3875f..caa9520 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..2d2d933
+index 0000000..d84de30
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,831 @@
+@@ -0,0 +1,851 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1515,17 +1515,37 @@ index 0000000..2d2d933
 +	}
 +#endif /* CONFIG_KGDB */
 +
-+	if (!ipipe_trap_notify(vector, regs)) {
-+		__ipipe_exptr handler = __ipipe_std_extable[vector];
-+		handler(regs,error_code);
++	if (unlikely(ipipe_trap_notify(vector, regs))) {
 +		local_irq_restore(flags);
-+		__fixup_if(regs);
-+		return 0;
++		return 1;
 +	}
 +
-+	local_irq_restore(flags);
++	/*
++	 * Detect unhandled faults from kernel space over non-root domains.
++	 */
++	if (unlikely(!ipipe_root_domain_p && !(error_code & 4))) {
++		/*
++		 * Always warn about such faults when running in debug
++		 * mode, otherwise avoid reporting the fixable ones.
++		 */
++		if (ipipe_may_dump_nonroot_fault(regs)) {
++			struct ipipe_domain *ipd = ipipe_current_domain;
++			ipipe_current_domain = ipipe_root_domain;
++			ipipe_trace_panic_freeze();
++			printk(KERN_ERR "DOMAIN FAULT: Unhandled exception over domain"
++			       " %s - switching to ROOT\n", ipd->name);
++			dump_stack();
++		}
++	}
 +
-+	return 1;
++	/* Always switch to root so that Linux can handle it cleanly. */
++	ipipe_current_domain = ipipe_root_domain;
++
++	__ipipe_std_extable[vector](regs, error_code);
++	local_irq_restore(flags);
++	__fixup_if(regs);
++
++	return 0;
 +}
 +
 +fastcall int __ipipe_divert_exception(struct pt_regs *regs, int vector)
@@ -2267,7 +2287,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..28815b2
+index 0000000..dfff580
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2297,10 +2317,10 @@ index 0000000..28815b2
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-10"
++#define IPIPE_ARCH_STRING	"1.10-11"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	10
++#define IPIPE_PATCH_NUMBER	11
 +
 +#ifndef __ASSEMBLY__
 +
@@ -5960,7 +5980,7 @@ index 0000000..e249074
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..3abbc12
+index 0000000..a57f20e
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
 @@ -0,0 +1,1362 @@
@@ -7215,7 +7235,7 @@ index 0000000..3abbc12
 +
 +	if (count > sizeof(buf) - 1)
 +		count = sizeof(buf) - 1;
-+	if (copy_from_user(buf, buffer, count) < 0)
++	if (copy_from_user(buf, buffer, count))
 +		return -EFAULT;
 +	buf[count] = 0;
 +	if (buf[count-1] == '\n')

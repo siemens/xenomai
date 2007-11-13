@@ -1,3 +1,7 @@
+2007-11-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-11.
+
 2007-11-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Fix select() breakage on a message pipe due
