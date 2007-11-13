@@ -60,19 +60,19 @@ $ scripts/prepare-kernel.sh --linux=<linux-srctree>
     suggested as a reasonable default.
 
 For instance, the following command would prepare the Linux tree
-located at /usr/src/linux-2.6.14-ipipe in order to include the Xenomai
+located at /usr/src/linux-2.6.23-ipipe in order to include the Xenomai
 support:
 
-$ cd xenomai-2.1
+$ cd xenomai-2.4
 $ scripts/prepare-kernel.sh
-  --linux=/usr/src/linux-2.6.14-ipipe
-  --adeos=/tmp/adeos-ipipe-2.6.14-i386-1.0-09.patch
+  --linux=/usr/src/linux-2.6.23-ipipe
+  --adeos=/tmp/adeos-ipipe-2.6.23-i386-1.10-12.patch
   --arch=i386
 
 Note: The script will infer the location of the Xenomai kernel code
 from its own location within the Xenomai source tree. In other words,
-if /usr/src/xenomai-2.1/script/prepare-kernel.sh is executing, then
-Xenomai's kernel support available from /usr/src/xenomai-2.1/ksrc will
+if /usr/src/xenomai-2.4/script/prepare-kernel.sh is executing, then
+Xenomai's kernel support available from /usr/src/xenomai-2.4/ksrc will
 be bound to the target kernel.
 
 1.2 Configuring and building the target kernel
@@ -280,21 +280,33 @@ same configuration.
 # the host immediately updates the target system with the installed
 # programs and libraries.
 
-2.1 Building for x86
---------------------
+2.1 Building for x86-32/64bit
+-----------------------------
 
-Let's say that we want to build Xenomai for a Pentium-based x86
-platform running a 2.6.14 kernel, using the native host toolchain; the
+Let's say that we want to build Xenomai for a Pentium-based x86 32bit
+platform running a 2.6.23 kernel, using the native host toolchain; the
 typical steps would be as follows:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
-  --adeos=$xenomai_root/ksrc/arch/i386/patches/adeos-ipipe-2.6.14-i386-X.Y-ZZ.patch \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-i386-X.Y-ZZ.patch \
   --linux=$linux_tree
 $ cd $linux_tree
 $ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
 $ make bzImage modules # then install as needed
 $ mkdir $build_root && cd $build_root
 $ $xenomai_root/configure --enable-x86-sep
+$ make install
+
+Similarly, for a 64bit platform, we would use:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-x86_64-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure
 $ make install
 
 Once the compilation has completed, /usr/xenomai should contain the
