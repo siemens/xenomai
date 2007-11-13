@@ -83,10 +83,12 @@
 	* ksrc/skins/posix/syscall.c (__pthread_cond_wait_prologue): Copy
 	the mutex recursion count to user-space upon timeout.
 
-2007-10-30  Philippe Gerum  <rpm@xenomai.org>
-
+2007-10-30  Stephane Fillod  <stephane.fillod@thomson.net>
+	
 	* ksrc/skins/rtai/task.c (rt_task_init): Set up default CPU
 	affinity.
+
+2007-10-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/heap.c (rt_heap_create): Record the
 	user-defined heap size value before any rounding is applied.
