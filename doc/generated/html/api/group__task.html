@@ -448,10 +448,10 @@ Return various information about the status of a given task.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the inquired task. If <em>task</em> is NULL, the current task is inquired.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>info</em>&nbsp;</td><td>The address of a structure the task information will be written to.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>info</em>&nbsp;</td><td>The address of a structure the task information will be written to. Passing NULL is valid, in which case the system is only probed for existence of the specified task.</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned and status information is written to the structure pointed at by <em>info</em> upon success. Otherwise:</dd></dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned if the task exists, and status information is written to the structure pointed at by <em>info</em> if non-NULL. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>task</em> is not a task descriptor.</li></ul>
 <p>
@@ -1734,7 +1734,7 @@ This service can be called from:<p>
 Rescheduling: always if a next equal-priority task is ready to run, otherwise, this service leads to a no-op. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Oct 30 18:01:08 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Nov 13 18:14:56 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
