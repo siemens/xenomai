@@ -1632,7 +1632,7 @@ index 746f78c..0e57eb3 100644
  static struct ipic_info ipic_info[] = {
  	[9] = {
 diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
-index d01ced1..bd351c0 100644
+index d01ced1..8500b35 100644
 --- a/arch/powerpc/sysdev/mpic.c
 +++ b/arch/powerpc/sysdev/mpic.c
 @@ -44,7 +44,7 @@
@@ -1644,7 +1644,7 @@ index d01ced1..bd351c0 100644
  
  #ifdef CONFIG_PPC32	/* XXX for now */
  #ifdef CONFIG_IRQ_ALL_CPUS
-@@ -555,19 +555,24 @@ static void mpic_unmask_irq(unsigned int irq)
+@@ -555,28 +555,33 @@ static void mpic_unmask_irq(unsigned int irq)
  	unsigned int loops = 100000;
  	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
@@ -1666,38 +1666,73 @@ index d01ced1..bd351c0 100644
  		}
  	} while(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK);
 +
++	ipipe_irq_unlock(irq);
++
 +	local_irq_restore_hw_cond(flags);
  }
  
- static void mpic_mask_irq(unsigned int irq)
-@@ -575,20 +580,24 @@ static void mpic_mask_irq(unsigned int irq)
- 	unsigned int loops = 100000;
+-static void mpic_mask_irq(unsigned int irq)
++static inline void __mpic_mask_irq(unsigned int irq)
+ {
+-	unsigned int loops = 100000;
  	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
-+	unsigned long flags;
+-
+-	DBG("%s: disable_irq: %d (src %d)\n", mpic->name, irq, src);
++	unsigned int loops = 100000;
  
- 	DBG("%s: disable_irq: %d (src %d)\n", mpic->name, irq, src);
- 
-+	local_irq_save_hw_cond(flags);
-+
  	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
  		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) |
- 		       MPIC_VECPRI_MASK);
--
+@@ -585,12 +590,27 @@ static void mpic_mask_irq(unsigned int irq)
  	/* make sure mask gets to controller before we return to user */
  	do {
  		if (!loops--) {
 -			printk(KERN_ERR "mpic_enable_irq timeout\n");
-+			printk(KERN_ERR "mpic_mask_irq timeout (irq=%u)\n", irq);
++			printk(KERN_ERR "mpic_mask_irq timeout, irq %u\n", irq);
  			break;
  		}
  	} while(!(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK));
-+
-+	local_irq_restore_hw_cond(flags);
  }
  
++void mpic_mask_irq(unsigned int irq)
++{
++#ifdef DEBUG
++	struct mpic *mpic = mpic_from_irq(irq);
++#endif
++	unsigned long flags;
++
++	DBG("%s: mask_irq: irq %u (src %d)\n", mpic->name, irq, mpic_irq_to_hw(irq));
++
++	local_irq_save_hw_cond(flags);
++	__mpic_mask_irq(irq);
++	ipipe_irq_lock(irq);
++	local_irq_restore_hw_cond(flags);
++}
++
  static void mpic_end_irq(unsigned int irq)
-@@ -730,6 +739,7 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+ {
+ 	struct mpic *mpic = mpic_from_irq(irq);
+@@ -603,6 +623,9 @@ static void mpic_end_irq(unsigned int irq)
+ 	 * latched another edge interrupt coming in anyway
+ 	 */
+ 
++#ifdef CONFIG_IPIPE
++	__mpic_mask_irq(irq);
++#endif
+ 	mpic_eoi(mpic);
+ }
+ 
+@@ -647,6 +670,9 @@ static void mpic_end_ht_irq(unsigned int irq)
+ #ifdef DEBUG_IRQ
+ 	DBG("%s: end_irq: %d\n", mpic->name, irq);
+ #endif
++#ifdef CONFIG_IPIPE
++	__mpic_mask_irq(irq);
++#endif
+ 	/* We always EOI on end_irq() even for edge interrupts since that
+ 	 * should only lower the priority, the MPIC should have properly
+ 	 * latched another edge interrupt coming in anyway
+@@ -730,6 +756,7 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	unsigned int src = mpic_irq_to_hw(virq);
  	struct irq_desc *desc = get_irq_desc(virq);
  	unsigned int vecpri, vold, vnew;
@@ -1705,7 +1740,7 @@ index d01ced1..bd351c0 100644
  
  	DBG("mpic: set_irq_type(mpic:@%p,virq:%d,src:0x%x,type:0x%x)\n",
  	    mpic, virq, src, flow_type);
-@@ -754,6 +764,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -754,6 +781,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	else
  		vecpri = mpic_type_to_vecpri(mpic, flow_type);
  
@@ -1714,7 +1749,7 @@ index d01ced1..bd351c0 100644
  	vold = mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI));
  	vnew = vold & ~(MPIC_INFO(VECPRI_POLARITY_MASK) |
  			MPIC_INFO(VECPRI_SENSE_MASK));
-@@ -761,6 +773,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -761,6 +790,8 @@ static int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	if (vold != vnew)
  		mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI), vnew);
  
@@ -2030,7 +2065,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..f2f4180
+index 0000000..d3740ee
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2073,10 +2108,10 @@ index 0000000..f2f4180
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-07"
++#define IPIPE_ARCH_STRING	"1.7-08"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -5431,7 +5466,7 @@ index 0000000..e249074
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..3abbc12
+index 0000000..a57f20e
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
 @@ -0,0 +1,1362 @@
@@ -6686,7 +6721,7 @@ index 0000000..3abbc12
 +
 +	if (count > sizeof(buf) - 1)
 +		count = sizeof(buf) - 1;
-+	if (copy_from_user(buf, buffer, count) < 0)
++	if (copy_from_user(buf, buffer, count))
 +		return -EFAULT;
 +	buf[count] = 0;
 +	if (buf[count-1] == '\n')
