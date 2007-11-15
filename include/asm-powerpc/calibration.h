@@ -29,8 +29,6 @@
 
 #include <asm/delay.h>
 
-#define __bogomips (loops_per_jiffy/(500000/HZ))
-
 static inline unsigned long xnarch_get_sched_latency(void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
@@ -48,6 +46,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 5000
 #elif defined(CONFIG_405GPR)
 #define __sched_latency 9000
+#elif defined(CONFIG_8540)
+#define __sched_latency 1800
 #endif
 
 #ifndef __sched_latency
@@ -65,6 +65,5 @@ static inline unsigned long xnarch_get_sched_latency(void)
 }
 
 #undef __sched_latency
-#undef __bogomips
 
 #endif /* !_XENO_ASM_POWERPC_CALIBRATION_H */
