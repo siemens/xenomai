@@ -1,3 +1,8 @@
+2007-11-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.20-1.7-08. Will
+	actually fix a showstopper with MPIC-equipped platforms.
+
 2007-11-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20-1.10-11.
