@@ -1,3 +1,8 @@
+2007-11-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h: Define specific calibration
+	value for MPC854x boards.
+
 2007-11-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4-rc6
