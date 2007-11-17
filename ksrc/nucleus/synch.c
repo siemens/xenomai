@@ -407,6 +407,44 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 }
 
 /*! 
+ * \fn xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch);
+ * \brief Access the thread leading a synch object wait queue.
+ *
+ * This services returns the descriptor address of to the thread leading a
+ * synchronization object wait queue.
+ *
+ * @param synch The descriptor address of the target synchronization object.
+ *
+ * @return The descriptor address of the unblocked thread.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
+{
+	xnthread_t *thread = NULL;
+	xnpholder_t *holder;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	holder = getheadpq(&synch->pendq);
+	if (holder)
+		thread = link2thread(holder, plink);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return thread;
+}
+
+/*! 
  * \fn void xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
  * \brief Give the resource ownership to a given waiting thread.
  *

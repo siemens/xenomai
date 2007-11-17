@@ -105,6 +105,8 @@ void xnsynch_sleep_on(xnsynch_t *synch,
 
 struct xnthread *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
 
+struct xnthread *xnsynch_peek_pendq(xnsynch_t *synch);
+
 xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch,
 					 xnpholder_t *holder);
 

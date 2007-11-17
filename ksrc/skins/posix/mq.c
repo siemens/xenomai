@@ -476,7 +476,7 @@ pse51_mq_trysend(pse51_direct_msg_t *msgp, pse51_desc_t *desc, size_t len)
 	if (len > mq->attr.mq_msgsize)
 		return EMSGSIZE;
 
-	reader = xnsynch_wakeup_one_sleeper(&mq->receivers);
+	reader = xnsynch_peek_pendq(&mq->receivers);
 	thread = thread2pthread(reader);
 
 	if (thread && !xnthread_test_state(reader, XNSHADOW)) {
@@ -582,13 +582,15 @@ int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 
 void pse51_mq_finish_send(mqd_t fd, pse51_direct_msg_t *msgp)
 {
+	pse51_desc_t *desc;
+	pse51_mq_t *mq;
+
+	pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	mq = node2mq(pse51_desc_node(desc));
+
 	if (!(msgp->flags & PSE51_MSG_DIRECT)) {
-		pse51_desc_t *desc;
 		pse51_msg_t *msg;
-		pse51_mq_t *mq;
 	
-		pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
-		mq = node2mq(pse51_desc_node(desc));
 		msg = any2msg(msgp->lenp, len);
 
 		insertpqf(&mq->queued, &msg->link, msg->link.prio);
@@ -603,7 +605,8 @@ void pse51_mq_finish_send(mqd_t fd, pse51_direct_msg_t *msgp)
 			return;	/* Do not reschedule */
 		}
 	}
-	xnpod_schedule();
+	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
+		xnpod_schedule();
 }
 
 int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
