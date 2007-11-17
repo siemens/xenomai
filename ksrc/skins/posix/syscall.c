@@ -1802,6 +1802,7 @@ static int __mq_setattr(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
+/* mq_send(q, buffer, len, prio) */
 static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 {
 	pse51_direct_msg_t msg;
@@ -1847,6 +1848,7 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
+/* mq_timedsend(q, buffer, len, prio, timeout) */
 static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
@@ -1897,7 +1899,7 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	__xn_copy_from_user(curr, msg.buf,
-			    (void __user *) __xn_reg_arg5(regs), len);
+			    (void __user *) __xn_reg_arg2(regs), len);
 	*(msg.lenp) = len;
 	*(msg.priop) = prio;
 	

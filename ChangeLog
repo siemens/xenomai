@@ -1,3 +1,10 @@
+2007-11-17  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/mq.c (pse51_mq_trysend, pse51_mq_finish_send):
+	Only call xnpod_wakeup_one_sleeper when a message is sent.
+
+	* ksrc/nucleus/synch.c (xnsynch_peek_pendq): Add a new call.
+
 2007-11-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Define specific calibration
@@ -10,6 +17,7 @@
 
 	* RELEASE: Xenomai 2.4-rc6
 
+>>>>>>> .r3186
 2007-11-11  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/syscall.c: Fix remaining spots where invalid user
