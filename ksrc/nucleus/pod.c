@@ -1408,6 +1408,10 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		if (xntimer_start(&thread->rtimer, timeout, XN_INFINITE,
 				  timeout_mode)) {
 			/* (absolute) timeout value in the past, bail out. */
+			if (wchan) {
+				thread->wchan = wchan;
+				xnsynch_forget_sleeper(thread);
+			}
 			xnthread_set_info(thread, XNTIMEO);
 			goto unlock_and_exit;
 		}
