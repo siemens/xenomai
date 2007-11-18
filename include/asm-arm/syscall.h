@@ -200,7 +200,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_XCHG			3
 
 struct __xn_tscinfo {
-        unsigned type;		/* Must remain first member */
+        int type;		/* Must remain first member */
         union {
                 struct {
                         volatile unsigned *counter;

@@ -1,5 +1,8 @@
 2007-11-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/arch/arm/switch.S: Call iwmmxt_task_switch with only one
+	argument starting from Linux 2.6.18.
+
 	* ksrc/nucleus/pod.c (xnpod_suspend_thread): Remove thread from
 	synchronization object wait queue upon exit due to timeout value
 	in the past.

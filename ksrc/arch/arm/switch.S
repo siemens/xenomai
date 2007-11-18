@@ -18,6 +18,7 @@
  */
 
 #include <linux/linkage.h>
+#include <linux/version.h>
 #include <asm/assembler.h>
 #include <asm/asm-offsets.h>
 
@@ -59,7 +60,9 @@ ENTRY(rthal_thread_switch)
     add     ip, r1, #TI_CPU_SAVE
     ldr     r3, [r2, #TI_TP_VALUE]
     stmia   ip!, {r4 - sl, fp, sp, lr}      @ Store most regs on stack
-    ldr     r6, [r2, #TI_CPU_DOMAIN]!
+#ifdef CONFIG_MMU
+    ldr     r6, [r2, #TI_CPU_DOMAIN]
+#endif
 #if __LINUX_ARM_ARCH__ >= 6
 #ifdef CONFIG_CPU_MPCORE
     clrex
@@ -77,7 +80,9 @@ ENTRY(rthal_thread_switch)
     mov     r4, #0xffff0fff
     str     r3, [r4, #-15]                  @ TLS val at 0xffff0ff0
 #endif
+#ifdef CONFIG_MMU
     mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
+#endif
 #ifdef CONFIG_VFP
     @ Always disable VFP so we can lazily save/restore the old
     @ state. This occurs in the context of the previous thread.
@@ -85,14 +90,22 @@ ENTRY(rthal_thread_switch)
     bic     r4, r4, #FPEXC_ENABLE
     VFPFMXR FPEXC, r4
 #endif
-#if defined(CONFIG_IWMMXT)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18) &&  defined(CONFIG_IWMMXT)
     bl      iwmmxt_task_switch
-#elif defined(CONFIG_CPU_XSCALE)
+#endif
+#if defined(CONFIG_CPU_XSCALE) && !defined(CONFIG_IWMMXT)
     add     r4, r2, #40                     @ cpu_context_save->extra
     ldmib   r4, {r4, r5}
     mar     acc0, r4, r5
 #endif
-    ldmib   r2, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
+    add	    r4, r2, #TI_CPU_SAVE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18) && defined(CONFIG_IWMMXT)
+    mov	    r5, r0
+    mov     r0, r2
+    bl	    iwmmxt_task_switch
+    mov	    r0, r5
+#endif	
+    ldmia   r4, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
 
 /*
  * r4 = xnarch_thread_trampoline
