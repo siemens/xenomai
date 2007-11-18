@@ -1,9 +1,15 @@
+2007-11-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/nucleus/pod.c (xnpod_suspend_thread): Remove thread from
+	synchronization object wait queue upon exit due to timeout value
+	in the past.
+
 2007-11-17  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/mq.c (pse51_mq_trysend, pse51_mq_finish_send):
 	Only call xnpod_wakeup_one_sleeper when a message is sent.
 
-	* ksrc/nucleus/synch.c (xnsynch_peek_pendq): Add a new call.
+	* ksrc/nucleus/synch.c (xnsynch_peek_pendq): Add a new service.
 
 2007-11-15  Philippe Gerum  <rpm@xenomai.org>
 
