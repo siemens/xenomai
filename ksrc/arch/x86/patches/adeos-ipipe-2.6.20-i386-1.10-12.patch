@@ -873,10 +873,10 @@ index 6a3875f..caa9520 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..d84de30
+index 0000000..85170b5
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,851 @@
+@@ -0,0 +1,856 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1520,26 +1520,31 @@ index 0000000..d84de30
 +		return 1;
 +	}
 +
-+	/*
-+	 * Detect unhandled faults from kernel space over non-root domains.
-+	 */
-+	if (unlikely(!ipipe_root_domain_p && !(error_code & 4))) {
-+		/*
-+		 * Always warn about such faults when running in debug
-+		 * mode, otherwise avoid reporting the fixable ones.
-+		 */
-+		if (ipipe_may_dump_nonroot_fault(regs)) {
-+			struct ipipe_domain *ipd = ipipe_current_domain;
-+			ipipe_current_domain = ipipe_root_domain;
-+			ipipe_trace_panic_freeze();
-+			printk(KERN_ERR "DOMAIN FAULT: Unhandled exception over domain"
-+			       " %s - switching to ROOT\n", ipd->name);
-+			dump_stack();
-+		}
-+	}
++	/* Detect unhandled faults over non-root domains. */
 +
-+	/* Always switch to root so that Linux can handle it cleanly. */
-+	ipipe_current_domain = ipipe_root_domain;
++	if (unlikely(!ipipe_root_domain_p)) {
++		struct ipipe_domain *ipd = ipipe_current_domain;
++
++		/* Switch to root so that Linux can handle the fault cleanly. */
++		ipipe_current_domain = ipipe_root_domain;
++
++		ipipe_trace_panic_freeze();
++
++		/* Always warn about user land and unfixable faults. */
++		if ((error_code & 4) || !search_exception_tables(regs->eip))
++			printk(KERN_ERR "BUG: Unhandled exception over domain"
++			       " %s at 0x%lx - switching to ROOT\n",
++			       ipd->name, regs->eip);
++#ifdef CONFIG_IPIPE_DEBUG
++		/* Also report fixable ones when debugging is enabled. */
++		else
++			printk(KERN_WARNING "WARNING: Fixable exception over "
++			       "domain %s at 0x%lx - switching to ROOT\n",
++			       ipd->name, regs->eip);
++#endif /* CONFIG_IPIPE_DEBUG */
++
++		dump_stack();
++	}
 +
 +	__ipipe_std_extable[vector](regs, error_code);
 +	local_irq_restore(flags);
@@ -2287,7 +2292,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..dfff580
+index 0000000..80af7a1
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,201 @@
@@ -2317,10 +2322,10 @@ index 0000000..dfff580
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-11"
++#define IPIPE_ARCH_STRING	"1.10-12"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	11
++#define IPIPE_PATCH_NUMBER	12
 +
 +#ifndef __ASSEMBLY__
 +
@@ -4461,7 +4466,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..e249074
+index 0000000..743d175
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1513 @@
@@ -4530,7 +4535,7 @@ index 0000000..e249074
 + * Work around a GCC 3.x issue making alias symbols unusable as
 + * constant initializers.
 + */
-+unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray);
++unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray)[0].status;
 +EXPORT_SYMBOL(__ipipe_root_status_addr);
 +#endif /* __GNUC__ < 4 */
 +
@@ -5980,10 +5985,10 @@ index 0000000..e249074
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..a57f20e
+index 0000000..2411063
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1362 @@
+@@ -0,0 +1,1364 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -7250,6 +7255,8 @@ index 0000000..a57f20e
 +	/* invalidate the current range before setting a new one */
 +	trigger_end = 0;
 +	wmb();
++	ipipe_trace_frozen_reset();
++
 +	/* set new range */
 +	trigger_begin = begin;
 +	wmb();
