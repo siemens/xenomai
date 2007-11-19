@@ -1,7 +1,9 @@
 2007-11-19  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/x86/patches: Upgrade to 2.6.20-1.10-12.
+	* ksrc/arch/x86/patches: Upgrade to 2.6.20/i386-1.10-12.
 
+	* ksrc/arch/x86/patches: Upgrade to 2.6.23/x86_64-1.2-06.
+	
 2007-11-19  Paul Corner <paul_c@tuxcnc.org>
 
 	* debian/: Adapt to x86* merge.
