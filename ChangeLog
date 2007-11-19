@@ -1,3 +1,7 @@
+2007-11-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Upgrade to I-pipe/arm 1.8 series.
+	
 2007-11-18  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/switch.S: Call iwmmxt_task_switch with only one
