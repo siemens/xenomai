@@ -1,3 +1,7 @@
+2007-11-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Upgrade to I-pipe/arm 1.8 series.
+	
 2007-11-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.20-1.10-12.
