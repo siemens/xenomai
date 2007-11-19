@@ -1,3 +1,7 @@
+2007-11-19  Paul Corner <paul_c@tuxcnc.org>
+
+	* debian/: Adapt to x86* merge.
+	
 2007-11-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/patches: Upgrade to I-pipe/arm 1.8 series.
@@ -30,7 +34,6 @@
 
 	* RELEASE: Xenomai 2.4-rc6
 
->>>>>>> .r3186
 2007-11-11  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/syscall.c: Fix remaining spots where invalid user

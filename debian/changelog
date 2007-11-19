@@ -1,3 +1,15 @@
+xenomai (2.4.0-0+rc6) unstable; urgency=low
+
+  * Update prepare-patch.sh to use combined x86/i386 Xenomai tree.
+  * Split patch generation out of build-stamp so that it only gets
+    called once along with the configure.
+  * In pursuit of silencing lintian:
+    * Rename top level ChangeLog to changelog when installed.
+    * Add ldconfig to post install/remove scripts.
+    * Compress changelogs.
+
+ -- Paul Corner <paul_c@gna.org>  Wed, 14 Nov 2007 21:48:27 +0000
+
 xenomai (2.3.50-05+r2299) unstable; urgency=low
 
   * Add top level ChangeLog and CREDITS to each package.

@@ -54,7 +54,6 @@ patch_link() {
             if test ! -d  $temp_tree/$link_dir/$d ; then
                 mkdir -p $temp_tree/$link_dir/$d
             fi
-echo " cp $xenomai_root/$target_dir/$f $temp_tree/$link_dir/$f"
             cp $xenomai_root/$target_dir/$f $temp_tree/$link_dir/$f
         done
     )
@@ -77,7 +76,6 @@ generate_patch() {
 diff_addons() {
     lines=`(echo ; echo ; cat $xenomai_root/scripts/Kconfig.frag) | wc -l`
 
-#    echo "diff -u1wbr orig/arch/$linux_arch/Kconfig new/arch/$linux_arch/Kconfig" >> $patch_file
     echo "--- linux/arch/$linux_arch/Kconfig	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
     echo "+++ linux-patched/arch/$linux_arch/Kconfig	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
     echo "@@ -40,2 +40,$lines @@" >> $patch_file
@@ -97,9 +95,22 @@ mkdir -p $xenomai_root/tmp/linux.new
 linux_tree="$xenomai_root/tmp/linux"
 temp_tree="$xenomai_root/tmp/linux.new"
 
+
 for linux_arch in $supported_arch ; do
-    patch_link r m ksrc/arch/$linux_arch arch/$linux_arch/xenomai
-    patch_link r n include/asm-$linux_arch include/asm-$linux_arch/xenomai
+    case $linux_arch in
+        i386)
+            base_arch=x86
+            ;;
+        x86_64)
+            base_arch=x86
+            ;;
+        *)
+            base_arch=$linux_arch
+            ;;
+    esac
+
+    patch_link r m ksrc/arch/$base_arch arch/$linux_arch/xenomai
+    patch_link r n include/asm-$base_arch include/asm-$linux_arch/xenomai
 
     p="+drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
     echo $p | patch_append arch/$linux_arch/Makefile
@@ -115,7 +126,6 @@ echo $p | patch_append kernel/Makefile
 # Create local directories then symlink to the source files from
 # there, so that we don't pollute the Xenomai source tree with
 # compilation files.
-
 patch_link n m ksrc/ kernel/xenomai
 patch_link n m ksrc/arch kernel/xenomai/arch
 patch_link r m ksrc/arch/generic kernel/xenomai/arch/generic

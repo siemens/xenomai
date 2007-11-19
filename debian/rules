@@ -34,21 +34,25 @@ endif
 	            --includedir=/usr/include/xenomai \
 	            --mandir=/usr/share/man
 
-build: build-stamp
-	./configure $(CONFIG_OPTS)
+build: build-stamp patch-stamp
 	$(MAKE)
-#	The kernel patches get generated next - Likely to involve some
-#	additional scripting..
+
+patch-stamp:
+	dh_testdir
+	touch patch-stamp
+#	The kernel patches get generated next - Need to revisit again
+#	when 2.6.24 ipipe patch is released.
 	$(CURDIR)/debian/prepare-patch.sh arm i386 powerpc x86_64
 
 build-stamp:
 	dh_testdir
 	touch build-stamp
+	./configure $(CONFIG_OPTS)
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
+	rm -f *-stamp
 	dh_clean
 	if test -f Makefile ; then \
 	    $(MAKE) distclean 2>/dev/null ; \
@@ -109,9 +113,10 @@ install: build
 #	Add CREDITS, ChangeLog, and READMEs to all packages.
 	for p in linux-patch-xenomai xenomai xenomai-dev xenomai-docs ; do \
 	    mkdir -p $(CURDIR)/debian/$$p/usr/share/doc/$$p ; \
-	    for f in CREDITS ChangeLog README.INSTALL TROUBLESHOOTING ; do \
+	    for f in CREDITS README.INSTALL TROUBLESHOOTING ; do \
 	        install -m 0644 $$f $(CURDIR)/debian/$$p/usr/share/doc/$$p/ ; \
 	    done ; \
+	    install -m 0644 -T ChangeLog $(CURDIR)/debian/$$p/usr/share/doc/$$p/changelog ; \
 	done
 
 # Build architecture-independent files here.
@@ -122,7 +127,7 @@ binary-indep: install
 	dh_installchangelogs
 	dh_link
 	dh_strip
-#	dh_compress
+	dh_compress
 	dh_fixperms
 	dh_installdeb
 	dh_makeshlibs
