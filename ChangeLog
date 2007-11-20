@@ -1,3 +1,8 @@
+2007-11-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscalls.c (__rt_queue_read): Do not attempt
+	to free the message block after a failed receive op.
+
 2007-11-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/patches: Upgrade to I-pipe/arm 1.8 series.

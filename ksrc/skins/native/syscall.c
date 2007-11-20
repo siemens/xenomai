@@ -2460,9 +2460,9 @@ static int __rt_queue_read(struct task_struct *curr, struct pt_regs *regs)
 
 		if (size > 0)
 			__xn_copy_to_user(curr, buf, mbuf, size);
-	}
 
-	rt_queue_free(q, mbuf);
+		rt_queue_free(q, mbuf);
+	}
 
 	return (int)rsize;
 }
