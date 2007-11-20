@@ -1,5 +1,10 @@
 2007-11-19  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/syscalls.c (__rt_queue_read): Do not attempt
+	to free the message block after a failed receive op.
+
+2007-11-19  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/x86/patches: Upgrade to 2.6.20/i386-1.10-12.
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.23/x86_64-1.2-06.
