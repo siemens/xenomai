@@ -168,15 +168,18 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 #endif /* CONFIG_XENO_HW_FPU */
 
 static const char *const rthal_fault_labels[] = {
-    [0] = "Data or instruction access",
-    [1] = "Section fault",
-    [2] = "Generic data abort",
-    [3] = "Unknown exception",
-    [4] = "Instruction breakpoint",
-    [5] = "Floating point exception",
-    [6] = "VFP Floating point exception",
-    [7] = "Undefined instruction",
-    [8] = NULL
+    [IPIPE_TRAP_ACCESS] = "Data or instruction access",
+    [IPIPE_TRAP_SECTION] = "Section fault",
+    [IPIPE_TRAP_DABT] = "Generic data abort",
+    [IPIPE_TRAP_UNKNOWN] = "Unknown exception",
+    [IPIPE_TRAP_BREAK] = "Instruction breakpoint",
+    [IPIPE_TRAP_FPU] = "Floating point exception",
+    [IPIPE_TRAP_VFP] = "VFP Floating point exception",
+    [IPIPE_TRAP_UNDEFINSTR] = "Undefined instruction",
+#ifdef IPIPE_TRAP_ALIGNMENT
+    [IPIPE_TRAP_ALIGNMENT] = "Unaligned access exception",
+#endif /* IPIPE_TRAP_ALIGNMENT */
+    [IPIPE_NR_FAULTS] = NULL
 };
 
 #endif /* !__cplusplus */
