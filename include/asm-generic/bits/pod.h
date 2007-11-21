@@ -27,6 +27,7 @@
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
+#include <linux/tick.h>
 #include <linux/ipipe_tickdev.h>
 
 /*!
@@ -119,7 +120,7 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 	xnticks_t tickval;
 	spl_t s;
 
-#ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
+#ifndef __IPIPE_FEATURE_REQUEST_TICKDEV
 	struct ipipe_tick_device *tdev = (struct ipipe_tick_device *)cdev;
 	cdev = tdev->slave->evtdev;
 #endif
