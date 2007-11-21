@@ -793,9 +793,10 @@ static int timer_read_proc(char *page,
 		tm_status = "off";
 
 	len = sprintf(page,
-		      "status=%s%s:setup=%Lu:clock=%Lu\n",
+		      "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
 		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
-		      xntbase_get_rawclock(&nktbase));
+		      xntbase_get_rawclock(&nktbase),
+		      XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
 
 	len -= off;
 	if (len <= off + count)

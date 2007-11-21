@@ -1,3 +1,12 @@
+2007-11-21  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/x86, include/asm-generic, include/asm-x86: Refactor
+	the x86* support around the recent x86 merge. Use the newest
+	ipipe_request_tickdev() interface when available for tick device
+	emulation.
+
+	* ksrc/nucleus/module.c: Report configured timer and clock device.
+
 2007-11-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscalls.c (__rt_queue_read): Do not attempt

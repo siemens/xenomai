@@ -985,8 +985,8 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 
 /**
  * \fn int rthal_timer_request(void (*tick_handler)(void),
- *             void (*mode_emul)(enum clock_event_mode mode, struct ipipe_tick_device *tdev),
- *             int (*tick_emul)(unsigned long delay, struct ipipe_tick_device *tdev), int cpu)
+ *             void (*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev),
+ *             int (*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)
  * \brief Grab the hardware timer.
  *
  * rthal_timer_request() grabs and tunes the hardware timer in oneshot

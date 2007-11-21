@@ -125,6 +125,8 @@ typedef struct { atomic_t owner; } xnlock_t;
 
 #define XNARCH_NR_IRQS               RTHAL_NR_IRQS
 #define XNARCH_TIMER_IRQ	     RTHAL_TIMER_IRQ
+#define XNARCH_TIMER_DEVICE          RTHAL_TIMER_DEVICE
+#define XNARCH_CLOCK_DEVICE          RTHAL_CLOCK_DEVICE
 
 #define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
 

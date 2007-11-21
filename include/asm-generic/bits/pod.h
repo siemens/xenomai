@@ -31,7 +31,7 @@
 
 /*!
  * @internal
- * \fn void xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device *tdev)
+ * \fn void xnarch_next_htick_shot(unsigned long delay, struct clock_event_device *cdev)
  *
  * \brief Next tick setup emulation callback.
  *
@@ -42,7 +42,7 @@
  * @param delay The time delta from the current date to the next tick,
  * expressed as a count of nanoseconds.
  *
- * @param tdev An pointer to the tick device which notifies us.
+ * @param cdev An pointer to the clock device which notifies us.
  *
  * Environment:
  *
@@ -58,11 +58,15 @@
  * Rescheduling: never.
  */
 
-static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device *tdev)
+static int xnarch_next_htick_shot(unsigned long delay, struct clock_event_device *cdev)
 {
 	xnsched_t *sched;
 	spl_t s;
 
+#if !defined(__IPIPE_FEATURE_REQUEST_TICKDEV) && 0 /* Unused. */
+	struct ipipe_tick_device *tdev = (struct ipipe_tick_device *)cdev;
+	cdev = tdev->slave->evtdev;
+#endif
 	xnlock_get_irqsave(&nklock, s);
 	sched = xnpod_current_sched();
 	xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
@@ -73,7 +77,7 @@ static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device 
 
 /*!
  * @internal
- * \fn void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_tick_device *tdev)
+ * \fn void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_event_device *cdev)
  *
  * \brief Tick mode switch emulation callback.
  *
@@ -94,7 +98,7 @@ static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device 
  * which should never be shut down, so this mode should not be
  * encountered.
  *
- * @param tdev An opaque pointer to the tick device which notifies us.
+ * @param cdev An opaque pointer to the clock device which notifies us.
  *
  * Environment:
  *
@@ -109,13 +113,17 @@ static int xnarch_next_htick_shot(unsigned long delay, struct ipipe_tick_device 
  * Rescheduling: never.
  */
 
-static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct ipipe_tick_device *tdev)
+static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_event_device *cdev)
 {
 	xnsched_t *sched;
 	xnticks_t tickval;
 	spl_t s;
 
-	rthal_timer_notify_switch(mode, tdev);
+#ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
+	struct ipipe_tick_device *tdev = (struct ipipe_tick_device *)cdev;
+	cdev = tdev->slave->evtdev;
+#endif
+	rthal_timer_notify_switch(mode, cdev);
 
 	if (mode == CLOCK_EVT_MODE_ONESHOT)
 		return;

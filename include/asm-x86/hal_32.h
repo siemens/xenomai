@@ -36,7 +36,18 @@
 
 #ifndef _XENO_ASM_X86_HAL_32_H
 #define _XENO_ASM_X86_HAL_32_H
-#define _XENO_ASM_X86_HAL_H
+
+#define RTHAL_ARCH_NAME			"i386"
+#ifdef CONFIG_X86_LOCAL_APIC
+# define RTHAL_TIMER_DEVICE		"lapic"
+#else
+# define RTHAL_TIMER_DEVICE		"pit"
+#endif
+#ifdef CONFIG_X86_TSC
+# define RTHAL_CLOCK_DEVICE		"tsc"
+#else
+# define RTHAL_CLOCK_DEVICE		"pit"
+#endif
 
 #include <asm/xenomai/wrappers.h>
 
@@ -85,9 +96,12 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
    from the system IRQ range, which is wrong... */
 #define ipipe_apic_vector_irq(vec) (vec - FIRST_EXTERNAL_VECTOR)
 #endif
+
 #else /* !CONFIG_X86_LOCAL_APIC */
+
 #define RTHAL_TIMER_IRQ		0	/* i8253 PIT interrupt. */
 #define RTHAL_HOST_TICK_IRQ	0	/* Host tick is emulated by Xenomai. */
+
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 #define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
@@ -174,8 +188,42 @@ static const char *const rthal_fault_labels[] = {
 	[20] = NULL,
 };
 
-long rthal_strncpy_from_user(char *dst, const char __user * src, long count);
+#ifdef CONFIG_X86_LOCAL_APIC
+
+#include <asm/fixmap.h>
+#include <asm/mpspec.h>
+#ifdef CONFIG_X86_IO_APIC
+#include <asm/io_apic.h>
+#endif /* CONFIG_X86_IO_APIC */
+#include <asm/apic.h>
+
+static inline int rthal_set_apic_base(int lvtt_value)
+{
+	if (APIC_INTEGRATED(GET_APIC_VERSION(apic_read(APIC_LVR))))
+		lvtt_value |= SET_APIC_TIMER_BASE(APIC_TIMER_BASE_DIV);
+
+	return lvtt_value;
+}
+
+static inline void rthal_setup_periodic_apic(int count, int vector)
+{
+	apic_read_around(APIC_LVTT);
+	apic_write_around(APIC_LVTT, rthal_set_apic_base(APIC_LVT_TIMER_PERIODIC | vector));
+	apic_read_around(APIC_TMICT);
+	apic_write_around(APIC_TMICT, count);
+}
+
+static inline void rthal_setup_oneshot_apic(int vector)
+{
+	apic_read_around(APIC_LVTT);
+	apic_write_around(APIC_LVTT, rthal_set_apic_base(vector));
+}
+#endif /* !CONFIG_X86_LOCAL_APIC */
 
 #endif /* !__cplusplus */
+
+long rthal_strncpy_from_user(char *dst, const char __user * src, long count);
+
+void rthal_latency_above_max(struct pt_regs *regs);
 
 #endif /* !_XENO_ASM_X86_HAL_32_H */
