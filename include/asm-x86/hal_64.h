@@ -22,7 +22,10 @@
 
 #ifndef _XENO_ASM_X86_HAL_64_H
 #define _XENO_ASM_X86_HAL_64_H
-#define _XENO_ASM_X86_HAL_H
+
+#define RTHAL_ARCH_NAME			"x86_64"
+#define RTHAL_TIMER_DEVICE		"lapic"
+#define RTHAL_CLOCK_DEVICE		"tsc"
 
 #include <asm/xenomai/wrappers.h>
 #include <asm-generic/xenomai/hal.h>    /* Read the generic bits. */
@@ -115,6 +118,23 @@ static const char *const rthal_fault_labels[] = {
     [19] = "SIMD error",
     [20] = NULL,
 };
+
+#ifdef CONFIG_X86_LOCAL_APIC
+
+#include <asm/mach_apic.h>
+
+static inline void rthal_setup_periodic_apic(int count, int vector)
+{
+	apic_write(APIC_LVTT, APIC_LVT_TIMER_PERIODIC | vector);
+	apic_write(APIC_TMICT, count);
+}
+
+static inline void rthal_setup_oneshot_apic(int vector)
+{
+	apic_write(APIC_LVTT, vector);
+}
+
+#endif /* !CONFIG_X86_LOCAL_APIC */
 
 #endif /* !__cplusplus */
 

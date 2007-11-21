@@ -10,7 +10,7 @@ endif
 
 obj-$(CONFIG_XENOMAI) += xeno_hal.o
 
-xeno_hal-y := hal_$(X86_MODE).o usercopy_$(X86_MODE).o
+xeno_hal-y := hal_$(X86_MODE).o hal-common.o usercopy_$(X86_MODE).o
 
 xeno_hal-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi_$(X86_MODE).o
 
@@ -26,7 +26,7 @@ USE_STANDARD_AS_RULE := true
 
 O_TARGET := built-in.o
 
-obj-y := hal_32.o
+obj-y := hal_32.o hal-common.o
 
 obj-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi_32.o
 

@@ -37,4 +37,7 @@
 
 typedef irq_handler_t rthal_irq_host_handler_t;
 
+#define DECLARE_LINUX_IRQ_HANDLER(fn, irq, dev_id)	\
+	irqreturn_t fn(int irq, void *dev_id)
+
 #endif /* _XENO_ASM_X86_WRAPPERS_64_H */

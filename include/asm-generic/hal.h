@@ -49,6 +49,13 @@
 #define RTHAL_CPU_FREQ		(rthal_tunables.cpu_freq)
 #define RTHAL_NR_APCS		BITS_PER_LONG
 
+#ifndef RTHAL_TIMER_DEVICE
+#define RTHAL_TIMER_DEVICE	"<unnamed>"
+#endif
+#ifndef RTHAL_CLOCK_DEVICE
+#define RTHAL_CLOCK_DEVICE	"<unnamed>"
+#endif
+
 #define RTHAL_EVENT_PROPAGATE   0
 #define RTHAL_EVENT_STOP        1
 
@@ -433,12 +440,12 @@ unsigned long rthal_timer_calibrate(void);
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 int rthal_timer_request(void (*tick_handler)(void),
-			void (*mode_emul)(enum clock_event_mode mode, struct ipipe_tick_device *tdev),
-			int (*tick_emul) (unsigned long delay, struct ipipe_tick_device *tdev),
+			void (*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev),
+			int (*tick_emul) (unsigned long delay, struct clock_event_device *cdev),
 			int cpu);
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,
-			       struct ipipe_tick_device *tdev);
+			       struct clock_event_device *cdev);
 
 #else
 int rthal_timer_request(void (*tick_handler)(void),
