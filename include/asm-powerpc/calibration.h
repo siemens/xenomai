@@ -38,9 +38,9 @@ static inline unsigned long xnarch_get_sched_latency(void)
 
 #if defined(CONFIG_PPC_PASEMI)
 #ifdef CONFIG_SMP
-#define __sched_latency 7000
+#define __sched_latency 9000
 #else
-#define __sched_latency 4000
+#define __sched_latency 7000
 #endif
 #elif defined(CONFIG_PPC_MPC52xx)
 #define __sched_latency 5000
