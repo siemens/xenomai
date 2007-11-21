@@ -1,3 +1,8 @@
+2007-11-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h: Increase calibration value
+	for PA-SEMI boards in SMP mode.
+
 2007-11-21  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/x86, include/asm-generic, include/asm-x86: Refactor
