@@ -698,3 +698,4 @@ EXPORT_SYMBOL(xnsynch_renice_sleeper);
 EXPORT_SYMBOL(xnsynch_sleep_on);
 EXPORT_SYMBOL(xnsynch_wakeup_one_sleeper);
 EXPORT_SYMBOL(xnsynch_wakeup_this_sleeper);
+EXPORT_SYMBOL(xnsynch_peek_pendq);
