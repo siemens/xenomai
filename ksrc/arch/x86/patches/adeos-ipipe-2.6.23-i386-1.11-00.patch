@@ -955,10 +955,10 @@ index e2f4a1c..ccafcc5 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..07e6a65
+index 0000000..b92a2f1
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,849 @@
+@@ -0,0 +1,848 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1577,12 +1577,6 @@ index 0000000..07e6a65
 +};
 +#endif /* CONFIG_KGDB */
 +
-+#ifdef CONFIG_IPIPE_DEBUG
-+#define ipipe_may_dump_nonroot_fault(regs)	1
-+#else
-+#define ipipe_may_dump_nonroot_fault(regs)	(!search_exception_tables((regs)->eip))
-+#endif
-+
 +fastcall int __ipipe_handle_exception(struct pt_regs *regs, long error_code, int vector)
 +{
 +	unsigned long flags;
@@ -1615,26 +1609,31 @@ index 0000000..07e6a65
 +		return 1;
 +	}
 +
-+	/*
-+	 * Detect unhandled faults from kernel space over non-root domains.
-+	 */
-+	if (unlikely(!ipipe_root_domain_p && !(error_code & 4))) {
-+		/*
-+		 * Always warn about such faults when running in debug
-+		 * mode, otherwise avoid reporting the fixable ones.
-+		 */
-+		if (ipipe_may_dump_nonroot_fault(regs)) {
-+			struct ipipe_domain *ipd = ipipe_current_domain;
-+			ipipe_current_domain = ipipe_root_domain;
-+			ipipe_trace_panic_freeze();
-+			printk(KERN_ERR "DOMAIN FAULT: Unhandled exception over domain"
-+			       " %s - switching to ROOT\n", ipd->name);
-+			dump_stack();
-+		}
-+	}
++	/* Detect unhandled faults over non-root domains. */
 +
-+	/* Always switch to root so that Linux can handle it cleanly. */
-+	ipipe_current_domain = ipipe_root_domain;
++	if (unlikely(!ipipe_root_domain_p)) {
++		struct ipipe_domain *ipd = ipipe_current_domain;
++
++		/* Switch to root so that Linux can handle the fault cleanly. */
++		ipipe_current_domain = ipipe_root_domain;
++
++		ipipe_trace_panic_freeze();
++
++		/* Always warn about user land and unfixable faults. */
++		if ((error_code & 4) || !search_exception_tables(regs->eip))
++			printk(KERN_ERR "BUG: Unhandled exception over domain"
++			       " %s at 0x%lx - switching to ROOT\n",
++			       ipd->name, regs->eip);
++#ifdef CONFIG_IPIPE_DEBUG
++		/* Also report fixable ones when debugging is enabled. */
++		else
++			printk(KERN_WARNING "WARNING: Fixable exception over "
++			       "domain %s at 0x%lx - switching to ROOT\n",
++			       ipd->name, regs->eip);
++#endif /* CONFIG_IPIPE_DEBUG */
++
++		dump_stack();
++	}
 +
 +	__ipipe_std_extable[vector](regs, error_code);
 +	local_irq_restore(flags);
@@ -2263,7 +2262,7 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..9225f45
+index 0000000..22b3260
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
 @@ -0,0 +1,212 @@
@@ -2293,10 +2292,10 @@ index 0000000..9225f45
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-12"
++#define IPIPE_ARCH_STRING	"1.11-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	12
++#define IPIPE_MINOR_NUMBER	11
++#define IPIPE_PATCH_NUMBER	00
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2895,18 +2894,6 @@ index d3bcebe..1ce1b6c 100644
  static inline void __raw_spin_lock_flags(raw_spinlock_t *lock, unsigned long flags)
  {
  	asm volatile(
-diff --git a/include/linux/clockchips.h b/include/linux/clockchips.h
-index def5a65..749fa7d 100644
---- a/include/linux/clockchips.h
-+++ b/include/linux/clockchips.h
-@@ -91,6 +91,7 @@ struct clock_event_device {
- 	struct list_head	list;
- 	enum clock_event_mode	mode;
- 	ktime_t			next_event;
-+	int64_t			delta;
- };
- 
- /*
 diff --git a/include/linux/hardirq.h b/include/linux/hardirq.h
 index 8d30229..74b355d 100644
 --- a/include/linux/hardirq.h
@@ -3483,10 +3470,10 @@ index 0000000..859c766
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..797ab74
+index 0000000..a8dd0a0
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,83 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -3553,6 +3540,12 @@ index 0000000..797ab74
 +#else /* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +static inline void ipipe_check_context(struct ipipe_domain *border_ipd) { }
 +#endif /* !CONFIG_IPIPE_DEBUG_CONTEXT */
++
++/* Generic features */
++
++#ifdef CONFIG_GENERIC_CLOCKEVENTS
++#define __IPIPE_FEATURE_REQUEST_TICKDEV  1
++#endif
 +
 +#else /* !CONFIG_IPIPE */
 +#define ipipe_preempt_disable(flags)	do { \
@@ -3701,10 +3694,10 @@ index 0000000..4b4d1f5
 +#endif	/* !__LINUX_IPIPE_PERCPU_H */
 diff --git a/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
 new file mode 100644
-index 0000000..d38a59b
+index 0000000..4a1cb1b
 --- /dev/null
 +++ b/include/linux/ipipe_tickdev.h
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,58 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_tickdev.h
 + *
@@ -3738,22 +3731,25 @@ index 0000000..d38a59b
 +struct ipipe_tick_device {
 +
 +	void (*emul_set_mode)(enum clock_event_mode,
-+			      struct ipipe_tick_device *tdev);
++			      struct clock_event_device *cdev);
 +	int (*emul_set_tick)(unsigned long delta,
-+			     struct ipipe_tick_device *tdev);
++			     struct clock_event_device *cdev);
 +	void (*real_set_mode)(enum clock_event_mode mode,
 +			      struct clock_event_device *cdev);
 +	int (*real_set_tick)(unsigned long delta,
 +			     struct clock_event_device *cdev);
 +	struct tick_device *slave;
++	unsigned long real_max_delta_ns;
++	unsigned long real_mult;
++	int real_shift;
 +};
 +
 +int ipipe_request_tickdev(const char *devname,
 +			  void (*emumode)(enum clock_event_mode mode,
-+					  struct ipipe_tick_device *tdev),
++					  struct clock_event_device *cdev),
 +			  int (*emutick)(unsigned long evt,
-+					 struct ipipe_tick_device *tdev),
-+			  int cpu);
++					 struct clock_event_device *cdev),
++			  int cpu, unsigned long *tmfreq);
 +
 +void ipipe_release_tickdev(int cpu);
 +
@@ -4552,10 +4548,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..3ea366c
+index 0000000..45e3396
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1623 @@
+@@ -0,0 +1,1618 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4623,7 +4619,7 @@ index 0000000..3ea366c
 + * Work around a GCC 3.x issue making alias symbols unusable as
 + * constant initializers.
 + */
-+unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray);
++unsigned long *const __ipipe_root_status_addr = &__raw_get_cpu_var(ipipe_percpu_darray)[0].status;
 +EXPORT_SYMBOL(__ipipe_root_status_addr);
 +#endif /* __GNUC__ < 4 */
 +
@@ -4655,36 +4651,17 @@ index 0000000..3ea366c
 +
 +static DEFINE_PER_CPU(struct ipipe_tick_device, ipipe_tick_cpu_device);
 +
-+static void __ipipe_set_tick_mode(enum clock_event_mode mode,
-+				  struct clock_event_device *cdev)
-+{
-+	struct ipipe_tick_device *itd;
-+	itd = &per_cpu(ipipe_tick_cpu_device, smp_processor_id());
-+	itd->emul_set_mode(mode, itd);
-+}
-+
-+static int __ipipe_set_next_tick(unsigned long evt,
-+				 struct clock_event_device *cdev)
-+{
-+	uint64_t delta_ns = (uint64_t)cdev->delta;
-+	struct ipipe_tick_device *itd;
-+
-+	if (delta_ns > ULONG_MAX)
-+		delta_ns = ULONG_MAX;
-+
-+	itd = &per_cpu(ipipe_tick_cpu_device, smp_processor_id());
-+	return itd->emul_set_tick((unsigned long)delta_ns, itd);
-+}
-+
 +int ipipe_request_tickdev(const char *devname,
 +			  void (*emumode)(enum clock_event_mode mode,
-+					  struct ipipe_tick_device *tdev),
++					  struct clock_event_device *cdev),
 +			  int (*emutick)(unsigned long delta,
-+					 struct ipipe_tick_device *tdev),
-+			  int cpu)
++					 struct clock_event_device *cdev),
++			  int cpu, unsigned long *tmfreq)
 +{
 +	struct ipipe_tick_device *itd;
 +	struct tick_device *slave;
++	struct clock_event_device *evtdev;
++	unsigned long long freq;
 +	unsigned long flags;
 +	int status;
 +
@@ -4723,14 +4700,23 @@ index 0000000..3ea366c
 +	 * to oneshot dynamically (highres/no_hz tick mode).
 +	 */
 +
++	evtdev = slave->evtdev;
 +	itd->slave = slave;
 +	itd->emul_set_mode = emumode;
 +	itd->emul_set_tick = emutick;
-+	itd->real_set_mode = slave->evtdev->set_mode;
-+	itd->real_set_tick = slave->evtdev->set_next_event;
-+	slave->evtdev->set_mode = __ipipe_set_tick_mode;
-+	slave->evtdev->set_next_event = __ipipe_set_next_tick;
-+	status = slave->evtdev->mode;
++	itd->real_set_mode = evtdev->set_mode;
++	itd->real_set_tick = evtdev->set_next_event;
++	itd->real_max_delta_ns = evtdev->max_delta_ns;
++	itd->real_mult = evtdev->mult;
++	itd->real_shift = evtdev->shift;
++	freq = (1000000000ULL * evtdev->mult) >> evtdev->shift;
++	*tmfreq = (unsigned long)freq;
++	evtdev->set_mode = emumode;
++	evtdev->set_next_event = emutick;
++	evtdev->max_delta_ns = ULONG_MAX;
++	evtdev->mult = 1;
++	evtdev->shift = 0;
++	status = evtdev->mode;
 +out:
 +	ipipe_critical_exit(flags);
 +
@@ -4741,6 +4727,7 @@ index 0000000..3ea366c
 +{
 +	struct ipipe_tick_device *itd;
 +	struct tick_device *slave;
++	struct clock_event_device *evtdev;
 +	unsigned long flags;
 +
 +	flags = ipipe_critical_enter(NULL);
@@ -4749,8 +4736,12 @@ index 0000000..3ea366c
 +
 +	if (itd->slave != NULL) {
 +		slave = &per_cpu(tick_cpu_device, cpu);
-+		slave->evtdev->set_mode = itd->real_set_mode;
-+		slave->evtdev->set_next_event = itd->real_set_tick;
++		evtdev = slave->evtdev;
++		evtdev->set_mode = itd->real_set_mode;
++		evtdev->set_next_event = itd->real_set_tick;
++		evtdev->max_delta_ns = itd->real_max_delta_ns;
++		evtdev->mult = itd->real_mult;
++		evtdev->shift = itd->real_shift;
 +		itd->slave = NULL;
 +	}
 +
@@ -6181,10 +6172,10 @@ index 0000000..3ea366c
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..1e8e987
+index 0000000..93b3989
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1342 @@
+@@ -0,0 +1,1344 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -7431,6 +7422,8 @@ index 0000000..1e8e987
 +	/* invalidate the current range before setting a new one */
 +	trigger_end = 0;
 +	wmb();
++	ipipe_trace_frozen_reset();
++
 +	/* set new range */
 +	trigger_begin = begin;
 +	wmb();
@@ -8089,18 +8082,6 @@ index cd72424..3e74c9b 100644
  	LOCK_CONTENDED(lock, _raw_spin_trylock, _raw_spin_lock);
  #else
  	_raw_spin_lock_flags(lock, &flags);
-diff --git a/kernel/time/clockevents.c b/kernel/time/clockevents.c
-index 41dd310..83a5bdc 100644
---- a/kernel/time/clockevents.c
-+++ b/kernel/time/clockevents.c
-@@ -84,6 +84,7 @@ int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
- 		return -ETIME;
- 
- 	dev->next_event = expires;
-+	dev->delta = delta;
- 
- 	if (dev->mode == CLOCK_EVT_MODE_SHUTDOWN)
- 		return 0;
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
 index cdc9b09..92aeb9c 100644
 --- a/lib/Kconfig.debug
