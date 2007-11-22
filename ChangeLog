@@ -2,6 +2,8 @@
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.20/i386-1.11-00.
 
+	* ksrc/arch/x86/patches: Upgrade to 2.6.23/x86_64-1.3-00.
+	
 2007-11-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Increase calibration value
