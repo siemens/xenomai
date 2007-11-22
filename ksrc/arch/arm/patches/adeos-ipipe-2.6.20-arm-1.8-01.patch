@@ -3959,6 +3959,20 @@ index 29c89f9..919ba5e 100644
 +	return OSMR0 - OSCR;
 +}
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mm/alignment.c b/arch/arm/mm/alignment.c
+index aa109f0..ee45282 100644
+--- a/arch/arm/mm/alignment.c
++++ b/arch/arm/mm/alignment.c
+@@ -627,6 +627,9 @@ do_alignment(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
+ 	unsigned int fault;
+ 	u16 tinstr = 0;
+ 
++	if (ipipe_trap_notify(IPIPE_TRAP_ALIGNMENT,regs))
++		return 0;
++
+ 	instrptr = instruction_pointer(regs);
+ 
+ 	fs = get_fs();
 diff --git a/arch/arm/mm/copypage-v4mc.c b/arch/arm/mm/copypage-v4mc.c
 index ded0e96..bb79f37 100644
 --- a/arch/arm/mm/copypage-v4mc.c
@@ -4647,7 +4661,7 @@ index b41831b..46b169e 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..3b6499d
+index 0000000..8e5d783
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,196 @@
@@ -4680,10 +4694,10 @@ index 0000000..3b6499d
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-00"
++#define IPIPE_ARCH_STRING	"1.8-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -4849,10 +4863,10 @@ index 0000000..3b6499d
 +#endif	/* !__ARM_IPIPE_H */
 diff --git a/include/asm-arm/ipipe_base.h b/include/asm-arm/ipipe_base.h
 new file mode 100644
-index 0000000..409599a
+index 0000000..c350724
 --- /dev/null
 +++ b/include/asm-arm/ipipe_base.h
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,103 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe_base.h
 + *
@@ -4892,7 +4906,8 @@ index 0000000..409599a
 +#define IPIPE_TRAP_FPU		 5	/* Floating point exception */
 +#define IPIPE_TRAP_VFP		 6	/* VFP floating point exception */
 +#define IPIPE_TRAP_UNDEFINSTR	 7	/* Undefined instruction */
-+#define IPIPE_NR_FAULTS		 8
++#define IPIPE_TRAP_ALIGNMENT	 8	/* Unaligned access exception */
++#define IPIPE_NR_FAULTS		 9
 +
 +/* Pseudo-vectors used for kernel events */
 +#define IPIPE_FIRST_EVENT	IPIPE_NR_FAULTS
