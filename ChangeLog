@@ -1,3 +1,7 @@
+2007-11-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Upgrade to 2.6.20.21-1.11-00.
+
 2007-11-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscalls.c (__rt_queue_read): Do not attempt

@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 7e2750f..055ab06 100644
+index 41e3b28..25db88d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -490,6 +490,10 @@ endif
@@ -87,7 +87,7 @@ index 1e8988e..d5ca7ba 100644
  obj-$(CONFIG_HPET_TIMER) 	+= time_hpet.o
  obj-$(CONFIG_EFI) 		+= efi.o efi_stub.o
 diff --git a/arch/i386/kernel/apic.c b/arch/i386/kernel/apic.c
-index 776d9be..76fe447 100644
+index 776d9be..3aef9d4 100644
 --- a/arch/i386/kernel/apic.c
 +++ b/arch/i386/kernel/apic.c
 @@ -102,7 +102,7 @@ void ack_bad_irq(unsigned int irq)
@@ -176,7 +176,18 @@ index 776d9be..76fe447 100644
  }
  
  /*
-@@ -1119,7 +1125,7 @@ void __init setup_boot_APIC_clock(void)
+@@ -1108,6 +1114,10 @@ static int __init calibrate_APIC_clock(void)
+ 		result/(1000000/HZ),
+ 		result%(1000000/HZ));
+ 
++#ifdef CONFIG_IPIPE
++	__ipipe_apic_timer_freq = result;
++#endif
++
+ 	return result;
+ }
+ 
+@@ -1119,7 +1129,7 @@ void __init setup_boot_APIC_clock(void)
  	apic_printk(APIC_VERBOSE, "Using local APIC timer interrupts.\n");
  	using_apic_timer = 1;
  
@@ -185,7 +196,7 @@ index 776d9be..76fe447 100644
  
  	calibration_result = calibrate_APIC_clock();
  	/*
-@@ -1127,7 +1133,7 @@ void __init setup_boot_APIC_clock(void)
+@@ -1127,7 +1137,7 @@ void __init setup_boot_APIC_clock(void)
  	 */
  	setup_APIC_timer(calibration_result);
  
@@ -194,7 +205,7 @@ index 776d9be..76fe447 100644
  }
  
  void __devinit setup_secondary_APIC_clock(void)
-@@ -1313,7 +1319,7 @@ fastcall void smp_spurious_interrupt(struct pt_regs *regs)
+@@ -1313,7 +1323,7 @@ fastcall void smp_spurious_interrupt(struct pt_regs *regs)
  	 */
  	v = apic_read(APIC_ISR + ((SPURIOUS_APIC_VECTOR & ~0x1f) >> 1));
  	if (v & (1 << (SPURIOUS_APIC_VECTOR & 0x1f)))
@@ -204,7 +215,7 @@ index 776d9be..76fe447 100644
  	/* see sw-dev-man vol 3, chapter 7.4.13.5 */
  	printk(KERN_INFO "spurious APIC interrupt on CPU#%d, should never happen.\n",
 diff --git a/arch/i386/kernel/entry.S b/arch/i386/kernel/entry.S
-index 5e47683..6387b61 100644
+index 9bf056e..c24e258 100644
 --- a/arch/i386/kernel/entry.S
 +++ b/arch/i386/kernel/entry.S
 @@ -44,6 +44,7 @@
@@ -351,9 +362,9 @@ index 5e47683..6387b61 100644
  	SAVE_ALL
  	GET_THREAD_INFO(%ebp)
 + 	CATCH_ROOT_SYSCALL(syscall_exit,restore_nocheck_notrace)
- 	testl $TF_MASK,PT_EFLAGS(%esp)
- 	jz no_singlestep
- 	orl $_TIF_SINGLESTEP,TI_flags(%ebp)
+ 					# system call tracing in operation / emulation
+ 	/* Note, _TIF_SECCOMP is bit number 8, and so it needs testw and not testb */
+ 	testw $(_TIF_SYSCALL_EMU|_TIF_SYSCALL_TRACE|_TIF_SECCOMP|_TIF_SYSCALL_AUDIT),TI_flags(%ebp)
 @@ -401,7 +461,11 @@ restore_all:
  	CFI_REMEMBER_STATE
  	je ldt_ss			# returning to user-space with LDT SS
@@ -873,10 +884,10 @@ index 6a3875f..caa9520 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..85170b5
+index 0000000..e4c668e
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,856 @@
+@@ -0,0 +1,858 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1005,6 +1016,8 @@ index 0000000..85170b5
 +}
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
++
++unsigned long __ipipe_apic_timer_freq;
 +
 +static int __ipipe_noack_apic(unsigned irq)
 +{
@@ -2292,10 +2305,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..80af7a1
+index 0000000..f967c44
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,205 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2322,10 +2335,10 @@ index 0000000..80af7a1
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-12"
++#define IPIPE_ARCH_STRING	"1.11-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	12
++#define IPIPE_MINOR_NUMBER	11
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2404,6 +2417,10 @@ index 0000000..80af7a1
 +void __ipipe_do_critical_sync(unsigned irq, void *cookie);
 +
 +extern int __ipipe_tick_irq;
++
++#ifdef CONFIG_X86_LOCAL_APIC
++extern unsigned long __ipipe_apic_timer_freq;
++#endif
 +
 +#define __ipipe_call_root_xirq_handler(ipd,irq) \
 +   __asm__ __volatile__ ("pushfl\n\t" \
@@ -2499,10 +2516,10 @@ index 0000000..80af7a1
 +#endif	/* !__I386_IPIPE_H */
 diff --git a/include/asm-i386/ipipe_base.h b/include/asm-i386/ipipe_base.h
 new file mode 100644
-index 0000000..ccb19e3
+index 0000000..f5f7074
 --- /dev/null
 +++ b/include/asm-i386/ipipe_base.h
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,189 @@
 +/* -*- linux-c -*-
 + * include/asm-i386/ipipe_base.h
 + *
@@ -2686,6 +2703,10 @@ index 0000000..ccb19e3
 +#endif	/* CONFIG_SMP */
 +
 +#endif /* !__ASSEMBLY__ */
++
++/* Arch-dependent features */
++
++#define __IPIPE_FEATURE_APIC_TIMER_FREQ  1
 +
 +#endif	/* !__I386_IPIPE_BASE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
@@ -3942,7 +3963,7 @@ index d0926d6..991c36c 100644
  #endif
  
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 4463735..6c689d9 100644
+index 7a0cc67..759ff7d 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -54,6 +54,7 @@ struct sched_param {
@@ -3977,7 +3998,7 @@ index 4463735..6c689d9 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1157,6 +1168,11 @@ static inline void put_task_struct(struct task_struct *t)
+@@ -1158,6 +1169,11 @@ static inline void put_task_struct(struct task_struct *t)
  #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
@@ -4283,10 +4304,10 @@ index 14f4d45..4c77db5 100644
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 diff --git a/kernel/exit.c b/kernel/exit.c
-index fec12eb..e9096c9 100644
+index d306845..a830d8f 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
-@@ -922,6 +922,7 @@ fastcall NORET_TYPE void do_exit(long code)
+@@ -938,6 +938,7 @@ fastcall NORET_TYPE void do_exit(long code)
  
  	if (group_dead)
  		acct_process();
@@ -4295,7 +4316,7 @@ index fec12eb..e9096c9 100644
  	__exit_files(tsk);
  	__exit_fs(tsk);
 diff --git a/kernel/fork.c b/kernel/fork.c
-index d57118d..d827f37 100644
+index cc374fb..b736924 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -387,6 +387,7 @@ void mmput(struct mm_struct *mm)
@@ -7696,7 +7717,7 @@ index c770e1a..f077940 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index cca93cc..26f9c28 100644
+index 907ab05..cc5f168 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1409,7 +1409,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -7717,7 +7738,7 @@ index cca93cc..26f9c28 100644
  }
  
  /*
-@@ -3420,12 +3422,15 @@ asmlinkage void __sched schedule(void)
+@@ -3424,12 +3426,15 @@ asmlinkage void __sched schedule(void)
  	long *switch_count;
  	struct rq *rq;
  
@@ -7734,7 +7755,7 @@ index cca93cc..26f9c28 100644
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3436,8 +3441,13 @@ asmlinkage void __sched schedule(void)
+@@ -3440,8 +3445,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -7748,7 +7769,7 @@ index cca93cc..26f9c28 100644
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3555,6 +3565,8 @@ switch_tasks:
+@@ -3559,6 +3569,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -7757,7 +7778,7 @@ index cca93cc..26f9c28 100644
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3568,7 +3580,7 @@ switch_tasks:
+@@ -3572,7 +3584,7 @@ switch_tasks:
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
@@ -7766,7 +7787,7 @@ index cca93cc..26f9c28 100644
  		goto need_resched;
  }
  EXPORT_SYMBOL(schedule);
-@@ -3586,6 +3598,7 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -3590,6 +3602,7 @@ asmlinkage void __sched preempt_schedule(void)
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -7774,7 +7795,7 @@ index cca93cc..26f9c28 100644
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4284,6 +4297,7 @@ recheck:
+@@ -4288,6 +4301,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -7782,7 +7803,7 @@ index cca93cc..26f9c28 100644
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -7057,3 +7071,50 @@ void set_curr_task(int cpu, struct task_struct *p)
+@@ -7061,3 +7075,50 @@ void set_curr_task(int cpu, struct task_struct *p)
  }
  
  #endif
@@ -7834,7 +7855,7 @@ index cca93cc..26f9c28 100644
 +
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 5630255..d577f31 100644
+index 4975f4c..5f869e2 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
 @@ -508,6 +508,7 @@ void signal_wake_up(struct task_struct *t, int resume)
@@ -7868,7 +7889,7 @@ index 2c6c2bf..14fda25 100644
  #else
  	_raw_spin_lock_flags(lock, &flags);
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 6e2101d..70dd5f2 100644
+index 17f8447..6733352 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
 @@ -227,9 +227,11 @@ int __kprobes atomic_notifier_call_chain(struct atomic_notifier_head *nh,
@@ -7886,7 +7907,7 @@ index 6e2101d..70dd5f2 100644
  }
  
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 5c26818..36cd9ec 100644
+index 330bff8..def2695 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -71,6 +71,8 @@ config HEADERS_CHECK
@@ -8301,7 +8322,7 @@ index ef09f0a..53d10ff 100644
 +
 +#endif
 diff --git a/mm/mlock.c b/mm/mlock.c
-index 3446b7e..c67382d 100644
+index ef8fc94..bbb9e3c 100644
 --- a/mm/mlock.c
 +++ b/mm/mlock.c
 @@ -162,10 +162,10 @@ asmlinkage long sys_munlock(unsigned long start, size_t len)
