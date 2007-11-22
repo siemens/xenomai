@@ -87,7 +87,7 @@ index 1e8988e..d5ca7ba 100644
  obj-$(CONFIG_HPET_TIMER) 	+= time_hpet.o
  obj-$(CONFIG_EFI) 		+= efi.o efi_stub.o
 diff --git a/arch/i386/kernel/apic.c b/arch/i386/kernel/apic.c
-index 776d9be..76fe447 100644
+index 776d9be..3aef9d4 100644
 --- a/arch/i386/kernel/apic.c
 +++ b/arch/i386/kernel/apic.c
 @@ -102,7 +102,7 @@ void ack_bad_irq(unsigned int irq)
@@ -176,7 +176,18 @@ index 776d9be..76fe447 100644
  }
  
  /*
-@@ -1119,7 +1125,7 @@ void __init setup_boot_APIC_clock(void)
+@@ -1108,6 +1114,10 @@ static int __init calibrate_APIC_clock(void)
+ 		result/(1000000/HZ),
+ 		result%(1000000/HZ));
+ 
++#ifdef CONFIG_IPIPE
++	__ipipe_apic_timer_freq = result;
++#endif
++
+ 	return result;
+ }
+ 
+@@ -1119,7 +1129,7 @@ void __init setup_boot_APIC_clock(void)
  	apic_printk(APIC_VERBOSE, "Using local APIC timer interrupts.\n");
  	using_apic_timer = 1;
  
@@ -185,7 +196,7 @@ index 776d9be..76fe447 100644
  
  	calibration_result = calibrate_APIC_clock();
  	/*
-@@ -1127,7 +1133,7 @@ void __init setup_boot_APIC_clock(void)
+@@ -1127,7 +1137,7 @@ void __init setup_boot_APIC_clock(void)
  	 */
  	setup_APIC_timer(calibration_result);
  
@@ -194,7 +205,7 @@ index 776d9be..76fe447 100644
  }
  
  void __devinit setup_secondary_APIC_clock(void)
-@@ -1313,7 +1319,7 @@ fastcall void smp_spurious_interrupt(struct pt_regs *regs)
+@@ -1313,7 +1323,7 @@ fastcall void smp_spurious_interrupt(struct pt_regs *regs)
  	 */
  	v = apic_read(APIC_ISR + ((SPURIOUS_APIC_VECTOR & ~0x1f) >> 1));
  	if (v & (1 << (SPURIOUS_APIC_VECTOR & 0x1f)))
@@ -873,10 +884,10 @@ index 6a3875f..caa9520 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..85170b5
+index 0000000..e4c668e
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,856 @@
+@@ -0,0 +1,858 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -1005,6 +1016,8 @@ index 0000000..85170b5
 +}
 +
 +#ifdef CONFIG_X86_LOCAL_APIC
++
++unsigned long __ipipe_apic_timer_freq;
 +
 +static int __ipipe_noack_apic(unsigned irq)
 +{
@@ -2292,10 +2305,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..80af7a1
+index 0000000..f967c44
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,205 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2322,10 +2335,10 @@ index 0000000..80af7a1
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.10-12"
++#define IPIPE_ARCH_STRING	"1.11-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	12
++#define IPIPE_MINOR_NUMBER	11
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2404,6 +2417,10 @@ index 0000000..80af7a1
 +void __ipipe_do_critical_sync(unsigned irq, void *cookie);
 +
 +extern int __ipipe_tick_irq;
++
++#ifdef CONFIG_X86_LOCAL_APIC
++extern unsigned long __ipipe_apic_timer_freq;
++#endif
 +
 +#define __ipipe_call_root_xirq_handler(ipd,irq) \
 +   __asm__ __volatile__ ("pushfl\n\t" \
@@ -2499,10 +2516,10 @@ index 0000000..80af7a1
 +#endif	/* !__I386_IPIPE_H */
 diff --git a/include/asm-i386/ipipe_base.h b/include/asm-i386/ipipe_base.h
 new file mode 100644
-index 0000000..ccb19e3
+index 0000000..f5f7074
 --- /dev/null
 +++ b/include/asm-i386/ipipe_base.h
-@@ -0,0 +1,185 @@
+@@ -0,0 +1,189 @@
 +/* -*- linux-c -*-
 + * include/asm-i386/ipipe_base.h
 + *
@@ -2686,6 +2703,10 @@ index 0000000..ccb19e3
 +#endif	/* CONFIG_SMP */
 +
 +#endif /* !__ASSEMBLY__ */
++
++/* Arch-dependent features */
++
++#define __IPIPE_FEATURE_APIC_TIMER_FREQ  1
 +
 +#endif	/* !__I386_IPIPE_BASE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
