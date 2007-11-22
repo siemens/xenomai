@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 7e2750f..055ab06 100644
+index 41e3b28..25db88d 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -490,6 +490,10 @@ endif
@@ -215,7 +215,7 @@ index 776d9be..3aef9d4 100644
  	/* see sw-dev-man vol 3, chapter 7.4.13.5 */
  	printk(KERN_INFO "spurious APIC interrupt on CPU#%d, should never happen.\n",
 diff --git a/arch/i386/kernel/entry.S b/arch/i386/kernel/entry.S
-index 5e47683..6387b61 100644
+index 9bf056e..c24e258 100644
 --- a/arch/i386/kernel/entry.S
 +++ b/arch/i386/kernel/entry.S
 @@ -44,6 +44,7 @@
@@ -362,9 +362,9 @@ index 5e47683..6387b61 100644
  	SAVE_ALL
  	GET_THREAD_INFO(%ebp)
 + 	CATCH_ROOT_SYSCALL(syscall_exit,restore_nocheck_notrace)
- 	testl $TF_MASK,PT_EFLAGS(%esp)
- 	jz no_singlestep
- 	orl $_TIF_SINGLESTEP,TI_flags(%ebp)
+ 					# system call tracing in operation / emulation
+ 	/* Note, _TIF_SECCOMP is bit number 8, and so it needs testw and not testb */
+ 	testw $(_TIF_SYSCALL_EMU|_TIF_SYSCALL_TRACE|_TIF_SECCOMP|_TIF_SYSCALL_AUDIT),TI_flags(%ebp)
 @@ -401,7 +461,11 @@ restore_all:
  	CFI_REMEMBER_STATE
  	je ldt_ss			# returning to user-space with LDT SS
@@ -3963,7 +3963,7 @@ index d0926d6..991c36c 100644
  #endif
  
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 4463735..6c689d9 100644
+index 7a0cc67..759ff7d 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -54,6 +54,7 @@ struct sched_param {
@@ -3998,7 +3998,7 @@ index 4463735..6c689d9 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1157,6 +1168,11 @@ static inline void put_task_struct(struct task_struct *t)
+@@ -1158,6 +1169,11 @@ static inline void put_task_struct(struct task_struct *t)
  #define PF_SPREAD_SLAB	0x02000000	/* Spread some slab caches over cpuset */
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
@@ -4304,10 +4304,10 @@ index 14f4d45..4c77db5 100644
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 diff --git a/kernel/exit.c b/kernel/exit.c
-index fec12eb..e9096c9 100644
+index d306845..a830d8f 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
-@@ -922,6 +922,7 @@ fastcall NORET_TYPE void do_exit(long code)
+@@ -938,6 +938,7 @@ fastcall NORET_TYPE void do_exit(long code)
  
  	if (group_dead)
  		acct_process();
@@ -4316,7 +4316,7 @@ index fec12eb..e9096c9 100644
  	__exit_files(tsk);
  	__exit_fs(tsk);
 diff --git a/kernel/fork.c b/kernel/fork.c
-index d57118d..d827f37 100644
+index cc374fb..b736924 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -387,6 +387,7 @@ void mmput(struct mm_struct *mm)
@@ -7717,7 +7717,7 @@ index c770e1a..f077940 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index cca93cc..26f9c28 100644
+index 907ab05..cc5f168 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1409,7 +1409,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -7738,7 +7738,7 @@ index cca93cc..26f9c28 100644
  }
  
  /*
-@@ -3420,12 +3422,15 @@ asmlinkage void __sched schedule(void)
+@@ -3424,12 +3426,15 @@ asmlinkage void __sched schedule(void)
  	long *switch_count;
  	struct rq *rq;
  
@@ -7755,7 +7755,7 @@ index cca93cc..26f9c28 100644
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3436,8 +3441,13 @@ asmlinkage void __sched schedule(void)
+@@ -3440,8 +3445,13 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
@@ -7769,7 +7769,7 @@ index cca93cc..26f9c28 100644
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3555,6 +3565,8 @@ switch_tasks:
+@@ -3559,6 +3569,8 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
@@ -7778,7 +7778,7 @@ index cca93cc..26f9c28 100644
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3568,7 +3580,7 @@ switch_tasks:
+@@ -3572,7 +3584,7 @@ switch_tasks:
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
@@ -7787,7 +7787,7 @@ index cca93cc..26f9c28 100644
  		goto need_resched;
  }
  EXPORT_SYMBOL(schedule);
-@@ -3586,6 +3598,7 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -3590,6 +3602,7 @@ asmlinkage void __sched preempt_schedule(void)
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -7795,7 +7795,7 @@ index cca93cc..26f9c28 100644
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4284,6 +4297,7 @@ recheck:
+@@ -4288,6 +4301,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -7803,7 +7803,7 @@ index cca93cc..26f9c28 100644
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -7057,3 +7071,50 @@ void set_curr_task(int cpu, struct task_struct *p)
+@@ -7061,3 +7075,50 @@ void set_curr_task(int cpu, struct task_struct *p)
  }
  
  #endif
@@ -7855,7 +7855,7 @@ index cca93cc..26f9c28 100644
 +
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/signal.c b/kernel/signal.c
-index 5630255..d577f31 100644
+index 4975f4c..5f869e2 100644
 --- a/kernel/signal.c
 +++ b/kernel/signal.c
 @@ -508,6 +508,7 @@ void signal_wake_up(struct task_struct *t, int resume)
@@ -7889,7 +7889,7 @@ index 2c6c2bf..14fda25 100644
  #else
  	_raw_spin_lock_flags(lock, &flags);
 diff --git a/kernel/sys.c b/kernel/sys.c
-index 6e2101d..70dd5f2 100644
+index 17f8447..6733352 100644
 --- a/kernel/sys.c
 +++ b/kernel/sys.c
 @@ -227,9 +227,11 @@ int __kprobes atomic_notifier_call_chain(struct atomic_notifier_head *nh,
@@ -7907,7 +7907,7 @@ index 6e2101d..70dd5f2 100644
  }
  
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 5c26818..36cd9ec 100644
+index 330bff8..def2695 100644
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -71,6 +71,8 @@ config HEADERS_CHECK
@@ -8322,7 +8322,7 @@ index ef09f0a..53d10ff 100644
 +
 +#endif
 diff --git a/mm/mlock.c b/mm/mlock.c
-index 3446b7e..c67382d 100644
+index ef8fc94..bbb9e3c 100644
 --- a/mm/mlock.c
 +++ b/mm/mlock.c
 @@ -162,10 +162,10 @@ asmlinkage long sys_munlock(unsigned long start, size_t len)
