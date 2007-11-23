@@ -335,9 +335,16 @@ Initializes a memory heap suitable for time-bounded allocation requests of dynam
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor which will be used to store the allocation data. This descriptor must always be valid while the heap is active therefore it must be allocated in permanent memory.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>heapaddr</em>&nbsp;</td><td>The address of the heap storage area. All allocations will be made from the given area in time-bounded mode. Since additional extents can be added to a heap, this parameter is also known as the "initial extent".</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>heapsize</em>&nbsp;</td><td>The size in bytes of the initial extent pointed at by <em>heapaddr</em>. <em>heapsize</em> must be a multiple of pagesize and lower than 16 Mbytes. <em>heapsize</em> must be large enough to contain an internal header. The following formula gives the size of this header:<br>
- hdrsize = (sizeof(xnextent_t) + ((heapsize - sizeof(xnextent_t))) / (pagesize + 1) + 15) &amp; ~15.<br>
+    <tr><td valign="top"></td><td valign="top"><em>heapsize</em>&nbsp;</td><td>The size in bytes of the initial extent pointed at by <em>heapaddr</em>. <em>heapsize</em> must be a multiple of pagesize and lower than 16 Mbytes. <em>heapsize</em> must be large enough to contain a dynamically-sized internal header. The following formula gives the size of this header:<br>
 </td></tr>
+  </table>
+</dl>
+H = heapsize, P=pagesize, M=sizeof(struct pagemap), E=sizeof(xnextent_t)<br>
+ hdrsize = ((H - E) * M) / (M + 1)<br>
+<p>
+This value is then aligned on the next 16-byte boundary. The routine xnheap_overhead() computes the corrected heap size according to the previous formula.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>pagesize</em>&nbsp;</td><td>The size in bytes of the fundamental memory page which will be used to subdivide the heap internally. Choosing the right page size is important regarding performance and memory fragmentation issues, so it might be a good idea to take a look at <a href="http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf">http://docs.FreeBSD.org/44doc/papers/kernmalloc.pdf</a> to pick the best one for your needs. In the current implementation, pagesize must be a power of two in the range [ 8 .. 32768 ] inclusive.</td></tr>
   </table>
 </dl>
@@ -454,7 +461,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Nov 13 18:14:54 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Nov 23 18:18:16 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
