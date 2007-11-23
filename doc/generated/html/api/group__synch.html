@@ -64,6 +64,9 @@ Thread synchronization services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">xnthread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#gc9926fd6af7a7fe01b9f8d02c1a62957">xnsynch_wakeup_one_sleeper</a> (xnsynch_t *synch)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to the next waiting thread.  <a href="#gc9926fd6af7a7fe01b9f8d02c1a62957"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnthread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g80c718b07372cfc4b1c18b4d5ac1c7ce">xnsynch_peek_pendq</a> (xnsynch_t *synch)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Access the thread leading a synch object wait queue.  <a href="#g80c718b07372cfc4b1c18b4d5ac1c7ce"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">xnpholder_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__synch.html#g15b56df22d23acd5de3d1d622b2caa6a">xnsynch_wakeup_this_sleeper</a> (xnsynch_t *synch, xnpholder_t *holder)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Give the resource ownership to a given waiting thread.  <a href="#g15b56df22d23acd5de3d1d622b2caa6a"></a><br></td></tr>
@@ -260,6 +263,40 @@ Environments:<p>
 This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never. 
+</div>
+</div><p>
+<a class="anchor" name="g80c718b07372cfc4b1c18b4d5ac1c7ce"></a><!-- doxytag: member="synch.c::xnsynch_peek_pendq" ref="g80c718b07372cfc4b1c18b4d5ac1c7ce" args="(xnsynch_t *synch)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">xnthread_t* xnsynch_peek_pendq           </td>
+          <td>(</td>
+          <td class="paramtype">xnsynch_t *&nbsp;</td>
+          <td class="paramname"> <em>synch</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td width="100%"><code> [read]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Access the thread leading a synch object wait queue. 
+<p>
+This services returns the descriptor address of to the thread leading a synchronization object wait queue.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>synch</em>&nbsp;</td><td>The descriptor address of the target synchronization object.</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>The descriptor address of the unblocked thread.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
 </div>
@@ -475,7 +512,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Nov 13 18:14:55 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Nov 23 18:18:16 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
