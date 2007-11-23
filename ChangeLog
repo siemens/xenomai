@@ -1,3 +1,9 @@
+2007-11-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/heap.c, include/nucleus/heap.h: Fix computation of
+	overhead due to the heap meta-data (xnheap_overhead). Recycle
+	empty bucketed pages to the global free page list.
+
 2007-11-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.20.21/i386-1.11-00.
