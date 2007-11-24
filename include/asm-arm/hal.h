@@ -29,6 +29,33 @@
 #ifndef _XENO_ASM_ARM_HAL_H
 #define _XENO_ASM_ARM_HAL_H
 
+#ifdef CONFIG_ARCH_AT91
+#include <linux/stringify.h>
+#define RTHAL_TIMER_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " RC"
+#define RTHAL_CLOCK_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " CV"
+#elif defined(CONFIG_ARCH_IMX)
+#define RTHAL_TIMER_DEVICE	"TCMP"
+#define RTHAL_CLOCK_DEVICE	"TCN"
+#elif defined(CONFIG_ARCH_IMX21)
+#define RTHAL_TIMER_DEVICE	"TCMP"
+#define RTHAL_CLOCK_DEVICE	"TCN"
+#elif defined(CONFIG_ARCH_INTEGRATOR)
+#define RTHAL_TIMER_DEVICE	"TIMER1"
+#define RTHAL_CLOCK_DEVICE	"TIMER1"
+#elif defined(CONFIG_ARCH_IXP4XX)
+#define RTHAL_TIMER_DEVICE	"OSRT1"
+#define RTHAL_CLOCK_DEVICE	"OSTS"
+#elif defined(CONFIG_ARCH_PXA)
+#define RTHAL_TIMER_DEVICE	"OSMR0"
+#define RTHAL_CLOCK_DEVICE	"OSCR"
+#elif defined(CONFIG_ARCH_S3C2410)
+#define RTHAL_TIMER_DEVICE	"TCNTB4"
+#define RTHAL_CLOCK_DEVICE	"TCNTO3"
+#elif defined(CONFIG_ARCH_SA1100)
+#define RTHAL_TIMER_DEVICE	"OSMR0"
+#define RTHAL_CLOCK_DEVICE	"OSCR"
+#endif /* CONFIG_ARCH_SA1100 */
+
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
 
