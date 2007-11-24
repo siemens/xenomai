@@ -108,27 +108,23 @@ int SKIN_INIT(posix)
 	xnprintf("starting POSIX services.\n");
 
 	err = xnpod_init();
-
-	if (err != 0) {
-	fail:
-		xnlogerr("POSIX skin init failed, code %d.\n", err);
-		return err;
-	}
+	if (err != 0)
+		goto fail;
 
 	err = xntbase_alloc("posix", tick_arg * 1000, 0, &pse51_tbase);
-
 	if (err)
-	    goto fail;
+	    goto fail_shutdown_pod;
 
 	xntbase_start(pse51_tbase);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = pse51_syscall_init();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-
 	if (err != 0) {
 		xntbase_free(pse51_tbase);
+	fail_shutdown_pod:
 		xnpod_shutdown(err);
+	  fail:
 		xnlogerr("POSIX skin init failed, code %d.\n", err);
 		return err;
 	}
