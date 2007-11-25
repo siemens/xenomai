@@ -1,3 +1,12 @@
+2007-11-25  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/skins/native/heap.c (__heap_read_proc): Display
+	actual/usable memory amount available instead of the requested
+	size which may be smaller.
+
+	* ksrc/skins/native/heap.c (rt_heap_inquire, RT_HEAP_INFO): Report
+	usable and used memory amounts.
+	
 2007-11-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/heap.c, include/nucleus/heap.h: Fix computation of

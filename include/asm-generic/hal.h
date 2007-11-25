@@ -49,13 +49,6 @@
 #define RTHAL_CPU_FREQ		(rthal_tunables.cpu_freq)
 #define RTHAL_NR_APCS		BITS_PER_LONG
 
-#ifndef RTHAL_TIMER_DEVICE
-#define RTHAL_TIMER_DEVICE	"<unnamed>"
-#endif
-#ifndef RTHAL_CLOCK_DEVICE
-#define RTHAL_CLOCK_DEVICE	"<unnamed>"
-#endif
-
 #define RTHAL_EVENT_PROPAGATE   0
 #define RTHAL_EVENT_STOP        1
 
