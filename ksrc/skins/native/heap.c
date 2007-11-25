@@ -63,7 +63,7 @@ static int __heap_read_proc(char *page,
 	p += sprintf(p, "type=%s:size=%lu:used=%lu\n",
 		     (heap->mode & H_SHARED) == H_SHARED ? "shared" :
 		     (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
-		     (u_long)heap->csize, xnheap_used_mem(&heap->heap_base));
+		     xnheap_usable_mem(&heap->heap_base), xnheap_used_mem(&heap->heap_base));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -173,7 +173,9 @@ static void __heap_flush_private(xnheap_t *heap,
  * going to be pre-allocated to the heap. Memory blocks will be
  * claimed and released to this pool.  The block pool is not
  * extensible, so this value must be compatible with the highest
- * memory pressure that could be expected.
+ * memory pressure that could be expected. A minimum of 2 * PAGESIZE
+ * will be enforced for mappable heaps, 2 * XNCORE_PAGE_SIZE
+ * otherwise.
  *
  * @param mode The heap creation mode. The following flags can be
  * OR'ed into this bitmask, each of them affecting the new heap:
@@ -724,6 +726,8 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 	strcpy(info->name, heap->name);
 	info->nwaiters = xnsynch_nsleepers(&heap->synch_base);
 	info->heapsize = heap->csize;
+	info->usablemem = xnheap_usable_mem(&heap->heap_base);
+	info->usedmem = xnheap_used_mem(&heap->heap_base);
 	info->mode = heap->mode;
 
       unlock_and_exit:

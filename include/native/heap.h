@@ -40,7 +40,11 @@ typedef struct rt_heap_info {
 
     int mode;			/* !< Creation mode. */
 
-    size_t heapsize;		/* !< Size of heap memory. */
+    size_t heapsize;		/* !< Requested heap size. */
+
+    size_t usablemem;		/* !< Available heap memory. */
+
+    size_t usedmem;		/* !< Amount of memory used. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
