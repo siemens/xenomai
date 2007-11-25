@@ -29,6 +29,9 @@
 #ifndef _XENO_ASM_ARM_HAL_H
 #define _XENO_ASM_ARM_HAL_H
 
+#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
+#include <asm/byteorder.h>
+
 #ifdef CONFIG_ARCH_AT91
 #include <linux/stringify.h>
 #define RTHAL_TIMER_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " RC"
@@ -55,9 +58,6 @@
 #define RTHAL_TIMER_DEVICE	"OSMR0"
 #define RTHAL_CLOCK_DEVICE	"OSCR"
 #endif /* CONFIG_ARCH_SA1100 */
-
-#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
-#include <asm/byteorder.h>
 
 typedef unsigned long long rthal_time_t;
 

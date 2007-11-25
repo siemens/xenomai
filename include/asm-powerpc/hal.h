@@ -29,10 +29,10 @@
 #ifndef _XENO_ASM_POWERPC_HAL_H
 #define _XENO_ASM_POWERPC_HAL_H
 
+#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
+
 #define RTHAL_TIMER_DEVICE	"decrementer"
 #define RTHAL_CLOCK_DEVICE	"timebase"
-
-#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
 typedef unsigned long long rthal_time_t;
 

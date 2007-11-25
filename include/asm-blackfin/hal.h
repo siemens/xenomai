@@ -26,11 +26,11 @@
 #ifndef _XENO_ASM_BLACKFIN_HAL_H
 #define _XENO_ASM_BLACKFIN_HAL_H
 
-#define RTHAL_TIMER_DEVICE	"coretmr"
-#define RTHAL_CLOCK_DEVICE	"cyclectr"
-
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/div64.h>
+
+#define RTHAL_TIMER_DEVICE	"coretmr"
+#define RTHAL_CLOCK_DEVICE	"cyclectr"
 
 typedef unsigned long long rthal_time_t;
 

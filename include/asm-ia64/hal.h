@@ -27,10 +27,10 @@
 #ifndef _XENO_ASM_IA64_HAL_H
 #define _XENO_ASM_IA64_HAL_H
 
+#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
+
 #define RTHAL_TIMER_DEVICE	"itm"
 #define RTHAL_CLOCK_DEVICE	"itc"
-
-#include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 
 typedef unsigned long long rthal_time_t;
 
