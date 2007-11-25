@@ -92,7 +92,10 @@ typedef struct xnheap {
 
         DECLARE_XNLOCK(lock);
 
-	caddr_t buckets[XNHEAP_NBUCKETS];
+	struct xnbucket {
+		caddr_t freelist;
+		int fcount;
+	} buckets[XNHEAP_NBUCKETS];
 
 	xnholder_t *idleq;
 
