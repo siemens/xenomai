@@ -161,7 +161,6 @@ int xnheap_init(xnheap_t *heap,
 {
 	u_long hdrsize, shiftsize, pageshift;
 	xnextent_t *extent;
-	int n;
 
 	/*
 	 * Perform some parametrical checks first.
@@ -219,14 +218,9 @@ int xnheap_init(xnheap_t *heap,
 	inith(&heap->link);
 	initq(&heap->extents);
 	xnlock_init(&heap->lock);
-
 	xnarch_init_heapcb(&heap->archdep);
-
-	for (n = 0; n < XNHEAP_NBUCKETS; n++)
-		heap->buckets[n] = NULL;
-
+	memset(heap->buckets, 0, sizeof(heap->buckets));
 	extent = (xnextent_t *)heapaddr;
-
 	init_extent(heap, extent);
 
 	appendq(&heap->extents, &extent->link);
@@ -428,10 +422,10 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 {
 	xnholder_t *holder;
 	xnextent_t *extent;
+	int log2size, ilog;
 	u_long pagenum;
 	caddr_t block;
 	u_long bsize;
-	int log2size;
 	spl_t s;
 
 	if (size == 0)
@@ -463,7 +457,7 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 	   2 times the page size. Otherwise, use the bucketed memory
 	   blocks. */
 
-	if (size <= heap->pagesize * 2) {
+	if (likely(size <= heap->pagesize * 2)) {
 		/* Find the first power of two greater or equal to the rounded
 		   size. The log2 value of this size is also computed. */
 
@@ -471,22 +465,22 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 		     bsize < size; bsize <<= 1, log2size++)
 			;	/* Loop */
 
+		ilog = log2size - XNHEAP_MINLOG2;
+
 		xnlock_get_irqsave(&heap->lock, s);
 
-		block = heap->buckets[log2size - XNHEAP_MINLOG2];
+		block = heap->buckets[ilog].freelist;
 
 		if (block == NULL) {
 			block = get_free_range(heap, bsize, log2size);
 			if (block == NULL)
 				goto release_and_exit;
+			if (bsize <= heap->pagesize)
+				heap->buckets[ilog].fcount += (heap->pagesize >> log2size) - 1;
 		} else {
-			/*
-			 * If only we had all pages sitting on
-			 * pagesize boundaries, we could use a trivial
-			 * address masking to compute the address of
-			 * the containing page, but we can't assume
-			 * that for now. Oh, well...
-			 */
+			if (bsize <= heap->pagesize)
+				--heap->buckets[ilog].fcount;
+
 			for (holder = getheadq(&heap->extents), extent = NULL;
 			     holder != NULL; holder = nextq(&heap->extents, holder)) {
 				extent = link2extent(holder);
@@ -502,7 +496,7 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 			++extent->pagemap[pagenum].bcount;
 		}
 
-		heap->buckets[log2size - XNHEAP_MINLOG2] = *((caddr_t *) block);
+		heap->buckets[ilog].freelist = *((caddr_t *) block);
 		heap->ubytes += bsize;
 	} else {
 		if (size > heap->maxcont)
@@ -566,10 +560,10 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 
 int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 {
-	caddr_t freepage, lastpage, nextpage, tailpage;
+	caddr_t freepage, lastpage, nextpage, tailpage, freeptr, *tailptr;
+	int log2size, npages, err, nblocks, xpage, ilog;
 	u_long pagenum, pagecont, boffset, bsize;
 	xnextent_t *extent = NULL;
-	int log2size, npages, err;
 	xnholder_t *holder;
 	spl_t s;
 
@@ -672,22 +666,75 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 		 * value for the heading page is always 1).
 		 */
 
-		if (unlikely(--extent->pagemap[pagenum].bcount == 0)) {
-			heap->buckets[log2size - XNHEAP_MINLOG2] = NULL;
-			npages = bsize >> heap->pageshift;
-			if (likely(npages <= 1)) {
-				tailpage = block;
-				goto free_pages;
-			}
-			goto free_page_list;
+		ilog = log2size - XNHEAP_MINLOG2;
+
+		if (likely(--extent->pagemap[pagenum].bcount > 0)) {
+			/* Return the block to the bucketed memory space. */
+			*((caddr_t *) block) = heap->buckets[ilog].freelist;
+			heap->buckets[ilog].freelist = block;
+			++heap->buckets[ilog].fcount;
+			break;
 		}
 
-		/* Return the block to the bucketed memory space. */
+		npages = bsize >> heap->pageshift;
 
-		*((caddr_t *) block) = heap->buckets[log2size - XNHEAP_MINLOG2];
-		heap->buckets[log2size - XNHEAP_MINLOG2] = block;
+		if (unlikely(npages > 1))
+			/*
+			 * The simplest case: we only have a single
+			 * block to deal with, which spans multiple
+			 * pages. We just need to release it as a list
+			 * of pages, without caring about the
+			 * consistency of the bucket.
+			 */
+			goto free_page_list;
 
-		break;
+		freepage = extent->membase + (pagenum << heap->pageshift);
+		block = freepage;
+		tailpage = freepage;
+		nextpage = freepage + heap->pagesize;
+		nblocks = heap->pagesize >> log2size;
+		heap->buckets[ilog].fcount -= (nblocks - 1);
+
+		XENO_ASSERT(NUCLEUS, heap->buckets[ilog].fcount >= 0,
+			    xnpod_fatal("free block count became negative (heap %p, log2=%d, fcount=%d)?!",
+					heap, log2size, heap->buckets[ilog].fcount);
+			);
+		/*
+		 * Easy case: all free blocks are laid on a single
+		 * page we are now releasing. Just clear the bucket
+		 * and bail out.
+		 */
+
+		if (likely(heap->buckets[ilog].fcount == 0)) {
+			heap->buckets[ilog].freelist = NULL;
+			goto free_pages;
+		}
+
+		/*
+		 * Worst case: multiple pages are traversed by the
+		 * bucket list. Scan the list to remove all blocks
+		 * belonging to the freed page. We are done whenever
+		 * all possible blocks from the freed page have been
+		 * traversed, or we hit the end of list, whichever
+		 * comes first.
+		 */
+
+		for (tailptr = &heap->buckets[ilog].freelist, freeptr = *tailptr, xpage = 1;
+		     freeptr != NULL && nblocks > 0; freeptr = *((caddr_t *) freeptr)) {
+			if (unlikely(freeptr < freepage || freeptr >= nextpage)) {
+				if (unlikely(xpage)) { /* Limit random writes */
+					*tailptr = freeptr;
+					xpage = 0;
+				}
+				tailptr = (caddr_t *)freeptr;
+			} else {
+				--nblocks;
+				xpage = 1;
+			}
+		}
+
+		*tailptr = freeptr;
+		goto free_pages;
 	}
 
 	heap->ubytes -= bsize;
