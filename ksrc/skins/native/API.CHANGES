@@ -187,3 +187,10 @@ ___________________________________________________________________
 	to request MMIO memory, in addition to I/O port
 	ranges. Finally, I/O region descriptors have been introduced
 	in order to provide auto-cleanup support of held regions.
+
+2.4-rc6 -> 2.4-rc7
+
+	* rt_heap_inquire() now reports the requested heap size
+          (info->heapsize), the overall actual/usable amount of memory
+          (info->usablemem), the current amount of memory used
+          (info->usedmem).
