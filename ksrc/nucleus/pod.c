@@ -499,6 +499,11 @@ void xnpod_shutdown(int xtype)
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 		xnsched_t *sched = xnpod_sched_slot(cpu);
 		xntimer_destroy(&sched->htimer);
+		xntimer_destroy(&sched->rootcb.ptimer);
+		xntimer_destroy(&sched->rootcb.rtimer);
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		xntimer_destroy(&sched->wdtimer);
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
 		xntimerq_destroy(&sched->timerqueue);
 	}
 

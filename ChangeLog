@@ -1,3 +1,11 @@
+2007-11-25  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-02.
+
+	* ksrc/nucleus/pod.c: Destroy watchdog and root thread
+	timers. This avoids subsequent duplicate insertions of such
+	objects into the per-timebase queue from xntimer_init().
+	
 2007-11-25  Philippe Gerum  <rpm@eclipse>
 
 	* ksrc/skins/native/heap.c (__heap_read_proc): Display
@@ -19,6 +27,8 @@
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.23/x86_64-1.3-00.
 	
+2007-11-22  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
 	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-01.
 	
 2007-11-21  Philippe Gerum  <rpm@xenomai.org>
