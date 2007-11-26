@@ -515,10 +515,10 @@ index 0000000..ce61e0c
 +#endif
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..21859d2
+index 0000000..106b10a
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,514 @@
+@@ -0,0 +1,517 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -1028,6 +1028,9 @@ index 0000000..21859d2
 +EXPORT_SYMBOL_GPL(cpu_do_switch_mm);
 +#endif
 +EXPORT_SYMBOL_GPL(__check_kvm_seq);
++#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
++EXPORT_SYMBOL(tasklist_lock);
++#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
 +
 +#ifdef CONFIG_IPIPE_TRACE_MCOUNT
 +void notrace mcount(void);
@@ -4661,7 +4664,7 @@ index b41831b..46b169e 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..8e5d783
+index 0000000..3ad8763
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,196 @@
@@ -4694,10 +4697,10 @@ index 0000000..8e5d783
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-01"
++#define IPIPE_ARCH_STRING	"1.8-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
