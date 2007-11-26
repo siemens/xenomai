@@ -1559,8 +1559,8 @@ Optional Features:
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
   --enable-arm-mach       Select for which machine we are compiling. Valid
-                          machines are at91rm9200, at91sam926x, integrator,
-                          ixp4xx, pxa, s3c2410, sa1100.
+                          machines are at91rm9200, at91sam926x, imx, imx21,
+                          integrator, ixp4xx, pxa, s3c2410, sa1100.
   --enable-arm-arch=<version>
                           Select ARM architecture version
   --enable-arm-tsc        Enable TSC emulation in user-space
@@ -21011,7 +21011,14 @@ if test "${enable_arm_mach+set}" = set; then
 	at91sam926x)   	arch=5
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	integrator) 	arch=choose;;
+	imx)		arch=4
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	imx21)		arch=5
+			unset tsc_type;;
+
+	integrator) 	arch=choose
+			unset tsc_type;;
 
 	ixp4xx|pxa) 	arch=5
 	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
