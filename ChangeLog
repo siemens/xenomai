@@ -1,3 +1,7 @@
+2007-11-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* RELEASE: Xenomai 2.4-rc7
+
 2007-11-25  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-02.
