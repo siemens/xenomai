@@ -48,6 +48,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 9000
 #elif defined(CONFIG_8540)
 #define __sched_latency 1800
+#elif defined(CONFIG_SEQUOIA)
+#define __sched_latency 3000
 #endif
 
 #ifndef __sched_latency
