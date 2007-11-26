@@ -315,7 +315,7 @@ while : ; do
       xenomai_arch=ia64
       ;;
    bfin|bfinnommu|blackfin)
-      linux_arch=bfinnommu
+      linux_arch=blackfin
       xenomai_arch=blackfin
       ;;
    arm)
