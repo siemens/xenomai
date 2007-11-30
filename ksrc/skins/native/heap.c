@@ -243,9 +243,6 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
-	if (heapsize < 2 * PAGE_SIZE)
-		heapsize = 2 * PAGE_SIZE;
-
 	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 
 #ifdef __KERNEL__
