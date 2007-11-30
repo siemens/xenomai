@@ -1,3 +1,14 @@
+2007-11-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/heap.h: Include rounding to 2*pagesz in
+	xnheap_rounded_size() computation.
+	
+2007-11-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/heap.c, include/nucleus/heap.h: Fix computation of
+	overhead due to the heap meta-data (xnheap_overhead). Recycle
+	empty bucketed pages to the global free page list.
+
 2007-11-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Upgrade to 2.6.20.21-1.11-00.

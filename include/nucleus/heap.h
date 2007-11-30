@@ -45,7 +45,7 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNHEAP_MINLOG2    3
-#define XNHEAP_MAXLOG2    22
+#define XNHEAP_MAXLOG2    22	/* Must hold pagemap::bcount objects */
 #define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)
 #define XNHEAP_MINALIGNSZ (1 << 4) /* i.e. 16 bytes */
 #define XNHEAP_NBUCKETS   (XNHEAP_MAXLOG2 - XNHEAP_MINLOG2 + 2)
@@ -65,7 +65,10 @@ typedef struct xnextent {
 		memlim,		/* Memory limit of page array */
 		freelist;	/* Head of the free page list */
 
-	u_char pagemap[1];	/* Beginning of page map */
+	struct xnpagemap {	/* Beginning of page map */
+		unsigned int type : 8;	  /* PFREE, PCONT, PLIST or log2 */
+		unsigned int bcount : 24; /* Number of active blocks. */
+	} pagemap[1];
 
 } xnextent_t;
 
@@ -89,7 +92,10 @@ typedef struct xnheap {
 	xnlock_t lock;
 #endif /* CONFIG_SMP */
 
-	caddr_t buckets[XNHEAP_NBUCKETS];
+	struct xnbucket {
+		caddr_t freelist;
+		int fcount;
+	} buckets[XNHEAP_NBUCKETS];
 
 	xnholder_t *idleq;
 
@@ -101,17 +107,25 @@ typedef struct xnheap {
 
 extern xnheap_t kheap;
 
-#define xnheap_extentsize(heap)      ((heap)->extentsize)
-#define xnheap_page_size(heap)       ((heap)->pagesize)
-#define xnheap_page_count(heap)      ((heap)->npages)
-#define xnheap_usable_mem(heap)      ((heap)->maxcont * countq(&(heap)->extents))
-#define xnheap_used_mem(heap)        ((heap)->ubytes)
-#define xnheap_max_contiguous(heap)  ((heap)->maxcont)
-#define xnheap_overhead(hsize,psize) \
-((sizeof(xnextent_t) + (((hsize) - sizeof(xnextent_t)) / (psize)) + \
- XNHEAP_MINALIGNSZ - 1) & ~(XNHEAP_MINALIGNSZ - 1))
-/* The alignment value must be a power of 2 */
-#define xnheap_align(size,al)		(((size)+(al)-1)&(~((al)-1)))
+#define xnheap_extentsize(heap)		((heap)->extentsize)
+#define xnheap_page_size(heap)		((heap)->pagesize)
+#define xnheap_page_count(heap)		((heap)->npages)
+#define xnheap_usable_mem(heap)		((heap)->maxcont * countq(&(heap)->extents))
+#define xnheap_used_mem(heap)		((heap)->ubytes)
+#define xnheap_max_contiguous(heap)	((heap)->maxcont)
+
+static inline size_t xnheap_align(size_t size, size_t al)
+{
+	/* The alignment value must be a power of 2 */
+	return ((size+al-1)&(~(al-1)));
+}
+
+static inline size_t xnheap_overhead(size_t hsize, size_t psize)
+{
+	size_t m = psize / sizeof(struct xnpagemap);
+	size_t q = ((hsize - sizeof(xnextent_t)) * m) / (m + 1);
+	return xnheap_align(hsize - q, XNHEAP_MINALIGNSZ);
+}
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
 #define xnfree(ptr)        xnheap_free(&kheap,ptr)
@@ -126,14 +140,20 @@ do { \
 
 static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
 {
-	/* Account for the overhead so that the actual heap space is
-	   large enough to match the requested size. Using a small
-	   page size for large single-block heaps might reserve a lot
-	   of useless page map memory, but this should never get
-	   pathological anyway, since we are only consuming 1 byte per
-	   page. */
-	hsize = xnheap_align(hsize,psize) + xnheap_overhead(hsize,psize);
-	return xnheap_align(hsize,psize);
+	/*
+	 * Account for the minimum heap size (i.e. 2 * page size) plus
+	 * overhead so that the actual heap space is large enough to
+	 * match the requested size. Using a small page size for large
+	 * single-block heaps might reserve a lot of useless page map
+	 * memory, but this should never get pathological anyway,
+	 * since we only consume 4 bytes per page.
+	 */
+	if (hsize < 2 * psize)
+		hsize = 2 * psize;
+	else
+		hsize = xnheap_align(hsize, psize);
+	hsize += xnheap_overhead(hsize, psize);
+	return xnheap_align(hsize, psize);
 }
 
 #ifdef __cplusplus
