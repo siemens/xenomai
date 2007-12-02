@@ -756,7 +756,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
       unlock_and_exit:
 
-#if XENO_DEBUG(REGISTRY)
+#if XENO_DEBUG(REGISTRY) && 0	/* XXX: GCC emits bad code. */
 	if (err)
 		xnlogerr("FAILED to bind to object %s (%s), status %d\n",
 			 key, object->pnode ? object->pnode->type : "unknown type",
