@@ -69,6 +69,10 @@ HEAP {
 #include <nucleus/assert.h>
 #include <asm/xenomai/bits/heap.h>
 
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#endif
+
 xnheap_t kheap;			/* System heap */
 
 static void init_extent(xnheap_t *heap, xnextent_t *extent)
