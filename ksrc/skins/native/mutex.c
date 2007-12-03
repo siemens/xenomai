@@ -287,7 +287,7 @@ int rt_mutex_delete(RT_MUTEX *mutex)
  * recursive and implement the priority inheritance protocol.
  *
  * Since a nested locking count is maintained for the current owner,
- * rt_mutex_lock() and rt_mutex_unlock() must be used in pairs.
+ * rt_mutex_acquire() and rt_mutex_release() must be used in pairs.
  *
  * Tasks pend on mutexes by priority order.
  *
