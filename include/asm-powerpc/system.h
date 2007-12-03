@@ -105,8 +105,7 @@ typedef struct xnarch_fltinfo {
 #ifdef CONFIG_PPC64
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
 				 ((fi)->exception == IPIPE_TRAP_IABR || \
-				  (fi)->exception == IPIPE_TRAP_SSTEP || \
-				  (fi)->exception == IPIPE_TRAP_PERFMON))
+				  (fi)->exception == IPIPE_TRAP_SSTEP))
 #else /* !CONFIG_PPC64 */
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
 				 ((fi)->exception == IPIPE_TRAP_IABR || \

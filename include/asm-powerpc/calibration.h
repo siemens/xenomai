@@ -27,20 +27,58 @@
 #error "please don't include asm/calibration.h directly"
 #endif
 
-#include <asm/delay.h>
-
-#define __bogomips (loops_per_jiffy/(500000/HZ))
-
 static inline unsigned long xnarch_get_sched_latency(void)
 {
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 #define __sched_latency CONFIG_XENO_OPT_TIMING_SCHEDLAT
 #else
 
+
+#if defined(CONFIG_PPC_PASEMI)
+#ifdef CONFIG_SMP
+#define __sched_latency 9000
+#else
+#define __sched_latency 7000
+#endif
+#elif defined(CONFIG_WALNUT)
+#define __sched_latency 11000
+#elif defined(CONFIG_BUBINGA)
+#define __sched_latency 8000
+#elif defined(CONFIG_SYCAMORE)
+#define __sched_latency 8000
+#elif defined(CONFIG_SEQUOIA)
+#define __sched_latency 3000
+#elif defined(CONFIG_OCOTEA)
+#define __sched_latency 2700
+#elif defined(CONFIG_BAMBOO)
+#define __sched_latency 4000
+#elif defined(CONFIG_TAISHAN)
+#define __sched_latency 1800
+#elif defined(CONFIG_YUCCA)
+#define __sched_latency 2780
+#elif defined(CONFIG_YELLOWSTONE)
+#define __sched_latency 2700
+/*
+ * Check for the most generic configs at the bottom of this list, so
+ * that the most specific choices available are picked first.
+ */
+#elif defined(CONFIG_MPC8560)
+#define __sched_latency 1600
+#elif defined(CONFIG_MPC8540)
+#define __sched_latency 1800
+#elif defined(CONFIG_405GPR)
+#define __sched_latency 9000
+#elif defined(CONFIG_PPC_MPC52xx)
+#define __sched_latency 5000
+#endif
+
+#ifndef __sched_latency
+/* Platform is unknown: pick a default value. */
 #ifdef CONFIG_PPC64
 #define __sched_latency 1000
 #else
-#define __sched_latency 9500
+#define __sched_latency 4000
+#endif
 #endif
 
 #endif /* CONFIG_XENO_OPT_TIMING_SCHEDLAT */
@@ -49,6 +87,5 @@ static inline unsigned long xnarch_get_sched_latency(void)
 }
 
 #undef __sched_latency
-#undef __bogomips
 
 #endif /* !_XENO_ASM_POWERPC_CALIBRATION_H */

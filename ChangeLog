@@ -1,3 +1,12 @@
+2007-12-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Backport 2.6.23-powerpc-2.0-03 to
+	2.6.23-ppc-1.6-00, to support a number of EVBs (32bit, uniprocessor
+	only) which have not been moved to the powerpc/ tree yet. 
+	
+	* include/asm-powerpc/calibration.h: Add a set of EVB-specific
+	calibration values.
+
 2007-11-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/heap.h: Include rounding to 2*pagesz in
