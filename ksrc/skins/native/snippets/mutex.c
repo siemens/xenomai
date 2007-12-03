@@ -17,11 +17,11 @@ int main (int argc, char *argv[])
     /* Now, grab the mutex lock, run the critical section, then
        release the lock: */
 
-    rt_mutex_lock(&mutex_desc,TM_INFINITE);
+    rt_mutex_acquire(&mutex_desc,TM_INFINITE);
 
     /* ... Critical section ... */
     
-    rt_mutex_unlock(&mutex_desc);
+    rt_mutex_release(&mutex_desc);
 
     /* ... */
 }
