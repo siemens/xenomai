@@ -123,7 +123,7 @@ static inline size_t xnheap_align(size_t size, size_t al)
 static inline size_t xnheap_overhead(size_t hsize, size_t psize)
 {
 	size_t m = psize / sizeof(struct xnpagemap);
-	size_t q = ((hsize - sizeof(xnextent_t)) * m) / (m + 1);
+	size_t q = (size_t)xnarch_llimd(hsize - sizeof(xnextent_t), m, m + 1);
 	return xnheap_align(hsize - q, XNHEAP_MINALIGNSZ);
 }
 
@@ -138,7 +138,7 @@ static inline size_t xnheap_overhead(size_t hsize, size_t psize)
 	xnheap_free(&kheap,ptr);		\
 } while(0)
 
-static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
+static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 {
 	/*
 	 * Account for the minimum heap size (i.e. 2 * page size) plus
@@ -150,8 +150,6 @@ static inline size_t xnheap_rounded_size (size_t hsize, size_t psize)
 	 */
 	if (hsize < 2 * psize)
 		hsize = 2 * psize;
-	else
-		hsize = xnheap_align(hsize, psize);
 	hsize += xnheap_overhead(hsize, psize);
 	return xnheap_align(hsize, psize);
 }
