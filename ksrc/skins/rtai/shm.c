@@ -141,24 +141,25 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 		return NULL;
 	}
 
-	/* Make sure we won't hit trivial argument errors when calling
-	   xnheap_init(). */
-
 	/*
 	 * Account for the minimum heap size and overhead so that the
 	 * actual free space is large enough to match the requested
 	 * size.
 	 */
 
-	heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
-
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
+
 	err = xnheap_init_mapped(p->heap,
 				 heapsize,
 				 suprt == USE_GFP_KERNEL ? GFP_KERNEL : 0);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 	{
-		void *heapmem = xnarch_alloc_host_mem(heapsize);
+		void *heapmem;
+
+		heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
+
+		heapmem = xnarch_alloc_host_mem(heapsize);
 
 		if (!heapmem) {
 			err = -ENOMEM;

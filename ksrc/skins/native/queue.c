@@ -218,16 +218,11 @@ int rt_queue_create(RT_QUEUE *q,
 	if (poolsize == 0)
 		return -EINVAL;
 
-	/* Make sure we won't hit trivial argument errors when calling
-	   xnheap_init(). */
-
 	/*
 	 * Account for the minimum heap size and overhead so that the
 	 * actual free space is large enough to match the requested
 	 * size.
 	 */
-
-	poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
 
 #ifdef __KERNEL__
 	if (mode & Q_SHARED) {
@@ -235,6 +230,8 @@ int rt_queue_create(RT_QUEUE *q,
 			return -EINVAL;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+		poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
+
 		err = xnheap_init_mapped(&q->bufpool,
 					 poolsize,
 					 (mode & Q_DMA) ? GFP_DMA : 0);
@@ -248,7 +245,11 @@ int rt_queue_create(RT_QUEUE *q,
 	} else
 #endif /* __KERNEL__ */
 	{
-		void *poolmem = xnarch_alloc_host_mem(poolsize);
+		void *poolmem;
+
+		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
+
+		poolmem = xnarch_alloc_host_mem(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;

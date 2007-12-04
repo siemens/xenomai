@@ -165,6 +165,7 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 #ifdef __KERNEL__
 	if (heapaddr == NULL) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+		heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 		err = xnheap_init_mapped(&heap->sysheap, heapsize, 0);
 
 		if (err) {
@@ -180,6 +181,10 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 	} else
 #endif /* __KERNEL__ */
 	{
+		/*
+		 * Caller must have accounted for overhead and
+		 * alignment since it supplies the memory space.
+		 */
 		err = xnheap_init(&heap->sysheap, heapaddr, heapsize, pagesize);
 
 		if (err) {
