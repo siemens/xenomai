@@ -173,7 +173,7 @@ static void __heap_flush_private(xnheap_t *heap,
  * going to be pre-allocated to the heap. Memory blocks will be
  * claimed and released to this pool.  The block pool is not
  * extensible, so this value must be compatible with the highest
- * memory pressure that could be expected. A minimum of 2 * PAGESIZE
+ * memory pressure that could be expected. A minimum of 2 * PAGE_SIZE
  * will be enforced for mappable heaps, 2 * XNCORE_PAGE_SIZE
  * otherwise.
  *
@@ -249,17 +249,14 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 	heap->csize = heapsize;	/* Record this for SBA management and inquiry. */
 
-	if (heapsize < 2 * XNCORE_PAGE_SIZE)
-		heapsize = 2 * XNCORE_PAGE_SIZE;
-
-	heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
-
 #ifdef __KERNEL__
 	if (mode & H_MAPPABLE) {
 		if (!name || !*name)
 			return -EINVAL;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+		heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
+
 		err = xnheap_init_mapped(&heap->heap_base,
 					 heapsize,
 					 (mode & H_DMA) ? GFP_DMA : 0);
@@ -273,7 +270,11 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	} else
 #endif /* __KERNEL__ */
 	{
-		void *heapmem = xnarch_alloc_host_mem(heapsize);
+		void *heapmem;
+
+		heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
+
+		heapmem = xnarch_alloc_host_mem(heapsize);
 
 		if (!heapmem)
 			return -ENOMEM;
@@ -510,7 +511,7 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
 
 	if (!heap) {
-		err = -EINVAL;
+		err = xeno_handle_error(heap, XENO_HEAP_MAGIC, RT_HEAP);
 		goto unlock_and_exit;
 	}
 

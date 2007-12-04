@@ -918,10 +918,10 @@ static int __sc_sinquiry(struct task_struct *curr, struct pt_regs *regs)
 
 static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
 {
-	u_long heapsize, pagesize;
 	unsigned log2psize;
 	vrtx_hdesc_t hdesc;
 	vrtxheap_t *heap;
+	u_long heapsize;
 	int err, hid;
 	spl_t s;
 
@@ -934,12 +934,6 @@ static int __sc_hcreate(struct task_struct *curr, struct pt_regs *regs)
 	/* Page size. */
 	log2psize = (int)__xn_reg_arg2(regs);
 
-	if (log2psize == 0)
-		pagesize = 512;	/* VRTXsa system call reference */
-	else
-		pagesize = 1 << log2psize;
-
-	heapsize = xnheap_rounded_size(heapsize, pagesize);
 	hid = sc_hcreate(NULL, heapsize, log2psize, &err);
 
 	if (err)
@@ -1147,8 +1141,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 	pid = __xn_reg_arg1(regs);
 	/* Size of partition space -- account for the heap mgmt overhead. */
 	ptsize = __xn_reg_arg2(regs);
-	/* We will manage the heap as a single memory block, so ask
-	   for a larger page size than XNCORE_PAGE_SIZE. */
+	/* Shared heaps use the natural page size (PAGE_SIZE) */
 	ptsize = xnheap_rounded_size(ptsize, PAGE_SIZE);
 	/* Block size. */
 	bsize = __xn_reg_arg3(regs);
