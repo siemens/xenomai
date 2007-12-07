@@ -163,6 +163,8 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 		    values are:
 		    - at91rm9200
 		    - at91sam926x
+		    - imx
+		    - imx21
 		    - integrator
  		    - ixp4xx
                     - pxa
