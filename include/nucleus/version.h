@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Cool #9"
+#define XENO_VERSION_NAME	"LifeStyle"
 
-#define XENO_VERSION_STRING	"2.3.4"
+#define XENO_VERSION_STRING	"2.3.5"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
