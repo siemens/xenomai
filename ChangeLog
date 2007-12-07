@@ -1,3 +1,16 @@
+2007-12-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/nucleus/heap.h (xnheap_rounded_size): Fix 32bit overflow
+	for large sizes.
+
+	* ksrc/nucleus/heap.c (xnheap_init_mapped): Only align the
+	requested heap size to the natural page size to avoid duplicate
+	overhead accounting. Callers must include the actual overhead
+	before calling.
+
+ 	* ksrc/skins: Ensure that all callers of xnheap_init_mapped() and
+	xnheap_init() do round to the proper page size before calling.
+
 2007-12-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Backport 2.6.23-powerpc-2.0-03 to
