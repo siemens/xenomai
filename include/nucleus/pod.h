@@ -76,7 +76,8 @@
 
 #define XNPOD_HEAPSIZE  (CONFIG_XENO_OPT_SYS_HEAPSZ * 1024)
 #define XNPOD_PAGESIZE  512
-#define XNPOD_RUNPRIO   0x80000000	/* Placeholder for "stdthread priority" */
+/* Placeholder for "running thread priority" */
+#define XNPOD_RUNPRIO   0x80000000
 
 /* Flags for xnpod_schedule_runnable() */
 #define XNPOD_SCHEDFIFO 0x0
