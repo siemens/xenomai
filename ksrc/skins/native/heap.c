@@ -269,7 +269,8 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		if (!heapmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&heap->heap_base, heapmem, heapsize, PAGE_SIZE);	/* Use natural page size */
+		err = xnheap_init(&heap->heap_base, heapmem, heapsize, PAGE_SIZE);
+
 		if (err) {
 			xnarch_sysfree(heapmem, heapsize);
 			return err;

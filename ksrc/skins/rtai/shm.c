@@ -141,20 +141,13 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 		return NULL;
 	}
 
-	/* Make sure we won't hit trivial argument errors when calling
-	   xnheap_init(). */
+	/*
+	 * Account for the minimum heap size and overhead so that the
+	 * actual free space is large enough to match the requested
+	 * size.
+	 */
 
-	if (heapsize < 2 * PAGE_SIZE)
-		heapsize = 2 * PAGE_SIZE;
-
-	/* Account for the overhead so that the actual free space is large
-	   enough to match the requested size. Using PAGE_SIZE for large
-	   shared heaps might reserve way too much useless page map
-	   memory, but this should never get pathological anyway, since we
-	   are only consuming 1 byte per page. */
-
-	heapsize += xnheap_overhead(heapsize, PAGE_SIZE);
-	heapsize = PAGE_ALIGN(heapsize);
+	heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = xnheap_init_mapped(p->heap,
@@ -167,8 +160,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 		if (!heapmem) {
 			err = -ENOMEM;
 		} else {
-
-			err = xnheap_init(p->heap, heapmem, heapsize, PAGE_SIZE);	/* Use natural page size */
+			err = xnheap_init(p->heap, heapmem, heapsize, PAGE_SIZE);
 			if (err) {
 				xnarch_sysfree(heapmem, heapsize);
 			}

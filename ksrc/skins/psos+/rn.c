@@ -189,7 +189,10 @@ u_long rn_create(char name[4],
 #ifdef __KERNEL__
 	if (rnaddr == NULL) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-		u_long err = xnheap_init_mapped(&rn->heapbase, rnsize, 0);
+		u_long err;
+
+		rnsize = xnheap_rounded_size(rnsize, PAGE_SIZE);
+		err = xnheap_init_mapped(&rn->heapbase, rnsize, 0);
 
 		if (err)
 			return err;
@@ -200,6 +203,10 @@ u_long rn_create(char name[4],
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	} else
 #endif /* __KERNEL__ */
+		/*
+		 * Caller must have accounted for overhead and
+		 * alignment since it supplies the memory space.
+		 */
 		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, PAGE_SIZE) != 0)
 			return ERR_TINYRN;
 

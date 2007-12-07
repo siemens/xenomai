@@ -215,9 +215,6 @@ int rt_queue_create(RT_QUEUE *q,
 	if (poolsize == 0)
 		return -EINVAL;
 
-	/* Account for the overhead so that the actual free space is large
-	   enough to match the requested size. */
-
 	poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
 
 #ifdef __KERNEL__
@@ -244,7 +241,7 @@ int rt_queue_create(RT_QUEUE *q,
 		if (!poolmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&q->bufpool, poolmem, poolsize, PAGE_SIZE);	/* Use natural page size */
+		err = xnheap_init(&q->bufpool, poolmem, poolsize, PAGE_SIZE);
 		if (err) {
 			xnarch_sysfree(poolmem, poolsize);
 			return err;
