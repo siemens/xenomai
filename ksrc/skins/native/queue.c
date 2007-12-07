@@ -218,12 +218,6 @@ int rt_queue_create(RT_QUEUE *q,
 	if (poolsize == 0)
 		return -EINVAL;
 
-	/*
-	 * Account for the minimum heap size and overhead so that the
-	 * actual free space is large enough to match the requested
-	 * size.
-	 */
-
 #ifdef __KERNEL__
 	if (mode & Q_SHARED) {
 		if (!name || !*name)
