@@ -1273,7 +1273,7 @@
 
 2007-06-03  Jan Kiszka  <jan.kiszka@web.de>
 
-	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Unconditinally
+	* ksrc/skins/rtdm/device.c (rtdm_dev_register): Unconditionally
 	check if mandatory close_nrt is provided.
 
 	* ksrc/nucleus/{module.c, shadow.c}: Move remove_proc_entry out of
@@ -1900,7 +1900,7 @@
 	this replaces the former behaviour which used to block without
 	starting any timer.
 
-2001-02-09  Jan Kiszka  <jan.kiszka@web.de>
+2007-02-09  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/rtdm/rtdm_driver.h, ksrc/skins/rtdm/core.c: Convert
 	request argument in IOCTL handler to unsigned int to fix issues
@@ -1915,7 +1915,7 @@
 	* src/testsuite/irqbench/irqloop.c: Silence 32bit <-> 64bit cast
 	warnings.
 
-2001-02-08  Jan Kiszka  <jan.kiszka@web.de>
+2007-02-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/synch.c (xnsleep_sleep_on): Pass mode argument to
 	xnpod_suspend_thread() instead of constant XN_RELATIVE.
@@ -1997,7 +1997,7 @@
 	* sim/include/Makefile.am: Fix destination directory for
 	xeno_config.h to $(prefix)/asm-sim.
 
-2007-01-30    <gilles.chanteperdrix@laposte.net>
+2007-01-30  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* doc/doxygen/Doxyfile*.in: Only enable search engine for HTML
 	documentation.
