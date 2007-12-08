@@ -83,7 +83,7 @@ case "$host" in
         XENO_LINUX_ARCH=bfinnommu
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
- arm-*)
+ arm*-*)
  	XENO_TARGET_ARCH=arm
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
