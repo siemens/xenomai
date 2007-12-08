@@ -245,3 +245,15 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 	return -XENOMAI_SKINCALL2(__pse51_muxid,
 				  __pse51_thread_set_name, thread, name);
 }
+
+int __wrap_pthread_kill(pthread_t thread, int sig)
+{
+	int err;
+	err = -XENOMAI_SKINCALL2(__pse51_muxid,
+				 __pse51_thread_kill, thread, sig);
+
+	if (err == ESRCH)
+		return __real_pthread_kill(thread, sig);
+
+	return err;
+}
