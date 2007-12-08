@@ -1,3 +1,7 @@
+2007-12-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* RELEASE: Xenomai 2.4.0 (Bells Of Lal)
+
 2007-12-08  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/posix/thread.c, ksrc/skins/posix/syscall.c,
@@ -37,7 +41,7 @@
 	timers. This avoids subsequent duplicate insertions of such
 	objects into the per-timebase queue from xntimer_init().
 	
-2007-11-25  Philippe Gerum  <rpm@eclipse>
+2007-11-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/heap.c (__heap_read_proc): Display
 	actual/usable memory amount available instead of the requested
