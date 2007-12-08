@@ -44,11 +44,11 @@
 <a name="l00017"></a>00017     <span class="comment">/* Now, grab the mutex lock, run the critical section, then</span>
 <a name="l00018"></a>00018 <span class="comment">       release the lock: */</span>
 <a name="l00019"></a>00019 
-<a name="l00020"></a>00020     rt_mutex_lock(&amp;mutex_desc,TM_INFINITE);
+<a name="l00020"></a>00020     <a name="a1"></a><a class="code" href="group__mutex.html#g8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire</a>(&amp;mutex_desc,TM_INFINITE);
 <a name="l00021"></a>00021 
 <a name="l00022"></a>00022     <span class="comment">/* ... Critical section ... */</span>
 <a name="l00023"></a>00023     
-<a name="l00024"></a>00024     rt_mutex_unlock(&amp;mutex_desc);
+<a name="l00024"></a>00024     <a name="a2"></a><a class="code" href="group__mutex.html#gc87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a>(&amp;mutex_desc);
 <a name="l00025"></a>00025 
 <a name="l00026"></a>00026     <span class="comment">/* ... */</span>
 <a name="l00027"></a>00027 }
@@ -56,9 +56,9 @@
 <a name="l00029"></a>00029 <span class="keywordtype">void</span> cleanup (<span class="keywordtype">void</span>)
 <a name="l00030"></a>00030 
 <a name="l00031"></a>00031 {
-<a name="l00032"></a>00032     <a name="a1"></a><a class="code" href="group__mutex.html#gd0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a>(&amp;mutex_desc);
+<a name="l00032"></a>00032     <a name="a3"></a><a class="code" href="group__mutex.html#gd0c2342227f821bd09f580b6a9684179">rt_mutex_delete</a>(&amp;mutex_desc);
 <a name="l00033"></a>00033 }
-</pre></div> <hr size="1"><address style="text-align: right;"><small>Generated on Fri Nov 23 18:17:52 2007 for Xenomai API by&nbsp;
+</pre></div> <hr size="1"><address style="text-align: right;"><small>Generated on Sat Dec 8 10:59:23 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>

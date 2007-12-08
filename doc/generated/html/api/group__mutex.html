@@ -96,7 +96,7 @@ Xenomai mutex services enforce a priority inheritance protocol in order to solve
 <p>
 Acquire a mutex.<p>
 Attempt to lock a mutex. The calling task is blocked until the mutex is available, in which case it is locked again before this service returns. Mutexes have an ownership property, which means that their current owner is tracked. Xenomai mutexes are implicitely recursive and implement the priority inheritance protocol.<p>
-Since a nested locking count is maintained for the current owner, rt_mutex_lock() and rt_mutex_unlock() must be used in pairs.<p>
+Since a nested locking count is maintained for the current owner, <a class="el" href="group__mutex.html#g8a087d5bfeaaf10b6f0a924b272d72c9">rt_mutex_acquire()</a> and <a class="el" href="group__mutex.html#gc87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release()</a> must be used in pairs.<p>
 Tasks pend on mutexes by priority order.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
@@ -417,7 +417,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Nov 23 18:18:17 2007 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Dec 8 10:59:49 2007 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
