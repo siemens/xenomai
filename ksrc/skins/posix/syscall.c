@@ -396,6 +396,21 @@ static int __pthread_set_name_np(struct task_struct *curr, struct pt_regs *regs)
 	return -pthread_set_name_np(k_tid, name);
 }
 
+static int __pthread_kill(struct task_struct *curr, struct pt_regs *regs)
+{
+	struct pse51_hkey hkey;
+	pthread_t k_tid;
+
+	hkey.u_tid = __xn_reg_arg1(regs);
+	hkey.mm = curr->mm;
+	k_tid = __pthread_find(&hkey);
+
+	if(!k_tid)
+		return -ESRCH;
+
+	return -pthread_kill(k_tid, __xn_reg_arg2(regs));
+}
+
 static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
 {
 	union __xeno_sem sm, *usm;
@@ -2653,6 +2668,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_thread_wait] = {&__pthread_wait_np, __xn_exec_primary},
 	[__pse51_thread_set_mode] = {&__pthread_set_mode_np, __xn_exec_primary},
 	[__pse51_thread_set_name] = {&__pthread_set_name_np, __xn_exec_any},
+	[__pse51_thread_kill] = {&__pthread_kill, __xn_exec_any},
 	[__pse51_sem_init] = {&__sem_init, __xn_exec_any},
 	[__pse51_sem_destroy] = {&__sem_destroy, __xn_exec_any},
 	[__pse51_sem_post] = {&__sem_post, __xn_exec_any},

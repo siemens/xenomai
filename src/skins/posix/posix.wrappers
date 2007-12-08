@@ -3,6 +3,7 @@
 --wrap pthread_getschedparam
 --wrap pthread_yield
 --wrap sched_yield
+--wrap pthread_kill
 --wrap sem_init
 --wrap sem_destroy
 --wrap sem_post

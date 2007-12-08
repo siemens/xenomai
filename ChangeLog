@@ -1,3 +1,8 @@
+2007-12-08  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/posix/thread.c, ksrc/skins/posix/syscall.c,
+	ksrc/skins/posix/thread.c: Add __pse51_thread_kill syscall.
+	
 2007-12-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/heap.h (xnheap_rounded_size): Fix 32bit overflow
