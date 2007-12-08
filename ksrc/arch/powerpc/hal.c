@@ -58,6 +58,12 @@
 #define DBG(fmt...)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#define rthal_decr_next(cpuid)	__ipipe_decr_next[cpuid]
+#else
+#define rthal_decr_next(cpuid)	per_cpu(__ipipe_decr_next, cpuid)
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 #define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->handler
 #else
@@ -92,7 +98,7 @@ static void rthal_set_local_cpu_timer(void)
     mtspr(SPRN_TCR, mfspr(SPRN_TCR) | TCR_ARE);
     mtspr(SPRN_PIT, ticks);
 #else /* !CONFIG_40x */
-    ticks = (long)(per_cpu(__ipipe_decr_next, cpuid) - __ipipe_read_timebase());
+    ticks = (long)(rthal_decr_next(cpuid) - __ipipe_read_timebase());
     set_dec(ticks > 0 ? ticks : 0);
 #endif /* CONFIG_40x */
     DBG("rthal_set_local_cpu_timer(%d): %ld\n", cpuid, ticks);
@@ -125,11 +131,11 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
         offset);
 
     previous_tb = __ipipe_read_timebase() + ticks;
-    per_cpu(__ipipe_decr_next, cpuid) = previous_tb;
+    rthal_decr_next(cpuid) = previous_tb;
     for_each_online_cpu(i) {
         if (i != cpuid) {
-	    per_cpu(__ipipe_decr_next, i) = previous_tb + offset;
-            previous_tb = per_cpu(__ipipe_decr_next, i);
+	    rthal_decr_next(i) = previous_tb + offset;
+            previous_tb = rthal_decr_next(i);
         }
     }
     __ipipe_decr_ticks = ticks;

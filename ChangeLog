@@ -1,3 +1,8 @@
+2007-12-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/hal.c: Fix compilation issue with older I-pipe
+	series over 2.4 kernels (i.e. 1.5 and earlier).
+	
 2007-12-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/nucleus/heap.h (xnheap_rounded_size): Fix 32bit overflow
