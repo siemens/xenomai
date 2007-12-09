@@ -1,23 +1,25 @@
-base referer
-rect $pod_8h.html 268,56 386,83
-rect $include_2nucleus_2registry_8h.html 256,715 398,741
-rect $task_8h.html 272,157 382,184
-rect $include_2native_2timer_8h.html 456,208 571,235
-rect $include_2native_2sem_8h.html 459,461 568,488
-rect $event_8h.html 454,512 574,539
-rect $include_2native_2mutex_8h.html 452,411 575,437
-rect $include_2native_2cond_8h.html 270,360 384,387
-rect $native_2pipe_8h.html 459,664 568,691
-rect $native_2queue_8h.html 452,613 575,640
-rect $native_2heap_8h.html 456,563 571,589
-rect $alarm_8h.html 454,259 574,285
-rect $include_2native_2intr_8h.html 462,309 566,336
-rect $include_2nucleus_2thread_8h-source.html 446,56 582,83
-rect $include_2nucleus_2intr_8h-source.html 640,183 752,209
-rect $include_2nucleus_2timer_8h-source.html 634,233 759,260
-rect $nucleus_2types_8h-source.html 812,461 940,488
-rect $include_2nucleus_2core_8h-source.html 454,157 574,184
-rect $synch_8h-source.html 631,411 762,437
-rect $native_2types_8h.html 638,461 755,488
-rect $nucleus_2pipe_8h-source.html 636,664 756,691
-rect $nucleus_2heap_8h-source.html 634,613 759,640
+<area shape="rect" href="$pod_8h.html" title="This file is part of the Xenomai project." alt="" coords="43,84,152,111">
+<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="1228,316,1361,343">
+<area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="197,84,301,111">
+<area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="287,161,396,188">
+<area shape="rect" href="$include_2native_2sem_8h.html" title="This file is part of the Xenomai project." alt="" coords="1012,161,1116,188">
+<area shape="rect" href="$event_8h.html" title="This file is part of the Xenomai project." alt="" coords="873,161,988,188">
+<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="729,161,849,188">
+<area shape="rect" href="$include_2native_2cond_8h.html" title="This file is part of the Xenomai project." alt="" coords="711,84,817,111">
+<area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="1415,161,1519,188">
+<area shape="rect" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="1273,161,1391,188">
+<area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="1140,161,1249,188">
+<area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="540,161,655,188">
+<area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="420,161,516,188">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="33,161,161,188">
+<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="57,239,161,265">
+<area shape="rect" href="$include_2nucleus_2timer_8h&#45;source.html" title="nucleus/timer.h" alt="" coords="533,239,651,265">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="671,316,796,343">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="771,471,891,497">
+<area shape="rect" href="$include_2nucleus_2core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="375,393,487,420">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="768,393,893,420">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="1087,548,1225,575">
+<area shape="rect" href="$synch_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="701,239,824,265">
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="875,239,987,265">
+<area shape="rect" href="$nucleus_2pipe_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="1407,239,1519,265">
+<area shape="rect" href="$nucleus_2heap_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="1200,239,1317,265">

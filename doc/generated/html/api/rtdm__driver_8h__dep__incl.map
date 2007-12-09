@@ -1,7 +1,6 @@
-base referer
-rect $ksrc_2skins_2rtdm_2core_8c.html 501,56 672,83
-rect $ksrc_2skins_2rtdm_2core_8h-source.html 264,56 435,83
-rect $device_8h-source.html 256,107 443,133
-rect $drvlib_8c.html 260,157 439,184
-rect $device_8c.html 495,107 679,133
-rect $skins_2rtdm_2module_8c.html 491,157 683,184
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="40,161,200,188">
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8h&#45;source.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="40,84,200,111">
+<area shape="rect" href="$device_8h&#45;source.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="224,84,397,111">
+<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="421,84,587,111">
+<area shape="rect" href="$device_8c.html" title="ksrc/skins/rtdm/device.c" alt="" coords="224,161,397,188">
+<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="ksrc/skins/rtdm/module.c" alt="" coords="421,161,600,188">

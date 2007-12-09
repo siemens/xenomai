@@ -1,26 +1,25 @@
-base referer
-rect $alarm_8h.html 460,360 633,387
-rect $include_2native_2mutex_8h.html 227,132 405,159
-rect $event_8h.html 460,411 633,437
-rect $native_2heap_8h.html 463,461 631,488
-rect $include_2native_2intr_8h.html 468,512 625,539
-rect $misc_8h.html 233,512 399,539
-rect $native_2pipe_8h.html 464,208 629,235
-rect $native_2queue_8h.html 457,664 636,691
-rect $include_2native_2sem_8h.html 465,765 628,792
-rect $include_2native_2timer_8h.html 231,613 401,640
-rect $ksrc_2skins_2native_2alarm_8c.html 695,461 884,488
-rect $skins_2native_2module_8c.html 689,411 889,437
-rect $native_2syscall_8c.html 692,360 887,387
-rect $include_2native_2cond_8h.html 463,107 631,133
-rect $ksrc_2skins_2native_2cond_8c.html 697,107 881,133
-rect $ksrc_2skins_2native_2mutex_8c.html 693,284 885,311
-rect $ksrc_2skins_2native_2event_8c.html 695,512 884,539
-rect $ksrc_2skins_2native_2heap_8c.html 697,563 881,589
-rect $ksrc_2skins_2native_2intr_8c.html 704,613 875,640
-rect $ksrc_2skins_2native_2pipe_8c.html 700,208 879,235
-rect $ksrc_2skins_2native_2queue_8c.html 693,664 885,691
-rect $ksrc_2skins_2native_2sem_8c.html 700,765 879,792
-rect $task_8h.html 465,715 628,741
-rect $ksrc_2skins_2native_2timer_8c.html 455,613 639,640
-rect $ksrc_2skins_2native_2task_8c.html 700,715 879,741
+<area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="289,161,452,188">
+<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="1555,84,1723,111">
+<area shape="rect" href="$event_8h.html" title="This file is part of the Xenomai project." alt="" coords="476,161,639,188">
+<area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="663,161,820,188">
+<area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="844,161,988,188">
+<area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="1747,84,1901,111">
+<area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="12,161,164,188">
+<area shape="rect" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="1012,161,1177,188">
+<area shape="rect" href="$include_2native_2sem_8h.html" title="This file is part of the Xenomai project." alt="" coords="1449,161,1601,188">
+<area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1136,84,1293,111">
+<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="861,239,1037,265">
+<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="651,239,837,265">
+<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="445,239,627,265">
+<area shape="rect" href="$include_2native_2cond_8h.html" title="This file is part of the Xenomai project." alt="" coords="1676,161,1831,188">
+<area shape="rect" href="$ksrc_2skins_2native_2cond_8c.html" title="This file is part of the Xenomai project." alt="" coords="2224,239,2395,265">
+<area shape="rect" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="2419,239,2600,265">
+<area shape="rect" href="$ksrc_2skins_2native_2event_8c.html" title="This file is part of the Xenomai project." alt="" coords="1061,239,1237,265">
+<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="1261,239,1432,265">
+<area shape="rect" href="$ksrc_2skins_2native_2intr_8c.html" title="This file is part of the Xenomai project." alt="" coords="1456,239,1616,265">
+<area shape="rect" href="$ksrc_2skins_2native_2pipe_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,239,171,265">
+<area shape="rect" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="1640,239,1819,265">
+<area shape="rect" href="$ksrc_2skins_2native_2sem_8c.html" title="This file is part of the Xenomai project." alt="" coords="1843,239,2011,265">
+<area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="1855,161,2007,188">
+<area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="1252,161,1425,188">
+<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="2035,239,2200,265">

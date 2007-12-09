@@ -1,9 +1,10 @@
-base referer
-rect $include_2nucleus_2core_8h-source.html 773,81 893,108
-rect $include_2nucleus_2thread_8h-source.html 219,107 355,133
-rect $synch_8h-source.html 404,56 535,83
-rect $include_2native_2timer_8h.html 229,157 344,184
-rect $include_2nucleus_2timer_8h-source.html 407,107 532,133
-rect $nucleus_2queue_8h-source.html 585,81 719,108
-rect $nucleus_2types_8h-source.html 769,132 897,159
-rect $native_2types_8h.html 593,132 711,159
+<area shape="rect" href="$include_2nucleus_2core_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="5,316,117,343">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="180,84,308,111">
+<area shape="rect" href="$synch_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="85,161,208,188">
+<area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="332,84,441,111">
+<area shape="rect" href="$include_2nucleus_2timer_8h&#45;source.html" title="nucleus/timer.h" alt="" coords="232,161,349,188">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="104,239,229,265">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="207,393,327,420">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="204,316,329,343">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="523,471,661,497">
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="325,239,437,265">

@@ -1,2 +1,5 @@
-base referer
-rect $rtdm_8h.html 227,81 331,108
+<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header." alt="" coords="124,84,225,111">
+<area shape="rect" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="5,161,67,188">
+<area shape="rect" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="91,161,160,188">
+<area shape="rect" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="184,161,267,188">
+<area shape="rect" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="291,161,389,188">
