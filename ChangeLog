@@ -1,3 +1,8 @@
+2007-12-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/native/misc.h: Do not run the auto-cleanup code for I/O
+	regions if CONFIG_XENO_OPT_PERVASIVE is disabled.
+
 2007-12-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4.0 (Bells Of Lal)
