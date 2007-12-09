@@ -14,6 +14,9 @@ Apply one of the patches found in this directory to the corresponding
 kernel release. You may want to have a look at the README.*INSTALL
 guides at the top of the Xenomai tree for more information.
 
+NOTE: starting with the I-pipe/arm 1.8 series, the CONFIG_IPIPE_COMPAT
+kernel option must be set in order to compile this Xenomai release.
+
 -- supported boards
 
 o ARM Integrator/CP ARM 1136
