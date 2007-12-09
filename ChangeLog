@@ -1,3 +1,7 @@
+2007-12-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* RELEASE: Xenomai 2.3.5 (LifeStyle)
+
 2007-12-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/hal.c: Fix compilation issue with older I-pipe
