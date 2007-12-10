@@ -57,6 +57,11 @@ int __real_pthread_create(pthread_t *tid,
 	return pthread_create(tid, attr, start, arg);
 }
 
+int __real_pthread_kill(pthread_t tid, int sig)
+{
+	return pthread_kill(tid, sig);
+}
+
 /* semaphores */
 int __real_sem_init(sem_t * sem, int pshared, unsigned value)
 {
