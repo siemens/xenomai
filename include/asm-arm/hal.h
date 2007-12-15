@@ -32,7 +32,9 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
 
-#ifdef CONFIG_ARCH_AT91
+#if defined(CONFIG_ARCH_AT91RM9200) \
+	|| defined(CONFIG_ARCH_AT91SAM9260) \
+	|| defined(CONFIG_ARCH_AT91SAM9261)
 #include <linux/stringify.h>
 #define RTHAL_TIMER_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " RC"
 #define RTHAL_CLOCK_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " CV"
@@ -57,6 +59,8 @@
 #elif defined(CONFIG_ARCH_SA1100)
 #define RTHAL_TIMER_DEVICE	"OSMR0"
 #define RTHAL_CLOCK_DEVICE	"OSCR"
+#else
+#error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
 
 typedef unsigned long long rthal_time_t;
