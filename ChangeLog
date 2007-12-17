@@ -1,3 +1,13 @@
+2007-12-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/task.c (t_mode): General fix.
+
+2007-12-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/native/task.c (rt_task_shadow): Allow passing NULL as
+	the task descriptor pointer when the latter is of no interest to
+	the caller.
+
 2007-12-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/native/misc.h: Do not run the auto-cleanup code for I/O
