@@ -365,8 +365,8 @@ u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
 		return -EPERM;
 
 	/* We have no error case here: just clear out any unwanted bit. */
-	clrmask &= ~T_MODE_MASK;
-	setmask &= ~T_MODE_MASK;
+	clrmask &= T_MODE_MASK;
+	setmask &= T_MODE_MASK;
 
 	task = psos_current_task();
 
