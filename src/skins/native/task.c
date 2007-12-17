@@ -154,6 +154,10 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
 	struct rt_arg_bulk bulk;
+	RT_TASK task_desc;
+
+	if (task == NULL)
+		task = &task_desc; /* Discarded. */
 
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
