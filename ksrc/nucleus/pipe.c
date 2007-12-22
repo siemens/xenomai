@@ -101,31 +101,35 @@ static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 }
 
 /* Must be entered with nklock held. */
-
-static inline int xnpipe_wait(xnpipe_state_t *state, int mask, spl_t s)
-{
-	wait_queue_head_t *waitq;
-	DEFINE_WAIT(wait);
-	int sigpending;
-
-	if (mask & XNPIPE_USER_WREAD)
-		waitq = &state->readq;
-	else
-		waitq = &state->syncq;
-
-	xnpipe_enqueue_wait(state, mask);
-	xnlock_put_irqrestore(&nklock, s);
-
-	prepare_to_wait_exclusive(waitq, &wait, TASK_INTERRUPTIBLE);
-	schedule();
-	finish_wait(waitq, &wait);
-	sigpending = signal_pending(current);
-
-	/* Restore the interrupt state initially set by the caller. */
-	xnlock_get_irqsave(&nklock, s);
-
-	return sigpending;
-}
+#define xnpipe_wait(__state, __mask, __s, __cond)	\
+({							\
+	wait_queue_head_t *__waitq;			\
+	DEFINE_WAIT(__wait);				\
+	int __sigpending;				\
+							\
+	if ((__mask) & XNPIPE_USER_WREAD)		\
+		__waitq = &(__state)->readq;		\
+	else						\
+		__waitq = &(__state)->syncq;		\
+							\
+	xnpipe_enqueue_wait(__state, __mask);		\
+	xnlock_put_irqrestore(&nklock, __s);		\
+									\
+	prepare_to_wait_exclusive(__waitq, &__wait, TASK_INTERRUPTIBLE);\
+									\
+	if (__cond)							\
+		xnpipe_dequeue_wait(__state, __mask);			\
+	else								\
+		schedule();						\
+									\
+	finish_wait(__waitq, &__wait);					\
+	__sigpending = signal_pending(current);				\
+									\
+	/* Restore the interrupt state initially set by the caller. */	\
+	xnlock_get_irqsave(&nklock, __s);				\
+									\
+	__sigpending;							\
+})
 
 static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 {
@@ -641,11 +645,9 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 		if (xnpipe_open_handler) {
 			xnlock_put_irqrestore(&nklock, s);
 
-			err =
-			    xnpipe_open_handler(xnminor_from_state(state),
-						NULL);
-
-			if (err != 0) {
+			err = xnpipe_open_handler(xnminor_from_state(state),
+						  NULL);
+			if (err) {
 				xnpipe_cleanup_user_conn(state);
 				return err;
 			}
@@ -662,10 +664,11 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 			return -EWOULDBLOCK;
 		}
 
-		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s);
-
-		if (sigpending && !testbits(state->status, XNPIPE_KERN_CONN)) {
-			xnpipe_cleanup_user_conn(state);
+		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s,
+					 testbits(state->status, XNPIPE_KERN_CONN));
+		if (sigpending) {
+			if (!testbits(state->status, XNPIPE_KERN_CONN))
+				xnpipe_cleanup_user_conn(state);
 			xnlock_put_irqrestore(&nklock, s);
 			return -ERESTARTSYS;
 		}
@@ -675,9 +678,8 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 		xnlock_put_irqrestore(&nklock, s);
 
 		if (xnpipe_open_handler)
-			err =
-			    xnpipe_open_handler(xnminor_from_state(state),
-						state->cookie);
+			err = xnpipe_open_handler(xnminor_from_state(state),
+						  state->cookie);
 	}
 
 	if (err)
@@ -763,7 +765,8 @@ static ssize_t xnpipe_read(struct file *file,
 			return -EAGAIN;
 		}
 
-		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s);
+		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s,
+					 !emptyq_p(&state->outq));
 		holder = getq(&state->outq);
 		mh = link2mh(holder);
 
@@ -897,7 +900,8 @@ static ssize_t xnpipe_write(struct file *file,
 	if (file->f_flags & O_SYNC) {
 		xnlock_get_irqsave(&nklock, s);
 		if (!emptyq_p(&state->inq)) {
-			if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s))
+			if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
+					!emptyq_p(&state->inq)))
 				count = -ERESTARTSYS;
 		}
 		xnlock_put_irqrestore(&nklock, s);

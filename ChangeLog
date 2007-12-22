@@ -5,6 +5,10 @@
 
 	* ksrc/arch/x86/patches: Update to 2.4.34-1.3-04, 2.4.35.5-1.3-04.
 	
+	* ksrc/nucleus/pipe.c (xnpipe_wait): Close race window causing an
+	immediate wakeup opportunity to be missed before the caller
+	schedules out.
+	
 2007-12-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/task.c (t_mode): General fix.
