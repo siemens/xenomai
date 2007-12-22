@@ -1,3 +1,13 @@
+2007-12-22  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/sja1000/{rtcan_sja1000.c, rtcan_*_pci.c}: Remove
+	CONFIG_XENO_OPT_SHIRQ* ifdefs to fix build problems with recent
+	versions of Xenomai. If rtdm_irq_request() now fails with -EBUSY, an
+	error message reminds the user to check for shared interrupt support.
+
+	* ksrc/drivers/can/rtcan_dev.c (rtcan_dev_unregister): unregister
+	devices properly in case refcounts are disabled.
+
 2007-12-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.4.25-ppc-1.2-02 against

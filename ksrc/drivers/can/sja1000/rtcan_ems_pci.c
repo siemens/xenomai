@@ -236,7 +236,7 @@ static int rtcan_ems_pci_add_chan(struct pci_dev *pdev, int channel,
 	err = rtcan_sja1000_register(dev);
 	if (err) {
 		printk(KERN_ERR
-		       "ERROR while trying to register SJA1000 device %d!\n",
+		       "ERROR %d while trying to register SJA1000 device!\n",
 		       err);
 		goto failure;
 	}
@@ -272,13 +272,9 @@ static int __devinit ems_pci_init_one (struct pci_dev *pdev,
 	if ((err = rtcan_ems_pci_add_chan(pdev, EMS_PCI_MASTER,
 					  &master_dev)))
 		goto failure_cleanup;
-#ifdef CONFIG_XENO_OPT_SHIRQ_LEVEL
 	if ((err = rtcan_ems_pci_add_chan(pdev, EMS_PCI_SLAVE,
 					  &master_dev)))
 		goto failure_cleanup;
-#else
-	printk("Shared interrupts not enabled, using single channel!\n");
-#endif
 
 	pci_set_drvdata(pdev, master_dev);
 	return 0;
