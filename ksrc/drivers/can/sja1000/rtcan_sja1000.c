@@ -763,7 +763,9 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
 			   chip->irq_num, rtcan_sja_interrupt,
 			   chip->irq_flags, sja_ctrl_name, dev);
     if (ret) {
-	printk("ERROR! IRQ %d busy or invalid (code=%d)!\n", chip->irq_num, ret);
+	printk(KERN_ERR "ERROR %d: IRQ %d is %s!\n",
+	       ret, chip->irq_num, ret == -EBUSY ?
+	       "busy, check shared interrupt support" : "invalid");
 	return ret;
     }
 
@@ -772,7 +774,8 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
     /* Register RTDM device */
     ret = rtcan_dev_register(dev);
     if (ret) {
-	printk(KERN_ERR "ERROR while trying to register RTCAN device!\n");
+	    printk(KERN_ERR
+		   "ERROR %d while trying to register RTCAN device!\n", ret);
         goto out_irq_free;
     }
 

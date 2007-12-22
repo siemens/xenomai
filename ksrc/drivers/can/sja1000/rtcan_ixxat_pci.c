@@ -186,7 +186,7 @@ static int rtcan_ixxat_pci_add_chan(struct pci_dev *pdev,
     /* Register SJA1000 device */
     ret = rtcan_sja1000_register(dev);
     if (ret) {
-	printk(KERN_ERR "ERROR while trying to register SJA1000 device %d!\n",
+	printk(KERN_ERR "ERROR %d while trying to register SJA1000 device!\n",
 	       ret);
 	goto failure;
     }
@@ -254,15 +254,11 @@ static int __devinit ixxat_pci_init_one (struct pci_dev *pdev,
 	goto failure_iounmap;
 
     if (channel != CHANNEL_SINGLE) {
-#ifdef CONFIG_XENO_OPT_SHIRQ_LEVEL
 	channel = CHANNEL_SLAVE;
 	if ((ret = rtcan_ixxat_pci_add_chan(pdev, channel,
 					    &master_dev, conf_addr,
 					    base_addr + CHANNEL_OFFSET)))
 	    goto failure_iounmap;
-#else
-	printk("Shared interrupts not enabled, using single channel!\n");
-#endif
     }
 
     pci_set_drvdata(pdev, master_dev);

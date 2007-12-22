@@ -260,7 +260,6 @@ int rtcan_dev_register(struct rtcan_device *dev)
 
 int rtcan_dev_unregister(struct rtcan_device *dev)
 {
-#ifdef RTCAN_USE_REFCOUNT
     rtdm_lockctx_t context;
 
 
@@ -278,6 +277,7 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
 
     rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
 
+#ifdef RTCAN_USE_REFCOUNT
     while (atomic_read(&dev->refcount) > 0) {
         rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
         up(&rtcan_devices_nrt_lock);
@@ -290,21 +290,20 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
         down(&rtcan_devices_nrt_lock);
         rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
     }
+#endif
     rtcan_devices[dev->ifindex - 1] = NULL;
 
     rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
     up(&rtcan_devices_nrt_lock);
 
+#ifdef RTCAN_USE_REFCOUNT
     RTCAN_ASSERT(atomic_read(&dev->refcount) == 0,
 		 printk("RTCAN: dev reference counter < 0!\n"););
+#endif
 
     printk("RTCAN: unregistered %s\n", dev->name);
 
     return 0;
-#else
-    printk("RTCAN: Oops, unexpected call of rtcan_dev_unregister()\n");
-    return -EINVAL;
-#endif
 }
 
 

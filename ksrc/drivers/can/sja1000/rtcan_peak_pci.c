@@ -247,10 +247,10 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
     /* Register SJA1000 device */
     ret = rtcan_sja1000_register(dev);
     if (ret) {
-	printk(KERN_ERR "ERROR while trying to register SJA1000 device %d!\n",
-	       ret);
+	printk(KERN_ERR
+	       "ERROR %d while trying to register SJA1000 device!\n", ret);
 	goto failure;
-    }    
+    }
 
     if (channel != CHANNEL_SLAVE)
 	*master_dev = dev;
@@ -292,13 +292,9 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
 	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_MASTER, 
 					   &master_dev)))
 	    goto failure_cleanup;
-#ifdef CONFIG_XENO_OPT_SHIRQ_LEVEL
 	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SLAVE, 
 					   &master_dev)))
 	    goto failure_cleanup;
-#else
-	printk("Shared interrupts not enabled, using single channel!\n");
-#endif
     } else {
 	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SINGLE,
 					   &master_dev)))
