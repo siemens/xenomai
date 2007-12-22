@@ -101,26 +101,26 @@ static inline void xnpipe_enqueue_read(xnpipe_state_t *state)
 }
 
 /* Must be entered with nklock held. */
-
-static inline int xnpipe_read_wait(xnpipe_state_t *state, spl_t s)
-{
-	DEFINE_WAIT(wait);
-	int sigpending;
-
-	xnpipe_enqueue_read(state);
-	xnlock_put_irqrestore(&nklock, s);
-
-	prepare_to_wait_exclusive(&(state)->readq, &wait, TASK_INTERRUPTIBLE);
-	schedule();
-	finish_wait(&(state)->readq, &wait);
-	sigpending = signal_pending(current);
-
-	/* We do not pass "s" back to the caller, we just restore the
-	   entry state here. */
-	xnlock_get_irqsave(&nklock, s);
-
-	return sigpending;
-}
+#define xnpipe_read_wait(__state, __s, __cond)	\
+({						\
+	DEFINE_WAIT(__wait);			\
+	int __sigpending;			\
+						\
+	xnpipe_enqueue_read(__state);		\
+	xnlock_put_irqrestore(&nklock, __s);	\
+									\
+	prepare_to_wait_exclusive(&(__state)->readq, &__wait, TASK_INTERRUPTIBLE); \
+	if (__cond)							\
+		xnpipe_dequeue_read(__state);				\
+	else								\
+		schedule();						\
+	finish_wait(&(__state)->readq, &__wait);			\
+	__sigpending = signal_pending(current);				\
+									\
+	xnlock_get_irqsave(&nklock, __s);				\
+									\
+	__sigpending;							\
+})
 
 static inline void xnpipe_dequeue_read(xnpipe_state_t *state)
 {
@@ -590,7 +590,8 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 			return -EWOULDBLOCK;
 		}
 
-		sigpending = xnpipe_read_wait(state, s);
+		sigpending = xnpipe_read_wait(state, s,
+					      testbits(state->status, XNPIPE_KERN_CONN));
 
 		if (sigpending && !testbits(state->status, XNPIPE_KERN_CONN)) {
 			xnpipe_cleanup_user_conn(state);
@@ -693,7 +694,7 @@ static ssize_t xnpipe_read(struct file *file,
 			return -EAGAIN;
 		}
 
-		sigpending = xnpipe_read_wait(state, s);
+		sigpending = xnpipe_read_wait(state, s, !emptyq_p(&state->outq));
 		holder = getq(&state->outq);
 		mh = link2mh(holder);
 

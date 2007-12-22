@@ -6,6 +6,10 @@
 	* ksrc/arch/i386/patches: Update to 2.4.34-1.3-04,
 	2.4.35.5-1.3-04.
 	
+	* ksrc/nucleus/pipe.c (xnpipe_read_wait): Close race window
+	causing an immediate wakeup opportunity to be missed before the
+	caller schedules out.
+	
 2007-12-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.3.5 (LifeStyle)
