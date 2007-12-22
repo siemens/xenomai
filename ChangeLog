@@ -3,6 +3,8 @@
 	* ksrc/arch/powerpc/patches: Update to 2.4.25-ppc-1.2-02 against
 	DENX's linuxppc_2_4_devel GIT tree as of 2007-12-22.
 
+	* ksrc/arch/x86/patches: Update to 2.4.34-1.3-04, 2.4.35.5-1.3-04.
+	
 2007-12-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos+/task.c (t_mode): General fix.
