@@ -4,6 +4,9 @@
 	
 	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-03.
 
+	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-09,
+	2.6.23-ppc-1.6-01, 2.6.23-powerpc-2.0-05.
+
 2007-12-22  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/{rtcan_sja1000.c, rtcan_*_pci.c}: Remove
