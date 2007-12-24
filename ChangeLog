@@ -2,6 +2,8 @@
 
 	* ksrc/arch/i386/patches: Update to 2.6.20-i386-1.11-01.
 	
+	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-03.
+
 2007-12-22  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/sja1000/{rtcan_sja1000.c, rtcan_*_pci.c}: Remove
