@@ -1,3 +1,17 @@
+diff --git a/.gitignore b/.gitignore
+index 060a71d..0d24dce 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -15,6 +15,9 @@
+ *.i
+ *.lst
+ *.symtypes
++*~
++*.orig
++*.rej
+ 
+ #
+ # Top-level generic files
 diff --git a/Makefile b/Makefile
 index 7e2750f..055ab06 100644
 --- a/Makefile
@@ -4664,7 +4678,7 @@ index b41831b..46b169e 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..3ad8763
+index 0000000..d7c63cf
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,196 @@
@@ -4697,10 +4711,10 @@ index 0000000..3ad8763
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-02"
++#define IPIPE_ARCH_STRING	"1.8-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -5295,10 +5309,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..859c766
+index 0000000..47066e4
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,554 @@
+@@ -0,0 +1,561 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5333,6 +5347,13 @@ index 0000000..859c766
 +#include <asm/ipipe.h>
 +
 +#ifdef CONFIG_IPIPE
++/*
++ * Sanity check: IPIPE_VIRQ_BASE depends on CONFIG_NR_CPUS, and if the
++ * latter gets too large, we fail to map the virtual interrupts.
++ */
++#if IPIPE_VIRQ_BASE / BITS_PER_LONG > BITS_PER_LONG
++#error "CONFIG_NR_CPUS is too large, please lower it."
++#endif
 +
 +#define IPIPE_VERSION_STRING	IPIPE_ARCH_STRING
 +#define IPIPE_RELEASE_NUMBER	((IPIPE_MAJOR_NUMBER << 16) | \
@@ -6322,7 +6343,7 @@ index 7ba23ec..e128dcf 100644
   * smp_processor_id(): get the current CPU ID.
   *
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 94b767d..1f43051 100644
+index 94b767d..4a254a9 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -172,7 +172,90 @@ do {								\
@@ -6375,10 +6396,10 @@ index 94b767d..1f43051 100644
 +		__raw_spin_lock(&((spinlock_t *)(lock))->raw_lock);	\
 +} while (0)
 +
-+#define PICK_SPINUNLOCK_IRQ_RAW(lock)				\
++#define PICK_SPINUNLOCK_IRQ_RAW(lock)					\
 +do {									\
 +	if (TYPE_EQUAL((lock), __ipipe_spinlock_t)) {			\
-+		__ipipe_spin_lock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
++		__ipipe_spin_unlock_irq(&((__ipipe_spinlock_t *)(lock))->__raw_lock); \
 +	} else if (TYPE_EQUAL(lock, spinlock_t))			\
 +		__raw_spin_unlock(&((spinlock_t *)(lock))->raw_lock);	\
 +		local_irq_enable();					\
@@ -6785,10 +6806,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..a2efc59
+index 0000000..3ea3127
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1515 @@
+@@ -0,0 +1,1519 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -6982,7 +7003,9 @@ index 0000000..a2efc59
 +
 +void __ipipe_unstall_root(void)
 +{
++#ifndef CONFIG_IPIPE_DEBUG_CONTEXT
 +	BUG_ON(!ipipe_root_domain_p);
++#endif
 +
 +        local_irq_disable_hw();
 +
@@ -6996,7 +7019,9 @@ index 0000000..a2efc59
 +
 +void __ipipe_restore_root(unsigned long x)
 +{
++#ifndef CONFIG_IPIPE_DEBUG_CONTEXT
 +	BUG_ON(!ipipe_root_domain_p);
++#endif
 +
 +	if (x)
 +		__ipipe_stall_root();
@@ -8306,10 +8331,10 @@ index 0000000..a2efc59
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..a57f20e
+index 0000000..2411063
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1362 @@
+@@ -0,0 +1,1364 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -9576,6 +9601,8 @@ index 0000000..a57f20e
 +	/* invalidate the current range before setting a new one */
 +	trigger_end = 0;
 +	wmb();
++	ipipe_trace_frozen_reset();
++
 +	/* set new range */
 +	trigger_begin = begin;
 +	wmb();
@@ -10257,10 +10284,10 @@ index a9e4415..52d1787 100644
  	return err;
  }
 diff --git a/lib/smp_processor_id.c b/lib/smp_processor_id.c
-index eddc9b3..7078cd0 100644
+index eddc9b3..66302ec 100644
 --- a/lib/smp_processor_id.c
 +++ b/lib/smp_processor_id.c
-@@ -13,6 +13,9 @@ unsigned int debug_smp_processor_id(void)
+@@ -13,10 +13,13 @@ unsigned int debug_smp_processor_id(void)
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
  
@@ -10270,6 +10297,11 @@ index eddc9b3..7078cd0 100644
  	if (likely(preempt_count))
  		goto out;
  
+-	if (irqs_disabled())
++	if (irqs_disabled() || irqs_disabled_hw())
+ 		goto out;
+ 
+ 	/*
 diff --git a/lib/spinlock_debug.c b/lib/spinlock_debug.c
 index 479fd46..5e135ef 100644
 --- a/lib/spinlock_debug.c
