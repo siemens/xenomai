@@ -153,7 +153,7 @@ void rootTask (long a0, long a1, long a2, long a3, long a4,
 int __xeno_user_init (void)
 {
     return !(tRoot = taskSpawn("root",
-                               0,
+                               1,
                                0,
                                32768,
                                rootTask,

@@ -1,4 +1,4 @@
-vpath %.c $(top_srcdir)/../ksrc/skins/posix/demos
+vpath %.c $(top_srcdir)/../examples/posix
 
 CC = $(top_builddir)/gcic/gcic
 
