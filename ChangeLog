@@ -1,3 +1,7 @@
+2007-12-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Update to 2.6.20-i386-1.12-00.
+	
 2007-12-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Update to 2.6.20-i386-1.11-01.

@@ -1,17 +1,3 @@
-diff --git a/.gitignore b/.gitignore
-index 060a71d..0d24dce 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -15,6 +15,9 @@
- *.i
- *.lst
- *.symtypes
-+*~
-+*.orig
-+*.rej
- 
- #
- # Top-level generic files
 diff --git a/Makefile b/Makefile
 index 41e3b28..25db88d 100644
 --- a/Makefile
@@ -228,6 +214,82 @@ index 776d9be..3aef9d4 100644
  
  	/* see sw-dev-man vol 3, chapter 7.4.13.5 */
  	printk(KERN_INFO "spurious APIC interrupt on CPU#%d, should never happen.\n",
+diff --git a/arch/i386/kernel/cpu/mtrr/cyrix.c b/arch/i386/kernel/cpu/mtrr/cyrix.c
+index 0737a59..c10e80d 100644
+--- a/arch/i386/kernel/cpu/mtrr/cyrix.c
++++ b/arch/i386/kernel/cpu/mtrr/cyrix.c
+@@ -17,7 +17,7 @@ cyrix_get_arr(unsigned int reg, unsigned long *base,
+ 	arr = CX86_ARR_BASE + (reg << 1) + reg;	/* avoid multiplication by 3 */
+ 
+ 	/* Save flags and disable interrupts */
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	ccr3 = getCx86(CX86_CCR3);
+ 	setCx86(CX86_CCR3, (ccr3 & 0x0f) | 0x10);	/* enable MAPEN */
+@@ -28,7 +28,7 @@ cyrix_get_arr(unsigned int reg, unsigned long *base,
+ 	setCx86(CX86_CCR3, ccr3);	/* disable MAPEN */
+ 
+ 	/* Enable interrupts if it was enabled previously */
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	shift = ((unsigned char *) base)[1] & 0x0f;
+ 	*base >>= PAGE_SHIFT;
+ 
+@@ -174,6 +174,7 @@ static void cyrix_set_arr(unsigned int reg, unsigned long base,
+ 			  unsigned long size, mtrr_type type)
+ {
+ 	unsigned char arr, arr_type, arr_size;
++	unsigned long flags;
+ 
+ 	arr = CX86_ARR_BASE + (reg << 1) + reg;	/* avoid multiplication by 3 */
+ 
+@@ -216,6 +217,8 @@ static void cyrix_set_arr(unsigned int reg, unsigned long base,
+ 		}
+ 	}
+ 
++	local_irq_save_hw(flags);
++
+ 	prepare_set();
+ 
+ 	base <<= PAGE_SHIFT;
+@@ -225,6 +228,8 @@ static void cyrix_set_arr(unsigned int reg, unsigned long base,
+ 	setCx86(CX86_RCR_BASE + reg, arr_type);
+ 
+ 	post_set();
++
++	local_irq_restore_hw(flags);
+ }
+ 
+ typedef struct {
+diff --git a/arch/i386/kernel/cpu/mtrr/generic.c b/arch/i386/kernel/cpu/mtrr/generic.c
+index f77fc53..0c758ef 100644
+--- a/arch/i386/kernel/cpu/mtrr/generic.c
++++ b/arch/i386/kernel/cpu/mtrr/generic.c
+@@ -380,12 +380,12 @@ static void generic_set_mtrr(unsigned int reg, unsigned long base,
+     [RETURNS] Nothing.
+ */
+ {
+-	unsigned long flags;
++	unsigned long flags, _flags;
+ 	struct mtrr_var_range *vr;
+ 
+ 	vr = &mtrr_state.var_ranges[reg];
+ 
+-	local_irq_save(flags);
++	local_irq_save_full(flags, _flags);
+ 	prepare_set();
+ 
+ 	if (size == 0) {
+@@ -404,7 +404,7 @@ static void generic_set_mtrr(unsigned int reg, unsigned long base,
+ 	}
+ 
+ 	post_set();
+-	local_irq_restore(flags);
++	local_irq_restore_full(flags, _flags);
+ }
+ 
+ int generic_validate_add_page(unsigned long base, unsigned long size, unsigned int type)
 diff --git a/arch/i386/kernel/entry.S b/arch/i386/kernel/entry.S
 index 9bf056e..c24e258 100644
 --- a/arch/i386/kernel/entry.S
@@ -898,10 +960,10 @@ index 6a3875f..caa9520 100644
  static struct irq_chip lapic_chip __read_mostly = {
 diff --git a/arch/i386/kernel/ipipe.c b/arch/i386/kernel/ipipe.c
 new file mode 100644
-index 0000000..e4c668e
+index 0000000..a6c70d0
 --- /dev/null
 +++ b/arch/i386/kernel/ipipe.c
-@@ -0,0 +1,858 @@
+@@ -0,0 +1,864 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/i386/kernel/ipipe.c
 + *
@@ -952,6 +1014,8 @@ index 0000000..e4c668e
 +#endif	/* CONFIG_X86_LOCAL_APIC */
 +
 +int __ipipe_tick_irq;
++
++DEFINE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
 +
 +#ifdef CONFIG_SMP
 +
@@ -1678,8 +1742,12 @@ index 0000000..e4c668e
 +	 * that other interrupt handlers don't actually care for such
 +	 * information. */
 +
-+	if (irq == __ipipe_tick_irq)
-+		set_irq_regs(&regs);
++	if (irq == __ipipe_tick_irq) {
++		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs.eflags;
++		__raw_get_cpu_var(__ipipe_tick_regs).eip = regs.eip;
++		__raw_get_cpu_var(__ipipe_tick_regs).xcs = regs.xcs;
++		__raw_get_cpu_var(__ipipe_tick_regs).ebp = regs.ebp;
++	}
 +
 +	/*
 +	 * Now walk the pipeline, yielding control to the highest
@@ -1825,10 +1893,33 @@ index 1a6f8bb..88137b6 100644
  
  	/*
 diff --git a/arch/i386/kernel/process.c b/arch/i386/kernel/process.c
-index c641056..699becc 100644
+index c641056..0d6ddf4 100644
 --- a/arch/i386/kernel/process.c
 +++ b/arch/i386/kernel/process.c
-@@ -189,6 +189,7 @@ void cpu_idle(void)
+@@ -62,6 +62,8 @@ asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
+ 
+ static int hlt_counter;
+ 
++static int force_mwait;
++
+ unsigned long boot_option_idle_override = 0;
+ EXPORT_SYMBOL(boot_option_idle_override);
+ 
+@@ -108,11 +110,11 @@ void default_idle(void)
+ 		 */
+ 		smp_mb();
+ 
+-		local_irq_disable();
++		local_irq_disable_hw();
+ 		if (!need_resched())
+ 			safe_halt();	/* enables interrupts racelessly */
+ 		else
+-			local_irq_enable();
++			local_irq_enable_hw();
+ 		current_thread_info()->status |= TS_POLLING;
+ 	} else {
+ 		/* loop is done by the caller */
+@@ -189,6 +191,7 @@ void cpu_idle(void)
  				play_dead();
  
  			__get_cpu_var(irq_stat).idle_timestamp = jiffies;
@@ -1836,7 +1927,37 @@ index c641056..699becc 100644
  			idle();
  		}
  		preempt_enable_no_resched();
-@@ -635,7 +636,7 @@ struct task_struct fastcall * __switch_to(struct task_struct *prev_p, struct tas
+@@ -256,13 +259,18 @@ static void mwait_idle(void)
+ 
+ void __devinit select_idle_routine(const struct cpuinfo_x86 *c)
+ {
++#ifdef CONFIG_IPIPE
++#define default_to_mwait force_mwait
++#else
++#define default_to_mwait 1
++#endif
+ 	if (cpu_has(c, X86_FEATURE_MWAIT)) {
+ 		printk("monitor/mwait feature present.\n");
+ 		/*
+ 		 * Skip, if setup has overridden idle.
+ 		 * One CPU supports mwait => All CPUs supports mwait
+ 		 */
+-		if (!pm_idle) {
++		if (!pm_idle && default_to_mwait) {
+ 			printk("using mwait in idle threads.\n");
+ 			pm_idle = mwait_idle;
+ 		}
+@@ -281,7 +289,8 @@ static int __init idle_setup (char *str)
+ 	} else if (!strncmp(str, "halt", 4)) {
+ 		printk("using halt in idle threads.\n");
+ 		pm_idle = default_idle;
+-	}
++	} else if (!strncmp(str, "mwait", 5))
++		  force_mwait = 1;
+ 
+ 	boot_option_idle_override = 1;
+ 	return 1;
+@@ -635,7 +644,7 @@ struct task_struct fastcall * __switch_to(struct task_struct *prev_p, struct tas
  {
  	struct thread_struct *prev = &prev_p->thread,
  				 *next = &next_p->thread;
@@ -2319,10 +2440,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..05d0ffd
+index 0000000..427b8ca
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,222 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2349,10 +2470,10 @@ index 0000000..05d0ffd
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.11-01"
++#define IPIPE_ARCH_STRING	"1.12-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	11
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_MINOR_NUMBER	12
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2432,59 +2553,11 @@ index 0000000..05d0ffd
 +
 +extern int __ipipe_tick_irq;
 +
++DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
++
 +#ifdef CONFIG_X86_LOCAL_APIC
 +extern unsigned long __ipipe_apic_timer_freq;
 +#endif
-+
-+#define __ipipe_call_root_xirq_handler(ipd,irq) \
-+   __asm__ __volatile__ ("pushfl\n\t" \
-+                         "pushl %%cs\n\t" \
-+                         "pushl $1f\n\t" \
-+	                 "pushl %%eax\n\t" \
-+                         "pushl %%gs\n\t" \
-+	                 "pushl %%es\n\t" \
-+	                 "pushl %%ds\n\t" \
-+	                 "pushl %%eax\n\t" \
-+	                 "pushl %%ebp\n\t" \
-+	                 "pushl %%edi\n\t" \
-+	                 "pushl %%esi\n\t" \
-+	                 "pushl %%edx\n\t" \
-+	                 "pushl %%ecx\n\t" \
-+	                 "pushl %%ebx\n\t" \
-+                         "movl  %%esp,%%eax\n\t" \
-+                         "call *%1\n\t" \
-+	                 "jmp ret_from_intr\n\t" \
-+	                 "1: cli\n" \
-+			 : /* no output */ \
-+			 : "a" (~irq), "m" ((ipd)->irqs[irq].handler))
-+
-+#define __ipipe_call_root_virq_handler(ipd,irq) \
-+   __asm__ __volatile__ ("pushfl\n\t" \
-+                         "pushl %%cs\n\t" \
-+                         "pushl $__virq_end\n\t" \
-+	                 "pushl $-1\n\t" \
-+                         "pushl %%gs\n\t" \
-+	                 "pushl %%es\n\t" \
-+	                 "pushl %%ds\n\t" \
-+	                 "pushl %%eax\n\t" \
-+	                 "pushl %%ebp\n\t" \
-+	                 "pushl %%edi\n\t" \
-+	                 "pushl %%esi\n\t" \
-+	                 "pushl %%edx\n\t" \
-+	                 "pushl %%ecx\n\t" \
-+	                 "pushl %%ebx\n\t" \
-+			 "pushl %2\n\t" \
-+                         "pushl %%eax\n\t" \
-+                         "call *%1\n\t" \
-+			 "addl $8,%%esp\n\t" \
-+			 : /* no output */ \
-+			 : "a" (irq), "m" ((ipd)->irqs[irq].handler), "r" ((ipd)->irqs[irq].cookie))
-+
-+#define __ipipe_finalize_root_virq_handler() \
-+   __asm__ __volatile__ ("jmp ret_from_intr\n\t" \
-+	                 "__virq_end: cli\n" \
-+			 : /* no output */ \
-+			 : /* no input */)
 +
 +static inline unsigned long __ipipe_ffnz(unsigned long ul)
 +{
@@ -2493,27 +2566,92 @@ index 0000000..05d0ffd
 +	return ul;
 +}
 +
-+/* When running handlers, enable hw interrupts for all domains but the
++typedef void (__ipipe_irq_handler)(unsigned irq,
++				   void *cookie);
++
++static inline void __ipipe_call_root_xirq_handler(unsigned irq,
++						  __ipipe_irq_handler *handler)
++{
++	struct pt_regs *regs = &__raw_get_cpu_var(__ipipe_tick_regs);
++
++	regs->orig_eax = ~irq;
++
++	__asm__ __volatile__("pushfl\n\t"
++			     "pushl %%cs\n\t"
++			     "pushl $__xirq_end\n\t"
++			     "pushl %%eax\n\t"
++			     "pushl %%gs\n\t"
++			     "pushl %%es\n\t"
++			     "pushl %%ds\n\t"
++			     "pushl %%eax\n\t"
++			     "pushl %%ebp\n\t"
++			     "pushl %%edi\n\t"
++			     "pushl %%esi\n\t"
++			     "pushl %%edx\n\t"
++			     "pushl %%ecx\n\t"
++			     "pushl %%ebx\n\t"
++			     "movl  %2,%%eax\n\t"
++			     "call *%1\n\t"
++			     "jmp ret_from_intr\n\t"
++			     "__xirq_end: cli\n"
++			     : /* no output */
++			     : "a" (~irq), "rm" (handler), "rm" (regs));
++}
++
++void irq_exit(void);
++
++static inline void __ipipe_call_root_virq_handler(unsigned irq,
++						  __ipipe_irq_handler *handler,
++						  void *cookie)
++{
++	__asm__ __volatile__("pushfl\n\t"
++			     "pushl %%cs\n\t"
++			     "pushl $__virq_end\n\t"
++			     "pushl $-1\n\t"
++			     "pushl %%gs\n\t"
++			     "pushl %%es\n\t"
++			     "pushl %%ds\n\t"
++			     "pushl %%eax\n\t"
++			     "pushl %%ebp\n\t"
++			     "pushl %%edi\n\t"
++			     "pushl %%esi\n\t"
++			     "pushl %%edx\n\t"
++			     "pushl %%ecx\n\t"
++			     "pushl %%ebx\n\t"
++			     "pushl %2\n\t"
++			     "pushl %%eax\n\t"
++			     "call *%1\n\t"
++			     "addl $8,%%esp\n"
++			     : /* no output */
++			     : "a" (irq), "rm" (handler), "d" (cookie));
++	irq_exit();
++	__asm__ __volatile__("jmp ret_from_intr\n\t"
++			     "__virq_end: cli\n"
++			     : /* no output */
++			     : /* no input */);
++}
++
++/*
++ * When running handlers, enable hw interrupts for all domains but the
 + * one heading the pipeline, so that IRQs can never be significantly
-+ * deferred for the latter. */
-+#define __ipipe_run_isr(ipd, irq) \
-+do { \
-+	local_irq_enable_nohead(ipd);				 \
-+	if (ipd == ipipe_root_domain) {				 \
-+		if (likely(!ipipe_virtual_irq_p(irq))) {	 \
-+			__ipipe_call_root_xirq_handler(ipd,irq); \
-+		} else {					 \
-+			irq_enter();				 \
-+			__ipipe_call_root_virq_handler(ipd,irq); \
-+			irq_exit();				 \
-+			__ipipe_finalize_root_virq_handler();	 \
-+		}						\
-+	} else {						\
++ * deferred for the latter.
++ */
++#define __ipipe_run_isr(ipd, irq)					\
++do {									\
++	local_irq_enable_nohead(ipd);					\
++	if (ipd == ipipe_root_domain) {					\
++		if (likely(!ipipe_virtual_irq_p(irq)))			\
++			__ipipe_call_root_xirq_handler(irq, ipd->irqs[irq].handler); \
++		else {							\
++			irq_enter();					\
++			__ipipe_call_root_virq_handler(irq, ipd->irqs[irq].handler, ipd->irqs[irq].cookie); \
++		}							\
++	} else {							\
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);	\
 +		__set_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
-+	}							\
-+	local_irq_disable_nohead(ipd);				\
++	}								\
++	local_irq_disable_nohead(ipd);					\
 +} while(0)
 +
 +#endif /* __ASSEMBLY__ */
@@ -2724,7 +2862,7 @@ index 0000000..f5f7074
 +
 +#endif	/* !__I386_IPIPE_BASE_H */
 diff --git a/include/asm-i386/irqflags.h b/include/asm-i386/irqflags.h
-index 17b18cf..77f26d6 100644
+index 17b18cf..0906066 100644
 --- a/include/asm-i386/irqflags.h
 +++ b/include/asm-i386/irqflags.h
 @@ -15,37 +15,61 @@
@@ -2789,20 +2927,17 @@ index 17b18cf..77f26d6 100644
  }
  
  /*
-@@ -54,6 +78,12 @@ static inline void raw_local_irq_enable(void)
+@@ -54,6 +78,9 @@ static inline void raw_local_irq_enable(void)
   */
  static inline void raw_safe_halt(void)
  {
-+#ifdef CONFIG_IPIPE
-+	__ipipe_unstall_root();
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +	ipipe_trace_end(0x8000000E);
-+#endif
 +#endif
  	__asm__ __volatile__("sti; hlt" : : : "memory");
  }
  
-@@ -71,16 +101,41 @@ static inline void halt(void)
+@@ -71,16 +98,41 @@ static inline void halt(void)
   */
  static inline unsigned long __raw_local_irq_save(void)
  {
@@ -2845,7 +2980,7 @@ index 17b18cf..77f26d6 100644
  #define ENABLE_INTERRUPTS_SYSEXIT	sti; sysexit
  #define INTERRUPT_RETURN		iret
  #define GET_CR0_INTO_EAX		movl %cr0, %eax
-@@ -91,8 +146,10 @@ static inline unsigned long __raw_local_irq_save(void)
+@@ -91,8 +143,10 @@ static inline unsigned long __raw_local_irq_save(void)
  #define raw_local_save_flags(flags) \
  		do { (flags) = __raw_local_save_flags(); } while (0)
  
@@ -2858,7 +2993,7 @@ index 17b18cf..77f26d6 100644
  
  static inline int raw_irqs_disabled_flags(unsigned long flags)
  {
-@@ -105,6 +162,70 @@ static inline int raw_irqs_disabled(void)
+@@ -105,6 +159,70 @@ static inline int raw_irqs_disabled(void)
  
  	return raw_irqs_disabled_flags(flags);
  }
@@ -3011,10 +3146,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..47066e4
+index 0000000..784d296
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,561 @@
+@@ -0,0 +1,576 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3510,6 +3645,18 @@ index 0000000..47066e4
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
++#define local_irq_save_full(vflags, rflags)		\
++	do {						\
++		local_irq_save(vflags);			\
++		local_irq_save_hw(rflags);		\
++	} while(0)
++
++#define local_irq_restore_full(vflags, rflags)		\
++	do {						\
++		local_irq_restore_hw(rflags);		\
++		local_irq_restore(vflags);		\
++	} while(0)
++
 +#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
 +#else	/* !CONFIG_IPIPE */
@@ -3529,6 +3676,9 @@ index 0000000..47066e4
 +#define local_irq_disable_hw_cond()		do { } while(0)
 +#define local_irq_save_hw_cond(flags)		do { (void)(flags); } while(0)
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
++
++#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
++#define local_irq_restore_full(vflags, rflags)	do { (void)(vflags); local_irq_restore(rflags); } while(0)
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
