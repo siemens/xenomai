@@ -1,17 +1,3 @@
-diff --git a/.gitignore b/.gitignore
-index 060a71d..0d24dce 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -15,6 +15,9 @@
- *.i
- *.lst
- *.symtypes
-+*~
-+*.orig
-+*.rej
- 
- #
- # Top-level generic files
 diff --git a/Makefile b/Makefile
 index 7e2750f..055ab06 100644
 --- a/Makefile
@@ -1345,7 +1331,7 @@ index 61c65d1..82c1141 100644
  	unsigned long offset = reloc_offset();
  	struct cpu_spec *spec;
 diff --git a/arch/powerpc/kernel/time.c b/arch/powerpc/kernel/time.c
-index f6f0c6b..e74d0fa 100644
+index f6f0c6b..4fd2828 100644
 --- a/arch/powerpc/kernel/time.c
 +++ b/arch/powerpc/kernel/time.c
 @@ -74,6 +74,8 @@
@@ -1367,19 +1353,7 @@ index f6f0c6b..e74d0fa 100644
  
  	profile_tick(CPU_PROFILING);
  	calculate_steal_time();
-@@ -651,7 +655,11 @@ void timer_interrupt(struct pt_regs * regs)
- 		 * is the case.
- 		 */
- 		if (!cpu_is_offline(cpu))
-+#ifdef CONFIG_IPIPE
-+			account_process_time(&__raw_get_cpu_var(__ipipe_tick_regs));
-+#else
- 			account_process_time(regs);
-+#endif
- 
- 		/*
- 		 * No need to check whether cpu is offline here; boot_cpuid
-@@ -672,7 +680,8 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -672,7 +676,8 @@ void timer_interrupt(struct pt_regs * regs)
  	}
  	
  	next_dec = tb_ticks_per_jiffy - ticks;
@@ -1389,7 +1363,7 @@ index f6f0c6b..e74d0fa 100644
  
  #ifdef CONFIG_PPC_ISERIES
  	if (firmware_has_feature(FW_FEATURE_ISERIES) && hvlpevent_is_pending())
-@@ -687,7 +696,9 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -687,7 +692,9 @@ void timer_interrupt(struct pt_regs * regs)
  	}
  #endif
  
@@ -2080,7 +2054,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..de73adb
+index 0000000..833af65
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2123,10 +2097,10 @@ index 0000000..de73adb
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-09"
++#define IPIPE_ARCH_STRING	"1.7-10"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	9
++#define IPIPE_PATCH_NUMBER	10
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -2472,10 +2446,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..47066e4
+index 0000000..784d296
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,561 @@
+@@ -0,0 +1,576 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2971,6 +2945,18 @@ index 0000000..47066e4
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
++#define local_irq_save_full(vflags, rflags)		\
++	do {						\
++		local_irq_save(vflags);			\
++		local_irq_save_hw(rflags);		\
++	} while(0)
++
++#define local_irq_restore_full(vflags, rflags)		\
++	do {						\
++		local_irq_restore_hw(rflags);		\
++		local_irq_restore(vflags);		\
++	} while(0)
++
 +#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
 +#else	/* !CONFIG_IPIPE */
@@ -2990,6 +2976,9 @@ index 0000000..47066e4
 +#define local_irq_disable_hw_cond()		do { } while(0)
 +#define local_irq_save_hw_cond(flags)		do { (void)(flags); } while(0)
 +#define local_irq_restore_hw_cond(flags)	do { } while(0)
++
++#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
++#define local_irq_restore_full(vflags, rflags)	do { (void)(vflags); local_irq_restore(rflags); } while(0)
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)

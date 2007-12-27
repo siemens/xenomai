@@ -6,6 +6,9 @@
 	* ksrc/arch/x86/patches: Update to 2.6.20-i386-1.12-00,
 	2.6.23-i386-1.12-00, 2.6.23-x86_64-1.4-00, 2.6.24-rc6-2.0-00.
 	
+	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-10,
+	2.6.23-ppc-1.6-02, 2.6.23-powerpc-2.0-07.
+
 2007-12-27  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/x86/hal-common.c: Track tick IRQ number changes.
