@@ -54,7 +54,7 @@ static void rthal_critical_sync(void)
 	case RTHAL_SET_ONESHOT_LINUX:
 		rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
 		/* We need to keep the timing cycle alive for the kernel. */
-		rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+		rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
 		break;
 
 	case RTHAL_SET_PERIODIC:
@@ -71,11 +71,14 @@ static void rthal_timer_set_oneshot(int rt_mode)
 	if (rt_mode) {
 		rthal_sync_op = RTHAL_SET_ONESHOT_XENOMAI;
 		rthal_setup_oneshot_apic(RTHAL_APIC_TIMER_VECTOR);
+		if (rthal_ktimer_saved_mode != KTIMER_MODE_UNUSED)
+			__ipipe_tick_irq = RTHAL_TIMER_IRQ;
 	} else {
 		rthal_sync_op = RTHAL_SET_ONESHOT_LINUX;
 		rthal_setup_oneshot_apic(LOCAL_TIMER_VECTOR);
+		__ipipe_tick_irq = RTHAL_HOST_TICK_IRQ;
 		/* We need to keep the timing cycle alive for the kernel. */
-		rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+		rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
 	}
 	rthal_critical_exit(flags);
 }
@@ -87,6 +90,7 @@ static void rthal_timer_set_periodic(void)
 	flags = rthal_critical_enter(&rthal_critical_sync);
 	rthal_sync_op = RTHAL_SET_PERIODIC;
 	rthal_setup_periodic_apic(RTHAL_APIC_ICOUNT, LOCAL_TIMER_VECTOR);
+	__ipipe_tick_irq = RTHAL_HOST_TICK_IRQ;
 	rthal_critical_exit(flags);
 }
 
@@ -112,7 +116,7 @@ DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
 #ifdef CONFIG_SMP
 	send_IPI_all(LOCAL_TIMER_VECTOR);
 #else
-	rthal_trigger_irq(ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR));
+	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
 #endif
 	return IRQ_HANDLED;
 }
