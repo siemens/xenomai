@@ -1,3 +1,7 @@
+2007-12-27  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/x86/hal-common.c: Track tick IRQ number changes.
+	
 2007-12-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Update to 2.6.20-1.8-03.

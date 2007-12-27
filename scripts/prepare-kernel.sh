@@ -293,10 +293,12 @@ while : ; do
    x86|i*86)
       linux_arch=i386
       xenomai_arch=x86
+      x86_arch_bits=32
       ;;
    x86_64|x8664|amd64|emt64)
       linux_arch=x86_64
       xenomai_arch=x86
+      x86_arch_bits=64
       ;;
    ppc|ppc32)
       linux_arch=ppc
@@ -332,12 +334,15 @@ while : ; do
    fi
 done
 
-linux_archsrc=$linux_arch
+arch_makefile=Makefile
 
-# i386 and x86_64 architectures were merged in 2.6.24-rc1. The resulting
+# i386 and x86_64 architectures are merged since 2.6.24. The resulting
 # combo is available from arch/x86 when present.
-if test "$xenomai_arch" = x86 -a -d $linux_tree/arch/x86; then
-   linux_archsrc=x86
+if test "$xenomai_arch" = x86; then
+  if test -d $linux_tree/arch/x86; then
+      linux_arch=x86
+      arch_makefile=Makefile_$x86_arch_bits
+  fi
 fi
 
 foo=`grep '^KERNELSRC    := ' $linux_tree/Makefile | cut -d= -f2`
@@ -398,9 +403,9 @@ else
    cd $curdir
 fi
 
-adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_archsrc/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
+adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
 
-if test \! x$adeos_version = x; then
+if test \! "x$adeos_version" = x; then
    if test x$verbose = x1; then
    echo "Adeos/$linux_arch $adeos_version installed."
    fi
@@ -424,13 +429,13 @@ case $linux_VERSION.$linux_PATCHLEVEL in
     patch_architecture_specific="y"
 
     if ! grep -q XENOMAI $linux_tree/init/Kconfig; then
-	sed -e "s,@LINUX_ARCH@,$linux_archsrc,g" $xenomai_root/scripts/Kconfig.frag |
+	sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag |
             patch_append init/Kconfig
     fi
 
-    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
-	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_archsrc/xenomai/"
-	( echo ; echo $p ) | patch_append arch/$linux_arch/Makefile
+    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/$arch_makefile; then
+	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
+	( echo ; echo $p ) | patch_append arch/$linux_arch/$arch_makefile
     fi
 
     patch_architecture_specific="n"
@@ -452,7 +457,7 @@ case $linux_VERSION.$linux_PATCHLEVEL in
 
     2.4)
 
-    export linux_archsrc
+    export linux_arch
     config_file=Config.in
 
     patch_architecture_specific="n"
@@ -466,7 +471,7 @@ wq
 EOF
     fi
     patch_architecture_specific="y"
-    for defconfig_file in .config arch/$linux_archsrc/defconfig; do
+    for defconfig_file in .config arch/$linux_arch/defconfig; do
        if test -w $linux_tree/$defconfig_file; then
           if ! grep -q CONFIG_XENO $linux_tree/$defconfig_file; then
 	      patch_ed $defconfig_file <<EOF
@@ -478,14 +483,14 @@ EOF
           fi
        fi
     done
-    if ! grep -q CONFIG_XENO $linux_tree/arch/$linux_archsrc/Makefile; then
-	patch_ed arch/$linux_archsrc/Makefile <<EOF
+    if ! grep -q CONFIG_XENO $linux_tree/arch/$linux_arch/Makefile; then
+	patch_ed arch/$linux_arch/Makefile <<EOF
 $
 a
 
 ifdef CONFIG_XENOMAI
-SUBDIRS += arch/$linux_archsrc/xenomai
-DRIVERS += arch/$linux_archsrc/xenomai/built-in.o
+SUBDIRS += arch/$linux_arch/xenomai
+DRIVERS += arch/$linux_arch/xenomai/built-in.o
 endif
 .
 wq
@@ -516,12 +521,12 @@ wq
 EOF
     fi
     patch_architecture_specific="y"
-    if ! grep -iq xenomai $linux_tree/arch/$linux_archsrc/config.in; then
-	patch_ed arch/$linux_archsrc/config.in <<EOF
+    if ! grep -iq xenomai $linux_tree/arch/$linux_arch/config.in; then
+	patch_ed arch/$linux_arch/config.in <<EOF
 $
 a
 
-source arch/$linux_archsrc/xenomai/Config.in
+source arch/$linux_arch/xenomai/Config.in
 .
 wq
 EOF
@@ -549,7 +554,7 @@ esac
 
 patch_kernelversion_specific="n"
 patch_architecture_specific="y"
-patch_link r m ksrc/arch/$xenomai_arch arch/$linux_archsrc/xenomai
+patch_link r m ksrc/arch/$xenomai_arch arch/$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link n m ksrc/ kernel/xenomai
 patch_link n m ksrc/arch kernel/xenomai/arch
@@ -558,7 +563,7 @@ patch_link n m ksrc/nucleus kernel/xenomai/nucleus
 patch_link r m ksrc/skins kernel/xenomai/skins
 patch_link r m ksrc/drivers drivers/xenomai
 patch_architecture_specific="y"
-patch_link r n include/asm-$xenomai_arch include/asm-$linux_archsrc/xenomai
+patch_link r n include/asm-$xenomai_arch include/asm-$linux_arch/xenomai
 patch_architecture_specific="n"
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
