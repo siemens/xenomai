@@ -3,7 +3,7 @@
 	* include/asm-powerpc/calibration.h: Decrease calibration value
 	for the mpc52xx.
 
-	* ksrc/arch/x86/patches: Update to 2.6.20-i386-1.12-00,
+	* ksrc/arch/x86/patches: Update to 2.6.20.21-i386-1.12-00,
 	2.6.23-i386-1.12-00, 2.6.23-x86_64-1.4-00, 2.6.24-rc6-2.0-00.
 	
 2007-12-27  Jan Kiszka  <jan.kiszka@web.de>
