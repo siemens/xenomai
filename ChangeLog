@@ -2,6 +2,9 @@
 
 	* ksrc/arch/i386/patches: Update to 2.6.20-i386-1.12-00.
 	
+	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-10,
+	2.6.23-ppc-1.6-02, 2.6.23-powerpc-2.0-07.
+
 2007-12-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Update to 2.6.20-i386-1.11-01.
