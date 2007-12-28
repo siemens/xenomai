@@ -74,9 +74,14 @@ extern void (*fp_init)(union fp_state *);
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->disable(irq); 0; })
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
-#define rthal_mark_irq_disabled(irq) (rthal_irq_desc_status(irq) |= IRQ_DISABLED)
-#define rthal_mark_irq_enabled(irq) (rthal_irq_desc_status(irq) &= ~IRQ_DISABLED)
-
+#define rthal_mark_irq_disabled(irq) do {              \
+            rthal_irq_desc_status(irq) |= IRQ_DISABLED; \
+            rthal_irq_descp(irq)->depth = 1;            \
+        } while(0);
+#define rthal_mark_irq_enabled(irq) do {                 \
+            rthal_irq_desc_status(irq) &= ~IRQ_DISABLED; \
+            rthal_irq_descp(irq)->depth = 0;             \
+        } while(0);
 static inline void fp_init(union fp_state *state)
 {
     /* FIXME: This is insufficient. */
