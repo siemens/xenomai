@@ -194,3 +194,11 @@ ___________________________________________________________________
           (info->heapsize), the overall actual/usable amount of memory
           (info->usablemem), the current amount of memory used
           (info->usedmem).
+
+___________________________________________________________________
+
+
+2.4.0 -> 2.4.1
+
+       * rt_heap_inquire() now reports the heap physical address, for DMA
+         operations (info->phys_addr).
