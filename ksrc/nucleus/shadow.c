@@ -1491,18 +1491,18 @@ void xnshadow_suspend(xnthread_t *thread)
 	schedule_linux_call(LO_SIGTHR_REQ, p, SIGHARDEN);
 }
 
-static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_migrate(struct pt_regs *regs)
 {
 	if (rthal_current_domain == rthal_root_domain)
 		if (__xn_reg_arg1(regs) == XENOMAI_XENO_DOMAIN) {
-			if (!xnshadow_thread(curr))
+			if (!xnshadow_thread(current))
 				return -EPERM;
 
 			/* Paranoid: a corner case where the
 			   user-space side fiddles with SIGHARDEN
 			   while the target thread is still waiting to
 			   be started. */
-			if (xnthread_test_state(xnshadow_thread(curr), XNDORMANT))
+			if (xnthread_test_state(xnshadow_thread(current), XNDORMANT))
 				return 0;
 
 			return xnshadow_harden()? : 1;
@@ -1516,7 +1516,7 @@ static int xnshadow_sys_migrate(struct task_struct *curr, struct pt_regs *regs)
 		return 0;
 }
 
-static int xnshadow_sys_arch(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_arch(struct pt_regs *regs)
 {
 	return xnarch_local_syscall(regs);
 }
@@ -1541,7 +1541,7 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
 	}
 }
 
-static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_bind(struct pt_regs *regs)
 {
 	unsigned magic = __xn_reg_arg1(regs);
 	u_long featdep = __xn_reg_arg2(regs);
@@ -1556,7 +1556,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	featmis = (~XENOMAI_FEAT_DEP & (featdep & XENOMAI_FEAT_MAN));
 
 	if (infarg) {
-		if (!__xn_access_ok(curr, VERIFY_WRITE, infarg, sizeof(finfo)))
+		if (!__xn_access_ok(current, VERIFY_WRITE, infarg, sizeof(finfo)))
 			return -EFAULT;
 
 		/* Pass back the supported feature set and the ABI revision
@@ -1576,7 +1576,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 				      sizeof(finfo.feat_req_s));
 		finfo.abirev = XENOMAI_ABI_REV;
 
-		__xn_copy_to_user(curr, (void *)infarg, &finfo, sizeof(finfo));
+		__xn_copy_to_user(current, (void *)infarg, &finfo, sizeof(finfo));
 	}
 
 	if (featmis)
@@ -1627,7 +1627,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 		goto eventcb_done;
 
 	xnlock_get_irqsave(&nklock, s);
-	ppd = ppd_lookup(muxid, curr->mm);
+	ppd = ppd_lookup(muxid, current->mm);
 	xnlock_put_irqrestore(&nklock, s);
 
 	/* protect from the same process binding several times. */
@@ -1635,7 +1635,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 		goto eventcb_done;
 
 	ppd = (xnshadow_ppd_t *) muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_ATTACH,
-							       curr);
+								current);
 
 	if (IS_ERR(ppd)) {
 		err = PTR_ERR(ppd);
@@ -1646,7 +1646,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 		goto eventcb_done;
 
 	ppd->key.muxid = muxid;
-	ppd->key.mm = curr->mm;
+	ppd->key.mm = current->mm;
 
 	if (ppd_insert(ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
@@ -1687,7 +1687,7 @@ static int xnshadow_sys_bind(struct task_struct *curr, struct pt_regs *regs)
 	return muxid;
 }
 
-static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_info(struct pt_regs *regs)
 {
 	int muxid = __xn_reg_arg1(regs);
 	u_long infarg = __xn_reg_arg2(regs);
@@ -1695,7 +1695,7 @@ static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
 	xnsysinfo_t info;
 	spl_t s;
 
-	if (!__xn_access_ok(curr, VERIFY_WRITE, infarg, sizeof(info)))
+	if (!__xn_access_ok(current, VERIFY_WRITE, infarg, sizeof(info)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1710,7 +1710,7 @@ static int xnshadow_sys_info(struct task_struct *curr, struct pt_regs *regs)
 	info.tickval = xntbase_get_tickval(timebasep ? *timebasep : &nktbase);
 	xnlock_put_irqrestore(&nklock, s);
 	info.cpufreq = xnarch_get_cpu_freq();
-	__xn_copy_to_user(curr, (void *)infarg, &info, sizeof(info));
+	__xn_copy_to_user(current, (void *)infarg, &info, sizeof(info));
 
 	return 0;
 }
@@ -1752,8 +1752,7 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 	read_unlock(&tasklist_lock);
 }
 
-static int xnshadow_sys_completion(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int xnshadow_sys_completion(struct pt_regs *regs)
 {
 	xncompletion_t __user *u_completion =
 	    (xncompletion_t __user *)__xn_reg_arg1(regs);
@@ -1794,12 +1793,12 @@ static int xnshadow_sys_completion(struct task_struct *curr,
 	return completion.syncflag == completion_value_ok ? 0 : (int)completion.syncflag;
 }
 
-static int xnshadow_sys_barrier(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_barrier(struct pt_regs *regs)
 {
 	return xnshadow_wait_barrier(regs);
 }
 
-static int xnshadow_sys_trace(struct task_struct *curr, struct pt_regs *regs)
+static int xnshadow_sys_trace(struct pt_regs *regs)
 {
 	int err = -ENOSYS;
 
@@ -1864,8 +1863,7 @@ static struct xnskin_props __props = {
 	.module = NULL
 };
 
-static inline int substitute_linux_syscall(struct task_struct *curr,
-					   struct pt_regs *regs)
+static inline int substitute_linux_syscall(struct pt_regs *regs)
 {
 	/* No real-time replacement for now -- let Linux handle this call. */
 	return 0;
@@ -1976,7 +1974,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		   immediately. */
 	}
 
-	err = muxtable[muxid].props->systab[muxop].svc(p, regs);
+	err = muxtable[muxid].props->systab[muxop].svc(regs);
 
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
@@ -2014,7 +2012,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	/* From now on, we know that we have a valid shadow thread
 	   pointer. */
 
-	if (substitute_linux_syscall(p, regs))
+	if (substitute_linux_syscall(regs))
 		/* This is a Linux syscall issued on behalf of a shadow thread
 		   running inside the Xenomai domain. This call has just been
 		   intercepted by the nucleus and a Xenomai replacement has been
@@ -2066,7 +2064,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	if (__xn_reg_mux_p(regs))
 		goto xenomai_syscall;
 
-	if (!thread || !substitute_linux_syscall(current, regs))
+	if (!thread || !substitute_linux_syscall(regs))
 		/* Fall back to Linux syscall handling. */
 		return RTHAL_EVENT_PROPAGATE;
 
@@ -2114,7 +2112,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	} else			/* We want to run the syscall in the Linux domain.  */
 		switched = 0;
 
-	err = muxtable[muxid].props->systab[muxop].svc(current, regs);
+	err = muxtable[muxid].props->systab[muxop].svc(regs);
 
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {

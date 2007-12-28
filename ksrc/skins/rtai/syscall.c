@@ -61,8 +61,9 @@ static void __shadow_delete_hook(xnthread_t *thread)
  * returns "opaque" on success
  */
 
-static int __rt_shm_heap_open(struct task_struct *curr, struct pt_regs *regs)
+static int __rt_shm_heap_open(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	unsigned long name;
 	int size;
 	int suprt, in_kheap;
@@ -74,14 +75,14 @@ static int __rt_shm_heap_open(struct task_struct *curr, struct pt_regs *regs)
 				int in_kheap, unsigned long *opaque);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(size))
-	    || !__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg5(regs),
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(size))
+	    || !__xn_access_ok(p, VERIFY_WRITE, __xn_reg_arg5(regs),
 			       sizeof(off)))
 		return 0;
 
 	name = (unsigned long)__xn_reg_arg1(regs);
 	/* Size of heap space. */
-	__xn_copy_from_user(curr, &size, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &size, (void __user *)__xn_reg_arg2(regs),
 			    sizeof(size));
 	/* Creation mode. */
 	suprt = (int)__xn_reg_arg3(regs);
@@ -95,9 +96,9 @@ static int __rt_shm_heap_open(struct task_struct *curr, struct pt_regs *regs)
 	off = xnheap_mapped_offset((xnheap_t *)opaque, ret);
 
 	size = (int)((xnheap_t *)opaque)->extentsize;
-	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &size,
+	__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &size,
 			  sizeof(size));
-	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs), &off,
+	__xn_copy_to_user(p, (void __user *)__xn_reg_arg5(regs), &off,
 			  sizeof(off));
 
 	return (int)opaque;
@@ -110,7 +111,7 @@ static int __rt_shm_heap_open(struct task_struct *curr, struct pt_regs *regs)
 /*
  * int __rt_shm_heap_close(unsigned long name)
  */
-static int __rt_shm_heap_close(struct task_struct *curr, struct pt_regs *regs)
+static int __rt_shm_heap_close(struct pt_regs *regs)
 {
 	unsigned long name;
 	int err = 0;
@@ -136,7 +137,7 @@ static int __rt_shm_heap_close(struct task_struct *curr, struct pt_regs *regs)
 #endif /* CONFIG_XENO_OPT_RTAI_SHM */
 
 static __attribute__ ((unused))
-int __rtai_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+int __rtai_call_not_available(struct pt_regs *regs)
 {
 	return -ENOSYS;
 }

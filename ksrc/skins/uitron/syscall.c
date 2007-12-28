@@ -34,20 +34,21 @@ int __ui_muxid;
  * int __uitron_cre_tsk(ID tskid, T_CTSK *pk_ctsk, xncompletion_t *completion)
  */
 
-static int __ui_cre_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_cre_tsk(struct pt_regs *regs)
 {
 	xncompletion_t __user *u_completion;
+	struct task_struct *p = current;
 	uitask_t *task;
 	T_CTSK pk_ctsk;
 	ID tskid;
 	spl_t s;
 	ER err;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_ctsk)))
+	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_ctsk)))
 		return -EFAULT;
 
 	tskid = __xn_reg_arg1(regs);
-	__xn_copy_from_user(curr, &pk_ctsk, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &pk_ctsk, (void __user *)__xn_reg_arg2(regs),
 			    sizeof(pk_ctsk));
 	pk_ctsk.tskatr |= TA_SHADOW;
 	/* Completion descriptor our parent thread is pending on. */
@@ -63,8 +64,8 @@ static int __ui_cre_tsk(struct task_struct *curr, struct pt_regs *regs)
 			err = E_OBJ;
 			goto fail;
 		}
-		strncpy(curr->comm, xnthread_name(&task->threadbase), sizeof(curr->comm));
-		curr->comm[sizeof(curr->comm) - 1] = '\0';
+		strncpy(p->comm, xnthread_name(&task->threadbase), sizeof(p->comm));
+		p->comm[sizeof(p->comm) - 1] = '\0';
 		xnlock_put_irqrestore(&nklock, s);
 		/* Since we may not hold the superlock across a call
 		 * to xnshadow_map(), we do have a small race window
@@ -88,7 +89,7 @@ fail:
  * int __ui_del_tsk(ID tskid)
  */
 
-static int __ui_del_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_del_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -99,7 +100,7 @@ static int __ui_del_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_sta_tsk(ID tskid, INT stacd)
  */
 
-static int __ui_sta_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_sta_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 	INT stacd = __xn_reg_arg2(regs);
@@ -111,7 +112,7 @@ static int __ui_sta_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ext_tsk(void)
  */
 
-static int __ui_ext_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ext_tsk(struct pt_regs *regs)
 {
 	ext_tsk();
 	return 0;
@@ -121,7 +122,7 @@ static int __ui_ext_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_exd_tsk(void)
  */
 
-static int __ui_exd_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_exd_tsk(struct pt_regs *regs)
 {
 	exd_tsk();
 	return 0;
@@ -131,7 +132,7 @@ static int __ui_exd_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ter_tsk(ID tskid)
  */
 
-static int __ui_ter_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ter_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -142,7 +143,7 @@ static int __ui_ter_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_dis_dsp(void)
  */
 
-static int __ui_dis_dsp(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_dis_dsp(struct pt_regs *regs)
 {
 	return dis_dsp();
 }
@@ -151,7 +152,7 @@ static int __ui_dis_dsp(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ena_dsp(void)
  */
 
-static int __ui_ena_dsp(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ena_dsp(struct pt_regs *regs)
 {
 	return ena_dsp();
 }
@@ -160,7 +161,7 @@ static int __ui_ena_dsp(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_chg_pri(ID tskid, PRI tskpri)
  */
 
-static int __ui_chg_pri(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_chg_pri(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 	PRI tskpri = __xn_reg_arg2(regs);
@@ -172,7 +173,7 @@ static int __ui_chg_pri(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_rot_rdq(PRI tskpri)
  */
 
-static int __ui_rot_rdq(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_rot_rdq(struct pt_regs *regs)
 {
 	PRI tskpri = __xn_reg_arg1(regs);
 
@@ -183,7 +184,7 @@ static int __ui_rot_rdq(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_rel_wai(ID tskid)
  */
 
-static int __ui_rel_wai(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_rel_wai(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -194,19 +195,20 @@ static int __ui_rel_wai(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_get_tid(ID *p_tskid)
  */
 
-static int __ui_get_tid(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_get_tid(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID tskid;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(tskid)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(tskid)))
 		return -EFAULT;
 
 	err = get_tid(&tskid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &tskid,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &tskid,
 				  sizeof(tskid));
 	return err;
 }
@@ -215,20 +217,21 @@ static int __ui_get_tid(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ref_tsk(T_RTSK *pk_rtsk, ID tskid)
  */
 
-static int __ui_ref_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ref_tsk(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID tskid = __xn_reg_arg2(regs);
 	T_RTSK pk_rtsk;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rtsk)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rtsk)))
 		return -EFAULT;
 
 	err = ref_tsk(&pk_rtsk, tskid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_rtsk,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_rtsk,
 				  sizeof(pk_rtsk));
 	return err;
 }
@@ -237,7 +240,7 @@ static int __ui_ref_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_sus_tsk(ID tskid)
  */
 
-static int __ui_sus_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_sus_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -248,7 +251,7 @@ static int __ui_sus_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_rsm_tsk(ID tskid)
  */
 
-static int __ui_rsm_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_rsm_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -259,7 +262,7 @@ static int __ui_rsm_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_frsm_tsk(ID tskid)
  */
 
-static int __ui_frsm_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_frsm_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -270,7 +273,7 @@ static int __ui_frsm_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_slp_tsk(void)
  */
 
-static int __ui_slp_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_slp_tsk(struct pt_regs *regs)
 {
 	ER err = slp_tsk();
 
@@ -287,7 +290,7 @@ static int __ui_slp_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_tslp_tsk(TMO tmout)
  */
 
-static int __ui_tslp_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_tslp_tsk(struct pt_regs *regs)
 {
 	TMO tmout = __xn_reg_arg1(regs);
 	ER err;
@@ -307,7 +310,7 @@ static int __ui_tslp_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_wup_tsk(ID tskid)
  */
 
-static int __ui_wup_tsk(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_wup_tsk(struct pt_regs *regs)
 {
 	ID tskid = __xn_reg_arg1(regs);
 
@@ -318,20 +321,21 @@ static int __ui_wup_tsk(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_can_wup(INT *p_wupcnt, ID tskid)
  */
 
-static int __ui_can_wup(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_can_wup(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID tskid = __xn_reg_arg2(regs);
 	INT wupcnt;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(wupcnt)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(wupcnt)))
 		return -EFAULT;
 
 	err = can_wup(&wupcnt, tskid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &wupcnt,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &wupcnt,
 				  sizeof(wupcnt));
 	return err;
 }
@@ -340,16 +344,17 @@ static int __ui_can_wup(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_cre_sem(ID semid, T_CSEM *pk_csem)
  */
 
-static int __ui_cre_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_cre_sem(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID semid = __xn_reg_arg1(regs);
 	T_CSEM pk_csem;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_csem)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_csem)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &pk_csem, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &pk_csem, (void __user *)__xn_reg_arg2(regs),
 			    sizeof(pk_csem));
 
 	return cre_sem(semid, &pk_csem);
@@ -359,7 +364,7 @@ static int __ui_cre_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_del_sem(ID semid)
  */
 
-static int __ui_del_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_del_sem(struct pt_regs *regs)
 {
 	ID semid = __xn_reg_arg1(regs);
 
@@ -370,7 +375,7 @@ static int __ui_del_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_sig_sem(ID semid)
  */
 
-static int __ui_sig_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_sig_sem(struct pt_regs *regs)
 {
 	ID semid = __xn_reg_arg1(regs);
 
@@ -381,7 +386,7 @@ static int __ui_sig_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_wai_sem(ID semid)
  */
 
-static int __ui_wai_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_wai_sem(struct pt_regs *regs)
 {
 	ID semid = __xn_reg_arg1(regs);
 	ER err;
@@ -401,7 +406,7 @@ static int __ui_wai_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_preq_sem(ID semid)
  */
 
-static int __ui_preq_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_preq_sem(struct pt_regs *regs)
 {
 	ID semid = __xn_reg_arg1(regs);
 
@@ -412,7 +417,7 @@ static int __ui_preq_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_twai_sem(ID semid, TMO tmout)
  */
 
-static int __ui_twai_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_twai_sem(struct pt_regs *regs)
 {
 	ID semid = __xn_reg_arg1(regs);
 	TMO tmout = __xn_reg_arg2(regs);
@@ -433,20 +438,21 @@ static int __ui_twai_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ref_sem(T_RSEM *pk_rsem, ID semid)
  */
 
-static int __ui_ref_sem(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ref_sem(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID semid = __xn_reg_arg2(regs);
 	T_RSEM pk_rsem;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rsem)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rsem)))
 		return -EFAULT;
 
 	err = ref_sem(&pk_rsem, semid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_rsem,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_rsem,
 				  sizeof(pk_rsem));
 	return err;
 }
@@ -455,16 +461,17 @@ static int __ui_ref_sem(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_cre_flg(ID semid, T_CFLG *pk_cflg)
  */
 
-static int __ui_cre_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_cre_flg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID flgid = __xn_reg_arg1(regs);
 	T_CFLG pk_cflg;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_cflg)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_cflg)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &pk_cflg, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &pk_cflg, (void __user *)__xn_reg_arg2(regs),
 			    sizeof(pk_cflg));
 
 	return cre_flg(flgid, &pk_cflg);
@@ -474,7 +481,7 @@ static int __ui_cre_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_del_flg(ID flgid)
  */
 
-static int __ui_del_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_del_flg(struct pt_regs *regs)
 {
 	ID flgid = __xn_reg_arg1(regs);
 
@@ -485,7 +492,7 @@ static int __ui_del_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_set_flg(ID flgid, UINT setptn)
  */
 
-static int __ui_set_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_set_flg(struct pt_regs *regs)
 {
 	ID flgid = __xn_reg_arg1(regs);
 	UINT setptn = __xn_reg_arg2(regs);
@@ -497,7 +504,7 @@ static int __ui_set_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_clr_flg(ID flgid, UINT clrptn)
  */
 
-static int __ui_clr_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_clr_flg(struct pt_regs *regs)
 {
 	ID flgid = __xn_reg_arg1(regs);
 	UINT clrptn = __xn_reg_arg2(regs);
@@ -509,14 +516,15 @@ static int __ui_clr_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_wai_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode)
  */
 
-static int __ui_wai_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_wai_flg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	UINT flgptn, waiptn, wfmode;
 	ID flgid;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
 		return -EFAULT;
 
 	flgid = __xn_reg_arg2(regs);
@@ -526,7 +534,7 @@ static int __ui_wai_flg(struct task_struct *curr, struct pt_regs *regs)
 	err = wai_flg(&flgptn, flgid, waiptn, wfmode);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &flgptn,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &flgptn,
 				  sizeof(flgptn));
 	else if (err == E_RLWAI) {
 		uitask_t *task = ui_current_task();
@@ -541,15 +549,16 @@ static int __ui_wai_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_twai_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode, TMO tmout)
  */
 
-static int __ui_twai_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_twai_flg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	UINT flgptn, waiptn, wfmode;
 	TMO tmout;
 	ID flgid;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
 		return -EFAULT;
 
 	flgid = __xn_reg_arg2(regs);
@@ -560,7 +569,7 @@ static int __ui_twai_flg(struct task_struct *curr, struct pt_regs *regs)
 	err = twai_flg(&flgptn, flgid, waiptn, wfmode, tmout);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &flgptn,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &flgptn,
 				  sizeof(flgptn));
 	else if (err == E_RLWAI) {
 		uitask_t *task = ui_current_task();
@@ -575,14 +584,15 @@ static int __ui_twai_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_pol_flg(UINT *p_flgptn, ID flgid, UINT waiptn, UINT wfmode)
  */
 
-static int __ui_pol_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_pol_flg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	UINT flgptn, waiptn, wfmode;
 	ID flgid;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(flgptn)))
 		return -EFAULT;
 
 	flgid = __xn_reg_arg2(regs);
@@ -592,7 +602,7 @@ static int __ui_pol_flg(struct task_struct *curr, struct pt_regs *regs)
 	err = pol_flg(&flgptn, flgid, waiptn, wfmode);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &flgptn,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &flgptn,
 				  sizeof(flgptn));
 	return err;
 }
@@ -601,20 +611,21 @@ static int __ui_pol_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ref_flg(T_RFLG *pk_rflg, ID flgid)
  */
 
-static int __ui_ref_flg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ref_flg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID flgid = __xn_reg_arg2(regs);
 	T_RFLG pk_rflg;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rflg)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rflg)))
 		return -EFAULT;
 
 	err = ref_flg(&pk_rflg, flgid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_rflg,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_rflg,
 				  sizeof(pk_rflg));
 	return err;
 }
@@ -623,16 +634,17 @@ static int __ui_ref_flg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_cre_mbx(ID mbxid, T_CMBX *pk_cmbx)
  */
 
-static int __ui_cre_mbx(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_cre_mbx(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID mbxid = __xn_reg_arg1(regs);
 	T_CMBX pk_cmbx;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_cmbx)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(pk_cmbx)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &pk_cmbx, (void __user *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &pk_cmbx, (void __user *)__xn_reg_arg2(regs),
 			    sizeof(pk_cmbx));
 
 	return cre_mbx(mbxid, &pk_cmbx);
@@ -642,7 +654,7 @@ static int __ui_cre_mbx(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_del_mbx(ID mbxid)
  */
 
-static int __ui_del_mbx(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_del_mbx(struct pt_regs *regs)
 {
 	ID mbxid = __xn_reg_arg1(regs);
 
@@ -653,7 +665,7 @@ static int __ui_del_mbx(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_snd_msg(ID mbxid, T_MSG *pk_msg)
  */
 
-static int __ui_snd_msg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_snd_msg(struct pt_regs *regs)
 {
 	ID mbxid = __xn_reg_arg1(regs);
 	T_MSG __user *pk_msg = (T_MSG __user *)__xn_reg_arg2(regs);
@@ -665,20 +677,21 @@ static int __ui_snd_msg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_rcv_msg(T_MSG **ppk_msg, ID mbxid)
  */
 
-static int __ui_rcv_msg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_rcv_msg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID mbxid = __xn_reg_arg2(regs);
 	T_MSG *pk_msg;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
 		return -EFAULT;
 
 	err = rcv_msg(&pk_msg, mbxid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_msg,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_msg,
 				  sizeof(pk_msg));
 	else if (err == E_RLWAI) {
 		uitask_t *task = ui_current_task();
@@ -693,20 +706,21 @@ static int __ui_rcv_msg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_prcv_msg(T_MSG **ppk_msg, ID mbxid)
  */
 
-static int __ui_prcv_msg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_prcv_msg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID mbxid = __xn_reg_arg2(regs);
 	T_MSG *pk_msg;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
 		return -EFAULT;
 
 	err = prcv_msg(&pk_msg, mbxid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_msg,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_msg,
 				  sizeof(pk_msg));
 	return err;
 }
@@ -715,21 +729,22 @@ static int __ui_prcv_msg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_trcv_msg(T_MSG **ppk_msg, ID mbxid, TMO tmout)
  */
 
-static int __ui_trcv_msg(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_trcv_msg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID mbxid = __xn_reg_arg2(regs);
 	TMO tmout = __xn_reg_arg3(regs);
 	T_MSG *pk_msg;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_msg)))
 		return -EFAULT;
 
 	err = trcv_msg(&pk_msg, mbxid, tmout);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_msg,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_msg,
 				  sizeof(pk_msg));
 	else if (err == E_RLWAI) {
 		uitask_t *task = ui_current_task();
@@ -744,20 +759,21 @@ static int __ui_trcv_msg(struct task_struct *curr, struct pt_regs *regs)
  * int __ui_ref_mbx(T_RMBX *pk_rmbx, ID mbxid)
  */
 
-static int __ui_ref_mbx(struct task_struct *curr, struct pt_regs *regs)
+static int __ui_ref_mbx(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	ID mbxid = __xn_reg_arg2(regs);
 	T_RMBX pk_rmbx;
 	ER err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rmbx)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(pk_rmbx)))
 		return -EFAULT;
 
 	err = ref_mbx(&pk_rmbx, mbxid);
 
 	if (err == E_OK)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs), &pk_rmbx,
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &pk_rmbx,
 				  sizeof(pk_rmbx));
 	return err;
 }

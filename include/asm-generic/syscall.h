@@ -70,8 +70,7 @@ struct pt_regs;
 
 typedef struct _xnsysent {
 
-    int (*svc)(struct task_struct *task,
-	       struct pt_regs *regs);
+    int (*svc)(struct pt_regs *regs);
 
 /* Syscall must run into the Linux domain. */
 #define __xn_exec_lostage    0x1

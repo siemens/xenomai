@@ -25,93 +25,96 @@
 
 int __rtdm_muxid;
 
-static int sys_rtdm_fdcount(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_fdcount(struct pt_regs *regs)
 {
 	return RTDM_FD_MAX;
 }
 
-static int sys_rtdm_open(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_open(struct pt_regs *regs)
 {
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
+	struct task_struct *p = current;
 
-	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs),
+	if (unlikely(!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs),
 				     sizeof(krnl_path)) ||
-		     __xn_strncpy_from_user(curr, krnl_path,
+		     __xn_strncpy_from_user(p, krnl_path,
 					    (const char __user *)__xn_reg_arg1(regs),
 					    sizeof(krnl_path) - 1) < 0))
 		return -EFAULT;
 	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
-	return __rt_dev_open(curr, (const char *)krnl_path,
+	return __rt_dev_open(p, (const char *)krnl_path,
 			     __xn_reg_arg2(regs));
 }
 
-static int sys_rtdm_socket(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_socket(struct pt_regs *regs)
 {
-	return __rt_dev_socket(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
+	return __rt_dev_socket(current, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
 			       __xn_reg_arg3(regs));
 }
 
-static int sys_rtdm_close(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_close(struct pt_regs *regs)
 {
-	return __rt_dev_close(curr, __xn_reg_arg1(regs));
+	return __rt_dev_close(current, __xn_reg_arg1(regs));
 }
 
-static int sys_rtdm_ioctl(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_ioctl(struct pt_regs *regs)
 {
-	return __rt_dev_ioctl(curr, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
+	return __rt_dev_ioctl(current, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
 			      (void *)__xn_reg_arg3(regs));
 }
 
-static int sys_rtdm_read(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_read(struct pt_regs *regs)
 {
-	return __rt_dev_read(curr, __xn_reg_arg1(regs),
+	return __rt_dev_read(current, __xn_reg_arg1(regs),
 			     (void *)__xn_reg_arg2(regs), __xn_reg_arg3(regs));
 }
 
-static int sys_rtdm_write(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_write(struct pt_regs *regs)
 {
-	return __rt_dev_write(curr, __xn_reg_arg1(regs),
+	return __rt_dev_write(current, __xn_reg_arg1(regs),
 			      (const void *)__xn_reg_arg2(regs),
 			      __xn_reg_arg3(regs));
 }
 
-static int sys_rtdm_recvmsg(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_recvmsg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct msghdr krnl_msg;
 	int ret;
 
-	if (unlikely(!__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg2(regs),
+	if (unlikely(!__xn_access_ok(p, VERIFY_WRITE, __xn_reg_arg2(regs),
 				     sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(curr, &krnl_msg,
+		     __xn_copy_from_user(p, &krnl_msg,
 					 (void __user *)__xn_reg_arg2(regs),
 					 sizeof(krnl_msg))))
 		return -EFAULT;
 
-	ret = __rt_dev_recvmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
+	ret = __rt_dev_recvmsg(p, __xn_reg_arg1(regs), &krnl_msg,
 			       __xn_reg_arg3(regs));
 	if (unlikely(ret < 0))
 		return ret;
 
-	if (unlikely(__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+	if (unlikely(__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs),
 				       &krnl_msg, sizeof(krnl_msg))))
 		return -EFAULT;
 
 	return ret;
 }
 
-static int sys_rtdm_sendmsg(struct task_struct *curr, struct pt_regs *regs)
+static int sys_rtdm_sendmsg(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct msghdr krnl_msg;
 
-	if (unlikely(!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs),
+	if (unlikely(!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs),
 				     sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(curr, &krnl_msg,
+		     __xn_copy_from_user(p, &krnl_msg,
 					 (void __user *)__xn_reg_arg2(regs),
 					 sizeof(krnl_msg))))
 		return -EFAULT;
 
-	return __rt_dev_sendmsg(curr, __xn_reg_arg1(regs), &krnl_msg,
+	return __rt_dev_sendmsg(p, __xn_reg_arg1(regs), &krnl_msg,
 				__xn_reg_arg3(regs));
 }
 

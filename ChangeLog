@@ -1,3 +1,10 @@
+2007-12-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c, ksrc/skins/*/syscalls.c: Remove
+	task_struct * argument from all syscall prototypes: this has
+	become useless since Adeos stopped using its own per-domain
+	stacks (i.e. starting with the -ipipe series).
+
 2007-12-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Decrease calibration value

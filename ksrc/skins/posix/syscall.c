@@ -143,8 +143,9 @@ static pthread_t __pthread_find(const struct pse51_hkey *hkey)
 	return k_tid;
 }
 
-static int __pthread_create(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_create(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct sched_param param;
 	struct pse51_hkey hkey;
 	pthread_attr_t attr;
@@ -155,19 +156,19 @@ static int __pthread_create(struct task_struct *curr, struct pt_regs *regs)
 	   POSIX library has assigned to our caller; we'll index our
 	   internal pthread_t descriptor in kernel space on it. */
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = p->mm;
 
 	/* Build a default thread attribute, then make sure that a few
 	   critical fields are set in a compatible fashion wrt to the
 	   calling context. */
 
 	pthread_attr_init(&attr);
-	attr.policy = curr->policy;
-	param.sched_priority = curr->rt_priority;
+	attr.policy = p->policy;
+	param.sched_priority = p->rt_priority;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
 	attr.schedparam = param;
 	attr.fp = 1;
-	attr.name = curr->comm;
+	attr.name = p->comm;
 
 	err = pthread_create(&k_tid, &attr, NULL, NULL);
 
@@ -189,7 +190,7 @@ static int __pthread_create(struct task_struct *curr, struct pt_regs *regs)
 
 #define __pthread_detach  __pse51_call_not_available
 
-static pthread_t __pthread_shadow(struct task_struct *curr,
+static pthread_t __pthread_shadow(struct task_struct *p,
 				  struct pse51_hkey *hkey)
 {
 	pthread_attr_t attr;
@@ -198,7 +199,7 @@ static pthread_t __pthread_shadow(struct task_struct *curr,
 
 	pthread_attr_init(&attr);
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.name = curr->comm;
+	attr.name = p->comm;
 
 	err = pthread_create(&k_tid, &attr, NULL, NULL);
 
@@ -218,9 +219,9 @@ static pthread_t __pthread_shadow(struct task_struct *curr,
 	return err ? ERR_PTR(err) : k_tid;
 }
 
-static int __pthread_setschedparam(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __pthread_setschedparam(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	int policy, err, promoted = 0;
 	struct sched_param param;
 	struct pse51_hkey hkey;
@@ -229,21 +230,21 @@ static int __pthread_setschedparam(struct task_struct *curr,
 	policy = __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(param)))
+	    (p, VERIFY_READ, __xn_reg_arg3(regs), sizeof(param)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &param,
 			    (void __user *)__xn_reg_arg3(regs), sizeof(param));
 
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = p->mm;
 	k_tid = __pthread_find(&hkey);
 
 	if (!k_tid && __xn_reg_arg1(regs) == __xn_reg_arg4(regs)) {
 		/* If the syscall applies to "current", and the latter is not
 		   a Xenomai thread already, then shadow it. */
-		k_tid = __pthread_shadow(curr, &hkey);
+		k_tid = __pthread_shadow(p, &hkey);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 
@@ -258,30 +259,30 @@ static int __pthread_setschedparam(struct task_struct *curr,
 		err = -EPERM;
 
 	if (!err)
-		__xn_put_user(curr, promoted,
+		__xn_put_user(p, promoted,
 			      (int __user *)__xn_reg_arg5(regs));
 
 	return err;
 }
 
-static int __pthread_getschedparam(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __pthread_getschedparam(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct sched_param param;
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 	int policy, err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(int)))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(int)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(param)))
+	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(param)))
 		return -EFAULT;
 
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = p->mm;
 	k_tid = __pthread_find(&hkey);
 
 	if (!k_tid)
@@ -290,11 +291,11 @@ static int __pthread_getschedparam(struct task_struct *curr,
 	err = -pthread_getschedparam(k_tid, &policy, &param);
 
 	if (!err) {
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg2(regs),
 				  &policy, sizeof(int));
 
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg3(regs),
 				  &param, sizeof(param));
 	}
@@ -302,9 +303,9 @@ static int __pthread_getschedparam(struct task_struct *curr,
 	return err;
 }
 
-static int __sched_yield(struct task_struct *curr, struct pt_regs *regs)
+static int __sched_yield(struct pt_regs *regs)
 {
-	pthread_t thread = thread2pthread(xnshadow_thread(curr));
+	pthread_t thread = thread2pthread(xnshadow_thread(current));
 	struct sched_param param;
 	int policy;
 
@@ -314,30 +315,30 @@ static int __sched_yield(struct task_struct *curr, struct pt_regs *regs)
 	return policy == SCHED_OTHER;
 }
 
-static int __pthread_make_periodic_np(struct task_struct *curr,
-				      struct pt_regs *regs)
+static int __pthread_make_periodic_np(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct timespec startt, periodt;
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(startt)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(startt)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(periodt)))
+	    (p, VERIFY_READ, __xn_reg_arg3(regs), sizeof(periodt)))
 		return -EFAULT;
 
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = p->mm;
 	k_tid = __pthread_find(&hkey);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &startt,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(startt));
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &periodt,
 			    (void __user *)__xn_reg_arg3(regs),
 			    sizeof(periodt));
@@ -345,26 +346,27 @@ static int __pthread_make_periodic_np(struct task_struct *curr,
 	return -pthread_make_periodic_np(k_tid, &startt, &periodt);
 }
 
-static int __pthread_wait_np(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_wait_np(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	unsigned long overruns;
 	int err;
 
 	if (__xn_reg_arg1(regs) &&
-	    !__xn_access_ok(curr, VERIFY_WRITE, __xn_reg_arg1(regs),
+	    !__xn_access_ok(p, VERIFY_WRITE, __xn_reg_arg1(regs),
 			    sizeof(overruns)))
 		return -EFAULT;
 
 	err = -pthread_wait_np(&overruns);
 
 	if (__xn_reg_arg1(regs) && (err == 0 || err == -ETIMEDOUT))
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg1(regs),
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs),
 				  &overruns, sizeof(overruns));
 
 	return err;
 }
 
-static int __pthread_set_mode_np(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_set_mode_np(struct pt_regs *regs)
 {
 	xnflags_t clrmask, setmask;
 
@@ -374,35 +376,36 @@ static int __pthread_set_mode_np(struct task_struct *curr, struct pt_regs *regs)
 	return -pthread_set_mode_np(clrmask, setmask);
 }
 
-static int __pthread_set_name_np(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_set_name_np(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(name)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(name)))
 		return -EFAULT;
 
-	__xn_strncpy_from_user(curr, name,
+	__xn_strncpy_from_user(p, name,
 			       (const char __user *)__xn_reg_arg2(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = p->mm;
 	k_tid = __pthread_find(&hkey);
 
 	return -pthread_set_name_np(k_tid, name);
 }
 
-static int __pthread_kill(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_kill(struct pt_regs *regs)
 {
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	hkey.u_tid = __xn_reg_arg1(regs);
-	hkey.mm = curr->mm;
+	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
 
 	if(!k_tid)
@@ -411,8 +414,9 @@ static int __pthread_kill(struct task_struct *curr, struct pt_regs *regs)
 	return -pthread_kill(k_tid, __xn_reg_arg2(regs));
 }
 
-static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_init(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 	unsigned value;
 	int pshared;
@@ -421,7 +425,7 @@ static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_WRITE, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
 	pshared = (int)__xn_reg_arg2(regs);
@@ -429,7 +433,7 @@ static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 	
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -439,7 +443,7 @@ static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
 		return -thread_get_errno();
 	}
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&usm->shadow_sem,
 			  &sm.shadow_sem, sizeof(usm->shadow_sem));
 
@@ -448,17 +452,18 @@ static int __sem_init(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
-static int __sem_post(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_post(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -466,17 +471,18 @@ static int __sem_post(struct task_struct *curr, struct pt_regs *regs)
 	return sem_post(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-static int __sem_wait(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_wait(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -484,43 +490,45 @@ static int __sem_wait(struct task_struct *curr, struct pt_regs *regs)
 	return sem_wait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-static int __sem_timedwait(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_timedwait(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 	struct timespec ts;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
+	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &ts,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(ts));
 
 	return sem_timedwait(&sm.native_sem, &ts) == 0 ? 0 : -thread_get_errno();
 }
 
-static int __sem_trywait(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_trywait(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -528,22 +536,23 @@ static int __sem_trywait(struct task_struct *curr, struct pt_regs *regs)
 	return sem_trywait(&sm.native_sem) == 0 ? 0 : -thread_get_errno();
 }
 
-static int __sem_getvalue(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_getvalue(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 	int err, sval;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(sval)))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(sval)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -553,14 +562,15 @@ static int __sem_getvalue(struct task_struct *curr, struct pt_regs *regs)
 	if (err)
 		return -thread_get_errno();
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg2(regs),
 			  &sval, sizeof(sval));
 	return 0;
 }
 
-static int __sem_destroy(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_destroy(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_sem sm, *usm;
 	int err;
 	spl_t s;
@@ -568,12 +578,12 @@ static int __sem_destroy(struct task_struct *curr, struct pt_regs *regs)
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
+	    (p, VERIFY_READ, (void __user *)usm, sizeof(*usm)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)&usm->shadow_sem,
 			    sizeof(sm.shadow_sem));
@@ -585,7 +595,7 @@ static int __sem_destroy(struct task_struct *curr, struct pt_regs *regs)
 		return -thread_get_errno();
 	}
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&usm->shadow_sem,
 			  &sm.shadow_sem, sizeof(usm->shadow_sem));
 
@@ -594,10 +604,11 @@ static int __sem_destroy(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
-static int __sem_open(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_open(struct pt_regs *regs)
 {
-	union __xeno_sem *sm;
+	struct task_struct *p = current;
 	char name[PSE51_MAXNAME];
+	union __xeno_sem *sm;
 	pse51_assoc_t *assoc;
 	unsigned long uaddr;
 	pse51_usem_t *usm;
@@ -606,18 +617,18 @@ static int __sem_open(struct task_struct *curr, struct pt_regs *regs)
 	spl_t s;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(uaddr)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(uaddr)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &uaddr,
 			    (void __user *)__xn_reg_arg1(regs), sizeof(uaddr));
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uaddr, sizeof(sem_t)))
+	    (p, VERIFY_WRITE, (void __user *)uaddr, sizeof(sem_t)))
 		return -EFAULT;
 
-	len = __xn_strncpy_from_user(curr,
+	len = __xn_strncpy_from_user(p,
 				     name,
 				     (char *)__xn_reg_arg2(regs), sizeof(name));
 
@@ -685,20 +696,21 @@ got_usm:
 
 	if (usm->uaddr == uaddr)
 		/* First binding by this process. */
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)usm->uaddr,
 				  &sm->shadow_sem, sizeof(sm->shadow_sem));
 	else
 		/* Semaphore already bound by this process in user-space. */
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg1(regs),
 				  &usm->uaddr, sizeof(unsigned long));
 
 	return 0;
 }
 
-static int __sem_close(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_close(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_assoc_t *assoc;
 	union __xeno_sem sm;
 	unsigned long uaddr;
@@ -709,10 +721,10 @@ static int __sem_close(struct task_struct *curr, struct pt_regs *regs)
 	uaddr = (unsigned long)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uaddr, sizeof(sem_t)))
+	    (p, VERIFY_READ, (void __user *)uaddr, sizeof(sem_t)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &sm.shadow_sem,
 			    (void __user *)uaddr, sizeof(sm.shadow_sem));
 
@@ -738,7 +750,7 @@ static int __sem_close(struct task_struct *curr, struct pt_regs *regs)
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
 	if (!err) {
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg2(regs),
 				  &closed, sizeof(int));
 
@@ -748,12 +760,12 @@ static int __sem_close(struct task_struct *curr, struct pt_regs *regs)
 	return -thread_get_errno();
 }
 
-static int __sem_unlink(struct task_struct *curr, struct pt_regs *regs)
+static int __sem_unlink(struct pt_regs *regs)
 {
 	char name[PSE51_MAXNAME];
 	long len;
 
-	len = __xn_strncpy_from_user(curr,
+	len = __xn_strncpy_from_user(current,
 				     name,
 				     (char *)__xn_reg_arg1(regs), sizeof(name));
 
@@ -766,14 +778,15 @@ static int __sem_unlink(struct task_struct *curr, struct pt_regs *regs)
 	return sem_unlink(name) == 0 ? 0 : -thread_get_errno();
 }
 
-static int __clock_getres(struct task_struct *curr, struct pt_regs *regs)
+static int __clock_getres(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct timespec ts;
 	clockid_t clock_id;
 	int err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ts)))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
 	clock_id = __xn_reg_arg1(regs);
@@ -781,20 +794,21 @@ static int __clock_getres(struct task_struct *curr, struct pt_regs *regs)
 	err = clock_getres(clock_id, &ts);
 
 	if (!err)
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg2(regs),
 				  &ts, sizeof(ts));
 	return err ? -thread_get_errno() : 0;
 }
 
-static int __clock_gettime(struct task_struct *curr, struct pt_regs *regs)
+static int __clock_gettime(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct timespec ts;
 	clockid_t clock_id;
 	int err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ts)))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
 	clock_id = __xn_reg_arg1(regs);
@@ -802,42 +816,44 @@ static int __clock_gettime(struct task_struct *curr, struct pt_regs *regs)
 	err = clock_gettime(clock_id, &ts);
 
 	if (!err)
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg2(regs),
 				  &ts, sizeof(ts));
 	return err ? -thread_get_errno() : 0;
 }
 
-static int __clock_settime(struct task_struct *curr, struct pt_regs *regs)
+static int __clock_settime(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct timespec ts;
 	clockid_t clock_id;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
+	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
 	clock_id = __xn_reg_arg1(regs);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &ts,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(ts));
 
 	return clock_settime(clock_id, &ts) ? -thread_get_errno() : 0;
 }
 
-static int __clock_nanosleep(struct task_struct *curr, struct pt_regs *regs)
+static int __clock_nanosleep(struct pt_regs *regs)
 {
 	struct timespec rqt, rmt, *rmtp = NULL;
+	struct task_struct *p = current;
 	clockid_t clock_id;
 	int flags, err;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(rqt)))
+	    (p, VERIFY_READ, __xn_reg_arg3(regs), sizeof(rqt)))
 		return -EFAULT;
 
 	if (__xn_reg_arg4(regs)) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(rmt)))
+		    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(rmt)))
 			return -EFAULT;
 
 		rmtp = &rmt;
@@ -847,7 +863,7 @@ static int __clock_nanosleep(struct task_struct *curr, struct pt_regs *regs)
 
 	flags = (int)__xn_reg_arg2(regs);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &rqt,
 			    (void __user *)__xn_reg_arg3(regs), sizeof(rqt));
 
@@ -857,22 +873,22 @@ static int __clock_nanosleep(struct task_struct *curr, struct pt_regs *regs)
 		return -err;
 
 	if (rmtp)
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg4(regs),
 				  rmtp, sizeof(*rmtp));
 	return -EINTR;
 }
 
-static int __pthread_mutexattr_init(struct task_struct *curr,
-				    struct pt_regs *regs)
+static int __pthread_mutexattr_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	err = pthread_mutexattr_init(&attr);
@@ -880,37 +896,37 @@ static int __pthread_mutexattr_init(struct task_struct *curr,
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 	return 0;
 }
 
-static int __pthread_mutexattr_destroy(struct task_struct *curr,
-				       struct pt_regs *regs)
+static int __pthread_mutexattr_destroy(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_destroy(&attr);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_mutexattr_gettype(struct task_struct *curr,
-				       struct pt_regs *regs)
+static int __pthread_mutexattr_gettype(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, type, *utypep;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -918,28 +934,28 @@ static int __pthread_mutexattr_gettype(struct task_struct *curr,
 	utypep = (int *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)utypep, sizeof(*utypep)))
+	    (p, VERIFY_WRITE, (void __user *)utypep, sizeof(*utypep)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_gettype(&attr, &type);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)utypep,&type,sizeof(*utypep));
+	__xn_copy_to_user(p,(void __user *)utypep,&type,sizeof(*utypep));
 
 	return 0;
 }
 
-static int __pthread_mutexattr_settype(struct task_struct *curr,
-				       struct pt_regs *regs)
+static int __pthread_mutexattr_settype(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, type;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -947,24 +963,24 @@ static int __pthread_mutexattr_settype(struct task_struct *curr,
 	type = (int) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_settype(&attr, type);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_mutexattr_getprotocol(struct task_struct *curr,
-					   struct pt_regs *regs)
+static int __pthread_mutexattr_getprotocol(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, proto, *uprotop;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -972,28 +988,28 @@ static int __pthread_mutexattr_getprotocol(struct task_struct *curr,
 	uprotop = (int *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uprotop, sizeof(*uprotop)))
+	    (p, VERIFY_WRITE, (void __user *)uprotop, sizeof(*uprotop)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_getprotocol(&attr, &proto);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uprotop,&proto,sizeof(*uprotop));
+	__xn_copy_to_user(p,(void __user *)uprotop,&proto,sizeof(*uprotop));
 
 	return 0;
 }
 
-static int __pthread_mutexattr_setprotocol(struct task_struct *curr,
-					   struct pt_regs *regs)
+static int __pthread_mutexattr_setprotocol(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, proto;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -1001,24 +1017,24 @@ static int __pthread_mutexattr_setprotocol(struct task_struct *curr,
 	proto = (int) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_setprotocol(&attr, proto);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_mutexattr_getpshared(struct task_struct *curr,
-					  struct pt_regs *regs)
+static int __pthread_mutexattr_getpshared(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, pshared, *upsharedp;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -1026,20 +1042,20 @@ static int __pthread_mutexattr_getpshared(struct task_struct *curr,
 	upsharedp = (int *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)upsharedp, sizeof(*upsharedp)))
+	    (p, VERIFY_WRITE, (void __user *)upsharedp, sizeof(*upsharedp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_getpshared(&attr, &pshared);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)upsharedp,
 			  &pshared,
 			  sizeof(*upsharedp));
@@ -1047,10 +1063,10 @@ static int __pthread_mutexattr_getpshared(struct task_struct *curr,
 	return 0;
 }
 
-static int __pthread_mutexattr_setpshared(struct task_struct *curr,
-					  struct pt_regs *regs)
+static int __pthread_mutexattr_setpshared(struct pt_regs *regs)
 {
 	pthread_mutexattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, pshared;
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg1(regs);
@@ -1058,23 +1074,24 @@ static int __pthread_mutexattr_setpshared(struct task_struct *curr,
 	pshared = (int) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_mutexattr_setpshared(&attr, pshared);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_mutex_init(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 	spl_t s;
 	int err;
@@ -1084,23 +1101,23 @@ static int __pthread_mutex_init(struct task_struct *curr, struct pt_regs *regs)
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_WRITE, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	/* We want the initialization to be atomic. */
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
 	if (uattrp) {
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &locattr,(void __user *)
 				    uattrp,
 				    sizeof(locattr));
@@ -1116,7 +1133,7 @@ static int __pthread_mutex_init(struct task_struct *curr, struct pt_regs *regs)
 		return -err;
 	}
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&umx->shadow_mutex,
 			  &mx.shadow_mutex, sizeof(umx->shadow_mutex));
 
@@ -1125,9 +1142,9 @@ static int __pthread_mutex_init(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
-static int __pthread_mutex_destroy(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __pthread_mutex_destroy(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 	int err;
 	spl_t s;
@@ -1135,12 +1152,12 @@ static int __pthread_mutex_destroy(struct task_struct *curr,
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
@@ -1152,7 +1169,7 @@ static int __pthread_mutex_destroy(struct task_struct *curr,
 		return -err;
 	}
 	
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&umx->shadow_mutex,
 			  &mx.shadow_mutex, sizeof(umx->shadow_mutex));
 
@@ -1161,17 +1178,18 @@ static int __pthread_mutex_destroy(struct task_struct *curr,
 	return 0;
 }
 
-static int __pthread_mutex_lock(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_mutex_lock(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
@@ -1179,27 +1197,27 @@ static int __pthread_mutex_lock(struct task_struct *curr, struct pt_regs *regs)
 	return -pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
 }
 
-static int __pthread_mutex_timedlock(struct task_struct *curr,
-				     struct pt_regs *regs)
+static int __pthread_mutex_timedlock(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 	struct timespec ts;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
+	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &ts,
 			    (void __user *)__xn_reg_arg2(regs), sizeof(ts));
 
@@ -1207,18 +1225,18 @@ static int __pthread_mutex_timedlock(struct task_struct *curr,
 					    1, ts2ticks_ceil(&ts) + 1);
 }
 
-static int __pthread_mutex_trylock(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __pthread_mutex_trylock(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
@@ -1226,18 +1244,18 @@ static int __pthread_mutex_trylock(struct task_struct *curr,
 	return -pthread_mutex_trylock(&mx.native_mutex);
 }
 
-static int __pthread_mutex_unlock(struct task_struct *curr,
-				  struct pt_regs *regs)
+static int __pthread_mutex_unlock(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_mutex mx, *umx;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
@@ -1245,16 +1263,16 @@ static int __pthread_mutex_unlock(struct task_struct *curr,
 	return -pthread_mutex_unlock(&mx.native_mutex);
 }
 
-static int __pthread_condattr_init(struct task_struct *curr,
-				   struct pt_regs *regs)
+static int __pthread_condattr_init(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err;
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	err = pthread_condattr_init(&attr);
@@ -1262,37 +1280,37 @@ static int __pthread_condattr_init(struct task_struct *curr,
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 	return 0;
 }
 
-static int __pthread_condattr_destroy(struct task_struct *curr,
-				      struct pt_regs *regs)
+static int __pthread_condattr_destroy(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err;
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_condattr_destroy(&attr);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_condattr_getclock(struct task_struct *curr,
-				       struct pt_regs *regs)
+static int __pthread_condattr_getclock(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	clockid_t clock, *uclockp;
 	int err;
 
@@ -1301,28 +1319,28 @@ static int __pthread_condattr_getclock(struct task_struct *curr,
 	uclockp = (clockid_t *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uclockp, sizeof(*uclockp)))
+	    (p, VERIFY_WRITE, (void __user *)uclockp, sizeof(*uclockp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_condattr_getclock(&attr, &clock);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uclockp,&clock,sizeof(*uclockp));
+	__xn_copy_to_user(p,(void __user *)uclockp,&clock,sizeof(*uclockp));
 
 	return 0;
 }
 
-static int __pthread_condattr_setclock(struct task_struct *curr,
-				       struct pt_regs *regs)
+static int __pthread_condattr_setclock(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	clockid_t clock;
 	int err;
 
@@ -1331,24 +1349,24 @@ static int __pthread_condattr_setclock(struct task_struct *curr,
 	clock = (clockid_t) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_condattr_setclock(&attr, clock);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_condattr_getpshared(struct task_struct *curr,
-					 struct pt_regs *regs)
+static int __pthread_condattr_getpshared(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, pshared, *upsharedp;
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
@@ -1356,20 +1374,20 @@ static int __pthread_condattr_getpshared(struct task_struct *curr,
 	upsharedp = (int *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)upsharedp, sizeof(*upsharedp)))
+	    (p, VERIFY_WRITE, (void __user *)upsharedp, sizeof(*upsharedp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_condattr_getpshared(&attr, &pshared);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)upsharedp,
 			  &pshared,
 			  sizeof(*upsharedp));
@@ -1377,10 +1395,10 @@ static int __pthread_condattr_getpshared(struct task_struct *curr,
 	return 0;
 }
 
-static int __pthread_condattr_setpshared(struct task_struct *curr,
-					 struct pt_regs *regs)
+static int __pthread_condattr_setpshared(struct pt_regs *regs)
 {
 	pthread_condattr_t attr, *uattrp;
+	struct task_struct *p = current;
 	int err, pshared;
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg1(regs);
@@ -1388,23 +1406,24 @@ static int __pthread_condattr_setpshared(struct task_struct *curr,
 	pshared = (int) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_WRITE, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,&attr,(void __user *)uattrp,sizeof(attr));
+	__xn_copy_from_user(p,&attr,(void __user *)uattrp,sizeof(attr));
 
 	err = pthread_condattr_setpshared(&attr, pshared);
 	if (err)
 		return -err;
 
-	__xn_copy_to_user(curr,(void __user *)uattrp,&attr,sizeof(*uattrp));
+	__xn_copy_to_user(p,(void __user *)uattrp,&attr,sizeof(*uattrp));
 
 	return 0;
 }
 
-static int __pthread_cond_init(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_init(struct pt_regs *regs)
 {
 	pthread_condattr_t locattr, *attr, *uattrp;
+	struct task_struct *p = current;
 	union __xeno_cond cnd, *ucnd;
 	spl_t s;
 	int err;
@@ -1414,23 +1433,23 @@ static int __pthread_cond_init(struct task_struct *curr, struct pt_regs *regs)
 	uattrp = (pthread_condattr_t *) __xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_WRITE, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
+	    (p, VERIFY_READ, (void __user *)uattrp, sizeof(*uattrp)))
 		return -EFAULT;
 
 	/* We want the initialization to be atomic. */
 	xnlock_get_irqsave(&nklock, s);
 	
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
 
 	if (uattrp) {
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &locattr,
 				    (void __user *)uattrp,
 				    sizeof(locattr));
@@ -1447,7 +1466,7 @@ static int __pthread_cond_init(struct task_struct *curr, struct pt_regs *regs)
 		return -err;
 	}
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&ucnd->shadow_cond,
 			  &cnd.shadow_cond, sizeof(ucnd->shadow_cond));
 
@@ -1456,9 +1475,9 @@ static int __pthread_cond_init(struct task_struct *curr, struct pt_regs *regs)
 	return 0;
 }
 
-static int __pthread_cond_destroy(struct task_struct *curr,
-				  struct pt_regs *regs)
+static int __pthread_cond_destroy(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_cond cnd, *ucnd;
 	int err;
 	spl_t s;
@@ -1466,12 +1485,12 @@ static int __pthread_cond_destroy(struct task_struct *curr,
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
@@ -1483,7 +1502,7 @@ static int __pthread_cond_destroy(struct task_struct *curr,
 		return -err;
 	}
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)&ucnd->shadow_cond,
 			  &cnd.shadow_cond, sizeof(ucnd->shadow_cond));
 
@@ -1493,10 +1512,10 @@ static int __pthread_cond_destroy(struct task_struct *curr,
 }
 
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
-static int __pthread_cond_wait_prologue(struct task_struct *curr,
-					struct pt_regs *regs)
+static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnshadow_thread(curr);
+	struct task_struct *p = current;
+	xnthread_t *cur = xnshadow_thread(p);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
 	unsigned timed, count;
@@ -1507,34 +1526,34 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
-	if (!__xn_access_ok(curr, VERIFY_WRITE,
+	if (!__xn_access_ok(p, VERIFY_WRITE,
 			    (void __user *)__xn_reg_arg3(regs), sizeof(count)))
 		return -EFAULT;
 	
 	timed = __xn_reg_arg4(regs);
 	if (timed && !__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)__xn_reg_arg5(regs), sizeof(ts)))
+	    (p, VERIFY_READ, (void __user *)__xn_reg_arg5(regs), sizeof(ts)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
 
 	if (timed) {
-		__xn_copy_from_user(curr, &ts,
+		__xn_copy_from_user(p, &ts,
 				    (void __user *)__xn_reg_arg5(regs),
 				    sizeof(ts));
 
@@ -1565,17 +1584,17 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
-		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
+		__xn_copy_to_user(p, (void __user *) __xn_reg_arg3(regs),
 				  &count, sizeof(count));
 
 	return -err;
 }
 
 /* pthread_cond_wait_epilogue(cond, mutex, count) */
-static int __pthread_cond_wait_epilogue(struct task_struct *curr,
-					struct pt_regs *regs)
+static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnshadow_thread(curr);
+	struct task_struct *p = current;
+	xnthread_t *cur = xnshadow_thread(p);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
 	unsigned count;
@@ -1584,21 +1603,21 @@ static int __pthread_cond_wait_epilogue(struct task_struct *curr,
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
+	    (p, VERIFY_READ, (void __user *)umx, sizeof(*umx)))
 		return -EFAULT;
 
 	count = __xn_reg_arg3(regs);
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mx.shadow_mutex,
 			    (void __user *)&umx->shadow_mutex,
 			    sizeof(mx.shadow_mutex));
@@ -1608,17 +1627,18 @@ static int __pthread_cond_wait_epilogue(struct task_struct *curr,
 					      &mx.shadow_mutex, count);
 }
 
-static int __pthread_cond_signal(struct task_struct *curr, struct pt_regs *regs)
+static int __pthread_cond_signal(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_cond cnd, *ucnd;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
@@ -1626,18 +1646,18 @@ static int __pthread_cond_signal(struct task_struct *curr, struct pt_regs *regs)
 	return -pthread_cond_signal(&cnd.native_cond);
 }
 
-static int __pthread_cond_broadcast(struct task_struct *curr,
-				    struct pt_regs *regs)
+static int __pthread_cond_broadcast(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	union __xeno_cond cnd, *ucnd;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
+	    (p, VERIFY_READ, (void __user *)ucnd, sizeof(*ucnd)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &cnd.shadow_cond,
 			    (void __user *)&ucnd->shadow_cond,
 			    sizeof(cnd.shadow_cond));
@@ -1646,8 +1666,9 @@ static int __pthread_cond_broadcast(struct task_struct *curr,
 }
 
 /* mq_open(name, oflags, mode, attr, ufd) */
-static int __mq_open(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_open(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct mq_attr locattr, *attr;
 	char name[PSE51_MAXNAME];
 	pse51_ufd_t *assoc;
@@ -1656,7 +1677,7 @@ static int __mq_open(struct task_struct *curr, struct pt_regs *regs)
 	unsigned len;
 	mode_t mode;
 
-	len = __xn_strncpy_from_user(curr,
+	len = __xn_strncpy_from_user(p,
 				     name,
 				     (const char __user *)__xn_reg_arg1(regs),
 				     sizeof(name));
@@ -1671,10 +1692,10 @@ static int __mq_open(struct task_struct *curr, struct pt_regs *regs)
 
 	if ((oflags & O_CREAT) && __xn_reg_arg4(regs)) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_READ, __xn_reg_arg4(regs), sizeof(attr)))
+		    (p, VERIFY_READ, __xn_reg_arg4(regs), sizeof(attr)))
 			return -EFAULT;
 
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &locattr,
 				    (struct mq_attr *)__xn_reg_arg4(regs),
 				    sizeof(locattr));
@@ -1710,7 +1731,7 @@ static int __mq_open(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
-static int __mq_close(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_close(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	mqd_t uqd;
@@ -1729,13 +1750,13 @@ static int __mq_close(struct task_struct *curr, struct pt_regs *regs)
 	return !err ? 0 : -thread_get_errno();
 }
 
-static int __mq_unlink(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_unlink(struct pt_regs *regs)
 {
 	char name[PSE51_MAXNAME];
 	unsigned len;
 	int err;
 
-	len = __xn_strncpy_from_user(curr,
+	len = __xn_strncpy_from_user(current,
 				     name,
 				     (const char __user *)__xn_reg_arg1(regs),
 				     sizeof(name));
@@ -1750,8 +1771,9 @@ static int __mq_unlink(struct task_struct *curr, struct pt_regs *regs)
 	return err ? -thread_get_errno() : 0;
 }
 
-static int __mq_getattr(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_getattr(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_assoc_t *assoc;
 	struct mq_attr attr;
 	pse51_ufd_t *ufd;
@@ -1765,7 +1787,7 @@ static int __mq_getattr(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(attr)))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(attr)))
 		return -EFAULT;
 
 	err = mq_getattr(ufd->kfd, &attr);
@@ -1773,14 +1795,15 @@ static int __mq_getattr(struct task_struct *curr, struct pt_regs *regs)
 	if (err)
 		return -thread_get_errno();
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg2(regs),
 			  &attr, sizeof(attr));
 	return 0;
 }
 
-static int __mq_setattr(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_setattr(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct mq_attr attr, oattr;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -1794,14 +1817,14 @@ static int __mq_setattr(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(attr)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(attr)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &attr, (struct mq_attr *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &attr, (struct mq_attr *)__xn_reg_arg2(regs),
 			    sizeof(attr));
 
 	if (__xn_reg_arg3(regs) &&
-	    !__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg3(regs),
+	    !__xn_access_ok(p, VERIFY_READ, __xn_reg_arg3(regs),
 			    sizeof(oattr)))
 		return -EFAULT;
 
@@ -1811,15 +1834,16 @@ static int __mq_setattr(struct task_struct *curr, struct pt_regs *regs)
 		return -thread_get_errno();
 
 	if (__xn_reg_arg3(regs))
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg3(regs),
 				  &oattr, sizeof(oattr));
 	return 0;
 }
 
 /* mq_send(q, buffer, len, prio) */
-static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_send(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -1841,7 +1865,7 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (len > 0 && !__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), len))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1852,7 +1876,7 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 		return -err;
 	}
 
-	__xn_copy_from_user(curr, msg.buf,
+	__xn_copy_from_user(p, msg.buf,
 			    (void __user *)__xn_reg_arg2(regs), len);
 	*(msg.lenp) = len;
 	*(msg.priop) = prio;
@@ -1864,9 +1888,10 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* mq_timedsend(q, buffer, len, prio, timeout) */
-static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_timedsend(struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
+	struct task_struct *p = current;
 	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -1888,16 +1913,16 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (__xn_reg_arg5(regs) &&
-	    !__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg5(regs),
+	    !__xn_access_ok(p, VERIFY_READ, __xn_reg_arg5(regs),
 			    sizeof(timeout)))
 		return -EFAULT;
 
 	if (len > 0 && !__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), len))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), len))
 		return -EFAULT;
 
 	if (__xn_reg_arg5(regs)) {
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &timeout,
 				    (struct timespec __user *)
 				    __xn_reg_arg5(regs), sizeof(timeout));
@@ -1913,7 +1938,7 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 		return -err;
 	}
 
-	__xn_copy_from_user(curr, msg.buf,
+	__xn_copy_from_user(p, msg.buf,
 			    (void __user *) __xn_reg_arg2(regs), len);
 	*(msg.lenp) = len;
 	*(msg.priop) = prio;
@@ -1924,8 +1949,9 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* mq_receive(qd, buffer, &len, &prio)*/
-static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_receive(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -1942,19 +1968,19 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(len)))
+	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(len)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &len, (ssize_t *) __xn_reg_arg3(regs),
+	__xn_copy_from_user(p, &len, (ssize_t *) __xn_reg_arg3(regs),
 			    sizeof(len));
 
 	if (__xn_reg_arg4(regs)
-	    && !__xn_access_ok(curr, VERIFY_WRITE,
+	    && !__xn_access_ok(p, VERIFY_WRITE,
 			       __xn_reg_arg4(regs), sizeof(prio)))
 		return -EFAULT;
 
 	if (len > 0 && !__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), len))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1966,7 +1992,7 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	if (!(msg.flags & PSE51_MSG_DIRECT)) {
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs),
 				  msg.buf, *(msg.lenp));
 		len = *(msg.lenp);
 		prio = *(msg.priop);
@@ -1975,12 +2001,12 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	pse51_mq_finish_rcv(ufd->kfd, &msg);
 	xnlock_put_irqrestore(&nklock, s);
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg3(regs),
 			  &len, sizeof(len));
 
 	if (__xn_reg_arg4(regs))
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg4(regs),
 				  &prio, sizeof(prio));
 
@@ -1988,9 +2014,10 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* mq_timedreceive(qd, buffer, &len, &prio, timeout) */
-static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_timedreceive(struct pt_regs *regs)
 {
 	struct timespec timeout, *timeoutp;
+	struct task_struct *p = current;
 	pse51_direct_msg_t msg;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -2007,28 +2034,28 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(len)))
+	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(len)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &len, (ssize_t *) __xn_reg_arg3(regs),
+	__xn_copy_from_user(p, &len, (ssize_t *) __xn_reg_arg3(regs),
 			    sizeof(len));
 
 	if (__xn_reg_arg4(regs)
-	    && !__xn_access_ok(curr, VERIFY_WRITE,
+	    && !__xn_access_ok(p, VERIFY_WRITE,
 			       __xn_reg_arg4(regs), sizeof(prio)))
 		return -EFAULT;
 
 	if (__xn_reg_arg5(regs) &&
-	    !__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg5(regs),
+	    !__xn_access_ok(p, VERIFY_READ, __xn_reg_arg5(regs),
 			    sizeof(timeout)))
 		return -EFAULT;
 
 	if (len > 0 && !__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), len))
+	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), len))
 		return -EFAULT;
 
 	if (__xn_reg_arg5(regs)) {
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &timeout,
 				    (struct timespec __user *)
 				    __xn_reg_arg5(regs), sizeof(timeout));
@@ -2045,7 +2072,7 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	if (!(msg.flags & PSE51_MSG_DIRECT)) {
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
+		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs),
 				  msg.buf, *(msg.lenp));
 		len = *(msg.lenp);
 		prio = *(msg.priop);
@@ -2054,20 +2081,21 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	pse51_mq_finish_rcv(ufd->kfd, &msg);
 	xnlock_put_irqrestore(&nklock, s);
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg3(regs),
 			  &len, sizeof(len));
 
 	if (__xn_reg_arg4(regs))
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg4(regs),
 				  &prio, sizeof(prio));
 
 	return 0;
 }
 
-static int __mq_notify(struct task_struct *curr, struct pt_regs *regs)
+static int __mq_notify(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_assoc_t *assoc;
 	struct sigevent sev;
 	pse51_ufd_t *ufd;
@@ -2082,10 +2110,10 @@ static int __mq_notify(struct task_struct *curr, struct pt_regs *regs)
 	ufd = assoc2ufd(assoc);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &sev, (char *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &sev, (char *)__xn_reg_arg2(regs),
 			    sizeof(sev));
 
 	if (mq_notify(ufd->kfd, &sev))
@@ -2111,14 +2139,15 @@ static int __pse51_intr_handler(xnintr_t *cookie)
 	return XN_ISR_HANDLED | (intr->mode & XN_ISR_NOENABLE);
 }
 
-static int __intr_attach(struct task_struct *curr, struct pt_regs *regs)
+static int __intr_attach(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pthread_intr_t intr;
 	int err, mode;
 	unsigned irq;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(intr)))
+	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(intr)))
 		return -EFAULT;
 
 	/* Interrupt line number. */
@@ -2134,7 +2163,7 @@ static int __intr_attach(struct task_struct *curr, struct pt_regs *regs)
 
 	if (err == 0) {
 		intr->mode = mode;
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (void __user *)__xn_reg_arg1(regs),
 				  &intr, sizeof(intr));
 	}
@@ -2142,7 +2171,7 @@ static int __intr_attach(struct task_struct *curr, struct pt_regs *regs)
 	return !err ? 0 : -thread_get_errno();
 }
 
-static int __intr_detach(struct task_struct *curr, struct pt_regs *regs)
+static int __intr_detach(struct pt_regs *regs)
 {
 	pthread_intr_t intr = (struct pse51_interrupt *)__xn_reg_arg1(regs);
 	int err = pthread_intr_detach_np(intr);
@@ -2150,9 +2179,10 @@ static int __intr_detach(struct task_struct *curr, struct pt_regs *regs)
 	return !err ? 0 : -thread_get_errno();
 }
 
-static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
+static int __intr_wait(struct pt_regs *regs)
 {
 	pthread_intr_t intr = (pthread_intr_t) __xn_reg_arg1(regs);
+	struct task_struct *p = current;
 	struct timespec ts;
 	xnthread_t *thread;
 	xnticks_t timeout;
@@ -2161,10 +2191,10 @@ static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
 
 	if (__xn_reg_arg2(regs)) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
+		    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(ts)))
 			return -EFAULT;
 
-		__xn_copy_from_user(curr,
+		__xn_copy_from_user(p,
 				    &ts,
 				    (void __user *)__xn_reg_arg2(regs),
 				    sizeof(ts));
@@ -2217,7 +2247,7 @@ static int __intr_wait(struct task_struct *curr, struct pt_regs *regs)
 	return err;
 }
 
-static int __intr_control(struct task_struct *curr, struct pt_regs *regs)
+static int __intr_control(struct pt_regs *regs)
 {
 	pthread_intr_t intr = (pthread_intr_t) __xn_reg_arg1(regs);
 	int err, cmd = (int)__xn_reg_arg2(regs);
@@ -2236,36 +2266,37 @@ static int __intr_control(struct task_struct *curr, struct pt_regs *regs)
 
 #endif /* !CONFIG_XENO_OPT_POSIX_INTR */
 
-static int __timer_create(struct task_struct *curr, struct pt_regs *regs)
+static int __timer_create(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct sigevent sev;
 	timer_t tm;
 	int rc;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sev)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr, &sev, (char *)__xn_reg_arg2(regs),
+	__xn_copy_from_user(p, &sev, (char *)__xn_reg_arg2(regs),
 			    sizeof(sev));
 
 	rc = timer_create((clockid_t) __xn_reg_arg1(regs), &sev, &tm);
 
 	if (!rc) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tm))) {
+		    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tm))) {
 			timer_delete(tm);
 			return -EFAULT;
 		}
 
-		__xn_copy_to_user(curr, (char *)__xn_reg_arg3(regs), &tm,
+		__xn_copy_to_user(p, (char *)__xn_reg_arg3(regs), &tm,
 				  sizeof(tm));
 	}
 
 	return rc == 0 ? 0 : -thread_get_errno();
 }
 
-static int __timer_delete(struct task_struct *curr, struct pt_regs *regs)
+static int __timer_delete(struct pt_regs *regs)
 {
 	int rc;
 
@@ -2274,18 +2305,19 @@ static int __timer_delete(struct task_struct *curr, struct pt_regs *regs)
 	return rc == 0 ? 0 : -thread_get_errno();
 }
 
-static int __timer_settime(struct task_struct *curr, struct pt_regs *regs)
+static int __timer_settime(struct pt_regs *regs)
 {
 	struct itimerspec newv, oldv, *oldvp;
+	struct task_struct *p = current;
 	int rc;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg3(regs), sizeof(newv)))
+	    (p, VERIFY_READ, __xn_reg_arg3(regs), sizeof(newv)))
 		return -EFAULT;
 
 	oldvp = __xn_reg_arg4(regs) == 0 ? NULL : &oldv;
 
-	__xn_copy_from_user(curr, &newv, (char *)__xn_reg_arg3(regs),
+	__xn_copy_from_user(p, &newv, (char *)__xn_reg_arg3(regs),
 			    sizeof(newv));
 
 	rc = timer_settime((timer_t) __xn_reg_arg1(regs),
@@ -2293,14 +2325,14 @@ static int __timer_settime(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!rc && oldvp) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(oldv))) {
+		    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(oldv))) {
 			timer_settime((timer_t) __xn_reg_arg1(regs),
 				      (int)__xn_reg_arg2(regs), oldvp, NULL);
 
 			return -EFAULT;
 		}
 
-		__xn_copy_to_user(curr,
+		__xn_copy_to_user(p,
 				  (char *)__xn_reg_arg4(regs),
 				  oldvp, sizeof(oldv));
 	}
@@ -2308,8 +2340,9 @@ static int __timer_settime(struct task_struct *curr, struct pt_regs *regs)
 	return rc == 0 ? 0 : -thread_get_errno();
 }
 
-static int __timer_gettime(struct task_struct *curr, struct pt_regs *regs)
+static int __timer_gettime(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct itimerspec val;
 	int rc;
 
@@ -2317,17 +2350,17 @@ static int __timer_gettime(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!rc) {
 		if (!__xn_access_ok
-		    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(val)))
+		    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(val)))
 			return -EFAULT;
 
-		__xn_copy_to_user(curr, (char *)__xn_reg_arg2(regs), &val,
+		__xn_copy_to_user(p, (char *)__xn_reg_arg2(regs), &val,
 				  sizeof(val));
 	}
 
 	return rc == 0 ? 0 : -thread_get_errno();
 }
 
-static int __timer_getoverrun(struct task_struct *curr, struct pt_regs *regs)
+static int __timer_getoverrun(struct pt_regs *regs)
 {
 	int rc;
 
@@ -2339,15 +2372,20 @@ static int __timer_getoverrun(struct task_struct *curr, struct pt_regs *regs)
 #ifdef CONFIG_XENO_OPT_POSIX_SHM
 
 /* shm_open(name, oflag, mode, ufd) */
-static int __shm_open(struct task_struct *curr, struct pt_regs *regs)
+static int __shm_open(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	char name[PSE51_MAXNAME];
 	int ufd, kfd, oflag, err;
 	pse51_ufd_t *assoc;
 	unsigned len;
 	mode_t mode;
 
-	len = __xn_strncpy_from_user(curr,
+	if (!__xn_access_ok
+	    (p, VERIFY_READ, __xn_reg_arg1(regs), sizeof(name)))
+		return -EFAULT;
+
+	len = __xn_strncpy_from_user(p,
 				     name,
 				     (const char __user *)__xn_reg_arg1(regs),
 				     sizeof(name));
@@ -2388,13 +2426,13 @@ static int __shm_open(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* shm_unlink(name) */
-static int __shm_unlink(struct task_struct *curr, struct pt_regs *regs)
+static int __shm_unlink(struct pt_regs *regs)
 {
 	char name[PSE51_MAXNAME];
 	unsigned len;
 	int err;
 
-	len = __xn_strncpy_from_user(curr,
+	len = __xn_strncpy_from_user(current,
 				     name,
 				     (const char __user *)__xn_reg_arg1(regs),
 				     sizeof(name));
@@ -2410,7 +2448,7 @@ static int __shm_unlink(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* shm_close(ufd) */
-static int __shm_close(struct task_struct *curr, struct pt_regs *regs)
+static int __shm_close(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -2432,7 +2470,7 @@ static int __shm_close(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* ftruncate(ufd, len) */
-static int __ftruncate(struct task_struct *curr, struct pt_regs *regs)
+static int __ftruncate(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -2464,8 +2502,9 @@ typedef struct {
 } pse51_mmap_param_t;
 
 /* mmap_prologue(len, ufd, off, pse51_mmap_param_t *mmap_param) */
-static int __mmap_prologue(struct task_struct *curr, struct pt_regs *regs)
+static int __mmap_prologue(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_mmap_param_t mmap_param;
 	pse51_assoc_t *assoc;
 	pse51_ufd_t *ufd;
@@ -2477,7 +2516,7 @@ static int __mmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 	off = (off_t) __xn_reg_arg3(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(mmap_param)))
+	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(mmap_param)))
 		return -EFAULT;
 
 	assoc =
@@ -2510,7 +2549,7 @@ static int __mmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 	mmap_param.offset = xnheap_mapped_offset(mmap_param.ioctl_cookie,
 						 mmap_param.kaddr);
 
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg4(regs),
 			  &mmap_param, sizeof(mmap_param));
 
@@ -2518,8 +2557,9 @@ static int __mmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* mmap_epilogue(uaddr, pse51_mmap_param_t *mmap_param) */
-static int __mmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
+static int __mmap_epilogue(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	pse51_mmap_param_t mmap_param;
 	pse51_umap_t *umap;
 	void *uaddr;
@@ -2528,10 +2568,10 @@ static int __mmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
 	uaddr = (void *)__xn_reg_arg1(regs);
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(mmap_param)))
+	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(mmap_param)))
 		return -EFAULT;
 
-	__xn_copy_from_user(curr,
+	__xn_copy_from_user(p,
 			    &mmap_param,
 			    (void __user *)__xn_reg_arg2(regs),
 			    sizeof(mmap_param));
@@ -2562,8 +2602,9 @@ static int __mmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* munmap_prologue(uaddr, len, &unmap) */
-static int __munmap_prologue(struct task_struct *curr, struct pt_regs *regs)
+static int __munmap_prologue(struct pt_regs *regs)
 {
+	struct task_struct *p = current;
 	struct {
 		unsigned long mapsize;
 		unsigned long offset;
@@ -2578,7 +2619,7 @@ static int __munmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 	uaddr = (unsigned long)__xn_reg_arg1(regs);
 	len = (size_t) __xn_reg_arg2(regs);
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(uunmap)))
+	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(uunmap)))
 		return -EFAULT;
 
 	assoc = pse51_assoc_lookup(&pse51_queues()->umaps, uaddr);
@@ -2595,7 +2636,7 @@ static int __munmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 
 	uunmap.mapsize = xnheap_extentsize(heap);
 	uunmap.offset = xnheap_mapped_offset(heap, umap->kaddr);
-	__xn_copy_to_user(curr,
+	__xn_copy_to_user(p,
 			  (void __user *)__xn_reg_arg3(regs),
 			  &uunmap, sizeof(uunmap));
 
@@ -2603,7 +2644,7 @@ static int __munmap_prologue(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /* munmap_epilogue(uaddr, len) */
-static int __munmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
+static int __munmap_epilogue(struct pt_regs *regs)
 {
 	pse51_assoc_t *assoc;
 	unsigned long uaddr;
@@ -2650,7 +2691,7 @@ static int __munmap_epilogue(struct task_struct *curr, struct pt_regs *regs)
 
 #endif /* !CONFIG_XENO_OPT_POSIX_SHM */
 
-int __pse51_call_not_available(struct task_struct *curr, struct pt_regs *regs)
+int __pse51_call_not_available(struct pt_regs *regs)
 {
 	return -ENOSYS;
 }
