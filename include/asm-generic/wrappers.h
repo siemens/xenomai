@@ -27,6 +27,7 @@
 
 #include <linux/version.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 #include <asm/io.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
@@ -280,5 +281,9 @@ unsigned long __va_to_kva(unsigned long va);
 #else /* !CONFIG_MARKERS */
 #define trace_mark(ev, fmt, args...)	do { } while (0)
 #endif /* CONFIG_MARKERS */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+#define KMALLOC_MAX_SIZE 131072
+#endif /* !KMALLOC_MAX_SIZE */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

@@ -1,3 +1,11 @@
+2007-12-28  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/native/heap.c (rt_heap_inquire): Allow retrieving the
+	heap physical address for DMA operations.
+
+	* ksrc/nucleus/heap.c (__alloc_and_reserve_heap): Allow heaps
+	larger than KMALLOC_MAX_SIZE by using __get_free_pages.
+
 2007-12-28  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c, ksrc/skins/*/syscalls.c: Remove
