@@ -202,3 +202,6 @@ ___________________________________________________________________
 
        * rt_task_shadow() now allows a NULL task descriptor pointer to
          be passed, when the latter is of no interest to the caller.
+
+       * rt_heap_inquire() now reports the heap physical address, for DMA
+         operations (info->phys_addr).
