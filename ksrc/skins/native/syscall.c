@@ -59,18 +59,15 @@ static int __rt_bind_helper(struct task_struct *p,
 	spl_t s;
 	int err;
 
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-		return -EFAULT;
-
-	if (__xn_strncpy_from_user(name,
-				   (const char __user *)__xn_reg_arg2(regs),
-				   sizeof(name) - 1))
+	if (__xn_safe_strncpy_from_user(name,
+					(const char __user *)__xn_reg_arg2(regs),
+					sizeof(name) - 1))
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
 
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	err = xnregistry_bind(name, timeout, handlep);
@@ -139,30 +136,15 @@ static int __rt_task_create(struct pt_regs *regs)
 		goto fail;
 	}
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(bulk))) {
-		err = -EFAULT;
-		goto fail;
-	}
-
-	if (__xn_copy_from_user(&bulk, (void __user *)__xn_reg_arg1(regs),
-				sizeof(bulk))) {
-		err = -EFAULT;
-		goto fail;
-	}
-
-	if (!access_wok(bulk.a1, sizeof(ph))) {
+	if (__xn_safe_copy_from_user(&bulk, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(bulk))) {
 		err = -EFAULT;
 		goto fail;
 	}
 
 	if (bulk.a2) {
-		if (!access_rok(bulk.a2, sizeof(name))) {
-			err = -EFAULT;
-			goto fail;
-		}
-
-		if (__xn_strncpy_from_user(name, (const char __user *)bulk.a2,
-					   sizeof(name) - 1)) {
+		if (__xn_safe_strncpy_from_user(name, (const char __user *)bulk.a2,
+						sizeof(name) - 1)) {
 			err = -EFAULT;
 			goto fail;
 		}
@@ -198,13 +180,14 @@ static int __rt_task_create(struct pt_regs *regs)
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = xnthread_handle(&task->thread_base);
 		ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
-		if (__xn_copy_to_user((void __user *)bulk.a1, &ph, sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)bulk.a1, &ph, sizeof(ph)))
 			err = -EFAULT;
-		else
+		else {
 			err = xnshadow_map(&task->thread_base, u_completion);
-		if (!err)
-			goto out;
-		rt_task_delete(task);
+			if (!err)
+				goto out;
+			rt_task_delete(task);
+		}
 	}
 		
 fail:
@@ -238,21 +221,19 @@ static int __rt_task_bind(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_TASK_MAGIC, NULL);
 
-	if (!err) {
-		/* We just don't know the associated user-space pthread
-		   identifier -- clear it to prevent misuse. */
-		ph.opaque2 = 0;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
-			err = -EFAULT;
-	}
+	if (err)
+		return err;
 
-	return err;
+	/* We just don't know the associated user-space pthread
+	   identifier -- clear it to prevent misuse. */
+	ph.opaque2 = 0;
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
+		return -EFAULT;
+
+	return 0;
 }
 
 /*
@@ -266,11 +247,8 @@ static int __rt_task_start(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	RT_TASK *task;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -294,12 +272,9 @@ static int __rt_task_suspend(struct pt_regs *regs)
 	RT_TASK *task;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -321,11 +296,8 @@ static int __rt_task_resume(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	RT_TASK *task;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -347,12 +319,9 @@ static int __rt_task_delete(struct pt_regs *regs)
 	RT_TASK *task;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -388,12 +357,9 @@ static int __rt_task_set_periodic(struct pt_regs *regs)
 	RT_TASK *task;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -403,12 +369,12 @@ static int __rt_task_set_periodic(struct pt_regs *regs)
 	if (!task)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&idate, (void __user *)__xn_reg_arg2(regs),
-				sizeof(idate)))
+	if (__xn_safe_copy_from_user(&idate, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(idate)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&period, (void __user *)__xn_reg_arg3(regs),
-				sizeof(period)))
+	if (__xn_safe_copy_from_user(&period, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(period)))
 		return -EFAULT;
 
 	return rt_task_set_periodic(task, idate, period);
@@ -423,15 +389,11 @@ static int __rt_task_wait_period(struct pt_regs *regs)
 	unsigned long overruns;
 	int err;
 
-	if (__xn_reg_arg1(regs) &&
-	    !access_wok(__xn_reg_arg1(regs), sizeof(overruns)))
-		return -EFAULT;
-
 	err = rt_task_wait_period(&overruns);
 
 	if (__xn_reg_arg1(regs) && (err == 0 || err == -ETIMEDOUT))
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs),
-				      &overruns, sizeof(overruns)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs),
+					   &overruns, sizeof(overruns)))
 			err = -EFAULT;
 	return err;
 }
@@ -449,12 +411,9 @@ static int __rt_task_set_priority(struct pt_regs *regs)
 	int prio;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -477,8 +436,8 @@ static int __rt_task_sleep(struct pt_regs *regs)
 {
 	RTIME delay;
 
-	if (__xn_copy_from_user(&delay, (void __user *)__xn_reg_arg1(regs),
-				sizeof(delay)))
+	if (__xn_safe_copy_from_user(&delay, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(delay)))
 		return -EFAULT;
 
 	return rt_task_sleep(delay);
@@ -492,8 +451,8 @@ static int __rt_task_sleep_until(struct pt_regs *regs)
 {
 	RTIME date;
 
-	if (__xn_copy_from_user(&date, (void __user *)__xn_reg_arg1(regs),
-				sizeof(date)))
+	if (__xn_safe_copy_from_user(&date, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(date)))
 		return -EFAULT;
 
 	return rt_task_sleep_until(date);
@@ -508,11 +467,8 @@ static int __rt_task_unblock(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	RT_TASK *task;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -536,17 +492,10 @@ static int __rt_task_inquire(struct pt_regs *regs)
 	RT_TASK *task;
 	int err;
 
-	if (__xn_reg_arg2(regs) &&
-	    !access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -562,11 +511,14 @@ static int __rt_task_inquire(struct pt_regs *regs)
 
 	err = rt_task_inquire(task, &info);
 
-	if (!err && __xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-				      &info, sizeof(info)))
-		err = -EFAULT;
+	if (err)
+		return err;
 
-	return err;
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
+		return -EFAULT;
+
+	return 0;
 }
 
 /*
@@ -582,12 +534,9 @@ static int __rt_task_notify(struct pt_regs *regs)
 	RT_TASK *task;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -612,10 +561,6 @@ static int __rt_task_set_mode(struct pt_regs *regs)
 {
 	int err, setmask, clrmask, mode_r;
 
-	if (__xn_reg_arg3(regs) &&
-	    !access_wok(__xn_reg_arg3(regs), sizeof(int)))
-		return -EFAULT;
-
 	clrmask = __xn_reg_arg1(regs);
 	setmask = __xn_reg_arg2(regs);
 
@@ -632,8 +577,8 @@ static int __rt_task_set_mode(struct pt_regs *regs)
 		mode_r |= T_PRIMARY;
 
 	if (__xn_reg_arg3(regs) &&
-	    __xn_copy_to_user((void __user *)__xn_reg_arg3(regs),
-			      &mode_r, sizeof(mode_r)))
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				   &mode_r, sizeof(mode_r)))
 		return -EFAULT;
 
 	return 0;
@@ -648,9 +593,6 @@ static int __rt_task_self(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	RT_TASK *task;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	task = __rt_task_current(current);
 
 	if (!task)
@@ -660,7 +602,7 @@ static int __rt_task_self(struct pt_regs *regs)
 
 	ph.opaque = xnthread_handle(&task->thread_base);	/* Copy back the task handle. */
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -678,12 +620,9 @@ static int __rt_task_slice(struct pt_regs *regs)
 	RTIME quantum;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -693,8 +632,8 @@ static int __rt_task_slice(struct pt_regs *regs)
 	if (!task)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&quantum, (void __user *)__xn_reg_arg2(regs),
-				sizeof(quantum)))
+	if (__xn_safe_copy_from_user(&quantum, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(quantum)))
 		return -EFAULT;
 
 	return rt_task_slice(task, quantum);
@@ -721,12 +660,9 @@ static int __rt_task_send(struct pt_regs *regs)
 	ssize_t err;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&ph,
-					(void __user *)__xn_reg_arg1(regs),
-					sizeof(ph)))
+		if (__xn_safe_copy_from_user(&ph,
+					     (void __user *)__xn_reg_arg1(regs),
+					     sizeof(ph)))
 			return -EFAULT;
 
 		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
@@ -736,37 +672,22 @@ static int __rt_task_send(struct pt_regs *regs)
 	if (!task)
 		return -ESRCH;
 
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(mcb_s)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&mcb_s, (void __user *)__xn_reg_arg2(regs),
-				sizeof(mcb_s)))
-		return -EFAULT;
-
-	if (mcb_s.size > 0 && !access_rok(mcb_s.data, mcb_s.size))
+	if (__xn_safe_copy_from_user(&mcb_s, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(mcb_s)))
 		return -EFAULT;
 
 	if (__xn_reg_arg3(regs)) {
-		if (!access_rok(__xn_reg_arg3(regs), sizeof(mcb_r)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&mcb_r,
-					(void __user *)__xn_reg_arg3(regs),
-					sizeof(mcb_r)))
-			return -EFAULT;
-
-		if (mcb_r.size > 0 && !access_wok(mcb_r.data, mcb_r.size))
+		if (__xn_safe_copy_from_user(&mcb_r,
+					     (void __user *)__xn_reg_arg3(regs),
+					     sizeof(mcb_r)))
 			return -EFAULT;
 	} else {
 		mcb_r.data = NULL;
 		mcb_r.size = 0;
 	}
 
-	if (!access_rok(__xn_reg_arg4(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	xsize = mcb_s.size + mcb_r.size;
@@ -789,9 +710,9 @@ static int __rt_task_send(struct pt_regs *regs)
 		}
 
 		if (mcb_s.size > 0 &&
-		    __xn_copy_from_user(tmp_area,
-					(void __user *)mcb_s.data,
-					mcb_s.size)) {
+		    __xn_safe_copy_from_user(tmp_area,
+					     (void __user *)mcb_s.data,
+					     mcb_s.size)) {
 			err = -EFAULT;
 			goto out;
 		}
@@ -804,15 +725,15 @@ static int __rt_task_send(struct pt_regs *regs)
 	err = rt_task_send(task, &mcb_s, &mcb_r, timeout);
 
 	if (err > 0 &&
-	    __xn_copy_to_user((void __user *)data_r, mcb_r.data, mcb_r.size)) {
+	    __xn_safe_copy_to_user((void __user *)data_r, mcb_r.data, mcb_r.size)) {
 		err = -EFAULT;
 		goto out;
 	}
 
 	if (__xn_reg_arg3(regs)) {
 		mcb_r.data = data_r;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				      &mcb_r, sizeof(mcb_r)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+					   &mcb_r, sizeof(mcb_r)))
 			err = -EFAULT;
 	}
 
@@ -836,21 +757,12 @@ static int __rt_task_receive(struct pt_regs *regs)
 	RTIME timeout;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(mcb_r)))
+	if (__xn_safe_copy_from_user(&mcb_r, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(mcb_r)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&mcb_r, (void __user *)__xn_reg_arg1(regs),
-				sizeof(mcb_r)))
-		return -EFAULT;
-
-	if (mcb_r.size > 0 && !access_wok(mcb_r.data, mcb_r.size))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	data_r = mcb_r.data;
@@ -877,8 +789,8 @@ static int __rt_task_receive(struct pt_regs *regs)
 	err = rt_task_receive(&mcb_r, timeout);
 
 	if (err > 0 && mcb_r.size > 0) {
-		if (__xn_copy_to_user((void __user *)data_r, mcb_r.data,
-				      mcb_r.size)) {
+		if (__xn_safe_copy_to_user((void __user *)data_r, mcb_r.data,
+					   mcb_r.size)) {
 			err = -EFAULT;
 			goto out;
 		}
@@ -886,8 +798,8 @@ static int __rt_task_receive(struct pt_regs *regs)
 
 	mcb_r.data = data_r;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &mcb_r,
-			      sizeof(mcb_r)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &mcb_r,
+				   sizeof(mcb_r)))
 		err = -EFAULT;
 
 out:
@@ -912,15 +824,9 @@ static int __rt_task_reply(struct pt_regs *regs)
 	flowid = __xn_reg_arg1(regs);
 
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(mcb_s)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(&mcb_s,
-					(void __user *)__xn_reg_arg2(regs),
-					sizeof(mcb_s)))
-			return -EFAULT;
-
-		if (mcb_s.size > 0 && !access_rok(mcb_s.data, mcb_s.size))
+		if (__xn_safe_copy_from_user(&mcb_s,
+					     (void __user *)__xn_reg_arg2(regs),
+					     sizeof(mcb_s)))
 			return -EFAULT;
 	} else {
 		mcb_s.data = NULL;
@@ -942,10 +848,10 @@ static int __rt_task_reply(struct pt_regs *regs)
 				return -ENOMEM;
 		}
 
-		if (__xn_copy_from_user(tmp_area, (void __user *)mcb_s.data,
-					mcb_s.size)) {
-			 err = -EFAULT;
-			 goto out;
+		if (__xn_safe_copy_from_user(tmp_area, (void __user *)mcb_s.data,
+					     mcb_s.size)) {
+			err = -EFAULT;
+			goto out;
 		}
 
 		mcb_s.data = tmp_area;
@@ -977,8 +883,8 @@ static int __rt_timer_set_mode(struct pt_regs *regs)
 {
 	RTIME tickval;
 
-	if (__xn_copy_from_user(&tickval, (void __user *)__xn_reg_arg1(regs),
-				sizeof(tickval)))
+	if (__xn_safe_copy_from_user(&tickval, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(tickval)))
 		return -EFAULT;
 
 	return rt_timer_set_mode(tickval);
@@ -992,8 +898,8 @@ static int __rt_timer_read(struct pt_regs *regs)
 {
 	RTIME now = rt_timer_read();
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &now,
-			      sizeof(now)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &now,
+				   sizeof(now)))
 		return -EFAULT;
 
 	return 0;
@@ -1007,8 +913,8 @@ static int __rt_timer_tsc(struct pt_regs *regs)
 {
 	RTIME tsc = rt_timer_tsc();
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &tsc,
-			      sizeof(tsc)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &tsc,
+				   sizeof(tsc)))
 		return -EFAULT;
 
 	return 0;
@@ -1022,20 +928,14 @@ static int __rt_timer_ns2ticks(struct pt_regs *regs)
 {
 	SRTIME ns, ticks;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ticks)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(ns)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ns, (void __user *)__xn_reg_arg2(regs),
-				sizeof(ns)))
+	if (__xn_safe_copy_from_user(&ns, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(ns)))
 		return -EFAULT;
 
 	ticks = rt_timer_ns2ticks(ns);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
-			      sizeof(ticks)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
+				   sizeof(ticks)))
 		return -EFAULT;
 
 	return 0;
@@ -1049,20 +949,14 @@ static int __rt_timer_ns2tsc(struct pt_regs *regs)
 {
 	SRTIME ns, ticks;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ticks)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(ns)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ns, (void __user *)__xn_reg_arg2(regs),
-				sizeof(ns)))
+	if (__xn_safe_copy_from_user(&ns, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(ns)))
 		return -EFAULT;
 
 	ticks = rt_timer_ns2tsc(ns);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
-			      sizeof(ticks)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
+				   sizeof(ticks)))
 		return -EFAULT;
 
 	return 0;
@@ -1076,19 +970,13 @@ static int __rt_timer_ticks2ns(struct pt_regs *regs)
 {
 	SRTIME ticks, ns;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ns)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(ticks)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ticks, (void __user *)__xn_reg_arg2(regs),
-				sizeof(ticks)))
+	if (__xn_safe_copy_from_user(&ticks, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(ticks)))
 		return -EFAULT;
 
 	ns = rt_timer_ticks2ns(ticks);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
 		return -EFAULT;
 
 	return 0;
@@ -1102,19 +990,13 @@ static int __rt_timer_tsc2ns(struct pt_regs *regs)
 {
 	SRTIME ticks, ns;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ns)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(ticks)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ticks, (void __user *)__xn_reg_arg2(regs),
-				sizeof(ticks)))
+	if (__xn_safe_copy_from_user(&ticks, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(ticks)))
 		return -EFAULT;
 
 	ns = rt_timer_tsc2ns(ticks);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
 		return -EFAULT;
 
 	return 0;
@@ -1129,16 +1011,13 @@ static int __rt_timer_inquire(struct pt_regs *regs)
 	RT_TIMER_INFO info;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(info)))
-		return -EFAULT;
-
 	err = rt_timer_inquire(&info);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -1152,8 +1031,8 @@ static int __rt_timer_spin(struct pt_regs *regs)
 {
 	RTIME ns;
 
-	if (__xn_copy_from_user(&ns, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ns)))
+	if (__xn_safe_copy_from_user(&ns, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ns)))
 		return -EFAULT;
 
 	rt_timer_spin(ns);
@@ -1178,16 +1057,10 @@ static int __rt_sem_create(struct pt_regs *regs)
 	int err, mode;
 	RT_SEM *sem;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 		name[sizeof(name) - 1] = '\0';
 	} else
@@ -1209,8 +1082,8 @@ static int __rt_sem_create(struct pt_regs *regs)
 		sem->cpid = current->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = sem->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(sem);
@@ -1229,16 +1102,13 @@ static int __rt_sem_bind(struct pt_regs *regs)
 	RT_SEM_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err = __rt_bind_helper(current, regs, &ph.opaque, XENO_SEM_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-			      sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -1254,11 +1124,8 @@ static int __rt_sem_delete(struct pt_regs *regs)
 	RT_SEM *sem;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
@@ -1285,11 +1152,8 @@ static int __rt_sem_p(struct pt_regs *regs)
 	RTIME timeout;
 	RT_SEM *sem;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
@@ -1297,8 +1161,8 @@ static int __rt_sem_p(struct pt_regs *regs)
 	if (!sem)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	return rt_sem_p(sem, timeout);
@@ -1313,11 +1177,8 @@ static int __rt_sem_v(struct pt_regs *regs)
 	RT_SEM_PLACEHOLDER ph;
 	RT_SEM *sem;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
@@ -1337,11 +1198,8 @@ static int __rt_sem_broadcast(struct pt_regs *regs)
 	RT_SEM_PLACEHOLDER ph;
 	RT_SEM *sem;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
@@ -1364,14 +1222,8 @@ static int __rt_sem_inquire(struct pt_regs *regs)
 	RT_SEM *sem;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
@@ -1384,8 +1236,8 @@ static int __rt_sem_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -1420,16 +1272,10 @@ static int __rt_event_create(struct pt_regs *regs)
 	RT_EVENT *event;
 	int err, mode;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1452,8 +1298,8 @@ static int __rt_event_create(struct pt_regs *regs)
 		event->cpid = current->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = event->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(event);
@@ -1472,17 +1318,14 @@ static int __rt_event_bind(struct pt_regs *regs)
 	RT_EVENT_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err =
 	    __rt_bind_helper(current, regs, &ph.opaque, XENO_EVENT_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-			      sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -1498,11 +1341,8 @@ static int __rt_event_delete(struct pt_regs *regs)
 	RT_EVENT *event;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
@@ -1534,12 +1374,8 @@ static int __rt_event_wait(struct pt_regs *regs)
 	RTIME timeout;
 	int mode, err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph))
-	    || !access_wok(__xn_reg_arg3(regs), sizeof(mask_r)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
@@ -1550,14 +1386,14 @@ static int __rt_event_wait(struct pt_regs *regs)
 	mask = (unsigned long)__xn_reg_arg2(regs);
 	mode = (int)__xn_reg_arg4(regs);
 
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	err = rt_event_wait(event, mask, &mask_r, mode, timeout);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &mask_r,
-			      sizeof(mask_r)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &mask_r,
+				   sizeof(mask_r)))
 		return -EFAULT;
 
 	return 0;
@@ -1574,11 +1410,8 @@ static int __rt_event_signal(struct pt_regs *regs)
 	unsigned long mask;
 	RT_EVENT *event;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
@@ -1604,15 +1437,8 @@ static int __rt_event_clear(struct pt_regs *regs)
 	RT_EVENT *event;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_reg_arg3(regs) &&
-	    !access_wok(__xn_reg_arg3(regs), sizeof(mask_r)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
@@ -1625,8 +1451,8 @@ static int __rt_event_clear(struct pt_regs *regs)
 	err = rt_event_clear(event, mask, &mask_r);
 
 	if (likely(!err && __xn_reg_arg3(regs)))
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				      &mask_r, sizeof(mask_r)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+					   &mask_r, sizeof(mask_r)))
 			err = -EFAULT;
 	return err;
 }
@@ -1643,14 +1469,8 @@ static int __rt_event_inquire(struct pt_regs *regs)
 	RT_EVENT *event;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
@@ -1663,8 +1483,8 @@ static int __rt_event_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -1696,16 +1516,10 @@ static int __rt_mutex_create(struct pt_regs *regs)
 	RT_MUTEX *mutex;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1723,8 +1537,8 @@ static int __rt_mutex_create(struct pt_regs *regs)
 		mutex->cpid = current->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = mutex->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(mutex);
@@ -1743,16 +1557,13 @@ static int __rt_mutex_bind(struct pt_regs *regs)
 	RT_MUTEX_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err =
 	    __rt_bind_helper(current, regs, &ph.opaque, XENO_MUTEX_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
 			      sizeof(ph)))
 		return -EFAULT;
 
@@ -1769,11 +1580,8 @@ static int __rt_mutex_delete(struct pt_regs *regs)
 	RT_MUTEX *mutex;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
@@ -1801,15 +1609,12 @@ static int __rt_mutex_acquire(struct pt_regs *regs)
 	RT_MUTEX *mutex;
 	RTIME timeout;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
@@ -1829,11 +1634,8 @@ static int __rt_mutex_release(struct pt_regs *regs)
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
@@ -1856,14 +1658,8 @@ static int __rt_mutex_inquire(struct pt_regs *regs)
 	RT_MUTEX *mutex;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
@@ -1876,8 +1672,8 @@ static int __rt_mutex_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -1908,16 +1704,10 @@ static int __rt_cond_create(struct pt_regs *regs)
 	RT_COND *cond;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1935,8 +1725,8 @@ static int __rt_cond_create(struct pt_regs *regs)
 		cond->cpid = current->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = cond->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(cond);
@@ -1955,17 +1745,14 @@ static int __rt_cond_bind(struct pt_regs *regs)
 	RT_COND_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err =
 	    __rt_bind_helper(current, regs, &ph.opaque, XENO_COND_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-			      sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -1981,11 +1768,8 @@ static int __rt_cond_delete(struct pt_regs *regs)
 	RT_COND *cond;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	cond = (RT_COND *)xnregistry_fetch(ph.opaque);
@@ -2014,16 +1798,12 @@ static int __rt_cond_wait(struct pt_regs *regs)
 	RT_COND *cond;
 	RTIME timeout;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(cph))
-	    || !access_rok(__xn_reg_arg2(regs), sizeof(mph)))
+	if (__xn_safe_copy_from_user(&cph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(cph)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&cph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(cph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&mph, (void __user *)__xn_reg_arg2(regs),
-				sizeof(mph)))
+	if (__xn_safe_copy_from_user(&mph, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(mph)))
 		return -EFAULT;
 
 	cond = (RT_COND *)xnregistry_fetch(cph.opaque);
@@ -2036,8 +1816,8 @@ static int __rt_cond_wait(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	return rt_cond_wait(cond, mutex, timeout);
@@ -2052,11 +1832,8 @@ static int __rt_cond_signal(struct pt_regs *regs)
 	RT_COND_PLACEHOLDER ph;
 	RT_COND *cond;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	cond = (RT_COND *)xnregistry_fetch(ph.opaque);
@@ -2076,11 +1853,8 @@ static int __rt_cond_broadcast(struct pt_regs *regs)
 	RT_COND_PLACEHOLDER ph;
 	RT_COND *cond;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	cond = (RT_COND *)xnregistry_fetch(ph.opaque);
@@ -2103,14 +1877,8 @@ static int __rt_cond_inquire(struct pt_regs *regs)
 	RT_COND *cond;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	cond = (RT_COND *)xnregistry_fetch(ph.opaque);
@@ -2123,8 +1891,8 @@ static int __rt_cond_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -2160,16 +1928,10 @@ static int __rt_queue_create(struct pt_regs *regs)
 	int err, mode;
 	RT_QUEUE *q;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -2200,7 +1962,7 @@ static int __rt_queue_create(struct pt_regs *regs)
 	ph.opaque2 = &q->bufpool;
 	ph.mapsize = xnheap_extentsize(&q->bufpool);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -2226,9 +1988,6 @@ static int __rt_queue_bind(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	xnlock_get_irqsave(&nklock, s);
 
 	err =
@@ -2243,7 +2002,7 @@ static int __rt_queue_bind(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	/* We might need to migrate to secondary mode now for mapping the
@@ -2253,7 +2012,7 @@ static int __rt_queue_bind(struct pt_regs *regs)
 	if (xnpod_primary_p())
 		xnshadow_relax(0);
 
-	return err;
+	return 0;
 
       unlock_and_exit:
 
@@ -2272,11 +2031,8 @@ static int __rt_queue_delete(struct pt_regs *regs)
 	RT_QUEUE *q;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2308,14 +2064,8 @@ static int __rt_queue_alloc(struct pt_regs *regs)
 	void *buf;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg3(regs), sizeof(buf)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2343,8 +2093,8 @@ static int __rt_queue_alloc(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &buf,
-			      sizeof(buf)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &buf,
+				   sizeof(buf)))
 		return -EFAULT;
 
 	return err;
@@ -2363,11 +2113,8 @@ static int __rt_queue_free(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	buf = (void __user *)__xn_reg_arg2(regs);
@@ -2416,11 +2163,8 @@ static int __rt_queue_send(struct pt_regs *regs)
 	size_t size;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	/* Buffer to send. */
@@ -2475,11 +2219,8 @@ static int __rt_queue_write(struct pt_regs *regs)
 	size_t size;
 	int mode;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2493,9 +2234,6 @@ static int __rt_queue_write(struct pt_regs *regs)
 	/* Sending mode. */
 	mode = (int)__xn_reg_arg4(regs);
 
-	if (!access_rok(buf, size))
-		return -EFAULT;
-
 	mbuf = rt_queue_alloc(q, size);
 
 	if (!mbuf)
@@ -2503,7 +2241,7 @@ static int __rt_queue_write(struct pt_regs *regs)
 
 	if (size > 0) {
 		/* Slurp the message directly into the conveying buffer. */
-		if (__xn_copy_from_user(mbuf, buf, size)) {
+		if (__xn_safe_copy_from_user(mbuf, buf, size)) {
 			rt_queue_free(q, mbuf);
 			return -EFAULT;
 		}
@@ -2527,21 +2265,12 @@ static int __rt_queue_receive(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(buf)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg3(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2568,9 +2297,11 @@ static int __rt_queue_receive(struct pt_regs *regs)
 	   into the caller's address space. */
 
 	buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool, buf);
+
 	xnlock_put_irqrestore(&nklock, s);
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &buf, sizeof(buf)))
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &buf, sizeof(buf)))
 		err = -EFAULT;
 out:
 
@@ -2593,11 +2324,8 @@ static int __rt_queue_read(struct pt_regs *regs)
 	RT_QUEUE *q;
 	size_t size;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2608,14 +2336,8 @@ static int __rt_queue_read(struct pt_regs *regs)
 	/* Size of message space. */
 	size = (size_t) __xn_reg_arg3(regs);
 
-	if (!access_wok(buf, size))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg4(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	rsize = rt_queue_receive(q, &mbuf, timeout);
@@ -2623,7 +2345,7 @@ static int __rt_queue_read(struct pt_regs *regs)
 	if (rsize >= 0) {
 		size = size < rsize ? size : rsize;
 
-		if (size > 0 &&	__xn_copy_to_user(buf, mbuf, size))
+		if (size > 0 &&	__xn_safe_copy_to_user(buf, mbuf, size))
 			rsize = -EFAULT;
 
 		rt_queue_free(q, mbuf);
@@ -2644,14 +2366,8 @@ static int __rt_queue_inquire(struct pt_regs *regs)
 	RT_QUEUE *q;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2664,8 +2380,8 @@ static int __rt_queue_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -2704,16 +2420,10 @@ static int __rt_heap_create(struct pt_regs *regs)
 	int err, mode;
 	RT_HEAP *heap;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -2742,7 +2452,7 @@ static int __rt_heap_create(struct pt_regs *regs)
 	ph.opaque2 = &heap->heap_base;
 	ph.mapsize = xnheap_extentsize(&heap->heap_base);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -2768,9 +2478,6 @@ static int __rt_heap_bind(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	xnlock_get_irqsave(&nklock, s);
 
 	err =
@@ -2785,7 +2492,7 @@ static int __rt_heap_bind(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	/* We might need to migrate to secondary mode now for mapping the
@@ -2795,7 +2502,7 @@ static int __rt_heap_bind(struct pt_regs *regs)
 	if (xnpod_primary_p())
 		xnshadow_relax(0);
 
-	return err;
+	return 0;
 
       unlock_and_exit:
 
@@ -2814,11 +2521,8 @@ static int __rt_heap_delete(struct pt_regs *regs)
 	RT_HEAP *heap;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
@@ -2852,21 +2556,12 @@ static int __rt_heap_alloc(struct pt_regs *regs)
 	int err = 0;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg3(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
-				sizeof(timeout)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg4(regs), sizeof(buf)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2892,8 +2587,8 @@ static int __rt_heap_alloc(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &buf,
-			      sizeof(buf)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs), &buf,
+				   sizeof(buf)))
 		return -EFAULT;
 
 	return err;
@@ -2912,11 +2607,8 @@ static int __rt_heap_free(struct pt_regs *regs)
 	int err;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	buf = (void __user *)__xn_reg_arg2(regs);
@@ -2960,14 +2652,8 @@ static int __rt_heap_inquire(struct pt_regs *regs)
 	RT_HEAP *heap;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	heap = (RT_HEAP *)xnregistry_fetch(ph.opaque);
@@ -2980,8 +2666,8 @@ static int __rt_heap_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -3021,16 +2707,10 @@ static int __rt_alarm_create(struct pt_regs *regs)
 	RT_ALARM *alarm;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -3048,8 +2728,8 @@ static int __rt_alarm_create(struct pt_regs *regs)
 		alarm->cpid = p->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = alarm->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(alarm);
@@ -3067,11 +2747,8 @@ static int __rt_alarm_delete(struct pt_regs *regs)
 	RT_ALARM *alarm;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
@@ -3099,11 +2776,8 @@ static int __rt_alarm_start(struct pt_regs *regs)
 	RTIME value, interval;
 	RT_ALARM *alarm;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
@@ -3111,12 +2785,12 @@ static int __rt_alarm_start(struct pt_regs *regs)
 	if (!alarm)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&value, (void __user *)__xn_reg_arg2(regs),
-				sizeof(value)))
+	if (__xn_safe_copy_from_user(&value, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(value)))
 		return -EFAULT;
 
-	if (__xn_copy_from_user(&interval, (void __user *)__xn_reg_arg3(regs),
-				sizeof(interval)))
+	if (__xn_safe_copy_from_user(&interval, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(interval)))
 		return -EFAULT;
 
 	return rt_alarm_start(alarm, value, interval);
@@ -3131,10 +2805,7 @@ static int __rt_alarm_stop(struct pt_regs *regs)
 	RT_ALARM_PLACEHOLDER ph;
 	RT_ALARM *alarm;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
 				sizeof(ph)))
 		return -EFAULT;
 
@@ -3158,11 +2829,8 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 	int err = 0;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -3206,14 +2874,8 @@ static int __rt_alarm_inquire(struct pt_regs *regs)
 	RT_ALARM *alarm;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	alarm = (RT_ALARM *)xnregistry_fetch(ph.opaque);
@@ -3226,8 +2888,8 @@ static int __rt_alarm_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -3279,16 +2941,10 @@ static int __rt_intr_create(struct pt_regs *regs)
 	RT_INTR *intr;
 	unsigned irq;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -3316,8 +2972,8 @@ static int __rt_intr_create(struct pt_regs *regs)
 		intr->cpid = p->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = intr->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(intr);
@@ -3337,16 +2993,13 @@ static int __rt_intr_bind(struct pt_regs *regs)
 	RT_INTR_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_INTR_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-			      sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -3362,11 +3015,8 @@ static int __rt_intr_delete(struct pt_regs *regs)
 	RT_INTR *intr;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
@@ -3396,21 +3046,15 @@ static int __rt_intr_wait(struct pt_regs *regs)
 	int err = 0;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(timeout)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	if (timeout == TM_NONBLOCK)
 		return -EINVAL;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -3462,11 +3106,8 @@ static int __rt_intr_enable(struct pt_regs *regs)
 	RT_INTR_PLACEHOLDER ph;
 	RT_INTR *intr;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
@@ -3486,11 +3127,8 @@ static int __rt_intr_disable(struct pt_regs *regs)
 	RT_INTR_PLACEHOLDER ph;
 	RT_INTR *intr;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
@@ -3513,14 +3151,8 @@ static int __rt_intr_inquire(struct pt_regs *regs)
 	RT_INTR *intr;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(info)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	intr = (RT_INTR *)xnregistry_fetch(ph.opaque);
@@ -3533,8 +3165,8 @@ static int __rt_intr_inquire(struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-			      &info, sizeof(info)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
 		return -EFAULT;
 
 	return 0;
@@ -3569,16 +3201,10 @@ static int __rt_pipe_create(struct pt_regs *regs)
 	size_t poolsize;
 	RT_PIPE *pipe;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (__xn_reg_arg2(regs)) {
-		if (!access_rok(__xn_reg_arg2(regs), sizeof(name)))
-			return -EFAULT;
-
-		if (__xn_strncpy_from_user(name,
-					   (const char __user *)__xn_reg_arg2(regs),
-					   sizeof(name) - 1))
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1))
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -3602,8 +3228,8 @@ static int __rt_pipe_create(struct pt_regs *regs)
 		pipe->cpid = p->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = pipe->handle;
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				      sizeof(ph)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
 			err = -EFAULT;
 	} else
 		xnfree(pipe);
@@ -3623,16 +3249,13 @@ static int __rt_pipe_bind(struct pt_regs *regs)
 	RT_PIPE_PLACEHOLDER ph;
 	int err;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_PIPE_MAGIC, NULL);
 
 	if (err)
 		return err;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-			      sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -3648,11 +3271,8 @@ static int __rt_pipe_delete(struct pt_regs *regs)
 	RT_PIPE *pipe;
 	int err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
@@ -3684,11 +3304,8 @@ static int __rt_pipe_read(struct pt_regs *regs)
 	size_t size;
 	ssize_t err;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
@@ -3696,14 +3313,11 @@ static int __rt_pipe_read(struct pt_regs *regs)
 	if (!pipe)
 		return -ESRCH;
 
-	if (__xn_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
-				sizeof(timeout)))
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
+				     sizeof(timeout)))
 		return -EFAULT;
 
 	size = (size_t) __xn_reg_arg3(regs);
-
-	if (size > 0 && !access_wok(__xn_reg_arg2(regs), size))
-		return -EFAULT;
 
 	err = rt_pipe_receive(pipe, &msg, timeout);
 
@@ -3716,8 +3330,8 @@ static int __rt_pipe_read(struct pt_regs *regs)
 	if (size < P_MSGSIZE(msg))
 		err = -ENOBUFS;
 	else if (P_MSGSIZE(msg) > 0 &&
-		 __xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-				   P_MSGPTR(msg), P_MSGSIZE(msg)))
+		 __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+					P_MSGPTR(msg), P_MSGSIZE(msg)))
 		err = -EFAULT;
 
 	/* Zero-sized messages are allowed, so we still need to free the
@@ -3744,11 +3358,8 @@ static int __rt_pipe_write(struct pt_regs *regs)
 	ssize_t err;
 	int mode;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
@@ -3763,16 +3374,13 @@ static int __rt_pipe_write(struct pt_regs *regs)
 		/* Try flushing the streaming buffer in any case. */
 		return rt_pipe_send(pipe, NULL, 0, mode);
 
-	if (!access_rok(__xn_reg_arg2(regs), size))
-		return -EFAULT;
-
 	msg = rt_pipe_alloc(pipe, size);
 
 	if (!msg)
 		return -ENOMEM;
 
-	if (__xn_copy_from_user(P_MSGPTR(msg),
-				(void __user *)__xn_reg_arg2(regs), size)) {
+	if (__xn_safe_copy_from_user(P_MSGPTR(msg),
+				     (void __user *)__xn_reg_arg2(regs), size)) {
 		rt_pipe_free(pipe, msg);
 		return -EFAULT;
 	}
@@ -3803,11 +3411,8 @@ static int __rt_pipe_stream(struct pt_regs *regs)
 	ssize_t err;
 	void *buf;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
@@ -3820,9 +3425,6 @@ static int __rt_pipe_stream(struct pt_regs *regs)
 	if (size == 0)
 		/* Try flushing the streaming buffer in any case. */
 		return rt_pipe_stream(pipe, NULL, 0);
-
-	if (!access_rok(__xn_reg_arg2(regs), size))
-		return -EFAULT;
 
 	/* Try using a local fast buffer if the sent data fits into it. */
 
@@ -3838,7 +3440,7 @@ static int __rt_pipe_stream(struct pt_regs *regs)
 		buf = P_MSGPTR(msg);
 	}
 
-	if (__xn_copy_from_user(buf, (void __user *)__xn_reg_arg2(regs), size)) {
+	if (__xn_safe_copy_from_user(buf, (void __user *)__xn_reg_arg2(regs), size)) {
 		err = -EFAULT;
 		goto out;
 	}
@@ -3880,26 +3482,14 @@ static int __rt_io_get_region(struct pt_regs *regs)
 	int err, flags;
 	spl_t s;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg2(regs), sizeof(iorn->name)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg3(regs), sizeof(start)))
-		return -EFAULT;
-
-	if (!access_rok(__xn_reg_arg4(regs), sizeof(len)))
-		return -EFAULT;
-
 	iorn = (RT_IOREGION *) xnmalloc(sizeof(*iorn));
 
 	if (!iorn)
 		return -ENOMEM;
 
-	if (__xn_strncpy_from_user(iorn->name,
-				   (const char __user *)__xn_reg_arg2(regs),
-				   sizeof(iorn->name) - 1))
+	if (__xn_safe_strncpy_from_user(iorn->name,
+					(const char __user *)__xn_reg_arg2(regs),
+					sizeof(iorn->name) - 1))
 		return -EFAULT;
 
 	iorn->name[sizeof(iorn->name) - 1] = '\0';
@@ -3909,14 +3499,14 @@ static int __rt_io_get_region(struct pt_regs *regs)
 	if (err)
 		goto fail;
 
-	if (__xn_copy_from_user(&start, (void __user *)__xn_reg_arg3(regs),
-				sizeof(start))) {
+	if (__xn_safe_copy_from_user(&start, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(start))) {
 		err = -EFAULT;
 		goto fail;
 	}
 
-	if (__xn_copy_from_user(&len, (void __user *)__xn_reg_arg4(regs),
-				sizeof(len))) {
+	if (__xn_safe_copy_from_user(&len, (void __user *)__xn_reg_arg4(regs),
+				     sizeof(len))) {
 		err = -EFAULT;
 		goto fail;
 	}
@@ -3948,7 +3538,7 @@ static int __rt_io_get_region(struct pt_regs *regs)
 	ph.start = start;
 	ph.len = len;
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
 	return 0;
@@ -3996,11 +3586,8 @@ static int __rt_io_put_region(struct pt_regs *regs)
 	int flags;
 	spl_t s;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
-	if (__xn_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				sizeof(ph)))
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
