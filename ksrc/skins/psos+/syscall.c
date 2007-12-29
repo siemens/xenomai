@@ -101,9 +101,10 @@ static int __t_create(struct pt_regs *regs)
 		else {
 			err = xnshadow_map(&task->threadbase, u_completion);	/* May be NULL */
 			if (!err)
-				return 0;
-			t_delete((u_long)task);
+				got out;
 		}
+
+		t_delete((u_long)task);
 	}
 
 	/* Unblock and pass back error code. */
@@ -111,6 +112,7 @@ static int __t_create(struct pt_regs *regs)
 	if (u_completion)
 		xnshadow_signal_completion(u_completion, err);
 
+out:
 	return err;
 }
 
@@ -1238,8 +1240,8 @@ static int __rn_getseg(struct pt_regs *regs)
 		segaddr =
 		    rn->mapbase + xnheap_mapped_offset(&rn->heapbase, segaddr);
 		xnlock_put_irqrestore(&nklock, s);
-		if (__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &segaddr,
-				      sizeof(segaddr)))
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs), &segaddr,
+					   sizeof(segaddr)))
 			err = -EFAULT;
 	} else
 		xnlock_put_irqrestore(&nklock, s);

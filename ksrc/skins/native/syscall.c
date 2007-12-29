@@ -186,8 +186,9 @@ static int __rt_task_create(struct pt_regs *regs)
 			err = xnshadow_map(&task->thread_base, u_completion);
 			if (!err)
 				goto out;
-			rt_task_delete(task);
 		}
+
+		rt_task_delete(task);
 	}
 		
 fail:
@@ -202,7 +203,7 @@ fail:
 	 * error). We avoid double memory release when the XNZOMBIE
 	 * flag is raised, meaning the deletion hook has run, and the
 	 * TCB memory is already scheduled for release. */
-	if (err && task != NULL
+	if (task != NULL
 	    && !xnthread_test_state(&task->thread_base, XNZOMBIE))
 		xnfree(task);
 out:
