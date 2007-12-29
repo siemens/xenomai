@@ -384,33 +384,21 @@ static int __sem_init(struct pt_regs *regs)
 	union __xeno_sem sm, *usm;
 	unsigned value;
 	int pshared;
-	spl_t s;
 
 	usm = (union __xeno_sem *)__xn_reg_arg1(regs);
-
-	if (!access_wok((void __user *)usm, sizeof(*usm)))
-		return -EFAULT;
-
 	pshared = (int)__xn_reg_arg2(regs);
 	value = (unsigned)__xn_reg_arg3(regs);
 
-	xnlock_get_irqsave(&nklock, s);
+	if (__xn_safe_copy_from_user(&sm.shadow_sem,
+				     (void __user *)&usm->shadow_sem,
+				     sizeof(sm.shadow_sem)))
+		return -EFAULT;
 
-	__xn_copy_from_user(&sm.shadow_sem,
-			    (void __user *)&usm->shadow_sem,
-			    sizeof(sm.shadow_sem));
-
-	if (sem_init(&sm.native_sem, pshared, value) == -1) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (sem_init(&sm.native_sem, pshared, value) == -1)
 		return -thread_get_errno();
-	}
 
-	__xn_copy_to_user((void __user *)&usm->shadow_sem,
-			  &sm.shadow_sem, sizeof(usm->shadow_sem));
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)&usm->shadow_sem,
+				      &sm.shadow_sem, sizeof(usm->shadow_sem));
 }
 
 static int __sem_post(struct pt_regs *regs)
@@ -862,7 +850,7 @@ static int __pthread_mutexattr_getpshared(struct pt_regs *regs)
 
 	upsharedp = (int *)__xn_reg_arg2(regs);
 
-	if (__xn_copy_from_user(&attr, (void __user *)uattrp, sizeof(attr)))
+	if (__xn_safe_copy_from_user(&attr, (void __user *)uattrp, sizeof(attr)))
 		return -EFAULT;
 
 	err = pthread_mutexattr_getpshared(&attr, &pshared);
@@ -896,29 +884,21 @@ static int __pthread_mutex_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
 	union __xeno_mutex mx, *umx;
-	spl_t s;
 	int err;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
 	uattrp = (pthread_mutexattr_t *) __xn_reg_arg2(regs);
 
-	if (!access_wok((void __user *)umx, sizeof(*umx)))
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
-
-	if (!access_rok((void __user *)uattrp, sizeof(*uattrp)))
-		return -EFAULT;
-
-	/* We want the initialization to be atomic. */
-	xnlock_get_irqsave(&nklock, s);
-
-	__xn_copy_from_user(&mx.shadow_mutex,
-			    (void __user *)&umx->shadow_mutex,
-			    sizeof(mx.shadow_mutex));
 
 	if (uattrp) {
-		__xn_copy_from_user(&locattr, (void __user *)
-				    uattrp, sizeof(locattr));
+		if (__xn_safe_copy_from_user(&locattr, (void __user *)
+					     uattrp, sizeof(locattr)))
+			return -EFAULT;
 
 		attr = &locattr;
 	} else
@@ -926,17 +906,11 @@ static int __pthread_mutex_init(struct pt_regs *regs)
 
 	err = pthread_mutex_init(&mx.native_mutex, attr);
 
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (err)
 		return -err;
-	}
 
-	__xn_copy_to_user((void __user *)&umx->shadow_mutex,
-			  &mx.shadow_mutex, sizeof(umx->shadow_mutex));
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex,
+				      &mx.shadow_mutex, sizeof(umx->shadow_mutex));
 }
 
 static int __pthread_mutex_destroy(struct pt_regs *regs)
@@ -1137,29 +1111,21 @@ static int __pthread_cond_init(struct pt_regs *regs)
 {
 	pthread_condattr_t locattr, *attr, *uattrp;
 	union __xeno_cond cnd, *ucnd;
-	spl_t s;
 	int err;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 
 	uattrp = (pthread_condattr_t *) __xn_reg_arg2(regs);
 
-	if (!access_wok((void __user *)ucnd, sizeof(*ucnd)))
+	if (__xn_safe_copy_from_user(&cnd.shadow_cond,
+				     (void __user *)&ucnd->shadow_cond,
+				     sizeof(cnd.shadow_cond)))
 		return -EFAULT;
-
-	if (!access_rok((void __user *)uattrp, sizeof(*uattrp)))
-		return -EFAULT;
-
-	/* We want the initialization to be atomic. */
-	xnlock_get_irqsave(&nklock, s);
-
-	__xn_copy_from_user(&cnd.shadow_cond,
-			    (void __user *)&ucnd->shadow_cond,
-			    sizeof(cnd.shadow_cond));
 
 	if (uattrp) {
-		__xn_copy_from_user(&locattr,
-				    (void __user *)uattrp, sizeof(locattr));
+		if (__xn_safe_copy_from_user(&locattr,
+					     (void __user *)uattrp, sizeof(locattr)))
+			return -EFAULT;
 
 		attr = &locattr;
 	} else
@@ -1168,17 +1134,11 @@ static int __pthread_cond_init(struct pt_regs *regs)
 	/* Always use default attribute. */
 	err = pthread_cond_init(&cnd.native_cond, attr);
 
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
+	if (err)
 		return -err;
-	}
 
-	__xn_copy_to_user((void __user *)&ucnd->shadow_cond,
-			  &cnd.shadow_cond, sizeof(ucnd->shadow_cond));
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)&ucnd->shadow_cond,
+				      &cnd.shadow_cond, sizeof(ucnd->shadow_cond));
 }
 
 static int __pthread_cond_destroy(struct pt_regs *regs)
@@ -1585,10 +1545,8 @@ static int __mq_receive(struct pt_regs *regs)
 
 	ufd = assoc2ufd(assoc);
 
-	if (!access_wok(__xn_reg_arg3(regs), sizeof(len)))
+	if (__xn_safe_copy_from_user(&len, (ssize_t *) __xn_reg_arg3(regs), sizeof(len)))
 		return -EFAULT;
-
-	__xn_copy_from_user(&len, (ssize_t *) __xn_reg_arg3(regs), sizeof(len));
 
 	if (__xn_reg_arg4(regs)
 	    && !access_wok(__xn_reg_arg4(regs), sizeof(prio)))
@@ -1615,12 +1573,14 @@ static int __mq_receive(struct pt_regs *regs)
 	pse51_mq_finish_rcv(ufd->kfd, &msg);
 	xnlock_put_irqrestore(&nklock, s);
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg3(regs),
-			  &len, sizeof(len));
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				   &len, sizeof(len)))
+		return -EFAULT;
 
-	if (__xn_reg_arg4(regs))
-		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs),
-				  &prio, sizeof(prio));
+	if (__xn_reg_arg4(regs) &&
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs),
+				   &prio, sizeof(prio)))
+		return -EFAULT;
 
 	return 0;
 }
