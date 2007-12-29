@@ -73,21 +73,15 @@ static int __wind_task_init(struct pt_regs *regs)
 	WIND_TCB_PLACEHOLDER ph;
 	WIND_TCB *task;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(bulk)))
+	if (__xn_safe_copy_from_user(&bulk, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(bulk)))
 		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(ph)))
-		return -EFAULT;
-
-	__xn_copy_from_user(&bulk, (void __user *)__xn_reg_arg1(regs),
-			    sizeof(bulk));
 
 	if (bulk.a1) {
-		if (!access_rok(bulk.a1, sizeof(name)))
+		if (__xn_safe_strncpy_from_user(name, (const char __user *)bulk.a1,
+						sizeof(name) - 1))
 			return -EFAULT;
 
-		__xn_strncpy_from_user(name, (const char __user *)bulk.a1,
-				       sizeof(name) - 1);
 		name[sizeof(name) - 1] = '\0';
 		strncpy(p->comm, name, sizeof(p->comm));
 		p->comm[sizeof(p->comm) - 1] = '\0';
@@ -104,10 +98,8 @@ static int __wind_task_init(struct pt_regs *regs)
 	task = (WIND_TCB *)xnmalloc(sizeof(*task));
 
 	if (!task) {
-		if (u_completion)
-			xnshadow_signal_completion(u_completion, -ENOMEM);
-
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto fail;
 	}
 
 	xnthread_clear_state(&task->threadbase, XNZOMBIE);
@@ -121,21 +113,28 @@ static int __wind_task_init(struct pt_regs *regs)
 		task->auto_delete = 1;
 		/* Copy back the registry handle to the ph struct. */
 		ph.handle = xnthread_handle(&task->threadbase);
-		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &ph,
-				  sizeof(ph));
-		err = xnshadow_map(&task->threadbase, u_completion);
-	} else {
-		/* Unblock and pass back error code. */
-
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &ph,
+					   sizeof(ph)))
+			err = -EFAULT;
+		else {
+			err = xnshadow_map(&task->threadbase, u_completion);
+			if (!err)
+				goto out;
+		}
+		taskDeleteForce((TASK_ID) task);
+	} else
 		err = wind_errnoget();
 
-		if (u_completion)
-			xnshadow_signal_completion(u_completion, err);
-	}
+	/* Unblock and pass back error code. */
 
-	if (err && !xnthread_test_state(&task->threadbase, XNZOMBIE))
+fail:
+
+	if (u_completion)
+		xnshadow_signal_completion(u_completion, err);
+
+	if (task && !xnthread_test_state(&task->threadbase, XNZOMBIE))
 		xnfree(task);
-
+out:
 	return err;
 }
 
@@ -251,9 +250,6 @@ static int __wind_task_self(struct pt_regs *regs)
 	WIND_TCB_PLACEHOLDER ph;
 	WIND_TCB *pTcb;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ph)))
-		return -EFAULT;
-
 	pTcb = __wind_task_current(current);
 
 	if (!pTcb)
@@ -263,9 +259,7 @@ static int __wind_task_self(struct pt_regs *regs)
 
 	ph.handle = xnthread_handle(&pTcb->threadbase);	/* Copy back the task handle. */
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph));
 }
 
 /*
@@ -302,9 +296,6 @@ static int __wind_task_priorityget(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 	int prio;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(prio)))
-		return -EFAULT;
-
 	if (handle)
 		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 	else
@@ -316,10 +307,8 @@ static int __wind_task_priorityget(struct pt_regs *regs)
 	if (taskPriorityGet((TASK_ID) pTcb, &prio) == ERROR)
 		return wind_errnoget();
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &prio,
-			  sizeof(prio));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &prio,
+				      sizeof(prio));
 }
 
 /*
@@ -404,18 +393,14 @@ static int __wind_task_nametoid(struct pt_regs *regs)
 	WIND_TCB_PLACEHOLDER ph;
 	TASK_ID task_id;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(ph)))
-		return -EFAULT;
-
 	if (!__xn_reg_arg1(regs))
 		return S_taskLib_NAME_NOT_FOUND;
 
-	if (!access_rok(__xn_reg_arg1(regs), sizeof(name)))
+	if (__xn_safe_strncpy_from_user(name,
+					(const char __user *)__xn_reg_arg1(regs),
+					sizeof(name) - 1))
 		return -EFAULT;
 
-	__xn_strncpy_from_user(name,
-			       (const char __user *)__xn_reg_arg1(regs),
-			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
 	task_id = taskNameToId(name);
@@ -425,9 +410,7 @@ static int __wind_task_nametoid(struct pt_regs *regs)
 
 	ph.handle = task_id;	/* Copy back the task handle. */
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &ph, sizeof(ph));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &ph, sizeof(ph));
 }
 
 /*
@@ -441,9 +424,6 @@ static int __wind_sem_bcreate(struct pt_regs *regs)
 	SEM_ID sem_id;
 	int flags;
 
-	if (!access_wok(__xn_reg_arg3(regs), sizeof(sem_id)))
-		return -EFAULT;
-
 	flags = __xn_reg_arg1(regs);
 	state = __xn_reg_arg2(regs);
 	sem = (wind_sem_t *)semBCreate(flags, state);
@@ -452,10 +432,9 @@ static int __wind_sem_bcreate(struct pt_regs *regs)
 		return wind_errnoget();
 
 	sem_id = sem->handle;
-	__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &sem_id,
-			  sizeof(sem_id));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &sem_id,
+				      sizeof(sem_id));
 }
 
 /*
@@ -468,9 +447,6 @@ static int __wind_sem_ccreate(struct pt_regs *regs)
 	wind_sem_t *sem;
 	SEM_ID sem_id;
 
-	if (!access_wok(__xn_reg_arg3(regs), sizeof(sem_id)))
-		return -EFAULT;
-
 	flags = __xn_reg_arg1(regs);
 	count = __xn_reg_arg2(regs);
 	sem = (wind_sem_t *)semCCreate(flags, count);
@@ -479,10 +455,9 @@ static int __wind_sem_ccreate(struct pt_regs *regs)
 		return wind_errnoget();
 
 	sem_id = sem->handle;
-	__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &sem_id,
-			  sizeof(sem_id));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &sem_id,
+				      sizeof(sem_id));
 }
 
 /*
@@ -495,9 +470,6 @@ static int __wind_sem_mcreate(struct pt_regs *regs)
 	SEM_ID sem_id;
 	int flags;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(sem_id)))
-		return -EFAULT;
-
 	flags = __xn_reg_arg1(regs);
 	sem = (wind_sem_t *)semMCreate(flags);
 
@@ -505,10 +477,9 @@ static int __wind_sem_mcreate(struct pt_regs *regs)
 		return wind_errnoget();
 
 	sem_id = sem->handle;
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &sem_id,
-			  sizeof(sem_id));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &sem_id,
+				      sizeof(sem_id));
 }
 
 /*
@@ -602,9 +573,6 @@ static int __wind_taskinfo_name(struct pt_regs *regs)
 	const char *name;
 	WIND_TCB *pTcb;
 
-	if (!access_wok(__xn_reg_arg2(regs), XNOBJECT_NAME_LEN))
-		return -EFAULT;
-
 	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 
 	if (!pTcb)
@@ -617,10 +585,8 @@ static int __wind_taskinfo_name(struct pt_regs *regs)
 
 	/* We assume that a VxWorks task name fits in XNOBJECT_NAME_LEN
 	   bytes, including the trailing \0. */
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), name,
-			  strlen(name) + 1);
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), name,
+				      strlen(name) + 1);
 }
 
 /*
@@ -632,14 +598,10 @@ static int __wind_taskinfo_iddfl(struct pt_regs *regs)
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	TASK_ID ret_id;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(ret_id)))
-		return -EFAULT;
-
 	ret_id = taskIdDefault(handle);
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &ret_id,
-			  sizeof(ret_id));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &ret_id,
+				      sizeof(ret_id));
 }
 
 /*
@@ -652,9 +614,6 @@ static int __wind_taskinfo_status(struct pt_regs *regs)
 	unsigned long status;
 	WIND_TCB *pTcb;
 	spl_t s;
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(status)))
-		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -669,10 +628,8 @@ static int __wind_taskinfo_status(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &status,
-			  sizeof(status));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &status,
+				      sizeof(status));
 }
 
 /*
@@ -709,9 +666,6 @@ static int __wind_errno_taskget(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 	int errcode;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(errcode)))
-		return -EFAULT;
-
 	if (handle)
 		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 	else
@@ -725,10 +679,8 @@ static int __wind_errno_taskget(struct pt_regs *regs)
 	if (errcode == ERROR)
 		return wind_errnoget();
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &errcode,
-			  sizeof(errcode));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &errcode,
+				      sizeof(errcode));
 }
 
 /*
@@ -754,9 +706,6 @@ static int __wind_msgq_create(struct pt_regs *regs)
 	wind_msgq_t *msgq;
 	MSG_Q_ID qid;
 
-	if (!access_wok(__xn_reg_arg4(regs), sizeof(qid)))
-		return -EFAULT;
-
 	nb_msgs = __xn_reg_arg1(regs);
 	length = __xn_reg_arg2(regs);
 	flags = __xn_reg_arg3(regs);
@@ -766,10 +715,9 @@ static int __wind_msgq_create(struct pt_regs *regs)
 		return wind_errnoget();
 
 	qid = msgq->handle;
-	__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &qid,
-			  sizeof(qid));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs), &qid,
+				      sizeof(qid));
 }
 
 /*
@@ -802,9 +750,6 @@ static int __wind_msgq_nummsgs(struct pt_regs *regs)
 	wind_msgq_t *msgq;
 	int nummsgs;
 
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(nummsgs)))
-		return -EFAULT;
-
 	msgq = (wind_msgq_t *)xnregistry_fetch(handle);
 
 	if (!msgq)
@@ -815,10 +760,8 @@ static int __wind_msgq_nummsgs(struct pt_regs *regs)
 	if (nummsgs == ERROR)
 		return wind_errnoget();
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &nummsgs,
-			  sizeof(nummsgs));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &nummsgs,
+				      sizeof(nummsgs));
 }
 
 /*
@@ -835,12 +778,6 @@ static int __wind_msgq_receive(struct pt_regs *regs)
 
 	nbytes = __xn_reg_arg3(regs);
 	timeout = __xn_reg_arg4(regs);
-
-	if (!access_wok(__xn_reg_arg2(regs), nbytes))
-		return -EFAULT;
-
-	if (!access_wok(__xn_reg_arg5(regs), sizeof(nbytes)))
-		return -EFAULT;
 
 	msgq = (wind_msgq_t *)xnregistry_fetch(handle);
 
@@ -861,11 +798,13 @@ static int __wind_msgq_receive(struct pt_regs *regs)
 	err = msgQReceive((MSG_Q_ID)msgq, msgbuf, nbytes, timeout);
 
 	if (err != ERROR) {
-		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-				  msgbuf, nbytes);
-		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs),
-				  &err, sizeof(err));
-		err = 0;
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+					   msgbuf, nbytes) ||
+		    __xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs),
+					   &err, sizeof(err)))
+			err = -EFAULT;
+		else
+			err = 0;
 	} else
 		err = wind_errnoget();
 
@@ -903,9 +842,6 @@ static int __wind_msgq_send(struct pt_regs *regs)
 	if (nbytes > msgq->msg_length)
 		return S_msgQLib_INVALID_MSG_LENGTH;
 
-	if (!access_rok(__xn_reg_arg2(regs), nbytes))
-		return -EFAULT;
-
 	if (nbytes <= sizeof(tmp_buf))
 		msgbuf = tmp_buf;
 	else {
@@ -917,14 +853,19 @@ static int __wind_msgq_send(struct pt_regs *regs)
 
 	/* This is sub-optimal since we end up copying the data twice. */
 
-	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs), nbytes);
-
-	err = msgQSend((MSG_Q_ID)msgq, msgbuf, nbytes, timeout, prio);
+	if (__xn_safe_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs), nbytes))
+		err = -EFAULT;
+	else {
+		if (msgQSend((MSG_Q_ID)msgq, msgbuf, nbytes, timeout, prio) == ERROR)
+			err = wind_errnoget();
+		else
+			err = 0;
+	}
 
 	if (msgbuf != tmp_buf)
 		xnfree(msgbuf);
 
-	return err == ERROR ? wind_errnoget() : 0;
+	return err;
 }
 
 /*
@@ -935,14 +876,10 @@ static int __wind_tick_get(struct pt_regs *regs)
 {
 	ULONG ticks;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(ticks)))
-		return -EFAULT;
-
 	ticks = tickGet();
-	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
-			  sizeof(ticks));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
+				      sizeof(ticks));
 }
 
 /*
@@ -981,15 +918,9 @@ static int __wind_sys_clkenable(struct pt_regs *regs)
 
 static int __wind_sys_clkrateget(struct pt_regs *regs)
 {
-	int hz;
+	int hz = sysClkRateGet();
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(hz)))
-		return -EFAULT;
-
-	hz = sysClkRateGet();
-	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &hz, sizeof(hz));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &hz, sizeof(hz));
 }
 
 /*
@@ -1010,9 +941,6 @@ static int __wind_wd_create(struct pt_regs *regs)
 	WDOG_ID wdog_id;
 	wind_wd_t *wd;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(wdog_id)))
-		return -EFAULT;
-
 	wd = (wind_wd_t *)wdCreate();
 
 	if (!wd)
@@ -1020,10 +948,9 @@ static int __wind_wd_create(struct pt_regs *regs)
 
 	wd->rh = wind_get_rholder();
 	wdog_id = wd->handle;
-	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &wdog_id,
-			  sizeof(wdog_id));
 
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &wdog_id,
+				      sizeof(wdog_id));
 }
 
 /*
@@ -1074,9 +1001,6 @@ static int __wind_wd_start(struct pt_regs *regs)
 	int timeout;
 	spl_t s;
 
-	if (!access_wok(__xn_reg_arg5(regs), sizeof(start_server)))
-		return -EFAULT;
-
 	handle = __xn_reg_arg1(regs);
 
 	wd = (wind_wd_t *)xnregistry_fetch(handle);
@@ -1110,10 +1034,8 @@ static int __wind_wd_start(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &start_server,
-			  sizeof(start_server));
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs), &start_server,
+				      sizeof(start_server));
 }
 
 /*
@@ -1149,9 +1071,6 @@ static int __wind_wd_wait(struct pt_regs *regs)
 	int err = 0;
 	spl_t s;
 
-	if (!access_wok(__xn_reg_arg1(regs), sizeof(wd->wdt)))
-		return -EFAULT;
-
 	rh = wind_get_rholder();
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1186,9 +1105,8 @@ static int __wind_wd_wait(struct pt_regs *regs)
 		/* We need the following to mark the watchdog as unqueued. */
 		inith(holder);
 		xnlock_put_irqrestore(&nklock, s);
-		__xn_copy_to_user((void __user *)__xn_reg_arg1(regs),
-				  &wd->wdt, sizeof(wd->wdt));
-		return 0;
+		return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs),
+					      &wd->wdt, sizeof(wd->wdt));
 	}
 
       unlock_and_exit:
