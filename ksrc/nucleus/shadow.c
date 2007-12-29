@@ -1753,20 +1753,22 @@ static int xnshadow_sys_completion(struct task_struct *curr,
 	   space. */
 
 	for (;;) {		/* Poor man's semaphore P. */
-		xnlock_get_irqsave(&nklock, s);
-
 		__xn_copy_from_user(current, &completion, u_completion, sizeof(completion));
 
-		if (completion.syncflag)
+		xnlock_get_irqsave(&nklock, s);
+
+		if (completion.syncflag) {
+			xnlock_put_irqrestore(&nklock, s);
 			break;
+		}
 
 		completion.pid = current->pid;
+
+		xnlock_put_irqrestore(&nklock, s);
 
 		__xn_copy_to_user(current, u_completion, &completion, sizeof(completion));
 
 		set_current_state(TASK_INTERRUPTIBLE);
-
-		xnlock_put_irqrestore(&nklock, s);
 
 		schedule();
 
@@ -1776,8 +1778,6 @@ static int xnshadow_sys_completion(struct task_struct *curr,
 			return -ERESTARTSYS;
 		}
 	}
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return completion.syncflag == completion_value_ok ? 0 : (int)completion.syncflag;
 }
