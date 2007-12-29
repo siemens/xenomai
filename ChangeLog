@@ -5,6 +5,13 @@
 
 2007-12-29  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (xnshadow_sys_completion): Fix error path
+	upon signal receipt.
+
+	* ksrc/nucleus/shadow.c (xnshadow_signal_completion): Don't hold
+	the superlock (uselessly) in code that might sleep due to a memory
+	access fault.
+
 	* ksrc/nucleus/shadow.c, ksrc/skins/*/syscalls.c, include/asm-*,
 	include/rtdm: Use vanilla in-atomic versions of copy_from/to_user
 	macros.
