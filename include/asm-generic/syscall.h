@@ -62,7 +62,9 @@ typedef struct xnsysinfo {
 #ifdef __KERNEL__
 
 #include <linux/types.h>
+#include <linux/uaccess.h>
 #include <asm/xenomai/wrappers.h>
+#include <asm/xenomai/hal.h>
 
 struct task_struct;
 struct pt_regs;
