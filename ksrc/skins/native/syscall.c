@@ -2345,17 +2345,18 @@ static int __rt_queue_write(struct task_struct *curr, struct pt_regs *regs)
 	/* Sending mode. */
 	mode = (int)__xn_reg_arg4(regs);
 
-	if (!__xn_access_ok(curr, VERIFY_READ, buf, size))
-		return -EFAULT;
-
 	mbuf = rt_queue_alloc(q, size);
 
 	if (!mbuf)
 		return -ENOMEM;
 
-	if (size > 0)
+	if (size > 0) {
+		if (!__xn_access_ok(curr, VERIFY_READ, buf, size))
+			return -EFAULT;
+
 		/* Slurp the message directly into the conveying buffer. */
 		__xn_copy_from_user(curr, mbuf, buf, size);
+	}
 
 	return rt_queue_send(q, mbuf, size, mode);
 }
@@ -2397,8 +2398,9 @@ static int __rt_queue_receive(struct task_struct *curr, struct pt_regs *regs)
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
 	if (!q) {
+		xnlock_put_irqrestore(&nklock, s);
 		err = -ESRCH;
-		goto unlock_and_exit;
+		goto out;
 	}
 
 	err = (int)rt_queue_receive(q, &buf, timeout);
@@ -2406,17 +2408,19 @@ static int __rt_queue_receive(struct task_struct *curr, struct pt_regs *regs)
 	/* Convert the caller-based address of buf to the equivalent area
 	   into the kernel address space. */
 
-	if (err >= 0) {
-		/* Convert the kernel-based address of buf to the equivalent area
-		   into the caller's address space. */
-		buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool, buf);
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
-				  &buf, sizeof(buf));
+	if (err < 0) {
+		xnlock_put_irqrestore(&nklock, s);
+		goto out;
 	}
 
-      unlock_and_exit:
+	/* Convert the kernel-based address of buf to the equivalent area
+	   into the caller's address space. */
 
+	buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool, buf);
 	xnlock_put_irqrestore(&nklock, s);
+	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
+			  &buf, sizeof(buf));
+out:
 
 	return err;
 }

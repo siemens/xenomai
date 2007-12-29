@@ -5,6 +5,9 @@
 
 2007-12-29  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/syscall.c (__rt_queue_write): Do not check the
+	source buffer whenever the transmit size is 0.
+	
 	* ksrc/nucleus/shadow.c (xnshadow_sys_completion): Fix error path
 	upon signal receipt.
 
