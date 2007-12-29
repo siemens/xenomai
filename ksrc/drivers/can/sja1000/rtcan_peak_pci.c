@@ -78,6 +78,7 @@ struct rtcan_peak_pci
 
 static struct pci_device_id peak_pci_tbl[] = {
 	{PEAK_PCI_VENDOR_ID, PEAK_PCI_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+	{ }
 };
 MODULE_DEVICE_TABLE (pci, peak_pci_tbl);
 
