@@ -1556,9 +1556,6 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	featmis = (~XENOMAI_FEAT_DEP & (featdep & XENOMAI_FEAT_MAN));
 
 	if (infarg) {
-		if (!access_wok(infarg, sizeof(finfo)))
-			return -EFAULT;
-
 		/* Pass back the supported feature set and the ABI revision
 		   level to user-space. */
 
@@ -1576,7 +1573,7 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 				      sizeof(finfo.feat_req_s));
 		finfo.abirev = XENOMAI_ABI_REV;
 
-		if (__xn_copy_to_user((void *)infarg, &finfo, sizeof(finfo)))
+		if (__xn_safe_copy_to_user((void *)infarg, &finfo, sizeof(finfo)))
 			return -EFAULT;
 	}
 
@@ -1696,9 +1693,6 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 	xnsysinfo_t info;
 	spl_t s;
 
-	if (!access_wok(infarg, sizeof(info)))
-		return -EFAULT;
-
 	xnlock_get_irqsave(&nklock, s);
 
 	if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
@@ -1709,13 +1703,12 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 
 	timebasep = muxtable[muxid].props->timebasep;
 	info.tickval = xntbase_get_tickval(timebasep ? *timebasep : &nktbase);
+
 	xnlock_put_irqrestore(&nklock, s);
+
 	info.cpufreq = xnarch_get_cpu_freq();
 
-	if (__xn_copy_to_user((void __user *)infarg, &info, sizeof(info)))
-		return -EFAULT;
-
-	return 0;
+	return __xn_safe_copy_to_user((void __user *)infarg, &info, sizeof(info));
 }
 
 #define completion_value_ok ((1UL << (BITS_PER_LONG-1))-1)
