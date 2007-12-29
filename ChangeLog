@@ -5,6 +5,8 @@
 
 2007-12-29  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-*/syscall*.h: Reshuffle uaccess wrappers.
+	
 	* ksrc/nucleus/shadow.c (xnshadow_sys_completion): Fix error path
 	upon signal receipt.
 
