@@ -161,7 +161,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -236,7 +235,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libnative.la
-libnative_la_LDFLAGS = -version-info 1:0:0 -lpthread
+libnative_la_LDFLAGS = -version-info 2:0:0 -lpthread
 libnative_la_SOURCES = \
 	alarm.c \
 	cond.c \
