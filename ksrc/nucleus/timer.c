@@ -381,7 +381,7 @@ static int xntimer_start_periodic(xntimer_t *timer,
 {
 	trace_mark(xn_nucleus_timer_start,
 		   "timer %p base %s value %Lu interval %Lu mode %u", timer,
-		   xntimer_base(timer)->name->name, value, interval, mode);
+		   xntimer_base(timer)->name, value, interval, mode);
 
 	if (!testbits(timer->status, XNTIMER_DEQUEUED))
 		xntimer_dequeue_periodic(timer);
