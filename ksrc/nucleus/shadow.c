@@ -1441,13 +1441,15 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 
       release_task:
 
-	if (__xn_reg_arg1(regs))
-		__xn_copy_to_user((void __user *)__xn_reg_arg1(regs),
-				  &thread->entry, sizeof(thread->entry));
+	if (__xn_reg_arg1(regs) &&
+	    __xn_copy_to_user((void __user *)__xn_reg_arg1(regs),
+			      &thread->entry, sizeof(thread->entry)))
+		return -EFAULT;
 
-	if (__xn_reg_arg2(regs))
-		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
-				  &thread->cookie, sizeof(thread->cookie));
+	if (__xn_reg_arg2(regs) &&
+	    __xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
+			      &thread->cookie, sizeof(thread->cookie)))
+		return -EFAULT;
 
 	return xnshadow_harden();
 }
@@ -1574,7 +1576,8 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 				      sizeof(finfo.feat_req_s));
 		finfo.abirev = XENOMAI_ABI_REV;
 
-		__xn_copy_to_user((void *)infarg, &finfo, sizeof(finfo));
+		if (__xn_copy_to_user((void *)infarg, &finfo, sizeof(finfo)))
+			return -EFAULT;
 	}
 
 	if (featmis)
@@ -1708,7 +1711,9 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 	info.tickval = xntbase_get_tickval(timebasep ? *timebasep : &nktbase);
 	xnlock_put_irqrestore(&nklock, s);
 	info.cpufreq = xnarch_get_cpu_freq();
-	__xn_copy_to_user((void __user *)infarg, &info, sizeof(info));
+
+	if (__xn_copy_to_user((void __user *)infarg, &info, sizeof(info)))
+		return -EFAULT;
 
 	return 0;
 }
@@ -1719,26 +1724,27 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 {
 	xncompletion_t completion;
 	struct task_struct *p;
+	int discarded;
 	spl_t s;
 
-	/* We should not be able to signal completion to any stale
-	   waiter. */
+	if (__xn_copy_from_user(&completion, u_completion, sizeof(completion)))
+		return;
 
+	/* Hold the nucleus lock to avoid missing a wakeup signal. */
 	xnlock_get_irqsave(&nklock, s);
 
-	__xn_copy_from_user(&completion, u_completion, sizeof(completion));
 	/* Poor man's semaphore V. */
 	completion.syncflag = err ? : completion_value_ok;
-	__xn_copy_to_user(u_completion, &completion, sizeof(completion));
 
 	if (completion.pid == -1) {
-		/* The waiter did not enter xnshadow_wait_completion() yet:
-		   just raise the flag and exit. */
 		xnlock_put_irqrestore(&nklock, s);
+		discarded = __xn_copy_to_user(u_completion, &completion, sizeof(completion));
 		return;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	discarded = __xn_copy_to_user(u_completion, &completion, sizeof(completion));
 
 	read_lock(&tasklist_lock);
 
@@ -1757,36 +1763,36 @@ static int xnshadow_sys_completion(struct pt_regs *regs)
 	xncompletion_t completion;
 	spl_t s;
 
-	/* The completion block is always part of the waiter's address
-	   space. */
-
 	for (;;) {		/* Poor man's semaphore P. */
+
+		if (__xn_copy_from_user(&completion, u_completion, sizeof(completion)))
+			return -EFAULT;
+
 		xnlock_get_irqsave(&nklock, s);
 
-		__xn_copy_from_user(&completion, u_completion, sizeof(completion));
-
-		if (completion.syncflag)
+		if (completion.syncflag) {
+			xnlock_put_irqrestore(&nklock, s);
 			break;
+		}
 
 		completion.pid = current->pid;
 
-		__xn_copy_to_user(u_completion, &completion, sizeof(completion));
+		xnlock_put_irqrestore(&nklock, s);
+
+		if (__xn_copy_to_user(u_completion, &completion, sizeof(completion)))
+			return -EFAULT;
 
 		set_current_state(TASK_INTERRUPTIBLE);
-
-		xnlock_put_irqrestore(&nklock, s);
 
 		schedule();
 
 		if (signal_pending(current)) {
 			completion.pid = -1;
-			__xn_copy_to_user(u_completion, &completion, sizeof(completion));
-			completion.syncflag = -ERESTARTSYS;
-			break;
+			if (__xn_copy_to_user(u_completion, &completion, sizeof(completion)))
+				return -EFAULT;
+			return -ERESTARTSYS;
 		}
 	}
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	return completion.syncflag == completion_value_ok ? 0 : (int)completion.syncflag;
 }
