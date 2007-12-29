@@ -1,3 +1,8 @@
+2007-12-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_sys_completion): Fix error path
+	upon signal receipt.
+
 2007-12-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Decrease calibration value

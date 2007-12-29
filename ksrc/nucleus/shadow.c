@@ -1784,8 +1784,7 @@ static int xnshadow_sys_completion(struct task_struct *curr,
 		if (signal_pending(current)) {
 			completion.pid = -1;
 			__xn_copy_to_user(current, u_completion, &completion, sizeof(completion));
-			completion.syncflag = -ERESTARTSYS;
-			break;
+			return -ERESTARTSYS;
 		}
 	}
 
