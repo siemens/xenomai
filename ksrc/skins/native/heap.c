@@ -201,8 +201,8 @@ static void __heap_flush_private(xnheap_t *heap,
  *
  * - H_DMA causes the block pool associated to the heap to be
  * allocated in physically contiguous memory, suitable for DMA
- * operations with I/O devices. The physical address of the
- * heap can be obtained by a call to rt_heap_inquire().
+ * operations with I/O devices. A 128Kb limit exists for @a heapsize
+ * when this flag is passed.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -730,7 +730,6 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 	info->usablemem = xnheap_usable_mem(&heap->heap_base);
 	info->usedmem = xnheap_used_mem(&heap->heap_base);
 	info->mode = heap->mode;
-	info->phys_addr = (heap->mode & H_SINGLE) ? virt_to_phys(heap->sba):0;
 
       unlock_and_exit:
 

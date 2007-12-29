@@ -1180,11 +1180,7 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 		 * space. Assume that we can wait to get the required memory.
 		 */
 
-		if (size <= KMALLOC_MAX_SIZE)
-			ptr = kmalloc(size, kmflags | GFP_KERNEL);
-		else
-			ptr = (void*) __get_free_pages(kmflags | GFP_KERNEL,
-						       get_order(size));
+		ptr = kmalloc(size, kmflags | GFP_KERNEL);
 
 		if (!ptr)
 			return NULL;
@@ -1216,10 +1212,7 @@ static inline void __unreserve_and_free_heap(void *ptr, size_t size,
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 			ClearPageReserved(virt_to_page(vaddr));
 
-		if (size <= KMALLOC_MAX_SIZE)
-			kfree(ptr);
-		else
-			free_pages((unsigned long)ptr, get_order(size));
+		kfree(ptr);
 	}
 }
 

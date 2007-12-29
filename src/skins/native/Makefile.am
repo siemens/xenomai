@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libnative.la
 
-libnative_la_LDFLAGS = -version-info 2:0:0 -lpthread
+libnative_la_LDFLAGS = -version-info 1:0:0 -lpthread
 
 libnative_la_SOURCES = \
 	alarm.c \

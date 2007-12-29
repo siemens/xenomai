@@ -34,10 +34,6 @@
 #define H_SINGLE   0x400	/* Manage as single-block area. */
 #define H_SHARED   (H_MAPPABLE|H_SINGLE) /* I.e. shared memory segment. */
 
-/** Structure containing heap-information useful to users.
- *
- *  @see rt_heap_inquire()
- */
 typedef struct rt_heap_info {
 
     int nwaiters;		/* !< Number of pending tasks. */
@@ -51,8 +47,6 @@ typedef struct rt_heap_info {
     size_t usedmem;		/* !< Amount of memory used. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
-
-    unsigned long phys_addr;	/* !< Physical address. */
 
 } RT_HEAP_INFO;
 

@@ -39,7 +39,7 @@
 #define __xn_feat_x86_tsc 0x00000002
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   2UL
+#define XENOMAI_ABI_REV   1UL
 
 #ifdef CONFIG_X86_TSC
 #define __xn_feat_x86_tsc_mask __xn_feat_x86_tsc
