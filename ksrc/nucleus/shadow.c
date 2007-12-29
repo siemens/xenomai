@@ -1721,15 +1721,25 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 {
 	xncompletion_t completion;
 	struct task_struct *p;
+	spl_t s;
 
 	__xn_copy_from_user(current, &completion, u_completion, sizeof(completion));
+
+	/* Hold the nucleus lock to avoid missing a wakeup signal. */
+	xnlock_get_irqsave(&nklock, s);
+
 	/* Poor man's semaphore V. */
 	completion.syncflag = err ? : completion_value_ok;
-	__xn_copy_to_user(current, u_completion, &completion, sizeof(completion));
 
-	if (completion.pid == -1)
-		/* The waiter did not enter xnshadow_wait_completion() yet:
-		   just raise the flag and exit. */
+	if (completion.pid == -1) {
+		xnlock_put_irqrestore(&nklock, s);
+		__xn_copy_to_user(u_completion, &completion, sizeof(completion));
+		return;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	__xn_copy_to_user(u_completion, &completion, sizeof(completion));
 
 	read_lock(&tasklist_lock);
 
