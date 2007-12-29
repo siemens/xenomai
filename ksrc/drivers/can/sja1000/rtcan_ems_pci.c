@@ -98,6 +98,7 @@ struct rtcan_ems_pci
 static struct pci_device_id ems_pci_tbl[] = {
 	{EMS_PCI_VENDOR_ID, EMS_PCI_DEVICE_ID,
 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+	{ }
 };
 MODULE_DEVICE_TABLE (pci, ems_pci_tbl);
 
