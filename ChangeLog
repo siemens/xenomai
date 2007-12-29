@@ -1,3 +1,8 @@
+2007-12-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/syscall.c (__rt_queue_write): Do not check the
+	source buffer whenever the transmit size is 0.
+	
 2007-12-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/i386/patches: Update to 2.6.20.21-i386-1.12-00,

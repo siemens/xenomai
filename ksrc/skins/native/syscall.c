@@ -2337,17 +2337,18 @@ static int __rt_queue_write(struct task_struct *curr, struct pt_regs *regs)
 	/* Sending mode. */
 	mode = (int)__xn_reg_arg4(regs);
 
-	if (!__xn_access_ok(curr, VERIFY_READ, buf, size))
-		return -EFAULT;
-
 	mbuf = rt_queue_alloc(q, size);
 
 	if (!mbuf)
 		return -ENOMEM;
 
-	if (size > 0)
+	if (size > 0) {
+		if (!__xn_access_ok(curr, VERIFY_READ, buf, size))
+			return -EFAULT;
+
 		/* Slurp the message directly into the conveying buffer. */
 		__xn_copy_from_user(curr, mbuf, buf, size);
+	}
 
 	return rt_queue_send(q, mbuf, size, mode);
 }
