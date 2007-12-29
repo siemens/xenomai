@@ -27,13 +27,7 @@
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
 
-#define wrap_range_ok(task,addr,size) ({ \
-	unsigned long flag, sum; \
-	__asm__("adds %1, %2, %3; sbcccs %1, %1, %0; movcc %0, #0" \
-		: "=&r" (flag), "=&r" (sum) \
-		: "r" (addr), "Ir" (size), "0" ((task)->thread_info->addr_limit) \
-		: "cc"); \
-	(flag == 0); })
+#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
 #define rthal_irq_descp(irq)	(&irq_desc[(irq)])
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)

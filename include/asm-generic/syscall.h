@@ -62,6 +62,7 @@ typedef struct xnsysinfo {
 #ifdef __KERNEL__
 
 #include <linux/types.h>
+#include <asm/xenomai/wrappers.h>
 
 struct task_struct;
 struct pt_regs;
@@ -109,6 +110,37 @@ extern int nkerrptd;
 #define xnshadow_thread(t) ((xnthread_t *)xnshadow_thrptd(t))
 /* The errno field must be addressable for plain Linux tasks too. */
 #define xnshadow_errno(t)  (*(int *)&((t)->ptd[nkerrptd]))
+
+#define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
+#define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))
+
+#define __xn_copy_from_user(dstP, srcP, n)	__copy_from_user_inatomic(dstP, srcP, n)
+#define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)
+#define __xn_put_user(src, dstP)		__put_user(src, dstP)
+#define __xn_get_user(dst, srcP)		__get_user(dst, srcP)
+#define __xn_strncpy_from_user(dstP, srcP, n)	wrap_strncpy_from_user(dstP, srcP, n)
+
+static inline int __xn_safe_copy_from_user(void *dst, const void __user *src,
+					   size_t size)
+{
+	return (!access_rok(src, size) ||
+		__xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
+}
+
+static inline int __xn_safe_copy_to_user(void __user *dst, const void *src,
+					 size_t size)
+{
+	return (!access_wok(dst, size) ||
+		__xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
+}
+
+static inline int __xn_safe_strncpy_from_user(char *dst,
+					      const char __user *src, size_t count)
+{
+	if (unlikely(!access_rok(src, 1)))
+		return -EFAULT;
+	return __xn_strncpy_from_user(dst, src, count);
+}
 
 #else /* !__KERNEL__ */
 

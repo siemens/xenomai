@@ -46,12 +46,6 @@
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)     ((__xn_reg_mux(regs) >> 24) & 0xff)
 
-#define __xn_copy_from_user(dstP, srcP, n)	__copy_from_user_inatomic(dstP, srcP, n)
-#define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)
-#define __xn_put_user(src, dstP)		__put_user(src, dstP)
-#define __xn_get_user(dst, srcP)		__get_user(dst, srcP)
-#define __xn_strncpy_from_user(dstP, srcP, n)	rthal_strncpy_from_user(dstP, srcP, n)
-
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
 

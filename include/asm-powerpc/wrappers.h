@@ -27,6 +27,8 @@
 #include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
 #include <linux/interrupt.h>
 
+#define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
 #define CONFIG_MMU 1
