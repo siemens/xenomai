@@ -1721,26 +1721,15 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 {
 	xncompletion_t completion;
 	struct task_struct *p;
-	spl_t s;
-
-	/* We should not be able to signal completion to any stale
-	   waiter. */
-
-	xnlock_get_irqsave(&nklock, s);
 
 	__xn_copy_from_user(current, &completion, u_completion, sizeof(completion));
 	/* Poor man's semaphore V. */
 	completion.syncflag = err ? : completion_value_ok;
 	__xn_copy_to_user(current, u_completion, &completion, sizeof(completion));
 
-	if (completion.pid == -1) {
+	if (completion.pid == -1)
 		/* The waiter did not enter xnshadow_wait_completion() yet:
 		   just raise the flag and exit. */
-		xnlock_put_irqrestore(&nklock, s);
-		return;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
 
 	read_lock(&tasklist_lock);
 

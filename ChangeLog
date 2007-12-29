@@ -3,6 +3,10 @@
 	* ksrc/nucleus/shadow.c (xnshadow_sys_completion): Fix error path
 	upon signal receipt.
 
+	* ksrc/nucleus/shadow.c (xnshadow_signal_completion): Don't hold
+	the superlock (uselessly) in code that might sleep due to a memory
+	access fault.
+
 2007-12-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Decrease calibration value
