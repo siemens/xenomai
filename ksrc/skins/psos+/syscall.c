@@ -101,7 +101,7 @@ static int __t_create(struct pt_regs *regs)
 		else {
 			err = xnshadow_map(&task->threadbase, u_completion);	/* May be NULL */
 			if (!err)
-				got out;
+				goto out;
 		}
 
 		t_delete((u_long)task);
