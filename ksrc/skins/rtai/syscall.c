@@ -61,26 +61,22 @@ static void __shadow_delete_hook(xnthread_t *thread)
  * returns "opaque" on success
  */
 
+void *_shm_alloc(unsigned long name, int size, int suprt,
+		 int in_kheap, unsigned long *opaque);
+
 static int __rt_shm_heap_open(struct pt_regs *regs)
 {
-	unsigned long name;
-	int size;
-	int suprt, in_kheap;
-
-	unsigned long off;
-	unsigned long opaque;
+	unsigned long off, opaque, name;
+	int size, suprt, in_kheap;
 	void *ret;
-	extern void *_shm_alloc(unsigned long name, int size, int suprt,
-				int in_kheap, unsigned long *opaque);
-
-	if (!access_wok(__xn_reg_arg2(regs), sizeof(size))
-	    || !access_wok(__xn_reg_arg5(regs), sizeof(off)))
-		return 0;
 
 	name = (unsigned long)__xn_reg_arg1(regs);
 	/* Size of heap space. */
-	__xn_copy_from_user(&size, (void __user *)__xn_reg_arg2(regs),
-			    sizeof(size));
+
+	if (__xn_safe_copy_from_user(&size, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(size)))
+		return -EFAULT;
+
 	/* Creation mode. */
 	suprt = (int)__xn_reg_arg3(regs);
 	in_kheap = (int)__xn_reg_arg4(regs);
@@ -93,10 +89,14 @@ static int __rt_shm_heap_open(struct pt_regs *regs)
 	off = xnheap_mapped_offset((xnheap_t *)opaque, ret);
 
 	size = (int)((xnheap_t *)opaque)->extentsize;
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &size,
-			  sizeof(size));
-	__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &off,
-			  sizeof(off));
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &size,
+				   sizeof(size)))
+		return -EFAULT;
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs), &off,
+				   sizeof(off)))
+		return -EFAULT;
 
 	return (int)opaque;
 
