@@ -46,28 +46,11 @@
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)     ((__xn_reg_mux(regs) >> 24) & 0xff)
 
-/* Our own set of copy-to/from-user macros which must bypass
-   might_sleep() checks. The caller cannot fault and is expected to
-   have checked for bad range before using the copy macros, so we
-   should not have to care about the result. */
-#define __xn_copy_from_user(task,dstP,srcP,n)  \
-    ({ int __err__ = __copy_from_user_inatomic(dstP,srcP,n); __err__; })
-#define __xn_copy_to_user(task,dstP,srcP,n)  \
-    ({ int __err__ = __copy_to_user_inatomic(dstP,srcP,n); __err__; })
-#define __xn_put_user(task,src,dstP)		__put_user(src,dstP)
-#define __xn_get_user(task,dst,srcP)		__get_user(dst,srcP)
-#define __xn_strncpy_from_user(task,dstP,srcP,n) rthal_strncpy_from_user(dstP,srcP,n)
-
-#define __xn_range_ok(task,addr,size) ({ \
-	unsigned long flag,sum; \
-	asm("addq %3,%1 ; sbbq %0,%0; cmpq %1,%4; sbbq $0,%0" \
-		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((long)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
-	flag == 0; })
-
-/* We consider any address lower than the natural page size as spurious. */
-#define __xn_access_ok(task,type,addr,size)    ((unsigned long)(addr) >= PAGE_SIZE && \
-						__xn_range_ok(task, addr, size))
+#define __xn_copy_from_user(dstP, srcP, n)	__copy_from_user_inatomic(dstP, srcP, n)
+#define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)
+#define __xn_put_user(src, dstP)		__put_user(src, dstP)
+#define __xn_get_user(dst, srcP)		__get_user(dst, srcP)
+#define __xn_strncpy_from_user(dstP, srcP, n)	rthal_strncpy_from_user(dstP, srcP, n)
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */

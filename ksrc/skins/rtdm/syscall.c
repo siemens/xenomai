@@ -35,22 +35,22 @@ static int sys_rtdm_open(struct pt_regs *regs)
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
 	struct task_struct *p = current;
 
-	if (unlikely(!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs),
-				     sizeof(krnl_path)) ||
-		     __xn_strncpy_from_user(p, krnl_path,
-					    (const char __user *)__xn_reg_arg1(regs),
+	if (unlikely(!access_rok(__xn_reg_arg1(regs),
+				 sizeof(krnl_path)) ||
+		     __xn_strncpy_from_user(krnl_path,
+					    (const char __user *)
+					    __xn_reg_arg1(regs),
 					    sizeof(krnl_path) - 1) < 0))
 		return -EFAULT;
 	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
-	return __rt_dev_open(p, (const char *)krnl_path,
-			     __xn_reg_arg2(regs));
+	return __rt_dev_open(p, (const char *)krnl_path, __xn_reg_arg2(regs));
 }
 
 static int sys_rtdm_socket(struct pt_regs *regs)
 {
-	return __rt_dev_socket(current, __xn_reg_arg1(regs), __xn_reg_arg2(regs),
-			       __xn_reg_arg3(regs));
+	return __rt_dev_socket(current, __xn_reg_arg1(regs),
+			       __xn_reg_arg2(regs), __xn_reg_arg3(regs));
 }
 
 static int sys_rtdm_close(struct pt_regs *regs)
@@ -83,9 +83,9 @@ static int sys_rtdm_recvmsg(struct pt_regs *regs)
 	struct msghdr krnl_msg;
 	int ret;
 
-	if (unlikely(!__xn_access_ok(p, VERIFY_WRITE, __xn_reg_arg2(regs),
-				     sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(p, &krnl_msg,
+	if (unlikely(!access_wok(__xn_reg_arg2(regs),
+				 sizeof(krnl_msg)) ||
+		     __xn_copy_from_user(&krnl_msg,
 					 (void __user *)__xn_reg_arg2(regs),
 					 sizeof(krnl_msg))))
 		return -EFAULT;
@@ -95,7 +95,7 @@ static int sys_rtdm_recvmsg(struct pt_regs *regs)
 	if (unlikely(ret < 0))
 		return ret;
 
-	if (unlikely(__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs),
+	if (unlikely(__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
 				       &krnl_msg, sizeof(krnl_msg))))
 		return -EFAULT;
 
@@ -107,9 +107,9 @@ static int sys_rtdm_sendmsg(struct pt_regs *regs)
 	struct task_struct *p = current;
 	struct msghdr krnl_msg;
 
-	if (unlikely(!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg2(regs),
-				     sizeof(krnl_msg)) ||
-		     __xn_copy_from_user(p, &krnl_msg,
+	if (unlikely(!access_rok(__xn_reg_arg2(regs),
+				 sizeof(krnl_msg)) ||
+		     __xn_copy_from_user(&krnl_msg,
 					 (void __user *)__xn_reg_arg2(regs),
 					 sizeof(krnl_msg))))
 		return -EFAULT;
@@ -150,14 +150,20 @@ static void *rtdm_skin_callback(int event, void *data)
 
 static xnsysent_t __systab[] = {
 	[__rtdm_fdcount] = {sys_rtdm_fdcount, __xn_exec_any},
-	[__rtdm_open]    = {sys_rtdm_open,    __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_socket]  = {sys_rtdm_socket,  __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_close]   = {sys_rtdm_close,   __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_ioctl]   = {sys_rtdm_ioctl,   __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_read]    = {sys_rtdm_read,    __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_write]   = {sys_rtdm_write,   __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_recvmsg] = {sys_rtdm_recvmsg, __xn_exec_current | __xn_exec_adaptive},
-	[__rtdm_sendmsg] = {sys_rtdm_sendmsg, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_open] = {sys_rtdm_open, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_socket] =
+	    {sys_rtdm_socket, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_close] =
+	    {sys_rtdm_close, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_ioctl] =
+	    {sys_rtdm_ioctl, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_read] = {sys_rtdm_read, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_write] =
+	    {sys_rtdm_write, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_recvmsg] =
+	    {sys_rtdm_recvmsg, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_sendmsg] =
+	    {sys_rtdm_sendmsg, __xn_exec_current | __xn_exec_adaptive},
 };
 
 static struct xnskin_props __props = {

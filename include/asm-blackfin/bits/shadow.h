@@ -102,7 +102,7 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 		ptr = __xn_reg_arg2(regs);
 		x = __xn_reg_arg3(regs);
 		r = xchg((unsigned long *)ptr, x);
-		__xn_put_user(current, r, (unsigned long *)__xn_reg_arg4(regs));
+		__xn_put_user(r, (unsigned long *)__xn_reg_arg4(regs));
 		break;
 
 	default:

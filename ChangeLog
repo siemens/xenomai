@@ -1,3 +1,9 @@
+2007-12-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c, ksrc/skins/*/syscalls.c, include/asm-*,
+	include/rtdm: Use vanilla in-atomic versions of copy_from/to_user
+	macros.
+	
 2007-12-28  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/native/heap.c (rt_heap_inquire): Allow retrieving the

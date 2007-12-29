@@ -420,6 +420,9 @@ static inline void xnarch_hisyscall_entry(void)	{ }
 }
 #endif
 
+#define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
+#define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))
+
 /* Dashboard and graph control. */
 #define XNARCH_DECL_DISPLAY_CONTEXT();
 #define xnarch_init_display_context(obj)

@@ -1112,52 +1112,52 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len);
 static inline int rtdm_read_user_ok(rtdm_user_info_t *user_info,
 				    const void __user *ptr, size_t size)
 {
-	return __xn_access_ok(user_info, VERIFY_READ, ptr, size);
+	return access_rok(ptr, size);
 }
 
 static inline int rtdm_rw_user_ok(rtdm_user_info_t *user_info,
 				  const void __user *ptr, size_t size)
 {
-	return __xn_access_ok(user_info, VERIFY_WRITE, ptr, size);
+	return access_wok(ptr, size);
 }
 
 static inline int rtdm_copy_from_user(rtdm_user_info_t *user_info,
 				      void *dst, const void __user *src,
 				      size_t size)
 {
-	return __xn_copy_from_user(user_info, dst, src, size) ? -EFAULT : 0;
+	return __xn_copy_from_user(dst, src, size) ? -EFAULT : 0;
 }
 
 static inline int rtdm_safe_copy_from_user(rtdm_user_info_t *user_info,
 					   void *dst, const void __user *src,
 					   size_t size)
 {
-	return (!__xn_access_ok(user_info, VERIFY_READ, src, size) ||
-		__xn_copy_from_user(user_info, dst, src, size)) ? -EFAULT : 0;
+	return (!access_rok(src, size) ||
+		__xn_copy_from_user(dst, src, size)) ? -EFAULT : 0;
 }
 
 static inline int rtdm_copy_to_user(rtdm_user_info_t *user_info,
 				    void __user *dst, const void *src,
 				    size_t size)
 {
-	return __xn_copy_to_user(user_info, dst, src, size) ? -EFAULT : 0;
+	return __xn_copy_to_user(dst, src, size) ? -EFAULT : 0;
 }
 
 static inline int rtdm_safe_copy_to_user(rtdm_user_info_t *user_info,
 					 void __user *dst, const void *src,
 					 size_t size)
 {
-	return (!__xn_access_ok(user_info, VERIFY_WRITE, dst, size) ||
-		__xn_copy_to_user(user_info, dst, src, size)) ? -EFAULT : 0;
+	return (!access_wok(dst, size) ||
+		__xn_copy_to_user(dst, src, size)) ? -EFAULT : 0;
 }
 
 static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 					 char *dst,
 					 const char __user *src, size_t count)
 {
-	if (unlikely(!__xn_access_ok(user_info, VERIFY_READ, src, 1)))
+	if (unlikely(!access_rok(src, 1)))
 		return -EFAULT;
-	return __xn_strncpy_from_user(user_info, dst, src, count);
+	return __xn_strncpy_from_user(dst, src, count);
 }
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 /* Define void user<->kernel services that simply fail */

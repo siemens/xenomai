@@ -70,18 +70,17 @@ static int __t_create(struct pt_regs *regs)
 	char name[XNOBJECT_NAME_LEN];
 	psostask_t *task;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get task name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 	strncpy(p->comm, name, sizeof(p->comm));
 	p->comm[sizeof(p->comm) - 1] = '\0';
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(tid)))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(tid)))
 		return -EFAULT;
 
 	/* Task priority. */
@@ -100,9 +99,9 @@ static int __t_create(struct pt_regs *regs)
 		 * about the new thread id, so we can manipulate its
 		 * TCB pointer freely. */
 		tid = xnthread_handle(&task->threadbase);
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &tid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &tid,
 				  sizeof(tid));
-		err = xnshadow_map(&task->threadbase, u_completion); /* May be NULL */
+		err = xnshadow_map(&task->threadbase, u_completion);	/* May be NULL */
 	} else {
 		/* Unblock and pass back error code. */
 
@@ -122,7 +121,7 @@ static int __t_create(struct pt_regs *regs)
 
 static int __t_start(struct pt_regs *regs)
 {
-	void (*startaddr)(u_long, u_long, u_long, u_long);
+	void (*startaddr) (u_long, u_long, u_long, u_long);
 	u_long mode, *argp;
 	xnhandle_t handle;
 	psostask_t *task;
@@ -142,8 +141,8 @@ static int __t_start(struct pt_regs *regs)
 	 * handles both from kernel and user-space based domains. */
 
 	mode = __xn_reg_arg2(regs);
-	startaddr = (typeof(startaddr))__xn_reg_arg3(regs);
-	argp = (u_long *)__xn_reg_arg4(regs); /* May be NULL. */
+	startaddr = (typeof(startaddr)) __xn_reg_arg3(regs);
+	argp = (u_long *)__xn_reg_arg4(regs);	/* May be NULL. */
 
 	return t_start((u_long)task, mode, startaddr, argp);
 }
@@ -216,23 +215,22 @@ static int __t_resume(struct pt_regs *regs)
 static int __t_ident(struct pt_regs *regs)
 {
 	char name[XNOBJECT_NAME_LEN], *namep;
-	struct task_struct *p = current;
 	u_long err, tid;
 	spl_t s;
 
 	if (__xn_reg_arg1(regs)) {
-		if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+		if (!access_rok(__xn_reg_arg1(regs), 4))
 			return -EFAULT;
 
 		/* Get task name. */
-		__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+		__xn_strncpy_from_user(name,
+				       (const char __user *)__xn_reg_arg1(regs),
 				       sizeof(name));
 		namep = name;
 	} else
 		namep = NULL;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(tid)))
+	if (!access_wok(__xn_reg_arg2(regs), sizeof(tid)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -247,7 +245,7 @@ static int __t_ident(struct pt_regs *regs)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &tid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &tid,
 				  sizeof(tid));
 
 	return err;
@@ -260,10 +258,8 @@ static int __t_ident(struct pt_regs *regs)
 static int __t_mode(struct pt_regs *regs)
 {
 	u_long clrmask, setmask, oldmode, err;
-	struct task_struct *p = current;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(oldmode)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(oldmode)))
 		return -EFAULT;
 
 	clrmask = __xn_reg_arg1(regs);
@@ -272,7 +268,7 @@ static int __t_mode(struct pt_regs *regs)
 	err = t_mode(clrmask, setmask, &oldmode);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &oldmode,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &oldmode,
 				  sizeof(oldmode));
 
 	return err;
@@ -285,20 +281,18 @@ static int __t_mode(struct pt_regs *regs)
 static int __t_setpri(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	u_long err, newprio, oldprio;
 	psostask_t *task;
 
 	if (handle)
 		task = (psostask_t *)xnregistry_fetch(handle);
 	else
-		task = __psos_task_current(p);
+		task = __psos_task_current(current);
 
 	if (!task)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(oldprio)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(oldprio)))
 		return -EFAULT;
 
 	newprio = __xn_reg_arg2(regs);
@@ -306,7 +300,7 @@ static int __t_setpri(struct pt_regs *regs)
 	err = t_setpri((u_long)task, newprio, &oldprio);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &oldprio,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &oldprio,
 				  sizeof(oldprio));
 
 	return err;
@@ -342,10 +336,8 @@ static int __ev_send(struct pt_regs *regs)
 static int __ev_receive(struct pt_regs *regs)
 {
 	u_long err, flags, timeout, events, events_r;
-	struct task_struct *p = current;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(events_r)))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(events_r)))
 		return -EFAULT;
 
 	events = __xn_reg_arg1(regs);
@@ -355,7 +347,7 @@ static int __ev_receive(struct pt_regs *regs)
 	err = ev_receive(events, flags, timeout, &events_r);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &events_r,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &events_r,
 				  sizeof(events_r));
 
 	return err;
@@ -367,21 +359,19 @@ static int __ev_receive(struct pt_regs *regs)
 
 static int __q_create(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	u_long maxnum, flags, qid, err;
 	char name[XNOBJECT_NAME_LEN];
 	psosqueue_t *queue;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get queue name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(qid)))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(qid)))
 		return -EFAULT;
 
 	/* Max message number. */
@@ -395,7 +385,7 @@ static int __q_create(struct pt_regs *regs)
 		queue = (psosqueue_t *)qid;
 		/* Copy back the registry handle. */
 		qid = queue->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &qid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &qid,
 				  sizeof(qid));
 	}
 
@@ -425,20 +415,18 @@ static int __q_delete(struct pt_regs *regs)
 
 static int __q_ident(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	u_long err, qid;
 	spl_t s;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get queue name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name));
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(qid)))
+	if (!access_wok(__xn_reg_arg2(regs), sizeof(qid)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -453,7 +441,7 @@ static int __q_ident(struct pt_regs *regs)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &qid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &qid,
 				  sizeof(qid));
 
 	return err;
@@ -467,7 +455,6 @@ static int __q_receive(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	u_long flags, timeout, msgbuf[4], err;
-	struct task_struct *p = current;
 	psosqueue_t *queue;
 
 	queue = (psosqueue_t *)xnregistry_fetch(handle);
@@ -475,8 +462,7 @@ static int __q_receive(struct pt_regs *regs)
 	if (!queue)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(u_long[4])))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(u_long[4])))
 		return -EFAULT;
 
 	flags = __xn_reg_arg2(regs);
@@ -485,7 +471,7 @@ static int __q_receive(struct pt_regs *regs)
 	err = q_receive((u_long)queue, flags, timeout, msgbuf);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), msgbuf,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), msgbuf,
 				  sizeof(u_long[4]));
 
 	return err;
@@ -498,7 +484,6 @@ static int __q_receive(struct pt_regs *regs)
 static int __q_send(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	psosqueue_t *queue;
 	u_long msgbuf[4];
 
@@ -507,12 +492,11 @@ static int __q_send(struct pt_regs *regs)
 	if (!queue)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(u_long[4])))
+	if (!access_rok(__xn_reg_arg2(regs), sizeof(u_long[4])))
 		return -EFAULT;
 
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			       sizeof(u_long[4]));
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(u_long[4]));
 
 	return q_send((u_long)queue, msgbuf);
 }
@@ -524,7 +508,6 @@ static int __q_send(struct pt_regs *regs)
 static int __q_urgent(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	psosqueue_t *queue;
 	u_long msgbuf[4];
 
@@ -533,12 +516,11 @@ static int __q_urgent(struct pt_regs *regs)
 	if (!queue)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(u_long[4])))
+	if (!access_rok(__xn_reg_arg2(regs), sizeof(u_long[4])))
 		return -EFAULT;
 
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			       sizeof(u_long[4]));
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(u_long[4]));
 
 	return q_urgent((u_long)queue, msgbuf);
 }
@@ -550,7 +532,6 @@ static int __q_urgent(struct pt_regs *regs)
 static int __q_broadcast(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	u_long msgbuf[4], count, err;
 	psosqueue_t *queue;
 
@@ -559,21 +540,19 @@ static int __q_broadcast(struct pt_regs *regs)
 	if (!queue)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(u_long[4])))
+	if (!access_rok(__xn_reg_arg2(regs), sizeof(u_long[4])))
 		return -EFAULT;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(count)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(count)))
 		return -EFAULT;
 
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			       sizeof(u_long[4]));
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(u_long[4]));
 
 	err = q_broadcast((u_long)queue, msgbuf, &count);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &count,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &count,
 				  sizeof(count));
 
 	return err;
@@ -586,20 +565,18 @@ static int __q_broadcast(struct pt_regs *regs)
 static int __q_vcreate(struct pt_regs *regs)
 {
 	u_long maxnum, maxlen, flags, qid, err;
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	psosqueue_t *queue;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get queue name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(qid)))
+	if (!access_wok(__xn_reg_arg5(regs), sizeof(qid)))
 		return -EFAULT;
 
 	/* Max message number. */
@@ -615,7 +592,7 @@ static int __q_vcreate(struct pt_regs *regs)
 		queue = (psosqueue_t *)qid;
 		/* Copy back the registry handle. */
 		qid = queue->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg5(regs), &qid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &qid,
 				  sizeof(qid));
 	}
 
@@ -645,20 +622,18 @@ static int __q_vdelete(struct pt_regs *regs)
 
 static int __q_vident(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	u_long err, qid;
 	spl_t s;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get queue name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name));
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(qid)))
+	if (!access_wok(__xn_reg_arg2(regs), sizeof(qid)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -673,7 +648,7 @@ static int __q_vident(struct pt_regs *regs)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &qid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &qid,
 				  sizeof(qid));
 
 	return err;
@@ -687,7 +662,6 @@ static int __q_vreceive(struct pt_regs *regs)
 {
 	u_long flags, timeout, msglen, buflen, err;
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	psosqueue_t *queue;
 	char tmp_buf[64];
 	void *msgbuf;
@@ -701,21 +675,18 @@ static int __q_vreceive(struct pt_regs *regs)
 	if (!queue)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(u_long)))
+	if (!access_wok(__xn_reg_arg5(regs), sizeof(u_long)))
 		return -EFAULT;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(modifiers)))
+	if (!access_rok(__xn_reg_arg2(regs), sizeof(modifiers)))
 		return -EFAULT;
 
-	__xn_copy_from_user(p, &modifiers, (void __user *)__xn_reg_arg2(regs),
-			       sizeof(modifiers));
+	__xn_copy_from_user(&modifiers, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(modifiers));
 
 	buflen = __xn_reg_arg4(regs);
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), buflen))
+	if (!access_wok(__xn_reg_arg3(regs), buflen))
 		return -EFAULT;
 
 	flags = modifiers.flags;
@@ -729,13 +700,14 @@ static int __q_vreceive(struct pt_regs *regs)
 		/* Optimize a bit: if the message can fit in a small
 		 * temp buffer in stack space, use the latter. */
 		msgbuf = tmp_buf;
-	
-	err = q_vreceive((u_long)queue, flags, timeout, msgbuf, buflen, &msglen);
+
+	err =
+	    q_vreceive((u_long)queue, flags, timeout, msgbuf, buflen, &msglen);
 
 	if (err == SUCCESS) {
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), msgbuf,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), msgbuf,
 				  msglen);
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg5(regs), &msglen,
+		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &msglen,
 				  sizeof(msglen));
 	}
 
@@ -752,7 +724,6 @@ static int __q_vreceive(struct pt_regs *regs)
 static int __q_vsend(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	u_long msglen, err;
 	psosqueue_t *queue;
 	char tmp_buf[64];
@@ -765,8 +736,7 @@ static int __q_vsend(struct pt_regs *regs)
 
 	msglen = __xn_reg_arg3(regs);
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+	if (!access_rok(__xn_reg_arg2(regs), msglen))
 		return -EFAULT;
 
 	if (msglen > sizeof(tmp_buf)) {
@@ -777,9 +747,8 @@ static int __q_vsend(struct pt_regs *regs)
 		/* Optimize a bit: if the message can fit in a small
 		 * temp buffer in stack space, use the latter. */
 		msgbuf = tmp_buf;
-	
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			    msglen);
+
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs), msglen);
 
 	err = q_vsend((u_long)queue, msgbuf, msglen);
 
@@ -796,7 +765,6 @@ static int __q_vsend(struct pt_regs *regs)
 static int __q_vurgent(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	u_long msglen, err;
 	psosqueue_t *queue;
 	char tmp_buf[64];
@@ -809,8 +777,7 @@ static int __q_vurgent(struct pt_regs *regs)
 
 	msglen = __xn_reg_arg3(regs);
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+	if (!access_rok(__xn_reg_arg2(regs), msglen))
 		return -EFAULT;
 
 	if (msglen > sizeof(tmp_buf)) {
@@ -821,9 +788,8 @@ static int __q_vurgent(struct pt_regs *regs)
 		/* Optimize a bit: if the message can fit in a small
 		 * temp buffer in stack space, use the latter. */
 		msgbuf = tmp_buf;
-	
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			    msglen);
+
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs), msglen);
 
 	err = q_vurgent((u_long)queue, msgbuf, msglen);
 
@@ -840,7 +806,6 @@ static int __q_vurgent(struct pt_regs *regs)
 static int __q_vbroadcast(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
-	struct task_struct *p = current;
 	u_long msglen, count, err;
 	psosqueue_t *queue;
 	char tmp_buf[64];
@@ -853,8 +818,7 @@ static int __q_vbroadcast(struct pt_regs *regs)
 
 	msglen = __xn_reg_arg3(regs);
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), msglen))
+	if (!access_rok(__xn_reg_arg2(regs), msglen))
 		return -EFAULT;
 
 	if (msglen > sizeof(tmp_buf)) {
@@ -865,9 +829,8 @@ static int __q_vbroadcast(struct pt_regs *regs)
 		/* Optimize a bit: if the message can fit in a small
 		 * temp buffer in stack space, use the latter. */
 		msgbuf = tmp_buf;
-	
-	__xn_copy_from_user(p, msgbuf, (void __user *)__xn_reg_arg2(regs),
-			    msglen);
+
+	__xn_copy_from_user(msgbuf, (void __user *)__xn_reg_arg2(regs), msglen);
 
 	err = q_vbroadcast((u_long)queue, msgbuf, msglen, &count);
 
@@ -875,7 +838,7 @@ static int __q_vbroadcast(struct pt_regs *regs)
 		xnfree(msgbuf);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &count,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &count,
 				  sizeof(count));
 
 	return err;
@@ -888,20 +851,18 @@ static int __q_vbroadcast(struct pt_regs *regs)
 static int __sm_create(struct pt_regs *regs)
 {
 	u_long icount, flags, smid, err;
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	psossem_t *sem;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get queue name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(smid)))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(smid)))
 		return -EFAULT;
 
 	/* Initial value. */
@@ -915,7 +876,7 @@ static int __sm_create(struct pt_regs *regs)
 		sem = (psossem_t *)smid;
 		/* Copy back the registry handle. */
 		smid = sem->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &smid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &smid,
 				  sizeof(smid));
 	}
 
@@ -947,14 +908,14 @@ static int __sm_p(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	psossem_t *sem;
-	u_long  flags, timeout;
+	u_long flags, timeout;
 
 	sem = (psossem_t *)xnregistry_fetch(handle);
 
 	if (!sem)
 		return ERR_OBJID;
 
-	flags   = __xn_reg_arg2(regs);
+	flags = __xn_reg_arg2(regs);
 	timeout = __xn_reg_arg3(regs);
 
 	return sm_p((u_long)sem, (u_long)flags, (u_long)timeout);
@@ -983,7 +944,7 @@ static int __sm_v(struct pt_regs *regs)
 
 static int __tm_wkafter(struct pt_regs *regs)
 {
-	u_long	ticks = __xn_reg_arg1(regs);
+	u_long ticks = __xn_reg_arg1(regs);
 
 	return tm_wkafter(ticks);
 }
@@ -1012,11 +973,9 @@ static int __tm_cancel(struct pt_regs *regs)
 static int __tm_evafter(struct pt_regs *regs)
 {
 	u_long ticks, events, tmid, err;
-	struct task_struct *p = current;
 	psostm_t *tm;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tmid)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(tmid)))
 		return -EFAULT;
 
 	ticks = __xn_reg_arg1(regs);
@@ -1028,7 +987,7 @@ static int __tm_evafter(struct pt_regs *regs)
 		tm = (psostm_t *)tmid;
 		/* Copy back the registry handle. */
 		tmid = tm->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &tmid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &tmid,
 				  sizeof(tmid));
 	}
 
@@ -1041,29 +1000,25 @@ static int __tm_evafter(struct pt_regs *regs)
 
 static int __tm_get(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	u_long date, time, ticks, err;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(date)))
+	if (!access_wok(__xn_reg_arg1(regs), sizeof(date)))
 		return -EFAULT;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(time)))
+	if (!access_wok(__xn_reg_arg2(regs), sizeof(time)))
 		return -EFAULT;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(ticks)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(ticks)))
 		return -EFAULT;
 
 	err = tm_get(&date, &time, &ticks);
 
 	if (err == SUCCESS) {
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &date,
+		__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &date,
 				  sizeof(date));
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &time,
+		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &time,
 				  sizeof(time));
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &ticks,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &ticks,
 				  sizeof(ticks));
 	}
 
@@ -1076,17 +1031,14 @@ static int __tm_get(struct pt_regs *regs)
 
 static int __tm_getm(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	xnticks_t ns;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ns)))
+	if (!access_wok(__xn_reg_arg1(regs), sizeof(ns)))
 		return -EFAULT;
 
-	ns = xntbase_get_jiffies(&nktbase); /* TSC converted to nanoseconds */
+	ns = xntbase_get_jiffies(&nktbase);	/* TSC converted to nanoseconds */
 
-	__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &ns,
-			  sizeof(ns));
+	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns));
 
 	return 0;
 }
@@ -1097,16 +1049,14 @@ static int __tm_getm(struct pt_regs *regs)
 
 static int __tm_getc(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	xnticks_t ticks;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(ticks)))
+	if (!access_wok(__xn_reg_arg1(regs), sizeof(ticks)))
 		return -EFAULT;
 
 	ticks = xntbase_get_jiffies(psos_tbase);
 
-	__xn_copy_to_user(p, (void __user *)__xn_reg_arg1(regs), &ticks,
+	__xn_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
 			  sizeof(ticks));
 
 	return 0;
@@ -1121,12 +1071,10 @@ static int __tm_signal(struct pt_regs *regs)
 	u_long value = __xn_reg_arg1(regs);
 	u_long interval = __xn_reg_arg2(regs);
 	int signo = __xn_reg_arg3(regs);
-	struct task_struct *p = current;
 	u_long err, tmid;
 	psostm_t *tm;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(tmid)))
+	if (!access_wok(__xn_reg_arg4(regs), sizeof(tmid)))
 		return -EFAULT;
 
 	if (value == 0)
@@ -1138,7 +1086,7 @@ static int __tm_signal(struct pt_regs *regs)
 		tm = (psostm_t *)tmid;
 		/* Copy back the registry handle. */
 		tmid = tm->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg4(regs), &tmid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg4(regs), &tmid,
 				  sizeof(tmid));
 	}
 
@@ -1166,11 +1114,9 @@ static int __tm_set(struct pt_regs *regs)
 static int __tm_evwhen(struct pt_regs *regs)
 {
 	u_long date, time, ticks, events, tmid, err;
-	struct task_struct *p = current;
 	psostm_t *tm;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(tmid)))
+	if (!access_wok(__xn_reg_arg5(regs), sizeof(tmid)))
 		return -EFAULT;
 
 	date = __xn_reg_arg1(regs);
@@ -1184,7 +1130,7 @@ static int __tm_evwhen(struct pt_regs *regs)
 		tm = (psostm_t *)tmid;
 		/* Copy back the registry handle. */
 		tmid = tm->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg5(regs), &tmid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &tmid,
 				  sizeof(tmid));
 	}
 
@@ -1212,11 +1158,9 @@ static int __tm_wkwhen(struct pt_regs *regs)
 static int __tm_evevery(struct pt_regs *regs)
 {
 	u_long ticks, events, tmid, err;
-	struct task_struct *p = current;
 	psostm_t *tm;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(tmid)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(tmid)))
 		return -EFAULT;
 
 	ticks = __xn_reg_arg1(regs);
@@ -1228,7 +1172,7 @@ static int __tm_evevery(struct pt_regs *regs)
 		tm = (psostm_t *)tmid;
 		/* Copy back the registry handle. */
 		tmid = tm->handle;
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &tmid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &tmid,
 				  sizeof(tmid));
 	}
 
@@ -1241,7 +1185,6 @@ static int __tm_evevery(struct pt_regs *regs)
 
 static int __rn_create(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	struct {
 		u_long rnsize;
@@ -1257,24 +1200,22 @@ static int __rn_create(struct pt_regs *regs)
 	psosrn_t *rn;
 	u_long err;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get region name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 
-	if (!__xn_access_ok
-	    (p, VERIFY_READ, __xn_reg_arg2(regs), sizeof(sizeopt)))
+	if (!access_rok(__xn_reg_arg2(regs), sizeof(sizeopt)))
 		return -EFAULT;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(rninfo)))
+	if (!access_wok(__xn_reg_arg3(regs), sizeof(rninfo)))
 		return -EFAULT;
 
-	__xn_copy_from_user(p, &sizeopt, (void __user *)__xn_reg_arg2(regs),
-			       sizeof(sizeopt));
+	__xn_copy_from_user(&sizeopt, (void __user *)__xn_reg_arg2(regs),
+			    sizeof(sizeopt));
 
 	err = rn_create(name, NULL,
 			sizeopt.rnsize,
@@ -1283,11 +1224,11 @@ static int __rn_create(struct pt_regs *regs)
 
 	if (err == SUCCESS) {
 		rn = (psosrn_t *)rninfo.rnid;
-		rn->mm = p->mm;
+		rn->mm = current->mm;
 		rninfo.rnid = rn->handle;
 		rninfo.rncb = &rn->heapbase;
 		rninfo.mapsize = xnheap_extentsize(&rn->heapbase);
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg3(regs), &rninfo,
+		__xn_copy_to_user((void __user *)__xn_reg_arg3(regs), &rninfo,
 				  sizeof(rninfo));
 	}
 
@@ -1317,20 +1258,18 @@ static int __rn_delete(struct pt_regs *regs)
 
 static int __rn_ident(struct pt_regs *regs)
 {
-	struct task_struct *p = current;
 	char name[XNOBJECT_NAME_LEN];
 	u_long err, rnid;
 	spl_t s;
 
-	if (!__xn_access_ok(p, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!access_rok(__xn_reg_arg1(regs), 4))
 		return -EFAULT;
 
 	/* Get region name. */
-	__xn_strncpy_from_user(p, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
 			       sizeof(name));
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(rnid)))
+	if (!access_wok(__xn_reg_arg2(regs), sizeof(rnid)))
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1345,7 +1284,7 @@ static int __rn_ident(struct pt_regs *regs)
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err == SUCCESS)
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg2(regs), &rnid,
+		__xn_copy_to_user((void __user *)__xn_reg_arg2(regs), &rnid,
 				  sizeof(rnid));
 	return err;
 }
@@ -1359,7 +1298,6 @@ static int __rn_getseg(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	u_long size, flags, timeout, err;
-	struct task_struct *p = current;
 	void *segaddr;
 	psosrn_t *rn;
 	spl_t s;
@@ -1369,8 +1307,7 @@ static int __rn_getseg(struct pt_regs *regs)
 	if (!rn)
 		return ERR_OBJID;
 
-	if (!__xn_access_ok
-	    (p, VERIFY_WRITE, __xn_reg_arg5(regs), sizeof(segaddr)))
+	if (!access_wok(__xn_reg_arg5(regs), sizeof(segaddr)))
 		return -EFAULT;
 
 	size = __xn_reg_arg2(regs);
@@ -1383,9 +1320,10 @@ static int __rn_getseg(struct pt_regs *regs)
 
 	if (err == SUCCESS) {
 		/* Convert pointer to user-space mapping. */
-		segaddr = rn->mapbase + xnheap_mapped_offset(&rn->heapbase, segaddr);
+		segaddr =
+		    rn->mapbase + xnheap_mapped_offset(&rn->heapbase, segaddr);
 		xnlock_put_irqrestore(&nklock, s);
-		__xn_copy_to_user(p, (void __user *)__xn_reg_arg5(regs), &segaddr,
+		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs), &segaddr,
 				  sizeof(segaddr));
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -1474,11 +1412,12 @@ static int __as_send(struct pt_regs *regs)
 static void *psos_shadow_eventcb(int event, void *data)
 {
 	struct psos_resource_holder *rh;
-	switch(event) {
+	switch (event) {
 
 	case XNSHADOW_CLIENT_ATTACH:
 
-		rh = (struct psos_resource_holder *) xnarch_alloc_host_mem(sizeof(*rh));
+		rh = (struct psos_resource_holder *)
+		    xnarch_alloc_host_mem(sizeof(*rh));
 		if (!rh)
 			return ERR_PTR(-ENOMEM);
 
