@@ -1754,6 +1754,7 @@ static int xnshadow_sys_completion(struct pt_regs *regs)
 {
 	xncompletion_t __user *u_completion;
 	xncompletion_t completion;
+	int discarded;
 
 	u_completion = (xncompletion_t __user *)__xn_reg_arg1(regs);
 
@@ -1783,8 +1784,7 @@ static int xnshadow_sys_completion(struct pt_regs *regs)
 
 		if (signal_pending(current)) {
 			completion.pid = -1;
-			if (__xn_safe_copy_to_user(u_completion, &completion, sizeof(completion)))
-				return -EFAULT;
+			discarded = __xn_safe_copy_to_user(u_completion, &completion, sizeof(completion));
 			return -ERESTARTSYS;
 		}
 	}
