@@ -2418,7 +2418,7 @@ static int __rt_queue_receive(struct task_struct *curr, struct pt_regs *regs)
 
 	buf = ph.mapbase + xnheap_mapped_offset(&q->bufpool, buf);
 	xnlock_put_irqrestore(&nklock, s);
-	__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
+	__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
 			  &buf, sizeof(buf));
 out:
 

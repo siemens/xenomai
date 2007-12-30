@@ -606,7 +606,7 @@ static int __sem_open(struct task_struct *curr, struct pt_regs *regs)
 	spl_t s;
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg1(regs), sizeof(uaddr)))
+	    (curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(uaddr)))
 		return -EFAULT;
 
 	__xn_copy_from_user(curr,
