@@ -35,12 +35,10 @@ static int sys_rtdm_open(struct pt_regs *regs)
 	char krnl_path[RTDM_MAX_DEVNAME_LEN + 1];
 	struct task_struct *p = current;
 
-	if (unlikely(!access_rok(__xn_reg_arg1(regs),
-				 sizeof(krnl_path)) ||
-		     __xn_strncpy_from_user(krnl_path,
-					    (const char __user *)
-					    __xn_reg_arg1(regs),
-					    sizeof(krnl_path) - 1) < 0))
+	if (unlikely(__xn_safe_strncpy_from_user(krnl_path,
+						 (const char __user *)
+						 __xn_reg_arg1(regs),
+						 sizeof(krnl_path) - 1) < 0))
 		return -EFAULT;
 	krnl_path[sizeof(krnl_path) - 1] = '\0';
 
