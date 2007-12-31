@@ -5,9 +5,9 @@
 
 2007-12-29  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/skins/posix/syscall.c (__sem_init, __pthread_mutex_init,
-	__pthread_cond_init): Kill more than questionable critical
-	sections using the nklock.
+	* ksrc/skins/posix/syscall.c (__sem_init/destroy,
+	__pthread_mutex_init/destroy, __pthread_cond_init/destroy): Kill
+	more than questionable critical sections using the nklock.
 	
 	* include/asm-*/syscall*.h: Reshuffle uaccess wrappers.
 	
