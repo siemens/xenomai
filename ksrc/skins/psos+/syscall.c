@@ -72,7 +72,7 @@ static int __t_create(struct pt_regs *regs)
 
 	/* Get task name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -226,7 +226,7 @@ static int __t_ident(struct pt_regs *regs)
 		/* Get task name. */
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg1(regs),
-						sizeof(name)))
+						sizeof(name)) < 0)
 			return -EFAULT;
 
 		namep = name;
@@ -360,7 +360,7 @@ static int __q_create(struct pt_regs *regs)
 
 	/* Get queue name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -413,7 +413,7 @@ static int __q_ident(struct pt_regs *regs)
 
 	/* Get queue name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name)))
+					sizeof(name)) < 0)
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -548,7 +548,7 @@ static int __q_vcreate(struct pt_regs *regs)
 
 	/* Get queue name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -603,7 +603,7 @@ static int __q_vident(struct pt_regs *regs)
 
 	/* Get queue name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name)))
+					sizeof(name)) < 0)
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -814,7 +814,7 @@ static int __sm_create(struct pt_regs *regs)
 
 	/* Get queue name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -1130,7 +1130,7 @@ static int __rn_create(struct pt_regs *regs)
 
 	/* Get region name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -1187,7 +1187,7 @@ static int __rn_ident(struct pt_regs *regs)
 
 	/* Get region name. */
 	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
-					sizeof(name)))
+					sizeof(name)) < 0)
 		return -EFAULT;
 
 	xnlock_get_irqsave(&nklock, s);

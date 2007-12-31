@@ -79,7 +79,7 @@ static int __wind_task_init(struct pt_regs *regs)
 
 	if (bulk.a1) {
 		if (__xn_safe_strncpy_from_user(name, (const char __user *)bulk.a1,
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -398,7 +398,7 @@ static int __wind_task_nametoid(struct pt_regs *regs)
 
 	if (__xn_safe_strncpy_from_user(name,
 					(const char __user *)__xn_reg_arg1(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';

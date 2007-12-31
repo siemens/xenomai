@@ -61,7 +61,7 @@ static int __rt_bind_helper(struct task_struct *p,
 
 	if (__xn_safe_strncpy_from_user(name,
 					(const char __user *)__xn_reg_arg2(regs),
-					sizeof(name) - 1))
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -144,7 +144,7 @@ static int __rt_task_create(struct pt_regs *regs)
 
 	if (bulk.a2) {
 		if (__xn_safe_strncpy_from_user(name, (const char __user *)bulk.a2,
-						sizeof(name) - 1)) {
+						sizeof(name) - 1) < 0) {
 			err = -EFAULT;
 			goto fail;
 		}
@@ -1061,7 +1061,7 @@ static int __rt_sem_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 		name[sizeof(name) - 1] = '\0';
 	} else
@@ -1276,7 +1276,7 @@ static int __rt_event_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1520,7 +1520,7 @@ static int __rt_mutex_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1708,7 +1708,7 @@ static int __rt_cond_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -1932,7 +1932,7 @@ static int __rt_queue_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -2424,7 +2424,7 @@ static int __rt_heap_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -2711,7 +2711,7 @@ static int __rt_alarm_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -2945,7 +2945,7 @@ static int __rt_intr_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -3205,7 +3205,7 @@ static int __rt_pipe_create(struct pt_regs *regs)
 	if (__xn_reg_arg2(regs)) {
 		if (__xn_safe_strncpy_from_user(name,
 						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1))
+						sizeof(name) - 1) < 0)
 			return -EFAULT;
 
 		name[sizeof(name) - 1] = '\0';
@@ -3490,7 +3490,7 @@ static int __rt_io_get_region(struct pt_regs *regs)
 
 	if (__xn_safe_strncpy_from_user(iorn->name,
 					(const char __user *)__xn_reg_arg2(regs),
-					sizeof(iorn->name) - 1))
+					sizeof(iorn->name) - 1) < 0)
 		return -EFAULT;
 
 	iorn->name[sizeof(iorn->name) - 1] = '\0';

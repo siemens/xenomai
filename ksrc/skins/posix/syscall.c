@@ -350,9 +350,9 @@ static int __pthread_set_name_np(struct pt_regs *regs)
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
-	if (__xn_strncpy_from_user(name,
-				   (const char __user *)__xn_reg_arg2(regs),
-				   sizeof(name) - 1))
+	if (__xn_safe_strncpy_from_user(name,
+					(const char __user *)__xn_reg_arg2(regs),
+					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
 	name[sizeof(name) - 1] = '\0';
@@ -644,8 +644,8 @@ static int __sem_unlink(struct pt_regs *regs)
 	char name[PSE51_MAXNAME];
 	long len;
 
-	len = __xn_strncpy_from_user(name,
-				     (char *)__xn_reg_arg1(regs), sizeof(name));
+	len = __xn_safe_strncpy_from_user(name,
+					  (char *)__xn_reg_arg1(regs), sizeof(name));
 
 	if (len < 0)
 		return len;
@@ -1292,9 +1292,9 @@ static int __mq_open(struct pt_regs *regs)
 	unsigned len;
 	mode_t mode;
 
-	len = __xn_strncpy_from_user(name,
-				     (const char __user *)__xn_reg_arg1(regs),
-				     sizeof(name));
+	len = __xn_safe_strncpy_from_user(name,
+					  (const char __user *)__xn_reg_arg1(regs),
+					  sizeof(name));
 	if (len <= 0)
 		return -EFAULT;
 
@@ -1365,9 +1365,9 @@ static int __mq_unlink(struct pt_regs *regs)
 	unsigned len;
 	int err;
 
-	len = __xn_strncpy_from_user(name,
-				     (const char __user *)__xn_reg_arg1(regs),
-				     sizeof(name));
+	len = __xn_safe_strncpy_from_user(name,
+					  (const char __user *)__xn_reg_arg1(regs),
+					  sizeof(name));
 	if (len <= 0)
 		return -EFAULT;
 
@@ -1945,9 +1945,9 @@ static int __shm_unlink(struct pt_regs *regs)
 	unsigned len;
 	int err;
 
-	len = __xn_strncpy_from_user(name,
-				     (const char __user *)__xn_reg_arg1(regs),
-				     sizeof(name));
+	len = __xn_safe_strncpy_from_user(name,
+					  (const char __user *)__xn_reg_arg1(regs),
+					  sizeof(name));
 	if (len <= 0)
 		return -EFAULT;
 
