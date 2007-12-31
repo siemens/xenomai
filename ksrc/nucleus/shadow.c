@@ -39,6 +39,7 @@
 #include <linux/wait.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
+#include <asm/semaphore.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
