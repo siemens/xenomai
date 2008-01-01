@@ -1,3 +1,9 @@
+2008-01-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/i386/patches: Update to 2.6.20.21-i386-1.12-01.
+	
+	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-11.
+
 2007-12-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (__rt_queue_write): Do not check the

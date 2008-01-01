@@ -3443,7 +3443,7 @@ index a7b60bf..22dcb01 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..e9d4e27
+index 0000000..1bc95b9
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,205 @@
@@ -3493,10 +3493,10 @@ index 0000000..e9d4e27
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.0-07"
++#define IPIPE_ARCH_STRING	"2.0-08"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -3946,10 +3946,10 @@ index 8d30229..74b355d 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..34fce1d
+index 0000000..ae0a72a
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,562 @@
+@@ -0,0 +1,574 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -4046,9 +4046,6 @@ index 0000000..34fce1d
 +
 +#define ipipe_virtual_irq_p(irq)	((irq) >= IPIPE_VIRQ_BASE && \
 +					 (irq) < IPIPE_NR_IRQS)
-+
-+typedef void (*ipipe_irq_handler_t)(unsigned irq,
-+				    void *cookie);
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
@@ -4446,6 +4443,18 @@ index 0000000..34fce1d
 +			local_irq_disable_hw();		\
 +	} while(0)
 +
++#define local_irq_save_full(vflags, rflags)		\
++	do {						\
++		local_irq_save(vflags);			\
++		local_irq_save_hw(rflags);		\
++	} while(0)
++
++#define local_irq_restore_full(vflags, rflags)		\
++	do {						\
++		local_irq_restore_hw(rflags);		\
++		local_irq_restore(vflags);		\
++	} while(0)
++
 +#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
 +#else	/* !CONFIG_IPIPE */
@@ -4473,6 +4482,9 @@ index 0000000..34fce1d
 +#define ipipe_safe_current		current
 +
 +#define local_irq_disable_head()	local_irq_disable()
++
++#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
++#define local_irq_restore_full(vflags, rflags)	do { (void)(vflags); local_irq_restore(rflags); } while(0)
 +
 +#endif	/* CONFIG_IPIPE */
 +
@@ -4514,10 +4526,10 @@ index 0000000..34fce1d
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..a8dd0a0
+index 0000000..3c8dd6a
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,86 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -4567,6 +4579,9 @@ index 0000000..a8dd0a0
 +
 +#define IPIPE_STALL_MASK	(1L << IPIPE_STALL_FLAG)
 +#define IPIPE_SYNC_MASK		(1L << IPIPE_SYNC_FLAG)
++
++typedef void (*ipipe_irq_handler_t)(unsigned irq,
++				    void *cookie);
 +
 +extern struct ipipe_domain ipipe_root;
 +
@@ -8855,12 +8870,12 @@ index 5da304c..a7d045d 100644
  	return error;
  }
 diff --git a/kernel/printk.c b/kernel/printk.c
-index 852c1e1..942dc39 100644
+index 852c1e1..0bf20db 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -596,6 +596,82 @@ static int have_callable_console(void)
-  * printf(3)
-  */
+@@ -573,6 +573,41 @@ static int have_callable_console(void)
+ 	return 0;
+ }
  
 +#ifdef CONFIG_IPIPE
 +
@@ -8897,8 +8912,13 @@ index 852c1e1..942dc39 100644
 +	spin_unlock_irqrestore(&__ipipe_printk_lock, flags);
 +}
 +
-+asmlinkage int printk(const char *fmt, ...)
-+{
+ /**
+  * printk - print a kernel message
+  * @fmt: format string
+@@ -598,6 +633,47 @@ static int have_callable_console(void)
+ 
+ asmlinkage int printk(const char *fmt, ...)
+ {
 +  	int r, fbytes, oldcount, cs = -1;
 +    	unsigned long flags;
 +	va_list args;
@@ -8938,9 +8958,11 @@ index 852c1e1..942dc39 100644
 +	return r;
 +}
 +#else /* !CONFIG_IPIPE */
- asmlinkage int printk(const char *fmt, ...)
- {
++asmlinkage int printk(const char *fmt, ...)
++{
  	va_list args;
+ 	int r;
+ 
 @@ -607,6 +683,7 @@ asmlinkage int printk(const char *fmt, ...)
  
  	return r;
