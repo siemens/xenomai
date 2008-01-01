@@ -2440,10 +2440,10 @@ index 29d8f9a..9a91ced 100644
  extern void enable_8259A_irq(unsigned int irq);
 diff --git a/include/asm-i386/ipipe.h b/include/asm-i386/ipipe.h
 new file mode 100644
-index 0000000..427b8ca
+index 0000000..d825ec1
 --- /dev/null
 +++ b/include/asm-i386/ipipe.h
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,219 @@
 +/*   -*- linux-c -*-
 + *   include/asm-i386/ipipe.h
 + *
@@ -2470,10 +2470,10 @@ index 0000000..427b8ca
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.12-00"
++#define IPIPE_ARCH_STRING	"1.12-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	12
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifndef __ASSEMBLY__
 +
@@ -2566,11 +2566,8 @@ index 0000000..427b8ca
 +	return ul;
 +}
 +
-+typedef void (__ipipe_irq_handler)(unsigned irq,
-+				   void *cookie);
-+
 +static inline void __ipipe_call_root_xirq_handler(unsigned irq,
-+						  __ipipe_irq_handler *handler)
++						  ipipe_irq_handler_t handler)
 +{
 +	struct pt_regs *regs = &__raw_get_cpu_var(__ipipe_tick_regs);
 +
@@ -2601,7 +2598,7 @@ index 0000000..427b8ca
 +void irq_exit(void);
 +
 +static inline void __ipipe_call_root_virq_handler(unsigned irq,
-+						  __ipipe_irq_handler *handler,
++						  ipipe_irq_handler_t handler,
 +						  void *cookie)
 +{
 +	__asm__ __volatile__("pushfl\n\t"
@@ -3146,10 +3143,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..784d296
+index 0000000..7336671
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,576 @@
+@@ -0,0 +1,573 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -3245,9 +3242,6 @@ index 0000000..784d296
 +
 +#define ipipe_virtual_irq_p(irq)	((irq) >= IPIPE_VIRQ_BASE && \
 +					 (irq) < IPIPE_NR_IRQS)
-+
-+typedef void (*ipipe_irq_handler_t)(unsigned irq,
-+				    void *cookie);
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
@@ -3728,10 +3722,10 @@ index 0000000..784d296
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..797ab74
+index 0000000..7c19431
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,80 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -3781,6 +3775,9 @@ index 0000000..797ab74
 +
 +#define IPIPE_STALL_MASK	(1L << IPIPE_STALL_FLAG)
 +#define IPIPE_SYNC_MASK		(1L << IPIPE_SYNC_FLAG)
++
++typedef void (*ipipe_irq_handler_t)(unsigned irq,
++				    void *cookie);
 +
 +extern struct ipipe_domain ipipe_root;
 +
