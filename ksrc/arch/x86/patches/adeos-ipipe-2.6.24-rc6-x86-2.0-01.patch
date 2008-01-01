@@ -1811,10 +1811,10 @@ index cbac167..bc82e4d 100644
 +#endif
 diff --git a/arch/x86/kernel/ipipe_32.c b/arch/x86/kernel/ipipe_32.c
 new file mode 100644
-index 0000000..4addbc0
+index 0000000..053c080
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe_32.c
-@@ -0,0 +1,839 @@
+@@ -0,0 +1,840 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe_32.c
 + *
@@ -2588,10 +2588,11 @@ index 0000000..4addbc0
 +	 * information. */
 +
 +	if (irq == __ipipe_tick_irq) {
-+		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs.eflags;
-+		__raw_get_cpu_var(__ipipe_tick_regs).eip = regs.eip;
-+		__raw_get_cpu_var(__ipipe_tick_regs).xcs = regs.xcs;
-+		__raw_get_cpu_var(__ipipe_tick_regs).ebp = regs.ebp;
++		struct pt_regs *tick_regs = &__raw_get_cpu_var(__ipipe_tick_regs);
++		tick_regs->eflags = regs.eflags;
++		tick_regs->xcs = regs.xcs;
++		tick_regs->eip = regs.eip;
++		tick_regs->ebp = regs.ebp;
 +	}
 +
 +	/*
@@ -2656,10 +2657,10 @@ index 0000000..4addbc0
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 diff --git a/arch/x86/kernel/ipipe_64.c b/arch/x86/kernel/ipipe_64.c
 new file mode 100644
-index 0000000..980ad10
+index 0000000..958528d
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe_64.c
-@@ -0,0 +1,810 @@
+@@ -0,0 +1,811 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe_64.c
 + *
@@ -3413,12 +3414,13 @@ index 0000000..980ad10
 +finalize:
 +
 +	if (irq == __ipipe_tick_irq) {
-+		__raw_get_cpu_var(__ipipe_tick_regs).rip = regs->rip;
-+		__raw_get_cpu_var(__ipipe_tick_regs).cs = regs->cs;
-+		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs->eflags;
-+		__raw_get_cpu_var(__ipipe_tick_regs).rbp = regs->rbp;
-+		__raw_get_cpu_var(__ipipe_tick_regs).rsp = regs->rsp;
-+		__raw_get_cpu_var(__ipipe_tick_regs).ss = regs->ss;
++		struct pt_regs *tick_regs = &__raw_get_cpu_var(__ipipe_tick_regs);
++		tick_regs->ss = regs->ss;
++		tick_regs->rsp = regs->rsp;
++		tick_regs->eflags = regs->eflags;
++		tick_regs->cs = regs->cs;
++		tick_regs->rip = regs->rip;
++		tick_regs->rbp = regs->rbp;
 +	}
 +
 +	/*
@@ -4530,15 +4532,15 @@ index 6d011bd..a99aa60 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..b762606
+index 0000000..19955bb
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,11 @@
 +#if defined(CONFIG_IPIPE) && !defined(IPIPE_ARCH_STRING)
-+#define IPIPE_ARCH_STRING	"2.0-00"
++#define IPIPE_ARCH_STRING	"2.0-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +#endif
 +#ifdef CONFIG_X86_32
 +# include "ipipe_32.h"
@@ -4547,10 +4549,10 @@ index 0000000..b762606
 +#endif
 diff --git a/include/asm-x86/ipipe_32.h b/include/asm-x86/ipipe_32.h
 new file mode 100644
-index 0000000..49d8f35
+index 0000000..b2d3d42
 --- /dev/null
 +++ b/include/asm-x86/ipipe_32.h
-@@ -0,0 +1,232 @@
+@@ -0,0 +1,229 @@
 +/*   -*- linux-c -*-
 + *   include/asm-x86/ipipe_32.h
 + *
@@ -4678,11 +4680,8 @@ index 0000000..49d8f35
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
 +
-+typedef void (__ipipe_irq_handler)(unsigned irq,
-+				   void *cookie);
-+
 +static inline void __ipipe_call_root_xirq_handler(unsigned irq,
-+						  __ipipe_irq_handler *handler)
++						  ipipe_irq_handler_t handler)
 +{
 +	struct pt_regs *regs = &__raw_get_cpu_var(__ipipe_tick_regs);
 +
@@ -4714,7 +4713,7 @@ index 0000000..49d8f35
 +void irq_exit(void);
 +
 +static inline void __ipipe_call_root_virq_handler(unsigned irq,
-+						  __ipipe_irq_handler *handler,
++						  ipipe_irq_handler_t handler,
 +						  void *cookie)
 +{
 +	irq_enter();
@@ -5893,10 +5892,10 @@ index 8d30229..74b355d 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..bfc8710
+index 0000000..ae0a72a
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,577 @@
+@@ -0,0 +1,574 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5993,9 +5992,6 @@ index 0000000..bfc8710
 +
 +#define ipipe_virtual_irq_p(irq)	((irq) >= IPIPE_VIRQ_BASE && \
 +					 (irq) < IPIPE_NR_IRQS)
-+
-+typedef void (*ipipe_irq_handler_t)(unsigned irq,
-+				    void *cookie);
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
@@ -6476,10 +6472,10 @@ index 0000000..bfc8710
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..a8dd0a0
+index 0000000..3c8dd6a
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,86 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -6529,6 +6525,9 @@ index 0000000..a8dd0a0
 +
 +#define IPIPE_STALL_MASK	(1L << IPIPE_STALL_FLAG)
 +#define IPIPE_SYNC_MASK		(1L << IPIPE_SYNC_FLAG)
++
++typedef void (*ipipe_irq_handler_t)(unsigned irq,
++				    void *cookie);
 +
 +extern struct ipipe_domain ipipe_root;
 +
@@ -10805,12 +10804,12 @@ index e1722d3..d7eeb4b 100644
  	return error;
  }
 diff --git a/kernel/printk.c b/kernel/printk.c
-index a30fe33..d11aa1f 100644
+index a30fe33..91d7422 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -613,6 +613,82 @@ static int have_callable_console(void)
-  * printf(3)
-  */
+@@ -590,6 +590,41 @@ static int have_callable_console(void)
+ 	return 0;
+ }
  
 +#ifdef CONFIG_IPIPE
 +
@@ -10847,8 +10846,13 @@ index a30fe33..d11aa1f 100644
 +	spin_unlock_irqrestore(&__ipipe_printk_lock, flags);
 +}
 +
-+asmlinkage int printk(const char *fmt, ...)
-+{
+ /**
+  * printk - print a kernel message
+  * @fmt: format string
+@@ -615,6 +650,47 @@ static int have_callable_console(void)
+ 
+ asmlinkage int printk(const char *fmt, ...)
+ {
 +  	int r, fbytes, oldcount, cs = -1;
 +    	unsigned long flags;
 +	va_list args;
@@ -10888,9 +10892,11 @@ index a30fe33..d11aa1f 100644
 +	return r;
 +}
 +#else /* !CONFIG_IPIPE */
- asmlinkage int printk(const char *fmt, ...)
- {
++asmlinkage int printk(const char *fmt, ...)
++{
  	va_list args;
+ 	int r;
+ 
 @@ -624,6 +700,7 @@ asmlinkage int printk(const char *fmt, ...)
  
  	return r;

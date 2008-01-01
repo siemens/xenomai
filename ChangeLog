@@ -1,3 +1,11 @@
+2008-01-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86/patches: Update to 2.6.20.21-i386-1.12-01,
+	2.6.23-i386-1.12-01, 2.6.23-x86_64-1.4-01, 2.6.24-rc6-2.0-01.
+	
+	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-11,
+	2.6.23-powerpc-2.0-08.
+
 2007-12-29  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/sja1000/rtcan_*_pci.c: Terminate PCI ID tables
