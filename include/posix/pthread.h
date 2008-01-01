@@ -494,6 +494,8 @@ int __real_pthread_cond_signal(pthread_cond_t *cond);
 
 int __real_pthread_cond_broadcast(pthread_cond_t *cond);
 
+int __real_pthread_kill(pthread_t tid, int sig);
+
 #ifdef __cplusplus
 }
 #endif
