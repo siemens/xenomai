@@ -397,10 +397,10 @@ static int rt_16550_set_config(struct rt_16550_context *ctx,
 		if (testbits(config->event_mask,
 			     RTSER_EVENT_MODEMHI | RTSER_EVENT_MODEMLO))
 			/* enable modem status interrupt */
-			ctx->ier_status |= IER_TX;
+			ctx->ier_status |= IER_MODEM;
 		else
 			/* disable modem status interrupt */
-			ctx->ier_status &= ~IER_TX;
+			ctx->ier_status &= ~IER_MODEM;
 		rt_16550_reg_out(mode, base, IER, ctx->ier_status);
 
 		rtdm_lock_put_irqrestore(&ctx->lock, lock_ctx);
