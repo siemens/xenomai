@@ -1126,7 +1126,7 @@ static const struct rtdm_device __initdata device_tmpl = {
 	.device_sub_class	= RTDM_SUBCLASS_16550A,
 	.profile_version	= RTSER_PROFILE_VER,
 	.driver_name		= RT_16550_DRIVER_NAME,
-	.driver_version		= RTDM_DRIVER_VER(1, 5, 1),
+	.driver_version		= RTDM_DRIVER_VER(1, 5, 2),
 	.peripheral_name	= "UART 16550A",
 	.provider_name		= "Jan Kiszka",
 };
