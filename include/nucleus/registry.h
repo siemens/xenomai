@@ -28,9 +28,9 @@
 
 #define XNOBJECT_SELF  XN_NO_HANDLE
 
-#if defined(__KERNEL__) && defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_REGISTRY)
+#if defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_REGISTRY)
 #define CONFIG_XENO_EXPORT_REGISTRY 1
-#endif /* __KERNEL__ && CONFIG_PROC_FS && CONFIG_XENO_OPT_REGISTRY */
+#endif /* CONFIG_PROC_FS && CONFIG_XENO_OPT_REGISTRY */
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
@@ -55,13 +55,13 @@ typedef struct xnobject {
 
     u_long cstamp;	/* !< Creation stamp. */
 
-#if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
+#ifdef CONFIG_PROC_FS
 
     struct xnpnode *pnode; /* !< /proc information class. */
 
     struct proc_dir_entry *proc; /* !< /proc entry. */
 
-#endif /* CONFIG_PROC_FS && __KERNEL__ */
+#endif /* CONFIG_PROC_FS */
 
 } xnobject_t;
 
@@ -81,7 +81,7 @@ int xnregistry_init(void);
 
 void xnregistry_cleanup(void);
 
-#if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
+#ifdef CONFIG_PROC_FS
 
 #include <linux/proc_fs.h>
 
@@ -111,7 +111,7 @@ typedef struct xnpnode {
 
 } xnpnode_t;
 
-#else /* !(CONFIG_PROC_FS && __KERNEL__) */
+#else /* !CONFIG_PROC_FS */
 
 typedef struct xnpnode { /* Placeholder. */
 
@@ -119,7 +119,7 @@ typedef struct xnpnode { /* Placeholder. */
 
 } xnpnode_t;
 
-#endif /* CONFIG_PROC_FS && __KERNEL__ */
+#endif /* !CONFIG_PROC_FS */
 
 /* Public interface. */
 
