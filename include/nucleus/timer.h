@@ -338,7 +338,6 @@ typedef struct xntimed_slave {
 #define xntimer_sched(t)	xnpod_current_sched()
 #endif /* !CONFIG_SMP */
 #define xntimer_interval(t)	((t)->interval)
-#define xntimer_set_cookie(t,c)	((t)->cookie = (c))
 #define xntimer_pexpect(t)      ((t)->pexpect)
 #define xntimer_pexpect_forward(t,delta) ((t)->pexpect += delta)
 
