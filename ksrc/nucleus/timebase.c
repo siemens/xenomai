@@ -490,6 +490,51 @@ xnticks_t xntbase_ns2ticks_ceil(xntbase_t *base, xntime_t t)
 			     xntbase_get_tickval(base), NULL);
 }
 
+/*!
+ * \fn xnticks_t xntbase_convert(xntbase_t *srcbase,xnticks_t ticks,xntbase_t *dstbase)
+ * \brief Convert a clock value into another time base.
+ *
+ * @param srcbase The descriptor address of the source time base.
+
+ * @param ticks The clock value expressed in the source time base to
+ * convert to the destination time base.
+ *
+ * @param dstbase The descriptor address of the destination time base.
+
+ * @return The converted count of ticks in the destination time base
+ * is returned.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+xnticks_t xntbase_convert(xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbase)
+{
+	/* Twisted, but tries hard not to rescale to nanoseconds *
+	   before converting, so that we could save a 64bit multiply
+	   in the common cases (i.e. converting to/from master). */
+
+	if (dstbase->tickvalue == srcbase->tickvalue)
+		return ticks;
+
+	if (likely(xntbase_master_p(dstbase)))
+		return xntbase_ticks2ns(srcbase, ticks); /* Periodic to master base. */
+
+	if (xntbase_master_p(srcbase))
+		return xntbase_ns2ticks(dstbase, ticks); /* Master base to periodic. */
+
+	/* Periodic to periodic. */
+
+	return xntbase_ns2ticks(dstbase, xntbase_ticks2ns(srcbase, ticks));
+}
+
 EXPORT_SYMBOL(xntbase_alloc);
 EXPORT_SYMBOL(xntbase_free);
 EXPORT_SYMBOL(xntbase_update);
@@ -498,6 +543,7 @@ EXPORT_SYMBOL(xntbase_start);
 EXPORT_SYMBOL(xntbase_stop);
 EXPORT_SYMBOL(xntbase_tick);
 EXPORT_SYMBOL(xntbase_ns2ticks_ceil);
+EXPORT_SYMBOL(xntbase_convert);
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
