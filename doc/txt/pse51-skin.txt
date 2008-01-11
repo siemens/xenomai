@@ -39,8 +39,12 @@ single unix specification V3, which can be accessed at the following URL :
 
 http://www.unix.org/single_unix_specification
 
-However, you may observe some variations from the interfaces and behaviours
-described in this specification. Here are the known ones :
+However, specifities of Xenomai POSIX skin implementation are documented as part
+of Xenomai doxygen documentation, available on-line at the following address:
+http://www.xenomai.org/documentation/trunk/html/api/group__posix.html
+
+You may observe some variations from the interfaces and behaviours described in
+the single unix specification. Here are the known ones:
 
 - the skin header file does not define the _POSIX* compile-time constants ;
  
@@ -126,9 +130,6 @@ replacements is invalid; dynamic initialization through the
 pthread_mutex_init() and pthread_cond_init() routines must be used
 instead, otherwise, mutex and condition variable-related calls would
 always return an error status (EINVAL).
-
-- Setting time through clock_settime(CLOCK_REALTIME) is not yet supported, but
-the CLOCK_REALTIME clock is aligned on Linux clock at POSIX skin startup.
 
 - Real-time signals sent to user-space threads cause migration to secondary
   mode.
