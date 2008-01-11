@@ -1788,7 +1788,7 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_mark(xn_nucleus_thread_renice,
-		   "thread %p thread_nmae %s priority %d",
+		   "thread %p thread_name %s priority %d",
 		   thread, xnthread_name(thread), prio);
 
 	oldprio = thread->cprio;
