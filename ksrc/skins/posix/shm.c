@@ -507,6 +507,11 @@ int ftruncate(int fd, off_t len)
 		goto err_shm_put;
 	}
 
+	/* Allocate one more page for alignment (the address returned by mmap
+	   must be aligned on a page boundardy). */
+	if (len)
+		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
+
 	err = 0;
 	if (emptyq_p(&shm->mappings)) {
 		/* Temporary storage, in order to preserve the memory contents upon
@@ -538,17 +543,11 @@ int ftruncate(int fd, off_t len)
 
 		if (len) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-			int flags;
-			len = xnheap_rounded_size(len, PAGE_SIZE);
-			flags = len <= 128 * 1024 ? GFP_USER : 0;
+			int flags = len <= 128 * 1024 ? GFP_USER : 0;
 			err = -xnheap_init_mapped(&shm->heapbase, len, flags);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
 			{
-				void *heapaddr;
-
-				len = xnheap_rounded_size(len, XNCORE_PAGE_SIZE);
-
-				heapaddr = xnarch_alloc_host_mem(len);
+				void *heapaddr = xnarch_alloc_host_mem(len);
 
 				if (heapaddr)
 					err =
