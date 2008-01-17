@@ -2319,7 +2319,7 @@ index 2a01186..0c56403 100644
  extern time_t last_rtc_update;
 diff --git a/include/asm-ppc/ipipe.h b/include/asm-ppc/ipipe.h
 new file mode 100644
-index 0000000..310d9ee
+index 0000000..2458701
 --- /dev/null
 +++ b/include/asm-ppc/ipipe.h
 @@ -0,0 +1,190 @@
@@ -2362,10 +2362,10 @@ index 0000000..310d9ee
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.6-02"
++#define IPIPE_ARCH_STRING	"1.6-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -8119,7 +8119,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index f82b359..91a1272 100644
+index f82b359..f51ca1a 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -8285,7 +8285,7 @@ index f82b359..91a1272 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2867,3 +2910,104 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2867,3 +2910,110 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  	return buf - old_buf;
  }
  EXPORT_SYMBOL_GPL(access_process_vm);
@@ -8325,7 +8325,9 @@ index f82b359..91a1272 100644
 +	pmd = pmd_offset(pud, addr);
 +	do {
 +		next = pmd_addr_end(addr, end);
-+		if (ipipe_pin_pte_range(mm, pmd, vma, addr, end))
++ 		if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
++ 			continue;
++		if (ipipe_pin_pte_range(mm, pmd, vma, addr, next))
 +			return -ENOMEM;
 +	} while (pmd++, addr = next, addr != end);
 +	return 0;
@@ -8341,7 +8343,9 @@ index f82b359..91a1272 100644
 +	pud = pud_offset(pgd, addr);
 +	do {
 +		next = pud_addr_end(addr, end);
-+		if (ipipe_pin_pmd_range(mm, pud, vma, addr, end))
++ 		if (pud_none(*pud) || unlikely(pud_bad(*pud)))
++ 			continue;
++		if (ipipe_pin_pmd_range(mm, pud, vma, addr, next))
 +			return -ENOMEM;
 +	} while (pud++, addr = next, addr != end);
 +	return 0;
@@ -8373,6 +8377,8 @@ index f82b359..91a1272 100644
 +		pgd = pgd_offset(mm, addr);
 +		do {
 +			next = pgd_addr_end(addr, end);
++			if (pgd_none(*pgd) || unlikely(pgd_bad(*pgd)))
++				continue;
 +			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
 +				result = -ENOMEM;
 +				goto done_mm;
