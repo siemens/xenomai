@@ -15,6 +15,10 @@
 	* include/asm-powerpc/calibration.h: Add calibration value for
 	AMCC's Rainier board.
 
+2008-01-14  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* scripts/prepare-kernel.sh: Kill arch_makefile.
+
 2008-01-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/timebase.c (xntbase_start): Raise the XNTBRUN bit.

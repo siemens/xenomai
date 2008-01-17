@@ -334,14 +334,11 @@ while : ; do
    fi
 done
 
-arch_makefile=Makefile
-
 # i386 and x86_64 architectures are merged since 2.6.24. The resulting
 # combo is available from arch/x86 when present.
 if test "$xenomai_arch" = x86; then
   if test -d $linux_tree/arch/x86; then
       linux_arch=x86
-      arch_makefile=Makefile_$x86_arch_bits
   fi
 fi
 
@@ -433,9 +430,9 @@ case $linux_VERSION.$linux_PATCHLEVEL in
             patch_append init/Kconfig
     fi
 
-    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/$arch_makefile; then
+    if ! grep -q CONFIG_XENOMAI $linux_tree/arch/$linux_arch/Makefile; then
 	p="drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
-	( echo ; echo $p ) | patch_append arch/$linux_arch/$arch_makefile
+	( echo ; echo $p ) | patch_append arch/$linux_arch/Makefile
     fi
 
     patch_architecture_specific="n"
