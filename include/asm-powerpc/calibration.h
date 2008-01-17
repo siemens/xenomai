@@ -54,6 +54,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 4000
 #elif defined(CONFIG_TAISHAN)
 #define __sched_latency 1800
+#elif defined(CONFIG_RAINIER)
+#define __sched_latency 2300
 #elif defined(CONFIG_YUCCA)
 #define __sched_latency 2780
 #elif defined(CONFIG_YELLOWSTONE)
