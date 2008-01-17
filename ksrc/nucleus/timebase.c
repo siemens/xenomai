@@ -394,6 +394,7 @@ void xntbase_start(xntbase_t *base)
 	}
 
 	start_date += base->tickvalue;
+	__setbits(base->status, XNTBRUN);
 
 	xnlock_put_irqrestore(&nklock, s);
 
