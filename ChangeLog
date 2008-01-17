@@ -1,3 +1,20 @@
+2007-01-17  Jan Kiszka  <jan.kiszka@web.de>
+
+	* scripts/Kconfig.frag: Extend HPET dependencies.
+
+2008-01-15  Philippe Gerum  <rpm@xenomai.org>
+	
+	* include/asm-powerpc/calibration.h: Add calibration value for
+	AMCC's Rainier board.
+
+2008-01-14  Jan Kiszka  <jan.kiszka@web.de>
+	
+	* scripts/prepare-kernel.sh: Kill arch_makefile.
+	
+2008-01-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/timebase.c (xntbase_start): Raise the XNTBRUN bit.
+
 2008-01-07  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* ksrc/drivers/serial/16550A.c (rt_16550_set_config): Set correct
