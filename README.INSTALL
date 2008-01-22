@@ -51,8 +51,10 @@ $ scripts/prepare-kernel.sh --linux=<linux-srctree>
     valid either way.
 
     --adeos specifies the path of the Adeos patch to apply against the
-    kernel tree. This parameter can be omitted if Adeos has already
-    been patched in. In any case, the script will not try to apply it
+    kernel tree. Suitable patches are available with Xenomai under
+    ksrc/arch/<target-arch>/patches. This parameter can be omitted if
+    Adeos has already been patched in or the script shall suggest an
+    appropriate one. In any case, the script will not try to apply it
     again whenever a former patch is detected.
 
     --arch tells the script about the target architecture. If
@@ -64,10 +66,7 @@ located at /usr/src/linux-2.6.23-ipipe in order to include the Xenomai
 support:
 
 $ cd xenomai-2.4
-$ scripts/prepare-kernel.sh
-  --linux=/usr/src/linux-2.6.23-ipipe
-  --adeos=/tmp/adeos-ipipe-2.6.23-i386-1.10-12.patch
-  --arch=i386
+$ scripts/prepare-kernel.sh --linux=/usr/src/linux-2.6.23-ipipe
 
 Note: The script will infer the location of the Xenomai kernel code
 from its own location within the Xenomai source tree. In other words,
