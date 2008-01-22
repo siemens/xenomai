@@ -353,10 +353,10 @@ eval linux_`grep '^PATCHLEVEL =' $linux_tree/Makefile | sed -e 's, ,,g'`
 eval linux_`grep '^SUBLEVEL =' $linux_tree/Makefile | sed -e 's, ,,g'`
 eval linux_`grep '^VERSION =' $linux_tree/Makefile | sed -e 's, ,,g'`
 
-linux_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL$linux_EXTRAVERSION"
+linux_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL"
 
 if test x$verbose = x1; then
-echo "Preparing kernel $linux_version in $linux_tree..."
+echo "Preparing kernel $linux_version$linux_EXTRAVERSION in $linux_tree..."
 fi
 
 if test -r $linux_tree/include/linux/ipipe.h; then
@@ -369,7 +369,7 @@ elif test -r $linux_tree/include/linux/adeos.h; then
    exit 2
 else
    if test x$adeos_patch = x; then
-      default_adeos_patch=`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version-$linux_arch-*|sort -r ) 2>/dev/null | head -n1`
+      default_adeos_patch="`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version*-{$linux_arch,$xenomai_arch}-*|sort -r ) 2>/dev/null | head -n1`"
    fi
    if test x$default_adeos_patch = x; then
       default_adeos_patch=/dev/null
@@ -393,7 +393,7 @@ else
    curdir=$PWD
    cd $linux_tree && patch --dry-run -p1 -f < $adeos_patch || { 
         cd $curdir;
-        echo "$me: Unable to patch kernel $linux_version with `basename $adeos_patch`." >&2
+        echo "$me: Unable to patch kernel $linux_version$linux_EXTRAVERSION with `basename $adeos_patch`." >&2
         exit 2;
    }
    patch -p1 -f -s < $adeos_patch
