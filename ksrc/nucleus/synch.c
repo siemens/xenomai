@@ -105,7 +105,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
  * end of its priority group.
  */
 
-static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
+static void xnsynch_renice_thread(xnthread_t *thread, int prio)
 {
 	thread->cprio = prio;
 
@@ -445,7 +445,7 @@ xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
 }
 
 /*! 
- * \fn void xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
+ * \fn xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
  * \brief Give the resource ownership to a given waiting thread.
  *
  * This service gives the ownership of a given synchronization object
@@ -463,7 +463,7 @@ xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
  * (&thread->plink) which MUST be currently linked to the
  * synchronization object's pending queue (i.e. synch->pendq).
  *
- * @return The link address of the unblocked thread in the
+ * @return The link address of the next waiting thread in the
  * synchronization object's pending queue.
  *
  * Side-effects:
