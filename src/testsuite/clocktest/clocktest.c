@@ -134,9 +134,11 @@ void check_time_warps(struct per_cpu_data *per_cpu_data)
 
         incr = now - last;
         if (incr < 0) {
+            acquire_lock(&lock);
             per_cpu_data->warps++;
             if (incr > per_cpu_data->max_warp)
                 per_cpu_data->max_warp = incr;
+            release_lock(&lock);
         }
     }
 }
@@ -160,7 +162,7 @@ void *cpu_thread(void *arg)
 
         check_time_warps(&per_cpu_data[cpuid]);
 
-        delay.tv_nsec = 1000000 + random() * 4000000;
+        delay.tv_nsec = 1000000 + random() * (100000.0 / RAND_MAX);
         nanosleep(&delay, NULL);
     }
 }
