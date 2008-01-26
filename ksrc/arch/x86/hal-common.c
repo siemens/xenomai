@@ -96,14 +96,14 @@ static void rthal_timer_set_periodic(void)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 #include <asm/smpboot.h>
-static inline void send_IPI_all(int vector)
+static inline void send_IPI_allbutself(int vector)
 {
 	unsigned long flags;
 
 	rthal_local_irq_save_hw(flags);
 	apic_wait_icr_idle();
 	apic_write_around(APIC_ICR,
-			  APIC_DM_FIXED | APIC_DEST_ALLINC | INT_DEST_ADDR_MODE
+			  APIC_DM_FIXED | APIC_DEST_ALLBUT | INT_DEST_ADDR_MODE
 			  | vector);
 	rthal_local_irq_restore_hw(flags);
 }
@@ -114,10 +114,9 @@ static inline void send_IPI_all(int vector)
 DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
 {
 #ifdef CONFIG_SMP
-	send_IPI_all(LOCAL_TIMER_VECTOR);
-#else
-	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
+	send_IPI_allbutself(LOCAL_TIMER_VECTOR);
 #endif
+	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
 	return IRQ_HANDLED;
 }
 
