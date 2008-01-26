@@ -337,6 +337,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
   fi
   case "$ADEOS_PATCH" in
 	*-powerpc-*) XENO_LINUX_ARCH=powerpc;;
+	*-x86-*) XENO_LINUX_ARCH=x86;;
   esac
   AC_SUBST(ADEOS_PATCH)
 
