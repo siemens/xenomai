@@ -1,3 +1,8 @@
+2008-01-26  Jan Kiszka <jan.kiszka@siemens.com>
+
+	* ksrc/arch/x86/hal-common.c (rthal_timer_request): Fixup tick IRQ
+	number for kernels lacking generic clock events support.
+
 2008-01-23  Jan Kiszka <jan.kiszka@siemens.com>
 
 	* src/testsuite/clocktest/clocktest.c: Fix randomization of

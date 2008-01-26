@@ -236,6 +236,12 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 			       "rthal_broadcast_timer",
 			       &rthal_broadcast_to_local_timers);
 
+	/*
+	 * rthal_timer_set_oneshot assumes the host tick flows via
+	 * RTHAL_TIMER_IRQ, but that's not the case for legacy x86_64.
+	 */
+	__ipipe_tick_irq = RTHAL_BCAST_TICK_IRQ;
+
 	rthal_nmi_init(&rthal_latency_above_max);
 out:
 	return 0;
