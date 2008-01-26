@@ -183,13 +183,13 @@ int rthal_timer_request(
 	if (cpu > 0)
 		goto out;
 
-	rthal_timer_set_oneshot(1);
-
 	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 				(rthal_irq_handler_t) tick_handler, NULL, NULL);
 
 	if (err)
 		return err;
+
+	rthal_timer_set_oneshot(1);
 
 	rthal_nmi_init(&rthal_latency_above_max);
 out:
@@ -223,8 +223,6 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 	if (cpu > 0)
 		goto out;
 
-	rthal_timer_set_oneshot(1);
-
 	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
 			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
 
@@ -235,6 +233,8 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 			       &rthal_broadcast_to_local_timers,
 			       "rthal_broadcast_timer",
 			       &rthal_broadcast_to_local_timers);
+
+	rthal_timer_set_oneshot(1);
 
 	/*
 	 * rthal_timer_set_oneshot assumes the host tick flows via
