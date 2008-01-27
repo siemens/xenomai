@@ -120,6 +120,8 @@ DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
 	return IRQ_HANDLED;
 }
 
+static int cpu_timers_requested;
+
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 int rthal_timer_request(
@@ -179,7 +181,7 @@ int rthal_timer_request(
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
 	 */
-	if (cpu > 0)
+	if (cpu_timers_requested++ > 0)
 		goto out;
 
 	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
@@ -219,7 +221,7 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
 	 */
-	if (cpu > 0)
+	if (cpu_timers_requested++ > 0)
 		goto out;
 
 	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
@@ -252,17 +254,19 @@ void rthal_timer_release(int cpu)
 {
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 	ipipe_release_tickdev(cpu);
-#else
-	rthal_irq_host_release(RTHAL_BCAST_TICK_IRQ,
-			       &rthal_broadcast_to_local_timers);
 #endif
 
 	/*
 	 * The rest of the cleanup work should only be performed once
-	 * by a single CPU.
+	 * by the last releasing CPU.
 	 */
-	if (cpu > 0)
+	if (--cpu_timers_requested > 0)
 		return;
+
+#ifndef CONFIG_GENERIC_CLOCKEVENTS
+	rthal_irq_host_release(RTHAL_BCAST_TICK_IRQ,
+			       &rthal_broadcast_to_local_timers);
+#endif
 
 	rthal_nmi_release();
 

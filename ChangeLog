@@ -1,3 +1,8 @@
+2008-01-27  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/x86/hal-common.c: Fix race when starting the cleanup
+	on CPU > 0. Avoid multiple RTHAL_BCAST_TICK_IRQ releases.
+
 2008-01-26  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* configure.in: Fix --enable-linux-build for latest arch/x86
