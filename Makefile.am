@@ -14,7 +14,7 @@ dist-hook:
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
-        $(mkinstalldirs) $(DESTDIR)/dev ; \
+	$(mkinstalldirs) $(DESTDIR)/dev; \
 	@if test x`id -u` = x0; then \
            sudo= ; \
         else if test \! "x`type $(SUDO)`" = x ; then \
