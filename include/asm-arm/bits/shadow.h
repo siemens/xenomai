@@ -90,10 +90,17 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			local_irq_save_hw(flags);
 			__xn_get_user(i, (int *)__xn_reg_arg2(regs));
 			__xn_get_user(v, (atomic_t **) __xn_reg_arg3(regs));
-			__xn_copy_from_user(&val, v, sizeof(atomic_t));
+			if (__xn_copy_from_user(&val, v, sizeof(atomic_t))) {
+				error = -EFAULT;
+				goto unlock;
+			}
 			ret = atomic_add_return(i, &val);
-			__xn_copy_to_user(v, &val, sizeof(atomic_t));
+			if (__xn_copy_to_user(v, &val, sizeof(atomic_t))) {
+				error = -EFAULT;
+				goto unlock;
+			}
 			__xn_put_user(ret, (int *)__xn_reg_arg4(regs));
+		  unlock:
 			local_irq_restore_hw(flags);
 			break;
 		}
@@ -179,7 +186,9 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			return -EINVAL;
 		}
 		
-		__xn_copy_to_user((void *)__xn_reg_arg2(regs), &info, sizeof(info));
+		if (__xn_copy_to_user((void *)__xn_reg_arg2(regs),
+				      &info, sizeof(info)))
+			return -EFAULT;
 		break;
 	}
 #endif /* IPIPE_TSC_TYPE_NONE */
