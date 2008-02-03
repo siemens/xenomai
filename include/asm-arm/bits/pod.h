@@ -67,33 +67,39 @@ static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 #endif /* TIF_MMSWITCH_INT */
 }
 
-static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
-{
-	struct task_struct *prev = out_tcb->active_task;
-	struct mm_struct *prev_mm = out_tcb->active_mm;
-	struct task_struct *next = in_tcb->user_task;
-
-
-	if (likely(next != NULL)) {
-		in_tcb->active_task = next;
-		in_tcb->active_mm = in_tcb->mm;
-		rthal_clear_foreign_stack(&rthal_domain);
-	} else {
-		in_tcb->active_task = prev;
-		in_tcb->active_mm = prev_mm;
-		rthal_set_foreign_stack(&rthal_domain);
-	}
-
-	if (prev_mm != in_tcb->active_mm) {
-		/* Switch to new user-space thread? */
-		if (in_tcb->active_mm)
-			switch_mm(prev_mm, in_tcb->active_mm, next);
-		if (!next->mm)
-			enter_lazy_tlb(prev_mm, next);
-	}
-
-	/* Kernel-to-kernel context switch. */
-	rthal_thread_switch(prev, out_tcb->tip, in_tcb->tip);
+#define xnarch_switch_to(_out_tcb, _in_tcb, lock)			\
+{									\
+	xnarchtcb_t *in_tcb = (_in_tcb);				\
+	xnarchtcb_t *out_tcb = (_out_tcb);				\
+	struct task_struct *prev = out_tcb->active_task;		\
+	struct mm_struct *prev_mm = out_tcb->active_mm;			\
+	struct task_struct *next = in_tcb->user_task;			\
+									\
+									\
+	if (likely(next != NULL)) {					\
+		in_tcb->active_task = next;				\
+		in_tcb->active_mm = in_tcb->mm;				\
+		rthal_clear_foreign_stack(&rthal_domain);		\
+	} else {							\
+		in_tcb->active_task = prev;				\
+		in_tcb->active_mm = prev_mm;				\
+		rthal_set_foreign_stack(&rthal_domain);			\
+	}								\
+									\
+	if (prev_mm != in_tcb->active_mm) {				\
+		/* Switch to new user-space thread? */			\
+		if (in_tcb->active_mm) {				\
+			spl_t ignored;					\
+			xnlock_clear_irqon(lock);			\
+			switch_mm(prev_mm, in_tcb->active_mm, next);	\
+			xnlock_get_irqsave(lock, ignored);		\
+		}							\
+		if (!next->mm)						\
+			enter_lazy_tlb(prev_mm, next);			\
+	}								\
+									\
+	/* Kernel-to-kernel context switch. */				\
+	rthal_thread_switch(prev, out_tcb->tip, in_tcb->tip);		\
 }
 
 static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)

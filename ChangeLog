@@ -3,6 +3,12 @@
 	* ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c, ksrc/nucleus/heap.c:
 	Rework thread self-deletion case for zombie finalization. This is
 	groundwork for unlocked context switch support.
+
+	* ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c: Arch-neutral support
+	for unlocked context switch.
+
+	* include/asm-arm/bits/pod.h, include/asm-arm/system.h: ARM
+	support for unlocked context switch.
 	
 2008-01-30  Philippe Gerum  <rpm@xenomai.org>
 
