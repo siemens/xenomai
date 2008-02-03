@@ -66,6 +66,22 @@ char *nkmsgbuf = NULL;
 
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+static inline void xnpod_switch_to(xnsched_t *sched,
+				   xnthread_t *threadout, xnthread_t *threadin)
+{
+	sched->lastthread = threadout;
+	xnthread_set_state(threadout, XNSWLOCK);
+	xnthread_set_state(threadin, XNSWLOCK);
+
+	xnarch_switch_to(xnthread_archtcb(threadout),
+			 xnthread_archtcb(threadin), &nklock);
+}
+#else /* !XNARCH_WANT_UNLOCKED_CTXSW */
+#define xnpod_switch_to(sched, threadout, threadin) \
+	xnarch_switch_to(xnthread_archtcb(threadout), xnthread_archtcb(threadin))
+#endif /* !XNARCH_WANT_UNLOCKED_CTXSW */
+
 const char *xnpod_fatal_helper(const char *format, ...)
 {
 	const unsigned nr_cpus = xnarch_num_online_cpus();
@@ -546,7 +562,7 @@ static inline void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
 	__clrbits(sched->status, XNKCOUT);
 }
 
-static void xnpod_zombie_hooks(xnthread_t *thread)
+void xnpod_zombie_hooks(xnthread_t *thread)
 {
 	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
 	thread->sched->zombie = thread;
@@ -1190,7 +1206,14 @@ void xnpod_delete_thread(xnthread_t *thread)
 		   the thread object. */
 		xnsched_set_resched(sched);
 		xnpod_schedule();
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+	} else if (!xnthread_test_state(thread, XNSWLOCK)) {
+		/* When killing a thread in the course of a context switch
+		   with nklock unlocked on a distant CPU, do nothing, this case
+		   will be caught in xnpod_finish_unlocked_switch. */
+#else /* !XNARCH_WANT_UNLOCKED_CTXSW */
 	} else {
+#endif /* !XNARCH_WANT_UNLOCKED_CTXSW */
 		if (!emptyq_p(&nkpod->tdeleteq)
 		    && !xnthread_test_state(thread, XNROOT)) {
 			trace_mark(xn_nucleus_thread_callout,
@@ -1869,8 +1892,10 @@ int xnpod_migrate_thread(int cpu)
 	/* Migrate the thread periodic timer. */
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
+#ifndef XNARCH_WANT_UNLOCKED_CTXSW
 	/* Put thread in the ready queue of the destination CPU's scheduler. */
 	xnpod_resume_thread(thread, 0);
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
 
 	xnpod_schedule();
 
@@ -2112,6 +2137,8 @@ void xnpod_dispatch_signals(void)
 
 void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
+	xnpod_finish_unlocked_switch(thread->sched);
+
 	xnpod_finalize_zombie(thread->sched);
 
 	trace_mark(xn_nucleus_thread_boot, "thread %p thread_name %s",
@@ -2148,6 +2175,8 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 
 	xnlock_clear_irqoff(&nklock);
 	splexit(!!imask);
+
+	xnpod_resched_after_unlocked_switch();
 }
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -2367,6 +2396,10 @@ void xnpod_schedule(void)
 	if (xnpod_callout_p() || xnpod_interrupt_p())
 		return;
 
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+      restart:
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
+
 	trace_mark(xn_nucleus_sched, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2388,7 +2421,7 @@ void xnpod_schedule(void)
 		xnarch_send_ipi(xnsched_resched_mask());
 		xnsched_clr_mask(sched);
 	}
-#if XENO_DEBUG(NUCLEUS)
+#if !XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
 		goto signal_unlock_and_exit;
 
@@ -2399,6 +2432,11 @@ void xnpod_schedule(void)
 #endif /* !XENO_DEBUG(NUCLEUS) */
 
 #endif /* CONFIG_SMP */
+
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+	if (xnthread_test_state(runthread, XNSWLOCK))
+		goto unlock_and_exit;
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
 
 	/* Clear the rescheduling bit */
 	xnsched_clr_resched(sched);
@@ -2486,8 +2524,7 @@ void xnpod_schedule(void)
 	xnstat_exectime_switch(sched, &threadin->stat.account);
 	xnstat_counter_inc(&threadin->stat.csw);
 
-	xnarch_switch_to(xnthread_archtcb(threadout),
-			 xnthread_archtcb(threadin));
+	xnpod_switch_to(sched, threadout, threadin);
 
 #ifdef CONFIG_SMP
 	/* If threadout migrated while suspended, sched is no longer correct. */
@@ -2512,6 +2549,8 @@ void xnpod_schedule(void)
 		xnpod_fatal("zombie thread %s (%p) would not die...",
 			    threadout->name, threadout);
 
+	xnpod_finish_unlocked_switch(sched);
+
 	xnpod_finalize_zombie(sched);
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -2530,11 +2569,19 @@ void xnpod_schedule(void)
 		xnpod_fire_callouts(&nkpod->tswitchq, runthread);
 	}
 
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+	if (unlikely(xnsched_resched_p()))
+		goto signal_unlock_and_restart;
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
+
       signal_unlock_and_exit:
 
 	if (xnthread_signaled_p(runthread))
 		xnpod_dispatch_signals();
 
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+      unlock_and_exit:
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
 	xnlock_put_irqrestore(&nklock, s);
 	return;
 
@@ -2553,8 +2600,21 @@ void xnpod_schedule(void)
 		   the caller may expect it to be locked. */
 		xnlock_get_irqsave(&nklock, ignored);
 		xnlock_put_irqrestore(&nklock, s);
+
+		return;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+  signal_unlock_and_restart:
+	if (xnthread_signaled_p(runthread))
+		xnpod_dispatch_signals();
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (xnsched_resched_p())
+		goto restart;
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
 }
 
 /*! 
@@ -2672,13 +2732,14 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	xnstat_exectime_switch(sched, &threadin->stat.account);
 	xnstat_counter_inc(&threadin->stat.csw);
 
-	xnarch_switch_to(xnthread_archtcb(runthread),
-			 xnthread_archtcb(threadin));
+	xnpod_switch_to(sched, runthread, threadin);
 
 #ifdef CONFIG_SMP
 	/* If runthread migrated while suspended, sched is no longer correct. */
 	sched = xnpod_current_sched();
 #endif
+
+	xnpod_finish_unlocked_switch(sched);
 
 	xnpod_finalize_zombie(sched);
 
@@ -2694,6 +2755,8 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	if (nkpod->schedhook && runthread == sched->runthread)
 		nkpod->schedhook(runthread, XNRUNNING);
 #endif /* __XENO_SIM__ */
+
+	xnpod_resched_after_unlocked_switch();
 }
 
 /*! 

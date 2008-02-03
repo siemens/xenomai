@@ -140,6 +140,10 @@ typedef struct xnsched {
 	xntimer_t htimer;	/*!< Host timer. */
 
 	xnthread_t *zombie;
+
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+	xnthread_t *lastthread;
+#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
 } xnsched_t;
 
 #define nkpod (&nkpod_struct)
@@ -456,6 +460,42 @@ static inline void xnpod_delete_self(void)
 {
 	xnpod_delete_thread(xnpod_current_thread());
 }
+
+#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+void xnpod_zombie_hooks(xnthread_t *thread);
+
+static inline void xnpod_finish_unlocked_switch(xnsched_t *sched)
+{
+	xnthread_clear_state(sched->lastthread, XNSWLOCK);
+	xnthread_clear_state(sched->runthread, XNSWLOCK);
+
+	/* Detect a thread which called xnpod_migrate_thread */
+	if (sched->lastthread->sched != sched)
+		xnpod_resume_thread(sched->lastthread, 0);
+
+	if (xnthread_test_state(sched->lastthread, XNZOMBIE)) {
+		/* There are two cases where sched->lastthread has the zombie
+		   bit:
+		   - either it had it before the context switch, the hooks
+		   have been executed and sched->zombie is lastthread;
+		   - or it has been killed while the nklocked was unlocked
+		   during the context switch, in which case we must run the
+		   hooks, and we do it now.
+		*/
+		if (sched->zombie != sched->lastthread)
+			xnpod_zombie_hooks(sched->lastthread);
+	}
+}
+
+static inline void xnpod_resched_after_unlocked_switch(void)
+{
+	if (xnsched_resched_p())
+		xnpod_schedule();
+}
+#else /* !XNARCH_WANT_UNLOCKED_CTXSW */
+#define xnpod_finish_unlocked_switch(sched)
+#define xnpod_resched_after_unlocked_switch()
+#endif /* !XNARCH_WANT_UNLOCKED_CTXSW */
 
 #ifdef __cplusplus
 }

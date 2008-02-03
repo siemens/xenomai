@@ -1127,6 +1127,8 @@ redo:
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnpod_current_sched();
 
+	xnpod_finish_unlocked_switch(sched);
+
 	xnpod_finalize_zombie(sched);
 
 #ifdef CONFIG_XENO_HW_FPU
@@ -1152,6 +1154,8 @@ redo:
 
 	trace_mark(xn_nucleus_shadow_hardened, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
+
+	xnpod_resched_after_unlocked_switch();
 
 	return 0;
 }
