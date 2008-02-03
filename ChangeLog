@@ -9,6 +9,11 @@
 
 	* include/asm-arm/bits/pod.h, include/asm-arm/system.h: ARM
 	support for unlocked context switch.
+
+
+	* ksrc/drivers/testing/klat.c, src/testsuite/klatency: Provide
+	more accurate latency measurement tool dedicated to kernel-based
+	activities.
 	
 2008-01-30  Philippe Gerum  <rpm@xenomai.org>
 

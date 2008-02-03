@@ -22,4 +22,10 @@ config XENO_DRIVERS_SWITCHTEST
 	Kernel-based driver for unit testing context switches and
 	FPU switches.
 
+config XENO_DRIVERS_KLATENCY
+	depends on XENO_DRIVERS_TIMERBENCH
+	tristate "Kernel-only latency measurement module"
+	help
+	Kernel module for kernel-only latency measurement.
+
 endmenu
