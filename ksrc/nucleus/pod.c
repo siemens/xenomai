@@ -292,6 +292,7 @@ int xnpod_init(void)
 #endif /* CONFIG_SMP */
 		xntimer_set_name(&sched->htimer, htimer_name);
 		xntimer_set_sched(&sched->htimer, sched);
+		sched->zombie = NULL;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -545,63 +546,34 @@ static inline void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
 	__clrbits(sched->status, XNKCOUT);
 }
 
-static inline void xnpod_switch_zombie(xnthread_t *threadout,
-				       xnthread_t *threadin)
+static void xnpod_zombie_hooks(xnthread_t *thread)
 {
+	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
+	thread->sched->zombie = thread;
+
 	/* Must be called with nklock locked, interrupts off. */
-	xnsched_t *sched = xnpod_current_sched();
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	int shadow = xnthread_test_state(threadout, XNSHADOW);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
 	trace_mark(xn_nucleus_sched_finalize,
-		   "thread_out %p thread_out_name %s "
-		   "thread_in %p thread_in_name %s",
-		   threadout, xnthread_name(threadout),
-		   threadin, xnthread_name(threadin));
+		   "thread_out %p thread_out_name %s",
+		   thread, xnthread_name(thread));
 
-	if (!emptyq_p(&nkpod->tdeleteq) && !xnthread_test_state(threadout, XNROOT)) {
+	if (!emptyq_p(&nkpod->tdeleteq)
+	    && !xnthread_test_state(thread, XNROOT)) {
 		trace_mark(xn_nucleus_thread_callout,
 			   "thread %p thread_name %s hook %s",
-			   threadout, xnthread_name(threadout), "DELETE");
-		xnpod_fire_callouts(&nkpod->tdeleteq, threadout);
+			   thread, xnthread_name(thread), "DELETE");
+		xnpod_fire_callouts(&nkpod->tdeleteq, thread);
 	}
+}
 
-	sched->runthread = threadin;
+void __xnpod_finalize_zombie(xnsched_t *sched)
+{
+	xnthread_t *thread = sched->zombie;
 
-	if (xnthread_test_state(threadin, XNROOT)) {
-		xnpod_reset_watchdog(sched);
-		xnfreesync();
-		xnarch_enter_root(xnthread_archtcb(threadin));
-	}
+	xnthread_cleanup_tcb(thread);
 
-	/* FIXME: Catch 22 here, whether we choose to run on an invalid
-	   stack (cleanup then hooks), or to access the TCB space shortly
-	   after it has been freed while non-preemptible (hooks then
-	   cleanup)... Option #2 is current. */
+	xnarch_finalize_no_switch(xnthread_archtcb(thread));
 
-	xnthread_cleanup_tcb(threadout);
-
-	xnstat_exectime_finalize(sched, &threadin->stat.account);
-
-	xnarch_finalize_and_switch(xnthread_archtcb(threadout),
-				   xnthread_archtcb(threadin));
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	xnarch_trace_pid(xnthread_user_task(threadin) ?
-			 xnarch_user_pid(xnthread_archtcb(threadin)) : -1,
-			 xnthread_current_priority(threadin));
-
-	if (shadow)
-		/* Reap the user-space mate of a deleted real-time shadow.
-		   The Linux task has resumed into the Linux domain at the
-		   last code location executed by the shadow. Remember
-		   that both sides use the Linux task's stack. */
-		xnshadow_exit();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-	xnpod_fatal("zombie thread %s (%p) would not die...", threadout->name,
-		    threadout);
+	sched->zombie = NULL;
 }
 
 /*! 
@@ -2140,6 +2112,8 @@ void xnpod_dispatch_signals(void)
 
 void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
+	xnpod_finalize_zombie(thread->sched);
+
 	trace_mark(xn_nucleus_thread_boot, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
@@ -2373,6 +2347,7 @@ void xnpod_schedule(void)
 	xnthread_t *threadout, *threadin, *runthread;
 	xnpholder_t *pholder;
 	xnsched_t *sched;
+	int zombie;
 #if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
 	int need_resched;
 #endif /* CONFIG_SMP || XENO_DEBUG(NUCLEUS) */
@@ -2402,7 +2377,6 @@ void xnpod_schedule(void)
 	xnarch_trace_pid(xnthread_user_task(runthread) ?
 			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
 			 xnthread_current_priority(runthread));
-
 #if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
 	need_resched = xnsched_tst_resched(sched);
 #endif
@@ -2429,13 +2403,16 @@ void xnpod_schedule(void)
 	/* Clear the rescheduling bit */
 	xnsched_clr_resched(sched);
 
+	zombie = xnthread_test_state(runthread, XNZOMBIE);
 	if (!xnthread_test_state(runthread, XNTHREAD_BLOCK_BITS | XNZOMBIE)) {
 
 		/* Do not preempt the current thread if it holds the
 		 * scheduler lock. */
 
-		if (xnthread_test_state(runthread, XNLOCK))
+		if (xnthread_test_state(runthread, XNLOCK)) {
+			xnsched_set_resched(sched);
 			goto signal_unlock_and_exit;
+		}
 
 		pholder = sched_getheadpq(&sched->readyq);
 
@@ -2491,18 +2468,20 @@ void xnpod_schedule(void)
 	shadow = xnthread_test_state(threadout, XNSHADOW);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-	if (xnthread_test_state(threadout, XNZOMBIE))
-		xnpod_switch_zombie(threadout, threadin);
+	if (xnthread_test_state(threadin, XNROOT)) {
+		xnpod_reset_watchdog(sched);
+		xnfreesync();
+	}
+
+	if (zombie)
+		xnpod_zombie_hooks(threadout);
 
 	sched->runthread = threadin;
 
 	if (xnthread_test_state(threadout, XNROOT))
 		xnarch_leave_root(xnthread_archtcb(threadout));
-	else if (xnthread_test_state(threadin, XNROOT)) {
-		xnpod_reset_watchdog(sched);
-		xnfreesync();
+	else if (xnthread_test_state(threadin, XNROOT))
 		xnarch_enter_root(xnthread_archtcb(threadin));
-	}
 
 	xnstat_exectime_switch(sched, &threadin->stat.account);
 	xnstat_counter_inc(&threadin->stat.csw);
@@ -2525,22 +2504,15 @@ void xnpod_schedule(void)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/* Test whether we are relaxing a thread. In such a case, we are here the
 	   epilogue of Linux' schedule, and should skip xnpod_schedule epilogue. */
-	if (shadow && xnthread_test_state(runthread, XNROOT)) {
-		spl_t ignored;
-		/* Shadow on entry and root without shadow extension on exit? 
-		   Mmmm... This must be the user-space mate of a deleted real-time
-		   shadow we've just rescheduled in the Linux domain to have it
-		   exit properly.  Reap it now. */
-		if (xnshadow_thrptd(current) == NULL)
-			xnshadow_exit();
-
-		/* We need to relock nklock here, since it is not locked and
-		   the caller may expect it to be locked. */
-		xnlock_get_irqsave(&nklock, ignored);
-		xnlock_put_irqrestore(&nklock, s);
-		return;
-	}
+	if (shadow && xnthread_test_state(runthread, XNROOT))
+		goto relax_epilogue;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+	if (zombie)
+		xnpod_fatal("zombie thread %s (%p) would not die...",
+			    threadout->name, threadout);
+
+	xnpod_finalize_zombie(sched);
 
 #ifdef CONFIG_XENO_HW_FPU
 	__xnpod_switch_fpu(sched);
@@ -2564,6 +2536,25 @@ void xnpod_schedule(void)
 		xnpod_dispatch_signals();
 
 	xnlock_put_irqrestore(&nklock, s);
+	return;
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+      relax_epilogue:
+	{
+		spl_t ignored;
+		/* Shadow on entry and root without shadow extension on exit? 
+		   Mmmm... This must be the user-space mate of a deleted real-time
+		   shadow we've just rescheduled in the Linux domain to have it
+		   exit properly.  Reap it now. */
+		if (xnshadow_thrptd(current) == NULL)
+			xnshadow_exit();
+
+		/* We need to relock nklock here, since it is not locked and
+		   the caller may expect it to be locked. */
+		xnlock_get_irqsave(&nklock, ignored);
+		xnlock_put_irqrestore(&nklock, s);
+	}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 /*! 
@@ -2664,9 +2655,6 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	if (threadin == runthread)
 		return;		/* No switch. */
 
-	if (xnthread_test_state(runthread, XNZOMBIE))
-		xnpod_switch_zombie(runthread, threadin);
-
 	sched->runthread = threadin;
 
 	if (xnthread_test_state(runthread, XNROOT))
@@ -2687,14 +2675,16 @@ void xnpod_schedule_runnable(xnthread_t *thread, int flags)
 	xnarch_switch_to(xnthread_archtcb(runthread),
 			 xnthread_archtcb(threadin));
 
-	xnarch_trace_pid(xnthread_user_task(runthread) ?
-			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
-			 xnthread_current_priority(runthread));
-
 #ifdef CONFIG_SMP
 	/* If runthread migrated while suspended, sched is no longer correct. */
 	sched = xnpod_current_sched();
 #endif
+
+	xnpod_finalize_zombie(sched);
+
+	xnarch_trace_pid(xnthread_user_task(runthread) ?
+			 xnarch_user_pid(xnthread_archtcb(runthread)) : -1,
+			 xnthread_current_priority(runthread));
 
 #ifdef CONFIG_XENO_HW_FPU
 	__xnpod_switch_fpu(sched);

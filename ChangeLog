@@ -1,3 +1,9 @@
+2008-02-03  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c, ksrc/nucleus/heap.c:
+	Rework thread self-deletion case for zombie finalization. This is
+	groundwork for unlocked context switch support.
+	
 2008-01-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/registry.c: Fix primes[] type.

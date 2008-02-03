@@ -139,6 +139,7 @@ typedef struct xnsched {
 
 	xntimer_t htimer;	/*!< Host timer. */
 
+	xnthread_t *zombie;
 } xnsched_t;
 
 #define nkpod (&nkpod_struct)
@@ -237,6 +238,14 @@ static inline void xnpod_reset_watchdog(xnsched_t *sched)
 {
 }
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
+
+void __xnpod_finalize_zombie(xnsched_t *sched);
+
+static inline void xnpod_finalize_zombie(xnsched_t *sched)
+{
+	if (sched->zombie)
+		__xnpod_finalize_zombie(sched);
+}
 
 	/* -- Beginning of the exported interface */
 

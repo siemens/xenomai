@@ -97,7 +97,7 @@ typedef struct xnheap {
 		int fcount;
 	} buckets[XNHEAP_NBUCKETS];
 
-	xnholder_t *idleq;
+	xnholder_t *idleq[XNARCH_NR_CPUS];
 
 	xnarch_heapcb_t archdep;
 

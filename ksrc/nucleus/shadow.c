@@ -1059,6 +1059,7 @@ int xnshadow_harden(void)
 	struct task_struct *this_task = current;
 	struct __gatekeeper *gk;
 	xnthread_t *thread;
+	xnsched_t *sched;
 	int gk_cpu;
 
 redo:
@@ -1124,9 +1125,12 @@ redo:
 	}
 
 	/* "current" is now running into the Xenomai domain. */
+	sched = xnpod_current_sched();
+
+	xnpod_finalize_zombie(sched);
 
 #ifdef CONFIG_XENO_HW_FPU
-	xnpod_switch_fpu(xnpod_current_sched());
+	xnpod_switch_fpu(sched);
 #endif /* CONFIG_XENO_HW_FPU */
 
 	xnarch_schedule_tail(this_task);

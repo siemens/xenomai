@@ -96,12 +96,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	stts();
 }
 
-static inline void xnarch_finalize_and_switch(xnarchtcb_t * dead_tcb,
-					      xnarchtcb_t * next_tcb)
-{
-	xnarch_switch_to(dead_tcb, next_tcb);
-}
-
 static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
 {
 	/* Empty */

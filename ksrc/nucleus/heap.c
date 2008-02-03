@@ -163,6 +163,7 @@ static void init_extent(xnheap_t *heap, xnextent_t *extent)
 int xnheap_init(xnheap_t *heap,
 		void *heapaddr, u_long heapsize, u_long pagesize)
 {
+	unsigned cpu, nr_cpus = xnarch_num_online_cpus();
 	u_long hdrsize, shiftsize, pageshift;
 	xnextent_t *extent;
 
@@ -218,7 +219,8 @@ int xnheap_init(xnheap_t *heap,
 
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * pagesize;
-	heap->idleq = NULL;
+	for (cpu = 0; cpu < nr_cpus; cpu++)
+		heap->idleq[cpu] = NULL;
 	inith(&heap->link);
 	initq(&heap->extents);
 	xnlock_init(&heap->lock);
@@ -866,6 +868,7 @@ int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 
 void xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
 {
+	unsigned cpu;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
@@ -873,21 +876,24 @@ void xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
 	   idle objects through the 'next' field, so the 'last' field of
 	   the link is used to point at the beginning of the freed
 	   memory. */
+	cpu = xnarch_current_cpu();
 	link->last = (xnholder_t *)block;
-	link->next = heap->idleq;
-	heap->idleq = link;
+	link->next = heap->idleq[cpu];
+	heap->idleq[cpu] = link;
 	xnlock_put_irqrestore(&heap->lock, s);
 }
 
 void xnheap_finalize_free_inner(xnheap_t *heap)
 {
 	xnholder_t *holder;
+	unsigned cpu;
 	spl_t s;
 
 	xnlock_get_irqsave(&heap->lock, s);
+	cpu = xnarch_current_cpu();
 
-	while ((holder = heap->idleq) != NULL) {
-		heap->idleq = holder->next;
+	while ((holder = heap->idleq[cpu]) != NULL) {
+		heap->idleq[cpu] = holder->next;
 		xnheap_free(heap, holder->last);
 	}
 
