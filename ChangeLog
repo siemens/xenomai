@@ -1,3 +1,7 @@
+2008-02-04  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* scripts/xeno-config.in: Provide consistent output of posix-ldflags.
+
 2008-02-03  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c, ksrc/nucleus/heap.c:
