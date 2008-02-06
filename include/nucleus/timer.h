@@ -41,6 +41,7 @@
 #define XNTIMER_PERIODIC  0x00000004
 #define XNTIMER_REALTIME  0x00000008
 #define XNTIMER_FIRED     0x00000010
+#define XNTIMER_NOBLCK	  0x00000020
 
 /* These flags are available to the real-time interfaces */
 #define XNTIMER_SPARE0  0x01000000

@@ -306,7 +306,8 @@ void xntimer_tick_aperiodic(void)
 		xnstat_counter_inc(&timer->fired);
 
 		if (likely(timer != &sched->htimer)) {
-			if (likely(!testbits(nktbase.status, XNTBLCK))) {
+			if (likely(!testbits(nktbase.status, XNTBLCK)
+				   || testbits(timer->status, XNTIMER_NOBLCK))) {
 				timer->handler(timer);
 				now = xnarch_get_cpu_tsc();
 				/* If the elapsed timer has no reload value, or has
