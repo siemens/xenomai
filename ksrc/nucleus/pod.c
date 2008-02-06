@@ -3305,7 +3305,8 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 			xntimer_stop(&thread->ptimer);
 
 		goto unlock_and_exit;
-	} else if (xntbase_periodic_p(xnthread_time_base(thread)) && period < nklatency) {
+	} else if (!xntbase_periodic_p(xnthread_time_base(thread))
+		   && period < nklatency) {
 		/* LART: detect periods which are shorter than the
 		 * intrinsic latency figure; this must be a joke... */
 		err = -EINVAL;
