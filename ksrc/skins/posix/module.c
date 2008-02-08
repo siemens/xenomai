@@ -48,6 +48,7 @@
 
 #ifdef __KERNEL__
 #include <posix/syscall.h>
+#include <posix/apc.h>
 #endif /* __KERNEL__ */
 #include <posix/posix.h>
 #include <posix/internal.h>
@@ -97,6 +98,9 @@ static void pse51_shutdown(int xtype)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	pse51_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+#ifdef __KERNEL__
+	pse51_apc_pkg_cleanup();
+#endif /* __KERNEL__ */
 	xntbase_free(pse51_tbase);
 	xnpod_shutdown(xtype);
 }
@@ -117,10 +121,17 @@ int SKIN_INIT(posix)
 
 	xntbase_start(pse51_tbase);
 
+#ifdef __KERNEL__
+	err = pse51_apc_pkg_init();
+	if (err)
+		goto fail_free_tbase;
+#endif /* __KERNEL__ */
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = pse51_syscall_init();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	if (err != 0) {
+	  fail_free_tbase:
 		xntbase_free(pse51_tbase);
 	fail_shutdown_pod:
 		xnpod_shutdown(err);

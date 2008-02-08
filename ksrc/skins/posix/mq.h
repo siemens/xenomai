@@ -4,25 +4,27 @@
 #include <nucleus/queue.h>
 #include <posix/registry.h>     /* For associative lists. */
 
-typedef struct pse51_direct_msg {
-	char *buf;
-	size_t *lenp;
-	unsigned *priop;
-	int flags;
-} pse51_direct_msg_t;
+struct pse51_mq;
+typedef struct pse51_mq pse51_mq_t;
 
-#define PSE51_MSG_DIRECT  1
-#define PSE51_MSG_RESCHED 2
+typedef struct pse51_msg {
+	xnpholder_t link;
+	size_t len;
+	char data[0];
+} pse51_msg_t;
 
-int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
-			     size_t len, const struct timespec *abs_timeoutp);
+#define pse51_msg_get_prio(msg) (msg)->link.prio
+#define pse51_msg_set_prio(msg, prio) (msg)->link.prio = (prio)
 
-void pse51_mq_finish_send(mqd_t fd, pse51_direct_msg_t *msgp);
+pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+				      const struct timespec *abs_timeoutp);
 
-int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
-			    size_t len, const struct timespec *abs_timeoutp);
+int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg);
 
-void pse51_mq_finish_rcv(mqd_t fd, pse51_direct_msg_t *msgp);
+pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+				     const struct timespec *abs_timeoutp);
+
+int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 

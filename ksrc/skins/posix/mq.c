@@ -36,6 +36,9 @@
 #include <posix/internal.h>	/* Magics, time conversion */
 #include <posix/thread.h>	/* errno. */
 #include <posix/sig.h>		/* pse51_siginfo_t. */
+#ifdef __KERNEL__
+#include <posix/apc.h>
+#endif /* __KERNEL__ */
 
 #include "mq.h"
 
@@ -55,6 +58,7 @@ struct pse51_mq {
 
 	/* mq_notify */
 	pse51_siginfo_t si;
+	mqd_t target_qd;
 	pthread_t target;
 
 	struct mq_attr attr;
@@ -65,17 +69,8 @@ struct pse51_mq {
     ((pse51_mq_t *) (((char *)laddr) - offsetof(pse51_mq_t, link)))
 };
 
-typedef struct pse51_mq pse51_mq_t;
-
-typedef struct pse51_msg {
-	xnpholder_t link;
-	size_t len;
-
 #define any2msg(addr, member)							\
     ((pse51_msg_t *)(((char *)addr) - offsetof(pse51_msg_t, member)))
-
-	char data[0];
-} pse51_msg_t;
 
 static xnqueue_t pse51_mqq;
 
@@ -149,20 +144,24 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 	return 0;
 }
 
-static void pse51_mq_destroy(pse51_mq_t * mq)
+static void pse51_mq_destroy(pse51_mq_t *mq)
 {
-	int need_resched;
+	int resched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	need_resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
-	need_resched =
-	    (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || need_resched;
+	resched = (xnsynch_destroy(&mq->receivers) == XNSYNCH_RESCHED);
+	resched = (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || resched;
 	removeq(&pse51_mqq, &mq->link);
 	xnlock_put_irqrestore(&nklock, s);
-	xnarch_free_host_mem(mq->mem, mq->memsize);
+#ifdef __KERNEL__
+	if (!xnpod_root_p())
+		pse51_schedule_lostage(PSE51_LO_FREE_REQ, mq->mem, mq->memsize);
+	else
+#endif /* __KERNEL__ */
+		xnarch_free_host_mem(mq->mem, mq->memsize);
 
-	if (need_resched)
+	if (resched)
 		xnpod_schedule();
 }
 
@@ -375,6 +374,8 @@ int mq_close(mqd_t fd)
 	if (err)
 		goto err_unlock;
 
+	if (mq->target_qd == fd)
+		mq->target = NULL;
 	if (pse51_node_removed_p(&mq->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -459,48 +460,9 @@ int mq_unlink(const char *name)
 	return 0;
 }
 
-static int
-pse51_mq_trysend(pse51_direct_msg_t *msgp, pse51_desc_t *desc, size_t len)
+static pse51_msg_t *pse51_mq_trysend(pse51_mq_t **mqp,
+				     pse51_desc_t *desc, size_t len)
 {
-	xnthread_t *reader;
-	pthread_t thread;
-	pse51_mq_t *mq;
-	unsigned flags;
-
-	mq = node2mq(pse51_desc_node(desc));
-	flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
-
-	if (flags != O_WRONLY && flags != O_RDWR)
-		return EBADF;
-
-	if (len > mq->attr.mq_msgsize)
-		return EMSGSIZE;
-
-	reader = xnsynch_peek_pendq(&mq->receivers);
-	thread = thread2pthread(reader);
-
-	if (thread && !xnthread_test_state(reader, XNSHADOW)) {
-		pse51_direct_msg_t *msg = (pse51_direct_msg_t *)thread->arg;
-		msg->flags |= PSE51_MSG_DIRECT;
-		*msgp = *msg;
-	} else {
-		pse51_msg_t *msg = pse51_mq_msg_alloc(mq);
-		if (!msg)
-			return EAGAIN;
-
-		msgp->buf = &msg->data[0];
-		msgp->lenp = &msg->len;
-		msgp->priop = &msg->link.prio;
-		msgp->flags = reader ? PSE51_MSG_RESCHED : 0;
-	}
-
-	return 0;
-}
-
-static int
-pse51_mq_tryrcv(pse51_direct_msg_t *msgp, pse51_desc_t *desc, size_t len)
-{
-	xnpholder_t *holder;
 	pse51_msg_t *msg;
 	pse51_mq_t *mq;
 	unsigned flags;
@@ -508,57 +470,86 @@ pse51_mq_tryrcv(pse51_direct_msg_t *msgp, pse51_desc_t *desc, size_t len)
 	mq = node2mq(pse51_desc_node(desc));
 	flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
 
-	if (flags != O_RDONLY && flags != O_RDWR)
-		return EBADF;
+	if (flags != O_WRONLY && flags != O_RDWR)
+		return ERR_PTR(-EBADF);
 
-	if (len < mq->attr.mq_msgsize)
-		return EMSGSIZE;
+	if (len > mq->attr.mq_msgsize)
+		return ERR_PTR(-EMSGSIZE);
 
-	if (!(holder = getpq(&mq->queued)))
-		return EAGAIN;
+	msg = pse51_mq_msg_alloc(mq);
+	if (!msg)
+		return ERR_PTR(-EAGAIN);
 
-	msg = any2msg(holder, link);
-	msgp->buf = &msg->data[0];
-	msgp->lenp = &msg->len;
-	msgp->priop = &msg->link.prio;
-	msgp->flags = 0;
-
-	return 0;	
+	*mqp = mq;
+	mq->nodebase.refcount++;
+	return msg;
 }
 
-int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
-			     size_t len, const struct timespec *abs_timeoutp)
+static pse51_msg_t *pse51_mq_tryrcv(pse51_mq_t **mqp,
+				    pse51_desc_t *desc, size_t len)
 {
+	xnpholder_t *holder;
+	pse51_mq_t *mq;
+	unsigned flags;
+
+	mq = node2mq(pse51_desc_node(desc));
+	flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
+
+	if (flags != O_RDONLY && flags != O_RDWR)
+		return ERR_PTR(-EBADF);
+
+	if (len < mq->attr.mq_msgsize)
+		return ERR_PTR(-EMSGSIZE);
+
+	if (!(holder = getpq(&mq->queued)))
+		return ERR_PTR(-EAGAIN);
+
+	*mqp = mq;
+	mq->nodebase.refcount++;
+	return any2msg(holder, link);
+}
+
+pse51_msg_t *pse51_mq_timedsend_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+				      const struct timespec *abs_timeoutp)
+{
+	xnthread_t *cur = xnpod_current_thread();
+	pse51_msg_t *msg;
+	spl_t s;
 	int rc;
 
+	xnlock_get_irqsave(&nklock, s);
 	for (;;) {
 		pse51_desc_t *desc;
-		xnthread_t *cur;
 		pse51_mq_t *mq;
 		xnticks_t to = XN_INFINITE;
 
-		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
-			return rc;
+		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC))) {
+			msg = ERR_PTR(-rc);
+			break;
+		}
 
-		if ((rc = pse51_mq_trysend(msgp, desc, len)) != EAGAIN)
-			return rc;
+		msg = pse51_mq_trysend(mqp, desc, len);
+		if (msg != ERR_PTR(-EAGAIN))
+			break;
 
 		if ((pse51_desc_getflags(desc) & O_NONBLOCK))
-			return rc;
+			break;
 
-		if (xnpod_unblockable_p())
-			return EPERM;
+		if (xnpod_unblockable_p()) {
+			msg = ERR_PTR(-EPERM);
+			break;
+		}
 
 		if (abs_timeoutp) {
-			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION)
-				return EINVAL;
+			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION){
+				msg = ERR_PTR(-EINVAL);
+				break;
+			}
 
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
 		}
 
 		mq = node2mq(pse51_desc_node(desc));
-
-		cur = xnpod_current_thread();
 
 		thread_cancellation_point(cur);
 
@@ -569,87 +560,117 @@ int pse51_mq_timedsend_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		if (xnthread_test_info(cur, XNBREAK))
-			return EINTR;
+		if (xnthread_test_info(cur, XNBREAK)) {
+			msg = ERR_PTR(-EINTR);
+			break;
+		}
 
-		if (xnthread_test_info(cur, XNTIMEO))
-			return ETIMEDOUT;
+		if (xnthread_test_info(cur, XNTIMEO)) {
+			msg = ERR_PTR(-ETIMEDOUT);
+			break;
+		}
 
-		if (xnthread_test_info(cur, XNRMID))
-			return EBADF;
-	}
-}
-
-void pse51_mq_finish_send(mqd_t fd, pse51_direct_msg_t *msgp)
-{
-	pse51_desc_t *desc;
-	pse51_mq_t *mq;
-
-	pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
-	mq = node2mq(pse51_desc_node(desc));
-
-	if (!(msgp->flags & PSE51_MSG_DIRECT)) {
-		pse51_msg_t *msg;
-	
-		msg = any2msg(msgp->lenp, len);
-
-		insertpqf(&mq->queued, &msg->link, msg->link.prio);
-
-		if (!(msgp->flags & PSE51_MSG_RESCHED)) {
-			if (mq->target && countpq(&mq->queued) == 1) {
-				/* First message ? no pending reader ? attempt
-				   to send a signal if mq_notify was called. */
-				pse51_sigqueue_inner(mq->target, &mq->si);
-				mq->target = NULL;
-			}
-			return;	/* Do not reschedule */
+		if (xnthread_test_info(cur, XNRMID)) {
+			msg = ERR_PTR(-EBADF);
+			break;
 		}
 	}
-	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
-		xnpod_schedule();
+	xnlock_put_irqrestore(&nklock, s);
+
+	return msg;
 }
 
-int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
-			    size_t len, const struct timespec *abs_timeoutp)
+int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
+{
+	int err = 0, resched = 0, removed;
+	pse51_desc_t *desc;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	if ((err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
+		goto bad_fd;
+	if ((node2mq(pse51_desc_node(desc)) != mq)) {
+		err = -EBADF;
+		goto bad_fd;
+	}
+
+	insertpqf(&mq->queued, &msg->link, msg->link.prio);
+
+	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
+		resched = 1;
+	else if (mq->target && countpq(&mq->queued) == 1) {
+		/* First message ? no pending reader ? attempt
+		   to send a signal if mq_notify was called. */
+		resched = pse51_sigqueue_inner(mq->target, &mq->si);
+		mq->target = NULL;
+	}
+
+  unref:
+	pse51_node_put(&mq->nodebase);
+	removed = pse51_node_removed_p(&mq->nodebase);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (resched)
+		xnpod_schedule();
+
+	if (removed) {
+		pse51_mq_destroy(mq);
+		xnfree(mq);
+	}
+
+	return err;
+
+  bad_fd:
+	/* descriptor was destroyed, simply return the message to the
+	   pool and wakeup any waiting sender. */;
+	pse51_mq_msg_free(mq, msg);
+
+	if (xnsynch_wakeup_one_sleeper(&mq->senders))
+		resched = 1;
+	goto unref;
+}
+
+pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
+				     const struct timespec *abs_timeoutp)
 {
 	xnthread_t *cur = xnpod_current_thread();
+	pse51_msg_t *msg;
+	spl_t s;
 	int rc;
 
+	xnlock_get_irqsave(&nklock, s);
 	for (;;) {
 		xnticks_t to = XN_INFINITE;
 		pse51_desc_t *desc;
-		pthread_t thread;
 		pse51_mq_t *mq;
-		int direct = 0;
 
-		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC)))
-			return rc;
+		if ((rc = pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC))) {
+			msg = ERR_PTR(-rc);
+			break;
+		}
 
-		if ((rc = pse51_mq_tryrcv(msgp, desc, len)) != EAGAIN)
-			return rc;
+		if ((msg = pse51_mq_tryrcv(mqp, desc, len)) != ERR_PTR(-EAGAIN))
+			break;
 
 		if ((pse51_desc_getflags(desc) & O_NONBLOCK))
-			return rc;
+			break;
 
-		if (xnpod_unblockable_p())
-			return EPERM;
+		if (xnpod_unblockable_p()) {
+			msg = ERR_PTR(-EPERM);
+			break;
+		}
 
 		if (abs_timeoutp) {
-			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION)
-				return EINVAL;
+			if ((unsigned long)abs_timeoutp->tv_nsec >= ONE_BILLION){
+				msg = ERR_PTR(-EINVAL);
+				break;
+			}
 
 			to = ts2ticks_ceil(abs_timeoutp) + 1;
 		}
 
 		mq = node2mq(pse51_desc_node(desc));
-
-		thread = thread2pthread(cur);
-
-		if (thread && !xnthread_test_state(cur, XNSHADOW)) {
-			msgp->flags &= ~PSE51_MSG_DIRECT;
-			thread->arg = msgp;
-			direct = 1;
-		}
 
 		thread_cancellation_point(cur);
 
@@ -660,37 +681,56 @@ int pse51_mq_timedrcv_inner(pse51_direct_msg_t *msgp, mqd_t fd,
 
 		thread_cancellation_point(cur);
 
-		if (direct && (msgp->flags & PSE51_MSG_DIRECT))
-			return 0;
+		if (xnthread_test_info(cur, XNRMID)) {
+			msg = ERR_PTR(-EBADF);
+			break;
+		}
 
-		if (xnthread_test_info(cur, XNRMID))
-			return EBADF;
+		if (xnthread_test_info(cur, XNTIMEO)) {
+			msg = ERR_PTR(-ETIMEDOUT);
+			break;
+		}
 
-		if (xnthread_test_info(cur, XNTIMEO))
-			return ETIMEDOUT;
-
-		if (xnthread_test_info(cur, XNBREAK))
-			return EINTR;
+		if (xnthread_test_info(cur, XNBREAK)) {
+			msg = ERR_PTR(-EINTR);
+			break;
+		}
 	}
+	xnlock_put_irqrestore(&nklock, s);
+
+	return msg;
 }
 
-void pse51_mq_finish_rcv(mqd_t fd, pse51_direct_msg_t *msgp)
+int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 {
+	int err = 0, resched = 0, removed;
+	pse51_desc_t *desc;
+	spl_t s;
 
-	if (!(msgp->flags & PSE51_MSG_DIRECT)) {
-		pse51_desc_t *desc;
-		pse51_msg_t *msg;
-		pse51_mq_t *mq;
+	xnlock_get_irqsave(&nklock, s);
+	err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	if (!err && node2mq(pse51_desc_node(desc)) != mq)
+		err = -EBADF;
 
-		pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
-		mq = node2mq(pse51_desc_node(desc));
-		msg = any2msg(msgp->lenp, len);
+	pse51_mq_msg_free(mq, msg);
 
-		pse51_mq_msg_free(mq, msg);
+	if (xnsynch_wakeup_one_sleeper(&mq->senders))
+		resched = 1;
 
-		if (xnsynch_wakeup_one_sleeper(&mq->senders))
-			xnpod_schedule();
+	pse51_node_put(&mq->nodebase);
+	removed = pse51_node_removed_p(&mq->nodebase);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (resched)
+		xnpod_schedule();
+
+	if (removed) {
+		pse51_mq_destroy(mq);
+		xnfree(mq);
 	}
+
+	return err;
 }
 
 /**
@@ -735,28 +775,26 @@ void pse51_mq_finish_rcv(mqd_t fd, pse51_direct_msg_t *msgp)
  */
 int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 {
-	pse51_direct_msg_t msg;
-	spl_t s;
+	pse51_msg_t *msg;
+	pse51_mq_t *mq;
 	int err;
 
-	xnlock_get_irqsave(&nklock, s);
-	err = pse51_mq_timedsend_inner(&msg, fd, len, NULL);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		thread_set_errno(err);
+	msg = pse51_mq_timedsend_inner(&mq, fd, len, NULL);
+	if (IS_ERR(msg)) {
+		thread_set_errno(-PTR_ERR(msg));
 		return -1;
 	}
 
-	memcpy(msg.buf, buffer, len);
-	*(msg.lenp) = len;
-	if (msg.priop)
-		*(msg.priop) = prio;
+	memcpy(msg->data, buffer, len);
+	msg->len = len;
+	pse51_msg_set_prio(msg, prio);
 	
-	pse51_mq_finish_send(fd, &msg);
-	xnlock_put_irqrestore(&nklock, s);
+	err = pse51_mq_finish_send(fd, mq, msg);
+	if (!err)
+		return 0;
 
-	return 0;
+	thread_set_errno(-err);
+	return -1;
 }
 
 /**
@@ -802,28 +840,26 @@ int mq_timedsend(mqd_t fd,
 		 const char *buffer,
 		 size_t len, unsigned prio, const struct timespec *abs_timeout)
 {
-	pse51_direct_msg_t msg;
-	spl_t s;
+	pse51_msg_t *msg;
+	pse51_mq_t *mq;
 	int err;
 
-	xnlock_get_irqsave(&nklock, s);
-	err = pse51_mq_timedsend_inner(&msg, fd, len, abs_timeout);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		thread_set_errno(err);
+	msg = pse51_mq_timedsend_inner(&mq, fd, len, abs_timeout);
+	if (IS_ERR(msg)) {
+		thread_set_errno(-PTR_ERR(msg));
 		return -1;
 	}
 
-	memcpy(msg.buf, buffer, len);
-	*(msg.lenp) = len;
-	if (msg.priop)
-		*(msg.priop) = prio;
+	memcpy(msg->data, buffer, len);
+	msg->len = len;
+	pse51_msg_set_prio(msg, prio);
 	
-	pse51_mq_finish_send(fd, &msg);
-	xnlock_put_irqrestore(&nklock, s);
+	err = pse51_mq_finish_send(fd, mq, msg);
+	if (!err)
+		return 0;
 
-	return 0;
+	thread_set_errno(-err);
+	return -1;
 }
 
 /**
@@ -871,34 +907,27 @@ int mq_timedsend(mqd_t fd,
  */
 ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
-	pse51_direct_msg_t msg;
-	spl_t s;
+	pse51_msg_t *msg;
+	pse51_mq_t *mq;
 	int err;
 
-	msg.buf = buffer;
-	msg.lenp = &len;
-	msg.priop = priop;
-	msg.flags = 0;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = pse51_mq_timedrcv_inner(&msg, fd, len, NULL);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		thread_set_errno(err);
+	msg = pse51_mq_timedrcv_inner(&mq, fd, len, NULL);
+	if (IS_ERR(msg)) {
+		thread_set_errno(-PTR_ERR(msg));
 		return -1;
 	}
 
-	if (!(msg.flags & PSE51_MSG_DIRECT)) {
-		memcpy(buffer, msg.buf, *(msg.lenp));
-		len = *(msg.lenp);
-		if (priop)
-			*priop = *(msg.priop);
-	}
-	pse51_mq_finish_rcv(fd, &msg);
-	xnlock_put_irqrestore(&nklock, s);
+	memcpy(buffer, msg->data, msg->len);
+	len = msg->len;
+	if (priop)
+		*priop = pse51_msg_get_prio(msg);
 
-	return len;
+	err = pse51_mq_finish_rcv(fd, mq, msg);
+	if (!err)
+		return len;
+
+	thread_set_errno(-err);
+	return -1;
 }
 
 /**
@@ -949,34 +978,27 @@ ssize_t mq_timedreceive(mqd_t fd,
 			unsigned *__restrict__ priop,
 			const struct timespec * __restrict__ abs_timeout)
 {
-	pse51_direct_msg_t msg;
-	spl_t s;
+	pse51_msg_t *msg;
+	pse51_mq_t *mq;
 	int err;
 
-	msg.buf = buffer;
-	msg.lenp = &len;
-	msg.priop = priop;
-	msg.flags = 0;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = pse51_mq_timedrcv_inner(&msg, fd, len, abs_timeout);
-	if (err) {
-		xnlock_put_irqrestore(&nklock, s);
-
-		thread_set_errno(err);
+	msg = pse51_mq_timedrcv_inner(&mq, fd, len, abs_timeout);
+	if (IS_ERR(msg)) {
+		thread_set_errno(-PTR_ERR(msg));
 		return -1;
 	}
 
-	if (!(msg.flags & PSE51_MSG_DIRECT)) {
-		memcpy(buffer, msg.buf, *(msg.lenp));
-		len = *(msg.lenp);
-		if (priop)
-			*priop = *(msg.priop);
-	}
-	pse51_mq_finish_rcv(fd, &msg);
-	xnlock_put_irqrestore(&nklock, s);
+	memcpy(buffer, msg->data, msg->len);
+	len = msg->len;
+	if (priop)
+		*priop = pse51_msg_get_prio(msg);
 
-	return len;
+	err = pse51_mq_finish_rcv(fd, mq, msg);
+	if (!err)
+		return len;
+
+	thread_set_errno(-err);
+	return -1;
 }
 
 /**
@@ -1172,6 +1194,7 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 		mq->target = NULL;
 	else {
 		mq->target = thread;
+		mq->target_qd = fd;
 		mq->si.info.si_signo = evp->sigev_signo;
 		mq->si.info.si_code = SI_MESGQ;
 		mq->si.info.si_value = evp->sigev_value;
