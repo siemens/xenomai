@@ -510,7 +510,11 @@ int ftruncate(int fd, off_t len)
 	/* Allocate one more page for alignment (the address returned by mmap
 	   must be aligned on a page boundary). */
 	if (len)
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 		len = xnheap_rounded_size(len + PAGE_SIZE, XNCORE_PAGE_SIZE);
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 	err = 0;
 	if (emptyq_p(&shm->mappings)) {
