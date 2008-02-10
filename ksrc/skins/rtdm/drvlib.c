@@ -920,7 +920,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 	trace_mark(xn_rtdm_event_timedwait,
 		   "event %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
-		   event, timeout, timeout_seq, timeout_seq ? *timeout_seq : 0);
+		   event, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1142,7 +1142,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	trace_mark(xn_rtdm_sem_timedwait,
 		   "sem %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
-		   sem, timeout, timeout_seq, timeout_seq ? *timeout_seq : 0);
+		   sem, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1372,7 +1372,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 
 	trace_mark(xn_rtdm_mutex_timedlock,
 		   "mutex %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
-		   mutex, timeout, timeout_seq, timeout_seq ? *timeout_seq : 0);
+		   mutex, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
 	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
