@@ -1,3 +1,8 @@
+2008-02-09  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/arch/powerpc, include/asm-powerpc/bits: Port to
+	DENX-2.6.24-stable.
+
 2008-01-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/registry.c: Fix primes[] type.
