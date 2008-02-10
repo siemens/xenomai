@@ -400,7 +400,7 @@ else
    cd $curdir
 fi
 
-adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-$linux_arch/ipipe.h|sed -e 's,.*"\(.*\)"$,\1,'`
+adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h|head -1|sed -e 's,.*"\(.*\)"$,\1,'`
 
 if test \! "x$adeos_version" = x; then
    if test x$verbose = x1; then
