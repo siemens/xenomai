@@ -1001,8 +1001,6 @@ EXPORT_SYMBOL(xntimer_get_raw_expiry_aperiodic);
 EXPORT_SYMBOL(__xntimer_init);
 EXPORT_SYMBOL(xntimer_destroy);
 EXPORT_SYMBOL(xntimer_freeze);
-EXPORT_SYMBOL(xntimer_get_date);
-EXPORT_SYMBOL(xntimer_get_timeout);
 EXPORT_SYMBOL(xntimer_get_overruns);
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(xntimer_migrate);
