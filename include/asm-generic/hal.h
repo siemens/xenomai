@@ -70,6 +70,13 @@
 #define RTHAL_SERVICE_VECTOR3	IPIPE_SERVICE_VECTOR3
 #define RTHAL_CRITICAL_IPI	IPIPE_CRITICAL_IPI
 
+enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
+	KTIMER_MODE_UNUSED = 0,
+	KTIMER_MODE_SHUTDOWN,
+	KTIMER_MODE_PERIODIC,
+	KTIMER_MODE_ONESHOT,
+};
+
 typedef struct ipipe_domain rthal_pipeline_stage_t;
 
 #ifdef IPIPE_SPIN_LOCK_UNLOCKED
