@@ -61,6 +61,8 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_HOST_TIMER_IPI	IPIPE_SERVICE_IPI4
 #endif /* CONFIG_SMP */
 
+#define DECREMENTER_MAX		0x7fffffff
+
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
@@ -73,14 +75,21 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
-	if (!delay)
+	if (delay < 3)
 		rthal_trigger_irq(RTHAL_TIMER_IRQ);
-	else
+	else {
 #ifdef CONFIG_40x
 		mtspr(SPRN_PIT, delay);
 #else /* !CONFIG_40x */
-	        set_dec((int)delay);	/* decrementer is only 32-bits */
+		/*
+		 * Decrementer must be set to a positive 32bit value,
+		 * otherwise it would flood us with exceptions.
+		 */
+		if (delay > DECREMENTER_MAX)
+			delay = DECREMENTER_MAX;
+		set_dec((int)delay);
 #endif /* CONFIG_40x */
+	}
 }
 
     /* Private interface -- Internal use only */
