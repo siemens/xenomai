@@ -272,10 +272,12 @@ EXPORT_SYMBOL(rthal_timer_notify_switch);
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 
+#ifdef CONFIG_SMP
 static void rthal_smp_relay_tick(unsigned irq, void *cookie)
 {
 	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
+#endif
 
 int rthal_timer_request(void (*handler)(void), int cpu)
 {
@@ -318,24 +320,15 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
 void rthal_timer_release(int cpu)
 {
-	unsigned long flags;
-
 	if (cpu > 0)
 		return;
-
-	flags = rthal_critical_enter(&rthal_critical_sync);
-
-	rthal_sync_op = RTHAL_SET_PERIODIC;
-	rthal_setup_periodic_dec();
-	rthal_disarm_decr(0);
 
 #ifdef CONFIG_SMP
 	rthal_irq_release(RTHAL_HOST_TIMER_IPI);
 	rthal_irq_release(RTHAL_TIMER_IPI);
 #endif /* CONFIG_SMP */
 	rthal_irq_release(RTHAL_TIMER_IRQ);
-
-	rthal_critical_exit(flags);
+	rthal_timer_set_periodic();
 }
 
 #endif /* !CONFIG_GENERIC_CLOCKEVENTS */
