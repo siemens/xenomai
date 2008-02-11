@@ -29,9 +29,14 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+#define xnarch_start_timer(tick_handler, cpu)	\
+	rthal_timer_request(tick_handler, xnarch_switch_htick_mode, xnarch_next_htick_shot, cpu)
+#else
 #define xnarch_start_timer(tick_handler, cpu)	\
 	({ int __tickval = rthal_timer_request(tick_handler, cpu) ?: \
 			(1000000000UL/HZ); __tickval; })
+#endif
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
@@ -161,13 +166,24 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	childregs->gpr[17] = (unsigned long)tcb;
 	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 	if (cpu_has_feature(CPU_FTR_SLB)) {	/* from process.c/copy_thread */
-		unsigned long sp_vsid = get_kernel_vsid(tcb->ts.ksp);
-
+		unsigned long sp_vsid;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+		sp_vsid = get_kernel_vsid(tcb->ts.ksp);
 		sp_vsid <<= SLB_VSID_SHIFT;
 		sp_vsid |= SLB_VSID_KERNEL;
 		if (cpu_has_feature(CPU_FTR_16M_PAGE))
 			sp_vsid |= SLB_VSID_L;
+#else
+		unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
 
+		if (cpu_has_feature(CPU_FTR_1T_SEGMENT))
+			sp_vsid = get_kernel_vsid(tcb->ts.ksp, MMU_SEGSIZE_1T)
+				<< SLB_VSID_SHIFT_1T;
+		else
+			sp_vsid = get_kernel_vsid(tcb->ts.ksp, MMU_SEGSIZE_256M)
+				<< SLB_VSID_SHIFT;
+		sp_vsid |= SLB_VSID_KERNEL | llp;
+#endif
 		tcb->ts.ksp_vsid = sp_vsid;
 	}
 #else /* !CONFIG_PPC64 */

@@ -998,7 +998,7 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  *
  * Hooks for emulating oneshot mode for the tick device are accepted
  * when CONFIG_GENERIC_CLOCKEVENTS is defined for the host
- * kernel. Hist tick emulation is a way to share the clockchip
+ * kernel. Host tick emulation is a way to share the clockchip
  * hardware between Linux and Xenomai, when the former provides
  * support for oneshot timing (i.e. high resolution timers and no-HZ
  * scheduler ticking).

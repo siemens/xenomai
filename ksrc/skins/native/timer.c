@@ -177,8 +177,6 @@ int rt_timer_set_mode(RTIME nstick)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_timer_ns2ticks);
-EXPORT_SYMBOL(rt_timer_ticks2ns);
 EXPORT_SYMBOL(rt_timer_inquire);
 EXPORT_SYMBOL(rt_timer_spin);
 EXPORT_SYMBOL(rt_timer_set_mode);

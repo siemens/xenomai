@@ -36,13 +36,6 @@
 #define RTHAL_COMPAT_TIMERFREQ		CLOCK_TICK_RATE
 #endif
 
-enum rthal_ktimer_mode { /* <!> Must follow enum clock_event_mode */
-	KTIMER_MODE_UNUSED = 0,
-	KTIMER_MODE_SHUTDOWN,
-	KTIMER_MODE_PERIODIC,
-	KTIMER_MODE_ONESHOT,
-};
-
 #if defined(CONFIG_GENERIC_CLOCKEVENTS) && !defined(__IPIPE_FEATURE_REQUEST_TICKDEV)
 
 #include <linux/ipipe_tickdev.h>
