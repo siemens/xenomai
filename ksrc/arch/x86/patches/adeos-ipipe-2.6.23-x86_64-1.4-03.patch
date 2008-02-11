@@ -974,10 +974,10 @@ index 966fa10..5d87ee3 100644
 +#endif
 diff --git a/arch/x86_64/kernel/ipipe.c b/arch/x86_64/kernel/ipipe.c
 new file mode 100644
-index 0000000..713dd6b
+index 0000000..77aba78
 --- /dev/null
 +++ b/arch/x86_64/kernel/ipipe.c
-@@ -0,0 +1,802 @@
+@@ -0,0 +1,810 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86_64/kernel/ipipe.c
 + *
@@ -1588,13 +1588,17 @@ index 0000000..713dd6b
 +	if (ipipe_current_domain != ipipe_root_domain &&
 +	    __ipipe_xlate_signo[vector] >= 0 &&
 +	    !kgdb_handle_exception(vector, __ipipe_xlate_signo[vector], error_code, regs)) {
-+		local_irq_restore(flags);
++		if (!flags)
++			__clear_bit(IPIPE_STALL_FLAG,
++				    &ipipe_root_cpudom_var(status));
 +		return 1;
 +	}
 +#endif /* CONFIG_KGDB */
 +
 +	if (unlikely(ipipe_trap_notify(vector, regs))) {
-+		local_irq_restore(flags);
++		if (!flags)
++			__clear_bit(IPIPE_STALL_FLAG,
++				    &ipipe_root_cpudom_var(status));
 +		return 1;
 +	}
 +
@@ -1730,7 +1734,11 @@ index 0000000..713dd6b
 +
 +finalize:
 +
++#ifdef CONFIG_SMP
++	if (irq == __ipipe_tick_irq || regs->orig_rax == ~LOCAL_TIMER_VECTOR) {
++#else
 +	if (irq == __ipipe_tick_irq) {
++#endif
 +		__raw_get_cpu_var(__ipipe_tick_regs).rip = regs->rip;
 +		__raw_get_cpu_var(__ipipe_tick_regs).cs = regs->cs;
 +		__raw_get_cpu_var(__ipipe_tick_regs).eflags = regs->eflags;
@@ -2356,7 +2364,7 @@ index a7c75ea..c54f337 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86_64/ipipe.h b/include/asm-x86_64/ipipe.h
 new file mode 100644
-index 0000000..0618b07
+index 0000000..fe565d0
 --- /dev/null
 +++ b/include/asm-x86_64/ipipe.h
 @@ -0,0 +1,183 @@
@@ -2386,10 +2394,10 @@ index 0000000..0618b07
 +
 +#ifdef CONFIG_IPIPE
 +
-+#define IPIPE_ARCH_STRING	"1.4-02"
++#define IPIPE_ARCH_STRING	"1.4-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifndef __ASSEMBLY__
 +
@@ -4071,10 +4079,10 @@ index 1692dd6..26cd667 100644
  #define VM_CAN_NONLINEAR 0x08000000	/* Has ->fault & does nonlinear pages */
  
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
-index 484988e..5539956 100644
+index 484988e..dc27067 100644
 --- a/include/linux/preempt.h
 +++ b/include/linux/preempt.h
-@@ -9,6 +9,7 @@
+@@ -9,13 +9,20 @@
  #include <linux/thread_info.h>
  #include <linux/linkage.h>
  #include <linux/list.h>
@@ -4082,43 +4090,21 @@ index 484988e..5539956 100644
  
  #ifdef CONFIG_DEBUG_PREEMPT
    extern void fastcall add_preempt_count(int val);
-@@ -29,18 +30,21 @@ asmlinkage void preempt_schedule(void);
- 
- #define preempt_disable() \
- do { \
-+	ipipe_check_context(ipipe_root_domain); \
- 	inc_preempt_count(); \
- 	barrier(); \
- } while (0)
- 
- #define preempt_enable_no_resched() \
- do { \
-+	ipipe_check_context(ipipe_root_domain); \
- 	barrier(); \
- 	dec_preempt_count(); \
- } while (0)
- 
- #define preempt_check_resched() \
- do { \
-+	ipipe_check_context(ipipe_root_domain); \
- 	if (unlikely(test_thread_flag(TIF_NEED_RESCHED))) \
- 		preempt_schedule(); \
- } while (0)
-@@ -54,10 +58,10 @@ do { \
- 
+   extern void fastcall sub_preempt_count(int val);
  #else
- 
--#define preempt_disable()		do { } while (0)
--#define preempt_enable_no_resched()	do { } while (0)
--#define preempt_enable()		do { } while (0)
--#define preempt_check_resched()		do { } while (0)
-+#define preempt_disable()		ipipe_check_context(ipipe_root_domain)
-+#define preempt_enable_no_resched()	ipipe_check_context(ipipe_root_domain)
-+#define preempt_enable()		ipipe_check_context(ipipe_root_domain)
-+#define preempt_check_resched()		ipipe_check_context(ipipe_root_domain)
- 
+-# define add_preempt_count(val)	do { preempt_count() += (val); } while (0)
+-# define sub_preempt_count(val)	do { preempt_count() -= (val); } while (0)
++# define add_preempt_count(val)	do { \
++	ipipe_check_context(ipipe_root_domain); \
++	preempt_count() += (val); \
++  } while (0)
++# define sub_preempt_count(val)	do { \
++	ipipe_check_context(ipipe_root_domain); \
++	preempt_count() -= (val); \
++  } while (0)
  #endif
  
+ #define inc_preempt_count() add_preempt_count(1)
 diff --git a/include/linux/sched.h b/include/linux/sched.h
 index 313c6b6..7b37b8c 100644
 --- a/include/linux/sched.h
@@ -8065,7 +8051,7 @@ index 8451dfc..dcf7628 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index 6107a0c..6d8e0db 100644
+index 6107a0c..24322e0 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1436,7 +1436,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -8112,15 +8098,22 @@ index 6107a0c..6d8e0db 100644
  }
  
  /*
-@@ -3474,6 +3481,8 @@ asmlinkage void __sched schedule(void)
- 	struct rq *rq;
- 	int cpu;
+@@ -3367,6 +3374,7 @@ void scheduler_tick(void)
  
+ void fastcall add_preempt_count(int val)
+ {
 +	ipipe_check_context(ipipe_root_domain);
-+
- need_resched:
- 	preempt_disable();
- 	cpu = smp_processor_id();
+ 	/*
+ 	 * Underflow?
+ 	 */
+@@ -3383,6 +3391,7 @@ EXPORT_SYMBOL(add_preempt_count);
+ 
+ void fastcall sub_preempt_count(int val)
+ {
++	ipipe_check_context(ipipe_root_domain);
+ 	/*
+ 	 * Underflow?
+ 	 */
 @@ -3481,6 +3490,11 @@ need_resched:
  	rcu_qsctr_inc(cpu);
  	prev = rq->curr;
@@ -8399,7 +8392,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index f82b359..40f0756 100644
+index f82b359..8ce463a 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -8605,7 +8598,7 @@ index f82b359..40f0756 100644
 +	pmd = pmd_offset(pud, addr);
 +	do {
 +		next = pmd_addr_end(addr, end);
-+		if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
++		if (pmd_none_or_clear_bad(pmd))
 +			continue;
 +		if (ipipe_pin_pte_range(mm, pmd, vma, addr, next))
 +			return -ENOMEM;
@@ -8623,7 +8616,7 @@ index f82b359..40f0756 100644
 +	pud = pud_offset(pgd, addr);
 +	do {
 +		next = pud_addr_end(addr, end);
-+		if (pud_none(*pud) || unlikely(pud_bad(*pud)))
++		if (pud_none_or_clear_bad(pud))
 +			continue;
 +		if (ipipe_pin_pmd_range(mm, pud, vma, addr, next))
 +			return -ENOMEM;
@@ -8657,7 +8650,7 @@ index f82b359..40f0756 100644
 +		pgd = pgd_offset(mm, addr);
 +		do {
 +			next = pgd_addr_end(addr, end);
-+			if (pgd_none(*pgd) || unlikely(pgd_bad(*pgd)))
++			if (pgd_none_or_clear_bad(pgd))
 +				continue;
 +			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
 +				result = -ENOMEM;
