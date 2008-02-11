@@ -496,7 +496,7 @@ This service should be called by upper interfaces wanting to signal the given re
     <tr><td valign="top"></td><td valign="top"><em>holder</em>&nbsp;</td><td>The link holder address of the thread to unblock (&amp;thread-&gt;plink) which MUST be currently linked to the synchronization object's pending queue (i.e. synch-&gt;pendq).</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>The link address of the unblocked thread in the synchronization object's pending queue.</dd></dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>The link address of the next waiting thread in the synchronization object's pending queue.</dd></dl>
 Side-effects:<p>
 <ul>
 <li>The effective priority of the previous resource owner might be lowered to its base priority value as a consequence of the priority inheritance boost being cleared.</li></ul>
@@ -512,7 +512,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Jan 1 18:25:02 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Feb 11 12:24:12 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>

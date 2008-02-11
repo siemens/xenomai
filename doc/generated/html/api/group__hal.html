@@ -658,7 +658,7 @@ This service can be called from:<p>
 
 </div>
 </div><p>
-<a class="anchor" name="g174a498bd8ee10a2279a9f79b9823bf6"></a><!-- doxytag: member="hal_32.c::rthal_timer_request" ref="g174a498bd8ee10a2279a9f79b9823bf6" args="(void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)" -->
+<a class="anchor" name="g174a498bd8ee10a2279a9f79b9823bf6"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="g174a498bd8ee10a2279a9f79b9823bf6" args="(void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -699,7 +699,7 @@ This service can be called from:<p>
 Grab the hardware timer.<p>
 rthal_timer_request() grabs and tunes the hardware timer in oneshot mode in order to clock the master time base.<p>
 A user-defined routine is registered as the clock tick handler. This handler will always be invoked on behalf of the Xenomai domain for each incoming tick.<p>
-Hooks for emulating oneshot mode for the tick device are accepted when CONFIG_GENERIC_CLOCKEVENTS is defined for the host kernel. Hist tick emulation is a way to share the clockchip hardware between Linux and Xenomai, when the former provides support for oneshot timing (i.e. high resolution timers and no-HZ scheduler ticking).<p>
+Hooks for emulating oneshot mode for the tick device are accepted when CONFIG_GENERIC_CLOCKEVENTS is defined for the host kernel. Host tick emulation is a way to share the clockchip hardware between Linux and Xenomai, when the former provides support for oneshot timing (i.e. high resolution timers and no-HZ scheduler ticking).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>tick_handler</em>&nbsp;</td><td>The address of the Xenomai tick handler which will process each incoming tick.</td></tr>
@@ -754,7 +754,7 @@ This service can be called from:<p>
 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Jan 1 18:25:02 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Feb 11 12:24:12 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
