@@ -1,3 +1,15 @@
+2008-02-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix, src/skins/posix: Support for the select
+	service.
+
+	* ksrc/skins/rtdm: Support for multiplexing RTDM file descriptors
+	events, i.e. for using RTDM file descriptors with the posix select
+	service.
+
+	* ksrc/nucleus/select.c, include/nucleus/select.h: Core support
+	for events multiplexing services (like posix select).
+
 2008-02-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to
