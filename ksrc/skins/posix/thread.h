@@ -21,6 +21,7 @@
 #define _POSIX_THREAD_H
 
 #include <posix/internal.h>
+#include <nucleus/select.h>
 
 typedef unsigned long long pse51_sigset_t;
 
@@ -90,6 +91,9 @@ struct pse51_thread {
     /* For timers. */
     xnqueue_t timersq;
     
+    /* For select. */
+    struct xnselector *selector;
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     struct pse51_hkey hkey;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

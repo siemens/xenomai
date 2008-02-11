@@ -84,6 +84,12 @@ static void thread_delete_hook(xnthread_t *xnthread)
 	pse51_mark_deleted(thread);
 	pse51_signal_cleanup_thread(thread);
 	pse51_timer_cleanup_thread(thread);
+#ifdef CONFIG_XENO_OPT_POSIX_SELECT
+	if (thread->selector) {
+		xnselector_destroy(thread->selector);
+		thread->selector = NULL;
+	}
+#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
 	switch (thread_getdetachstate(thread)) {
 	case PTHREAD_CREATE_DETACHED:
@@ -216,6 +222,7 @@ int pthread_create(pthread_t *tid,
 	pse51_signal_init_thread(thread, cur);
 	pse51_tsd_init_thread(thread);
 	pse51_timer_init_thread(thread);
+	thread->selector = NULL;
 
 	if (thread->attr.policy == SCHED_RR) {
 		xnthread_time_slice(&thread->threadbase) = pse51_time_slice;

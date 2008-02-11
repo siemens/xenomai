@@ -1,5 +1,5 @@
 menuconfig XENO_SKIN_POSIX
-	depends on XENO_OPT_NUCLEUS
+	depends on XENO_OPT_NUCLEUS 
 	tristate "POSIX API"
 	default y
 	help
@@ -47,6 +47,15 @@ config XENO_OPT_POSIX_INTR
 	RTDM skin is the preferred way of implementing drivers), leave this
 	option unselected.
 
+config XENO_OPT_POSIX_SELECT
+	bool "Select syscall"
+	select XENO_OPT_SELECT
+	help
+
+	This option allows applications using the Xenomai POSIX skin in
+	user-space to use the "select" syscall with Xenomai POSIXK skin file
+	descriptors.
+
 config XENO_OPT_DEBUG_POSIX
 	bool "Debugging support"
 	default y
@@ -55,4 +64,11 @@ config XENO_OPT_DEBUG_POSIX
 	When enabled, this option makes the skin warn about not properly
 	cleaned up POSIX objects it detects on process termination.
 
+endif
+
+if XENO_OPT_POSIX_SELECT && XENO_SKIN_POSIX = y && XENO_SKIN_RTDM = m
+	comment "This configuration will not work ! If you enable the POSIX"
+	comment "select syscall while the POSIX skin is built-in the kernel,"
+	comment "you have to compile the POSIX skin as a module or the RTDM"
+	comment "skin built-in the kernel."
 endif

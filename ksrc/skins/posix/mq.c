@@ -65,6 +65,8 @@ struct pse51_mq {
 
 	xnholder_t link;	/* link in mqq */
 
+	DECLARE_XNSELECT(read_select);
+	DECLARE_XNSELECT(write_select);
 #define link2mq(laddr) \
     ((pse51_mq_t *) (((char *)laddr) - offsetof(pse51_mq_t, link)))
 };
@@ -140,6 +142,8 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 
 	mq->attr = *attr;
 	mq->target = NULL;
+	xnselect_init(&mq->read_select);
+	xnselect_init(&mq->write_select);
 
 	return 0;
 }
@@ -154,6 +158,8 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
 	resched = (xnsynch_destroy(&mq->senders) == XNSYNCH_RESCHED) || resched;
 	removeq(&pse51_mqq, &mq->link);
 	xnlock_put_irqrestore(&nklock, s);
+	xnselect_destroy(&mq->read_select);
+	xnselect_destroy(&mq->write_select);
 #ifdef __KERNEL__
 	if (!xnpod_root_p())
 		pse51_schedule_lostage(PSE51_LO_FREE_REQ, mq->mem, mq->memsize);
@@ -480,6 +486,9 @@ static pse51_msg_t *pse51_mq_trysend(pse51_mq_t **mqp,
 	if (!msg)
 		return ERR_PTR(-EAGAIN);
 
+	if (countq(&mq->avail) == 0)
+		xnselect_signal(&mq->write_select, 0);
+
 	*mqp = mq;
 	mq->nodebase.refcount++;
 	return msg;
@@ -503,6 +512,9 @@ static pse51_msg_t *pse51_mq_tryrcv(pse51_mq_t **mqp,
 
 	if (!(holder = getpq(&mq->queued)))
 		return ERR_PTR(-EAGAIN);
+
+	if (countpq(&mq->queued) == 0)
+		xnselect_signal(&mq->read_select, 0);
 
 	*mqp = mq;
 	mq->nodebase.refcount++;
@@ -595,13 +607,16 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 	}
 
 	insertpqf(&mq->queued, &msg->link, msg->link.prio);
+	if (countpq(&mq->queued) == 1)
+		resched = xnselect_signal(&mq->read_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->receivers))
 		resched = 1;
 	else if (mq->target && countpq(&mq->queued) == 1) {
 		/* First message ? no pending reader ? attempt
 		   to send a signal if mq_notify was called. */
-		resched = pse51_sigqueue_inner(mq->target, &mq->si);
+		if (pse51_sigqueue_inner(mq->target, &mq->si))
+			resched = 1;
 		mq->target = NULL;
 	}
 
@@ -625,6 +640,9 @@ int pse51_mq_finish_send(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 	/* descriptor was destroyed, simply return the message to the
 	   pool and wakeup any waiting sender. */;
 	pse51_mq_msg_free(mq, msg);
+
+	if (countq(&mq->avail) == 1)
+		resched = xnselect_signal(&mq->write_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->senders))
 		resched = 1;
@@ -713,6 +731,9 @@ int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
 		err = -EBADF;
 
 	pse51_mq_msg_free(mq, msg);
+
+	if (countq(&mq->avail) == 1)
+		resched = xnselect_signal(&mq->write_select, 1);
 
 	if (xnsynch_wakeup_one_sleeper(&mq->senders))
 		resched = 1;
@@ -1209,6 +1230,62 @@ int mq_notify(mqd_t fd, const struct sigevent *evp)
 	thread_set_errno(err);
 	return -1;
 }
+
+#ifdef CONFIG_XENO_OPT_POSIX_SELECT
+int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
+			 unsigned type, unsigned index)
+{
+	struct xnselect_binding *binding;
+	pse51_desc_t *desc;
+	pse51_mq_t *mq;
+	int err;
+	spl_t s;
+	
+	if (type == XNSELECT_READ || type == XNSELECT_WRITE) {
+		binding = xnmalloc(sizeof(*binding));
+		if (!binding)
+			return -ENOMEM;
+	} else
+		return -EBADF;
+
+	xnlock_get_irqsave(&nklock, s);
+	err = -pse51_desc_get(&desc, fd, PSE51_MQ_MAGIC);
+	if (err)
+		goto unlock_and_error;
+
+	mq = node2mq(pse51_desc_node(desc));
+
+	switch(type) {
+	case XNSELECT_READ:
+		err = -EBADF;
+		if ((pse51_desc_getflags(desc) & PSE51_PERMS_MASK) == O_WRONLY)
+			goto unlock_and_error;
+
+		err = xnselect_bind(&mq->read_select, binding,
+				    selector, type, index, countpq(&mq->queued));
+		if (err)
+			goto unlock_and_error;
+		break;
+
+	case XNSELECT_WRITE:
+		err = -EBADF;
+		if ((pse51_desc_getflags(desc) & PSE51_PERMS_MASK) == O_RDONLY)
+			goto unlock_and_error;
+
+		err = xnselect_bind(&mq->write_select, binding,
+				    selector, type, index, countq(&mq->avail));
+		if (err)
+			goto unlock_and_error;
+		break;
+	}
+	xnlock_put_irqrestore(&nklock, s);
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+	return err;
+}
+#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 static void uqd_cleanup(pse51_assoc_t *assoc)
