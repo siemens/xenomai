@@ -87,3 +87,4 @@
 --wrap shm_unlink
 --wrap mmap
 --wrap munmap
+--wrap select
