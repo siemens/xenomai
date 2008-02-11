@@ -294,6 +294,34 @@ err_out:
 
 EXPORT_SYMBOL(__rt_dev_socket);
 
+int __rt_dev_select_bind(rtdm_user_info_t *info, int fd,
+			 struct xnselector *selector,
+			 unsigned type, unsigned index)
+{
+	struct rtdm_dev_context *context;
+	struct rtdm_operations  *ops;
+	int ret;
+
+	context = rtdm_context_get(fd);
+
+	ret = -EBADF;
+	if (unlikely(!context))
+		goto err_out;
+
+	ops = context->ops;
+
+	ret = ops->select_bind(context, selector, type, index);
+
+	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+
+	rtdm_context_unlock(context);
+
+  err_out:
+	return ret;
+}
+
+EXPORT_SYMBOL(__rt_dev_select_bind);
+
 int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 {
 	struct rtdm_dev_context *context;

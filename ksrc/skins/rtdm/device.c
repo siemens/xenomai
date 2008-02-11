@@ -70,6 +70,14 @@ int rtdm_no_support(void)
 	return -ENOSYS;
 }
 
+int rtdm_select_bind_no_support(struct rtdm_dev_context *context,
+				struct xnselector *selector,
+				unsigned type,
+				unsigned index)
+{
+	return -EBADF;
+}
+  
 static inline int get_name_hash(const char *str, int limit, int hashkey_mask)
 {
 	int hash = 0;
@@ -242,6 +250,8 @@ int rtdm_dev_register(struct rtdm_device *device)
 	SET_DEFAULT_OP_IF_NULL(device->ops, write);
 	SET_DEFAULT_OP_IF_NULL(device->ops, recvmsg);
 	SET_DEFAULT_OP_IF_NULL(device->ops, sendmsg);
+	if (!device->ops.select_bind)
+		device->ops.select_bind = rtdm_select_bind_no_support;
 
 	atomic_set(&device->reserved.refcount, 0);
 	device->reserved.exclusive_context = NULL;

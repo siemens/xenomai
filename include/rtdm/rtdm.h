@@ -247,6 +247,10 @@ ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 			 struct msghdr *msg, int flags);
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 			 const struct msghdr *msg, int flags);
+struct xnselector;
+int __rt_dev_select_bind(rtdm_user_info_t *user_info, int fd,
+			 struct xnselector *selector,
+			 unsigned type, unsigned index);
 #endif /* __KERNEL__ */
 
 /* Define RTDM_NO_DEFAULT_USER_API to switch off the default rt_dev_xxx

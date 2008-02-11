@@ -38,6 +38,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
+#include <nucleus/select.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
@@ -262,6 +263,10 @@ typedef ssize_t (*rtdm_sendmsg_handler_t)(struct rtdm_dev_context *context,
 typedef int (*rtdm_rt_handler_t)(struct rtdm_dev_context *context,
 				 rtdm_user_info_t *user_info, void *arg);
 
+typedef int (*rtdm_select_bind_handler_t)(struct rtdm_dev_context *context,
+					  struct xnselector *selector,
+					  unsigned type,
+					  unsigned index);
 /**
  * Device operations
  */
@@ -304,6 +309,8 @@ struct rtdm_operations {
 	/** Transmit message handler for non-real-time context (optional) */
 	rtdm_sendmsg_handler_t sendmsg_nrt;
 	/** @} Message-Oriented Device Operations */
+
+	rtdm_select_bind_handler_t select_bind;
 };
 
 struct rtdm_devctx_reserved {
@@ -1002,11 +1009,20 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout);
 
 typedef struct {
 	xnsynch_t synch_base;
+	DECLARE_XNSELECT(select_block);
 } rtdm_event_t;
 
 #define RTDM_EVENT_PENDING		XNSYNCH_SPARE1
 
 void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+int rtdm_event_select_bind(rtdm_event_t *event,
+			   struct xnselector *selector,
+			   unsigned type,
+			   unsigned bit_index);
+#else /* !CONFIG_XENO_OPT_RTDM_SELECT */
+#define rtdm_event_select_bind(e, s, t, b) ({ -EBADF; })
+#endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_event_wait(rtdm_event_t *event);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 			 rtdm_toseq_t *timeout_seq);
@@ -1027,6 +1043,7 @@ static inline void rtdm_event_destroy(rtdm_event_t *event)
 {
 	trace_mark(xn_rtdm_event_destroy, "event %p", event);
 	__rtdm_synch_flush(&event->synch_base, XNRMID);
+	xnselect_destroy(&event->select_block);
 }
 #endif /* !DOXYGEN_CPP */
 
@@ -1035,9 +1052,18 @@ static inline void rtdm_event_destroy(rtdm_event_t *event)
 typedef struct {
 	unsigned long value;
 	xnsynch_t synch_base;
+	DECLARE_XNSELECT(select_block);
 } rtdm_sem_t;
 
 void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+int rtdm_sem_select_bind(rtdm_sem_t *sem,
+			 struct xnselector *selector,
+			 unsigned type,
+			 unsigned bit_index);
+#else /* !CONFIG_XENO_OPT_RTDM_SELECT */
+#define rtdm_sem_select_bind(s, se, t, b) ({ -EBADF; })
+#endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_sem_down(rtdm_sem_t *sem);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 		       rtdm_toseq_t *timeout_seq);
@@ -1048,6 +1074,7 @@ static inline void rtdm_sem_destroy(rtdm_sem_t *sem)
 {
 	trace_mark(xn_rtdm_sem_destroy, "sem %p", sem);
 	__rtdm_synch_flush(&sem->synch_base, XNRMID);
+	xnselect_destroy(&sem->select_block);
 }
 #endif /* !DOXYGEN_CPP */
 

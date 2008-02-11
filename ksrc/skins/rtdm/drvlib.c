@@ -756,11 +756,38 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 	xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
 	if (pending)
 		xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
+	xnselect_init(&event->select_block);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 EXPORT_SYMBOL(rtdm_event_init);
+
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+int rtdm_event_select_bind(rtdm_event_t *event,
+			   struct xnselector *selector,
+			   unsigned type,
+			   unsigned bit_index)
+{
+	struct xnselect_binding *binding;
+	int err;
+	spl_t s;
+
+	binding = xnmalloc(sizeof(*binding));
+	if (!binding)
+		return -ENOMEM;
+
+	xnlock_get_irqsave(&nklock, s);
+	err = xnselect_bind(&event->select_block,
+			    binding, selector, type,bit_index,
+			    xnsynch_test_flags(&event->synch_base,
+					       RTDM_EVENT_PENDING));
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL(rtdm_event_select_bind);
+#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -825,6 +852,7 @@ void rtdm_event_pulse(rtdm_event_t *event);
  */
 void rtdm_event_signal(rtdm_event_t *event)
 {
+	int resched = 0;
 	spl_t s;
 
 	trace_mark(xn_rtdm_event_signal, "event %p", event);
@@ -833,6 +861,10 @@ void rtdm_event_signal(rtdm_event_t *event)
 
 	xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
 	if (xnsynch_flush(&event->synch_base, 0))
+		resched = 1;
+	if (xnselect_signal(&event->select_block, 1))
+		resched = 1;
+	if (resched)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -927,9 +959,10 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 	if (unlikely(testbits(event->synch_base.status, RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
 	else if (likely(xnsynch_test_flags(&event->synch_base,
-					   RTDM_EVENT_PENDING)))
+					   RTDM_EVENT_PENDING))) {
 		xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
-	else {
+		xnselect_signal(&event->select_block, 0);
+	} else {
 		/* non-blocking mode */
 		if (timeout < 0) {
 			err = -EWOULDBLOCK;
@@ -951,10 +984,11 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 		}
 
 		if (likely
-		    (!xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK)))
+		    (!xnthread_test_info(thread, XNTIMEO | XNRMID | XNBREAK))) {
 			xnsynch_clear_flags(&event->synch_base,
 					    RTDM_EVENT_PENDING);
-		else if (xnthread_test_info(thread, XNTIMEO))
+			xnselect_signal(&event->select_block, 0);
+		} else if (xnthread_test_info(thread, XNTIMEO))
 			err = -ETIMEDOUT;
 		else if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;
@@ -995,6 +1029,7 @@ void rtdm_event_clear(rtdm_event_t *event)
 	xnlock_get_irqsave(&nklock, s);
 
 	xnsynch_clear_flags(&event->synch_base, RTDM_EVENT_PENDING);
+	xnselect_signal(&event->select_block, 0);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -1034,11 +1069,36 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 
 	sem->value = value;
 	xnsynch_init(&sem->synch_base, XNSYNCH_PRIO);
+	xnselect_init(&sem->select_block);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 EXPORT_SYMBOL(rtdm_sem_init);
+
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+int rtdm_sem_select_bind(rtdm_sem_t *sem,
+			 struct xnselector *selector,
+			 unsigned type,
+			 unsigned bit_index)
+{
+	struct xnselect_binding *binding;
+	int err;
+	spl_t s;
+
+	binding = xnmalloc(sizeof(*binding));
+	if (!binding)
+		return -ENOMEM;
+
+	xnlock_get_irqsave(&nklock, s);
+	err = xnselect_bind(&sem->select_block,
+			    binding, selector, type, bit_index, sem->value > 0);
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL(rtdm_sem_select_bind);
+#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -1148,9 +1208,10 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	if (testbits(sem->synch_base.status, RTDM_SYNCH_DELETED))
 		err = -EIDRM;
-	else if (sem->value > 0)
-		sem->value--;
-	else if (timeout < 0) /* non-blocking mode */
+	else if (sem->value > 0) {
+		if(!--sem->value)
+			xnselect_signal(&sem->select_block, 0);
+	} else if (timeout < 0) /* non-blocking mode */
 		err = -EWOULDBLOCK;
 	else {
 		thread = xnpod_current_thread();
@@ -1214,7 +1275,9 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 	if (xnsynch_wakeup_one_sleeper(&sem->synch_base))
 		xnpod_schedule();
 	else
-		sem->value++;
+		if (sem->value++ == 0
+		    && xnselect_signal(&sem->select_block, 1))
+			xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
 }
