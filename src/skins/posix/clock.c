@@ -58,7 +58,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int err;
 #ifdef CONFIG_XENO_HW_DIRECT_TSC
-	if (clock_id == CLOCK_MONOTONIC) {
+	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
 		unsigned long long tsc;
 		unsigned long rem;
 
