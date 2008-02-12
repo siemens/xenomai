@@ -56,10 +56,3 @@ config XENO_OPT_DEBUG_RTDM
 	drivers. A minor runtime overhead is added.
 
 endif
-
-if XENO_OPT_POSIX_SELECT && XENO_SKIN_POSIX = y && XENO_SKIN_RTDM = m
-	comment "This configuration will not work ! If you enable the POSIX"
-	comment "select syscall while the POSIX skin is built-in the kernel,"
-	comment "you have to compile the POSIX skin as a module or the RTDM"
-	comment "skin built-in the kernel."
-endif
