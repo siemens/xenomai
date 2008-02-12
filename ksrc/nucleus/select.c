@@ -124,8 +124,11 @@ int xnselect_bind(struct xnselect *select_block,
 	appendq(&selector->bindings, &binding->slink);
 	appendq(&select_block->bindings, &binding->link);
 	__FD_SET(index, &selector->fds[type].expected);
-	if (state)
+	if (state) {
 		__FD_SET(index, &selector->fds[type].pending);
+		if (xnselect_wakeup(selector))
+			xnpod_schedule();
+	}
 
 	return 0;
 }
