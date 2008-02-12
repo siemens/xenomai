@@ -64,6 +64,8 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 		tsc = __xn_rdtsc();
 		tp->tv_sec = xnarch_ulldiv(tsc, sysinfo.cpufreq, &rem);
+		/* Next line is 64 bits safe, since rem is less than
+		   sysinfo.cpufreq hence fits on 32 bits. */
 		tp->tv_nsec = xnarch_imuldiv(rem, 1000000000, sysinfo.cpufreq);
 		return 0;
 	}
