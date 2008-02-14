@@ -40,6 +40,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	fi
 
 	bool 'Shared interrupts' CONFIG_XENO_OPT_SHIRQ
+	bool 'Core support for select-like services' CONFIG_XENO_OPT_SELECT
 
 	bool 'Enable periodic timing' CONFIG_XENO_OPT_TIMING_PERIODIC
 	int 'Timer tuning latency (ns)' CONFIG_XENO_OPT_TIMING_TIMERLAT 0

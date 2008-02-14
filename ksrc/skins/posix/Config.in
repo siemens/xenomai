@@ -14,6 +14,17 @@ if [ "$CONFIG_XENO_SKIN_POSIX" != "n" ]; then
 	fi
 	bool 'Shared memory' CONFIG_XENO_OPT_POSIX_SHM
 	bool 'Interrupts' CONFIG_XENO_OPT_POSIX_INTR
+        if [ "$CONFIG_XENO_SKIN_POSIX" != "y" -o "$CONFIG_XENO_SKIN_RTDM" != "m"]; then
+		if [ "$CONFIG_XENO_OPT_SELECT" = "n" ]; then
+			comment "Support for POSIX skin select needs nucleus support for select-like services"
+		else
+			bool 'Support for select syscall' CONFIG_XENO_OPT_POSIX_SELECT
+		fi
+	else
+		comment "Note: Support for select is not available if the POSIX skin"
+		comment "is built-in and the RTDM skin is compiled as a module."
+	
+        fi
 	bool 'Debugging support' CONFIG_XENO_OPT_DEBUG_POSIX
 	endmenu
 fi
