@@ -220,6 +220,7 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
 	type: -1
 };
 
+#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
 static inline unsigned long long __xn_rdtsc(void)
 {
 #if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
@@ -260,6 +261,7 @@ static inline unsigned long long __xn_rdtsc(void)
 
 #endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
 }
+#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
 
 static inline void xeno_arm_features_check(void)
 {
