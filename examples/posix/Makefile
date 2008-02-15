@@ -35,9 +35,9 @@ endif
 
 CC=$(shell $(XENOCONFIG) --cc)
 
-CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --posix-cflags)
+CFLAGS=-DCONSUMER $(shell $(XENOCONFIG) --posix-cflags) $(APP_CFLAGS)
 
-LDFLAGS=$(shell $(XENOCONFIG) --posix-ldflags)
+LDFLAGS=$(shell $(XENOCONFIG) --posix-ldflags) $(APP_LDFLAGS)
 
 # This includes the library path of given Xenomai into the binary to make live
 # easier for beginners if Xenomai's libs are not in any default search path.
@@ -64,13 +64,14 @@ CLEANMOD := ${patsubst %, .%*, $(MODULES)}
 PWD      := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 
 ### Kernel 2.6
-ifeq ($(findstring 2.6,$(KSRC)),2.6)
+PATCHLEVEL:=$(shell sed 's/PATCHLEVEL = \(.*\)/\1/;t;d' $(KSRC)/Makefile)
+ifeq ($(PATCHLEVEL),6)
 
 obj-m        := $(OBJS)
 EXTRA_CFLAGS := -DPRODUCER -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_CFLAGS)
 
 all::
-	$(MAKE) -C $(KSRC) SUBDIRS=$(PWD) modules
+	$(MAKE) -C $(KSRC) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) SUBDIRS=$(PWD) modules
 	$(RM) *.o
 
 ### Kernel 2.4

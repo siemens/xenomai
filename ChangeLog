@@ -1,3 +1,8 @@
+2008-02-15  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/posix/thread.c (__wrap_pthread_create): Follow more
+	closely Linux behaviour with regard to scheduling and priorities.
+
 2008-02-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* RELEASE: Xenomai 2.4.2 (One Big Rush)

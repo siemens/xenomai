@@ -33,14 +33,17 @@ typedef struct {
 
 } pse51_siginfo_t;
 
-/* Must be called with nklock lock, irqs off, may reschedule. */
-void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t *si);
+/* Must be called with nklock lock, irqs off returns non zero if rescheduling
+   needed. */
+int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t *si);
 
 void pse51_sigunqueue(pthread_t thread, pse51_siginfo_t *si);
 
 void pse51_signal_init_thread(pthread_t new, const pthread_t parent);
 
 void pse51_signal_cleanup_thread(pthread_t zombie);
+
+void pse51_signal_handle_request(pthread_t thread);
 
 void pse51_signal_pkg_init(void);
 

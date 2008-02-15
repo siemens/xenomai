@@ -58,12 +58,14 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int err;
 #ifdef CONFIG_XENO_HW_DIRECT_TSC
-	if (clock_id == CLOCK_MONOTONIC) {
+	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
 		unsigned long long tsc;
 		unsigned long rem;
 
 		tsc = __xn_rdtsc();
 		tp->tv_sec = xnarch_ulldiv(tsc, sysinfo.cpufreq, &rem);
+		/* Next line is 64 bits safe, since rem is less than
+		   sysinfo.cpufreq hence fits on 32 bits. */
 		tp->tv_nsec = xnarch_imuldiv(rem, 1000000000, sysinfo.cpufreq);
 		return 0;
 	}

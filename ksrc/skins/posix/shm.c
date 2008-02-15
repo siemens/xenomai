@@ -508,7 +508,7 @@ int ftruncate(int fd, off_t len)
 	}
 
 	/* Allocate one more page for alignment (the address returned by mmap
-	   must be aligned on a page boundardy). */
+	   must be aligned on a page boundary). */
 	if (len)
 		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
 

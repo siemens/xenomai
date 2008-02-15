@@ -52,6 +52,7 @@
 #include <asm/xenomai/system.h>	/* For xnlock. */
 #include <posix/timer.h>	/* For pse51_timer_notified. */
 #include <posix/sig.h>
+#include <posix/apc.h>
 
 static void pse51_default_handler(int sig);
 
@@ -67,33 +68,6 @@ static pse51_siginfo_t pse51_infos_pool[PSE51_SIGQUEUE_MAX];
 static xnlock_t pse51_infos_lock = XNARCH_LOCK_UNLOCKED;
 #endif
 static xnpqueue_t pse51_infos_free_list;
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-#define SIG_MAX_REQUESTS 64	/* Must be a ^2 */
-
-static int pse51_signals_apc;
-
-static struct pse51_signals_threadsq_t {
-	int in, out;
-	pthread_t thread[SIG_MAX_REQUESTS];
-} pse51_signals_threadsq[XNARCH_NR_CPUS];
-
-static void pse51_signal_schedule_request(pthread_t thread)
-{
-	int cpuid = rthal_processor_id(), reqnum;
-	struct pse51_signals_threadsq_t *rq = &pse51_signals_threadsq[cpuid];
-	spl_t s;
-
-	/* Signal the APC, to have it delegate signals to Linux. */
-	splhigh(s);
-	reqnum = rq->in;
-	rq->thread[reqnum] = thread;
-	rq->in = (reqnum + 1) & (SIG_MAX_REQUESTS - 1);
-	splexit(s);
-
-	rthal_apc_schedule(pse51_signals_apc);
-}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 static pse51_siginfo_t *pse51_new_siginfo(int sig, int code, union sigval value)
 {
@@ -328,13 +302,13 @@ int sigismember(const sigset_t * set, int sig)
 }
 
 /* Must be called with nklock lock, irqs off, may reschedule. */
-void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
+int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 {
 	unsigned prio;
 	int signum;
 
 	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread))
-		 return;
+		 return 0;
 
 	signum = si->info.si_signo;
 	/* Since signals below SIGRTMIN are not real-time, they should be treated
@@ -354,12 +328,11 @@ void pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (testbits(thread->threadbase.state, XNSHADOW))
-		pse51_signal_schedule_request(thread);
+		pse51_schedule_lostage(PSE51_LO_SIGNAL_REQ, thread, 0);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-	if (thread == pse51_current_thread()
-	    || xnpod_unblock_thread(&thread->threadbase))
-		xnpod_schedule();
+	return thread == pse51_current_thread()
+		|| xnpod_unblock_thread(&thread->threadbase);
 }
 
 void pse51_sigunqueue(pthread_t thread, pse51_siginfo_t * si)
@@ -564,8 +537,8 @@ int pthread_kill(pthread_t thread, int sig)
 		return ESRCH;
 	}
 
-	if (sig)
-		pse51_sigqueue_inner(thread, si);
+	if (sig && pse51_sigqueue_inner(thread, si))
+		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -622,8 +595,8 @@ int pthread_sigqueue_np(pthread_t thread, int sig, union sigval value)
 		return ESRCH;
 	}
 
-	if (sig)
-		pse51_sigqueue_inner(thread, si);
+	if (sig && pse51_sigqueue_inner(thread, si))
+		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -1078,49 +1051,41 @@ static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 	xnshadow_relax(1);
 }
 
-static void pse51_signal_handle_request(void *cookie)
+void pse51_signal_handle_request(pthread_t thread)
 {
-	int cpuid = smp_processor_id(), reqnum;
-	struct pse51_signals_threadsq_t *rq = &pse51_signals_threadsq[cpuid];
+	pse51_siginfo_t *si;
+	spl_t s;
 
-	while ((reqnum = rq->out) != rq->in) {
-		pthread_t thread = rq->thread[reqnum];
-		pse51_siginfo_t *si;
-		spl_t s;
+	xnlock_get_irqsave(&nklock, s);
 
-		rq->out = (reqnum + 1) & (SIG_MAX_REQUESTS - 1);
+	thread->threadbase.signals = 0;
+
+	while ((si = pse51_getsigq(&thread->pending,
+				   &thread->pending.mask, NULL))) {
+		siginfo_t info = si->info;
+
+		if (si->info.si_code == SI_TIMER)
+			pse51_timer_notified(si);
+
+		if (si->info.si_code == SI_QUEUE
+		    || si->info.si_code == SI_USER)
+			pse51_delete_siginfo(si);
+		/* Nothing to be done for SI_MESQ. */
+
+		/* Release the big lock, before calling a function which may
+		   reschedule. */
+		xnlock_put_irqrestore(&nklock, s);
+
+		send_sig_info(info.si_signo,
+			      &info,
+			      xnthread_user_task(&thread->threadbase));
 
 		xnlock_get_irqsave(&nklock, s);
 
 		thread->threadbase.signals = 0;
-
-		while ((si = pse51_getsigq(&thread->pending,
-					   &thread->pending.mask, NULL))) {
-			siginfo_t info = si->info;
-
-			if (si->info.si_code == SI_TIMER)
-				pse51_timer_notified(si);
-
-			if (si->info.si_code == SI_QUEUE
-			    || si->info.si_code == SI_USER)
-				pse51_delete_siginfo(si);
-			/* Nothing to be done for SI_MESQ. */
-
-			/* Release the big lock, before calling a function which may
-			   reschedule. */
-			xnlock_put_irqrestore(&nklock, s);
-
-			send_sig_info(info.si_signo,
-				      &info,
-				      xnthread_user_task(&thread->threadbase));
-
-			xnlock_get_irqsave(&nklock, s);
-
-			thread->threadbase.signals = 0;
-		}
-
-		xnlock_put_irqrestore(&nklock, s);
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -1187,14 +1152,6 @@ void pse51_signal_pkg_init(void)
 		emptyset(user2pse51_sigset(&actions[i - 1].sa_mask));
 		actions[i - 1].sa_flags = 0;
 	}
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	pse51_signals_apc = rthal_apc_alloc("posix_signals_handler",
-					    &pse51_signal_handle_request, NULL);
-
-	if (pse51_signals_apc < 0)
-		printk("Unable to allocate APC: %d !\n", pse51_signals_apc);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 void pse51_signal_pkg_cleanup(void)
@@ -1207,10 +1164,6 @@ void pse51_signal_pkg_cleanup(void)
 			xnprintf("Posix siginfo structure %p was not freed, "
 				 "freeing now.\n", &pse51_infos_pool[i].info);
 #endif /* XENO_DEBUG(POSIX) */
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	rthal_apc_free(pse51_signals_apc);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 static void pse51_default_handler(int sig)
