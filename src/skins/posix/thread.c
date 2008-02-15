@@ -19,11 +19,16 @@
 #include <stddef.h>
 #include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 #include <pthread.h>
+#include <sys/types.h>
 #include <semaphore.h>
 #include <posix/syscall.h>
 
 extern int __pse51_muxid;
+
+static pthread_attr_t default_attr;
+static int linuxthreads;
 
 static void (*old_sigharden_handler)(int sig);
 
@@ -74,11 +79,26 @@ int __wrap_pthread_getschedparam(pthread_t thread,
 	return err;
 }
 
+int __wrap_sched_yield(void)
+{
+	int err = -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
+
+	if (err == -1)
+		err = __real_sched_yield();
+
+	return err;
+}
+
+int __wrap_pthread_yield(void)
+{
+	return __wrap_sched_yield();
+}
+
 struct pthread_iargs {
 	void *(*start) (void *);
 	void *arg;
 	int policy;
-	int prio;
+	int parent_prio, prio;
 	sem_t sync;
 	int ret;
 };
@@ -90,17 +110,14 @@ static void *__pthread_trampoline(void *arg)
 	pthread_t tid = pthread_self();
 	struct sched_param param;
 	void *status = NULL;
-	int policy;
+	int parent_prio, policy;
 	long err;
 
 	old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
 
-	/* Broken pthread libs ignore some of the thread attribute specs
-	   passed to pthread_create(3), so we force the scheduling policy
-	   once again here. */
 	param.sched_priority = iargs->prio;
 	policy = iargs->policy;
-	__real_pthread_setschedparam(tid, policy, &param);
+	parent_prio = iargs->parent_prio;
 
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
@@ -118,6 +135,17 @@ static void *__pthread_trampoline(void *arg)
 	__real_sem_post(&iargs->sync);
 
 	if (!err) {
+		/* Broken pthread libs ignore some of the thread attribute specs
+		   passed to pthread_create(3), so we force the scheduling policy
+		   once again here. */
+		__real_pthread_setschedparam(tid, policy, &param);
+
+		/* If the thread running pthread_create runs with the same
+		   priority as us, we should leave it running, as if there never
+		   was a synchronization with a semaphore. */
+		if (parent_prio && param.sched_priority == parent_prio)
+			__wrap_sched_yield();
+
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 		status = start(cookie);
@@ -133,44 +161,49 @@ int __wrap_pthread_create(pthread_t *tid,
 {
 	struct pthread_iargs iargs;
 	pthread_attr_t iattr;
-	int inherit, policy, err;
+	int inherit, err;
 	struct sched_param param;
 	pthread_t ltid;
 
-	if (!attr) {
-		policy = SCHED_OTHER;
-		iargs.prio = 0;
-	} else {
-		pthread_attr_getinheritsched(attr, &inherit);
-		if (inherit == PTHREAD_EXPLICIT_SCHED) {
-			pthread_attr_getschedpolicy(attr, &policy);
-			pthread_attr_getschedparam(attr, &param);
-		} else
-			/* inherit == PTHREAD_INHERIT_SCHED */
-			__wrap_pthread_getschedparam(pthread_self(),
-						     &policy, &param);
-		iargs.prio = param.sched_priority;
+	if (!attr)
+		attr = &default_attr;
+		
+	pthread_attr_getinheritsched(attr, &inherit);
+	__wrap_pthread_getschedparam(pthread_self(),
+				     &iargs.policy, &param);
+	iargs.parent_prio = param.sched_priority;
+	if (inherit == PTHREAD_EXPLICIT_SCHED) {
+		pthread_attr_getschedpolicy(attr, &iargs.policy);
+		pthread_attr_getschedparam(attr, &param);
+	}
+	iargs.prio = param.sched_priority;
 
+	memcpy(&iattr, attr, sizeof(pthread_attr_t));
+	if (linuxthreads && geteuid()) {
 		/* Work around linuxthreads shortcoming: it doesn't believe
 		   that it could have RT power as non-root and fails the
 		   thread creation overeagerly. */
-		memcpy(&iattr, attr, sizeof(pthread_attr_t));
+		pthread_attr_setinheritsched(&iattr, PTHREAD_EXPLICIT_SCHED);
 		param.sched_priority = 0;
 		pthread_attr_setschedpolicy(&iattr, SCHED_OTHER);
 		pthread_attr_setschedparam(&iattr, &param);
-		attr = &iattr;
-	}
+	} else
+		/* Get the created thread to temporarily inherit pthread_create
+		   caller priority */
+		pthread_attr_setinheritsched(&iattr, PTHREAD_INHERIT_SCHED);
+	attr = &iattr;
 
 	/* First start a native POSIX thread, then associate a Xenomai shadow to
 	   it. */
 
 	iargs.start = start;
 	iargs.arg = arg;
-	iargs.policy = policy;
 	iargs.ret = EAGAIN;
 	__real_sem_init(&iargs.sync, 0, 0);
 
-	err = __real_pthread_create(&ltid, attr, &__pthread_trampoline, &iargs);
+	err = __real_pthread_create(&ltid, attr,
+				    &__pthread_trampoline, &iargs);
+
 	if (!err)
 		while (__real_sem_wait(&iargs.sync) && errno == EINTR) ;
 	__real_sem_destroy(&iargs.sync);
@@ -181,21 +214,6 @@ int __wrap_pthread_create(pthread_t *tid,
 		*tid = ltid;
 
 	return err;
-}
-
-int __wrap_sched_yield(void)
-{
-	int err = -XENOMAI_SKINCALL0(__pse51_muxid, __pse51_sched_yield);
-
-	if (err == -1)
-		err = __real_sched_yield();
-
-	return err;
-}
-
-int __wrap_pthread_yield(void)
-{
-	return __wrap_sched_yield();
 }
 
 int pthread_make_periodic_np(pthread_t thread,
@@ -256,4 +274,13 @@ int __wrap_pthread_kill(pthread_t thread, int sig)
 		return __real_pthread_kill(thread, sig);
 
 	return err;
+}
+
+static __attribute__((constructor)) void pse51_thread_init(void)
+{
+	char vers[128];
+	pthread_attr_init(&default_attr);
+	linuxthreads =
+		!confstr(_CS_GNU_LIBPTHREAD_VERSION, vers, sizeof(vers))
+		|| strstr(vers, "linuxthreads");
 }
