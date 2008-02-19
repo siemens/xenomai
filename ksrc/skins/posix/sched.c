@@ -183,6 +183,7 @@ int sched_rr_get_interval(int pid, struct timespec *interval)
  */
 int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 {
+	int prio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -192,8 +193,11 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 		return ESRCH;
 	}
 
-	*pol = tid->attr.policy;
-	*par = tid->attr.schedparam;
+	prio = xnthread_base_priority(&tid->threadbase);
+	par->sched_priority = prio;
+	*pol = (prio
+		? (!xnthread_test_state(&tid->threadbase, XNRRB)
+		   ? SCHED_FIFO : SCHED_RR) : SCHED_OTHER);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -273,9 +277,6 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
-
-	tid->attr.policy = pol;
-	tid->attr.schedparam = *par;
 
 	xnpod_renice_thread(&tid->threadbase, par->sched_priority);
 	xnpod_set_thread_mode(&tid->threadbase, clrmask, setmask);

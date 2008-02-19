@@ -188,8 +188,8 @@ int pthread_create(pthread_t *tid,
 			return EINVAL;
 		}
 
-		thread->attr.policy = cur->attr.policy;
-		thread->attr.schedparam = cur->attr.schedparam;
+		pthread_getschedparam(cur, &thread->attr.policy,
+				      &thread->attr.schedparam);
 	}
 
 	prio = thread->attr.schedparam.sched_priority;
