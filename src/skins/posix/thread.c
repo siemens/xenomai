@@ -143,7 +143,7 @@ static void *__pthread_trampoline(void *arg)
 		/* If the thread running pthread_create runs with the same
 		   priority as us, we should leave it running, as if there never
 		   was a synchronization with a semaphore. */
-		if (parent_prio && param.sched_priority == parent_prio)
+		if (param.sched_priority == parent_prio)
 			__wrap_sched_yield();
 
 		if (policy != SCHED_OTHER)
@@ -169,8 +169,9 @@ int __wrap_pthread_create(pthread_t *tid,
 		attr = &default_attr;
 		
 	pthread_attr_getinheritsched(attr, &inherit);
-	__wrap_pthread_getschedparam(pthread_self(),
-				     &iargs.policy, &param);
+	__wrap_pthread_getschedparam(pthread_self(), &iargs.policy, &param);
+	/* Set the glibc idea of our priority to the same as Xenomai. */
+	__real_pthread_setschedparam(pthread_self(), iargs.policy, &param);
 	iargs.parent_prio = param.sched_priority;
 	if (inherit == PTHREAD_EXPLICIT_SCHED) {
 		pthread_attr_getschedpolicy(attr, &iargs.policy);
