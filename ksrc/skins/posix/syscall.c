@@ -1847,7 +1847,7 @@ static int __mq_send(struct task_struct *curr, struct pt_regs *regs)
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
-	if(__xn_copy_from_user(msg->data,
+	if(__xn_copy_from_user(curr, msg->data,
 			       (void __user *)__xn_reg_arg2(regs), len)) {
 		pse51_mq_finish_send(ufd->kfd, mq, msg);
 		return -EFAULT;
@@ -1903,7 +1903,7 @@ static int __mq_timedsend(struct task_struct *curr, struct pt_regs *regs)
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
-	if(__xn_copy_from_user(msg->data,
+	if(__xn_copy_from_user(curr, msg->data,
 			       (void __user *)__xn_reg_arg2(regs), len)) {
 		pse51_mq_finish_send(ufd->kfd, mq, msg);
 		return -EFAULT;
@@ -1952,7 +1952,7 @@ static int __mq_receive(struct task_struct *curr, struct pt_regs *regs)
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
+	if (__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
 			      msg->data, msg->len)) {
 		pse51_mq_finish_rcv(ufd->kfd, mq, msg);
 		return -EFAULT;
@@ -2029,7 +2029,7 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	if (IS_ERR(msg))
 		return PTR_ERR(msg);
 
-	if (__xn_copy_to_user((void __user *)__xn_reg_arg2(regs),
+	if (__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
 			      msg->data, msg->len)) {
 		pse51_mq_finish_rcv(ufd->kfd, mq, msg);
 		return -EFAULT;
@@ -2041,8 +2041,10 @@ static int __mq_timedreceive(struct task_struct *curr, struct pt_regs *regs)
 	if (err)
 		return err;
 
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				   &len, sizeof(len)))
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg3(regs), sizeof(len)) ||
+	    __xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+			      &len, sizeof(len)))
 		return -EFAULT;
 
 	if (__xn_reg_arg4(regs))
