@@ -106,7 +106,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
  * end of its priority group.
  */
 
-static inline void xnsynch_renice_thread(xnthread_t *thread, int prio)
+static void xnsynch_renice_thread(xnthread_t *thread, int prio)
 {
 	thread->cprio = prio;
 
