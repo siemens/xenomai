@@ -1,3 +1,11 @@
+2008-02-23  Philippe Gerum  <rpm@xenomai.org>
+
+p	* ksrc/arch/arm/patches: update IMX21 support.
+	
+2008-01-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c: Fix primes[] type.
+
 2008-01-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-12,
