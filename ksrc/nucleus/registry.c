@@ -79,14 +79,14 @@ static int registry_proc_apc;
 
 int xnregistry_init(void)
 {
-	static const u_short primes[] = {
+	static const int primes[] = {
 		101, 211, 307, 401, 503, 601,
 		701, 809, 907, 1009, 1103
 	};
 
 #define obj_hash_max(n)			 \
-((n) < sizeof(primes) / sizeof(u_long) ? \
- (n) : sizeof(primes) / sizeof(u_long) - 1)
+((n) < sizeof(primes) / sizeof(int) ? \
+ (n) : sizeof(primes) / sizeof(int) - 1)
 
 	int n;
 
