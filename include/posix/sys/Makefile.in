@@ -139,7 +139,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -217,6 +216,7 @@ includesubdir = $(includedir)/posix/sys
 includesub_HEADERS = \
 	ioctl.h \
 	mman.h \
+	select.h \
 	socket.h
 
 all: all-am
