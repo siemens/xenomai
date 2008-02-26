@@ -29,6 +29,7 @@
  * this interface in order to remain portable.
  */
 
+#include <linux/bitops.h>
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/pgtable.h>
