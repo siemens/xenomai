@@ -53,10 +53,61 @@ static struct {
     int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
-int rthal_timer_request(void (*handler)(void), int cpu)
+enum rthal_ktimer_mode rthal_ktimer_saved_mode;
+
+int rthal_timer_request(void (*handler)(void),
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+			void (*mode_emul)(enum clock_event_mode mode,
+					  struct clock_event_device *cdev),
+			int (*tick_emul)(unsigned long delay,
+					 struct clock_event_device *cdev),
+#endif /* CONFIG_GENERIC_CLOCKEVENTS */
+			int cpu)
 {
+    int tickval, err;
     unsigned long flags;
-    int err;
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+    unsigned long tmfreq;
+
+    int res = ipipe_request_tickdev(RTHAL_TIMER_DEVICE, mode_emul,
+				    tick_emul, cpu, &tmfreq);
+    
+    switch (res) {
+    case CLOCK_EVT_MODE_PERIODIC:
+		/* oneshot tick emulation callback won't be used, ask
+		 * the caller to start an internal timer for emulating
+		 * a periodic tick. */
+	    tickval = 1000000000UL / HZ;
+	    break;
+	    
+    case CLOCK_EVT_MODE_ONESHOT:
+	    /* oneshot tick emulation */
+	    tickval = 1;
+	    break;
+	    
+    case CLOCK_EVT_MODE_UNUSED:
+	    /* we don't need to emulate the tick at all. */
+	    tickval = 0;
+	    break;
+	    
+    case CLOCK_EVT_MODE_SHUTDOWN:
+		return -ENOSYS;
+		
+    default:
+	    return res;
+    }
+    rthal_ktimer_saved_mode = res;
+
+    if (rthal_timerfreq_arg == 0)
+	    rthal_tunables.timer_freq = CLOCK_TICK_RATE;
+#else /* !CONFIG_GENERIC_CLOCKEVENTS */
+    tickval = 1000000000UL / HZ;
+    rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
+
+    if (rthal_timerfreq_arg == 0)
+	    rthal_tunables.timer_freq = CLOCK_TICK_RATE;
+#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
 
     flags = rthal_critical_enter(NULL);
 
@@ -71,12 +122,16 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
     rthal_critical_exit(flags);
 
-    return err;
+    return err ?: tickval;
 }
 
 void rthal_timer_release(int cpu)
 {
     unsigned long flags;
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+    ipipe_release_tickdev(cpu);
+#endif    
 
     flags = rthal_critical_enter(NULL);
 
@@ -88,6 +143,16 @@ void rthal_timer_release(int cpu)
 
     rthal_critical_exit(flags);
 }
+
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+void rthal_timer_notify_switch(enum clock_event_mode mode,
+			       struct clock_event_device *cdev)
+{
+	rthal_ktimer_saved_mode = mode;
+}
+
+EXPORT_SYMBOL(rthal_timer_notify_switch);
+#endif
 
 unsigned long rthal_timer_calibrate(void)
 {

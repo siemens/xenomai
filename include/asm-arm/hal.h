@@ -32,13 +32,13 @@
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
 
-#ifdef CONFIG_ARCH_AT91
+#if defined(CONFIG_ARCH_AT91)
 #include <linux/stringify.h>
-#define RTHAL_TIMER_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " RC"
-#define RTHAL_CLOCK_DEVICE	"TC" __stringify(CONFIG_IPIPE_AT91_TC) " CV"
+#define RTHAL_TIMER_DEVICE	"at91_tc" __stringify(CONFIG_IPIPE_AT91_TC)
+#define RTHAL_CLOCK_DEVICE	"at91_tc" __stringify(CONFIG_IPIPE_AT91_TC)
 #elif defined(CONFIG_ARCH_IMX)
-#define RTHAL_TIMER_DEVICE	"TCMP"
-#define RTHAL_CLOCK_DEVICE	"TCN"
+#define RTHAL_TIMER_DEVICE	"imx_timer1"
+#define RTHAL_CLOCK_DEVICE	"imx_timer1"
 #elif defined(CONFIG_ARCH_IMX21)
 #define RTHAL_TIMER_DEVICE	"TCMP"
 #define RTHAL_CLOCK_DEVICE	"TCN"
@@ -46,11 +46,11 @@
 #define RTHAL_TIMER_DEVICE	"TIMER1"
 #define RTHAL_CLOCK_DEVICE	"TIMER1"
 #elif defined(CONFIG_ARCH_IXP4XX)
-#define RTHAL_TIMER_DEVICE	"OSRT1"
+#define RTHAL_TIMER_DEVICE	"ixp4xx_timer1"
 #define RTHAL_CLOCK_DEVICE	"OSTS"
 #elif defined(CONFIG_ARCH_PXA)
-#define RTHAL_TIMER_DEVICE	"OSMR0"
-#define RTHAL_CLOCK_DEVICE	"OSCR"
+#define RTHAL_TIMER_DEVICE	"osmr0"
+#define RTHAL_CLOCK_DEVICE	"oscr0"
 #elif defined(CONFIG_ARCH_S3C2410)
 #define RTHAL_TIMER_DEVICE	"TCNTB4"
 #define RTHAL_CLOCK_DEVICE	"TCNTO3"
