@@ -912,9 +912,6 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 	int err = 0;
 	spl_t s;
 
-	head = snprintf(name, XNOBJECT_NAME_LEN, "IRQ%d: ", irq);
-	name += head;
-
 	xnlock_get_irqsave(&intrlock, s);
 
 	if (revision != xnintr_list_rev) {
@@ -934,6 +931,8 @@ int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
 		goto unlock_and_exit;
 	}
 
+	head = snprintf(name, XNOBJECT_NAME_LEN, "IRQ%d: ", irq);
+	name += head;
 	strncpy(name, intr->name, XNOBJECT_NAME_LEN-head);
 
 	*hits = xnstat_counter_get(&intr->stat[cpu_no].hits);
