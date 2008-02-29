@@ -1,3 +1,21 @@
+xenomai (2.4.2-2) unstable; urgency=low
+
+  * debian/copyright: Refined Copyrights
+  * debian/control: Added ia64 to remaining relevant Architecture lines
+  * debian/rules: Moved DEBIAN/rules adjustment for architecture independent
+    target to arch-indep target
+
+ -- Roland Stigge <stigge@antcom.de>  Thu, 28 Feb 2008 20:55:23 +0100
+
+xenomai (2.4.2-1) unstable; urgency=low
+
+  * Initial revision for the Debian Archive
+  * debian/control:
+    - Reorganized binary package structure
+    - Standards-Version: 3.7.3
+
+ -- Roland Stigge <stigge@antcom.de>  Wed, 20 Feb 2008 18:06:49 +0100
+
 xenomai (2.4.0-0+rc6) unstable; urgency=low
 
   * Update prepare-patch.sh to use combined x86/i386 Xenomai tree.
