@@ -398,36 +398,36 @@ exit 0
 
 
 #################################################
-
-DONE:
-
-1. added -W <program invocation>
-
-The program should generate a load that is appropriately demanding
-upon cpu, interrupts, devices, etc.
-
-It should also work when invoked more than once, and scale the loads
-reasonably linearly (since the -w will count by N).
-
-Also, if it spawns subtasks, it should end them all when it gets SIGTERM.
-
-
-2. added timestamp to the output filename to avoid overwriting
-   previous results.
-
-3. added -p 'command', which runs command before, between, and after
-   the latency tests.
-
-
-TODO:
-
-1. get workload child reaper to work when child is killed from
-separate window, or when it finishes.  Forex, 'dd if=/dev/hda ...'
-will eventually finish, and should be restarted to keep the load up.
-Figure out why killall didnt work properly.
-
-2. Much more testing.  Heres a weak start. You migth be better off
-using and improving test/test-xeno-test.rb.
+#
+#DONE:
+#
+#1. added -W <program invocation>
+#
+#The program should generate a load that is appropriately demanding
+#upon cpu, interrupts, devices, etc.
+#
+#It should also work when invoked more than once, and scale the loads
+#reasonably linearly (since the -w will count by N).
+#
+#Also, if it spawns subtasks, it should end them all when it gets SIGTERM.
+#
+#
+#2. added timestamp to the output filename to avoid overwriting
+#   previous results.
+#
+#3. added -p 'command', which runs command before, between, and after
+#   the latency tests.
+#
+#
+#TODO:
+#
+#1. get workload child reaper to work when child is killed from
+#separate window, or when it finishes.  Forex, 'dd if=/dev/hda ...'
+#will eventually finish, and should be restarted to keep the load up.
+#Figure out why killall didnt work properly.
+#
+#2. Much more testing.  Heres a weak start. You migth be better off
+#using and improving test/test-xeno-test.rb.
 
 #!/bin/bash
 PATH=.:$PATH
