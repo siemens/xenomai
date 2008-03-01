@@ -198,14 +198,12 @@ static inline void rpi_none(xnthread_t *thread)
 	xnarch_memory_barrier();
 }
 
-static void rpi_push(xnthread_t *thread)
+static void rpi_push(xnthread_t *thread, int cpu)
 {
-	struct xnrpi *rpislot;
+	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
 	xnthread_t *top;
 	int prio;
 	spl_t s;
-
-	rpislot = &gatekeeper[rthal_processor_id()].rpislot;
 
 	/* non-RT shadows and RT shadows which disabled RPI cause the
 	   root priority to be lowered to its base level. The purpose
@@ -230,17 +228,16 @@ static void rpi_push(xnthread_t *thread)
 	} else
 		prio = XNCORE_IDLE_PRIO;
 
-	if (xnpod_root_priority() != prio)
-		xnpod_renice_root(prio);
+	if (xnpod_root_priority(cpu) != prio)
+		xnpod_renice_root(cpu, prio);
 }
 
 static void rpi_pop(xnthread_t *thread)
 {
-	struct xnrpi *rpislot;
+	int cpu = rthal_processor_id();
+	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
 	int prio;
 	spl_t s;
-
-	rpislot = &gatekeeper[rthal_processor_id()].rpislot;
 
 	xnlock_get_irqsave(&rpislot->lock, s);
 
@@ -267,20 +264,22 @@ static void rpi_pop(xnthread_t *thread)
 
 	xnlock_put_irqrestore(&rpislot->lock, s);
 
-	if (xnpod_root_priority() != prio)
-		xnpod_renice_root(prio);
+	if (xnpod_root_priority(cpu) != prio)
+		xnpod_renice_root(cpu, prio);
 }
 
 static void rpi_update(xnthread_t *thread)
 {
-	struct xnrpi *rpislot;
+	int cpu = rthal_processor_id();
+	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
 	spl_t s;
 
-	rpislot = &gatekeeper[rthal_processor_id()].rpislot;
 	xnlock_get_irqsave(&rpislot->lock, s);
+
 	sched_removepq(&rpislot->threadq, &thread->xlink);
 	rpi_none(thread);
-	rpi_push(thread);
+	rpi_push(thread, cpu);
+
 	xnlock_put_irqrestore(&rpislot->lock, s);
 }
 
@@ -358,7 +357,7 @@ static void rpi_clear_remote(xnthread_t *thread)
 static void rpi_migrate(xnthread_t *thread)
 {
 	rpi_clear_remote(thread);
-	rpi_push(thread);
+	rpi_push(thread, rthal_processor_id());
 }
 
 #else  /* !CONFIG_SMP */
@@ -368,6 +367,7 @@ static void rpi_migrate(xnthread_t *thread)
 
 static inline void rpi_switch(struct task_struct *next)
 {
+	int cpu = rthal_processor_id();
 	xnthread_t *threadin, *threadout;
 	struct xnrpi *rpislot;
 	int oldprio, newprio;
@@ -375,8 +375,8 @@ static inline void rpi_switch(struct task_struct *next)
 
 	threadout = xnshadow_thread(current);
 	threadin = xnshadow_thread(next);
-	rpislot = &gatekeeper[rthal_processor_id()].rpislot;
-	oldprio = xnpod_root_priority();
+	rpislot = &gatekeeper[cpu].rpislot;
+	oldprio = xnpod_root_priority(cpu);
 
 	if (threadout &&
 	    current->state != TASK_RUNNING &&
@@ -456,7 +456,7 @@ boost_root:
 	if (newprio == oldprio)
 		return;
 
-	xnpod_renice_root(newprio);
+	xnpod_renice_root(cpu, newprio);
 
 	if (newprio < oldprio)
 		/* Subtle: by downgrading the root thread priority,
@@ -470,8 +470,9 @@ boost_root:
 
 static inline void rpi_clear_local(xnthread_t *thread)
 {
-	if (thread == NULL && xnpod_root_priority() != XNCORE_IDLE_PRIO)
-		xnpod_renice_root(XNCORE_IDLE_PRIO);
+	int cpu = rthal_processor_id();
+	if (thread == NULL && xnpod_root_priority(cpu) != XNCORE_IDLE_PRIO)
+		xnpod_renice_root(cpu, XNCORE_IDLE_PRIO);
 }
 
 #ifdef CONFIG_SMP
@@ -483,15 +484,16 @@ void xnshadow_rpi_check(void)
 	 * otherwise, we would have to mask them while testing the
 	 * queue for emptiness _and_ demoting the boost level.
 	 */
-	struct xnrpi *rpislot = &gatekeeper[rthal_processor_id()].rpislot;
+	int cpu = rthal_processor_id();
+	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
 	int norpi;
  
  	xnlock_get(&rpislot->lock);
  	norpi = sched_emptypq_p(&rpislot->threadq);
  	xnlock_put(&rpislot->lock);
 
-	if (norpi && xnpod_root_priority() != XNCORE_IDLE_PRIO)
-		xnpod_renice_root(XNCORE_IDLE_PRIO);
+	if (norpi && xnpod_root_priority(cpu) != XNCORE_IDLE_PRIO)
+		xnpod_renice_root(cpu, XNCORE_IDLE_PRIO);
 }
 
 #endif	/* CONFIG_SMP */
@@ -502,7 +504,7 @@ void xnshadow_rpi_check(void)
 #define rpi_init_gk(gk)		do { } while(0)
 #define rpi_clear_local(t)	do { } while(0)
 #define rpi_clear_remote(t)	do { } while(0)
-#define rpi_push(t)		do { } while(0)
+#define rpi_push(t, cpu)	do { } while(0)
 #define rpi_pop(t)		do { } while(0)
 #define rpi_update(t)		do { } while(0)
 #define rpi_switch(n)		do { } while(0)
@@ -1209,7 +1211,7 @@ void xnshadow_relax(int notify)
 
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
-	rpi_push(thread);
+	rpi_push(thread, rthal_processor_id());
 
 	clear_task_nowakeup(current);
 
@@ -1469,7 +1471,9 @@ void xnshadow_start(xnthread_t *thread)
 {
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 
-	rpi_push(thread);	/* A shadow always starts in relaxed mode. */
+	/* A shadow always starts in relaxed mode. */
+	rpi_push(thread, xnsched_cpu(thread->sched));
+
 	trace_mark(xn_nucleus_shadow_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 	xnpod_resume_thread(thread, XNDORMANT);
