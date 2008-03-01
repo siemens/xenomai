@@ -1,3 +1,7 @@
+2008-03-01  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* include/asm-generic/system.h (xnlock_put): Add proper barrier.
+
 2008-02-15  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/posix/thread.c (__wrap_pthread_create): Follow more
