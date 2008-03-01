@@ -308,6 +308,12 @@ static inline void xnlock_put (xnlock_t *lock)
 		    xnlock_stats[cpuid].line = lock->line;
 	    }
 #endif /* XENO_DEBUG(NUCLEUS) */
+	    /*
+	     * Make sure all data written inside the lock is visible to
+	     * other CPUs before we release the lock.
+	     */
+	    xnarch_memory_barrier();
+
 	    atomic_set(&lock->owner, ~0);
     }
 #if XENO_DEBUG(NUCLEUS)
