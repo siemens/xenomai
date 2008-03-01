@@ -2,6 +2,12 @@
 
 	* include/asm-generic/system.h (xnlock_put): Add proper barrier.
 
+	* ksrc/nucleus/shadow.c, include/nucleus/pod.h: Let rpi_push,
+	xnpod_renice_root, and xnpod_root_priority work on specified CPU
+	instead of the current one. Issue rpi_push for the new thread's
+	target CPU in xnshadow_start, which may be different from the
+	current one.
+
 2008-02-15  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/posix/thread.c (__wrap_pthread_create): Follow more
