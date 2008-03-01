@@ -94,32 +94,6 @@ static void rthal_timer_set_periodic(void)
 	rthal_critical_exit(flags);
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#include <asm/smpboot.h>
-static inline void send_IPI_allbutself(int vector)
-{
-	unsigned long flags;
-
-	rthal_local_irq_save_hw(flags);
-	apic_wait_icr_idle();
-	apic_write_around(APIC_ICR,
-			  APIC_DM_FIXED | APIC_DEST_ALLBUT | INT_DEST_ADDR_MODE
-			  | vector);
-	rthal_local_irq_restore_hw(flags);
-}
-#elif defined(__i386__)
-#include <mach_ipi.h>
-#endif
-
-DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
-{
-#ifdef CONFIG_SMP
-	send_IPI_allbutself(LOCAL_TIMER_VECTOR);
-#endif
-	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
-	return IRQ_HANDLED;
-}
-
 static int cpu_timers_requested;
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
@@ -198,6 +172,32 @@ out:
 }
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#include <asm/smpboot.h>
+static inline void send_IPI_allbutself(int vector)
+{
+	unsigned long flags;
+
+	rthal_local_irq_save_hw(flags);
+	apic_wait_icr_idle();
+	apic_write_around(APIC_ICR,
+			  APIC_DM_FIXED | APIC_DEST_ALLBUT | INT_DEST_ADDR_MODE
+			  | vector);
+	rthal_local_irq_restore_hw(flags);
+}
+#elif defined(__i386__)
+#include <mach_ipi.h>
+#endif
+
+DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
+{
+#ifdef CONFIG_SMP
+	send_IPI_allbutself(LOCAL_TIMER_VECTOR);
+#endif
+	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
+	return IRQ_HANDLED;
+}
 
 int rthal_timer_request(void (*tick_handler)(void), int cpu)
 {
