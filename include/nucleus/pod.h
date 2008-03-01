@@ -333,21 +333,21 @@ static inline void xnpod_reset_watchdog(xnsched_t *sched)
 
 #define xnpod_timeset_p()	(!!testbits(nkpod->status,XNTMSET))
 
-static inline void xnpod_renice_root(int prio)
+static inline void xnpod_renice_root(int cpu, int prio)
 {
 	xnthread_t *rootcb;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	rootcb = xnpod_current_root();
+	rootcb = &xnpod_sched_slot(cpu)->rootcb;
 	rootcb->cprio = prio;
 	xnpod_schedule_runnable(rootcb, XNPOD_SCHEDLIFO | XNPOD_NOSWITCH);
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-static inline int xnpod_root_priority(void)
+static inline int xnpod_root_priority(int cpu)
 {
-	return xnthread_current_priority(xnpod_current_root());
+	return xnthread_current_priority(&xnpod_sched_slot(cpu)->rootcb);
 }
 
 static inline int xnpod_get_qdir(xnpod_t *pod)
