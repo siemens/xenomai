@@ -1,3 +1,10 @@
+2008-03-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_delete_thread): Only send SIGKILL to
+	userland threads deleted from a kernel-based Xenomai context,
+	assuming the interface library will have called pthread_cancel()
+	for the target thread in all other cases.
+
 2008-03-01  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/asm-generic/system.h (xnlock_put): Add proper barrier.

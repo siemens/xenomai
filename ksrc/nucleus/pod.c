@@ -1152,9 +1152,11 @@ void xnpod_delete_thread(xnthread_t *thread)
 	 * 2) Make sure shadow threads are removed from the system on
 	 * behalf of their own context, by sending them a lethal
 	 * signal when it is not the case instead of wiping out their
-	 * TCB. In such a case, the deletion is asynchronous, and
-	 * killed thread will later enter xnpod_delete_thread() from
-	 * the exit notification handler (I-pipe).
+	 * TCB. We only do that whenever the caller is a kernel-based
+	 * Xenomai context. In such a case, the deletion is
+	 * asynchronous, and killed thread will later enter
+	 * xnpod_delete_thread() from the exit notification handler
+	 * (I-pipe).
 	 *
 	 * Sidenote: xnpod_delete_thread() might be called for
 	 * cleaning up a just created shadow task which has not been
@@ -1178,7 +1180,14 @@ void xnpod_delete_thread(xnthread_t *thread)
 	if (xnthread_user_task(thread) != NULL &&
 	    !xnthread_test_state(thread, XNDORMANT) &&
 	    !xnpod_current_p(thread)) {
-		xnshadow_send_sig(thread, SIGKILL, 1);
+		if (!xnpod_userspace_p())
+			xnshadow_send_sig(thread, SIGKILL, 1);
+		/*
+		 * Otherwise, assume the interface library has issued
+		 * pthread_cancel on the target thread, which should
+		 * cause the current service to be called for
+		 * self-deletion of that thread.
+		 */
 		goto unlock_and_exit;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
