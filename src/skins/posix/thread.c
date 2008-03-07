@@ -281,7 +281,11 @@ static __attribute__((constructor)) void pse51_thread_init(void)
 {
 	char vers[128];
 	pthread_attr_init(&default_attr);
+#ifdef _CS_GNU_LIBPTHREAD_VERSION
 	linuxthreads =
 		!confstr(_CS_GNU_LIBPTHREAD_VERSION, vers, sizeof(vers))
 		|| strstr(vers, "linuxthreads");
+#else /* !_CS_GNU_LIBPTHREAD_VERSION */
+	linuxthreads = 1;
+#endif /* !_CS_GNU_LIBPTHREAD_VERSION */
 }
