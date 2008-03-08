@@ -836,7 +836,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 #if defined(CONFIG_XENO_OPT_SHIRQ_LEVEL) || defined(CONFIG_XENO_OPT_SHIRQ_EDGE)
 	intr = xnirqs[irq].handlers;
 	if (intr) {
-		strcpy(p, "	   "); p += 8;
+		strcpy(p, "	   "); p += 4;
 
 		do {
 			*p = ' '; p += 1;
@@ -848,7 +848,7 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 #else /* !CONFIG_XENO_OPT_SHIRQ_LEVEL && !CONFIG_XENO_OPT_SHIRQ_EDGE */
 	intr = rthal_irq_cookie(&rthal_domain, irq);
 	if (intr) {
-		strcpy(p, "	    "); p += 9;
+		strcpy(p, "	    "); p += 5;
 		strcpy(p, intr->name); p += strlen(intr->name);
 	}
 #endif /* CONFIG_XENO_OPT_SHIRQ_LEVEL || CONFIG_XENO_OPT_SHIRQ_EDGE */

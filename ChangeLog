@@ -1,3 +1,8 @@
+2007-03-08  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/nucleus/intr.c (xnintr_irq_proc): Fix whitespace damage
+	causing string copy bug.
+	
 2008-03-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/posix/mq.c (__wrap_mq_notify): Fix error path.
