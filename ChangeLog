@@ -5,6 +5,8 @@
 	
 2008-03-08  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/x86/patches: Update to 2.6.24-2.0-04.
+
 	* src/skins/posix/mq.c (__wrap_mq_notify): Fix error path.
 
 2008-03-06  Philippe Gerum  <rpm@xenomai.org>
