@@ -281,4 +281,19 @@ unsigned long __va_to_kva(unsigned long va);
 #define trace_mark(ev, fmt, args...)	do { } while (0)
 #endif /* CONFIG_MARKERS */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+static inline unsigned long hweight_long(unsigned long w)
+{
+#if BITS_PER_LONG == 64
+	return hweight64(w);
+#else /* 32 bits */
+	return hweight32(w);
+#endif /* 32 bits */
+}
+
+#define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
+unsigned long find_next_bit(const unsigned long *addr,
+                            unsigned long size, unsigned long offset);
+#endif /* linux version < 2.6.0 */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

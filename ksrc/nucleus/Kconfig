@@ -228,6 +228,9 @@ config XENO_OPT_SHIRQ
 	are allowed to control dedicated hardware devices which are
 	configured to share the same interrupt line.
 
+config XENO_OPT_SELECT
+	bool
+
 menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC

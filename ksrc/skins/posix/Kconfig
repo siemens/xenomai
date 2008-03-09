@@ -1,5 +1,5 @@
 menuconfig XENO_SKIN_POSIX
-	depends on XENO_OPT_NUCLEUS
+	depends on XENO_OPT_NUCLEUS 
 	tristate "POSIX API"
 	default y
 	help
@@ -46,6 +46,21 @@ config XENO_OPT_POSIX_INTR
 	do not intend to handle interrupts in POSIX skin programs (and using the
 	RTDM skin is the preferred way of implementing drivers), leave this
 	option unselected.
+
+if XENO_SKIN_POSIX = y && XENO_SKIN_RTDM = m
+	comment "Note: Support for select is not available if the POSIX skin"
+	comment "is built-in and the RTDM skin is compiled as a module."
+endif
+
+config XENO_OPT_POSIX_SELECT
+	bool "Select syscall"
+	select XENO_OPT_SELECT
+	depends on XENO_SKIN_POSIX != y || XENO_SKIN_RTDM != m
+	help
+
+	This option allows applications using the Xenomai POSIX skin in
+	user-space to use the "select" syscall with Xenomai POSIXK skin file
+	descriptors.
 
 config XENO_OPT_DEBUG_POSIX
 	bool "Debugging support"

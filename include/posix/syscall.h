@@ -100,6 +100,7 @@
 #define __pse51_condattr_setpshared   74
 #define __pse51_thread_getschedparam  75
 #define __pse51_thread_kill           76
+#define __pse51_select                77
 
 #ifdef __KERNEL__
 

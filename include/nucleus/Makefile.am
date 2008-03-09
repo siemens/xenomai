@@ -15,6 +15,7 @@ includesub_HEADERS = \
 	ppd.h \
 	queue.h \
 	registry.h \
+	select.h \
 	shadow.h \
 	stat.h \
 	synch.h \

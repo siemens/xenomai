@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/select.h>
 
 /* sched */
 int __real_pthread_setschedparam(pthread_t thread,
@@ -234,4 +235,12 @@ void *__real_mmap(void *addr,
 int __real_munmap(void *addr, size_t len)
 {
 	return munmap(addr, len);
+}
+
+int __real_select (int __nfds, fd_set *__restrict __readfds,
+		   fd_set *__restrict __writefds,
+		   fd_set *__restrict __exceptfds,
+		   struct timeval *__restrict __timeout)
+{
+	return select(__nfds, __readfds, __writefds, __exceptfds, __timeout);
 }
