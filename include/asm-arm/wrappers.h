@@ -31,7 +31,7 @@
 	unsigned long flag, sum; \
 	__asm__("adds %1, %2, %3; sbcccs %1, %1, %0; movcc %0, #0" \
 		: "=&r" (flag), "=&r" (sum) \
-		: "r" (addr), "Ir" (size), "0" ((task)->thread_info->addr_limit) \
+		: "r" (addr), "Ir" (size), "0" (task_thread_info(task)->addr_limit) \
 		: "cc"); \
 	(flag == 0); })
 
