@@ -116,7 +116,7 @@ struct xnselector;
 #define xnselect_init(block)
 #define xnselect_bind(select_block,binding,selector,type,bit_index,state) \
 	({ -EBADF; })
-#define xnselect_signal(block, state) ({ 0; })
+#define xnselect_signal(block, state) ({ int __ret = 0; __ret; })
 #define xnselect_destroy(block)
 #endif /* !CONFIG_XENO_OPT_SELECT */
 
