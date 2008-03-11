@@ -1,4 +1,7 @@
-2008-03-11  Philippe Gerum  <rpm@eclipse>
+2008-03-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/switch_32.S: Assume that CPU_FTR_SPE may not
+	exist in outdated kernels.
 
 	* ksrc/skins/vxworks: Add auto-cleanup support for message queues
 	and semaphores.
