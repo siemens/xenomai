@@ -1,3 +1,8 @@
+2008-03-11  Philippe Gerum  <rpm@eclipse>
+
+	* ksrc/skins/vxworks: Add auto-cleanup support for message queues
+	and semaphores.
+
 2008-03-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.24-arm-1.9-00.

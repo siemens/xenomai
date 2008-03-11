@@ -20,8 +20,6 @@
 
 #include <vxworks/defs.h>
 
-static xnqueue_t wind_msgq_q;
-
 static int msgq_destroy_internal(wind_msgq_t *queue);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
@@ -95,15 +93,11 @@ static xnpnode_t msgq_pnode = {
 
 void wind_msgq_init(void)
 {
-	initq(&wind_msgq_q);
 }
 
 void wind_msgq_cleanup(void)
 {
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&wind_msgq_q)) != NULL)
-		msgq_destroy_internal(link2wind_msgq(holder));
+	wind_msgq_flush_rq(&__wind_global_rholder.msgQq);
 }
 
 /* free_msg: return a message to the free list */
@@ -171,9 +165,10 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 
 	queue->magic = WIND_MSGQ_MAGIC;
 	queue->msg_length = length;
-
 	queue->free_list = NULL;
 	initq(&queue->msgq);
+	inith(&queue->rlink);
+	queue->rqueue = &wind_get_rholder()->msgQq;
 
 	/* init of the synch object : */
 	if (flags & MSG_Q_PRIORITY)
@@ -186,10 +181,8 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 	for (i = 0; i < nb_msgs; ++i, msgs_mem += msg_size)
 		free_msg(queue, (wind_msg_t *)msgs_mem);
 
-	inith(&queue->link);
-
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&wind_msgq_q, &queue->link);
+	appendq(queue->rqueue, &queue->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -402,7 +395,7 @@ static int msgq_destroy_internal(wind_msgq_t *queue)
 	xnregistry_remove(queue->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 	wind_mark_deleted(queue);
-	removeq(&wind_msgq_q, &queue->link);
+	removeq(queue->rqueue, &queue->rlink);
 	xnfree(queue);
 	return s;
 }

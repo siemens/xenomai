@@ -1140,11 +1140,12 @@ static void *__wind_shadow_eventcb(int event, void *data)
 			return ERR_PTR(-ENOMEM);
 
 		initq(&rh->wdq);
-
 		/* A single server thread pends on this. */
 		xnsynch_init(&rh->wdsynch, XNSYNCH_FIFO);
 		initq(&rh->wdpending);
 		rh->wdcount = 0;
+		initq(&rh->msgQq);
+		initq(&rh->semq);
 
 		return &rh->ppd;
 
@@ -1152,9 +1153,10 @@ static void *__wind_shadow_eventcb(int event, void *data)
 
 		rh = ppd2rholder((xnshadow_ppd_t *) data);
 		wind_wd_flush_rq(&rh->wdq);
-
 		xnsynch_destroy(&rh->wdsynch);
 		/* No need to reschedule: all our threads have been zapped. */
+		wind_msgq_flush_rq(&rh->msgQq);
+		wind_sem_flush_rq(&rh->semq);
 
 		xnarch_free_host_mem(rh, sizeof(*rh));
 
