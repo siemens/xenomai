@@ -1,3 +1,7 @@
+2008-03-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.24-arm-1.9-00.
+
 2008-03-08  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/native/task.c: Call pthread_exit() to properly cleanup
