@@ -26,8 +26,6 @@
 
 #define WIND_SEM_DEL_SAFE XNSYNCH_SPARE0
 
-static xnqueue_t wind_sem_q;
-
 static const sem_vtbl_t semb_vtbl;
 static const sem_vtbl_t semc_vtbl;
 static const sem_vtbl_t semm_vtbl;
@@ -102,15 +100,11 @@ static xnpnode_t sem_pnode = {
 
 void wind_sem_init(void)
 {
-	initq(&wind_sem_q);
 }
 
 void wind_sem_cleanup(void)
 {
-	xnholder_t *holder;
-
-	while ((holder = getheadq(&wind_sem_q)) != NULL)
-		sem_destroy_internal(link2wind_sem(holder));
+	wind_sem_flush_rq(&__wind_global_rholder.semq);
 }
 
 SEM_ID semBCreate(int flags, SEM_B_STATE state)
@@ -429,13 +423,14 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 	check_alloc(wind_sem_t, sem, return 0);
 
 	xnsynch_init(&sem->synchbase, (xnflags_t)flags);
-	inith(&sem->link);
 	sem->magic = WIND_SEM_MAGIC;
 	sem->count = count;
 	sem->vtbl = vtbl;
+	inith(&sem->rlink);
+	sem->rqueue = &wind_get_rholder()->semq;
 
 	xnlock_get_irqsave(&nklock, s);
-	appendq(&wind_sem_q, &sem->link);
+	appendq(sem->rqueue, &sem->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	{
@@ -464,7 +459,7 @@ static void sem_destroy_internal(wind_sem_t *sem)
 	xnregistry_remove(sem->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 	wind_mark_deleted(sem);
-	removeq(&wind_sem_q, &sem->link);
+	removeq(sem->rqueue, &sem->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnfree(sem);

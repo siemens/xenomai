@@ -41,6 +41,9 @@ typedef struct wind_resource_holder {
 	xnsynch_t wdsynch;	/* Per-process synch for watchdog server task. */
 	xnqueue_t wdpending;	/* Elapsed watchdogs to notify to user-space. */
 
+	xnqueue_t msgQq;	/* Msg queues created by the process. */
+	xnqueue_t semq;		/* Semaphores created by the process. */
+
 } wind_rholder_t;
 
 extern wind_rholder_t __wind_global_rholder;

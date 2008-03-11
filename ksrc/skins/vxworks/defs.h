@@ -62,10 +62,6 @@ struct wind_sem {
 
     unsigned int magic;
 
-    xnholder_t link;
-
-#define link2wind_sem(ln) container_of(ln, wind_sem_t, link)
-
     xnsynch_t synchbase;
 
 #define synch2wind_sem(syncb) container_of(syncb, wind_sem_t, synchbase)
@@ -85,8 +81,17 @@ struct wind_sem {
     
     xnthread_t *owner;
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+#define rlink2sem(ln)	container_of(ln, wind_sem_t, rlink)
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
     const sem_vtbl_t * vtbl;
 };
+
+static inline void wind_sem_flush_rq(xnqueue_t *rq)
+{
+	wind_flush_rq(wind_sem_t, rq, sem);
+}
 
 typedef struct wind_msg {
 
@@ -110,10 +115,6 @@ typedef struct wind_msgq {
 
     xnqueue_t msgq;             /* queue of messages available for reading */
 
-    xnholder_t link;            /* link in wind_msgq_t */
-
-#define link2wind_msgq(ln) container_of(ln, wind_msgq_t, link)
-
     xnsynch_t synchbase;        /* pended readers or writers */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
@@ -121,7 +122,16 @@ typedef struct wind_msgq {
     char name[XNOBJECT_NAME_LEN];
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
+    xnholder_t rlink;		/* !< Link in resource queue. */
+#define rlink2msgQ(ln)	container_of(ln, wind_msgq_t, rlink)
+    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
 } wind_msgq_t;
+
+static inline void wind_msgq_flush_rq(xnqueue_t *rq)
+{
+	wind_flush_rq(wind_msgq_t, rq, msgQ);
+}
 
 typedef struct wind_tcb wind_task_t;
 
