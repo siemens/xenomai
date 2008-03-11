@@ -1,3 +1,7 @@
+2008-03-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.24-arm-1.9-00.
+
 2008-03-09  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix, src/skins/posix: Support for the select
