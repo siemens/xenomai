@@ -438,12 +438,16 @@ int rt_cond_broadcast(RT_COND *cond)
 
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
-	int err, kicked = 0;
+	int err = 0, kicked = 0;
 	xnthread_t *thread;
+	int lockcnt;
 	spl_t s;
 
 	if (timeout == TM_NONBLOCK)
 		return -EWOULDBLOCK;
+
+	if (xnpod_unblockable_p())
+		return -EPERM;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -454,12 +458,33 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 		goto unlock_and_exit;
 	}
 
-	err = rt_mutex_release(mutex);
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 
-	if (err)
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
 		goto unlock_and_exit;
+	}
 
 	thread = xnpod_current_thread();
+
+	if (thread != xnsynch_owner(&mutex->synch_base)) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
+
+	/*
+	 * We can't use rt_mutex_release since that might reschedule
+	 * before enter xnsynch_sleep_on, hence most of the code is
+	 * duplicated here.
+	 */
+	lockcnt = mutex->lockcnt; /* Leave even if mutex is nested */
+
+	mutex->lockcnt = 0;
+
+	if (xnsynch_wakeup_one_sleeper(&mutex->synch_base)) {
+		mutex->lockcnt = 1;
+		/* Scheduling deferred */
+	}
 
 	xnsynch_sleep_on(&cond->synch_base, timeout, XN_RELATIVE);
 
@@ -473,6 +498,8 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 	}
 
 	rt_mutex_acquire(mutex, TM_INFINITE);
+
+	mutex->lockcnt = lockcnt; /* Adjust lockcnt */
 
 	if (kicked)
 		xnthread_set_info(thread, XNKICKED);
