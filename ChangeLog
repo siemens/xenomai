@@ -1,3 +1,10 @@
+2008-03-12  Anders Blomdell <anders.blomdell@control.lth.se>
+
+	* ksrc/skins/native/cond.c (rt_cond_wait): Fix race due to an
+	unwanted rescheduling between the mutex is released and the sleep
+	state is entered. Also properly release nested locks before
+	attempting to sleep.
+
 2008-03-08  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* src/skins/native/task.c: Call pthread_exit() to properly cleanup
