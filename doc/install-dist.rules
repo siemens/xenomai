@@ -11,8 +11,6 @@
 #
 # PDF_DOCSDIR & PS_DOCSDIR: same thing for pdf and ps files.
 
-docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
-
 doc_top_distdir=$(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT=$(doc_top_distdir)/doc/generated
 
