@@ -946,7 +946,6 @@ static int __wind_wd_create(struct pt_regs *regs)
 	if (!wd)
 		return wind_errnoget();
 
-	wd->rh = wind_get_rholder();
 	wdog_id = wd->handle;
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &wdog_id,
