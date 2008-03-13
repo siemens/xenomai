@@ -1,3 +1,10 @@
+2008-03-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/system.h: Disable heap space scattering for
+	I-pipe/kernel combos >= 2.6.20-1.7-12. This allows allocating
+	chunks of contiguous memory > 128Kb from Xenomai heaps on this
+	arch.
+
 2008-03-12  Anders Blomdell <anders.blomdell@control.lth.se>
 
 	* ksrc/skins/native/cond.c (rt_cond_wait): Fix race due to an
@@ -12,10 +19,6 @@
 
 	* ksrc/skins/vxworks: Add auto-cleanup support for message queues
 	and semaphores.
-
-2008-03-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
-
-	* ksrc/arch/arm/patches: Upgrade to 2.6.24-arm-1.9-00.
 
 2008-03-09  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
