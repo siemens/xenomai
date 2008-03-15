@@ -92,7 +92,6 @@ config XENO_OPT_NATIVE_MUTEX
 config XENO_OPT_NATIVE_COND
 	bool "Condition variables"
 	default y
-	enable XENO_OPT_NATIVE_MUTEX
 	help
 	
 	Condition variables are synchronization objects which
