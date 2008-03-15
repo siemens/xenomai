@@ -103,9 +103,10 @@ list. Here are the known variations:
 
 - When called from user-space, all blocking services might return
   prematurely with the POSIX error value "EINTR", whenever a Linux
-  signal is received by the sleeping task. This also includes
-  taskDelete() which might need to wait for the deleted task to exit a
-  safe section (taskSafe/taskUnsafe) before proceeding.
+  signal is received by the sleeping task and the signal action flag
+  clears SA_RESTART. This also includes taskDelete() which might need
+  to wait for the deleted task to exit a safe section
+  (taskSafe/taskUnsafe) before proceeding.
 
 Module parameters
 =================
