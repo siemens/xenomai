@@ -1,10 +1,8 @@
-2008-03-12  Philippe Gerum  <rpm@xenomai.org>
-
-	* include/asm-powerpc/system.h: Disable heap space scattering for
-	I-pipe/kernel combos >= 2.6.20-1.7-12. This allows allocating
-	chunks of contiguous memory > 128Kb from Xenomai heaps on this
-	arch.
-
+2008-03-16  Philippe Gerum  <rpm@xenomai.org>
+ 
+ 	* include/asm-generic/wrappers.h (wrap_remap_io_page_range): Set
+ 	pgprot_noncached() into the vma flags for MMIO mapping requests.
+ 
 2008-03-12  Anders Blomdell <anders.blomdell@control.lth.se>
 
 	* ksrc/skins/native/cond.c (rt_cond_wait): Fix race due to an
