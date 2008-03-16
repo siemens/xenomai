@@ -53,6 +53,8 @@ int SKIN_INIT(vxworks)
 	int err;
 
 	initq(&__wind_global_rholder.wdq);
+	initq(&__wind_global_rholder.msgQq);
+	initq(&__wind_global_rholder.semq);
 
 	/* The following fields are unused in the global holder;
 	   still, we initialize them not to leave such data in an
