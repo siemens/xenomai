@@ -67,6 +67,10 @@ unsigned long __va_to_kva(unsigned long va);
     vma->vm_flags |= VM_RESERVED; \
     remap_page_range(from,to,size,prot); \
 })
+#define wrap_remap_kmem_page_range(vma,from,to,size,prot) ({ \
+    vma->vm_flags |= VM_RESERVED; \
+    remap_page_range(from,to,size,prot); \
+})
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task,(task)->processor)
 #define wrap_enter_lazy_tlb(mm,task)	\
@@ -206,6 +210,10 @@ unsigned long __va_to_kva(unsigned long va);
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
     remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot);		\
     })
+#define wrap_remap_kmem_page_range(vma,from,to,size,prot)  ({		\
+    /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
+    remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot);		\
+    })
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,10)
 /* Actually, this is a best-effort since we don't have
  * vm_insert_page(), and has the unwanted side-effet of setting the
@@ -219,12 +227,20 @@ unsigned long __va_to_kva(unsigned long va);
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
     remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot);		\
     })
+#define wrap_remap_kmem_page_range(vma,from,to,size,prot)  ({		\
+    /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
+    remap_pfn_range(vma,from,(to) >> PAGE_SHIFT,size,prot);		\
+    })
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
     remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({	\
+      vma->vm_flags |= VM_RESERVED;				\
+      remap_page_range(vma,from,to,size,prot);			\
+    })
+#define wrap_remap_kmem_page_range(vma,from,to,size,prot) ({	\
       vma->vm_flags |= VM_RESERVED;				\
       remap_page_range(vma,from,to,size,prot);			\
     })
