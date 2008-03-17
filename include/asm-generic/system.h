@@ -414,6 +414,15 @@ static inline int xnarch_remap_io_page_range(struct vm_area_struct *vma,
     return wrap_remap_io_page_range(vma,from,to,size,prot);
 }
 
+static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
+					       unsigned long from,
+					       unsigned long to,
+					       unsigned long size,
+					       pgprot_t prot)
+{
+    return wrap_remap_kmem_page_range(vma,from,to,size,prot);
+}
+
 #ifdef __cplusplus
 }
 #endif
