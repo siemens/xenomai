@@ -1,3 +1,8 @@
+2008-03-16  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/skins/rtdm/drvlib.c (rtdm_mmap_buffer): Differentiate between
+	mapping of kmalloc'ed vs. I/O memory.
+
 2008-03-16  Philippe Gerum  <rpm@xenomai.org>
  
  	* include/asm-generic/wrappers.h (wrap_remap_io_page_range): Set
