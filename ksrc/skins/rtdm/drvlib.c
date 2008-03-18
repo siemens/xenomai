@@ -1739,8 +1739,12 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 		return 0;
 	} else
 #endif /* CONFIG_MMU */
+	if (mmap_data->src_paddr)
 		return xnarch_remap_io_page_range(vma, maddr, paddr,
 						  size, PAGE_SHARED);
+	else
+		return xnarch_remap_kmem_page_range(vma, maddr, paddr,
+						    size, PAGE_SHARED);
 }
 
 static struct file_operations rtdm_mmap_fops = {
