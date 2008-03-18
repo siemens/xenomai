@@ -988,7 +988,7 @@
 	invocations silently by switching to NRT mode (we can now rely on
 	close_nrt being always available).
 
-2007-07-19  Sebastian Smolorz  <ssm@emlix.com>
+2007-07-19  Sebastian Smolorz  <sesmo@gmx.net>
 
 	* include/asm-arm/syscall.h: Add user-space access to
 	tsc emulation for decrementing counters.
@@ -2440,7 +2440,7 @@
 	* include/asm-blackfin/syscall.h: Add weak placeholders for
 	shm_open and shm_unlink.
 
-2006-12-21  Sebastian Smolorz <ssm@emlix.com>, Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2006-12-21  Sebastian Smolorz <sesmo@gmx.net>, Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.{14,15}-1.5-03, adding
 	support for the Samsung S3C24xx platform and the tracer.
