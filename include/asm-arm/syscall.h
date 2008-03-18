@@ -4,7 +4,7 @@
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
  *
- * Copyright (C) 2007 Sebastian Smolorz <ssm@emlix.com>
+ * Copyright (C) 2007 Sebastian Smolorz <sesmo@gmx.net>
  *	Support for TSC emulation in user space for decrementing counters
  *
  * Xenomai is free software; you can redistribute it and/or modify
