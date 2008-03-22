@@ -208,6 +208,14 @@ static void xnpod_flush_heap(xnheap_t *heap,
 	xnarch_free_host_mem(extaddr, extsize);
 }
 
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+static void xnpod_flush_stackpool(xnheap_t *heap,
+				  void *extaddr, u_long extsize, void *cookie)
+{
+	xnarch_free_stack_mem(extaddr, extsize);
+}
+#endif
+
 /*! 
  * \fn int xnpod_init(void)
  * \brief Initialize the core pod.
@@ -340,12 +348,37 @@ int xnpod_init(void)
 #else /* !XNARCH_SCATTER_HEAPSZ */
 	heapaddr = xnarch_alloc_host_mem(xnmod_sysheap_size);
 
-	if (!heapaddr ||
+	if (heapaddr == NULL ||
 	    xnheap_init(&kheap, heapaddr, xnmod_sysheap_size,
 			XNPOD_PAGESIZE) != 0) {
 		err = -ENOMEM;
 		goto fail;
 	}
+
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	/*
+	 * We have to differentiate the system heap memory from the
+	 * pool where the kernel thread stacks will be obtained from,
+	 * because on some architectures, vmalloc memory may not be
+	 * accessed while running in physical addressing mode
+	 * (e.g. exception trampoline code on powerpc with standard
+	 * MMU support - CONFIG_PPC_STD_MMU). Meanwhile, since we want
+	 * to allow the system heap to be larger than 128Kb in
+	 * contiguous memory, we can't restrict to using kmalloc()
+	 * memory for it either.  Therefore, we manage a private stack
+	 * pool for kernel-based threads which will be populated with
+	 * the kind of memory the underlying arch requires, still
+	 * allowing the system heap to rely on a vmalloc'ed segment.
+	 */
+	heapaddr = xnarch_alloc_stack_mem(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024);
+
+	if (heapaddr == NULL ||
+	    xnheap_init(&kstacks, heapaddr, CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024,
+			XNPOD_PAGESIZE) != 0) {
+		err = -ENOMEM;
+		goto fail;
+	}
+#endif /* CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0 */
 #endif /* XNARCH_SCATTER_HEAPSZ */
 
 	for (cpu = 0; cpu < nr_cpus; cpu++) {
@@ -518,6 +551,10 @@ void xnpod_shutdown(int xtype)
 	xnlock_get_irqsave(&nklock, s);
 
 	xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
+
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
+#endif
 
       unlock_and_exit:
 

@@ -107,6 +107,10 @@ typedef struct xnheap {
 
 extern xnheap_t kheap;
 
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+extern xnheap_t kstacks;
+#endif
+
 #define xnheap_extentsize(heap)		((heap)->extentsize)
 #define xnheap_page_size(heap)		((heap)->pagesize)
 #define xnheap_page_count(heap)		((heap)->npages)

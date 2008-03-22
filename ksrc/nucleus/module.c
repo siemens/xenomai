@@ -905,10 +905,17 @@ static int heap_read_proc(char *page,
 	if (!xnpod_active_p())
 		return -ESRCH;
 
-	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu\n",
+	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu  (main heap)\n",
 		      xnheap_usable_mem(&kheap),
 		      xnheap_used_mem(&kheap),
 		      xnheap_page_size(&kheap));
+
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	len += sprintf(page + len, "size=%lu:used=%lu:pagesz=%lu  (stack pool)\n",
+		       xnheap_usable_mem(&kstacks),
+		       xnheap_used_mem(&kstacks),
+		       xnheap_page_size(&kstacks));
+#endif
 
 	len -= off;
 	if (len <= off + count)

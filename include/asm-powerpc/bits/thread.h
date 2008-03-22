@@ -49,7 +49,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
         (tcb)->stackbase = NULL; \
 	__err = 0; \
     } else { \
-        (tcb)->stackbase = xnmalloc(stacksize); \
+       (tcb)->stackbase = xnheap_alloc(&kstacks, stacksize);	\
         __err = (tcb)->stackbase ? 0 : -ENOMEM; \
     } \
     __err; \
@@ -58,7 +58,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 #define xnarch_free_stack(tcb) \
 do { \
       if ((tcb)->stackbase) \
-	  xnfree((tcb)->stackbase); \
+	  xnheap_free(&kstacks, (tcb)->stackbase);	\
 } while(0)
 
 #endif /* !_XENO_ASM_POWERPC_BITS_THREAD_H */
