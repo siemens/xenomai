@@ -8,6 +8,9 @@
 	pool for kernel threads, so that we can control the type of memory
 	used there, depending on per-arch requirements.
 
+	* ksrc/nucleus/pod.c, include/asm-powerpc/system.h: Remove support
+	for scattered heap memory (now useless with private stack pool).
+
 2008-03-16  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_mmap_buffer): Differentiate between

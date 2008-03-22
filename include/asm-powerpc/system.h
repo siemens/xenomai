@@ -29,14 +29,9 @@
 #include <asm-generic/xenomai/system.h>
 
 #ifdef CONFIG_PPC64
-#define XNARCH_THREAD_STACKSZ   16384
+#define XNARCH_THREAD_STACKSZ   8182
 #else
 #define XNARCH_THREAD_STACKSZ   4096
-/* FIXME: Work-around to bypass the issues raised by using vmalloc'ed
-   memory over Xenomai kernel threads. We are possibly mishandling
-   minor faults aimed at kernel mapping propagation on this arch --
-   this should be fixed at Adeos level. */
-#define XNARCH_SCATTER_HEAPSZ   (128 * 1024)	/* Remain inside kmalloc() bounds. */
 #endif
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
