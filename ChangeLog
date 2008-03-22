@@ -1,5 +1,9 @@
 2008-03-22  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vxworks/taskLib.c (taskSpawn): Fix error path.
+
+2008-03-22  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/nucleus, ksrc/arch, include/asm-*: Introduce private stack
 	pool for kernel threads, so that we can control the type of memory
 	used there, depending on per-arch requirements.
