@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"One Big Rush"
+#define XENO_VERSION_NAME	"Back to Shalla-Bal"
 
-#define XENO_VERSION_STRING	"2.4.2"
+#define XENO_VERSION_STRING	"2.4.3"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
