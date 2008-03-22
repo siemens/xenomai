@@ -304,48 +304,6 @@ int xnpod_init(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef XNARCH_SCATTER_HEAPSZ
-	{
-		int blkcnt, nblk = 0;
-
-		blkcnt = (xnmod_sysheap_size + XNARCH_SCATTER_HEAPSZ - 1) /
-		    XNARCH_SCATTER_HEAPSZ;
-
-		do {
-			heapaddr = xnarch_alloc_host_mem(XNARCH_SCATTER_HEAPSZ);
-
-			if (!heapaddr) {
-				err = -ENOMEM;
-				goto fail;
-			}
-
-			if (nblk == 0) {
-				u_long init_size = xnmod_sysheap_size;
-
-				if (init_size > XNARCH_SCATTER_HEAPSZ)
-					init_size = XNARCH_SCATTER_HEAPSZ;
-
-				err =
-				    xnheap_init(&kheap, heapaddr, init_size,
-						XNPOD_PAGESIZE);
-			} else
-				/* The heap manager wants additional extents to have the
-				   same size than the initial one. */
-				err =
-				    xnheap_extend(&kheap, heapaddr,
-						  XNARCH_SCATTER_HEAPSZ);
-
-			if (err) {
-				if (nblk > 0)
-					xnheap_destroy(&kheap,
-						       &xnpod_flush_heap, NULL);
-
-				goto fail;
-			}
-		}
-		while (++nblk < blkcnt);
-	}
-#else /* !XNARCH_SCATTER_HEAPSZ */
 	heapaddr = xnarch_alloc_host_mem(xnmod_sysheap_size);
 
 	if (heapaddr == NULL ||
@@ -379,7 +337,6 @@ int xnpod_init(void)
 		goto fail;
 	}
 #endif /* CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0 */
-#endif /* XNARCH_SCATTER_HEAPSZ */
 
 	for (cpu = 0; cpu < nr_cpus; cpu++) {
 		sched = xnpod_sched_slot(cpu);
