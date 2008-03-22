@@ -100,6 +100,8 @@ ARM-specific HAL services.
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gf9a1d505ea432f89dd435c3acabb8334">rthal_timer_request</a> (void(*handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)</td></tr>
+
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#g1ff77e4ea7ed60ba6a1b1a61a513058d">rthal_timer_release</a> (int cpu)</td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ge84c63d8728c72e9374da3a86df14d64">rthal_irq_host_request</a> (unsigned irq, rthal_irq_host_handler_t handler, char *name, void *dev_id)</td></tr>
@@ -125,8 +127,6 @@ ARM-specific HAL services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gf11636f94b0a6913241679d84265eba6">rthal_apc_free</a> (int apc)</td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga0e99241b9b16e6a43a4eb0ec144448e">rthal_apc_schedule</a> (int apc)</td></tr>
-
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#g174a498bd8ee10a2279a9f79b9823bf6">rthal_timer_request</a> (void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)</td></tr>
 
 </table>
 <hr><h2>Function Documentation</h2>
@@ -645,7 +645,7 @@ This service can be called from:<p>
 
 <p>
 Release the hardware timer.<p>
-Releases the hardware timer, thus reverting the effect of a previous call to rthal_timer_request(). In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
+Releases the hardware timer, thus reverting the effect of a previous call to <a class="el" href="group__hal.html#gf9a1d505ea432f89dd435c3acabb8334">rthal_timer_request()</a>. In case the timer hardware is shared with Linux, a periodic setup suitable for the Linux kernel will be reset.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>cpu</em>&nbsp;</td><td>The CPU number the timer was grabbed from.</td></tr>
@@ -658,7 +658,7 @@ This service can be called from:<p>
 
 </div>
 </div><p>
-<a class="anchor" name="g174a498bd8ee10a2279a9f79b9823bf6"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="g174a498bd8ee10a2279a9f79b9823bf6" args="(void(*tick_handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)" -->
+<a class="anchor" name="gf9a1d505ea432f89dd435c3acabb8334"></a><!-- doxytag: member="hal.c::rthal_timer_request" ref="gf9a1d505ea432f89dd435c3acabb8334" args="(void(*handler)(void), void(*mode_emul)(enum clock_event_mode mode, struct clock_event_device *cdev), int(*tick_emul)(unsigned long delay, struct clock_event_device *cdev), int cpu)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -697,7 +697,7 @@ This service can be called from:<p>
 
 <p>
 Grab the hardware timer.<p>
-rthal_timer_request() grabs and tunes the hardware timer in oneshot mode in order to clock the master time base.<p>
+<a class="el" href="group__hal.html#gf9a1d505ea432f89dd435c3acabb8334">rthal_timer_request()</a> grabs and tunes the hardware timer in oneshot mode in order to clock the master time base.<p>
 A user-defined routine is registered as the clock tick handler. This handler will always be invoked on behalf of the Xenomai domain for each incoming tick.<p>
 Hooks for emulating oneshot mode for the tick device are accepted when CONFIG_GENERIC_CLOCKEVENTS is defined for the host kernel. Host tick emulation is a way to share the clockchip hardware between Linux and Xenomai, when the former provides support for oneshot timing (i.e. high resolution timers and no-HZ scheduler ticking).<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -710,7 +710,7 @@ Hooks for emulating oneshot mode for the tick device are accepted when CONFIG_GE
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>a positive value is returned on success, representing the duration of a Linux periodic tick expressed as a count of nanoseconds; zero should be returned when the Linux kernel does not undergo periodic timing on the given CPU (e.g. oneshot mode). Otherwise:</dd></dl>
 <ul>
-<li>-EBUSY is returned if the hardware timer has already been grabbed. rthal_timer_request() must be issued before rthal_timer_request() is called again.</li></ul>
+<li>-EBUSY is returned if the hardware timer has already been grabbed. <a class="el" href="group__hal.html#gf9a1d505ea432f89dd435c3acabb8334">rthal_timer_request()</a> must be issued before <a class="el" href="group__hal.html#gf9a1d505ea432f89dd435c3acabb8334">rthal_timer_request()</a> is called again.</li></ul>
 <p>
 <ul>
 <li>-ENODEV is returned if the hardware timer cannot be used. This situation may occur after the kernel disabled the timer due to invalid calibration results; in such a case, such hardware is unusable for any timing duties.</li></ul>
@@ -754,7 +754,7 @@ This service can be called from:<p>
 
 </div>
 </div><p>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Feb 11 12:24:12 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Mar 22 17:58:13 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>

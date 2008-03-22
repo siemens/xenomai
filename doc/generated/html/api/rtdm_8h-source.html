@@ -158,197 +158,201 @@
 <a name="l00247"></a>00247                          <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
 <a name="l00248"></a>00248 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, <span class="keywordtype">int</span> fd,
 <a name="l00249"></a>00249                          <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
-<a name="l00250"></a>00250 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-<a name="l00251"></a>00251 
-<a name="l00252"></a>00252 <span class="comment">/* Define RTDM_NO_DEFAULT_USER_API to switch off the default rt_dev_xxx</span>
-<a name="l00253"></a>00253 <span class="comment"> * interface when providing a customised user API */</span>
-<a name="l00254"></a>00254 <span class="preprocessor">#ifndef RTDM_NO_DEFAULT_USER_API</span>
-<a name="l00255"></a>00255 <span class="preprocessor"></span>
-<a name="l00256"></a>00256 <span class="preprocessor">#ifdef __KERNEL__</span>
-<a name="l00257"></a>00257 <span class="preprocessor"></span>
-<a name="l00258"></a>00258 <span class="preprocessor">#define rt_dev_open(path, oflag, ...)                           \</span>
-<a name="l00259"></a>00259 <span class="preprocessor">        __rt_dev_open(NULL, path, oflag)</span>
-<a name="l00260"></a>00260 <span class="preprocessor"></span>
-<a name="l00261"></a>00261 <span class="preprocessor">#define rt_dev_socket(protocol_family, socket_type, protocol)   \</span>
-<a name="l00262"></a>00262 <span class="preprocessor">        __rt_dev_socket(NULL, protocol_family, socket_type, protocol)</span>
-<a name="l00263"></a>00263 <span class="preprocessor"></span>
-<a name="l00264"></a>00264 <span class="preprocessor">#define rt_dev_close(fd)                                        \</span>
-<a name="l00265"></a>00265 <span class="preprocessor">        __rt_dev_close(NULL, fd)</span>
-<a name="l00266"></a>00266 <span class="preprocessor"></span>
-<a name="l00267"></a>00267 <span class="preprocessor">#define rt_dev_ioctl(fd, request, ...)                          \</span>
-<a name="l00268"></a>00268 <span class="preprocessor">        __rt_dev_ioctl(NULL, fd, request, __VA_ARGS__)</span>
-<a name="l00269"></a>00269 <span class="preprocessor"></span>
-<a name="l00270"></a>00270 <span class="preprocessor">#define rt_dev_read(fd, buf, nbyte)                             \</span>
-<a name="l00271"></a>00271 <span class="preprocessor">        __rt_dev_read(NULL, fd, buf, nbyte)</span>
-<a name="l00272"></a>00272 <span class="preprocessor"></span>
-<a name="l00273"></a>00273 <span class="preprocessor">#define rt_dev_write(fd, buf, nbyte)                            \</span>
-<a name="l00274"></a>00274 <span class="preprocessor">        __rt_dev_write(NULL, fd, buf, nbyte)</span>
-<a name="l00275"></a>00275 <span class="preprocessor"></span>
-<a name="l00276"></a>00276 <span class="preprocessor">#define rt_dev_recvmsg(fd, msg, flags)                          \</span>
-<a name="l00277"></a>00277 <span class="preprocessor">        __rt_dev_recvmsg(NULL, fd, msg, flags)</span>
-<a name="l00278"></a>00278 <span class="preprocessor"></span>
-<a name="l00279"></a>00279 <span class="preprocessor">#define rt_dev_sendmsg(fd, msg, flags)                          \</span>
-<a name="l00280"></a>00280 <span class="preprocessor">        __rt_dev_sendmsg(NULL, fd, msg, flags)</span>
-<a name="l00281"></a>00281 <span class="preprocessor"></span>
-<a name="l00282"></a>00282 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
-<a name="l00283"></a>00283                                       <span class="keyword">struct</span> sockaddr *from,
-<a name="l00284"></a>00284                                       socklen_t *fromlen)
-<a name="l00285"></a>00285 {
-<a name="l00286"></a>00286         <span class="keyword">struct </span>iovec iov;
-<a name="l00287"></a>00287         <span class="keyword">struct </span>msghdr msg;
-<a name="l00288"></a>00288         <span class="keywordtype">int</span> ret;
-<a name="l00289"></a>00289 
-<a name="l00290"></a>00290         iov.iov_base = buf;
-<a name="l00291"></a>00291         iov.iov_len = len;
-<a name="l00292"></a>00292 
-<a name="l00293"></a>00293         msg.msg_name = from;
-<a name="l00294"></a>00294         msg.msg_namelen = from ? *fromlen : 0;
-<a name="l00295"></a>00295         msg.msg_iov = &amp;iov;
-<a name="l00296"></a>00296         msg.msg_iovlen = 1;
-<a name="l00297"></a>00297         msg.msg_control = NULL;
-<a name="l00298"></a>00298         msg.msg_controllen = 0;
-<a name="l00299"></a>00299 
-<a name="l00300"></a>00300         ret = rt_dev_recvmsg(fd, &amp;msg, flags);
-<a name="l00301"></a>00301         <span class="keywordflow">if</span> (ret &gt;= 0 &amp;&amp; from)
-<a name="l00302"></a>00302                 *fromlen = msg.msg_namelen;
-<a name="l00303"></a>00303         <span class="keywordflow">return</span> ret;
-<a name="l00304"></a>00304 }
-<a name="l00305"></a>00305 
-<a name="l00306"></a>00306 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
-<a name="l00307"></a>00307 
-<a name="l00308"></a>00308 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00309"></a>00309 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-<a name="l00310"></a>00310 <span class="preprocessor">#endif</span>
-<a name="l00311"></a>00311 <span class="preprocessor"></span>
-<a name="l00312"></a>00312 <span class="keywordtype">int</span> rt_dev_open(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">int</span> oflag, ...);
-<a name="l00313"></a>00313 <span class="keywordtype">int</span> rt_dev_socket(<span class="keywordtype">int</span> protocol_family, <span class="keywordtype">int</span> socket_type, <span class="keywordtype">int</span> protocol);
-<a name="l00314"></a>00314 <span class="keywordtype">int</span> rt_dev_close(<span class="keywordtype">int</span> fd);
-<a name="l00315"></a>00315 <span class="keywordtype">int</span> rt_dev_ioctl(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> request, ...);
-<a name="l00316"></a>00316 ssize_t rt_dev_read(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00317"></a>00317 ssize_t rt_dev_write(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00318"></a>00318 ssize_t rt_dev_recvmsg(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
-<a name="l00319"></a>00319 ssize_t rt_dev_sendmsg(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
-<a name="l00320"></a>00320 
-<a name="l00321"></a>00321 ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
-<a name="l00322"></a>00322                         <span class="keyword">struct</span> sockaddr *from, socklen_t *fromlen);
-<a name="l00323"></a>00323 
-<a name="l00324"></a>00324 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00325"></a>00325 <span class="preprocessor"></span>}
-<a name="l00326"></a>00326 <span class="preprocessor">#endif</span>
-<a name="l00327"></a>00327 <span class="preprocessor"></span>
-<a name="l00328"></a>00328 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
-<a name="l00329"></a>00329 
-<a name="l00330"></a>00330 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00331"></a>00331 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-<a name="l00332"></a>00332 <span class="preprocessor">#endif</span>
-<a name="l00333"></a>00333 <span class="preprocessor"></span>
-<a name="l00334"></a>00334 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_recv(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags)
-<a name="l00335"></a>00335 {
-<a name="l00336"></a>00336         <span class="keywordflow">return</span> rt_dev_recvfrom(fd, buf, len, flags, NULL, NULL);
-<a name="l00337"></a>00337 }
-<a name="l00338"></a>00338 
-<a name="l00339"></a>00339 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_sendto(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
-<a name="l00340"></a>00340                                     <span class="keywordtype">int</span> flags, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *to,
-<a name="l00341"></a>00341                                     socklen_t tolen)
-<a name="l00342"></a>00342 {
-<a name="l00343"></a>00343         <span class="keyword">struct </span>iovec iov;
-<a name="l00344"></a>00344         <span class="keyword">struct </span>msghdr msg;
-<a name="l00345"></a>00345 
-<a name="l00346"></a>00346         iov.iov_base = (<span class="keywordtype">void</span> *)buf;
-<a name="l00347"></a>00347         iov.iov_len = len;
-<a name="l00348"></a>00348 
-<a name="l00349"></a>00349         msg.msg_name = (<span class="keyword">struct </span>sockaddr *)to;
-<a name="l00350"></a>00350         msg.msg_namelen = tolen;
-<a name="l00351"></a>00351         msg.msg_iov = &amp;iov;
-<a name="l00352"></a>00352         msg.msg_iovlen = 1;
-<a name="l00353"></a>00353         msg.msg_control = NULL;
-<a name="l00354"></a>00354         msg.msg_controllen = 0;
-<a name="l00355"></a>00355 
-<a name="l00356"></a>00356         <span class="keywordflow">return</span> rt_dev_sendmsg(fd, &amp;msg, flags);
-<a name="l00357"></a>00357 }
-<a name="l00358"></a>00358 
-<a name="l00359"></a>00359 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_send(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
-<a name="l00360"></a>00360                                   <span class="keywordtype">int</span> flags)
-<a name="l00361"></a>00361 {
-<a name="l00362"></a>00362         <span class="keywordflow">return</span> rt_dev_sendto(fd, buf, len, flags, NULL, 0);
-<a name="l00363"></a>00363 }
-<a name="l00364"></a>00364 
-<a name="l00365"></a>00365 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getsockopt(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
-<a name="l00366"></a>00366                                     <span class="keywordtype">void</span> *optval, socklen_t *optlen)
-<a name="l00367"></a>00367 {
-<a name="l00368"></a>00368         <span class="keyword">struct </span>_rtdm_getsockopt_args args =
-<a name="l00369"></a>00369                 { level, optname, optval, optlen };
-<a name="l00370"></a>00370 
-<a name="l00371"></a>00371         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKOPT, &amp;args);
-<a name="l00372"></a>00372 }
-<a name="l00373"></a>00373 
-<a name="l00374"></a>00374 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_setsockopt(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
-<a name="l00375"></a>00375                                     <span class="keyword">const</span> <span class="keywordtype">void</span> *optval, socklen_t optlen)
-<a name="l00376"></a>00376 {
-<a name="l00377"></a>00377         <span class="keyword">struct </span>_rtdm_setsockopt_args args =
-<a name="l00378"></a>00378                 { level, optname, (<span class="keywordtype">void</span> *)optval, optlen };
-<a name="l00379"></a>00379 
-<a name="l00380"></a>00380         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SETSOCKOPT, &amp;args);
-<a name="l00381"></a>00381 }
-<a name="l00382"></a>00382 
-<a name="l00383"></a>00383 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_bind(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *my_addr,
-<a name="l00384"></a>00384                               socklen_t addrlen)
-<a name="l00385"></a>00385 {
-<a name="l00386"></a>00386         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { my_addr, addrlen };
-<a name="l00387"></a>00387 
-<a name="l00388"></a>00388         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_BIND, &amp;args);
-<a name="l00389"></a>00389 }
-<a name="l00390"></a>00390 
-<a name="l00391"></a>00391 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_connect(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *serv_addr,
-<a name="l00392"></a>00392                                  socklen_t addrlen)
-<a name="l00393"></a>00393 {
-<a name="l00394"></a>00394         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { serv_addr, addrlen };
-<a name="l00395"></a>00395 
-<a name="l00396"></a>00396         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_CONNECT, &amp;args);
-<a name="l00397"></a>00397 }
-<a name="l00398"></a>00398 
-<a name="l00399"></a>00399 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_listen(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> backlog)
-<a name="l00400"></a>00400 {
-<a name="l00401"></a>00401         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_LISTEN, backlog);
-<a name="l00402"></a>00402 }
-<a name="l00403"></a>00403 
-<a name="l00404"></a>00404 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_accept(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *addr,
-<a name="l00405"></a>00405                                 socklen_t *addrlen)
-<a name="l00406"></a>00406 {
-<a name="l00407"></a>00407         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { addr, addrlen };
-<a name="l00408"></a>00408 
-<a name="l00409"></a>00409         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_ACCEPT, &amp;args);
-<a name="l00410"></a>00410 }
-<a name="l00411"></a>00411 
-<a name="l00412"></a>00412 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getsockname(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
-<a name="l00413"></a>00413                                      socklen_t *namelen)
-<a name="l00414"></a>00414 {
-<a name="l00415"></a>00415         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
-<a name="l00416"></a>00416 
-<a name="l00417"></a>00417         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKNAME, &amp;args);
-<a name="l00418"></a>00418 }
-<a name="l00419"></a>00419 
-<a name="l00420"></a>00420 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getpeername(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
-<a name="l00421"></a>00421                                      socklen_t *namelen)
-<a name="l00422"></a>00422 {
-<a name="l00423"></a>00423         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
-<a name="l00424"></a>00424 
-<a name="l00425"></a>00425         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETPEERNAME, &amp;args);
-<a name="l00426"></a>00426 }
-<a name="l00427"></a>00427 
-<a name="l00428"></a>00428 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_shutdown(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> how)
-<a name="l00429"></a>00429 {
-<a name="l00430"></a>00430         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SHUTDOWN, how);
-<a name="l00431"></a>00431 }
-<a name="l00432"></a>00432 
-<a name="l00433"></a>00433 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00434"></a>00434 <span class="preprocessor"></span>}
-<a name="l00435"></a>00435 <span class="preprocessor">#endif</span>
-<a name="l00436"></a>00436 <span class="preprocessor"></span>
-<a name="l00437"></a>00437 <span class="preprocessor">#endif </span><span class="comment">/* RTDM_NO_DEFAULT_USER_API */</span>
-<a name="l00438"></a>00438 
-<a name="l00439"></a>00439 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_H */</span>
-</pre></div><hr size="1"><address style="text-align: right;"><small>Generated on Mon Feb 11 12:24:11 2008 for Xenomai API by&nbsp;
+<a name="l00250"></a>00250 <span class="keyword">struct </span>xnselector;
+<a name="l00251"></a>00251 <span class="keywordtype">int</span> __rt_dev_select_bind(rtdm_user_info_t *user_info, <span class="keywordtype">int</span> fd,
+<a name="l00252"></a>00252                          <span class="keyword">struct</span> xnselector *selector,
+<a name="l00253"></a>00253                          <span class="keywordtype">unsigned</span> type, <span class="keywordtype">unsigned</span> index);
+<a name="l00254"></a>00254 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00255"></a>00255 
+<a name="l00256"></a>00256 <span class="comment">/* Define RTDM_NO_DEFAULT_USER_API to switch off the default rt_dev_xxx</span>
+<a name="l00257"></a>00257 <span class="comment"> * interface when providing a customised user API */</span>
+<a name="l00258"></a>00258 <span class="preprocessor">#ifndef RTDM_NO_DEFAULT_USER_API</span>
+<a name="l00259"></a>00259 <span class="preprocessor"></span>
+<a name="l00260"></a>00260 <span class="preprocessor">#ifdef __KERNEL__</span>
+<a name="l00261"></a>00261 <span class="preprocessor"></span>
+<a name="l00262"></a>00262 <span class="preprocessor">#define rt_dev_open(path, oflag, ...)                           \</span>
+<a name="l00263"></a>00263 <span class="preprocessor">        __rt_dev_open(NULL, path, oflag)</span>
+<a name="l00264"></a>00264 <span class="preprocessor"></span>
+<a name="l00265"></a>00265 <span class="preprocessor">#define rt_dev_socket(protocol_family, socket_type, protocol)   \</span>
+<a name="l00266"></a>00266 <span class="preprocessor">        __rt_dev_socket(NULL, protocol_family, socket_type, protocol)</span>
+<a name="l00267"></a>00267 <span class="preprocessor"></span>
+<a name="l00268"></a>00268 <span class="preprocessor">#define rt_dev_close(fd)                                        \</span>
+<a name="l00269"></a>00269 <span class="preprocessor">        __rt_dev_close(NULL, fd)</span>
+<a name="l00270"></a>00270 <span class="preprocessor"></span>
+<a name="l00271"></a>00271 <span class="preprocessor">#define rt_dev_ioctl(fd, request, ...)                          \</span>
+<a name="l00272"></a>00272 <span class="preprocessor">        __rt_dev_ioctl(NULL, fd, request, __VA_ARGS__)</span>
+<a name="l00273"></a>00273 <span class="preprocessor"></span>
+<a name="l00274"></a>00274 <span class="preprocessor">#define rt_dev_read(fd, buf, nbyte)                             \</span>
+<a name="l00275"></a>00275 <span class="preprocessor">        __rt_dev_read(NULL, fd, buf, nbyte)</span>
+<a name="l00276"></a>00276 <span class="preprocessor"></span>
+<a name="l00277"></a>00277 <span class="preprocessor">#define rt_dev_write(fd, buf, nbyte)                            \</span>
+<a name="l00278"></a>00278 <span class="preprocessor">        __rt_dev_write(NULL, fd, buf, nbyte)</span>
+<a name="l00279"></a>00279 <span class="preprocessor"></span>
+<a name="l00280"></a>00280 <span class="preprocessor">#define rt_dev_recvmsg(fd, msg, flags)                          \</span>
+<a name="l00281"></a>00281 <span class="preprocessor">        __rt_dev_recvmsg(NULL, fd, msg, flags)</span>
+<a name="l00282"></a>00282 <span class="preprocessor"></span>
+<a name="l00283"></a>00283 <span class="preprocessor">#define rt_dev_sendmsg(fd, msg, flags)                          \</span>
+<a name="l00284"></a>00284 <span class="preprocessor">        __rt_dev_sendmsg(NULL, fd, msg, flags)</span>
+<a name="l00285"></a>00285 <span class="preprocessor"></span>
+<a name="l00286"></a>00286 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
+<a name="l00287"></a>00287                                       <span class="keyword">struct</span> sockaddr *from,
+<a name="l00288"></a>00288                                       socklen_t *fromlen)
+<a name="l00289"></a>00289 {
+<a name="l00290"></a>00290         <span class="keyword">struct </span>iovec iov;
+<a name="l00291"></a>00291         <span class="keyword">struct </span>msghdr msg;
+<a name="l00292"></a>00292         <span class="keywordtype">int</span> ret;
+<a name="l00293"></a>00293 
+<a name="l00294"></a>00294         iov.iov_base = buf;
+<a name="l00295"></a>00295         iov.iov_len = len;
+<a name="l00296"></a>00296 
+<a name="l00297"></a>00297         msg.msg_name = from;
+<a name="l00298"></a>00298         msg.msg_namelen = from ? *fromlen : 0;
+<a name="l00299"></a>00299         msg.msg_iov = &amp;iov;
+<a name="l00300"></a>00300         msg.msg_iovlen = 1;
+<a name="l00301"></a>00301         msg.msg_control = NULL;
+<a name="l00302"></a>00302         msg.msg_controllen = 0;
+<a name="l00303"></a>00303 
+<a name="l00304"></a>00304         ret = rt_dev_recvmsg(fd, &amp;msg, flags);
+<a name="l00305"></a>00305         <span class="keywordflow">if</span> (ret &gt;= 0 &amp;&amp; from)
+<a name="l00306"></a>00306                 *fromlen = msg.msg_namelen;
+<a name="l00307"></a>00307         <span class="keywordflow">return</span> ret;
+<a name="l00308"></a>00308 }
+<a name="l00309"></a>00309 
+<a name="l00310"></a>00310 <span class="preprocessor">#else </span><span class="comment">/* !__KERNEL__ */</span>
+<a name="l00311"></a>00311 
+<a name="l00312"></a>00312 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00313"></a>00313 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+<a name="l00314"></a>00314 <span class="preprocessor">#endif</span>
+<a name="l00315"></a>00315 <span class="preprocessor"></span>
+<a name="l00316"></a>00316 <span class="keywordtype">int</span> rt_dev_open(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">int</span> oflag, ...);
+<a name="l00317"></a>00317 <span class="keywordtype">int</span> rt_dev_socket(<span class="keywordtype">int</span> protocol_family, <span class="keywordtype">int</span> socket_type, <span class="keywordtype">int</span> protocol);
+<a name="l00318"></a>00318 <span class="keywordtype">int</span> rt_dev_close(<span class="keywordtype">int</span> fd);
+<a name="l00319"></a>00319 <span class="keywordtype">int</span> rt_dev_ioctl(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> request, ...);
+<a name="l00320"></a>00320 ssize_t rt_dev_read(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
+<a name="l00321"></a>00321 ssize_t rt_dev_write(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
+<a name="l00322"></a>00322 ssize_t rt_dev_recvmsg(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
+<a name="l00323"></a>00323 ssize_t rt_dev_sendmsg(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> msghdr *msg, <span class="keywordtype">int</span> flags);
+<a name="l00324"></a>00324 
+<a name="l00325"></a>00325 ssize_t rt_dev_recvfrom(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags,
+<a name="l00326"></a>00326                         <span class="keyword">struct</span> sockaddr *from, socklen_t *fromlen);
+<a name="l00327"></a>00327 
+<a name="l00328"></a>00328 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00329"></a>00329 <span class="preprocessor"></span>}
+<a name="l00330"></a>00330 <span class="preprocessor">#endif</span>
+<a name="l00331"></a>00331 <span class="preprocessor"></span>
+<a name="l00332"></a>00332 <span class="preprocessor">#endif </span><span class="comment">/* !__KERNEL__ */</span>
+<a name="l00333"></a>00333 
+<a name="l00334"></a>00334 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00335"></a>00335 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+<a name="l00336"></a>00336 <span class="preprocessor">#endif</span>
+<a name="l00337"></a>00337 <span class="preprocessor"></span>
+<a name="l00338"></a>00338 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_recv(<span class="keywordtype">int</span> fd, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len, <span class="keywordtype">int</span> flags)
+<a name="l00339"></a>00339 {
+<a name="l00340"></a>00340         <span class="keywordflow">return</span> rt_dev_recvfrom(fd, buf, len, flags, NULL, NULL);
+<a name="l00341"></a>00341 }
+<a name="l00342"></a>00342 
+<a name="l00343"></a>00343 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_sendto(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
+<a name="l00344"></a>00344                                     <span class="keywordtype">int</span> flags, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *to,
+<a name="l00345"></a>00345                                     socklen_t tolen)
+<a name="l00346"></a>00346 {
+<a name="l00347"></a>00347         <span class="keyword">struct </span>iovec iov;
+<a name="l00348"></a>00348         <span class="keyword">struct </span>msghdr msg;
+<a name="l00349"></a>00349 
+<a name="l00350"></a>00350         iov.iov_base = (<span class="keywordtype">void</span> *)buf;
+<a name="l00351"></a>00351         iov.iov_len = len;
+<a name="l00352"></a>00352 
+<a name="l00353"></a>00353         msg.msg_name = (<span class="keyword">struct </span>sockaddr *)to;
+<a name="l00354"></a>00354         msg.msg_namelen = tolen;
+<a name="l00355"></a>00355         msg.msg_iov = &amp;iov;
+<a name="l00356"></a>00356         msg.msg_iovlen = 1;
+<a name="l00357"></a>00357         msg.msg_control = NULL;
+<a name="l00358"></a>00358         msg.msg_controllen = 0;
+<a name="l00359"></a>00359 
+<a name="l00360"></a>00360         <span class="keywordflow">return</span> rt_dev_sendmsg(fd, &amp;msg, flags);
+<a name="l00361"></a>00361 }
+<a name="l00362"></a>00362 
+<a name="l00363"></a>00363 <span class="keyword">static</span> <span class="keyword">inline</span> ssize_t rt_dev_send(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> len,
+<a name="l00364"></a>00364                                   <span class="keywordtype">int</span> flags)
+<a name="l00365"></a>00365 {
+<a name="l00366"></a>00366         <span class="keywordflow">return</span> rt_dev_sendto(fd, buf, len, flags, NULL, 0);
+<a name="l00367"></a>00367 }
+<a name="l00368"></a>00368 
+<a name="l00369"></a>00369 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getsockopt(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
+<a name="l00370"></a>00370                                     <span class="keywordtype">void</span> *optval, socklen_t *optlen)
+<a name="l00371"></a>00371 {
+<a name="l00372"></a>00372         <span class="keyword">struct </span>_rtdm_getsockopt_args args =
+<a name="l00373"></a>00373                 { level, optname, optval, optlen };
+<a name="l00374"></a>00374 
+<a name="l00375"></a>00375         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKOPT, &amp;args);
+<a name="l00376"></a>00376 }
+<a name="l00377"></a>00377 
+<a name="l00378"></a>00378 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_setsockopt(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> level, <span class="keywordtype">int</span> optname,
+<a name="l00379"></a>00379                                     <span class="keyword">const</span> <span class="keywordtype">void</span> *optval, socklen_t optlen)
+<a name="l00380"></a>00380 {
+<a name="l00381"></a>00381         <span class="keyword">struct </span>_rtdm_setsockopt_args args =
+<a name="l00382"></a>00382                 { level, optname, (<span class="keywordtype">void</span> *)optval, optlen };
+<a name="l00383"></a>00383 
+<a name="l00384"></a>00384         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SETSOCKOPT, &amp;args);
+<a name="l00385"></a>00385 }
+<a name="l00386"></a>00386 
+<a name="l00387"></a>00387 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_bind(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *my_addr,
+<a name="l00388"></a>00388                               socklen_t addrlen)
+<a name="l00389"></a>00389 {
+<a name="l00390"></a>00390         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { my_addr, addrlen };
+<a name="l00391"></a>00391 
+<a name="l00392"></a>00392         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_BIND, &amp;args);
+<a name="l00393"></a>00393 }
+<a name="l00394"></a>00394 
+<a name="l00395"></a>00395 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_connect(<span class="keywordtype">int</span> fd, <span class="keyword">const</span> <span class="keyword">struct</span> sockaddr *serv_addr,
+<a name="l00396"></a>00396                                  socklen_t addrlen)
+<a name="l00397"></a>00397 {
+<a name="l00398"></a>00398         <span class="keyword">struct </span>_rtdm_setsockaddr_args args = { serv_addr, addrlen };
+<a name="l00399"></a>00399 
+<a name="l00400"></a>00400         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_CONNECT, &amp;args);
+<a name="l00401"></a>00401 }
+<a name="l00402"></a>00402 
+<a name="l00403"></a>00403 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_listen(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> backlog)
+<a name="l00404"></a>00404 {
+<a name="l00405"></a>00405         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_LISTEN, backlog);
+<a name="l00406"></a>00406 }
+<a name="l00407"></a>00407 
+<a name="l00408"></a>00408 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_accept(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *addr,
+<a name="l00409"></a>00409                                 socklen_t *addrlen)
+<a name="l00410"></a>00410 {
+<a name="l00411"></a>00411         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { addr, addrlen };
+<a name="l00412"></a>00412 
+<a name="l00413"></a>00413         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_ACCEPT, &amp;args);
+<a name="l00414"></a>00414 }
+<a name="l00415"></a>00415 
+<a name="l00416"></a>00416 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getsockname(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
+<a name="l00417"></a>00417                                      socklen_t *namelen)
+<a name="l00418"></a>00418 {
+<a name="l00419"></a>00419         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
+<a name="l00420"></a>00420 
+<a name="l00421"></a>00421         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETSOCKNAME, &amp;args);
+<a name="l00422"></a>00422 }
+<a name="l00423"></a>00423 
+<a name="l00424"></a>00424 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_getpeername(<span class="keywordtype">int</span> fd, <span class="keyword">struct</span> sockaddr *name,
+<a name="l00425"></a>00425                                      socklen_t *namelen)
+<a name="l00426"></a>00426 {
+<a name="l00427"></a>00427         <span class="keyword">struct </span>_rtdm_getsockaddr_args args = { name, namelen };
+<a name="l00428"></a>00428 
+<a name="l00429"></a>00429         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_GETPEERNAME, &amp;args);
+<a name="l00430"></a>00430 }
+<a name="l00431"></a>00431 
+<a name="l00432"></a>00432 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> rt_dev_shutdown(<span class="keywordtype">int</span> fd, <span class="keywordtype">int</span> how)
+<a name="l00433"></a>00433 {
+<a name="l00434"></a>00434         <span class="keywordflow">return</span> rt_dev_ioctl(fd, _RTIOC_SHUTDOWN, how);
+<a name="l00435"></a>00435 }
+<a name="l00436"></a>00436 
+<a name="l00437"></a>00437 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00438"></a>00438 <span class="preprocessor"></span>}
+<a name="l00439"></a>00439 <span class="preprocessor">#endif</span>
+<a name="l00440"></a>00440 <span class="preprocessor"></span>
+<a name="l00441"></a>00441 <span class="preprocessor">#endif </span><span class="comment">/* RTDM_NO_DEFAULT_USER_API */</span>
+<a name="l00442"></a>00442 
+<a name="l00443"></a>00443 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_H */</span>
+</pre></div><hr size="1"><address style="text-align: right;"><small>Generated on Sat Mar 22 17:57:48 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>

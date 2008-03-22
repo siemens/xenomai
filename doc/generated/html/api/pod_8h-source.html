@@ -275,21 +275,21 @@
 <a name="l00300"></a>00300 <span class="preprocessor"></span>
 <a name="l00301"></a>00301 <span class="preprocessor">#define xnpod_idle_p()          xnpod_root_p()</span>
 <a name="l00302"></a>00302 <span class="preprocessor"></span>
-<a name="l00303"></a>00303 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_renice_root(<span class="keywordtype">int</span> prio)
+<a name="l00303"></a>00303 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_renice_root(<span class="keywordtype">int</span> cpu, <span class="keywordtype">int</span> prio)
 <a name="l00304"></a>00304 {
 <a name="l00305"></a>00305         xnthread_t *rootcb;
 <a name="l00306"></a>00306         spl_t s;
 <a name="l00307"></a>00307 
 <a name="l00308"></a>00308         xnlock_get_irqsave(&amp;nklock, s);
-<a name="l00309"></a>00309         rootcb = xnpod_current_root();
+<a name="l00309"></a>00309         rootcb = &amp;xnpod_sched_slot(cpu)-&gt;rootcb;
 <a name="l00310"></a>00310         rootcb-&gt;cprio = prio;
 <a name="l00311"></a>00311         <a class="code" href="group__pod.html#gc7a3941274759d17b822d6e996662a05" title="Hidden rescheduling procedure.">xnpod_schedule_runnable</a>(rootcb, XNPOD_SCHEDLIFO | XNPOD_NOSWITCH);
 <a name="l00312"></a>00312         xnlock_put_irqrestore(&amp;nklock, s);
 <a name="l00313"></a>00313 }
 <a name="l00314"></a>00314 
-<a name="l00315"></a>00315 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnpod_root_priority(<span class="keywordtype">void</span>)
+<a name="l00315"></a>00315 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnpod_root_priority(<span class="keywordtype">int</span> cpu)
 <a name="l00316"></a>00316 {
-<a name="l00317"></a>00317         <span class="keywordflow">return</span> xnthread_current_priority(xnpod_current_root());
+<a name="l00317"></a>00317         <span class="keywordflow">return</span> xnthread_current_priority(&amp;xnpod_sched_slot(cpu)-&gt;rootcb);
 <a name="l00318"></a>00318 }
 <a name="l00319"></a>00319 
 <a name="l00320"></a>00320 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a" title="Initialize the core pod.">xnpod_init</a>(<span class="keywordtype">void</span>);
@@ -428,7 +428,7 @@
 <a name="l00453"></a>00453 <span class="preprocessor">#endif</span>
 <a name="l00454"></a>00454 <span class="preprocessor"></span>
 <a name="l00457"></a>00457 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
-</pre></div><hr size="1"><address style="text-align: right;"><small>Generated on Mon Feb 11 12:24:11 2008 for Xenomai API by&nbsp;
+</pre></div><hr size="1"><address style="text-align: right;"><small>Generated on Sat Mar 22 17:57:48 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.3 </small></address>
 </body>
