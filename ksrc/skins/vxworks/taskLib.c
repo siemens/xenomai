@@ -227,19 +227,17 @@ TASK_ID taskSpawn(const char *name,
 			  arg9);
 
 	if (status == ERROR)
-		goto error;
+		return ERROR;
 
 	task->auto_delete = 1;
 	status = taskActivate(task_id);
 
-	if (status == ERROR)
-		goto error;
+	if (status == ERROR) {
+		taskDeleteForce(task_id);
+		return ERROR;
+	}
 
 	return task_id;
-
-      error:
-	taskDeleteForce(task_id);
-	return ERROR;
 }
 
 STATUS taskDeleteForce(TASK_ID task_id)
