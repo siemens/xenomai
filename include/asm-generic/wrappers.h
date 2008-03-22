@@ -199,6 +199,7 @@ void show_stack(struct task_struct *task,
 unsigned long __va_to_kva(unsigned long va);
 #else /* !CONFIG_MMU */
 #define __va_to_kva(va) (va)
+#define pgprot_noncached(p) (p)
 #endif /* CONFIG_MMU */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) && defined(CONFIG_MMU)
