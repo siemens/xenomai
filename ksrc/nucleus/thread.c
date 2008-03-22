@@ -47,7 +47,7 @@ int xnthread_init(xnthread_t *thread,
 		  int prio, xnflags_t flags, unsigned stacksize,
 		  xnthrops_t *ops)
 {
-	int err;
+	int ret = 0;
 
 	if (name)
 		xnobject_copy_name(thread->name, name);
@@ -71,10 +71,17 @@ int xnthread_init(xnthread_t *thread,
 		/* Align stack size on a natural word boundary */
 		stacksize &= ~(sizeof(long) - 1);
 
-	err = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
-
-	if (err)
-		return err;
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
+	if (stacksize > 0) {
+		xnlogerr("%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
+			 __FUNCTION__, thread->name);
+		return -ENOMEM;
+	}
+#else
+	ret = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
+	if (ret)
+		return ret;
+#endif
 
 	thread->state = flags;
 	thread->info = 0;
@@ -116,14 +123,16 @@ int xnthread_init(xnthread_t *thread,
 
 	xnarch_init_display_context(thread);
 
-	return 0;
+	return ret;
 }
 
 void xnthread_cleanup_tcb(xnthread_t *thread)
 {
 	/* Does not wreck the TCB, only releases the held resources. */
 
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnarch_free_stack(xnthread_archtcb(thread));
+#endif
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	thread->registry.handle = XN_NO_HANDLE;

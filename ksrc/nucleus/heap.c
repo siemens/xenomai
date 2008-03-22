@@ -75,6 +75,10 @@ HEAP {
 
 xnheap_t kheap;			/* System heap */
 
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+xnheap_t kstacks;		/* Private stack pool */
+#endif
+
 static void init_extent(xnheap_t *heap, xnextent_t *extent)
 {
 	caddr_t freepage;

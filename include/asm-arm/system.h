@@ -117,6 +117,16 @@ static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
 	kfree(chunk);
 }
 
+static inline void *xnarch_alloc_stack_mem(u_long bytes)
+{
+	return kmalloc(bytes, GFP_KERNEL);
+}
+
+static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
+{
+	kfree(chunk);
+}
+
 #ifdef __cplusplus
 }
 #endif
