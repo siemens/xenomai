@@ -1,3 +1,7 @@
+2008-03-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/taskLib.c (taskSpawn): Fix error path.
+
 2008-03-16  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/skins/rtdm/drvlib.c (rtdm_mmap_buffer): Differentiate between
