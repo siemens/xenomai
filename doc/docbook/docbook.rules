@@ -1,5 +1,5 @@
 # -*- makefile -*-
-dbx_docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
+dbx_docdir = $(docdir)
 
 dbx_top_distdir=$(doc_top_distdir)
 DBX_SRC_ROOT=$(top_srcdir)/$(DBX_DOC_ROOT)
