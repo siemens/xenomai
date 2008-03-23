@@ -151,7 +151,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -664,8 +663,8 @@ dist-hook:
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
-        $(mkinstalldirs) $(DESTDIR)/dev ; \
-	@if test x`id -u` = x0; then \
+	@$(mkinstalldirs) $(DESTDIR)/dev; \
+	if test x`id -u` = x0; then \
            sudo= ; \
         else if test \! "x`type $(SUDO)`" = x ; then \
            echo "sudo found (sudo is $(SUDO)), testing it..." ; \

@@ -760,6 +760,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/switchtest/Makefile \
 	src/testsuite/irqbench/Makefile \
 	src/testsuite/clocktest/Makefile \
+       	src/testsuite/klatency/Makefile \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
        	include/Makefile \

@@ -7,6 +7,12 @@ config XENO_DRIVERS_TIMERBENCH
 	Kernel-based benchmark driver for timer latency evaluation.
 	See testsuite/latency for a possible front-end.
 
+config XENO_DRIVERS_KLATENCY
+	depends on XENO_DRIVERS_TIMERBENCH
+	tristate "Kernel-only latency measurement module"
+	help
+	Kernel module for kernel-only latency measurement.
+
 config XENO_DRIVERS_IRQBENCH
 	depends on XENO_SKIN_RTDM
 	tristate "IRQ benchmark driver"

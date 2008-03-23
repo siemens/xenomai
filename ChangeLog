@@ -52,6 +52,11 @@
 
 	* src/skins/native/task.c: Call pthread_exit() to properly cleanup
 	thread's resources on self-deletion.
+
+
+	* ksrc/drivers/testing/klat.c, src/testsuite/klatency: Provide
+	more accurate latency measurement tool dedicated to kernel-based
+	activities.
 	
 2008-03-08  Philippe Gerum  <rpm@xenomai.org>
 
