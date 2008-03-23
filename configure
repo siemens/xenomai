@@ -23805,14 +23805,8 @@ done
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
-	      test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
-              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
-	      if test -e $XENO_LINUX_SRCDIR/arch/x86; then
-		  case $cfg_arch in
-		  i386|x86_64) cfg_arch=x86;;
-		  esac
-	      fi
+              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               if test $cfg_arch = $XENO_LINUX_ARCH ; then
                  cp $XENO_LINUX_SRCDIR/.config .xenomai.config
               fi
