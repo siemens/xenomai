@@ -470,10 +470,10 @@ index 34ae114..10ea724 100644
  	u32 lc = c;
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..386c175
+index 0000000..29e9837
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,727 @@
+@@ -0,0 +1,729 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -1197,6 +1197,8 @@ index 0000000..386c175
 +EXPORT_SYMBOL_GPL(context_map);
 +EXPORT_SYMBOL_GPL(atomic_set_mask);
 +EXPORT_SYMBOL_GPL(atomic_clear_mask);
++EXPORT_SYMBOL_GPL(last_task_used_math);
++EXPORT_SYMBOL_GPL(tasklist_lock);
 +#ifdef CONFIG_IPIPE_TRACE_MCOUNT
 +void notrace _mcount(void);
 +EXPORT_SYMBOL(_mcount);
@@ -2054,7 +2056,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..d315688
+index 0000000..7c4159e
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,182 @@
@@ -2097,10 +2099,10 @@ index 0000000..d315688
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.7-12"
++#define IPIPE_ARCH_STRING	"1.7-13"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	12
++#define IPIPE_PATCH_NUMBER	13
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -2446,10 +2448,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..7336671
+index 0000000..f2051bc
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,573 @@
+@@ -0,0 +1,575 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -2887,6 +2889,7 @@ index 0000000..7336671
 +	__clear_bit(IPIPE_NOSTACK_FLAG, &ipipe_cpudom_var(ipd, status));
 +}
 +
++#ifndef ipipe_safe_current
 +#define ipipe_safe_current()					\
 +({								\
 +	struct task_struct *p;					\
@@ -2894,6 +2897,7 @@ index 0000000..7336671
 +		     &ipipe_this_cpudom_var(status)) ? &init_task : current; \
 +	p; \
 +})
++#endif
 +
 +ipipe_event_handler_t ipipe_catch_event(struct ipipe_domain *ipd,
 +					unsigned event,
@@ -3025,7 +3029,7 @@ index 0000000..7336671
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..7c19431
+index 0000000..c32cef1
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
 @@ -0,0 +1,80 @@
@@ -3103,7 +3107,7 @@ index 0000000..7c19431
 +#define ipipe_preempt_disable(flags)	do { \
 +						preempt_disable(); \
 +						(void)(flags); \
-+					while (0)
++					} while (0)
 +#define ipipe_preempt_enable(flags)	preempt_enable()
 +#define ipipe_check_context(ipd)	do { } while(0)
 +#endif	/* CONFIG_IPIPE */
@@ -5481,15 +5485,15 @@ index 0000000..d3f31ed
 +#endif
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..2411063
+index 0000000..bada2c6
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1364 @@
+@@ -0,0 +1,1356 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
 + * Copyright (C) 2005 Luotao Fu.
-+ *               2005-2007 Jan Kiszka.
++ *               2005-2008 Jan Kiszka.
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -5551,8 +5555,7 @@ index 0000000..2411063
 +#define IPIPE_TFLG_CURRENT_DOMAIN(point) \
 +	((point->flags & IPIPE_TFLG_CURRDOM_MASK) >> IPIPE_TFLG_CURRDOM_SHIFT)
 +
-+
-+struct ipipe_trace_point{
++struct ipipe_trace_point {
 +	short type;
 +	short flags;
 +	unsigned long eip;
@@ -5561,7 +5564,7 @@ index 0000000..2411063
 +	unsigned long long timestamp;
 +};
 +
-+struct ipipe_trace_path{
++struct ipipe_trace_path {
 +	volatile int flags;
 +	int dump_lock; /* separated from flags due to cross-cpu access */
 +	int trace_pos; /* next point to fill */
@@ -5587,29 +5590,18 @@ index 0000000..2411063
 +#define IPIPE_TYPE_MASK             0x0007
 +#define IPIPE_TYPE_BITS             3
 +
-+
 +#ifdef CONFIG_IPIPE_TRACE_VMALLOC
-+
-+static struct ipipe_trace_path *trace_paths[NR_CPUS];
-+
++static DEFINE_PER_CPU(struct ipipe_trace_path *, trace_path);
 +#else /* !CONFIG_IPIPE_TRACE_VMALLOC */
-+
-+static struct ipipe_trace_path trace_paths[NR_CPUS][IPIPE_TRACE_PATHS] =
-+	{ [0 ... NR_CPUS-1] =
-+		{ [0 ... IPIPE_TRACE_PATHS-1] =
-+			{ .begin = -1, .end = -1 }
-+		}
-+	};
++static DEFINE_PER_CPU(struct ipipe_trace_path, trace_path[IPIPE_TRACE_PATHS]) =
++	{ [0 ... IPIPE_TRACE_PATHS-1] = { .begin = -1, .end = -1 } };
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +
 +int ipipe_trace_enable = 0;
 +
-+static int active_path[NR_CPUS] =
-+	{ [0 ... NR_CPUS-1] = IPIPE_DEFAULT_ACTIVE };
-+static int max_path[NR_CPUS] =
-+	{ [0 ... NR_CPUS-1] = IPIPE_DEFAULT_MAX };
-+static int frozen_path[NR_CPUS] =
-+	{ [0 ... NR_CPUS-1] = IPIPE_DEFAULT_FROZEN };
++static DEFINE_PER_CPU(int, active_path) = { IPIPE_DEFAULT_ACTIVE };
++static DEFINE_PER_CPU(int, max_path) = { IPIPE_DEFAULT_MAX };
++static DEFINE_PER_CPU(int, frozen_path) = { IPIPE_DEFAULT_FROZEN };
 +static IPIPE_DEFINE_SPINLOCK(global_path_lock);
 +static int pre_trace = IPIPE_DEFAULT_PRE_TRACE;
 +static int post_trace = IPIPE_DEFAULT_POST_TRACE;
@@ -5656,7 +5648,7 @@ index 0000000..2411063
 +	}
 +}
 +
-+static notrace int __ipipe_get_free_trace_path(int old, int cpu_id)
++static notrace int __ipipe_get_free_trace_path(int old, int cpu)
 +{
 +	int new_active = old;
 +	struct ipipe_trace_path *tp;
@@ -5664,9 +5656,9 @@ index 0000000..2411063
 +	do {
 +		if (++new_active == IPIPE_TRACE_PATHS)
 +			new_active = 0;
-+		tp = &trace_paths[cpu_id][new_active];
-+	} while ((new_active == max_path[cpu_id]) ||
-+	         (new_active == frozen_path[cpu_id]) ||
++		tp = &per_cpu(trace_path, cpu)[new_active];
++	} while (new_active == per_cpu(max_path, cpu) ||
++	         new_active == per_cpu(frozen_path, cpu) ||
 +	         tp->dump_lock);
 +
 +	return new_active;
@@ -5690,30 +5682,30 @@ index 0000000..2411063
 +}
 +
 +static notrace struct ipipe_trace_path *
-+__ipipe_trace_end(int cpu_id, struct ipipe_trace_path *tp, int pos)
++__ipipe_trace_end(int cpu, struct ipipe_trace_path *tp, int pos)
 +{
 +	struct ipipe_trace_path *old_tp = tp;
-+	long active = active_path[cpu_id];
++	long active = per_cpu(active_path, cpu);
 +	unsigned long long length;
 +
 +	/* do we have a new worst case? */
 +	length = tp->point[tp->end].timestamp -
 +	         tp->point[tp->begin].timestamp;
-+	if (length > (trace_paths[cpu_id][max_path[cpu_id]]).length) {
++	if (length > per_cpu(trace_path, cpu)[per_cpu(max_path, cpu)].length) {
 +		/* we need protection here against other cpus trying
 +		   to start a proc dump */
 +		spin_lock(&global_path_lock);
 +
 +		/* active path holds new worst case */
 +		tp->length = length;
-+		max_path[cpu_id] = active;
++		per_cpu(max_path, cpu) = active;
 +
 +		/* find next unused trace path */
-+		active = __ipipe_get_free_trace_path(active, cpu_id);
++		active = __ipipe_get_free_trace_path(active, cpu);
 +
 +		spin_unlock(&global_path_lock);
 +
-+		tp = &trace_paths[cpu_id][active];
++		tp = &per_cpu(trace_path, cpu)[active];
 +
 +		/* migrate last entries for pre-tracing */
 +		__ipipe_migrate_pre_trace(tp, old_tp, pos);
@@ -5723,11 +5715,11 @@ index 0000000..2411063
 +}
 +
 +static notrace struct ipipe_trace_path *
-+__ipipe_trace_freeze(int cpu_id, struct ipipe_trace_path *tp, int pos)
++__ipipe_trace_freeze(int cpu, struct ipipe_trace_path *tp, int pos)
 +{
 +	struct ipipe_trace_path *old_tp = tp;
-+	long active = active_path[cpu_id];
-+	int i;
++	long active = per_cpu(active_path, cpu);
++	int n;
 +
 +	/* frozen paths have no core (begin=end) */
 +	tp->begin = tp->end;
@@ -5736,21 +5728,21 @@ index 0000000..2411063
 +	 * to set their frozen path or to start a proc dump */
 +	spin_lock(&global_path_lock);
 +
-+	frozen_path[cpu_id] = active;
++	per_cpu(frozen_path, cpu) = active;
 +
 +	/* find next unused trace path */
-+	active = __ipipe_get_free_trace_path(active, cpu_id);
++	active = __ipipe_get_free_trace_path(active, cpu);
 +
 +	/* check if this is the first frozen path */
-+	for (i = 0; i < NR_CPUS && trace_paths[i] != NULL; i++) {
-+		if ((i != cpu_id) &&
-+		    (trace_paths[i][frozen_path[i]].end >= 0))
++	for_each_possible_cpu(n) {
++		if (n != cpu &&
++		    per_cpu(trace_path, n)[per_cpu(frozen_path, n)].end >= 0)
 +			tp->end = -1;
 +	}
 +
 +	spin_unlock(&global_path_lock);
 +
-+	tp = &trace_paths[cpu_id][active];
++	tp = &per_cpu(trace_path, cpu)[active];
 +
 +	/* migrate last entries for pre-tracing */
 +	__ipipe_migrate_pre_trace(tp, old_tp, pos);
@@ -5766,13 +5758,13 @@ index 0000000..2411063
 +	int pos, next_pos, begin;
 +	struct ipipe_trace_point *point;
 +	unsigned long flags;
-+	int cpu_id;
++	int cpu;
 +
 +	local_irq_save_hw_notrace(flags);
 +
-+	cpu_id = ipipe_processor_id();
++	cpu = ipipe_processor_id();
 + restart:
-+	tp = old_tp = &trace_paths[cpu_id][active_path[cpu_id]];
++	tp = old_tp = &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)];
 +
 +	/* here starts a race window with NMIs - catched below */
 +
@@ -5799,7 +5791,8 @@ index 0000000..2411063
 +
 +	/* check active_path again - some nasty NMI may have switched
 +	 * it meanwhile */
-+	if (unlikely(tp != &trace_paths[cpu_id][active_path[cpu_id]])) {
++	if (unlikely(tp !=
++		     &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)])) {
 +		/* release lock on wrong path and restart */
 +		tp->flags &= ~IPIPE_TFLG_NMI_LOCK;
 +
@@ -5840,7 +5833,7 @@ index 0000000..2411063
 +	if ((unlikely(type == IPIPE_TRACE_FREEZE) ||
 +	     (unlikely(eip >= trigger_begin && eip <= trigger_end) &&
 +	     type == IPIPE_TRACE_FUNC)) &&
-+	    (trace_paths[cpu_id][frozen_path[cpu_id]].begin < 0) &&
++	    per_cpu(trace_path, cpu)[per_cpu(frozen_path, cpu)].begin < 0 &&
 +	    !(tp->flags & IPIPE_TFLG_FREEZING)) {
 +		tp->post_trace = post_trace + 1;
 +		tp->flags |= IPIPE_TFLG_FREEZING;
@@ -5863,9 +5856,9 @@ index 0000000..2411063
 +
 + enforce_end:
 +		if (tp->flags & IPIPE_TFLG_FREEZING)
-+			tp = __ipipe_trace_freeze(cpu_id, tp, pos);
++			tp = __ipipe_trace_freeze(cpu, tp, pos);
 +		else
-+			tp = __ipipe_trace_end(cpu_id, tp, pos);
++			tp = __ipipe_trace_end(cpu, tp, pos);
 +
 +		/* reset the active path, maybe already start a new one */
 +		tp->begin = (type == IPIPE_TRACE_BEGIN) ?
@@ -5875,7 +5868,7 @@ index 0000000..2411063
 +		tp->flags = 0;
 +
 +		/* update active_path not earlier to avoid races with NMIs */
-+		active_path[cpu_id] = tp - trace_paths[cpu_id];
++		per_cpu(active_path, cpu) = tp - per_cpu(trace_path, cpu);
 +	}
 +
 +	/* we still have old_tp and point,
@@ -5899,14 +5892,14 @@ index 0000000..2411063
 +static unsigned long __ipipe_global_path_lock(void)
 +{
 +	unsigned long flags;
-+	int cpu_id;
++	int cpu;
 +	struct ipipe_trace_path *tp;
 +
 +	spin_lock_irqsave(&global_path_lock, flags);
 +
-+	cpu_id = ipipe_processor_id();
++	cpu = ipipe_processor_id();
 + restart:
-+	tp = &trace_paths[cpu_id][active_path[cpu_id]];
++	tp = &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)];
 +
 +	/* here is small race window with NMIs - catched below */
 +
@@ -5917,7 +5910,7 @@ index 0000000..2411063
 +
 +	/* check active_path again - some nasty NMI may have switched
 +	 * it meanwhile */
-+	if (tp != &trace_paths[cpu_id][active_path[cpu_id]]) {
++	if (tp != &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)]) {
 +		/* release lock on wrong path and restart */
 +		tp->flags &= ~IPIPE_TFLG_NMI_LOCK;
 +
@@ -5931,14 +5924,14 @@ index 0000000..2411063
 +
 +static void __ipipe_global_path_unlock(unsigned long flags)
 +{
-+	int cpu_id;
++	int cpu;
 +	struct ipipe_trace_path *tp;
 +
 +	/* release spinlock first - it's not involved in the NMI issue */
 +	__ipipe_spin_unlock_irqbegin(&global_path_lock);
 +
-+	cpu_id = ipipe_processor_id();
-+	tp = &trace_paths[cpu_id][active_path[cpu_id]];
++	cpu = ipipe_processor_id();
++	tp = &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)];
 +
 +	tp->flags &= ~IPIPE_TFLG_NMI_LOCK;
 +
@@ -6000,15 +5993,15 @@ index 0000000..2411063
 +
 +int ipipe_trace_max_reset(void)
 +{
-+	int cpu_id;
++	int cpu;
 +	unsigned long flags;
 +	struct ipipe_trace_path *path;
 +	int ret = 0;
 +
 +	flags = __ipipe_global_path_lock();
 +
-+	for (cpu_id = 0; cpu_id < NR_CPUS && trace_paths[cpu_id] != NULL; cpu_id++) {
-+		path = &trace_paths[cpu_id][max_path[cpu_id]];
++	for_each_possible_cpu(cpu) {
++		path = &per_cpu(trace_path, cpu)[per_cpu(max_path, cpu)];
 +
 +		if (path->dump_lock) {
 +			ret = -EBUSY;
@@ -6029,15 +6022,15 @@ index 0000000..2411063
 +
 +int ipipe_trace_frozen_reset(void)
 +{
-+	int cpu_id;
++	int cpu;
 +	unsigned long flags;
 +	struct ipipe_trace_path *path;
 +	int ret = 0;
 +
 +	flags = __ipipe_global_path_lock();
 +
-+	for_each_online_cpu(cpu_id) {
-+		path = &trace_paths[cpu_id][frozen_path[cpu_id]];
++	for_each_online_cpu(cpu) {
++		path = &per_cpu(trace_path, cpu)[per_cpu(frozen_path, cpu)];
 +
 +		if (path->dump_lock) {
 +			ret = -EBUSY;
@@ -6093,7 +6086,7 @@ index 0000000..2411063
 +void ipipe_trace_panic_freeze(void)
 +{
 +	unsigned long flags;
-+	int cpu_id;
++	int cpu;
 +
 +	if (!ipipe_trace_enable)
 +		return;
@@ -6101,9 +6094,9 @@ index 0000000..2411063
 +	ipipe_trace_enable = 0;
 +	local_irq_save_hw_notrace(flags);
 +
-+	cpu_id = ipipe_processor_id();
++	cpu = ipipe_processor_id();
 +
-+	panic_path = &trace_paths[cpu_id][active_path[cpu_id]];
++	panic_path = &per_cpu(trace_path, cpu)[per_cpu(active_path, cpu)];
 +
 +	local_irq_restore_hw(flags);
 +}
@@ -6376,7 +6369,7 @@ index 0000000..2411063
 +	mutex_lock(&out_mutex);
 +
 +	if (!n) {
-+		struct ipipe_trace_path *path;
++		struct ipipe_trace_path *tp;
 +		unsigned long length_usecs;
 +		int points, cpu;
 +		unsigned long flags;
@@ -6389,10 +6382,10 @@ index 0000000..2411063
 +		/* find the longest of all per-cpu paths */
 +		print_path = NULL;
 +		for_each_online_cpu(cpu) {
-+			path = &trace_paths[cpu][max_path[cpu]];
++			tp = &per_cpu(trace_path, cpu)[per_cpu(max_path, cpu)];
 +			if ((print_path == NULL) ||
-+			    (path->length > print_path->length)) {
-+				print_path = path;
++			    (tp->length > print_path->length)) {
++				print_path = tp;
 +				break;
 +			}
 +		}
@@ -6539,7 +6532,7 @@ index 0000000..2411063
 +	mutex_lock(&out_mutex);
 +
 +	if (!n) {
-+		struct ipipe_trace_path *path;
++		struct ipipe_trace_path *tp;
 +		int cpu;
 +		unsigned long flags;
 +
@@ -6551,9 +6544,9 @@ index 0000000..2411063
 +		/* find the first of all per-cpu frozen paths */
 +		print_path = NULL;
 +		for_each_online_cpu(cpu) {
-+			path = &trace_paths[cpu][frozen_path[cpu]];
-+			if (path->end >= 0) {
-+				print_path = path;
++			tp = &per_cpu(trace_path, cpu)[per_cpu(frozen_path, cpu)];
++			if (tp->end >= 0) {
++				print_path = tp;
 +				break;
 +			}
 +		}
@@ -6789,19 +6782,22 @@ index 0000000..2411063
 +	int cpu, path;
 +
 +	for_each_possible_cpu(cpu) {
-+		trace_paths[cpu] = vmalloc(
-+			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
-+		if (trace_paths[cpu] == NULL) {
++		struct ipipe_trace_path *tp_buf;
++
++		tp_buf = vmalloc_node(sizeof(struct ipipe_trace_path) *
++				      IPIPE_TRACE_PATHS, cpu_to_node(cpu));
++		if (!tp_buf) {
 +			printk(KERN_ERR "I-pipe: "
 +			       "insufficient memory for trace buffer.\n");
 +			return;
 +		}
-+		memset(trace_paths[cpu], 0,
-+			sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
++		memset(tp_buf, 0,
++		       sizeof(struct ipipe_trace_path) * IPIPE_TRACE_PATHS);
 +		for (path = 0; path < IPIPE_TRACE_PATHS; path++) {
-+			trace_paths[cpu][path].begin = -1;
-+			trace_paths[cpu][path].end   = -1;
++			tp_buf[path].begin = -1;
++			tp_buf[path].end   = -1;
 +		}
++		per_cpu(trace_path, cpu) = tp_buf;
 +	}
 +#endif /* CONFIG_IPIPE_TRACE_VMALLOC */
 +	ipipe_trace_enable = CONFIG_IPIPE_TRACE_ENABLE_VALUE;
@@ -7531,7 +7527,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index ef09f0a..c96f2e1 100644
+index ef09f0a..25b3620 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -7736,7 +7732,7 @@ index ef09f0a..c96f2e1 100644
 +	pmd = pmd_offset(pud, addr);
 +	do {
 +		next = pmd_addr_end(addr, end);
-+		if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
++		if (pmd_none_or_clear_bad(pmd))
 +			continue;
 +		if (ipipe_pin_pte_range(mm, pmd, vma, addr, next))
 +			return -ENOMEM;
@@ -7754,7 +7750,7 @@ index ef09f0a..c96f2e1 100644
 +	pud = pud_offset(pgd, addr);
 +	do {
 +		next = pud_addr_end(addr, end);
-+		if (pud_none(*pud) || unlikely(pud_bad(*pud)))
++		if (pud_none_or_clear_bad(pud))
 +			continue;
 +		if (ipipe_pin_pmd_range(mm, pud, vma, addr, next))
 +			return -ENOMEM;
@@ -7788,7 +7784,7 @@ index ef09f0a..c96f2e1 100644
 +		pgd = pgd_offset(mm, addr);
 +		do {
 +			next = pgd_addr_end(addr, end);
-+			if (pgd_none(*pgd) || unlikely(pgd_bad(*pgd)))
++			if (pgd_none_or_clear_bad(pgd))
 +				continue;
 +			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
 +				result = -ENOMEM;
