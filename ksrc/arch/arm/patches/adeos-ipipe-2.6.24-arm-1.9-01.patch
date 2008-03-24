@@ -14,10 +14,19 @@ index 189d8ef..29b3ba8 100644
  KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
  else
 diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index a04f507..2e94321 100644
+index a04f507..4a325c6 100644
 --- a/arch/arm/Kconfig
 +++ b/arch/arm/Kconfig
-@@ -618,6 +618,8 @@ config LOCAL_TIMERS
+@@ -179,6 +179,8 @@ config ARCH_VERSATILE
+ config ARCH_AT91
+ 	bool "Atmel AT91"
+ 	select GENERIC_GPIO
++	select GENERIC_TIME if IPIPE
++	select GENERIC_CLOCKEVENTS if IPIPE
+ 	help
+ 	  This enables support for systems based on the Atmel AT91RM9200
+ 	  and AT91SAM9xxx processors.
+@@ -618,6 +620,8 @@ config LOCAL_TIMERS
  	  accounting to be spread across the timer interval, preventing a
  	  "thundering herd" at every timer tick.
  
@@ -1089,39 +1098,10 @@ index c34db4e..c4b4bc8 100644
  	/*
  	 * Copy signal return handlers into the vector page, and
 diff --git a/arch/arm/mach-at91/Kconfig b/arch/arm/mach-at91/Kconfig
-index 05a9f8a..192f5d7 100644
+index 05a9f8a..08eee57 100644
 --- a/arch/arm/mach-at91/Kconfig
 +++ b/arch/arm/mach-at91/Kconfig
-@@ -12,18 +12,28 @@ config ARCH_AT91RM9200
- 
- config ARCH_AT91SAM9260
- 	bool "AT91SAM9260 or AT91SAM9XE"
-+	select GENERIC_TIME if IPIPE
-+	select GENERIC_CLOCKEVENTS if IPIPE
- 
- config ARCH_AT91SAM9261
- 	bool "AT91SAM9261"
-+	select GENERIC_TIME if IPIPE
-+	select GENERIC_CLOCKEVENTS if IPIPE
- 
- config ARCH_AT91SAM9263
- 	bool "AT91SAM9263"
-+	select GENERIC_TIME if IPIPE
-+	select GENERIC_CLOCKEVENTS if IPIPE
- 
- config ARCH_AT91SAM9RL
- 	bool "AT91SAM9RL"
-+	select GENERIC_TIME if IPIPE
-+	select GENERIC_CLOCKEVENTS if IPIPE
- 
- config ARCH_AT91X40
- 	bool "AT91x40"
-+	select GENERIC_TIME if IPIPE
-+	select GENERIC_CLOCKEVENTS if IPIPE
- 
- endchoice
- 
-@@ -194,6 +204,31 @@ endif
+@@ -194,6 +194,31 @@ endif
  
  # ----------------------------------------------------------
  
@@ -1173,10 +1153,10 @@ index a21f08c..a41d679 100644
 +endif
 diff --git a/arch/arm/mach-at91/at91_ipipe_time.c b/arch/arm/mach-at91/at91_ipipe_time.c
 new file mode 100644
-index 0000000..601463d
+index 0000000..3b55a01
 --- /dev/null
 +++ b/arch/arm/mach-at91/at91_ipipe_time.c
-@@ -0,0 +1,391 @@
+@@ -0,0 +1,396 @@
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
@@ -1504,7 +1484,12 @@ index 0000000..601463d
 +}
 +
 +static struct clk *tc, local_tc = {
++#ifndef CONFIG_ARCH_AT91SAM9263
 +	.name		= "tc" __stringify(CONFIG_IPIPE_AT91_TC) "_clk",
++#else
++	/* at91sam9263 only has a single TCB clock. */
++	.name		= "tcb_clk",
++#endif
 +	.users          = 0,
 +	.type		= CLK_TYPE_PERIPHERAL,
 +	.pmc_mask       = 1 << (KERNEL_TIMER_IRQ_NUM),
@@ -1915,7 +1900,7 @@ index 4813a35..282239b 100644
  
  void __init at91sam9rl_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91/gpio.c b/arch/arm/mach-at91/gpio.c
-index aa2d365..5aef5c4 100644
+index aa2d365..87640a5 100644
 --- a/arch/arm/mach-at91/gpio.c
 +++ b/arch/arm/mach-at91/gpio.c
 @@ -21,6 +21,11 @@
@@ -1940,13 +1925,15 @@ index aa2d365..5aef5c4 100644
  	.mask		= gpio_irq_mask,
  	.unmask		= gpio_irq_unmask,
  	.set_type	= gpio_irq_type,
-@@ -412,6 +420,50 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+@@ -412,6 +420,104 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
  	/* now it may re-trigger */
  }
  
 +#ifdef CONFIG_IPIPE
 +void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
 +{
++/* CONFIG_AT91_TIMER_HZ is defined only if the AT91 patch is applied. */
++#ifndef CONFIG_AT91_TIMER_HZ
 +	struct irq_desc *desc = &irq_desc[irq];
 +	unsigned	pin;
 +	struct irq_desc	*gpio;
@@ -1958,6 +1945,7 @@ index aa2d365..5aef5c4 100644
 +	/* temporarily mask (level sensitive) parent IRQ */
 +	desc->chip->ack(irq);
 +	for (;;) {
++		/* reading ISR acks the pending (edge triggered) GPIO interrupt */
 +		isr = __raw_readl(pio + PIO_ISR) & __raw_readl(pio + PIO_IMR);
 +		if (!isr)
 +			break;
@@ -1985,20 +1973,73 @@ index aa2d365..5aef5c4 100644
 +	}
 +	desc->chip->unmask(irq);
 +	/* now it may re-trigger */
++#else /* defined(AT91_TIMER_HZ) */
++	struct irq_desc *desc = &irq_desc[irq];
++	unsigned	pin;
++	struct irq_desc	*gpio;
++	struct at91_gpio_bank *bank;
++	void __iomem	*pio;
++	u32		isr;
++
++	bank = get_irq_chip_data(irq);
++	pio = bank->regbase;
++
++	/* temporarily mask (level sensitive) parent IRQ */
++	desc->chip->ack(irq);
++	for (;;) {
++		/* Reading ISR acks pending (edge triggered) GPIO interrupts.
++		 * When there none are pending, we're finished unless we need
++		 * to process multiple banks (like ID_PIOCDE on sam9263).
++		 */
++		isr = __raw_readl(pio + PIO_ISR) & __raw_readl(pio + PIO_IMR);
++		if (!isr) {
++			if (!bank->next)
++				break;
++			bank = bank->next;
++			pio = bank->regbase;
++			continue;
++		}
++
++		pin = bank->chipbase;
++		gpio = &irq_desc[pin];
++
++		while (isr) {
++			if (isr & 1) {
++				if (unlikely(gpio->depth)) {
++					/*
++					 * The core ARM interrupt handler lazily disables IRQs so
++					 * another IRQ must be generated before it actually gets
++					 * here to be disabled on the GPIO controller.
++					 */
++					gpio_irq_mask(pin);
++				}
++				else
++					__ipipe_handle_irq(pin, regs);
++			}
++			pin++;
++			gpio++;
++			isr >>= 1;
++		}
++	}
++	desc->chip->unmask(irq);
++	/* now it may re-trigger */
++#endif /* defined(AT91_TIMER_HZ) */
 +}
 +#endif /* CONFIG_IPIPE */
 +
  /*--------------------------------------------------------------------------*/
  
  /*
-@@ -460,4 +512,7 @@ void __init at91_gpio_init(struct at91_gpio_bank *data, int nr_banks)
- 
- 	gpio = data;
- 	gpio_banks = nr_banks;
+@@ -449,6 +555,9 @@ void __init at91_gpio_irq_setup(void)
+ 		set_irq_chained_handler(id, gpio_irq_handler);
+ 	}
+ 	pr_info("AT91: %d gpio irqs in %d banks\n", pin - PIN_BASE, gpio_banks);
 +#ifdef CONFIG_IPIPE
-+	__ipipe_at91_gpio_banks = nr_banks;
++	__ipipe_at91_gpio_banks = gpio_banks;
 +#endif /* CONFIG_IPIPE */
  }
+ 
+ /*
 diff --git a/arch/arm/mach-at91/irq.c b/arch/arm/mach-at91/irq.c
 index 78a5cdb..32b59fb 100644
 --- a/arch/arm/mach-at91/irq.c
@@ -4810,7 +4851,7 @@ index 47a6b08..1f066e3 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..5523aac
+index 0000000..2058e74
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,194 @@
@@ -4844,10 +4885,10 @@ index 0000000..5523aac
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.9-00"
++#define IPIPE_ARCH_STRING	"1.9-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"

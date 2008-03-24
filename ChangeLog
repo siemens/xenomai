@@ -1,3 +1,7 @@
+2008-03-11  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/arch/arm/patches: Update to 2.6.24-arm-1.9-01.
+
 2008-03-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/taskLib.c (taskSpawn): Fix error path.
