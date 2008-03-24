@@ -1,5 +1,9 @@
 2008-03-24  Philippe Gerum  <rpm@xenomai.org>
 
+	* RELEASE: Xenomai 2.4.3 (Back to Shalla-Bal)
+
+2008-03-24  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-13,
 	2.6.24-powerpc-2.1-01.
 
