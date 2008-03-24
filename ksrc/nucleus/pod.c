@@ -333,9 +333,9 @@ int xnpod_init(void)
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	/*
 	 * We have to differentiate the system heap memory from the
-	 * pool where the kernel thread stacks will be obtained from,
-	 * because on some architectures, vmalloc memory may not be
-	 * accessed while running in physical addressing mode
+	 * pool from which the kernel thread stacks will be obtained
+	 * from, because on some architectures, vmalloc memory may not
+	 * be accessed while running in physical addressing mode
 	 * (e.g. exception trampoline code on powerpc with standard
 	 * MMU support - CONFIG_PPC_STD_MMU). Meanwhile, since we want
 	 * to allow the system heap to be larger than 128Kb in
