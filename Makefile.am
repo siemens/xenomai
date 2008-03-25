@@ -90,8 +90,9 @@ linux/.xenomai-prepared: config.status
 
 linux/install: linux/all
 	@targets=modules_install ; \
-	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-	$(SUDO) true ; then sudo=$(SUDO) ; targets="$$targets install" ; fi && \
+	sudo=; if test x`id -u` = x0; then targets="$$targets install"; else \
+	if test \! "x`type $(SUDO)`" = x && $(SUDO) true; then sudo=$(SUDO); \
+	targets="$$targets install"; fi; fi && \
 	$(mkinstalldirs) $(DESTDIR) && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \

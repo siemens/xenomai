@@ -737,8 +737,9 @@ install-user:
 
 @XENO_BUILD_LINUX_TRUE@linux/install: linux/all
 @XENO_BUILD_LINUX_TRUE@	@targets=modules_install ; \
-@XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-@XENO_BUILD_LINUX_TRUE@	$(SUDO) true ; then sudo=$(SUDO) ; targets="$$targets install" ; fi && \
+@XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` = x0; then targets="$$targets install"; else \
+@XENO_BUILD_LINUX_TRUE@	if test \! "x`type $(SUDO)`" = x && $(SUDO) true; then sudo=$(SUDO); \
+@XENO_BUILD_LINUX_TRUE@	targets="$$targets install"; fi; fi && \
 @XENO_BUILD_LINUX_TRUE@	$(mkinstalldirs) $(DESTDIR) && \
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
