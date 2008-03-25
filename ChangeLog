@@ -1,3 +1,8 @@
+2008-03-25  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* include/asm-generic/bits/pod.h, include/asm-generic/system.h:
+	Refactor xnlock debug support.
+	
 2008-03-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-13,
