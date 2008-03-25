@@ -295,4 +295,22 @@ unsigned long long xnarch_get_cpu_time(void)
 
 EXPORT_SYMBOL(xnarch_get_cpu_time);
 
+#ifdef CONFIG_SMP
+void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+{
+	unsigned int spin_limit;
+	int cpu = xnarch_current_cpu();
+
+	xnlock_dbg_prepare_spin(&spin_limit);
+
+	while (atomic_cmpxchg(&lock->owner, ~0, cpu) != ~0)
+		do {
+			cpu_relax();
+			xnlock_dbg_spinning(lock, cpu, &spin_limit /*, */
+					    XNLOCK_DBG_PASS_CONTEXT);
+		} while(atomic_read(&lock->owner) != ~0);
+}
+EXPORT_SYMBOL(__xnlock_spin);
+#endif /* CONFIG_SMP */
+
 #endif /* !_XENO_ASM_GENERIC_BITS_POD_H */

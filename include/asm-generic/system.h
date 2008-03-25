@@ -130,10 +130,13 @@ typedef struct {
 #define XNLOCK_DBG_PASS_CONTEXT		, file, line, function
 #define XNLOCK_DBG_MAX_SPINS		10000000
 
-static inline void
-xnlock_dbg_prepare_acquire(unsigned long long *start, unsigned *spin_limit)
+static inline void xnlock_dbg_prepare_acquire(unsigned long long *start)
 {
 	*start = rthal_rdtsc();
+}
+
+static inline void xnlock_dbg_prepare_spin(unsigned *spin_limit)
+{
 	*spin_limit = XNLOCK_DBG_MAX_SPINS;
 }
 
@@ -204,15 +207,14 @@ typedef struct { atomic_t owner; } xnlock_t;
 #define XNLOCK_DBG_CONTEXT_ARGS
 #define XNLOCK_DBG_PASS_CONTEXT
 
-static inline void
-xnlock_dbg_prepare_acquire(unsigned long long *start, unsigned *spin_limit)
-{ }
+static inline void xnlock_dbg_prepare_acquire(unsigned long long *start) { }
+static inline void xnlock_dbg_prepare_spin(unsigned *spin_limit)	 { }
 
 static inline void
-xnlock_dbg_spinning(xnlock_t *lock, int cpu, unsigned int *spin_limit)	{ }
+xnlock_dbg_spinning(xnlock_t *lock, int cpu, unsigned int *spin_limit)	 { }
 
 static inline void
-xnlock_dbg_acquired(xnlock_t *lock, int cpu, unsigned long long *start)	{ }
+xnlock_dbg_acquired(xnlock_t *lock, int cpu, unsigned long long *start)	 { }
 
 static inline int xnlock_dbg_release(xnlock_t *lock)
 {
@@ -321,23 +323,20 @@ static inline void xnlock_init (xnlock_t *lock)
 #define DEFINE_XNLOCK(lock)		xnlock_t lock = XNARCH_LOCK_UNLOCKED
 #define DEFINE_PRIVATE_XNLOCK(lock)	static DEFINE_XNLOCK(lock)
 
+void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
+
 static inline int __xnlock_get(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	unsigned long long start;
-	unsigned int spin_limit;
 	int cpu = xnarch_current_cpu();
 
 	if (atomic_read(&lock->owner) == cpu)
 		return 1;
 
-	xnlock_dbg_prepare_acquire(&start, &spin_limit);
+	xnlock_dbg_prepare_acquire(&start);
 
-	while (atomic_cmpxchg(&lock->owner, ~0, cpu) != ~0)
-		do {
-			cpu_relax();
-			xnlock_dbg_spinning(lock, cpu, &spin_limit /*, */
-					    XNLOCK_DBG_PASS_CONTEXT);
-		} while(atomic_read(&lock->owner) != ~0);
+	if (unlikely(atomic_cmpxchg(&lock->owner, ~0, cpu) != ~0))
+		__xnlock_spin(lock /*, */ XNLOCK_DBG_PASS_CONTEXT);
 
 	xnlock_dbg_acquired(lock, cpu, &start /*, */ XNLOCK_DBG_PASS_CONTEXT);
 

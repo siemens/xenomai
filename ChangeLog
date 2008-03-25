@@ -1,7 +1,7 @@
 2008-03-25  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/asm-generic/bits/pod.h, include/asm-generic/system.h:
-	Refactor xnlock debug support.
+	Refactor xnlock debug support. Move spinning code out of line.
 	
 2008-03-24  Philippe Gerum  <rpm@xenomai.org>
 
