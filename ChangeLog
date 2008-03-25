@@ -1,3 +1,8 @@
+2008-03-24  Stephane Fillod  <stephane.fillod@thomson.net>
+
+	* ksrc/skins/native/heap.c: Output oustanding number of heap
+	mappings to registry /proc file.
+	
 2008-03-25  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/asm-generic/bits/pod.h, include/asm-generic/system.h:
