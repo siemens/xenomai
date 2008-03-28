@@ -294,34 +294,6 @@ err_out:
 
 EXPORT_SYMBOL(__rt_dev_socket);
 
-int __rt_dev_select_bind(rtdm_user_info_t *info, int fd,
-			 struct xnselector *selector,
-			 unsigned type, unsigned index)
-{
-	struct rtdm_dev_context *context;
-	struct rtdm_operations  *ops;
-	int ret;
-
-	context = rtdm_context_get(fd);
-
-	ret = -EBADF;
-	if (unlikely(!context))
-		goto err_out;
-
-	ops = context->ops;
-
-	ret = ops->select_bind(context, selector, type, index);
-
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
-
-	rtdm_context_unlock(context);
-
-  err_out:
-	return ret;
-}
-
-EXPORT_SYMBOL(__rt_dev_select_bind);
-
 int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 {
 	struct rtdm_dev_context *context;
@@ -543,6 +515,62 @@ ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 }
 
 EXPORT_SYMBOL(__rt_dev_sendmsg);
+
+/**
+ * @brief Bind a selector to specified event types of a given file descriptor
+ * @internal
+ *
+ * This function is invoked by higher RTOS layers implementing select-like
+ * services. It shall not be called directly by RTDM drivers.
+ *
+ * @param[in] fd File descriptor to bind to
+ * @param[in,out] selector Selector object that shall be bound to the given
+ * event
+ * @param[in] type Event type the caller is interested in
+ * @param[in] fd_index Index in the file descriptor set of the caller
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EBADF is returned if the file descriptor @a fd cannot be resolved.
+ *
+ * - -EINVAL is returned if @a type or @a fd_index are invalid.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_select_bind(int fd, rtdm_selector_t *selector,
+		     enum rtdm_selecttype type, unsigned fd_index)
+{
+	struct rtdm_dev_context *context;
+	struct rtdm_operations  *ops;
+	int ret;
+
+	context = rtdm_context_get(fd);
+
+	ret = -EBADF;
+	if (unlikely(!context))
+		goto err_out;
+
+	ops = context->ops;
+
+	ret = ops->select_bind(context, selector, type, fd_index);
+
+	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+
+	rtdm_context_unlock(context);
+
+  err_out:
+	return ret;
+}
+
+EXPORT_SYMBOL(rtdm_select_bind);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
