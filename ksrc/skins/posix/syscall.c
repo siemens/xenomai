@@ -2370,11 +2370,10 @@ static int select_bind_one(struct xnselector *selector, unsigned type, int fd)
 	pse51_assoc_t *assoc;
 #if defined(CONFIG_XENO_SKIN_RTDM) || defined (CONFIG_XENO_SKIN_RTDM_MODULE)
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
-	
+
 	if (fd >= rtdm_fd_start)
-		return __rt_dev_select_bind(current,
-					    fd - rtdm_fd_start,
-					    selector, type, fd);
+		return rtdm_select_bind(fd - rtdm_fd_start,
+					selector, type, fd);
 #endif /* CONFIG_XENO_SKIN_RTDM */
 
 	assoc = pse51_assoc_lookup(&pse51_queues()->uqds, fd);

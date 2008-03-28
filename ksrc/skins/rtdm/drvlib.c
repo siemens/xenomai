@@ -4,6 +4,7 @@
  *
  * @note Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+ * @note Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@gmail.com>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -764,32 +765,6 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 
 EXPORT_SYMBOL(rtdm_event_init);
 
-#ifdef CONFIG_XENO_OPT_RTDM_SELECT
-int rtdm_event_select_bind(rtdm_event_t *event,
-			   struct xnselector *selector,
-			   unsigned type,
-			   unsigned bit_index)
-{
-	struct xnselect_binding *binding;
-	int err;
-	spl_t s;
-
-	binding = xnmalloc(sizeof(*binding));
-	if (!binding)
-		return -ENOMEM;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = xnselect_bind(&event->select_block,
-			    binding, selector, type,bit_index,
-			    xnsynch_test_flags(&event->synch_base,
-					       RTDM_EVENT_PENDING));
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-EXPORT_SYMBOL(rtdm_event_select_bind);
-#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
-
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
  * @brief Destroy an event
@@ -1036,6 +1011,65 @@ void rtdm_event_clear(rtdm_event_t *event)
 }
 
 EXPORT_SYMBOL(rtdm_event_clear);
+
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+/**
+ * @brief Bind a selector to an event
+ *
+ * This functions binds the given selector to an event so that the former is
+ * notified when the event state changes. Typically the select binding handler
+ * will invoke this service.
+ *
+ * @param[in,out] event Event handle as returned by rtdm_event_init()
+ * @param[in,out] selector Selector as passed to the select binding handler
+ * @param[in] type Type of the bound event as passed to the select binding handler
+ * @param[in] fd_index File descriptor index as passed to the select binding
+ * handler
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EIDRM is returned if @a event has been destroyed.
+ *
+ * - -ENOMEM is returned if there is insufficient memory to establish the
+ * dynamic binding.
+ *
+ * - -EINVAL is returned if @a type or @a fd_index are invalid.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
+			   enum rtdm_selecttype type, unsigned fd_index)
+{
+	struct xnselect_binding *binding;
+	int err;
+	spl_t s;
+
+	binding = xnmalloc(sizeof(*binding));
+	if (!binding)
+		return -ENOMEM;
+
+	xnlock_get_irqsave(&nklock, s);
+	if (unlikely(testbits(event->synch_base.status, RTDM_SYNCH_DELETED)))
+		err = -EIDRM;
+	else
+		err = xnselect_bind(&event->select_block,
+				    binding, selector, type, fd_index,
+				    xnsynch_test_flags(&event->synch_base,
+						       RTDM_EVENT_PENDING));
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL(rtdm_event_select_bind);
+#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 /** @} */
 
 /*!
@@ -1076,30 +1110,6 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 }
 
 EXPORT_SYMBOL(rtdm_sem_init);
-
-#ifdef CONFIG_XENO_OPT_RTDM_SELECT
-int rtdm_sem_select_bind(rtdm_sem_t *sem,
-			 struct xnselector *selector,
-			 unsigned type,
-			 unsigned bit_index)
-{
-	struct xnselect_binding *binding;
-	int err;
-	spl_t s;
-
-	binding = xnmalloc(sizeof(*binding));
-	if (!binding)
-		return -ENOMEM;
-
-	xnlock_get_irqsave(&nklock, s);
-	err = xnselect_bind(&sem->select_block,
-			    binding, selector, type, bit_index, sem->value > 0);
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-EXPORT_SYMBOL(rtdm_sem_select_bind);
-#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -1207,7 +1217,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (testbits(sem->synch_base.status, RTDM_SYNCH_DELETED))
+	if (unlikely(testbits(sem->synch_base.status, RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
 	else if (sem->value > 0) {
 		if(!--sem->value)
@@ -1284,6 +1294,63 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 }
 
 EXPORT_SYMBOL(rtdm_sem_up);
+
+#ifdef CONFIG_XENO_OPT_RTDM_SELECT
+/**
+ * @brief Bind a selector to a semaphore
+ *
+ * This functions binds the given selector to the semaphore so that the former
+ * is notified when the semaphore state changes. Typically the select binding
+ * handler will invoke this service.
+ *
+ * @param[in,out] sem Semaphore handle as returned by rtdm_sem_init()
+ * @param[in,out] selector Selector as passed to the select binding handler
+ * @param[in] type Type of the bound event as passed to the select binding handler
+ * @param[in] fd_index File descriptor index as passed to the select binding
+ * handler
+ *
+ * @return 0 on success, otherwise:
+ *
+ * - -EIDRM is returned if @a sem has been destroyed.
+ *
+ * - -ENOMEM is returned if there is insufficient memory to establish the
+ * dynamic binding.
+ *
+ * - -EINVAL is returned if @a type or @a fd_index are invalid.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
+			 enum rtdm_selecttype type, unsigned fd_index)
+{
+	struct xnselect_binding *binding;
+	int err;
+	spl_t s;
+
+	binding = xnmalloc(sizeof(*binding));
+	if (!binding)
+		return -ENOMEM;
+
+	xnlock_get_irqsave(&nklock, s);
+	if (unlikely(testbits(sem->synch_base.status, RTDM_SYNCH_DELETED)))
+		err = -EIDRM;
+	else
+		err = xnselect_bind(&sem->select_block, binding, selector,
+				    type, fd_index, (sem->value > 0));
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+EXPORT_SYMBOL(rtdm_sem_select_bind);
+#endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 /** @} */
 
 /*!

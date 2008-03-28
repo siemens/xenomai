@@ -4,6 +4,7 @@
  *
  * @note Copyright (C) 2005-2007 Jan Kiszka <jan.kiszka@web.de>
  * @note Copyright (C) 2005 Joerg Langenberg <joerg.langenberg@gmx.net>
+ * @note Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@gmail.com>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -49,6 +50,8 @@
 #endif
 
 struct rtdm_dev_context;
+typedef struct xnselector rtdm_selector_t;
+enum rtdm_selecttype;
 
 /*!
  * @addtogroup devregister
@@ -98,7 +101,7 @@ struct rtdm_dev_context;
  * @{
  */
 /** Version of struct rtdm_device */
-#define RTDM_DEVICE_STRUCT_VER		4
+#define RTDM_DEVICE_STRUCT_VER		5
 
 /** Version of struct rtdm_dev_context */
 #define RTDM_CONTEXT_STRUCT_VER		3
@@ -187,6 +190,22 @@ typedef int (*rtdm_ioctl_handler_t)(struct rtdm_dev_context *context,
 				    unsigned int request, void __user *arg);
 
 /**
+ * Select binding handler
+ *
+ * @param[in] context Context structure associated with opened device instance
+ * @param[in,out] selector Object that shall be bound to the given event
+ * @param[in] type Event type the selector is interested in
+ * @param[in] fd_index Opaque value, to be passed to rtdm_event_select_bind or
+ * rtdm_sem_select_bind unmodfied
+ *
+ * @return 0 on success, otherwise negative error code
+ */
+typedef int (*rtdm_select_bind_handler_t)(struct rtdm_dev_context *context,
+					  rtdm_selector_t *selector,
+					  enum rtdm_selecttype type,
+					  unsigned fd_index);
+
+/**
  * Read handler
  *
  * @param[in] context Context structure associated with opened device instance
@@ -262,11 +281,6 @@ typedef ssize_t (*rtdm_sendmsg_handler_t)(struct rtdm_dev_context *context,
 
 typedef int (*rtdm_rt_handler_t)(struct rtdm_dev_context *context,
 				 rtdm_user_info_t *user_info, void *arg);
-
-typedef int (*rtdm_select_bind_handler_t)(struct rtdm_dev_context *context,
-					  struct xnselector *selector,
-					  unsigned type,
-					  unsigned index);
 /**
  * Device operations
  */
@@ -282,6 +296,9 @@ struct rtdm_operations {
 	rtdm_ioctl_handler_t ioctl_rt;
 	/** IOCTL from non-real-time context (optional) */
 	rtdm_ioctl_handler_t ioctl_nrt;
+
+	/** Select binding handler for any context (optional) */
+	rtdm_select_bind_handler_t select_bind;
 	/** @} Common Operations */
 
 	/*! @name Stream-Oriented Device Operations
@@ -309,8 +326,6 @@ struct rtdm_operations {
 	/** Transmit message handler for non-real-time context (optional) */
 	rtdm_sendmsg_handler_t sendmsg_nrt;
 	/** @} Message-Oriented Device Operations */
-
-	rtdm_select_bind_handler_t select_bind;
 };
 
 struct rtdm_devctx_reserved {
@@ -493,6 +508,26 @@ static inline nanosecs_abs_t rtdm_clock_read_monotonic(void)
  * @addtogroup rtdmsync
  * @{
  */
+
+/*!
+ * @anchor RTDM_SELECTTYPE_xxx   @name RTDM_SELECTTYPE_xxx
+ * Event types select can bind to
+ * @{
+ */
+enum rtdm_selecttype {
+	/** Select input data availability events */
+	RTDM_SELECTTYPE_READ = XNSELECT_READ,
+
+	/** Select ouput buffer availability events */
+	RTDM_SELECTTYPE_WRITE = XNSELECT_WRITE,
+
+	/** Select exceptional events */
+	RTDM_SELECTTYPE_EXCEPT = XNSELECT_EXCEPT
+};
+/** @} RTDM_SELECTTYPE_xxx */
+
+int rtdm_select_bind(int fd, rtdm_selector_t *selector,
+		     enum rtdm_selecttype type, unsigned fd_index);
 
 /*!
  * @name Global Lock across Scheduler Invocation
@@ -1016,12 +1051,10 @@ typedef struct {
 
 void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
 #ifdef CONFIG_XENO_OPT_RTDM_SELECT
-int rtdm_event_select_bind(rtdm_event_t *event,
-			   struct xnselector *selector,
-			   unsigned type,
-			   unsigned bit_index);
+int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
+			   enum rtdm_selecttype type, unsigned fd_index);
 #else /* !CONFIG_XENO_OPT_RTDM_SELECT */
-#define rtdm_event_select_bind(e, s, t, b) ({ -EBADF; })
+#define rtdm_event_select_bind(e, s, t, i) ({ -EBADF; })
 #endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_event_wait(rtdm_event_t *event);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
@@ -1057,12 +1090,10 @@ typedef struct {
 
 void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
 #ifdef CONFIG_XENO_OPT_RTDM_SELECT
-int rtdm_sem_select_bind(rtdm_sem_t *sem,
-			 struct xnselector *selector,
-			 unsigned type,
-			 unsigned bit_index);
+int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
+			 enum rtdm_selecttype type, unsigned fd_index);
 #else /* !CONFIG_XENO_OPT_RTDM_SELECT */
-#define rtdm_sem_select_bind(s, se, t, b) ({ -EBADF; })
+#define rtdm_sem_select_bind(s, se, t, i) ({ -EBADF; })
 #endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_sem_down(rtdm_sem_t *sem);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
