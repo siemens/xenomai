@@ -154,8 +154,8 @@ static u_long tm_date_to_ticks(u_long date,
 		/* Add one day for leap year after February. */
 		*count += 1;
 
-	for (n = month - 1; month > 0; month--)
-		*count += tm_month_sizes[month - 1];
+	for (n = month - 1; n > 0; n--)
+		*count += tm_month_sizes[n];
 
 	*count += day - 1;
 	*count *= 24;
