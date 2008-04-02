@@ -1,3 +1,19 @@
+2008-04-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/bits/mlock_alert.h:
+	xeno_handle_mlock_alert() has to be a weak symbol to allow
+	static multi-lib support.
+
+2008-03-28  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos/pt.c (pt_getbuf): Return ERR_NOBUF when
+	required.
+
+2008-03-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos+/tm.c (tm_date_to_ticks): Fix month addition
+	loop.
+
 2008-03-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.20-powerpc-1.7-13.
