@@ -9,7 +9,7 @@
 __attribute__ ((weak))
 int xeno_sigxcpu_no_mlock = 1;
 
-__attribute__ ((visibility ("internal")))
+__attribute__ ((weak, visibility ("internal")))
 void xeno_handle_mlock_alert(int sig)
 {
 	struct sigaction sa;
