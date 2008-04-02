@@ -155,7 +155,8 @@ u_long pt_getbuf(u_long ptid, void **bufaddr)
 		pt->ublks++;
 		numblk = ((char *)buf - pt->data) / pt->bsize;
 		pt_bitmap_setbit(pt, numblk);
-	}
+	} else
+		err = ERR_NOBUF;
 
 	*bufaddr = buf;
 
