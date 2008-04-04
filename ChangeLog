@@ -1,3 +1,10 @@
+2008-04-04  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-*/{pod.h,init.h}: Introduce arch-specific
+	xnarch_ns_to_tsc as inverse of mul-shift xnarch_tsc_to_ns instead
+	of converting back via CPU frequency. Avoids drifts between large
+	calculated versus measured dates.
+
 2008-04-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/bits/mlock_alert.h:
