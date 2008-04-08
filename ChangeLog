@@ -1,5 +1,8 @@
 2008-04-08  Philippe Gerum  <rpm@xenomai.org>
 
+	* src/skins/posix/wrappers.c: Make placeholders weak symbols to
+	allow override.
+	
 	* ksrc/skins/vxworks/syscall.c: __vxworks_sem_give has to be a
 	conforming mode entry in order to properly signal mutex-type
 	semaphores, both from genuine Linux and Xenomai user-space
