@@ -1,8 +1,9 @@
 2008-04-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/syscall.c: __vxworks_sem_give has to be a
-	primary mode entry in order to properly signal mutex-type
-	semaphores.
+	conforming mode entry in order to properly signal mutex-type
+	semaphores, both from genuine Linux and Xenomai user-space
+	contexts.
 
 2008-04-04  Jan Kiszka  <jan.kiszka@web.de>
 
