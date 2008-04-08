@@ -46,7 +46,7 @@
 #define RTHAL_TIMER_DEVICE	"TIMER1"
 #define RTHAL_CLOCK_DEVICE	"TIMER1"
 #elif defined(CONFIG_ARCH_IXP4XX)
-#define RTHAL_TIMER_DEVICE	"ixp4xx_timer1"
+#define RTHAL_TIMER_DEVICE	"ixp4xx timer1"
 #define RTHAL_CLOCK_DEVICE	"OSTS"
 #elif defined(CONFIG_ARCH_PXA)
 #define RTHAL_TIMER_DEVICE	"osmr0"
@@ -108,6 +108,8 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/mach/irq.h>
 
 #define RTHAL_TIMER_IRQ   __ipipe_mach_timerint
+
+#define RTHAL_SHARED_HEAP_FLAGS XNHEAP_GFP_NONCACHED
 
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
