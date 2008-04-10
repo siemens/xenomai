@@ -102,8 +102,8 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 
 	if (pk_ctsk->stksz == 0)
 		pk_ctsk->stksz = PTHREAD_STACK_MIN * 4;
-	else if (pk_ctsk->stksz < PTHREAD_STACK_MIN)
-		pk_ctsk->stksz = PTHREAD_STACK_MIN;
+	else if (pk_ctsk->stksz < PTHREAD_STACK_MIN * 2)
+		pk_ctsk->stksz = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setstacksize(&thattr, pk_ctsk->stksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);

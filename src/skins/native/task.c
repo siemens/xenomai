@@ -129,8 +129,8 @@ int rt_task_create(RT_TASK *task,
 
 	if (stksize == 0)
 		stksize = PTHREAD_STACK_MIN * 4;
-	else if (stksize < PTHREAD_STACK_MIN)
-		stksize = PTHREAD_STACK_MIN;
+	else if (stksize < PTHREAD_STACK_MIN * 2)
+		stksize = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setstacksize(&thattr, stksize);
 	if (!(mode & T_JOINABLE))

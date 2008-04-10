@@ -138,8 +138,8 @@ int sc_tecreate(void (*entry) (void *),
 
 	if (ustacksz == 0)
 		ustacksz = PTHREAD_STACK_MIN * 4;
-	else if (ustacksz < PTHREAD_STACK_MIN)
-		ustacksz = PTHREAD_STACK_MIN;
+	else if (ustacksz < PTHREAD_STACK_MIN * 2)
+		ustacksz = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setstacksize(&thattr, ustacksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
