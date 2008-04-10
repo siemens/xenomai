@@ -160,8 +160,8 @@ STATUS taskInit(WIND_TCB *pTcb,
 
 	if (stacksize == 0)
 		stacksize = PTHREAD_STACK_MIN * 4;
-	else if (stacksize < PTHREAD_STACK_MIN)
-		stacksize = PTHREAD_STACK_MIN;
+	else if (stacksize < PTHREAD_STACK_MIN * 2)
+		stacksize = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);

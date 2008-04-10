@@ -1,3 +1,9 @@
+2008-04-10  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/*: Force minimum stack size to 32k, in order to work
+	around usual traps with stdio routines eating a lot of stack
+	space.
+
 2008-04-09  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/semLib.c (semb_take, semm_take, semm_give):

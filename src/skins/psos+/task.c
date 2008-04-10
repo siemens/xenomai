@@ -127,8 +127,8 @@ u_long t_create(const char *name,
 
 	if (ustack == 0)
 		ustack = PTHREAD_STACK_MIN * 4;
-	else if (ustack < PTHREAD_STACK_MIN)
-		ustack = PTHREAD_STACK_MIN;
+	else if (ustack < PTHREAD_STACK_MIN * 2)
+		ustack = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
