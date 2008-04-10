@@ -242,9 +242,12 @@ static inline int wind_errnoget (void)
 
 
 /* Must be called with nklock locked, interrupts off. */
-static inline void taskSafeInner (wind_task_t *cur)
+static inline void taskSafeInner (xnthread_t *cur)
 {
-    cur->safecnt++;
+	if (xnthread_get_magic(cur) == VXWORKS_SKIN_MAGIC) {
+		wind_task_t *task = thread2wind_task(cur);
+		task->safecnt++;
+	}
 }
 
 /* Must be called with nklock locked, interrupts off.
@@ -253,16 +256,29 @@ static inline void taskSafeInner (wind_task_t *cur)
    - OK if the safe count was zero or decremented but no rescheduling is needed.
    - 1 if the safe count was decremented and rescheduling is needed.
 */
-static inline int taskUnsafeInner (wind_task_t *cur)
+static inline int taskUnsafeInner (xnthread_t *cur)
 {
-    if(!xnpod_primary_p())
-        return ERROR;
-    
-    if (cur->safecnt == 0)
-	return OK;
+	wind_task_t *task;
 
-    if(--cur->safecnt == 0)
-        return xnsynch_flush(&cur->safesync,0) == XNSYNCH_RESCHED;
+	if (xnthread_get_magic(cur) != VXWORKS_SKIN_MAGIC)
+		/*
+		 * We utterly lie here, but cross-API calls to obtain
+		 * VxWorks task safetiness are more than borderline
+		 * anyway. We basically allow this to make
+		 * semGive/semTake available to non-VxWorks tasks.
+		 */
+		return OK;
+
+	if(!xnpod_primary_p())
+		return ERROR;
+
+	task = thread2wind_task(cur);
+
+	if (task->safecnt == 0)
+		return OK;
+
+	if(--task->safecnt == 0)
+		return xnsynch_flush(&task->safesync,0) == XNSYNCH_RESCHED;
 
     return OK;
 }

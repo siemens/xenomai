@@ -485,7 +485,7 @@ STATUS taskSafe(void)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	taskSafeInner(wind_current_task());
+	taskSafeInner(xnpod_current_thread());
 	xnlock_put_irqrestore(&nklock, s);
 
 	return OK;
@@ -497,7 +497,7 @@ STATUS taskUnsafe(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	switch (taskUnsafeInner(wind_current_task())) {
+	switch (taskUnsafeInner(xnpod_current_thread())) {
 
 	case ERROR:
 		wind_errnoset(-EPERM);

@@ -1,3 +1,12 @@
+2008-04-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/semLib.c (semb_take, semm_take, semm_give):
+	Only refer to the base thread control block to allow cross-API
+	calls.
+
+	* ksrc/skins/vxworks/defs.h (taskSafeInner, taskUnsafeInner): Make
+	those nops for non-VxWorks callers.
+
 2008-04-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/posix/wrappers.c: Make placeholders weak symbols to
