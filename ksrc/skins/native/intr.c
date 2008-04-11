@@ -160,14 +160,18 @@ static xnpnode_t __intr_pnode = {
  * The ISR is not encouraged to use these bits in case it shares the IRQ line
  * with other ISRs in the real-time domain.
  *
+ * - RT_INTR_NOENABLE asks Xenomai not to re-enable the IRQ line upon return
+ * of the interrupt service routine.
+ *
  * - RT_INTR_PROPAGATE tells Xenomai to require the real-time control
  * layer to forward the IRQ. For instance, this would cause the Adeos
  * control layer to propagate the interrupt down the interrupt
  * pipeline to other Adeos domains, such as Linux. This is the regular
- * way to share interrupts between Xenomai and the Linux kernel.
- *
- * - RT_INTR_NOENABLE asks Xenomai not to re-enable the IRQ line upon return
- * of the interrupt service routine.
+ * way to share interrupts between Xenomai and the Linux kernel. In
+ * effect, RT_INTR_PROPAGATE implies RT_INTR_NOENABLE since it would
+ * make no sense to re-enable the interrupt channel before the next
+ * domain down the pipeline has had a chance to process the propagated
+ * interrupt.
  *
  * A count of interrupt receipts is tracked into the interrupt
  * descriptor, and reset to zero each time the interrupt object is

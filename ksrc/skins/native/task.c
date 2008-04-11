@@ -2212,10 +2212,17 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * Creates a real-time task running in the context of the calling
  * regular Linux task in user-space.
  *
- * @param task The address of a task descriptor Xenomai will use to store
- * the task-related data.  This descriptor must always be valid while
- * the task is active therefore it must be allocated in permanent
- * memory.
+ * @param task In non-NULL, the address of a task descriptor Xenomai
+ * will use to store the task-related data; this descriptor must
+ * always be valid while the task is active therefore it must be
+ * allocated in permanent memory. If NULL is passed, then the
+ * descriptor will not be returned; main() threads which do not need
+ * to be referred to by other threads may use this syntax to promote
+ * themselves to the real-time domain for instance.
+ *
+ * @note Allowing for a NULL descriptor pointer to be passed is a
+ * recent feature which is not available with any earlier Xenomai
+ * release.
  *
  * The current context is switched to primary execution mode and
  * returns immediately, unless T_SUSP has been passed in the @a mode

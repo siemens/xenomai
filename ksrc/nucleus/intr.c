@@ -530,15 +530,19 @@ int __init xnintr_mount(void)
  * The ISR is not encouraged to use these bits in case it shares the IRQ line
  * with other ISRs in the real-time domain.
  *
- * - XN_ISR_PROPAGATE tells the nucleus to require the real-time control
- * layer to forward the IRQ. For instance, this would cause the Adeos
- * control layer to propagate the interrupt down the interrupt
- * pipeline to other Adeos domains, such as Linux. This is the regular
- * way to share interrupts between the nucleus and the host system.
- *
  * - XN_ISR_NOENABLE causes the nucleus to ask the real-time control
  * layer _not_ to re-enable the IRQ line (read the following section).
  * xnarch_end_irq() must be called to re-enable the IRQ line later.
+ *
+ * - XN_ISR_PROPAGATE tells the nucleus to require the real-time
+ * control layer to forward the IRQ. For instance, this would cause
+ * the Adeos control layer to propagate the interrupt down the
+ * interrupt pipeline to other Adeos domains, such as Linux. This is
+ * the regular way to share interrupts between the nucleus and the
+ * host system. In effect, XN_ISR_PROPAGATE implies XN_ISR_NOENABLE
+ * since it would make no sense to re-enable the interrupt channel
+ * before the next domain down the pipeline has had a chance to
+ * process the propagated interrupt.
  *
  * The nucleus re-enables the IRQ line by default. Over some real-time
  * control layers which mask and acknowledge IRQs, this operation is

@@ -76,10 +76,13 @@
  * @par Parameters:
  * @a intrp and @a irq have the same meaning as in kernel-space;
  * @a mode is a bitwise OR of the following values:
- * - PTHREAD_IPROPAGATE, meaning that the interrupt should be propagated to
- *   lower priority domains;
  * - PTHREAD_INOAUTOENA, meaning that the interrupt should not be automatically
  *   re-enabled.
+ * - PTHREAD_IPROPAGATE, meaning that the interrupt should be propagated to
+ *   lower priority domains. In effect, PTHREAD_IPROPAGATE implies
+ *   PTHREAD_INOAUTOENA since it would make no sense to re-enable the
+ *   interrupt channel before the next domain down the pipeline has
+ *   had a chance to process the propagated interrupt.
  *
  * This service is intended to be used in conjunction with the
  * pthread_intr_wait_np() service.
