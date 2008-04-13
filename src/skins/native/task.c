@@ -294,8 +294,10 @@ RT_TASK *rt_task_self(void)
 	self = (RT_TASK *)malloc(sizeof(*self));
 
 	if (!self ||
-	    XENOMAI_SKINCALL1(__native_muxid, __native_task_self, self) != 0)
+	    XENOMAI_SKINCALL1(__native_muxid, __native_task_self, self) != 0) {
+		free(self);
 		return NULL;
+	}
 
 	pthread_setspecific(__native_tskey, self);
 
