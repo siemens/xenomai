@@ -410,10 +410,16 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
  * A nesting count is maintained so that rt_task_suspend() and
  * rt_task_resume() must be used in pairs.
  *
+ * Receiving a Linux signal causes the suspended task to resume
+ * immediately.
+ *
  * @param task The descriptor address of the affected task. If @a task
  * is NULL, the current task is suspended.
  *
  * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINTR is returned if a Linux signal has been received by the
+ * suspended task.
  *
  * - -EINVAL is returned if @a task is not a task descriptor.
  *
@@ -463,9 +469,12 @@ int rt_task_suspend(RT_TASK *task)
 		goto unlock_and_exit;
 	}
 
-	if (task->suspend_depth++ == 0)
+	if (task->suspend_depth++ == 0) {
 		xnpod_suspend_thread(&task->thread_base, XNSUSP,
 				     XN_INFINITE, XN_RELATIVE, NULL);
+		if (xnthread_test_info(&task->thread_base, XNBREAK))
+			err = -EINTR;
+	}
 
       unlock_and_exit:
 
