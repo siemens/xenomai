@@ -1,3 +1,8 @@
+2008-04-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/task.c (rt_task_suspend): Check for break
+	condition upon return from xnpod_suspend_thread().
+
 2008-04-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/syscall.c: __vxworks_sem_give has to be a
