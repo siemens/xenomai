@@ -598,7 +598,6 @@ int __init xnintr_mount(void)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -644,7 +643,6 @@ int xnintr_init(xnintr_t *intr,
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -684,7 +682,6 @@ int xnintr_destroy(xnintr_t *intr)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  *
@@ -745,7 +742,6 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -790,7 +786,6 @@ int xnintr_detach(xnintr_t *intr)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
@@ -822,7 +817,6 @@ int xnintr_enable(xnintr_t *intr)
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
  *
  * Rescheduling: never.
  */
