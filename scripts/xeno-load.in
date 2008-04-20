@@ -127,7 +127,7 @@ children_pids=""
 cleanup () {
 
     if test \! "x$children_pids" = x; then
-       $sudo kill -SIGINT $children_pids >& /dev/null
+       $sudo kill -SIGINT $children_pids > /dev/null 2>&1
        children_pids=""
        sleep 1
     fi
