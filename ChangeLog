@@ -1,5 +1,11 @@
 2008-04-23  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/native/task.c (rt_task_sleep_until): Provide support
+	for infinite sleep, passing TM_INFINITE as the wake up date. Only
+	rt_task_unblock() can resume tasks blocked that way.
+
+2008-04-23  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/powerpc/patches: Update to 2.6.24-powerpc-2.1-02.
 
 2008-04-14  Philippe Gerum  <rpm@xenomai.org>

@@ -958,8 +958,10 @@ int rt_task_sleep(RTIME delay)
  * reached.
  *
  * @param date The absolute date in clock ticks to wait before
- * resuming the task (see note). Passing an already elapsed date
- * causes the task to return immediately with no delay.
+ * resuming the task (see note). As a special case, TM_INFINITE is an
+ * acceptable value that makes the caller block indefinitely, until
+ * rt_task_unblock() is called against it. Otherwise, any wake up date
+ * in the past causes the task to return immediately with no delay.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -968,7 +970,8 @@ int rt_task_sleep(RTIME delay)
  *
  * - -ETIMEDOUT is returned if @a date has already elapsed.
  *
- * - -EWOULDBLOCK is returned if the system timer is inactive.
+ * - -EWOULDBLOCK is returned if the system timer is inactive, and
+ *    @date is valid but different from TM_INFINITE.
  *
  * - -EPERM is returned if this service was called from a context
  * which cannot sleep (e.g. interrupt, non-realtime or scheduler
@@ -990,8 +993,8 @@ int rt_task_sleep(RTIME delay)
 
 int rt_task_sleep_until(RTIME date)
 {
+	int err = 0, mode = XN_REALTIME;
 	xnthread_t *self;
-	int err = 0;
 	spl_t s;
 
 	if (xnpod_unblockable_p())
@@ -999,21 +1002,29 @@ int rt_task_sleep_until(RTIME date)
 
 	self = xnpod_current_thread();
 
-	if (!xnthread_timed_p(self))
-		return -EWOULDBLOCK;
-
 	xnlock_get_irqsave(&nklock, s);
 
-	/* Calling the suspension service on behalf of the current task
-	   implicitely calls the rescheduling procedure. */
-
-	if (date > xntbase_get_time(__native_tbase)) {
-		xnpod_suspend_thread(self, XNDELAY, date, XN_REALTIME, NULL);
-
-		if (xnthread_test_info(self, XNBREAK))
-			err = -EINTR;
-	} else
+	if (date == TM_INFINITE)
+		/* i.e. will resume only upon rt_task_unblock(). */
+		mode = XN_RELATIVE;
+	else if (date <= xntbase_get_time(__native_tbase)) {
 		err = -ETIMEDOUT;
+		goto unlock_and_exit;
+	} else if (!xnthread_timed_p(self)) {
+		err = -EWOULDBLOCK;
+		goto unlock_and_exit;
+	}
+
+	/*
+	 * Calling the suspension service on behalf of the current
+	 * task implicitely calls the rescheduling procedure.
+	 */
+	xnpod_suspend_thread(self, XNDELAY, date, mode, NULL);
+
+	if (xnthread_test_info(self, XNBREAK))
+		err = -EINTR;
+
+ unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
