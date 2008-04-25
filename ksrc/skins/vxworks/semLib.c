@@ -432,6 +432,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 	inith(&sem->link);
 	sem->magic = WIND_SEM_MAGIC;
 	sem->count = count;
+	sem->owner = NULL;
 	sem->vtbl = vtbl;
 
 	xnlock_get_irqsave(&nklock, s);

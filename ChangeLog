@@ -1,3 +1,8 @@
+2008-04-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/semLib.c: (sem_create_internal): Clear the
+	owner field at init.
+
 2008-04-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_suspend): Check for break
