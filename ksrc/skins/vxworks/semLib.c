@@ -426,6 +426,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 	sem->magic = WIND_SEM_MAGIC;
 	sem->count = count;
 	sem->vtbl = vtbl;
+	sem->owner = NULL;
 	inith(&sem->rlink);
 	sem->rqueue = &wind_get_rholder()->semq;
 
