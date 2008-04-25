@@ -3825,7 +3825,7 @@ index 6d011bd..a99aa60 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..2efaca4
+index 0000000..554ee87
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,126 @@
@@ -3856,10 +3856,10 @@ index 0000000..2efaca4
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-04"
++#define IPIPE_ARCH_STRING	"2.0-05"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -6187,17 +6187,18 @@ index ff203dd..3791605 100644
 +
  #endif
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 1b7b95c..7f27db6 100644
+index 1b7b95c..a0c80c7 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -104,6 +104,7 @@ extern unsigned int kobjsize(const void *objp);
- #define VM_MAPPED_COPY	0x01000000	/* T if mapped copy of data (nommu mmap) */
- #define VM_INSERTPAGE	0x02000000	/* The vma has had "vm_insert_page()" done on it */
- #define VM_ALWAYSDUMP	0x04000000	/* Always include in core dumps */
-+#define VM_PINNED	0x08000000	/* Disable faults for the vma */
+@@ -107,6 +107,8 @@ extern unsigned int kobjsize(const void *objp);
  
  #define VM_CAN_NONLINEAR 0x08000000	/* Has ->fault & does nonlinear pages */
  
++#define VM_PINNED	0x10000000	/* Disable faults for the vma */
++
+ #ifndef VM_STACK_DEFAULT_FLAGS		/* arch can override this */
+ #define VM_STACK_DEFAULT_FLAGS VM_DATA_DEFAULT_FLAGS
+ #endif
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index 484988e..dc27067 100644
 --- a/include/linux/preempt.h
@@ -10524,7 +10525,7 @@ index 9c4b025..08f096b 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 4b0144b..e0e7a3d 100644
+index 4b0144b..32d6cb6 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -10633,7 +10634,7 @@ index 4b0144b..e0e7a3d 100644
  	src_pte = pte_offset_map_nested(src_pmd, addr);
  	src_ptl = pte_lockptr(src_mm, src_pmd);
  	spin_lock_nested(src_ptl, SINGLE_DEPTH_NESTING);
-@@ -521,7 +579,20 @@ again:
+@@ -521,7 +579,26 @@ again:
  			progress++;
  			continue;
  		}
@@ -10643,8 +10644,14 @@ index 4b0144b..e0e7a3d 100644
 +			if (is_cow_mapping(vma->vm_flags)) {
 +				if (((vma->vm_flags|src_mm->def_flags) & (VM_LOCKED|VM_PINNED))
 +				    == (VM_LOCKED|VM_PINNED)) {
++				    	arch_leave_lazy_mmu_mode();
++				    	spin_unlock(src_ptl);
++				    	pte_unmap_nested(src_pte);
++				    	add_mm_rss(dst_mm, rss[0], rss[1]);
++				    	pte_unmap_unlock(dst_pte, dst_ptl);
++				    	cond_resched();
 +					do_cow_break = 1;
-+					break;
++					goto again;
 +				}
 +			}
 +		}
@@ -10655,7 +10662,7 @@ index 4b0144b..e0e7a3d 100644
  		progress += 8;
  	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
  
-@@ -1496,34 +1567,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
+@@ -1496,34 +1573,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  	return pte;
  }
  
@@ -10690,7 +10697,7 @@ index 4b0144b..e0e7a3d 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2756,3 +2799,110 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2756,3 +2805,110 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
