@@ -1,5 +1,10 @@
 2008-04-25  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/skins/vxworks/semLib.c: (sem_create_internal): Clear the
+	owner field at init.
+
+2008-04-25  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/x86/patches: Update to 2.6.24-x86-2.0-05.
 
 2008-04-25  Philippe Gerum  <rpm@xenomai.org>
