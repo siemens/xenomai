@@ -1,3 +1,9 @@
+2008-04-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-x86/wrappers* (rthal_irq_chip_enable/disable): Route
+	enable/disable requests to unmask/mask PIC routines for
+	post-2.6.18 kernels.
+
 2008-04-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_sleep_until): Provide support
