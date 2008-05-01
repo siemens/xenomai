@@ -296,14 +296,17 @@ unsigned long __va_to_kva(unsigned long va);
 #define IRQF_SHARED			SA_SHIRQ
 #endif /* < 2.6.18 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+/* For pre-2.6.24 kernel with LTTng add-on. */
 #ifdef CONFIG_MARKERS
 #include <linux/marker.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 #define trace_mark(ev, fmt, args...)	MARK(ev, fmt, ## args)
-#endif
 #else /* !CONFIG_MARKERS */
 #define trace_mark(ev, fmt, args...)	do { } while (0)
-#endif /* CONFIG_MARKERS */
+#endif /* !CONFIG_MARKERS */
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
+#include <linux/marker.h>
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 static inline unsigned long hweight_long(unsigned long w)
