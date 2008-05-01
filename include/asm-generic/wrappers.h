@@ -296,8 +296,11 @@ unsigned long __va_to_kva(unsigned long va);
 #define IRQF_SHARED			SA_SHIRQ
 #endif /* < 2.6.18 */
 
-#if defined(CONFIG_MARKERS) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24)
+#ifdef CONFIG_MARKERS
 #include <linux/marker.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+#define trace_mark(ev, fmt, args...)	MARK(ev, fmt, ## args)
+#endif
 #else /* !CONFIG_MARKERS */
 #define trace_mark(ev, fmt, args...)	do { } while (0)
 #endif /* CONFIG_MARKERS */
