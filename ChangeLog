@@ -1,3 +1,9 @@
+2008-05-02  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/skins/posix/syscall.c: Fix pthread_cond/mutex_init for NULL
+	attributes, remove questionable locking around sem/mutex/cond
+	initialization and destruction (backport of #3369).
+
 2008-04-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/semLib.c: (sem_create_internal): Clear the
