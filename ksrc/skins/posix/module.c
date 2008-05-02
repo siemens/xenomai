@@ -131,7 +131,10 @@ int SKIN_INIT(posix)
 	err = pse51_syscall_init();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	if (err != 0) {
+#ifdef __KERNEL__
+		pse51_apc_pkg_cleanup();
 	  fail_free_tbase:
+#endif /* __KERNEL__ */
 		xntbase_free(pse51_tbase);
 	fail_shutdown_pod:
 		xnpod_shutdown(err);
