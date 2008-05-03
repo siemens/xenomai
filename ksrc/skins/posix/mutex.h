@@ -104,6 +104,7 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 
 	if (xnthread_test_info(cur, XNTIMEO))
 		return ETIMEDOUT;
+	mutex->count = count;
 
 	return 0;
 }
