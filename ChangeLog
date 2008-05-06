@@ -1,3 +1,8 @@
+2008-05-06  Klaas Gadeyne <klaas.gadeyne@fmtc.be>
+
+	* ksrc/skins/native/cond.c (rt_cond_wait): Fix
+	documentation (ETIMEDOUT status).
+	
 2008-05-02  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Fix pthread_cond/mutex_init for NULL
