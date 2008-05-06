@@ -97,7 +97,7 @@ void xnintr_clock_handler(void)
 
 	xnarch_announce_tick();
 
-	trace_mark(xn_nucleus_irq_enter, "irq %d", XNARCH_TIMER_IRQ);
+	trace_mark(xn_nucleus_irq_enter, "irq %u", XNARCH_TIMER_IRQ);
 	trace_mark(xn_nucleus_tbase_tick, "base %s", nktbase.name);
 
 	++sched->inesting;
@@ -122,7 +122,7 @@ void xnintr_clock_handler(void)
 		xnarch_relay_tick();
 	}
 
-	trace_mark(xn_nucleus_irq_exit, "irq %d", XNARCH_TIMER_IRQ);
+	trace_mark(xn_nucleus_irq_exit, "irq %u", XNARCH_TIMER_IRQ);
 	xnstat_exectime_switch(sched, prev);
 }
 
@@ -166,7 +166,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus_irq_enter, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
 
@@ -210,7 +210,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	if (--sched->inesting == 0 && xnsched_resched_p())
 		xnpod_schedule();
 
-	trace_mark(xn_nucleus_irq_exit, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
 }
 
@@ -231,7 +231,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus_irq_enter, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
 
@@ -290,7 +290,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	if (--sched->inesting == 0 && xnsched_resched_p())
 		xnpod_schedule();
 
-	trace_mark(xn_nucleus_irq_exit, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
 }
 
@@ -441,7 +441,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
-	trace_mark(xn_nucleus_irq_enter, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
 
@@ -488,7 +488,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	if (--sched->inesting == 0 && xnsched_resched_p())
 		xnpod_schedule();
 
-	trace_mark(xn_nucleus_irq_exit, "irq %d", irq);
+	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
 }
 
