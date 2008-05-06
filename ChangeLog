@@ -172,7 +172,7 @@
 
 2008-03-06  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/skins/native/syscall.c: Mark __rt_task_delete as a lostage
+	* ksrc/skins/native/syscall.c: Mark __rt_pipe_delete as a lostage
 	call, since it may release host memory.
 
 2008-03-05  Philippe Gerum  <rpm@xenomai.org>
