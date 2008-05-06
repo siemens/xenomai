@@ -174,7 +174,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_mark(xn_nucleus_synch_sleepon,
-		   "thread %p thread_name %s sync %p",
+		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
@@ -390,7 +390,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 		synch->owner = thread;
 		xnthread_set_info(thread, XNWAKEN);
 		trace_mark(xn_nucleus_synch_wakeup_one,
-			   "thread %p thread_name %s sync %p",
+			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
 	} else
