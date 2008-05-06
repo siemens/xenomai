@@ -1,3 +1,10 @@
+2008-05-06  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (do_schedule_event): Do not grab the
+	sighand lock for reading the signal pending mask: it's useless,
+	and exposes us to deadlocks on SMP because we own the runqueue
+	lock here.
+
 2008-05-06  Klaas Gadeyne <klaas.gadeyne@fmtc.be>
 
 	* ksrc/skins/native/cond.c (rt_cond_wait): Fix

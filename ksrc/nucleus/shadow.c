@@ -2183,20 +2183,26 @@ static inline void do_schedule_event(struct task_struct *next)
 	set_switch_lock_owner(prev);
 
 	if (threadin) {
-		/* Check whether we need to unlock the timers, each time a
-		   Linux task resumes from a stopped state, excluding tasks
-		   resuming shortly for entering a stopped state asap due to
-		   ptracing. To identify the latter, we need to check for
-		   SIGSTOP and SIGINT in order to encompass both the NPTL and
-		   LinuxThreads behaviours. */
-
+		/*
+		 * Check whether we need to unlock the timers, each
+		 * time a Linux task resumes from a stopped state,
+		 * excluding tasks resuming shortly for entering a
+		 * stopped state asap due to ptracing. To identify the
+		 * latter, we need to check for SIGSTOP and SIGINT in
+		 * order to encompass both the NPTL and LinuxThreads
+		 * behaviours.
+		 */
 		if (xnthread_test_info(threadin, XNDEBUG)) {
 			if (signal_pending(next)) {
 				sigset_t pending;
-
-				spin_lock(&wrap_sighand_lock(next));	/* Already interrupt-safe. */
+				/*
+				 * Do not grab the sighand lock here:
+				 * it's useless, and we already own
+				 * the runqueue lock, so this would
+				 * expose us to deadlock situations on
+				 * SMP.
+				 */
 				wrap_get_sigpending(&pending, next);
-				spin_unlock(&wrap_sighand_lock(next));
 
 				if (sigismember(&pending, SIGSTOP) ||
 				    sigismember(&pending, SIGINT))
