@@ -416,6 +416,9 @@ int rt_cond_broadcast(RT_COND *cond)
  * descriptor, including if the deletion occurred while the caller was
  * sleeping on the variable.
  *
+ * - -ETIMEDOUT is returned if @a timeout expired before the condition
+ * variable has been signaled.
+ *
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * waiting task before the condition variable has been signaled.
  *

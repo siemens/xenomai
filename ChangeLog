@@ -1,3 +1,8 @@
+2008-05-06  Klaas Gadeyne <klaas.gadeyne@fmtc.be>
+
+	* ksrc/skins/native/cond.c (rt_cond_wait): Fix
+	documentation (ETIMEDOUT status).
+	
 2008-04-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/semLib.c: (sem_create_internal): Clear the
