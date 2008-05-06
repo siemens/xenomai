@@ -181,7 +181,7 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
 	xnsched_t *sched = xnpod_current_sched();
 
-	trace_mark(xe_nucleus_sched_remote, MARK_NOARGS);
+	trace_mark(xn_nucleus_sched_remote, MARK_NOARGS);
 #if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
 	if (testbits(sched->status, XNRPICK)) {
 		clrbits(sched->status, XNRPICK);
@@ -1791,7 +1791,7 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 	xnlock_get_irqsave(&nklock, s);
 
 	trace_mark(xn_nucleus_thread_renice,
-		   "thread %p thread_nmae %s priority %d",
+		   "thread %p thread_name %s priority %d",
 		   thread, xnthread_name(thread), prio);
 
 	oldprio = thread->cprio;

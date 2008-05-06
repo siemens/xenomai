@@ -1241,8 +1241,8 @@ void xnshadow_relax(int notify)
 	   root thread. */
 
 	trace_mark(xn_nucleus_shadow_relaxed,
-		  "thread %p thread_name %s comm %s",
-		  thread, xnthread_name(thread), current->comm);
+		   "thread %p thread_name %s comm %s",
+		   thread, xnthread_name(thread), current->comm);
 }
 
 void xnshadow_exit(void)
