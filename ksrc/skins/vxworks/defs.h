@@ -79,8 +79,6 @@ struct wind_sem {
      */
     unsigned count;
     
-    xnthread_t *owner;
-
     xnholder_t rlink;		/* !< Link in resource queue. */
 #define rlink2sem(ln)	container_of(ln, wind_sem_t, rlink)
     xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
@@ -252,8 +250,7 @@ static inline void taskSafeInner (xnthread_t *cur)
 
 /* Must be called with nklock locked, interrupts off.
    Returns :
-   - ERROR if the current context is invalid
-   - OK if the safe count was zero or decremented but no rescheduling is needed.
+   - 0 if the safe count was zero or decremented but no rescheduling is needed.
    - 1 if the safe count was decremented and rescheduling is needed.
 */
 static inline int taskUnsafeInner (xnthread_t *cur)
@@ -267,20 +264,14 @@ static inline int taskUnsafeInner (xnthread_t *cur)
 		 * anyway. We basically allow this to make
 		 * semGive/semTake available to non-VxWorks tasks.
 		 */
-		return OK;
-
-	if(!xnpod_primary_p())
-		return ERROR;
+		return 0;
 
 	task = thread2wind_task(cur);
 
-	if (task->safecnt == 0)
-		return OK;
-
-	if(--task->safecnt == 0)
+	if (task->safecnt > 0 && --task->safecnt == 0)
 		return xnsynch_flush(&task->safesync,0) == XNSYNCH_RESCHED;
 
-    return OK;
+	return 0;
 }
 
 extern xntbase_t *wind_tbase;
