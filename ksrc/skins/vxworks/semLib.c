@@ -333,32 +333,38 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 {
 	xnthread_t *cur = xnpod_current_thread();
 
-	if (sem->count != 0 && sem->owner != cur) {
-		error_check(to == XN_NONBLOCK, S_objLib_OBJ_UNAVAILABLE,
-			    return ERROR);
-
-		xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
-
-		error_check(xnthread_test_info(cur, XNBREAK), -EINTR,
-			    return ERROR);
-
-		error_check(xnthread_test_info(cur, XNRMID),
-			    S_objLib_OBJ_DELETED, return ERROR);
-
-		error_check(xnthread_test_info(cur, XNTIMEO),
-			    S_objLib_OBJ_TIMEOUT, return ERROR);
+	if (xnsynch_owner(&sem->synchbase) == NULL) {
+		xnsynch_set_owner(&sem->synchbase, cur);
+		goto grab_sem;
 	}
 
-	if (sem->count == 0) {
-		sem->owner = cur;
-		if (xnsynch_test_flags(&sem->synchbase, XNSYNCH_PIP))
-			xnsynch_set_owner(&sem->synchbase, cur);
+	if (xnsynch_owner(&sem->synchbase) == cur) {
+		sem->count++;
+		return OK;
 	}
+
+	error_check(to == XN_NONBLOCK, S_objLib_OBJ_UNAVAILABLE,
+		    return ERROR);
+
+	xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
+
+	error_check(xnthread_test_info(cur, XNBREAK),
+		    -EINTR, return ERROR);
+
+	error_check(xnthread_test_info(cur, XNRMID),
+		    S_objLib_OBJ_DELETED, return ERROR);
+
+	error_check(xnthread_test_info(cur, XNTIMEO),
+		    S_objLib_OBJ_TIMEOUT, return ERROR);
+ grab_sem:
+	/*
+	 * xnsynch_sleep_on() might have stolen the resource, so we
+	 * need to put our internal data in sync.
+	 */
+	sem->count = 1;
 
 	if (xnsynch_test_flags(&sem->synchbase, WIND_SEM_DEL_SAFE))
 		taskSafeInner(cur);
-
-	++sem->count;
 
 	return OK;
 }
@@ -367,33 +373,28 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 static STATUS semm_give(wind_sem_t *sem)
 {
 	xnthread_t *cur = xnpod_current_thread();
-	xnsynch_t *sem_synch = &sem->synchbase;
-	int need_resched = 0;
+	int resched = 0;
 
 	check_NOT_ISR_CALLABLE(return ERROR);
 
-	if (cur != sem->owner || sem->count == 0) {
+	if (cur != xnsynch_owner(&sem->synchbase)) {
 		wind_errnoset(S_semLib_INVALID_OPERATION);
 		return ERROR;
 	}
 
-	if (--sem->count == 0 && xnsynch_wakeup_one_sleeper(sem_synch) != NULL)
-		need_resched = 1;
+	if (--sem->count > 0)
+		return OK;
 
-	if (xnsynch_test_flags(sem_synch, WIND_SEM_DEL_SAFE))
-		switch (taskUnsafeInner(cur)) {
-		case ERROR:
-			return ERROR;
+	if (xnsynch_wakeup_one_sleeper(&sem->synchbase)) {
+		sem->count = 1;
+		resched = 1;
+	}
 
-		case OK:
-			break;
+	if (xnsynch_test_flags(&sem->synchbase, WIND_SEM_DEL_SAFE))
+		if (taskUnsafeInner(cur))
+			resched = 1;
 
-		case 1:
-			need_resched = 1;
-			break;
-		}
-
-	if (need_resched)
+	if (resched)
 		xnpod_schedule();
 
 	return OK;
@@ -426,7 +427,6 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 	sem->magic = WIND_SEM_MAGIC;
 	sem->count = count;
 	sem->vtbl = vtbl;
-	sem->owner = NULL;
 	inith(&sem->rlink);
 	sem->rqueue = &wind_get_rholder()->semq;
 

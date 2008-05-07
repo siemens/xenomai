@@ -495,24 +495,18 @@ STATUS taskUnsafe(void)
 {
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	switch (taskUnsafeInner(xnpod_current_thread())) {
-
-	case ERROR:
+	if (!xnpod_primary_p()) {
 		wind_errnoset(-EPERM);
-		xnlock_put_irqrestore(&nklock, s);
 		return ERROR;
-
-	case OK:
-		break;
-
-	case 1:
-		xnpod_schedule();
-		break;
 	}
 
+	xnlock_get_irqsave(&nklock, s);
+
+	if (taskUnsafeInner(xnpod_current_thread()))
+		xnpod_schedule();
+
 	xnlock_put_irqrestore(&nklock, s);
+
 	return OK;
 }
 
