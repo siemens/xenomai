@@ -96,7 +96,6 @@ unsigned long __va_to_kva(unsigned long va);
 #define PF_NOFREEZE 0
 
 /* Signals */
-#define wrap_sighand_lock(p)     ((p)->sigmask_lock)
 #define wrap_get_sigpending(m,p) sigandsets(m, \
 					    &(p)->pending.signal, \
 					    &(p)->pending.signal)
@@ -278,7 +277,6 @@ unsigned long __va_to_kva(unsigned long va);
 #endif /* < 2.6.15 */
 
 /* Signals */
-#define wrap_sighand_lock(p)     ((p)->sighand->siglock)
 #define wrap_get_sigpending(m,p) sigorsets(m, \
 					   &(p)->pending.signal, \
 					   &(p)->signal->shared_pending.signal)
