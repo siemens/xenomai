@@ -2161,6 +2161,9 @@ static inline void do_taskexit_event(struct task_struct *p)
 	if (!thread)
 		return;
 
+	if (xnthread_test_info(thread, XNDEBUG))
+		unlock_timers();
+
 	if (xnpod_shadow_p())
 		xnshadow_relax(0);
 
