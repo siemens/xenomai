@@ -72,7 +72,7 @@ typedef struct xnarch_fltinfo {
 
 #define xnarch_fault_trap(fi)   ((fi)->vector)
 #define xnarch_fault_code(fi)   ((fi)->errcode)
-#define xnarch_fault_pc(fi)     ((fi)->regs->eip)
+#define xnarch_fault_pc(fi)     ((fi)->regs->x86reg_ip)
 /* fault is caused by use FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(fi)  ((fi)->vector == 7)
 /* The following predicates are only usable over a regular Linux stack
@@ -116,7 +116,7 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 
 static inline int xnarch_shadow_p (xnarchtcb_t *tcb, struct task_struct *task)
 {
-    return tcb->espp == &task->thread.esp; /* Sign of shadow... */
+    return tcb->espp == &task->thread.x86reg_sp;
 }
 
 #ifdef __cplusplus

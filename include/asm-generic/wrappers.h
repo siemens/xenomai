@@ -299,7 +299,7 @@ unsigned long __va_to_kva(unsigned long va);
 /* For pre-2.6.24 kernel with LTTng add-on. */
 #ifdef CONFIG_MARKERS
 #include <linux/marker.h>
-#define trace_mark(ev, fmt, args...)	MARK(ev, fmt, ## args)
+#define trace_mark(ev, fmt, args...)	MARK(ev, fmt , ##args)
 #else /* !CONFIG_MARKERS */
 #define trace_mark(ev, fmt, args...)	do { } while (0)
 #endif /* !CONFIG_MARKERS */

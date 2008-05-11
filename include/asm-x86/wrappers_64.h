@@ -42,4 +42,28 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define DECLARE_LINUX_IRQ_HANDLER(fn, irq, dev_id)	\
 	irqreturn_t fn(int irq, void *dev_id)
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
+#define x86reg_origax	orig_ax
+#define x86reg_ax	ax
+#define x86reg_bx	bx
+#define x86reg_cx	cx
+#define x86reg_dx	dx
+#define x86reg_si	si
+#define x86reg_di	di
+#define x86reg_sp	sp
+#define x86reg_bp	bp
+#define x86reg_ip	ip
+#else
+#define x86reg_origax	orig_rax
+#define x86reg_ax	rax
+#define x86reg_bx	rbx
+#define x86reg_cx	rcx
+#define x86reg_dx	rdx
+#define x86reg_si	rsi
+#define x86reg_di	rdi
+#define x86reg_sp	rsp
+#define x86reg_bp	rbp
+#define x86reg_ip	rip
+#endif
+
 #endif /* _XENO_ASM_X86_WRAPPERS_64_H */

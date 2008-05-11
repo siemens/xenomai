@@ -31,14 +31,15 @@
 #include <linux/errno.h>
 #include <asm/uaccess.h>
 #include <asm/ptrace.h>
+#include <asm/xenomai/wrappers.h>
 
 /* Register mapping for accessing syscall args. */
 
-#define __xn_reg_mux(regs)    ((regs)->orig_rax)
-#define __xn_reg_rval(regs)   ((regs)->rax)
-#define __xn_reg_arg1(regs)   ((regs)->rdi)
-#define __xn_reg_arg2(regs)   ((regs)->rsi)
-#define __xn_reg_arg3(regs)   ((regs)->rdx)
+#define __xn_reg_mux(regs)    ((regs)->x86reg_origax)
+#define __xn_reg_rval(regs)   ((regs)->x86reg_ax)
+#define __xn_reg_arg1(regs)   ((regs)->x86reg_di)
+#define __xn_reg_arg2(regs)   ((regs)->x86reg_si)
+#define __xn_reg_arg3(regs)   ((regs)->x86reg_dx)
 #define __xn_reg_arg4(regs)   ((regs)->r10) /* entry.S convention here. */
 #define __xn_reg_arg5(regs)   ((regs)->r8)
 

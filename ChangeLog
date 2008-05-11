@@ -1,3 +1,11 @@
+2008-05-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-x86: Adapt to 2.6.25.
+
+2008-05-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/semLib.c: Rework mutex support.
+
 2008-05-09  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/nucleus/shadow.c (do_taskexit_event): Unlock timers when
