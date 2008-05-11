@@ -34,8 +34,8 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->user_task = task;
 	tcb->active_task = NULL;
 	tcb->esp = 0;
-	tcb->espp = &task->thread.esp;
-	tcb->eipp = &task->thread.eip;
+	tcb->espp = &task->thread.x86reg_sp;
+	tcb->eipp = &task->thread.x86reg_ip;
 	tcb->fpup = &task->thread.i387;
 }
 

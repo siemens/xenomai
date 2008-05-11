@@ -72,7 +72,11 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/io.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
+#include <asm/i8259.h>
+#else
 #include <io_ports.h>
+#endif
 #ifdef CONFIG_X86_LOCAL_APIC
 #include <asm/fixmap.h>
 #include <asm/apic.h>

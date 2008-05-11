@@ -78,7 +78,7 @@ typedef struct xnarch_fltinfo {
 
 #define xnarch_fault_trap(fi)   ((fi)->vector)
 #define xnarch_fault_code(fi)   ((fi)->errcode)
-#define xnarch_fault_pc(fi)     ((fi)->regs->rip)
+#define xnarch_fault_pc(fi)     ((fi)->regs->x86reg_ip)
 /* fault is caused by use FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(fi)  ((fi)->vector == 7)
 /* The following predicates are only usable over a regular Linux stack

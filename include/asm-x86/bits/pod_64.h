@@ -59,8 +59,8 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->rspp = &current->thread.rsp;
-	rootcb->ripp = &current->thread.rip;
+	rootcb->rspp = &current->thread.x86reg_sp;
+	rootcb->ripp = &current->thread.x86reg_ip;
 	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
