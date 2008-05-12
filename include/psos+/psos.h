@@ -200,6 +200,16 @@ u_long t_restart(u_long tid,
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
+/*
+ * The following macros return normalized or native pSOS priority
+ * values. The core pod uses an ascending [0-257] priority scale
+ * (include/nucleus/core.h), whilst the pSOS personality exhibits a
+ * smaller scale [1-255]. In other words, these macros are nops for
+ * pSOS.
+ */
+#define psos_normalized_prio(prio)	(prio)
+#define psos_denormalized_prio(prio)	(prio)
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

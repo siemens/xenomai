@@ -55,21 +55,31 @@ static void vrtx_task_sigharden(int sig)
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
+static void vrtx_task_init_priority(int prio)
+{
+	struct sched_param param;
+	int maxprio;
+
+	memset(&param, 0, sizeof(param));
+	maxprio = sched_get_priority_max(SCHED_FIFO);
+	/* We need to normalize this value. */
+	param.sched_priority = vrtx_normalized_prio(prio);
+	if (param.sched_priority > maxprio)
+		param.sched_priority = maxprio;
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+}
+
 static void *vrtx_task_trampoline(void *cookie)
 {
 	struct vrtx_task_iargs *iargs =
 	    (struct vrtx_task_iargs *)cookie, _iargs;
 	struct vrtx_arg_bulk bulk;
-	struct sched_param param;
 	long err;
 
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
 
-	/* Apply sched params here as some libpthread implementions fail
-	   doing this via pthread_create. */
-	param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	vrtx_task_init_priority(iargs->prio);
 
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -112,6 +122,7 @@ int sc_tecreate(void (*entry) (void *),
 {
 	struct vrtx_task_iargs iargs;
 	xncompletion_t completion;
+	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	int err, tid_r;
@@ -141,6 +152,11 @@ int sc_tecreate(void (*entry) (void *),
 	else if (ustacksz < PTHREAD_STACK_MIN * 2)
 		ustacksz = PTHREAD_STACK_MIN * 2;
 
+	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	memset(&param, 0, sizeof(param));
+	param.sched_priority = vrtx_normalized_prio(prio);
+	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, ustacksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
 

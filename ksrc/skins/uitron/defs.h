@@ -40,15 +40,6 @@
 #define ui_isobj(h) ((h) && \
 ((*((unsigned *)(h)) & 0xffff0000) == 0x85850000)
 
-/* The following macros return normalized or native priority values
-   for the underlying pod. The core pod providing user-space support
-   uses an ascending [0..257] priority scale (include/nucleus/core.h),
-   whilst the uITRON personality exhibits a decreasing scale
-   [8..1]. We normalize to the range [92..99], leaving 0 unchanged. */
-
-#define ui_normalized_prio(prio)	({ int __p = (prio) ? XNCORE_HIGH_PRIO - (prio) + 1 : 0; __p; })
-#define ui_denormalized_prio(prio)	ui_normalized_prio(prio)
-
 extern xntbase_t *ui_tbase;
 
 #endif /* !_UITRON_DEFS_H */

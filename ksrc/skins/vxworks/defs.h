@@ -174,17 +174,6 @@ static inline void wind_wd_flush_rq(xnqueue_t *rq)
 
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
-/* The following macros return normalized or native VxWorks priority
-   values. The core pod uses an ascending [0-257] priority scale
-   (include/nucleus/core.h), whilst the VxWorks personality exhibits a
-   decreasing scale [255-0]; normalization is done in the [1-256]
-   range so that priority 0 is kept for non-realtime shadows. */
-
-#define wind_normalized_prio(prio)  \
-  ({ int __p = (prio) ? XNCORE_MAX_PRIO - (prio) - 1 : 0; __p; })
-#define wind_denormalized_prio(prio) \
-  ({ int __p = (prio) ? 256 - (prio) : 0; __p; })
-
 int *wind_errno_location(void);
 
 static inline void wind_errnoset (int err)
