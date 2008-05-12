@@ -259,6 +259,18 @@ typedef WIND_TCB_PLACEHOLDER WIND_TCB;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
+/*
+ * The following macros return normalized or native VxWorks priority
+ * values. The core pod uses an ascending [0-257] priority scale
+ * (include/nucleus/core.h), whilst the VxWorks personality exhibits a
+ * decreasing scale [255-0]; normalization is done in the [1-256]
+ * range so that priority 0 is kept for non-realtime shadows.
+ */
+#define wind_normalized_prio(prio)  \
+  ({ int __p = (prio) ? XNCORE_MAX_PRIO - (prio) - 1 : 0; __p; })
+#define wind_denormalized_prio(prio) \
+  ({ int __p = (prio) ? 256 - (prio) : 0; __p; })
+
 #ifdef __cplusplus
 extern "C" {
 #endif

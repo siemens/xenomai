@@ -61,9 +61,12 @@ static void *rt_task_trampoline(void *cookie)
 	long err;
 
 	if (iargs->prio > 0) {
-		/* Apply sched params here as some libpthread implementions
-		   fail doing this via pthread_create. */
-		param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+		/*
+		 * Re-apply sched params here as some libpthread
+		 * implementations fail doing this via pthread_create.
+		 */
+		memset(&param, 0, sizeof(param));
+		param.sched_priority = iargs->prio;
 		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	}
 
@@ -105,6 +108,7 @@ int rt_task_create(RT_TASK *task,
 {
 	struct rt_task_iargs iargs;
 	xncompletion_t completion;
+	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
 	int err;
@@ -132,6 +136,11 @@ int rt_task_create(RT_TASK *task,
 	else if (stksize < PTHREAD_STACK_MIN * 2)
 		stksize = PTHREAD_STACK_MIN * 2;
 
+	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
+	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	memset(&param, 0, sizeof(param));
+	param.sched_priority = prio;
+	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stksize);
 	if (!(mode & T_JOINABLE))
 		pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
@@ -153,6 +162,7 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
+	struct sched_param param;
 	struct rt_arg_bulk bulk;
 	RT_TASK task_desc;
 
@@ -163,6 +173,13 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	old_sigharden_handler = signal(SIGHARDEN, &rt_task_sigharden);
+
+	if (prio > 0) {
+		/* Make sure the POSIX library caches the right priority. */
+		memset(&param, 0, sizeof(param));
+		param.sched_priority = prio;
+		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	}
 
 	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)name;

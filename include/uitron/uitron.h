@@ -450,6 +450,16 @@ typedef struct t_dexc {
 #define E_RLWAI    (-86)   /* WAIT state was forcibly released */
 #define EN_CTXID   (-121)  /* Task-related call in non-task context */
 
+/*
+ * The following macros return normalized or native priority values
+ * for the underlying pod. The core pod providing user-space support
+ * uses an ascending [0..257] priority scale (include/nucleus/core.h),
+ * whilst the uITRON personality exhibits a decreasing scale
+ * [8..1]. We normalize to the range [92..99], leaving 0 unchanged.
+ */
+#define ui_normalized_prio(prio)	({ int __p = (prio) ? XNCORE_HIGH_PRIO - (prio) + 1 : 0; __p; })
+#define ui_denormalized_prio(prio)	ui_normalized_prio(prio)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

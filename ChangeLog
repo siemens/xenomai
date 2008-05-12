@@ -1,3 +1,10 @@
+2008-05-12  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* src/skins/{native, vxworks, uitron, psos, vrtx}: Make sure that
+	all task priority changes are done through regular libpthread
+	calls, in case the standard pthread library caches thread
+	priorities (like the NPTL does...).
+
 2008-05-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-x86: Adapt to 2.6.25.
