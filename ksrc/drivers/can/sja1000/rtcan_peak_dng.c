@@ -308,7 +308,7 @@ int __init rtcan_peak_dng_init_one(int idx)
     return ret;
 }
 
-void __exit rtcan_peak_dng_exit_one(struct rtcan_device *dev)
+void rtcan_peak_dng_exit_one(struct rtcan_device *dev)
 {
     struct rtcan_peak_dng *dng = (struct rtcan_peak_dng *)dev->board_priv;
 
@@ -345,7 +345,7 @@ static int pnp_registered;
 #endif /* Linux >= 2.6.0 */
 
 /** Cleanup module */
-static void __exit rtcan_peak_dng_exit(void)
+static void rtcan_peak_dng_exit(void)
 {
     int i;
     struct rtcan_device *dev;

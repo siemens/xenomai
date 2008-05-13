@@ -181,7 +181,7 @@ void rthal_smi_restore(void)
 	unregister_reboot_notifier(&rthal_smi_notifier);
 }
 
-static unsigned short __devinit get_smi_en_addr(struct pci_dev *dev)
+static unsigned short get_smi_en_addr(struct pci_dev *dev)
 {
 	u_int8_t byte0, byte1;
 

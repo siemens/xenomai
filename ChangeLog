@@ -1,3 +1,9 @@
+2008-05-12  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/x86/smi.c, ksrc/drivers/can/sja1000/rtcan_peak_dng.c:
+	Fix section violations by removing some __devinit and __exit
+	annotations.
+
 2008-05-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-x86: Adapt to 2.6.25.
