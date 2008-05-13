@@ -137,9 +137,12 @@ int rt_task_create(RT_TASK *task,
 		stksize = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
 	memset(&param, 0, sizeof(param));
-	param.sched_priority = prio;
+	if (prio > 0) {
+		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+		param.sched_priority = prio;
+	} else
+		pthread_attr_setschedpolicy(&thattr, SCHED_OTHER);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stksize);
 	if (!(mode & T_JOINABLE))
