@@ -46,7 +46,7 @@ extern xntbase_t *__native_tbase;
 extern "C" {
 #endif
 
-#if defined(__KERNEL__)  || defined(__XENO_SIM__)
+#if (defined(__KERNEL__)  || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
 static inline SRTIME rt_timer_ns2tsc(SRTIME ns)
 {
 	return xnarch_ns_to_tsc(ns);
