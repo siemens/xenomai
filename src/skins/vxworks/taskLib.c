@@ -64,18 +64,21 @@ static void wind_task_sigharden(int sig)
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-static void wind_task_init_priority(int prio)
+static int wind_task_set_posix_priority(int prio, struct sched_param *param)
 {
-	struct sched_param param;
-	int maxprio;
+	int maxpprio, pprio;
 
-	memset(&param, 0, sizeof(param));
-	maxprio = sched_get_priority_max(SCHED_FIFO);
-	/* We need to normalize this value. */
-	param.sched_priority = wind_normalized_prio(prio);
-	if (param.sched_priority > maxprio)
-		param.sched_priority = maxprio;
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	maxpprio = sched_get_priority_max(SCHED_FIFO);
+
+	/* We need to normalize this value first. */
+	pprio = wind_normalized_prio(prio);
+	if (pprio > maxpprio)
+		pprio = maxpprio;
+
+	memset(param, 0, sizeof(*param));
+	param->sched_priority = pprio;
+
+	return pprio ? SCHED_FIFO : SCHED_OTHER;
 }
 
 static void *wind_task_trampoline(void *cookie)
@@ -83,6 +86,8 @@ static void *wind_task_trampoline(void *cookie)
 	struct wind_task_iargs *iargs =
 	    (struct wind_task_iargs *)cookie, _iargs;
 	struct wind_arg_bulk bulk;
+	struct sched_param param;
+	int policy;
 	long err;
 
 	/* Backup the arg struct, it might vanish after completion. */
@@ -92,7 +97,8 @@ static void *wind_task_trampoline(void *cookie)
 	 * Apply sched params here as some libpthread implementations
 	 * fail doing this properly via pthread_create.
 	 */
-	wind_task_init_priority(iargs->prio);
+	policy = wind_task_set_posix_priority(iargs->prio, &param);
+	pthread_setschedparam(pthread_self(), policy, &param);
 
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -141,8 +147,8 @@ STATUS taskInit(WIND_TCB *pTcb,
 	xncompletion_t completion;
 	struct sched_param param;
 	pthread_attr_t thattr;
+	int err, policy;
 	pthread_t thid;
-	int err;
 
 	/* Migrate this thread to the Linux domain since we are about to
 	   issue a series of regular kernel syscalls in order to create
@@ -179,9 +185,8 @@ STATUS taskInit(WIND_TCB *pTcb,
 		stacksize = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = wind_normalized_prio(prio);
+	policy = wind_task_set_posix_priority(prio, &param);
+	pthread_attr_setschedpolicy(&thattr, policy);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
