@@ -47,18 +47,21 @@ static void psos_task_sigharden(int sig)
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-static void psos_task_init_priority(int prio)
+static int psos_task_set_posix_priority(int prio, struct sched_param *param)
 {
-	struct sched_param param;
-	int maxprio;
+	int maxpprio, pprio;
 
-	memset(&param, 0, sizeof(param));
-	maxprio = sched_get_priority_max(SCHED_FIFO);
-	/* We need to normalize this value. */
-	param.sched_priority = psos_normalized_prio(prio);
-	if (param.sched_priority > maxprio)
-		param.sched_priority = maxprio;
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	maxpprio = sched_get_priority_max(SCHED_FIFO);
+
+	/* We need to normalize this value first. */
+	pprio = psos_normalized_prio(prio);
+	if (pprio > maxpprio)
+		pprio = maxpprio;
+
+	memset(param, 0, sizeof(*param));
+	param->sched_priority = pprio;
+
+	return pprio ? SCHED_FIFO : SCHED_OTHER;
 }
 
 static void *psos_task_trampoline(void *cookie)
@@ -66,9 +69,12 @@ static void *psos_task_trampoline(void *cookie)
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
 	u_long dummy_args[4] = { 0, 0, 0, 0 }, *targs;
+	struct sched_param param;
+	int policy;
 	long err;
 
-	psos_task_init_priority(iargs->prio);
+	policy = psos_task_set_posix_priority(iargs->prio, &param);
+	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
@@ -112,6 +118,7 @@ u_long t_create(const char *name,
 	struct sched_param param;
 	pthread_attr_t thattr;
 	pthread_t thid;
+	int policy;
 	long err;
 
 	/* Migrate this thread to the Linux domain since we are about
@@ -140,12 +147,8 @@ u_long t_create(const char *name,
 		ustack = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	memset(&param, 0, sizeof(param));
-	if (prio > 0) {
-		pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-		param.sched_priority = psos_normalized_prio(prio);
-	} else
-		pthread_attr_setschedpolicy(&thattr, SCHED_OTHER);
+	policy = psos_task_set_posix_priority(prio, &param);
+	pthread_attr_setschedpolicy(&thattr, policy);
 	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, ustack);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
