@@ -189,6 +189,8 @@ typedef struct xnthread {
 
     struct xnsynch *wchan;	/* Resource the thread pends on */
 
+    struct xnsynch *wwake;	/* Wait channel the thread was resumed from */
+
     xntimer_t rtimer;		/* Resource timer */
 
     xntimer_t ptimer;		/* Periodic timer */
