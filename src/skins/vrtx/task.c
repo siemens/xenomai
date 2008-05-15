@@ -55,18 +55,21 @@ static void vrtx_task_sigharden(int sig)
 	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 }
 
-static void vrtx_task_init_priority(int prio)
+static int vrtx_task_set_posix_priority(int prio, struct sched_param *param)
 {
-	struct sched_param param;
-	int maxprio;
+	int maxpprio, pprio;
 
-	memset(&param, 0, sizeof(param));
-	maxprio = sched_get_priority_max(SCHED_FIFO);
-	/* We need to normalize this value. */
-	param.sched_priority = vrtx_normalized_prio(prio);
-	if (param.sched_priority > maxprio)
-		param.sched_priority = maxprio;
-	pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+	maxpprio = sched_get_priority_max(SCHED_FIFO);
+
+	/* We need to normalize this value first. */
+	pprio = vrtx_normalized_prio(prio);
+	if (pprio > maxpprio)
+		pprio = maxpprio;
+
+	memset(param, 0, sizeof(*param));
+	param->sched_priority = pprio;
+
+	return pprio ? SCHED_FIFO : SCHED_OTHER;
 }
 
 static void *vrtx_task_trampoline(void *cookie)
@@ -74,12 +77,19 @@ static void *vrtx_task_trampoline(void *cookie)
 	struct vrtx_task_iargs *iargs =
 	    (struct vrtx_task_iargs *)cookie, _iargs;
 	struct vrtx_arg_bulk bulk;
+	struct sched_param param;
+	int policy;
 	long err;
 
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
 
-	vrtx_task_init_priority(iargs->prio);
+	/*
+	 * Apply sched params here as some libpthread implementions
+	 * fail doing this properly via pthread_create.
+	 */
+	policy = vrtx_task_set_posix_priority(iargs->prio, &param);
+	pthread_setschedparam(pthread_self(), policy, &param);
 
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -123,9 +133,9 @@ int sc_tecreate(void (*entry) (void *),
 	struct vrtx_task_iargs iargs;
 	xncompletion_t completion;
 	struct sched_param param;
+	int err, tid_r, policy;
 	pthread_attr_t thattr;
 	pthread_t thid;
-	int err, tid_r;
 
 	/* Migrate this thread to the Linux domain since we are about to
 	   issue a series of regular kernel syscalls in order to create
@@ -153,15 +163,13 @@ int sc_tecreate(void (*entry) (void *),
 		ustacksz = PTHREAD_STACK_MIN * 2;
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
-	memset(&param, 0, sizeof(param));
-	param.sched_priority = vrtx_normalized_prio(prio);
+	policy = vrtx_task_set_posix_priority(prio, &param);
 	pthread_attr_setschedparam(&thattr, &param);
+	pthread_attr_setschedpolicy(&thattr, policy);
 	pthread_attr_setstacksize(&thattr, ustacksz);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
 
 	err = pthread_create(&thid, &thattr, &vrtx_task_trampoline, &iargs);
-
 	if (!err)
 		/* Wait for sync with vrtx_task_trampoline() */
 		err = XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
