@@ -1,3 +1,7 @@
+2008-05-15  Gernot Hillier  <gernot.hillier@siemens.com>
+
+	* configure.in: Disallow includedir == /usr/include.
+
 2008-05-15  Markus Osterried <markus.osterried@ericsson.com>
 
 	* src/skins/psos/tm.c (tm_evevery): Fix system call number.
