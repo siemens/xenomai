@@ -1,3 +1,7 @@
+2008-05-15  Markus Osterried <markus.osterried@ericsson.com>
+
+	* src/skins/psos/tm.c (tm_evevery): Fix system call number.
+
 2008-05-06  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (do_schedule_event): Do not grab the
