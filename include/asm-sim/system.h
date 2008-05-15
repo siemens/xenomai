@@ -186,8 +186,10 @@ static inline unsigned long ffnz(unsigned long word)
 }
 
 #define xnarch_stack_size(tcb)    0
-#define xnarch_fpu_ptr(tcb)       (NULL)
-#define xnarch_user_task(tcb)     (NULL)
+#define xnarch_stack_base(tcb)	  NULL
+#define xnarch_stack_end(tcb)	  NULL
+#define xnarch_fpu_ptr(tcb)       NULL
+#define xnarch_user_task(tcb)     NULL
 #define xnarch_user_pid(tcb)      0
 
 /* Under the MVM, preemption only occurs at the C-source line level,

@@ -34,6 +34,8 @@
 #define XNARCH_WANT_UNLOCKED_CTXSW
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
+#define xnarch_stack_base(tcb)	((tcb)->stackbase)
+#define xnarch_stack_end(tcb)	((caddr_t)(tcb)->stackbase - (tcb)->stacksize)
 #define xnarch_user_task(tcb)   ((tcb)->user_task)
 #define xnarch_user_pid(tcb)    ((tcb)->user_task->pid)
 

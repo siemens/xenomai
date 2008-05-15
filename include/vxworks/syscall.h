@@ -69,12 +69,14 @@
 #define __vxworks_wd_cancel        43
 #define __vxworks_wd_wait          44
 #define __vxworks_int_context      45
+#define __vxworks_taskinfo_get     46
 
 struct wind_arg_bulk {
 
     u_long a1;
     u_long a2;
     u_long a3;
+    u_long a4;
 };
 
 #ifdef __KERNEL__

@@ -104,6 +104,8 @@ STATUS taskInit(WIND_TCB *pTcb,
 	   neither. */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+ 	/* Caller should fill in this field whenever applicable. */
+ 	pTcb->ptid = 0;
 	if (flags & VX_SHADOW)
 		bflags |= XNSHADOW;
 #else /* !CONFIG_XENO_OPT_PERVASIVE */

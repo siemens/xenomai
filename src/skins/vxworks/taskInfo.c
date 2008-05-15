@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
 #include <nucleus/thread.h>	/* For status bits. */
 #include <vxworks/vxworks.h>
 
@@ -71,4 +72,41 @@ BOOL taskIsSuspended(TASK_ID task_id)
 		return 0;
 
 	return !!(status & XNSUSP);
+}
+
+STATUS taskInfoGet(TASK_ID task_id, TASK_DESC *desc)
+{
+	pthread_attr_t attr;
+	int probe1, probe2;
+	size_t stacksize;
+	void *stackbase;
+	int err;
+
+	err = XENOMAI_SKINCALL2(__vxworks_muxid,
+				__vxworks_taskinfo_get, task_id, desc);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
+
+	if (pthread_getattr_np((pthread_t)desc->opaque, &attr)) {
+		errno = S_objLib_OBJ_ID_ERROR;
+		return ERROR;
+	}
+
+	pthread_attr_getstack(&attr, &stackbase, &stacksize);
+	desc->stacksize = stacksize;
+	desc->pStackBase = stackbase;
+
+	if (&probe1 < &probe2)
+		/* Stack grows upward. */
+		desc->pStackEnd = (caddr_t)stackbase + stacksize;
+	else
+		/* Stack grows downward. */
+		desc->pStackEnd = (caddr_t)stackbase - stacksize;
+
+	desc->pExcStackBase = desc->pStackBase;
+	desc->pExcStackEnd = desc->pStackEnd;
+
+	return OK;
 }
