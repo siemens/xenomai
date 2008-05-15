@@ -327,6 +327,7 @@ while : ; do
    *)
       echo "$me: unsupported architecture: $linux_arch" >&2
       linux_arch=
+      usedefault=
       ;;
    esac
    if test \! x$linux_arch = x; then
@@ -384,6 +385,7 @@ else
       fi
       if test \! -r "$adeos_patch"; then
          echo "$me: cannot read Adeos patch from $adeos_patch" >&2
+         usedefault=
          adeos_patch=
       fi
    done
