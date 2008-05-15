@@ -1,3 +1,7 @@
+2008-05-15  Markus Osterried <markus.osterried@ericsson.com>
+
+	* src/skins/psos/tm.c (tm_evevery): Fix system call number.
+
 2008-05-13  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/nucleus/pod.c (__xnpod_finalize_zombie, xnpod_delete_thread):
