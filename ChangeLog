@@ -3,6 +3,23 @@
 	* src/skins/vxworks, ksrc/skins/vxworks: Add taskInfoGet()
 	service.
 
+	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Check last wchan
+	signaled to prevent a race on interpreting the XNWAKEN flag. The
+	actual case that patch fixes is as follows:
+	- Thread A grabs synch X
+	- Thread A sleeps on synch Y
+	- Synch Y is signaled, thread A is unblocked but not immediately
+	resumed CPU-wise, XNWAKEN is raised.
+	- Thread B mistakenly steals synch X, being confused by the
+	XNWAKEN state of thread A, but which is applicable to a different
+	synch object (synch Y).
+
+	To fix this, we need to make sure that XNWAKEN applies to the
+	ownership of the right synchronization object -- this is the
+	purpose of the new thread->wwake field. Another option would be to
+	have the synchronization object hold the steal state, but this
+	would raise other issues.
+
 2008-05-15  Gernot Hillier  <gernot.hillier@siemens.com>
 
 	* configure.in: Disallow includedir == /usr/include.
