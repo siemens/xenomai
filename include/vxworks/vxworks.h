@@ -127,6 +127,32 @@ typedef struct WIND_TCB_PLACEHOLDER {
     TASK_ID handle;
 } WIND_TCB_PLACEHOLDER;
 
+#define WIND_READY	0x0
+#define WIND_SUSPEND	0x1
+#define WIND_PEND	0x2
+#define WIND_DELAY	0x4
+#define WIND_DEAD	0x8
+#define WIND_STOP	0x10	/* Never reported. */
+
+typedef struct _TASK_DESC {
+
+	TASK_ID tid;
+	char    name[XNOBJECT_NAME_LEN];
+	int	priority;
+	int	status;
+	int	flags;
+	FUNCPTR	entry;
+	int	stacksize;
+	char	*pStackBase;
+	char	*pStackEnd;
+	char	*pExcStackBase;
+	char	*pExcStackEnd;
+	int	errorStatus;
+
+	unsigned long opaque;
+	
+} TASK_DESC;
+
 typedef void (*wind_timer_t)(long);
     
 typedef struct wind_wd_utarget {
@@ -156,6 +182,9 @@ typedef struct wind_tcb {
     int status;
     int prio;
     FUNCPTR entry;
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+    unsigned long ptid;
+#endif
 
     /* Xenomai specific: used by taskLib */
 
@@ -345,6 +374,9 @@ BOOL taskIsReady(TASK_ID task_id);
 
 BOOL taskIsSuspended (TASK_ID task_id);
          
+STATUS taskInfoGet(TASK_ID task_id,
+		   TASK_DESC *desc);
+
 STATUS semGive(SEM_ID sem_id);
 
 STATUS semTake(SEM_ID sem_id,

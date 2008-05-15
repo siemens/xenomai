@@ -180,3 +180,4 @@ EXPORT_SYMBOL(tickGet);
 EXPORT_SYMBOL(tickSet);
 EXPORT_SYMBOL(kernelTimeSlice);
 EXPORT_SYMBOL(kernelVersion);
+EXPORT_SYMBOL(taskInfoGet);

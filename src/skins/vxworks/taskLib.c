@@ -108,6 +108,7 @@ static void *wind_task_trampoline(void *cookie)
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
+	bulk.a4 = (u_long)pthread_self();
 
 	err = XENOMAI_SKINCALL3(__vxworks_muxid,
 				__vxworks_task_init,

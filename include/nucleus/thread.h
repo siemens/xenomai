@@ -277,6 +277,8 @@ typedef struct xnhook {
 #define xnthread_pending_signals(thread)  ((thread)->signals)
 #define xnthread_timeout(thread)           xntimer_get_timeout(&(thread)->rtimer)
 #define xnthread_stack_size(thread)        xnarch_stack_size(xnthread_archtcb(thread))
+#define xnthread_stack_base(thread)        xnarch_stack_base(xnthread_archtcb(thread))
+#define xnthread_stack_end(thread)         xnarch_stack_end(xnthread_archtcb(thread))
 #define xnthread_handle(thread)            ((thread)->registry.handle)
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 #define xnthread_time_base(thread)         ((thread)->rtimer.base)

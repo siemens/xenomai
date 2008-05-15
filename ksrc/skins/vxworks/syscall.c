@@ -60,6 +60,7 @@ static WIND_TCB *__wind_task_current(struct task_struct *curr)
  * a1: const char *name;
  * a2: int prio;
  * a3: int flags;
+ * a4: pthread_self();
  * }
  */
 
@@ -120,6 +121,7 @@ static int __wind_task_init(struct task_struct *curr, struct pt_regs *regs)
 		     0, 0, 0, 0, 0, 0, 0, 0, 0, 0) == OK) {
 		/* Let the skin discard the TCB memory upon exit. */
 		task->auto_delete = 1;
+		task->ptid = bulk.a4;
 		/* Copy back the registry handle to the ph struct. */
 		ph.handle = xnthread_handle(&task->threadbase);
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &ph,
@@ -690,6 +692,34 @@ static int __wind_taskinfo_status(struct task_struct *curr,
 			  sizeof(status));
 
 	return 0;
+}
+
+/*
+ * int __wind_taskinfo_get(TASK_ID task_id, TASK_DESC *desc)
+ */
+static int __wind_taskinfo_get(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	TASK_DESC desc;
+	WIND_TCB *pTcb;
+	int err;
+
+	if (!__xn_access_ok
+	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(desc)))
+		return -EFAULT;
+
+	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+
+	if (!pTcb)
+		return S_objLib_OBJ_ID_ERROR;
+
+	err = taskInfoGet((TASK_ID)pTcb, &desc);
+
+	if (!err)
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &desc,
+				  sizeof(desc));
+
+	return err;
 }
 
 /*
@@ -1305,6 +1335,7 @@ static xnsysent_t __systab[] = {
 	[__vxworks_taskinfo_name] = {&__wind_taskinfo_name, __xn_exec_any},
 	[__vxworks_taskinfo_iddfl] = {&__wind_taskinfo_iddfl, __xn_exec_any},
 	[__vxworks_taskinfo_status] = {&__wind_taskinfo_status, __xn_exec_any},
+	[__vxworks_taskinfo_get] = {&__wind_taskinfo_get, __xn_exec_any},
 	[__vxworks_errno_taskset] = {&__wind_errno_taskset, __xn_exec_primary},
 	[__vxworks_errno_taskget] = {&__wind_errno_taskget, __xn_exec_primary},
 	[__vxworks_kernel_timeslice] =
