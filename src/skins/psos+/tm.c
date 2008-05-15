@@ -71,7 +71,7 @@ u_long tm_wkwhen(u_long date, u_long time, u_long ticks)
 
 u_long tm_evevery(u_long ticks, u_long events, u_long *tmid_r)
 {
-	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_evwhen, ticks, events, tmid_r);
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_tm_evevery, ticks, events, tmid_r);
 }
 
 u_long tm_getm(unsigned long long *ns_r) /* Xenomai extension. */
