@@ -82,6 +82,7 @@ int xnthread_init(xnthread_t *thread,
 	thread->rrperiod = XN_INFINITE;
 	thread->rrcredit = XN_INFINITE;
 	thread->wchan = NULL;
+ 	thread->wwake = NULL;
 	thread->magic = 0;
 	thread->errcode = 0;
 #ifdef CONFIG_XENO_OPT_REGISTRY

@@ -190,8 +190,7 @@ redo:
 	}
 
 	if (xnpod_compare_prio(thread->cprio, owner->cprio) > 0) {
-
-		if (xnthread_test_info(owner, XNWAKEN)) {
+ 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
 			synch->owner = thread;
 			xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
@@ -234,6 +233,7 @@ redo:
 
       unlock_and_exit:
 
+	thread->wwake = NULL;
 	xnthread_clear_info(thread, XNWAKEN);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -377,6 +377,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 	if (holder) {
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
+		thread->wwake = synch;
 		synch->owner = thread;
 		xnthread_set_info(thread, XNWAKEN);
 		xnltt_log_event(xeno_ev_wakeup1, thread->name, synch);
@@ -448,6 +449,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	nholder = poppq(&synch->pendq, holder);
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
+	thread->wwake = synch;
 	synch->owner = thread;
 	xnthread_set_info(thread, XNWAKEN);
 	xnltt_log_event(xeno_ev_wakeupx, thread->name, synch);
