@@ -1691,7 +1691,8 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
  * remote task eventually replies. Passing TM_NONBLOCK causes the
  * service to return immediately without waiting if the remote task is
  * not waiting for messages (i.e. if @a task is not currently blocked
- * on the rt_task_receive() service).
+ * on the rt_task_receive() service); however, the caller will wait
+ * indefinitely for a reply from that remote task if present.
  *
  * @return A positive value is returned upon success, representing the
  * length (in bytes) of the reply message returned by the remote
@@ -1717,6 +1718,9 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
  * - -EPERM is returned if this service should block, but was called
  * from a context which cannot sleep (e.g. interrupt, non-realtime or
  * scheduler locked).
+ *
+ * - -ESRCH is returned if @a task cannot be found (when called from
+ *    user-space only).
  *
  * Environments:
  *
@@ -1755,10 +1759,17 @@ ssize_t rt_task_send(RT_TASK *task,
 		goto unlock_and_exit;
 	}
 
-	if (timeout == TM_NONBLOCK && xnsynch_nsleepers(&task->mrecv) == 0) {
-		/* Can't block and no server listening; just bail out. */
-		err = -EWOULDBLOCK;
-		goto unlock_and_exit;
+	if (timeout == TM_NONBLOCK) {
+		if (xnsynch_nsleepers(&task->mrecv) == 0) {
+			/* Can't block and no server listening; just bail out. */
+			err = -EWOULDBLOCK;
+			goto unlock_and_exit;
+		} else
+			/*
+			 * Make sure we'll wait indefinitely once we
+			 * know that a remote task is listening.
+			 */
+			timeout = TM_INFINITE;
 	}
 
 	if (xnpod_unblockable_p()) {
