@@ -276,9 +276,11 @@ static void rpi_update(xnthread_t *thread)
 
 	xnlock_get_irqsave(&rpislot->lock, s);
 
-	sched_removepq(&rpislot->threadq, &thread->xlink);
-	rpi_none(thread);
-	rpi_push(thread, cpu);
+	if (rpi_p(thread)) {
+		sched_removepq(&rpislot->threadq, &thread->xlink);
+		rpi_none(thread);
+		rpi_push(thread, cpu);
+	}
 
 	xnlock_put_irqrestore(&rpislot->lock, s);
 }

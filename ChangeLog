@@ -6,6 +6,9 @@
 	not to wait for a reply, but it means to wait for a reply UNLESS
 	no server is listening to us before we send the request.
 
+	* ksrc/nucleus/shadow.c (rpi_update): Handle calls for non
+	RPI-boosted threads gracefully; those are legit.
+
 2008-05-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/vxworks, ksrc/skins/vxworks: Add taskInfoGet()
