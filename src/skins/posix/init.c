@@ -30,16 +30,7 @@
 
 /* asm-generic/bits/bind.h uses the following functions, so we redefine them to
    be the __real variants */
-#undef open
-#undef ioctl
-#undef mmap
-#undef close
-#undef munmap
-#define open __real_open
-#define ioctl __real_ioctl
-#define mmap __real_mmap
-#define close __real_close
-#define munmap __real_munmap
+#define XENO_WRAPPED_OPEN
 
 #include <asm-generic/bits/bind.h>
 

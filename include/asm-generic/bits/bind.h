@@ -51,7 +51,11 @@ static void *map_sem_heap(unsigned shared)
 	} hinfo;
 	int fd, err;
 
+#ifndef XENO_WRAPPED_OPEN
 	fd = open("/dev/rtheap", O_RDWR, 0);
+#else /* !XENO_WRAPPED_OPEN */
+	fd = __real_open("/dev/rtheap", O_RDWR, 0);
+#endif /* !XENO_WRAPPED_OPEN */
 	if (fd < 0) {
 		fprintf(stderr, "Xenomai: open: %m\n");
 		return MAP_FAILED;
