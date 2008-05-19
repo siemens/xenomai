@@ -158,6 +158,33 @@ config XENO_OPT_SYS_STACKPOOLSZ
 	default 0
 endif	
 
+config XENO_OPT_SEM_HEAPSZ
+	int "Size of private semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for private semaphores.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
+config XENO_OPT_GLOBAL_SEM_HEAPSZ
+	int "Size of global semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for semaphores shared 
+	between several processes.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
 config XENO_OPT_STATS
 	bool "Statistics collection"
 	depends on PROC_FS

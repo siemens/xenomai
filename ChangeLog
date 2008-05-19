@@ -1,5 +1,14 @@
 2008-05-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* ksrc/nucleus/shadow.c (xnshadow_sys_event): Create a ppd for the
+	system skin which allows to create a private "semaphore heap" for
+	each process as well as a global "semaphore heap" shared between
+	all processes. Define two new syscalls: 
+	- __xn_sys_sem_heap which returns to user-space the address of one
+	of the two heaps;
+	- __xn_sys_current which allows to get xnpod_current_thread() in
+	user-space.
+
 	* include/asm-arm/atomic.h: Implement atomic operations in
 	user-space without syscalls.
 

@@ -20,6 +20,7 @@ includesub_HEADERS = \
 	stat.h \
 	synch.h \
 	system.h \
+	sys_ppd.h \
 	thread.h \
 	timebase.h \
 	timer.h \

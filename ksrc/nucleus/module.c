@@ -28,6 +28,7 @@
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
 #include <nucleus/version.h>
+#include <nucleus/sys_ppd.h>
 #ifdef CONFIG_XENO_OPT_PIPE
 #include <nucleus/pipe.h>
 #endif /* CONFIG_XENO_OPT_PIPE */
@@ -49,6 +50,9 @@ xnqueue_t xnmod_glink_queue;
 u_long xnmod_sysheap_size;
 
 int xeno_nucleus_status = -EINVAL;
+
+struct xnsys_ppd __xnsys_global_ppd;
+EXPORT_SYMBOL(__xnsys_global_ppd);
 
 void xnmod_alloc_glinks(xnqueue_t *freehq)
 {
@@ -1156,6 +1160,14 @@ int __init __xeno_sys_init(void)
 	if (err)
 		goto fail;
 
+	err = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
+				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
+				 XNARCH_SHARED_HEAP_FLAGS ?:
+				 (CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ <= 128
+				  ? GFP_USER : 0));
+	if (err)
+		goto cleanup_arch;
+	
 #ifdef __KERNEL__
 #ifdef CONFIG_PROC_FS
 	xnpod_init_proc();
@@ -1167,7 +1179,7 @@ int __init __xeno_sys_init(void)
 	err = xnpipe_mount();
 
 	if (err)
-		goto cleanup_arch;
+		goto cleanup_proc;
 #endif /* CONFIG_XENO_OPT_PIPE */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -1207,13 +1219,15 @@ int __init __xeno_sys_init(void)
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
 
-      cleanup_arch:
+      cleanup_proc:
 
 #endif /* CONFIG_XENO_OPT_PIPE */
 
 #ifdef CONFIG_PROC_FS
 	xnpod_delete_proc();
 #endif /* CONFIG_PROC_FS */
+
+      cleanup_arch:
 
 	xnarch_exit();
 
@@ -1253,6 +1267,8 @@ void __exit __xeno_sys_exit(void)
 	xnpipe_umount();
 #endif /* CONFIG_XENO_OPT_PIPE */
 #endif /* __KERNEL__ */
+
+	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap);
 
 	if (nkmsgbuf)
 		xnarch_free_host_mem(nkmsgbuf, XNPOD_FATAL_BUFSZ);

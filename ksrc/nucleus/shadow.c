@@ -51,6 +51,7 @@
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
 #include <nucleus/stat.h>
+#include <nucleus/sys_ppd.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
@@ -1560,11 +1561,11 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
 
 static int xnshadow_sys_bind(struct pt_regs *regs)
 {
+	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
 	unsigned magic = __xn_reg_arg1(regs);
 	u_long featdep = __xn_reg_arg2(regs);
 	u_long abirev = __xn_reg_arg3(regs);
 	u_long infarg = __xn_reg_arg4(regs);
-	xnshadow_ppd_t *ppd = NULL;
 	xnfeatinfo_t finfo;
 	u_long featmis;
 	int muxid, err;
@@ -1638,6 +1639,36 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	   earlier than that, do not refer to nkpod until the latter had a
 	   chance to call xnpod_init(). */
 
+	xnlock_get_irqsave(&nklock, s);
+	sys_ppd = ppd_lookup(0, current->mm);
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (sys_ppd)
+		goto muxid_eventcb;
+
+	sys_ppd = (xnshadow_ppd_t *) muxtable[0].props->eventcb(XNSHADOW_CLIENT_ATTACH,
+								 current);
+
+	if (IS_ERR(sys_ppd)) {
+		err = PTR_ERR(sys_ppd);
+		goto fail;
+	}
+
+	if (!sys_ppd)
+		goto muxid_eventcb;
+
+
+	sys_ppd->key.muxid = 0;
+	sys_ppd->key.mm = current->mm;
+
+	if (ppd_insert(sys_ppd) == -EBUSY) {
+		/* In case of concurrent binding (which can not happen with
+		   Xenomai libraries), detach right away the second ppd. */
+		muxtable[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
+		sys_ppd = NULL;
+	}
+
+  muxid_eventcb:
 	if (!muxtable[muxid].props->eventcb)
 		goto eventcb_done;
 
@@ -1654,7 +1685,7 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 
 	if (IS_ERR(ppd)) {
 		err = PTR_ERR(ppd);
-		goto fail;
+		goto fail_destroy_sys_ppd;
 	}
 
 	if (!ppd)
@@ -1691,6 +1722,11 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 
 		err = -ENOSYS;
 
+	  fail_destroy_sys_ppd:
+		if (sys_ppd) {
+			ppd_remove(sys_ppd);
+			muxtable[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
+		}
 	      fail:
 		if (!xnarch_atomic_get(&muxtable[muxid].refcnt))
 			xnarch_atomic_dec(&muxtable[muxid].refcnt);
@@ -1858,6 +1894,32 @@ static int xnshadow_sys_trace(struct pt_regs *regs)
 	return err;
 }
 
+struct heap_info {
+	xnheap_t *addr;
+	unsigned size;
+};
+
+static int xnshadow_sys_sem_heap(struct pt_regs *regs)
+{
+	struct heap_info hinfo, __user *us_hinfo;
+	unsigned global;
+
+	global = __xn_reg_arg2(regs);
+	us_hinfo = (struct heap_info __user *) __xn_reg_arg1(regs);
+	hinfo.addr = &xnsys_ppd_get(global)->sem_heap;
+	hinfo.size = xnheap_extentsize(hinfo.addr);
+
+	return __xn_safe_copy_to_user(us_hinfo, &hinfo, sizeof(*us_hinfo));
+}
+
+static int xnshadow_sys_current(struct pt_regs *regs)
+{
+	xnthread_t * __user *us_current, *cur = xnshadow_thread(current);
+	us_current = (xnthread_t *__user *) __xn_reg_arg1(regs);
+
+	return __xn_safe_copy_to_user(us_current, &cur, sizeof(*us_current));
+}
+
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -1866,15 +1928,50 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_completion] = {&xnshadow_sys_completion, __xn_exec_lostage},
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
+	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_any},
+	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
 };
 
+static void *xnshadow_sys_event(int event, void *data)
+{
+	struct xnsys_ppd *p;
+	int err;
+
+	switch(event) {
+	case XNSHADOW_CLIENT_ATTACH:
+		p = (struct xnsys_ppd *) xnarch_alloc_host_mem(sizeof(*p));
+		if (!p)
+			return ERR_PTR(-ENOMEM);
+
+		err = xnheap_init_mapped(&p->sem_heap,
+					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
+					 XNARCH_SHARED_HEAP_FLAGS ?:
+					 (CONFIG_XENO_OPT_SEM_HEAPSZ <= 128
+					  ? GFP_USER : 0));
+		if (err) {
+			xnarch_free_host_mem(p, sizeof(*p));
+			return ERR_PTR(err);
+		}
+
+		return &p->ppd;
+
+	case XNSHADOW_CLIENT_DETACH:
+		p = ppd2sys((xnshadow_ppd_t *) data);
+
+		xnheap_destroy_mapped(&p->sem_heap);
+
+		return NULL;
+	}
+
+	return ERR_PTR(-EINVAL);
+}
 
 static struct xnskin_props __props = {
 	.name = "sys",
 	.magic = 0x434F5245,
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
-	.eventcb = NULL,
+	.eventcb = xnshadow_sys_event,
 	.timebasep = NULL,
 	.module = NULL
 };

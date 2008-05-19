@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <semaphore.h>
 #include <posix/syscall.h>
+#include <asm-generic/bits/current.h>
 
 extern int __pse51_muxid;
 
@@ -56,6 +57,7 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 
 	if (!err && promoted) {
 		old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
+		xeno_set_current();
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 	}
@@ -131,6 +133,8 @@ static void *__pthread_trampoline(void *arg)
 
 	start = iargs->start;
 	cookie = iargs->arg;
+
+	xeno_set_current();
 
 	__real_sem_post(&iargs->sync);
 
