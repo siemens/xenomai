@@ -1,3 +1,8 @@
+2008-05-19  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/asm-x86/bits/shadow_64.h (xnarch_init_shadow_tcb): Keep
+	pointing at register "rip" within the thread struct.
+
 2008-05-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/task.c (rt_task_send): Apply infinite timeout
