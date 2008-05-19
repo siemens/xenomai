@@ -1600,13 +1600,14 @@ static int __rt_mutex_delete(struct pt_regs *regs)
 
 /*
  * int __rt_mutex_acquire(RT_MUTEX_PLACEHOLDER *ph,
+ *			  xntmode_t timeout_mode,
  *                        RTIME *timeoutp)
- *
  */
 
 static int __rt_mutex_acquire(struct pt_regs *regs)
 {
 	RT_MUTEX_PLACEHOLDER ph;
+	xntmode_t timeout_mode;
 	RT_MUTEX *mutex;
 	RTIME timeout;
 
@@ -1614,7 +1615,9 @@ static int __rt_mutex_acquire(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+	timeout_mode = __xn_reg_arg2(regs);
+
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
@@ -1623,7 +1626,7 @@ static int __rt_mutex_acquire(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	return rt_mutex_acquire(mutex, timeout);
+	return rt_mutex_acquire_inner(mutex, timeout_mode, timeout);
 }
 
 /*
@@ -1789,12 +1792,14 @@ static int __rt_cond_delete(struct pt_regs *regs)
 /*
  * int __rt_cond_wait(RT_COND_PLACEHOLDER *cph,
  *                    RT_MUTEX_PLACEHOLDER *mph,
+ *                    xntmode_t timeout_mode,
  *                    RTIME *timeoutp)
  */
 
 static int __rt_cond_wait(struct pt_regs *regs)
 {
 	RT_COND_PLACEHOLDER cph, mph;
+	xntmode_t timeout_mode;
 	RT_MUTEX *mutex;
 	RT_COND *cond;
 	RTIME timeout;
@@ -1817,11 +1822,13 @@ static int __rt_cond_wait(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+	timeout_mode = __xn_reg_arg3(regs);
+
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	return rt_cond_wait(cond, mutex, timeout);
+	return rt_cond_wait_inner(cond, mutex, timeout_mode, timeout);
 }
 
 /*

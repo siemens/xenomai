@@ -82,6 +82,9 @@ static inline void __native_cond_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_COND, rq, cond);
 }
 
+int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
+		       xntmode_t timeout_mode, RTIME timeout);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_COND */
 
 #define __native_cond_pkg_init()		({ 0; })
@@ -137,6 +140,10 @@ int rt_cond_broadcast(RT_COND *cond);
 int rt_cond_wait(RT_COND *cond,
 		 RT_MUTEX *mutex,
 		 RTIME timeout);
+
+int rt_cond_wait_until(RT_COND *cond,
+		       RT_MUTEX *mutex,
+		       RTIME timeout);
 
 int rt_cond_inquire(RT_COND *cond,
 		    RT_COND_INFO *info);

@@ -86,6 +86,10 @@ static inline void __native_mutex_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_MUTEX, rq, mutex);
 }
 
+int rt_mutex_acquire_inner(RT_MUTEX *mutex,
+			   xntmode_t timeout_mode,
+			   RTIME timeout);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_MUTEX */
 
 #define __native_mutex_pkg_init()		({ 0; })
@@ -136,6 +140,9 @@ int rt_mutex_delete(RT_MUTEX *mutex);
 
 int rt_mutex_acquire(RT_MUTEX *mutex,
 		     RTIME timeout);
+
+int rt_mutex_acquire_until(RT_MUTEX *mutex,
+			   RTIME timeout);
 
 int rt_mutex_release(RT_MUTEX *mutex);
 

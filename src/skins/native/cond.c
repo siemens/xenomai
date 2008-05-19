@@ -41,8 +41,16 @@ int rt_cond_delete(RT_COND *cond)
 
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_cond_wait, cond, mutex, &timeout);
+	return XENOMAI_SKINCALL4(__native_muxid,
+				 __native_cond_wait, cond, mutex,
+				 XN_RELATIVE, &timeout);
+}
+
+int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+{
+	return XENOMAI_SKINCALL4(__native_muxid,
+				 __native_cond_wait, cond, mutex,
+				 XN_ABSOLUTE, &timeout);
 }
 
 int rt_cond_signal(RT_COND *cond)

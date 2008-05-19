@@ -285,6 +285,63 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	return err;
 }
 
+int rt_mutex_acquire_inner(RT_MUTEX *mutex, xntmode_t timeout_mode, RTIME timeout)
+{
+	xnthread_t *thread;
+	int err = 0;
+	spl_t s;
+
+	if (xnpod_unblockable_p())
+		return -EPERM;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
+
+	thread = xnpod_current_thread();
+
+	if (xnsynch_owner(&mutex->synch_base) == NULL) {
+		xnsynch_set_owner(&mutex->synch_base, thread);
+		goto grab_mutex;
+	}
+
+	if (xnsynch_owner(&mutex->synch_base) == thread) {
+		mutex->lockcnt++;
+		goto unlock_and_exit;
+	}
+
+	if (timeout == TM_NONBLOCK) {
+		err = -EWOULDBLOCK;
+		goto unlock_and_exit;
+	}
+
+	xnsynch_sleep_on(&mutex->synch_base, timeout, timeout_mode);
+
+	if (xnthread_test_info(thread, XNRMID))
+		err = -EIDRM;	/* Mutex deleted while pending. */
+	else if (xnthread_test_info(thread, XNTIMEO))
+		err = -ETIMEDOUT;	/* Timeout. */
+	else if (xnthread_test_info(thread, XNBREAK))
+		err = -EINTR;	/* Unblocked. */
+	else {
+	      grab_mutex:
+		/* xnsynch_sleep_on() might have stolen the resource,
+		   so we need to put our internal data in sync. */
+		mutex->lockcnt = 1;
+	}
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
 /**
  * @fn int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  *
@@ -297,7 +354,8 @@ int rt_mutex_delete(RT_MUTEX *mutex)
  * recursive and implement the priority inheritance protocol.
  *
  * Since a nested locking count is maintained for the current owner,
- * rt_mutex_acquire() and rt_mutex_release() must be used in pairs.
+ * rt_mutex_acquire{_until}() and rt_mutex_release() must be used in
+ * pairs.
  *
  * Tasks pend on mutexes by priority order.
  *
@@ -350,59 +408,76 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
-	xnthread_t *thread;
-	int err = 0;
-	spl_t s;
+	return rt_mutex_acquire_inner(mutex, XN_RELATIVE, timeout);
+}
 
-	if (xnpod_unblockable_p())
-		return -EPERM;
+/**
+ * @fn int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+ *
+ * @brief Acquire a mutex (with absolute timeout value).
+ *
+ * Attempt to lock a mutex. The calling task is blocked until the
+ * mutex is available, in which case it is locked again before this
+ * service returns. Mutexes have an ownership property, which means
+ * that their current owner is tracked. Xenomai mutexes are implicitely
+ * recursive and implement the priority inheritance protocol.
+ *
+ * Since a nested locking count is maintained for the current owner,
+ * rt_mutex_acquire{_until}() and rt_mutex_release() must be used in
+ * pairs.
+ *
+ * Tasks pend on mutexes by priority order.
+ *
+ * @param mutex The descriptor address of the mutex to acquire.
+ *
+ * @param timeout The number of clock ticks to wait for the mutex to
+ * be available to the calling task (see note). Passing TM_INFINITE
+ * causes the caller to block indefinitely until the mutex is
+ * available. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if the mutex is still locked by another
+ * task.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a mutex is not a mutex descriptor.
+ *
+ * - -EIDRM is returned if @a mutex is a deleted mutex descriptor,
+ * including if the deletion occurred while the caller was sleeping on
+ * it.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the mutex is not immediately available.
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before the mutex has become available.
+ *
+ * - -ETIMEDOUT is returned if the mutex cannot be made available to
+ * the calling task until the absolute timeout date is reached.
+ *
+ * - -EPERM is returned if this service was called from a context
+ * which cannot be given the ownership of the mutex (e.g. interrupt,
+ * non-realtime or scheduler locked).
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task
+ * - User-space task (switches to primary mode)
+ *
+ * Rescheduling: always unless the request is immediately satisfied or
+ * @a timeout specifies a non-blocking operation.  If the caller is
+ * blocked, the current owner's priority might be temporarily raised
+ * as a consequence of the priority inheritance protocol.
+ *
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
+ */
 
-	xnlock_get_irqsave(&nklock, s);
-
-	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-
-	if (!mutex) {
-		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-		goto unlock_and_exit;
-	}
-
-	thread = xnpod_current_thread();
-
-	if (xnsynch_owner(&mutex->synch_base) == NULL) {
-		xnsynch_set_owner(&mutex->synch_base, thread);
-		goto grab_mutex;
-	}
-
-	if (xnsynch_owner(&mutex->synch_base) == thread) {
-		mutex->lockcnt++;
-		goto unlock_and_exit;
-	}
-
-	if (timeout == TM_NONBLOCK) {
-		err = -EWOULDBLOCK;
-		goto unlock_and_exit;
-	}
-
-	xnsynch_sleep_on(&mutex->synch_base, timeout, XN_RELATIVE);
-
-	if (xnthread_test_info(thread, XNRMID))
-		err = -EIDRM;	/* Mutex deleted while pending. */
-	else if (xnthread_test_info(thread, XNTIMEO))
-		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(thread, XNBREAK))
-		err = -EINTR;	/* Unblocked. */
-	else {
-	      grab_mutex:
-		/* xnsynch_sleep_on() might have stolen the resource,
-		   so we need to put our internal data in sync. */
-		mutex->lockcnt = 1;
-	}
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+{
+	return rt_mutex_acquire_inner(mutex, XN_ABSOLUTE, timeout);
 }
 
 /**
@@ -619,5 +694,6 @@ void __native_mutex_pkg_cleanup(void)
 EXPORT_SYMBOL(rt_mutex_create);
 EXPORT_SYMBOL(rt_mutex_delete);
 EXPORT_SYMBOL(rt_mutex_acquire);
+EXPORT_SYMBOL(rt_mutex_acquire_until);
 EXPORT_SYMBOL(rt_mutex_release);
 EXPORT_SYMBOL(rt_mutex_inquire);

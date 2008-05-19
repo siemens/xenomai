@@ -40,8 +40,14 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
-	return XENOMAI_SKINCALL2(__native_muxid,
-				 __native_mutex_acquire, mutex, &timeout);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_mutex_acquire, mutex, XN_RELATIVE, &timeout);
+}
+
+int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
+{
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_mutex_acquire, mutex, XN_ABSOLUTE, &timeout);
 }
 
 int rt_mutex_release(RT_MUTEX *mutex)
