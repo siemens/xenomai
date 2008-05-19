@@ -170,6 +170,7 @@ if test $XENO_TARGET_ARCH = arm ; then
   CONFIX_XENO_ARM_EABI=
 
   unset CONFIG_XENO_ARM_SA1100
+  unset CONFIG_XENO_CPU_XSC3
   unset tsc_type
   unset CONFIG_XENO_ARM_HW_DIRECT_TSC
 
@@ -177,7 +178,7 @@ if test $XENO_TARGET_ARCH = arm ; then
   AC_ARG_ENABLE(arm-mach,
 	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
 compiling. Valid machines are at91rm9200, at91sam926x, imx, imx21, integrator, 
-ixp4xx, pxa, s3c2410, sa1100.]),
+ixp4xx, pxa, pxa3xx, s3c2410, sa1100.]),
 	[case "$enableval" in
 	at91rm9200)   	arch=4
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
@@ -196,6 +197,9 @@ ixp4xx, pxa, s3c2410, sa1100.]),
 	
 	ixp4xx|pxa) 	arch=5
 	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	pxa3xx)	        arch=xscale3
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	s3c2410) 	arch=4
 			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
@@ -222,6 +226,9 @@ ixp4xx, pxa, s3c2410, sa1100.]),
 		esac
 		CONFIG_XENO_ARM_ARCH="$enableval"
     	])
+  elif test $arch = xscale3; then
+	CONFIG_XENO_ARM_ARCH=5
+	CONFIG_XENO_CPU_XSC3=y
   else
 	CONFIG_XENO_ARM_ARCH=$arch
   fi
@@ -229,6 +236,9 @@ ixp4xx, pxa, s3c2410, sa1100.]),
 
   AC_MSG_CHECKING(for ARM SA1100 architecture)
   AC_MSG_RESULT(${CONFIG_XENO_ARM_SA1100:-no})
+
+  AC_MSG_CHECKING(for ARM Xscale3 architecture)
+  AC_MSG_RESULT(${CONFIG_XENO_CPU_XSC3:-no})
 
   AC_MSG_CHECKING(for TSC emulation in user-space.)
   if test $tsc_type; then
@@ -531,6 +541,7 @@ test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 
 test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
+test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
 test $CONFIG_XENO_ARM_HW_DIRECT_TSC && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_HW_DIRECT_TSC,$CONFIG_XENO_ARM_HW_DIRECT_TSC,[config])
 test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
 

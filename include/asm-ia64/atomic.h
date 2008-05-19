@@ -27,16 +27,17 @@
 #include <asm/atomic.h>
 #include <asm/system.h>
 
-typedef atomic_t atomic_counter_t;
+typedef atomic64_t atomic_counter_t;
+typedef atomic64_t xnarch_atomic_t;
 
 #define xnarch_atomic_xchg(ptr,v)		xchg(ptr,v)
 
-#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
-#define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
-#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
-#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)
-#define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
+#define xnarch_atomic_set(pcounter,i)          atomic64_set(pcounter,i)
+#define xnarch_atomic_get(pcounter)            atomic64_read(pcounter)
+#define xnarch_atomic_inc(pcounter)            atomic64_inc(pcounter)
+#define xnarch_atomic_dec(pcounter)            atomic64_dec(pcounter)
+#define xnarch_atomic_inc_and_test(pcounter)   atomic64_inc_and_test(pcounter)
+#define xnarch_atomic_dec_and_test(pcounter)   atomic64_dec_and_test(pcounter)
 #define xnarch_memory_barrier()                smp_mb()
 
 static inline void atomic_set_mask(unsigned mask, unsigned long *addr)
@@ -66,6 +67,11 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
 }
 
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
+
+#define xnarch_atomic_cmpxchg(pcounter,old,new) \
+	atomic64_cmpxchg((pcounter),(old),(new))
+
+#include <asm-generic/xenomai/atomic.h>
 
 #else /* !__KERNEL__ */
 

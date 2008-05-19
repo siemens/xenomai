@@ -1,5 +1,10 @@
 2008-05-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* include/asm-arm/atomic.h: Implement atomic operations in
+	user-space without syscalls.
+
+	* include/asm-*/atomic.h: Define xnarch_atomic_t.
+
 	* include/asm-generic/atomic.h: Define xnarch_atomic_intptr_t.
 
 	* include/asm-generic/system.h, include/asm-arm/hal.h: Define

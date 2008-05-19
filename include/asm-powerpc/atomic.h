@@ -34,7 +34,7 @@
 #define xnarch_memory_barrier()  smp_mb()
 
 #ifdef CONFIG_PPC64
-static __inline__ void atomic_clear_mask(unsigned long mask,
+static __inline__ void atomic64_clear_mask(unsigned long mask,
 					 unsigned long *ptr)
 {
     __asm__ __volatile__ ("\n\
@@ -47,7 +47,7 @@ static __inline__ void atomic_clear_mask(unsigned long mask,
 	: "r5", "cc", "memory");
 }
 
-static __inline__ void atomic_set_mask(unsigned long mask,
+static __inline__ void atomic64_set_mask(unsigned long mask,
 				       unsigned long *ptr)
 {
     __asm__ __volatile__ ("\n\
@@ -59,11 +59,25 @@ static __inline__ void atomic_set_mask(unsigned long mask,
 	: "r" (ptr), "r" (mask)
 	: "r5", "cc", "memory");
 }
+
+#define xnarch_atomic_set(pcounter,i)          atomic64_set(pcounter,i)
+#define xnarch_atomic_get(pcounter)            atomic64_read(pcounter)
+#define xnarch_atomic_inc(pcounter)            atomic64_inc(pcounter)
+#define xnarch_atomic_dec(pcounter)            atomic64_dec(pcounter)
+#define xnarch_atomic_inc_and_test(pcounter)   atomic64_inc_and_test(pcounter)
+#define xnarch_atomic_dec_and_test(pcounter)   atomic64_dec_and_test(pcounter)
+#define xnarch_atomic_set_mask(pflags,mask)    atomic64_set_mask(mask,pflags)
+#define xnarch_atomic_clear_mask(pflags,mask)  atomic64_clear_mask(mask,pflags)
+#define xnarch_atomic_cmpxchg(pcounter,old,new) \
+      atomic64_cmpxchg((pcounter),(old),(new))
+
+typedef atomic64_t atomic_counter_t;
+typedef atomic64_t xnarch_atomic_t;
+
 #else /* !CONFIG_PPC64 */
  /* These are defined in arch/{ppc,powerpc}/kernel/misc[_32].S on 32-bit PowerPC */
 void atomic_set_mask(unsigned long mask, unsigned long *ptr);
 void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
-#endif /* CONFIG_PPC64 */
 
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
@@ -73,8 +87,15 @@ void atomic_clear_mask(unsigned long mask, unsigned long *ptr);
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
+#define xnarch_atomic_cmpxchg(pcounter,old,new) \
+      atomic_cmpxchg((pcounter),(old),(new))
 
 typedef atomic_t atomic_counter_t;
+typedef atomic_t xnarch_atomic_t;
+
+#endif /* !CONFIG_PPC64 */
+
+#include <asm-generic/xenomai/atomic.h>
 
 #else /* !__KERNEL__ */
 
