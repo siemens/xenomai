@@ -93,19 +93,6 @@ typedef struct pse51_threadattr {
 
 /* pthread_mutexattr_t and pthread_condattr_t fit on 32 bits, for compatibility
    with libc. */
-typedef struct pse51_mutexattr {
-	unsigned magic: 24;
-	unsigned type: 2;
-	unsigned protocol: 2;
-	unsigned pshared: 1;
-} pthread_mutexattr_t;
-
-typedef struct pse51_condattr {
-	unsigned magic: 24;
-	unsigned clock: 2;
-	unsigned pshared: 1;
-} pthread_condattr_t;
-
 struct pse51_key;
 typedef struct pse51_key *pthread_key_t;
 
@@ -169,24 +156,46 @@ struct timespec;
 #define PTHREAD_IENABLE     0
 #define PTHREAD_IDISABLE    1
 
+struct pse51_mutexattr {
+	unsigned magic: 24;
+	unsigned type: 2;
+	unsigned protocol: 2;
+	unsigned pshared: 1;
+};
+
+struct pse51_condattr {
+	unsigned magic: 24;
+	unsigned clock: 2;
+	unsigned pshared: 1;
+};
+
 struct pse51_mutex;
 
 union __xeno_mutex {
-    pthread_mutex_t native_mutex;
-    struct __shadow_mutex {
-	unsigned magic;
-	struct pse51_mutex *mutex;
-    } shadow_mutex;
+	pthread_mutex_t native_mutex;
+	struct __shadow_mutex {
+		unsigned magic;
+		unsigned lockcnt;
+		struct pse51_mutex *mutex;
+#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+		xnarch_atomic_t lock;
+		union {
+			unsigned owner_offset;
+			xnarch_atomic_intptr_t *owner;
+		};
+		struct pse51_mutexattr attr;
+#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+	} shadow_mutex;
 };
 
 struct pse51_cond;
 
 union __xeno_cond {
-    pthread_cond_t native_cond;
-    struct __shadow_cond {
-	unsigned magic;
-	struct pse51_cond *cond;
-    } shadow_cond;
+	pthread_cond_t native_cond;
+	struct __shadow_cond {
+		unsigned magic;
+		struct pse51_cond *cond;
+	} shadow_cond;
 };
 
 struct pse51_interrupt;
@@ -194,6 +203,9 @@ struct pse51_interrupt;
 typedef struct pse51_interrupt *pthread_intr_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
+typedef struct pse51_mutexattr pthread_mutexattr_t;
+
+typedef struct pse51_condattr pthread_condattr_t;
 
 #ifdef __cplusplus
 extern "C" {

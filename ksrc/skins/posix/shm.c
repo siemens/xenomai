@@ -90,14 +90,6 @@ static void pse51_shm_init(pse51_shm_t * shm)
 	appendq(&pse51_shmq, &shm->link);
 }
 
-#ifndef CONFIG_XENO_OPT_PERVASIVE
-static void pse51_free_heap_extent(xnheap_t *heap,
-				   void *extent, u_long size, void *cookie)
-{
-	xnarch_free_host_mem(extent, size);
-}
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
-
 /* Must be called nklock locked, irq off. */
 static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 {
@@ -111,11 +103,7 @@ static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 	if (shm->addr) {
 		xnheap_free(&shm->heapbase, shm->addr);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 		xnheap_destroy_mapped(&shm->heapbase);
-#else /* !CONFIG_XENO_OPT_PERVASIVE. */
-		xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent, NULL);
-#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
 		shm->addr = NULL;
 		shm->size = 0;
@@ -534,37 +522,19 @@ int ftruncate(int fd, off_t len)
 			memcpy(addr, shm->addr, size);
 
 			xnheap_free(&shm->heapbase, shm->addr);
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 			xnheap_destroy_mapped(&shm->heapbase);
-#else /* !CONFIG_XENO_OPT_PERVASIVE. */
-			xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent,
-				       NULL);
-#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
 
 			shm->addr = NULL;
 			shm->size = 0;
 		}
 
 		if (len) {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-			int flags = len <= 128 * 1024 ? GFP_USER : 0;
+			int flags = (XNARCH_SHARED_HEAP_FLAGS ?:
+				     len <= 128 * 1024 ? GFP_USER : 0);
+
 			err = -xnheap_init_mapped(&shm->heapbase, len, flags);
-#else /* !CONFIG_XENO_OPT_PERVASIVE. */
-			{
-				void *heapaddr = xnarch_alloc_host_mem(len);
-
-				if (heapaddr)
-					err =
-					    -xnheap_init(&shm->heapbase,
-							 heapaddr, len,
-							 XNCORE_PAGE_SIZE);
-				else
-					err = ENOMEM;
-
-				if (err)
-					goto err_up;
-			}
-#endif /* !CONFIG_XENO_OPT_PERVASIVE. */
+			if (err)
+				goto err_up;
 
 			shm->size = xnheap_max_contiguous(&shm->heapbase);
 			shm->addr = xnheap_alloc(&shm->heapbase, shm->size);

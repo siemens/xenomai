@@ -1,3 +1,8 @@
+2008-05-20  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/mutex*, src/skins/posix/mutex*: Implement
+	user-space posix mutexes.
+
 2008-05-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/nucleus/shadow.c (xnshadow_sys_event): Create a ppd for the

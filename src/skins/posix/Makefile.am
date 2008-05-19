@@ -2,6 +2,8 @@ includedir = $(prefix)/include/posix
 
 lib_LTLIBRARIES = libpthread_rt.la
 
+CPPFLAGS+=-I$(top_srcdir)/ksrc/skins
+
 libpthread_rt_la_LDFLAGS = -version-info 1:0:0 -lpthread
 
 libpthread_rt_la_SOURCES = \

@@ -26,8 +26,22 @@
 #include <posix/posix.h>
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
-#include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
+
+/* asm-generic/bits/bind.h uses the following functions, so we redefine them to
+   be the __real variants */
+#undef open
+#undef ioctl
+#undef mmap
+#undef close
+#undef munmap
+#define open __real_open
+#define ioctl __real_ioctl
+#define mmap __real_mmap
+#define close __real_close
+#define munmap __real_munmap
+
+#include <asm-generic/bits/bind.h>
 
 int __pse51_muxid = -1;
 int __rtdm_muxid = -1;
@@ -91,5 +105,15 @@ void __init_posix_interface(void)
 			exit(EXIT_FAILURE);
 		}
 		fork_handler_registered = 1;
+
+		if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
+			fprintf(stderr, "sizeof(pthread_mutex_t): %d,"
+				" sizeof(shadow_mutex): %d\n",
+				sizeof(pthread_mutex_t),
+				sizeof(struct __shadow_mutex));
+			exit(EXIT_FAILURE);
+		}
+
 	}
 }
+

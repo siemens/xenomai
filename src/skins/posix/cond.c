@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <posix/syscall.h>
 #include <pthread.h>
+#include <posix/cb_lock.h>
 
 extern int __pse51_muxid;
 
@@ -95,13 +96,16 @@ static void __pthread_cond_cleanup(void *data)
 			  c->count);
 }
 
-int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
+int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 {
 	struct pse51_cond_cleanup_t c = {
 		.cond = (union __xeno_cond *)cond,
 		.mutex = (union __xeno_mutex *)mutex,
 	};
 	int err, oldtype;
+
+	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
+		return EINVAL;
 
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
@@ -118,10 +122,14 @@ int __wrap_pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex)
 
 	pthread_cleanup_pop(0);
 
-	if (err)
+	if (err) {
+		cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 		return err;
+	}
 
 	__pthread_cond_cleanup(&c);
+
+	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 
 	pthread_testcancel();
 
@@ -138,6 +146,9 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 	};
 	int err, oldtype;
 
+	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
+		return EINVAL;
+
 	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
@@ -153,10 +164,14 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 
 	pthread_cleanup_pop(0);
 
-	if (err && err != ETIMEDOUT)
+	if (err && err != ETIMEDOUT) {
+		cb_read_unlock(&c.mutex->shadow_mutex.lock, s);		
 		return err;
+	}
 
 	__pthread_cond_cleanup(&c);
+
+	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 
 	pthread_testcancel();
 

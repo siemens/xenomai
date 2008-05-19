@@ -23,6 +23,7 @@
 #include <asm/xenomai/wrappers.h>
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
+#include <nucleus/sys_ppd.h>
 #include <posix/syscall.h>
 #include <posix/posix.h>
 #include <posix/thread.h>
@@ -884,6 +885,7 @@ static int __pthread_mutexattr_setpshared(struct pt_regs *regs)
 	return __xn_safe_copy_to_user((void __user *)uattrp, &attr, sizeof(*uattrp));
 }
 
+#ifndef XNARCH_HAVE_US_ATOMIC_CMPXCHG
 static int __pthread_mutex_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
@@ -941,6 +943,8 @@ static int __pthread_mutex_destroy(struct pt_regs *regs)
 static int __pthread_mutex_lock(struct pt_regs *regs)
 {
 	union __xeno_mutex mx, *umx;
+	DECLARE_CB_LOCK_FLAGS(s);
+	int err;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
@@ -949,13 +953,28 @@ static int __pthread_mutex_lock(struct pt_regs *regs)
 				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
 
-	return -pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
+	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
+		return -EINVAL;
+
+	err = pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
+
+	cb_read_unlock(&mx.shadow_mutex.lock, s);
+
+	if (!err &&
+	    __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex.lockcnt,
+				   &mx.shadow_mutex.lockcnt,
+				   sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
 }
 
 static int __pthread_mutex_timedlock(struct pt_regs *regs)
 {
 	union __xeno_mutex mx, *umx;
+	DECLARE_CB_LOCK_FLAGS(s);
 	struct timespec ts;
+	int err;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
@@ -968,13 +987,27 @@ static int __pthread_mutex_timedlock(struct pt_regs *regs)
 				     (void __user *)__xn_reg_arg2(regs), sizeof(ts)))
 		return -EFAULT;
 
-	return -pse51_mutex_timedlock_break(&mx.shadow_mutex,
-					    1, ts2ticks_ceil(&ts) + 1);
+	if (unlikely(cb_try_read_lock(&mx.shadow_mutex.lock, s)))
+		return -EINVAL;
+
+	err = pse51_mutex_timedlock_break(&mx.shadow_mutex,
+					  1, ts2ticks_ceil(&ts) + 1);
+
+	cb_read_unlock(&mx.shadow_mutex.lock, s);
+
+	if (!err &&
+	    __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex.lockcnt,
+				   &mx.shadow_mutex.lockcnt,
+				   sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
 }
 
 static int __pthread_mutex_trylock(struct pt_regs *regs)
 {
 	union __xeno_mutex mx, *umx;
+	int err;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
@@ -983,12 +1016,28 @@ static int __pthread_mutex_trylock(struct pt_regs *regs)
 				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
 
-	return -pthread_mutex_trylock(&mx.native_mutex);
+	err = pthread_mutex_trylock(&mx.native_mutex);
+
+	if (!err &&
+	    __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex.lockcnt,
+				   &mx.shadow_mutex.lockcnt,
+				   sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
 }
 
 static int __pthread_mutex_unlock(struct pt_regs *regs)
 {
+	xnthread_t *cur = xnpod_current_thread();
+	struct __shadow_mutex *shadow;
 	union __xeno_mutex mx, *umx;
+	DECLARE_CB_LOCK_FLAGS(s);
+	pse51_mutex_t *mutex;
+	int err;
+
+	if (xnpod_root_p())
+		return -EPERM;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
 
@@ -997,8 +1046,238 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 				     sizeof(mx.shadow_mutex)))
 		return -EFAULT;
 
-	return -pthread_mutex_unlock(&mx.native_mutex);
+	shadow = &mx.shadow_mutex;
+
+	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
+		return -EINVAL;
+
+	if (!pse51_obj_active(shadow,
+			      PSE51_MUTEX_MAGIC, struct __shadow_mutex)) {
+		err = -EINVAL;
+		goto out;
+	}
+
+	mutex = shadow->mutex;
+
+	if (clear_claimed(xnarch_atomic_intptr_get(mutex->owner)) != cur) {
+		err = -EPERM;
+		goto out;
+	}
+
+	err = 0;
+	if (shadow->lockcnt > 1) {
+		/* Mutex is recursive */
+		--shadow->lockcnt;
+		cb_read_unlock(&shadow->lock, s);
+
+		if (__xn_safe_copy_to_user((void __user *)
+					   &umx->shadow_mutex.lockcnt,
+					   &shadow->lockcnt,
+					   sizeof(umx->shadow_mutex.lockcnt)))
+			return -EFAULT;
+
+		return 0;
+	}
+	
+	pse51_mutex_unlock_internal(cur, mutex);
+
+  out:
+	cb_read_unlock(&shadow->lock, s);
+
+	return err;
 }
+#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+static int __pthread_mutex_check_init(struct pt_regs *regs)
+{
+	pthread_mutexattr_t locattr, *attr, *uattrp;
+	union __xeno_mutex mx, *umx;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	uattrp = (pthread_mutexattr_t *) __xn_reg_arg2(regs);
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     sizeof(mx.shadow_mutex)))
+		return -EFAULT;
+
+	if (uattrp) {
+		if (__xn_safe_copy_from_user(&locattr, (void __user *)
+					     uattrp, sizeof(locattr)))
+			return -EFAULT;
+
+		attr = &locattr;
+	} else
+		attr = NULL;
+
+	return pse51_mutex_check_init(&umx->shadow_mutex, attr);
+}
+
+static int __pthread_mutex_init(struct pt_regs *regs)
+{
+	pthread_mutexattr_t locattr, *attr, *uattrp;
+	union __xeno_mutex mx, *umx;
+	pse51_mutex_t *mutex;
+	xnarch_atomic_intptr_t *ownerp;
+	int err;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	uattrp = (pthread_mutexattr_t *) __xn_reg_arg2(regs);
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     sizeof(mx.shadow_mutex)))
+		return -EFAULT;
+
+	if (uattrp) {
+		if (__xn_safe_copy_from_user(&locattr, (void __user *)
+					     uattrp, sizeof(locattr)))
+			return -EFAULT;
+
+		attr = &locattr;
+	} else
+		attr = &pse51_default_mutex_attr;
+
+	mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));
+	if (!mutex)
+		return -ENOMEM;
+
+	ownerp = (xnarch_atomic_intptr_t *)
+		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
+			     sizeof(xnarch_atomic_intptr_t));
+	if (!ownerp) {
+		xnfree(mutex);
+		return -EAGAIN;
+	}
+
+	err = pse51_mutex_init_internal(&mx.shadow_mutex, mutex, ownerp, attr);
+	if (err) {
+		xnfree(mutex);
+		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
+		return err;
+	}
+
+	return __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex,
+				      &mx.shadow_mutex, sizeof(umx->shadow_mutex));
+}
+
+static int __pthread_mutex_destroy(struct pt_regs *regs)
+{
+	struct __shadow_mutex *shadow;
+	union __xeno_mutex mx, *umx;
+	pse51_mutex_t *mutex;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	shadow = &mx.shadow_mutex;
+
+	if (__xn_safe_copy_from_user(shadow,
+				     (void __user *)&umx->shadow_mutex,
+				     sizeof(*shadow)))
+		return -EFAULT;
+
+	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
+		return -EINVAL;
+
+	mutex = shadow->mutex;
+	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq)
+		return -EPERM;
+
+	if (xnarch_atomic_intptr_get(mutex->owner))
+		return -EBUSY;
+
+	pse51_mark_deleted(shadow);
+	if (!mutex->attr.pshared)
+		xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
+			    mutex->owner);
+	pse51_mutex_destroy_internal(mutex, mutex->owningq);
+
+	return __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex,
+				      shadow, sizeof(umx->shadow_mutex));
+}
+
+static int __pthread_mutex_lock(struct pt_regs *regs)
+{
+	struct __shadow_mutex *shadow;
+	union __xeno_mutex mx, *umx;
+	int err;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     offsetof(struct __shadow_mutex, lock)))
+		return -EFAULT;
+
+	shadow = &mx.shadow_mutex;
+
+	err = pse51_mutex_timedlock_break(&mx.shadow_mutex, 0, XN_INFINITE);
+
+	if (!err &&
+	    __xn_safe_copy_to_user((void __user *)
+				   &umx->shadow_mutex.lockcnt,
+				   &shadow->lockcnt,
+				   sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
+}
+
+static int __pthread_mutex_timedlock(struct pt_regs *regs)
+{
+	struct __shadow_mutex *shadow;
+	union __xeno_mutex mx, *umx;
+	struct timespec ts;
+	int err;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     sizeof(mx.shadow_mutex)))
+		return -EFAULT;
+
+	if (__xn_safe_copy_from_user(&ts,
+				     (void __user *)__xn_reg_arg2(regs),
+				     sizeof(ts)))
+		return -EFAULT;
+
+	shadow = &mx.shadow_mutex;
+
+	err = pse51_mutex_timedlock_break(&mx.shadow_mutex,
+					    1, ts2ticks_ceil(&ts) + 1);
+
+	if (!err &&
+	    __xn_safe_copy_to_user((void __user *)
+				   &umx->shadow_mutex.lockcnt,
+				   &shadow->lockcnt,
+				   sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
+}
+
+static int __pthread_mutex_unlock(struct pt_regs *regs)
+{
+	xnthread_t *cur = xnpod_current_thread();
+	union __xeno_mutex mx, *umx;
+
+	if (xnpod_root_p())
+		return -EPERM;
+
+	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
+
+	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
+				     (void __user *)&umx->shadow_mutex,
+				     offsetof(struct __shadow_mutex, lock)))
+		return -EFAULT;
+
+	pse51_mutex_unlock_internal(cur, mx.shadow_mutex.mutex);
+
+	return 0;
+}
+#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
 
 static int __pthread_condattr_init(struct pt_regs *regs)
 {
@@ -1188,7 +1467,12 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
+#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+				     offsetof(struct __shadow_mutex, lock)
+#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+				     sizeof(mx.shadow_mutex)
+#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+				     ))
 		return -EFAULT;
 
 	if (timed) {
@@ -1237,6 +1521,7 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
 	unsigned count;
+	int err;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1250,11 +1535,25 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-				     sizeof(mx.shadow_mutex)))
+#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+				     offsetof(struct __shadow_mutex, lock)
+#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+				     sizeof(mx.shadow_mutex)
+#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+				     ))
 		return -EFAULT;
 
-	return -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+	err = pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					      &mx.shadow_mutex, count);
+
+	if (err == 0
+	    && __xn_safe_copy_to_user((void __user *)
+				      &umx->shadow_mutex.lockcnt,
+				      &mx.shadow_mutex.lockcnt,
+				      sizeof(umx->shadow_mutex.lockcnt)))
+		return -EFAULT;
+
+	return -err;
 }
 
 static int __pthread_cond_signal(struct pt_regs *regs)
@@ -2394,7 +2693,11 @@ static xnsysent_t __systab[] = {
 	[__pse51_mutex_lock] = {&__pthread_mutex_lock, __xn_exec_primary},
 	[__pse51_mutex_timedlock] =
 	    {&__pthread_mutex_timedlock, __xn_exec_primary},
+#ifndef XNARCH_HAVE_US_ATOMIC_CMPXCHG
 	[__pse51_mutex_trylock] = {&__pthread_mutex_trylock, __xn_exec_primary},
+#else
+        [__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},
+#endif
 	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary},
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
@@ -2477,7 +2780,6 @@ static void *pse51_eventcb(int event, void *data)
 
 	switch (event) {
 	case XNSHADOW_CLIENT_ATTACH:
-
 		q = (pse51_queues_t *) xnarch_alloc_host_mem(sizeof(*q));
 		if (!q)
 			return ERR_PTR(-ENOSPC);
