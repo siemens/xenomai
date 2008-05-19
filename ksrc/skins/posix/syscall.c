@@ -966,7 +966,7 @@ static int __pthread_mutex_lock(struct pt_regs *regs)
 				   sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return -err;
+	return err;
 }
 
 static int __pthread_mutex_timedlock(struct pt_regs *regs)
@@ -1001,7 +1001,7 @@ static int __pthread_mutex_timedlock(struct pt_regs *regs)
 				   sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return -err;
+	return err;
 }
 
 static int __pthread_mutex_trylock(struct pt_regs *regs)
@@ -1221,7 +1221,7 @@ static int __pthread_mutex_lock(struct pt_regs *regs)
 				   sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return -err;
+	return err;
 }
 
 static int __pthread_mutex_timedlock(struct pt_regs *regs)
@@ -1255,7 +1255,7 @@ static int __pthread_mutex_timedlock(struct pt_regs *regs)
 				   sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return -err;
+	return err;
 }
 
 static int __pthread_mutex_unlock(struct pt_regs *regs)

@@ -449,11 +449,11 @@ int pthread_mutex_lock(pthread_mutex_t * mx)
 
 	do {
 		err = pse51_mutex_timedlock_break(shadow, 0, XN_INFINITE);
-	} while (err == EINTR);
+	} while (err == -EINTR);
 
 	cb_read_unlock(&shadow->lock, s);
 
-	return err;
+	return -err;
 }
 
 /**
@@ -503,11 +503,11 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
 	do {
 		err = pse51_mutex_timedlock_break(shadow, 1,
 						  ts2ticks_ceil(to) + 1);
-	} while (err == EINTR);
+	} while (err == -EINTR);
 
 	cb_read_unlock(&shadow->lock, s);
 
-	return err;
+	return -err;
 }
 
 /**
