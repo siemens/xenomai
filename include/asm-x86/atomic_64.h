@@ -27,19 +27,24 @@
 #include <asm/atomic.h>
 #include <asm/system.h>
 
-#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
-#define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
-#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
-#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)
-#define xnarch_atomic_inc_and_test(pcounter)  atomic_inc_and_test(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter)  atomic_dec_and_test(pcounter)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
-#define xnarch_atomic_clear_mask(pflags,mask) atomic_clear_mask(mask,pflags)
+#define xnarch_atomic_set(pcounter,i)          atomic64_set(pcounter,i)
+#define xnarch_atomic_get(pcounter)            atomic64_read(pcounter)
+#define xnarch_atomic_inc(pcounter)            atomic64_inc(pcounter)
+#define xnarch_atomic_dec(pcounter)            atomic64_dec(pcounter)
+#define xnarch_atomic_inc_and_test(pcounter)  atomic64_inc_and_test(pcounter)
+#define xnarch_atomic_dec_and_test(pcounter)  atomic64_dec_and_test(pcounter)
+#define xnarch_atomic_set_mask(pflags,mask)    atomic64_set_mask(mask,pflags)
+#define xnarch_atomic_clear_mask(pflags,mask) atomic64_clear_mask(mask,pflags)
 #define xnarch_atomic_xchg(ptr,x)              xchg(ptr,x)
+#define xnarch_atomic_cmpxchg(pcounter,old,new) \
+	atomic64_cmpxchg((pcounter),(old),(new))
 
 #define xnarch_memory_barrier()  smp_mb()
 
-typedef atomic_t atomic_counter_t;
+typedef atomic64_t atomic_counter_t;
+typedef atomic64_t xnarch_atomic_t;
+
+#include <asm-generic/xenomai/atomic.h>
 
 #else /* !__KERNEL__ */
 

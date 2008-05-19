@@ -36,10 +36,15 @@
 #define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,pflags)
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
 #define xnarch_atomic_xchg(ptr,x)              xchg(ptr,x)
+#define xnarch_atomic_cmpxchg(pcounter,old,new) \
+	atomic_cmpxchg((pcounter),(old),(new))
 
 #define xnarch_memory_barrier()  smp_mb()
 
 typedef atomic_t atomic_counter_t;
+typedef atomic_t xnarch_atomic_t;
+
+#include <asm-generic/xenomai/atomic.h>
 
 #else /* !__KERNEL__ */
 
