@@ -57,6 +57,8 @@
 #define XNHEAP_PCONT   1
 #define XNHEAP_PLIST   2
 
+#define XNHEAP_GFP_NONCACHED (1 << __GFP_BITS_SHIFT)
+
 typedef struct xnextent {
 
 	xnholder_t link;

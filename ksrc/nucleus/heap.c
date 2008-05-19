@@ -1097,8 +1097,12 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	vaddr = (unsigned long)heap->archdep.heapbase;
 
-	if (!heap->archdep.kmflags) {
+	if (!heap->archdep.kmflags
+	    || heap->archdep.kmflags == XNHEAP_GFP_NONCACHED) {
 		unsigned long maddr = vma->vm_start;
+
+		if (heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
+			vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
 		while (size > 0) {
 			if (xnarch_remap_vm_page(vma, maddr, vaddr))
@@ -1174,9 +1178,13 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 
 	/* Size must be page-aligned. */
 
-	if (!kmflags) {
-		ptr = vmalloc(size);
-
+	if (!kmflags || kmflags == XNHEAP_GFP_NONCACHED) {
+		if (!kmflags)
+			ptr = vmalloc(size);
+		else
+			ptr = __vmalloc(size,
+					GFP_KERNEL | __GFP_HIGHMEM,
+					pgprot_noncached(PAGE_KERNEL));
 		if (!ptr)
 			return NULL;
 
@@ -1217,7 +1225,7 @@ static inline void __unreserve_and_free_heap(void *ptr, size_t size,
 
 	vabase = (unsigned long)ptr;
 
-	if (!kmflags) {
+	if (!kmflags  || kmflags == XNHEAP_GFP_NONCACHED) {
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 			ClearPageReserved(virt_to_page(__va_to_kva(vaddr)));
 
@@ -1241,6 +1249,11 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 
 	/* Caller must have accounted for internal overhead. */
 	heapsize = xnheap_align(heapsize, PAGE_SIZE);
+
+	if ((memflags & XNHEAP_GFP_NONCACHED)
+	    && memflags != XNHEAP_GFP_NONCACHED)
+		return -EINVAL;
+
 	heapbase = __alloc_and_reserve_heap(heapsize, memflags);
 
 	if (!heapbase)
@@ -1284,10 +1297,42 @@ int xnheap_destroy_mapped(xnheap_t *heap)
 	return 0;
 }
 
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+static void xnheap_free_extent(xnheap_t *heap,
+			       void *extent, u_long size, void *cookie)
+{
+	xnarch_free_host_mem(extent, size);
+}
+
+int xnheap_init_mapped(xnheap_t *heap, unsigned len, int flags)
+{
+	void *heapaddr = xnarch_alloc_host_mem(len);
+	int err;
+
+	if ((flags & XNHEAP_GFP_NONCACHED)
+	    && flags != XNHEAP_GFP_NONCACHED)
+		return -EINVAL;
+
+	if (heapaddr) {
+		err = xnheap_init(&shm->heapbase,
+				  heapaddr, len, XNCORE_PAGE_SIZE);
+		if (err)
+			xnarch_free_host_mem(heapaddr, len);
+
+		return err;
+	}
+
+	return -ENOMEM;
+}
+
+void xnheap_destroy_mapped(xnheap_t *heap)
+{
+	xnheap_destroy(heap, &xnheap_free_extent, NULL);
+}
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+
 EXPORT_SYMBOL(xnheap_init_mapped);
 EXPORT_SYMBOL(xnheap_destroy_mapped);
-
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 /*@}*/
 

@@ -205,6 +205,10 @@ static void __heap_flush_private(xnheap_t *heap,
  * operations with I/O devices. The physical address of the
  * heap can be obtained by a call to rt_heap_inquire().
  *
+ * - H_NONCACHED causes the heap not to be cached. This is necessary on
+ * platforms such as ARM to share a heap between kernel and user-space.
+ * Note that this flag is not compatible with the H_DMA flag.
+ *
  * @return 0 is returned upon success. Otherwise:
  *
  * - -EEXIST is returned if the @a name is already in use by some
@@ -260,7 +264,9 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 
 		err = xnheap_init_mapped(&heap->heap_base,
 					 heapsize,
-					 (mode & H_DMA) ? GFP_DMA : 0);
+					 ((mode & H_DMA) ? GFP_DMA : 0)
+					 | ((mode & H_NONCACHED) ?
+					    XNHEAP_GFP_NONCACHED : 0));
 		if (err)
 			return err;
 
