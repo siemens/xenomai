@@ -1,5 +1,7 @@
 2008-05-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* include/asm-generic/atomic.h: Define xnarch_atomic_intptr_t.
+
 	* include/asm-generic/system.h, include/asm-arm/hal.h: Define
 	XNARCH_SHARED_HEAP_FLAGS.
 
