@@ -1,5 +1,8 @@
 2008-05-19  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
+	* include/asm-generic/system.h, include/asm-arm/hal.h: Define
+	XNARCH_SHARED_HEAP_FLAGS.
+
 	* ksrc/nucleus/heap.c (xnheap_init_mapped): Add support for non
 	shared mappings. Implement xnheap_init_mapped in the non
 	CONFIG_XENO_OPT_PERVASIVE case.

@@ -108,10 +108,15 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/processor.h>
 #include <asm/ipipe.h>
 #include <asm/mach/irq.h>
+#include <asm/cacheflush.h>
 
 #define RTHAL_TIMER_IRQ   __ipipe_mach_timerint
 
-#define RTHAL_SHARED_HEAP_FLAGS XNHEAP_GFP_NONCACHED
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+#define RTHAL_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#define RTHAL_SHARED_HEAP_FLAGS 0
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
