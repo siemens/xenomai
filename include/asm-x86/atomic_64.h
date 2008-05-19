@@ -33,8 +33,10 @@
 #define xnarch_atomic_dec(pcounter)            atomic64_dec(pcounter)
 #define xnarch_atomic_inc_and_test(pcounter)  atomic64_inc_and_test(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)  atomic64_dec_and_test(pcounter)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic64_set_mask(mask,pflags)
-#define xnarch_atomic_clear_mask(pflags,mask) atomic64_clear_mask(mask,pflags)
+#define xnarch_atomic_set_mask(pflags,mask) \
+	atomic_set_mask((mask),(unsigned *)(pflags))
+#define xnarch_atomic_clear_mask(pflags,mask) \
+	atomic_clear_mask((mask),(unsigned *)(pflags))
 #define xnarch_atomic_xchg(ptr,x)              xchg(ptr,x)
 #define xnarch_atomic_cmpxchg(pcounter,old,new) \
 	atomic64_cmpxchg((pcounter),(old),(new))
