@@ -2,6 +2,9 @@
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.25-x86-2.0-06.
 
+	* [k]src/skins/native/sem.c (rt_sem_p_until): Add new
+	call with absolute timeout specification.
+
 2008-05-20  Philippe Gerum  <rpm@eclipse.xenomai.org>
 
 	* [k]src/skins/native/buffer: Add message buffer feature.

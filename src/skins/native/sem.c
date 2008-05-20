@@ -40,7 +40,14 @@ int rt_sem_delete(RT_SEM *sem)
 
 int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
-	return XENOMAI_SKINCALL2(__native_muxid, __native_sem_p, sem, &timeout);
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_sem_p, sem, XN_RELATIVE, &timeout);
+}
+
+int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+{
+	return XENOMAI_SKINCALL3(__native_muxid,
+				 __native_sem_p, sem, XN_ABSOLUTE, &timeout);
 }
 
 int rt_sem_v(RT_SEM *sem)

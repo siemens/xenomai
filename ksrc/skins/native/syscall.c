@@ -1145,11 +1145,13 @@ static int __rt_sem_delete(struct pt_regs *regs)
 
 /*
  * int __rt_sem_p(RT_SEM_PLACEHOLDER *ph,
+ *                xntmode_t timeout_mode,
  *                RTIME *timeoutp)
  */
 
 static int __rt_sem_p(struct pt_regs *regs)
 {
+	xntmode_t timeout_mode;
 	RT_SEM_PLACEHOLDER ph;
 	RTIME timeout;
 	RT_SEM *sem;
@@ -1159,15 +1161,16 @@ static int __rt_sem_p(struct pt_regs *regs)
 		return -EFAULT;
 
 	sem = (RT_SEM *)xnregistry_fetch(ph.opaque);
-
 	if (!sem)
 		return -ESRCH;
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg2(regs),
+	timeout_mode = __xn_reg_arg2(regs);
+
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	return rt_sem_p(sem, timeout);
+	return rt_sem_p_inner(sem, timeout_mode, timeout);
 }
 
 /*

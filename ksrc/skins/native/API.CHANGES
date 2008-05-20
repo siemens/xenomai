@@ -206,8 +206,10 @@ ___________________________________________________________________
        * rt_heap_inquire() now reports the heap physical address, for DMA
          operations (info->phys_addr).
 
-       * New rt_mutex_acquire_until() and rt_cond_wait_until() calls provide
-       absolute timeout specification.
+       * The following new calls accept an absolute timeout specification:
+           - rt_mutex_acquire_until()
+	   - rt_cond_wait_until()
+	   - rt_sem_p_until()
 
        * rt_task_suspend() may now be called while holding the
          scheduler. The lock will be released and reacquired

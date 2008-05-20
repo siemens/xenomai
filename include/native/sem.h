@@ -91,6 +91,9 @@ static inline void __native_sem_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_SEM, rq, sem);
 }
 
+int rt_sem_p_inner(RT_SEM *sem,
+		   xntmode_t timeout_mode, RTIME timeout);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_SEM */
 
 #define __native_sem_pkg_init()		({ 0; })
@@ -143,6 +146,9 @@ int rt_sem_delete(RT_SEM *sem);
 
 int rt_sem_p(RT_SEM *sem,
 	     RTIME timeout);
+
+int rt_sem_p_until(RT_SEM *sem,
+		   RTIME timeout);
 
 int rt_sem_v(RT_SEM *sem);
 

@@ -295,8 +295,58 @@ int rt_sem_delete(RT_SEM *sem)
 	return err;
 }
 
+int rt_sem_p_inner(RT_SEM *sem, xntmode_t timeout_mode, RTIME timeout)
+{
+	int err = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
+
+	if (!sem) {
+		err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
+		goto unlock_and_exit;
+	}
+
+	if (timeout == TM_NONBLOCK) {
+		if (sem->count > 0)
+			sem->count--;
+		else
+			err = -EWOULDBLOCK;
+
+		goto unlock_and_exit;
+	}
+
+	if (xnpod_unblockable_p()) {
+		err = -EPERM;
+		goto unlock_and_exit;
+	}
+
+	if (sem->count > 0)
+		--sem->count;
+	else {
+		xnthread_t *thread = xnpod_current_thread();
+
+		xnsynch_sleep_on(&sem->synch_base, timeout, timeout_mode);
+
+		if (xnthread_test_info(thread, XNRMID))
+			err = -EIDRM;	/* Semaphore deleted while pending. */
+		else if (xnthread_test_info(thread, XNTIMEO))
+			err = -ETIMEDOUT;	/* Timeout. */
+		else if (xnthread_test_info(thread, XNBREAK))
+			err = -EINTR;	/* Unblocked. */
+	}
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
 /**
- * @fn int rt_sem_p(RT_SEM *sem,RTIME timeout)
+ * @fn int rt_sem_p(RT_SEM *sem, RTIME timeout)
  * @brief Pend on a semaphore.
  *
  * Acquire a semaphore unit. If the semaphore value is greater than
@@ -355,52 +405,70 @@ int rt_sem_delete(RT_SEM *sem)
 
 int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
-	int err = 0;
-	spl_t s;
+	return rt_sem_p_inner(sem, XN_RELATIVE, timeout);
+}
 
-	xnlock_get_irqsave(&nklock, s);
+/**
+ * @fn int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+ * @brief Pend on a semaphore (with absolute timeout date).
+ *
+ * Acquire a semaphore unit. If the semaphore value is greater than
+ * zero, it is decremented by one and the service immediately returns
+ * to the caller. Otherwise, the caller is blocked until the semaphore
+ * is either signaled or destroyed, unless a non-blocking operation
+ * has been required.
+ *
+ * @param sem The descriptor address of the affected semaphore.
+ *
+ * @param timeout The absolute date specifying a time limit to wait
+ * for a semaphore unit to be available (see note). Passing
+ * TM_INFINITE causes the caller to block indefinitely until a unit is
+ * available. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if no unit is available.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a sem is not a semaphore descriptor.
+ *
+ * - -EIDRM is returned if @a sem is a deleted semaphore descriptor,
+ * including if the deletion occurred while the caller was sleeping on
+ * it for a unit to become available.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and the semaphore value is zero.
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before a semaphore unit has become available.
+ *
+ * - -ETIMEDOUT is returned if no unit is available within the
+ * specified amount of time.
+ *
+ * - -EPERM is returned if this service should block, but was called
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ *   only if @a timeout is equal to TM_NONBLOCK.
+ *
+ * - Kernel-based task
+ * - User-space task (switches to primary mode)
+ *
+ * Rescheduling: always unless the request is immediately satisfied or
+ * @a timeout specifies a non-blocking operation.
+ *
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
+ */
 
-	sem = xeno_h2obj_validate(sem, XENO_SEM_MAGIC, RT_SEM);
-
-	if (!sem) {
-		err = xeno_handle_error(sem, XENO_SEM_MAGIC, RT_SEM);
-		goto unlock_and_exit;
-	}
-
-	if (timeout == TM_NONBLOCK) {
-		if (sem->count > 0)
-			sem->count--;
-		else
-			err = -EWOULDBLOCK;
-
-		goto unlock_and_exit;
-	}
-
-	if (xnpod_unblockable_p()) {
-		err = -EPERM;
-		goto unlock_and_exit;
-	}
-
-	if (sem->count > 0)
-		--sem->count;
-	else {
-		xnthread_t *thread = xnpod_current_thread();
-
-		xnsynch_sleep_on(&sem->synch_base, timeout, XN_RELATIVE);
-
-		if (xnthread_test_info(thread, XNRMID))
-			err = -EIDRM;	/* Semaphore deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
-			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
-			err = -EINTR;	/* Unblocked. */
-	}
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
+{
+	return rt_sem_p_inner(sem, XN_ABSOLUTE, timeout);
 }
 
 /**
@@ -654,6 +722,7 @@ void __native_sem_pkg_cleanup(void)
 EXPORT_SYMBOL(rt_sem_create);
 EXPORT_SYMBOL(rt_sem_delete);
 EXPORT_SYMBOL(rt_sem_p);
+EXPORT_SYMBOL(rt_sem_p_until);
 EXPORT_SYMBOL(rt_sem_v);
 EXPORT_SYMBOL(rt_sem_inquire);
 EXPORT_SYMBOL(rt_sem_broadcast);
