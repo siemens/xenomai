@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <limits.h>
 #include <posix/syscall.h>
 #include <posix/cb_lock.h>
 #include <asm-generic/bits/current.h>
