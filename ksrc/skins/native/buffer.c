@@ -140,10 +140,13 @@ static xnpnode_t __buffer_pnode = {
  * OR'ed into this bitmask, each of them affecting the new buffer:
  *
  * - B_FIFO makes tasks pend in FIFO order for reading data from the
-     buffer.
+ *   buffer.
  *
  * - B_PRIO makes tasks pend in priority order for reading data from
-     the buffer.
+ *   the buffer.
+ *
+ * This parameter also applies to tasks blocked on the buffer's output
+ * queue (see rt_buffer_write()).
  *
  * @return 0 is returned upon success. Otherwise:
  *
