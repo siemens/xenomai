@@ -631,7 +631,7 @@ int rt_queue_send(RT_QUEUE *q, void *mbuf, size_t size, int mode)
 		if (!sleeper)
 			break;
 
-		thread2rtask(sleeper)->wait_args.qmsg = msg;
+		sleeper->wait_u.buffer.ptr = msg;
 		msg->refcount++;
 		nrecv++;
 	}
@@ -799,9 +799,9 @@ int rt_queue_write(RT_QUEUE *q, const void *buf, size_t size, int mode)
 ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 {
 	rt_queue_msg_t *msg = NULL;
+	xnthread_t *thread;
 	xnholder_t *holder;
 	ssize_t err = 0;
-	RT_TASK *task;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -831,17 +831,17 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 
 		xnsynch_sleep_on(&q->synch_base, timeout, XN_RELATIVE);
 
-		task = xeno_current_task();
+		thread = xnpod_current_thread();
 
-		if (xnthread_test_info(&task->thread_base, XNRMID))
+		if (xnthread_test_info(thread, XNRMID))
 			err = -EIDRM;	/* Queue deleted while pending. */
-		else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+		else if (xnthread_test_info(thread, XNTIMEO))
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(&task->thread_base, XNBREAK))
+		else if (xnthread_test_info(thread, XNBREAK))
 			err = -EINTR;	/* Unblocked. */
 		else {
-			msg = task->wait_args.qmsg;
-			task->wait_args.qmsg = NULL;
+			msg = thread->wait_u.buffer.ptr;
+			thread->wait_u.buffer.ptr = NULL;
 		}
 	}
 

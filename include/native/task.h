@@ -154,13 +154,6 @@ typedef struct rt_task {
 	    unsigned long mask;
 	} event;
 
-	struct rt_queue_msg *qmsg;
-
-	struct {
-	    size_t size;
-	    void *block;
-	} heap;
-	
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	struct {
 	    RT_TASK_MCB mcb_s; /* Send area. */

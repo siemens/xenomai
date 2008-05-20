@@ -77,8 +77,7 @@ static int __heap_read_proc(char *page,
 
 		while (holder) {
 			xnthread_t *sleeper = link2thread(holder, plink);
-			RT_TASK *task = thread2rtask(sleeper);
-			size_t size = task->wait_args.heap.size;
+			size_t size = sleeper->wait_u.buffer.size;
 			p += sprintf(p, "+%s (size=%zd)\n",
 				     xnthread_name(sleeper), size);
 			holder =
@@ -509,7 +508,7 @@ int rt_heap_delete(RT_HEAP *heap)
 int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 {
 	void *block = NULL;
-	RT_TASK *task;
+	xnthread_t *thread;
 	int err = 0;
 	spl_t s;
 
@@ -568,19 +567,19 @@ int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **blockp)
 		goto unlock_and_exit;
 	}
 
-	task = xeno_current_task();
-	task->wait_args.heap.size = size;
-	task->wait_args.heap.block = NULL;
+	thread = xnpod_current_thread();
+	thread->wait_u.buffer.size = size;
+	thread->wait_u.buffer.ptr = NULL;
 	xnsynch_sleep_on(&heap->synch_base, timeout, XN_RELATIVE);
 
-	if (xnthread_test_info(&task->thread_base, XNRMID))
+	if (xnthread_test_info(thread, XNRMID))
 		err = -EIDRM;	/* Heap deleted while pending. */
-	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+	else if (xnthread_test_info(thread, XNTIMEO))
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(&task->thread_base, XNBREAK))
+	else if (xnthread_test_info(thread, XNBREAK))
 		err = -EINTR;	/* Unblocked. */
 	else
-		block = task->wait_args.heap.block;
+		block = thread->wait_u.buffer.ptr;
 
       unlock_and_exit:
 
@@ -656,18 +655,17 @@ int rt_heap_free(RT_HEAP *heap, void *block)
 		nwake = 0;
 
 		while ((holder = nholder) != NULL) {
-			RT_TASK *sleeper =
-			    thread2rtask(link2thread(holder, plink));
+			xnthread_t *sleeper = link2thread(holder, plink);
 			void *block;
 
 			block = xnheap_alloc(&heap->heap_base,
-					     sleeper->wait_args.heap.size);
+					     sleeper->wait_u.buffer.size);
 			if (block) {
 				nholder =
 				    xnsynch_wakeup_this_sleeper(&heap->
 								synch_base,
 								holder);
-				sleeper->wait_args.heap.block = block;
+				sleeper->wait_u.buffer.ptr = block;
 				nwake++;
 			} else
 				nholder =
