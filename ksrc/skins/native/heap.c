@@ -482,8 +482,8 @@ int rt_heap_delete(RT_HEAP *heap)
  * waiting task before any block was available.
  *
  * - -EPERM is returned if this service should block but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
@@ -784,8 +784,8 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * - -ENOENT is returned if the special file /dev/rtheap
  * (character-mode, major 10, minor 254) is not available from the

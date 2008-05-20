@@ -774,8 +774,8 @@ int rt_queue_write(RT_QUEUE *q, const void *buf, size_t size, int mode)
  * waiting task before any data was available.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
@@ -907,8 +907,8 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
  * waiting task before any data was available.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
@@ -1048,10 +1048,10 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked). This error may also be returned whenever the
- * call attempts to bind from a user-space application to a local
- * queue defined from kernel space (i.e. Q_SHARED was not passed to
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).  This error may also be returned whenever the call
+ * attempts to bind from a user-space application to a local queue
+ * defined from kernel space (i.e. Q_SHARED was not passed to
  * rt_queue_create()).
  *
  * - -ENOENT is returned if the special file /dev/rtheap

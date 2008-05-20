@@ -387,7 +387,7 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, xntmode_t timeout_mode, RTIME timeou
  *
  * - -EPERM is returned if this service was called from a context
  * which cannot be given the ownership of the mutex (e.g. interrupt,
- * non-realtime or scheduler locked).
+ * non-realtime context).
  *
  * Environments:
  *
@@ -414,7 +414,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 /**
  * @fn int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
  *
- * @brief Acquire a mutex (with absolute timeout value).
+ * @brief Acquire a mutex (with absolute timeout date).
  *
  * Attempt to lock a mutex. The calling task is blocked until the
  * mutex is available, in which case it is locked again before this
@@ -430,12 +430,12 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  *
  * @param mutex The descriptor address of the mutex to acquire.
  *
- * @param timeout The number of clock ticks to wait for the mutex to
- * be available to the calling task (see note). Passing TM_INFINITE
- * causes the caller to block indefinitely until the mutex is
- * available. Passing TM_NONBLOCK causes the service to return
- * immediately without waiting if the mutex is still locked by another
- * task.
+ * @param timeout The absolute date specifying a time limit to wait
+ * for the mutex to be available to the calling task (see
+ * note). Passing TM_INFINITE causes the caller to block indefinitely
+ * until the mutex is available. Passing TM_NONBLOCK causes the
+ * service to return immediately without waiting if the mutex is still
+ * locked by another task.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -456,7 +456,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  *
  * - -EPERM is returned if this service was called from a context
  * which cannot be given the ownership of the mutex (e.g. interrupt,
- * non-realtime or scheduler locked).
+ * non-realtime context).
  *
  * Environments:
  *
@@ -643,8 +643,8 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *

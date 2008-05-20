@@ -435,8 +435,8 @@ int rt_event_signal(RT_EVENT *event, unsigned long mask)
  * within the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
@@ -678,8 +678,8 @@ int rt_event_inquire(RT_EVENT *event, RT_EVENT_INFO *info)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *

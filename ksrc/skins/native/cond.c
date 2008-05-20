@@ -523,7 +523,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 /**
  * @fn int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  *
- * @brief Wait on a condition (with an absolute timeout date).
+ * @brief Wait on a condition (with absolute timeout date).
  *
  * This service atomically release the mutex and causes the calling
  * task to block on the specified condition variable. The caller will
@@ -538,10 +538,10 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  * @param mutex The descriptor address of the mutex protecting the
  * condition variable.
  *
- * @param timeout The number of clock ticks to wait for the condition
- * variable to be signaled (see note). Passing TM_INFINITE causes the
- * caller to block indefinitely until the condition variable is
- * signaled.
+ * @param timeout The absolute date specifying a time limit to wait
+ * for the condition variable to be signaled (see note). Passing
+ * TM_INFINITE causes the caller to block indefinitely until the
+ * condition variable is signaled.
  *
  * @return 0 is returned upon success. Otherwise:
  *
@@ -676,8 +676,8 @@ int rt_cond_inquire(RT_COND *cond, RT_COND_INFO *info)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
