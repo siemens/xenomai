@@ -423,8 +423,8 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
  *
  * - -EINVAL is returned if @a task is not a task descriptor.
  *
- * - -EPERM is returned if the addressed @a task is not allowed to sleep
- * (i.e. scheduler locked).
+ * - -EPERM is returned if this service was called from an invalid
+ * context (e.g. interrupt, non-realtime context).
  *
  * - -EIDRM is returned if @a task is a deleted task descriptor.
  *
@@ -460,12 +460,6 @@ int rt_task_suspend(RT_TASK *task)
 
 	if (!task) {
 		err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
-		goto unlock_and_exit;
-	}
-
-	/* We are about to suspend a task, let's check whether it may sleep */
-	if (xnthread_test_state(&task->thread_base, XNLOCK)) {
-		err = -EPERM;
 		goto unlock_and_exit;
 	}
 
@@ -1716,8 +1710,8 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
  * caller before any reply was available.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * - -ESRCH is returned if @a task cannot be found (when called from
  *    user-space only).
@@ -2348,8 +2342,8 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * the specified amount of time.
  *
  * - -EPERM is returned if this service should block, but was called
- * from a context which cannot sleep (e.g. interrupt, non-realtime or
- * scheduler locked).
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
  *
  * Environments:
  *
