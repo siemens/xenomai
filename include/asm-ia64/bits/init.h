@@ -107,13 +107,13 @@ int xnarch_alloc_stack(xnarchtcb_t * tcb, unsigned stacksize)
 					   will have on this arch. */
 
 	if (rthal_current_domain == rthal_root_domain &&
-	    atomic_read(&xnarch_free_stacks_count) <=
+	    xnarch_atomic_get(&xnarch_free_stacks_count) <=
 	    CONFIG_XENO_HW_IA64_STACK_POOL) {
 		stack = (xnarch_stack_t *)
 		    __get_free_pages(GFP_KERNEL, KERNEL_STACK_SIZE_ORDER);
 
 		if (stack)
-			atomic_inc(&xnarch_allocated_stacks);
+			xnarch_atomic_inc(&xnarch_allocated_stacks);
 
 		goto done;
 	}
@@ -123,7 +123,7 @@ int xnarch_alloc_stack(xnarchtcb_t * tcb, unsigned stacksize)
 	xnlock_put_irqrestore(&xnarch_stacks_lock, s);
 
 	if (stack)
-		atomic_dec(&xnarch_free_stacks_count);
+		xnarch_atomic_dec(&xnarch_free_stacks_count);
 
       done:
 
@@ -141,9 +141,9 @@ void xnarch_free_stack(xnarchtcb_t * tcb)
 		return;
 
 	if (rthal_current_domain == rthal_root_domain
-	    && atomic_read(&xnarch_free_stacks_count) >
+	    && xnarch_atomic_get(&xnarch_free_stacks_count) >
 	    CONFIG_XENO_HW_IA64_STACK_POOL) {
-		atomic_dec(&xnarch_allocated_stacks);
+		xnarch_atomic_dec(&xnarch_allocated_stacks);
 		free_pages((unsigned long)stack, KERNEL_STACK_SIZE_ORDER);
 		return;
 	}
@@ -152,12 +152,12 @@ void xnarch_free_stack(xnarchtcb_t * tcb)
 	stacksq_push(&xnarch_free_stacks_q, stack);
 	xnlock_put_irqrestore(&xnarch_stacks_lock, s);
 
-	atomic_inc(&xnarch_free_stacks_count);
+	xnarch_atomic_inc(&xnarch_free_stacks_count);
 }
 
 static int xnarch_stack_pool_init(void)
 {
-	while (atomic_read(&xnarch_free_stacks_count) <
+	while (xnarch_atomic_get(&xnarch_free_stacks_count) <
 	       CONFIG_XENO_HW_IA64_STACK_POOL) {
 		xnarchtcb_t tcb;	/* Fake TCB only to allocate and recycle stacks. */
 
@@ -180,13 +180,13 @@ static void xnarch_stack_pool_destroy(void)
 		free_pages((unsigned long)stack, KERNEL_STACK_SIZE_ORDER);
 		stack = stacksq_pop(&xnarch_free_stacks_q);
 
-		if (atomic_dec_and_test(&xnarch_allocated_stacks))
+		if (xnarch_atomic_dec_and_test(&xnarch_allocated_stacks))
 			break;
 	}
 
-	if (atomic_read(&xnarch_allocated_stacks) != 0)
-		xnarch_logwarn("leaked %u kernel threads stacks.\n",
-			       atomic_read(&xnarch_allocated_stacks));
+	if (xnarch_atomic_get(&xnarch_allocated_stacks) != 0)
+		xnarch_logwarn("leaked %ld kernel threads stacks.\n",
+			       xnarch_atomic_get(&xnarch_allocated_stacks));
 
 	if (xnarch_free_stacks_q.next)
 		xnarch_logwarn("kernel threads stacks pool corrupted.\n");

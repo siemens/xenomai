@@ -98,10 +98,10 @@ void __init_posix_interface(void)
 		fork_handler_registered = 1;
 
 		if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
-			fprintf(stderr, "sizeof(pthread_mutex_t): %d,"
-				" sizeof(shadow_mutex): %d\n",
-				sizeof(pthread_mutex_t),
-				sizeof(struct __shadow_mutex));
+			fprintf(stderr, "sizeof(pthread_mutex_t): %d <"
+				" sizeof(shadow_mutex): %d !\n",
+				(int) sizeof(pthread_mutex_t),
+				(int) sizeof(struct __shadow_mutex));
 			exit(EXIT_FAILURE);
 		}
 

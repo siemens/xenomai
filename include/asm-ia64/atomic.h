@@ -69,7 +69,7 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
 #define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,pflags)
 
 #define xnarch_atomic_cmpxchg(pcounter,old,new) \
-	atomic64_cmpxchg((pcounter),(old),(new))
+	cmpxchg((&(pcounter)->counter),(old),(new))
 
 #include <asm-generic/xenomai/atomic.h>
 
@@ -127,6 +127,13 @@ static inline int atomic_sub_return (int i, atomic_counter_t *v)
 	return new;
 }
 
+/* These functions actually only work on the first 32 bits word of the
+   64 bits status word whose address is addr. But the bit fields used
+   by the nucleus have to work on 32 bits architectures anyway. */
+#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
+#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
+#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
+
 #define xnarch_memory_barrier()  	asm volatile ("mf" ::: "memory")
 
 #define cpu_relax()			asm volatile ("hint @pause" ::: "memory")
@@ -136,12 +143,5 @@ static inline int atomic_sub_return (int i, atomic_counter_t *v)
 #endif /* __KERNEL__ */
 
 typedef unsigned long atomic_flags_t;
-
-/* These functions actually only work on the first 32 bits word of the
-   64 bits status word whose address is addr. But the bit fields used
-   by the nucleus have to work on 32 bits architectures anyway. */
-#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
-#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
 
 #endif /* !_XENO_ASM_IA64_ATOMIC_H */
