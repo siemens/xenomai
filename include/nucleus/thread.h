@@ -156,90 +156,97 @@ typedef void (*xnasr_t)(xnsigmask_t sigs);
 
 typedef struct xnthread {
 
-    xnarchtcb_t tcb;		/* Architecture-dependent block -- Must be first */
+	xnarchtcb_t tcb;		/* Architecture-dependent block -- Must be first */
 
-    xnflags_t state;		/* Thread state flags */
+	xnflags_t state;		/* Thread state flags */
 
-    xnflags_t info;		/* Thread information flags */
+	xnflags_t info;		/* Thread information flags */
 
-    struct xnsched *sched;	/* Thread scheduler */
+	struct xnsched *sched;	/* Thread scheduler */
 
-    xnarch_cpumask_t affinity;	/* Processor affinity. */
+	xnarch_cpumask_t affinity;	/* Processor affinity. */
 
-    int bprio;			/* Base priority (before PIP boost) */
+	int bprio;			/* Base priority (before PIP boost) */
 
-    int cprio;			/* Current priority */
+	int cprio;			/* Current priority */
 
-    u_long schedlck;		/*!< Scheduler lock count. */
+	u_long schedlck;		/*!< Scheduler lock count. */
+	
+	xnpholder_t rlink;		/* Thread holder in ready queue */
 
-    xnpholder_t rlink;		/* Thread holder in ready queue */
-
-    xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
+	xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
 
 #ifdef CONFIG_XENO_OPT_PRIOCPL
-    xnpholder_t xlink;		/* Thread holder in the RPI queue (shadow only) */
+	xnpholder_t xlink;		/* Thread holder in the RPI queue (shadow only) */
 
-    struct xnrpi *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
+	struct xnrpi *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
-    xnholder_t glink;		/* Thread holder in global queue */
+	xnholder_t glink;		/* Thread holder in global queue */
 
 #define link2thread(ln, fld)	container_of(ln, xnthread_t, fld)
 
-    xnpqueue_t claimq;		/* Owned resources claimed by others (PIP) */
+	xnpqueue_t claimq;		/* Owned resources claimed by others (PIP) */
 
-    struct xnsynch *wchan;	/* Resource the thread pends on */
+	struct xnsynch *wchan;		/* Resource the thread pends on */
 
-    struct xnsynch *wwake;	/* Wait channel the thread was resumed from */
+	struct xnsynch *wwake;		/* Wait channel the thread was resumed from */
+	
+	xntimer_t rtimer;		/* Resource timer */
 
-    xntimer_t rtimer;		/* Resource timer */
+	xntimer_t ptimer;		/* Periodic timer */
+	
+	xnsigmask_t signals;		/* Pending core signals */
 
-    xntimer_t ptimer;		/* Periodic timer */
+	xnticks_t rrperiod;		/* Allotted round-robin period (ticks) */
 
-    xnsigmask_t signals;	/* Pending core signals */
+	xnticks_t rrcredit;		/* Remaining round-robin time credit (ticks) */
 
-    xnticks_t rrperiod;		/* Allotted round-robin period (ticks) */
+	union {
+		struct {
+			void *ptr;
+			size_t size;
+		} buffer;
+	} wait_u;
 
-    xnticks_t rrcredit;		/* Remaining round-robin time credit (ticks) */
+	struct {
+		xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
+		xnstat_counter_t csw;	/* Context switches (includes secondary -> primary switches) */
+		xnstat_counter_t pf;	/* Number of page faults */
+		xnstat_exectime_t account; /* Execution time accounting entity */
+		xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
+	} stat;
 
-    struct {
-	xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
-	xnstat_counter_t csw;	/* Context switches (includes secondary -> primary switches) */
-	xnstat_counter_t pf;	/* Number of page faults */
-	xnstat_exectime_t account; /* Execution time accounting entity */
-	xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
-    } stat;
+	int errcode;			/* Local errno */
 
-    int errcode;		/* Local errno */
+	xnasr_t asr;			/* Asynchronous service routine */
 
-    xnasr_t asr;		/* Asynchronous service routine */
+	xnflags_t asrmode;		/* Thread's mode for ASR */
 
-    xnflags_t asrmode;		/* Thread's mode for ASR */
+	int asrimask;			/* Thread's interrupt mask for ASR */
 
-    int asrimask;		/* Thread's interrupt mask for ASR */
+	unsigned asrlevel;		/* ASR execution level (ASRs are reentrant) */
 
-    unsigned asrlevel;		/* ASR execution level (ASRs are reentrant) */
+	int imask;			/* Initial interrupt mask */
 
-    int imask;			/* Initial interrupt mask */
+	int imode;			/* Initial mode */
 
-    int imode;			/* Initial mode */
-
-    int iprio;			/* Initial priority */
+	int iprio;			/* Initial priority */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
-    struct {
-	xnhandle_t handle;	/* Handle in registry */
-	const char *waitkey;	/* Pended key */
-    } registry;
+	struct {
+		xnhandle_t handle;	/* Handle in registry */
+		const char *waitkey;	/* Pended key */
+	} registry;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-    xnthrops_t *ops;		/* Thread class operations. */
+	xnthrops_t *ops;		/* Thread class operations. */
 
-    char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
+	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 
-    void (*entry)(void *cookie); /* Thread entry routine */
+	void (*entry)(void *cookie); /* Thread entry routine */
 
-    void *cookie;		/* Cookie to pass to the entry routine */
+	void *cookie;		/* Cookie to pass to the entry routine */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
 
