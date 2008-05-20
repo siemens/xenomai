@@ -208,3 +208,12 @@ ___________________________________________________________________
 
        * New rt_mutex_acquire_until() and rt_cond_wait_until() calls provide
        absolute timeout specification.
+
+       * rt_task_suspend() may now be called while holding the
+         scheduler. The lock will be released and reacquired
+         dynamically across the suspension.
+
+       * Introduce buffer support (RT_BUFFER). Buffers are simple and
+         efficient inter-task communication objects for relaying small
+         to medium-sized data in a plain FIFO manner. Messages may be
+         of an arbitrary length.

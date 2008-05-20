@@ -82,6 +82,7 @@ int SKIN_INIT(native)
 	initq(&__native_global_rholder.queueq);
 	initq(&__native_global_rholder.semq);
 	initq(&__native_global_rholder.ioregionq);
+	initq(&__native_global_rholder.bufferq);
 
 	err = xnpod_init();
 

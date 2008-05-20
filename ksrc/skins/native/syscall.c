@@ -36,6 +36,7 @@
 #include <native/alarm.h>
 #include <native/intr.h>
 #include <native/pipe.h>
+#include <native/buffer.h>
 #include <native/misc.h>
 
 /*
@@ -3197,7 +3198,8 @@ static int __rt_intr_inquire(struct pt_regs *regs)
 /*
  * int __rt_pipe_create(RT_PIPE_PLACEHOLDER *ph,
  *                      const char *name,
- *                      int minor)
+ *                      int minor,
+ *                      size_t poolsize)
  */
 
 static int __rt_pipe_create(struct pt_regs *regs)
@@ -3473,6 +3475,291 @@ out:
 
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
 
+#ifdef CONFIG_XENO_OPT_NATIVE_BUFFER
+
+/*
+ * int __rt_buffer_create(RT_BUFFER_PLACEHOLDER *ph,
+ *                        const char *name,
+ *                        size_t bufsz,
+ *                        int mode)
+ */
+
+static int __rt_buffer_create(struct pt_regs *regs)
+{
+	char name[XNOBJECT_NAME_LEN];
+	RT_BUFFER_PLACEHOLDER ph;
+	RT_BUFFER *bf;
+	int ret, mode;
+	size_t bufsz;
+
+	if (__xn_reg_arg2(regs)) {
+		if (__xn_safe_strncpy_from_user(name,
+						(const char __user *)__xn_reg_arg2(regs),
+						sizeof(name) - 1) < 0)
+			return -EFAULT;
+		name[sizeof(name) - 1] = '\0';
+	} else
+		*name = '\0';
+
+	/* Buffer size. */
+	bufsz = __xn_reg_arg3(regs);
+	/* Creation mode. */
+	mode = __xn_reg_arg4(regs);
+
+	bf = (RT_BUFFER *)xnmalloc(sizeof(*bf));
+	if (!bf)
+		return -ENOMEM;
+
+	ret = rt_buffer_create(bf, name, bufsz, mode);
+	if (ret == 0) {
+		bf->cpid = current->pid;
+		/* Copy back the registry handle to the ph struct. */
+		ph.opaque = bf->handle;
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+					   sizeof(ph)))
+			ret = -EFAULT;
+	} else
+		xnfree(bf);
+
+	return ret;
+}
+
+/*
+ * int __rt_buffer_bind(RT_BUFFER_PLACEHOLDER *ph,
+ *                      const char *name,
+ *                      RTIME *timeoutp)
+ */
+
+static int __rt_buffer_bind(struct pt_regs *regs)
+{
+	RT_BUFFER_PLACEHOLDER ph;
+	int ret;
+
+	ret = __rt_bind_helper(current, regs, &ph.opaque, XENO_BUFFER_MAGIC, NULL);
+	if (ret)
+		return ret;
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph)))
+		return -EFAULT;
+
+	return 0;
+}
+
+/*
+ * int __rt_buffer_delete(RT_BUFFER_PLACEHOLDER *ph)
+ */
+
+static int __rt_buffer_delete(struct pt_regs *regs)
+{
+	RT_BUFFER_PLACEHOLDER ph;
+	RT_BUFFER *bf;
+	int ret;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	if (!bf)
+		return -ESRCH;
+
+	ret = rt_buffer_delete(bf);
+	if (ret == 0 && bf->cpid)
+		xnfree(bf);
+
+	return ret;
+}
+
+/*
+ * int __rt_buffer_write(RT_BUFFER_PLACEHOLDER *ph,
+ *                       const void *buf,
+ *                       size_t size,
+ *                       xntmode_t timeout_mode,
+ *                       RTIME *timeoutp)
+ */
+
+static int __rt_buffer_write(struct pt_regs *regs)
+{
+	char tmp_buf[RT_BUFFER_FSTORE_LIMIT], *tmp_area;
+	RT_BUFFER_PLACEHOLDER ph;
+	xntmode_t timeout_mode;
+	void __user *ptr;
+	RTIME timeout;
+	RT_BUFFER *bf;
+	size_t size;
+	ssize_t ret;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
+				     sizeof(timeout)))
+		return -EFAULT;
+
+	ptr = (void __user *)__xn_reg_arg2(regs);
+	size = __xn_reg_arg3(regs);
+	timeout_mode = __xn_reg_arg4(regs);
+
+	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	if (!bf)
+		return -ESRCH;
+
+	/*
+	 * Unfortunately, we can't copy to/from userland while holding
+	 * the nklock, so we need to go through a temp buffer to hold
+	 * the message first.
+	 */
+	if (size > 0) {
+		if (size <= sizeof(tmp_buf))
+			tmp_area = tmp_buf;
+		else {
+			tmp_area = xnmalloc(size);
+
+			if (tmp_area == NULL)
+				return -ENOMEM;
+		}
+		if (__xn_safe_copy_from_user(tmp_area, ptr, size)) {
+			ret = -EFAULT;
+			goto out;
+		}
+	} else
+		tmp_area = NULL;
+
+	ret = rt_buffer_write_inner(bf, tmp_area, size, timeout_mode, timeout);
+out:
+	if (tmp_area && tmp_area != tmp_buf)
+		xnfree(tmp_area);
+
+	return (int)ret;
+}
+
+/*
+ * int __rt_buffer_read(RT_BUFFER_PLACEHOLDER *ph,
+ *                      void *buf,
+ *                      size_t size,
+ *                      xntmode_t timeout_mode,
+ *                      RTIME *timeoutp)
+ */
+
+static int __rt_buffer_read(struct pt_regs *regs)
+{
+	char tmp_buf[RT_BUFFER_FSTORE_LIMIT], *tmp_area;
+	RT_BUFFER_PLACEHOLDER ph;
+	xntmode_t timeout_mode;
+	void __user *ptr;
+	RTIME timeout;
+	RT_BUFFER *bf;
+	size_t size;
+	ssize_t ret;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
+				     sizeof(timeout)))
+		return -EFAULT;
+
+	ptr = (void __user *)__xn_reg_arg2(regs);
+	size = __xn_reg_arg3(regs);
+	timeout_mode = __xn_reg_arg4(regs);
+
+	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	if (!bf)
+		return -ESRCH;
+
+	/*
+	 * Unfortunately, we can't copy to/from userland while holding
+	 * the nklock, so we need to go through a temp buffer to hold
+	 * the message first.
+	 */
+	if (size > 0) {
+		if (size <= sizeof(tmp_buf))
+			tmp_area = tmp_buf;
+		else {
+			tmp_area = xnmalloc(size);
+
+			if (tmp_area == NULL)
+				return -ENOMEM;
+		}
+	} else
+		tmp_area = NULL;
+
+	ret = rt_buffer_read_inner(bf, tmp_area, size, timeout_mode, timeout);
+	if (ret > 0 && __xn_safe_copy_to_user(ptr, tmp_area, ret))
+		ret = -EFAULT;
+
+	if (tmp_area && tmp_area != tmp_buf)
+		xnfree(tmp_area);
+
+	return (int)ret;
+}
+
+/*
+ * int __rt_buffer_clear(RT_BUFFER_PLACEHOLDER *ph)
+ */
+
+static int __rt_buffer_clear(struct pt_regs *regs)
+{
+	RT_BUFFER_PLACEHOLDER ph;
+	RT_BUFFER *bf;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	if (!bf)
+		return -ESRCH;
+
+	return rt_buffer_clear(bf);
+}
+
+/*
+ * int __rt_buffer_inquire(RT_BUFFER_PLACEHOLDER *ph,
+ *                         RT_BUFFER_INFO *infop)
+ */
+
+static int __rt_buffer_inquire(struct pt_regs *regs)
+{
+	RT_BUFFER_PLACEHOLDER ph;
+	RT_BUFFER_INFO info;
+	RT_BUFFER *bf;
+	int ret;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	if (!bf)
+		return -ESRCH;
+
+	ret = rt_buffer_inquire(bf, &info);
+	if (ret)
+		return ret;
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &info, sizeof(info)))
+		return -EFAULT;
+
+	return 0;
+}
+
+#else /* !CONFIG_XENO_OPT_NATIVE_BUFFER */
+
+#define __rt_buffer_create   __rt_call_not_available
+#define __rt_buffer_bind     __rt_call_not_available
+#define __rt_buffer_delete   __rt_call_not_available
+#define __rt_buffer_read     __rt_call_not_available
+#define __rt_buffer_write    __rt_call_not_available
+#define __rt_buffer_clear    __rt_call_not_available
+#define __rt_buffer_inquire  __rt_call_not_available
+
+#endif /* !CONFIG_XENO_OPT_NATIVE_BUFFER */
+
 /*
  * int __rt_io_get_region(RT_IOREGION_PLACEHOLDER *ph,
  *                        const char *name,
@@ -3674,6 +3961,7 @@ static void *__shadow_eventcb(int event, void *data)
 		initq(&rh->queueq);
 		initq(&rh->semq);
 		initq(&rh->ioregionq);
+		initq(&rh->bufferq);
 
 		return &rh->ppd;
 
@@ -3690,6 +3978,7 @@ static void *__shadow_eventcb(int event, void *data)
 		__native_queue_flush_rq(&rh->queueq);
 		__native_sem_flush_rq(&rh->semq);
 		__native_ioregion_flush_rq(&rh->ioregionq);
+		__native_buffer_flush_rq(&rh->bufferq);
 
 		xnarch_free_host_mem(rh, sizeof(*rh));
 
@@ -3800,6 +4089,13 @@ static xnsysent_t __systab[] = {
 	[__native_io_put_region] = {&__rt_io_put_region, __xn_exec_lostage},
 	[__native_timer_ns2tsc] = {&__rt_timer_ns2tsc, __xn_exec_any},
 	[__native_timer_tsc2ns] = {&__rt_timer_tsc2ns, __xn_exec_any},
+	[__native_buffer_create] = {&__rt_buffer_create, __xn_exec_any},
+	[__native_buffer_bind] = {&__rt_buffer_bind, __xn_exec_conforming},
+	[__native_buffer_delete] = {&__rt_buffer_delete, __xn_exec_any},
+	[__native_buffer_read] = {&__rt_buffer_read, __xn_exec_conforming},
+	[__native_buffer_write] = {&__rt_buffer_write, __xn_exec_conforming},
+	[__native_buffer_clear] = {&__rt_buffer_clear, __xn_exec_any},
+	[__native_buffer_inquire] = {&__rt_buffer_inquire, __xn_exec_any},
 };
 
 extern xntbase_t *__native_tbase;

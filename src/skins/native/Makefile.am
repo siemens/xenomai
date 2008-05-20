@@ -4,6 +4,7 @@ libnative_la_LDFLAGS = -version-info 3:0:0 -lpthread
 
 libnative_la_SOURCES = \
 	alarm.c \
+	buffer.c \
 	cond.c \
 	event.c \
 	heap.c \

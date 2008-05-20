@@ -104,9 +104,20 @@ config XENO_OPT_NATIVE_QUEUE
 	help
 	
 	Message queueing is a method by which real-time tasks can
-	exchange or pass data through a xeno-managed queue of
+	exchange or pass data through a Xenomai-managed queue of
 	messages. Messages can vary in length and be assigned
-	different types or usages.
+	different types or usages. Message queues are particularly
+	well suited for exchanging large chunks of data.
+
+config XENO_OPT_NATIVE_BUFFER
+	bool "Buffers"
+	default y
+	help
+	
+	Buffers allow for simple and efficient inter-task
+	communication, writing and reading messages
+	asynchronously. Data may be of an arbitrary length, albeit
+	buffers are best suited for small to medium-sized messages.
 
 config XENO_OPT_NATIVE_HEAP
 	bool "Memory heaps"

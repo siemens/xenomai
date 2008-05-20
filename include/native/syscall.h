@@ -119,14 +119,21 @@
 #define __native_timer_tsc2ns       93
 #define __native_queue_write        94
 #define __native_queue_read         95
+#define __native_buffer_create      96
+#define __native_buffer_bind        97
+#define __native_buffer_delete      98
+#define __native_buffer_read        99
+#define __native_buffer_write       100
+#define __native_buffer_clear       101
+#define __native_buffer_inquire     102
 
 struct rt_arg_bulk {
 
-    u_long a1;
-    u_long a2;
-    u_long a3;
-    u_long a4;
-    u_long a5;
+	u_long a1;
+	u_long a2;
+	u_long a3;
+	u_long a4;
+	u_long a5;
 };
 
 #ifdef __KERNEL__
@@ -143,7 +150,7 @@ void __native_syscall_cleanup(void);
 
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 
-#define __native_syscall_init()	({ 0; })
+#define __native_syscall_init()		({ 0; })
 #define __native_syscall_cleanup()	do { } while(0)
 
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */

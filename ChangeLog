@@ -1,3 +1,10 @@
+2008-05-20  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* [k]src/skins/native/buffer: Add message buffer feature.
+
+	* ksrc/skins/native/task.c (rt_task_suspend): Caller may hold the
+	scheduler lock.
+
 2008-05-20  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* ksrc/skins/posix/mutex*, src/skins/posix/mutex*: Implement
