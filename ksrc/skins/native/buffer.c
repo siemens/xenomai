@@ -48,6 +48,11 @@ static int __buffer_read_proc(char *page,
 
 	xnlock_get_irqsave(&nklock, s);
 
+	p += sprintf(p, "type=%s:size=%zu:used=%zu\n",
+		     bf->mode & B_PRIO ? "PRIO" : "FIFO",
+		     bf->bufsz,
+		     bf->fillsz);
+
 	if (xnsynch_nsleepers(&bf->isynch_base) > 0) {
 		xnpholder_t *holder;
 
