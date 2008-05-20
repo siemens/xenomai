@@ -334,10 +334,50 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 	if (size == 0)
 		goto unlock_and_exit;
 
+	rbytes = size;
+
+	/*
+	 * Let's optimize the case where the buffer is empty on entry,
+	 * and the leading task blocked on the input queue could be
+	 * satisfied by the incoming message; in such a case, we
+	 * directly copy the incoming data to the destination memory,
+	 * instead of having it transit through the buffer. Otherwise,
+	 * we simply accumulate the data into the buffer.
+	 */
+
+	if (bf->fillsz > 0)
+		/* Buffer needs to be empty to keep FIFO ordering. */
+		goto accumulate;
+
+	waiter = xnsynch_peek_pendq(&bf->isynch_base);
+	if (waiter == NULL)
+		/* No blocked task. */
+		goto accumulate;
+
+	n = waiter->wait_u.buffer.size;
+	if (n > size)
+		/* Not enough data to satisfy the request. */
+		goto accumulate;
+
+	/* Ok, transfer the message directly, and wake up the task. */
+	memcpy(waiter->wait_u.buffer.ptr, ptr, n);
+	waiter->wait_u.buffer.size = 0; /* Flags a direct transfer. */
+	xnsynch_wakeup_one_sleeper(&bf->isynch_base);
+
+	if (n == size) {
+		/* Full message consumed - reschedule and exit. */
+		xnpod_schedule();
+		goto unlock_and_exit;
+	}
+
+	/* Some bytes were not consumed, move them to the buffer. */
+	rbytes -= n;
+
+accumulate:
+
 	for (;;) {
 		/* We should be able to copy the entire message, or block. */
 		if (bf->fillsz + size <= bf->bufsz) {
-			rbytes = size;
 			nsum = 0;
 			do {
 				if (bf->wptr + rbytes > bf->bufsz)
@@ -486,6 +526,11 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 		}
 		if (xnthread_test_info(thread, XNBREAK)) {
 			ret = -EINTR;	/* Unblocked. */
+			break;
+		}
+		if (thread->wait_u.buffer.size == 0) {
+			/* Direct transfer tool place. */
+			ret = size;
 			break;
 		}
 	}
