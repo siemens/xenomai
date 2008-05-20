@@ -46,8 +46,6 @@
 typedef atomic_t atomic_counter_t;
 typedef atomic_t xnarch_atomic_t;
 
-#include <asm-generic/xenomai/atomic.h>
-
 #else /* !__KERNEL__ */
 
 #ifdef CONFIG_SMP
@@ -94,7 +92,7 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long new)
 	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
 #define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
-#endif /* __KERNEL__ */
+#endif /* !__KERNEL__ */
 
 typedef unsigned long atomic_flags_t;
 
