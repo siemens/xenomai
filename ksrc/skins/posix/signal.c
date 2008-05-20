@@ -1048,7 +1048,13 @@ static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 {
 	/* Migrate to secondary mode in order to get the signals delivered by
 	   Linux. */
+	xnthread_t *cur = xnpod_current_thread();
+	int interrupted;
+
+	interrupted = xnthread_test_info(cur, XNBREAK);
 	xnshadow_relax(1);
+	if (interrupted)
+		xnthread_set_info(cur, XNBREAK | XNKICKED);
 }
 
 void pse51_signal_handle_request(pthread_t thread)
