@@ -1,3 +1,15 @@
+2008-05-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/native/wrappers.[ch]: Define a wrapper file
+	maintaining a list of placeholders for routines that we do NOT
+	want to be wrapped to their Xenomai POSIX API counterparts when
+	used internally by the native interface code, and use those
+	symbols throughout the interface.
+
+2008-05-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native: Remove all deprecated calls.
+
 2008-05-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.25-x86-2.0-06.
