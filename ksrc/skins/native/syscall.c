@@ -2265,12 +2265,14 @@ static int __rt_queue_write(struct pt_regs *regs)
 /*
  * int __rt_queue_receive(RT_QUEUE_PLACEHOLDER *ph,
  *                        void **bufp,
+ *                        xntmode_t timeout_mode,
  *                        RTIME *timeoutp)
  */
 
 static int __rt_queue_receive(struct pt_regs *regs)
 {
 	RT_QUEUE_PLACEHOLDER ph;
+	xntmode_t timeout_mode;
 	RTIME timeout;
 	RT_QUEUE *q;
 	void *buf;
@@ -2281,10 +2283,12 @@ static int __rt_queue_receive(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg3(regs),
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
-
+	
+	timeout_mode = __xn_reg_arg3(regs);
+	
 	xnlock_get_irqsave(&nklock, s);
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2295,7 +2299,7 @@ static int __rt_queue_receive(struct pt_regs *regs)
 		goto out;
 	}
 
-	err = (int)rt_queue_receive(q, &buf, timeout);
+	err = (int)rt_queue_receive_inner(q, &buf, timeout_mode, timeout);
 
 	/* Convert the caller-based address of buf to the equivalent area
 	   into the kernel address space. */
@@ -2324,6 +2328,7 @@ out:
  * int __rt_queue_read(RT_QUEUE_PLACEHOLDER *ph,
  *                     void *buf,
  *                     size_t size,
+ *                     xntmode_t timeout_mode,
  *                     RTIME *timeoutp)
  */
 
@@ -2331,6 +2336,7 @@ static int __rt_queue_read(struct pt_regs *regs)
 {
 	RT_QUEUE_PLACEHOLDER ph;
 	void __user *buf, *mbuf;
+	xntmode_t timeout_mode;
 	ssize_t rsize;
 	RTIME timeout;
 	RT_QUEUE *q;
@@ -2348,11 +2354,14 @@ static int __rt_queue_read(struct pt_regs *regs)
 	/* Size of message space. */
 	size = (size_t) __xn_reg_arg3(regs);
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
+	/* Relative/absolute timeout spec. */
+	timeout_mode = __xn_reg_arg4(regs);
+	
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	rsize = rt_queue_receive(q, &mbuf, timeout);
+	rsize = rt_queue_receive_inner(q, &mbuf, timeout_mode, timeout);
 
 	if (rsize >= 0) {
 		size = size < rsize ? size : rsize;

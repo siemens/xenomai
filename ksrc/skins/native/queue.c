@@ -732,6 +732,68 @@ int rt_queue_write(RT_QUEUE *q, const void *buf, size_t size, int mode)
 	return rt_queue_send(q, mbuf, size, mode);
 }
 
+ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
+			       xntmode_t timeout_mode, RTIME timeout)
+{
+	rt_queue_msg_t *msg = NULL;
+	xnthread_t *thread;
+	xnholder_t *holder;
+	ssize_t err = 0;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	q = xeno_h2obj_validate(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+
+	if (!q) {
+		err = xeno_handle_error(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+		goto unlock_and_exit;
+	}
+
+	holder = getq(&q->pendq);
+
+	if (holder) {
+		msg = link2rtmsg(holder);
+		msg->refcount++;
+	} else {
+		if (timeout == TM_NONBLOCK) {
+			err = -EWOULDBLOCK;;
+			goto unlock_and_exit;
+		}
+
+		if (xnpod_unblockable_p()) {
+			err = -EPERM;
+			goto unlock_and_exit;
+		}
+
+		xnsynch_sleep_on(&q->synch_base, timeout, timeout_mode);
+
+		thread = xnpod_current_thread();
+
+		if (xnthread_test_info(thread, XNRMID))
+			err = -EIDRM;	/* Queue deleted while pending. */
+		else if (xnthread_test_info(thread, XNTIMEO))
+			err = -ETIMEDOUT;	/* Timeout. */
+		else if (xnthread_test_info(thread, XNBREAK))
+			err = -EINTR;	/* Unblocked. */
+		else {
+			msg = thread->wait_u.buffer.ptr;
+			thread->wait_u.buffer.ptr = NULL;
+		}
+	}
+
+	if (msg) {
+		*bufp = msg + 1;
+		err = (ssize_t) msg->size;
+	}
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
 /**
  * @fn ssize_t rt_queue_receive(RT_QUEUE *q,void **bufp,RTIME timeout)
  *
@@ -749,11 +811,11 @@ int rt_queue_write(RT_QUEUE *q, const void *buf, size_t size, int mode)
  * upon success with the address of the received message. Once
  * consumed, the message space should be freed using rt_queue_free().
  *
- * @param timeout The number of clock ticks to wait for some message
- * to arrive (see note). Passing TM_INFINITE causes the caller to
- * block indefinitely until some message is eventually
- * available. Passing TM_NONBLOCK causes the service to return
- * immediately without waiting if no message is available on entry.
+ * @param timeout The number of clock ticks to wait for a message to
+ * arrive (see note). Passing TM_INFINITE causes the caller to block
+ * indefinitely until some message is eventually available. Passing
+ * TM_NONBLOCK causes the service to return immediately without
+ * waiting if no message is available on entry.
  *
  * @return The number of bytes available from the received message is
  * returned upon success. Zero is a possible value corresponding to a
@@ -798,63 +860,97 @@ int rt_queue_write(RT_QUEUE *q, const void *buf, size_t size, int mode)
 
 ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 {
-	rt_queue_msg_t *msg = NULL;
-	xnthread_t *thread;
-	xnholder_t *holder;
-	ssize_t err = 0;
-	spl_t s;
+	return rt_queue_receive_inner(q, bufp, XN_RELATIVE, timeout);
+}
 
-	xnlock_get_irqsave(&nklock, s);
+/**
+ * @fn ssize_t rt_queue_receive_until(RT_QUEUE *q,void **bufp,RTIME timeout)
+ *
+ * @brief Receive a message from a queue (with absolute timeout date).
+ *
+ * This service retrieves the next message available from the given
+ * queue. Unless otherwise specified, the caller is blocked for a
+ * given amount of time if no message is immediately available on
+ * entry.
+ *
+ * @param q The descriptor address of the message queue to receive
+ * from.
+ *
+ * @param bufp A pointer to a memory location which will be written
+ * upon success with the address of the received message. Once
+ * consumed, the message space should be freed using rt_queue_free().
+ *
+ * @param timeout The absolute date specifying a time limit to wait
+ * for a message to arrive (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until some message is eventually
+ * available. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if no message is available on entry.
+ *
+ * @return The number of bytes available from the received message is
+ * returned upon success. Zero is a possible value corresponding to a
+ * zero-sized message passed to rt_queue_send(). Otherwise:
+ *
+ * - -EINVAL is returned if @a q is not a message queue descriptor.
+ *
+ * - -EIDRM is returned if @a q is a deleted queue descriptor.
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before a message arrives.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and no message is immediately available on entry.
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before any data was available.
+ *
+ * - -EPERM is returned if this service should block, but was called
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ *   only if @a timeout is equal to TM_NONBLOCK.
+ *
+ * - Kernel-based task
+ * - User-space task (switches to primary mode)
+ *
+ * Rescheduling: always unless the request is immediately satisfied or
+ * @a timeout specifies a non-blocking operation.
+ *
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
+ */
 
-	q = xeno_h2obj_validate(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+ssize_t rt_queue_receive_until(RT_QUEUE *q, void **bufp, RTIME timeout)
+{
+	return rt_queue_receive_inner(q, bufp, XN_ABSOLUTE, timeout);
+}
 
-	if (!q) {
-		err = xeno_handle_error(q, XENO_QUEUE_MAGIC, RT_QUEUE);
-		goto unlock_and_exit;
-	}
+ssize_t rt_queue_read_inner(RT_QUEUE *q, void *buf,
+			    size_t size, xntmode_t timeout_mode, RTIME timeout)
+{
+	ssize_t rsize;
+	void *mbuf;
 
-	holder = getq(&q->pendq);
+	rsize = rt_queue_receive_inner(q, &mbuf, timeout_mode, timeout);
 
-	if (holder) {
-		msg = link2rtmsg(holder);
-		msg->refcount++;
-	} else {
-		if (timeout == TM_NONBLOCK) {
-			err = -EWOULDBLOCK;;
-			goto unlock_and_exit;
-		}
+	if (rsize < 0)
+		return rsize;
 
-		if (xnpod_unblockable_p()) {
-			err = -EPERM;
-			goto unlock_and_exit;
-		}
+	if (size > rsize)
+		size = rsize;
 
-		xnsynch_sleep_on(&q->synch_base, timeout, XN_RELATIVE);
+	if (size > 0)
+		memcpy(buf, mbuf, size);
 
-		thread = xnpod_current_thread();
+	rt_queue_free(q, mbuf);
 
-		if (xnthread_test_info(thread, XNRMID))
-			err = -EIDRM;	/* Queue deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
-			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
-			err = -EINTR;	/* Unblocked. */
-		else {
-			msg = thread->wait_u.buffer.ptr;
-			thread->wait_u.buffer.ptr = NULL;
-		}
-	}
-
-	if (msg) {
-		*bufp = msg + 1;
-		err = (ssize_t) msg->size;
-	}
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return rsize;
 }
 
 /**
@@ -879,11 +975,11 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
  * @param size The length in bytes of the memory area pointed to by @a
  * buf. Messages larger than @a size are truncated appropriately.
  *
- * @param timeout The number of clock ticks to wait for some message
- * to arrive (see note). Passing TM_INFINITE causes the caller to
- * block indefinitely until some message is eventually
- * available. Passing TM_NONBLOCK causes the service to return
- * immediately without waiting if no message is available on entry.
+ * @param timeout The number of clock ticks to wait for a message to
+ * arrive (see note). Passing TM_INFINITE causes the caller to block
+ * indefinitely until some message is eventually available. Passing
+ * TM_NONBLOCK causes the service to return immediately without
+ * waiting if no message is available on entry.
  *
  * @return The number of bytes available from the received message is
  * returned upon success, which might be greater than the actual
@@ -934,7 +1030,99 @@ ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 	ssize_t rsize;
 	void *mbuf;
 
-	rsize = rt_queue_receive(q, &mbuf, timeout);
+	rsize = rt_queue_receive_inner(q, &mbuf, XN_RELATIVE, timeout);
+
+	if (rsize < 0)
+		return rsize;
+
+	if (size > rsize)
+		size = rsize;
+
+	if (size > 0)
+		memcpy(buf, mbuf, size);
+
+	rt_queue_free(q, mbuf);
+
+	return rsize;
+}
+
+/**
+ * @fn ssize_t rt_queue_read_until(RT_QUEUE *q,void *buf,size_t size,RTIME timeout)
+ *
+ * @brief Read a message from a queue (with absolute timeout date).
+ *
+ * This service retrieves the next message available from the given
+ * queue. Unless otherwise specified, the caller is blocked for a
+ * given amount of time if no message is immediately available on
+ * entry. This services differs from rt_queue_receive() in that it
+ * copies back the payload data to a user-defined memory area, instead
+ * of returning a pointer to the message buffer holding such data.
+ *
+ * @param q The descriptor address of the message queue to read
+ * from.
+ *
+ * @param buf A pointer to a memory area which will be written upon
+ * success with the message contents. The internal message buffer
+ * conveying the data is automatically freed by this call.
+ *
+ * @param size The length in bytes of the memory area pointed to by @a
+ * buf. Messages larger than @a size are truncated appropriately.
+ *
+ * @param timeout The absolute date specifying a time limit to wait
+ * for a message to arrive (see note). Passing TM_INFINITE causes the
+ * caller to block indefinitely until some message is eventually
+ * available. Passing TM_NONBLOCK causes the service to return
+ * immediately without waiting if no message is available on entry.
+ *
+ * @return The number of bytes available from the received message is
+ * returned upon success, which might be greater than the actual
+ * number of bytes copied to the destination buffer if the message has
+ * been truncated. Zero is a possible value corresponding to a
+ * zero-sized message passed to rt_queue_send() or
+ * rt_queue_write(). Otherwise:
+ *
+ * - -EINVAL is returned if @a q is not a message queue descriptor.
+ *
+ * - -EIDRM is returned if @a q is a deleted queue descriptor.
+ *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before a message arrives.
+ *
+ * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
+ * and no message is immediately available on entry.
+ *
+ * - -EINTR is returned if rt_task_unblock() has been called for the
+ * waiting task before any data was available.
+ *
+ * - -EPERM is returned if this service should block, but was called
+ * from a context which cannot sleep (e.g. interrupt, non-realtime
+ * context).
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ *   only if @a timeout is equal to TM_NONBLOCK.
+ *
+ * - Kernel-based task
+ * - User-space task (switches to primary mode)
+ *
+ * Rescheduling: always unless the request is immediately satisfied or
+ * @a timeout specifies a non-blocking operation.
+ *
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * native skin is bound to a periodic time base (see
+ * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
+ */
+
+ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
+{
+	ssize_t rsize;
+	void *mbuf;
+
+	rsize = rt_queue_receive_inner(q, &mbuf, XN_ABSOLUTE, timeout);
 
 	if (rsize < 0)
 		return rsize;
@@ -1120,5 +1308,7 @@ EXPORT_SYMBOL(rt_queue_free);
 EXPORT_SYMBOL(rt_queue_send);
 EXPORT_SYMBOL(rt_queue_write);
 EXPORT_SYMBOL(rt_queue_receive);
+EXPORT_SYMBOL(rt_queue_receive_until);
 EXPORT_SYMBOL(rt_queue_read);
+EXPORT_SYMBOL(rt_queue_read_until);
 EXPORT_SYMBOL(rt_queue_inquire);

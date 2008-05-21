@@ -132,6 +132,12 @@ static inline void __native_queue_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_QUEUE, rq, queue);
 }
 
+ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
+			       xntmode_t timeout_mode, RTIME timeout);
+
+ssize_t rt_queue_read_inner(RT_QUEUE *q, void *buf,
+			    size_t size, xntmode_t timeout_mode, RTIME timeout);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #define __native_queue_pkg_init()		({ 0; })
@@ -198,6 +204,10 @@ ssize_t rt_queue_receive(RT_QUEUE *q,
 			 void **bufp,
 			 RTIME timeout);
 
+ssize_t rt_queue_receive_until(RT_QUEUE *q,
+			       void **bufp,
+			       RTIME timeout);
+
 static inline ssize_t __deprecated_call__ rt_queue_recv(RT_QUEUE *q,
 							void **bufp,
 							RTIME timeout)
@@ -209,6 +219,11 @@ ssize_t rt_queue_read(RT_QUEUE *q,
 		      void *bufp,
 		      size_t size,
 		      RTIME timeout);
+
+ssize_t rt_queue_read_until(RT_QUEUE *q,
+			    void *bufp,
+			    size_t size,
+			    RTIME timeout);
 
 int rt_queue_inquire(RT_QUEUE *q,
 		     RT_QUEUE_INFO *info);

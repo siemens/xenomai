@@ -210,6 +210,8 @@ ___________________________________________________________________
            - rt_mutex_acquire_until()
 	   - rt_cond_wait_until()
 	   - rt_sem_p_until()
+	   - rt_queue_receive_until()
+	   - rt_queue_read_until()
 
        * rt_task_suspend() may now be called while holding the
          scheduler. The lock will be released and reacquired
