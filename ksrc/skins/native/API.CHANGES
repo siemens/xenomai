@@ -213,9 +213,9 @@ ___________________________________________________________________
 	   - rt_queue_receive_until()
 	   - rt_queue_read_until()
 
-       * rt_task_suspend() may now be called while holding the
-         scheduler. The lock will be released and reacquired
-         dynamically across the suspension.
+       * rt_task_suspend() does not return -EPERM when called while
+         holding the scheduler lock anymore. The lock will be released
+         and reacquired dynamically across the suspension.
 
        * Introduce buffer support (RT_BUFFER). Buffers are simple and
          efficient inter-task communication objects for relaying small
