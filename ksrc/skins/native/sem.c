@@ -440,9 +440,9 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * waiting task before a semaphore unit has become available.
  *
- * - -ETIMEDOUT is returned if no unit is available within the
- * specified amount of time.
- *
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before a semaphore unit is available.
+
  * - -EPERM is returned if this service should block, but was called
  * from a context which cannot sleep (e.g. interrupt, non-realtime
  * context).

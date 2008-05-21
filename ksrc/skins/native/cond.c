@@ -553,7 +553,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  * sleeping on the variable.
  *
  * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
- * before the condition variable has been signaled.
+ * before the condition variable is signaled.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
  * waiting task before the condition variable has been signaled.

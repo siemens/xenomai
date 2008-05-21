@@ -651,9 +651,8 @@ int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
  * @return The number of bytes written to the buffer is returned upon
  * success. Otherwise:
  *
- * - -ETIMEDOUT is returned if @a timeout is different from
- * TM_NONBLOCK and no buffer space is available within the specified
- * amount of time to hold the message.
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before enough buffer space is available to hold the message.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and no buffer space is immediately available on entry to hold the
@@ -802,9 +801,8 @@ int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * @return The number of bytes read from the buffer is returned upon
  * success. Otherwise:
  *
- * - -ETIMEDOUT is returned if @a timeout is different from
- * TM_NONBLOCK and not enough data is available within the specified
- * amount of time to form a complete message.
+ * - -ETIMEDOUT is returned if the absolute @a timeout date is reached
+ * before a complete message arrives.
  *
  * - -EWOULDBLOCK is returned if @a timeout is equal to TM_NONBLOCK
  * and not enough data is immediately available on entry to form a
