@@ -92,6 +92,11 @@ static inline void __native_event_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_EVENT, rq, event);
 }
 
+int rt_event_wait_inner(RT_EVENT *event,
+			unsigned long mask,
+			unsigned long *mask_r,
+			int mode, xntmode_t timeout_mode, RTIME timeout);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_EVENT */
 
 #define __native_event_pkg_init()		({ 0; })
@@ -150,6 +155,12 @@ int rt_event_wait(RT_EVENT *event,
 		  unsigned long *mask_r,
 		  int mode,
 		  RTIME timeout);
+
+int rt_event_wait_until(RT_EVENT *event,
+			unsigned long mask,
+			unsigned long *mask_r,
+			int mode,
+			RTIME timeout);
 
 int rt_event_clear(RT_EVENT *event,
 		   unsigned long mask,

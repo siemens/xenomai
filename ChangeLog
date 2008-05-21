@@ -6,7 +6,8 @@
 	used internally by the native interface code, and use those
 	symbols throughout the interface.
 
-2008-05-21  Philippe Gerum  <rpm@xenomai.org>
+	* [k]src/skins/native/event.c (rt_event_wait_until): Add new call
+	with absolute timeout specification.
 
 	* ksrc/skins/native: Remove all deprecated calls.
 

@@ -1365,9 +1365,9 @@ static int __rt_event_delete(struct pt_regs *regs)
 
 /*
  * int __rt_event_wait(RT_EVENT_PLACEHOLDER *ph,
-                       unsigned long mask,
-                       unsigned long *mask_r,
-                       int mode,
+ *                     unsigned long *mask_io,
+ *                     int mode,
+ *                     xntmode_t timeout_mode,
  *                     RTIME *timeoutp)
  */
 
@@ -1375,6 +1375,7 @@ static int __rt_event_wait(struct pt_regs *regs)
 {
 	unsigned long mask, mask_r;
 	RT_EVENT_PLACEHOLDER ph;
+	xntmode_t timeout_mode;
 	RT_EVENT *event;
 	RTIME timeout;
 	int mode, err;
@@ -1383,21 +1384,24 @@ static int __rt_event_wait(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
+	if (__xn_safe_copy_from_user(&mask, (void __user *)__xn_reg_arg2(regs),
+				     sizeof(mask)))
+		return -EFAULT;
 
+	event = (RT_EVENT *)xnregistry_fetch(ph.opaque);
 	if (!event)
 		return -ESRCH;
 
-	mask = (unsigned long)__xn_reg_arg2(regs);
-	mode = (int)__xn_reg_arg4(regs);
+	mode = (int)__xn_reg_arg3(regs);
+	timeout_mode = __xn_reg_arg4(regs);
 
 	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	err = rt_event_wait(event, mask, &mask_r, mode, timeout);
+	err = rt_event_wait_inner(event, mask, &mask_r, mode, timeout_mode, timeout);
 
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &mask_r,
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &mask_r,
 				   sizeof(mask_r)))
 		return -EFAULT;
 

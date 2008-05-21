@@ -44,9 +44,34 @@ int rt_event_wait(RT_EVENT *event,
 		  unsigned long mask,
 		  unsigned long *mask_r, int mode, RTIME timeout)
 {
-	return XENOMAI_SKINCALL5(__native_muxid,
-				 __native_event_wait,
-				 event, mask, mask_r, mode, &timeout);
+	int ret;
+
+	ret = XENOMAI_SKINCALL5(__native_muxid,
+				__native_event_wait,
+				event, &mask, mode, XN_RELATIVE, &timeout);
+	if (ret)
+		return ret;
+
+	*mask_r = mask;
+
+	return 0;
+}
+
+int rt_event_wait_until(RT_EVENT *event,
+			unsigned long mask,
+			unsigned long *mask_r, int mode, RTIME timeout)
+{
+	int ret;
+
+	ret = XENOMAI_SKINCALL5(__native_muxid,
+				__native_event_wait,
+				event, &mask, mode, XN_ABSOLUTE, &timeout);
+	if (ret)
+		return ret;
+
+	*mask_r = mask;
+
+	return 0;
 }
 
 int rt_event_signal(RT_EVENT *event, unsigned long mask)

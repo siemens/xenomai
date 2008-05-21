@@ -212,6 +212,7 @@ ___________________________________________________________________
 	   - rt_sem_p_until()
 	   - rt_queue_receive_until()
 	   - rt_queue_read_until()
+	   - rt_event_wait_until()
 
        * rt_task_suspend() does not return -EPERM when called while
          holding the scheduler lock anymore. The lock will be released
