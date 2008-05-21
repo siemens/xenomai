@@ -4097,8 +4097,6 @@ static xnsysent_t __systab[] = {
 	[__native_buffer_inquire] = {&__rt_buffer_inquire, __xn_exec_any},
 };
 
-extern xntbase_t *__native_tbase;
-
 static struct xnskin_props __props = {
 	.name = "native",
 	.magic = XENO_SKIN_MAGIC,
