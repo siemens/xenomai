@@ -34,6 +34,7 @@
 #include <nucleus/heap.h>
 #include <native/task.h>
 #include <native/buffer.h>
+#include <native/timer.h>
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
@@ -339,6 +340,17 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 	if (size == 0)
 		goto unlock_and_exit;
 
+	if (timeout_mode == XN_RELATIVE &&
+	    timeout != TM_NONBLOCK && timeout != TM_INFINITE) {
+		/*
+		 * We may sleep several times before being able to
+		 * send the data, so let's always use an absolute time
+		 * spec.
+		 */
+		timeout_mode = XN_ABSOLUTE;
+		timeout += xntbase_get_time(__native_tbase);
+	}
+
 	rbytes = size;
 
 	/*
@@ -470,6 +482,16 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 
 	if (size == 0)
 		goto unlock_and_exit;
+
+	if (timeout_mode == XN_RELATIVE &&
+	    timeout != TM_NONBLOCK && timeout != TM_INFINITE) {
+		/*
+		 * We may sleep several times before receiving the
+		 * data, so let's always use an absolute time spec.
+		 */
+		timeout_mode = XN_ABSOLUTE;
+		timeout += xntbase_get_time(__native_tbase);
+	}
 
 	for (;;) {
 		/*
