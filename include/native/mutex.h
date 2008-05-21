@@ -149,27 +149,6 @@ int rt_mutex_release(RT_MUTEX *mutex);
 int rt_mutex_inquire(RT_MUTEX *mutex,
 		     RT_MUTEX_INFO *info);
 
-#ifdef __KERNEL__
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-static inline int __deprecated_call__ rt_mutex_lock(RT_MUTEX *mutex, RTIME timeout)
-{
-	return rt_mutex_acquire(mutex, timeout);
-}
-
-static inline int __deprecated_call__ rt_mutex_unlock(RT_MUTEX *mutex)
-{
-	return rt_mutex_release(mutex);
-}
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
-#else /* !__KERNEL__ */
-
-int rt_mutex_lock(RT_MUTEX *mutex,
-		  RTIME timeout);
-
-int rt_mutex_unlock(RT_MUTEX *mutex);
-
-#endif /* __KERNEL__ */
-
 #ifdef __cplusplus
 }
 #endif

@@ -221,3 +221,12 @@ ___________________________________________________________________
          efficient inter-task communication objects for relaying small
          to medium-sized data in a plain FIFO manner. Messages may be
          of an arbitrary length.
+
+       * The following deprecated calls have been removed:
+          - rt_timer_start() -> NOT REPLACED
+	  - rt_timer_stop() -> NOT REPLACED
+	  - rt_misc_get_io_region() -> rt_io_get_region()
+	  - rt_misc_put_io_region() -> rt_io_put_region()
+	  - rt_queue_recv() -> rt_queue_receive()
+	  - rt_mutex_lock() -> rt_mutex_acquire()
+	  - rt_mutex_unlock() -> rt_mutex_release()

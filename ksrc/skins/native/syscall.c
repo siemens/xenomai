@@ -3842,8 +3842,6 @@ static int __rt_io_get_region(struct pt_regs *regs)
 	iorn->cpid = p->pid;
 	/* Copy back the registry handle to the ph struct. */
 	ph.opaque = iorn->handle;
-	ph.start = start;
-	ph.len = len;
 
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
@@ -3899,22 +3897,7 @@ static int __rt_io_put_region(struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(ph.opaque == XN_NO_HANDLE)) {	/* Legacy compat. */
-		xnqueue_t *rq = &xeno_get_rholder()->ioregionq;
-		RT_IOREGION *_iorn;
-		xnholder_t *holder;
-
-		for (holder = getheadq(rq), iorn = NULL;
-		     holder; holder = nextq(rq, holder)) {
-			_iorn = rlink2ioregion(holder);
-			if (_iorn->start == ph.start && _iorn->len == ph.len) {
-				iorn = _iorn;
-				break;
-			}
-		}
-	} else
-		iorn = (RT_IOREGION *) xnregistry_fetch(ph.opaque);
-
+	iorn = (RT_IOREGION *) xnregistry_fetch(ph.opaque);
 	if (iorn == NULL) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -ESRCH;

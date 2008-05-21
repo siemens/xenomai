@@ -29,12 +29,6 @@
 
 typedef struct rt_ioregion_placeholder {
 	xnhandle_t opaque;
-	/*
-	 * We keep the region start and length in the userland
-	 * placeholder to support deprecated rt_misc_io_*() calls.
-	 */
-	uint64_t start;
-	uint64_t len;
 } RT_IOREGION_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
@@ -105,31 +99,6 @@ int rt_io_get_region(RT_IOREGION *iorn,
 		     int flags);
 
 int rt_io_put_region(RT_IOREGION *iorn);
-
-__deprecated_call__
-static inline int  rt_misc_get_io_region(unsigned long start,
-					 unsigned long len,
-					 const char *label)
-{
-	RT_IOREGION iorn;
-
-	return rt_io_get_region(&iorn, label, (uint64_t)start,
-				(uint64_t)len, IORN_IOPORT);
-}
-
-__deprecated_call__
-static inline int rt_misc_put_io_region(unsigned long start,
-					unsigned long len)
-{
-	RT_IOREGION iorn;
-
-	iorn.opaque = XN_NO_HANDLE;
-	iorn.start = (uint64_t)start;
-	iorn.len = (uint64_t)len;
-	rt_io_put_region(&iorn);
-
-	return 0;
-}
 
 #ifdef __cplusplus
 }

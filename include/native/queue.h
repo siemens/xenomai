@@ -205,13 +205,6 @@ ssize_t rt_queue_receive_until(RT_QUEUE *q,
 			       void **bufp,
 			       RTIME timeout);
 
-static inline ssize_t __deprecated_call__ rt_queue_recv(RT_QUEUE *q,
-							void **bufp,
-							RTIME timeout)
-{
-    return rt_queue_receive(q,bufp,timeout);
-}
-
 ssize_t rt_queue_read(RT_QUEUE *q,
 		      void *bufp,
 		      size_t size,

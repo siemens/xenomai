@@ -238,16 +238,6 @@ void rt_timer_spin(RTIME ns);
 
 int rt_timer_set_mode(RTIME nstick);
 
-static inline int __deprecated_call__
-rt_timer_start(RTIME nstick __attribute__((unused)))
-{
-    return 0;
-}
-
-static inline void __deprecated_call__ rt_timer_stop(void)
-{
-}
-
 #ifdef __cplusplus
 }
 #endif
