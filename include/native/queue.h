@@ -135,9 +135,6 @@ static inline void __native_queue_flush_rq(xnqueue_t *rq)
 ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 			       xntmode_t timeout_mode, RTIME timeout);
 
-ssize_t rt_queue_read_inner(RT_QUEUE *q, void *buf,
-			    size_t size, xntmode_t timeout_mode, RTIME timeout);
-
 #else /* !CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #define __native_queue_pkg_init()		({ 0; })

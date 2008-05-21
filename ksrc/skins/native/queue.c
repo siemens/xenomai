@@ -1027,23 +1027,7 @@ ssize_t rt_queue_read_inner(RT_QUEUE *q, void *buf,
 
 ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 {
-	ssize_t rsize;
-	void *mbuf;
-
-	rsize = rt_queue_receive_inner(q, &mbuf, XN_RELATIVE, timeout);
-
-	if (rsize < 0)
-		return rsize;
-
-	if (size > rsize)
-		size = rsize;
-
-	if (size > 0)
-		memcpy(buf, mbuf, size);
-
-	rt_queue_free(q, mbuf);
-
-	return rsize;
+	return rt_queue_read_inner(q, buf, size, XN_RELATIVE, timeout);
 }
 
 /**
@@ -1119,23 +1103,7 @@ ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 
 ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 {
-	ssize_t rsize;
-	void *mbuf;
-
-	rsize = rt_queue_receive_inner(q, &mbuf, XN_ABSOLUTE, timeout);
-
-	if (rsize < 0)
-		return rsize;
-
-	if (size > rsize)
-		size = rsize;
-
-	if (size > 0)
-		memcpy(buf, mbuf, size);
-
-	rt_queue_free(q, mbuf);
-
-	return rsize;
+	return rt_queue_read_inner(q, buf, size, XN_ABSOLUTE, timeout);
 }
 
 /**
