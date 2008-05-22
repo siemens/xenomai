@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <vxworks/vxworks.h>
+#include "wrappers.h"
 
 extern pthread_key_t __vxworks_tskey;
 
@@ -98,7 +99,7 @@ static void *wind_task_trampoline(void *cookie)
 	 * fail doing this properly via pthread_create.
 	 */
 	policy = wind_task_set_posix_priority(iargs->prio, &param);
-	pthread_setschedparam(pthread_self(), policy, &param);
+	__real_pthread_setschedparam(pthread_self(), policy, &param);
 
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -192,7 +193,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
 
-	err = pthread_create(&thid, &thattr, &wind_task_trampoline, &iargs);
+	err = __real_pthread_create(&thid, &thattr, &wind_task_trampoline, &iargs);
 
 	/* POSIX codes returned by internal calls do not conflict with
 	   VxWorks ones, so let's use errno for passing the back

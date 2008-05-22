@@ -13,7 +13,9 @@ libvxworks_la_SOURCES = \
 	tickLib.c \
 	sysLib.c \
 	wdLib.c \
-	init.c
+	init.c \
+	wrappers.c \
+	wrappers.h
 
 libvxworks_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

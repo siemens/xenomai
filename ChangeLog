@@ -5,11 +5,11 @@
 
 2008-05-21  Philippe Gerum  <rpm@xenomai.org>
 
-	* src/skins/native/wrappers.[ch]: Define a wrapper file
+	* src/skins/{native,vxworks}/wrappers.[ch]: Define a wrapper file
 	maintaining a list of placeholders for routines that we do NOT
 	want to be wrapped to their Xenomai POSIX API counterparts when
-	used internally by the native interface code, and use those
-	symbols throughout the interface.
+	linked with our POSIX library, and use those symbols throughout
+	the interfaces.
 
 	* [k]src/skins/native/event.c (rt_event_wait_until): Add new call
 	with absolute timeout specification.
