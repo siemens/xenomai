@@ -24,6 +24,7 @@
 #include <native/syscall.h>
 #include <native/task.h>
 #include <native/heap.h>
+#include "wrappers.h"
 
 extern int __native_muxid;
 
@@ -33,22 +34,22 @@ static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER * php)
 
 	/* Open the heap device to share the heap memory with the
 	   in-kernel skin and bound clients. */
-	heapfd = open(XNHEAP_DEV_NAME, O_RDWR);
+	heapfd = __real_open(XNHEAP_DEV_NAME, O_RDWR);
 
 	if (heapfd < 0)
 		return -ENOENT;
 
 	/* Bind this file instance to the shared heap. */
-	err = ioctl(heapfd, 0, php->opaque2);
+	err = __real_ioctl(heapfd, 0, php->opaque2);
 
 	if (err)
 		goto close_and_exit;
 
 	/* Map the heap memory into our address space. */
-	php->mapbase = (caddr_t) mmap(NULL,
-				      php->mapsize,
-				      PROT_READ | PROT_WRITE,
-				      MAP_SHARED, heapfd, 0L);
+	php->mapbase = (caddr_t) __real_mmap(NULL,
+					     php->mapsize,
+					     PROT_READ | PROT_WRITE,
+					     MAP_SHARED, heapfd, 0L);
 
 	if (php->mapbase != MAP_FAILED)
 		/* Copy back a complete placeholder only if all is ok. */
@@ -58,7 +59,7 @@ static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER * php)
 
       close_and_exit:
 
-	close(heapfd);
+	__real_close(heapfd);
 
 	return err;
 }
@@ -96,7 +97,7 @@ int rt_heap_bind(RT_HEAP *heap, const char *name, RTIME timeout)
 
 int rt_heap_unbind(RT_HEAP *heap)
 {
-	int err = munmap(heap->mapbase, heap->mapsize);
+	int err = __real_munmap(heap->mapbase, heap->mapsize);
 
 	if (err == -1)
 		err = -errno;
@@ -112,7 +113,7 @@ int rt_heap_delete(RT_HEAP *heap)
 {
 	int err;
 
-	err = munmap(heap->mapbase, heap->mapsize);
+	err = __real_munmap(heap->mapbase, heap->mapsize);
 
 	if (err == -1)
 		err = -errno;

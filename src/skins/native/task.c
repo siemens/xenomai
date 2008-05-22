@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <native/syscall.h>
 #include <native/task.h>
+#include "wrappers.h"
 
 extern pthread_key_t __native_tskey;
 
@@ -67,7 +68,7 @@ static void *rt_task_trampoline(void *cookie)
 		 */
 		memset(&param, 0, sizeof(param));
 		param.sched_priority = iargs->prio;
-		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+		__real_pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	}
 
 	/* rt_task_delete requires asynchronous cancellation */
@@ -148,7 +149,7 @@ int rt_task_create(RT_TASK *task,
 	if (!(mode & T_JOINABLE))
 		pthread_attr_setdetachstate(&thattr, PTHREAD_CREATE_DETACHED);
 
-	err = pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);
+	err = __real_pthread_create(&thid, &thattr, &rt_task_trampoline, &iargs);
 
 	if (err)
 		return -err;
@@ -177,7 +178,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		/* Make sure the POSIX library caches the right priority. */
 		memset(&param, 0, sizeof(param));
 		param.sched_priority = prio;
-		pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
+		__real_pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 	}
 
 	bulk.a1 = (u_long)task;
