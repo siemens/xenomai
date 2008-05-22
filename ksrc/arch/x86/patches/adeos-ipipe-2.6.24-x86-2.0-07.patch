@@ -14,7 +14,7 @@ index 189d8ef..29b3ba8 100644
  KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
  else
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 80b7ba4..1736939 100644
+index 80b7ba4..d8f7c3f 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -316,7 +316,7 @@ config SCHED_NO_NO_OMIT_FRAME_POINTER
@@ -26,6 +26,15 @@ index 80b7ba4..1736939 100644
  	help
  	  This changes the kernel so it can modify itself when it is run
  	  under a hypervisor, potentially improving performance significantly
+@@ -325,7 +325,7 @@ config PARAVIRT
+ 
+ menuconfig PARAVIRT_GUEST
+ 	bool "Paravirtualized guest support"
+-	depends on X86_32
++	depends on X86_32 && !IPIPE
+ 	help
+ 	  Say Y here to get to see options related to running Linux under
+ 	  various hypervisors.  This option alone does not add any kernel code.
 @@ -496,6 +496,8 @@ config SCHED_MC
  
  source "kernel/Kconfig.preempt"
@@ -1753,10 +1762,10 @@ index cbac167..bc82e4d 100644
 +#endif
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..c9ea2c9
+index 0000000..bbec601
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,1013 @@
+@@ -0,0 +1,1014 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -2558,6 +2567,7 @@ index 0000000..c9ea2c9
 +	}
 +
 +	__ipipe_std_extable[vector](regs, error_code);
++	asm volatile ("cli");
 +	local_irq_restore(flags);
 +	__fixup_if(regs);
 +
@@ -3825,7 +3835,7 @@ index 6d011bd..a99aa60 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..554ee87
+index 0000000..518c690
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,126 @@
@@ -3856,10 +3866,10 @@ index 0000000..554ee87
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-05"
++#define IPIPE_ARCH_STRING	"2.0-07"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	7
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -6802,10 +6812,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..3d9c1e3
+index 0000000..f87bf7c
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1632 @@
+@@ -0,0 +1,1630 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -7765,15 +7775,13 @@ index 0000000..3d9c1e3
 +			rank = __ipipe_ffnz(submask);
 +			irq = (level << IPIPE_IRQ_ISHIFT) + rank;
 +
-+			if (test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control)) {
-+				__clear_bit(rank, &ipipe_this_cpudom_var(irqpend_lomask)[level]);
-+				continue;
-+			}
-+
 +			__clear_bit(rank, &ipipe_this_cpudom_var(irqpend_lomask)[level]);
 +
 +			if (ipipe_this_cpudom_var(irqpend_lomask)[level] == 0)
 +				__clear_bit(level, &ipipe_this_cpudom_var(irqpend_himask));
++
++			if (test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))
++				continue;
 +
 +			__set_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status));
 +
@@ -10015,6 +10023,28 @@ index 44019ce..933c8b3 100644
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
+diff --git a/kernel/lockdep.c b/kernel/lockdep.c
+index e2c07ec..ebd0012 100644
+--- a/kernel/lockdep.c
++++ b/kernel/lockdep.c
+@@ -2028,7 +2028,7 @@ void trace_hardirqs_on(void)
+ 	curr->hardirqs_enabled = 1;
+ 	ip = (unsigned long) __builtin_return_address(0);
+ 
+-	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
++	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+ 		return;
+ 	if (DEBUG_LOCKS_WARN_ON(current->hardirq_context))
+ 		return;
+@@ -2064,7 +2064,7 @@ void trace_hardirqs_off(void)
+ 	if (unlikely(!debug_locks || current->lockdep_recursion))
+ 		return;
+ 
+-	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled()))
++	if (DEBUG_LOCKS_WARN_ON(!irqs_disabled() && !irqs_disabled_hw()))
+ 		return;
+ 
+ 	if (curr->hardirqs_enabled) {
 diff --git a/kernel/power/disk.c b/kernel/power/disk.c
 index 05b6479..8446b38 100644
 --- a/kernel/power/disk.c
@@ -10525,7 +10555,7 @@ index 9c4b025..08f096b 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 4b0144b..32d6cb6 100644
+index 4b0144b..c57c616 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -10596,7 +10626,7 @@ index 4b0144b..32d6cb6 100644
 +				pte = pte_mkclean(pte);
 +			pte = pte_mkold(pte);
 +
-+			page_dup_rmap(uncow_page, vma, addr);
++			page_add_new_anon_rmap(uncow_page, vma, addr);
 +			rss[!!PageAnon(uncow_page)]++;
 +			goto out_set_pte;
 +		}
@@ -10697,7 +10727,7 @@ index 4b0144b..32d6cb6 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2756,3 +2805,110 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
+@@ -2756,3 +2805,111 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
  
  	return buf - old_buf;
  }
@@ -10716,7 +10746,7 @@ index 4b0144b..32d6cb6 100644
 +		if (!pte)
 +			continue;
 +
-+		if (!pte_present(*pte)) {
++		if (!pte_present(*pte) || pte_write(*pte)) {
 +			pte_unmap_unlock(pte, ptl);
 +			continue;
 +		}
@@ -10780,7 +10810,8 @@ index 4b0144b..32d6cb6 100644
 +		goto done_mm;
 +
 +	for (vma = mm->mmap; vma; vma = vma->vm_next) {
-+		if (!is_cow_mapping(vma->vm_flags))
++		if (!is_cow_mapping(vma->vm_flags)
++		    || !(vma->vm_flags & VM_WRITE))
 +			continue;
 +
 +		addr = vma->vm_start;
