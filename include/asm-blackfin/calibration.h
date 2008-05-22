@@ -36,6 +36,10 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #define __sched_latency 7500
 #elif defined(CONFIG_BF561)
 #define __sched_latency 3000
+#elif defined(CONFIG_BF54x)
+#define __sched_latency 3000
+#elif defined(CONFIG_BF52x)
+#define __sched_latency 3000
 #else
 #error "unsupported Blackfin processor"
 #endif
