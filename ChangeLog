@@ -1,3 +1,7 @@
+2008-05-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.24-powerpc-2.1-03.
+
 2008-05-22  Yi Li <liyi.dev@gmail.com>
 
 	* ksrc/arch/blackfin/patches: Resync patch on 2008R1. Add support
