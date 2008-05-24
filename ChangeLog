@@ -1,3 +1,8 @@
+2008-05-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/syscall.c (__wind_msgq_receive): Fix byte
+	count for copy to user.
+
 2008-05-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Check last wchan
