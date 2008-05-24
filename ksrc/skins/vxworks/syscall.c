@@ -914,7 +914,7 @@ static int __wind_msgq_receive(struct task_struct *curr, struct pt_regs *regs)
 
 	if (err != ERROR) {
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs),
-				  msgbuf, nbytes);
+				  msgbuf, err);
 		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs),
 				  &err, sizeof(err));
 		err = 0;

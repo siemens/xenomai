@@ -1,3 +1,8 @@
+2008-05-24  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/syscall.c (__wind_msgq_receive): Fix byte
+	count for copy to user.
+
 2008-05-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.24-powerpc-2.1-03.
