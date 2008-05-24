@@ -829,7 +829,7 @@ static int __wind_msgq_receive(struct pt_regs *regs)
 
 	if (err != ERROR) {
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
-					   msgbuf, nbytes) ||
+					   msgbuf, err) ||
 		    __xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs),
 					   &err, sizeof(err)))
 			err = -EFAULT;
