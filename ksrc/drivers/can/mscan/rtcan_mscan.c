@@ -29,7 +29,6 @@
 #include <linux/module.h>
 #include <linux/ioport.h>
 #include <linux/delay.h>
-#include <asm/ppcboot.h>
 
 #include <rtdm/rtdm_driver.h>
 
