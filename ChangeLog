@@ -1,5 +1,10 @@
 2008-05-25  Wolfgang Grandegger  <wg@grandegger.com>
 
+	* ksrc/drivers/can/mscan/rtcan_mscan.c (rtcan_mscan_exit): Fix
+	section mismatch warning.
+
+2008-05-25  Wolfgang Grandegger  <wg@grandegger.com>
+
 	* ksrc/drivers/can/mscan/rtcan_mscan.c: Remove #include <ppcboot.h>
 	because it's not needed at all and it makes trouble with kernel
 	version >= 2.6.24.

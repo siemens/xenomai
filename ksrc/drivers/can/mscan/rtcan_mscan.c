@@ -853,7 +853,7 @@ out_dev_free:
 
 }
 
-static void __exit rtcan_mscan_exit(void)
+static void rtcan_mscan_exit(void)
 {
     int i;
     struct rtcan_device *dev;
