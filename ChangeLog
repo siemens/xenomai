@@ -1,3 +1,7 @@
+2008-05-25  Roland Stigge  <stigge@antcom.de>
+
+	* doc/man/*: Add new manual pages.
+
 2008-05-25  Wolfgang Grandegger  <wg@grandegger.com>
 
 	* ksrc/drivers/can/mscan/rtcan_mscan.c (rtcan_mscan_exit): Fix
