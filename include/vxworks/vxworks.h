@@ -136,21 +136,21 @@ typedef struct WIND_TCB_PLACEHOLDER {
 
 typedef struct _TASK_DESC {
 
-	TASK_ID tid;
-	char    name[XNOBJECT_NAME_LEN];
-	int	priority;
-	int	status;
-	int	flags;
-	FUNCPTR	entry;
-	int	stacksize;
-	char	*pStackBase;
-	char	*pStackEnd;
-	char	*pExcStackBase;
-	char	*pExcStackEnd;
-	int	errorStatus;
+	TASK_ID td_tid;
+	char    td_name[XNOBJECT_NAME_LEN];
+	int	td_priority;
+	int	td_status;
+	int	td_flags;
+	FUNCPTR	td_entry;
+	int	td_stacksize;
+	char	*td_pStackBase;
+	char	*td_pStackEnd;
+	char	*td_pExcStackBase;
+	char	*td_pExcStackEnd;
+	int	td_errorStatus;
 
-	unsigned long opaque;
-	
+	unsigned long td_opaque;
+
 } TASK_DESC;
 
 typedef void (*wind_timer_t)(long);

@@ -22,8 +22,6 @@
 #ifndef _XENO_NUCLEUS_THREAD_H
 #define _XENO_NUCLEUS_THREAD_H
 
-#include <nucleus/timer.h>
-
 /*! @ingroup nucleus 
   @defgroup nucleus_state_flags Thread state flags.
   @brief Bits reporting permanent or transient states of thread.
@@ -130,6 +128,7 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/stat.h>
+#include <nucleus/timer.h>
 
 #ifdef __XENO_SIM__
 /* Pseudo-status (must not conflict with other bits) */

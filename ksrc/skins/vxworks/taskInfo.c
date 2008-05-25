@@ -84,42 +84,42 @@ STATUS taskInfoGet(TASK_ID task_id, TASK_DESC *desc)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
 
-	desc->tid = task_id;
-	xnobject_copy_name(desc->name, task->name);
-	desc->priority = wind_denormalized_prio(xnthread_current_priority
+	desc->td_tid = task_id;
+	xnobject_copy_name(desc->td_name, task->name);
+	desc->td_priority = wind_denormalized_prio(xnthread_current_priority
 						(&task->threadbase));
 
 	status = xnthread_state_flags(&task->threadbase);
 
 	if (xnpod_current_thread() == &task->threadbase || (status & XNREADY))
-		desc->status |= WIND_READY;
+		desc->td_status |= WIND_READY;
 	else if (status & XNDORMANT)
-		desc->status |= WIND_DEAD;
+		desc->td_status |= WIND_DEAD;
 	else {
 		if (status & XNSUSP)
-			desc->status |= WIND_SUSPEND;
+			desc->td_status |= WIND_SUSPEND;
 		if (status & XNPEND)
-			desc->status |= WIND_PEND;
+			desc->td_status |= WIND_PEND;
 		if (status & XNDELAY)
-			desc->status |= WIND_DELAY;
+			desc->td_status |= WIND_DELAY;
 	}
 
-	desc->flags = task->flags;
-	desc->entry = task->entry;
-	desc->errorStatus = errnoOfTaskGet(task_id);
+	desc->td_flags = task->flags;
+	desc->td_entry = task->entry;
+	desc->td_errorStatus = errnoOfTaskGet(task_id);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (status & XNSHADOW)
-		desc->opaque = task->ptid;
+		desc->td_opaque = task->ptid;
 		/* Userland should fill in the stack information. */
 	else
 #endif
 	{
-		desc->stacksize = xnthread_stack_size(&task->threadbase);
-		desc->pStackBase = (char *)xnthread_stack_base(&task->threadbase);
-		desc->pStackEnd = (char *)xnthread_stack_end(&task->threadbase);
-		desc->pExcStackBase = desc->pStackBase;
-		desc->pExcStackEnd = desc->pStackEnd;
+		desc->td_stacksize = xnthread_stack_size(&task->threadbase);
+		desc->td_pStackBase = (char *)xnthread_stack_base(&task->threadbase);
+		desc->td_pStackEnd = (char *)xnthread_stack_end(&task->threadbase);
+		desc->td_pExcStackBase = desc->td_pStackBase;
+		desc->td_pExcStackEnd = desc->td_pStackEnd;
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

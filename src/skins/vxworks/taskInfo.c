@@ -89,24 +89,24 @@ STATUS taskInfoGet(TASK_ID task_id, TASK_DESC *desc)
 		return ERROR;
 	}
 
-	if (pthread_getattr_np((pthread_t)desc->opaque, &attr)) {
+	if (pthread_getattr_np((pthread_t)desc->td_opaque, &attr)) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
 	pthread_attr_getstack(&attr, &stackbase, &stacksize);
-	desc->stacksize = stacksize;
-	desc->pStackBase = stackbase;
+	desc->td_stacksize = stacksize;
+	desc->td_pStackBase = stackbase;
 
 	if (&probe1 < &probe2)
 		/* Stack grows upward. */
-		desc->pStackEnd = (caddr_t)stackbase + stacksize;
+		desc->td_pStackEnd = (caddr_t)stackbase + stacksize;
 	else
 		/* Stack grows downward. */
-		desc->pStackEnd = (caddr_t)stackbase - stacksize;
+		desc->td_pStackEnd = (caddr_t)stackbase - stacksize;
 
-	desc->pExcStackBase = desc->pStackBase;
-	desc->pExcStackEnd = desc->pStackEnd;
+	desc->td_pExcStackBase = desc->td_pStackBase;
+	desc->td_pExcStackEnd = desc->td_pStackEnd;
 
 	return OK;
 }
