@@ -137,7 +137,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -211,7 +210,12 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-man1_MANS = xeno-config.man xeno-info.man xeno-load.man xeno-test.man
+man1_MANS = xeno-config.man xeno-info.man xeno-load.man xeno-test.man \
+	    clocktest.man.in cyclictest.man.in irqbench.man.in irqloop.man.in \
+	    klatency.man.in latency.man.in rtcanconfig.man.in \
+	    rtcanrecv.man.in rtcansend.man.in switchbench.man.in \
+	    switchtest.man.in
+
 man5_MANS = runinfo.man
 all: all-am
 
