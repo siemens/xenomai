@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <limits.h>
+#include <string.h>
 #include <psos+/psos.h>
 
 extern int __psos_muxid;

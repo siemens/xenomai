@@ -169,25 +169,6 @@ struct pse51_condattr {
 	unsigned pshared: 1;
 };
 
-struct pse51_mutex;
-
-union __xeno_mutex {
-	pthread_mutex_t native_mutex;
-	struct __shadow_mutex {
-		unsigned magic;
-		unsigned lockcnt;
-		struct pse51_mutex *mutex;
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
-		xnarch_atomic_t lock;
-		union {
-			unsigned owner_offset;
-			xnarch_atomic_intptr_t *owner;
-		};
-		struct pse51_mutexattr attr;
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
-	} shadow_mutex;
-};
-
 struct pse51_cond;
 
 union __xeno_cond {

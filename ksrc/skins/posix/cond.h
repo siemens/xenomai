@@ -21,6 +21,7 @@
 #define _POSIX_COND_H
 
 #include <posix/posix.h>
+#include <posix/mutex.h>
 
 int pse51_cond_timedwait_prologue(xnthread_t *cur,
 				  struct __shadow_cond *shadow,

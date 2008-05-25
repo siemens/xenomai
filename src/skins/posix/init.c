@@ -27,6 +27,7 @@
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
 #include <asm-generic/bits/mlock_alert.h>
+#include <posix/mutex.h>
 
 /* asm-generic/bits/bind.h uses the following functions, so we redefine them to
    be the __real variants */

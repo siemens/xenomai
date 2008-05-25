@@ -22,8 +22,6 @@
 #ifndef _XENO_NUCLEUS_INTR_H
 #define _XENO_NUCLEUS_INTR_H
 
-#include <nucleus/types.h>
-
 /* Possible return values of ISR. */
 #define XN_ISR_NONE   	 0x1
 #define XN_ISR_HANDLED	 0x2
@@ -41,6 +39,7 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#include <nucleus/types.h>
 #include <nucleus/stat.h>
 
 typedef struct xnintr {

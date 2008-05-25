@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <posix/syscall.h>
 #include <pthread.h>
+#include <posix/mutex.h>
 #include <posix/cb_lock.h>
 
 extern int __pse51_muxid;

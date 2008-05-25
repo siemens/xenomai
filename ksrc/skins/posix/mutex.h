@@ -19,6 +19,30 @@
 #ifndef _POSIX_MUTEX_H
 #define _POSIX_MUTEX_H
 
+#include <asm/xenomai/atomic.h>
+#include <pthread.h>
+
+struct pse51_mutex;
+
+union __xeno_mutex {
+	pthread_mutex_t native_mutex;
+	struct __shadow_mutex {
+		unsigned magic;
+		unsigned lockcnt;
+		struct pse51_mutex *mutex;
+#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+		xnarch_atomic_t lock;
+		union {
+			unsigned owner_offset;
+			xnarch_atomic_intptr_t *owner;
+		};
+		struct pse51_mutexattr attr;
+#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+	} shadow_mutex;
+};
+
+#ifdef __KERNEL__
+
 #include <posix/internal.h>
 #include <posix/thread.h>
 #include <posix/cb_lock.h>
@@ -174,5 +198,7 @@ static inline void pse51_mutex_unlock_internal(xnthread_t *cur,
 		xnarch_atomic_intptr_set(mutex->owner, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 }
+
+#endif /* __KERNEL__ */
 
 #endif /* !_POSIX_MUTEX_H */
