@@ -1,3 +1,4 @@
+#include <asm/xenomai/wrappers.h>
 #include <linux/sched.h>
 #include <linux/completion.h>
 #include <linux/unistd.h>
@@ -108,7 +109,7 @@ EXPORT_SYMBOL(kthread_create);
 EXPORT_SYMBOL(kthread_should_stop);
 EXPORT_SYMBOL(kthread_stop);
 
-static inline unsigned long __ffs(unsigned long word)
+static inline unsigned long __ffs_compat(unsigned long word)
 {
 	if ((unsigned)(word))
 		return ffs(word) - 1;
@@ -157,5 +158,5 @@ found_first:
         if (tmp == 0UL)         /* Are any bits set? */
                 return result + size;   /* Nope. */
 found_middle:
-        return result + __ffs(tmp);
+        return result + __ffs_compat(tmp);
 }

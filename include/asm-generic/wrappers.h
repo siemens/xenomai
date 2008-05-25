@@ -35,6 +35,7 @@
 #include <linux/wrapper.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
+#include <linux/bitops.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 
 /* Compiler */
@@ -185,6 +186,10 @@ void show_stack(struct task_struct *task,
 
 #ifndef __deprecated
 #define __deprecated  __attribute__((deprecated))
+#endif
+
+#ifndef BITOP_WORD
+#define BITOP_WORD(nr)	((nr) / BITS_PER_LONG)
 #endif
 
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
