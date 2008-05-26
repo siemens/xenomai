@@ -104,6 +104,9 @@ for linux_arch in $supported_arch ; do
         x86_64)
             base_arch=x86
             ;;
+        x86)
+            base_arch=x86
+            ;;
         *)
             base_arch=$linux_arch
             ;;
@@ -146,11 +149,11 @@ generate_patch >> $patch_file
 
 cd $xenomai_root
 
-echo "Patch-name: Xenomai realtime kernel patches" > $xenomai_root/debian/linux-patch-xenomai.kpatches
-echo "Patch-id: xenomai" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
-echo "Architecture: all" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+#echo "Patch-name: Xenomai realtime kernel patches" > $xenomai_root/debian/linux-patch-xenomai.kpatches
+#echo "Patch-id: xenomai" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+#echo "Architecture: all" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 
-find $xenomai_root/ksrc/ -name "adeos-ipipe-2.6.*.patch" |
+find $xenomai_root/ksrc/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
 while read f ; do
 
     file=`basename $f`
@@ -173,6 +176,9 @@ while read f ; do
         x86_64)
             march=amd64
         ;;
+	x86)
+	    march=i386
+	;;
     esac
 
     # Only one patch per arch/kver - Having a common plus kver/arch patch
@@ -182,6 +188,13 @@ while read f ; do
     echo "Patch-file: $file" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
     echo "Kernel-version: $kver" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
     echo "Architecture: $march" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+
+    if [ "$arch" = "x86" ] ; then
+	echo "" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+	echo "Patch-file: $file" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+	echo "Kernel-version: $kver" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+	echo "Architecture: amd64" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
+    fi
 
     cp $f $xenomai_root/$file
     cat $xenomai_root/$patch_file >> $xenomai_root/$file

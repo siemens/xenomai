@@ -1,3 +1,63 @@
+xenomai (2.4.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 26 May 2008 11:58:30 +0200
+
+xenomai (2.4.3-7) unstable; urgency=low
+
+  * Included patch from Riku Voipio to fix ARM compile issues
+    (Closes: #477720)
+
+ -- Roland Stigge <stigge@antcom.de>  Thu, 24 Apr 2008 23:18:01 +0200
+
+xenomai (2.4.3-6) unstable; urgency=low
+
+  * Added lintian override for recursive include directories (necessary
+    according to upstream)
+  * Added missing man pages (can be removed when integrated upstream)
+  * debian/rules: Fixed klatency/run script to be proper shell script
+
+ -- Roland Stigge <stigge@antcom.de>  Tue, 22 Apr 2008 12:23:22 +0200
+
+xenomai (2.4.3-5) unstable; urgency=low
+
+  * Install xeno-config into libxenomai-dev where the executable is
+
+ -- Roland Stigge <stigge@antcom.de>  Sat, 19 Apr 2008 22:15:07 +0200
+
+xenomai (2.4.3-4) unstable; urgency=low
+
+  * Move /usr/lib/xenomai to original upstream /usr/share/xenomai
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 18 Apr 2008 19:51:49 +0200
+
+xenomai (2.4.3-3) unstable; urgency=low
+
+  * debian/rules: Separated prepare-patch.sh calls for individual
+    architectures (Closes: #473098)
+
+ -- Roland Stigge <stigge@antcom.de>  Thu, 10 Apr 2008 10:01:33 +0200
+
+xenomai (2.4.3-2) unstable; urgency=low
+
+  * Enable x86 patches for both i386 and amd64 (Closes: #473098)
+
+ -- Roland Stigge <stigge@antcom.de>  Tue, 01 Apr 2008 10:04:51 +0200
+
+xenomai (2.4.3-1) unstable; urgency=low
+
+  * New upstream release
+  * Added debian/watch
+
+ -- Roland Stigge <stigge@antcom.de>  Tue, 25 Mar 2008 14:13:50 +0100
+
+xenomai (2.4.2-3) unstable; urgency=low
+
+  * Fixed bashisms by using "#!/bin/bash" (Closes: #471871)
+
+ -- Roland Stigge <stigge@antcom.de>  Sat, 22 Mar 2008 17:01:11 +0100
+
 xenomai (2.4.2-2) unstable; urgency=low
 
   * debian/copyright: Refined Copyrights

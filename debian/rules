@@ -6,26 +6,32 @@
 
 #export DH_VERBOSE=1
 
-DEB_BUILD_GNU_CPU ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_CPU)
-DEB_BUILD_ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DEB_HOST_GNU_CPU ?= $(shell dpkg-architecture -qDEB_HOST_GNU_CPU)
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-ifeq ($(DEB_BUILD_ARCH), i386)
+ifeq ($(DEB_HOST_ARCH), i386)
 # Note: Would like to use --includedir=/usr/include/xenomai, but
 # there appears to be a `make install` problem.
 	CONFIG_OPTS = \
 	            --enable-x86-tsc
 endif
-ifeq ($(DEB_BUILD_ARCH), amd64)
+ifeq ($(DEB_HOST_ARCH), amd64)
 	CONFIG_OPTS = \
 	            --enable-smp \
 	            --enable-x86-tsc \
 	            --enable-x86-sep
 endif
-ifeq ($(DEB_BUILD_ARCH), powerpc)
+ifeq ($(DEB_HOST_ARCH), powerpc)
 	CONFIG_OPTS =
 endif
-ifeq ($(DEB_BUILD_ARCH), arm)
-	CONFIG_OPTS =
+ifeq ($(DEB_HOST_ARCH), armeb)
+	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc --enable-arm-eabi
+endif
+ifeq ($(DEB_HOST_ARCH), armel)
+	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc --enable-arm-eabi
+endif
+ifeq ($(DEB_HOST_ARCH), arm)
+	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc
 endif
 	CONFIG_OPTS += --prefix=/usr \
 	            --includedir=/usr/include/xenomai \
@@ -46,9 +52,10 @@ build-indep-stamp:
 
 patch-stamp:
 	dh_testdir
-#	The kernel patches get generated next - Need to revisit again
-#	when 2.6.24 ipipe patch is released.
-	bash $(CURDIR)/debian/prepare-patch.sh arm i386 powerpc x86_64
+	cp debian/linux-patch-xenomai.kpatches.in debian/linux-patch-xenomai.kpatches
+	for i in arm i386 powerpc x86_64 x86 ; do \
+		bash $(CURDIR)/debian/prepare-patch.sh $$i ; \
+	done
 	touch patch-stamp
 
 config.status: configure-stamp
@@ -78,12 +85,14 @@ install: build
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# xeno-config should be only in libxenomai-dev
 	rm -f $(CURDIR)/debian/xenomai-runtime/usr/bin/xeno-config
+	rm -f $(CURDIR)/debian/xenomai-runtime/usr/share/man/man1/xeno-config.1
 	for f in $(CURDIR)/ksrc/nucleus/udev/*.rules ; do \
 	    cat $$f >> $(CURDIR)/debian/libxenomai1/etc/udev/xenomai.rules ; \
 	done
 	# remove empty directory
 	rm -rf $(CURDIR)/debian/xenomai-doc/usr/share/doc/xenomai-doc/ps
 	cp debian/libxenomai1.lintian $(CURDIR)/debian/libxenomai1/usr/share/lintian/overrides/libxenomai1
+	cp debian/libxenomai-dev.lintian $(CURDIR)/debian/libxenomai-dev/usr/share/lintian/overrides/libxenomai-dev
 	dh_installkpatches
 
 # Build architecture-independent files here.
@@ -112,6 +121,7 @@ binary-indep: build install
 binary-arch: build install
 	dh_testdir -s
 	dh_testroot -s
+	dh_installman -s
 	dh_installdocs -s -A CREDITS README.INSTALL TROUBLESHOOTING
 	dh_installchangelogs -s ChangeLog
 	dh_link -s
