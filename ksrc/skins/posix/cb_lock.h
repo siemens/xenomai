@@ -2,6 +2,7 @@
 #define CB_LOCK_H
 
 #include <asm/xenomai/atomic.h>
+#include <nucleus/compiler.h>
 
 #ifndef __KERNEL__
 typedef void xnthread_t;
