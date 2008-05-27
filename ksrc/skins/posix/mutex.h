@@ -186,16 +186,19 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 static inline void pse51_mutex_unlock_internal(xnthread_t *cur,
 					       pse51_mutex_t *mutex)
 {
+	xnthread_t *owner;
 	spl_t s;
 
 	if (likely(xnarch_atomic_intptr_cmpxchg(mutex->owner, cur, NULL) == cur))
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (xnsynch_wakeup_one_sleeper(&mutex->synchbase))
+	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+	xnarch_atomic_intptr_set(mutex->owner,
+				 set_claimed(owner,
+					     xnsynch_nsleepers(&mutex->synchbase)));
+	if (owner)
 		xnpod_schedule();
-	else
-		xnarch_atomic_intptr_set(mutex->owner, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 }
 

@@ -223,6 +223,7 @@ static inline int mutex_save_count(xnthread_t *cur,
 				   unsigned *count_ptr)
 {
 	pse51_mutex_t *mutex;
+	xnthread_t *owner;
 
 	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
 		 return EINVAL;
@@ -237,8 +238,11 @@ static inline int mutex_save_count(xnthread_t *cur,
 	if (likely(xnarch_atomic_intptr_cmpxchg(mutex->owner, cur, NULL) == cur))
 		return 0;
 
-	if (!xnsynch_wakeup_one_sleeper(&mutex->synchbase))
-		xnarch_atomic_intptr_set(mutex->owner, NULL);
+	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+	xnarch_atomic_intptr_set
+		(mutex->owner,
+		 set_claimed(owner,xnsynch_nsleepers(&mutex->synchbase)));
+
 	/* Do not reschedule here, releasing the mutex and suspension must be
 	   done atomically in pthread_cond_*wait. */
 
@@ -341,7 +345,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
 
 	err = pse51_mutex_timedlock_internal(cur, mutex, count, 0, XN_INFINITE);
 
-	if (err == EINTR)
+	if (err == -EINTR)
 		goto unlock_and_return;
 
 

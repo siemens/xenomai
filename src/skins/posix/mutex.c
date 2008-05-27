@@ -356,7 +356,10 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	}
 #endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
 
-	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_mutex_unlock, shadow);
+	err = XENOMAI_SKINCALL1(__pse51_muxid,
+				__pse51_mutex_unlock, shadow);
+	if (err == -EINTR)
+		err = 0;
 
 #ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
   out_err:

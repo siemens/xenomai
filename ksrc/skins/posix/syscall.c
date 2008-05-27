@@ -1501,7 +1501,7 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 							  &mx.shadow_mutex,
 							  count);
 		}
-		while (err == EINTR);
+		while (err == -EINTR);
 		xnthread_set_info(cur, XNKICKED);
 		err = EINTR;
 	}
@@ -1553,7 +1553,7 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 				      sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return -err;
+	return err;
 }
 
 static int __pthread_cond_signal(struct pt_regs *regs)
@@ -2698,7 +2698,7 @@ static xnsysent_t __systab[] = {
 #else
         [__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},
 #endif
-	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary},
+	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary|__xn_exec_norestart},
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
 	[__pse51_cond_wait_prologue] =
