@@ -441,8 +441,6 @@ int rt_pipe_delete(RT_PIPE *pipe)
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
- * - -EIDRM is returned if @a pipe was closed while reading.
- *
  * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
  *
  * - -ETIMEDOUT is returned if @a timeout is different from

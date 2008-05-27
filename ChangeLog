@@ -1,3 +1,9 @@
+2008-05-27  Sebastian Smolorz  <sesmo@gmx.net>
+
+	* ksrc/skins/native/pipe.c (rt_pipe_receive): Fix documentation
+	for the return values of the function. -EIDRM is no valid return
+	value any more.
+
 2008-05-25  Roland Stigge  <stigge@antcom.de>
 
 	* doc/man/*: Add new manual pages.
