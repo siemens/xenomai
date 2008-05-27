@@ -301,7 +301,7 @@ int sigismember(const sigset_t * set, int sig)
 	return ismember(pse51_set, sig);
 }
 
-/* Must be called with nklock lock, irqs off, may reschedule. */
+/* Must be called with nklock lock, irqs off. */
 int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 {
 	unsigned prio;
@@ -327,8 +327,19 @@ int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 	}
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (testbits(thread->threadbase.state, XNSHADOW))
+	if (xnthread_test_state(&thread->threadbase, XNSHADOW)) {
 		pse51_schedule_lostage(PSE51_LO_SIGNAL_REQ, thread, 0);
+		if (xnthread_test_state(&thread->threadbase,
+					XNDELAY|XNPEND|XNSUSP|XNRELAX)) {
+			/* Thread is suspended in a syscall, or already relaxed,
+			   we do not need to run the signal dispatcher, the
+			   signal APC will cause the sigwake_event to be
+			   generated, which will kick the thread. */
+			thread->threadbase.signals = 0;
+			return 0;
+		} else
+			return thread == pse51_current_thread();
+	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return thread == pse51_current_thread()
