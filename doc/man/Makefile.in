@@ -34,9 +34,14 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = doc/man
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/runinfo.man.in $(srcdir)/xeno-config.man.in \
-	$(srcdir)/xeno-info.man.in $(srcdir)/xeno-load.man.in \
-	$(srcdir)/xeno-test.man.in
+	$(srcdir)/clocktest.man.in $(srcdir)/cyclictest.man.in \
+	$(srcdir)/irqbench.man.in $(srcdir)/irqloop.man.in \
+	$(srcdir)/klatency.man.in $(srcdir)/latency.man.in \
+	$(srcdir)/rtcanconfig.man.in $(srcdir)/rtcanrecv.man.in \
+	$(srcdir)/rtcansend.man.in $(srcdir)/runinfo.man.in \
+	$(srcdir)/switchbench.man.in $(srcdir)/switchtest.man.in \
+	$(srcdir)/xeno-config.man.in $(srcdir)/xeno-info.man.in \
+	$(srcdir)/xeno-load.man.in $(srcdir)/xeno-test.man.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
@@ -45,8 +50,11 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
-CONFIG_CLEAN_FILES = runinfo.man xeno-config.man xeno-info.man \
-	xeno-load.man xeno-test.man
+CONFIG_CLEAN_FILES = clocktest.man cyclictest.man irqbench.man \
+	irqloop.man klatency.man latency.man rtcanconfig.man \
+	rtcanrecv.man rtcansend.man switchbench.man switchtest.man \
+	runinfo.man xeno-config.man xeno-info.man xeno-load.man \
+	xeno-test.man
 SOURCES =
 DIST_SOURCES =
 man1dir = $(mandir)/man1
@@ -209,10 +217,10 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 man1_MANS = xeno-config.man xeno-info.man xeno-load.man xeno-test.man \
-	    clocktest.man.in cyclictest.man.in irqbench.man.in irqloop.man.in \
-	    klatency.man.in latency.man.in rtcanconfig.man.in \
-	    rtcanrecv.man.in rtcansend.man.in switchbench.man.in \
-	    switchtest.man.in
+	    clocktest.man cyclictest.man irqbench.man irqloop.man \
+	    klatency.man latency.man rtcanconfig.man \
+	    rtcanrecv.man rtcansend.man switchbench.man \
+	    switchtest.man
 
 man5_MANS = runinfo.man
 all: all-am
@@ -247,6 +255,28 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+clocktest.man: $(top_builddir)/config.status $(srcdir)/clocktest.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+cyclictest.man: $(top_builddir)/config.status $(srcdir)/cyclictest.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+irqbench.man: $(top_builddir)/config.status $(srcdir)/irqbench.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+irqloop.man: $(top_builddir)/config.status $(srcdir)/irqloop.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+klatency.man: $(top_builddir)/config.status $(srcdir)/klatency.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+latency.man: $(top_builddir)/config.status $(srcdir)/latency.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+rtcanconfig.man: $(top_builddir)/config.status $(srcdir)/rtcanconfig.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+rtcanrecv.man: $(top_builddir)/config.status $(srcdir)/rtcanrecv.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+rtcansend.man: $(top_builddir)/config.status $(srcdir)/rtcansend.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+switchbench.man: $(top_builddir)/config.status $(srcdir)/switchbench.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+switchtest.man: $(top_builddir)/config.status $(srcdir)/switchtest.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 runinfo.man: $(top_builddir)/config.status $(srcdir)/runinfo.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno-config.man: $(top_builddir)/config.status $(srcdir)/xeno-config.man.in

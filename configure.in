@@ -816,6 +816,17 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/Makefile \
 	doc/txt/Makefile \
 	doc/man/Makefile \
+	doc/man/clocktest.man \
+	doc/man/cyclictest.man \
+	doc/man/irqbench.man \
+	doc/man/irqloop.man \
+	doc/man/klatency.man \
+	doc/man/latency.man \
+	doc/man/rtcanconfig.man \
+	doc/man/rtcanrecv.man \
+	doc/man/rtcansend.man \
+	doc/man/switchbench.man \
+	doc/man/switchtest.man \
 	doc/man/runinfo.man \
 	doc/man/xeno-config.man \
 	doc/man/xeno-info.man \

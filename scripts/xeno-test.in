@@ -441,18 +441,18 @@ exit 0
 #
 #2. Much more testing.  Heres a weak start. You migth be better off
 #using and improving test/test-xeno-test.rb.
-
-#!/bin/bash
-PATH=.:$PATH
-xeno-test -L
-xeno-test -N foo -T 18 -l 6 -s
-xeno-test -L -N foo1-
-xeno-test -m
-xeno-test -T 1 -M $USER@localhost
-xeno-test -N foo0 -w0 -l 5 -T 30 -h
-xeno-test -L -N foo4- -w4
-xeno-test -L -N foo4W- -w4 -W 'dd if=/dev/hda1 of=/dev/null'
-
-3. Repeat the same tests under the BusyBox.
-
-4. Check for border cases like missing awk, curl, mail, script, /proc/config.gz
+#
+##!/bin/bash
+#PATH=.:$PATH
+#xeno-test -L
+#xeno-test -N foo -T 18 -l 6 -s
+#xeno-test -L -N foo1-
+#xeno-test -m
+#xeno-test -T 1 -M $USER@localhost
+#xeno-test -N foo0 -w0 -l 5 -T 30 -h
+#xeno-test -L -N foo4- -w4
+#xeno-test -L -N foo4W- -w4 -W 'dd if=/dev/hda1 of=/dev/null'
+#
+#3. Repeat the same tests under the BusyBox.
+#
+#4. Check for border cases like missing awk, curl, mail, script, /proc/config.gz
