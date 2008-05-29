@@ -111,6 +111,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	mutex->attr = *attr;
 	mutex->owner = ownerp;
 	mutex->owningq = kq;
+	mutex->sleepers = 0;
 	xnarch_atomic_intptr_set(ownerp, NULL);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -294,12 +295,14 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 		/* Attempting to relock a normal mutex, deadlock. */
 		xnlock_get_irqsave(&nklock, s);
 		for (;;) {
+			++mutex->sleepers;
 			if (timed)
 				xnsynch_sleep_on(&mutex->synchbase,
 						 abs_to, XN_REALTIME);
 			else
 				xnsynch_sleep_on(&mutex->synchbase,
 						 XN_INFINITE, XN_RELATIVE);
+			--mutex->sleepers;
 
 			if (xnthread_test_info(cur, XNBREAK)) {
 				err = -EINTR;

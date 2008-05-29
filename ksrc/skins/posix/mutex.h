@@ -56,6 +56,7 @@ typedef struct pse51_mutex {
 
 	xnarch_atomic_intptr_t *owner;
 	pthread_mutexattr_t attr;
+	unsigned sleepers;
 	pse51_kqueues_t *owningq;
 } pse51_mutex_t;
 
@@ -148,10 +149,12 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 	}
 
 	xnsynch_set_owner(&mutex->synchbase, clear_claimed(owner));
+	++mutex->sleepers;
 	if (timed)
 		xnsynch_sleep_on(&mutex->synchbase, abs_to, XN_REALTIME);
 	else
 		xnsynch_sleep_on(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
+	--mutex->sleepers;
 
 	if (xnthread_test_info(cur, XNBREAK)) {
 		err = -EINTR;
@@ -166,16 +169,14 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 		goto error;
 	}
 
-	xnarch_atomic_intptr_set
-		(mutex->owner,
-		 set_claimed(cur, xnsynch_nsleepers(&mutex->synchbase)));
+	xnarch_atomic_intptr_set(mutex->owner,set_claimed(cur, mutex->sleepers));
 	shadow->lockcnt = count;
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 
   error:
-	if (!xnsynch_nsleepers(&mutex->synchbase))
+	if (!mutex->sleepers)
 		xnarch_atomic_intptr_set
 			(mutex->owner,
 			 clear_claimed(xnarch_atomic_intptr_get(mutex->owner)));
@@ -195,8 +196,7 @@ static inline void pse51_mutex_unlock_internal(xnthread_t *cur,
 	xnlock_get_irqsave(&nklock, s);
 	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
 	xnarch_atomic_intptr_set(mutex->owner,
-				 set_claimed(owner,
-					     xnsynch_nsleepers(&mutex->synchbase)));
+				 set_claimed(owner, mutex->sleepers));
 	if (owner)
 		xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
