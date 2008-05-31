@@ -4,6 +4,7 @@
 #ifdef __KERNEL__
 #include <linux/module.h>
 #else /* !__KERNEL__ */
+#include <stdint.h>
 #include <stdio.h>
 #define printk printf
 #endif /* !__KERNEL__ */
