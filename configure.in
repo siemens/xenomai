@@ -176,14 +176,18 @@ if test $XENO_TARGET_ARCH = arm ; then
   AC_MSG_CHECKING(for ARM machine)
   AC_ARG_ENABLE(arm-mach,
 	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
-compiling. Valid machines are at91rm9200, at91sam926x, imx, imx21, integrator, 
-ixp4xx, pxa, s3c2410, sa1100.]),
+compiling. Valid machines are at91rm9200, at91sam926x, generic, imx, imx21, 
+integrator, ixp4xx, pxa, s3c2410, sa1100.]),
 	[case "$enableval" in
 	at91rm9200)   	arch=4
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	at91sam926x)   	arch=5
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	generic)	arch=4
+			CONFIG_XENO_ARM_SA1100=y
+			unset tsc_type;;
 
 	imx)		arch=4
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
@@ -213,7 +217,7 @@ ixp4xx, pxa, s3c2410, sa1100.]),
   AC_MSG_CHECKING(for ARM architecture version)
   if test $arch = choose; then
   	AC_ARG_ENABLE(arm-arch,
-    	AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version]),
+    	AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version, if the machine selected with --enable-arm-mach supports several architecture versions]),
     	[
 		case "$enableval" in
 		"" | y | ye | yes | n | no)
@@ -233,12 +237,12 @@ ixp4xx, pxa, s3c2410, sa1100.]),
   AC_MSG_CHECKING(for TSC emulation in user-space.)
   if test $tsc_type; then
 	AC_ARG_ENABLE(arm-tsc,
-		AS_HELP_STRING([--enable-arm-tsc], [Enable TSC emulation in 
+		AS_HELP_STRING([--disable-arm-tsc], [Disable TSC emulation in 
 user-space]),
 	[case "$enableval" in
 	y | yes) CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type ;;
 	*) unset CONFIG_XENO_ARM_HW_DIRECT_TSC ;;
-	esac])
+	esac], [CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type])
 	AC_MSG_RESULT(${enable_arm_tsc:-no})
   else
 	AC_MSG_RESULT(not supported by this board)

@@ -1,3 +1,8 @@
+2008-05-31  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* configure.in (--enable-arm-mach): Add a "generic" machine.
+	(--disable-arm-tsc): Enable ARM tsc emulation by default.
+
 2008-05-27  Sebastian Smolorz  <sesmo@gmx.net>
 
 	* ksrc/skins/native/pipe.c (rt_pipe_receive): Fix documentation
