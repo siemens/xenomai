@@ -23,6 +23,8 @@
 #ifndef _XENO_ASM_POWERPC_ATOMIC_H
 #define _XENO_ASM_POWERPC_ATOMIC_H
 
+#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
+
 #ifdef __KERNEL__
 
 #include <linux/bitops.h>
@@ -100,19 +102,30 @@ typedef atomic_t xnarch_atomic_t;
 #else /* !__KERNEL__ */
 
 #ifndef __powerpc64__
+typedef struct { unsigned int counter; } xnarch_atomic_t;
 /* Always enable the work-around for 405 boards in user-space for
    now. */
 #define PPC405_ERR77(ra,rb)	"dcbt " #ra "," #rb ";"
 #else /* __powerpc64__ */
+typedef struct { unsigned long counter; } xnarch_atomic_t;
 #define PPC405_ERR77(ra,rb)
 #endif /* !__powerpc64__ */
+
+#define xnarch_atomic_get(v)	((v)->counter)
+#define xnarch_atomic_set(v, i)	(((v)->counter) = (i))
 
 #ifdef CONFIG_SMP
 #define EIEIO_ON_SMP    "eieio\n"
 #define ISYNC_ON_SMP    "\n\tisync"
+#ifdef __powerpc64__
+#define LWSYNC_ON_SMP    "lwsync\n"
+#else
+#define LWSYNC_ON_SMP    "sync\n"
+#endif
 #else
 #define EIEIO_ON_SMP
 #define ISYNC_ON_SMP
+#define LWSYNC_ON_SMP
 #endif
 
 /*
@@ -189,8 +202,66 @@ static __inline__ unsigned long
 #define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 #define cpu_relax()			xnarch_memory_barrier()
 
+#ifdef __powerpc64__
+static __inline__ unsigned long
+__do_cmpxchg(volatile unsigned long *p,
+	     unsigned long old, unsigned long new)
+{
+	unsigned long prev;
+
+	__asm__ __volatile__ (
+	LWSYNC_ON_SMP
+"1:	ldarx	%0,0,%2		# __cmpxchg_u64\n\
+	cmpd	0,%0,%3\n\
+	bne-	2f\n\
+	stdcx.	%4,0,%2\n\
+	bne-	1b"
+	ISYNC_ON_SMP
+	"\n\
+2:"
+	: "=&r" (prev), "+m" (*p)
+	: "r" (p), "r" (old), "r" (new)
+	: "cc", "memory");
+
+	return prev;
+}
+#else
+static __inline__ unsigned long
+__do_cmpxchg(volatile unsigned int *p,
+	     unsigned long old, unsigned long new)
+{
+	unsigned int prev;
+
+	__asm__ __volatile__ (
+	LWSYNC_ON_SMP
+"1:	lwarx	%0,0,%2		# __cmpxchg_u32\n\
+	cmpw	0,%0,%3\n\
+	bne-	2f\n"
+	PPC405_ERR77(0,%2)
+"	stwcx.	%4,0,%2\n\
+	bne-	1b"
+	ISYNC_ON_SMP
+	"\n\
+2:"
+	: "=&r" (prev), "+m" (*p)
+	: "r" (p), "r" (old), "r" (new)
+	: "cc", "memory");
+
+	return prev;
+}
+#endif
+
+static __inline__ unsigned long
+xnarch_atomic_cmpxchg(xnarch_atomic_t *p,
+		      unsigned long old, unsigned long new)
+{
+	return __do_cmpxchg(&p->counter, old, new);
+}
+
 #endif /* __KERNEL__ */
 
 typedef unsigned long atomic_flags_t;
+
+#include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_POWERPC_ATOMIC_H */
