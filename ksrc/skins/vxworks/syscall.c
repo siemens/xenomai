@@ -637,16 +637,12 @@ static int __wind_taskinfo_status(struct pt_regs *regs)
 /*
  * int __wind_taskinfo_get(TASK_ID task_id, TASK_DESC *desc)
  */
-static int __wind_taskinfo_get(struct task_struct *curr, struct pt_regs *regs)
+static int __wind_taskinfo_get(struct pt_regs *regs)
 {
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	TASK_DESC desc;
 	WIND_TCB *pTcb;
 	int err;
-
-	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg2(regs), sizeof(desc)))
-		return -EFAULT;
 
 	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 
@@ -655,11 +651,11 @@ static int __wind_taskinfo_get(struct task_struct *curr, struct pt_regs *regs)
 
 	err = taskInfoGet((TASK_ID)pTcb, &desc);
 
-	if (!err)
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg2(regs), &desc,
-				  sizeof(desc));
+	if (err)
+		return err;
 
-	return err;
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				      &desc, sizeof(desc));
 }
 
 /*
