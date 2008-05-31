@@ -321,6 +321,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 {
 	xnthread_t *thread, *waiter;
 	size_t rbytes, n, nsum;
+	int resched = 0;
 	ssize_t ret = 0;
 	spl_t s;
 
@@ -363,7 +364,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 	 */
 
 	if (bf->fillsz > 0)
-		/* Buffer needs to be empty to keep FIFO ordering. */
+		/* Buffer has to be empty to keep FIFO ordering. */
 		goto accumulate;
 
 	waiter = xnsynch_peek_pendq(&bf->isynch_base);
@@ -389,6 +390,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 
 	/* Some bytes were not consumed, move them to the buffer. */
 	rbytes -= n;
+	resched = 1;	/* Rescheduling is pending. */
 
 accumulate:
 
@@ -417,8 +419,10 @@ accumulate:
 			 */
 			waiter = xnsynch_peek_pendq(&bf->isynch_base);
 			if (waiter && waiter->wait_u.buffer.size <= bf->fillsz) {
-				if (xnsynch_flush(&bf->isynch_base, 0) == XNSYNCH_RESCHED)
+				if (xnsynch_flush(&bf->isynch_base, 0) == XNSYNCH_RESCHED) {
 					xnpod_schedule();
+					resched = 0;
+				}
 			}
 			break;
 		}
@@ -449,9 +453,13 @@ accumulate:
 			ret = -EINTR;	/* Unblocked. */
 			break;
 		}
+		resched = 0;
 	}
 
       unlock_and_exit:
+
+	if (resched)
+		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -641,7 +649,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
 {
 	return rt_buffer_write_inner(bf, ptr, size, XN_RELATIVE, timeout);
 }
@@ -715,7 +723,7 @@ int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-int rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
 {
 	return rt_buffer_write_inner(bf, ptr, size, XN_ABSOLUTE, timeout);
 }
@@ -791,7 +799,7 @@ int rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME tim
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
 {
 	return rt_buffer_read_inner(bf, ptr, size, XN_RELATIVE, timeout);
 }
@@ -866,7 +874,7 @@ int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-int rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
 {
 	return rt_buffer_read_inner(bf, ptr, size, XN_ABSOLUTE, timeout);
 }
