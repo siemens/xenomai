@@ -98,7 +98,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	shadow->lockcnt = 0;
 
 #ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
-	atomic_set(&shadow->lock, -1);
+	xnarch_atomic_set(&shadow->lock, -1);
 	shadow->attr = *attr;
 	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
 #endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
