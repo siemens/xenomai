@@ -1,5 +1,8 @@
 menu "Testing drivers"
 
+config XENO_KLATENCY_MODULE
+	def_tristate m
+
 config XENO_DRIVERS_TIMERBENCH
 	depends on XENO_SKIN_RTDM
 	tristate "Timer benchmark driver"
@@ -8,7 +11,7 @@ config XENO_DRIVERS_TIMERBENCH
 	See testsuite/latency for a possible front-end.
 
 config XENO_DRIVERS_KLATENCY
-	depends on XENO_DRIVERS_TIMERBENCH
+	depends on XENO_DRIVERS_TIMERBENCH && XENO_KLATENCY_MODULE
 	tristate "Kernel-only latency measurement module"
 	help
 	Kernel module for kernel-only latency measurement.
