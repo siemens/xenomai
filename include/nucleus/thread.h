@@ -146,7 +146,7 @@ struct xnrpi;
 
 typedef struct xnthrops {
 
-	int (*get_denormalized_prio)(struct xnthread *);
+	int (*get_denormalized_prio)(struct xnthread *, int coreprio);
 	unsigned (*get_magic)(void);
 
 } xnthrops_t;
@@ -306,9 +306,9 @@ typedef struct xnhook {
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
 
 /* Class-level operations for threads. */
-static inline int xnthread_get_denormalized_prio(xnthread_t *t)
+static inline int xnthread_get_denormalized_prio(xnthread_t *t, int coreprio)
 {
-	return t->ops ? t->ops->get_denormalized_prio(t) : xnthread_current_priority(t);
+	return t->ops ? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
 }
 
 static inline unsigned xnthread_get_magic(xnthread_t *t)

@@ -5,6 +5,10 @@
 	set it properly before attempting a shadow mapping, and also
 	contradicts the cached priority value maintained by the glibc.
 
+	* ksrc/nucleus/shadow.c (do_setsched_event): Do not propagate
+	 priority changes to the nucleus for threads that belong to skins
+	 that have a priority scale not compatible with the POSIX one.
+
 2008-05-31  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* configure.in (--enable-arm-mach): Add a "generic" machine.

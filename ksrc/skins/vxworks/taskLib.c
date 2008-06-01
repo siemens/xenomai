@@ -30,9 +30,9 @@ static int testSafe(wind_task_t *task);
 static void wind_task_delete_hook(xnthread_t *xnthread);
 static void wind_task_trampoline(void *cookie);
 
-static int wind_task_get_denormalized_prio(xnthread_t *thread)
+static int wind_task_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
-	return wind_denormalized_prio(xnthread_current_priority(thread));
+	return wind_denormalized_prio(coreprio);
 }
 
 static unsigned wind_task_get_magic(void)

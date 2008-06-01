@@ -28,9 +28,9 @@ static u_long vrtx_default_stacksz;
 
 static TCB vrtx_idle_tcb;
 
-static int vrtx_get_denormalized_prio(xnthread_t *thread)
+static int vrtx_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
-	return vrtx_denormalized_prio(xnthread_current_priority(thread));
+	return vrtx_denormalized_prio(coreprio);
 }
 
 static unsigned vrtx_get_magic(void)

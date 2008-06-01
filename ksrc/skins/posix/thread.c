@@ -38,18 +38,12 @@ xnticks_t pse51_time_slice;
 
 static pthread_attr_t default_attr;
 
-static int pse51_get_denormalized_prio(xnthread_t *thread)
-{
-	return xnthread_current_priority(thread);
-}
-
 static unsigned pse51_get_magic(void)
 {
 	return PSE51_SKIN_MAGIC;
 }
 
 static xnthrops_t pse51_thread_ops = {
-	.get_denormalized_prio = &pse51_get_denormalized_prio,
 	.get_magic = &pse51_get_magic,
 };
 

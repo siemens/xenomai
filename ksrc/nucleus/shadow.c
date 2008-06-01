@@ -2424,11 +2424,15 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	if (!thread || p->policy != SCHED_FIFO)
 		return;
 
-	/* Linux's priority scale is a subset of the core pod's priority
-	   scale, so there is no need to bound the priority values when
-	   mapping them from Linux -> Xenomai. */
-
-	if (xnthread_current_priority(thread) != priority) {
+	/*
+	 * Linux's priority scale is a subset of the core pod's
+	 * priority scale, so there is no need to bound the priority
+	 * values when mapping them from Linux -> Xenomai. We
+	 * propagate priority changes to the nucleus only for threads
+	 * that belong to skins that have a compatible priority scale.
+	 */
+	if (xnthread_current_priority(thread) != priority &&
+		xnthread_get_denormalized_prio(thread, priority) == priority) {
 		xnpod_renice_thread_inner(thread, priority, 0);
 		if (xnsched_resched_p()) {
 			if (p == current &&

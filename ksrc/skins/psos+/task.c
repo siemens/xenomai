@@ -27,18 +27,12 @@ static u_long psos_time_slice;
 
 static u_long psos_task_ids;
 
-static int psos_get_denormalized_prio(xnthread_t *thread)
-{
-	return xnthread_current_priority(thread);
-}
-
 static unsigned psos_get_magic(void)
 {
 	return PSOS_SKIN_MAGIC;
 }
 
 static xnthrops_t psos_task_ops = {
-	.get_denormalized_prio = &psos_get_denormalized_prio,
 	.get_magic = &psos_get_magic,
 };
 
