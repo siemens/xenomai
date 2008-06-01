@@ -52,7 +52,10 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 				 __pse51_thread_setschedparam,
 				 thread, policy, param, myself, &promoted);
 
-	__real_pthread_setschedparam(thread, policy, param);
+	if (err == EPERM)
+		return __real_pthread_setschedparam(thread, policy, param);
+	else
+		__real_pthread_setschedparam(thread, policy, param);
 
 	if (!err && promoted) {
 		old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
