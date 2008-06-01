@@ -85,7 +85,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	memcpy(&_iargs, iargs, sizeof(_iargs));
 
 	/*
-	 * Apply sched params here as some libpthread implementions
+	 * Apply sched params here as some libpthread implementations
 	 * fail doing this properly via pthread_create.
 	 */
 	policy = vrtx_task_set_posix_priority(iargs->prio, &param);

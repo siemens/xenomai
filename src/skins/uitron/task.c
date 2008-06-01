@@ -73,7 +73,7 @@ static void *uitron_task_trampoline(void *cookie)
 	INT arg;
 
 	/*
-	 * Apply sched params here as some libpthread implementions
+	 * Apply sched params here as some libpthread implementations
 	 * fail doing this properly via pthread_create.
 	 */
 	policy = uitron_task_set_posix_priority(iargs->pk_ctsk->itskpri, &param);
