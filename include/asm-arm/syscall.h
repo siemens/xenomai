@@ -148,12 +148,12 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #ifdef CONFIG_XENO_ARM_EABI
 #define __SYS_REG register unsigned long __r7 __asm__ ("r7") = XENO_ARM_SYSCALL;
 #define __SYS_REG_LIST ,"r" (__r7)
-#define __syscall "swi\t0"
+#define __xn_syscall "swi\t0"
 #else
 #define __SYS_REG
 #define __SYS_REG_LIST
 #define __NR_OABI_SYSCALL_BASE	0x900000
-#define __syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
+#define __xn_syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
 #endif
 
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
@@ -165,7 +165,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 								\
 	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
 	__asm__ __volatile__ (				\
-        __syscall                       \
+        __xn_syscall                       \
 		: "=r" (__res_r0)				\
 		: ASM_INPUT_##nr __SYS_REG_LIST	\
 		: "memory");					\
