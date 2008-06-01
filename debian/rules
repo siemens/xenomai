@@ -25,13 +25,13 @@ ifeq ($(DEB_HOST_ARCH), powerpc)
 	CONFIG_OPTS =
 endif
 ifeq ($(DEB_HOST_ARCH), armeb)
-	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc --enable-arm-eabi
+	CONFIG_OPTS = --enable-arm-mach=generic --enable-arm-eabi
 endif
 ifeq ($(DEB_HOST_ARCH), armel)
-	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc --enable-arm-eabi
+	CONFIG_OPTS = --enable-arm-mach=generic --enable-arm-eabi
 endif
 ifeq ($(DEB_HOST_ARCH), arm)
-	CONFIG_OPTS = --enable-arm-mach=imx --enable-arm-tsc
+	CONFIG_OPTS = --enable-arm-mach=generic
 endif
 	CONFIG_OPTS += --prefix=/usr \
 	            --includedir=/usr/include/xenomai \
