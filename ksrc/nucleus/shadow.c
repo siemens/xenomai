@@ -1270,10 +1270,9 @@ void xnshadow_exit(void)
  * \brief Create a shadow thread context.
  *
  * This call maps a nucleus thread to the "current" Linux task.  The
- * priority of the Linux task is set to the priority of the shadow
- * thread bounded to the [0..MAX_RT_PRIO-1] range, and its scheduling
- * policy is set to either SCHED_FIFO for non-zero priority levels, or
- * SCHED_NORMAL otherwise.
+ * priority and scheduling class of the underlying Linux task are not
+ * affected; it is assumed that the interface library did set them
+ * appropriately before issuing the shadow mapping request.
  *
  * @param thread The descriptor address of the new shadow thread to be
  * mapped to "current". This descriptor must have been previously
@@ -1319,7 +1318,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int prio, err;
+	int err;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
 		return -EINVAL;
@@ -1364,8 +1363,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
-	prio = normalize_priority(xnthread_base_priority(thread));
-	set_linux_task_priority(current, prio);
 	xnshadow_thrptd(current) = thread;
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);

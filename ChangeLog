@@ -1,3 +1,10 @@
+2008-06-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (xnshadow_map): Do not set the underlying
+	Linux task priority; this is useless since userland is expected to
+	set it properly before attempting a shadow mapping, and also
+	contradicts the cached priority value maintained by the glibc.
+
 2008-05-31  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
 
 	* configure.in (--enable-arm-mach): Add a "generic" machine.
