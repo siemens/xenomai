@@ -54,18 +54,12 @@ static DEFINE_XNQUEUE(__xeno_task_q);
 
 static u_long __xeno_task_stamp;
 
-static int __task_get_denormalized_prio(xnthread_t *thread)
-{
-	return xnthread_current_priority(thread);
-}
-
 static unsigned __task_get_magic(void)
 {
 	return XENO_SKIN_MAGIC;
 }
 
 static xnthrops_t __xeno_task_ops = {
-	.get_denormalized_prio = &__task_get_denormalized_prio,
 	.get_magic = &__task_get_magic,
 };
 

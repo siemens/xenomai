@@ -100,19 +100,19 @@ const char *xnpod_fatal_helper(const char *format, ...)
 
 		while (holder) {
 			xnthread_t *thread = link2thread(holder, glink);
-			int dnprio;
+			int cprio, dnprio;
 
 			holder = nextq(&nkpod->threadq, holder);
 
 			if (thread->sched != sched)
 				continue;
 
-			dnprio = xnthread_get_denormalized_prio(thread);
+			cprio = xnthread_current_priority(thread);
+			dnprio = xnthread_get_denormalized_prio(thread, cprio);
 
-			if (dnprio != xnthread_current_priority(thread))
+			if (dnprio != cprio)
 				snprintf(pbuf, sizeof(pbuf), "%3d(%d)",
-					 xnthread_current_priority(thread),
-					 dnprio);
+					 cprio, dnprio);
 			else
 				snprintf(pbuf, sizeof(pbuf), "%3d", dnprio);
 

@@ -25,9 +25,9 @@ xnmap_t *ui_task_idmap;
 
 static xnqueue_t uitaskq;
 
-static int uitask_get_denormalized_prio(xnthread_t *thread)
+static int uitask_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
-	return ui_denormalized_prio(xnthread_current_priority(thread));
+	return ui_denormalized_prio(coreprio);
 }
 
 static unsigned uitask_get_magic(void)

@@ -26,9 +26,9 @@ static DEFINE_XNQUEUE(__rtai_task_q);
 
 static int __rtai_task_sig;
 
-static int __task_get_denormalized_prio(xnthread_t *thread)
+static int __task_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
-	return XNCORE_HIGH_PRIO - xnthread_current_priority(thread) + 1;
+	return XNCORE_HIGH_PRIO - coreprio + 1;
 }
 
 static unsigned __task_get_magic(void)

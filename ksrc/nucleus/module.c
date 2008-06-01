@@ -233,7 +233,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 		iter->sched_info[n].pid = xnthread_user_pid(thread);
 		memcpy(iter->sched_info[n].name, thread->name, sizeof(iter->sched_info[n].name));
 		iter->sched_info[n].cprio = thread->cprio;
-		iter->sched_info[n].dnprio = xnthread_get_denormalized_prio(thread);
+		iter->sched_info[n].dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
 		iter->sched_info[n].period = xnthread_get_period(thread);
 		iter->sched_info[n].timeout = xnthread_get_timeout(thread, iter->start_time);
 		iter->sched_info[n].state = xnthread_state_flags(thread);
