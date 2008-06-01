@@ -124,6 +124,30 @@ enum rtdm_selecttype;
 /** @} Driver Versioning */
 
 /*!
+ * @addtogroup rtdmsync
+ * @{
+ */
+
+/*!
+ * @anchor RTDM_SELECTTYPE_xxx   @name RTDM_SELECTTYPE_xxx
+ * Event types select can bind to
+ * @{
+ */
+enum rtdm_selecttype {
+	/** Select input data availability events */
+	RTDM_SELECTTYPE_READ = XNSELECT_READ,
+
+	/** Select ouput buffer availability events */
+	RTDM_SELECTTYPE_WRITE = XNSELECT_WRITE,
+
+	/** Select exceptional events */
+	RTDM_SELECTTYPE_EXCEPT = XNSELECT_EXCEPT
+};
+/** @} RTDM_SELECTTYPE_xxx */
+
+/** @} rtdmsync */
+
+/*!
  * @name Operation Handler Prototypes
  * @{
  */
@@ -503,32 +527,15 @@ static inline nanosecs_abs_t rtdm_clock_read_monotonic(void)
 }
 #endif /* !DOXYGEN_CPP */
 
-/* --- spin lock services --- */
 /*!
  * @addtogroup rtdmsync
  * @{
  */
 
-/*!
- * @anchor RTDM_SELECTTYPE_xxx   @name RTDM_SELECTTYPE_xxx
- * Event types select can bind to
- * @{
- */
-enum rtdm_selecttype {
-	/** Select input data availability events */
-	RTDM_SELECTTYPE_READ = XNSELECT_READ,
-
-	/** Select ouput buffer availability events */
-	RTDM_SELECTTYPE_WRITE = XNSELECT_WRITE,
-
-	/** Select exceptional events */
-	RTDM_SELECTTYPE_EXCEPT = XNSELECT_EXCEPT
-};
-/** @} RTDM_SELECTTYPE_xxx */
-
 int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 		     enum rtdm_selecttype type, unsigned fd_index);
 
+/* --- spin lock services --- */
 /*!
  * @name Global Lock across Scheduler Invocation
  * @{

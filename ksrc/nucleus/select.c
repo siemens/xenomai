@@ -299,7 +299,7 @@ EXPORT_SYMBOL(xnselector_init);
  * than expected if the sleep is interrupted.
  * @param timeout_mode the mode of @a timeout.
  * 
- * @retval -EINVAL if @nfds is negative;
+ * @retval -EINVAL if @a nfds is negative;
  * @retval -ECHRNG if some of the descriptors passed in @a in_fds have not yet
  * been registered with xnselect_bind(), @a out_fds contains the set of such
  * descriptors;
