@@ -243,7 +243,11 @@ user-space]),
 	y | yes) CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type ;;
 	*) unset CONFIG_XENO_ARM_HW_DIRECT_TSC ;;
 	esac], [CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type])
-	AC_MSG_RESULT(${enable_arm_tsc:-no})
+	if test $CONFIG_XENO_ARM_HW_DIRECT_TSC; then
+		AC_MSG_RESULT(yes)
+	else
+		AC_MSG_RESULT(no)
+	fi
   else
 	AC_MSG_RESULT(not supported by this board)
   fi
