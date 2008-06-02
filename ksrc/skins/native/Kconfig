@@ -1,7 +1,7 @@
 menuconfig XENO_SKIN_NATIVE
 	depends on XENO_OPT_NUCLEUS
 	tristate "Native API"
-	default m if MODULES
+	default y
 	help
 
 	The native Xenomai API.
