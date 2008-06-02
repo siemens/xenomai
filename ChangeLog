@@ -1,3 +1,8 @@
+2008-06-02  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h: Add calibration value for
+	the MPC8349_ITX board.
+
 2008-06-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_map): Do not set the underlying
