@@ -1,6 +1,6 @@
-diff -Naurdp linux-2.6.14/.gitignore ipipe-2.6.14-imx21/.gitignore
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/.gitignore ipipe-2.6.14-imx21/.gitignore
 --- linux-2.6.14/.gitignore	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/.gitignore	2007-05-14 23:25:43.000000000 +0200
++++ ipipe-2.6.14-imx21/.gitignore	2008-02-21 22:08:59.000000000 +0100
 @@ -10,11 +10,17 @@
  *.a
  *.s
@@ -39,9 +39,9 @@ diff -Naurdp linux-2.6.14/.gitignore ipipe-2.6.14-imx21/.gitignore
 +
 +# cscope files
 +cscope.*
-diff -Naurdp linux-2.6.14/Makefile ipipe-2.6.14-imx21/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/Makefile ipipe-2.6.14-imx21/Makefile
 --- linux-2.6.14/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/Makefile	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/Makefile	2008-02-21 22:08:59.000000000 +0100
 @@ -189,8 +189,8 @@ SUBARCH := $(shell uname -m | sed -e s/i
  # Default value for CROSS_COMPILE is not to prefix executables
  # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
@@ -64,9 +64,9 @@ diff -Naurdp linux-2.6.14/Makefile ipipe-2.6.14-imx21/Makefile
  ifdef CONFIG_FRAME_POINTER
  CFLAGS		+= -fno-omit-frame-pointer $(call cc-option,-fno-optimize-sibling-calls,)
  else
-diff -Naurdp linux-2.6.14/arch/arm/Kconfig ipipe-2.6.14-imx21/arch/arm/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/Kconfig ipipe-2.6.14-imx21/arch/arm/Kconfig
 --- linux-2.6.14/arch/arm/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/Kconfig	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/Kconfig	2008-02-21 22:08:59.000000000 +0100
 @@ -2,6 +2,11 @@
  # For a description of the syntax of this configuration file,
  # see Documentation/kbuild/kconfig-language.txt.
@@ -107,769 +107,9 @@ diff -Naurdp linux-2.6.14/arch/arm/Kconfig ipipe-2.6.14-imx21/arch/arm/Kconfig
  config PREEMPT
  	bool "Preemptible Kernel (EXPERIMENTAL)"
  	depends on EXPERIMENTAL
-diff -Naurdp linux-2.6.14/arch/arm/Kconfig.orig ipipe-2.6.14-imx21/arch/arm/Kconfig.orig
---- linux-2.6.14/arch/arm/Kconfig.orig	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/Kconfig.orig	2007-07-26 01:05:37.000000000 +0200
-@@ -0,0 +1,756 @@
-+#
-+# For a description of the syntax of this configuration file,
-+# see Documentation/kbuild/kconfig-language.txt.
-+#
-+# March 2006 :
-+# Adapted to ARM9 i.MX21/CSB535FS board by S.Gerber, G.Boutillier and D.Rossier
-+# University of Applied Sciences Western Switzerland
-+# Reconfigurable & Embedded Digital Systems, REDS Institute
-+#
-+
-+mainmenu "Linux Kernel Configuration"
-+
-+config ARM
-+	bool
-+	default y
-+	help
-+	  The ARM series is a line of low-power-consumption RISC chip designs
-+	  licensed by ARM ltd and targeted at embedded applications and
-+	  handhelds such as the Compaq IPAQ.  ARM-based PCs are no longer
-+	  manufactured, but  legacy ARM-based PC hardware remains popular in
-+	  Europe.  There is an ARM Linux project with a web page at
-+	  <http://www.arm.linux.org.uk/>.
-+
-+config MMU
-+	bool
-+	default y
-+
-+config EISA
-+	bool
-+	---help---
-+	  The Extended Industry Standard Architecture (EISA) bus was
-+	  developed as an open alternative to the IBM MicroChannel bus.
-+
-+	  The EISA bus provided some of the features of the IBM MicroChannel
-+	  bus while maintaining backward compatibility with cards made for
-+	  the older ISA bus.  The EISA bus saw limited use between 1988 and
-+	  1995 when it was made obsolete by the PCI bus.
-+
-+	  Say Y here if you are building a kernel for an EISA-based machine.
-+
-+	  Otherwise, say N.
-+
-+config SBUS
-+	bool
-+
-+config MCA
-+	bool
-+	help
-+	  MicroChannel Architecture is found in some IBM PS/2 machines and
-+	  laptops.  It is a bus system similar to PCI or ISA. See
-+	  <file:Documentation/mca.txt> (and especially the web page given
-+	  there) before attempting to build an MCA bus kernel.
-+
-+config UID16
-+	bool
-+	default y
-+
-+config RWSEM_GENERIC_SPINLOCK
-+	bool
-+	default y
-+
-+config RWSEM_XCHGADD_ALGORITHM
-+	bool
-+
-+config GENERIC_CALIBRATE_DELAY
-+	bool
-+	default y
-+
-+config GENERIC_BUST_SPINLOCK
-+	bool
-+
-+config ARCH_MAY_HAVE_PC_FDC
-+	bool
-+
-+config GENERIC_ISA_DMA
-+	bool
-+
-+config FIQ
-+	bool
-+
-+source "init/Kconfig"
-+
-+menu "System Type"
-+
-+choice
-+	prompt "ARM system type"
-+	default ARCH_RPC
-+
-+config ARCH_CLPS7500
-+	bool "Cirrus-CL-PS7500FE"
-+	select TIMER_ACORN
-+	select ISA
-+
-+config ARCH_CLPS711X
-+	bool "CLPS711x/EP721x-based"
-+
-+config ARCH_CO285
-+	bool "Co-EBSA285"
-+	select FOOTBRIDGE
-+	select FOOTBRIDGE_ADDIN
-+
-+config ARCH_EBSA110
-+	bool "EBSA-110"
-+	select ISA
-+	help
-+	  This is an evaluation board for the StrongARM processor available
-+	  from Digital. It has limited hardware on-board, including an onboard
-+	  Ethernet interface, two PCMCIA sockets, two serial ports and a
-+	  parallel port.
-+
-+config ARCH_CAMELOT
-+	bool "Epxa10db"
-+	help
-+	  This enables support for Altera's Excalibur XA10 development board.
-+	  If you would like to build your kernel to run on one of these boards
-+	  then you must say 'Y' here. Otherwise say 'N'
-+
-+config ARCH_FOOTBRIDGE
-+	bool "FootBridge"
-+	select FOOTBRIDGE
-+
-+config ARCH_INTEGRATOR
-+	bool "Integrator"
-+	select ARM_AMBA
-+	select ICST525
-+
-+config ARCH_IOP3XX
-+	bool "IOP3xx-based"
-+	select PCI
-+
-+config ARCH_IXP4XX
-+	bool "IXP4xx-based"
-+	select DMABOUNCE
-+	select PCI
-+
-+config ARCH_IXP2000
-+	bool "IXP2400/2800-based"
-+	select PCI
-+
-+config ARCH_L7200
-+	bool "LinkUp-L7200"
-+	select FIQ
-+	help
-+	  Say Y here if you intend to run this kernel on a LinkUp Systems
-+	  L7200 Software Development Board which uses an ARM720T processor.
-+	  Information on this board can be obtained at:
-+
-+	  <http://www.linkupsys.com/>
-+
-+	  If you have any questions or comments about the Linux kernel port
-+	  to this board, send e-mail to <sjhill@cotw.com>.
-+
-+config ARCH_PXA
-+	bool "PXA2xx-based"
-+
-+config ARCH_RPC
-+	bool "RiscPC"
-+	select ARCH_ACORN
-+	select FIQ
-+	select TIMER_ACORN
-+	select ARCH_MAY_HAVE_PC_FDC
-+	help
-+	  On the Acorn Risc-PC, Linux can support the internal IDE disk and
-+	  CD-ROM interface, serial and parallel port, and the floppy drive.
-+
-+config ARCH_SA1100
-+	bool "SA1100-based"
-+	select ISA
-+	select ARCH_DISCONTIGMEM_ENABLE
-+
-+config ARCH_S3C2410
-+	bool "Samsung S3C2410"
-+	help
-+	  Samsung S3C2410X CPU based systems, such as the Simtec Electronics
-+	  BAST (<http://www.simtec.co.uk/products/EB110ITX/>), the IPAQ 1940 or
-+	  the Samsung SMDK2410 development board (and derviatives).
-+
-+config ARCH_SHARK
-+	bool "Shark"
-+	select ISA
-+	select ISA_DMA
-+	select PCI
-+
-+config ARCH_LH7A40X
-+	bool "Sharp LH7A40X"
-+	help
-+	  Say Y here for systems based on one of the Sharp LH7A40X
-+	  System on a Chip processors.  These CPUs include an ARM922T
-+	  core with a wide array of integrated devices for
-+	  hand-held and low-power applications.
-+
-+config ARCH_OMAP
-+	bool "TI OMAP"
-+
-+config ARCH_VERSATILE
-+	bool "Versatile"
-+	select ARM_AMBA
-+	select ICST307
-+	help
-+	  This enables support for ARM Ltd Versatile board.
-+
-+config ARCH_IMX
-+	bool "IMX"
-+
-+config FAMILY_IMX21
-+	bool "IMX21"
-+
-+config ARCH_H720X
-+	bool "Hynix-HMS720x-based"
-+	help
-+	  This enables support for systems based on the Hynix HMS720x
-+
-+config ARCH_AAEC2000
-+	bool "Agilent AAEC-2000 based"
-+	help
-+	  This enables support for systems based on the Agilent AAEC-2000
-+
-+endchoice
-+
-+source "arch/arm/mach-clps711x/Kconfig"
-+
-+source "arch/arm/mach-epxa10db/Kconfig"
-+
-+source "arch/arm/mach-footbridge/Kconfig"
-+
-+source "arch/arm/mach-integrator/Kconfig"
-+
-+source "arch/arm/mach-iop3xx/Kconfig"
-+
-+source "arch/arm/mach-ixp4xx/Kconfig"
-+
-+source "arch/arm/mach-ixp2000/Kconfig"
-+
-+source "arch/arm/mach-pxa/Kconfig"
-+
-+source "arch/arm/mach-sa1100/Kconfig"
-+
-+source "arch/arm/plat-omap/Kconfig"
-+
-+source "arch/arm/mach-omap1/Kconfig"
-+
-+source "arch/arm/mach-s3c2410/Kconfig"
-+
-+source "arch/arm/mach-lh7a40x/Kconfig"
-+
-+source "arch/arm/mach-imx/Kconfig"
-+
-+source "arch/arm/mach-imx21/Kconfig"
-+
-+source "arch/arm/mach-h720x/Kconfig"
-+
-+source "arch/arm/mach-versatile/Kconfig"
-+
-+source "arch/arm/mach-aaec2000/Kconfig"
-+
-+# Definitions to make life easier
-+config ARCH_ACORN
-+	bool
-+
-+source arch/arm/mm/Kconfig
-+
-+#  bool 'Use XScale PMU as timer source' CONFIG_XSCALE_PMU_TIMER
-+config XSCALE_PMU
-+	bool
-+	depends on CPU_XSCALE && !XSCALE_PMU_TIMER
-+	default y
-+
-+endmenu
-+
-+source "arch/arm/common/Kconfig"
-+
-+config FORCE_MAX_ZONEORDER
-+	int
-+	depends on SA1111
-+	default "9"
-+
-+menu "Bus support"
-+
-+config ARM_AMBA
-+	bool
-+
-+config ISA
-+	bool
-+	help
-+	  Find out whether you have ISA slots on your motherboard.  ISA is the
-+	  name of a bus system, i.e. the way the CPU talks to the other stuff
-+	  inside your box.  Other bus systems are PCI, EISA, MicroChannel
-+	  (MCA) or VESA.  ISA is an older system, now being displaced by PCI;
-+	  newer boards don't support it.  If you have ISA, say Y, otherwise N.
-+
-+config ISA_DMA
-+	bool
-+
-+config ISA_DMA_API
-+	bool
-+	default y
-+
-+config PCI
-+	bool "PCI support" if ARCH_INTEGRATOR_AP || ARCH_VERSATILE_PB
-+	help
-+	  Find out whether you have a PCI motherboard. PCI is the name of a
-+	  bus system, i.e. the way the CPU talks to the other stuff inside
-+	  your box. Other bus systems are ISA, EISA, MicroChannel (MCA) or
-+	  VESA. If you have PCI, say Y, otherwise N.
-+
-+	  The PCI-HOWTO, available from
-+	  <http://www.tldp.org/docs.html#howto>, contains valuable
-+	  information about which PCI hardware does work under Linux and which
-+	  doesn't.
-+
-+# Select the host bridge type
-+config PCI_HOST_VIA82C505
-+	bool
-+	depends on PCI && ARCH_SHARK
-+	default y
-+
-+source "drivers/pci/Kconfig"
-+
-+source "drivers/pcmcia/Kconfig"
-+
-+endmenu
-+
-+menu "Kernel Features"
-+
-+config SMP
-+	bool "Symmetric Multi-Processing (EXPERIMENTAL)"
-+	depends on EXPERIMENTAL && BROKEN #&& n
-+	help
-+	  This enables support for systems with more than one CPU. If you have
-+	  a system with only one CPU, like most personal computers, say N. If
-+	  you have a system with more than one CPU, say Y.
-+
-+	  If you say N here, the kernel will run on single and multiprocessor
-+	  machines, but will use only one CPU of a multiprocessor machine. If
-+	  you say Y here, the kernel will run on many, but not all, single
-+	  processor machines. On a single processor machine, the kernel will
-+	  run faster if you say N here.
-+
-+	  See also the <file:Documentation/smp.txt>,
-+	  <file:Documentation/i386/IO-APIC.txt>,
-+	  <file:Documentation/nmi_watchdog.txt> and the SMP-HOWTO available at
-+	  <http://www.linuxdoc.org/docs.html#howto>.
-+
-+	  If you don't know what to do here, say N.
-+
-+config NR_CPUS
-+	int "Maximum number of CPUs (2-32)"
-+	range 2 32
-+	depends on SMP
-+	default "4"
-+
-+config PREEMPT
-+	bool "Preemptible Kernel (EXPERIMENTAL)"
-+	depends on EXPERIMENTAL
-+	help
-+	  This option reduces the latency of the kernel when reacting to
-+	  real-time or interactive events by allowing a low priority process to
-+	  be preempted even if it is in kernel mode executing a system call.
-+	  This allows applications to run more reliably even when the system is
-+	  under load.
-+
-+	  Say Y here if you are building a kernel for a desktop, embedded
-+	  or real-time system.  Say N if you are unsure.
-+
-+config NO_IDLE_HZ
-+	bool "Dynamic tick timer"
-+	help
-+	  Select this option if you want to disable continuous timer ticks
-+	  and have them programmed to occur as required. This option saves
-+	  power as the system can remain in idle state for longer.
-+
-+	  By default dynamic tick is disabled during the boot, and can be
-+	  manually enabled with:
-+
-+	    echo 1 > /sys/devices/system/timer/timer0/dyn_tick
-+
-+	  Alternatively, if you want dynamic tick automatically enabled
-+	  during boot, pass "dyntick=enable" via the kernel command string.
-+
-+	  Please note that dynamic tick may affect the accuracy of
-+	  timekeeping on some platforms depending on the implementation.
-+	  Currently at least OMAP, PXA2xx and SA11x0 platforms are known
-+	  to have accurate timekeeping with dynamic tick.
-+
-+config ARCH_DISCONTIGMEM_ENABLE
-+	bool
-+	default (ARCH_LH7A40X && !LH7A40X_CONTIGMEM)
-+	help
-+	  Say Y to support efficient handling of discontiguous physical memory,
-+	  for architectures which are either NUMA (Non-Uniform Memory Access)
-+	  or have huge holes in the physical address space for other reasons.
-+	  See <file:Documentation/vm/numa> for more.
-+
-+source "mm/Kconfig"
-+
-+config LEDS
-+	bool "Timer and CPU usage LEDs"
-+	depends on ARCH_CDB89712 || ARCH_CO285 || ARCH_EBSA110 || \
-+		   ARCH_EBSA285 || ARCH_IMX || ARCH_INTEGRATOR || \
-+		   ARCH_LUBBOCK || MACH_MAINSTONE || ARCH_NETWINDER || \
-+		   ARCH_OMAP || ARCH_P720T || ARCH_PXA_IDP || \
-+		   ARCH_SA1100 || ARCH_SHARK || ARCH_VERSATILE
-+	help
-+	  If you say Y here, the LEDs on your machine will be used
-+	  to provide useful information about your current system status.
-+
-+	  If you are compiling a kernel for a NetWinder or EBSA-285, you will
-+	  be able to select which LEDs are active using the options below. If
-+	  you are compiling a kernel for the EBSA-110 or the LART however, the
-+	  red LED will simply flash regularly to indicate that the system is
-+	  still functional. It is safe to say Y here if you have a CATS
-+	  system, but the driver will do nothing.
-+
-+config LEDS_TIMER
-+	bool "Timer LED" if (!ARCH_CDB89712 && !ARCH_OMAP) || \
-+			    MACH_OMAP_H2 || MACH_OMAP_PERSEUS2
-+	depends on LEDS
-+	default y if ARCH_EBSA110
-+	help
-+	  If you say Y here, one of the system LEDs (the green one on the
-+	  NetWinder, the amber one on the EBSA285, or the red one on the LART)
-+	  will flash regularly to indicate that the system is still
-+	  operational. This is mainly useful to kernel hackers who are
-+	  debugging unstable kernels.
-+
-+	  The LART uses the same LED for both Timer LED and CPU usage LED
-+	  functions. You may choose to use both, but the Timer LED function
-+	  will overrule the CPU usage LED.
-+
-+config LEDS_CPU
-+	bool "CPU usage LED" if (!ARCH_CDB89712 && !ARCH_EBSA110 && \
-+			!ARCH_OMAP) || MACH_OMAP_H2 || MACH_OMAP_PERSEUS2
-+	depends on LEDS
-+	help
-+	  If you say Y here, the red LED will be used to give a good real
-+	  time indication of CPU usage, by lighting whenever the idle task
-+	  is not currently executing.
-+
-+	  The LART uses the same LED for both Timer LED and CPU usage LED
-+	  functions. You may choose to use both, but the Timer LED function
-+	  will overrule the CPU usage LED.
-+
-+config ALIGNMENT_TRAP
-+	bool
-+	default y if !ARCH_EBSA110
-+	help
-+	  ARM processors can not fetch/store information which is not
-+	  naturally aligned on the bus, i.e., a 4 byte fetch must start at an
-+	  address divisible by 4. On 32-bit ARM processors, these non-aligned
-+	  fetch/store instructions will be emulated in software if you say
-+	  here, which has a severe performance impact. This is necessary for
-+	  correct operation of some network protocols. With an IP-only
-+	  configuration it is safe to say N, otherwise say Y.
-+
-+endmenu
-+
-+menu "Boot options"
-+
-+# Compressed boot loader in ROM.  Yes, we really want to ask about
-+# TEXT and BSS so we preserve their values in the config files.
-+config ZBOOT_ROM_TEXT
-+	hex "Compressed ROM boot loader base address"
-+	default "0"
-+	help
-+	  The physical address at which the ROM-able zImage is to be
-+	  placed in the target.  Platforms which normally make use of
-+	  ROM-able zImage formats normally set this to a suitable
-+	  value in their defconfig file.
-+
-+	  If ZBOOT_ROM is not enabled, this has no effect.
-+
-+config ZBOOT_ROM_BSS
-+	hex "Compressed ROM boot loader BSS address"
-+	default "0"
-+	help
-+	  The base address of 64KiB of read/write memory in the target
-+	  for the ROM-able zImage, which must be available while the
-+	  decompressor is running.  Platforms which normally make use of
-+	  ROM-able zImage formats normally set this to a suitable
-+	  value in their defconfig file.
-+
-+	  If ZBOOT_ROM is not enabled, this has no effect.
-+
-+config ZBOOT_ROM
-+	bool "Compressed boot loader in ROM/flash"
-+	depends on ZBOOT_ROM_TEXT != ZBOOT_ROM_BSS
-+	help
-+	  Say Y here if you intend to execute your compressed kernel image
-+	  (zImage) directly from ROM or flash.  If unsure, say N.
-+
-+config CMDLINE
-+	string "Default kernel command string"
-+	default ""
-+	help
-+	  On some architectures (EBSA110 and CATS), there is currently no way
-+	  for the boot loader to pass arguments to the kernel. For these
-+	  architectures, you should supply some command-line options at build
-+	  time by entering them here. As a minimum, you should specify the
-+	  memory size and the root device (e.g., mem=64M root=/dev/nfs).
-+
-+config XIP_KERNEL
-+	bool "Kernel Execute-In-Place from ROM"
-+	depends on !ZBOOT_ROM
-+	help
-+	  Execute-In-Place allows the kernel to run from non-volatile storage
-+	  directly addressable by the CPU, such as NOR flash. This saves RAM
-+	  space since the text section of the kernel is not loaded from flash
-+	  to RAM.  Read-write sections, such as the data section and stack,
-+	  are still copied to RAM.  The XIP kernel is not compressed since
-+	  it has to run directly from flash, so it will take more space to
-+	  store it.  The flash address used to link the kernel object files,
-+	  and for storing it, is configuration dependent. Therefore, if you
-+	  say Y here, you must know the proper physical address where to
-+	  store the kernel image depending on your own flash memory usage.
-+
-+	  Also note that the make target becomes "make xipImage" rather than
-+	  "make zImage" or "make Image".  The final kernel binary to put in
-+	  ROM memory will be arch/arm/boot/xipImage.
-+
-+	  If unsure, say N.
-+
-+config XIP_PHYS_ADDR
-+	hex "XIP Kernel Physical Location"
-+	depends on XIP_KERNEL
-+	default "0x00080000"
-+	help
-+	  This is the physical address in your flash memory the kernel will
-+	  be linked for and stored to.  This address is dependent on your
-+	  own flash usage.
-+
-+endmenu
-+
-+if (ARCH_SA1100 || ARCH_INTEGRATOR || ARCH_OMAP1)
-+
-+menu "CPU Frequency scaling"
-+
-+source "drivers/cpufreq/Kconfig"
-+
-+config CPU_FREQ_SA1100
-+	bool
-+	depends on CPU_FREQ && (SA1100_H3100 || SA1100_H3600 || SA1100_H3800 || SA1100_LART || SA1100_PLEB || SA1100_BADGE4 || SA1100_HACKKIT)
-+	default y
-+
-+config CPU_FREQ_SA1110
-+	bool
-+	depends on CPU_FREQ && (SA1100_ASSABET || SA1100_CERF || SA1100_PT_SYSTEM3)
-+	default y
-+
-+config CPU_FREQ_INTEGRATOR
-+	tristate "CPUfreq driver for ARM Integrator CPUs"
-+	depends on ARCH_INTEGRATOR && CPU_FREQ
-+	default y
-+	help
-+	  This enables the CPUfreq driver for ARM Integrator CPUs.
-+
-+	  For details, take a look at <file:Documentation/cpu-freq>.
-+
-+	  If in doubt, say Y.
-+
-+endmenu
-+
-+endif
-+
-+menu "Floating point emulation"
-+
-+comment "At least one emulation must be selected"
-+
-+config FPE_NWFPE
-+	bool "NWFPE math emulation"
-+	---help---
-+	  Say Y to include the NWFPE floating point emulator in the kernel.
-+	  This is necessary to run most binaries. Linux does not currently
-+	  support floating point hardware so you need to say Y here even if
-+	  your machine has an FPA or floating point co-processor podule.
-+
-+	  You may say N here if you are going to load the Acorn FPEmulator
-+	  early in the bootup.
-+
-+config FPE_NWFPE_XP
-+	bool "Support extended precision"
-+	depends on FPE_NWFPE && !CPU_BIG_ENDIAN
-+	help
-+	  Say Y to include 80-bit support in the kernel floating-point
-+	  emulator.  Otherwise, only 32 and 64-bit support is compiled in.
-+	  Note that gcc does not generate 80-bit operations by default,
-+	  so in most cases this option only enlarges the size of the
-+	  floating point emulator without any good reason.
-+
-+	  You almost surely want to say N here.
-+
-+config FPE_FASTFPE
-+	bool "FastFPE math emulation (EXPERIMENTAL)"
-+	depends on !CPU_32v3 && EXPERIMENTAL
-+	---help---
-+	  Say Y here to include the FAST floating point emulator in the kernel.
-+	  This is an experimental much faster emulator which now also has full
-+	  precision for the mantissa.  It does not support any exceptions.
-+	  It is very simple, and approximately 3-6 times faster than NWFPE.
-+
-+	  It should be sufficient for most programs.  It may be not suitable
-+	  for scientific calculations, but you have to check this for yourself.
-+	  If you do not feel you need a faster FP emulation you should better
-+	  choose NWFPE.
-+
-+config VFP
-+	bool "VFP-format floating point maths"
-+	depends on CPU_V6 || CPU_ARM926T
-+	help
-+	  Say Y to include VFP support code in the kernel. This is needed
-+	  if your hardware includes a VFP unit.
-+
-+	  Please see <file:Documentation/arm/VFP/release-notes.txt> for
-+	  release notes and additional status information.
-+
-+	  Say N if your target does not have VFP hardware.
-+
-+endmenu
-+
-+menu "Userspace binary formats"
-+
-+source "fs/Kconfig.binfmt"
-+
-+config ARTHUR
-+	tristate "RISC OS personality"
-+	help
-+	  Say Y here to include the kernel code necessary if you want to run
-+	  Acorn RISC OS/Arthur binaries under Linux. This code is still very
-+	  experimental; if this sounds frightening, say N and sleep in peace.
-+	  You can also say M here to compile this support as a module (which
-+	  will be called arthur).
-+
-+endmenu
-+
-+menu "Power management options"
-+
-+config PM
-+	bool "Power Management support"
-+	---help---
-+	  "Power Management" means that parts of your computer are shut
-+	  off or put into a power conserving "sleep" mode if they are not
-+	  being used.  There are two competing standards for doing this: APM
-+	  and ACPI.  If you want to use either one, say Y here and then also
-+	  to the requisite support below.
-+
-+	  Power Management is most important for battery powered laptop
-+	  computers; if you have a laptop, check out the Linux Laptop home
-+	  page on the WWW at <http://www.linux-on-laptops.com/> or
-+	  Tuxmobil - Linux on Mobile Computers at <http://www.tuxmobil.org/>
-+	  and the Battery Powered Linux mini-HOWTO, available from
-+	  <http://www.tldp.org/docs.html#howto>.
-+
-+config APM
-+	tristate "Advanced Power Management Emulation"
-+	depends on PM
-+	---help---
-+	  APM is a BIOS specification for saving power using several different
-+	  techniques. This is mostly useful for battery powered laptops with
-+	  APM compliant BIOSes. If you say Y here, the system time will be
-+	  reset after a RESUME operation, the /proc/apm device will provide
-+	  battery status information, and user-space programs will receive
-+	  notification of APM "events" (e.g. battery status change).
-+
-+	  In order to use APM, you will need supporting software. For location
-+	  and more information, read <file:Documentation/pm.txt> and the
-+	  Battery Powered Linux mini-HOWTO, available from
-+	  <http://www.tldp.org/docs.html#howto>.
-+
-+	  This driver does not spin down disk drives (see the hdparm(8)
-+	  manpage ("man 8 hdparm") for that), and it doesn't turn off
-+	  VESA-compliant "green" monitors.
-+
-+	  Generally, if you don't have a battery in your machine, there isn't
-+	  much point in using this driver and you should say N. If you get
-+	  random kernel OOPSes or reboots that don't seem to be related to
-+	  anything, try disabling/enabling this option (or disabling/enabling
-+	  APM in your BIOS).
-+
-+endmenu
-+
-+source "net/Kconfig"
-+
-+menu "Device Drivers"
-+
-+source "drivers/base/Kconfig"
-+
-+if ALIGNMENT_TRAP
-+source "drivers/mtd/Kconfig"
-+endif
-+
-+source "drivers/parport/Kconfig"
-+
-+source "drivers/pnp/Kconfig"
-+
-+source "drivers/block/Kconfig"
-+
-+source "drivers/acorn/block/Kconfig"
-+
-+if PCMCIA || ARCH_CLPS7500 || ARCH_IOP3XX || ARCH_IXP4XX \
-+	|| ARCH_L7200 || ARCH_LH7A40X || ARCH_PXA || ARCH_RPC \
-+	|| ARCH_S3C2410 || ARCH_SA1100 || ARCH_SHARK || FOOTBRIDGE
-+source "drivers/ide/Kconfig"
-+endif
-+
-+source "drivers/scsi/Kconfig"
-+
-+source "drivers/md/Kconfig"
-+
-+source "drivers/message/fusion/Kconfig"
-+
-+source "drivers/ieee1394/Kconfig"
-+
-+source "drivers/message/i2o/Kconfig"
-+
-+source "drivers/net/Kconfig"
-+
-+source "drivers/isdn/Kconfig"
-+
-+# input before char - char/joystick depends on it. As does USB.
-+
-+source "drivers/input/Kconfig"
-+
-+source "drivers/char/Kconfig"
-+
-+source "drivers/i2c/Kconfig"
-+
-+source "drivers/hwmon/Kconfig"
-+
-+#source "drivers/l3/Kconfig"
-+
-+source "drivers/misc/Kconfig"
-+
-+source "drivers/mfd/Kconfig"
-+
-+source "drivers/media/Kconfig"
-+
-+source "drivers/video/Kconfig"
-+
-+source "sound/Kconfig"
-+
-+source "drivers/usb/Kconfig"
-+
-+source "drivers/mmc/Kconfig"
-+
-+endmenu
-+
-+source "fs/Kconfig"
-+
-+source "arch/arm/oprofile/Kconfig"
-+
-+source "arch/arm/Kconfig.debug"
-+
-+source "security/Kconfig"
-+
-+source "crypto/Kconfig"
-+
-+source "lib/Kconfig"
-diff -Naurdp linux-2.6.14/arch/arm/Makefile ipipe-2.6.14-imx21/arch/arm/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/Makefile ipipe-2.6.14-imx21/arch/arm/Makefile
 --- linux-2.6.14/arch/arm/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/Makefile	2008-02-21 22:08:59.000000000 +0100
 @@ -5,6 +5,11 @@
  # License.  See the file "COPYING" in the main directory of this archive
  # for more details.
@@ -890,9 +130,9 @@ diff -Naurdp linux-2.6.14/arch/arm/Makefile ipipe-2.6.14-imx21/arch/arm/Makefile
   machine-$(CONFIG_ARCH_H720X)	   := h720x
   machine-$(CONFIG_ARCH_AAEC2000)   := aaec2000
  
-diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/Makefile ipipe-2.6.14-imx21/arch/arm/boot/compressed/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/boot/compressed/Makefile ipipe-2.6.14-imx21/arch/arm/boot/compressed/Makefile
 --- linux-2.6.14/arch/arm/boot/compressed/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/Makefile	2008-02-21 22:08:59.000000000 +0100
 @@ -3,6 +3,12 @@
  #
  # create a compressed vmlinuz image from the original vmlinux
@@ -926,9 +166,9 @@ diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/Makefile ipipe-2.6.14-imx21/a
  ifeq ($(CONFIG_DEBUG_ICEDCC),y)
  OBJS            += ice-dcc.o
  endif
-diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/head-csb535.S ipipe-2.6.14-imx21/arch/arm/boot/compressed/head-csb535.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/boot/compressed/head-csb535.S ipipe-2.6.14-imx21/arch/arm/boot/compressed/head-csb535.S
 --- linux-2.6.14/arch/arm/boot/compressed/head-csb535.S	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/head-csb535.S	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/head-csb535.S	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,31 @@
 +/* 
 + * linux/arch/arm/boot/compressed/head-csb535.S
@@ -961,9 +201,9 @@ diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/head-csb535.S ipipe-2.6.14-im
 +
 +	ldr	r7, 1b           /* Set machine type */
 +
-diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/head.S ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/boot/compressed/head.S ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S
 --- linux-2.6.14/arch/arm/boot/compressed/head.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S	2008-02-21 22:08:59.000000000 +0100
 @@ -6,6 +6,12 @@
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
@@ -1229,855 +469,9 @@ diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/head.S ipipe-2.6.14-imx21/arc
  reloc_end:
  
  		.align
-diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/head.S.orig ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S.orig
---- linux-2.6.14/arch/arm/boot/compressed/head.S.orig	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/head.S.orig	2007-07-26 01:05:37.000000000 +0200
-@@ -0,0 +1,842 @@
-+/*
-+ *  linux/arch/arm/boot/compressed/head.S
-+ *
-+ *  Copyright (C) 1996-2002 Russell King
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * March 2006 :
-+ * Adapted to ARM9 i.MX21/CSB535FS board by S.Gerber, G.Boutillier and D.Rossier
-+ * University of Applied Sciences Western Switzerland
-+ * Reconfigurable & Embedded Digital Systems, REDS Institute
-+ *
-+ */
-+#include <linux/config.h>
-+#include <linux/linkage.h>
-+
-+/*
-+ * Debugging stuff
-+ *
-+ * Note that these macros must not contain any code which is not
-+ * 100% relocatable.  Any attempt to do so will result in a crash.
-+ * Please select one of the following when turning on debugging.
-+ */
-+#ifdef DEBUG
-+
-+#include <asm/arch/debug-macro.S>
-+
-+#if defined(CONFIG_DEBUG_ICEDCC)
-+		.macro	loadsp, rb
-+		.endm
-+		.macro writeb, ch, rb
-+		mcr	p14, 0, \ch, c0, c1, 0
-+		.endm
-+#else
-+		.macro	writeb,	ch, rb
-+		senduart \ch, \rb
-+		.endm
-+
-+#if defined(CONFIG_FOOTBRIDGE) || \
-+    defined(CONFIG_ARCH_RPC) || \
-+    defined(CONFIG_ARCH_INTEGRATOR) || \
-+    defined(CONFIG_ARCH_PXA) || \
-+    defined(CONFIG_ARCH_IXP4XX) || \
-+    defined(CONFIG_ARCH_IXP2000) || \
-+    defined(CONFIG_ARCH_LH7A40X) || \
-+    defined(CONFIG_ARCH_OMAP)
-+		.macro	loadsp,	rb
-+		addruart \rb
-+		.endm
-+#elif defined(CONFIG_ARCH_SA1100)
-+		.macro	loadsp, rb
-+		mov	\rb, #0x80000000	@ physical base address
-+#  if defined(CONFIG_DEBUG_LL_SER3)
-+		add	\rb, \rb, #0x00050000	@ Ser3
-+#  else
-+		add	\rb, \rb, #0x00010000	@ Ser1
-+#  endif
-+		.endm
-+#elif defined(CONFIG_ARCH_IOP331)
-+		.macro loadsp, rb
-+                mov   	\rb, #0xff000000
-+                orr     \rb, \rb, #0x00ff0000
-+                orr     \rb, \rb, #0x0000f700   @ location of the UART
-+		.endm
-+#elif defined(CONFIG_ARCH_S3C2410)
-+		.macro loadsp, rb
-+		mov	\rb, #0x50000000
-+		add	\rb, \rb, #0x4000 * CONFIG_S3C2410_LOWLEVEL_UART_PORT
-+		.endm
-+#else
-+#error no serial architecture defined
-+#endif
-+#endif
-+#endif
-+
-+		.macro	kputc,val
-+		mov	r0, \val
-+		bl	putc
-+		.endm
-+
-+		.macro	kphex,val,len
-+		mov	r0, \val
-+		mov	r1, #\len
-+		bl	phex
-+		.endm
-+
-+		.macro	debug_reloc_start
-+#ifdef DEBUG
-+		kputc	#'\n'
-+		kphex	r6, 8		/* processor id */
-+		kputc	#':'
-+		kphex	r7, 8		/* architecture id */
-+		kputc	#':'
-+		mrc	p15, 0, r0, c1, c0
-+		kphex	r0, 8		/* control reg */
-+		kputc	#'\n'
-+		kphex	r5, 8		/* decompressed kernel start */
-+		kputc	#'-'
-+
-+		kphex	r9, 8		/* decompressed kernel end  */
-+		
-+		kputc	#'\n'
-+#endif
-+		.endm
-+
-+		.macro	debug_reloc_end
-+#ifdef DEBUG
-+		kphex	r5, 8		/* end of kernel */
-+		kputc	#'\n'
-+		mov	r0, r4
-+		bl	memdump		/* dump 256 bytes at start of kernel */
-+#endif
-+		.endm
-+
-+		.section ".start", #alloc, #execinstr
-+/*
-+ * sort out different calling conventions
-+ */
-+		.align
-+start:
-+		.type	start,#function
-+		.rept	8
-+		mov	r0, r0
-+		.endr
-+
-+		b	1f
-+		.word	0x016f2818		@ Magic numbers to help the loader
-+		.word	start			@ absolute load/run zImage address
-+		.word	_edata			@ zImage end address
-+1:		mov	r7, r1			@ save architecture ID
-+
-+		mov	r8, r2			@ save atags pointer
-+#if defined (CONFIG_UMON_SHIM)
-+		mov	r10, r0			@ save the uMON command line
-+#endif
-+
-+#ifndef __ARM_ARCH_2__
-+		/*
-+		 * Booting from Angel - need to enter SVC mode and disable
-+		 * FIQs/IRQs (numeric definitions from angel arm.h source).
-+		 * We only do this if we were in user mode on entry.
-+		 */
-+		mrs	r2, cpsr		@ get current mode
-+		tst	r2, #3			@ not user?
-+		bne	not_angel
-+		mov	r0, #0x17		@ angel_SWIreason_EnterSVC
-+		swi	0x123456		@ angel_SWI_ARM
-+not_angel:
-+		mrs	r2, cpsr		@ turn off interrupts to
-+		orr	r2, r2, #0xc0		@ prevent angel from running
-+		msr	cpsr_c, r2
-+#else
-+		teqp	pc, #0x0c000003		@ turn off interrupts
-+#endif
-+
-+		/*
-+		 * Note that some cache flushing and other stuff may
-+		 * be needed here - is there an Angel SWI call for this?
-+		 */
-+
-+		/*
-+		 * some architecture specific code can be inserted
-+                 * by the linker here, but it should preserve r7,r8 and r9.
-+		 */
-+
-+		.text
-+
-+#if defined(CONFIG_UMON_SHIM)
-+
-+                /* this "shim" builds an ATAG list in a safe memory */
-+		/* area from the uMON command line */
-+                /* uMON's call (no -a) command points r0
-+		/* to the text of the command line */
-+		/* TODO: newer uMON's have a "linux call" cmd */
-+
-+#if defined(CONFIG_MACH_CSB535)
-+#warning TODO:	 get rid of this magic number
-+		ldr	r2, =0xc0000000	/* put the tags at the bottom of SDRAM */
-+#else
-+#error	uMON shim is not implemented for this machine.
-+#endif
-+		mov	r8, r2		/* save the correct atags pointer */
-+	
-+		ldr	r1, =5
-+		stmia	r2!, {r1}
-+		ldr	r1, =0x54410001	/* ATAG_CORE */
-+		stmia	r2!, {r1}
-+
-+		ldr	r1, =0		/* flags */
-+		stmia	r2!, {r1}
-+		ldr	r1, =4096	/* pagesize */
-+		stmia	r2!, {r1}
-+		ldr	r1, =0		/* rootdev (usually overridden on cmdline) */
-+		stmia	r2!, {r1}
-+	
-+		ldr	r1, =4
-+		stmia	r2!, {r1}
-+		ldr	r1, =0x54410002	/* ATAG_MEM */
-+		stmia	r2!, {r1}
-+
-+#if defined(CONFIG_MACH_CSB535)
-+#warning TODO: get rid of these magic numbers
-+		ldr	r1, =0x2000000	/* size */
-+		ldr	r3, =0xc000000	/* start */
-+#endif
-+
-+		stmia	r2!, {r1}
-+		stmia	r2!, {r3}
-+
-+		/* save some room for cmdline length */
-+		mov	r4, r2
-+		add	r2, r2, #4
-+	
-+		ldr	r1, =0x54410009	/* ATAG_CMDLINE */
-+		stmia	r2!, {r1}
-+
-+		/* copy over the command line */
-+		/* (if one wasn't provided, we'll likely crash here) */
-+
-+1:		ldmia	r10!, {r1}
-+		stmia	r2!, {r1}
-+		
-+		/* look for the null terminator */
-+		ands	r5, r1, #0x000000ff
-+		beq	1f	
-+		ands	r5, r1, #0x0000ff00
-+		beq	1f	
-+		ands	r5, r1, #0x00ff0000
-+		beq	1f	
-+		ands	r5, r1, #0xff000000
-+		beq	1f
-+
-+		b	1b
-+	
-+		/* put the word count into the ATAG_CMDLINE */
-+1:		sub	r5, r2, r4
-+		mov	r5, r5, lsr #2
-+		stmia	r4, {r5}
-+
-+		/* terminate */
-+		ldr	r1, =0 /* ATAG_NONE */
-+		stmia	r2!, {r1}
-+		stmia	r2!, {r1}
-+
-+#endif /* CONFIG_UMON_SHIM */
-+
-+9:		adr	r0, LC0
-+
-+		ldmia	r0, {r1, r2, r3, r4, r5, r6, ip, sp}
-+		subs	r0, r0, r1		@ calculate the delta offset
-+
-+						@ if delta is zero, we are
-+		beq	not_relocated		@ running at the address we
-+						@ were linked at.
-+
-+		/*
-+		 * We're running at a different address.  We need to fix
-+		 * up various pointers:
-+		 *   r5 - zImage base address
-+		 *   r6 - GOT start
-+		 *   ip - GOT end
-+		 */
-+		add	r5, r5, r0
-+		add	r6, r6, r0
-+		add	ip, ip, r0
-+
-+#ifndef CONFIG_ZBOOT_ROM
-+		/*
-+		 * If we're running fully PIC === CONFIG_ZBOOT_ROM = n,
-+		 * we need to fix up pointers into the BSS region.
-+		 *   r2 - BSS start
-+		 *   r3 - BSS end
-+		 *   sp - stack pointer
-+		 */
-+		add	r2, r2, r0
-+		add	r3, r3, r0
-+		add	sp, sp, r0
-+
-+		/*
-+		 * Relocate all entries in the GOT table.
-+		 */
-+1:		ldr	r1, [r6, #0]		@ relocate entries in the GOT
-+		add	r1, r1, r0		@ table.  This fixes up the
-+		str	r1, [r6], #4		@ C references.
-+		cmp	r6, ip
-+		blo	1b
-+#else
-+
-+		/*
-+		 * Relocate entries in the GOT table.  We only relocate
-+		 * the entries that are outside the (relocated) BSS region.
-+		 */
-+1:		ldr	r1, [r6, #0]		@ relocate entries in the GOT
-+		cmp	r1, r2			@ entry < bss_start ||
-+		cmphs	r3, r1			@ _end < entry
-+		addlo	r1, r1, r0		@ table.  This fixes up the
-+		str	r1, [r6], #4		@ C references.
-+		cmp	r6, ip
-+		blo	1b
-+#endif
-+
-+not_relocated:	mov	r0, #0
-+1:		str	r0, [r2], #4		@ clear bss
-+		str	r0, [r2], #4
-+		str	r0, [r2], #4
-+		str	r0, [r2], #4
-+		cmp	r2, r3
-+		blo	1b
-+
-+		/*
-+		 * The C runtime environment should now be setup
-+		 * sufficiently.  Turn the cache on, set up some
-+		 * pointers, and start decompressing.
-+		 */
-+		bl	cache_on
-+
-+		mov	r1, sp			@ malloc space above stack
-+		add	r2, sp, #0x10000	@ 64k max
-+
-+/*
-+ * Check to see if we will overwrite ourselves.
-+ *   r4 = final kernel address
-+ *   r5 = start of this image
-+ *   r2 = end of malloc space (and therefore this image)
-+ * We basically want:
-+ *   r4 >= r2 -> OK
-+ *   r4 + image length <= r5 -> OK
-+ */
-+		cmp	r4, r2
-+		bhs	wont_overwrite
-+		add	r0, r4, #4096*1024	@ 4MB largest kernel size
-+		cmp	r0, r5
-+		bls	wont_overwrite
-+
-+		mov	r5, r2			@ decompress after malloc space
-+		mov	r0, r5
-+		mov	r3, r7
-+		bl	decompress_kernel
-+
-+		add	r0, r0, #127
-+		bic	r0, r0, #127		@ align the kernel length
-+/*
-+ * r0     = decompressed kernel length
-+ * r1-r3  = unused
-+ * r4     = kernel execution address
-+ * r5     = decompressed kernel start
-+ * r6     = processor ID
-+ * r7     = architecture ID
-+ * r8     = atags pointer
-+ * r9-r14 = corrupted
-+ */
-+		add	r1, r5, r0		@ end of decompressed kernel
-+		adr	r2, reloc_start
-+		ldr	r3, LC1
-+		add	r3, r2, r3
-+
-+1:		ldmia	r2!, {r9 - r14}		@ copy relocation code
-+		stmia	r1!, {r9 - r14}
-+		ldmia	r2!, {r9 - r14}
-+		stmia	r1!, {r9 - r14}
-+
-+		cmp	r2, r3
-+		blo	1b
-+
-+		bl	cache_clean_flush
-+		add	pc, r5, r0		@ call relocation code
-+
-+/*
-+ * We're not in danger of overwriting ourselves.  Do this the simple way.
-+ *
-+ * r4     = kernel execution address
-+ * r7     = architecture ID
-+ */
-+wont_overwrite:	mov	r0, r4
-+		mov	r3, r7
-+		bl	decompress_kernel
-+		b	call_kernel
-+
-+		.type	LC0, #object
-+LC0:		.word	LC0			@ r1
-+		.word	__bss_start		@ r2
-+		.word	_end			@ r3
-+		.word	zreladdr		@ r4
-+		.word	_start			@ r5
-+		.word	_got_start		@ r6
-+		.word	_got_end		@ ip
-+		.word	user_stack+4096		@ sp
-+LC1:		.word	reloc_end - reloc_start
-+		.size	LC0, . - LC0
-+
-+#ifdef CONFIG_ARCH_RPC
-+		.globl	params
-+params:		ldr	r0, =params_phys
-+		mov	pc, lr
-+		.ltorg
-+		.align
-+#endif
-+
-+/*
-+ * Turn on the cache.  We need to setup some page tables so that we
-+ * can have both the I and D caches on.
-+ *
-+ * We place the page tables 16k down from the kernel execution address,
-+ * and we hope that nothing else is using it.  If we're using it, we
-+ * will go pop!
-+ *
-+ * On entry,
-+ *  r4 = kernel execution address
-+ *  r6 = processor ID
-+ *  r7 = architecture number
-+ *  r8 = run-time address of "start"
-+ * On exit,
-+ *  r1, r2, r3, r9, r10, r12 corrupted
-+ * This routine must preserve:
-+ *  r4, r5, r6, r7, r8
-+ */
-+		.align	5
-+cache_on:	mov	r3, #8			@ cache_on function
-+		b	call_cache_fn
-+
-+__setup_mmu:	sub	r3, r4, #16384		@ Page directory size
-+		bic	r3, r3, #0xff		@ Align the pointer
-+		bic	r3, r3, #0x3f00
-+/*
-+ * Initialise the page tables, turning on the cacheable and bufferable
-+ * bits for the RAM area only.
-+ */
-+
-+		mov	r0, r3
-+		mov	r9, r0, lsr #18
-+		mov	r9, r9, lsl #18		@ start of RAM
-+#if !defined(CONFIG_ARCH_IMX)
-+ 		add	r10, r9, #0x10000000	@ a reasonable RAM size
-+#else
-+		add	r10, r9, #0x08000000	@ Max for imx is 128MB
-+#endif
-+
-+/*
-+*Fin modification
-+*/
-+		
-+		mov	r1, #0x12
-+		orr	r1, r1, #3 << 10
-+		add	r2, r3, #16384
-+
-+1:		cmp	r1, r9			@ if virt > start of RAM
-+	
-+		orrhs	r1, r1, #0x0c		@ set cacheable, bufferable
-+
-+		cmp	r1, r10			@ if virt > end of RAM
-+
-+		bichs	r1, r1, #0x0c		@ clear cacheable, bufferable
-+		str	r1, [r0], #4		@ 1:1 mapping
-+		add	r1, r1, #1048576
-+		teq	r0, r2
-+		bne	1b
-+/*
-+ * If ever we are running from Flash, then we surely want the cache
-+ * to be enabled also for our execution instance...  We map 2MB of it
-+ * so there is no map overlap problem for up to 1 MB compressed kernel.
-+ * If the execution is in RAM then we would only be duplicating the above.
-+ */
-+		mov	r1, #0x1e
-+		orr	r1, r1, #3 << 10
-+		mov	r2, pc, lsr #20
-+		orr	r1, r1, r2, lsl #20
-+		add	r0, r3, r2, lsl #2
-+		str	r1, [r0], #4
-+		add	r1, r1, #1048576
-+		str	r1, [r0]
-+		mov	pc, lr
-+
-+__armv4_cache_on:
-+		mov	r12, lr
-+		bl	__setup_mmu
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer
-+		mcr	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
-+		mrc	p15, 0, r0, c1, c0, 0	@ read control reg
-+		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
-+		orr	r0, r0, #0x0030
-+		bl	__common_cache_on
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
-+		mov	pc, r12
-+
-+__arm6_cache_on:
-+		mov	r12, lr
-+		bl	__setup_mmu
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c7, c0, 0	@ invalidate whole cache v3
-+		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
-+		mov	r0, #0x30
-+		bl	__common_cache_on
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
-+		mov	pc, r12
-+
-+__common_cache_on:
-+#ifndef DEBUG
-+		orr	r0, r0, #0x000d		@ Write buffer, mmu
-+#endif
-+		mov	r1, #-1
-+		mcr	p15, 0, r3, c2, c0, 0	@ load page table pointer
-+		mcr	p15, 0, r1, c3, c0, 0	@ load domain access control
-+		mcr	p15, 0, r0, c1, c0, 0	@ load control register
-+		mov	pc, lr
-+
-+/*
-+ * All code following this line is relocatable.  It is relocated by
-+ * the above code to the end of the decompressed kernel image and
-+ * executed there.  During this time, we have no stacks.
-+ *
-+ * r0     = decompressed kernel length
-+ * r1-r3  = unused
-+ * r4     = kernel execution address
-+ * r5     = decompressed kernel start
-+ * r6     = processor ID
-+ * r7     = architecture ID
-+ * r8     = atags pointer
-+ * r9-r14 = corrupted
-+ */
-+		.align	5
-+
-+reloc_start:	add	r9, r5, r0
-+
-+		debug_reloc_start
-+		mov	r1, r4
-+1:
-+		.rept	4
-+		
-+		ldmia	r5!, {r0, r2, r3, r10 - r14}	@ relocate kernel
-+		stmia	r1!, {r0, r2, r3, r10 - r14}
-+		
-+		.endr
-+
-+		cmp	r5, r9
-+
-+		blo	1b
-+		debug_reloc_end
-+
-+call_kernel:	bl	cache_clean_flush
-+		bl	cache_off
-+		mov	r0, #0
-+		mov	r1, r7			@ restore architecture number
-+
-+		mov	r2, r8			@ restore atags pointer
-+
-+		mov	pc, r4			@ call kernel
-+
-+/*
-+ * Here follow the relocatable cache support functions for the
-+ * various processors.  This is a generic hook for locating an
-+ * entry and jumping to an instruction at the specified offset
-+ * from the start of the block.  Please note this is all position
-+ * independent code.
-+ *
-+ *  r1  = corrupted
-+ *  r2  = corrupted
-+ *  r3  = block offset
-+ *  r6  = corrupted
-+ *  r12 = corrupted
-+ */
-+
-+call_cache_fn:	adr	r12, proc_types
-+		mrc	p15, 0, r6, c0, c0	@ get processor ID
-+1:		ldr	r1, [r12, #0]		@ get value
-+		ldr	r2, [r12, #4]		@ get mask
-+		eor	r1, r1, r6		@ (real ^ match)
-+		tst	r1, r2			@       & mask
-+		addeq	pc, r12, r3		@ call cache function
-+		add	r12, r12, #4*5
-+		b	1b
-+
-+/*
-+ * Table for cache operations.  This is basically:
-+ *   - CPU ID match
-+ *   - CPU ID mask
-+ *   - 'cache on' method instruction
-+ *   - 'cache off' method instruction
-+ *   - 'cache flush' method instruction
-+ *
-+ * We match an entry using: ((real_id ^ match) & mask) == 0
-+ *
-+ * Writethrough caches generally only need 'on' and 'off'
-+ * methods.  Writeback caches _must_ have the flush method
-+ * defined.
-+ */
-+		.type	proc_types,#object
-+proc_types:
-+		.word	0x41560600		@ ARM6/610
-+		.word	0xffffffe0
-+		b	__arm6_cache_off	@ works, but slow
-+		b	__arm6_cache_off
-+		mov	pc, lr
-+@		b	__arm6_cache_on		@ untested
-+@		b	__arm6_cache_off
-+@		b	__armv3_cache_flush
-+
-+		.word	0x00000000		@ old ARM ID
-+		.word	0x0000f000
-+		mov	pc, lr
-+		mov	pc, lr
-+		mov	pc, lr
-+
-+		.word	0x41007000		@ ARM7/710
-+		.word	0xfff8fe00
-+		b	__arm7_cache_off
-+		b	__arm7_cache_off
-+		mov	pc, lr
-+
-+		.word	0x41807200		@ ARM720T (writethrough)
-+		.word	0xffffff00
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		mov	pc, lr
-+
-+		.word	0x00007000		@ ARM7 IDs
-+		.word	0x0000f000
-+		mov	pc, lr
-+		mov	pc, lr
-+		mov	pc, lr
-+
-+		@ Everything from here on will be the new ID system.
-+
-+		.word	0x4401a100		@ sa110 / sa1100
-+		.word	0xffffffe0
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv4_cache_flush
-+
-+		.word	0x6901b110		@ sa1110
-+		.word	0xfffffff0
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv4_cache_flush
-+
-+		@ These match on the architecture ID
-+
-+		.word	0x00020000		@ ARMv4T
-+		.word	0x000f0000
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv4_cache_flush
-+
-+		.word	0x00050000		@ ARMv5TE
-+		.word	0x000f0000
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv4_cache_flush
-+
-+		.word	0x00060000		@ ARMv5TEJ
-+		.word	0x000f0000
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv4_cache_flush
-+
-+		.word	0x00070000		@ ARMv6
-+		.word	0x000f0000
-+		b	__armv4_cache_on
-+		b	__armv4_cache_off
-+		b	__armv6_cache_flush
-+
-+		.word	0			@ unrecognised type
-+		.word	0
-+		mov	pc, lr
-+		mov	pc, lr
-+		mov	pc, lr
-+
-+		.size	proc_types, . - proc_types
-+
-+/*
-+ * Turn off the Cache and MMU.  ARMv3 does not support
-+ * reading the control register, but ARMv4 does.
-+ *
-+ * On entry,  r6 = processor ID
-+ * On exit,   r0, r1, r2, r3, r12 corrupted
-+ * This routine must preserve: r4, r6, r7
-+ */
-+		.align	5
-+cache_off:	mov	r3, #12			@ cache_off function
-+		b	call_cache_fn
-+
-+__armv4_cache_off:
-+		mrc	p15, 0, r0, c1, c0
-+		bic	r0, r0, #0x000d
-+		mcr	p15, 0, r0, c1, c0	@ turn MMU and cache off
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c7, c7	@ invalidate whole cache v4
-+		mcr	p15, 0, r0, c8, c7	@ invalidate whole TLB v4
-+		mov	pc, lr
-+
-+__arm6_cache_off:
-+		mov	r0, #0x00000030		@ ARM6 control reg.
-+		b	__armv3_cache_off
-+
-+__arm7_cache_off:
-+		mov	r0, #0x00000070		@ ARM7 control reg.
-+		b	__armv3_cache_off
-+
-+__armv3_cache_off:
-+		mcr	p15, 0, r0, c1, c0, 0	@ turn MMU and cache off
-+		mov	r0, #0
-+		mcr	p15, 0, r0, c7, c0, 0	@ invalidate whole cache v3
-+		mcr	p15, 0, r0, c5, c0, 0	@ invalidate whole TLB v3
-+		mov	pc, lr
-+
-+/*
-+ * Clean and flush the cache to maintain consistency.
-+ *
-+ * On entry,
-+ *  r6 = processor ID
-+ * On exit,
-+ *  r1, r2, r3, r11, r12 corrupted
-+ * This routine must preserve:
-+ *  r0, r4, r5, r6, r7
-+ */
-+		.align	5
-+cache_clean_flush:
-+		mov	r3, #16
-+		b	call_cache_fn
-+
-+__armv6_cache_flush:
-+		mov	r1, #0
-+		mcr	p15, 0, r1, c7, c14, 0	@ clean+invalidate D
-+		mcr	p15, 0, r1, c7, c5, 0	@ invalidate I+BTB
-+		mcr	p15, 0, r1, c7, c15, 0	@ clean+invalidate unified
-+		mcr	p15, 0, r1, c7, c10, 4	@ drain WB
-+		mov	pc, lr
-+
-+__armv4_cache_flush:
-+		mov	r2, #64*1024		@ default: 32K dcache size (*2)
-+		mov	r11, #32		@ default: 32 byte line size
-+		mrc	p15, 0, r3, c0, c0, 1	@ read cache type
-+		teq	r3, r6			@ cache ID register present?
-+		beq	no_cache_id
-+		mov	r1, r3, lsr #18
-+		and	r1, r1, #7
-+		mov	r2, #1024
-+		mov	r2, r2, lsl r1		@ base dcache size *2
-+		tst	r3, #1 << 14		@ test M bit
-+		addne	r2, r2, r2, lsr #1	@ +1/2 size if M == 1
-+		mov	r3, r3, lsr #12
-+		and	r3, r3, #3
-+		mov	r11, #8
-+		mov	r11, r11, lsl r3	@ cache line size in bytes
-+no_cache_id:
-+		bic	r1, pc, #63		@ align to longest cache line
-+		add	r2, r1, r2
-+1:		ldr	r3, [r1], r11		@ s/w flush D cache
-+		teq	r1, r2
-+		bne	1b
-+
-+		mcr	p15, 0, r1, c7, c5, 0	@ flush I cache
-+		mcr	p15, 0, r1, c7, c6, 0	@ flush D cache
-+		mcr	p15, 0, r1, c7, c10, 4	@ drain WB
-+		mov	pc, lr
-+
-+__armv3_cache_flush:
-+		mov	r1, #0
-+		mcr	p15, 0, r0, c7, c0, 0	@ invalidate whole cache v3
-+		mov	pc, lr
-+
-+/*
-+ * Various debugging routines for printing hex characters and
-+ * memory, which again must be relocatable.
-+ */
-+#ifdef DEBUG
-+		.type	phexbuf,#object
-+phexbuf:	.space	12
-+		.size	phexbuf, . - phexbuf
-+
-+phex:		adr	r3, phexbuf
-+		mov	r2, #0
-+		strb	r2, [r3, r1]
-+1:		subs	r1, r1, #1
-+		movmi	r0, r3
-+		bmi	puts
-+		and	r2, r0, #15
-+		mov	r0, r0, lsr #4
-+		cmp	r2, #10
-+		addge	r2, r2, #7
-+		add	r2, r2, #'0'
-+		strb	r2, [r3, r1]
-+		b	1b
-+
-+puts:		loadsp	r3
-+1:		ldrb	r2, [r0], #1
-+		teq	r2, #0
-+		moveq	pc, lr
-+2:		writeb	r2, r3
-+		mov	r1, #0x00020000
-+3:		subs	r1, r1, #1
-+		bne	3b
-+		teq	r2, #'\n'
-+		moveq	r2, #'\r'
-+		beq	2b
-+		teq	r0, #0
-+		bne	1b
-+		mov	pc, lr
-+putc:
-+		mov	r2, r0
-+		mov	r0, #0
-+		loadsp	r3
-+		b	2b
-+
-+memdump:	mov	r12, r0
-+		mov	r10, lr
-+		mov	r11, #0
-+2:		mov	r0, r11, lsl #2
-+		add	r0, r0, r12
-+		mov	r1, #8
-+		bl	phex
-+		mov	r0, #':'
-+		bl	putc
-+1:		mov	r0, #' '
-+		bl	putc
-+		ldr	r0, [r12, r11, lsl #2]
-+		mov	r1, #8
-+		bl	phex
-+		and	r0, r11, #7
-+		teq	r0, #3
-+		moveq	r0, #' '
-+		bleq	putc
-+		and	r0, r11, #7
-+		add	r11, r11, #1
-+		teq	r0, #7
-+		bne	1b
-+		mov	r0, #'\n'
-+		bl	putc
-+		cmp	r11, #64
-+		blt	2b
-+		mov	pc, r10
-+#endif
-+
-+reloc_end:
-+
-+		.align
-+		.section ".stack", "w"
-+user_stack:	.space	4096
-diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/misc.c ipipe-2.6.14-imx21/arch/arm/boot/compressed/misc.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/boot/compressed/misc.c ipipe-2.6.14-imx21/arch/arm/boot/compressed/misc.c
 --- linux-2.6.14/arch/arm/boot/compressed/misc.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/misc.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/boot/compressed/misc.c	2008-02-21 22:08:59.000000000 +0100
 @@ -14,7 +14,13 @@
   *  only.  This way all non constant variables will end up in the bss segment,
   *  which should point to addresses in RAM and cleared to 0 on start.
@@ -2176,9 +570,9 @@ diff -Naurdp linux-2.6.14/arch/arm/boot/compressed/misc.c ipipe-2.6.14-imx21/arc
  	return output_ptr;
  }
  #else
-diff -Naurdp linux-2.6.14/arch/arm/kernel/Makefile ipipe-2.6.14-imx21/arch/arm/kernel/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/Makefile ipipe-2.6.14-imx21/arch/arm/kernel/Makefile
 --- linux-2.6.14/arch/arm/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/Makefile	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/Makefile	2008-02-21 22:08:59.000000000 +0100
 @@ -19,6 +19,8 @@ obj-$(CONFIG_ARTHUR)		+= arthur.o
  obj-$(CONFIG_ISA_DMA)		+= dma-isa.o
  obj-$(CONFIG_PCI)		+= bios32.o
@@ -2188,9 +582,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/Makefile ipipe-2.6.14-imx21/arch/arm/k
  
  obj-$(CONFIG_IWMMXT)		+= iwmmxt.o
  AFLAGS_iwmmxt.o			:= -Wa,-mcpu=iwmmxt
-diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-armv.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-armv.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/entry-armv.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-armv.S
 --- linux-2.6.14/arch/arm/kernel/entry-armv.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-armv.S	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-armv.S	2008-02-21 22:08:59.000000000 +0100
 @@ -3,6 +3,7 @@
   *
   *  Copyright (C) 1996,1997,1998 Russell King.
@@ -2400,9 +794,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-armv.S ipipe-2.6.14-imx21/arch/a
  	get_thread_info tsk
  	mov	why, #0
  	b	ret_to_user
-diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-common.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-common.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/entry-common.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-common.S
 --- linux-2.6.14/arch/arm/kernel/entry-common.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-common.S	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-common.S	2008-02-21 22:08:59.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/kernel/entry-common.S
   *
@@ -2526,9 +920,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-common.S ipipe-2.6.14-imx21/arch
 +	mov	pc, lr
 +
 +#endif
-diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-header.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-header.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/entry-header.S ipipe-2.6.14-imx21/arch/arm/kernel/entry-header.S
 --- linux-2.6.14/arch/arm/kernel/entry-header.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-header.S	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/entry-header.S	2008-02-21 22:08:59.000000000 +0100
 @@ -67,6 +67,15 @@
  #endif
  	.endm
@@ -2545,9 +939,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/entry-header.S ipipe-2.6.14-imx21/arch
  
  /*
   * These are the registers used in the syscall handler, and allow us to
-diff -Naurdp linux-2.6.14/arch/arm/kernel/head.S ipipe-2.6.14-imx21/arch/arm/kernel/head.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/head.S ipipe-2.6.14-imx21/arch/arm/kernel/head.S
 --- linux-2.6.14/arch/arm/kernel/head.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/head.S	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/head.S	2008-02-21 22:08:59.000000000 +0100
 @@ -10,6 +10,12 @@
   * published by the Free Software Foundation.
   *
@@ -2683,9 +1077,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/head.S ipipe-2.6.14-imx21/arch/arm/ker
  
  /*
   * Setup the initial page tables.  We only setup the barest
-diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-core.c ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-core.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/ipipe-core.c ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-core.c
 --- linux-2.6.14/arch/arm/kernel/ipipe-core.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-core.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-core.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,239 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe-core.c
@@ -2926,9 +1320,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-core.c ipipe-2.6.14-imx21/arch/a
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 +EXPORT_SYMBOL(ipipe_tune_timer);
-diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-mcount.S ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-mcount.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/ipipe-mcount.S ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-mcount.S
 --- linux-2.6.14/arch/arm/kernel/ipipe-mcount.S	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-mcount.S	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-mcount.S	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,40 @@
 +/*
 + *  linux/arch/arm/kernel/ipipe-mcount.S
@@ -2970,9 +1364,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-mcount.S ipipe-2.6.14-imx21/arch
 +	ldmdb   fp, {r0 - r3, fp, sp, pc}	@ pop entry frame and return
 +
 +#endif
-diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-root.c ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-root.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/ipipe-root.c ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-root.c
 --- linux-2.6.14/arch/arm/kernel/ipipe-root.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-root.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/ipipe-root.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,419 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe-root.c
@@ -3393,9 +1787,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/ipipe-root.c ipipe-2.6.14-imx21/arch/a
 +void notrace mcount(void);
 +EXPORT_SYMBOL(mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
-diff -Naurdp linux-2.6.14/arch/arm/kernel/irq.c ipipe-2.6.14-imx21/arch/arm/kernel/irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/irq.c ipipe-2.6.14-imx21/arch/arm/kernel/irq.c
 --- linux-2.6.14/arch/arm/kernel/irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/irq.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/irq.c	2008-02-21 22:08:59.000000000 +0100
 @@ -54,10 +54,11 @@
  
  static int noirqdebug;
@@ -3450,9 +1844,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/irq.c ipipe-2.6.14-imx21/arch/arm/kern
  
  	spin_unlock(&irq_controller_lock);
  	irq_exit();
-diff -Naurdp linux-2.6.14/arch/arm/kernel/process.c ipipe-2.6.14-imx21/arch/arm/kernel/process.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/process.c ipipe-2.6.14-imx21/arch/arm/kernel/process.c
 --- linux-2.6.14/arch/arm/kernel/process.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/process.c	2007-07-26 01:06:36.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/process.c	2008-02-21 22:08:59.000000000 +0100
 @@ -39,6 +39,10 @@ extern void setup_mm_for_reboot(char mod
  
  static volatile int hlt_counter;
@@ -3528,9 +1922,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/process.c ipipe-2.6.14-imx21/arch/arm/
  		leds_event(led_idle_end);
  		preempt_enable();
  		schedule();
-diff -Naurdp linux-2.6.14/arch/arm/kernel/setup.c ipipe-2.6.14-imx21/arch/arm/kernel/setup.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/kernel/setup.c ipipe-2.6.14-imx21/arch/arm/kernel/setup.c
 --- linux-2.6.14/arch/arm/kernel/setup.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/kernel/setup.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/kernel/setup.c	2008-02-21 22:08:59.000000000 +0100
 @@ -6,6 +6,12 @@
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
@@ -3567,9 +1961,9 @@ diff -Naurdp linux-2.6.14/arch/arm/kernel/setup.c ipipe-2.6.14-imx21/arch/arm/ke
  		tags = phys_to_virt(mdesc->boot_params);
  
  	/*
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/Kconfig ipipe-2.6.14-imx21/arch/arm/mach-imx21/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/Kconfig ipipe-2.6.14-imx21/arch/arm/mach-imx21/Kconfig
 --- linux-2.6.14/arch/arm/mach-imx21/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Kconfig	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Kconfig	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,37 @@
 +menu "IMX Implementations"
 +	depends on FAMILY_IMX21
@@ -3608,9 +2002,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/Kconfig ipipe-2.6.14-imx21/arch/ar
 +
 +config ARCH_IMX21
 +	bool
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/Makefile ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/Makefile ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile
 --- linux-2.6.14/arch/arm/mach-imx21/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,20 @@
 +#
 +# Makefile for the linux kernel.
@@ -3632,16 +2026,16 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/Makefile ipipe-2.6.14-imx21/arch/a
 +
 +obj-$(CONFIG_LEDS)	+=  $(led-y)
 +led-$(CONFIG_ARCH_MX2ADS) += leds-mx2ads.o
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/Makefile.boot ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile.boot
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/Makefile.boot ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile.boot
 --- linux-2.6.14/arch/arm/mach-imx21/Makefile.boot	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile.boot	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/Makefile.boot	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,3 @@
 +    zreladdr-$(CONFIG_ARCH_MX2ADS)	:= 0xc0008000
 +    zreladdr-$(CONFIG_MACH_CSB535)	:= 0xc0008000
 +
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/csb535.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/csb535.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/csb535.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/csb535.c
 --- linux-2.6.14/arch/arm/mach-imx21/csb535.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/csb535.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/csb535.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,208 @@
 +/*
 + * arch/arm/mach-imx21/csb535.c
@@ -3851,9 +2245,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/csb535.c ipipe-2.6.14-imx21/arch/a
 +	.timer		= &imx21_timer,
 +	.init_machine	= csb535_init,
 +MACHINE_END
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/dma.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/dma.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/dma.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/dma.c
 --- linux-2.6.14/arch/arm/mach-imx21/dma.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/dma.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/dma.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,218 @@
 +/*
 + *  linux/arch/arm/mach-imx21/dma.c
@@ -4073,9 +2467,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/dma.c ipipe-2.6.14-imx21/arch/arm/
 +
 +EXPORT_SYMBOL(imx_request_dma);
 +EXPORT_SYMBOL(imx_free_dma);
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/generic.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/generic.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.c
 --- linux-2.6.14/arch/arm/mach-imx21/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,459 @@
 +/*
 + *  arch/arm/mach-imx21/generic.c
@@ -4536,9 +2930,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/generic.c ipipe-2.6.14-imx21/arch/
 +}
 +
 +subsys_initcall(imx21_init);
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/generic.h ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/generic.h ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.h
 --- linux-2.6.14/arch/arm/mach-imx21/generic.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/generic.h	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,19 @@
 +/*
 + *  linux/arch/arm/mach-imx21/generic.h
@@ -4559,9 +2953,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/generic.h ipipe-2.6.14-imx21/arch/
 +
 +struct sys_timer;
 +extern struct sys_timer imx21_timer;
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/irq.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/irq.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c
 --- linux-2.6.14/arch/arm/mach-imx21/irq.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c	2007-07-26 01:06:36.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/irq.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,278 @@
 +/*
 + *  linux/arch/arm/mach-imx21/irq.c
@@ -4841,9 +3235,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/irq.c ipipe-2.6.14-imx21/arch/arm/
 +	/* Disable all interrupts initially. */
 +	/* In IMX21 this is done in the bootloader. */
 +}
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds-mx2ads.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds-mx2ads.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/leds-mx2ads.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds-mx2ads.c
 --- linux-2.6.14/arch/arm/mach-imx21/leds-mx2ads.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds-mx2ads.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds-mx2ads.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,54 @@
 +/*
 + * linux/arch/arm/mach-imx21/leds-mx2ads.c
@@ -4899,9 +3293,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds-mx2ads.c ipipe-2.6.14-imx21/a
 +	}
 +	local_irq_restore(flags);
 +}
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/leds.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.c
 --- linux-2.6.14/arch/arm/mach-imx21/leds.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,31 @@
 +/*
 + * linux/arch/arm/mach-imx21/leds.h
@@ -4934,9 +3328,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds.c ipipe-2.6.14-imx21/arch/arm
 +}
 +
 +__initcall(leds_init);
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds.h ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/leds.h ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.h
 --- linux-2.6.14/arch/arm/mach-imx21/leds.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/leds.h	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,9 @@
 +/*
 + * include/asm-arm/arch-imx21/leds.h
@@ -4947,9 +3341,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/leds.h ipipe-2.6.14-imx21/arch/arm
 + *
 + */
 +extern void mx1ads_leds_event(led_event_t evt);
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/mx2ads.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/mx2ads.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/mx2ads.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/mx2ads.c
 --- linux-2.6.14/arch/arm/mach-imx21/mx2ads.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/mx2ads.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/mx2ads.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,210 @@
 +/*
 + * arch/arm/mach-imx21/mx2ads.c
@@ -5161,9 +3555,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/mx2ads.c ipipe-2.6.14-imx21/arch/a
 +	.timer		= &imx21_timer,
 +	INIT_MACHINE(mx2ads_init)
 +MACHINE_END
-diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/time.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-imx21/time.c ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c
 --- linux-2.6.14/arch/arm/mach-imx21/time.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c	2007-07-26 01:06:36.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-imx21/time.c	2008-02-21 22:08:59.000000000 +0100
 @@ -0,0 +1,241 @@
 +/*
 + *  linux/arch/arm/mach-imx21/time.c
@@ -5406,9 +3800,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-imx21/time.c ipipe-2.6.14-imx21/arch/arm
 +};
 +
 +
-diff -Naurdp linux-2.6.14/arch/arm/mach-integrator/core.c ipipe-2.6.14-imx21/arch/arm/mach-integrator/core.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-integrator/core.c ipipe-2.6.14-imx21/arch/arm/mach-integrator/core.c
 --- linux-2.6.14/arch/arm/mach-integrator/core.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-integrator/core.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-integrator/core.c	2008-02-21 22:08:59.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/core.c
   *
@@ -5635,9 +4029,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-integrator/core.c ipipe-2.6.14-imx21/arc
 +	return readl(TIMER1_VA_BASE + TIMER_VALUE);
 +}
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/arch/arm/mach-integrator/integrator_cp.c ipipe-2.6.14-imx21/arch/arm/mach-integrator/integrator_cp.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-integrator/integrator_cp.c ipipe-2.6.14-imx21/arch/arm/mach-integrator/integrator_cp.c
 --- linux-2.6.14/arch/arm/mach-integrator/integrator_cp.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-integrator/integrator_cp.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-integrator/integrator_cp.c	2008-02-21 22:08:59.000000000 +0100
 @@ -2,6 +2,7 @@
   *  linux/arch/arm/mach-integrator/integrator_cp.c
   *
@@ -5702,9 +4096,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-integrator/integrator_cp.c ipipe-2.6.14-
  }
  
  static struct sys_timer cp_timer = {
-diff -Naurdp linux-2.6.14/arch/arm/mach-pxa/irq.c ipipe-2.6.14-imx21/arch/arm/mach-pxa/irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-pxa/irq.c ipipe-2.6.14-imx21/arch/arm/mach-pxa/irq.c
 --- linux-2.6.14/arch/arm/mach-pxa/irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-pxa/irq.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-pxa/irq.c	2008-02-21 22:09:00.000000000 +0100
 @@ -16,6 +16,7 @@
  #include <linux/module.h>
  #include <linux/interrupt.h>
@@ -5756,9 +4150,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-pxa/irq.c ipipe-2.6.14-imx21/arch/arm/ma
  static void pxa_ack_muxed_gpio(unsigned int irq)
  {
  	int gpio = irq - IRQ_GPIO(2) + 2;
-diff -Naurdp linux-2.6.14/arch/arm/mach-pxa/time.c ipipe-2.6.14-imx21/arch/arm/mach-pxa/time.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-pxa/time.c ipipe-2.6.14-imx21/arch/arm/mach-pxa/time.c
 --- linux-2.6.14/arch/arm/mach-pxa/time.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-pxa/time.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-pxa/time.c	2008-02-21 22:09:00.000000000 +0100
 @@ -19,6 +19,7 @@
  #include <linux/signal.h>
  #include <linux/errno.h>
@@ -5927,9 +4321,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-pxa/time.c ipipe-2.6.14-imx21/arch/arm/m
 +	return OSMR0 - OSCR;
 +}
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/irq.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-s3c2410/irq.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/irq.c
 --- linux-2.6.14/arch/arm/mach-s3c2410/irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/irq.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/irq.c	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
   *	Ben Dooks <ben@simtec.co.uk>
@@ -6054,9 +4448,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/irq.c ipipe-2.6.14-imx21/arch/ar
  /* s3c24xx_init_irq
   *
   * Initialise S3C2410 IRQ system
-diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/s3c2440-irq.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/s3c2440-irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-s3c2410/s3c2440-irq.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/s3c2440-irq.c
 --- linux-2.6.14/arch/arm/mach-s3c2410/s3c2440-irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/s3c2440-irq.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/s3c2440-irq.c	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003,2004 Simtec Electronics
   *	Ben Dooks <ben@simtec.co.uk>
@@ -6121,9 +4515,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/s3c2440-irq.c ipipe-2.6.14-imx21
  static int s3c2440_irq_add(struct sys_device *sysdev)
  {
  	unsigned int irqno;
-diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/time.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/time.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-s3c2410/time.c ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/time.c
 --- linux-2.6.14/arch/arm/mach-s3c2410/time.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/time.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-s3c2410/time.c	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (C) 2003-2005 Simtec Electronics
   *	Ben Dooks, <ben@simtec.co.uk>
@@ -6425,9 +4819,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-s3c2410/time.c ipipe-2.6.14-imx21/arch/a
 +	return __raw_readl(S3C2410_TCNTO(4));
 +}
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/arch/arm/mach-sa1100/irq.c ipipe-2.6.14-imx21/arch/arm/mach-sa1100/irq.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-sa1100/irq.c ipipe-2.6.14-imx21/arch/arm/mach-sa1100/irq.c
 --- linux-2.6.14/arch/arm/mach-sa1100/irq.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-sa1100/irq.c	2007-07-26 01:06:15.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-sa1100/irq.c	2008-02-21 22:09:00.000000000 +0100
 @@ -14,6 +14,7 @@
  #include <linux/ioport.h>
  #include <linux/ptrace.h>
@@ -6474,9 +4868,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-sa1100/irq.c ipipe-2.6.14-imx21/arch/arm
  /*
   * Like GPIO0 to 10, GPIO11-27 IRQs need to be handled specially.
   * In addition, the IRQs are all collected up into one bit in the
-diff -Naurdp linux-2.6.14/arch/arm/mach-sa1100/time.c ipipe-2.6.14-imx21/arch/arm/mach-sa1100/time.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mach-sa1100/time.c ipipe-2.6.14-imx21/arch/arm/mach-sa1100/time.c
 --- linux-2.6.14/arch/arm/mach-sa1100/time.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mach-sa1100/time.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mach-sa1100/time.c	2008-02-21 22:09:00.000000000 +0100
 @@ -13,6 +13,7 @@
  #include <linux/interrupt.h>
  #include <linux/timex.h>
@@ -6640,9 +5034,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mach-sa1100/time.c ipipe-2.6.14-imx21/arch/ar
 +	return OSMR0 - OSCR;
 +}
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/arch/arm/mm/Kconfig ipipe-2.6.14-imx21/arch/arm/mm/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mm/Kconfig ipipe-2.6.14-imx21/arch/arm/mm/Kconfig
 --- linux-2.6.14/arch/arm/mm/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mm/Kconfig	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mm/Kconfig	2008-02-21 22:09:00.000000000 +0100
 @@ -1,3 +1,10 @@
 +#
 +# March 2006 :
@@ -6667,9 +5061,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mm/Kconfig ipipe-2.6.14-imx21/arch/arm/mm/Kco
  	select CPU_32v5
  	select CPU_ABRT_EV5TJ
  	select CPU_CACHE_VIVT
-diff -Naurdp linux-2.6.14/arch/arm/mm/copypage-v4mc.c ipipe-2.6.14-imx21/arch/arm/mm/copypage-v4mc.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mm/copypage-v4mc.c ipipe-2.6.14-imx21/arch/arm/mm/copypage-v4mc.c
 --- linux-2.6.14/arch/arm/mm/copypage-v4mc.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mm/copypage-v4mc.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mm/copypage-v4mc.c	2008-02-21 22:09:00.000000000 +0100
 @@ -43,7 +43,7 @@ static DEFINE_SPINLOCK(minicache_lock);
   * instruction.  If your processor does not supply this, you have to write your
   * own copy_user_page that does the right thing.
@@ -6688,9 +5082,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mm/copypage-v4mc.c ipipe-2.6.14-imx21/arch/ar
  v4_mc_clear_user_page(void *kaddr, unsigned long vaddr)
  {
  	asm volatile(
-diff -Naurdp linux-2.6.14/arch/arm/mm/copypage-xscale.c ipipe-2.6.14-imx21/arch/arm/mm/copypage-xscale.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mm/copypage-xscale.c ipipe-2.6.14-imx21/arch/arm/mm/copypage-xscale.c
 --- linux-2.6.14/arch/arm/mm/copypage-xscale.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mm/copypage-xscale.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mm/copypage-xscale.c	2008-02-21 22:09:00.000000000 +0100
 @@ -41,7 +41,7 @@ static DEFINE_SPINLOCK(minicache_lock);
   * Dcache aliasing issue.  The writes will be forwarded to the write buffer,
   * and merged as appropriate.
@@ -6709,9 +5103,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mm/copypage-xscale.c ipipe-2.6.14-imx21/arch/
  xscale_mc_clear_user_page(void *kaddr, unsigned long vaddr)
  {
  	asm volatile(
-diff -Naurdp linux-2.6.14/arch/arm/mm/fault.c ipipe-2.6.14-imx21/arch/arm/mm/fault.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/arch/arm/mm/fault.c ipipe-2.6.14-imx21/arch/arm/mm/fault.c
 --- linux-2.6.14/arch/arm/mm/fault.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/arch/arm/mm/fault.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/arch/arm/mm/fault.c	2008-02-21 22:09:00.000000000 +0100
 @@ -223,6 +223,9 @@ do_page_fault(unsigned long addr, unsign
  	struct mm_struct *mm;
  	int fault, sig, code;
@@ -6763,9 +5157,9 @@ diff -Naurdp linux-2.6.14/arch/arm/mm/fault.c ipipe-2.6.14-imx21/arch/arm/mm/fau
  	printk(KERN_ALERT "Unhandled fault: %s (0x%03x) at 0x%08lx\n",
  		inf->name, fsr, addr);
  
-diff -Naurdp linux-2.6.14/config_2.6.14_imx21_cogent535fs ipipe-2.6.14-imx21/config_2.6.14_imx21_cogent535fs
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/config_2.6.14_imx21_cogent535fs ipipe-2.6.14-imx21/config_2.6.14_imx21_cogent535fs
 --- linux-2.6.14/config_2.6.14_imx21_cogent535fs	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/config_2.6.14_imx21_cogent535fs	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/config_2.6.14_imx21_cogent535fs	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,798 @@
 +#
 +# Automatically generated make config: don't edit
@@ -7565,9 +5959,9 @@ diff -Naurdp linux-2.6.14/config_2.6.14_imx21_cogent535fs ipipe-2.6.14-imx21/con
 +CONFIG_CRC32=y
 +# CONFIG_LIBCRC32C is not set
 +CONFIG_ZLIB_INFLATE=y
-diff -Naurdp linux-2.6.14/drivers/mtd/maps/Kconfig ipipe-2.6.14-imx21/drivers/mtd/maps/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/mtd/maps/Kconfig ipipe-2.6.14-imx21/drivers/mtd/maps/Kconfig
 --- linux-2.6.14/drivers/mtd/maps/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/mtd/maps/Kconfig	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/mtd/maps/Kconfig	2008-02-21 22:09:00.000000000 +0100
 @@ -1,3 +1,10 @@
 +#
 +# March 2006 :
@@ -7596,9 +5990,9 @@ diff -Naurdp linux-2.6.14/drivers/mtd/maps/Kconfig ipipe-2.6.14-imx21/drivers/mt
  config MTD_SA1100
  	tristate "CFI Flash device mapped on StrongARM SA11x0"
  	depends on ARM && MTD_CFI && ARCH_SA1100 && MTD_PARTITIONS
-diff -Naurdp linux-2.6.14/drivers/mtd/maps/Makefile ipipe-2.6.14-imx21/drivers/mtd/maps/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/mtd/maps/Makefile ipipe-2.6.14-imx21/drivers/mtd/maps/Makefile
 --- linux-2.6.14/drivers/mtd/maps/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/mtd/maps/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/mtd/maps/Makefile	2008-02-21 22:09:00.000000000 +0100
 @@ -1,6 +1,12 @@
  #
  # linux/drivers/maps/Makefile
@@ -7617,9 +6011,9 @@ diff -Naurdp linux-2.6.14/drivers/mtd/maps/Makefile ipipe-2.6.14-imx21/drivers/m
  obj-$(CONFIG_MTD_PLATRAM)	+= plat-ram.o
  obj-$(CONFIG_MTD_OMAP_NOR)	+= omap_nor.o
 +obj-$(CONFIG_MTD_CSB535)	+= csbxxx.o
-diff -Naurdp linux-2.6.14/drivers/mtd/maps/csbxxx.c ipipe-2.6.14-imx21/drivers/mtd/maps/csbxxx.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/mtd/maps/csbxxx.c ipipe-2.6.14-imx21/drivers/mtd/maps/csbxxx.c
 --- linux-2.6.14/drivers/mtd/maps/csbxxx.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/drivers/mtd/maps/csbxxx.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/mtd/maps/csbxxx.c	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,159 @@
 +/*
 + *
@@ -7780,9 +6174,9 @@ diff -Naurdp linux-2.6.14/drivers/mtd/maps/csbxxx.c ipipe-2.6.14-imx21/drivers/m
 +MODULE_LICENSE("GPL");
 +MODULE_AUTHOR("Bill Gatliff <bgat@billgatliff.com>");
 +MODULE_DESCRIPTION("MTD map driver for Cogent CSBXXX");
-diff -Naurdp linux-2.6.14/drivers/net/Kconfig ipipe-2.6.14-imx21/drivers/net/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/net/Kconfig ipipe-2.6.14-imx21/drivers/net/Kconfig
 --- linux-2.6.14/drivers/net/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/net/Kconfig	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/net/Kconfig	2008-02-21 22:09:00.000000000 +0100
 @@ -2,6 +2,12 @@
  #
  # Network device configuration
@@ -7813,9 +6207,9 @@ diff -Naurdp linux-2.6.14/drivers/net/Kconfig ipipe-2.6.14-imx21/drivers/net/Kco
  config MACSONIC
  	tristate "Macintosh SONIC based ethernet (onboard, NuBus, LC, CS)"
  	depends on NET_ETHERNET && MAC
-diff -Naurdp linux-2.6.14/drivers/net/Makefile ipipe-2.6.14-imx21/drivers/net/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/net/Makefile ipipe-2.6.14-imx21/drivers/net/Makefile
 --- linux-2.6.14/drivers/net/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/net/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/net/Makefile	2008-02-21 22:09:00.000000000 +0100
 @@ -1,6 +1,12 @@
  #
  # Makefile for the Linux network (ethercard) device drivers.
@@ -7837,9 +6231,9 @@ diff -Naurdp linux-2.6.14/drivers/net/Makefile ipipe-2.6.14-imx21/drivers/net/Ma
  obj-$(CONFIG_TUN) += tun.o
  obj-$(CONFIG_DL2K) += dl2k.o
  obj-$(CONFIG_R8169) += r8169.o
-diff -Naurdp linux-2.6.14/drivers/net/cirrus.c ipipe-2.6.14-imx21/drivers/net/cirrus.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/net/cirrus.c ipipe-2.6.14-imx21/drivers/net/cirrus.c
 --- linux-2.6.14/drivers/net/cirrus.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/drivers/net/cirrus.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/net/cirrus.c	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,702 @@
 +
 +/*
@@ -8543,9 +6937,9 @@ diff -Naurdp linux-2.6.14/drivers/net/cirrus.c ipipe-2.6.14-imx21/drivers/net/ci
 +module_init (cirrus_init);
 +module_exit (cirrus_cleanup);
 +
-diff -Naurdp linux-2.6.14/drivers/net/cirrus.h ipipe-2.6.14-imx21/drivers/net/cirrus.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/net/cirrus.h ipipe-2.6.14-imx21/drivers/net/cirrus.h
 --- linux-2.6.14/drivers/net/cirrus.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/drivers/net/cirrus.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/net/cirrus.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,331 @@
 +#ifndef CIRRUS_H
 +#define CIRRUS_H
@@ -8878,9 +7272,9 @@ diff -Naurdp linux-2.6.14/drivers/net/cirrus.h ipipe-2.6.14-imx21/drivers/net/ci
 +
 +#endif	/* #ifndef CIRRUS_H */
 +
-diff -Naurdp linux-2.6.14/drivers/pci/msi.c ipipe-2.6.14-imx21/drivers/pci/msi.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/pci/msi.c ipipe-2.6.14-imx21/drivers/pci/msi.c
 --- linux-2.6.14/drivers/pci/msi.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/pci/msi.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/pci/msi.c	2008-02-21 22:09:00.000000000 +0100
 @@ -146,6 +146,21 @@ static void unmask_MSI_irq(unsigned int 
  	msi_set_mask_bit(vector, 0);
  }
@@ -8930,9 +7324,9 @@ diff -Naurdp linux-2.6.14/drivers/pci/msi.c ipipe-2.6.14-imx21/drivers/pci/msi.c
  	.end		= end_msi_irq_wo_maskbit,
  	.set_affinity	= set_msi_irq_affinity
  };
-diff -Naurdp linux-2.6.14/drivers/serial/Kconfig ipipe-2.6.14-imx21/drivers/serial/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/serial/Kconfig ipipe-2.6.14-imx21/drivers/serial/Kconfig
 --- linux-2.6.14/drivers/serial/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/serial/Kconfig	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/serial/Kconfig	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,12 @@
  #
  # $Id: Kconfig,v 1.11 2004/03/11 18:08:04 lethal Exp $
@@ -8969,9 +7363,9 @@ diff -Naurdp linux-2.6.14/drivers/serial/Kconfig ipipe-2.6.14-imx21/drivers/seri
  	  CPU you can make it the console by answering Y to this option.
  
  	  Even if you say Y here, the currently visible virtual console
-diff -Naurdp linux-2.6.14/drivers/serial/Makefile ipipe-2.6.14-imx21/drivers/serial/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/serial/Makefile ipipe-2.6.14-imx21/drivers/serial/Makefile
 --- linux-2.6.14/drivers/serial/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/drivers/serial/Makefile	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/serial/Makefile	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,12 @@
  #
  #  $Id: Makefile,v 1.8 2002/07/21 21:32:30 rmk Exp $
@@ -8993,9 +7387,9 @@ diff -Naurdp linux-2.6.14/drivers/serial/Makefile ipipe-2.6.14-imx21/drivers/ser
  obj-$(CONFIG_SERIAL_MPC52xx) += mpc52xx_uart.o
  obj-$(CONFIG_SERIAL_ICOM) += icom.o
  obj-$(CONFIG_SERIAL_M32R_SIO) += m32r_sio.o
-diff -Naurdp linux-2.6.14/drivers/serial/imx21.c ipipe-2.6.14-imx21/drivers/serial/imx21.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/drivers/serial/imx21.c ipipe-2.6.14-imx21/drivers/serial/imx21.c
 --- linux-2.6.14/drivers/serial/imx21.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/drivers/serial/imx21.c	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/drivers/serial/imx21.c	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,1002 @@
 +/*
 + *  linux/drivers/serial/imx21.c
@@ -9999,9 +8393,9 @@ diff -Naurdp linux-2.6.14/drivers/serial/imx21.c ipipe-2.6.14-imx21/drivers/seri
 +MODULE_AUTHOR("Sascha Hauer");
 +MODULE_DESCRIPTION("IMX generic serial port driver");
 +MODULE_LICENSE("GPL");
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h
 --- linux-2.6.14/include/asm-arm/arch-imx/imx-regs.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h	2007-07-26 01:06:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx/imx-regs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -1,481 +1,618 @@
 -#ifndef _IMX_REGS_H
 -#define _IMX_REGS_H
@@ -11167,9 +9561,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx/imx-regs.h ipipe-2.6.14-imx21
  
 -#endif				// _IMX_REGS_H
 +#endif				// _MX2ADS_REGS_H
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/csb535.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/csb535.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/csb535.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h	2007-07-26 01:06:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/csb535.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,59 @@
 +/*
 + * linux/include/asm-arm/arch-imx21/csb535.h
@@ -11230,9 +9624,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/csb535.h ipipe-2.6.14-imx21
 +
 +
 +#endif /* __ASM_ARCH_CSB535_H */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/debug-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/debug-macro.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/debug-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/debug-macro.S
 --- linux-2.6.14/include/asm-arm/arch-imx21/debug-macro.S	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/debug-macro.S	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/debug-macro.S	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,36 @@
 +/* linux/include/asm-arm/arch-imx21/debug-macro.S
 + *
@@ -11270,9 +9664,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/debug-macro.S ipipe-2.6.14-
 +                cmp     \rd, #0x2000
 +                bne     1002b
 +		.endm
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/dma.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/dma.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/dma.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/dma.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/dma.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/dma.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/dma.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,71 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/dma.h
@@ -11345,9 +9739,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/dma.h ipipe-2.6.14-imx21/in
 +#define DMA_REQ_UART1_R       31
 +
 +#endif				/* _ASM_ARCH_DMA_H */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/entry-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/entry-macro.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/entry-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/entry-macro.S
 --- linux-2.6.14/include/asm-arm/arch-imx21/entry-macro.S	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/entry-macro.S	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/entry-macro.S	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,29 @@
 +/*
 + * include/asm-arm/arch-imx21/entry-macro.S
@@ -11378,9 +9772,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/entry-macro.S ipipe-2.6.14-
 +		tst	\irqstat, #1	@ to make the condition code = TRUE
 +		.endm
 +
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/hardware.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/hardware.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/hardware.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/hardware.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/hardware.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/hardware.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/hardware.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,116 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/hardware.h
@@ -11498,9 +9892,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/hardware.h ipipe-2.6.14-imx
 +#endif
 +
 +#endif
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/imx-regs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/imx-regs.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h	2007-07-26 01:06:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx-regs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,747 @@
 +#ifndef _MX2ADS_REGS_H
 +#define _MX2ADS_REGS_H
@@ -12249,9 +10643,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/imx-regs.h ipipe-2.6.14-imx
 +#define  UTS_SOFTRST	 (1<<0)	 /* Software reset */
 +
 +#endif				// _MX2ADS_REGS_H
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/imx21fb.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx21fb.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/imx21fb.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx21fb.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/imx21fb.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx21fb.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/imx21fb.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,35 @@
 +/*
 + * This structure describes the machine which we are running on.
@@ -12288,9 +10682,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/imx21fb.h ipipe-2.6.14-imx2
 +	void (*backlight_power)(int);
 +};
 +void set_imx_fb_info(struct imxfb_mach_info *hard_imx_fb_info);
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/io.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/io.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/io.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/io.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/io.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/io.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/io.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,28 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/io.h
@@ -12320,9 +10714,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/io.h ipipe-2.6.14-imx21/inc
 +#define __mem_pci(a)	(a)
 +
 +#endif
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/irq.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irq.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/irq.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irq.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/irq.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irq.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irq.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,20 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/irq.h
@@ -12344,9 +10738,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/irq.h ipipe-2.6.14-imx21/in
 + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 + */
 +#define fixup_irq(i)	(i)
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/irqs.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h	2007-07-26 01:06:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/irqs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,131 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/irqs.h
@@ -12479,9 +10873,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/irqs.h ipipe-2.6.14-imx21/i
 +#ifdef CONFIG_IPIPE
 +#define __ipipe_mach_irq_mux_p(irq) ((irq) == INT_GPIO)
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/memory.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/memory.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/memory.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/memory.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/memory.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/memory.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/memory.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,41 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/memory.h
@@ -12524,9 +10918,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/memory.h ipipe-2.6.14-imx21
 +#define __bus_to_virt(x)	(x -  PHYS_OFFSET + PAGE_OFFSET)
 +
 +#endif
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/mx2ads.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/mx2ads.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/mx2ads.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/mx2ads.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/mx2ads.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/mx2ads.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/mx2ads.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,39 @@
 +/*
 + * linux/include/asm-arm/arch-imx21/mx2ads.h
@@ -12567,9 +10961,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/mx2ads.h ipipe-2.6.14-imx21
 +#define CLK32 32768
 +
 +#endif /* __ASM_ARCH_MX2ADS_H */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/param.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/param.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/param.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/param.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/param.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/param.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/param.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,19 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/param.h
@@ -12590,9 +10984,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/param.h ipipe-2.6.14-imx21/
 + * along with this program; if not, write to the Free Software
 + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 + */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/system.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/system.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/system.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/system.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/system.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/system.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/system.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,40 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/system.h
@@ -12634,9 +11028,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/system.h ipipe-2.6.14-imx21
 +}
 +
 +#endif
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/timex.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/timex.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/timex.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/timex.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/timex.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/timex.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/timex.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,27 @@
 +/*
 + *  linux/include/asm-arm/imx/timex.h
@@ -12665,9 +11059,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/timex.h ipipe-2.6.14-imx21/
 +#define CLOCK_TICK_RATE		(CLK32)
 +
 +#endif
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/uncompress.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/uncompress.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/uncompress.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/uncompress.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/uncompress.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/uncompress.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/uncompress.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,182 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/uncompress.h
@@ -12851,9 +11245,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/uncompress.h ipipe-2.6.14-i
 +#define arch_decomp_setup()
 +
 +#define arch_decomp_wdog()
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/vmalloc.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/vmalloc.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-imx21/vmalloc.h ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/vmalloc.h
 --- linux-2.6.14/include/asm-arm/arch-imx21/vmalloc.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/vmalloc.h	2007-07-26 01:05:37.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-imx21/vmalloc.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,32 @@
 +/*
 + *  linux/include/asm-arm/arch-imx21/vmalloc.h
@@ -12887,9 +11281,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-imx21/vmalloc.h ipipe-2.6.14-imx2
 +#define VMALLOC_START	  (((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
 +#define VMALLOC_VMADDR(x) ((unsigned long)(x))
 +#define VMALLOC_END       (PAGE_OFFSET + 0x10000000)
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/entry-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/entry-macro.S
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-integrator/entry-macro.S ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/entry-macro.S
 --- linux-2.6.14/include/asm-arm/arch-integrator/entry-macro.S	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/entry-macro.S	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/entry-macro.S	2008-02-21 22:09:00.000000000 +0100
 @@ -20,7 +20,11 @@
  		teq	\irqstat, #0
  		ldreq	\irqstat, [\base, #(INTEGRATOR_HDR_IC_OFFSET+IRQ_STATUS)]
@@ -12903,9 +11297,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/entry-macro.S ipipe-2.
  1001:		tst	\irqstat, #15
  		bne	1002f
  		add	\irqnr, \irqnr, #4
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/irqs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-integrator/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/irqs.h
 --- linux-2.6.14/include/asm-arm/arch-integrator/irqs.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/irqs.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/irqs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -80,3 +80,6 @@
  
  #define NR_IRQS                         47
@@ -12913,9 +11307,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/irqs.h ipipe-2.6.14-im
 +#ifdef CONFIG_IPIPE
 +#define __ipipe_mach_irq_mux_p(irq) ((irq) == IRQ_CP_CPPLDINT)
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/platform.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/platform.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-integrator/platform.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/platform.h
 --- linux-2.6.14/include/asm-arm/arch-integrator/platform.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/platform.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/platform.h	2008-02-21 22:09:00.000000000 +0100
 @@ -26,13 +26,15 @@
   * 	NOTE: This is a multi-hosted header file for use with uHAL and
   * 	      supported debuggers.
@@ -12955,9 +11349,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/platform.h ipipe-2.6.1
  
  /*
   *  These are useconds NOT ticks.
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/timex.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/timex.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-integrator/timex.h ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/timex.h
 --- linux-2.6.14/include/asm-arm/arch-integrator/timex.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/timex.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-integrator/timex.h	2008-02-21 22:09:00.000000000 +0100
 @@ -21,6 +21,6 @@
   */
  
@@ -12967,9 +11361,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-integrator/timex.h ipipe-2.6.14-i
   */
 -#define CLOCK_TICK_RATE		(50000000 / 16)
 +#define CLOCK_TICK_RATE		(1000000)
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-pxa/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-pxa/irqs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-pxa/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-pxa/irqs.h
 --- linux-2.6.14/include/asm-arm/arch-pxa/irqs.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-pxa/irqs.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-pxa/irqs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -73,6 +73,10 @@
  			((i) - IRQ_GPIO(2) + 2)
  #define IRQ_TO_GPIO(i)	(((i) < IRQ_GPIO(2)) ? ((i) - IRQ_GPIO0) : IRQ_TO_GPIO_2_x(i))
@@ -12981,9 +11375,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-pxa/irqs.h ipipe-2.6.14-imx21/inc
  #if defined(CONFIG_PXA25x)
  #define PXA_LAST_GPIO	80
  #elif defined(CONFIG_PXA27x)
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-s3c2410/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-s3c2410/irqs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-s3c2410/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-s3c2410/irqs.h
 --- linux-2.6.14/include/asm-arm/arch-s3c2410/irqs.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-s3c2410/irqs.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-s3c2410/irqs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -3,6 +3,8 @@
   * Copyright (c) 2003-2005 Simtec Electronics
   *   Ben Dooks <ben@simtec.co.uk>
@@ -13028,9 +11422,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-s3c2410/irqs.h ipipe-2.6.14-imx21
 +#endif /* CONFIG_IPIPE */
 +
  #endif /* __ASM_ARCH_IRQ_H */
-diff -Naurdp linux-2.6.14/include/asm-arm/arch-sa1100/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-sa1100/irqs.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/arch-sa1100/irqs.h ipipe-2.6.14-imx21/include/asm-arm/arch-sa1100/irqs.h
 --- linux-2.6.14/include/asm-arm/arch-sa1100/irqs.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/arch-sa1100/irqs.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/arch-sa1100/irqs.h	2008-02-21 22:09:00.000000000 +0100
 @@ -145,6 +145,10 @@
  #define IRQ_LOCOMO_SPI_OVRN	(IRQ_BOARD_END + 20)
  #define IRQ_LOCOMO_SPI_TEND	(IRQ_BOARD_END + 21)
@@ -13042,9 +11436,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/arch-sa1100/irqs.h ipipe-2.6.14-imx21/
  /*
   * Figure out the MAX IRQ number.
   *
-diff -Naurdp linux-2.6.14/include/asm-arm/atomic.h ipipe-2.6.14-imx21/include/asm-arm/atomic.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/atomic.h ipipe-2.6.14-imx21/include/asm-arm/atomic.h
 --- linux-2.6.14/include/asm-arm/atomic.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/atomic.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/atomic.h	2008-02-21 22:09:00.000000000 +0100
 @@ -85,9 +85,9 @@ static inline void atomic_clear_mask(uns
  	unsigned long tmp, tmp2;
  
@@ -13095,9 +11489,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/atomic.h ipipe-2.6.14-imx21/include/as
  }
  
  #endif /* __LINUX_ARM_ARCH__ */
-diff -Naurdp linux-2.6.14/include/asm-arm/bitops.h ipipe-2.6.14-imx21/include/asm-arm/bitops.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/bitops.h ipipe-2.6.14-imx21/include/asm-arm/bitops.h
 --- linux-2.6.14/include/asm-arm/bitops.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/bitops.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/bitops.h	2008-02-21 22:09:00.000000000 +0100
 @@ -36,9 +36,9 @@ static inline void ____atomic_set_bit(un
  
  	p += bit >> 5;
@@ -13173,9 +11567,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/bitops.h ipipe-2.6.14-imx21/include/as
  
  	return res & mask;
  }
-diff -Naurdp linux-2.6.14/include/asm-arm/ipipe.h ipipe-2.6.14-imx21/include/asm-arm/ipipe.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/ipipe.h ipipe-2.6.14-imx21/include/asm-arm/ipipe.h
 --- linux-2.6.14/include/asm-arm/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/asm-arm/ipipe.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/ipipe.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,217 @@
 +/* -*- linux-c -*-
 + * include/asm-arm/ipipe.h
@@ -13394,9 +11788,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/ipipe.h ipipe-2.6.14-imx21/include/asm
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__ARM_IPIPE_H */
-diff -Naurdp linux-2.6.14/include/asm-arm/mmu_context.h ipipe-2.6.14-imx21/include/asm-arm/mmu_context.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/mmu_context.h ipipe-2.6.14-imx21/include/asm-arm/mmu_context.h
 --- linux-2.6.14/include/asm-arm/mmu_context.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/mmu_context.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/mmu_context.h	2008-02-21 22:09:00.000000000 +0100
 @@ -80,13 +80,16 @@ static inline void
  switch_mm(struct mm_struct *prev, struct mm_struct *next,
  	  struct task_struct *tsk)
@@ -13415,9 +11809,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/mmu_context.h ipipe-2.6.14-imx21/inclu
  	}
  }
  
-diff -Naurdp linux-2.6.14/include/asm-arm/pgalloc.h ipipe-2.6.14-imx21/include/asm-arm/pgalloc.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/pgalloc.h ipipe-2.6.14-imx21/include/asm-arm/pgalloc.h
 --- linux-2.6.14/include/asm-arm/pgalloc.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/pgalloc.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/pgalloc.h	2008-02-21 22:09:00.000000000 +0100
 @@ -29,6 +29,11 @@ extern void free_pgd_slow(pgd_t *pgd);
  
  #define check_pgt_cache()		do { } while (0)
@@ -13430,9 +11824,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/pgalloc.h ipipe-2.6.14-imx21/include/a
  /*
   * Allocate one PTE table.
   *
-diff -Naurdp linux-2.6.14/include/asm-arm/system.h ipipe-2.6.14-imx21/include/asm-arm/system.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/asm-arm/system.h ipipe-2.6.14-imx21/include/asm-arm/system.h
 --- linux-2.6.14/include/asm-arm/system.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/asm-arm/system.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/asm-arm/system.h	2008-02-21 22:09:00.000000000 +0100
 @@ -4,6 +4,7 @@
  #ifdef __KERNEL__
  
@@ -13669,9 +12063,9 @@ diff -Naurdp linux-2.6.14/include/asm-arm/system.h ipipe-2.6.14-imx21/include/as
  		break;
  #else
  	case 1:
-diff -Naurdp linux-2.6.14/include/linux/hardirq.h ipipe-2.6.14-imx21/include/linux/hardirq.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/hardirq.h ipipe-2.6.14-imx21/include/linux/hardirq.h
 --- linux-2.6.14/include/linux/hardirq.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/linux/hardirq.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/hardirq.h	2008-02-21 22:09:00.000000000 +0100
 @@ -87,8 +87,21 @@ extern void synchronize_irq(unsigned int
  # define synchronize_irq(irq)	barrier()
  #endif
@@ -13694,9 +12088,9 @@ diff -Naurdp linux-2.6.14/include/linux/hardirq.h ipipe-2.6.14-imx21/include/lin
  
  #ifndef CONFIG_VIRT_CPU_ACCOUNTING
  static inline void account_user_vtime(struct task_struct *tsk)
-diff -Naurdp linux-2.6.14/include/linux/ipipe.h ipipe-2.6.14-imx21/include/linux/ipipe.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/ipipe.h ipipe-2.6.14-imx21/include/linux/ipipe.h
 --- linux-2.6.14/include/linux/ipipe.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/linux/ipipe.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/ipipe.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,770 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
@@ -14468,9 +12862,9 @@ diff -Naurdp linux-2.6.14/include/linux/ipipe.h ipipe-2.6.14-imx21/include/linux
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -Naurdp linux-2.6.14/include/linux/ipipe_trace.h ipipe-2.6.14-imx21/include/linux/ipipe_trace.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/ipipe_trace.h ipipe-2.6.14-imx21/include/linux/ipipe_trace.h
 --- linux-2.6.14/include/linux/ipipe_trace.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/include/linux/ipipe_trace.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/ipipe_trace.h	2008-02-21 22:09:00.000000000 +0100
 @@ -0,0 +1,40 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
@@ -14512,9 +12906,9 @@ diff -Naurdp linux-2.6.14/include/linux/ipipe_trace.h ipipe-2.6.14-imx21/include
 +void ipipe_trace_panic_dump(void);
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff -Naurdp linux-2.6.14/include/linux/linkage.h ipipe-2.6.14-imx21/include/linux/linkage.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/linkage.h ipipe-2.6.14-imx21/include/linux/linkage.h
 --- linux-2.6.14/include/linux/linkage.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/linux/linkage.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/linkage.h	2008-02-21 22:09:00.000000000 +0100
 @@ -51,4 +51,8 @@
  #define fastcall
  #endif
@@ -14524,9 +12918,9 @@ diff -Naurdp linux-2.6.14/include/linux/linkage.h ipipe-2.6.14-imx21/include/lin
 +#endif
 +
  #endif
-diff -Naurdp linux-2.6.14/include/linux/preempt.h ipipe-2.6.14-imx21/include/linux/preempt.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/preempt.h ipipe-2.6.14-imx21/include/linux/preempt.h
 --- linux-2.6.14/include/linux/preempt.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/linux/preempt.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/preempt.h	2008-02-21 22:09:00.000000000 +0100
 @@ -13,41 +13,57 @@
    extern void fastcall add_preempt_count(int val);
    extern void fastcall sub_preempt_count(int val);
@@ -14606,9 +13000,9 @@ diff -Naurdp linux-2.6.14/include/linux/preempt.h ipipe-2.6.14-imx21/include/lin
  } while (0)
  
  #else
-diff -Naurdp linux-2.6.14/include/linux/sched.h ipipe-2.6.14-imx21/include/linux/sched.h
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/include/linux/sched.h ipipe-2.6.14-imx21/include/linux/sched.h
 --- linux-2.6.14/include/linux/sched.h	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/linux/sched.h	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/include/linux/sched.h	2008-02-21 22:09:00.000000000 +0100
 @@ -4,6 +4,7 @@
  #include <asm/param.h>	/* for HZ */
  
@@ -14653,246 +13047,9 @@ diff -Naurdp linux-2.6.14/include/linux/sched.h ipipe-2.6.14-imx21/include/linux
  
  /*
   * Only the _current_ task can read/write to tsk->flags, but other
-diff -Naurdp linux-2.6.14/include/sound/uda1341.h~ ipipe-2.6.14-imx21/include/sound/uda1341.h~
---- linux-2.6.14/include/sound/uda1341.h~	2006-07-15 15:10:28.000000000 +0200
-+++ ipipe-2.6.14-imx21/include/sound/uda1341.h~	1970-01-01 01:00:00.000000000 +0100
-@@ -1,233 +0,0 @@
--/*
-- *  linux/include/linux/l3/uda1341.h
-- *
-- * Philips UDA1341 mixer device driver for ALSA
-- *
-- * Copyright (c) 2002 Tomas Kasparek <tomas.kasparek@seznam.cz>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License.
-- *
-- * History:
-- *
-- * 2002-03-13 Tomas Kasparek Initial release - based on uda1341.h from OSS
-- * 2002-03-30 Tomas Kasparek Proc filesystem support, complete mixer and DSP
-- *                           features support
-- */
--
--/* $Id: uda1341.h,v 1.6 2004/05/03 17:36:50 tiwai Exp $ */
--
--#define UDA1341_ALSA_NAME "snd-uda1341"
--
--/*
-- * Default rate set after inicialization
-- */
--#define AUDIO_RATE_DEFAULT	44100
--
--/*
-- * UDA1341 L3 address and command types
-- */
--#define UDA1341_L3ADDR		5
--#define UDA1341_DATA0		(UDA1341_L3ADDR << 2 | 0)
--#define UDA1341_DATA1		(UDA1341_L3ADDR << 2 | 1)
--#define UDA1341_STATUS		(UDA1341_L3ADDR << 2 | 2)
--
--enum uda1341_onoff {
--	OFF=0,
--	ON,
--};
--
--const char *onoff_names[] = {
--	"Off",
--	"On",
--};
--
--enum uda1341_format {
--	I2S=0,
--	LSB16,
--	LSB18,
--	LSB20,
--	MSB,
--	LSB16MSB,
--	LSB18MSB,
--	LSB20MSB,        
--};
--
--const char *format_names[] = {
--	"I2S-bus",
--	"LSB 16bits",
--	"LSB 18bits",
--	"LSB 20bits",
--	"MSB",
--	"in LSB 16bits/out MSB",
--	"in LSB 18bits/out MSB",
--	"in LSB 20bits/out MSB",        
--};
--
--enum uda1341_fs {
--	F512=0,
--	F384,
--	F256,
--	Funused,
--};
--
--const char *fs_names[] = {
--	"512*fs",
--	"384*fs",
--	"256*fs",
--	"Unused - bad value!",
--};
--
--enum uda1341_peak {
--	BEFORE=0,
--	AFTER,
--};
--
--const char *peak_names[] = {
--	"before",
--	"after",
--};
--
--enum uda1341_filter {
--	FLAT=0,
--	MIN,
--	MIN2,
--	MAX,
--};
--
--const char *filter_names[] = {
--	"flat",
--	"min",
--	"min",
--	"max",
--};
--
--const char*bass_values[][16] = {
--	{"0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB", "0 dB",
--	 "0 dB", "0 dB", "0 dB", "0 dB", "undefined", }, //flat
--	{"0 dB", "2 dB", "4 dB", "6 dB", "8 dB", "10 dB", "12 dB", "14 dB", "16 dB", "18 dB", "18 dB",
--	 "18 dB", "18 dB", "18 dB", "18 dB", "undefined",}, // min
--	{"0 dB", "2 dB", "4 dB", "6 dB", "8 dB", "10 dB", "12 dB", "14 dB", "16 dB", "18 dB", "18 dB",
--	 "18 dB", "18 dB", "18 dB", "18 dB", "undefined",}, // min
--	{"0 dB", "2 dB", "4 dB", "6 dB", "8 dB", "10 dB", "12 dB", "14 dB", "16 dB", "18 dB", "20 dB",
--	 "22 dB", "24 dB", "24 dB", "24 dB", "undefined",}, // max
--};
--
--enum uda1341_mixer {
--	DOUBLE,
--	LINE,
--	MIC,
--	MIXER,
--};
--
--const char *mixer_names[] = {
--	"double differential",
--	"input channel 1 (line in)",
--	"input channel 2 (microphone)",
--	"digital mixer",
--};
--
--enum uda1341_deemp {
--	NONE,
--	D32,
--	D44,
--	D48,
--};
--
--const char *deemp_names[] = {
--	"none",
--	"32 kHz",
--	"44.1 kHz",
--	"48 kHz",        
--};
--
--const char *mic_sens_value[] = {
--	"-3 dB", "0 dB", "3 dB", "9 dB", "15 dB", "21 dB", "27 dB", "not used",
--};
--
--const unsigned short AGC_atime[] = {
--	11, 16, 11, 16, 21, 11, 16, 21,
--};
--
--const unsigned short AGC_dtime[] = {
--	100, 100, 200, 200, 200, 400, 400, 400,
--};
--
--const char *AGC_level[] = {
--	"-9.0", "-11.5", "-15.0", "-17.5",
--};
--
--const char *ig_small_value[] = {
--	"-3.0", "-2.5", "-2.0", "-1.5", "-1.0", "-0.5",
--};
--
--/*
-- * this was computed as peak_value[i] = pow((63-i)*1.42,1.013)
-- *
-- * UDA1341 datasheet on page 21: Peak value (dB) = (Peak level - 63.5)*5*log2
-- * There is an table with these values [level]=value: [3]=-90.31, [7]=-84.29
-- * [61]=-2.78, [62] = -1.48, [63] = 0.0
-- * I tried to compute it, but using but even using logarithm with base either 10 or 2
-- * i was'n able to get values in the table from the formula. So I constructed another
-- * formula (see above) to interpolate the values as good as possible. If there is some
-- * mistake, please contact me on tomas.kasparek@seznam.cz. Thanks.
-- * UDA1341TS datasheet is available at:
-- *   http://www-us9.semiconductors.com/acrobat/datasheets/UDA1341TS_3.pdf 
-- */
--const char *peak_value[] = {
--	"-INF dB", "N.A.", "N.A", "90.31 dB", "N.A.", "N.A.", "N.A.", "-84.29 dB",
--	"-82.65 dB", "-81.13 dB", "-79.61 dB", "-78.09 dB", "-76.57 dB", "-75.05 dB", "-73.53 dB",
--	"-72.01 dB", "-70.49 dB", "-68.97 dB", "-67.45 dB", "-65.93 dB", "-64.41 dB", "-62.90 dB",
--	"-61.38 dB", "-59.86 dB", "-58.35 dB", "-56.83 dB", "-55.32 dB", "-53.80 dB", "-52.29 dB",
--	"-50.78 dB", "-49.26 dB", "-47.75 dB", "-46.24 dB", "-44.73 dB", "-43.22 dB", "-41.71 dB",
--	"-40.20 dB", "-38.69 dB", "-37.19 dB", "-35.68 dB", "-34.17 dB", "-32.67 dB", "-31.17 dB",
--	"-29.66 dB", "-28.16 dB", "-26.66 dB", "-25.16 dB", "-23.66 dB", "-22.16 dB", "-20.67 dB",
--	"-19.17 dB", "-17.68 dB", "-16.19 dB", "-14.70 dB", "-13.21 dB", "-11.72 dB", "-10.24 dB",
--	"-8.76 dB", "-7.28 dB", "-5.81 dB", "-4.34 dB", "-2.88 dB", "-1.43 dB", "0.00 dB",
--};
--
--enum uda1341_config {
--	CMD_READ_REG = 0,
--	CMD_RESET,
--	CMD_FS,
--	CMD_FORMAT,
--	CMD_OGAIN,
--	CMD_IGAIN,
--	CMD_DAC,
--	CMD_ADC,
--	CMD_VOLUME,
--	CMD_BASS,
--	CMD_TREBBLE,
--	CMD_PEAK,
--	CMD_DEEMP,
--	CMD_MUTE,        
--	CMD_FILTER,
--	CMD_CH1,
--	CMD_CH2,
--	CMD_MIC,       
--	CMD_MIXER,
--	CMD_AGC,
--	CMD_IG,
--	CMD_AGC_TIME,
--	CMD_AGC_LEVEL,
--#ifdef CONFIG_PM
--	CMD_SUSPEND,
--	CMD_RESUME,
--#endif
--	CMD_LAST,
--};
--
--enum write_through {
--	//used in update_bits (write_cfg) to avoid l3_write - just update local copy of regs.
--	REGS_ONLY=0,
--	//update local regs and write value to uda1341 - do l3_write
--	FLUSH,
--};
--
--int __init snd_chip_uda1341_mixer_new(snd_card_t *card, struct l3_client **clnt);
--
--/*
-- * Local variables:
-- * indent-tabs-mode: t
-- * End:
-- */
-diff -Naurdp linux-2.6.14/init/Kconfig ipipe-2.6.14-imx21/init/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/init/Kconfig ipipe-2.6.14-imx21/init/Kconfig
 --- linux-2.6.14/init/Kconfig	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/init/Kconfig	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/init/Kconfig	2008-02-21 22:09:03.000000000 +0100
 @@ -69,6 +69,7 @@ menu "General setup"
  
  config LOCALVERSION
@@ -14901,9 +13058,9 @@ diff -Naurdp linux-2.6.14/init/Kconfig ipipe-2.6.14-imx21/init/Kconfig
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-diff -Naurdp linux-2.6.14/init/main.c ipipe-2.6.14-imx21/init/main.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/init/main.c ipipe-2.6.14-imx21/init/main.c
 --- linux-2.6.14/init/main.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/init/main.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/init/main.c	2008-02-21 22:09:03.000000000 +0100
 @@ -487,6 +487,11 @@ asmlinkage void __init start_kernel(void
  	init_timers();
  	softirq_init();
@@ -14924,9 +13081,9 @@ diff -Naurdp linux-2.6.14/init/main.c ipipe-2.6.14-imx21/init/main.c
  
  	/* Networking initialization needs a process context */ 
  	sock_init();
-diff -Naurdp linux-2.6.14/kernel/Makefile ipipe-2.6.14-imx21/kernel/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/Makefile ipipe-2.6.14-imx21/kernel/Makefile
 --- linux-2.6.14/kernel/Makefile	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/Makefile	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/Makefile	2008-02-21 22:09:03.000000000 +0100
 @@ -32,6 +32,7 @@ obj-$(CONFIG_DETECT_SOFTLOCKUP) += softl
  obj-$(CONFIG_GENERIC_HARDIRQS) += irq/
  obj-$(CONFIG_CRASH_DUMP) += crash_dump.o
@@ -14935,9 +13092,9 @@ diff -Naurdp linux-2.6.14/kernel/Makefile ipipe-2.6.14-imx21/kernel/Makefile
  
  ifneq ($(CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER),y)
  # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
-diff -Naurdp linux-2.6.14/kernel/exit.c ipipe-2.6.14-imx21/kernel/exit.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/exit.c ipipe-2.6.14-imx21/kernel/exit.c
 --- linux-2.6.14/kernel/exit.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/exit.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/exit.c	2008-02-21 22:09:03.000000000 +0100
 @@ -846,6 +846,7 @@ fastcall NORET_TYPE void do_exit(long co
  		exit_itimers(tsk->signal);
  		acct_process(code);
@@ -14946,9 +13103,9 @@ diff -Naurdp linux-2.6.14/kernel/exit.c ipipe-2.6.14-imx21/kernel/exit.c
  	exit_mm(tsk);
  
  	exit_sem(tsk);
-diff -Naurdp linux-2.6.14/kernel/fork.c ipipe-2.6.14-imx21/kernel/fork.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/fork.c ipipe-2.6.14-imx21/kernel/fork.c
 --- linux-2.6.14/kernel/fork.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/fork.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/fork.c	2008-02-21 22:09:03.000000000 +0100
 @@ -372,6 +372,7 @@ void fastcall __mmdrop(struct mm_struct 
  void mmput(struct mm_struct *mm)
  {
@@ -14981,9 +13138,9 @@ diff -Naurdp linux-2.6.14/kernel/fork.c ipipe-2.6.14-imx21/kernel/fork.c
  
  fork_out:
  	if (retval)
-diff -Naurdp linux-2.6.14/kernel/ipipe/Kconfig ipipe-2.6.14-imx21/kernel/ipipe/Kconfig
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/Kconfig ipipe-2.6.14-imx21/kernel/ipipe/Kconfig
 --- linux-2.6.14/kernel/ipipe/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/Kconfig	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/Kconfig	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,6 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
@@ -14991,9 +13148,9 @@ diff -Naurdp linux-2.6.14/kernel/ipipe/Kconfig ipipe-2.6.14-imx21/kernel/ipipe/K
 +	---help---
 +	  Activate this option if you want the interrupt pipeline to be
 +	  compiled in.
-diff -Naurdp linux-2.6.14/kernel/ipipe/Kconfig.debug ipipe-2.6.14-imx21/kernel/ipipe/Kconfig.debug
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/Kconfig.debug ipipe-2.6.14-imx21/kernel/ipipe/Kconfig.debug
 --- linux-2.6.14/kernel/ipipe/Kconfig.debug	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/Kconfig.debug	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/Kconfig.debug	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,69 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
@@ -15064,16 +13221,16 @@ diff -Naurdp linux-2.6.14/kernel/ipipe/Kconfig.debug ipipe-2.6.14-imx21/kernel/i
 +	int
 +	default 0 if !IPIPE_TRACE_ENABLE
 +	default 1 if IPIPE_TRACE_ENABLE
-diff -Naurdp linux-2.6.14/kernel/ipipe/Makefile ipipe-2.6.14-imx21/kernel/ipipe/Makefile
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/Makefile ipipe-2.6.14-imx21/kernel/ipipe/Makefile
 --- linux-2.6.14/kernel/ipipe/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/Makefile	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/Makefile	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,3 @@
 +
 +obj-$(CONFIG_IPIPE)	+= core.o generic.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-diff -Naurdp linux-2.6.14/kernel/ipipe/core.c ipipe-2.6.14-imx21/kernel/ipipe/core.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/core.c ipipe-2.6.14-imx21/kernel/ipipe/core.c
 --- linux-2.6.14/kernel/ipipe/core.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/core.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/core.c	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,1051 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
@@ -16126,9 +14283,9 @@ diff -Naurdp linux-2.6.14/kernel/ipipe/core.c ipipe-2.6.14-imx21/kernel/ipipe/co
 +EXPORT_SYMBOL(__ipipe_pipeline);
 +EXPORT_SYMBOL(__ipipe_pipelock);
 +EXPORT_SYMBOL(__ipipe_virtual_irq_map);
-diff -Naurdp linux-2.6.14/kernel/ipipe/generic.c ipipe-2.6.14-imx21/kernel/ipipe/generic.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/generic.c ipipe-2.6.14-imx21/kernel/ipipe/generic.c
 --- linux-2.6.14/kernel/ipipe/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/generic.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/generic.c	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,424 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/generic.c
@@ -16554,9 +14711,9 @@ diff -Naurdp linux-2.6.14/kernel/ipipe/generic.c ipipe-2.6.14-imx21/kernel/ipipe
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_schedule_irq);
-diff -Naurdp linux-2.6.14/kernel/ipipe/tracer.c ipipe-2.6.14-imx21/kernel/ipipe/tracer.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/ipipe/tracer.c ipipe-2.6.14-imx21/kernel/ipipe/tracer.c
 --- linux-2.6.14/kernel/ipipe/tracer.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.14-imx21/kernel/ipipe/tracer.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/ipipe/tracer.c	2008-02-21 22:09:03.000000000 +0100
 @@ -0,0 +1,1241 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
@@ -17799,9 +15956,9 @@ diff -Naurdp linux-2.6.14/kernel/ipipe/tracer.c ipipe-2.6.14-imx21/kernel/ipipe/
 +	__ipipe_create_trace_proc_val(trace_dir, "enable",
 +	                              &ipipe_trace_enable);
 +}
-diff -Naurdp linux-2.6.14/kernel/irq/handle.c ipipe-2.6.14-imx21/kernel/irq/handle.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/irq/handle.c ipipe-2.6.14-imx21/kernel/irq/handle.c
 --- linux-2.6.14/kernel/irq/handle.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/irq/handle.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/irq/handle.c	2008-02-21 22:09:03.000000000 +0100
 @@ -81,6 +81,17 @@ fastcall int handle_IRQ_event(unsigned i
  {
  	int ret, retval = 0, status = 0;
@@ -17839,9 +15996,9 @@ diff -Naurdp linux-2.6.14/kernel/irq/handle.c ipipe-2.6.14-imx21/kernel/irq/hand
  	/*
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
-diff -Naurdp linux-2.6.14/kernel/printk.c ipipe-2.6.14-imx21/kernel/printk.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/printk.c ipipe-2.6.14-imx21/kernel/printk.c
 --- linux-2.6.14/kernel/printk.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/printk.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/printk.c	2008-02-21 22:09:03.000000000 +0100
 @@ -507,6 +507,78 @@ __attribute__((weak)) unsigned long long
   * is inspected when the actual printing occurs.
   */
@@ -17929,9 +16086,9 @@ diff -Naurdp linux-2.6.14/kernel/printk.c ipipe-2.6.14-imx21/kernel/printk.c
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-diff -Naurdp linux-2.6.14/kernel/sched.c ipipe-2.6.14-imx21/kernel/sched.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/sched.c ipipe-2.6.14-imx21/kernel/sched.c
 --- linux-2.6.14/kernel/sched.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/sched.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/sched.c	2008-02-21 22:09:03.000000000 +0100
 @@ -1154,7 +1154,7 @@ static int try_to_wake_up(task_t *p, uns
  
  	rq = task_rq_lock(p, &flags);
@@ -18072,9 +16229,9 @@ diff -Naurdp linux-2.6.14/kernel/sched.c ipipe-2.6.14-imx21/kernel/sched.c
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-diff -Naurdp linux-2.6.14/kernel/signal.c ipipe-2.6.14-imx21/kernel/signal.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/kernel/signal.c ipipe-2.6.14-imx21/kernel/signal.c
 --- linux-2.6.14/kernel/signal.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/kernel/signal.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/kernel/signal.c	2008-02-21 22:09:03.000000000 +0100
 @@ -601,6 +601,7 @@ void signal_wake_up(struct task_struct *
  	unsigned int mask;
  
@@ -18083,9 +16240,9 @@ diff -Naurdp linux-2.6.14/kernel/signal.c ipipe-2.6.14-imx21/kernel/signal.c
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced case.
-diff -Naurdp linux-2.6.14/lib/Kconfig.debug ipipe-2.6.14-imx21/lib/Kconfig.debug
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/lib/Kconfig.debug ipipe-2.6.14-imx21/lib/Kconfig.debug
 --- linux-2.6.14/lib/Kconfig.debug	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/lib/Kconfig.debug	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/lib/Kconfig.debug	2008-02-21 22:09:03.000000000 +0100
 @@ -9,6 +9,8 @@ config PRINTK_TIME
  	  in kernel startup.
  
@@ -18095,9 +16252,9 @@ diff -Naurdp linux-2.6.14/lib/Kconfig.debug ipipe-2.6.14-imx21/lib/Kconfig.debug
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-diff -Naurdp linux-2.6.14/lib/smp_processor_id.c ipipe-2.6.14-imx21/lib/smp_processor_id.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/lib/smp_processor_id.c ipipe-2.6.14-imx21/lib/smp_processor_id.c
 --- linux-2.6.14/lib/smp_processor_id.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/lib/smp_processor_id.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/lib/smp_processor_id.c	2008-02-21 22:09:03.000000000 +0100
 @@ -12,6 +12,11 @@ unsigned int debug_smp_processor_id(void
  	int this_cpu = raw_smp_processor_id();
  	cpumask_t this_mask;
@@ -18110,9 +16267,9 @@ diff -Naurdp linux-2.6.14/lib/smp_processor_id.c ipipe-2.6.14-imx21/lib/smp_proc
  	if (likely(preempt_count))
  		goto out;
  
-diff -Naurdp linux-2.6.14/lib/spinlock_debug.c ipipe-2.6.14-imx21/lib/spinlock_debug.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/lib/spinlock_debug.c ipipe-2.6.14-imx21/lib/spinlock_debug.c
 --- linux-2.6.14/lib/spinlock_debug.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/lib/spinlock_debug.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/lib/spinlock_debug.c	2008-02-21 22:09:03.000000000 +0100
 @@ -10,6 +10,7 @@
  #include <linux/spinlock.h>
  #include <linux/interrupt.h>
@@ -18195,9 +16352,9 @@ diff -Naurdp linux-2.6.14/lib/spinlock_debug.c ipipe-2.6.14-imx21/lib/spinlock_d
  }
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
-diff -Naurdp linux-2.6.14/mm/memory.c ipipe-2.6.14-imx21/mm/memory.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/mm/memory.c ipipe-2.6.14-imx21/mm/memory.c
 --- linux-2.6.14/mm/memory.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/mm/memory.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/mm/memory.c	2008-02-21 22:09:03.000000000 +0100
 @@ -48,6 +48,7 @@
  #include <linux/rmap.h>
  #include <linux/module.h>
@@ -18206,9 +16363,9 @@ diff -Naurdp linux-2.6.14/mm/memory.c ipipe-2.6.14-imx21/mm/memory.c
  
  #include <asm/pgalloc.h>
  #include <asm/uaccess.h>
-diff -Naurdp linux-2.6.14/mm/vmalloc.c ipipe-2.6.14-imx21/mm/vmalloc.c
+diff -Naurdp -x '*~' -x '*.orig' -x '*.rej' linux-2.6.14/mm/vmalloc.c ipipe-2.6.14-imx21/mm/vmalloc.c
 --- linux-2.6.14/mm/vmalloc.c	2005-10-28 02:02:08.000000000 +0200
-+++ ipipe-2.6.14-imx21/mm/vmalloc.c	2007-07-26 01:06:16.000000000 +0200
++++ ipipe-2.6.14-imx21/mm/vmalloc.c	2008-02-21 22:09:03.000000000 +0100
 @@ -18,6 +18,7 @@
  
  #include <asm/uaccess.h>
