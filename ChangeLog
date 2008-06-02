@@ -3,6 +3,8 @@
 	* include/asm-powerpc/calibration.h: Add calibration value for
 	the MPC8349_ITX board.
 
+	* ksrc/arch/blackfin/patches: Update to 2.6.22-blackfin-1.7-01.
+
 2008-06-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (xnshadow_map): Do not set the underlying
