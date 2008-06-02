@@ -1,6 +1,7 @@
 menu "Testing drivers"
 
 config XENO_KLATENCY_MODULE
+        depends on MODULES
 	def_tristate m
 
 config XENO_DRIVERS_TIMERBENCH
