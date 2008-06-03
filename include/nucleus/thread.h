@@ -308,7 +308,8 @@ typedef struct xnhook {
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(xnthread_t *t, int coreprio)
 {
-	return t->ops ? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
+	return t->ops && t->ops->get_denormalized_prio
+		? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
 }
 
 static inline unsigned xnthread_get_magic(xnthread_t *t)
