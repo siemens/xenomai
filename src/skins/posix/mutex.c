@@ -125,14 +125,24 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t * mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-	return -XENOMAI_SKINCALL1(__pse51_muxid,
-				  __pse51_mutex_trylock, &_mutex->shadow_mutex);
+	do {
+		err = XENOMAI_SKINCALL1(__pse51_muxid,
+					__pse51_mutex_trylock,
+					&_mutex->shadow_mutex);
+	} while (err == -EINTR);
+
+	return -err;
 }
 
 int __wrap_pthread_mutex_unlock(pthread_mutex_t * mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 
-	return -XENOMAI_SKINCALL1(__pse51_muxid,
-				  __pse51_mutex_unlock, &_mutex->shadow_mutex);
+	do {
+		err = XENOMAI_SKINCALL1(__pse51_muxid,
+					__pse51_mutex_unlock,
+					&_mutex->shadow_mutex);
+	} while (err == -EINTR);
+
+	return -err;
 }
