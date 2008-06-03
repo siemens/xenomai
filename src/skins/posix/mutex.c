@@ -124,6 +124,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t * mutex,
 int __wrap_pthread_mutex_trylock(pthread_mutex_t * mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	int err;
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
@@ -137,6 +138,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t * mutex)
 int __wrap_pthread_mutex_unlock(pthread_mutex_t * mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
+	int err;
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
