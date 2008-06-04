@@ -1,3 +1,10 @@
+2008-06-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c: Allocate registry_obj_slots[]
+	dynamically to work around limited data mapping during early boot
+	on ppc (same issue that required CONFIG_IPIPE_TRACE_VMALLOC to be
+	provided).
+
 2008-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Add calibration value for

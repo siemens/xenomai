@@ -46,7 +46,7 @@
 #define CONFIG_XENO_OPT_DEBUG_REGISTRY  0
 #endif
 
-static xnobject_t registry_obj_slots[CONFIG_XENO_OPT_REGISTRY_NRSLOTS];
+static xnobject_t *registry_obj_slots;
 
 static xnqueue_t registry_obj_freeq;	/* Free objects. */
 
@@ -94,6 +94,11 @@ int xnregistry_init(void)
  (n) : sizeof(primes) / sizeof(int) - 1)
 
 	int n;
+
+	registry_obj_slots =
+		xnarch_alloc_host_mem(CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
+	if (registry_obj_slots == NULL)
+		return -ENOMEM;
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 	registry_proc_apc =
@@ -195,6 +200,9 @@ void xnregistry_cleanup(void)
 	flush_scheduled_work();
 	remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+	xnarch_free_host_mem(registry_obj_slots,
+			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
 }
 
 static inline xnobject_t *registry_validate(xnhandle_t handle)
