@@ -2622,47 +2622,12 @@ index 9a455d4..7e7df25 100644
  static long pSeries_lpar_hpte_remove(unsigned long hpte_group)
  {
 diff --git a/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
-index 5fe65b2..5642819 100644
+index 5fe65b2..dffe5f2 100644
 --- a/arch/powerpc/sysdev/cpm2_pic.c
 +++ b/arch/powerpc/sysdev/cpm2_pic.c
-@@ -82,24 +82,32 @@ static void cpm2_mask_irq(unsigned int virq)
- {
+@@ -118,8 +118,9 @@ static void cpm2_end_irq(unsigned int virq)
  	int	bit, word;
  	unsigned int irq_nr = virq_to_hw(virq);
-+	unsigned long flags;
- 
- 	bit = irq_to_siubit[irq_nr];
- 	word = irq_to_siureg[irq_nr];
- 
-+	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq_nr);
- 	ppc_cached_irq_mask[word] &= ~(1 << bit);
- 	out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
-+	local_irq_restore_hw_cond(flags);
- }
- 
- static void cpm2_unmask_irq(unsigned int virq)
- {
- 	int	bit, word;
- 	unsigned int irq_nr = virq_to_hw(virq);
-+	unsigned long flags;
- 
- 	bit = irq_to_siubit[irq_nr];
- 	word = irq_to_siureg[irq_nr];
- 
-+	local_irq_save_hw_cond(flags);
- 	ppc_cached_irq_mask[word] |= 1 << bit;
- 	out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
-+	ipipe_irq_unlock(irq_nr);
-+	local_irq_restore_hw_cond(flags);
- }
- 
- static void cpm2_ack(unsigned int virq)
-@@ -117,15 +125,20 @@ static void cpm2_end_irq(unsigned int virq)
- {
- 	int	bit, word;
- 	unsigned int irq_nr = virq_to_hw(virq);
-+	unsigned long flags;
  
 -	if (!(irq_desc[irq_nr].status & (IRQ_DISABLED|IRQ_INPROGRESS))
 -			&& irq_desc[irq_nr].action) {
@@ -2672,15 +2637,6 @@ index 5fe65b2..5642819 100644
  
  		bit = irq_to_siubit[irq_nr];
  		word = irq_to_siureg[irq_nr];
- 
-+		local_irq_save_hw_cond(flags);
- 		ppc_cached_irq_mask[word] |= 1 << bit;
- 		out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
-+		ipipe_irq_unlock(irq_nr);
-+		local_irq_restore_hw_cond(flags);
- 
- 		/*
- 		 * Work around large numbers of spurious IRQs on PowerPC 82xx
 diff --git a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
 index 216c0f5..2b06740 100644
 --- a/arch/powerpc/sysdev/i8259.c
@@ -2915,6 +2871,19 @@ index 4f061c7..00ac0a9 100644
  		err = request_irq(vipi, mpic_ipi_action,
  				  IRQF_DISABLED|IRQF_PERCPU,
  				  ipi_names[i], mpic);
+diff --git a/arch/powerpc/sysdev/qe_lib/qe_ic.c b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+index e1c0fd6..3430da8 100644
+--- a/arch/powerpc/sysdev/qe_lib/qe_ic.c
++++ b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+@@ -33,7 +33,7 @@
+ 
+ #include "qe_ic.h"
+ 
+-static DEFINE_SPINLOCK(qe_ic_lock);
++static IPIPE_DEFINE_SPINLOCK(qe_ic_lock);
+ 
+ static struct qe_ic_info qe_ic_info[] = {
+ 	[1] = {
 diff --git a/arch/powerpc/sysdev/tsi108_pci.c b/arch/powerpc/sysdev/tsi108_pci.c
 index 31d3d33..8d670e2 100644
 --- a/arch/powerpc/sysdev/tsi108_pci.c
@@ -2972,7 +2941,7 @@ index 31d3d33..8d670e2 100644
  }
  
 diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
-index 847a549..8a263b9 100644
+index 847a549..7ca96b2 100644
 --- a/arch/powerpc/sysdev/uic.c
 +++ b/arch/powerpc/sysdev/uic.c
 @@ -49,7 +49,7 @@ struct uic {
@@ -2984,30 +2953,6 @@ index 847a549..8a263b9 100644
  
  	/* The remapper for this UIC */
  	struct irq_host	*irqhost;
-@@ -69,6 +69,7 @@ static void uic_unmask_irq(unsigned int virq)
- 	er = mfdcr(uic->dcrbase + UIC_ER);
- 	er |= 1 << (31 - src);
- 	mtdcr(uic->dcrbase + UIC_ER, er);
-+	ipipe_irq_unlock(virq);
- 	spin_unlock_irqrestore(&uic->lock, flags);
- }
- 
-@@ -80,6 +81,7 @@ static void uic_mask_irq(unsigned int virq)
- 	u32 er;
- 
- 	spin_lock_irqsave(&uic->lock, flags);
-+	ipipe_irq_lock(virq);
- 	er = mfdcr(uic->dcrbase + UIC_ER);
- 	er &= ~(1 << (31 - src));
- 	mtdcr(uic->dcrbase + UIC_ER, er);
-@@ -106,6 +108,7 @@ static void uic_mask_ack_irq(unsigned int virq)
- 
- 	sr = 1 << (31-src);
- 	spin_lock_irqsave(&uic->lock, flags);
-+	ipipe_irq_lock(virq);
- 	er = mfdcr(uic->dcrbase + UIC_ER);
- 	er &= ~sr;
- 	mtdcr(uic->dcrbase + UIC_ER, er);
 diff --git a/arch/ppc/Kconfig b/arch/ppc/Kconfig
 index ec1c2b5..b56ab93 100644
 --- a/arch/ppc/Kconfig
@@ -3652,7 +3597,7 @@ index 36c0e75..7b61aaf 100644
  	if (debugger_fault_handler && TRAP(regs) == 0x300) {
  		debugger_fault_handler(regs);
 diff --git a/arch/ppc/syslib/cpm2_pic.c b/arch/ppc/syslib/cpm2_pic.c
-index fb2d584..8a5fdc7 100644
+index fb2d584..c7ef14a 100644
 --- a/arch/ppc/syslib/cpm2_pic.c
 +++ b/arch/ppc/syslib/cpm2_pic.c
 @@ -49,6 +49,7 @@ static void cpm2_mask_irq(unsigned int irq_nr)
@@ -3663,12 +3608,11 @@ index fb2d584..8a5fdc7 100644
  
  	irq_nr -= CPM_IRQ_OFFSET;
  
-@@ -56,14 +57,18 @@ static void cpm2_mask_irq(unsigned int irq_nr)
+@@ -56,14 +57,17 @@ static void cpm2_mask_irq(unsigned int irq_nr)
  	word = irq_to_siureg[irq_nr];
  
  	simr = &(cpm2_immr->im_intctl.ic_simrh);
 +	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq_nr);
  	ppc_cached_irq_mask[word] &= ~(1 << bit);
  	simr[word] = ppc_cached_irq_mask[word];
 +	local_irq_restore_hw_cond(flags);
@@ -3682,14 +3626,13 @@ index fb2d584..8a5fdc7 100644
  
  	irq_nr -= CPM_IRQ_OFFSET;
  
-@@ -71,14 +76,18 @@ static void cpm2_unmask_irq(unsigned int irq_nr)
+@@ -71,14 +75,17 @@ static void cpm2_unmask_irq(unsigned int irq_nr)
  	word = irq_to_siureg[irq_nr];
  
  	simr = &(cpm2_immr->im_intctl.ic_simrh);
 +	local_irq_save_hw_cond(flags);
  	ppc_cached_irq_mask[word] |= 1 << bit;
  	simr[word] = ppc_cached_irq_mask[word];
-+	ipipe_irq_unlock(irq_nr);
 +	local_irq_restore_hw_cond(flags);
  }
  
@@ -3701,12 +3644,11 @@ index fb2d584..8a5fdc7 100644
  
  	irq_nr -= CPM_IRQ_OFFSET;
  
-@@ -87,26 +96,34 @@ static void cpm2_mask_and_ack(unsigned int irq_nr)
+@@ -87,26 +94,32 @@ static void cpm2_mask_and_ack(unsigned int irq_nr)
  
  	simr = &(cpm2_immr->im_intctl.ic_simrh);
  	sipnr = &(cpm2_immr->im_intctl.ic_sipnrh);
 +	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq_nr);
  	ppc_cached_irq_mask[word] &= ~(1 << bit);
  	simr[word] = ppc_cached_irq_mask[word];
  	sipnr[word] = 1 << bit;
@@ -3733,12 +3675,11 @@ index fb2d584..8a5fdc7 100644
 +		local_irq_save_hw_cond(flags);
  		ppc_cached_irq_mask[word] |= 1 << bit;
  		simr[word] = ppc_cached_irq_mask[word];
-+		ipipe_irq_unlock(irq_nr);
 +		local_irq_restore_hw_cond(flags);
  		/*
  		 * Work around large numbers of spurious IRQs on PowerPC 82xx
  		 * systems.
-@@ -121,6 +138,11 @@ static struct hw_interrupt_type cpm2_pic = {
+@@ -121,6 +134,11 @@ static struct hw_interrupt_type cpm2_pic = {
  	.disable = cpm2_mask_irq,
  	.ack = cpm2_mask_and_ack,
  	.end = cpm2_end_irq,
@@ -3750,7 +3691,7 @@ index fb2d584..8a5fdc7 100644
  };
  
  int cpm2_get_irq(void)
-@@ -173,5 +195,9 @@ void cpm2_init_IRQ(void)
+@@ -173,5 +191,9 @@ void cpm2_init_IRQ(void)
  	for (i = 0; i < NR_CPM_INTS; i++) {
  		irq_desc[i+CPM_IRQ_OFFSET].chip = &cpm2_pic;
  		irq_desc[i+CPM_IRQ_OFFSET].status |= IRQ_LEVEL;
@@ -3761,10 +3702,10 @@ index fb2d584..8a5fdc7 100644
  	}
  }
 diff --git a/arch/ppc/syslib/ipic.c b/arch/ppc/syslib/ipic.c
-index 9192777..60ac6b3 100644
+index 9192777..0cff514 100644
 --- a/arch/ppc/syslib/ipic.c
 +++ b/arch/ppc/syslib/ipic.c
-@@ -382,40 +382,52 @@ static void ipic_enable_irq(unsigned int irq)
+@@ -382,40 +382,50 @@ static void ipic_enable_irq(unsigned int irq)
  {
  	struct ipic *ipic = ipic_from_irq(irq);
  	unsigned int src = irq - ipic->irq_offset;
@@ -3775,7 +3716,6 @@ index 9192777..60ac6b3 100644
  	temp = ipic_read(ipic->regs, ipic_info[src].mask);
  	temp |= (1 << (31 - ipic_info[src].bit));
  	ipic_write(ipic->regs, ipic_info[src].mask, temp);
-+	ipipe_irq_unlock(irq);
 +	local_irq_restore_hw_cond(flags);
  }
  
@@ -3787,7 +3727,6 @@ index 9192777..60ac6b3 100644
  	u32 temp;
  
 +	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq);
  	temp = ipic_read(ipic->regs, ipic_info[src].mask);
  	temp &= ~(1 << (31 - ipic_info[src].bit));
  	ipic_write(ipic->regs, ipic_info[src].mask, temp);
@@ -3818,7 +3757,7 @@ index 9192777..60ac6b3 100644
  		ipic_enable_irq(irq);
  }
  
-@@ -425,6 +437,11 @@ struct hw_interrupt_type ipic = {
+@@ -425,6 +435,11 @@ struct hw_interrupt_type ipic = {
  	.disable = ipic_disable_irq,
  	.ack = ipic_disable_irq_and_ack,
  	.end = ipic_end_irq,
@@ -3830,7 +3769,7 @@ index 9192777..60ac6b3 100644
  };
  
  void __init ipic_init(phys_addr_t phys_addr,
-@@ -474,6 +491,10 @@ void __init ipic_init(phys_addr_t phys_addr,
+@@ -474,6 +489,10 @@ void __init ipic_init(phys_addr_t phys_addr,
  	for (i = 0 ; i < NR_IPIC_INTS ; i++) {
  		irq_desc[i+irq_offset].chip = &ipic;
  		irq_desc[i+irq_offset].status = IRQ_LEVEL;
@@ -3841,7 +3780,7 @@ index 9192777..60ac6b3 100644
  	}
  
  	temp = 0;
-@@ -496,6 +517,7 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
+@@ -496,6 +515,7 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
  {
  	struct ipic *ipic = ipic_from_irq(irq);
  	unsigned int src = irq - ipic->irq_offset;
@@ -3849,7 +3788,7 @@ index 9192777..60ac6b3 100644
  	u32 temp;
  
  	if (priority > 7)
-@@ -505,6 +527,8 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
+@@ -505,6 +525,8 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
  	if (ipic_info[src].prio == 0)
  		return -EINVAL;
  
@@ -3858,7 +3797,7 @@ index 9192777..60ac6b3 100644
  	temp = ipic_read(ipic->regs, ipic_info[src].prio);
  
  	if (priority < 4) {
-@@ -517,6 +541,8 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
+@@ -517,6 +539,8 @@ int ipic_set_priority(unsigned int irq, unsigned int priority)
  
  	ipic_write(ipic->regs, ipic_info[src].prio, temp);
  
@@ -3867,7 +3806,7 @@ index 9192777..60ac6b3 100644
  	return 0;
  }
  
-@@ -524,8 +550,11 @@ void ipic_set_highest_priority(unsigned int irq)
+@@ -524,8 +548,11 @@ void ipic_set_highest_priority(unsigned int irq)
  {
  	struct ipic *ipic = ipic_from_irq(irq);
  	unsigned int src = irq - ipic->irq_offset;
@@ -3879,7 +3818,7 @@ index 9192777..60ac6b3 100644
  	temp = ipic_read(ipic->regs, IPIC_SICFR);
  
  	/* clear and set HPI */
-@@ -533,6 +562,8 @@ void ipic_set_highest_priority(unsigned int irq)
+@@ -533,6 +560,8 @@ void ipic_set_highest_priority(unsigned int irq)
  	temp |= (src & 0x7f) << 24;
  
  	ipic_write(ipic->regs, IPIC_SICFR, temp);
@@ -3889,7 +3828,7 @@ index 9192777..60ac6b3 100644
  
  void ipic_set_default_priority(void)
 diff --git a/arch/ppc/syslib/open_pic.c b/arch/ppc/syslib/open_pic.c
-index 18ec947..5021430 100644
+index 18ec947..bd3fcd0 100644
 --- a/arch/ppc/syslib/open_pic.c
 +++ b/arch/ppc/syslib/open_pic.c
 @@ -90,6 +90,11 @@ struct hw_interrupt_type open_pic = {
@@ -3920,7 +3859,7 @@ index 18ec947..5021430 100644
  
  	/* Initialize the spurious interrupt */
  	if (ppc_md.progress) ppc_md.progress("openpic: spurious",0x3bd);
-@@ -718,29 +729,37 @@ openpic_hookup_cascade(u_int irq, char *name,
+@@ -718,29 +729,35 @@ openpic_hookup_cascade(u_int irq, char *name,
  static void openpic_enable_irq(u_int irq)
  {
  	volatile u_int __iomem *vpp;
@@ -3934,7 +3873,6 @@ index 18ec947..5021430 100644
  	do {
  		mb(); /* sync is probably useless here */
  	} while (openpic_readfield(vpp, OPENPIC_MASK));
-+	ipipe_irq_unlock(irq);
 +	local_irq_restore_hw_cond(flags);
  }
  
@@ -3947,7 +3885,6 @@ index 18ec947..5021430 100644
  	check_arg_irq(irq);
  	vpp = &ISR[irq - open_pic_irq_offset]->Vector_Priority;
 +	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq);
  	openpic_setfield(vpp, OPENPIC_MASK);
  	/* make sure mask gets to controller before we return to user */
  	do {
@@ -3958,7 +3895,7 @@ index 18ec947..5021430 100644
  }
  
  #ifdef CONFIG_SMP
-@@ -821,7 +840,7 @@ static void openpic_set_sense(u_int irq, int sense)
+@@ -821,7 +838,7 @@ static void openpic_set_sense(u_int irq, int sense)
   */
  static void openpic_ack_irq(unsigned int irq_nr)
  {
@@ -3967,7 +3904,7 @@ index 18ec947..5021430 100644
  	openpic_disable_irq(irq_nr);
  	openpic_eoi();
  #else
-@@ -832,9 +851,10 @@ static void openpic_ack_irq(unsigned int irq_nr)
+@@ -832,9 +849,10 @@ static void openpic_ack_irq(unsigned int irq_nr)
  
  static void openpic_end_irq(unsigned int irq_nr)
  {
@@ -3982,10 +3919,10 @@ index 18ec947..5021430 100644
  #else
  	if ((irq_desc[irq_nr].status & IRQ_LEVEL) != 0)
 diff --git a/arch/ppc/syslib/ppc4xx_pic.c b/arch/ppc/syslib/ppc4xx_pic.c
-index 002cb31..03789b7 100644
+index 002cb31..7b04407 100644
 --- a/arch/ppc/syslib/ppc4xx_pic.c
 +++ b/arch/ppc/syslib/ppc4xx_pic.c
-@@ -41,40 +41,55 @@ extern unsigned char ppc4xx_uic_ext_irq_cfg[] __attribute__ ((weak));
+@@ -41,40 +41,52 @@ extern unsigned char ppc4xx_uic_ext_irq_cfg[] __attribute__ ((weak));
  static void ppc4xx_uic##n##_enable(unsigned int irq)			\
  {									\
  	u32 mask = IRQ_MASK_UIC##n(irq);				\
@@ -3995,7 +3932,6 @@ index 002cb31..03789b7 100644
  		mtdcr(DCRN_UIC_SR(UIC##n), mask);			\
  	ppc_cached_irq_mask[n] |= mask;					\
  	mtdcr(DCRN_UIC_ER(UIC##n), ppc_cached_irq_mask[n]);		\
-+	ipipe_irq_unlock(irq);						\
 +	local_irq_restore_hw_cond(flags);				\
  }									\
  									\
@@ -4003,7 +3939,6 @@ index 002cb31..03789b7 100644
  {									\
 +	unsigned long flags;						\
 +	local_irq_save_hw_cond(flags);					\
-+	ipipe_irq_lock(irq);						\
  	ppc_cached_irq_mask[n] &= ~IRQ_MASK_UIC##n(irq);		\
  	mtdcr(DCRN_UIC_ER(UIC##n), ppc_cached_irq_mask[n]);		\
  	ACK_UIC##n##_PARENT						\
@@ -4037,12 +3972,11 @@ index 002cb31..03789b7 100644
  		ppc_cached_irq_mask[n] |= mask;				\
  		mtdcr(DCRN_UIC_ER(UIC##n), ppc_cached_irq_mask[n]);	\
  	}								\
-+	ipipe_irq_unlock(irq);						\
 +	local_irq_restore_hw_cond(flags);				\
  }
  
  #define DECLARE_UIC(n)							\
-@@ -84,6 +99,8 @@ static void ppc4xx_uic##n##_end(unsigned int irq)			\
+@@ -84,6 +96,8 @@ static void ppc4xx_uic##n##_end(unsigned int irq)			\
  	.disable 	= ppc4xx_uic##n##_disable,			\
  	.ack 		= ppc4xx_uic##n##_ack,				\
  	.end 		= ppc4xx_uic##n##_end,				\
@@ -4051,7 +3985,7 @@ index 002cb31..03789b7 100644
  }									\
  
  #if NR_UICS == 4
-@@ -308,6 +325,11 @@ void __init ppc4xx_pic_init(void)
+@@ -308,6 +322,11 @@ void __init ppc4xx_pic_init(void)
  		irq_desc[i].chip = &__uic[i >> 5].decl;
  		if (is_level_sensitive(i))
  			irq_desc[i].status |= IRQ_LEVEL;
@@ -4558,7 +4492,7 @@ index a7b60bf..22dcb01 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..4248ab0
+index 0000000..9bba093
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,210 @@
@@ -4608,10 +4542,10 @@ index 0000000..4248ab0
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.1-03"
++#define IPIPE_ARCH_STRING	"2.1-04"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
