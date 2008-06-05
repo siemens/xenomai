@@ -1,3 +1,8 @@
+2008-06-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.24-powerpc-2.1-04,
+	2.6.25-powerpc-2.2-00.
+
 2008-06-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/registry.c: Allocate registry_obj_slots[]
