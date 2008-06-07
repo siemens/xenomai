@@ -1,3 +1,8 @@
+2008-06-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to
+	2.6.20-powerpc-1.8-00 (various fixes + legacy ppc/ support).
+
 2008-06-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.24-powerpc-2.1-04,
