@@ -1,3 +1,8 @@
+2008-06-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to
+	2.6.20-powerpc-1.8-00 (various fixes + legacy ppc/ support).
+
 2008-05-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/syscall.c (__wind_msgq_receive): Fix byte
