@@ -4,7 +4,7 @@
 
 	* ksrc/arch/blackfin/patches: Update to 2.6.22-blackfin-1.7-02.
 	
-	* ksrc/arch/powerpc/patches: Upgrade to 2.6.25-powerpc-2.2-01,
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.25-powerpc-2.2-02,
 	2.6.20-powerpc-1.8-01.
 	
 	* ksrc/arch/x86/patches: Update to 2.6.25-x86-2.0-08.
