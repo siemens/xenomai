@@ -21,9 +21,9 @@
 #ifndef _XENO_NUCLEUS_STAT_H
 #define _XENO_NUCLEUS_STAT_H
 
-#ifdef CONFIG_XENO_OPT_STATS
+#include <nucleus/types.h>  /* This pulls in linux/config.h with legacy kernels. */
 
-#include <nucleus/types.h>
+#ifdef CONFIG_XENO_OPT_STATS
 
 typedef struct xnstat_exectime {
 
