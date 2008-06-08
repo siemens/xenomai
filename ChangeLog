@@ -1,4 +1,8 @@
 2008-06-08  Philippe Gerum  <rpm@xenomai.org>
+	
+	* RELEASE: Xenomai 2.4.4 (Made Of Tears)
+
+2008-06-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.25-arm-1.9-02.
 
