@@ -1041,10 +1041,10 @@ index e31aca9..b1553f5 100644
  	u32 lc = c;
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..7f19a32
+index 0000000..d2407af
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,754 @@
+@@ -0,0 +1,751 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -1768,9 +1768,6 @@ index 0000000..7f19a32
 +EXPORT_SYMBOL_GPL(__switch_to);
 +EXPORT_SYMBOL_GPL(show_stack);
 +EXPORT_SYMBOL_GPL(_switch);
-+#ifdef CONFIG_PPC_MERGE
-+EXPORT_SYMBOL_GPL(last_task_used_math);
-+#endif
 +EXPORT_SYMBOL_GPL(tasklist_lock);
 +#ifdef CONFIG_PPC64
 +EXPORT_PER_CPU_SYMBOL(ppc64_tlb_batch);
@@ -1791,7 +1788,7 @@ index 0000000..7f19a32
 +EXPORT_SYMBOL_GPL(context_map);
 +EXPORT_SYMBOL_GPL(atomic_set_mask);
 +EXPORT_SYMBOL_GPL(atomic_clear_mask);
-+#ifdef CONFIG_PPC_MERGE
++#ifndef CONFIG_SMP
 +EXPORT_SYMBOL_GPL(last_task_used_math);
 +#endif
 +#ifdef CONFIG_IPIPE_TRACE_MCOUNT
@@ -4480,7 +4477,7 @@ index a7b60bf..22dcb01 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..fe98b78
+index 0000000..3fb28b2
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,212 @@
@@ -4530,10 +4527,10 @@ index 0000000..fe98b78
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.2-01"
++#define IPIPE_ARCH_STRING	"2.2-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
