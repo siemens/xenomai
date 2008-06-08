@@ -30,6 +30,11 @@
 	on ppc (same issue that required CONFIG_IPIPE_TRACE_VMALLOC to be
 	provided).
 
+2008-06-03  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* src/skins/posix/mutex.c (__wrap_pthread_mutex_trylock, 
+	__wrap_pthread_mutex_unlock): trap the -EINTR return value.
+
 2008-06-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Add calibration value for
@@ -53,11 +58,22 @@
 	* configure.in (--enable-arm-mach): Add a "generic" machine.
 	(--disable-arm-tsc): Enable ARM tsc emulation by default.
 
+2008-05-27  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/signal.c (pse51_sigqueue_inner): Fix posix
+	shadows signals: only trigger xnshadow_relax if the target thread
+	is not already suspended from the nucleus point of view.
+
 2008-05-27  Sebastian Smolorz  <sesmo@gmx.net>
 
 	* ksrc/skins/native/pipe.c (rt_pipe_receive): Fix documentation
 	for the return values of the function. -EIDRM is no valid return
 	value any more.
+
+2008-05-25  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* include/nucleus/intr.h, include/nucleus/thread.h: Fix
+	compilation of posix applications in user-space with ucLibc.
 
 2008-05-25  Roland Stigge  <stigge@antcom.de>
 
@@ -184,6 +200,12 @@
 	* ksrc/skins/native/cond.c (rt_cond_wait): Fix
 	documentation (ETIMEDOUT status).
 	
+2008-05-03  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+
+	* ksrc/skins/posix/mutex.h (pse51_mutex_timedlock_internal):
+	Correctly restore the mutex recursion count after suspension in
+	a condition variable.
+
 2008-05-02  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Fix pthread_cond/mutex_init for NULL
