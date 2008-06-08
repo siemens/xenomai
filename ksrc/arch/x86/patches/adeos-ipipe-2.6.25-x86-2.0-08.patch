@@ -3804,6 +3804,18 @@ index 77f7a7f..394d623 100644
  static struct uart_driver serial8250_reg;
  static struct console serial8250_console = {
  	.name		= "ttyS",
+diff --git a/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
+index b2ba2fc..4764463 100644
+--- a/include/asm-generic/cmpxchg-local.h
++++ b/include/asm-generic/cmpxchg-local.h
+@@ -1,6 +1,7 @@
+ #ifndef __ASM_GENERIC_CMPXCHG_LOCAL_H
+ #define __ASM_GENERIC_CMPXCHG_LOCAL_H
+ 
++#include <asm/ipipe_base.h>
+ #include <linux/types.h>
+ 
+ extern unsigned long wrong_size_cmpxchg(volatile void *ptr);
 diff --git a/include/asm-x86/apic.h b/include/asm-x86/apic.h
 index bcfc07f..8c46e37 100644
 --- a/include/asm-x86/apic.h
@@ -3924,7 +3936,7 @@ index 6d011bd..a99aa60 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..9aa64f5
+index 0000000..4b22658
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,126 @@
@@ -3955,10 +3967,10 @@ index 0000000..9aa64f5
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-06"
++#define IPIPE_ARCH_STRING	"2.0-08"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_PATCH_NUMBER	8
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -9974,6 +9986,32 @@ index fdb3fbe..f79e09c 100644
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 5fa6198..ed21856 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -176,8 +176,10 @@ unsigned int __do_IRQ(unsigned int irq)
+ 		/*
+ 		 * No locking required for CPU-local interrupts:
+ 		 */
++#ifndef CONFIG_IPIPE
+ 		if (desc->chip->ack)
+ 			desc->chip->ack(irq);
++#endif
+ 		if (likely(!(desc->status & IRQ_DISABLED))) {
+ 			action_ret = handle_IRQ_event(irq, desc->action);
+ 			if (!noirqdebug)
+@@ -188,8 +190,10 @@ unsigned int __do_IRQ(unsigned int irq)
+ 	}
+ 
+ 	spin_lock(&desc->lock);
++#ifndef CONFIG_IPIPE
+ 	if (desc->chip->ack)
+ 		desc->chip->ack(irq);
++#endif
+ 	/*
+ 	 * REPLAY is when Linux resends an IRQ that was dropped earlier
+ 	 * WAITING is used by probe to mark irqs that are being tested
 diff --git a/kernel/lockdep.c b/kernel/lockdep.c
 index 81a4e4a..da942d6 100644
 --- a/kernel/lockdep.c
@@ -10135,7 +10173,7 @@ index bdd4ea8..ad6873e 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index 8dcdec6..c0cd432 100644
+index 8dcdec6..2e8ad3e 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1842,7 +1842,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -10143,7 +10181,7 @@ index 8dcdec6..c0cd432 100644
  	rq = task_rq_lock(p, &flags);
  	old_state = p->state;
 -	if (!(old_state & state))
-+	if (!(old_state & state) || (old_state & TASK_NOWAKEUP))
++	if (!(old_state & state) || (old_state & (TASK_NOWAKEUP|TASK_ATOMICSWITCH)))
  		goto out;
  
  	if (p->se.on_rq)
@@ -10496,7 +10534,7 @@ index 9c4b025..08f096b 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 0d14d1e..b14218d 100644
+index 0d14d1e..3563354 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -51,6 +51,7 @@
@@ -10565,7 +10603,7 @@ index 0d14d1e..b14218d 100644
 +				pte = pte_mkclean(pte);
 +			pte = pte_mkold(pte);
 +
-+			page_dup_rmap(uncow_page, vma, addr);
++			page_add_new_anon_rmap(uncow_page, vma, addr);
 +			rss[!!PageAnon(uncow_page)]++;
 +			goto out_set_pte;
 +		}
@@ -10664,7 +10702,7 @@ index 0d14d1e..b14218d 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2737,3 +2786,110 @@ void print_vma_addr(char *prefix, unsigned long ip)
+@@ -2737,3 +2786,111 @@ void print_vma_addr(char *prefix, unsigned long ip)
  	}
  	up_read(&current->mm->mmap_sem);
  }
@@ -10683,7 +10721,7 @@ index 0d14d1e..b14218d 100644
 +		if (!pte)
 +			continue;
 +
-+		if (!pte_present(*pte)) {
++		if (!pte_present(*pte) || pte_write(*pte)) {
 +			pte_unmap_unlock(pte, ptl);
 +			continue;
 +		}
@@ -10747,7 +10785,8 @@ index 0d14d1e..b14218d 100644
 +		goto done_mm;
 +
 +	for (vma = mm->mmap; vma; vma = vma->vm_next) {
-+		if (!is_cow_mapping(vma->vm_flags))
++		if (!is_cow_mapping(vma->vm_flags)
++		    || !(vma->vm_flags & VM_WRITE))
 +			continue;
 +
 +		addr = vma->vm_start;
