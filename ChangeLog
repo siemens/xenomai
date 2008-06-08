@@ -1,3 +1,14 @@
+2008-06-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.25-arm-1.9-02.
+
+	* ksrc/arch/blackfin/patches: Update to 2.6.22-blackfin-1.7-02.
+	
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.25-powerpc-2.2-01,
+	2.6.20-powerpc-1.8-01.
+	
+	* ksrc/arch/x86/patches: Update to 2.6.25-x86-2.0-08.
+	
 2008-06-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to
