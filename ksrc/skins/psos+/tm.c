@@ -205,7 +205,7 @@ static u_long tm_date_to_ticks(u_long date,
 		*count += 1;
 
 	for (n = month - 1; n > 0; n--)
-		*count += tm_month_sizes[n];
+		*count += tm_month_sizes[n - 1];
 
 	*count += day - 1;
 	*count *= 24;
@@ -223,9 +223,10 @@ static u_long tm_date_to_ticks(u_long date,
 static void tm_ticks_to_date(u_long *date,
 			     u_long *time, u_long *ticks, xnticks_t count)
 {
-	u_long year, month, day, hour, min, sec, allsecs, rem;
+	u_long year, month, day, hour, min, sec, rem;
+	xnticks_t allsecs;
 
-	allsecs = (u_long)xnarch_ulldiv(count, xntbase_get_ticks2sec(psos_tbase), &rem);
+	allsecs = xnarch_ulldiv(count, xntbase_get_ticks2sec(psos_tbase), &rem);
 
 	year = 0;
 
@@ -257,14 +258,14 @@ static void tm_ticks_to_date(u_long *date,
 		month++;
 	}
 
-	day = allsecs / tm_secbyday;
-	allsecs -= (day * tm_secbyday);
-	day++;			/* Days are 1-based. */
-	hour = (allsecs / tm_secbyhour);
-	allsecs -= (hour * tm_secbyhour);
-	min = (allsecs / tm_secbymin);
-	allsecs -= (min * tm_secbymin);
 	sec = allsecs;
+	day = sec / tm_secbyday;
+	sec -= (day * tm_secbyday);
+	day++;			/* Days are 1-based. */
+	hour = (sec / tm_secbyhour);
+	sec -= (hour * tm_secbyhour);
+	min = (sec / tm_secbymin);
+	sec -= (min * tm_secbymin);
 
 	*date = (year << 16) | (month << 8) | day;
 	*time = (hour << 16) | (min << 8) | sec;
