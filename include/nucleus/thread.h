@@ -325,7 +325,7 @@ void xnthread_cleanup_tcb(xnthread_t *thread);
 
 char *xnthread_symbolic_status(xnflags_t status, char *buf, int size);
 
-int *xnthread_get_errno_location(void);
+int *xnthread_get_errno_location(xnthread_t *thread);
 
 static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 {

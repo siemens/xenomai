@@ -22,7 +22,7 @@
 
 int *wind_current_context_errno(void)
 {
-	return xnthread_get_errno_location();
+	return xnthread_get_errno_location(xnpod_current_thread());
 }
 
 void printErrno(int status)
@@ -90,23 +90,13 @@ void printErrno(int status)
 
 STATUS errnoSet(int status)
 {
-	int *errno_ptr = wind_current_context_errno();
-
-	if (!errno_ptr)
-		return ERROR;
-
-	*errno_ptr = status;
+	wind_errnoset(status);
 	return OK;
 }
 
 int errnoGet(void)
 {
-	int *errno_ptr = wind_current_context_errno();
-
-	if (!errno_ptr)
-		return 0;
-
-	return (*errno_ptr);
+	return wind_errnoget();
 }
 
 int errnoOfTaskGet(TASK_ID task_id)
@@ -120,7 +110,7 @@ int errnoOfTaskGet(TASK_ID task_id)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
 
-	result = wind_errnoget();
+	result = *xnthread_get_errno_location(&task->threadbase);
 
 	xnlock_put_irqrestore(&nklock, s);
 	return result;
@@ -140,7 +130,7 @@ STATUS errnoOfTaskSet(TASK_ID task_id, int status)
 	check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 			   goto error);
 
-	wind_errnoset(status);
+	*xnthread_get_errno_location(&task->threadbase) = status;
 
 	xnlock_put_irqrestore(&nklock, s);
 	return OK;

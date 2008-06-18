@@ -105,12 +105,12 @@ struct pse51_thread {
 
 static inline void thread_set_errno (int err)
 {
-    *xnthread_get_errno_location() = err;
+	*xnthread_get_errno_location(xnpod_current_thread()) = err;
 }
 
 static inline int thread_get_errno (void)
 {
-    return *xnthread_get_errno_location();
+	return *xnthread_get_errno_location(xnpod_current_thread());
 }
 
 #define thread_name(thread) ((thread)->attr.name)
