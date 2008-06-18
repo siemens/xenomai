@@ -1,3 +1,20 @@
+2008-06-18  Markus Osterried <markus.osterried@ericsson.com>
+
+	* ksrc/skins/psos+/tm.c (tm_ticks_to_date): Fix overflow and
+	off-by-one reference error.
+
+2008-06-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* thread.c (xnthread_get_errno_location): Allow operation on
+	non-current threads.
+
+	* ksrc/skins/vxworks/errnoLib.c (errnoOfTaskGet, errnoOfTaskSet):
+	Refer to the target task's errno location (instead of current's).
+
+	* ksrc/skins/vxworks/syscall.c (__wind_errno_taskset,
+	__wind_errno_taskset): Allow calls from non-VxWorks tasks.
+
+
 2008-06-08  Philippe Gerum  <rpm@xenomai.org>
 	
 	* RELEASE: Xenomai 2.4.4 (Made Of Tears)
