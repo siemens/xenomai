@@ -668,11 +668,12 @@ static int __wind_errno_taskset(struct pt_regs *regs)
 	int errcode = __xn_reg_arg2(regs);
 	WIND_TCB *pTcb;
 
-	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
-	else
-		pTcb = __wind_task_current(current);
-
+ 	if (!handle) {
+ 		wind_errnoset(errcode);
+ 		return 0;
+ 	}
+ 
+ 	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
 
@@ -692,18 +693,17 @@ static int __wind_errno_taskget(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 	int errcode;
 
-	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
-	else
-		pTcb = __wind_task_current(current);
-
-	if (!pTcb)
-		return S_objLib_OBJ_ID_ERROR;
-
-	errcode = errnoOfTaskGet((TASK_ID) pTcb);
-
-	if (errcode == ERROR)
-		return wind_errnoget();
+ 	if (!handle)
+ 		errcode = wind_errnoget();
+ 	else {
+ 		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+ 		if (!pTcb)
+ 			return S_objLib_OBJ_ID_ERROR;
+ 
+ 		errcode = errnoOfTaskGet((TASK_ID) pTcb);
+ 		if (errcode == ERROR)
+ 			return wind_errnoget();
+ 	}
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &errcode,
 				      sizeof(errcode));

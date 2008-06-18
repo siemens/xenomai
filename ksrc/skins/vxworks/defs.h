@@ -174,16 +174,14 @@ static inline void wind_wd_flush_rq(xnqueue_t *rq)
 
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
-int *wind_errno_location(void);
-
-static inline void wind_errnoset (int err)
+static inline void wind_errnoset(int err)
 {
-    *xnthread_get_errno_location() = err;
+	*xnthread_get_errno_location(xnpod_current_thread()) = err;
 }
 
-static inline int wind_errnoget (void)
+static inline int wind_errnoget(void)
 {
-    return *xnthread_get_errno_location();
+	return *xnthread_get_errno_location(xnpod_current_thread());
 }
 
 #define error_check(cond, status, action) do    \

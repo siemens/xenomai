@@ -34,13 +34,13 @@
 #define ENOTSUP         EOPNOTSUPP
 #define	ETIMEDOUT	110	/* Connection timed out */
 
-#define errno (*xnthread_get_errno_location())
+#define errno (*xnthread_get_errno_location(xnpod_current_thread()))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int *xnthread_get_errno_location(void);
+int *xnthread_get_errno_location(xnthread_t *thread);
 
 #ifdef __cplusplus
 }
