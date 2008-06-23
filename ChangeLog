@@ -1,3 +1,9 @@
+2008-06-23  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.25-powerpc-2.2-03.
+	
+	* ksrc/arch/x86/patches: Update to 2.6.25-x86-2.0-09.
+	
 2008-06-18  Markus Osterried <markus.osterried@ericsson.com>
 
 	* ksrc/skins/psos+/tm.c (tm_ticks_to_date): Fix overflow and
