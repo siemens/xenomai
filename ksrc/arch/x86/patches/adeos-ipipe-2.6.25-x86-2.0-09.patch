@@ -2925,31 +2925,10 @@ index 9a4fde7..71bd58e 100644
  	int sum;
  	int touched = 0;
 diff --git a/arch/x86/kernel/process_32.c b/arch/x86/kernel/process_32.c
-index 43930e7..e29e59c 100644
+index 43930e7..d97c8c2 100644
 --- a/arch/x86/kernel/process_32.c
 +++ b/arch/x86/kernel/process_32.c
-@@ -111,7 +111,7 @@ void default_idle(void)
- 		 */
- 		smp_mb();
- 
--		local_irq_disable();
-+		local_irq_disable_hw();
- 		if (!need_resched()) {
- 			ktime_t t0, t1;
- 			u64 t0n, t1n;
-@@ -123,8 +123,9 @@ void default_idle(void)
- 			t1 = ktime_get();
- 			t1n = ktime_to_ns(t1);
- 			sched_clock_idle_wakeup_event(t1n - t0n);
--		}
--		local_irq_enable();
-+			local_irq_enable(); /* This will force enable_hw as well. */
-+		} else
-+			local_irq_enable_hw();
- 		current_thread_info()->status |= TS_POLLING;
- 	} else {
- 		/* loop is done by the caller */
-@@ -203,6 +204,7 @@ void cpu_idle(void)
+@@ -203,6 +203,7 @@ void cpu_idle(void)
  				play_dead();
  
  			__get_cpu_var(irq_stat).idle_timestamp = jiffies;
@@ -2957,7 +2936,7 @@ index 43930e7..e29e59c 100644
  			idle();
  		}
  		tick_nohz_restart_sched_tick();
-@@ -269,6 +271,11 @@ static int __cpuinit mwait_usable(const struct cpuinfo_x86 *c)
+@@ -269,6 +270,11 @@ static int __cpuinit mwait_usable(const struct cpuinfo_x86 *c)
  
  void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  {
@@ -2969,7 +2948,7 @@ index 43930e7..e29e59c 100644
  	static int selected;
  
  	if (selected)
-@@ -284,7 +291,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
+@@ -284,7 +290,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  		 * Skip, if setup has overridden idle.
  		 * One CPU supports mwait => All CPUs supports mwait
  		 */
@@ -2978,8 +2957,17 @@ index 43930e7..e29e59c 100644
  			printk(KERN_INFO "using mwait in idle threads.\n");
  			pm_idle = mwait_idle;
  		}
+@@ -648,7 +654,7 @@ struct task_struct * __switch_to(struct task_struct *prev_p, struct task_struct
+ {
+ 	struct thread_struct *prev = &prev_p->thread,
+ 				 *next = &next_p->thread;
+-	int cpu = smp_processor_id();
++	int cpu = raw_processor_id();
+ 	struct tss_struct *tss = &per_cpu(init_tss, cpu);
+ 
+ 	/* never put a printk in __switch_to... printk() calls wake_up*() indirectly */
 diff --git a/arch/x86/kernel/process_64.c b/arch/x86/kernel/process_64.c
-index 46c4c54..fa242a4 100644
+index 46c4c54..a3b2fa7 100644
 --- a/arch/x86/kernel/process_64.c
 +++ b/arch/x86/kernel/process_64.c
 @@ -53,6 +53,8 @@
@@ -2991,28 +2979,7 @@ index 46c4c54..fa242a4 100644
  unsigned long kernel_thread_flags = CLONE_VM | CLONE_UNTRACED;
  
  unsigned long boot_option_idle_override = 0;
-@@ -105,7 +107,7 @@ void default_idle(void)
- 	 * test NEED_RESCHED:
- 	 */
- 	smp_mb();
--	local_irq_disable();
-+	local_irq_disable_hw();
- 	if (!need_resched()) {
- 		ktime_t t0, t1;
- 		u64 t0n, t1n;
-@@ -117,8 +119,9 @@ void default_idle(void)
- 		t1 = ktime_get();
- 		t1n = ktime_to_ns(t1);
- 		sched_clock_idle_wakeup_event(t1n - t0n);
--	}
--	local_irq_enable();
-+		local_irq_enable(); /* This will force enable_hw as well. */
-+	} else
-+		local_irq_enable_hw();
- 	current_thread_info()->status |= TS_POLLING;
- }
- 
-@@ -185,6 +188,7 @@ void cpu_idle(void)
+@@ -185,6 +187,7 @@ void cpu_idle(void)
  			 */
  			local_irq_disable();
  			enter_idle();
@@ -3020,7 +2987,7 @@ index 46c4c54..fa242a4 100644
  			idle();
  			/* In many cases the interrupt that ended idle
  			   has already called exit_idle. But some idle
-@@ -265,6 +269,11 @@ static int __cpuinit mwait_usable(const struct cpuinfo_x86 *c)
+@@ -265,6 +268,11 @@ static int __cpuinit mwait_usable(const struct cpuinfo_x86 *c)
  
  void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  {
@@ -3032,7 +2999,7 @@ index 46c4c54..fa242a4 100644
  	static int selected;
  
  	if (selected)
-@@ -280,7 +289,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
+@@ -280,7 +288,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
  		 * Skip, if setup has overridden idle.
  		 * One CPU supports mwait => All CPUs supports mwait
  		 */
@@ -3041,7 +3008,7 @@ index 46c4c54..fa242a4 100644
  			printk(KERN_INFO "using mwait in idle threads.\n");
  			pm_idle = mwait_idle;
  		}
-@@ -483,6 +492,7 @@ int copy_thread(int nr, unsigned long clone_flags, unsigned long sp,
+@@ -483,6 +491,7 @@ int copy_thread(int nr, unsigned long clone_flags, unsigned long sp,
  	p->thread.sp = (unsigned long) childregs;
  	p->thread.sp0 = (unsigned long) (childregs+1);
  	p->thread.usersp = me->thread.usersp;
@@ -3049,7 +3016,7 @@ index 46c4c54..fa242a4 100644
  
  	set_tsk_thread_flag(p, TIF_FORK);
  
-@@ -602,7 +612,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
+@@ -602,7 +611,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
  {
  	struct thread_struct *prev = &prev_p->thread,
  				 *next = &next_p->thread;
@@ -3936,7 +3903,7 @@ index 6d011bd..a99aa60 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..4b22658
+index 0000000..76a1b40
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,126 @@
@@ -3967,10 +3934,10 @@ index 0000000..4b22658
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-08"
++#define IPIPE_ARCH_STRING	"2.0-09"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	8
++#define IPIPE_PATCH_NUMBER	9
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
