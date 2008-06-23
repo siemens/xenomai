@@ -2627,7 +2627,7 @@ index 9a455d4..7e7df25 100644
  static long pSeries_lpar_hpte_remove(unsigned long hpte_group)
  {
 diff --git a/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
-index 5fe65b2..5642819 100644
+index 5fe65b2..625a890 100644
 --- a/arch/powerpc/sysdev/cpm2_pic.c
 +++ b/arch/powerpc/sysdev/cpm2_pic.c
 @@ -82,24 +82,32 @@ static void cpm2_mask_irq(unsigned int virq)
@@ -2663,7 +2663,7 @@ index 5fe65b2..5642819 100644
  }
  
  static void cpm2_ack(unsigned int virq)
-@@ -117,15 +125,20 @@ static void cpm2_end_irq(unsigned int virq)
+@@ -117,21 +125,26 @@ static void cpm2_end_irq(unsigned int virq)
  {
  	int	bit, word;
  	unsigned int irq_nr = virq_to_hw(virq);
@@ -2682,10 +2682,16 @@ index 5fe65b2..5642819 100644
  		ppc_cached_irq_mask[word] |= 1 << bit;
  		out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
 +		ipipe_irq_unlock(irq_nr);
-+		local_irq_restore_hw_cond(flags);
  
  		/*
  		 * Work around large numbers of spurious IRQs on PowerPC 82xx
+ 		 * systems.
+ 		 */
+ 		mb();
++		local_irq_restore_hw_cond(flags);
+ 	}
+ }
+ 
 diff --git a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
 index 216c0f5..2b06740 100644
 --- a/arch/powerpc/sysdev/i8259.c
@@ -2990,7 +2996,7 @@ index 31d3d33..8d670e2 100644
  }
  
 diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
-index 625b275..dd40f64 100644
+index 625b275..4eff1ab 100644
 --- a/arch/powerpc/sysdev/uic.c
 +++ b/arch/powerpc/sysdev/uic.c
 @@ -49,7 +49,7 @@ struct uic {
@@ -3017,14 +3023,6 @@ index 625b275..dd40f64 100644
 +	ipipe_irq_lock(virq);
  	er = mfdcr(uic->dcrbase + UIC_ER);
  	er &= ~(1 << (31 - src));
- 	mtdcr(uic->dcrbase + UIC_ER, er);
-@@ -109,6 +111,7 @@ static void uic_mask_ack_irq(unsigned int virq)
- 
- 	sr = 1 << (31-src);
- 	spin_lock_irqsave(&uic->lock, flags);
-+	ipipe_irq_lock(virq);
- 	er = mfdcr(uic->dcrbase + UIC_ER);
- 	er &= ~sr;
  	mtdcr(uic->dcrbase + UIC_ER, er);
 diff --git a/arch/ppc/Kconfig b/arch/ppc/Kconfig
 index f7ec066..3cded55 100644
@@ -4477,7 +4475,7 @@ index a7b60bf..22dcb01 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..3fb28b2
+index 0000000..f3aa39d
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,212 @@
@@ -4527,10 +4525,10 @@ index 0000000..3fb28b2
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.2-02"
++#define IPIPE_ARCH_STRING	"2.2-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -4544,8 +4542,6 @@ index 0000000..3fb28b2
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status)); \
 +		local_irq_enable_hw(); x;				\
 +	} )
-+
-+#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
 +
 +struct ipipe_domain;
 +
@@ -4691,6 +4687,8 @@ index 0000000..3fb28b2
 +#define task_hijacked(p)	0
 +
 +#endif /* CONFIG_IPIPE */
++
++#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
 +
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git a/include/asm-powerpc/ipipe_base.h b/include/asm-powerpc/ipipe_base.h
