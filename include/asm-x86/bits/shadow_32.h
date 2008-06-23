@@ -36,7 +36,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->esp = 0;
 	tcb->espp = &task->thread.x86reg_sp;
 	tcb->eipp = &task->thread.x86reg_ip;
-	tcb->fpup = &task->thread.i387;
+	tcb->fpup = x86_fpustate_ptr(&task->thread);
 }
 
 static inline void xnarch_grab_xirqs(rthal_irq_handler_t handler)

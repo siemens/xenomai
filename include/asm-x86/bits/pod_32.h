@@ -63,7 +63,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->ts_usedfpu = wrap_test_fpu_used(current) != 0;
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	rootcb->fpup = &rootcb->user_task->thread.i387;
+	rootcb->fpup = x86_fpustate_ptr(&rootcb->user_task->thread);
 }
 
 #define xnarch_enter_root(rootcb)  do { } while(0)
