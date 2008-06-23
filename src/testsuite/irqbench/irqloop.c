@@ -22,6 +22,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/mman.h>
 #include <rtdm/rttesting.h>
 
