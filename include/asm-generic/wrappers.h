@@ -192,6 +192,9 @@ void show_stack(struct task_struct *task,
 #define BITOP_WORD(nr)	((nr) / BITS_PER_LONG)
 #endif
 
+#define __GFP_BITS_SHIFT 20
+#define pgprot_noncached(p) (p)
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
@@ -262,24 +265,35 @@ unsigned long __va_to_kva(unsigned long va);
     enter_lazy_tlb(mm,task)
 
 /* Device registration */
+#if  LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
+#define DECLARE_DEVCLASS(clname) struct class *clname
+#define wrap_device_create(c,p,dt,dv,fmt,args...)	device_create(c,p,dt,fmt , ##args)
+#define wrap_device_destroy	device_destroy
+#define DECLARE_DEVHANDLE(devh) struct device *devh
+#else /* >= 2.6.26 */
+#define DECLARE_DEVHANDLE(devh) struct class_device *devh
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
 #define DECLARE_DEVCLASS(clname) struct class *clname
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) || defined(gfp_zone)
-/* Testing that gfp_zone() exists as a macro is a gross hack used to
-   discover DENX-originated 2.6.14 kernels, for which the prototype of
-   class_device_create() already conforms to the one found in 2.6.15
-   mainline. */
-#define wrap_class_device_create class_device_create
+/*
+ * Testing that gfp_zone() exists as a macro is a gross hack used to
+ * discover DENX-originated 2.6.14 kernels, for which the prototype of
+ * class_device_create() already conforms to the one found in 2.6.15
+ * mainline.
+ */
+#define wrap_device_create class_device_create
 #else /* < 2.6.15 */
-#define wrap_class_device_create(c,p,dt,dv,fmt,args...) class_device_create(c,dt,dv,fmt , ##args)
+#define wrap_device_create(c,p,dt,dv,fmt,args...) class_device_create(c,dt,dv,fmt , ##args)
 #endif /* >= 2.6.15 */
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #define DECLARE_DEVCLASS(clname) struct class_simple *clname
-#define wrap_class_device_create(c,p,dt,dv,fmt,args...) class_simple_device_add(c,dt,dv,fmt , ##args)
+#define wrap_device_create(c,p,dt,dv,fmt,args...) class_simple_device_add(c,dt,dv,fmt , ##args)
 #define class_create class_simple_create
 #define class_device_destroy(a,b) class_simple_device_remove(b)
 #define class_destroy class_simple_destroy
 #endif  /* >= 2.6.13 */
+#define wrap_device_destroy(a, b)	class_device_destroy(a, b)
+#endif  /* >= 2.6.26 */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
 #define atomic_cmpxchg(v, old, new) ((int)cmpxchg(&((v)->counter), old, new))

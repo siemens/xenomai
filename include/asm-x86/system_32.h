@@ -43,7 +43,7 @@ struct task_struct;
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
     /* Kernel mode side */
-    union i387_union fpuenv __attribute__ ((aligned (16))); /* FPU backup area */
+    x86_fpustate fpuenv __attribute__ ((aligned (16))); /* FPU backup area */
     unsigned stacksize;         /* Aligned size of stack (bytes) */
     unsigned long *stackbase;   /* Stack space */
     unsigned long esp;          /* Saved ESP for kernel-based threads */
@@ -55,7 +55,7 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
     unsigned long *espp;        /* Pointer to ESP backup area (&esp or &user->thread.esp) */
     unsigned long *eipp;        /* Pointer to EIP backup area (&eip or &user->thread.eip) */
-    union i387_union *fpup;     /* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
+    x86_fpustate *fpup;		/* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
 
     /* FPU context bits for root thread. */
     unsigned is_root: 1;

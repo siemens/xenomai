@@ -1095,10 +1095,10 @@ int xnpipe_mount(void)
 	}
 
 	for (i = 0; i < XNPIPE_NDEVS; i++) {
-		struct class_device *cldev;
-		cldev = wrap_class_device_create(xnpipe_class, NULL,
-						 MKDEV(XNPIPE_DEV_MAJOR, i),
-						 NULL, "rtp%d", i);
+		DECLARE_DEVHANDLE(cldev);
+		cldev = wrap_device_create(xnpipe_class, NULL,
+					   MKDEV(XNPIPE_DEV_MAJOR, i),
+					   NULL, "rtp%d", i);
 		if (IS_ERR(cldev)) {
 			xnlogerr
 			    ("can't add device class, major=%d, minor=%d, err=%ld\n",
@@ -1129,7 +1129,7 @@ void xnpipe_umount(void)
 	unregister_chrdev(XNPIPE_DEV_MAJOR, "rtpipe");
 
 	for (i = 0; i < XNPIPE_NDEVS; i++)
-		class_device_destroy(xnpipe_class, MKDEV(XNPIPE_DEV_MAJOR, i));
+		wrap_device_destroy(xnpipe_class, MKDEV(XNPIPE_DEV_MAJOR, i));
 
 	class_destroy(xnpipe_class);
 }

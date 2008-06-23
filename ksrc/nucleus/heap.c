@@ -1137,7 +1137,7 @@ static struct miscdevice xnheap_dev = {
 
 int xnheap_mount(void)
 {
-	struct class_device *cldev;
+	DECLARE_DEVHANDLE(cldev);
 
 	xnheap_class = class_create(THIS_MODULE, "rtheap");
 
@@ -1147,9 +1147,9 @@ int xnheap_mount(void)
 		return -EBUSY;
 	}
 
-	cldev = wrap_class_device_create(xnheap_class, NULL,
-					 MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
-					 NULL, "rtheap");
+	cldev = wrap_device_create(xnheap_class, NULL,
+				   MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
+				   NULL, "rtheap");
 	if (IS_ERR(cldev)) {
 		xnlogerr
 		    ("can't add device class, major=%d, minor=%d, err=%ld\n",
@@ -1167,7 +1167,7 @@ int xnheap_mount(void)
 void xnheap_umount(void)
 {
 	misc_deregister(&xnheap_dev);
-	class_device_destroy(xnheap_class, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR));
+	wrap_device_destroy(xnheap_class, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR));
 	class_destroy(xnheap_class);
 }
 

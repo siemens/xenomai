@@ -66,4 +66,12 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define x86reg_ip	rip
 #endif
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,25)
+typedef union i387_union x86_fpustate;
+#define x86_fpustate_ptr(t) (&(t)->i387)
+#else
+typedef union thread_xstate x86_fpustate;
+#define x86_fpustate_ptr(t) ((t)->xstate)
+#endif
+
 #endif /* _XENO_ASM_X86_WRAPPERS_64_H */

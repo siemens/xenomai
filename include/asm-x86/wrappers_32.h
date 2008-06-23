@@ -27,6 +27,7 @@
 
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
+#include <asm/processor.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
 
@@ -195,6 +196,14 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define x86reg_sp	esp
 #define x86reg_bp	ebp
 #define x86reg_ip	eip
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,25)
+typedef union i387_union x86_fpustate;
+#define x86_fpustate_ptr(t) (&(t)->i387)
+#else
+typedef union thread_xstate x86_fpustate;
+#define x86_fpustate_ptr(t) ((t)->xstate)
 #endif
 
 #endif /* _XENO_ASM_X86_WRAPPERS_32_H */
