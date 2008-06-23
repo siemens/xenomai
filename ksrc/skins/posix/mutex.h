@@ -102,7 +102,7 @@ pse51_mutex_trylock_internal(xnthread_t *cur,
 #endif /* XENO_DEBUG(POSIX) */
 
 	owner = xnarch_atomic_intptr_cmpxchg(mutex->owner, NULL, cur);
-	if (unlikely(owner))
+	if (unlikely(owner != NULL))
 		return owner;
 
 	shadow->lockcnt = count;
