@@ -112,6 +112,34 @@ static int __pipe_output_handler(int bminor,
 		/* Free memory from output/discarded message. */
 		xnheap_free(pipe->bufpool, mh);
 
+	if (pipe->monitor == NULL || retval < 0)
+		return retval;
+
+	/* Propagating the return value here would make no sense. */
+	pipe->monitor(pipe, P_EVENT_OUTPUT);
+
+	return retval;
+}
+
+static int __pipe_input_handler(int bminor,
+				xnpipe_mh_t *mh, int retval, void *cookie)
+{
+	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	
+	if (pipe->monitor == NULL)
+		return retval;
+
+	if (retval == 0)
+		/* Callee may alter the return value passed to userland. */
+		retval = pipe->monitor(pipe, P_EVENT_INPUT);
+	else if (retval == -EPIPE)
+		pipe->monitor(pipe, P_EVENT_CLOSE);
+
+	/*
+	 * We don't notify the kernel endpoint about userland errors,
+	 * such as passing invalid buffer addresses (i.e. -EFAULT).
+	 */
+
 	return retval;
 }
 
@@ -229,6 +257,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	pipe->buffer = NULL;
 	pipe->bufpool = &kheap;
 	pipe->fillsz = 0;
+	pipe->monitor = NULL;
 	pipe->status = 0;
 	pipe->handle = 0;	/* i.e. (still) unregistered pipe. */
 	pipe->magic = XENO_PIPE_MAGIC;
@@ -274,7 +303,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 
 	minor = xnpipe_connect(minor,
 			       &__pipe_output_handler,
-			       NULL, &__pipe_alloc_handler, pipe);
+			       &__pipe_input_handler, &__pipe_alloc_handler, pipe);
 
 	if (minor < 0) {
 		if (pipe->bufpool == &pipe->privpool)
@@ -372,7 +401,7 @@ int rt_pipe_delete(RT_PIPE *pipe)
 	}
 
 	removeq(pipe->rqueue, &pipe->rlink);
-
+	pipe->monitor = NULL;	/* Stop monitoring. */
 	err = xnpipe_disconnect(pipe->minor);
 
 	if (pipe->buffer != NULL) {
@@ -1049,6 +1078,78 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
 	return xnpipe_flush(minor, mode);
 }
 
+/**
+ * @fn int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event))
+ *
+ * @brief Monitor a message pipe asynchronously.
+ *
+ * This service registers a notifier callback that will be called upon
+ * specific events occurring on the channel.  rt_pipe_monitor() is
+ * particularly useful to monitor a channel asynchronously while
+ * performing other tasks.
+ *
+ * @param pipe The descriptor address of the pipe to monitor.
+ *
+ * @param fn The notification handler. This user-provided routine will
+ * be passed the address of the message pipe descriptor receiving the
+ * event, and the event code.  Three events are currently defined:
+ *
+ * - P_EVENT_INPUT is sent when the user-space endpoint writes to the
+ *   pipe, which means that some input is pending for the kernel-based
+ *   endpoint.
+ *
+ * - P_EVENT_OUTPUT is sent when the user-space endpoint successfully
+ *   reads a complete buffer from the pipe.
+ *
+ * - P_EVENT_CLOSE is sent when the user-space endpoint is closed.
+ *
+ * The notification handler is called on behalf of a fully atomic
+ * context; therefore, care must be taken to keep its overhead
+ * low. The Xenomai services that may be called from a notification
+ * handler are restricted to the set allowed to a real-time interrupt
+ * handler.
+ *
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a pipe is not a pipe descriptor.
+ *
+ * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
+ *
+ * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ *
+ * Rescheduling: never.
+ */
+
+int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event))
+{
+	int err;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+
+	if (!pipe) {
+		err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
+		xnlock_put_irqrestore(&nklock, s);
+		return err;
+	}
+
+	pipe->monitor = fn;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+	
+}
+
 /*@}*/
 
 EXPORT_SYMBOL(rt_pipe_create);
@@ -1061,3 +1162,4 @@ EXPORT_SYMBOL(rt_pipe_stream);
 EXPORT_SYMBOL(rt_pipe_alloc);
 EXPORT_SYMBOL(rt_pipe_free);
 EXPORT_SYMBOL(rt_pipe_flush);
+EXPORT_SYMBOL(rt_pipe_monitor);

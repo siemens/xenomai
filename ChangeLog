@@ -1,4 +1,8 @@
-2008-06-23  Philippe Gerum  <rpm@eclipse.xenomai.org>
+2008-06-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/pipe.c: Add rt_pipe_monitor() service.
+
+2008-06-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-x86, ksrc/nucleus/heap.c, ksrc/nucleus/pipe.c: Adapt
 	to 2.6.26-rc7.

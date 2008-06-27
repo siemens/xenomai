@@ -231,3 +231,9 @@ ___________________________________________________________________
 	  - rt_queue_recv() -> rt_queue_receive()
 	  - rt_mutex_lock() -> rt_mutex_acquire()
 	  - rt_mutex_unlock() -> rt_mutex_release()
+
+       * The new rt_pipe_monitor() service (kernel-only) allows to
+         register a notifier callback that will be called upon
+         specific events occurring on the channel.  rt_pipe_monitor()
+         is particularly useful to monitor a channel asynchronously
+         from kernel space while performing other tasks.
