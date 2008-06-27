@@ -38,13 +38,16 @@ This directory only contains the most recent patches; you may find the
 complete collection of Adeos/I-pipe patches at the following
 locations (see note):
 
-* all existing I-pipe patches for the combo ppc32+ppc64 architecture:
+* all existing I-pipe patches based on the powerpc/ tree, also
+including the combo patches for ppc32+ppc64 architectures:
 http://download.gna.org/adeos/patches/v2.6/powerpc/
 
-* older I-pipe patches for the standalone ppc32 architecture:
+* older I-pipe patches based on the ppc/ tree, only for the standalone
+ppc32 architecture:
 http://download.gna.org/adeos/patches/v2.6/ppc/
 
-* older I-pipe patches for the standalone ppc64 architecture:
+* older I-pipe patches based on the ppc64/ tree, only for the
+standalone ppc64 architecture:
 http://download.gna.org/adeos/patches/v2.6/ppc64/
 
 NOTE: not all these patches are guaranteed to work with the current
