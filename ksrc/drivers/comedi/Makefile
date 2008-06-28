@@ -2,14 +2,22 @@ ifeq ($(PATCHLEVEL),6)
 
 # Makefile frag for Linux v2.6
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/comedi
 
-obj-$(CONFIG_XENO_DRIVERS_COMEDI_FAKE) += comedi_fake.o
-obj-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += comedi_loop.o
+obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o testing/
 
-comedi_fake-y := fake.o
+xeno_comedi-y := \
+	buffer.o \
+	command.o \
+	device.o \
+	driver.o \
+	driver_facilities.o \
+	instruction.o \
+	os_facilities.o \
+	subdevice.o \
+	transfer.o
 
-comedi_loop-y := loop.o
+xeno_comedi-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
 else
 
@@ -17,23 +25,34 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_DRIVERS_COMEDI_FAKE) += comedi_fake.o
-obj-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += comedi_loop.o
+subdir-$(CONFIG_XENO_DRIVERS_COMEDI_FAKE) += testing
+subdir-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += testing
 
-comedi_fake-objs := fake.o
+obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o
 
-comedi_loop-objs := loop.o
+opt_objs-y :=
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
 
-export-objs := $(comedi_fake-objs) $(comedi_loop-objs)
+xeno_comedi-objs := \
+	buffer.o \
+	command.o \
+	device.o \
+	driver.o \
+	driver_facilities.o \
+	instruction.o \
+	os_facilities.o \
+	subdevice.o \
+	transfer.o
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
+xeno_comedi-objs += $(opt_objs-y)
+
+export-objs := $(xeno_comedi-objs)
+
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat -I.
 
 include $(TOPDIR)/Rules.make
 
-comedi_fake.o: $(comedi_fake-objs)
-	$(LD) -r -o $@ $(comedi_fake-objs)
-
-comedi_loop.o: $(comedi_loop-objs)
-	$(LD) -r -o $@ $(comedi_loop-objs)
+xeno_comedi.o: $(xeno_comedi-objs)
+	$(LD) -r -o $@ $(xeno_comedi-objs)
 
 endif

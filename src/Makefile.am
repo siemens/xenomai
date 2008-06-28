@@ -1,2 +1,2 @@
 
-SUBDIRS = include rtdk skins testsuite utils
+SUBDIRS = include rtdk skins drvlib testsuite utils

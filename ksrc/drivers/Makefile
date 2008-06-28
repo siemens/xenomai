@@ -17,9 +17,7 @@ subdir-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += testing
 subdir-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += testing
 
 subdir-$(CONFIG_XENO_DRIVERS_CAN) += can
-
-subdir-$(CONFIG_XENO_DRIVERS_COMEDI_FAKE) += comedi
-subdir-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += comedi
+subdir-$(CONFIG_XENO_DRIVERS_COMEDI) += comedi
 
 include $(TOPDIR)/Rules.make
 

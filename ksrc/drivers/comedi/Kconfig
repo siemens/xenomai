@@ -1,13 +1,16 @@
 menu "COMEDI drivers"
 
-config XENO_DRIVERS_COMEDI_FAKE
-	depends on XENO_SKIN_COMEDI
-	tristate "Fake driver (testing)"
-	default n
+config XENO_DRIVERS_COMEDI
+	depends on XENO_SKIN_RTDM
+	tristate "COMEDI interface"
+	help
 
-config XENO_DRIVERS_COMEDI_LOOP
-	depends on XENO_SKIN_COMEDI
-	tristate "Loop driver (testing)"
-	default n
+	COMEDI is a popular framework aimed at supporting data
+	acquisition drivers (see http://comedi.org).
+
+	This driver stack is a port of the original COMEDI framework
+	over the RTDM interface.
+
+source drivers/xenomai/comedi/testing/Kconfig
 
 endmenu

@@ -1,0 +1,8 @@
+
+#
+# Xenomai configuration for Linux v2.4
+#
+
+dep_tristate 'Fake driver' CONFIG_XENO_DRIVERS_COMEDI_FAKE $CONFIG_XENO_DRIVERS_COMEDI
+
+dep_tristate 'Loop driver' CONFIG_XENO_DRIVERS_COMEDI_LOOP $CONFIG_XENO_DRIVERS_COMEDI

@@ -779,9 +779,10 @@ AC_CONFIG_FILES([ \
        	src/skins/psos+/Makefile \
        	src/skins/vrtx/Makefile \
        	src/skins/rtdm/Makefile \
-       	src/skins/comedi/Makefile \
        	src/skins/rtai/Makefile \
        	src/skins/uitron/Makefile \
+       	src/drvlib/Makefile \
+       	src/drvlib/comedi/Makefile \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \

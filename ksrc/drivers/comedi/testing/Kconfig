@@ -1,0 +1,10 @@
+
+config XENO_DRIVERS_COMEDI_FAKE
+	depends on XENO_DRIVERS_COMEDI
+	tristate "Fake driver"
+	default n
+
+config XENO_DRIVERS_COMEDI_LOOP
+	depends on XENO_DRIVERS_COMEDI
+	tristate "Loop driver"
+	default n

@@ -1,2 +1,2 @@
 
-SUBDIRS = native posix rtdm comedi vxworks psos+ vrtx rtai uitron
+SUBDIRS = native posix rtdm vxworks psos+ vrtx rtai uitron
