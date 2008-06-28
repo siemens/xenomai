@@ -8,7 +8,7 @@ CPPFLAGS = \
 
 LDFLAGS = \
 	@XENO_USER_LDFLAGS@ \
-	-L../../skins/comedi \
+	-L../../drvlib/comedi \
 	-L../../skins/native \
 	-L../../skins/rtdm
 
