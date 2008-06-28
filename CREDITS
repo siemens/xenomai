@@ -32,7 +32,8 @@ D: Debian package for RTAI/fusion. 80486 fixes.
 
 N: Alexis Berlemont
 E: berlemont.hauw@free.fr
-D: LTT support maintainer. ia64 port. Comedi over fusion.
+D: LTT support maintainer. ia64 port.
+D: Comedi/RTDM maintainer.
 
 N: Marco Cavallini
 E: rtai@koansoftware.com
