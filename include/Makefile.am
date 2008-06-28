@@ -11,6 +11,7 @@ SUBDIRS = \
 	asm-powerpc \
 	asm-arm \
 	asm-sim \
+	comedi \
 	native \
 	nucleus \
 	posix \

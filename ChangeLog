@@ -1,3 +1,9 @@
+2008-06-28  Philippe Gerum  <rpm@xenomai.org>,
+	    Alexis Berlemont  <alexis.berlemont@free.fr>
+
+	* ksrc/skins/comedi, include/comedi, src/skins/comedi,
+	src/utils/comedi: Merge COMEDI over RTDM framework.
+
 2008-06-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/pipe.c: Add rt_pipe_monitor() service.

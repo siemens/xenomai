@@ -1,2 +1,2 @@
 
-SUBDIRS = can
+SUBDIRS = can comedi

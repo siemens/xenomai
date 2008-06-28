@@ -36,6 +36,7 @@
 #include <linux/wait.h>
 #include <linux/sched.h>
 #include <linux/bitops.h>
+#include <linux/delay.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 
 /* Compiler */
@@ -104,6 +105,20 @@ unsigned long __va_to_kva(unsigned long va);
 #define DEFINE_WAIT(w) DECLARE_WAITQUEUE(w, current)
 #define is_sync_wait(wait)  (!(wait) || ((wait)->task))
 
+static inline void prepare_to_wait(wait_queue_head_t *q,
+				   wait_queue_t *wait,
+				   int state)
+{
+	unsigned long flags;
+
+	wait->flags &= ~WQ_FLAG_EXCLUSIVE;
+	spin_lock_irqsave(&q->lock, flags);
+	__add_wait_queue(q, wait);
+	if (is_sync_wait(wait))
+		set_current_state(state);
+	spin_unlock_irqrestore(&q->lock, flags);
+}
+
 static inline void prepare_to_wait_exclusive(wait_queue_head_t *q,
 					     wait_queue_t *wait,
 					     int state)
@@ -130,6 +145,36 @@ static inline void finish_wait(wait_queue_head_t *q,
 		spin_unlock_irqrestore(&q->lock, flags);
 	}
 }
+
+#ifndef wait_event_interruptible_timeout
+#define __wait_event_interruptible_timeout(wq, condition, ret)		\
+do {									\
+	DEFINE_WAIT(__wait);						\
+									\
+	for (;;) {							\
+		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
+		if (condition)						\
+			break;						\
+		if (!signal_pending(current)) {				\
+			ret = schedule_timeout(ret);			\
+			if (!ret)					\
+				break;					\
+			continue;					\
+		}							\
+		ret = -ERESTARTSYS;					\
+		break;							\
+	}								\
+	finish_wait(&wq, &__wait);					\
+} while (0)
+
+#define wait_event_interruptible_timeout(wq, condition, timeout)	\
+({									\
+	long __ret = timeout;						\
+	if (!(condition))						\
+		__wait_event_interruptible_timeout(wq, condition, __ret); \
+	__ret;								\
+})
+#endif
 
 /* Workqueues. Some 2.4 ports already provide for a limited emulation
    of workqueue calls in linux/workqueue.h, except DECLARE_WORK(), so
@@ -159,6 +204,42 @@ static inline void finish_wait(wait_queue_head_t *q,
 		set_current_state(TASK_INTERRUPTIBLE);	\
 		schedule_timeout(t);				\
 } while(0)
+
+#ifndef NSEC_PER_MSEC
+#define NSEC_PER_MSEC	1000000L
+#endif
+
+#ifndef USEC_PER_SEC
+#define USEC_PER_SEC	1000000L
+#endif
+
+#define MAX_JIFFY_OFFSET ((~0UL >> 1)-1)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,28)
+static inline unsigned int jiffies_to_usecs(const unsigned long j)
+{
+#if HZ <= 1000 && !(1000 % HZ)
+	return (1000000 / HZ) * j;
+#elif HZ > 1000 && !(HZ % 1000)
+	return (j*1000 + (HZ - 1000))/(HZ / 1000);
+#else
+	return (j * 1000000) / HZ;
+#endif
+}
+#endif
+
+static inline unsigned long usecs_to_jiffies(const unsigned int u)
+{
+	if (u > jiffies_to_usecs(MAX_JIFFY_OFFSET))
+		return MAX_JIFFY_OFFSET;
+#if HZ <= USEC_PER_SEC && !(USEC_PER_SEC % HZ)
+	return (u + (USEC_PER_SEC / HZ) - 1) / (USEC_PER_SEC / HZ);
+#elif HZ > USEC_PER_SEC && !(HZ % USEC_PER_SEC)
+	return u * (HZ / USEC_PER_SEC);
+#else
+	return (u * HZ + USEC_PER_SEC - 1) / USEC_PER_SEC;
+#endif
+}
 
 #ifdef MODULE
 #define try_module_get(mod) try_inc_mod_count(mod)

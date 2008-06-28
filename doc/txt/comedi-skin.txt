@@ -1,0 +1,95 @@
+I Comedi and Xenomai
+
+The Xenomai project aims at providing a complete framework for the
+development of applications with real-time constraints in the Linux
+environment.
+
+A complete framework means at least providing solutions for :
+  - the development of RT applications while preserving the regular
+  Linux programming model;
+  - coupling development productivity tools (gdb, ltt, valgrind, etc.)
+  - providing a migration path to applications written for other OS
+  (vxWorks, RTAI, etc.);
+  - implementing real-time device drivers with as many reusable
+  components as possible;
+  - etc.
+
+Given that RTDM already provides a stable interface and design
+framework to based real-time device drivers on, the prospect of
+reusing a whole set of hardware manipulation "backends" like those
+provided by the Comedi project is interesting.
+
+The Comedi project provides open-source drivers, libraries and tools
+for data acquisition. The interest of Comedi are summed-up in their
+website :
+  - real-time support;
+  - an abstract layer gathers some facilities to ease driver
+  development;
+  - a high-level library in order to develop device-independant
+  application; 
+
+The software features developped by the Comedi community seem
+critical for the Xenomai evolution strategy. We are interested in
+getting a comedi-like solution working over RTDM;
+
+II Objectives / Development plan
+
+  1) Comedi port over RTDM
+
+The first step is to adapt the Comedi architecture to RTDM. The goal
+is to extend the real-time capabilities to the user mode. The abstract
+layer (comedi/comedi_fops.c, comedi/drivers.c, etc.) must be modified
+so as to use the RTDM API instead of the standard Linux functions;
+
+Such a work implies some modifications in the code organization of
+the Comedi codebase. Compared to the actual Comedi "real-time code",
+RTDM does not just handle interrupts, the range of RTDM funcionalities
+is nearly equivalent as Linux;
+
+Therefore we can leverage this to fully rebase the Comedi abstract
+layer over RTDM.
+
+  2) Comedilib modifications
+
+We must be aware that the Comedilib library can be used in any user
+mode real-time application. Some changes in the implementation of
+Comedilib seem necessary to supply with this constraint (allocation,
+etc.). 
+
+This library implementation will comply with the standard POSIX API
+thanks to the POSIX skin provided by Xenomai.
+
+  3) Real-time or not real-time ?
+
+Eventually, this project has not only been created for real-time
+reasons, the wide set of drivers usable from any context (non-RT user
+mode, non-RT kernel mode, RT kernel mode) is a point which made the
+success of this project.
+
+Instead of narrowing the functionality field of Comedi to our
+interests, we are thinking of widening it by adding a full-featured 
+real-time support without impeding the regular Linux support it
+provides.
+
+The aim would be to make any Comedi drivers reachable via RTDM calls
+and the classical Linux API. 
+
+This triggers us to the idea of rethinking a part of the Comedi
+architecture. The Comedi layer would be composed of an OS-dependant
+part and a generic set of functionalities.
+
+III Code Organization
+
+For the time being, the code is located in the Xenomai subversion
+repository outside the Xenomai directory. Some tarballs will be made
+available in the Xenomai download area during the developemnt. The
+reasons for keeping a branch code independant from Xenomai and Comedi
+are :
+  - the Comedi-rtdm layer will be dependant from Xenomai/RTDM and not the
+contrary. 
+  - the Comedi-rtdm code is not mature enough to be exposed as a
+complete solution. It is just a development branch far from being as
+usable as the original Comedi code. 
+
+--
+Alexis Berlemont - Sun Apr 9 16:48:24 2006 CEST

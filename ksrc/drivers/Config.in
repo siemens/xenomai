@@ -10,5 +10,6 @@ comment 'Drivers'
 	source drivers/xenomai/serial/Config.in
 	source drivers/xenomai/testing/Config.in
 	source drivers/xenomai/can/Config.in
+	source drivers/xenomai/comedi/Config.in
 endmenu
 fi

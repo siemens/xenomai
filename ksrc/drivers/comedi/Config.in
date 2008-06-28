@@ -1,0 +1,13 @@
+
+#
+# Xenomai configuration for Linux v2.4
+#
+
+mainmenu_option next_comment
+comment 'COMEDI drivers'
+
+dep_tristate 'Fake driver (testing)' CONFIG_XENO_DRIVERS_COMEDI_FAKE $CONFIG_XENO_SKIN_COMEDI
+
+dep_tristate 'Loop driver (testing)' CONFIG_XENO_DRIVERS_COMEDI_LOOP $CONFIG_XENO_SKIN_COMEDI
+
+endmenu

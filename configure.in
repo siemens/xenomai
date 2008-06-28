@@ -779,6 +779,7 @@ AC_CONFIG_FILES([ \
        	src/skins/psos+/Makefile \
        	src/skins/vrtx/Makefile \
        	src/skins/rtdm/Makefile \
+       	src/skins/comedi/Makefile \
        	src/skins/rtai/Makefile \
        	src/skins/uitron/Makefile \
 	src/include/Makefile \
@@ -792,6 +793,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/klatency/Makefile \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
+	src/utils/comedi/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-generic/bits/Makefile \
@@ -814,6 +816,7 @@ AC_CONFIG_FILES([ \
        	include/psos+/Makefile \
        	include/rtai/Makefile \
        	include/rtdm/Makefile \
+       	include/comedi/Makefile \
        	include/uitron/Makefile \
        	include/vrtx/Makefile \
        	include/vxworks/Makefile \

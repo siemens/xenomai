@@ -214,7 +214,7 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = can
+SUBDIRS = can comedi
 all: all-recursive
 
 .SUFFIXES:

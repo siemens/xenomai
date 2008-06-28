@@ -21489,8 +21489,13 @@ else
   CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type
 fi
 
-	{ echo "$as_me:$LINENO: result: ${enable_arm_tsc:-no}" >&5
-echo "${ECHO_T}${enable_arm_tsc:-no}" >&6; }
+	if test $CONFIG_XENO_ARM_HW_DIRECT_TSC; then
+		{ echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	else
+		{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+	fi
   else
 	{ echo "$as_me:$LINENO: result: not supported by this board" >&5
 echo "${ECHO_T}not supported by this board" >&6; }
@@ -22831,7 +22836,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/utils/Makefile src/utils/can/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/comedi/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/switchbench/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/comedi/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/comedi/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -23502,6 +23507,7 @@ do
     "src/skins/psos+/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/psos+/Makefile" ;;
     "src/skins/vrtx/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/vrtx/Makefile" ;;
     "src/skins/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/rtdm/Makefile" ;;
+    "src/skins/comedi/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/comedi/Makefile" ;;
     "src/skins/rtai/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/rtai/Makefile" ;;
     "src/skins/uitron/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/uitron/Makefile" ;;
     "src/include/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
@@ -23515,6 +23521,7 @@ do
     "src/testsuite/klatency/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/klatency/Makefile" ;;
     "src/utils/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/Makefile" ;;
     "src/utils/can/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/can/Makefile" ;;
+    "src/utils/comedi/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/comedi/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "include/asm-generic/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-generic/Makefile" ;;
     "include/asm-generic/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-generic/bits/Makefile" ;;
@@ -23537,6 +23544,7 @@ do
     "include/psos+/Makefile") CONFIG_FILES="$CONFIG_FILES include/psos+/Makefile" ;;
     "include/rtai/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtai/Makefile" ;;
     "include/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtdm/Makefile" ;;
+    "include/comedi/Makefile") CONFIG_FILES="$CONFIG_FILES include/comedi/Makefile" ;;
     "include/uitron/Makefile") CONFIG_FILES="$CONFIG_FILES include/uitron/Makefile" ;;
     "include/vrtx/Makefile") CONFIG_FILES="$CONFIG_FILES include/vrtx/Makefile" ;;
     "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;

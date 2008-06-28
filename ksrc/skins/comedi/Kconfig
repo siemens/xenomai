@@ -1,0 +1,10 @@
+menuconfig XENO_SKIN_COMEDI
+	select XENO_SKIN_RTDM
+	tristate "COMEDI interface"
+	help
+
+	COMEDI is a popular framework aimed at supporting data
+	acquisition drivers (see http://comedi.org).
+
+	This skin is a port of the original COMEDI framework over the
+	RTDM interface.

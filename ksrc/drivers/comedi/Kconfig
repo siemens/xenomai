@@ -1,0 +1,13 @@
+menu "COMEDI drivers"
+
+config XENO_DRIVERS_COMEDI_FAKE
+	depends on XENO_SKIN_COMEDI
+	tristate "Fake driver (testing)"
+	default n
+
+config XENO_DRIVERS_COMEDI_LOOP
+	depends on XENO_SKIN_COMEDI
+	tristate "Loop driver (testing)"
+	default n
+
+endmenu

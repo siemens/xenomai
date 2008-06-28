@@ -10,5 +10,6 @@ source "kernel/xenomai/skins/vrtx/Kconfig"
 source "kernel/xenomai/skins/vxworks/Kconfig"
 source "kernel/xenomai/skins/rtai/Kconfig"
 source "kernel/xenomai/skins/rtdm/Kconfig"
+source "kernel/xenomai/skins/comedi/Kconfig"
 
 endmenu
