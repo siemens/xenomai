@@ -311,7 +311,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_trylock, shadow);
-	} while (err = -EINTR);
+	} while (err == -EINTR);
 
 #endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
 
