@@ -121,7 +121,11 @@ static const char *const rthal_fault_labels[] = {
 
 #ifdef CONFIG_X86_LOCAL_APIC
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
 #include <asm/mach_apic.h>
+#else
+#include <asm/apic.h>
+#endif
 
 static inline void rthal_setup_periodic_apic(int count, int vector)
 {
