@@ -24,7 +24,6 @@
 
 #include <comedi/subdevice.h>
 #include <comedi/device.h>
-#include <comedi/root_leaf.h>
 
 /* --- Descriptor precompilation constants --- */
 
@@ -74,8 +73,8 @@ struct comedi_descriptor {
 			/**< Opaque field. */
 	int sbsize;
 		/**< Data buffer size. */
-	comedi_root_t *sbdata;
-			 /**< Data buffer pointer. */
+	void *sbdata;
+		 /**< Data buffer pointer. */
 };
 typedef struct comedi_descriptor comedi_desc_t;
 

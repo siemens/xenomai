@@ -29,7 +29,8 @@
 
 #include <comedi/context.h>
 #include <comedi/device.h>
-#include <comedi/proc.h> 
+
+#include "proc.h" 
 
 static comedi_dev_t comedi_devs[COMEDI_NB_DEVICES];
 

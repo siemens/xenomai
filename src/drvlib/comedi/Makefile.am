@@ -8,8 +8,10 @@ libcomedi_la_SOURCES = \
 	info.c \
 	range.c \
 	sync.c \
-	sys.c
+	sys.c \
+	root_leaf.h
 
 libcomedi_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+

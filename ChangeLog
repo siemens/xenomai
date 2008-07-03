@@ -1,3 +1,12 @@
+2008-07-03  Alexis Berlemont  <alexis.berlemont@free.fr>
+
+	* include/comedi, src/drvlib: the header root_leaf.h moved from
+	include/comedi to src/drvlib; this header is now considered as an
+	interhnal header.
+	
+	* include/comedi, ksrc/drivers/comedi: the header proc.h is now
+	considered as an internal header.
+	
 2008-07-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos/task.c (t_mode): Fix update mask.

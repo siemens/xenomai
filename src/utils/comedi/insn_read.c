@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     }
 
     /* Allocates a buffer so as to get more info (subd, chan, rng) */
-    dsc.sbdata = (comedi_root_t*) malloc(dsc.sbsize);
+    dsc.sbdata = malloc(dsc.sbsize);
     if(dsc.sbdata == NULL) {
 	ret = -ENOMEM;
 	fprintf(stderr, "insn_read: info buffer allocation failed\n");

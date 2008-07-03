@@ -98,8 +98,7 @@ int comedi_init_sync(comedi_sync_t *snc)
     /* Initializes the flags field */
     snc->status = 0;
 
-    /* If RTDM is disabled, 
-       a wait queue head structure is enough */
+    /* If the process is NRT, we need a wait queue structure */
     init_waitqueue_head(&snc->wq);
     
     /* Initializes the RTDM event */
@@ -125,10 +124,14 @@ int comedi_wait_sync(comedi_sync_t *snc, int rt)
 	goto out_wait;
 
     if(rt != 0) {
+	/* If the calling process is in primary mode,
+	   we can use RTDM API ... */
 	set_bit(__RT_WAITER, &snc->status);
 	ret = rtdm_event_wait(&snc->rtdm_evt);
     }
     else {
+	/* ... else if the process is NRT, 
+	   the Linux wait queue system is used */
 	set_bit(__NRT_WAITER, &snc->status);
 	ret = wait_event_interruptible(snc->wq,
 				       test_bit(__EVT_PDING,&snc->status));
@@ -151,10 +154,14 @@ int comedi_timedwait_sync(comedi_sync_t *snc,
 	goto out_wait;
 
     if(rt != 0) {
+	/* If the calling process is in primary mode,
+	   we can use RTDM API ... */
 	set_bit(__RT_WAITER, &snc->status);
 	ret=rtdm_event_timedwait(&snc->rtdm_evt, ns_timeout, NULL);
     }
     else {
+	/* ... else if the process is NRT, 
+	   the Linux wait queue system is used */
 
 	timeout = do_div(ns_timeout, 1000);
 
@@ -168,7 +175,6 @@ int comedi_timedwait_sync(comedi_sync_t *snc,
 	ret = wait_event_interruptible_timeout(snc->wq,
 					     test_bit(__EVT_PDING, &snc->status),
 					     timeout);
-
     }
 
     out_wait:
@@ -184,6 +190,10 @@ void comedi_signal_sync(comedi_sync_t *snc)
 
     set_bit(__EVT_PDING, &snc->status);
 
+    /* comedi_signal_sync() is bound not to be called upon the right
+       user process context; so, the status flags stores its mode.
+       Thus the proper event signaling function is called */
+
     if(test_and_clear_bit(__RT_WAITER,&snc->status))
 	rtdm_event_signal(&snc->rtdm_evt);
 
@@ -191,7 +201,7 @@ void comedi_signal_sync(comedi_sync_t *snc)
 	rtdm_nrtsig_pend(&snc->nrt_sig);
 
     if(hit == 0){
-	/* At first signalling, we may not know the proper way
+	/* At first signaling, we may not know the proper way
 	   to send the event */
 	rtdm_event_signal(&snc->rtdm_evt);
 	rtdm_nrtsig_pend(&snc->nrt_sig);

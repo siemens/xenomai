@@ -28,7 +28,8 @@
 
 #include <comedi/context.h>
 #include <comedi/device.h>
-#include <comedi/proc.h>
+
+#include "proc.h"
 
 /* --- Initialization / cleanup / cancel functions --- */
 

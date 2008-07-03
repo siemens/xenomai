@@ -13,8 +13,6 @@ include_HEADERS =
 	ioctl.h \
 	lib_syscall.h \
 	os_facilities.h \
-	proc.h \
-	root_leaf.h \
 	subdevice.h \
 	transfer.h \
 	types.h

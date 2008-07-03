@@ -22,9 +22,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <comedi/root_leaf.h>
 #include <comedi/descriptor.h>
 #include <comedi/comedi.h>
+
+#include "root_leaf.h"
 
 #ifndef DOXYGEN_CPP
 

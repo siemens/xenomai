@@ -28,7 +28,8 @@
 #include <comedi/context.h>
 #include <comedi/device.h>
 #include <comedi/driver.h>
-#include <comedi/proc.h>
+
+#include "proc.h"
 
 static LIST_HEAD(comedi_drvs);
 
