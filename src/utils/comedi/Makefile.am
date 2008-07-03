@@ -22,4 +22,4 @@ cmd_write_SOURCES = cmd_write.c
 cmd_write_LDADD = -lcomedi -lnative -lrtdm
 
 insn_read_SOURCES = insn_read.c
-insn_read_LDADD = -lcomedi -lcomedi_rng -lnative -lrtdm
+insn_read_LDADD = -lcomedi -lnative -lrtdm
