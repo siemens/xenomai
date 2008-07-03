@@ -205,13 +205,12 @@ static void rpi_push(xnthread_t *thread, int cpu)
 	int prio;
 	spl_t s;
 
-	/* non-RT shadows and RT shadows which disabled RPI cause the
-	   root priority to be lowered to its base level. The purpose
-	   of the following code is to enqueue the just thread
-	   whenever it involves RPI, and determine which priority to
-	   pick next for the root thread (i.e. the highest among RPI
-	   enabled threads, or the base level if none exists). */
-
+	/*
+	 * The purpose of the following code is to enqueue the thread
+	 * whenever it involves RPI, and determine which priority to
+	 * pick next for the root thread (i.e. the highest among RPI
+	 * enabled threads, or the base level if none exists).
+	 */
 	if (likely(xnthread_user_task(thread)->policy == SCHED_FIFO &&
 		   !xnthread_test_state(thread, XNRPIOFF))) {
 		xnlock_get_irqsave(&rpislot->lock, s);
