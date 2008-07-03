@@ -69,7 +69,7 @@ int comedi_snd_cancel(comedi_desc_t *dsc, unsigned int idx_subd)
     if(dsc == NULL || dsc->fd < 0)
 	return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_CANCEL, (void*) idx_subd);
+    return __sys_ioctl(dsc->fd, COMEDI_CANCEL, (void*) (long)idx_subd);
 }
 
 /**
