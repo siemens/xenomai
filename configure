@@ -21476,8 +21476,13 @@ else
   CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type
 fi
 
-	{ echo "$as_me:$LINENO: result: ${enable_arm_tsc:-no}" >&5
-echo "${ECHO_T}${enable_arm_tsc:-no}" >&6; }
+	if test $CONFIG_XENO_ARM_HW_DIRECT_TSC; then
+		{ echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+	else
+		{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+	fi
   else
 	{ echo "$as_me:$LINENO: result: not supported by this board" >&5
 echo "${ECHO_T}not supported by this board" >&6; }

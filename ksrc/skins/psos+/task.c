@@ -351,24 +351,29 @@ unlock_and_exit:
 	return err;
 }
 
-u_long t_mode(u_long clrmask, u_long setmask, u_long *oldmode)
+u_long t_mode(u_long mask, u_long newmask, u_long *oldmode)
 {
 	psostask_t *task;
 
 	if (!xnpod_primary_p())
 		return -EPERM;
 
-	/* We have no error case here: just clear out any unwanted bit. */
-	clrmask &= T_MODE_MASK;
-	setmask &= T_MODE_MASK;
-
 	task = psos_current_task();
+
+	/* We have no error case here: just clear out any unwanted bit. */
+	mask &= T_MODE_MASK;
+	newmask &= T_MODE_MASK;
+	if (mask == 0) {
+		*oldmode = xeno_mode_to_psos(xnthread_state_flags(&task->threadbase) & XNTHREAD_MODE_BITS);
+		*oldmode |= ((task->threadbase.imask & 0x7) << 8);
+		return SUCCESS;
+	}
 
 	*oldmode =
 		xeno_mode_to_psos(xnpod_set_thread_mode
 				  (&task->threadbase,
-				   psos_mode_to_xeno(clrmask),
-				   psos_mode_to_xeno(setmask)));
+				   psos_mode_to_xeno(mask),
+				   psos_mode_to_xeno(newmask)));
 	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
 
 	/* Reschedule in case the scheduler has been unlocked. */

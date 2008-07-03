@@ -1,3 +1,7 @@
+2008-07-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/psos/task.c (t_mode): Fix update mask.
+
 2008-06-23  Philippe Gerum  <rpm@eclipse.xenomai.org>
 
 	* include/asm-x86, ksrc/nucleus/heap.c, ksrc/nucleus/pipe.c: Adapt

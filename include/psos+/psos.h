@@ -368,8 +368,8 @@ u_long t_ident(const char *name,
 	       u_long node,
 	       u_long *tid_r);
 
-u_long t_mode(u_long clrmask,
-	      u_long setmask,
+u_long t_mode(u_long mask,
+	      u_long newmask,
 	      u_long *oldmode_r);
 
 u_long t_resume(u_long tid);
