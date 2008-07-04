@@ -90,7 +90,7 @@ modules:
 	@echo "$(CFLAGS)"
 
 clean::
-	$(RM) $(CLEANMOD) *.o *.ko *.mod.c Module*.symvers
+	$(RM) $(CLEANMOD) *.o *.ko *.mod.c Module*.symvers Module.markers modules.order
 	$(RM) -R .tmp*
 	$(RM) .runinfo
 
