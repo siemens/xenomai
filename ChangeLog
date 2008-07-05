@@ -2,6 +2,8 @@
 
 	* ksrc/skins/psos/pt.c (pt_create): Fix overhead computation.
 
+	* include/psos/pt.h (pt_block_pos): Fix 64bit issue.
+
 2008-07-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos/task.c (t_mode): Fix update mask.
