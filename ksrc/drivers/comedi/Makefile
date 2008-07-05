@@ -17,7 +17,7 @@ xeno_comedi-y := \
 	subdevice.o \
 	transfer.o
 
-xeno_comedi-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+xeno_comedi-$(CONFIG_XENO_OPT_PERVASIVE) += rtdm_interface.o
 
 else
 
@@ -31,7 +31,7 @@ subdir-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += testing
 obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o
 
 opt_objs-y :=
-opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += syscall.o
+opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += rtdm_interface.o
 
 xeno_comedi-objs := \
 	buffer.o \
