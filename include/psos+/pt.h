@@ -67,13 +67,13 @@ typedef struct psospt {
 
     char *data;			/* Pointer to the user space behind the bitmap */
 
-    u_long bitmap[1];		/* Start of bitmap -- keeps alignment */
-
     xnholder_t rlink;		/* !< Link in resource queue. */
 
 #define rlink2pt(ln)		container_of(ln, psospt_t, rlink)
 
     xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+
+    u_long bitmap[1];		/* Start of bitmap -- keeps alignment */
 
 } psospt_t;
 
