@@ -31,11 +31,18 @@ void psospt_cleanup(void)
 	psos_pt_flush_rq(&__psos_global_rholder.ptq);
 }
 
+static inline size_t pt_overhead(size_t psize, size_t bsize)
+{
+	size_t m = (bsize * 8);
+	size_t q = (size_t)xnarch_llimd(psize - sizeof(psospt_t), m, m + 1);
+	return (psize - q + pt_align_mask) & ~pt_align_mask;
+}
+
 u_long pt_create(const char *name, void *paddr, void *laddr,	/* unused */
 		 u_long psize,
 		 u_long bsize, u_long flags, u_long *ptid, u_long *nbuf)
 {
-	u_long bitmapsize;
+	u_long overhead;
 	psospt_t *pt;
 	char *mp;
 	u_long n;
@@ -53,23 +60,20 @@ u_long pt_create(const char *name, void *paddr, void *laddr,	/* unused */
 	if (psize < sizeof(psospt_t))
 		return ERR_TINYPT;
 
-	psize -= sizeof(psospt_t);
 	pt = (psospt_t *)paddr;
 	inith(&pt->link);
 
 	xnobject_copy_name(pt->name, name);
 	pt->flags = flags;
 	pt->bsize = (bsize + pt_align_mask) & ~pt_align_mask;
+	overhead = pt_overhead(psize, pt->bsize);
 
-	bitmapsize = (psize * 8) / (pt->bsize + 8);
-	bitmapsize = (bitmapsize + pt_align_mask) & ~pt_align_mask;
-
-	if (bitmapsize <= pt_align_mask)
+	pt->nblks = (psize - overhead) / pt->bsize;
+	if (pt->nblks == 0)
 		return ERR_TINYPT;
 
-	pt->nblks = (psize - bitmapsize) / pt->bsize;
 	pt->psize = pt->nblks * pt->bsize;
-	pt->data = (char *)pt->bitmap + bitmapsize;
+	pt->data = (caddr_t)pt + overhead;
 	pt->freelist = mp = pt->data;
 	pt->ublks = 0;
 
@@ -81,9 +85,7 @@ u_long pt_create(const char *name, void *paddr, void *laddr,	/* unused */
 
 	*((void **)mp) = NULL;
 
-	for (n = 0; n < bitmapsize / sizeof(u_long); n++)
-		pt->bitmap[n] = 0;
-
+	memset(pt->bitmap, 0, overhead - sizeof(*pt) + sizeof(pt->bitmap));
 	pt->magic = PSOS_PT_MAGIC;
 
 	inith(&pt->rlink);
