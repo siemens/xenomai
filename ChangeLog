@@ -2,7 +2,8 @@
 
 	* ksrc/skins/psos/pt.c (pt_create): Fix overhead computation.
 
-	* include/psos/pt.h (pt_block_pos): Fix 64bit issue.
+	* include/psos/pt.h (pt_block_pos): Fix 64bit issue. Fix control
+	block corruption (bitmap field not last).
 
 2008-07-03  Philippe Gerum  <rpm@xenomai.org>
 
