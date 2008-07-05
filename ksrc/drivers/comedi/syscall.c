@@ -196,7 +196,7 @@ struct comedi_dummy_context {
 };
 
 static struct rtdm_device rtdm_devs[COMEDI_NB_DEVICES] =
-    {[0...COMEDI_NB_DEVICES - 1] = {
+    {[0 ... COMEDI_NB_DEVICES - 1] = {
 	      struct_version:	    RTDM_DEVICE_STRUCT_VER,
 	      device_flags:	    RTDM_NAMED_DEVICE,
 	      context_size:	    sizeof(struct
