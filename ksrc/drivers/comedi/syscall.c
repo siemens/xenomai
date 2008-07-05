@@ -224,8 +224,8 @@ static struct rtdm_device rtdm_devs[COMEDI_NB_DEVICES] =
 	      driver_version:	    RTDM_DRIVER_VER(0, 0,
 						    2),
 	      peripheral_name:	    "Comedi",
-	      provider_name:	    "David Schleef",
-				    }
+	      provider_name:	    "Alexis Berlemont",
+	    }
 };
 
 int comedi_register(void)
