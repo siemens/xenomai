@@ -2,6 +2,8 @@
 
 	* ksrc/skins/psos/pt.c (pt_create): Fix overhead computation.
 
+	* include/psos/pt.h (pt_block_pos): Fix 64bit issue.
+
 2008-07-03  Alexis Berlemont  <alexis.berlemont@free.fr>
 
 	* include/comedi, src/drvlib: the header root_leaf.h moved from
