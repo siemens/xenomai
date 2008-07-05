@@ -47,13 +47,13 @@
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_snd_insnlist(comedi_desc_t *dsc, comedi_insnlst_t *arg)
+int comedi_snd_insnlist(comedi_desc_t * dsc, comedi_insnlst_t * arg)
 {
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_INSNLIST, arg);
+	return __sys_ioctl(dsc->fd, COMEDI_INSNLIST, arg);
 }
 
 /**
@@ -68,13 +68,13 @@ int comedi_snd_insnlist(comedi_desc_t *dsc, comedi_insnlst_t *arg)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_snd_insn(comedi_desc_t *dsc, comedi_insn_t *arg)
+int comedi_snd_insn(comedi_desc_t * dsc, comedi_insn_t * arg)
 {
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_INSN, arg);
+	return __sys_ioctl(dsc->fd, COMEDI_INSN, arg);
 }
 
 /** @} Synchronous acquisition API */
@@ -109,57 +109,55 @@ int comedi_snd_insn(comedi_desc_t *dsc, comedi_insn_t *arg)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sync_write(comedi_desc_t *dsc,
+int comedi_sync_write(comedi_desc_t * dsc,
 		      unsigned int idx_subd,
-		      unsigned int chan_desc, 
+		      unsigned int chan_desc,
 		      unsigned int ns_delay, void *buf, size_t nbyte)
 {
-    int ret;
-    comedi_insn_t insn_tab[2] = {
-	{
-	    type: COMEDI_INSN_WRITE,
-	    idx_subd: idx_subd,
-	    chan_desc: chan_desc,
-	    data_size: 0,
-	    data: buf
-	},
-	{
-	    type: COMEDI_INSN_WAIT,
-	    idx_subd: idx_subd,
-	    chan_desc: chan_desc,
-	    data_size: 1,
-	    data: NULL
-	}
-    };
-
-    /* If some delay needs to be applied,
-       the instruction list feature is needed */
-    if(ns_delay != 0) {
 	int ret;
-	lsampl_t _delay = (lsampl_t) ns_delay;	
-	comedi_insnlst_t insnlst = {
-	    count: 2,
-	    insns: insn_tab
+	comedi_insn_t insn_tab[2] = {
+		{
+		      type:COMEDI_INSN_WRITE,
+		      idx_subd:idx_subd,
+		      chan_desc:chan_desc,
+		      data_size:0,
+	      data:buf},
+		{
+		      type:COMEDI_INSN_WAIT,
+		      idx_subd:idx_subd,
+		      chan_desc:chan_desc,
+		      data_size:1,
+	      data:NULL}
 	};
 
-	/* Sets the delay to wait */
-	insn_tab[1].data = &_delay;
+	/* If some delay needs to be applied,
+	   the instruction list feature is needed */
+	if (ns_delay != 0) {
+		int ret;
+		lsampl_t _delay = (lsampl_t) ns_delay;
+		comedi_insnlst_t insnlst = {
+		      count:2,
+		      insns:insn_tab
+		};
 
-	/* Sends the two instructions (false read + wait) 
-	   to the Comedi layer */
-	ret = comedi_snd_insnlist(dsc, &insnlst);
-	if(ret < 0)
-	    return ret;	
-    }
+		/* Sets the delay to wait */
+		insn_tab[1].data = &_delay;
 
-    /* The first instruction structure must be updated so as 
-       to write the proper data amount */
-    insn_tab[0].data_size = nbyte;
+		/* Sends the two instructions (false read + wait) 
+		   to the Comedi layer */
+		ret = comedi_snd_insnlist(dsc, &insnlst);
+		if (ret < 0)
+			return ret;
+	}
 
-    /* Sends the write instruction to the Comedi layer */
-    ret = comedi_snd_insn(dsc, insn_tab);
+	/* The first instruction structure must be updated so as 
+	   to write the proper data amount */
+	insn_tab[0].data_size = nbyte;
 
-    return (ret == 0) ? nbyte : ret;
+	/* Sends the write instruction to the Comedi layer */
+	ret = comedi_snd_insn(dsc, insn_tab);
+
+	return (ret == 0) ? nbyte : ret;
 }
 
 /**
@@ -178,57 +176,55 @@ int comedi_sync_write(comedi_desc_t *dsc,
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sync_read(comedi_desc_t *dsc,
+int comedi_sync_read(comedi_desc_t * dsc,
 		     unsigned int idx_subd,
-		     unsigned int chan_desc, 
+		     unsigned int chan_desc,
 		     unsigned int ns_delay, void *buf, size_t nbyte)
 {
-    int ret;
-    comedi_insn_t insn_tab[2] = {
-	{
-	    type: COMEDI_INSN_READ,
-	    idx_subd: idx_subd,
-	    chan_desc: chan_desc,
-	    data_size: 0,
-	    data: buf
-	},
-	{
-	    type: COMEDI_INSN_WAIT,
-	    idx_subd: idx_subd,
-	    chan_desc: chan_desc,
-	    data_size: 1,
-	    data: NULL
-	}
-    };
-
-    /* If some delay needs to be applied,
-       the instruction list feature is needed */
-    if(ns_delay != 0) {
 	int ret;
-	lsampl_t _delay = (lsampl_t) ns_delay;
-	comedi_insnlst_t insnlst = {
-	    count: 2,
-	    insns: insn_tab
+	comedi_insn_t insn_tab[2] = {
+		{
+		      type:COMEDI_INSN_READ,
+		      idx_subd:idx_subd,
+		      chan_desc:chan_desc,
+		      data_size:0,
+	      data:buf},
+		{
+		      type:COMEDI_INSN_WAIT,
+		      idx_subd:idx_subd,
+		      chan_desc:chan_desc,
+		      data_size:1,
+	      data:NULL}
 	};
 
-	/* Sets the delay to wait */
-	insn_tab[1].data = &_delay;
+	/* If some delay needs to be applied,
+	   the instruction list feature is needed */
+	if (ns_delay != 0) {
+		int ret;
+		lsampl_t _delay = (lsampl_t) ns_delay;
+		comedi_insnlst_t insnlst = {
+		      count:2,
+		      insns:insn_tab
+		};
 
-	/* Sends the two instructions (false read + wait) 
-	   to the Comedi layer */
-	ret = comedi_snd_insnlist(dsc, &insnlst);
-	if(ret < 0)
-	    return ret;	
-    }
+		/* Sets the delay to wait */
+		insn_tab[1].data = &_delay;
 
-    /* The first instruction structure must be updated so as 
-       to retrieve the proper data amount */
-    insn_tab[0].data_size = nbyte;
+		/* Sends the two instructions (false read + wait) 
+		   to the Comedi layer */
+		ret = comedi_snd_insnlist(dsc, &insnlst);
+		if (ret < 0)
+			return ret;
+	}
 
-    /* Sends the read instruction to the Comedi layer */
-    ret = comedi_snd_insn(dsc, insn_tab);
+	/* The first instruction structure must be updated so as 
+	   to retrieve the proper data amount */
+	insn_tab[0].data_size = nbyte;
 
-    return (ret == 0) ? nbyte : ret;
+	/* Sends the read instruction to the Comedi layer */
+	ret = comedi_snd_insn(dsc, insn_tab);
+
+	return (ret == 0) ? nbyte : ret;
 }
 
 /** @} Synchronous acquisition API */

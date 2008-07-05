@@ -29,134 +29,134 @@
 
 #ifndef DOXYGEN_CPP
 
-static void comedi_root_setup(comedi_root_t *rt,
-		      unsigned long gsize, 
-		      unsigned long rsize)
+static void comedi_root_setup(comedi_root_t * rt,
+			      unsigned long gsize, unsigned long rsize)
 {
-  /* Common init */
-  rt->offset=((void*)rt+sizeof(comedi_root_t));
-  rt->gsize=gsize;
-  rt->id=0xffffffff;
-  rt->lfnxt=NULL;
-  rt->lfchd=NULL;
+	/* Common init */
+	rt->offset = ((void *)rt + sizeof(comedi_root_t));
+	rt->gsize = gsize;
+	rt->id = 0xffffffff;
+	rt->lfnxt = NULL;
+	rt->lfchd = NULL;
 
-  /* Specific init */
-  rt->data=rt->offset;
-  rt->offset+=rsize;
+	/* Specific init */
+	rt->data = rt->offset;
+	rt->offset += rsize;
 }
 
-static int comedi_leaf_add(comedi_root_t *rt,
-		    comedi_leaf_t *lf,
-		    comedi_leaf_t **lfchild,
-		    unsigned long lfsize)
+static int comedi_leaf_add(comedi_root_t * rt,
+			   comedi_leaf_t * lf,
+			   comedi_leaf_t ** lfchild, unsigned long lfsize)
 {
-  /* Basic checking */
-  if(rt->offset+lfsize>((void*)rt)+rt->gsize)
-    return -ENOMEM;    
+	/* Basic checking */
+	if (rt->offset + lfsize > ((void *)rt) + rt->gsize)
+		return -ENOMEM;
 
-  if(lf->nb_leaf!=0)
-  {
-    int i;  
-    comedi_leaf_t *lflst=lf->lfchd;
+	if (lf->nb_leaf != 0) {
+		int i;
+		comedi_leaf_t *lflst = lf->lfchd;
 
-    for(i=0;i<(lf->nb_leaf-1);i++)
-    {
-      if(lflst==NULL)
-	return -EFAULT;
-      else
-	lflst=lflst->lfnxt;
-    }
-    lflst->lfnxt=(comedi_leaf_t*)rt->offset;  
-  }
-  else
-    lf->lfchd=(comedi_leaf_t*)rt->offset;
+		for (i = 0; i < (lf->nb_leaf - 1); i++) {
+			if (lflst == NULL)
+				return -EFAULT;
+			else
+				lflst = lflst->lfnxt;
+		}
+		lflst->lfnxt = (comedi_leaf_t *) rt->offset;
+	} else
+		lf->lfchd = (comedi_leaf_t *) rt->offset;
 
-  /* Inits parent leaf */
-  lf->nb_leaf++;
-  *lfchild=(comedi_leaf_t*)rt->offset;
-  rt->offset+=sizeof(comedi_leaf_t);
+	/* Inits parent leaf */
+	lf->nb_leaf++;
+	*lfchild = (comedi_leaf_t *) rt->offset;
+	rt->offset += sizeof(comedi_leaf_t);
 
-  /* Performs child leaf init */
-  (*lfchild)->id=lf->nb_leaf-1;
-  (*lfchild)->nb_leaf=0;
-  (*lfchild)->lfnxt=NULL;
-  (*lfchild)->lfchd=NULL;
-  (*lfchild)->data=(void*)rt->offset;
+	/* Performs child leaf init */
+	(*lfchild)->id = lf->nb_leaf - 1;
+	(*lfchild)->nb_leaf = 0;
+	(*lfchild)->lfnxt = NULL;
+	(*lfchild)->lfchd = NULL;
+	(*lfchild)->data = (void *)rt->offset;
 
-  /* Performs root modifications */
-  rt->offset+=lfsize;
+	/* Performs root modifications */
+	rt->offset += lfsize;
 
-  return 0;
+	return 0;
 }
 
-static inline comedi_leaf_t * comedi_leaf_get(comedi_leaf_t *lf, unsigned int id)
+static inline comedi_leaf_t *comedi_leaf_get(comedi_leaf_t * lf,
+					     unsigned int id)
 {
-  int i;
-  comedi_leaf_t *lflst=lf->lfchd;
+	int i;
+	comedi_leaf_t *lflst = lf->lfchd;
 
-  for(i=0;i<id && lflst!=NULL ;i++)
-      lflst=lflst->lfnxt;
+	for (i = 0; i < id && lflst != NULL; i++)
+		lflst = lflst->lfnxt;
 
-  return lflst;
+	return lflst;
 }
 
-static int __comedi_get_sbsize(int fd, comedi_desc_t *dsc)
+static int __comedi_get_sbsize(int fd, comedi_desc_t * dsc)
 {
-  unsigned int i,j,nb_chan,nb_rng;
-  int ret,res=dsc->nb_subd*(sizeof(comedi_sbinfo_t)+sizeof(comedi_leaf_t));
-  
-  for(i=0;i<dsc->nb_subd;i++)
-  {
-    if((ret=comedi_sys_nbchaninfo(fd,i,&nb_chan))<0)
-      return ret;
-    res+=nb_chan*(sizeof(comedi_chinfo_t)+sizeof(comedi_leaf_t));
-    for(j=0;j<nb_chan;j++)
-    {
-      if((ret=comedi_sys_nbrnginfo(fd,i,j,&nb_rng))<0)
-	return ret;
-      res+=nb_rng*(sizeof(comedi_rnginfo_t)+sizeof(comedi_leaf_t));
-    }
-  }
-  
-  return res;
+	unsigned int i, j, nb_chan, nb_rng;
+	int ret, res =
+	    dsc->nb_subd * (sizeof(comedi_sbinfo_t) + sizeof(comedi_leaf_t));
+
+	for (i = 0; i < dsc->nb_subd; i++) {
+		if ((ret = comedi_sys_nbchaninfo(fd, i, &nb_chan)) < 0)
+			return ret;
+		res +=
+		    nb_chan * (sizeof(comedi_chinfo_t) + sizeof(comedi_leaf_t));
+		for (j = 0; j < nb_chan; j++) {
+			if ((ret = comedi_sys_nbrnginfo(fd, i, j, &nb_rng)) < 0)
+				return ret;
+			res +=
+			    nb_rng * (sizeof(comedi_rnginfo_t) +
+				      sizeof(comedi_leaf_t));
+		}
+	}
+
+	return res;
 }
 
-static int __comedi_fill_desc(int fd, comedi_desc_t *dsc)
+static int __comedi_fill_desc(int fd, comedi_desc_t * dsc)
 {
-  int ret;
-  unsigned int i,j;
-  comedi_sbinfo_t *sbinfo;
-  comedi_root_t *rt=(comedi_root_t*)dsc->sbdata;
-  
-  comedi_root_setup(rt,dsc->sbsize,dsc->nb_subd*sizeof(comedi_sbinfo_t));
-  sbinfo=(comedi_sbinfo_t*)rt->data;
+	int ret;
+	unsigned int i, j;
+	comedi_sbinfo_t *sbinfo;
+	comedi_root_t *rt = (comedi_root_t *) dsc->sbdata;
 
-  if((ret=comedi_sys_subdinfo(fd,sbinfo))<0)
-    return ret;
-  
-  for(i=0;i<dsc->nb_subd;i++)
-  {
-    comedi_leaf_t *lfs;
-    comedi_chinfo_t *chinfo;
-    comedi_leaf_add(rt,(comedi_leaf_t*)rt,&lfs,sbinfo[i].nb_chan*sizeof(comedi_chinfo_t));
+	comedi_root_setup(rt, dsc->sbsize,
+			  dsc->nb_subd * sizeof(comedi_sbinfo_t));
+	sbinfo = (comedi_sbinfo_t *) rt->data;
 
-    chinfo=(comedi_chinfo_t*)lfs->data;
+	if ((ret = comedi_sys_subdinfo(fd, sbinfo)) < 0)
+		return ret;
 
-    if((ret=comedi_sys_chaninfo(fd,i,chinfo))<0)
-      return ret;
-    for(j=0;j<sbinfo[i].nb_chan;j++)
-    {
-      comedi_leaf_t *lfc;
-      comedi_rnginfo_t *rnginfo;
-      comedi_leaf_add(rt,lfs,&lfc,chinfo[j].nb_rng*sizeof(comedi_rnginfo_t));
+	for (i = 0; i < dsc->nb_subd; i++) {
+		comedi_leaf_t *lfs;
+		comedi_chinfo_t *chinfo;
+		comedi_leaf_add(rt, (comedi_leaf_t *) rt, &lfs,
+				sbinfo[i].nb_chan * sizeof(comedi_chinfo_t));
 
-      rnginfo=(comedi_rnginfo_t*)lfc->data;
-      if((ret=comedi_sys_rnginfo(fd,i,j,rnginfo))<0)
-	return ret;
-    }
-  }  
+		chinfo = (comedi_chinfo_t *) lfs->data;
 
-  return 0;
+		if ((ret = comedi_sys_chaninfo(fd, i, chinfo)) < 0)
+			return ret;
+		for (j = 0; j < sbinfo[i].nb_chan; j++) {
+			comedi_leaf_t *lfc;
+			comedi_rnginfo_t *rnginfo;
+			comedi_leaf_add(rt, lfs, &lfc,
+					chinfo[j].nb_rng *
+					sizeof(comedi_rnginfo_t));
+
+			rnginfo = (comedi_rnginfo_t *) lfc->data;
+			if ((ret = comedi_sys_rnginfo(fd, i, j, rnginfo)) < 0)
+				return ret;
+		}
+	}
+
+	return 0;
 }
 
 #endif /* !DOXYGEN_CPP */
@@ -202,34 +202,33 @@ static int __comedi_fill_desc(int fd, comedi_desc_t *dsc)
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_sys_desc(int fd, comedi_desc_t *dsc, int pass)
+int comedi_sys_desc(int fd, comedi_desc_t * dsc, int pass)
 {
-  int ret=0;
-  if(dsc==NULL || 
-     (pass != COMEDI_BSC_DESC && dsc->magic != MAGIC_BSC_DESC))
-      return -EINVAL;
-  
-  if(pass == COMEDI_BSC_DESC) {
+	int ret = 0;
+	if (dsc == NULL ||
+	    (pass != COMEDI_BSC_DESC && dsc->magic != MAGIC_BSC_DESC))
+		return -EINVAL;
 
-      ret = comedi_sys_devinfo(fd,(comedi_dvinfo_t*)dsc);
-      if(ret < 0)
-	  goto out_comedi_sys_desc;
-    
-      dsc->sbsize = __comedi_get_sbsize(fd,dsc);
-      dsc->sbdata = NULL;
-      dsc->magic = MAGIC_BSC_DESC;
-  }
-  else {
+	if (pass == COMEDI_BSC_DESC) {
 
-      ret= __comedi_fill_desc(fd, dsc);
-      if(ret < 0)
-	  goto out_comedi_sys_desc;
+		ret = comedi_sys_devinfo(fd, (comedi_dvinfo_t *) dsc);
+		if (ret < 0)
+			goto out_comedi_sys_desc;
 
-      dsc->magic = MAGIC_CPLX_DESC;
-  }
-  
-    out_comedi_sys_desc:
-  return ret;      
+		dsc->sbsize = __comedi_get_sbsize(fd, dsc);
+		dsc->sbdata = NULL;
+		dsc->magic = MAGIC_BSC_DESC;
+	} else {
+
+		ret = __comedi_fill_desc(fd, dsc);
+		if (ret < 0)
+			goto out_comedi_sys_desc;
+
+		dsc->magic = MAGIC_CPLX_DESC;
+	}
+
+      out_comedi_sys_desc:
+	return ret;
 }
 
 /*! @} Descriptor Syscall API */
@@ -252,29 +251,29 @@ int comedi_sys_desc(int fd, comedi_desc_t *dsc, int pass)
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_open(comedi_desc_t *dsc, const char *fname)
+int comedi_open(comedi_desc_t * dsc, const char *fname)
 {
-    int ret;
+	int ret;
 
-    /* Basic checking */
-    if(dsc == NULL)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL)
+		return -EINVAL;
 
-    /* Initializes the descriptor */
-    memset(dsc, 0, sizeof(comedi_desc_t));
+	/* Initializes the descriptor */
+	memset(dsc, 0, sizeof(comedi_desc_t));
 
-    /* Opens the driver */
-    dsc->fd = comedi_sys_open(fname);
-    if(dsc->fd < 0)
-	return dsc->fd;
+	/* Opens the driver */
+	dsc->fd = comedi_sys_open(fname);
+	if (dsc->fd < 0)
+		return dsc->fd;
 
-    /* Basically fills the descriptor */
-    ret = comedi_sys_desc(dsc->fd, dsc, COMEDI_BSC_DESC);
-    if(ret < 0) {
-	comedi_sys_close(dsc->fd);
-    }
-    
-    return ret;    
+	/* Basically fills the descriptor */
+	ret = comedi_sys_desc(dsc->fd, dsc, COMEDI_BSC_DESC);
+	if (ret < 0) {
+		comedi_sys_close(dsc->fd);
+	}
+
+	return ret;
 }
 
 /**
@@ -285,13 +284,13 @@ int comedi_open(comedi_desc_t *dsc, const char *fname)
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_close(comedi_desc_t *dsc)
+int comedi_close(comedi_desc_t * dsc)
 {
-    /* Basic checking */
-    if(dsc == NULL)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL)
+		return -EINVAL;
 
-    return comedi_sys_close(dsc->fd);
+	return comedi_sys_close(dsc->fd);
 }
 
 /**
@@ -303,17 +302,17 @@ int comedi_close(comedi_desc_t *dsc)
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_fill_desc(comedi_desc_t *dsc)
+int comedi_fill_desc(comedi_desc_t * dsc)
 {
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    /* Checks the descriptor has been basically filled */
-    if(dsc->magic != MAGIC_BSC_DESC)
-	return -EINVAL;
+	/* Checks the descriptor has been basically filled */
+	if (dsc->magic != MAGIC_BSC_DESC)
+		return -EINVAL;
 
-    return comedi_sys_desc(dsc->fd, dsc, COMEDI_CPLX_DESC);
+	return comedi_sys_desc(dsc->fd, dsc, COMEDI_CPLX_DESC);
 }
 
 /**
@@ -327,24 +326,24 @@ int comedi_fill_desc(comedi_desc_t *dsc)
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_get_subdinfo(comedi_desc_t *dsc, 
-			unsigned int subd, comedi_sbinfo_t **info)
+int comedi_get_subdinfo(comedi_desc_t * dsc,
+			unsigned int subd, comedi_sbinfo_t ** info)
 {
-  comedi_leaf_t *tmp;  
+	comedi_leaf_t *tmp;
 
-  if(dsc == NULL || info == NULL)
-    return -EINVAL;
+	if (dsc == NULL || info == NULL)
+		return -EINVAL;
 
-  if(dsc->magic != MAGIC_CPLX_DESC)
-      return -EINVAL;
+	if (dsc->magic != MAGIC_CPLX_DESC)
+		return -EINVAL;
 
-  if(subd >= dsc->nb_subd)
-    return -EINVAL;
+	if (subd >= dsc->nb_subd)
+		return -EINVAL;
 
-  tmp = (comedi_leaf_t*)dsc->sbdata;
-  *info = &(((comedi_sbinfo_t*)tmp->data)[subd]);
+	tmp = (comedi_leaf_t *) dsc->sbdata;
+	*info = &(((comedi_sbinfo_t *) tmp->data)[subd]);
 
-  return 0;
+	return 0;
 }
 
 /**
@@ -359,30 +358,30 @@ int comedi_get_subdinfo(comedi_desc_t *dsc,
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_get_chinfo(comedi_desc_t *dsc, 
+int comedi_get_chinfo(comedi_desc_t * dsc,
 		      unsigned int subd,
-		      unsigned int chan, comedi_chinfo_t **info)
+		      unsigned int chan, comedi_chinfo_t ** info)
 {
-  comedi_leaf_t *tmp;
+	comedi_leaf_t *tmp;
 
-  if(dsc==NULL || info==NULL)
-    return -EINVAL;
+	if (dsc == NULL || info == NULL)
+		return -EINVAL;
 
-  if(dsc->magic != MAGIC_CPLX_DESC)
-      return -EINVAL;
+	if (dsc->magic != MAGIC_CPLX_DESC)
+		return -EINVAL;
 
-  if(subd >= dsc->nb_subd)
-    return -EINVAL;  
+	if (subd >= dsc->nb_subd)
+		return -EINVAL;
 
-  tmp = (comedi_leaf_t*)dsc->sbdata;
+	tmp = (comedi_leaf_t *) dsc->sbdata;
 
-  if(chan >= ((comedi_sbinfo_t*) tmp->data)[subd].nb_chan)
-    return -EINVAL;
+	if (chan >= ((comedi_sbinfo_t *) tmp->data)[subd].nb_chan)
+		return -EINVAL;
 
-  tmp = comedi_leaf_get(tmp,subd);
-  *info = &(((comedi_chinfo_t*)tmp->data)[chan]);
-  
-  return 0;
+	tmp = comedi_leaf_get(tmp, subd);
+	*info = &(((comedi_chinfo_t *) tmp->data)[chan]);
+
+	return 0;
 }
 
 /**
@@ -398,37 +397,36 @@ int comedi_get_chinfo(comedi_desc_t *dsc,
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_get_rnginfo(comedi_desc_t *dsc, 
+int comedi_get_rnginfo(comedi_desc_t * dsc,
 		       unsigned int subd,
 		       unsigned int chan,
-		       unsigned int rng, comedi_rnginfo_t **info)
+		       unsigned int rng, comedi_rnginfo_t ** info)
 {
-  comedi_leaf_t *tmp;
+	comedi_leaf_t *tmp;
 
-  if(dsc==NULL || info==NULL)
-    return -EINVAL;
+	if (dsc == NULL || info == NULL)
+		return -EINVAL;
 
-  if(dsc->magic != MAGIC_CPLX_DESC)
-      return -EINVAL;
+	if (dsc->magic != MAGIC_CPLX_DESC)
+		return -EINVAL;
 
-  if(subd >= dsc->nb_subd)
-    return -EINVAL;  
+	if (subd >= dsc->nb_subd)
+		return -EINVAL;
 
-  tmp = (comedi_leaf_t*)dsc->sbdata;
+	tmp = (comedi_leaf_t *) dsc->sbdata;
 
-  if(chan >= ((comedi_sbinfo_t*)tmp->data)[subd].nb_chan)
-    return -EINVAL;
+	if (chan >= ((comedi_sbinfo_t *) tmp->data)[subd].nb_chan)
+		return -EINVAL;
 
-  tmp = comedi_leaf_get(tmp,subd);
+	tmp = comedi_leaf_get(tmp, subd);
 
-  if(rng >= ((comedi_chinfo_t*)tmp->data)[chan].nb_rng)
-    return -EINVAL;
+	if (rng >= ((comedi_chinfo_t *) tmp->data)[chan].nb_rng)
+		return -EINVAL;
 
-  tmp = comedi_leaf_get(tmp,chan);
-  *info = &(((comedi_rnginfo_t*)tmp->data)[rng]);
-  
-  return 0;
+	tmp = comedi_leaf_get(tmp, chan);
+	*info = &(((comedi_rnginfo_t *) tmp->data)[rng]);
+
+	return 0;
 }
 
 /*! @} Descriptor API */
-

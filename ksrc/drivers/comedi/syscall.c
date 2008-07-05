@@ -34,84 +34,80 @@
 #include <comedi/ioctl.h>
 #include <comedi/device.h>
 
-int (*comedi_ioctl_functions[NB_IOCTL_FUNCTIONS])(comedi_cxt_t *,void*) = 
-{ 
-  comedi_ioctl_devcfg,
-  comedi_ioctl_devinfo,
-  comedi_ioctl_subdinfo,
-  comedi_ioctl_chaninfo,
-  comedi_ioctl_rnginfo,
-  comedi_ioctl_cmd,
-  comedi_ioctl_cancel,
-  comedi_ioctl_insnlist,
-  comedi_ioctl_insn,
-  comedi_ioctl_bufcfg,
-  comedi_ioctl_bufinfo,
-  comedi_ioctl_poll,
-  comedi_ioctl_mmap,
-  comedi_ioctl_nbchaninfo,
-  comedi_ioctl_nbrnginfo
-};
+int (*comedi_ioctl_functions[NB_IOCTL_FUNCTIONS]) (comedi_cxt_t *, void *) = {
+comedi_ioctl_devcfg,
+	    comedi_ioctl_devinfo,
+	    comedi_ioctl_subdinfo,
+	    comedi_ioctl_chaninfo,
+	    comedi_ioctl_rnginfo,
+	    comedi_ioctl_cmd,
+	    comedi_ioctl_cancel,
+	    comedi_ioctl_insnlist,
+	    comedi_ioctl_insn,
+	    comedi_ioctl_bufcfg,
+	    comedi_ioctl_bufinfo,
+	    comedi_ioctl_poll,
+	    comedi_ioctl_mmap, comedi_ioctl_nbchaninfo, comedi_ioctl_nbrnginfo};
 
 #ifdef CONFIG_PROC_FS
 struct proc_dir_entry *comedi_proc_root;
 
 int comedi_init_proc(void)
 {
-    int ret=0;
-    struct proc_dir_entry *entry;
+	int ret = 0;
+	struct proc_dir_entry *entry;
 
-    /* Creates the global directory */
-    comedi_proc_root=create_proc_entry("comedi",S_IFDIR,0);
-    if(comedi_proc_root==NULL)
-    {
-	comedi_logerr("comedi_proc_init: failed to create /proc/comedi\n");
-	return -ENOMEM;
-    }    
+	/* Creates the global directory */
+	comedi_proc_root = create_proc_entry("comedi", S_IFDIR, 0);
+	if (comedi_proc_root == NULL) {
+		comedi_logerr
+		    ("comedi_proc_init: failed to create /proc/comedi\n");
+		return -ENOMEM;
+	}
 
-    /* Creates the devices related file */
-    entry=create_proc_entry("devices",0444,comedi_proc_root);
-    if(entry==NULL)
-    {
-	comedi_logerr("comedi_proc_init: failed to create /proc/comedi/devices\n");
-	ret=-ENOMEM;
-	goto err_proc_init;
-    }
+	/* Creates the devices related file */
+	entry = create_proc_entry("devices", 0444, comedi_proc_root);
+	if (entry == NULL) {
+		comedi_logerr
+		    ("comedi_proc_init: failed to create /proc/comedi/devices\n");
+		ret = -ENOMEM;
+		goto err_proc_init;
+	}
 
-    entry->nlink=1;
-    entry->data=NULL;
-    entry->write_proc=NULL;
-    entry->read_proc=comedi_rdproc_devs;
-    entry->owner=THIS_MODULE;
+	entry->nlink = 1;
+	entry->data = NULL;
+	entry->write_proc = NULL;
+	entry->read_proc = comedi_rdproc_devs;
+	entry->owner = THIS_MODULE;
 
-    /* Creates the drivers related file */
-    entry=create_proc_entry("drivers",0444,comedi_proc_root);
-    if(entry==NULL)
-    {
-	comedi_logerr("comedi_proc_init: failed to create /proc/comedi/drivers\n");
-	ret=-ENOMEM;
-	goto err_proc_init;
-    }
+	/* Creates the drivers related file */
+	entry = create_proc_entry("drivers", 0444, comedi_proc_root);
+	if (entry == NULL) {
+		comedi_logerr
+		    ("comedi_proc_init: failed to create /proc/comedi/drivers\n");
+		ret = -ENOMEM;
+		goto err_proc_init;
+	}
 
-    entry->nlink=1;
-    entry->data=NULL;
-    entry->write_proc=NULL;
-    entry->read_proc=comedi_rdproc_drvs;
-    entry->owner=THIS_MODULE;
+	entry->nlink = 1;
+	entry->data = NULL;
+	entry->write_proc = NULL;
+	entry->read_proc = comedi_rdproc_drvs;
+	entry->owner = THIS_MODULE;
 
-    return 0;
+	return 0;
 
-    err_proc_init:
-    remove_proc_entry("devices", comedi_proc_root);
-    remove_proc_entry("comedi", NULL);
-    return ret;
+      err_proc_init:
+	remove_proc_entry("devices", comedi_proc_root);
+	remove_proc_entry("comedi", NULL);
+	return ret;
 }
 
 void comedi_cleanup_proc(void)
 {
-    remove_proc_entry("drivers", comedi_proc_root);
-    remove_proc_entry("devices", comedi_proc_root);
-    remove_proc_entry("comedi", NULL);    
+	remove_proc_entry("drivers", comedi_proc_root);
+	remove_proc_entry("devices", comedi_proc_root);
+	remove_proc_entry("comedi", NULL);
 }
 
 #else /* !CONFIG_PROC_FS */
@@ -122,145 +118,143 @@ void comedi_cleanup_proc(void)
 #endif /* CONFIG_PROC_FS */
 
 int comedi_rt_open(struct rtdm_dev_context *context,
-			  rtdm_user_info_t *user_info, 
-			  int flags)
+		   rtdm_user_info_t * user_info, int flags)
 {
-    comedi_cxt_t cxt;
-    
-    comedi_init_cxt(context, user_info, &cxt);    
-    comedi_set_dev(&cxt);
-    comedi_loginfo("comedi_rt_open: minor=%d\n",comedi_get_minor(&cxt));
+	comedi_cxt_t cxt;
 
-    return 0;
+	comedi_init_cxt(context, user_info, &cxt);
+	comedi_set_dev(&cxt);
+	comedi_loginfo("comedi_rt_open: minor=%d\n", comedi_get_minor(&cxt));
+
+	return 0;
 }
 
 int comedi_rt_close(struct rtdm_dev_context *context,
-		    rtdm_user_info_t *user_info)
+		    rtdm_user_info_t * user_info)
 {
-    comedi_cxt_t cxt;
+	comedi_cxt_t cxt;
 
-    comedi_init_cxt(context, user_info, &cxt);    
-    comedi_set_dev(&cxt);
-    comedi_loginfo("comedi_rt_close: minor=%d\n",comedi_get_minor(&cxt));
+	comedi_init_cxt(context, user_info, &cxt);
+	comedi_set_dev(&cxt);
+	comedi_loginfo("comedi_rt_close: minor=%d\n", comedi_get_minor(&cxt));
 
-    return 0;
-}
-
-ssize_t comedi_rt_read(struct rtdm_dev_context *context,
-		       rtdm_user_info_t *user_info, void *buf, 
-		       size_t nbytes)
-{
-    comedi_cxt_t cxt;
-    comedi_dev_t *dev;
-
-    comedi_init_cxt(context, user_info, &cxt);
-    comedi_set_dev(&cxt);
-    dev = comedi_get_dev(&cxt);
-
-    comedi_loginfo("comedi_rt_read: minor=%d\n",comedi_get_minor(&cxt));
-
-    if(nbytes == 0)
 	return 0;
-
-    return comedi_read(&cxt, buf, nbytes);
 }
 
-ssize_t comedi_rt_write(struct rtdm_dev_context *context,
-			rtdm_user_info_t *user_info, const void *buf,
+ssize_t comedi_rt_read(struct rtdm_dev_context * context,
+		       rtdm_user_info_t * user_info, void *buf, size_t nbytes)
+{
+	comedi_cxt_t cxt;
+	comedi_dev_t *dev;
+
+	comedi_init_cxt(context, user_info, &cxt);
+	comedi_set_dev(&cxt);
+	dev = comedi_get_dev(&cxt);
+
+	comedi_loginfo("comedi_rt_read: minor=%d\n", comedi_get_minor(&cxt));
+
+	if (nbytes == 0)
+		return 0;
+
+	return comedi_read(&cxt, buf, nbytes);
+}
+
+ssize_t comedi_rt_write(struct rtdm_dev_context * context,
+			rtdm_user_info_t * user_info, const void *buf,
 			size_t nbytes)
 {
-    comedi_cxt_t cxt;
-    comedi_dev_t *dev;
-  
-    comedi_init_cxt(context, user_info, &cxt);
-    comedi_set_dev(&cxt);
-    dev = comedi_get_dev(&cxt);
+	comedi_cxt_t cxt;
+	comedi_dev_t *dev;
 
-    comedi_loginfo("comedi_rt_write: minor=%d\n",comedi_get_minor(&cxt));  
+	comedi_init_cxt(context, user_info, &cxt);
+	comedi_set_dev(&cxt);
+	dev = comedi_get_dev(&cxt);
 
-    if(nbytes == 0)
-	return 0;
+	comedi_loginfo("comedi_rt_write: minor=%d\n", comedi_get_minor(&cxt));
 
-    return comedi_write(&cxt, buf, nbytes);
+	if (nbytes == 0)
+		return 0;
+
+	return comedi_write(&cxt, buf, nbytes);
 }
 
-
 int comedi_rt_ioctl(struct rtdm_dev_context *context,
-		    rtdm_user_info_t *user_info, 
+		    rtdm_user_info_t * user_info,
 		    unsigned int request, void *arg)
 {
-    comedi_cxt_t cxt;
+	comedi_cxt_t cxt;
 
-    comedi_init_cxt(context, user_info, &cxt);
-    comedi_set_dev(&cxt);
-    comedi_loginfo("comedi_rt_ioctl: minor=%d\n",comedi_get_minor(&cxt));
+	comedi_init_cxt(context, user_info, &cxt);
+	comedi_set_dev(&cxt);
+	comedi_loginfo("comedi_rt_ioctl: minor=%d\n", comedi_get_minor(&cxt));
 
-    return comedi_ioctl_functions[_IOC_NR(request)](&cxt,arg);
+	return comedi_ioctl_functions[_IOC_NR(request)] (&cxt, arg);
 }
 
 struct comedi_dummy_context {
-  int nouse;
+	int nouse;
 };
 
-static struct rtdm_device rtdm_devs[COMEDI_NB_DEVICES] = 
-{ [ 0 ... COMEDI_NB_DEVICES -1 ] = 
-  {
-      struct_version: RTDM_DEVICE_STRUCT_VER,
-      device_flags: RTDM_NAMED_DEVICE,
-      context_size: sizeof(struct comedi_dummy_context),
-      device_name: "",
-      
-      open_rt: comedi_rt_open,
-      open_nrt: comedi_rt_open,
-      
-      ops: {
-	  close_rt: comedi_rt_close,
-	  ioctl_rt: comedi_rt_ioctl,
-	  read_rt: comedi_rt_read,
-	  write_rt: comedi_rt_write,
+static struct rtdm_device rtdm_devs[COMEDI_NB_DEVICES] =
+    {[0...COMEDI_NB_DEVICES - 1] = {
+	      struct_version:	    RTDM_DEVICE_STRUCT_VER,
+	      device_flags:	    RTDM_NAMED_DEVICE,
+	      context_size:	    sizeof(struct
+					   comedi_dummy_context),
+	      device_name:	    "",
 
-	  close_nrt: comedi_rt_close,
-	  ioctl_nrt: comedi_rt_ioctl,
-	  read_nrt: comedi_rt_read,
-	  write_nrt: comedi_rt_write,
-      },
-      
-      device_class: RTDM_CLASS_EXPERIMENTAL,
-      device_sub_class: RTDM_SUBCLASS_COMEDI,
-      driver_name: "rtdm_comedi",
-      driver_version: RTDM_DRIVER_VER(0,0,2),
-      peripheral_name: "Comedi",
-      provider_name: "David Schleef",
-  }
+	      open_rt:		    comedi_rt_open,
+	      open_nrt:	    comedi_rt_open,
+
+	      ops:		    {
+		      close_rt:     comedi_rt_close,
+		      ioctl_rt:     comedi_rt_ioctl,
+		      read_rt:	     comedi_rt_read,
+		      write_rt:     comedi_rt_write,
+
+		      close_nrt:    comedi_rt_close,
+		      ioctl_nrt:    comedi_rt_ioctl,
+		      read_nrt:     comedi_rt_read,
+		      write_nrt:    comedi_rt_write,
+				     },
+
+	      device_class:	    RTDM_CLASS_EXPERIMENTAL,
+	      device_sub_class:    RTDM_SUBCLASS_COMEDI,
+	      driver_name:	    "rtdm_comedi",
+	      driver_version:	    RTDM_DRIVER_VER(0, 0,
+						    2),
+	      peripheral_name:	    "Comedi",
+	      provider_name:	    "David Schleef",
+				    }
 };
 
 int comedi_register(void)
 {
-    int i,ret = 0;
+	int i, ret = 0;
 
-    for(i = 0; i < COMEDI_NB_DEVICES && ret == 0; i++) {
-      
-	/* Sets the device name through which user process can access
-	   the Comedi layer */
-	snprintf(rtdm_devs[i].device_name, 
-		 RTDM_MAX_DEVNAME_LEN, "comedi%d",i);
-	rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
+	for (i = 0; i < COMEDI_NB_DEVICES && ret == 0; i++) {
 
-	/* To keep things simple, the RTDM device ID 
-	   is the Comedi device index */ 
-	rtdm_devs[i].device_id = i;
+		/* Sets the device name through which user process can access
+		   the Comedi layer */
+		snprintf(rtdm_devs[i].device_name,
+			 RTDM_MAX_DEVNAME_LEN, "comedi%d", i);
+		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
 
-	ret = rtdm_dev_register(&(rtdm_devs[i]));
-    }
+		/* To keep things simple, the RTDM device ID 
+		   is the Comedi device index */
+		rtdm_devs[i].device_id = i;
 
-    return ret;
+		ret = rtdm_dev_register(&(rtdm_devs[i]));
+	}
+
+	return ret;
 }
 
 void comedi_unregister(void)
 {
-    int i;
-    for(i=0;i<COMEDI_NB_DEVICES;i++)
-	rtdm_dev_unregister(&(rtdm_devs[i]),1000);
+	int i;
+	for (i = 0; i < COMEDI_NB_DEVICES; i++)
+		rtdm_dev_unregister(&(rtdm_devs[i]), 1000);
 }
 
 MODULE_DESCRIPTION("Comedi4RTDM");
@@ -268,35 +262,35 @@ MODULE_LICENSE("GPL");
 
 static int __init comedi_init(void)
 {
-  int ret;
+	int ret;
 
-  /* Initializes the devices */
-  comedi_init_devs();
+	/* Initializes the devices */
+	comedi_init_devs();
 
-  /* Initializes Comedi time management */
-  comedi_init_time();
+	/* Initializes Comedi time management */
+	comedi_init_time();
 
-  /* Registers RTDM / fops interface */
-  ret = comedi_register();
-  if(ret != 0) {
-      comedi_unregister();
-      goto out_comedi_init;
-  }
+	/* Registers RTDM / fops interface */
+	ret = comedi_register();
+	if (ret != 0) {
+		comedi_unregister();
+		goto out_comedi_init;
+	}
 
-  /* Initializes Comedi proc layer */
-  ret = comedi_init_proc();
+	/* Initializes Comedi proc layer */
+	ret = comedi_init_proc();
 
- out_comedi_init:
-  return ret;
+      out_comedi_init:
+	return ret;
 }
 
 static void __exit comedi_cleanup(void)
 {
-    /* Removes Comedi proc files */
-    comedi_cleanup_proc();
+	/* Removes Comedi proc files */
+	comedi_cleanup_proc();
 
-    /* Unregisters RTDM / fops interface */
-    comedi_unregister();
+	/* Unregisters RTDM / fops interface */
+	comedi_unregister();
 }
 
 module_init(comedi_init);

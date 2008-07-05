@@ -70,7 +70,7 @@
 #define COMEDI_INSN_INTTRIG (6 | COMEDI_INSN_MASK_WRITE | \
 			     COMEDI_INSN_MASK_SPECIAL)
 
-	  /*! @} *//* Ends doxygen-group insn_lib_type */
+		   /*! @} *//* Ends doxygen-group insn_lib_type */
 
 /** 
  * Maximal wait duration

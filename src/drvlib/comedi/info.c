@@ -24,62 +24,60 @@
 
 #ifndef DOXYGEN_CPP
 
-int comedi_sys_devinfo(int fd, comedi_dvinfo_t *info)
+int comedi_sys_devinfo(int fd, comedi_dvinfo_t * info)
 {
-    return __sys_ioctl(fd,COMEDI_DEVINFO,info);
+	return __sys_ioctl(fd, COMEDI_DEVINFO, info);
 }
 
-int comedi_sys_subdinfo(int fd, comedi_sbinfo_t *info)
+int comedi_sys_subdinfo(int fd, comedi_sbinfo_t * info)
 {
-    return __sys_ioctl(fd,COMEDI_SUBDINFO,info);
+	return __sys_ioctl(fd, COMEDI_SUBDINFO, info);
 }
 
-int comedi_sys_nbchaninfo(int fd, 
-			  unsigned int idx_subd, unsigned int *nb)
+int comedi_sys_nbchaninfo(int fd, unsigned int idx_subd, unsigned int *nb)
 {
-    int ret;
-    comedi_chinfo_arg_t arg = {idx_subd, NULL};
-    
-    if(nb == NULL)
-	return -EINVAL;
-    
-    ret = __sys_ioctl(fd, COMEDI_NBCHANINFO, &arg);
-    *nb = (unsigned long) arg.info;
-    
-    return ret;
+	int ret;
+	comedi_chinfo_arg_t arg = { idx_subd, NULL };
+
+	if (nb == NULL)
+		return -EINVAL;
+
+	ret = __sys_ioctl(fd, COMEDI_NBCHANINFO, &arg);
+	*nb = (unsigned long)arg.info;
+
+	return ret;
 }
 
-int comedi_sys_chaninfo(int fd, 
-			unsigned int idx_subd, comedi_chinfo_t *info)
+int comedi_sys_chaninfo(int fd, unsigned int idx_subd, comedi_chinfo_t * info)
 {
-    comedi_chinfo_arg_t arg = {idx_subd, info};
-  
-    return __sys_ioctl(fd, COMEDI_CHANINFO, &arg);
+	comedi_chinfo_arg_t arg = { idx_subd, info };
+
+	return __sys_ioctl(fd, COMEDI_CHANINFO, &arg);
 }
 
-int comedi_sys_nbrnginfo(int fd, 
-			 unsigned int idx_subd, 
+int comedi_sys_nbrnginfo(int fd,
+			 unsigned int idx_subd,
 			 unsigned int idx_chan, unsigned int *nb)
 {
-    int ret;
-    comedi_rnginfo_arg_t arg = {idx_subd, idx_chan, NULL};
-    
-    if(nb == NULL)
-	return -EINVAL;
+	int ret;
+	comedi_rnginfo_arg_t arg = { idx_subd, idx_chan, NULL };
 
-    ret = __sys_ioctl(fd,COMEDI_NBRNGINFO, &arg);
-    *nb = (unsigned long)arg.info;
-    
-    return ret;
+	if (nb == NULL)
+		return -EINVAL;
+
+	ret = __sys_ioctl(fd, COMEDI_NBRNGINFO, &arg);
+	*nb = (unsigned long)arg.info;
+
+	return ret;
 }
 
-int comedi_sys_rnginfo(int fd, 
-		       unsigned int idx_subd, 
-		       unsigned int idx_chan, comedi_rnginfo_t *info)
+int comedi_sys_rnginfo(int fd,
+		       unsigned int idx_subd,
+		       unsigned int idx_chan, comedi_rnginfo_t * info)
 {
-    comedi_rnginfo_arg_t arg = {idx_subd, idx_chan, info};
+	comedi_rnginfo_arg_t arg = { idx_subd, idx_chan, info };
 
-    return __sys_ioctl(fd,COMEDI_RNGINFO, &arg);
+	return __sys_ioctl(fd, COMEDI_RNGINFO, &arg);
 }
 
 #endif /* !DOXYGEN_CPP */

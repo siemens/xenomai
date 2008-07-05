@@ -111,7 +111,7 @@
 			   COMEDI_SUBD_PROC | \
 			   COMEDI_SUBD_SERIAL)
 
-	  /*! @} *//* Ends doxygen-group subdevice_type */
+		   /*! @} *//* Ends doxygen-group subdevice_type */
 
 /*!
  * @ingroup subdevice
@@ -132,7 +132,7 @@
  */
 #define COMEDI_SUBD_MMAP 0x8000
 
-	  /*! @} *//* Ends doxygen-group subdevice_cap */
+		   /*! @} *//* Ends doxygen-group subdevice_cap */
 
 #ifdef __KERNEL__
 

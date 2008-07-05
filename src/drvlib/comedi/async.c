@@ -41,13 +41,13 @@
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_snd_command(comedi_desc_t *dsc, comedi_cmd_t *cmd)
+int comedi_snd_command(comedi_desc_t * dsc, comedi_cmd_t * cmd)
 {
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_CMD, cmd);
+	return __sys_ioctl(dsc->fd, COMEDI_CMD, cmd);
 }
 
 /**
@@ -63,13 +63,13 @@ int comedi_snd_command(comedi_desc_t *dsc, comedi_cmd_t *cmd)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_snd_cancel(comedi_desc_t *dsc, unsigned int idx_subd)
+int comedi_snd_cancel(comedi_desc_t * dsc, unsigned int idx_subd)
 {
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_CANCEL, (void*) (long)idx_subd);
+	return __sys_ioctl(dsc->fd, COMEDI_CANCEL, (void *)(long)idx_subd);
 }
 
 /**
@@ -92,16 +92,16 @@ int comedi_snd_cancel(comedi_desc_t *dsc, unsigned int idx_subd)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_set_bufsize(comedi_desc_t *dsc, 
+int comedi_set_bufsize(comedi_desc_t * dsc,
 		       unsigned int idx_subd, unsigned long size)
 {
-    comedi_bufcfg_t cfg = {idx_subd, size};
+	comedi_bufcfg_t cfg = { idx_subd, size };
 
-    /* Basic checking */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    return __sys_ioctl(dsc->fd, COMEDI_BUFCFG, &cfg);
+	return __sys_ioctl(dsc->fd, COMEDI_BUFCFG, &cfg);
 }
 
 /**
@@ -122,25 +122,25 @@ int comedi_set_bufsize(comedi_desc_t *dsc,
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_get_bufsize(comedi_desc_t *dsc, 
+int comedi_get_bufsize(comedi_desc_t * dsc,
 		       unsigned int idx_subd, unsigned long *size)
 {
-    comedi_bufinfo_t info = {idx_subd, 0, 0};
-    int ret;
+	comedi_bufinfo_t info = { idx_subd, 0, 0 };
+	int ret;
 
-    /* Basic checkings */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checkings */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    if(size == NULL)
-	return -EINVAL;
+	if (size == NULL)
+		return -EINVAL;
 
-    ret = __sys_ioctl(dsc->fd, COMEDI_BUFINFO, &info);
-    
-    if(ret == 0)
-	*size = info.buf_size;
-    
-    return ret;
+	ret = __sys_ioctl(dsc->fd, COMEDI_BUFINFO, &info);
+
+	if (ret == 0)
+		*size = info.buf_size;
+
+	return ret;
 }
 
 /**
@@ -177,28 +177,28 @@ int comedi_get_bufsize(comedi_desc_t *dsc,
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_mark_bufrw(comedi_desc_t *dsc, 
-		      unsigned int idx_subd, 
+int comedi_mark_bufrw(comedi_desc_t * dsc,
+		      unsigned int idx_subd,
 		      unsigned long cur, unsigned long *new)
 {
-    int ret;
-    comedi_bufinfo_t info = {idx_subd, 0, cur};
+	int ret;
+	comedi_bufinfo_t info = { idx_subd, 0, cur };
 
-    /* Basic checkings */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checkings */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    if(new == NULL)
-	return -EINVAL;
+	if (new == NULL)
+		return -EINVAL;
 
-    ret = __sys_ioctl(dsc->fd, COMEDI_BUFINFO, &info);
+	ret = __sys_ioctl(dsc->fd, COMEDI_BUFINFO, &info);
 
-    if(ret == 0)
-	*new = info.rw_count;
+	if (ret == 0)
+		*new = info.rw_count;
 
-    return ret;    
+	return ret;
 }
-			
+
 /**
  * @brief Get the available data count
  *
@@ -214,24 +214,24 @@ int comedi_mark_bufrw(comedi_desc_t *dsc,
  * @return the available data count.
  *
  */
-int comedi_poll(comedi_desc_t *dsc,
+int comedi_poll(comedi_desc_t * dsc,
 		unsigned int idx_subd, unsigned long ms_timeout)
 {
-    int ret;
-    comedi_poll_t poll = {idx_subd, ms_timeout};
+	int ret;
+	comedi_poll_t poll = { idx_subd, ms_timeout };
 
-    /* Basic checkings */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checkings */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    ret = __sys_ioctl(dsc->fd, COMEDI_POLL, &poll);
+	ret = __sys_ioctl(dsc->fd, COMEDI_POLL, &poll);
 
-    /* There is an ugly cast, but it is the only way to stick with
-       the original Comedi API */
-    if(ret == 0)
-	ret = (int) poll.arg;
-    
-    return ret;
+	/* There is an ugly cast, but it is the only way to stick with
+	   the original Comedi API */
+	if (ret == 0)
+		ret = (int)poll.arg;
+
+	return ret;
 }
 
 /**
@@ -247,25 +247,25 @@ int comedi_poll(comedi_desc_t *dsc,
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_mmap(comedi_desc_t *dsc,
+int comedi_mmap(comedi_desc_t * dsc,
 		unsigned int idx_subd, unsigned long size, void **ptr)
 {
-    int ret;
-    comedi_mmap_t map = {idx_subd, size, NULL };
+	int ret;
+	comedi_mmap_t map = { idx_subd, size, NULL };
 
-    /* Basic checkings */
-    if(dsc == NULL || dsc->fd < 0)
-	return -EINVAL;
+	/* Basic checkings */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
 
-    if(ptr == NULL)
-	return -EINVAL;
+	if (ptr == NULL)
+		return -EINVAL;
 
-    ret = __sys_ioctl(dsc->fd, COMEDI_MMAP, &map);
+	ret = __sys_ioctl(dsc->fd, COMEDI_MMAP, &map);
 
-    if(ret == 0)
-	*ptr = map.ptr;
+	if (ret == 0)
+		*ptr = map.ptr;
 
-    return ret;
+	return ret;
 }
 
 /** @} Command syscall API */
@@ -275,7 +275,6 @@ int comedi_mmap(comedi_desc_t *dsc,
  * @defgroup async2_lib Command syscall API
  * @{
  */
-
 
 /**
  * @brief Perform asynchronous read operation on the analog input
@@ -297,34 +296,34 @@ int comedi_mmap(comedi_desc_t *dsc,
  * @return Number of bytes read, otherwise negative error code.
  *
  */
-int comedi_async_read(comedi_desc_t *dsc,
+int comedi_async_read(comedi_desc_t * dsc,
 		      void *buf, size_t nbyte, unsigned long ms_timeout)
 {
-    /* Basic checking */
-    if(dsc == NULL)
-	return -EINVAL;
-    
-    /* The function comedi_poll() is useful only if 
-       the timeout is not COMEDI_INFINITE (== 0) */
-    if(ms_timeout != COMEDI_INFINITE) {
-	int ret;
+	/* Basic checking */
+	if (dsc == NULL)
+		return -EINVAL;
 
-	ret = comedi_poll(dsc, dsc->idx_read_subd, ms_timeout);
-	if(ret < 0)
-	    return ret;
+	/* The function comedi_poll() is useful only if 
+	   the timeout is not COMEDI_INFINITE (== 0) */
+	if (ms_timeout != COMEDI_INFINITE) {
+		int ret;
 
-	/* If the timeout value is equal to COMEDI_NONBLOCK,
-	   there is no need to call the launch any read operation */
-	if(ret == 0 && ms_timeout == COMEDI_NONBLOCK)
-	    return ret;
-    }
-    
-    /* One more basic checking */
-    if(dsc->fd < 0)
-	return -EINVAL;
-    
-    /* Performs the read operation */
-    return comedi_sys_read(dsc->fd, buf, nbyte);
+		ret = comedi_poll(dsc, dsc->idx_read_subd, ms_timeout);
+		if (ret < 0)
+			return ret;
+
+		/* If the timeout value is equal to COMEDI_NONBLOCK,
+		   there is no need to call the launch any read operation */
+		if (ret == 0 && ms_timeout == COMEDI_NONBLOCK)
+			return ret;
+	}
+
+	/* One more basic checking */
+	if (dsc->fd < 0)
+		return -EINVAL;
+
+	/* Performs the read operation */
+	return comedi_sys_read(dsc->fd, buf, nbyte);
 }
 
 /**
@@ -347,34 +346,34 @@ int comedi_async_read(comedi_desc_t *dsc,
  * @return Number of bytes written, otherwise negative error code.
  *
  */
-int comedi_async_write(comedi_desc_t *dsc,
+int comedi_async_write(comedi_desc_t * dsc,
 		       void *buf, size_t nbyte, unsigned long ms_timeout)
 {
-    /* Basic checking */
-    if(dsc == NULL)
-	return -EINVAL;
+	/* Basic checking */
+	if (dsc == NULL)
+		return -EINVAL;
 
-    /* The function comedi_poll() is useful only if 
-       the timeout is not COMEDI_INFINITE (== 0) */
-    if(ms_timeout != COMEDI_INFINITE) {
-	int ret;
+	/* The function comedi_poll() is useful only if 
+	   the timeout is not COMEDI_INFINITE (== 0) */
+	if (ms_timeout != COMEDI_INFINITE) {
+		int ret;
 
-	ret = comedi_poll(dsc, dsc->idx_write_subd, ms_timeout);
-	if(ret < 0)
-	    return ret;
+		ret = comedi_poll(dsc, dsc->idx_write_subd, ms_timeout);
+		if (ret < 0)
+			return ret;
 
-	/* If the timeout value is equal to COMEDI_NONBLOCK,
-	   there is no need to call the launch any read operation */
-	if(ret == 0 && ms_timeout == COMEDI_NONBLOCK)
-	    return ret;
-    }
-    
-    /* One more basic checking */
-    if(dsc->fd < 0)
-	return -EINVAL;
-    
-    /* Performs the write operation */
-    return comedi_sys_write(dsc->fd, buf, nbyte);
+		/* If the timeout value is equal to COMEDI_NONBLOCK,
+		   there is no need to call the launch any read operation */
+		if (ret == 0 && ms_timeout == COMEDI_NONBLOCK)
+			return ret;
+	}
+
+	/* One more basic checking */
+	if (dsc->fd < 0)
+		return -EINVAL;
+
+	/* Performs the write operation */
+	return comedi_sys_write(dsc->fd, buf, nbyte);
 }
 
 /** @} Command syscall API */

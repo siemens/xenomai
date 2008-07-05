@@ -42,7 +42,7 @@
  */
 #define COMEDI_CMD_BULK 0x2
 
-	  /*! @} *//* Ends doxygen-group command_flags */
+		   /*! @} *//* Ends doxygen-group command_flags */
 
 /*! 
   \ingroup command_lib
@@ -113,7 +113,7 @@
  */
 #define TRIG_ROUND_UP_NEXT 0x00030000
 
-	  /*! @} *//* Ends doxygen-group command_triggers */
+		   /*! @} *//* Ends doxygen-group command_triggers */
 
 /*! 
   \ingroup command_lib
@@ -153,7 +153,7 @@
  */
 #define AREF_OTHER 0x03
 
-	  /*! @} *//* Ends doxygen-group command_chans */
+		   /*! @} *//* Ends doxygen-group command_chans */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 /* Channels macros only useful for the kernel side */

@@ -50,7 +50,7 @@
  */
 #define COMEDI_CPLX_DESC 0x1
 
-	  /*! @} *//* Ends doxygen-group get_descriptor_pass */
+		   /*! @} *//* Ends doxygen-group get_descriptor_pass */
 
 /* --- Descriptor structure --- */
 

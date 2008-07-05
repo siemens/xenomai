@@ -60,7 +60,7 @@
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_add_drv(comedi_drv_t *drv);
+int comedi_add_drv(comedi_drv_t * drv);
 EXPORT_SYMBOL(comedi_add_drv);
 
 /**
@@ -74,7 +74,7 @@ EXPORT_SYMBOL(comedi_add_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_rm_drv(comedi_drv_t *drv);
+int comedi_rm_drv(comedi_drv_t * drv);
 EXPORT_SYMBOL(comedi_rm_drv);
 
 /**
@@ -85,7 +85,7 @@ EXPORT_SYMBOL(comedi_rm_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_init_drv(comedi_drv_t *drv);
+int comedi_init_drv(comedi_drv_t * drv);
 EXPORT_SYMBOL(comedi_init_drv);
 
 /**
@@ -96,7 +96,7 @@ EXPORT_SYMBOL(comedi_init_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_cleanup_drv(comedi_drv_t *drv);
+int comedi_cleanup_drv(comedi_drv_t * drv);
 EXPORT_SYMBOL(comedi_cleanup_drv);
 
 /** @} */
@@ -128,7 +128,7 @@ EXPORT_SYMBOL(range_unipolar5);
  * case of error a negative error code is returned.
  *
  */
-int comedi_add_subd(comedi_drv_t *drv, comedi_subd_t *subd);
+int comedi_add_subd(comedi_drv_t * drv, comedi_subd_t * subd);
 EXPORT_SYMBOL(comedi_add_subd);
 
 /**
@@ -140,7 +140,7 @@ EXPORT_SYMBOL(comedi_add_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_get_nbchan(comedi_dev_t *dev, int subd_key);
+int comedi_get_nbchan(comedi_dev_t * dev, int subd_key);
 EXPORT_SYMBOL(comedi_get_nbchan);
 
 /** @} */
@@ -174,7 +174,7 @@ EXPORT_SYMBOL(comedi_get_nbchan);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absput(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_prepare_absput(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_absput);
 
 /**
@@ -198,7 +198,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absput(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_commit_absput(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_absput);
 
 /**
@@ -219,7 +219,7 @@ EXPORT_SYMBOL(comedi_buf_commit_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_put(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_prepare_put(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_put);
 
 /**
@@ -240,7 +240,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_put(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_commit_put(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_put);
 
 /**
@@ -258,7 +258,7 @@ EXPORT_SYMBOL(comedi_buf_commit_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_put(comedi_dev_t *dev, void *bufdata, unsigned long count);
+int comedi_buf_put(comedi_dev_t * dev, void *bufdata, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_put);
 
 /**
@@ -282,7 +282,7 @@ EXPORT_SYMBOL(comedi_buf_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absget(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_prepare_absget(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_absget);
 
 /**
@@ -306,7 +306,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absget(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_commit_absget(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_absget);
 
 /**
@@ -327,7 +327,7 @@ EXPORT_SYMBOL(comedi_buf_commit_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_get(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_prepare_get(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_get);
 
 /**
@@ -348,7 +348,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_get(comedi_dev_t *dev, unsigned long count);
+int comedi_buf_commit_get(comedi_dev_t * dev, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_get);
 
 /**
@@ -367,7 +367,7 @@ EXPORT_SYMBOL(comedi_buf_commit_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_get(comedi_dev_t *dev, void *bufdata, unsigned long count);
+int comedi_buf_get(comedi_dev_t * dev, void *bufdata, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_get);
 
 /**
@@ -395,8 +395,7 @@ EXPORT_SYMBOL(comedi_buf_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_evt(comedi_dev_t *dev,
-		   unsigned int type, unsigned long evts);
+int comedi_buf_evt(comedi_dev_t * dev, unsigned int type, unsigned long evts);
 EXPORT_SYMBOL(comedi_buf_evt);
 
 /**
@@ -414,7 +413,7 @@ EXPORT_SYMBOL(comedi_buf_evt);
  * @return the amount of data available in the Comedi buffer.
  *
  */
-unsigned long comedi_buf_count(comedi_dev_t *dev, unsigned int type);
+unsigned long comedi_buf_count(comedi_dev_t * dev, unsigned int type);
 EXPORT_SYMBOL(comedi_buf_count);
 
 /**
@@ -433,7 +432,7 @@ EXPORT_SYMBOL(comedi_buf_count);
  * @return the command descriptor.
  *
  */
-comedi_cmd_t *comedi_get_cmd(comedi_dev_t *dev, 
+comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
 			     unsigned int type, int idx_subd);
 EXPORT_SYMBOL(comedi_get_cmd);
 
@@ -456,7 +455,7 @@ EXPORT_SYMBOL(comedi_get_cmd);
  * is registered.
  *
  */
-unsigned int comedi_get_irq(comedi_dev_t *dev);
+unsigned int comedi_get_irq(comedi_dev_t * dev);
 EXPORT_SYMBOL(comedi_get_irq);
 
 /**
@@ -480,9 +479,9 @@ EXPORT_SYMBOL(comedi_get_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_request_irq(comedi_dev_t *dev,
+int comedi_request_irq(comedi_dev_t * dev,
 		       unsigned int irq,
-		       comedi_irq_hdlr_t handler, 
+		       comedi_irq_hdlr_t handler,
 		       unsigned long flags, void *cookie);
 EXPORT_SYMBOL(comedi_request_irq);
 
@@ -495,7 +494,7 @@ EXPORT_SYMBOL(comedi_request_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_free_irq(comedi_dev_t *dev, unsigned int irq);
+int comedi_free_irq(comedi_dev_t * dev, unsigned int irq);
 EXPORT_SYMBOL(comedi_free_irq);
 
 /** @} */
@@ -508,7 +507,7 @@ EXPORT_SYMBOL(comedi_free_irq);
  * @{
  */
 
-#ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
+#ifdef DOXYGEN_CPP		/* Only used for doxygen doc generation */
 
 /**
  * @brief Intialise and start a Comedi task
@@ -526,10 +525,9 @@ EXPORT_SYMBOL(comedi_free_irq);
  * @return 0 on success, otherwise negative error code
  *
  */
-int comedi_task_init(comedi_task_t *task, 
+int comedi_task_init(comedi_task_t * task,
 		     const char *name,
 		     comedi_task_proc_t proc, void *arg, int priority);
-
 
 /**
  * @brief Destroy a Comedi task

@@ -27,32 +27,32 @@
 
 lsampl_t data32_get(void *src)
 {
-    return (lsampl_t) *((lsampl_t*)(src));
+	return (lsampl_t) * ((lsampl_t *) (src));
 }
 
 lsampl_t data16_get(void *src)
 {
-    return (lsampl_t) *((sampl_t*)(src));
+	return (lsampl_t) * ((sampl_t *) (src));
 }
 
 lsampl_t data8_get(void *src)
 {
-    return (lsampl_t) *((unsigned char*)(src));
+	return (lsampl_t) * ((unsigned char *)(src));
 }
 
 void data32_set(void *dst, lsampl_t val)
 {
-    *((lsampl_t*)(dst)) = val;
+	*((lsampl_t *) (dst)) = val;
 }
 
 void data16_set(void *dst, lsampl_t val)
 {
-    *((sampl_t*)(dst)) = (sampl_t) (0xffff & val);
+	*((sampl_t *) (dst)) = (sampl_t) (0xffff & val);
 }
 
 void data8_set(void *dst, lsampl_t val)
 {
-    *((unsigned char*)(dst)) = (unsigned char) (0xff & val);
+	*((unsigned char *)(dst)) = (unsigned char)(0xff & val);
 }
 
 #endif /* !DOXYGEN_CPP */
@@ -78,61 +78,60 @@ void data8_set(void *dst, lsampl_t val)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_find_range(comedi_desc_t *dsc,
+int comedi_find_range(comedi_desc_t * dsc,
 		      unsigned int idx_subd,
 		      unsigned int idx_chan,
 		      unsigned long unit,
-		      double min, double max, comedi_rnginfo_t **rng)
+		      double min, double max, comedi_rnginfo_t ** rng)
 {
-    int i, ret;
-    long lmin, lmax;
-    comedi_chinfo_t *chinfo;
-    comedi_rnginfo_t *rnginfo;
+	int i, ret;
+	long lmin, lmax;
+	comedi_chinfo_t *chinfo;
+	comedi_rnginfo_t *rnginfo;
 
-    /* Basic checkings */
-    if(dsc == NULL || rng == NULL)
-	return -EINVAL;
+	/* Basic checkings */
+	if (dsc == NULL || rng == NULL)
+		return -EINVAL;
 
-    /* comedi_fill_desc() must have been called on this descriptor */
-    if(dsc->magic != MAGIC_CPLX_DESC)
-	return -EINVAL;    
+	/* comedi_fill_desc() must have been called on this descriptor */
+	if (dsc->magic != MAGIC_CPLX_DESC)
+		return -EINVAL;
 
-    /* Retrieves the ranges count */
-    ret = comedi_get_chinfo(dsc, idx_subd, idx_chan, &chinfo);
-    if(ret < 0)
-	goto out_get_range;
+	/* Retrieves the ranges count */
+	ret = comedi_get_chinfo(dsc, idx_subd, idx_chan, &chinfo);
+	if (ret < 0)
+		goto out_get_range;
 
-    /* Initializes variables */
-    lmin = (long) (min * COMEDI_RNG_FACTOR);
-    lmax = (long) (max * COMEDI_RNG_FACTOR);
-    *rng = NULL;
-    
-    /* Performs the research */
-    for(i = 0; i < chinfo->nb_rng; i++) {
-
-	ret = comedi_get_rnginfo(dsc, idx_subd, idx_chan, i, &rnginfo);
-	if(ret < 0)
-	    goto out_get_range;
-
-	if(COMEDI_RNG_UNIT(rnginfo->flags) == unit && 
-	   rnginfo->min <= lmin && rnginfo->max >= lmax) {
-
-	    if(*rng != NULL) {
-		if(rnginfo->min >= (*rng)->min && 
-		   rnginfo->max <= (*rng)->max)
-		    *rng = rnginfo;
-	    }
-	    else
-		*rng = rnginfo;	    
-	}
-    }
-    
-    out_get_range: 
-    
-    if(ret < 0)
+	/* Initializes variables */
+	lmin = (long)(min * COMEDI_RNG_FACTOR);
+	lmax = (long)(max * COMEDI_RNG_FACTOR);
 	*rng = NULL;
 
-    return ret;
+	/* Performs the research */
+	for (i = 0; i < chinfo->nb_rng; i++) {
+
+		ret = comedi_get_rnginfo(dsc, idx_subd, idx_chan, i, &rnginfo);
+		if (ret < 0)
+			goto out_get_range;
+
+		if (COMEDI_RNG_UNIT(rnginfo->flags) == unit &&
+		    rnginfo->min <= lmin && rnginfo->max >= lmax) {
+
+			if (*rng != NULL) {
+				if (rnginfo->min >= (*rng)->min &&
+				    rnginfo->max <= (*rng)->max)
+					*rng = rnginfo;
+			} else
+				*rng = rnginfo;
+		}
+	}
+
+      out_get_range:
+
+	if (ret < 0)
+		*rng = NULL;
+
+	return ret;
 }
 
 /**
@@ -150,58 +149,57 @@ int comedi_find_range(comedi_desc_t *dsc,
  * error code.
  *
  */
-int comedi_to_phys(comedi_chinfo_t *chan,
-		   comedi_rnginfo_t *rng,
-		   double *dst, void *src, int cnt)
+int comedi_to_phys(comedi_chinfo_t * chan,
+		   comedi_rnginfo_t * rng, double *dst, void *src, int cnt)
 {
-    int i = 0, j = 0;
-    lsampl_t tmp;
+	int i = 0, j = 0;
+	lsampl_t tmp;
 
-    /* Temporary values used for conversion
-       (phys = a * src + b) */
-    double a, b;
-    /* Temporary data accessor */
-    lsampl_t (*datax_get)(void *);
+	/* Temporary values used for conversion
+	   (phys = a * src + b) */
+	double a, b;
+	/* Temporary data accessor */
+	lsampl_t(*datax_get) (void *);
 
-    /* Basic checking */
-    if(rng == NULL || chan == NULL)
-	return 0;
-    
-    /* This converting function only works 
-       if acquired data width is 8, 16 or 32 */
-    switch(chan->nb_bits) {
-    case 32:
-	datax_get = data32_get;
-	break;
-    case 16:
-	datax_get = data16_get;
-	break;
-    case 8:
-	datax_get = data8_get;
-	break;
-    default:
-	return -EINVAL;
-    };
+	/* Basic checking */
+	if (rng == NULL || chan == NULL)
+		return 0;
 
-    /* Computes the translation factor and the constant only once */
-    a = ((double) (rng->max - rng->min)) / 
-	(((1ULL << chan->nb_bits) - 1) * COMEDI_RNG_FACTOR);
-    b = (double) rng->min / COMEDI_RNG_FACTOR;
+	/* This converting function only works 
+	   if acquired data width is 8, 16 or 32 */
+	switch (chan->nb_bits) {
+	case 32:
+		datax_get = data32_get;
+		break;
+	case 16:
+		datax_get = data16_get;
+		break;
+	case 8:
+		datax_get = data8_get;
+		break;
+	default:
+		return -EINVAL;
+	};
 
-    while(i < cnt) {
+	/* Computes the translation factor and the constant only once */
+	a = ((double)(rng->max - rng->min)) /
+	    (((1ULL << chan->nb_bits) - 1) * COMEDI_RNG_FACTOR);
+	b = (double)rng->min / COMEDI_RNG_FACTOR;
 
-	/* Properly retrieves the data */
-	tmp = datax_get(src + i);
+	while (i < cnt) {
 
-	/* Performs the conversion */
-	dst[j] = a * tmp + b;
+		/* Properly retrieves the data */
+		tmp = datax_get(src + i);
 
-	/* Updates the counters */
-	i += chan->nb_bits / 8;
-	j++;
-    }
+		/* Performs the conversion */
+		dst[j] = a * tmp + b;
 
-    return j;
+		/* Updates the counters */
+		i += chan->nb_bits / 8;
+		j++;
+	}
+
+	return j;
 }
 
 /**
@@ -219,55 +217,54 @@ int comedi_to_phys(comedi_chinfo_t *chan,
  * error code.
  *
  */
-int comedi_from_phys(comedi_chinfo_t *chan,
-		     comedi_rnginfo_t *rng,
-		     void *dst, double *src, int cnt)
+int comedi_from_phys(comedi_chinfo_t * chan,
+		     comedi_rnginfo_t * rng, void *dst, double *src, int cnt)
 {
-    int i = 0, j = 0;
+	int i = 0, j = 0;
 
-    /* Temporary values used for conversion
-       (dst = a * phys - b) */
-    double a, b;
-    /* Temporary data accessor */
-    void (*datax_set)(void *, lsampl_t);
+	/* Temporary values used for conversion
+	   (dst = a * phys - b) */
+	double a, b;
+	/* Temporary data accessor */
+	void (*datax_set) (void *, lsampl_t);
 
-    /* Basic checking */
-    if(rng == NULL || chan == NULL)
-	return 0;
-    
-    /* This converting function only works 
-       if acquired data width is 8, 16 or 32 */
-    switch(chan->nb_bits) {
-    case 32:
-	datax_set = data32_set;
-	break;
-    case 16:
-	datax_set = data16_set;
-	break;
-    case 8:
-	datax_set = data8_set;
-	break;
-    default:
-	return -EINVAL;
-    };
+	/* Basic checking */
+	if (rng == NULL || chan == NULL)
+		return 0;
 
-    /* Computes the translation factor and the constant only once */
-    a = (((double)COMEDI_RNG_FACTOR) / (rng->max - rng->min)) * 
-	((1ULL << chan->nb_bits) - 1);
-    b = ((double)(rng->min) / (rng->max - rng->min)) * 
-	((1ULL << chan->nb_bits) - 1);
+	/* This converting function only works 
+	   if acquired data width is 8, 16 or 32 */
+	switch (chan->nb_bits) {
+	case 32:
+		datax_set = data32_set;
+		break;
+	case 16:
+		datax_set = data16_set;
+		break;
+	case 8:
+		datax_set = data8_set;
+		break;
+	default:
+		return -EINVAL;
+	};
 
-    while(i < cnt) {
+	/* Computes the translation factor and the constant only once */
+	a = (((double)COMEDI_RNG_FACTOR) / (rng->max - rng->min)) *
+	    ((1ULL << chan->nb_bits) - 1);
+	b = ((double)(rng->min) / (rng->max - rng->min)) *
+	    ((1ULL << chan->nb_bits) - 1);
 
-	/* Performs the conversion */
-	datax_set(dst + i, (lsampl_t)(a * src[j] - b));
+	while (i < cnt) {
 
-	/* Updates the counters */
-	i += chan->nb_bits / 8;
-	j++;
-    }
+		/* Performs the conversion */
+		datax_set(dst + i, (lsampl_t) (a * src[j] - b));
 
-    return j;    
+		/* Updates the counters */
+		i += chan->nb_bits / 8;
+		j++;
+	}
+
+	return j;
 }
 
 /** @} Range / conversion  API */

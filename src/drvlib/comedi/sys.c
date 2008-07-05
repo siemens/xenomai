@@ -54,7 +54,7 @@
  */
 int comedi_sys_open(const char *fname)
 {
-    return __sys_open(fname);
+	return __sys_open(fname);
 }
 
 /**
@@ -67,7 +67,7 @@ int comedi_sys_open(const char *fname)
  */
 int comedi_sys_close(int fd)
 {
-    return __sys_close(fd);
+	return __sys_close(fd);
 }
 
 /**
@@ -85,7 +85,7 @@ int comedi_sys_close(int fd)
  */
 int comedi_sys_read(int fd, void *buf, size_t nbyte)
 {
-    return __sys_read(fd, buf, nbyte);
+	return __sys_read(fd, buf, nbyte);
 }
 
 /**
@@ -103,7 +103,7 @@ int comedi_sys_read(int fd, void *buf, size_t nbyte)
  */
 int comedi_sys_write(int fd, void *buf, size_t nbyte)
 {
-    return __sys_write(fd, buf, nbyte);
+	return __sys_write(fd, buf, nbyte);
 }
 
 /** @} */
@@ -123,9 +123,9 @@ int comedi_sys_write(int fd, void *buf, size_t nbyte)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sys_attach(int fd, comedi_lnkdesc_t *arg)
+int comedi_sys_attach(int fd, comedi_lnkdesc_t * arg)
 {
-    return __sys_ioctl(fd, COMEDI_DEVCFG, arg);
+	return __sys_ioctl(fd, COMEDI_DEVCFG, arg);
 }
 
 /**
@@ -138,8 +138,7 @@ int comedi_sys_attach(int fd, comedi_lnkdesc_t *arg)
  */
 int comedi_sys_detach(int fd)
 {
-    return __sys_ioctl(fd, COMEDI_DEVCFG, NULL);
+	return __sys_ioctl(fd, COMEDI_DEVCFG, NULL);
 }
 
 /** @} */
-
