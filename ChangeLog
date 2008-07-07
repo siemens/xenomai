@@ -1,3 +1,8 @@
+2008-07-08  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/drivers/comedi/instruction.c: follow the 64 bits division
+	header renaming (calc64.h -> div64.h).
+
 2008-07-08  Alexis Berlemont  <alexis.berlemont@free.fr>
 
 	* include/comedi/lib_syscall.h, src/drvlib/syscall.h: the header
