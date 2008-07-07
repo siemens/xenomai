@@ -202,8 +202,8 @@ static void __heap_flush_private(xnheap_t *heap,
  *
  * - H_DMA causes the block pool associated to the heap to be
  * allocated in physically contiguous memory, suitable for DMA
- * operations with I/O devices. A 128Kb limit exists for @a heapsize
- * when this flag is passed.
+ * operations with I/O devices. @a heapsize beyond 128KiB will
+ * be rounded up to a two expononent allocation.
  *
  * @return 0 is returned upon success. Otherwise:
  *

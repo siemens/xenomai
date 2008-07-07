@@ -27,6 +27,7 @@
 
 #include <linux/version.h>
 #include <linux/module.h>
+#include <linux/slab.h>
 #include <asm/io.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
@@ -324,6 +325,10 @@ unsigned long __va_to_kva(unsigned long va);
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
 #include <linux/marker.h>
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
+#define KMALLOC_MAX_SIZE 131072
+#endif /* !KMALLOC_MAX_SIZE */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 static inline unsigned long hweight_long(unsigned long w)
