@@ -262,7 +262,7 @@ static int __pthread_setschedparam(struct task_struct *curr,
 		err = -EPERM;
 
 	if (!err)
-		__xn_copy_to_user((void __user *)__xn_reg_arg5(regs),
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg5(regs),
 				  &promoted, sizeof(promoted));
 
 	return err;
