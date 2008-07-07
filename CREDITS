@@ -40,7 +40,7 @@ E: rtai@koansoftware.com
 D: VxWorks demo.
 
 N: Gilles Chanteperdrix
-E: gilles.chanteperdrix@laposte.net
+E: gilles.chanteperdrix@xenomai.org
 D: POSIX and VxWorks skins author and maintainer. Autoconfiscation
 D: janitor. SMP support. ia64 port. Fixes and improvements all over
 D: the map.
