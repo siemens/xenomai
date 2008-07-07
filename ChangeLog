@@ -1,3 +1,11 @@
+2008-07-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/sysLib.c (wind_sysclk_init): Allow for
+	aperiodic timing.
+
+	* ksrc/skins/posix/syscall.c (__pthread_setschedparam): Use
+	__xn_copy_to_user() to clear might_sleep() warning.
+
 2008-07-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/psos/pt.c (pt_create): Fix overhead computation.
