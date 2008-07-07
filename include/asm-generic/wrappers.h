@@ -63,7 +63,7 @@ unsigned long __va_to_kva(unsigned long va);
 
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
+    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,vma->vm_page_prot); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({ \
     vma->vm_flags |= VM_RESERVED; \
@@ -230,7 +230,7 @@ unsigned long __va_to_kva(unsigned long va);
  * memory. Anyway, this legacy would only hit setups using pre-2.6.11
  * kernel revisions. */
 #define wrap_remap_vm_page(vma,from,to) \
-    remap_pfn_range(vma,from,virt_to_phys((void *)__va_to_kva(to)) >> PAGE_SHIFT,PAGE_SHIFT,PAGE_SHARED)
+    remap_pfn_range(vma,from,virt_to_phys((void *)__va_to_kva(to)) >> PAGE_SHIFT,PAGE_SHIFT,vma->vm_page_prot)
 #define wrap_remap_io_page_range(vma,from,to,size,prot)  ({		\
     (vma)->vm_page_prot = pgprot_noncached((vma)->vm_page_prot);	\
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
@@ -243,7 +243,7 @@ unsigned long __va_to_kva(unsigned long va);
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,PAGE_SHARED); \
+    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,vma->vm_page_prot); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({	\
       vma->vm_flags |= VM_RESERVED;				\
@@ -254,6 +254,10 @@ unsigned long __va_to_kva(unsigned long va);
       remap_page_range(vma,from,to,size,prot);			\
     })
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
+
+#ifndef __GFP_BITS_SHIFT
+#define __GFP_BITS_SHIFT 20
+#endif
 
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task)
