@@ -32,11 +32,15 @@
 #define MAGIC_CPLX_DESC 0xabcd1234
 
 /*! 
-  \ingroup descriptor_lib
-  @defgroup get_descriptor_pass Device descriptor recovery mode
-  @brief Constants used as argument so as to define the description
-  depth to recover
+  @addtogroup descriptor_sys
   @{
+ */
+
+/*!
+ * @anchor COMEDI_xxx_DESC   @name COMEDI_xxx_DESC
+ * @brief Constants used as argument so as to define the description
+ * depth to recover
+ * @{
  */
 
 /** 
@@ -50,14 +54,15 @@
  */
 #define COMEDI_CPLX_DESC 0x1
 
-		   /*! @} *//* Ends doxygen-group get_descriptor_pass */
+	  /*! @} COMEDI_xxx_DESC */
 
 /* --- Descriptor structure --- */
 
-/** Structure containing device-information useful to users.
- *
- *  @see comedi_get_desc()
+/*! 
+ * @brief Structure containing device-information useful to users
+ * @see comedi_get_desc()
  */
+
 struct comedi_descriptor {
 	char board_name[COMEDI_NAMELEN];
 				     /**< Board name. */
@@ -77,5 +82,7 @@ struct comedi_descriptor {
 		 /**< Data buffer pointer. */
 };
 typedef struct comedi_descriptor comedi_desc_t;
+
+	  /*! @} descriptor_sys */
 
 #endif /* __COMEDI_LIB_CORE__ */

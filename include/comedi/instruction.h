@@ -31,8 +31,13 @@
 #define COMEDI_INSN_MASK_SPECIAL 0x2000000
 
 /*!
- * @ingroup sync_syscall_lib
- * @defgroup insn_lib_type Instruction types
+ * @addtogroup sync1_lib
+ * @{
+ */
+
+/*!
+ * @anchor COMEDI_INSN_xxx @name COMEDI_INSN_xxx
+ * @brief Flags to define the type of instruction
  * @{
  */
 
@@ -70,19 +75,18 @@
 #define COMEDI_INSN_INTTRIG (6 | COMEDI_INSN_MASK_WRITE | \
 			     COMEDI_INSN_MASK_SPECIAL)
 
-		   /*! @} *//* Ends doxygen-group insn_lib_type */
+	  /*! @} COMEDI_INSN_xxx */
 
 /** 
  * Maximal wait duration
  */
 #define COMEDI_INSN_WAIT_MAX 100000
 
-/** Structure describing the synchronous instruction.
- *
- * This the argument of the ioctl INSN
- * 
- *  @see comedi_snd_insn()
+/*! 
+ * @brief Structure describing the synchronous instruction
+ * @see comedi_snd_insn()
  */
+
 struct comedi_instruction {
 	unsigned int type;
 		       /**< Instruction type */
@@ -97,12 +101,11 @@ struct comedi_instruction {
 };
 typedef struct comedi_instruction comedi_insn_t;
 
-/** Structure describing the synchronous instruction.
- *
- * This the argument of the ioctl INSNLIST
- *
- *  @see comedi_snd_insn()
+/*! 
+ * @brief Structure describing the list of synchronous instructions
+ * @see comedi_snd_insnlist()
  */
+
 struct comedi_instruction_list {
 	unsigned int count;
 			/**< Instructions count */
@@ -110,6 +113,8 @@ struct comedi_instruction_list {
 			  /**< Tab containing the instructions pointers */
 };
 typedef struct comedi_instruction_list comedi_insnlst_t;
+
+	  /*! @} sync1_lib */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 

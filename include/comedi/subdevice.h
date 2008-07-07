@@ -44,8 +44,13 @@
 #define COMEDI_SUBD_MASK_SPECIAL 0x20000000
 
 /*!
- * @ingroup subdevice
- * @defgroup subdevice_type Subdevice types
+ * @addtogroup subdevice
+ * @{
+ */
+
+/*!
+ * @anchor COMEDI_SUBD_xxx @name Subdevices types
+ * @brief Flags to define the subdevice type
  * @{
  */
 
@@ -111,11 +116,11 @@
 			   COMEDI_SUBD_PROC | \
 			   COMEDI_SUBD_SERIAL)
 
-		   /*! @} *//* Ends doxygen-group subdevice_type */
+	  /*! @} COMEDI_SUBD_xxx */
 
 /*!
- * @ingroup subdevice
- * @defgroup subdevice_cap Subdevice features
+ * @anchor COMEDI_SUBD_FT_xxx @name Subdevice features
+ * @brief Flags to define the subdevice's capabilities
  * @{
  */
 
@@ -132,7 +137,7 @@
  */
 #define COMEDI_SUBD_MMAP 0x8000
 
-		   /*! @} *//* Ends doxygen-group subdevice_cap */
+	  /*! @} COMEDI_SUBD_FT_xxx */
 
 #ifdef __KERNEL__
 
@@ -141,10 +146,11 @@
 struct comedi_device;
 struct comedi_driver;
 
-/** Structure describing the subdevice.
- *
- *  @see comedi_add_subd()
+/*! 
+ * @brief Structure describing the subdevice
+ * @see comedi_add_subd()
  */
+
 struct comedi_subdevice {
 
 	struct list_head list;
@@ -184,6 +190,8 @@ struct comedi_subdevice {
 typedef struct comedi_subdevice comedi_subd_t;
 
 #endif /* __KERNEL__ */
+
+	  /*! @} subdevice */
 
 #ifndef DOXYGEN_CPP
 

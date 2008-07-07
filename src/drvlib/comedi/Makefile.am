@@ -7,9 +7,10 @@ libcomedi_la_SOURCES = \
 	descriptor.c \
 	info.c \
 	range.c \
+	root_leaf.h \
 	sync.c \
 	sys.c \
-	root_leaf.h
+	syscall.h
 
 libcomedi_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

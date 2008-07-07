@@ -11,7 +11,6 @@ include_HEADERS =
 	driver.h \
 	instruction.h \
 	ioctl.h \
-	lib_syscall.h \
 	os_facilities.h \
 	subdevice.h \
 	transfer.h \

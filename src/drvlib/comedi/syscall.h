@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedilib for RTDM, syscalls declarations
+ * Comedilib for RTDM, internal declarations
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -19,13 +19,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef __COMEDI_LIB_SYSCALL__
-#define __COMEDI_LIB_SYSCALL__
+#ifndef __COMEDI_LIB_INTERNAL__
+#define __COMEDI_LIB_INTERNAL__
+
+#include <rtdm/rtdm.h>
 
 #ifndef DOXYGEN_CPP
-
-#include <errno.h>
-#include <rtdm/rtdm.h>
 
 static inline int __sys_open(const char *fname)
 {
@@ -54,4 +53,4 @@ static inline ssize_t __sys_write(int fd, void *buf, size_t nbyte)
 
 #endif /* !DOXYGEN_CPP */
 
-#endif /* __COMEDI_LIB_SYSCALL__ */
+#endif /* __COMEDI_LIB_INTERNAL__ */

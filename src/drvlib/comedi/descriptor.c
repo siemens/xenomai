@@ -25,6 +25,7 @@
 #include <comedi/descriptor.h>
 #include <comedi/comedi.h>
 
+#include "syscall.h"
 #include "root_leaf.h"
 
 #ifndef DOXYGEN_CPP

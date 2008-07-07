@@ -20,7 +20,8 @@
  */
 
 /*!
- * @defgroup Comedilib4RTDM Comedi library API.
+ * @ingroup Comedi4RTDM
+ * @defgroup Comedilib4RTDM Library API.
  *
  * This is the API interface of Comedi4RTDM library
  *
@@ -32,10 +33,13 @@
  *
  * This is the API interface which encapsulates common syscalls
  * structure
+ * Warning: this API level should not be used
  */
 
 #include <comedi/ioctl.h>
-#include <comedi/lib_syscall.h>
+#include <comedi/comedi.h>
+
+#include "syscall.h"
 
 /*!
  * @ingroup syscall

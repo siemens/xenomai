@@ -1,3 +1,10 @@
+2008-07-08  Alexis Berlemont  <alexis.berlemont@free.fr>
+
+	* include/comedi/lib_syscall.h, src/drvlib/syscall.h: the header
+	lib_syscall.h has been renamed (syscall.h) and is now considered
+	as an internal header.
+	* include/*.h: improve Comedi Doxygen documentation.
+
 2008-07-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vxworks/sysLib.c (wind_sysclk_init): Allow for

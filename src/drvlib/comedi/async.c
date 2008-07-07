@@ -19,12 +19,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <errno.h>
+
 #include <comedi/ioctl.h>
 #include <comedi/comedi.h>
 
+#include "syscall.h"
+
 /*!
  * @ingroup level1_lib
- * @defgroup async1_lib Command syscall API
+ * @defgroup async1_lib Asynchronous acquisition API
  * @{
  */
 
@@ -240,7 +244,7 @@ int comedi_poll(comedi_desc_t * dsc,
  * @param[in] dsc Device descriptor filled by comedi_open() (and
  * optionally comedi_fill_desc())
  * @param[in] idx_subd Index of the concerned subdevice
- * @param[int] size Size of the buffer to map
+ * @param[in] size Size of the buffer to map
  * @param[out] ptr Address of the pointer containing the assigned
  * address on return
  *
@@ -272,7 +276,7 @@ int comedi_mmap(comedi_desc_t * dsc,
 
 /*!
  * @ingroup level2_lib
- * @defgroup async2_lib Command syscall API
+ * @defgroup async2_lib Asynchronous acquisition API
  * @{
  */
 

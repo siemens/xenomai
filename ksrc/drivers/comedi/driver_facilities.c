@@ -21,15 +21,16 @@
  */
 
 /*!
- * @defgroup Comedi4RTDM Comedi driver API.
+ * @defgroup Comedi4RTDM Comedi API.
  *
- * This is the API interface of Comedi4RTDM kernel layer
+ * This is the API interface of Comedi4RTDM (kernel layer and user
+ * layer)
  *
  */
 
 /*!
  * @ingroup Comedi4RTDM
- * @defgroup driverfacilities Driver Development API
+ * @defgroup driverfacilities Driver API
  *
  * This is the API interface of Comedi provided to device drivers.
  */
@@ -149,7 +150,7 @@ EXPORT_SYMBOL(comedi_get_nbchan);
 
 /*!
  * @ingroup driverfacilities
- * @defgroup buffer Buffer management services
+ * @defgroup comedi_buffer Buffer management services
  * @{
  */
 
@@ -442,7 +443,7 @@ EXPORT_SYMBOL(comedi_get_cmd);
 
 /*!
  * @ingroup driverfacilities
- * @defgroup interrupt Interrupt management services
+ * @defgroup comedi_interrupt Interrupt management services
  * @{
  */
 
@@ -561,7 +562,7 @@ int comedi_task_sleep(unsigned long long nsdelay);
 /**
  * @brief Get the absolute time in nanoseconds
  *
- * @return 0 the absolute time expressed in nanoseconds
+ * @return the absolute time expressed in nanoseconds
  *
  */
 unsigned long long comedi_get_time(void);

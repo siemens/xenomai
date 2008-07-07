@@ -25,13 +25,16 @@
 
 #include <comedi/context.h>
 
-/*! 
-  \ingroup command_lib
-  @defgroup command_flags Command flags definitions 
-  @{
+/*!
+ * @addtogroup async1_lib
+ * @{
  */
 
-/* Common command flags definitions */
+/*!
+ * @anchor COMEDI_CMD_xxx @name COMEDI_CMD_xxx
+ * @brief Common command flags definitions
+ * @{
+ */
 
 /** 
  * Do not execute the command, just check it
@@ -42,15 +45,13 @@
  */
 #define COMEDI_CMD_BULK 0x2
 
-		   /*! @} *//* Ends doxygen-group command_flags */
+	  /*! @} COMEDI_CMD_xxx */
 
-/*! 
-  \ingroup command_lib
-  @defgroup command_triggers Command triggers definitions 
-  @{
+/*!
+ * @anchor TRIG_xxx @name TRIG_xxx
+ * @brief Command triggers flags definitions
+ * @{
  */
-
-/* Trigger flags definitions */
 
 /** 
  * Never trigger
@@ -113,14 +114,13 @@
  */
 #define TRIG_ROUND_UP_NEXT 0x00030000
 
-		   /*! @} *//* Ends doxygen-group command_triggers */
+	  /*! @} TRIG_xxx */
 
-/*! 
-  \ingroup command_lib
-  @defgroup command_chans Command channels definitions 
-  @brief Specific precompilation macros useful for the channels
-  descriptors tab located in the command structure
-  @{
+/*!
+ * @anchor CHAN_RNG_AREF @name Channel macros
+ * @brief Specific precompilation macros and constants useful for the
+ * channels descriptors tab located in the command structure
+ * @{
  */
 
 /** 
@@ -153,7 +153,7 @@
  */
 #define AREF_OTHER 0x03
 
-		   /*! @} *//* Ends doxygen-group command_chans */
+	  /*! @} CHAN_RNG_AREF */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 /* Channels macros only useful for the kernel side */
@@ -169,10 +169,11 @@
 #define CR_INVERT (1<<29)
 #endif /* __KERNEL__ */
 
-/** Structure describing the asynchronous command.
- *
- *  @see comedi_snd_command()
+/*! 
+ * @brief Structure describing the asynchronous instruction
+ * @see comedi_snd_command()
  */
+
 struct comedi_cmd_desc {
 	unsigned char idx_subd;
 			    /**< Subdevice to which the command will be applied. */
@@ -214,6 +215,8 @@ struct comedi_cmd_desc {
 		   /**< Driver specific buffer pointer */
 };
 typedef struct comedi_cmd_desc comedi_cmd_t;
+
+	  /*! @} async1_lib */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 

@@ -19,8 +19,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <errno.h>
+
 #include <comedi/ioctl.h>
 #include <comedi/comedi.h>
+
+#include "syscall.h"
 
 /*!
  * @ingroup Comedilib4RTDM

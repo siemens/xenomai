@@ -19,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <errno.h>
 #include <math.h>
 
 #include <comedi/comedi.h>
@@ -68,12 +69,13 @@ void data8_set(void *dst, lsampl_t val)
  *
  * @param[in] dsc Device descriptor filled by comedi_open() and
  * comedi_fill_desc()
+ *
  * @param[in] idx_subd Index of the concerned subdevice
  * @param[in] idx_chan Index of the concerned channel
  * @param[in] unit Unit type used in the range
  * @param[in] min Minimal limit value
  * @param[in] max Maximal limit value
- * @param[out] Found range
+ * @param[out] rng Found range
  *
  * @return 0 on success, otherwise a negative error code.
  *
@@ -137,8 +139,6 @@ int comedi_find_range(comedi_desc_t * dsc,
 /**
  * @brief Convert samples to physical units
  *
- * @param[in] dsc Device descriptor filled by comedi_open() (and
- * optionally comedi_fill_desc())
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
  * @param[out] dst Ouput buffer 
@@ -205,8 +205,6 @@ int comedi_to_phys(comedi_chinfo_t * chan,
 /**
  * @brief Convert physical units to samples
  *
- * @param[in] dsc Device descriptor filled by comedi_open() (and
- * optionally comedi_fill_desc())
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
  * @param[out] dst Ouput buffer 
