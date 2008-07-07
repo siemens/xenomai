@@ -194,3 +194,12 @@ ___________________________________________________________________
           (info->heapsize), the overall actual/usable amount of memory
           (info->usablemem), the current amount of memory used
           (info->usedmem).
+
+___________________________________________________________________
+
+
+2.4.4 -> 2.4.5
+
+	* rt_heap_create() allows creating DMA heaps larger than 128kb
+	  rt_heap_create() allows creating non-shared mappings with H_NONCACHED
+	flag.
