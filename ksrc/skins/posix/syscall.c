@@ -258,8 +258,9 @@ static int __pthread_setschedparam(struct pt_regs *regs)
 		   pthread_setschedparam service. */
 		err = -EPERM;
 
-	if (!err)
-		__xn_put_user(promoted, (int __user *)__xn_reg_arg5(regs));
+	if (!err && __xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs),
+					   &promoted, sizeof(promoted)))
+		err = -EFAULT;
 
 	return err;
 }
