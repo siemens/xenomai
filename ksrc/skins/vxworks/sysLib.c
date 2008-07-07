@@ -39,12 +39,14 @@ void wind_sysclk_hook(void)
 int wind_sysclk_init(u_long period)
 {
 	extern u_long sync_time;
-	u_long init_rate = ONE_BILLION / period;
+	u_long init_rate;
 	int err;
+
+	init_rate = period ? ONE_BILLION / period : 0;
 
 	err = xntbase_alloc("vxworks", period, sync_time ? 0 : XNTBISO,
 			    &wind_tbase);
-	if (err)
+	if (err || period == 0)
 		return err;
 
 	err = sysClkRateSet(init_rate);
