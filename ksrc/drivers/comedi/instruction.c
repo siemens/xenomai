@@ -26,11 +26,7 @@
 #include <linux/version.h>
 #include <linux/ioport.h>
 #include <linux/mman.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26)
-#include <linux/div64.h>
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26) */ 
-#include <linux/calc64.h>
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26) */
+#include <asm/div64.h>
 #include <asm/io.h>
 #include <asm/errno.h>
 
