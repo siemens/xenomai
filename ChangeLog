@@ -1,3 +1,11 @@
+2008-07-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-generic/features.h: Add a "fastsem" feature to catch
+	invalid mix of kernel-space and user-space support.
+	* include/asm-*/atomic.h, ksrc/skins/posix: Replace hardcoded
+	XNARCH_HAVE_US_ATOMIC_CMPXCHG with CONFIG_XENO_FASTSEM, inherited
+	from Kconfig in kernel-space and from configure.in in user-space.
+
 2008-07-08  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/drivers/comedi/instruction.c: follow the 64 bits division

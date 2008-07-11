@@ -37,7 +37,6 @@ typedef atomic_t xnarch_atomic_t;
 #define xnarch_memory_barrier()  	smp_mb()
 
 #if __LINUX_ARM_ARCH__ >= 6
-#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
 
 static inline void
 xnarch_atomic_set_mask(unsigned long *addr, unsigned long mask)
@@ -64,10 +63,6 @@ xnarch_atomic_set_mask(unsigned long *addr, unsigned long mask)
     *addr |= mask;
     local_irq_restore_hw(flags);
 }
-
-#ifndef CONFIG_SMP
-#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
-#endif /* CONFIG_SMP */
 
 #endif /* ARM_ARCH_6 */
 
@@ -142,8 +137,6 @@ __xchg(volatile void *ptr, unsigned long x, unsigned int size)
  * Atomic operations lifted from linux/include/asm-arm/atomic.h 
  */
 #if CONFIG_XENO_ARM_ARCH >= 6
-#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
-
 static __inline__ void xnarch_atomic_set(xnarch_atomic_t *v, int i)
 {
 	unsigned long tmp;
@@ -278,7 +271,6 @@ xnarch_atomic_clear_mask(unsigned long *addr, unsigned long mask)
                      XENOMAI_SYSARCH_ATOMIC_CLEAR_MASK, mask, addr);
 }
 #else /* ARM_ARCH <= 5 && !CONFIG_SMP */
-#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
 
 static __inline__ void xnarch_atomic_set(xnarch_atomic_t *ptr, int val)
 {

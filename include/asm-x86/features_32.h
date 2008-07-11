@@ -57,7 +57,8 @@
 			   __xn_feat_x86_sep_mask| \
 			   __xn_feat_x86_tsc_mask)
 
-#define XENOMAI_FEAT_MAN  (__xn_feat_x86_sep| \
+#define XENOMAI_FEAT_MAN  (__xn_feat_generic_man_mask| \
+			   __xn_feat_x86_sep| \
 			   __xn_feat_x86_tsc)
 
 static inline int check_abi_revision(unsigned long abirev)

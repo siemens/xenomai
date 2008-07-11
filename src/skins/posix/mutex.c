@@ -26,7 +26,7 @@
 
 extern int __pse51_muxid;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 #define PSE51_MUTEX_MAGIC (0x86860303)
 
 extern unsigned long xeno_sem_heap[2];
@@ -38,7 +38,7 @@ static xnarch_atomic_intptr_t *get_ownerp(struct __shadow_mutex *shadow)
 	
 	return (xnarch_atomic_intptr_t *) (xeno_sem_heap[1] + shadow->owner_offset);
 }
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
@@ -98,7 +98,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		goto checked;
 
@@ -111,17 +111,17 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
   checked:
 	cb_force_write_lock(&shadow->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,__pse51_mutex_init,shadow,attr);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	if (!shadow->attr.pshared)
 		shadow->owner = (xnarch_atomic_intptr_t *)
 			(xeno_sem_heap[0] + shadow->owner_offset);
 	
 	cb_write_unlock(&shadow->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return err;
 }
@@ -148,7 +148,7 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	xnthread_t *cur, *owner;
 
 	cur = xeno_get_current();
@@ -188,16 +188,16 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 			++shadow->lockcnt;
 			goto out;
 		}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,__pse51_mutex_lock,shadow);
 	} while (err == -EINTR);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return -err;
 }
@@ -209,7 +209,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	xnthread_t *cur, *owner;
 
 	cur = xeno_get_current();
@@ -249,17 +249,17 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 			++shadow->lockcnt;
 			goto out;
 		}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	do {
 		err = XENOMAI_SKINCALL2(__pse51_muxid,
 					__pse51_mutex_timedlock, shadow, to);
 	} while (err == -EINTR);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return -err;
 }
@@ -270,7 +270,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	xnthread_t *cur, *owner;
 
 	cur = xeno_get_current();
@@ -306,14 +306,14 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
   out:
 	cb_read_unlock(&shadow->lock, s);
 
-#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#else /* !CONFIG_XENO_FASTSEM */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_trylock, shadow);
 	} while (err == -EINTR);
 
-#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* !CONFIG_XENO_FASTSEM */
 
 	return -err;
 }
@@ -324,7 +324,7 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	xnarch_atomic_intptr_t *ownerp;
 	xnthread_t *cur;
 
@@ -357,17 +357,17 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_unlock, shadow);
 	} while (err == -EINTR);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
   out_err:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return -err;
 }

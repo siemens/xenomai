@@ -36,14 +36,14 @@ static void init_current_key(void)
 	}
 }
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 __attribute__ ((weak))
 unsigned long xeno_sem_heap[2] = { 0, 0 };
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 void xeno_handle_mlock_alert(int sig);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 static void *map_sem_heap(unsigned shared)
 {
 	struct heap_info {
@@ -97,7 +97,7 @@ static void unmap_sem_heap(unsigned long heap_addr, unsigned shared)
 
 	munmap((void *) heap_addr, hinfo.size);
 }
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 static inline int
 xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
@@ -153,7 +153,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 
 	pthread_once(&xeno_init_current_key_once, &init_current_key);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	/* In case we forked, we need to map the new local semaphore heap */
 	if (xeno_sem_heap[0])
 		unmap_sem_heap(xeno_sem_heap[0], 0);
@@ -172,7 +172,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 			exit(EXIT_FAILURE);
 		}
 	}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return muxid;
 }
@@ -219,7 +219,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 
 	pthread_once(&xeno_init_current_key_once, &init_current_key);
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	/* In case we forked, we need to map the new local semaphore heap */
 	if (xeno_sem_heap[0])
 		unmap_sem_heap(xeno_sem_heap[0], 0);
@@ -238,7 +238,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 			exit(EXIT_FAILURE);
 		}
 	}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return muxid;
 }

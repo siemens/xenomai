@@ -422,10 +422,10 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	unsigned count;
 	int err;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, 0, XN_INFINITE);
@@ -435,9 +435,9 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 							      mutex, count))
 			;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	cb_read_unlock(&mutex->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return err != EINTR ? err : 0;
 }
@@ -490,10 +490,10 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	unsigned count;
 	int err;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ticks_ceil(abstime) + 1);
@@ -503,9 +503,9 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 							      mutex, count))
 			;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	cb_read_unlock(&mutex->lock, s);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return err != EINTR ? err : 0;
 }

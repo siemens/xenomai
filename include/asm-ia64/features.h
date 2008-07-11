@@ -26,7 +26,7 @@
 
 #define XENOMAI_FEAT_DEP  __xn_feat_generic_mask
 
-#define XENOMAI_FEAT_MAN  0
+#define XENOMAI_FEAT_MAN  __xn_feat_generic_man_mask
 
 static inline int check_abi_revision(unsigned long abirev)
 {

@@ -75,7 +75,7 @@
                             __xn_feat_arm_eabi_mask             | \
 			    __xn_feat_arm_tsc_mask)
 
-#define XENOMAI_FEAT_MAN  0
+#define XENOMAI_FEAT_MAN  __xn_feat_generic_man_mask
 
 static inline int check_abi_revision(unsigned long abirev)
 {

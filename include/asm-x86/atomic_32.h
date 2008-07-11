@@ -21,8 +21,6 @@
 #define _XENO_ASM_X86_ATOMIC_32_H
 #define _XENO_ASM_X86_ATOMIC_H
 
-#define XNARCH_HAVE_US_ATOMIC_CMPXCHG
-
 #ifdef __KERNEL__
 
 #include <linux/bitops.h>

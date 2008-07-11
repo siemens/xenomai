@@ -25,7 +25,9 @@
 #include <xeno_config.h>
 #endif /* __KERNEL__ */
 
-#define __xn_feat_smp     0x80000000
+#define __xn_feat_smp       0x80000000
+#define __xn_feat_fastsem   0x40000000
+#define __xn_feat_nofastsem 0x20000000
 
 #ifdef CONFIG_SMP
 #define __xn_feat_smp_mask __xn_feat_smp
@@ -33,13 +35,25 @@
 #define __xn_feat_smp_mask 0
 #endif
 
-#define __xn_feat_generic_mask  __xn_feat_smp_mask
+#ifdef CONFIG_XENO_FASTSEM
+#define __xn_feat_fastsem_mask __xn_feat_fastsem
+#else
+#define __xn_feat_fastsem_mask __xn_feat_nofastsem
+#endif
+
+#define __xn_feat_generic_mask     (__xn_feat_smp_mask | __xn_feat_fastsem_mask)
+
+#define __xn_feat_generic_man_mask (__xn_feat_fastsem | __xn_feat_nofastsem)
 
 static inline const char *get_generic_feature_label (unsigned feature)
 {
     switch (feature) {
     	case __xn_feat_smp:
 	    return "smp";
+        case __xn_feat_fastsem:
+	    return "fastsem";
+        case __xn_feat_nofastsem:
+	    return "nofastsem";
     	default:
 	    return 0;
     }

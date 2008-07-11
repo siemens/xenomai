@@ -886,7 +886,7 @@ static int __pthread_mutexattr_setpshared(struct pt_regs *regs)
 	return __xn_safe_copy_to_user((void __user *)uattrp, &attr, sizeof(*uattrp));
 }
 
-#ifndef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifndef CONFIG_XENO_FASTSEM
 static int __pthread_mutex_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
@@ -1087,7 +1087,7 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	return err;
 }
-#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#else /* !CONFIG_XENO_FASTSEM */
 static int __pthread_mutex_check_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
@@ -1278,7 +1278,7 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	return 0;
 }
-#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* !CONFIG_XENO_FASTSEM */
 
 static int __pthread_condattr_init(struct pt_regs *regs)
 {
@@ -1468,11 +1468,11 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 				     offsetof(struct __shadow_mutex, lock)
-#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#else /* !CONFIG_XENO_FASTSEM */
 				     sizeof(mx.shadow_mutex)
-#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* !CONFIG_XENO_FASTSEM */
 				     ))
 		return -EFAULT;
 
@@ -1536,11 +1536,11 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 				     offsetof(struct __shadow_mutex, lock)
-#else /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#else /* !CONFIG_XENO_FASTSEM */
 				     sizeof(mx.shadow_mutex)
-#endif /* !XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* !CONFIG_XENO_FASTSEM */
 				     ))
 		return -EFAULT;
 
@@ -2694,7 +2694,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_mutex_lock] = {&__pthread_mutex_lock, __xn_exec_primary},
 	[__pse51_mutex_timedlock] =
 	    {&__pthread_mutex_timedlock, __xn_exec_primary},
-#ifndef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifndef CONFIG_XENO_FASTSEM
 	[__pse51_mutex_trylock] = {&__pthread_mutex_trylock, __xn_exec_primary},
 #else
         [__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},
