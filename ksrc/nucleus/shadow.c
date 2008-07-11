@@ -1577,7 +1577,7 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 		stringify_feature_set(XENOMAI_FEAT_DEP, finfo.feat_all_s,
 				      sizeof(finfo.feat_all_s));
 		finfo.feat_man = featdep & XENOMAI_FEAT_MAN;
-		stringify_feature_set(XENOMAI_FEAT_MAN, finfo.feat_man_s,
+		stringify_feature_set(finfo.feat_man, finfo.feat_man_s,
 				      sizeof(finfo.feat_man_s));
 		finfo.feat_mis = featmis;
 		stringify_feature_set(featmis, finfo.feat_mis_s,
