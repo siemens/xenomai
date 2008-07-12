@@ -36,7 +36,7 @@
  */
 
 /*!
- * @anchor COMEDI_INSN_xxx @name COMEDI_INSN_xxx
+ * @anchor COMEDI_INSN_xxx @name Instruction type
  * @brief Flags to define the type of instruction
  * @{
  */
