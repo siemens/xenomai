@@ -21257,23 +21257,27 @@ fi
 { echo "$as_me:$LINENO: checking for target architecture" >&5
 echo $ECHO_N "checking for target architecture... $ECHO_C" >&6; }
 
+CONFIG_XENO_FASTSEM=
 case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_FASTSEM=y
         ;;
  powerpc-*|ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/ppc/boot/images/zImage.elf
+	CONFIG_XENO_FASTSEM=y
         ;;
  powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc64
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/ppc64/boot/images/zImage
+	CONFIG_XENO_FASTSEM=y
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
@@ -21290,6 +21294,8 @@ case "$host" in
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
+	# We set CONFIG_XENO_FASTSEM later, when we know what architecture we
+	# are running
 	;;
  x86_64-*|amd64-*)
 	XENO_TARGET_ARCH=x86
@@ -21513,6 +21519,10 @@ fi
 
   { echo "$as_me:$LINENO: result: ${CONFIG_XENO_ARM_EABI:-no}" >&5
 echo "${ECHO_T}${CONFIG_XENO_ARM_EABI:-no}" >&6; }
+
+  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
+	CONFIG_XENO_FASTSEM=y
+  fi
 fi
 
 { echo "$as_me:$LINENO: checking whether building Linux in Xenomai build tree" >&5
@@ -22310,6 +22320,11 @@ _ACEOF
 test x$CONFIG_SMP = xy &&
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_SMP 1
+_ACEOF
+
+test x$CONFIG_XENO_FASTSEM = xy &&
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_FASTSEM 1
 _ACEOF
 
 test x$CONFIG_X86_TSC = xy &&
