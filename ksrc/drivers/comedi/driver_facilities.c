@@ -151,6 +151,54 @@ EXPORT_SYMBOL(comedi_get_nbchan);
 /*!
  * @ingroup driverfacilities
  * @defgroup comedi_buffer Buffer management services
+ *
+ * Buffer management services
+ *
+ * The buffer is the key component of the Comedi infrastructure. It
+ * manages transfers between the user-space and the Comedi drivers
+ * thanks to generic functions which are described hereafter. Thanks
+ * to the buffer subsystem, the driver developer does not have to care
+ * about the way the user program retrieves or sends data.
+ *
+ * To write a classical char driver, the developer has to fill a fops
+ * structure so as to provide transfer operations to the user program
+ * (read, write, ioctl and mmap if need be).
+ *
+ * The Comedi infrastructure manages the whole interface with the
+ * userspace; the common read, write, mmap, etc. callbacks are generic
+ * Comedi functions. These functions manage (and perform, if need be)
+ * tranfers between the user-space and an asynchronous buffer thanks
+ * to lockless mechanisms.
+ *
+ * Consequently, the developer has to use the proper buffer functions
+ * in order to write / read acquired data into / from the asynchronous
+ * buffer.
+ *
+ * Here are listed the functions:
+ * - comedi_buf_prepare_(abs)put() and comedi_buf_commit_(abs)put()
+ * - comedi_buf_prepare_(abs)get() and comedi_buf_commit_(abs)get()
+ * - comedi_buf_put()
+ * - comedi_buf_get()
+ * - comedi_buf_evt().
+ *
+ * The functions count might seem high; however, the developer needs a
+ * few of them to write a driver. Having so many functions enables to
+ * manage any transfer cases:
+ * - If some DMA controller is available, there is no need to make the
+ *   driver copy the acquired data into the asynchronous buffer, the
+ *   DMA controller must directly trigger DMA shots into / from the
+ *   buffer. In that case, a function comedi_buf_prepare_*() must be
+ *   used so as to set up the DMA transfer and a function
+ *   comedi_buf_commit_*() has to be called to complete the
+ *   transfer().
+ * - For DMA controllers which need to work with global counter (the
+ *   transfered data count since the beginning of the acquisition),
+ *   the functions comedi_buf_*_abs_*() have been made available.
+ * - If no DMA controller is available, the driver has to perform the
+ *   copy between the hardware component and the asynchronous
+ *   buffer. In such cases, the functions comedi_buf_get() and
+ *   comedi_buf_put() are useful.
+ *
  * @{
  */
 

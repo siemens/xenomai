@@ -237,8 +237,8 @@ typedef struct comedi_rng_info_arg comedi_rnginfo_arg_t;
 #ifdef __KERNEL__
 
 /* --- Subdevice related functions --- */
-comedi_chfeats_t *comedi_get_chfeat(comedi_subd_t * sb, int idx);
-comedi_rngfeats_t *comedi_get_rngfeat(comedi_subd_t * sb,
+comedi_chan_t *comedi_get_chfeat(comedi_subd_t * sb, int idx);
+comedi_rng_t *comedi_get_rngfeat(comedi_subd_t * sb,
 				      int chidx, int rngidx);
 int comedi_check_chanlist(comedi_subd_t * subd,
 			  unsigned char nb_chan, unsigned int *chans);

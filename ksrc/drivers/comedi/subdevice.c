@@ -61,13 +61,13 @@ comedi_rngdesc_t range_unipolar5 = RNG_GLOBAL(rng_unipolar10);
 
 /* --- Basic channel / range management functions --- */
 
-comedi_chfeats_t *comedi_get_chfeat(comedi_subd_t * sb, int idx)
+comedi_chan_t *comedi_get_chfeat(comedi_subd_t * sb, int idx)
 {
 	int i = (sb->chan_desc->mode != COMEDI_CHAN_GLOBAL_CHANDESC) ? idx : 0;
 	return &(sb->chan_desc->chans[i]);
 }
 
-comedi_rngfeats_t *comedi_get_rngfeat(comedi_subd_t * sb, int chidx, int rngidx)
+comedi_rng_t *comedi_get_rngfeat(comedi_subd_t * sb, int chidx, int rngidx)
 {
 	int i = (sb->rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ? chidx : 0;
 	return &(sb->rng_desc->rngtabs[i]->rngs[rngidx]);

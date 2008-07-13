@@ -245,7 +245,7 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
-			comedi_chfeats_t *chft;
+			comedi_chan_t *chft;
 			chft =
 			    comedi_get_chfeat(dev->transfer->
 					      subds[cmd->idx_subd],
