@@ -48,10 +48,10 @@
  * - their references;
  *
  * Such parameters must be declared for each channel composing a
- * subdevice. The structure comedi_chfeats_t (comedi_channel_features)
- * is used to define one channel. 
+ * subdevice. The structure comedi_channel (comedi_chan_t) is used to
+ * define one channel.
  *
- * Another structure named comedi_chdesc_t (comedi_channels_desc)
+ * Another structure named comedi_channels_desc (comedi_chdesc_t)
  * gathers all channels for a specific subdevice. This latter
  * structure also stores :
  * - the channels count;
@@ -161,11 +161,11 @@ comedi_rngdesc_t example_rng = RNG_GLOBAL(example_tab);
  * @brief Structure describing some channel's characteristics
  */
 
-struct comedi_channel_features {
+struct comedi_channel {
 	unsigned long flags; /*!< Channel flags to define the reference. */
 	unsigned char nb_bits; /*!< Channel resolution. */	                
 };
-typedef struct comedi_channel_features comedi_chfeats_t;
+typedef struct comedi_channel comedi_chan_t;
 
 /*!
  * @anchor COMEDI_CHAN_xxx @name Channels declaration mode
@@ -193,7 +193,7 @@ typedef struct comedi_channel_features comedi_chfeats_t;
 struct comedi_channels_desc {
 	unsigned char mode; /*!< Declaration mode (global or per channel) */
 	unsigned char length; /*!< Channels count */
-	comedi_chfeats_t chans[GCC_ZERO_LENGTH_ARRAY]; /*!< Channels tab */
+	comedi_chan_t chans[GCC_ZERO_LENGTH_ARRAY]; /*!< Channels tab */
 };
 typedef struct comedi_channels_desc comedi_chdesc_t;
 
@@ -231,12 +231,12 @@ typedef struct comedi_channels_desc comedi_chdesc_t;
  * @brief Structure describing a (unique) range
  */
 
-struct comedi_range_features {
+struct comedi_range {
 	long min; /*!< Minimal value */
 	long max; /*!< Maximal falue */
 	unsigned long flags; /*!< Range flags (unit, etc.) */
 };
-typedef struct comedi_range_features comedi_rngfeats_t;
+typedef struct comedi_range comedi_rng_t;
 
 /** 
  * Macro to declare a (unique) range with no unit defined
@@ -258,7 +258,7 @@ typedef struct comedi_range_features comedi_rngfeats_t;
 #define COMEDI_RNGTAB(x) \
 struct { \
     unsigned char length;  \
-    comedi_rngfeats_t rngs[x]; \
+    comedi_rng_t rngs[x]; \
 }
 typedef COMEDI_RNGTAB(GCC_ZERO_LENGTH_ARRAY) comedi_rngtab_t;
 

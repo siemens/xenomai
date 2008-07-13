@@ -30,7 +30,7 @@
 
 /*!
  * @ingroup Comedi4RTDM
- * @defgroup driverfacilities Driver API
+ * @defgroup driverfacilities Driver API.
  *
  * This is the API interface of Comedi provided to device drivers.
  */
