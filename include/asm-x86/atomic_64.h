@@ -50,6 +50,8 @@ typedef atomic64_t xnarch_atomic_t;
 
 #else /* !__KERNEL__ */
 
+#include <asm/xenomai/features.h>
+
 #define __xeno_xg(x) ((volatile long *)(x))
 
 static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,

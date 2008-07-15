@@ -249,6 +249,8 @@ __do_cmpxchg(volatile unsigned int *p,
 }
 #endif
 
+#include <asm/xenomai/features.h>
+
 static __inline__ unsigned long
 xnarch_atomic_cmpxchg(xnarch_atomic_t *p,
 		      unsigned long old, unsigned long new)

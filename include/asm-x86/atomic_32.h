@@ -94,6 +94,7 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long new)
 
 typedef unsigned long atomic_flags_t;
 
+#include <asm/xenomai/features.h>
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_X86_ATOMIC_32_H */

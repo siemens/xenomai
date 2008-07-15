@@ -75,6 +75,7 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
 
 #else /* !__KERNEL__ */
 
+#include <asm/xenomai/features.h>
 #include <sys/types.h>
 #include <stdint.h>
 
