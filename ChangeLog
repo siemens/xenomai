@@ -1,3 +1,7 @@
+2008-07-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c (xnregistry_bind): Use absolute timeout.
+
 2008-07-07  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/heap.c (xnheap_init_mapped): Add support for non
@@ -27,7 +31,7 @@
 
 	* ksrc/skins/psos/task.c (t_mode): Fix update mask.
 
-2008-06-23  Philippe Gerum  <rpm@eclipse.xenomai.org>
+2008-06-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-x86, ksrc/nucleus/heap.c, ksrc/nucleus/pipe.c: Adapt
 	to 2.6.26-rc7.
