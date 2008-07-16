@@ -47,7 +47,7 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 {
 	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_sem_p, sem, XN_ABSOLUTE, &timeout);
+				 __native_sem_p, sem, XN_REALTIME, &timeout);
 }
 
 int rt_sem_v(RT_SEM *sem)

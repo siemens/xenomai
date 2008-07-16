@@ -47,7 +47,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 {
 	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_mutex_acquire, mutex, XN_ABSOLUTE, &timeout);
+				 __native_mutex_acquire, mutex, XN_REALTIME, &timeout);
 }
 
 int rt_mutex_release(RT_MUTEX *mutex)

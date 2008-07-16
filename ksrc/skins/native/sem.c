@@ -468,7 +468,7 @@ int rt_sem_p(RT_SEM *sem, RTIME timeout)
 
 int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 {
-	return rt_sem_p_inner(sem, XN_ABSOLUTE, timeout);
+	return rt_sem_p_inner(sem, XN_REALTIME, timeout);
 }
 
 /**

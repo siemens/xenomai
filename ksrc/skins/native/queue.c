@@ -928,7 +928,7 @@ ssize_t rt_queue_receive(RT_QUEUE *q, void **bufp, RTIME timeout)
 
 ssize_t rt_queue_receive_until(RT_QUEUE *q, void **bufp, RTIME timeout)
 {
-	return rt_queue_receive_inner(q, bufp, XN_ABSOLUTE, timeout);
+	return rt_queue_receive_inner(q, bufp, XN_REALTIME, timeout);
 }
 
 ssize_t rt_queue_read_inner(RT_QUEUE *q, void *buf,
@@ -1103,7 +1103,7 @@ ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 
 ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 {
-	return rt_queue_read_inner(q, buf, size, XN_ABSOLUTE, timeout);
+	return rt_queue_read_inner(q, buf, size, XN_REALTIME, timeout);
 }
 
 /**

@@ -65,7 +65,7 @@ int rt_event_wait_until(RT_EVENT *event,
 
 	ret = XENOMAI_SKINCALL5(__native_muxid,
 				__native_event_wait,
-				event, &mask, mode, XN_ABSOLUTE, &timeout);
+				event, &mask, mode, XN_REALTIME, &timeout);
 	if (ret)
 		return ret;
 

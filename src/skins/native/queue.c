@@ -168,7 +168,7 @@ ssize_t rt_queue_receive_until(RT_QUEUE *q, void **bufp, RTIME timeout)
 {
 	return XENOMAI_SKINCALL4(__native_muxid,
 				 __native_queue_receive, q, bufp,
-				 XN_ABSOLUTE, &timeout);
+				 XN_REALTIME, &timeout);
 }
 
 ssize_t rt_queue_read(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
@@ -182,7 +182,7 @@ ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 {
 	return XENOMAI_SKINCALL5(__native_muxid,
 				 __native_queue_read, q, buf, size,
-				 XN_ABSOLUTE, &timeout);
+				 XN_REALTIME, &timeout);
 }
 
 int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)

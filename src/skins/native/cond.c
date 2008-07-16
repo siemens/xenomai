@@ -50,7 +50,7 @@ int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
 	return XENOMAI_SKINCALL4(__native_muxid,
 				 __native_cond_wait, cond, mutex,
-				 XN_ABSOLUTE, &timeout);
+				 XN_REALTIME, &timeout);
 }
 
 int rt_cond_signal(RT_COND *cond)

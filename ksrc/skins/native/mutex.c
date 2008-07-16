@@ -477,7 +477,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 
 int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 {
-	return rt_mutex_acquire_inner(mutex, XN_ABSOLUTE, timeout);
+	return rt_mutex_acquire_inner(mutex, XN_REALTIME, timeout);
 }
 
 /**

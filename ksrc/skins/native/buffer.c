@@ -348,7 +348,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 		 * send the data, so let's always use an absolute time
 		 * spec.
 		 */
-		timeout_mode = XN_ABSOLUTE;
+		timeout_mode = XN_REALTIME;
 		timeout += xntbase_get_time(__native_tbase);
 	}
 
@@ -497,7 +497,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 		 * We may sleep several times before receiving the
 		 * data, so let's always use an absolute time spec.
 		 */
-		timeout_mode = XN_ABSOLUTE;
+		timeout_mode = XN_REALTIME;
 		timeout += xntbase_get_time(__native_tbase);
 	}
 
@@ -725,7 +725,7 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
 
 ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
 {
-	return rt_buffer_write_inner(bf, ptr, size, XN_ABSOLUTE, timeout);
+	return rt_buffer_write_inner(bf, ptr, size, XN_REALTIME, timeout);
 }
 
 /**
@@ -876,7 +876,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
 
 ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
 {
-	return rt_buffer_read_inner(bf, ptr, size, XN_ABSOLUTE, timeout);
+	return rt_buffer_read_inner(bf, ptr, size, XN_REALTIME, timeout);
 }
 
 /**

@@ -577,7 +577,7 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 
 int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
-	return rt_cond_wait_inner(cond, mutex, XN_ABSOLUTE, timeout);
+	return rt_cond_wait_inner(cond, mutex, XN_REALTIME, timeout);
 }
 
 /**

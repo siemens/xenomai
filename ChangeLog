@@ -1,6 +1,9 @@
 2008-07-15  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/nucleus/registry.c (xnregistry_bind): Use absolute timeout.
+	* ksrc/nucleus/registry.c (xnregistry_bind): Use realtime timeout.
+
+	* ksrc/skins/native: Massive fixage of timeout mode for new calls
+	with absolute timespecs.
 
 2008-07-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 

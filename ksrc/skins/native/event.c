@@ -614,7 +614,7 @@ int rt_event_wait_until(RT_EVENT *event,
 		  unsigned long mask,
 		  unsigned long *mask_r, int mode, RTIME timeout)
 {
-	return rt_event_wait_inner(event, mask, mask_r, mode, XN_ABSOLUTE, timeout);
+	return rt_event_wait_inner(event, mask, mask_r, mode, XN_REALTIME, timeout);
 }
 
 /**

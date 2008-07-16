@@ -50,7 +50,7 @@ ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *buf, size_t size, RTIME timeou
 {
 	return XENOMAI_SKINCALL5(__native_muxid,
 				 __native_buffer_read, bf, buf, size,
-				 XN_ABSOLUTE, &timeout);
+				 XN_REALTIME, &timeout);
 }
 
 ssize_t rt_buffer_write(RT_BUFFER *bf, const void *buf, size_t size, RTIME timeout)
@@ -64,7 +64,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *buf, size_t size, RTIME
 {
 	return XENOMAI_SKINCALL5(__native_muxid,
 				 __native_buffer_write, bf, buf, size,
-				 XN_ABSOLUTE, &timeout);
+				 XN_REALTIME, &timeout);
 }
 
 int rt_buffer_clear(RT_BUFFER *bf)
