@@ -1,3 +1,7 @@
+2008-07-15  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c (xnregistry_bind): Use absolute timeout.
+
 2008-07-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* include/asm-generic/features.h: Add a "fastsem" feature to catch

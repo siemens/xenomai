@@ -711,7 +711,6 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 	xnobject_t *object;
 	xnthread_t *thread;
 	xntbase_t *tbase;
-	xnticks_t stime;
 	int err = 0;
 	spl_t s;
 
@@ -723,7 +722,8 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	stime = xntbase_get_time(tbase);
+	if (timeout != XN_INFINITE && timeout != XN_NONBLOCK)
+		timeout += xntbase_get_time(tbase);
 
 	for (;;) {
 		object = registry_hash_find(key);
@@ -738,18 +738,8 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 			goto unlock_and_exit;
 		}
 
-		if (timeout != XN_INFINITE) {
-			xnticks_t now = xntbase_get_time(tbase);
-
-			if (stime + timeout >= now)
-				break;
-
-			timeout -= (now - stime);
-			stime = now;
-		}
-
 		thread->registry.waitkey = key;
-		xnsynch_sleep_on(&registry_hash_synch, timeout, XN_RELATIVE);
+		xnsynch_sleep_on(&registry_hash_synch, timeout, XN_REALTIME);
 
 		if (xnthread_test_info(thread, XNTIMEO)) {
 			err = -ETIMEDOUT;
