@@ -73,7 +73,7 @@ static int __rt_bind_helper(struct task_struct *curr,
 	__xn_copy_from_user(curr, &timeout, (void __user *)__xn_reg_arg3(regs),
 			    sizeof(timeout));
 
-	err = xnregistry_bind(name, timeout, handlep);
+	err = xnregistry_bind(name, timeout, XN_RELATIVE, handlep);
 
 	if (!err) {
 		xnlock_get_irqsave(&nklock, s);
