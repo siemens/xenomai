@@ -130,6 +130,7 @@ int xnregistry_enter(const char *key,
 
 int xnregistry_bind(const char *key,
 		    xnticks_t timeout,
+		    int timeout_mode,
 		    xnhandle_t *phandle);
 
 int xnregistry_remove(xnhandle_t handle);

@@ -427,7 +427,7 @@ accumulate:
 			break;
 		}
 
-		if (timeout == TM_NONBLOCK) {
+		if (timeout_mode == XN_RELATIVE && timeout == TM_NONBLOCK) {
 			ret = -EWOULDBLOCK;
 			break;
 		}
@@ -537,7 +537,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 			break;
 		}
 
-		if (timeout == TM_NONBLOCK) {
+		if (timeout_mode == XN_RELATIVE && timeout == TM_NONBLOCK) {
 			ret = -EWOULDBLOCK;
 			break;
 		}

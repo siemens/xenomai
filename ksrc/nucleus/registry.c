@@ -649,7 +649,7 @@ int xnregistry_enter(const char *key,
 }
 
 /**
- * @fn int xnregistry_bind(const char *key,xnticks_t timeout,xnhandle_t *phandle)
+ * @fn int xnregistry_bind(const char *key,xnticks_t timeout,int timeout_mode,xnhandle_t *phandle)
  * @brief Bind to a real-time object.
  *
  * This service retrieves the registry handle of a given object
@@ -660,12 +660,19 @@ int xnregistry_enter(const char *key,
  * @param key A valid NULL-terminated string which identifies the
  * object to bind to.
  *
- * @param timeout The number of clock ticks to wait for the
- * registration to occur (see note). Passing XN_INFINITE causes the
- * caller to block indefinitely until the object is
- * registered. Passing XN_NONBLOCK causes the service to return
- * immediately without waiting if the object is not registered on
- * entry.
+ * @param timeout The timeout which may be used to limit the time the
+ * thread wait for the object to be registered. This value is a wait
+ * time given in ticks (see note). It can either be relative, absolute
+ * monotonic (XN_ABSOLUTE), or absolute adjustable (XN_REALTIME)
+ * depending on @a timeout_mode. Passing XN_INFINITE @b and setting @a
+ * timeout_mode to XN_RELATIVE specifies an unbounded wait. Passing
+ * XN_NONBLOCK causes the service to return immediately without
+ * waiting if the object is not registered on entry. All other values
+ * are used as a wait limit.
+ *
+ * @param timeout_mode The mode of the @a timeout parameter. It can
+ * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
+ * xntimer_start()).
  *
  * @param phandle A pointer to a memory location which will be written
  * upon success with the generic handle defined by the registry for
@@ -706,7 +713,8 @@ int xnregistry_enter(const char *key,
  * nanoseconds otherwise.
  */
 
-int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
+int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
+		    xnhandle_t *phandle)
 {
 	xnobject_t *object;
 	xnthread_t *thread;
@@ -722,8 +730,11 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (timeout != XN_INFINITE && timeout != XN_NONBLOCK)
+	if (timeout_mode == XN_RELATIVE &&
+	    timeout != XN_INFINITE && timeout != XN_NONBLOCK) {
+		timeout_mode = XN_REALTIME;
 		timeout += xntbase_get_time(tbase);
+	}
 
 	for (;;) {
 		object = registry_hash_find(key);
@@ -733,13 +744,14 @@ int xnregistry_bind(const char *key, xnticks_t timeout, xnhandle_t *phandle)
 			goto unlock_and_exit;
 		}
 
-		if (timeout == XN_NONBLOCK || xnpod_unblockable_p()) {
+		if ((timeout_mode == XN_RELATIVE && timeout == XN_NONBLOCK) ||
+		    xnpod_unblockable_p()) {
 			err = -EWOULDBLOCK;
 			goto unlock_and_exit;
 		}
 
 		thread->registry.waitkey = key;
-		xnsynch_sleep_on(&registry_hash_synch, timeout, XN_REALTIME);
+		xnsynch_sleep_on(&registry_hash_synch, timeout, timeout_mode);
 
 		if (xnthread_test_info(thread, XNTIMEO)) {
 			err = -ETIMEDOUT;

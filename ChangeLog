@@ -1,3 +1,10 @@
+2008-07-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/registry.c,
+	ksrc/skins/native/buffer.c (xnregistry_bind,
+	rt_buffer_write_inner, rt_buffer_read_inner, __rt_bind_helper):
+	Fix another round of timer mode issues.
+
 2008-07-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/registry.c (xnregistry_bind): Use realtime timeout.
@@ -203,7 +210,7 @@
 	* [k]src/skins/native/sem.c (rt_sem_p_until): Add new
 	call with absolute timeout specification.
 
-2008-05-20  Philippe Gerum  <rpm@eclipse.xenomai.org>
+2008-05-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* [k]src/skins/native/buffer: Add message buffer feature.
 
@@ -240,7 +247,7 @@
 	shared mappings. Implement xnheap_init_mapped in the non
 	CONFIG_XENO_OPT_PERVASIVE case.
 
-2008-05-19  Philippe Gerum  <rpm@eclipse.xenomai.org>
+2008-05-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* [k]src/skins/native/mutex.c (rt_mutex_acquire_until): Add new
 	call with absolute timeout specification.
@@ -306,7 +313,7 @@
 	Fix section violations by removing some __devinit and __exit
 	annotations.
 
-2008-05-12  Philippe Gerum  <rpm@eclipse.xenomai.org>
+2008-05-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/{native, vxworks, uitron, psos, vrtx}: Make sure that
 	all task priority changes are done through regular libpthread

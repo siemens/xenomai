@@ -71,7 +71,7 @@ static int __rt_bind_helper(struct task_struct *p,
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	err = xnregistry_bind(name, timeout, handlep);
+	err = xnregistry_bind(name, timeout, XN_RELATIVE, handlep);
 
 	if (err)
 		return err;
