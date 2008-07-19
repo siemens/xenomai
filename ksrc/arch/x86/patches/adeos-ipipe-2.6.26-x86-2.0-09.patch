@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 2b4977c..5935d35 100644
+index e3c5eb6..6f37e4f 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -517,6 +517,10 @@ KBUILD_CFLAGS += $(call cc-option, -fno-stack-protector)
@@ -14,7 +14,7 @@ index 2b4977c..5935d35 100644
  KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
  else
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 52e18e6..c054904 100644
+index bf07b6f..3b623c1 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -359,6 +359,7 @@ config SCHED_NO_NO_OMIT_FRAME_POINTER
@@ -25,7 +25,7 @@ index 52e18e6..c054904 100644
  	help
  	  Say Y here to get to see options related to running Linux under
  	  various hypervisors.  This option alone does not add any kernel code.
-@@ -403,7 +404,7 @@ source "arch/x86/lguest/Kconfig"
+@@ -404,7 +405,7 @@ source "arch/x86/lguest/Kconfig"
  
  config PARAVIRT
  	bool "Enable paravirtualization code"
@@ -34,7 +34,7 @@ index 52e18e6..c054904 100644
  	help
  	  This changes the kernel so it can modify itself when it is run
  	  under a hypervisor, potentially improving performance significantly
-@@ -591,6 +592,8 @@ config SCHED_MC
+@@ -596,6 +597,8 @@ config SCHED_MC
  
  source "kernel/Kconfig.preempt"
  
@@ -83,7 +83,7 @@ index 92fdd35..a9e08bf 100644
  KBUILD_CFLAGS += $(call cc-option,-fno-stack-protector)
  
 diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
-index 5e618c3..ef5847e 100644
+index 77807d4..d3188b0 100644
 --- a/arch/x86/kernel/Makefile
 +++ b/arch/x86/kernel/Makefile
 @@ -70,6 +70,8 @@ obj-$(CONFIG_DOUBLEFAULT) 	+= doublefault_32.o
@@ -3161,7 +3161,7 @@ index 0cb7aad..52b46db 100644
  	 * Remove this CPU:
  	 */
 diff --git a/arch/x86/kernel/smpboot.c b/arch/x86/kernel/smpboot.c
-index 56078d6..5c37fc8 100644
+index 3e1cece..5312c56 100644
 --- a/arch/x86/kernel/smpboot.c
 +++ b/arch/x86/kernel/smpboot.c
 @@ -300,7 +300,7 @@ static void __cpuinit smp_callin(void)
@@ -3173,7 +3173,7 @@ index 56078d6..5c37fc8 100644
  {
  	/*
  	 * Don't put *anything* before cpu_init(), SMP booting is too
-@@ -1015,7 +1015,7 @@ do_rest:
+@@ -1014,7 +1014,7 @@ do_rest:
  int __cpuinit native_cpu_up(unsigned int cpu)
  {
  	int apicid = cpu_present_to_apicid(cpu);
@@ -3182,7 +3182,7 @@ index 56078d6..5c37fc8 100644
  	int err;
  
  	WARN_ON(irqs_disabled());
-@@ -1067,9 +1067,9 @@ int __cpuinit native_cpu_up(unsigned int cpu)
+@@ -1066,9 +1066,9 @@ int __cpuinit native_cpu_up(unsigned int cpu)
  	 * Check TSC synchronization with the AP (keep irqs disabled
  	 * while doing so):
  	 */
@@ -3752,7 +3752,7 @@ index 279c940..daabf90 100644
  struct ht_irq_cfg {
  	struct pci_dev *dev;
 diff --git a/drivers/serial/8250.c b/drivers/serial/8250.c
-index 1bc00b7..50e562d 100644
+index be95e55..eb76082 100644
 --- a/drivers/serial/8250.c
 +++ b/drivers/serial/8250.c
 @@ -2609,6 +2609,51 @@ static int serial8250_console_early_setup(void)
@@ -6079,7 +6079,7 @@ index 552e0ec..3e337d7 100644
  extern int create_irq(void);
  extern void destroy_irq(unsigned int irq);
 diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 792bf0a..062ace9 100644
+index 2e70006..340b471 100644
 --- a/include/linux/kernel.h
 +++ b/include/linux/kernel.h
 @@ -14,6 +14,7 @@
@@ -6090,7 +6090,7 @@ index 792bf0a..062ace9 100644
  #include <asm/byteorder.h>
  #include <asm/bug.h>
  
-@@ -109,9 +110,12 @@ struct user;
+@@ -112,9 +113,12 @@ struct user;
   */
  #ifdef CONFIG_PREEMPT_VOLUNTARY
  extern int _cond_resched(void);
@@ -10031,7 +10031,7 @@ index 14a656c..4cd1475 100644
  	return error;
  }
 diff --git a/kernel/printk.c b/kernel/printk.c
-index 8fb01c3..6bd0ed7 100644
+index e2129e8..8210af9 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
 @@ -581,6 +581,41 @@ static int have_callable_console(void)
@@ -10133,7 +10133,7 @@ index 8fb01c3..6bd0ed7 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index b048ad8..a4bf7d3 100644
+index 4e2f603..84f0cd3 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -2088,7 +2088,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -10218,7 +10218,7 @@ index b048ad8..a4bf7d3 100644
  		/*
  		 * the context switch might have flipped the stack from under
  		 * us, hence refresh the local variables.
-@@ -4857,6 +4872,7 @@ recheck:
+@@ -4855,6 +4870,7 @@ recheck:
  
  	oldprio = p->prio;
  	__setscheduler(rq, p, policy, param->sched_priority);
@@ -10226,7 +10226,7 @@ index b048ad8..a4bf7d3 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -5173,6 +5189,7 @@ static void __cond_resched(void)
+@@ -5171,6 +5187,7 @@ static void __cond_resched(void)
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
  	__might_sleep(__FILE__, __LINE__);
  #endif
@@ -10234,7 +10234,7 @@ index b048ad8..a4bf7d3 100644
  	/*
  	 * The BKS might be reacquired before we have dropped
  	 * PREEMPT_ACTIVE, which could trigger a second
-@@ -8864,3 +8881,60 @@ struct cgroup_subsys cpuacct_subsys = {
+@@ -8867,3 +8884,60 @@ struct cgroup_subsys cpuacct_subsys = {
  	.subsys_id = cpuacct_subsys_id,
  };
  #endif	/* CONFIG_CGROUP_CPUACCT */
@@ -10494,7 +10494,7 @@ index 9c4b025..08f096b 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index 9aefaae..5ea9264 100644
+index 2302d22..ad2d21f 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -51,6 +51,7 @@
@@ -10629,7 +10629,7 @@ index 9aefaae..5ea9264 100644
  		progress += 8;
  	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
  
-@@ -1623,32 +1698,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
+@@ -1642,32 +1717,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  	return pte;
  }
  
@@ -10662,7 +10662,7 @@ index 9aefaae..5ea9264 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -2838,3 +2887,111 @@ void print_vma_addr(char *prefix, unsigned long ip)
+@@ -2894,3 +2943,111 @@ void print_vma_addr(char *prefix, unsigned long ip)
  	}
  	up_read(&current->mm->mmap_sem);
  }
