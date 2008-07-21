@@ -51,7 +51,7 @@ unsigned long long comedi_get_time(void)
 
 /* --- IRQ section --- */
 
-static int comedi_handle_irq(rtdm_irq_t * irq_handle)
+static int comedi_handle_irq(rtdm_irq_t *irq_handle)
 {
 	comedi_irq_desc_t *dsc =
 	    rtdm_irq_get_arg(irq_handle, comedi_irq_desc_t);
@@ -62,7 +62,7 @@ static int comedi_handle_irq(rtdm_irq_t * irq_handle)
 		return RTDM_IRQ_NONE;
 }
 
-int __comedi_request_irq(comedi_irq_desc_t * dsc,
+int __comedi_request_irq(comedi_irq_desc_t *dsc,
 			 unsigned int irq,
 			 comedi_irq_hdlr_t handler,
 			 unsigned long flags, void *cookie)
@@ -91,7 +91,7 @@ static void comedi_nrt_sync_handler(rtdm_nrtsig_t nrt_sig, void *arg)
 	wake_up_interruptible(&snc->wq);
 }
 
-int comedi_init_sync(comedi_sync_t * snc)
+int comedi_init_sync(comedi_sync_t *snc)
 {
 	int ret = 0;
 
@@ -110,13 +110,13 @@ int comedi_init_sync(comedi_sync_t * snc)
 	return ret;
 }
 
-void comedi_cleanup_sync(comedi_sync_t * snc)
+void comedi_cleanup_sync(comedi_sync_t *snc)
 {
 	rtdm_nrtsig_destroy(&snc->nrt_sig);
 	rtdm_event_destroy(&snc->rtdm_evt);
 }
 
-int comedi_wait_sync(comedi_sync_t * snc, int rt)
+int comedi_wait_sync(comedi_sync_t *snc, int rt)
 {
 	int ret = 0;
 

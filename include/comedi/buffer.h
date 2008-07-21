@@ -345,7 +345,11 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg);
 ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes);
-ssize_t comedi_write(comedi_cxt_t * cxt, const void *bufdata, size_t nbytes);
+ssize_t comedi_write(comedi_cxt_t * cxt, 
+		     const void *bufdata, size_t nbytes);
+int comedi_select(comedi_cxt_t *cxt, 
+		  rtdm_selector_t *selector,
+		  enum rtdm_selecttype type, unsigned fd_index);
 
 #endif /* __KERNEL__ */
 

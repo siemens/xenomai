@@ -191,41 +191,59 @@ int comedi_rt_ioctl(struct rtdm_dev_context *context,
 	return comedi_ioctl_functions[_IOC_NR(request)] (&cxt, arg);
 }
 
+int comedi_rt_select(struct rtdm_dev_context *context,
+		     rtdm_selector_t *selector,
+		     enum rtdm_selecttype type, unsigned fd_index)
+{
+	comedi_cxt_t cxt;
+
+	/* The user_info argument is not available, fortunately it is
+	   not critical as no copy_from_user / copy_to_user are to be
+	   called */
+	comedi_init_cxt(context, NULL, &cxt);
+	comedi_set_dev(&cxt);
+	comedi_loginfo("comedi_rt_select: minor=%d\n", comedi_get_minor(&cxt));
+
+	return comedi_select(&cxt, selector, type, fd_index);
+}
+
 struct comedi_dummy_context {
 	int nouse;
 };
 
 static struct rtdm_device rtdm_devs[COMEDI_NB_DEVICES] =
-    {[0 ... COMEDI_NB_DEVICES - 1] = {
-	      struct_version:	    RTDM_DEVICE_STRUCT_VER,
-	      device_flags:	    RTDM_NAMED_DEVICE,
-	      context_size:	    sizeof(struct
-					   comedi_dummy_context),
-	      device_name:	    "",
+{[0 ... COMEDI_NB_DEVICES - 1] = {
+	struct_version:	    RTDM_DEVICE_STRUCT_VER,
+	device_flags:	    RTDM_NAMED_DEVICE,
+	context_size:	    sizeof(struct
+				   comedi_dummy_context),
+	device_name:	    "",
 
-	      open_rt:		    comedi_rt_open,
-	      open_nrt:	    comedi_rt_open,
+	open_rt:		    comedi_rt_open,
+	open_nrt:	            comedi_rt_open,
 
-	      ops:		    {
-		      close_rt:     comedi_rt_close,
-		      ioctl_rt:     comedi_rt_ioctl,
-		      read_rt:	     comedi_rt_read,
-		      write_rt:     comedi_rt_write,
+	ops:		    {
+		close_rt:     comedi_rt_close,
+		ioctl_rt:     comedi_rt_ioctl,
+		read_rt:	    comedi_rt_read,
+		write_rt:     comedi_rt_write,
 
-		      close_nrt:    comedi_rt_close,
-		      ioctl_nrt:    comedi_rt_ioctl,
-		      read_nrt:     comedi_rt_read,
-		      write_nrt:    comedi_rt_write,
-				     },
+		close_nrt:    comedi_rt_close,
+		ioctl_nrt:    comedi_rt_ioctl,
+		read_nrt:     comedi_rt_read,
+		write_nrt:    comedi_rt_write,
+		      
+		select_bind:  comedi_rt_select,
+		},
 
-	      device_class:	    RTDM_CLASS_EXPERIMENTAL,
-	      device_sub_class:    RTDM_SUBCLASS_COMEDI,
-	      driver_name:	    "rtdm_comedi",
-	      driver_version:	    RTDM_DRIVER_VER(0, 0,
-						    2),
-	      peripheral_name:	    "Comedi",
-	      provider_name:	    "Alexis Berlemont",
-	    }
+	device_class:	    RTDM_CLASS_EXPERIMENTAL,
+	device_sub_class:    RTDM_SUBCLASS_COMEDI,
+	driver_name:	    "rtdm_comedi",
+	driver_version:	    RTDM_DRIVER_VER(0, 0,
+					    2),
+	peripheral_name:	    "Comedi",
+	provider_name:	    "Alexis Berlemont",
+	}
 };
 
 int comedi_register(void)
@@ -234,8 +252,8 @@ int comedi_register(void)
 
 	for (i = 0; i < COMEDI_NB_DEVICES && ret == 0; i++) {
 
-		/* Sets the device name through which user process can access
-		   the Comedi layer */
+		/* Sets the device name through which 
+		   user process can access the Comedi layer */
 		snprintf(rtdm_devs[i].device_name,
 			 RTDM_MAX_DEVNAME_LEN, "comedi%d", i);
 		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;

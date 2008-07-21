@@ -135,6 +135,9 @@ int comedi_init_drv(comedi_drv_t * drv)
 		return -EINVAL;
 
 	memset(drv, 0, sizeof(comedi_drv_t));
+	/* The linked list initialization is the only reason 
+	   why comedi_init_drv() is mandatory before 
+	   registering the driver */
 	INIT_LIST_HEAD(&drv->subdvsq);
 
 	return 0;

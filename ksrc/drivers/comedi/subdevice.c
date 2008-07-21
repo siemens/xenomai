@@ -126,9 +126,13 @@ int comedi_add_subd(comedi_drv_t * drv, comedi_subd_t * subd)
 	comedi_subd_t *news;
 	int i = 0;
 
+	/* Basic checking */
 	if (drv == NULL || subd == NULL)
 		return -EINVAL;
 
+	/* The driver developer does not have to manage instances
+	   of the subdevice structure; the allocation are done
+	   in the Comedi layer */
 	news = comedi_kmalloc(sizeof(comedi_subd_t));
 	if (news == NULL)
 		return -ENOMEM;
@@ -151,6 +155,7 @@ int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg)
 	int i, ret = 0;
 	comedi_sbinfo_t *subd_info;
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
@@ -183,6 +188,7 @@ int comedi_ioctl_nbchaninfo(comedi_cxt_t * cxt, void *arg)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 	comedi_chinfo_arg_t inarg;
 
+	/* Basic checking */
 	if (!dev->flags & COMEDI_DEV_ATTACHED)
 		return -EINVAL;
 
@@ -214,6 +220,7 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 	comedi_chdesc_t *chan_desc;
 	comedi_rngdesc_t *rng_desc;
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
@@ -232,6 +239,8 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 	if (chan_info == NULL)
 		return -ENOMEM;
 
+	/* If the channel descriptor is global, the fields are filled 
+	   with the same instance of channel descriptor */
 	for (i = 0; i < chan_desc->length; i++) {
 		int j =
 		    (chan_desc->mode != COMEDI_CHAN_GLOBAL_CHANDESC) ? i : 0;
@@ -264,6 +273,7 @@ int comedi_ioctl_nbrnginfo(comedi_cxt_t * cxt, void *arg)
 	comedi_rnginfo_arg_t inarg;
 	comedi_rngdesc_t *rng_desc;
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
@@ -296,6 +306,7 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 	comedi_rnginfo_t *rng_info;
 	comedi_rnginfo_arg_t inarg;
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
@@ -311,6 +322,8 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 	    dev->transfer->subds[inarg.idx_subd]->chan_desc->length)
 		return -EINVAL;
 
+	/* If the range descriptor is global, 
+	   we take the first instance */
 	rng_desc = dev->transfer->subds[inarg.idx_subd]->rng_desc;
 	tmp = (rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ?
 	    inarg.idx_chan : 0;

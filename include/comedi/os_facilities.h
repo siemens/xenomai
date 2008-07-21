@@ -174,6 +174,9 @@ struct comedi_sync {
 };
 typedef struct comedi_sync comedi_sync_t;
 
+#define comedi_select_sync(snc, slr, type, fd) \
+	rtdm_event_select_bind(&((snc)->rtdm_evt), slr, type, fd)
+
 int comedi_init_sync(comedi_sync_t * snc);
 void comedi_cleanup_sync(comedi_sync_t * snc);
 int comedi_wait_sync(comedi_sync_t * snc, int rt);

@@ -33,6 +33,7 @@
  * @defgroup driverfacilities Driver API.
  *
  * This is the API interface of Comedi provided to device drivers.
+ *
  */
 
 #include <linux/module.h>
@@ -47,6 +48,33 @@
 /*!
  * @ingroup driverfacilities
  * @defgroup driver Driver management services
+ *
+ * Comedi driver registration / unregistration
+ *
+ * In a common Linux char driver, the developer has to register a fops
+ * structure filled with callbacks for read / write / mmap / ioctl
+ * operations.
+ *
+ * Comedi drivers do not have to implement read / write / mmap / ioctl
+ * functions, these procedures are implemented in the Comedi generic
+ * layer. Then, the transfers between user-space and kernel-space are
+ * already managed. Comedi drivers work with commands and instructions
+ * which are some kind of more dedicated read / write operations. And,
+ * instead of registering a fops structure, a Comedi driver must
+ * register some comedi_driver structure.
+ *
+ * Before registrations, the following steps must have been performed:
+ * - Initialize the structure thanks to comedi_init_drv();
+ * - At least, one subdevice descriptor has to declared into the
+ *   driver thanks to comedi_add_subd();
+ * 
+ * Eventually, the driver must be inserted into the Comedi drivers set
+ * thanks to comedi_add_drv().
+ *
+ * In the cleanup module function, the driver must be unregistered
+ * thanks to comedi_rm_drv() and destroyed by calling
+ * comedi_cleanup_drv().
+ *
  * @{
  */
 
@@ -107,6 +135,36 @@ EXPORT_SYMBOL(comedi_cleanup_drv);
 /*!
  * @ingroup driverfacilities
  * @defgroup subdevice Subdevice management services
+ *
+ * Subdevice declaration in a driver
+ *
+ * The subdevice structure is the most complex one in the Comedi
+ * driver layer. It contains some description fields to fill and some
+ * callbacks to declare.
+ *
+ * The description fields are:
+ * - flags: to define the subdevice type and its capabilities;
+ * - chan_desc: to describe the channels which compose the subdevice;
+ * - rng_desc: to declare the usable ranges;
+ *
+ * The functions callbakcs are:
+ * - do_cmd() and do_cmdtest(): to performe asynchronous acquisitions
+ *   thanks to commands;
+ * - cancel(): to abort a working asynchronous acquisition;
+ * - munge(): to apply modifications on the data freshly acquired
+ *   during an asynchronous transfer. Warning: using this feature with
+ *   can significantly reduce the performances (if the munge operation
+ *   is complex, it will trigger high CPU charge and if the
+ *   acquisition device is DMA capable, many cache-misses and
+ *   cache-replaces will occur (the benefits of the DMA controller
+ *   will vanish);
+ * - trigger(): optionnaly to launch an asynchronous acquisition;
+ * - insn_read(), insn_write(), insn_bits(), insn_config(): to perform
+ *   synchronous acquisition operations.
+ *
+ * Once the subdevice is filled, it must be inserted into the driver
+ * structure thanks to comedi_add_subd().
+ *
  * @{
  */
 

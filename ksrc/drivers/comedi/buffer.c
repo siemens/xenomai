@@ -394,9 +394,12 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 	comedi_loginfo("comedi_ioctl_bufcfg: minor=%d\n",
 		       comedi_get_minor(cxt));
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
+	/* As Linux API is used to allocate a virtual buffer,
+	   the calling process must not be in primary mode */
 	if (comedi_test_rt() != 0)
 		return -EPERM;
 
@@ -410,6 +413,8 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 	if (buf_cfg.buf_size > COMEDI_BUF_MAXSIZE)
 		return -EINVAL;
 
+	/* If a transfer is occuring or if the buffer is mmapped,
+	   no buffer size change is allowed */
 	if (test_bit(COMEDI_TSF_BUSY,
 		     &(dev->transfer->status[buf_cfg.idx_subd])))
 		return -EBUSY;
@@ -418,6 +423,7 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 		     &(dev->transfer->status[buf_cfg.idx_subd])))
 		return -EPERM;
 
+	/* Performs the re-allocation */
 	comedi_free_buffer(dev->transfer->bufs[buf_cfg.idx_subd]);
 
 	dev->transfer->bufs[buf_cfg.idx_subd]->size = buf_cfg.buf_size;
@@ -436,6 +442,7 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 	comedi_loginfo("comedi_ioctl_bufinfo: minor=%d\n",
 		       comedi_get_minor(cxt));
 
+	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
@@ -526,12 +533,14 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
 	ssize_t count = 0;
 
+	/* Basic checkings */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
 		return -ENOENT;
 
+	/* Checks the subdevice capabilities */
 	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
@@ -605,19 +614,22 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 	return count;
 }
 
-ssize_t comedi_write(comedi_cxt_t * cxt, const void *bufdata, size_t nbytes)
+ssize_t comedi_write(comedi_cxt_t *cxt, 
+		     const void *bufdata, size_t nbytes)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 	int idx_subd = dev->transfer->idx_write_subd;
 	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
 	ssize_t count = 0;
 
+	/* Basic checkings */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
 		return -ENOENT;
 
+	/* Checks the subdevice capabilities */
 	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
@@ -687,6 +699,37 @@ ssize_t comedi_write(comedi_cxt_t * cxt, const void *bufdata, size_t nbytes)
       out_comedi_write:
 
 	return count;
+}
+
+int comedi_select(comedi_cxt_t *cxt, 
+		  rtdm_selector_t *selector,
+		  enum rtdm_selecttype type, unsigned fd_index)
+{
+	comedi_dev_t *dev = comedi_get_dev(cxt);
+	int idx_subd = (type == RTDM_SELECTTYPE_READ) ? 
+		dev->transfer->idx_read_subd :
+		dev->transfer->idx_write_subd;
+	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
+
+	/* Checks the RTDM select type 
+	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
+	if(type != RTDM_SELECTTYPE_READ && 
+	   type != RTDM_SELECTTYPE_WRITE)
+		return -EINVAL;
+
+	/* Basic checkings */
+	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+		return -EINVAL;
+
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+		return -ENOENT;	
+
+	/* Checks the subdevice capabilities */
+	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+		return -EINVAL;
+
+	/* Performs a bind on the Comedi synchronization element */
+	return comedi_select_sync(&(buf->sync), selector, type, fd_index);	
 }
 
 int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
