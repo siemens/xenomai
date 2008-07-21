@@ -72,14 +72,14 @@ static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 }
 
 static inline unsigned long
-xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long new)
+xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newval)
 {
 	volatile void *ptr = &v->counter;
 	unsigned long prev;
 
 	__asm__ __volatile__(LOCK_PREFIX "cmpxchgl %1,%2"
 			     : "=a"(prev)
-			     : "r"(new), "m"(*__xeno_xg(ptr)), "0"(old)
+			     : "r"(newval), "m"(*__xeno_xg(ptr)), "0"(old)
 			     : "memory");
 	return prev;
 }
