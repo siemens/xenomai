@@ -17,8 +17,8 @@ static inline void xnarch_atomic_intptr_set(xnarch_atomic_intptr_t *l, void *i)
         xnarch_atomic_set(v, (long)i);
 }
 
-#define xnarch_atomic_intptr_cmpxchg(l, old, new) \
+#define xnarch_atomic_intptr_cmpxchg(l, old, newval) \
         (void *)(xnarch_atomic_cmpxchg((xnarch_atomic_t *)(l), \
-				       (long)(old), (long)(new)))
+				       (long)(old), (long)(newval)))
 
 #endif /* _XENO_ASM_GENERIC_ATOMIC_H */

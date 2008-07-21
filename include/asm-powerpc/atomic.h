@@ -203,7 +203,7 @@ static __inline__ unsigned long
 #ifdef __powerpc64__
 static __inline__ unsigned long
 __do_cmpxchg(volatile unsigned long *p,
-	     unsigned long old, unsigned long new)
+	     unsigned long old, unsigned long newval)
 {
 	unsigned long prev;
 
@@ -218,7 +218,7 @@ __do_cmpxchg(volatile unsigned long *p,
 	"\n\
 2:"
 	: "=&r" (prev), "+m" (*p)
-	: "r" (p), "r" (old), "r" (new)
+	: "r" (p), "r" (old), "r" (newval)
 	: "cc", "memory");
 
 	return prev;
@@ -226,7 +226,7 @@ __do_cmpxchg(volatile unsigned long *p,
 #else
 static __inline__ unsigned long
 __do_cmpxchg(volatile unsigned int *p,
-	     unsigned long old, unsigned long new)
+	     unsigned long old, unsigned long newval)
 {
 	unsigned int prev;
 
@@ -242,7 +242,7 @@ __do_cmpxchg(volatile unsigned int *p,
 	"\n\
 2:"
 	: "=&r" (prev), "+m" (*p)
-	: "r" (p), "r" (old), "r" (new)
+	: "r" (p), "r" (old), "r" (newval)
 	: "cc", "memory");
 
 	return prev;
@@ -253,9 +253,9 @@ __do_cmpxchg(volatile unsigned int *p,
 
 static __inline__ unsigned long
 xnarch_atomic_cmpxchg(xnarch_atomic_t *p,
-		      unsigned long old, unsigned long new)
+		      unsigned long old, unsigned long newval)
 {
-	return __do_cmpxchg(&p->counter, old, new);
+	return __do_cmpxchg(&p->counter, old, newval);
 }
 
 #endif /* __KERNEL__ */

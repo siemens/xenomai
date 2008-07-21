@@ -152,7 +152,7 @@ static __inline__ void xnarch_atomic_set(xnarch_atomic_t *v, int i)
 }
 
 static __inline__ int
-xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr, int old, int new)
+xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr, int old, int newval)
 {
 	unsigned long oldval, res;
 
@@ -163,7 +163,7 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr, int old, int new)
 		"teq	%1, %3\n"
 		"strexeq %0, %4, [%2]\n"
 		    : "=&r" (res), "=&r" (oldval)
-		    : "r" (&ptr->counter), "Ir" (old), "r" (new)
+		    : "r" (&ptr->counter), "Ir" (old), "r" (newval)
 		    : "cc");
 	} while (res);
 
@@ -278,10 +278,10 @@ static __inline__ void xnarch_atomic_set(xnarch_atomic_t *ptr, int val)
 }
 
 static __inline__ int
-xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr, int old, int new)
+xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr, int old, int newval)
 {
         register int asm_old asm("r0") = old;
-        register int asm_new asm("r1") = new;
+        register int asm_new asm("r1") = newval;
         register int *asm_ptr asm("r2") = (int *) &ptr->counter;
         register int asm_lr asm("lr");
 	register int asm_tmp asm("r3");

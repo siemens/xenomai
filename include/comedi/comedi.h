@@ -105,7 +105,7 @@ int comedi_get_bufsize(comedi_desc_t * dsc,
 
 int comedi_mark_bufrw(comedi_desc_t * dsc,
 		      unsigned int idx_subd,
-		      unsigned long cur, unsigned long *new);
+		      unsigned long cur, unsigned long *newp);
 
 int comedi_poll(comedi_desc_t * dsc,
 		unsigned int idx_subd, unsigned long ms_timeout);

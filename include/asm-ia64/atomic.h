@@ -97,35 +97,35 @@ static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 	return ia64_intri_res;
 }
 
-#define do_cmpxchg4_acq(ptr, new, old)							\
+#define do_cmpxchg4_acq(ptr, newval, old)						\
 ({											\
 	uint64_t ia64_intri_res;							\
 	asm volatile ("mov ar.ccv=%0;;" :: "rO"((uint64_t)old));			\
 	asm volatile ("cmpxchg4.acq %0=[%1],%2,ar.ccv":					\
-			      "=r"(ia64_intri_res) : "r"(ptr), "r"(new) : "memory");	\
+			      "=r"(ia64_intri_res) : "r"(ptr), "r"(newval) : "memory");	\
 	ia64_intri_res;									\
 })
 
 static inline int atomic_add (int i, atomic_counter_t *v)
 {
-	int32_t old, new;
+	int32_t old, newval;
 
 	do {
 		old = atomic_read(v);
-		new = old + i;
-	} while (do_cmpxchg4_acq(v, new, old) != old);
-	return new;
+		newval = old + i;
+	} while (do_cmpxchg4_acq(v, newval, old) != old);
+	return newval;
 }
 
 static inline int atomic_sub_return (int i, atomic_counter_t *v)
 {
-	int32_t old, new;
+	int32_t old, newval;
 
 	do {
 		old = atomic_read(v);
-		new = old - i;
-	} while (do_cmpxchg4_acq(v, new, old) != old);
-	return new;
+		newval = old - i;
+	} while (do_cmpxchg4_acq(v, newval, old) != old);
+	return newval;
 }
 
 /* These functions actually only work on the first 32 bits word of the
