@@ -4,7 +4,7 @@ config XENO_GENERIC_STACKPOOL
 
 config XENO_FASTSEM
 	bool
-	default y if CONFIG_X86_32
+	default y if X86_32
 
 source "kernel/xenomai/nucleus/Kconfig"
 
