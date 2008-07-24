@@ -4,10 +4,7 @@
 
 2008-07-19  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/nucleus/registry.c,
-	ksrc/skins/native/buffer.c (xnregistry_bind,
-	rt_buffer_write_inner, rt_buffer_read_inner, __rt_bind_helper):
-	Fix another round of timer mode issues.
+	* ksrc/nucleus/registry.c: Fix timer mode issue.
 
 2008-07-15  Philippe Gerum  <rpm@xenomai.org>
 
