@@ -181,7 +181,7 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 
 --enable-arm-eabi   Enable ARM EABI interface        weak,disabled
 
---enable-arm-tsc    Enable ARM TSC emulation	     strong,disabled
+--enable-arm-tsc    Enable ARM TSC emulation	     strong,enabled
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
