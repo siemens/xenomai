@@ -28,6 +28,7 @@
 #define linux_semaphore semaphore
 #endif /* !CONFIG_PREEMPT_RT */
 #else /* !__KERNEL__ */
+#include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>
 #ifndef BITS_PER_LONG
