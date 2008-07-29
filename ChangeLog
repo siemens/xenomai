@@ -1,3 +1,8 @@
+2008-07-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/nucleus/types.h (xnobject_copy_name): Add trailing NULL
+	character in the overflow case.
+
 2008-07-21  Alexis Berlemont  <alexis.berlemont@free.fr>
 
 	* ksrc/drivers/comedi/rtdm_interface.c,
