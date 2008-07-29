@@ -97,7 +97,7 @@ typedef atomic_flags_t xnflags_t;
 static inline void xnobject_copy_name(char *dst, const char *src)
 {
     if (src)
-        strncpy(dst, src, XNOBJECT_NAME_LEN);
+	snprintf(dst, XNOBJECT_NAME_LEN, "%s", src);
     else
         *dst = '\0';
 }
