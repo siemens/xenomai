@@ -55,8 +55,8 @@
 #define RTHAL_TIMER_DEVICE	"TCNTB4"
 #define RTHAL_CLOCK_DEVICE	"TCNTO3"
 #elif defined(CONFIG_ARCH_SA1100)
-#define RTHAL_TIMER_DEVICE	"OSMR0"
-#define RTHAL_CLOCK_DEVICE	"OSCR"
+#define RTHAL_TIMER_DEVICE	"osmr0"
+#define RTHAL_CLOCK_DEVICE	"oscr0"
 #endif /* CONFIG_ARCH_SA1100 */
 
 typedef unsigned long long rthal_time_t;
