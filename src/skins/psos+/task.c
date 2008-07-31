@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <limits.h>
+#include <memory.h>
 #include <string.h>
 #include <psos+/psos.h>
 
