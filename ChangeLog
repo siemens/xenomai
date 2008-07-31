@@ -1,3 +1,7 @@
+2008-07-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.26-arm-1.9-02.
+	
 2008-07-31 Filip Van Rillaer <Filip.VanRillaer@oneaccess-net.com>
 
 	* ksrc/skins/native/syscall.c (__rt_event_wait): Fix return value.
