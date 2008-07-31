@@ -1,3 +1,9 @@
+2008-07-29  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/native/mutex.h,
+	ksrc/skins/native/mutex.c (rt_task_inquire): Returns the task
+	owner's symbolic name in RT_TASK_INFO.
+	
 2008-07-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.26-arm-1.9-02.

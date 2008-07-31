@@ -26,13 +26,20 @@
 
 struct rt_task;
 
+/** Structure containing mutex information useful to users.
+ *
+ *  @see rt_mutex_inquire()
+ */
 typedef struct rt_mutex_info {
 
-	int lockcnt;		/* !< Lock nesting level (> 0 means "locked"). */
+	int lockcnt;		/**< Lock nesting level (> 0 means "locked"). */
 
-	int nwaiters;		/* !< Number of pending tasks. */
+	int nwaiters;		/**< Number of pending tasks. */
 
-	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
+	char name[XNOBJECT_NAME_LEN]; /**< Symbolic name. */
+
+	char owner[XNOBJECT_NAME_LEN]; /**< Symbolic name of the current owner,
+					    empty if unlocked. */
 
 } RT_MUTEX_INFO;
 
