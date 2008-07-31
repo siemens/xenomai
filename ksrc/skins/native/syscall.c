@@ -1405,7 +1405,7 @@ static int __rt_event_wait(struct pt_regs *regs)
 				   sizeof(mask_r)))
 		return -EFAULT;
 
-	return 0;
+	return err;
 }
 
 /*
