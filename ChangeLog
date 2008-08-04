@@ -1,3 +1,8 @@
+2008-08-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/module.c (stat_seq_open): Move cpu field assignment
+	inside the safe section.
+
 2008-07-29  Jan Kiszka  <jan.kiszka@web.de>
 
 	* include/native/mutex.h,

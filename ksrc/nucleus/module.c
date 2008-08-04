@@ -444,13 +444,13 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	/* Iterate over all IRQ numbers, ... */
 	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
 		xnintr_t *prev = NULL;
-		int cpu = 0;
+		int cpu = 0, _cpu;
 		int err;
 
 		/* ...over all shared IRQs on all CPUs */
 		while (1) {
 			stat_info = &iter->stat_info[iter->nentries];
-			stat_info->cpu = cpu;
+			_cpu = cpu;
 
 			err = xnintr_query(irq, &cpu, &prev, intr_rev,
 					   stat_info->name,
@@ -462,6 +462,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 			if (err)
 				break; /* line unused or end of chain */
 
+			stat_info->cpu = _cpu;
 			stat_info->pid = 0;
 			stat_info->state =  0;
 			stat_info->ssw = 0;
