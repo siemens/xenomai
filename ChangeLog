@@ -1,3 +1,10 @@
+2008-08-05  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h: Add calibration value for the
+	MPC836x_MDS series. Decrease PA-Semi value, we made progress.
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.2-04.
+	
 2008-08-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/module.c (stat_seq_open): Move cpu field assignment
