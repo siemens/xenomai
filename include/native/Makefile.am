@@ -2,6 +2,7 @@ includesubdir = $(includedir)/native
 
 includesub_HEADERS = \
 	alarm.h \
+	buffer.h \
 	cond.h \
 	event.h \
 	heap.h \
