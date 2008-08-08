@@ -2,6 +2,10 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
+config XENO_FASTSEM
+	bool
+	default y
+
 source "kernel/xenomai/nucleus/Kconfig"
 
 menu "Machine"
