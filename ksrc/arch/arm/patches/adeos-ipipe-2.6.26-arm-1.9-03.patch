@@ -69,7 +69,7 @@ index ad455ff..83e420e 100644
  obj-$(CONFIG_CRUNCH)		+= crunch.o crunch-bits.o
  AFLAGS_crunch-bits.o		:= -Wa,-mcpu=ep9312
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 7dca225..71744e3 100644
+index 7dca225..449f69c 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -248,17 +248,21 @@ index 7dca225..71744e3 100644
  #else
  	mov	pc, lr				@ CP#10 (VFP)
  	mov	pc, lr				@ CP#11 (VFP)
-@@ -617,11 +668,35 @@ call_fpe:
+@@ -617,11 +668,43 @@ call_fpe:
  #endif
  
  do_fpe:
 +#ifdef CONFIG_IPIPE
 +	mov	r4, r0
++	mov	r5, r2
++	mov	r6, lr
 +	mov	r0, #5				@ == IPIPE_TRAP_FPU
 +	mov	r1, sp				@ r0 = trapno, r1 = &regs
 +	bl	__ipipe_dispatch_event		@ branch to trap handler
 +	cmp	r0, #0
-+	ldrne	pc, [r9]
++	movne	pc, r9
++	mov	lr, r6
++	mov	r2, r5
 +	mov	r0, r4
 +#endif
  	enable_irq
@@ -270,11 +274,15 @@ index 7dca225..71744e3 100644
 +_do_vfp:
 +#ifdef CONFIG_IPIPE
 +	mov	r4, r0
++	mov	r5, r2
++	mov	r6, lr
 +	mov	r0, #6				@ == IPIPE_TRAP_VFP
 +	mov	r1, sp				@ r0 = trapno, r1 = &regs
 +	bl	__ipipe_dispatch_event		@ branch to trap handler
 +	cmp	r0, #0
-+	ldrne	pc, [r9]
++	movne	pc, r9
++	mov	lr, r6
++	mov	r2, r5
 +	mov	r0, r4
 +#endif
 +	b	do_vfp
@@ -284,7 +292,7 @@ index 7dca225..71744e3 100644
  /*
   * The FP module is called with these registers set:
   *  r0  = instruction
-@@ -663,6 +738,13 @@ __pabt_usr:
+@@ -663,6 +746,13 @@ __pabt_usr:
   * This is the return code to user mode for abort handlers
   */
  ENTRY(ret_from_exception)
@@ -298,7 +306,7 @@ index 7dca225..71744e3 100644
  	get_thread_info tsk
  	mov	why, #0
  	b	ret_to_user
-@@ -735,6 +817,18 @@ ENTRY(__switch_to)
+@@ -735,6 +825,18 @@ ENTRY(__switch_to)
   * purpose.
   */
  
@@ -4879,7 +4887,7 @@ index 5c60bfc..d487753 100644
  }
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..3079a09
+index 0000000..92b0d1f
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,198 @@
@@ -4913,10 +4921,10 @@ index 0000000..3079a09
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.9-02"
++#define IPIPE_ARCH_STRING	"1.9-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"

@@ -1,3 +1,7 @@
+2008-07-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.9-03.
+	
 2008-08-05  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Add calibration value for the
