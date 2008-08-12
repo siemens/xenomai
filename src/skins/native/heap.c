@@ -113,19 +113,12 @@ int rt_heap_delete(RT_HEAP *heap)
 {
 	int err;
 
-	err = __real_munmap(heap->mapbase, heap->mapsize);
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_heap_delete, heap);
+	if (err)
+		return err;
 
-	if (err == -1)
+	if (__real_munmap(heap->mapbase, heap->mapsize))
 		err = -errno;
-
-	if (!err)
-		err =
-		    XENOMAI_SKINCALL1(__native_muxid, __native_heap_delete,
-				      heap);
-
-	/* If the deletion fails, there is likely something fishy about
-	   this heap descriptor, so we'd better clean it up anyway so
-	   that it could not be further used. */
 
 	heap->opaque = XN_NO_HANDLE;
 	heap->mapbase = NULL;

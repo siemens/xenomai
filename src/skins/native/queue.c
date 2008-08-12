@@ -114,21 +114,18 @@ int rt_queue_delete(RT_QUEUE *q)
 {
 	int err;
 
-	err = __real_munmap(q->mapbase, q->mapsize);
-
-	if (err)
-		return -EINVAL;
-
 	err = XENOMAI_SKINCALL1(__native_muxid, __native_queue_delete, q);
-
 	if (err)
 		return err;
+
+	if (__real_munmap(q->mapbase, q->mapsize))
+		err = -errno;
 
 	q->opaque = XN_NO_HANDLE;
 	q->mapbase = NULL;
 	q->mapsize = 0;
 
-	return 0;
+	return err;
 }
 
 void *rt_queue_alloc(RT_QUEUE *q, size_t size)

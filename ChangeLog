@@ -1,3 +1,9 @@
+2008-08-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/native/{heap, queue}.c (rt_{heap, queue}_delete):
+	Unmap the memory pool only after the actual deletion syscall
+	returned successfully.
+
 2008-07-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.9-03.
