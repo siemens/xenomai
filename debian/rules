@@ -39,14 +39,14 @@ endif
 
 build: build-arch build-indep
 
-build-arch: config.status  build-arch-stamp
-build-arch-stamp: patch-stamp
+build-arch: build-arch-stamp
+build-arch-stamp: config.status patch-stamp
 	dh_testdir
 	$(MAKE)
 	touch build-arch-stamp
 
-build-indep: config.status  build-indep-stamp
-build-indep-stamp:
+build-indep: build-indep-stamp
+build-indep-stamp: config.status
 	dh_testdir
 	touch build-indep-stamp
 
