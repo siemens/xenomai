@@ -587,6 +587,11 @@ static inline xnticks_t xntimer_get_timeout(xntimer_t *timer)
 	return timer->base->ops->get_timer_timeout(timer);
 }
 
+static inline xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
+{
+	return timer->base->ops->get_timer_timeout(timer);
+}
+
 /*!
  * \fn xnticks_t xntimer_get_interval(xntimer_t *timer)
  *
@@ -686,6 +691,11 @@ static inline xnticks_t xntimer_get_timeout(xntimer_t *timer)
 	if (!xntimer_running_p(timer))
 		return XN_INFINITE;
 
+	return xntimer_get_timeout_aperiodic(timer);
+}
+
+static inline xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
+{
 	return xntimer_get_timeout_aperiodic(timer);
 }
 

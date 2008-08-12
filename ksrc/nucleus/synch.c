@@ -234,7 +234,7 @@ redo:
 		   for the resource. */
 		if (timeout_mode != XN_RELATIVE || timeout == XN_INFINITE)
 			goto redo;
-		timeout = xnthread_timeout(thread);
+		timeout = xntimer_get_timeout_stopped(&thread->rtimer);
 		if (timeout > 1) /* Otherwise, it's too late. */
 			goto redo;
 		xnthread_set_info(thread, XNTIMEO);
