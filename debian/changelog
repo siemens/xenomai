@@ -1,3 +1,32 @@
+xenomai (2.4.4-3) unstable; urgency=low
+
+  * debian/rules: Fixed concurrent ./configure + make runs, thanks to Albin
+    Tonnerre (Closes: #486461)
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 16 Jun 2008 11:44:01 +0200
+
+xenomai (2.4.4-2) unstable; urgency=low
+
+  * Backported kernel 2.6.24 patches for x86, powerpc and arm (for lenny) from
+    xenomai 2.4.3
+  * debian/control: Standards-Version: 3.8.0
+
+ -- Roland Stigge <stigge@antcom.de>  Thu, 12 Jun 2008 14:27:12 +0200
+
+xenomai (2.4.4-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/rules: configure --enable-arm-mach=generic for ARM
+  * debian/control: Standards-Version: 3.8.0
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 09 Jun 2008 14:28:01 +0200
+
+xenomai (2.4.4~svn20080526-1) experimental; urgency=low
+
+  * New upstream snapshot
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 26 May 2008 11:58:30 +0200
+
 xenomai (2.4.3-7) unstable; urgency=low
 
   * Included patch from Riku Voipio to fix ARM compile issues
