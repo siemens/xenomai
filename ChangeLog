@@ -1,3 +1,8 @@
+2008-08-13  Stephane Fillod  <stephane.fillod@thomson.net>
+
+	* ksrc/arch/generic/hal.c: rthal_realtime_faults[][] should be
+	unsigned to cope with (unexpectedly) large values.
+	
 2008-08-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (request_syscall_restart): Notify about
