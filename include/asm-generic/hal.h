@@ -350,7 +350,7 @@ extern volatile int rthal_sync_op;
 
 extern rthal_trap_handler_t rthal_trap_handler;
 
-extern int rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+extern unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
 
 extern int rthal_arch_init(void);
 

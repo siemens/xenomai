@@ -85,7 +85,7 @@ struct rthal_calibration_data rthal_tunables;
 
 rthal_trap_handler_t rthal_trap_handler;
 
-int rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
 
 volatile int rthal_sync_op;
 
@@ -662,7 +662,7 @@ static int faults_read_proc(char *page,
         p += sprintf(p, "\n%3d: ", trap);
 
         for_each_online_cpu(cpu) {
-            p += sprintf(p, "%12d", rthal_realtime_faults[cpu][trap]);
+            p += sprintf(p, "%12u", rthal_realtime_faults[cpu][trap]);
         }
 
         p += sprintf(p, "    (%s)", rthal_fault_labels[trap]);
