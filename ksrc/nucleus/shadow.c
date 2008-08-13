@@ -818,21 +818,20 @@ static inline void request_syscall_restart(xnthread_t *thread,
 					   struct pt_regs *regs,
 					   int sysflags)
 {
+	int notify = 0;
+
 	if (xnthread_test_info(thread, XNKICKED)) {
-		if (__xn_interrupted_p(regs))
+		if (__xn_interrupted_p(regs)) {
 			__xn_error_return(regs,
 					  (sysflags & __xn_exec_norestart) ?
 					  -ERESTARTNOHAND : -ERESTARTSYS);
+			notify = 1;
+		}
 
 		xnthread_clear_info(thread, XNKICKED);
 	}
 
-	/* Relaxing due to a fault will trigger a notification from the
-	   trap handler when applicable, so we don't otherwise notify upon
-	   signal receipt, since testing syscall return values for -EINTR
-	   is still possible to detect such situation. */
-
-	xnshadow_relax(0);
+	xnshadow_relax(notify);
 }
 
 static inline void set_linux_task_priority(struct task_struct *p, int prio)

@@ -1,3 +1,8 @@
+2008-08-13  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c (request_syscall_restart): Notify about
+	mode transition in the interrupted syscall case.
+
 2008-08-12  Philippe Gerum  <rpm@eclipse.xenomai.org>
 
 	* ksrc/nucleus/synch.c (xnsynch_sleep_on): Compute remaining
