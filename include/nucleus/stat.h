@@ -84,20 +84,20 @@ do { \
 
 
 typedef struct xnstat_counter {
-	int counter;
+	unsigned long counter;
 } xnstat_counter_t;
 
-static inline int xnstat_counter_inc(xnstat_counter_t *c)
+static inline unsigned long xnstat_counter_inc(xnstat_counter_t *c)
 {
 	return c->counter++;
 }
 
-static inline int xnstat_counter_get(xnstat_counter_t *c)
+static inline unsigned long xnstat_counter_get(xnstat_counter_t *c)
 {
 	return c->counter;
 }
 
-static inline void xnstat_counter_set(xnstat_counter_t *c, int value)
+static inline void xnstat_counter_set(xnstat_counter_t *c, unsigned long value)
 {
 	c->counter = value;
 }
