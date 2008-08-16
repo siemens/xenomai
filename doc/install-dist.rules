@@ -10,6 +10,7 @@
 # can be from . or from a directory containing pre-generated versions)
 #
 # PDF_DOCSDIR & PS_DOCSDIR: same thing for pdf and ps files.
+docdir=@docdir@
 
 doc_top_distdir=$(top_builddir)/$(PACKAGE)-$(VERSION)
 GEN_DOC_DIST_ROOT=$(doc_top_distdir)/doc/generated

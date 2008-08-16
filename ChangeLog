@@ -1,3 +1,8 @@
+2008-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* configure.in: Add docdir if missing, in order to remain
+	compatible with automake 1.9.
+
 2008-08-14  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/nucleus/stat.h: Make xnstat_counter unsigned and extend
