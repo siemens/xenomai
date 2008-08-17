@@ -471,8 +471,8 @@ dnl Documentation package.
 
 if test x"$docdir" = x; then
         docdir=$datadir/doc/$PACKAGE-$VERSION
-        AC_SUBST(docdir)
 fi
+AC_SUBST(docdir)
 
 if test \! -d $srcdir/doc ; then 
     unset XENO_MAYBE_DOCDIR
