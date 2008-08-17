@@ -55,19 +55,19 @@ MODULE_LICENSE("GPL");
 
 static u32 mem[RTCAN_MEM_MAX_DEV];
 static int irq[RTCAN_MEM_MAX_DEV];
-static u32 clock[RTCAN_MEM_MAX_DEV];
+static u32 can_clock[RTCAN_MEM_MAX_DEV];
 static u8 ocr[RTCAN_MEM_MAX_DEV];
 static u8 cdr[RTCAN_MEM_MAX_DEV];
 
 compat_module_param_array(mem, uint, RTCAN_MEM_MAX_DEV, 0444);
 compat_module_param_array(irq, int, RTCAN_MEM_MAX_DEV, 0444);
-compat_module_param_array(clock, uint, RTCAN_MEM_MAX_DEV, 0444);
+compat_module_param_array(can_clock, uint, RTCAN_MEM_MAX_DEV, 0444);
 compat_module_param_array(ocr, byte, RTCAN_MEM_MAX_DEV, 0444);
 compat_module_param_array(cdr, byte, RTCAN_MEM_MAX_DEV, 0444);
 
 MODULE_PARM_DESC(mem, "The io-memory address");
 MODULE_PARM_DESC(irq, "The interrupt number");
-MODULE_PARM_DESC(clock, "External clock frequency (default 16 MHz)");
+MODULE_PARM_DESC(can_clock, "External clock frequency (default 16 MHz)");
 MODULE_PARM_DESC(ocr, "Value of output control register (default 0x1a)");
 MODULE_PARM_DESC(cdr, "Value of clock divider register (default 0xc8");
 
@@ -125,8 +125,8 @@ int __init rtcan_mem_init_one(int idx)
 	}
 
 	/* Clock frequency in Hz */
-	if (clock[idx])
-		dev->can_sys_clock = clock[idx] / 2;
+	if (can_clock[idx])
+		dev->can_sys_clock = can_clock[idx] / 2;
 	else
 		dev->can_sys_clock = 8000000; /* 16/2 MHz */
 

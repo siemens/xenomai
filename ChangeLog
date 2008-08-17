@@ -1,3 +1,8 @@
+2008-08-18  Paul Corner <paul_c@tuxcnc.org>, Jan Kiszka <jan.kiszka@web.de>
+
+	* ksrc/drivers/can/sja1000/rtcan_{isa, mem}.c: Add "can_" prefix
+	to clock module parameter to avoid conflict with 2.6.26+ symbol.
+
 2008-08-16  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* configure.in: Add docdir if missing, in order to remain
