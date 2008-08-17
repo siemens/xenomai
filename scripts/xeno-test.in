@@ -439,7 +439,7 @@ exit 0
 #will eventually finish, and should be restarted to keep the load up.
 #Figure out why killall didnt work properly.
 #
-#2. Much more testing.  Heres a weak start. You migth be better off
+#2. Much more testing.  Heres a weak start. You might be better off
 #using and improving test/test-xeno-test.rb.
 #
 ##!/bin/bash
