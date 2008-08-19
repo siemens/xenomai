@@ -1,4 +1,8 @@
 2008-08-19  Philippe Gerum  <rpm@xenomai.org>
+	
+	* RELEASE: Xenomai 2.4.5 (Overdriver)
+
+2008-08-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/thread.c (xnthread_get_errno_location): Always
 	return a pointer to in-TCB errno variable when running with
