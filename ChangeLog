@@ -1,3 +1,13 @@
+2008-08-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/thread.c (xnthread_get_errno_location): Always
+	return a pointer to in-TCB errno variable when running with
+	CONFIG_XENO_OPT_PERVASIVE disabled.
+
+	* ksrc/skins/posix/apc.c (pse51_lostage_handle_request): Exclude
+	PSE51_LO_SIGNAL_REQ handling when CONFIG_XENO_OPT_PERVASIVE is
+	disabled.
+
 2008-08-18  Paul Corner <paul_c@tuxcnc.org>, Jan Kiszka <jan.kiszka@web.de>
 
 	* ksrc/drivers/can/sja1000/rtcan_{isa, mem}.c: Add "can_" prefix
