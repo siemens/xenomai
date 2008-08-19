@@ -215,10 +215,10 @@ int *xnthread_get_errno_location(xnthread_t *thread)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNSHADOW))
 		return &thread->errcode;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnthread_test_state(thread, XNROOT))
 		return &xnshadow_errno(current);
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return &thread->errcode;
 }
