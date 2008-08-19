@@ -447,119 +447,129 @@
 <a name="l00587"></a>00587         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_timeout(timer);
 <a name="l00588"></a>00588 }
 <a name="l00589"></a>00589 
-<a name="l00621"></a><a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190">00621</a> <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190" title="Return the timer interval value.">xntimer_get_interval</a>(xntimer_t *timer)
-<a name="l00622"></a>00622 {
-<a name="l00623"></a>00623         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_interval(timer);
-<a name="l00624"></a>00624 }
-<a name="l00625"></a>00625 
-<a name="l00626"></a>00626 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+<a name="l00590"></a>00590 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
+<a name="l00591"></a>00591 {
+<a name="l00592"></a>00592         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_timeout(timer);
+<a name="l00593"></a>00593 }
+<a name="l00594"></a>00594 
+<a name="l00626"></a><a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190">00626</a> <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190" title="Return the timer interval value.">xntimer_get_interval</a>(xntimer_t *timer)
 <a name="l00627"></a>00627 {
-<a name="l00628"></a>00628         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_raw_expiry(timer);
+<a name="l00628"></a>00628         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_interval(timer);
 <a name="l00629"></a>00629 }
 <a name="l00630"></a>00630 
-<a name="l00631"></a>00631 <span class="keywordtype">void</span> xntslave_init(xntslave_t *slave);
-<a name="l00632"></a>00632 
-<a name="l00633"></a>00633 <span class="keywordtype">void</span> xntslave_destroy(xntslave_t *slave);
-<a name="l00634"></a>00634 
-<a name="l00635"></a>00635 <span class="keywordtype">void</span> xntslave_update(xntslave_t *slave,
-<a name="l00636"></a>00636                      xnticks_t interval);
+<a name="l00631"></a>00631 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+<a name="l00632"></a>00632 {
+<a name="l00633"></a>00633         <span class="keywordflow">return</span> timer-&gt;base-&gt;ops-&gt;get_timer_raw_expiry(timer);
+<a name="l00634"></a>00634 }
+<a name="l00635"></a>00635 
+<a name="l00636"></a>00636 <span class="keywordtype">void</span> xntslave_init(xntslave_t *slave);
 <a name="l00637"></a>00637 
-<a name="l00638"></a>00638 <span class="keywordtype">void</span> xntslave_start(xntslave_t *slave,
-<a name="l00639"></a>00639                     xnticks_t start,
-<a name="l00640"></a>00640                     xnticks_t interval);
-<a name="l00641"></a>00641 
-<a name="l00642"></a>00642 <span class="keywordtype">void</span> xntslave_stop(xntslave_t *slave);
-<a name="l00643"></a>00643 
-<a name="l00644"></a>00644 <span class="keywordtype">void</span> xntslave_adjust(xntslave_t *slave, xnsticks_t delta);
-<a name="l00645"></a>00645 
-<a name="l00646"></a>00646 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
-<a name="l00647"></a>00647 
-<a name="l00648"></a>00648 <span class="keywordtype">int</span> xntimer_start_aperiodic(xntimer_t *timer,
-<a name="l00649"></a>00649                             xnticks_t value,
-<a name="l00650"></a>00650                             xnticks_t interval,
-<a name="l00651"></a>00651                             xntmode_t mode);
+<a name="l00638"></a>00638 <span class="keywordtype">void</span> xntslave_destroy(xntslave_t *slave);
+<a name="l00639"></a>00639 
+<a name="l00640"></a>00640 <span class="keywordtype">void</span> xntslave_update(xntslave_t *slave,
+<a name="l00641"></a>00641                      xnticks_t interval);
+<a name="l00642"></a>00642 
+<a name="l00643"></a>00643 <span class="keywordtype">void</span> xntslave_start(xntslave_t *slave,
+<a name="l00644"></a>00644                     xnticks_t start,
+<a name="l00645"></a>00645                     xnticks_t interval);
+<a name="l00646"></a>00646 
+<a name="l00647"></a>00647 <span class="keywordtype">void</span> xntslave_stop(xntslave_t *slave);
+<a name="l00648"></a>00648 
+<a name="l00649"></a>00649 <span class="keywordtype">void</span> xntslave_adjust(xntslave_t *slave, xnsticks_t delta);
+<a name="l00650"></a>00650 
+<a name="l00651"></a>00651 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
 <a name="l00652"></a>00652 
-<a name="l00653"></a>00653 <span class="keywordtype">void</span> xntimer_stop_aperiodic(xntimer_t *timer);
-<a name="l00654"></a>00654 
-<a name="l00655"></a>00655 xnticks_t xntimer_get_date_aperiodic(xntimer_t *timer);
-<a name="l00656"></a>00656 
-<a name="l00657"></a>00657 xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer);
-<a name="l00658"></a>00658 
-<a name="l00659"></a>00659 xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer);
-<a name="l00660"></a>00660 
-<a name="l00661"></a>00661 xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer);
-<a name="l00662"></a>00662 
-<a name="l00663"></a>00663 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__timer.html#g0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start</a>(xntimer_t *timer,
-<a name="l00664"></a>00664                                 xnticks_t value, xnticks_t interval,
-<a name="l00665"></a>00665                                 xntmode_t mode)
-<a name="l00666"></a>00666 {
-<a name="l00667"></a>00667         <span class="keywordflow">return</span> xntimer_start_aperiodic(timer, value, interval, mode);
-<a name="l00668"></a>00668 }
-<a name="l00669"></a>00669 
-<a name="l00670"></a>00670 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g1244411df9784d63d3e2f99016d62643" title="Disarm a timer.">xntimer_stop</a>(xntimer_t *timer)
+<a name="l00653"></a>00653 <span class="keywordtype">int</span> xntimer_start_aperiodic(xntimer_t *timer,
+<a name="l00654"></a>00654                             xnticks_t value,
+<a name="l00655"></a>00655                             xnticks_t interval,
+<a name="l00656"></a>00656                             xntmode_t mode);
+<a name="l00657"></a>00657 
+<a name="l00658"></a>00658 <span class="keywordtype">void</span> xntimer_stop_aperiodic(xntimer_t *timer);
+<a name="l00659"></a>00659 
+<a name="l00660"></a>00660 xnticks_t xntimer_get_date_aperiodic(xntimer_t *timer);
+<a name="l00661"></a>00661 
+<a name="l00662"></a>00662 xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer);
+<a name="l00663"></a>00663 
+<a name="l00664"></a>00664 xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer);
+<a name="l00665"></a>00665 
+<a name="l00666"></a>00666 xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer);
+<a name="l00667"></a>00667 
+<a name="l00668"></a>00668 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__timer.html#g0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start</a>(xntimer_t *timer,
+<a name="l00669"></a>00669                                 xnticks_t value, xnticks_t interval,
+<a name="l00670"></a>00670                                 xntmode_t mode)
 <a name="l00671"></a>00671 {
-<a name="l00672"></a>00672         <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
-<a name="l00673"></a>00673                 xntimer_stop_aperiodic(timer);
-<a name="l00674"></a>00674 }
-<a name="l00675"></a>00675 
-<a name="l00676"></a>00676 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#ge87b875cf9f6831afffcfee8dabd67a8" title="Return the absolute expiration date.">xntimer_get_date</a>(xntimer_t *timer)
-<a name="l00677"></a>00677 {
-<a name="l00678"></a>00678         <span class="keywordflow">if</span> (!xntimer_running_p(timer))
-<a name="l00679"></a>00679                 <span class="keywordflow">return</span> XN_INFINITE;
+<a name="l00672"></a>00672         <span class="keywordflow">return</span> xntimer_start_aperiodic(timer, value, interval, mode);
+<a name="l00673"></a>00673 }
+<a name="l00674"></a>00674 
+<a name="l00675"></a>00675 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g1244411df9784d63d3e2f99016d62643" title="Disarm a timer.">xntimer_stop</a>(xntimer_t *timer)
+<a name="l00676"></a>00676 {
+<a name="l00677"></a>00677         <span class="keywordflow">if</span> (!testbits(timer-&gt;status,XNTIMER_DEQUEUED))
+<a name="l00678"></a>00678                 xntimer_stop_aperiodic(timer);
+<a name="l00679"></a>00679 }
 <a name="l00680"></a>00680 
-<a name="l00681"></a>00681         <span class="keywordflow">return</span> xntimer_get_date_aperiodic(timer);
-<a name="l00682"></a>00682 }
-<a name="l00683"></a>00683 
-<a name="l00684"></a>00684 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#g00d603a038b09e436717b84975b00abf" title="Return the relative expiration date.">xntimer_get_timeout</a>(xntimer_t *timer)
-<a name="l00685"></a>00685 {
-<a name="l00686"></a>00686         <span class="keywordflow">if</span> (!xntimer_running_p(timer))
-<a name="l00687"></a>00687                 <span class="keywordflow">return</span> XN_INFINITE;
+<a name="l00681"></a>00681 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#ge87b875cf9f6831afffcfee8dabd67a8" title="Return the absolute expiration date.">xntimer_get_date</a>(xntimer_t *timer)
+<a name="l00682"></a>00682 {
+<a name="l00683"></a>00683         <span class="keywordflow">if</span> (!xntimer_running_p(timer))
+<a name="l00684"></a>00684                 <span class="keywordflow">return</span> XN_INFINITE;
+<a name="l00685"></a>00685 
+<a name="l00686"></a>00686         <span class="keywordflow">return</span> xntimer_get_date_aperiodic(timer);
+<a name="l00687"></a>00687 }
 <a name="l00688"></a>00688 
-<a name="l00689"></a>00689         <span class="keywordflow">return</span> xntimer_get_timeout_aperiodic(timer);
-<a name="l00690"></a>00690 }
-<a name="l00691"></a>00691 
-<a name="l00692"></a>00692 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190" title="Return the timer interval value.">xntimer_get_interval</a>(xntimer_t *timer)
-<a name="l00693"></a>00693 {
-<a name="l00694"></a>00694         <span class="keywordflow">return</span> xntimer_get_interval_aperiodic(timer);
+<a name="l00689"></a>00689 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#g00d603a038b09e436717b84975b00abf" title="Return the relative expiration date.">xntimer_get_timeout</a>(xntimer_t *timer)
+<a name="l00690"></a>00690 {
+<a name="l00691"></a>00691         <span class="keywordflow">if</span> (!xntimer_running_p(timer))
+<a name="l00692"></a>00692                 <span class="keywordflow">return</span> XN_INFINITE;
+<a name="l00693"></a>00693 
+<a name="l00694"></a>00694         <span class="keywordflow">return</span> xntimer_get_timeout_aperiodic(timer);
 <a name="l00695"></a>00695 }
 <a name="l00696"></a>00696 
-<a name="l00697"></a>00697 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+<a name="l00697"></a>00697 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_timeout_stopped(xntimer_t *timer)
 <a name="l00698"></a>00698 {
-<a name="l00699"></a>00699         <span class="keywordflow">return</span> xntimerh_date(&amp;timer-&gt;aplink);
+<a name="l00699"></a>00699         <span class="keywordflow">return</span> xntimer_get_timeout_aperiodic(timer);
 <a name="l00700"></a>00700 }
 <a name="l00701"></a>00701 
-<a name="l00702"></a>00702 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
-<a name="l00703"></a>00703 
-<a name="l00706"></a>00706 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__timer.html#g5609dd2602efe2c5b04eda28b22b9720" title="Get the count of overruns for the last tick.">xntimer_get_overruns</a>(xntimer_t *timer, xnticks_t now);
-<a name="l00707"></a>00707 
-<a name="l00708"></a>00708 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71" title="Freeze all timers (from every time bases).">xntimer_freeze</a>(<span class="keywordtype">void</span>);
-<a name="l00709"></a>00709 
-<a name="l00710"></a>00710 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa" title="Process a timer tick for the aperiodic master time base.">xntimer_tick_aperiodic</a>(<span class="keywordtype">void</span>);
+<a name="l00702"></a>00702 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t <a class="code" href="group__timer.html#gb0d00a02bf04fdd48987d5d4efa68190" title="Return the timer interval value.">xntimer_get_interval</a>(xntimer_t *timer)
+<a name="l00703"></a>00703 {
+<a name="l00704"></a>00704         <span class="keywordflow">return</span> xntimer_get_interval_aperiodic(timer);
+<a name="l00705"></a>00705 }
+<a name="l00706"></a>00706 
+<a name="l00707"></a>00707 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
+<a name="l00708"></a>00708 {
+<a name="l00709"></a>00709         <span class="keywordflow">return</span> xntimerh_date(&amp;timer-&gt;aplink);
+<a name="l00710"></a>00710 }
 <a name="l00711"></a>00711 
-<a name="l00712"></a>00712 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1" title="Process a timer tick for a slave periodic time base.">xntimer_tick_periodic</a>(xntimer_t *timer);
+<a name="l00712"></a>00712 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_TIMING_PERIODIC */</span>
 <a name="l00713"></a>00713 
-<a name="l00714"></a>00714 <span class="keywordtype">void</span> xntimer_tick_periodic_inner(xntslave_t *slave);
-<a name="l00715"></a>00715 
-<a name="l00716"></a>00716 <span class="keywordtype">void</span> xntimer_adjust_all_aperiodic(xnsticks_t delta);
+<a name="l00716"></a>00716 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__timer.html#g5609dd2602efe2c5b04eda28b22b9720" title="Get the count of overruns for the last tick.">xntimer_get_overruns</a>(xntimer_t *timer, xnticks_t now);
 <a name="l00717"></a>00717 
-<a name="l00718"></a>00718 <span class="preprocessor">#ifdef CONFIG_SMP</span>
-<a name="l00719"></a>00719 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_migrate(xntimer_t *timer,
-<a name="l00720"></a>00720                     <span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
-<a name="l00721"></a>00721 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
-<a name="l00722"></a>00722 <span class="preprocessor">#define xntimer_migrate(timer, sched)           do { } while(0)</span>
-<a name="l00723"></a>00723 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
-<a name="l00724"></a>00724 
-<a name="l00725"></a>00725 <span class="preprocessor">#define xntimer_set_sched(timer, sched) xntimer_migrate(timer, sched)</span>
-<a name="l00726"></a>00726 <span class="preprocessor"></span>
-<a name="l00727"></a>00727 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00728"></a>00728 <span class="preprocessor"></span>}
-<a name="l00729"></a>00729 <span class="preprocessor">#endif</span>
-<a name="l00730"></a>00730 <span class="preprocessor"></span>
-<a name="l00731"></a>00731 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-<a name="l00732"></a>00732 
-<a name="l00733"></a>00733 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
+<a name="l00718"></a>00718 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71" title="Freeze all timers (from every time bases).">xntimer_freeze</a>(<span class="keywordtype">void</span>);
+<a name="l00719"></a>00719 
+<a name="l00720"></a>00720 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa" title="Process a timer tick for the aperiodic master time base.">xntimer_tick_aperiodic</a>(<span class="keywordtype">void</span>);
+<a name="l00721"></a>00721 
+<a name="l00722"></a>00722 <span class="keywordtype">void</span> <a class="code" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1" title="Process a timer tick for a slave periodic time base.">xntimer_tick_periodic</a>(xntimer_t *timer);
+<a name="l00723"></a>00723 
+<a name="l00724"></a>00724 <span class="keywordtype">void</span> xntimer_tick_periodic_inner(xntslave_t *slave);
+<a name="l00725"></a>00725 
+<a name="l00726"></a>00726 <span class="keywordtype">void</span> xntimer_adjust_all_aperiodic(xnsticks_t delta);
+<a name="l00727"></a>00727 
+<a name="l00728"></a>00728 <span class="preprocessor">#ifdef CONFIG_SMP</span>
+<a name="l00729"></a>00729 <span class="preprocessor"></span><span class="keywordtype">int</span> xntimer_migrate(xntimer_t *timer,
+<a name="l00730"></a>00730                     <span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
+<a name="l00731"></a>00731 <span class="preprocessor">#else </span><span class="comment">/* ! CONFIG_SMP */</span>
+<a name="l00732"></a>00732 <span class="preprocessor">#define xntimer_migrate(timer, sched)           do { } while(0)</span>
+<a name="l00733"></a>00733 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_SMP */</span>
+<a name="l00734"></a>00734 
+<a name="l00735"></a>00735 <span class="preprocessor">#define xntimer_set_sched(timer, sched) xntimer_migrate(timer, sched)</span>
+<a name="l00736"></a>00736 <span class="preprocessor"></span>
+<a name="l00737"></a>00737 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00738"></a>00738 <span class="preprocessor"></span>}
+<a name="l00739"></a>00739 <span class="preprocessor">#endif</span>
+<a name="l00740"></a>00740 <span class="preprocessor"></span>
+<a name="l00741"></a>00741 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00742"></a>00742 
+<a name="l00743"></a>00743 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_TIMER_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:24 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:16 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

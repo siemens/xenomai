@@ -112,20 +112,20 @@
 <a name="l00084"></a>00084 <span class="preprocessor"></span>
 <a name="l00085"></a>00085 
 <a name="l00086"></a>00086 <span class="keyword">typedef</span> <span class="keyword">struct </span>xnstat_counter {
-<a name="l00087"></a>00087         <span class="keywordtype">int</span> counter;
+<a name="l00087"></a>00087         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> counter;
 <a name="l00088"></a>00088 } xnstat_counter_t;
 <a name="l00089"></a>00089 
-<a name="l00090"></a>00090 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_inc(xnstat_counter_t *c)
+<a name="l00090"></a>00090 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> xnstat_counter_inc(xnstat_counter_t *c)
 <a name="l00091"></a>00091 {
 <a name="l00092"></a>00092         <span class="keywordflow">return</span> c-&gt;counter++;
 <a name="l00093"></a>00093 }
 <a name="l00094"></a>00094 
-<a name="l00095"></a>00095 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnstat_counter_get(xnstat_counter_t *c)
+<a name="l00095"></a>00095 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> xnstat_counter_get(xnstat_counter_t *c)
 <a name="l00096"></a>00096 {
 <a name="l00097"></a>00097         <span class="keywordflow">return</span> c-&gt;counter;
 <a name="l00098"></a>00098 }
 <a name="l00099"></a>00099 
-<a name="l00100"></a>00100 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnstat_counter_set(xnstat_counter_t *c, <span class="keywordtype">int</span> value)
+<a name="l00100"></a>00100 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnstat_counter_set(xnstat_counter_t *c, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value)
 <a name="l00101"></a>00101 {
 <a name="l00102"></a>00102         c-&gt;counter = value;
 <a name="l00103"></a>00103 }
@@ -176,7 +176,7 @@
 <a name="l00148"></a>00148 <span class="preprocessor"></span>
 <a name="l00149"></a>00149 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_STAT_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:24 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:16 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

@@ -66,7 +66,7 @@ Xenomai memory heaps are built over the nucleus's heap objects, which in turn pr
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#g300ca8c868d02dad99790fe39b443f6f">rt_heap_free</a> (RT_HEAP *heap, void *block)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free a block.  <a href="#g300ca8c868d02dad99790fe39b443f6f"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#g6af669528e1bcae4f1ed15b292bda08e">rt_heap_inquire</a> (RT_HEAP *heap, RT_HEAP_INFO *info)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#g6af669528e1bcae4f1ed15b292bda08e">rt_heap_inquire</a> (RT_HEAP *heap, <a class="el" href="structrt__heap__info.html">RT_HEAP_INFO</a> *info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a heap.  <a href="#g6af669528e1bcae4f1ed15b292bda08e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__native__heap.html#ge17a8784a83d2eec94089a86a831a833">rt_heap_bind</a> (RT_HEAP *heap, const char *name, RTIME timeout)</td></tr>
@@ -300,7 +300,10 @@ H_SHARED is a shorthand for creating shared memory segments transparently access
 <li>H_SHARED is a shorthand for H_MAPPABLE|H_SINGLE, creating a global shared memory segment accessible from both the kernel and user-space contexts.</li></ul>
 <p>
 <ul>
-<li>H_DMA causes the block pool associated to the heap to be allocated in physically contiguous memory, suitable for DMA operations with I/O devices. A 128Kb limit exists for <em>heapsize</em> when this flag is passed.</li></ul>
+<li>H_DMA causes the block pool associated to the heap to be allocated in physically contiguous memory, suitable for DMA operations with I/O devices. <em>heapsize</em> beyond 128KiB will be rounded up to a two expononent allocation.</li></ul>
+<p>
+<ul>
+<li>H_NONCACHED causes the heap not to be cached. This is necessary on platforms such as ARM to share a heap between kernel and user-space. Note that this flag is not compatible with the H_DMA flag.</li></ul>
 <p>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
@@ -372,9 +375,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode).</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00270">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00807">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00270">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00237">rt_heap_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>.</p>
 
 </div>
 </div><p>
@@ -438,7 +441,7 @@ Rescheduling: possible.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">RT_HEAP_INFO *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structrt__heap__info.html">RT_HEAP_INFO</a> *&nbsp;</td>
           <td class="paramname"> <em>info</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -473,6 +476,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
+<p>References <a class="el" href="native_2heap_8h-source.html#l00048">rt_heap_info::heapsize</a>, <a class="el" href="native_2heap_8h-source.html#l00046">rt_heap_info::mode</a>, <a class="el" href="native_2heap_8h-source.html#l00054">rt_heap_info::name</a>, <a class="el" href="native_2heap_8h-source.html#l00044">rt_heap_info::nwaiters</a>, <a class="el" href="native_2heap_8h-source.html#l00050">rt_heap_info::usablemem</a>, and <a class="el" href="native_2heap_8h-source.html#l00052">rt_heap_info::usedmem</a>.</p>
+
 </div>
 </div><p>
 <a class="anchor" name="gea086656fe119a563e8c0b6d44f83c8e"></a><!-- doxytag: member="heap.c::rt_heap_unbind" ref="gea086656fe119a563e8c0b6d44f83c8e" args="(RT_HEAP *heap)" -->
@@ -511,7 +516,7 @@ Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:26 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

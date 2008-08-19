@@ -333,7 +333,7 @@
 <a name="l00325"></a>00325 
 <a name="l00326"></a>00326 <span class="keywordtype">char</span> *xnthread_symbolic_status(xnflags_t status, <span class="keywordtype">char</span> *buf, <span class="keywordtype">int</span> size);
 <a name="l00327"></a>00327 
-<a name="l00328"></a>00328 <span class="keywordtype">int</span> *xnthread_get_errno_location(<span class="keywordtype">void</span>);
+<a name="l00328"></a>00328 <span class="keywordtype">int</span> *xnthread_get_errno_location(xnthread_t *thread);
 <a name="l00329"></a>00329 
 <a name="l00330"></a>00330 <span class="keyword">static</span> <span class="keyword">inline</span> xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
 <a name="l00331"></a>00331 {
@@ -400,7 +400,7 @@
 <a name="l00392"></a>00392 
 <a name="l00393"></a>00393 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:24 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:16 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

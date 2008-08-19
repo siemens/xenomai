@@ -67,7 +67,7 @@ Xenomai mutex services enforce a priority inheritance protocol in order to solve
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#gc87911b7279f55ef2f5f9aefe36ff070">rt_mutex_release</a> (RT_MUTEX *mutex)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unlock mutex.  <a href="#gc87911b7279f55ef2f5f9aefe36ff070"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#g8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a> (RT_MUTEX *mutex, RT_MUTEX_INFO *info)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#g8f7db304bb5a839d81614f00c4cde145">rt_mutex_inquire</a> (RT_MUTEX *mutex, <a class="el" href="structrt__mutex__info.html">RT_MUTEX_INFO</a> *info)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Inquire about a mutex.  <a href="#g8f7db304bb5a839d81614f00c4cde145"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__mutex.html#g39b3a0e7f6f6ee41b8068ed59e25d1d1">rt_mutex_bind</a> (RT_MUTEX *mutex, const char *name, RTIME timeout)</td></tr>
@@ -312,7 +312,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00807">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00165">rt_mutex_create()</a>.</p>
 
@@ -331,7 +331,7 @@ Rescheduling: possible.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">RT_MUTEX_INFO *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structrt__mutex__info.html">RT_MUTEX_INFO</a> *&nbsp;</td>
           <td class="paramname"> <em>info</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -366,6 +366,8 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
+<p>References <a class="el" href="include_2native_2mutex_8h-source.html#l00035">rt_mutex_info::lockcnt</a>, <a class="el" href="include_2native_2mutex_8h-source.html#l00039">rt_mutex_info::name</a>, and <a class="el" href="include_2native_2mutex_8h-source.html#l00037">rt_mutex_info::nwaiters</a>.</p>
+
 </div>
 </div><p>
 <a class="anchor" name="gc87911b7279f55ef2f5f9aefe36ff070"></a><!-- doxytag: member="mutex.c::rt_mutex_release" ref="gc87911b7279f55ef2f5f9aefe36ff070" args="(RT_MUTEX *mutex)" -->
@@ -447,7 +449,7 @@ Rescheduling: never.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:27 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:24 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

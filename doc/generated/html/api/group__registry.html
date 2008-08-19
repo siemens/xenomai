@@ -60,9 +60,9 @@ The registry provides a mean to index real-time object descriptors created by Xe
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4">xnregistry_enter</a> (const char *key, void *objaddr, xnhandle_t *phandle, xnpnode_t *pnode)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a real-time object.  <a href="#gd44413c8fc23a46ce7c63e6889b669f4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#g8fbb263924fc9d55794eba7dad27e080">xnregistry_bind</a> (const char *key, xnticks_t timeout, xnhandle_t *phandle)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5">xnregistry_bind</a> (const char *key, xnticks_t timeout, int timeout_mode, xnhandle_t *phandle)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time object.  <a href="#g8fbb263924fc9d55794eba7dad27e080"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time object.  <a href="#g03ceaaa3cb5799a6b706dc9a65f493e5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#g477bb20ccb4bcf87c343aca8e58f9ef9">xnregistry_remove</a> (xnhandle_t handle)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Forcibly unregister a real-time object.  <a href="#g477bb20ccb4bcf87c343aca8e58f9ef9"></a><br></td></tr>
@@ -80,7 +80,7 @@ The registry provides a mean to index real-time object descriptors created by Xe
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find a real-time object into the registry.  <a href="#gf781f03f25b1667eb7f31cb6a246613a"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="g8fbb263924fc9d55794eba7dad27e080"></a><!-- doxytag: member="registry.c::xnregistry_bind" ref="g8fbb263924fc9d55794eba7dad27e080" args="(const char *key, xnticks_t timeout, xnhandle_t *phandle)" -->
+<a class="anchor" name="g03ceaaa3cb5799a6b706dc9a65f493e5"></a><!-- doxytag: member="registry.c::xnregistry_bind" ref="g03ceaaa3cb5799a6b706dc9a65f493e5" args="(const char *key, xnticks_t timeout, int timeout_mode, xnhandle_t *phandle)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -95,6 +95,12 @@ The registry provides a mean to index real-time object descriptors created by Xe
           <td></td>
           <td class="paramtype">xnticks_t&nbsp;</td>
           <td class="paramname"> <em>timeout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>timeout_mode</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -118,7 +124,8 @@ This service retrieves the registry handle of a given object identified by its k
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>key</em>&nbsp;</td><td>A valid NULL-terminated string which identifies the object to bind to.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The number of clock ticks to wait for the registration to occur (see note). Passing XN_INFINITE causes the caller to block indefinitely until the object is registered. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout</em>&nbsp;</td><td>The timeout which may be used to limit the time the thread wait for the object to be registered. This value is a wait time given in ticks (see note). It can either be relative, absolute monotonic (XN_ABSOLUTE), or absolute adjustable (XN_REALTIME) depending on <em>timeout_mode</em>. Passing XN_INFINITE <b>and</b> setting <em>timeout_mode</em> to XN_RELATIVE specifies an unbounded wait. Passing XN_NONBLOCK causes the service to return immediately without waiting if the object is not registered on entry. All other values are used as a wait limit.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>timeout_mode</em>&nbsp;</td><td>The mode of the <em>timeout</em> parameter. It can either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also <a class="el" href="group__timer.html#g0ad3c70bed7fe1a45b45ee0875f031ab" title="Arm a timer.">xntimer_start()</a>).</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>phandle</em>&nbsp;</td><td>A pointer to a memory location which will be written upon success with the generic handle defined by the registry for the retrieved object. Contents of this memory is undefined upon failure.</td></tr>
   </table>
 </dl>
@@ -217,7 +224,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00237">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00245">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00165">rt_mutex_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00210">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00236">rt_task_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00245">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00165">rt_mutex_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00210">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00236">rt_task_create()</a>.</p>
 
 </div>
 </div><p>
@@ -369,7 +376,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00274">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00238">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00260">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00363">rt_heap_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00342">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00248">rt_mutex_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00356">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00331">rt_queue_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00258">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00910">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00274">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00238">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00260">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00369">rt_heap_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00342">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00248">rt_mutex_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00356">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00331">rt_queue_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00258">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00912">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div><p>
@@ -435,12 +442,12 @@ This service can be called from:<p>
 Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00807">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00168">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00168">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Jun 8 18:00:26 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>
