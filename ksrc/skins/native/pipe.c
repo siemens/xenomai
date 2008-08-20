@@ -89,15 +89,26 @@ static void __pipe_flush_pool(xnheap_t *heap,
 static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
 {
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	void *buf;
 
 	/* Allocate memory for the incoming message. */
-	return xnheap_alloc(pipe->bufpool, size);
+	buf = xnheap_alloc(pipe->bufpool, size);
+	if (pipe->monitor) {
+		while (buf == NULL) {
+			if (pipe->monitor(pipe, P_EVENT_NOBUF, size))
+				break;
+			buf = xnheap_alloc(pipe->bufpool, size);
+		}
+	}
+
+	return buf;
 }
 
 static int __pipe_output_handler(int bminor,
 				 xnpipe_mh_t *mh, int retval, void *cookie)
 {
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	size_t size = xnpipe_m_size(mh);
 	
 	if (mh == pipe->buffer) {
 		spl_t s;
@@ -116,7 +127,7 @@ static int __pipe_output_handler(int bminor,
 		return retval;
 
 	/* Propagating the return value here would make no sense. */
-	pipe->monitor(pipe, P_EVENT_OUTPUT);
+	pipe->monitor(pipe, P_EVENT_OUTPUT, size);
 
 	return retval;
 }
@@ -131,9 +142,9 @@ static int __pipe_input_handler(int bminor,
 
 	if (retval == 0)
 		/* Callee may alter the return value passed to userland. */
-		retval = pipe->monitor(pipe, P_EVENT_INPUT);
-	else if (retval == -EPIPE)
-		pipe->monitor(pipe, P_EVENT_CLOSE);
+		retval = pipe->monitor(pipe, P_EVENT_INPUT, xnpipe_m_size(mh));
+	else if (retval == -EPIPE && mh == NULL)
+		pipe->monitor(pipe, P_EVENT_CLOSE, 0);
 
 	/*
 	 * We don't notify the kernel endpoint about userland errors,
@@ -1079,7 +1090,7 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
 }
 
 /**
- * @fn int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event))
+ * @fn int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event, long arg))
  *
  * @brief Monitor a message pipe asynchronously.
  *
@@ -1092,22 +1103,33 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
  *
  * @param fn The notification handler. This user-provided routine will
  * be passed the address of the message pipe descriptor receiving the
- * event, and the event code.  Three events are currently defined:
+ * event, the event code, and an optional argument.  Three events are
+ * currently defined:
  *
  * - P_EVENT_INPUT is sent when the user-space endpoint writes to the
  *   pipe, which means that some input is pending for the kernel-based
- *   endpoint.
+ *   endpoint. The argument is the size of the incoming message.
  *
  * - P_EVENT_OUTPUT is sent when the user-space endpoint successfully
- *   reads a complete buffer from the pipe.
+ *   reads a complete buffer from the pipe. The argument is the size
+ *   of the outgoing message.
  *
- * - P_EVENT_CLOSE is sent when the user-space endpoint is closed.
+ * - P_EVENT_CLOSE is sent when the user-space endpoint is closed. The
+     argument is always 0.
  *
- * The notification handler is called on behalf of a fully atomic
- * context; therefore, care must be taken to keep its overhead
- * low. The Xenomai services that may be called from a notification
- * handler are restricted to the set allowed to a real-time interrupt
- * handler.
+ * - P_EVENT_NOBUF is sent when no memory is available from the kernel
+ * pool to hold the message currently sent from the user-space
+ * endpoint. The argument is the size of the failed allocation. The
+ * handler shall return 0 to request an allocation retry, or any
+ * non-zero value to cause the write(2) system call to receive an
+ * ENOMEM error. For instance, a flow control algorithm dealing with
+ * memory starvation may be implemented in the handler.
+ *
+ * The P_EVENT_INPUT and P_EVENT_OUTPUT events are fired on behalf of
+ * a fully atomic context; therefore, care must be taken to keep its
+ * overhead low. In those cases, the Xenomai services that may be
+ * called from the handler are restricted to the set allowed to a
+ * real-time interrupt handler.
  *
  * @return Zero is returned upon success. Otherwise:
  *
@@ -1127,7 +1149,7 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
  * Rescheduling: never.
  */
 
-int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event))
+int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event, long arg))
 {
 	int err;
 	spl_t s;

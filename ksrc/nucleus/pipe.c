@@ -309,7 +309,7 @@ int xnpipe_disconnect(int minor)
 
 	__clrbits(state->status, XNPIPE_KERN_CONN);
 
-	if (state->output_handler != NULL) {
+	if (state->output_handler) {
 		while ((holder = getq(&state->outq)) != NULL)
 			state->output_handler(minor, link2mh(holder),
 					      -EPIPE, state->cookie);
@@ -317,7 +317,7 @@ int xnpipe_disconnect(int minor)
 
 	if (testbits(state->status, XNPIPE_USER_CONN)) {
 		while ((holder = getq(&state->inq)) != NULL) {
-			if (state->input_handler != NULL)
+			if (state->input_handler)
 				state->input_handler(minor, link2mh(holder),
 						     -EPIPE, state->cookie);
 			else if (state->alloc_handler == NULL)
@@ -540,7 +540,7 @@ int xnpipe_flush(int minor, int mode)
 			mh = link2mh(holder);
 			n += xnpipe_m_size(mh);
 
-			if (state->output_handler != NULL)
+			if (state->output_handler)
 				state->output_handler(xnminor_from_state(state),
 						      mh, 0, state->cookie);
 
@@ -553,8 +553,8 @@ int xnpipe_flush(int minor, int mode)
 		while ((holder = getq(&state->inq)) != NULL) {
 			xnlock_put_irqrestore(&nklock, s);
 
-			if (state->input_handler != NULL)
-				state->input_handler(minor, link2mh(holder), -EPIPE,
+			if (state->input_handler)
+				state->input_handler(minor, link2mh(holder), 0,
 						     state->cookie);
 			else if (state->alloc_handler == NULL)
 				xnfree(link2mh(holder));
@@ -588,14 +588,14 @@ static void xnpipe_cleanup_user_conn(xnpipe_state_t *state)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (state->output_handler != NULL) {
+	if (state->output_handler) {
 		while ((holder = getq(&state->outq)) != NULL)
 			state->output_handler(minor, link2mh(holder), -EPIPE,
 					      state->cookie);
 	}
 
 	while ((holder = getq(&state->inq)) != NULL) {
-		if (state->input_handler != NULL)
+		if (state->input_handler)
 			state->input_handler(minor, link2mh(holder), -EPIPE,
 					     state->cookie);
 		else if (state->alloc_handler == NULL)
@@ -714,7 +714,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 		xnlock_put_irqrestore(&nklock, s);
 
-		if (xnpipe_close_handler != NULL)
+		if (xnpipe_close_handler)
 			err = xnpipe_close_handler(minor, state->cookie);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -729,6 +729,9 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	xnpipe_cleanup_user_conn(state);
 
+	if (state->input_handler)
+		state->input_handler(MINOR(inode->i_rdev),
+				     NULL, -EPIPE, state->cookie);
 	return err;
 }
 
@@ -814,7 +817,7 @@ static ssize_t xnpipe_read(struct file *file,
 
 	if (xnpipe_m_size(mh) > xnpipe_m_rdoff(mh))
 		prependq(&state->outq, &mh->link);
-	else if (state->output_handler != NULL)
+	else if (state->output_handler)
 		ret = state->output_handler(xnminor_from_state(state),
 					    mh, err ?: ret, state->cookie);
 
@@ -852,7 +855,7 @@ static ssize_t xnpipe_write(struct file *file,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (alloc_handler != NULL)
+	if (alloc_handler)
 		mh = (struct xnpipe_mh *)
 		    alloc_handler(xnminor_from_state(state),
 				  count + sizeof(*mh), cookie);
@@ -870,9 +873,9 @@ static ssize_t xnpipe_write(struct file *file,
 	if (copy_from_user(xnpipe_m_data(mh), buf, count)) {
 		if (alloc_handler == NULL)
 			xnfree(mh);
-		else if (input_handler != NULL)
-			state->input_handler(xnminor_from_state(state), mh,
-					     -EFAULT, state->cookie);
+		else if (input_handler)
+			input_handler(xnminor_from_state(state), mh,
+				      -EFAULT, state->cookie);
 		return -EFAULT;
 	}
 
@@ -889,7 +892,7 @@ static ssize_t xnpipe_write(struct file *file,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (input_handler != NULL) {
+	if (input_handler) {
 		int err =
 		    input_handler(xnminor_from_state(state), mh, 0, cookie);
 
@@ -954,7 +957,7 @@ static int xnpipe_ioctl(struct inode *inode,
 			mh = link2mh(holder);
 			n += xnpipe_m_size(mh);
 
-			if (io_handler != NULL)
+			if (io_handler)
 				io_handler(xnminor_from_state(state), mh, 0,
 					   cookie);
 

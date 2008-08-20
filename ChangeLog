@@ -1,3 +1,8 @@
+2008-08-20  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/pipe.c: Add P_EVENT_NOBUF event. Send
+	P_EVENT_CLOSE only once during release.
+	
 2008-08-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/thread.c (xnthread_get_errno_location): Always

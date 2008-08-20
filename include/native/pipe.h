@@ -35,6 +35,7 @@
 #define P_EVENT_INPUT	1
 #define P_EVENT_OUTPUT	2
 #define P_EVENT_CLOSE	3
+#define P_EVENT_NOBUF	4
 
 typedef struct rt_pipe_placeholder {
     xnhandle_t opaque;
@@ -68,7 +69,7 @@ typedef struct rt_pipe {
 
     xnheap_t *bufpool;         /* !< Current buffer pool. */
 
-    int (*monitor)(struct rt_pipe *pipe, int event);
+    int (*monitor)(struct rt_pipe *pipe, int event, long arg);
 
     xnheap_t privpool;         /* !< Private buffer pool. */
 
@@ -146,7 +147,7 @@ int rt_pipe_flush(RT_PIPE *pipe,
 		  int mode);
 
 int rt_pipe_monitor(RT_PIPE *pipe,
-		    int (*fn)(RT_PIPE *pipe, int event));
+		    int (*fn)(RT_PIPE *pipe, int event, long arg));
 
 #ifdef CONFIG_XENO_OPT_NATIVE_PIPE
 
