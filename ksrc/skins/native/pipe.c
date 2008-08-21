@@ -1103,7 +1103,7 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
  *
  * @param fn The notification handler. This user-provided routine will
  * be passed the address of the message pipe descriptor receiving the
- * event, the event code, and an optional argument.  Three events are
+ * event, the event code, and an optional argument.  Four events are
  * currently defined:
  *
  * - P_EVENT_INPUT is sent when the user-space endpoint writes to the
