@@ -1,3 +1,9 @@
+2008-08-21  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_write): Fix inverted O_SYNC
+	test. Block caller upon memory starvation; still honors
+	O_NONBLOCK.
+
 2008-08-20  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/pipe.c: Add P_EVENT_NOBUF event. Send

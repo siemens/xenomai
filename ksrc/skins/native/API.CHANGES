@@ -237,3 +237,12 @@ ___________________________________________________________________
          specific events occurring on the channel.  rt_pipe_monitor()
          is particularly useful to monitor a channel asynchronously
          from kernel space while performing other tasks.
+
+       * Writing to a message pipe from the non real-time endpoint may
+         now block, until enough memory is available from the pool,
+         i.e. until the real-time side has consumed enough pending
+         messages.  Setting O_NONBLOCK on the fildes prevents this
+         behaviour, in which case -EWOULDBLOCK is immediately returned
+         upon memory starvation. -ENOMEM may still be returned in case
+         the written buffer is larger than the largest block of
+         contiguous memory ever available from the pool.

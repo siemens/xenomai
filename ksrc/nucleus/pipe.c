@@ -493,13 +493,8 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 	ret = (ssize_t) xnpipe_m_size(*pmh);
 
 	if (testbits(state->status, XNPIPE_USER_WSYNC)) {
-		if (emptyq_p(&state->inq)) {
-			/* Wake up the regular Linux task waiting for
-			   the nucleus side to consume all messages
-			   (O_SYNC). */
-			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
-			xnpipe_schedule_request();
-		}
+		__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+		xnpipe_schedule_request();
 	}
 
       unlock_and_exit:
@@ -765,7 +760,7 @@ static ssize_t xnpipe_read(struct file *file,
 	if (!mh) {
 		if (file->f_flags & O_NONBLOCK) {
 			xnlock_put_irqrestore(&nklock, s);
-			return -EAGAIN;
+			return -EWOULDBLOCK;
 		}
 
 		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s,
@@ -834,6 +829,7 @@ static ssize_t xnpipe_write(struct file *file,
 	xnpipe_io_handler *input_handler;
 	struct xnpipe_mh *mh;
 	void *cookie;
+	int pollnum;
 	spl_t s;
 
 	if (count == 0)
@@ -853,18 +849,36 @@ static ssize_t xnpipe_write(struct file *file,
 	input_handler = state->input_handler;
 	cookie = state->cookie;
 
+retry:
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (alloc_handler)
 		mh = (struct xnpipe_mh *)
 		    alloc_handler(xnminor_from_state(state),
 				  count + sizeof(*mh), cookie);
-	else
+	else {
 		mh = (struct xnpipe_mh *)xnmalloc(count + sizeof(*mh));
+		if (mh == NULL &&
+		    count + sizeof(*mh) > xnheap_max_contiguous(&kheap))
+			mh = (struct xnpipe_mh *)-1;
+	}
 
-	if (!mh)
-		/* Cannot sleep. */
+	if (mh == (struct xnpipe_mh *)-1)
 		return -ENOMEM;
+
+	if (mh == NULL) {
+		if (file->f_flags & O_NONBLOCK)
+			return -EWOULDBLOCK;
+
+		xnlock_get_irqsave(&nklock, s);
+		pollnum = countq(&state->inq);
+		if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
+				pollnum > countq(&state->inq))) {
+			xnlock_put_irqrestore(&nklock, s);
+			return -ERESTARTSYS;
+		}
+		goto retry;
+	}
 
 	inith(xnpipe_m_link(mh));
 	xnpipe_m_size(mh) = count;
@@ -904,12 +918,12 @@ static ssize_t xnpipe_write(struct file *file,
 		xnlock_get_irqsave(&nklock, s);
 		if (!emptyq_p(&state->inq)) {
 			if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
-					!emptyq_p(&state->inq)))
+					emptyq_p(&state->inq)))
 				count = -ERESTARTSYS;
 		}
 		xnlock_put_irqrestore(&nklock, s);
 	}
-		
+
 	return (ssize_t) count;
 }
 

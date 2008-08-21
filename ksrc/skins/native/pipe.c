@@ -91,14 +91,12 @@ static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
 	RT_PIPE *pipe = (RT_PIPE *)cookie;
 	void *buf;
 
-	/* Allocate memory for the incoming message. */
+	/* Try to allocate memory for the incoming message. */
 	buf = xnheap_alloc(pipe->bufpool, size);
-	if (pipe->monitor) {
-		while (buf == NULL) {
-			if (pipe->monitor(pipe, P_EVENT_NOBUF, size))
-				break;
-			buf = xnheap_alloc(pipe->bufpool, size);
-		}
+	if (unlikely(buf == NULL && pipe->monitor)) {
+		pipe->monitor(pipe, P_EVENT_NOBUF, size);
+		if (size > xnheap_max_contiguous(pipe->bufpool))
+			buf = (void *)-1; /* Will never succeed. */
 	}
 
 	return buf;
@@ -1119,11 +1117,11 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
  *
  * - P_EVENT_NOBUF is sent when no memory is available from the kernel
  * pool to hold the message currently sent from the user-space
- * endpoint. The argument is the size of the failed allocation. The
- * handler shall return 0 to request an allocation retry, or any
- * non-zero value to cause the write(2) system call to receive an
- * ENOMEM error. For instance, a flow control algorithm dealing with
- * memory starvation may be implemented in the handler.
+ * endpoint. The argument is the size of the failed allocation. Upon
+ * return from the handler, the caller will block and retry until
+ * enough space is available from the pool; during that process, the
+ * handler might be called multiple times, each time a new attempt to
+ * get the required memory fails.
  *
  * The P_EVENT_INPUT and P_EVENT_OUTPUT events are fired on behalf of
  * a fully atomic context; therefore, care must be taken to keep their
