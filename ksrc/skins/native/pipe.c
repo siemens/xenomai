@@ -1126,7 +1126,7 @@ int rt_pipe_flush(RT_PIPE *pipe, int mode)
  * memory starvation may be implemented in the handler.
  *
  * The P_EVENT_INPUT and P_EVENT_OUTPUT events are fired on behalf of
- * a fully atomic context; therefore, care must be taken to keep its
+ * a fully atomic context; therefore, care must be taken to keep their
  * overhead low. In those cases, the Xenomai services that may be
  * called from the handler are restricted to the set allowed to a
  * real-time interrupt handler.
