@@ -97,11 +97,11 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	shadow->mutex = mutex;
 	shadow->lockcnt = 0;
 
-#ifdef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifdef CONFIG_XENO_FASTSEM
 	xnarch_atomic_set(&shadow->lock, -1);
 	shadow->attr = *attr;
 	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
@@ -163,16 +163,16 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 		goto checked;
 
 	err = pse51_mutex_check_init(shadow, attr);
-#ifndef XNARCH_HAVE_US_ATOMIC_CMPXCHG
+#ifndef CONFIG_XENO_FASTSEM
 	cb_read_unlock(&shadow->lock, s);
 	if (err)
 		return -err;
-#else /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#else /* CONFIG_XENO_FASTSEM */
 	if (err) {
 		cb_read_unlock(&shadow->lock, s);
 		return -err;
 	}
-#endif /* XNARCH_HAVE_US_ATOMIC_CMPXCHG */
+#endif /* CONFIG_XENO_FASTSEM */
 
   checked:
 	mutex = (pse51_mutex_t *) xnmalloc(sizeof(*mutex));

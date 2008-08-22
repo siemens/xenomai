@@ -1,3 +1,9 @@
+2008-08-22  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/skins/posix/mutex.c: Convert remaining
+	XNARCH_HAVE_US_ATOMIC_CMPXCHG to CONFIG_XENO_FASTSEM, fixing
+	fast mutex support again.
+
 2008-08-21  Philippe Gerum  <rpm@eclipse.xenomai.org>
 
 	* ksrc/nucleus/pipe.c (xnpipe_write): Fix inverted O_SYNC
