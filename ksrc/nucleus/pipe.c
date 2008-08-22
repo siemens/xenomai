@@ -518,6 +518,7 @@ int xnpipe_flush(int minor, int mode)
 	xnpipe_state_t *state;
 	struct xnpipe_mh *mh;
 	xnholder_t *holder;
+	int msgcount;
 	spl_t s;
 
 	if (minor < 0 || minor >= XNPIPE_NDEVS)
@@ -526,6 +527,8 @@ int xnpipe_flush(int minor, int mode)
 	state = &xnpipe_states[minor];
 
 	xnlock_get_irqsave(&nklock, s);
+
+	msgcount = countq(&state->outq) + countq(&state->inq);
 
 	if (mode & XNPIPE_OFLUSH) {
 		ssize_t n = 0;
@@ -557,13 +560,12 @@ int xnpipe_flush(int minor, int mode)
 
 			xnlock_get_irqsave(&nklock, s);
 		}
-		if (testbits(state->status, XNPIPE_USER_WSYNC)) {
-			/* We obviously have no more messages pending
-			 * on the RT side, so wake up the regular
-			 * Linux task. */
-			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
-			xnpipe_schedule_request();
-		}
+	}
+
+	if (testbits(state->status, XNPIPE_USER_WSYNC) &&
+	    msgcount > countq(&state->outq) + countq(&state->inq)) {
+		__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+		xnpipe_schedule_request();
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
