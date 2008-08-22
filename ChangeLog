@@ -1,3 +1,8 @@
+2008-08-22  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* configure.in: Add docdir if missing, in order to remain
+	compatible with automake 1.9.
+
 2008-08-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Fix handling of concurrent read/write sleep

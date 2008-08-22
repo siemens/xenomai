@@ -443,6 +443,11 @@ AM_CONDITIONAL(XENO_BUILD_LINUX, [test \! x"$XENO_LINUX_SRCDIR" = x])
 
 dnl Documentation package.
 
+if test x"$docdir" = x; then
+        docdir=$datadir/doc/$PACKAGE-$VERSION
+fi
+AC_SUBST(docdir)
+
 if test \! -d $srcdir/doc ; then 
     unset XENO_MAYBE_DOCDIR
 else
