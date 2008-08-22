@@ -1,3 +1,12 @@
+2008-08-22  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c: Fix handling of concurrent read/write sleep
+	states on the same minor.
+	
+	* ksrc/nucleus/pipe.c (xnpipe_write): Fix inverted O_SYNC
+	test. Block caller upon memory starvation; still honors
+	O_NONBLOCK.
+
 2008-08-19  Philippe Gerum  <rpm@xenomai.org>
 	
 	* RELEASE: Xenomai 2.4.5 (Overdriver)

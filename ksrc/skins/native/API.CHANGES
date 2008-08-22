@@ -203,3 +203,17 @@ ___________________________________________________________________
 	* rt_heap_create() allows creating DMA heaps larger than 128kb
 	  rt_heap_create() allows creating non-shared mappings with H_NONCACHED
 	flag.
+
+___________________________________________________________________
+
+
+2.4.5 -> 2.4.6
+
+       * Writing to a message pipe from the non real-time endpoint may
+         now block, until enough memory is available from the pool,
+         i.e. until the real-time side has consumed enough pending
+         messages.  Setting O_NONBLOCK on the fildes prevents this
+         behaviour, in which case -EWOULDBLOCK is immediately returned
+         upon memory starvation. -ENOMEM may still be returned in case
+         the written buffer is larger than the largest block of
+         contiguous memory ever available from the pool.
