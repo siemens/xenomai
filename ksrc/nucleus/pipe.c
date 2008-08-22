@@ -850,6 +850,7 @@ static ssize_t xnpipe_write(struct file *file,
 	cookie = state->cookie;
 
 retry:
+	pollnum = countq(&state->inq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (alloc_handler)
@@ -871,7 +872,6 @@ retry:
 			return -EWOULDBLOCK;
 
 		xnlock_get_irqsave(&nklock, s);
-		pollnum = countq(&state->inq);
 		if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
 				pollnum > countq(&state->inq))) {
 			xnlock_put_irqrestore(&nklock, s);
