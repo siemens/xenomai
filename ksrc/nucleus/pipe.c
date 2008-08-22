@@ -92,10 +92,10 @@ static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!testbits(state->status, mask)) {
+	if (state->wcount++ == 0)
 		appendq(&xnpipe_sleepq, &state->slink);
-		__setbits(state->status, mask);
-	}
+
+	__setbits(state->status, mask);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -138,8 +138,9 @@ static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (testbits(state->status, mask)) {
+		if (--state->wcount == 0)
+			removeq(&xnpipe_sleepq, &state->slink);
 		__clrbits(state->status, mask);
-		removeq(&xnpipe_sleepq, &state->slink);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -632,6 +633,7 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 	file->private_data = state;
 	init_waitqueue_head(&state->readq);
 	init_waitqueue_head(&state->syncq);
+	state->wcount = 0;
 
 	__clrbits(state->status,
 		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY | XNPIPE_USER_SIGIO);
@@ -693,8 +695,8 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (testbits(state->status, XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC))
-		xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC);
+	xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
+	xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
 		int minor = xnminor_from_state(state);
@@ -812,9 +814,16 @@ static ssize_t xnpipe_read(struct file *file,
 
 	if (xnpipe_m_size(mh) > xnpipe_m_rdoff(mh))
 		prependq(&state->outq, &mh->link);
-	else if (state->output_handler)
-		ret = state->output_handler(xnminor_from_state(state),
-					    mh, err ?: ret, state->cookie);
+	else {
+		if (state->output_handler)
+			ret = state->output_handler(xnminor_from_state(state),
+						    mh, err ?: ret, state->cookie);
+
+		if (testbits(state->status, XNPIPE_USER_WSYNC)) {
+			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			xnpipe_schedule_request();
+		}
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -850,7 +859,7 @@ static ssize_t xnpipe_write(struct file *file,
 	cookie = state->cookie;
 
 retry:
-	pollnum = countq(&state->inq);
+	pollnum = countq(&state->inq) + countq(&state->outq);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (alloc_handler)
@@ -873,7 +882,7 @@ retry:
 
 		xnlock_get_irqsave(&nklock, s);
 		if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
-				pollnum > countq(&state->inq))) {
+				pollnum > countq(&state->inq) + countq(&state->outq))) {
 			xnlock_put_irqrestore(&nklock, s);
 			return -ERESTARTSYS;
 		}
