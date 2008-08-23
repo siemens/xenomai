@@ -64,11 +64,17 @@ int pse51_mutex_check_init(struct __shadow_mutex *shadow,
 
 	if (shadow->magic == PSE51_MUTEX_MAGIC) {
 		xnholder_t *holder;
+		spl_t s;
+
+		xnlock_get_irqsave(&nklock, s);
 		for (holder = getheadq(mutexq); holder;
 		     holder = nextq(mutexq, holder))
-			if (holder == &shadow->mutex->link)
+			if (holder == &shadow->mutex->link) {
+				xnlock_put_irqrestore(&nklock, s);
 				/* mutex is already in the queue. */
 				return -EBUSY;
+			}
+		xnlock_put_irqrestore(&nklock, s);
 	}
 
 	return 0;
