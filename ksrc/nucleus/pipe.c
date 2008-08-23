@@ -943,11 +943,13 @@ static int xnpipe_ioctl(struct inode *inode,
 {
 	xnpipe_state_t *state = (xnpipe_state_t *)file->private_data;
 	xnpipe_io_handler *io_handler;
+	int err = 0, n, minor;
 	struct xnpipe_mh *mh;
 	xnholder_t *holder;
 	void *cookie;
-	int err = 0, n;
 	spl_t s;
+
+	minor = xnminor_from_state(state);
 
 	switch (cmd) {
 	case XNPIPEIOC_GET_NRDEV:
@@ -957,7 +959,7 @@ static int xnpipe_ioctl(struct inode *inode,
 
 		break;
 
-	case XNPIPEIOC_FLUSH:
+	case XNPIPEIOC_OFLUSH:
 
 		/* Theoretically, a flush request could be prevented
 		   from ending by a real-time sender perpetually
@@ -971,10 +973,10 @@ static int xnpipe_ioctl(struct inode *inode,
 		   design problem anyway. */
 
 		n = 0;
-		xnlock_get_irqsave(&nklock, s);
-
 		io_handler = state->output_handler;
 		cookie = state->cookie;
+
+		xnlock_get_irqsave(&nklock, s);
 
 		while ((holder = getq(&state->outq)) != NULL) {
 			xnlock_put_irqrestore(&nklock, s);
@@ -983,16 +985,45 @@ static int xnpipe_ioctl(struct inode *inode,
 			n += xnpipe_m_size(mh);
 
 			if (io_handler)
-				io_handler(xnminor_from_state(state), mh, 0,
-					   cookie);
+				io_handler(minor, mh, 0, cookie);
 
 			xnlock_get_irqsave(&nklock, s);
 		}
 
 		state->ionrd -= n;
+		goto kick_wsync;
+
+	case XNPIPEIOC_IFLUSH:
+
+		n = 0;
+		io_handler = state->input_handler;
+		cookie = state->cookie;
+
+		xnlock_get_irqsave(&nklock, s);
+
+		while ((holder = getq(&state->inq)) != NULL) {
+			xnlock_put_irqrestore(&nklock, s);
+
+			mh = link2mh(holder);
+			n += xnpipe_m_size(mh);
+
+			if (state->input_handler)
+				state->input_handler(minor, mh, 0, cookie);
+			else if (state->alloc_handler == NULL)
+				xnfree(mh);
+
+			xnlock_get_irqsave(&nklock, s);
+		}
+
+	kick_wsync:
+
+		if (n > 0 && testbits(state->status, XNPIPE_USER_WSYNC)) {
+			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
+			xnpipe_schedule_request();
+		}
+
 		xnlock_put_irqrestore(&nklock, s);
 		err = n;
-
 		break;
 
 	case XNPIPEIOC_SETSIG:

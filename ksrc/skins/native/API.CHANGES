@@ -246,3 +246,11 @@ ___________________________________________________________________
          upon memory starvation. -ENOMEM may still be returned in case
          the written buffer is larger than the largest block of
          contiguous memory ever available from the pool.
+
+       * ioctl(XNPIPEIOC_FLUSH) command on message pipes was renamed
+         to ioctl(XNPIPEIOC_OFLUSH), meaning that it affects the
+         output queue of the real-time endpoint (i.e. the input queue
+         of the non real-time endpoint in user-space). Conversely, the
+         new ioctl(XNPIPEIOC_IFLUSH) command has been added, to flush
+         the input queue of the real-time endpoint (i.e. the output
+         queue of the non real-time endpoint in user-space).

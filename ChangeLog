@@ -1,3 +1,8 @@
+2008-08-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c: Rename XNPIPEIOC_FLUSH to
+	XNPIPEIOC_OFLUSH. Add XNPIPEIOC_IFLUSH.
+
 2008-08-22  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Fix handling of concurrent read/write sleep

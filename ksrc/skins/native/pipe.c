@@ -1032,19 +1032,22 @@ int rt_pipe_free(RT_PIPE *pipe, RT_PIPE_MSG *msg)
  * side in user-space for the given message pipe. Upon success, no
  * data remains to be read from the remote side of the connection.
  *
- * The user-space equivalent is a call to:
- * ioctl(pipefd, XNPIPEIOC_FLUSH, 0).
- *
  * @param pipe The descriptor address of the pipe to flush.
  *
  * @param mode A mask indicating which queues need to be flushed; the
  * following flags may be combined in a single flush request:
  *
- * - XNPIPE_IFLUSH causes the input queue to be flushed (i.e. data
- * coming from user-space to the kernel endpoint will be discarded).
+ * - XNPIPE_OFLUSH causes the output queue to be flushed (i.e. unread
+ * data sent from the real-time endpoint in kernel-space to the non
+ * real-time endpoint in user-space will be discarded).  This is
+ * equivalent to calling ioctl(pipefd, XNPIPEIOC_OFLUSH, 0) from
+ * user-space.
  *
- * - XNPIPE_OFLUSH causes the output queue to be flushed (i.e. data
- * going to user-space from the kernel endpoint will be discarded).
+ * - XNPIPE_IFLUSH causes the input queue to be flushed (i.e. unread
+ * data sent from the non real-time endpoint in user-space to the
+ * real-time endpoint in kernel-space will be discarded).  This is
+ * equivalent to calling ioctl(pipefd, XNPIPEIOC_IFLUSH, 0) from
+ * user-space.
  *
  * @return Zero is returned upon success. Otherwise:
  *
