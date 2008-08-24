@@ -1,4 +1,3 @@
-#include <xeno_config.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -12,9 +11,11 @@
 #include <pthread.h>
 #include <sys/mman.h>
 #include <semaphore.h>
+#include <setjmp.h>
 
 #include <getopt.h>
 
+#include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
 #include <rtdm/rttesting.h>
 
@@ -625,38 +626,38 @@ static int parse_arg(struct task_params *param,
 static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 {
 	if (param->cpu > end_cpu - 1)
-		return -1;
+		return 0;
 
 	switch (param->type) {
 	case SLEEPER:
 		if (param->fp)
-			return -1;
+			return 0;
 		break;
 
 	case RTK:
 		if (param->fp & UFPS)
-			return -1;
+			return 0;
 		break;
 
 	case RTUP:
 		if (param->fp & (AFP|UFPS))
-			return -1;
+			return 0;
 		break;
 
 	case RTUS:
 		if (param->fp & (AFP|UFPP))
-			return -1;
+			return 0;
 		break;
 
 	case RTUO:
 		if (param->fp & AFP)
-			return -1;
+			return 0;
 		break;
 	default:
-		return -1;
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 static int task_create(struct cpu_tasks *cpu,
@@ -888,6 +889,41 @@ void usage(FILE *fd, const char *progname)
 	fprintf(fd, "\n\n");
 }
 
+sigjmp_buf jump;
+
+void illegal_instruction(int sig)
+{
+	signal(sig, SIG_DFL);
+	siglongjmp(jump, 1);
+}
+
+int check_fpu(void)
+{
+	int check;
+
+	/* Check if fp routines are dummy or if hw fpu is not supported. */
+	fprintf(stderr, "== Testing FPU check routines...\n");
+	if(sigsetjmp(jump, 1)) {
+		fprintf(stderr, "== Hardware FPU not available on your board"
+			" or not enabled in Linux kernel\n== configuration:"
+			" skipping FPU switches tests.\n");
+		return 0;
+	}
+	signal(SIGILL, illegal_instruction);
+	fp_regs_set(1);
+	check = fp_regs_check(2);
+	signal(SIGILL, SIG_DFL);
+	if (check != 1) {
+		fprintf(stderr,
+			"== FPU check routines: unimplemented, "
+			"skipping FPU switches tests.\n");
+		return 0;
+	}
+
+	fprintf(stderr, "== FPU check routines: OK.\n");
+	return 1;
+}
+
 int main(int argc, const char *argv[])
 {
 	pthread_attr_t rt_attr, sleeper_attr;
@@ -991,18 +1027,8 @@ int main(int argc, const char *argv[])
 		char buffer[32];
 		unsigned count;
 
-		/* Check if fp routines are dummy. */
-		if (use_fp) {
-			fprintf(stderr, "== Testing FPU check routines...\n");
-			fp_regs_set(1);
-			if (fp_regs_check(2) != 1) {
-				fprintf(stderr,
-					"== FPU check routines: unimplemented, "
-					"skipping FPU switches tests.\n");
-				use_fp = 0;
-			} else
-				fprintf(stderr, "== FPU check routines: OK.\n");
-		}
+		if (use_fp)
+			use_fp = check_fpu();
 
 		if (use_fp) {
 			all = all_fp;
@@ -1068,7 +1094,7 @@ int main(int argc, const char *argv[])
 			exit(EXIT_FAILURE);
 		}
 
-		if (check_arg(&params, &cpus[nr_cpus])) {
+		if (!check_arg(&params, &cpus[nr_cpus])) {
 			usage(stderr, progname);
 			fprintf(stderr,
 				"Invalid parameters %s. Aborting\n",
@@ -1079,8 +1105,8 @@ int main(int argc, const char *argv[])
 		if (!use_fp && params.fp) {
 			usage(stderr, progname);
 			fprintf(stderr,
-				"%s is invalid because FPU is disabled.\n",
-				argv[i]);
+				"%s is invalid because FPU is disabled"
+				" (option -n passed).\n", argv[i]);
 			exit(EXIT_FAILURE);
 		}
 

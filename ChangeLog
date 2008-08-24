@@ -1,3 +1,9 @@
+2008-08-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* src/testsuite/switchtest/switchtest.c (check_fpu): Handle
+	gracefully SIGILL by stopping using the FPU when switchtest is
+	launched with no argument.
+
 2008-08-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pipe.c: Rename XNPIPEIOC_FLUSH to
