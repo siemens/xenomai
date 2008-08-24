@@ -57,6 +57,8 @@
 #elif defined(CONFIG_ARCH_SA1100)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
+#else
+#error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
 
 typedef unsigned long long rthal_time_t;
