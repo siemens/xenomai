@@ -280,10 +280,10 @@ EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
 EXPORT_SYMBOL(rthal_thread_switch);
 EXPORT_SYMBOL(rthal_thread_trampoline);
-#ifdef CONFIG_VFP
+#if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
 EXPORT_SYMBOL(last_VFP_context);
 EXPORT_SYMBOL(rthal_vfp_save);
 EXPORT_SYMBOL(rthal_vfp_load);
-#endif /* CONFIG_VFP */
+#endif /* CONFIG_VFP && CONFIG_XENO_HW_FPU */
 
 // vim: ts=4 et sw=4 sts=4
