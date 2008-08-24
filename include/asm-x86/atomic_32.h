@@ -64,7 +64,7 @@ struct __xeno_xchg_dummy { unsigned long a[100]; };
 static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 						unsigned long x)
 {
-	__asm__ __volatile__(LOCK_PREFIX "xchgl %0,%1"
+	__asm__ __volatile__("xchgl %0,%1"
 			     :"=r" (x)
 			     :"m" (*__xeno_xg(ptr)), "0" (x)
 			     :"memory");
