@@ -100,7 +100,7 @@ int rthal_timer_request(void (*handler)(void),
     rthal_ktimer_saved_mode = res;
 
     if (rthal_timerfreq_arg == 0)
-	    rthal_tunables.timer_freq = CLOCK_TICK_RATE;
+	    rthal_tunables.timer_freq = tmfreq;
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
     tickval = 1000000000UL / HZ;
     rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
@@ -280,5 +280,10 @@ EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
 EXPORT_SYMBOL(rthal_thread_switch);
 EXPORT_SYMBOL(rthal_thread_trampoline);
+#ifdef CONFIG_VFP
+EXPORT_SYMBOL(last_VFP_context);
+EXPORT_SYMBOL(rthal_vfp_save);
+EXPORT_SYMBOL(rthal_vfp_load);
+#endif /* CONFIG_VFP */
 
 // vim: ts=4 et sw=4 sts=4
