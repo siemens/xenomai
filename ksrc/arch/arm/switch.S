@@ -21,6 +21,9 @@
 #include <linux/version.h>
 #include <asm/assembler.h>
 #include <asm/asm-offsets.h>
+#ifdef CONFIG_VFP
+#include <asm/vfpmacros.h>
+#endif
 
 /*
  * Switch context routine.
@@ -41,6 +44,35 @@
 
     .text
 
+#ifdef CONFIG_VFP
+/* Copied from vfp_save_state in arch/arm/vfp/vfphw.S 
+ * r0 = pointer to union vfp_state, r1 = fpexc
+ */
+ENTRY(rthal_vfp_save)
+    VFPFSTMIA	r0, r2			@ save the working registers
+    VFPFMRX	r2, FPSCR		@ current status
+    tst		r1, #FPEXC_EX		@ is there additional state to save?
+    VFPFMRX	r3, FPINST, NE		@ FPINST (only if FPEXC.EX is set)
+    tstne	r1, #FPEXC_FP2V		@ is there an FPINST2 to read?
+    VFPFMRX	r12, FPINST2, NE	@ FPINST2 if needed (and present)
+    stmia	r0, {r1, r2, r3, r12}	@ save FPEXC, FPSCR, FPINST, FPINST2
+    mov		pc, lr
+
+/* Copied from no_old_VFP_process in arch/arm/vfp/vfphw.S
+ * r0 = pointer to union vfp_state
+ */	
+ENTRY(rthal_vfp_load)
+    VFPFLDMIA	r0, r2			@ reload the working registers while
+					@ FPEXC is in a safe state
+    ldmia	r0, {r1, r2, r3, r12}	@ load FPEXC, FPSCR, FPINST, FPINST2
+    tst		r1, #FPEXC_EX		@ is there additional state to restore?
+    VFPFMXR	FPINST, r3, NE		@ restore FPINST (only if FPEXC.EX is set)
+    tstne	r1, #FPEXC_FP2V		@ is there an FPINST2 to write?
+    VFPFMXR	FPINST2, r12, NE	@ FPINST2 if needed (and present)
+    VFPFMXR	FPSCR, r2		@ restore status
+    mov		pc, lr
+#endif
+	
 /*
  * Copied from __switch_to, arch/arm/kernel/entry-armv.S.
  * Right now it is identical, but who knows what the
@@ -87,7 +119,14 @@ ENTRY(rthal_thread_switch)
     @ Always disable VFP so we can lazily save/restore the old
     @ state. This occurs in the context of the previous thread.
     VFPFMRX r4, FPEXC
+#if defined(CONFIG_SMP) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+    #error "Need to save FPU here"
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
     bic     r4, r4, #FPEXC_ENABLE
+#else
+    bic     r4, r4, #FPEXC_EN
+#endif
     VFPFMXR FPEXC, r4
 #endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18) &&  defined(CONFIG_IWMMXT)

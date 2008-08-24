@@ -96,6 +96,10 @@ static inline void fp_init(union fp_state *state)
 	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy)
 #endif /* IPIPE < 1.5-03 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
+#define FPEXC_EN FPEXC_ENABLE
+#endif
+
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
 
 // vim: ts=4 et sw=4 sts=4

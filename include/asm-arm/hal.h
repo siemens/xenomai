@@ -31,6 +31,9 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
+#ifdef CONFIG_VFP
+#include <asm/vfp.h>
+#endif /* CONFIG_VFP */
 
 #if defined(CONFIG_ARCH_AT91)
 #include <linux/stringify.h>
@@ -48,6 +51,9 @@
 #elif defined(CONFIG_ARCH_IXP4XX)
 #define RTHAL_TIMER_DEVICE	"ixp4xx timer1"
 #define RTHAL_CLOCK_DEVICE	"OSTS"
+#elif defined(CONFIG_ARCH_MXC)
+#define RTHAL_TIMER_DEVICE	"mxc_timer1"
+#define RTHAL_CLOCK_DEVICE	"mxc_timer1"
 #elif defined(CONFIG_ARCH_PXA)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
@@ -164,7 +170,14 @@ typedef struct rthal_fpenv {
      */
     __u8                    used_cp[16];    /* thread used copro */
     unsigned long           tp_value;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
+    struct crunch_state     crunchstate;
+#endif /* Linux version >= 2.6.18 */
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 15)
     union fp_state          fpstate;
+#else /* Linux version >= 2.6.16 */
+    union fp_state          fpstate __attribute__((aligned(8)));
+#endif /* Linux version >= 2.6.16 */
     union vfp_state         vfpstate;
 } rthal_fpenv_t;
 
@@ -172,10 +185,63 @@ static inline void rthal_init_fpu(rthal_fpenv_t *fpuenv)
 {
     fp_init(&fpuenv->fpstate);
 #if defined(CONFIG_VFP)
-    vfp_flush_thread(&fpuenv->vfpstate);
+    /* vfpstate has already been zeroed by xnarch_init_fpu */
+    fpuenv->vfpstate.hard.fpexc = FPEXC_EN;
+    fpuenv->vfpstate.hard.fpscr = FPSCR_ROUND_NEAREST;
 #endif
 }
 
+#define rthal_task_fpenv(task) \
+    ((rthal_fpenv_t *) &task_thread_info(task)->used_cp[0])
+
+#ifdef CONFIG_VFP
+asmlinkage void rthal_vfp_save(union vfp_state *vfp, unsigned fpexc);
+
+asmlinkage void rthal_vfp_load(union vfp_state *vfp);
+
+static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv, unsigned fpexc)
+{
+    rthal_vfp_save(&fpuenv->vfpstate, fpexc);
+}
+
+static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
+{
+    rthal_vfp_load(&fpuenv->vfpstate);
+}
+
+extern union vfp_state *last_VFP_context[NR_CPUS];
+#define rthal_get_fpu_owner()						\
+    ({									\
+	union vfp_state *_vfp_owner = last_VFP_context[smp_processor_id()]; \
+	(!_vfp_owner							\
+	 ? NULL								\
+	 : container_of(_vfp_owner, rthal_fpenv_t, vfpstate));		\
+    })
+
+#define rthal_vfp_fmrx(_vfp_) ({		\
+    u32 __v;					\
+    asm("mrc p10, 7, %0, " __stringify(_vfp_)	\
+	", cr0, 0 @ fmrx %0, " #_vfp_:		\
+	"=r" (__v));				\
+    __v;					\
+ })
+
+#define rthal_vfp_fmxr(_vfp_,_var_)		\
+    asm("mcr p10, 7, %0, " __stringify(_vfp_)	\
+	", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
+	/* */ : "r" (_var_))
+
+#define rthal_disable_fpu() \
+    rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
+
+#define rthal_enable_fpu()					\
+    ({								\
+	unsigned _fpexc = rthal_vfp_fmrx(FPEXC) | FPEXC_EN;	\
+	rthal_vfp_fmxr(FPEXC, _fpexc);				\
+	_fpexc;							\
+    })
+
+#else /* !CONFIG_VFP */
 static inline void rthal_save_fpu(rthal_fpenv_t *fpuenv)
 {
 }
@@ -195,6 +261,8 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 
 #define rthal_enable_fpu() \
 	task_thread_info(current)->used_cp[1] = task_thread_info(current)->used_cp[2] = 1;
+
+#endif /* !CONFIG_VFP */
 
 #endif /* CONFIG_XENO_HW_FPU */
 

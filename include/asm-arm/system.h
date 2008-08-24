@@ -53,6 +53,7 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
        - last_task_used_math for Linux US threads (only current or NULL when MP)
        - current for RT US threads.
     */
+    unsigned is_root;
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else /* !CONFIG_XENO_HW_FPU */
 #define xnarch_fpu_ptr(tcb)     NULL
@@ -88,7 +89,86 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_trap(fi)   ((fi)->exception)
 #define xnarch_fault_code(fi)   (0)
 #define xnarch_fault_pc(fi)     ((fi)->regs->ARM_pc - (thumb_mode((fi)->regs) ? 2 : 4)) /* XXX ? */
-#define xnarch_fault_fpu_p(fi)  (0)
+static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
+{
+    /* This function does the same thing to decode the faulting instruct as
+       "call_fpe" in arch/arm/entry-armv.S */
+    static unsigned copro_to_exc[16] = {
+	IPIPE_TRAP_UNDEFINSTR,
+	/* FPE */
+	IPIPE_TRAP_FPU, IPIPE_TRAP_FPU,
+	IPIPE_TRAP_UNDEFINSTR,
+#ifdef CONFIG_CRUNCH
+	IPIPE_TRAP_FPU, IPIPE_TRAP_FPU, IPIPE_TRAP_FPU,
+#else /* !CONFIG_CRUNCH */
+	IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR,
+#endif /* !CONFIG_CRUNCH */
+	IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR,
+#ifdef CONFIG_VFP
+	IPIPE_TRAP_VFP, IPIPE_TRAP_VFP,
+#else /* !CONFIG_VFP */
+	IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR,
+#endif /* !CONFIG_VFP */
+	IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR,
+	IPIPE_TRAP_UNDEFINSTR, IPIPE_TRAP_UNDEFINSTR,
+    };
+    unsigned instr, exc, cp;
+    char *pc;
+
+    if (fi->exception == IPIPE_TRAP_FPU || fi->exception == IPIPE_TRAP_VFP)
+	return 1;
+
+    /* When an FPU fault occurs in user-mode, it will be properly resolved
+       before __ipipe_dispatch_event is called. */
+    if (fi->exception != IPIPE_TRAP_UNDEFINSTR || xnarch_fault_um(fi))
+	return 0;
+
+    pc = (char *) xnarch_fault_pc(fi);
+    if (unlikely(thumb_mode(fi->regs))) {
+	unsigned short thumbh, thumbl;
+
+	thumbh = *(unsigned short *) pc;
+	thumbl = *((unsigned short *) pc + 1);
+	
+	if ((thumbh & 0x0000f800) < 0x0000e800)
+	    return 0;
+	instr = (thumbh << 16) | thumbl;
+
+#ifdef CONFIG_NEON
+	if ((instr & 0xef000000) == 0xef000000
+	    || (instr & 0xff100000) == 0xf9000000) {
+		fi->exception = IPIPE_TRAP_VFP;
+		return 1;
+	}
+#endif
+    } else {
+	instr = *(unsigned *) pc;
+
+#ifdef CONFIG_NEON
+	if ((instr & 0xfe000000) == 0xf2000000
+	    || (instr & 0xff100000) == 0xf4000000) {
+		fi->exception = IPIPE_TRAP_VFP;
+		return 1;
+	}
+#endif
+    }
+
+    if ((instr & 0x0c000000) != 0x0c000000)
+	return 0;
+
+    cp = (instr & 0x00000f00) >> 8;
+#ifdef CONFIG_IWMMXT
+    /* We need something equivalent to _TIF_USING_IWMMXT for Xenomai kernel
+       threads */
+    if (cp <= 1) {
+	fi->exception = IPIPE_TRAP_FPU;
+	return 1;
+    }
+#endif
+
+    fi->exception = exc = copro_to_exc[cp];
+    return exc != IPIPE_TRAP_UNDEFINSTR;
+}
 /* The following predicates are only usable over a regular Linux stack
    context. */
 #define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)

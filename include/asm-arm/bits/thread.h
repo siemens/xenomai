@@ -30,7 +30,7 @@
 static inline unsigned long xnarch_current_domain_access_control(void)
 {
 	unsigned long domain_access_control;
-      asm("mrc p15, 0, %0, c3, c0":"=r"(domain_access_control));
+	asm("mrc p15, 0, %0, c3, c0":"=r"(domain_access_control));
 	return domain_access_control;
 }
 
@@ -47,6 +47,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
 	tcb->fpup = &tcb->fpuenv;
+	tcb->is_root = 0;
 #endif /* CONFIG_XENO_HW_FPU */
 	/* Must be followed by xnarch_init_thread(). */
 }

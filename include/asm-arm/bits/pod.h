@@ -62,11 +62,14 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
 	rootcb->tip = task_thread_info(current);
 #ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_VFP
+	rootcb->fpup = rthal_get_fpu_owner();
+#else /* !CONFIG_VFP */
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
 	rootcb->fpup = (rootcb->user_fpu_owner
-			? (rthal_fpenv_t *) & task_thread_info(rootcb->user_fpu_owner)->used_cp[0]
-			: NULL);
+			? rthal_task_fpenv(rootcb->user_fpu_owner) : NULL);
+#endif /* !CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
@@ -130,6 +133,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
 	tcb->fpup = NULL;
+	tcb->is_root = 1;
 #endif /* CONFIG_XENO_HW_FPU */
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
@@ -175,11 +179,22 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 /* No lazy FPU init on ARM. */
 #define xnarch_fpu_init_p(task) (1)
 
-static inline void xnarch_enable_fpu(xnarchtcb_t * current_tcb)
+static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-	if (!current_tcb->user_task)
+#ifdef CONFIG_VFP
+	/* If we are restoring the Linux current thread which does not own the
+	   FPU context, we keep FPU disabled, so that a fault will occur if the
+	   newly switched thread uses the FPU, to allow the kernel handler to
+	   pick the correct FPU context.
+	*/ 
+	if (likely(!tcb->is_root)
+	    || (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)))
 		rthal_enable_fpu();
+#else /* !CONFIG_VFP */
+	if (!tcb->user_task)
+		rthal_enable_fpu();
+#endif /* !CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
@@ -190,13 +205,20 @@ static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 	   must be run on behalf of the emerging thread. */
 	memset(&tcb->fpuenv, 0, sizeof(tcb->fpuenv));
 	rthal_init_fpu(&tcb->fpuenv);
+#ifdef CONFIG_VFP
+	rthal_enable_fpu();
+	rthal_restore_fpu(&tcb->fpuenv);
+#endif /* CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
 static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-
+#ifdef CONFIG_VFP
+	if (tcb->fpup)
+		rthal_save_fpu(tcb->fpup, rthal_enable_fpu());
+#else /* !CONFIG_VFP */
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
@@ -205,13 +227,32 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 			task_thread_info(tcb->user_fpu_owner)->used_cp[2] = 0;
 		}
 	}
+#endif /* !CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
 static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
+#ifdef CONFIG_VFP
+	if (likely(!tcb->is_root)) {
+		rthal_enable_fpu();
+		rthal_restore_fpu(tcb->fpup);
+	} else {
+	/* We are restoring the Linux current thread which does not own the FPU
+	   context, so the FPU must be disabled, so that a fault will occur if
+	   the newly switched thread uses the FPU, to allow the kernel handler
+	   to pick the correct FPU context.
 
+	   Further set last_VFP_context to NULL to avoid the Linux kernel to
+	   save, when the fault occur, the current FPU context, the one of an RT
+	   task, into the FPU area of the last non RT task which used the FPU
+	   before the preemption by Xenomai.
+	*/ 
+		last_VFP_context[smp_processor_id()] = NULL;
+		rthal_disable_fpu();
+	}
+#else /* !CONFIG_VFP */
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
 
@@ -225,6 +266,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   whereas we could be much lazier. */
 	if (tcb->user_task)
 		rthal_disable_fpu();
+#endif /* !CONFIG_VFP */
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
