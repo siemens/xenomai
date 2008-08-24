@@ -158,17 +158,9 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 		    You must have TSC for this.
 
 --enable-arm-mach   Select ARM machine for the	     none
-		    current build tree, valid
-		    values are:
-		    - at91rm9200
-		    - at91sam926x
-		    - imx
-		    - imx21
-		    - integrator
- 		    - ixp4xx
-                    - pxa
-                    - s3c2410
-                    - sa1100
+		    current build tree, check 
+		    configure --help for a list
+		    of valid values.
 		    Passing this option is 
 		    mandatory when compiling 
 		    Xenomai for ARM
@@ -181,7 +173,7 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 
 --enable-arm-eabi   Enable ARM EABI interface        weak,disabled
 
---enable-arm-tsc    Enable ARM TSC emulation	     strong,disabled
+--enable-arm-tsc    Enable ARM TSC emulation	     strong,enabled
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.

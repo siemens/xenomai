@@ -51,6 +51,9 @@
 #elif defined(CONFIG_ARCH_IXP4XX)
 #define RTHAL_TIMER_DEVICE	"ixp4xx timer1"
 #define RTHAL_CLOCK_DEVICE	"OSTS"
+#elif defined(CONFIG_ARCH_MXC)
+#define RTHAL_TIMER_DEVICE	"mxc_timer1"
+#define RTHAL_CLOCK_DEVICE	"mxc_timer1"
 #elif defined(CONFIG_ARCH_PXA)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
