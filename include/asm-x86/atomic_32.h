@@ -21,6 +21,8 @@
 #define _XENO_ASM_X86_ATOMIC_32_H
 #define _XENO_ASM_X86_ATOMIC_H
 
+#include <asm/xenomai/features.h>
+
 #ifdef __KERNEL__
 
 #include <linux/bitops.h>
@@ -94,7 +96,6 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newva
 
 typedef unsigned long atomic_flags_t;
 
-#include <asm/xenomai/features.h>
 #include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_X86_ATOMIC_32_H */
