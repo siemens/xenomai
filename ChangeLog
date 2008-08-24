@@ -10,6 +10,9 @@
 	
 2008-08-22  Jan Kiszka  <jan.kiszka@siemens.com>
 
+	* include/asm-x86/atomic_64.h, configure.in, ksrc/arch/x86/Kconfig:
+	Add x86_64 support for user-space locks.
+
 	* ksrc/skins/posix/mutex.c: Convert remaining
 	XNARCH_HAVE_US_ATOMIC_CMPXCHG to CONFIG_XENO_FASTSEM, fixing
 	fast mutex support again.

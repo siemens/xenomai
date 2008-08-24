@@ -21,6 +21,10 @@
 #define _XENO_ASM_X86_ATOMIC_64_H
 #define _XENO_ASM_X86_ATOMIC_H
 
+#include <asm/xenomai/features.h>
+
+typedef unsigned long atomic_flags_t;
+
 #ifdef __KERNEL__
 
 #include <linux/bitops.h>
@@ -50,9 +54,19 @@ typedef atomic64_t xnarch_atomic_t;
 
 #else /* !__KERNEL__ */
 
-#include <asm/xenomai/features.h>
+#ifdef CONFIG_SMP
+#define LOCK_PREFIX "lock ; "
+#else
+#define LOCK_PREFIX ""
+#endif
+
+typedef struct { unsigned long counter; } xnarch_atomic_t;
 
 #define __xeno_xg(x) ((volatile long *)(x))
+
+#define xnarch_atomic_get(v)		((v)->counter)
+
+#define xnarch_atomic_set(v,i)		(((v)->counter) = (i))
 
 static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 						unsigned long x)
@@ -64,12 +78,25 @@ static inline unsigned long xnarch_atomic_xchg (volatile void *ptr,
 	return x;
 }
 
+static inline unsigned long
+xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newval)
+{
+	volatile void *ptr = &v->counter;
+	unsigned long prev;
+
+	__asm__ __volatile__(LOCK_PREFIX "cmpxchgq %1,%2"
+			     : "=a"(prev)
+			     : "r"(newval), "m"(*__xeno_xg(ptr)), "0"(old)
+			     : "memory");
+	return prev;
+}
+
 #define xnarch_memory_barrier()		asm volatile("mfence":::"memory")
 #define xnarch_read_memory_barrier()	asm volatile("lfence":::"memory")
 #define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
 #endif /* __KERNEL__ */
 
-typedef unsigned long atomic_flags_t;
+#include <asm-generic/xenomai/atomic.h>
 
 #endif /* !_XENO_ASM_X86_ATOMIC_64_H */
