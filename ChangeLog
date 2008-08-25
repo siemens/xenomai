@@ -1,4 +1,4 @@
-2008-08-22  Jan Kiszka  <jan.kiszka@siemens.com>
+2008-08-25  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/asm-generic/wrappers.h: Provide atomic_long wrappings.
 
