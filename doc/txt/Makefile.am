@@ -8,4 +8,5 @@ dist_txtdoc_DATA = \
 	rtai-skin.txt \
 	uITRON-skin.txt \
 	vrtx-skin.txt \
+	comedi-skin.txt \
 	vxworks-skin.txt

@@ -1,6 +1,6 @@
 includesubdir = $(includedir)/comedi
 
-include_HEADERS = 	\
+includesub_HEADERS = 	\
 	buffer.h	\
 	channel_range.h	\
 	comedi_driver.h	\

@@ -21301,6 +21301,7 @@ case "$host" in
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_FASTSEM=y
         ;;
  *) echo ""
    echo "*******************************************"
@@ -21697,6 +21698,11 @@ else
   XENO_BUILD_LINUX_FALSE=
 fi
 
+
+
+if test x"$docdir" = x; then
+        docdir=$datadir/doc/$PACKAGE-$VERSION
+fi
 
 
 if test \! -d $srcdir/doc ; then
