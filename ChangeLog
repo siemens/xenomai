@@ -1,3 +1,10 @@
+2008-08-22  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* include/asm-generic/wrappers.h: Provide atomic_long wrappings.
+
+	* include/asm-x86/atomic*.h: Unify header, switching
+	xnarch_atomic to atomic_long type and services.
+
 2008-08-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* include/asm-arm/hal.h, configure.in: Add support for ARM MXC

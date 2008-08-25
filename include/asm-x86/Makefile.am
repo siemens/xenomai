@@ -4,8 +4,6 @@ includesub_HEADERS =	\
 	arith_32.h	\
 	arith_64.h	\
 	arith.h	\
-	atomic_32.h	\
-	atomic_64.h	\
 	atomic.h	\
 	calibration.h	\
 	features_32.h	\
