@@ -30,7 +30,7 @@
 #include <linux/slab.h>
 #include <asm/io.h>
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 
 #include <linux/wrapper.h>
 #include <linux/wait.h>
@@ -38,6 +38,11 @@
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
+#include <asm/atomic.h>
+
+#if BITS_PER_LONG != 32
+#error Upgrade to kernel 2.6!
+#endif
 
 /* Compiler */
 #ifndef __attribute_const__
@@ -276,7 +281,63 @@ void show_stack(struct task_struct *task,
 #define __GFP_BITS_SHIFT 20
 #define pgprot_noncached(p) (p)
 
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
+typedef atomic_t atomic_long_t;
+
+static inline long atomic_long_read(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	return (long)atomic_read(v);
+}
+
+static inline void atomic_long_set(atomic_long_t *l, long i)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	atomic_set(v, i);
+}
+
+static inline void atomic_long_inc(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	atomic_inc(v);
+}
+
+static inline void atomic_long_dec(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	atomic_dec(v);
+}
+
+static inline int atomic_long_dec_and_test(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	return atomic_dec_and_test(v);
+}
+
+static inline int atomic_long_inc_and_test(atomic_long_t *l)
+{
+	atomic_t *v = (atomic_t *)l;
+
+	return atomic_inc_and_test(v);
+}
+
+#define atomic_long_cmpxchg(l, old, new) \
+	(atomic_cmpxchg((atomic_t *)(l), (old), (new)))
+
+static inline unsigned long hweight_long(unsigned long w)
+{
+	return hweight32(w);
+}
+
+#define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
+unsigned long find_next_bit(const unsigned long *addr,
+                            unsigned long size, unsigned long offset);
+
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
 	module_param_array(name, type, NULL, perm)
@@ -393,7 +454,7 @@ unsigned long __va_to_kva(unsigned long va);
 #define DECLARE_WORK_FUNC(f)		void f(struct work_struct *work)
 #endif /* >= 2.6.20 */
 
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 #define IRQF_SHARED			SA_SHIRQ
@@ -414,20 +475,5 @@ unsigned long __va_to_kva(unsigned long va);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define KMALLOC_MAX_SIZE 131072
 #endif /* !KMALLOC_MAX_SIZE */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-static inline unsigned long hweight_long(unsigned long w)
-{
-#if BITS_PER_LONG == 64
-	return hweight64(w);
-#else /* 32 bits */
-	return hweight32(w);
-#endif /* 32 bits */
-}
-
-#define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
-unsigned long find_next_bit(const unsigned long *addr,
-                            unsigned long size, unsigned long offset);
-#endif /* linux version < 2.6.0 */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
