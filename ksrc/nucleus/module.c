@@ -352,7 +352,9 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	struct seq_file *seq;
 	xnholder_t *holder;
 	struct stat_seq_info *stat_info;
-	int err, count, thrq_rev, intr_rev, irq;
+	xnintr_iterator_t intr_iter;
+	int err, count, thrq_rev, irq;
+	int intr_count;
 	spl_t s;
 
 	if (!xnpod_active_p())
@@ -368,18 +370,8 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	/* The order is important here: first xnintr_list_rev then
-	 * xnintr_count.  On the other hand, xnintr_attach/detach()
-	 * update xnintr_count first and then xnintr_list_rev.  This
-	 * should guarantee that we can't get an up-to-date
-	 * xnintr_list_rev and old xnintr_count here. The other way
-	 * around is not a problem as xnintr_query() will notice this
-	 * fact later.  Should xnintr_list_rev change later,
-	 * xnintr_query() will trigger an appropriate error below. */
-
-	intr_rev = xnintr_list_rev;
-	xnarch_memory_barrier();
-	count += xnintr_count * RTHAL_NR_CPUS;
+	intr_count = xnintr_query_init(&intr_iter);
+	count += intr_count * RTHAL_NR_CPUS;
 
 	if (iter)
 		kfree(iter);
@@ -442,35 +434,30 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	}
 
 	/* Iterate over all IRQ numbers, ... */
-	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
-		xnintr_t *prev = NULL;
-		int cpu = 0, _cpu;
-		int err;
-
+	for (irq = 0; irq < XNARCH_NR_IRQS; irq++)
 		/* ...over all shared IRQs on all CPUs */
 		while (1) {
 			stat_info = &iter->stat_info[iter->nentries];
-			_cpu = cpu;
 
-			err = xnintr_query(irq, &cpu, &prev, intr_rev,
-					   stat_info->name,
-					   &stat_info->csw,
-					   &stat_info->exectime,
-					   &stat_info->account_period);
-			if (err == -EAGAIN)
-				goto restart_unlocked;
-			if (err)
+			err = xnintr_query_next(irq, &intr_iter,
+						stat_info->name);
+			if (err) {
+				if (err == -EAGAIN)
+					goto restart_unlocked;
 				break; /* line unused or end of chain */
+			}
 
-			stat_info->cpu = _cpu;
+			stat_info->cpu = intr_iter.cpu;
+			stat_info->csw = intr_iter.hits;
+			stat_info->exectime = intr_iter.exectime;
+			stat_info->account_period = intr_iter.account_period;
 			stat_info->pid = 0;
 			stat_info->state =  0;
 			stat_info->ssw = 0;
 			stat_info->pf = 0;
 
 			iter->nentries++;
-		};
-	}
+		}
 
 	seq = file->private_data;
 	seq->private = iter;

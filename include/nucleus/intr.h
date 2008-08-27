@@ -69,11 +69,23 @@ typedef struct xnintr {
 
 } xnintr_t;
 
+typedef struct xnintr_iterator {
+
+    int cpu;		/* !< Current CPU in iteration. */
+
+    unsigned long hits;	/* !< Current hit counter. */
+
+    xnticks_t exectime;	/* !< Used CPU time in current accounting period. */
+
+    xnticks_t account_period; /* !< Length of accounting period. */
+
+    int list_rev;	/* !< System-wide xnintr list revision (internal use). */
+
+    xnintr_t *prev;	/* !< Previously visited xnintr object (internal use). */
+
+} xnintr_iterator_t;
+
 extern xnintr_t nkclock;
-#ifdef CONFIG_XENO_OPT_STATS
-extern int xnintr_count;
-extern int xnintr_list_rev;
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,9 +120,8 @@ int xnintr_disable(xnintr_t *intr);
 xnarch_cpumask_t xnintr_affinity(xnintr_t *intr,
                                  xnarch_cpumask_t cpumask);
 
-int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
-		 unsigned long *hits, xnticks_t *exectime,
-		 xnticks_t *account_period);
+int xnintr_query_init(xnintr_iterator_t *iterator);
+int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf);
 
 #ifdef __cplusplus
 }

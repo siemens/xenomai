@@ -42,9 +42,9 @@
 DEFINE_PRIVATE_XNLOCK(intrlock);
 
 #ifdef CONFIG_XENO_OPT_STATS
-xnintr_t nkclock;	/* Only for statistics */
-int xnintr_count = 1;	/* Number of attached xnintr objects + nkclock */
-int xnintr_list_rev;	/* Modification counter of xnintr list */
+xnintr_t nkclock;	     /* Only for statistics */
+static int xnintr_count = 1; /* Number of attached xnintr objects + nkclock */
+static int xnintr_list_rev;  /* Modification counter of xnintr list */
 
 /* Both functions update xnintr_list_rev at the very end.
  * This guarantees that module.c::stat_seq_open() won't get
@@ -899,55 +899,77 @@ int xnintr_irq_proc(unsigned int irq, char *str)
 #endif /* CONFIG_PROC_FS */
 
 #ifdef CONFIG_XENO_OPT_STATS
-int xnintr_query(int irq, int *cpu, xnintr_t **prev, int revision, char *name,
-		 unsigned long *hits, xnticks_t *exectime,
-		 xnticks_t *account_period)
+int xnintr_query_init(xnintr_iterator_t *iterator)
+{
+	iterator->cpu = -1;
+	iterator->prev = NULL;
+
+	/* The order is important here: first xnintr_list_rev then
+	 * xnintr_count.  On the other hand, xnintr_attach/detach()
+	 * update xnintr_count first and then xnintr_list_rev.  This
+	 * should guarantee that we can't get an up-to-date
+	 * xnintr_list_rev and old xnintr_count here. The other way
+	 * around is not a problem as xnintr_query() will notice this
+	 * fact later.  Should xnintr_list_rev change later,
+	 * xnintr_query() will trigger an appropriate error below. */
+
+	iterator->list_rev = xnintr_list_rev;
+	xnarch_memory_barrier();
+
+	return xnintr_count;
+}
+
+int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 {
 	xnintr_t *intr;
 	xnticks_t last_switch;
-	int head;
-	int cpu_no = *cpu;
+	int cpu_no = iterator->cpu + 1;
 	int err = 0;
 	spl_t s;
 
+	if (cpu_no == xnarch_num_online_cpus())
+		cpu_no = 0;
+	iterator->cpu = cpu_no;
+
 	xnlock_get_irqsave(&intrlock, s);
 
-	if (revision != xnintr_list_rev) {
+	if (iterator->list_rev != xnintr_list_rev) {
 		err = -EAGAIN;
 		goto unlock_and_exit;
 	}
 
-	if (*prev)
-		intr = xnintr_shirq_next(*prev);
-	else if (irq == XNARCH_TIMER_IRQ)
-		intr = &nkclock;
-	else
-		intr = xnintr_shirq_first(irq);
+	if (!iterator->prev) {
+		if (irq == XNARCH_TIMER_IRQ)
+			intr = &nkclock;
+		else
+			intr = xnintr_shirq_first(irq);
+	} else
+		intr = xnintr_shirq_next(iterator->prev);
 
 	if (!intr) {
+		cpu_no = -1;
+		iterator->prev = NULL;
 		err = -ENODEV;
 		goto unlock_and_exit;
 	}
 
-	head = snprintf(name, XNOBJECT_NAME_LEN, "IRQ%d: ", irq);
-	name += head;
-	strncpy(name, intr->name, XNOBJECT_NAME_LEN-head);
+	snprintf(name_buf, XNOBJECT_NAME_LEN, "IRQ%d: %s", irq, intr->name);
 
-	*hits = xnstat_counter_get(&intr->stat[cpu_no].hits);
+	iterator->hits = xnstat_counter_get(&intr->stat[cpu_no].hits);
 
 	last_switch = xnpod_sched_slot(cpu_no)->last_account_switch;
 
-	*exectime       = intr->stat[cpu_no].account.total;
-	*account_period = last_switch - intr->stat[cpu_no].account.start;
+	iterator->exectime = intr->stat[cpu_no].account.total;
+	iterator->account_period =
+		last_switch - intr->stat[cpu_no].account.start;
 
-	intr->stat[cpu_no].account.total  = 0;
+	intr->stat[cpu_no].account.total = 0;
 	intr->stat[cpu_no].account.start = last_switch;
 
-	if (++cpu_no == xnarch_num_online_cpus()) {
-		cpu_no = 0;
-		*prev  = intr;
-	}
-	*cpu = cpu_no;
+	/* Proceed to next entry in shared IRQ chain when all CPUs
+	 * have been visited for this one. */
+	if (cpu_no + 1 == xnarch_num_online_cpus())
+		iterator->prev = intr;
 
      unlock_and_exit:
 	xnlock_put_irqrestore(&intrlock, s);
