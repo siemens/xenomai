@@ -60,6 +60,8 @@ static int registry_hash_entries;
 
 static xnsynch_t registry_hash_synch;
 
+static unsigned registry_exported_objects;
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 #include <linux/workqueue.h>
@@ -76,11 +78,40 @@ static xnqueue_t registry_obj_procq;	/* Objects waiting for /proc handling. */
 static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
 #endif /* !CONFIG_PREEMPT_RT */
 
-static struct proc_dir_entry *registry_proc_root;
-
 static int registry_proc_apc;
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+#ifdef CONFIG_PROC_FS
+static struct proc_dir_entry *registry_proc_root;
+
+static int
+registry_usage_read_proc(char *page, char **start, off_t off,
+			 int count, int *eof, void *data)
+{
+	int len;
+
+	if (!xnpod_active_p())
+		return -ESRCH;
+
+	len = sprintf(page, "slots=%u:used=%u:exported=%u\n",
+		      CONFIG_XENO_OPT_REGISTRY_NRSLOTS,
+		      CONFIG_XENO_OPT_REGISTRY_NRSLOTS -
+		      countq(&registry_obj_freeq),
+		      registry_exported_objects);
+
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+#endif /* CONFIG_PROC_FS */
 
 int xnregistry_init(void)
 {
@@ -100,22 +131,28 @@ int xnregistry_init(void)
 	if (registry_obj_slots == NULL)
 		return -ENOMEM;
 
+#ifdef CONFIG_PROC_FS
+	registry_proc_root = create_proc_entry("registry",
+					       S_IFDIR, rthal_proc_root);
+	if (!registry_proc_root)
+		return -ENOMEM;
+
+	rthal_add_proc_leaf("usage", registry_usage_read_proc,
+			    NULL, NULL, registry_proc_root);
+
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 	registry_proc_apc =
 	    rthal_apc_alloc("registry_export", &registry_proc_schedule, NULL);
 
-	if (registry_proc_apc < 0)
+	if (registry_proc_apc < 0) {
+		remove_proc_entry("usage", registry_proc_root);
+		remove_proc_entry("registry", rthal_proc_root);
 		return registry_proc_apc;
-
-	registry_proc_root = create_proc_entry("registry",
-					       S_IFDIR, rthal_proc_root);
-	if (!registry_proc_root) {
-		rthal_apc_free(registry_proc_apc);
-		return -ENOMEM;
 	}
 
 	initq(&registry_obj_procq);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 	initq(&registry_obj_freeq);
 	initq(&registry_obj_busyq);
@@ -136,10 +173,13 @@ int xnregistry_init(void)
 						  registry_hash_entries);
 
 	if (!registry_hash_table) {
+#ifdef CONFIG_PROC_FS
+		remove_proc_entry("usage", registry_proc_root);
+		remove_proc_entry("registry", rthal_proc_root);
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 		rthal_apc_free(registry_proc_apc);
-		remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 		return -ENOMEM;
 	}
 
@@ -195,8 +235,12 @@ void xnregistry_cleanup(void)
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 	rthal_apc_free(registry_proc_apc);
 	flush_scheduled_work();
-	remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+#ifdef CONFIG_PROC_FS
+	remove_proc_entry("usage", registry_proc_root);
+	remove_proc_entry("registry", rthal_proc_root);
+#endif /* CONFIG_PROC_FS */
 
 	xnarch_free_host_mem(registry_obj_slots,
 			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
@@ -269,6 +313,7 @@ static DECLARE_WORK_FUNC(registry_proc_callback)
 		if (object->proc != XNOBJECT_PROC_RESERVED1)
 			goto unexport;
 
+		registry_exported_objects++;
 		++pnode->entries;
 		object->proc = XNOBJECT_PROC_RESERVED2;
 		appendq(&registry_obj_busyq, holder);
@@ -326,6 +371,7 @@ static DECLARE_WORK_FUNC(registry_proc_callback)
 		continue;
 
 	unexport:
+		registry_exported_objects--;
 		entries = --pnode->entries;
 		entry = object->proc;
 		object->proc = NULL;
