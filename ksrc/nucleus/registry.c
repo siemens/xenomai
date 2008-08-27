@@ -1024,15 +1024,13 @@ void *xnregistry_get(xnhandle_t handle)
 	void *objaddr;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
 	if (handle == XNOBJECT_SELF) {
-		if (!xnpod_primary_p()) {
-			objaddr = NULL;
-			goto unlock_and_exit;
-		}
+		if (!xnpod_primary_p())
+			return NULL;
 		handle = xnpod_current_thread()->registry.handle;
 	}
+
+	xnlock_get_irqsave(&nklock, s);
 
 	object = registry_validate(handle);
 
@@ -1087,16 +1085,13 @@ u_long xnregistry_put(xnhandle_t handle)
 	u_long newlock;
 	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
 	if (handle == XNOBJECT_SELF) {
-		if (!xnpod_primary_p()) {
-			newlock = 0;
-			goto unlock_and_exit;
-		}
-
+		if (!xnpod_primary_p())
+			return 0;
 		handle = xnpod_current_thread()->registry.handle;
 	}
+
+	xnlock_get_irqsave(&nklock, s);
 
 	object = registry_validate(handle);
 
@@ -1150,28 +1145,17 @@ u_long xnregistry_put(xnhandle_t handle)
 void *xnregistry_fetch(xnhandle_t handle)
 {
 	xnobject_t *object;
-	void *objaddr;
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (handle == XNOBJECT_SELF) {
-		objaddr = xnpod_primary_p()? xnpod_current_thread() : NULL;
-		goto unlock_and_exit;
-	}
+	if (handle == XNOBJECT_SELF)
+		return xnpod_primary_p()? xnpod_current_thread() : NULL;
 
 	object = registry_validate(handle);
 
-	if (object)
-		objaddr = object->objaddr;
-	else
-		objaddr = NULL;
+	if (!object)
+		return NULL;
 
-      unlock_and_exit:
+	return object->objaddr;
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	return objaddr;
 }
 
 /*@}*/

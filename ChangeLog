@@ -1,3 +1,9 @@
+2008-08-26  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/nucleus/registry.c (xnregistry_fetch/get/put): Remove
+	pointless locking, move XNOBJECT_SELF lookups out of critical
+	sections.
+
 2008-08-25  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* include/asm-generic/wrappers.h: Provide atomic_long wrappings.
