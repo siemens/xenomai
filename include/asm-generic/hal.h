@@ -459,11 +459,11 @@ void rthal_timer_release(int cpu);
 
 extern struct proc_dir_entry *rthal_proc_root;
 
-struct proc_dir_entry *__rthal_add_proc_leaf(const char *name,
-					     read_proc_t rdproc,
-					     write_proc_t wrproc,
-					     void *data,
-					     struct proc_dir_entry *parent);
+struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
+					   read_proc_t rdproc,
+					   write_proc_t wrproc,
+					   void *data,
+					   struct proc_dir_entry *parent);
 #endif /* CONFIG_PROC_FS */
 
 #ifdef CONFIG_IPIPE_TRACE

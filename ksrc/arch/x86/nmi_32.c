@@ -232,9 +232,9 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 	nmi_watchdog_tick = &rthal_nmi_watchdog_tick;
 
 #ifdef CONFIG_PROC_FS
-	__rthal_add_proc_leaf("nmi_early_shots",
-			      &earlyshots_read_proc,
-			      NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("nmi_early_shots",
+			    &earlyshots_read_proc,
+			    NULL, NULL, rthal_proc_root);
 #endif /* CONFIG_PROC_FS */
 
 	return 0;

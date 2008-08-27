@@ -987,29 +987,6 @@ static int affinity_write_proc(struct file *file,
 	return count;
 }
 
-static struct proc_dir_entry *add_proc_leaf(const char *name,
-					    read_proc_t rdproc,
-					    write_proc_t wrproc,
-					    void *data,
-					    struct proc_dir_entry *parent)
-{
-	int mode = wrproc ? 0644 : 0444;
-	struct proc_dir_entry *entry;
-
-	entry = create_proc_entry(name, mode, parent);
-
-	if (!entry)
-		return NULL;
-
-	entry->nlink = 1;
-	entry->data = data;
-	entry->read_proc = rdproc;
-	entry->write_proc = wrproc;
-	entry->owner = THIS_MODULE;
-
-	return entry;
-}
-
 static struct proc_dir_entry *add_proc_fops(const char *name,
 					    struct file_operations *fops,
 					    size_t size,
@@ -1046,26 +1023,31 @@ void xnpod_init_proc(void)
 #endif /* CONFIG_XENO_OPT_STATS */
 
 #if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
-	add_proc_leaf("lock", &lock_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("lock", &lock_read_proc, NULL, NULL,
+			    rthal_proc_root);
 #endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
 
-	add_proc_leaf("latency",
-		      &latency_read_proc,
-		      &latency_write_proc, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("latency",
+			    &latency_read_proc,
+			    &latency_write_proc, NULL, rthal_proc_root);
 
-	add_proc_leaf("version", &version_read_proc, NULL, NULL,
-		      rthal_proc_root);
+	rthal_add_proc_leaf("version", &version_read_proc, NULL, NULL,
+			    rthal_proc_root);
 
-	add_proc_leaf("timer", &timer_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("timer", &timer_read_proc, NULL, NULL,
+			    rthal_proc_root);
 
-	add_proc_leaf("timebases", &timebase_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("timebases", &timebase_read_proc, NULL, NULL,
+			    rthal_proc_root);
 
-	add_proc_leaf("irq", &irq_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("irq", &irq_read_proc, NULL, NULL,
+			    rthal_proc_root);
 
-	add_proc_leaf("heap", &heap_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("heap", &heap_read_proc, NULL, NULL,
+			    rthal_proc_root);
 
-	add_proc_leaf("affinity", &affinity_read_proc, &affinity_write_proc,
-		      NULL, rthal_proc_root);
+	rthal_add_proc_leaf("affinity", &affinity_read_proc,
+			    &affinity_write_proc, NULL, rthal_proc_root);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	iface_proc_root =
@@ -1129,9 +1111,9 @@ static int iface_read_proc(char *page,
 
 void xnpod_declare_iface_proc(struct xnskin_slot *iface)
 {
-	add_proc_leaf(iface->props->name,
-		      &iface_read_proc, NULL, iface,
-		      iface_proc_root);
+	rthal_add_proc_leaf(iface->props->name,
+			    &iface_read_proc, NULL, iface,
+			    iface_proc_root);
 }
 
 void xnpod_discard_iface_proc(const char *iface_name)

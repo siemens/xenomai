@@ -225,29 +225,6 @@ static inline xnobject_t *registry_validate(xnhandle_t handle)
    like are hopefully properly handled due to a careful
    synchronization of operations across domains. */
 
-static struct proc_dir_entry *add_proc_leaf(const char *name,
-					    read_proc_t rdproc,
-					    write_proc_t wrproc,
-					    void *data,
-					    struct proc_dir_entry *parent)
-{
-	int mode = wrproc ? 0644 : 0444;
-	struct proc_dir_entry *entry;
-
-	entry = create_proc_entry(name, mode, parent);
-
-	if (!entry)
-		return NULL;
-
-	entry->nlink = 1;
-	entry->data = data;
-	entry->read_proc = rdproc;
-	entry->write_proc = wrproc;
-	entry->owner = THIS_MODULE;
-
-	return entry;
-}
-
 static struct proc_dir_entry *add_proc_link(const char *name,
 					    link_proc_t *link_proc,
 					    void *data,
@@ -332,10 +309,10 @@ static DECLARE_WORK_FUNC(registry_proc_callback)
 						     object->objaddr, dir);
 		else
 			/* Entry allows to get/set object properties. */
-			object->proc = add_proc_leaf(object->key,
-						     pnode->read_proc,
-						     pnode->write_proc,
-						     object->objaddr, dir);
+			object->proc = rthal_add_proc_leaf(object->key,
+							   pnode->read_proc,
+							   pnode->write_proc,
+							   object->objaddr, dir);
 	      fail:
 		xnlock_get_irqsave(&nklock, s);
 

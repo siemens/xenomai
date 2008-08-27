@@ -108,9 +108,9 @@ static int maxlat_write_proc(struct file *file,
 
 void rthal_nmi_proc_register(void)
 {
-    __rthal_add_proc_leaf("nmi_maxlat",
-                          &maxlat_read_proc,
-                          &maxlat_write_proc, NULL, rthal_proc_root);
+    rthal_add_proc_leaf("nmi_maxlat",
+                        &maxlat_read_proc,
+                        &maxlat_write_proc, NULL, rthal_proc_root);
 }
 
 void rthal_nmi_proc_unregister(void)

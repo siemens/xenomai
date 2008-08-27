@@ -723,11 +723,11 @@ static int apc_read_proc(char *page,
     return len;
 }
 
-struct proc_dir_entry *__rthal_add_proc_leaf(const char *name,
-                                             read_proc_t rdproc,
-                                             write_proc_t wrproc,
-                                             void *data,
-                                             struct proc_dir_entry *parent)
+struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
+                                           read_proc_t rdproc,
+                                           write_proc_t wrproc,
+                                           void *data,
+                                           struct proc_dir_entry *parent)
 {
     int mode = wrproc ? 0644 : 0444;
     struct proc_dir_entry *entry;
@@ -756,12 +756,12 @@ static int rthal_proc_register(void)
 
     rthal_proc_root->owner = THIS_MODULE;
 
-    __rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
+    rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
 
-    __rthal_add_proc_leaf("faults",
-                          &faults_read_proc, NULL, NULL, rthal_proc_root);
+    rthal_add_proc_leaf("faults",
+                        &faults_read_proc, NULL, NULL, rthal_proc_root);
 
-    __rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
+    rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
 
     rthal_nmi_proc_register();
 
