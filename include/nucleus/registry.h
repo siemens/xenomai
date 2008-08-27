@@ -55,6 +55,8 @@ typedef struct xnobject {
 
     u_long cstamp;	/* !< Creation stamp. */
 
+    struct xnobject *hnext;	/* !< Next in h-table */
+
 #ifdef CONFIG_PROC_FS
 
     struct xnpnode *pnode; /* !< /proc information class. */
@@ -64,14 +66,6 @@ typedef struct xnobject {
 #endif /* CONFIG_PROC_FS */
 
 } xnobject_t;
-
-typedef struct xnobjhash {
-
-    xnobject_t *object;
-
-    struct xnobjhash *next;	/* !< Next in h-table */
-
-} xnobjhash_t;
 
 #ifdef __cplusplus
 extern "C" {
