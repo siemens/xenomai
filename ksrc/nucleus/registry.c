@@ -1040,8 +1040,6 @@ void *xnregistry_get(xnhandle_t handle)
 	} else
 		objaddr = NULL;
 
-      unlock_and_exit:
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return objaddr;
