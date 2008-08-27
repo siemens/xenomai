@@ -1,3 +1,10 @@
+2008-08-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/syscalls.c: Fix taskNametoId() wrapper, so
+	that it returns the registry handle to userland, not the internal
+	TCB address. Ensure taskInfoGet() returns the userland handle in
+	TASK_DESC::td_tid.
+
 2008-08-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* include/asm-arm/hal.h, configure.in: Add support for ARM MXC
