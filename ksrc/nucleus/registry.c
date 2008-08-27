@@ -624,7 +624,8 @@ int xnregistry_enter(const char *key,
 	if (!*key) {
 		object->key = NULL;
 		*phandle = object - registry_obj_slots;
-		return 0;
+		err = 0;
+		goto unlock_and_exit;
 	}
 
 	err = registry_hash_enter(key, object);
