@@ -232,6 +232,8 @@ typedef void (*wind_delete_hook)(WIND_TCB *);
 
 typedef void (*wind_tick_handler_t)(long);
     
+xnhandle_t taskNameToHandle(const char *name);
+
 #ifdef errno
 #undef errno
 #endif

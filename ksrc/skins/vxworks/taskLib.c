@@ -551,9 +551,9 @@ wind_task_t *taskTcb(TASK_ID task_id)
    wind_tasks_q */
 TASK_ID taskNameToId(const char *name)
 {
+	TASK_ID result = (TASK_ID)ERROR;
 	xnholder_t *holder;
 	wind_task_t *task;
-	int result = ERROR;
 	spl_t s;
 
 	if (!name)
@@ -576,6 +576,28 @@ TASK_ID taskNameToId(const char *name)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return result;
+}
+
+xnhandle_t taskNameToHandle(const char *name)
+{
+	xnhandle_t handle;
+	wind_task_t *task;
+	TASK_ID task_id;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	task_id = taskNameToId(name);
+	if (task_id == ERROR) {
+		handle = XN_NO_HANDLE;
+		goto out;
+	}
+	task = (wind_task_t *)task_id;
+	handle = xnthread_handle(&task->threadbase);
+out:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return handle;
 }
 
 /* nklock must be locked on entry, interrupts off */

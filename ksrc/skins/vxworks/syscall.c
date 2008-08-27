@@ -393,7 +393,7 @@ static int __wind_task_nametoid(struct pt_regs *regs)
 {
 	char name[XNOBJECT_NAME_LEN];
 	WIND_TCB_PLACEHOLDER ph;
-	TASK_ID task_id;
+	xnhandle_t handle;
 
 	if (!__xn_reg_arg1(regs))
 		return S_taskLib_NAME_NOT_FOUND;
@@ -405,12 +405,11 @@ static int __wind_task_nametoid(struct pt_regs *regs)
 
 	name[sizeof(name) - 1] = '\0';
 
-	task_id = taskNameToId(name);
-
-	if (task_id == ERROR)
+	handle = taskNameToHandle(name);
+	if (handle == XN_NO_HANDLE)
 		return wind_errnoget();
 
-	ph.handle = task_id;	/* Copy back the task handle. */
+	ph.handle = handle; /* Copy back the task handle. */
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &ph, sizeof(ph));
 }
@@ -645,14 +644,15 @@ static int __wind_taskinfo_get(struct pt_regs *regs)
 	int err;
 
 	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
-
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
 
 	err = taskInfoGet((TASK_ID)pTcb, &desc);
-
 	if (err)
 		return err;
+
+	/* Replace the kernel-based pointer by the userland handle. */
+	desc.td_tid = handle;
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
 				      &desc, sizeof(desc));
