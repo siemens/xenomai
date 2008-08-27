@@ -1,5 +1,8 @@
 2008-08-26  Jan Kiszka  <jan.kiszka@siemens.com>
 
+	* ksrc/nucleus/registry.c (xnregistry_enter/remove): Allow for
+	key-less anonymous object registration.
+
 	* ksrc/nucleus/registry.c (xnregistry_fetch/get/put): Remove
 	pointless locking, move XNOBJECT_SELF lookups out of critical
 	sections.
