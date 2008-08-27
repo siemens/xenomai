@@ -274,17 +274,7 @@ int rt_queue_create(RT_QUEUE *q,
 	   half-baked objects... */
 
 	if (name) {
-		xnpnode_t *pnode = &__queue_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			   from user-space, it gets registered under an unique
-			   internal name but is not exported through /proc. */
-			xnobject_create_name(q->name, sizeof(q->name), q);
-			pnode = NULL;
-		}
-
-		err = xnregistry_enter(q->name, q, &q->handle, pnode);
+		err = xnregistry_enter(q->name, q, &q->handle, &__queue_pnode);
 
 		if (err)
 			rt_queue_delete(q);

@@ -204,19 +204,8 @@ int rt_event_create(RT_EVENT *event,
 	   half-baked objects... */
 
 	if (name) {
-		xnpnode_t *pnode = &__event_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			   from user-space, it gets registered under an unique
-			   internal name but is not exported through /proc. */
-			xnobject_create_name(event->name, sizeof(event->name),
-					     (void *)event);
-			pnode = NULL;
-		}
-
-		err =
-		    xnregistry_enter(event->name, event, &event->handle, pnode);
+		err = xnregistry_enter(event->name, event, &event->handle,
+				       &__event_pnode);
 
 		if (err)
 			rt_event_delete(event);

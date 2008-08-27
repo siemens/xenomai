@@ -221,20 +221,9 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 	 * handles to half-baked objects...
 	 */
 	if (name) {
-		xnpnode_t *pnode = &__buffer_pnode;
+		ret = xnregistry_enter(bf->name, bf, &bf->handle,
+				       &__buffer_pnode);
 
-		if (!*name) {
-			/*
-			 * Since this is an anonymous object (empty
-			 * name on entry) from user-space, it gets
-			 * registered under an unique internal name
-			 * but is not exported through /proc.
-			 */
-			xnobject_create_name(bf->name, sizeof(bf->name), bf);
-			pnode = NULL;
-		}
-
-		ret = xnregistry_enter(bf->name, bf, &bf->handle, pnode);
 		if (ret)
 			rt_buffer_delete(bf);
 	}

@@ -191,19 +191,8 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	   half-baked objects... */
 
 	if (name) {
-		xnpnode_t *pnode = &__mutex_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			   from user-space, it gets registered under an unique
-			   internal name but is not exported through /proc. */
-			xnobject_create_name(mutex->name, sizeof(mutex->name),
-					     (void *)mutex);
-			pnode = NULL;
-		}
-
-		err =
-		    xnregistry_enter(mutex->name, mutex, &mutex->handle, pnode);
+		err = xnregistry_enter(mutex->name, mutex, &mutex->handle,
+				       &__mutex_pnode);
 
 		if (err)
 			rt_mutex_delete(mutex);

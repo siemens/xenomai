@@ -284,20 +284,9 @@ int rt_intr_create(RT_INTR *intr,
 	/* <!> Since xnregister_enter() may reschedule, only register
 	   complete objects, so that the registry cannot return handles to
 	   half-baked objects... */
-	if (!err && name) {
-		xnpnode_t *pnode = &__intr_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			 * from user-space, it gets registered under an unique
-			 * internal name but is not exported through /proc. */
-			xnobject_create_name(intr->name, sizeof(intr->name),
-				(void *)intr);
-			pnode = NULL;
-		}
-
-		err = xnregistry_enter(intr->name, intr, &intr->handle, pnode);
-	}	
+	if (!err && name)
+		err = xnregistry_enter(intr->name, intr, &intr->handle,
+				       &__intr_pnode);
 	
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 

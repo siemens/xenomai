@@ -203,18 +203,8 @@ int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 	   half-baked objects... */
 
 	if (name) {
-		xnpnode_t *pnode = &__sem_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			   from user-space, it gets registered under an unique
-			   internal name but is not exported through /proc. */
-			xnobject_create_name(sem->name, sizeof(sem->name),
-					     (void *)sem);
-			pnode = NULL;
-		}
-
-		err = xnregistry_enter(sem->name, sem, &sem->handle, pnode);
+		err = xnregistry_enter(sem->name, sem, &sem->handle,
+				       &__sem_pnode);
 
 		if (err)
 			rt_sem_delete(sem);

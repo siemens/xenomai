@@ -248,15 +248,8 @@ int rt_task_create(RT_TASK *task,
 
 	bflags = mode & (XNFPU | XNSHADOW | XNSHIELD | XNSUSP);
 
-	if (name) {
-		if (!*name)
-			/* i.e. Anonymous object which must be accessible from
-			   user-space. */
-			xnobject_create_name(task->rname, sizeof(task->rname),
-					     task);
-		else
-			xnobject_copy_name(task->rname, name);
-	}
+	if (name)
+		xnobject_copy_name(task->rname, name);
 
 	if (xnpod_init_thread(&task->thread_base, __native_tbase,
 			      name, prio, bflags, stksize, &__xeno_task_ops) != 0)
@@ -304,11 +297,6 @@ int rt_task_create(RT_TASK *task,
 				       NULL);
 		if (err)
 			xnpod_delete_thread(&task->thread_base);
-		else if (!*name)
-			/* /proc/xenomai/sched will dump no name for the anonymous
-			   task, but the registry still has a stable reference
-			   into the TCB to set up a handle for the task. */
-			xnthread_clear_name(&task->thread_base);
 	}
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 

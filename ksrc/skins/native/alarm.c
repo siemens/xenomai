@@ -212,24 +212,20 @@ int rt_alarm_create(RT_ALARM *alarm,
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (name) {
+		if (!*name) {
+			/* To improve readability in timer_base /proc
+			   output. */
+			xnobject_create_name(alarm->name, sizeof(alarm->name),
+					     (void *)alarm);
+		}
+
 #ifdef CONFIG_XENO_OPT_REGISTRY
 		/* <!> Since xnregister_enter() may reschedule, only register
 		   complete objects, so that the registry cannot return
 		   handles to half-baked objects... */
 
-		xnpnode_t *pnode = &__alarm_pnode;
-
-		if (!*name) {
-			/* Since this is an anonymous object (empty name on entry)
-			   from user-space, it gets registered under an unique
-			   internal name but is not exported through /proc. */
-			xnobject_create_name(alarm->name, sizeof(alarm->name),
-					     (void *)alarm);
-			pnode = NULL;
-		}
-
-		err =
-		    xnregistry_enter(alarm->name, alarm, &alarm->handle, pnode);
+		err = xnregistry_enter((*name) ? alarm->name : "", alarm,
+				       &alarm->handle, &__alarm_pnode);
 
 		if (err)
 			rt_alarm_delete(alarm);
