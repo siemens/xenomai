@@ -271,7 +271,10 @@ void rt_print_auto_init(int enable)
 
 void rt_print_cleanup(void)
 {
-	cleanup_buffer(pthread_getspecific(__buffer_key));
+	struct print_buffer *buffer = pthread_getspecific(__buffer_key);
+
+	if (buffer)
+		cleanup_buffer(buffer);
 }
 
 const char *rt_print_buffer_name(void)
