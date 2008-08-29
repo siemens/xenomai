@@ -853,22 +853,21 @@ int xnregistry_remove(xnhandle_t handle)
 	object->objaddr = NULL;
 	object->cstamp = 0;
 
-	if (!object->key)
-		goto unlock_and_exit;
-
-	registry_hash_remove(object);
+	if (object->key) {
+		registry_hash_remove(object);
 
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
-	if (object->pnode) {
-		registry_proc_unexport(object);
+		if (object->pnode) {
+			registry_proc_unexport(object);
 
-		/* Leave the update of the object queues to the work callback
-		   if it has been kicked. */
+			/* Leave the update of the object queues to the work
+			   callback if it has been kicked. */
 
-		if (object->pnode)
-			goto unlock_and_exit;
-	}
+			if (object->pnode)
+				goto unlock_and_exit;
+		}
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+	}
 
 	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_freeq, &object->link);
