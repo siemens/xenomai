@@ -1,7 +1,7 @@
 2008-08-29  Jan Kiszka  <jan.kiszka@web.de>
 
-	* src/rtdk/rt_print.c (rt_print_cleanup): Do nothing if rt_print
-	was not used by the thread.
+	* src/rtdk/rt_print.c (rt_print_cleanup): Fix and improve cleanup,
+	cancel printer thread.
 
 2008-08-27  Philippe Gerum  <rpm@xenomai.org>
 
