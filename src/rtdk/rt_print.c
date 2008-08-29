@@ -60,13 +60,14 @@ struct print_buffer {
 	off_t read_pos;
 };
 
-struct print_buffer *__first_buffer;
-uint32_t __seq_no;
-size_t __default_buffer_size;
-struct timespec __print_period;
-int __auto_init;
-pthread_mutex_t __buffer_lock;
-pthread_key_t __buffer_key;
+static struct print_buffer *__first_buffer;
+static uint32_t __seq_no;
+static size_t __default_buffer_size;
+static struct timespec __print_period;
+static int __auto_init;
+static pthread_mutex_t __buffer_lock;
+static pthread_key_t __buffer_key;
+static pthread_t __printer_thread;
 
 static void cleanup_buffer(struct print_buffer *buffer);
 static void print_buffers(void);
@@ -275,6 +276,15 @@ void rt_print_cleanup(void)
 
 	if (buffer)
 		cleanup_buffer(buffer);
+	else {
+		pthread_mutex_lock(&__buffer_lock);
+
+		print_buffers();
+
+		pthread_mutex_unlock(&__buffer_lock);
+	}
+
+	pthread_cancel(__printer_thread);
 }
 
 const char *rt_print_buffer_name(void)
@@ -384,7 +394,7 @@ static void print_buffers(void)
 	}
 }
 
-static void *printer_thread(void *arg)
+static void *printer_loop(void *arg)
 {
 	while (1) {
 		nanosleep(&__print_period, NULL);
@@ -399,7 +409,6 @@ static void *printer_thread(void *arg)
 
 void __rt_print_init(void)
 {
-	pthread_t thread;
 	pthread_attr_t thattr;
 	const char *value_str;
 	unsigned long long period;
@@ -437,5 +446,5 @@ void __rt_print_init(void)
 
 	pthread_attr_init(&thattr);
 	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
-	pthread_create(&thread, &thattr, printer_thread, NULL);
+	pthread_create(&__printer_thread, &thattr, printer_loop, NULL);
 }
