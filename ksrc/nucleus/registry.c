@@ -867,9 +867,10 @@ int xnregistry_remove(xnhandle_t handle)
 				goto unlock_and_exit;
 		}
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
+
+		removeq(&registry_obj_busyq, &object->link);
 	}
 
-	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_freeq, &object->link);
 
       unlock_and_exit:
