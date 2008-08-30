@@ -7,6 +7,7 @@ if XENO_OPT_NUCLEUS != n
 
 config XENO_OPT_PERVASIVE
 	bool "Pervasive real-time support in user-space"
+	select IPIPE_WORKING_ATOMICSWITCH if IPIPE_HAVE_WORKING_ATOMICSWITCH
 	default y
 	help
 

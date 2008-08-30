@@ -1,5 +1,13 @@
 2008-08-30  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
+	* ksrc/nucleus/shadow.c (gatekeeper_thread): Mask out
+	TASK_ATOMICSWITCH test when testing hardening thread state, to
+	take into account newer I-pipe patches with imporved ATOMICSWITCH
+	support.
+
+	* ksrc/nucleus/Kconfig: Select improved ATOMICSWITCH support if
+	the I-pipe patch has it.
+
 	* include/asm-arm/hal.h: Only use VFP if I-pipe patch has ironed
 	VFP support.
 
