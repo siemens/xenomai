@@ -31,7 +31,11 @@
 
 #include <asm-generic/xenomai/hal.h>	/* Read the generic bits. */
 #include <asm/byteorder.h>
+
 #ifdef CONFIG_VFP
+#if defined(CONFIG_XENO_HW_FPU) && !__IPIPE_FEATURE_VFP_SAFE
+#error "Xenomai requires a more recent I-pipe patch to use VFP hardware"
+#endif /* defined(CONFIG_XENO_HW_FPU) && !__IPIPE_FEATURE_VFP_SAFE */
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
 

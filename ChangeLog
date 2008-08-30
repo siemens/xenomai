@@ -1,5 +1,8 @@
 2008-08-30  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
+	* include/asm-arm/hal.h: Only use VFP if I-pipe patch has ironed
+	VFP support.
+
 	* include/asm-arm/syscall.h (__xn_rdtsc): Add an implementation of
 	the tsc emulation for fast wrapping hardware timers.
 
