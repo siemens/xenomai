@@ -1,3 +1,10 @@
+2008-08-30  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-arm/syscall.h (__xn_rdtsc): Add an implementation of
+	the tsc emulation for fast wrapping hardware timers.
+
+	* configure.in: Select this tsc implementation for AT91.
+
 2008-08-29  Jan Kiszka  <jan.kiszka@web.de>
 
 	* src/rtdk/rt_print.c (rt_print_cleanup): Fix and improve cleanup,

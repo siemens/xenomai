@@ -218,6 +218,7 @@ struct __xn_tscinfo {
 #define __XN_TSC_TYPE_NONE        0
 #define __XN_TSC_TYPE_FREERUNNING 1
 #define __XN_TSC_TYPE_DECREMENTER 2
+#define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 3
 
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
@@ -239,19 +240,36 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
 static inline unsigned long long __xn_rdtsc(void)
 {
 #if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
-	const unsigned long long mask = __xn_tscinfo.u.fr.mask;
-	unsigned long long result;
+	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
+        const unsigned mask = __xn_tscinfo.u.fr.mask;
+        unsigned long long result;
+        unsigned counter;
+
+        __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+        __asm__ ("" : /* */ : /* */ : "memory");
+        counter = *counterp;
+
+        if ((counter & mask) < ((unsigned) result & mask))
+                result += mask + 1;
+        return (result & ~((unsigned long long) mask)) | (counter & mask);
+#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
+	const unsigned mask = __xn_tscinfo.u.fr.mask;
+	register unsigned long long after, before;
 	unsigned counter;
 
-	__asm__ ("ldmia %1, %M0\n"
-		 : "=r"(result), "+&r"(__xn_tscinfo.u.fr.tsc)
-		 : "m"(*__xn_tscinfo.u.fr.tsc));
-	__asm__ ("" : /* */ : /* */ : "memory");
-	counter = *__xn_tscinfo.u.fr.counter;
-
-	if ((counter & mask) < (result & mask))
-		result += mask + 1;
-	return (result & ~mask) | (counter & mask);
+	__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
+	do {
+		before = after;
+		counter = *counterp;
+		__asm__ ("" : /* */ : /* */ : "memory");
+		__asm__ ("ldmia %1, %M0\n" : "=r"(after): "r"(tscp), "m"(*tscp));
+	} while (((unsigned) after & ~mask) != ((unsigned) before & ~mask));
+	if ((counter & mask) < ((unsigned) before & mask))
+		before += mask + 1;
+	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
 	const unsigned mask = __xn_tscinfo.u.dec.mask;
@@ -306,7 +324,8 @@ static inline void xeno_arm_features_check(void)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
+#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING \
+    || CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	case __XN_TSC_TYPE_FREERUNNING: {
 		unsigned long phys_addr;
 
@@ -321,6 +340,14 @@ static inline void xeno_arm_features_check(void)
 		__xn_tscinfo.u.fr.counter = 
 			((volatile unsigned *)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
+#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+		if (__xn_tscinfo.u.fr.mask >= ((1 << 28) - 1)) {
+			fprintf(stderr, "Hardware tsc is not a fast wrapping"
+				" one, select the correct platform, or fix\n"
+				"configure.in\n");
+			exit(EXIT_FAILURE);
+		}
+#endif /* __XN_TSC_TYPE_FREERUNNING_FAST_WRAP */
 		break;
 	}
 #elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER

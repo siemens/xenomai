@@ -180,10 +180,10 @@ compiling. Valid machines are at91rm9200, at91sam926x, generic, imx, imx21,
 integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 	[case "$enableval" in
 	at91rm9200)   	arch=4
-	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	at91sam926x)   	arch=5
-	        	tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	generic)	arch=4
 			CONFIG_XENO_ARM_SA1100=y
