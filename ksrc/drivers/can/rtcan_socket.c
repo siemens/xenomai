@@ -98,6 +98,9 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
     rtdm_sem_destroy(&sock->recv_sem);
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
-    list_del(&sock->socket_list);
+    if (sock->socket_list.next) {
+        list_del(&sock->socket_list);
+        sock->socket_list.next = NULL;
+    }
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 }
