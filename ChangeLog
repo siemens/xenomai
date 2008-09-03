@@ -1,3 +1,8 @@
+2008-09-03  Jan Kiszka  <jan.kiszka@web.de>
+
+	* include/rtdm/rtdm.h: Align in-kernel socklen_t with spec, it
+	contains only 32 valid bits.
+
 2008-08-30  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (gatekeeper_thread): Mask out
