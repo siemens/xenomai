@@ -54,7 +54,7 @@
 #include <linux/sched.h>
 #include <linux/socket.h>
 
-typedef size_t socklen_t;
+typedef u32 socklen_t;
 typedef struct task_struct rtdm_user_info_t;
 
 #else /* !__KERNEL__ */
