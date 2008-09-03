@@ -3,6 +3,9 @@
 	* include/rtdm/rtdm.h: Align in-kernel socklen_t with spec, it
 	contains only 32 valid bits.
 
+	* ksrc/drivers/can/rtcan_socket.c (rtcan_socket_cleanup): Make
+	rtcan_socket_list deregistration robust against reentrance.
+
 2008-08-30  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (gatekeeper_thread): Mask out
