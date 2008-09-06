@@ -251,7 +251,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		counter = *counterp;
 		__asm__ ("" : /* */ : /* */ : "memory");
 		__asm__ ("ldmia %1, %M0\n" : "=r"(after): "r"(tscp), "m"(*tscp));
-	} while (((unsigned) after & ~mask) != ((unsigned) before & ~mask));
+	} while (((unsigned) after) != ((unsigned) before));
 	if ((counter & mask) < ((unsigned) before & mask))
 		before += mask + 1;
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
