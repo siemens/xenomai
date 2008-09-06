@@ -134,11 +134,16 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 	/* Set bit 0, so that mutex_unlock will know that the mutex is claimed.
 	   Hold the nklock, for mutual exclusion with slow mutex_unlock. */
 	xnlock_get_irqsave(&nklock, s);
-	while(!test_claimed(owner)) {
+	if (test_claimed(owner)) {
+		old = xnarch_atomic_intptr_get(mutex->owner);
+		goto test_no_owner;
+	}
+	do {
 		old = xnarch_atomic_intptr_cmpxchg(mutex->owner,
 						   owner, set_claimed(owner, 1));
 		if (likely(old == owner))
 			break;
+	  test_no_owner:
 		if (old == NULL) {
 			/* Owner called fast mutex_unlock
 			   (on another cpu) */
@@ -146,7 +151,7 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 			goto retry_lock;
 		}
 		owner = old;
-	}
+	} while (!test_claimed(owner));
 
 	xnsynch_set_owner(&mutex->synchbase, clear_claimed(owner));
 	++mutex->sleepers;
