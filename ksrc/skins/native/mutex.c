@@ -421,10 +421,7 @@ int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
  *
  * @param timeout The absolute date specifying a time limit to wait
  * for the mutex to be available to the calling task (see
- * note). Passing TM_INFINITE causes the caller to block indefinitely
- * until the mutex is available. Passing TM_NONBLOCK causes the
- * service to return immediately without waiting if the mutex is still
- * locked by another task.
+ * note).
  *
  * @return 0 is returned upon success. Otherwise:
  *
