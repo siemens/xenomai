@@ -119,8 +119,6 @@ void xnsynch_renice_sleeper(struct xnthread *thread);
 
 void xnsynch_forget_sleeper(struct xnthread *thread);
 
-struct xnthread *xnsynch_forget_one_sleeper(xnsynch_t *synch);
-
 #ifdef __cplusplus
 }
 #endif
