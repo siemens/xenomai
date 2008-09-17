@@ -143,7 +143,7 @@ static int rn_destroy_internal(psosrn_t *rn)
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&rn->heapbase))
-		xnheap_destroy_mapped(&rn->heapbase);
+		xnheap_destroy_mapped(&rn->heapbase, NULL);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&rn->heapbase, NULL, NULL);

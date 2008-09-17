@@ -2056,8 +2056,8 @@ static int __rt_queue_delete(struct pt_regs *regs)
 	if (!q)
 		err = -ESRCH;
 	else {
-		err = rt_queue_delete(q);	/* Callee will check the queue
-						   descriptor for validity again. */
+		/* Callee will check the queue descriptor for validity again. */
+		err = rt_queue_delete_inner(q, (void __user *)ph.mapbase);
 		if (!err && q->cpid)
 			xnfree(q);
 	}
@@ -2555,8 +2555,8 @@ static int __rt_heap_delete(struct pt_regs *regs)
 	if (!heap)
 		err = -ESRCH;
 	else {
-		err = rt_heap_delete(heap);	/* Callee will check the heap
-						   descriptor for validity again. */
+		/* Callee will check the heap descriptor for validity again. */
+		err = rt_heap_delete_inner(heap, (void __user *)ph.mapbase);
 		if (!err && heap->cpid)
 			xnfree(heap);
 	}

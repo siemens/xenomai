@@ -318,7 +318,7 @@ int rt_queue_create(RT_QUEUE *q,
  * Rescheduling: possible.
  */
 
-int rt_queue_delete(RT_QUEUE *q)
+int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 {
 	int err = 0;
 	spl_t s;
@@ -343,14 +343,16 @@ int rt_queue_delete(RT_QUEUE *q)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	/* The queue descriptor has been marked as deleted before we
-	   released the superlock thus preventing any sucessful subsequent
-	   calls of rt_queue_delete(), so now we can actually destroy the
-	   associated heap safely. */
+	/*
+	 * The queue descriptor has been marked as deleted before we
+	 * released the superlock thus preventing any sucessful
+	 * subsequent calls of rt_queue_delete(), so now we can
+	 * actually destroy the associated heap safely.
+	 */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (q->mode & Q_SHARED)
-		err = xnheap_destroy_mapped(&q->bufpool);
+		err = xnheap_destroy_mapped(&q->bufpool, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
@@ -378,6 +380,11 @@ int rt_queue_delete(RT_QUEUE *q)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
+}
+
+int rt_queue_delete(RT_QUEUE *q)
+{
+	return rt_queue_delete_inner(q, NULL);
 }
 
 /**

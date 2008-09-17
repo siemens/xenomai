@@ -103,7 +103,7 @@ static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 	if (shm->addr) {
 		xnheap_free(&shm->heapbase, shm->addr);
 
-		xnheap_destroy_mapped(&shm->heapbase);
+		xnheap_destroy_mapped(&shm->heapbase, NULL);
 
 		shm->addr = NULL;
 		shm->size = 0;
@@ -522,7 +522,7 @@ int ftruncate(int fd, off_t len)
 			memcpy(addr, shm->addr, size);
 
 			xnheap_free(&shm->heapbase, shm->addr);
-			xnheap_destroy_mapped(&shm->heapbase);
+			xnheap_destroy_mapped(&shm->heapbase, NULL);
 
 			shm->addr = NULL;
 			shm->size = 0;

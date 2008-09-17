@@ -1095,7 +1095,7 @@ static int __sc_pcreate(struct pt_regs *regs)
 
       unmap_pt:
 
-	xnheap_destroy_mapped(ptheap);
+	xnheap_destroy_mapped(ptheap, NULL);
 
       free_heap:
 

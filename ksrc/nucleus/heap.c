@@ -959,7 +959,7 @@ static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
 
 static void xnheap_vmclose(struct vm_area_struct *vma)
 {
-	xnheap_t *heap = (xnheap_t *)vma->vm_private_data;
+	xnheap_t *heap = vma->vm_private_data;
 	atomic_dec(&heap->archdep.numaps);
 }
 
@@ -973,28 +973,14 @@ static int xnheap_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int xnheap_release(struct inode *inode, struct file *file)
-{
-	xnheap_t *heap = (xnheap_t *)file->private_data;
-
-	/* Careful: the ioctl() binding might have not been issued. */
-
-	if (heap != NULL)
-		atomic_dec(&heap->archdep.numaps);
-
-	return 0;
-}
-
 static inline xnheap_t *__validate_heap_addr(void *addr)
 {
 	xnholder_t *holder;
 
-	/* Not time critical and seldomly called, so O(N) is ok here. */
-
 	for (holder = getheadq(&kheapq); holder;
 	     holder = nextq(&kheapq, holder))
-		if (link2heap(holder) == (xnheap_t *)addr)
-			return (xnheap_t *)addr;
+		if (link2heap(holder) == addr)
+			return addr;
 
 	return NULL;
 }
@@ -1015,7 +1001,6 @@ static int xnheap_ioctl(struct inode *inode,
 		goto unlock_and_exit;
 	}
 
-	atomic_inc(&heap->archdep.numaps);	/* Paired with xnheap_release() */
 	file->private_data = heap;
 
       unlock_and_exit:
@@ -1126,7 +1111,6 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 static struct file_operations xnheap_fops = {
 	.owner = THIS_MODULE,
 	.open = &xnheap_open,
-	.release = &xnheap_release,
 	.ioctl = &xnheap_ioctl,
 	.mmap = &xnheap_mmap
 };
@@ -1255,12 +1239,10 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 		return -EINVAL;
 
 	heapbase = __alloc_and_reserve_heap(heapsize, memflags);
-
 	if (!heapbase)
 		return -ENOMEM;
 
 	err = xnheap_init(heap, heapbase, heapsize, PAGE_SIZE);
-
 	if (err) {
 		__unreserve_and_free_heap(heapbase, heapsize, memflags);
 		return err;
@@ -1276,13 +1258,17 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	return 0;
 }
 
-int xnheap_destroy_mapped(xnheap_t *heap)
+int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
 {
+	int err = 0, ccheck;
+	unsigned long len;
 	spl_t s;
+
+	ccheck = mapaddr ? 1 : 0;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (atomic_read(&heap->archdep.numaps) > 0) {
+	if (atomic_read(&heap->archdep.numaps) > ccheck) {
 		xnlock_put_irqrestore(&nklock, s);
 		return -EBUSY;
 	}
@@ -1292,9 +1278,17 @@ int xnheap_destroy_mapped(xnheap_t *heap)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	__unreserve_and_free_heap(heap->archdep.heapbase,
-				  xnheap_extentsize(heap), heap->archdep.kmflags);
-	return 0;
+	len = xnheap_extentsize(heap);
+
+	if (mapaddr) {
+		down_write(&current->mm->mmap_sem);
+		err = do_munmap(current->mm, (unsigned long)mapaddr, len);
+		up_write(&current->mm->mmap_sem);
+	}
+	if (err == 0)
+		__unreserve_and_free_heap(heap->archdep.heapbase,
+					  len, heap->archdep.kmflags);
+	return err;
 }
 
 #else /* !CONFIG_XENO_OPT_PERVASIVE */

@@ -135,6 +135,9 @@ static inline void __native_queue_flush_rq(xnqueue_t *rq)
 ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 			       xntmode_t timeout_mode, RTIME timeout);
 
+int rt_queue_delete_inner(RT_QUEUE *q,
+			  void __user *mapaddr);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #define __native_queue_pkg_init()		({ 0; })

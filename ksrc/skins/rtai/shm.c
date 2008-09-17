@@ -299,7 +299,7 @@ static int _shm_free(unsigned long name)
 				 * Can destroy_mapped suspend ?
 				 */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-				ret = xnheap_destroy_mapped(p->heap);
+				ret = xnheap_destroy_mapped(p->heap, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 				ret =
 				    xnheap_destroy(p->heap,
@@ -357,10 +357,10 @@ void __rtai_shm_pkg_cleanup(void)
 			if (p->heap == &kheap)
 				xnheap_free(&kheap, p->chunk);
 			else {
-				/* Should release lock here? Can destroy_mapped suspend ?
+				/* FIXME: MUST release lock here.
 				 */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-				xnheap_destroy_mapped(p->heap);
+				xnheap_destroy_mapped(p->heap, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 				xnheap_destroy(p->heap, &__heap_flush_private,
 					       NULL);
