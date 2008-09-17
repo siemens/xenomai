@@ -366,7 +366,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
  * Rescheduling: possible.
  */
 
-int rt_heap_delete(RT_HEAP *heap)
+int rt_heap_delete_inner(RT_HEAP *heap, void __user *mapaddr)
 {
 	int err = 0;
 	spl_t s;
@@ -392,14 +392,16 @@ int rt_heap_delete(RT_HEAP *heap)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	/* The heap descriptor has been marked as deleted before we
-	   released the superlock thus preventing any sucessful subsequent
-	   calls of rt_heap_delete(), so now we can actually destroy
-	   it safely. */
+	/*
+	 * The heap descriptor has been marked as deleted before we
+	 * released the superlock thus preventing any sucessful
+	 * subsequent calls of rt_heap_delete(), so now we can
+	 * actually destroy it safely.
+	 */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (heap->mode & H_MAPPABLE)
-		err = xnheap_destroy_mapped(&heap->heap_base);
+		err = xnheap_destroy_mapped(&heap->heap_base, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
@@ -427,6 +429,11 @@ int rt_heap_delete(RT_HEAP *heap)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
+}
+
+int rt_heap_delete(RT_HEAP *heap)
+{
+	return rt_heap_delete_inner(heap, NULL);
 }
 
 /**

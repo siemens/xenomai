@@ -86,7 +86,7 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&heap->sysheap))
-		xnheap_destroy_mapped(&heap->sysheap);
+		xnheap_destroy_mapped(&heap->sysheap, NULL);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		xnheap_destroy(&heap->sysheap, NULL, NULL);

@@ -118,6 +118,9 @@ static inline void __native_heap_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_HEAP, rq, heap);
 }
 
+int rt_heap_delete_inner(RT_HEAP *heap,
+			 void __user *mapaddr);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_HEAP */
 
 #define __native_heap_pkg_init()		({ 0; })

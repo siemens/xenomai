@@ -132,6 +132,9 @@ static inline void __native_queue_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_QUEUE, rq, queue);
 }
 
+int rt_queue_delete_inner(RT_QUEUE *q,
+			  void __user *mapaddr);
+
 #else /* !CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #define __native_queue_pkg_init()		({ 0; })

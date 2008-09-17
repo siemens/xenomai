@@ -81,6 +81,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		/* If the mapping fails, make sure we don't leave a dandling
 		   heap in kernel space -- remove it. */
 		XENOMAI_SKINCALL1(__native_muxid, __native_heap_delete, &ph);
+
 	return err;
 }
 
@@ -117,14 +118,11 @@ int rt_heap_delete(RT_HEAP *heap)
 	if (err)
 		return err;
 
-	if (__real_munmap(heap->mapbase, heap->mapsize))
-		err = -errno;
-
 	heap->opaque = XN_NO_HANDLE;
 	heap->mapbase = NULL;
 	heap->mapsize = 0;
 
-	return err;
+	return 0;
 }
 
 int rt_heap_alloc(RT_HEAP *heap, size_t size, RTIME timeout, void **bufp)

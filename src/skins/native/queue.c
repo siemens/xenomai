@@ -118,14 +118,11 @@ int rt_queue_delete(RT_QUEUE *q)
 	if (err)
 		return err;
 
-	if (__real_munmap(q->mapbase, q->mapsize))
-		err = -errno;
-
 	q->opaque = XN_NO_HANDLE;
 	q->mapbase = NULL;
 	q->mapsize = 0;
 
-	return err;
+	return 0;
 }
 
 void *rt_queue_alloc(RT_QUEUE *q, size_t size)
