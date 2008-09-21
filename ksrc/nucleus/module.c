@@ -1238,7 +1238,7 @@ void __exit __xeno_sys_exit(void)
 #endif /* CONFIG_XENO_OPT_PIPE */
 #endif /* __KERNEL__ */
 
-	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap);
+	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL);
 
 	if (nkmsgbuf)
 		xnarch_free_host_mem(nkmsgbuf, XNPOD_FATAL_BUFSZ);
