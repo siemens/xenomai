@@ -455,8 +455,10 @@ void xnpod_shutdown(int xtype)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!xnpod_active_p() || --nkpod->refcnt != 0)
-		goto unlock_and_exit;	/* No-op */
+	if (!xnpod_active_p() || --nkpod->refcnt != 0) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;	/* No-op */
+	}
 
 	/* FIXME: We must release the lock before disabling the time
 	   source, so we accept a potential race due to another skin
@@ -505,17 +507,11 @@ void xnpod_shutdown(int xtype)
 
 	xnarch_notify_halt();
 
-	xnlock_get_irqsave(&nklock, s);
-
 	xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
 #endif
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)

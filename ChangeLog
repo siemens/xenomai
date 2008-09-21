@@ -1,3 +1,8 @@
+2008-09-21  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/pod.c (xnpod_shutdown): Drop nklock around
+	xnheap_destroy invocations.
+
 2008-09-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/heap.c (xnheap_destroy_mapped): Handle last
