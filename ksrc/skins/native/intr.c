@@ -237,7 +237,8 @@ static xnpnode_t __intr_pnode = {
  *
  * - Kernel module initialization/cleanup code
  * - Kernel-based task
- * - User-space task
+ * - User-space task (note that in user-space the interface is different,
+ *   see rt_intr_create())
  *
  * Rescheduling: possible.
  *
