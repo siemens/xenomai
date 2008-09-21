@@ -4,7 +4,7 @@
   <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl" />
   <xsl:include href="../common/common.xsl" />
   <xsl:param name="paper.type" select="'A4'"  />
-  <xsl:param name="fo.extensions" select="1"  />
+  <xsl:param name="fop1.extensions" select="1"  />
   <xsl:param name="page.height.portrait">9in</xsl:param>
   <xsl:param name="page.width.portrait">7in</xsl:param>
   <xsl:param name="page.margin.inner">0.75in</xsl:param>
@@ -15,7 +15,7 @@
   <xsl:param name="chunk.section.depth" select="2" />
   <xsl:param name="section.autolabel" select="1" />
   <xsl:param name="section.label.includes.component.label" select="1" />
-  <xsl:param name="fop.extensions" select="1" />
+  <xsl:param name="fop1.extensions" select="1" />
   <xsl:param name="insert.xref.page.number" select="1" />
   <xsl:param name="admon.graphics" select="1" />
   <xsl:param name="admon.graphics.extension" select="'.png'" />
