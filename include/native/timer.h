@@ -17,7 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * \ingroup native_timer
  */
+
+/*!
+ * \ingroup native
+ * \addtogroup native_timer
+ *@{*/
 
 #ifndef _XENO_TIMER_H
 #define _XENO_TIMER_H
@@ -26,6 +33,10 @@
 
 #define TM_ONESHOT XN_APERIODIC_TICK
 
+/** Structure containing timer-information useful to users.
+ *
+ *  @see rt_timer_inquire()
+ */
 typedef struct rt_timer_info {
 
     RTIME period;	/* !< Current status (unset, aperiodic, period). */
@@ -251,5 +262,7 @@ static inline void __deprecated_call__ rt_timer_stop(void)
 #ifdef __cplusplus
 }
 #endif
+
+/*@}*/
 
 #endif /* !_XENO_TIMER_H */
