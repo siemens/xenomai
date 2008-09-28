@@ -1,3 +1,9 @@
+2008-09-28  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-generic/bits/bind.h (xeno_sigill_handler): Print an
+	error message in case of SIGILL instead of the cryptic "Illegal
+	instruction" message.
+
 2008-09-21  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/pod.c (xnpod_shutdown): Drop nklock around
