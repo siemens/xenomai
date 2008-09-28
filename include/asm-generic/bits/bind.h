@@ -10,15 +10,32 @@
 
 void xeno_handle_mlock_alert(int sig);
 
+void __attribute__((weak)) xeno_sigill_handler(int sig)
+{
+	fprintf(stderr, "Xenomai or CONFIG_XENO_OPT_PERVASIVE disabled.\n"
+		"(modprobe xeno_nucleus?)\n");
+	exit(1);
+}
+
 static inline int
 xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 {
+	sighandler_t old_sigill_handler;
 	struct sigaction sa;
 	xnfeatinfo_t finfo;
 	int muxid;
 
+	old_sigill_handler = signal(SIGILL, xeno_sigill_handler);
+	if (old_sigill_handler == SIG_ERR) {
+		perror("signal(SIGILL)");
+		exit(1);
+	}
+
 	muxid = XENOMAI_SYSBIND(skin_magic,
 				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, &finfo);
+
+	signal(SIGILL, old_sigill_handler);
+
 	switch (muxid) {
 	case -EINVAL:
 
@@ -68,11 +85,21 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 static inline int
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 {
+	sighandler_t old_sigill_handler;
 	xnfeatinfo_t finfo;
 	int muxid;
 
+	old_sigill_handler = signal(SIGILL, xeno_sigill_handler);
+	if (old_sigill_handler == SIG_ERR) {
+		perror("signal(SIGILL)");
+		exit(1);
+	}
+
 	muxid = XENOMAI_SYSBIND(skin_magic,
 				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, &finfo);
+
+	signal(SIGILL, old_sigill_handler);
+
 	switch (muxid) {
 	case -EINVAL:
 
