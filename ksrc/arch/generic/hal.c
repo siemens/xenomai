@@ -1076,6 +1076,7 @@ EXPORT_SYMBOL(rthal_timer_calibrate);
 EXPORT_SYMBOL(rthal_apc_alloc);
 EXPORT_SYMBOL(rthal_apc_free);
 EXPORT_SYMBOL(rthal_apc_schedule);
+EXPORT_SYMBOL(rthal_add_proc_leaf);
 
 EXPORT_SYMBOL(rthal_critical_enter);
 EXPORT_SYMBOL(rthal_critical_exit);
