@@ -19,11 +19,9 @@ dev devices:
            echo "sudo found (sudo is $(SUDO)), testing it..." ; \
            $(SUDO) sh -c "( mknod $(DESTDIR)/dev/dummy c 150 0 && rm -f $(DESTDIR)/dev/dummy )" && \
            sudo="$(SUDO)" || { \
-echo '*** Warning: you are not super-user and sudo does not work, real-time\
-devices' ; \
+echo '*** Warning: you are not super-user and sudo does not work, real-time devices' ; \
 echo '*** nodes will not be created.' ; \
-echo '*** If you do not create these devices by hand, Xenomai test programs\
-will not' ; \
+echo '*** If you do not create these devices by hand, Xenomai test programs will not' ; \
 echo '*** work.' ; \
 echo '*** To create these devices please run "make devices" with super-user' ; \
 echo '*** privileges.' ; \
