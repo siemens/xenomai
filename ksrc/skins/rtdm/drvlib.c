@@ -139,31 +139,29 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 		   rtdm_task_proc_t task_proc, void *arg,
 		   int priority, nanosecs_rel_t period)
 {
-	int res;
+	int err;
 
-	res = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0, NULL);
-	if (res)
-		goto error_out;
+	err = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0, NULL);
+	if (err)
+		return err;
 
 	if (period > 0) {
-		res = xnpod_set_thread_periodic(task, XN_INFINITE,
+		err = xnpod_set_thread_periodic(task, XN_INFINITE,
 						xntbase_ns2ticks_ceil
 						(rtdm_tbase,  period));
-		if (res)
+		if (err)
 			goto cleanup_out;
 	}
 
-	res = xnpod_start_thread(task, 0, 0, XNPOD_ALL_CPUS, task_proc, arg);
-	if (res)
+	err = xnpod_start_thread(task, 0, 0, XNPOD_ALL_CPUS, task_proc, arg);
+	if (err)
 		goto cleanup_out;
 
-	return res;
+	return 0;
 
       cleanup_out:
 	xnpod_delete_thread(task);
-
-      error_out:
-	return res;
+	return err;
 }
 
 EXPORT_SYMBOL(rtdm_task_init);
