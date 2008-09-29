@@ -28,6 +28,8 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 
+#include <xeno_config.h>
+
 #ifndef HAVE_RECENT_SETAFFINITY
 #ifdef HAVE_OLD_SETAFFINITY
 #define sched_setaffinity(pid, len, mask)	sched_setaffinity(pid, mask)

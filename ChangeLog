@@ -1,3 +1,8 @@
+2008-09-29  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* src/testsuite/clocktest/clocktest.c: Unbreak CPU distribution
+	of test threads.
+
 2008-09-28  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* include/asm-generic/bits/bind.h (xeno_sigill_handler): Print an
