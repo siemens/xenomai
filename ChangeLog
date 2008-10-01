@@ -1,3 +1,7 @@
+2008-10-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86/patches: Upgrade to 2.6.26-x86-2.0-12.
+
 2008-09-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.2-05.
