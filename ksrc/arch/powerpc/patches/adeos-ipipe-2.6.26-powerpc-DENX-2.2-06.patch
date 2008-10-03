@@ -2011,6 +2011,19 @@ index 802b8b6..6979da6 100644
  void ppc64_runlatch_on(void)
  {
  	unsigned long ctrl;
+diff --git a/arch/powerpc/kernel/prom_init_check.sh b/arch/powerpc/kernel/prom_init_check.sh
+index 2c7e8e8..259a756 100644
+--- a/arch/powerpc/kernel/prom_init_check.sh
++++ b/arch/powerpc/kernel/prom_init_check.sh
+@@ -20,7 +20,7 @@ WHITELIST="add_reloc_offset __bss_start __bss_stop copy_and_flush
+ _end enter_prom memcpy memset reloc_offset __secondary_hold
+ __secondary_hold_acknowledge __secondary_hold_spinloop __start
+ strcmp strcpy strlcpy strlen strncmp strstr logo_linux_clut224
+-reloc_got2 kernstart_addr"
++reloc_got2 kernstart_addr _mcount"
+ 
+ NM="$1"
+ OBJ="$2"
 diff --git a/arch/powerpc/kernel/setup_32.c b/arch/powerpc/kernel/setup_32.c
 index 5112a4a..292bbf8 100644
 --- a/arch/powerpc/kernel/setup_32.c
@@ -4496,7 +4509,7 @@ index ad8c9f7..0adf5fd 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..5c3ccfb
+index 0000000..a05e868
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,212 @@
@@ -4546,10 +4559,10 @@ index 0000000..5c3ccfb
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.2-05"
++#define IPIPE_ARCH_STRING	"2.2-06"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -6840,10 +6853,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..f5094cc
+index 0000000..4187aa4
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1652 @@
+@@ -0,0 +1,1653 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8417,6 +8430,7 @@ index 0000000..f5094cc
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +
 +DEFINE_PER_CPU(int, ipipe_percpu_context_check) = { 1 };
++DEFINE_PER_CPU(int, ipipe_saved_context_check_state);
 +
 +void ipipe_check_context(struct ipipe_domain *border_ipd)
 +{
