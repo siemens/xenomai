@@ -3939,7 +3939,7 @@ index ecc80f3..e6d33a0 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..f7ab9be
+index 0000000..29ba33d
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,126 @@
@@ -3970,10 +3970,10 @@ index 0000000..f7ab9be
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-12"
++#define IPIPE_ARCH_STRING	"2.0-13"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	12
++#define IPIPE_PATCH_NUMBER	13
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -6768,10 +6768,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..f5094cc
+index 0000000..4187aa4
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1652 @@
+@@ -0,0 +1,1653 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8345,6 +8345,7 @@ index 0000000..f5094cc
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +
 +DEFINE_PER_CPU(int, ipipe_percpu_context_check) = { 1 };
++DEFINE_PER_CPU(int, ipipe_saved_context_check_state);
 +
 +void ipipe_check_context(struct ipipe_domain *border_ipd)
 +{
@@ -10153,7 +10154,7 @@ index e2129e8..8210af9 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index 4e2f603..effdf82 100644
+index 4e2f603..01461c9 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -2088,7 +2088,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -10182,7 +10183,7 @@ index 4e2f603..effdf82 100644
  context_switch(struct rq *rq, struct task_struct *prev,
  	       struct task_struct *next)
  {
-@@ -2485,12 +2487,25 @@ context_switch(struct rq *rq, struct task_struct *prev,
+@@ -2485,12 +2487,23 @@ context_switch(struct rq *rq, struct task_struct *prev,
  	switch_to(prev, next, prev);
  
  	barrier();
@@ -10195,8 +10196,6 @@ index 4e2f603..effdf82 100644
 +	if (task_hijacked(prev))
 +		return 1;
 +
-+#undef clrtask
-+
  	/*
  	 * this_rq must be evaluated again because prev may have moved
  	 * CPUs since it called schedule(), thus the 'rq' on its stack
@@ -10208,7 +10207,7 @@ index 4e2f603..effdf82 100644
  }
  
  /*
-@@ -4025,6 +4040,7 @@ void scheduler_tick(void)
+@@ -4025,6 +4038,7 @@ void scheduler_tick(void)
  
  void __kprobes add_preempt_count(int val)
  {
@@ -10216,7 +10215,7 @@ index 4e2f603..effdf82 100644
  	/*
  	 * Underflow?
  	 */
-@@ -4041,6 +4057,7 @@ EXPORT_SYMBOL(add_preempt_count);
+@@ -4041,6 +4055,7 @@ EXPORT_SYMBOL(add_preempt_count);
  
  void __kprobes sub_preempt_count(int val)
  {
@@ -10224,7 +10223,7 @@ index 4e2f603..effdf82 100644
  	/*
  	 * Underflow?
  	 */
-@@ -4152,6 +4169,9 @@ need_resched:
+@@ -4152,6 +4167,9 @@ need_resched:
  	rcu_qsctr_inc(cpu);
  	prev = rq->curr;
  	switch_count = &prev->nivcsw;
@@ -10234,7 +10233,7 @@ index 4e2f603..effdf82 100644
  
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -4194,15 +4214,18 @@ need_resched_nonpreemptible:
+@@ -4194,15 +4212,18 @@ need_resched_nonpreemptible:
  		rq->curr = next;
  		++*switch_count;
  
@@ -10255,7 +10254,7 @@ index 4e2f603..effdf82 100644
  
  	hrtick_set(rq);
  
-@@ -4855,6 +4878,7 @@ recheck:
+@@ -4855,6 +4876,7 @@ recheck:
  
  	oldprio = p->prio;
  	__setscheduler(rq, p, policy, param->sched_priority);
@@ -10263,7 +10262,7 @@ index 4e2f603..effdf82 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -5171,6 +5195,7 @@ static void __cond_resched(void)
+@@ -5171,6 +5193,7 @@ static void __cond_resched(void)
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
  	__might_sleep(__FILE__, __LINE__);
  #endif
@@ -10271,7 +10270,7 @@ index 4e2f603..effdf82 100644
  	/*
  	 * The BKS might be reacquired before we have dropped
  	 * PREEMPT_ACTIVE, which could trigger a second
-@@ -8867,3 +8892,60 @@ struct cgroup_subsys cpuacct_subsys = {
+@@ -8867,3 +8890,60 @@ struct cgroup_subsys cpuacct_subsys = {
  	.subsys_id = cpuacct_subsys_id,
  };
  #endif	/* CONFIG_CGROUP_CPUACCT */
