@@ -5523,10 +5523,10 @@ index 0b120ee..28da4f9 100644
  extern void cpu_reset(unsigned long addr) __attribute__((noreturn));
 diff --git a/include/asm-arm/fcse.h b/include/asm-arm/fcse.h
 new file mode 100644
-index 0000000..40160fa
+index 0000000..59752b3
 --- /dev/null
 +++ b/include/asm-arm/fcse.h
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,79 @@
 +/*
 + * Filename:    include/asm-arm/fcse.h
 + * Description: ARM Process ID (PID) includes for Fast Address Space Switching
@@ -5546,6 +5546,8 @@ index 0000000..40160fa
 + */
 +#ifndef __ASM_ARM_FCSE_H
 +#define __ASM_ARM_FCSE_H
++
++#include <linux/sched.h>
 +
 +#ifdef CONFIG_ARM_FCSE
 +
@@ -5606,7 +5608,7 @@ index 0000000..40160fa
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..59f9558
+index 0000000..0ffe5b5
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,198 @@
@@ -5640,10 +5642,10 @@ index 0000000..59f9558
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.11-00"
++#define IPIPE_ARCH_STRING	"1.11-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	11
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"

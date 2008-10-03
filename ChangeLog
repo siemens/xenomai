@@ -1,6 +1,6 @@
 2008-10-03  Philippe Gerum  <rpm@xenomai.org>
 
-	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-00.
+	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-01.
 
 	* ksrc/arch/x86/patches: Update to 2.6.26-x86-2.0-13.
 
