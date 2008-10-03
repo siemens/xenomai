@@ -1,10 +1,18 @@
+2008-10-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-00.
+
+	* ksrc/arch/x86/patches: Update to 2.6.26-x86-2.0-13.
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.2-06.
+
 2008-10-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.10-02.
 
 	* ksrc/arch/blackfin/patches: Update to 2008R1-bf5xx-1.7-04.patch
 
-	* ksrc/arch/x86/patches: Update to 2.6.26-blackfin-2.0-12.
+	* ksrc/arch/x86/patches: Update to 2.6.26-x86-2.0-12.
 
 2008-09-30  Philippe Gerum  <rpm@xenomai.org>
 
