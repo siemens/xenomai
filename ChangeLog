@@ -1,3 +1,9 @@
+2008-10-04  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* src/skins/native/task.c (rt_task_set_priority): Call
+	__real_pthread_setschedparam in order to inform the libc of the
+	scheduling parameters change.
+
 2008-10-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-01.

@@ -249,8 +249,14 @@ int rt_task_wait_period(unsigned long *overruns_r)
 
 int rt_task_set_priority(RT_TASK *task, int prio)
 {
-	return XENOMAI_SKINCALL2(__native_muxid,
-				 __native_task_set_priority, task, prio);
+	struct sched_param param;
+	pthread_t thread;
+	int policy, err; 
+
+	thread = task ? (pthread_t) task->opaque2 : pthread_self();
+	policy = prio ? SCHED_FIFO : SCHED_OTHER;
+	param.sched_priority = prio;
+	return -__real_pthread_setschedparam(thread, policy, &param);
 }
 
 int rt_task_sleep(RTIME delay)
