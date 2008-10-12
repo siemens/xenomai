@@ -46,7 +46,7 @@ void comedi_free_buffer(comedi_buf_t * buf_desc)
 		unsigned long vaddr, vabase = (unsigned long)buf_desc->buf;
 		for (vaddr = vabase; vaddr < vabase + buf_desc->size;
 		     vaddr += PAGE_SIZE)
-			ClearPageReserved(virt_to_page(__va_to_kva(vaddr)));
+			ClearPageReserved(vmalloc_to_page(vaddr));
 		vfree(buf_desc->buf);
 		buf_desc->buf = NULL;
 	}
@@ -73,7 +73,7 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 
 	for (vaddr = vabase; vaddr < vabase + buf_desc->size;
 	     vaddr += PAGE_SIZE)
-		SetPageReserved(virt_to_page(__va_to_kva(vaddr)));
+		SetPageReserved(vmalloc_to_page(vaddr));
 
 	buf_desc->pg_list = comedi_kmalloc(((buf_desc->size) >> PAGE_SHIFT) *
 					   sizeof(unsigned long));
@@ -85,7 +85,7 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 	for (vaddr = vabase; vaddr < vabase + buf_desc->size;
 	     vaddr += PAGE_SIZE)
 		buf_desc->pg_list[(vaddr - vabase) >> PAGE_SHIFT] =
-		    __va_to_kva(vaddr);
+			page_address(vmalloc_to_page(vaddr));
 
       out_virt_contig_alloc:
 	if (ret != 0)
