@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -31,6 +32,9 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
+
+#undef __real_ftruncate
+#undef __real_mmap
 
 /* sched */
 __attribute__ ((weak))
@@ -254,17 +258,33 @@ int __real_shm_unlink(const char *name)
 }
 
 __attribute__ ((weak))
-int __real_ftruncate(int fildes, off_t length)
+int __real_ftruncate(int fildes, long length)
 {
 	return ftruncate(fildes, length);
 }
 
 __attribute__ ((weak))
 void *__real_mmap(void *addr,
-		  size_t len, int prot, int flags, int fd, off_t off)
+		  size_t len, int prot, int flags, int fd, long off)
 {
 	return mmap(addr, len, prot, flags, fd, off);
 }
+
+/* 32 bits platform */
+#if LONG_MAX == 2147483647L
+__attribute__ ((weak))
+int __real_ftruncate64(int fildes, long long length)
+{
+	return ftruncate64(fildes, length);
+}
+
+__attribute__ ((weak))
+void *__real_mmap64(void *addr,
+		    size_t len, int prot, int flags, int fd, long long off)
+{
+	return mmap64(addr, len, prot, flags, fd, off);
+}
+#endif
 
 __attribute__ ((weak))
 int __real_munmap(void *addr, size_t len)
