@@ -1,3 +1,8 @@
+2008-10-12  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/nucleus/heap.c (__alloc_and_reserve_heap): Get highmem
+	working.
+
 2008-10-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-01.
