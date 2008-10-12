@@ -58,12 +58,9 @@
 
 /* VM */
 
-/* We don't support MMU-less architectures over 2.4 */
-unsigned long __va_to_kva(unsigned long va);
-
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,vma->vm_page_prot); \
+    remap_page_range(from,page_to_phys(vmalloc_to_page((void *)to)),PAGE_SIZE,vma->vm_page_prot); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({ \
     vma->vm_flags |= VM_RESERVED; \
@@ -202,10 +199,7 @@ void show_stack(struct task_struct *task,
 
 /* VM */
 
-#ifdef CONFIG_MMU
-unsigned long __va_to_kva(unsigned long va);
-#else /* !CONFIG_MMU */
-#define __va_to_kva(va) (va)
+#ifndef CONFIG_MMU
 #define pgprot_noncached(p) (p)
 #endif /* CONFIG_MMU */
 
@@ -230,7 +224,7 @@ unsigned long __va_to_kva(unsigned long va);
  * memory. Anyway, this legacy would only hit setups using pre-2.6.11
  * kernel revisions. */
 #define wrap_remap_vm_page(vma,from,to) \
-    remap_pfn_range(vma,from,virt_to_phys((void *)__va_to_kva(to)) >> PAGE_SHIFT,PAGE_SHIFT,vma->vm_page_prot)
+    remap_pfn_range(vma,from,page_to_pfn(vmalloc_to_page((void *)to)),PAGE_SHIFT,vma->vm_page_prot)
 #define wrap_remap_io_page_range(vma,from,to,size,prot)  ({		\
     (vma)->vm_page_prot = pgprot_noncached((vma)->vm_page_prot);	\
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
@@ -243,7 +237,7 @@ unsigned long __va_to_kva(unsigned long va);
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10) */
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
-    remap_page_range(from,virt_to_phys((void *)__va_to_kva(to)),PAGE_SIZE,vma->vm_page_prot); \
+    remap_page_range(from,page_to_phys(vmalloc_to_page((void *)to)),PAGE_SIZE,vma->vm_page_prot); \
 })
 #define wrap_remap_io_page_range(vma,from,to,size,prot) ({	\
       vma->vm_flags |= VM_RESERVED;				\
