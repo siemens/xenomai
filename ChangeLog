@@ -1,3 +1,8 @@
+2008-10-13  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/nucleus/shadow.c (xnshadow_sys_event): Properly free
+	xnsys_ppd buffer on client detach.
+
 2008-10-12  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* src/skins/posix/shm.c (__wrap_mmap64, __wrap_ftruncate64):

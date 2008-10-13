@@ -1955,6 +1955,7 @@ static void *xnshadow_sys_event(int event, void *data)
 		p = ppd2sys((xnshadow_ppd_t *) data);
 
 		xnheap_destroy_mapped(&p->sem_heap, NULL);
+		xnarch_free_host_mem(p, sizeof(*p));
 
 		return NULL;
 	}
