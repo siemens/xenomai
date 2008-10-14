@@ -1,3 +1,9 @@
+2008-10-14  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/pipe.c, include/nucleus/pipe.h: Remove
+	xnpipe_session_handler callbacks and related xnpipe_setup
+	service.
+
 2008-10-13  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/nucleus/shadow.c (xnshadow_sys_event): Properly free

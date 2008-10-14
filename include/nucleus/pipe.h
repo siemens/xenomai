@@ -76,8 +76,6 @@ static inline xnpipe_mh_t *link2mh(xnholder_t *ln)
 typedef int xnpipe_io_handler (int minor,
 			       struct xnpipe_mh *mh, int retval, void *cookie);
 
-typedef int xnpipe_session_handler (int minor, void *cookie);
-
 typedef void *xnpipe_alloc_handler (int minor, size_t size, void *cookie);
 
 typedef struct xnpipe_state {
@@ -117,9 +115,6 @@ int xnpipe_mount(void);
 void xnpipe_umount(void);
 
 /* Entry points of the kernel interface. */
-
-void xnpipe_setup(xnpipe_session_handler *open_handler,
-		  xnpipe_session_handler *close_handler);
 
 int xnpipe_connect(int minor,
 		   xnpipe_io_handler *output_handler,

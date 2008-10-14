@@ -37,8 +37,6 @@
 
 static int xnpipe_asyncsig = SIGIO;
 
-static xnpipe_session_handler *xnpipe_open_handler, *xnpipe_close_handler;
-
 xnpipe_state_t xnpipe_states[XNPIPE_NDEVS];
 
 #define XNPIPE_BITMAP_SIZE	((XNPIPE_NDEVS + BITS_PER_LONG - 1) / BITS_PER_LONG)
@@ -230,13 +228,6 @@ static inline void xnpipe_schedule_request(void)
 /* Real-time entry points. Remember that we _must_ enforce critical
    sections since we might be competing with the real-time threads for
    data access. */
-
-void xnpipe_setup(xnpipe_session_handler *open_handler,
-		  xnpipe_session_handler *close_handler)
-{
-	xnpipe_open_handler = open_handler;
-	xnpipe_close_handler = close_handler;
-}
 
 int xnpipe_connect(int minor,
 		   xnpipe_io_handler *output_handler,
@@ -641,22 +632,6 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY | XNPIPE_USER_SIGIO);
 
 	if (!testbits(state->status, XNPIPE_KERN_CONN)) {
-		if (xnpipe_open_handler) {
-			xnlock_put_irqrestore(&nklock, s);
-
-			err = xnpipe_open_handler(xnminor_from_state(state),
-						  NULL);
-			if (err) {
-				xnpipe_cleanup_user_conn(state);
-				return err;
-			}
-
-			if (testbits(state->status, XNPIPE_KERN_CONN))
-				return 0;
-
-			xnlock_get_irqsave(&nklock, s);
-		}
-
 		if (testbits(file->f_flags, O_NONBLOCK)) {
 			xnpipe_cleanup_user_conn(state);
 			xnlock_put_irqrestore(&nklock, s);
@@ -671,15 +646,9 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 			xnlock_put_irqrestore(&nklock, s);
 			return -ERESTARTSYS;
 		}
-
-		xnlock_put_irqrestore(&nklock, s);
-	} else {
-		xnlock_put_irqrestore(&nklock, s);
-
-		if (xnpipe_open_handler)
-			err = xnpipe_open_handler(xnminor_from_state(state),
-						  state->cookie);
 	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
 		xnpipe_cleanup_user_conn(state);
@@ -701,22 +670,15 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 	xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
-		int minor = xnminor_from_state(state);
-
 		/* If a Xenomai thread is waiting on this object, wake
 		   it up now. */
-
 		if (xnsynch_nsleepers(&state->synchbase) > 0) {
 			xnsynch_flush(&state->synchbase, XNRMID);
 			xnpod_schedule();
 		}
+	}
 
-		xnlock_put_irqrestore(&nklock, s);
-
-		if (xnpipe_close_handler)
-			err = xnpipe_close_handler(minor, state->cookie);
-	} else
-		xnlock_put_irqrestore(&nklock, s);
+	xnlock_put_irqrestore(&nklock, s);
 
 	if (state->asyncq) {	/* Clear the async queue */
 		xnlock_get_irqsave(&nklock, s);
@@ -1204,5 +1166,4 @@ EXPORT_SYMBOL(xnpipe_send);
 EXPORT_SYMBOL(xnpipe_mfixup);
 EXPORT_SYMBOL(xnpipe_recv);
 EXPORT_SYMBOL(xnpipe_inquire);
-EXPORT_SYMBOL(xnpipe_setup);
 EXPORT_SYMBOL(xnpipe_flush);
