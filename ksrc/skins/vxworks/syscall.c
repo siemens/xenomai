@@ -442,6 +442,26 @@ static int __wind_task_nametoid(struct task_struct *curr, struct pt_regs *regs)
 }
 
 /*
+ * int __wind_task_setmode(int clrmask, int setmask, int *mode_r)
+ */
+
+static int __wind_task_setmode(struct task_struct *curr, struct pt_regs *regs)
+{
+	int setmask, clrmask, mode_r;
+
+	clrmask = __xn_reg_arg1(regs);
+	setmask = __xn_reg_arg2(regs);
+
+	/* Primary required: current thread must be valid. */
+	mode_r = xnpod_set_thread_mode(xnpod_current_thread(),
+				       clrmask, setmask);
+	if (__xn_reg_arg3(regs))
+		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg3(regs),
+				  &mode_r, sizeof(mode_r));
+	return 0;
+}
+
+/*
  * int __wind_sem_bcreate(int flags, SEM_B_STATE state, SEM_ID *psem_id)
  */
 
@@ -1325,6 +1345,7 @@ static xnsysent_t __systab[] = {
 	[__vxworks_task_delay] = {&__wind_task_delay, __xn_exec_primary},
 	[__vxworks_task_verifyid] = {&__wind_task_verifyid, __xn_exec_any},
 	[__vxworks_task_nametoid] = {&__wind_task_nametoid, __xn_exec_any},
+	[__vxworks_task_setmode] = {&__wind_task_setmode, __xn_exec_primary},
 	[__vxworks_sem_bcreate] = {&__wind_sem_bcreate, __xn_exec_any},
 	[__vxworks_sem_ccreate] = {&__wind_sem_ccreate, __xn_exec_any},
 	[__vxworks_sem_mcreate] = {&__wind_sem_mcreate, __xn_exec_any},

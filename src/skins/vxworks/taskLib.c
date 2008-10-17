@@ -435,3 +435,18 @@ void taskExit(int code)
 {
 	pthread_exit((void *)(long) code);
 }
+
+STATUS taskSetMode(int clrmask, int setmask, int *rmask)
+{
+	int err = XENOMAI_SKINCALL3(__vxworks_muxid,
+				    __vxworks_task_setmode,
+				    clrmask,
+				    setmask,
+				    rmask);
+	if (err) {
+		errno = abs(err);
+		return ERROR;
+	}
+
+	return OK;
+}

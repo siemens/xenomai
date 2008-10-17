@@ -1,3 +1,8 @@
+2008-10-17  Philippe Gerum  <rpm@xenomai.org>
+
+	* src/skins/vxworks/taskLib.c, ksrc/skins/vxworks/syscall.c: Add
+	taskSetMode() extension.
+
 2008-10-14  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/vrtx/{init.c, task.c}: Set up TCB pointer for each

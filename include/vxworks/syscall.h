@@ -70,6 +70,7 @@
 #define __vxworks_wd_wait          44
 #define __vxworks_int_context      45
 #define __vxworks_taskinfo_get     46
+#define __vxworks_task_setmode     47
 
 struct wind_arg_bulk {
 

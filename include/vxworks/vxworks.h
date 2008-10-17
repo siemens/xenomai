@@ -27,6 +27,7 @@
 #define _XENO_VXWORKS_VXWORKS_H
 
 #include <nucleus/types.h>
+#include <nucleus/thread.h>
 
 #define VXWORKS_SKIN_VERSION_STRING  "4"
 #define VXWORKS_SKIN_VERSION_CODE    0x00000004
@@ -83,6 +84,13 @@ typedef int BOOL;
 #define VX_PRIVATE_ENV   0x0080
 /* do not fill the stack for use by checkStack(). */
 #define VX_NO_STACK_FILL 0x0100
+
+/* Xenomai extension: enable IRQ shield. */
+#define VX_IRQ_SHIELD    XNSHIELD
+/* Xenomai extension: enable mode switch trap. */
+#define VX_TRAP_SWITCH   XNTRAPSW
+/* Xenomai extension: disable Linux priority coupling. */
+#define VX_RPI_OFF       XNRPIOFF
 
 /* defines for all kinds of semaphores */
 #define SEM_Q_FIFO           0x0
@@ -287,6 +295,9 @@ int *wind_current_context_errno(void);
 #include <vxworks/syscall.h>
 
 typedef WIND_TCB_PLACEHOLDER WIND_TCB;
+
+/* Xenomai extension */
+STATUS taskSetMode(int clrmask, int setmask, int *rmask);
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
