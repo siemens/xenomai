@@ -1,3 +1,8 @@
+2008-10-18  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/nucleus/pipe.c (xnpipe_open): Fix context unwinding upon
+	signal receipt.
+
 2008-10-17  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/vxworks/taskLib.c, ksrc/skins/vxworks/syscall.c: Add
