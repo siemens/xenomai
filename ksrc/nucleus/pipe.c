@@ -86,38 +86,39 @@ static inline void xnpipe_minor_free(int minor)
 
 static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 {
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
 	if (state->wcount++ == 0)
 		appendq(&xnpipe_sleepq, &state->slink);
 
 	__setbits(state->status, mask);
+}
 
-	xnlock_put_irqrestore(&nklock, s);
+static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
+{
+	if (testbits(state->status, mask)) {
+		if (--state->wcount == 0)
+			removeq(&xnpipe_sleepq, &state->slink);
+		__clrbits(state->status, mask);
+	}
 }
 
 /* Must be entered with nklock held. */
-#define xnpipe_wait(__state, __mask, __s, __cond)	\
-({							\
-	wait_queue_head_t *__waitq;			\
-	DEFINE_WAIT(__wait);				\
-	int __sigpending;				\
-							\
-	if ((__mask) & XNPIPE_USER_WREAD)		\
-		__waitq = &(__state)->readq;		\
-	else						\
-		__waitq = &(__state)->syncq;		\
-							\
-	xnpipe_enqueue_wait(__state, __mask);		\
-	xnlock_put_irqrestore(&nklock, __s);		\
+#define xnpipe_wait(__state, __mask, __s, __cond)			\
+({									\
+	wait_queue_head_t *__waitq;					\
+	DEFINE_WAIT(__wait);						\
+	int __sigpending;						\
+									\
+	if ((__mask) & XNPIPE_USER_WREAD)				\
+		__waitq = &(__state)->readq;				\
+	else								\
+		__waitq = &(__state)->syncq;				\
+									\
+	xnpipe_enqueue_wait(__state, __mask);				\
+	xnlock_put_irqrestore(&nklock, __s);				\
 									\
 	prepare_to_wait_exclusive(__waitq, &__wait, TASK_INTERRUPTIBLE);\
 									\
-	if (__cond)							\
-		xnpipe_dequeue_wait(__state, __mask);			\
-	else								\
+	if (!__cond)							\
 		schedule();						\
 									\
 	finish_wait(__waitq, &__wait);					\
@@ -125,24 +126,10 @@ static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 									\
 	/* Restore the interrupt state initially set by the caller. */	\
 	xnlock_get_irqsave(&nklock, __s);				\
+	xnpipe_dequeue_wait(__state, __mask);				\
 									\
 	__sigpending;							\
 })
-
-static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (testbits(state->status, mask)) {
-		if (--state->wcount == 0)
-			removeq(&xnpipe_sleepq, &state->slink);
-		__clrbits(state->status, mask);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
 
 static void xnpipe_wakeup_proc(void *cookie)
 {
@@ -158,7 +145,8 @@ static void xnpipe_wakeup_proc(void *cookie)
 	while ((holder = nholder) != NULL) {
 		nholder = nextq(&xnpipe_sleepq, holder);
 		state = link2xnpipe(holder, slink);
-		if ((rbits = testbits(state->status, XNPIPE_USER_ALL_READY)) != 0) {
+		if ((rbits =
+		     testbits(state->status, XNPIPE_USER_ALL_READY)) != 0) {
 			__clrbits(state->status, rbits);
 			/* PREEMPT_RT kernels could schedule us out as
 			   a result of waking up a waiter, so we need
@@ -166,7 +154,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 			   before calling wake_up_interruptible(). */
 			if ((rbits & XNPIPE_USER_WREAD_READY) != 0) {
 				if (waitqueue_active(&state->readq)) {
-					xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
 					xnlock_put_irqrestore(&nklock, s);
 					wake_up_interruptible(&state->readq);
 					rbits &= ~XNPIPE_USER_WREAD_READY;
@@ -175,7 +162,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 			}
 			if ((rbits & XNPIPE_USER_WSYNC_READY) != 0) {
 				if (waitqueue_active(&state->syncq)) {
-					xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
 					xnlock_put_irqrestore(&nklock, s);
 					wake_up_interruptible(&state->syncq);
 					rbits &= ~XNPIPE_USER_WSYNC_READY;
@@ -476,7 +462,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 			goto unlock_and_exit;
 		}
 
-		/* remaining timeout */		
+		/* remaining timeout */
 		timeout = xnthread_timeout(thread);
 	}
 
@@ -629,7 +615,8 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 	state->wcount = 0;
 
 	__clrbits(state->status,
-		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY | XNPIPE_USER_SIGIO);
+		  XNPIPE_USER_ALL_WAIT | XNPIPE_USER_ALL_READY |
+		  XNPIPE_USER_SIGIO);
 
 	if (!testbits(state->status, XNPIPE_KERN_CONN)) {
 		if (testbits(file->f_flags, O_NONBLOCK)) {
@@ -639,10 +626,10 @@ static int xnpipe_open(struct inode *inode, struct file *file)
 		}
 
 		sigpending = xnpipe_wait(state, XNPIPE_USER_WREAD, s,
-					 testbits(state->status, XNPIPE_KERN_CONN));
+					 testbits(state->status,
+						  XNPIPE_KERN_CONN));
 		if (sigpending) {
-			if (!testbits(state->status, XNPIPE_KERN_CONN))
-				xnpipe_cleanup_user_conn(state);
+			xnpipe_cleanup_user_conn(state);
 			xnlock_put_irqrestore(&nklock, s);
 			return -ERESTARTSYS;
 		}
@@ -761,7 +748,10 @@ static ssize_t xnpipe_read(struct file *file,
 
 		xnlock_put_irqrestore(&nklock, s);
 		/* More data could be appended while doing this: */
-		err = __copy_to_user(buf + inbytes, xnpipe_m_data(mh) + xnpipe_m_rdoff(mh), nbytes);
+		err =
+		    __copy_to_user(buf + inbytes,
+				   xnpipe_m_data(mh) + xnpipe_m_rdoff(mh),
+				   nbytes);
 		xnlock_get_irqsave(&nklock, s);
 
 		if (err) {
@@ -781,7 +771,8 @@ static ssize_t xnpipe_read(struct file *file,
 	else {
 		if (state->output_handler)
 			ret = state->output_handler(xnminor_from_state(state),
-						    mh, err ?: ret, state->cookie);
+						    mh, err ? : ret,
+						    state->cookie);
 
 		if (testbits(state->status, XNPIPE_USER_WSYNC)) {
 			__setbits(state->status, XNPIPE_USER_WSYNC_READY);
@@ -791,7 +782,7 @@ static ssize_t xnpipe_read(struct file *file,
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err ?: ret;
+	return err ? : ret;
 }
 
 static ssize_t xnpipe_write(struct file *file,
@@ -822,7 +813,7 @@ static ssize_t xnpipe_write(struct file *file,
 	input_handler = state->input_handler;
 	cookie = state->cookie;
 
-retry:
+      retry:
 	pollnum = countq(&state->inq) + countq(&state->outq);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -846,7 +837,8 @@ retry:
 
 		xnlock_get_irqsave(&nklock, s);
 		if (xnpipe_wait(state, XNPIPE_USER_WSYNC, s,
-				pollnum > countq(&state->inq) + countq(&state->outq))) {
+				pollnum >
+				countq(&state->inq) + countq(&state->outq))) {
 			xnlock_put_irqrestore(&nklock, s);
 			return -ERESTARTSYS;
 		}
