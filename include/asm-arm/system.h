@@ -91,6 +91,12 @@ typedef struct xnarch_fltinfo {
 #define xnarch_fault_trap(fi)   ((fi)->exception)
 #define xnarch_fault_code(fi)   (0)
 #define xnarch_fault_pc(fi)     ((fi)->regs->ARM_pc - (thumb_mode((fi)->regs) ? 2 : 4)) /* XXX ? */
+#ifndef CONFIG_XENO_HW_FPU
+/* It is normal on ARM for user-space support running with a kernel compiled
+   with FPU support to make FPU faults, even on the context of real-time threads
+   which do not otherwise use FPU, so we simply ignore these faults. */
+#define xnarch_fault_fpu_p(fi) (0)
+#else /* CONFIG_XENO_HW_FPU */
 static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
 {
     /* This function does the same thing to decode the faulting instruct as
@@ -171,6 +177,7 @@ static inline int xnarch_fault_fpu_p(struct xnarch_fltinfo *fi)
     fi->exception = exc = copro_to_exc[cp];
     return exc != IPIPE_TRAP_UNDEFINSTR;
 }
+#endif /* CONFIG_XENO_HW_FPU */
 /* The following predicates are only usable over a regular Linux stack
    context. */
 #define xnarch_fault_pf_p(fi)   ((fi)->exception == IPIPE_TRAP_ACCESS)
