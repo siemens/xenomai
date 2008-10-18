@@ -118,7 +118,7 @@ static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 									\
 	prepare_to_wait_exclusive(__waitq, &__wait, TASK_INTERRUPTIBLE);\
 									\
-	if (!__cond)							\
+	if (!(__cond))							\
 		schedule();						\
 									\
 	finish_wait(__waitq, &__wait);					\
@@ -145,8 +145,8 @@ static void xnpipe_wakeup_proc(void *cookie)
 	while ((holder = nholder) != NULL) {
 		nholder = nextq(&xnpipe_sleepq, holder);
 		state = link2xnpipe(holder, slink);
-		if ((rbits =
-		     testbits(state->status, XNPIPE_USER_ALL_READY)) != 0) {
+		rbits = testbits(state->status, XNPIPE_USER_ALL_READY);
+		if (rbits) {
 			__clrbits(state->status, rbits);
 			/* PREEMPT_RT kernels could schedule us out as
 			   a result of waking up a waiter, so we need
@@ -156,7 +156,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 				if (waitqueue_active(&state->readq)) {
 					xnlock_put_irqrestore(&nklock, s);
 					wake_up_interruptible(&state->readq);
-					rbits &= ~XNPIPE_USER_WREAD_READY;
 					xnlock_get_irqsave(&nklock, s);
 				}
 			}
@@ -164,7 +163,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 				if (waitqueue_active(&state->syncq)) {
 					xnlock_put_irqrestore(&nklock, s);
 					wake_up_interruptible(&state->syncq);
-					rbits &= ~XNPIPE_USER_WSYNC_READY;
 					xnlock_get_irqsave(&nklock, s);
 				}
 			}
