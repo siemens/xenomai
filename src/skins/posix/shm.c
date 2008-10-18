@@ -148,7 +148,7 @@ void *__wrap_mmap(void *addr,
 }
 
 /* 32 bits platform */
-#if LONG_MAX == 2147483647L
+#if LONG_BITS == 32
 int __wrap_ftruncate64(int fildes, long long length)
 {
 	int err;
