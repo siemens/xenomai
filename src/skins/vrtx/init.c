@@ -39,8 +39,6 @@ static void __flush_tsd(void *tsd)
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
-	TCB *tcb;
-
 	__vrtx_muxid =
 	    xeno_bind_skin(VRTX_SKIN_MAGIC, "vrtx", "xeno_vrtx");
 	__vrtx_muxid = __xn_mux_shifted_id(__vrtx_muxid);
@@ -51,13 +49,4 @@ void __init_xeno_interface(void)
 		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
 		exit(1);
 	}
-
-	tcb = (TCB *) malloc(sizeof(*tcb));
-
-	if (!tcb) {
-		fprintf(stderr, "Xenomai: failed to allocate local TCB?!\n");
-		exit(1);
-	}
-
-	pthread_setspecific(__vrtx_tskey, tcb);
 }

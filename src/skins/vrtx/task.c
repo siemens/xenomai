@@ -80,6 +80,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	struct sched_param param;
 	int policy;
 	long err;
+	TCB *tcb;
 
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
@@ -93,6 +94,15 @@ static void *vrtx_task_trampoline(void *cookie)
 
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+	tcb = (TCB *) malloc(sizeof(*tcb));
+	if (tcb == NULL) {
+		fprintf(stderr, "Xenomai: failed to allocate local TCB?!\n");
+		err = -ENOMEM;
+		goto fail;
+	}
+
+	pthread_setspecific(__vrtx_tskey, tcb);
 
 	old_sigharden_handler = signal(SIGHARDEN, &vrtx_task_sigharden);
 
@@ -116,9 +126,7 @@ static void *vrtx_task_trampoline(void *cookie)
 
 	if (!err)
 		_iargs.entry(_iargs.param);
-
-      fail:
-
+fail:
 	pthread_exit((void *)err);
 }
 
