@@ -234,6 +234,18 @@ int pthread_create(pthread_t *tid,
 	thread->hkey.mm = NULL;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+#ifdef CONFIG_XENO_FASTSEM
+	/* We need an anonymous registry entry to obtain a handle for fast
+	   mutex locking. */
+	{
+		int err = xnthread_register(&thread->threadbase, "");
+		if (err) {
+			thread_destroy(thread);
+			return err;
+		}
+	}
+#endif /* CONFIG_XENO_FASTSEM */
+
 	*tid = thread;		/* Must be done before the thread is started. */
 
 	if (start)		/* Do not start shadow threads (i.e. start == NULL). */

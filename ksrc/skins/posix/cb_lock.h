@@ -3,15 +3,22 @@
 
 #include <asm/xenomai/atomic.h>
 #include <nucleus/compiler.h>
+#include <nucleus/types.h>
 
 #ifndef __KERNEL__
 typedef void xnthread_t;
 #endif /* __KERNEL__ */
 
-#define test_claimed(owner) ((long) (owner) & 1)
-#define clear_claimed(owner) ((xnthread_t *) ((long) (owner) & ~1))
-#define set_claimed(owner, bit) \
-        ((xnthread_t *) ((long) clear_claimed(owner) | !!(bit)))
+#define __CLAIMED_BIT		XN_HANDLE_SPARE3
+
+#define test_claimed(owner)	xnhandle_test_spare(owner, __CLAIMED_BIT)
+#define clear_claimed(owner)	xnhandle_mask_spare(owner)
+#define set_claimed(owner, bit) ({ \
+	xnhandle_t __tmp = xnhandle_mask_spare(owner); \
+	if (bit) \
+		xnhandle_set_spare(__tmp, __CLAIMED_BIT); \
+	__tmp; \
+})
 
 #ifdef CONFIG_XENO_FASTSEM
 

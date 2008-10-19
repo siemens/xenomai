@@ -34,7 +34,7 @@ union __xeno_mutex {
 		xnarch_atomic_t lock;
 		union {
 			unsigned owner_offset;
-			xnarch_atomic_intptr_t *owner;
+			xnarch_atomic_t *owner;
 		};
 		struct pse51_mutexattr attr;
 #endif /* CONFIG_XENO_FASTSEM */
@@ -54,7 +54,7 @@ typedef struct pse51_mutex {
 #define link2mutex(laddr)                                               \
 	((pse51_mutex_t *)(((char *)laddr) - offsetof(pse51_mutex_t, link)))
 
-	xnarch_atomic_intptr_t *owner;
+	xnarch_atomic_t *owner;
 	pthread_mutexattr_t attr;
 	unsigned sleepers;
 	pse51_kqueues_t *owningq;
@@ -77,7 +77,7 @@ int pse51_mutex_check_init(struct __shadow_mutex *shadow,
 
 int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 			      pse51_mutex_t *mutex,
-			      xnarch_atomic_intptr_t *ownerp,
+			      xnarch_atomic_t *ownerp,
 			      const pthread_mutexattr_t *attr);
 
 void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
@@ -88,6 +88,7 @@ pse51_mutex_trylock_internal(xnthread_t *cur,
 			     struct __shadow_mutex *shadow, unsigned count)
 {
 	pse51_mutex_t *mutex = shadow->mutex;
+	xnhandle_t ownerh;
 	xnthread_t *owner;
 
 	if (xnpod_unblockable_p())
@@ -101,9 +102,14 @@ pse51_mutex_trylock_internal(xnthread_t *cur,
 		return ERR_PTR(-EPERM);
 #endif /* XENO_DEBUG(POSIX) */
 
-	owner = xnarch_atomic_intptr_cmpxchg(mutex->owner, NULL, cur);
-	if (unlikely(owner != NULL))
+	ownerh = xnarch_atomic_cmpxchg(mutex->owner, XN_NO_HANDLE,
+				       xnthread_handle(cur));
+	if (unlikely(ownerh != XN_NO_HANDLE)) {
+		owner = xnthread_lookup(clear_claimed(ownerh));
+		if (!owner)
+			return ERR_PTR(-EINVAL);
 		return owner;
+	}
 
 	shadow->lockcnt = count;
 	return NULL;
@@ -118,7 +124,8 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 
 {
 	pse51_mutex_t *mutex;
-	xnthread_t *owner, *old;
+	xnthread_t *owner;
+	xnhandle_t ownerh, old;
 	spl_t s;
 	int err;
 
@@ -128,32 +135,39 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 		return PTR_ERR(owner);
 
 	mutex = shadow->mutex;
-	if (clear_claimed(owner) == cur)
+	if (owner == cur)
 		return -EBUSY;
 
 	/* Set bit 0, so that mutex_unlock will know that the mutex is claimed.
 	   Hold the nklock, for mutual exclusion with slow mutex_unlock. */
 	xnlock_get_irqsave(&nklock, s);
-	if (test_claimed(owner)) {
-		old = xnarch_atomic_intptr_get(mutex->owner);
+	if (test_claimed(ownerh)) {
+		old = xnarch_atomic_get(mutex->owner);
 		goto test_no_owner;
 	}
 	do {
-		old = xnarch_atomic_intptr_cmpxchg(mutex->owner,
-						   owner, set_claimed(owner, 1));
-		if (likely(old == owner))
+		old = xnarch_atomic_cmpxchg(mutex->owner, ownerh,
+					    set_claimed(ownerh, 1));
+		if (likely(old == ownerh))
 			break;
 	  test_no_owner:
-		if (old == NULL) {
+		if (old == XN_NO_HANDLE) {
 			/* Owner called fast mutex_unlock
 			   (on another cpu) */
 			xnlock_put_irqrestore(&nklock, s);
 			goto retry_lock;
 		}
-		owner = old;
-	} while (!test_claimed(owner));
+		ownerh = old;
+	} while (!test_claimed(ownerh));
 
-	xnsynch_set_owner(&mutex->synchbase, clear_claimed(owner));
+	owner = xnthread_lookup(clear_claimed(ownerh));
+
+	if (unlikely(!owner)) {
+		err = -EINVAL;
+		goto error;
+	}
+
+	xnsynch_set_owner(&mutex->synchbase, owner);
 	++mutex->sleepers;
 	if (timed)
 		xnsynch_sleep_on(&mutex->synchbase, abs_to, XN_REALTIME);
@@ -174,7 +188,8 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 		goto error;
 	}
 
-	xnarch_atomic_intptr_set(mutex->owner,set_claimed(cur, mutex->sleepers));
+	ownerh = set_claimed(xnthread_handle(cur), mutex->sleepers);
+	xnarch_atomic_set(mutex->owner, ownerh);
 	shadow->lockcnt = count;
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -182,9 +197,9 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 
   error:
 	if (!mutex->sleepers)
-		xnarch_atomic_intptr_set
+		xnarch_atomic_set
 			(mutex->owner,
-			 clear_claimed(xnarch_atomic_intptr_get(mutex->owner)));
+			 clear_claimed(xnarch_atomic_get(mutex->owner)));
 	xnlock_put_irqrestore(&nklock, s);
 	return err;
 }
@@ -192,16 +207,18 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 static inline void pse51_mutex_unlock_internal(xnthread_t *cur,
 					       pse51_mutex_t *mutex)
 {
+	xnhandle_t ownerh;
 	xnthread_t *owner;
 	spl_t s;
 
-	if (likely(xnarch_atomic_intptr_cmpxchg(mutex->owner, cur, NULL) == cur))
+	if (likely(xnarch_atomic_cmpxchg(mutex->owner, cur, XN_NO_HANDLE) ==
+		   xnthread_handle(cur)))
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
 	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
-	xnarch_atomic_intptr_set(mutex->owner,
-				 set_claimed(owner, mutex->sleepers));
+	ownerh = set_claimed(xnthread_handle(owner), mutex->sleepers);
+	xnarch_atomic_set(mutex->owner, ownerh);
 	if (owner)
 		xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);

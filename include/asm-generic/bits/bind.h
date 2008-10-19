@@ -15,18 +15,24 @@
 
 __attribute__ ((weak))
 pthread_key_t xeno_current_key;
-__attribute__ ((weak))
-pthread_once_t xeno_init_current_key_once = PTHREAD_ONCE_INIT;
 
 __attribute__ ((weak))
 void xeno_set_current(void)
 {
 	void *kthread_cb;
-	XENOMAI_SYSCALL1(__xn_sys_current, &kthread_cb);
+	int err;
+
+	err = XENOMAI_SYSCALL1(__xn_sys_current, &kthread_cb);
+	if (err) {
+		fprintf(stderr, "Xenomai: error obtaining handle for current "
+			"thread: %s\n", strerror(err));
+		exit(1);
+	}
 	pthread_setspecific(xeno_current_key, kthread_cb);
 }
 
-static void init_current_key(void)
+static __attribute__ ((constructor))
+void init_current_key(void)
 {
 	int err = pthread_key_create(&xeno_current_key, NULL);
 	if (err) {
@@ -168,8 +174,6 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 	sa.sa_flags = 0;
 	sigaction(SIGXCPU, &sa, NULL);
 
-	pthread_once(&xeno_init_current_key_once, &init_current_key);
-
 #ifdef CONFIG_XENO_FASTSEM
 	/* In case we forked, we need to map the new local semaphore heap */
 	if (xeno_sem_heap[0])
@@ -243,8 +247,6 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 #ifdef xeno_arch_features_check
 	xeno_arch_features_check();
 #endif /* xeno_arch_features_check */
-
-	pthread_once(&xeno_init_current_key_once, &init_current_key);
 
 #ifdef CONFIG_XENO_FASTSEM
 	/* In case we forked, we need to map the new local semaphore heap */

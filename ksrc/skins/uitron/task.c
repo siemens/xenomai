@@ -16,7 +16,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <nucleus/registry.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <uitron/task.h>
@@ -150,6 +149,16 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 	appendq(&uitaskq, &task->link);
 	xnlock_put_irqrestore(&nklock, s);
 	task->magic = uITRON_TASK_MAGIC;
+
+#ifdef CONFIG_XENO_FASTSEM
+	/* We need an anonymous registry entry to obtain a handle for fast
+	   mutex locking. */
+	if (xnthread_register(&task->threadbase, "")) {
+		xnmap_remove(ui_task_idmap, tskid);
+		xnpod_abort_thread(&task->threadbase);
+		return E_NOMEM;
+	}
+#endif /* CONFIG_XENO_FASTSEM */
 
 	return E_OK;
 }

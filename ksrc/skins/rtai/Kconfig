@@ -1,5 +1,6 @@
 menuconfig XENO_SKIN_RTAI
 	depends on XENO_OPT_NUCLEUS
+	select XENO_OPT_REGISTRY if XENO_FASTSEM
 	tristate "RTAI emulator"
 	help
 

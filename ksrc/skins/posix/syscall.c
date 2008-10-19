@@ -1060,7 +1060,8 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	mutex = shadow->mutex;
 
-	if (clear_claimed(xnarch_atomic_intptr_get(mutex->owner)) != cur) {
+	if (clear_claimed(xnarch_atomic_get(mutex->owner)) !=
+	    xnthread_handle(cur)) {
 		err = -EPERM;
 		goto out;
 	}
@@ -1119,7 +1120,7 @@ static int __pthread_mutex_init(struct pt_regs *regs)
 	pthread_mutexattr_t locattr, *attr, *uattrp;
 	union __xeno_mutex mx, *umx;
 	pse51_mutex_t *mutex;
-	xnarch_atomic_intptr_t *ownerp;
+	xnarch_atomic_t *ownerp;
 	int err;
 
 	umx = (union __xeno_mutex *)__xn_reg_arg1(regs);
@@ -1144,9 +1145,9 @@ static int __pthread_mutex_init(struct pt_regs *regs)
 	if (!mutex)
 		return -ENOMEM;
 
-	ownerp = (xnarch_atomic_intptr_t *)
+	ownerp = (xnarch_atomic_t *)
 		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
-			     sizeof(xnarch_atomic_intptr_t));
+			     sizeof(xnarch_atomic_t));
 	if (!ownerp) {
 		xnfree(mutex);
 		return -EAGAIN;
@@ -1185,7 +1186,7 @@ static int __pthread_mutex_destroy(struct pt_regs *regs)
 	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq)
 		return -EPERM;
 
-	if (xnarch_atomic_intptr_get(mutex->owner))
+	if (xnarch_atomic_get(mutex->owner) != XN_NO_HANDLE)
 		return -EBUSY;
 
 	pse51_mark_deleted(shadow);

@@ -145,6 +145,14 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	if (err)
 		return err;
 
+#ifdef CONFIG_XENO_FASTSEM
+	/* We need an anonymous registry entry to obtain a handle for fast
+	   mutex locking. */
+	err = xnthread_register(task, "");
+	if (err)
+		goto cleanup_out;
+#endif /* CONFIG_XENO_FASTSEM */
+
 	if (period > 0) {
 		err = xnpod_set_thread_periodic(task, XN_INFINITE,
 						xntbase_ns2ticks_ceil

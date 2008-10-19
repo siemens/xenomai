@@ -1908,13 +1908,21 @@ static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 	return __xn_safe_copy_to_user(us_hinfo, &hinfo, sizeof(*us_hinfo));
 }
 
+#ifdef CONFIG_XENO_OPT_REGISTRY
 static int xnshadow_sys_current(struct pt_regs *regs)
 {
-	xnthread_t * __user *us_current, *cur = xnshadow_thread(current);
-	us_current = (xnthread_t *__user *) __xn_reg_arg1(regs);
+	xnthread_t *cur = xnshadow_thread(current);
+	xnhandle_t __user *us_handle;
 
-	return __xn_safe_copy_to_user(us_current, &cur, sizeof(*us_current));
+	if (!cur)
+		return -EPERM;
+
+	us_handle = (xnhandle_t __user *) __xn_reg_arg1(regs);
+
+	return __xn_safe_copy_to_user(us_handle, &xnthread_handle(cur),
+				      sizeof(*us_handle));
 }
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
@@ -1925,7 +1933,9 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
 	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_any},
+#ifdef CONFIG_XENO_OPT_REGISTRY
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
+#endif /* CONFIG_XENO_OPT_REGISTRY */
 };
 
 static void *xnshadow_sys_event(int event, void *data)

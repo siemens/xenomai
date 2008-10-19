@@ -1,7 +1,9 @@
 2008-10-19  Jan Kiszka  <jan.kiszka@siemens.com>
 
-	* ksrc/skins, include/nucleus, ksrc/nucleus: Generic thread
-	registration.
+	* ksrc/skins, include/nucleus, ksrc/nucleus:
+
+	- Generic thread registration.
+	- Handle-based xeno_get_current service.
 	
 2008-10-18  Jan Kiszka  <jan.kiszka@siemens.com>
  

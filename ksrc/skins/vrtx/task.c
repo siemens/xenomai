@@ -188,11 +188,24 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	if (mode & 0x10)
 		bmode |= XNRRB;
 
-	*errp = RET_OK;
-
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_task_q, &task->link);
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_FASTSEM
+	/* We need an anonymous registry entry to obtain a handle for fast
+	   mutex locking. */
+	{
+		int err = xnthread_register(&task->threadbase, "");
+		if (err) {
+			xnpod_abort_thread(&task->threadbase);
+			*errp = ER_MEM;
+			return -1;
+		}
+	}
+#endif /* CONFIG_XENO_FASTSEM */
+
+	*errp = RET_OK;
 
 	xnpod_start_thread(&task->threadbase,
 			   bmode, 0, XNPOD_ALL_CPUS, &vrtxtask_trampoline,

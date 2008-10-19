@@ -31,12 +31,12 @@ extern int __pse51_muxid;
 
 extern unsigned long xeno_sem_heap[2];
 
-static xnarch_atomic_intptr_t *get_ownerp(struct __shadow_mutex *shadow)
+static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 {
 	if (likely(!shadow->attr.pshared))
 		return shadow->owner;
 	
-	return (xnarch_atomic_intptr_t *) (xeno_sem_heap[1] + shadow->owner_offset);
+	return (xnarch_atomic_t *) (xeno_sem_heap[1] + shadow->owner_offset);
 }
 #endif /* CONFIG_XENO_FASTSEM */
 
@@ -117,7 +117,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
 #ifdef CONFIG_XENO_FASTSEM
 	if (!shadow->attr.pshared)
-		shadow->owner = (xnarch_atomic_intptr_t *)
+		shadow->owner = (xnarch_atomic_t *)
 			(xeno_sem_heap[0] + shadow->owner_offset);
 	
 	cb_write_unlock(&shadow->lock, s);
@@ -149,10 +149,10 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	int err = 0;
 
 #ifdef CONFIG_XENO_FASTSEM
-	xnthread_t *cur, *owner;
+	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
@@ -163,8 +163,8 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 		goto out;
 	}
 
-	owner = xnarch_atomic_intptr_cmpxchg(get_ownerp(shadow), NULL, cur);
-	if (likely(!owner)) {
+	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
+	if (likely(owner == XN_NO_HANDLE)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
@@ -210,10 +210,10 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	int err = 0;
 
 #ifdef CONFIG_XENO_FASTSEM
-	xnthread_t *cur, *owner;
+	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
@@ -224,8 +224,8 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 		goto out;
 	}	
 
-	owner = xnarch_atomic_intptr_cmpxchg(get_ownerp(shadow), NULL, cur);
-	if (likely(!owner)) {
+	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
+	if (likely(owner == XN_NO_HANDLE)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
@@ -271,10 +271,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	int err = 0;
 
 #ifdef CONFIG_XENO_FASTSEM
-	xnthread_t *cur, *owner;
+	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
@@ -285,8 +285,8 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 		goto out;
 	}	
 
-	owner = xnarch_atomic_intptr_cmpxchg(get_ownerp(shadow), NULL, cur);
-	if (likely(!owner)) {
+	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
+	if (likely(owner == XN_NO_HANDLE)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
@@ -325,11 +325,11 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	int err = 0;
 
 #ifdef CONFIG_XENO_FASTSEM
-	xnarch_atomic_intptr_t *ownerp;
-	xnthread_t *cur;
+	xnarch_atomic_t *ownerp;
+	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
@@ -341,7 +341,8 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	}
 
 	ownerp = get_ownerp(shadow);
-	if (unlikely(clear_claimed(xnarch_atomic_intptr_get(ownerp)) != cur)) {
+	owner = clear_claimed(xnarch_atomic_get(ownerp));
+	if (unlikely(owner != cur)) {
 		err = -EPERM;
 		goto out_err;
 	}
@@ -352,7 +353,7 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		goto out;
 	}
 
-	if (likely(xnarch_atomic_intptr_cmpxchg(ownerp, cur, NULL) == cur)) {
+	if (likely(xnarch_atomic_cmpxchg(ownerp, cur, XN_NO_HANDLE) == cur)) {
 	  out:
 		cb_read_unlock(&shadow->lock, s);
 		return 0;

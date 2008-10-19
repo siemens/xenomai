@@ -230,18 +230,20 @@ static inline int mutex_save_count(xnthread_t *cur,
 
 	mutex = shadow->mutex;
 
-	if (clear_claimed(xnarch_atomic_intptr_get(mutex->owner)) != cur)
+	if (clear_claimed(xnarch_atomic_get(mutex->owner)) !=
+	    xnthread_handle(cur))
 		return EPERM;
 
 	*count_ptr = shadow->lockcnt;
 
-	if (likely(xnarch_atomic_intptr_cmpxchg(mutex->owner, cur, NULL) == cur))
+	if (likely(xnarch_atomic_cmpxchg(mutex->owner, cur, XN_NO_HANDLE) ==
+		   xnthread_handle(cur)))
 		return 0;
 
 	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
-	xnarch_atomic_intptr_set
-		(mutex->owner,
-		 set_claimed(owner,xnsynch_nsleepers(&mutex->synchbase)));
+	xnarch_atomic_set(mutex->owner,
+			  set_claimed(xnthread_handle(owner),
+				      xnsynch_nsleepers(&mutex->synchbase)));
 
 	/* Do not reschedule here, releasing the mutex and suspension must be
 	   done atomically in pthread_cond_*wait. */

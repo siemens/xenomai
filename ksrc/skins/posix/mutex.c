@@ -82,7 +82,7 @@ int pse51_mutex_check_init(struct __shadow_mutex *shadow,
 
 int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 			      pse51_mutex_t *mutex,
-			      xnarch_atomic_intptr_t *ownerp,
+			      xnarch_atomic_t *ownerp,
 			      const pthread_mutexattr_t *attr)
 {
 	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
@@ -118,7 +118,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	mutex->owner = ownerp;
 	mutex->owningq = kq;
 	mutex->sleepers = 0;
-	xnarch_atomic_intptr_set(ownerp, NULL);
+	xnarch_atomic_set(ownerp, XN_NO_HANDLE);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&kq->mutexq, &mutex->link);
@@ -159,7 +159,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
 	pse51_mutex_t *mutex;
-	xnarch_atomic_intptr_t *ownerp;
+	xnarch_atomic_t *ownerp;
 	int err;
 
 	if (!attr)
@@ -185,9 +185,9 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	if (!mutex)
 		return ENOMEM;
 
-	ownerp = (xnarch_atomic_intptr_t *)
+	ownerp = (xnarch_atomic_t *)
 		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
-			     sizeof(xnarch_atomic_intptr_t));
+			     sizeof(xnarch_atomic_t));
 	if (!ownerp) {
 		xnfree(mutex);
 		return EAGAIN;
@@ -266,7 +266,7 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 		return EPERM;
 	}
 
-	if (xnarch_atomic_intptr_get(mutex->owner)) {
+	if (xnarch_atomic_get(mutex->owner) != XN_NO_HANDLE) {
 		cb_write_unlock(&shadow->lock, s);
 		return EBUSY;
 	}
@@ -289,6 +289,10 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 	pse51_mutex_t *mutex;
 	spl_t s;
 	int err;
+
+	/* We need a valid thread handle for the fast lock. */
+	if (xnthread_handle(cur) == XN_NO_HANDLE)
+		return -EPERM;
 
 	err = pse51_mutex_timedlock_internal(cur, shadow, 1, timed, abs_to);
 	if (err != -EBUSY)
@@ -392,7 +396,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 		return -PTR_ERR(owner);
 
 	err = EBUSY;
-	if (clear_claimed(owner) == cur) {
+	if (owner == cur) {
 		pse51_mutex_t *mutex = shadow->mutex;
 
 		if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
@@ -573,7 +577,8 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 
 	mutex = shadow->mutex;
 	
-	if (clear_claimed(xnarch_atomic_intptr_get(mutex->owner)) != cur) {
+	if (clear_claimed(xnarch_atomic_get(mutex->owner)) !=
+	    xnthread_handle(cur)) {
 		err = EPERM;
 		goto out;
 	}

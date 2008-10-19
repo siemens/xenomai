@@ -283,11 +283,9 @@ int rt_task_create(RT_TASK *task,
 	   complete objects, so that the registry cannot return handles to
 	   half-baked objects... */
 
-	if (name) {
-		err = xnthread_register(&task->thread_base, task->rname);
-		if (err)
-			xnpod_delete_thread(&task->thread_base);
-	}
+	err = xnthread_register(&task->thread_base, name ? task->rname : "");
+	if (err)
+		xnpod_delete_thread(&task->thread_base);
 
 	return err;
 }
