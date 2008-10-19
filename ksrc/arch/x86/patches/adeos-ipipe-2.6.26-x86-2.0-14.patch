@@ -1813,10 +1813,10 @@ index c0df7b8..4836be1 100644
  /* must come after the send_IPI functions above for inlining */
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..f4ab5d5
+index 0000000..3a24903
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,1010 @@
+@@ -0,0 +1,1012 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -2761,6 +2761,8 @@ index 0000000..f4ab5d5
 +		tick_regs->ip = regs->ip;
 +		tick_regs->bp = regs->bp;
 +#endif /* !CONFIG_X86_32 */
++		if (!ipipe_root_domain_p)
++			tick_regs->flags &= ~X86_EFLAGS_IF;
 +	}
 +
 +	/*
@@ -3939,10 +3941,10 @@ index ecc80f3..e6d33a0 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..29ba33d
+index 0000000..84f3c03
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,128 @@
 +/*   -*- linux-c -*-
 + *   include/asm-x86/ipipe.h
 + *
@@ -3970,10 +3972,10 @@ index 0000000..29ba33d
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-13"
++#define IPIPE_ARCH_STRING	"2.0-14"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	13
++#define IPIPE_PATCH_NUMBER	14
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -4060,6 +4062,8 @@ index 0000000..29ba33d
 +
 +#define __ipipe_syscall_watched_p(p, sc)	\
 +	(((p)->flags & PF_EVNOTIFY) || (unsigned long)sc >= NR_syscalls)
++
++#define __ipipe_root_tick_p(regs)	((regs)->flags & X86_EFLAGS_IF)
 +
 +#else /* !CONFIG_IPIPE */
 +
@@ -5108,10 +5112,10 @@ index 181006c..bc69d94 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..72d19b5
+index 0000000..0d40153
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,602 @@
+@@ -0,0 +1,611 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5144,6 +5148,41 @@ index 0000000..72d19b5
 +#include <linux/ipipe_base.h>
 +#include <linux/ipipe_compat.h>
 +#include <asm/ipipe.h>
++
++#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
++
++#include <linux/cpumask.h>
++#include <asm/system.h>
++
++static inline int ipipe_disable_context_check(int cpu)
++{
++	return xchg(&per_cpu(ipipe_percpu_context_check, cpu), 0);
++}
++
++static inline void ipipe_restore_context_check(int cpu, int old_state)
++{
++	per_cpu(ipipe_percpu_context_check, cpu) = old_state;
++}
++
++static inline void ipipe_context_check_off(void)
++{
++	int cpu;
++	for_each_online_cpu(cpu)
++		per_cpu(ipipe_percpu_context_check, cpu) = 0;
++}
++
++#else	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
++
++static inline int ipipe_disable_context_check(int cpu)
++{
++	return 0;
++}
++
++static inline void ipipe_restore_context_check(int cpu, int old_state) { }
++
++static inline void ipipe_context_check_off(void) { }
++
++#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
 +#ifdef CONFIG_IPIPE
 +
@@ -5626,6 +5665,32 @@ index 0000000..72d19b5
 +
 +#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
++static inline void ipipe_nmi_enter(void)
++{
++	int cpu = ipipe_processor_id();
++
++	per_cpu(ipipe_nmi_saved_root, cpu) = ipipe_root_cpudom_var(status);
++	__set_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++
++#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
++	per_cpu(ipipe_saved_context_check_state, cpu) =
++		ipipe_disable_context_check(cpu);
++#endif /* CONFIG_IPIPE_DEBUG_CONTEXT */
++}
++
++static inline void ipipe_nmi_exit(void)
++{
++	int cpu = ipipe_processor_id();
++
++#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
++	ipipe_restore_context_check
++		(cpu, per_cpu(ipipe_saved_context_check_state, cpu));
++#endif /* CONFIG_IPIPE_DEBUG_CONTEXT */
++
++	if (!test_bit(IPIPE_STALL_FLAG, &per_cpu(ipipe_nmi_saved_root, cpu)))
++		__clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++}
++
 +#else	/* !CONFIG_IPIPE */
 +
 +#define ipipe_init()			do { } while(0)
@@ -5650,6 +5715,9 @@ index 0000000..72d19b5
 +#define ipipe_root_domain_p		1
 +#define ipipe_safe_current		current
 +
++#define ipipe_nmi_enter()		do { } while (0)
++#define ipipe_nmi_exit()		do { } while (0)
++
 +#define local_irq_disable_head()	local_irq_disable()
 +
 +#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
@@ -5657,61 +5725,6 @@ index 0000000..72d19b5
 +#define local_irq_restore_nosync(vflags)	local_irq_restore(vflags)
 +
 +#endif	/* CONFIG_IPIPE */
-+
-+#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
-+
-+#include <linux/cpumask.h>
-+#include <asm/system.h>
-+
-+static inline int ipipe_disable_context_check(int cpu)
-+{
-+	return xchg(&per_cpu(ipipe_percpu_context_check, cpu), 0);
-+}
-+
-+static inline void ipipe_restore_context_check(int cpu, int old_state)
-+{
-+	per_cpu(ipipe_percpu_context_check, cpu) = old_state;
-+}
-+
-+static inline void ipipe_context_check_off(void)
-+{
-+	int cpu;
-+	for_each_online_cpu(cpu)
-+		per_cpu(ipipe_percpu_context_check, cpu) = 0;
-+}
-+
-+static inline void ipipe_nmi_enter(void)
-+{
-+	int cpu = ipipe_processor_id();
-+
-+	per_cpu(ipipe_saved_context_check_state, cpu) =
-+		ipipe_disable_context_check(cpu);
-+}
-+
-+static inline void ipipe_nmi_exit(void)
-+{
-+	int cpu = ipipe_processor_id();
-+
-+	ipipe_restore_context_check
-+		(cpu, per_cpu(ipipe_saved_context_check_state, cpu));
-+}
-+
-+#else	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
-+
-+static inline int ipipe_disable_context_check(int cpu)
-+{
-+	return 0;
-+}
-+
-+static inline void ipipe_restore_context_check(int cpu, int old_state) { }
-+
-+static inline void ipipe_context_check_off(void) { }
-+
-+static inline void ipipe_nmi_enter(void) { }
-+
-+static inline void ipipe_nmi_exit(void) { }
-+
-+#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
 +
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
@@ -5870,10 +5883,10 @@ index 0000000..50a245c
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..f1311dd
+index 0000000..6b1a379
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,78 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -5931,6 +5944,8 @@ index 0000000..f1311dd
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data, ipipe_percpu_darray[CONFIG_IPIPE_DOMAINS]);
 +
 +DECLARE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain);
++
++DECLARE_PER_CPU(unsigned long, ipipe_nmi_saved_root);
 +
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +DECLARE_PER_CPU(int, ipipe_percpu_context_check);
@@ -6188,7 +6203,7 @@ index 23f0c54..7991b6d 100644
  
  #define inc_preempt_count() add_preempt_count(1)
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index c5d3f84..2530fef 100644
+index c5d3f84..b313b98 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -59,6 +59,7 @@ struct sched_param {
@@ -6213,7 +6228,22 @@ index c5d3f84..2530fef 100644
  
  /* Convenience macros for the sake of set_task_state */
  #define TASK_KILLABLE		(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)
-@@ -1287,6 +1295,9 @@ struct task_struct {
+@@ -286,6 +294,14 @@ extern void account_process_tick(struct task_struct *task, int user);
+ extern void update_process_times(int user);
+ extern void scheduler_tick(void);
+ extern void hrtick_resched(void);
++#ifdef CONFIG_IPIPE
++extern void update_root_process_times(struct pt_regs *regs);
++#else  /* !CONFIG_IPIPE */
++static inline void update_root_process_times(struct pt_regs *regs)
++{
++	update_process_times(user_mode(regs));
++}
++#endif /* CONFIG_IPIPE */
+ 
+ extern void sched_show_task(struct task_struct *p);
+ 
+@@ -1287,6 +1303,9 @@ struct task_struct {
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -6223,7 +6253,7 @@ index c5d3f84..2530fef 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1507,6 +1518,11 @@ static inline void put_task_struct(struct task_struct *t)
+@@ -1507,6 +1526,11 @@ static inline void put_task_struct(struct task_struct *t)
  #define PF_MEMPOLICY	0x10000000	/* Non-default NUMA mempolicy */
  #define PF_MUTEX_TESTER	0x20000000	/* Thread belongs to the rt mutex tester */
  #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezeable */
@@ -6768,10 +6798,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..4187aa4
+index 0000000..ef517f0
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1653 @@
+@@ -0,0 +1,1655 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -6854,6 +6884,8 @@ index 0000000..4187aa4
 +{ [IPIPE_ROOT_SLOT] = { .status = IPIPE_STALL_MASK } }; /* Root domain stalled on each CPU at startup. */
 +
 +DEFINE_PER_CPU(struct ipipe_domain *, ipipe_percpu_domain) = { &ipipe_root };
++
++DEFINE_PER_CPU(unsigned long, ipipe_nmi_saved_root); /* Copy of root status during NMI */
 +
 +static IPIPE_DEFINE_SPINLOCK(__ipipe_pipelock);
 +
@@ -10015,6 +10047,19 @@ index 81a4e4a..da942d6 100644
  		return;
  
  	if (curr->hardirqs_enabled) {
+diff --git a/kernel/panic.c b/kernel/panic.c
+index 425567f..82e7181 100644
+--- a/kernel/panic.c
++++ b/kernel/panic.c
+@@ -267,6 +267,8 @@ int oops_may_print(void)
+  */
+ void oops_enter(void)
+ {
++	ipipe_trace_panic_freeze();
++	ipipe_disable_context_check(ipipe_processor_id());
+ 	debug_locks_off(); /* can't trust the integrity of the kernel anymore */
+ 	do_oops_enter_exit();
+ }
 diff --git a/kernel/power/disk.c b/kernel/power/disk.c
 index 14a656c..4cd1475 100644
 --- a/kernel/power/disk.c
@@ -10052,7 +10097,7 @@ index 14a656c..4cd1475 100644
  	return error;
  }
 diff --git a/kernel/printk.c b/kernel/printk.c
-index e2129e8..8210af9 100644
+index e2129e8..8ec76db 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
 @@ -581,6 +581,41 @@ static int have_callable_console(void)
@@ -10097,21 +10142,37 @@ index e2129e8..8210af9 100644
  /**
   * printk - print a kernel message
   * @fmt: format string
-@@ -606,6 +641,47 @@ static int have_callable_console(void)
+@@ -606,6 +641,63 @@ static int have_callable_console(void)
  
  asmlinkage int printk(const char *fmt, ...)
  {
-+  	int r, fbytes, oldcount, cs = -1;
-+    	unsigned long flags;
++	int r, fbytes, oldcount;
++	int sprintk = 1;
++	int cs = -1;
++	unsigned long flags;
 +	va_list args;
 +
 +	va_start(args, fmt);
 +
-+	if (test_bit(IPIPE_SPRINTK_FLAG,&ipipe_current_domain->flags) ||
++	if (test_bit(IPIPE_SPRINTK_FLAG, &ipipe_current_domain->flags) ||
 +	    oops_in_progress)
 +		cs = ipipe_disable_context_check(ipipe_processor_id());
++	else if (ipipe_current_domain == ipipe_root_domain) {
++		struct ipipe_domain *dom;
 +
-+	if (ipipe_current_domain == ipipe_root_domain || cs != -1) {
++		local_irq_save_hw(flags);
++		list_for_each_entry(dom, &__ipipe_pipeline, p_link) {
++			if (dom == ipipe_root_domain)
++				break;
++			if (test_bit(IPIPE_STALL_FLAG,
++				     &ipipe_cpudom_var(dom, status)))
++				sprintk = 0;
++		}
++		local_irq_restore_hw(flags);
++	} else
++		sprintk = 0;
++
++	if (sprintk) {
 +		r = vprintk(fmt, args);
 +		if (cs != -1)
 +			ipipe_restore_context_check(ipipe_processor_id(), cs);
@@ -10145,7 +10206,7 @@ index e2129e8..8210af9 100644
  	va_list args;
  	int r;
  
-@@ -615,6 +691,7 @@ asmlinkage int printk(const char *fmt, ...)
+@@ -615,6 +707,7 @@ asmlinkage int printk(const char *fmt, ...)
  
  	return r;
  }
@@ -10366,9 +10427,18 @@ index ae28c82..523eb7a 100644
  #else
  	_raw_spin_lock_flags(lock, &flags);
 diff --git a/kernel/time/tick-common.c b/kernel/time/tick-common.c
-index 4f38865..b757e8a 100644
+index 4f38865..74dbd8c 100644
 --- a/kernel/time/tick-common.c
 +++ b/kernel/time/tick-common.c
+@@ -69,7 +69,7 @@ static void tick_periodic(int cpu)
+ 		write_sequnlock(&xtime_lock);
+ 	}
+ 
+-	update_process_times(user_mode(get_irq_regs()));
++	update_root_process_times(get_irq_regs());
+ 	profile_tick(CPU_PROFILING);
+ }
+ 
 @@ -165,6 +165,10 @@ static void tick_setup_device(struct tick_device *td,
  
  	td->evtdev = newdev;
@@ -10380,6 +10450,59 @@ index 4f38865..b757e8a 100644
  	/*
  	 * When the device is not per cpu, pin the interrupt to the
  	 * current cpu:
+diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+index b854a89..0e7b8f6 100644
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -469,7 +469,7 @@ static void tick_nohz_handler(struct clock_event_device *dev)
+ 		ts->idle_jiffies++;
+ 	}
+ 
+-	update_process_times(user_mode(regs));
++	update_root_process_times(regs);
+ 	profile_tick(CPU_PROFILING);
+ 
+ 	/* Do not restart, when we are in the idle loop */
+@@ -576,7 +576,7 @@ static enum hrtimer_restart tick_sched_timer(struct hrtimer *timer)
+ 			touch_softlockup_watchdog();
+ 			ts->idle_jiffies++;
+ 		}
+-		update_process_times(user_mode(regs));
++		update_root_process_times(regs);
+ 		profile_tick(CPU_PROFILING);
+ 	}
+ 
+diff --git a/kernel/timer.c b/kernel/timer.c
+index ceacc66..19627c8 100644
+--- a/kernel/timer.c
++++ b/kernel/timer.c
+@@ -990,6 +990,26 @@ void update_process_times(int user_tick)
+ 	run_posix_cpu_timers(p);
+ }
+ 
++#ifdef CONFIG_IPIPE
++
++void update_root_process_times(struct pt_regs *regs)
++{
++	int cpu, user_tick = user_mode(regs);
++
++	if (__ipipe_root_tick_p(regs)) {
++		update_process_times(user_tick);
++		return;
++	}
++
++	run_local_timers();
++	cpu = smp_processor_id();
++	if (rcu_pending(cpu))
++		rcu_check_callbacks(cpu, user_tick);
++	run_posix_cpu_timers(current);
++}
++
++#endif
++
+ /*
+  * Nr of active tasks - counted in fixed-point numbers
+  */
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
 index d2099f4..8102abc 100644
 --- a/lib/Kconfig.debug
@@ -10394,10 +10517,10 @@ index d2099f4..8102abc 100644
  	bool "Kernel debugging"
  	help
 diff --git a/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
-index 486da62..0d33232 100644
+index 486da62..9a0f064 100644
 --- a/lib/bust_spinlocks.c
 +++ b/lib/bust_spinlocks.c
-@@ -12,16 +12,19 @@
+@@ -12,6 +12,7 @@
  #include <linux/tty.h>
  #include <linux/wait.h>
  #include <linux/vt_kern.h>
@@ -10405,11 +10528,7 @@ index 486da62..0d33232 100644
  
  
  void __attribute__((weak)) bust_spinlocks(int yes)
- {
- 	if (yes) {
-+  		ipipe_trace_panic_freeze();
- 		++oops_in_progress;
- 	} else {
+@@ -22,6 +23,7 @@ void __attribute__((weak)) bust_spinlocks(int yes)
  #ifdef CONFIG_VT
  		unblank_screen();
  #endif
