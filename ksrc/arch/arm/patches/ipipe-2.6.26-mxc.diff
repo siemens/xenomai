@@ -1,6 +1,6 @@
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/Kconfig ipipe-2.6.26-mxc/arch/arm/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/Kconfig	2008-10-19 14:26:54.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/Kconfig	2008-10-19 14:37:41.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -369,7 +369,11 @@ config ARCH_NS9XXX
  
  config ARCH_MXC
@@ -15,7 +15,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/Kconfig ipipe-2.6.26-mxc/ar
  
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/clock_imx27.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/clock_imx27.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/clock_imx27.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/clock_imx27.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/clock_imx27.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,1626 @@
 +/*
 + * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -1645,7 +1645,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/clock_imx27.c ipip
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/cpu_imx27.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/cpu_imx27.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/cpu_imx27.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/cpu_imx27.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/cpu_imx27.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,63 @@
 +/*
 + * Copyright 2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -1712,7 +1712,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/cpu_imx27.c ipipe-
 +EXPORT_SYMBOL(mx27_revision);
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/crm_regs.h ipipe-2.6.26-mxc/arch/arm/mach-mx2/crm_regs.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/crm_regs.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/crm_regs.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/crm_regs.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,273 @@
 +/*
 + * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -1989,7 +1989,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/crm_regs.h ipipe-2
 +#endif /* __ARCH_ARM_MACH_MX2_CRM_REGS_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/devices.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/devices.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/devices.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/devices.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/devices.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,231 @@
 +/*
 + * Author: MontaVista Software, Inc.
@@ -2224,7 +2224,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/devices.c ipipe-2.
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/generic.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/generic.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/generic.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/generic.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/generic.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,74 @@
 +/*
 + * generic.c
@@ -2302,7 +2302,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/generic.c ipipe-2.
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Kconfig ipipe-2.6.26-mxc/arch/arm/mach-mx2/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Kconfig	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Kconfig	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,39 @@
 +comment "MX2 family CPU support"
 +	depends on ARCH_MX2
@@ -2345,7 +2345,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Kconfig ipipe-2.6.
 +endchoice
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Makefile ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Makefile	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,14 @@
 +#
 +# Makefile for the linux kernel.
@@ -2363,14 +2363,14 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Makefile ipipe-2.6
 +obj-$(CONFIG_MACH_PCM970_BASEBOARD) += pcm970-baseboard.o
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Makefile.boot ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile.boot
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/Makefile.boot	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile.boot	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/Makefile.boot	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,3 @@
 +   zreladdr-y	:= 0xA0008000
 +params_phys-y	:= 0xA0000100
 +initrd_phys-y	:= 0xA0800000
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/mx27ads.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/mx27ads.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/mx27ads.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/mx27ads.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/mx27ads.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,304 @@
 +/*
 + *  Copyright (C) 2000 Deep Blue Solutions Ltd
@@ -2678,7 +2678,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/mx27ads.c ipipe-2.
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm038.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm038.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm038.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm038.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm038.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,204 @@
 +/*
 + * Copyright 2007 Robert Schwebel <r.schwebel@pengutronix.de>, Pengutronix
@@ -2886,7 +2886,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm038.c ipipe-2.6
 +MACHINE_END
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm970-baseboard.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm970-baseboard.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm970-baseboard.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm970-baseboard.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/pcm970-baseboard.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,32 @@
 +/*
 + * Copyright (C) 2008 Juergen Beisert (kernel@pengutronix.de)
@@ -2922,7 +2922,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/pcm970-baseboard.c
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/serial.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/serial.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/serial.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/serial.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/serial.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,177 @@
 +/*
 + * Copyright 2006-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -3103,7 +3103,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/serial.c ipipe-2.6
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/system.c ipipe-2.6.26-mxc/arch/arm/mach-mx2/system.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/system.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/system.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx2/system.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,63 @@
 +/*
 + * Copyright (C) 1999 ARM Limited
@@ -3170,7 +3170,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx2/system.c ipipe-2.6
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/clock.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/clock.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/clock.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/clock.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/clock.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,1147 @@
 +/*
 + * Copyright 2005-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -4321,7 +4321,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/clock.c ipipe-2.6.
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/crm_regs.h ipipe-2.6.26-mxc/arch/arm/mach-mx3/crm_regs.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/crm_regs.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/crm_regs.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/crm_regs.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,401 @@
 +/*
 + * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -4726,7 +4726,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/crm_regs.h ipipe-2
 +#endif				/* __ARCH_ARM_MACH_MX3_CRM_REGS_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/devices.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/devices.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/devices.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/devices.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/devices.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,180 @@
 +/*
 + * Copyright 2006-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -4910,7 +4910,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/devices.c ipipe-2.
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/iomux.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/iomux.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/iomux.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/iomux.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/iomux.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,111 @@
 +/*
 + * Copyright 2004-2006 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -5025,7 +5025,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/iomux.c ipipe-2.6.
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Kconfig ipipe-2.6.26-mxc/arch/arm/mach-mx3/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Kconfig	2007-10-22 21:48:38.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/Kconfig	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -8,5 +8,18 @@ config MACH_MX31ADS
  	  Include support for MX31ADS platform. This includes specific
  	  configurations for the board and its peripherals.
@@ -5047,7 +5047,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Kconfig ipipe-2.6.
  
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Makefile ipipe-2.6.26-mxc/arch/arm/mach-mx3/Makefile
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Makefile	2007-10-22 21:48:38.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/Makefile	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/Makefile	2008-10-19 15:15:34.000000000 +0200
 @@ -4,5 +4,7 @@
  
  # Object file lists.
@@ -5059,7 +5059,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/Makefile ipipe-2.6
 +obj-$(CONFIG_MACH_PCM037)	+= pcm037.o
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31ads.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31ads.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31ads.c	2007-10-22 21:48:38.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31ads.c	2008-10-19 14:38:16.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31ads.c	2008-10-19 15:15:34.000000000 +0200
 @@ -22,13 +22,18 @@
  #include <linux/init.h>
  #include <linux/clk.h>
@@ -5258,7 +5258,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31ads.c ipipe-2.
  MACHINE_END
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31lite.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31lite.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31lite.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31lite.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/mx31lite.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,107 @@
 +/*
 + *  Copyright (C) 2000 Deep Blue Solutions Ltd
@@ -5369,7 +5369,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/mx31lite.c ipipe-2
 +MACHINE_END
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/pcm037.c ipipe-2.6.26-mxc/arch/arm/mach-mx3/pcm037.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/pcm037.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/pcm037.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/mach-mx3/pcm037.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,130 @@
 +/*
 + *  Copyright (C) 2008 Sascha Hauer, Pengutronix
@@ -5655,7 +5655,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/mach-mx3/time.c ipipe-2.6.2
 -};
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/clock.c ipipe-2.6.26-mxc/arch/arm/plat-mxc/clock.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/clock.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/clock.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/clock.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,331 @@
 +/*
 + * Based on arch/arm/plat-omap/clock.c
@@ -5990,7 +5990,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/clock.c ipipe-2.6.
 +#endif
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/gpio.c ipipe-2.6.26-mxc/arch/arm/plat-mxc/gpio.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/gpio.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/gpio.c	2008-10-19 14:38:16.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/gpio.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,316 @@
 +/*
 + * MXC GPIO support. (c) 2008 Daniel Mack <daniel@caiaq.de>
@@ -6310,7 +6310,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/gpio.c ipipe-2.6.2
 +}
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/iomux-mx1-mx2.c ipipe-2.6.26-mxc/arch/arm/plat-mxc/iomux-mx1-mx2.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/iomux-mx1-mx2.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/iomux-mx1-mx2.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/iomux-mx1-mx2.c	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,156 @@
 +/*
 + *  arch/arm/mach-mxc/generic.c
@@ -6470,7 +6470,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/iomux-mx1-mx2.c ip
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/irq.c ipipe-2.6.26-mxc/arch/arm/plat-mxc/irq.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/irq.c	2008-07-29 23:55:20.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/irq.c	2008-10-19 14:38:16.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/irq.c	2008-10-19 15:15:34.000000000 +0200
 @@ -1,24 +1,59 @@
  /*
 - *  Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -6568,7 +6568,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/irq.c ipipe-2.6.26
  }
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Kconfig ipipe-2.6.26-mxc/arch/arm/plat-mxc/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Kconfig	2008-07-29 23:55:20.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/Kconfig	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -3,9 +3,14 @@ if ARCH_MXC
  menu "Freescale MXC Implementations"
  
@@ -6595,7 +6595,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Kconfig ipipe-2.6.
  endmenu
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Makefile ipipe-2.6.26-mxc/arch/arm/plat-mxc/Makefile
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Makefile	2008-07-29 23:55:20.000000000 +0200
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/Makefile	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/Makefile	2008-10-19 15:15:34.000000000 +0200
 @@ -3,4 +3,6 @@
  #
  
@@ -6606,7 +6606,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/Makefile ipipe-2.6
 +obj-$(CONFIG_ARCH_MX2) += iomux-mx1-mx2.o
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/time.c ipipe-2.6.26-mxc/arch/arm/plat-mxc/time.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/time.c	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/time.c	2008-10-19 14:38:16.000000000 +0200
++++ ipipe-2.6.26-mxc/arch/arm/plat-mxc/time.c	2008-10-19 15:52:12.000000000 +0200
 @@ -0,0 +1,388 @@
 +/*
 + *  linux/arch/arm/plat-mxc/time.c
@@ -6948,8 +6948,8 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/time.c ipipe-2.6.2
 +		local_tsc = &tsc[ipipe_processor_id()];
 +
 +		__asm__ ("ldmia %1, %M0\n"
-+			 : "=r"(result.full), "+&r"(local_tsc)
-+			 : "m"(*local_tsc));
++			 : "=r"(result.full):
++			   "r"(local_tsc), "m"(*local_tsc));
 +		barrier();
 +		stamp = __raw_readl(TIMER_BASE + MXC_TCN);
 +		if (unlikely(stamp < result.low))
@@ -6998,7 +6998,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/arch/arm/plat-mxc/time.c ipipe-2.6.2
 +#endif /* CONFIG_IPIPE */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/cs89x0.c ipipe-2.6.26-mxc/drivers/net/cs89x0.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/cs89x0.c	2008-07-29 23:55:42.000000000 +0200
-+++ ipipe-2.6.26-mxc/drivers/net/cs89x0.c	2008-10-19 14:42:43.000000000 +0200
++++ ipipe-2.6.26-mxc/drivers/net/cs89x0.c	2008-10-19 15:15:34.000000000 +0200
 @@ -194,6 +194,12 @@ static unsigned int cs8900_irq_map[] = {
  #define CIRRUS_DEFAULT_IRQ	VH_INTC_INT_NUM_CASCADED_INTERRUPT_1 /* Event inputs bank 1 - ID 35/bit 3 */
  static unsigned int netcard_portlist[] __used __initdata = {CIRRUS_DEFAULT_BASE, 0};
@@ -7048,7 +7048,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/cs89x0.c ipipe-2.6.26-mx
                                 dev->name, dev->irq, lp->irq_map);
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/Kconfig ipipe-2.6.26-mxc/drivers/net/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/Kconfig	2008-07-29 23:55:41.000000000 +0200
-+++ ipipe-2.6.26-mxc/drivers/net/Kconfig	2008-10-19 14:36:38.000000000 +0200
++++ ipipe-2.6.26-mxc/drivers/net/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -1410,7 +1410,8 @@ config FORCEDETH_NAPI
  
  config CS89x0
@@ -7073,7 +7073,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/net/Kconfig ipipe-2.6.26-mxc
  	depends on NET_PCI && PCI && MIPS
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/imx.c ipipe-2.6.26-mxc/drivers/serial/imx.c
 --- adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/imx.c	2008-07-29 23:55:51.000000000 +0200
-+++ ipipe-2.6.26-mxc/drivers/serial/imx.c	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/drivers/serial/imx.c	2008-10-19 15:15:34.000000000 +0200
 @@ -40,6 +40,7 @@
  #include <linux/tty_flip.h>
  #include <linux/serial_core.h>
@@ -7578,7 +7578,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/imx.c ipipe-2.6.26-mx
  		return ret;
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/Kconfig ipipe-2.6.26-mxc/drivers/serial/Kconfig
 --- adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/Kconfig	2008-07-29 23:55:51.000000000 +0200
-+++ ipipe-2.6.26-mxc/drivers/serial/Kconfig	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/drivers/serial/Kconfig	2008-10-19 15:15:34.000000000 +0200
 @@ -753,7 +753,7 @@ config BFIN_UART3_CTSRTS
  
  config SERIAL_IMX
@@ -7590,7 +7590,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/drivers/serial/Kconfig ipipe-2.6.26-
  	  If you have a machine based on a Motorola IMX CPU you
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx27ads.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx27ads.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx27ads.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx27ads.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx27ads.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,354 @@
 +/*
 + * Copyright 2005-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -7948,7 +7948,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx27a
 +#endif				/* __ASM_ARCH_MXC_BOARD_MX27ADS_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31ads.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31ads.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31ads.h	2008-07-29 23:55:59.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31ads.h	2008-10-19 14:36:15.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31ads.h	2008-10-19 15:15:34.000000000 +0200
 @@ -90,6 +90,9 @@
  #define PBC_INTMASK_CLEAR_REG	(PBC_INTMASK_CLEAR + PBC_BASE_ADDRESS)
  #define EXPIO_PARENT_INT	IOMUX_TO_IRQ(MX31_PIN_GPIO1_4)
@@ -7971,7 +7971,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31a
  #endif /* __ASM_ARCH_MXC_BOARD_MX31ADS_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31lite.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31lite.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31lite.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31lite.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-mx31lite.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,38 @@
 +/*
 + * Copyright 2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -8013,7 +8013,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-mx31l
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm037.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm037.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm037.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm037.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm037.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,27 @@
 +/*
 + *  Copyright (C) 2008 Sascha Hauer, Pengutronix
@@ -8044,7 +8044,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm03
 +#endif /* __ASM_ARCH_MXC_BOARD_PCM037_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm038.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm038.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm038.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm038.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/board-pcm038.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,41 @@
 +/*
 + * Copyright (C) 2008 Juergen Beisert (kernel@pengutronix.de)
@@ -8089,7 +8089,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/board-pcm03
 +#endif /* __ASM_ARCH_MXC_BOARD_PCM038_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/clock.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/clock.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/clock.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/clock.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/clock.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,67 @@
 +/*
 + * Copyright 2005-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -8160,7 +8160,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/clock.h ipi
 +#endif /* __ASM_ARCH_MXC_CLOCK_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/common.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/common.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/common.h	2007-10-22 21:49:15.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/common.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/common.h	2008-10-19 15:15:34.000000000 +0200
 @@ -11,10 +11,10 @@
  #ifndef __ASM_ARCH_MXC_COMMON_H__
  #define __ASM_ARCH_MXC_COMMON_H__
@@ -8177,7 +8177,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/common.h ip
  #endif
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/debug-macro.S ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/debug-macro.S
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/debug-macro.S	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/debug-macro.S	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/debug-macro.S	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,49 @@
 +/* linux/include/asm-arm/arch-imx/debug-macro.S
 + *
@@ -8230,7 +8230,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/debug-macro
 +		.endm
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/gpio.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/gpio.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/gpio.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/gpio.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/gpio.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,42 @@
 +/*
 + * Copyright 2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -8276,7 +8276,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/gpio.h ipip
 +#endif
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/hardware.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/hardware.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/hardware.h	2008-07-29 23:55:59.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/hardware.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/hardware.h	2008-10-19 15:15:34.000000000 +0200
 @@ -1,11 +1,20 @@
  /*
 - *  Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -8329,7 +8329,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/hardware.h 
  #endif /* __ASM_ARCH_MXC_HARDWARE_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iim.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iim.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iim.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iim.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iim.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,77 @@
 +/*
 + * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -8410,7 +8410,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iim.h ipipe
 +#endif /* __ASM_ARCH_MXC_IIM_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/imx-uart.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/imx-uart.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/imx-uart.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/imx-uart.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/imx-uart.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,32 @@
 +/*
 + * Copyright (C) 2008 by Sascha Hauer <kernel@pengutronix.de>
@@ -8446,7 +8446,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/imx-uart.h 
 +#endif
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx1-mx2.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx1-mx2.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx1-mx2.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx1-mx2.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx1-mx2.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,372 @@
 +/*
 + * Copyright (C) 2008 by Sascha Hauer <kernel@pengutronix.de>
@@ -8822,7 +8822,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx1-m
 +#endif /* _MXC_GPIO_MX1_MX2_H */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx3.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx3.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx3.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx3.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/iomux-mx3.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,501 @@
 +/*
 + * Copyright 2004-2006 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -9327,7 +9327,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/iomux-mx3.h
 +
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/irqs.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/irqs.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/irqs.h	2008-07-29 23:55:59.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/irqs.h	2008-10-19 14:38:16.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/irqs.h	2008-10-19 15:15:34.000000000 +0200
 @@ -13,17 +13,14 @@
  
  #include <asm/hardware.h>
@@ -9357,7 +9357,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/irqs.h ipip
  #endif /* __ASM_ARCH_MXC_IRQS_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx27.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx27.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx27.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx27.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx27.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,302 @@
 +/*
 + * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -9663,7 +9663,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx27.h ipip
 +#endif /* __ASM_ARCH_MXC_MX27_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx31.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx31.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx31.h	2008-07-29 23:55:59.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx31.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mx31.h	2008-10-19 15:15:34.000000000 +0200
 @@ -320,6 +320,8 @@
  #define MXC_MAX_GPIO_LINES      (GPIO_NUM_PIN * GPIO_PORT_NUM)
  #define MXC_MAX_VIRTUAL_INTS	16
@@ -9701,7 +9701,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mx31.h ipip
  /* this is a i.MX31 CPU */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mxc.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mxc.h	2008-07-29 23:55:59.000000000 +0200
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc.h	2008-10-19 15:15:34.000000000 +0200
 @@ -1,11 +1,20 @@
  /*
   * Copyright 2004-2007 Freescale Semiconductor, Inc. All Rights Reserved.
@@ -9868,7 +9868,7 @@ diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mxc.h ipipe
  #endif /*  __ASM_ARCH_MXC_H__ */
 diff -Naurdp adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mxc_timer.h ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc_timer.h
 --- adeos-ipipe-2.6.26-arm-1.11-02/include/asm-arm/arch-mxc/mxc_timer.h	1970-01-01 01:00:00.000000000 +0100
-+++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc_timer.h	2008-10-19 14:36:04.000000000 +0200
++++ ipipe-2.6.26-mxc/include/asm-arm/arch-mxc/mxc_timer.h	2008-10-19 15:15:34.000000000 +0200
 @@ -0,0 +1,158 @@
 +/*
 + * mxc_timer.h
