@@ -41,6 +41,7 @@ static void __flush_tsd(void *tsd)
 
 static __attribute__ ((constructor))
 void __init_native_tskey(void)
+{
 	/* Allocate a TSD key for indexing self task pointers. */
 
 	if (pthread_key_create(&__native_tskey, &__flush_tsd) != 0) {

@@ -344,8 +344,6 @@ RT_TASK *rt_task_self(void)
 		return NULL;
 
 #else /* !HAVE___THREAD */
-	RT_TASK *self;
-
 	self = (RT_TASK *)pthread_getspecific(__native_tskey);
 
 	if (self)
