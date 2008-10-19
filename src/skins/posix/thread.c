@@ -47,11 +47,23 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 				 int policy, const struct sched_param *param)
 {
 	pthread_t myself = pthread_self();
+	unsigned long *mode_buf = NULL;
 	int err, promoted;
+
+	if (thread == myself) {
+#ifdef HAVE___THREAD
+		mode_buf = xeno_init_current_mode();
+#else /* !HAVE___THREAD */
+		mode_buf = malloc(sizeof(*mode_buf));
+
+		if (!mode_buf)
+			return ENOMEM;
+#endif /* !HAVE___THREAD */
+	}
 
 	err = -XENOMAI_SKINCALL5(__pse51_muxid,
 				 __pse51_thread_setschedparam,
-				 thread, policy, param, myself, &promoted);
+				 thread, policy, param, mode_buf, &promoted);
 
 	if (err == EPERM)
 		return __real_pthread_setschedparam(thread, policy, param);
@@ -60,10 +72,17 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 
 	if (!err && promoted) {
 		old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
+#ifndef HAVE___THREAD
+		pthread_setspecific(xeno_current_mode_key, mode_buf);
+#endif /* !HAVE___THREAD */
 		xeno_set_current();
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 	}
+#ifndef HAVE___THREAD
+	else
+		free(mode_buf);
+#endif /* !HAVE___THREAD */
 
 	return err;
 }
@@ -116,6 +135,7 @@ static void *__pthread_trampoline(void *arg)
 	struct sched_param param;
 	void *status = NULL;
 	int parent_prio, policy;
+	unsigned long *mode_buf;
 	long err;
 
 	old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
@@ -123,10 +143,18 @@ static void *__pthread_trampoline(void *arg)
 	param.sched_priority = iargs->prio;
 	policy = iargs->policy;
 	parent_prio = iargs->parent_prio;
+	mode_buf = xeno_init_current_mode();
+
+	if (!mode_buf) {
+		status = (void *)ENOMEM;
+		iargs->ret = ENOMEM;
+		goto out;
+	}
 
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
-	err = XENOMAI_SKINCALL1(__pse51_muxid, __pse51_thread_create, tid);
+	err = XENOMAI_SKINCALL2(__pse51_muxid, __pse51_thread_create, tid,
+				mode_buf);
 	iargs->ret = -err;
 
 	/* We must save anything we'll need to use from *iargs on our own
@@ -159,6 +187,7 @@ static void *__pthread_trampoline(void *arg)
 	} else
 		status = (void *)-err;
 
+out:
 	pthread_exit(status);
 }
 

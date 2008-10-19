@@ -191,7 +191,8 @@ static int __rt_task_create(struct pt_regs *regs)
 		if (__xn_safe_copy_to_user((void __user *)bulk.a1, &ph, sizeof(ph)))
 			err = -EFAULT;
 		else {
-			err = xnshadow_map(&task->thread_base, u_completion);
+			err = xnshadow_map(&task->thread_base, u_completion,
+					   (unsigned long __user *)bulk.a6);
 			if (!err)
 				goto out;
 		}

@@ -85,6 +85,7 @@ struct vrtx_arg_bulk {
     u_long a1;
     u_long a2;
     u_long a3;
+    u_long a4;
 };
 
 #ifdef __KERNEL__

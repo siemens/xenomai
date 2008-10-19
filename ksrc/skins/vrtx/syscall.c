@@ -48,6 +48,7 @@ static int __muxid;
  * a1: int tid;
  * a2: int prio;
  * a3: int mode;
+ * a4: unsigned long *shadow_mode;
  * }
  */
 
@@ -89,7 +90,8 @@ static int __sc_tecreate(struct pt_regs *regs)
 					   &tid, sizeof(tid)))
 			err = -EFAULT;
 		else {
-			err = xnshadow_map(&task->threadbase, u_completion);
+			err = xnshadow_map(&task->threadbase, u_completion,
+					   (unsigned long __user *)bulk.a4);
 			if (!err)
 				goto done;
 		}

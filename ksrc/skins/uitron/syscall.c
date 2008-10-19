@@ -31,13 +31,15 @@
 int __ui_muxid;
 
 /*
- * int __uitron_cre_tsk(ID tskid, T_CTSK *pk_ctsk, xncompletion_t *completion)
+ * int __uitron_cre_tsk(ID tskid, T_CTSK *pk_ctsk, xncompletion_t *completion,
+ *                      unsigned long *mode)
  */
 
 static int __ui_cre_tsk(struct pt_regs *regs)
 {
 	xncompletion_t __user *u_completion;
 	struct task_struct *p = current;
+	unsigned long __user *u_mode;
 	uitask_t *task;
 	T_CTSK pk_ctsk;
 	ID tskid;
@@ -53,6 +55,8 @@ static int __ui_cre_tsk(struct pt_regs *regs)
 	pk_ctsk.tskatr |= TA_SHADOW;
 	/* Completion descriptor our parent thread is pending on. */
 	u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
+
+	u_mode = (unsigned long __user *)__xn_reg_arg4(regs);
 
 	err = cre_tsk(tskid, &pk_ctsk);
 
@@ -74,7 +78,7 @@ static int __ui_cre_tsk(struct pt_regs *regs)
 		 * recycled before we could map it; however, the risk
 		 * is mitigated by consistency checks performed in
 		 * xnshadow_map(). */
-		return xnshadow_map(&task->threadbase, u_completion);	/* May be NULL */
+		return xnshadow_map(&task->threadbase, u_completion, u_mode);
 	}
 
       fail:

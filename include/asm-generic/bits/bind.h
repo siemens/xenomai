@@ -17,6 +17,8 @@
 #ifdef HAVE___THREAD
 __thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec"))) =
 	XN_NO_HANDLE;
+__thread unsigned long
+xeno_current_mode __attribute__ ((tls_model ("initial-exec")));
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
@@ -24,17 +26,35 @@ static inline void __xeno_set_current(xnhandle_t current)
 }
 #else /* !HAVE___THREAD */
 pthread_key_t xeno_current_key;
+pthread_key_t xeno_current_mode_key;
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
 	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
+unsigned long *xeno_init_current_mode(void)
+{
+	unsigned long *mode = malloc(sizeof(unsigned long));
+	pthread_setspecific(xeno_current_mode_key, mode);
+	return mode;
+}
+
+static void cleanup_current_mode(void *ptr)
+{
+	free(ptr);
+}
+
 static __attribute__ ((constructor))
-void init_current_key(void)
+void init_current_keys(void)
 {
 	int err = pthread_key_create(&xeno_current_key, NULL);
+	if (err)
+		goto error_exit;
+
+	err = pthread_key_create(&xeno_current_mode_key, cleanup_current_mode);
 	if (err) {
+	  error_exit:
 		fprintf(stderr, "Xenomai: error creating TSD key: %s\n",
 			strerror(err));
 		exit(1);

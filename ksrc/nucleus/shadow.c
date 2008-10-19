@@ -1079,6 +1079,8 @@ redo:
 		/* Grab the request token. */
 		return -ERESTARTSYS;
 
+	__xn_put_user(0, thread->u_mode);
+
 	preempt_disable();
 
 	/* Assume that we might have been migrated while waiting for
@@ -1250,6 +1252,8 @@ void xnshadow_relax(int notify)
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
+	__xn_put_user(XNRELAX, thread->u_mode);
+
 	trace_mark(xn_nucleus_shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
 		  thread, xnthread_name(thread), current->comm);
@@ -1264,7 +1268,9 @@ void xnshadow_exit(void)
 }
 
 /*!
- * \fn int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
+ * \fn int xnshadow_map(xnthread_t *thread,
+ *                      xncompletion_t __user *u_completion,
+ *                      unsigned long __user *u_mode)
  * @internal
  * \brief Create a shadow thread context.
  *
@@ -1287,6 +1293,11 @@ void xnshadow_exit(void)
  * domain, only processing signals. Otherwise, the shadow thread is
  * immediately started and "current" immediately resumes in the Xenomai
  * domain from this service.
+ *
+ * @param: u_mode is the address of a mode variable in user space that
+ * will reflect the current thread mode (primary or secondary). The
+ * nucleus will try to update the variable before switching to secondary
+ * or after switching from primary mode.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -1313,7 +1324,8 @@ void xnshadow_exit(void)
  *
  */
 
-int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
+int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
+		 unsigned long __user *u_mode)
 {
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
@@ -1324,6 +1336,9 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 
 	if (xnthread_test_state(thread, XNMAPPED))
 		return -EINVAL;
+
+	if (!access_wok(u_mode, sizeof(*u_mode)))
+		return -EFAULT;
 
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
@@ -1384,6 +1399,9 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 
 	if (err)
 		return err;
+
+	thread->u_mode = u_mode;
+	__xn_put_user(XNRELAX, u_mode);
 
 	err = xnshadow_harden();
 

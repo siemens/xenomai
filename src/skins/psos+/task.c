@@ -72,6 +72,7 @@ static void *psos_task_trampoline(void *cookie)
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
 	u_long dummy_args[4] = { 0, 0, 0, 0 }, *targs;
+	struct psos_arg_bulk bulk;
 	struct sched_param param;
 	int policy;
 	long err;
@@ -83,10 +84,19 @@ static void *psos_task_trampoline(void *cookie)
 
 	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
 
-	err = XENOMAI_SKINCALL5(__psos_muxid,
+	bulk.a1 = (u_long)iargs->name;
+	bulk.a2 = (u_long)iargs->prio;
+	bulk.a3 = (u_long)iargs->flags;
+	bulk.a4 = (u_long)xeno_init_current_mode();
+
+	if (!bulk.a4) {
+		err = -ENOMEM;
+		goto fail;
+	}
+
+	err = XENOMAI_SKINCALL3(__psos_muxid,
 				__psos_t_create,
-				iargs->name, iargs->prio, iargs->flags,
-				iargs->tid_r, iargs->completionp);
+				&bulk, iargs->tid_r, iargs->completionp);
 	if (err)
 		goto fail;
 

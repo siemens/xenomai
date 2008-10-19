@@ -89,6 +89,12 @@ static void *rt_task_trampoline(void *cookie)
 	bulk.a3 = (u_long)iargs->prio;
 	bulk.a4 = (u_long)iargs->mode;
 	bulk.a5 = (u_long)pthread_self();
+	bulk.a6 = (u_long)xeno_init_current_mode();
+
+	if (!bulk.a6) {
+		err = -ENOMEM;
+		goto fail;
+	}
 
 	err = XENOMAI_SKINCALL2(__native_muxid,
 				__native_task_create, &bulk,
@@ -205,6 +211,10 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	bulk.a3 = (u_long)prio;
 	bulk.a4 = (u_long)mode;
 	bulk.a5 = (u_long)pthread_self();
+	bulk.a6 = (u_long)xeno_init_current_mode();
+
+	if (!bulk.a6)
+		return -ENOMEM;
 
 	err = XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
 				NULL);

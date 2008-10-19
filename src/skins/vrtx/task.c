@@ -118,6 +118,12 @@ static void *vrtx_task_trampoline(void *cookie)
 	bulk.a1 = (u_long)iargs->tid;
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->mode;
+	bulk.a4 = (u_long)xeno_init_current_mode();
+
+	if (!bulk.a4) {
+		err = -ENOMEM;
+		goto fail;
+	}
 
 	err = XENOMAI_SKINCALL3(__vrtx_muxid,
 				__vrtx_tecreate,

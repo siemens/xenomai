@@ -180,7 +180,8 @@ static int __pthread_create(struct pt_regs *regs)
 	if (err)
 		return -err;	/* Conventionally, our error codes are negative. */
 
-	err = xnshadow_map(&k_tid->threadbase, NULL);
+	err = xnshadow_map(&k_tid->threadbase, NULL,
+			   (unsigned long __user *)__xn_reg_arg2(regs));
 
 	if (!err && !__pthread_hash(&hkey, k_tid))
 		err = -ENOMEM;
@@ -196,7 +197,8 @@ static int __pthread_create(struct pt_regs *regs)
 #define __pthread_detach  __pse51_call_not_available
 
 static pthread_t __pthread_shadow(struct task_struct *p,
-				  struct pse51_hkey *hkey)
+				  struct pse51_hkey *hkey,
+				  unsigned long __user *u_mode)
 {
 	pthread_attr_t attr;
 	pthread_t k_tid;
@@ -211,7 +213,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 	if (err)
 		return ERR_PTR(-err);
 
-	err = xnshadow_map(&k_tid->threadbase, NULL);
+	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
 
 	if (!err && !__pthread_hash(hkey, k_tid))
 		err = -EAGAIN;
@@ -227,11 +229,13 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 static int __pthread_setschedparam(struct pt_regs *regs)
 {
 	int policy, err, promoted = 0;
+	unsigned long __user *u_mode;
 	struct sched_param param;
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	policy = __xn_reg_arg2(regs);
+	u_mode = (unsigned long __user *)__xn_reg_arg4(regs);
 
 	if (__xn_safe_copy_from_user(&param,
 				     (void __user *)__xn_reg_arg3(regs), sizeof(param)))
@@ -241,10 +245,10 @@ static int __pthread_setschedparam(struct pt_regs *regs)
 	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
 
-	if (!k_tid && __xn_reg_arg1(regs) == __xn_reg_arg4(regs)) {
+	if (!k_tid && u_mode) {
 		/* If the syscall applies to "current", and the latter is not
 		   a Xenomai thread already, then shadow it. */
-		k_tid = __pthread_shadow(current, &hkey);
+		k_tid = __pthread_shadow(current, &hkey, u_mode);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 

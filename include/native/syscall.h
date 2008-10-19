@@ -134,6 +134,7 @@ struct rt_arg_bulk {
 	u_long a3;
 	u_long a4;
 	u_long a5;
+	u_long a6;
 };
 
 #ifdef __KERNEL__

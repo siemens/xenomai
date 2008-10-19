@@ -248,6 +248,10 @@ typedef struct xnthread {
 
 	void *cookie;		/* Cookie to pass to the entry routine */
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	unsigned long __user *u_mode;	/* Thread mode variable in userland. */
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
     XNARCH_DECL_DISPLAY_CONTEXT();
 
 } xnthread_t;

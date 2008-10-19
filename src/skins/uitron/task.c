@@ -68,6 +68,7 @@ static void *uitron_task_trampoline(void *cookie)
 {
 	struct uitron_task_iargs *iargs = (struct uitron_task_iargs *)cookie;
 	struct sched_param param;
+	unsigned long *mode;
 	void (*entry)(INT);
 	int policy;
 	long err;
@@ -83,10 +84,16 @@ static void *uitron_task_trampoline(void *cookie)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	old_sigharden_handler = signal(SIGHARDEN, &uitron_task_sigharden);
 
-	err = XENOMAI_SKINCALL3(__uitron_muxid,
+	mode = xeno_init_current_mode();
+	if (!mode) {
+		err = -ENOMEM;
+		goto fail;
+	}
+
+	err = XENOMAI_SKINCALL4(__uitron_muxid,
 				__uitron_cre_tsk,
 				iargs->tskid, iargs->pk_ctsk,
-				iargs->completionp);
+				iargs->completionp, mode);
 	if (err)
 		goto fail;
 

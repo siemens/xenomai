@@ -77,6 +77,7 @@ struct wind_arg_bulk {
     u_long a2;
     u_long a3;
     u_long a4;
+    u_long a5;
 };
 
 #ifdef __KERNEL__

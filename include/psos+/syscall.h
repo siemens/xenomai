@@ -74,6 +74,14 @@
 /* Xenomai extension: get raw count of jiffies */
 #define __psos_tm_getc      46
 
+struct psos_arg_bulk {
+
+    u_long a1;
+    u_long a2;
+    u_long a3;
+    u_long a4;
+};
+
 #ifdef __KERNEL__
 
 #ifdef __cplusplus

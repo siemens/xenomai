@@ -118,6 +118,12 @@ static void *wind_task_trampoline(void *cookie)
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
 	bulk.a4 = (u_long)pthread_self();
+	bulk.a5 = (u_long)xeno_init_current_mode();
+
+	if (!bulk.a5) {
+		err = -ENOMEM;
+		goto fail;
+	}
 
 	err = XENOMAI_SKINCALL3(__vxworks_muxid,
 				__vxworks_task_init,

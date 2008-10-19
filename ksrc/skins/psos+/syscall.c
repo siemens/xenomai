@@ -60,11 +60,14 @@ static psostask_t *__psos_task_current(struct task_struct *p)
 }
 
 /*
- * int __t_create(const char *name,
- *                u_long prio,
- *                u_long flags,
+ * int __t_create(struct psos_arg_bulk *bulk,
  *                u_long *tid_r,
  *                xncompletion_t *completion)
+ * bulk = {
+ * a1: const char *name;
+ * a2: u_long prio;
+ * a3: u_long flags;
+ * a4: unsigned long *mode;
  */
 
 static int __t_create(struct pt_regs *regs)
@@ -73,10 +76,15 @@ static int __t_create(struct pt_regs *regs)
 	struct task_struct *p = current;
 	u_long prio, flags, tid, err;
 	char name[XNOBJECT_NAME_LEN];
+	struct psos_arg_bulk bulk;
 	psostask_t *task;
 
+	if (__xn_safe_copy_from_user(&bulk, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(bulk)))
+		return -EFAULT;
+
 	/* Get task name. */
-	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
+	if (__xn_safe_strncpy_from_user(name, (const char __user *)bulk.a1,
 					sizeof(name) - 1) < 0)
 		return -EFAULT;
 
@@ -85,12 +93,12 @@ static int __t_create(struct pt_regs *regs)
 	p->comm[sizeof(p->comm) - 1] = '\0';
 
 	/* Task priority. */
-	prio = __xn_reg_arg2(regs);
+	prio = bulk.a2;
 	/* Task flags. Force FPU support in user-space. This will lead
 	   to a no-op if the platform does not support it. */
-	flags = __xn_reg_arg3(regs) | T_SHADOW | T_FPU;
+	flags = bulk.a3 | T_SHADOW | T_FPU;
 	/* Completion descriptor our parent thread is pending on. */
-	u_completion = (xncompletion_t __user *)__xn_reg_arg5(regs);
+	u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
 
 	err = t_create(name, prio, 0, 0, flags, &tid);
 
@@ -100,14 +108,14 @@ static int __t_create(struct pt_regs *regs)
 		 * about the new thread id, so we can manipulate its
 		 * TCB pointer freely. */
 		tid = xnthread_handle(&task->threadbase);
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs), &tid,
+		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &tid,
 					   sizeof(tid)))
 			return -EFAULT;
-		else {
-			err = xnshadow_map(&task->threadbase, u_completion);	/* May be NULL */
-			if (!err)
-				goto out;
-		}
+
+		err = xnshadow_map(&task->threadbase, u_completion,
+				   (unsigned long __user *)bulk.a4);
+		if (!err)
+			goto out;
 
 		t_delete((u_long)task);
 	}
