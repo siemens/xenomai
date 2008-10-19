@@ -9,6 +9,8 @@
 	* include/asm-*: Remove xnarch_atomic_intptr.
 
 	* src/skins: Spread xeno_get_current.
+
+	* ksrc/skins/native (mutex support): Refactor lockcnt tracking.
 	
 2008-10-18  Jan Kiszka  <jan.kiszka@siemens.com>
  

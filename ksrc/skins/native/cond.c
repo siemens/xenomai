@@ -421,10 +421,8 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 
 	mutex->lockcnt = 0;
 
-	if (xnsynch_release(&mutex->synch_base)) {
-		mutex->lockcnt = 1;
-		/* Scheduling deferred */
-	}
+	xnsynch_release(&mutex->synch_base);
+	/* Scheduling deferred */
 
 	xnsynch_sleep_on(&cond->synch_base, timeout, timeout_mode);
 

@@ -320,8 +320,6 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, xntmode_t timeout_mode, RTIME timeou
 		err = -EINTR;	/* Unblocked. */
 	else {
 	      grab_mutex:
-		/* xnsynch_sleep_on() might have stolen the resource,
-		   so we need to put our internal data in sync. */
 		mutex->lockcnt = 1;
 	}
 
@@ -524,10 +522,8 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	if (--mutex->lockcnt > 0)
 		goto unlock_and_exit;
 
-	if (xnsynch_release(&mutex->synch_base)) {
-		mutex->lockcnt = 1;
+	if (xnsynch_release(&mutex->synch_base))
 		xnpod_schedule();
-	}
 
       unlock_and_exit:
 
@@ -584,7 +580,7 @@ int rt_mutex_inquire(RT_MUTEX *mutex, RT_MUTEX_INFO *info)
 	strcpy(info->name, mutex->name);
 	info->lockcnt = mutex->lockcnt;
 	info->nwaiters = xnsynch_nsleepers(&mutex->synch_base);
-	if (mutex->lockcnt)
+	if (xnsynch_owner(&mutex->synch_base))
 		strcpy(info->owner,
 		       xnthread_name(xnsynch_owner(&mutex->synch_base)));
 	else
