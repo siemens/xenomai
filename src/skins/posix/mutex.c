@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <limits.h>
+#include <nucleus/synch.h>
 #include <posix/mutex.h>
 #include <posix/syscall.h>
 #include <posix/cb_lock.h>
@@ -146,10 +147,10 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err = 0;
+	int err;
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	xnhandle_t cur, owner;
+	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -163,14 +164,15 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 		goto out;
 	}
 
-	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
-	if (likely(owner == XN_NO_HANDLE)) {
+	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+
+	if (likely(!err)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
 
-	if (clear_claimed(owner) == cur)
+	if (err == -EBUSY)
 		switch(shadow->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -184,8 +186,8 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 				err = -EAGAIN;
 				goto out;
 			}
-
 			++shadow->lockcnt;
+			err = 0;
 			goto out;
 		}
 #endif /* CONFIG_XENO_FASTSYNCH */
@@ -207,10 +209,10 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err = 0;
+	int err;
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	xnhandle_t cur, owner;
+	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -224,14 +226,15 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 		goto out;
 	}	
 
-	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
-	if (likely(owner == XN_NO_HANDLE)) {
+	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+
+	if (likely(!err)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
 
-	if (clear_claimed(owner) == cur)
+	if (err == -EBUSY)
 		switch(shadow->attr.type) {
 		case PTHREAD_MUTEX_NORMAL:
 			break;
@@ -268,10 +271,10 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err = 0;
+	int err;
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	xnhandle_t cur, owner;
+	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -285,23 +288,23 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 		goto out;
 	}	
 
-	owner = xnarch_atomic_cmpxchg(get_ownerp(shadow), XN_NO_HANDLE, cur);
-	if (likely(owner == XN_NO_HANDLE)) {
+	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+
+	if (likely(!err)) {
 		shadow->lockcnt = 1;
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
 
-	err = -EBUSY;
-	if (clear_claimed(owner) == cur
-	    && shadow->attr.type == PTHREAD_MUTEX_RECURSIVE) {
+	if (err == -EBUSY && shadow->attr.type == PTHREAD_MUTEX_RECURSIVE) {
 		if (shadow->lockcnt == UINT_MAX)
 			err = -EAGAIN;
 		else {
 			++shadow->lockcnt;
 			err = 0;
 		}
-	}
+	} else
+		err = -EBUSY;
 
   out:
 	cb_read_unlock(&shadow->lock, s);
@@ -322,11 +325,11 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	union __xeno_mutex *_mutex = (union __xeno_mutex *)mutex;
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
-	int err = 0;
+	int err;
 
 #ifdef CONFIG_XENO_FASTSYNCH
 	xnarch_atomic_t *ownerp;
-	xnhandle_t cur, owner;
+	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
@@ -341,19 +344,17 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	}
 
 	ownerp = get_ownerp(shadow);
-	owner = clear_claimed(xnarch_atomic_get(ownerp));
-	if (unlikely(owner != cur)) {
-		err = -EPERM;
-		goto out_err;
-	}
 
-	err = 0;
+	err = xnsynch_fast_owner_check(ownerp, cur);
+	if (unlikely(err))
+		goto out_err;
+
 	if (shadow->lockcnt > 1) {
 		--shadow->lockcnt;
 		goto out;
 	}
 
-	if (likely(xnarch_atomic_cmpxchg(ownerp, cur, XN_NO_HANDLE) == cur)) {
+	if (likely(xnsynch_fast_release(ownerp, cur))) {
 	  out:
 		cb_read_unlock(&shadow->lock, s);
 		return 0;

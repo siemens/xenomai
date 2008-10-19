@@ -1060,13 +1060,10 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	mutex = shadow->mutex;
 
-	if (clear_claimed(xnarch_atomic_get(mutex->owner)) !=
-	    xnthread_handle(cur)) {
-		err = -EPERM;
+	err = (xnsynch_owner(&mutex->synchbase) == cur) ? 0 : -EPERM;
+	if (err)
 		goto out;
-	}
 
-	err = 0;
 	if (shadow->lockcnt > 1) {
 		/* Mutex is recursive */
 		--shadow->lockcnt;
@@ -1080,8 +1077,9 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 		return 0;
 	}
-	
-	pse51_mutex_unlock_internal(cur, mutex);
+
+	if (xnsynch_release(&mutex->synchbase))
+		xnpod_schedule();
 
   out:
 	cb_read_unlock(&shadow->lock, s);
@@ -1186,13 +1184,11 @@ static int __pthread_mutex_destroy(struct pt_regs *regs)
 	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq)
 		return -EPERM;
 
-	if (xnarch_atomic_get(mutex->owner) != XN_NO_HANDLE)
+	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
+				     XN_NO_HANDLE) != 0)
 		return -EBUSY;
 
 	pse51_mark_deleted(shadow);
-	if (!mutex->attr.pshared)
-		xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
-			    mutex->owner);
 	pse51_mutex_destroy_internal(mutex, mutex->owningq);
 
 	return __xn_safe_copy_to_user((void __user *)&umx->shadow_mutex,
@@ -1262,7 +1258,6 @@ static int __pthread_mutex_timedlock(struct pt_regs *regs)
 
 static int __pthread_mutex_unlock(struct pt_regs *regs)
 {
-	xnthread_t *cur = xnpod_current_thread();
 	union __xeno_mutex mx, *umx;
 
 	if (xnpod_root_p())
@@ -1275,7 +1270,8 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 				     offsetof(struct __shadow_mutex, lock)))
 		return -EFAULT;
 
-	pse51_mutex_unlock_internal(cur, mx.shadow_mutex.mutex);
+	if (xnsynch_release(&mx.shadow_mutex.mutex->synchbase))
+		xnpod_schedule();
 
 	return 0;
 }

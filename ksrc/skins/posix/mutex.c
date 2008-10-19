@@ -102,9 +102,9 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	shadow->magic = PSE51_MUTEX_MAGIC;
 	shadow->mutex = mutex;
 	shadow->lockcnt = 0;
+	xnarch_atomic_set(&shadow->lock, -1);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	xnarch_atomic_set(&shadow->lock, -1);
 	shadow->attr = *attr;
 	shadow->owner_offset = xnheap_mapped_offset(&sys_ppd->sem_heap, ownerp);
 #endif /* CONFIG_XENO_FASTSYNCH */
@@ -112,13 +112,10 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
 
-	xnsynch_init(&mutex->synchbase, synch_flags, NULL);
+	xnsynch_init(&mutex->synchbase, synch_flags, ownerp);
 	inith(&mutex->link);
 	mutex->attr = *attr;
-	mutex->owner = ownerp;
 	mutex->owningq = kq;
-	mutex->sleepers = 0;
-	xnarch_atomic_set(ownerp, XN_NO_HANDLE);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&kq->mutexq, &mutex->link);
@@ -159,7 +156,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
 	pse51_mutex_t *mutex;
-	xnarch_atomic_t *ownerp;
+	xnarch_atomic_t *ownerp = NULL;
 	int err;
 
 	if (!attr)
@@ -185,6 +182,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 	if (!mutex)
 		return ENOMEM;
 
+#ifdef CONFIG_XENO_FASTSYNCH
 	ownerp = (xnarch_atomic_t *)
 		xnheap_alloc(&xnsys_ppd_get(attr->pshared)->sem_heap,
 			     sizeof(xnarch_atomic_t));
@@ -192,6 +190,7 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 		xnfree(mutex);
 		return EAGAIN;
 	}
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	cb_force_write_lock(&shadow->lock, s);
 	err = pse51_mutex_init_internal(shadow, mutex, ownerp, attr);
@@ -199,7 +198,9 @@ int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 
 	if (err) {
 		xnfree(mutex);
+#ifdef CONFIG_XENO_FASTSYNCH
 		xnheap_free(&xnsys_ppd_get(attr->pshared)->sem_heap, ownerp);
+#endif /* CONFIG_XENO_FASTSYNCH */
 	}
 	return -err;
 }
@@ -216,8 +217,10 @@ void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
 	xnsynch_destroy(&mutex->synchbase);
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (mutex->attr.pshared)
-		xnheap_free(&xnsys_ppd_get(1)->sem_heap, mutex->owner);
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
+		    mutex->synchbase.fastlock);
+#endif /* CONFIG_XENO_FASTSYNCH */
 	/* We do not free the owner if the mutex is not pshared, because when
 	   this function is called from pse51_mutexq_cleanup, the sem_heap has
 	   been destroyed, and we have no way to find it back. */
@@ -266,7 +269,12 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 		return EPERM;
 	}
 
-	if (xnarch_atomic_get(mutex->owner) != XN_NO_HANDLE) {
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
+				     XN_NO_HANDLE) != 0) {
+#else /* CONFIG_XENO_FASTSYNCH */
+	if (xnsynch_owner_check(&mutex->synchbase, NULL) {
+#endif
 		cb_write_unlock(&shadow->lock, s);
 		return EBUSY;
 	}
@@ -274,9 +282,6 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	pse51_mark_deleted(shadow);
 	cb_write_unlock(&shadow->lock, s);
 
-	if (!mutex->attr.pshared)
-		xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
-			    mutex->owner);
 	pse51_mutex_destroy_internal(mutex, pse51_kqueues(mutex->attr.pshared));
 	
 	return 0;
@@ -305,14 +310,12 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 		/* Attempting to relock a normal mutex, deadlock. */
 		xnlock_get_irqsave(&nklock, s);
 		for (;;) {
-			++mutex->sleepers;
 			if (timed)
 				xnsynch_acquire(&mutex->synchbase,
 						abs_to, XN_REALTIME);
 			else
 				xnsynch_acquire(&mutex->synchbase,
 						XN_INFINITE, XN_RELATIVE);
-			--mutex->sleepers;
 
 			if (xnthread_test_info(cur, XNBREAK)) {
 				err = -EINTR;
@@ -384,19 +387,48 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 {
 	struct __shadow_mutex *shadow =
 	    &((union __xeno_mutex *)mx)->shadow_mutex;
-	xnthread_t *owner, *cur = xnpod_current_thread();
+	xnthread_t *cur = xnpod_current_thread();
+	pse51_mutex_t *mutex = shadow->mutex;
 	DECLARE_CB_LOCK_FLAGS(s);
 	int err;
+
+	if (xnpod_unblockable_p())
+		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
-	owner = pse51_mutex_trylock_internal(cur, shadow, 1);
-	if (likely(!owner) || IS_ERR(owner))
-		return -PTR_ERR(owner);
+	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC,
+			      struct __shadow_mutex)) {
+		err = EINVAL;
+		goto unlock_and_return;
+	}
 
-	err = EBUSY;
-	if (owner == cur) {
+#if XENO_DEBUG(POSIX)
+	if (mutex->owningq != pse51_kqueues(mutex->attr.pshared)) {
+		err = EPERM;
+		goto unlock_and_return;
+	}
+#endif /* XENO_DEBUG(POSIX) */
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	err = -xnsynch_fast_acquire(mutex->synchbase.fastlock,
+				    xnthread_handle(cur));
+#else /* !CONFIG_XENO_FASTSYNCH */
+	{
+		xnthread_t *owner = xnsynch_owner(&mutex->synchbase);
+		if (!owner)
+			err = 0;
+		else if (owner == cur)
+			err = EBUSY;
+		else
+			err = EAGAIN;
+	}
+#endif /* !CONFIG_XENO_FASTSYNCH */
+
+	if (likely(!err))
+		shadow->lockcnt = 1;
+	else if (err == EBUSY) {
 		pse51_mutex_t *mutex = shadow->mutex;
 
 		if (mutex->attr.type == PTHREAD_MUTEX_RECURSIVE) {
@@ -409,6 +441,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 		}
 	}
 
+  unlock_and_return:
 	cb_read_unlock(&shadow->lock, s);
 
 	return err;
@@ -564,7 +597,7 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	int err;
 
 	if (xnpod_root_p() || xnpod_interrupt_p())
-		return -EPERM;
+		return EPERM;
 
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
@@ -576,14 +609,11 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	}
 
 	mutex = shadow->mutex;
-	
-	if (clear_claimed(xnarch_atomic_get(mutex->owner)) !=
-	    xnthread_handle(cur)) {
-		err = EPERM;
-		goto out;
-	}
 
-	err = 0;
+	err = -xnsynch_owner_check(&mutex->synchbase, cur);
+	if (err)
+		goto out;
+
 	if (shadow->lockcnt > 1) {
 		/* Mutex is recursive */
 		--shadow->lockcnt;
@@ -591,7 +621,8 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 		return 0;
 	}
 
-	pse51_mutex_unlock_internal(cur, mutex);
+	if (xnsynch_release(&mutex->synchbase))
+		xnpod_schedule();
 
   out:
 	cb_read_unlock(&shadow->lock, s);
