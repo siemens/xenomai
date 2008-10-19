@@ -2,7 +2,7 @@ menuconfig XENO_SKIN_VXWORKS
 	depends on XENO_OPT_NUCLEUS
 	select XENO_OPT_TIMING_PERIODIC
 	tristate "VxWorks emulator"
-	select XENO_OPT_REGISTRY if XENO_OPT_PERVASIVE || XENO_FASTSEM
+	select XENO_OPT_REGISTRY if XENO_OPT_PERVASIVE || XENO_FASTSYNCH
 	help
 
 	This API skin emulates WindRiver's VxWorks operating system.

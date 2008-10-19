@@ -207,7 +207,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	xnsynch_init(&alarm->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&alarm->synch_base, XNSYNCH_PRIO, NULL);
 	alarm->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 

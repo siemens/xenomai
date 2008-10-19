@@ -38,7 +38,7 @@ void rt_typed_sem_init(SEM * sem, int value, int type)
 			mode = XNSYNCH_FIFO;
 	}
 
-	xnsynch_init(&sem->synch_base, mode);
+	xnsynch_init(&sem->synch_base, mode, NULL);
 	sem->count = value;
 	sem->type = type & 0x3;
 	sem->owner = NULL;

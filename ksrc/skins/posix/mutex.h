@@ -30,14 +30,14 @@ union __xeno_mutex {
 		unsigned magic;
 		unsigned lockcnt;
 		struct pse51_mutex *mutex;
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 		xnarch_atomic_t lock;
 		union {
 			unsigned owner_offset;
 			xnarch_atomic_t *owner;
 		};
 		struct pse51_mutexattr attr;
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 	} shadow_mutex;
 };
 

@@ -174,7 +174,7 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 	if (flags & MSG_Q_PRIORITY)
 		bflags |= XNSYNCH_PRIO;
 
-	xnsynch_init(&queue->synchbase, bflags);
+	xnsynch_init(&queue->synchbase, bflags, NULL);
 
 	msg_size = sizeof(wind_msg_t) + length;
 

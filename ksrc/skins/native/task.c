@@ -255,7 +255,7 @@ int rt_task_create(RT_TASK *task,
 	task->overrun = -1;
 	task->cstamp = ++__xeno_task_stamp;
 	task->safelock = 0;
-	xnsynch_init(&task->safesynch, XNSYNCH_FIFO);
+	xnsynch_init(&task->safesynch, XNSYNCH_FIFO, NULL);
 
 	xnarch_cpus_clear(task->affinity);
 
@@ -268,9 +268,9 @@ int rt_task_create(RT_TASK *task,
 		task->affinity = XNPOD_ALL_CPUS;
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
-	xnsynch_init(&task->mrecv, XNSYNCH_FIFO);
+	xnsynch_init(&task->mrecv, XNSYNCH_FIFO, NULL);
 	xnsynch_init(&task->msendq,
-		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER, NULL);
 	xnsynch_set_owner(&task->msendq, &task->thread_base);
 	task->flowgen = 0;
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */

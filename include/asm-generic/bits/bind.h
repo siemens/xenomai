@@ -42,14 +42,14 @@ void init_current_key(void)
 	}
 }
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 __attribute__ ((weak))
 unsigned long xeno_sem_heap[2] = { 0, 0 };
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 void xeno_handle_mlock_alert(int sig);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 static void *map_sem_heap(unsigned shared)
 {
 	struct heap_info {
@@ -103,7 +103,7 @@ static void unmap_sem_heap(unsigned long heap_addr, unsigned shared)
 
 	munmap((void *) heap_addr, hinfo.size);
 }
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 void __attribute__((weak)) xeno_sigill_handler(int sig)
 {
@@ -174,7 +174,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 	sa.sa_flags = 0;
 	sigaction(SIGXCPU, &sa, NULL);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	/* In case we forked, we need to map the new local semaphore heap */
 	if (xeno_sem_heap[0])
 		unmap_sem_heap(xeno_sem_heap[0], 0);
@@ -193,7 +193,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 			exit(EXIT_FAILURE);
 		}
 	}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return muxid;
 }
@@ -248,7 +248,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 	xeno_arch_features_check();
 #endif /* xeno_arch_features_check */
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	/* In case we forked, we need to map the new local semaphore heap */
 	if (xeno_sem_heap[0])
 		unmap_sem_heap(xeno_sem_heap[0], 0);
@@ -267,7 +267,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 			exit(EXIT_FAILURE);
 		}
 	}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return muxid;
 }

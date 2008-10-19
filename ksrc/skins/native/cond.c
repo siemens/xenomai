@@ -160,7 +160,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xnsynch_init(&cond->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&cond->synch_base, XNSYNCH_PRIO, NULL);
 	cond->handle = 0;	/* i.e. (still) unregistered cond. */
 	cond->magic = XENO_COND_MAGIC;
 	xnobject_copy_name(cond->name, name);

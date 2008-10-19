@@ -259,7 +259,7 @@ static u_long q_create_internal(const char *name,
 		}
 	}
 
-	xnsynch_init(&queue->synchbase, bflags);
+	xnsynch_init(&queue->synchbase, bflags, NULL);
 
 	queue->magic = PSOS_QUEUE_MAGIC;
 	xnobject_copy_name(queue->name, name);

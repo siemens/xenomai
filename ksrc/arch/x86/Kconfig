@@ -2,7 +2,7 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-config XENO_FASTSEM
+config XENO_FASTSYNCH
 	bool
 	default y
 

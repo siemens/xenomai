@@ -181,7 +181,7 @@ int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 	if ((mode & S_PULSE) && icount > 0)
 		return -EINVAL;
 
-	xnsynch_init(&sem->synch_base, mode & S_PRIO);
+	xnsynch_init(&sem->synch_base, mode & S_PRIO, NULL);
 	sem->count = icount;
 	sem->mode = mode;
 	sem->handle = 0;	/* i.e. (still) unregistered semaphore. */

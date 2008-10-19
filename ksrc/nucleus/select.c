@@ -274,7 +274,7 @@ int xnselector_init(struct xnselector *selector)
 {
 	unsigned i;
 
-	xnsynch_init(&selector->synchbase, XNSYNCH_FIFO | XNSYNCH_NOPIP);
+	xnsynch_init(&selector->synchbase, XNSYNCH_FIFO, NULL);
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++) {
 		__FD_ZERO(&selector->fds[i].expected);
 		__FD_ZERO(&selector->fds[i].pending);

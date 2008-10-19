@@ -114,7 +114,7 @@ u_long sm_create(const char *name, u_long icount, u_long flags, u_long *smid)
 	if (flags & SM_PRIOR)
 		bflags |= XNSYNCH_PRIO;
 
-	xnsynch_init(&sem->synchbase, bflags);
+	xnsynch_init(&sem->synchbase, bflags, NULL);
 
 	inith(&sem->link);
 	sem->count = icount;

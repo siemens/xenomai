@@ -192,8 +192,8 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 	if (bf->bufmem == NULL)
 		return -ENOMEM;
 
-	xnsynch_init(&bf->isynch_base, mode & B_PRIO);
-	xnsynch_init(&bf->osynch_base, mode & B_PRIO);
+	xnsynch_init(&bf->isynch_base, mode & B_PRIO, NULL);
+	xnsynch_init(&bf->osynch_base, mode & B_PRIO, NULL);
 
 	bf->handle = 0;	/* i.e. (still) unregistered buffer. */
 	xnobject_copy_name(bf->name, name);

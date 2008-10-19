@@ -234,7 +234,7 @@ int xnpipe_connect(int minor,
 
 	__setbits(state->status, XNPIPE_KERN_CONN);
 
-	xnsynch_init(&state->synchbase, XNSYNCH_FIFO);
+	xnsynch_init(&state->synchbase, XNSYNCH_FIFO, NULL);
 	state->output_handler = output_handler;
 	state->input_handler = input_handler;
 	state->alloc_handler = alloc_handler;

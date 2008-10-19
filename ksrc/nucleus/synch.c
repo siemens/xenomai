@@ -37,7 +37,9 @@
 #include <nucleus/module.h>
 
 /*! 
- * \fn void xnsynch_init(xnsynch_t *synch, xnflags_t flags);
+ * \fn void xnsynch_init(xnsynch_t *synch, xnflags_t flags,
+ *                       xnarch_atomic_t *fastlock)
+ *
  * \brief Initialize a synchronization object.
  *
  * Initializes a new specialized object which can subsequently be used
@@ -79,6 +81,10 @@
  * synchronization object makes the waiters wait by priority order on
  * the awaited resource (XNSYNCH_PRIO).
  *
+ * @param fastlock Address of the fast lock word to be associated with
+ * the synchronization object. If NULL is passed or XNSYNCH_OWNER is not
+ * set, fast-lock support is disabled.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -90,7 +96,7 @@
  * Rescheduling: never.
  */
 
-void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
+void xnsynch_init(xnsynch_t *synch, xnflags_t flags, xnarch_atomic_t *fastlock)
 {
 	initph(&synch->link);
 
@@ -100,6 +106,13 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
 	synch->cleanup = NULL;	/* Only works for PIP-enabled objects. */
+#ifdef CONFIG_XENO_FASTSYNCH
+	if ((flags & XNSYNCH_OWNER) && fastlock) {
+		synch->fastlock = fastlock;
+		xnarch_atomic_set(fastlock, XN_NO_HANDLE);
+	} else
+		synch->fastlock = NULL;
+#endif /* CONFIG_XENO_FASTSYNCH */
 	initpq(&synch->pendq);
 	xnarch_init_display_context(synch);
 }
@@ -379,36 +392,87 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 		     xntmode_t timeout_mode)
 {
 	xnthread_t *thread = xnpod_current_thread(), *owner;
+	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
+	const int use_fastlock = xnsynch_fastlock_p(synch);
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
-	xnlock_get_irqsave(&nklock, s);
-
 	trace_mark(xn_nucleus_synch_acquire, "synch %p", synch);
 
-redo:
-	owner = synch->owner;
+      redo:
 
-	if (!owner) {
-		synch->owner = thread;
-		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
-		goto unlock_and_exit;
+	if (use_fastlock) {
+		fastlock = xnarch_atomic_cmpxchg(xnsynch_fastlock(synch),
+						 XN_NO_HANDLE, threadh);
+
+		if (likely(fastlock == XN_NO_HANDLE)) {
+			xnthread_clear_info(thread,
+					    XNRMID | XNTIMEO | XNBREAK);
+			return;
+		}
+
+		xnlock_get_irqsave(&nklock, s);
+
+		/* Set claimed bit.
+		   In case it appears to be set already, re-read its state
+		   under nklock so that we don't miss any change between the
+		   lock-less read and here. But also try to avoid cmpxchg
+		   where possible. Only if it appears not to be set, start
+		   with cmpxchg directly. */
+		if (xnsynch_fast_is_claimed(fastlock)) {
+			old = xnarch_atomic_get(xnsynch_fastlock(synch));
+			goto test_no_owner;
+		}
+		do {
+			old = xnarch_atomic_cmpxchg
+				(xnsynch_fastlock(synch), fastlock,
+				 xnsynch_fast_set_claimed(fastlock, 1));
+			if (likely(old == fastlock))
+				break;
+
+		  test_no_owner:
+			if (old == XN_NO_HANDLE) {
+				/* Owner called xnsynch_release
+				   (on another cpu) */
+				xnlock_put_irqrestore(&nklock, s);
+				goto redo;
+			}
+			fastlock = old;
+		} while (!xnsynch_fast_is_claimed(fastlock));
+
+		owner = xnthread_lookup(xnsynch_fast_mask_claimed(fastlock));
+
+		if (!owner) {
+			/* The handle is broken, therefore pretend that the synch
+			   object was deleted to signal an error. */
+			xnthread_set_info(thread, XNRMID);
+			goto unlock_and_exit;
+		}
+
+		xnsynch_set_owner(synch, owner);
+	} else {
+		xnlock_get_irqsave(&nklock, s);
+
+		owner = synch->owner;
+
+		if (!owner) {
+			synch->owner = thread;
+			xnthread_clear_info(thread,
+					    XNRMID | XNTIMEO | XNBREAK);
+			goto unlock_and_exit;
+		}
 	}
 
-	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
+	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
-		goto unlock_and_exit;
-	}
-
-	if (thread->cprio > owner->cprio) {
+	else if (thread->cprio > owner->cprio) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
 			synch->owner = thread;
 			xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
 			xnthread_set_info(owner, XNROBBED);
-			goto unlock_and_exit;
+			goto grab_and_exit;
 		}
 
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
@@ -439,12 +503,28 @@ redo:
 		/* Somebody stole us the ownership while we were ready
 		   to run, waiting for the CPU: we need to wait again
 		   for the resource. */
-		if (timeout_mode != XN_RELATIVE || timeout == XN_INFINITE)
+		if (timeout_mode != XN_RELATIVE || timeout == XN_INFINITE) {
+			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
+		}
 		timeout = xntimer_get_timeout_stopped(&thread->rtimer);
-		if (timeout > 1) /* Otherwise, it's too late. */
+		if (timeout > 1) { /* Otherwise, it's too late. */
+			xnlock_put_irqrestore(&nklock, s);
 			goto redo;
+		}
 		xnthread_set_info(thread, XNTIMEO);
+	} else {
+
+	      grab_and_exit:
+
+		if (use_fastlock) {
+			/* We are the new owner, update the fastlock
+			   accordingly. */
+			if (xnsynch_pended_p(synch))
+				threadh =
+				    xnsynch_fast_set_claimed(threadh, 1);
+			xnarch_atomic_set(xnsynch_fastlock(synch), threadh);
+		}
 	}
 
       unlock_and_exit:
@@ -582,11 +662,19 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 
 struct xnthread *xnsynch_release(xnsynch_t *synch)
 {
+	const int use_fastlock = xnsynch_fastlock_p(synch);
 	xnthread_t *newowner, *lastowner;
+	xnhandle_t lastownerh, newownerh;
 	xnpholder_t *holder;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
+
+	lastownerh = xnthread_handle(xnpod_current_thread());
+
+	if (use_fastlock &&
+	    likely(xnsynch_fast_release(xnsynch_fastlock(synch), lastownerh)))
+		return NULL;
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -605,10 +693,16 @@ struct xnthread *xnsynch_release(xnsynch_t *synch)
 
 		if (testbits(synch->status, XNSYNCH_CLAIMED))
 			xnsynch_clear_boost(synch, lastowner);
+
+		newownerh = xnsynch_fast_set_claimed(xnthread_handle(newowner),
+						     xnsynch_pended_p(synch));
 	} else {
 		newowner = NULL;
 		synch->owner = NULL;
+		newownerh = XN_NO_HANDLE;
 	}
+	if (use_fastlock)
+		xnarch_atomic_set(xnsynch_fastlock(synch), newownerh);
 
 	xnlock_put_irqrestore(&nklock, s);
 

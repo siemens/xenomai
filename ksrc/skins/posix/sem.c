@@ -99,7 +99,7 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
 
 	inith(&sem->link);
 	appendq(&pse51_kqueues(pshared)->semq, &sem->link);
-	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO);
+	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO, NULL);
 	sem->value = value;
 	sem->pshared = pshared;
 	sem->is_named = 0;

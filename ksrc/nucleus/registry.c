@@ -186,7 +186,7 @@ int xnregistry_init(void)
 	for (n = 0; n < registry_hash_entries; n++)
 		registry_hash_table[n] = NULL;
 
-	xnsynch_init(&registry_hash_synch, XNSYNCH_FIFO);
+	xnsynch_init(&registry_hash_synch, XNSYNCH_FIFO, NULL);
 
 	return 0;
 }
@@ -615,7 +615,7 @@ int xnregistry_enter(const char *key,
 
 	object = link2xnobj(holder);
 
-	xnsynch_init(&object->safesynch, XNSYNCH_FIFO);
+	xnsynch_init(&object->safesynch, XNSYNCH_FIFO, NULL);
 	object->objaddr = objaddr;
 	object->cstamp = ++registry_obj_stamp;
 	object->safelock = 0;

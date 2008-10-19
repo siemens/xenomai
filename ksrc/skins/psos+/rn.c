@@ -214,7 +214,7 @@ u_long rn_create(const char *name,
 	rn->usize = usize;
 	xnobject_copy_name(rn->name, name);
 
-	xnsynch_init(&rn->synchbase, bflags);
+	xnsynch_init(&rn->synchbase, bflags, NULL);
 	rn->magic = PSOS_RN_MAGIC;
 
 	inith(&rn->rlink);

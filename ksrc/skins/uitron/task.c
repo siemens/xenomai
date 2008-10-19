@@ -150,7 +150,7 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 	xnlock_put_irqrestore(&nklock, s);
 	task->magic = uITRON_TASK_MAGIC;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
 	if (xnthread_register(&task->threadbase, "")) {
@@ -158,7 +158,7 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 		xnpod_abort_thread(&task->threadbase);
 		return E_NOMEM;
 	}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return E_OK;
 }

@@ -21,7 +21,7 @@
 
 void taskev_init(psosevent_t *evgroup)
 {
-	xnsynch_init(&evgroup->synchbase, XNSYNCH_FIFO);
+	xnsynch_init(&evgroup->synchbase, XNSYNCH_FIFO, NULL);
 	evgroup->events = 0;
 }
 

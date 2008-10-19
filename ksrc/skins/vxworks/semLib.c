@@ -423,7 +423,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 
 	check_alloc(wind_sem_t, sem, return 0);
 
-	xnsynch_init(&sem->synchbase, (xnflags_t)flags);
+	xnsynch_init(&sem->synchbase, (xnflags_t)flags, NULL);
 	sem->magic = WIND_SEM_MAGIC;
 	sem->count = count;
 	sem->vtbl = vtbl;

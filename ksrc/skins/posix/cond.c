@@ -142,7 +142,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	shadow->magic = PSE51_COND_MAGIC;
 	shadow->cond = cond;
 
-	xnsynch_init(&cond->synchbase, synch_flags);
+	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	inith(&cond->link);
 	cond->attr = *attr;
 	cond->mutex = NULL;
@@ -424,10 +424,10 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 	unsigned count;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex,
 					    &count, 0, XN_INFINITE);
@@ -437,9 +437,9 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 							      mutex, count))
 			;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	cb_read_unlock(&mutex->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err != EINTR ? err : 0;
 }
@@ -492,10 +492,10 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 	unsigned count;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&mutex->lock, s)))
 		return EINVAL;
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = pse51_cond_timedwait_prologue(cur, cond, mutex, &count, 1,
 					    ts2ticks_ceil(abstime) + 1);
@@ -505,9 +505,9 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 							      mutex, count))
 			;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	cb_read_unlock(&mutex->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err != EINTR ? err : 0;
 }

@@ -129,8 +129,8 @@ static int pse51_mq_init(pse51_mq_t * mq, const struct mq_attr *attr)
 
 	mq->memsize = memsize;
 	initpq(&mq->queued);
-	xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP);
-	xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP);
+	xnsynch_init(&mq->receivers, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
+	xnsynch_init(&mq->senders, XNSYNCH_PRIO | XNSYNCH_NOPIP, NULL);
 	mq->mem = mem;
 
 	/* Fill the pool. */

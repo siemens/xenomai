@@ -1171,7 +1171,7 @@ static void *__wind_shadow_eventcb(int event, void *data)
 
 		initq(&rh->wdq);
 		/* A single server thread pends on this. */
-		xnsynch_init(&rh->wdsynch, XNSYNCH_FIFO);
+		xnsynch_init(&rh->wdsynch, XNSYNCH_FIFO, NULL);
 		initq(&rh->wdpending);
 		rh->wdcount = 0;
 		initq(&rh->msgQq);

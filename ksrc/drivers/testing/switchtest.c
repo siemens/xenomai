@@ -219,7 +219,7 @@ static int rtswitch_register_task(rtswitch_context_t *ctx,
 	ctx->next_index++;
 	t->base = *arg;
 	sema_init(&t->nrt_synch, 0);
-	xnsynch_init(&t->rt_synch, XNSYNCH_FIFO);
+	xnsynch_init(&t->rt_synch, XNSYNCH_FIFO, NULL);
 
 	up(&ctx->lock);
 

@@ -145,13 +145,13 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	if (err)
 		return err;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
 	err = xnthread_register(task, "");
 	if (err)
 		goto cleanup_out;
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (period > 0) {
 		err = xnpod_set_thread_periodic(task, XN_INFINITE,
@@ -761,7 +761,7 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 	/* Make atomic for re-initialisation support */
 	xnlock_get_irqsave(&nklock, s);
 
-	xnsynch_init(&event->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&event->synch_base, XNSYNCH_PRIO, NULL);
 	if (pending)
 		xnsynch_set_flags(&event->synch_base, RTDM_EVENT_PENDING);
 	xnselect_init(&event->select_block);
@@ -1109,7 +1109,7 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 	xnlock_get_irqsave(&nklock, s);
 
 	sem->value = value;
-	xnsynch_init(&sem->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&sem->synch_base, XNSYNCH_PRIO, NULL);
 	xnselect_init(&sem->select_block);
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -1391,7 +1391,7 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex)
 	xnlock_get_irqsave(&nklock, s);
 
 	xnsynch_init(&mutex->synch_base,
-		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER, NULL);
 
 	xnlock_put_irqrestore(&nklock, s);
 }

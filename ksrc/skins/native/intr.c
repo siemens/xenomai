@@ -266,7 +266,7 @@ int rt_intr_create(RT_INTR *intr,
 
 	xnintr_init(&intr->intr_base, intr->name, irq, isr, iack, mode);
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO, NULL);
 	intr->pending = 0;
 	intr->cpid = 0;
 	intr->mode = 0;

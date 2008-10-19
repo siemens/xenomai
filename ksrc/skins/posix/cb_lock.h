@@ -20,7 +20,7 @@ typedef void xnthread_t;
 	__tmp; \
 })
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 
 static  __inline__ int __cb_try_read_lock(xnarch_atomic_t *lock)
 {
@@ -68,7 +68,7 @@ static __inline__ void __cb_write_unlock(xnarch_atomic_t *lock)
 #define cb_try_write_lock(lock, flags) __cb_try_write_lock(lock)
 #define cb_force_write_lock(lock, flags) __cb_force_write_lock(lock)
 #define cb_write_unlock(lock, flags) __cb_write_unlock(lock)
-#else /* !CONFIG_XENO_FASTSEM */
+#else /* !CONFIG_XENO_FASTSYNCH */
 #ifdef __KERNEL__
 #define DECLARE_CB_LOCK_FLAGS(name) spl_t name
 #define cb_try_read_lock(lock, flags) \
@@ -87,6 +87,6 @@ static __inline__ void __cb_write_unlock(xnarch_atomic_t *lock)
 #define cb_force_write_lock(lock, flags) do { } while (0)
 #define cb_write_unlock(lock, flags) do { } while (0)
 #endif /* !__KERNEL__ */
-#endif /* !CONFIG_XENO_FASTSEM */
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 #endif /* CB_LOCK_H */

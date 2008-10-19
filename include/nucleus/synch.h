@@ -32,9 +32,41 @@
 #define XNSYNCH_DREORD  0x4
 #define XNSYNCH_OWNER   0x8
 
+/* Fast lock API */
+static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
+					   xnhandle_t ownerh)
+{
+	return (xnhandle_mask_spare(xnarch_atomic_get(fastlock)) == ownerh) ?
+		0 : -EPERM;
+}
+
+static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
+				       xnhandle_t new_ownerh)
+{
+	xnhandle_t lock_state =
+	    xnarch_atomic_cmpxchg(fastlock, XN_NO_HANDLE, new_ownerh);
+
+	if (likely(lock_state == XN_NO_HANDLE))
+		return 0;
+
+	if (xnhandle_mask_spare(lock_state) == new_ownerh)
+		return -EBUSY;
+
+	return -EAGAIN;
+}
+
+static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
+				       xnhandle_t cur_ownerh)
+{
+	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
+		cur_ownerh);
+}
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
+
+#define XNSYNCH_FLCLAIM XN_HANDLE_SPARE3 /* Corresponding bit in fast lock */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -67,6 +99,10 @@ typedef struct xnsynch {
 
     struct xnthread *owner; /* Thread which owns the resource */
 
+#ifdef CONFIG_XENO_FASTSYNCH
+    xnarch_atomic_t *fastlock; /* Pointer to fast lock word */
+#endif /* CONFIG_XENO_FASTSYNCH */
+
     void (*cleanup)(struct xnsynch *synch); /* Cleanup handler */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
@@ -81,12 +117,30 @@ typedef struct xnsynch {
 #define xnsynch_pended_p(synch)		(!emptypq_p(&((synch)->pendq)))
 #define xnsynch_owner(synch)		((synch)->owner)
 
+#ifdef CONFIG_XENO_FASTSYNCH
+#define xnsynch_fastlock(synch)		((synch)->fastlock)
+#define xnsynch_fastlock_p(synch)	((synch)->fastlock != NULL)
+#define xnsynch_owner_check(synch, thread) \
+	xnsynch_fast_owner_check((synch)->fastlock, xnthread_handle(thread))
+#else /* !CONFIG_XENO_FASTSYNCH */
+#define xnsynch_fastlock(synch)		NULL
+#define xnsynch_fastlock_p(synch)	0
+#define xnsynch_owner_check(synch, thread) \
+	((synch)->owner == thread ? 0 : -EPERM)
+#endif /* !CONFIG_XENO_FASTSYNCH */
+
+#define xnsynch_fast_is_claimed(fastlock) \
+	xnhandle_test_spare(fastlock, XNSYNCH_FLCLAIM)
+#define xnsynch_fast_set_claimed(fastlock, enable) \
+	(((fastlock) & ~XNSYNCH_FLCLAIM) | ((enable) ? XNSYNCH_FLCLAIM : 0))
+#define xnsynch_fast_mask_claimed(fastlock) ((fastlock) & ~XNSYNCH_FLCLAIM)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void xnsynch_init(xnsynch_t *synch,
-		  xnflags_t flags);
+void xnsynch_init(xnsynch_t *synch, xnflags_t flags,
+		  xnarch_atomic_t *fastlock);
 
 #define xnsynch_destroy(synch) xnsynch_flush(synch,XNRMID)
 

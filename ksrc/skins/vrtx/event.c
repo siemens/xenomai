@@ -151,7 +151,7 @@ int sc_fcreate(int *errp)
 		goto nocb;
 	}
 
-	xnsynch_init(&evgroup->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD);
+	xnsynch_init(&evgroup->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD, NULL);
 	inith(&evgroup->link);
 	evgroup->evid = evid;
 	evgroup->magic = VRTX_EVENT_MAGIC;

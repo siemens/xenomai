@@ -255,7 +255,7 @@ int rt_queue_create(RT_QUEUE *q,
 		}
 	}
 
-	xnsynch_init(&q->synch_base, mode & (Q_PRIO | Q_FIFO));
+	xnsynch_init(&q->synch_base, mode & (Q_PRIO | Q_FIFO), NULL);
 	initq(&q->pendq);
 	q->handle = 0;		/* i.e. (still) unregistered queue. */
 	q->magic = XENO_QUEUE_MAGIC;

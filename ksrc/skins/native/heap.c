@@ -292,7 +292,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		}
 	}
 
-	xnsynch_init(&heap->synch_base, mode & (H_PRIO | H_FIFO));
+	xnsynch_init(&heap->synch_base, mode & (H_PRIO | H_FIFO), NULL);
 	heap->handle = 0;	/* i.e. (still) unregistered heap. */
 	heap->magic = XENO_HEAP_MAGIC;
 	heap->mode = mode;

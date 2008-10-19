@@ -161,7 +161,8 @@ int sc_mcreate(unsigned int opt, int *errp)
 	inith(&mx->link);
 	mx->mid = mid;
 	mx->owner = NULL;
-	xnsynch_init(&mx->synchbase, bflags | XNSYNCH_DREORD | XNSYNCH_OWNER);
+	xnsynch_init(&mx->synchbase, bflags | XNSYNCH_DREORD | XNSYNCH_OWNER,
+		     NULL);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_mx_q, &mx->link);

@@ -1,10 +1,11 @@
 2008-10-19  Jan Kiszka  <jan.kiszka@siemens.com>
 
-	* ksrc/skins, include/nucleus, ksrc/nucleus:
+	* ksrc/skins, include/nucleus, ksrc/nucleus, ksrc/drivers:
 
 	- Generic thread registration.
 	- Handle-based xeno_get_current service.
 	- Factor out xnsynch_acquire/release.
+	- Lockless fast path for xnsynch_acquire().
 
 	* include/asm-*: Remove xnarch_atomic_intptr.
 

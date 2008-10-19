@@ -26,7 +26,7 @@
 
 extern int __pse51_muxid;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 #define PSE51_MUTEX_MAGIC (0x86860303)
 
 extern unsigned long xeno_sem_heap[2];
@@ -38,7 +38,7 @@ static xnarch_atomic_t *get_ownerp(struct __shadow_mutex *shadow)
 	
 	return (xnarch_atomic_t *) (xeno_sem_heap[1] + shadow->owner_offset);
 }
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 int __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {
@@ -98,7 +98,7 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		goto checked;
 
@@ -111,17 +111,17 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex,
 
   checked:
 	cb_force_write_lock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,__pse51_mutex_init,shadow,attr);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	if (!shadow->attr.pshared)
 		shadow->owner = (xnarch_atomic_t *)
 			(xeno_sem_heap[0] + shadow->owner_offset);
 	
 	cb_write_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;
 }
@@ -148,7 +148,7 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
@@ -188,16 +188,16 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 			++shadow->lockcnt;
 			goto out;
 		}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,__pse51_mutex_lock,shadow);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }
@@ -209,7 +209,7 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
@@ -249,17 +249,17 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 			++shadow->lockcnt;
 			goto out;
 		}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL2(__pse51_muxid,
 					__pse51_mutex_timedlock, shadow, to);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
   out:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }
@@ -270,7 +270,7 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	xnhandle_t cur, owner;
 
 	cur = xeno_get_current();
@@ -306,14 +306,14 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
   out:
 	cb_read_unlock(&shadow->lock, s);
 
-#else /* !CONFIG_XENO_FASTSEM */
+#else /* !CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_trylock, shadow);
 	} while (err == -EINTR);
 
-#endif /* !CONFIG_XENO_FASTSEM */
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }
@@ -324,7 +324,7 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 	struct __shadow_mutex *shadow = &_mutex->shadow_mutex;
 	int err = 0;
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	xnarch_atomic_t *ownerp;
 	xnhandle_t cur, owner;
 
@@ -358,17 +358,17 @@ int __wrap_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		cb_read_unlock(&shadow->lock, s);
 		return 0;
 	}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
 		err = XENOMAI_SKINCALL1(__pse51_muxid,
 					__pse51_mutex_unlock, shadow);
 	} while (err == -EINTR);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
   out_err:
 	cb_read_unlock(&shadow->lock, s);
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	return -err;
 }

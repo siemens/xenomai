@@ -138,7 +138,8 @@ ER cre_mbx(ID mbxid, T_CMBX *pk_cmbx)
 	}
 
 	xnsynch_init(&mbx->synchbase,
-		     (pk_cmbx->mbxatr & TA_TPRI) ? XNSYNCH_PRIO : XNSYNCH_FIFO);
+		     (pk_cmbx->mbxatr & TA_TPRI) ? XNSYNCH_PRIO : XNSYNCH_FIFO,
+		     NULL);
 
 	mbx->id = mbxid;
 	mbx->exinf = pk_cmbx->exinf;

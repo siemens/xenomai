@@ -122,7 +122,7 @@ ER cre_flg(ID flgid, T_CFLG *pk_cflg)
 		return E_OBJ;
 	}
 
-	xnsynch_init(&flag->synchbase, XNSYNCH_FIFO);
+	xnsynch_init(&flag->synchbase, XNSYNCH_FIFO, NULL);
 	flag->id = flgid;
 	flag->exinf = pk_cflg->exinf;
 	flag->flgatr = pk_cflg->flgatr;

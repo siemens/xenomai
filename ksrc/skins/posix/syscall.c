@@ -886,7 +886,7 @@ static int __pthread_mutexattr_setpshared(struct pt_regs *regs)
 	return __xn_safe_copy_to_user((void __user *)uattrp, &attr, sizeof(*uattrp));
 }
 
-#ifndef CONFIG_XENO_FASTSEM
+#ifndef CONFIG_XENO_FASTSYNCH
 static int __pthread_mutex_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
@@ -1088,7 +1088,7 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	return err;
 }
-#else /* !CONFIG_XENO_FASTSEM */
+#else /* !CONFIG_XENO_FASTSYNCH */
 static int __pthread_mutex_check_init(struct pt_regs *regs)
 {
 	pthread_mutexattr_t locattr, *attr, *uattrp;
@@ -1279,7 +1279,7 @@ static int __pthread_mutex_unlock(struct pt_regs *regs)
 
 	return 0;
 }
-#endif /* !CONFIG_XENO_FASTSEM */
+#endif /* !CONFIG_XENO_FASTSYNCH */
 
 static int __pthread_condattr_init(struct pt_regs *regs)
 {
@@ -1469,11 +1469,11 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 				     offsetof(struct __shadow_mutex, lock)
-#else /* !CONFIG_XENO_FASTSEM */
+#else /* !CONFIG_XENO_FASTSYNCH */
 				     sizeof(mx.shadow_mutex)
-#endif /* !CONFIG_XENO_FASTSEM */
+#endif /* !CONFIG_XENO_FASTSYNCH */
 				     ))
 		return -EFAULT;
 
@@ -1537,11 +1537,11 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 
 	if (__xn_safe_copy_from_user(&mx.shadow_mutex,
 				     (void __user *)&umx->shadow_mutex,
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 				     offsetof(struct __shadow_mutex, lock)
-#else /* !CONFIG_XENO_FASTSEM */
+#else /* !CONFIG_XENO_FASTSYNCH */
 				     sizeof(mx.shadow_mutex)
-#endif /* !CONFIG_XENO_FASTSEM */
+#endif /* !CONFIG_XENO_FASTSYNCH */
 				     ))
 		return -EFAULT;
 
@@ -2695,7 +2695,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_mutex_lock] = {&__pthread_mutex_lock, __xn_exec_primary},
 	[__pse51_mutex_timedlock] =
 	    {&__pthread_mutex_timedlock, __xn_exec_primary},
-#ifndef CONFIG_XENO_FASTSEM
+#ifndef CONFIG_XENO_FASTSYNCH
 	[__pse51_mutex_trylock] = {&__pthread_mutex_trylock, __xn_exec_primary},
 #else
         [__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},

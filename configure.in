@@ -59,27 +59,27 @@ AM_PROG_LEX
 
 AC_MSG_CHECKING([for target architecture])
 
-CONFIG_XENO_FASTSEM=
+CONFIG_XENO_FASTSYNCH=
 case "$host" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
-	CONFIG_XENO_FASTSEM=y
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  powerpc-*|ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/ppc/boot/images/zImage.elf
-	CONFIG_XENO_FASTSEM=y
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc64
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/ppc64/boot/images/zImage
-	CONFIG_XENO_FASTSEM=y
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
@@ -96,14 +96,14 @@ case "$host" in
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
-	# We set CONFIG_XENO_FASTSEM later, when we know what architecture we
+	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
 	# are running
 	;;
  x86_64-*|amd64-*)
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
-	CONFIG_XENO_FASTSEM=y
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  *) echo ""
    echo "*******************************************"
@@ -288,7 +288,7 @@ user-space]),
   AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
 
   if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
-	CONFIG_XENO_FASTSEM=y
+	CONFIG_XENO_FASTSYNCH=y
   fi
 fi
 
@@ -570,7 +570,7 @@ dnl
 
 test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
-test x$CONFIG_XENO_FASTSEM = xy && AC_DEFINE(CONFIG_XENO_FASTSEM,1,[config])
+test x$CONFIG_XENO_FASTSYNCH = xy && AC_DEFINE(CONFIG_XENO_FASTSYNCH,1,[config])
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 

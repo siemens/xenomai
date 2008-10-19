@@ -210,7 +210,7 @@ vrtxmb_t *mb_map(char **mboxp)
 	mb->mboxp = mboxp;
 	mb->msg = NULL;
 	mb->hnext = NULL;
-	xnsynch_init(&mb->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD);
+	xnsynch_init(&mb->synchbase, XNSYNCH_PRIO | XNSYNCH_DREORD, NULL);
 	appendq(&vrtx_mbox_q, &mb->link);
 	mb_hash(mboxp, mb);
 

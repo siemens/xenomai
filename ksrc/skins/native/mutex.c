@@ -171,7 +171,7 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 		return -EPERM;
 
 	xnsynch_init(&mutex->synch_base,
-		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER, NULL);
 	mutex->handle = 0;	/* i.e. (still) unregistered mutex. */
 	mutex->magic = XENO_MUTEX_MAGIC;
 	mutex->lockcnt = 0;

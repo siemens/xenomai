@@ -116,7 +116,7 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 	xnintr_init(&intr->intr_base, NULL, irq, isr, iack, 0);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO);
+	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO, NULL);
 	intr->pending = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	intr->magic = PSE51_INTR_MAGIC;

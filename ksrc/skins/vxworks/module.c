@@ -59,7 +59,7 @@ int SKIN_INIT(vxworks)
 	/* The following fields are unused in the global holder;
 	   still, we initialize them not to leave such data in an
 	   invalid state. */
-	xnsynch_init(&__wind_global_rholder.wdsynch, XNSYNCH_FIFO);
+	xnsynch_init(&__wind_global_rholder.wdsynch, XNSYNCH_FIFO, NULL);
 	initq(&__wind_global_rholder.wdpending);
 	__wind_global_rholder.wdcount = 0;
 

@@ -127,7 +127,8 @@ ER cre_sem(ID semid, T_CSEM *pk_csem)
 	}
 
 	xnsynch_init(&sem->synchbase,
-		     (pk_csem->sematr & TA_TPRI) ? XNSYNCH_PRIO : XNSYNCH_FIFO);
+		     (pk_csem->sematr & TA_TPRI) ? XNSYNCH_PRIO : XNSYNCH_FIFO,
+		     NULL);
 
 	sem->id = semid;
 	sem->exinf = pk_csem->exinf;

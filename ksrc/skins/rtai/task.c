@@ -152,7 +152,7 @@ int rt_task_init(RT_TASK *task,
 	task->magic = RTAI_TASK_MAGIC;
 	appendq(&__rtai_task_q, &task->link);
 
-#ifdef CONFIG_XENO_FASTSEM
+#ifdef CONFIG_XENO_FASTSYNCH
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
 	err = xnthread_register(&task->thread_base, "");
@@ -160,7 +160,7 @@ int rt_task_init(RT_TASK *task,
 		xnpod_abort_thread(&task->thread_base);
 		goto unlock_and_exit;
 	}
-#endif /* CONFIG_XENO_FASTSEM */
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	/* Add a switch hook only if a signal function has been declared
 	   at least once for some created task. */

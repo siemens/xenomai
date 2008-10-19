@@ -146,7 +146,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 	xnthread_time_slice(&pTcb->threadbase) = rrperiod;
 
 	pTcb->safecnt = 0;
-	xnsynch_init(&pTcb->safesync, 0);
+	xnsynch_init(&pTcb->safesync, 0, NULL);
 
 	/* TODO: fill in attributes of wind_task_t:
 	   pTcb->status

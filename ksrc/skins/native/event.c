@@ -183,7 +183,7 @@ int rt_event_create(RT_EVENT *event,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xnsynch_init(&event->synch_base, mode & EV_PRIO);
+	xnsynch_init(&event->synch_base, mode & EV_PRIO, NULL);
 	event->value = ivalue;
 	event->handle = 0;	/* i.e. (still) unregistered event. */
 	event->magic = XENO_EVENT_MAGIC;
