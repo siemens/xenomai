@@ -1,3 +1,11 @@
+2008-10-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.2-07.
+
+	* ksrc/arch/arm/patches: Update to 2.6.26-arm-1.11-02.
+
+	* ksrc/arch/x86/patches: Update to 2.6.26-x86-2.0-14.
+
 2008-10-19  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins, include/nucleus, ksrc/nucleus, ksrc/drivers:
