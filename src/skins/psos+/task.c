@@ -26,6 +26,7 @@
 #include <memory.h>
 #include <string.h>
 #include <psos+/psos.h>
+#include <asm-generic/bits/current.h>
 
 extern int __psos_muxid;
 
@@ -88,6 +89,8 @@ static void *psos_task_trampoline(void *cookie)
 				iargs->tid_r, iargs->completionp);
 	if (err)
 		goto fail;
+
+	xeno_set_current();
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -173,14 +176,21 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 		u_long flags,
 		u_long *tid_r)
 {
+	int err;
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
 
-	return XENOMAI_SKINCALL5(__psos_muxid,
-				 __psos_t_create,
-				 name, prio, flags,
-				 tid_r, NULL);
+	err = XENOMAI_SKINCALL5(__psos_muxid,
+				__psos_t_create,
+				name, prio, flags,
+				tid_r, NULL);
+
+	if (!err)
+		xeno_set_current();
+
+	return err;
 }
 
 u_long t_start(u_long tid,

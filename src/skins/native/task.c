@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <native/syscall.h>
 #include <native/task.h>
+#include <asm-generic/bits/current.h>
 #include "wrappers.h"
 
 extern pthread_key_t __native_tskey;
@@ -87,6 +88,8 @@ static void *rt_task_trampoline(void *cookie)
 				iargs->completionp);
 	if (err)
 		goto fail;
+
+	xeno_set_current();
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -169,6 +172,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	struct sched_param param;
 	struct rt_arg_bulk bulk;
 	RT_TASK task_desc;
+	int err;
 
 	if (task == NULL)
 		task = &task_desc; /* Discarded. */
@@ -191,8 +195,13 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	bulk.a4 = (u_long)mode;
 	bulk.a5 = (u_long)pthread_self();
 
-	return XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
-				 NULL);
+	err = XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
+				NULL);
+
+	if (!err)
+		xeno_set_current();
+
+	return err;
 }
 
 int rt_task_bind(RT_TASK *task, const char *name, RTIME timeout)

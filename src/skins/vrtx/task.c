@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <vrtx/vrtx.h>
+#include <asm-generic/bits/current.h>
 
 extern pthread_key_t __vrtx_tskey;
 
@@ -115,6 +116,8 @@ static void *vrtx_task_trampoline(void *cookie)
 				&bulk, iargs->tid_r, iargs->completionp);
 	if (err)
 		goto fail;
+
+	xeno_set_current();
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the

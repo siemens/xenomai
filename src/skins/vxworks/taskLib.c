@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <vxworks/vxworks.h>
+#include <asm-generic/bits/current.h>
 #include "wrappers.h"
 
 extern pthread_key_t __vxworks_tskey;
@@ -116,6 +117,8 @@ static void *wind_task_trampoline(void *cookie)
 				&bulk, iargs->pTcb, iargs->completionp);
 	if (err)
 		goto fail;
+
+	xeno_set_current();
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the

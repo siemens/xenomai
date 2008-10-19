@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <asm/xenomai/system.h>
 #include <uitron/uitron.h>
+#include <asm-generic/bits/current.h>
 
 extern int __uitron_muxid;
 
@@ -89,6 +90,8 @@ static void *uitron_task_trampoline(void *cookie)
 	if (err)
 		goto fail;
 
+	xeno_set_current();
+
 	/* iargs->pk_ctsk might not be valid anymore, after our parent
 	   was released from the completion sync, so do not
 	   dereference this pointer. */
@@ -150,7 +153,7 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 ER shd_tsk(ID tskid, T_CTSK *pk_ctsk) /* Xenomai extension. */
 {
 	struct sched_param param;
-	int policy;
+	int policy, err;
 	
 	/* Make sure the POSIX library caches the right priority. */
 	policy = uitron_task_set_posix_priority(pk_ctsk->itskpri, &param);
@@ -160,10 +163,15 @@ ER shd_tsk(ID tskid, T_CTSK *pk_ctsk) /* Xenomai extension. */
 
 	old_sigharden_handler = signal(SIGHARDEN, &uitron_task_sigharden);
 
-	return XENOMAI_SKINCALL3(__uitron_muxid,
-				 __uitron_cre_tsk,
-				 tskid, pk_ctsk,
-				 NULL);
+	err = XENOMAI_SKINCALL3(__uitron_muxid,
+				__uitron_cre_tsk,
+				tskid, pk_ctsk,
+				NULL);
+
+	if (!err)
+		xeno_set_current();
+
+	return err;
 }
 
 ER del_tsk(ID tskid)
