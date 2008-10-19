@@ -26,13 +26,14 @@
 #endif /* __KERNEL__ */
 
 #define __xn_feat_smp         0x80000000
-#define __xn_feat_fastsynch   0x40000000
-#define __xn_feat_nofastsynch 0x20000000
+#define __xn_feat_nosmp       0x40000000
+#define __xn_feat_fastsynch   0x20000000
+#define __xn_feat_nofastsynch 0x10000000
 
 #ifdef CONFIG_SMP
 #define __xn_feat_smp_mask __xn_feat_smp
 #else
-#define __xn_feat_smp_mask 0
+#define __xn_feat_smp_mask __xn_feat_nosmp
 #endif
 
 #ifdef CONFIG_XENO_FASTSYNCH
@@ -41,22 +42,29 @@
 #define __xn_feat_fastsynch_mask __xn_feat_nofastsynch
 #endif
 
-#define __xn_feat_generic_mask     (__xn_feat_smp_mask | __xn_feat_fastsynch_mask)
+/* List of generic features kernel or userland may support */
+#define __xn_feat_generic_mask \
+	(__xn_feat_smp_mask | __xn_feat_fastsynch_mask)
 
-#define __xn_feat_generic_man_mask (__xn_feat_fastsynch | __xn_feat_nofastsynch)
+/* List of features both sides have to agree on:
+   If userland supports it, the kernel has to provide it, too. */
+#define __xn_feat_generic_man_mask \
+	(__xn_feat_fastsynch | __xn_feat_nofastsynch | __xn_feat_nosmp)
 
 static inline const char *get_generic_feature_label (unsigned feature)
 {
-    switch (feature) {
-    	case __xn_feat_smp:
-	    return "smp";
-        case __xn_feat_fastsynch:
-	    return "fastsynch";
-        case __xn_feat_nofastsynch:
-	    return "nofastsynch";
-    	default:
-	    return 0;
-    }
+	switch (feature) {
+	case __xn_feat_smp:
+		return "smp";
+	case __xn_feat_nosmp:
+		return "nosmp";
+	case __xn_feat_fastsynch:
+		return "fastsynch";
+	case __xn_feat_nofastsynch:
+		return "nofastsynch";
+	default:
+		return 0;
+	}
 }
 
 #endif /* !_XENO_ASM_GENERIC_FEATURES_H */
