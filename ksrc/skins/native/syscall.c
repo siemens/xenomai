@@ -52,7 +52,8 @@ int __native_muxid;
 static int __rt_bind_helper(struct task_struct *p,
 			    struct pt_regs *regs,
 			    xnhandle_t *handlep,
-			    unsigned magic, void **objaddrp)
+			    unsigned magic, void **objaddrp,
+			    unsigned long objoffs)
 {
 	char name[XNOBJECT_NAME_LEN];
 	RTIME timeout;
@@ -82,7 +83,7 @@ static int __rt_bind_helper(struct task_struct *p,
 
 	/* Also validate the type of the bound object. */
 
-	if (xeno_test_magic(objaddr, magic)) {
+	if (xeno_test_magic(objaddr + objoffs, magic)) {
 		if (objaddrp)
 			*objaddrp = objaddr;
 	} else
@@ -91,6 +92,11 @@ static int __rt_bind_helper(struct task_struct *p,
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
+}
+
+static RT_TASK *__rt_task_lookup(xnhandle_t threadh)
+{
+	return thread2rtask(xnthread_lookup(threadh));
 }
 
 static RT_TASK *__rt_task_current(struct task_struct *p)
@@ -223,7 +229,9 @@ static int __rt_task_bind(struct pt_regs *regs)
 	RT_TASK_PLACEHOLDER ph;
 	int err;
 
-	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_TASK_MAGIC, NULL);
+	err =
+	    __rt_bind_helper(p, regs, &ph.opaque, XENO_TASK_MAGIC, NULL,
+			     -offsetof(RT_TASK, thread_base));
 
 	if (err)
 		return err;
@@ -253,7 +261,7 @@ static int __rt_task_start(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+	task = __rt_task_lookup(ph.opaque);
 
 	if (!task)
 		return -ESRCH;
@@ -279,7 +287,7 @@ static int __rt_task_suspend(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -302,7 +310,7 @@ static int __rt_task_resume(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+	task = __rt_task_lookup(ph.opaque);
 
 	if (!task)
 		return -ESRCH;
@@ -326,7 +334,7 @@ static int __rt_task_delete(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -364,7 +372,7 @@ static int __rt_task_set_periodic(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -418,7 +426,7 @@ static int __rt_task_set_priority(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -473,7 +481,7 @@ static int __rt_task_unblock(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+	task = __rt_task_lookup(ph.opaque);
 
 	if (!task)
 		return -ESRCH;
@@ -500,7 +508,7 @@ static int __rt_task_inquire(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -541,7 +549,7 @@ static int __rt_task_notify(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(p);
 
@@ -627,7 +635,7 @@ static int __rt_task_slice(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(current);
 
@@ -667,7 +675,7 @@ static int __rt_task_send(struct pt_regs *regs)
 					     sizeof(ph)))
 			return -EFAULT;
 
-		task = (RT_TASK *)xnregistry_fetch(ph.opaque);
+		task = __rt_task_lookup(ph.opaque);
 	} else
 		task = __rt_task_current(current);
 
@@ -1104,7 +1112,9 @@ static int __rt_sem_bind(struct pt_regs *regs)
 	RT_SEM_PLACEHOLDER ph;
 	int err;
 
-	err = __rt_bind_helper(current, regs, &ph.opaque, XENO_SEM_MAGIC, NULL);
+	err =
+	    __rt_bind_helper(current, regs, &ph.opaque, XENO_SEM_MAGIC,
+			     NULL, 0);
 
 	if (err)
 		return err;
@@ -1324,7 +1334,8 @@ static int __rt_event_bind(struct pt_regs *regs)
 	int err;
 
 	err =
-	    __rt_bind_helper(current, regs, &ph.opaque, XENO_EVENT_MAGIC, NULL);
+	    __rt_bind_helper(current, regs, &ph.opaque, XENO_EVENT_MAGIC,
+			     NULL, 0);
 
 	if (err)
 		return err;
@@ -1567,7 +1578,8 @@ static int __rt_mutex_bind(struct pt_regs *regs)
 	int err;
 
 	err =
-	    __rt_bind_helper(current, regs, &ph.opaque, XENO_MUTEX_MAGIC, NULL);
+	    __rt_bind_helper(current, regs, &ph.opaque, XENO_MUTEX_MAGIC,
+			     NULL, 0);
 
 	if (err)
 		return err;
@@ -1758,7 +1770,8 @@ static int __rt_cond_bind(struct pt_regs *regs)
 	int err;
 
 	err =
-	    __rt_bind_helper(current, regs, &ph.opaque, XENO_COND_MAGIC, NULL);
+	    __rt_bind_helper(current, regs, &ph.opaque, XENO_COND_MAGIC,
+			     NULL, 0);
 
 	if (err)
 		return err;
@@ -2008,7 +2021,7 @@ static int __rt_queue_bind(struct pt_regs *regs)
 
 	err =
 	    __rt_bind_helper(p, regs, &ph.opaque, XENO_QUEUE_MAGIC,
-			     (void **)&q);
+			     (void **)&q, 0);
 
 	if (err)
 		goto unlock_and_exit;
@@ -2507,7 +2520,7 @@ static int __rt_heap_bind(struct pt_regs *regs)
 
 	err =
 	    __rt_bind_helper(p, regs, &ph.opaque, XENO_HEAP_MAGIC,
-			     (void **)&heap);
+			     (void **)&heap, 0);
 
 	if (err)
 		goto unlock_and_exit;
@@ -3018,7 +3031,7 @@ static int __rt_intr_bind(struct pt_regs *regs)
 	RT_INTR_PLACEHOLDER ph;
 	int err;
 
-	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_INTR_MAGIC, NULL);
+	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_INTR_MAGIC, NULL, 0);
 
 	if (err)
 		return err;
@@ -3275,7 +3288,7 @@ static int __rt_pipe_bind(struct pt_regs *regs)
 	RT_PIPE_PLACEHOLDER ph;
 	int err;
 
-	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_PIPE_MAGIC, NULL);
+	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_PIPE_MAGIC, NULL, 0);
 
 	if (err)
 		return err;
@@ -3551,7 +3564,9 @@ static int __rt_buffer_bind(struct pt_regs *regs)
 	RT_BUFFER_PLACEHOLDER ph;
 	int ret;
 
-	ret = __rt_bind_helper(current, regs, &ph.opaque, XENO_BUFFER_MAGIC, NULL);
+	ret =
+	    __rt_bind_helper(current, regs, &ph.opaque, XENO_BUFFER_MAGIC,
+			     NULL, 0);
 	if (ret)
 		return ret;
 

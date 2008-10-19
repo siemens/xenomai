@@ -170,14 +170,11 @@ STATUS taskInit(WIND_TCB *pTcb,
 	appendq(&wind_tasks_q, &pTcb->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (xnregistry_enter(pTcb->name,
-			     pTcb, &xnthread_handle(&pTcb->threadbase), NULL)) {
+	if (xnthread_register(&pTcb->threadbase, pTcb->name)) {
 		wind_errnoset(S_objLib_OBJ_ID_ERROR);
 		taskDeleteForce((TASK_ID) pTcb);
 		return ERROR;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return OK;
 }
@@ -617,11 +614,6 @@ static void wind_task_delete_hook(xnthread_t *thread)
 
 	if (xnthread_get_magic(thread) != VXWORKS_SKIN_MAGIC)
 		return;
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (xnthread_handle(thread) != XN_NO_HANDLE)
-	    xnregistry_remove(xnthread_handle(thread));
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	task = thread2wind_task(thread);
 

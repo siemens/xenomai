@@ -42,6 +42,11 @@
 
 int __wind_muxid;
 
+static inline WIND_TCB *__wind_lookup_task(xnhandle_t threadh)
+{
+	return thread2wind_task(xnthread_lookup(threadh));
+}
+
 static WIND_TCB *__wind_task_current(struct task_struct *p)
 {
 	xnthread_t *thread = xnshadow_thread(p);
@@ -146,7 +151,7 @@ out:
 
 static int __wind_task_activate(struct pt_regs *regs)
 {
-	WIND_TCB *pTcb = (WIND_TCB *)xnregistry_fetch(__xn_reg_arg1(regs));
+	WIND_TCB *pTcb = __wind_lookup_task(__xn_reg_arg1(regs));
 
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
@@ -167,7 +172,7 @@ static int __wind_task_deleteforce(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 
 	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+		pTcb = __wind_lookup_task(handle);
 	else
 		pTcb = __wind_task_current(current);
 
@@ -190,7 +195,7 @@ static int __wind_task_delete(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 
 	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+		pTcb = __wind_lookup_task(handle);
 	else
 		pTcb = __wind_task_current(current);
 
@@ -213,7 +218,7 @@ static int __wind_task_suspend(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 
 	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+		pTcb = __wind_lookup_task(handle);
 	else
 		pTcb = __wind_task_current(current);
 
@@ -232,7 +237,7 @@ static int __wind_task_suspend(struct pt_regs *regs)
 
 static int __wind_task_resume(struct pt_regs *regs)
 {
-	WIND_TCB *pTcb = (WIND_TCB *)xnregistry_fetch(__xn_reg_arg1(regs));
+	WIND_TCB *pTcb = __wind_lookup_task(__xn_reg_arg1(regs));
 
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
@@ -275,7 +280,7 @@ static int __wind_task_priorityset(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 
 	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+		pTcb = __wind_lookup_task(handle);
 	else
 		pTcb = __wind_task_current(current);
 
@@ -299,7 +304,7 @@ static int __wind_task_priorityget(struct pt_regs *regs)
 	int prio;
 
 	if (handle)
-		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+		pTcb = __wind_lookup_task(handle);
 	else
 		pTcb = __wind_task_current(current);
 
@@ -374,7 +379,7 @@ static int __wind_task_verifyid(struct pt_regs *regs)
 	xnhandle_t handle = __xn_reg_arg1(regs);
 	WIND_TCB *pTcb;
 
-	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+	pTcb = __wind_lookup_task(handle);
 
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
@@ -574,7 +579,7 @@ static int __wind_taskinfo_name(struct pt_regs *regs)
 	const char *name;
 	WIND_TCB *pTcb;
 
-	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+	pTcb = __wind_lookup_task(handle);
 
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
@@ -618,7 +623,7 @@ static int __wind_taskinfo_status(struct pt_regs *regs)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+	pTcb = __wind_lookup_task(handle);
 
 	if (!pTcb || pTcb->magic != WIND_TASK_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -643,7 +648,7 @@ static int __wind_taskinfo_get(struct pt_regs *regs)
 	WIND_TCB *pTcb;
 	int err;
 
-	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+	pTcb = __wind_lookup_task(handle);
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
 
@@ -673,7 +678,7 @@ static int __wind_errno_taskset(struct pt_regs *regs)
  		return 0;
  	}
  
- 	pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+ 	pTcb = __wind_lookup_task(handle);
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
 
@@ -696,7 +701,7 @@ static int __wind_errno_taskget(struct pt_regs *regs)
  	if (!handle)
  		errcode = wind_errnoget();
  	else {
- 		pTcb = (WIND_TCB *)xnregistry_fetch(handle);
+ 		pTcb = __wind_lookup_task(handle);
  		if (!pTcb)
  			return S_objLib_OBJ_ID_ERROR;
  

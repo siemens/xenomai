@@ -35,7 +35,6 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/synch.h>
-#include <nucleus/thread.h>
 
 struct xnpnode;
 

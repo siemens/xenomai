@@ -1,3 +1,8 @@
+2008-10-19  Jan Kiszka  <jan.kiszka@siemens.com>
+
+	* ksrc/skins, include/nucleus, ksrc/nucleus: Generic thread
+	registration.
+	
 2008-10-18  Jan Kiszka  <jan.kiszka@siemens.com>
  
 	* ksrc/nucleus/pipe.c (xnpipe_open): Fix context unwinding upon

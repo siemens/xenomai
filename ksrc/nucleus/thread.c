@@ -136,6 +136,8 @@ void xnthread_cleanup_tcb(xnthread_t *thread)
 #endif
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
+	if (thread->registry.handle != XN_NO_HANDLE)
+		xnregistry_remove(thread->registry.handle);
 	thread->registry.handle = XN_NO_HANDLE;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 }

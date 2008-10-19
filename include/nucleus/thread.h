@@ -130,6 +130,7 @@
 
 #include <nucleus/stat.h>
 #include <nucleus/timer.h>
+#include <nucleus/registry.h>
 
 #ifdef __XENO_SIM__
 /* Pseudo-status (must not conflict with other bits) */
@@ -391,6 +392,30 @@ static inline xnticks_t xnthread_get_period(xnthread_t *thread)
 
 	return period;
 }
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+static inline int xnthread_register(xnthread_t *thread, const char *name)
+{
+	return xnregistry_enter(name, thread, &xnthread_handle(thread), NULL);
+}
+
+static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
+{
+	xnthread_t *thread = xnregistry_fetch(threadh);
+
+	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
+}
+#else /* !CONFIG_XENO_OPT_REGISTRY */
+static inline int xnthread_register(xnthread_t *thread, const char *name)
+{
+	return 0;
+}
+
+static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
+{
+	return NULL;
+}
+#endif /* !CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef __cplusplus
 }

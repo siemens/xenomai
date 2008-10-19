@@ -46,7 +46,6 @@
 
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
-#include <nucleus/registry.h>
 #include <native/task.h>
 #include <native/timer.h>
 
@@ -79,11 +78,6 @@ static void __task_delete_hook(xnthread_t *thread)
 	xnsynch_destroy(&task->mrecv);
 	xnsynch_destroy(&task->msendq);
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (xnthread_handle(&task->thread_base) != XN_NO_HANDLE)
-		xnregistry_remove(xnthread_handle(&task->thread_base));
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xnsynch_destroy(&task->safesynch);
 
@@ -285,20 +279,15 @@ int rt_task_create(RT_TASK *task,
 	appendq(&__xeno_task_q, &task->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	/* <!> Since xnregister_enter() may reschedule, only register
 	   complete objects, so that the registry cannot return handles to
 	   half-baked objects... */
 
 	if (name) {
-		err = xnregistry_enter(task->rname,
-				       task,
-				       &xnthread_handle(&task->thread_base),
-				       NULL);
+		err = xnthread_register(&task->thread_base, task->rname);
 		if (err)
 			xnpod_delete_thread(&task->thread_base);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }

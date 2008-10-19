@@ -17,7 +17,6 @@
  * 02111-1307, USA.
  */
 
-#include <nucleus/registry.h>
 #include <psos+/task.h>
 #include <psos+/tm.h>
 
@@ -44,11 +43,6 @@ static void psostask_delete_hook(xnthread_t *thread)
 
 	if (xnthread_get_magic(thread) != PSOS_SKIN_MAGIC)
 		return;
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	if (xnthread_handle(thread) != XN_NO_HANDLE)
-		xnregistry_remove(xnthread_handle(thread));
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	task = thread2psostask(thread);
 
@@ -95,6 +89,7 @@ u_long t_create(const char *name,
 {
 	xnflags_t bflags = 0;
 	psostask_t *task;
+	u_long err;
 	spl_t s;
 	int n;
 
@@ -159,16 +154,11 @@ u_long t_create(const char *name,
 	*tid_r = (u_long)task;
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		u_long err = xnregistry_enter(task->name,
-					      task, &xnthread_handle(&task->threadbase), NULL);
-		if (err) {
-			t_delete((u_long)task);
-			return err;
-		}
+	err = xnthread_register(&task->threadbase, task->name);
+	if (err) {
+		t_delete((u_long)task);
+		return err;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xnarch_create_display(&task->threadbase, task->name, psostask);
 

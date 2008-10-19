@@ -44,6 +44,11 @@
 
 int __psos_muxid;
 
+static inline psostask_t *__psos_task_lookup(xnhandle_t taskh)
+{
+	return thread2psostask(xnthread_lookup(taskh));
+}
+
 static psostask_t *__psos_task_current(struct task_struct *p)
 {
 	xnthread_t *thread = xnshadow_thread(p);
@@ -131,7 +136,7 @@ static int __t_start(struct pt_regs *regs)
 	psostask_t *task;
 
 	handle = __xn_reg_arg1(regs);
-	task = (psostask_t *)xnregistry_fetch(handle);
+	task = __psos_task_lookup(handle);
 
 	if (!task)
 		return ERR_OBJID;
@@ -162,7 +167,7 @@ static int __t_delete(struct pt_regs *regs)
 	handle = __xn_reg_arg1(regs);
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
@@ -182,7 +187,7 @@ static int __t_suspend(struct pt_regs *regs)
 	psostask_t *task;
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
@@ -202,7 +207,7 @@ static int __t_resume(struct pt_regs *regs)
 	psostask_t *task;
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
@@ -284,7 +289,7 @@ static int __t_setpri(struct pt_regs *regs)
 	psostask_t *task;
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
@@ -314,7 +319,7 @@ static int __ev_send(struct pt_regs *regs)
 	u_long events;
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
@@ -1317,7 +1322,7 @@ static int __as_send(struct pt_regs *regs)
 	psostask_t *task;
 
 	if (handle)
-		task = (psostask_t *)xnregistry_fetch(handle);
+		task = __psos_task_lookup(handle);
 	else
 		task = __psos_task_current(current);
 
