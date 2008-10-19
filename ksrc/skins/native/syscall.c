@@ -24,6 +24,7 @@
 #include <nucleus/heap.h>
 #include <nucleus/shadow.h>
 #include <nucleus/registry.h>
+#include <nucleus/sys_ppd.h>
 #include <native/syscall.h>
 #include <native/task.h>
 #include <native/timer.h>
@@ -1532,6 +1533,8 @@ static int __rt_event_inquire(struct pt_regs *regs)
 static int __rt_mutex_create(struct pt_regs *regs)
 {
 	char name[XNOBJECT_NAME_LEN];
+	xnarch_atomic_t *fastlock = NULL;
+	xnheap_t *sem_heap;
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
 	int err;
@@ -1546,22 +1549,45 @@ static int __rt_mutex_create(struct pt_regs *regs)
 	} else
 		*name = '\0';
 
+	sem_heap = &xnsys_ppd_get(*name != '\0')->sem_heap;
+
 	mutex = (RT_MUTEX *)xnmalloc(sizeof(*mutex));
 
 	if (!mutex)
 		return -ENOMEM;
 
-	err = rt_mutex_create(mutex, name);
+#ifdef CONFIG_XENO_FASTSYNCH
+	fastlock = xnheap_alloc(sem_heap, sizeof(xnarch_atomic_t));
+
+	if (!fastlock) {
+		xnfree(mutex);
+		return -ENOMEM;
+	}
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	err = rt_mutex_create_inner(mutex, name, fastlock);
 
 	if (err == 0) {
 		mutex->cpid = current->pid;
 		/* Copy back the registry handle to the ph struct. */
 		ph.opaque = mutex->handle;
+#ifdef CONFIG_XENO_FASTSYNCH
+		/* The lock address will be finished in user space. */
+		ph.fastlock =
+			(void *)xnheap_mapped_offset(sem_heap, fastlock);
+		if (*name != '\0')
+			xnsynch_set_flags(&mutex->synch_base,
+					  RT_MUTEX_EXPORTED);
+#endif /* CONFIG_XENO_FASTSYNCH */
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
 					   sizeof(ph)))
 			err = -EFAULT;
-	} else
+	} else {
+#ifdef CONFIG_XENO_FASTSYNCH
+		xnheap_free(&xnsys_ppd_get(*name != '\0')->sem_heap, fastlock);
+#endif /* CONFIG_XENO_FASTSYNCH */
 		xnfree(mutex);
+	}
 
 	return err;
 }
@@ -1575,14 +1601,21 @@ static int __rt_mutex_create(struct pt_regs *regs)
 static int __rt_mutex_bind(struct pt_regs *regs)
 {
 	RT_MUTEX_PLACEHOLDER ph;
+	RT_MUTEX *mutex;
 	int err;
 
 	err =
 	    __rt_bind_helper(current, regs, &ph.opaque, XENO_MUTEX_MAGIC,
-			     NULL, 0);
+			     (void **)&mutex, 0);
 
 	if (err)
 		return err;
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	ph.fastlock =
+		(void *)xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap,
+					     mutex->synch_base.fastlock);
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
 			      sizeof(ph)))
@@ -1610,10 +1643,17 @@ static int __rt_mutex_delete(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	err = rt_mutex_delete(mutex);
+	err = rt_mutex_delete_inner(mutex);
 
-	if (!err && mutex->cpid)
+	if (!err && mutex->cpid) {
+#ifdef CONFIG_XENO_FASTSYNCH
+		int global = xnsynch_test_flags(&mutex->synch_base,
+						RT_MUTEX_EXPORTED);
+		xnheap_free(&xnsys_ppd_get(global)->sem_heap,
+			    mutex->synch_base.fastlock);
+#endif /* CONFIG_XENO_FASTSYNCH */
 		xnfree(mutex);
+	}
 
 	return err;
 }
@@ -1626,13 +1666,14 @@ static int __rt_mutex_delete(struct pt_regs *regs)
 
 static int __rt_mutex_acquire(struct pt_regs *regs)
 {
-	RT_MUTEX_PLACEHOLDER ph;
+	RT_MUTEX_PLACEHOLDER __user *ph;
 	xntmode_t timeout_mode;
+	xnhandle_t mutexh;
 	RT_MUTEX *mutex;
 	RTIME timeout;
 
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
+	ph = (RT_MUTEX_PLACEHOLDER __user *)__xn_reg_arg1(regs);
+	if (__xn_safe_copy_from_user(&mutexh, &ph->opaque, sizeof(mutexh)))
 		return -EFAULT;
 
 	timeout_mode = __xn_reg_arg2(regs);
@@ -1641,12 +1682,12 @@ static int __rt_mutex_acquire(struct pt_regs *regs)
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
+	mutex = (RT_MUTEX *)xnregistry_fetch(mutexh);
 
 	if (!mutex)
 		return -ESRCH;
 
-	return rt_mutex_acquire_inner(mutex, timeout_mode, timeout);
+	return rt_mutex_acquire_inner(mutex, timeout, timeout_mode);
 }
 
 /*
@@ -1655,14 +1696,15 @@ static int __rt_mutex_acquire(struct pt_regs *regs)
 
 static int __rt_mutex_release(struct pt_regs *regs)
 {
-	RT_MUTEX_PLACEHOLDER ph;
+	RT_MUTEX_PLACEHOLDER __user *ph;
+	xnhandle_t mutexh;
 	RT_MUTEX *mutex;
 
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
+	ph = (RT_MUTEX_PLACEHOLDER __user *)__xn_reg_arg1(regs);
+	if (__xn_safe_copy_from_user(&mutexh, &ph->opaque, sizeof(mutexh)))
 		return -EFAULT;
 
-	mutex = (RT_MUTEX *)xnregistry_fetch(ph.opaque);
+	mutex = (RT_MUTEX *)xnregistry_fetch(mutexh);
 
 	if (!mutex)
 		return -ESRCH;

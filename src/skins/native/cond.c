@@ -41,16 +41,46 @@ int rt_cond_delete(RT_COND *cond)
 
 int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
+#ifdef CONFIG_XENO_FASTSYNCH
+	int saved_lockcnt, err;
+
+	saved_lockcnt = mutex->lockcnt;
+
+	err = XENOMAI_SKINCALL4(__native_muxid,
+				__native_cond_wait, cond, mutex,
+				XN_RELATIVE, &timeout);
+
+	mutex->lockcnt = saved_lockcnt;
+
+	return err;
+
+#else /* !CONFIG_XENO_FASTSYNCH */
 	return XENOMAI_SKINCALL4(__native_muxid,
 				 __native_cond_wait, cond, mutex,
 				 XN_RELATIVE, &timeout);
+#endif /* !CONFIG_XENO_FASTSYNCH */
 }
 
 int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
+#ifdef CONFIG_XENO_FASTSYNCH
+	int saved_lockcnt, err;
+
+	saved_lockcnt = mutex->lockcnt;
+
+	err = XENOMAI_SKINCALL4(__native_muxid,
+				__native_cond_wait, cond, mutex,
+				XN_REALTIME, &timeout);
+
+	mutex->lockcnt = saved_lockcnt;
+
+	return err;
+
+#else /* !CONFIG_XENO_FASTSYNCH */
 	return XENOMAI_SKINCALL4(__native_muxid,
 				 __native_cond_wait, cond, mutex,
 				 XN_REALTIME, &timeout);
+#endif /* !CONFIG_XENO_FASTSYNCH */
 }
 
 int rt_cond_signal(RT_COND *cond)

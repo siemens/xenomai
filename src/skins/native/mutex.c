@@ -16,21 +16,51 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <limits.h>
+#include <nucleus/synch.h>
 #include <native/syscall.h>
 #include <native/mutex.h>
+#include <asm-generic/bits/current.h>
 
 extern int __native_muxid;
+extern unsigned long xeno_sem_heap[2];
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
-	return XENOMAI_SKINCALL2(__native_muxid,
-				 __native_mutex_create, mutex, name);
+	int err;
+
+	err = XENOMAI_SKINCALL2(__native_muxid,
+				__native_mutex_create, mutex, name);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (!err) {
+		mutex->fastlock = (xnarch_atomic_t *)
+			(xeno_sem_heap[(name && *name) ? 1 : 0] +
+			 (unsigned long)mutex->fastlock);
+		mutex->lockcnt = 0;
+	}
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	return err;
 }
 
 int rt_mutex_bind(RT_MUTEX *mutex, const char *name, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_mutex_bind, mutex, name, &timeout);
+	int err;
+
+	err = XENOMAI_SKINCALL3(__native_muxid,
+				__native_mutex_bind, mutex, name, &timeout);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (!err) {
+		mutex->fastlock = (xnarch_atomic_t *)
+			(xeno_sem_heap[(name && *name) ? 1 : 0] +
+			 (unsigned long)mutex->fastlock);
+		mutex->lockcnt = 0;
+	}
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	return err;
 }
 
 int rt_mutex_delete(RT_MUTEX *mutex)
@@ -38,20 +68,76 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_delete, mutex);
 }
 
+static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode)
+{
+	int err;
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnhandle_t cur;
+
+	cur = xeno_get_current();
+	if (!cur)
+		return -EPERM;
+
+	err = xnsynch_fast_acquire(mutex->fastlock, cur);
+	if (likely(!err)) {
+		mutex->lockcnt = 1;
+		return 0;
+	}
+
+	if (err == -EBUSY) {
+		if (mutex->lockcnt == UINT_MAX)
+			return -EAGAIN;
+
+		mutex->lockcnt++;
+		return 0;
+	}
+
+	if (timeout == TM_NONBLOCK && mode == XN_RELATIVE)
+		return -EWOULDBLOCK;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	err = XENOMAI_SKINCALL3(__native_muxid,
+				__native_mutex_acquire, mutex, mode, &timeout);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (!err)
+		mutex->lockcnt = 1;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	return err;
+}
+
 int rt_mutex_acquire(RT_MUTEX *mutex, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_mutex_acquire, mutex, XN_RELATIVE, &timeout);
+	return rt_mutex_acquire_inner(mutex, timeout, XN_RELATIVE);
 }
 
 int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
-				 __native_mutex_acquire, mutex, XN_REALTIME, &timeout);
+	return rt_mutex_acquire_inner(mutex, timeout, XN_REALTIME);
 }
 
 int rt_mutex_release(RT_MUTEX *mutex)
 {
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnhandle_t cur;
+
+	cur = xeno_get_current();
+	if (!cur)
+		return -EPERM;
+
+	if (unlikely(xnsynch_fast_owner_check(mutex->fastlock, cur) != 0))
+		return -EPERM;
+
+	if (mutex->lockcnt > 1) {
+		mutex->lockcnt--;
+		return 0;
+	}
+
+	if (likely(xnsynch_fast_release(mutex->fastlock, cur)))
+		return 0;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
 	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_release, mutex);
 }
 

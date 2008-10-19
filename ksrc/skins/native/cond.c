@@ -378,7 +378,7 @@ int rt_cond_broadcast(RT_COND *cond)
 int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 		       xntmode_t timeout_mode, RTIME timeout)
 {
-	int err = 0, kicked = 0;
+	int err, kicked = 0;
 	xnthread_t *thread;
 	int lockcnt;
 	spl_t s;
@@ -407,15 +407,14 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 
 	thread = xnpod_current_thread();
 
-	if (thread != xnsynch_owner(&mutex->synch_base)) {
-		err = -EPERM;
+	err = xnsynch_owner_check(&mutex->synch_base, thread);
+
+	if (err)
 		goto unlock_and_exit;
-	}
 
 	/*
 	 * We can't use rt_mutex_release since that might reschedule
-	 * before enter xnsynch_sleep_on, hence most of the code is
-	 * duplicated here.
+	 * before enter xnsynch_sleep_on.
 	 */
 	lockcnt = mutex->lockcnt; /* Leave even if mutex is nested */
 

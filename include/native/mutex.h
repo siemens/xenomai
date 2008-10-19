@@ -32,7 +32,7 @@ struct rt_task;
  */
 typedef struct rt_mutex_info {
 
-	int lockcnt;		/**< Lock nesting level (> 0 means "locked"). */
+	int locked;		/**< > 0 if mutex is locked. */
 
 	int nwaiters;		/**< Number of pending tasks. */
 
@@ -44,7 +44,15 @@ typedef struct rt_mutex_info {
 } RT_MUTEX_INFO;
 
 typedef struct rt_mutex_placeholder {
+
 	xnhandle_t opaque;
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnarch_atomic_t *fastlock;
+
+	int lockcnt;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
 } RT_MUTEX_PLACEHOLDER;
 
 #if (defined(__KERNEL__) || defined(__XENO_SIM__)) && !defined(DOXYGEN_CPP)
@@ -53,6 +61,8 @@ typedef struct rt_mutex_placeholder {
 #include <native/ppd.h>
 
 #define XENO_MUTEX_MAGIC 0x55550505
+
+#define RT_MUTEX_EXPORTED	XNSYNCH_SPARE0	/* Mutex registered by name */
 
 typedef struct __rt_mutex {
 
@@ -74,7 +84,7 @@ typedef struct __rt_mutex {
 
 #define rlink2mutex(ln)		container_of(ln, RT_MUTEX, rlink)
 
-    xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
+	xnqueue_t *rqueue;	/* !< Backpointer to resource queue. */
 
 } RT_MUTEX;
 
@@ -93,9 +103,8 @@ static inline void __native_mutex_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_MUTEX, rq, mutex);
 }
 
-int rt_mutex_acquire_inner(RT_MUTEX *mutex,
-			   xntmode_t timeout_mode,
-			   RTIME timeout);
+int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
+			   xntmode_t timeout_mode);
 
 #else /* !CONFIG_XENO_OPT_NATIVE_MUTEX */
 
@@ -137,6 +146,10 @@ static inline int rt_mutex_unbind (RT_MUTEX *mutex)
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
+			  xnarch_atomic_t *fastlock);
+int rt_mutex_delete_inner(RT_MUTEX *mutex);
 
 /* Public interface. */
 

@@ -11,7 +11,10 @@
 
 	* src/skins: Spread xeno_get_current.
 
-	* ksrc/skins/native (mutex support): Refactor lockcnt tracking.
+	* ksrc/skins/native (mutex support):
+
+	- Refactor lockcnt tracking.
+	- Use fast xnsynch services.
 
 	* ksrc/skins/posix, src/skins/posix: Convert to fast xnsynch
 	services.
