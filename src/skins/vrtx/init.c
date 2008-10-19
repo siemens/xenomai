@@ -26,9 +26,10 @@
 #include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
 
-pthread_key_t __vrtx_tskey;
-
 int __vrtx_muxid = -1;
+
+#ifndef HAVE___THREAD
+pthread_key_t __vrtx_tskey;
 
 static void __flush_tsd(void *tsd)
 {
@@ -37,16 +38,21 @@ static void __flush_tsd(void *tsd)
 }
 
 static __attribute__ ((constructor))
-void __init_xeno_interface(void)
+void __init_vrtx_tskey(void)
 {
-	__vrtx_muxid =
-	    xeno_bind_skin(VRTX_SKIN_MAGIC, "vrtx", "xeno_vrtx");
-	__vrtx_muxid = __xn_mux_shifted_id(__vrtx_muxid);
-
 	/* Allocate a TSD key for indexing self task pointers. */
 
 	if (pthread_key_create(&__vrtx_tskey, &__flush_tsd) != 0) {
 		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
 		exit(1);
 	}
+}
+#endif /* !HAVE___THREAD */
+
+static __attribute__ ((constructor))
+void __init_xeno_interface(void)
+{
+	__vrtx_muxid =
+	    xeno_bind_skin(VRTX_SKIN_MAGIC, "vrtx", "xeno_vrtx");
+	__vrtx_muxid = __xn_mux_shifted_id(__vrtx_muxid);
 }

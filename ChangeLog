@@ -18,6 +18,8 @@
 
 	* ksrc/skins/posix, src/skins/posix: Convert to fast xnsynch
 	services.
+
+	* src/skins: Use __thread storage class where applicable.
 	
 2008-10-18  Jan Kiszka  <jan.kiszka@siemens.com>
  

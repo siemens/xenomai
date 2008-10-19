@@ -29,7 +29,11 @@
 #include <vrtx/vrtx.h>
 #include <asm-generic/bits/current.h>
 
+#ifdef HAVE___THREAD
+__thread TCB __vrtx_tcb __attribute__ ((tls_model ("initial-exec")));
+#else /* !HAVE___THREAD */
 extern pthread_key_t __vrtx_tskey;
+#endif /* !HAVE___THREAD */
 
 extern int __vrtx_muxid;
 
@@ -81,7 +85,9 @@ static void *vrtx_task_trampoline(void *cookie)
 	struct sched_param param;
 	int policy;
 	long err;
+#ifndef HAVE___THREAD
 	TCB *tcb;
+#endif /* !HAVE___THREAD */
 
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
@@ -96,6 +102,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+#ifndef HAVE___THREAD
 	tcb = (TCB *) malloc(sizeof(*tcb));
 	if (tcb == NULL) {
 		fprintf(stderr, "Xenomai: failed to allocate local TCB?!\n");
@@ -104,6 +111,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	}
 
 	pthread_setspecific(__vrtx_tskey, tcb);
+#endif /* !HAVE___THREAD */
 
 	old_sigharden_handler = signal(SIGHARDEN, &vrtx_task_sigharden);
 
@@ -224,7 +232,11 @@ TCB *sc_tinquiry(int pinfo[], int tid, int *errp)
 {
 	TCB *tcb;
 
-	tcb = (TCB *) pthread_getspecific(__vrtx_tskey);	/* Cannot fail. */
+#ifdef HAVE___THREAD
+	tcb = &__vrtx_tcb;
+#else /* !HAVE___THREAD */
+	tcb = (TCB *) pthread_getspecific(__vrtx_tskey); /* Cannot fail. */
+#endif /* !HAVE___THREAD */
 
 	*errp = XENOMAI_SKINCALL3(__vrtx_muxid,
 				  __vrtx_tinquiry, pinfo, tcb, tid);

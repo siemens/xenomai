@@ -29,7 +29,14 @@
 #include <asm-generic/bits/current.h>
 #include "wrappers.h"
 
+#ifdef HAVE___THREAD
+__thread RT_TASK __native_self __attribute__ ((tls_model ("initial-exec"))) = {
+	.opaque = XN_NO_HANDLE,
+	.opaque2 = 0
+};
+#else /* !HAVE___THREAD */
 extern pthread_key_t __native_tskey;
+#endif /* !HAVE___THREAD */
 
 extern int __native_muxid;
 
@@ -90,6 +97,10 @@ static void *rt_task_trampoline(void *cookie)
 		goto fail;
 
 	xeno_set_current();
+
+#ifdef HAVE___THREAD
+	__native_self = *iargs->task;
+#endif /* HAVE___THREAD */
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -316,6 +327,15 @@ RT_TASK *rt_task_self(void)
 {
 	RT_TASK *self;
 
+#ifdef HAVE___THREAD
+	self = &__native_self;
+
+	if (self->opaque == XN_NO_HANDLE)
+		return NULL;
+
+#else /* !HAVE___THREAD */
+	RT_TASK *self;
+
 	self = (RT_TASK *)pthread_getspecific(__native_tskey);
 
 	if (self)
@@ -330,6 +350,7 @@ RT_TASK *rt_task_self(void)
 	}
 
 	pthread_setspecific(__native_tskey, self);
+#endif /* !HAVE___THREAD */
 
 	return self;
 }

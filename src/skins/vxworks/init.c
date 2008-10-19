@@ -26,9 +26,10 @@
 #include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
 
-pthread_key_t __vxworks_tskey;
-
 int __vxworks_muxid = -1;
+
+#ifndef HAVE___THREAD
+pthread_key_t __vxworks_tskey;
 
 static void __flush_tsd(void *tsd)
 {
@@ -37,16 +38,21 @@ static void __flush_tsd(void *tsd)
 }
 
 static __attribute__ ((constructor))
-void __init_xeno_interface(void)
+void __init_vxworks_tskey(void)
 {
-	__vxworks_muxid = xeno_bind_skin(VXWORKS_SKIN_MAGIC,
-					 "vxworks", "xeno_vxworks");
-	__vxworks_muxid = __xn_mux_shifted_id(__vxworks_muxid);
-
 	/* Allocate a TSD key for indexing self task pointers. */
 
 	if (pthread_key_create(&__vxworks_tskey, &__flush_tsd) != 0) {
 		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
 		exit(1);
 	}
+}
+#endif /* !HAVE___THREAD */
+
+static __attribute__ ((constructor))
+void __init_xeno_interface(void)
+{
+	__vxworks_muxid = xeno_bind_skin(VXWORKS_SKIN_MAGIC,
+					 "vxworks", "xeno_vxworks");
+	__vxworks_muxid = __xn_mux_shifted_id(__vxworks_muxid);
 }

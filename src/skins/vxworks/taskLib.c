@@ -30,7 +30,14 @@
 #include <asm-generic/bits/current.h>
 #include "wrappers.h"
 
+#ifdef HAVE___THREAD
+__thread WIND_TCB
+__vxworks_self __attribute__ ((tls_model ("initial-exec"))) = {
+	.handle = XN_NO_HANDLE
+};
+#else /* !HAVE___THREAD */
 extern pthread_key_t __vxworks_tskey;
+#endif /* !HAVE___THREAD */
 
 extern int __vxworks_muxid;
 
@@ -119,6 +126,10 @@ static void *wind_task_trampoline(void *cookie)
 		goto fail;
 
 	xeno_set_current();
+
+#ifdef HAVE___THREAD
+	__vxworks_self = *iargs->pTcb;
+#endif /* HAVE___THREAD */
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -309,8 +320,14 @@ STATUS taskResume(TASK_ID task_id)
 
 TASK_ID taskIdSelf(void)
 {
-	WIND_TCB *self = (WIND_TCB *)pthread_getspecific(__vxworks_tskey);
+#ifdef HAVE___THREAD
+	return __vxworks_self.handle;
+
+#else /* !HAVE___THREAD */
+	WIND_TCB *self;
 	int err;
+
+	self = (WIND_TCB *)pthread_getspecific(__vxworks_tskey);
 
 	if (self)
 		return self->handle;
@@ -332,6 +349,7 @@ TASK_ID taskIdSelf(void)
 	pthread_setspecific(__vxworks_tskey, self);
 
 	return self->handle;
+#endif /* !HAVE___THREAD */
 }
 
 STATUS taskPrioritySet(TASK_ID task_id, int prio)

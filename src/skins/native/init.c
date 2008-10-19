@@ -27,16 +27,28 @@
 #include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
 
-pthread_key_t __native_tskey;
-
 int __native_muxid = -1;
 void native_timer_init(int);
+
+#ifndef HAVE___THREAD
+pthread_key_t __native_tskey;
 
 static void __flush_tsd(void *tsd)
 {
 	/* Free the task descriptor allocated by rt_task_self(). */
 	free(tsd);
 }
+
+static __attribute__ ((constructor))
+void __init_native_tskey(void)
+	/* Allocate a TSD key for indexing self task pointers. */
+
+	if (pthread_key_create(&__native_tskey, &__flush_tsd) != 0) {
+		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
+		exit(1);
+	}
+}
+#endif /* !HAVE___THREAD */
 
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
@@ -49,11 +61,4 @@ void __init_xeno_interface(void)
 #endif /* CONFIG_XENO_HW_DIRECT_TSC */
 	
 	__native_muxid = __xn_mux_shifted_id(__native_muxid);
-
-	/* Allocate a TSD key for indexing self task pointers. */
-
-	if (pthread_key_create(&__native_tskey, &__flush_tsd) != 0) {
-		fprintf(stderr, "Xenomai: failed to allocate new TSD key?!\n");
-		exit(1);
-	}
 }

@@ -11,24 +11,23 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <nucleus/types.h>
 #include <asm/xenomai/syscall.h>
 
-__attribute__ ((weak))
+#ifdef HAVE___THREAD
+__thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec"))) =
+	XN_NO_HANDLE;
+
+static inline void __xeno_set_current(xnhandle_t current)
+{
+	xeno_current = current;
+}
+#else /* !HAVE___THREAD */
 pthread_key_t xeno_current_key;
 
-__attribute__ ((weak))
-void xeno_set_current(void)
+static inline void __xeno_set_current(xnhandle_t current)
 {
-	void *kthread_cb;
-	int err;
-
-	err = XENOMAI_SYSCALL1(__xn_sys_current, &kthread_cb);
-	if (err) {
-		fprintf(stderr, "Xenomai: error obtaining handle for current "
-			"thread: %s\n", strerror(err));
-		exit(1);
-	}
-	pthread_setspecific(xeno_current_key, kthread_cb);
+	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
 static __attribute__ ((constructor))
@@ -40,6 +39,22 @@ void init_current_key(void)
 			strerror(err));
 		exit(1);
 	}
+}
+#endif /* !HAVE___THREAD */
+
+__attribute__ ((weak))
+void xeno_set_current(void)
+{
+	xnhandle_t current;
+	int err;
+
+	err = XENOMAI_SYSCALL1(__xn_sys_current, &current);
+	if (err) {
+		fprintf(stderr, "Xenomai: error obtaining handle for current "
+			"thread: %s\n", strerror(err));
+		exit(1);
+	}
+	__xeno_set_current(current);
 }
 
 #ifdef CONFIG_XENO_FASTSYNCH

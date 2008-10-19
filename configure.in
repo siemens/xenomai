@@ -762,6 +762,29 @@ LIBS="$LIBS -lrt"
 AC_CHECK_FUNCS([shm_open shm_unlink])
 LIBS="$save_LIBS"
 
+AC_ARG_WITH([__thread],
+	    AC_HELP_STRING([--without-__thread],
+			   [do not use TLS features (allows for dlopen'ing Xenomai libs)]),
+	    [use__thread=$withval],
+	    [use__thread=yes])
+
+dnl Check whether the compiler supports the __thread keyword.
+if test "x$use__thread" != xno; then
+	AC_CACHE_CHECK([for __thread], libc_cv_gcc___thread,
+	[cat > conftest.c <<\EOF
+__thread int a __attribute__ ((tls_model ("initial-exec"))) = 42;
+EOF
+	if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS -c -Werror conftest.c >&AS_MESSAGE_LOG_FD]); then
+		libc_cv_gcc___thread=yes
+	else
+		libc_cv_gcc___thread=no
+	fi
+	rm -f conftest*])
+	if test "$libc_cv_gcc___thread" = yes; then
+		AC_DEFINE(HAVE___THREAD,1,[config])
+	fi
+fi
+
 dnl
 dnl Build the Makefiles
 dnl

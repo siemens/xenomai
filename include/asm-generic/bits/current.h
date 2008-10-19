@@ -4,9 +4,16 @@
 #include <pthread.h>
 #include <nucleus/types.h>
 
-extern pthread_key_t xeno_current_key;
+#ifdef HAVE___THREAD
+extern __thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec")));
 
-extern void xeno_set_current(void);
+static inline xnhandle_t xeno_get_current(void)
+{
+	return xeno_current;
+}
+
+#else /* ! HAVE___THREAD */
+extern pthread_key_t xeno_current_key;
 
 static inline xnhandle_t xeno_get_current(void)
 {
@@ -17,5 +24,8 @@ static inline xnhandle_t xeno_get_current(void)
 
 	return (xnhandle_t)val;
 }
+#endif /* ! HAVE___THREAD */
+
+void xeno_set_current(void);
 
 #endif /* _XENO_ASM_GENERIC_CURRENT_H */
