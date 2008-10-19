@@ -161,7 +161,7 @@ int sc_mcreate(unsigned int opt, int *errp)
 	inith(&mx->link);
 	mx->mid = mid;
 	mx->owner = NULL;
-	xnsynch_init(&mx->synchbase, bflags | XNSYNCH_DREORD);
+	xnsynch_init(&mx->synchbase, bflags | XNSYNCH_DREORD | XNSYNCH_OWNER);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_mx_q, &mx->link);
@@ -192,7 +192,7 @@ void sc_mpost(int mid, int *errp)
 	}
 
 	/* Undefined behaviour if the poster does not own the mutex. */
-	mx->owner = xnsynch_wakeup_one_sleeper(&mx->synchbase);
+	mx->owner = xnsynch_release(&mx->synchbase);
 
 	*errp = RET_OK;
 
@@ -267,7 +267,7 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 		if (timeout)
 			task->vrtxtcb.TCBSTAT |= TBSDELAY;
 
-		xnsynch_sleep_on(&mx->synchbase, timeout, XN_RELATIVE);
+		xnsynch_acquire(&mx->synchbase, timeout, XN_RELATIVE);
 
 		if (xnthread_test_info(&task->threadbase, XNBREAK))
 			*errp = -EINTR;

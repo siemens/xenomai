@@ -85,7 +85,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 			      xnarch_atomic_t *ownerp,
 			      const pthread_mutexattr_t *attr)
 {
-	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_NOPIP;
+	xnflags_t synch_flags = XNSYNCH_PRIO | XNSYNCH_OWNER;
 	struct xnsys_ppd *sys_ppd;
 	pse51_kqueues_t *kq;
 	spl_t s;
@@ -307,11 +307,11 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 		for (;;) {
 			++mutex->sleepers;
 			if (timed)
-				xnsynch_sleep_on(&mutex->synchbase,
-						 abs_to, XN_REALTIME);
+				xnsynch_acquire(&mutex->synchbase,
+						abs_to, XN_REALTIME);
 			else
-				xnsynch_sleep_on(&mutex->synchbase,
-						 XN_INFINITE, XN_RELATIVE);
+				xnsynch_acquire(&mutex->synchbase,
+						XN_INFINITE, XN_RELATIVE);
 			--mutex->sleepers;
 
 			if (xnthread_test_info(cur, XNBREAK)) {

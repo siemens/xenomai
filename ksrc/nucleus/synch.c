@@ -59,6 +59,12 @@
  * - XNSYNCH_PRIO causes the threads waiting for the resource to pend
  * in priority order. Otherwise, FIFO ordering is used (XNSYNCH_FIFO).
  *
+ * - XNSYNCH_OWNER indicates that the synchronization object shall
+ * track its owning thread (required if XNSYNCH_PIP is selected). Note
+ * that setting this flag implies the use xnsynch_acquire and
+ * xnsynch_release instead of xnsynch_sleep_on and
+ * xnsynch_wakeup_one_sleeper/xnsynch_wakeup_this_sleeper.
+ *
  * - XNSYNCH_PIP causes the priority inheritance mechanism to be
  * automatically activated when a priority inversion is detected among
  * threads using this object. Otherwise, no priority inheritance takes
@@ -89,7 +95,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	initph(&synch->link);
 
 	if (flags & XNSYNCH_PIP)
-		flags |= XNSYNCH_PRIO;	/* Obviously... */
+		flags |= XNSYNCH_PRIO | XNSYNCH_OWNER;	/* Obviously... */
 
 	synch->status = flags & ~XNSYNCH_CLAIMED;
 	synch->owner = NULL;
@@ -98,43 +104,18 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags)
 	xnarch_init_display_context(synch);
 }
 
-/*
- * xnsynch_renice_thread() -- This service is used by the PIP code to
- * raise/lower a thread's priority. The thread's base priority value
- * is _not_ changed and if ready, the thread is always moved at the
- * end of its priority group.
- */
-
-static void xnsynch_renice_thread(xnthread_t *thread, int prio)
-{
-	thread->cprio = prio;
-
-	if (thread->wchan)
-		/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
-		xnsynch_renice_sleeper(thread);
-	else if (thread != xnpod_current_thread() &&
-		 xnthread_test_state(thread, XNREADY))
-		/* xnpod_resume_thread() must be called for runnable
-		   threads but the running one. */
-		xnpod_resume_thread(thread, 0);
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_test_state(thread, XNRELAX))
-		xnshadow_renice(thread);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-}
-
-/*! 
+/*!
  * \fn void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
- *                           xntmode_t timeout_mode)
- *
- * \brief Sleep on a synchronization object.
+ *                           xntmode_t timeout_mode);
+ * \brief Sleep on an ownerless synchronization object.
  *
  * Makes the calling thread sleep on the specified synchronization
  * object, waiting for it to be signaled.
  *
  * This service should be called by upper interfaces wanting the
- * current thread to pend on the given resource.
+ * current thread to pend on the given resource. It must not be used
+ * with synchronization objects that are supposed to track ownership
+ * (XNSYNCH_OWNER).
  *
  * @param synch The descriptor address of the synchronization object
  * to sleep on.
@@ -168,8 +149,10 @@ static void xnsynch_renice_thread(xnthread_t *thread, int prio)
 void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 		      xntmode_t timeout_mode)
 {
-	xnthread_t *thread = xnpod_current_thread(), *owner;
+	xnthread_t *thread = xnpod_current_thread();
 	spl_t s;
+
+	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -177,17 +160,232 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 
-	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
+	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
-		goto unlock_and_exit;
+	else /* i.e. priority-sorted */
+		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+
+	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+/*!
+ * \fn xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
+ * \brief Give the resource ownership to the next waiting thread.
+ *
+ * This service wakes up the thread which is currently leading the
+ * synchronization object's pending list. The sleeping thread is
+ * unblocked from its pending state, but no reschedule is performed.
+ *
+ * This service should be called by upper interfaces wanting to signal
+ * the given resource so that a single waiter is resumed. It must not
+ * be used with synchronization objects that are supposed to track
+ * ownership (XNSYNCH_OWNER not set).
+ *
+ * @param synch The descriptor address of the synchronization object
+ * whose ownership is changed.
+ *
+ * @return The descriptor address of the unblocked thread.
+ *
+ * Side-effects:
+ *
+ * - The effective priority of the previous resource owner might be
+ * lowered to its base priority value as a consequence of the priority
+ * inheritance boost being cleared.
+ *
+ * - The synchronization object ownership is transfered to the
+ * unblocked thread.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
+{
+	xnthread_t *thread = NULL;
+	xnpholder_t *holder;
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	holder = getpq(&synch->pendq);
+
+	if (holder) {
+		thread = link2thread(holder, plink);
+		thread->wchan = NULL;
+		trace_mark(xn_nucleus_synch_wakeup_one,
+			   "thread %p thread_name %s synch %p",
+			   thread, xnthread_name(thread), synch);
+		xnpod_resume_thread(thread, XNPEND);
 	}
 
-	if (!testbits(synch->status, XNSYNCH_PIP)) { /* i.e. no ownership */
-		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
-		goto unlock_and_exit;
-	}
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+
+	return thread;
+}
+
+/*!
+ * \fn void xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
+ * \brief Give the resource ownership to a given waiting thread.
+ *
+ * This service wakes up a specific thread which is currently pending on
+ * the given synchronization object. The sleeping thread is unblocked
+ * from its pending state, but no reschedule is performed.
+ *
+ * This service should be called by upper interfaces wanting to signal
+ * the given resource so that a specific waiter is resumed. It must not
+ * be used with synchronization objects that are supposed to track
+ * ownership (XNSYNCH_OWNER not set).
+ *
+ * @param synch The descriptor address of the synchronization object
+ * whose ownership is changed.
+ *
+ * @param holder The link holder address of the thread to unblock
+ * (&thread->plink) which MUST be currently linked to the
+ * synchronization object's pending queue (i.e. synch->pendq).
+ *
+ * @return The link address of the unblocked thread in the
+ * synchronization object's pending queue.
+ *
+ * Side-effects:
+ *
+ * - The effective priority of the previous resource owner might be
+ * lowered to its base priority value as a consequence of the priority
+ * inheritance boost being cleared.
+ *
+ * - The synchronization object ownership is transfered to the
+ * unblocked thread.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
+{
+	xnthread_t *thread;
+	xnpholder_t *nholder;
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	nholder = poppq(&synch->pendq, holder);
+
+	thread = link2thread(holder, plink);
+	thread->wchan = NULL;
+	trace_mark(xn_nucleus_synch_wakeup_this,
+		   "thread %p thread_name %s synch %p",
+		   thread, xnthread_name(thread), synch);
+	xnpod_resume_thread(thread, XNPEND);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
+
+	return nholder;
+}
+
+/*
+ * xnsynch_renice_thread() -- This service is used by the PIP code to
+ * raise/lower a thread's priority. The thread's base priority value
+ * is _not_ changed and if ready, the thread is always moved at the
+ * end of its priority group.
+ */
+
+static void xnsynch_renice_thread(xnthread_t *thread, int prio)
+{
+	thread->cprio = prio;
+
+	if (thread->wchan)
+		/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
+		xnsynch_renice_sleeper(thread);
+	else if (thread != xnpod_current_thread() &&
+		 xnthread_test_state(thread, XNREADY))
+		/* xnpod_resume_thread() must be called for runnable
+		   threads but the running one. */
+		xnpod_resume_thread(thread, 0);
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (xnthread_test_state(thread, XNRELAX))
+		xnshadow_renice(thread);
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+}
+
+/*! 
+ * \fn void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
+ *                          xntmode_t timeout_mode);
+ * \brief Acquire the ownership of a synchronization object.
+ *
+ * This service should be called by upper interfaces wanting the
+ * current thread to acquire the ownership of the given resource. If
+ * the resource is already assigned to a thread, the caller is
+ * suspended.
+ *
+ * This service must be used only with synchronization objects that
+ * track ownership (XNSYNCH_OWNER set.
+ *
+ * @param synch The descriptor address of the synchronization object
+ * to acquire.
+ *
+ * @param timeout The timeout which may be used to limit the time the
+ * thread pends on the resource. This value is a wait time given in
+ * ticks (see note). It can either be relative, absolute monotonic, or
+ * absolute adjustable depending on @a timeout_mode. Passing XN_INFINITE
+ * @b and setting @a mode to XN_RELATIVE specifies an unbounded wait. All
+ * other values are used to initialize a watchdog timer.
+ *
+ * @param timeout_mode The mode of the @a timeout parameter. It can
+ * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
+ * xntimer_start()).
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: possible.
+ *
+ * @note The @a timeout value will be interpreted as jiffies if the
+ * current thread is bound to a periodic time base (see
+ * xnpod_init_thread), or nanoseconds otherwise.
+ */
+
+void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
+		     xntmode_t timeout_mode)
+{
+	xnthread_t *thread = xnpod_current_thread(), *owner;
+	spl_t s;
+
+	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
+
+	xnlock_get_irqsave(&nklock, s);
+
+	trace_mark(xn_nucleus_synch_acquire, "synch %p", synch);
 
 redo:
 	owner = synch->owner;
@@ -195,6 +393,12 @@ redo:
 	if (!owner) {
 		synch->owner = thread;
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK);
+		goto unlock_and_exit;
+	}
+
+	if (!testbits(synch->status, XNSYNCH_PRIO)) { /* i.e. FIFO */
+		appendpq(&synch->pendq, &thread->plink);
+		xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 		goto unlock_and_exit;
 	}
 
@@ -207,19 +411,22 @@ redo:
 			goto unlock_and_exit;
 		}
 
-		if (!xnthread_test_state(owner, XNBOOST)) {
-			owner->bprio = owner->cprio;
-			xnthread_set_state(owner, XNBOOST);
-		}
-
-		if (testbits(synch->status, XNSYNCH_CLAIMED))
-			removepq(&owner->claimq, &synch->link);
-		else
-			__setbits(synch->status, XNSYNCH_CLAIMED);
-
-		insertpqf(&owner->claimq, &synch->link, thread->cprio);
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
-		xnsynch_renice_thread(owner, thread->cprio);
+
+		if (testbits(synch->status, XNSYNCH_PIP)) {
+			if (!xnthread_test_state(owner, XNBOOST)) {
+				owner->bprio = owner->cprio;
+				xnthread_set_state(owner, XNBOOST);
+			}
+
+			if (testbits(synch->status, XNSYNCH_CLAIMED))
+				removepq(&owner->claimq, &synch->link);
+			else
+				__setbits(synch->status, XNSYNCH_CLAIMED);
+
+			insertpqf(&owner->claimq, &synch->link, thread->cprio);
+			xnsynch_renice_thread(owner, thread->cprio);
+		}
 	} else
 		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 
@@ -335,17 +542,17 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 	}
 }
 
-/*! 
- * \fn xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
+/*!
+ * \fn xnthread_t *xnsynch_release(xnsynch_t *synch);
  * \brief Give the resource ownership to the next waiting thread.
  *
- * This service gives the ownership of a synchronization object to the
- * thread which is currently leading the object's pending list. The
- * sleeping thread is unblocked, but no action is taken regarding the
- * previous owner of the resource.
+ * This service releases the ownership of the given synchronization
+ * object. The thread which is currently leading the object's pending
+ * list, if any, is unblocked from its pending state. However, no
+ * reschedule is performed.
  *
- * This service should be called by upper interfaces wanting to signal
- * the given resource so that a single waiter is resumed.
+ * This service must be used only with synchronization objects that
+ * track ownership (XNSYNCH_OWNER set.
  *
  * @param synch The descriptor address of the synchronization object
  * whose ownership is changed.
@@ -373,38 +580,41 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
  * Rescheduling: never.
  */
 
-xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
+struct xnthread *xnsynch_release(xnsynch_t *synch)
 {
-	xnthread_t *thread = NULL, *lastowner;
+	xnthread_t *newowner, *lastowner;
 	xnpholder_t *holder;
 	spl_t s;
 
+	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
+
 	xnlock_get_irqsave(&nklock, s);
 
-	lastowner = synch->owner;
+	trace_mark(xn_nucleus_synch_release, "synch %p", synch);
+
 	holder = getpq(&synch->pendq);
 
 	if (holder) {
-		thread = link2thread(holder, plink);
-		thread->wchan = NULL;
-		thread->wwake = synch;
-		synch->owner = thread;
-		xnthread_set_info(thread, XNWAKEN);
-		trace_mark(xn_nucleus_synch_wakeup_one,
-			   "thread %p thread_name %s synch %p",
-			   thread, xnthread_name(thread), synch);
-		xnpod_resume_thread(thread, XNPEND);
-	} else
-		synch->owner = NULL;
+		newowner = link2thread(holder, plink);
+		newowner->wchan = NULL;
+		newowner->wwake = synch;
+		lastowner = synch->owner;
+		synch->owner = newowner;
+		xnthread_set_info(newowner, XNWAKEN);
+		xnpod_resume_thread(newowner, XNPEND);
 
-	if (testbits(synch->status, XNSYNCH_CLAIMED))
-		xnsynch_clear_boost(synch, lastowner);
+		if (testbits(synch->status, XNSYNCH_CLAIMED))
+			xnsynch_clear_boost(synch, lastowner);
+	} else {
+		newowner = NULL;
+		synch->owner = NULL;
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 
-	return thread;
+	return newowner;
 }
 
 /*! 
@@ -443,80 +653,6 @@ xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return thread;
-}
-
-/*! 
- * \fn void xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
- * \brief Give the resource ownership to a given waiting thread.
- *
- * This service gives the ownership of a given synchronization object
- * to a specific thread which is currently pending on it. The sleeping
- * thread is unblocked from its pending state. No action is taken
- * regarding the previous resource owner.
- *
- * This service should be called by upper interfaces wanting to signal
- * the given resource so that a specific waiter is resumed.
- *
- * @param synch The descriptor address of the synchronization object
- * whose ownership is changed.
- *
- * @param holder The link holder address of the thread to unblock
- * (&thread->plink) which MUST be currently linked to the
- * synchronization object's pending queue (i.e. synch->pendq).
- *
- * @return The link address of the unblocked thread in the
- * synchronization object's pending queue.
- *
- * Side-effects:
- *
- * - The effective priority of the previous resource owner might be
- * lowered to its base priority value as a consequence of the priority
- * inheritance boost being cleared.
- *
- * - The synchronization object ownership is transfered to the
- * unblocked thread.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
-{
-	xnthread_t *thread, *lastowner;
-	xnpholder_t *nholder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	lastowner = synch->owner;
-	nholder = poppq(&synch->pendq, holder);
-
-	thread = link2thread(holder, plink);
-	thread->wchan = NULL;
-	thread->wwake = synch;
-	synch->owner = thread;
-	xnthread_set_info(thread, XNWAKEN);
-	trace_mark(xn_nucleus_synch_wakeup_all,
-		   "thread %p thread_name %s synch %p",
-		   thread, xnthread_name(thread), synch);
-	xnpod_resume_thread(thread, XNPEND);
-
-	if (testbits(synch->status, XNSYNCH_CLAIMED))
-		xnsynch_clear_boost(synch, lastowner);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
-
-	return nholder;
 }
 
 /*! 
@@ -679,12 +815,12 @@ void xnsynch_release_all_ownerships(xnthread_t *thread)
 
 	for (holder = getheadpq(&thread->claimq); holder != NULL;
 	     holder = nholder) {
-		/* Since xnsynch_wakeup_one_sleeper() alters the claim
+		/* Since xnsynch_release() alters the claim
 		   queue, we need to be conservative while scanning
 		   it. */
 		xnsynch_t *synch = link2synch(holder);
 		nholder = nextpq(&thread->claimq, holder);
-		xnsynch_wakeup_one_sleeper(synch);
+		xnsynch_release(synch);
 		if (synch->cleanup)
 			synch->cleanup(synch);
 	}
@@ -701,3 +837,5 @@ EXPORT_SYMBOL(xnsynch_sleep_on);
 EXPORT_SYMBOL(xnsynch_wakeup_one_sleeper);
 EXPORT_SYMBOL(xnsynch_wakeup_this_sleeper);
 EXPORT_SYMBOL(xnsynch_peek_pendq);
+EXPORT_SYMBOL(xnsynch_acquire);
+EXPORT_SYMBOL(xnsynch_release);

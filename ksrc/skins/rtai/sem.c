@@ -28,7 +28,7 @@ void rt_typed_sem_init(SEM * sem, int value, int type)
 	int mode = XNSYNCH_PRIO;
 
 	if ((type & RES_SEM) == RES_SEM) {
-		mode |= XNSYNCH_PIP;
+		mode |= XNSYNCH_PIP | XNSYNCH_OWNER;
 		value = 0;	/* We will use this as a lock count. */
 	} else {
 		if ((type & BIN_SEM) && value > 1)
@@ -98,7 +98,7 @@ int rt_sem_signal(SEM * sem)
 			goto unlock_and_exit;
 
 		sem->owner =
-		    thread2rtask(xnsynch_wakeup_one_sleeper(&sem->synch_base));
+		    thread2rtask(xnsynch_release(&sem->synch_base));
 
 		if (sem->owner != NULL)
 			xnpod_schedule();
@@ -141,12 +141,12 @@ int rt_sem_wait(SEM * sem)
 			err = ++sem->count;
 			goto unlock_and_exit;
 		}
+		xnsynch_acquire(&sem->synch_base, XN_INFINITE, XN_RELATIVE);
 	} else if (sem->count > 0) {
 		err = sem->count--;
 		goto unlock_and_exit;
-	}
-
-	xnsynch_sleep_on(&sem->synch_base, XN_INFINITE, XN_RELATIVE);
+	} else
+		xnsynch_sleep_on(&sem->synch_base, XN_INFINITE, XN_RELATIVE);
 
 	if (xnthread_test_info(&task->thread_base, XNRMID))
 		err = SEM_ERR;	/* Semaphore deleted while pending. */

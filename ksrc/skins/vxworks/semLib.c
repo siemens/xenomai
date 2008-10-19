@@ -138,7 +138,7 @@ SEM_ID semCCreate(int flags, int count)
 
 SEM_ID semMCreate(int flags)
 {
-	int bflags = 0;
+	int bflags = XNSYNCH_OWNER;
 
 	error_check(flags & ~WIND_SEMM_OPTION_MASK, S_semLib_INVALID_QUEUE_TYPE,
 		    return 0);
@@ -346,7 +346,7 @@ static STATUS semm_take(wind_sem_t *sem, xnticks_t to)
 	error_check(to == XN_NONBLOCK, S_objLib_OBJ_UNAVAILABLE,
 		    return ERROR);
 
-	xnsynch_sleep_on(&sem->synchbase, to, XN_RELATIVE);
+	xnsynch_acquire(&sem->synchbase, to, XN_RELATIVE);
 
 	error_check(xnthread_test_info(cur, XNBREAK),
 		    -EINTR, return ERROR);
@@ -385,7 +385,7 @@ static STATUS semm_give(wind_sem_t *sem)
 	if (--sem->count > 0)
 		return OK;
 
-	if (xnsynch_wakeup_one_sleeper(&sem->synchbase)) {
+	if (xnsynch_release(&sem->synchbase)) {
 		sem->count = 1;
 		resched = 1;
 	}

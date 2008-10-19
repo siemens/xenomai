@@ -240,7 +240,7 @@ static inline int mutex_save_count(xnthread_t *cur,
 		   xnthread_handle(cur)))
 		return 0;
 
-	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+	owner = xnsynch_release(&mutex->synchbase);
 	xnarch_atomic_set(mutex->owner,
 			  set_claimed(xnthread_handle(owner),
 				      xnsynch_nsleepers(&mutex->synchbase)));

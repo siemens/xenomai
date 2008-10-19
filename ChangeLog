@@ -4,6 +4,7 @@
 
 	- Generic thread registration.
 	- Handle-based xeno_get_current service.
+	- Factor out xnsynch_acquire/release.
 
 	* include/asm-*: Remove xnarch_atomic_intptr.
 

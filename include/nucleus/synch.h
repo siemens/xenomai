@@ -30,10 +30,11 @@
 #define XNSYNCH_NOPIP   0x0
 #define XNSYNCH_PIP     0x2
 #define XNSYNCH_DREORD  0x4
+#define XNSYNCH_OWNER   0x8
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#define XNSYNCH_CLAIMED 0x8	/* Claimed by other thread(s) w/ PIP */
+#define XNSYNCH_CLAIMED 0x10	/* Claimed by other thread(s) w/ PIP */
 
 /* Spare flags usable by upper interfaces */
 #define XNSYNCH_SPARE0  0x01000000
@@ -105,13 +106,18 @@ void xnsynch_sleep_on(xnsynch_t *synch,
 
 struct xnthread *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
 
-struct xnthread *xnsynch_peek_pendq(xnsynch_t *synch);
-
 xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch,
 					 xnpholder_t *holder);
 
-int xnsynch_flush(xnsynch_t *synch,
-		  xnflags_t reason);
+void xnsynch_acquire(xnsynch_t *synch,
+		     xnticks_t timeout,
+		     xntmode_t timeout_mode);
+
+struct xnthread *xnsynch_release(xnsynch_t *synch);
+
+struct xnthread *xnsynch_peek_pendq(xnsynch_t *synch);
+
+int xnsynch_flush(xnsynch_t *synch, xnflags_t reason);
 
 void xnsynch_release_all_ownerships(struct xnthread *thread);
 

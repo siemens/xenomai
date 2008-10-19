@@ -1390,7 +1390,8 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex)
 	/* Make atomic for re-initialisation support */
 	xnlock_get_irqsave(&nklock, s);
 
-	xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO | XNSYNCH_PIP);
+	xnsynch_init(&mutex->synch_base,
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -1534,14 +1535,14 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 restart:
 		if (timeout_seq && (timeout > 0)) {
 			/* timeout sequence */
-			xnsynch_sleep_on(&mutex->synch_base, *timeout_seq,
-					 XN_ABSOLUTE);
+			xnsynch_acquire(&mutex->synch_base, *timeout_seq,
+					XN_ABSOLUTE);
 		} else {
 			/* infinite or relative timeout */
-			xnsynch_sleep_on(&mutex->synch_base,
-					 xntbase_ns2ticks_ceil
-					 (xnthread_time_base(curr_thread),
-					  timeout), XN_RELATIVE);
+			xnsynch_acquire(&mutex->synch_base,
+					xntbase_ns2ticks_ceil
+					(xnthread_time_base(curr_thread),
+					 timeout), XN_RELATIVE);
 		}
 
 		if (unlikely(xnthread_test_info(curr_thread,

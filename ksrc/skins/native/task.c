@@ -269,7 +269,8 @@ int rt_task_create(RT_TASK *task,
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	xnsynch_init(&task->mrecv, XNSYNCH_FIFO);
-	xnsynch_init(&task->msendq, XNSYNCH_PRIO | XNSYNCH_PIP);
+	xnsynch_init(&task->msendq,
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
 	xnsynch_set_owner(&task->msendq, &task->thread_base);
 	task->flowgen = 0;
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
@@ -1773,7 +1774,7 @@ ssize_t rt_task_send(RT_TASK *task,
 	   client in the case required by the priority inheritance
 	   protocol (i.e. prio(client) > prio(server)). */
 
-	xnsynch_sleep_on(&task->msendq, timeout, XN_RELATIVE);
+	xnsynch_acquire(&task->msendq, timeout, XN_RELATIVE);
 
 	/* At this point, the server task might have exited right
 	 * after having replied to us, so do not make optimistic

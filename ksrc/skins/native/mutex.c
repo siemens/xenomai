@@ -170,7 +170,8 @@ int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xnsynch_init(&mutex->synch_base, XNSYNCH_PRIO | XNSYNCH_PIP);
+	xnsynch_init(&mutex->synch_base,
+		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER);
 	mutex->handle = 0;	/* i.e. (still) unregistered mutex. */
 	mutex->magic = XENO_MUTEX_MAGIC;
 	mutex->lockcnt = 0;
@@ -309,7 +310,7 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, xntmode_t timeout_mode, RTIME timeou
 		goto unlock_and_exit;
 	}
 
-	xnsynch_sleep_on(&mutex->synch_base, timeout, timeout_mode);
+	xnsynch_acquire(&mutex->synch_base, timeout, timeout_mode);
 
 	if (xnthread_test_info(thread, XNRMID))
 		err = -EIDRM;	/* Mutex deleted while pending. */
@@ -523,7 +524,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	if (--mutex->lockcnt > 0)
 		goto unlock_and_exit;
 
-	if (xnsynch_wakeup_one_sleeper(&mutex->synch_base)) {
+	if (xnsynch_release(&mutex->synch_base)) {
 		mutex->lockcnt = 1;
 		xnpod_schedule();
 	}

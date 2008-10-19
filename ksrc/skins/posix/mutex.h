@@ -170,9 +170,9 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 	xnsynch_set_owner(&mutex->synchbase, owner);
 	++mutex->sleepers;
 	if (timed)
-		xnsynch_sleep_on(&mutex->synchbase, abs_to, XN_REALTIME);
+		xnsynch_acquire(&mutex->synchbase, abs_to, XN_REALTIME);
 	else
-		xnsynch_sleep_on(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
+		xnsynch_acquire(&mutex->synchbase, XN_INFINITE, XN_RELATIVE);
 	--mutex->sleepers;
 
 	if (xnthread_test_info(cur, XNBREAK)) {
@@ -216,7 +216,7 @@ static inline void pse51_mutex_unlock_internal(xnthread_t *cur,
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
-	owner = xnsynch_wakeup_one_sleeper(&mutex->synchbase);
+	owner = xnsynch_release(&mutex->synchbase);
 	ownerh = set_claimed(xnthread_handle(owner), mutex->sleepers);
 	xnarch_atomic_set(mutex->owner, ownerh);
 	if (owner)
