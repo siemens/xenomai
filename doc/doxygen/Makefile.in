@@ -13,19 +13,6 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
-
-# -*- makefile -*-
-# Generic rules for installation and distribution of documentation.
-#
-# Parameters :
-# HTML_DOCS list of html documentation directories
-# PDF_DOCS list of pdf files
-# PS_DOCS list of ps files
-#
-# HTML_DOCSDIR: where directories listed in HTML_DOCS should be taken from (this
-# can be from . or from a directory containing pre-generated versions)
-#
-# PDF_DOCSDIR & PS_DOCSDIR: same thing for pdf and ps files.
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -186,6 +173,19 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
+
+# -*- makefile -*-
+# Generic rules for installation and distribution of documentation.
+#
+# Parameters :
+# HTML_DOCS list of html documentation directories
+# PDF_DOCS list of pdf files
+# PS_DOCS list of ps files
+#
+# HTML_DOCSDIR: where directories listed in HTML_DOCS should be taken from (this
+# can be from . or from a directory containing pre-generated versions)
+#
+# PDF_DOCSDIR & PS_DOCSDIR: same thing for pdf and ps files.
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
