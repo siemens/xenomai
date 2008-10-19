@@ -412,9 +412,6 @@ static __inline__ void xnarch_atomic_clear_mask(xnarch_atomic_t *v, long mask)
 
 typedef unsigned long atomic_flags_t;
 
-/* Add support for xnarch_atomic_intptr_t */
-#include <asm-generic/xenomai/atomic.h>
-
 #endif /* !_XENO_ASM_ARM_ATOMIC_H */
 
 // vim: ts=4 et sw=4 sts=4

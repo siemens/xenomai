@@ -136,6 +136,4 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newva
 
 #endif /* __KERNEL__ */
 
-#include <asm-generic/xenomai/atomic.h>
-
 #endif /* !_XENO_ASM_X86_ATOMIC_64_H */

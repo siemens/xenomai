@@ -262,6 +262,4 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *p,
 
 typedef unsigned long atomic_flags_t;
 
-#include <asm-generic/xenomai/atomic.h>
-
 #endif /* !_XENO_ASM_POWERPC_ATOMIC_H */

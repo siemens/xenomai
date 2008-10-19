@@ -71,8 +71,6 @@ static inline void atomic_clear_mask(unsigned mask, unsigned long *addr)
 #define xnarch_atomic_cmpxchg(pcounter,old,new) \
 	cmpxchg((&(pcounter)->counter),(old),(new))
 
-#include <asm-generic/xenomai/atomic.h>
-
 #else /* !__KERNEL__ */
 
 #include <asm/xenomai/features.h>

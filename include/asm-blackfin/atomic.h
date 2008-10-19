@@ -42,8 +42,6 @@
 typedef atomic_t atomic_counter_t;
 typedef atomic_t xnarch_atomic_t;
 
-#include <asm-generic/xenomai/atomic.h>
-
 #else /* !__KERNEL__ */
 
 #include <asm/xenomai/syscall.h>
