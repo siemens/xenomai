@@ -164,31 +164,33 @@ int __wrap_pthread_mutex_lock(pthread_mutex_t *mutex)
 		goto out;
 	}
 
-	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+	if (likely(!(xeno_get_current_mode() & XNRELAX))) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
 
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
-	}
+		if (likely(!err)) {
+			shadow->lockcnt = 1;
+			cb_read_unlock(&shadow->lock, s);
+			return 0;
+		}
 
-	if (err == -EBUSY)
-		switch(shadow->attr.type) {
-		case PTHREAD_MUTEX_NORMAL:
-			break;
+		if (err == -EBUSY)
+			switch(shadow->attr.type) {
+			case PTHREAD_MUTEX_NORMAL:
+				break;
 
-		case PTHREAD_MUTEX_ERRORCHECK:
-			err = -EDEADLK;
-			goto out;
+			case PTHREAD_MUTEX_ERRORCHECK:
+				err = -EDEADLK;
+				goto out;
 
-		case PTHREAD_MUTEX_RECURSIVE:
-			if (shadow->lockcnt == UINT_MAX) {
-				err = -EAGAIN;
+			case PTHREAD_MUTEX_RECURSIVE:
+				if (shadow->lockcnt == UINT_MAX) {
+					err = -EAGAIN;
+					goto out;
+				}
+				++shadow->lockcnt;
+				err = 0;
 				goto out;
 			}
-			++shadow->lockcnt;
-			err = 0;
-			goto out;
 		}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
@@ -226,32 +228,34 @@ int __wrap_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 		goto out;
 	}	
 
-	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
+	if (likely(!(xeno_get_current_mode() & XNRELAX))) {
+		err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
 
-	if (likely(!err)) {
-		shadow->lockcnt = 1;
-		cb_read_unlock(&shadow->lock, s);
-		return 0;
-	}
+		if (likely(!err)) {
+			shadow->lockcnt = 1;
+			cb_read_unlock(&shadow->lock, s);
+			return 0;
+		}
 
-	if (err == -EBUSY)
-		switch(shadow->attr.type) {
-		case PTHREAD_MUTEX_NORMAL:
-			break;
+		if (err == -EBUSY)
+			switch(shadow->attr.type) {
+			case PTHREAD_MUTEX_NORMAL:
+				break;
 
-		case PTHREAD_MUTEX_ERRORCHECK:
-			err = -EDEADLK;
-			goto out;
+			case PTHREAD_MUTEX_ERRORCHECK:
+				err = -EDEADLK;
+				goto out;
 
-		case PTHREAD_MUTEX_RECURSIVE:
-			if (shadow->lockcnt == UINT_MAX) {
-				err = -EAGAIN;
+			case PTHREAD_MUTEX_RECURSIVE:
+				if (shadow->lockcnt == UINT_MAX) {
+					err = -EAGAIN;
+					goto out;
+				}
+
+				++shadow->lockcnt;
 				goto out;
 			}
-
-			++shadow->lockcnt;
-			goto out;
-		}
+	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	do {
@@ -286,7 +290,17 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 	if (unlikely(shadow->magic != PSE51_MUTEX_MAGIC)) {
 		err = -EINVAL;
 		goto out;
-	}	
+	}
+
+	if (unlikely(xeno_get_current_mode() & XNRELAX)) {
+		do {
+			err = -XENOMAI_SYSCALL1(__xn_sys_migrate,
+						XENOMAI_XENO_DOMAIN);
+		} while (err == EINTR);
+
+		if (err)
+			goto out;
+	}
 
 	err = xnsynch_fast_acquire(get_ownerp(shadow), cur);
 

@@ -18,6 +18,7 @@
 
 #include <limits.h>
 #include <nucleus/synch.h>
+#include <nucleus/thread.h>
 #include <native/syscall.h>
 #include <native/mutex.h>
 #include <asm-generic/bits/current.h>
@@ -78,22 +79,24 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 	if (!cur)
 		return -EPERM;
 
-	err = xnsynch_fast_acquire(mutex->fastlock, cur);
-	if (likely(!err)) {
-		mutex->lockcnt = 1;
-		return 0;
+	if (likely(!(xeno_get_current_mode() & XNRELAX))) {
+		err = xnsynch_fast_acquire(mutex->fastlock, cur);
+		if (likely(!err)) {
+			mutex->lockcnt = 1;
+			return 0;
+		}
+
+		if (err == -EBUSY) {
+			if (mutex->lockcnt == UINT_MAX)
+				return -EAGAIN;
+
+			mutex->lockcnt++;
+			return 0;
+		}
+
+		if (timeout == TM_NONBLOCK && mode == XN_RELATIVE)
+			return -EWOULDBLOCK;
 	}
-
-	if (err == -EBUSY) {
-		if (mutex->lockcnt == UINT_MAX)
-			return -EAGAIN;
-
-		mutex->lockcnt++;
-		return 0;
-	}
-
-	if (timeout == TM_NONBLOCK && mode == XN_RELATIVE)
-		return -EWOULDBLOCK;
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	err = XENOMAI_SKINCALL3(__native_muxid,
