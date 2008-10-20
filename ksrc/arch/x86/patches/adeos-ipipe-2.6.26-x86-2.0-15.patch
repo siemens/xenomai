@@ -3339,7 +3339,7 @@ index a1f07d7..7d765d0 100644
  		flush_tlb_others(cpu_mask, mm, TLB_FLUSH_ALL);
  
 diff --git a/arch/x86/kernel/traps_32.c b/arch/x86/kernel/traps_32.c
-index 08d752d..f422387 100644
+index 08d752d..0d3ec6c 100644
 --- a/arch/x86/kernel/traps_32.c
 +++ b/arch/x86/kernel/traps_32.c
 @@ -335,6 +335,9 @@ void show_registers(struct pt_regs *regs)
@@ -3361,30 +3361,7 @@ index 08d752d..f422387 100644
  static notrace __kprobes void default_do_nmi(struct pt_regs *regs)
  {
  	unsigned char reason = 0;
-@@ -831,17 +836,21 @@ static int ignore_nmis;
- 
- notrace __kprobes void do_nmi(struct pt_regs *regs, long error_code)
- {
--	int cpu;
-+	int cpu, cs;
- 
- 	nmi_enter();
- 
- 	cpu = smp_processor_id();
- 
-+	cs = ipipe_disable_context_check(cpu);
-+ 
- 	++nmi_count(cpu);
- 
- 	if (!ignore_nmis)
- 		default_do_nmi(regs);
- 
-+ 	ipipe_restore_context_check(cpu, cs);
-+ 
- 	nmi_exit();
- }
- 
-@@ -1148,6 +1157,7 @@ asmlinkage void math_state_restore(void)
+@@ -1148,6 +1153,7 @@ asmlinkage void math_state_restore(void)
  {
  	struct thread_info *thread = current_thread_info();
  	struct task_struct *tsk = thread->task;
@@ -3392,7 +3369,7 @@ index 08d752d..f422387 100644
  
  	if (!tsk_used_math(tsk)) {
  		local_irq_enable();
-@@ -1164,10 +1174,12 @@ asmlinkage void math_state_restore(void)
+@@ -1164,10 +1170,12 @@ asmlinkage void math_state_restore(void)
  		local_irq_disable();
  	}
  
@@ -3740,6 +3717,88 @@ index 8bcb6f4..ee76f9b 100644
 +#endif
 +}
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/x86/vdso/vclock_gettime.c b/arch/x86/vdso/vclock_gettime.c
+index efa2ba7..1ef0f90 100644
+--- a/arch/x86/vdso/vclock_gettime.c
++++ b/arch/x86/vdso/vclock_gettime.c
+@@ -23,7 +23,7 @@
+ 
+ #define gtod vdso_vsyscall_gtod_data
+ 
+-static long vdso_fallback_gettime(long clock, struct timespec *ts)
++notrace static long vdso_fallback_gettime(long clock, struct timespec *ts)
+ {
+ 	long ret;
+ 	asm("syscall" : "=a" (ret) :
+@@ -31,7 +31,7 @@ static long vdso_fallback_gettime(long clock, struct timespec *ts)
+ 	return ret;
+ }
+ 
+-static inline long vgetns(void)
++notrace static inline long vgetns(void)
+ {
+ 	long v;
+ 	cycles_t (*vread)(void);
+@@ -40,7 +40,7 @@ static inline long vgetns(void)
+ 	return (v * gtod->clock.mult) >> gtod->clock.shift;
+ }
+ 
+-static noinline int do_realtime(struct timespec *ts)
++notrace static noinline int do_realtime(struct timespec *ts)
+ {
+ 	unsigned long seq, ns;
+ 	do {
+@@ -54,7 +54,8 @@ static noinline int do_realtime(struct timespec *ts)
+ }
+ 
+ /* Copy of the version in kernel/time.c which we cannot directly access */
+-static void vset_normalized_timespec(struct timespec *ts, long sec, long nsec)
++notrace static void
++vset_normalized_timespec(struct timespec *ts, long sec, long nsec)
+ {
+ 	while (nsec >= NSEC_PER_SEC) {
+ 		nsec -= NSEC_PER_SEC;
+@@ -68,7 +69,7 @@ static void vset_normalized_timespec(struct timespec *ts, long sec, long nsec)
+ 	ts->tv_nsec = nsec;
+ }
+ 
+-static noinline int do_monotonic(struct timespec *ts)
++notrace static noinline int do_monotonic(struct timespec *ts)
+ {
+ 	unsigned long seq, ns, secs;
+ 	do {
+@@ -82,7 +83,7 @@ static noinline int do_monotonic(struct timespec *ts)
+ 	return 0;
+ }
+ 
+-int __vdso_clock_gettime(clockid_t clock, struct timespec *ts)
++notrace int __vdso_clock_gettime(clockid_t clock, struct timespec *ts)
+ {
+ 	if (likely(gtod->sysctl_enabled && gtod->clock.vread))
+ 		switch (clock) {
+@@ -96,7 +97,7 @@ int __vdso_clock_gettime(clockid_t clock, struct timespec *ts)
+ int clock_gettime(clockid_t, struct timespec *)
+ 	__attribute__((weak, alias("__vdso_clock_gettime")));
+ 
+-int __vdso_gettimeofday(struct timeval *tv, struct timezone *tz)
++notrace int __vdso_gettimeofday(struct timeval *tv, struct timezone *tz)
+ {
+ 	long ret;
+ 	if (likely(gtod->sysctl_enabled && gtod->clock.vread)) {
+diff --git a/arch/x86/vdso/vgetcpu.c b/arch/x86/vdso/vgetcpu.c
+index c8097f1..9fbc6b2 100644
+--- a/arch/x86/vdso/vgetcpu.c
++++ b/arch/x86/vdso/vgetcpu.c
+@@ -13,7 +13,8 @@
+ #include <asm/vgtod.h>
+ #include "vextern.h"
+ 
+-long __vdso_getcpu(unsigned *cpu, unsigned *node, struct getcpu_cache *unused)
++notrace long
++__vdso_getcpu(unsigned *cpu, unsigned *node, struct getcpu_cache *unused)
+ {
+ 	unsigned int p;
+ 
 diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index 279c940..daabf90 100644
 --- a/drivers/pci/htirq.c
@@ -3941,7 +4000,7 @@ index ecc80f3..e6d33a0 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..84f3c03
+index 0000000..f8b9c34
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,128 @@
@@ -3972,10 +4031,10 @@ index 0000000..84f3c03
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.0-14"
++#define IPIPE_ARCH_STRING	"2.0-15"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	0
-+#define IPIPE_PATCH_NUMBER	14
++#define IPIPE_PATCH_NUMBER	15
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
