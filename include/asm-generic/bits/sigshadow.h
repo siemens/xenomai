@@ -1,7 +1,6 @@
 #ifndef _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 #define _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 
-#include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 
@@ -21,7 +20,6 @@ xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 
 	switch(action) {
 	case SIGSHADOW_ACTION_HARDEN:
-		fprintf(stderr, "Got SIGSHADOW_ACTION_HARDEN !\n");
 		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 		break;
 
@@ -29,7 +27,6 @@ xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		struct sched_param param;
 		int policy;
 
-		fprintf(stderr, "Got SIGSHADOW_ACTION_RENICE !\n");
 		param.sched_priority = sigshadow_arg(si->si_int);
 		policy = param.sched_priority > 0 ? SCHED_FIFO: SCHED_OTHER;
 		pthread_setschedparam(pthread_self(), policy, &param);
