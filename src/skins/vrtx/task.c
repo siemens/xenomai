@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <vrtx/vrtx.h>
+#include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
 
 #ifdef HAVE___THREAD
@@ -48,17 +49,6 @@ struct vrtx_task_iargs {
 	void *param;
 	xncompletion_t *completionp;
 };
-
-static void (*old_sigharden_handler)(int sig);
-
-static void vrtx_task_sigharden(int sig)
-{
-	if (old_sigharden_handler &&
-	    old_sigharden_handler != &vrtx_task_sigharden)
-		old_sigharden_handler(sig);
-
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
 
 static int vrtx_task_set_posix_priority(int prio, struct sched_param *param)
 {
@@ -113,7 +103,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	pthread_setspecific(__vrtx_tskey, tcb);
 #endif /* !HAVE___THREAD */
 
-	old_sigharden_handler = signal(SIGHARDEN, &vrtx_task_sigharden);
+	sigshadow_install_once();
 
 	bulk.a1 = (u_long)iargs->tid;
 	bulk.a2 = (u_long)iargs->prio;

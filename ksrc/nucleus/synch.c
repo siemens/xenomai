@@ -343,6 +343,8 @@ static void xnsynch_renice_thread(xnthread_t *thread, int prio)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
+	else if (xnthread_test_state(thread, XNSHADOW))
+		xnthread_set_info(thread, XNPRIOSET);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 

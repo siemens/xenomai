@@ -27,22 +27,12 @@
 #include <semaphore.h>
 #include <posix/syscall.h>
 #include <asm-generic/bits/current.h>
+#include <asm-generic/bits/sigshadow.h>
 
 extern int __pse51_muxid;
 
 static pthread_attr_t default_attr;
 static int linuxthreads;
-
-static void (*old_sigharden_handler)(int sig);
-
-static void __pthread_sigharden_handler(int sig)
-{
-	if (old_sigharden_handler &&
-	    old_sigharden_handler != &__pthread_sigharden_handler)
-		old_sigharden_handler(sig);
-
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
 
 int __wrap_pthread_setschedparam(pthread_t thread,
 				 int policy, const struct sched_param *param)
@@ -68,11 +58,9 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 
 	if (err == EPERM)
 		return __real_pthread_setschedparam(thread, policy, param);
-	else
-		__real_pthread_setschedparam(thread, policy, param);
 
 	if (!err && promoted) {
-		old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
+		sigshadow_install_once();
 #ifndef HAVE___THREAD
 		pthread_setspecific(xeno_current_mode_key, mode_buf);
 #endif /* !HAVE___THREAD */
@@ -139,7 +127,7 @@ static void *__pthread_trampoline(void *arg)
 	unsigned long *mode_buf;
 	long err;
 
-	old_sigharden_handler = signal(SIGHARDEN, &__pthread_sigharden_handler);
+	sigshadow_install_once();
 
 	param.sched_priority = iargs->prio;
 	policy = iargs->policy;

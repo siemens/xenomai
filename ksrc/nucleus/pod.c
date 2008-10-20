@@ -1162,7 +1162,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 	    !xnthread_test_state(thread, XNDORMANT) &&
 	    !xnpod_current_p(thread)) {
 		if (!xnpod_userspace_p())
-			xnshadow_send_sig(thread, SIGKILL, 1);
+			xnshadow_send_sig(thread, SIGKILL, 0, 1);
 		/*
 		 * Otherwise, assume the interface library has issued
 		 * pthread_cancel on the target thread, which should
@@ -1456,7 +1456,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	   is actually running some code under the control of the
 	   Linux scheduler (i.e. it's relaxed).  To make this
 	   possible, we force the target Linux task to migrate back to
-	   the Xenomai domain by sending it a SIGHARDEN signal the
+	   the Xenomai domain by sending it a SIGSHADOW signal the
 	   skin interface libraries trap for this specific internal
 	   purpose, whose handler is expected to call back the
 	   nucleus's migration service. By forcing this migration, we
@@ -1821,8 +1821,12 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 			xnpod_resume_thread(thread, 0);
 	}
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (propagate && xnthread_test_state(thread, XNRELAX))
-		xnshadow_renice(thread);
+	if (propagate) {
+		if (xnthread_test_state(thread, XNRELAX))
+			xnshadow_renice(thread);
+		else if (xnthread_test_state(thread, XNSHADOW))
+			xnthread_set_info(thread, XNPRIOSET);
+	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xnlock_put_irqrestore(&nklock, s);

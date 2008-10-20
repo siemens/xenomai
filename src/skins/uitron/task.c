@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <asm/xenomai/system.h>
+#include <asm-generic/bits/sigshadow.h>
 #include <uitron/uitron.h>
 #include <asm-generic/bits/current.h>
 
@@ -35,17 +36,6 @@ struct uitron_task_iargs {
 	T_CTSK *pk_ctsk;
 	xncompletion_t *completionp;
 };
-
-static void (*old_sigharden_handler)(int sig);
-
-static void uitron_task_sigharden(int sig)
-{
-	if (old_sigharden_handler &&
-	    old_sigharden_handler != &uitron_task_sigharden)
-		old_sigharden_handler(sig);
-
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
 
 static int uitron_task_set_posix_priority(int prio, struct sched_param *param)
 {
@@ -82,7 +72,7 @@ static void *uitron_task_trampoline(void *cookie)
 	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	old_sigharden_handler = signal(SIGHARDEN, &uitron_task_sigharden);
+	sigshadow_install_once();
 
 	mode = xeno_init_current_mode();
 	if (!mode) {
@@ -167,8 +157,7 @@ ER shd_tsk(ID tskid, T_CTSK *pk_ctsk) /* Xenomai extension. */
 	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-	old_sigharden_handler = signal(SIGHARDEN, &uitron_task_sigharden);
+	sigshadow_install_once();
 
 	err = XENOMAI_SKINCALL3(__uitron_muxid,
 				__uitron_cre_tsk,

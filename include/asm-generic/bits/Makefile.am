@@ -6,4 +6,5 @@ includesub_HEADERS = \
 	heap.h \
 	intr.h \
 	mlock_alert.h \
-	pod.h
+	pod.h \
+	sigshadow.h

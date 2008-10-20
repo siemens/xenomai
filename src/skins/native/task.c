@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <native/syscall.h>
 #include <native/task.h>
+#include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
 #include "wrappers.h"
 
@@ -50,23 +51,13 @@ struct rt_task_iargs {
 	xncompletion_t *completionp;
 };
 
-static void (*old_sigharden_handler)(int sig);
-
-static void rt_task_sigharden(int sig)
-{
-	if (old_sigharden_handler &&
-	    old_sigharden_handler != &rt_task_sigharden)
-		old_sigharden_handler(sig);
-
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
-
 static void *rt_task_trampoline(void *cookie)
 {
 	struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
 	void (*entry) (void *cookie);
 	struct sched_param param;
 	struct rt_arg_bulk bulk;
+	RT_TASK *task;
 	long err;
 
 	if (iargs->prio > 0) {
@@ -82,9 +73,10 @@ static void *rt_task_trampoline(void *cookie)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	old_sigharden_handler = signal(SIGHARDEN, &rt_task_sigharden);
+	sigshadow_install_once();
 
-	bulk.a1 = (u_long)iargs->task;
+	task = iargs->task;
+	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)iargs->name;
 	bulk.a3 = (u_long)iargs->prio;
 	bulk.a4 = (u_long)iargs->mode;
@@ -105,7 +97,7 @@ static void *rt_task_trampoline(void *cookie)
 	xeno_set_current();
 
 #ifdef HAVE___THREAD
-	__native_self = *iargs->task;
+	__native_self = *task;
 #endif /* HAVE___THREAD */
 
 	/* Wait on the barrier for the task to be started. The barrier
@@ -196,8 +188,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-	old_sigharden_handler = signal(SIGHARDEN, &rt_task_sigharden);
+	sigshadow_install_once();
 
 	if (prio > 0) {
 		/* Make sure the POSIX library caches the right priority. */

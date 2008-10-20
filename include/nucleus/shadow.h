@@ -99,6 +99,7 @@ void xnshadow_reset_shield(void);
 
 void xnshadow_send_sig(struct xnthread *thread,
 		       int sig,
+		       int arg,
 		       int specific);
 
 void xnshadow_rpi_check(void);

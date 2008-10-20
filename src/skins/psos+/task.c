@@ -26,6 +26,7 @@
 #include <memory.h>
 #include <string.h>
 #include <psos+/psos.h>
+#include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
 
 extern int __psos_muxid;
@@ -38,17 +39,6 @@ struct psos_task_iargs {
 	u_long *tid_r;
 	xncompletion_t *completionp;
 };
-
-static void (*old_sigharden_handler)(int sig);
-
-static void psos_task_sigharden(int sig)
-{
-	if (old_sigharden_handler &&
-	    old_sigharden_handler != &psos_task_sigharden)
-		old_sigharden_handler(sig);
-
-	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
-}
 
 static int psos_task_set_posix_priority(int prio, struct sched_param *param)
 {
@@ -81,8 +71,7 @@ static void *psos_task_trampoline(void *cookie)
 	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
+	sigshadow_install_once();
 
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
@@ -189,8 +178,7 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 	int err;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
+	sigshadow_install_once();
 
 	err = XENOMAI_SKINCALL5(__psos_muxid,
 				__psos_t_create,

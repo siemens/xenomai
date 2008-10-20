@@ -237,6 +237,26 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setschedparam.html">
  * Specification.</a>
+ *
+ * @note
+ *
+ * When creating or shadowing a Xenomai thread for the first time in
+ * user-space, Xenomai installs a handler for the SIGWINCH signal. If you had
+ * installed a handler before that, it will be automatically called by Xenomai
+ * for SIGWINCH signals that it has not sent.
+ *
+ * If, however, you install a signal handler for SIGWINCH after creating
+ * or shadowing the first Xenomai thread, you have to explicitly call the
+ * function xeno_sigwinch_handler at the beginning of your signal handler,
+ * using its return to know if the signal was in fact an internal signal of
+ * Xenomai (in which case it returns 1), or if you should handle the signal (in
+ * which case it returns 0). xeno_sigwinch_handler prototype is:
+ *
+ * <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b>
+ *
+ * Which means that you should register your handler with sigaction, using the
+ * SA_SIGINFO flag, and pass all the arguments you received to
+ * xeno_sigwinch_handler.
  * 
  */
 int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)

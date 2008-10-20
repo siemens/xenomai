@@ -115,6 +115,14 @@ do { \
    switch_lock_owner[task_cpu(t)] = t; \
 } while(0)
 
+#define xnshadow_sig_mux(sig, arg) ((sig) | ((arg) << 8))
+#define xnshadow_sig_demux(muxed, sig, arg) \
+	do {				     \
+		int _muxed = (muxed);	     \
+		(sig) = _muxed & 0xff;	     \
+		(arg) = _muxed >> 8;	     \
+	} while (0)
+
 static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
@@ -879,7 +887,7 @@ static void xnshadow_dereference_skin(unsigned magic)
 
 static void lostage_handler(void *cookie)
 {
-	int cpu = smp_processor_id(), reqnum, sig;
+	int cpu = smp_processor_id(), reqnum, sig, arg;
 	struct __lostagerq *rq = &lostagerq[cpu];
 
 	while ((reqnum = rq->out) != rq->in) {
@@ -927,8 +935,16 @@ static void lostage_handler(void *cookie)
 
 		case LO_SIGTHR_REQ:
 
-			sig = rq->req[reqnum].arg;
-			send_sig(sig, p, 1);
+			xnshadow_sig_demux(rq->req[reqnum].arg, sig, arg);
+			if (sig == SIGSHADOW) {
+				siginfo_t si;
+				memset(&si, '\0', sizeof(si));
+				si.si_signo = sig;
+				si.si_code = SI_QUEUE;
+				si.si_int = arg;
+				send_sig_info(sig, &si, p);
+			} else
+				send_sig(sig, p, 1);
 			break;
 
 		case LO_SIGGRP_REQ:
@@ -1237,6 +1253,13 @@ void xnshadow_relax(int notify)
 		/* Help debugging spurious relaxes. */
 		send_sig(SIGXCPU, current, 1);
 
+	if (xnthread_test_info(thread, XNPRIOSET)) {
+		xnthread_clear_info(thread, XNPRIOSET);
+		xnshadow_send_sig(thread, SIGSHADOW,
+				  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio),
+				  1);
+	}
+
 #ifdef CONFIG_SMP
 	/* If the shadow thread changed its CPU affinity while in
 	   primary mode, reset the CPU affinity of its Linux
@@ -1500,16 +1523,16 @@ void xnshadow_start(xnthread_t *thread)
 		schedule_linux_call(LO_START_REQ, p, 0);
 }
 
+/* Called with nklock locked, Xenomai interrupts off. */
 void xnshadow_renice(xnthread_t *thread)
 {
-	/* Called with nklock locked, Xenomai interrupts off. */
-	struct task_struct *p = xnthread_archtcb(thread)->user_task;
-
 	/* We need to bound the priority values in the [1..MAX_RT_PRIO-1]
 	   range, since the core pod's priority scale is a superset of
 	   Linux's priority scale. */
 	int prio = normalize_priority(xnthread_current_priority(thread));
-	schedule_linux_call(LO_RENICE_REQ, p, prio);
+
+	xnshadow_send_sig(thread, SIGSHADOW,
+			  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio), 1);
 
 	if (!xnthread_test_state(thread, XNDORMANT) &&
 	    xnthread_sched(thread) == xnpod_current_sched())
@@ -1519,8 +1542,7 @@ void xnshadow_renice(xnthread_t *thread)
 void xnshadow_suspend(xnthread_t *thread)
 {
 	/* Called with nklock locked, Xenomai interrupts off. */
-	struct task_struct *p = xnthread_archtcb(thread)->user_task;
-	schedule_linux_call(LO_SIGTHR_REQ, p, SIGHARDEN);
+	xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN, 1);
 }
 
 static int xnshadow_sys_migrate(struct pt_regs *regs)
@@ -1531,7 +1553,7 @@ static int xnshadow_sys_migrate(struct pt_regs *regs)
 				return -EPERM;
 
 			/* Paranoid: a corner case where the
-			   user-space side fiddles with SIGHARDEN
+			   user-space side fiddles with SIGSHADOW
 			   while the target thread is still waiting to
 			   be started. */
 			if (xnthread_test_state(xnshadow_thread(current), XNDORMANT))
@@ -2007,10 +2029,11 @@ static inline int substitute_linux_syscall(struct pt_regs *regs)
 	return 0;
 }
 
-void xnshadow_send_sig(xnthread_t *thread, int sig, int specific)
+void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 {
 	schedule_linux_call(specific ? LO_SIGTHR_REQ : LO_SIGGRP_REQ,
-			    xnthread_user_task(thread), sig);
+			    xnthread_user_task(thread),
+			    xnshadow_sig_mux(sig, specific ? arg : 0));
 }
 
 static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
