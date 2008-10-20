@@ -28,7 +28,7 @@
 #undef CONFIG_XENO_CPU_XSC3
 
 /* config */
-#undef CONFIG_XENO_FASTSEM
+#undef CONFIG_XENO_FASTSYNCH
 
 /* Host system alias */
 #undef CONFIG_XENO_HOST_STRING
@@ -100,6 +100,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* config */
+#undef HAVE___THREAD
 
 /* Name of package */
 #undef PACKAGE
