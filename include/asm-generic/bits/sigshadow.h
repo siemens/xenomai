@@ -1,6 +1,7 @@
 #ifndef _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 #define _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 
+#include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 
