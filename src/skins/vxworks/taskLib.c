@@ -86,6 +86,7 @@ static void *wind_task_trampoline(void *cookie)
 	    (struct wind_task_iargs *)cookie, _iargs;
 	struct wind_arg_bulk bulk;
 	struct sched_param param;
+	WIND_TCB *pTcb;
 	int policy;
 	long err;
 
@@ -108,6 +109,7 @@ static void *wind_task_trampoline(void *cookie)
 	bulk.a3 = (u_long)iargs->flags;
 	bulk.a4 = (u_long)pthread_self();
 	bulk.a5 = (u_long)xeno_init_current_mode();
+	pTcb = iargs->pTcb;
 
 	if (!bulk.a5) {
 		err = -ENOMEM;
@@ -116,14 +118,14 @@ static void *wind_task_trampoline(void *cookie)
 
 	err = XENOMAI_SKINCALL3(__vxworks_muxid,
 				__vxworks_task_init,
-				&bulk, iargs->pTcb, iargs->completionp);
+				&bulk, pTcb, iargs->completionp);
 	if (err)
 		goto fail;
 
 	xeno_set_current();
 
 #ifdef HAVE___THREAD
-	__vxworks_self = *iargs->pTcb;
+	__vxworks_self = *pTcb;
 #endif /* HAVE___THREAD */
 
 	/* Wait on the barrier for the task to be started. The barrier
