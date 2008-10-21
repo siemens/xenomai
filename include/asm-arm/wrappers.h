@@ -27,6 +27,8 @@
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
 
+#define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
+
 #define wrap_range_ok(task,addr,size) ({ \
 	unsigned long flag, sum; \
 	__asm__("adds %1, %2, %3; sbcccs %1, %1, %0; movcc %0, #0" \

@@ -31,6 +31,9 @@
 
 #define CONFIG_MMU 1
 
+#define wrap_phys_mem_prot(filp,pfn,size,prot)  \
+  __pgprot(pgprot_val(prot) | _PAGE_NO_CACHE | _PAGE_GUARDED)
+
 #define atomic_inc_and_test(v) (atomic_inc_return(v) == 0)
 #define show_stack(p,sp)       print_backtrace(sp)	/* Only works for current. */
 
@@ -50,6 +53,9 @@ static __inline__ int fls(unsigned int x)
 }
 
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
+
+#define wrap_phys_mem_prot(filp,pfn,size,prot) \
+  phys_mem_access_prot(filp, pfn, size, prot)
 
 #ifdef CONFIG_PPC64
 #define wrap_range_ok(task,addr,size) \

@@ -1053,7 +1053,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 			vaddr += PAGE_SIZE;
 			size -= PAGE_SIZE;
 		}
-	} else if (xnarch_remap_io_page_range(vma,
+	} else if (xnarch_remap_io_page_range(file,vma,
 					      vma->vm_start,
 					      virt_to_phys((void *)vaddr),
 					      size, PAGE_SHARED))
