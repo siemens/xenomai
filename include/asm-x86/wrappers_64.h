@@ -30,6 +30,8 @@
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	rthal_strncpy_from_user(dstP, srcP, n)
 
+#define wrap_phys_mem_prot(filp,pfn,size,prot)  (prot)
+
 #define rthal_irq_descp(irq)		(irq_desc + irq)
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 

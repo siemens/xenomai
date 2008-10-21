@@ -1,3 +1,9 @@
+2008-10-21  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-*/wrappers.h, include/asm-generic/system.h:
+	Introduce wrap_phys_mem_prot() to retrieve per-arch VMA protection
+	bits to access physical memory.
+
 2008-10-20  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (lostage_handler): Allow a siginfo_t to be

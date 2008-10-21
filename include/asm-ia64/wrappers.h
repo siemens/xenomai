@@ -27,6 +27,9 @@
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
 
+#define wrap_phys_mem_prot(filp,pfn,size,prot) \
+  phys_mem_access_prot(filp, pfn, size, prot)
+
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
 typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
