@@ -1,3 +1,9 @@
+2008-10-21  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/nucleus/udev: Don't allow the world to access special
+	Xenomai devices. Suggest to use a separate group for managing
+	access (udev will fall back to root if group does not exist).
+	
 2008-10-21  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-*/wrappers.h, include/asm-generic/system.h:
