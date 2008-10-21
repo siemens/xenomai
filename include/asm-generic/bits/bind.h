@@ -15,18 +15,18 @@
 #include <asm/xenomai/syscall.h>
 
 #ifdef HAVE___THREAD
-__thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec"))) =
-	XN_NO_HANDLE;
-__thread unsigned long
-xeno_current_mode __attribute__ ((tls_model ("initial-exec")));
+__thread __attribute__ ((tls_model ("initial-exec"), weak))
+xnhandle_t xeno_current = XN_NO_HANDLE;
+__thread __attribute__ ((tls_model ("initial-exec"), weak))
+unsigned long xeno_current_mode;
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
 	xeno_current = current;
 }
 #else /* !HAVE___THREAD */
-pthread_key_t xeno_current_key;
-pthread_key_t xeno_current_mode_key;
+pthread_key_t xeno_current_key __attribute__ ((weak));
+pthread_key_t xeno_current_mode_key __attribute__ ((weak));
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
