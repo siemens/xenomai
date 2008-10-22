@@ -118,7 +118,7 @@ static void tm_sigpost_handler(xntimer_t *timer)
 {
 	psostm_t *tm = container_of(timer, psostm_t, timerbase);
 
-	xnshadow_send_sig(&tm->owner->threadbase, tm->data, 1);
+	xnshadow_send_sig(&tm->owner->threadbase, tm->data, 0, 1);
 
 	if (xntimer_interval(&tm->timerbase) == XN_INFINITE)
 		tm_destroy_internal(tm);

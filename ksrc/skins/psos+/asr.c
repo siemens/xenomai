@@ -84,7 +84,8 @@ u_long as_send(u_long tid, u_long signals)
 		if (xnthread_user_task(&task->threadbase) != NULL) {
 			int signo = SIGRTMIN + ffnz(signals);
 			if (signo < SIGRTMAX) {
-				xnshadow_send_sig(&task->threadbase, signo, 1);
+				xnshadow_send_sig(&task->threadbase,
+						  signo, 0, 1);
 				goto unlock_and_exit;
 			}
 		}
