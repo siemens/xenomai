@@ -123,7 +123,7 @@ typedef struct xnsynch {
 #define xnsynch_owner_check(synch, thread) \
 	xnsynch_fast_owner_check((synch)->fastlock, xnthread_handle(thread))
 #else /* !CONFIG_XENO_FASTSYNCH */
-#define xnsynch_fastlock(synch)		NULL
+#define xnsynch_fastlock(synch)		((xnarch_atomic_t *)NULL)
 #define xnsynch_fastlock_p(synch)	0
 #define xnsynch_owner_check(synch, thread) \
 	((synch)->owner == thread ? 0 : -EPERM)
