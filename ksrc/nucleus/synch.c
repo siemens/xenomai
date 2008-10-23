@@ -405,7 +405,9 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
       redo:
 
 	if (use_fastlock) {
-		fastlock = xnarch_atomic_cmpxchg(xnsynch_fastlock(synch),
+		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
+
+		fastlock = xnarch_atomic_cmpxchg(lockp,
 						 XN_NO_HANDLE, threadh);
 
 		if (likely(fastlock == XN_NO_HANDLE)) {
@@ -423,13 +425,12 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 		   where possible. Only if it appears not to be set, start
 		   with cmpxchg directly. */
 		if (xnsynch_fast_is_claimed(fastlock)) {
-			old = xnarch_atomic_get(xnsynch_fastlock(synch));
+			old = xnarch_atomic_get(lockp);
 			goto test_no_owner;
 		}
 		do {
-			old = xnarch_atomic_cmpxchg
-				(xnsynch_fastlock(synch), fastlock,
-				 xnsynch_fast_set_claimed(fastlock, 1));
+			old = xnarch_atomic_cmpxchg(lockp, fastlock,
+					xnsynch_fast_set_claimed(fastlock, 1));
 			if (likely(old == fastlock))
 				break;
 
@@ -520,12 +521,13 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 	      grab_and_exit:
 
 		if (use_fastlock) {
+			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
 			/* We are the new owner, update the fastlock
 			   accordingly. */
 			if (xnsynch_pended_p(synch))
 				threadh =
 				    xnsynch_fast_set_claimed(threadh, 1);
-			xnarch_atomic_set(xnsynch_fastlock(synch), threadh);
+			xnarch_atomic_set(lockp, threadh);
 		}
 	}
 
@@ -703,8 +705,10 @@ struct xnthread *xnsynch_release(xnsynch_t *synch)
 		synch->owner = NULL;
 		newownerh = XN_NO_HANDLE;
 	}
-	if (use_fastlock)
-		xnarch_atomic_set(xnsynch_fastlock(synch), newownerh);
+	if (use_fastlock) {
+		xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
+		xnarch_atomic_set(lockp, newownerh);
+	}
 
 	xnlock_put_irqrestore(&nklock, s);
 

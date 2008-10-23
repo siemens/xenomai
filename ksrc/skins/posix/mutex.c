@@ -273,7 +273,7 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	if (xnsynch_fast_owner_check(mutex->synchbase.fastlock,
 				     XN_NO_HANDLE) != 0) {
 #else /* CONFIG_XENO_FASTSYNCH */
-	if (xnsynch_owner_check(&mutex->synchbase, NULL) {
+	if (xnsynch_owner_check(&mutex->synchbase, NULL)) {
 #endif
 		cb_write_unlock(&shadow->lock, s);
 		return EBUSY;
