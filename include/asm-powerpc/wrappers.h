@@ -24,8 +24,7 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
-#include <linux/interrupt.h>
+#include <linux/version.h>
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
@@ -72,6 +71,9 @@ static __inline__ int fls(unsigned int x)
 #endif /* !CONFIG_PPC64 */
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
+
+#include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
+#include <linux/interrupt.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
 
