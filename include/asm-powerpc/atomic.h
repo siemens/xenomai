@@ -95,8 +95,6 @@ typedef atomic_t xnarch_atomic_t;
 
 #endif /* !CONFIG_PPC64 */
 
-#include <asm-generic/xenomai/atomic.h>
-
 #else /* !__KERNEL__ */
 
 #ifndef __powerpc64__
