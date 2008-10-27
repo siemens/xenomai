@@ -247,11 +247,11 @@ static inline unsigned long long __xn_rdtsc(void)
         unsigned counter;
 
         __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
-        __asm__ ("" : /* */ : /* */ : "memory");
+        __asm__ __volatile__ ("" : /* */ : /* */ : "memory");
         counter = *counterp;
 
         if ((counter & mask) < ((unsigned) result & mask))
-                result += mask + 1;
+                result += mask + 1ULL;
         return (result & ~((unsigned long long) mask)) | (counter & mask);
 #elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
@@ -264,7 +264,7 @@ static inline unsigned long long __xn_rdtsc(void)
 	do {
 		before = after;
 		counter = *counterp;
-		__asm__ ("" : /* */ : /* */ : "memory");
+		__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
 		__asm__ ("ldmia %1, %M0\n" : "=r"(after): "r"(tscp), "m"(*tscp));
 	} while (((unsigned) after) != ((unsigned) before));
 	if ((counter & mask) < ((unsigned) before & mask))
@@ -281,7 +281,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		counter = *__xn_tscinfo.u.dec.counter;
 		last_cnt = *__xn_tscinfo.u.dec.last_cnt;
 		/* compiler barrier. */
-		asm("" : /* */ : /* */ : "memory");
+		__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
 
 		after = *__xn_tscinfo.u.dec.tsc;
 	} while (after != before);
@@ -289,7 +289,7 @@ static inline unsigned long long __xn_rdtsc(void)
 	counter &= mask;
 	last_cnt &= mask;
 	if (counter > last_cnt)
-		before += mask + 1;
+		before += mask + 1ULL;
 	return (before + last_cnt - counter);
 
 #endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
