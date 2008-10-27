@@ -1,3 +1,8 @@
+2008-10-27  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-arm/syscall.h (__xn_rdtsc): Fix ARM tsc emulation
+	when based on 32 bits counters.
+
 2008-10-21  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/nucleus/udev: Don't allow the world to access special
