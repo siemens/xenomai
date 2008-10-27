@@ -21687,8 +21687,8 @@ echo $ECHO_N "checking if lndir supports the -silent -ignorelinks options... $EC
 	  cd conftest2.dir && $LNDIR -silent -ignorelinks ../conftest1.dir \
 		&& cd ..
 	  test -e conftest2.dir/foo && LNDIR="$LNDIR -silent -ignorelinks"
-	  rm -Rf contest1.dir conftest2.dir
     fi
+    rm -Rf conftest1.dir conftest2.dir
     if test "x$LNDIR" = "xlndir"; then
 	{ echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
