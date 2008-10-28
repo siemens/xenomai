@@ -49,18 +49,6 @@ int xnthread_init(xnthread_t *thread,
 {
 	int ret = 0;
 
-	if (name)
-		xnobject_copy_name(thread->name, name);
-	else
-		snprintf(thread->name, sizeof(thread->name), "%p", thread);
-
-	xntimer_init(&thread->rtimer, tbase, xnthread_timeout_handler);
-	xntimer_set_name(&thread->rtimer, thread->name);
-	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, tbase, xnthread_periodic_handler);
-	xntimer_set_name(&thread->ptimer, thread->name);
-	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
-
 	/* Setup the TCB. */
 
 	xnarch_init_tcb(xnthread_archtcb(thread));
@@ -82,6 +70,18 @@ int xnthread_init(xnthread_t *thread,
 	if (ret)
 		return ret;
 #endif
+
+	if (name)
+		xnobject_copy_name(thread->name, name);
+	else
+		snprintf(thread->name, sizeof(thread->name), "%p", thread);
+
+	xntimer_init(&thread->rtimer, tbase, xnthread_timeout_handler);
+	xntimer_set_name(&thread->rtimer, thread->name);
+	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
+	xntimer_init(&thread->ptimer, tbase, xnthread_periodic_handler);
+	xntimer_set_name(&thread->ptimer, thread->name);
+	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
 	thread->state = flags;
 	thread->info = 0;
