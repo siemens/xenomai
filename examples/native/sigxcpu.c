@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <getopt.h>
 #include <execinfo.h>
+#include <sys/mman.h>
 #include <native/task.h>
 
 RT_TASK task;
@@ -42,6 +43,8 @@ int main (int argc, char **argv)
 
 {
     int err;
+
+    mlockall(MCL_CURRENT | MCL_FUTURE);
 
     signal(SIGXCPU, warn_upon_switch);
 
