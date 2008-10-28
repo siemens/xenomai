@@ -1260,30 +1260,30 @@ static void xnheap_free_extent(xnheap_t *heap,
 	xnarch_free_host_mem(extent, size);
 }
 
-int xnheap_init_mapped(xnheap_t *heap, unsigned len, int flags)
+int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 {
-	void *heapaddr = xnarch_alloc_host_mem(len);
-	int err;
+	void *heapaddr;
+	int ret;
 
-	if ((flags & XNHEAP_GFP_NONCACHED)
-	    && flags != XNHEAP_GFP_NONCACHED)
+	if ((memflags & XNHEAP_GFP_NONCACHED)
+	    && memflags != XNHEAP_GFP_NONCACHED)
 		return -EINVAL;
 
+	heapaddr = xnarch_alloc_host_mem(heapsize);
 	if (heapaddr) {
-		err = xnheap_init(&shm->heapbase,
-				  heapaddr, len, XNCORE_PAGE_SIZE);
-		if (err)
-			xnarch_free_host_mem(heapaddr, len);
+		ret = xnheap_init(heap, heapaddr, heapsize, XNCORE_PAGE_SIZE);
+		if (ret)
+			xnarch_free_host_mem(heapaddr, heapsize);
 
-		return err;
+		return ret;
 	}
 
 	return -ENOMEM;
 }
 
-void xnheap_destroy_mapped(xnheap_t *heap)
+int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
 {
-	xnheap_destroy(heap, &xnheap_free_extent, NULL);
+	return xnheap_destroy(heap, &xnheap_free_extent, NULL);
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
