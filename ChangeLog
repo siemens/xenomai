@@ -1,3 +1,8 @@
+2008-10-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/intr.c, ksrc/arch/generic/hal.c,
+	include/nucleus/types.h: Change rthal_irq_ackfn_t definition.
+
 2008-10-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* include/asm-generic/arith.h: Introduce generic divide-less ullimd.
