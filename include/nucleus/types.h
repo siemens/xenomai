@@ -65,7 +65,7 @@ struct xnintr;
 
 typedef int (*xnisr_t)(struct xnintr *intr);
 
-typedef int (*xniack_t)(unsigned irq);
+typedef void (*xniack_t)(unsigned irq, void *arg);
 
 #define XN_INFINITE   (0)
 #define XN_NONBLOCK   ((xnticks_t)-1)
