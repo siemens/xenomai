@@ -195,7 +195,6 @@ unsigned long long __rthal_generic_ullimd (const unsigned long long op,
 static inline __attribute__((__const__)) long long
 __rthal_generic_llimd (long long op, unsigned m, unsigned d)
 {
-
     if(op < 0LL)
         return -__rthal_generic_ullimd(-op, m, d);
     return __rthal_generic_ullimd(op, m, d);
@@ -245,6 +244,7 @@ __rthal_generic_llmulshft(const long long op,
 #endif /* !rthal_llmulshft */
 
 #ifdef XNARCH_WANT_NODIV_MULDIV
+
 #ifndef __rthal_add64and32
 #define __rthal_add64and32(h, l, s) \
 	__rthal_u64tou32(__rthal_u64fromu32((h), (l)) + (s), (h), (l))
@@ -260,6 +260,15 @@ typedef struct {
 	unsigned integ;
 } rthal_u32frac_t;
 
+static inline void xnarch_init_u32frac(rthal_u32frac_t *const f,
+				       const unsigned m,
+				       const unsigned d)
+{
+	f->integ = m / d;
+	f->frac = __rthal_generic_div96by32(__rthal_u64fromu32(m % d, 0),
+					    0, d, NULL);
+}
+
 #ifndef rthal_nodiv_imuldiv
 static inline __attribute__((__const__)) unsigned
 rthal_generic_nodiv_imuldiv(unsigned op, const rthal_u32frac_t f)
@@ -274,33 +283,54 @@ static inline __attribute__((__const__)) unsigned long long
 __rthal_mul64by64_high(const unsigned long long op, const unsigned long long m)
 {
     /* Compute high 64 bits of multiplication 64 bits x 64 bits. */
-    register unsigned long long t1, t2, t3;
-    register unsigned oph, opl, mh, ml, t0, t1h, t1l, t2h, t2l, t3h, t3l;
+    register unsigned long long t0, t1, t2, t3;
+    register unsigned oph, opl, mh, ml, t0h, t0l, t1h, t1l, t2h, t2l, t3h, t3l;
 
     __rthal_u64tou32(op, oph, opl);
     __rthal_u64tou32(m, mh, ml);
-    t0 = rthal_ullmul(opl, ml) >> 32;
+    t0 = rthal_ullmul(opl, ml);
+    __rthal_u64tou32(t0, t0h, t0l);
     t3 = rthal_ullmul(oph, mh);
     __rthal_u64tou32(t3, t3h, t3l);
+    __rthal_add64and32(t3l, t0h, t0l >> 31);
     t1 = rthal_ullmul(oph, ml);
     __rthal_u64tou32(t1, t1h, t1l);
-    __rthal_add96and64(t3h, t3l, t0, t1h, t1l);
+    __rthal_add96and64(t3h, t3l, t0h, t1h, t1l);
     t2 = rthal_ullmul(opl, mh);
     __rthal_u64tou32(t2, t2h, t2l);
-    __rthal_add96and64(t3h, t3l, t0, t2h, t2l);
+    __rthal_add96and64(t3h, t3l, t0h, t2h, t2l);
 
     return __rthal_u64fromu32(t3h, t3l);
 }
 
 static inline unsigned long long
-rthal_generic_nodiv_ullimd(const unsigned long long op,
-			   const unsigned long long frac,
-			   unsigned integ)
+__rthal_generic_nodiv_ullimd(const unsigned long long op,
+			     const unsigned long long frac,
+			     unsigned integ)
 {
 	return __rthal_mul64by64_high(op, frac) + integ * op;
 }
-#define rthal_nodiv_ullimd(op, f, i) rthal_generic_nodiv_ullimd((op),(f), (i))
+#define rthal_nodiv_ullimd(op, f, i)  __rthal_generic_nodiv_ullimd((op),(f), (i))
 #endif /* !rthal_nodiv_ullimd */
+
+#ifndef rthal_nodiv_llimd
+static inline __attribute__((__const__)) long long
+__rthal_generic_nodiv_llimd (long long op, unsigned m, unsigned d)
+{
+	long long ret;
+	int sign = 0;
+
+	if(op < 0LL) {
+		sign = 1;
+		op = -op;
+	}
+        ret = rthal_nodiv_ullimd(op, m, d);
+
+	return sign ? -ret : ret;
+}
+#define rthal_nodiv_llimd(ll,m,d) __rthal_generic_nodiv_llimd((ll),(m),(d))
+#endif /* !rthal_nodiv_llimd */
+
 #endif /* XNARCH_WANT_NODIV_MULDIV */
 
 static inline void xnarch_init_llmulshft(const unsigned m_in,
@@ -321,17 +351,6 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 	*m_out = (unsigned)mult;
 }
 
-#ifdef XNARCH_WANT_NODIV_MULDIV
-static inline void xnarch_init_u32frac(rthal_u32frac_t *const f,
-				       const unsigned m,
-				       const unsigned d)
-{
-	f->integ = m / d;
-	f->frac = __rthal_generic_div96by32(__rthal_u64fromu32(m % d, 0),
-					    0, d, NULL);
-}
-#endif /* XNARCH_WANT_NODIV_MULDIV */
-
 #define xnarch_ullmod(ull,uld,rem)   ({ xnarch_ulldiv(ull,uld,rem); (*rem); })
 #define xnarch_uldiv(ull, d)         rthal_uldivrem(ull, d, NULL)
 #define xnarch_ulmod(ull, d)         ({ u_long _rem;                    \
@@ -346,6 +365,7 @@ static inline void xnarch_init_u32frac(rthal_u32frac_t *const f,
 			                rthal_divmod64((a),(b),&_rem); _rem; })
 #define xnarch_imuldiv               rthal_imuldiv
 #define xnarch_llimd                 rthal_llimd
+#define xnarch_nodiv_llimd           rthal_nodiv_llimd
 #define xnarch_llmulshft             rthal_llmulshft
 #define xnarch_get_cpu_tsc           rthal_rdtsc
 
