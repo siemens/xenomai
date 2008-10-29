@@ -129,9 +129,8 @@ void rthal_critical_exit(unsigned long flags)
  * routine, aimed at replacing the one provided by Adeos. Only very
  * specific situations actually require to override the default Adeos
  * setting for this parameter, like having to acknowledge non-standard
- * PIC hardware. @a ackfn should return a non-zero value to indicate
- * that the interrupt has been properly acknowledged. If @a ackfn is
- * NULL, the default Adeos routine will be used instead.
+ * PIC hardware. If @a ackfn is NULL, the default Adeos routine will
+ * be used instead.
  *
  * @param cookie A user-defined opaque cookie the HAL will pass to the
  * interrupt handler as its sole argument.
