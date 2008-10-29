@@ -8,7 +8,7 @@
 #include "outofline.h"
 
 static volatile unsigned nsec_per_sec = 1000000000;
-static volatile unsigned sample_freq = 666000000;
+static volatile unsigned sample_freq = 33000000;
 static volatile unsigned long long arg = 0x7fffffffffffffffULL;
 static unsigned threshold = 15000; /* 15 usecs */
 
@@ -48,9 +48,9 @@ int main(void)
 	int i;
 
 	/* Prepare. */
-	xnarch_init_llmulshft(nsec_per_sec, sample_freq, &mul, &shft);
+	xnarch_init_llmulshft(sample_freq, nsec_per_sec, &mul, &shft);
 #ifdef XNARCH_WANT_NODIV_MULDIV
-	xnarch_init_u32frac(&frac, nsec_per_sec, sample_freq);
+	xnarch_init_u32frac(&frac, sample_freq, nsec_per_sec);
 #endif /* XNARCH_WANT_NODIV_MULDIV */
 	threshold = rt_timer_ns2tsc(threshold);
 	fprintf(stderr, "mul: 0x%08x, shft: %d\n", mul, shft);
