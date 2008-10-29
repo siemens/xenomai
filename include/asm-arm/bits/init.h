@@ -80,7 +80,7 @@ static inline int xnarch_init(void)
 			      &xnarch_tsc_scale, &xnarch_tsc_shift);
 	xnarch_tsc_divide = 1 << xnarch_tsc_shift;
 
-	xnarch_init_u32frac(&xnarch_tsc_frac, RTHAL_CPU_FREQ, 1000000000);
+	xnarch_init_u32frac(&xnarch_tsc_frac, xnarch_tsc_divide, xnarch_tsc_scale);
 
 	err = xnarch_calibrate_sched();
 
