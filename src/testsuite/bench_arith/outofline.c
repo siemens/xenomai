@@ -3,8 +3,6 @@
 
 #include <asm/xenomai/arith.h>
 
-#include "outofline.h"
-
 unsigned long long dummy(void)
 {
 	return 0;
