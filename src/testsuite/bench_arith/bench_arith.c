@@ -9,8 +9,8 @@
 
 static volatile unsigned nsec_per_sec = 1000000000;
 static volatile unsigned sample_freq = 33000000;
-static volatile unsigned long long arg = 0x7fffffffffffffffULL;
-static unsigned threshold = 15000; /* 15 usecs */
+static volatile long long arg = 0x7fffffffffffffffULL;
+static unsigned threshold = 20000; /* 15 usecs */
 
 #define bench(display, f)						\
 	do {								\
@@ -58,24 +58,22 @@ int main(void)
 
 	bench("inline calibration", 0);
 	calib = avg;
-	bench("inlined ullimd",
-	      __rthal_generic_ullimd(arg, nsec_per_sec, sample_freq));
+	bench("inlined ullimd", rthal_llimd(arg, sample_freq, nsec_per_sec));
 	bench("inlined llmulshft", rthal_llmulshft(arg, mul, shft));
 #ifdef XNARCH_WANT_NODIV_MULDIV
 	bench("inlined nodiv_ullimd",
-	      rthal_nodiv_ullimd(arg, frac.frac, frac.integ));
+	      rthal_nodiv_llimd(arg, frac.frac, frac.integ));
 #endif /* XNARCH_WANT_NODIV_MULDIV */
 
 	calib = 0;
 	bench("out of line calibration", dummy());
 	calib = avg;
 	bench("out of line ullimd",
-	      do_ullimd(arg, nsec_per_sec, sample_freq));
+	      do_llimd(arg, sample_freq, nsec_per_sec));
 	bench("out of line llmulshft", do_llmulshft(arg, mul, shft));
 #ifdef XNARCH_WANT_NODIV_MULDIV
 	bench("out of line nodiv_ullimd",
-	      do_nodiv_ullimd(arg, frac.frac, frac.integ));
+	      do_nodiv_llimd(arg, frac.frac, frac.integ));
 #endif /* XNARCH_WANT_NODIV_MULDIV */
-
 	return 0;
 }
