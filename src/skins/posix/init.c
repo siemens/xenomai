@@ -27,6 +27,7 @@
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
 #include <asm-generic/bits/mlock_alert.h>
+#include <asm-generic/bits/sigshadow.h>
 #include <posix/mutex.h>
 
 /* asm-generic/bits/bind.h uses the following functions, so we redefine them to
@@ -106,6 +107,9 @@ void __init_posix_interface(void)
 			exit(EXIT_FAILURE);
 		}
 
+		/* Restore default state. */
+		sigaction(SIGSHADOW, &xeno_saved_sigshadow_action, NULL);
+		xeno_sigshadow_installed = PTHREAD_ONCE_INIT;		
 	}
 }
 
