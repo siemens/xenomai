@@ -292,7 +292,7 @@ __rthal_mul64by64_high(const unsigned long long op, const unsigned long long m)
     __rthal_u64tou32(t0, t0h, t0l);
     t3 = rthal_ullmul(oph, mh);
     __rthal_u64tou32(t3, t3h, t3l);
-    __rthal_add64and32(t3l, t0h, t0l >> 31);
+    __rthal_add96and64(t3h, t3l, t0h, 0, t0l >> 31);
     t1 = rthal_ullmul(oph, ml);
     __rthal_u64tou32(t1, t1h, t1l);
     __rthal_add96and64(t3h, t3l, t0h, t1h, t1l);
@@ -315,7 +315,7 @@ __rthal_generic_nodiv_ullimd(const unsigned long long op,
 
 #ifndef rthal_nodiv_llimd
 static inline __attribute__((__const__)) long long
-__rthal_generic_nodiv_llimd (long long op, unsigned m, unsigned d)
+__rthal_generic_nodiv_llimd (long long op, unsigned long long frac, unsigned integ)
 {
 	long long ret;
 	int sign = 0;
@@ -324,11 +324,11 @@ __rthal_generic_nodiv_llimd (long long op, unsigned m, unsigned d)
 		sign = 1;
 		op = -op;
 	}
-        ret = rthal_nodiv_ullimd(op, m, d);
+        ret = rthal_nodiv_ullimd(op, frac, integ);
 
 	return sign ? -ret : ret;
 }
-#define rthal_nodiv_llimd(ll,m,d) __rthal_generic_nodiv_llimd((ll),(m),(d))
+#define rthal_nodiv_llimd(ll,frac,integ) __rthal_generic_nodiv_llimd((ll),(frac),(integ))
 #endif /* !rthal_nodiv_llimd */
 
 #endif /* XNARCH_WANT_NODIV_MULDIV */
