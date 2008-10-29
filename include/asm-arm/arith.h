@@ -1,14 +1,25 @@
 #ifndef _XENO_ASM_ARM_ARITH_H
 #define _XENO_ASM_ARM_ARITH_H
 
+#include <asm/xenomai/features.h>
+
 #define XNARCH_WANT_NODIV_MULDIV
 
-#define __rthal_add64and32(h, l, s) \
-	do {				       \
-		__asm__ ("adds %1, %2\n\t" \
-			 "adc %0, #0\n\t" \
-			 : "+r"(h), "+r"(l) \
-			 : "r"(s));	    \
+#if __LINUX_ARM_ARCH__ >= 4
+static inline __attribute__((__const__)) unsigned long long
+rthal_arm_nodiv_ullimd(const unsigned long long op,
+		       const unsigned long long frac,
+		       const unsigned rhs_integ);
+
+#define rthal_nodiv_ullimd(op, frac, integ) \
+	rthal_arm_nodiv_ullimd((op), (frac), (integ))
+#else /* arm <= v3 */
+#define __rthal_add64and32(h, l, s)		\
+	do {					\
+		__asm__ ("adds %1, %2\n\t"	\
+			 "adc %0, #0\n\t"	\
+			 : "+r"(h), "+r"(l)	\
+			 : "r"(s): "cc");	\
 	} while (0)
 
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
@@ -17,14 +28,13 @@
 			 "adcs %1, %3\n\t"		\
 			 "adc %0, #0\n\t"		\
 			 : "+r"(l0), "+r"(l1), "+r"(l2)	\
-			 : "r"(s0), "r"(s1));		\
+			 : "r"(s0), "r"(s1): "cc");	\
 	} while (0)
-
-#define rthal_nodiv_ullimd(op, frac, integ) \
-	rthal_arm_nodiv_ullimd((op), (frac), (integ))
+#endif /* arm <= v3 */
 
 #include <asm-generic/xenomai/arith.h>
 
+#if __LINUX_ARM_ARCH__ >= 4
 static inline __attribute__((__const__)) unsigned long long
 rthal_arm_nodiv_ullimd(const unsigned long long op,
 		       const unsigned long long frac,
@@ -46,6 +56,9 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 	
 	__asm__ ("umull %[tl], %[rl], %[opl], %[fracl]\n\t"
 		 "umull %[rm], %[rh], %[oph], %[frach]\n\t"
+		 "adds %[rl], %[tl], lsr #31\n\t"
+		 "adcs %[rm], #0\n\t"
+		 "adc %[rh], #0\n\t"
 		 "umull %[tl], %[th], %[oph], %[fracl]\n\t"
 		 "adds %[rl], %[tl]\n\t"
 		 "adcs %[rm], %[th]\n\t"
@@ -60,8 +73,11 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 		   [tl]"=r"(tl), [th]"=r"(th)
 		 : [opl]"r"(opl), [oph]"r"(oph),
 		   [fracl]"r"(fracl), [frach]"r"(frach),
-		   [integ]"r"(integ));
+		   [integ]"r"(integ)
+		 : "cc");
 
 	return __rthal_u64fromu32(rh, rm);
 }
+#endif /* arm >= v4 */
+
 #endif /* _XENO_ASM_ARM_ARITH_H */
