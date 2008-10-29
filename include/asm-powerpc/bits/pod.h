@@ -23,6 +23,16 @@
 #ifndef _XENO_ASM_POWERPC_BITS_POD_H
 #define _XENO_ASM_POWERPC_BITS_POD_H
 
+unsigned xnarch_tsc_scale;
+unsigned xnarch_tsc_shift;
+unsigned xnarch_tsc_divide;
+
+long long xnarch_tsc_to_ns(long long ts)
+{
+	return xnarch_llmulshft(ts, xnarch_tsc_scale, xnarch_tsc_shift);
+}
+#define XNARCH_TSC_TO_NS
+
 #include <asm-generic/xenomai/bits/pod.h>
 
 void xnpod_welcome_thread(struct xnthread *, int);
