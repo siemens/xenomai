@@ -245,15 +245,6 @@ __rthal_generic_llmulshft(const long long op,
 
 #ifdef XNARCH_WANT_NODIV_MULDIV
 
-#ifndef __rthal_add64and32
-#define __rthal_add64and32(h, l, s) \
-	__rthal_u64tou32(__rthal_u64fromu32((h), (l)) + (s), (h), (l))
-#endif /* !__rthal_add64and32 */
-
-#ifndef __rthal_add96and64
-#error "__rthal_add96and64 must be implemented."
-#endif
-
 /* Representation of a 32 bits fraction. */
 typedef struct {
 	unsigned long long frac;
@@ -279,6 +270,11 @@ rthal_generic_nodiv_imuldiv(unsigned op, const rthal_u32frac_t f)
 #endif /* rthal_nodiv_imuldiv */
 
 #ifndef rthal_nodiv_ullimd
+
+#ifndef __rthal_add96and64
+#error "__rthal_add96and64 must be implemented."
+#endif
+
 static inline __attribute__((__const__)) unsigned long long
 __rthal_mul64by64_high(const unsigned long long op, const unsigned long long m)
 {
