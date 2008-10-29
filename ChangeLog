@@ -1,3 +1,8 @@
+2008-10-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits, include/asm-powerpc/arith.h: Enable
+	fast maths for xnarch_ns_to_tsc().
+
 2008-10-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/intr.c, ksrc/arch/generic/hal.c,

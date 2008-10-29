@@ -68,6 +68,7 @@ int xnarch_calibrate_sched(void)
 static inline int xnarch_init(void)
 {
 	extern unsigned xnarch_tsc_scale, xnarch_tsc_shift, xnarch_tsc_divide;
+	extern rthal_u32frac_t xnarch_tsc_frac;
 	int err;
 
 	err = rthal_init();
@@ -84,6 +85,8 @@ static inline int xnarch_init(void)
 	xnarch_init_llmulshft(1000000000, RTHAL_CPU_FREQ,
 			      &xnarch_tsc_scale, &xnarch_tsc_shift);
 	xnarch_tsc_divide = 1 << xnarch_tsc_shift;
+
+	xnarch_init_u32frac(&xnarch_tsc_frac, xnarch_tsc_divide, xnarch_tsc_scale);
 
 	err = xnarch_calibrate_sched();
 
