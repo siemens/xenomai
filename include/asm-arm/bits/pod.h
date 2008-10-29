@@ -26,6 +26,7 @@
 unsigned xnarch_tsc_scale;
 unsigned xnarch_tsc_shift;
 unsigned xnarch_tsc_divide;
+rthal_u32frac_t xnarch_tsc_frac;
 
 long long xnarch_tsc_to_ns(long long ts)
 {
