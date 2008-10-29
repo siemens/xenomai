@@ -32,34 +32,31 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = skins/vrtx
+target_triplet = @target@
+bin_PROGRAMS = bench_arith$(EXEEXT)
+subdir = src/testsuite/bench_arith
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/../config/version $(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
+	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
+	$(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/include/xeno_config.h
+CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)"
-libLIBRARIES_INSTALL = $(INSTALL_DATA)
-LIBRARIES = $(lib_LIBRARIES)
-ARFLAGS = cru
-libvrtx_sim_a_AR = $(AR) $(ARFLAGS)
-libvrtx_sim_a_LIBADD =
-nodist_libvrtx_sim_a_OBJECTS = event.$(OBJEXT) heap.$(OBJEXT) \
-	mb.$(OBJEXT) module.$(OBJEXT) mx.$(OBJEXT) pt.$(OBJEXT) \
-	queue.$(OBJEXT) sem.$(OBJEXT) task.$(OBJEXT) time.$(OBJEXT)
-libvrtx_sim_a_OBJECTS = $(nodist_libvrtx_sim_a_OBJECTS)
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
-depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
+am__installdirs = "$(DESTDIR)$(bindir)"
+binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+PROGRAMS = $(bin_PROGRAMS)
+am_bench_arith_OBJECTS = bench_arith-bench_arith.$(OBJEXT) \
+	bench_arith-outofline.$(OBJEXT)
+bench_arith_OBJECTS = $(am_bench_arith_OBJECTS)
+bench_arith_DEPENDENCIES = ../../skins/native/libnative.la
+bench_arith_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(bench_arith_LDFLAGS) $(LDFLAGS) -o $@
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include
+depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -70,31 +67,52 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(nodist_libvrtx_sim_a_SOURCES)
-DIST_SOURCES =
+SOURCES = $(bench_arith_SOURCES)
+DIST_SOURCES = $(bench_arith_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-ALLOCA = @ALLOCA@
+ADEOS_PATCH = @ADEOS_PATCH@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-CC = $(top_builddir)/gcic/gcic
+BUILD_EXEEXT = @BUILD_EXEEXT@
+BUILD_OBJEXT = @BUILD_OBJEXT@
+CC = @CC@
+CCAS = @CCAS@
+CCASDEPMODE = @CCASDEPMODE@
+CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
+CC_FOR_BUILD = @CC_FOR_BUILD@
 CFLAGS = @CFLAGS@
+CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@
+CONFIG_STATUS_DEPENDENCIES = @CONFIG_STATUS_DEPENDENCIES@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
+CPP_FOR_BUILD = @CPP_FOR_BUILD@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBX_DOC_ROOT = @DBX_DOC_ROOT@
+DBX_FOP = @DBX_FOP@
+DBX_GEN_DOC_ROOT = @DBX_GEN_DOC_ROOT@
+DBX_LINT = @DBX_LINT@
+DBX_MAYBE_NONET = @DBX_MAYBE_NONET@
+DBX_ROOT = @DBX_ROOT@
+DBX_XSLTPROC = @DBX_XSLTPROC@
+DBX_XSL_ROOT = @DBX_XSL_ROOT@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DOXYGEN = @DOXYGEN@
+DOXYGEN_HAVE_DOT = @DOXYGEN_HAVE_DOT@
+DOXYGEN_SHOW_INCLUDE_FILES = @DOXYGEN_SHOW_INCLUDE_FILES@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -110,27 +128,22 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LATEX_BATCHMODE = @LATEX_BATCHMODE@
+LATEX_MODE = @LATEX_MODE@
 LDFLAGS = @LDFLAGS@
+LD_FILE_OPTION = @LD_FILE_OPTION@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LNDIR = @LNDIR@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
-MVM_BUILD_STRING = @MVM_BUILD_STRING@
-MVM_CFLAGS = @MVM_CFLAGS@
-MVM_CXXFLAGS = @MVM_CXXFLAGS@
-MVM_GCCAS = @MVM_GCCAS@
-MVM_GCCLD = @MVM_GCCLD@
-MVM_GCC_TARBALL = @MVM_GCC_TARBALL@
-MVM_HOST_STRING = @MVM_HOST_STRING@
-MVM_LDADD = @MVM_LDADD@
-MVM_PROG_PATCH = @MVM_PROG_PATCH@
 NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -145,42 +158,26 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TCL_BIN_DIR = @TCL_BIN_DIR@
-TCL_BUILD_LIB_SPEC = @TCL_BUILD_LIB_SPEC@
-TCL_BUILD_STUB_LIB_SPEC = @TCL_BUILD_STUB_LIB_SPEC@
-TCL_DBGX = @TCL_DBGX@
-TCL_DEFS = @TCL_DEFS@
-TCL_EXTRA_CFLAGS = @TCL_EXTRA_CFLAGS@
-TCL_INCLUDES = @TCL_INCLUDES@
-TCL_LD_FLAGS = @TCL_LD_FLAGS@
-TCL_LIBS = @TCL_LIBS@
-TCL_LIB_FILE = @TCL_LIB_FILE@
-TCL_LIB_SPEC = @TCL_LIB_SPEC@
-TCL_SCRIPT = @TCL_SCRIPT@
-TCL_SHLIB_LD_LIBS = @TCL_SHLIB_LD_LIBS@
-TCL_SRC_DIR = @TCL_SRC_DIR@
-TCL_STUB_LIB_FILE = @TCL_STUB_LIB_FILE@
-TCL_STUB_LIB_SPEC = @TCL_STUB_LIB_SPEC@
-TIX_LIB_SPEC = @TIX_LIB_SPEC@
-TIX_TCL_LIB = @TIX_TCL_LIB@
-TK_BIN_DIR = @TK_BIN_DIR@
-TK_DBGX = @TK_DBGX@
-TK_LIB_FILE = @TK_LIB_FILE@
-TK_LIB_FLAG = @TK_LIB_FLAG@
-TK_LIB_SPEC = @TK_LIB_SPEC@
-TK_SRC_DIR = @TK_SRC_DIR@
 VERSION = @VERSION@
-X11_LIBS = @X11_LIBS@
-XMKMF = @XMKMF@
-X_CFLAGS = @X_CFLAGS@
-X_EXTRA_LIBS = @X_EXTRA_LIBS@
-X_LIBS = @X_LIBS@
-X_PRE_LIBS = @X_PRE_LIBS@
+XENO_BUILD_STRING = @XENO_BUILD_STRING@
+XENO_HOST_STRING = @XENO_HOST_STRING@
+XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
+XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
+XENO_LINUX_IMAGE = @XENO_LINUX_IMAGE@
+XENO_LINUX_INSTALL_TARGET = @XENO_LINUX_INSTALL_TARGET@
+XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
+XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
+XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
+XENO_USER_APP_CFLAGS = @XENO_USER_APP_CFLAGS@
+XENO_USER_APP_LDFLAGS = @XENO_USER_APP_LDFLAGS@
+XENO_USER_CFLAGS = @XENO_USER_CFLAGS@
+XENO_USER_LDFLAGS = @XENO_USER_LDFLAGS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_CC_FOR_BUILD = @ac_ct_CC_FOR_BUILD@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
 am__include = @am__include@
@@ -223,34 +220,26 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
-subdirs = @subdirs@
 sysconfdir = @sysconfdir@
+target = @target@
 target_alias = @target_alias@
+target_cpu = @target_cpu@
+target_os = @target_os@
+target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@CONFIG_XENO_MVM_ATOMIC_CORE_TRUE@atomic_core := --no-inst -O2
-AM_CPPFLAGS = \
-	-D__IN_XENO__ \
-	--gcic-backend=$(prefix)/libexec/gcic \
-	--skin-code \
-	$(atomic_core) \
-	-I$(srcdir)/../include \
-	-I$(top_srcdir)/../include \
-	-I$(top_srcdir)/../ksrc/skins
+testdir = $(exec_prefix)/share/xenomai/testsuite/bench_arith
+bench_arith_SOURCES = bench_arith.c outofline.c
+bench_arith_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
 
-lib_LIBRARIES = libvrtx_sim.a
-nodist_libvrtx_sim_a_SOURCES = \
-	event.c \
-	heap.c \
-	mb.c \
-	module.c \
-	mx.c \
-	pt.c \
-	queue.c \
-	sem.c \
-	task.c \
-	time.c
+bench_arith_LDFLAGS = @XENO_USER_LDFLAGS@
+bench_arith_LDADD = \
+	../../skins/native/libnative.la \
+	-lpthread -lm
 
+EXTRA_DIST = runinfo.in
 all: all-am
 
 .SUFFIXES:
@@ -264,9 +253,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  skins/vrtx/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/testsuite/bench_arith/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  skins/vrtx/Makefile
+	  $(AUTOMAKE) --foreign  src/testsuite/bench_arith/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -284,39 +273,37 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libLIBRARIES: $(lib_LIBRARIES)
+install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(libLIBRARIES_INSTALL) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(libLIBRARIES_INSTALL) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
-	  else :; fi; \
-	done
-	@$(POST_INSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    p=$(am__strip_dir) \
-	    echo " $(RANLIB) '$(DESTDIR)$(libdir)/$$p'"; \
-	    $(RANLIB) "$(DESTDIR)$(libdir)/$$p"; \
+	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	     || test -f $$p1 \
+	  ; then \
+	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
+	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
 	  else :; fi; \
 	done
 
-uninstall-libLIBRARIES:
+uninstall-binPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
 	done
 
-clean-libLIBRARIES:
-	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libvrtx_sim.a: $(libvrtx_sim_a_OBJECTS) $(libvrtx_sim_a_DEPENDENCIES) 
-	-rm -f libvrtx_sim.a
-	$(libvrtx_sim_a_AR) libvrtx_sim.a $(libvrtx_sim_a_OBJECTS) $(libvrtx_sim_a_LIBADD)
-	$(RANLIB) libvrtx_sim.a
+clean-binPROGRAMS:
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
+	done
+bench_arith$(EXEEXT): $(bench_arith_OBJECTS) $(bench_arith_DEPENDENCIES) 
+	@rm -f bench_arith$(EXEEXT)
+	$(bench_arith_LINK) $(bench_arith_OBJECTS) $(bench_arith_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -324,16 +311,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mb.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/queue.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/task.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/time.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bench_arith-bench_arith.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bench_arith-outofline.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -355,6 +334,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+bench_arith-bench_arith.o: bench_arith.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bench_arith-bench_arith.o -MD -MP -MF $(DEPDIR)/bench_arith-bench_arith.Tpo -c -o bench_arith-bench_arith.o `test -f 'bench_arith.c' || echo '$(srcdir)/'`bench_arith.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/bench_arith-bench_arith.Tpo $(DEPDIR)/bench_arith-bench_arith.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bench_arith.c' object='bench_arith-bench_arith.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bench_arith-bench_arith.o `test -f 'bench_arith.c' || echo '$(srcdir)/'`bench_arith.c
+
+bench_arith-bench_arith.obj: bench_arith.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bench_arith-bench_arith.obj -MD -MP -MF $(DEPDIR)/bench_arith-bench_arith.Tpo -c -o bench_arith-bench_arith.obj `if test -f 'bench_arith.c'; then $(CYGPATH_W) 'bench_arith.c'; else $(CYGPATH_W) '$(srcdir)/bench_arith.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/bench_arith-bench_arith.Tpo $(DEPDIR)/bench_arith-bench_arith.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bench_arith.c' object='bench_arith-bench_arith.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bench_arith-bench_arith.obj `if test -f 'bench_arith.c'; then $(CYGPATH_W) 'bench_arith.c'; else $(CYGPATH_W) '$(srcdir)/bench_arith.c'; fi`
+
+bench_arith-outofline.o: outofline.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bench_arith-outofline.o -MD -MP -MF $(DEPDIR)/bench_arith-outofline.Tpo -c -o bench_arith-outofline.o `test -f 'outofline.c' || echo '$(srcdir)/'`outofline.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/bench_arith-outofline.Tpo $(DEPDIR)/bench_arith-outofline.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='outofline.c' object='bench_arith-outofline.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bench_arith-outofline.o `test -f 'outofline.c' || echo '$(srcdir)/'`outofline.c
+
+bench_arith-outofline.obj: outofline.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bench_arith-outofline.obj -MD -MP -MF $(DEPDIR)/bench_arith-outofline.Tpo -c -o bench_arith-outofline.obj `if test -f 'outofline.c'; then $(CYGPATH_W) 'outofline.c'; else $(CYGPATH_W) '$(srcdir)/outofline.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/bench_arith-outofline.Tpo $(DEPDIR)/bench_arith-outofline.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='outofline.c' object='bench_arith-outofline.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bench_arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bench_arith-outofline.obj `if test -f 'outofline.c'; then $(CYGPATH_W) 'outofline.c'; else $(CYGPATH_W) '$(srcdir)/outofline.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -437,9 +444,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(PROGRAMS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -468,8 +475,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES clean-libtool \
-	mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -487,11 +493,11 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-data-local
 
 install-dvi: install-dvi-am
 
-install-exec-am: install-libLIBRARIES
+install-exec-am: install-binPROGRAMS
 
 install-html: install-html-am
 
@@ -523,27 +529,38 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libLIBRARIES
+uninstall-am: uninstall-binPROGRAMS uninstall-local
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLIBRARIES clean-libtool ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am \
-	install-libLIBRARIES install-man install-pdf install-pdf-am \
+.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
+	clean-generic clean-libtool ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am \
+	install-data-local install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-libLIBRARIES
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-local
 
-vpath %.c $(top_srcdir)/../ksrc/skins/vrtx
 
-override CFLAGS = -g
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(testdir)
+	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(testdir)/.runinfo
+	@echo "#!/bin/sh" > $(DESTDIR)$(testdir)/run
+	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" >> $(DESTDIR)$(testdir)/run
+	@chmod +x $(DESTDIR)$(testdir)/run
+
+uninstall-local:
+	$(RM) $(DESTDIR)$(testdir)/.runinfo $(DESTDIR)$(testdir)/run
+
+run: all
+	@$(top_srcdir)/scripts/xeno-load --verbose
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

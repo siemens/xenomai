@@ -1,6 +1,67 @@
 #ifndef _XENO_ASM_ARM_ARITH_H
 #define _XENO_ASM_ARM_ARITH_H
 
+#define XNARCH_WANT_NODIV_MULDIV
+
+#define __rthal_add64and32(h, l, s) \
+	do {				       \
+		__asm__ ("adds %1, %2\n\t" \
+			 "adc %0, #0\n\t" \
+			 : "+r"(h), "+r"(l) \
+			 : "r"(s));	    \
+	} while (0)
+
+#define __rthal_add96and64(l0, l1, l2, s0, s1)		\
+	do {						\
+		__asm__ ("adds %2, %4\n\t"		\
+			 "adcs %1, %3\n\t"		\
+			 "adc %0, #0\n\t"		\
+			 : "+r"(l0), "+r"(l1), "+r"(l2)	\
+			 : "r"(s0), "r"(s1));		\
+	} while (0)
+
+#define rthal_nodiv_ullimd(op, frac, integ) \
+	rthal_arm_nodiv_ullimd((op), (frac), (integ))
+
 #include <asm-generic/xenomai/arith.h>
 
+static inline __attribute__((__const__)) unsigned long long
+rthal_arm_nodiv_ullimd(const unsigned long long op,
+		       const unsigned long long frac,
+		       const unsigned rhs_integ)
+{
+	register unsigned rl __asm__("r5");
+	register unsigned rm __asm__("r0");
+	register unsigned rh __asm__("r1");
+	register unsigned fracl __asm__ ("r2");
+	register unsigned frach __asm__ ("r3");
+	register unsigned integ __asm__("r4") = rhs_integ;
+	register unsigned opl __asm__ ("r6");
+	register unsigned oph __asm__ ("r7");
+	register unsigned tl __asm__("r8");
+	register unsigned th __asm__("r9");
+
+	__rthal_u64tou32(op, oph, opl);
+	__rthal_u64tou32(frac, frach, fracl);
+	
+	__asm__ ("umull %[tl], %[rl], %[opl], %[fracl]\n\t"
+		 "umull %[rm], %[rh], %[oph], %[frach]\n\t"
+		 "umull %[tl], %[th], %[oph], %[fracl]\n\t"
+		 "adds %[rl], %[tl]\n\t"
+		 "adcs %[rm], %[th]\n\t"
+		 "adc %[rh], #0\n\t"
+		 "umull %[tl], %[th], %[opl], %[frach]\n\t"
+		 "adds %[rl], %[tl]\n\t"
+		 "adcs %[rm], %[th]\n\t"
+		 "adc %[rh], #0\n\t"
+		 "umlal %[rm], %[rh], %[opl], %[integ]\n\t"
+		 "mla %[rh], %[oph], %[integ], %[rh]\n\t"
+		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
+		   [tl]"=r"(tl), [th]"=r"(th)
+		 : [opl]"r"(opl), [oph]"r"(oph),
+		   [fracl]"r"(fracl), [frach]"r"(frach),
+		   [integ]"r"(integ));
+
+	return __rthal_u64fromu32(rh, rm);
+}
 #endif /* _XENO_ASM_ARM_ARITH_H */

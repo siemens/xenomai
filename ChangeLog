@@ -1,3 +1,11 @@
+2008-10-29  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-generic/arith.h: Introduce generic divide-less ullimd.
+	
+	* include/asm-arm/arith.h: Introduce optimized divide-less ullimd.
+
+	* src/testsuite/bench_arith: Introduce arithmetic helper benchmarks.
+	
 2008-10-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/bits: Enable TSC to ns conversion via scaled
