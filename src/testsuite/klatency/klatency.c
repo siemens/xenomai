@@ -8,6 +8,11 @@
 #include <errno.h>
 #include <rtdm/rttesting.h>
 
+struct pkt {
+	struct rttst_tmbench_config config;
+	struct rttst_interm_bench_res res;
+};
+
 long long period_ns = 0;
 int test_duration = 0;		/* sec of testing, via -T <sec>, 0 is inf */
 int data_lines = 21;		/* data lines per header line, -l <lines> to change */
@@ -35,9 +40,9 @@ int finished = 0;
 
 void display(void)
 {
-	struct rttst_interm_bench_res result;
 	int err, n = 0, got_results = 0;
 	time_t start, actual_duration;
+	struct pkt result;
 
 	time(&start);
 
@@ -57,12 +62,12 @@ void display(void)
 		}
 
 		got_results = 1;
-		minj = result.last.min;
-		gminj = result.overall.min;
-		avgj = result.last.avg;
-		maxj = result.last.max;
-		gmaxj = result.overall.max;
-		goverrun = result.overall.overruns;
+		minj = result.res.last.min;
+		gminj = result.res.overall.min;
+		avgj = result.res.last.avg;
+		maxj = result.res.last.max;
+		gmaxj = result.res.overall.max;
+		goverrun = result.res.overall.overruns;
 
 		if (!quiet) {
 			if (data_lines && (n++ % data_lines) == 0) {
@@ -98,12 +103,12 @@ void display(void)
 	if (got_results) {
 		long gminj, gmaxj, gavgj, goverrun;
 
-		gminj = result.overall.min;
-		gmaxj = result.overall.max;
-		goverrun = result.overall.overruns;
-		gavgj = result.overall.avg
-			/ ((result.overall.test_loops) > 1 ?
-			   result.overall.test_loops : 2) - 1;
+		gminj = result.res.overall.min;
+		gmaxj = result.res.overall.max;
+		goverrun = result.res.overall.overruns;
+		gavgj = result.res.overall.avg
+			/ ((result.res.overall.test_loops) > 1 ?
+			   result.res.overall.test_loops : 2) - 1;
 
 		printf("---|------------|------------|------------|--------|-------------------------\n"
 		       "RTS|%12.3f|%12.3f|%12.3f|%8ld|    %.2ld:%.2ld:%.2ld/%.2d:%.2d:%.2d\n",
@@ -125,7 +130,7 @@ void sighand(int sig __attribute__ ((unused)))
 
 int main(int argc, char **argv)
 {
-	struct rttst_tmbench_config config;
+	struct pkt pkt;
 	int c;
 
 	while ((c = getopt(argc, argv, "l:T:qP:")) != EOF)
@@ -196,15 +201,15 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (read(benchdev, &config, sizeof(config)) == -1) {
+	if (read(benchdev, &pkt, sizeof(pkt)) == -1) {
 		perror("read");
 		exit(EXIT_FAILURE);
 	}
 
-	test_mode = config.mode;
-	priority = config.priority;
-	period_ns = config.period;
-	freeze_max = config.freeze_max;
+	test_mode = pkt.config.mode;
+	priority = pkt.config.priority;
+	period_ns = pkt.config.period;
+	freeze_max = pkt.config.freeze_max;
 
 	printf("== Sampling period: %Ld us\n"
 	       "== Test mode: %s\n"
