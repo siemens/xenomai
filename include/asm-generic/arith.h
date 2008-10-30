@@ -195,9 +195,16 @@ unsigned long long __rthal_generic_ullimd (const unsigned long long op,
 static inline __attribute__((__const__)) long long
 __rthal_generic_llimd (long long op, unsigned m, unsigned d)
 {
-    if(op < 0LL)
-        return -__rthal_generic_ullimd(-op, m, d);
-    return __rthal_generic_ullimd(op, m, d);
+	long long ret;
+	int sign = 0;
+
+	if(op < 0LL) {
+		sign = 1;
+		op = -op;
+	}
+        ret = __rthal_generic_ullimd(op, m, d);
+
+	return sign ? -ret : ret;
 }
 #define rthal_llimd(ll,m,d) __rthal_generic_llimd((ll),(m),(d))
 #endif /* !rthal_llimd */
