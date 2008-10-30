@@ -23,11 +23,5 @@ do_llmulshft(long long ll, unsigned m, unsigned s)
 long long
 do_nodiv_llimd(long long ll, unsigned long long frac, unsigned integ)
 {
-	static unsigned traced;
-	long long res = rthal_nodiv_llimd(ll, frac, integ);
-	if (!traced) {
-		fprintf(stderr, "res: 0x%016llx\n", res);
-		traced = 1;
-	}
-	return res;
+	return rthal_nodiv_llimd(ll, frac, integ);
 }
