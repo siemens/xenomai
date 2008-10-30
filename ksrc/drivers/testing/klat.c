@@ -49,14 +49,17 @@ MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
 static RT_TASK klat_srvr;
 static RT_PIPE klat_pipe;
 static int fd;
+static struct {
+	struct rttst_tmbench_config config;
+	struct rttst_interm_bench_res res;
+} pkt;
 
 static void klat_server(void *cookie)
 {
-	struct rttst_interm_bench_res res;
 	int err;
 
 	for (;;) {
-		err = rt_dev_ioctl(fd, RTTST_RTIOC_INTERM_BENCH_RES, &res);
+		err = rt_dev_ioctl(fd, RTTST_RTIOC_INTERM_BENCH_RES, &pkt.res);
 		if (err) {
 			if (err != -EIDRM)
 				printk("rt_dev_ioctl(RTTST_RTIOC_INTERM_BENCH_RES): %d",
@@ -66,14 +69,13 @@ static void klat_server(void *cookie)
 
 		/* Do not check rt_pipe_write return value, the pipe may well be
 		   full. */
-		rt_pipe_write(&klat_pipe, &res, sizeof(res), P_NORMAL);
+		rt_pipe_write(&klat_pipe, &pkt, sizeof(pkt), P_NORMAL);
 	}
 }
 
 static int __init klat_mod_init(void)
 {
 	char devname[RTDM_MAX_DEVNAME_LEN + 1];
-	struct rttst_tmbench_config config;
 	unsigned dev_nr;
 	int err;
 
@@ -89,12 +91,12 @@ static int __init klat_mod_init(void)
 		goto err_close_pipe;
 	}
 
-	config.mode = mode;
-	config.priority = priority;
-	config.period = period * 1000;
-	config.warmup_loops = 1;
-	config.histogram_size = 0;
-	config.freeze_max = freeze_max;
+	pkt.config.mode = mode;
+	pkt.config.priority = priority;
+	pkt.config.period = period * 1000;
+	pkt.config.warmup_loops = 1;
+	pkt.config.histogram_size = 0;
+	pkt.config.freeze_max = freeze_max;
 
 	for (dev_nr = 0; dev_nr < DEV_NR_MAX; dev_nr++) {
 		snprintf(devname, sizeof(devname), "rttest%d", dev_nr);
@@ -102,7 +104,7 @@ static int __init klat_mod_init(void)
 		if (fd < 0)
 			continue;
 
-		err = rt_dev_ioctl(fd, RTTST_RTIOC_TMBENCH_START, &config);
+		err = rt_dev_ioctl(fd, RTTST_RTIOC_TMBENCH_START, &pkt.config);
 		if (err == -ENOTTY) {
 			rt_dev_close(fd);
 			continue;
@@ -111,7 +113,7 @@ static int __init klat_mod_init(void)
 		if (err < 0) {
 			printk("rt_dev_ioctl(RTTST_RTIOC_TMBENCH_START): %d\n",
 			       err);
-			goto err_close_dev;
+			goto err_destroy_task;
 		}
 
 		break;
@@ -119,13 +121,8 @@ static int __init klat_mod_init(void)
 	if (fd < 0) {
 		printk("rt_dev_open: could not find rttest device\n"
 		       "(modprobe timerbench?)");
-		return fd;
-	}
-
-	err = rt_pipe_write(&klat_pipe, &config, sizeof(config), P_NORMAL);
-	if (err < 0) {
-		printk("rt_pipe_write: %d\n", err);
-		goto err_close_dev;
+		err = fd;
+		goto err_destroy_task;
 	}
 
 	err = rt_task_start(&klat_srvr, &klat_server, NULL);
@@ -138,6 +135,7 @@ static int __init klat_mod_init(void)
 
   err_close_dev:
 	rt_dev_close(fd);
+  err_destroy_task:
 	rt_task_delete(&klat_srvr);
   err_close_pipe:
 	rt_pipe_delete(&klat_pipe);
