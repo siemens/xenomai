@@ -1,3 +1,9 @@
+2008-10-30  Wolfgang Grandegger  <wg@grandegger.com>
+
+	* ksrc/drivers/can/rtcan_raw_filter.c(rtcan_raw_mount_filter):
+	Applying the filter mask required for fast filter checks got lost
+	somehow with commit 2202.
+
 2008-10-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/bits, include/asm-powerpc/arith.h: Enable
