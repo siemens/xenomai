@@ -1046,8 +1046,8 @@ static int gatekeeper_thread(void *data)
 #endif /* CONFIG_SMP */
 			xnpod_resume_thread(thread, XNRELAX);
 			ishield_off();
-			xnpod_schedule();
 			xnlock_put_irqrestore(&nklock, s);
+			xnpod_schedule();
 		}
 	}
 
