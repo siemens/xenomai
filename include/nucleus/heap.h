@@ -224,12 +224,19 @@ void xnheap_schedule_free(xnheap_t *heap,
 			  void *block,
 			  xnholder_t *link);
 
-void xnheap_finalize_free_inner(xnheap_t *heap);
+void xnheap_finalize_free_inner(xnheap_t *heap,
+				int cpu);
 
 static inline void xnheap_finalize_free(xnheap_t *heap)
 {
-    if (heap->idleq)
-	xnheap_finalize_free_inner(heap);
+	int cpu = xnarch_current_cpu();
+
+	XENO_ASSERT(NUCLEUS, 
+		    spltest() != 0,
+		    xnpod_fatal("%s called in unsafe context", __FUNCTION__));
+
+	if (heap->idleq[cpu])
+		xnheap_finalize_free_inner(heap, cpu);
 }
 
 int xnheap_check_block(xnheap_t *heap,

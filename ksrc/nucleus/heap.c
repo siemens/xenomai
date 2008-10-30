@@ -887,21 +887,14 @@ void xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
 	xnlock_put_irqrestore(&heap->lock, s);
 }
 
-void xnheap_finalize_free_inner(xnheap_t *heap)
+void xnheap_finalize_free_inner(xnheap_t *heap, int cpu)
 {
 	xnholder_t *holder;
-	unsigned cpu;
-	spl_t s;
-
-	xnlock_get_irqsave(&heap->lock, s);
-	cpu = xnarch_current_cpu();
 
 	while ((holder = heap->idleq[cpu]) != NULL) {
 		heap->idleq[cpu] = holder->next;
 		xnheap_free(heap, holder->last);
 	}
-
-	xnlock_put_irqrestore(&heap->lock, s);
 }
 
 int xnheap_check_block(xnheap_t *heap, void *block)

@@ -6,6 +6,11 @@
 
 2008-10-30  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/nucleus/heap.h, ksrc/nucleus/heap (xnheap_finalize_free,
+	xnheap_finalize_free_inner): Fix fast path.
+
+2008-10-30  Philippe Gerum  <rpm@xenomai.org>
+
 	* include/asm-powerpc/bits, include/asm-powerpc/arith.h: Enable
 	fast maths for xnarch_ns_to_tsc().
 
