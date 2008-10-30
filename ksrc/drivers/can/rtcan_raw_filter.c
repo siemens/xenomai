@@ -62,6 +62,9 @@ static inline void rtcan_raw_mount_filter(can_filter_t *recv_filter,
 	recv_filter->can_id = filter->can_id;
 	recv_filter->can_mask = filter->can_mask & ~CAN_INV_FILTER;
     }
+
+    /* Apply mask for fast filter check */
+    recv_filter->can_id &= recv_filter->can_mask;
 }
 
 
