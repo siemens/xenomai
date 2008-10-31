@@ -45,7 +45,6 @@ int main(void)
 	unsigned mul, shft, rejected;
 	long long avg, calib = 0;
 #ifdef XNARCH_WANT_NODIV_MULDIV
-#error x
 	rthal_u32frac_t frac;
 #endif
 	int i;
