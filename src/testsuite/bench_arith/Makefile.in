@@ -229,7 +229,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 testdir = $(exec_prefix)/share/xenomai/testsuite/bench_arith
-bench_arith_SOURCES = bench_arith.c outofline.c
+bench_arith_SOURCES = bench_arith.c outofline.c outofline.h
 bench_arith_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include

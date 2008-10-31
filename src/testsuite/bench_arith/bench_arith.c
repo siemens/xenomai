@@ -44,17 +44,20 @@ int main(void)
 {
 	unsigned mul, shft, rejected;
 	long long avg, calib = 0;
+#ifdef XNARCH_WANT_NODIV_MULDIV
+#error x
 	rthal_u32frac_t frac;
+#endif
 	int i;
 
 	/* Prepare. */
 	xnarch_init_llmulshft(sample_freq, nsec_per_sec, &mul, &shft);
+	fprintf(stderr, "mul: 0x%08x, shft: %d\n", mul, shft);
 #ifdef XNARCH_WANT_NODIV_MULDIV
 	xnarch_init_u32frac(&frac, sample_freq, nsec_per_sec);
+	fprintf(stderr, "integ: %d, frac: 0x%08llx\n", frac.integ, frac.frac);
 #endif /* XNARCH_WANT_NODIV_MULDIV */
 	threshold = rt_timer_ns2tsc(threshold);
-	fprintf(stderr, "mul: 0x%08x, shft: %d\n", mul, shft);
-	fprintf(stderr, "integ: %d, frac: 0x%08llx\n", frac.integ, frac.frac);
 
 	bench("inline calibration", 0);
 	calib = avg;

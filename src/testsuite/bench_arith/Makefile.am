@@ -2,7 +2,7 @@ testdir = $(exec_prefix)/share/xenomai/testsuite/bench_arith
 
 bin_PROGRAMS = bench_arith
 
-bench_arith_SOURCES = bench_arith.c outofline.c
+bench_arith_SOURCES = bench_arith.c outofline.c outofline.h
 
 bench_arith_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

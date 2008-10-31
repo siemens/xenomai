@@ -20,8 +20,10 @@ do_llmulshft(long long ll, unsigned m, unsigned s)
 	return rthal_llmulshft(ll, m, s);
 }
 
+#ifdef XNARCH_WANT_NODIV_MULDIV
 long long
 do_nodiv_llimd(long long ll, unsigned long long frac, unsigned integ)
 {
 	return rthal_nodiv_llimd(ll, frac, integ);
 }
+#endif
