@@ -1,3 +1,13 @@
+2008-11-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc: Add support for unlocked context switching.
+
+2008-11-03  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* include/asm-arm, include/nucleus/pod.h, ksrc/nucleus/intr.c,
+	ksrc/nucleus/pod.c, ksrc/nucleus/shadow.c: Provide generic support
+	for unlocked context switching.
+
 2008-10-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c (gatekeeper_thread): Release pending
