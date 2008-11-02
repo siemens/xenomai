@@ -110,7 +110,12 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_lazy_switch(sched,
 		&nkclock.stat[xnsched_cpu(sched)].account, start);
 
+#ifndef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	if (--sched->inesting == 0 && xnsched_resched_p())
+#else /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	if (--sched->inesting == 0 && xnsched_resched_p()
+	    && !xnthread_test_state(xnpod_current_thread(), XNSWLOCK))
+#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
 		xnpod_schedule();
 
 	/* Since the host tick is low priority, we can wait for returning
@@ -207,7 +212,12 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
+#ifndef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	if (--sched->inesting == 0 && xnsched_resched_p())
+#else /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	if (--sched->inesting == 0 && xnsched_resched_p()
+	    && !xnthread_test_state(xnpod_current_thread(), XNSWLOCK))
+#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
 		xnpod_schedule();
 
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);

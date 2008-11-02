@@ -1147,9 +1147,7 @@ redo:
 	}
 
 	/* "current" is now running into the Xenomai domain. */
-	sched = xnpod_current_sched();
-
-	xnpod_finish_unlocked_switch(sched);
+	sched = xnpod_finish_unlocked_switch(thread->sched);
 
 	xnpod_finalize_zombie(sched);
 

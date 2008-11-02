@@ -141,9 +141,9 @@ typedef struct xnsched {
 
 	xnthread_t *zombie;
 
-#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	xnthread_t *lastthread;
-#endif /* XNARCH_WANT_UNLOCKED_CTXSW */
+#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
 } xnsched_t;
 
 #define nkpod (&nkpod_struct)
@@ -461,11 +461,21 @@ static inline void xnpod_delete_self(void)
 	xnpod_delete_thread(xnpod_current_thread());
 }
 
-#ifdef XNARCH_WANT_UNLOCKED_CTXSW
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+
 void xnpod_zombie_hooks(xnthread_t *thread);
 
-static inline void xnpod_finish_unlocked_switch(xnsched_t *sched)
+static inline xnsched_t *xnpod_finish_unlocked_switch(xnsched_t *sched)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+#ifdef CONFIG_SMP
+	/* If current thread migrated while suspended */
+	sched = xnpod_current_sched();
+#endif /* CONFIG_SMP */
+
 	xnthread_clear_state(sched->lastthread, XNSWLOCK);
 	xnthread_clear_state(sched->runthread, XNSWLOCK);
 
@@ -485,6 +495,8 @@ static inline void xnpod_finish_unlocked_switch(xnsched_t *sched)
 		if (sched->zombie != sched->lastthread)
 			xnpod_zombie_hooks(sched->lastthread);
 	}
+
+	return sched;
 }
 
 static inline void xnpod_resched_after_unlocked_switch(void)
@@ -492,10 +504,19 @@ static inline void xnpod_resched_after_unlocked_switch(void)
 	if (xnsched_resched_p())
 		xnpod_schedule();
 }
-#else /* !XNARCH_WANT_UNLOCKED_CTXSW */
-#define xnpod_finish_unlocked_switch(sched)
+
+#define xnsched_resched_p_after_unlock
+
+#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+
+#ifdef CONFIG_SMP
+#define xnpod_finish_unlocked_switch(sched)	xnpod_current_sched()
+#else /* !CONFIG_SMP */
+#define xnpod_finish_unlocked_switch(sched)	(sched)
+#endif /* !CONFIG_SMP */
 #define xnpod_resched_after_unlocked_switch()
-#endif /* !XNARCH_WANT_UNLOCKED_CTXSW */
+
+#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 #ifdef __cplusplus
 }
