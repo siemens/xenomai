@@ -92,6 +92,15 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	}
 }
 
+static inline struct mm_struct *rthal_get_active_mm(void)
+{
+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+	return per_cpu(ipipe_active_mm, smp_processor_id());
+#else
+	return current->active_mm;
+#endif
+}
+
     /* Private interface -- Internal use only */
 
 #define RTHAL_SWITCH_FRAME_SIZE  (STACK_FRAME_OVERHEAD + sizeof(struct pt_regs))

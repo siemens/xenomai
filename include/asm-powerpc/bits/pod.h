@@ -62,6 +62,8 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->tsp = &current->thread;
+	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
+	rootcb->tip = task_thread_info(current);
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -74,35 +76,47 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+	if (!rootcb->mm)
+		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
+#endif
 }
 
-static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
+struct xnlock;
+
+static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
+				    xnarchtcb_t *in_tcb)
 {
+	struct mm_struct *prev_mm = out_tcb->active_mm, *next_mm;
 	struct task_struct *prev = out_tcb->active_task;
 	struct task_struct *next = in_tcb->user_task;
 
 	if (likely(next != NULL)) {
 		in_tcb->active_task = next;
+		in_tcb->active_mm = in_tcb->mm;
 		rthal_clear_foreign_stack(&rthal_domain);
 	} else {
 		in_tcb->active_task = prev;
+		in_tcb->active_mm = prev_mm;
 		rthal_set_foreign_stack(&rthal_domain);
 	}
 
-	if (next && next != prev) {	/* Switch to new user-space thread? */
-		struct mm_struct *mm = next->active_mm;
-		/* Switch the mm context. */
+	next_mm = in_tcb->active_mm;
+
+	if (prev_mm != next_mm) {
 #ifdef CONFIG_PPC64
 #ifdef CONFIG_ALTIVEC
 		asm volatile ("dssall;\n" :/*empty*/:);
 #endif
-		if (!cpu_isset(rthal_processor_id(), mm->cpu_vm_mask))
-			cpu_set(rthal_processor_id(), mm->cpu_vm_mask);
+		if (likely(next_mm)) {
+			if (!cpu_isset(rthal_processor_id(), next_mm->cpu_vm_mask))
+				cpu_set(rthal_processor_id(), next_mm->cpu_vm_mask);
 
-		if (cpu_has_feature(CPU_FTR_SLB))
-			switch_slb(next, mm);
-		else
-			switch_stab(next, mm);
+			if (cpu_has_feature(CPU_FTR_SLB))
+				switch_slb(next, next_mm);
+			else
+				switch_stab(next, next_mm);
+		}
         }
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 #else /* PPC32 */
@@ -113,13 +127,15 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 #endif
 			      :/*empty*/:);
 #endif /* CONFIG_ALTIVEC */
-		next->thread.pgdir = mm->pgd;
-		get_mmu_context(mm);
+		if (likely(next_mm)) {
+			next->thread.pgdir = next_mm->pgd;
+			get_mmu_context(next_mm);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-		set_context(mm->context, mm->pgd);
+			set_context(next_mm->context, next_mm->pgd);
 #else /* !(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))*/
-		set_context(mm->context.id, mm->pgd);
+			set_context(next_mm->context.id, next_mm->pgd);
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
+		}
 		current = prev;	/* Make sure r2 is valid. */
 	}
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
@@ -133,13 +149,16 @@ static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
 	/* Empty */
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
+static inline void xnarch_init_root_tcb(xnarchtcb_t *tcb,
 					struct xnthread *thread,
 					const char *name)
 {
 	tcb->user_task = current;
 	tcb->active_task = NULL;
 	tcb->tsp = &tcb->ts;
+	tcb->mm = current->mm;
+	tcb->active_mm = NULL;
+	tcb->tip = &tcb->ti;
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
 	tcb->fpup = NULL;
