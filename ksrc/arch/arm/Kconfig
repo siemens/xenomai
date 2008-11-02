@@ -24,6 +24,22 @@ config XENO_HW_FPU
 	enabling FPU support when the hardware is available may
 	greatly improve	performance.
 
+config XENO_HW_UNLOCKED_SWITCH
+	bool "Enable unlocked context switch"
+	depends on IPIPE_UNMASKED_CONTEXT_SWITCH
+	default y
+	help
+	The nucleus may allow non-atomic execution of the
+	machine-dependent context switching code, so that other CPUs
+	and/or local interrupts may execute concurrently.
+
+	This option reduces interrupt latency when costly cache and
+	TLB flushes are required to switch context, and may improve
+	concurrency on some SMP/multi-core systems as well.
+
+	You definitely want to enable that option on embedded ARM
+	platforms.
+
 endmenu
 
 source "kernel/xenomai/skins/Kconfig"
