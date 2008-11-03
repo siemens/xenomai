@@ -30,7 +30,6 @@
 #ifdef __KERNEL__
 
 #include <asm/atomic.h>
-#include <asm/semaphore.h>
 #include <linux/netdevice.h>
 
 #include "rtcan_list.h"

@@ -102,7 +102,7 @@ static inline void send_IPI_allbutself(int vector)
 
 	rthal_local_irq_save_hw(flags);
 	apic_wait_icr_idle();
-	apic_write_around(APIC_ICR,
+	apic_write(APIC_ICR,
 			  APIC_DM_FIXED | APIC_DEST_ALLBUT | INT_DEST_ADDR_MODE
 			  | vector);
 	rthal_local_irq_restore_hw(flags);

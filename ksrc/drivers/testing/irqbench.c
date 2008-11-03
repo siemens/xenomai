@@ -19,7 +19,6 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/ioport.h>
-#include <asm/semaphore.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/pnp.h>
