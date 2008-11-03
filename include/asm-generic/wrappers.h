@@ -403,10 +403,14 @@ unsigned long find_next_bit(const unsigned long *addr,
 /* Device registration */
 #if  LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
 #define DECLARE_DEVCLASS(clname) struct class *clname
+#if  LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
 #define wrap_device_create(c,p,dt,dv,fmt,args...)	device_create(c,p,dt,fmt , ##args)
+#else  /* >= 2.6.27 */
+#define wrap_device_create(c,p,dt,dv,fmt,args...)	device_create(c,p,dt,dv,fmt , ##args)
+#endif  /* >= 2.6.27 */
 #define wrap_device_destroy	device_destroy
 #define DECLARE_DEVHANDLE(devh) struct device *devh
-#else /* >= 2.6.26 */
+#else /* <= 2.6.25 */
 #define DECLARE_DEVHANDLE(devh) struct class_device *devh
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,13)
 #define DECLARE_DEVCLASS(clname) struct class *clname
@@ -469,5 +473,16 @@ unsigned long find_next_bit(const unsigned long *addr,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define KMALLOC_MAX_SIZE 131072
 #endif /* !KMALLOC_MAX_SIZE */
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
+
+#include <linux/semaphore.h>
+#include <linux/pid.h>
+
+#define find_task_by_pid(nr)		\
+  find_task_by_pid_type_ns(PIDTYPE_PID, nr, &init_pid_ns)
+#define kill_proc(pid, sig, priv)	\
+  kill_proc_info(sig, (priv) ? SEND_SIG_PRIV : SEND_SIG_NOINFO, pid)
+#endif /* LINUX_VERSION_CODE >= 2.6.27 */ 
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

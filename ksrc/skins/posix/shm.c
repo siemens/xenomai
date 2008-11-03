@@ -39,10 +39,6 @@
 #include <posix/thread.h>
 #include <posix/shm.h>
 
-#ifdef __KERNEL__
-#include <asm/semaphore.h>
-#endif /* __KERNEL__ */
-
 typedef struct pse51_shm {
 	pse51_node_t nodebase;
 

@@ -3,7 +3,6 @@
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
 #include <asm/xenomai/fptest.h>
-#include <asm/semaphore.h>
 
 #define RTSWITCH_RT      0x4
 #define RTSWITCH_NRT     0

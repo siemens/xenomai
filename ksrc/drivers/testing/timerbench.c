@@ -17,7 +17,6 @@
  */
 
 #include <linux/module.h>
-#include <asm/semaphore.h>
 #ifdef CONFIG_IPIPE_TRACE
 #include <linux/ipipe_trace.h>
 #endif /* CONFIG_IPIPE_TRACE */

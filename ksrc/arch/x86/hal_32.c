@@ -82,7 +82,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	for (i = 0; i < 20; i++) {
 		v = apic_read(APIC_TMICT);
-		apic_write_around(APIC_TMICT, v);
+		apic_write(APIC_TMICT, v);
 	}
 
 	dt = (rthal_rdtsc() - t) / 2;
@@ -376,7 +376,7 @@ rthal_time_t rthal_get_8254_tsc(void)
 int rthal_arch_init(void)
 {
 #ifdef CONFIG_X86_LOCAL_APIC
-	if (!test_bit(X86_FEATURE_APIC, boot_cpu_data.x86_capability)) {
+	if (!boot_cpu_has(X86_FEATURE_APIC)) {
 		printk("Xenomai: Local APIC absent or disabled!\n"
 		       "         Disable APIC support or pass \"lapic=1\" as bootparam.\n");
 		rthal_smi_restore();

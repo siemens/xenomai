@@ -57,6 +57,12 @@
 #error "Xenomai has to rely on the WP bit, CONFIG_M486 or better required"
 #endif /* CONFIG_X86_WP_WORKS_OK */
 
+#if defined(CONFIG_X86_LOCAL_APIC) && \
+  defined(apic_write_around) && !defined(CONFIG_X86_GOOD_APIC)
+#error "Xenomai needs a working LAPIC - if your machine has a bad one, you"
+#error "should disable CONFIG_X86_LOCAL_APIC in your kernel configuration."
+#endif
+
 typedef unsigned long long rthal_time_t;
 
 static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
@@ -150,10 +156,10 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
 	} else {
 		/* Note: reading before writing just to work around the Pentium
-		   APIC double write bug. apic_read_around() expands to nil
+		   APIC double write bug. apic_read() expands to nil
 		   whenever CONFIG_X86_GOOD_APIC is set. --rpm */
-		apic_read_around(APIC_TMICT);
-		apic_write_around(APIC_TMICT, delay);
+		apic_read(APIC_TMICT);
+		apic_write(APIC_TMICT, delay);
 	}
 #else /* !CONFIG_X86_LOCAL_APIC */
 	if (!delay)
@@ -211,16 +217,16 @@ static inline int rthal_set_apic_base(int lvtt_value)
 
 static inline void rthal_setup_periodic_apic(int count, int vector)
 {
-	apic_read_around(APIC_LVTT);
-	apic_write_around(APIC_LVTT, rthal_set_apic_base(APIC_LVT_TIMER_PERIODIC | vector));
-	apic_read_around(APIC_TMICT);
-	apic_write_around(APIC_TMICT, count);
+	apic_read(APIC_LVTT);
+	apic_write(APIC_LVTT, rthal_set_apic_base(APIC_LVT_TIMER_PERIODIC | vector));
+	apic_read(APIC_TMICT);
+	apic_write(APIC_TMICT, count);
 }
 
 static inline void rthal_setup_oneshot_apic(int vector)
 {
-	apic_read_around(APIC_LVTT);
-	apic_write_around(APIC_LVTT, rthal_set_apic_base(vector));
+	apic_read(APIC_LVTT);
+	apic_write(APIC_LVTT, rthal_set_apic_base(vector));
 }
 #endif /* !CONFIG_X86_LOCAL_APIC */
 
