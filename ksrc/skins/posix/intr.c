@@ -101,7 +101,7 @@
  */
 int pthread_intr_attach_np(pthread_intr_t * intrp,
 			   unsigned irq,
-			   int (*isr) (xnintr_t *), int (*iack) (unsigned irq))
+			   xnisr_t isr, xniack_t iack)
 {
 	pthread_intr_t intr;
 	int err;
