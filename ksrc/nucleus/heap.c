@@ -946,8 +946,6 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
 
-static DECLARE_DEVCLASS(xnheap_class);
-
 static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
 
 static void xnheap_vmclose(struct vm_area_struct *vma)
@@ -1076,38 +1074,12 @@ static struct miscdevice xnheap_dev = {
 
 int xnheap_mount(void)
 {
-	DECLARE_DEVHANDLE(cldev);
-
-	xnheap_class = class_create(THIS_MODULE, "rtheap");
-
-	if (IS_ERR(xnheap_class)) {
-		xnlogerr("error creating rtheap class, err=%ld.\n",
-			 PTR_ERR(xnheap_class));
-		return -EBUSY;
-	}
-
-	cldev = wrap_device_create(xnheap_class, NULL,
-				   MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR),
-				   NULL, "rtheap");
-	if (IS_ERR(cldev)) {
-		xnlogerr
-		    ("can't add device class, major=%d, minor=%d, err=%ld\n",
-		     MISC_MAJOR, XNHEAP_DEV_MINOR, PTR_ERR(cldev));
-		class_destroy(xnheap_class);
-		return -EBUSY;
-	}
-
-	if (misc_register(&xnheap_dev) < 0)
-		return -EBUSY;
-
-	return 0;
+	return misc_register(&xnheap_dev);
 }
 
 void xnheap_umount(void)
 {
 	misc_deregister(&xnheap_dev);
-	wrap_device_destroy(xnheap_class, MKDEV(MISC_MAJOR, XNHEAP_DEV_MINOR));
-	class_destroy(xnheap_class);
 }
 
 static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)

@@ -1,5 +1,10 @@
 2008-11-03  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/nucleus/heap.c (xnheap_mount): Remove useless (and actually
+	erroneous) class registration.
+
+2008-11-03  Philippe Gerum  <rpm@xenomai.org>
+
 	* include/asm-powerpc: Add support for unlocked context switching.
 
 2008-11-03  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
