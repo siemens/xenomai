@@ -96,6 +96,15 @@ static inline void fp_init(union fp_state *state)
 #define FPEXC_EN FPEXC_ENABLE
 #endif
 
+#if !defined(__IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH) && defined(TIF_MMSWITCH_INT)
+/*
+ * Legacy ARM patches might provide unmasked context switch support
+ * without defining the common config option; force this support in.
+ */
+#define CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH	1
+#define CONFIG_XENO_HW_UNLOCKED_SWITCH		1
+#endif
+
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
 
 // vim: ts=4 et sw=4 sts=4
