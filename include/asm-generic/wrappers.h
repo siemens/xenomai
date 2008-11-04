@@ -483,6 +483,9 @@ unsigned long find_next_bit(const unsigned long *addr,
   find_task_by_pid_type_ns(PIDTYPE_PID, nr, &init_pid_ns)
 #define kill_proc(pid, sig, priv)	\
   kill_proc_info(sig, (priv) ? SEND_SIG_PRIV : SEND_SIG_NOINFO, pid)
-#endif /* LINUX_VERSION_CODE >= 2.6.27 */ 
+
+#else /* LINUX_VERSION_CODE < 2.6.27 */
+#include <asm/semaphore.h>
+#endif /* LINUX_VERSION_CODE < 2.6.27 */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
