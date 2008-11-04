@@ -332,7 +332,8 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 		}
 		shirq->unhandled = 0;
 
-		err = xnarch_hook_irq(intr->irq, handler, intr->iack, intr);
+		err = xnarch_hook_irq(intr->irq, handler,
+				      (rthal_irq_ackfn_t)intr->iack, intr);
 		if (err)
 			return err;
 	}
