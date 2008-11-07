@@ -1,3 +1,7 @@
+2008-11-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.3-00.
+
 2008-11-06  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/arith.h: Provide native nodiv_ullimd support
