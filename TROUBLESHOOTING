@@ -262,6 +262,29 @@ A: Xenomai sends this message if the kernel configuration Xenomai was
                            PowerPC
 
 ======================================================================
+
+Q: Xenomai seems to have a problem booting on my ppc64 target, the
+message log says:
+
+"I-pipe: Domain Xenomai registered.
+ Xenomai: hal/powerpc started.
+ I-pipe: Domain Xenomai unregistered.
+ Xenomai: hal/powerpc stopped.
+ Xenomai: system init failed, code -22.
+ Xenomai: native skin init failed, code -22.
+ Xenomai: starting POSIX services.
+ Xenomai: POSIX skin init failed, code -22.
+ Xenomai: RTDM skin init failed, code -22.
+ ..."
+
+A: Check whether CONFIG_PPC_64K_PAGES is defined in your kernel
+configuration. If so, then you need to raise all Xenomai parameters
+defining the size of internal heaps, such as
+CONFIG_XENO_OPT_SYS_HEAPSZ, CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ,
+CONFIG_XENO_OPT_SEM_HEAPSZ and CONFIG_XENO_OPT_SYS_STACKPOOLSZ, so
+that (size / 64k) > 2. The default values for these parameters are
+currently based on the assumption that PAGE_SIZE = 4k.
+
 ======================================================================
 
                            ia64
