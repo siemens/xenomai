@@ -42,6 +42,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #endif
 #elif defined(CONFIG_WALNUT)
 #define __sched_latency 11000
+#elif defined(CONFIG_YOSEMITE)
+#define __sched_latency 1000
 #elif defined(CONFIG_BUBINGA)
 #define __sched_latency 8000
 #elif defined(CONFIG_SYCAMORE)
