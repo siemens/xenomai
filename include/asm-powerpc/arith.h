@@ -33,16 +33,19 @@ rthal_powerpc64_nodiv_ullimd(const unsigned long long op,
 {
 	unsigned long h, l, m;
 
-	__asm__("mulhdu   %0, %3, %4\n\t"			\
-		"mulld    %1, %3, %4\n\t"			\
-		"rlwinm   %2, %1, 0, 0, 0\n\t"			\
-		"sldi     %2, %2, 1\n\t"			\
-		"addc     %1, %1, %2\n\t"			\
-		"addze    %0, %0\n\t"				\
-		"adde     %0, %0, %5\n\t"			\
+	__asm__("mulhdu	  %0, %3, %4\n\t"			\
+		"mulld	  %1, %3, %4\n\t"			\
+		"rlwinm	  %2, %1, 0, 0, 0\n\t"			\
+		"sldi	  %2, %2, 1\n\t"			\
+		"addc	  %1, %1, %2\n\t"			\
+		"addze	  %0, %0\n\t"				\
+		"mr	  %2, %5\n\t"				\
+		"clrldi	  %2, %2, 32\n\t"			\
+		"mulld	  %2, %3, %2\n\t"			\
+		"adde	  %0, %0, %2\n\t"			\
 		: "=&r"(h), "=&r"(l), "=&r"(m)			\
 		: "r"(op), "r"(frac), "r"(rhs_integ) : "cc");	\
-	  
+
 	return h;
 }
 
