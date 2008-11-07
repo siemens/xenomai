@@ -32,6 +32,8 @@
 #define XNSYNCH_DREORD  0x4
 #define XNSYNCH_OWNER   0x8
 
+#ifdef CONFIG_XENO_FASTSYNCH
+
 /* Fast lock API */
 static inline int xnsynch_fast_owner_check(xnarch_atomic_t *fastlock,
 					   xnhandle_t ownerh)
@@ -61,6 +63,22 @@ static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
 	return (xnarch_atomic_cmpxchg(fastlock, cur_ownerh, XN_NO_HANDLE) ==
 		cur_ownerh);
 }
+
+#else /* !CONFIG_XENO_FASTSYNCH */
+
+static inline int xnsynch_fast_acquire(xnarch_atomic_t *fastlock,
+				       xnhandle_t new_ownerh)
+{
+	return -ENOSYS;
+}
+
+static inline int xnsynch_fast_release(xnarch_atomic_t *fastlock,
+				       xnhandle_t cur_ownerh)
+{
+	return -1;
+}
+
+#endif	/* !CONFIG_XENO_FASTSYNCH */
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 

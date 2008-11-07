@@ -44,7 +44,13 @@ typedef atomic_t xnarch_atomic_t;
 
 #else /* !__KERNEL__ */
 
+#include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
+
+typedef struct { int counter;} xnarch_atomic_t;
+
+#define xnarch_atomic_get(v)		((v)->counter)
+#define xnarch_atomic_set(v, i)	(((v)->counter) = i)
 
 static __inline__ unsigned long xnarch_atomic_xchg(unsigned long *ptr, unsigned long x)
 {
