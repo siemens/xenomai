@@ -76,7 +76,6 @@ BOOL taskIsSuspended(TASK_ID task_id)
 
 STATUS taskInfoGet(TASK_ID task_id, TASK_DESC *desc)
 {
-	pthread_attr_t attr;
 	int probe1, probe2;
 	size_t stacksize;
 	void *stackbase;
@@ -89,12 +88,26 @@ STATUS taskInfoGet(TASK_ID task_id, TASK_DESC *desc)
 		return ERROR;
 	}
 
-	if (pthread_getattr_np((pthread_t)desc->td_opaque, &attr)) {
-		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
-	}
+#ifdef __UCLIBC__
+	/*
+	 * pthread_getattr_np() is not currently available with
+	 * uClibc, so we can't easily determine the stack
+	 * configuration.
+	 */
+	stackbase = NULL;
+	stacksize = 0;
+#else
+	{
+		pthread_attr_t attr;
 
-	pthread_attr_getstack(&attr, &stackbase, &stacksize);
+		if (pthread_getattr_np((pthread_t)desc->td_opaque, &attr)) {
+			errno = S_objLib_OBJ_ID_ERROR;
+			return ERROR;
+		}
+		pthread_attr_getstack(&attr, &stackbase, &stacksize);
+	}
+#endif
+
 	desc->td_stacksize = stacksize;
 	desc->td_pStackBase = stackbase;
 
