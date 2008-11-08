@@ -1088,3 +1088,7 @@ EXPORT_SYMBOL(rthal_proc_root);
 EXPORT_SYMBOL(rthal_init);
 EXPORT_SYMBOL(rthal_exit);
 EXPORT_SYMBOL(__rthal_generic_full_divmod64);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
+EXPORT_SYMBOL_GPL(kill_proc_info);
+#endif
