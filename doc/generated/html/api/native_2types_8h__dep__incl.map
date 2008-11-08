@@ -1,25 +1,28 @@
-<area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="1599,161,1761,188">
-<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="368,84,536,111">
-<area shape="rect" href="$event_8h.html" title="This file is part of the Xenomai project." alt="" coords="1063,161,1225,188">
-<area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="1249,161,1407,188">
-<area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="1431,161,1575,188">
-<area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="519,161,673,188">
-<area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="12,161,164,188">
-<area shape="rect" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="697,161,863,188">
-<area shape="rect" href="$include_2native_2sem_8h.html" title="This file is part of the Xenomai project." alt="" coords="887,161,1039,188">
-<area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="1785,161,1937,188">
-<area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1961,161,2119,188">
-<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="1923,239,2099,265">
-<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="739,239,925,265">
-<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="533,239,715,265">
-<area shape="rect" href="$include_2native_2cond_8h.html" title="This file is part of the Xenomai project." alt="" coords="239,161,393,188">
-<area shape="rect" href="$ksrc_2skins_2native_2cond_8c.html" title="This file is part of the Xenomai project." alt="" coords="231,239,401,265">
-<area shape="rect" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="2312,239,2493,265">
-<area shape="rect" href="$ksrc_2skins_2native_2event_8c.html" title="This file is part of the Xenomai project." alt="" coords="1344,239,1520,265">
-<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="1544,239,1715,265">
-<area shape="rect" href="$ksrc_2skins_2native_2intr_8c.html" title="This file is part of the Xenomai project." alt="" coords="1739,239,1899,265">
-<area shape="rect" href="$ksrc_2skins_2native_2pipe_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,239,171,265">
-<area shape="rect" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="949,239,1128,265">
-<area shape="rect" href="$ksrc_2skins_2native_2sem_8c.html" title="This file is part of the Xenomai project." alt="" coords="1152,239,1320,265">
-<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="2123,239,2288,265">
-<area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="2517,239,2691,265">
+base referer
+rect $alarm_8h.html 410,411 562,437
+rect $native_2buffer_8h.html 410,107 562,133
+rect $include_2native_2mutex_8h.html 206,351 360,377
+rect $event_8h.html 411,512 560,539
+rect $native_2heap_8h.html 412,461 559,488
+rect $include_2native_2intr_8h.html 418,613 554,640
+rect $misc_8h.html 412,715 559,741
+rect $native_2pipe_8h.html 414,816 558,843
+rect $native_2queue_8h.html 408,664 563,691
+rect $include_2native_2sem_8h.html 414,563 558,589
+rect $task_8h.html 415,259 556,285
+rect $include_2native_2timer_8h.html 412,56 559,83
+rect $ksrc_2skins_2native_2alarm_8c.html 616,208 784,235
+rect $skins_2native_2module_8c.html 611,613 790,640
+rect $native_2syscall_8c.html 614,512 787,539
+rect $ksrc_2skins_2native_2buffer_8c.html 616,56 784,83
+rect $include_2native_2cond_8h.html 412,360 559,387
+rect $ksrc_2skins_2native_2cond_8c.html 619,259 782,285
+rect $ksrc_2skins_2native_2mutex_8c.html 615,157 786,184
+rect $ksrc_2skins_2native_2event_8c.html 616,360 784,387
+rect $ksrc_2skins_2native_2heap_8c.html 619,309 782,336
+rect $ksrc_2skins_2native_2intr_8c.html 624,461 776,488
+rect $ksrc_2skins_2native_2pipe_8c.html 620,816 780,843
+rect $ksrc_2skins_2native_2queue_8c.html 615,563 786,589
+rect $ksrc_2skins_2native_2sem_8c.html 620,411 780,437
+rect $ksrc_2skins_2native_2task_8c.html 620,107 780,133
+rect $ksrc_2skins_2native_2timer_8c.html 619,5 782,32

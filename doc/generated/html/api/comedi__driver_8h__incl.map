@@ -1,0 +1,4 @@
+base referer
+rect $os__facilities_8h.html 264,6 414,32
+rect $context_8h.html 278,56 400,83
+rect $device_8h.html 280,107 398,134

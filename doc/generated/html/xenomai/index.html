@@ -1,22 +1,5 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Xenomai - Implementing a RTOS emulation framework
-      on GNU/Linux</title><link rel="stylesheet" href="../css/xenomai.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><meta name="description" content="Generally speaking, the Xenomai technology first aims at
-      helping application designers relying on traditional RTOS to
-      move as smoothly as possible to a GNU/Linux-based execution
-      environment, without having to rewrite their application
-      entirely. This paper discusses the motivations for proposing this
-      framework, the general observations concerning the traditional
-      RTOS directing this technology, and some in-depth details about
-      its implementation. The Xenomai project has been launched in August 2001.  It
-      has merged in 2003 with the RTAI project to
-      produce an industrial-grade real-time Free Software platform for
-      GNU/Linux called RTAI/fusion, on top of Xenomai's abstract RTOS
-      core. Eventually, the RTAI/fusion effort became independent from
-      RTAI in 2005 as the xenomai
-      project.  Linux is a registered trademark of Linus Torvalds. Other
-      trademarks cited in this paper are the property of their
-      respective owner."><link rel="start" href="#index" title="Xenomai - Implementing a RTOS emulation framework
-      on GNU/Linux"><link rel="next" href="#whitepaper" title="1. White paper"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="index"></a>Xenomai - Implementing a RTOS emulation framework
-      on GNU/Linux</h1></div><div><p class="releaseinfo">First Edition</p></div><div><div class="author"><h3 class="author"><span class="firstname">Philippe</span> <span class="surname">Gerum</span></h3></div></div><div><p class="copyright">Copyright © 2004 </p></div><div><p class="pubdate">April 2004</p></div><div><a href="ln-id2471239.html">Legal Notice</a></div><div><div class="abstract"><p class="title"><b>Abstract</b></p><p>Generally speaking, the Xenomai technology first aims at
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Xenomai - Implementing a RTOS emulation framework on GNU/Linux</title><link rel="stylesheet" href="../css/xenomai.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.71.0"><meta name="description" content="Generally speaking, the Xenomai technology first aims at helping application designers relying on traditional RTOS to move as smoothly as possible to a GNU/Linux-based execution environment, without having to rewrite their application entirely. This paper discusses the motivations for proposing this framework, the general observations concerning the traditional RTOS directing this technology, and some in-depth details about its implementation. The Xenomai project has been launched in August 2001. It has merged in 2003 with the RTAI project to produce an industrial-grade real-time Free Software platform for GNU/Linux called RTAI/fusion, on top of Xenomai's abstract RTOS core. Eventually, the RTAI/fusion effort became independent from RTAI in 2005 as the xenomai project. Linux is a registered trademark of Linus Torvalds. Other trademarks cited in this paper are the property of their respective owner."><link rel="start" href="#index" title="Xenomai - Implementing a RTOS emulation framework on GNU/Linux"><link rel="next" href="#whitepaper" title="1. White paper"><link rel="copyright" href="ln-id357489.html" title="Legal Notice"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="index"></a>Xenomai - Implementing a RTOS emulation framework
+      on GNU/Linux</h1></div><div><p class="releaseinfo">First Edition</p></div><div><div class="author"><h3 class="author"><span class="firstname">Philippe</span> <span class="surname">Gerum</span></h3></div></div><div><p class="copyright">Copyright © 2004 </p></div><div><p class="pubdate">April 2004</p></div><div><a href="ln-id357489.html">Legal Notice</a></div><div><div class="abstract"><p class="title"><b>Abstract</b></p><p>Generally speaking, the Xenomai technology first aims at
       helping application designers relying on traditional RTOS to
       move as smoothly as possible to a GNU/Linux-based execution
       environment, without having to rewrite their application
@@ -260,7 +243,7 @@
 		another thread or service routine while pending on a
 		synchronization resource (e.g. semaphore, message
 		queue). In such a case, the resource is dispatched to
-		it, but it remains suspended until explicitely resumed
+		it, but it remains suspended until explicitly resumed
 		by the proper nucleus service.</p></li><li><p>PENDING and DELAYED states may be combined to
 		express a timed wait on a resource. In such a case,
 		the time the thread can be blocked is bound to a limit

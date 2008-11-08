@@ -1,0 +1,8 @@
+base referer
+rect $include_2nucleus_2thread_8h-source.html 220,56 340,83
+rect $stat_8h-source.html 583,5 687,32
+rect $include_2nucleus_2timer_8h.html 397,56 509,83
+rect $include_2nucleus_2registry_8h.html 391,107 516,133
+rect $nucleus_2types_8h-source.html 752,56 867,83
+rect $timebase_8h.html 567,56 703,83
+rect $synch_8h-source.html 576,157 693,184

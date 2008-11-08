@@ -1,0 +1,9 @@
+base referer
+rect $comedi_2types_8h.html 821,107 933,133
+rect $descriptor_8h.html 224,208 363,235
+rect $subdevice_8h.html 412,208 551,235
+rect $device_8h.html 423,259 540,285
+rect $context_8h.html 816,259 939,285
+rect $instruction_8h.html 613,208 755,235
+rect $command_8h.html 615,309 753,336
+rect $channel__range_8h.html 600,360 768,387

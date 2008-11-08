@@ -1,5 +1,6 @@
-<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="337,84,457,111">
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="341,161,453,188">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="337,239,457,265">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="328,316,467,343">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,316,616,343">
+base referer
+rect $include_2native_2mutex_8h.html 200,102 309,126
+rect $native_2types_8h.html 359,102 463,126
+rect $nucleus_2types_8h-source.html 512,102 627,126
+rect $compiler_8h-source.html 688,102 821,126
+rect $assert_8h-source.html 695,150 815,174

@@ -1,0 +1,4 @@
+base referer
+rect $structcomedi__cmd__desc.html 5,96 139,123
+rect $structcomedi__channels__desc.html 163,96 323,123
+rect $structcomedi__channel.html 184,6 301,32

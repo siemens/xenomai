@@ -1,13 +1,12 @@
-<area shape="rect" href="$pod_8h.html" title="This file is part of the Xenomai project." alt="" coords="275,84,384,111">
-<area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="132,161,241,188">
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="265,161,393,188">
-<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="379,239,483,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="155,239,272,265">
-<area shape="rect" href="$stat_8h&#45;source.html" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="297,316,407,343">
-<area shape="rect" href="$timebase_8h.html" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="129,316,273,343">
-<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="Copyright (C) 2006,2007 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="481,393,607,420">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="365,471,485,497">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,548,616,575">
-<area shape="rect" href="$core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="581,471,693,497">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="203,548,341,575">
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="165,393,277,420">
+base referer
+rect $pod_8h.html 220,107 324,134
+rect $include_2native_2timer_8h.html 384,56 486,83
+rect $include_2nucleus_2thread_8h-source.html 375,107 495,134
+rect $include_2nucleus_2intr_8h-source.html 558,208 659,235
+rect $stat_8h-source.html 738,107 842,134
+rect $include_2nucleus_2timer_8h.html 552,56 664,83
+rect $include_2nucleus_2registry_8h.html 546,158 671,184
+rect $nucleus_2types_8h-source.html 907,132 1022,159
+rect $timebase_8h.html 722,56 858,83
+rect $synch_8h-source.html 731,208 848,235
+rect $native_2types_8h.html 738,6 842,32

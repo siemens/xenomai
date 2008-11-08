@@ -1,5 +1,6 @@
-<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="Copyright (C) 2006,2007 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="476,84,601,111">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="352,161,472,188">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,239,616,265">
-<area shape="rect" href="$core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="576,161,688,188">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="328,239,467,265">
+base referer
+rect $nucleus_2queue_8h-source.html 237,149 357,173
+rect $nucleus_2types_8h-source.html 405,100 520,124
+rect $assert_8h-source.html 588,149 708,173
+rect $core_8h-source.html 408,199 517,223
+rect $compiler_8h-source.html 581,101 715,125

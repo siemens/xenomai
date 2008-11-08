@@ -1,4 +1,5 @@
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="341,84,453,111">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="This file is part of the Xenomai project." alt="" coords="337,161,457,188">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="328,239,467,265">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="491,239,616,265">
+base referer
+rect $native_2types_8h.html 210,102 314,126
+rect $nucleus_2types_8h-source.html 363,102 478,126
+rect $compiler_8h-source.html 539,102 672,126
+rect $assert_8h-source.html 546,150 666,174

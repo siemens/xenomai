@@ -1,0 +1,8 @@
+base referer
+rect $nucleus_2heap_8h-source.html 203,6 315,32
+rect $pod_8h.html 207,107 311,134
+rect $synch_8h-source.html 200,56 317,83
+rect $select_8h.html 200,158 317,184
+rect $nucleus_2queue_8h-source.html 367,31 487,58
+rect $include_2nucleus_2thread_8h-source.html 367,158 487,184
+rect $include_2nucleus_2intr_8h-source.html 376,107 477,134

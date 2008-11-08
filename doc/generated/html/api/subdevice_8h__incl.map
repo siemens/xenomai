@@ -1,0 +1,6 @@
+base referer
+rect $comedi_2types_8h.html 461,82 573,108
+rect $context_8h.html 456,158 579,184
+rect $instruction_8h.html 253,107 395,134
+rect $command_8h.html 255,208 393,235
+rect $channel__range_8h.html 240,259 408,286

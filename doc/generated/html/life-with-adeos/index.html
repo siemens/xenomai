@@ -1,13 +1,4 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Life with Adeos</title><link rel="stylesheet" href="../css/xenomai.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><meta name="description" content="This article gives an overview of the Adeos technology and
-      what it provides to Xenomai. After an introduction addressing
-      the event pipeline, the implementation of interrupts dispatching
-      as well as the system event propagation, we will then study the
-      interactions between Xenomai and Adeos. The notions of primary
-      and secondary domains will be explained and we will also be
-      interested in studying how interrupts get propagated. We will
-      finally conclude on a few tips and tricks to disable/enable
-      interrupts sources and to share interrupts between domains.
-      "><link rel="start" href="#index" title="Life with Adeos"><link rel="next" href="#What_is_Adeos" title="1. What is Adeos"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="index"></a>Life with Adeos</h1></div><div><p class="releaseinfo">Revision B</p></div><div><div class="author"><h3 class="author"><span class="firstname">Philippe</span> <span class="surname">Gerum</span></h3></div></div><div><p class="copyright">Copyright © 2005 </p></div><div><p class="pubdate">10/09/2005</p></div><div><a href="ln-id2471216.html">Legal Notice</a></div><div><div class="abstract"><p class="title"><b>Abstract</b></p><p>This article gives an overview of the Adeos technology and
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Life with Adeos</title><link rel="stylesheet" href="../css/xenomai.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.71.0"><meta name="description" content="This article gives an overview of the Adeos technology and what it provides to Xenomai. After an introduction addressing the event pipeline, the implementation of interrupts dispatching as well as the system event propagation, we will then study the interactions between Xenomai and Adeos. The notions of primary and secondary domains will be explained and we will also be interested in studying how interrupts get propagated. We will finally conclude on a few tips and tricks to disable/enable interrupts sources and to share interrupts between domains."><link rel="start" href="#index" title="Life with Adeos"><link rel="next" href="#What_is_Adeos" title="1. What is Adeos"><link rel="copyright" href="ln-id426927.html" title="Legal Notice"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="index"></a>Life with Adeos</h1></div><div><p class="releaseinfo">Revision B</p></div><div><div class="author"><h3 class="author"><span class="firstname">Philippe</span> <span class="surname">Gerum</span></h3></div></div><div><p class="copyright">Copyright © 2005 </p></div><div><p class="pubdate">10/09/2005</p></div><div><a href="ln-id426927.html">Legal Notice</a></div><div><div class="abstract"><p class="title"><b>Abstract</b></p><p>This article gives an overview of the Adeos technology and
       what it provides to Xenomai. After an introduction addressing
       the event pipeline, the implementation of interrupts dispatching
       as well as the system event propagation, we will then study the
@@ -296,7 +287,7 @@
       the Linux kernel: this keeps the system working when the
       real-time nucleus does not intercept such interrupt.</p></div></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="Tips_and_trick"></a>3. Tips and tricks</h2></div></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="Enabling_Disabling_interrupt_source"></a>3.1. Enabling/Disabling interrupt sources</h3></div></div></div><p>In addition to being able to stall a domain entirely so
       that no interrupt could flow through it anymore until it is
-      explicitely unstalled, Adeos allows to selectively disable, and
+      explicitly unstalled, Adeos allows to selectively disable, and
       conversely re-enable, the actual source of interrupts, at
       hardware level.</p><p>After having taken over the box, Adeos handles the
       interrupt disabling requests for all domains, including for the

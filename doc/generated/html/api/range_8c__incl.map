@@ -1,0 +1,6 @@
+base referer
+rect $comedi_8h.html 224,107 347,133
+rect $comedi_2types_8h.html 771,132 883,159
+rect $descriptor_8h.html 395,157 533,184
+rect $subdevice_8h.html 583,157 721,184
+rect $device_8h.html 593,208 711,235

@@ -1,0 +1,11 @@
+base referer
+rect $descriptor_8h.html 232,70 416,96
+rect $comedi__driver_8h.html 220,120 428,147
+rect $driver__facilities_8c.html 477,164 717,191
+rect $comedi_8h.html 513,107 681,134
+rect $descriptor_8c.html 765,6 960,32
+rect $async_8c.html 777,56 948,83
+rect $info_8c.html 784,107 941,134
+rect $range_8c.html 777,158 948,184
+rect $sync_8c.html 781,208 944,235
+rect $sys_8c.html 784,259 941,286

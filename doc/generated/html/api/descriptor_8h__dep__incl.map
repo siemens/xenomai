@@ -1,0 +1,8 @@
+base referer
+rect $comedi_8h.html 239,107 407,134
+rect $descriptor_8c.html 456,6 651,32
+rect $async_8c.html 468,56 639,83
+rect $info_8c.html 475,107 632,134
+rect $range_8c.html 468,158 639,184
+rect $sync_8c.html 472,208 635,235
+rect $sys_8c.html 475,259 632,286

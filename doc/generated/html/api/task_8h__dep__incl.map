@@ -1,11 +1,13 @@
-<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,84,181,111">
-<area shape="rect" href="$ksrc_2skins_2native_2cond_8c.html" title="This file is part of the Xenomai project." alt="" coords="205,84,376,111">
-<area shape="rect" href="$ksrc_2skins_2native_2event_8c.html" title="This file is part of the Xenomai project." alt="" coords="400,84,576,111">
-<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="600,84,771,111">
-<area shape="rect" href="$ksrc_2skins_2native_2intr_8c.html" title="This file is part of the Xenomai project." alt="" coords="795,84,955,111">
-<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="979,84,1165,111">
-<area shape="rect" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="1189,84,1371,111">
-<area shape="rect" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="1395,84,1573,111">
-<area shape="rect" href="$ksrc_2skins_2native_2sem_8c.html" title="This file is part of the Xenomai project." alt="" coords="1597,84,1765,111">
-<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="1789,84,1971,111">
-<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="1995,84,2160,111">
+base referer
+rect $ksrc_2skins_2native_2alarm_8c.html 203,6 371,32
+rect $ksrc_2skins_2native_2buffer_8c.html 203,56 371,83
+rect $ksrc_2skins_2native_2cond_8c.html 205,107 368,134
+rect $ksrc_2skins_2native_2event_8c.html 203,158 371,184
+rect $ksrc_2skins_2native_2heap_8c.html 205,208 368,235
+rect $ksrc_2skins_2native_2intr_8c.html 211,259 363,286
+rect $skins_2native_2module_8c.html 197,310 376,336
+rect $ksrc_2skins_2native_2mutex_8c.html 201,360 372,387
+rect $ksrc_2skins_2native_2queue_8c.html 201,411 372,438
+rect $ksrc_2skins_2native_2sem_8c.html 207,462 367,488
+rect $native_2syscall_8c.html 200,512 373,539
+rect $ksrc_2skins_2native_2task_8c.html 207,563 367,590
