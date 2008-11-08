@@ -222,9 +222,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00245">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00165">rt_mutex_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00210">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00236">rt_task_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00246">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00165">rt_mutex_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00210">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00236">rt_task_create()</a>.</p>
 
 </div>
 </div><p>
@@ -337,7 +337,7 @@ This service can be called from:<p>
 <li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: possible if the lock count falls down to zero and some thread is currently waiting for the object to be unlocked. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00571">xnsynch_flush()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00571">xnsynch_flush()</a>.</p>
 
 </div>
 </div><p>
@@ -376,7 +376,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00274">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00238">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00260">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00369">rt_heap_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00342">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00248">rt_mutex_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00356">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00331">rt_queue_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00258">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00912">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00274">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00238">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00260">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00343">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00248">rt_mutex_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00356">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00258">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00912">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div><p>
@@ -447,7 +447,7 @@ Rescheduling: possible if the object to remove is currently locked and the calli
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:28 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

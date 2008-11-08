@@ -201,7 +201,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="pod_8c-source.html#l02764">xnpod_add_hook()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02760">xnpod_add_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -310,7 +310,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00049">XNASDI</a>, and <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00049">XNASDI</a>, and <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -404,7 +404,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="thread__attr_8c-source.html#l00081">pthread_attr_init()</a>, <a class="el" href="thread__attr_8c-source.html#l00197">pthread_attr_setdetachstate()</a>, <a class="el" href="thread__attr_8c-source.html#l00373">pthread_attr_setinheritsched()</a>, <a class="el" href="thread__attr_8c-source.html#l00571">pthread_attr_setschedparam()</a>, <a class="el" href="thread__attr_8c-source.html#l00467">pthread_attr_setschedpolicy()</a>, <a class="el" href="thread__attr_8c-source.html#l00283">pthread_attr_setstacksize()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01116">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l00684">xnpod_init_thread()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00055">XNSHIELD</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="thread__attr_8c-source.html#l00081">pthread_attr_init()</a>, <a class="el" href="thread__attr_8c-source.html#l00197">pthread_attr_setdetachstate()</a>, <a class="el" href="thread__attr_8c-source.html#l00373">pthread_attr_setinheritsched()</a>, <a class="el" href="thread__attr_8c-source.html#l00571">pthread_attr_setschedparam()</a>, <a class="el" href="thread__attr_8c-source.html#l00467">pthread_attr_setschedpolicy()</a>, <a class="el" href="thread__attr_8c-source.html#l00283">pthread_attr_setstacksize()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01112">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l00680">xnpod_init_thread()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00055">XNSHIELD</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
 <p>Referenced by <a class="el" href="task_8h-source.html#l00314">rt_task_spawn()</a>.</p>
 
@@ -459,7 +459,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>Any user-space context (conforming call)</li></ul>
 <p>
 Rescheduling: always if <em>task</em> is NULL, and possible if the deleted task is currently running into a safe section. 
-<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00341">pthread_exit()</a>, and <a class="el" href="pod_8c-source.html#l01116">xnpod_delete_thread()</a>.</p>
+<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00341">pthread_exit()</a>, and <a class="el" href="pod_8c-source.html#l01112">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -619,7 +619,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -751,7 +751,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="pod_8c-source.html#l02834">xnpod_remove_hook()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02830">xnpod_remove_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -815,7 +815,7 @@ This service can be called from:<p>
 Rescheduling: Always.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>When called from a user-space task, this service may need to allocate some temporary buffer space from the system heap to hold the reply data if the size of the latter exceeds a certain amount; the threshold before allocation is currently set to 64 bytes. </dd></dl>
 
-<p>References <a class="el" href="task_8h-source.html#l00114">rt_task_mcb::data</a>, <a class="el" href="task_8h-source.html#l00112">rt_task_mcb::opcode</a>, <a class="el" href="task_8h-source.html#l00116">rt_task_mcb::size</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01560">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="task_8h-source.html#l00114">rt_task_mcb::data</a>, <a class="el" href="task_8h-source.html#l00112">rt_task_mcb::opcode</a>, <a class="el" href="task_8h-source.html#l00116">rt_task_mcb::size</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01556">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -858,7 +858,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if the suspension nesting level falls down to zero as a result of the current invocation. 
-<p>References <a class="el" href="pod_8c-source.html#l01560">xnpod_resume_thread()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l01556">xnpod_resume_thread()</a>, <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
 
 </div>
 </div><p>
@@ -1084,7 +1084,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible, if T_LOCK has been passed into <em>clrmask</em> and the calling context is a task. 
-<p>References <a class="el" href="task_8h-source.html#l00049">T_LOCK</a>, <a class="el" href="task_8h-source.html#l00051">T_NOSIG</a>, <a class="el" href="task_8h-source.html#l00050">T_RRB</a>, <a class="el" href="task_8h-source.html#l00052">T_SHIELD</a>, <a class="el" href="task_8h-source.html#l00053">T_WARNSW</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01036">xnpod_set_thread_mode()</a>.</p>
+<p>References <a class="el" href="task_8h-source.html#l00049">T_LOCK</a>, <a class="el" href="task_8h-source.html#l00051">T_NOSIG</a>, <a class="el" href="task_8h-source.html#l00050">T_RRB</a>, <a class="el" href="task_8h-source.html#l00052">T_SHIELD</a>, <a class="el" href="task_8h-source.html#l00053">T_WARNSW</a>, <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01032">xnpod_set_thread_mode()</a>.</p>
 
 </div>
 </div><p>
@@ -1157,7 +1157,7 @@ This service can be called from:<p>
 Rescheduling: always if the operation affects the current task and <em>idate</em> has not elapsed yet.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>idate</em> and <em>period</em> values will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="pod_8c-source.html#l03240">xnpod_set_thread_periodic()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l03236">xnpod_set_thread_periodic()</a>.</p>
 
 </div>
 </div><p>
@@ -1222,7 +1222,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if <em>task</em> is the current one. 
-<p>References <a class="el" href="pod_8c-source.html#l01784">xnpod_renice_thread()</a>, and <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l01780">xnpod_renice_thread()</a>, and <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -1357,7 +1357,7 @@ This service can be called from:<p>
 Rescheduling: always unless a null delay is given.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>delay</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, and <a class="el" href="pod_8c-source.html#l01361">xnpod_suspend_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, and <a class="el" href="pod_8c-source.html#l01357">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -1405,7 +1405,7 @@ This service can be called from:<p>
 Rescheduling: always unless a date in the past is given.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>date</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01361">xnpod_suspend_thread()</a>, and <a class="el" href="timebase_8h-source.html#l00344">xntbase_get_time()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01357">xnpod_suspend_thread()</a>, and <a class="el" href="timebase_8h-source.html#l00344">xntbase_get_time()</a>.</p>
 
 </div>
 </div><p>
@@ -1636,7 +1636,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, and <a class="el" href="pod_8c-source.html#l00798">xnpod_start_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, and <a class="el" href="pod_8c-source.html#l00794">xnpod_start_thread()</a>.</p>
 
 <p>Referenced by <a class="el" href="task_8h-source.html#l00314">rt_task_spawn()</a>.</p>
 
@@ -1691,7 +1691,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always if <em>task</em> is NULL. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01361">xnpod_suspend_thread()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01357">xnpod_suspend_thread()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
 
 </div>
 </div><p>
@@ -1766,7 +1766,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01695">xnpod_unblock_thread()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01691">xnpod_unblock_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -1814,7 +1814,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always, unless the current release point has already been reached. In the latter case, the current task immediately returns from this service without being delayed. 
-<p>References <a class="el" href="pod_8c-source.html#l03339">xnpod_wait_thread_period()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l03335">xnpod_wait_thread_period()</a>.</p>
 
 </div>
 </div><p>
@@ -1851,7 +1851,7 @@ Rescheduling: always if a next equal-priority task is ready to run, otherwise, t
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:24 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:29 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

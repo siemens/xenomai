@@ -636,7 +636,7 @@ Installs an interrupt handler for the specified IRQ line by requesting the appro
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>irq</em>&nbsp;</td><td>The hardware interrupt channel to install a handler on. This value is architecture-dependent.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>handler</em>&nbsp;</td><td>The address of a valid interrupt service routine. This handler will be called each time the corresponding IRQ is delivered, and will be passed the <em>cookie</em> value unmodified.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>ackfn</em>&nbsp;</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the one provided by Adeos. Only very specific situations actually require to override the default Adeos setting for this parameter, like having to acknowledge non-standard PIC hardware. <em>ackfn</em> should return a non-zero value to indicate that the interrupt has been properly acknowledged. If <em>ackfn</em> is NULL, the default Adeos routine will be used instead.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ackfn</em>&nbsp;</td><td>The address of an optional interrupt acknowledge routine, aimed at replacing the one provided by Adeos. Only very specific situations actually require to override the default Adeos setting for this parameter, like having to acknowledge non-standard PIC hardware. If <em>ackfn</em> is NULL, the default Adeos routine will be used instead.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>cookie</em>&nbsp;</td><td>A user-defined opaque cookie the HAL will pass to the interrupt handler as its sole argument.</td></tr>
   </table>
 </dl>
@@ -689,7 +689,7 @@ This service can be called from:<p>
 <ul>
 <li>Linux domain context. </li></ul>
 
-<p>References <a class="el" href="generic_2hal_8c-source.html#l00200">rthal_irq_release()</a>.</p>
+<p>References <a class="el" href="generic_2hal_8c-source.html#l00199">rthal_irq_release()</a>.</p>
 
 </div>
 </div><p>
@@ -756,7 +756,7 @@ This service can be called from:<p>
 <ul>
 <li>Linux domain context. </li></ul>
 
-<p>References <a class="el" href="generic_2hal_8c-source.html#l00200">rthal_irq_release()</a>, and <a class="el" href="generic_2hal_8c-source.html#l00158">rthal_irq_request()</a>.</p>
+<p>References <a class="el" href="generic_2hal_8c-source.html#l00199">rthal_irq_release()</a>, and <a class="el" href="generic_2hal_8c-source.html#l00157">rthal_irq_request()</a>.</p>
 
 </div>
 </div><p>
@@ -794,7 +794,7 @@ This service can be called from:<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:28 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

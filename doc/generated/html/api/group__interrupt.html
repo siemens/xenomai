@@ -327,12 +327,12 @@ A count of interrupt receipts is tracked into the interrupt descriptor, and rese
 Environments:<p>
 This service can be called from:<p>
 <ul>
-<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task (note that in user-space the interface is different, see <a class="el" href="group__interrupt.html#g92fa8e83f6f3db05dd1d2d075dd310ee" title="Create an interrupt object from user-space.">rt_intr_create()</a>)</li></ul>
 <p>
 Rescheduling: possible.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The interrupt source associated to the interrupt descriptor remains masked upon creation. <a class="el" href="group__interrupt.html#gc712ee67f90d053a21bdb0041a63e17c" title="Enable an interrupt object.">rt_intr_enable()</a> should be called for the new interrupt object to unmask it. </dd></dl>
 
-<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00038">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00688">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00601">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00038">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00690">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00603">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -378,9 +378,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00646">xnintr_destroy()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00745">xnintr_detach()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00648">xnintr_destroy()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00747">xnintr_detach()</a>, <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00245">rt_intr_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00246">rt_intr_create()</a>.</p>
 
 </div>
 </div><p>
@@ -422,7 +422,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00820">xnintr_disable()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00822">xnintr_disable()</a>.</p>
 
 </div>
 </div><p>
@@ -464,7 +464,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00789">xnintr_enable()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00791">xnintr_enable()</a>.</p>
 
 </div>
 </div><p>
@@ -612,7 +612,7 @@ Rescheduling: always, unless an interrupt is already pending on entry.<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:28 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

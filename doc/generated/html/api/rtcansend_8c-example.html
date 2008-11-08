@@ -109,7 +109,7 @@ RT_TASK rt_task_desc;
     <span class="keywordtype">int</span> i, j, ret;
 
     <span class="keywordflow">for</span> (i = 0; i &lt; loops; i++) {
-        <a name="a4"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366" title="Delay the calling task (relative).">rt_task_sleep</a>(<a name="a5"></a><a class="code" href="include_2native_2timer_8h.html#ad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(delay));
+        <a name="a4"></a><a class="code" href="group__task.html#gd5225e5fb8d583fbdfa5299f322b8366" title="Delay the calling task (relative).">rt_task_sleep</a>(<a name="a5"></a><a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(delay));
         <span class="keywordflow">if</span> (count)
             memcpy(&amp;frame.data[0], &amp;i, <span class="keyword">sizeof</span>(i));
         <span class="comment">/* Note: sendto avoids the definiton of a receive filter list */</span>
@@ -338,7 +338,7 @@ RT_TASK rt_task_desc;
     <span class="keywordflow">return</span> -1;
 }
 </pre></div> </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:16 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:26 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

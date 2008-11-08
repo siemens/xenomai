@@ -327,7 +327,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2heap_8c-source.html#l00112">rt_heap_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2heap_8c-source.html#l00113">rt_heap_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -375,8 +375,6 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode).</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00270">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
-
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>.</p>
 
 </div>
@@ -424,7 +422,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00429">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00788">xnheap_free()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00491">xnsynch_wakeup_this_sleeper()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00429">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00788">xnheap_free()</a>, <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00491">xnsynch_wakeup_this_sleeper()</a>.</p>
 
 </div>
 </div><p>
@@ -516,7 +514,7 @@ Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:23 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:28 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

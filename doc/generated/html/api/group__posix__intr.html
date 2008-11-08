@@ -49,9 +49,9 @@ Note however, that it is recommended to use the standardized driver API of the R
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__intr.html#gb3bc869108f07ae59173f5a8fa4e9cc8">pthread_intr_attach_np</a> (pthread_intr_t *intrp, unsigned irq, int(*isr)(xnintr_t *), int(*iack)(unsigned irq))</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__intr.html#gf3a9c7f6f99728f07d14a64518033acb">pthread_intr_attach_np</a> (pthread_intr_t *intrp, unsigned irq, xnisr_t isr, xniack_t iack)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create and attach an interrupt object.  <a href="#gb3bc869108f07ae59173f5a8fa4e9cc8"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create and attach an interrupt object.  <a href="#gf3a9c7f6f99728f07d14a64518033acb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__intr.html#gd85032757591da13e1263ff94d3e2e73">pthread_intr_detach_np</a> (pthread_intr_t intr)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroy an interrupt object.  <a href="#gd85032757591da13e1263ff94d3e2e73"></a><br></td></tr>
@@ -63,7 +63,7 @@ Note however, that it is recommended to use the standardized driver API of the R
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next interruption.  <a href="#g6b6286b729876ba65abb999260639fb3"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="gb3bc869108f07ae59173f5a8fa4e9cc8"></a><!-- doxytag: member="intr.c::pthread_intr_attach_np" ref="gb3bc869108f07ae59173f5a8fa4e9cc8" args="(pthread_intr_t *intrp, unsigned irq, int(*isr)(xnintr_t *), int(*iack)(unsigned irq))" -->
+<a class="anchor" name="gf3a9c7f6f99728f07d14a64518033acb"></a><!-- doxytag: member="intr.c::pthread_intr_attach_np" ref="gf3a9c7f6f99728f07d14a64518033acb" args="(pthread_intr_t *intrp, unsigned irq, xnisr_t isr, xniack_t iack)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -82,13 +82,13 @@ Note however, that it is recommended to use the standardized driver API of the R
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int(*)(xnintr_t *)&nbsp;</td>
+          <td class="paramtype">xnisr_t&nbsp;</td>
           <td class="paramname"> <em>isr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int(*)(unsigned irq)&nbsp;</td>
+          <td class="paramtype">xniack_t&nbsp;</td>
           <td class="paramname"> <em>iack</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -134,7 +134,7 @@ The return values are identical in kernel-space and user-space.<p>
   </table>
 </dl>
 
-<p>References <a class="el" href="ksrc_2skins_2posix_2intr_8c-source.html#l00200">pthread_intr_detach_np()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00688">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00601">xnintr_init()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2posix_2intr_8c-source.html#l00200">pthread_intr_detach_np()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00690">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00603">xnintr_init()</a>, and <a class="el" href="synch_8c-source.html#l00087">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -183,7 +183,7 @@ This service is a non-portable extension of the POSIX interface.<p>
   </table>
 </dl>
 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00820">xnintr_disable()</a>, and <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00789">xnintr_enable()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00822">xnintr_disable()</a>, and <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00791">xnintr_enable()</a>.</p>
 
 </div>
 </div><p>
@@ -272,7 +272,7 @@ This service is a non-portable extension of the POSIX interface.<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:25 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:30 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

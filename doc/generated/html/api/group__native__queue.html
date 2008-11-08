@@ -133,7 +133,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00429">xnheap_alloc()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00722">rt_queue_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00729">rt_queue_write()</a>.</p>
 
 </div>
 </div><p>
@@ -351,8 +351,6 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode).</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00270">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
-
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>.</p>
 
 </div>
@@ -401,7 +399,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00569">xnheap_test_and_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00932">rt_queue_read()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00939">rt_queue_read()</a>.</p>
 
 </div>
 </div><p>
@@ -534,7 +532,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00140">rt_queue_free()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00157">rt_queue_receive()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00137">rt_queue_free()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00154">rt_queue_receive()</a>.</p>
 
 </div>
 </div><p>
@@ -612,7 +610,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00111">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00168">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00932">rt_queue_read()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00939">rt_queue_read()</a>.</p>
 
 </div>
 </div><p>
@@ -690,9 +688,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8c-source.html#l02377">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00376">xnsynch_wakeup_one_sleeper()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02373">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00376">xnsynch_wakeup_one_sleeper()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00722">rt_queue_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00729">rt_queue_write()</a>.</p>
 
 </div>
 </div><p>
@@ -808,12 +806,12 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00131">rt_queue_alloc()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00145">rt_queue_send()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00128">rt_queue_alloc()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00142">rt_queue_send()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Aug 19 23:03:24 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:29 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>
