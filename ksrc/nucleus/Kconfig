@@ -37,6 +37,8 @@ config XENO_OPT_ISHIELD
 	of Linux kernel activities is already prevented by design,
 	should leave this option disabled.
 
+	If in doubt, leave this option disabled.
+
 config XENO_OPT_PRIOCPL
 	depends on XENO_OPT_PERVASIVE
 	bool "Priority coupling support"
