@@ -3783,7 +3783,7 @@ index bb1c09f..28d6d12 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..6247238
+index 0000000..2c29fdb
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,128 @@
@@ -3814,10 +3814,10 @@ index 0000000..6247238
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.1-00"
++#define IPIPE_ARCH_STRING	"2.1-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -6622,10 +6622,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..2ef6878
+index 0000000..9fab398
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1673 @@
+@@ -0,0 +1,1700 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -7475,6 +7475,18 @@ index 0000000..2ef6878
 +			local_irq_restore_hw(flags);
 +			propagate = !evhand(event, start_domain, data);
 +			local_irq_save_hw(flags);
++			/*
++			 * We may have a migration issue here, if the
++			 * current task is migrated to another CPU on
++			 * behalf of the invoked handler, usually when
++			 * a syscall event is processed. However,
++			 * ipipe_catch_event() will make sure that a
++			 * CPU that clears a handler for any given
++			 * event will not attempt to wait for itself
++			 * to clear the evsync bit for that event,
++			 * which practically plugs the hole, without
++			 * resorting to a much more complex strategy.
++			 */
 +			ipipe_cpudom_var(next_domain, evsync) &= ~(1LL << event);
 +			if (ipipe_current_domain != next_domain)
 +				this_domain = ipipe_current_domain;
@@ -7962,6 +7974,21 @@ index 0000000..2ef6878
 +		 * synchronization flag is cleared for the given event
 +		 * on all CPUs.
 +		 */
++		preempt_disable();
++		cpu = smp_processor_id();
++		/*
++		 * Hack: this solves the potential migration issue
++		 * raised in __ipipe_dispatch_event(). This is a
++		 * work-around which makes the assumption that other
++		 * CPUs will subsequently, either process at least one
++		 * interrupt for the target domain, or call
++		 * __ipipe_dispatch_event() without going through a
++		 * migration while running the handler at least once;
++		 * practically, this is safe on any normally running
++		 * system.
++		 */
++		ipipe_percpudom(ipd, evsync, cpu) &= ~(1LL << event);
++		preempt_enable();
 +
 +		for_each_online_cpu(cpu) {
 +			while (ipipe_percpudom(ipd, evsync, cpu) & (1LL << event))
