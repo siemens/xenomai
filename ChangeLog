@@ -1,3 +1,7 @@
+2008-11-09  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/x86/patches: Upgrade to 2.6.27-x86-2.1-01.
+
 2008-11-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.27-x86-2.1-00.
