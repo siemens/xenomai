@@ -33,6 +33,7 @@ static inline void __xeno_set_current(xnhandle_t current)
 	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
+__attribute__ ((weak))
 unsigned long *xeno_init_current_mode(void)
 {
 	unsigned long *mode = malloc(sizeof(unsigned long));
