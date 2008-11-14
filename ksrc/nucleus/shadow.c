@@ -1405,6 +1405,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
 	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
 	set_cpus_allowed(current, affinity);
+	thread->u_mode = u_mode;
 
 	if (u_completion) {
  		/* We still have the XNDORMANT bit set, so we can't
@@ -1416,11 +1417,9 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	/* Nobody waits for us, so we may start the shadow immediately. */
 	err = xnpod_start_thread(thread, 0, 0, affinity, NULL, NULL);
-
 	if (err)
 		return err;
 
-	thread->u_mode = u_mode;
 	__xn_put_user(XNRELAX, u_mode);
 
 	err = xnshadow_harden();
