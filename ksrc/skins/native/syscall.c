@@ -123,6 +123,7 @@ static RT_TASK *__rt_task_current(struct task_struct *p)
  * a3: int prio;
  * a4: int mode;
  * a5: pthread_t opaque;
+ * a6: thread mode writeback area;
  * }
  */
 
