@@ -1,5 +1,10 @@
 2008-11-14  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/blackfin/hal.c: Let the I-pipe do dummy acknowledges
+	of core timer ticks.
+
+2008-11-14  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/nucleus/shadow.c (xnshadow_map): Store the thread mode
 	writeback pointer early enough, i.e. before returning to dormant
 	state when applicable.
