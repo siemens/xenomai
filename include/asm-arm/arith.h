@@ -14,14 +14,6 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 #define rthal_nodiv_ullimd(op, frac, integ) \
 	rthal_arm_nodiv_ullimd((op), (frac), (integ))
 #else /* arm <= v3 */
-#define __rthal_add64and32(h, l, s)		\
-	do {					\
-		__asm__ ("adds %1, %2\n\t"	\
-			 "adc %0, #0\n\t"	\
-			 : "+r"(h), "+r"(l)	\
-			 : "r"(s): "cc");	\
-	} while (0)
-
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\
 		__asm__ ("adds %2, %4\n\t"		\
