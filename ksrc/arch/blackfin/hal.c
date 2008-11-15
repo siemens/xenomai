@@ -50,11 +50,6 @@ static struct {
 /* Acknowledge the core timer IRQ. This routine does nothing, except
    preventing Linux to mask the IRQ. */
 
-static int rthal_timer_ack(unsigned irq)
-{
-	return 1;
-}
-
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
 asmlinkage void irq_panic(int reason, struct pt_regs *regs);
@@ -96,7 +91,7 @@ int rthal_timer_request(void (*handler) (void), int cpu)
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t) handler,
-				&rthal_timer_ack, NULL);
+				NULL, NULL);
 
 	rthal_critical_exit(flags);
 
