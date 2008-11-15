@@ -62,7 +62,7 @@ int xnthread_init(xnthread_t *thread,
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
 	if (stacksize > 0) {
 		xnlogerr("%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
-			 __FUNCTION__, thread->name);
+			 __FUNCTION__, name);
 		return -ENOMEM;
 	}
 #else
