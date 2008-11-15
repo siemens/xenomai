@@ -6,7 +6,7 @@
 /*
  * Reading the 64bit part indirectly may seem a bit twisted, but we
  * don't have many Dregs on the Blackfin, and __rthal_mul64by64_high()
- * grabs most of them. Still, nodiv_ullimd performs 5x better than
+ * grabs most of them. Still, nodiv_ullimd performs 5x faster than
  * ullimd on this arch.
  */
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
