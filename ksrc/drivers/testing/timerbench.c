@@ -215,7 +215,7 @@ static int rt_tmbench_close(struct rtdm_dev_context *context,
 	if (ctx->mode >= 0) {
 		if (ctx->mode == RTTST_TMBENCH_TASK)
 			rtdm_task_destroy(&ctx->timer_task);
-		else
+		else if (ctx->mode == RTTST_TMBENCH_HANDLER)
 			rtdm_timer_destroy(&ctx->timer);
 
 		rtdm_event_destroy(&ctx->result_event);
@@ -291,15 +291,17 @@ static int rt_tmbench_start(struct rtdm_dev_context *context,
 	ctx->curr.max = -10000000;
 	ctx->curr.avg = 0;
 	ctx->curr.overruns = 0;
+	ctx->mode = RTTST_TMBENCH_NONE;
 
 	rtdm_event_init(&ctx->result_event, 0);
 
 	if (config->mode == RTTST_TMBENCH_TASK) {
 		if (!test_bit(RTDM_CLOSING, &context->context_flags)) {
-			ctx->mode = RTTST_TMBENCH_TASK;
 			err = rtdm_task_init(&ctx->timer_task, "timerbench",
 					     timer_task_proc, ctx,
 					     config->priority, 0);
+			if (!err)
+				ctx->mode = RTTST_TMBENCH_TASK;
 		}
 	} else {
 		rtdm_timer_init(&ctx->timer, timer_proc,
@@ -343,7 +345,7 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 
 	if (ctx->mode == RTTST_TMBENCH_TASK)
 		rtdm_task_destroy(&ctx->timer_task);
-	else
+	else if (ctx->mode == RTTST_TMBENCH_HANDLER)
 		rtdm_timer_destroy(&ctx->timer);
 
 	rtdm_event_destroy(&ctx->result_event);
