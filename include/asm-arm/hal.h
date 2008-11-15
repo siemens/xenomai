@@ -275,6 +275,8 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 
 #endif /* CONFIG_XENO_HW_FPU */
 
+void rthal_fault_range(struct vm_area_struct *vma);
+
 static const char *const rthal_fault_labels[] = {
     [IPIPE_TRAP_ACCESS] = "Data or instruction access",
     [IPIPE_TRAP_SECTION] = "Section fault",

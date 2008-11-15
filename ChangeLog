@@ -1,3 +1,10 @@
+2008-11-16  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/arch/arm/hal.c (rthal_fault_range): Add a service to the
+	hal allowing to fault a user-space address range.
+
+	* ksrc/nucleus/heap.c (xnheap_mmap): Call this new service.
+
 2008-11-15  Philippe Gerum  <rpm@xenomai.org>
 	
 	* ksrc/arch/blackfin/Kconfig: Enable generic stack pool for kernel
