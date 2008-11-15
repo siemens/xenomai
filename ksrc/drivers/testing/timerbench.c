@@ -197,7 +197,7 @@ static int rt_tmbench_open(struct rtdm_dev_context *context,
 
 	ctx = (struct rt_tmbench_context *)context->dev_private;
 
-	ctx->mode = -1;
+	ctx->mode = RTTST_TMBENCH_INVALID;
 	init_MUTEX(&ctx->nrt_mutex);
 
 	return 0;
@@ -223,7 +223,7 @@ static int rt_tmbench_close(struct rtdm_dev_context *context,
 		if (ctx->histogram_size)
 			kfree(ctx->histogram_min);
 
-		ctx->mode = -1;
+		ctx->mode = RTTST_TMBENCH_INVALID;
 		ctx->histogram_size = 0;
 	}
 
@@ -291,7 +291,7 @@ static int rt_tmbench_start(struct rtdm_dev_context *context,
 	ctx->curr.max = -10000000;
 	ctx->curr.avg = 0;
 	ctx->curr.overruns = 0;
-	ctx->mode = RTTST_TMBENCH_NONE;
+	ctx->mode = RTTST_TMBENCH_INVALID;
 
 	rtdm_event_init(&ctx->result_event, 0);
 
@@ -350,7 +350,7 @@ static int rt_tmbench_stop(struct rt_tmbench_context *ctx,
 
 	rtdm_event_destroy(&ctx->result_event);
 
-	ctx->mode = -1;
+	ctx->mode = RTTST_TMBENCH_INVALID;
 
 	ctx->result.overall.avg =
 	    slldiv(ctx->result.overall.avg,

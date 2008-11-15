@@ -84,7 +84,7 @@ typedef struct rttst_overall_bench_res {
 	void *__padding;	/* align to dwords on 32-bit archs */
 } rttst_overall_bench_res_t;
 
-#define RTTST_TMBENCH_NONE		-1
+#define RTTST_TMBENCH_INVALID		-1 /* internal use only */
 #define RTTST_TMBENCH_TASK		0
 #define RTTST_TMBENCH_HANDLER		1
 
