@@ -1,3 +1,15 @@
+2008-11-15  Philippe Gerum  <rpm@xenomai.org>
+	
+	* ksrc/arch/blackfin/Kconfig: Enable generic stack pool for kernel
+	threads.
+
+	* ksrc/nucleus/thread.c (xnthread_init): Fix error message that
+	may trigger invalid memory reference.
+
+	* ksrc/drivers/testing/timerbench.c (rt_tmbench_stop): Introduce
+	RTTST_TMBENCH_NONE to make sure that no attempt is made to delete
+	a non-existent task after rtdm_task_init() has failed.
+
 2008-11-11  Philippe Gerum  <rpm@xenomai.org>
 	
 	* RELEASE: Xenomai 2.4.6.1
