@@ -50,6 +50,15 @@ static struct {
 /* Acknowledge the core timer IRQ. This routine does nothing, except
    preventing Linux to mask the IRQ. */
 
+#if IPIPE_MAJOR_NUMBER < 2 && IPIPE_MINOR_NUMBER < 8
+static int rthal_timer_ack(unsigned irq)
+{
+	return 1;
+}
+#else
+#define rthal_timer_ack NULL
+#endif
+
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
 asmlinkage void irq_panic(int reason, struct pt_regs *regs);
@@ -91,7 +100,7 @@ int rthal_timer_request(void (*handler) (void), int cpu)
 
 	err = rthal_irq_request(RTHAL_TIMER_IRQ,
 				(rthal_irq_handler_t) handler,
-				NULL, NULL);
+				rthal_timer_ack, NULL);
 
 	rthal_critical_exit(flags);
 
