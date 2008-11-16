@@ -71,7 +71,7 @@ __rthal_x86_64_nodiv_ullimd(unsigned long long op, unsigned long long frac,
 		 "addq %[t], %[rl]\n\t"
 		 "adcq $0, %[rh]\n\t":
 		 [rh]"=&d"(rh), [rl]"=&a"(rl):
-		 "1"(frac), [op]"r"(op), [t]"r"(0x8000000ULL));
+		 "1"(frac), [op]"r"(op), [t]"r"(0x8000000ULL), "cc");
 	return rh + op * integ;
 }
 
