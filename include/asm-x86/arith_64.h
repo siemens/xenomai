@@ -63,16 +63,24 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 #define XNARCH_WANT_NODIV_MULDIV
 
 static inline __attribute__((__const__)) unsigned long long
-__rthal_x86_64_nodiv_ullimd(unsigned long long op, unsigned long long frac,
-			    unsigned integ)
+__rthal_x86_64_nodiv_ullimd(unsigned long long op,
+			    unsigned long long frac, unsigned rhs_integ)
 {
-	unsigned long long rh, rl;
+	register unsigned long long rh __asm__("rax") = frac;
+	register unsigned long long rl __asm__("rdx");
+	register unsigned long long integ __asm__("rsi") = rhs_integ;
+	register unsigned long long t __asm__("r8") = 0x80000000ULL;
+
 	__asm__ ("mulq %[op]\n\t"
+		 "xchgq %[rh], %[rl]\n\t"
 		 "addq %[t], %[rl]\n\t"
-		 "adcq $0, %[rh]\n\t":
-		 [rh]"=&d"(rh), [rl]"=&a"(rl):
-		 "1"(frac), [op]"r"(op), [t]"r"(0x8000000ULL): "cc");
-	return rh + op * integ;
+		 "adcq $0, %[rh]\n\t"
+		 "imulq %[op], %[integ]\n\t"
+		 "addq %[integ], %[rh]":
+		 [rh]"+&a"(rh), [rl]"=&d"(rl), [integ]"+S"(integ):
+		 [op]"D"(op), [t]"r"(t): "cc");
+
+	return rh;
 }
 
 #define rthal_nodiv_ullimd(op, frac, integ) \
