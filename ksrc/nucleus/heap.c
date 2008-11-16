@@ -1056,9 +1056,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 					      size, PAGE_SHARED))
 		return -EAGAIN;
 
-#ifdef xnarch_fault_range
 	xnarch_fault_range(vma);
-#endif /* xnarch_fault_range */
 
 	atomic_inc(&heap->archdep.numaps);
 

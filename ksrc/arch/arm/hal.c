@@ -227,7 +227,7 @@ int rthal_irq_end(unsigned irq)
     return rthal_irq_chip_end(irq);
 }
 
-void rthal_fault_range(struct vm_area_struct *vma)
+void __rthal_arm_fault_range(struct vm_area_struct *vma)
 {
 	unsigned long addr;
 	for (addr = vma->vm_start; addr != vma->vm_end; addr += PAGE_SIZE)
@@ -287,7 +287,7 @@ EXPORT_SYMBOL(rthal_arch_init);
 EXPORT_SYMBOL(rthal_arch_cleanup);
 EXPORT_SYMBOL(rthal_thread_switch);
 EXPORT_SYMBOL(rthal_thread_trampoline);
-EXPORT_SYMBOL(rthal_fault_range);
+EXPORT_SYMBOL(__rthal_arm_fault_range);
 #if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
 EXPORT_SYMBOL(last_VFP_context);
 EXPORT_SYMBOL(rthal_vfp_save);

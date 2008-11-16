@@ -1781,6 +1781,7 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 {
 	struct rtdm_mmap_data *mmap_data = filp->private_data;
 	unsigned long vaddr, paddr, maddr, size;
+	int ret;
 
 	vma->vm_ops = mmap_data->vm_ops;
 	vma->vm_private_data = mmap_data->vm_private_data;
@@ -1810,15 +1811,21 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 			vaddr += PAGE_SIZE;
 			mapped_size += PAGE_SIZE;
 		}
-		return 0;
+		xnarch_fault_range(vma);
+		ret = 0;
 	} else
 #endif /* CONFIG_MMU */
 	if (mmap_data->src_paddr)
-	  	return xnarch_remap_io_page_range(filp, vma, maddr, paddr,
-						  size, PAGE_SHARED);
-	else
-		return xnarch_remap_kmem_page_range(vma, maddr, paddr,
-						    size, PAGE_SHARED);
+	  	ret = xnarch_remap_io_page_range(filp, vma, maddr, paddr,
+						 size, PAGE_SHARED);
+	else {
+		ret = xnarch_remap_kmem_page_range(vma, maddr, paddr,
+						   size, PAGE_SHARED);
+		if (!ret)
+			xnarch_fault_range(vma);
+	}
+
+	return ret;
 }
 
 static struct file_operations rtdm_mmap_fops = {

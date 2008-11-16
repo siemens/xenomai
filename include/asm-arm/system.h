@@ -214,8 +214,6 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 	kfree(chunk);
 }
 
-#define xnarch_fault_range(vma) rthal_fault_range(vma)
-
 #ifdef __cplusplus
 }
 #endif

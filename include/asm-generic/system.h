@@ -452,6 +452,12 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
     return wrap_remap_kmem_page_range(vma,from,to,size,prot);
 }
 
+#ifdef rthal_fault_range
+#define xnarch_fault_range(vma) rthal_fault_range(vma)
+#else /* !rthal_fault_range */
+#define xnarch_fault_range(vma) do { } while (0)
+#endif /*!rthal_fault_range */
+
 #ifndef xnarch_hisyscall_entry
 static inline void xnarch_hisyscall_entry(void)	{ }
 #endif
