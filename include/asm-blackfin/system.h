@@ -87,19 +87,23 @@ extern "C" {
 
 static inline void *xnarch_alloc_host_mem(u_long bytes)
 {
-    return kmalloc(bytes,GFP_KERNEL);
+	return kmalloc(bytes,GFP_KERNEL);
 }
 
 static inline void xnarch_free_host_mem(void *chunk, u_long bytes)
 {
-    kfree(chunk);
+	kfree(chunk);
 }
 
-/*
- * On Blackfin, kernel thread stacks are obtained from the main
- * Xenomai heap, so we don't need to implement
- * xnarch_alloc/free_stack_mem().
- */
+static inline void *xnarch_alloc_stack_mem(u_long bytes)
+{
+	return kmalloc(bytes, GFP_KERNEL);
+}
+
+static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
+{
+	kfree(chunk);
+}
 
 #define __xnarch_hisyscall_entry()	\
   do	{				\
