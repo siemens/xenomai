@@ -32,8 +32,8 @@ __rthal_x86_64_llimd (long long op, unsigned m, unsigned d)
 	long long result;
 
 	__asm__ (
-		"imul %[m]\t\n"
-		"idiv %[d]\t\n"
+		"imul %[m]\n\t"
+		"idiv %[d]\n\t"
 		: "=a" (result)
 		: "a" (op), [m] "r" ((unsigned long long)m),
 		  [d] "r" ((unsigned long long)d)
@@ -49,7 +49,7 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 	long long result;
 
 	__asm__ (
-		"imul %[m]\t\n"
+		"imul %[m]\n\t"
 		"shrd %%cl,%%rdx,%%rax\t\n"
 		: "=a,a" (result)
 		: "a,a" (op), [m] "m,r" ((unsigned long long)m),
@@ -59,6 +59,26 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 	return result;
 }
 #define rthal_llmulshft(op, m, s) __rthal_x86_64_llmulshft((op), (m), (s))
+
+#define XNARCH_WANT_NODIV_MULDIV
+
+static inline __attribute__((__const__)) unsigned long long
+__rthal_x86_64_nodiv_ullimd(unsigned long long op, unsigned long long frac,
+			    unsigned integ)
+{
+	unsigned long long rh, rl;
+	__asm__ ("mulq %[op]\n\t":
+		 "=d"(rh), "=a"(rl):
+		 "1"(frac), [op]"r"(op));
+	__asm__ ("addq %[rl], %[t]\n\t"
+		 "adcq $0, %[rh]\n\t":
+		 [rh]"+r"(rh), [rl]"+r"(rl):
+		 [t]"r"((rl & (1ULL << 31)) << 1));
+	return rh + op * integ;
+}
+
+#define rthal_nodiv_ullimd(op, frac, integ) \
+	__rthal_x86_64_nodiv_ullimd((op), (frac), (integ))
 
 #include <asm-generic/xenomai/arith.h>
 
