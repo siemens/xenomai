@@ -66,21 +66,20 @@ static inline __attribute__((__const__)) unsigned long long
 __rthal_x86_64_nodiv_ullimd(unsigned long long op,
 			    unsigned long long frac, unsigned rhs_integ)
 {
-	register unsigned long long rh __asm__("rax") = frac;
-	register unsigned long long rl __asm__("rdx");
+	register unsigned long long rl __asm__("rax") = frac;
+	register unsigned long long rh __asm__("rdx");
 	register unsigned long long integ __asm__("rsi") = rhs_integ;
 	register unsigned long long t __asm__("r8") = 0x80000000ULL;
 
 	__asm__ ("mulq %[op]\n\t"
-		 "xchgq %[rh], %[rl]\n\t"
 		 "addq %[t], %[rl]\n\t"
 		 "adcq $0, %[rh]\n\t"
 		 "imulq %[op], %[integ]\n\t"
-		 "addq %[integ], %[rh]":
-		 [rh]"+&a"(rh), [rl]"=&d"(rl), [integ]"+S"(integ):
+		 "leaq (%[integ], %[rh], 1),%[rl]":
+		 [rh]"=&d"(rh), [rl]"+&a"(rl), [integ]"+S"(integ):
 		 [op]"D"(op), [t]"r"(t): "cc");
 
-	return rh;
+	return rl;
 }
 
 #define rthal_nodiv_ullimd(op, frac, integ) \
