@@ -67,8 +67,11 @@ int xnthread_init(xnthread_t *thread,
 	}
 #else
 	ret = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
-	if (ret)
+	if (ret) {
+		xnlogerr("%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
+			 __FUNCTION__, name);
 		return ret;
+	}
 #endif
 
 	if (name)
