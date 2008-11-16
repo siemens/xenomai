@@ -67,14 +67,11 @@ __rthal_x86_64_nodiv_ullimd(unsigned long long op, unsigned long long frac,
 			    unsigned integ)
 {
 	unsigned long long rh, rl;
-	__asm__ ("mulq %[op]\n\t":
-		 "=d"(rh), "=a"(rl):
-		 "1"(frac), [op]"r"(op));
-	__asm__ ("addq %[rl], %[t]\n\t"
+	__asm__ ("mulq %[op]\n\t"
+		 "addq %[t], %[rl]\n\t"
 		 "adcq $0, %[rh]\n\t":
-		 [rh]"+r"(rh), [rl]"+r"(rl):
-		 [t]"r"((rl & (1ULL << 31)) << 1):
-		 "cc");
+		 [rh]"=&d"(rh), [rl]"=&a"(rl):
+		 "1"(frac), [op]"r"(op), [t]"r"(0x8000000ULL));
 	return rh + op * integ;
 }
 
