@@ -1,3 +1,8 @@
+2008-11-16  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin/patches: Upgrade to to
+	2008R1.5-RC3-bf5xx-1.8-00.patch.
+	
 2008-11-16  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/hal.c (rthal_fault_range): Add a service to the

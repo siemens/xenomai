@@ -13,7 +13,7 @@ On the Blackfin architecture, Xenomai is supported on the the BF527,
 BF533, BF537, BF548 and BF561(*) boards, based on the uClinux releases
 published by the Blackfin project [2].
 
-The current patch applies against uClinux-2008R1-RC8 as published by
+The current patch applies against uClinux-2008R1.5-RC3 as published by
 the Blackfin project.
 
 Just apply the provided patch against the corresponding kernel
