@@ -50,7 +50,7 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 
 	__asm__ (
 		"imul %[m]\n\t"
-		"shrd %%cl,%%rdx,%%rax\t\n"
+		"shrd %%cl,%%rdx,%%rax\n\t"
 		: "=a,a" (result)
 		: "a,a" (op), [m] "m,r" ((unsigned long long)m),
 		  "c,c" (s)
@@ -73,7 +73,8 @@ __rthal_x86_64_nodiv_ullimd(unsigned long long op, unsigned long long frac,
 	__asm__ ("addq %[rl], %[t]\n\t"
 		 "adcq $0, %[rh]\n\t":
 		 [rh]"+r"(rh), [rl]"+r"(rl):
-		 [t]"r"((rl & (1ULL << 31)) << 1));
+		 [t]"r"((rl & (1ULL << 31)) << 1):
+		 "cc");
 	return rh + op * integ;
 }
 
