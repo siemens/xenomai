@@ -96,10 +96,21 @@ static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 
 static inline void xnpipe_dequeue_wait(xnpipe_state_t *state, int mask)
 {
-	if (testbits(state->status, mask)) {
-		if (--state->wcount == 0)
+	if (testbits(state->status, mask))
+		if (--state->wcount == 0) {
 			removeq(&xnpipe_sleepq, &state->slink);
-		__clrbits(state->status, mask);
+			__clrbits(state->status, mask);
+		}
+}
+
+static inline void xnpipe_dequeue_all(xnpipe_state_t *state, int mask)
+{
+	if (testbits(state->status, mask)) {
+		if (state->wcount) {
+			state->wcount = 0;
+			removeq(&xnpipe_sleepq, &state->slink);
+			__clrbits(state->status, mask);
+		}
 	}
 }
 
@@ -682,8 +693,8 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	xnpipe_dequeue_wait(state, XNPIPE_USER_WREAD);
-	xnpipe_dequeue_wait(state, XNPIPE_USER_WSYNC);
+	xnpipe_dequeue_all(state, XNPIPE_USER_WREAD);
+	xnpipe_dequeue_all(state, XNPIPE_USER_WSYNC);
 
 	if (testbits(state->status, XNPIPE_KERN_CONN)) {
 		int minor = xnminor_from_state(state);

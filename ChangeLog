@@ -1,3 +1,8 @@
+2008-11-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/nucleus/pipe.c (xnpipe_release): Remove released pipe from
+	sleepq.
+
 2008-11-16  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/hal.c (xnarch_fault_range): Add a service to the
