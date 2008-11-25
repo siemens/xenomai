@@ -241,14 +241,14 @@ int rt_queue_create(RT_QUEUE *q,
 	{
 		void *poolmem;
 
-		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
+		poolsize = xnheap_rounded_size(poolsize, XNHEAP_PAGE_SIZE);
 
 		poolmem = xnarch_alloc_host_mem(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&q->bufpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
+		err = xnheap_init(&q->bufpool, poolmem, poolsize, XNHEAP_PAGE_SIZE);
 		if (err) {
 			xnarch_free_host_mem(poolmem, poolsize);
 			return err;

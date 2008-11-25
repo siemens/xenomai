@@ -28,7 +28,7 @@ static int __rtai_task_sig;
 
 static int __task_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
-	return XNCORE_HIGH_PRIO - coreprio + 1;
+	return XNSCHED_HIGH_PRIO - coreprio + 1;
 }
 
 static unsigned __task_get_magic(void)
@@ -113,11 +113,11 @@ int rt_task_init(RT_TASK *task,
 	int err;
 	spl_t s;
 
-	if (priority < XNCORE_LOW_PRIO ||
-	    priority > XNCORE_HIGH_PRIO || task->magic == RTAI_TASK_MAGIC)
+	if (priority < XNSCHED_LOW_PRIO ||
+	    priority > XNSCHED_HIGH_PRIO || task->magic == RTAI_TASK_MAGIC)
 		return -EINVAL;
 
-	priority = XNCORE_HIGH_PRIO - priority + 1;	/* Normalize. */
+	priority = XNSCHED_HIGH_PRIO - priority + 1;	/* Normalize. */
 
 	if (uses_fpu)
 #ifdef CONFIG_XENO_HW_FPU

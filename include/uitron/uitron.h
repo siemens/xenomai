@@ -452,12 +452,12 @@ typedef struct t_dexc {
 
 /*
  * The following macros return normalized or native priority values
- * for the underlying pod. The core pod providing user-space support
- * uses an ascending [0..257] priority scale (include/nucleus/core.h),
- * whilst the uITRON personality exhibits a decreasing scale
- * [8..1]. We normalize to the range [92..99], leaving 0 unchanged.
+ * for the underlying pod. The core scheduler uses an ascending
+ * [0..257] priority scale (include/nucleus/sched.h), whilst the
+ * uITRON personality exhibits a decreasing scale [8..1]. We normalize
+ * to the range [92..99], leaving 0 unchanged.
  */
-#define ui_normalized_prio(prio)	({ int __p = (prio) ? XNCORE_HIGH_PRIO - (prio) + 1 : 0; __p; })
+#define ui_normalized_prio(prio)	({ int __p = (prio) ? XNSCHED_HIGH_PRIO - (prio) + 1 : 0; __p; })
 #define ui_denormalized_prio(prio)	ui_normalized_prio(prio)
 
 #ifdef __cplusplus

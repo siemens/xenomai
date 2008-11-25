@@ -22,8 +22,7 @@
 #ifndef _XENO_TASK_H
 #define _XENO_TASK_H
 
-#include <nucleus/core.h>
-#include <nucleus/thread.h>
+#include <nucleus/sched.h>
 #include <native/types.h>
 
 /* Creation flags. */
@@ -63,8 +62,8 @@
 #define T_DESC(cookie) thread2rtask(cookie)
 
 /* Priority range (POSIXish, same bounds as Xenomai's). */
-#define T_LOPRIO  XNCORE_LOW_PRIO
-#define T_HIPRIO  XNCORE_HIGH_PRIO
+#define T_LOPRIO  XNSCHED_LOW_PRIO
+#define T_HIPRIO  XNSCHED_HIGH_PRIO
 
 typedef struct rt_task_placeholder {
     xnhandle_t opaque;

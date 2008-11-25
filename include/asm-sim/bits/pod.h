@@ -112,10 +112,9 @@ static inline int xnarch_release_ipi (void)
     return 0;
 }
 
-static inline void xnarch_escalate (void)
+static inline int xnarch_escalate (void)
 {
-    void xnpod_schedule_handler(void);
-    xnpod_schedule_handler();
+    return 0;
 }
 
 #define xnarch_notify_ready()    mvm_finalize_init()

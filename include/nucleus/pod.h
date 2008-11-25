@@ -31,8 +31,7 @@
 /*! \addtogroup pod
  *@{*/
 
-#include <nucleus/thread.h>
-#include <nucleus/intr.h>
+#include <nucleus/sched.h>
 
 /* Pod status flags */
 #define XNFATAL  0x00000001	/* Fatal error in progress */
@@ -54,127 +53,16 @@
 #define XNPOD_SPARE6  0x40000000
 #define XNPOD_SPARE7  0x80000000
 
-/* Flags for context checking */
-#define XNPOD_THREAD_CONTEXT     0x1	/* Regular thread */
-#define XNPOD_INTERRUPT_CONTEXT  0x2	/* Interrupt service thread */
-#define XNPOD_HOOK_CONTEXT       0x4	/* Nanokernel hook */
-#define XNPOD_ROOT_CONTEXT       0x8	/* Root thread */
-
 #define XNPOD_NORMAL_EXIT  0x0
 #define XNPOD_FATAL_EXIT   0x1
 
 #define XNPOD_ALL_CPUS  XNARCH_CPU_MASK_ALL
 
-#define XNPOD_HEAPSIZE  (CONFIG_XENO_OPT_SYS_HEAPSZ * 1024)
-#define XNPOD_PAGESIZE  512
-#define XNPOD_RUNPRIO   0x80000000	/* Placeholder for "stdthread priority" */
-
-/* Flags for xnpod_schedule_runnable() */
-#define XNPOD_SCHEDFIFO 0x0
-#define XNPOD_SCHEDLIFO 0x1
-#define XNPOD_NOSWITCH  0x2
-
-#ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
-typedef xnmlqueue_t xnsched_queue_t;
-#define sched_initpq		initmlq
-#define sched_emptypq_p		emptymlq_p
-#define sched_insertpql		insertmlql
-#define sched_insertpqf		insertmlqf
-#define sched_appendpq		appendmlq
-#define sched_prependpq		prependmlq
-#define sched_removepq		removemlq
-#define sched_getheadpq		getheadmlq
-#define sched_getpq		getmlq
-#define sched_findpqh		findmlqh
-#else /* ! CONFIG_XENO_OPT_SCALABLE_SCHED */
-typedef xnpqueue_t xnsched_queue_t;
-#define sched_initpq(pqslot, minp, maxp)	initpq(pqslot)
-#define sched_emptypq_p		emptypq_p
-#define sched_insertpql		insertpql
-#define sched_insertpqf		insertpqf
-#define sched_appendpq		appendpq
-#define sched_prependpq		prependpq
-#define sched_removepq		removepq
-#define sched_getheadpq		getheadpq
-#define sched_getpq		getpq
-#define sched_findpqh		findpqh
-#endif /* !CONFIG_XENO_OPT_SCALABLE_SCHED */
-
 #define XNPOD_FATAL_BUFSZ  16384
-
-/*! 
- * \brief Scheduling information structure.
- */
-
-typedef struct xnsched {
-
-	xnflags_t status;	/*!< Scheduler specific status bitmask */
-
-	xnthread_t *runthread;	/*!< Current thread (service or user). */
-
-	xnarch_cpumask_t resched; /*!< Mask of CPUs needing rescheduling. */
-
-	xnsched_queue_t readyq;	/*!< Ready-to-run threads (prioritized). */
-
-	xntimerq_t timerqueue;	/* !< Core timer queue. */
-
-	volatile unsigned inesting; /*!< Interrupt nesting level. */
-
-#ifdef CONFIG_XENO_HW_FPU
-	xnthread_t *fpuholder;	/*!< Thread owning the current FPU context. */
-#endif				/* CONFIG_XENO_HW_FPU */
-
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_t wdtimer;	/*!< Watchdog timer object. */
-	int wdcount;		/*!< Watchdog tick count. */
-#endif	/* CONFIG_XENO_OPT_WATCHDOG */
-
-	xnthread_t rootcb;	/*!< Root thread control block. */
-
-#ifdef CONFIG_XENO_OPT_STATS
-	xnticks_t last_account_switch;	/*!< Last account switch date (ticks). */
-
-	xnstat_exectime_t *current_account;	/*!< Currently active account */
-#endif	/* CONFIG_XENO_OPT_STATS */
-
-	xntimer_t htimer;	/*!< Host timer. */
-
-	xnthread_t *zombie;
-
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	xnthread_t *lastthread;
-#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
-} xnsched_t;
 
 #define nkpod (&nkpod_struct)
 
-#ifdef CONFIG_SMP
-#define xnsched_cpu(__sched__)                  \
-    ((__sched__) - &nkpod->sched[0])
-#else /* !CONFIG_SMP */
-#define xnsched_cpu(__sched__) ({ (void)__sched__; 0; })
-#endif /* CONFIG_SMP */
-
-#define xnsched_resched_mask() \
-    (xnpod_current_sched()->resched)
-
-#define xnsched_resched_p()                     \
-    (!xnarch_cpus_empty(xnsched_resched_mask()))
-
-#define xnsched_tst_resched(__sched__) \
-    xnarch_cpu_isset(xnsched_cpu(__sched__), xnsched_resched_mask())
-
-#define xnsched_set_resched(__sched__) \
-    xnarch_cpu_set(xnsched_cpu(__sched__), xnsched_resched_mask())
-
-#define xnsched_clr_resched(__sched__) \
-    xnarch_cpu_clear(xnsched_cpu(__sched__), xnsched_resched_mask())
-
-#define xnsched_clr_mask(__sched__) \
-    xnarch_cpus_clear((__sched__)->resched)
-
 struct xnsynch;
-struct xnintr;
 
 /*! 
  * \brief Real-time pod descriptor.
@@ -195,11 +83,9 @@ struct xnpod {
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
 
-	int refcnt;		/*!< Reference count.  */
-
-#ifdef __KERNEL__
 	atomic_counter_t timerlck;	/*!< Timer lock depth.  */
-#endif	/* __KERNEL__ */
+
+	int refcnt;		/*!< Reference count.  */
 
 #ifdef __XENO_SIM__
 	void (*schedhook) (xnthread_t *thread, xnflags_t mask);	/*!< Internal scheduling hook. */
@@ -224,24 +110,11 @@ extern xnpod_t nkpod_struct;
 extern "C" {
 #endif
 
-void xnpod_schedule_runnable(xnthread_t *thread, int flags);
-
 void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate);
 
 #ifdef CONFIG_XENO_HW_FPU
 void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
-
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-static inline void xnpod_reset_watchdog(xnsched_t *sched)
-{
-	sched->wdcount = 0;
-}
-#else /* !CONFIG_XENO_OPT_WATCHDOG */
-static inline void xnpod_reset_watchdog(xnsched_t *sched)
-{
-}
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
 
 void __xnpod_finalize_zombie(xnsched_t *sched);
 
@@ -275,7 +148,7 @@ static inline void xnpod_finalize_zombie(xnsched_t *sched)
     (xnpod_interrupt_p() || xnpod_callout_p())
 
 #define xnpod_current_thread() \
-    (xnpod_current_sched()->runthread)
+    (xnpod_current_sched()->curr)
 
 #define xnpod_current_root() \
     (&xnpod_current_sched()->rootcb)
@@ -309,26 +182,9 @@ static inline void xnpod_finalize_zombie(xnsched_t *sched)
 #define xnpod_primary_p() \
     (!(xnpod_asynch_p() || xnpod_root_p()))
 
-#define xnpod_secondary_p()		xnpod_root_p()
+#define xnpod_secondary_p()	xnpod_root_p()
 
 #define xnpod_idle_p()		xnpod_root_p()
-
-static inline void xnpod_renice_root(int cpu, int prio)
-{
-	xnthread_t *rootcb;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	rootcb = &xnpod_sched_slot(cpu)->rootcb;
-	rootcb->cprio = prio;
-	xnpod_schedule_runnable(rootcb, XNPOD_SCHEDLIFO | XNPOD_NOSWITCH);
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-static inline int xnpod_root_priority(int cpu)
-{
-	return xnthread_current_priority(&xnpod_sched_slot(cpu)->rootcb);
-}
 
 int xnpod_init(void);
 
@@ -379,45 +235,44 @@ void xnpod_renice_thread(xnthread_t *thread,
 
 int xnpod_migrate_thread(int cpu);
 
-void xnpod_rotate_readyq(int prio);
-
-void xnpod_do_rr(void);
-
 void xnpod_schedule(void);
 
 void xnpod_dispatch_signals(void);
 
 static inline void xnpod_lock_sched(void)
 {
-	xnthread_t *runthread;
+	xnthread_t *curr;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	runthread = xnpod_current_sched()->runthread;
+	curr = xnpod_current_sched()->curr;
 
-	if (xnthread_lock_count(runthread)++ == 0)
-		xnthread_set_state(runthread, XNLOCK);
+	if (xnthread_lock_count(curr)++ == 0)
+		xnthread_set_state(curr, XNLOCK);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 static inline void xnpod_unlock_sched(void)
 {
-	xnthread_t *runthread;
+	xnthread_t *curr;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	runthread = xnpod_current_sched()->runthread;
+	curr = xnpod_current_sched()->curr;
 
-	if (--xnthread_lock_count(runthread) == 0) {
-		xnthread_clear_state(runthread, XNLOCK);
+	if (--xnthread_lock_count(curr) == 0) {
+		xnthread_clear_state(curr, XNLOCK);
 		xnpod_schedule();
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+
+void xnpod_fire_callouts(xnqueue_t *hookq,
+			 xnthread_t *thread);
 
 void xnpod_activate_rr(xnticks_t quantum);
 
@@ -437,8 +292,6 @@ static inline xntime_t xnpod_get_cpu_time(void)
 int xnpod_add_hook(int type, void (*routine) (xnthread_t *));
 
 int xnpod_remove_hook(int type, void (*routine) (xnthread_t *));
-
-void xnpod_check_context(int mask);
 
 static inline void xnpod_yield(void)
 {
@@ -460,63 +313,6 @@ static inline void xnpod_delete_self(void)
 {
 	xnpod_delete_thread(xnpod_current_thread());
 }
-
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-
-void xnpod_zombie_hooks(xnthread_t *thread);
-
-static inline xnsched_t *xnpod_finish_unlocked_switch(xnsched_t *sched)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-#ifdef CONFIG_SMP
-	/* If current thread migrated while suspended */
-	sched = xnpod_current_sched();
-#endif /* CONFIG_SMP */
-
-	xnthread_clear_state(sched->lastthread, XNSWLOCK);
-	xnthread_clear_state(sched->runthread, XNSWLOCK);
-
-	/* Detect a thread which called xnpod_migrate_thread */
-	if (sched->lastthread->sched != sched)
-		xnpod_resume_thread(sched->lastthread, 0);
-
-	if (xnthread_test_state(sched->lastthread, XNZOMBIE)) {
-		/* There are two cases where sched->lastthread has the zombie
-		   bit:
-		   - either it had it before the context switch, the hooks
-		   have been executed and sched->zombie is lastthread;
-		   - or it has been killed while the nklocked was unlocked
-		   during the context switch, in which case we must run the
-		   hooks, and we do it now.
-		*/
-		if (sched->zombie != sched->lastthread)
-			xnpod_zombie_hooks(sched->lastthread);
-	}
-
-	return sched;
-}
-
-static inline void xnpod_resched_after_unlocked_switch(void)
-{
-	if (xnsched_resched_p())
-		xnpod_schedule();
-}
-
-#define xnsched_resched_p_after_unlock
-
-#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
-
-#ifdef CONFIG_SMP
-#define xnpod_finish_unlocked_switch(sched)	xnpod_current_sched()
-#else /* !CONFIG_SMP */
-#define xnpod_finish_unlocked_switch(sched)	(sched)
-#endif /* !CONFIG_SMP */
-#define xnpod_resched_after_unlocked_switch()
-
-#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 #ifdef __cplusplus
 }

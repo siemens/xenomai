@@ -1140,7 +1140,7 @@ int rt_task_inquire(RT_TASK *task, RT_TASK_INFO *info)
 	info->status = xnthread_state_flags(&task->thread_base);
 	info->relpoint = xntimer_get_date(&task->thread_base.ptimer);
 	raw_exectime = xnthread_get_exectime(&task->thread_base);
-	if (task->thread_base.sched->runthread == &task->thread_base)
+	if (xnthread_sched(&task->thread_base)->curr == &task->thread_base)
 		raw_exectime += xnstat_exectime_now() -
 			xnthread_get_lastswitch(&task->thread_base);
 	info->exectime = xnarch_tsc_to_ns(raw_exectime);

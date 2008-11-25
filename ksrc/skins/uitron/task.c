@@ -447,9 +447,9 @@ ER rot_rdq(PRI tskpri)
 	if (tskpri != TPRI_RUN) {
 		if (tskpri < 1 || tskpri > 8)
 			return E_PAR;
-		xnpod_rotate_readyq(ui_normalized_prio(tskpri));
+		xnsched_rotate(ui_normalized_prio(tskpri));
 	} else
-		xnpod_rotate_readyq(XNPOD_RUNPRIO);
+		xnsched_rotate(XNSCHED_RUNPRIO);
 
 	xnpod_schedule();
 

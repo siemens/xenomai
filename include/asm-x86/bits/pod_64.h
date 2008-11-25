@@ -108,23 +108,6 @@ static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
 	/* Empty */
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
-					struct xnthread *thread,
-					const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->rspp = &tcb->rsp;
-	tcb->ripp = &tcb->rip;
-	tcb->fpup = NULL;
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-	tcb->is_root = 1;
-}
-
 asmlinkage void xnarch_thread_trampoline(xnarchtcb_t *tcb)
 {
 	/* xnpod_welcome_thread() will do clts() if needed. */

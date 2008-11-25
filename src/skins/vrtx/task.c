@@ -26,6 +26,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <limits.h>
+#include <nucleus/sched.h>
 #include <vrtx/vrtx.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>

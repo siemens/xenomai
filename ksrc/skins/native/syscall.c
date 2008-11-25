@@ -2926,9 +2926,9 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_base_priority(thread) != XNCORE_IRQ_PRIO)
+	if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO)
 		/* Renice the waiter above all regular tasks if needed. */
-		xnpod_renice_thread(thread, XNCORE_IRQ_PRIO);
+		xnpod_renice_thread(thread, XNSCHED_IRQ_PRIO);
 
 	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
 
@@ -3153,9 +3153,9 @@ static int __rt_intr_wait(struct pt_regs *regs)
 	if (!intr->pending) {
 		thread = xnpod_current_thread();
 
-		if (xnthread_base_priority(thread) != XNCORE_IRQ_PRIO)
+		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO)
 			/* Renice the waiter above all regular tasks if needed. */
-			xnpod_renice_thread(thread, XNCORE_IRQ_PRIO);
+			xnpod_renice_thread(thread, XNSCHED_IRQ_PRIO);
 
 		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 

@@ -247,12 +247,12 @@ void __native_pipe_pkg_cleanup(void)
 int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 {
 #if CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0
-	/* XNCORE_PAGE_SIZE is guaranteed to be significantly greater
+	/* XNHEAP_PAGE_SIZE is guaranteed to be significantly greater
 	 * than sizeof(RT_PIPE_MSG), so that we could store a message
 	 * header along with a useful buffer space into the local
 	 * pool. */
-	size_t streamsz = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ < XNCORE_PAGE_SIZE ?
-		XNCORE_PAGE_SIZE : CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ;
+	size_t streamsz = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ < XNHEAP_PAGE_SIZE ?
+		XNHEAP_PAGE_SIZE : CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ;
 #else
 #define streamsz  0
 #endif
@@ -282,14 +282,14 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 		   that the actual free space is large enough to match
 		   the requested size. */
 
-		poolsize = xnheap_rounded_size(poolsize, XNCORE_PAGE_SIZE);
+		poolsize = xnheap_rounded_size(poolsize, XNHEAP_PAGE_SIZE);
 		poolmem = xnarch_alloc_host_mem(poolsize);
 
 		if (!poolmem)
 			return -ENOMEM;
 
 		/* Use natural page size */
-		err = xnheap_init(&pipe->privpool, poolmem, poolsize, XNCORE_PAGE_SIZE);
+		err = xnheap_init(&pipe->privpool, poolmem, poolsize, XNHEAP_PAGE_SIZE);
 		if (err) {
 			xnarch_free_host_mem(poolmem, poolsize);
 			return err;

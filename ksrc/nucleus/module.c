@@ -27,13 +27,13 @@
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
+#include <nucleus/intr.h>
 #include <nucleus/version.h>
 #include <nucleus/sys_ppd.h>
 #ifdef CONFIG_XENO_OPT_PIPE
 #include <nucleus/pipe.h>
 #endif /* CONFIG_XENO_OPT_PIPE */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-#include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #include <asm/xenomai/bits/init.h>
 
@@ -41,7 +41,7 @@ MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
 MODULE_LICENSE("GPL");
 
-u_long sysheap_size_arg = XNPOD_HEAPSIZE / 1024;
+u_long sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
 module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 MODULE_PARM_DESC(sysheap_size, "System heap size (Kb)");
 
@@ -105,6 +105,7 @@ struct sched_seq_iterator {
 		pid_t pid;
 		char name[XNOBJECT_NAME_LEN];
 		char timebase[XNOBJECT_NAME_LEN];
+		char sched_class[XNOBJECT_NAME_LEN];
 		int cprio;
 		int dnprio;
 		xnticks_t period;
@@ -147,8 +148,8 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 	char sbuf[64], pbuf[16];
 
 	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-8s %-10s %-10s %-8s  %-10s %s\n",
-			   "CPU", "PID", "PRI", "PERIOD", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
+		seq_printf(seq, "%-3s  %-6s %-5s  %-8s %-10s %-10s %-8s  %-10s %s\n",
+			   "CPU", "PID", "CLASS", "PRI", "PERIOD", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
 	else {
 		struct sched_seq_info *p = v;
 
@@ -158,9 +159,10 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
-		seq_printf(seq, "%3u  %-6d %-8s %-10Lu %-10Lu %-8s  %-10s %s\n",
+		seq_printf(seq, "%3u  %-6d %-5s  %-8s %-10Lu %-10Lu %-8s  %-10s %s\n",
 			   p->cpu,
 			   p->pid,
+			   p->sched_class,
 			   pbuf,
 			   p->period,
 			   p->timeout,
@@ -243,6 +245,7 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 		iter->sched_info[n].state = xnthread_state_flags(thread);
 		memcpy(iter->sched_info[n].timebase, xntbase_name(xnthread_time_base(thread)),
 		       sizeof(iter->sched_info[n].timebase));
+		xnobject_copy_name(iter->sched_info[n].sched_class, thread->sched_class->name);
 
 		holder = nextq(&nkpod->threadq, holder);
 
@@ -417,7 +420,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 		stat_info->pf = xnstat_counter_get(&thread->stat.pf);
 
 		period = sched->last_account_switch - thread->stat.lastperiod.start;
-		if (!period && thread == sched->runthread) {
+		if (!period && thread == sched->curr) {
 			stat_info->exectime = 1;
 			stat_info->account_period = 1;
 		} else {
@@ -1169,6 +1172,8 @@ int __init __xeno_sys_init(void)
 
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
+
+	initq(&xnmod_glink_queue);
 
 	xeno_nucleus_status = 0;
 

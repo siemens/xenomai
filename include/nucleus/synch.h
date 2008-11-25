@@ -109,7 +109,7 @@ typedef struct xnsynch {
 
     xnpholder_t link;	/* Link in claim queues */
 
-#define link2synch(ln)		container_of(ln, xnsynch_t, link)
+#define link2synch(ln)		container_of(ln, struct xnsynch, link)
 
     xnflags_t status;	/* Status word */
 
@@ -157,39 +157,41 @@ typedef struct xnsynch {
 extern "C" {
 #endif
 
-void xnsynch_init(xnsynch_t *synch, xnflags_t flags,
+void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
 		  xnarch_atomic_t *fastlock);
 
-#define xnsynch_destroy(synch) xnsynch_flush(synch,XNRMID)
+#define xnsynch_destroy(synch)	xnsynch_flush(synch,XNRMID)
 
-static inline void xnsynch_set_owner (xnsynch_t *synch, struct xnthread *thread)
+static inline void xnsynch_set_owner(struct xnsynch *synch,
+				     struct xnthread *thread)
 {
-    synch->owner = thread;
+	synch->owner = thread;
 }
 
-static inline void xnsynch_register_cleanup (xnsynch_t *synch, void (*handler)(xnsynch_t *))
+static inline void xnsynch_register_cleanup(struct xnsynch *synch,
+					    void (*handler)(struct xnsynch *))
 {
-    synch->cleanup = handler;
+	synch->cleanup = handler;
 }
 
-void xnsynch_sleep_on(xnsynch_t *synch,
+void xnsynch_sleep_on(struct xnsynch *synch,
 		      xnticks_t timeout,
 		      xntmode_t timeout_mode);
 
-struct xnthread *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
+struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
-xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch,
+xnpholder_t *xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 					 xnpholder_t *holder);
 
-void xnsynch_acquire(xnsynch_t *synch,
+void xnsynch_acquire(struct xnsynch *synch,
 		     xnticks_t timeout,
 		     xntmode_t timeout_mode);
 
-struct xnthread *xnsynch_release(xnsynch_t *synch);
+struct xnthread *xnsynch_release(struct xnsynch *synch);
 
-struct xnthread *xnsynch_peek_pendq(xnsynch_t *synch);
+struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
 
-int xnsynch_flush(xnsynch_t *synch, xnflags_t reason);
+int xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
 
 void xnsynch_release_all_ownerships(struct xnthread *thread);
 

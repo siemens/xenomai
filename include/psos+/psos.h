@@ -202,8 +202,8 @@ u_long t_restart(u_long tid,
 
 /*
  * The following macros return normalized or native pSOS priority
- * values. The core pod uses an ascending [0-257] priority scale
- * (include/nucleus/core.h), whilst the pSOS personality exhibits a
+ * values. The core scheduler uses an ascending [0-257] priority scale
+ * (include/nucleus/sched.h), whilst the pSOS personality exhibits a
  * smaller scale [1-255]. In other words, these macros are nops for
  * pSOS.
  */

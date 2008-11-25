@@ -157,7 +157,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 	{
 		void *heapmem;
 
-		heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
+		heapsize = xnheap_rounded_size(heapsize, XNHEAP_PAGE_SIZE);
 
 		heapmem = xnarch_alloc_host_mem(heapsize);
 
@@ -165,7 +165,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 			err = -ENOMEM;
 		} else {
 
-			err = xnheap_init(p->heap, heapmem, heapsize, XNCORE_PAGE_SIZE);
+			err = xnheap_init(p->heap, heapmem, heapsize, XNHEAP_PAGE_SIZE);
 			if (err) {
 				xnarch_free_host_mem(heapmem, heapsize);
 			}

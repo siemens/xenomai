@@ -24,7 +24,6 @@
 #include <string.h>
 #include <asm/param.h>
 #include <asm/xenomai/atomic.h>
-#include <nucleus/core.h>
 #include <nucleus/trace.h>
 
 #endif /* !_XENO_NUCLEUS_SYSTEM_H */

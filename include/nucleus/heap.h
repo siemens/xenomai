@@ -46,6 +46,10 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
+#define XNHEAP_PAGE_MASK  	(~(XNHEAP_PAGE_SIZE-1))
+#define XNHEAP_PAGE_ALIGN(addr)	(((addr)+XNHEAP_PAGE_SIZE-1)&XNHEAP_PAGE_MASK)
+
 #define XNHEAP_MINLOG2    3
 #define XNHEAP_MAXLOG2    22	/* Must hold pagemap::bcount objects */
 #define XNHEAP_MINALLOCSZ (1 << XNHEAP_MINLOG2)

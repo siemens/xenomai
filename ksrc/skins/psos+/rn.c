@@ -206,7 +206,7 @@ u_long rn_create(const char *name,
 		 * Caller must have accounted for overhead and
 		 * alignment since it supplies the memory space.
 		 */
-		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, XNCORE_PAGE_SIZE) != 0)
+		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, XNHEAP_PAGE_SIZE) != 0)
 			return ERR_TINYRN;
 
 	inith(&rn->link);

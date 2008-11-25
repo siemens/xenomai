@@ -40,7 +40,6 @@
 #define XNSTARTED 0x00000080 /**< Thread has been started */
 #define XNMAPPED  0x00000100 /**< Mapped to a regular Linux task (shadow only) */
 #define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
-#define XNHELD    0x00000400 /**< Held thread from suspended partition */
 
 #define XNBOOST   0x00000800 /**< Undergoes a PIP boost */
 #define XNDEBUG   0x00001000 /**< Hit a debugger breakpoint (shadow only) */
@@ -90,7 +89,7 @@
 	'f', '.', '.',			\
 }
 
-#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNHELD)
+#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW|XNRPIOFF)
 
 /* These state flags are available to the real-time interfaces */
@@ -143,8 +142,8 @@
 
 struct xnthread;
 struct xnsched;
+struct xnsched_class;
 struct xnsynch;
-struct xnrpi;
 
 typedef struct xnthrops {
 
@@ -165,6 +164,10 @@ typedef struct xnthread {
 
 	struct xnsched *sched;	/* Thread scheduler */
 
+	struct xnsched_class *sched_class; /* Current scheduling class */
+
+	struct xnsched_class *base_class; /* Base scheduling class */
+
 	xnarch_cpumask_t affinity;	/* Processor affinity. */
 
 	int bprio;			/* Base priority (before PIP boost) */
@@ -180,7 +183,7 @@ typedef struct xnthread {
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 	xnpholder_t xlink;		/* Thread holder in the RPI queue (shadow only) */
 
-	struct xnrpi *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
+	struct xnsched *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
 	xnholder_t glink;		/* Thread holder in global queue */
@@ -233,6 +236,8 @@ typedef struct xnthread {
 	int imode;			/* Initial mode */
 
 	int iprio;			/* Initial priority */
+
+	struct xnsched_class *init_class; /* Initial scheduling class */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	struct {

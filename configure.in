@@ -835,13 +835,12 @@ AC_CONFIG_FILES([ \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \
-       	src/testsuite/switchbench/Makefile \
        	src/testsuite/cyclic/Makefile \
        	src/testsuite/switchtest/Makefile \
 	src/testsuite/irqbench/Makefile \
 	src/testsuite/clocktest/Makefile \
        	src/testsuite/klatency/Makefile \
-       	src/testsuite/bench_arith/Makefile \
+       	src/testsuite/unit/Makefile \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
 	src/utils/comedi/Makefile \

@@ -4,7 +4,10 @@ ifeq ($(PATCHLEVEL),6)
 
 obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
-xeno_nucleus-y := heap.o intr.o module.o pod.o synch.o thread.o timebase.o timer.o
+xeno_nucleus-y := \
+	heap.o intr.o module.o pod.o \
+	sched.o sched-rt.o sched-idle.o \
+	synch.o thread.o timebase.o timer.o
 
 xeno_nucleus-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o
 
@@ -28,7 +31,10 @@ obj-$(CONFIG_XENO_OPT_NUCLEUS) := xeno_nucleus.o
 
 list-multi := xeno_nucleus.o
 
-xeno_nucleus-objs := heap.o intr.o module.o pod.o synch.o thread.o timebase.o timer.o
+xeno_nucleus-objs := \
+	heap.o intr.o module.o pod.o \
+	sched.o sched-rt.o sched-idle.o \
+	synch.o thread.o timebase.o timer.o
 
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o

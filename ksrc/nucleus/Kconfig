@@ -91,6 +91,25 @@ config XENO_OPT_PIPELINE_HEAD
 	the latter case, this option will simply have no effect. If in
 	doubt, say 'Y' here.
 
+config XENO_OPT_SCHED_CLASSES
+	bool "Enable extended scheduling classes"
+	default n
+	help
+
+	This option enables support for extended scheduling classes
+	into the Xenomai core. Each scheduling class defines its own
+	set of rules for determining when and how to select a new
+	thread to run.
+
+	By default, the Xenomai core implements the common real-time
+	scheduling class, which supports both preemptive fixed-
+	priority FIFO scheduling, and round-robin scheduling.
+
+	Enable this option to allow for more scheduling classes to be
+	defined.
+
+	If in doubt, say N.
+
 config XENO_OPT_PIPE
 	bool
 
@@ -328,10 +347,12 @@ config XENO_OPT_SCALABLE_SCHED
 	used in the real-time thread scheduler, so that it operates
 	in constant-time regardless of the number of _concurrently
 	runnable_ threads (which might be much lower than the total
-	number of active threads). Its use is recommended for
-	large multi-threaded systems involving more than 10 of such
-	threads; otherwise, the default linear method usually performs
-	better with lower memory footprints.
+	number of active threads).
+
+	Its use is recommended for large multi-threaded systems
+	involving more than 10 of such threads; otherwise, the default
+	linear method usually performs better with lower memory
+	footprints.
 
 choice
 	prompt "Timer indexing method"

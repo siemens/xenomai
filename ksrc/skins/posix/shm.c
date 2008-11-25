@@ -497,7 +497,7 @@ int ftruncate(int fd, off_t len)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
-		len = xnheap_rounded_size(len + PAGE_SIZE, XNCORE_PAGE_SIZE);
+		len = xnheap_rounded_size(len + PAGE_SIZE, XNHEAP_PAGE_SIZE);
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 	err = 0;

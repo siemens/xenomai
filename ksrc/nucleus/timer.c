@@ -488,9 +488,11 @@ void xntimer_tick_periodic_inner(xntslave_t *slave)
 	xnqueue_t *timerq;
 	xntimer_t *timer;
 
-	/* Update the periodic clocks keeping the things strictly
-	   monotonous (this routine is run on every cpu, but only CPU
-	   XNTIMER_KEEPER_ID should do this). */
+	/*
+	 * Update the periodic clocks keeping the things strictly
+	 * monotonous (this routine is run on every cpu, but only CPU
+	 * XNTIMER_KEEPER_ID should do this).
+	 */
 	if (sched == xnpod_sched_slot(XNTIMER_KEEPER_ID))
 		++base->jiffies;
 
@@ -507,17 +509,17 @@ void xntimer_tick_periodic_inner(xntslave_t *slave)
 
 		xntimer_dequeue_periodic(timer);
 		xnstat_counter_inc(&timer->fired);
-
 		timer->handler(timer);
 
 		if (!xntimer_reload_p(timer))
 			continue;
+
 		__setbits(timer->status, XNTIMER_FIRED);
 		xntlholder_date(&timer->plink) = base->jiffies + timer->interval;
 		xntimer_enqueue_periodic(timer);
 	}
 
-	xnpod_do_rr();		/* Do round-robin management. */
+	xnsched_tick(sched->curr); /* Do round-robin management. */
 }
 
 void xntimer_tick_periodic(xntimer_t *mtimer)

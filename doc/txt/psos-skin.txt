@@ -76,7 +76,7 @@ error status when given.
 for an internal timer from the nucleus heap.
 
 * rn_create() requires the region size to be a multiple of
-  XNCORE_PAGE_SIZE (512).
+  XNHEAP_PAGE_SIZE (512).
 
 * rn_retseg() does not check for the ERR_SEGFREE condition.
 

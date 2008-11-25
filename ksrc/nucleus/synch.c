@@ -2,7 +2,7 @@
  * \brief Thread synchronization services.
  * \author Philippe Gerum
  *
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -36,8 +36,15 @@
 #include <nucleus/thread.h>
 #include <nucleus/module.h>
 
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#endif
+
+#define w_bprio(t)	xnsched_weighted_bprio(t)
+#define w_cprio(t)	xnsched_weighted_cprio(t)
+
 /*! 
- * \fn void xnsynch_init(xnsynch_t *synch, xnflags_t flags,
+ * \fn void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
  *                       xnarch_atomic_t *fastlock)
  *
  * \brief Initialize a synchronization object.
@@ -96,7 +103,7 @@
  * Rescheduling: never.
  */
 
-void xnsynch_init(xnsynch_t *synch, xnflags_t flags, xnarch_atomic_t *fastlock)
+void xnsynch_init(struct xnsynch *synch, xnflags_t flags, xnarch_atomic_t *fastlock)
 {
 	initph(&synch->link);
 
@@ -118,7 +125,7 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags, xnarch_atomic_t *fastlock)
 }
 
 /*!
- * \fn void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
+ * \fn void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
  *                           xntmode_t timeout_mode);
  * \brief Sleep on an ownerless synchronization object.
  *
@@ -159,10 +166,10 @@ void xnsynch_init(xnsynch_t *synch, xnflags_t flags, xnarch_atomic_t *fastlock)
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
+void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 		      xntmode_t timeout_mode)
 {
-	xnthread_t *thread = xnpod_current_thread();
+	struct xnthread *thread = xnpod_current_thread();
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
@@ -176,7 +183,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
 	else /* i.e. priority-sorted */
-		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -184,7 +191,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 }
 
 /*!
- * \fn xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch);
+ * \fn struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
  * \brief Give the resource ownership to the next waiting thread.
  *
  * This service wakes up the thread which is currently leading the
@@ -222,10 +229,10 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
  * Rescheduling: never.
  */
 
-xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
+struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 {
-	xnthread_t *thread = NULL;
-	xnpholder_t *holder;
+	struct xnthread *thread = NULL;
+	struct xnpholder *holder;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
@@ -233,7 +240,6 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 	xnlock_get_irqsave(&nklock, s);
 
 	holder = getpq(&synch->pendq);
-
 	if (holder) {
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
@@ -251,7 +257,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 }
 
 /*!
- * \fn void xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder);
+ * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder);
  * \brief Give the resource ownership to a given waiting thread.
  *
  * This service wakes up a specific thread which is currently pending on
@@ -294,10 +300,10 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
  * Rescheduling: never.
  */
 
-xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
+struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder)
 {
-	xnthread_t *thread;
-	xnpholder_t *nholder;
+	struct xnthread *thread;
+	struct xnpholder *nholder;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, testbits(synch->status, XNSYNCH_OWNER));
@@ -305,7 +311,6 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	xnlock_get_irqsave(&nklock, s);
 
 	nholder = poppq(&synch->pendq, holder);
-
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
 	trace_mark(xn_nucleus_synch_wakeup_this,
@@ -325,20 +330,18 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
  * raise/lower a thread's priority. The thread's base priority value
  * is _not_ changed and if ready, the thread is always moved at the
  * end of its priority group.
+ *
+ * The priority argument passed to this routine does NOT bear the
+ * weight value of the target scheduling class.
  */
 
-static void xnsynch_renice_thread(xnthread_t *thread, int prio)
+static void xnsynch_renice_thread(struct xnthread *thread,
+				  struct xnsched_class *sched_class, int prio)
 {
-	thread->cprio = prio;
+	xnsched_set_policy(thread, sched_class, prio);
 
 	if (thread->wchan)
-		/* Ignoring the XNSYNCH_DREORD flag on purpose here. */
 		xnsynch_renice_sleeper(thread);
-	else if (thread != xnpod_current_thread() &&
-		 xnthread_test_state(thread, XNREADY))
-		/* xnpod_resume_thread() must be called for runnable
-		   threads but the running one. */
-		xnpod_resume_thread(thread, 0);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNRELAX))
@@ -349,7 +352,7 @@ static void xnsynch_renice_thread(xnthread_t *thread, int prio)
 }
 
 /*! 
- * \fn void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
+ * \fn void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
  *                          xntmode_t timeout_mode);
  * \brief Acquire the ownership of a synchronization object.
  *
@@ -390,10 +393,10 @@ static void xnsynch_renice_thread(xnthread_t *thread, int prio)
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
+void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		     xntmode_t timeout_mode)
 {
-	xnthread_t *thread = xnpod_current_thread(), *owner;
+	struct xnthread *thread = xnpod_current_thread(), *owner;
 	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
 	const int use_fastlock = xnsynch_fastlock_p(synch);
 	spl_t s;
@@ -469,7 +472,7 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
-	else if (thread->cprio > owner->cprio) {
+	else if (w_cprio(thread) > w_cprio(owner)) {
 		if (xnthread_test_info(owner, XNWAKEN) && owner->wwake == synch) {
 			/* Ownership is still pending, steal the resource. */
 			synch->owner = thread;
@@ -478,11 +481,12 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 			goto grab_and_exit;
 		}
 
-		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
 
 		if (testbits(synch->status, XNSYNCH_PIP)) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
 				owner->bprio = owner->cprio;
+				owner->base_class = owner->sched_class;
 				xnthread_set_state(owner, XNBOOST);
 			}
 
@@ -491,11 +495,12 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 			else
 				__setbits(synch->status, XNSYNCH_CLAIMED);
 
-			insertpqf(&owner->claimq, &synch->link, thread->cprio);
-			xnsynch_renice_thread(owner, thread->cprio);
+			insertpqf(&owner->claimq, &synch->link, w_cprio(thread));
+			xnsynch_renice_thread(owner, thread->sched_class,
+					      thread->cprio);
 		}
 	} else
-		insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
@@ -541,7 +546,7 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
 
 /*! 
  * @internal
- * \fn void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *owner);
+ * \fn void xnsynch_clear_boost(struct xnsynch *synch, struct xnthread *owner);
  * \brief Clear the priority boost.
  *
  * This service is called internally whenever a synchronization object
@@ -556,31 +561,43 @@ void xnsynch_acquire(xnsynch_t *synch, xnticks_t timeout,
  * @note This routine must be entered nklock locked, interrupts off.
  */
 
-static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
+static void xnsynch_clear_boost(struct xnsynch *synch,
+				struct xnthread *owner)
 {
-	int downprio;
+	struct xnsched_class *sched_class;
+	struct xnthread *target;
+	struct xnsynch *hsynch;
+	struct xnpholder *h;
+	int prio, wprio;
 
-	removepq(&lastowner->claimq, &synch->link);
-	downprio = lastowner->bprio;
+	removepq(&owner->claimq, &synch->link);
 	__clrbits(synch->status, XNSYNCH_CLAIMED);
+	prio = owner->bprio;
+	wprio = w_bprio(owner);
 
-	if (emptypq_p(&lastowner->claimq))
-		xnthread_clear_state(lastowner, XNBOOST);
-	else {
+	if (emptypq_p(&owner->claimq)) {
+		xnthread_clear_state(owner, XNBOOST);
+		sched_class = owner->base_class;
+	} else {
 		/* Find the highest priority needed to enforce the PIP. */
-		int rprio = getheadpq(&lastowner->claimq)->prio;
-
-		if (rprio > downprio)
-			downprio = rprio;
+		hsynch = link2synch(getheadpq(&owner->claimq));
+		h = getheadpq(&hsynch->pendq);
+		XENO_BUGON(NUCLEUS, h == NULL);
+		target = link2thread(h, plink);
+		sched_class = target->sched_class;
+		if (w_cprio(target) > wprio) {
+			prio = target->cprio;
+			wprio = w_cprio(target);
+		}
 	}
 
-	if (lastowner->cprio != downprio)
-		xnsynch_renice_thread(lastowner, downprio);
+	if (w_cprio(owner) != wprio)
+		xnsynch_renice_thread(owner, sched_class, prio);
 }
 
 /*! 
  * @internal
- * \fn void xnsynch_renice_sleeper(xnthread_t *thread);
+ * \fn void xnsynch_renice_sleeper(struct xnthread *thread);
  * \brief Change a sleeper's priority.
  *
  * This service is used by the PIP code to update the pending priority
@@ -591,43 +608,55 @@ static void xnsynch_clear_boost(xnsynch_t *synch, xnthread_t *lastowner)
  * @note This routine must be entered nklock locked, interrupts off.
  */
 
-void xnsynch_renice_sleeper(xnthread_t *thread)
+void xnsynch_renice_sleeper(struct xnthread *thread)
 {
-	xnsynch_t *synch = thread->wchan;
-	xnthread_t *owner;
+	struct xnsynch *synch = thread->wchan;
+	struct xnthread *owner;
 
 	if (!testbits(synch->status, XNSYNCH_PRIO))
 		return;
 
 	removepq(&synch->pendq, &thread->plink);
-	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
+	insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
 	owner = synch->owner;
 
-	if (owner != NULL && thread->cprio > owner->cprio) {
-		/* The new priority of the sleeping thread is higher
-		 * than the priority of the current owner of the
-		 * resource: we need to update the PI state. */
+	if (owner != NULL && w_cprio(thread) > w_cprio(owner)) {
+		/*
+		 * The new (weighted) priority of the sleeping thread
+		 * is higher than the priority of the current owner of
+		 * the resource: we need to update the PI state.
+		 */
 		if (testbits(synch->status, XNSYNCH_CLAIMED)) {
-			/* The resource is already claimed, just
-			   reorder the claim queue. */
+			/*
+			 * The resource is already claimed, just
+			 * reorder the claim queue.
+			 */
 			removepq(&owner->claimq, &synch->link);
-			insertpqf(&owner->claimq, &synch->link, thread->cprio);
+			insertpqf(&owner->claimq, &synch->link,
+				  w_cprio(thread));
 		} else {
-			/* The resource was NOT claimed, claim it now
-			 * and boost the owner. */
+			/*
+			 * The resource was NOT claimed, claim it now
+			 * and boost the owner.
+			 */
 			__setbits(synch->status, XNSYNCH_CLAIMED);
-			insertpqf(&owner->claimq, &synch->link, thread->cprio);
+			insertpqf(&owner->claimq, &synch->link,
+				  w_cprio(thread));
 			owner->bprio = owner->cprio;
+			owner->base_class = owner->sched_class;
 			xnthread_set_state(owner, XNBOOST);
 		}
-		/* Renice the owner thread, progressing in the PI
-		   chain as needed. */
-		xnsynch_renice_thread(owner, thread->cprio);
+		/*
+		 * Renice the owner thread, progressing in the PI
+		 * chain as needed.
+		 */
+		xnsynch_renice_thread(owner, thread->sched_class,
+				      thread->cprio);
 	}
 }
 
 /*!
- * \fn xnthread_t *xnsynch_release(xnsynch_t *synch);
+ * \fn struct xnthread *xnsynch_release(struct xnsynch *synch);
  * \brief Give the resource ownership to the next waiting thread.
  *
  * This service releases the ownership of the given synchronization
@@ -636,7 +665,7 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
  * reschedule is performed.
  *
  * This service must be used only with synchronization objects that
- * track ownership (XNSYNCH_OWNER set.
+ * track ownership (XNSYNCH_OWNER set).
  *
  * @param synch The descriptor address of the synchronization object
  * whose ownership is changed.
@@ -664,12 +693,12 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
  * Rescheduling: never.
  */
 
-struct xnthread *xnsynch_release(xnsynch_t *synch)
+struct xnthread *xnsynch_release(struct xnsynch *synch)
 {
 	const int use_fastlock = xnsynch_fastlock_p(synch);
-	xnthread_t *newowner, *lastowner;
+	struct xnthread *newowner, *lastowner;
 	xnhandle_t lastownerh, newownerh;
-	xnpholder_t *holder;
+	struct xnpholder *holder;
 	spl_t s;
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
@@ -685,7 +714,6 @@ struct xnthread *xnsynch_release(xnsynch_t *synch)
 	trace_mark(xn_nucleus_synch_release, "synch %p", synch);
 
 	holder = getpq(&synch->pendq);
-
 	if (holder) {
 		newowner = link2thread(holder, plink);
 		newowner->wchan = NULL;
@@ -718,7 +746,7 @@ struct xnthread *xnsynch_release(xnsynch_t *synch)
 }
 
 /*! 
- * \fn xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch);
+ * \fn struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
  * \brief Access the thread leading a synch object wait queue.
  *
  * This services returns the descriptor address of to the thread leading a
@@ -739,10 +767,10 @@ struct xnthread *xnsynch_release(xnsynch_t *synch)
  *
  * Rescheduling: never.
  */
-xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
+struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 {
-	xnthread_t *thread = NULL;
-	xnpholder_t *holder;
+	struct xnthread *thread = NULL;
+	struct xnpholder *holder;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -756,7 +784,7 @@ xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
 }
 
 /*! 
- * \fn void xnsynch_flush(xnsynch_t *synch, xnflags_t reason);
+ * \fn void xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
  * \brief Unblock all waiters pending on a resource.
  *
  * This service atomically releases all threads which currently sleep
@@ -804,9 +832,9 @@ xnthread_t *xnsynch_peek_pendq(xnsynch_t *synch)
  * Rescheduling: never.
  */
 
-int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
+int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 {
-	xnpholder_t *holder;
+	struct xnpholder *holder;
 	int status;
 	spl_t s;
 
@@ -818,7 +846,7 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
 
 	while ((holder = getpq(&synch->pendq)) != NULL) {
-		xnthread_t *sleeper = link2thread(holder, plink);
+		struct xnthread *sleeper = link2thread(holder, plink);
 		xnthread_set_info(sleeper, reason);
 		sleeper->wchan = NULL;
 		xnpod_resume_thread(sleeper, XNPEND);
@@ -838,7 +866,7 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 
 /*! 
  * @internal
- * \fn void xnsynch_forget_sleeper(xnthread_t *thread);
+ * \fn void xnsynch_forget_sleeper(struct xnthread *thread);
  * \brief Abort a wait for a resource.
  *
  * Performs all the necessary housekeeping chores to stop a thread
@@ -855,9 +883,11 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
  * @note This routine must be entered nklock locked, interrupts off.
  */
 
-void xnsynch_forget_sleeper(xnthread_t *thread)
+void xnsynch_forget_sleeper(struct xnthread *thread)
 {
-	xnsynch_t *synch = thread->wchan;
+	struct xnsynch *synch = thread->wchan;
+	struct xnthread *owner, *target;
+	struct xnpholder *h;
 
 	trace_mark(xn_nucleus_synch_forget,
 		   "thread %p thread_name %s synch %p",
@@ -869,26 +899,30 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 
 	if (testbits(synch->status, XNSYNCH_CLAIMED)) {
 		/* Find the highest priority needed to enforce the PIP. */
-		xnthread_t *owner = synch->owner;
-		int rprio;
+		owner = synch->owner;
 
 		if (emptypq_p(&synch->pendq))
 			/* No more sleepers: clear the boost. */
 			xnsynch_clear_boost(synch, owner);
-		else if (getheadpq(&synch->pendq)->prio !=
-			 getheadpq(&owner->claimq)->prio) {
-			/* Reorder the claim queue, and lower the priority to the
-			   required minimum needed to prevent priority
-			   inversion. */
-			removepq(&owner->claimq, &synch->link);
+		else {
+			target = link2thread(getheadpq(&synch->pendq), plink);
+			h = getheadpq(&owner->claimq);
+			if (w_cprio(target) != h->prio) {
+				/*
+				 * Reorder the claim queue, and lower
+				 * the priority to the required
+				 * minimum needed to prevent priority
+				 * inversion.
+				 */
+				removepq(&owner->claimq, &synch->link);
+				insertpqf(&owner->claimq, &synch->link,
+					  w_cprio(target));
 
-			insertpqf(&owner->claimq,
-				  &synch->link, getheadpq(&synch->pendq)->prio);
-
-			rprio = getheadpq(&owner->claimq)->prio;
-
-			if (rprio < owner->cprio)
-				xnsynch_renice_thread(owner, rprio);
+				h = getheadpq(&owner->claimq);
+				if (h->prio < w_cprio(owner))
+					xnsynch_renice_thread(owner, target->sched_class,
+							      target->cprio);
+			}
 		}
 	}
 
@@ -897,7 +931,7 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 
 /*! 
  * @internal
- * \fn void xnsynch_release_all_ownerships(xnthread_t *thread);
+ * \fn void xnsynch_release_all_ownerships(struct xnthread *thread);
  * \brief Release all ownerships.
  *
  * This call is used internally to release all the ownerships obtained
@@ -909,16 +943,18 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
  * @note This routine must be entered nklock locked, interrupts off.
  */
 
-void xnsynch_release_all_ownerships(xnthread_t *thread)
+void xnsynch_release_all_ownerships(struct xnthread *thread)
 {
-	xnpholder_t *holder, *nholder;
+	struct xnpholder *holder, *nholder;
+	struct xnsynch *synch;
 
 	for (holder = getheadpq(&thread->claimq); holder != NULL;
 	     holder = nholder) {
-		/* Since xnsynch_release() alters the claim
-		   queue, we need to be conservative while scanning
-		   it. */
-		xnsynch_t *synch = link2synch(holder);
+		/*
+		 * Since xnsynch_release() alters the claim queue, we
+		 * need to be conservative while scanning it.
+		 */
+		synch = link2synch(holder);
 		nholder = nextpq(&thread->claimq, holder);
 		xnsynch_release(synch);
 		if (synch->cleanup)

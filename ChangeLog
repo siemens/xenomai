@@ -1,3 +1,10 @@
+2008-11-25  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc, include: Introduce scheduling classes.
+
+	* src/testsuite: Move all unit/feature tests to a single
+	directory. Merge mutex torture test.
+
 2008-11-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/pipe.c (xnpipe_release): Remove released pipe from
@@ -9498,7 +9505,7 @@
 	* skins/native/syscall.c (__rt_heap_create): Fix placeholder type
 	used.
 
-	* include/nucleus/core.h (XNCORE_IRQ_PRIO): Add priority level
+	* include/nucleus/core.h (XNSCHED_IRQ_PRIO): Add priority level
 	for interrupt servers in user-space.
 
 2004-12-03  Philippe Gerum  <rpm@xenomai.org>

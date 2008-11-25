@@ -35,7 +35,6 @@
 #include <linux/list.h>
 
 #include <nucleus/xenomai.h>
-#include <nucleus/core.h>
 #include <nucleus/heap.h>
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
@@ -957,8 +956,8 @@ typedef void (*rtdm_task_proc_t)(void *arg);
  * @anchor taskprio @name Task Priority Range
  * Maximum and minimum task priorities
  * @{ */
-#define RTDM_TASK_LOWEST_PRIORITY	XNCORE_LOW_PRIO
-#define RTDM_TASK_HIGHEST_PRIORITY	XNCORE_HIGH_PRIO
+#define RTDM_TASK_LOWEST_PRIORITY	XNSCHED_LOW_PRIO
+#define RTDM_TASK_HIGHEST_PRIORITY	XNSCHED_HIGH_PRIO
 /** @} Task Priority Range */
 
 /*!

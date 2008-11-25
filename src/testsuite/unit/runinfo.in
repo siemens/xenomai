@@ -1,0 +1,4 @@
+arith:native:!@exec_prefix@/bin/arith;popall:control_c
+wakeup-time:native:!@exec_prefix@/bin/wakeup-time;popall:control_c
+mutex-torture-posix:posix:!@exec_prefix@/bin/mutex-torture-posix;popall:control_c
+mutex-torture-native:native:!@exec_prefix@/bin/mutex-torture-native;popall:control_c

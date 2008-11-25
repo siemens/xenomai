@@ -50,8 +50,11 @@ int xnthread_init(xnthread_t *thread,
 	int ret = 0;
 
 	/* Setup the TCB. */
-
 	xnarch_init_tcb(xnthread_archtcb(thread));
+
+#ifndef CONFIG_XENO_HW_FPU
+	flags &= ~XNFPU;
+#endif /* CONFIG_XENO_HW_FPU */
 
 	if (flags & XNSHADOW)
 		stacksize = 0;
@@ -94,6 +97,11 @@ int xnthread_init(xnthread_t *thread,
 	thread->asrimask = 0;
 	thread->asr = XNTHREAD_INVALID_ASR;
 	thread->asrlevel = 0;
+
+	thread->init_class = (flags & XNROOT) ?
+	  &xnsched_class_idle : &xnsched_class_default;
+	thread->base_class = thread->init_class;
+	thread->sched_class = thread->init_class;
 
 	thread->iprio = prio;
 	thread->bprio = prio;

@@ -25,6 +25,7 @@
 #include <limits.h>
 #include <asm/xenomai/system.h>
 #include <asm-generic/bits/sigshadow.h>
+#include <nucleus/sched.h>
 #include <uitron/uitron.h>
 #include <asm-generic/bits/current.h>
 

@@ -2,7 +2,7 @@
  * \brief Real-time shadow services.
  * \author Philippe Gerum
  *
- * Copyright (C) 2001-2007 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2001-2008 Philippe Gerum <rpm@xenomai.org>.
  * Copyright (C) 2004 The RTAI project <http://www.rtai.org>
  * Copyright (C) 2004 The HYADES project <http://www.hyades-itea.org>
  * Copyright (C) 2005 The Xenomai project <http://www.xenomai.org>
@@ -45,18 +45,15 @@
 #include <nucleus/synch.h>
 #include <nucleus/module.h>
 #include <nucleus/shadow.h>
-#include <nucleus/core.h>
 #include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
 #include <nucleus/stat.h>
 #include <nucleus/sys_ppd.h>
+#include <nucleus/assert.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
-
-/* debug support */
-#include <nucleus/assert.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS  0
@@ -66,24 +63,9 @@ static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-int nkthrptd;
-
-int nkerrptd;
+int nkthrptd, nkerrptd;
 
 struct xnskin_slot muxtable[XENOMAI_MUX_NR];
-
-static struct __gatekeeper {
-
-	struct task_struct *server;
-	wait_queue_head_t waitq;
-	struct linux_semaphore sync;
-	xnthread_t *thread;
-	struct xnrpi {
-		DECLARE_XNLOCK(lock);
-		xnsched_queue_t threadq;
-	} rpislot;
-
-} gatekeeper[XNARCH_NR_CPUS];
 
 static int lostage_apc;
 
@@ -106,14 +88,6 @@ static struct __lostagerq {
 
 } lostagerq[XNARCH_NR_CPUS];
 
-#define get_switch_lock_owner() \
-switch_lock_owner[task_cpu(current)]
-
-#define set_switch_lock_owner(t) \
-do { \
-   switch_lock_owner[task_cpu(t)] = t; \
-} while(0)
-
 #define xnshadow_sig_mux(sig, arg) ((sig) | ((arg) << 8))
 #define xnshadow_sig_demux(muxed, sig, arg) \
 	do {				     \
@@ -132,6 +106,16 @@ void xnpod_declare_iface_proc(struct xnskin_slot *iface);
 
 void xnpod_discard_iface_proc(const char *iface);
 
+static inline struct task_struct *get_switch_lock_owner(void)
+{
+	return switch_lock_owner[task_cpu(current)];
+}
+
+static inline void set_switch_lock_owner(struct task_struct *p)
+{
+	switch_lock_owner[task_cpu(p)] = p;
+}
+
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 
 /*
@@ -140,11 +124,10 @@ void xnpod_discard_iface_proc(const char *iface);
  * respect to a given real-time thread, which migrates from primary to
  * secondary execution mode. In effect, this means upgrading the root
  * thread priority to the one of the migrating thread, so that the
- * Linux kernel - as a whole - inherits the priority of the thread
- * that leaves the Xenomai domain for a while, typically to perform
- * regular Linux system calls, process Linux-originated signals and so
- * on. This is what makes a real-time shadow able to access the Linux
- * services seamlessly, from the application POV.
+ * Linux kernel - as a whole - inherits the scheduling class and the
+ * priority of the thread that leaves the Xenomai domain for a while,
+ * typically to perform regular Linux system calls, process
+ * Linux-originated signals and so on.
  *
  * To do that, we have to track real-time threads as they move to/from
  * the Linux domain (see xnshadow_relax/xnshadow_harden), so that we
@@ -152,8 +135,8 @@ void xnpod_discard_iface_proc(const char *iface);
  * to be given at any point in time, in order to preserve the priority
  * scheme consistent across both schedulers. In practice, this means
  * that a real-time thread with a current priority of, say 27,
- * Xenomai-wise (i.e. xnthread_current_priority(thread)) would cause
- * the root thread to inherit the same priority value, so that any
+ * Xenomai-wise would cause the root thread to move to the real-time
+ * scheduling class, and inherit the same priority value, so that any
  * Xenomai thread below (or at) this level would not preempt the Linux
  * kernel while running on behalf of the migrated thread. This mapping
  * only concerns Xenomai threads underlaid by Linux tasks in the
@@ -178,38 +161,25 @@ void xnpod_discard_iface_proc(const char *iface);
  * better than losing the Xenomai priority entirely.
  *
  * Implementation-wise, a list of all the currently relaxed Xenomai
- * threads (rpi_push) is maintained for each CPU in the corresponding
- * gatekeeper slot (i.e. struct gatekeeper::rpislot.threadq). Threads
- * are removed from this queue (rpi_pop) as they 1) go back to primary
- * mode, or 2) exit.  Each time a relaxed Xenomai thread is scheduled
- * in by the Linux scheduler, the root thread inherits its priority
- * (rpi_switch). Each time the gatekeeper processes a request to move
- * a relaxed thread back to primary mode, the latter thread is popped
- * from the RPI list, and the root thread inherits the Xenomai
- * priority of the thread leading the RPI list after the removal. If
- * no other thread is currently relaxed, the root thread is given back
- * its base priority, i.e. the lowest available level.
+ * threads (rpi_push) is maintained for each CPU in the scheduling
+ * classes for which RPI applies. Threads are removed from this queue
+ * (rpi_pop) as they 1) go back to primary mode, or 2) exit.  Each
+ * time a relaxed Xenomai thread is scheduled in by the Linux
+ * scheduler, the root thread inherits its scheduling class and
+ * priority (rpi_switch). Each time the gatekeeper processes a request
+ * to move a relaxed thread back to primary mode, the latter thread is
+ * popped from the RPI list, and the root thread inherits the
+ * scheduling class and priority of the thread leading the RPI list
+ * after the removal. If no other thread is currently relaxed, the
+ * root thread is moved back to the idle scheduling class.
  */
 
 #define rpi_p(t)	((t)->rpi != NULL)
 
-static inline void rpi_init_gk(struct __gatekeeper *gk)
+static void rpi_push(struct xnsched *sched, struct xnthread *thread)
 {
-	struct xnrpi *rpislot = &gk->rpislot;
-	xnlock_init(&rpislot->lock);
-	sched_initpq(&rpislot->threadq, XNCORE_MIN_PRIO, XNCORE_MAX_PRIO);
-}
-
-static inline void rpi_none(xnthread_t *thread)
-{
-	thread->rpi = NULL;
-	xnarch_memory_barrier();
-}
-
-static void rpi_push(xnthread_t *thread, int cpu)
-{
-	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
-	xnthread_t *top;
+	struct xnsched_class *sched_class;
+	struct xnthread *top;
 	int prio;
 	spl_t s;
 
@@ -221,82 +191,92 @@ static void rpi_push(xnthread_t *thread, int cpu)
 	 */
 	if (likely(xnthread_user_task(thread)->policy == SCHED_FIFO &&
 		   !xnthread_test_state(thread, XNRPIOFF))) {
-		xnlock_get_irqsave(&rpislot->lock, s);
+		xnlock_get_irqsave(&sched->rpilock, s);
 
 		if (XENO_DEBUG(NUCLEUS) && rpi_p(thread))
 			xnpod_fatal("re-enqueuing a relaxed thread in the RPI queue");
 
-		sched_insertpqf(&rpislot->threadq, &thread->xlink, xnthread_current_priority(thread));
-		thread->rpi = rpislot;
+		top = xnsched_push_rpi(sched, thread);
+		thread->rpi = sched;
+		prio = top->cprio;
+		sched_class = top->sched_class;
+		xnlock_put_irqrestore(&sched->rpilock, s);
+	} else {
+		top = NULL;
+		prio = XNSCHED_IDLE_PRIO;
+		sched_class = &xnsched_class_idle;
+	}
 
-		top = link2thread(sched_getheadpq(&rpislot->threadq), xlink);
-		prio = xnthread_current_priority(top);
-		xnlock_put_irqrestore(&rpislot->lock, s);
-	} else
-		prio = XNCORE_IDLE_PRIO;
-
-	if (xnpod_root_priority(cpu) != prio)
-		xnpod_renice_root(cpu, prio);
+	if (xnsched_root_priority(sched) != prio ||
+	    xnsched_root_class(sched) != sched_class)
+		xnsched_renice_root(sched, top);
 }
 
-static void rpi_pop(xnthread_t *thread)
+static void rpi_pop(struct xnthread *thread)
 {
-	int cpu = rthal_processor_id();
-	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
+	struct xnsched_class *sched_class;
+	struct xnsched *sched;
+	xnthread_t *top;
 	int prio;
 	spl_t s;
 
-	xnlock_get_irqsave(&rpislot->lock, s);
+	sched = xnpod_current_sched();
 
-	/* Make sure we don't try to unlink a shadow which is not
-	   linked to the local RPI queue. This may happen in case a
-	   hardening thread is migrated by the kernel while in flight
-	   to the primary mode. */
+	xnlock_get_irqsave(&sched->rpilock, s);
 
-	if (likely(thread->rpi == rpislot)) {
-		sched_removepq(&rpislot->threadq, &thread->xlink);
-		rpi_none(thread);
+	/*
+	 * Make sure we don't try to unlink a shadow which is not
+	 * linked to a local RPI queue. This may happen in case a
+	 * hardening thread is migrated by the kernel while in flight
+	 * to the primary mode.
+	 */
+	if (likely(thread->rpi == sched)) {
+		xnsched_pop_rpi(thread);
+		thread->rpi = NULL;
 	} else if (!rpi_p(thread)) {
-		xnlock_put_irqrestore(&rpislot->lock, s);
+		xnlock_put_irqrestore(&sched->rpilock, s);
 		return;
 	}
 
-	if (likely(sched_emptypq_p(&rpislot->threadq)))
-		prio = XNCORE_IDLE_PRIO;
+	top = xnsched_peek_rpi(sched);
+	if (likely(top == NULL)) {
+		prio = XNSCHED_IDLE_PRIO;
+		sched_class = &xnsched_class_idle;
+	}
 	else {
-		xnpholder_t *pholder = sched_getheadpq(&rpislot->threadq);
-		xnthread_t *top = link2thread(pholder, xlink);
-		prio = xnthread_current_priority(top);
+		prio = top->cprio;
+		sched_class = top->sched_class;
 	}
 
-	xnlock_put_irqrestore(&rpislot->lock, s);
+	xnlock_put_irqrestore(&sched->rpilock, s);
 
-	if (xnpod_root_priority(cpu) != prio)
-		xnpod_renice_root(cpu, prio);
+	if (xnsched_root_priority(sched) != prio ||
+	    xnsched_root_class(sched) != sched_class)
+		xnsched_renice_root(sched, top);
 }
 
-static void rpi_update(xnthread_t *thread)
+static void rpi_update(struct xnthread *thread)
 {
-	int cpu = rthal_processor_id();
-	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
+	struct xnsched *sched = xnpod_current_sched();
 	spl_t s;
 
-	xnlock_get_irqsave(&rpislot->lock, s);
+	xnlock_get_irqsave(&sched->rpilock, s);
 
 	if (rpi_p(thread)) {
-		sched_removepq(&rpislot->threadq, &thread->xlink);
-		rpi_none(thread);
-		rpi_push(thread, cpu);
+		xnsched_pop_rpi(thread);
+		thread->rpi = NULL;
+		rpi_push(sched, thread);
 	}
 
-	xnlock_put_irqrestore(&rpislot->lock, s);
+	xnlock_put_irqrestore(&sched->rpilock, s);
 }
 
 #ifdef CONFIG_SMP
 
-static void rpi_clear_remote(xnthread_t *thread)
+static void rpi_clear_remote(struct xnthread *thread)
 {
-	struct xnrpi *rpislot;
+	xnarch_cpumask_t cpumask;
+	struct xnsched *rpi;
 	int rcpu = -1;
 	spl_t s;
 
@@ -304,8 +284,8 @@ static void rpi_clear_remote(xnthread_t *thread)
 	 * This is the only place where we may touch a remote RPI slot
 	 * (after a migration within the Linux domain), so let's use
 	 * the backlink pointer the thread provides to fetch the
-	 * actual slot it is supposed to be linked to, _not_ the
-	 * gatekeeper's RPI slot for the current CPU.
+	 * actual RPI slot it is supposed to be linked to, instead of
+	 * the local one.
 	 *
 	 * BIG FAT WARNING: The nklock must NOT be held when entering
 	 * this routine, otherwise a deadlock would be possible,
@@ -317,25 +297,25 @@ static void rpi_clear_remote(xnthread_t *thread)
 		xnpod_fatal("nklock held while calling %s - this may deadlock!",
 			    __FUNCTION__);
 
-	rpislot = thread->rpi;
-
-	if (unlikely(rpislot == NULL))
+	rpi = thread->rpi;
+	if (unlikely(rpi == NULL))
 		return;
 
-	xnlock_get_irqsave(&rpislot->lock, s);
+	xnlock_get_irqsave(&rpi->rpilock, s);
 
-	/* The RPI slot - if present - is always valid, and won't
+	/*
+	 * The RPI slot - if present - is always valid, and won't
 	 * change since the thread is resuming on this CPU and cannot
 	 * migrate under our feet. We may grab the remote slot lock
-	 * now. */
+	 * now.
+	 */
+	xnsched_pop_rpi(thread);
+	thread->rpi = NULL;
 
-	sched_removepq(&rpislot->threadq, &thread->xlink);
-	rpi_none(thread);
+	if (xnsched_peek_rpi(rpi) == NULL)
+		rcpu = xnsched_cpu(rpi);
 
-	if (sched_emptypq_p(&rpislot->threadq))
-		rcpu = container_of(rpislot, struct __gatekeeper, rpislot) - gatekeeper;
-
-	xnlock_put_irqrestore(&rpislot->lock, s);
+	xnlock_put_irqrestore(&rpi->rpilock, s);
 
 	/*
 	 * Ok, this one is not trivial. Unless a relaxed shadow has
@@ -348,14 +328,12 @@ static void rpi_clear_remote(xnthread_t *thread)
 	 * Xenomai root thread for the source CPU with a boosted
 	 * priority. To prevent this, we send an IPI from the
 	 * destination CPU to the source CPU when a migration is
-	 * detected, so that the latter could adjust its root thread
+	 * detected, so that the latter can adjust its root thread
 	 * priority.
 	 */
 	if (rcpu != -1 && rcpu != rthal_processor_id()) {
-		xnsched_t *rsched = xnpod_sched_slot(rcpu);
-		if (!testbits(rsched->status, XNRPICK)) {
-			xnarch_cpumask_t cpumask;
-			setbits(rsched->status, XNRPICK);
+		if (!testbits(rpi->status, XNRPICK)) {
+			setbits(rpi->status, XNRPICK);
 			xnarch_cpus_clear(cpumask);
 			xnarch_cpu_set(rcpu, cpumask);
 			xnarch_send_ipi(cpumask);
@@ -363,33 +341,34 @@ static void rpi_clear_remote(xnthread_t *thread)
 	}
 }
 
-static void rpi_migrate(xnthread_t *thread)
+static void rpi_migrate(struct xnsched *sched, struct xnthread *thread)
 {
 	rpi_clear_remote(thread);
-	rpi_push(thread, rthal_processor_id());
+	rpi_push(sched, thread);
 }
 
 #else  /* !CONFIG_SMP */
 #define rpi_clear_remote(t)	do { } while(0)
-#define rpi_migrate(t)		do { } while(0)
+#define rpi_migrate(sched, t)	do { } while(0)
 #endif	/* !CONFIG_SMP */
 
-static inline void rpi_switch(struct task_struct *next)
+static inline void rpi_switch(struct task_struct *next_task)
 {
-	int cpu = rthal_processor_id();
-	xnthread_t *threadin, *threadout;
-	struct xnrpi *rpislot;
+	struct xnsched_class *oldclass, *newclass;
+	struct xnthread *next, *prev, *top;
+	struct xnsched *sched;
 	int oldprio, newprio;
 	spl_t s;
 
-	threadout = xnshadow_thread(current);
-	threadin = xnshadow_thread(next);
-	rpislot = &gatekeeper[cpu].rpislot;
-	oldprio = xnpod_root_priority(cpu);
+	prev = xnshadow_thread(current);
+	next = xnshadow_thread(next_task);
+	sched = xnpod_current_sched();
+	oldprio = xnsched_root_priority(sched);
+	oldclass = xnsched_root_class(sched);
 
-	if (threadout &&
+	if (prev &&
 	    current->state != TASK_RUNNING &&
-	    !xnthread_test_info(threadout, XNATOMIC)) {
+	    !xnthread_test_info(prev, XNATOMIC)) {
 		/*
 		 * A blocked Linux task must be removed from the RPI
 		 * list. Checking for XNATOMIC prevents from unlinking
@@ -403,33 +382,38 @@ static inline void rpi_switch(struct task_struct *next)
 		 * since this may happen if such thread immediately
 		 * resumes on the remote CPU.
 		 */
-		xnlock_get_irqsave(&rpislot->lock, s);
-		if (threadout->rpi == rpislot) {
-			sched_removepq(&rpislot->threadq, &threadout->xlink);
-			rpi_none(threadout);
+		xnlock_get_irqsave(&sched->rpilock, s);
+		if (prev->rpi == sched) {
+			xnsched_pop_rpi(prev);
+			prev->rpi = NULL;
 		}
-		xnlock_put_irqrestore(&rpislot->lock, s);
+		xnlock_put_irqrestore(&sched->rpilock, s);
 	}
 
-	if (threadin == NULL ||
-	    next->policy != SCHED_FIFO ||
-	    xnthread_test_state(threadin, XNRPIOFF)) {
-		xnlock_get_irqsave(&rpislot->lock, s);
+	if (next == NULL ||
+	    next_task->policy != SCHED_FIFO ||
+	    xnthread_test_state(next, XNRPIOFF)) {
+		xnlock_get_irqsave(&sched->rpilock, s);
 
-		if (!sched_emptypq_p(&rpislot->threadq)) {
-			xnpholder_t *pholder = sched_getheadpq(&rpislot->threadq);
-			xnthread_t *top = link2thread(pholder, xlink);
-			newprio = xnthread_current_priority(top);
-		} else
-			newprio = XNCORE_IDLE_PRIO;
+		top = xnsched_peek_rpi(sched);
+		if (top) {
+			newprio = top->cprio;
+			newclass = top->sched_class;
+		} else {
+			newprio = XNSCHED_IDLE_PRIO;
+			newclass = &xnsched_class_idle;
+		}
 
-		xnlock_put_irqrestore(&rpislot->lock, s);
+		xnlock_put_irqrestore(&sched->rpilock, s);
 		goto boost_root;
 	}
 
-	newprio = xnthread_current_priority(threadin);
+	newprio = next->cprio;
+	newclass = next->sched_class;
+	top = next;
 
-	/* Be careful about two issues affecting a task's RPI state
+	/*
+	 * Be careful about two issues affecting a task's RPI state
 	 * here:
 	 *
 	 * 1) A relaxed shadow awakes (Linux-wise) after a blocked
@@ -438,71 +422,69 @@ static inline void rpi_switch(struct task_struct *next)
 	 * resumes.
 	 *
 	 * 2) A relaxed shadow has migrated from another CPU, in that
-	 * case, we end up having a thread linked to an RPI slot which
-	 * is _not_ the current gatekeeper's one [sidenote: we don't
-	 * care about migrations handled by Xenomai in primary mode,
-	 * since the shadow would not be linked to any RPI queue in
-	 * the first place].  Since a migration must happen while the
-	 * task is off the CPU Linux-wise, rpi_switch() will be called
-	 * upon resumption on the target CPU by the Linux
-	 * scheduler. At that point, we just need to update the RPI
-	 * information in case the RPI queue backlink does not match
-	 * the gatekeeper's RPI slot for the current CPU. */
+	 * case, we end up having a thread still linked to a remote
+	 * RPI slot [sidenote: we don't care about migrations handled
+	 * by Xenomai in primary mode, since the shadow would not be
+	 * linked to any RPI queue in the first place].  Since a
+	 * migration must happen while the task is off the CPU
+	 * Linux-wise, rpi_switch() will be called upon resumption on
+	 * the target CPU by the Linux scheduler. At that point, we
+	 * just need to update the RPI information in case the RPI
+	 * queue backlink does not match the local RPI slot.
+	 */
 
-	if (unlikely(threadin->rpi == NULL)) {
-		if (!xnthread_test_state(threadin, XNDORMANT)) {
-			xnlock_get_irqsave(&rpislot->lock, s);
-			sched_insertpqf(&rpislot->threadq, &threadin->xlink, newprio);
-			threadin->rpi = rpislot;
-			xnlock_put_irqrestore(&rpislot->lock, s);
+	if (unlikely(next->rpi == NULL)) {
+		if (!xnthread_test_state(next, XNDORMANT)) {
+			xnlock_get_irqsave(&sched->rpilock, s);
+			xnsched_push_rpi(sched, next);
+			next->rpi = sched;
+			xnlock_put_irqrestore(&sched->rpilock, s);
 		}
-	} else if (unlikely(threadin->rpi != rpislot))
+	} else if (unlikely(next->rpi != sched))
 		/* We hold no lock here. */
-		rpi_migrate(threadin);
+		rpi_migrate(sched, next);
 
 boost_root:
 
-	if (newprio == oldprio)
+	if (newprio == oldprio && newclass == oldclass)
 		return;
 
-	xnpod_renice_root(cpu, newprio);
-
-	if (newprio < oldprio)
-		/* Subtle: by downgrading the root thread priority,
-		   some higher priority thread might well become
-		   eligible for execution instead of us. Since
-		   xnpod_renice_root() does not reschedule (and must
-		   _not_ in most of other cases), let's call the
-		   rescheduling procedure ourselves. */
-		xnpod_schedule();
+	xnsched_renice_root(sched, top);
+	/*
+	 * Subtle: by downgrading the root thread priority, some
+	 * higher priority thread might have become eligible for
+	 * execution instead of us. Since xnsched_renice_root() does
+	 * not reschedule, we need to kick the rescheduling procedure
+	 * here.
+	 */
+	xnpod_schedule();
 }
 
-static inline void rpi_clear_local(xnthread_t *thread)
+static inline void rpi_clear_local(struct xnthread *thread)
 {
-	int cpu = rthal_processor_id();
-	if (thread == NULL && xnpod_root_priority(cpu) != XNCORE_IDLE_PRIO)
-		xnpod_renice_root(cpu, XNCORE_IDLE_PRIO);
+	struct xnsched *sched = xnpod_current_sched();
+	if (thread == NULL &&
+	    xnsched_root_class(sched) != &xnsched_class_idle)
+		xnsched_renice_root(sched, NULL);
 }
 
 #ifdef CONFIG_SMP
-
+/*
+ * BIG FAT WARNING: interrupts should be off on entry, otherwise, we
+ * would have to mask them while testing the RPI queue for emptiness
+ * _and_ demoting the boost level.
+ */
 void xnshadow_rpi_check(void)
 {
-	/*
-	 * BIG FAT WARNING: interrupts should be off on entry,
-	 * otherwise, we would have to mask them while testing the
-	 * queue for emptiness _and_ demoting the boost level.
-	 */
-	int cpu = rthal_processor_id();
-	struct xnrpi *rpislot = &gatekeeper[cpu].rpislot;
-	int norpi;
+	struct xnsched *sched = xnpod_current_sched();
+	struct xnthread *top;
  
- 	xnlock_get(&rpislot->lock);
- 	norpi = sched_emptypq_p(&rpislot->threadq);
- 	xnlock_put(&rpislot->lock);
+ 	xnlock_get(&sched->rpilock);
+ 	top = xnsched_peek_rpi(sched);
+ 	xnlock_put(&sched->rpilock);
 
-	if (norpi && xnpod_root_priority(cpu) != XNCORE_IDLE_PRIO)
-		xnpod_renice_root(cpu, XNCORE_IDLE_PRIO);
+	if (top == NULL && xnsched_root_class(sched) != &xnsched_class_idle)
+		xnsched_renice_root(sched, NULL);
 }
 
 #endif	/* CONFIG_SMP */
@@ -510,10 +492,9 @@ void xnshadow_rpi_check(void)
 #else
 
 #define rpi_p(t)		(0)
-#define rpi_init_gk(gk)		do { } while(0)
 #define rpi_clear_local(t)	do { } while(0)
 #define rpi_clear_remote(t)	do { } while(0)
-#define rpi_push(t, cpu)	do { } while(0)
+#define rpi_push(sched, t)	do { } while(0)
 #define rpi_pop(t)		do { } while(0)
 #define rpi_update(t)		do { } while(0)
 #define rpi_switch(n)		do { } while(0)
@@ -995,11 +976,11 @@ static inline int normalize_priority(int prio)
 
 static int gatekeeper_thread(void *data)
 {
-	struct __gatekeeper *gk = (struct __gatekeeper *)data;
 	struct task_struct *this_task = current;
 	DECLARE_WAITQUEUE(wait, this_task);
-	int cpu = gk - &gatekeeper[0];
-	xnthread_t *thread;
+	struct xnsched *sched = data;
+	int cpu = xnsched_cpu(sched);
+	struct xnthread *target;
 	cpumask_t cpumask;
 	spl_t s;
 
@@ -1009,41 +990,47 @@ static int gatekeeper_thread(void *data)
 	set_cpus_allowed(this_task, cpumask);
 	set_linux_task_priority(this_task, MAX_RT_PRIO - 1);
 
-	init_waitqueue_head(&gk->waitq);
-	add_wait_queue_exclusive(&gk->waitq, &wait);
-
-	up(&gk->sync);		/* Sync with xnshadow_mount(). */
+	init_waitqueue_head(&sched->gkwaitq);
+	add_wait_queue_exclusive(&sched->gkwaitq, &wait);
+	up(&sched->gksync);	/* Sync with xnshadow_mount(). */
 
 	for (;;) {
 		set_current_state(TASK_INTERRUPTIBLE);
-		up(&gk->sync);	/* Make the request token available. */
+		up(&sched->gksync); /* Make the request token available. */
 		schedule();
 
 		if (kthread_should_stop())
 			break;
 
-		/* Real-time shadow TCBs are always removed on behalf
-		   of the killed thread. */
+		/*
+		 * Real-time shadow TCBs are always removed on behalf
+		 * of the killed thread.
+		 */
+		target = sched->gktarget;
 
-		thread = gk->thread;
-
-		/* In the very rare case where the requestor has been awaken
-		   by a signal before we have been able to process the
-		   pending request, just ignore the latter. */
-
-		if ((xnthread_user_task(thread)->state & ~TASK_ATOMICSWITCH)
+		/*
+		 * In the very rare case where the requestor has been
+		 * awaken by a signal before we have been able to
+		 * process the pending request, just ignore the
+		 * latter.
+		 */
+		if ((xnthread_user_task(target)->state & ~TASK_ATOMICSWITCH)
 		    == TASK_INTERRUPTIBLE) {
-			rpi_pop(thread);
+			rpi_pop(target);
 			xnlock_get_irqsave(&nklock, s);
 #ifdef CONFIG_SMP
-			/* If the task changed its CPU while in secondary mode,
-			   change the CPU of the underlying Xenomai shadow too. We
-			   do not migrate the thread timers here, it would not
-			   work. For a "full" migration comprising timers, using
-			   xnpod_migrate_thread is required. */
-			thread->sched = xnpod_sched_slot(cpu);
+			/*
+			 * If the task changed its CPU while in
+			 * secondary mode, change the CPU of the
+			 * underlying Xenomai shadow too. We do not
+			 * migrate the thread timers here, it would
+			 * not work. For a "full" migration comprising
+			 * timers, using xnpod_migrate_thread is
+			 * required.
+			 */
+			target->sched = sched;
 #endif /* CONFIG_SMP */
-			xnpod_resume_thread(thread, XNRELAX);
+			xnpod_resume_thread(target, XNRELAX);
 			ishield_off();
 			xnlock_put_irqrestore(&nklock, s);
 			xnpod_schedule();
@@ -1059,10 +1046,10 @@ static int gatekeeper_thread(void *data)
  * \brief Migrate a Linux task to the Xenomai domain.
  *
  * This service causes the transition of "current" from the Linux
- * domain to Xenomai. This is obtained by asking the gatekeeper to resume
- * the shadow mated with "current" then triggering the rescheduling
- * procedure in the Xenomai domain. The shadow will resume in the Xenomai
- * domain as returning from schedule().
+ * domain to Xenomai. This is obtained by asking the gatekeeper to
+ * resume the shadow mated with "current" then triggering the
+ * rescheduling procedure in the Xenomai domain. The shadow will
+ * resume in the Xenomai domain as returning from schedule().
  *
  * Environments:
  *
@@ -1076,21 +1063,19 @@ static int gatekeeper_thread(void *data)
 int xnshadow_harden(void)
 {
 	struct task_struct *this_task = current;
-	struct __gatekeeper *gk;
-	xnthread_t *thread;
-	xnsched_t *sched;
-	int gk_cpu;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int cpu;
 
 redo:
-	gk_cpu = task_cpu(this_task);
 	thread = xnshadow_thread(this_task);
-
 	if (!thread)
 		return -EPERM;
 
-	gk = &gatekeeper[gk_cpu];
+	cpu = task_cpu(this_task);
+	sched = xnpod_sched_slot(cpu);
 
-	if (signal_pending(this_task) || down_interruptible(&gk->sync))
+	if (signal_pending(this_task) || down_interruptible(&sched->gksync))
 		/* Grab the request token. */
 		return -ERESTARTSYS;
 
@@ -1098,44 +1083,50 @@ redo:
 
 	preempt_disable();
 
-	/* Assume that we might have been migrated while waiting for
+	/*
+	 * Assume that we might have been migrated while waiting for
 	 * the token. Redo acquisition in such a case, so that we
 	 * don't mistakenly send the request to the wrong
-	 * gatekeeper. */
-
-	if (gk_cpu != task_cpu(this_task)) {
+	 * gatekeeper.
+	 */
+	if (cpu != task_cpu(this_task)) {
 		preempt_enable();
-		up(&gk->sync);
+		up(&sched->gksync);
 		goto redo;
 	}
 
-	/* Set up the request to move "current" from the Linux domain to
-	   the Xenomai domain. This will cause the shadow thread to resume
-	   using the register state of the current Linux task. For this to
-	   happen, we set up the migration data, prepare to suspend the
-	   current task, wake up the gatekeeper which will perform the
-	   actual transition, then schedule out. Most of this sequence
-	   must be atomic, and we get this guarantee by disabling
-	   preemption and using the TASK_ATOMICSWITCH cumulative state
-	   provided by Adeos to Linux tasks. */
+	/*
+	 * Set up the request to move "current" from the Linux domain
+	 * to the Xenomai domain. This will cause the shadow thread to
+	 * resume using the register state of the current Linux
+	 * task. For this to happen, we set up the migration data,
+	 * prepare to suspend the current task, wake up the gatekeeper
+	 * which will perform the actual transition, then schedule
+	 * out. Most of this sequence must be atomic, and we get this
+	 * guarantee by disabling preemption and using the
+	 * TASK_ATOMICSWITCH cumulative state provided by Adeos to
+	 * Linux tasks.
+	 */
 
 	trace_mark(xn_nucleus_shadow_gohard,
 		   "thread %p thread_name %s comm %s",
 		   thread, xnthread_name(thread), this_task->comm);
 
-	gk->thread = thread;
+	sched->gktarget = thread;
 	xnthread_set_info(thread, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-	wake_up_interruptible_sync(&gk->waitq);
+	wake_up_interruptible_sync(&sched->gkwaitq);
 	schedule();	/* Will preempt_enable() thanks to TASK_ATOMICSWITCH */
 	xnthread_clear_info(thread, XNATOMIC);
 
-	/* Rare case: we might have been awaken by a signal before the
-	   gatekeeper sent us to primary mode. Since TASK_UNINTERRUPTIBLE
-	   is unavailable to us without wrecking the runqueue's count of
-	   uniniterruptible tasks, we just notice the issue and gracefully
-	   fail; the caller will have to process this signal anyway. */
-
+	/*
+	 * Rare case: we might have been awaken by a signal before the
+	 * gatekeeper sent us to primary mode. Since
+	 * TASK_UNINTERRUPTIBLE is unavailable to us without wrecking
+	 * the runqueue's count of uniniterruptible tasks, we just
+	 * notice the issue and gracefully fail; the caller will have
+	 * to process this signal anyway.
+	 */
 	if (rthal_current_domain == rthal_root_domain) {
 		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(this_task)
 		    || this_task->state != TASK_RUNNING))
@@ -1146,7 +1137,7 @@ redo:
 	}
 
 	/* "current" is now running into the Xenomai domain. */
-	sched = xnpod_finish_unlocked_switch(thread->sched);
+	sched = xnsched_finish_unlocked_switch(thread->sched);
 
 	xnpod_finalize_zombie(sched);
 
@@ -1174,7 +1165,7 @@ redo:
 	trace_mark(xn_nucleus_shadow_hardened, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-	xnpod_resched_after_unlocked_switch();
+	xnsched_resched_after_unlocked_switch();
 
 	return 0;
 }
@@ -1215,10 +1206,11 @@ void xnshadow_relax(int notify)
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
-	/* Enqueue the request to move the running shadow from the Xenomai
-	   domain to the Linux domain.  This will cause the Linux task
-	   to resume using the register state of the shadow thread. */
-
+	/*
+	 * Enqueue the request to move the running shadow from the Xenomai
+	 * domain to the Linux domain.  This will cause the Linux task
+	 * to resume using the register state of the shadow thread.
+	 */
 	trace_mark(xn_nucleus_shadow_gorelax, "thread %p thread_name %s",
 		  thread, xnthread_name(thread));
 
@@ -1228,7 +1220,7 @@ void xnshadow_relax(int notify)
 
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 
-	rpi_push(thread, rthal_processor_id());
+	rpi_push(thread->sched, thread);
 
 	clear_task_nowakeup(current);
 
@@ -1503,12 +1495,12 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 	return xnshadow_harden();
 }
 
-void xnshadow_start(xnthread_t *thread)
+void xnshadow_start(struct xnthread *thread)
 {
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
 
 	/* A shadow always starts in relaxed mode. */
-	rpi_push(thread, xnsched_cpu(thread->sched));
+	rpi_push(thread->sched, thread);
 
 	trace_mark(xn_nucleus_shadow_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -1520,12 +1512,14 @@ void xnshadow_start(xnthread_t *thread)
 }
 
 /* Called with nklock locked, Xenomai interrupts off. */
-void xnshadow_renice(xnthread_t *thread)
+void xnshadow_renice(struct xnthread *thread)
 {
-	/* We need to bound the priority values in the [1..MAX_RT_PRIO-1]
-	   range, since the core pod's priority scale is a superset of
-	   Linux's priority scale. */
-	int prio = normalize_priority(xnthread_current_priority(thread));
+	/*
+	 * We need to bound the priority values in the
+	 * [1..MAX_RT_PRIO-1] range, since the core pod's priority
+	 * scale is a superset of Linux's priority scale.
+	 */
+	int prio = normalize_priority(thread->cprio);
 
 	xnshadow_send_sig(thread, SIGSHADOW,
 			  sigshadow_int(SIGSHADOW_ACTION_RENICE, prio), 1);
@@ -2161,27 +2155,35 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
       linux_syscall:
 
 	if (xnpod_root_p())
-		/* The call originates from the Linux domain, either from a
-		   relaxed shadow or from a regular Linux task; just propagate
-		   the event so that we will fall back to linux_sysentry(). */
+		/*
+		 * The call originates from the Linux domain, either
+		 * from a relaxed shadow or from a regular Linux task;
+		 * just propagate the event so that we will fall back
+		 * to linux_sysentry().
+		 */
 		goto propagate_syscall;
 
-	/* From now on, we know that we have a valid shadow thread
-	   pointer. */
-
+	/*
+	 * From now on, we know that we have a valid shadow thread
+	 * pointer.
+	 */
 	if (substitute_linux_syscall(regs))
-		/* This is a Linux syscall issued on behalf of a shadow thread
-		   running inside the Xenomai domain. This call has just been
-		   intercepted by the nucleus and a Xenomai replacement has been
-		   substituted for it. */
+		/*
+		 * This is a Linux syscall issued on behalf of a
+		 * shadow thread running inside the Xenomai
+		 * domain. This call has just been intercepted by the
+		 * nucleus and a Xenomai replacement has been
+		 * substituted for it.
+		 */
 		return RTHAL_EVENT_STOP;
 
-	/* This syscall has not been substituted, let Linux handle
-	   it. This will eventually fall back to the Linux syscall handler
-	   if our Linux domain handler does not intercept it. Before we
-	   let it go, ensure that our running thread has properly entered
-	   the Linux domain. */
-
+	/*
+	 * This syscall has not been substituted, let Linux handle
+	 * it. This will eventually fall back to the Linux syscall
+	 * handler if our Linux domain handler does not intercept
+	 * it. Before we let it go, ensure that the current thread has
+	 * properly entered the Linux domain.
+	 */
 	xnshadow_relax(1);
 
 	goto propagate_syscall;
@@ -2190,9 +2192,12 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
 	if (__xn_reg_mux_p(regs)) {
 		if (__xn_reg_mux(regs) == __xn_mux_code(0, __xn_sys_bind))
-			/* Valid exception case: we may be called to bind to a
-			   skin which will create its own pod through its callback
-			   routine before returning to user-space. */
+			/*
+			 * Valid exception case: we may be called to
+			 * bind to a skin which will create its own
+			 * pod through its callback routine before
+			 * returning to user-space.
+			 */
 			goto propagate_syscall;
 
 		xnlogwarn("bad syscall %ld/%ld -- no skin loaded.\n",
@@ -2202,8 +2207,10 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		return RTHAL_EVENT_STOP;
 	}
 
-	/* Regular Linux syscall with no skin loaded -- propagate it
-	   to the Linux kernel. */
+	/*
+	 * Regular Linux syscall with no skin loaded -- propagate it
+	 * to the Linux kernel.
+	 */
 
       propagate_syscall:
 
@@ -2329,19 +2336,19 @@ static inline void do_taskexit_event(struct task_struct *p)
 
 RTHAL_DECLARE_EXIT_EVENT(taskexit_event);
 
-static inline void do_schedule_event(struct task_struct *next)
+static inline void do_schedule_event(struct task_struct *next_task)
 {
-	struct task_struct *prev;
-	xnthread_t *threadin;
+	struct task_struct *prev_task;
+	struct xnthread *next;
 
 	if (!xnpod_active_p())
 		return;
 
-	prev = current;
-	threadin = xnshadow_thread(next);
-	set_switch_lock_owner(prev);
+	prev_task = current;
+	next = xnshadow_thread(next_task);
+	set_switch_lock_owner(prev_task);
 
-	if (threadin) {
+	if (next) {
 		/*
 		 * Check whether we need to unlock the timers, each
 		 * time a Linux task resumes from a stopped state,
@@ -2351,8 +2358,8 @@ static inline void do_schedule_event(struct task_struct *next)
 		 * order to encompass both the NPTL and LinuxThreads
 		 * behaviours.
 		 */
-		if (xnthread_test_info(threadin, XNDEBUG)) {
-			if (signal_pending(next)) {
+		if (xnthread_test_info(next, XNDEBUG)) {
+			if (signal_pending(next_task)) {
 				sigset_t pending;
 				/*
 				 * Do not grab the sighand lock here:
@@ -2361,48 +2368,48 @@ static inline void do_schedule_event(struct task_struct *next)
 				 * expose us to deadlock situations on
 				 * SMP.
 				 */
-				wrap_get_sigpending(&pending, next);
+				wrap_get_sigpending(&pending, next_task);
 
 				if (sigismember(&pending, SIGSTOP) ||
 				    sigismember(&pending, SIGINT))
 					goto no_ptrace;
 			}
 
-			xnthread_clear_info(threadin, XNDEBUG);
+			xnthread_clear_info(next, XNDEBUG);
 			unlock_timers();
 		}
 
 	      no_ptrace:
 
 		if (XENO_DEBUG(NUCLEUS)) {
-			int sigpending = signal_pending(next);
+			int sigpending = signal_pending(next_task);
 
-			if (!xnthread_test_state(threadin, XNRELAX)) {
+			if (!xnthread_test_state(next, XNRELAX)) {
 				xnarch_trace_panic_freeze();
-				show_stack(xnthread_user_task(threadin), NULL);
+				show_stack(xnthread_user_task(next), NULL);
 				xnpod_fatal
 				    ("Hardened thread %s[%d] running in Linux"" domain?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     threadin->name, next->pid, xnthread_state_flags(threadin),
-				     sigpending, prev->comm, prev->pid);
-			} else if (!(next->ptrace & PT_PTRACED) &&
+				     next->name, next_task->pid, xnthread_state_flags(next),
+				     sigpending, prev_task->comm, prev_task->pid);
+			} else if (!(next_task->ptrace & PT_PTRACED) &&
 				   /* Allow ptraced threads to run shortly in order to
 				      properly recover from a stopped state. */
-				   xnthread_test_state(threadin, XNSTARTED)
-				   && xnthread_test_state(threadin, XNPEND)) {
+				   xnthread_test_state(next, XNSTARTED)
+				   && xnthread_test_state(next, XNPEND)) {
 				xnarch_trace_panic_freeze();
-				show_stack(xnthread_user_task(threadin), NULL);
+				show_stack(xnthread_user_task(next), NULL);
 				xnpod_fatal
 				    ("blocked thread %s[%d] rescheduled?! (status=0x%lx, sig=%d, prev=%s[%d])",
-				     threadin->name, next->pid, xnthread_state_flags(threadin),
-				     sigpending, prev->comm, prev->pid);
+				     next->name, next_task->pid, xnthread_state_flags(next),
+				     sigpending, prev_task->comm, prev_task->pid);
 			}
 		}
 
-		ishield_reset(threadin);
-	} else if (next != gatekeeper[rthal_processor_id()].server)
+		ishield_reset(next);
+	} else if (next_task != xnpod_current_sched()->gatekeeper)
 		ishield_off();
 
-	rpi_switch(next);
+	rpi_switch(next_task);
 }
 
 RTHAL_DECLARE_SCHEDULE_EVENT(schedule_event);
@@ -2434,7 +2441,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 	if (xnthread_test_state(thread, XNRELAX))
 		goto unlock_and_exit;
 
-	if (thread == thread->sched->runthread)
+	if (thread == xnthread_sched(thread)->curr)
 		xnsched_set_resched(thread->sched);
 
 	if (xnpod_unblock_thread(thread))
@@ -2478,7 +2485,7 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	 * propagate priority changes to the nucleus only for threads
 	 * that belong to skins that have a compatible priority scale.
 	 */
-	if (xnthread_current_priority(thread) != priority &&
+	if (thread->cprio != priority &&
 		xnthread_get_denormalized_prio(thread, priority) == priority) {
 		xnpod_renice_thread_inner(thread, priority, 0);
 		if (xnsched_resched_p()) {
@@ -2651,13 +2658,13 @@ void xnshadow_release_events(void)
 
 int xnshadow_mount(void)
 {
+	struct xnsched *sched;
 	unsigned i, size;
 	int cpu, err;
 
 	nucleus_muxid = -1;
 
 	err = ishield_init();
-
 	if (err)
 		return err;
 
@@ -2673,15 +2680,14 @@ int xnshadow_mount(void)
 	    rthal_apc_alloc("lostage_handler", &lostage_handler, NULL);
 
 	for_each_online_cpu(cpu) {
-		struct __gatekeeper *gk = &gatekeeper[cpu];
-		rpi_init_gk(gk);
-		sema_init(&gk->sync, 0);
+		sched = &nkpod_struct.sched[cpu];
+		sema_init(&sched->gksync, 0);
 		xnarch_memory_barrier();
-		gk->server =
-		    kthread_create(&gatekeeper_thread, gk, "gatekeeper/%d",
+		sched->gatekeeper =
+		    kthread_create(&gatekeeper_thread, sched, "gatekeeper/%d",
 				   cpu);
-		wake_up_process(gk->server);
-		down(&gk->sync);
+		wake_up_process(sched->gatekeeper);
+		down(&sched->gksync);
 	}
 
 	/* We need to grab these ones right now. */
@@ -2720,6 +2726,7 @@ int xnshadow_mount(void)
 
 void xnshadow_cleanup(void)
 {
+	struct xnsched *sched;
 	int cpu;
 
 	if (nucleus_muxid >= 0)
@@ -2736,10 +2743,10 @@ void xnshadow_cleanup(void)
 	rthal_catch_hisyscall(NULL);
 
 	for_each_online_cpu(cpu) {
-		struct __gatekeeper *gk = &gatekeeper[cpu];
-		down(&gk->sync);
-		gk->thread = NULL;
-		kthread_stop(gk->server);
+		sched = &nkpod_struct.sched[cpu];
+		down(&sched->gksync);
+		sched->gktarget = NULL;
+		kthread_stop(sched->gatekeeper);
 	}
 
 	rthal_apc_free(lostage_apc);

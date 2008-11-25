@@ -21,9 +21,7 @@
 #ifndef _RTAI_TASK_H
 #define _RTAI_TASK_H
 
-#include <nucleus/core.h>
 #include <nucleus/thread.h>
-#include <nucleus/synch.h>
 #include <rtai/types.h>
 
 typedef struct rt_task_placeholder {

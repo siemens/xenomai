@@ -4,7 +4,6 @@ includesub_HEADERS = \
 	assert.h \
 	bheap.h \
 	compiler.h \
-	core.h \
 	heap.h \
 	intr.h \
 	jhash.h \
@@ -16,6 +15,9 @@ includesub_HEADERS = \
 	queue.h \
 	registry.h \
 	select.h \
+	sched.h \
+	sched-builtin.h \
+	schedqueue.h \
 	shadow.h \
 	stat.h \
 	synch.h \

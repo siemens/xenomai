@@ -174,7 +174,7 @@ static void __heap_flush_private(xnheap_t *heap,
  * claimed and released to this pool.  The block pool is not
  * extensible, so this value must be compatible with the highest
  * memory pressure that could be expected. A minimum of 2 * PAGE_SIZE
- * will be enforced for mappable heaps, 2 * XNCORE_PAGE_SIZE
+ * will be enforced for mappable heaps, 2 * XNHEAP_PAGE_SIZE
  * otherwise.
  *
  * @param mode The heap creation mode. The following flags can be
@@ -278,14 +278,14 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	{
 		void *heapmem;
 
-		heapsize = xnheap_rounded_size(heapsize, XNCORE_PAGE_SIZE);
+		heapsize = xnheap_rounded_size(heapsize, XNHEAP_PAGE_SIZE);
 
 		heapmem = xnarch_alloc_host_mem(heapsize);
 
 		if (!heapmem)
 			return -ENOMEM;
 
-		err = xnheap_init(&heap->heap_base, heapmem, heapsize, XNCORE_PAGE_SIZE);
+		err = xnheap_init(&heap->heap_base, heapmem, heapsize, XNHEAP_PAGE_SIZE);
 		if (err) {
 			xnarch_free_host_mem(heapmem, heapsize);
 			return err;

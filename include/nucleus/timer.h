@@ -134,14 +134,14 @@ typedef xntlholder_t xntimerh_t;
 #define xntimerh_prio(h)       xntlholder_prio(h)
 #define xntimerh_init(h)       xntlholder_init(h)
 
-typedef struct {
+typedef struct xntimerq {
 	unsigned date_shift;
 	unsigned long long next_shot;
 	unsigned long long shot_wrap;
 	xnqueue_t bucket[XNTIMER_WHEELSIZE];
 } xntimerq_t;
 
-typedef struct {
+typedef struct xntimerq_it {
 	unsigned bucket;
 } xntimerq_it_t;
 

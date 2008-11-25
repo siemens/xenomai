@@ -225,6 +225,9 @@ includesub_HEADERS = \
 	pod_32.h	\
 	pod_64.h	\
 	pod.h		\
+	sched_32.h	\
+	sched_64.h	\
+	sched.h		\
 	shadow_32.h	\
 	shadow_64.h	\
 	shadow.h	\

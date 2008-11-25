@@ -1238,7 +1238,7 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 
 	heapaddr = xnarch_alloc_host_mem(heapsize);
 	if (heapaddr) {
-		ret = xnheap_init(heap, heapaddr, heapsize, XNCORE_PAGE_SIZE);
+		ret = xnheap_init(heap, heapaddr, heapsize, XNHEAP_PAGE_SIZE);
 		if (ret)
 			xnarch_free_host_mem(heapaddr, heapsize);
 

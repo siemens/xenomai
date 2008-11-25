@@ -20,7 +20,6 @@
 #define _POSIX_INTERNAL_H
 
 #include <nucleus/xenomai.h>
-#include <nucleus/core.h>
 #include <nucleus/ppd.h>
 #include <nucleus/select.h>
 #include <posix/posix.h>
@@ -51,8 +50,8 @@
 #define PSE51_TIMER_MAGIC       PSE51_MAGIC(0D)
 #define PSE51_SHM_MAGIC         PSE51_MAGIC(0E)
 
-#define PSE51_MIN_PRIORITY      XNCORE_LOW_PRIO
-#define PSE51_MAX_PRIORITY      XNCORE_HIGH_PRIO
+#define PSE51_MIN_PRIORITY      XNSCHED_LOW_PRIO
+#define PSE51_MAX_PRIORITY      XNSCHED_HIGH_PRIO
 
 #define ONE_BILLION             1000000000
 

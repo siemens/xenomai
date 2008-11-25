@@ -32,7 +32,6 @@
 
 #include <nucleus/pod.h>
 #ifdef __KERNEL__
-#include <nucleus/core.h>
 #include <rtdm/syscall.h>
 #endif /* __KERNEL__ */
 

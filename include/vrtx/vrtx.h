@@ -102,13 +102,13 @@ void ui_timer(void);
 
 /*
  * The following macros return normalized or native VRTX priority
- * values. The core pod uses an ascending [0-257] priority scale
- * (include/nucleus/core.h), whilst the VRTX personality exhibits a
+ * values. The core scheduler uses an ascending [0-257] priority scale
+ * (include/nucleus/sched.h), whilst the VRTX personality exhibits a
  * decreasing scale [255-0]; normalization is done in the [1-256]
  * range so that priority 0 is kept for non-realtime shadows.
  */
 #define vrtx_normalized_prio(prio)  \
-  ({ int __p = (prio) ? XNCORE_MAX_PRIO - (prio) - 1 : 0; __p; })
+  ({ int __p = (prio) ? XNSCHED_RT_MAX_PRIO - (prio) - 1 : 0; __p; })
 #define vrtx_denormalized_prio(prio) \
   ({ int __p = (prio) ? 256 - (prio) : 0; __p; })
 
