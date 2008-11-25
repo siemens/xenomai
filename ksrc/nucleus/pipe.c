@@ -86,7 +86,7 @@ static inline void xnpipe_minor_free(int minor)
 
 static inline void xnpipe_enqueue_wait(xnpipe_state_t *state, int mask)
 {
-	if (state->wcount++ == 0)
+	if (state->wcount != 0x7fffffff && state->wcount++ == 0)
 		appendq(&xnpipe_sleepq, &state->slink);
 
 	__setbits(state->status, mask);
