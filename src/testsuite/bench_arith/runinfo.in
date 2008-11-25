@@ -1,1 +1,0 @@
-bench_arith:native:!@exec_prefix@/bin/bench_arith;popall:control_c
