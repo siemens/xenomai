@@ -4516,7 +4516,7 @@ index ad8c9f7..0adf5fd 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..2e70d2f
+index 0000000..f1485e2
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,236 @@
@@ -4566,10 +4566,10 @@ index 0000000..2e70d2f
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.3-00"
++#define IPIPE_ARCH_STRING	"2.3-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	3
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -4914,7 +4914,7 @@ index 0000000..9dd0dda
 +
 +#endif	/* !__ASM_POWERPC_IPIPE_BASE_H */
 diff --git a/include/asm-powerpc/mmu_context.h b/include/asm-powerpc/mmu_context.h
-index 9102b8b..93bb1dd 100644
+index 9102b8b..7c46543 100644
 --- a/include/asm-powerpc/mmu_context.h
 +++ b/include/asm-powerpc/mmu_context.h
 @@ -167,6 +167,8 @@ static inline void destroy_context(struct mm_struct *mm)
@@ -4926,7 +4926,7 @@ index 9102b8b..93bb1dd 100644
  static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  			     struct task_struct *tsk)
  {
-@@ -185,11 +187,56 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+@@ -185,18 +187,57 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  	if (prev == next)
  		return;
  
@@ -4978,12 +4978,19 @@ index 9102b8b..93bb1dd 100644
 +	local_irq_restore_hw(flags);
  }
  
+-#define deactivate_mm(tsk,mm)	do { } while (0)
 +#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
-+
- #define deactivate_mm(tsk,mm)	do { } while (0)
  
- /*
-@@ -239,6 +286,45 @@ extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
+-/*
+- * After we have set current->mm to a new value, this activates
+- * the context for the new mm so we see the new mappings.
+- */
+-#define activate_mm(active_mm, mm)   switch_mm(active_mm, mm, current)
++#define deactivate_mm(tsk,mm)	do { } while (0)
+ 
+ extern void mmu_context_init(void);
+ 
+@@ -239,6 +280,45 @@ extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
   * switch_mm is the entry point called from the architecture independent
   * code in kernel/sched.c
   */
@@ -5029,7 +5036,7 @@ index 9102b8b..93bb1dd 100644
  static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  			     struct task_struct *tsk)
  {
-@@ -260,6 +346,8 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+@@ -260,8 +340,12 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  		switch_stab(tsk, next);
  }
  
@@ -5037,7 +5044,18 @@ index 9102b8b..93bb1dd 100644
 +
  #define deactivate_mm(tsk,mm)	do { } while (0)
  
++#endif /* CONFIG_PPC64 */
++
  /*
+  * After we have set current->mm to a new value, this activates
+  * the context for the new mm so we see the new mappings.
+@@ -275,6 +359,5 @@ static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
+ 	local_irq_restore(flags);
+ }
+ 
+-#endif /* CONFIG_PPC64 */
+ #endif /* __KERNEL__ */
+ #endif /* __ASM_POWERPC_MMU_CONTEXT_H */
 diff --git a/include/asm-powerpc/mpic.h b/include/asm-powerpc/mpic.h
 index dccfa3f..5ac8575 100644
 --- a/include/asm-powerpc/mpic.h

@@ -1,3 +1,7 @@
+2008-11-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.3-01.
+
 2008-11-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc, include: Introduce scheduling classes.
