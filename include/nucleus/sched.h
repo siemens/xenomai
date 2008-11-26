@@ -34,13 +34,20 @@
 
 #include <nucleus/schedqueue.h>
 
+/* Sched status flags */
+#define XNKCOUT	 0x80000000	/* Sched callout context */
+#define XNHTICK  0x40000000	/* Host tick pending  */
+#define XNRPICK  0x20000000	/* Check RPI state */
+#define XNINTCK  0x10000000	/* In master tick handler context */
+#define XNINIRQ  0x01000000	/* In IRQ handling context */
+#define XNSWLOCK 0x02000000	/* In context switch */
+
 struct xnsched_rt {
 
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 	xnsched_queue_t relaxed;	/*!< Relaxed thread queue. */
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
-
 };
 
 /*! 
@@ -122,22 +129,17 @@ struct xnsched_class {
 #define xnsched_cpu(__sched__)	({ (void)__sched__; 0; })
 #endif /* CONFIG_SMP */
 
-#define xnsched_resched_mask()	(xnpod_current_sched()->resched)
+/* Test all resched flags from the given scheduler mask. */
+#define xnsched_resched_p(__sched__)			\
+  (!xnarch_cpus_empty((__sched__)->resched))
 
-#define xnsched_resched_p()				\
-    (!xnarch_cpus_empty(xnsched_resched_mask()))
+/* Set self resched flag for the given scheduler. */
+#define xnsched_set_self_resched(__sched__)		\
+  xnarch_cpu_set(xnsched_cpu(__sched__), (__sched__)->resched)
 
-#define xnsched_tst_resched(__sched__)			\
-    xnarch_cpu_isset(xnsched_cpu(__sched__), xnsched_resched_mask())
-
+/* Set specific resched flag into the local scheduler mask. */
 #define xnsched_set_resched(__sched__)			\
-    xnarch_cpu_set(xnsched_cpu(__sched__), xnsched_resched_mask())
-
-#define xnsched_clr_resched(__sched__)			\
-    xnarch_cpu_clear(xnsched_cpu(__sched__), xnsched_resched_mask())
-
-#define xnsched_clr_mask(__sched__)			\
-    xnarch_cpus_clear((__sched__)->resched)
+    xnarch_cpu_set(xnsched_cpu(__sched__), xnpod_current_sched()->resched)
 
 void xnsched_zombie_hooks(struct xnthread *thread);
 

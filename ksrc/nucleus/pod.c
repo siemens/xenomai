@@ -156,13 +156,13 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 		xnshadow_rpi_check();
 	}
 #endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
-	xnsched_set_resched(sched);
+	xnsched_set_self_resched(sched);
 	xnpod_schedule();
 }
 
 void xnpod_schedule_deferred(void)
 {
-	if (xnpod_active_p() && xnsched_resched_p())
+	if (xnpod_active_p() && xnsched_resched_p(xnpod_current_sched()))
 		xnpod_schedule();
 }
 
@@ -1045,12 +1045,13 @@ void xnpod_delete_thread(xnthread_t *thread)
 		xnsched_set_resched(sched);
 		xnpod_schedule();
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	} else if (!xnthread_test_state(thread, XNSWLOCK)) {
+	} else if (!testbits(sched->status, XNSWLOCK) &&
+		   !xnthread_test_state(thread, XNMIGRATE)) {
 		/*
 		 * When killing a thread in the course of a context
-		 * switch with nklock unlocked on a distant CPU, do
-		 * nothing, this case will be caught in
-		 * xnsched_finish_unlocked_switch.
+		 * switch or in flight to another CPU with nklock
+		 * unlocked on a distant CPU, do nothing, this case
+		 * will be caught in xnsched_finish_unlocked_switch.
 		 */
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 	} else {
@@ -1062,10 +1063,10 @@ void xnpod_delete_thread(xnthread_t *thread)
 				   thread, xnthread_name(thread), "DELETE");
 			xnpod_fire_callouts(&nkpod->tdeleteq, thread);
 		}
-
-		/* Note: the thread control block must remain available until
-		   the user hooks have been called. */
-
+		/*
+		 * Note: the thread control block must remain
+		 * available until the user hooks have been called.
+		 */
 		xnthread_cleanup_tcb(thread);
 
 		xnarch_finalize_no_switch(xnthread_archtcb(thread));
@@ -1221,7 +1222,6 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		xnsched_set_resched(sched);
 
 	/* Is the thread ready to run? */
-
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 		/* If attempting to suspend a runnable (shadow) thread which
@@ -1284,46 +1284,49 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 #endif /* __XENO_SIM__ */
 
 	if (thread == sched->curr)
-		/* If "thread" is runnning on another CPU, xnpod_schedule will
-		   just trigger the IPI. */
+		/*
+		 * If the thread is runnning on another CPU,
+		 * xnpod_schedule will just trigger the IPI.
+		 */
 		xnpod_schedule();
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* Ok, this one is an interesting corner case, which requires
-	   a bit of background first. Here, we handle the case of
-	   suspending a _relaxed_ shadow which is _not_ the current
-	   thread.  The net effect is that we are attempting to stop
-	   the shadow thread at the nucleus level, whilst this thread
-	   is actually running some code under the control of the
-	   Linux scheduler (i.e. it's relaxed).  To make this
-	   possible, we force the target Linux task to migrate back to
-	   the Xenomai domain by sending it a SIGSHADOW signal the
-	   skin interface libraries trap for this specific internal
-	   purpose, whose handler is expected to call back the
-	   nucleus's migration service. By forcing this migration, we
-	   make sure that the real-time nucleus controls, hence
-	   properly stops, the target thread according to the
-	   requested suspension condition. Otherwise, the shadow
-	   thread in secondary mode would just keep running into the
-	   Linux domain, thus breaking the most common assumptions
-	   regarding suspended threads. We only care for threads that
-	   are not current, and for XNSUSP and XNDELAY conditions,
-	   because:
-
-	   - skins are supposed to ask for primary mode switch when
-	   processing any syscall which may block the caller; IOW,
-	   __xn_exec_primary must be set in the mode flags for those. So
-	   there is no need to deal specifically with the relax+suspend
-	   issue when the about to be suspended thread is current, since
-	   it must not be relaxed anyway.
-
-	   - among all blocking bits (XNTHREAD_BLOCK_BITS), only
-	   XNSUSP and XNDELAY may be applied by the current thread to
-	   a non-current thread. XNPEND is always added by the caller
-	   to its own state, XNDORMANT is a pre-runtime state, and
-	   XNRELAX has special semantics escaping this issue.
-
-	   Also note that we don't signal threads which are in a
-	   dormant state, since they are suspended by definition.
+	/*
+	 * Ok, this one is an interesting corner case, which requires
+	 * a bit of background first. Here, we handle the case of
+	 * suspending a _relaxed_ shadow which is _not_ the current
+	 * thread.  The net effect is that we are attempting to stop
+	 * the shadow thread at the nucleus level, whilst this thread
+	 * is actually running some code under the control of the
+	 * Linux scheduler (i.e. it's relaxed).  To make this
+	 * possible, we force the target Linux task to migrate back to
+	 * the Xenomai domain by sending it a SIGSHADOW signal the
+	 * skin interface libraries trap for this specific internal
+	 * purpose, whose handler is expected to call back the
+	 * nucleus's migration service. By forcing this migration, we
+	 * make sure that the real-time nucleus controls, hence
+	 * properly stops, the target thread according to the
+	 * requested suspension condition. Otherwise, the shadow
+	 * thread in secondary mode would just keep running into the
+	 * Linux domain, thus breaking the most common assumptions
+	 * regarding suspended threads. We only care for threads that
+	 * are not current, and for XNSUSP and XNDELAY conditions,
+	 * because:
+	 *
+	 * - skins are supposed to ask for primary mode switch when
+	 * processing any syscall which may block the caller; IOW,
+	 * __xn_exec_primary must be set in the mode flags for
+	 * those. So there is no need to deal specifically with the
+	 * relax+suspend issue when the about to be suspended thread
+	 * is current, since it must not be relaxed anyway.
+	 * 
+	 * - among all blocking bits (XNTHREAD_BLOCK_BITS), only
+	 * XNSUSP and XNDELAY may be applied by the current thread to
+	 * a non-current thread. XNPEND is always added by the caller
+	 * to its own state, XNDORMANT is a pre-runtime state, and
+	 * XNRELAX has special semantics escaping this issue.
+	 *
+	 * Also note that we don't signal threads which are in a
+	 * dormant state, since they are suspended by definition.
 	 */
 
 	else if (xnthread_test_state(thread, XNSHADOW | XNRELAX | XNDORMANT) ==
@@ -1672,7 +1675,7 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 }
 
 /** 
- * \fn int xnpod_migrate_thread (int cpu)
+ * \fn int xnpod_migrate_thread(int cpu)
  *
  * \brief Migrate the current thread.
  *
@@ -1690,7 +1693,7 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 int xnpod_migrate_thread(int cpu)
 {
 	xnthread_t *thread;
-	int err;
+	int ret;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -1704,11 +1707,11 @@ int xnpod_migrate_thread(int cpu)
 	thread = xnpod_current_thread();
 
 	if (!xnarch_cpu_isset(cpu, thread->affinity)) {
-		err = -EPERM;
+		ret = -EPERM;
 		goto unlock_and_exit;
 	}
 
-	err = 0;
+	ret = 0;
 
 	if (cpu == xnarch_current_cpu())
 		goto unlock_and_exit;
@@ -1741,10 +1744,16 @@ int xnpod_migrate_thread(int cpu)
 	/* Migrate the thread periodic timer. */
 	xntimer_set_sched(&thread->ptimer, thread->sched);
 
-#ifndef CONFIG_XENO_HW_UNLOCKED_SWITCH
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	/*
+	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
+	 * will put the thread on the remote runqueue.
+	 */
+	xnthread_set_state(thread, XNMIGRATE);
+#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 	/* Move thread to the remote runnable queue. */
 	xnsched_putback(thread);
-#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
+#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 	xnpod_schedule();
 
@@ -1758,7 +1767,7 @@ int xnpod_migrate_thread(int cpu)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 /*! 
@@ -2004,8 +2013,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 {
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	sched->last = prev;
-	xnthread_set_state(prev, XNSWLOCK);
-	xnthread_set_state(next, XNSWLOCK);
+	__setbits(sched->status, XNSWLOCK);
 	xnlock_clear_irqon(&nklock);
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
@@ -2080,66 +2088,43 @@ static inline void xnpod_switch_to(xnsched_t *sched,
  * @note The switch hooks are called on behalf of the resuming thread.
  */
 
-void xnpod_schedule(void)
+static inline int __xnpod_test_resched(struct xnsched *sched)
 {
-	xnthread_t *prev, *next, *curr;
-	int zombie, switched = 0;
-	xnsched_t *sched;
-#if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
-	int need_resched;
-#endif /* CONFIG_SMP || XENO_DEBUG(NUCLEUS) */
+	int cpu = xnsched_cpu(sched), resched;
+	
+	resched = xnarch_cpu_isset(cpu, sched->resched);
+	xnarch_cpu_clear(cpu, sched->resched);
+#ifdef CONFIG_SMP
+	/* Send resched IPI to remote CPU(s). */
+	if (unlikely(xnsched_resched_p(sched))) {
+		xnarch_send_ipi(sched->resched);
+		xnarch_cpus_clear(sched->resched);
+	}
+#endif
+	return resched;
+}
+
+void __xnpod_schedule(struct xnsched *sched)
+{
+	struct xnthread *prev, *next, *curr = sched->curr;
+	int zombie, switched = 0, need_resched, shadow;
 	spl_t s;
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	int shadow;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnarch_escalate())
-		return;
-
-	/*
-	 * No immediate rescheduling is possible if an ISR or callout
-	 * context is active.
-	 */
-	if (xnpod_callout_p() || xnpod_interrupt_p())
 		return;
 
 	trace_mark(xn_nucleus_sched, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	sched = xnpod_current_sched();
-	curr = sched->curr;
-
 	xnarch_trace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
 
-#if defined(CONFIG_SMP) || XENO_DEBUG(NUCLEUS)
-	need_resched = xnsched_tst_resched(sched);
-#endif
-#ifdef CONFIG_SMP
-	if (need_resched)
-		xnsched_clr_resched(sched);
-
-	if (xnsched_resched_p()) {
-		xnarch_send_ipi(xnsched_resched_mask());
-		xnsched_clr_mask(sched);
-	}
-#if !XENO_DEBUG(NUCLEUS)
-	if (!need_resched)
-		goto signal_unlock_and_exit;
-
-	xnsched_set_resched(sched);
-#else /* XENO_DEBUG(NUCLEUS) */
-	if (need_resched)
-		xnsched_set_resched(sched);
-#endif /* XENO_DEBUG(NUCLEUS) */
-#endif /* CONFIG_SMP */
-
-	xnsched_clr_resched(sched);
+	need_resched = __xnpod_test_resched(sched);
 	zombie = xnthread_test_state(curr, XNZOMBIE);
-	next = xnsched_pick_next(sched);
 
+	next = xnsched_pick_next(sched);
 	if (next == curr && !xnthread_test_state(curr, XNRESTART))
 		/* Note: the root thread never restarts. */
 		goto signal_unlock_and_exit;
@@ -2156,6 +2141,8 @@ void xnpod_schedule(void)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	shadow = xnthread_test_state(prev, XNSHADOW);
+#else
+	(void)shadow;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnthread_test_state(next, XNROOT)) {
@@ -2932,7 +2919,6 @@ EXPORT_SYMBOL(xnpod_remove_hook);
 EXPORT_SYMBOL(xnpod_renice_thread);
 EXPORT_SYMBOL(xnpod_restart_thread);
 EXPORT_SYMBOL(xnpod_resume_thread);
-EXPORT_SYMBOL(xnpod_schedule);
 EXPORT_SYMBOL(xnpod_set_thread_mode);
 EXPORT_SYMBOL(xnpod_set_thread_periodic);
 EXPORT_SYMBOL(xnpod_shutdown);
@@ -2944,6 +2930,7 @@ EXPORT_SYMBOL(xnpod_trap_fault);
 EXPORT_SYMBOL(xnpod_unblock_thread);
 EXPORT_SYMBOL(xnpod_wait_thread_period);
 EXPORT_SYMBOL(xnpod_welcome_thread);
+EXPORT_SYMBOL(__xnpod_schedule);
 
 EXPORT_SYMBOL(nkpod_struct);
 

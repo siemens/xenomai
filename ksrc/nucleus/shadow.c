@@ -903,7 +903,7 @@ static void lostage_handler(void *cookie)
 
 			wake_up_process(p);
 
-			if (xnsched_resched_p())
+			if (xnsched_resched_p(xnpod_current_sched()))
 				xnpod_schedule();
 
 			break;
@@ -2488,7 +2488,7 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	if (thread->cprio != priority &&
 		xnthread_get_denormalized_prio(thread, priority) == priority) {
 		xnpod_renice_thread_inner(thread, priority, 0);
-		if (xnsched_resched_p()) {
+		if (xnsched_resched_p(xnpod_current_sched())) {
 			if (p == current &&
 			    xnthread_sched(thread) == xnpod_current_sched())
 				rpi_update(thread);

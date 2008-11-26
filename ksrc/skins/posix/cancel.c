@@ -156,7 +156,7 @@ void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
 	cleanup_handler_t *handler;
 	spl_t s;
 
-	if (!routine || !cur || xnpod_interrupt_p() || xnpod_callout_p())
+	if (!routine || !cur || xnpod_asynch_p())
 		return;
 
 	/* The allocation is inside the critical section in order to make the
@@ -217,7 +217,7 @@ void pthread_cleanup_pop(int execute)
 	void *arg;
 	spl_t s;
 
-	if (!cur || xnpod_interrupt_p() || xnpod_callout_p())
+	if (!cur || xnpod_asynch_p())
 		return;
 
 	xnlock_get_irqsave(&nklock, s);

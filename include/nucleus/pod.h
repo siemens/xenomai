@@ -37,12 +37,6 @@
 #define XNFATAL  0x00000001	/* Fatal error in progress */
 #define XNPEXEC  0x00000002	/* Pod is active (a skin is attached) */
 
-/* Sched status flags */
-#define XNKCOUT  0x80000000	/* Sched callout context */
-#define XNHTICK  0x40000000	/* Host tick pending  */
-#define XNRPICK  0x20000000	/* Check RPI state */
-#define XNINTCK  0x10000000	/* In master tick handler context */
-
 /* These flags are available to the real-time interfaces */
 #define XNPOD_SPARE0  0x01000000
 #define XNPOD_SPARE1  0x02000000
@@ -118,6 +112,8 @@ void xnpod_switch_fpu(xnsched_t *sched);
 
 void __xnpod_finalize_zombie(xnsched_t *sched);
 
+void __xnpod_schedule(struct xnsched *sched);
+
 static inline void xnpod_finalize_zombie(xnsched_t *sched)
 {
 	if (sched->zombie)
@@ -133,19 +129,19 @@ static inline void xnpod_finalize_zombie(xnsched_t *sched)
     xnpod_sched_slot(xnarch_current_cpu())
 
 #define xnpod_active_p() \
-    (!!testbits(nkpod->status, XNPEXEC))
+    testbits(nkpod->status, XNPEXEC)
 
 #define xnpod_fatal_p() \
-    (!!testbits(nkpod->status, XNFATAL))
+    testbits(nkpod->status, XNFATAL)
 
 #define xnpod_interrupt_p() \
-    (xnpod_current_sched()->inesting > 0)
+    testbits(xnpod_current_sched()->status, XNINIRQ)
 
 #define xnpod_callout_p() \
-    (!!testbits(xnpod_current_sched()->status,XNKCOUT))
+    testbits(xnpod_current_sched()->status, XNKCOUT)
 
 #define xnpod_asynch_p() \
-    (xnpod_interrupt_p() || xnpod_callout_p())
+    testbits(xnpod_current_sched()->status, XNKCOUT|XNINIRQ)
 
 #define xnpod_current_thread() \
     (xnpod_current_sched()->curr)
@@ -154,7 +150,7 @@ static inline void xnpod_finalize_zombie(xnsched_t *sched)
     (&xnpod_current_sched()->rootcb)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-#define xnpod_current_p(thread)					\
+#define xnpod_current_p(thread)						\
     ({ int __shadow_p = xnthread_test_state(thread, XNSHADOW);		\
        int __curr_p = __shadow_p ? xnshadow_thread(current) == thread	\
 	   : thread == xnpod_current_thread();				\
@@ -165,19 +161,19 @@ static inline void xnpod_finalize_zombie(xnsched_t *sched)
 #endif
 
 #define xnpod_locked_p() \
-    (!!xnthread_test_state(xnpod_current_thread(),XNLOCK))
+    xnthread_test_state(xnpod_current_thread(), XNLOCK)
 
 #define xnpod_unblockable_p() \
-    (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(),XNROOT))
+    (xnpod_asynch_p() || xnthread_test_state(xnpod_current_thread(), XNROOT))
 
 #define xnpod_root_p() \
-    (!!xnthread_test_state(xnpod_current_thread(),XNROOT))
+    xnthread_test_state(xnpod_current_thread(),XNROOT)
 
 #define xnpod_shadow_p() \
-    (!!xnthread_test_state(xnpod_current_thread(),XNSHADOW))
+    xnthread_test_state(xnpod_current_thread(),XNSHADOW)
 
 #define xnpod_userspace_p() \
-    (!!xnthread_test_state(xnpod_current_thread(),XNROOT|XNSHADOW))
+    xnthread_test_state(xnpod_current_thread(),XNROOT|XNSHADOW)
 
 #define xnpod_primary_p() \
     (!(xnpod_asynch_p() || xnpod_root_p()))
@@ -235,9 +231,41 @@ void xnpod_renice_thread(xnthread_t *thread,
 
 int xnpod_migrate_thread(int cpu);
 
-void xnpod_schedule(void);
-
 void xnpod_dispatch_signals(void);
+
+static inline void xnpod_schedule(void)
+{
+	struct xnsched *sched;
+	/*
+	 * NOTE: Since __xnpod_schedule() won't run if an escalation
+	 * to primary domain is needed, we won't use critical
+	 * scheduler information before we actually run in primary
+	 * mode; therefore we can first test the scheduler status then
+	 * escalate.  Running in the primary domain means that no
+	 * Linux-triggered CPU migration may occur from that point
+	 * either. Finally, since migration is always a self-directed
+	 * operation for Xenomai threads, we can safely read the
+	 * scheduler state bits without holding the nklock.
+	 *
+	 * Said differently, if we race here because of a CPU
+	 * migration, it must have been Linux-triggered because we run
+	 * in secondary mode; in which case we will escalate to the
+	 * primary domain, then unwind the current call frame without
+	 * running the rescheduling procedure in
+	 * __xnpod_schedule(). Therefore, the scheduler pointer will
+	 * be either valid, or unused.
+	 */
+	sched = xnpod_current_sched();
+	/*
+	 * No immediate rescheduling is possible if an ISR or callout
+	 * context is active, or if we are caught in the middle of a
+	 * unlocked context switch.
+	 */
+	if (testbits(sched->status, XNKCOUT|XNINIRQ|XNSWLOCK))
+		return;
+
+	__xnpod_schedule(sched);
+}
 
 static inline void xnpod_lock_sched(void)
 {

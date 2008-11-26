@@ -69,8 +69,7 @@ static inline void xnintr_sync_stat_references(xnintr_t *intr)
 	int cpu;
 
 	for_each_online_cpu(cpu) {
-		xnsched_t *sched = xnpod_sched_slot(cpu);
-
+		struct xnsched *sched = xnpod_sched_slot(cpu);
 		/* Synchronize on all dangling references to go away. */
 		while (sched->current_account == &intr->stat[cpu].account)
 			cpu_relax();
@@ -88,7 +87,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie);
 
 void xnintr_clock_handler(void)
 {
-	xnsched_t *sched = xnpod_current_sched();
+	struct xnsched *sched = xnpod_current_sched();
 	xnstat_exectime_t *prev;
 	xnticks_t start;
 
@@ -101,6 +100,7 @@ void xnintr_clock_handler(void)
 	trace_mark(xn_nucleus_tbase_tick, "base %s", nktbase.name);
 
 	++sched->inesting;
+	__setbits(sched->status, XNINIRQ);
 
 	xnlock_get(&nklock);
 	xntimer_tick_aperiodic();
@@ -110,18 +110,17 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_lazy_switch(sched,
 		&nkclock.stat[xnsched_cpu(sched)].account, start);
 
-#ifndef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	if (--sched->inesting == 0 && xnsched_resched_p())
-#else /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
-	if (--sched->inesting == 0 && xnsched_resched_p()
-	    && !xnthread_test_state(xnpod_current_thread(), XNSWLOCK))
-#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
-		xnpod_schedule();
+	if (--sched->inesting == 0) {
+		__clrbits(sched->status, XNINIRQ);
+		if (xnsched_resched_p(sched))
+			xnpod_schedule();
+	}
 
-	/* Since the host tick is low priority, we can wait for returning
-	   from the rescheduling procedure before actually calling the
-	   propagation service, if it is pending. */
-
+	/*
+	 * Since the host tick is low priority, we can wait for
+	 * returning from the rescheduling procedure before actually
+	 * calling the propagation service, if it is pending.
+	 */
 	if (testbits(sched->status, XNHTICK)) {
 		__clrbits(sched->status, XNHTICK);
 		xnarch_relay_tick();
@@ -162,25 +161,28 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
  */
 static void xnintr_shirq_handler(unsigned irq, void *cookie)
 {
-	xnsched_t *sched = xnpod_current_sched();
+	struct xnsched *sched = xnpod_current_sched();
+	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnstat_exectime_t *prev;
 	xnticks_t start;
-	xnintr_irq_t *shirq = &xnirqs[irq];
 	xnintr_t *intr;
-	int s = 0;
+	int s = 0, ret;
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
 	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
+	__setbits(sched->status, XNINIRQ);
 
 	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
 
 	while (intr) {
-		int ret;
-
+		/*
+		 * NOTE: We assume that no CPU migration will occur
+		 * while running the interrupt service routine.
+		 */
 		ret = intr->isr(intr);
 		s |= ret;
 
@@ -212,13 +214,11 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
-#ifndef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	if (--sched->inesting == 0 && xnsched_resched_p())
-#else /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
-	if (--sched->inesting == 0 && xnsched_resched_p()
-	    && !xnthread_test_state(xnpod_current_thread(), XNSWLOCK))
-#endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
-		xnpod_schedule();
+	if (--sched->inesting == 0) {
+		__clrbits(sched->status, XNINIRQ);
+		if (xnsched_resched_p(sched))
+			xnpod_schedule();
+	}
 
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
@@ -231,29 +231,30 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 {
 	const int MAX_EDGEIRQ_COUNTER = 128;
-
-	xnsched_t *sched = xnpod_current_sched();
+	struct xnsched *sched = xnpod_current_sched();
+	xnintr_irq_t *shirq = &xnirqs[irq];
+	int s = 0, counter = 0, ret, code;
+	struct xnintr *intr, *end = NULL;
 	xnstat_exectime_t *prev;
 	xnticks_t start;
-	xnintr_irq_t *shirq = &xnirqs[irq];
-	xnintr_t *intr, *end = NULL;
-	int s = 0, counter = 0;
 
 	prev  = xnstat_exectime_get_current(sched);
 	start = xnstat_exectime_now();
 	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
+	__setbits(sched->status, XNINIRQ);
 
 	xnlock_get(&shirq->lock);
 	intr = shirq->handlers;
 
 	while (intr != end) {
-		int ret, code;
-
 		xnstat_exectime_switch(sched,
 			&intr->stat[xnsched_cpu(sched)].account);
-
+		/*
+		 * NOTE: We assume that no CPU migration will occur
+		 * while running the interrupt service routine.
+		 */
 		ret = intr->isr(intr);
 		code = ret & ~XN_ISR_BITMASK;
 		s |= ret;
@@ -297,9 +298,11 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
-	if (--sched->inesting == 0 && xnsched_resched_p())
-		xnpod_schedule();
-
+	if (--sched->inesting == 0) {
+		__clrbits(sched->status, XNINIRQ);
+		if (xnsched_resched_p(sched))
+			xnpod_schedule();
+	}
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
 }
@@ -445,9 +448,9 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
  */
 static void xnintr_irq_handler(unsigned irq, void *cookie)
 {
-	xnsched_t *sched = xnpod_current_sched();
-	xnintr_t *intr;
+	struct xnsched *sched = xnpod_current_sched();
 	xnstat_exectime_t *prev;
+	struct xnintr *intr;
 	xnticks_t start;
 	int s;
 
@@ -456,12 +459,18 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	trace_mark(xn_nucleus_irq_enter, "irq %u", irq);
 
 	++sched->inesting;
+	__setbits(sched->status, XNINIRQ);
 
 	xnlock_get(&xnirqs[irq].lock);
 
 #ifdef CONFIG_SMP
-	/* In SMP case, we have to reload the cookie under the per-IRQ lock
-	   to avoid racing with xnintr_detach. */
+	/*
+	 * In SMP case, we have to reload the cookie under the per-IRQ
+	 * lock to avoid racing with xnintr_detach.  However, we
+	 * assume that no CPU migration will occur while running the
+	 * interrupt service routine, so the scheduler pointer will
+	 * remain valid throughout this function.
+	 */
 	intr = xnarch_get_irq_cookie(irq);
 	if (unlikely(!intr)) {
 		s = 0;
@@ -472,7 +481,6 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	intr = cookie;
 #endif
 	s = intr->isr(intr);
-
 	if (unlikely(s == XN_ISR_NONE)) {
 		if (++intr->unhandled == XNINTR_MAX_UNHANDLED) {
 			xnlogerr("%s: IRQ%d not handled. Disabling IRQ "
@@ -497,8 +505,11 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
-	if (--sched->inesting == 0 && xnsched_resched_p())
-		xnpod_schedule();
+	if (--sched->inesting == 0) {
+		__clrbits(sched->status, XNINIRQ);
+		if (xnsched_resched_p(sched))
+			xnpod_schedule();
+	}
 
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);

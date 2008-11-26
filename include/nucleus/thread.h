@@ -40,6 +40,7 @@
 #define XNSTARTED 0x00000080 /**< Thread has been started */
 #define XNMAPPED  0x00000100 /**< Mapped to a regular Linux task (shadow only) */
 #define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
+#define XNMIGRATE 0x00000400 /**< Thread is currently migrating to another CPU. */
 
 #define XNBOOST   0x00000800 /**< Undergoes a PIP boost */
 #define XNDEBUG   0x00001000 /**< Hit a debugger breakpoint (shadow only) */
@@ -47,10 +48,11 @@
 #define XNRRB     0x00004000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00008000 /**< ASR are disabled */
 
-/* Some skins may depend on the following fields to live in the high
-   16-bit word, in order to be combined with the emulated RTOS flags
-   which use the low one, so don't change them carelessly. */
-
+/*
+ * Some skins may depend on the following fields to live in the high
+ * 16-bit word, in order to be combined with the emulated RTOS flags
+ * which use the low one, so don't change them carelessly.
+ */
 #define XNSHIELD  0x00010000 /**< IRQ shield is enabled (shadow only) */
 #define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
 #define XNRPIOFF  0x00040000 /**< Stop priority coupling (shadow only) */
@@ -58,7 +60,6 @@
 #define XNFPU     0x00100000 /**< Thread uses FPU */
 #define XNSHADOW  0x00200000 /**< Shadow thread */
 #define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
-#define XNSWLOCK  0x00800000 /**< Thread is currently switching context. */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -71,7 +72,6 @@
   'R' -> Runnable.
   'U' -> Unstarted or dormant.
   'X' -> Relaxed shadow.
-  'H' -> Held thread.
   'b' -> Priority boost undergoing.
   'T' -> Ptraced and stopped.
   'l' -> Locks scheduler.
@@ -84,12 +84,12 @@
 #define XNTHREAD_STATE_LABELS  {	\
 	'S', 'W', 'D', 'R', 'U',	\
 	'.', '.', '.', '.', 'X',	\
-	'H', 'b', 'T', 'l', 'r',	\
+	'.', 'b', 'T', 'l', 'r',	\
 	'.', 's', 't', 'o', '.',	\
 	'f', '.', '.',			\
 }
 
-#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX)
+#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW|XNRPIOFF)
 
 /* These state flags are available to the real-time interfaces */

@@ -2,6 +2,9 @@
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.3-01.
 
+	* ksrc/nucleus, ksrc/skins/posix/cancel.c, include/nucleus:
+	Optimize resched flag handling.
+
 2008-11-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc, include: Introduce scheduling classes.

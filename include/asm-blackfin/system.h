@@ -105,11 +105,11 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 	kfree(chunk);
 }
 
-#define __xnarch_hisyscall_entry()	\
-  do	{				\
-	  if (xnsched_resched_p())	\
-		  xnpod_schedule();	\
-  } while(0)
+#define __xnarch_hisyscall_entry()				\
+	do	{						\
+		if (xnsched_resched_p(xnpod_current_sched()))	\
+			xnpod_schedule();			\
+	} while(0)
 
 #define xnarch_hisyscall_entry	__xnarch_hisyscall_entry
 

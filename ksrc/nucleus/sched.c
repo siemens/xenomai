@@ -108,8 +108,7 @@ void xnsched_init(struct xnsched *sched)
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
 	sched->zombie = NULL;
-
-	xnsched_clr_mask(sched);
+	xnarch_cpus_clear(sched->resched);
 
 	xnthread_init(&sched->rootcb,
 		      &nktbase,
@@ -161,7 +160,7 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 		 * scheduler lock.
 		 */
 		if (xnthread_test_state(curr, XNLOCK)) {
-			xnsched_set_resched(sched);
+			xnsched_set_self_resched(sched);
 			return curr;
 		}
 		/*
@@ -291,6 +290,7 @@ void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 {
+	struct xnthread *last;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -300,14 +300,16 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	sched = xnpod_current_sched();
 #endif /* CONFIG_SMP */
 
-	xnthread_clear_state(sched->last, XNSWLOCK);
-	xnthread_clear_state(sched->curr, XNSWLOCK);
+	last = sched->last;
+	__clrbits(sched->status, XNSWLOCK);
 
 	/* Detect a thread which called xnpod_migrate_thread */
-	if (sched->last->sched != sched)
-		xnsched_putback(sched->last);
+	if (last->sched != sched) {
+		xnsched_putback(last);
+		xnthread_clear_state(last, XNMIGRATE);
+	}
 
-	if (xnthread_test_state(sched->last, XNZOMBIE)) {
+	if (xnthread_test_state(last, XNZOMBIE)) {
 		/*
 		 * There are two cases where sched->last has the zombie
 		 * bit:
@@ -317,8 +319,8 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 		 * during the context switch, in which case we must run the
 		 * hooks, and we do it now.
 		 */
-		if (sched->zombie != sched->last)
-			xnsched_zombie_hooks(sched->last);
+		if (sched->zombie != last)
+			xnsched_zombie_hooks(last);
 	}
 
 	return sched;
@@ -326,7 +328,7 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 
 void xnsched_resched_after_unlocked_switch(void)
 {
-	if (xnsched_resched_p())
+	if (xnsched_resched_p(xnpod_current_sched()))
 		xnpod_schedule();
 }
 
