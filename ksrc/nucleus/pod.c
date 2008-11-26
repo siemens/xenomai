@@ -324,9 +324,10 @@ int xnpod_init(void)
 
 void xnpod_shutdown(int xtype)
 {
-	xnholder_t *holder, *nholder;
-	xnthread_t *thread;
-	unsigned cpu;
+	struct xnholder *h, *nh;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int cpu;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -336,25 +337,24 @@ void xnpod_shutdown(int xtype)
 		return;	/* No-op */
 	}
 
-	/* FIXME: We must release the lock before disabling the time
-	   source, so we accept a potential race due to another skin
-	   being pushed while we remove the current pod, which is
-	   clearly not a common situation anyway. */
-
+	/*
+	 * FIXME: We must release the lock before disabling the time
+	 * source, so we accept a potential race due to another skin
+	 * being pushed while we remove the current pod, which is
+	 * clearly not a common situation anyway.
+	 */
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnpod_disable_timesource();
-
 	xnarch_notify_shutdown();
 
 	xnlock_get_irqsave(&nklock, s);
 
-	nholder = getheadq(&nkpod->threadq);
+	nh = getheadq(&nkpod->threadq);
+	while ((h = nh) != NULL) {
+		nh = nextq(&nkpod->threadq, h);
 
-	while ((holder = nholder) != NULL) {
-		nholder = nextq(&nkpod->threadq, holder);
-
-		thread = link2thread(holder, glink);
+		thread = link2thread(h, glink);
 
 		if (!xnthread_test_state(thread, XNROOT))
 			xnpod_delete_thread(thread);
@@ -365,14 +365,8 @@ void xnpod_shutdown(int xtype)
 	__clrbits(nkpod->status, XNPEXEC);
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
-		xnsched_t *sched = xnpod_sched_slot(cpu);
-		xntimer_destroy(&sched->htimer);
-		xntimer_destroy(&sched->rootcb.ptimer);
-		xntimer_destroy(&sched->rootcb.rtimer);
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-		xntimer_destroy(&sched->wdtimer);
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
-		xntimerq_destroy(&sched->timerqueue);
+		sched = xnpod_sched_slot(cpu);
+		xnsched_destroy(sched);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -380,11 +374,8 @@ void xnpod_shutdown(int xtype)
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_cleanup();
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-
 	xnarch_notify_halt();
-
 	xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
-
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
 #endif

@@ -174,6 +174,8 @@ static inline void xnsched_reset_watchdog(struct xnsched *sched)
 
 void xnsched_init(struct xnsched *sched);
 
+void xnsched_destroy(struct xnsched *sched);
+
 struct xnthread *xnsched_pick_next(struct xnsched *sched);
 
 void xnsched_putback(struct xnthread *thread);
