@@ -5,6 +5,8 @@
 	* ksrc/nucleus, ksrc/skins/posix/cancel.c, include/nucleus:
 	Optimize resched flag handling.
 
+	* ksrc/nucleus/pod.c: Sanitize HW_FPU conditionals.
+
 2008-11-25  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc, include: Introduce scheduling classes.

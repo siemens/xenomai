@@ -65,6 +65,129 @@ char *nkmsgbuf = NULL;
 
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
+#ifdef CONFIG_XENO_HW_FPU
+
+static inline void __xnpod_init_fpu(struct xnsched *sched,
+				    struct xnthread *thread)
+{
+	/*
+	 * When switching to a newly created thread, it is necessary
+	 * to switch FPU contexts, as a replacement for xnpod_schedule
+	 * epilogue (a newly created was not switched out by calling
+	 * xnpod_schedule, since it is new).
+	 */
+	if (xnthread_test_state(thread, XNFPU)) {
+		if (sched->fpuholder != NULL &&
+		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
+		    xnarch_fpu_ptr(xnthread_archtcb(thread)))
+			xnarch_save_fpu(xnthread_archtcb(sched->fpuholder));
+
+		xnarch_init_fpu(xnthread_archtcb(thread));
+
+		sched->fpuholder = thread;
+	}
+}
+
+static inline void __xnpod_giveup_fpu(struct xnsched *sched,
+				      struct xnthread *thread)
+{
+	if (thread == sched->fpuholder)
+		sched->fpuholder = NULL;
+}
+
+static inline void __xnpod_release_fpu(struct xnthread *thread)
+{
+	if (xnthread_test_state(thread, XNFPU)) {
+		/*
+		 * Force the FPU save, and nullify the
+		 * sched->fpuholder pointer, to avoid leaving
+		 * fpuholder pointing on the backup area of the
+		 * migrated thread.
+		 */
+		xnarch_save_fpu(xnthread_archtcb(thread));
+		thread->sched->fpuholder = NULL;
+	}
+}
+
+static inline void __xnpod_switch_fpu(struct xnsched *sched)
+{
+	xnthread_t *curr = sched->curr;
+
+	if (!xnthread_test_state(curr, XNFPU))
+		return;
+
+	if (sched->fpuholder != curr) {
+		if (sched->fpuholder == NULL ||
+		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
+		    xnarch_fpu_ptr(xnthread_archtcb(curr))) {
+			if (sched->fpuholder)
+				xnarch_save_fpu(xnthread_archtcb
+						(sched->fpuholder));
+
+			xnarch_restore_fpu(xnthread_archtcb(curr));
+		} else
+			xnarch_enable_fpu(xnthread_archtcb(curr));
+
+		sched->fpuholder = curr;
+	} else
+		xnarch_enable_fpu(xnthread_archtcb(curr));
+}
+
+/* xnpod_switch_fpu() -- Switches to the current thread's FPU context,
+   saving the previous one as needed. */
+
+void xnpod_switch_fpu(xnsched_t *sched)
+{
+	__xnpod_switch_fpu(sched);
+}
+
+static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
+{
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	xnarchtcb_t *tcb = xnthread_archtcb(thread);
+
+	if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
+		/*
+		 * The faulting task is a shadow using the FPU for the
+		 * first time, initialize its FPU. Of course if
+		 * Xenomai is not compiled with support for FPU, such
+		 * use of the FPU is an error.
+		 */
+		xnarch_init_fpu(tcb);
+		return 1;
+	}
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+	return 0;
+}
+
+#else /* !CONFIG_XENO_HW_FPU */
+
+static inline void __xnpod_init_fpu(struct xnsched *sched,
+				    struct xnthread *thread)
+{
+}
+
+static inline void __xnpod_giveup_fpu(struct xnsched *sched,
+				      struct xnthread *thread)
+{
+}
+
+static inline void __xnpod_release_fpu(struct xnthread *thread)
+{
+}
+
+static inline void __xnpod_switch_fpu(struct xnsched *sched)
+{
+}
+
+static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
+{
+	return 0;
+}
+
+#endif /* !CONFIG_XENO_HW_FPU */
+
 const char *xnpod_fatal_helper(const char *format, ...)
 {
 	const unsigned nr_cpus = xnarch_num_online_cpus();
@@ -1028,10 +1151,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	xnsynch_release_all_ownerships(thread);
 
-#ifdef CONFIG_XENO_HW_FPU
-	if (thread == sched->fpuholder)
-		sched->fpuholder = NULL;
-#endif /* CONFIG_XENO_HW_FPU */
+	__xnpod_giveup_fpu(sched, thread);
 
 	xnthread_set_state(thread, XNZOMBIE);
 
@@ -1720,18 +1840,7 @@ int xnpod_migrate_thread(int cpu)
 		   "thread %p thread_name %s cpu %d",
 		   thread, xnthread_name(thread), cpu);
 
-#ifdef CONFIG_XENO_HW_FPU
-	if (xnthread_test_state(thread, XNFPU)) {
-		/*
-		 * Force the FPU save, and nullify the
-		 * sched->fpuholder pointer, to avoid leaving
-		 * fpuholder pointing on the backup area of the
-		 * migrated thread.
-		 */
-		xnarch_save_fpu(xnthread_archtcb(thread));
-		thread->sched->fpuholder = NULL;
-	}
-#endif /* CONFIG_XENO_HW_FPU */
+	__xnpod_release_fpu(thread);
 
 	if (xnthread_test_state(thread, XNREADY)) {
 		xnsched_dequeue(thread);
@@ -1945,21 +2054,7 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 		/* Actually grab the scheduler lock. */
 		xnpod_lock_sched();
 
-#ifdef CONFIG_XENO_HW_FPU
-	/* When switching to a newly created thread, it is necessary to switch FPU
-	   contexts, as a replacement for xnpod_schedule epilogue (a newly created
-	   was not switched out by calling xnpod_schedule, since it is new). */
-	if (xnthread_test_state(thread, XNFPU)) {
-		if (sched->fpuholder != NULL &&
-		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
-		    xnarch_fpu_ptr(xnthread_archtcb(thread)))
-			xnarch_save_fpu(xnthread_archtcb(sched->fpuholder));
-
-		xnarch_init_fpu(xnthread_archtcb(thread));
-
-		sched->fpuholder = thread;
-	}
-#endif /* CONFIG_XENO_HW_FPU */
+	__xnpod_init_fpu(sched, thread);
 
 	xnthread_clear_state(thread, XNRESTART);
 
@@ -1971,42 +2066,6 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 
 	xnsched_resched_after_unlocked_switch();
 }
-
-#ifdef CONFIG_XENO_HW_FPU
-
-static inline void __xnpod_switch_fpu(xnsched_t *sched)
-{
-	xnthread_t *curr = sched->curr;
-
-	if (!xnthread_test_state(curr, XNFPU))
-		return;
-
-	if (sched->fpuholder != curr) {
-		if (sched->fpuholder == NULL ||
-		    xnarch_fpu_ptr(xnthread_archtcb(sched->fpuholder)) !=
-		    xnarch_fpu_ptr(xnthread_archtcb(curr))) {
-			if (sched->fpuholder)
-				xnarch_save_fpu(xnthread_archtcb
-						(sched->fpuholder));
-
-			xnarch_restore_fpu(xnthread_archtcb(curr));
-		} else
-			xnarch_enable_fpu(xnthread_archtcb(curr));
-
-		sched->fpuholder = curr;
-	} else
-		xnarch_enable_fpu(xnthread_archtcb(curr));
-}
-
-/* xnpod_switch_fpu() -- Switches to the current thread's FPU context,
-   saving the previous one as needed. */
-
-void xnpod_switch_fpu(xnsched_t *sched)
-{
-	__xnpod_switch_fpu(sched);
-}
-
-#endif /* CONFIG_XENO_HW_FPU */
 
 static inline void xnpod_switch_to(xnsched_t *sched,
 				   xnthread_t *prev, xnthread_t *next)
@@ -2193,9 +2252,7 @@ void __xnpod_schedule(struct xnsched *sched)
 
 	xnpod_finalize_zombie(sched);
 
-#ifdef CONFIG_XENO_HW_FPU
 	__xnpod_switch_fpu(sched);
-#endif /* CONFIG_XENO_HW_FPU */
 
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
@@ -2445,19 +2502,8 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 #ifdef __KERNEL__
 	if (xnarch_fault_fpu_p(fltinfo)) {
-#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_HW_FPU)
-		xnarchtcb_t *tcb = xnthread_archtcb(thread);
-
-		if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
-			/* The faulting task is a shadow using the FPU for the
-			   first time, initialize its FPU. Of course if Xenomai is
-			   not compiled with support for FPU, such use of the FPU
-			   is an error. */
-			xnarch_init_fpu(tcb);
+		if (__xnpod_fault_init_fpu(thread))
 			return 1;
-		}
-#endif /* OPT_PERVASIVE && HW_FPU */
-
 		print_symbol("invalid use of FPU in Xenomai context at %s\n",
 			     xnarch_fault_pc(fltinfo));
 	}
