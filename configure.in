@@ -844,6 +844,7 @@ AC_CONFIG_FILES([ \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
 	src/utils/comedi/Makefile \
+	src/utils/ps/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
        	include/asm-generic/bits/Makefile \

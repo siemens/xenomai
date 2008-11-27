@@ -982,9 +982,11 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 
 	last_switch = xnpod_sched_slot(cpu_no)->last_account_switch;
 
-	iterator->exectime = intr->stat[cpu_no].account.total;
+	iterator->exectime_period = intr->stat[cpu_no].account.total;
 	iterator->account_period =
 		last_switch - intr->stat[cpu_no].account.start;
+	intr->stat[cpu_no].sum.total += iterator->exectime_period;
+	iterator->exectime_total = intr->stat[cpu_no].sum.total;
 
 	intr->stat[cpu_no].account.total = 0;
 	intr->stat[cpu_no].account.start = last_switch;

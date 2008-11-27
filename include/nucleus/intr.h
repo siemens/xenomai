@@ -65,6 +65,7 @@ typedef struct xnintr {
     struct {
 	xnstat_counter_t hits;	  /* !< Number of handled receipts since attachment. */
 	xnstat_exectime_t account; /* !< Runtime accounting entity */
+	xnstat_exectime_t sum; /* !< Accumulated accounting entity */
     } stat[XNARCH_NR_CPUS];
 
 } xnintr_t;
@@ -75,9 +76,11 @@ typedef struct xnintr_iterator {
 
     unsigned long hits;	/* !< Current hit counter. */
 
-    xnticks_t exectime;	/* !< Used CPU time in current accounting period. */
+    xnticks_t exectime_period;	/* !< Used CPU time in current accounting period. */
 
     xnticks_t account_period; /* !< Length of accounting period. */
+
+    xnticks_t exectime_total;	/* !< Overall CPU time consumed. */
 
     int list_rev;	/* !< System-wide xnintr list revision (internal use). */
 

@@ -1,3 +1,8 @@
+2008-11-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/module.c, src/utils/ps: Introduce
+	/proc/xenomai/acct and basic real-time ps command.
+
 2008-11-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.3-01.

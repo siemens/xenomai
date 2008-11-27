@@ -278,8 +278,9 @@ struct stat_seq_iterator {
 		unsigned long ssw;
 		unsigned long csw;
 		unsigned long pf;
-		xnticks_t exectime;
+		xnticks_t exectime_period;
 		xnticks_t account_period;
+		xnticks_t exectime_total;
 	} stat_info[1];
 };
 
@@ -312,51 +313,15 @@ static void stat_seq_stop(struct seq_file *seq, void *v)
 {
 }
 
-static int stat_seq_show(struct seq_file *seq, void *v)
-{
-	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-10s %-10s %-4s  %-8s  %5s"
-			   "  %s\n",
-			   "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
-			   "NAME");
-	else {
-		struct stat_seq_info *p = v;
-		int usage = 0;
-
-		if (p->account_period) {
-			while (p->account_period > 0xFFFFFFFF) {
-				p->exectime >>= 16;
-				p->account_period >>= 16;
-			}
-			usage =
-			    xnarch_ulldiv(p->exectime * 1000LL +
-					  (p->account_period >> 1),
-					  p->account_period, NULL);
-		}
-		seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
-			   "  %s\n",
-			   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
-			   usage / 10, usage % 10, p->name);
-	}
-
-	return 0;
-}
-
-static struct seq_operations stat_op = {
-	.start = &stat_seq_start,
-	.next = &stat_seq_next,
-	.stop = &stat_seq_stop,
-	.show = &stat_seq_show
-};
-
-static int stat_seq_open(struct inode *inode, struct file *file)
+static int __stat_seq_open(struct inode *inode,
+			   struct file *file, struct seq_operations *ops)
 {
 	struct stat_seq_iterator *iter = NULL;
+	struct stat_seq_info *stat_info;
+	int err, count, thrq_rev, irq;
+	xnintr_iterator_t intr_iter;
 	struct seq_file *seq;
 	xnholder_t *holder;
-	struct stat_seq_info *stat_info;
-	xnintr_iterator_t intr_iter;
-	int err, count, thrq_rev, irq;
 	int intr_count;
 	spl_t s;
 
@@ -384,7 +349,7 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	if (!iter)
 		return -ENOMEM;
 
-	err = seq_open(file, &stat_op);
+	err = seq_open(file, ops);
 
 	if (err) {
 		kfree(iter);
@@ -421,13 +386,14 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 
 		period = sched->last_account_switch - thread->stat.lastperiod.start;
 		if (!period && thread == sched->curr) {
-			stat_info->exectime = 1;
+			stat_info->exectime_period = 1;
 			stat_info->account_period = 1;
 		} else {
-			stat_info->exectime = thread->stat.account.total -
+			stat_info->exectime_period = thread->stat.account.total -
 				thread->stat.lastperiod.total;
 			stat_info->account_period = period;
 		}
+		stat_info->exectime_total = thread->stat.account.total;
 		thread->stat.lastperiod.total = thread->stat.account.total;
 		thread->stat.lastperiod.start = sched->last_account_switch;
 
@@ -452,8 +418,9 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 
 			stat_info->cpu = intr_iter.cpu;
 			stat_info->csw = intr_iter.hits;
-			stat_info->exectime = intr_iter.exectime;
+			stat_info->exectime_period = intr_iter.exectime_period;
 			stat_info->account_period = intr_iter.account_period;
+			stat_info->exectime_total = intr_iter.exectime_total;
 			stat_info->pid = 0;
 			stat_info->state =  0;
 			stat_info->ssw = 0;
@@ -468,9 +435,90 @@ static int stat_seq_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+static int stat_seq_show(struct seq_file *seq, void *v)
+{
+	if (v == SEQ_START_TOKEN)
+		seq_printf(seq, "%-3s  %-6s %-10s %-10s %-4s  %-8s  %5s"
+			   "  %s\n",
+			   "CPU", "PID", "MSW", "CSW", "PF", "STAT", "%CPU",
+			   "NAME");
+	else {
+		struct stat_seq_info *p = v;
+		int usage = 0;
+
+		if (p->account_period) {
+			while (p->account_period > 0xFFFFFFFF) {
+				p->exectime_period >>= 16;
+				p->account_period >>= 16;
+			}
+			usage =
+			    xnarch_ulldiv(p->exectime_period * 1000LL +
+					  (p->account_period >> 1),
+					  p->account_period, NULL);
+		}
+		seq_printf(seq, "%3u  %-6d %-10lu %-10lu %-4lu  %.8lx  %3u.%u"
+			   "  %s\n",
+			   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
+			   usage / 10, usage % 10, p->name);
+	}
+
+	return 0;
+}
+
+static struct seq_operations stat_op = {
+	.start = &stat_seq_start,
+	.next = &stat_seq_next,
+	.stop = &stat_seq_stop,
+	.show = &stat_seq_show
+};
+
+static int stat_seq_open(struct inode *inode, struct file *file)
+{
+	return __stat_seq_open(inode, file, &stat_op);
+}
+
 static struct file_operations stat_seq_operations = {
 	.owner = THIS_MODULE,
 	.open = stat_seq_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release_private,
+};
+
+static int acct_seq_show(struct seq_file *seq, void *v)
+{
+	struct stat_seq_info *p;
+
+	if (v == SEQ_START_TOKEN)
+		return 0;
+	/*
+	 * Dump per-thread data.
+	 */
+	p = v;
+
+	seq_printf(seq, "%u %d %lu %lu %lu %.8lx %Lu %Lu %Lu %s\n",
+		   p->cpu, p->pid, p->ssw, p->csw, p->pf, p->state,
+		   xnarch_tsc_to_ns(p->account_period), xnarch_tsc_to_ns(p->exectime_period),
+		   xnarch_tsc_to_ns(p->exectime_total), p->name);
+
+	return 0;
+}
+
+static struct seq_operations acct_op = {
+	.start = &stat_seq_start,
+	.next = &stat_seq_next,
+	.stop = &stat_seq_stop,
+	.show = &acct_seq_show
+};
+
+static int acct_seq_open(struct inode *inode, struct file *file)
+{
+	return __stat_seq_open(inode, file, &acct_op);
+}
+
+static struct file_operations acct_seq_operations = {
+	.owner = THIS_MODULE,
+	.open = acct_seq_open,
 	.read = seq_read,
 	.llseek = seq_lseek,
 	.release = seq_release_private,
@@ -1007,6 +1055,7 @@ void xnpod_init_proc(void)
 
 #ifdef CONFIG_XENO_OPT_STATS
 	add_proc_fops("stat", &stat_seq_operations, 0, rthal_proc_root);
+	add_proc_fops("acct", &acct_seq_operations, 0, rthal_proc_root);
 
 	tmstat_proc_root =
 		create_proc_entry("timerstat", S_IFDIR, rthal_proc_root);
@@ -1069,6 +1118,7 @@ void xnpod_delete_proc(void)
 	/* All timebases must have been deregistered now. */
 	XENO_ASSERT(NUCLEUS, !getheadq(&nktimebaseq), ;);
 	remove_proc_entry("timerstat", rthal_proc_root);
+	remove_proc_entry("acct", rthal_proc_root);
 	remove_proc_entry("stat", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_STATS */
 #if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
