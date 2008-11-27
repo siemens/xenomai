@@ -152,8 +152,8 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (!delay) {
-		/* Kick the timer interrupt immediately. */
-		rthal_trigger_irq(RTHAL_APIC_TIMER_IPI);
+		/* Pend the timer interrupt. */
+		rthal_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
 	} else {
 		/* Note: reading before writing just to work around the Pentium
 		   APIC double write bug. apic_read() expands to nil
@@ -163,7 +163,7 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	}
 #else /* !CONFIG_X86_LOCAL_APIC */
 	if (!delay)
-		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
 		outb(delay & 0xff, PIT_CH0);
 		outb(delay >> 8, PIT_CH0);

@@ -65,7 +65,7 @@ static inline unsigned long long rthal_rdtsc(void)
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
 	if (delay < 2)
-		rthal_trigger_irq(RTHAL_TIMER_IRQ);
+		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
 		bfin_write_TCOUNT(delay - 1);
 		__builtin_bfin_csync();

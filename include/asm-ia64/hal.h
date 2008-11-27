@@ -76,7 +76,7 @@ static inline void rthal_timer_program_shot (unsigned long delay)
     rthal_local_irq_save_hw(flags);
 #endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
     if (!delay)
-	rthal_trigger_irq(RTHAL_TIMER_IRQ);
+	rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
     else
 	ia64_set_itm(ia64_get_itc() + delay);
 #ifndef CONFIG_XENO_OPT_PIPELINE_HEAD

@@ -1,5 +1,10 @@
 2008-11-27  Philippe Gerum  <rpm@xenomai.org>
 
+	* include/asm-*/hal.h: Use new ipipe_schedule_irq_head() service
+	when available from the I-pipe layer.
+
+2008-11-27  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/nucleus/module.c, src/utils/ps: Introduce
 	/proc/xenomai/acct and basic real-time ps command.
 

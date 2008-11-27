@@ -141,7 +141,12 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_release_superlock(x)	ipipe_critical_exit(x)
 #define rthal_propagate_irq(irq)	ipipe_propagate_irq(irq)
 #define rthal_set_irq_affinity(irq,aff)	ipipe_set_irq_affinity(irq,aff)
-#define rthal_schedule_irq(irq)	ipipe_schedule_irq(irq)
+#define rthal_schedule_irq(irq)		ipipe_schedule_irq(irq)
+#ifdef __IPIPE_FEATURE_SCHEDULE_IRQ_HEAD
+#define rthal_schedule_irq_head(irq)	ipipe_schedule_irq_head(irq)
+#else
+#define rthal_schedule_irq_head(irq)	ipipe_schedule_irq(irq)
+#endif
 #define rthal_virtualize_irq(dom,irq,isr,cookie,ackfn,mode) \
     ipipe_virtualize_irq(dom,irq,isr,cookie,ackfn,mode)
 #define rthal_alloc_virq()		ipipe_alloc_virq()
