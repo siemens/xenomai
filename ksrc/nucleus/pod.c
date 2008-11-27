@@ -859,10 +859,9 @@ void xnpod_restart_thread(xnthread_t *thread)
 	if (!xnthread_test_state(thread, XNSTARTED))
 		return;		/* Not started yet or not restartable. */
 
-#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
-	if (xnthread_test_state(thread, XNROOT | XNSHADOW))
-		xnpod_fatal("attempt to restart a user-space thread");
-#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT|XNSHADOW),
+		    xnpod_fatal("attempt to restart a user-space thread");
+		);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1063,10 +1062,9 @@ void xnpod_delete_thread(xnthread_t *thread)
 	xnsched_t *sched;
 	spl_t s;
 
-#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
-	if (xnthread_test_state(thread, XNROOT))
-		xnpod_fatal("attempt to delete the root thread");
-#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnpod_fatal("attempt to delete the root thread");
+		);
 
 #ifdef __XENO_SIM__
 	if (nkpod->schedhook)
@@ -1319,14 +1317,15 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	xnsched_t *sched;
 	spl_t s;
 
-#if XENO_DEBUG(NUCLEUS) || defined(__XENO_SIM__)
-	if (xnthread_test_state(thread, XNROOT))
-		xnpod_fatal("attempt to suspend root thread %s", thread->name);
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnpod_fatal("attempt to suspend root thread %s",
+				thread->name);
+		);
 
-	if (thread->wchan && wchan)
-		xnpod_fatal("thread %s attempts a conjunctive wait",
-			    thread->name);
-#endif /* XENO_DEBUG(NUCLEUS) || __XENO_SIM__ */
+	XENO_ASSERT(NUCLEUS, wchan == NULL || thread->wchan == NULL,
+		    xnpod_fatal("thread %s attempts a conjunctive wait",
+				thread->name);
+		);
 
 	xnlock_get_irqsave(&nklock, s);
 
