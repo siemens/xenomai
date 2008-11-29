@@ -64,6 +64,7 @@ extern "C" {
 #define xnarch_trace_special(id, v)		rthal_trace_special(id, v)
 #define xnarch_trace_special_u64(id, v)		rthal_trace_special_u64(id, v)
 #define xnarch_trace_pid(pid, prio)		rthal_trace_pid(pid, prio)
+#define xnarch_trace_tick(delay_tsc)		rthal_trace_tick(delay_tsc)
 #define xnarch_trace_panic_freeze()		rthal_trace_panic_freeze()
 #define xnarch_trace_panic_dump()		rthal_trace_panic_dump()
 
