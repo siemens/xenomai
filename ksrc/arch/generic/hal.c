@@ -272,7 +272,7 @@ int rthal_irq_release(unsigned irq)
  */
 
 /**
- * @fn int rthal_irq_host_pend (unsigned irq)
+ * @fn void rthal_irq_host_pend (unsigned irq)
  *
  * @brief Propagate an IRQ event to Linux.
  *
@@ -282,12 +282,8 @@ int rthal_irq_release(unsigned irq)
  * interrupt handler (see rthal_irq_request()), in case such interrupt
  * must also be handled by the Linux kernel.
  *
- * @param irq The interrupt source to detach the shared handler from.
- * This value is architecture-dependent.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
+ * @param irq The interrupt number to propagate.  This value is
+ * architecture-dependent.
  *
  * Environments:
  *
@@ -295,11 +291,6 @@ int rthal_irq_release(unsigned irq)
  *
  * - Xenomai domain context.
  */
-
-int rthal_irq_host_pend(unsigned irq)
-{
-    return rthal_propagate_irq(irq);
-}
 
 /**
  * @fn int rthal_irq_affinity (unsigned irq,cpumask_t cpumask,cpumask_t *oldmask)
@@ -1066,7 +1057,6 @@ EXPORT_SYMBOL(rthal_irq_disable);
 EXPORT_SYMBOL(rthal_irq_end);
 EXPORT_SYMBOL(rthal_irq_host_request);
 EXPORT_SYMBOL(rthal_irq_host_release);
-EXPORT_SYMBOL(rthal_irq_host_pend);
 EXPORT_SYMBOL(rthal_irq_affinity);
 EXPORT_SYMBOL(rthal_trap_catch);
 EXPORT_SYMBOL(rthal_timer_request);

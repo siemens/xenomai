@@ -139,14 +139,16 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_suspend_domain()		ipipe_suspend_domain()
 #define rthal_grab_superlock(syncfn)	ipipe_critical_enter(syncfn)
 #define rthal_release_superlock(x)	ipipe_critical_exit(x)
-#define rthal_propagate_irq(irq)	ipipe_propagate_irq(irq)
 #define rthal_set_irq_affinity(irq,aff)	ipipe_set_irq_affinity(irq,aff)
 #define rthal_schedule_irq(irq)		ipipe_schedule_irq(irq)
-#ifdef __IPIPE_FEATURE_SCHEDULE_IRQ_HEAD
-#define rthal_schedule_irq_head(irq)	ipipe_schedule_irq_head(irq)
-#else
+#ifdef __IPIPE_FEATURE_FASTPEND_IRQ
+/* We use the faster form assuming that hw IRQs are off at call site. */
+#define rthal_schedule_irq_head(irq)	__ipipe_schedule_irq_head(irq)
+#define rthal_propagate_irq(irq)	__ipipe_propagate_irq(irq)
+#else /* !__IPIPE_FEATURE_FASTPEND_IRQ */
 #define rthal_schedule_irq_head(irq)	ipipe_schedule_irq(irq)
-#endif
+#define rthal_propagate_irq(irq)	ipipe_propagate_irq(irq)
+#endif /* !__IPIPE_FEATURE_FASTPEND_IRQ */
 #define rthal_virtualize_irq(dom,irq,isr,cookie,ackfn,mode) \
     ipipe_virtualize_irq(dom,irq,isr,cookie,ackfn,mode)
 #define rthal_alloc_virq()		ipipe_alloc_virq()
@@ -425,7 +427,10 @@ int rthal_irq_host_request(unsigned irq,
 int rthal_irq_host_release(unsigned irq,
 			   void *dev_id);
 
-int rthal_irq_host_pend(unsigned irq);
+static inline void rthal_irq_host_pend(unsigned irq)
+{
+	rthal_propagate_irq(irq);
+}
 
 int rthal_apc_alloc(const char *name,
 		    void (*handler)(void *cookie),

@@ -1,3 +1,8 @@
+2008-11-29  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/hal.h, ksrc/arch/generic/hal.c: Use new
+	I-pipe's fast ops for IRQ propagation.
+
 2008-11-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-*/hal.h: Use new ipipe_schedule_irq_head() service
