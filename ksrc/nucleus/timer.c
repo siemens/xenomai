@@ -285,21 +285,28 @@ void xntimer_tick_aperiodic(void)
 	xntimerq_t *timerq = &sched->timerqueue;
 	xntimerh_t *holder;
 	xntimer_t *timer;
+	xnsticks_t delta;
 	xnticks_t now;
 
-	/* Optimisation: any local timer reprogramming triggered by invoked
-	   timer handlers can wait until we leave the tick handler. Use this
-	   status flag as hint to xntimer_start_aperiodic. */
+	/*
+	 * Optimisation: any local timer reprogramming triggered by
+	 * invoked timer handlers can wait until we leave the tick
+	 * handler. Use this status flag as hint to
+	 * xntimer_start_aperiodic.
+	 */
 	__setbits(sched->status, XNINTCK);
 
 	now = xnarch_get_cpu_tsc();
 	while ((holder = xntimerq_head(timerq)) != NULL) {
 		timer = aplink2timer(holder);
-
-		if ((xnsticks_t) (xntimerh_date(&timer->aplink) - now)
-		    > (xnsticks_t)nklatency)
-			/* No need to continue in aperiodic mode since timeout
-			   dates are ordered by increasing values. */
+		/*
+		 * If the delay to the next shot is greater than the
+		 * intrinsic latency value, we may stop scanning the
+		 * timer queue there, since timeout dates are ordered
+		 * by increasing values.
+		 */
+		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
+		if (delta > (xnsticks_t)nklatency)
 			break;
 
 		trace_mark(xn_nucleus_timer_expire, "timer %p", timer);
@@ -312,11 +319,12 @@ void xntimer_tick_aperiodic(void)
 				   || testbits(timer->status, XNTIMER_NOBLCK))) {
 				timer->handler(timer);
 				now = xnarch_get_cpu_tsc();
-				/* If the elapsed timer has no reload value, or has
-				   been re-enqueued likely as a result of a call to
-				   xntimer_start() from the timeout handler, or has
-				   been killed by the handler. In all cases, don't
-				   attempt to re-enqueue it for the next shot. */
+				/*
+				 * If the elapsed timer has no reload
+				 * value, or was re-enqueued or killed
+				 * by the timeout handler: don't not
+				 * re-enqueue it for the next shot.
+				 */
 				if (!xntimer_reload_p(timer))
 					continue;
 				__setbits(timer->status, XNTIMER_FIRED);
