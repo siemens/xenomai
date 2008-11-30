@@ -298,7 +298,8 @@ int rthal_irq_release(unsigned irq)
 
 int rthal_irq_host_pend(unsigned irq)
 {
-    return rthal_propagate_irq(irq);
+    rthal_propagate_irq(irq);
+    return 0;
 }
 
 /**

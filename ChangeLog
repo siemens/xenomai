@@ -1,3 +1,9 @@
+2008-11-30  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/generic/hal.c (rthal_irq_host_pend): Consider
+	ipipe_propagate_irq() as a void call for compatibility with recent
+	I-pipe releases.
+
 2008-11-24  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus/pipe.c (xnpipe_release): Remove released pipe from
