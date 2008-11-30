@@ -1291,7 +1291,10 @@ void xnshadow_exit(void)
  * Xenomai resource remains attached to it.
  *
  * - -EINVAL is returned if the thread control block does not bear the
- * XNSHADOW bit, or if the thread has already been mapped.
+ * XNSHADOW bit.
+ *
+ * - -EBUSY is returned if either the current Linux task or the
+ * associated shadow thread is already involved in a shadow mapping.
  *
  * Environments:
  *
@@ -1312,8 +1315,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 	if (!xnthread_test_state(thread, XNSHADOW))
 		return -EINVAL;
 
-	if (xnthread_test_state(thread, XNMAPPED))
-		return -EINVAL;
+	if (xnshadow_thread(current) || xnthread_test_state(thread, XNMAPPED))
+		return -EBUSY;
 
 #ifdef CONFIG_MMU
 	if (!(current->mm->def_flags & VM_LOCKED))
