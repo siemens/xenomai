@@ -597,7 +597,7 @@ int rthal_apc_schedule(int apc)
     rthal_local_irq_save(flags);
 
     if (!__test_and_set_bit(apc, &rthal_apc_pending[rthal_processor_id()]))
-	    rthal_schedule_irq(rthal_apc_virq);
+	    rthal_schedule_irq_root(rthal_apc_virq);
 
     rthal_local_irq_restore(flags);
 

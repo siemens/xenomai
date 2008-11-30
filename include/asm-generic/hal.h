@@ -140,13 +140,14 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_grab_superlock(syncfn)	ipipe_critical_enter(syncfn)
 #define rthal_release_superlock(x)	ipipe_critical_exit(x)
 #define rthal_set_irq_affinity(irq,aff)	ipipe_set_irq_affinity(irq,aff)
-#define rthal_schedule_irq(irq)		ipipe_schedule_irq(irq)
 #ifdef __IPIPE_FEATURE_FASTPEND_IRQ
 /* We use the faster form assuming that hw IRQs are off at call site. */
 #define rthal_schedule_irq_head(irq)	__ipipe_schedule_irq_head(irq)
+#define rthal_schedule_irq_root(irq)	__ipipe_schedule_irq_root(irq)
 #define rthal_propagate_irq(irq)	__ipipe_propagate_irq(irq)
 #else /* !__IPIPE_FEATURE_FASTPEND_IRQ */
 #define rthal_schedule_irq_head(irq)	ipipe_schedule_irq(irq)
+#define rthal_schedule_irq_root(irq)	ipipe_schedule_irq(irq)
 #define rthal_propagate_irq(irq)	ipipe_propagate_irq(irq)
 #endif /* !__IPIPE_FEATURE_FASTPEND_IRQ */
 #define rthal_virtualize_irq(dom,irq,isr,cookie,ackfn,mode) \
