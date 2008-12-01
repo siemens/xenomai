@@ -1,3 +1,7 @@
+2008-12-01  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/calibration.h: Decrease PA-Semi value.
+
 2008-11-29  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/hal.h, ksrc/arch/generic/hal.c: Use new
