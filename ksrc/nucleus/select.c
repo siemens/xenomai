@@ -395,15 +395,16 @@ void xnselector_destroy(struct xnselector *selector)
 	while ((holder = getq(&selector->bindings))) {
 		struct xnselect_binding *binding;
 		struct xnselect *fd;
+		spl_t dummy;
 
 		binding = link2binding(holder, slink);
 		fd = binding->fd;
 		removeq(&fd->bindings, &binding->link);
-		xnlock_put_irqrestore(&nklock, s);
+		xnlock_clear_irqon(&nklock);
 
 		xnfree(binding);
 
-		xnlock_get_irqsave(&nklock, s);
+		xnlock_get_irqsave(&nklock, dummy);
 	}
 	xnlock_put_irqrestore(&nklock, s);
 
