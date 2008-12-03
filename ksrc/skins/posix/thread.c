@@ -66,6 +66,9 @@ static void thread_trampoline(void *cookie)
 static void thread_delete_hook(xnthread_t *xnthread)
 {
 	pthread_t thread = thread2pthread(xnthread);
+#ifdef CONFIG_XENO_OPT_POSIX_SELECT
+	struct selector *selector = NULL;
+#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 	spl_t s;
 
 	if (!thread)
@@ -81,6 +84,7 @@ static void thread_delete_hook(xnthread_t *xnthread)
 #ifdef CONFIG_XENO_OPT_POSIX_SELECT
 	if (thread->selector) {
 		xnselector_destroy(thread->selector);
+		selector = thread->selector;
 		thread->selector = NULL;
 	}
 #endif /* CONFIG_XENO_OPT_POSIX_SELECT */
@@ -105,6 +109,11 @@ static void thread_delete_hook(xnthread_t *xnthread)
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_POSIX_SELECT
+	if (selector)
+		xnfree(selector);
+#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 }
 
 /**
