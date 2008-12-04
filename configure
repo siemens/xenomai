@@ -21959,8 +21959,8 @@ fi
 
 
 
-# Extract the first word of "fop.sh", so it can be a program name with args.
-set dummy fop.sh; ac_word=$2
+# Extract the first word of "fop", so it can be a program name with args.
+set dummy fop; ac_word=$2
 { echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
 if test "${ac_cv_prog_DBX_FOP+set}" = set; then
@@ -21976,7 +21976,7 @@ do
   test -z "$as_dir" && as_dir=.
   for ac_exec_ext in '' $ac_executable_extensions; do
   if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_prog_DBX_FOP="fop.sh"
+    ac_cv_prog_DBX_FOP="fop"
     echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -21997,8 +21997,8 @@ fi
 
 
 if test x"$DBX_FOP" = x -a -n "$DBX_DOC"; then
-   { { echo "$as_me:$LINENO: error: fop.sh was not found. Check your PATH variable and try again." >&5
-echo "$as_me: error: fop.sh was not found. Check your PATH variable and try again." >&2;}
+   { { echo "$as_me:$LINENO: error: fop was not found. Check your PATH variable and try again." >&5
+echo "$as_me: error: fop was not found. Check your PATH variable and try again." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -22571,6 +22571,8 @@ case $XENO_TARGET_ARCH in
 	# Produce libraries in FDPIC format.
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
 	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
+	XENO_USER_APP_CFLAGS="$XENO_USER_APP_CFLAGS -mfdpic"
+	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS -mfdpic"
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"
