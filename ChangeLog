@@ -1,10 +1,14 @@
+2008-12-04  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.4-01.
+
 2008-12-01  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-powerpc/calibration.h: Decrease PA-Semi value.
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.26-powerpc-2.4-00.
 
-	* ksrc/arch/x86/patches: Update to 2.6.27-x86-2.2-00.
+	* ksrc/arch/x86/patches: Upgrade to 2.6.27-x86-2.2-00.
 	
 2008-11-29  Philippe Gerum  <rpm@xenomai.org>
 

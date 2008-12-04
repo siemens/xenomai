@@ -4550,7 +4550,7 @@ index ad8c9f7..0adf5fd 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..7937dde
+index 0000000..7c245e5
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,236 @@
@@ -4600,10 +4600,10 @@ index 0000000..7937dde
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.4-00"
++#define IPIPE_ARCH_STRING	"2.4-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -7154,10 +7154,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..a3dbe7f
+index 0000000..cec1fd5
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1729 @@
+@@ -0,0 +1,1712 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -7735,23 +7735,6 @@ index 0000000..a3dbe7f
 +
 +		if (test_bit(IPIPE_STALL_FLAG, &np->status))
 +			break;	/* Stalled stage -- do not go further. */
-+
-+		if (next_domain == &ipipe_root) {
-+			/*
-+			 * Allow pending hw interrupts directed at
-+			 * higher priority domains to be taken while
-+			 * syncing pending IRQs from the low priority
-+			 * Linux stage. This reduces interrupt latency
-+			 * by shortening the masked section that
-+			 * starts from __ipipe_handle_irq() in the
-+			 * arch-dep section, and ends when a root
-+			 * handler is fired, or at the end of this
-+			 * loop walk - whichever comes first.
-+			 */
-+			local_irq_enable_hw();
-+			cpu_relax();
-+			local_irq_disable_hw();
-+		}
 +
 +		if (np->irqpend_himask) {
 +			if (next_domain == this_domain)
