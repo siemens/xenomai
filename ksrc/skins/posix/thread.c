@@ -67,7 +67,7 @@ static void thread_delete_hook(xnthread_t *xnthread)
 {
 	pthread_t thread = thread2pthread(xnthread);
 #ifdef CONFIG_XENO_OPT_POSIX_SELECT
-	struct selector *selector = NULL;
+	struct xnselector *selector = NULL;
 #endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 	spl_t s;
 
