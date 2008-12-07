@@ -220,6 +220,8 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 			   thread, xnthread_name(thread), "DELETE");
 		xnpod_fire_callouts(&nkpod->tdeleteq, thread);
 	}
+
+	xnsched_forget(thread);
 }
 
 #ifdef CONFIG_XENO_OPT_PRIOCPL
@@ -262,24 +264,17 @@ struct xnthread *xnsched_peek_rpi(struct xnsched *sched)
 void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
 {
 	struct xnthread *root = &sched->rootcb;
-	struct xnsched_class *sched_class;
-	int prio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (target) {
-		prio = target->cprio;
-		sched_class = target->sched_class;
-	} else {
-		prio = XNSCHED_IDLE_PRIO;
-		sched_class = &xnsched_class_idle;
-	}
+	if (target == NULL)
+		target = root;
 
-	xnsched_set_policy(root, sched_class, prio);
+	xnsched_track_policy(root, target);
 
 	trace_mark(xn_nucleus_sched_reniceroot, MARK_NOARGS);
-	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(root)), prio);
+	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(root)), root->cprio);
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -348,18 +343,109 @@ void xnsched_putback(struct xnthread *thread)
 
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_set_policy(struct xnthread *thread,
-			struct xnsched_class *sched_class, int prio)
+			struct xnsched_class *sched_class,
+			const union xnsched_policy_param *p)
 {
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_dequeue(thread);
 
+	if (sched_class != thread->base_class)
+		xnsched_forget(thread);
+
 	thread->sched_class = sched_class;
-	thread->cprio = prio;
+	thread->base_class = sched_class;
+	xnsched_setparam(thread, p);
 
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
 
 	xnsched_set_resched(thread->sched);
+}
+
+/* Must be called with nklock locked, interrupts off. */
+void xnsched_track_policy(struct xnthread *thread,
+			  struct xnthread *target)
+{
+	union xnsched_policy_param param;
+
+	if (xnthread_test_state(thread, XNREADY))
+		xnsched_dequeue(thread);
+	/*
+	 * Self-targeting means to reset the scheduling policy and
+	 * parameters to the base ones. Otherwise, make thread inherit
+	 * the scheduling data from target.
+	 */
+	if (target == thread) {
+		thread->sched_class = thread->base_class;
+		xnsched_trackprio(thread, NULL);
+	} else {
+		xnsched_getparam(target, &param);
+		thread->sched_class = target->sched_class;
+		xnsched_trackprio(thread, &param);
+	}
+
+	if (xnthread_test_state(thread, XNREADY))
+		xnsched_enqueue(thread);
+
+	xnsched_set_resched(thread->sched);
+}
+
+/* Must be called with nklock locked, interrupts off. thread must be
+ * runnable. */
+void xnsched_migrate(struct xnthread *thread, struct xnsched *sched)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (xnthread_test_state(thread, XNREADY)) {
+		xnsched_dequeue(thread);
+		xnthread_clear_state(thread, XNREADY);
+	}
+
+	if (sched_class->sched_migrate)
+		sched_class->sched_migrate(thread, sched);
+	/*
+	 * WARNING: the scheduling class may have just changed as a
+	 * result of calling the per-class migration hook.
+	 */
+	xnsched_set_resched(thread->sched);
+	thread->sched = sched;
+
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	/*
+	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
+	 * will put the thread on the remote runqueue.
+	 */
+	xnthread_set_state(thread, XNMIGRATE);
+#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	/* Move thread to the remote runnable queue. */
+	xnsched_putback(thread);
+#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+}
+
+/* Must be called with nklock locked, interrupts off. thread may be
+ * blocked. */
+void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (xnthread_test_state(thread, XNREADY)) {
+		xnsched_dequeue(thread);
+		xnthread_clear_state(thread, XNREADY);
+	}
+
+	if (sched_class->sched_migrate)
+		sched_class->sched_migrate(thread, sched);
+	/*
+	 * WARNING: the scheduling class may have just changed as a
+	 * result of calling the per-class migration hook.
+	 */
+	xnsched_set_resched(thread->sched);
+	thread->sched = sched;
+
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
+		xnsched_requeue(thread);
+		xnthread_set_state(thread, XNREADY);
+	}
 }
 
 /*!
@@ -440,31 +526,31 @@ void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
 }
 
 void addmlq(struct xnsched_mlq *q,
-	    struct xnpholder *holder, int idx, int lifo)
+	    struct xnpholder *h, int idx, int lifo)
 {
 	struct xnqueue *queue = &q->queue[idx];
 	int hi = idx / BITS_PER_LONG;
 	int lo = idx % BITS_PER_LONG;
 
 	if (lifo)
-		prependq(queue, &holder->plink);
+		prependq(queue, &h->plink);
 	else
-		appendq(queue, &holder->plink);
+		appendq(queue, &h->plink);
 
-	holder->prio = idx;
+	h->prio = idx;
 	q->elems++;
 	__setbits(q->himap, 1UL << hi);
 	__setbits(q->lomap[hi], 1UL << lo);
 }
 
-void removemlq(struct xnsched_mlq *q, struct xnpholder *holder)
+void removemlq(struct xnsched_mlq *q, struct xnpholder *h)
 {
-	int idx = holder->prio;
+	int idx = h->prio;
 	struct xnqueue *queue = &q->queue[idx];
 
 	q->elems--;
 
-	removeq(queue, &holder->plink);
+	removeq(queue, &h->plink);
 
 	if (emptyq_p(queue)) {
 		int hi = idx / BITS_PER_LONG;
@@ -483,28 +569,28 @@ struct xnpholder *findmlqh(struct xnsched_mlq *q, int prio)
 
 struct xnpholder *getheadmlq(struct xnsched_mlq *q)
 {
-	struct xnpholder *holder;
 	struct xnqueue *queue;
+	struct xnpholder *h;
 
 	if (emptymlq_p(q))
 		return NULL;
 
 	queue = &q->queue[ffsmlq(q)];
-	holder = (struct xnpholder *)getheadq(queue);
+	h = (struct xnpholder *)getheadq(queue);
 
-	XENO_ASSERT(QUEUES, holder,
+	XENO_ASSERT(QUEUES, h,
 		    xnpod_fatal
 		    ("corrupted multi-level queue, qslot=%p at %s:%d", q,
 		     __FILE__, __LINE__);
 		);
 
-	return holder;
+	return h;
 }
 
 struct xnpholder *getmlq(struct xnsched_mlq *q)
 {
-	xnholder_t *holder;
 	struct xnqueue *queue;
+	struct xnholder *h;
 	int idx, hi, lo;
 
 	if (emptymlq_p(q))
@@ -512,9 +598,9 @@ struct xnpholder *getmlq(struct xnsched_mlq *q)
 
 	idx = ffsmlq(q);
 	queue = &q->queue[idx];
-	holder = getq(queue);
+	h = getq(queue);
 
-	XENO_ASSERT(QUEUES, holder,
+	XENO_ASSERT(QUEUES, h,
 		    xnpod_fatal
 		    ("corrupted multi-level queue, qslot=%p at %s:%d", q,
 		     __FILE__, __LINE__);
@@ -530,7 +616,43 @@ struct xnpholder *getmlq(struct xnsched_mlq *q)
 			__clrbits(q->himap, 1UL << hi);
 	}
 
-	return (struct xnpholder *)holder;
+	return (struct xnpholder *)h;
+}
+
+struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
+{
+	unsigned long hibits, lobits;
+	int idx = h->prio, hi, lo;
+	struct xnqueue *queue;
+	struct xnholder *nh;
+
+	hi = idx / BITS_PER_LONG;
+	lo = idx % BITS_PER_LONG;
+	lobits = q->lomap[hi] >> lo;
+	hibits = q->himap >> hi;
+
+	for (;;) {
+		queue = &q->queue[idx];
+		if (!emptyq_p(queue)) {
+			nh = nextpq(queue, h);
+			if (nh)
+				return (struct xnpholder *)nh;
+		}
+		for (;;) {
+			idx++;
+			lobits >>= 1;
+			if (lobits == 0) {
+				hibits >>= 1;
+				if (hibits == 0)
+					return NULL;
+				lobits = q->lomap[++hi];
+			}
+			if (lobits & 1)
+				break;
+		}
+	}
+
+	return NULL;
 }
 
 #endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */

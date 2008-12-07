@@ -83,7 +83,7 @@ static struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 	return __xnsched_rt_pick(sched);
 }
 
-static void xnsched_rt_tick(struct xnthread *curr)
+void xnsched_rt_tick(struct xnthread *curr)
 {
 	if (!xnthread_test_state(curr, XNRRB) || curr->rrcredit == XN_INFINITE)
 		return;
@@ -111,6 +111,24 @@ static void xnsched_rt_tick(struct xnthread *curr)
 	}
 }
 
+void xnsched_rt_setparam(struct xnthread *thread,
+			 const union xnsched_policy_param *p)
+{
+	__xnsched_rt_setparam(thread, p);
+}
+
+void xnsched_rt_getparam(struct xnthread *thread,
+			 union xnsched_policy_param *p)
+{
+	__xnsched_rt_getparam(thread, p);
+}
+
+void xnsched_rt_trackprio(struct xnthread *thread,
+			  const union xnsched_policy_param *p)
+{
+	__xnsched_rt_trackprio(thread, p);
+}
+
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 
 static struct xnthread *xnsched_rt_push_rpi(struct xnsched *sched,
@@ -133,19 +151,22 @@ static struct xnthread *xnsched_rt_peek_rpi(struct xnsched *sched)
 
 struct xnsched_class xnsched_class_rt = {
 
-	.sched_init	=	xnsched_rt_init,
-	.sched_enqueue	=	xnsched_rt_enqueue,
-	.sched_dequeue	=	xnsched_rt_dequeue,
-	.sched_requeue	=	xnsched_rt_requeue,
-	.sched_pick	=	xnsched_rt_pick,
-	.sched_tick	=	xnsched_rt_tick,
-	.sched_rotate	=	xnsched_rt_rotate,
+	.sched_init		=	xnsched_rt_init,
+	.sched_enqueue		=	xnsched_rt_enqueue,
+	.sched_dequeue		=	xnsched_rt_dequeue,
+	.sched_requeue		=	xnsched_rt_requeue,
+	.sched_pick		=	xnsched_rt_pick,
+	.sched_tick		=	xnsched_rt_tick,
+	.sched_rotate		=	xnsched_rt_rotate,
+	.sched_setparam		=	xnsched_rt_setparam,
+	.sched_trackprio	=	xnsched_rt_trackprio,
+	.sched_getparam		=	xnsched_rt_getparam,
 #ifdef CONFIG_XENO_OPT_PRIOCPL
-	.sched_push_rpi =	xnsched_rt_push_rpi,
-	.sched_pop_rpi =	xnsched_rt_pop_rpi,
-	.sched_peek_rpi =	xnsched_rt_peek_rpi,
+	.sched_push_rpi 	=	xnsched_rt_push_rpi,
+	.sched_pop_rpi		=	xnsched_rt_pop_rpi,
+	.sched_peek_rpi 	=	xnsched_rt_peek_rpi,
 #endif
-	.next		=	&xnsched_class_idle,
-	.weight		=	XNSCHED_CLASS_WEIGHT(1),
-	.name		=	"rt"
+	.next			=	&xnsched_class_idle,
+	.weight			=	XNSCHED_CLASS_WEIGHT(1),
+	.name			=	"rt"
 };

@@ -60,6 +60,9 @@ struct xnpholder *getheadmlq(struct xnsched_mlq *q);
 
 struct xnpholder *getmlq(struct xnsched_mlq *q);
 
+struct xnpholder *nextmlq(struct xnsched_mlq *q,
+			  struct xnpholder *h);
+
 static inline int countmlq(struct xnsched_mlq *q)
 {
 	return q->elems;
@@ -125,6 +128,7 @@ typedef struct xnsched_mlq xnsched_queue_t;
 #define sched_prependpq		prependmlq
 #define sched_removepq		removemlq
 #define sched_getheadpq		getheadmlq
+#define sched_nextpq		nextmlq
 #define sched_getpq		getmlq
 #define sched_findpqh		findmlqh
 
@@ -140,6 +144,7 @@ typedef xnpqueue_t xnsched_queue_t;
 #define sched_prependpq			prependpq
 #define sched_removepq			removepq
 #define sched_getheadpq			getheadpq
+#define sched_nextpq			nextpq
 #define sched_getpq			getpq
 #define sched_findpqh			findpqh
 

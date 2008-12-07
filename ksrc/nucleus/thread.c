@@ -102,6 +102,7 @@ int xnthread_init(xnthread_t *thread,
 	  &xnsched_class_idle : &xnsched_class_default;
 	thread->base_class = thread->init_class;
 	thread->sched_class = thread->init_class;
+	xnsched_init_tcb(thread);
 
 	thread->iprio = prio;
 	thread->bprio = prio;

@@ -1,3 +1,8 @@
+2008-12-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus, include/nucleus: Finalize groundwork for
+	scheduling classes.
+
 2008-12-04  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.4-01.

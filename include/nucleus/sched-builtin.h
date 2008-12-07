@@ -62,6 +62,19 @@ extern struct xnsched_class xnsched_class_idle;
 
 #define xnsched_class_default xnsched_class_rt
 
+struct xnsched_rt_param {
+	int prio;
+};
+
+struct xnsched_idle_param {
+	int prio;
+};
+
+union xnsched_policy_param {
+	struct xnsched_rt_param idle;
+	struct xnsched_rt_param rt;
+};
+
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
 {
 	sched_insertpql(&thread->sched->rt.runnable,
@@ -85,6 +98,33 @@ static inline struct xnthread *__xnsched_rt_pick(struct xnsched *sched)
 	return h ? link2thread(h, rlink) : NULL;
 }
 
+static inline void __xnsched_rt_setparam(struct xnthread *thread,
+					 const union xnsched_policy_param *p)
+{
+	thread->cprio = p->rt.prio;
+}
+
+static inline void __xnsched_rt_getparam(struct xnthread *thread,
+					 union xnsched_policy_param *p)
+{
+	p->rt.prio = thread->cprio;
+}
+
+static inline void __xnsched_rt_trackprio(struct xnthread *thread,
+					  const union xnsched_policy_param *p)
+{
+	if (p)
+		__xnsched_rt_setparam(thread, p);
+	else
+		thread->cprio = thread->bprio;
+}
+
+static inline void xnsched_rt_init_tcb(struct xnthread *thread)
+{
+}
+
+void xnsched_rt_tick(struct xnthread *curr);
+
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 
 static inline struct xnthread *__xnsched_rt_push_rpi(struct xnsched *sched,
@@ -107,6 +147,31 @@ static inline struct xnthread *__xnsched_rt_peek_rpi(struct xnsched *sched)
 }
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
+
+static inline void __xnsched_idle_setparam(struct xnthread *thread,
+					   const union xnsched_policy_param *p)
+{
+	thread->cprio = p->idle.prio;
+}
+
+static inline void __xnsched_idle_getparam(struct xnthread *thread,
+					   union xnsched_policy_param *p)
+{
+	p->idle.prio = thread->cprio;
+}
+
+static inline void __xnsched_idle_trackprio(struct xnthread *thread,
+					    const union xnsched_policy_param *p)
+{
+	if (p)
+		__xnsched_idle_setparam(thread, p);
+	else
+		thread->cprio = XNSCHED_IDLE_PRIO;
+}
+
+static inline void xnsched_idle_init_tcb(struct xnthread *thread)
+{
+}
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 

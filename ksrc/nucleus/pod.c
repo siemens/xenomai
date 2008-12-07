@@ -1181,6 +1181,8 @@ void xnpod_delete_thread(xnthread_t *thread)
 				   thread, xnthread_name(thread), "DELETE");
 			xnpod_fire_callouts(&nkpod->tdeleteq, thread);
 		}
+
+		xnsched_forget(thread);
 		/*
 		 * Note: the thread control block must remain
 		 * available until the user hooks have been called.
@@ -1811,8 +1813,9 @@ void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
 
 int xnpod_migrate_thread(int cpu)
 {
-	xnthread_t *thread;
-	int ret;
+	struct xnthread *thread;
+	struct xnsched *sched;
+	int ret = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -1830,10 +1833,10 @@ int xnpod_migrate_thread(int cpu)
 		goto unlock_and_exit;
 	}
 
-	ret = 0;
-
 	if (cpu == xnarch_current_cpu())
 		goto unlock_and_exit;
+
+	sched = xnpod_sched_slot(cpu);
 
 	trace_mark(xn_nucleus_thread_migrate,
 		   "thread %p thread_name %s cpu %d",
@@ -1841,27 +1844,11 @@ int xnpod_migrate_thread(int cpu)
 
 	__xnpod_release_fpu(thread);
 
-	if (xnthread_test_state(thread, XNREADY)) {
-		xnsched_dequeue(thread);
-		xnthread_clear_state(thread, XNREADY);
-	}
-
-	xnsched_set_resched(thread->sched);
-	thread->sched = xnpod_sched_slot(cpu);
+	/* Move to remote scheduler. */
+	xnsched_migrate(thread, sched);
 
 	/* Migrate the thread periodic timer. */
-	xntimer_set_sched(&thread->ptimer, thread->sched);
-
-#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
-	/*
-	 * Mark the thread in flight, xnsched_finish_unlocked_switch()
-	 * will put the thread on the remote runqueue.
-	 */
-	xnthread_set_state(thread, XNMIGRATE);
-#else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
-	/* Move thread to the remote runnable queue. */
-	xnsched_putback(thread);
-#endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
+	xntimer_set_sched(&thread->ptimer, sched);
 
 	xnpod_schedule();
 

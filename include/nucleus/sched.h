@@ -39,8 +39,8 @@
 #define XNHTICK  0x40000000	/* Host tick pending  */
 #define XNRPICK  0x20000000	/* Check RPI state */
 #define XNINTCK  0x10000000	/* In master tick handler context */
-#define XNINIRQ  0x01000000	/* In IRQ handling context */
-#define XNSWLOCK 0x02000000	/* In context switch */
+#define XNINIRQ  0x08000000	/* In IRQ handling context */
+#define XNSWLOCK 0x04000000	/* In context switch */
 
 struct xnsched_rt {
 
@@ -59,7 +59,9 @@ typedef struct xnsched {
 	xnflags_t status;		/*!< Scheduler specific status bitmask. */
 	struct xnthread *curr;		/*!< Current thread. */
 	xnarch_cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
-	struct xnsched_rt rt;		/*!< Context of default real-time class. */
+
+	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
+
 	xntimerq_t timerqueue;		/* !< Core timer queue. */
 	volatile unsigned inesting;	/*!< Interrupt nesting level. */
 	struct xntimer htimer;		/*!< Host timer. */
@@ -97,6 +99,8 @@ typedef struct xnsched {
 
 } xnsched_t;
 
+union xnsched_policy_param;
+
 struct xnsched_class {
 
 	void (*sched_init)(struct xnsched *sched);
@@ -106,6 +110,15 @@ struct xnsched_class {
 	struct xnthread *(*sched_pick)(struct xnsched *sched);
 	void (*sched_tick)(struct xnthread *curr);
 	void (*sched_rotate)(struct xnsched *sched, int prio);
+	void (*sched_migrate)(struct xnthread *thread,
+			      struct xnsched *sched);
+	void (*sched_setparam)(struct xnthread *thread,
+			       const union xnsched_policy_param *p);
+	void (*sched_getparam)(struct xnthread *thread,
+			       union xnsched_policy_param *p);
+	void (*sched_trackprio)(struct xnthread *thread,
+				const union xnsched_policy_param *p);
+	void (*sched_forget)(struct xnthread *thread);
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 	struct xnthread *(*sched_push_rpi)(struct xnsched *sched,
 					   struct xnthread *thread);
@@ -183,9 +196,25 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched);
 void xnsched_putback(struct xnthread *thread);
 
 void xnsched_set_policy(struct xnthread *thread,
-			struct xnsched_class *sched_class, int prio);
+			struct xnsched_class *sched_class,
+			const union xnsched_policy_param *p);
+
+void xnsched_track_policy(struct xnthread *thread,
+			  struct xnthread *target);
+
+void xnsched_migrate(struct xnthread *thread,
+		     struct xnsched *sched);
+
+void xnsched_migrate_passive(struct xnthread *thread,
+			     struct xnsched *sched);
 
 void xnsched_rotate(int prio);
+
+static inline void xnsched_init_tcb(struct xnthread *thread)
+{
+	xnsched_idle_init_tcb(thread);
+	xnsched_rt_init_tcb(thread);
+}
 
 static inline int xnsched_root_priority(struct xnsched *sched)
 {
@@ -239,6 +268,32 @@ static inline int xnsched_weighted_bprio(struct xnthread *thread)
 static inline int xnsched_weighted_cprio(struct xnthread *thread)
 {
 	return thread->cprio + thread->sched_class->weight;
+}
+
+static inline void xnsched_setparam(struct xnthread *thread,
+				    const union xnsched_policy_param *p)
+{
+	thread->sched_class->sched_setparam(thread, p);
+}
+
+static inline void xnsched_getparam(struct xnthread *thread,
+				    union xnsched_policy_param *p)
+{
+	thread->sched_class->sched_getparam(thread, p);
+}
+
+static inline void xnsched_trackprio(struct xnthread *thread,
+				     const union xnsched_policy_param *p)
+{
+	thread->sched_class->sched_trackprio(thread, p);
+}
+
+static inline void xnsched_forget(struct xnthread *thread)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (sched_class->sched_forget)
+		sched_class->sched_forget(thread);
 }
 
 #ifdef CONFIG_XENO_OPT_PRIOCPL
@@ -295,6 +350,43 @@ static inline int xnsched_weighted_bprio(struct xnthread *thread)
 static inline int xnsched_weighted_cprio(struct xnthread *thread)
 {
 	return thread->cprio;
+}
+
+static inline void xnsched_setparam(struct xnthread *thread,
+				    const union xnsched_policy_param *p)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (sched_class != &xnsched_class_idle)
+		__xnsched_rt_setparam(thread, p);
+	else
+		__xnsched_idle_setparam(thread, p);
+}
+
+static inline void xnsched_getparam(struct xnthread *thread,
+				    union xnsched_policy_param *p)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (sched_class != &xnsched_class_idle)
+		__xnsched_rt_getparam(thread, p);
+	else
+		__xnsched_idle_getparam(thread, p);
+}
+
+static inline void xnsched_trackprio(struct xnthread *thread,
+				     const union xnsched_policy_param *p)
+{
+	struct xnsched_class *sched_class = thread->sched_class;
+
+	if (sched_class != &xnsched_class_idle)
+		__xnsched_rt_trackprio(thread, p);
+	else
+		__xnsched_idle_trackprio(thread, p);
+}
+
+static inline void xnsched_forget(struct xnthread *thread)
+{
 }
 
 #ifdef CONFIG_XENO_OPT_PRIOCPL

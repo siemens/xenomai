@@ -29,19 +29,41 @@ static struct xnthread *xnsched_idle_pick(struct xnsched *sched)
 	return &sched->rootcb;
 }
 
+void xnsched_idle_setparam(struct xnthread *thread,
+			   const union xnsched_policy_param *p)
+{
+	__xnsched_idle_setparam(thread, p);
+}
+
+void xnsched_idle_getparam(struct xnthread *thread,
+			   union xnsched_policy_param *p)
+{
+	__xnsched_idle_getparam(thread, p);
+}
+
+void xnsched_idle_trackprio(struct xnthread *thread,
+			   const union xnsched_policy_param *p)
+{
+	__xnsched_rt_trackprio(thread, p);
+}
+
 struct xnsched_class xnsched_class_idle = {
 
 #ifdef __XENO_SIM__
-	.sched_init	=	NULL,
-	.sched_enqueue	=	NULL,
-	.sched_dequeue	=	NULL,
-	.sched_requeue	=	NULL,
-	.sched_pick	=	NULL,
-	.sched_tick	=	NULL,
-	.sched_rotate	=	NULL,
-	.next		=	NULL,
+	.sched_init		=	NULL,
+	.sched_enqueue		=	NULL,
+	.sched_dequeue		=	NULL,
+	.sched_requeue		=	NULL,
+	.sched_pick		=	NULL,
+	.sched_tick		=	NULL,
+	.sched_rotate		=	NULL,
+	.sched_forget		=	NULL,
 #endif
-	.sched_pick	=	xnsched_idle_pick,
-	.weight		=	XNSCHED_CLASS_WEIGHT(0),
-	.name		=	"idle"
+	.sched_pick		=	xnsched_idle_pick,
+	.sched_setparam		=	xnsched_idle_setparam,
+	.sched_getparam		=	xnsched_idle_getparam,
+	.sched_trackprio	=	xnsched_idle_trackprio,
+	.next			=	NULL,
+	.weight			=	XNSCHED_CLASS_WEIGHT(0),
+	.name			=	"idle"
 };

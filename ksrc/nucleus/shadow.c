@@ -1028,7 +1028,8 @@ static int gatekeeper_thread(void *data)
 			 * timers, using xnpod_migrate_thread is
 			 * required.
 			 */
-			target->sched = sched;
+			if (target->sched != sched)
+				xnsched_migrate_passive(target, sched);
 #endif /* CONFIG_SMP */
 			xnpod_resume_thread(target, XNRELAX);
 			ishield_off();

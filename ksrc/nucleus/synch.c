@@ -330,15 +330,13 @@ struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnph
  * raise/lower a thread's priority. The thread's base priority value
  * is _not_ changed and if ready, the thread is always moved at the
  * end of its priority group.
- *
- * The priority argument passed to this routine does NOT bear the
- * weight value of the target scheduling class.
  */
 
 static void xnsynch_renice_thread(struct xnthread *thread,
-				  struct xnsched_class *sched_class, int prio)
+				  struct xnthread *target)
 {
-	xnsched_set_policy(thread, sched_class, prio);
+	/* Apply the scheduling policy of "target" to "thread" */
+	xnsched_track_policy(thread, target);
 
 	if (thread->wchan)
 		xnsynch_renice_sleeper(thread);
@@ -486,7 +484,6 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		if (testbits(synch->status, XNSYNCH_PIP)) {
 			if (!xnthread_test_state(owner, XNBOOST)) {
 				owner->bprio = owner->cprio;
-				owner->base_class = owner->sched_class;
 				xnthread_set_state(owner, XNBOOST);
 			}
 
@@ -496,8 +493,7 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 				__setbits(synch->status, XNSYNCH_CLAIMED);
 
 			insertpqf(&owner->claimq, &synch->link, w_cprio(thread));
-			xnsynch_renice_thread(owner, thread->sched_class,
-					      thread->cprio);
+			xnsynch_renice_thread(owner, thread);
 		}
 	} else
 		insertpqf(&synch->pendq, &thread->plink, w_cprio(thread));
@@ -564,35 +560,32 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 static void xnsynch_clear_boost(struct xnsynch *synch,
 				struct xnthread *owner)
 {
-	struct xnsched_class *sched_class;
 	struct xnthread *target;
 	struct xnsynch *hsynch;
 	struct xnpholder *h;
-	int prio, wprio;
+	int wprio;
 
 	removepq(&owner->claimq, &synch->link);
 	__clrbits(synch->status, XNSYNCH_CLAIMED);
-	prio = owner->bprio;
 	wprio = w_bprio(owner);
 
 	if (emptypq_p(&owner->claimq)) {
 		xnthread_clear_state(owner, XNBOOST);
-		sched_class = owner->base_class;
+		target = owner;
 	} else {
 		/* Find the highest priority needed to enforce the PIP. */
 		hsynch = link2synch(getheadpq(&owner->claimq));
 		h = getheadpq(&hsynch->pendq);
 		XENO_BUGON(NUCLEUS, h == NULL);
 		target = link2thread(h, plink);
-		sched_class = target->sched_class;
-		if (w_cprio(target) > wprio) {
-			prio = target->cprio;
+		if (w_cprio(target) > wprio)
 			wprio = w_cprio(target);
-		}
+		else
+			target = owner;
 	}
 
 	if (w_cprio(owner) != wprio)
-		xnsynch_renice_thread(owner, sched_class, prio);
+		xnsynch_renice_thread(owner, target);
 }
 
 /*! 
@@ -643,15 +636,13 @@ void xnsynch_renice_sleeper(struct xnthread *thread)
 			insertpqf(&owner->claimq, &synch->link,
 				  w_cprio(thread));
 			owner->bprio = owner->cprio;
-			owner->base_class = owner->sched_class;
 			xnthread_set_state(owner, XNBOOST);
 		}
 		/*
 		 * Renice the owner thread, progressing in the PI
 		 * chain as needed.
 		 */
-		xnsynch_renice_thread(owner, thread->sched_class,
-				      thread->cprio);
+		xnsynch_renice_thread(owner, thread);
 	}
 }
 
@@ -920,8 +911,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 
 				h = getheadpq(&owner->claimq);
 				if (h->prio < w_cprio(owner))
-					xnsynch_renice_thread(owner, target->sched_class,
-							      target->cprio);
+					xnsynch_renice_thread(owner, target);
 			}
 		}
 	}
