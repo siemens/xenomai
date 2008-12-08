@@ -1,4 +1,3 @@
-base referer
-rect $os__facilities_8h.html 264,6 414,32
-rect $context_8h.html 278,56 400,83
-rect $device_8h.html 280,107 398,134
+<area shape="rect" href="$os__facilities_8h.html" title="Comedi for RTDM, Operation system facilities." alt="" coords="5,81,152,105">
+<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="176,81,296,105">
+<area shape="rect" href="$device_8h.html" title="Comedi for RTDM, device related features." alt="" coords="320,81,435,105">

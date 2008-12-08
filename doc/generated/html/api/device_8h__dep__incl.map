@@ -1,11 +1,10 @@
-base referer
-rect $descriptor_8h.html 232,70 416,96
-rect $comedi__driver_8h.html 220,120 428,147
-rect $driver__facilities_8c.html 477,164 717,191
-rect $comedi_8h.html 513,107 681,134
-rect $descriptor_8c.html 765,6 960,32
-rect $async_8c.html 777,56 948,83
-rect $info_8c.html 784,107 941,134
-rect $range_8c.html 777,158 948,184
-rect $sync_8c.html 781,208 944,235
-rect $sys_8c.html 784,259 941,286
+<area shape="rect" href="$descriptor_8h.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="372,81,551,105">
+<area shape="rect" href="$comedi__driver_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="575,81,777,105">
+<area shape="rect" href="$driver__facilities_8c.html" title="Comedi for RTDM, driver facilities." alt="" coords="664,156,901,180">
+<area shape="rect" href="$comedi_8h.html" title="Comedilib for RTDM, library facilities." alt="" coords="411,156,576,180">
+<area shape="rect" href="$descriptor_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="5,230,197,254">
+<area shape="rect" href="$async_8c.html" title="Comedilib for RTDM, command, transfer, etc." alt="" coords="221,230,392,254">
+<area shape="rect" href="$info_8c.html" title="Comedilib for RTDM, device, subdevice, etc." alt="" coords="416,230,571,254">
+<area shape="rect" href="$range_8c.html" title="Comedilib for RTDM, range related features." alt="" coords="595,230,763,254">
+<area shape="rect" href="$sync_8c.html" title="Comedilib for RTDM, instruction related features." alt="" coords="787,230,949,254">
+<area shape="rect" href="$sys_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="973,230,1128,254">

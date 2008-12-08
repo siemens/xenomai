@@ -1,8 +1,16 @@
-base referer
-rect $nucleus_2heap_8h-source.html 192,12 304,39
-rect $pod_8h.html 196,69 300,96
-rect $map_8h.html 194,132 303,159
-rect $nucleus_2queue_8h-source.html 354,5 474,32
-rect $nucleus_2types_8h-source.html 523,107 638,133
-rect $include_2nucleus_2thread_8h-source.html 354,56 474,83
-rect $include_2nucleus_2intr_8h-source.html 363,107 464,133
+<area shape="rect" href="$nucleus_2heap_8h&#45;source.html" title="nucleus/heap.h" alt="" coords="589,156,699,180">
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="399,81,500,105">
+<area shape="rect" href="$map_8h.html" title="nucleus/map.h" alt="" coords="73,454,180,478">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="455,454,569,478">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="295,529,407,553">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,604,571,628">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="5,604,133,628">
+<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="392,156,507,180">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="217,230,335,254">
+<area shape="rect" href="$schedqueue_8h&#45;source.html" title="nucleus/schedqueue.h" alt="" coords="499,305,651,329">
+<area shape="rect" href="$sched&#45;builtin_8h.html" title="Definitions for built&#45;in scheduling classes." alt="" coords="372,230,527,254">
+<area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="119,380,223,404">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="219,305,328,329">
+<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="352,305,475,329">
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="247,380,380,404">
+<area shape="rect" href="$synch_8h&#45;source.html" title="nucleus/synch.h" alt="" coords="455,380,569,404">

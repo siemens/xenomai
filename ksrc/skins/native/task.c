@@ -260,7 +260,7 @@ int rt_task_create(RT_TASK *task,
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	bflags = mode & (XNFPU | XNSHADOW | XNSHIELD | XNSUSP);
+	bflags = mode & (XNFPU | XNSHADOW | XNSUSP);
 
 	if (name)
 		xnobject_copy_name(task->rname, name);
@@ -1410,17 +1410,6 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
  * - T_NOSIG disables the asynchronous signal delivery for the current
  * task.
  *
- * - T_SHIELD enables the interrupt shield for the current user-space
- * task. When engaged, the interrupt shield protects the Xenomai task
- * running in secondary mode from any preemption by the regular Linux
- * interrupt handlers, without delaying in any way the Xenomai
- * interrupt handling. The shield is operated on a per-task basis at
- * each context switch, depending on the setting of this flag. This
- * flag is cleared by default for new user-space tasks. This feature
- * is only available if the CONFIG_XENO_OPT_ISHIELD option has been
- * enabled at configuration time; otherwise, this flag is simply
- * ignored.
- *
  * - When set, T_WARNSW causes the SIGXCPU signal to be sent to the
  * current user-space task whenever it switches to the secondary
  * mode. This feature is useful to detect unwanted migrations to the
@@ -1488,7 +1477,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	}
 
 	if (((clrmask | setmask) &
-	     ~(T_LOCK | T_RRB | T_NOSIG | T_SHIELD | T_WARNSW)) != 0)
+	     ~(T_LOCK | T_RRB | T_NOSIG | T_WARNSW)) != 0)
 		return -EINVAL;
 
 	if (!xnpod_primary_p())

@@ -1,9 +1,12 @@
-base referer
-rect $ioctl_8h.html 236,56 340,83
-rect $comedi_8h.html 227,107 350,133
-rect $src_2drvlib_2comedi_2syscall_8h.html 252,245 324,272
-rect $comedi_2types_8h.html 774,107 886,133
-rect $descriptor_8h.html 398,132 536,159
-rect $subdevice_8h.html 586,132 724,159
-rect $device_8h.html 596,183 714,209
-rect $rtdm_8h.html 422,309 512,336
+<area shape="rect" href="$ioctl_8h.html" title="Comedi for RTDM, IOCTLs declarations." alt="" coords="91,82,192,106">
+<area shape="rect" href="$comedi_8h.html" title="Comedilib for RTDM, library facilities." alt="" coords="216,82,336,106">
+<area shape="rect" href="$src_2drvlib_2comedi_2syscall_8h.html" title="Comedilib for RTDM, internal declarations." alt="" coords="529,82,601,106">
+<area shape="rect" href="$comedi_2types_8h.html" title="Comedi for RTDM, misc declarations." alt="" coords="141,380,251,404">
+<area shape="rect" href="$descriptor_8h.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="273,156,407,180">
+<area shape="rect" href="$subdevice_8h.html" title="Comedi for RTDM, subdevice related features." alt="" coords="272,231,408,255">
+<area shape="rect" href="$device_8h.html" title="Comedi for RTDM, device related features." alt="" coords="432,231,547,255">
+<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="453,380,573,404">
+<area shape="rect" href="$instruction_8h.html" title="Comedi for RTDM, instruction related features." alt="" coords="337,306,476,330">
+<area shape="rect" href="$command_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="551,306,687,330">
+<area shape="rect" href="$channel__range_8h.html" title="Comedi for RTDM, channel, range related features." alt="" coords="711,306,873,330">
+<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="747,156,835,180">

@@ -1,3 +1,2 @@
-base referer
-rect $comedi__driver_8h.html 249,5 457,32
-rect $driver__facilities_8c.html 507,5 747,32
+<area shape="rect" href="$comedi__driver_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="23,82,225,106">
+<area shape="rect" href="$driver__facilities_8c.html" title="Comedi for RTDM, driver facilities." alt="" coords="5,156,243,180">

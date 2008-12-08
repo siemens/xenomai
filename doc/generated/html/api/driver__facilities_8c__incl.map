@@ -1,5 +1,4 @@
-base referer
-rect $context_8h.html 520,107 643,133
-rect $device_8h.html 523,208 640,235
-rect $comedi__driver_8h.html 295,157 457,184
-rect $os__facilities_8h.html 507,157 656,184
+<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="144,156,264,180">
+<area shape="rect" href="$device_8h.html" title="Comedi for RTDM, device related features." alt="" coords="459,156,573,180">
+<area shape="rect" href="$comedi__driver_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="283,82,440,106">
+<area shape="rect" href="$os__facilities_8h.html" title="Comedi for RTDM, Operation system facilities." alt="" coords="288,156,435,180">

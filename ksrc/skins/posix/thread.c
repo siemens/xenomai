@@ -650,9 +650,6 @@ int pthread_wait_np(unsigned long *overruns_r)
  * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
  *   current thread from being switched out by the scheduler until the scheduler
  *   is unlocked;
- * - PTHREAD_SHIELD, when set, activates the interrupt shield, which improve the
- *   execution determinism of the current thread by blocking Linux interrupts
- *   when it runs in secondary mode;
  * - PTHREAD_RPIOFF, when set, prevents the root Linux thread from inheriting
  *   the priority of the calling thread, when this thread is running in
  *   secondary mode;
@@ -682,7 +679,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW))
-		valid_flags |= XNTHREAD_STATE_SPARE1 | XNSHIELD | XNTRAPSW | XNRPIOFF;
+		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW | XNRPIOFF;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */

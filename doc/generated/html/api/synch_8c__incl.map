@@ -1,8 +1,15 @@
-base referer
-rect $pod_8h.html 212,107 316,134
-rect $include_2nucleus_2thread_8h-source.html 385,56 505,83
-rect $synch_8h-source.html 387,158 504,184
-rect $module_8h-source.html 201,208 327,235
-rect $include_2nucleus_2intr_8h-source.html 395,107 496,134
-rect $nucleus_2queue_8h-source.html 563,208 683,235
-rect $timebase_8h.html 377,259 513,286
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="523,81,624,105">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="321,230,439,254">
+<area shape="rect" href="$synch_8h&#45;source.html" title="nucleus/synch.h" alt="" coords="416,380,531,404">
+<area shape="rect" href="$module_8h&#45;source.html" title="nucleus/module.h" alt="" coords="715,305,837,329">
+<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="524,156,639,180">
+<area shape="rect" href="$schedqueue_8h&#45;source.html" title="nucleus/schedqueue.h" alt="" coords="692,230,844,254">
+<area shape="rect" href="$sched&#45;builtin_8h.html" title="Definitions for built&#45;in scheduling classes." alt="" coords="513,230,668,254">
+<area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="288,380,392,404">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="329,305,439,329">
+<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="183,305,305,329">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="307,529,419,553">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="301,604,429,628">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,604,571,628">
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="605,380,739,404">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="471,454,585,478">

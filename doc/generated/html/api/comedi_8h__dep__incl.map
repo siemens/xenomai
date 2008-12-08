@@ -1,7 +1,6 @@
-base referer
-rect $async_8c.html 236,6 407,32
-rect $descriptor_8c.html 224,56 419,83
-rect $info_8c.html 243,107 400,134
-rect $range_8c.html 236,158 407,184
-rect $sync_8c.html 240,208 403,235
-rect $sys_8c.html 243,259 400,286
+<area shape="rect" href="$async_8c.html" title="Comedilib for RTDM, command, transfer, etc." alt="" coords="5,81,176,105">
+<area shape="rect" href="$descriptor_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="200,81,392,105">
+<area shape="rect" href="$info_8c.html" title="Comedilib for RTDM, device, subdevice, etc." alt="" coords="416,81,571,105">
+<area shape="rect" href="$range_8c.html" title="Comedilib for RTDM, range related features." alt="" coords="595,81,763,105">
+<area shape="rect" href="$sync_8c.html" title="Comedilib for RTDM, instruction related features." alt="" coords="787,81,949,105">
+<area shape="rect" href="$sys_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="973,81,1128,105">

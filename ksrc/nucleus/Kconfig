@@ -18,27 +18,6 @@ config XENO_OPT_PERVASIVE
 	applications, which directly call the real-time APIs from
 	kernel modules.
 
-config XENO_OPT_ISHIELD
-	depends on XENO_OPT_PERVASIVE
-	bool "Interrupt shield support"
-	help
-
-	This option builds in the interrupt shield support, which can
-	be further enabled on a thread-by-thread basis. When enabled
-	for a thread, the interrupt shield prevents it from being
-	preempted by Linux interrupt handlers when it executes in the
-	secondary domain (i.e. under the control of the Linux
-	scheduler), thus increasing the execution time accuracy for
-	CPU-bound tasks.
-
-	Note: since the interrupt shield adds extra-computation to the
-	critical path, applications based on threads running in the
-	primary Xenomai domain, hence for which preemption by any kind
-	of Linux kernel activities is already prevented by design,
-	should leave this option disabled.
-
-	If in doubt, leave this option disabled.
-
 config XENO_OPT_PRIOCPL
 	depends on XENO_OPT_PERVASIVE
 	bool "Priority coupling support"

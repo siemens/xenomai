@@ -1,6 +1,5 @@
-base referer
-rect $comedi_2types_8h.html 461,82 573,108
-rect $context_8h.html 456,158 579,184
-rect $instruction_8h.html 253,107 395,134
-rect $command_8h.html 255,208 393,235
-rect $channel__range_8h.html 240,259 408,286
+<area shape="rect" href="$comedi_2types_8h.html" title="Comedi for RTDM, misc declarations." alt="" coords="105,156,215,180">
+<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="276,156,396,180">
+<area shape="rect" href="$instruction_8h.html" title="Comedi for RTDM, instruction related features." alt="" coords="160,82,299,106">
+<area shape="rect" href="$command_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="373,82,509,106">
+<area shape="rect" href="$channel__range_8h.html" title="Comedi for RTDM, channel, range related features." alt="" coords="533,82,696,106">

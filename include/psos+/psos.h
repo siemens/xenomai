@@ -59,13 +59,12 @@
 
 /* Those bits are Xenomai-specific. */
 #define T_SHADOW      0x8000
-#define  T_SHIELD      XNSHIELD
-#define  T_TRAPSW      XNTRAPSW
-#define  T_RPIOFF      XNRPIOFF
+#define  T_TRAPSW     XNTRAPSW
+#define  T_RPIOFF     XNRPIOFF
 
 #define T_START_MASK   (T_NOPREEMPT|T_TSLICE|T_NOASR|T_SUPV|T_NOISR|T_LEVELMASK7)
 #define T_MODE_MASK    (T_NOPREEMPT|T_TSLICE|T_NOASR|T_NOISR| \
-			T_LEVELMASK7|T_SHIELD|T_TRAPSW|T_RPIOFF)
+			T_LEVELMASK7|T_TRAPSW|T_RPIOFF)
 
 #define RN_PRIOR      0x0002
 #define RN_FIFO       0x0000

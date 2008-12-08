@@ -1,4 +1,3 @@
-base referer
-rect $structcomedi__cmd__desc.html 5,96 139,123
-rect $structcomedi__channels__desc.html 163,96 323,123
-rect $structcomedi__channel.html 184,6 301,32
+<area shape="rect" href="$structcomedi__cmd__desc.html" title="Structure describing the asynchronous instruction." alt="" coords="5,94,136,118">
+<area shape="rect" href="$structcomedi__channels__desc.html" title="Structure describing a channels set." alt="" coords="160,94,317,118">
+<area shape="rect" href="$structcomedi__channel.html" title="Structure describing some channel&#39;s characteristics." alt="" coords="181,6,296,30">

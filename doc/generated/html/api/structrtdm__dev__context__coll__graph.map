@@ -1,3 +1,2 @@
-base referer
-rect $structrtdm__operations.html 25,9 142,33
-rect $structrtdm__device.html 97,100 190,124
+<area shape="rect" href="$structrtdm__operations.html" title="Device operations." alt="" coords="23,6,137,30">
+<area shape="rect" href="$structrtdm__device.html" title="RTDM device." alt="" coords="91,94,181,118">

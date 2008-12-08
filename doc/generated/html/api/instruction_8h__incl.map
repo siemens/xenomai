@@ -1,3 +1,2 @@
-base referer
-rect $comedi_2types_8h.html 245,5 357,32
-rect $context_8h.html 240,56 363,83
+<area shape="rect" href="$comedi_2types_8h.html" title="Comedi for RTDM, misc declarations." alt="" coords="5,81,115,105">
+<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="139,81,259,105">

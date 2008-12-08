@@ -1,11 +1,16 @@
-base referer
-rect $pod_8h.html 199,107 303,133
-rect $nucleus_2ppd_8h-source.html 199,208 303,235
-rect $nucleus_2heap_8h-source.html 195,157 307,184
-rect $include_2nucleus_2thread_8h-source.html 356,107 476,133
-rect $include_2nucleus_2intr_8h-source.html 532,5 633,32
-rect $stat_8h-source.html 700,107 804,133
-rect $include_2nucleus_2timer_8h.html 527,107 639,133
-rect $include_2nucleus_2registry_8h.html 689,56 815,83
-rect $nucleus_2types_8h-source.html 864,81 979,108
-rect $nucleus_2queue_8h-source.html 356,208 476,235
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="391,81,492,105">
+<area shape="rect" href="$nucleus_2ppd_8h&#45;source.html" title="nucleus/ppd.h" alt="" coords="532,156,633,180">
+<area shape="rect" href="$nucleus_2heap_8h&#45;source.html" title="nucleus/heap.h" alt="" coords="617,81,727,105">
+<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="364,156,479,180">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="161,230,279,254">
+<area shape="rect" href="$schedqueue_8h&#45;source.html" title="nucleus/schedqueue.h" alt="" coords="432,305,584,329">
+<area shape="rect" href="$sched&#45;builtin_8h.html" title="Definitions for built&#45;in scheduling classes." alt="" coords="316,230,471,254">
+<area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="52,380,156,404">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="152,305,261,329">
+<area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="285,305,408,329">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="295,529,407,553">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="5,604,133,628">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,604,571,628">
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="180,380,313,404">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="455,454,569,478">
+<area shape="rect" href="$synch_8h&#45;source.html" title="nucleus/synch.h" alt="" coords="388,380,503,404">

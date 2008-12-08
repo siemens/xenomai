@@ -1,7 +1,5 @@
-base referer
-rect $nucleus_2types_8h-source.html 560,107 675,133
-rect $synch_8h-source.html 227,157 344,184
-rect $compiler_8h-source.html 736,107 869,133
-rect $assert_8h-source.html 743,157 863,184
-rect $nucleus_2queue_8h-source.html 392,157 512,184
-rect $core_8h-source.html 563,208 672,235
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="323,231,435,255">
+<area shape="rect" href="$synch_8h&#45;source.html" title="nucleus/synch.h" alt="" coords="416,82,531,106">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="301,306,429,330">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,306,571,330">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="416,156,531,180">

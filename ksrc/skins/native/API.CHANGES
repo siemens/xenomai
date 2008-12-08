@@ -254,3 +254,9 @@ ___________________________________________________________________
          new ioctl(XNPIPEIOC_IFLUSH) command has been added, to flush
          the input queue of the real-time endpoint (i.e. the output
          queue of the non real-time endpoint in user-space).
+
+       * As Xenomai 2.5-rc1, the nucleus does not provide support for
+         the Linux interrupt shield anymore, so the T_SHIELD flag has
+         been removed from the interface. Applications that require
+         low latency from secondary mode should consider PREEMPT_RT
+         kernels nowadays.

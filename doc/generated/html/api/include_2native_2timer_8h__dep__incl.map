@@ -1,7 +1,6 @@
-base referer
-rect $ksrc_2skins_2native_2alarm_8c.html 208,6 376,32
-rect $ksrc_2skins_2native_2buffer_8c.html 208,56 376,83
-rect $skins_2native_2module_8c.html 203,107 382,134
-rect $native_2syscall_8c.html 206,158 379,184
-rect $ksrc_2skins_2native_2task_8c.html 212,208 372,235
-rect $ksrc_2skins_2native_2timer_8c.html 211,259 374,286
+<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,81,173,105">
+<area shape="rect" href="$ksrc_2skins_2native_2buffer_8c.html" title="This file is part of the Xenomai project." alt="" coords="197,81,365,105">
+<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="389,81,565,105">
+<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="589,81,765,105">
+<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="789,81,949,105">
+<area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="973,81,1136,105">

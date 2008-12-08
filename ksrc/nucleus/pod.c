@@ -631,12 +631,8 @@ int xnpod_init_thread(xnthread_t *thread,
 	spl_t s;
 	int err;
 
-	if (flags & ~(XNFPU | XNSHADOW | XNSHIELD | XNSUSP))
+	if (flags & ~(XNFPU | XNSHADOW | XNSUSP))
 		return -EINVAL;
-
-#ifndef CONFIG_XENO_OPT_ISHIELD
-	flags &= ~XNSHIELD;
-#endif /* !CONFIG_XENO_OPT_ISHIELD */
 
 	if (stacksize == 0)
 		stacksize = XNARCH_THREAD_STACKSZ;
@@ -769,9 +765,6 @@ int xnpod_start_thread(xnthread_t *thread,
 		err = -EBUSY;
 		goto unlock_and_exit;
 	}
-#ifndef CONFIG_XENO_OPT_ISHIELD
-	mode &= ~XNSHIELD;
-#endif /* !CONFIG_XENO_OPT_ISHIELD */
 
 	xnthread_set_state(thread, (mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
 	thread->imask = imask;
@@ -951,16 +944,6 @@ void xnpod_restart_thread(xnthread_t *thread)
  * - XNASDI disables the asynchronous signal handling for this thread.
  * See xnpod_schedule() for more on this.
  *
- * - XNSHIELD enables the interrupt shield for the current user-space
- * task. When engaged, the interrupt shield protects the shadow task
- * running in secondary mode from any preemption by the regular Linux
- * interrupt handlers, without delaying in any way Xenomai's interrupt
- * handling. The shield is operated on a per-task basis at each
- * context switch, depending on the setting of this flag. This feature
- * is only available if the CONFIG_XENO_OPT_ISHIELD option has been
- * enabled at configuration time; otherwise, this flag is simply
- * ignored.
- *
  * - XNRPIOFF disables thread priority coupling between Xenomai and
  * Linux schedulers. This bit prevents the root Linux thread from
  * inheriting the priority of the running shadow Xenomai thread. Use
@@ -990,9 +973,6 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 		   "thread %p thread_name %s clrmask %lu setmask %lu",
 		   thread, xnthread_name(thread), clrmask, setmask);
 
-#ifndef CONFIG_XENO_OPT_ISHIELD
-	setmask &= ~XNSHIELD;
-#endif /* !CONFIG_XENO_OPT_ISHIELD */
 	oldmode = xnthread_state_flags(thread) & XNTHREAD_MODE_BITS;
 	xnthread_clear_state(thread, clrmask & XNTHREAD_MODE_BITS);
 	xnthread_set_state(thread, setmask & XNTHREAD_MODE_BITS);
@@ -1010,13 +990,6 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 		thread->rrcredit = thread->rrperiod;
 
 	xnlock_put_irqrestore(&nklock, s);
-
-#ifdef CONFIG_XENO_OPT_ISHIELD
-	if (curr == thread &&
-	    xnthread_test_state(thread, XNSHADOW) &&
-	    ((clrmask | setmask) & XNSHIELD) != 0)
-		xnshadow_reset_shield();
-#endif /* CONFIG_XENO_OPT_ISHIELD */
 
 	return oldmode;
 }

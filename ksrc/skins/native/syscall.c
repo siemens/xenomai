@@ -166,7 +166,7 @@ static int __rt_task_create(struct pt_regs *regs)
 	/* Task priority. */
 	prio = bulk.a3;
 	/* Task init mode & CPU affinity. */
-	mode = bulk.a4 & (T_CPUMASK | T_SUSP | T_SHIELD);
+	mode = bulk.a4 & (T_CPUMASK | T_SUSP);
 
 	task = (RT_TASK *)xnmalloc(sizeof(*task));
 

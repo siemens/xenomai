@@ -1,3 +1,9 @@
+2008-12-08  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus, ksrc/skins: Remove interrupt shield
+	support. Applications that require low latency from secondary mode
+	should consider PREEMPT_RT kernels nowadays.
+
 2008-12-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Finalize groundwork for

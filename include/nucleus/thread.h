@@ -53,13 +53,11 @@
  * 16-bit word, in order to be combined with the emulated RTOS flags
  * which use the low one, so don't change them carelessly.
  */
-#define XNSHIELD  0x00010000 /**< IRQ shield is enabled (shadow only) */
-#define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
-#define XNRPIOFF  0x00040000 /**< Stop priority coupling (shadow only) */
-
-#define XNFPU     0x00100000 /**< Thread uses FPU */
-#define XNSHADOW  0x00200000 /**< Shadow thread */
-#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
+#define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
+#define XNRPIOFF  0x00020000 /**< Stop priority coupling (shadow only) */
+#define XNFPU     0x00040000 /**< Thread uses FPU */
+#define XNSHADOW  0x00080000 /**< Shadow thread */
+#define XNROOT    0x00100000 /**< Root thread (that is, Linux/IDLE) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -81,10 +79,10 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.sto.f.."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.tof.."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE)
-#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW|XNRPIOFF)
+#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW|XNRPIOFF)
 
 /* These state flags are available to the real-time interfaces */
 #define XNTHREAD_STATE_SPARE0  0x10000000

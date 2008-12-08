@@ -1,8 +1,6 @@
-base referer
-rect $timebase_8h.html 215,157 351,184
-rect $stat_8h-source.html 408,107 512,133
-rect $nucleus_2queue_8h-source.html 400,157 520,184
-rect $nucleus_2types_8h-source.html 568,107 683,133
-rect $assert_8h-source.html 751,157 871,184
-rect $core_8h-source.html 571,208 680,235
-rect $compiler_8h-source.html 744,107 877,133
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="24,82,157,106">
+<area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="165,156,269,180">
+<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="27,156,141,180">
+<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="161,231,273,255">
+<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="5,306,123,330">
+<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="328,306,456,330">
