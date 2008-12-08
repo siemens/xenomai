@@ -81,7 +81,7 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.sto..f.."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.sto.f.."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNSHIELD|XNTRAPSW|XNRPIOFF)
