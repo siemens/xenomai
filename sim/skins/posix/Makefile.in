@@ -61,7 +61,7 @@ nodist_libposix_sim_a_OBJECTS = sched.$(OBJEXT) thread_attr.$(OBJEXT) \
 	cond_attr.$(OBJEXT) cond.$(OBJEXT) sem.$(OBJEXT) \
 	cancel.$(OBJEXT) once.$(OBJEXT) signal.$(OBJEXT) tsd.$(OBJEXT) \
 	clock.$(OBJEXT) timer.$(OBJEXT) intr.$(OBJEXT) \
-	registry.$(OBJEXT) mq.$(OBJEXT) shm.$(OBJEXT) module.$(OBJEXT)
+	registry.$(OBJEXT) mq.$(OBJEXT) module.$(OBJEXT)
 libposix_sim_a_OBJECTS = $(nodist_libposix_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -275,7 +275,6 @@ nodist_libposix_sim_a_SOURCES = \
 	intr.c \
 	registry.c \
 	mq.c \
-	shm.c \
 	module.c
 
 includesub_HEADERS = \
@@ -368,7 +367,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/registry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sem.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signal.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread_attr.Po@am__quote@

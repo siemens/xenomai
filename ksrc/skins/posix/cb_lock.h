@@ -5,7 +5,7 @@
 #include <nucleus/compiler.h>
 #include <nucleus/types.h>
 
-#ifndef __KERNEL__
+#if !defined(__KERNEL__) && !defined(__XENO_SIM__)
 typedef void xnthread_t;
 #endif /* __KERNEL__ */
 
@@ -69,7 +69,7 @@ static __inline__ void __cb_write_unlock(xnarch_atomic_t *lock)
 #define cb_force_write_lock(lock, flags) __cb_force_write_lock(lock)
 #define cb_write_unlock(lock, flags) __cb_write_unlock(lock)
 #else /* !CONFIG_XENO_FASTSYNCH */
-#ifdef __KERNEL__
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 #define DECLARE_CB_LOCK_FLAGS(name) spl_t name
 #define cb_try_read_lock(lock, flags) \
 	({ xnlock_get_irqsave(&nklock, flags); 0; })

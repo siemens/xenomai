@@ -619,7 +619,9 @@ int xnregistry_enter(const char *key,
 	object->objaddr = objaddr;
 	object->cstamp = ++registry_obj_stamp;
 	object->safelock = 0;
+#ifdef CONFIG_PROC_FS
 	object->pnode = NULL;
+#endif
 
 	if (!*key) {
 		object->key = NULL;

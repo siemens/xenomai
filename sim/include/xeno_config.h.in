@@ -16,6 +16,9 @@
 #undef CONFIG_XENO_OPT_NATIVE_ALARM
 
 /* config */
+#undef CONFIG_XENO_OPT_NATIVE_BUFFER
+
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_COND
 
 /* config */

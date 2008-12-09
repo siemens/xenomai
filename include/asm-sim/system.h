@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <xeno_config.h>
+#include <asm/xenomai/atomic.h>
 
 struct xnthread;
 struct xnsynch;
@@ -182,7 +183,11 @@ static inline unsigned long long xnarch_ulldiv(unsigned long long ull,
 
 static inline unsigned long ffnz(unsigned long word)
 {
+#if __WORDSIZE == 32
+  return ffs((int)word) - 1;
+#else
     return ffsl(word) - 1;
+#endif
 }
 
 #define xnarch_stack_size(tcb)    0
@@ -191,6 +196,8 @@ static inline unsigned long ffnz(unsigned long word)
 #define xnarch_fpu_ptr(tcb)       NULL
 #define xnarch_user_task(tcb)     NULL
 #define xnarch_user_pid(tcb)      0
+
+#define __user
 
 /* Under the MVM, preemption only occurs at the C-source line level,
    so we just need plain C bitops and counter support. */

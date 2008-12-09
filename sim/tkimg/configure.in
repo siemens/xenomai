@@ -1,4 +1,4 @@
-AC_PREREQ(2.57)
+AC_PREREQ(2.53)
 
 AC_INIT(imgInit.c)
 

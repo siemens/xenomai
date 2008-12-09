@@ -1183,6 +1183,7 @@ int __init __xeno_sys_init(void)
 	if (err)
 		goto fail;
 
+#ifndef __XENO_SIM__
 	err = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
 				 XNARCH_SHARED_HEAP_FLAGS ?:
@@ -1190,6 +1191,7 @@ int __init __xeno_sys_init(void)
 				  ? GFP_USER : 0));
 	if (err)
 		goto cleanup_arch;
+#endif
 	
 #ifdef __KERNEL__
 #ifdef CONFIG_PROC_FS

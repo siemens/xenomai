@@ -41,7 +41,7 @@ union __xeno_mutex {
 	} shadow_mutex;
 };
 
-#ifdef __KERNEL__
+#if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <posix/internal.h>
 #include <posix/thread.h>

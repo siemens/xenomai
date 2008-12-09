@@ -1052,6 +1052,8 @@ int rt_buffer_inquire(RT_BUFFER *bf, RT_BUFFER_INFO *info)
  * Rescheduling: never.
  */
 
+#ifdef CONFIG_XENO_OPT_NATIVE_BUFFER
+
 int __native_buffer_pkg_init(void)
 {
 	return 0;
@@ -1061,6 +1063,8 @@ void __native_buffer_pkg_cleanup(void)
 {
 	__native_buffer_flush_rq(&__native_global_rholder.bufferq);
 }
+
+#endif
 
 /*@}*/
 

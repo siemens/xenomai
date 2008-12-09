@@ -39,7 +39,6 @@ nodist_libposix_sim_a_SOURCES = \
 	intr.c \
 	registry.c \
 	mq.c \
-	shm.c \
 	module.c
 
 includesub_HEADERS = \

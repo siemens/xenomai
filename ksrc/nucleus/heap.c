@@ -69,10 +69,6 @@ HEAP {
 #include <nucleus/assert.h>
 #include <asm/xenomai/bits/heap.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
-
 xnheap_t kheap;			/* System heap */
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
@@ -1220,7 +1216,7 @@ int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
 	return err;
 }
 
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#elif !defined(__XENO_SIM__) /* !CONFIG_XENO_OPT_PERVASIVE */
 static void xnheap_free_extent(xnheap_t *heap,
 			       void *extent, u_long size, void *cookie)
 {

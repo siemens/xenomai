@@ -27,5 +27,6 @@ nodist_libnative_sim_a_SOURCES = \
 	mutex.c \
 	cond.c \
 	queue.c \
+	buffer.c \
 	heap.c \
 	alarm.c

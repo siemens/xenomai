@@ -56,7 +56,8 @@ libnative_sim_a_AR = $(AR) $(ARFLAGS)
 libnative_sim_a_LIBADD =
 nodist_libnative_sim_a_OBJECTS = module.$(OBJEXT) task.$(OBJEXT) \
 	timer.$(OBJEXT) sem.$(OBJEXT) event.$(OBJEXT) mutex.$(OBJEXT) \
-	cond.$(OBJEXT) queue.$(OBJEXT) heap.$(OBJEXT) alarm.$(OBJEXT)
+	cond.$(OBJEXT) queue.$(OBJEXT) buffer.$(OBJEXT) heap.$(OBJEXT) \
+	alarm.$(OBJEXT)
 libnative_sim_a_OBJECTS = $(nodist_libnative_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -247,6 +248,7 @@ nodist_libnative_sim_a_SOURCES = \
 	mutex.c \
 	cond.c \
 	queue.c \
+	buffer.c \
 	heap.c \
 	alarm.c
 
@@ -324,6 +326,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alarm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heap.Po@am__quote@

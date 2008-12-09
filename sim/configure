@@ -27839,6 +27839,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_NATIVE_BUFFER 1
+_ACEOF
+
+
 
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_OPT_RTAI_SEM 1

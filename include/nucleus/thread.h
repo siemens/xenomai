@@ -403,7 +403,7 @@ static inline int xnthread_register(xnthread_t *thread, const char *name)
 
 static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
 {
-	xnthread_t *thread = xnregistry_fetch(threadh);
+  xnthread_t *thread = (struct xnthread *)xnregistry_fetch(threadh);
 
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
