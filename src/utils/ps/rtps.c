@@ -7,7 +7,7 @@
 #define PROC_ACCT  "/proc/xenomai/acct"
 #define PROC_PID  "/proc/%d/cmdline"
 
-#define ACCT_FMT   "%u %d %lu %lu %lu %lx %Lu %Lu %Lu %s"
+#define ACCT_FMT   "%u %d %lu %lu %lu %lx %Lu %Lu %Lu %[^\n]"
 #define ACCT_NFMT  10
 
 int main(int argc, char *argv[])
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	if (acctfp == NULL)
 		error(1, errno, "cannot open %s\n", PROC_ACCT);
 
-	printf("%-6s %-17s  %-16s %-3s\n",
+	printf("%-6s %-17s   %-24s %s\n\n",
 	       "PID", "TIME", "THREAD", "CMD");
 
 	while (fscanf(acctfp, ACCT_FMT,
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		sec %= (60 * 60);
 		min = sec / 60;
 		sec %= 60;
-		printf("%-6d %.2u:%.2u:%.2lu.%.3u,%.3u   %-16s %s\n",
+		printf("%-6d %.3u:%.2u:%.2lu.%.3u,%.3u   %-24s %s\n",
 		       pid,
 		       hr, min, sec, msec, usec,
 		       name, cmdbuf);
