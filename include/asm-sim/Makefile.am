@@ -1,6 +1,6 @@
 includesubdir = $(includedir)/asm-sim
 
-includesub_HEADERS = system.h
+includesub_HEADERS = system.h atomic.h
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(includesubdir)

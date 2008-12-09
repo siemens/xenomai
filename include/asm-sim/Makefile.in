@@ -226,7 +226,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-sim
-includesub_HEADERS = system.h
+includesub_HEADERS = system.h atomic.h
 SUBDIRS = bits
 all: all-recursive
 
