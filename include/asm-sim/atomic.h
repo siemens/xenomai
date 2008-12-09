@@ -24,4 +24,10 @@
 
 typedef unsigned long xnarch_atomic_t;
 
+unsigned long mvm_atomic_cmpxchg(unsigned long *p,
+				 unsigned long o, unsigned long n);
+
+#define xnarch_atomic_cmpxchg(p,o,n)	\
+	mvm_atomic_cmpxchg(p, o, n)
+
 #endif /* _XENO_ASM_SIM_ATOMIC_H */

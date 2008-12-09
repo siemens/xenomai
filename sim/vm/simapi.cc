@@ -314,6 +314,17 @@ void mvm_finalize_thread (struct XenoThread *dead) {
     dead->cancel();
 }
 
+unsigned long mvm_atomic_cmpxchg(unsigned long *p,
+				 unsigned long o, unsigned long n)
+{
+	unsigned long _o = *p;
+
+	if (_o == o)
+		*p = n;
+
+	return _o;
+}
+
 void kdoor(mvm_terminate) (int xcode) {
     MvmManager::This->finish(xcode);
 }

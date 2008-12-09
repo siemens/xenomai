@@ -27798,6 +27798,21 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_SCHED_CLASSES 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_SCHED_TP 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_SCHED_TP_NRPART 4
+_ACEOF
+
+
 
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_OPT_NATIVE_SEM 1

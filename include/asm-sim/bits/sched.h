@@ -19,11 +19,19 @@
 #ifndef _XENO_ASM_SIM_BITS_SCHED_H
 #define _XENO_ASM_SIM_BITS_SCHED_H
 
+#ifdef __IN_XENO__
+
 static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 					 struct xnthread *thread,
 					 const char *name)
 {
     tcb->vmthread = mvm_thread_self();
 }
+
+#else
+
+#include_next <bits/sched.h>
+
+#endif
 
 #endif /* !_XENO_ASM_SIM_BITS_SCHED_H */

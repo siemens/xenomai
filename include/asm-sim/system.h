@@ -530,6 +530,7 @@ while(0)
 #define xnarch_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
 #define xnarch_trace_panic_freeze()		({int err = -ENOSYS; err; })
 #define xnarch_trace_panic_dump()		({int err = -ENOSYS; err; })
+#define xnarch_trace_tick(delay_tsc)		({int err = -ENOSYS; err; })
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)

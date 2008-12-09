@@ -54,7 +54,6 @@ struct xnsched_class xnsched_class_idle = {
 	.sched_enqueue		=	NULL,
 	.sched_dequeue		=	NULL,
 	.sched_requeue		=	NULL,
-	.sched_pick		=	NULL,
 	.sched_tick		=	NULL,
 	.sched_rotate		=	NULL,
 	.sched_forget		=	NULL,

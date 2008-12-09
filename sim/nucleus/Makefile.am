@@ -15,6 +15,10 @@ lib_LIBRARIES = libnucleus_sim.a
 # included here.
 
 nodist_libnucleus_sim_a_SOURCES = \
+			sched.c \
+			sched-idle.c \
+			sched-rt.c \
+			sched-tp.c \
 			heap.c \
 			intr.c \
 			map.c \

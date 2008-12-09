@@ -28,12 +28,6 @@
  *
  */
 
-#include <nucleus/pod.h>
-#include <nucleus/registry.h>
-#ifdef __KERNEL__
-#include <linux/init.h>
-#include <native/syscall.h>
-#endif /* __KERNEL__ */
 #include <native/task.h>
 #include <native/timer.h>
 #include <native/sem.h>
@@ -46,6 +40,7 @@
 #include <native/alarm.h>
 #include <native/intr.h>
 #include <native/misc.h>
+#include <native/syscall.h>
 
 MODULE_DESCRIPTION("Native skin");
 MODULE_AUTHOR("rpm@xenomai.org");

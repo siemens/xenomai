@@ -149,6 +149,20 @@ int rt_pipe_flush(RT_PIPE *pipe,
 int rt_pipe_monitor(RT_PIPE *pipe,
 		    int (*fn)(RT_PIPE *pipe, int event, long arg));
 
+#else /* !__KERNEL__ */
+
+int rt_pipe_bind(RT_PIPE *pipe,
+		 const char *name,
+		 RTIME timeout);
+
+static inline int rt_pipe_unbind(RT_PIPE *pipe)
+{
+    pipe->opaque = XN_NO_HANDLE;
+    return 0;
+}
+
+#endif /* __KERNEL__ */
+
 #ifdef CONFIG_XENO_OPT_NATIVE_PIPE
 
 int __native_pipe_pkg_init(void);
@@ -167,20 +181,6 @@ static inline void __native_pipe_flush_rq(xnqueue_t *rq)
 #define __native_pipe_flush_rq(rq)		do { } while(0)
 
 #endif /* !CONFIG_XENO_OPT_NATIVE_PIPE */
-
-#else /* !__KERNEL__ */
-
-int rt_pipe_bind(RT_PIPE *pipe,
-		 const char *name,
-		 RTIME timeout);
-
-static inline int rt_pipe_unbind(RT_PIPE *pipe)
-{
-    pipe->opaque = XN_NO_HANDLE;
-    return 0;
-}
-
-#endif /* __KERNEL__ */
 
 #ifdef __cplusplus
 }

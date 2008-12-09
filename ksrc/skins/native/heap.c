@@ -732,7 +732,11 @@ int rt_heap_inquire(RT_HEAP *heap, RT_HEAP_INFO *info)
 	info->usablemem = xnheap_usable_mem(&heap->heap_base);
 	info->usedmem = xnheap_used_mem(&heap->heap_base);
 	info->mode = heap->mode;
+#ifdef __XENO_SIM__
+	info->phys_addr = 0;
+#else
 	info->phys_addr = (heap->mode & H_SINGLE) ? virt_to_phys(heap->sba):0;
+#endif
 
       unlock_and_exit:
 

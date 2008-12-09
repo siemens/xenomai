@@ -137,7 +137,7 @@ struct rt_arg_bulk {
 	u_long a6;
 };
 
-#ifdef __KERNEL__
+#if defined (__KERNEL__) || defined(__XENO_SIM__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -160,6 +160,6 @@ void __native_syscall_cleanup(void);
 }
 #endif
 
-#endif /* __KERNEL__ */
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* _NATIVE_SYSCALL_H */

@@ -67,6 +67,15 @@
 #undef CONFIG_XENO_OPT_SCALABLE_SCHED
 
 /* config */
+#undef CONFIG_XENO_OPT_SCHED_CLASSES
+
+/* config */
+#undef CONFIG_XENO_OPT_SCHED_TP
+
+/* config */
+#undef CONFIG_XENO_OPT_SCHED_TP_NRPART
+
+/* config */
 #undef CONFIG_XENO_OPT_SYS_HEAPSZ
 
 /* config */
