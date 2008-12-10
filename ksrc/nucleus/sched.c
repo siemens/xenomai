@@ -518,7 +518,7 @@ void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
 	for (prio = 0; prio < XNSCHED_MLQ_LEVELS; prio++)
 		initq(&q->queue[prio]);
 
-	XENO_ASSERT(NUCLEUS, 
+	XENO_ASSERT(QUEUES, 
 		    hiprio - loprio + 1 < XNSCHED_MLQ_LEVELS,
 		    xnpod_fatal("priority range [%d..%d] is beyond multi-level "
 				"queue indexing capabilities",
@@ -634,21 +634,24 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 	for (;;) {
 		queue = &q->queue[idx];
 		if (!emptyq_p(queue)) {
-			nh = nextpq(queue, h);
+			nh = h ? nextq(queue, &h->plink) : getheadq(queue);
 			if (nh)
 				return (struct xnpholder *)nh;
 		}
 		for (;;) {
-			idx++;
 			lobits >>= 1;
 			if (lobits == 0) {
 				hibits >>= 1;
 				if (hibits == 0)
 					return NULL;
 				lobits = q->lomap[++hi];
-			}
-			if (lobits & 1)
+				idx = hi * BITS_PER_LONG;
+			} else
+				idx++;
+			if (lobits & 1) {
+				h = NULL;
 				break;
+			}
 		}
 	}
 
