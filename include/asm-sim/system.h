@@ -65,6 +65,7 @@ typedef int spl_t;
 #define splhigh(x)  ((x) = mvm_set_irqmask(-1))
 #define splexit(x)  mvm_set_irqmask(x)
 #define splnone()   mvm_set_irqmask(0)
+#define spltest()   (mvm_get_irqmask() != 0)
 #define splget(x)   ((x) = mvm_get_irqmask())
 
 typedef unsigned long xnlock_t;
