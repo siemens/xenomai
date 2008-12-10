@@ -31,7 +31,7 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif
 
-#define xnsched_class_highest	(&xnsched_class_rt)
+#define xnsched_class_highest	(&xnsched_class_tp)
 
 #define for_each_xnsched_class(p) \
    for (p = xnsched_class_highest; p; p = p->next)

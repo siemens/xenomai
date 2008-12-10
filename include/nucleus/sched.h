@@ -33,6 +33,7 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/schedqueue.h>
+#include <nucleus/sched-tp.h>
 
 /* Sched status flags */
 #define XNKCOUT	 0x80000000	/* Sched callout context */
@@ -41,6 +42,8 @@
 #define XNINTCK  0x10000000	/* In master tick handler context */
 #define XNINIRQ  0x08000000	/* In IRQ handling context */
 #define XNSWLOCK 0x04000000	/* In context switch */
+
+#define XNSCHED_EVT_DEADLINE	24 /* Deadline event (thread->signals). */
 
 struct xnsched_rt {
 
@@ -61,6 +64,9 @@ typedef struct xnsched {
 	xnarch_cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
 
 	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	struct xnsched_tp tp;		/*!< Context of TP class. */
+#endif
 
 	xntimerq_t timerqueue;		/* !< Core timer queue. */
 	volatile unsigned inesting;	/*!< Interrupt nesting level. */
@@ -214,6 +220,9 @@ static inline void xnsched_init_tcb(struct xnthread *thread)
 {
 	xnsched_idle_init_tcb(thread);
 	xnsched_rt_init_tcb(thread);
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	xnsched_tp_init_tcb(thread);
+#endif /* CONFIG_XENO_OPT_SCHED_TP */
 }
 
 static inline int xnsched_root_priority(struct xnsched *sched)

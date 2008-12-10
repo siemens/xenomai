@@ -71,23 +71,42 @@ config XENO_OPT_PIPELINE_HEAD
 	doubt, say 'Y' here.
 
 config XENO_OPT_SCHED_CLASSES
-	bool "Enable extended scheduling classes"
-	default n
+	bool "Extra scheduling classes"
+	default y
 	help
 
-	This option enables support for extended scheduling classes
-	into the Xenomai core. Each scheduling class defines its own
-	set of rules for determining when and how to select a new
-	thread to run.
+	Xenomai implements a set of scheduling classes.  Each
+	scheduling class defines its own set of rules for determining
+	when and how to select a new thread to run.
 
-	By default, the Xenomai core implements the common real-time
-	scheduling class, which supports both preemptive fixed-
-	priority FIFO scheduling, and round-robin scheduling.
+	The Xenomai core has a built-in real-time class, which
+	supports both preemptive fixed- priority FIFO scheduling, and
+	round-robin scheduling.
 
-	Enable this option to allow for more scheduling classes to be
-	defined.
+	Enabling this option will allow you to select additional
+	scheduling classes to compile in.
 
 	If in doubt, say N.
+
+config XENO_OPT_SCHED_TP
+	bool "Temporal partitioning"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables support for temporal partitioning.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_TP_NRPART
+	int "Number of partitions"
+	default 4
+	range 1 1024
+	depends on XENO_OPT_SCHED_TP
+	help
+
+	Define here the maximum number of temporal partitions the TP
+	scheduler may have to handle.
 
 config XENO_OPT_PIPE
 	bool

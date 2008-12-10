@@ -55,9 +55,9 @@
  */
 #define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
 #define XNRPIOFF  0x00020000 /**< Stop priority coupling (shadow only) */
-#define XNFPU     0x00040000 /**< Thread uses FPU */
-#define XNSHADOW  0x00080000 /**< Shadow thread */
-#define XNROOT    0x00100000 /**< Root thread (that is, Linux/IDLE) */
+#define XNFPU     0x00100000 /**< Thread uses FPU */
+#define XNSHADOW  0x00200000 /**< Shadow thread */
+#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -79,7 +79,7 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.tof.."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.to..f.."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW|XNRPIOFF)
@@ -136,6 +136,7 @@ struct xnthread;
 struct xnsched;
 struct xnsched_class;
 struct xnsynch;
+struct xnsched_tpslot;
 
 typedef struct xnthrops {
 
@@ -159,6 +160,12 @@ typedef struct xnthread {
 	struct xnsched_class *sched_class; /* Current scheduling class */
 
 	struct xnsched_class *base_class; /* Base scheduling class */
+
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	struct xnsched_tpslot *tps;	/* Current partition slot for TP scheduling */
+
+	struct xnholder tp_link;	/* Link in per-sched TP thread queue */
+#endif
 
 	xnarch_cpumask_t affinity;	/* Processor affinity. */
 

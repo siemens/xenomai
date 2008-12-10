@@ -73,6 +73,9 @@ struct xnsched_idle_param {
 union xnsched_policy_param {
 	struct xnsched_rt_param idle;
 	struct xnsched_rt_param rt;
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	struct xnsched_tp_param tp;
+#endif
 };
 
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
