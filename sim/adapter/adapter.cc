@@ -36,6 +36,12 @@ extern void (*gcic_dframe)(int);
 
 extern "C" {
 
+static inline int get_denormalized_prio(xnthread_t *t, int coreprio)
+{
+	return t->ops && t->ops->get_denormalized_prio
+		? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
+}
+
 static const char *mvm_get_thread_mode (void *tcbarg)
 
 {
@@ -62,9 +68,9 @@ static const char *mvm_get_thread_mode (void *tcbarg)
 	modeString.append("asr");
 
     if (kthread->state & XNBOOST)
-	modeString.append(CString().format("boost=%d",kthread->ops->get_denormalized_prio(kthread, kthread->cprio)));
+	modeString.append(CString().format("boost=%d",get_denormalized_prio(kthread, kthread->cprio)));
     else
-	modeString.append(CString().format("prio=%d",kthread->ops->get_denormalized_prio(kthread, kthread->cprio)));
+	modeString.append(CString().format("prio=%d",get_denormalized_prio(kthread, kthread->cprio)));
 
     return modeString;
 }
