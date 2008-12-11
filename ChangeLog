@@ -1,3 +1,8 @@
+2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls
+	earlier by introducing the per-sched XNSCHED status bit.
+
 2008-12-11  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, ksrc/skins (xnpod_init_thread, xnpod_start_thread,
