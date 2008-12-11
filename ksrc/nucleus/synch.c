@@ -83,8 +83,8 @@
  * wait queue should not be reordered whenever the priority of a
  * blocked thread it holds is changed. If this flag is not specified,
  * changing the priority of a blocked thread using
- * xnpod_renice_thread() will cause this object's wait queue to be
- * reordered according to the new priority level, provided the
+ * xnpod_set_thread_schedparam() will cause this object's wait queue
+ * to be reordered according to the new priority level, provided the
  * synchronization object makes the waiters wait by priority order on
  * the awaited resource (XNSYNCH_PRIO).
  *
@@ -339,7 +339,7 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 	xnsched_track_policy(thread, target);
 
 	if (thread->wchan)
-		xnsynch_renice_sleeper(thread);
+		xnsynch_requeue_sleeper(thread);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(thread, XNRELAX))
@@ -590,7 +590,7 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
 
 /*! 
  * @internal
- * \fn void xnsynch_renice_sleeper(struct xnthread *thread);
+ * \fn void xnsynch_requeue_sleeper(struct xnthread *thread);
  * \brief Change a sleeper's priority.
  *
  * This service is used by the PIP code to update the pending priority
@@ -601,7 +601,7 @@ static void xnsynch_clear_boost(struct xnsynch *synch,
  * @note This routine must be entered nklock locked, interrupts off.
  */
 
-void xnsynch_renice_sleeper(struct xnthread *thread)
+void xnsynch_requeue_sleeper(struct xnthread *thread)
 {
 	struct xnsynch *synch = thread->wchan;
 	struct xnthread *owner;
@@ -958,7 +958,7 @@ EXPORT_SYMBOL(xnsynch_flush);
 EXPORT_SYMBOL(xnsynch_forget_sleeper);
 EXPORT_SYMBOL(xnsynch_init);
 EXPORT_SYMBOL(xnsynch_release_all_ownerships);
-EXPORT_SYMBOL(xnsynch_renice_sleeper);
+EXPORT_SYMBOL(xnsynch_requeue_sleeper);
 EXPORT_SYMBOL(xnsynch_sleep_on);
 EXPORT_SYMBOL(xnsynch_wakeup_one_sleeper);
 EXPORT_SYMBOL(xnsynch_wakeup_this_sleeper);

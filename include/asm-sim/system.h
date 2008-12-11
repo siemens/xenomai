@@ -98,7 +98,6 @@ typedef unsigned long xnlock_t;
 #define XNARCH_TIMER_IRQ	    1
 
 #define XNARCH_THREAD_STACKSZ 0 /* Let the simulator choose. */
-#define XNARCH_ROOT_STACKSZ   0	/* Only a placeholder -- no stack */
 
 #define XNARCH_PROMPT "Xenomai/sim: "
 #define xnarch_loginfo(fmt,args...)  fprintf(stdout, XNARCH_PROMPT fmt , ##args)
@@ -272,7 +271,7 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
 #define __exit
 
 /* Kernel markers */
-#define trace_mark(...);
+#define trace_mark(tag, args...) do { } while(0)
 
 #define container_of(ptr, type, member) ({                      \
         const typeof( ((type *)0)->member ) *__mptr = (ptr);    \

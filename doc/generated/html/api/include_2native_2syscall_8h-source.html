@@ -165,7 +165,7 @@
 <a name="l00137"></a>00137         u_long a6;
 <a name="l00138"></a>00138 };
 <a name="l00139"></a>00139 
-<a name="l00140"></a>00140 <span class="preprocessor">#ifdef __KERNEL__</span>
+<a name="l00140"></a>00140 <span class="preprocessor">#if defined (__KERNEL__) || defined(__XENO_SIM__)</span>
 <a name="l00141"></a>00141 <span class="preprocessor"></span>
 <a name="l00142"></a>00142 <span class="preprocessor">#ifdef __cplusplus</span>
 <a name="l00143"></a>00143 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
@@ -188,11 +188,11 @@
 <a name="l00160"></a>00160 <span class="preprocessor"></span>}
 <a name="l00161"></a>00161 <span class="preprocessor">#endif</span>
 <a name="l00162"></a>00162 <span class="preprocessor"></span>
-<a name="l00163"></a>00163 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00163"></a>00163 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
 <a name="l00164"></a>00164 
 <a name="l00165"></a>00165 <span class="preprocessor">#endif </span><span class="comment">/* _NATIVE_SYSCALL_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:05:56 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

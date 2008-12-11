@@ -31,7 +31,11 @@
 #define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
 #endif
 
+#ifdef CONFIG_XENO_OPT_SCHED_TP
 #define xnsched_class_highest	(&xnsched_class_tp)
+#else
+#define xnsched_class_highest	(&xnsched_class_rt)
+#endif
 
 #define for_each_xnsched_class(p) \
    for (p = xnsched_class_highest; p; p = p->next)
@@ -75,12 +79,12 @@ void xnsched_init(struct xnsched *sched)
 {
 	char htimer_name[XNOBJECT_NAME_LEN];
 	char root_name[XNOBJECT_NAME_LEN];
+	union xnsched_policy_param param;
+	struct xnthread_init_attr attr;
 	int cpu = xnsched_cpu(sched);
 	struct xnsched_class *p;
 
 	for_each_xnsched_class(p) {
-		XENO_BUGON(NUCLEUS,
-			   p->weight > INT_MAX / XNSCHED_CLASS_MAX_THREADS);
 		if (p->sched_init)
 			p->sched_init(sched);
 	}
@@ -110,13 +114,16 @@ void xnsched_init(struct xnsched *sched)
 	sched->zombie = NULL;
 	xnarch_cpus_clear(sched->resched);
 
-	xnthread_init(&sched->rootcb,
-		      &nktbase,
-		      root_name, XNSCHED_IDLE_PRIO,
-		      XNROOT | XNSTARTED | XNFPU,
-		      XNARCH_ROOT_STACKSZ,
-		      NULL);
-	sched->rootcb.sched = sched;
+	attr.flags = XNROOT | XNSTARTED | XNFPU;
+	attr.name = root_name;
+	attr.stacksize = 0;
+	attr.tbase = &nktbase;
+	attr.ops = NULL;
+	param.idle.prio = XNSCHED_IDLE_PRIO;
+
+	xnthread_init(&sched->rootcb, &attr,
+		      sched, &xnsched_class_idle, &param);
+
 	sched->rootcb.affinity = xnarch_cpumask_of_cpu(cpu);
 	xnstat_exectime_set_current(sched, &sched->rootcb.stat.account);
 #ifdef CONFIG_XENO_HW_FPU
@@ -346,11 +353,17 @@ void xnsched_set_policy(struct xnthread *thread,
 			struct xnsched_class *sched_class,
 			const union xnsched_policy_param *p)
 {
-	if (xnthread_test_state(thread, XNREADY))
-		xnsched_dequeue(thread);
+	/*
+	 * As a special case, we may be called from xnthread_init()
+	 * with no previous scheduling class at all.
+	 */
+	if (likely(thread->base_class)) {
+		if (xnthread_test_state(thread, XNREADY))
+			xnsched_dequeue(thread);
 
-	if (sched_class != thread->base_class)
-		xnsched_forget(thread);
+		if (sched_class != thread->base_class)
+			xnsched_forget(thread);
+	}
 
 	thread->sched_class = sched_class;
 	thread->base_class = sched_class;
@@ -359,7 +372,8 @@ void xnsched_set_policy(struct xnthread *thread,
 	if (xnthread_test_state(thread, XNREADY))
 		xnsched_enqueue(thread);
 
-	xnsched_set_resched(thread->sched);
+	if (xnthread_test_state(thread, XNSTARTED))
+		xnsched_set_resched(thread->sched);
 }
 
 /* Must be called with nklock locked, interrupts off. */
@@ -454,7 +468,7 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  *
  * The active scheduling class is requested to rotate its runqueue for
  * the current CPU. Rotation is performed on the priority level
- * specified by @prio. A scheduling class is active when the current
+ * specified by @a prio. A scheduling class is active when the current
  * thread belongs to it.
  *
  * For instance, a round-robin scheduling policy may be implemented by

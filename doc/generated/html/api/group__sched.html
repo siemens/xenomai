@@ -48,6 +48,11 @@
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Common real-time scheduling class implementation (FIFO + RR). <br></td></tr>
 
 <p>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="sched-tp_8c.html">sched-tp.c</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Temporal partitioning (typical of IMA systems). <br></td></tr>
+
+<p>
 <tr><td colspan="2"><br><h2>Data Structures</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html">xnsched</a></td></tr>
 
@@ -77,7 +82,7 @@
 <p>
 Rotate a priority level in the runqueue. 
 <p>
-The active scheduling class is requested to rotate its runqueue for the current CPU. Rotation is performed on the priority level specified by . A scheduling class is active when the current thread belongs to it.<p>
+The active scheduling class is requested to rotate its runqueue for the current CPU. Rotation is performed on the priority level specified by <em>prio</em>. A scheduling class is active when the current thread belongs to it.<p>
 For instance, a round-robin scheduling policy may be implemented by periodically issuing this call when the RT class is active, in which case the thread leading the specified priority group will be moved at the end of the latter.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The nucleus already provides a built-in round-robin mode for the RT class (see <a class="el" href="group__pod.html#g072d9a7d5c9a369061786c8a5b05b7fc" title="Globally activate the round-robin scheduling.">xnpod_activate_rr()</a>).</dd></dl>
 <dl compact><dt><b>Parameters:</b></dt><dd>
@@ -91,12 +96,12 @@ This service should be called from:<p>
 <li>Kernel-based task</li><li>Interrupt service routine (preempting a Xenomai thread)</li><li>User-space task (primary mode only)</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="sched_8h-source.html#l00060">xnsched::curr</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00063">xnsched::curr</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:06:02 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:55 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

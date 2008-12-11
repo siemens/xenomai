@@ -986,7 +986,8 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay);
 
 static inline void rtdm_task_set_priority(rtdm_task_t *task, int priority)
 {
-	xnpod_renice_thread(task, priority);
+	union xnsched_policy_param param = { .rt = { .prio = priority } };
+	xnpod_set_thread_schedparam(task, &xnsched_class_rt, &param);
 	xnpod_schedule();
 }
 

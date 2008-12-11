@@ -1,7 +1,8 @@
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="208,81,325,105">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="281,81,399,105">
 <area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="112,231,216,255">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="212,156,321,180">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="216,156,325,180">
 <area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="349,156,472,180">
+<area shape="rect" href="$schedparam_8h&#45;source.html" title="nucleus/schedparam.h" alt="" coords="496,156,648,180">
 <area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="316,380,428,404">
 <area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="301,455,429,479">
 <area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,455,571,479">

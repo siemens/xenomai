@@ -195,7 +195,7 @@ int xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
 
 void xnsynch_release_all_ownerships(struct xnthread *thread);
 
-void xnsynch_renice_sleeper(struct xnthread *thread);
+void xnsynch_requeue_sleeper(struct xnthread *thread);
 
 void xnsynch_forget_sleeper(struct xnthread *thread);
 

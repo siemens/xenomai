@@ -73,12 +73,12 @@ Real-time pod services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g824dc22468666c9f14da1842f0184b84">xnpod_shutdown</a> (int xtype)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="#g824dc22468666c9f14da1842f0184b84"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d">xnpod_init_thread</a> (xnthread_t *thread, xntbase_t *tbase, const char *name, int prio, xnflags_t flags, unsigned stacksize, xnthrops_t *ops)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread</a> (struct xnthread *thread, const struct xnthread_init_attr *attr, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="#g3f58282d6373a9d47da258f26181365d"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="#gd71ebccc5b7b3d367f65127a8849c036"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66">xnpod_start_thread</a> (xnthread_t *thread, const struct xnthread_start_attr *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="#g0717d8705635fe0f30455f37e8d0e280"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="#gd322f6afd62430705486a9036d0b7d66"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g61624578d0f1979f1ca6a5e9e49a74a3">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="#g61624578d0f1979f1ca6a5e9e49a74a3"></a><br></td></tr>
@@ -100,9 +100,9 @@ Real-time pod services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ge5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="#ge5f0d19e7a499b9b262f68a43ab545dd"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g1282a77af15a1421fb9bd0f5b90330b5">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gae550ac24b444d0430353fc80a3c79ab">xnpod_set_thread_schedparam</a> (struct xnthread *thread, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="#g1282a77af15a1421fb9bd0f5b90330b5"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base scheduling parameters of a thread.  <a href="#gae550ac24b444d0430353fc80a3c79ab"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g4d14486d26a32a2660697f5a88d8301d">xnpod_migrate_thread</a> (int cpu)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="#g4d14486d26a32a2660697f5a88d8301d"></a><br></td></tr>
@@ -170,7 +170,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if the current thread self-deletes. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="pod_8c-source.html#l01033">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="pod_8c-source.html#l01036">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -271,7 +271,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01208">rt_task_add_hook()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01223">rt_task_add_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -324,7 +324,7 @@ Rescheduling: never.
 <p>
 Delete a thread. 
 <p>
-Terminates a thread and releases all the nucleus resources it currently holds. A thread exists in the system since <a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d" title="Initialize a new thread.">xnpod_init_thread()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
+Terminates a thread and releases all the nucleus resources it currently holds. A thread exists in the system since <a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036" title="Initialize a new thread.">xnpod_init_thread()</a> has been called to create it, so this service must be called in order to destroy it afterwards.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the terminated thread.</td></tr>
@@ -339,9 +339,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if the current thread self-deletes. 
-<p>References <a class="el" href="sched_8h-source.html#l00060">xnsched::curr</a>, <a class="el" href="sched_8h-source.html#l00059">xnsched::status</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMIGRATE</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, <a class="el" href="synch_8c-source.html#l00936">xnsynch_release_all_ownerships()</a>, <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00836">xntimer_destroy()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00038">XNZOMBIE</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00063">xnsched::curr</a>, <a class="el" href="sched_8h-source.html#l00062">xnsched::status</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMIGRATE</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, <a class="el" href="synch_8c-source.html#l00936">xnsynch_release_all_ownerships()</a>, <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00836">xntimer_destroy()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00038">XNZOMBIE</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00250">rt_task_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00581">rt_task_delete()</a>, <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>, <a class="el" href="pod_8c-source.html#l01203">xnpod_abort_thread()</a>, and <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00250">rt_task_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00594">rt_task_delete()</a>, <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>, <a class="el" href="pod_8c-source.html#l01206">xnpod_abort_thread()</a>, and <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>.</p>
 
 </div>
 </div><p>
@@ -402,7 +402,7 @@ This internal routine checks for the presence of asynchronous signals directed t
 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00049">XNASDI</a>.</p>
 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l02001">xnpod_welcome_thread()</a>, and <a class="el" href="shadow_8c-source.html#l00895">xnshadow_harden()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l02023">xnpod_welcome_thread()</a>, and <a class="el" href="shadow_8c-source.html#l00895">xnshadow_harden()</a>.</p>
 
 </div>
 </div><p>
@@ -444,7 +444,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Built-in support for periodic timing depends on CONFIG_XENO_OPT_TIMING_PERIODIC. </dd></dl>
 
-<p>References <a class="el" href="sched_8h-source.html#l00067">xnsched::htimer</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00628">xnintr_init()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00073">xnsched::htimer</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00628">xnintr_init()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>.</p>
 
 <p>Referenced by <a class="el" href="pod_8c-source.html#l00328">xnpod_init()</a>.</p>
 
@@ -479,55 +479,37 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization code </li></ul>
 
-<p>References <a class="el" href="pod_8h-source.html#l00082">xnpod::refcnt</a>, <a class="el" href="sched_8h-source.html#l00069">xnsched::rootcb</a>, <a class="el" href="pod_8h-source.html#l00071">xnpod::sched</a>, <a class="el" href="pod_8h-source.html#l00069">xnpod::status</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tdeleteq</a>, <a class="el" href="pod_8h-source.html#l00073">xnpod::threadq</a>, <a class="el" href="pod_8h-source.html#l00080">xnpod::timerlck</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tstartq</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tswitchq</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00272">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="pod_8c-source.html#l02572">xnpod_enable_timesource()</a>, and <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00082">xnpod::refcnt</a>, <a class="el" href="sched_8h-source.html#l00075">xnsched::rootcb</a>, <a class="el" href="pod_8h-source.html#l00071">xnpod::sched</a>, <a class="el" href="pod_8h-source.html#l00069">xnpod::status</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tdeleteq</a>, <a class="el" href="pod_8h-source.html#l00073">xnpod::threadq</a>, <a class="el" href="pod_8h-source.html#l00080">xnpod::timerlck</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tstartq</a>, <a class="el" href="pod_8h-source.html#l00076">xnpod::tswitchq</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00268">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00163">xnheap_init()</a>, <a class="el" href="pod_8c-source.html#l02594">xnpod_enable_timesource()</a>, and <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>.</p>
 
 </div>
 </div><p>
-<a class="anchor" name="g3f58282d6373a9d47da258f26181365d"></a><!-- doxytag: member="pod.h::xnpod_init_thread" ref="g3f58282d6373a9d47da258f26181365d" args="(xnthread_t *thread, xntbase_t *tbase, const char *name, int prio, xnflags_t flags, unsigned stacksize, xnthrops_t *ops)" -->
+<a class="anchor" name="gd71ebccc5b7b3d367f65127a8849c036"></a><!-- doxytag: member="pod.h::xnpod_init_thread" ref="gd71ebccc5b7b3d367f65127a8849c036" args="(struct xnthread *thread, const struct xnthread_init_attr *attr, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int xnpod_init_thread           </td>
           <td>(</td>
-          <td class="paramtype">xnthread_t *&nbsp;</td>
+          <td class="paramtype">struct xnthread *&nbsp;</td>
           <td class="paramname"> <em>thread</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">xntbase_t *&nbsp;</td>
-          <td class="paramname"> <em>tbase</em>, </td>
+          <td class="paramtype">const struct xnthread_init_attr *&nbsp;</td>
+          <td class="paramname"> <em>attr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const char *&nbsp;</td>
-          <td class="paramname"> <em>name</em>, </td>
+          <td class="paramtype">struct xnsched_class *&nbsp;</td>
+          <td class="paramname"> <em>sched_class</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>prio</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">xnflags_t&nbsp;</td>
-          <td class="paramname"> <em>flags</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned&nbsp;</td>
-          <td class="paramname"> <em>stacksize</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">xnthrops_t *&nbsp;</td>
-          <td class="paramname"> <em>ops</em></td><td>&nbsp;</td>
+          <td class="paramtype">const union xnsched_policy_param *&nbsp;</td>
+          <td class="paramname"> <em>sched_param</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -541,7 +523,7 @@ This service can be called from:<p>
 <p>
 Initialize a new thread. 
 <p>
-Initializes a new thread attached to the active pod. The thread is left in an innocuous state until it is actually started by <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280" title="Initial start of a newly created thread.">xnpod_start_thread()</a>.<p>
+Initializes a new thread attached to the active pod. The thread is left in an innocuous state until it is actually started by <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a>.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The address of a thread descriptor the nucleus will use to store the thread-specific data. This descriptor must always be valid while the thread is active therefore it must be allocated in permanent memory. </td></tr>
@@ -550,27 +532,39 @@ Initializes a new thread attached to the active pod. The thread is left in an in
 <dl class="warning" compact><dt><b>Warning:</b></dt><dd>Some architectures may require the descriptor to be properly aligned in memory; this is an additional reason for descriptors not to be laid in the program stack where alignement constraints might not always be satisfied.</dd></dl>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by the nucleus for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. The simulator even uses this name intensively to identify threads in the debugging GUI it provides. However, passing NULL here is always legal and means "anonymous".</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>tbase</em>&nbsp;</td><td>The time base descriptor to refer to for all timed operations issued by the new thread. See <a class="el" href="group__timebase.html#gfcb0a76ac26eaaa768db89cb54e3f24a" title="Allocate a time base.">xntbase_alloc()</a> for detailed explanations about time bases.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new thread. This value must range from [loprio .. hiprio] (inclusive) as specified when calling the <a class="el" href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a" title="Initialize the core pod.">xnpod_init()</a> service.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>flags</em>&nbsp;</td><td>A set of creation flags affecting the operation. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the created thread:</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>A pointer to an attribute block describing the initial properties of the new thread. Members of this structure are defined as follows:</td></tr>
   </table>
 </dl>
 <ul>
-<li>XNSUSP creates the thread in a suspended state. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread()</a> service for its execution to actually begin, additionally to issuing <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280" title="Initial start of a newly created thread.">xnpod_start_thread()</a> for it. This flag can also be specified when invoking <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280" title="Initial start of a newly created thread.">xnpod_start_thread()</a> as a starting mode.</li></ul>
+<li>name: An ASCII string standing for the symbolic name of the thread. This name is copied to a safe place into the thread descriptor. This name might be used in various situations by the nucleus for issuing human-readable diagnostic messages, so it is usually a good idea to provide a sensible value here. The simulator even uses this name intensively to identify threads in the debugging GUI it provides. However, passing NULL here is always legal and means "anonymous".</li></ul>
+<p>
+<ul>
+<li>tbase: The time base descriptor to refer to for all timed operations issued by the new thread. See <a class="el" href="group__timebase.html#gfcb0a76ac26eaaa768db89cb54e3f24a" title="Allocate a time base.">xntbase_alloc()</a> for detailed explanations about time bases.</li></ul>
+<p>
+<ul>
+<li>flags: A set of creation flags affecting the operation. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the created thread:</li></ul>
+<p>
+<ul>
+<li>XNSUSP creates the thread in a suspended state. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread()</a> service for its execution to actually begin, additionally to issuing <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> for it. This flag can also be specified when invoking <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> as a starting mode.</li></ul>
 <p>
 <ul>
 <li>XNFPU (enable FPU) tells the nucleus that the new thread will use the floating-point unit. In such a case, the nucleus will handle the FPU context save/restore ops upon thread switches at the expense of a few additional cycles per context switch. By default, a thread is not expected to use the FPU. This flag is simply ignored when the nucleus runs on behalf of a userspace-based real-time control layer since the FPU management is always active if present.</li></ul>
 <p>
+<ul>
+<li>stacksize: The size of the stack (in bytes) for the new thread. If zero is passed, the nucleus will use a reasonable pre-defined size depending on the underlying real-time control layer.</li></ul>
+<p>
+<ul>
+<li>ops: A pointer to a structure defining the class-level operations available for this thread. Fields from this structure must have been set appropriately by the caller.</li></ul>
+<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>stacksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new thread. If zero is passed, the nucleus will use a reasonable pre-defined size depending on the underlying real-time control layer.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>ops</em>&nbsp;</td><td>A pointer to a structure defining the class-level operations available for this thread. Fields from this structure must have been set appropriately by the caller.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sched_class</em>&nbsp;</td><td>The initial scheduling class the new thread should be assigned to.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sched_param</em>&nbsp;</td><td>The initial scheduling parameters to set for the new thread; <em>sched_param</em> must be valid within the context of <em>sched_class</em>.</td></tr>
   </table>
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned on success. Otherwise, one of the following error codes indicates the cause of the failure:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>flags</em> has invalid bits set.</li></ul>
+<li>-EINVAL is returned if <em>attr-&gt;flags</em> has invalid bits set.</li></ul>
 <p>
 <ul>
 <li>-ENOMEM is returned if not enough memory is available from the system heap to create the new thread's stack.</li></ul>
@@ -582,7 +576,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00058">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00058">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
 
 <p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00180">pthread_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00250">rt_task_create()</a>, and <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>.</p>
 
@@ -621,7 +615,7 @@ This call makes the current thread migrate to another CPU if its affinity allows
   </table>
 </dl>
 
-<p>References <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -667,63 +661,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01246">rt_task_remove_hook()</a>.</p>
-
-</div>
-</div><p>
-<a class="anchor" name="g1282a77af15a1421fb9bd0f5b90330b5"></a><!-- doxytag: member="pod.h::xnpod_renice_thread" ref="g1282a77af15a1421fb9bd0f5b90330b5" args="(xnthread_t *thread, int prio)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void xnpod_renice_thread           </td>
-          <td>(</td>
-          <td class="paramtype">xnthread_t *&nbsp;</td>
-          <td class="paramname"> <em>thread</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>prio</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td width="100%"></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Change the base priority of a thread. 
-<p>
-Changes the base priority of a thread. If the reniced thread is currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO) for a synchronization object to be signaled, the nucleus will attempt to reorder the object's wait queue so that it reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag has been set for the pended object.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The new thread priority.</td></tr>
-  </table>
-</dl>
-It is absolutely required to use this service to change a thread priority, in order to have all the needed housekeeping chores correctly performed. i.e. Do *not* change the thread.cprio field by hand, unless the thread is known to be in an innocuous state (e.g. dormant).<p>
-Side-effects:<p>
-<ul>
-<li>This service does not call the rescheduling procedure but may affect the ready queue.</li></ul>
-<p>
-<ul>
-<li>Assigning the same priority to a running or ready thread moves it to the end of the ready queue, thus causing a manual round-robin.</li></ul>
-<p>
-<ul>
-<li>If the reniced thread is a user-space shadow, propagate the request to the mated Linux task.</li></ul>
-<p>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
-<p>
-Rescheduling: never. 
-<p>Referenced by <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00841">rt_task_set_priority()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01261">rt_task_remove_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -746,10 +684,10 @@ Rescheduling: never.
 <p>
 Restart a thread. 
 <p>
-Restarts a previously started thread. The thread is first terminated then respawned using the same information that prevailed when it was first started, including the mode bits and interrupt mask initially passed to the <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service. As a consequence of this call, the thread entry point is rerun.<p>
+Restarts a previously started thread. The thread is first terminated then respawned using the same information that prevailed when it was first started, including the mode bits and interrupt mask initially passed to the <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service. As a consequence of this call, the thread entry point is rerun.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously started by the <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously started by the <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66" title="Initial start of a newly created thread.">xnpod_start_thread()</a> service.</td></tr>
   </table>
 </dl>
 Self-restarting a thread is allowed. However, restarting the root thread is not.<p>
@@ -759,7 +697,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01490">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01619">xnpod_unblock_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNRESTART</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00040">XNSTARTED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00936">xnsynch_release_all_ownerships()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01493">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01622">xnpod_unblock_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNRESTART</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00040">XNSTARTED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00936">xnsynch_release_all_ownerships()</a>.</p>
 
 </div>
 </div><p>
@@ -823,9 +761,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="sched_8h-source.html#l00060">xnsched::curr</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00497">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00063">xnsched::curr</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00497">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l02055">rt_task_reply()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00502">rt_task_resume()</a>, <a class="el" href="pod_8c-source.html#l00848">xnpod_restart_thread()</a>, <a class="el" href="pod_8c-source.html#l00735">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01619">xnpod_unblock_thread()</a>, <a class="el" href="synch_8c-source.html#l00826">xnsynch_flush()</a>, <a class="el" href="synch_8c-source.html#l00687">xnsynch_release()</a>, <a class="el" href="synch_8c-source.html#l00232">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="synch_8c-source.html#l00303">xnsynch_wakeup_this_sleeper()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l02070">rt_task_reply()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00515">rt_task_resume()</a>, <a class="el" href="pod_8c-source.html#l00853">xnpod_restart_thread()</a>, <a class="el" href="pod_8c-source.html#l00740">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01622">xnpod_unblock_thread()</a>, <a class="el" href="synch_8c-source.html#l00826">xnsynch_flush()</a>, <a class="el" href="synch_8c-source.html#l00687">xnsynch_release()</a>, <a class="el" href="synch_8c-source.html#l00232">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="synch_8c-source.html#l00303">xnsynch_wakeup_this_sleeper()</a>.</p>
 
 </div>
 </div><p>
@@ -867,9 +805,9 @@ This service can be called from:<p>
 <p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The switch hooks are called on behalf of the resuming thread. </dd></dl>
 
-<p>References <a class="el" href="sched_8h-source.html#l00059">xnsched::status</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00062">xnsched::status</a>.</p>
 
-<p>Referenced by <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00577">pthread_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00527">pthread_cond_signal()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00311">pthread_detach()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00439">pthread_join()</a>, <a class="el" href="signal_8c-source.html#l00529">pthread_kill()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c-source.html#l00590">pthread_mutex_unlock()</a>, <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, <a class="el" href="signal_8c-source.html#l00701">pthread_sigmask()</a>, <a class="el" href="signal_8c-source.html#l00587">pthread_sigqueue_np()</a>, <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00270">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00898">rt_buffer_clear()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00266">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00354">rt_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00228">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00298">rt_cond_signal()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00249">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00318">rt_event_signal()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00624">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00336">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00555">rt_mutex_release()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00589">rt_queue_send()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00546">rt_sem_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00248">rt_sem_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00492">rt_sem_v()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01283">rt_task_catch()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01343">rt_task_notify()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l02055">rt_task_reply()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00502">rt_task_resume()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01467">rt_task_set_mode()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00841">rt_task_set_priority()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01049">rt_task_unblock()</a>, <a class="el" href="drvlib_8c-source.html#l00835">rtdm_event_signal()</a>, <a class="el" href="drvlib_8c-source.html#l01284">rtdm_sem_up()</a>, <a class="el" href="ksrc_2skins_2posix_2sem_8c-source.html#l00716">sem_post()</a>, <a class="el" href="pod_8c-source.html#l01033">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01787">xnpod_migrate_thread()</a>, <a class="el" href="pod_8c-source.html#l00848">xnpod_restart_thread()</a>, <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>, <a class="el" href="pod_8c-source.html#l00735">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00596">xnregistry_enter()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l01103">xnregistry_put()</a>, <a class="el" href="select_8c-source.html#l00107">xnselect_bind()</a>, and <a class="el" href="select_8c-source.html#l00389">xnselector_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00577">pthread_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00527">pthread_cond_signal()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00325">pthread_detach()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00453">pthread_join()</a>, <a class="el" href="signal_8c-source.html#l00529">pthread_kill()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c-source.html#l00590">pthread_mutex_unlock()</a>, <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, <a class="el" href="signal_8c-source.html#l00701">pthread_sigmask()</a>, <a class="el" href="signal_8c-source.html#l00587">pthread_sigqueue_np()</a>, <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00270">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00898">rt_buffer_clear()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00266">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00354">rt_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00228">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00298">rt_cond_signal()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00249">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00318">rt_event_signal()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00624">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00336">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00555">rt_mutex_release()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00589">rt_queue_send()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00546">rt_sem_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00248">rt_sem_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00492">rt_sem_v()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01298">rt_task_catch()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01358">rt_task_notify()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l02070">rt_task_reply()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00515">rt_task_resume()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01482">rt_task_set_mode()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00854">rt_task_set_priority()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01064">rt_task_unblock()</a>, <a class="el" href="drvlib_8c-source.html#l00850">rtdm_event_signal()</a>, <a class="el" href="drvlib_8c-source.html#l01299">rtdm_sem_up()</a>, <a class="el" href="ksrc_2skins_2posix_2sem_8c-source.html#l00716">sem_post()</a>, <a class="el" href="pod_8c-source.html#l01036">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01809">xnpod_migrate_thread()</a>, <a class="el" href="pod_8c-source.html#l00853">xnpod_restart_thread()</a>, <a class="el" href="pod_8c-source.html#l00448">xnpod_shutdown()</a>, <a class="el" href="pod_8c-source.html#l00740">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00596">xnregistry_enter()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l01105">xnregistry_put()</a>, <a class="el" href="select_8c-source.html#l00107">xnselect_bind()</a>, and <a class="el" href="select_8c-source.html#l00389">xnselector_destroy()</a>.</p>
 
 </div>
 </div><p>
@@ -935,7 +873,7 @@ This service can be called from:<p>
 Rescheduling: never, therefore, the caller should reschedule if XNLOCK has been passed into <em>clrmask</em>. 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00048">XNRRB</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00675">pthread_set_mode_np()</a>, <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01467">rt_task_set_mode()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00689">pthread_set_mode_np()</a>, <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01482">rt_task_set_mode()</a>.</p>
 
 </div>
 </div><p>
@@ -999,9 +937,72 @@ This service can be called from:<p>
 Rescheduling: possible if the operation affects the current thread and <em>idate</em> has not elapsed yet.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>idate</em> and <em>period</em> values will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00497">xntimer_stop()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>, and <a class="el" href="include_2nucleus_2timer_8h-source.html#l00497">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00576">pthread_make_periodic_np()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00713">rt_task_set_periodic()</a>, and <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00590">pthread_make_periodic_np()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00726">rt_task_set_periodic()</a>, and <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="gae550ac24b444d0430353fc80a3c79ab"></a><!-- doxytag: member="pod.h::xnpod_set_thread_schedparam" ref="gae550ac24b444d0430353fc80a3c79ab" args="(struct xnthread *thread, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void xnpod_set_thread_schedparam           </td>
+          <td>(</td>
+          <td class="paramtype">struct xnthread *&nbsp;</td>
+          <td class="paramname"> <em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct xnsched_class *&nbsp;</td>
+          <td class="paramname"> <em>sched_class</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const union xnsched_policy_param *&nbsp;</td>
+          <td class="paramname"> <em>sched_param</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td width="100%"></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Change the base scheduling parameters of a thread. 
+<p>
+Changes the base scheduling policy and paramaters of a thread. If the thread is currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO) for a synchronization object to be signaled, the nucleus will attempt to reorder the object's wait queue so that it reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag has been set for the pended object.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sched_class</em>&nbsp;</td><td>The new scheduling class the thread should be assigned to.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>sched_param</em>&nbsp;</td><td>The scheduling parameters to set for the thread; <em>sched_param</em> must be valid within the context of <em>sched_class</em>.</td></tr>
+  </table>
+</dl>
+It is absolutely required to use this service to change a thread priority, in order to have all the needed housekeeping chores correctly performed. i.e. Do *not* call xnsched_set_policy() directly or worse, change the thread.cprio field by hand in any case.<p>
+Side-effects:<p>
+<ul>
+<li>This service does not call the rescheduling procedure but may affect the state of the runnable queue for the previous and new scheduling classes.</li></ul>
+<p>
+<ul>
+<li>Assigning the same scheduling class and parameters to a running or ready thread moves it to the end of the runnable queue, thus causing a manual round-robin.</li></ul>
+<p>
+<ul>
+<li>If the thread is a user-space shadow, this call propagates the request to the mated Linux task.</li></ul>
+<p>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
+<p>
+Rescheduling: never. 
+<p>Referenced by <a class="el" href="skins_2posix_2sched_8c-source.html#l00262">pthread_setschedparam()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00854">rt_task_set_priority()</a>.</p>
 
 </div>
 </div><p>
@@ -1037,13 +1038,13 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00272">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l01033">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l02673">xnpod_disable_timesource()</a>, <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00268">xnheap_destroy()</a>, <a class="el" href="pod_8c-source.html#l01036">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l02695">xnpod_disable_timesource()</a>, <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>.</p>
 
 <p>Referenced by <a class="el" href="pod_8c-source.html#l00328">xnpod_init()</a>.</p>
 
 </div>
 </div><p>
-<a class="anchor" name="g0717d8705635fe0f30455f37e8d0e280"></a><!-- doxytag: member="pod.h::xnpod_start_thread" ref="g0717d8705635fe0f30455f37e8d0e280" args="(xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)" -->
+<a class="anchor" name="gd322f6afd62430705486a9036d0b7d66"></a><!-- doxytag: member="pod.h::xnpod_start_thread" ref="gd322f6afd62430705486a9036d0b7d66" args="(xnthread_t *thread, const struct xnthread_start_attr *attr)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1056,32 +1057,8 @@ Rescheduling: never.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">xnflags_t&nbsp;</td>
-          <td class="paramname"> <em>mode</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>imask</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">xnarch_cpumask_t&nbsp;</td>
-          <td class="paramname"> <em>affinity</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">void(*)(void *cookie)&nbsp;</td>
-          <td class="paramname"> <em>entry</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">void *&nbsp;</td>
-          <td class="paramname"> <em>cookie</em></td><td>&nbsp;</td>
+          <td class="paramtype">const struct xnthread_start_attr *&nbsp;</td>
+          <td class="paramname"> <em>attr</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -1098,10 +1075,13 @@ Initial start of a newly created thread.
 Starts a (newly) created thread, scheduling it for the first time. This call releases the target thread from the XNDORMANT state. This service also sets the initial mode and interrupt mask for the new thread.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously initialized by the <a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d" title="Initialize a new thread.">xnpod_init_thread()</a> service.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The initial thread mode. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the started thread:</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the affected thread which must have been previously initialized by the <a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036" title="Initialize a new thread.">xnpod_init_thread()</a> service.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>A pointer to an attribute block describing the execution properties of the new thread. Members of this structure are defined as follows:</td></tr>
   </table>
 </dl>
+<ul>
+<li>mode: The initial thread mode. The following flags can be part of this bitmask, each of them affecting the nucleus behaviour regarding the started thread:</li></ul>
+<p>
 <ul>
 <li>XNLOCK causes the thread to lock the scheduler when it starts. The target thread will have to call the xnpod_unlock_sched() service to unlock the scheduler. A non-preemptible thread may still block, in which case, the lock is reasserted when the thread is scheduled back in.</li></ul>
 <p>
@@ -1114,20 +1094,24 @@ Starts a (newly) created thread, scheduling it for the first time. This call rel
 <ul>
 <li>XNSUSP makes the thread start in a suspended state. In such a case, the thread will have to be explicitly resumed using the <a class="el" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread()</a> service for its execution to actually begin.</li></ul>
 <p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>imask</em>&nbsp;</td><td>The interrupt mask that should be asserted when the thread starts. The processor interrupt state will be set to the given value when the thread starts running. The interpretation of this value might be different across real-time layers, but a non-zero value should always mark an interrupt masking in effect (e.g. local_irq_disable()). Conversely, a zero value should always mark a fully preemptible state regarding interrupts (e.g. local_irq_enable()).</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>affinity</em>&nbsp;</td><td>The processor affinity of this thread. Passing XNPOD_ALL_CPUS or an empty affinity set means "any cpu".</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>entry</em>&nbsp;</td><td>The address of the thread's body routine. In other words, it is the thread entry point.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>cookie</em>&nbsp;</td><td>A user-defined opaque cookie the nucleus will pass to the emerging thread as the sole argument of its entry point.</td></tr>
-  </table>
-</dl>
+<ul>
+<li>imask: The interrupt mask that should be asserted when the thread starts. The processor interrupt state will be set to the given value when the thread starts running. The interpretation of this value might be different across real-time layers, but a non-zero value should always mark an interrupt masking in effect (e.g. local_irq_disable()). Conversely, a zero value should always mark a fully preemptible state regarding interrupts (e.g. local_irq_enable()).</li></ul>
+<p>
+<ul>
+<li>affinity: The processor affinity of this thread. Passing XNPOD_ALL_CPUS or an empty affinity set means "any cpu".</li></ul>
+<p>
+<ul>
+<li>entry: The address of the thread's body routine. In other words, it is the thread entry point.</li></ul>
+<p>
+<ul>
+<li>cookie: A user-defined opaque cookie the nucleus will pass to the emerging thread as the sole argument of its entry point.</li></ul>
+<p>
 The START hooks are called on behalf of the calling context (if any).<p>
 <dl compact><dt><b>Return values:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>0</em>&nbsp;</td><td>if <em>thread</em> could be started ;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>-EBUSY</em>&nbsp;</td><td>if <em>thread</em> was already started ;</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>-EINVAL</em>&nbsp;</td><td>if the value of <em>affinity</em> is invalid.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>-EINVAL</em>&nbsp;</td><td>if the value of <em>attr-&gt;affinity</em> is invalid.</td></tr>
   </table>
 </dl>
 Environments:<p>
@@ -1136,9 +1120,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="pod_8c-source.html#l01490">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00048">XNRRB</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00040">XNSTARTED</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="pod_8c-source.html#l01493">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00048">XNRRB</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00040">XNSTARTED</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00180">pthread_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00356">rt_task_start()</a>, <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>, and <a class="el" href="shadow_8c-source.html#l01172">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00180">pthread_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00365">rt_task_start()</a>, <a class="el" href="drvlib_8c-source.html#l00138">rtdm_task_init()</a>, and <a class="el" href="shadow_8c-source.html#l01172">xnshadow_map()</a>.</p>
 
 </div>
 </div><p>
@@ -1220,9 +1204,9 @@ This service can be called from:<p>
 Rescheduling: possible if the current thread suspends itself.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="sched_8h-source.html#l00060">xnsched::curr</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00105">XNKICKED</a>, <a class="el" href="pod_8h-source.html#l00236">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00103">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00107">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00102">XNTIMEO</a>, <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNWAKEN</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00063">xnsched::curr</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDORMANT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00105">XNKICKED</a>, <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNREADY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00103">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00107">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>, <a class="el" href="synch_8c-source.html#l00877">xnsynch_forget_sleeper()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00102">XNTIMEO</a>, <a class="el" href="include_2nucleus_2timer_8h-source.html#l00465">xntimer_start()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNWAKEN</a>.</p>
 
-<p>Referenced by <a class="el" href="clock_8c-source.html#l00221">clock_nanosleep()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00914">rt_task_sleep()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00978">rt_task_sleep_until()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00435">rt_task_suspend()</a>, <a class="el" href="pod_8c-source.html#l01203">xnpod_abort_thread()</a>, <a class="el" href="pod_8c-source.html#l00625">xnpod_init_thread()</a>, <a class="el" href="pod_8c-source.html#l02757">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l02447">xnpod_trap_fault()</a>, <a class="el" href="pod_8c-source.html#l02857">xnpod_wait_thread_period()</a>, <a class="el" href="shadow_8c-source.html#l01172">xnshadow_map()</a>, <a class="el" href="shadow_8c-source.html#l01033">xnshadow_relax()</a>, <a class="el" href="synch_8c-source.html#l00394">xnsynch_acquire()</a>, and <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>.</p>
+<p>Referenced by <a class="el" href="clock_8c-source.html#l00221">clock_nanosleep()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00929">rt_task_sleep()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00993">rt_task_sleep_until()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00448">rt_task_suspend()</a>, <a class="el" href="pod_8c-source.html#l01206">xnpod_abort_thread()</a>, <a class="el" href="pod_8c-source.html#l00632">xnpod_init_thread()</a>, <a class="el" href="pod_8c-source.html#l02779">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l02469">xnpod_trap_fault()</a>, <a class="el" href="pod_8c-source.html#l02879">xnpod_wait_thread_period()</a>, <a class="el" href="shadow_8c-source.html#l01172">xnshadow_map()</a>, <a class="el" href="shadow_8c-source.html#l01033">xnshadow_relax()</a>, <a class="el" href="synch_8c-source.html#l00394">xnsynch_acquire()</a>, and <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>.</p>
 
 </div>
 </div><p>
@@ -1252,7 +1236,7 @@ This is the default handler which is called whenever an uncontrolled exception o
   </table>
 </dl>
 
-<p>References <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="shadow_8c-source.html#l01033">xnshadow_relax()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="shadow_8c-source.html#l01033">xnshadow_relax()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00033">XNSUSP</a>.</p>
 
 </div>
 </div><p>
@@ -1290,9 +1274,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, and <a class="el" href="pod_8c-source.html#l01490">xnpod_resume_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, and <a class="el" href="pod_8c-source.html#l01493">xnpod_resume_thread()</a>.</p>
 
-<p>Referenced by <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01049">rt_task_unblock()</a>, and <a class="el" href="pod_8c-source.html#l00848">xnpod_restart_thread()</a>.</p>
+<p>Referenced by <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01064">rt_task_unblock()</a>, and <a class="el" href="pod_8c-source.html#l00853">xnpod_restart_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -1337,9 +1321,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: always, unless the current release point has already been reached. In the latter case, the current thread immediately returns from this service without being delayed. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00932">xntimer_get_overruns()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00932">xntimer_get_overruns()</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00628">pthread_wait_np()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00788">rt_task_wait_period()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00642">pthread_wait_np()</a>, and <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00801">rt_task_wait_period()</a>.</p>
 
 </div>
 </div><p>
@@ -1376,12 +1360,12 @@ Thread prologue.
 This internal routine is called on behalf of a (re)starting thread's prologue before the user entry point is invoked. This call is reserved for internal housekeeping chores and cannot be inlined.<p>
 Entered with nklock locked, irqs off. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01946">xnpod_dispatch_signals()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNRESTART</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00047">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01968">xnpod_dispatch_signals()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNRESTART</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:05:58 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:52 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

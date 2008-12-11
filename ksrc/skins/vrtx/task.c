@@ -113,6 +113,9 @@ int sc_tecreate_inner(vrtxtask_t *task,
 		      u_long user,
 		      u_long sys, char *paddr, u_long psize, int *errp)
 {
+	union xnsched_policy_param param;
+	struct xnthread_start_attr sattr;
+	struct xnthread_init_attr iattr;
 	xnflags_t bmode = 0, bflags = 0;
 	char *_paddr = NULL;
 	char name[16];
@@ -158,11 +161,15 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	if (!(mode & 0x8))
 		bflags |= XNFPU;
 
+	iattr.tbase = vrtx_tbase;
+	iattr.name = name;
+	iattr.flags = bflags;
+	iattr.ops = &vrtxtask_ops;
+	iattr.stacksize = user + sys;
+	param.rt.prio = vrtx_normalized_prio(prio);
+
 	if (xnpod_init_thread(&task->threadbase,
-			      vrtx_tbase,
-			      name,
-			      vrtx_normalized_prio(prio),
-			      bflags, user + sys, &vrtxtask_ops) != 0) {
+			      &iattr, &xnsched_class_rt, &param) != 0) {
 		if (_paddr)
 			xnfree(_paddr);
 
@@ -207,9 +214,13 @@ int sc_tecreate_inner(vrtxtask_t *task,
 
 	*errp = RET_OK;
 
-	xnpod_start_thread(&task->threadbase,
-			   bmode, 0, XNPOD_ALL_CPUS, &vrtxtask_trampoline,
-			   task);
+	sattr.mode = bmode;
+	sattr.imask = 0;
+	sattr.affinity = XNPOD_ALL_CPUS;
+	sattr.entry = vrtxtask_trampoline;
+	sattr.cookie = task;
+	xnpod_start_thread(&task->threadbase, &sattr);
+
 	return tid;
 }
 
@@ -312,6 +323,7 @@ void sc_tdelete(int tid, int opt, int *errp)
 
 void sc_tpriority(int tid, int prio, int *errp)
 {
+	union xnsched_policy_param param;
 	vrtxtask_t *task;
 	spl_t s;
 
@@ -339,9 +351,10 @@ void sc_tpriority(int tid, int prio, int *errp)
 		if (!xnthread_test_state(&task->threadbase, XNBOOST))
 			/* ...unless the thread is PIP-boosted. */
 			xnpod_resume_thread(&task->threadbase, 0);
-	} else
-		xnpod_renice_thread(&task->threadbase,
-				    vrtx_normalized_prio(prio));
+	} else {
+		param.rt.prio = vrtx_normalized_prio(prio);
+		xnpod_set_thread_schedparam(&task->threadbase, &xnsched_class_rt, &param);
+	}
 
 	*errp = RET_OK;
 

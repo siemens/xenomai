@@ -261,6 +261,7 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  */
 int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 {
+	union xnsched_policy_param param;
 	xnflags_t clrmask, setmask;
 	spl_t s;
 
@@ -298,7 +299,8 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 		return EINVAL;
 	}
 
-	xnpod_renice_thread(&tid->threadbase, par->sched_priority);
+	param.rt.prio = par->sched_priority;
+	xnpod_set_thread_schedparam(&tid->threadbase, &xnsched_class_rt, &param);
 	xnpod_set_thread_mode(&tid->threadbase, clrmask, setmask);
 
 	xnpod_schedule();

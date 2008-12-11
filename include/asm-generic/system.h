@@ -231,8 +231,6 @@ static inline int xnlock_dbg_release(xnlock_t *lock)
 #define XNARCH_TIMER_DEVICE		RTHAL_TIMER_DEVICE
 #define XNARCH_CLOCK_DEVICE		RTHAL_CLOCK_DEVICE
 
-#define XNARCH_ROOT_STACKSZ		0 /* Only a placeholder -- no stack */
-
 #define XNARCH_PROMPT "Xenomai: "
 #define xnarch_loginfo(fmt, args...)	printk(KERN_INFO XNARCH_PROMPT fmt, ##args)
 #define xnarch_logwarn(fmt, args...)	printk(KERN_WARNING XNARCH_PROMPT fmt, ##args)

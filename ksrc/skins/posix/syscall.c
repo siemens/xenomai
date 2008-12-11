@@ -2023,6 +2023,7 @@ static int __intr_detach(struct pt_regs *regs)
 static int __intr_wait(struct pt_regs *regs)
 {
 	pthread_intr_t intr = (pthread_intr_t) __xn_reg_arg1(regs);
+	union xnsched_policy_param param;
 	struct timespec ts;
 	xnthread_t *thread;
 	xnticks_t timeout;
@@ -2057,9 +2058,11 @@ static int __intr_wait(struct pt_regs *regs)
 	if (!intr->pending) {
 		thread = xnpod_current_thread();
 
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO)
-			/* Renice the waiter above all regular threads if needed. */
-			xnpod_renice_thread(thread, XNSCHED_IRQ_PRIO);
+		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+			/* Boost the waiter above all regular threads if needed. */
+			param.rt.prio = XNSCHED_IRQ_PRIO;
+			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+		}
 
 		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 

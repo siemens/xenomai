@@ -123,6 +123,7 @@
 #include <nucleus/stat.h>
 #include <nucleus/timer.h>
 #include <nucleus/registry.h>
+#include <nucleus/schedparam.h>
 
 #ifdef __XENO_SIM__
 /* Pseudo-status (must not conflict with other bits) */
@@ -133,17 +134,32 @@
 #define XNTHREAD_INVALID_ASR  ((void (*)(xnsigmask_t))0)
 
 struct xnthread;
+struct xnsynch;
 struct xnsched;
 struct xnsched_class;
-struct xnsynch;
 struct xnsched_tpslot;
+union xnsched_policy_param;
 
 typedef struct xnthrops {
-
 	int (*get_denormalized_prio)(struct xnthread *, int coreprio);
 	unsigned (*get_magic)(void);
-
 } xnthrops_t;
+
+struct xnthread_init_attr {
+	struct xntbase *tbase;
+	struct xnthrops *ops;
+	xnflags_t flags;
+	unsigned int stacksize;
+	const char *name;
+};
+
+struct xnthread_start_attr {
+	xnflags_t mode;
+	int imask;
+	xnarch_cpumask_t affinity;
+	void (*entry)(void *cookie);
+	void *cookie;
+};
 
 typedef void (*xnasr_t)(xnsigmask_t sigs);
 
@@ -153,9 +169,9 @@ typedef struct xnthread {
 
 	xnflags_t state;		/* Thread state flags */
 
-	xnflags_t info;		/* Thread information flags */
+	xnflags_t info;			/* Thread information flags */
 
-	struct xnsched *sched;	/* Thread scheduler */
+	struct xnsched *sched;		/* Thread scheduler */
 
 	struct xnsched_class *sched_class; /* Current scheduling class */
 
@@ -234,9 +250,9 @@ typedef struct xnthread {
 
 	int imode;			/* Initial mode */
 
-	int iprio;			/* Initial priority */
-
 	struct xnsched_class *init_class; /* Initial scheduling class */
+
+	union xnsched_policy_param init_schedparam; /* Initial scheduling parameters */
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	struct {
@@ -266,12 +282,9 @@ typedef struct xnthread {
 #define XNHOOK_THREAD_DELETE 3
 
 typedef struct xnhook {
-
 	xnholder_t link;
 #define link2hook(ln)		container_of(ln, xnhook_t, link)
-
 	void (*routine)(xnthread_t *thread);
-
 } xnhook_t;
 
 #define xnthread_name(thread)               ((thread)->name)
@@ -286,9 +299,9 @@ typedef struct xnhook {
 #define xnthread_set_info(thread,flags)    __setbits((thread)->info,flags)
 #define xnthread_clear_info(thread,flags)  __clrbits((thread)->info,flags)
 #define xnthread_lock_count(thread)        ((thread)->schedlck)
-#define xnthread_initial_priority(thread) ((thread)->iprio)
+#define xnthread_init_schedparam(thread)   ((thread)->init_schedparam)
 #define xnthread_base_priority(thread)     ((thread)->bprio)
-#define xnthread_current_priority(thread) ((thread)->cprio)
+#define xnthread_current_priority(thread)  ((thread)->cprio)
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
 #define xnthread_time_credit(thread)       ((thread)->rrcredit)
 #define xnthread_archtcb(thread)           (&((thread)->tcb))
@@ -331,13 +344,11 @@ static inline unsigned xnthread_get_magic(xnthread_t *t)
 extern "C" {
 #endif
 
-int xnthread_init(xnthread_t *thread,
-		  xntbase_t *tbase,
-		  const char *name,
-		  int prio,
-		  xnflags_t flags,
-		  unsigned stacksize,
-		  xnthrops_t *ops);
+int xnthread_init(struct xnthread *thread,
+		  const struct xnthread_init_attr *attr,
+		  struct xnsched *sched,
+		  struct xnsched_class *sched_class,
+		  const union xnsched_policy_param *sched_param);
 
 void xnthread_cleanup_tcb(xnthread_t *thread);
 

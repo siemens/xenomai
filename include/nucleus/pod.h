@@ -104,8 +104,10 @@ extern xnpod_t nkpod_struct;
 extern "C" {
 #endif
 
-void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate);
-
+void __xnpod_set_thread_schedparam(struct xnthread *thread,
+				   struct xnsched_class *sched_class,
+				   const union xnsched_policy_param *sched_param,
+				   int propagate);
 #ifdef CONFIG_XENO_HW_FPU
 void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
@@ -190,20 +192,13 @@ void xnpod_disable_timesource(void);
 
 void xnpod_shutdown(int xtype);
 
-int xnpod_init_thread(xnthread_t *thread,
-		      xntbase_t *tbase,
-		      const char *name,
-		      int prio,
-		      xnflags_t flags,
-		      unsigned stacksize,
-		      xnthrops_t *ops);
+int xnpod_init_thread(struct xnthread *thread,
+		      const struct xnthread_init_attr *attr,
+		      struct xnsched_class *sched_class,
+		      const union xnsched_policy_param *sched_param);
 
 int xnpod_start_thread(xnthread_t *thread,
-		       xnflags_t mode,
-		       int imask,
-		       xnarch_cpumask_t affinity,
-		       void (*entry) (void *cookie),
-		       void *cookie);
+		       const struct xnthread_start_attr *attr);
 
 void xnpod_restart_thread(xnthread_t *thread);
 
@@ -226,8 +221,9 @@ void xnpod_resume_thread(xnthread_t *thread,
 
 int xnpod_unblock_thread(xnthread_t *thread);
 
-void xnpod_renice_thread(xnthread_t *thread,
-			 int prio);
+void xnpod_set_thread_schedparam(struct xnthread *thread,
+				 struct xnsched_class *sched_class,
+				 const union xnsched_policy_param *sched_param);
 
 int xnpod_migrate_thread(int cpu);
 

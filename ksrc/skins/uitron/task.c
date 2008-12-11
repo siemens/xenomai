@@ -83,6 +83,8 @@ void uitask_cleanup(void)
 
 ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 {
+	union xnsched_policy_param param;
+	struct xnthread_init_attr attr;
 	int bflags = XNFPU;
 	uitask_t *task;
 	char aname[32];
@@ -127,11 +129,15 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 
 	sprintf(aname, "tsk%d", tskid);
 
+	attr.tbase = ui_tbase;
+	attr.name = aname;
+	attr.flags = bflags;
+	attr.ops = &uitask_ops;
+	attr.stacksize = pk_ctsk->stksz;
+	param.rt.prio = ui_normalized_prio(pk_ctsk->itskpri);
+
 	if (xnpod_init_thread(&task->threadbase,
-			      ui_tbase,
-			      aname,
-			      ui_normalized_prio(pk_ctsk->itskpri), bflags,
-			      pk_ctsk->stksz, &uitask_ops) != 0) {
+			      &attr, &xnsched_class_rt, &param) != 0) {
 		xnmap_remove(ui_task_idmap, tskid);
 		xnfree(task);
 		return E_NOMEM;
@@ -209,6 +215,7 @@ static void uitask_trampoline(void *cookie)
 
 ER sta_tsk(ID tskid, INT stacd)
 {
+	struct xnthread_start_attr attr;
 	uitask_t *task;
 	ER err = E_OK;
 	spl_t s;
@@ -238,15 +245,21 @@ ER sta_tsk(ID tskid, INT stacd)
 	task->waitinfo = 0;
 	task->stacd = stacd;
 
+	attr.mode = 0;
+	attr.imask = 0;
+	attr.affinity = XNPOD_ALL_CPUS;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (xnthread_test_state(&task->threadbase, XNSHADOW))
-		xnpod_start_thread(&task->threadbase,
-				   0, 0, XNPOD_ALL_CPUS,
-				   (void(*)(void *))task->entry, (void *)(long)stacd);
-	else
+	if (xnthread_test_state(&task->threadbase, XNSHADOW)) {
+		attr.entry = (void(*)(void *))task->entry;
+		attr.cookie = (void *)(long)stacd;
+		xnpod_start_thread(&task->threadbase, &attr);
+	} else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-		xnpod_start_thread(&task->threadbase,
-				   0, 0, XNPOD_ALL_CPUS, uitask_trampoline, task);
+	{
+		attr.entry = uitask_trampoline;
+		attr.cookie = task;
+		xnpod_start_thread(&task->threadbase, &attr);
+	}
 
 	xnpod_resume_thread(&task->threadbase, XNDORMANT);
 
@@ -395,6 +408,7 @@ ER ena_dsp(void)
 
 ER chg_pri(ID tskid, PRI tskpri)
 {
+	union xnsched_policy_param param;
 	uitask_t *task;
 	spl_t s;
 
@@ -429,13 +443,16 @@ ER chg_pri(ID tskid, PRI tskpri)
 	}
 
 	if (tskpri == TPRI_INI)
-		tskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
+		tskpri = ui_denormalized_prio(xnthread_init_schedparam(&task->threadbase).rt.prio);
 
-	/* uITRON specs explicitly states: "If the priority specified
-	   is the same as the current priority, the task will still be
-	   moved behind other tasks of the same priority", so this
-	   allows for manual round-robin. */
-	xnpod_renice_thread(&task->threadbase, ui_normalized_prio(tskpri));
+	/*
+	 * uITRON specs explicitly states: "If the priority specified
+	 * is the same as the current priority, the task will still be
+	 * moved behind other tasks of the same priority", so this
+	 * allows for manual round-robin.
+	 */
+	param.rt.prio = ui_normalized_prio(tskpri);
+	xnpod_set_thread_schedparam(&task->threadbase, &xnsched_class_rt, &param);
 	xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -554,7 +571,7 @@ ER ref_tsk(T_RTSK *pk_rtsk, ID tskid)
 	pk_rtsk->wid = 0;	/* FIXME */
 	pk_rtsk->tskatr = task->tskatr;
 	pk_rtsk->task = task->entry;
-	pk_rtsk->itskpri = ui_denormalized_prio(xnthread_initial_priority(&task->threadbase));
+	pk_rtsk->itskpri = ui_denormalized_prio(xnthread_init_schedparam(&task->threadbase).rt.prio);
 	pk_rtsk->stksz = (INT)xnthread_stack_size(&task->threadbase);
 
 	xnlock_put_irqrestore(&nklock, s);

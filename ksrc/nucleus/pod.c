@@ -540,7 +540,7 @@ void __xnpod_finalize_zombie(xnsched_t *sched)
 }
 
 /*! 
- * \fn void xnpod_init_thread(xnthread_t *thread,xntbase_t *tbase,const char *name,int prio,xnflags_t flags,unsigned stacksize, xnthrops_t *ops)
+ * \fn void xnpod_init_thread(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * \brief Initialize a new thread.
  *
  * Initializes a new thread attached to the active pod. The thread is
@@ -555,7 +555,11 @@ void __xnpod_finalize_zombie(xnsched_t *sched)
  * reason for descriptors not to be laid in the program stack where
  * alignement constraints might not always be satisfied.
  *
- * @param name An ASCII string standing for the symbolic name of the
+ * @param attr A pointer to an attribute block describing the initial
+ * properties of the new thread. Members of this structure are defined
+ * as follows:
+ *
+ * - name: An ASCII string standing for the symbolic name of the
  * thread. This name is copied to a safe place into the thread
  * descriptor. This name might be used in various situations by the
  * nucleus for issuing human-readable diagnostic messages, so it is
@@ -564,47 +568,50 @@ void __xnpod_finalize_zombie(xnsched_t *sched)
  * debugging GUI it provides. However, passing NULL here is always
  * legal and means "anonymous".
  *
- * @param tbase The time base descriptor to refer to for all timed
+ * - tbase: The time base descriptor to refer to for all timed
  * operations issued by the new thread. See xntbase_alloc() for
  * detailed explanations about time bases.
  *
- * @param prio The base priority of the new thread. This value must
- * range from [loprio .. hiprio] (inclusive) as specified when calling
- * the xnpod_init() service.
- *
- * @param flags A set of creation flags affecting the operation. The
+ * - flags: A set of creation flags affecting the operation. The
  * following flags can be part of this bitmask, each of them affecting
  * the nucleus behaviour regarding the created thread:
  *
- * - XNSUSP creates the thread in a suspended state. In such a case,
+ *   - XNSUSP creates the thread in a suspended state. In such a case,
  * the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin,
  * additionally to issuing xnpod_start_thread() for it. This flag can
  * also be specified when invoking xnpod_start_thread() as a starting
  * mode.
-
- * - XNFPU (enable FPU) tells the nucleus that the new thread will use
- * the floating-point unit. In such a case, the nucleus will handle
- * the FPU context save/restore ops upon thread switches at the
+ *
+ *   - XNFPU (enable FPU) tells the nucleus that the new thread will
+ * use the floating-point unit. In such a case, the nucleus will
+ * handle the FPU context save/restore ops upon thread switches at the
  * expense of a few additional cycles per context switch. By default,
  * a thread is not expected to use the FPU. This flag is simply
  * ignored when the nucleus runs on behalf of a userspace-based
  * real-time control layer since the FPU management is always active
  * if present.
  *
- * @param stacksize The size of the stack (in bytes) for the new
+ * - stacksize: The size of the stack (in bytes) for the new
  * thread. If zero is passed, the nucleus will use a reasonable
  * pre-defined size depending on the underlying real-time control
  * layer.
  *
- * @param ops A pointer to a structure defining the class-level
- * operations available for this thread. Fields from this structure
- * must have been set appropriately by the caller.
+ * - ops: A pointer to a structure defining the class-level operations
+ * available for this thread. Fields from this structure must have
+ * been set appropriately by the caller.
+ *
+ * @param sched_class The initial scheduling class the new thread
+ * should be assigned to.
+ *
+ * @param sched_param The initial scheduling parameters to set for the
+ * new thread; @a sched_param must be valid within the context of @a
+ * sched_class.
  *
  * @return 0 is returned on success. Otherwise, one of the following
  * error codes indicates the cause of the failure:
  *
- *         - -EINVAL is returned if @a flags has invalid bits set.
+ *         - -EINVAL is returned if @a attr->flags has invalid bits set.
  *
  *         - -ENOMEM is returned if not enough memory is available
  *         from the system heap to create the new thread's stack.
@@ -622,37 +629,31 @@ void __xnpod_finalize_zombie(xnsched_t *sched)
  * Rescheduling: never.
  */
 
-int xnpod_init_thread(xnthread_t *thread,
-		      xntbase_t *tbase,
-		      const char *name,
-		      int prio, xnflags_t flags, unsigned stacksize,
-		      xnthrops_t *ops)
+int xnpod_init_thread(struct xnthread *thread,
+		      const struct xnthread_init_attr *attr,
+		      struct xnsched_class *sched_class,
+		      const union xnsched_policy_param *sched_param)
 {
+	struct xnsched *sched = xnpod_current_sched();
 	spl_t s;
-	int err;
+	int ret;
 
-	if (flags & ~(XNFPU | XNSHADOW | XNSUSP))
+	if (attr->flags & ~(XNFPU | XNSHADOW | XNSUSP))
 		return -EINVAL;
 
-	if (stacksize == 0)
-		stacksize = XNARCH_THREAD_STACKSZ;
-
-	/* Exclude XNSUSP, so that xnpod_suspend_thread() will actually do
-	   the suspension work for the thread. */
-	err = xnthread_init(thread, tbase, name, prio, flags & ~XNSUSP, stacksize, ops);
-
-	if (err)
-		return err;
+	ret = xnthread_init(thread, attr, sched, sched_class, sched_param);
+	if (ret)
+		return ret;
 
 	trace_mark(xn_nucleus_thread_init,
-		   "thread %p thread_name %s flags %lu priority %d",
-		   thread, xnthread_name(thread), flags, prio);
+		   "thread %p thread_name %s flags %lu class %s prio %d",
+		   thread, xnthread_name(thread), attr->flags,
+		   sched_class->name, thread->cprio);
 
 	xnlock_get_irqsave(&nklock, s);
-	thread->sched = xnpod_current_sched();
 	appendq(&nkpod->threadq, &thread->glink);
 	nkpod->threadq_rev++;
-	xnpod_suspend_thread(thread, XNDORMANT | (flags & XNSUSP), XN_INFINITE,
+	xnpod_suspend_thread(thread, XNDORMANT | (attr->flags & XNSUSP), XN_INFINITE,
 			     XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -660,7 +661,7 @@ int xnpod_init_thread(xnthread_t *thread,
 }
 
 /*! 
- * \fn int xnpod_start_thread(xnthread_t *thread,xnflags_t mode,int imask,xnarch_cpumask_t affinity,void (*entry)(void *cookie),void *cookie)
+ * \fn int xnpod_start_thread(struct xnthread *thread,const struct xnthread_start_attr *attr)
  * \brief Initial start of a newly created thread.
  *
  * Starts a (newly) created thread, scheduling it for the first
@@ -672,45 +673,49 @@ int xnpod_init_thread(xnthread_t *thread,
  * must have been previously initialized by the xnpod_init_thread()
  * service.
  *
- * @param mode The initial thread mode. The following flags can be
- * part of this bitmask, each of them affecting the nucleus
+ * @param attr A pointer to an attribute block describing the
+ * execution properties of the new thread. Members of this structure
+ * are defined as follows:
+ *
+ * - mode: The initial thread mode. The following flags can
+ * be part of this bitmask, each of them affecting the nucleus
  * behaviour regarding the started thread:
  *
- * - XNLOCK causes the thread to lock the scheduler when it starts.
+ *   - XNLOCK causes the thread to lock the scheduler when it starts.
  * The target thread will have to call the xnpod_unlock_sched()
  * service to unlock the scheduler. A non-preemptible thread may still
  * block, in which case, the lock is reasserted when the thread is
  * scheduled back in.
  *
- * - XNRRB causes the thread to be marked as undergoing the
+ *   - XNRRB causes the thread to be marked as undergoing the
  * round-robin scheduling policy at startup.  The contents of the
  * thread.rrperiod field determines the time quantum (in ticks)
  * allowed for its next slice.
  *
- * - XNASDI disables the asynchronous signal handling for this thread.
- * See xnpod_schedule() for more on this.
+ *   - XNASDI disables the asynchronous signal handling for this
+ * thread.  See xnpod_schedule() for more on this.
  *
- * - XNSUSP makes the thread start in a suspended state. In such a
+ *   - XNSUSP makes the thread start in a suspended state. In such a
  * case, the thread will have to be explicitly resumed using the
  * xnpod_resume_thread() service for its execution to actually begin.
  *
- * @param imask The interrupt mask that should be asserted when the
- * thread starts. The processor interrupt state will be set to the
- * given value when the thread starts running. The interpretation of
- * this value might be different across real-time layers, but a
- * non-zero value should always mark an interrupt masking in effect
+ * - imask: The interrupt mask that should be asserted when the thread
+ * starts. The processor interrupt state will be set to the given
+ * value when the thread starts running. The interpretation of this
+ * value might be different across real-time layers, but a non-zero
+ * value should always mark an interrupt masking in effect
  * (e.g. local_irq_disable()). Conversely, a zero value should always
  * mark a fully preemptible state regarding interrupts
  * (e.g. local_irq_enable()).
  *
- * @param affinity The processor affinity of this thread. Passing
+ * - affinity: The processor affinity of this thread. Passing
  * XNPOD_ALL_CPUS or an empty affinity set means "any cpu".
  *
- * @param entry The address of the thread's body routine. In other
- * words, it is the thread entry point.
+ * - entry: The address of the thread's body routine. In other words,
+ * it is the thread entry point.
  *
- * @param cookie A user-defined opaque cookie the nucleus will pass
- * to the emerging thread as the sole argument of its entry point.
+ * - cookie: A user-defined opaque cookie the nucleus will pass to the
+ * emerging thread as the sole argument of its entry point.
  *
  * The START hooks are called on behalf of the calling context (if
  * any).
@@ -719,7 +724,7 @@ int xnpod_init_thread(xnthread_t *thread,
  *
  * @retval -EBUSY if @a thread was already started ;
  *
- * @retval -EINVAL if the value of @a affinity is invalid.
+ * @retval -EINVAL if the value of @a attr->affinity is invalid.
  *
  * Environments:
  *
@@ -732,14 +737,12 @@ int xnpod_init_thread(xnthread_t *thread,
  * Rescheduling: possible.
  */
 
-int xnpod_start_thread(xnthread_t *thread,
-		       xnflags_t mode,
-		       int imask,
-		       xnarch_cpumask_t affinity,
-		       void (*entry) (void *cookie), void *cookie)
+int xnpod_start_thread(struct xnthread *thread,
+		       const struct xnthread_start_attr *attr)
 {
+	xnarch_cpumask_t affinity = attr->affinity;
 	spl_t s;
-	int err;
+	int ret;
 
 	if (!xnthread_test_state(thread, XNDORMANT))
 		return -EBUSY;
@@ -752,25 +755,26 @@ int xnpod_start_thread(xnthread_t *thread,
 	xnarch_cpus_and(thread->affinity, affinity, thread->affinity);
 
 	if (xnarch_cpus_empty(thread->affinity)) {
-		err = -EINVAL;
+		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 #ifdef CONFIG_SMP
-	if (!xnarch_cpu_isset(xnsched_cpu(thread->sched), thread->affinity))
-		thread->sched =
-		    xnpod_sched_slot(xnarch_first_cpu(thread->affinity));
+	if (!xnarch_cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
+		sched = xnpod_sched_slot(xnarch_first_cpu(thread->affinity));
+		xnsched_migrate_passive(thread, sched);
+	}
 #endif /* CONFIG_SMP */
 
 	if (xnthread_test_state(thread, XNSTARTED)) {
-		err = -EBUSY;
+		ret = -EBUSY;
 		goto unlock_and_exit;
 	}
 
-	xnthread_set_state(thread, (mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
-	thread->imask = imask;
-	thread->imode = (mode & XNTHREAD_MODE_BITS);
-	thread->entry = entry;
-	thread->cookie = cookie;
+	xnthread_set_state(thread, (attr->mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
+	thread->imask = attr->imask;
+	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
+	thread->entry = attr->entry;
+	thread->cookie = attr->cookie;
 
 	if (xnthread_test_state(thread, XNRRB))
 		thread->rrcredit = thread->rrperiod;
@@ -790,12 +794,13 @@ int xnpod_start_thread(xnthread_t *thread,
 	/* Setup the initial stack frame. */
 
 	xnarch_init_thread(xnthread_archtcb(thread),
-			   entry, cookie, imask, thread, thread->name);
+			   attr->entry, attr->cookie, attr->imask,
+			   thread, thread->name);
 
 	xnpod_resume_thread(thread, XNDORMANT);
 
 #ifdef __XENO_SIM__
-	if (!(mode & XNSUSP) && nkpod->schedhook)
+	if (!(attr->mode & XNSUSP) && nkpod->schedhook)
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
@@ -808,13 +813,13 @@ int xnpod_start_thread(xnthread_t *thread,
 
 	xnpod_schedule();
 
-	err = 0;
+	ret = 0;
 
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 /*! 
@@ -876,10 +881,8 @@ void xnpod_restart_thread(xnthread_t *thread)
 	xnthread_set_state(thread, thread->imode);
 
 	/* Reset scheduling class and priority to the initial ones. */
-	thread->cprio = thread->iprio;
-	thread->bprio = thread->iprio;
-	thread->base_class = thread->init_class;
-	thread->sched_class = thread->init_class;
+	xnsched_set_policy(thread, thread->init_class,
+			   &thread->init_schedparam);
 
 	/* Clear pending signals. */
 	thread->signals = 0;
@@ -1665,35 +1668,41 @@ int xnpod_unblock_thread(xnthread_t *thread)
 }
 
 /*!
- * \fn void xnpod_renice_thread(xnthread_t *thread,int prio)
- * \brief Change the base priority of a thread.
+ * \fn void xnpod_set_thread_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
+ * \brief Change the base scheduling parameters of a thread.
  *
- * Changes the base priority of a thread. If the reniced thread is
- * currently blocked, waiting in priority-pending mode (XNSYNCH_PRIO)
- * for a synchronization object to be signaled, the nucleus will
- * attempt to reorder the object's wait queue so that it reflects the
- * new sleeper's priority, unless the XNSYNCH_DREORD flag has been set
- * for the pended object.
+ * Changes the base scheduling policy and paramaters of a thread. If
+ * the thread is currently blocked, waiting in priority-pending mode
+ * (XNSYNCH_PRIO) for a synchronization object to be signaled, the
+ * nucleus will attempt to reorder the object's wait queue so that it
+ * reflects the new sleeper's priority, unless the XNSYNCH_DREORD flag
+ * has been set for the pended object.
  *
  * @param thread The descriptor address of the affected thread.
  *
- * @param prio The new thread priority.
+ * @param sched_class The new scheduling class the thread should be
+ * assigned to.
+ *
+ * @param sched_param The scheduling parameters to set for the thread;
+ * @a sched_param must be valid within the context of @a sched_class.
  *
  * It is absolutely required to use this service to change a thread
  * priority, in order to have all the needed housekeeping chores
- * correctly performed. i.e. Do *not* change the thread.cprio field by
- * hand, unless the thread is known to be in an innocuous state
- * (e.g. dormant).
+ * correctly performed. i.e. Do *not* call xnsched_set_policy()
+ * directly or worse, change the thread.cprio field by hand in any
+ * case.
  *
  * Side-effects:
  *
  * - This service does not call the rescheduling procedure but may
- * affect the ready queue.
+ * affect the state of the runnable queue for the previous and new
+ * scheduling classes.
  *
- * - Assigning the same priority to a running or ready thread moves it
- * to the end of the ready queue, thus causing a manual round-robin.
+ * - Assigning the same scheduling class and parameters to a running
+ * or ready thread moves it to the end of the runnable queue, thus
+ * causing a manual round-robin.
  *
- * - If the reniced thread is a user-space shadow, propagate the
+ * - If the thread is a user-space shadow, this call propagates the
  * request to the mated Linux task.
  *
  * Environments:
@@ -1708,54 +1717,67 @@ int xnpod_unblock_thread(xnthread_t *thread)
  * Rescheduling: never.
  */
 
-void xnpod_renice_thread(xnthread_t *thread, int prio)
+void xnpod_set_thread_schedparam(struct xnthread *thread,
+				 struct xnsched_class *sched_class,
+				 const union xnsched_policy_param *sched_param)
 {
-	xnpod_renice_thread_inner(thread, prio, 1);
+	__xnpod_set_thread_schedparam(thread, sched_class, sched_param, 1);
 }
 
-void xnpod_renice_thread_inner(xnthread_t *thread, int prio, int propagate)
+void __xnpod_set_thread_schedparam(struct xnthread *thread,
+				   struct xnsched_class *sched_class,
+				   const union xnsched_policy_param *sched_param,
+				   int propagate)
 {
-	int oldprio;
+	int old_wprio, new_wprio;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_thread_renice,
-		   "thread %p thread_name %s priority %d",
-		   thread, xnthread_name(thread), prio);
+	old_wprio = xnsched_weighted_cprio(thread);
+	xnsched_set_policy(thread, sched_class, sched_param);
+	new_wprio = xnsched_weighted_cprio(thread);
 
-	oldprio = thread->cprio;
+	trace_mark(xn_nucleus_set_thread_schedparam,
+		   "thread %p thread_name %s class %s prio %d",
+		   thread, xnthread_name(thread),
+		   thread->sched_class->name, thread->cprio);
 	/*
-	 * Change the thread priority, taking in account an undergoing PIP
-	 * boost.
+	 * NOTE: The behaviour changed compared to v2.4.x: we do not
+	 * prevent the caller from altering the scheduling parameters
+	 * of a thread that currently undergoes a PIP boost
+	 * anymore. Rationale: Calling xnpod_set_thread_schedparam()
+	 * carelessly with no consideration for resource management is
+	 * a bug in essence, and xnpod_set_thread_schedparam() does
+	 * not have to paper over it, especially at the cost of more
+	 * complexity when dealing with multiple scheduling classes.
+	 * In short, callers have to make sure that lowering a thread
+	 * priority is safe with respect to what their application
+	 * currently does.
 	 */
-	thread->bprio = prio;
-
+	if (old_wprio != new_wprio && thread->wchan != NULL &&
+	    !testbits(thread->wchan->status, XNSYNCH_DREORD))
+		/*
+		 * Update the pending order of the thread inside its
+		 * wait queue, unless this behaviour has been
+		 * explicitly disabled for the pended synchronization
+		 * object, or the requested (weighted) priority has
+		 * not changed, thus preventing spurious round-robin
+		 * effects.
+		 */
+		xnsynch_requeue_sleeper(thread);
 	/*
-	 * Since we don't want to mess with the priority inheritance
-	 * scheme, we must take care of never lowering the target
-	 * thread's priority level if it is undergoing a PIP boost.
-	 * Note that different priority levels for a given thread are
-	 * by definition consistent within its scheduling class, so we
-	 * don't need to use weighted priority values here.
+	 * We don't need/want to move the thread at the end of its
+	 * priority group whenever:
+	 * - it is blocked and thus not runnable;
+	 * - it bears the ready bit in which case xnsched_set_policy()
+	 * already reordered the runnable queue;
+	 * - we currently hold the scheduler lock, so we don't want
+	 * any round-robin effect to take place.
 	 */
-	if (!xnthread_test_state(thread, XNBOOST) || prio > oldprio) {
-		thread->cprio = prio;
-		if (prio != oldprio && thread->wchan != NULL &&
-		    !testbits(thread->wchan->status, XNSYNCH_DREORD))
-			/*
-			 * Renice the pending order of the thread
-			 * inside its wait queue, unless this
-			 * behaviour has been explicitly disabled for
-			 * the pended synchronization object, or the
-			 * requested priority has not changed, thus
-			 * preventing spurious round-robin effects.
-			 */
-			xnsynch_renice_sleeper(thread);
+	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
+		xnsched_putback(thread);
 
-		if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS | XNLOCK))
-			xnsched_putback(thread);
-	}
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (propagate) {
 		if (xnthread_test_state(thread, XNRELAX))
@@ -2921,7 +2943,7 @@ EXPORT_SYMBOL(xnpod_init);
 EXPORT_SYMBOL(xnpod_init_thread);
 EXPORT_SYMBOL(xnpod_migrate_thread);
 EXPORT_SYMBOL(xnpod_remove_hook);
-EXPORT_SYMBOL(xnpod_renice_thread);
+EXPORT_SYMBOL(xnpod_set_thread_schedparam);
 EXPORT_SYMBOL(xnpod_restart_thread);
 EXPORT_SYMBOL(xnpod_resume_thread);
 EXPORT_SYMBOL(xnpod_set_thread_mode);

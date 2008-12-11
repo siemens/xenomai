@@ -139,9 +139,19 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 		   rtdm_task_proc_t task_proc, void *arg,
 		   int priority, nanosecs_rel_t period)
 {
+	union xnsched_policy_param param;
+	struct xnthread_start_attr sattr;
+	struct xnthread_init_attr iattr;
 	int err;
 
-	err = xnpod_init_thread(task, rtdm_tbase, name, priority, 0, 0, NULL);
+	iattr.tbase = rtdm_tbase;
+	iattr.name = name;
+	iattr.flags = 0;
+	iattr.ops = NULL;
+	iattr.stacksize = 0;
+	param.rt.prio = priority;
+
+	err = xnpod_init_thread(task, &iattr, &xnsched_class_rt, &param);
 	if (err)
 		return err;
 
@@ -161,7 +171,12 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 			goto cleanup_out;
 	}
 
-	err = xnpod_start_thread(task, 0, 0, XNPOD_ALL_CPUS, task_proc, arg);
+	sattr.mode = 0;
+	sattr.imask = 0;
+	sattr.affinity = XNPOD_ALL_CPUS;
+	sattr.entry = task_proc;
+	sattr.cookie = arg;
+	err = xnpod_start_thread(task, &sattr);
 	if (err)
 		goto cleanup_out;
 

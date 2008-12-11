@@ -69,7 +69,7 @@
 <a name="l00041"></a>00041         } shadow_mutex;
 <a name="l00042"></a>00042 };
 <a name="l00043"></a>00043 
-<a name="l00044"></a>00044 <span class="preprocessor">#ifdef __KERNEL__</span>
+<a name="l00044"></a>00044 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
 <a name="l00045"></a>00045 <span class="preprocessor"></span>
 <a name="l00046"></a>00046 <span class="preprocessor">#include &lt;posix/internal.h&gt;</span>
 <a name="l00047"></a>00047 <span class="preprocessor">#include &lt;posix/thread.h&gt;</span>
@@ -156,7 +156,7 @@
 <a name="l00128"></a>00128 
 <a name="l00129"></a>00129 <span class="preprocessor">#endif </span><span class="comment">/* !_POSIX_MUTEX_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:05:56 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

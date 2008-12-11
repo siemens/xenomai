@@ -1,3 +1,15 @@
+2008-12-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus, ksrc/skins (xnpod_init_thread, xnpod_start_thread,
+	xnpod_renice_thread, xnsched_renice_root, xnsynch_renice_sleeper):
+
+	- Pass scheduling class and parameters to xnpod_init_thread().
+	- Introduce attribute structs to hold misc thread properties passed
+	to xnpod_init_thread() and xnpod_start_thread().
+	- Pass scheduling class and parameters to xnpod_renice_thread(),
+	and rename to xnpod_set_thread_schedparam().
+	- Rename xnsynch_renice_sleeper() => xnsynch_requeue_sleeper().
+
 2008-12-10  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Introduce temporal partitioning

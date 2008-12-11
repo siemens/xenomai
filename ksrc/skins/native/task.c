@@ -250,6 +250,8 @@ void __native_task_pkg_cleanup(void)
 int rt_task_create(RT_TASK *task,
 		   const char *name, int stksize, int prio, int mode)
 {
+	union xnsched_policy_param param;
+	struct xnthread_init_attr attr;
 	int err = 0, cpumask, cpu;
 	xnflags_t bflags;
 	spl_t s;
@@ -265,8 +267,15 @@ int rt_task_create(RT_TASK *task,
 	if (name)
 		xnobject_copy_name(task->rname, name);
 
-	if (xnpod_init_thread(&task->thread_base, __native_tbase,
-			      name, prio, bflags, stksize, &__xeno_task_ops) != 0)
+	attr.tbase = __native_tbase;
+	attr.name = name;
+	attr.flags = bflags;
+	attr.ops = &__xeno_task_ops;
+	attr.stacksize = stksize;
+	param.rt.prio = prio;
+
+	if (xnpod_init_thread(&task->thread_base,
+			      &attr, &xnsched_class_rt, &param) != 0)
 		/* Assume this is the only possible failure. */
 		return -ENOMEM;
 
@@ -355,7 +364,8 @@ int rt_task_create(RT_TASK *task,
 
 int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 {
-	int err = 0;
+	struct xnthread_start_attr attr;
+	int ret = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -366,24 +376,27 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 	task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
 	if (!task) {
-		err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+		ret = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
 		goto unlock_and_exit;
 	}
 
 	if (!xnthread_test_state(&task->thread_base, XNDORMANT)) {
-		err = -EBUSY;	/* Task already started. */
+		ret = -EBUSY;	/* Task already started. */
 		goto unlock_and_exit;
 	}
 
-	err =
-	    xnpod_start_thread(&task->thread_base, 0, 0, task->affinity, entry,
-			       cookie);
+	attr.mode = 0;
+	attr.imask = 0;
+	attr.affinity = task->affinity;
+	attr.entry = entry;
+	attr.cookie = cookie;
+	ret = xnpod_start_thread(&task->thread_base, &attr);
 
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 /**
@@ -840,6 +853,7 @@ int rt_task_wait_period(unsigned long *overruns_r)
 
 int rt_task_set_priority(RT_TASK *task, int prio)
 {
+	union xnsched_policy_param param;
 	int oldprio;
 	spl_t s;
 
@@ -864,7 +878,8 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 
 	oldprio = xnthread_base_priority(&task->thread_base);
 
-	xnpod_renice_thread(&task->thread_base, prio);
+	param.rt.prio = prio;
+	xnpod_set_thread_schedparam(&task->thread_base, &xnsched_class_rt, &param);
 
 	xnpod_schedule();
 

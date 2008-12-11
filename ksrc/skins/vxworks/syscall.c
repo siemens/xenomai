@@ -1096,6 +1096,7 @@ static int __wind_wd_cancel(struct pt_regs *regs)
 
 static int __wind_wd_wait(struct pt_regs *regs)
 {
+	union xnsched_policy_param param;
 	xnholder_t *holder;
 	wind_rholder_t *rh;
 	WIND_TCB *pTcb;
@@ -1109,9 +1110,12 @@ static int __wind_wd_wait(struct pt_regs *regs)
 
 	pTcb = __wind_task_current(current);
 
-	if (xnthread_base_priority(&pTcb->threadbase) != XNSCHED_IRQ_PRIO)
-		/* Renice the waiter above all regular tasks if needed. */
-		xnpod_renice_thread(&pTcb->threadbase, XNSCHED_IRQ_PRIO);
+	if (xnthread_base_priority(&pTcb->threadbase) != XNSCHED_IRQ_PRIO) {
+		/* Boost the waiter above all regular tasks if needed. */
+		param.rt.prio = XNSCHED_IRQ_PRIO;
+		xnpod_set_thread_schedparam(&pTcb->threadbase,
+					    &xnsched_class_rt, &param);
+	}
 
 	if (!emptyq_p(&rh->wdpending))
 		goto pull_event;

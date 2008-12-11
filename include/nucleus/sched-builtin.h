@@ -62,22 +62,6 @@ extern struct xnsched_class xnsched_class_idle;
 
 #define xnsched_class_default xnsched_class_rt
 
-struct xnsched_rt_param {
-	int prio;
-};
-
-struct xnsched_idle_param {
-	int prio;
-};
-
-union xnsched_policy_param {
-	struct xnsched_rt_param idle;
-	struct xnsched_rt_param rt;
-#ifdef CONFIG_XENO_OPT_SCHED_TP
-	struct xnsched_tp_param tp;
-#endif
-};
-
 static inline void __xnsched_rt_requeue(struct xnthread *thread)
 {
 	sched_insertpql(&thread->sched->rt.runnable,

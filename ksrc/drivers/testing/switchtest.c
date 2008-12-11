@@ -300,6 +300,9 @@ static void rtswitch_ktask(void *cookie)
 static int rtswitch_create_ktask(rtswitch_context_t *ctx,
                                  struct rttst_swtest_task *ptask)
 {
+	union xnsched_policy_param param;
+	struct xnthread_start_attr sattr;
+	struct xnthread_init_attr iattr;
 	rtswitch_task_t *task;
 	xnflags_t init_flags;
 	struct taskarg arg;
@@ -321,29 +324,42 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 
 	init_flags = (ptask->flags & RTTST_SWTEST_FPU) ? XNFPU : 0;
 
-	/* Migrate the calling thread to the same CPU as the created task, in
-	   order to be sure that the created task is suspended when this function
-	   returns. This also allow us to use the stack to pass the parameters to
-	   the created task. */
+	/*
+	 * Migrate the calling thread to the same CPU as the created
+	 * task, in order to be sure that the created task is
+	 * suspended when this function returns. This also allow us to
+	 * use the stack to pass the parameters to the created
+	 * task.
+	 */
 	set_cpus_allowed(current, cpumask_of_cpu(ctx->cpu));
 
-	err = xnpod_init_thread(&task->ktask, rtdm_tbase, name, 1, init_flags, 0, NULL);
+	iattr.tbase = rtdm_tbase;
+	iattr.name = name;
+	iattr.flags = init_flags;
+	iattr.ops = NULL;
+	iattr.stacksize = 0;
+	param.rt.prio = 1;
 
-	if (!err)
-		err = xnpod_start_thread(&task->ktask,
-					 0,
-					 0,
-					 xnarch_cpumask_of_cpu(ctx->cpu),
-					 rtswitch_ktask,
-					 &arg);
-	else
-		/* In order to avoid calling xnpod_delete_thread with invalid
-		   thread. */
+	err = xnpod_init_thread(&task->ktask,
+				&iattr, &xnsched_class_rt, &param);
+	if (!err) {
+		sattr.mode = 0;
+		sattr.imask = 0;
+		sattr.affinity = xnarch_cpumask_of_cpu(ctx->cpu);
+		sattr.entry = rtswitch_ktask;
+		sattr.cookie = &arg;
+		err = xnpod_start_thread(&task->ktask, &sattr);
+	} else
+		/*
+		 * In order to avoid calling xnpod_delete_thread with
+		 * invalid thread.
+		 */
 		task->base.flags = 0;
-
-	/* Putting the argument on stack is safe, because the new thread will
-	   preempt the current thread immediately, and will suspend only once the
-	   arguments on stack are used. */
+	/*
+	 * Putting the argument on stack is safe, because the new
+	 * thread will preempt the current thread immediately, and
+	 * will suspend only once the arguments on stack are used.
+	 */
 
 	return err;
 }

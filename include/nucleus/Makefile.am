@@ -16,8 +16,10 @@ includesub_HEADERS = \
 	registry.h \
 	select.h \
 	sched.h \
-	sched-builtin.h \
+	schedparam.h \
 	schedqueue.h \
+	sched-builtin.h \
+	sched-tp.h \
 	shadow.h \
 	stat.h \
 	synch.h \

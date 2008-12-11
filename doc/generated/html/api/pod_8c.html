@@ -55,12 +55,12 @@ Include dependency graph for pod.c:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g824dc22468666c9f14da1842f0184b84">xnpod_shutdown</a> (int xtype)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Shutdown the current pod.  <a href="group__pod.html#g824dc22468666c9f14da1842f0184b84"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d">xnpod_init_thread</a> (xnthread_t *thread, xntbase_t *tbase, const char *name, int prio, xnflags_t flags, unsigned stacksize, xnthrops_t *ops)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036">xnpod_init_thread</a> (struct xnthread *thread, const struct xnthread_init_attr *attr, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#g3f58282d6373a9d47da258f26181365d"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280">xnpod_start_thread</a> (xnthread_t *thread, xnflags_t mode, int imask, xnarch_cpumask_t affinity, void(*entry)(void *cookie), void *cookie)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a new thread.  <a href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66">xnpod_start_thread</a> (xnthread_t *thread, const struct xnthread_start_attr *attr)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initial start of a newly created thread.  <a href="group__pod.html#gd322f6afd62430705486a9036d0b7d66"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g61624578d0f1979f1ca6a5e9e49a74a3">xnpod_restart_thread</a> (xnthread_t *thread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Restart a thread.  <a href="group__pod.html#g61624578d0f1979f1ca6a5e9e49a74a3"></a><br></td></tr>
@@ -82,9 +82,9 @@ Include dependency graph for pod.c:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#ge5f0d19e7a499b9b262f68a43ab545dd">xnpod_unblock_thread</a> (xnthread_t *thread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unblock a thread.  <a href="group__pod.html#ge5f0d19e7a499b9b262f68a43ab545dd"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g1282a77af15a1421fb9bd0f5b90330b5">xnpod_renice_thread</a> (xnthread_t *thread, int prio)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#gae550ac24b444d0430353fc80a3c79ab">xnpod_set_thread_schedparam</a> (struct xnthread *thread, struct xnsched_class *sched_class, const union xnsched_policy_param *sched_param)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base priority of a thread.  <a href="group__pod.html#g1282a77af15a1421fb9bd0f5b90330b5"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the base scheduling parameters of a thread.  <a href="group__pod.html#gae550ac24b444d0430353fc80a3c79ab"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__pod.html#g4d14486d26a32a2660697f5a88d8301d">xnpod_migrate_thread</a> (int cpu)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate the current thread.  <a href="group__pod.html#g4d14486d26a32a2660697f5a88d8301d"></a><br></td></tr>
@@ -123,7 +123,7 @@ Include dependency graph for pod.c:</div>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait for the next periodic release point.  <a href="group__pod.html#gf836996e4a3378928f2a9f93a4915cfa"></a><br></td></tr>
 </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:05:58 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:51 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

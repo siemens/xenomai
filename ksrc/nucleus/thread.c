@@ -34,39 +34,46 @@ static void xnthread_timeout_handler(xntimer_t *timer)
 static void xnthread_periodic_handler(xntimer_t *timer)
 {
 	xnthread_t *thread = container_of(timer, xnthread_t, ptimer);
-
-	/* Prevent unwanted round-robin, and do not wake up threads
-	   blocked on a resource. */
+	/*
+	 * Prevent unwanted round-robin, and do not wake up threads
+	 * blocked on a resource.
+	 */
 	if (xnthread_test_state(thread, XNDELAY|XNPEND) == XNDELAY)
 		xnpod_resume_thread(thread, XNDELAY);
 }
 
-int xnthread_init(xnthread_t *thread,
-		  xntbase_t *tbase,
-		  const char *name,
-		  int prio, xnflags_t flags, unsigned stacksize,
-		  xnthrops_t *ops)
+int xnthread_init(struct xnthread *thread,
+		  const struct xnthread_init_attr *attr,
+		  struct xnsched *sched,
+		  struct xnsched_class *sched_class,
+		  const union xnsched_policy_param *sched_param)
 {
+	unsigned int stacksize = attr->stacksize;
+	xnflags_t flags = attr->flags;
 	int ret = 0;
 
 	/* Setup the TCB. */
 	xnarch_init_tcb(xnthread_archtcb(thread));
 
+	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_HW_FPU
 	flags &= ~XNFPU;
 #endif /* CONFIG_XENO_HW_FPU */
 
-	if (flags & XNSHADOW)
+	if (flags & (XNSHADOW|XNROOT))
 		stacksize = 0;
-	else
+	else {
+		if (stacksize == 0) /* Pick a reasonable default. */
+			stacksize = XNARCH_THREAD_STACKSZ;
 		/* Align stack size on a natural word boundary */
 		stacksize &= ~(sizeof(long) - 1);
+	}
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
 #ifndef __XENO_SIM__
 	if (stacksize > 0) {
 		xnlogerr("%s: cannot create kernel thread '%s' (CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0)\n",
-			 __FUNCTION__, name);
+			 __FUNCTION__, attr->name);
 		return -ENOMEM;
 	}
 #endif
@@ -74,20 +81,20 @@ int xnthread_init(xnthread_t *thread,
 	ret = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
 	if (ret) {
 		xnlogerr("%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
-			 __FUNCTION__, name);
+			 __FUNCTION__, attr->name);
 		return ret;
 	}
 #endif
 
-	if (name)
-		xnobject_copy_name(thread->name, name);
+	if (attr->name)
+		xnobject_copy_name(thread->name, attr->name);
 	else
 		snprintf(thread->name, sizeof(thread->name), "%p", thread);
 
-	xntimer_init(&thread->rtimer, tbase, xnthread_timeout_handler);
+	xntimer_init(&thread->rtimer, attr->tbase, xnthread_timeout_handler);
 	xntimer_set_name(&thread->rtimer, thread->name);
 	xntimer_set_priority(&thread->rtimer, XNTIMER_HIPRIO);
-	xntimer_init(&thread->ptimer, tbase, xnthread_periodic_handler);
+	xntimer_init(&thread->ptimer, attr->tbase, xnthread_periodic_handler);
 	xntimer_set_name(&thread->ptimer, thread->name);
 	xntimer_set_priority(&thread->ptimer, XNTIMER_HIPRIO);
 
@@ -100,15 +107,7 @@ int xnthread_init(xnthread_t *thread,
 	thread->asr = XNTHREAD_INVALID_ASR;
 	thread->asrlevel = 0;
 
-	thread->init_class = (flags & XNROOT) ?
-	  &xnsched_class_idle : &xnsched_class_default;
-	thread->base_class = thread->init_class;
-	thread->sched_class = thread->init_class;
-	xnsched_init_tcb(thread);
-
-	thread->iprio = prio;
-	thread->bprio = prio;
-	thread->cprio = prio;
+	thread->ops = attr->ops;
 	thread->rrperiod = XN_INFINITE;
 	thread->rrcredit = XN_INFINITE;
 	thread->wchan = NULL;
@@ -125,7 +124,6 @@ int xnthread_init(xnthread_t *thread,
 	thread->imode = 0;
 	thread->entry = NULL;
 	thread->cookie = 0;
-	thread->ops = ops;
 
 	inith(&thread->glink);
 	initph(&thread->rlink);
@@ -135,6 +133,13 @@ int xnthread_init(xnthread_t *thread,
 	thread->rpi = NULL;
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 	initpq(&thread->claimq);
+
+	thread->sched = sched;
+	thread->init_class = sched_class;
+	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
+	thread->init_schedparam = *sched_param;
+	xnsched_init_tcb(thread);
+	xnsched_set_policy(thread, sched_class, sched_param);
 
 	xnarch_init_display_context(thread);
 

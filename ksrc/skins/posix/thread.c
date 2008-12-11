@@ -181,6 +181,9 @@ int pthread_create(pthread_t *tid,
 		   const pthread_attr_t * attr,
 		   void *(*start) (void *), void *arg)
 {
+	union xnsched_policy_param param;
+	struct xnthread_start_attr sattr;
+	struct xnthread_init_attr iattr;
 	pthread_t thread, cur;
 	xnflags_t flags = 0;
 	size_t stacksize;
@@ -224,8 +227,15 @@ int pthread_create(pthread_t *tid,
 	if (!start)
 		flags |= XNSHADOW;	/* Note: no interrupt shield. */
 
-	if (xnpod_init_thread(&thread->threadbase, pse51_tbase,
-			      name, prio, flags, stacksize, &pse51_thread_ops) != 0) {
+	iattr.tbase = pse51_tbase;
+	iattr.name = name;
+	iattr.flags = flags;
+	iattr.ops = &pse51_thread_ops;
+	iattr.stacksize = stacksize;
+	param.rt.prio = prio;
+
+	if (xnpod_init_thread(&thread->threadbase,
+			      &iattr, &xnsched_class_rt, &param) != 0) {
 		xnfree(thread);
 		return EAGAIN;
 	}
@@ -266,22 +276,26 @@ int pthread_create(pthread_t *tid,
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
 	{
-		int err = xnthread_register(&thread->threadbase, "");
-		if (err) {
+		int ret = xnthread_register(&thread->threadbase, "");
+		if (ret) {
 			thread_destroy(thread);
-			return err;
+			return ret;
 		}
 	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	*tid = thread;		/* Must be done before the thread is started. */
 
-	if (start)		/* Do not start shadow threads (i.e. start == NULL). */
-		xnpod_start_thread(&thread->threadbase,
-				   flags,
-				   0,
-				   thread->attr.affinity,
-				   thread_trampoline, thread);
+	/* Do not start shadow threads (i.e. start == NULL). */
+	if (start) {
+		sattr.mode = flags;
+		sattr.imask = 0;
+		sattr.affinity = thread->attr.affinity;
+		sattr.entry = thread_trampoline;
+		sattr.cookie = thread;
+		xnpod_start_thread(&thread->threadbase, &sattr);
+	}
+
 	return 0;
 }
 

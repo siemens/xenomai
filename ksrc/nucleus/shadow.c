@@ -1172,9 +1172,10 @@ void xnshadow_exit(void)
 int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		 unsigned long __user *u_mode)
 {
+	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
 	unsigned muxid, magic;
-	int err;
+	int ret;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
 		return -EINVAL;
@@ -1189,8 +1190,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (!(current->mm->def_flags & VM_LOCKED))
 		send_sig(SIGXCPU, current, 1);
 	else
-		if ((err = rthal_disable_ondemand_mappings(current)))
-			return err;
+		if ((ret = rthal_disable_ondemand_mappings(current)))
+			return ret;
 #endif /* CONFIG_MMU */
 
 	/* Increment the interface reference count. */
@@ -1241,18 +1242,23 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	}
 
 	/* Nobody waits for us, so we may start the shadow immediately. */
-	err = xnpod_start_thread(thread, 0, 0, affinity, NULL, NULL);
-	if (err)
-		return err;
+	attr.mode = 0;
+	attr.imask = 0;
+	attr.affinity = affinity;
+	attr.entry = NULL;
+	attr.cookie = NULL;
+	ret = xnpod_start_thread(thread, &attr);
+	if (ret)
+		return ret;
 
 	__xn_put_user(XNRELAX, u_mode);
 
-	err = xnshadow_harden();
+	ret = xnshadow_harden();
 
 	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(thread)),
 			 xnthread_current_priority(thread));
 
-	return err;
+	return ret;
 }
 
 void xnshadow_unmap(xnthread_t *thread)
@@ -2304,6 +2310,8 @@ RTHAL_DECLARE_SIGWAKE_EVENT(sigwake_event);
 static inline void do_setsched_event(struct task_struct *p, int priority)
 {
 	xnthread_t *thread = xnshadow_thread(p);
+	union xnsched_policy_param param;
+	struct xnsched *sched;
 
 	if (!thread || p->policy != SCHED_FIFO)
 		return;
@@ -2314,26 +2322,39 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 	 * values when mapping them from Linux -> Xenomai. We
 	 * propagate priority changes to the nucleus only for threads
 	 * that belong to skins that have a compatible priority scale.
+	 *
+	 * BIG FAT WARNING: Change of scheduling parameters from the
+	 * Linux side are propagated only to threads that belong to
+	 * the Xenomai RT scheduling class. Threads from other classes
+	 * are remain unaffected, since we could not map this
+	 * information 1:1 between Linux and Xenomai.
 	 */
-	if (thread->cprio != priority &&
-		xnthread_get_denormalized_prio(thread, priority) == priority) {
-		xnpod_renice_thread_inner(thread, priority, 0);
-		if (xnsched_resched_p(xnpod_current_sched())) {
-			if (p == current &&
-			    xnthread_sched(thread) == xnpod_current_sched())
-				rpi_update(thread);
-			/*
-			 * rpi_switch() will fix things properly
-			 * otherwise.  This may delay the update if
-			 * the thread is running on the remote CPU
-			 * until it gets back into rpi_switch() as the
-			 * incoming thread anew, but this is
-			 * acceptable (i.e. strict ordering across
-			 * CPUs is not supported anyway).
-			 */
-			xnpod_schedule();
-		}
-	}
+	if (thread->base_class != &xnsched_class_rt ||
+	    thread->cprio == priority)
+		return;
+
+	if (xnthread_get_denormalized_prio(thread, priority) != priority)
+		/* Priority scales don't match 1:1. */
+		return;
+
+	param.rt.prio = priority;
+	__xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param, 0);
+	sched = xnpod_current_sched();
+
+	if (!xnsched_resched_p(sched))
+		return;
+
+	if (p == current &&
+	    xnthread_sched(thread) == sched)
+		rpi_update(thread);
+	/*
+	 * rpi_switch() will fix things properly otherwise.  This may
+	 * delay the update if the thread is running on the remote CPU
+	 * until it gets back into rpi_switch() as the incoming thread
+	 * anew, but this is acceptable (i.e. strict ordering across
+	 * CPUs is not supported anyway).
+	 */
+	xnpod_schedule();
 }
 
 RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);

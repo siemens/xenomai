@@ -113,13 +113,11 @@
 <li>xnpod_init()
 : <a class="el" href="group__pod.html#g167bb3b4251ac8b8a3e7f358d236908a">pod.h</a>
 <li>xnpod_init_thread()
-: <a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d">pod.h</a>
+: <a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036">pod.h</a>
 <li>xnpod_migrate_thread()
 : <a class="el" href="group__pod.html#g4d14486d26a32a2660697f5a88d8301d">pod.h</a>
 <li>xnpod_remove_hook()
 : <a class="el" href="group__pod.html#gce800481d23255eebe45f969e9434adf">pod.h</a>
-<li>xnpod_renice_thread()
-: <a class="el" href="group__pod.html#g1282a77af15a1421fb9bd0f5b90330b5">pod.h</a>
 <li>xnpod_restart_thread()
 : <a class="el" href="group__pod.html#g61624578d0f1979f1ca6a5e9e49a74a3">pod.h</a>
 <li>xnpod_resume_thread()
@@ -130,10 +128,12 @@
 : <a class="el" href="group__pod.html#g629c06b152dabfdb679b6e49bd9f7734">pod.h</a>
 <li>xnpod_set_thread_periodic()
 : <a class="el" href="group__pod.html#ged5776a428e7c59b52b1da76f0d765fa">pod.h</a>
+<li>xnpod_set_thread_schedparam()
+: <a class="el" href="group__pod.html#gae550ac24b444d0430353fc80a3c79ab">pod.h</a>
 <li>xnpod_shutdown()
 : <a class="el" href="group__pod.html#g824dc22468666c9f14da1842f0184b84">pod.h</a>
 <li>xnpod_start_thread()
-: <a class="el" href="group__pod.html#g0717d8705635fe0f30455f37e8d0e280">pod.h</a>
+: <a class="el" href="group__pod.html#gd322f6afd62430705486a9036d0b7d66">pod.h</a>
 <li>xnpod_suspend_thread()
 : <a class="el" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a">pod.h</a>
 <li>xnpod_trap_fault()
@@ -203,8 +203,8 @@
 : <a class="el" href="group__synch.html#g1208abb6b3d0017a4e0c43b9baff8cfb">synch.c</a>
 <li>xnsynch_release_all_ownerships()
 : <a class="el" href="group__synch.html#g51146a2d5bd0ec6a10d2fcd685946938">synch.c</a>
-<li>xnsynch_renice_sleeper()
-: <a class="el" href="group__synch.html#gdba598f04a8a1ca61e5c8b74e43618c6">synch.c</a>
+<li>xnsynch_requeue_sleeper()
+: <a class="el" href="group__synch.html#g49c975f160509b1aa04df4900614b2ce">synch.c</a>
 <li>xnsynch_sleep_on()
 : <a class="el" href="group__synch.html#g167a0921fe85c94d08dda8ed8cec82aa">synch.c</a>
 <li>xnsynch_wakeup_one_sleeper()
@@ -260,7 +260,7 @@
 , <a class="el" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
 </ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:06:02 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:55 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

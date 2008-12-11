@@ -87,6 +87,8 @@ u_long t_create(const char *name,
 		u_long prio,
 		u_long sstack, u_long ustack, u_long flags, u_long *tid_r)
 {
+	union xnsched_policy_param param;
+	struct xnthread_init_attr attr;
 	xnflags_t bflags = 0;
 	psostask_t *task;
 	u_long err;
@@ -128,8 +130,15 @@ u_long t_create(const char *name,
 		   user-space. */
 		sprintf(task->name, "anon_task%lu", psos_task_ids++);
 
-	if (xnpod_init_thread(&task->threadbase, psos_tbase,
-			      task->name, prio, bflags, ustack, &psos_task_ops) != 0) {
+	attr.tbase = psos_tbase;
+	attr.name = task->name;
+	attr.flags = bflags;
+	attr.ops = &psos_task_ops;
+	attr.stacksize = ustack;
+	param.rt.prio = prio;
+
+	if (xnpod_init_thread(&task->threadbase,
+			      &attr, &xnsched_class_rt, &param) != 0) {
 		xnfree(task);
 		return ERR_NOSTK;	/* Assume this is the only possible failure */
 	}
@@ -178,6 +187,7 @@ u_long t_start(u_long tid,
 	       void (*startaddr) (u_long, u_long, u_long, u_long),
 	       u_long targs[])
 {
+	struct xnthread_start_attr attr;
 	u_long err = SUCCESS;
 	xnflags_t xnmode;
 	psostask_t *task;
@@ -202,20 +212,23 @@ u_long t_start(u_long tid,
 	}
 
 	xnmode = psos_mode_to_xeno(mode);
-
 	task->entry = startaddr;
 
+	attr.mode = xnmode;
+	attr.imask = (int)((mode >> 8) & 0x7);
+	attr.affinity = XNPOD_ALL_CPUS;
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(&task->threadbase, XNSHADOW)) {
 		memset(task->args, 0, sizeof(task->args));
-		/* The shadow will be returned the exact values passed
+		attr.entry = (void (*)(void *))startaddr;
+		attr.cookie = targs;
+		/*
+		 * The shadow will be returned the exact values passed
 		 * to t_start(), since the trampoline is performed at
 		 * user-space level. We just relay the information
-		 * from t_create() to t_start() here.*/
-		xnpod_start_thread(&task->threadbase,
-				   xnmode,
-				   (int)((mode >> 8) & 0x7),
-				   XNPOD_ALL_CPUS, (void (*)(void *))startaddr, targs);
+		 * from t_create() to t_start() here.
+		 */
+		xnpod_start_thread(&task->threadbase, &attr);
 	}
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
@@ -223,10 +236,9 @@ u_long t_start(u_long tid,
 		for (n = 0; n < 4; n++)
 			task->args[n] = targs ? targs[n] : 0;
 
-		xnpod_start_thread(&task->threadbase,
-				   xnmode,
-				   (int)((mode >> 8) & 0x7),
-				   XNPOD_ALL_CPUS, &psostask_trampoline, task);
+		attr.entry = psostask_trampoline;
+		attr.cookie = task;
+		xnpod_start_thread(&task->threadbase, &attr);
 	}
 
 unlock_and_exit:
@@ -494,6 +506,7 @@ unlock_and_exit:
 
 u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 {
+	union xnsched_policy_param param;
 	u_long err = SUCCESS;
 	psostask_t *task;
 	spl_t s;
@@ -524,7 +537,9 @@ u_long t_setpri(u_long tid, u_long newprio, u_long *oldprio)
 		}
 
 		if (newprio != *oldprio) {
-			xnpod_renice_thread(&task->threadbase, newprio);
+			param.rt.prio = newprio;
+			xnpod_set_thread_schedparam(&task->threadbase,
+						    &xnsched_class_rt, &param);
 			xnpod_schedule();
 		}
 	}

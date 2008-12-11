@@ -31,11 +31,6 @@
 
 extern struct xnsched_class xnsched_class_tp;
 
-struct xnsched_tp_param {
-	int prio;
-	int pid;	/* partition id. */
-};
-
 struct xnsched_tp_window {
 	xnticks_t w_offset;
 	int w_part;

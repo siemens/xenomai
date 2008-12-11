@@ -2906,6 +2906,7 @@ static int __rt_alarm_stop(struct pt_regs *regs)
 static int __rt_alarm_wait(struct pt_regs *regs)
 {
 	xnthread_t *thread = xnpod_current_thread();
+	union xnsched_policy_param param;
 	RT_ALARM_PLACEHOLDER ph;
 	RT_ALARM *alarm;
 	int err = 0;
@@ -2926,9 +2927,11 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 		goto unlock_and_exit;
 	}
 
-	if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO)
-		/* Renice the waiter above all regular tasks if needed. */
-		xnpod_renice_thread(thread, XNSCHED_IRQ_PRIO);
+	if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+		/* Boost the waiter above all regular tasks if needed. */
+		param.rt.prio = XNSCHED_IRQ_PRIO;
+		xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+	}
 
 	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
 
@@ -3121,6 +3124,7 @@ static int __rt_intr_delete(struct pt_regs *regs)
 
 static int __rt_intr_wait(struct pt_regs *regs)
 {
+	union xnsched_policy_param param;
 	RT_INTR_PLACEHOLDER ph;
 	xnthread_t *thread;
 	RTIME timeout;
@@ -3153,9 +3157,11 @@ static int __rt_intr_wait(struct pt_regs *regs)
 	if (!intr->pending) {
 		thread = xnpod_current_thread();
 
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO)
-			/* Renice the waiter above all regular tasks if needed. */
-			xnpod_renice_thread(thread, XNSCHED_IRQ_PRIO);
+		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
+			/* Boost the waiter above all regular tasks if needed. */
+			param.rt.prio = XNSCHED_IRQ_PRIO;
+			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
+		}
 
 		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
 

@@ -95,7 +95,7 @@ This service can be called from:<p>
 <p>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="sched_8h-source.html#l00096">xnsched::gksync</a>, <a class="el" href="sched_8h-source.html#l00097">xnsched::gktarget</a>, <a class="el" href="sched_8h-source.html#l00095">xnsched::gkwaitq</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNATOMIC</a>, and <a class="el" href="pod_8c-source.html#l01946">xnpod_dispatch_signals()</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00102">xnsched::gksync</a>, <a class="el" href="sched_8h-source.html#l00103">xnsched::gktarget</a>, <a class="el" href="sched_8h-source.html#l00101">xnsched::gkwaitq</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNATOMIC</a>, and <a class="el" href="pod_8c-source.html#l01968">xnpod_dispatch_signals()</a>.</p>
 
 <p>Referenced by <a class="el" href="shadow_8c-source.html#l01172">xnshadow_map()</a>.</p>
 
@@ -140,7 +140,7 @@ Create a shadow thread context.
 This call maps a nucleus thread to the "current" Linux task. The priority and scheduling class of the underlying Linux task are not affected; it is assumed that the interface library did set them appropriately before issuing the shadow mapping request.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#g3f58282d6373a9d47da258f26181365d" title="Initialize a new thread.">xnpod_init_thread()</a>.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>The descriptor address of the new shadow thread to be mapped to "current". This descriptor must have been previously initialized by a call to <a class="el" href="group__pod.html#gd71ebccc5b7b3d367f65127a8849c036" title="Initialize a new thread.">xnpod_init_thread()</a>.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>u_completion</em>&nbsp;</td><td>is the address of an optional completion descriptor aimed at synchronizing our parent thread with us. If non-NULL, the information <a class="el" href="group__shadow.html#gea016c86d43254322f82199bf9e6afb3" title="Create a shadow thread context.">xnshadow_map()</a> will store into the completion block will be later used to wake up the parent thread when the current shadow has been initialized. In the latter case, the new shadow thread is left in a dormant state (XNDORMANT) after its creation, leading to the suspension of "current" in the Linux domain, only processing signals. Otherwise, the shadow thread is immediately started and "current" immediately resumes in the Xenomai domain from this service.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em></em>&nbsp;</td><td>u_mode is the address of a mode variable in user space that will reflect the current thread mode (primary or secondary). The nucleus will try to update the variable before switching to secondary or after switching from primary mode.</td></tr>
   </table>
@@ -165,7 +165,7 @@ This service can be called from:<p>
 <p>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00041">XNMAPPED</a>, <a class="el" href="pod_8c-source.html#l00735">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, and <a class="el" href="shadow_8c-source.html#l00895">xnshadow_harden()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00041">XNMAPPED</a>, <a class="el" href="pod_8c-source.html#l00740">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00059">XNSHADOW</a>, and <a class="el" href="shadow_8c-source.html#l00895">xnshadow_harden()</a>.</p>
 
 </div>
 </div><p>
@@ -236,14 +236,14 @@ Rescheduling: always.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>"current" is valid here since the shadow runs with the properties of the Linux task. </dd></dl>
 </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00109">XNAFFSET</a>, <a class="el" href="pod_8c-source.html#l01288">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00056">XNTRAPSW</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00109">XNAFFSET</a>, <a class="el" href="pod_8c-source.html#l01291">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00042">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00056">XNTRAPSW</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00675">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c-source.html#l02447">xnpod_trap_fault()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00689">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c-source.html#l02469">xnpod_trap_fault()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Dec 8 16:05:58 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:52 2008 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

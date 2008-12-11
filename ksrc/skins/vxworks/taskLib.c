@@ -84,6 +84,8 @@ STATUS taskInit(WIND_TCB *pTcb,
 		long arg0, long arg1, long arg2, long arg3, long arg4,
 		long arg5, long arg6, long arg7, long arg8, long arg9)
 {
+	union xnsched_policy_param param;
+	struct xnthread_init_attr attr;
 	xnflags_t bflags = 0;
 	spl_t s;
 
@@ -127,11 +129,15 @@ STATUS taskInit(WIND_TCB *pTcb,
 		   user-space. */
 		sprintf(pTcb->name, "t%lu", pTcb->flow_id);
 
+	attr.tbase = wind_tbase;
+	attr.name = pTcb->name;
+	attr.flags = bflags;
+	attr.ops = &windtask_ops;
+	attr.stacksize = stacksize;
+	param.rt.prio = wind_normalized_prio(prio);
+
 	if (xnpod_init_thread(&pTcb->threadbase,
-			      wind_tbase,
-			      pTcb->name,
-			      wind_normalized_prio(prio), bflags,
-			      stacksize, &windtask_ops) != 0) {
+			      &attr, &xnsched_class_rt, &param) != 0) {
 		/* Assume this is the only possible failure. */
 		wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);
 		return ERROR;
@@ -181,6 +187,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 
 STATUS taskActivate(TASK_ID task_id)
 {
+	struct xnthread_start_attr attr;
 	wind_task_t *task;
 	spl_t s;
 
@@ -195,8 +202,12 @@ STATUS taskActivate(TASK_ID task_id)
 	if (!xnthread_test_state(&(task->threadbase), XNDORMANT))
 		goto error;
 
-	xnpod_start_thread(&task->threadbase, XNRRB, 0,
-			   XNPOD_ALL_CPUS, wind_task_trampoline, task);
+	attr.mode = XNRRB;
+	attr.imask = 0;
+	attr.affinity = XNPOD_ALL_CPUS;
+	attr.entry = wind_task_trampoline;
+	attr.cookie = task;
+	xnpod_start_thread(&task->threadbase, &attr);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -400,6 +411,7 @@ STATUS taskRestart(TASK_ID task_id)
 
 STATUS taskPrioritySet(TASK_ID task_id, int prio)
 {
+	union xnsched_policy_param param;
 	wind_task_t *task;
 	spl_t s;
 
@@ -416,8 +428,9 @@ STATUS taskPrioritySet(TASK_ID task_id, int prio)
 		check_OBJ_ID_ERROR(task_id, wind_task_t, task, WIND_TASK_MAGIC,
 				   goto error);
 
-	xnpod_renice_thread(&task->threadbase, wind_normalized_prio(prio));
 	task->prio = prio;
+	param.rt.prio = wind_normalized_prio(prio);
+	xnpod_set_thread_schedparam(&task->threadbase, &xnsched_class_rt, &param);
 
 	xnpod_schedule();
 
