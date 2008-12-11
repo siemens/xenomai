@@ -1,5 +1,5 @@
-/*!\file sched-builtin.h
- * \brief Definitions for built-in scheduling classes.
+/*!\file sched-rt.h
+ * \brief Definitions for the RT scheduling class.
  * \author Philippe Gerum
  *
  * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
@@ -20,20 +20,17 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_NUCLEUS_SCHED_BUILTIN_H
-#define _XENO_NUCLEUS_SCHED_BUILTIN_H
+#ifndef _XENO_NUCLEUS_SCHED_RT_H
+#define _XENO_NUCLEUS_SCHED_RT_H
 
 #ifndef _XENO_NUCLEUS_SCHED_H
-#error "please don't include nucleus/sched-builtin.h directly"
+#error "please don't include nucleus/sched-rt.h directly"
 #endif
 
 /* Priority scale for the RT scheduling class. */
 #define XNSCHED_RT_MIN_PRIO	0
 #define XNSCHED_RT_MAX_PRIO	257
 #define XNSCHED_RT_NR_PRIO	(XNSCHED_RT_MAX_PRIO - XNSCHED_RT_MIN_PRIO + 1)
-
-/* Idle priority level - actually never used for indexing. */
-#define XNSCHED_IDLE_PRIO	-1
 
 /*
  * Builtin priorities shared by all core APIs.  Those APIs, namely
@@ -135,31 +132,6 @@ static inline struct xnthread *__xnsched_rt_peek_rpi(struct xnsched *sched)
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
-static inline void __xnsched_idle_setparam(struct xnthread *thread,
-					   const union xnsched_policy_param *p)
-{
-	thread->cprio = p->idle.prio;
-}
-
-static inline void __xnsched_idle_getparam(struct xnthread *thread,
-					   union xnsched_policy_param *p)
-{
-	p->idle.prio = thread->cprio;
-}
-
-static inline void __xnsched_idle_trackprio(struct xnthread *thread,
-					    const union xnsched_policy_param *p)
-{
-	if (p)
-		__xnsched_idle_setparam(thread, p);
-	else
-		thread->cprio = XNSCHED_IDLE_PRIO;
-}
-
-static inline void xnsched_idle_init_tcb(struct xnthread *thread)
-{
-}
-
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
-#endif /* !_XENO_NUCLEUS_SCHED_BUILTIN_H */
+#endif /* !_XENO_NUCLEUS_SCHED_RT_H */

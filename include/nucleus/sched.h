@@ -191,7 +191,8 @@ static inline void xnsched_reset_watchdog(struct xnsched *sched)
 }
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
-#include <nucleus/sched-builtin.h>
+#include <nucleus/sched-idle.h>
+#include <nucleus/sched-rt.h>
 
 void xnsched_init(struct xnsched *sched);
 
@@ -422,7 +423,8 @@ struct xnthread *xnsched_peek_rpi(struct xnsched *sched);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 
-#include <nucleus/sched-builtin.h>
+#include <nucleus/sched-idle.h>
+#include <nucleus/sched-rt.h>
 
 #endif /* !(__KERNEL__ || __XENO_SIM__) */
 

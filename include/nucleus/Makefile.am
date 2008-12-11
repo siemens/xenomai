@@ -18,7 +18,8 @@ includesub_HEADERS = \
 	sched.h \
 	schedparam.h \
 	schedqueue.h \
-	sched-builtin.h \
+	sched-idle.h \
+	sched-rt.h \
 	sched-tp.h \
 	shadow.h \
 	stat.h \
