@@ -343,12 +343,6 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched)
 	return sched;
 }
 
-void xnsched_resched_after_unlocked_switch(void)
-{
-	if (xnsched_resched_p(xnpod_current_sched()))
-		xnpod_schedule();
-}
-
 #endif /* CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 /* Must be called with nklock locked, interrupts off. */

@@ -170,3 +170,5 @@ struct xnsched_class xnsched_class_rt = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"rt"
 };
+
+EXPORT_SYMBOL(xnsched_class_rt);

@@ -285,7 +285,7 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 
 void xnpod_schedule_deferred(void)
 {
-	if (xnpod_active_p() && xnsched_resched_p(xnpod_current_sched()))
+	if (xnpod_active_p())
 		xnpod_schedule();
 }
 
@@ -746,6 +746,7 @@ int xnpod_start_thread(struct xnthread *thread,
 	}
 #ifdef CONFIG_SMP
 	if (!xnarch_cpu_isset(xnsched_cpu(thread->sched), thread->affinity)) {
+		xnsched_t *sched;
 		sched = xnpod_sched_slot(xnarch_first_cpu(thread->affinity));
 		xnsched_migrate_passive(thread, sched);
 	}
@@ -2127,6 +2128,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 		xnarch_cpus_clear(sched->resched);
 	}
 #endif
+	clrbits(sched->status, XNRESCHED);
 	return resched;
 }
 
@@ -2148,6 +2150,10 @@ void __xnpod_schedule(struct xnsched *sched)
 			 xnthread_current_priority(curr));
 
 	need_resched = __xnpod_test_resched(sched);
+#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+	if (!need_resched)
+		goto signal_unlock_and_exit;
+#endif /* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */
 	zombie = xnthread_test_state(curr, XNZOMBIE);
 
 	next = xnsched_pick_next(sched);

@@ -36,12 +36,13 @@
 #include <nucleus/sched-tp.h>
 
 /* Sched status flags */
-#define XNKCOUT	 0x80000000	/* Sched callout context */
-#define XNHTICK  0x40000000	/* Host tick pending  */
-#define XNRPICK  0x20000000	/* Check RPI state */
-#define XNINTCK  0x10000000	/* In master tick handler context */
-#define XNINIRQ  0x08000000	/* In IRQ handling context */
-#define XNSWLOCK 0x04000000	/* In context switch */
+#define XNKCOUT		0x80000000	/* Sched callout context */
+#define XNHTICK		0x40000000	/* Host tick pending  */
+#define XNRPICK		0x20000000	/* Check RPI state */
+#define XNINTCK		0x10000000	/* In master tick handler context */
+#define XNINIRQ		0x08000000	/* In IRQ handling context */
+#define XNSWLOCK	0x04000000	/* In context switch */
+#define XNRESCHED	0x02000000	/* Needs rescheduling */
 
 #define XNSCHED_EVT_DEADLINE	24 /* Deadline event (thread->signals). */
 
@@ -149,16 +150,23 @@ struct xnsched_class {
 #endif /* CONFIG_SMP */
 
 /* Test all resched flags from the given scheduler mask. */
-#define xnsched_resched_p(__sched__)			\
-  (!xnarch_cpus_empty((__sched__)->resched))
+static inline int xnsched_resched_p(xnsched_t *sched) 
+{
+	return !xnarch_cpus_empty(sched->resched);
+}
 
 /* Set self resched flag for the given scheduler. */
-#define xnsched_set_self_resched(__sched__)		\
-  xnarch_cpu_set(xnsched_cpu(__sched__), (__sched__)->resched)
+#define xnsched_set_self_resched(__sched__) do {		\
+  xnarch_cpu_set(xnsched_cpu(__sched__), (__sched__)->resched); \
+  setbits((__sched__)->status, XNRESCHED);			\
+} while (0)
 
 /* Set specific resched flag into the local scheduler mask. */
-#define xnsched_set_resched(__sched__)			\
-    xnarch_cpu_set(xnsched_cpu(__sched__), xnpod_current_sched()->resched)
+#define xnsched_set_resched(__sched__) do {				\
+  xnsched_t *current_sched = xnpod_current_sched();			\
+  xnarch_cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
+  setbits(current_sched->status, XNRESCHED);				\
+} while (0)
 
 void xnsched_zombie_hooks(struct xnthread *thread);
 
@@ -174,7 +182,7 @@ static inline void xnsched_finalize_zombie(struct xnsched *sched)
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 
-void xnsched_resched_after_unlocked_switch(void);
+#define xnsched_resched_after_unlocked_switch() xnpod_schedule()
 
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 

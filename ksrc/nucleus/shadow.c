@@ -735,8 +735,7 @@ static void lostage_handler(void *cookie)
 
 			wake_up_process(p);
 
-			if (xnsched_resched_p(xnpod_current_sched()))
-				xnpod_schedule();
+			xnpod_schedule();
 
 			break;
 

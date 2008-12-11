@@ -112,8 +112,7 @@ void xnintr_clock_handler(void)
 
 	if (--sched->inesting == 0) {
 		__clrbits(sched->status, XNINIRQ);
-		if (xnsched_resched_p(sched))
-			xnpod_schedule();
+		xnpod_schedule();
 	}
 
 	/*
@@ -216,8 +215,7 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		__clrbits(sched->status, XNINIRQ);
-		if (xnsched_resched_p(sched))
-			xnpod_schedule();
+		xnpod_schedule();
 	}
 
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
@@ -300,8 +298,7 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		__clrbits(sched->status, XNINIRQ);
-		if (xnsched_resched_p(sched))
-			xnpod_schedule();
+		xnpod_schedule();
 	}
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
 	xnstat_exectime_switch(sched, prev);
@@ -507,8 +504,7 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 
 	if (--sched->inesting == 0) {
 		__clrbits(sched->status, XNINIRQ);
-		if (xnsched_resched_p(sched))
-			xnpod_schedule();
+		xnpod_schedule();
 	}
 
 	trace_mark(xn_nucleus_irq_exit, "irq %u", irq);
