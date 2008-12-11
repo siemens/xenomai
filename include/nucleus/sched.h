@@ -162,6 +162,14 @@ struct xnsched_class {
 
 void xnsched_zombie_hooks(struct xnthread *thread);
 
+void __xnsched_finalize_zombie(struct xnsched *sched);
+
+static inline void xnsched_finalize_zombie(struct xnsched *sched)
+{
+	if (sched->zombie)
+		__xnsched_finalize_zombie(sched);
+}
+
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 
 struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);

@@ -103,11 +103,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	stts();
 }
 
-static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
-{
-	/* Empty */
-}
-
 asmlinkage void xnarch_thread_trampoline(xnarchtcb_t *tcb)
 {
 	/* xnpod_welcome_thread() will do clts() if needed. */

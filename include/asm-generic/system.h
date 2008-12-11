@@ -451,6 +451,8 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
     return wrap_remap_kmem_page_range(vma,from,to,size,prot);
 }
 
+#define xnarch_finalize_no_switch(dead_tcb) do { } while(0)
+
 #ifdef rthal_fault_range
 #define xnarch_fault_range(vma) rthal_fault_range(vma)
 #else /* !rthal_fault_range */

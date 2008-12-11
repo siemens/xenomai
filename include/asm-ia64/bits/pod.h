@@ -100,11 +100,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	}
 }
 
-static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
-{
-	/* Empty */
-}
-
 #define fph2task(faddr)                                 \
     ((struct task_struct *)((char *) (faddr) -          \
                             (size_t) &((struct task_struct *) 0)->thread.fph[0]))

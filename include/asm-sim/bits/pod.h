@@ -38,12 +38,6 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
     __mvm_breakable(mvm_switch_threads)(out_tcb->vmthread,in_tcb->vmthread);
 }
 
-static inline void xnarch_finalize_no_switch (xnarchtcb_t *dead_tcb)
-{
-    if (dead_tcb->vmthread)	/* Might be unstarted. */
-	mvm_finalize_thread(dead_tcb->vmthread);
-}
-
 static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
 					 struct xnthread *thread,
 					 const char *name)

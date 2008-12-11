@@ -971,7 +971,7 @@ redo:
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
 
-	xnpod_finalize_zombie(sched);
+	xnsched_finalize_zombie(sched);
 
 #ifdef CONFIG_XENO_HW_FPU
 	xnpod_switch_fpu(sched);

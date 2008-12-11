@@ -113,11 +113,6 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 	rthal_thread_switch(prev, out_tcb->tip, in_tcb->tip);
 }
 
-static inline void xnarch_finalize_no_switch(xnarchtcb_t * dead_tcb)
-{
-	/* Empty */
-}
-
 static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 					struct xnthread *thread,
 					const char *name)

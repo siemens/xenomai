@@ -525,20 +525,6 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
 	__clrbits(sched->status, XNKCOUT);
 }
 
-void __xnpod_finalize_zombie(xnsched_t *sched)
-{
-	xnthread_t *thread = sched->zombie;
-
-	xnthread_cleanup_tcb(thread);
-
-	xnarch_finalize_no_switch(xnthread_archtcb(thread));
-
-	if (xnthread_test_state(sched->curr, XNROOT))
-		xnfreesync();
-
-	sched->zombie = NULL;
-}
-
 /*! 
  * \fn void xnpod_init_thread(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * \brief Initialize a new thread.
@@ -2024,7 +2010,7 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 {
 	xnsched_t *sched = xnsched_finish_unlocked_switch(thread->sched);
 
-	xnpod_finalize_zombie(sched);
+	xnsched_finalize_zombie(sched);
 
 	trace_mark(xn_nucleus_thread_boot, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -2231,7 +2217,7 @@ void __xnpod_schedule(struct xnsched *sched)
 		xnpod_fatal("zombie thread %s (%p) would not die...",
 			    prev->name, prev);
 
-	xnpod_finalize_zombie(sched);
+	xnsched_finalize_zombie(sched);
 
 	__xnpod_switch_fpu(sched);
 

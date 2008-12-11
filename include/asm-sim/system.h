@@ -447,6 +447,12 @@ static inline void xnarch_free_host_mem (void *chunk, u_long bytes)
     free(chunk);
 }
 
+static inline void xnarch_finalize_no_switch(xnarchtcb_t *dead_tcb)
+{
+    if (dead_tcb->vmthread)	/* Might be unstarted. */
+	mvm_finalize_thread(dead_tcb->vmthread);
+}
+
 #define xnarch_current_cpu()  0
 
 #define cpu_relax()           do { } while(0)

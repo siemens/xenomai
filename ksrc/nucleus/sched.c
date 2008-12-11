@@ -24,6 +24,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/timer.h>
+#include <nucleus/heap.h>
 #include <nucleus/assert.h>
 #include <asm/xenomai/bits/sched.h>
 
@@ -229,6 +230,20 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 	}
 
 	xnsched_forget(thread);
+}
+
+void __xnsched_finalize_zombie(struct xnsched *sched)
+{
+	struct xnthread *thread = sched->zombie;
+
+	xnthread_cleanup_tcb(thread);
+
+	xnarch_finalize_no_switch(xnthread_archtcb(thread));
+
+	if (xnthread_test_state(sched->curr, XNROOT))
+		xnfreesync();
+
+	sched->zombie = NULL;
 }
 
 #ifdef CONFIG_XENO_OPT_PRIOCPL

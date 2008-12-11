@@ -112,15 +112,7 @@ void __xnpod_set_thread_schedparam(struct xnthread *thread,
 void xnpod_switch_fpu(xnsched_t *sched);
 #endif /* CONFIG_XENO_HW_FPU */
 
-void __xnpod_finalize_zombie(xnsched_t *sched);
-
 void __xnpod_schedule(struct xnsched *sched);
-
-static inline void xnpod_finalize_zombie(xnsched_t *sched)
-{
-	if (sched->zombie)
-		__xnpod_finalize_zombie(sched);
-}
 
 	/* -- Beginning of the exported interface */
 
