@@ -312,3 +312,5 @@ struct xnsched_class xnsched_class_tp = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"tp"
 };
+
+EXPORT_SYMBOL(xnsched_class_tp);
