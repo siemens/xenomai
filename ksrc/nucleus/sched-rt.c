@@ -85,8 +85,6 @@ static struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 
 void xnsched_rt_tick(struct xnthread *curr)
 {
-	if (!xnthread_test_state(curr, XNRRB) || curr->rrcredit == XN_INFINITE)
-		return;
 	/*
 	 * The thread can be preempted and undergoes a round-robin
 	 * scheduling. Round-robin time credit is only consumed by a
