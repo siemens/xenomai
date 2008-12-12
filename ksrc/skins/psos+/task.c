@@ -373,18 +373,31 @@ u_long t_mode(u_long mask, u_long newmask, u_long *oldmode)
 	/* We have no error case here: just clear out any unwanted bit. */
 	mask &= T_MODE_MASK;
 	newmask &= T_MODE_MASK;
-	if (mask == 0) {
-		*oldmode = xeno_mode_to_psos(xnthread_state_flags(&task->threadbase) & XNTHREAD_MODE_BITS);
-		*oldmode |= ((task->threadbase.imask & 0x7) << 8);
-		return SUCCESS;
+
+	*oldmode = xeno_mode_to_psos(xnthread_state_flags(&task->threadbase) & XNTHREAD_MODE_BITS);
+	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
+
+	if (mask & T_TSLICE) {
+		if (newmask & T_TSLICE) {
+			xnthread_time_slice(&task->threadbase) = psos_time_slice;
+			xnthread_time_credit(&task->threadbase) = psos_time_slice;
+		} else {
+			xnthread_time_slice(&task->threadbase) = XN_INFINITE;
+			xnthread_time_credit(&task->threadbase) = XN_INFINITE;
+		} /* psos_time_slice may be zero. */
+		if (xnthread_time_slice(&task->threadbase) != XN_INFINITE)
+			xnthread_set_state(&task->threadbase, XNRRB);
+		else
+			xnthread_clear_state(&task->threadbase, XNRRB);
+		mask &= ~T_TSLICE;
 	}
 
-	*oldmode =
-		xeno_mode_to_psos(xnpod_set_thread_mode
-				  (&task->threadbase,
-				   psos_mode_to_xeno(mask),
-				   psos_mode_to_xeno(newmask)));
-	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
+	if (mask == 0)
+		return SUCCESS;
+
+	xnpod_set_thread_mode(&task->threadbase,
+			      psos_mode_to_xeno(mask),
+			      psos_mode_to_xeno(newmask));
 
 	/* Reschedule in case the scheduler has been unlocked. */
 	xnpod_schedule();
