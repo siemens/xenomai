@@ -302,6 +302,9 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 int xnpod_wait_thread_period(unsigned long *overruns_r);
 
+int xnpod_set_thread_tslice(struct xnthread *thread,
+			    xnticks_t quantum);
+
 static inline xntime_t xnpod_get_cpu_time(void)
 {
 	return xnarch_get_cpu_time();

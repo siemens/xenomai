@@ -673,11 +673,6 @@ int xnpod_init_thread(struct xnthread *thread,
  * block, in which case, the lock is reasserted when the thread is
  * scheduled back in.
  *
- *   - XNRRB causes the thread to be marked as undergoing the
- * round-robin scheduling policy at startup.  The contents of the
- * thread.rrperiod field determines the time quantum (in ticks)
- * allowed for its next slice.
- *
  *   - XNASDI disables the asynchronous signal handling for this
  * thread.  See xnpod_schedule() for more on this.
  *
@@ -762,9 +757,6 @@ int xnpod_start_thread(struct xnthread *thread,
 	thread->imode = (attr->mode & XNTHREAD_MODE_BITS);
 	thread->entry = attr->entry;
 	thread->cookie = attr->cookie;
-
-	if (xnthread_test_state(thread, XNRRB))
-		thread->rrcredit = thread->rrperiod;
 
 	trace_mark(xn_nucleus_thread_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -924,13 +916,6 @@ void xnpod_restart_thread(xnthread_t *thread)
  * service. A non-preemptible thread may still block, in which case,
  * the lock is reasserted when the thread is scheduled back in.
  *
- * - XNRRB causes the thread to be marked as undergoing the
- * round-robin scheduling policy.  The contents of the thread.rrperiod
- * field determines the time quantum (in ticks) allowed for its
- * next slice. If the thread is already undergoing the round-robin
- * scheduling policy at the time this service is called, the time
- * quantum remains unchanged.
- *
  * - XNASDI disables the asynchronous signal handling for this thread.
  * See xnpod_schedule() for more on this.
  *
@@ -975,9 +960,6 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 		} else if (!xnthread_test_state(thread, XNLOCK))
 			xnthread_lock_count(thread) = 0;
 	}
-
-	if (!(oldmode & XNRRB) && xnthread_test_state(thread, XNRRB))
-		thread->rrcredit = thread->rrperiod;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2829,6 +2811,65 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 	return err;
 }
 
+/**
+ * @fn int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
+ * @brief Set thread time-slicing information.
+ *
+ * Update the time-slicing information for a given thread. This
+ * service enables or disables round-robin scheduling for the thread,
+ * depending on the value of @a quantum. By default, times-slicing is
+ * disabled for a new thread initialized by a call to
+ * xnpod_init_thread().
+ *
+ * @param thread The descriptor address of the affected thread.
+ *
+ * @param quantum The time quantum assigned to the thread expressed in
+ * clock ticks (see note). If @a quantum is different from
+ * XN_INFINITE, the time-slice for the thread is set to that value and
+ * its current time credit is refilled (i.e. the thread is given a
+ * full time-slice to run next). Otherwise, if @a quantum equals
+ * XN_INFINITE, time-slicing is stopped for that thread.
+ *
+ * @return 0 is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if the base scheduling class of the target
+ * thread does not support time-slicing.
+ *
+ * - -ENODEV is returned if the thread is not bound to a periodic
+ * timebase.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ *
+ * @note @a quantum will be interpreted as jiffies.
+ */
+
+int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
+{
+	if (!xntbase_periodic_p(xnthread_time_base(thread)))
+		return -ENODEV;
+
+	if (thread->base_class->sched_tick == NULL)
+		return -EINVAL;
+
+	thread->rrperiod = quantum;
+	thread->rrcredit = quantum;
+
+	if (quantum != XN_INFINITE)
+		xnthread_set_state(thread, XNRRB);
+	else
+		xnthread_clear_state(thread, XNRRB);
+
+	return 0;
+}
+
 /*@}*/
 
 EXPORT_SYMBOL(xnpod_add_hook);
@@ -2852,6 +2893,7 @@ EXPORT_SYMBOL(xnpod_suspend_thread);
 EXPORT_SYMBOL(xnpod_trap_fault);
 EXPORT_SYMBOL(xnpod_unblock_thread);
 EXPORT_SYMBOL(xnpod_wait_thread_period);
+EXPORT_SYMBOL(xnpod_set_thread_tslice);
 EXPORT_SYMBOL(xnpod_welcome_thread);
 EXPORT_SYMBOL(__xnpod_schedule);
 

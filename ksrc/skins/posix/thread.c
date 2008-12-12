@@ -256,11 +256,8 @@ int pthread_create(pthread_t *tid,
 	pse51_timer_init_thread(thread);
 	thread->selector = NULL;
 
-	if (thread->attr.policy == SCHED_RR) {
-		xnthread_time_slice(&thread->threadbase) = pse51_time_slice;
-		flags = XNRRB;
-	} else
-		flags = 0;
+	if (thread->attr.policy == SCHED_RR)
+		xnpod_set_thread_tslice(&thread->threadbase, pse51_time_slice);
 
 	xnlock_get_irqsave(&nklock, s);
 	thread->container = &pse51_kqueues(0)->threadq;
@@ -288,7 +285,7 @@ int pthread_create(pthread_t *tid,
 
 	/* Do not start shadow threads (i.e. start == NULL). */
 	if (start) {
-		sattr.mode = flags;
+		sattr.mode = 0;
 		sattr.imask = 0;
 		sattr.affinity = thread->attr.affinity;
 		sattr.entry = thread_trampoline;

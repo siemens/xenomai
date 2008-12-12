@@ -213,11 +213,8 @@ u_long t_start(u_long tid,
 
 	xnmode = psos_mode_to_xeno(mode);
 	if (xnmode & XNRRB) {
-		if (psos_time_slice != XN_INFINITE) {
-			xnthread_time_slice(&task->threadbase) = psos_time_slice;
-			xnthread_time_credit(&task->threadbase) = psos_time_slice;
-		} else
-			xnmode &= ~XNRRB;
+		xnpod_set_thread_tslice(&task->threadbase, psos_time_slice);
+		xnmode &= ~XNRRB;
 	}
 
 	task->entry = startaddr;
@@ -378,17 +375,12 @@ u_long t_mode(u_long mask, u_long newmask, u_long *oldmode)
 	*oldmode |= ((task->threadbase.imask & 0x7) << 8);
 
 	if (mask & T_TSLICE) {
-		if (newmask & T_TSLICE) {
-			xnthread_time_slice(&task->threadbase) = psos_time_slice;
-			xnthread_time_credit(&task->threadbase) = psos_time_slice;
-		} else {
-			xnthread_time_slice(&task->threadbase) = XN_INFINITE;
-			xnthread_time_credit(&task->threadbase) = XN_INFINITE;
-		} /* psos_time_slice may be zero. */
-		if (xnthread_time_slice(&task->threadbase) != XN_INFINITE)
-			xnthread_set_state(&task->threadbase, XNRRB);
+		if (newmask & T_TSLICE)
+			xnpod_set_thread_tslice(&task->threadbase,
+						psos_time_slice);
 		else
-			xnthread_clear_state(&task->threadbase, XNRRB);
+			xnpod_set_thread_tslice(&task->threadbase,
+						XN_INFINITE);
 		mask &= ~T_TSLICE;
 	}
 

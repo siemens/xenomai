@@ -28,8 +28,8 @@
 
 #include <nucleus/types.h>
 
-#define VXWORKS_SKIN_VERSION_STRING  "4"
-#define VXWORKS_SKIN_VERSION_CODE    0x00000004
+#define VXWORKS_SKIN_VERSION_STRING  "5"
+#define VXWORKS_SKIN_VERSION_CODE    0x00000005
 #define VXWORKS_SKIN_MAGIC           0x57494E44
 
 #undef STATUS

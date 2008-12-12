@@ -279,16 +279,12 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 
 	case SCHED_OTHER:
 	case SCHED_FIFO:
-		xnthread_time_slice(&tid->threadbase) = XN_INFINITE;
-		xnthread_time_credit(&tid->threadbase) = XN_INFINITE;
-		xnthread_clear_state(&tid->threadbase, XNRRB);
+		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
 		break;
 
 
 	case SCHED_RR:
-		xnthread_time_slice(&tid->threadbase) = pse51_time_slice;
-		xnthread_time_credit(&tid->threadbase) = pse51_time_slice;
-		xnthread_set_state(&tid->threadbase, XNRRB);
+		xnpod_set_thread_tslice(&tid->threadbase, pse51_time_slice);
 	}
 
 	if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY

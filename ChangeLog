@@ -21,6 +21,10 @@
 	* ksrc/skins/psos+/task.c (t_mode): Handle round-robin setup
 	locally (do not rely on xnpod_set_thread_mode() anymore).
 
+	* ksrc/nucleus/pod.c (xnpod_set_thread_mode, xnpod_start_thread):
+	Do not handle XNRRB in these services anymore, but leave this to
+	the new xnpod_set_thread_tslice() call.
+
 2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls

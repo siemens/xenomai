@@ -194,11 +194,8 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	if (mode & 0x4)
 		bmode |= XNLOCK;
 
-	if (mode & 0x10 && rrperiod != XN_INFINITE) {
-		xnthread_time_slice(&task->threadbase) = rrperiod;
-		xnthread_time_credit(&task->threadbase) = rrperiod;
-		bmode |= XNRRB;
-	}
+	if (mode & 0x10)
+		xnpod_set_thread_tslice(&task->threadbase, rrperiod);
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_task_q, &task->link);
@@ -530,12 +527,7 @@ void sc_tslice(u_short ticks)
 
 	for (h = getheadq(&vrtx_task_q); h; h = nextq(&vrtx_task_q, h)) {
 		task = link2vrtxtask(h);
-		xnthread_time_slice(&task->threadbase) = ticks;
-		xnthread_time_credit(&task->threadbase) = ticks;
-		if (ticks)
-			xnthread_set_state(&task->threadbase, XNRRB);
-		else
-			xnthread_clear_state(&task->threadbase, XNRRB);
+		xnpod_set_thread_tslice(&task->threadbase, ticks);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);

@@ -257,8 +257,7 @@ static inline void xnsched_tick(struct xnthread *curr)
 	struct xnsched_class *sched_class = curr->sched_class;
 
 	if (sched_class != &xnsched_class_idle &&
-	    xnthread_test_state(curr, XNRRB) &&
-	    curr->rrcredit != XN_INFINITE)
+	    xnthread_test_state(curr, XNRRB))
 		sched_class->sched_tick(curr);
 }
 

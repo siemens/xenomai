@@ -81,12 +81,7 @@ void wind_set_rrperiod(xnticks_t ticks)
 
 	for (h = getheadq(&wind_tasks_q); h; h = nextq(&wind_tasks_q, h)) {
 		pTcb = link2wind_task(h);
-		xnthread_time_slice(&pTcb->threadbase) = ticks;
-		xnthread_time_credit(&pTcb->threadbase) = ticks;
-		if (ticks)
-			xnthread_set_state(&pTcb->threadbase, XNRRB);
-		else
-			xnthread_clear_state(&pTcb->threadbase, XNRRB);
+		xnpod_set_thread_tslice(&pTcb->threadbase, ticks);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
@@ -203,7 +198,6 @@ STATUS taskInit(WIND_TCB *pTcb,
 STATUS taskActivate(TASK_ID task_id)
 {
 	struct xnthread_start_attr attr;
-	xnflags_t bmode = 0;
 	wind_task_t *task;
 	spl_t s;
 
@@ -218,13 +212,10 @@ STATUS taskActivate(TASK_ID task_id)
 	if (!xnthread_test_state(&(task->threadbase), XNDORMANT))
 		goto error;
 
-	if (rrperiod) {
-		xnthread_time_slice(&task->threadbase) = rrperiod;
-		xnthread_time_credit(&task->threadbase) = rrperiod;
-		bmode |= XNRRB;
-	}
+	if (rrperiod)
+		xnpod_set_thread_tslice(&task->threadbase, rrperiod);
 
-	attr.mode = bmode;
+	attr.mode = 0;
 	attr.imask = 0;
 	attr.affinity = XNPOD_ALL_CPUS;
 	attr.entry = wind_task_trampoline;

@@ -1579,7 +1579,6 @@ RT_TASK *rt_task_self(void)
 
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
-	struct xnthread *thread;
 	int ret = 0;
 	spl_t s;
 
@@ -1602,14 +1601,7 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 		goto unlock_and_exit;
 	}
 
-	thread = &task->thread_base;
-	xnthread_time_slice(thread) = quantum;
-	xnthread_time_credit(thread) = quantum;
-
-	if (quantum)
-		xnthread_set_state(thread, XNRRB);
-	else
-		xnthread_clear_state(thread, XNRRB);
+	xnpod_set_thread_tslice(&task->thread_base, quantum);
 
       unlock_and_exit:
 
