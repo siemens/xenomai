@@ -255,8 +255,13 @@ static inline struct xnsched_class *xnsched_root_class(struct xnsched *sched)
 static inline void xnsched_tick(struct xnthread *curr)
 {
 	struct xnsched_class *sched_class = curr->sched_class;
-
+	/*
+	 * A thread that undergoes round-robin scheduling only
+	 * consumes its time slice when it runs within its own
+	 * scheduling class, which excludes temporary PIP boosts.
+	 */
 	if (sched_class != &xnsched_class_idle &&
+	    sched_class == curr->base_class &&
 	    xnthread_test_state(curr, XNRRB))
 		sched_class->sched_tick(curr);
 }
