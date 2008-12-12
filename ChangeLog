@@ -1,3 +1,8 @@
+2008-12-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/kernelLib.c, ksrc/skins/vxworks/taskLib.c:
+	Sanitize RR scheduling setup.
+
 2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls

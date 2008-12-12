@@ -297,10 +297,8 @@ extern "C" {
 
     void wind_msgq_cleanup(void);
 
+    void wind_set_rrperiod(xnticks_t ticks);
 
-    void wind_set_rrperiod( xnticks_t ticks );
-
-    
 #ifdef __cplusplus
 }
 #endif

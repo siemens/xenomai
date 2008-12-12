@@ -22,19 +22,7 @@
 
 STATUS kernelTimeSlice(int ticks)
 {
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	wind_set_rrperiod((xnticks_t)ticks);
-
-	if (ticks != 0)
-		xnpod_activate_rr(ticks);
-	else
-		xnpod_deactivate_rr();
-
-	xnlock_put_irqrestore(&nklock, s);
-
+	wind_set_rrperiod(ticks);
 	return OK;
 }
 

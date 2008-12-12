@@ -71,7 +71,25 @@ void wind_task_cleanup(void)
 
 void wind_set_rrperiod(xnticks_t ticks)
 {
+	WIND_TCB *pTcb;
+	xnholder_t *h;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
 	rrperiod = ticks;
+
+	for (h = getheadq(&wind_tasks_q); h; h = nextq(&wind_tasks_q, h)) {
+		pTcb = link2wind_task(h);
+		xnthread_time_slice(&pTcb->threadbase) = ticks;
+		xnthread_time_credit(&pTcb->threadbase) = ticks;
+		if (ticks)
+			xnthread_set_state(&pTcb->threadbase, XNRRB);
+		else
+			xnthread_clear_state(&pTcb->threadbase, XNRRB);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 STATUS taskInit(WIND_TCB *pTcb,
@@ -148,9 +166,6 @@ STATUS taskInit(WIND_TCB *pTcb,
 	pTcb->flags = flags & ~VX_SHADOW;
 	pTcb->prio = prio;
 	pTcb->entry = entry;
-
-	xnthread_time_slice(&pTcb->threadbase) = rrperiod;
-
 	pTcb->safecnt = 0;
 	xnsynch_init(&pTcb->safesync, 0, NULL);
 
@@ -202,7 +217,9 @@ STATUS taskActivate(TASK_ID task_id)
 	if (!xnthread_test_state(&(task->threadbase), XNDORMANT))
 		goto error;
 
-	attr.mode = XNRRB;
+	xnthread_time_slice(&task->threadbase) = rrperiod;
+
+	attr.mode = rrperiod ? XNRRB : 0;
 	attr.imask = 0;
 	attr.affinity = XNPOD_ALL_CPUS;
 	attr.entry = wind_task_trampoline;
