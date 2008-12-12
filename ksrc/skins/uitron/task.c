@@ -461,14 +461,20 @@ ER chg_pri(ID tskid, PRI tskpri)
 
 ER rot_rdq(PRI tskpri)
 {
+	union xnsched_policy_param param;
+	spl_t s;
+
 	if (tskpri != TPRI_RUN) {
 		if (tskpri < 1 || tskpri > 8)
 			return E_PAR;
-		xnsched_rotate(ui_normalized_prio(tskpri));
+		param.rt.prio = ui_normalized_prio(tskpri);
 	} else
-		xnsched_rotate(XNSCHED_RUNPRIO);
+		param.rt.prio = XNSCHED_RUNPRIO;
 
+	xnlock_get_irqsave(&nklock, s);
+	xnsched_rotate(xnpod_current_sched(), &xnsched_class_rt, &param);
 	xnpod_schedule();
+	xnlock_put_irqrestore(&nklock, s);
 
 	return E_OK;
 }

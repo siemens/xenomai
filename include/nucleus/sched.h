@@ -116,7 +116,8 @@ struct xnsched_class {
 	void (*sched_requeue)(struct xnthread *thread);
 	struct xnthread *(*sched_pick)(struct xnsched *sched);
 	void (*sched_tick)(struct xnthread *curr);
-	void (*sched_rotate)(struct xnsched *sched, int prio);
+	void (*sched_rotate)(struct xnsched *sched,
+			     const union xnsched_policy_param *p);
 	void (*sched_migrate)(struct xnthread *thread,
 			      struct xnsched *sched);
 	void (*sched_setparam)(struct xnthread *thread,
@@ -231,7 +232,37 @@ void xnsched_migrate(struct xnthread *thread,
 void xnsched_migrate_passive(struct xnthread *thread,
 			     struct xnsched *sched);
 
-void xnsched_rotate(int prio);
+/*!
+ * \fn void xnsched_rotate(struct xnsched *sched, struct xnsched_class *sched_class, const union xnsched_policy_param *param)
+ * \brief Rotate a scheduler runqueue.
+ *
+ * The specified scheduling class is requested to rotate its runqueue
+ * for the given scheduler. Rotation is performed according to the
+ * scheduling parameter specified by @a sched_param.
+ *
+ * @note The nucleus supports round-robin scheduling for the members
+ * of the RT class.
+ *
+ * @param sched_param The scheduling parameter providing rotation
+ * information to the specified scheduling class.
+ *
+ * Environments:
+ *
+ * This service should be called from:
+ *
+ * - Kernel-based task
+ * - Interrupt service routine
+ * - User-space task (primary mode only)
+ *
+ * Rescheduling: never.
+ */
+
+static inline void xnsched_rotate(struct xnsched *sched,
+				  struct xnsched_class *sched_class,
+				  const union xnsched_policy_param *sched_param)
+{
+	sched_class->sched_rotate(sched, sched_param);
+}
 
 static inline void xnsched_init_tcb(struct xnthread *thread)
 {

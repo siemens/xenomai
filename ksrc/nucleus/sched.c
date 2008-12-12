@@ -471,57 +471,6 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 	}
 }
 
-/*!
- * \fn void xnsched_rotate(int prio)
- * \brief Rotate a priority level in the runqueue.
- *
- * The active scheduling class is requested to rotate its runqueue for
- * the current CPU. Rotation is performed on the priority level
- * specified by @a prio. A scheduling class is active when the current
- * thread belongs to it.
- *
- * For instance, a round-robin scheduling policy may be implemented by
- * periodically issuing this call when the RT class is active, in
- * which case the thread leading the specified priority group will be
- * moved at the end of the latter.
- *
- * @note The nucleus supports round-robin scheduling for the members
- * of the RT class.
- *
- * @param prio The priority level to rotate. if XNSCHED_RUNPRIO is
- * given, the priority of the currently running thread is used to
- * rotate the queue.
- *
- * Environments:
- *
- * This service should be called from:
- *
- * - Kernel-based task
- * - Interrupt service routine (preempting a Xenomai thread)
- * - User-space task (primary mode only)
- *
- * Rescheduling: never.
- */
-
-void xnsched_rotate(int prio)
-{
-	struct xnsched_class *sched_class;
-	struct xnsched *sched;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	sched = xnpod_current_sched();
-	sched_class = sched->curr->sched_class;
-
-	if (sched_class->sched_rotate)
-		sched_class->sched_rotate(sched, prio);
-
-	trace_mark(xn_nucleus_sched_rotate, "priority %d", prio);
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
 #ifndef CONFIG_XENO_OPT_DEBUG_QUEUES

@@ -58,30 +58,34 @@ static void xnsched_rt_dequeue(struct xnthread *thread)
 	__xnsched_rt_dequeue(thread);
 }
 
-static void xnsched_rt_rotate(struct xnsched *sched, int prio)
+static void xnsched_rt_rotate(struct xnsched *sched,
+			      const union xnsched_policy_param *p)
 {
-	struct xnthread *thread;
+	struct xnthread *thread, *curr;
 	struct xnpholder *h;
 
 	if (sched_emptypq_p(&sched->rt.runnable))
 		return;	/* No runnable thread in this class. */
 
-	if (prio == XNSCHED_RUNPRIO) {
-		thread = sched->curr;
-	} else {
-		h = sched_findpqh(&sched->rt.runnable, prio);
+	curr = sched->curr;
+
+	if (p->rt.prio == XNSCHED_RUNPRIO)
+		thread = curr;
+	else {
+		h = sched_findpqh(&sched->rt.runnable, p->rt.prio);
 		if (h == NULL)
 			return;
 		thread = link2thread(h, rlink);
 	}
+
 	/*
 	 * In case we picked the current thread, we have to make sure
 	 * not to move it back to the runnable queue if it was blocked
 	 * before we were called. The same goes if the current thread
 	 * holds the scheduler lock.
 	 */
-	if (thread == sched->curr &&
-	    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS | XNLOCK))
+	if (thread == curr &&
+	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNLOCK))
 		return;
 
 	xnsched_putback(thread);
