@@ -1848,100 +1848,6 @@ int xnpod_migrate_thread(int cpu)
 }
 
 /*! 
- * \fn void xnpod_activate_rr(xnticks_t quantum)
- * \brief Globally activate the round-robin scheduling.
- *
- * This service activates the round-robin scheduling for all threads
- * which have the XNRRB flag set in their status mask (see
- * xnpod_set_thread_mode()). Each of them will run for the given time
- * quantum, then preempted and moved to the end of its priority group
- * in the ready queue. This process is repeated until the round-robin
- * scheduling is disabled for those threads.
- *
- * @param quantum The time credit which will be given to each
- * rr-enabled thread (in ticks).
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xnpod_activate_rr(xnticks_t quantum)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	trace_mark(xn_nucleus_sched_rractivate, "quantum %Lu", quantum);
-
-	holder = getheadq(&nkpod->threadq);
-
-	while (holder) {
-		xnthread_t *thread = link2thread(holder, glink);
-
-		if (xnthread_test_state(thread, XNRRB)) {
-			thread->rrperiod = quantum;
-			thread->rrcredit = quantum;
-		}
-
-		holder = nextq(&nkpod->threadq, holder);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-/*! 
- * \fn void xnpod_deactivate_rr(void)
- * \brief Globally deactivate the round-robin scheduling.
- *
- * This service deactivates the round-robin scheduling for all threads
- * which have the XNRRB flag set in their status mask (see
- * xnpod_set_thread_mode()).
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xnpod_deactivate_rr(void)
-{
-	xnholder_t *holder;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	trace_mark(xn_nucleus_sched_rrdeactivate, MARK_NOARGS);
-
-	holder = getheadq(&nkpod->threadq);
-
-	while (holder) {
-		xnthread_t *thread = link2thread(holder, glink);
-
-		if (xnthread_test_state(thread, XNRRB))
-			thread->rrcredit = XN_INFINITE;
-
-		holder = nextq(&nkpod->threadq, holder);
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-/*! 
  * @internal
  * \fn void xnpod_dispatch_signals(void)
  * \brief Deliver pending asynchronous signals to the running thread.
@@ -2925,9 +2831,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 
 /*@}*/
 
-EXPORT_SYMBOL(xnpod_activate_rr);
 EXPORT_SYMBOL(xnpod_add_hook);
-EXPORT_SYMBOL(xnpod_deactivate_rr);
 EXPORT_SYMBOL(xnpod_delete_thread);
 EXPORT_SYMBOL(xnpod_abort_thread);
 EXPORT_SYMBOL(xnpod_fatal_helper);

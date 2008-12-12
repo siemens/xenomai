@@ -5,6 +5,9 @@
 
 	Sanitize RR scheduling setup.
 
+	* ksrc/nucleus/pod.c: Remove obsolete xnpod_activate_rr(),
+	xnpod_deactivate_rr().
+
 2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls

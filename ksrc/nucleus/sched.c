@@ -485,8 +485,8 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
  * which case the thread leading the specified priority group will be
  * moved at the end of the latter.
  *
- * @note The nucleus already provides a built-in round-robin mode for
- * the RT class (see xnpod_activate_rr()).
+ * @note The nucleus supports round-robin scheduling for the members
+ * of the RT class.
  *
  * @param prio The priority level to rotate. if XNSCHED_RUNPRIO is
  * given, the priority of the currently running thread is used to

@@ -296,10 +296,6 @@ static inline void xnpod_unlock_sched(void)
 void xnpod_fire_callouts(xnqueue_t *hookq,
 			 xnthread_t *thread);
 
-void xnpod_activate_rr(xnticks_t quantum);
-
-void xnpod_deactivate_rr(void);
-
 int xnpod_set_thread_periodic(xnthread_t *thread,
 			      xnticks_t idate,
 			      xnticks_t period);
