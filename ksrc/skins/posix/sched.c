@@ -262,7 +262,6 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 {
 	union xnsched_policy_param param;
-	xnflags_t clrmask, setmask;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -280,15 +279,16 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 
 	case SCHED_OTHER:
 	case SCHED_FIFO:
-		setmask = 0;
-		clrmask = XNRRB;
+		xnthread_time_slice(&tid->threadbase) = XN_INFINITE;
+		xnthread_time_credit(&tid->threadbase) = XN_INFINITE;
+		xnthread_clear_state(&tid->threadbase, XNRRB);
 		break;
 
 
 	case SCHED_RR:
 		xnthread_time_slice(&tid->threadbase) = pse51_time_slice;
-		setmask = XNRRB;
-		clrmask = 0;
+		xnthread_time_credit(&tid->threadbase) = pse51_time_slice;
+		xnthread_set_state(&tid->threadbase, XNRRB);
 	}
 
 	if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
@@ -301,7 +301,6 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 
 	param.rt.prio = par->sched_priority;
 	xnpod_set_thread_schedparam(&tid->threadbase, &xnsched_class_rt, &param);
-	xnpod_set_thread_mode(&tid->threadbase, clrmask, setmask);
 
 	xnpod_schedule();
 

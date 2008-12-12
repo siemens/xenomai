@@ -3,6 +3,7 @@
 	* ksrc/skins/vxworks/kernelLib.c, ksrc/skins/vxworks/taskLib.c:
 	* ksrc/skins/vrtx/task.c:
 	* ksrc/skins/psos+/task.c:
+	* ksrc/skins/posix/sched.c:
 
 	Sanitize RR scheduling setup.
 
