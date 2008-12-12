@@ -66,14 +66,23 @@ static void xnsched_rt_rotate(struct xnsched *sched, int prio)
 	if (sched_emptypq_p(&sched->rt.runnable))
 		return;	/* No runnable thread in this class. */
 
-	if (prio == XNSCHED_RUNPRIO)
+	if (prio == XNSCHED_RUNPRIO) {
 		thread = sched->curr;
-	else {
+	} else {
 		h = sched_findpqh(&sched->rt.runnable, prio);
 		if (h == NULL)
 			return;
 		thread = link2thread(h, rlink);
 	}
+	/*
+	 * In case we picked the current thread, we have to make sure
+	 * not to move it back to the runnable queue if it was blocked
+	 * before we were called. The same goes if the current thread
+	 * holds the scheduler lock.
+	 */
+	if (thread == sched->curr &&
+	    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS | XNLOCK))
+		return;
 
 	xnsched_putback(thread);
 }
@@ -86,13 +95,9 @@ static struct xnthread *xnsched_rt_pick(struct xnsched *sched)
 void xnsched_rt_tick(struct xnthread *curr)
 {
 	/*
-	 * The thread can be preempted and undergoes a round-robin
-	 * scheduling. Round-robin time credit is only consumed by a
-	 * running thread. Thus, if a higher priority thread outside
-	 * the priority group which started the time slicing grabs the
-	 * processor, the current time credit of the preempted thread
-	 * is kept unchanged, and will not be reset when this thread
-	 * resumes execution.
+	 * The round-robin time credit is only consumed by a running
+	 * thread that neither holds the scheduler lock nor was
+	 * blocked before entering this callback.
 	 */
 	if (likely(curr->rrcredit > 1))
 		--curr->rrcredit;
@@ -104,8 +109,7 @@ void xnsched_rt_tick(struct xnthread *curr)
 		 * the next run.
 		 */
 		curr->rrcredit = curr->rrperiod;
-		if (!xnthread_test_state(curr, XNTHREAD_BLOCK_BITS | XNLOCK))
-			xnsched_putback(curr);
+		xnsched_putback(curr);
 	}
 }
 

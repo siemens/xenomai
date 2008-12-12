@@ -263,7 +263,7 @@ static inline void xnsched_tick(struct xnthread *curr, struct xntbase *tbase)
 	if (xnthread_time_base(curr) == tbase &&
 	    sched_class != &xnsched_class_idle &&
 	    sched_class == curr->base_class &&
-	    xnthread_test_state(curr, XNRRB))
+	    xnthread_test_state(curr, XNTHREAD_BLOCK_BITS|XNLOCK|XNRRB) == XNRRB)
 		sched_class->sched_tick(curr);
 }
 
