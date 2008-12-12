@@ -28,6 +28,8 @@ static u_long vrtx_default_stacksz;
 
 static TCB vrtx_idle_tcb;
 
+static xnticks_t rrperiod;
+
 static int vrtx_get_denormalized_prio(xnthread_t *thread, int coreprio)
 {
 	return vrtx_denormalized_prio(coreprio);
@@ -192,8 +194,10 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	if (mode & 0x4)
 		bmode |= XNLOCK;
 
-	if (mode & 0x10)
+	if (mode & 0x10 && rrperiod != XN_INFINITE) {
+		xnthread_time_slice(&task->threadbase) = rrperiod;
 		bmode |= XNRRB;
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&vrtx_task_q, &task->link);
@@ -515,10 +519,25 @@ void sc_tsuspend(int tid, int opt, int *errp)
 
 void sc_tslice(u_short ticks)
 {
-	if (ticks == 0)
-		xnpod_deactivate_rr();
-	else
-		xnpod_activate_rr(ticks);
+	vrtxtask_t *task;
+	xnholder_t *h;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	rrperiod = ticks;
+
+	for (h = getheadq(&vrtx_task_q); h; h = nextq(&vrtx_task_q, h)) {
+		task = link2vrtxtask(h);
+		xnthread_time_slice(&task->threadbase) = ticks;
+		xnthread_time_credit(&task->threadbase) = ticks;
+		if (ticks)
+			xnthread_set_state(&task->threadbase, XNRRB);
+		else
+			xnthread_clear_state(&task->threadbase, XNRRB);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 void sc_lock(void)
