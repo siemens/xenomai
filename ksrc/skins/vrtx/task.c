@@ -196,6 +196,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 
 	if (mode & 0x10 && rrperiod != XN_INFINITE) {
 		xnthread_time_slice(&task->threadbase) = rrperiod;
+		xnthread_time_credit(&task->threadbase) = rrperiod;
 		bmode |= XNRRB;
 	}
 

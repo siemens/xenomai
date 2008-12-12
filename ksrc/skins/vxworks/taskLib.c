@@ -203,6 +203,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 STATUS taskActivate(TASK_ID task_id)
 {
 	struct xnthread_start_attr attr;
+	xnflags_t bmode = 0;
 	wind_task_t *task;
 	spl_t s;
 
@@ -217,9 +218,13 @@ STATUS taskActivate(TASK_ID task_id)
 	if (!xnthread_test_state(&(task->threadbase), XNDORMANT))
 		goto error;
 
-	xnthread_time_slice(&task->threadbase) = rrperiod;
+	if (rrperiod) {
+		xnthread_time_slice(&task->threadbase) = rrperiod;
+		xnthread_time_credit(&task->threadbase) = rrperiod;
+		bmode |= XNRRB;
+	}
 
-	attr.mode = rrperiod ? XNRRB : 0;
+	attr.mode = bmode;
 	attr.imask = 0;
 	attr.affinity = XNPOD_ALL_CPUS;
 	attr.entry = wind_task_trampoline;
