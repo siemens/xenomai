@@ -1417,11 +1417,6 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
  * - T_LOCK causes the current task to lock the scheduler. Clearing
  * this bit unlocks the scheduler.
  *
- * - T_RRB causes the current task to be marked as undergoing the
- * round-robin scheduling policy. If the task is already undergoing
- * the round-robin scheduling policy at the time this service is
- * called, the time quantum remains unchanged.
- *
  * - T_NOSIG disables the asynchronous signal delivery for the current
  * task.
  *
@@ -1492,7 +1487,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	}
 
 	if (((clrmask | setmask) &
-	     ~(T_LOCK | T_RRB | T_NOSIG | T_WARNSW)) != 0)
+	     ~(T_LOCK | T_NOSIG | T_WARNSW)) != 0)
 		return -EINVAL;
 
 	if (!xnpod_primary_p())
@@ -1544,8 +1539,9 @@ RT_TASK *rt_task_self(void)
  * @brief Set a task's round-robin quantum.
  *
  * Set the time credit allotted to a task undergoing the round-robin
- * scheduling. As a side-effect, rt_task_slice() refills the current
- * quantum of the target task.
+ * scheduling. If @a quantum is non-zero, rt_task_slice() also refills
+ * the current quantum for the target task, otherwise, time-slicing is
+ * stopped for that task.
  *
  * @param task The descriptor address of the affected task. If @a task
  * is NULL, the current task is considered.
@@ -1555,8 +1551,7 @@ RT_TASK *rt_task_self(void)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a task is not a task descriptor, or if @a
- * quantum is zero.
+ * - -EINVAL is returned if @a task is not a task descriptor.
  *
  * - -ENODEV is returned if the native skin is not bound to a periodic
  * time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), in which case
@@ -1584,16 +1579,14 @@ RT_TASK *rt_task_self(void)
 
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
-	int err = 0;
+	struct xnthread *thread;
+	int ret = 0;
 	spl_t s;
 
 	if (!xntbase_periodic_p(__native_tbase))
 		return -ENODEV;
 
-	if (!quantum)
-		return -EINVAL;
-
-	if (!task) {
+	if (task == NULL) {
 		if (!xnpod_primary_p())
 			return -EPERM;
 
@@ -1605,18 +1598,24 @@ int rt_task_slice(RT_TASK *task, RTIME quantum)
 	task = xeno_h2obj_validate(task, XENO_TASK_MAGIC, RT_TASK);
 
 	if (!task) {
-		err = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
+		ret = xeno_handle_error(task, XENO_TASK_MAGIC, RT_TASK);
 		goto unlock_and_exit;
 	}
 
-	xnthread_time_slice(&task->thread_base) = quantum;
-	xnthread_time_credit(&task->thread_base) = quantum;
+	thread = &task->thread_base;
+	xnthread_time_slice(thread) = quantum;
+	xnthread_time_credit(thread) = quantum;
+
+	if (quantum)
+		xnthread_set_state(thread, XNRRB);
+	else
+		xnthread_clear_state(thread, XNRRB);
 
       unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	return ret;
 }
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS

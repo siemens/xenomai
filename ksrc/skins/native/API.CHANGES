@@ -260,3 +260,12 @@ ___________________________________________________________________
          been removed from the interface. Applications that require
          low latency from secondary mode should consider PREEMPT_RT
          kernels nowadays.
+
+       * rt_task_slice() now enables/disables round-robin scheduling
+         for the target task, in addition to setting the time
+         quantum. If the quantum is non-zero, time-slicing is
+         automatically enabled for the task, or disabled otherwise.
+
+       * rt_task_set_mode() does not support the T_RRB bit
+         anymore. Round-robin scheduling should be controlled using
+         the rt_task_slice() service instead.

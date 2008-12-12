@@ -46,7 +46,6 @@
 #define T_STARTED  XNSTARTED  /**< See #XNSTARTED */
 #define T_BOOST    XNBOOST    /**< See #XNBOOST   */
 #define T_LOCK     XNLOCK     /**< See #XNLOCK    */
-#define T_RRB      XNRRB      /**< See #XNRRB     */
 #define T_NOSIG    XNASDI     /**< See #XNASDI    */ 
 #define T_WARNSW   XNTRAPSW   /**< See #XNTRAPSW  */ 
 #define T_RPIOFF   XNRPIOFF   /**< See #XNRPIOFF  */ 

@@ -8,6 +8,14 @@
 	* ksrc/nucleus/pod.c: Remove obsolete xnpod_activate_rr(),
 	xnpod_deactivate_rr().
 
+	* ksrc/skins/native/task.c (rt_task_slice): enable/disable
+	 round-robin scheduling for the target task, in addition to
+	 setting the time quantum.
+
+	* ksrc/skins/native/task.c (rt_task_set_mode): Remove T_RRB
+	flag. rt_task_slice() should be used to enable/disable time
+	slicing for a task instead.
+
 2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls
