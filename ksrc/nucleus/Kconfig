@@ -323,6 +323,24 @@ config XENO_OPT_TIMING_PERIODIC
 	modes. Periodic threads needing high timing accuracy will even
 	likely prefer using aperiodic timing.
 
+config XENO_OPT_TIMING_VIRTICK
+	int "Virtual tick duration in aperiodic mode (us)"
+	default 1000
+	help
+
+	Time-slicing (aka round-robin scheduling) defines a base
+	period that represents the duration of one tick; threads can
+	then be given a time credit to consume as a count of
+	ticks. For that reason, time-slicing is usually based on a
+	periodic timing mode.
+
+	This parameter defines the duration of a virtual tick
+	expressed as a count of micro-seconds, so that time-slicing is
+	also available to threads that undergo aperiodic timing. In
+	such a case, the time credit assigned to a thread will be
+	equal to XENO_OPT_TIMING_VIRTICK * quantum, where quantum is
+	the count of ticks representing a full time-slice.
+
 config XENO_OPT_TIMING_SCHEDLAT
 	int "Scheduling latency (ns)"
 	default 0

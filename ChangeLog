@@ -25,6 +25,10 @@
 	Do not handle XNRRB in these services anymore, but leave this to
 	the new xnpod_set_thread_tslice() call.
 
+	* ksrc/nucleus/pod.c (xnpod_set_thread_tslice): Implement
+	time-slicing over aperiodic mode, the simplest and cheapest way,
+	without adding any overhead to the scheduler core.
+
 2008-12-11  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/nucleus, include/nucleus: Detect useless rescheduling calls

@@ -65,6 +65,8 @@ char *nkmsgbuf = NULL;
 
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
+xnticks_t nkvtick = CONFIG_XENO_OPT_TIMING_VIRTICK * 1000;
+
 #ifdef CONFIG_XENO_HW_FPU
 
 static inline void __xnpod_init_fpu(struct xnsched *sched,
@@ -289,6 +291,11 @@ void xnpod_schedule_deferred(void)
 		xnpod_schedule();
 }
 
+static void xnpod_timeslice_handler(struct xntimer *timer)
+{
+	xnsched_tick(timer->sched->curr, &nktbase);
+}
+
 static void xnpod_flush_heap(xnheap_t *heap,
 			     void *extaddr, u_long extsize, void *cookie)
 {
@@ -358,6 +365,8 @@ int xnpod_init(void)
 	initq(&pod->tstartq);
 	initq(&pod->tswitchq);
 	initq(&pod->tdeleteq);
+	xntimer_init(&pod->tslicer, &nktbase, xnpod_timeslice_handler);
+	pod->tsliced = 0;
 	xnarch_atomic_set(&pod->timerlck, 0);
 #ifdef __XENO_SIM__
 	pod->schedhook = NULL;
@@ -459,6 +468,8 @@ void xnpod_shutdown(int xtype)
 		xnlock_put_irqrestore(&nklock, s);
 		return;	/* No-op */
 	}
+
+	xntimer_destroy(&nkpod->tslicer);
 
 	/*
 	 * FIXME: We must release the lock before disabling the time
@@ -2824,7 +2835,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
  * @param thread The descriptor address of the affected thread.
  *
  * @param quantum The time quantum assigned to the thread expressed in
- * clock ticks (see note). If @a quantum is different from
+ * time-slicing ticks (see note). If @a quantum is different from
  * XN_INFINITE, the time-slice for the thread is set to that value and
  * its current time credit is refilled (i.e. the thread is given a
  * full time-slice to run next). Otherwise, if @a quantum equals
@@ -2834,9 +2845,6 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
  *
  * - -EINVAL is returned if the base scheduling class of the target
  * thread does not support time-slicing.
- *
- * - -ENODEV is returned if the thread is not bound to a periodic
- * timebase.
  *
  * Environments:
  *
@@ -2848,24 +2856,41 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
  *
  * Rescheduling: never.
  *
- * @note @a quantum will be interpreted as jiffies.
+ * @note If @a thread is bound to a periodic timebase, @a quantum
+ * represents the number of periodic ticks in that
+ * timebase. Otherwise, if @a thread is bound to the master time base,
+ * a full time-slice will last:
+ * @a quantum * CONFIG_XENO_OPT_TIMING_VIRTICK.
  */
 
 int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 {
-	if (!xntbase_periodic_p(xnthread_time_base(thread)))
-		return -ENODEV;
-
+	unsigned long oldmode;
+	int aperiodic;
+	spl_t s;
+	
 	if (thread->base_class->sched_tick == NULL)
 		return -EINVAL;
 
+	xnlock_get_irqsave(&nklock, s);
+
+	aperiodic = !xntbase_periodic_p(xnthread_time_base(thread));
 	thread->rrperiod = quantum;
 	thread->rrcredit = quantum;
+	oldmode = xnthread_test_state(thread, XNRRB);
 
-	if (quantum != XN_INFINITE)
+	if (quantum != XN_INFINITE) {
 		xnthread_set_state(thread, XNRRB);
-	else
+		if (aperiodic && !oldmode && nkpod->tsliced++ == 0)
+			xntimer_start(&nkpod->tslicer,
+				      nkvtick, nkvtick, XN_RELATIVE);
+	} else {
 		xnthread_clear_state(thread, XNRRB);
+		if (aperiodic && oldmode && --nkpod->tsliced == 0)
+			xntimer_stop(&nkpod->tslicer);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
 }

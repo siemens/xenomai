@@ -79,6 +79,9 @@ struct xnpod {
 
 	atomic_counter_t timerlck;	/*!< Timer lock depth.  */
 
+	xntimer_t tslicer;	/*!< Time-slicing timer for aperiodic mode  */
+	int tsliced;		/*!< Number of threads using the slicer */
+
 	int refcnt;		/*!< Reference count.  */
 
 #ifdef __XENO_SIM__

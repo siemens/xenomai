@@ -529,7 +529,7 @@ void xntimer_tick_periodic_inner(xntslave_t *slave)
 		xntimer_enqueue_periodic(timer);
 	}
 
-	xnsched_tick(sched->curr); /* Do round-robin management. */
+	xnsched_tick(sched->curr, base); /* Do time-slicing if required. */
 }
 
 void xntimer_tick_periodic(xntimer_t *mtimer)

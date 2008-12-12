@@ -1547,15 +1547,11 @@ RT_TASK *rt_task_self(void)
  * is NULL, the current task is considered.
  *
  * @param quantum The round-robin quantum for the task expressed in
- * clock ticks (see note).
+ * ticks (see note).
  *
  * @return 0 is returned upon success. Otherwise:
  *
  * - -EINVAL is returned if @a task is not a task descriptor.
- *
- * - -ENODEV is returned if the native skin is not bound to a periodic
- * time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), in which case
- * round-robin scheduling is not available.
  *
  * - -EPERM is returned if @a task is NULL but not called from a task
  * context.
@@ -1574,16 +1570,14 @@ RT_TASK *rt_task_self(void)
  * Rescheduling: never.
  *
  * @note The @a quantum value is always interpreted as a count of
- * jiffies.
+ * ticks. If the task undergoes aperiodic timing, the tick duration is
+ * defined by CONFIG_XENO_OPT_TIMING_VIRTICK.
  */
 
 int rt_task_slice(RT_TASK *task, RTIME quantum)
 {
 	int ret = 0;
 	spl_t s;
-
-	if (!xntbase_periodic_p(__native_tbase))
-		return -ENODEV;
 
 	if (task == NULL) {
 		if (!xnpod_primary_p())
