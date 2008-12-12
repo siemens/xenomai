@@ -212,6 +212,14 @@ u_long t_start(u_long tid,
 	}
 
 	xnmode = psos_mode_to_xeno(mode);
+	if (xnmode & XNRRB) {
+		if (psos_time_slice != XN_INFINITE) {
+			xnthread_time_slice(&task->threadbase) = psos_time_slice;
+			xnthread_time_credit(&task->threadbase) = psos_time_slice;
+		} else
+			xnmode &= ~XNRRB;
+	}
+
 	task->entry = startaddr;
 
 	attr.mode = xnmode;
