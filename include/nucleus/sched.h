@@ -47,7 +47,6 @@
 #define XNSCHED_EVT_DEADLINE	24 /* Deadline event (thread->signals). */
 
 struct xnsched_rt {
-
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
 #ifdef CONFIG_XENO_OPT_PRIOCPL
 	xnsched_queue_t relaxed;	/*!< Relaxed thread queue. */
@@ -305,7 +304,7 @@ static inline void xnsched_enqueue(struct xnthread *thread)
 	struct xnsched_class *sched_class = thread->sched_class;
 
 	if (sched_class != &xnsched_class_idle)
-		thread->sched_class->sched_enqueue(thread);
+		sched_class->sched_enqueue(thread);
 }
 
 static inline void xnsched_dequeue(struct xnthread *thread)
@@ -313,7 +312,7 @@ static inline void xnsched_dequeue(struct xnthread *thread)
 	struct xnsched_class *sched_class = thread->sched_class;
 
 	if (sched_class != &xnsched_class_idle)
-		thread->sched_class->sched_dequeue(thread);
+		sched_class->sched_dequeue(thread);
 }
 
 static inline void xnsched_requeue(struct xnthread *thread)
@@ -354,7 +353,7 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 
 static inline void xnsched_forget(struct xnthread *thread)
 {
-	struct xnsched_class *sched_class = thread->sched_class;
+	struct xnsched_class *sched_class = thread->base_class;
 
 	if (sched_class->sched_forget)
 		sched_class->sched_forget(thread);
