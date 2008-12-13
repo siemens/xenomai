@@ -88,6 +88,9 @@
 #undef CONFIG_XENO_OPT_TIMING_PERIODIC
 
 /* config */
+#undef CONFIG_XENO_OPT_TIMING_VIRTICK
+
+/* config */
 #undef CONFIG_XENO_OPT_UITRON_PERIOD
 
 /* config */

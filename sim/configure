@@ -27813,6 +27813,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_OPT_TIMING_VIRTICK 1000
+_ACEOF
+
+
 
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_OPT_NATIVE_SEM 1
