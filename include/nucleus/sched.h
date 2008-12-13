@@ -242,6 +242,12 @@ void xnsched_migrate_passive(struct xnthread *thread,
  * @note The nucleus supports round-robin scheduling for the members
  * of the RT class.
  *
+ * @param sched The per-CPU scheduler hosting the target scheduling
+ * class.
+ *
+ * @param sched_class The scheduling class which should rotate its
+ * runqueue.
+ *
  * @param sched_param The scheduling parameter providing rotation
  * information to the specified scheduling class.
  *
