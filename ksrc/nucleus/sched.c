@@ -221,13 +221,7 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 		   "thread_out %p thread_out_name %s",
 		   thread, xnthread_name(thread));
 
-	if (!emptyq_p(&nkpod->tdeleteq)
-	    && !xnthread_test_state(thread, XNROOT)) {
-		trace_mark(xn_nucleus_thread_callout,
-			   "thread %p thread_name %s hook %s",
-			   thread, xnthread_name(thread), "DELETE");
-		xnpod_fire_callouts(&nkpod->tdeleteq, thread);
-	}
+	xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
 
 	xnsched_forget(thread);
 }

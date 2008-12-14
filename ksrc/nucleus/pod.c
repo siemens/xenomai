@@ -794,12 +794,7 @@ int xnpod_start_thread(struct xnthread *thread,
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
-	if (!emptyq_p(&nkpod->tstartq) && !xnthread_test_state(thread, XNROOT)) {
-		trace_mark(xn_nucleus_thread_callout,
-			   "thread %p thread_name %s hook %s",
-			   thread, xnthread_name(thread), "START");
-		xnpod_fire_callouts(&nkpod->tstartq, thread);
-	}
+	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 
 	xnpod_schedule();
 
@@ -1130,13 +1125,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 	} else {
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
-		if (!emptyq_p(&nkpod->tdeleteq)
-		    && !xnthread_test_state(thread, XNROOT)) {
-			trace_mark(xn_nucleus_thread_callout,
-				   "thread %p thread_name %s hook %s",
-				   thread, xnthread_name(thread), "DELETE");
-			xnpod_fire_callouts(&nkpod->tdeleteq, thread);
-		}
+		xnpod_run_hooks(&nkpod->tdeleteq, thread, "DELETE");
 
 		xnsched_forget(thread);
 		/*
@@ -2131,12 +2120,7 @@ void __xnpod_schedule(struct xnsched *sched)
 		nkpod->schedhook(curr, XNRUNNING);
 #endif /* __XENO_SIM__ */
 
-	if (!emptyq_p(&nkpod->tswitchq) && !xnthread_test_state(curr, XNROOT)) {
-		trace_mark(xn_nucleus_thread_callout,
-			   "thread %p thread_name %s hook %s",
-			   curr, xnthread_name(curr), "SWITCH");
-		xnpod_fire_callouts(&nkpod->tswitchq, curr);
-	}
+	xnpod_run_hooks(&nkpod->tswitchq, curr, "SWITCH");
 
       signal_unlock_and_exit:
 
