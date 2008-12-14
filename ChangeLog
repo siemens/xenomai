@@ -1,3 +1,9 @@
+2008-12-14  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/hal.c (rthal_timer_release): Decrement and
+	test request nesting count as expected to release the timer
+	without generic clockevents support.
+
 2008-11-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/generic/hal.c (rthal_irq_host_pend): Consider
