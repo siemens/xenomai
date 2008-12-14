@@ -320,7 +320,7 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
 void rthal_timer_release(int cpu)
 {
-	if (cpu > 0)
+	if (--cpu_timers_requested > 0)
 		return;
 
 #ifdef CONFIG_SMP
