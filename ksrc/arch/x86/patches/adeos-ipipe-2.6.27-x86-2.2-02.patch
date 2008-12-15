@@ -3775,7 +3775,7 @@ index bb1c09f..28d6d12 100644
  #endif /* __ASM_IPI_H */
 diff --git a/include/asm-x86/ipipe.h b/include/asm-x86/ipipe.h
 new file mode 100644
-index 0000000..3feb467
+index 0000000..dcb3c2b
 --- /dev/null
 +++ b/include/asm-x86/ipipe.h
 @@ -0,0 +1,128 @@
@@ -3806,10 +3806,10 @@ index 0000000..3feb467
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.2-01"
++#define IPIPE_ARCH_STRING	"2.2-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -4583,7 +4583,7 @@ index 0000000..52a50ac
 +
 +#endif	/* !__X86_IPIPE_BASE_64_H */
 diff --git a/include/asm-x86/irq_vectors.h b/include/asm-x86/irq_vectors.h
-index a48c7f2..6ec20f0 100644
+index a48c7f2..05fa7c2 100644
 --- a/include/asm-x86/irq_vectors.h
 +++ b/include/asm-x86/irq_vectors.h
 @@ -77,13 +77,20 @@
@@ -4593,7 +4593,7 @@ index a48c7f2..6ec20f0 100644
 +#ifdef CONFIG_IPIPE
 +#define INVALIDATE_TLB_VECTOR_END	0xf2
 +#define INVALIDATE_TLB_VECTOR_START	0xf0	/* f0-f2 used for TLB flush */
-+#define NUM_INVALIDATE_TLB_VECTORS	4	/* f3-f7 used by I-pipe */
++#define NUM_INVALIDATE_TLB_VECTORS	3	/* f3-f7 used by I-pipe */
 +#else /* !CONFIG_IPIPE */
  #define INVALIDATE_TLB_VECTOR_END	0xf7
  #define INVALIDATE_TLB_VECTOR_START	0xf0	/* f0-f7 used for TLB flush */
