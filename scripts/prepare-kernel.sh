@@ -1,5 +1,5 @@
 #! /bin/bash
-set -e
+set -ex
 
 unset CDPATH
 
@@ -360,7 +360,16 @@ if test x$verbose = x1; then
 echo "Preparing kernel $linux_version$linux_EXTRAVERSION in $linux_tree..."
 fi
 
+asm_ipipe_h=unknown
+
 if test -r $linux_tree/include/linux/ipipe.h; then
+    if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
+	linux_include_asm=arch/$linux_arch/include/asm
+	asm_ipipe_h=$linux_include_asm/ipipe.h
+    else
+	linux_include_asm=include/asm-$linux_arch
+	asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h|head -1`
+    fi
     if test x$verbose = x1; then
     echo "Adeos found - bypassing patch."
     fi
@@ -402,7 +411,7 @@ else
    cd $curdir
 fi
 
-adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -1|sed -e 's,.*"\(.*\)"$,\1,'`
+adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $asm_ipipe_h 2>/dev/null|head -1|sed -e 's,.*"\(.*\)"$,\1,'`
 
 if test \! "x$adeos_version" = x; then
    if test x$verbose = x1; then
@@ -562,7 +571,7 @@ patch_link n m ksrc/nucleus kernel/xenomai/nucleus
 patch_link r m ksrc/skins kernel/xenomai/skins
 patch_link r m ksrc/drivers drivers/xenomai
 patch_architecture_specific="y"
-patch_link r n include/asm-$xenomai_arch include/asm-$linux_arch/xenomai
+patch_link r n include/asm-$xenomai_arch $linux_include_asm/xenomai
 patch_architecture_specific="n"
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
