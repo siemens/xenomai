@@ -202,12 +202,12 @@ struct xnthread *xnsched_pick_next(struct xnsched *sched)
 	return NULL; /* Never executed because of the idle class. */
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 	thread = __xnsched_rt_pick(sched); (void)p;
-	if (likely(thread)) {
-		xnthread_clear_state(thread, XNREADY);
-		return thread;
-	}
+	if (unlikely(thread == NULL))
+		thread = &sched->rootcb;
 
-	return &sched->rootcb;
+	xnthread_clear_state(thread, XNREADY);
+
+	return thread;
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 }
 
