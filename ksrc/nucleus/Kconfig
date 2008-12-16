@@ -72,7 +72,7 @@ config XENO_OPT_PIPELINE_HEAD
 
 config XENO_OPT_SCHED_CLASSES
 	bool "Extra scheduling classes"
-	default y
+	default n
 	help
 
 	Xenomai implements a set of scheduling classes.  Each
