@@ -626,5 +626,4 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 
 #endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */
 
-EXPORT_SYMBOL(xnsched_rotate);
 EXPORT_SYMBOL(xnsched_set_policy);
