@@ -472,7 +472,22 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define KMALLOC_MAX_SIZE 131072
-#endif /* !KMALLOC_MAX_SIZE */
+#if BITS_PER_LONG == 64
+#define atomic_long_cmpxchg(l, old, new)	\
+	atomic_cmpxchg((atomic64_t *)(l), (old), (new))
+#define atomic_long_dec_and_test(l)		\
+	atomic_dec_and_test((atomic64_t *)l)
+#define atomic_long_inc_and_test(l)		\
+	atomic_inc_and_test((atomic64_t *)l)
+#else
+#define atomic_long_cmpxchg(l, old, new)	\
+	atomic_cmpxchg((atomic_t *)(l), (old), (new))
+#define atomic_long_dec_and_test(l)		\
+	atomic_dec_and_test((atomic_t *)l)
+#define atomic_long_inc_and_test(l)		\
+	atomic_inc_and_test((atomic_t *)l)
+#endif
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
 

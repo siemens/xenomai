@@ -2,9 +2,14 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-config XENO_FASTSYNCH
+config XENO_FASTSYNCH_DEP
 	bool
 	default y if (CPU_32v3 || CPU_32v4T || CPU_32v5) && !SMP || CPU_32v6 || CPU_32v7
+
+config XENO_FASTSYNCH
+	bool
+	depends on XENO_FASTSYNCH_DEP
+	select XENO_OPT_REGISTRY if XENO_FASTSYNCH_DEP
 
 source "kernel/xenomai/nucleus/Kconfig"
 

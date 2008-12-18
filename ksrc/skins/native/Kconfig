@@ -1,6 +1,5 @@
 menuconfig XENO_SKIN_NATIVE
 	depends on XENO_OPT_NUCLEUS
-	select XENO_OPT_REGISTRY if XENO_FASTSYNCH
 	tristate "Native API"
 	default y
 	help
