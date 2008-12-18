@@ -368,7 +368,7 @@ if test -r $linux_tree/include/linux/ipipe.h; then
 	asm_ipipe_h=$linux_include_asm/ipipe.h
     else
 	linux_include_asm=include/asm-$linux_arch
-	asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h|head -1`
+	asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -1`
     fi
     if test x$verbose = x1; then
     echo "Adeos found - bypassing patch."
