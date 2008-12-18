@@ -30,7 +30,7 @@ struct xnsched_rt_param {
 
 struct xnsched_tp_param {
 	int prio;
-	int pid;	/* partition id. */
+	int ptid;	/* partition id. */
 };
 
 union xnsched_policy_param {

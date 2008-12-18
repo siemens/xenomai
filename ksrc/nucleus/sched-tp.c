@@ -153,7 +153,7 @@ static void xnsched_tp_setparam(struct xnthread *thread,
 		xnthread_set_state(thread, XNRPIOFF);
 	}
 
-	thread->tps = &sched->tp.partitions[p->tp.pid];
+	thread->tps = &sched->tp.partitions[p->tp.ptid];
 	thread->cprio = p->tp.prio;
 }
 
@@ -161,7 +161,7 @@ static void xnsched_tp_getparam(struct xnthread *thread,
 				union xnsched_policy_param *p)
 {
 	p->tp.prio = thread->cprio;
-	p->tp.pid = thread->tps - thread->sched->tp.partitions;
+	p->tp.ptid = thread->tps - thread->sched->tp.partitions;
 }
 
 static void xnsched_tp_trackprio(struct xnthread *thread,
@@ -189,7 +189,7 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 		/* We should never cross partition boundaries. */
 		XENO_BUGON(NUCLEUS,
 			   thread->base_class == &xnsched_class_tp &&
-			   thread->tps - thread->sched->tp.partitions != p->tp.pid);
+			   thread->tps - thread->sched->tp.partitions != p->tp.ptid);
 		thread->cprio = p->tp.prio;
 	} else
 		thread->cprio = thread->bprio;
@@ -294,6 +294,12 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 	return old_gps;
 }
 
+int xnsched_tp_get_partition(struct xnsched *sched)
+{
+	struct xnsched_tp *tp = &sched->tp;
+	return tp->tps == NULL ? - 1 : tp->tps - tp->partitions;
+}
+
 struct xnsched_class xnsched_class_tp = {
 
 	.sched_init		=	xnsched_tp_init,
@@ -314,3 +320,7 @@ struct xnsched_class xnsched_class_tp = {
 };
 
 EXPORT_SYMBOL(xnsched_class_tp);
+EXPORT_SYMBOL(xnsched_tp_set_schedule);
+EXPORT_SYMBOL(xnsched_tp_start_schedule);
+EXPORT_SYMBOL(xnsched_tp_stop_schedule);
+EXPORT_SYMBOL(xnsched_tp_get_partition);

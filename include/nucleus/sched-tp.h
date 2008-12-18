@@ -71,6 +71,8 @@ void xnsched_tp_start_schedule(struct xnsched *sched);
 
 void xnsched_tp_stop_schedule(struct xnsched *sched);
 
+int xnsched_tp_get_partition(struct xnsched *sched);
+
 #endif /* !CONFIG_XENO_OPT_SCHED_TP */
 
 #endif /* !_XENO_NUCLEUS_SCHED_TP_H */
