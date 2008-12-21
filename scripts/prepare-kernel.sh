@@ -360,16 +360,7 @@ if test x$verbose = x1; then
 echo "Preparing kernel $linux_version$linux_EXTRAVERSION in $linux_tree..."
 fi
 
-asm_ipipe_h=unknown
-
 if test -r $linux_tree/include/linux/ipipe.h; then
-    if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
-	linux_include_asm=arch/$linux_arch/include/asm
-	asm_ipipe_h=$linux_include_asm/ipipe.h
-    else
-	linux_include_asm=include/asm-$linux_arch
-	asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -1`
-    fi
     if test x$verbose = x1; then
     echo "Adeos found - bypassing patch."
     fi
@@ -409,6 +400,15 @@ else
    }
    patch -p1 -f -s < $adeos_patch
    cd $curdir
+fi
+
+asm_ipipe_h=unknown
+if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
+   linux_include_asm=arch/$linux_arch/include/asm
+   asm_ipipe_h=$linux_include_asm/ipipe.h
+else
+   linux_include_asm=include/asm-$linux_arch
+   asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -1`
 fi
 
 adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $asm_ipipe_h 2>/dev/null|head -1|sed -e 's,.*"\(.*\)"$,\1,'`
