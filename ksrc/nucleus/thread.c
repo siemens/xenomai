@@ -58,8 +58,10 @@ int xnthread_init(struct xnthread *thread,
 	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_HW_FPU
 	flags &= ~XNFPU;
-#endif /* CONFIG_XENO_HW_FPU */
-
+#endif
+#ifdef __XENO_SIM__
+	flags &= ~XNSHADOW;
+#endif
 	if (flags & (XNSHADOW|XNROOT))
 		stacksize = 0;
 	else {
