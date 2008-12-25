@@ -31,7 +31,7 @@ static unsigned psos_get_magic(void)
 	return PSOS_SKIN_MAGIC;
 }
 
-static xnthrops_t psos_task_ops = {
+static struct xnthread_operations psos_task_ops = {
 	.get_magic = &psos_get_magic,
 };
 

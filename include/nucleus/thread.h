@@ -140,14 +140,14 @@ struct xnsched_class;
 struct xnsched_tpslot;
 union xnsched_policy_param;
 
-typedef struct xnthrops {
+struct xnthread_operations {
 	int (*get_denormalized_prio)(struct xnthread *, int coreprio);
 	unsigned (*get_magic)(void);
-} xnthrops_t;
+};
 
 struct xnthread_init_attr {
 	struct xntbase *tbase;
-	struct xnthrops *ops;
+	struct xnthread_operations *ops;
 	xnflags_t flags;
 	unsigned int stacksize;
 	const char *name;
@@ -261,7 +261,7 @@ typedef struct xnthread {
 	} registry;
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 
-	xnthrops_t *ops;		/* Thread class operations. */
+	struct xnthread_operations *ops; /* Thread class operations. */
 
 	char name[XNOBJECT_NAME_LEN]; /* Symbolic name of thread */
 

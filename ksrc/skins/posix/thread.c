@@ -43,7 +43,7 @@ static unsigned pse51_get_magic(void)
 	return PSE51_SKIN_MAGIC;
 }
 
-static xnthrops_t pse51_thread_ops = {
+static struct xnthread_operations pse51_thread_ops = {
 	.get_magic = &pse51_get_magic,
 };
 

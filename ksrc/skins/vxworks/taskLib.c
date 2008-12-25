@@ -40,7 +40,7 @@ static unsigned wind_task_get_magic(void)
 	return VXWORKS_SKIN_MAGIC;
 }
 
-static xnthrops_t windtask_ops = {
+static struct xnthread_operations windtask_ops = {
 	.get_denormalized_prio = &wind_task_get_denormalized_prio,
 	.get_magic = &wind_task_get_magic,
 };

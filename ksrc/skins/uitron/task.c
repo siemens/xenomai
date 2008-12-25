@@ -34,7 +34,7 @@ static unsigned uitask_get_magic(void)
 	return uITRON_SKIN_MAGIC;
 }
 
-static xnthrops_t uitask_ops = {
+static struct xnthread_operations uitask_ops = {
 	.get_denormalized_prio = &uitask_get_denormalized_prio,
 	.get_magic = &uitask_get_magic,
 };

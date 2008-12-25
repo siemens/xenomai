@@ -40,7 +40,7 @@ static unsigned vrtx_get_magic(void)
 	return VRTX_SKIN_MAGIC;
 }
 
-static xnthrops_t vrtxtask_ops = {
+static struct xnthread_operations vrtxtask_ops = {
 	.get_denormalized_prio = &vrtx_get_denormalized_prio,
 	.get_magic = &vrtx_get_magic,
 };

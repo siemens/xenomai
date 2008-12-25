@@ -36,7 +36,7 @@ static unsigned __task_get_magic(void)
 	return RTAI_SKIN_MAGIC;
 }
 
-static xnthrops_t __rtai_task_ops = {
+static struct xnthread_operations __rtai_task_ops = {
 	.get_denormalized_prio = &__task_get_denormalized_prio,
 	.get_magic = &__task_get_magic,
 };

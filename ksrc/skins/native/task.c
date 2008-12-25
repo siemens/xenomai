@@ -58,7 +58,7 @@ static unsigned __task_get_magic(void)
 	return XENO_SKIN_MAGIC;
 }
 
-static xnthrops_t __xeno_task_ops = {
+static struct xnthread_operations __xeno_task_ops = {
 	.get_magic = &__task_get_magic,
 };
 
