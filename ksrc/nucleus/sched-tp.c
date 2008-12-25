@@ -64,8 +64,6 @@ static void tp_schedule_next(struct xnsched_tp *tp)
 	xnsched_set_resched(sched);
 }
 
-static void xnsched_tp_requeue(struct xnthread *thread);
-
 static void tp_tick_handler(struct xntimer *timer)
 {
 	struct xnsched_tp *tp = container_of(timer, struct xnsched_tp, tf_timer);
