@@ -69,39 +69,6 @@ static void xnsched_tp_requeue(struct xnthread *thread);
 static void tp_tick_handler(struct xntimer *timer)
 {
 	struct xnsched_tp *tp = container_of(timer, struct xnsched_tp, tf_timer);
-	struct xnsched *sched = container_of(tp, struct xnsched, tp);
-	struct xnthread *curr = sched->curr, *thread;
-	struct xnpholder *h;
-
-	/* Requeue the current thread if it belongs to us. */
-	if (curr->base_class == &xnsched_class_tp) {
-		if (!xnthread_test_state(curr, XNREADY)) {
-			xnsched_tp_requeue(curr);
-			xnthread_set_state(curr, XNREADY);
-		}
-	}
-
-	/*
-	 * Send a deadline notification to all TP threads that are
-	 * still runnable when the current partition window ends.
-	 */
-	for (h = sched_getheadpq(&tp->tps->runnable); h;
-	     h = sched_nextpq(&tp->tps->runnable, h)) {
-		thread = link2thread(h, rlink);
-		/*
-		 * Some threads from other classes might be on our
-		 * runqueue because of a PIP boost - filter them out.
-		 */
-		if (thread->base_class != &xnsched_class_tp)
-			continue;
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-		if (xnthread_test_state(thread, XNSHADOW))
-			xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_DEADLINE, 1);
-#endif
-		else
-			thread->signals |= (1L << XNSCHED_EVT_DEADLINE);
-	}
-
 	/*
 	 * Advance beginning date of time frame by a full period if we
 	 * are processing the last window.

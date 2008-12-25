@@ -62,7 +62,6 @@ typedef struct xnsysinfo {
 #define SIGSHADOW  SIGWINCH
 #define SIGSHADOW_ACTION_HARDEN   1
 #define SIGSHADOW_ACTION_RENICE   2
-#define SIGSHADOW_ACTION_DEADLINE 3
 #define sigshadow_action(code) ((code) & 0xff)
 #define sigshadow_arg(code) (((code) >> 8) & 0xff)
 #define sigshadow_int(action, arg) ((action) | ((arg) << 8))

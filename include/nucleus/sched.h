@@ -44,8 +44,6 @@
 #define XNSWLOCK	0x04000000	/* In context switch */
 #define XNRESCHED	0x02000000	/* Needs rescheduling */
 
-#define XNSCHED_EVT_DEADLINE	24 /* Deadline event (thread->signals). */
-
 struct xnsched_rt {
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
 #ifdef CONFIG_XENO_OPT_PRIOCPL
