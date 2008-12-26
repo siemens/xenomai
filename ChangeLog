@@ -1,3 +1,9 @@
+2008-12-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/bits/timer.h, ksrc/arch/powerpc/hal.c: Use
+	the calibrated timer frequency obtained from the kernel with
+	CONFIG_GENERIC_CLOCKEVENTS.
+
 2008-12-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/prepare-kernel.sh: Handle new directory layout with

@@ -180,10 +180,6 @@ int rthal_timer_request(
 
 	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
 				    &tmfreq);
-	/*
-	 * Ignore the returned timer freq; the timebase freq is more
-	 * accurate (CPU_FREQ == timebase freq for this port).
-	 */
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -209,6 +205,9 @@ int rthal_timer_request(
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
+
+	if (rthal_timerfreq_arg == 0)
+		rthal_tunables.timer_freq = tmfreq;
 
 	/*
 	 * The rest of the initialization should only be performed

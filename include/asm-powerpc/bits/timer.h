@@ -34,11 +34,10 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	 * here, we voluntarily limit to 32 bits, 4 billions ticks
 	 * should be enough for now. Would a timer needs more, an
 	 * extra call to the tick handler would simply occur after 4
-	 * billions ticks.  Since the timebase value is used to
-	 * express CPU ticks on the PowerPC port, there is no need to
-	 * rescale the delay value.
+	 * billions ticks.
 	 */
-	rthal_timer_program_shot(delay);
+	rthal_timer_program_shot(rthal_imuldiv
+				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
 }
 
 static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)
