@@ -13,6 +13,11 @@ menu "Machine"
 
 depends on XENO_OPT_NUCLEUS
 
+config XENO_HW_WANTS_UNMASKED_CONTEXT_SWITCH
+        bool
+	select IPIPE_UNMASKED_CONTEXT_SWITCH
+	default y
+
 config XENO_HW_FPU
 	bool "Enable FPU support"
 	depends on PPC_FPU
