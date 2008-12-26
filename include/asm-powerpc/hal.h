@@ -81,6 +81,17 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 #ifdef CONFIG_40x
 		mtspr(SPRN_PIT, delay);
 #else /* !CONFIG_40x */
+#ifdef CONFIG_PPC_PASEMI
+		/*
+		 * PA6T rev Ax have decrementer ticking at 1/2 tb rate
+		 * and set_dec() will scale back the delay
+		 * accordingly; since our timing code assumes
+		 * timebase_freq == decrementer_freq, we need to
+		 * double the delay before set_dec() computes the
+		 * final value used to program the decrementer.
+		 */
+		delay <<= 1;
+#endif
 		/*
 		 * Decrementer must be set to a positive 32bit value,
 		 * otherwise it would flood us with exceptions.

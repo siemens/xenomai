@@ -4,6 +4,11 @@
 	the calibrated timer frequency obtained from the kernel with
 	CONFIG_GENERIC_CLOCKEVENTS.
 
+	* include/asm-powerpc/hal.h (rthal_timer_program_shot): Fix early
+	shots on PA-Semi where decrementer_freq = timebase_freq / 2 (our
+	timer management code assumes timebase_freq == decrementer_freq on
+	powerpc).
+
 2008-12-16  Philippe Gerum  <rpm@xenomai.org>
 
 	* scripts/prepare-kernel.sh: Handle new directory layout with
