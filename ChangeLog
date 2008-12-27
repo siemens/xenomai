@@ -1,3 +1,14 @@
+2008-12-27  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.4-03.
+
+2008-12-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-powerpc/hal.h (rthal_timer_program_shot): Fix early
+	shots on PA-Semi where decrementer_freq = timebase_freq / 2 (our
+	timer management code assumes timebase_freq == decrementer_freq on
+	powerpc).
+
 2008-12-15  Philippe Gerum  <rpm@eclipse.xenomai.org>
 
 	* ksrc/arch/x86/patches: Update to 2.6.27-x86-2.2-02.
