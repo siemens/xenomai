@@ -2570,12 +2570,14 @@ index 0f2d239..46540c8 100644
  #ifdef CONFIG_PPC_SUBPAGE_PROT
  		if (rc == -2)
 diff --git a/arch/powerpc/mm/slb.c b/arch/powerpc/mm/slb.c
-index 267b2b0..25454a8 100644
+index 267b2b0..b3399c7 100644
 --- a/arch/powerpc/mm/slb.c
 +++ b/arch/powerpc/mm/slb.c
-@@ -106,7 +106,9 @@ void slb_flush_and_rebolt(void)
+@@ -105,8 +105,11 @@ void slb_flush_and_rebolt(void)
+ 	 * appropriately too. */
  	unsigned long linear_llp, vmalloc_llp, lflags, vflags;
  	unsigned long ksp_esid_data, ksp_vsid_data;
++	unsigned long flags;
  
 +#ifndef CONFIG_IPIPE
  	WARN_ON(!irqs_disabled());
@@ -2583,6 +2585,29 @@ index 267b2b0..25454a8 100644
  
  	linear_llp = mmu_psize_defs[mmu_linear_psize].sllp;
  	vmalloc_llp = mmu_psize_defs[mmu_vmalloc_psize].sllp;
+@@ -128,7 +131,12 @@ void slb_flush_and_rebolt(void)
+ 	 * We can't take a PMU exception in the following code, so hard
+ 	 * disable interrupts.
+ 	 */
++#ifdef CONFIG_IPIPE
++	local_irq_save_hw(flags);
++#else
+ 	hard_irq_disable();
++	(void)flags;
++#endif
+ 
+ 	/* We need to do this all in asm, so we're sure we don't touch
+ 	 * the stack between the slbia and rebolting it. */
+@@ -154,6 +162,9 @@ void slb_flush_and_rebolt(void)
+ 		        "r"(ksp_vsid_data),
+ 		        "r"(ksp_esid_data)
+ 		     : "memory");
++#ifdef CONFIG_IPIPE
++	local_irq_restore_hw(flags);
++#endif
+ }
+ 
+ void slb_vmalloc_update(void)
 diff --git a/arch/powerpc/platforms/cell/spu_base.c b/arch/powerpc/platforms/cell/spu_base.c
 index 78f905b..43d2b87 100644
 --- a/arch/powerpc/platforms/cell/spu_base.c
@@ -4550,7 +4575,7 @@ index ad8c9f7..0adf5fd 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..7c245e5
+index 0000000..336ac4b
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,236 @@
@@ -4600,10 +4625,10 @@ index 0000000..7c245e5
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.4-01"
++#define IPIPE_ARCH_STRING	"2.4-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -4948,7 +4973,7 @@ index 0000000..9dd0dda
 +
 +#endif	/* !__ASM_POWERPC_IPIPE_BASE_H */
 diff --git a/include/asm-powerpc/mmu_context.h b/include/asm-powerpc/mmu_context.h
-index 9102b8b..7c46543 100644
+index 9102b8b..46e1e23 100644
 --- a/include/asm-powerpc/mmu_context.h
 +++ b/include/asm-powerpc/mmu_context.h
 @@ -167,6 +167,8 @@ static inline void destroy_context(struct mm_struct *mm)
@@ -5024,7 +5049,7 @@ index 9102b8b..7c46543 100644
  
  extern void mmu_context_init(void);
  
-@@ -239,6 +280,45 @@ extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
+@@ -239,15 +280,58 @@ extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
   * switch_mm is the entry point called from the architecture independent
   * code in kernel/sched.c
   */
@@ -5070,8 +5095,26 @@ index 9102b8b..7c46543 100644
  static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  			     struct task_struct *tsk)
  {
-@@ -260,8 +340,12 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
++	unsigned long flags;
++
++	local_irq_save_hw_cond(flags);
++
+ 	if (!cpu_isset(smp_processor_id(), next->cpu_vm_mask))
+ 		cpu_set(smp_processor_id(), next->cpu_vm_mask);
+ 
+ 	/* No need to flush userspace segments if the mm doesnt change */
+ 	if (prev == next)
+-		return;
++		goto out;
+ 
+ #ifdef CONFIG_ALTIVEC
+ 	if (cpu_has_feature(CPU_FTR_ALTIVEC))
+@@ -258,10 +342,16 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+ 		switch_slb(tsk, next);
+ 	else
  		switch_stab(tsk, next);
++out:
++	local_irq_restore_hw_cond(flags);
  }
  
 +#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
@@ -5083,7 +5126,7 @@ index 9102b8b..7c46543 100644
  /*
   * After we have set current->mm to a new value, this activates
   * the context for the new mm so we see the new mappings.
-@@ -275,6 +359,5 @@ static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
+@@ -275,6 +365,5 @@ static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
  	local_irq_restore(flags);
  }
  
@@ -7010,7 +7053,7 @@ index 5f6c258..1f3ef9d 100644
  bad_fork_free_pid:
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..468c1a1
+index 0000000..de5e6a3
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
 @@ -0,0 +1,35 @@
@@ -7048,7 +7091,7 @@ index 0000000..468c1a1
 +config IPIPE_UNMASKED_CONTEXT_SWITCH
 +       bool
 +       depends on IPIPE
-+       default y
++       default n
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
 index 0000000..64a692c
@@ -7154,10 +7197,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..cec1fd5
+index 0000000..97e6aae
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1712 @@
+@@ -0,0 +1,1713 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8861,6 +8904,7 @@ index 0000000..cec1fd5
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_pend_irq);
++EXPORT_SYMBOL(__ipipe_set_irq_pending);
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
 +EXPORT_SYMBOL(ipipe_request_tickdev);
 +EXPORT_SYMBOL(ipipe_release_tickdev);
