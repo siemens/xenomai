@@ -1,3 +1,7 @@
+2008-08-18  Paul Corner <paul_c@tuxcnc.org>
+
+	* debian/control: Fix short descriptions.
+	
 2008-12-27  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to 2.6.26-powerpc-2.4-03.
