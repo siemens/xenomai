@@ -1,3 +1,7 @@
+2008-12-29  Jan Kiszka  <jan.kiszka@web.de>
+
+	* ksrc/arch/x86/hal-common.c (rthal_timer_request): Fix race.
+	
 2008-08-18  Paul Corner <paul_c@tuxcnc.org>
 
 	* debian/control: Fix short descriptions.

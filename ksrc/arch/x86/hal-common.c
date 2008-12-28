@@ -107,18 +107,24 @@ int rthal_timer_request(
 	int cpu)
 {
 	unsigned long tmfreq;
-	int tickval, err;
+	int tickval, err, res;
+
+	if (cpu_timers_requested == 0) {
+		err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
+					(rthal_irq_handler_t) tick_handler,
+					NULL, NULL);
+		if (err)
+			return err;
+	}
 
 	/* This code works both for UP+LAPIC and SMP configurations. */
 
 #ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
-	int res = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu,
-					&tmfreq);
+	res = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu,
+				    &tmfreq);
 #else
-	int res = ipipe_request_tickdev("lapic",
-					(compat_emumode_t)mode_emul,
-					(compat_emutick_t)tick_emul,
-					cpu);
+	res = ipipe_request_tickdev("lapic", (compat_emumode_t)mode_emul,
+				    (compat_emutick_t)tick_emul, cpu);
 	tmfreq = RTHAL_COMPAT_TIMERFREQ;
 #endif
 
@@ -141,9 +147,12 @@ int rthal_timer_request(
 		break;
 
 	case CLOCK_EVT_MODE_SHUTDOWN:
-		return -ENODEV;
+		res = -ENODEV;
+		/* fall through */
 
 	default:
+		if (cpu_timers_requested == 0)
+			rthal_irq_release(RTHAL_APIC_TIMER_IPI);
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
@@ -155,19 +164,12 @@ int rthal_timer_request(
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
 	 */
-	if (cpu_timers_requested++ > 0)
-		goto out;
+	if (cpu_timers_requested++ == 0) {
+		rthal_timer_set_oneshot(1);
 
-	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
-				(rthal_irq_handler_t) tick_handler, NULL, NULL);
+		rthal_nmi_init(&rthal_latency_above_max);
+	}
 
-	if (err)
-		return err;
-
-	rthal_timer_set_oneshot(1);
-
-	rthal_nmi_init(&rthal_latency_above_max);
-out:
 	return tickval;
 }
 
@@ -270,12 +272,12 @@ void rthal_timer_release(int cpu)
 
 	rthal_nmi_release();
 
-	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
-
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
+
+	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
 }
 
 
