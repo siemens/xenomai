@@ -97,51 +97,6 @@ unsigned long rthal_timer_calibrate(void)
 	return rthal_imuldiv(dt, 20, RTHAL_CPU_FREQ);
 }
 
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-
-#include <linux/vt_kern.h>
-
-extern void show_registers(struct pt_regs *regs);
-
-extern spinlock_t nmi_print_lock;
-
-void die_nmi(struct pt_regs *regs, const char *msg)
-{
-	spin_lock(&nmi_print_lock);
-	/*
-	 * We are in trouble anyway, lets at least try
-	 * to get a message out.
-	 */
-	bust_spinlocks(1);
-	printk(msg);
-	show_registers(regs);
-	printk("console shuts up ...\n");
-	console_silent();
-	spin_unlock(&nmi_print_lock);
-	bust_spinlocks(0);
-	do_exit(SIGSEGV);
-}
-
-#endif /* Linux < 2.6 */
-
-void rthal_latency_above_max(struct pt_regs *regs)
-{
-	/* Try to report via latency tracer first, then fall back to panic. */
-	if (rthal_trace_user_freeze(rthal_maxlat_us, 1) < 0) {
-		char buf[128];
-
-		snprintf(buf,
-			 sizeof(buf),
-			 "NMI watchdog detected timer latency above %u us\n",
-			 rthal_maxlat_us);
-		die_nmi(regs, buf);
-	}
-}
-
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-
 #else /* !CONFIG_X86_LOCAL_APIC */
 
 unsigned long rthal_timer_calibrate(void)

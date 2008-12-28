@@ -37,7 +37,7 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 	{
 		extern unsigned long rthal_maxlat_tsc;
-		if (delay <= (ULONG_MAX - rthal_maxlat_tsc))
+		if (delay <= (LONG_MAX - rthal_maxlat_tsc))
 			rthal_nmi_arm(delay + rthal_maxlat_tsc);
 	}
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */

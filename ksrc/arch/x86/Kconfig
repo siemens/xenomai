@@ -27,8 +27,6 @@ config XENO_HW_FPU
 	Float-Point Unit on the x86 platform at the following URL:
 	http://www.intel.com/design/intarch/techinfo/Pentium/fpu.htm
 
-if !X86_64
-
 menu "NMI watchdog"
 
 config XENO_HW_NMI_DEBUG_LATENCY
@@ -58,8 +56,6 @@ config XENO_HW_NMI_DEBUG_LATENCY_MAX
         NMI watchdog pulls the handbrake.
 
 endmenu
-
-endif
 
 menu "SMI workaround"
 

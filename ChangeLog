@@ -2,6 +2,8 @@
 
 	* ksrc/arch/x86/hal-common.c (rthal_timer_request): Fix race.
 	
+	* ksrc/arch/x86: Rework NMI support.
+	
 2008-08-18  Paul Corner <paul_c@tuxcnc.org>
 
 	* debian/control: Fix short descriptions.

@@ -69,6 +69,8 @@ typedef int (*compat_emutick_t)(unsigned long evt,
 
 extern enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
+void rthal_latency_above_max(struct pt_regs *regs);
+
 #ifdef __i386__
 #include "hal_32.h"
 #else

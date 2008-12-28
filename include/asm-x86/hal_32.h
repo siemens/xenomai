@@ -234,6 +234,4 @@ static inline void rthal_setup_oneshot_apic(int vector)
 
 long rthal_strncpy_from_user(char *dst, const char __user * src, long count);
 
-void rthal_latency_above_max(struct pt_regs *regs);
-
 #endif /* !_XENO_ASM_X86_HAL_32_H */
