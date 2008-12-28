@@ -25,6 +25,7 @@
 unsigned xnarch_tsc_scale;
 unsigned xnarch_tsc_shift;
 unsigned xnarch_tsc_divide;
+rthal_u32frac_t xnarch_tsc_frac;
 
 long long xnarch_tsc_to_ns(long long ts)
 {
@@ -34,7 +35,9 @@ long long xnarch_tsc_to_ns(long long ts)
 
 long long xnarch_ns_to_tsc(long long ns)
 {
-	return xnarch_llimd(ns, xnarch_tsc_divide, xnarch_tsc_scale);
+	return xnarch_nodiv_llimd(ns,
+				  xnarch_tsc_frac.frac,
+				  xnarch_tsc_frac.integ);
 }
 #define XNARCH_NS_TO_TSC
 
