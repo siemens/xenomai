@@ -257,7 +257,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 
 		fprintf(stderr, "Xenomai: incompatible feature set\n");
 		fprintf(stderr,
-			"(required=\"%s\", present=\"%s\", missing=\"%s\").\n",
+			"(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\").\n",
 			finfo.feat_man_s, finfo.feat_all_s, finfo.feat_mis_s);
 		exit(1);
 
