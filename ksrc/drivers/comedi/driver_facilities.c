@@ -543,6 +543,26 @@ comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
 			     unsigned int type, int idx_subd);
 EXPORT_SYMBOL(comedi_get_cmd);
 
+
+/**
+ * @brief Get the channel index according to its type
+ *
+ * @param[in] dev Device descriptor structure
+ * @param[in] type Buffer transfer type:
+ * - COMEDI_BUF_PUT for device -> Comedi buffer -> user-process
+ *   transfer.
+ * - COMEDI_BUF_GET for user-process -> Comedi_buffer -> device
+ *   transfer.
+ * @param[in] idx_subd Subdevice key index; this argument is optional:
+ * if the "type" is not correct, the last argument is used to select
+ * the proper subdevice.
+ *
+ * @return the channel index.
+ *
+ */
+int comedi_get_chan(struct comedi_device *dev, unsigned int type, int idx_subd);
+EXPORT_SYMBOL(comedi_get_chan);
+
 /** @} */
 
 /* --- IRQ handling section --- */

@@ -85,7 +85,7 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 	for (vaddr = vabase; vaddr < vabase + buf_desc->size;
 	     vaddr += PAGE_SIZE)
 		buf_desc->pg_list[(vaddr - vabase) >> PAGE_SHIFT] =
-			(unsigned long) page_address(vmalloc_to_page(vaddr));
+			(unsigned long) page_to_phys(vmalloc_to_page(vaddr));
 
       out_virt_contig_alloc:
 	if (ret != 0)
