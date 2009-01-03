@@ -1,3 +1,7 @@
+2009-01-04  Paul Corner <paul_c@tuxcnc.org>
+
+	debian/rules: allow dpkg-cross to cross-compile binary packages.
+
 2009-01-03  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c: Move the XNDEBUG flag to the state mask
