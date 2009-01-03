@@ -1,3 +1,8 @@
+2009-01-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c: Move the XNDEBUG flag to the state mask
+	where it belongs (instead of the info mask).
+
 2008-12-29  Jan Kiszka  <jan.kiszka@web.de>
 
 	* ksrc/arch/x86/hal-common.c (rthal_timer_request): Fix race.
