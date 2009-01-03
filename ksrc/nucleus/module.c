@@ -567,19 +567,19 @@ static int tmstat_seq_show(struct seq_file *seq, void *v)
 {
 	if (v == SEQ_START_TOKEN)
 		seq_printf(seq,
-			   "%-3s  %-10s  %-10s  %-9s  %-9s  %-11s  %-15s\n",
+			   "%-3s  %-10s  %-10s  %-10s  %-10s  %-11s  %-15s\n",
 			   "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
 			   "INTERVAL", "HANDLER", "NAME");
 	else {
 		struct tmstat_seq_info *p = v;
-		char timeout_buf[21]  = "-        ";
-		char interval_buf[21] = "-        ";
+		char timeout_buf[21]  = "-         ";
+		char interval_buf[21] = "-         ";
 
 		if (!testbits(p->status, XNTIMER_DEQUEUED))
-			snprintf(timeout_buf, sizeof(timeout_buf), "%-9llu",
+			snprintf(timeout_buf, sizeof(timeout_buf), "%-10llu",
 				 p->timeout);
 		if (testbits(p->status, XNTIMER_PERIODIC))
-			snprintf(interval_buf, sizeof(interval_buf), "%-9llu",
+			snprintf(interval_buf, sizeof(interval_buf), "%-10llu",
 				 p->interval);
 		seq_printf(seq,
 			   "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
@@ -1033,7 +1033,6 @@ static struct proc_dir_entry *add_proc_fops(const char *name,
 	struct proc_dir_entry *entry;
 
 	entry = create_proc_entry(name, 0, parent);
-
 	if (!entry)
 		return NULL;
 
