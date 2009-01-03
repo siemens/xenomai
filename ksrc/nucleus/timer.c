@@ -329,9 +329,12 @@ void xntimer_tick_aperiodic(void)
 					continue;
 				__setbits(timer->status, XNTIMER_FIRED);
 			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
-				/* Postpone the next tick to a reasonable date in
-				   the future, waiting for the timebase to be unlocked
-				   at some point. */
+				/*
+				 * Postpone the next tick to a
+				 * reasonable date in the future,
+				 * waiting for the timebase to be
+				 * unlocked at some point.
+				 */
 				xntimerh_date(&timer->aplink) = xntimerh_date(&sched->htimer.aplink);
 				continue;
 			}

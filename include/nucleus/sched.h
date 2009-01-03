@@ -381,8 +381,8 @@ static inline void xnsched_pop_rpi(struct xnthread *thread)
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 
 /*
- * If only the RT scheduling class is compiled in, we may fully inline
- * common helpers for it.
+ * If only the RT and IDLE scheduling classes are compiled in, we can
+ * fully inline common helpers for dealing with those.
  */
 
 static inline void xnsched_enqueue(struct xnthread *thread)
