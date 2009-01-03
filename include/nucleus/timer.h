@@ -391,9 +391,15 @@ extern xntbops_t nktimer_ops_aperiodic,
 #define xntimer_init	__xntimer_init
 #endif /* !CONFIG_XENO_OPT_STATS */
 
-void __xntimer_init(xntimer_t *timer,
-		  xntbase_t *base,
-		  void (*handler)(xntimer_t *timer));
+#define xntimer_init_noblock(timer, base, handler)	\
+	do {						\
+		xntimer_init(timer, base, handler);	\
+		(timer)->status |= XNTIMER_NOBLCK;	\
+	} while(0)
+
+void __xntimer_init(struct xntimer *timer,
+		    struct xntbase *base,
+		    void (*handler)(struct xntimer *timer));
 
 void xntimer_destroy(xntimer_t *timer);
 
