@@ -96,7 +96,7 @@ static void xnsched_tp_init(struct xnsched *sched)
 	tp->tps = NULL;
 	tp->gps = NULL;
 	initq(&tp->threads);
-	xntimer_init(&tp->tf_timer, &nktbase, tp_tick_handler);
+	xntimer_init_noblock(&tp->tf_timer, &nktbase, tp_tick_handler);
 }
 
 static void xnsched_tp_setparam(struct xnthread *thread,
@@ -262,7 +262,11 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 int xnsched_tp_get_partition(struct xnsched *sched)
 {
 	struct xnsched_tp *tp = &sched->tp;
-	return tp->tps == NULL ? - 1 : tp->tps - tp->partitions;
+
+	if (tp->tps == NULL || tp->tps == &tp->idle)
+		return -1;
+
+	return tp->tps - tp->partitions;
 }
 
 struct xnsched_class xnsched_class_tp = {
