@@ -41,23 +41,24 @@
 #define XNMAPPED  0x00000100 /**< Mapped to a regular Linux task (shadow only) */
 #define XNRELAX   0x00000200 /**< Relaxed shadow thread (blocking bit) */
 #define XNMIGRATE 0x00000400 /**< Thread is currently migrating to another CPU. */
+#define XNHELD    0x00000800 /**< Thread is held to process emergency. */
 
-#define XNBOOST   0x00000800 /**< Undergoes a PIP boost */
-#define XNDEBUG   0x00001000 /**< Hit a debugger breakpoint (shadow only) */
-#define XNLOCK    0x00002000 /**< Holds the scheduler lock (i.e. not preemptible) */
-#define XNRRB     0x00004000 /**< Undergoes a round-robin scheduling */
-#define XNASDI    0x00008000 /**< ASR are disabled */
+#define XNBOOST   0x00001000 /**< Undergoes a PIP boost */
+#define XNDEBUG   0x00002000 /**< Hit a debugger breakpoint (shadow only) */
+#define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
+#define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
+#define XNASDI    0x00010000 /**< ASR are disabled */
 
 /*
  * Some skins may depend on the following fields to live in the high
  * 16-bit word, in order to be combined with the emulated RTOS flags
  * which use the low one, so don't change them carelessly.
  */
-#define XNTRAPSW  0x00010000 /**< Trap execution mode switches */
-#define XNRPIOFF  0x00020000 /**< Stop priority coupling (shadow only) */
-#define XNFPU     0x00100000 /**< Thread uses FPU */
-#define XNSHADOW  0x00200000 /**< Shadow thread */
-#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
+#define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
+#define XNRPIOFF  0x00040000 /**< Stop priority coupling (shadow only) */
+#define XNFPU     0x00080000 /**< Thread uses FPU */
+#define XNSHADOW  0x00100000 /**< Shadow thread */
+#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -70,6 +71,7 @@
   'R' -> Runnable.
   'U' -> Unstarted or dormant.
   'X' -> Relaxed shadow.
+  'H' -> Held in emergency.
   'b' -> Priority boost undergoing.
   'T' -> Ptraced and stopped.
   'l' -> Locks scheduler.
@@ -79,9 +81,9 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.bTlr.to..f.."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr.tof.."
 
-#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE)
+#define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW|XNRPIOFF)
 
 /* These state flags are available to the real-time interfaces */
@@ -108,6 +110,7 @@
 #define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
 #define XNAFFSET  0x00000080 /**< CPU affinity changed from primary mode */
 #define XNPRIOSET 0x00000100 /**< Priority changed from primary mode */
+#define XNABORT   0x00000200 /**< Thread is being aborted */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000

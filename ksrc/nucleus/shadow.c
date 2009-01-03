@@ -1212,12 +1212,14 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		   thread, xnthread_name(thread), current->pid,
 		   xnthread_base_priority(thread));
 
-	/* Switch on propagation of normal kernel events for the bound
-	   task. This is basically a per-task event filter which
-	   restricts event notifications (e.g. syscalls) to tasks
-	   bearing the PF_EVNOTIFY flag, so that we don't uselessly
-	   intercept those events when they happen to be caused by
-	   plain (i.e. non-Xenomai) Linux tasks. */
+	/*
+	 * Switch on propagation of normal kernel events for the bound
+	 * task. This is basically a per-task event filter which
+	 * restricts event notifications (e.g. syscalls) to tasks
+	 * bearing the PF_EVNOTIFY flag, so that we don't uselessly
+	 * intercept those events when they happen to be caused by
+	 * plain (i.e. non-Xenomai) Linux tasks.
+	 */
 	current->flags |= PF_EVNOTIFY;
 
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
@@ -1233,9 +1235,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	thread->u_mode = u_mode;
 
 	if (u_completion) {
- 		/* We still have the XNDORMANT bit set, so we can't
+ 		/*
+		 * We still have the XNDORMANT bit set, so we can't
  		 * link to the RPI queue which only links _runnable_
- 		 * relaxed shadow. */
+ 		 * relaxed shadow.
+		 */
 		xnshadow_signal_completion(u_completion, 0);
 		return 0;
 	}
@@ -1354,8 +1358,8 @@ void xnshadow_renice(struct xnthread *thread)
 {
 	/*
 	 * We need to bound the priority values in the
-	 * [1..MAX_RT_PRIO-1] range, since the core pod's priority
-	 * scale is a superset of Linux's priority scale.
+	 * [1..MAX_RT_PRIO-1] range, since the Xenomai priority scale
+	 * is a superset of the Linux priority scale.
 	 */
 	int prio = normalize_priority(thread->cprio);
 
@@ -1367,7 +1371,7 @@ void xnshadow_renice(struct xnthread *thread)
 		rpi_update(thread);
 }
 
-void xnshadow_suspend(xnthread_t *thread)
+void xnshadow_suspend(struct xnthread *thread)
 {
 	/* Called with nklock locked, Xenomai interrupts off. */
 	xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN, 1);
@@ -1375,16 +1379,21 @@ void xnshadow_suspend(xnthread_t *thread)
 
 static int xnshadow_sys_migrate(struct pt_regs *regs)
 {
+	struct xnthread *thread;
+
 	if (rthal_current_domain == rthal_root_domain)
 		if (__xn_reg_arg1(regs) == XENOMAI_XENO_DOMAIN) {
-			if (!xnshadow_thread(current))
+			thread = xnshadow_thread(current);
+			if (thread == NULL)
 				return -EPERM;
-
-			/* Paranoid: a corner case where the
-			   user-space side fiddles with SIGSHADOW
-			   while the target thread is still waiting to
-			   be started. */
-			if (xnthread_test_state(xnshadow_thread(current), XNDORMANT))
+			/*
+			 * Paranoid: a corner case where the
+			 * user-space side fiddles with SIGSHADOW
+			 * while the target thread is still waiting to
+			 * be started (whether it was never started or
+			 * it was stopped).
+			 */
+			if (xnthread_test_state(thread, XNDORMANT))
 				return 0;
 
 			return xnshadow_harden()? : 1;
@@ -2282,8 +2291,16 @@ static inline void do_sigwake_event(struct task_struct *p)
 	if (xnpod_unblock_thread(thread))
 		xnthread_set_info(thread, XNKICKED);
 
-	if (xnthread_test_state(thread, XNSUSP)) {
-		xnpod_resume_thread(thread, XNSUSP);
+	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
+		xnpod_resume_thread(thread, XNSUSP|XNHELD);
+		xnthread_set_info(thread, XNKICKED|XNBREAK);
+	}
+	/*
+	 * Check whether a thread was started and later stopped, in
+	 * which case we may wake it up upon signal receipt.
+	 */
+	if (xnthread_test_state(thread, XNDORMANT|XNSTARTED) == (XNDORMANT|XNSTARTED)) {
+		xnpod_resume_thread(thread, XNDORMANT);
 		xnthread_set_info(thread, XNKICKED|XNBREAK);
 	}
 

@@ -714,7 +714,7 @@ int xnpod_init_thread(struct xnthread *thread,
  *
  * @retval 0 if @a thread could be started ;
  *
- * @retval -EBUSY if @a thread was already started ;
+ * @retval -EBUSY if @a thread was not dormant or stopped ;
  *
  * @retval -EINVAL if the value of @a attr->affinity is invalid.
  *
@@ -732,17 +732,27 @@ int xnpod_init_thread(struct xnthread *thread,
 int xnpod_start_thread(struct xnthread *thread,
 		       const struct xnthread_start_attr *attr)
 {
-	xnarch_cpumask_t affinity = attr->affinity;
+	xnarch_cpumask_t affinity;
+	int ret = 0;
 	spl_t s;
-	int ret;
-
-	if (!xnthread_test_state(thread, XNDORMANT))
-		return -EBUSY;
-
-	xnarch_cpus_and(affinity, affinity, nkaffinity);
 
 	xnlock_get_irqsave(&nklock, s);
 
+	if (!xnthread_test_state(thread, XNDORMANT)) {
+		ret = -EBUSY;
+		goto unlock_and_exit;
+	}
+
+	if (xnthread_test_state(thread, XNSTARTED)) {
+		/* Resuming from a stopped state. */
+		xnpod_resume_thread(thread, XNDORMANT);
+		goto schedule;
+	}
+
+	/* This is our initial start. */
+
+	affinity = attr->affinity;
+	xnarch_cpus_and(affinity, affinity, nkaffinity);
 	thread->affinity = xnarch_cpu_online_map;
 	xnarch_cpus_and(thread->affinity, affinity, thread->affinity);
 
@@ -757,11 +767,6 @@ int xnpod_start_thread(struct xnthread *thread,
 		xnsched_migrate_passive(thread, sched);
 	}
 #endif /* CONFIG_SMP */
-
-	if (xnthread_test_state(thread, XNSTARTED)) {
-		ret = -EBUSY;
-		goto unlock_and_exit;
-	}
 
 	xnthread_set_state(thread, (attr->mode & (XNTHREAD_MODE_BITS | XNSUSP)) | XNSTARTED);
 	thread->imask = attr->imask;
@@ -796,11 +801,10 @@ int xnpod_start_thread(struct xnthread *thread,
 
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 
+schedule:
 	xnpod_schedule();
 
-	ret = 0;
-
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -808,49 +812,15 @@ int xnpod_start_thread(struct xnthread *thread,
 }
 
 /*! 
- * \fn void xnpod_restart_thread(xnthread_t *thread)
+ * @internal
+ * \fn void __xnpod_reset_thread(struct xnthread *thread, int unlock)
+ * \brief Reset the thread.
  *
- * \brief Restart a thread.
- *
- * Restarts a previously started thread.  The thread is first
- * terminated then respawned using the same information that prevailed
- * when it was first started, including the mode bits and interrupt
- * mask initially passed to the xnpod_start_thread() service. As a
- * consequence of this call, the thread entry point is rerun.
- *
- * @param thread The descriptor address of the affected thread which
- * must have been previously started by the xnpod_start_thread()
- * service.
- *
- * Self-restarting a thread is allowed. However, restarting the root
- * thread is not.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: possible.
+ * This internal routine resets the state of a thread so that it can
+ * be subsequently stopped or restarted.
  */
-
-void xnpod_restart_thread(xnthread_t *thread)
+void __xnpod_reset_thread(struct xnthread *thread)
 {
-	spl_t s;
-
-	if (!xnthread_test_state(thread, XNSTARTED))
-		return;		/* Not started yet or not restartable. */
-
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT|XNSHADOW),
-		    xnpod_fatal("attempt to restart a user-space thread");
-		);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	trace_mark(xn_nucleus_thread_restart, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
 	/* Break the thread out of any wait it is currently in. */
 	xnpod_unblock_thread(thread);
 
@@ -872,30 +842,115 @@ void xnpod_restart_thread(xnthread_t *thread)
 	/* Clear pending signals. */
 	thread->signals = 0;
 
-	if (thread == xnpod_current_sched()->curr) {
-		/*
-		 * Clear all sched locks held by the restarted thread.
-		 */
-		if (xnthread_test_state(thread, XNLOCK)) {
-			xnthread_clear_state(thread, XNLOCK);
-			xnthread_lock_count(thread) = 0;
-		}
-		xnthread_set_state(thread, XNRESTART);
+	if (xnthread_test_state(thread, XNLOCK)) {
+		xnthread_clear_state(thread, XNLOCK);
+		xnthread_lock_count(thread) = 0;
 	}
+}
 
-	/* Reset the initial stack frame. */
+/*! 
+ * \fn void xnpod_stop_thread(xnthread_t *thread)
+ *
+ * \brief Stop a thread.
+ *
+ * Stop a previously started thread.  The thread is put back into the
+ * dormant state; however, it is not deleted from the system.
+ *
+ * @param thread The descriptor address of the affected thread which
+ * must have been previously started by the xnpod_start_thread()
+ * service.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: possible.
+ */
+
+void xnpod_stop_thread(struct xnthread *thread)
+{
+	spl_t s;
+
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
+		    xnpod_fatal("attempt to stop the root thread");
+		);
+
+	trace_mark(xn_nucleus_thread_stop, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	xnlock_get_irqsave(&nklock, s);
+	if (!xnthread_test_state(thread, XNDORMANT)) {
+		__xnpod_reset_thread(thread);
+		xnpod_suspend_thread(thread, XNDORMANT,
+				     XN_INFINITE, XN_RELATIVE, NULL);
+	} /* Otherwise, it is a nop. */
+	xnlock_put_irqrestore(&nklock, s);
+
+	xnpod_schedule();
+}
+
+/*! 
+ * \fn void xnpod_restart_thread(xnthread_t *thread)
+ *
+ * \brief Restart a thread.
+ *
+ * Restarts a previously started thread.  The thread is first
+ * terminated then respawned using the same information that prevailed
+ * when it was first started, including the mode bits and interrupt
+ * mask initially passed to the xnpod_start_thread() service. As a
+ * consequence of this call, the thread entry point is rerun.
+ *
+ * @param thread The descriptor address of the affected thread which
+ * must have been previously started by the xnpod_start_thread()
+ * service.
+ *
+ * Self-restarting a thread is allowed. However, restarting the root
+ * thread is not. Restarting a thread which was never started once
+ * leads to a null-effect.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ *
+ * Rescheduling: possible.
+ */
+
+void xnpod_restart_thread(xnthread_t *thread)
+{
+	spl_t s;
+
+	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT|XNSHADOW),
+		    xnpod_fatal("attempt to restart a user-space thread");
+		);
+
+	trace_mark(xn_nucleus_thread_restart, "thread %p thread_name %s",
+		   thread, xnthread_name(thread));
+
+	if (!xnthread_test_state(thread, XNSTARTED))
+		return;		/* Not started yet. */
+
+	xnlock_get_irqsave(&nklock, s);
+
+	__xnpod_reset_thread(thread);
+
+	if (thread == xnpod_current_sched()->curr)
+		xnthread_set_state(thread, XNRESTART);
+
+	/* Reset the stack of kernel threads. */
 	xnarch_init_thread(xnthread_archtcb(thread),
 			   thread->entry,
 			   thread->cookie, thread->imask, thread, thread->name);
-	/*
-	 * Running this code tells us that xnpod_restart_thread() was
-	 * not self-directed, so we must reschedule now since our
-	 * priority may be lower than the restarted thread's
-	 * priority.
-	 */
-	xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	xnpod_schedule();
 }
 
 /*! 
@@ -1053,7 +1108,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 	 * (i.e. user_task extension != NULL). This will also prevent
 	 * any action on kernel-based Xenomai threads for which the
 	 * user TCB extension is always NULL.  We don't send any
-	 * signal to dormant threads because GDB (6.x) has some
+	 * signal to unstarted threads because GDB (6.x) has some
 	 * problems dealing with vanishing threads under some
 	 * circumstances, likely when asynchronous cancellation is in
 	 * effect. In most cases, this is a non-issue since
@@ -1067,6 +1122,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	if (xnthread_user_task(thread) != NULL &&
 	    !xnthread_test_state(thread, XNDORMANT) &&
+	    !xnthread_test_info(thread, XNABORT) &&
 	    !xnpod_current_p(thread)) {
 		if (!xnpod_userspace_p())
 			xnshadow_send_sig(thread, SIGKILL, 0, 1);
@@ -1178,7 +1234,9 @@ void xnpod_abort_thread(xnthread_t *thread)
 
 	xnlock_get_irqsave(&nklock, s);
 	if (!xnpod_current_p(thread))
-		xnpod_suspend_thread(thread, XNDORMANT, XN_INFINITE, XN_RELATIVE, NULL);
+		xnpod_suspend_thread(thread, XNDORMANT,
+				     XN_INFINITE, XN_RELATIVE, NULL);
+	xnthread_set_info(thread, XNABORT);
 	xnpod_delete_thread(thread);
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -1261,7 +1319,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 			  xnticks_t timeout, xntmode_t timeout_mode,
 			  xnsynch_t *wchan)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
+	xnflags_t oldstate;
 	spl_t s;
 
 	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT),
@@ -1283,6 +1342,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		   timeout_mode, wchan);
 
 	sched = thread->sched;
+	oldstate = thread->state;
 
 	if (thread == sched->curr)
 		xnsched_set_resched(sched);
@@ -1290,11 +1350,14 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	/* Is the thread ready to run? */
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-		/* If attempting to suspend a runnable (shadow) thread which
-		   has received a Linux signal, just raise the break condition
-		   and return immediately. Note: a relaxed shadow never has
-		   the KICKED bit set, so that xnshadow_relax() is never
-		   prevented from blocking the current thread. */
+		/*
+		 * If attempting to suspend a runnable (shadow) thread
+		 * which has received a Linux signal, just raise the
+		 * break condition and return immediately. Note: a
+		 * relaxed shadow never has the KICKED bit set, so
+		 * that xnshadow_relax() is never prevented from
+		 * blocking the current thread.
+		 */
 		if (xnthread_test_info(thread, XNKICKED)) {
 			XENO_ASSERT(NUCLEUS, (mask & XNRELAX) == 0,
 				    xnpod_fatal("Relaxing a kicked thread"
@@ -1375,8 +1438,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * thread in secondary mode would just keep running into the
 	 * Linux domain, thus breaking the most common assumptions
 	 * regarding suspended threads. We only care for threads that
-	 * are not current, and for XNSUSP and XNDELAY conditions,
-	 * because:
+	 * are not current, and for XNSUSP, XNDELAY and XNDORMANT
+	 * conditions, because:
 	 *
 	 * - skins are supposed to ask for primary mode switch when
 	 * processing any syscall which may block the caller; IOW,
@@ -1386,17 +1449,22 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * is current, since it must not be relaxed anyway.
 	 * 
 	 * - among all blocking bits (XNTHREAD_BLOCK_BITS), only
-	 * XNSUSP and XNDELAY may be applied by the current thread to
-	 * a non-current thread. XNPEND is always added by the caller
-	 * to its own state, XNDORMANT is a pre-runtime state, and
-	 * XNRELAX has special semantics escaping this issue.
+	 * XNSUSP, XNDELAY, XNDORMANT and XNHELD may be applied by the
+	 * current thread to a non-current thread. XNPEND is always
+	 * added by the caller to its own state, XNMIGRATE and XNRELAX
+	 * have special semantics escaping this issue.
 	 *
 	 * Also note that we don't signal threads which are in a
-	 * dormant state, since they are suspended by definition.
+	 * dormant state, since they are already suspended by
+	 * definition.
 	 */
-
-	else if (xnthread_test_state(thread, XNSHADOW | XNRELAX | XNDORMANT) ==
-		 (XNSHADOW | XNRELAX) && (mask & (XNDELAY | XNSUSP)) != 0)
+	else if ((oldstate & (XNSHADOW | XNTHREAD_BLOCK_BITS)) == (XNSHADOW | XNRELAX) &&
+		 /* I.e. if the thread is a running relaxed shadow */
+		 (mask & (XNDELAY | XNSUSP | XNDORMANT | XNHELD)) != 0)
+		 /*
+		  * And we apply any of the above blocking bits, then
+		  * send a migration signal.
+		  */
 		xnshadow_suspend(thread);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -1406,7 +1474,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 }
 
 /*!
- * \fn void xnpod_resume_thread(xnthread_t *thread,xnflags_t mask)
+ * \fn void xnpod_resume_thread(struct xnthread *thread,xnflags_t mask)
  * \brief Resume a thread.
  *
  * Resumes the execution of a thread previously suspended by one or
@@ -1459,9 +1527,10 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
  * Rescheduling: never.
  */
 
-void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
+void xnpod_resume_thread(struct xnthread *thread, xnflags_t mask)
 {
-	xnsched_t *sched;
+	struct xnsched *sched;
+	xnflags_t oldstate;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -1474,9 +1543,10 @@ void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
 			 xnthread_current_priority(thread));
 
 	sched = thread->sched;
+	oldstate = thread->state;
 
-	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-		if (xnthread_test_state(thread, XNREADY))
+	if ((oldstate & XNTHREAD_BLOCK_BITS) == 0) {
+		if (oldstate & XNREADY)
 			xnsched_dequeue(thread);
 		goto enqueue;
 	}
@@ -1499,34 +1569,35 @@ void xnpod_resume_thread(xnthread_t *thread, xnflags_t mask)
 		mask = xnthread_test_state(thread, XNPEND);
 		if (mask == 0)
 			goto unlock_and_exit;
-
-		if (thread->wchan) {
+		if (thread->wchan)
 			xnsynch_forget_sleeper(thread);
-			if (xnthread_test_state(thread, XNTHREAD_BLOCK_BITS))
-				goto unlock_and_exit;
-		}
-	} else if (xnthread_test_state(thread, XNDELAY)) {
-		if ((mask & XNPEND) != 0) {
+		goto recheck_state;
+	}
+
+	if (xnthread_test_state(thread, XNDELAY)) {
+		if (mask & XNPEND) {
 			/*
-			 * The thread is woken up due to the
-			 * availability of the requested
-			 * resource. Cancel the watchdog timer.
+			 * A resource became available to the thread.
+			 * Cancel the watchdog timer.
 			 */
 			xntimer_stop(&thread->rtimer);
 			xnthread_clear_state(thread, XNDELAY);
 		}
-
-		if (xnthread_test_state(thread, XNTHREAD_BLOCK_BITS))
-			goto unlock_and_exit;
-	} else {
-		/*
-		 * The thread is still suspended, but is no more
-		 * pending on a resource.
-		 */
-		if ((mask & XNPEND) != 0 && thread->wchan)
-			xnsynch_forget_sleeper(thread);
-		goto unlock_and_exit;
+		goto recheck_state;
 	}
+
+	/*
+	 * The thread is still suspended, but is no more pending on a
+	 * resource.
+	 */
+	if ((mask & XNPEND) != 0 && thread->wchan)
+		xnsynch_forget_sleeper(thread);
+
+	goto unlock_and_exit;
+
+recheck_state:
+	if (xnthread_test_state(thread, XNTHREAD_BLOCK_BITS))
+		goto unlock_and_exit;
 
 clear_wchan:
 	if ((mask & ~XNDELAY) != 0 && thread->wchan != NULL)
@@ -1539,8 +1610,13 @@ clear_wchan:
 		 */
 		xnsynch_forget_sleeper(thread);
 
+	if (unlikely((oldstate & mask) & XNHELD)) {
+		xnsched_requeue(thread);
+		goto ready;
+	}
 enqueue:
 	xnsched_enqueue(thread);
+ready:
 	xnthread_set_state(thread, XNREADY);
 	xnsched_set_resched(sched);
 
@@ -1566,8 +1642,8 @@ enqueue:
  *
  * @param thread The descriptor address of the unblocked thread.
  *
- * This call neither releases the thread from the XNSUSP, XNRELAX nor
- * the XNDORMANT suspensive conditions.
+ * This call neither releases the thread from the XNSUSP, XNRELAX,
+ * XNDORMANT or XNHELD suspensive conditions.
  *
  * When the thread resumes execution, the XNBREAK bit is set in the
  * unblocked thread's information mask. Unblocking a non-blocked
@@ -2896,6 +2972,7 @@ EXPORT_SYMBOL(xnpod_set_thread_mode);
 EXPORT_SYMBOL(xnpod_set_thread_periodic);
 EXPORT_SYMBOL(xnpod_shutdown);
 EXPORT_SYMBOL(xnpod_start_thread);
+EXPORT_SYMBOL(xnpod_stop_thread);
 EXPORT_SYMBOL(xnpod_enable_timesource);
 EXPORT_SYMBOL(xnpod_disable_timesource);
 EXPORT_SYMBOL(xnpod_suspend_thread);
