@@ -2148,7 +2148,7 @@ static inline void do_taskexit_event(struct task_struct *p)
 	if (!thread)
 		return;
 
-	if (xnthread_test_info(thread, XNDEBUG))
+	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
 
 	if (xnpod_shadow_p())
@@ -2195,7 +2195,7 @@ static inline void do_schedule_event(struct task_struct *next)
 		 * order to encompass both the NPTL and LinuxThreads
 		 * behaviours.
 		 */
-		if (xnthread_test_info(threadin, XNDEBUG)) {
+		if (xnthread_test_state(threadin, XNDEBUG)) {
 			if (signal_pending(next)) {
 				sigset_t pending;
 				/*
@@ -2212,7 +2212,7 @@ static inline void do_schedule_event(struct task_struct *next)
 					goto no_ptrace;
 			}
 
-			xnthread_clear_info(threadin, XNDEBUG);
+			xnthread_clear_state(threadin, XNDEBUG);
 			unlock_timers();
 		}
 
@@ -2261,7 +2261,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if ((p->ptrace & PT_PTRACED) && !xnthread_test_info(thread, XNDEBUG)) {
+	if ((p->ptrace & PT_PTRACED) && !xnthread_test_state(thread, XNDEBUG)) {
 		sigset_t pending;
 
 		/* We already own the siglock. */
@@ -2270,7 +2270,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
 		    || sigismember(&pending, SIGINT)) {
-			xnthread_set_info(thread, XNDEBUG);
+			xnthread_set_state(thread, XNDEBUG);
 			lock_timers();
 		}
 	}
