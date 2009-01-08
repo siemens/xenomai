@@ -8,7 +8,7 @@ config XENO_FASTSYNCH_DEP
 
 config XENO_FASTSYNCH
 	bool
-	depends on XENO_FASTSYNCH_DEP
+	default y if XENO_FASTSYNCH_DEP
 	select XENO_OPT_REGISTRY if XENO_FASTSYNCH_DEP
 
 source "kernel/xenomai/nucleus/Kconfig"
