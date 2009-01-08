@@ -228,7 +228,7 @@ static inline unsigned long long __xn_rdtsc(void)
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
         const unsigned mask = __xn_tscinfo.u.fr.mask;
-	register unsigned long long after, before;
+	register unsigned long long result;
         unsigned counter;
 
         __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
