@@ -2468,8 +2468,8 @@ void xnpod_schedule(void)
 	if (!need_resched) {
 		xnprintf
 		    ("xnpod_schedule: scheduler state changed without rescheduling"
-		     "bit set\nwhen switching from %s to %s\n", runthread->name,
-		     threadin->name);
+		     " bit set\nwhen switching from %s (state=%lx) to %s\n", runthread->name,
+		     runthread->state, threadin->name);
 #ifdef __KERNEL__
 		show_stack(NULL, NULL);
 #endif

@@ -399,6 +399,7 @@ static inline void xnpod_unlock_sched(void)
 	runthread = xnpod_current_sched()->runthread;
 
 	if (--xnthread_lock_count(runthread) == 0) {
+		xnsched_set_resched(runthread->sched);
 		xnthread_clear_state(runthread, XNLOCK);
 		xnpod_schedule();
 	}
