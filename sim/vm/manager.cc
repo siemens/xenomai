@@ -90,7 +90,8 @@ u_long *MvmManager::dcr1 = NULL;
 
 const char **MvmManager::dcr2 = NULL;
 
-int *MvmManager::dcr3 = NULL;
+static int icr3;	// Only available during early init.
+int *MvmManager::dcr3 = &icr3;
 
 MvmManager *MvmManager::This = NULL;
 

@@ -25157,6 +25157,16 @@ _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_DEBUG_QUEUES 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_MVM_DEBUG 1
 _ACEOF
 

@@ -13,6 +13,12 @@
 #undef CONFIG_XENO_OPT_DEBUG
 
 /* config */
+#undef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+
+/* config */
+#undef CONFIG_XENO_OPT_DEBUG_QUEUES
+
+/* config */
 #undef CONFIG_XENO_OPT_NATIVE_ALARM
 
 /* config */

@@ -198,7 +198,8 @@ int mvm_set_irqmask (int level)
 	level = MVM_IRQ_LEVELS;
 
     MVM_CR_IMASK = level;
-    MvmIrqManager::This->dispatchIrq();
+    if (MvmIrqManager::This)
+	MvmIrqManager::This->dispatchIrq();
 
     return oldmask;
 }
