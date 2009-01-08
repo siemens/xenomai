@@ -269,38 +269,6 @@ static inline void xnpod_schedule(void)
 	__xnpod_schedule(sched);
 }
 
-static inline void xnpod_lock_sched(void)
-{
-	xnthread_t *curr;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	curr = xnpod_current_sched()->curr;
-
-	if (xnthread_lock_count(curr)++ == 0)
-		xnthread_set_state(curr, XNLOCK);
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-static inline void xnpod_unlock_sched(void)
-{
-	xnthread_t *curr;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	curr = xnpod_current_sched()->curr;
-
-	if (--xnthread_lock_count(curr) == 0) {
-		xnthread_clear_state(curr, XNLOCK);
-		xnpod_schedule();
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
 void xnpod_fire_callouts(xnqueue_t *hookq,
 			 xnthread_t *thread);
 

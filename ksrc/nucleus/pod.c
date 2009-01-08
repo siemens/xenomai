@@ -2234,6 +2234,39 @@ void __xnpod_schedule(struct xnsched *sched)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
+void xnpod_lock_sched(void)
+{
+	struct xnthread *curr;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	curr = xnpod_current_sched()->curr;
+
+	if (xnthread_lock_count(curr)++ == 0)
+		xnthread_set_state(curr, XNLOCK);
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+void xnpod_unlock_sched(void)
+{
+	struct xnthread *curr;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	curr = xnpod_current_sched()->curr;
+
+	if (--xnthread_lock_count(curr) == 0) {
+		xnthread_clear_state(curr, XNLOCK);
+		xnsched_set_resched(curr->sched);
+		xnpod_schedule();
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
 /*! 
  * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))
  * \brief Install a nucleus hook.
@@ -2981,6 +3014,8 @@ EXPORT_SYMBOL(xnpod_unblock_thread);
 EXPORT_SYMBOL(xnpod_wait_thread_period);
 EXPORT_SYMBOL(xnpod_set_thread_tslice);
 EXPORT_SYMBOL(xnpod_welcome_thread);
+EXPORT_SYMBOL(xnpod_lock_sched);
+EXPORT_SYMBOL(xnpod_unlock_sched);
 EXPORT_SYMBOL(__xnpod_schedule);
 
 EXPORT_SYMBOL(nkpod_struct);
