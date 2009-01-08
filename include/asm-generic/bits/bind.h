@@ -57,7 +57,7 @@ void init_current_keys(void)
 	if (err) {
 	  error_exit:
 		fprintf(stderr, "Xenomai: error creating TSD key: %s\n",
-			strerror(err));
+			strerror(-err));
 		exit(1);
 	}
 }
