@@ -1224,6 +1224,10 @@ int __init __xeno_sys_init(void)
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
 
+#if XENO_DEBUG(NUCLEUS)
+	xnloginfo("debug mode enabled.\n");
+#endif
+
 	initq(&xnmod_glink_queue);
 
 	xeno_nucleus_status = 0;
