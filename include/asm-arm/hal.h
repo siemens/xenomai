@@ -160,7 +160,14 @@ static inline struct mm_struct *rthal_get_active_mm(void)
 #endif /* !TIF_MMSWITCH_INT */
 }
 
-    /* Private interface -- Internal use only */
+static inline void rthal_set_active_mm(struct mm_struct *mm)
+{
+#ifdef TIF_MMSWITCH_INT
+	per_cpu(ipipe_active_mm, rthal_processor_id()) = mm;
+#endif /* TIF_MMSWITCH_INT */
+}
+
+/* Private interface -- Internal use only */
 
 asmlinkage void rthal_thread_switch(struct task_struct *prev,
 				    struct thread_info *out,

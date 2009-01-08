@@ -103,8 +103,10 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 
 	if (prev_mm != in_tcb->active_mm) {
 		/* Switch to new user-space thread? */
-		if (in_tcb->active_mm)
+		if (in_tcb->active_mm) {
 			switch_mm(prev_mm, in_tcb->active_mm, next);
+			rthal_set_active_mm(in_tcb->active_mm);
+		}
 		if (!next->mm)
 			enter_lazy_tlb(prev_mm, next);
 	}
