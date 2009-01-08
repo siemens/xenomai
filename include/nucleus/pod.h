@@ -269,6 +269,10 @@ static inline void xnpod_schedule(void)
 	__xnpod_schedule(sched);
 }
 
+void xnpod_lock_sched(void);
+
+void xnpod_unlock_sched(void);
+
 void xnpod_fire_callouts(xnqueue_t *hookq,
 			 xnthread_t *thread);
 
