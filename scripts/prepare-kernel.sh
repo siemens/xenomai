@@ -405,7 +405,7 @@ fi
 asm_ipipe_h=unknown
 if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
    linux_include_asm=arch/$linux_arch/include/asm
-   asm_ipipe_h=$linux_include_asm/ipipe.h
+   asm_ipipe_h=$linux_tree/$linux_include_asm/ipipe.h
 else
    linux_include_asm=include/asm-$linux_arch
    asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -1`
