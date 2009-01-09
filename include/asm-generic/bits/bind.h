@@ -72,7 +72,7 @@ void xeno_set_current(void)
 	err = XENOMAI_SYSCALL1(__xn_sys_current, &current);
 	if (err) {
 		fprintf(stderr, "Xenomai: error obtaining handle for current "
-			"thread: %s\n", strerror(err));
+			"thread: %s\n", strerror(-err));
 		exit(1);
 	}
 	__xeno_set_current(current);
