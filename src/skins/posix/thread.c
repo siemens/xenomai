@@ -45,10 +45,15 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 #ifdef HAVE___THREAD
 		mode_buf = xeno_init_current_mode();
 #else /* !HAVE___THREAD */
-		mode_buf = malloc(sizeof(*mode_buf));
+		mode_buf = pthread_getspecific(xeno_current_mode_key);
+		if (!mode_buf) {
+			mode_buf = malloc(sizeof(*mode_buf));
 
-		if (!mode_buf)
-			return ENOMEM;
+			if (!mode_buf)
+				return ENOMEM;
+
+			pthread_setspecific(xeno_current_mode_key, mode_buf);
+		}
 #endif /* !HAVE___THREAD */
 	}
 
@@ -61,17 +66,10 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 
 	if (!err && promoted) {
 		sigshadow_install_once();
-#ifndef HAVE___THREAD
-		pthread_setspecific(xeno_current_mode_key, mode_buf);
-#endif /* !HAVE___THREAD */
 		xeno_set_current();
 		if (policy != SCHED_OTHER)
 			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
 	}
-#ifndef HAVE___THREAD
-	else
-		free(mode_buf);
-#endif /* !HAVE___THREAD */
 
 	return err;
 }
@@ -154,7 +152,8 @@ static void *__pthread_trampoline(void *arg)
 	start = iargs->start;
 	cookie = iargs->arg;
 
-	xeno_set_current();
+	if (!err)
+		xeno_set_current();
 
 	__real_sem_post(&iargs->sync);
 
