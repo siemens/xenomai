@@ -81,22 +81,22 @@
 
 static inline void __xn_success_return(struct pt_regs *regs, int v)
 {
-    __xn_reg_rval(regs) = v;
+	__xn_reg_rval(regs) = v;
 }
 
 static inline void __xn_error_return(struct pt_regs *regs, int v)
 {
-    __xn_reg_rval(regs) = v;
+	__xn_reg_rval(regs) = v;
 }
 
 static inline void __xn_status_return(struct pt_regs *regs, int v)
 {
-    __xn_reg_rval(regs) = v;
+	__xn_reg_rval(regs) = v;
 }
 
 static inline int __xn_interrupted_p(struct pt_regs *regs)
 {
-    return __xn_reg_rval(regs) == -EINTR;
+	return __xn_reg_rval(regs) == -EINTR;
 }
 
 #else /* !__KERNEL__ */
@@ -111,29 +111,42 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  */
 
 #define LOADARGS_0(muxcode, dummy...)		\
-    __r0 = (unsigned long) (muxcode)
+	__a0 = (unsigned long) (muxcode)
 #define LOADARGS_1(muxcode, arg1)		\
-    LOADARGS_0(muxcode);			\
-    __r1 = (unsigned long) (arg1)
+	LOADARGS_0(muxcode);			\
+	__a1 = (unsigned long) (arg1)
 #define LOADARGS_2(muxcode, arg1, arg2)       	\
-    LOADARGS_1(muxcode, arg1);			\
-    __r2 = (unsigned long) (arg2)
+	LOADARGS_1(muxcode, arg1);		\
+	__a2 = (unsigned long) (arg2)
 #define LOADARGS_3(muxcode, arg1, arg2, arg3) 	\
-    LOADARGS_2(muxcode, arg1, arg2);		\
-    __r3 = (unsigned long) (arg3)
+	LOADARGS_2(muxcode, arg1, arg2);	\
+	__a3 = (unsigned long) (arg3)
 #define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	\
-    LOADARGS_3(muxcode, arg1, arg2, arg3);		\
-    __r4 = (unsigned long) (arg4)
+	LOADARGS_3(muxcode, arg1, arg2, arg3);		\
+	__a4 = (unsigned long) (arg4)
 #define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
-    LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
-    __r5 = (unsigned long) (arg5)
+	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
+	__a5 = (unsigned long) (arg5)
 
-#define ASM_INDECL_0 register unsigned long __r0  __asm__ ("r0")
-#define ASM_INDECL_1 ASM_INDECL_0; register unsigned long __r1  __asm__ ("r1")
-#define ASM_INDECL_2 ASM_INDECL_1; register unsigned long __r2  __asm__ ("r2")
-#define ASM_INDECL_3 ASM_INDECL_2; register unsigned long __r3  __asm__ ("r3")
-#define ASM_INDECL_4 ASM_INDECL_3; register unsigned long __r4  __asm__ ("r4")
-#define ASM_INDECL_5 ASM_INDECL_4; register unsigned long __r5  __asm__ ("r5")
+#define LOADREGS_0 __r0 = __a0
+#define LOADREGS_1 LOADREGS_0; __r1 = __a1
+#define LOADREGS_2 LOADREGS_1; __r2 = __a2
+#define LOADREGS_3 LOADREGS_2; __r3 = __a3
+#define LOADREGS_4 LOADREGS_3; __r4 = __a4
+#define LOADREGS_5 LOADREGS_4; __r5 = __a5
+
+#define ASM_INDECL_0							\
+	unsigned long __a0; register unsigned long __r0  __asm__ ("r0")
+#define ASM_INDECL_1 ASM_INDECL_0;					\
+	unsigned long __a1; register unsigned long __r1  __asm__ ("r1")
+#define ASM_INDECL_2 ASM_INDECL_1;					\
+	unsigned long __a2; register unsigned long __r2  __asm__ ("r2")
+#define ASM_INDECL_3 ASM_INDECL_2;					\
+	unsigned long __a3; register unsigned long __r3  __asm__ ("r3")
+#define ASM_INDECL_4 ASM_INDECL_3;					\
+	unsigned long __a4; register unsigned long __r4  __asm__ ("r4")
+#define ASM_INDECL_5 ASM_INDECL_4;					\
+	unsigned long __a5; register unsigned long __r5  __asm__ ("r5")
 
 #define ASM_INPUT_0 "r" (__r0)
 #define ASM_INPUT_1 ASM_INPUT_0, "r" (__r1)
@@ -146,47 +159,63 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define __sys1(x)	__sys2(x)
 
 #ifdef CONFIG_XENO_ARM_EABI
-#define __SYS_REG register unsigned long __r7 __asm__ ("r7") = XENO_ARM_SYSCALL;
-#define __SYS_REG_LIST ,"r" (__r7)
+#define __SYS_REG register unsigned long __r7 __asm__ ("r7");
+#define __SYS_REG_SET __r7 = XENO_ARM_SYSCALL;
+#define __SYS_REG_INPUT ,"r" (__r7)
 #define __xn_syscall "swi\t0"
 #else
 #define __SYS_REG
-#define __SYS_REG_LIST
+#define __SYS_REG_SET
+#define __SYS_REG_INPUT
 #define __NR_OABI_SYSCALL_BASE	0x900000
 #define __xn_syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
 #endif
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
-  ({								\
-        unsigned long __res;					\
-	register unsigned long __res_r0 __asm__ ("r0");		\
-   	ASM_INDECL_##nr;					\
-    __SYS_REG;                          \
-								\
-	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
-	__asm__ __volatile__ (				\
-        __xn_syscall                       \
-		: "=r" (__res_r0)				\
-		: ASM_INPUT_##nr __SYS_REG_LIST	\
-		: "memory");					\
-   	__res = __res_r0;					\
-   	(int) __res;						\
-  })
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+	({								\
+		unsigned long __res;					\
+		register unsigned long __res_r0 __asm__ ("r0");		\
+		ASM_INDECL_##nr;					\
+		__SYS_REG;						\
+		LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
+		LOADREGS_##nr;						\
+		__SYS_REG_SET;						\
+		__asm__ __volatile__ (					\
+			__xn_syscall					\
+			: "=r" (__res_r0)				\
+			: ASM_INPUT_##nr __SYS_REG_INPUT		\
+			: "memory");					\
+		__res = __res_r0;					\
+		(int) __res;						\
+	})
 
-#define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
-#define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
-#define XENOMAI_SYSCALL2(op,a1,a2)          XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
-#define XENOMAI_SYSCALL3(op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
-#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
-#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
-#define XENOMAI_SYSBIND(a1,a2,a3,a4)        XENOMAI_DO_SYSCALL(4,0,__xn_sys_bind,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL0(op)			\
+	XENOMAI_DO_SYSCALL(0,0,op)
+#define XENOMAI_SYSCALL1(op,a1)			\
+	XENOMAI_DO_SYSCALL(1,0,op,a1)
+#define XENOMAI_SYSCALL2(op,a1,a2)		\
+	XENOMAI_DO_SYSCALL(2,0,op,a1,a2)
+#define XENOMAI_SYSCALL3(op,a1,a2,a3)		\
+	XENOMAI_DO_SYSCALL(3,0,op,a1,a2,a3)
+#define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)	\
+	XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
+#define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5)		\
+	XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SYSBIND(a1,a2,a3,a4)				\
+	XENOMAI_DO_SYSCALL(4,0,__xn_sys_bind,a1,a2,a3,a4)
 
-#define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
-#define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
-#define XENOMAI_SKINCALL2(id,op,a1,a2)          XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
-#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)       XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
-#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
-#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
+#define XENOMAI_SKINCALL0(id,op)		\
+	XENOMAI_DO_SYSCALL(0,id,op)
+#define XENOMAI_SKINCALL1(id,op,a1)		\
+	XENOMAI_DO_SYSCALL(1,id,op,a1)
+#define XENOMAI_SKINCALL2(id,op,a1,a2)		\
+	XENOMAI_DO_SYSCALL(2,id,op,a1,a2)
+#define XENOMAI_SKINCALL3(id,op,a1,a2,a3)	\
+	XENOMAI_DO_SYSCALL(3,id,op,a1,a2,a3)
+#define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)	\
+	XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
+#define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
+	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
 #ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
 #define CONFIG_XENO_HW_DIRECT_TSC
@@ -324,8 +353,8 @@ static inline void xeno_arm_features_check(void)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING \
-    || CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING		\
+	|| CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	case __XN_TSC_TYPE_FREERUNNING: {
 		unsigned long phys_addr;
 
