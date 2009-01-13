@@ -972,6 +972,7 @@ static int heap_read_proc(char *page,
 	return len;
 }
 
+#ifdef CONFIG_SMP
 static int affinity_read_proc(char *page,
 			      char **start,
 			      off_t off, int count, int *eof, void *data)
@@ -1024,6 +1025,7 @@ static int affinity_write_proc(struct file *file,
 
 	return count;
 }
+#endif /* CONFIG_SMP */
 
 static struct proc_dir_entry *add_proc_fops(const char *name,
 					    struct file_operations *fops,
@@ -1084,8 +1086,10 @@ void xnpod_init_proc(void)
 	rthal_add_proc_leaf("heap", &heap_read_proc, NULL, NULL,
 			    rthal_proc_root);
 
+#ifdef CONFIG_SMP
 	rthal_add_proc_leaf("affinity", &affinity_read_proc,
 			    &affinity_write_proc, NULL, rthal_proc_root);
+#endif /* CONFIG_SMP */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	iface_proc_root =
@@ -1105,7 +1109,9 @@ void xnpod_delete_proc(void)
 
 	remove_proc_entry("interfaces", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+#ifdef CONFIG_SMP
 	remove_proc_entry("affinity", rthal_proc_root);
+#endif /* CONFIG_SMP */
 	remove_proc_entry("heap", rthal_proc_root);
 	remove_proc_entry("irq", rthal_proc_root);
 	remove_proc_entry("timer", rthal_proc_root);
