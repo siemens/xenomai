@@ -21342,6 +21342,9 @@ echo "${ECHO_T}${debug_symbols:-no}" >&6; }
 
 
 CONFIG_SMP=
+if test $XENO_TARGET_ARCH = x86; then
+	CONFIG_SMP=y
+fi
 { echo "$as_me:$LINENO: checking for SMP support" >&5
 echo $ECHO_N "checking for SMP support... $ECHO_C" >&6; }
 # Check whether --enable-smp was given.
