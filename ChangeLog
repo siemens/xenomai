@@ -1,3 +1,8 @@
+2009-01-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/arch/arm/patches: Upgrade to 2.6.26-arm-1.12-00,
+	2.6.27-arm-1.12-00 (include FCSE support).
+
 2009-01-08  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_unlock_sched): Arm the resched flag

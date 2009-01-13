@@ -77,7 +77,7 @@ index ad455ff..72cea9c 100644
  obj-$(CONFIG_CRUNCH)		+= crunch.o crunch-bits.o
  AFLAGS_crunch-bits.o		:= -Wa,-mcpu=ep9312
 diff --git a/arch/arm/kernel/entry-armv.S b/arch/arm/kernel/entry-armv.S
-index 7dca225..77c5ea1 100644
+index 7dca225..7aaf366 100644
 --- a/arch/arm/kernel/entry-armv.S
 +++ b/arch/arm/kernel/entry-armv.S
 @@ -4,6 +4,7 @@
@@ -172,7 +172,7 @@ index 7dca225..77c5ea1 100644
  	ldr	r0, [sp, #S_PSR]		@ irqs are already disabled
  	msr	spsr_cxsf, r0
  #ifdef CONFIG_TRACE_IRQFLAGS
-@@ -229,12 +256,20 @@ __irq_svc:
+@@ -229,12 +256,25 @@ __irq_svc:
  #ifdef CONFIG_PREEMPT
  svc_preempt:
  	mov	r8, lr
@@ -189,14 +189,19 @@ index 7dca225..77c5ea1 100644
 +	ipipe_fast_unstall_root r4, r0
 +	mov	pc, r8				@ go again
 +#ifdef CONFIG_IPIPE
++#if __GNUC__ >= 4
 +.LCipipe_root_status:
 +	.word	__ipipe_root_status
++#else /* gcc < 4 */
++.LCipipe_root_status_addr:
++	.word	__ipipe_root_status_addr
++#endif /* gcc < 4 */
 +#endif /* CONFIG_IPIPE */
 +#endif /* CONFIG_PREEMPT */
  
  	.align	5
  __und_svc:
-@@ -247,6 +282,17 @@ __und_svc:
+@@ -247,6 +287,17 @@ __und_svc:
  	svc_entry
  #endif
  
@@ -214,7 +219,7 @@ index 7dca225..77c5ea1 100644
  	@
  	@ call emulation code, which returns using r9 if it has emulated
  	@ the instruction, or the more conventional lr if we are to treat
-@@ -423,18 +469,28 @@ __irq_usr:
+@@ -423,18 +474,28 @@ __irq_usr:
  #endif
  	get_thread_info tsk
  #ifdef CONFIG_PREEMPT
@@ -243,7 +248,7 @@ index 7dca225..77c5ea1 100644
  #ifdef CONFIG_TRACE_IRQFLAGS
  	bl	trace_hardirqs_on
  #endif
-@@ -539,7 +595,7 @@ call_fpe:
+@@ -539,7 +600,7 @@ call_fpe:
  	mov	r7, #1
  	strb	r7, [r10, #TI_USED_CP + 10]	@ mark CP#10 as used
  	strb	r7, [r10, #TI_USED_CP + 11]	@ mark CP#11 as used
@@ -252,7 +257,7 @@ index 7dca225..77c5ea1 100644
  1:
  #endif
  	tst	r0, #0x08000000			@ only CDP/CPRT/LDC/STC have bit 27
-@@ -581,8 +637,8 @@ call_fpe:
+@@ -581,8 +642,8 @@ call_fpe:
  	mov	pc, lr				@ CP#8
  	mov	pc, lr				@ CP#9
  #ifdef CONFIG_VFP
@@ -263,7 +268,7 @@ index 7dca225..77c5ea1 100644
  #else
  	mov	pc, lr				@ CP#10 (VFP)
  	mov	pc, lr				@ CP#11 (VFP)
-@@ -617,11 +673,43 @@ call_fpe:
+@@ -617,11 +678,43 @@ call_fpe:
  #endif
  
  do_fpe:
@@ -307,7 +312,7 @@ index 7dca225..77c5ea1 100644
  /*
   * The FP module is called with these registers set:
   *  r0  = instruction
-@@ -663,6 +751,13 @@ __pabt_usr:
+@@ -663,6 +756,13 @@ __pabt_usr:
   * This is the return code to user mode for abort handlers
   */
  ENTRY(ret_from_exception)
@@ -321,7 +326,7 @@ index 7dca225..77c5ea1 100644
  	get_thread_info tsk
  	mov	why, #0
  	b	ret_to_user
-@@ -735,6 +830,18 @@ ENTRY(__switch_to)
+@@ -735,6 +835,18 @@ ENTRY(__switch_to)
   * purpose.
   */
  
@@ -490,10 +495,10 @@ index 597ed00..1e1f086 100644
 +
 +#endif
 diff --git a/arch/arm/kernel/entry-header.S b/arch/arm/kernel/entry-header.S
-index 87ab4e1..c4892b5 100644
+index 87ab4e1..e57aff8 100644
 --- a/arch/arm/kernel/entry-header.S
 +++ b/arch/arm/kernel/entry-header.S
-@@ -49,6 +49,34 @@
+@@ -49,7 +49,55 @@
  #endif
  	.endm
  
@@ -509,9 +514,28 @@ index 87ab4e1..c4892b5 100644
 +	movs	pc, lr				@ return & move spsr_svc into cpsr
 +	.endm
 +
++#if __GNUC__ >= 4
 +	.macro ipipe_fast_stall_root, raddr, rtemp1
 +#ifdef CONFIG_IPIPE
 +	ldr	\raddr, .LCipipe_root_status
++	ldr	\rtemp1, [\raddr]
++	orr	\rtemp1, \rtemp1, #1
++	str	\rtemp1, [\raddr]
++#endif /* CONFIG_IPIPE */
++	.endm
+ 
++	.macro ipipe_fast_unstall_root, raddr, rtemp1
++#ifdef CONFIG_IPIPE
++	ldr	\rtemp1, [\raddr]
++	bic	\rtemp1, \rtemp1, #1
++	str	\rtemp1, [\raddr]
++#endif /* CONFIG_IPIPE */
++	.endm
++#else /* gcc < 4 */
++	.macro ipipe_fast_stall_root, raddr, rtemp1
++#ifdef CONFIG_IPIPE
++	ldr	\raddr, .LCipipe_root_status_addr
++	ldr	\raddr, [\raddr]
 +	ldr	\rtemp1, [\raddr]
 +	orr	\rtemp1, \rtemp1, #1
 +	str	\rtemp1, [\raddr]
@@ -525,42 +549,87 @@ index 87ab4e1..c4892b5 100644
 +	str	\rtemp1, [\raddr]
 +#endif /* CONFIG_IPIPE */
 +	.endm
- 
++#endif /* gcc < 4 */
++	
  /*
   * These are the registers used in the syscall handler, and allow us to
+  * have in theory up to 7 arguments to a function - r0 to r6.
 diff --git a/arch/arm/kernel/fcse.c b/arch/arm/kernel/fcse.c
 new file mode 100644
-index 0000000..b314aae
+index 0000000..2f154c6
 --- /dev/null
 +++ b/arch/arm/kernel/fcse.c
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,172 @@
 +#include <linux/bitops.h>
 +#include <linux/memory.h>
 +#include <linux/spinlock.h>
-+#include <linux/bitops.h>
++#include <linux/mm.h>
++
 +#include <asm/fcse.h>
++#include <asm/cacheflush.h>
++#include <asm/tlbflush.h>
 +
-+#define MAX_PID (MODULE_START / FCSE_PID_TASK_SIZE)
-+#define PIDS_LONGS ((MAX_PID + 8 * sizeof(long) - 1) / (8 * sizeof(long)))
++#define NR_PIDS (TASK_SIZE / FCSE_PID_TASK_SIZE)
++#define PIDS_LONGS ((NR_PIDS + BITS_PER_LONG - 1) / BITS_PER_LONG)
 +
-+static DEFINE_SPINLOCK(fcse_lock);
++static IPIPE_DEFINE_SPINLOCK(fcse_lock);
 +static unsigned long fcse_pids_bits[PIDS_LONGS];
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++static unsigned long fcse_pids_cache_dirty[PIDS_LONGS];
++static unsigned random_pid;
++struct {
++	struct mm_struct *last_mm;
++	unsigned count;
++} per_pid[NR_PIDS];
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
++	
++static void fcse_pid_reference_inner(unsigned pid)
++{
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	if (++per_pid[pid].count == 1)
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
++		__set_bit(pid, fcse_pids_bits);
++}
++
++static void fcse_pid_dereference(unsigned pid)
++{
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	if (--per_pid[pid].count == 0) {
++		__clear_bit(pid, fcse_pids_bits);
++		per_pid[pid].last_mm = NULL;
++	}
++#else /* CONFIG_ARM_FCSE_BEST_EFFORT */
++	__clear_bit(pid, fcse_pids_bits);
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
++}
 +
 +int fcse_pid_alloc(void)
 +{
 +	unsigned long flags;
-+	unsigned bit;
++	unsigned pid;
 +
 +	spin_lock_irqsave(&fcse_lock, flags);
-+	bit = find_first_zero_bit(fcse_pids_bits, MAX_PID);
-+	if (bit == MAX_PID) {
-+		spin_unlock(&fcse_lock);
-+		return -1;
++	pid = find_next_zero_bit(fcse_pids_bits, NR_PIDS, 1);
++	if (pid == NR_PIDS) {
++		/* Allocate zero pid last, since zero pid is also used by
++		   processes with address space larger than 32MB. */
++		if (!test_bit(0, fcse_pids_bits))
++			pid = 0;
++		else {
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++			if(++random_pid == NR_PIDS)
++				random_pid = 0;
++			pid = random_pid;
++#else /* CONFIG_ARM_FCSE_GUARANTEED */
++			spin_unlock_irqrestore(&fcse_lock, flags);
++			return -EAGAIN;
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
++		}
 +	}
-+	set_bit(bit, fcse_pids_bits);
++	fcse_pid_reference_inner(pid);
 +	spin_unlock_irqrestore(&fcse_lock, flags);
 +
-+	return bit;
++	return pid;
 +}
 +
 +void fcse_pid_free(unsigned pid)
@@ -568,9 +637,101 @@ index 0000000..b314aae
 +	unsigned long flags;
 +
 +	spin_lock_irqsave(&fcse_lock, flags);
-+	pid = test_and_clear_bit(pid, fcse_pids_bits);
++	fcse_pid_dereference(pid);
 +	spin_unlock_irqrestore(&fcse_lock, flags);
 +}
++
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++void fcse_pid_reference(unsigned pid)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcse_lock, flags);
++	fcse_pid_reference_inner(pid);
++	spin_unlock_irqrestore(&fcse_lock, flags);
++}
++
++static void fcse_notify_flush_all_inner(struct mm_struct *next)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcse_lock, flags);
++	switch(ARRAY_SIZE(fcse_pids_cache_dirty)) {
++	case 4:
++		fcse_pids_cache_dirty[3] = 0UL;
++	case 3:
++		fcse_pids_cache_dirty[2] = 0UL;
++	case 2:
++		fcse_pids_cache_dirty[1] = 0UL;
++	case 1:
++		fcse_pids_cache_dirty[0] = 0UL;
++	}
++	if (next != &init_mm && next) {
++		unsigned pid = next->context.pid >> FCSE_PID_SHIFT;
++		__set_bit(pid, fcse_pids_cache_dirty);
++	}
++	spin_unlock_irqrestore(&fcse_lock, flags);
++}
++
++int fcse_needs_flush(struct mm_struct *prev, struct mm_struct *next)
++{
++	unsigned res, reused_pid = 0, pid = next->context.pid >> FCSE_PID_SHIFT;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcse_lock, flags);
++	if (per_pid[pid].last_mm != next) {
++		if (per_pid[pid].last_mm)
++			reused_pid = test_bit(pid, fcse_pids_cache_dirty);
++		per_pid[pid].last_mm = next;
++	}
++	__set_bit(pid, fcse_pids_cache_dirty);
++	spin_unlock_irqrestore(&fcse_lock, flags);
++
++	res = !prev
++		|| reused_pid 
++		|| prev->context.shared_dirty_pages
++		|| prev->context.high_pages
++		|| next->context.high_pages;
++
++	if (res)
++		fcse_notify_flush_all_inner(next);
++
++	return res;
++}
++
++/* Called with mm->mmap_sem write-locked. */
++void fcse_relocate_mm_to_null_pid(struct mm_struct *mm)
++{
++	pgd_t *to = mm->pgd + pgd_index(0);
++	pgd_t *from = pgd_offset(mm, 0);
++	unsigned len = pgd_index(FCSE_TASK_SIZE) * sizeof(*from);
++	unsigned long preempt_flags, flags;
++
++	ipipe_preempt_disable(preempt_flags);
++
++	memcpy(to, from, len);
++	spin_lock_irqsave(&fcse_lock, flags);
++	fcse_pid_dereference(mm->context.pid >> FCSE_PID_SHIFT);
++	fcse_pid_reference_inner(0);
++	per_pid[0].last_mm = mm;
++	spin_unlock_irqrestore(&fcse_lock, flags);
++
++	mm->context.pid = 0;
++	mm->context.big = 1;
++	fcse_pid_set(0);
++	memzero(from, len);
++	mb();
++	flush_cache_mm(mm);
++	flush_tlb_mm(mm);
++
++	ipipe_preempt_enable(preempt_flags);
++}
++
++void fcse_notify_flush_all(void)
++{
++	fcse_notify_flush_all_inner(current->mm);
++}
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
 diff --git a/arch/arm/kernel/ipipe-mcount.S b/arch/arm/kernel/ipipe-mcount.S
 new file mode 100644
 index 0000000..ce61e0c
@@ -617,10 +778,10 @@ index 0000000..ce61e0c
 +#endif
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..64e9146
+index 0000000..399c045
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,445 @@
+@@ -0,0 +1,446 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -747,28 +908,16 @@ index 0000000..64e9146
 +	return 0;
 +}
 +
-+static int __ipipe_ack_irq(unsigned irq)
++static void __ipipe_ack_irq(unsigned irq, struct irq_desc *desc)
 +{
-+	irq_desc_t *desc = irq_desc + irq;
 +	desc->ipipe_ack(irq, desc);
-+#ifdef irq_finish
-+ 	/* AT91 specific workaround */
-+        irq_finish(irq);
-+#endif /* irq_finish */
-+	return 1;
 +}
 +
-+static int __ipipe_ack_timerirq(unsigned irq)
++static void __ipipe_ack_timerirq(unsigned irq, struct irq_desc *desc)
 +{
-+	irq_desc_t *desc = irq_desc + irq;
 +	desc->ipipe_ack(irq, desc);
-+#ifdef irq_finish
-+ 	/* AT91 specific workaround */
-+	irq_finish(irq);
-+#endif /* irq_finish */
 +	__ipipe_mach_acktimer();
 +	desc->ipipe_end(irq, desc);
-+	return 1;
 +}
 +
 +void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
@@ -936,21 +1085,20 @@ index 0000000..64e9146
 +		goto finalize_nosync;
 +	}
 +
-+	head = __ipipe_pipeline.next;
-+	next_domain = list_entry(head, struct ipipe_domain, p_link);
-+	if (likely(test_bit(IPIPE_WIRED_FLAG, &next_domain->irqs[irq].control))) {
-+		if (!m_ack && next_domain->irqs[irq].acknowledge != NULL)
-+			next_domain->irqs[irq].acknowledge(irq);
-+		if (likely(__ipipe_dispatch_wired(next_domain, irq))) {
-+			goto finalize;
-+		} else
-+			goto finalize_nosync;
-+	}
-+
 +	this_domain = ipipe_current_domain;
 +
 +	if (test_bit(IPIPE_STICKY_FLAG, &this_domain->irqs[irq].control))
 +		head = &this_domain->p_link;
++        else {
++                head = __ipipe_pipeline.next;
++                next_domain = list_entry(head, struct ipipe_domain, p_link);
++                if (likely(test_bit(IPIPE_WIRED_FLAG, &next_domain->irqs[irq].control))) {
++                        if (!m_ack && next_domain->irqs[irq].acknowledge != NULL)
++                                next_domain->irqs[irq].acknowledge(irq, irq_desc + irq);
++                        __ipipe_dispatch_wired(next_domain, irq);
++                        goto finalize_nosync;
++                }
++        }
 +
 +	/* Ack the interrupt. */
 +
@@ -973,8 +1121,10 @@ index 0000000..64e9146
 +			 */
 +			__ipipe_set_irq_pending(next_domain, irq);
 +
-+			if (!m_ack && next_domain->irqs[irq].acknowledge != NULL)
-+				m_ack = next_domain->irqs[irq].acknowledge(irq);
++			if (!m_ack && next_domain->irqs[irq].acknowledge) {
++                                next_domain->irqs[irq].acknowledge(irq, irq_desc + irq);
++                                m_ack = 1;
++                        }
 +		}
 +
 +		/*
@@ -988,7 +1138,14 @@ index 0000000..64e9146
 +		pos = next_domain->p_link.next;
 +	}
 +
-+finalize:
++	/*
++	 * If the interrupt preempted the head domain, then do not
++	 * even try to walk the pipeline, unless an interrupt is
++	 * pending for it.
++	 */
++	if (test_bit(IPIPE_AHEAD_FLAG, &this_domain->flags) &&
++	    ipipe_head_cpudom_var(irqpend_himask) == 0)
++		goto finalize_nosync;
 +
 +	/*
 +	 * Now walk the pipeline, yielding control to the highest
@@ -1020,6 +1177,11 @@ index 0000000..64e9146
 +asmlinkage int __ipipe_grab_irq(int irq, struct pt_regs *regs)
 +{
 +        int status;
++
++#ifdef irq_finish
++ 	/* AT91 specific workaround */
++        irq_finish(irq);
++#endif /* irq_finish */
 +
 +	if (irq == __ipipe_mach_timerint) {
 +                /*
@@ -1122,7 +1284,7 @@ index 4b05dc5..78905e2 100644
  	return 0;
  }
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
-index eefae1d..b13d8a5 100644
+index eefae1d..28cb155 100644
 --- a/arch/arm/kernel/smp.c
 +++ b/arch/arm/kernel/smp.c
 @@ -32,6 +32,7 @@
@@ -1146,7 +1308,7 @@ index eefae1d..b13d8a5 100644
  void flush_tlb_page(struct vm_area_struct *vma, unsigned long uaddr)
  {
 -	cpumask_t mask = vma->vm_mm->cpu_vm_mask;
-+	cpumask_t mask = fcse_tlb_mask(vma->vm_mm);
++ 	cpumask_t mask = fcse_tlb_mask(vma->vm_mm);
  	struct tlb_args ta;
  
  	ta.ta_vma = vma;
@@ -1159,27 +1321,6 @@ index eefae1d..b13d8a5 100644
  	struct tlb_args ta;
  
  	ta.ta_vma = vma;
-diff --git a/arch/arm/kernel/sys_arm.c b/arch/arm/kernel/sys_arm.c
-index 0128687..66ff375 100644
---- a/arch/arm/kernel/sys_arm.c
-+++ b/arch/arm/kernel/sys_arm.c
-@@ -61,6 +61,16 @@ inline long do_mmap2(
- 
- 	if (file)
- 		fput(file);
-+#ifdef CONFIG_ARM_FCSE
-+	/* FIXME, this really sucks, and we should really recheck in mremap,
-+	   mprotect, and munmap */
-+	if (likely((unsigned) error < (unsigned)(-4096))
-+	    && (flags & MAP_SHARED) && (prot & PROT_WRITE)) {
-+		struct vm_area_struct *vma = find_vma(current->mm, error);
-+		if (vma->vm_page_prot & (L_PTE_CACHEABLE | L_PTE_BUFFERABLE))
-+			++current->mm->context.mappings_needing_flush;
-+	}
-+#endif
- out:
- 	return error;
- }
 diff --git a/arch/arm/kernel/traps.c b/arch/arm/kernel/traps.c
 index 5595fdd..171f707 100644
 --- a/arch/arm/kernel/traps.c
@@ -3750,29 +3891,59 @@ index a9799cb..8de19f9 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
-index 33ed048..8e8e1e4 100644
+index 33ed048..2c95738 100644
 --- a/arch/arm/mm/Kconfig
 +++ b/arch/arm/mm/Kconfig
-@@ -716,3 +716,19 @@ config CACHE_L2X0
+@@ -716,3 +716,49 @@ config CACHE_L2X0
  	select OUTER_CACHE
  	help
  	  This option enables the L2x0 PrimeCell.
 +
 +config ARM_FCSE
 +	bool "Fast Context Switch Extension (EXPERIMENTAL)"
-+	depends on EXPERIMENTAL
++ 	depends on EXPERIMENTAL && !SMP
 +	default n
 +	help
 +
 +	  The Fast Context Switch Extension (FCSE) avoids the need for
 +	  costly MMU-related operations when switching task contexts
 +	  (like flushing caches), hence providing a significant
-+	  improvement in terms of latency. However, this result is
-+	  obtained at the expense of fewer concurrent processes
-+	  available (95) and a smaller address space for each process
-+	  (32M).
++	  improvement in terms of latency.
 +
-+	  Say Y here to enable the ARM FCSE. If unsure, say N.
++	  Enabling this option makes linux use the FCSE.
++
++	  We propose two modes:
++	  - the guaranteed mode: we guarantee that there will never be any cache
++	    flush when switching context, but this means that there can not be
++	    more than 95 running processes in the system, each with a virtual
++	    memory space smaller than 32MB, and that the shared memory
++	    mappings do not use cache;
++	  - the best effort mode: we allow some cache flushes to happen from
++	    time to time, but do not limit the number of processes or the
++	    virtual memory space available for each process, and the shared
++	    memory mappings use cache.
++
++if ARM_FCSE
++
++choice
++	prompt "FCSE mode"
++	default ARM_FCSE_BEST_EFFORT
++	help
++	  This option allow setting which FCSE mode will be used.
++
++config ARM_FCSE_GUARANTEED
++	bool "guaranteed"
++	help
++	  Select guaranteed mode.
++
++config ARM_FCSE_BEST_EFFORT
++	bool "best effort"
++	help
++	  Select best-effort mode.
++
++endchoice
++
++endif
 diff --git a/arch/arm/mm/alignment.c b/arch/arm/mm/alignment.c
 index e162cca..8860e0f 100644
 --- a/arch/arm/mm/alignment.c
@@ -3864,6 +4035,92 @@ index 2e455f8..accf6ed 100644
  xscale_mc_clear_user_page(void *kaddr, unsigned long vaddr)
  {
  	asm volatile(
+diff --git a/arch/arm/mm/fault-armv.c b/arch/arm/mm/fault-armv.c
+index 44558d5..e91c33e 100644
+--- a/arch/arm/mm/fault-armv.c
++++ b/arch/arm/mm/fault-armv.c
+@@ -23,6 +23,57 @@
+ 
+ static unsigned long shared_pte_mask = L_PTE_CACHEABLE;
+ 
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++static void fcse_set_pte_shared(struct vm_area_struct *vma,
++				unsigned long address)
++{
++	pgd_t *pgd;
++	pmd_t *pmd;
++	pte_t *pte, entry;
++
++	if (!(vma->vm_flags & VM_MAYSHARE) || address >= TASK_SIZE)
++		return;
++
++	pgd = pgd_offset(vma->vm_mm, address);
++	if (pgd_none(*pgd))
++		goto no_pgd;
++	if (pgd_bad(*pgd))
++		goto bad_pgd;
++
++	pmd = pmd_offset(pgd, address);
++	if (pmd_none(*pmd))
++		goto no_pmd;
++	if (pmd_bad(*pmd))
++		goto bad_pmd;
++
++	pte = pte_offset_map(pmd, address);
++	entry = *pte;
++
++	if((pte_val(entry)
++	    & (L_PTE_PRESENT | L_PTE_CACHEABLE | L_PTE_WRITE | L_PTE_DIRTY))
++	   == (L_PTE_PRESENT | L_PTE_CACHEABLE | L_PTE_WRITE | L_PTE_DIRTY)) {
++		pte_val(entry) |= L_PTE_SHARED;
++		set_pte_at(vma->vm_mm, address, pte, entry);
++	}
++	pte_unmap(pte);
++	return;
++	
++bad_pgd:
++	pgd_ERROR(*pgd);
++	pgd_clear(pgd);
++no_pgd:
++	return;
++
++bad_pmd:
++	pmd_ERROR(*pmd);
++	pmd_clear(pmd);
++no_pmd:
++	return;
++}
++#else /* !CONFIG_ARM_FCSE_BEST_EFFORT */
++#define fcse_set_pte_shared(vma, addr) do { } while (0)
++#endif /* !CONFIG_ARM_FCSE_BEST_EFFORT */
++
+ /*
+  * We take the easy way out of this problem - we make the
+  * PTE uncacheable.  However, we leave the write buffer on.
+@@ -84,6 +135,7 @@ no_pmd:
+ static void
+ make_coherent(struct address_space *mapping, struct vm_area_struct *vma, unsigned long addr, unsigned long pfn)
+ {
++#ifndef CONFIG_ARM_FCSE_GUARANTEED
+ 	struct mm_struct *mm = vma->vm_mm;
+ 	struct vm_area_struct *mpnt;
+ 	struct prio_tree_iter iter;
+@@ -115,8 +167,14 @@ make_coherent(struct address_space *mapping, struct vm_area_struct *vma, unsigne
+ 	flush_dcache_mmap_unlock(mapping);
+ 	if (aliases)
+ 		adjust_pte(vma, addr);
+-	else
++	else {
++		fcse_set_pte_shared(vma, addr);
+ 		flush_cache_page(vma, addr, pfn);
++	}
++#else /* CONFIG_ARM_FCSE_GUARANTEED */
++	if (vma->vm_flags & VM_MAYSHARE)
++		adjust_pte(vma, addr);
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
+ }
+ 
+ /*
 diff --git a/arch/arm/mm/fault.c b/arch/arm/mm/fault.c
 index 28ad7ab..78efa71 100644
 --- a/arch/arm/mm/fault.c
@@ -3987,7 +4244,7 @@ index 28ad7ab..78efa71 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mm/flush.c b/arch/arm/mm/flush.c
-index 9df507d..426941e 100644
+index 9df507d..1e69859 100644
 --- a/arch/arm/mm/flush.c
 +++ b/arch/arm/mm/flush.c
 @@ -14,6 +14,7 @@
@@ -3998,7 +4255,19 @@ index 9df507d..426941e 100644
  
  #include "mm.h"
  
-@@ -58,9 +59,11 @@ void flush_cache_mm(struct mm_struct *mm)
+@@ -40,8 +41,10 @@ static void flush_pfn_alias(unsigned long pfn, unsigned long vaddr)
+ void flush_cache_mm(struct mm_struct *mm)
+ {
+ 	if (cache_is_vivt()) {
+-		if (cpu_isset(smp_processor_id(), mm->cpu_vm_mask))
++		if (cpu_isset(smp_processor_id(), mm->cpu_vm_mask)) {
++			fcse_notify_flush_all();
+ 			__cpuc_flush_user_all();
++		}
+ 		return;
+ 	}
+ 
+@@ -58,9 +61,11 @@ void flush_cache_mm(struct mm_struct *mm)
  void flush_cache_range(struct vm_area_struct *vma, unsigned long start, unsigned long end)
  {
  	if (cache_is_vivt()) {
@@ -4013,7 +4282,7 @@ index 9df507d..426941e 100644
  		return;
  	}
  
-@@ -78,8 +81,11 @@ void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr, unsig
+@@ -78,8 +83,11 @@ void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr, unsig
  {
  	if (cache_is_vivt()) {
  		if (cpu_isset(smp_processor_id(), vma->vm_mm->cpu_vm_mask)) {
@@ -4027,20 +4296,62 @@ index 9df507d..426941e 100644
  		}
  		return;
  	}
+diff --git a/arch/arm/mm/mmap.c b/arch/arm/mm/mmap.c
+index 3f6dc40..64f6632 100644
+--- a/arch/arm/mm/mmap.c
++++ b/arch/arm/mm/mmap.c
+@@ -54,7 +54,7 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
+ 	if (flags & MAP_FIXED) {
+ 		if (aliasing && flags & MAP_SHARED && addr & (SHMLBA - 1))
+ 			return -EINVAL;
+-		return addr;
++		goto found_addr;
+ 	}
+ 
+ 	if (len > TASK_SIZE)
+@@ -69,7 +69,7 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
+ 		vma = find_vma(mm, addr);
+ 		if (TASK_SIZE - len >= addr &&
+ 		    (!vma || addr + len <= vma->vm_start))
+-			return addr;
++			goto found_addr;
+ 	}
+ 	if (len > mm->cached_hole_size) {
+ 	        start_addr = addr = mm->free_area_cache;
+@@ -103,7 +103,7 @@ full_search:
+ 			 * Remember the place where we stopped the search:
+ 			 */
+ 			mm->free_area_cache = addr + len;
+-			return addr;
++			goto found_addr;
+ 		}
+ 		if (addr + mm->cached_hole_size < vma->vm_start)
+ 		        mm->cached_hole_size = vma->vm_start - addr;
+@@ -111,6 +111,16 @@ full_search:
+ 		if (do_align)
+ 			addr = COLOUR_ALIGN(addr, pgoff);
+ 	}
++
++  found_addr:
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	if (addr + len > FCSE_TASK_SIZE && mm->context.pid)
++		fcse_relocate_mm_to_null_pid(mm);
++#elif defined(CONFIG_ARM_FCSE_GUARANTEED)
++	if (addr + len > FCSE_TASK_SIZE)
++		return -ENOMEM;
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
++	return addr;
+ }
+ 
+ 
 diff --git a/arch/arm/mm/pgd.c b/arch/arm/mm/pgd.c
-index e0f19ab..ec39e6e 100644
+index e0f19ab..35b1457 100644
 --- a/arch/arm/mm/pgd.c
 +++ b/arch/arm/mm/pgd.c
-@@ -16,7 +16,46 @@
+@@ -18,6 +18,41 @@
  
- #include "mm.h"
- 
-+#ifndef CONFIG_ARM_FCSE
  #define FIRST_KERNEL_PGD_NR	(FIRST_USER_PGD_NR + USER_PTRS_PER_PGD)
-+#else /* CONFIG_ARM_FCSE */
-+#define FIRST_KERNEL_PGD_NR	(MODULE_START / PGDIR_SIZE)
-+#endif /* CONFIG_ARM_FCSE */
-+
+ 
 +#ifdef CONFIG_IPIPE
 +/* Copied from arch/i386/mm/pgdtable.c, maintains the list of pgds for the
 +   implementation of ipipe_pin_range_globally in arch/arm/mm/fault.c. */
@@ -4070,32 +4381,24 @@ index e0f19ab..ec39e6e 100644
 +		set_page_private(next, (unsigned long)pprev);
 +}
 +#else /* !CONFIG_IPIPE */
-+#define pgd_list_lock(flags) (flags) = (flags)
-+#define pgd_list_unlock(flags) (flags) = (flags)
++#define pgd_list_lock(flags) ((void) (flags))
++#define pgd_list_unlock(flags) ((void) (flags))
 +#define pgd_list_add(pgd) do { } while (0)
 +#define pgd_list_del(pgd) do { } while (0)
 +#endif /* !CONFIG_IPIPE */
- 
++
  /*
   * need to get a 16k page for level 1
-@@ -26,6 +65,16 @@ pgd_t *get_pgd_slow(struct mm_struct *mm)
+  */
+@@ -26,6 +61,7 @@ pgd_t *get_pgd_slow(struct mm_struct *mm)
  	pgd_t *new_pgd, *init_pgd;
  	pmd_t *new_pmd, *init_pmd;
  	pte_t *new_pte, *init_pte;
 +	unsigned long flags;
-+#ifdef CONFIG_ARM_FCSE
-+	int pid;
-+
-+	pid = fcse_pid_alloc();
-+	if (pid == -1)
-+		goto no_pgd;
-+
-+	mm->context.pid = pid << FCSE_PID_SHIFT;
-+#endif /* CONFIG_ARM_FCSE */
  
  	new_pgd = (pgd_t *)__get_free_pages(GFP_KERNEL, 2);
  	if (!new_pgd)
-@@ -37,17 +86,24 @@ pgd_t *get_pgd_slow(struct mm_struct *mm)
+@@ -37,8 +73,11 @@ pgd_t *get_pgd_slow(struct mm_struct *mm)
  	 * Copy over the kernel and IO PGD entries
  	 */
  	init_pgd = pgd_offset_k(0);
@@ -4107,21 +4410,18 @@ index e0f19ab..ec39e6e 100644
  
  	clean_dcache_area(new_pgd, PTRS_PER_PGD * sizeof(pgd_t));
  
- 	if (!vectors_high()) {
-+		/* We can not use pgd_offset here since mm->pgd is not yet
-+		   initialized. */
-+		pgd_t *pgd = new_pgd + pgd_index(fcse_va_to_mva(mm, 0));
-+
- 		/*
+@@ -47,6 +86,10 @@ pgd_t *get_pgd_slow(struct mm_struct *mm)
  		 * On ARM, first page must always be allocated since it
  		 * contains the machine vectors.
  		 */
--		new_pmd = pmd_alloc(mm, new_pgd, 0);
-+		new_pmd = pmd_alloc(mm, pgd, 0);
++#ifdef CONFIG_ARM_FCSE
++		/* FCSE does not work without high vectors. */
++		BUG();
++#endif /* CONFIG_ARM_FCSE */
+ 		new_pmd = pmd_alloc(mm, new_pgd, 0);
  		if (!new_pmd)
  			goto no_pmd;
- 
-@@ -74,6 +130,7 @@ no_pgd:
+@@ -74,6 +117,7 @@ no_pgd:
  
  void free_pgd_slow(struct mm_struct *mm, pgd_t *pgd)
  {
@@ -4129,7 +4429,16 @@ index e0f19ab..ec39e6e 100644
  	pmd_t *pmd;
  	pgtable_t pte;
  
-@@ -95,5 +152,11 @@ void free_pgd_slow(struct mm_struct *mm, pgd_t *pgd)
+@@ -81,7 +125,7 @@ void free_pgd_slow(struct mm_struct *mm, pgd_t *pgd)
+ 		return;
+ 
+ 	/* pgd is always present and good */
+-	pmd = pmd_off(pgd, 0);
++	pmd = pmd_off(pgd + pgd_index(fcse_va_to_mva(mm, 0)), 0);
+ 	if (pmd_none(*pmd))
+ 		goto free;
+ 	if (pmd_bad(*pmd)) {
+@@ -95,5 +139,8 @@ void free_pgd_slow(struct mm_struct *mm, pgd_t *pgd)
  	pte_free(mm, pte);
  	pmd_free(mm, pmd);
  free:
@@ -4137,78 +4446,81 @@ index e0f19ab..ec39e6e 100644
 +	pgd_list_del(pgd);
 +	pgd_list_unlock(flags);
  	free_pages((unsigned long) pgd, 2);
-+#ifdef CONFIG_ARM_FCSE
-+	fcse_pid_free(mm->context.pid >> FCSE_PID_SHIFT);
-+#endif /* CONFIG_ARM_FCSE */
  }
 diff --git a/arch/arm/mm/proc-arm920.S b/arch/arm/mm/proc-arm920.S
-index 28cdb06..2454d0b 100644
+index 28cdb06..ba8769b 100644
 --- a/arch/arm/mm/proc-arm920.S
 +++ b/arch/arm/mm/proc-arm920.S
-@@ -321,6 +321,10 @@ ENTRY(cpu_arm920_dcache_clean_area)
+@@ -321,6 +321,11 @@ ENTRY(cpu_arm920_dcache_clean_area)
  ENTRY(cpu_arm920_switch_mm)
  #ifdef CONFIG_MMU
  	mov	ip, #0
++#ifndef CONFIG_ARM_FCSE_GUARANTEED
 +#ifdef CONFIG_ARM_FCSE
 +	cmp	r2, #0
-+	beq	.LCnoflush
++	beq	3f
 +#endif
  #ifdef CONFIG_CPU_DCACHE_WRITETHROUGH
  	mcr	p15, 0, ip, c7, c6, 0		@ invalidate D cache
  #else
-@@ -338,6 +342,9 @@ ENTRY(cpu_arm920_switch_mm)
+@@ -338,6 +343,10 @@ ENTRY(cpu_arm920_switch_mm)
  #endif
  	mcr	p15, 0, ip, c7, c5, 0		@ invalidate I cache
  	mcr	p15, 0, ip, c7, c10, 4		@ drain WB
 +#ifdef CONFIG_ARM_FCSE
-+.LCnoflush:
++3:
 +#endif
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
  	mcr	p15, 0, r0, c2, c0, 0		@ load page table pointer
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  #endif
 diff --git a/arch/arm/mm/proc-arm926.S b/arch/arm/mm/proc-arm926.S
-index 4cd3316..ca7f4ee 100644
+index 4cd3316..1f31a1c 100644
 --- a/arch/arm/mm/proc-arm926.S
 +++ b/arch/arm/mm/proc-arm926.S
-@@ -337,6 +337,10 @@ ENTRY(cpu_arm926_dcache_clean_area)
+@@ -337,6 +337,11 @@ ENTRY(cpu_arm926_dcache_clean_area)
  ENTRY(cpu_arm926_switch_mm)
  #ifdef CONFIG_MMU
  	mov	ip, #0
++#ifndef CONFIG_ARM_FCSE_GUARANTEED
 +#ifdef CONFIG_ARM_FCSE
 +	cmp	r2, #0
-+	beq	.LCnoflush
++	beq	2f
 +#endif
  #ifdef CONFIG_CPU_DCACHE_WRITETHROUGH
  	mcr	p15, 0, ip, c7, c6, 0		@ invalidate D cache
  #else
-@@ -346,6 +350,9 @@ ENTRY(cpu_arm926_switch_mm)
+@@ -346,6 +351,10 @@ ENTRY(cpu_arm926_switch_mm)
  #endif
  	mcr	p15, 0, ip, c7, c5, 0		@ invalidate I cache
  	mcr	p15, 0, ip, c7, c10, 4		@ drain WB
 +#ifdef CONFIG_ARM_FCSE
-+.LCnoflush:
++2:
 +#endif
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
  	mcr	p15, 0, r0, c2, c0, 0		@ load page table pointer
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  #endif
 diff --git a/arch/arm/mm/proc-xscale.S b/arch/arm/mm/proc-xscale.S
-index 2dd8527..c101e5d 100644
+index 2dd8527..2c71a64 100644
 --- a/arch/arm/mm/proc-xscale.S
 +++ b/arch/arm/mm/proc-xscale.S
-@@ -417,9 +417,16 @@ ENTRY(cpu_xscale_dcache_clean_area)
+@@ -417,9 +417,18 @@ ENTRY(cpu_xscale_dcache_clean_area)
   */
  	.align	5
  ENTRY(cpu_xscale_switch_mm)
++#ifndef CONFIG_ARM_FCSE_GUARANTEED
 +#ifdef CONFIG_ARM_FCSE
 +	cmp	r2, #0
-+	beq	.LCnoflush
++	beq	2f
 +#endif
  	clean_d_cache r1, r2
  	mcr	p15, 0, ip, c7, c5, 0		@ Invalidate I cache & BTB
  	mcr	p15, 0, ip, c7, c10, 4		@ Drain Write (& Fill) Buffer
 +#ifdef CONFIG_ARM_FCSE
-+.LCnoflush:
++2:
 +#endif
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
  	mcr	p15, 0, r0, c2, c0, 0		@ load page table pointer
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  	cpwait_ret lr, ip
@@ -5463,7 +5775,7 @@ index 5c60bfc..d487753 100644
  	return res & mask;
  }
 diff --git a/include/asm-arm/cacheflush.h b/include/asm-arm/cacheflush.h
-index 759a97b..badb18a 100644
+index 759a97b..06895c8 100644
 --- a/include/asm-arm/cacheflush.h
 +++ b/include/asm-arm/cacheflush.h
 @@ -15,6 +15,7 @@
@@ -5474,7 +5786,17 @@ index 759a97b..badb18a 100644
  
  #define CACHE_COLOUR(vaddr)	((vaddr & (SHMLBA - 1)) >> PAGE_SHIFT)
  
-@@ -339,16 +340,20 @@ static inline void flush_cache_mm(struct mm_struct *mm)
+@@ -332,23 +333,29 @@ static inline void outer_flush_range(unsigned long start, unsigned long end)
+ #ifndef CONFIG_CPU_CACHE_VIPT
+ static inline void flush_cache_mm(struct mm_struct *mm)
+ {
+-	if (cpu_isset(smp_processor_id(), mm->cpu_vm_mask))
++	if (cpu_isset(smp_processor_id(), mm->cpu_vm_mask)) {
++		fcse_notify_flush_all();
+ 		__cpuc_flush_user_all();
++	}
+ }
+ 
  static inline void
  flush_cache_range(struct vm_area_struct *vma, unsigned long start, unsigned long end)
  {
@@ -5497,7 +5819,7 @@ index 759a97b..badb18a 100644
  		__cpuc_flush_user_range(addr, addr + PAGE_SIZE, vma->vm_flags);
  	}
  }
-@@ -379,8 +384,14 @@ extern void flush_ptrace_access(struct vm_area_struct *vma, struct page *page,
+@@ -379,14 +386,22 @@ extern void flush_ptrace_access(struct vm_area_struct *vma, struct page *page,
   * Harvard caches are synchronised for the user space address range.
   * This is used for the ARM private sys_cacheflush system call.
   */
@@ -5514,7 +5836,16 @@ index 759a97b..badb18a 100644
  
  /*
   * Perform necessary cache operations to ensure that data previously
-@@ -417,7 +428,8 @@ static inline void flush_anon_page(struct vm_area_struct *vma,
+  * stored within this range of addresses can be executed by the CPU.
+  */
+-#define flush_icache_range(s,e)		__cpuc_coherent_kern_range(s,e)
++#define flush_icache_range(s,e)						\
++	__cpuc_coherent_kern_range(fcse_va_to_mva(current->mm, (s)),	\
++				   fcse_va_to_mva(current->mm, (e)))
+ 
+ /*
+  * Perform necessary cache operations to ensure that the TLB will
+@@ -417,7 +432,8 @@ static inline void flush_anon_page(struct vm_area_struct *vma,
  	extern void __flush_anon_page(struct vm_area_struct *vma,
  				struct page *, unsigned long);
  	if (PageAnon(page))
@@ -5559,10 +5890,10 @@ index 0b120ee..28da4f9 100644
  extern void cpu_reset(unsigned long addr) __attribute__((noreturn));
 diff --git a/include/asm-arm/fcse.h b/include/asm-arm/fcse.h
 new file mode 100644
-index 0000000..59752b3
+index 0000000..38a5526
 --- /dev/null
 +++ b/include/asm-arm/fcse.h
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,91 @@
 +/*
 + * Filename:    include/asm-arm/fcse.h
 + * Description: ARM Process ID (PID) includes for Fast Address Space Switching
@@ -5587,6 +5918,8 @@ index 0000000..59752b3
 +
 +#ifdef CONFIG_ARM_FCSE
 +
++#include <linux/mm_types.h>	/* For struct mm_struct */
++
 +#define FCSE_PID_SHIFT 25
 +
 +/* Size of PID relocation area */
@@ -5597,12 +5930,12 @@ index 0000000..59752b3
 +
 +#define fcse_tlb_mask(mm) ((mm)->context.cpu_tlb_mask)
 +#define fcse_cpu_set_vm_mask(cpu, mm) cpu_set(cpu, (mm)->cpu_vm_mask)
-+#define fcse_needs_flush(mm) ((mm)->context.mappings_needing_flush)
 +
 +/* Sets the CPU's PID Register */
 +static inline void fcse_pid_set(unsigned long pid)
 +{
-+	__asm__ __volatile__("mcr p15, 0, %0, c13, c0, 0": /* */: "r" (pid));
++	__asm__ __volatile__ ("mcr p15, 0, %0, c13, c0, 0"
++			      : /* */: "r" (pid) : "memory");
 +}
 +
 +/* Returns the state of the CPU's PID Register */
@@ -5631,6 +5964,15 @@ index 0000000..59752b3
 +
 +int fcse_pid_alloc(void);
 +void fcse_pid_free(unsigned pid);
++void fcse_pid_reference(unsigned pid);
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++int fcse_needs_flush(struct mm_struct *prev, struct mm_struct *next);
++void fcse_notify_flush_all(void);
++void fcse_relocate_mm_to_null_pid(struct mm_struct *mm);
++#else /* CONFIG_ARM_FCSE_GUARANTEED */
++#define fcse_needs_flush(prev, next) (0)
++#define fcse_notify_flush_all() do { } while (0)
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
 +
 +#else /* CONFIG_ARM_FCSE */
 +#define fcse_pid_set(pid) do { } while (0)
@@ -5638,13 +5980,14 @@ index 0000000..59752b3
 +#define fcse_va_to_mva(mm, x) ({ (void)(mm); (x); })
 +#define fcse_tlb_mask(mm) ((mm)->cpu_vm_mask)
 +#define fcse_cpu_set_vm_mask(cpu, mm) do { } while (0)
-+#define fcse_needs_flush(mm) (1)
++#define fcse_needs_flush(prev, next) (1)
++#define fcse_notify_flush_all() do { } while (0)
 +#endif
 +
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/include/asm-arm/ipipe.h b/include/asm-arm/ipipe.h
 new file mode 100644
-index 0000000..ac7c229
+index 0000000..d2ceb26
 --- /dev/null
 +++ b/include/asm-arm/ipipe.h
 @@ -0,0 +1,200 @@
@@ -5678,10 +6021,10 @@ index 0000000..ac7c229
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.11-02"
++#define IPIPE_ARCH_STRING	"1.12-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	11
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_MINOR_NUMBER	12
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -6175,51 +6518,44 @@ index 6d09974..0aa4056 100644
  #endif
  #endif
 diff --git a/include/asm-arm/memory.h b/include/asm-arm/memory.h
-index 9ba4d71..bda4e74 100644
+index 9ba4d71..458aa47 100644
 --- a/include/asm-arm/memory.h
 +++ b/include/asm-arm/memory.h
-@@ -34,14 +34,23 @@
-  * TASK_SIZE - the maximum size of a user space task.
+@@ -35,7 +35,12 @@
   * TASK_UNMAPPED_BASE - the lower boundary of the mmap VM area
   */
-+#ifdef CONFIG_ARM_FCSE
-+#define TASK_SIZE		UL(0x02000000)
-+#define TASK_UNMAPPED_BASE	UL(0x01000000)
-+#else
  #define TASK_SIZE		UL(0xbf000000)
- #define TASK_UNMAPPED_BASE	UL(0x40000000)
- #endif
-+#endif
- 
- /*
-  * The maximum size of a 26-bit user space task.
-  */
 +#ifdef CONFIG_ARM_FCSE
-+#define TASK_SIZE_26		UL(0x02000000)
-+#else
- #define TASK_SIZE_26		UL(0x04000000)
-+#endif
++#define TASK_UNMAPPED_BASE	UL(0x01000000)
++#define FCSE_TASK_SIZE		UL(0x02000000)
++#else /* !CONFIG_ARM_FCSE */
+ #define TASK_UNMAPPED_BASE	UL(0x40000000)
++#endif /* !CONFIG_ARM_FCSE */
+ #endif
  
  /*
-  * Page offset: 3GB
 diff --git a/include/asm-arm/mmu.h b/include/asm-arm/mmu.h
-index 53099d4..b74d736 100644
+index 53099d4..3eb1d7f 100644
 --- a/include/asm-arm/mmu.h
 +++ b/include/asm-arm/mmu.h
-@@ -7,6 +7,11 @@ typedef struct {
+@@ -7,6 +7,15 @@ typedef struct {
  #ifdef CONFIG_CPU_HAS_ASID
  	unsigned int id;
  #endif
 +#ifdef CONFIG_ARM_FCSE
 +	unsigned long pid;
-+	unsigned mappings_needing_flush;
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	unsigned big;
++	unsigned high_pages;
++	unsigned shared_dirty_pages;
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
 +	cpumask_t cpu_tlb_mask;
 +#endif
  	unsigned int kvm_seq;
  } mm_context_t;
  
 diff --git a/include/asm-arm/mmu_context.h b/include/asm-arm/mmu_context.h
-index 6913d02..bcca4a2 100644
+index 6913d02..2c1897d 100644
 --- a/include/asm-arm/mmu_context.h
 +++ b/include/asm-arm/mmu_context.h
 @@ -17,6 +17,7 @@
@@ -6230,7 +6566,7 @@ index 6913d02..bcca4a2 100644
  
  void __check_kvm_seq(struct mm_struct *mm);
  
-@@ -64,7 +65,15 @@ static inline void check_context(struct mm_struct *mm)
+@@ -64,11 +65,49 @@ static inline void check_context(struct mm_struct *mm)
  		__check_kvm_seq(mm);
  }
  
@@ -6239,15 +6575,50 @@ index 6913d02..bcca4a2 100644
 +init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 +{
 +#ifdef CONFIG_ARM_FCSE
++	int pid;
++
 +	cpus_clear(mm->context.cpu_tlb_mask);
-+	mm->context.mappings_needing_flush = 0;
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	if (!mm->context.big) {
++		pid = fcse_pid_alloc();
++		mm->context.pid = pid << FCSE_PID_SHIFT;
++	} else {
++		/* We are normally forking a process vith a virtual address
++		   space larger than 32 MB, so its pid should be 0. */
++		BUG_ON(mm->context.pid);
++		fcse_pid_reference(0);
++	}
++	/* If we are forking, set_pte_at will restore the correct high pages
++	   count, and shared writable pages are write-protected again. */
++	mm->context.high_pages = 0;
++	mm->context.shared_dirty_pages = 0;
++#else /* CONFIG_ARM_FCSE_GUARANTEED */
++	pid = fcse_pid_alloc();
++	if (pid < 0)
++		return pid;
++	mm->context.pid = pid << FCSE_PID_SHIFT;
++#endif /* CONFIG_ARM_FCSE_GUARANTEED */
 +#endif /* CONFIG_ARM_FCSE */
 +	return 0;
 +}
  
  #endif
  
-@@ -95,13 +104,31 @@ switch_mm(struct mm_struct *prev, struct mm_struct *next,
+-#define destroy_context(mm)		do { } while(0)
++static inline void destroy_context(struct mm_struct *mm)
++{
++#ifdef CONFIG_ARM_FCSE
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++	BUG_ON(mm->context.high_pages);
++	BUG_ON(mm->context.shared_dirty_pages);
++#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
++	fcse_pid_free(mm->context.pid >> FCSE_PID_SHIFT);
++#endif /* CONFIG_ARM_FCSE */
++}
+ 
+ /*
+  * This is called when "tsk" is about to enter lazy TLB mode.
+@@ -95,13 +134,33 @@ switch_mm(struct mm_struct *prev, struct mm_struct *next,
  	  struct task_struct *tsk)
  {
  #ifdef CONFIG_MMU
@@ -6262,22 +6633,24 @@ index 6913d02..bcca4a2 100644
 -		if (cache_is_vivt())
 -			cpu_clear(cpu, prev->cpu_vm_mask);
 +#if defined(CONFIG_IPIPE)
-+		if (ipipe_current_domain == ipipe_root_domain) {
++		if (ipipe_root_domain_p)
 +			do {
-+				per_cpu(ipipe_active_mm, cpu) = NULL; /* mm state is undefined. */
++				/* mark mm state as undefined. */
++				per_cpu(ipipe_active_mm, cpu) = NULL; 
 +				barrier();
 +				fcse_pid_set(next->context.pid);
 +				cpu_switch_mm(next->pgd, next,
-+					      fcse_needs_flush(next));
++					      fcse_needs_flush(prev, next));
 +				barrier();
-+				per_cpu(ipipe_active_mm, cpu) = next;
++				prev = xchg(&per_cpu(ipipe_active_mm, cpu),
++					    next);
 +			} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
-+		} else
++		else
 +#endif /* CONFIG_IPIPE */
 +			{
 +				fcse_pid_set(next->context.pid);
 +				cpu_switch_mm(next->pgd, next,
-+					      fcse_needs_flush(next));
++					      fcse_needs_flush(prev, next));
 +			}
 +		if (cache_is_vivt() && prev)
 +			cpu_clear(cpu, fcse_tlb_mask(prev));
@@ -6285,10 +6658,89 @@ index 6913d02..bcca4a2 100644
  #endif
  }
 diff --git a/include/asm-arm/pgtable.h b/include/asm-arm/pgtable.h
-index 5571c13..ad4a56a 100644
+index 5571c13..0afac16 100644
 --- a/include/asm-arm/pgtable.h
 +++ b/include/asm-arm/pgtable.h
-@@ -344,10 +344,14 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
+@@ -112,6 +112,8 @@
+ #define LIBRARY_TEXT_START	0x0c000000
+ 
+ #ifndef __ASSEMBLY__
++#include <asm/fcse.h>
++
+ extern void __pte_error(const char *file, int line, unsigned long val);
+ extern void __pmd_error(const char *file, int line, unsigned long val);
+ extern void __pgd_error(const char *file, int line, unsigned long val);
+@@ -227,6 +229,40 @@ extern pgprot_t		pgprot_kernel;
+ #define __S111  __PAGE_SHARED
+ 
+ #ifndef __ASSEMBLY__
++#ifdef CONFIG_ARM_FCSE_BEST_EFFORT
++#define fcse_account_page_removal(mm, addr, val) do {		\
++	struct mm_struct *_mm = (mm);				\
++	unsigned long _addr = (addr);				\
++	unsigned long _val = (val);				\
++	if (pte_present(_val) && _addr < TASK_SIZE) {		\
++		if (_addr >= FCSE_TASK_SIZE)			\
++			--_mm->context.high_pages;		\
++	}							\
++	if(pte_present(_val) && ((_val) & L_PTE_SHARED))	\
++		--_mm->context.shared_dirty_pages;		\
++} while (0)
++
++#define fcse_account_page_addition(mm, addr, val) ({			\
++	struct mm_struct *_mm = (mm);					\
++	unsigned long _addr = (addr);					\
++	unsigned long _val = (val);					\
++	if (pte_present(_val)						\
++	    && _addr < TASK_SIZE && _addr >= FCSE_TASK_SIZE)		\
++		++_mm->context.high_pages;				\
++	if (pte_present(_val) && (_val & L_PTE_SHARED)) {		\
++		if ((_val & (L_PTE_CACHEABLE | L_PTE_WRITE | L_PTE_DIRTY)) \
++		    != (L_PTE_CACHEABLE | L_PTE_WRITE | L_PTE_DIRTY))	\
++			_val &= ~L_PTE_SHARED;				\
++		else							\
++			++_mm->context.shared_dirty_pages;		\
++	}								\
++	_val;								\
++})
++#else /* CONFIG_ARM_FCSE_GUARANTEED || !CONFIG_ARM_FCSE */
++#define fcse_account_page_removal(mm, addr, val) do { } while (0)
++#define fcse_account_page_addition(mm, addr, val) (val)
++#endif /* CONFIG_ARM_FCSE_GUARANTEED || !CONFIG_ARM_FCSE */
++
+ /*
+  * ZERO_PAGE is a global shared page that is always zero: used
+  * for zero-mapped memory areas etc..
+@@ -238,7 +274,10 @@ extern struct page *empty_zero_page;
+ #define pfn_pte(pfn,prot)	(__pte(((pfn) << PAGE_SHIFT) | pgprot_val(prot)))
+ 
+ #define pte_none(pte)		(!pte_val(pte))
+-#define pte_clear(mm,addr,ptep)	set_pte_ext(ptep, __pte(0), 0)
++#define pte_clear(mm,addr,ptep)	do {				\
++	fcse_account_page_removal(mm, addr, pte_val(*ptep));	\
++	set_pte_ext(ptep, __pte(0), 0);				\
++} while (0)
+ #define pte_page(pte)		(pfn_to_page(pte_pfn(pte)))
+ #define pte_offset_kernel(dir,addr)	(pmd_page_vaddr(*(dir)) + __pte_index(addr))
+ #define pte_offset_map(dir,addr)	(pmd_page_vaddr(*(dir)) + __pte_index(addr))
+@@ -248,9 +287,13 @@ extern struct page *empty_zero_page;
+ 
+ #define set_pte_ext(ptep,pte,ext) cpu_set_pte_ext(ptep,pte,ext)
+ 
+-#define set_pte_at(mm,addr,ptep,pteval) do { \
+-	set_pte_ext(ptep, pteval, (addr) >= TASK_SIZE ? 0 : PTE_EXT_NG); \
+- } while (0)
++#define set_pte_at(mm,addr,ptep,pteval) do {				\
++	unsigned long _pteval = (pteval);				\
++	fcse_account_page_removal(mm, addr, pte_val(*ptep));		\
++	pte_val(_pteval) =						\
++		fcse_account_page_addition(mm, addr, pte_val(_pteval)); \
++	set_pte_ext(ptep, _pteval, (addr) >= TASK_SIZE ? 0 : PTE_EXT_NG); \
++} while (0)
+ 
+ /*
+  * The following only work if pte_present() is true.
+@@ -344,10 +387,14 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
  /* to find an entry in a page-table-directory */
  #define pgd_index(addr)		((addr) >> PGDIR_SHIFT)
  
@@ -6319,6 +6771,26 @@ index 75ec760..481c431 100644
  
  #define cpu_get_pgd()	\
  	({						\
+diff --git a/include/asm-arm/processor.h b/include/asm-arm/processor.h
+index bd8029e..764ccdc 100644
+--- a/include/asm-arm/processor.h
++++ b/include/asm-arm/processor.h
+@@ -23,9 +23,15 @@
+ #include <asm/types.h>
+ 
+ #ifdef __KERNEL__
++#ifndef CONFIG_ARM_FCSE
+ #define STACK_TOP	((current->personality == PER_LINUX_32BIT) ? \
+ 			 TASK_SIZE : TASK_SIZE_26)
+ #define STACK_TOP_MAX	TASK_SIZE
++#else /* CONFIG_ARM_FCSE */
++#define STACK_TOP	FCSE_TASK_SIZE
++#define STACK_TOP_MAX	FCSE_TASK_SIZE
++#endif /* CONFIG_ARM_FCSE */
++
+ #endif
+ 
+ union debug_insn {
 diff --git a/include/asm-arm/system.h b/include/asm-arm/system.h
 index 514af79..59cf71d 100644
 --- a/include/asm-arm/system.h
@@ -6477,10 +6949,10 @@ index 181006c..bc69d94 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..0d40153
+index 0000000..ddb05a7
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,611 @@
+@@ -0,0 +1,669 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -6615,7 +7087,9 @@ index 0000000..0d40153
 +
 +#define IPIPE_SAME_HANDLER	((ipipe_irq_handler_t)(-1))
 +
-+typedef int (*ipipe_irq_ackfn_t)(unsigned irq);
++struct irq_desc;
++
++typedef void (*ipipe_irq_ackfn_t)(unsigned irq, struct irq_desc *desc);
 +
 +typedef int (*ipipe_event_handler_t)(unsigned event,
 +				     struct ipipe_domain *from,
@@ -6718,11 +7192,13 @@ index 0000000..0d40153
 +
 +void __ipipe_walk_pipeline(struct list_head *pos);
 +
-+int __ipipe_schedule_irq(unsigned irq, struct list_head *head);
++void __ipipe_pend_irq(unsigned irq, struct list_head *head);
 +
 +int __ipipe_dispatch_event(unsigned event, void *data);
 +
-+int __ipipe_dispatch_wired(struct ipipe_domain *head_domain, unsigned irq);
++void __ipipe_dispatch_wired_nocheck(struct ipipe_domain *head, unsigned irq);
++
++void __ipipe_dispatch_wired(struct ipipe_domain *head, unsigned irq);
 +
 +void __ipipe_sync_stage(unsigned long syncmask);
 +
@@ -6760,7 +7236,8 @@ index 0000000..0d40153
 + * Keep the following as a macro, so that client code could check for
 + * the support of the invariant pipeline head optimization.
 + */
-+#define __ipipe_pipeline_head() list_entry(__ipipe_pipeline.next,struct ipipe_domain,p_link)
++#define __ipipe_pipeline_head() \
++	list_entry(__ipipe_pipeline.next, struct ipipe_domain, p_link)
 +
 +#define __ipipe_event_monitored_p(ev) \
 +	(__ipipe_event_monitors[ev] > 0 || (ipipe_current_domain->evself & (1LL << ev)))
@@ -6850,14 +7327,66 @@ index 0000000..0d40153
 +
 +int ipipe_trigger_irq(unsigned irq);
 +
-+static inline int ipipe_propagate_irq(unsigned irq)
++static inline void __ipipe_propagate_irq(unsigned irq)
 +{
-+	return __ipipe_schedule_irq(irq, ipipe_current_domain->p_link.next);
++	struct list_head *next = ipipe_current_domain->p_link.next;
++	if (next == &ipipe_root.p_link) {
++		/* Fast path: root must handle all interrupts. */
++		__ipipe_set_irq_pending(&ipipe_root, irq);
++		return;
++	}
++	__ipipe_pend_irq(irq, next);
 +}
 +
-+static inline int ipipe_schedule_irq(unsigned irq)
++static inline void __ipipe_schedule_irq(unsigned irq)
 +{
-+	return __ipipe_schedule_irq(irq, &ipipe_current_domain->p_link);
++	__ipipe_pend_irq(irq, &ipipe_current_domain->p_link);
++}
++
++static inline void __ipipe_schedule_irq_head(unsigned irq)
++{
++	__ipipe_set_irq_pending(__ipipe_pipeline_head(), irq);
++}
++
++static inline void __ipipe_schedule_irq_root(unsigned irq)
++{
++	__ipipe_set_irq_pending(&ipipe_root, irq);
++}
++
++static inline void ipipe_propagate_irq(unsigned irq)
++{
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
++	__ipipe_propagate_irq(irq);
++	local_irq_restore_hw(flags);
++}
++
++static inline void ipipe_schedule_irq(unsigned irq)
++{
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
++	__ipipe_schedule_irq(irq);
++	local_irq_restore_hw(flags);
++}
++
++static inline void ipipe_schedule_irq_head(unsigned irq)
++{
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
++	__ipipe_schedule_irq_head(irq);
++	local_irq_restore_hw(flags);
++}
++
++static inline void ipipe_schedule_irq_root(unsigned irq)
++{
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
++	__ipipe_schedule_irq_root(irq);
++	local_irq_restore_hw(flags);
 +}
 +
 +void ipipe_stall_pipeline_from(struct ipipe_domain *ipd);
@@ -7079,6 +7608,7 @@ index 0000000..0d40153
 +
 +#define ipipe_root_domain_p		1
 +#define ipipe_safe_current		current
++#define ipipe_processor_id()		smp_processor_id()
 +
 +#define ipipe_nmi_enter()		do { } while (0)
 +#define ipipe_nmi_exit()		do { } while (0)
@@ -7094,10 +7624,10 @@ index 0000000..0d40153
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..d359b82
+index 0000000..c49fe14
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,90 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -7147,6 +7677,7 @@ index 0000000..d359b82
 +
 +#define IPIPE_STALL_MASK	(1L << IPIPE_STALL_FLAG)
 +#define IPIPE_SYNC_MASK		(1L << IPIPE_SYNC_FLAG)
++#define IPIPE_NOSTACK_MASK	(1L << IPIPE_NOSTACK_FLAG)
 +
 +typedef void (*ipipe_irq_handler_t)(unsigned irq,
 +				    void *cookie);
@@ -7171,10 +7702,11 @@ index 0000000..d359b82
 +/* Generic features */
 +
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
-+#define __IPIPE_FEATURE_REQUEST_TICKDEV  1
++#define __IPIPE_FEATURE_REQUEST_TICKDEV    1
 +#endif
-+
-+#define __IPIPE_FEATURE_DELAYED_ATOMICSW 1
++#define __IPIPE_FEATURE_DELAYED_ATOMICSW   1
++#define __IPIPE_FEATURE_FASTPEND_IRQ       1
++#define __IPIPE_FEATURE_TRACE_EVENT	   1
 +
 +#else /* !CONFIG_IPIPE */
 +#define ipipe_preempt_disable(flags)	do { \
@@ -7248,10 +7780,10 @@ index 0000000..50a245c
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..6b1a379
+index 0000000..2f41af3
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,84 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -7291,17 +7823,19 @@ index 0000000..6b1a379
 +};
 +
 +#ifdef CONFIG_SMP
-+#define ipipe_percpudom(ipd, var, cpu)	\
-+	(per_cpu(ipipe_percpu_darray, cpu)[(ipd)->slot].var)
-+#define ipipe_cpudom_var(ipd, var)	\
-+	(__raw_get_cpu_var(ipipe_percpu_darray)[(ipd)->slot].var)
++#define ipipe_percpudom_ptr(ipd, cpu)	\
++	(&per_cpu(ipipe_percpu_darray, cpu)[(ipd)->slot])
++#define ipipe_cpudom_ptr(ipd)	\
++	(&__raw_get_cpu_var(ipipe_percpu_darray)[(ipd)->slot])
 +#else
 +DECLARE_PER_CPU(struct ipipe_percpu_domain_data *, ipipe_percpu_daddr[CONFIG_IPIPE_DOMAINS]);
-+#define ipipe_percpudom(ipd, var, cpu)	\
-+	(per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot]->var)
-+#define ipipe_cpudom_var(ipd, var)	\
-+	(__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot]->var)
++#define ipipe_percpudom_ptr(ipd, cpu)	\
++	(per_cpu(ipipe_percpu_daddr, cpu)[(ipd)->slot])
++#define ipipe_cpudom_ptr(ipd)	\
++	(__raw_get_cpu_var(ipipe_percpu_daddr)[(ipd)->slot])
 +#endif
++#define ipipe_percpudom(ipd, var, cpu)	(ipipe_percpudom_ptr(ipd, cpu)->var)
++#define ipipe_cpudom_var(ipd, var)	(ipipe_cpudom_ptr(ipd)->var)
 +
 +#define IPIPE_ROOT_SLOT			0
 +#define IPIPE_HEAD_SLOT			(CONFIG_IPIPE_DOMAINS - 1)
@@ -7320,14 +7854,18 @@ index 0000000..6b1a379
 +#define ipipe_percpu(var, cpu)		per_cpu(var, cpu)
 +#define ipipe_cpu_var(var)		__raw_get_cpu_var(var)
 +
-+#define ipipe_root_cpudom_var(var)	\
-+	__raw_get_cpu_var(ipipe_percpu_darray)[IPIPE_ROOT_SLOT].var
++#define ipipe_root_cpudom_ptr(var)	\
++	(&__raw_get_cpu_var(ipipe_percpu_darray)[IPIPE_ROOT_SLOT])
++
++#define ipipe_root_cpudom_var(var)	ipipe_root_cpudom_ptr()->var
 +
 +#define ipipe_this_cpudom_var(var)	\
 +	ipipe_cpudom_var(ipipe_current_domain, var)
 +
-+#define ipipe_head_cpudom_var(var)	\
-+	__raw_get_cpu_var(ipipe_percpu_darray)[IPIPE_HEAD_SLOT].var
++#define ipipe_head_cpudom_ptr()		\
++	(&__raw_get_cpu_var(ipipe_percpu_darray)[IPIPE_HEAD_SLOT])
++
++#define ipipe_head_cpudom_var(var)	ipipe_head_cpudom_ptr()->var
 +
 +#endif	/* !__LINUX_IPIPE_PERCPU_H */
 diff --git a/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
@@ -7396,10 +7934,10 @@ index 0000000..4a1cb1b
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
 diff --git a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
-index 0000000..815b5ad
+index 0000000..627b354
 --- /dev/null
 +++ b/include/linux/ipipe_trace.h
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,72 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_trace.h
 + *
@@ -7434,18 +7972,20 @@ index 0000000..815b5ad
 +void ipipe_trace_freeze(unsigned long v);
 +void ipipe_trace_special(unsigned char special_id, unsigned long v);
 +void ipipe_trace_pid(pid_t pid, short prio);
++void ipipe_trace_event(unsigned char id, unsigned long delay_tsc);
 +int ipipe_trace_max_reset(void);
 +int ipipe_trace_frozen_reset(void);
 +
 +#else /* !CONFIG_IPIPE_TRACE */
 +
-+#define ipipe_trace_begin(v)		do { (void)(v); } while(0)
-+#define ipipe_trace_end(v)		do { (void)(v); } while(0)
-+#define ipipe_trace_freeze(v)		do { (void)(v); } while(0)
-+#define ipipe_trace_special(id, v)	do { (void)(id); (void)(v); } while(0)
-+#define ipipe_trace_pid(pid, prio)	do { (void)(pid); (void)(prio); } while(0)
-+#define ipipe_trace_max_reset()		do { } while(0)
-+#define ipipe_trace_froze_reset()	do { } while(0)
++#define ipipe_trace_begin(v)			do { (void)(v); } while(0)
++#define ipipe_trace_end(v)			do { (void)(v); } while(0)
++#define ipipe_trace_freeze(v)			do { (void)(v); } while(0)
++#define ipipe_trace_special(id, v)		do { (void)(id); (void)(v); } while(0)
++#define ipipe_trace_pid(pid, prio)		do { (void)(pid); (void)(prio); } while(0)
++#define ipipe_trace_event(id, delay_tsc)	do { (void)(id); (void)(delay_tsc); } while(0)
++#define ipipe_trace_max_reset()			do { } while(0)
++#define ipipe_trace_froze_reset()		do { } while(0)
 +
 +#endif /* !CONFIG_IPIPE_TRACE */
 +
@@ -7471,7 +8011,7 @@ index 0000000..815b5ad
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 552e0ec..ecd540b 100644
+index 552e0ec..a921438 100644
 --- a/include/linux/irq.h
 +++ b/include/linux/irq.h
 @@ -151,6 +151,12 @@ struct irq_chip {
@@ -7480,9 +8020,9 @@ index 552e0ec..ecd540b 100644
  struct irq_desc {
 +#ifdef CONFIG_IPIPE
 +	void			(*ipipe_ack)(unsigned int irq,
-+						      struct irq_desc *desc);
++					     struct irq_desc *desc);
 +	void			(*ipipe_end)(unsigned int irq,
-+						      struct irq_desc *desc);
++					     struct irq_desc *desc);
 +#endif /* CONFIG_IPIPE */
  	irq_flow_handler_t	handle_irq;
  	struct irq_chip		*chip;
@@ -8163,10 +8703,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ef517f0
+index 0000000..97e6aae
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1655 @@
+@@ -0,0 +1,1713 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8200,6 +8740,7 @@ index 0000000..ef517f0
 +#include <linux/interrupt.h>
 +#include <linux/bitops.h>
 +#include <linux/tick.h>
++#include <linux/prefetch.h>
 +#ifdef CONFIG_PROC_FS
 +#include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
@@ -8474,15 +9015,17 @@ index 0000000..ef517f0
 +
 +void __ipipe_unstall_root(void)
 +{
++	struct ipipe_percpu_domain_data *p = ipipe_root_cpudom_ptr();
++
 +#ifndef CONFIG_IPIPE_DEBUG_CONTEXT
 +	BUG_ON(!ipipe_root_domain_p);
 +#endif
 +
 +        local_irq_disable_hw();
 +
-+        __clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++        __clear_bit(IPIPE_STALL_FLAG, &p->status);
 +
-+        if (unlikely(ipipe_root_cpudom_var(irqpend_himask) != 0))
++        if (unlikely(p->irqpend_himask != 0))
 +                __ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
 +        local_irq_enable_hw();
@@ -8568,11 +9111,13 @@ index 0000000..ef517f0
 +
 +void ipipe_unstall_pipeline_head(void)
 +{
++	struct ipipe_percpu_domain_data *p = ipipe_head_cpudom_ptr();
++
 +	local_irq_disable_hw();
 +
-+	__clear_bit(IPIPE_STALL_FLAG, &ipipe_head_cpudom_var(status));
++	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +
-+	if (unlikely(ipipe_head_cpudom_var(irqpend_himask) != 0)) {
++	if (unlikely(p->irqpend_himask != 0)) {
 +		struct ipipe_domain *head_domain = __ipipe_pipeline_head();
 +		if (likely(head_domain == ipipe_current_domain))
 +			__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
@@ -8585,12 +9130,14 @@ index 0000000..ef517f0
 +
 +void __ipipe_restore_pipeline_head(unsigned long x)
 +{
++	struct ipipe_percpu_domain_data *p = ipipe_head_cpudom_ptr();
++
 +	local_irq_disable_hw();
 +
 +	if (x) {
 +#ifdef CONFIG_DEBUG_KERNEL
 +		static int warned;
-+		if (!warned && test_and_set_bit(IPIPE_STALL_FLAG, &ipipe_head_cpudom_var(status))) {
++		if (!warned && test_and_set_bit(IPIPE_STALL_FLAG, &p->status)) {
 +			/*
 +			 * Already stalled albeit ipipe_restore_pipeline_head()
 +			 * should have detected it? Send a warning once.
@@ -8601,12 +9148,12 @@ index 0000000..ef517f0
 +			dump_stack();
 +		}
 +#else /* !CONFIG_DEBUG_KERNEL */
-+		set_bit(IPIPE_STALL_FLAG, &ipipe_head_cpudom_var(status));
++		set_bit(IPIPE_STALL_FLAG, &p->status);
 +#endif /* CONFIG_DEBUG_KERNEL */
 +	}
 +	else {
-+		__clear_bit(IPIPE_STALL_FLAG, &ipipe_head_cpudom_var(status));
-+		if (unlikely(ipipe_head_cpudom_var(irqpend_himask) != 0)) {
++		__clear_bit(IPIPE_STALL_FLAG, &p->status);
++		if (unlikely(p->irqpend_himask != 0)) {
 +			struct ipipe_domain *head_domain = __ipipe_pipeline_head();
 +			if (likely(head_domain == ipipe_current_domain))
 +				__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
@@ -8667,66 +9214,83 @@ index 0000000..ef517f0
 +void __ipipe_set_irq_pending(struct ipipe_domain *ipd, unsigned irq)
 +{
 +	int level = irq >> IPIPE_IRQ_ISHIFT, rank = irq & IPIPE_IRQ_IMASK;
++	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(ipd);
 +
++	prefetchw(p);
++	
 +	if (likely(!test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
-+		__set_bit(rank, &ipipe_cpudom_var(ipd, irqpend_lomask)[level]);
-+		__set_bit(level,&ipipe_cpudom_var(ipd, irqpend_himask));
++		__set_bit(rank, &p->irqpend_lomask[level]);
++		__set_bit(level, &p->irqpend_himask);
 +	} else
-+		__set_bit(rank, &ipipe_cpudom_var(ipd, irqheld_mask)[level]);
++		__set_bit(rank, &p->irqheld_mask[level]);
 +
-+	ipipe_cpudom_var(ipd, irqall)[irq]++;
++	p->irqall[irq]++;
 +}
 +
 +/* Must be called hw IRQs off. */
 +void __ipipe_lock_irq(struct ipipe_domain *ipd, int cpu, unsigned irq)
 +{
-+	if (likely(!test_and_set_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
-+		int level = irq >> IPIPE_IRQ_ISHIFT, rank = irq & IPIPE_IRQ_IMASK;
-+		if (__test_and_clear_bit(rank, &ipipe_percpudom(ipd, irqpend_lomask, cpu)[level]))
-+			__set_bit(rank, &ipipe_cpudom_var(ipd, irqheld_mask)[level]);
-+		if (ipipe_percpudom(ipd, irqpend_lomask, cpu)[level] == 0)
-+			__clear_bit(level, &ipipe_percpudom(ipd, irqpend_himask, cpu));
-+	}
++	struct ipipe_percpu_domain_data *p;
++	int level, rank;
++
++	if (unlikely(test_and_set_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control)))
++		return;
++
++	level = irq >> IPIPE_IRQ_ISHIFT;
++	rank = irq & IPIPE_IRQ_IMASK;
++	p = ipipe_percpudom_ptr(ipd, cpu);
++
++	if (__test_and_clear_bit(rank, &p->irqpend_lomask[level]))
++		__set_bit(rank, &p->irqheld_mask[level]);
++	if (p->irqpend_lomask[level] == 0)
++		__clear_bit(level, &p->irqpend_himask);
 +}
 +
 +/* Must be called hw IRQs off. */
 +void __ipipe_unlock_irq(struct ipipe_domain *ipd, unsigned irq)
 +{
-+	int cpu;
++	struct ipipe_percpu_domain_data *p;
++	int cpu, level, rank;
 +
-+	if (likely(test_and_clear_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
-+		int level = irq >> IPIPE_IRQ_ISHIFT, rank = irq & IPIPE_IRQ_IMASK;
-+		for_each_online_cpu(cpu) {
-+			if (test_and_clear_bit(rank, &ipipe_percpudom(ipd, irqheld_mask, cpu)[level])) {
-+				/* We need atomic ops here: */
-+				set_bit(rank, &ipipe_percpudom(ipd, irqpend_lomask, cpu)[level]);
-+				set_bit(level, &ipipe_percpudom(ipd, irqpend_himask, cpu));
-+			}
++	if (unlikely(!test_and_clear_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control)))
++		return;
++
++	level = irq >> IPIPE_IRQ_ISHIFT, rank = irq & IPIPE_IRQ_IMASK;
++	for_each_online_cpu(cpu) {
++		p = ipipe_percpudom_ptr(ipd, cpu);
++		if (test_and_clear_bit(rank, &p->irqheld_mask[level])) {
++			/* We need atomic ops here: */
++			set_bit(rank, &p->irqpend_lomask[level]);
++			set_bit(level, &p->irqpend_himask);
 +		}
 +	}
 +}
 +
-+/* __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
-+   be called with local hw interrupts disabled. */
-+
++/*
++ * __ipipe_walk_pipeline(): Plays interrupts pending in the log. Must
++ * be called with local hw interrupts disabled.
++ */
 +void __ipipe_walk_pipeline(struct list_head *pos)
 +{
 +	struct ipipe_domain *this_domain = ipipe_current_domain, *next_domain;
++	struct ipipe_percpu_domain_data *p, *np;
++
++	p = ipipe_cpudom_ptr(this_domain);
 +
 +	while (pos != &__ipipe_pipeline) {
 +
 +		next_domain = list_entry(pos, struct ipipe_domain, p_link);
++		np = ipipe_cpudom_ptr(next_domain);
 +
-+		if (test_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(next_domain, status)))
++		if (test_bit(IPIPE_STALL_FLAG, &np->status))
 +			break;	/* Stalled stage -- do not go further. */
 +
-+		if (ipipe_cpudom_var(next_domain, irqpend_himask) != 0) {
-+
++		if (np->irqpend_himask) {
 +			if (next_domain == this_domain)
 +				__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +			else {
 +
-+				ipipe_cpudom_var(this_domain, evsync) = 0;
++				p->evsync = 0;
 +				ipipe_current_domain = next_domain;
 +				ipipe_suspend_domain();	/* Sync stage and propagate interrupts. */
 +
@@ -8738,12 +9302,10 @@ index 0000000..ef517f0
 +				 * domain.
 +				 */
 +
-+				if (ipipe_cpudom_var(this_domain, irqpend_himask) != 0 &&
-+				    !test_bit(IPIPE_STALL_FLAG,
-+					      &ipipe_cpudom_var(this_domain, status)))
++				if (p->irqpend_himask &&
++				    !test_bit(IPIPE_STALL_FLAG, &p->status))
 +					__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +			}
-+
 +			break;
 +		} else if (next_domain == this_domain)
 +			break;
@@ -8759,16 +9321,17 @@ index 0000000..ef517f0
 +void ipipe_suspend_domain(void)
 +{
 +	struct ipipe_domain *this_domain, *next_domain;
++	struct ipipe_percpu_domain_data *p;
 +	struct list_head *ln;
 +	unsigned long flags;
 +
 +	local_irq_save_hw(flags);
 +
 +	this_domain = next_domain = ipipe_current_domain;
++	p = ipipe_cpudom_ptr(this_domain);
++	p->status &= ~(IPIPE_STALL_MASK|IPIPE_SYNC_MASK);
 +
-+	__clear_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(this_domain, status));
-+
-+	if (ipipe_cpudom_var(this_domain, irqpend_himask) != 0)
++	if (p->irqpend_himask != 0)
 +		goto sync_stage;
 +
 +	for (;;) {
@@ -8778,16 +9341,15 @@ index 0000000..ef517f0
 +			break;
 +
 +		next_domain = list_entry(ln, struct ipipe_domain, p_link);
++		p = ipipe_cpudom_ptr(next_domain);
 +
-+		if (test_bit(IPIPE_STALL_FLAG,
-+			     &ipipe_cpudom_var(next_domain, status)) != 0)
++		if (p->status & IPIPE_STALL_MASK)
 +			break;
 +
-+		if (ipipe_cpudom_var(next_domain, irqpend_himask) == 0)
++		if (p->irqpend_himask == 0)
 +			continue;
 +
 +		ipipe_current_domain = next_domain;
-+
 +sync_stage:
 +		__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
 +
@@ -8803,6 +9365,7 @@ index 0000000..ef517f0
 +
 +	local_irq_restore_hw(flags);
 +}
++
 +
 +/* ipipe_alloc_virq() -- Allocate a pipelined virtual/soft interrupt.
 + * Virtual interrupts are handled in exactly the same way than their
@@ -8998,6 +9561,18 @@ index 0000000..ef517f0
 +			local_irq_restore_hw(flags);
 +			propagate = !evhand(event, start_domain, data);
 +			local_irq_save_hw(flags);
++			/*
++			 * We may have a migration issue here, if the
++			 * current task is migrated to another CPU on
++			 * behalf of the invoked handler, usually when
++			 * a syscall event is processed. However,
++			 * ipipe_catch_event() will make sure that a
++			 * CPU that clears a handler for any given
++			 * event will not attempt to wait for itself
++			 * to clear the evsync bit for that event,
++			 * which practically plugs the hole, without
++			 * resorting to a much more complex strategy.
++			 */
 +			ipipe_cpudom_var(next_domain, evsync) &= ~(1LL << event);
 +			if (ipipe_current_domain != next_domain)
 +				this_domain = ipipe_current_domain;
@@ -9042,48 +9617,63 @@ index 0000000..ef517f0
 + * consequence of what the root domain cannot handle wired
 + * interrupts.
 + * 4- Wired interrupts must have a valid acknowledge handler for the
-+ * head domain (if needed), and in any case, must not rely on handlers
-+ * provided by lower priority domains during the acknowledge cycle
-+ * (see __ipipe_handle_irq).
++ * head domain (if needed, see __ipipe_handle_irq).
 + *
 + * Called with hw interrupts off.
 + */
 +
-+int __ipipe_dispatch_wired(struct ipipe_domain *head_domain, unsigned irq)
++void __ipipe_dispatch_wired(struct ipipe_domain *head, unsigned irq)
 +{
-+	struct ipipe_domain *old;
++	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
 +
-+	if (test_bit(IPIPE_LOCK_FLAG, &head_domain->irqs[irq].control)) {
-+		/* If we can't process this IRQ right now, we must
++	prefetchw(p);
++
++	if (unlikely(test_bit(IPIPE_LOCK_FLAG, &head->irqs[irq].control))) {
++		/*
++		 * If we can't process this IRQ right now, we must
 +		 * mark it as held, so that it will get played during
 +		 * normal log sync when the corresponding interrupt
-+		 * source is eventually unlocked. */
-+		ipipe_cpudom_var(head_domain, irqall)[irq]++;
-+		__set_bit(irq & IPIPE_IRQ_IMASK, &ipipe_cpudom_var(head_domain, irqheld_mask)[irq >> IPIPE_IRQ_ISHIFT]);
-+		return 0;
++		 * source is eventually unlocked.
++		 */
++		p->irqall[irq]++;
++		__set_bit(irq & IPIPE_IRQ_IMASK, &p->irqheld_mask[irq >> IPIPE_IRQ_ISHIFT]);
++		return;
 +	}
 +
-+	if (test_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(head_domain, status))) {
-+		__ipipe_set_irq_pending(head_domain, irq);
-+		return 0;
++	if (test_bit(IPIPE_STALL_FLAG, &p->status)) {
++		__ipipe_set_irq_pending(head, irq);
++		return;
 +	}
++
++	__ipipe_dispatch_wired_nocheck(head, irq);
++}
++
++void __ipipe_dispatch_wired_nocheck(struct ipipe_domain *head, unsigned irq)
++{
++	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
++	struct ipipe_domain *old;
++
++	prefetchw(p);
 +
 +	old = ipipe_current_domain;
-+	ipipe_current_domain = head_domain; /* Switch to the head domain. */
++	ipipe_current_domain = head; /* Switch to the head domain. */
 +
-+	ipipe_cpudom_var(head_domain, irqall)[irq]++;
-+	__set_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(head_domain, status));
-+	head_domain->irqs[irq].handler(irq, head_domain->irqs[irq].cookie); /* Call the ISR. */
++	p->irqall[irq]++;
++	__set_bit(IPIPE_STALL_FLAG, &p->status);
++	head->irqs[irq].handler(irq, head->irqs[irq].cookie); /* Call the ISR. */
 +	__ipipe_run_irqtail();
-+	__clear_bit(IPIPE_STALL_FLAG, &ipipe_cpudom_var(head_domain, status));
++	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +
-+	/* We expect the caller to start a complete pipeline walk upon
-+	 * return, so that propagated interrupts will get played. */
++	if (ipipe_current_domain == head) {
++		ipipe_current_domain = old;
++		if (old == head) {
++			if (p->irqpend_himask)
++				__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY);
++			return;
++		}
++	}
 +
-+	if (ipipe_current_domain == head_domain)
-+		ipipe_current_domain = old; /* Back to the preempted domain. */
-+
-+	return 1;
++	__ipipe_walk_pipeline(&head->p_link);
 +}
 +
 +/*
@@ -9102,15 +9692,18 @@ index 0000000..ef517f0
 + */
 +void __ipipe_sync_stage(unsigned long syncmask)
 +{
++	struct ipipe_percpu_domain_data *p;
 +	unsigned long mask, submask;
 +	struct ipipe_domain *ipd;
 +	int level, rank, cpu;
 +	unsigned irq;
 +
-+	if (__test_and_set_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status)))
++	ipd = ipipe_current_domain;
++	p = ipipe_cpudom_ptr(ipd);
++
++	if (__test_and_set_bit(IPIPE_SYNC_FLAG, &p->status))
 +		return;
 +
-+	ipd = ipipe_current_domain;
 +	cpu = ipipe_processor_id();
 +
 +	/*
@@ -9121,17 +9714,17 @@ index 0000000..ef517f0
 +	 * sigaction()), it will have to unstall (then stall again before
 +	 * returning to us!) the stage when it sees fit.
 +	 */
-+	while ((mask = (ipipe_this_cpudom_var(irqpend_himask) & syncmask)) != 0) {
++	while ((mask = (p->irqpend_himask & syncmask)) != 0) {
 +		level = __ipipe_ffnz(mask);
 +
-+		while ((submask = ipipe_this_cpudom_var(irqpend_lomask)[level]) != 0) {
++		while ((submask = p->irqpend_lomask[level]) != 0) {
 +			rank = __ipipe_ffnz(submask);
 +			irq = (level << IPIPE_IRQ_ISHIFT) + rank;
 +
-+			__clear_bit(rank, &ipipe_this_cpudom_var(irqpend_lomask)[level]);
++			__clear_bit(rank, &p->irqpend_lomask[level]);
 +
-+			if (ipipe_this_cpudom_var(irqpend_lomask)[level] == 0)
-+				__clear_bit(level, &ipipe_this_cpudom_var(irqpend_himask));
++			if (p->irqpend_lomask[level] == 0)
++				__clear_bit(level, &p->irqpend_himask);
 +			/*
 +			 * Make sure the compiler will not postpone
 +			 * the pending bitmask updates before calling
@@ -9146,12 +9739,13 @@ index 0000000..ef517f0
 +			if (test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))
 +				continue;
 +
-+			__set_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status));
++			__set_bit(IPIPE_STALL_FLAG, &p->status);
 +
 +			if (ipd == ipipe_root_domain)
 +				trace_hardirqs_off();
 +
 +			__ipipe_run_isr(ipd, irq);
++			p = ipipe_cpudom_ptr(ipipe_current_domain);
 +#ifdef CONFIG_SMP
 +			{
 +				int newcpu = ipipe_processor_id();
@@ -9169,20 +9763,21 @@ index 0000000..ef517f0
 +					 * since it must have scheduled another task in by
 +					 * now.
 +					 */
-+					__set_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status));
++					__set_bit(IPIPE_SYNC_FLAG, &p->status);
 +					cpu = newcpu;
 +				}
 +			}
 +#endif	/* CONFIG_SMP */
-+			if (ipd == ipipe_root_domain &&
-+			    test_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status)))
++#ifdef CONFIG_TRACE_IRQFLAGS
++			if (ipipe_root_domain_p &&
++			    test_bit(IPIPE_STALL_FLAG, &p->status))
 +				trace_hardirqs_on();
-+
-+			__clear_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status));
++#endif
++			__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +		}
 +	}
 +
-+	__clear_bit(IPIPE_SYNC_FLAG, &ipipe_this_cpudom_var(status));
++	__clear_bit(IPIPE_SYNC_FLAG, &p->status);
 +}
 +
 +/* ipipe_register_domain() -- Link a new domain to the pipeline. */
@@ -9369,38 +9964,25 @@ index 0000000..ef517f0
 + * a running interrupt handler to the next domain down the pipeline.
 + * ipipe_schedule_irq() -- Does almost the same as above, but attempts
 + * to pend the interrupt for the current domain first.
++ * Must be called hw IRQs off.
 + */
-+int __ipipe_schedule_irq(unsigned irq, struct list_head *head)
++void __ipipe_pend_irq(unsigned irq, struct list_head *head)
 +{
 +	struct ipipe_domain *ipd;
 +	struct list_head *ln;
-+	unsigned long flags;
 +
-+	if (irq >= IPIPE_NR_IRQS ||
-+	    (ipipe_virtual_irq_p(irq)
-+	     && !test_bit(irq - IPIPE_VIRQ_BASE, &__ipipe_virtual_irq_map)))
-+		return -EINVAL;
-+
-+	local_irq_save_hw(flags);
-+
-+	ln = head;
-+
-+	while (ln != &__ipipe_pipeline) {
-+
++#ifdef CONFIG_IPIPE_DEBUG
++	BUG_ON(irq >= IPIPE_NR_IRQS ||
++	       (ipipe_virtual_irq_p(irq)
++		&& !test_bit(irq - IPIPE_VIRQ_BASE, &__ipipe_virtual_irq_map)));
++#endif
++	for (ln = head; ln != &__ipipe_pipeline; ln = ipd->p_link.next) {
 +		ipd = list_entry(ln, struct ipipe_domain, p_link);
-+
 +		if (test_bit(IPIPE_HANDLE_FLAG, &ipd->irqs[irq].control)) {
 +			__ipipe_set_irq_pending(ipd, irq);
-+			local_irq_restore_hw(flags);
-+			return 1;
++			return;
 +		}
-+
-+		ln = ipd->p_link.next;
 +	}
-+
-+	local_irq_restore_hw(flags);
-+
-+	return 0;
 +}
 +
 +/* ipipe_free_virq() -- Release a virtual/soft interrupt. */
@@ -9485,6 +10067,21 @@ index 0000000..ef517f0
 +		 * synchronization flag is cleared for the given event
 +		 * on all CPUs.
 +		 */
++		preempt_disable();
++		cpu = smp_processor_id();
++		/*
++		 * Hack: this solves the potential migration issue
++		 * raised in __ipipe_dispatch_event(). This is a
++		 * work-around which makes the assumption that other
++		 * CPUs will subsequently, either process at least one
++		 * interrupt for the target domain, or call
++		 * __ipipe_dispatch_event() without going through a
++		 * migration while running the handler at least once;
++		 * practically, this is safe on any normally running
++		 * system.
++		 */
++		ipipe_percpudom(ipd, evsync, cpu) &= ~(1LL << event);
++		preempt_enable();
 +
 +		for_each_online_cpu(cpu) {
 +			while (ipipe_percpudom(ipd, evsync, cpu) & (1LL << event))
@@ -9812,7 +10409,8 @@ index 0000000..ef517f0
 +EXPORT_SYMBOL(ipipe_get_ptd);
 +EXPORT_SYMBOL(ipipe_set_irq_affinity);
 +EXPORT_SYMBOL(ipipe_send_ipi);
-+EXPORT_SYMBOL(__ipipe_schedule_irq);
++EXPORT_SYMBOL(__ipipe_pend_irq);
++EXPORT_SYMBOL(__ipipe_set_irq_pending);
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
 +EXPORT_SYMBOL(ipipe_request_tickdev);
 +EXPORT_SYMBOL(ipipe_release_tickdev);
@@ -9824,10 +10422,10 @@ index 0000000..ef517f0
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
 diff --git a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
-index 0000000..fc7fe99
+index 0000000..1d055a0
 --- /dev/null
 +++ b/kernel/ipipe/tracer.c
-@@ -0,0 +1,1336 @@
+@@ -0,0 +1,1383 @@
 +/* -*- linux-c -*-
 + * kernel/ipipe/tracer.c
 + *
@@ -9924,6 +10522,7 @@ index 0000000..fc7fe99
 +	IPIPE_TRACE_FREEZE,
 +	IPIPE_TRACE_SPECIAL,
 +	IPIPE_TRACE_PID,
++	IPIPE_TRACE_EVENT,
 +};
 +
 +#define IPIPE_TYPE_MASK             0x0007
@@ -10330,6 +10929,16 @@ index 0000000..fc7fe99
 +}
 +EXPORT_SYMBOL(ipipe_trace_pid);
 +
++void notrace ipipe_trace_event(unsigned char id, unsigned long delay_tsc)
++{
++	if (!ipipe_trace_enable)
++		return;
++	__ipipe_trace(IPIPE_TRACE_EVENT | (id << IPIPE_TYPE_BITS),
++	              __BUILTIN_RETURN_ADDRESS0,
++	              __BUILTIN_RETURN_ADDRESS1, delay_tsc);
++}
++EXPORT_SYMBOL(ipipe_trace_event);
++
 +int ipipe_trace_max_reset(void)
 +{
 +	int cpu;
@@ -10421,6 +11030,27 @@ index 0000000..fc7fe99
 +	strcpy(task_info + (11 - strlen(buf)), buf);
 +}
 +
++static void
++__ipipe_get_event_date(char *buf,struct ipipe_trace_path *path,
++		       struct ipipe_trace_point *point)
++{
++	long time;
++	int type;
++
++	time = __ipipe_signed_tsc2us(point->timestamp -
++				     path->point[path->begin].timestamp + point->v);
++	type = point->type >> IPIPE_TYPE_BITS;
++
++	if (type == 0)
++		/*
++		 * Event type #0 is predefined, stands for the next
++		 * timer tick.
++		 */
++		sprintf(buf, "tick@%-6ld", time);
++	else
++		sprintf(buf, "%3d@%-7ld", type, time);
++}
++
 +#ifdef CONFIG_IPIPE_TRACE_PANIC
 +void ipipe_trace_panic_freeze(void)
 +{
@@ -10445,7 +11075,7 @@ index 0000000..fc7fe99
 +{
 +	int cnt = back_trace;
 +	int start, pos;
-+	char task_info[12];
++	char buf[16];
 +
 +	if (!panic_path)
 +		return;
@@ -10459,7 +11089,7 @@ index 0000000..fc7fe99
 +	while (cnt-- > 0) {
 +		struct ipipe_trace_point *point = &panic_path->point[pos];
 +		long time;
-+		char buf[16];
++		char info[16];
 +		int i;
 +
 +		printk(" %c",
@@ -10477,7 +11107,7 @@ index 0000000..fc7fe99
 +			printk("-<invalid>-\n");
 +		else {
 +			__ipipe_trace_point_type(buf, point);
-+			printk(buf);
++			printk("%s", buf);
 +
 +			switch (point->type & IPIPE_TYPE_MASK) {
 +				case IPIPE_TRACE_FUNC:
@@ -10485,9 +11115,15 @@ index 0000000..fc7fe99
 +					break;
 +
 +				case IPIPE_TRACE_PID:
-+					__ipipe_get_task_info(task_info,
++					__ipipe_get_task_info(info,
 +							      point, 1);
-+					printk(task_info);
++					printk(info);
++					break;
++
++				case IPIPE_TRACE_EVENT:
++					__ipipe_get_event_date(info,
++							       panic_path, point);
++					printk("%s", info);
 +					break;
 +
 +				default:
@@ -10564,6 +11200,10 @@ index 0000000..fc7fe99
 +
 +		case IPIPE_TRACE_PID:
 +			sprintf(buf, "[%5d] ", (pid_t)point->v);
++			break;
++
++		case IPIPE_TRACE_EVENT:
++			sprintf(buf, "event   ");
 +			break;
 +	}
 +}
@@ -10813,6 +11453,11 @@ index 0000000..fc7fe99
 +
 +			case IPIPE_TRACE_PID:
 +				__ipipe_get_task_info(buf, point, 0);
++				seq_puts(m, buf);
++				break;
++
++			case IPIPE_TRACE_EVENT:
++				__ipipe_get_event_date(buf, print_path, point);
 +				seq_puts(m, buf);
 +				break;
 +
@@ -11165,7 +11810,7 @@ index 0000000..fc7fe99
 +	                              &ipipe_trace_enable);
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 964964b..47c9722 100644
+index 964964b..903dba6 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -353,7 +353,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
@@ -11353,7 +11998,7 @@ index 964964b..47c9722 100644
  
  	spin_lock_irqsave(&desc->lock, flags);
  
-@@ -579,6 +707,10 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -579,9 +707,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  			mask_ack_irq(desc, irq);
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
@@ -11364,6 +12009,13 @@ index 964964b..47c9722 100644
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
++#ifdef CONFIG_IPIPE
++	/* Suppress intermediate trampoline routine. */
++	ipipe_root_domain->irqs[irq].acknowledge = desc->ipipe_ack;
++#endif /* CONFIG_IPIPE */
+ 
+ 	if (handle != handle_bad_irq && is_chained) {
+ 		desc->status &= ~IRQ_DISABLED;
 diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
 index 5fa6198..ed21856 100644
 --- a/kernel/irq/handle.c
@@ -11413,10 +12065,18 @@ index 81a4e4a..da942d6 100644
  
  	if (curr->hardirqs_enabled) {
 diff --git a/kernel/panic.c b/kernel/panic.c
-index 425567f..82e7181 100644
+index 425567f..c16bce2 100644
 --- a/kernel/panic.c
 +++ b/kernel/panic.c
-@@ -267,6 +267,8 @@ int oops_may_print(void)
+@@ -21,6 +21,7 @@
+ #include <linux/debug_locks.h>
+ #include <linux/random.h>
+ #include <linux/kallsyms.h>
++#include <linux/ipipe_trace.h>
+ 
+ int panic_on_oops;
+ int tainted;
+@@ -267,6 +268,8 @@ int oops_may_print(void)
   */
  void oops_enter(void)
  {
