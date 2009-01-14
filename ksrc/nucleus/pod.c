@@ -3078,7 +3078,7 @@ int xnpod_enable_timesource(void)
 	xnlock_put_irqrestore(&nklock, s);
 
 	nktbase.wallclock_offset =
-		xnarch_get_host_time() + xnarch_get_cpu_time();
+		xnarch_get_host_time() - xnarch_get_cpu_time();
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 
