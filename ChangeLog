@@ -1,3 +1,8 @@
+2009-01-14  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/nucleus/pod.c (__xnpod_schedule): Fix handling of relaxed
+	shadow epilogue.
+
 2009-01-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.26-arm-1.12-00,
