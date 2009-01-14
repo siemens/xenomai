@@ -2099,7 +2099,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 void __xnpod_schedule(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr = sched->curr;
-	int zombie, switched = 0, need_resched, shadow;
+	int zombie, switched = 0, need_resched, relaxing;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -2136,9 +2136,9 @@ void __xnpod_schedule(struct xnsched *sched)
 		   next, xnthread_name(next));
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	shadow = xnthread_test_state(prev, XNSHADOW);
+	relaxing = xnthread_test_state(prev, XNRELAX);
 #else
-	(void)shadow;
+	(void)relaxing;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnthread_test_state(next, XNROOT)) {
@@ -2161,6 +2161,16 @@ void __xnpod_schedule(struct xnsched *sched)
 
 	xnpod_switch_to(sched, prev, next);
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	/*
+	 * Test whether we are relaxing a thread. In such a case, we
+	 * are here the epilogue of Linux' schedule, and should skip
+	 * xnpod_schedule epilogue.
+	 */
+	if (relaxing)
+		goto relax_epilogue;
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
 	switched = 1;
 	sched = xnsched_finish_unlocked_switch(sched);
 	/*
@@ -2172,16 +2182,6 @@ void __xnpod_schedule(struct xnsched *sched)
 	xnarch_trace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	/*
-	 * Test whether we are relaxing a thread. In such a case, we
-	 * are here the epilogue of Linux' schedule, and should skip
-	 * xnpod_schedule epilogue.
-	 */
-	if (shadow && xnthread_test_state(curr, XNROOT))
-		goto relax_epilogue;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (zombie)
 		xnpod_fatal("zombie thread %s (%p) would not die...",
@@ -2220,7 +2220,7 @@ void __xnpod_schedule(struct xnsched *sched)
 		   shadow we've just rescheduled in the Linux domain to have it
 		   exit properly.  Reap it now. */
 		if (xnshadow_thrptd(current) == NULL) {
-			xnlock_clear_irqon(&nklock);
+			splnone();
 			xnshadow_exit();
 		}
 
@@ -2605,7 +2605,7 @@ int xnpod_enable_timesource(void)
 	xnlock_put_irqrestore(&nklock, s);
 
 	nktbase.wallclock_offset =
-		xnarch_get_host_time() + xnarch_get_cpu_time();
+		xnarch_get_host_time() - xnarch_get_cpu_time();
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 
