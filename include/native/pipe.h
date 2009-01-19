@@ -171,7 +171,7 @@ void __native_pipe_pkg_cleanup(void);
 
 static inline void __native_pipe_flush_rq(xnqueue_t *rq)
 {
-	xeno_flush_rq(RT_PIPE, rq, pipe);
+	xeno_flush_rq_norelease(RT_PIPE, rq, pipe);
 }
 
 #else /* !CONFIG_XENO_OPT_NATIVE_PIPE */

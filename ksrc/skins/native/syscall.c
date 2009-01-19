@@ -3358,23 +3358,16 @@ static int __rt_pipe_delete(struct pt_regs *regs)
 {
 	RT_PIPE_PLACEHOLDER ph;
 	RT_PIPE *pipe;
-	int err;
 
 	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
 				     sizeof(ph)))
 		return -EFAULT;
 
-	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
-
-	if (!pipe)
+	pipe = xnregistry_fetch(ph.opaque);
+	if (pipe == NULL)
 		return -ESRCH;
 
-	err = rt_pipe_delete(pipe);
-
-	if (!err && pipe->cpid)
-		xnfree(pipe);
-
-	return err;
+	return rt_pipe_delete(pipe);
 }
 
 /*

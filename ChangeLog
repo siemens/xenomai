@@ -1,3 +1,15 @@
+2009-01-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pipe.c, ksrc/skins/native/pipe.c,
+	ksrc/skins/rtai/fifo.c: Refactor callback management, fixing a
+	severe latency issue, and a potential memory leak in both
+	disconnect/release handlers.
+
+	* ksrc/nucleus/pipe.c (xnpipe_disconnect, xnpipe_release):
+	Introduce lingering close sequence to keep the extra state safe
+	after xnpipe_disconnect() is invoked, until xnpipe_release() is
+	called for the same channel.
+
 2009-01-15  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.27-powerpc-2.4-03,
