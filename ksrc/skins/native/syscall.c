@@ -3454,7 +3454,6 @@ static int __rt_pipe_delete(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_PIPE_PLACEHOLDER ph;
 	RT_PIPE *pipe;
-	int err;
 
 	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(ph)))
 		return -EFAULT;
@@ -3467,12 +3466,7 @@ static int __rt_pipe_delete(struct task_struct *curr, struct pt_regs *regs)
 	if (!pipe)
 		return -ESRCH;
 
-	err = rt_pipe_delete(pipe);
-
-	if (!err && pipe->cpid)
-		xnfree(pipe);
-
-	return err;
+	return rt_pipe_delete(pipe);
 }
 
 /*

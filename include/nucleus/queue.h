@@ -262,6 +262,9 @@ static inline void moveq(xnqueue_t *dstq, xnqueue_t *srcq)
 	xnholder_t *tailsrc = srcq->head.last;
 	xnholder_t *headdst = &dstq->head;
 
+	if (emptyq_p(srcq))
+		return;
+
 	headsrc->last->next = tailsrc->next;
 	tailsrc->next->last = headsrc->last;
 	headsrc->last = headdst;

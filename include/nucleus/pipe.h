@@ -23,10 +23,12 @@
 #define XNPIPE_NDEVS      CONFIG_XENO_OPT_PIPE_NRDEV
 #define XNPIPE_DEV_MAJOR  150
 
-#define	XNPIPE_IOCTL_BASE     'p'
-#define XNPIPEIOC_GET_NRDEV   _IOW(XNPIPE_IOCTL_BASE,0,int)
-#define XNPIPEIOC_FLUSH       _IO(XNPIPE_IOCTL_BASE,1)
-#define XNPIPEIOC_SETSIG      _IO(XNPIPE_IOCTL_BASE,2)
+#define	XNPIPE_IOCTL_BASE	'p'
+#define XNPIPEIOC_GET_NRDEV	_IOW(XNPIPE_IOCTL_BASE, 0, int)
+#define XNPIPEIOC_IFLUSH	_IO(XNPIPE_IOCTL_BASE,1)
+#define XNPIPEIOC_OFLUSH	_IO(XNPIPE_IOCTL_BASE,2)
+#define XNPIPEIOC_FLUSH		XNPIPEIOC_OFLUSH
+#define XNPIPEIOC_SETSIG	_IO(XNPIPE_IOCTL_BASE,3)
 
 #define XNPIPE_NORMAL  0x0
 #define XNPIPE_URGENT  0x1
@@ -45,12 +47,13 @@
 #include <linux/poll.h>
 
 #define XNPIPE_KERN_CONN         0x1
-#define XNPIPE_USER_CONN         0x2
-#define XNPIPE_USER_SIGIO        0x4
-#define XNPIPE_USER_WREAD        0x8
-#define XNPIPE_USER_WREAD_READY  0x10
-#define XNPIPE_USER_WSYNC        0x20
-#define XNPIPE_USER_WSYNC_READY  0x40
+#define XNPIPE_KERN_LCLOSE       0x2
+#define XNPIPE_USER_CONN         0x4
+#define XNPIPE_USER_SIGIO        0x8
+#define XNPIPE_USER_WREAD        0x10
+#define XNPIPE_USER_WREAD_READY  0x20
+#define XNPIPE_USER_WSYNC        0x40
+#define XNPIPE_USER_WSYNC_READY  0x80
 
 #define XNPIPE_USER_ALL_WAIT \
 (XNPIPE_USER_WREAD|XNPIPE_USER_WSYNC)
@@ -60,37 +63,39 @@
 
 typedef struct xnpipe_mh {
 
-	xnholder_t link;
+	struct xnholder link;
 	unsigned size;
 	unsigned rdoff;
 
 } xnpipe_mh_t;
 
-static inline xnpipe_mh_t *link2mh(xnholder_t *ln)
+static inline xnpipe_mh_t *link2mh(struct xnholder *ln)
 {
 	return ln ? container_of(ln, xnpipe_mh_t, link) : NULL;
 }
 
-typedef int xnpipe_io_handler (int minor,
-			       struct xnpipe_mh *mh, int retval, void *cookie);
+struct xnpipe_state;
 
-typedef int xnpipe_session_handler (int minor, void *cookie);
+struct xnpipe_operations {
+	void (*output)(struct xnpipe_mh *mh, void *xstate);
+	int (*input)(struct xnpipe_mh *mh, int retval, void *xstate);
+	void *(*alloc_ibuf)(size_t size, void *xstate);
+	void (*free_ibuf)(void *buf, void *xstate);
+	void (*free_obuf)(void *buf, void *xstate);
+	void (*release)(void *xstate);
+};
 
-typedef void *xnpipe_alloc_handler (int minor, size_t size, void *cookie);
+struct xnpipe_state {
 
-typedef struct xnpipe_state {
+	struct xnholder slink;	/* Link on sleep queue */
+	struct xnholder alink;	/* Link on async queue */
+#define link2xnpipe(ln, fld)	container_of(ln, struct xnpipe_state, fld)
 
-	xnholder_t slink;	/* Link on sleep queue */
-	xnholder_t alink;	/* Link on async queue */
-#define link2xnpipe(ln, fld)	container_of(ln, xnpipe_state_t, fld)
-
-	xnqueue_t inq;		/* From user-space to kernel */
-	xnqueue_t outq;		/* From kernel to user-space */
-	xnpipe_io_handler *output_handler;
-	xnpipe_io_handler *input_handler;
-	xnpipe_alloc_handler *alloc_handler;
-	xnsynch_t synchbase;
-	void *cookie;
+	struct xnqueue inq;		/* From user-space to kernel */
+	struct xnqueue outq;		/* From kernel to user-space */
+	struct xnsynch synchbase;
+	struct xnpipe_operations ops;
+	void *xstate;		/* Extra state managed by caller */
 
 	/* Linux kernel part */
 	xnflags_t status;
@@ -100,9 +105,9 @@ typedef struct xnpipe_state {
 	int wcount;			/* number of waiters on this minor */
 	size_t ionrd;
 
-} xnpipe_state_t;
+};
 
-extern xnpipe_state_t xnpipe_states[];
+extern struct xnpipe_state xnpipe_states[];
 
 #define xnminor_from_state(s) (s - xnpipe_states)
 
@@ -116,13 +121,8 @@ void xnpipe_umount(void);
 
 /* Entry points of the kernel interface. */
 
-void xnpipe_setup(xnpipe_session_handler *open_handler,
-		  xnpipe_session_handler *close_handler);
-
 int xnpipe_connect(int minor,
-		   xnpipe_io_handler *output_handler,
-		   xnpipe_io_handler *input_handler,
-		   xnpipe_alloc_handler *alloc_handler, void *cookie);
+		   struct xnpipe_operations *ops, void *xstate);
 
 int xnpipe_disconnect(int minor);
 
@@ -134,15 +134,13 @@ ssize_t xnpipe_mfixup(int minor, struct xnpipe_mh *mh, ssize_t size);
 ssize_t xnpipe_recv(int minor,
 		    struct xnpipe_mh **pmh, xnticks_t timeout);
 
-int xnpipe_inquire(int minor);
-
 int xnpipe_flush(int minor, int mode);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-static inline xnholder_t *xnpipe_m_link(xnpipe_mh_t *mh)
+static inline struct xnholder *xnpipe_m_link(xnpipe_mh_t *mh)
 {
 	return &mh->link;
 }

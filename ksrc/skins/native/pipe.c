@@ -86,33 +86,46 @@ static void __pipe_flush_pool(xnheap_t *heap,
 	xnarch_free_host_mem(poolmem, poolsize);
 }
 
-static void *__pipe_alloc_handler(int bminor, size_t size, void *cookie)
+static void *__pipe_alloc_handler(size_t size, void *xstate) /* nklock free */
 {
-	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	RT_PIPE *pipe = xstate;
+	void *buf;
 
-	/* Allocate memory for the incoming message. */
-	return xnheap_alloc(pipe->bufpool, size);
+	/* Try to allocate memory for the incoming message. */
+	buf = xnheap_alloc(pipe->bufpool, size);
+	if (unlikely(buf == NULL)) {
+		if (size > xnheap_max_contiguous(pipe->bufpool))
+			buf = (void *)-1; /* Will never succeed. */
+	}
+
+	return buf;
 }
 
-static int __pipe_output_handler(int bminor,
-				 xnpipe_mh_t *mh, int retval, void *cookie)
+static void __pipe_free_handler(void *buf, void *xstate) /* nklock free */
 {
-	RT_PIPE *pipe = (RT_PIPE *)cookie;
+	RT_PIPE *pipe = xstate;
+	spl_t s;
 	
-	if (mh == pipe->buffer) {
-		spl_t s;
-
-		/* Reuse the streaming buffer. */
+	if (buf == pipe->buffer) {
+		/* Reset the streaming buffer. */
 		xnlock_get_irqsave(&nklock, s);
 		pipe->fillsz = 0;
 		__clear_bit(P_SYNCWAIT, &pipe->status);
 		__clear_bit(P_ATOMIC, &pipe->status);
 		xnlock_put_irqrestore(&nklock, s);
 	} else
-		/* Free memory from output/discarded message. */
-		xnheap_free(pipe->bufpool, mh);
+		xnheap_free(pipe->bufpool, buf);
+}
 
-	return retval;
+static void __pipe_release_handler(void *xstate) /* nklock free */
+{
+	RT_PIPE *pipe = xstate;
+
+	if (pipe->bufpool == &pipe->privpool)
+		xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
+
+	if (pipe->cpid)
+		xnfree(pipe);
 }
 
 int __native_pipe_pkg_init(void)
@@ -219,6 +232,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 #else
 #define streamsz  0
 #endif
+	struct xnpipe_operations ops;
 	void *poolmem;
 	int err = 0;
 	spl_t s;
@@ -272,17 +286,21 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	pipe->buffer->size = streamsz - sizeof(RT_PIPE_MSG);
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
-	minor = xnpipe_connect(minor,
-			       &__pipe_output_handler,
-			       NULL, &__pipe_alloc_handler, pipe);
+	ops.output = NULL;
+	ops.input = NULL;
+	ops.alloc_ibuf = &__pipe_alloc_handler;
+	ops.free_ibuf = &__pipe_free_handler;
+	ops.free_obuf = &__pipe_free_handler;
+	ops.release = &__pipe_release_handler;
 
+	minor = xnpipe_connect(minor, &ops, pipe);
 	if (minor < 0) {
 		if (pipe->bufpool == &pipe->privpool)
 			xnheap_destroy(&pipe->privpool, __pipe_flush_pool,
 				       NULL);
-
 		return minor;
 	}
+
 	pipe->minor = minor;
 	inith(&pipe->rlink);
 	pipe->rqueue = &xeno_get_rholder()->pipeq;
@@ -364,21 +382,14 @@ int rt_pipe_delete(RT_PIPE *pipe)
 	xnlock_get_irqsave(&nklock, s);
 
 	pipe = xeno_h2obj_validate(pipe, XENO_PIPE_MAGIC, RT_PIPE);
-
-	if (!pipe) {
+	if (pipe == NULL) {
 		err = xeno_handle_error(pipe, XENO_PIPE_MAGIC, RT_PIPE);
 		xnlock_put_irqrestore(&nklock, s);
 		return err;
 	}
 
 	removeq(pipe->rqueue, &pipe->rlink);
-
-	err = xnpipe_disconnect(pipe->minor);
-
-	if (pipe->buffer != NULL) {
-		xnheap_free(pipe->bufpool, pipe->buffer);
-		pipe->buffer = NULL;
-	}
+	pipe->buffer = NULL;
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	if (pipe->handle)
@@ -388,11 +399,11 @@ int rt_pipe_delete(RT_PIPE *pipe)
 	xeno_mark_deleted(pipe);
 
 	xnlock_put_irqrestore(&nklock, s);
-
-	if (pipe->bufpool == &pipe->privpool)
-		xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
-
-	return err;
+	/*
+	 * We must not hold the nklock when disconnecting a channel,
+	 * so that the release handler may run regular kernel code safely.
+	 */
+	return xnpipe_disconnect(pipe->minor);
 }
 
 /**
@@ -941,10 +952,10 @@ repeat:
 
 RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe, size_t size)
 {
-	RT_PIPE_MSG *msg =
-	    (RT_PIPE_MSG *)xnheap_alloc(pipe->bufpool,
-					size + sizeof(RT_PIPE_MSG));
-	if (msg) {
+	RT_PIPE_MSG *msg;
+
+	msg = xnheap_alloc(pipe->bufpool, size + sizeof(RT_PIPE_MSG));
+	if (likely(msg)) {
 		inith(&msg->link);
 		msg->size = size;
 	}

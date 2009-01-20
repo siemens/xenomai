@@ -74,37 +74,62 @@ static xnpnode_t __fifo_pnode = {
 
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 
-#define X_FIFO_HANDLER2(handler) ((int (*)(int, ...))(handler))
+#define CALL_FIFO_HANDLER(fifo, type)	\
+	  ((int (*)(int, ...))((fifo)->handler))((fifo) - __fifo_table, (type))
 
-static int __fifo_exec_handler(int minor,
-			       struct xnpipe_mh *mh, int retval, void *cookie)
+static int __fifo_input_handler(struct xnpipe_mh *mh, int retval, void *xstate) /* nklock held */
 {
-	RT_FIFO *fifo = __fifo_table + minor;
+	RT_FIFO *fifo = xstate;
 	int err;
 
-	if (retval >= 0 &&
-	    fifo->handler != NULL &&
-	    (err = X_FIFO_HANDLER2(fifo->handler) (minor, 'w') < 0))
-		retval = err;
+	if (retval >= 0 && fifo->handler) {
+		err = CALL_FIFO_HANDLER(fifo, 'w');
+		if (err < 0)
+			retval = err;
+	}
 
 	return retval;
 }
 
-static int __fifo_output_handler(int minor,
-				 xnpipe_mh_t *mh, int retval, void *cookie)
+static void __fifo_output_handler(xnpipe_mh_t *mh, void *xstate) /* nklock held */
 {
-	RT_FIFO *fifo = __fifo_table + minor;
-	int err;
+	RT_FIFO *fifo = xstate;
 
+	if (fifo->handler)
+		CALL_FIFO_HANDLER(fifo, 'r');
+}
+
+static void __fifo_ifree_handler(void *buf, void *xstate) /* nklock free */
+{
+	xnfree(buf);
+}
+
+static void __fifo_ofree_handler(void *buf, void *xstate) /* nklock free except when resizing */
+{
+	RT_FIFO *fifo = xstate;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 	fifo->fillsz = 0;
 	__clear_bit(RTFIFO_SYNCWAIT, &fifo->status);
+	xnlock_put_irqrestore(&nklock, s);
+}
 
-	if (retval >= 0 &&
-	    fifo->handler != NULL &&
-	    (err = X_FIFO_HANDLER2(fifo->handler) (minor, 'r') < 0))
-		retval = err;
+static void __fifo_release_handler(void *xstate) /* nklock free */
+{
+	RT_FIFO *fifo = xstate;
+	void *buffer;
+	int size;
+	spl_t s;
 
-	return retval;
+	xnlock_get_irqsave(&nklock, s); /* Protect against resizes. */
+	buffer = fifo->buffer;
+	size = fifo->bufsz;
+	fifo->buffer = NULL;
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (buffer)
+		xnarch_free_host_mem(buffer, size + sizeof(xnpipe_mh_t));
 }
 
 int __rtai_fifo_pkg_init(void)
@@ -123,6 +148,7 @@ void __rtai_fifo_pkg_cleanup(void)
 
 int rtf_create(unsigned minor, int size)
 {
+	struct xnpipe_operations ops;
 	int err, oldsize;
 	RT_FIFO *fifo;
 	void *buffer;
@@ -143,11 +169,15 @@ int rtf_create(unsigned minor, int size)
 		return -EINVAL;
 
 	fifo = __fifo_table + minor;
+	ops.output = &__fifo_output_handler;
+	ops.input = &__fifo_input_handler;
+	ops.release = &__fifo_release_handler;
+	ops.free_ibuf = &__fifo_ifree_handler;
+	ops.free_obuf = &__fifo_ofree_handler;
+	/* Use defaults: */
+	ops.alloc_ibuf = NULL;	/* i.e. xnmalloc() */
 
-	err = xnpipe_connect(minor,
-			     &__fifo_output_handler,
-			     &__fifo_exec_handler, NULL, fifo);
-
+	err = xnpipe_connect(minor, &ops, fifo);
 	if (err < 0 && err != -EBUSY)
 		return err;
 
@@ -158,6 +188,12 @@ int rtf_create(unsigned minor, int size)
 	if (err == -EBUSY) {
 		/* Resize the fifo on-the-fly if the specified buffer
 		   size is different from the current one. */
+
+		/*
+		 * Make sure the streaming buffer is not enqueued for
+		 * output.
+		 */
+		xnpipe_flush(minor, XNPIPE_OFLUSH);
 
 		buffer = fifo->buffer;
 		oldsize = fifo->bufsz;
@@ -181,20 +217,17 @@ int rtf_create(unsigned minor, int size)
 
 	xnlock_put_irqrestore(&nklock, s);
 	buffer = xnarch_alloc_host_mem(size + sizeof(xnpipe_mh_t));
-	xnlock_get_irqsave(&nklock, s);
 
 	if (buffer == NULL) {
 		if (err >= 0)
-			/* First open, we need to disconnect upon
-			 * error. Caveat: we still hold the lock while
-			 * flushing the message pipe's input and
-			 * output queues during disconnection. */
 			xnpipe_disconnect(minor);
-
+		xnlock_get_irqsave(&nklock, s);
 		--fifo->refcnt;
 		err = -ENOMEM;
 		goto fail;
 	}
+
+	xnlock_get_irqsave(&nklock, s);
 
 	fifo->buffer = buffer;
 	fifo->bufsz = size;
@@ -257,10 +290,9 @@ int rtf_destroy(unsigned minor)
 			if (fifo->handle)
 				xnregistry_remove(fifo->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
-			xnpipe_disconnect(minor);
 			fifo->refcnt = 0;
 			xnlock_put_irqrestore(&nklock, s);
-			xnarch_free_host_mem(buffer, oldsize + sizeof(xnpipe_mh_t));
+			xnpipe_disconnect(minor);
 
 			return 0;
 		}

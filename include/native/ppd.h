@@ -61,7 +61,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 	return ppd2rholder(ppd);
 }
 
-#define __xeno_release_obj(obj)		\
+#define __xeno_release_obj(obj)			\
 	do {					\
 		if ((obj)->cpid)		\
 			xnfree(obj);		\
@@ -74,7 +74,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 	return &__native_global_rholder;
 }
 
-#define __xeno_release_obj(obj)
+#define __xeno_release_obj(obj)		do { } while(0)
 
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
@@ -86,7 +86,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 #define __xeno_trace_release(__name, __obj, __err)
 #endif /* !XENO_DEBUG(NATIVE) */
 
-#define xeno_flush_rq(__type, __rq, __name)				\
+#define __xeno_flush_rq(__type, __rq, __name, __release)		\
 	do {								\
 		int rt_##__name##_delete(__type *);			\
 		xnholder_t *holder, *nholder;				\
@@ -109,11 +109,18 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 					obj->rqueue = &__native_global_rholder.__name##q; \
 				}					\
 			} else {					\
-				__xeno_release_obj(obj);		\
+				if (__release)				\
+					__xeno_release_obj(obj);	\
 				xnlock_get_irqsave(&nklock, s);		\
 			}						\
 		}							\
 		xnlock_put_irqrestore(&nklock, s);			\
 	} while(0)
+
+#define xeno_flush_rq(__type, __rq, __name)  \
+	__xeno_flush_rq(__type, __rq, __name, 1)
+
+#define xeno_flush_rq_norelease(__type, __rq, __name)  \
+	__xeno_flush_rq(__type, __rq, __name, 0)
 
 #endif /* !_XENO_PPD_H */
