@@ -80,6 +80,7 @@ static inline void xnpipe_minor_free(int minor)
 	/* May be called with nklock free. */
 	clrbits(xnpipe_bitmap[minor / BITS_PER_LONG],
 		1UL << (minor % BITS_PER_LONG));
+	xnarch_memory_barrier();
 }
 
 static inline void xnpipe_enqueue_wait(struct xnpipe_state *state, int mask)
