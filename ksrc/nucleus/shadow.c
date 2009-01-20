@@ -76,10 +76,9 @@ static struct __lostagerq {
 	struct {
 #define LO_START_REQ  0
 #define LO_WAKEUP_REQ 1
-#define LO_RENICE_REQ 2
-#define LO_SIGGRP_REQ 3
-#define LO_SIGTHR_REQ 4
-#define LO_UNMAP_REQ  5
+#define LO_SIGGRP_REQ 2
+#define LO_SIGTHR_REQ 3
+#define LO_UNMAP_REQ  4
 		int type;
 		struct task_struct *task;
 		int arg;
@@ -737,11 +736,6 @@ static void lostage_handler(void *cookie)
 
 			xnpod_schedule();
 
-			break;
-
-		case LO_RENICE_REQ:
-
-			set_linux_task_priority(p, rq->req[reqnum].arg);
 			break;
 
 		case LO_SIGTHR_REQ:
