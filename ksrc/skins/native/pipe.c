@@ -93,8 +93,9 @@ static void *__pipe_alloc_handler(size_t size, void *xstate) /* nklock free */
 
 	/* Try to allocate memory for the incoming message. */
 	buf = xnheap_alloc(pipe->bufpool, size);
-	if (unlikely(buf == NULL && pipe->monitor)) {
-		pipe->monitor(pipe, P_EVENT_NOBUF, size);
+	if (unlikely(buf == NULL)) {
+		if (pipe->monitor)
+			pipe->monitor(pipe, P_EVENT_NOBUF, size);
 		if (size > xnheap_max_contiguous(pipe->bufpool))
 			buf = (void *)-1; /* Will never succeed. */
 	}
