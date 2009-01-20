@@ -77,11 +77,9 @@ static inline int xnpipe_minor_alloc(int minor)
 
 static inline void xnpipe_minor_free(int minor)
 {
-	if (minor < 0 || minor >= XNPIPE_NDEVS)
-		return;
-
-	__clrbits(xnpipe_bitmap[minor / BITS_PER_LONG],
-		  1UL << (minor % BITS_PER_LONG));
+	/* May be called with nklock free. */
+	clrbits(xnpipe_bitmap[minor / BITS_PER_LONG],
+		1UL << (minor % BITS_PER_LONG));
 }
 
 static inline void xnpipe_enqueue_wait(struct xnpipe_state *state, int mask)
@@ -413,9 +411,9 @@ cleanup:
 		__setbits(state->status, XNPIPE_KERN_LCLOSE);
 		xnlock_put_irqrestore(&nklock, s);
 	} else {
-		xnpipe_minor_free(minor);
 		xnlock_put_irqrestore(&nklock, s);
 		state->ops.release(state->xstate);
+		xnpipe_minor_free(minor);
 	}
 
 	if (need_sched)
@@ -621,9 +619,9 @@ int xnpipe_flush(int minor, int mode)
 		__clrbits((__state)->status, XNPIPE_USER_CONN);		\
 		if (testbits((__state)->status, XNPIPE_KERN_LCLOSE)) {	\
 			clrbits((__state)->status, XNPIPE_KERN_LCLOSE);	\
-			xnpipe_minor_free(xnminor_from_state(__state));	\
 			xnlock_put_irqrestore(&nklock, (__s));		\
 			(__state)->ops.release((__state)->xstate);	\
+			xnpipe_minor_free(xnminor_from_state(__state));	\
 			xnlock_get_irqsave(&nklock, (__s));		\
 		}							\
 	} while(0)
