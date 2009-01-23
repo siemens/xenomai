@@ -210,8 +210,12 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	err = XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
 				NULL);
 
-	if (!err)
+	if (!err) {
+#ifdef HAVE___THREAD
+		__native_self = *task;
+#endif /* HAVE___THREAD */
 		xeno_set_current();
+	}
 
 	return err;
 }
