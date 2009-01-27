@@ -36,7 +36,7 @@ int xnsched_register_class(struct xnsched_class *sched_class)
 {
 	/*
 	 * The build rules shall ensure that scheduling classes are
-	 * registered by decreasing priority order via initcalls, so
+	 * registered by increasing priority order via initcalls, so
 	 * the the highest priority class shall be registered last.
 	 */
 	sched_class->next = xnsched_class_highest;
