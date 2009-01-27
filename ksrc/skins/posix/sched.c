@@ -22,8 +22,8 @@
  *
  * Thread scheduling services.
  *
- * Xenomai POSIX skin supports the scheduling policies SCHED_FIFO, SCHED_RR and
- * SCHED_OTHER.
+ * Xenomai POSIX skin supports the scheduling policies SCHED_FIFO,
+ * SCHED_RR, SCHED_SPORADIC and SCHED_OTHER.
  *
  * The SCHED_OTHER policy is mainly useful for user-space non-realtime
  * activities that need to synchronize with real-time activities.
@@ -35,7 +35,8 @@
  * round-robin time slice is configured with the @a xeno_posix module
  * parameter @a time_slice, as a count of system timer clock ticks.
  *
- * The SCHED_SPORADIC policy is not supported.
+ * The SCHED_SPORADIC policy provides a mean to schedule aperiodic or
+ * sporadic threads in periodic-based systems.
  *
  * The scheduling policy and priority of a thread is set when creating a thread,
  * by using thread creation attributes (see pthread_attr_setinheritsched(),
@@ -73,6 +74,7 @@ int sched_get_priority_min(int policy)
 	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
+	case SCHED_SPORADIC:
 		return PSE51_MIN_PRIORITY;
 
 	case SCHED_OTHER:
@@ -107,6 +109,7 @@ int sched_get_priority_max(int policy)
 	switch (policy) {
 	case SCHED_FIFO:
 	case SCHED_RR:
+	case SCHED_SPORADIC:
 		return PSE51_MAX_PRIORITY;
 
 	case SCHED_OTHER:
@@ -205,6 +208,78 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 }
 
 /**
+ * Get the extended scheduling policy and parameters of the specified
+ * thread.
+ *
+ * This service is an extended version of pthread_getschedparam(),
+ * that also supports Xenomai-specific or additional POSIX scheduling
+ * policies, which are not available with the host Linux environment.
+ *
+ * Typically, SCHED_SPORADIC parameters can be retrieved from this
+ * call.
+ *
+ * @param tid target thread;
+ *
+ * @param pol address where the scheduling policy of @a tid is stored on
+ * success;
+ *
+ * @param par address where the scheduling parameters of @a tid is stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
+ * Specification.</a>
+ * 
+ */
+int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
+{
+	struct xnsched_class *base_class;
+	struct xnthread *thread;
+	int prio;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
+	}
+
+	thread = &tid->threadbase;
+	base_class = xnthread_base_class(thread);
+	prio = xnthread_base_priority(thread);
+	par->sched_priority = prio;
+
+	if (base_class == &xnsched_class_rt) {
+		*pol = (prio
+			? (!xnthread_test_state(thread, XNRRB)
+			   ? SCHED_FIFO : SCHED_RR) : SCHED_OTHER);
+		goto unlock_and_exit;
+	}
+
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	if (base_class == &xnsched_class_sporadic) {
+		*pol = SCHED_SPORADIC;
+		par->sched_ss_low_priority = thread->pss->param.low_prio;
+		ticks2ts(&par->sched_ss_repl_period, thread->pss->param.repl_period);
+		ticks2ts(&par->sched_ss_init_budget, thread->pss->param.init_budget);
+		par->sched_ss_max_repl = thread->pss->param.max_repl;
+		goto unlock_and_exit;
+	}
+#endif
+
+unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+
+/**
  * Set the scheduling policy and parameters of the specified thread.
  *
  * This service set the scheduling policy of the Xenomai POSIX skin thread @a
@@ -220,7 +295,8 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  *
  * @param tid target thread;
  *
- * @param pol scheduling policy, one of SCHED_FIFO, SCHED_RR or SCHED_OTHER;
+ * @param pol scheduling policy, one of SCHED_FIFO, SCHED_RR or
+ * SCHED_OTHER;
  *
  * @param par scheduling parameters address.
  *
@@ -279,6 +355,7 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 
 	case SCHED_OTHER:
 	case SCHED_FIFO:
+	case SCHED_SPORADIC:
 		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
 		break;
 
@@ -306,6 +383,91 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 }
 
 /**
+ * Set the extended scheduling policy and parameters of the specified
+ * thread.
+ *
+ * This service is an extended version of pthread_setschedparam(),
+ * that supports Xenomai-specific or additional POSIX scheduling
+ * policies, which are not available with the host Linux environment.
+ *
+ * Typically, a Xenomai thread policy can be set to SCHED_SPORADIC
+ * using this call.
+ *
+ * @param tid target thread;
+ *
+ * @param pol address where the scheduling policy of @a tid is stored on
+ * success;
+ *
+ * @param par address where the scheduling parameters of @a tid is stored on
+ * success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - ESRCH, @a tid is invalid.
+ * - EINVAL, @a par contains invalid parameters.
+ * - ENOMEM, lack of memory to perform the operation.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
+ * Specification.</a>
+ * 
+ */
+int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex *par)
+{
+	union xnsched_policy_param param;
+	struct sched_param short_param;
+	int ret = 0;
+	spl_t s;
+
+	switch (pol) {
+	case SCHED_OTHER:
+	case SCHED_FIFO:
+	case SCHED_RR:
+		short_param.sched_priority = par->sched_priority;
+		return pthread_setschedparam(tid, pol, &short_param);
+	default:
+		if (par->sched_priority < PSE51_MIN_PRIORITY ||
+		    par->sched_priority >  PSE51_MAX_PRIORITY) {
+			return EINVAL;
+		}
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(tid, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ESRCH;
+	}
+
+	switch (pol) {
+	default:
+
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	case SCHED_SPORADIC:
+		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
+		param.pss.normal_prio = par->sched_priority;
+		param.pss.low_prio = par->sched_ss_low_priority;
+		param.pss.current_prio = param.pss.normal_prio;
+		param.pss.init_budget = ts2ticks_ceil(&par->sched_ss_init_budget);
+		param.pss.repl_period = ts2ticks_ceil(&par->sched_ss_repl_period);
+		param.pss.max_repl = par->sched_ss_max_repl;
+		ret = -xnpod_set_thread_schedparam(&tid->threadbase,
+						   &xnsched_class_sporadic, &param);
+		break;
+#endif
+	}
+
+	xnpod_schedule();
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
+}
+
+/**
  * Yield the processor.
  *
  * This function move the current thread at the end of its priority group.
@@ -329,5 +491,7 @@ EXPORT_SYMBOL(sched_get_priority_min);
 EXPORT_SYMBOL(sched_get_priority_max);
 EXPORT_SYMBOL(sched_rr_get_interval);
 EXPORT_SYMBOL(pthread_getschedparam);
+EXPORT_SYMBOL(pthread_getschedparam_ex);
 EXPORT_SYMBOL(pthread_setschedparam);
+EXPORT_SYMBOL(pthread_setschedparam_ex);
 EXPORT_SYMBOL(sched_yield);

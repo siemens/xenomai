@@ -1,3 +1,9 @@
+2009-01-27  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* ksrc/nucleus, include/nucleus, ksrc/skins/posix, include/posix,
+	sim, include/asm-sim: Introduce POSIX sporadic scheduling (PSS)
+	class.
+
 2009-01-21  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* ksrc/arch/arm/patches: Upgrade to 2.6.28-arm-1.2-00.

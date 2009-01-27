@@ -265,10 +265,12 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
 
 /* Nullify other kernel macros */
 #define EXPORT_SYMBOL(sym);
+#define EXPORT_SYMBOL_GPL(sym);
 #define module_init(sym);
 #define module_exit(sym);
 #define __init
 #define __exit
+#define __initcall(fn);
 
 /* Kernel markers */
 #define trace_mark(tag, args...) do { } while(0)

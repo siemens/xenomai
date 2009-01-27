@@ -74,6 +74,49 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 	return err;
 }
 
+int pthread_setschedparam_ex(pthread_t thread,
+			     int policy, const struct sched_param_ex *param)
+{
+	pthread_t myself = pthread_self();
+	struct sched_param short_param;
+	unsigned long *mode_buf = NULL;
+	int err, promoted;
+
+	if (thread == myself) {
+#ifdef HAVE___THREAD
+		mode_buf = xeno_init_current_mode();
+#else /* !HAVE___THREAD */
+		mode_buf = pthread_getspecific(xeno_current_mode_key);
+		if (!mode_buf) {
+			mode_buf = malloc(sizeof(*mode_buf));
+
+			if (!mode_buf)
+				return ENOMEM;
+
+			pthread_setspecific(xeno_current_mode_key, mode_buf);
+		}
+#endif /* !HAVE___THREAD */
+	}
+
+	err = -XENOMAI_SKINCALL5(__pse51_muxid,
+				 __pse51_thread_setschedparam_ex,
+				 thread, policy, param, mode_buf, &promoted);
+
+	if (err == EPERM) {
+		short_param.sched_priority = param->sched_priority;
+		return __real_pthread_setschedparam(thread, policy, &short_param);
+	}
+
+	if (!err && promoted) {
+		sigshadow_install_once();
+		xeno_set_current();
+		if (policy != SCHED_OTHER)
+			XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
+	}
+
+	return err;
+}
+
 int __wrap_pthread_getschedparam(pthread_t thread,
 				 int *__restrict__ policy,
 				 struct sched_param *__restrict__ param)
@@ -86,6 +129,26 @@ int __wrap_pthread_getschedparam(pthread_t thread,
 
 	if (err == ESRCH)
 		return __real_pthread_getschedparam(thread, policy, param);
+
+	return err;
+}
+
+int pthread_getschedparam_ex(pthread_t thread,
+			     int *__restrict__ policy,
+			     struct sched_param_ex *__restrict__ param)
+{
+	struct sched_param short_param;
+	int err;
+
+	err = -XENOMAI_SKINCALL3(__pse51_muxid,
+				 __pse51_thread_getschedparam_ex,
+				 thread, policy, param);
+
+	if (err == ESRCH) {
+		err = __real_pthread_getschedparam(thread, policy, &short_param);
+		if (err == 0)
+			param->sched_priority = short_param.sched_priority;
+	}
 
 	return err;
 }

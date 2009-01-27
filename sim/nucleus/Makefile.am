@@ -13,11 +13,14 @@ lib_LIBRARIES = libnucleus_sim.a
 # Shadow, pipe and pervasive supports make no sense compiling in
 # native simulation mode. Therefore, their respective files are not
 # included here.
+# CAUTION: the declaration order of scheduling classes is
+# significant. Lower priority classes shall be listed first.
 
 nodist_libnucleus_sim_a_SOURCES = \
 			sched.c \
 			sched-idle.c \
 			sched-rt.c \
+			sched-sporadic.c \
 			sched-tp.c \
 			heap.c \
 			intr.c \

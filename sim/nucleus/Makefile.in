@@ -55,10 +55,10 @@ ARFLAGS = cru
 libnucleus_sim_a_AR = $(AR) $(ARFLAGS)
 libnucleus_sim_a_DEPENDENCIES = ../adapter/adapter.o
 nodist_libnucleus_sim_a_OBJECTS = sched.$(OBJEXT) sched-idle.$(OBJEXT) \
-	sched-rt.$(OBJEXT) sched-tp.$(OBJEXT) heap.$(OBJEXT) \
-	intr.$(OBJEXT) map.$(OBJEXT) module.$(OBJEXT) pod.$(OBJEXT) \
-	registry.$(OBJEXT) synch.$(OBJEXT) thread.$(OBJEXT) \
-	timebase.$(OBJEXT) timer.$(OBJEXT)
+	sched-rt.$(OBJEXT) sched-sporadic.$(OBJEXT) sched-tp.$(OBJEXT) \
+	heap.$(OBJEXT) intr.$(OBJEXT) map.$(OBJEXT) module.$(OBJEXT) \
+	pod.$(OBJEXT) registry.$(OBJEXT) synch.$(OBJEXT) \
+	thread.$(OBJEXT) timebase.$(OBJEXT) timer.$(OBJEXT)
 libnucleus_sim_a_OBJECTS = $(nodist_libnucleus_sim_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/../config/depcomp
@@ -236,10 +236,13 @@ lib_LIBRARIES = libnucleus_sim.a
 # Shadow, pipe and pervasive supports make no sense compiling in
 # native simulation mode. Therefore, their respective files are not
 # included here.
+# CAUTION: the declaration order of scheduling classes is
+# significant. Lower priority classes shall be listed first.
 nodist_libnucleus_sim_a_SOURCES = \
 			sched.c \
 			sched-idle.c \
 			sched-rt.c \
+			sched-sporadic.c \
 			sched-tp.c \
 			heap.c \
 			intr.c \
@@ -342,6 +345,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/registry.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched-idle.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched-rt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched-sporadic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched-tp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sched.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/synch.Po@am__quote@

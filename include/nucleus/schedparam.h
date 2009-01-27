@@ -33,11 +33,23 @@ struct xnsched_tp_param {
 	int ptid;	/* partition id. */
 };
 
+struct xnsched_sporadic_param {
+	xntime_t init_budget;
+	xntime_t repl_period;
+	int max_repl;
+	int low_prio;
+	int normal_prio;
+	int current_prio;
+};
+
 union xnsched_policy_param {
 	struct xnsched_idle_param idle;
 	struct xnsched_rt_param rt;
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	struct xnsched_tp_param tp;
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	struct xnsched_sporadic_param pss;
 #endif
 };
 

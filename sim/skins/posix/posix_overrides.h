@@ -67,7 +67,9 @@
 #define pthread_attr_getschedpolicy pse51_threadattr_getschedpolicy
 #define pthread_attr_setschedpolicy pse51_threadattr_setschedpolicy
 #define pthread_attr_getschedparam pse51_threadattr_getschedparam
+#define pthread_attr_getschedparam_ex pse51_threadattr_getschedparam_ex
 #define pthread_attr_setschedparam pse51_threadattr_setschedparam
+#define pthread_attr_setschedparam_ex pse51_threadattr_setschedparam_ex
 #define pthread_attr_getscope pse51_threadattr_getscope
 #define pthread_attr_setscope pse51_threadattr_setscope
 #define pthread_attr_getname_np pse51_threadattr_getname_np
@@ -83,7 +85,9 @@
 #define pthread_join pse51_thread_join
 #define pthread_self pse51_thread_self
 #define pthread_getschedparam pse51_thread_getschedparam
+#define pthread_getschedparam_ex pse51_thread_getschedparam_ex
 #define pthread_setschedparam pse51_thread_setschedparam
+#define pthread_setschedparam_ex pse51_thread_setschedparam_ex
 #define pthread_mutexattr_init pse51_mutexattr_init
 #define pthread_mutexattr_destroy pse51_mutexattr_destroy
 #define pthread_mutexattr_gettype pse51_mutexattr_gettype

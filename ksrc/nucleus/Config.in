@@ -30,8 +30,12 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Extra scheduling classes' CONFIG_XENO_OPT_SCHED_CLASSES
 	if [ "$CONFIG_XENO_OPT_SCHED_CLASSES" = "y" ]; then
 		bool 'Temporal partitioning' CONFIG_XENO_OPT_SCHED_TP
-		if [ "$CONFIG_XENO_OPT_SCHED_CLASSES" = "y" ]; then
+		if [ "$CONFIG_XENO_OPT_SCHED_TP" = "y" ]; then
 		   int 'Number of partitions' CONFIG_XENO_OPT_SCHED_TP_NRPART 4
+		fi
+		bool 'Sporadic scheduling' CONFIG_XENO_OPT_SCHED_SPORADIC
+		if [ "$CONFIG_XENO_OPT_SCHED_SPORADIC" = "y" ]; then
+		   int 'Maximum number of pending replenishments' CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL 8
 		fi
 	fi
 	bool 'Statistics collection' CONFIG_XENO_OPT_STATS

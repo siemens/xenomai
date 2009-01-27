@@ -164,6 +164,8 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_pick		=	xnsched_rt_pick,
 	.sched_tick		=	xnsched_rt_tick,
 	.sched_rotate		=	xnsched_rt_rotate,
+	.sched_forget		=	NULL,
+	.sched_declare		=	NULL,
 	.sched_setparam		=	xnsched_rt_setparam,
 	.sched_trackprio	=	xnsched_rt_trackprio,
 	.sched_getparam		=	xnsched_rt_getparam,
@@ -171,10 +173,18 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_push_rpi 	=	xnsched_rt_push_rpi,
 	.sched_pop_rpi		=	xnsched_rt_pop_rpi,
 	.sched_peek_rpi 	=	xnsched_rt_peek_rpi,
+	.sched_suspend_rpi 	=	NULL,
+	.sched_resume_rpi 	=	NULL,
 #endif
-	.next			=	&xnsched_class_idle,
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"rt"
 };
 
-EXPORT_SYMBOL(xnsched_class_rt);
+EXPORT_SYMBOL_GPL(xnsched_class_rt);
+
+static int __init register_sched_class(void)
+{
+	return xnsched_register_class(&xnsched_class_rt);
+}
+
+__initcall(register_sched_class);

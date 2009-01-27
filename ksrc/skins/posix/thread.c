@@ -213,11 +213,11 @@ int pthread_create(pthread_t *tid,
 			return EINVAL;
 		}
 
-		pthread_getschedparam(cur, &thread->attr.policy,
-				      &thread->attr.schedparam);
+		pthread_getschedparam_ex(cur, &thread->attr.policy,
+					 &thread->attr.schedparam_ex);
 	}
 
-	prio = thread->attr.schedparam.sched_priority;
+	prio = thread->attr.schedparam_ex.sched_priority;
 	stacksize = thread->attr.stacksize;
 	name = thread->attr.name;
 

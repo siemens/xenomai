@@ -33,7 +33,7 @@ void __xeno_user_exit(void);
 
 static inline int xnarch_init (void)
 {
-    return 0;
+	return 0;
 }
 
 static inline void xnarch_exit (void)
@@ -42,47 +42,56 @@ static inline void xnarch_exit (void)
 
 void mvm_root (void *cookie)
 {
-    int err;
+	int err;
 
-    err = __xeno_skin_init();
+	err = __xeno_skin_init();
 
-    if (err)
-	__mvm_breakable(mvm_fatal)("skin_init() failed, err=%x\n",err);
+	if (err)
+		__mvm_breakable(mvm_fatal)("skin_init() failed, err=%x\n",err);
 
-    err = __xeno_user_init();
+	err = __xeno_user_init();
 
-    if (err)
-	__mvm_breakable(mvm_fatal)("user_init() failed, err=%x\n",err);
+	if (err)
+		__mvm_breakable(mvm_fatal)("user_init() failed, err=%x\n",err);
 
-    /* Wait for all RT-threads to finish */
-    __mvm_breakable(mvm_join_threads)();
+	/* Wait for all RT-threads to finish */
+	__mvm_breakable(mvm_join_threads)();
 
-    __xeno_user_exit();
-    __xeno_skin_exit();
-    __xeno_sys_exit();
+	__xeno_user_exit();
+	__xeno_skin_exit();
+	__xeno_sys_exit();
 
-    __mvm_breakable(mvm_terminate)(0);
+	__mvm_breakable(mvm_terminate)(0);
+}
+
+static inline void __register_sched_classes(void)
+{
+	xnsched_register_class(&xnsched_class_idle);
+	xnsched_register_class(&xnsched_class_rt);
+	xnsched_register_class(&xnsched_class_sporadic);
+	xnsched_register_class(&xnsched_class_tp);
 }
 
 int main (int argc, char *argv[])
 {
-    xnarchtcb_t tcb;
-    int err;
+	xnarchtcb_t tcb;
+	int err;
 
-    err = __xeno_sys_init();
+	err = __xeno_sys_init();
+	if (err)
+		__mvm_breakable(mvm_fatal)("sys_init() failed, err=%x\n",err);
 
-    if (err)
-	__mvm_breakable(mvm_fatal)("sys_init() failed, err=%x\n",err);
+	__register_sched_classes();
 
-    mvm_init(argc,argv);
+	mvm_init(argc,argv);
 
-    tcb.entry = &mvm_root;
-    tcb.cookie = NULL;
-    tcb.kthread = NULL;
-    tcb.vmthread = NULL;
-    tcb.imask = 0;
+	tcb.entry = &mvm_root;
+	tcb.cookie = NULL;
+	tcb.kthread = NULL;
+	tcb.vmthread = NULL;
+	tcb.imask = 0;
 
-    return mvm_run(&tcb,(void *)&mvm_root);
+	return mvm_run(&tcb,(void *)&mvm_root);
 }
 
 #endif /* !_XENO_ASM_SIM_BITS_INIT_H */

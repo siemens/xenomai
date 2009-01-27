@@ -1713,7 +1713,7 @@ int xnpod_unblock_thread(xnthread_t *thread)
 }
 
 /*!
- * \fn void xnpod_set_thread_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
+ * \fn int xnpod_set_thread_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * \brief Change the base scheduling parameters of a thread.
  *
  * Changes the base scheduling policy and paramaters of a thread. If
@@ -1736,6 +1736,11 @@ int xnpod_unblock_thread(xnthread_t *thread)
  * correctly performed. i.e. Do *not* call xnsched_set_policy()
  * directly or worse, change the thread.cprio field by hand in any
  * case.
+ *
+ * @return 0 is returned on success. Otherwise, a negative error code
+ * indicates the cause of a failure that happened in the scheduling
+ * class implementation for @a sched_class. Invalid parameters passed
+ * into @a sched_param are common causes of error.
  *
  * Side-effects:
  *
@@ -1762,25 +1767,29 @@ int xnpod_unblock_thread(xnthread_t *thread)
  * Rescheduling: never.
  */
 
-void xnpod_set_thread_schedparam(struct xnthread *thread,
-				 struct xnsched_class *sched_class,
-				 const union xnsched_policy_param *sched_param)
+int xnpod_set_thread_schedparam(struct xnthread *thread,
+				struct xnsched_class *sched_class,
+				const union xnsched_policy_param *sched_param)
 {
-	__xnpod_set_thread_schedparam(thread, sched_class, sched_param, 1);
+	return __xnpod_set_thread_schedparam(thread, sched_class, sched_param, 1);
 }
 
-void __xnpod_set_thread_schedparam(struct xnthread *thread,
-				   struct xnsched_class *sched_class,
-				   const union xnsched_policy_param *sched_param,
-				   int propagate)
+int __xnpod_set_thread_schedparam(struct xnthread *thread,
+				  struct xnsched_class *sched_class,
+				  const union xnsched_policy_param *sched_param,
+				  int propagate)
 {
-	int old_wprio, new_wprio;
+	int old_wprio, new_wprio, ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	old_wprio = xnsched_weighted_cprio(thread);
-	xnsched_set_policy(thread, sched_class, sched_param);
+
+	ret = xnsched_set_policy(thread, sched_class, sched_param);
+	if (ret)
+		goto unlock_and_exit;
+
 	new_wprio = xnsched_weighted_cprio(thread);
 
 	trace_mark(xn_nucleus_set_thread_schedparam,
@@ -1832,7 +1841,11 @@ void __xnpod_set_thread_schedparam(struct xnthread *thread,
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
+unlock_and_exit:
+
 	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 /** 
@@ -2990,37 +3003,36 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 
 /*@}*/
 
-EXPORT_SYMBOL(xnpod_add_hook);
-EXPORT_SYMBOL(xnpod_delete_thread);
-EXPORT_SYMBOL(xnpod_abort_thread);
-EXPORT_SYMBOL(xnpod_fatal_helper);
-EXPORT_SYMBOL(xnpod_init);
-EXPORT_SYMBOL(xnpod_init_thread);
-EXPORT_SYMBOL(xnpod_migrate_thread);
-EXPORT_SYMBOL(xnpod_remove_hook);
-EXPORT_SYMBOL(xnpod_set_thread_schedparam);
-EXPORT_SYMBOL(xnpod_restart_thread);
-EXPORT_SYMBOL(xnpod_resume_thread);
-EXPORT_SYMBOL(xnpod_set_thread_mode);
-EXPORT_SYMBOL(xnpod_set_thread_periodic);
-EXPORT_SYMBOL(xnpod_shutdown);
-EXPORT_SYMBOL(xnpod_start_thread);
-EXPORT_SYMBOL(xnpod_stop_thread);
-EXPORT_SYMBOL(xnpod_enable_timesource);
-EXPORT_SYMBOL(xnpod_disable_timesource);
-EXPORT_SYMBOL(xnpod_suspend_thread);
-EXPORT_SYMBOL(xnpod_trap_fault);
-EXPORT_SYMBOL(xnpod_unblock_thread);
-EXPORT_SYMBOL(xnpod_wait_thread_period);
-EXPORT_SYMBOL(xnpod_set_thread_tslice);
-EXPORT_SYMBOL(xnpod_welcome_thread);
-EXPORT_SYMBOL(xnpod_lock_sched);
-EXPORT_SYMBOL(xnpod_unlock_sched);
+EXPORT_SYMBOL_GPL(xnpod_add_hook);
+EXPORT_SYMBOL_GPL(xnpod_delete_thread);
+EXPORT_SYMBOL_GPL(xnpod_abort_thread);
+EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
+EXPORT_SYMBOL_GPL(xnpod_init);
+EXPORT_SYMBOL_GPL(xnpod_init_thread);
+EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
+EXPORT_SYMBOL_GPL(xnpod_remove_hook);
+EXPORT_SYMBOL_GPL(xnpod_set_thread_schedparam);
+EXPORT_SYMBOL_GPL(xnpod_restart_thread);
+EXPORT_SYMBOL_GPL(xnpod_resume_thread);
+EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
+EXPORT_SYMBOL_GPL(xnpod_set_thread_periodic);
+EXPORT_SYMBOL_GPL(xnpod_shutdown);
+EXPORT_SYMBOL_GPL(xnpod_start_thread);
+EXPORT_SYMBOL_GPL(xnpod_stop_thread);
+EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
+EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
+EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
+EXPORT_SYMBOL_GPL(xnpod_trap_fault);
+EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
+EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
+EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
+EXPORT_SYMBOL_GPL(xnpod_welcome_thread);
+EXPORT_SYMBOL_GPL(xnpod_lock_sched);
+EXPORT_SYMBOL_GPL(xnpod_unlock_sched);
 EXPORT_SYMBOL(__xnpod_schedule);
 
 EXPORT_SYMBOL(nkpod_struct);
-
 #ifdef CONFIG_SMP
 EXPORT_SYMBOL(nklock);
 #endif /* CONFIG_SMP */
-EXPORT_SYMBOL(nklatency);
+EXPORT_SYMBOL_GPL(nklatency);

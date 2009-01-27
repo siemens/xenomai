@@ -50,7 +50,7 @@ int xnthread_init(struct xnthread *thread,
 {
 	unsigned int stacksize = attr->stacksize;
 	xnflags_t flags = attr->flags;
-	int ret = 0;
+	int ret;
 
 	/* Setup the TCB. */
 	xnarch_init_tcb(xnthread_archtcb(thread));
@@ -140,11 +140,27 @@ int xnthread_init(struct xnthread *thread,
 	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
 	thread->init_schedparam = *sched_param;
-	xnsched_init_tcb(thread);
-	xnsched_set_policy(thread, sched_class, sched_param);
+	ret = xnsched_init_tcb(thread);
+	if (ret)
+		goto fail;
+
+	/*
+	 * We must set the scheduling policy last; the scheduling
+	 * class implementation code may need the TCB to be fully
+	 * initialized to proceed.
+	 */
+	ret = xnsched_set_policy(thread, sched_class, sched_param);
+	if (ret)
+		goto fail;
 
 	xnarch_init_display_context(thread);
 
+	return 0;
+
+fail:
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	xnarch_free_stack(xnthread_archtcb(thread));
+#endif
 	return ret;
 }
 

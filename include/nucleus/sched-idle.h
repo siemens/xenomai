@@ -57,8 +57,9 @@ static inline void __xnsched_idle_trackprio(struct xnthread *thread,
 		thread->cprio = XNSCHED_IDLE_PRIO;
 }
 
-static inline void xnsched_idle_init_tcb(struct xnthread *thread)
+static inline int xnsched_idle_init_tcb(struct xnthread *thread)
 {
+	return 0;
 }
 
 #endif /* __KERNEL__ || __XENO_SIM__ */

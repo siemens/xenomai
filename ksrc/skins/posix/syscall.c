@@ -151,7 +151,6 @@ static pthread_t __pthread_find(const struct pse51_hkey *hkey)
 static int __pthread_create(struct pt_regs *regs)
 {
 	struct task_struct *p = current;
-	struct sched_param param;
 	struct pse51_hkey hkey;
 	pthread_attr_t attr;
 	pthread_t k_tid;
@@ -169,9 +168,8 @@ static int __pthread_create(struct pt_regs *regs)
 
 	pthread_attr_init(&attr);
 	attr.policy = p->policy;
-	param.sched_priority = p->rt_priority;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.schedparam = param;
+	attr.schedparam_ex.sched_priority = p->rt_priority;
 	attr.fp = 1;
 	attr.name = p->comm;
 
@@ -269,6 +267,44 @@ static int __pthread_setschedparam(struct pt_regs *regs)
 	return err;
 }
 
+static int __pthread_setschedparam_ex(struct pt_regs *regs)
+{
+	int policy, err, promoted = 0;
+	unsigned long __user *u_mode;
+	struct sched_param_ex param;
+	struct pse51_hkey hkey;
+	pthread_t k_tid;
+
+	policy = __xn_reg_arg2(regs);
+	u_mode = (unsigned long __user *)__xn_reg_arg4(regs);
+
+	if (__xn_safe_copy_from_user(&param,
+				     (void __user *)__xn_reg_arg3(regs), sizeof(param)))
+		return -EFAULT;
+
+	hkey.u_tid = __xn_reg_arg1(regs);
+	hkey.mm = current->mm;
+	k_tid = __pthread_find(&hkey);
+
+	if (!k_tid && u_mode) {
+		k_tid = __pthread_shadow(current, &hkey, u_mode);
+		if (IS_ERR(k_tid))
+			return PTR_ERR(k_tid);
+
+		promoted = 1;
+	}
+	if (k_tid)
+		err = -pthread_setschedparam_ex(k_tid, policy, &param);
+	else
+		err = -EPERM;
+
+	if (!err && __xn_safe_copy_to_user((void __user *)__xn_reg_arg5(regs),
+					   &promoted, sizeof(promoted)))
+		err = -EFAULT;
+
+	return err;
+}
+
 static int __pthread_getschedparam(struct pt_regs *regs)
 {
 	struct sched_param param;
@@ -296,13 +332,40 @@ static int __pthread_getschedparam(struct pt_regs *regs)
 				      &param, sizeof(param));
 }
 
+static int __pthread_getschedparam_ex(struct pt_regs *regs)
+{
+	struct sched_param_ex param;
+	struct pse51_hkey hkey;
+	pthread_t k_tid;
+	int policy, err;
+
+	hkey.u_tid = __xn_reg_arg1(regs);
+	hkey.mm = current->mm;
+	k_tid = __pthread_find(&hkey);
+
+	if (!k_tid)
+		return -ESRCH;
+
+	err = -pthread_getschedparam_ex(k_tid, &policy, &param);
+
+	if (err)
+		return err;
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &policy, sizeof(int)))
+		return -EFAULT;
+
+	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				      &param, sizeof(param));
+}
+
 static int __sched_yield(struct pt_regs *regs)
 {
 	pthread_t thread = thread2pthread(xnshadow_thread(current));
-	struct sched_param param;
+	struct sched_param_ex param;
 	int policy;
 
-	pthread_getschedparam(thread, &policy, &param);
+	pthread_getschedparam_ex(thread, &policy, &param);
 	sched_yield();
 
 	return policy == SCHED_OTHER;
@@ -2670,8 +2733,12 @@ static xnsysent_t __systab[] = {
 	[__pse51_thread_detach] = {&__pthread_detach, __xn_exec_any},
 	[__pse51_thread_setschedparam] =
 	    {&__pthread_setschedparam, __xn_exec_conforming},
+	[__pse51_thread_setschedparam_ex] =
+	    {&__pthread_setschedparam_ex, __xn_exec_conforming},
 	[__pse51_thread_getschedparam] =
 	    {&__pthread_getschedparam, __xn_exec_any},
+	[__pse51_thread_getschedparam_ex] =
+	    {&__pthread_getschedparam_ex, __xn_exec_any},
 	[__pse51_sched_yield] = {&__sched_yield, __xn_exec_primary},
 	[__pse51_thread_make_periodic] =
 	    {&__pthread_make_periodic_np, __xn_exec_conforming},

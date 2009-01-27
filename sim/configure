@@ -27823,6 +27823,16 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_SCHED_SPORADIC 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL 16
+_ACEOF
+
+
 cat >>confdefs.h <<_ACEOF
 #define CONFIG_XENO_OPT_TIMING_VIRTICK 1000
 _ACEOF

@@ -102,6 +102,8 @@
 #define __pse51_thread_getschedparam  75
 #define __pse51_thread_kill           76
 #define __pse51_select                77
+#define __pse51_thread_setschedparam_ex	78
+#define __pse51_thread_getschedparam_ex	79
 
 #ifdef __KERNEL__
 

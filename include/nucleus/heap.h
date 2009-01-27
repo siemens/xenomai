@@ -67,6 +67,11 @@
 
 #define XNHEAP_GFP_NONCACHED (1 << __GFP_BITS_SHIFT)
 
+struct xnpagemap {
+	unsigned int type : 8;	  /* PFREE, PCONT, PLIST or log2 */
+	unsigned int bcount : 24; /* Number of active blocks. */
+};
+
 typedef struct xnextent {
 
 	xnholder_t link;
@@ -77,10 +82,7 @@ typedef struct xnextent {
 		memlim,		/* Memory limit of page array */
 		freelist;	/* Head of the free page list */
 
-	struct xnpagemap {	/* Beginning of page map */
-		unsigned int type : 8;	  /* PFREE, PCONT, PLIST or log2 */
-		unsigned int bcount : 24; /* Number of active blocks. */
-	} pagemap[1];
+	struct xnpagemap pagemap[1];	/* Beginning of page map */
 
 } xnextent_t;
 

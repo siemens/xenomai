@@ -236,6 +236,7 @@ includesub_HEADERS = \
 	schedqueue.h \
 	sched-idle.h \
 	sched-rt.h \
+	sched-sporadic.h \
 	sched-tp.h \
 	shadow.h \
 	stat.h \

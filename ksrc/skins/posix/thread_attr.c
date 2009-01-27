@@ -51,7 +51,7 @@ static const pthread_attr_t default_thread_attr = {
       stacksize:PTHREAD_STACK_MIN,
       inheritsched:PTHREAD_EXPLICIT_SCHED,
       policy:SCHED_OTHER,
-      schedparam:{
+      schedparam_ex:{
       sched_priority:0},
 
       name:NULL,
@@ -406,7 +406,7 @@ int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
  * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
- * SCHED_RR or SCHED_OTHER.
+ * SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -449,7 +449,7 @@ int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
  * Threads created with the attribute object @a attr use the value of this
  * attribute as scheduling policy if the @a inheritsched attribute is set to
  * PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO,
- * SCHED_RR or SCHED_OTHER.
+ * SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.
  *
  * @param attr attribute object;
  *
@@ -476,6 +476,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 	case SCHED_OTHER:
 	case SCHED_FIFO:
 	case SCHED_RR:
+	case SCHED_SPORADIC:
 
 		break;
 	}
@@ -489,10 +490,10 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 
 	attr->policy = policy;
 	if (policy == SCHED_OTHER) {
-		if (attr->schedparam.sched_priority != 0)
-			attr->schedparam.sched_priority = 0;
-	} else if (attr->schedparam.sched_priority == 0)
-		attr->schedparam.sched_priority = PSE51_MIN_PRIORITY;
+		if (attr->schedparam_ex.sched_priority != 0)
+			attr->schedparam_ex.sched_priority = 0;
+	} else if (attr->schedparam_ex.sched_priority == 0)
+		attr->schedparam_ex.sched_priority = PSE51_MIN_PRIORITY;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -502,13 +503,18 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 /**
  * Get schedparam attribute.
  *
- * This service stores, at the address @a par, the value of the @a schedparam
- * attribute in the attribute object @a attr.
+ * This service stores, at the address @a par, the limited form of the
+ * @a schedparam attribute in the attribute object @a attr.
  *
- * The only member of the @b sched_param structure used by this implementation
- * is @a sched_priority. Threads created with @a attr will use the value of this
- * attribute as a scheduling priority if the attribute @a inheritsched is set to
- * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.
+ * The limited form only defines the @a sched_priority member, that is
+ * sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR
+ * and SCHED_OTHER class members. Threads created with @a attr will
+ * use the value of this attribute as a scheduling priority if the
+ * attribute @a inheritsched is set to PTHREAD_EXPLICIT_SCHED. Valid
+ * priorities range from 1 to 99.
+ *
+ * pthread_attr_getschedparam_ex() should be used to retrieve the
+ * parameters for extended scheduling classes, such as SCHED_SPORADIC.
  *
  * @param attr attribute object;
  *
@@ -536,7 +542,51 @@ int pthread_attr_getschedparam(const pthread_attr_t * attr,
 		return EINVAL;
 	}
 
-	*par = attr->schedparam;
+	par->sched_priority = attr->schedparam_ex.sched_priority;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+
+/**
+ * Get schedparam_ex extended attribute.
+ *
+ * This service is an extended version of
+ * pthread_attr_getschedparam(), that also supports Xenomai-specific
+ * or additional POSIX scheduling policies, which are not available
+ * with the host Linux environment.
+ *
+ * Typically, SCHED_SPORADIC parameters can be retrieved from this
+ * call.
+ *
+ * @param attr attribute object;
+ *
+ * @param par address where the value of the extended @a schedparam_ex
+ * attribute will be stored on success.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">
+ * Specification.</a>
+ * 
+ */
+int pthread_attr_getschedparam_ex(const pthread_attr_t * attr,
+				  struct sched_param_ex *par)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
+
+	*par = attr->schedparam_ex;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -546,14 +596,15 @@ int pthread_attr_getschedparam(const pthread_attr_t * attr,
 /**
  * Set schedparam attribute.
  *
- * This service set to @a par, the value of the @a schedparam attribute in the
- * attribute object @a attr.
+ * This service set to @a par, the limited form of the @a schedparam
+ * attribute in the attribute object @a attr.
  *
- * The only member of the @b sched_param structure used by this implementation
- * is @a sched_priority. Threads created with @a attr will use the value of this
- * attribute as a scheduling priority if the attribute @a inheritsched is set to
- * PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.
- *
+ * The limited form only defines the @a sched_priority member, that is
+ * sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR
+ * and SCHED_OTHER class members. Threads created with @a attr will
+ * use the value of this attribute as a scheduling priority if the
+ * attribute @a inheritsched is set to PTHREAD_EXPLICIT_SCHED. Valid
+ * priorities range from 1 to 99.
  *
  * @param attr attribute object;
  *
@@ -588,7 +639,57 @@ int pthread_attr_setschedparam(pthread_attr_t * attr,
 		return EINVAL;
 	}
 
-	attr->schedparam = *par;
+	attr->schedparam_ex.sched_priority = par->sched_priority;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+}
+
+/**
+ * Set extended schedparam_ex attribute.
+ *
+ * This service is an extended version of
+ * pthread_attr_setschedparam(), that also supports Xenomai-specific
+ * or additional POSIX scheduling policies, which are not available
+ * with the host Linux environment.
+ *
+ * Typically, SCHED_SPORADIC parameters can be set using this call.
+ *
+ * @param attr attribute object;
+ *
+ * @param par value of the @a schedparam attribute.
+ *
+ * @return 0 on success;
+ * @return an error number if:
+ * - EINVAL, @a attr or @a par is invalid.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">
+ * Specification.</a>
+ * 
+ */
+int pthread_attr_setschedparam_ex(pthread_attr_t * attr,
+				  const struct sched_param_ex *par)
+{
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(attr, PSE51_THREAD_ATTR_MAGIC, pthread_attr_t)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
+
+	if ((attr->policy != SCHED_OTHER &&
+	     (par->sched_priority < PSE51_MIN_PRIORITY
+	      || par->sched_priority > PSE51_MAX_PRIORITY))
+	    || (attr->policy == SCHED_OTHER && par->sched_priority != 0)) {
+		xnlock_put_irqrestore(&nklock, s);
+		return EINVAL;
+	}
+
+	attr->schedparam_ex = *par;
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -971,7 +1072,9 @@ EXPORT_SYMBOL(pthread_attr_setinheritsched);
 EXPORT_SYMBOL(pthread_attr_getschedpolicy);
 EXPORT_SYMBOL(pthread_attr_setschedpolicy);
 EXPORT_SYMBOL(pthread_attr_getschedparam);
+EXPORT_SYMBOL(pthread_attr_getschedparam_ex);
 EXPORT_SYMBOL(pthread_attr_setschedparam);
+EXPORT_SYMBOL(pthread_attr_setschedparam_ex);
 EXPORT_SYMBOL(pthread_attr_getscope);
 EXPORT_SYMBOL(pthread_attr_setscope);
 EXPORT_SYMBOL(pthread_attr_getname_np);

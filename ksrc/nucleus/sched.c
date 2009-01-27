@@ -25,21 +25,27 @@
 #include <nucleus/thread.h>
 #include <nucleus/timer.h>
 #include <nucleus/heap.h>
-#include <nucleus/assert.h>
 #include <asm/xenomai/bits/sched.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
-
-#ifdef CONFIG_XENO_OPT_SCHED_TP
-#define xnsched_class_highest	(&xnsched_class_tp)
-#else
-#define xnsched_class_highest	(&xnsched_class_rt)
-#endif
+static struct xnsched_class *xnsched_class_highest;
 
 #define for_each_xnsched_class(p) \
    for (p = xnsched_class_highest; p; p = p->next)
+
+int xnsched_register_class(struct xnsched_class *sched_class)
+{
+	/*
+	 * The build rules shall ensure that scheduling classes are
+	 * registered by decreasing priority order via initcalls, so
+	 * the the highest priority class shall be registered last.
+	 */
+	sched_class->next = xnsched_class_highest;
+	xnsched_class_highest = sched_class;
+#if XENO_DEBUG(NUCLEUS)
+	xnloginfo("scheduling class %s registered.\n", sched_class->name);
+#endif
+	return 0;
+}
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 
@@ -352,10 +358,28 @@ void xnsched_putback(struct xnthread *thread)
 }
 
 /* Must be called with nklock locked, interrupts off. */
-void xnsched_set_policy(struct xnthread *thread,
-			struct xnsched_class *sched_class,
-			const union xnsched_policy_param *p)
+int xnsched_set_policy(struct xnthread *thread,
+		       struct xnsched_class *sched_class,
+		       const union xnsched_policy_param *p)
 {
+	int ret;
+
+	/*
+	 * Declaring a thread to a new scheduling class may fail, so
+	 * we do that early, while the thread is still a member of the
+	 * previous class. However, this also means that the
+	 * declaration callback shall not do anything that might
+	 * affect the previous class (such as touching thread->rlink
+	 * for instance).
+	 */
+	if (sched_class != thread->base_class) {
+		if (sched_class->sched_declare) {
+			ret = sched_class->sched_declare(thread, p);
+			if (ret)
+				return ret;
+		}
+	}
+
 	/*
 	 * As a special case, we may be called from xnthread_init()
 	 * with no previous scheduling class at all.
@@ -377,6 +401,8 @@ void xnsched_set_policy(struct xnthread *thread,
 
 	if (xnthread_test_state(thread, XNSTARTED))
 		xnsched_set_resched(thread->sched);
+
+	return 0;
 }
 
 /* Must be called with nklock locked, interrupts off. */

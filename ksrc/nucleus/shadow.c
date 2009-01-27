@@ -50,7 +50,6 @@
 #include <nucleus/trace.h>
 #include <nucleus/stat.h>
 #include <nucleus/sys_ppd.h>
-#include <nucleus/assert.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
@@ -342,8 +341,18 @@ static void rpi_clear_remote(struct xnthread *thread)
 
 static void rpi_migrate(struct xnsched *sched, struct xnthread *thread)
 {
+	spl_t s;
+
 	rpi_clear_remote(thread);
 	rpi_push(sched, thread);
+	/*
+	 * The remote CPU already ran rpi_switch() for the leaving
+	 * thread, so there is no point in calling
+	 * xnsched_suspend_rpi() for the latter anew.
+	 */
+	xnlock_get_irqsave(&nklock, s);
+	xnsched_resume_rpi(thread);
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 #else  /* !CONFIG_SMP */
@@ -373,8 +382,7 @@ static inline void rpi_switch(struct task_struct *next_task)
 		 * list. Checking for XNATOMIC prevents from unlinking
 		 * a thread which is currently in flight to the
 		 * primary domain (see xnshadow_harden()); not doing
-		 * so would open a tiny window for priority
-		 * inversion.
+		 * so would open a tiny window for priority inversion.
 		 *
 		 * BIG FAT WARNING: Do not consider a blocked thread
 		 * linked to another processor's RPI list for removal,
@@ -385,8 +393,13 @@ static inline void rpi_switch(struct task_struct *next_task)
 		if (prev->rpi == sched) {
 			xnsched_pop_rpi(prev);
 			prev->rpi = NULL;
-		}
-		xnlock_put_irqrestore(&sched->rpilock, s);
+			xnlock_put_irqrestore(&sched->rpilock, s);
+			/* Do NOT nest the rpilock and nklock locks. */
+			xnlock_get_irqsave(&nklock, s);
+		  	xnsched_suspend_rpi(prev);
+			xnlock_put_irqrestore(&nklock, s);
+		} else
+		  	xnlock_put_irqrestore(&sched->rpilock, s);
 	}
 
 	if (next == NULL ||
@@ -438,6 +451,9 @@ static inline void rpi_switch(struct task_struct *next_task)
 			xnsched_push_rpi(sched, next);
 			next->rpi = sched;
 			xnlock_put_irqrestore(&sched->rpilock, s);
+			xnlock_get_irqsave(&nklock, s);
+		  	xnsched_resume_rpi(next);
+			xnlock_put_irqrestore(&nklock, s);
 		}
 	} else if (unlikely(next->rpi != sched))
 		/* We hold no lock here. */

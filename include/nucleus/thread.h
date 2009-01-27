@@ -182,8 +182,10 @@ typedef struct xnthread {
 
 #ifdef CONFIG_XENO_OPT_SCHED_TP
 	struct xnsched_tpslot *tps;	/* Current partition slot for TP scheduling */
-
 	struct xnholder tp_link;	/* Link in per-sched TP thread queue */
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	struct xnsched_sporadic_data *pss; /* Sporadic scheduling data. */
 #endif
 
 	xnarch_cpumask_t affinity;	/* Processor affinity. */
@@ -305,6 +307,9 @@ typedef struct xnhook {
 #define xnthread_init_schedparam(thread)   ((thread)->init_schedparam)
 #define xnthread_base_priority(thread)     ((thread)->bprio)
 #define xnthread_current_priority(thread)  ((thread)->cprio)
+#define xnthread_init_class(thread)        ((thread)->init_class)
+#define xnthread_base_class(thread)        ((thread)->base_class)
+#define xnthread_sched_class(thread)       ((thread)->sched_class)
 #define xnthread_time_slice(thread)        ((thread)->rrperiod)
 #define xnthread_time_credit(thread)       ((thread)->rrcredit)
 #define xnthread_archtcb(thread)           (&((thread)->tcb))

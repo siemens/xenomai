@@ -23,11 +23,6 @@
  */
 
 #include <nucleus/pod.h>
-#include <nucleus/assert.h>
-
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
 
 static void tp_schedule_next(struct xnsched_tp *tp)
 {
@@ -97,26 +92,13 @@ static void xnsched_tp_init(struct xnsched *sched)
 	tp->gps = NULL;
 	initq(&tp->threads);
 	xntimer_init_noblock(&tp->tf_timer, &nktbase, tp_tick_handler);
+	xntimer_set_name(&tp->tf_timer, "tp-tick");
 }
 
 static void xnsched_tp_setparam(struct xnthread *thread,
 				const union xnsched_policy_param *p)
 {
 	struct xnsched *sched = thread->sched;
-
-	if (thread->tps == NULL) {
-		appendq(&sched->tp.threads, &thread->tp_link);
-		/*
-		 * RPI makes no sense with temporal partitioning,
-		 * since resources obtained from Linux should have
-		 * been pre-allocated by the application before
-		 * entering real-time duties, so that timings remain
-		 * accurate. As a consequence of this, the reason to
-		 * have priority inheritance for the root thread
-		 * disappears.
-		 */
-		xnthread_set_state(thread, XNRPIOFF);
-	}
 
 	thread->tps = &sched->tp.partitions[p->tp.ptid];
 	thread->cprio = p->tp.prio;
@@ -158,6 +140,29 @@ static void xnsched_tp_trackprio(struct xnthread *thread,
 		thread->cprio = p->tp.prio;
 	} else
 		thread->cprio = thread->bprio;
+}
+
+static int xnsched_tp_declare(struct xnthread *thread,
+			      const union xnsched_policy_param *p)
+{
+	struct xnsched *sched = thread->sched;
+
+	if (p->tp.prio < XNSCHED_RT_MIN_PRIO ||
+	    p->tp.prio > XNSCHED_RT_MAX_PRIO)
+		return -EINVAL;
+
+	appendq(&sched->tp.threads, &thread->tp_link);
+	/*
+	 * RPI makes no sense with temporal partitioning, since
+	 * resources obtained from Linux should have been
+	 * pre-allocated by the application before entering real-time
+	 * duties, so that timings remain accurate. As a consequence
+	 * of this, the reason to have priority inheritance for the
+	 * root thread disappears.
+	 */
+	xnthread_set_state(thread, XNRPIOFF);
+
+	return 0;
 }
 
 static void xnsched_tp_forget(struct xnthread *thread)
@@ -248,7 +253,6 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 	 */
 	while ((h = getq(&tp->threads)) != NULL) {
 		thread = link2thread(h, tp_link);
-		thread->tps = NULL;
 		param.rt.prio = thread->cprio;
 		xnsched_set_policy(thread, &xnsched_class_rt, &param);
 	}
@@ -282,14 +286,21 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_setparam		=	xnsched_tp_setparam,
 	.sched_getparam		=	xnsched_tp_getparam,
 	.sched_trackprio	=	xnsched_tp_trackprio,
+	.sched_declare		=	xnsched_tp_declare,
 	.sched_forget		=	xnsched_tp_forget,
-	.next			=	&xnsched_class_rt,
 	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"tp"
 };
 
-EXPORT_SYMBOL(xnsched_class_tp);
-EXPORT_SYMBOL(xnsched_tp_set_schedule);
-EXPORT_SYMBOL(xnsched_tp_start_schedule);
-EXPORT_SYMBOL(xnsched_tp_stop_schedule);
-EXPORT_SYMBOL(xnsched_tp_get_partition);
+EXPORT_SYMBOL_GPL(xnsched_class_tp);
+EXPORT_SYMBOL_GPL(xnsched_tp_set_schedule);
+EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);
+EXPORT_SYMBOL_GPL(xnsched_tp_stop_schedule);
+EXPORT_SYMBOL_GPL(xnsched_tp_get_partition);
+
+static int __init register_sched_class(void)
+{
+	return xnsched_register_class(&xnsched_class_tp);
+}
+
+__initcall(register_sched_class);

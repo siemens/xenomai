@@ -82,9 +82,9 @@ typedef struct pse51_threadattr {
 	size_t stacksize;
 	int inheritsched;
 	int policy;
-	struct sched_param schedparam;
 
 	/* Non portable */
+	struct sched_param_ex schedparam_ex;
 	char *name;
 	int fp;
 	xnarch_cpumask_t affinity;
@@ -228,8 +228,14 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr,
 int pthread_attr_getschedparam(const pthread_attr_t *attr,
 			       struct sched_param *par);
 
+int pthread_attr_getschedparam_ex(const pthread_attr_t *attr,
+				  struct sched_param_ex *par);
+
 int pthread_attr_setschedparam(pthread_attr_t *attr,
 			       const struct sched_param *par);
+
+int pthread_attr_setschedparam_ex(pthread_attr_t *attr,
+				  const struct sched_param_ex *par);
 
 int pthread_attr_getscope(const pthread_attr_t *attr,
 			  int *scope);
@@ -276,9 +282,17 @@ int pthread_getschedparam(pthread_t tid,
 			  int *pol,
 			  struct sched_param *par);
 
+int pthread_getschedparam_ex(pthread_t tid,
+			     int *pol,
+			     struct sched_param_ex *par);
+
 int pthread_setschedparam(pthread_t tid,
 			  int pol,
 			  const struct sched_param *par);
+
+int pthread_setschedparam_ex(pthread_t tid,
+			     int pol,
+			     const struct sched_param_ex *par);
 
 int pthread_mutexattr_init(pthread_mutexattr_t *attr);
 

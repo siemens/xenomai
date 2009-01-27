@@ -107,10 +107,10 @@ extern xnpod_t nkpod_struct;
 extern "C" {
 #endif
 
-void __xnpod_set_thread_schedparam(struct xnthread *thread,
-				   struct xnsched_class *sched_class,
-				   const union xnsched_policy_param *sched_param,
-				   int propagate);
+int __xnpod_set_thread_schedparam(struct xnthread *thread,
+				  struct xnsched_class *sched_class,
+				  const union xnsched_policy_param *sched_param,
+				  int propagate);
 
 void __xnpod_reset_thread(struct xnthread *thread);
 
@@ -221,9 +221,9 @@ void xnpod_resume_thread(xnthread_t *thread,
 
 int xnpod_unblock_thread(xnthread_t *thread);
 
-void xnpod_set_thread_schedparam(struct xnthread *thread,
-				 struct xnsched_class *sched_class,
-				 const union xnsched_policy_param *sched_param);
+int xnpod_set_thread_schedparam(struct xnthread *thread,
+				struct xnsched_class *sched_class,
+				const union xnsched_policy_param *sched_param);
 
 int xnpod_migrate_thread(int cpu);
 

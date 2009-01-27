@@ -19,13 +19,12 @@
 #ifndef _XENO_SKIN_POSIX_H
 #define _XENO_SKIN_POSIX_H
 
-#define PSE51_SKIN_VERSION_STRING  "1.0"
-#define PSE51_SKIN_VERSION_CODE    0x00010000
 #define PSE51_SKIN_MAGIC           0x50534531
 
 #ifdef __XENO_SIM__
 
 #include <posix/errno.h>
+#include <posix/sched.h>
 #include <posix/pthread.h>
 #include <posix/sched.h>
 #include <posix/signal.h>

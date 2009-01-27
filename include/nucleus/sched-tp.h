@@ -57,10 +57,12 @@ struct xnsched_tp {
 	struct xnqueue threads;		 /* !< Assigned thread queue */
 };
 
-static inline void xnsched_tp_init_tcb(struct xnthread *thread)
+static inline int xnsched_tp_init_tcb(struct xnthread *thread)
 {
 	inith(&thread->tp_link);
 	thread->tps = NULL;
+
+	return 0;
 }
 
 struct xnsched_tp_schedule *

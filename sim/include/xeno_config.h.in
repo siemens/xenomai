@@ -76,6 +76,12 @@
 #undef CONFIG_XENO_OPT_SCHED_CLASSES
 
 /* config */
+#undef CONFIG_XENO_OPT_SCHED_SPORADIC
+
+/* config */
+#undef CONFIG_XENO_OPT_SCHED_SPORADIC_MAXREPL
+
+/* config */
 #undef CONFIG_XENO_OPT_SCHED_TP
 
 /* config */

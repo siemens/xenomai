@@ -103,8 +103,13 @@ static inline void __xnsched_rt_trackprio(struct xnthread *thread,
 		thread->cprio = thread->bprio;
 }
 
-static inline void xnsched_rt_init_tcb(struct xnthread *thread)
+static inline void __xnsched_rt_forget(struct xnthread *thread)
 {
+}
+
+static inline int xnsched_rt_init_tcb(struct xnthread *thread)
+{
+	return 0;
 }
 
 void xnsched_rt_tick(struct xnthread *curr);
@@ -128,6 +133,14 @@ static inline struct xnthread *__xnsched_rt_peek_rpi(struct xnsched *sched)
 {
 	struct xnpholder *h = sched_getheadpq(&sched->rt.relaxed);
 	return h ? link2thread(h, xlink) : NULL;
+}
+
+static inline void __xnsched_rt_suspend_rpi(struct xnthread *thread)
+{
+}
+
+static inline void __xnsched_rt_resume_rpi(struct xnthread *thread)
+{
 }
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */

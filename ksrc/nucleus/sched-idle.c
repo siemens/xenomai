@@ -49,7 +49,6 @@ void xnsched_idle_trackprio(struct xnthread *thread,
 
 struct xnsched_class xnsched_class_idle = {
 
-#ifdef __XENO_SIM__
 	.sched_init		=	NULL,
 	.sched_enqueue		=	NULL,
 	.sched_dequeue		=	NULL,
@@ -57,12 +56,18 @@ struct xnsched_class xnsched_class_idle = {
 	.sched_tick		=	NULL,
 	.sched_rotate		=	NULL,
 	.sched_forget		=	NULL,
-#endif
+	.sched_declare		=	NULL,
 	.sched_pick		=	xnsched_idle_pick,
 	.sched_setparam		=	xnsched_idle_setparam,
 	.sched_getparam		=	xnsched_idle_getparam,
 	.sched_trackprio	=	xnsched_idle_trackprio,
-	.next			=	NULL,
 	.weight			=	XNSCHED_CLASS_WEIGHT(0),
 	.name			=	"idle"
 };
+
+static int __init register_sched_class(void)
+{
+	return xnsched_register_class(&xnsched_class_idle);
+}
+
+__initcall(register_sched_class);

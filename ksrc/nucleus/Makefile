@@ -6,10 +6,15 @@ obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
 xeno_nucleus-y := \
 	heap.o intr.o module.o pod.o \
-	synch.o thread.o timebase.o timer.o \
-	sched.o sched-idle.o sched-rt.o
+	synch.o thread.o timebase.o timer.o sched.o
 
+# CAUTION: the declaration order of scheduling classes is
+# significant. Lower priority classes shall be listed first.
+xeno_nucleus-y += sched-idle.o
+xeno_nucleus-y += sched-rt.o
+xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
+
 xeno_nucleus-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o
 xeno_nucleus-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 xeno_nucleus-$(CONFIG_XENO_OPT_MAP) += map.o
@@ -30,16 +35,19 @@ list-multi := xeno_nucleus.o
 
 xeno_nucleus-objs := \
 	heap.o intr.o module.o pod.o \
-	sched.o sched-rt.o sched-idle.o \
-	synch.o thread.o timebase.o timer.o
+	synch.o thread.o timebase.o timer.o sched.o
 
-opt_objs-y :=
+# CAUTION: the declaration order of scheduling classes is
+# significant. Lower priority classes shall be listed first.
+opt_objs-y := sched_idle.o sched_rt.o
+opt_objs-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
+opt_objs-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
+
 opt_objs-$(CONFIG_XENO_OPT_PERVASIVE) += shadow.o
 opt_objs-$(CONFIG_XENO_OPT_PIPE) += pipe.o
 opt_objs-$(CONFIG_XENO_OPT_MAP) += map.o
 opt_objs-$(CONFIG_XENO_OPT_REGISTRY) += registry.o
 opt_objs-$(CONFIG_XENO_OPT_SELECT) += select.o
-opt_objs-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 
 xeno_nucleus-objs += $(opt_objs-y)
 

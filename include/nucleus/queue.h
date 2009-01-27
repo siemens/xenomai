@@ -262,6 +262,7 @@ static inline void moveq(xnqueue_t *dstq, xnqueue_t *srcq)
 	if (emptyq_p(srcq))
 		return;
 
+	/* srcq elements are moved to head of dstq (LIFO) */
 	headsrc->last->next = tailsrc->next;
 	tailsrc->next->last = headsrc->last;
 	headsrc->last = headdst;

@@ -108,6 +108,31 @@ config XENO_OPT_SCHED_TP_NRPART
 	Define here the maximum number of temporal partitions the TP
 	scheduler may have to handle.
 
+config XENO_OPT_SCHED_SPORADIC
+	bool "Sporadic scheduling"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables support for the sporadic scheduling.  It
+	can be used to enforce a capped limit on the execution time of
+	a thread within a given period of time.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_SPORADIC_MAXREPL
+	int "Maximum number of pending replenishments"
+	default 8
+	range 4 16
+	depends on XENO_OPT_SCHED_SPORADIC
+	help
+
+	For performance reason, the budget replenishment information
+	is statically stored on a per-thread basis. This parameter
+	defines the maximum number of replenishment requests that can
+	be pending concurrently for any given thread that undergoes
+	sporadic scheduling (system minimum is 4).
+
 config XENO_OPT_PIPE
 	bool
 
