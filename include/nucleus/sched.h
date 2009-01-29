@@ -283,7 +283,7 @@ static inline void xnsched_rotate(struct xnsched *sched,
 
 static inline int xnsched_init_tcb(struct xnthread *thread)
 {
-	int ret;
+	int ret = 0;
 
 	xnsched_idle_init_tcb(thread);
 	xnsched_rt_init_tcb(thread);
@@ -297,7 +297,7 @@ static inline int xnsched_init_tcb(struct xnthread *thread)
 	if (ret)
 		return ret;
 #endif /* CONFIG_XENO_OPT_SCHED_SPORADIC */
-	return 0;
+	return ret;
 }
 
 static inline int xnsched_root_priority(struct xnsched *sched)
