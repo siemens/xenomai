@@ -312,9 +312,9 @@ static int xnsched_sporadic_declare(struct xnthread *thread,
 
 	tbase = xnthread_time_base(thread);
 	xntimer_init(&pss->repl_timer, tbase, sporadic_replenish_handler);
-	xntimer_set_name(&pss->repl_timer, "ss-replenish");
+	xntimer_set_name(&pss->repl_timer, "pss-replenish");
 	xntimer_init(&pss->drop_timer, tbase, sporadic_drop_handler);
-	xntimer_set_name(&pss->drop_timer, "ss-drop");
+	xntimer_set_name(&pss->drop_timer, "pss-drop");
 
 	thread->pss = pss;
 	pss->thread = thread;
