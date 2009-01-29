@@ -70,7 +70,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 		 * The kernel is currently using fpu in kernel-space,
 		 * do not clobber the user-space fpu backup area.
 		 */
-		rootcb->fpup = &rootcb->i387;
+		rootcb->fpup = &rootcb->fpuenv;
 }
 
 #define xnarch_enter_root(rootcb)  do { } while(0)
