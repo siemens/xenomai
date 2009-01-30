@@ -457,6 +457,8 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 		ret = -xnpod_set_thread_schedparam(&tid->threadbase,
 						   &xnsched_class_sporadic, &param);
 		break;
+#else
+		(void)param;
 #endif
 	}
 
