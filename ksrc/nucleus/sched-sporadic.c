@@ -328,6 +328,8 @@ static void xnsched_sporadic_forget(struct xnthread *thread)
 
 	xntimer_destroy(&pss->repl_timer);
 	xntimer_destroy(&pss->drop_timer);
+	xnfree(pss);
+	thread->pss = NULL;
 }
 
 static void xnsched_sporadic_enqueue(struct xnthread *thread)
