@@ -210,7 +210,7 @@ index f89dffb..e62fb2c 100644
  #endif /* _ASM_X86_IPI_H */
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..dc73c8c
+index 0000000..b20cf26
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,156 @@
@@ -241,10 +241,10 @@ index 0000000..dc73c8c
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.2-04"
++#define IPIPE_ARCH_STRING	"2.2-05"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	2
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -2963,10 +2963,10 @@ index f1c688e..484928c 100644
  /* must come after the send_IPI functions above for inlining */
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..8c7af12
+index 0000000..59052d1
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,977 @@
+@@ -0,0 +1,981 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -3626,8 +3626,12 @@ index 0000000..8c7af12
 +static void do_machine_check_vector(struct pt_regs *regs, long error_code)
 +{
 +#ifdef CONFIG_X86_MCE
++#ifdef CONFIG_X86_32
 +	extern void (*machine_check_vector)(struct pt_regs *, long error_code);
 +	machine_check_vector(regs, error_code);
++#else
++	do_machine_check(regs, error_code);
++#endif
 +#endif /* CONFIG_X86_MCE */
 +}
 +
