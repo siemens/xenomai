@@ -1,7 +1,7 @@
 2009-01-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.27.13-x86-2.2-04,
-	2.6.28.2-x86-2.2-04.
+	2.6.28.2-x86-2.2-05.
 
 2009-01-27  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
