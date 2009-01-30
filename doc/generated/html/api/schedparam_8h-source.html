@@ -58,20 +58,32 @@
 <a name="l00030"></a>00030 
 <a name="l00031"></a>00031 <span class="keyword">struct </span>xnsched_tp_param {
 <a name="l00032"></a>00032         <span class="keywordtype">int</span> prio;
-<a name="l00033"></a>00033         <span class="keywordtype">int</span> pid;        <span class="comment">/* partition id. */</span>
+<a name="l00033"></a>00033         <span class="keywordtype">int</span> ptid;       <span class="comment">/* partition id. */</span>
 <a name="l00034"></a>00034 };
 <a name="l00035"></a>00035 
-<a name="l00036"></a>00036 <span class="keyword">union </span>xnsched_policy_param {
-<a name="l00037"></a>00037         <span class="keyword">struct </span>xnsched_idle_param idle;
-<a name="l00038"></a>00038         <span class="keyword">struct </span>xnsched_rt_param rt;
-<a name="l00039"></a>00039 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SCHED_TP</span>
-<a name="l00040"></a>00040 <span class="preprocessor"></span>        <span class="keyword">struct </span>xnsched_tp_param tp;
-<a name="l00041"></a>00041 <span class="preprocessor">#endif</span>
-<a name="l00042"></a>00042 <span class="preprocessor"></span>};
-<a name="l00043"></a>00043 
-<a name="l00044"></a>00044 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHEDPARAM_H */</span>
+<a name="l00036"></a>00036 <span class="keyword">struct </span>xnsched_sporadic_param {
+<a name="l00037"></a>00037         xntime_t init_budget;
+<a name="l00038"></a>00038         xntime_t repl_period;
+<a name="l00039"></a>00039         <span class="keywordtype">int</span> max_repl;
+<a name="l00040"></a>00040         <span class="keywordtype">int</span> low_prio;
+<a name="l00041"></a>00041         <span class="keywordtype">int</span> normal_prio;
+<a name="l00042"></a>00042         <span class="keywordtype">int</span> current_prio;
+<a name="l00043"></a>00043 };
+<a name="l00044"></a>00044 
+<a name="l00045"></a>00045 <span class="keyword">union </span>xnsched_policy_param {
+<a name="l00046"></a>00046         <span class="keyword">struct </span>xnsched_idle_param idle;
+<a name="l00047"></a>00047         <span class="keyword">struct </span>xnsched_rt_param rt;
+<a name="l00048"></a>00048 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_SCHED_TP</span>
+<a name="l00049"></a>00049 <span class="preprocessor"></span>        <span class="keyword">struct </span>xnsched_tp_param tp;
+<a name="l00050"></a>00050 <span class="preprocessor">#endif</span>
+<a name="l00051"></a>00051 <span class="preprocessor"></span><span class="preprocessor">#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC</span>
+<a name="l00052"></a>00052 <span class="preprocessor"></span>        <span class="keyword">struct </span>xnsched_sporadic_param pss;
+<a name="l00053"></a>00053 <span class="preprocessor">#endif</span>
+<a name="l00054"></a>00054 <span class="preprocessor"></span>};
+<a name="l00055"></a>00055 
+<a name="l00056"></a>00056 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHEDPARAM_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:43 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

@@ -312,10 +312,6 @@ while : ; do
       linux_arch=powerpc
       xenomai_arch=powerpc
       ;;
-   ia64)
-      linux_arch=ia64
-      xenomai_arch=ia64
-      ;;
    bfin|bfinnommu|blackfin)
       linux_arch=blackfin
       xenomai_arch=blackfin

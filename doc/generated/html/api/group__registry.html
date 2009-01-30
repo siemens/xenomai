@@ -153,7 +153,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h-source.html#l00303">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00102">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNBREAK</a>, <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h-source.html#l00303">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
@@ -224,7 +224,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="pod_8h-source.html#l00232">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00180">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00240">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00250">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00247">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, and <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00180">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00240">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00250">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00249">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, and <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>.</p>
 
 </div>
 </div><p>
@@ -376,7 +376,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00270">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00266">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00228">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00249">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00336">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00384">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00248">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00937">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00270">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00266">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00228">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00249">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00336">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00392">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00248">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00937">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div><p>
@@ -442,12 +442,12 @@ This service can be called from:<p>
 Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00830">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00102">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00830">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00169">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00104">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:52 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:45 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

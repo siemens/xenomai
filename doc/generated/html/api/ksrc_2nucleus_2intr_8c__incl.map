@@ -1,11 +1,13 @@
 <area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="205,81,307,105">
 <area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="119,380,223,404">
 <area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="nucleus/intr.h" alt="" coords="32,305,131,329">
-<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="380,156,495,180">
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="539,230,656,254">
+<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="771,156,885,180">
+<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="392,230,509,254">
 <area shape="rect" href="$schedqueue_8h&#45;source.html" title="nucleus/schedqueue.h" alt="" coords="621,380,773,404">
-<area shape="rect" href="$sched&#45;tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="205,230,336,254">
-<area shape="rect" href="$sched&#45;builtin_8h.html" title="Definitions for built&#45;in scheduling classes." alt="" coords="360,230,515,254">
+<area shape="rect" href="$sched&#45;tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="763,230,893,254">
+<area shape="rect" href="$sched&#45;sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="917,230,1085,254">
+<area shape="rect" href="$sched&#45;idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="1109,230,1248,254">
+<area shape="rect" href="$sched&#45;rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="1272,230,1400,254">
 <area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="256,305,365,329">
 <area shape="rect" href="$include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="389,305,512,329">
 <area shape="rect" href="$schedparam_8h&#45;source.html" title="nucleus/schedparam.h" alt="" coords="536,305,688,329">

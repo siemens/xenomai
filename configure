@@ -21281,11 +21281,6 @@ case "$host" in
 	XENO_LINUX_IMAGE=arch/ppc64/boot/images/zImage
 	CONFIG_XENO_FASTSYNCH=y
         ;;
- ia64-*)
-	XENO_TARGET_ARCH=ia64
-        XENO_LINUX_ARCH=ia64
-	XENO_LINUX_INSTALL_TARGET=install
-        ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=blackfin
@@ -22599,9 +22594,6 @@ case $XENO_TARGET_ARCH in
  powerpc)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
- ia64)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-        ;;
  blackfin)
 	# Produce libraries in FDPIC format.
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
@@ -22914,7 +22906,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/drvlib/Makefile src/drvlib/comedi/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/comedi/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-ia64/Makefile include/asm-ia64/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/comedi/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno-load scripts/xeno-test src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/rtai/Makefile src/skins/uitron/Makefile src/drvlib/Makefile src/drvlib/comedi/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/comedi/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtai/Makefile include/rtdm/Makefile include/comedi/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -23611,8 +23603,6 @@ do
     "include/asm-x86/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-x86/bits/Makefile" ;;
     "include/asm-powerpc/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/Makefile" ;;
     "include/asm-powerpc/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-powerpc/bits/Makefile" ;;
-    "include/asm-ia64/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-ia64/Makefile" ;;
-    "include/asm-ia64/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-ia64/bits/Makefile" ;;
     "include/asm-arm/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/Makefile" ;;
     "include/asm-arm/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/bits/Makefile" ;;
     "include/asm-sim/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
@@ -24576,7 +24566,6 @@ done
               . $XENO_LINUX_SRCDIR/.config
 	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-              test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
 	      test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :

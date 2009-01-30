@@ -1,5 +1,9 @@
 2009-01-30  Philippe Gerum  <rpm@xenomai.org>
 
+	* ksrc/arch/ia64, include/asm-ia64: Itanium port discontinued.
+
+2009-01-30  Philippe Gerum  <rpm@xenomai.org>
+
 	* ksrc/arch/x86/patches: Upgrade to 2.6.27.13-x86-2.2-04,
 	2.6.28.2-x86-2.2-04.
 

@@ -85,9 +85,15 @@ In user-space, the attributes and their defaults values are those documented by 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__threadattr.html#g8b69613ee83bf326af4b15de5e00ec99">pthread_attr_getschedparam</a> (const pthread_attr_t *attr, struct sched_param *par)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get schedparam attribute.  <a href="#g8b69613ee83bf326af4b15de5e00ec99"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__threadattr.html#gc7026e5a69f8e3a04b03b144392d4df1">pthread_attr_getschedparam_ex</a> (const pthread_attr_t *attr, struct sched_param_ex *par)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get schedparam_ex extended attribute.  <a href="#gc7026e5a69f8e3a04b03b144392d4df1"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__threadattr.html#g7d0bf4f0734aca888f89f7341b1df222">pthread_attr_setschedparam</a> (pthread_attr_t *attr, const struct sched_param *par)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set schedparam attribute.  <a href="#g7d0bf4f0734aca888f89f7341b1df222"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__threadattr.html#g981dc55cf19905531309e6a51f0328c3">pthread_attr_setschedparam_ex</a> (pthread_attr_t *attr, const struct sched_param_ex *par)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set extended schedparam_ex attribute.  <a href="#g981dc55cf19905531309e6a51f0328c3"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__posix__threadattr.html#gbfd252cd45081231018030e3878efa06">pthread_attr_getscope</a> (const pthread_attr_t *attr, int *scope)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get contention scope attribute.  <a href="#gbfd252cd45081231018030e3878efa06"></a><br></td></tr>
@@ -398,12 +404,57 @@ an error number if:<ul>
 <p>
 Get schedparam attribute. 
 <p>
-This service stores, at the address <em>par</em>, the value of the <em>schedparam</em> attribute in the attribute object <em>attr</em>.<p>
-The only member of the <b>sched_param</b> structure used by this implementation is <em>sched_priority</em>. Threads created with <em>attr</em> will use the value of this attribute as a scheduling priority if the attribute <em>inheritsched</em> is set to PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.<p>
+This service stores, at the address <em>par</em>, the limited form of the <em>schedparam</em> attribute in the attribute object <em>attr</em>.<p>
+The limited form only defines the <em>sched_priority</em> member, that is sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR and SCHED_OTHER class members. Threads created with <em>attr</em> will use the value of this attribute as a scheduling priority if the attribute <em>inheritsched</em> is set to PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.<p>
+<a class="el" href="group__posix__threadattr.html#gc7026e5a69f8e3a04b03b144392d4df1" title="Get schedparam_ex extended attribute.">pthread_attr_getschedparam_ex()</a> should be used to retrieve the parameters for extended scheduling classes, such as SCHED_SPORADIC.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>address where the value of the <em>schedparam</em> attribute will be stored on success.</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>EINVAL, <em>attr</em> is invalid.</li></ul>
+</dd></dl>
+<dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">Specification.</a> </dd></dl>
+
+</div>
+</div><p>
+<a class="anchor" name="gc7026e5a69f8e3a04b03b144392d4df1"></a><!-- doxytag: member="thread_attr.c::pthread_attr_getschedparam_ex" ref="gc7026e5a69f8e3a04b03b144392d4df1" args="(const pthread_attr_t *attr, struct sched_param_ex *par)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_attr_getschedparam_ex           </td>
+          <td>(</td>
+          <td class="paramtype">const pthread_attr_t *&nbsp;</td>
+          <td class="paramname"> <em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">struct sched_param_ex *&nbsp;</td>
+          <td class="paramname"> <em>par</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td width="100%"></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Get schedparam_ex extended attribute. 
+<p>
+This service is an extended version of <a class="el" href="group__posix__threadattr.html#g8b69613ee83bf326af4b15de5e00ec99" title="Get schedparam attribute.">pthread_attr_getschedparam()</a>, that also supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.<p>
+Typically, SCHED_SPORADIC parameters can be retrieved from this call.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>address where the value of the extended <em>schedparam_ex</em> attribute will be stored on success.</td></tr>
   </table>
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
@@ -443,7 +494,7 @@ an error number if:<ul>
 Get schedpolicy attribute. 
 <p>
 This service stores, at the address <em>policy</em>, the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR or SCHED_OTHER.<p>
+Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -844,8 +895,8 @@ an error number if:<ul>
 <p>
 Set schedparam attribute. 
 <p>
-This service set to <em>par</em>, the value of the <em>schedparam</em> attribute in the attribute object <em>attr</em>.<p>
-The only member of the <b>sched_param</b> structure used by this implementation is <em>sched_priority</em>. Threads created with <em>attr</em> will use the value of this attribute as a scheduling priority if the attribute <em>inheritsched</em> is set to PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.<p>
+This service set to <em>par</em>, the limited form of the <em>schedparam</em> attribute in the attribute object <em>attr</em>.<p>
+The limited form only defines the <em>sched_priority</em> member, that is sufficent to hold the scheduling parameter for SCHED_FIFO, SCHED_RR and SCHED_OTHER class members. Threads created with <em>attr</em> will use the value of this attribute as a scheduling priority if the attribute <em>inheritsched</em> is set to PTHREAD_EXPLICIT_SCHED. Valid priorities range from 1 to 99.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -859,6 +910,50 @@ an error number if:<ul>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">Specification.</a> </dd></dl>
 
 <p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00119">rt_task_create()</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="g981dc55cf19905531309e6a51f0328c3"></a><!-- doxytag: member="thread_attr.c::pthread_attr_setschedparam_ex" ref="g981dc55cf19905531309e6a51f0328c3" args="(pthread_attr_t *attr, const struct sched_param_ex *par)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pthread_attr_setschedparam_ex           </td>
+          <td>(</td>
+          <td class="paramtype">pthread_attr_t *&nbsp;</td>
+          <td class="paramname"> <em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct sched_param_ex *&nbsp;</td>
+          <td class="paramname"> <em>par</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td width="100%"></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Set extended schedparam_ex attribute. 
+<p>
+This service is an extended version of <a class="el" href="group__posix__threadattr.html#g7d0bf4f0734aca888f89f7341b1df222" title="Set schedparam attribute.">pthread_attr_setschedparam()</a>, that also supports Xenomai-specific or additional POSIX scheduling policies, which are not available with the host Linux environment.<p>
+Typically, SCHED_SPORADIC parameters can be set using this call.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>par</em>&nbsp;</td><td>value of the <em>schedparam</em> attribute.</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success; <p>
+an error number if:<ul>
+<li>EINVAL, <em>attr</em> or <em>par</em> is invalid.</li></ul>
+</dd></dl>
+<dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">Specification.</a> </dd></dl>
 
 </div>
 </div><p>
@@ -891,7 +986,7 @@ an error number if:<ul>
 Set schedpolicy attribute. 
 <p>
 This service set to <em>policy</em> the value of the <em>policy</em> attribute in the attribute object <em>attr</em>.<p>
-Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR or SCHED_OTHER.<p>
+Threads created with the attribute object <em>attr</em> use the value of this attribute as scheduling policy if the <em>inheritsched</em> attribute is set to PTHREAD_EXPLICIT_SCHED. The value of this attribute is one of SCHED_FIFO, SCHED_RR, SCHED_SPORADIC or SCHED_OTHER.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>attr</em>&nbsp;</td><td>attribute object;</td></tr>
@@ -1001,7 +1096,7 @@ an error number if:<ul>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:55 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:48 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

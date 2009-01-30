@@ -7,7 +7,6 @@ SUBDIRS = \
 	asm-generic \
 	asm-blackfin \
 	asm-x86 \
-	asm-ia64 \
 	asm-powerpc \
 	asm-arm \
 	asm-sim \

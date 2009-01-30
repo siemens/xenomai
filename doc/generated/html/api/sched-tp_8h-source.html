@@ -64,25 +64,29 @@
 <a name="l00057"></a>00057         <span class="keyword">struct </span>xnqueue threads;          <span class="comment">/* !&lt; Assigned thread queue */</span>
 <a name="l00058"></a>00058 };
 <a name="l00059"></a>00059 
-<a name="l00060"></a>00060 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnsched_tp_init_tcb(<span class="keyword">struct</span> xnthread *thread)
+<a name="l00060"></a>00060 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> xnsched_tp_init_tcb(<span class="keyword">struct</span> xnthread *thread)
 <a name="l00061"></a>00061 {
 <a name="l00062"></a>00062         inith(&amp;thread-&gt;tp_link);
 <a name="l00063"></a>00063         thread-&gt;tps = NULL;
-<a name="l00064"></a>00064 }
-<a name="l00065"></a>00065 
-<a name="l00066"></a>00066 <span class="keyword">struct </span>xnsched_tp_schedule *
-<a name="l00067"></a>00067 xnsched_tp_set_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched,
-<a name="l00068"></a>00068                         <span class="keyword">struct</span> xnsched_tp_schedule *gps);
-<a name="l00069"></a>00069 
-<a name="l00070"></a>00070 <span class="keywordtype">void</span> xnsched_tp_start_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
+<a name="l00064"></a>00064 
+<a name="l00065"></a>00065         <span class="keywordflow">return</span> 0;
+<a name="l00066"></a>00066 }
+<a name="l00067"></a>00067 
+<a name="l00068"></a>00068 <span class="keyword">struct </span>xnsched_tp_schedule *
+<a name="l00069"></a>00069 xnsched_tp_set_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched,
+<a name="l00070"></a>00070                         <span class="keyword">struct</span> xnsched_tp_schedule *gps);
 <a name="l00071"></a>00071 
-<a name="l00072"></a>00072 <span class="keywordtype">void</span> xnsched_tp_stop_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
+<a name="l00072"></a>00072 <span class="keywordtype">void</span> xnsched_tp_start_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
 <a name="l00073"></a>00073 
-<a name="l00074"></a>00074 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SCHED_TP */</span>
+<a name="l00074"></a>00074 <span class="keywordtype">void</span> xnsched_tp_stop_schedule(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
 <a name="l00075"></a>00075 
-<a name="l00076"></a>00076 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHED_TP_H */</span>
+<a name="l00076"></a>00076 <span class="keywordtype">int</span> xnsched_tp_get_partition(<span class="keyword">struct</span> <a class="code" href="structxnsched.html" title="Scheduling information structure.">xnsched</a> *sched);
+<a name="l00077"></a>00077 
+<a name="l00078"></a>00078 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_SCHED_TP */</span>
+<a name="l00079"></a>00079 
+<a name="l00080"></a>00080 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SCHED_TP_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:43 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

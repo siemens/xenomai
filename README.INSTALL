@@ -328,23 +328,7 @@ $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu
   CXX=ppc_4xx-g++ LD=ppc_4xx-ld
 $ make DESTDIR=$staging_dir install
 
-2.3 Building for the IPF
-------------------------
-
-A typical cross-compilation setup, in order to build Xenomai for an
-ia64 system:
-
-$ $xenomai_root/scripts/prepare-kernel.sh --arch=ia64 \
-  --adeos=$xenomai_root/ksrc/arch/ia64/patches/adeos-ipipe-2.6.15-ia64-X.Y-ZZ.patch \
-  --linux=$linux_tree
-$ cd $linux_tree
-$ make ARCH=ia64 CROSS_COMPILE=ia64-linux- xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make ARCH=ia64 CROSS_COMPILE=ia64-linux- bzImage modules # then install as needed
-$ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ia64-unknown-linux-gnu CC=ia64-linux-gcc CXX=ia64-linux-gcc AR=ia64-linux-ar LD=ia64-linux-ld
-$ make install
-
-2.4 Building for the Blackfin
+2.3 Building for the Blackfin
 -----------------------------
 
 The Blackfin is an MMU-less, DSP-type architecture running uClinux.
@@ -373,7 +357,7 @@ architecture. In case of problem running the testsuite, try restarting
 the last two build steps, passing the --disable-shared option to the
 "configure" script.
 
-2.5 Building for x86 with the --enable-linux-build option
+2.4 Building for x86 with the --enable-linux-build option
 ---------------------------------------------------------
 
 Build the Linux kernel as part of the user space support build process:
@@ -387,7 +371,7 @@ When "make install" is finished, you should find the patched kernel installed
 in /boot, its module under /lib/modules, and Xenomai user-space libraries
 and tools under /usr/xenomai.
 
-2.6 Building for x86_64
+2.5 Building for x86_64
 -----------------------
 
 Here are the typical steps for building Xenomai on a x86_64 host

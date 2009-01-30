@@ -81,11 +81,6 @@ case "$host" in
 	XENO_LINUX_IMAGE=arch/ppc64/boot/images/zImage
 	CONFIG_XENO_FASTSYNCH=y
         ;;
- ia64-*)
-	XENO_TARGET_ARCH=ia64
-        XENO_LINUX_ARCH=ia64
-	XENO_LINUX_INSTALL_TARGET=install
-        ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=blackfin
@@ -443,7 +438,6 @@ patch. Default is to infer the patch name from Linux kernel version.]),
               . $XENO_LINUX_SRCDIR/.config
 	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-              test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
               test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
               test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
 	      test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
@@ -672,9 +666,6 @@ case $XENO_TARGET_ARCH in
  powerpc)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
- ia64)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-        ;;
  blackfin)
 	# Produce libraries in FDPIC format.
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
@@ -859,8 +850,6 @@ AC_CONFIG_FILES([ \
        	include/asm-x86/bits/Makefile \
        	include/asm-powerpc/Makefile \
        	include/asm-powerpc/bits/Makefile \
-       	include/asm-ia64/Makefile \
-       	include/asm-ia64/bits/Makefile \
        	include/asm-arm/Makefile \
        	include/asm-arm/bits/Makefile \
        	include/asm-sim/Makefile \

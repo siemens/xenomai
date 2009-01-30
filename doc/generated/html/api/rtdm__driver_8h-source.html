@@ -450,7 +450,7 @@
 <a name="l00987"></a>00987 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__rtdmtask.html#g286f2d3ff73b3e9c5f24d5a1122a57d2" title="Adjust real-time task priority.">rtdm_task_set_priority</a>(rtdm_task_t *task, <span class="keywordtype">int</span> priority)
 <a name="l00988"></a>00988 {
 <a name="l00989"></a>00989         <span class="keyword">union </span>xnsched_policy_param param = { .rt = { .prio = priority } };
-<a name="l00990"></a>00990         <a class="code" href="group__pod.html#gae550ac24b444d0430353fc80a3c79ab" title="Change the base scheduling parameters of a thread.">xnpod_set_thread_schedparam</a>(task, &amp;xnsched_class_rt, &amp;param);
+<a name="l00990"></a>00990         <a class="code" href="group__pod.html#g6d535ef9821e98fd7f257b50a3c8d595" title="Change the base scheduling parameters of a thread.">xnpod_set_thread_schedparam</a>(task, &amp;xnsched_class_rt, &amp;param);
 <a name="l00991"></a>00991         <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
 <a name="l00992"></a>00992 }
 <a name="l00993"></a>00993 
@@ -712,7 +712,7 @@
 <a name="l01249"></a>01249 
 <a name="l01250"></a>01250 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:44 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

@@ -179,7 +179,7 @@
 <a name="l00171"></a>00171 
 <a name="l00172"></a>00172 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> __native_pipe_flush_rq(xnqueue_t *rq)
 <a name="l00173"></a>00173 {
-<a name="l00174"></a>00174         xeno_flush_rq(RT_PIPE, rq, pipe);
+<a name="l00174"></a>00174         xeno_flush_rq_norelease(RT_PIPE, rq, pipe);
 <a name="l00175"></a>00175 }
 <a name="l00176"></a>00176 
 <a name="l00177"></a>00177 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_NATIVE_PIPE */</span>
@@ -196,7 +196,7 @@
 <a name="l00188"></a>00188 <span class="preprocessor"></span>
 <a name="l00189"></a>00189 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_PIPE_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:50 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:43 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

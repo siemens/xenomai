@@ -8,7 +8,7 @@ Homepage: http://www.xenomai.org/
 
 Package: xenomai-runtime
 Section: devel
-Architecture: amd64 arm armeb armel i386 ia64 powerpc
+Architecture: amd64 arm armeb armel i386 powerpc
 Depends: ${shlibs:Depends}
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai
@@ -47,7 +47,7 @@ Description: Linux kernel patches for Xenomai
 
 Package: libxenomai1
 Section: libs
-Architecture: amd64 arm armeb armel i386 ia64 powerpc
+Architecture: amd64 arm armeb armel i386 powerpc
 Depends: ${shlibs:Depends}
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai
@@ -64,7 +64,7 @@ Description: Shared libraries for Xenomai
 
 Package: libxenomai-dev
 Section: libdevel
-Architecture: amd64 arm armeb armel i386 ia64 powerpc
+Architecture: amd64 arm armeb armel i386 powerpc
 Depends: libxenomai1 (= ${binary:Version})
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai

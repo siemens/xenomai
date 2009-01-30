@@ -95,6 +95,9 @@ The functions count might seem high; however, the developer needs a few of them 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcomedi__cmd__desc.html">comedi_cmd_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__comedi__buffer.html#gac6511221868aa7f9e736051228fc6b6">comedi_get_cmd</a> (comedi_dev_t *dev, unsigned int type, int idx_subd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the current Comedi command descriptor.  <a href="#gac6511221868aa7f9e736051228fc6b6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__comedi__buffer.html#gdaa1225e24070d8f39a5e490bb8984b8">comedi_get_chan</a> (struct comedi_device *dev, unsigned int type, int idx_subd)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the channel index according to its type.  <a href="#gdaa1225e24070d8f39a5e490bb8984b8"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="g43995ef0f5412e85292d1ae092295641"></a><!-- doxytag: member="driver_facilities.c::comedi_buf_commit_absget" ref="g43995ef0f5412e85292d1ae092295641" args="(comedi_dev_t *dev, unsigned long count)" -->
@@ -593,6 +596,53 @@ The function <a class="el" href="group__comedi__buffer.html#g826875d8fdfa2f1e685
 
 </div>
 </div><p>
+<a class="anchor" name="gdaa1225e24070d8f39a5e490bb8984b8"></a><!-- doxytag: member="driver_facilities.c::comedi_get_chan" ref="gdaa1225e24070d8f39a5e490bb8984b8" args="(struct comedi_device *dev, unsigned int type, int idx_subd)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int comedi_get_chan           </td>
+          <td>(</td>
+          <td class="paramtype">struct comedi_device *&nbsp;</td>
+          <td class="paramname"> <em>dev</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&nbsp;</td>
+          <td class="paramname"> <em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>idx_subd</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td width="100%"></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Get the channel index according to its type. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>dev</em>&nbsp;</td><td>Device descriptor structure </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>type</em>&nbsp;</td><td>Buffer transfer type:<ul>
+<li>COMEDI_BUF_PUT for device -&gt; Comedi buffer -&gt; user-process transfer.</li><li>COMEDI_BUF_GET for user-process -&gt; Comedi_buffer -&gt; device transfer. </li></ul>
+</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>idx_subd</em>&nbsp;</td><td>Subdevice key index; this argument is optional: if the "type" is not correct, the last argument is used to select the proper subdevice.</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>the channel index. </dd></dl>
+
+</div>
+</div><p>
 <a class="anchor" name="gac6511221868aa7f9e736051228fc6b6"></a><!-- doxytag: member="driver_facilities.c::comedi_get_cmd" ref="gac6511221868aa7f9e736051228fc6b6" args="(comedi_dev_t *dev, unsigned int type, int idx_subd)" -->
 <div class="memitem">
 <div class="memproto">
@@ -641,7 +691,7 @@ Get the current Comedi command descriptor.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:54 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:48 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

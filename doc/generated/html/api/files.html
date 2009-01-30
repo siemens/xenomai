@@ -79,7 +79,9 @@
   <tr><td class="indexkey">include/nucleus/<b>ppd.h</b> <a href="nucleus_2ppd_8h-source.html">[code]</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey">include/nucleus/<b>queue.h</b> <a href="nucleus_2queue_8h-source.html">[code]</a></td><td class="indexvalue"></td></tr>
   <tr><td class="indexkey">include/nucleus/<a class="el" href="include_2nucleus_2registry_8h.html">registry.h</a> <a href="include_2nucleus_2registry_8h-source.html">[code]</a></td><td class="indexvalue">This file is part of the Xenomai project </td></tr>
-  <tr><td class="indexkey">include/nucleus/<a class="el" href="sched-builtin_8h.html">sched-builtin.h</a> <a href="sched-builtin_8h-source.html">[code]</a></td><td class="indexvalue">Definitions for built-in scheduling classes </td></tr>
+  <tr><td class="indexkey">include/nucleus/<a class="el" href="sched-idle_8h.html">sched-idle.h</a> <a href="sched-idle_8h-source.html">[code]</a></td><td class="indexvalue">Definitions for the IDLE scheduling class </td></tr>
+  <tr><td class="indexkey">include/nucleus/<a class="el" href="sched-rt_8h.html">sched-rt.h</a> <a href="sched-rt_8h-source.html">[code]</a></td><td class="indexvalue">Definitions for the RT scheduling class </td></tr>
+  <tr><td class="indexkey">include/nucleus/<a class="el" href="sched-sporadic_8h.html">sched-sporadic.h</a> <a href="sched-sporadic_8h-source.html">[code]</a></td><td class="indexvalue">Definitions for the SSP scheduling class </td></tr>
   <tr><td class="indexkey">include/nucleus/<a class="el" href="sched-tp_8h.html">sched-tp.h</a> <a href="sched-tp_8h-source.html">[code]</a></td><td class="indexvalue">Definitions for the TP scheduling class </td></tr>
   <tr><td class="indexkey">include/nucleus/<a class="el" href="sched_8h.html">sched.h</a> <a href="sched_8h-source.html">[code]</a></td><td class="indexvalue">Scheduler interface header </td></tr>
   <tr><td class="indexkey">include/nucleus/<b>schedparam.h</b> <a href="schedparam_8h-source.html">[code]</a></td><td class="indexvalue"></td></tr>
@@ -108,12 +110,11 @@
   <tr><td class="indexkey">ksrc/arch/blackfin/<a class="el" href="blackfin_2nmi_8c.html">nmi.c</a></td><td class="indexvalue">NMI watchdog support </td></tr>
   <tr><td class="indexkey">ksrc/arch/generic/<a class="el" href="generic_2hal_8c.html">hal.c</a></td><td class="indexvalue">Generic Real-Time HAL </td></tr>
   <tr><td class="indexkey">ksrc/arch/generic/<a class="el" href="generic_2nmi_8c.html">nmi.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for x86 </td></tr>
-  <tr><td class="indexkey">ksrc/arch/ia64/<a class="el" href="ia64_2hal_8c.html">hal.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for ia64 </td></tr>
   <tr><td class="indexkey">ksrc/arch/powerpc/<a class="el" href="powerpc_2hal_8c.html">hal.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for PowerPC </td></tr>
   <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="hal-common_8c.html">hal-common.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for x86 </td></tr>
   <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="hal__32_8c.html">hal_32.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for x86 </td></tr>
   <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="hal__64_8c.html">hal_64.c</a></td><td class="indexvalue">Adeos-based Real-Time Abstraction Layer for x86_64 </td></tr>
-  <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="nmi__32_8c.html">nmi_32.c</a></td><td class="indexvalue">NMI watchdog for x86, from linux/arch/i386/kernel/nmi.c </td></tr>
+  <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="x86_2nmi_8c.html">nmi.c</a></td><td class="indexvalue">NMI watchdog for x86, from linux/arch/i386/kernel/nmi.c </td></tr>
   <tr><td class="indexkey">ksrc/arch/x86/<a class="el" href="smi_8c.html">smi.c</a></td><td class="indexvalue">SMI workaround for x86 </td></tr>
   <tr><td class="indexkey">ksrc/drivers/comedi/<a class="el" href="ksrc_2drivers_2comedi_2buffer_8c.html">buffer.c</a></td><td class="indexvalue">Comedi for RTDM, buffer related features </td></tr>
   <tr><td class="indexkey">ksrc/drivers/comedi/<a class="el" href="command_8c.html">command.c</a></td><td class="indexvalue">Comedi for RTDM, command related features </td></tr>
@@ -133,6 +134,7 @@
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="nucleus_2registry_8c.html">registry.c</a></td><td class="indexvalue">This file is part of the Xenomai project </td></tr>
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="sched-idle_8c.html">sched-idle.c</a></td><td class="indexvalue">Idle scheduling class implementation (i.e. Linux placeholder) </td></tr>
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="sched-rt_8c.html">sched-rt.c</a></td><td class="indexvalue">Common real-time scheduling class implementation (FIFO + RR) </td></tr>
+  <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="sched-sporadic_8c.html">sched-sporadic.c</a></td><td class="indexvalue">POSIX SCHED_SPORADIC scheduling class </td></tr>
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="sched-tp_8c.html">sched-tp.c</a></td><td class="indexvalue">Temporal partitioning (typical of IMA systems) </td></tr>
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="select_8c.html">select.c</a></td><td class="indexvalue">File descriptors events multiplexing </td></tr>
   <tr><td class="indexkey">ksrc/nucleus/<a class="el" href="shadow_8c.html">shadow.c</a></td><td class="indexvalue">Real-time shadow services </td></tr>
@@ -185,7 +187,7 @@
   <tr><td class="indexkey">src/skins/native/<b>wrappers.h</b> <a href="wrappers_8h-source.html">[code]</a></td><td class="indexvalue"></td></tr>
 </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Dec 11 16:13:55 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Jan 30 15:50:49 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>
