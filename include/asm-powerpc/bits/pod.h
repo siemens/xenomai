@@ -257,18 +257,16 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 		rthal_restore_fpu(tcb->fpup);
 
 		/* Note: Only enable FP in MSR, if it was enabled when we saved the
-		 * fpu state. We might have preempted Linux when it had disabled FP
-		 * for the thread, but not yet set last_task_used_math to NULL 
+		 * fpu state.
 		 */
 		if (tcb->user_fpu_owner &&
-		    tcb->user_fpu_owner->thread.regs &&
-		    ((tcb->user_fpu_owner_prev_msr & MSR_FP) != 0))
+		    tcb->user_fpu_owner->thread.regs)
 			tcb->user_fpu_owner->thread.regs->msr |= MSR_FP;
 	}
 
 	/* FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
 	   whereas we could be much lazier. */
-	if (tcb->user_task)
+        if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 
 #endif /* CONFIG_XENO_HW_FPU */
