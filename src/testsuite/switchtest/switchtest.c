@@ -42,11 +42,29 @@ typedef unsigned long cpu_set_t;
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
 
+/* Thread type. */
+typedef enum {
+	SLEEPER = 0,
+	RTK  = 1,	 /* kernel-space thread. */
+	RTUP = 2,	 /* user-space real-time thread in primary mode. */
+	RTUS = 3,	 /* user-space real-time thread in secondary mode. */
+	RTUO = 4,	 /* user-space real-time thread oscillating
+			    between primary and secondary mode. */
+	SWITCHER = 8,
+	FPU_STRESS = 16,
+} threadtype;
+
+typedef enum {
+	AFP  = 1,	 /* arm the FPU task bit (only make sense for RTK) */
+	UFPP = 2,	 /* use the FPU while in primary mode. */
+	UFPS = 4	 /* use the FPU while in secondary mode. */
+} fpflags;
+
 struct cpu_tasks;
 
 struct task_params {
-	unsigned type;
-	unsigned fp;
+	threadtype type;
+	fpflags fp;
 	pthread_t thread;
 	struct cpu_tasks *cpu;
 	struct rttst_swtest_task swt;
@@ -60,22 +78,6 @@ struct cpu_tasks {
 	unsigned fd;
 	unsigned long last_switches_count;
 };
-
-/* Thread type. */
-typedef enum {
-	SLEEPER = 0,
-	RTK  = 1,	 /* kernel-space thread. */
-	RTUP = 2,	 /* user-space real-time thread in primary mode. */
-	RTUS = 3,	 /* user-space real-time thread in secondary mode. */
-	RTUO = 4,	 /* user-space real-time thread oscillating
-			    between primary and secondary mode. */
-} threadtype;
-
-typedef enum {
-	AFP  = 1,	 /* arm the FPU task bit (only make sense for RTK) */
-	UFPP = 2,	 /* use the FPU while in primary mode. */
-	UFPS = 4	 /* use the FPU while in secondary mode. */
-} fpflags;
 
 static sem_t sleeper_start;
 static int quiet, status;
@@ -113,7 +115,9 @@ static char *task_name(char *buf, size_t sz,
 		[RTK] = "rtk",
 		[RTUP] = "rtup",
 		[RTUS] = "rtus",
-		[RTUO] = "rtuo"
+		[RTUO] = "rtuo",
+		[SWITCHER] = "switcher",
+		[FPU_STRESS] = "fpu_stress",
 	};
 	struct {
 		unsigned flag;
@@ -125,11 +129,16 @@ static char *task_name(char *buf, size_t sz,
 	};
 	struct task_params *param;
 	unsigned pos, i;
-	
-	if (task >= cpu->tasks_count)
+
+	if (task > cpu->tasks_count)
 		return "???";
 
-	param = &cpu->tasks[task];
+	if (task == cpu->tasks_count)
+		param = &cpu->tasks[task];
+	else
+		for (param = &cpu->tasks[0]; param->swt.index != task; param++)
+			;
+
 	pos = snprintf(buf, sz, "%s", basename[param->type]);
 	for (i = 0; i < sizeof(flags) / sizeof(flags[0]); i++) {
 		if (!(param->fp & flags[i].flag))
@@ -233,7 +242,7 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 	cpu->last_switches_count = switches_count;
 }
 
-static void *sleeper(void *cookie)
+static void *sleeper_switcher(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
 	unsigned tasks_count = param->cpu->tasks_count;
@@ -268,8 +277,8 @@ static void *sleeper(void *cookie)
 		struct timespec now, diff;
 		unsigned expected, fp_val;
 		int err;
-
-		__real_nanosleep(&ts, NULL);
+		if (param->type == SLEEPER)
+			__real_nanosleep(&ts, NULL);
 
 		clock_gettime(CLOCK_REALTIME, &now);
 
@@ -316,6 +325,44 @@ static void *sleeper(void *cookie)
 	}
 
 	return NULL;
+}
+
+
+static double dot(volatile double *a, volatile double *b, int n)
+{
+    int k = n - 1;
+    double s = 0.0;
+    for(; k >= 0; k--)
+	s = s + a[k]*b[k];
+
+    return s;
+}
+
+static void *fpu_stress(void *cookie)
+{
+	static volatile double a[10000], b[sizeof(a)/sizeof(a[0])]; 
+	struct task_params *param = (struct task_params *) cookie;
+	cpu_set_t cpu_set;
+	unsigned i;
+
+	CPU_ZERO(&cpu_set);
+	CPU_SET(param->cpu->index, &cpu_set);
+	if (smp_sched_setaffinity(0, sizeof(cpu_set), &cpu_set)) {
+		perror("sleeper: sched_setaffinity");
+		clean_exit(EXIT_FAILURE);
+	}
+
+	for (i = 0; i < sizeof(a)/sizeof(a[0]); i++)
+		a[i] = b[i] = 3.14;
+
+	for (;;) {
+		double s = dot(a, b, sizeof(a)/sizeof(a[0]));
+		if ((unsigned) (s + 0.5) != 98596) {
+			fprintf(stderr, "fpu stress task failure! dot: %g\n", s);
+			clean_exit(EXIT_FAILURE);
+		}
+		pthread_testcancel();
+	}
 }
 
 static void *rtup(void *cookie)
@@ -630,8 +677,8 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 
 	switch (param->type) {
 	case SLEEPER:
-		if (param->fp)
-			return 0;
+	case SWITCHER:
+	case FPU_STRESS:
 		break;
 
 	case RTK:
@@ -662,8 +709,7 @@ static int check_arg(const struct task_params *param, struct cpu_tasks *end_cpu)
 
 static int task_create(struct cpu_tasks *cpu,
 		       struct task_params *param,
-		       pthread_attr_t *rt_attr,
-		       pthread_attr_t *sleeper_attr)
+		       pthread_attr_t *rt_attr)
 {
 	char buffer[64];
 	typedef void *thread_routine(void *);
@@ -690,6 +736,7 @@ static int task_create(struct cpu_tasks *cpu,
 	case RTUS:
 	case RTUO:
 	case SLEEPER:
+	case SWITCHER:
 		param->swt.flags = 0;
 
 		err=ioctl(cpu->fd,RTTST_RTIOC_SWTEST_REGISTER_UTASK,&param->swt);
@@ -697,6 +744,9 @@ static int task_create(struct cpu_tasks *cpu,
 			perror("ioctl(RTTST_RTIOC_SWTEST_REGISTER_UTASK)");
 			return -1;
 		}
+		break;
+
+	case FPU_STRESS:
 		break;
 
 	default:
@@ -707,14 +757,42 @@ static int task_create(struct cpu_tasks *cpu,
 	if (param->type == RTK)
 		return 0;
 
-	if (param->type == SLEEPER) {
+	if (param->type == SLEEPER || param->type == SWITCHER) {
+		pthread_attr_t attr;
+
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr, 20 * 1024);
+
 		err = __real_pthread_create(&param->thread,
-					    sleeper_attr,
-					    sleeper,
+					    &attr,
+					    sleeper_switcher,
 					    param);
+
+		pthread_attr_destroy(&attr);
 
 		if (err)
 			fprintf(stderr,"pthread_create: %s\n",strerror(err));
+
+
+		return err;
+	}
+
+	if (param->type == FPU_STRESS) {
+		pthread_attr_t attr;
+
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr, 50 * 1024);
+
+		err = __real_pthread_create(&param->thread,
+					    &attr,
+					    fpu_stress,
+					    param);
+
+		pthread_attr_destroy(&attr);
+
+		if (err)
+			fprintf(stderr,"pthread_create: %s\n",strerror(err));
+
 
 		return err;
 	}
@@ -853,7 +931,10 @@ void usage(FILE *fd, const char *progname)
 		"second the count of\ncontext switches;\n"
 		"--timeout <duration> or -T <duration>, limit the test duration "
 		"to <duration>\nseconds;\n"
-		"--nofpu or -n, disables any use of FPU instructions.\n\n"
+		"--nofpu or -n, disables any use of FPU instructions.\n"
+		"--stress <period> or -s <period> enable a stress mode where:\n"
+		"  context switches occur every <period> us;\n"
+		"  a background task uses fpu (and check) fpu all the time.\n\n"
 		"Each 'threadspec' specifies the characteristics of a "
 		"thread to be created:\n"
 		"threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*\n"
@@ -926,8 +1007,8 @@ int check_fpu(void)
 
 int main(int argc, const char *argv[])
 {
+	unsigned i, j, nr_cpus, use_fp = 1, stress = 0;
 	pthread_attr_t rt_attr, sleeper_attr;
-	unsigned i, j, nr_cpus, use_fp = 1;
 	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
 	struct sched_param sp;
@@ -967,14 +1048,15 @@ int main(int argc, const char *argv[])
 	for (;;) {
 		static struct option long_options[] = {
 			{ "help",    0, NULL, 'h' },
-			{ "lines",   0, NULL, 'l' },
+			{ "lines",   1, NULL, 'l' },
 			{ "nofpu",   0, NULL, 'n' },
 			{ "quiet",   0, NULL, 'q' },
-			{ "timeout", 0, NULL, 'T' },
+			{ "stress",  1, NULL, 's' },
+			{ "timeout", 1, NULL, 'T' },
 			{ NULL,      0, NULL, 0   }
 		};
 		int i = 0;
-		int c = getopt_long(argc, (char *const *) argv, ":hl:nqT:",
+		int c = getopt_long(argc, (char *const *) argv, ":hl:nqs:T:",
 				    long_options, &i);
 
 		if (c == -1)
@@ -995,6 +1077,10 @@ int main(int argc, const char *argv[])
 
 		case 'q':
 			quiet = 1;
+			break;
+
+		case 's':
+			stress = xatoul(optarg);
 			break;
 
 		case 'T':
@@ -1075,11 +1161,12 @@ int main(int argc, const char *argv[])
 			exit(EXIT_FAILURE);
 		}
 
-		cpus[i].tasks[0].type = SLEEPER;
+		cpus[i].tasks[0].type = stress ? SWITCHER : SLEEPER;
 		cpus[i].tasks[0].fp = use_fp ? UFPS : 0;
 		cpus[i].tasks[0].cpu = &cpus[i];	
 		cpus[i].tasks[0].thread = 0;
 		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
+
 	}
 
 	/* Parse arguments and build data structures. */
@@ -1128,6 +1215,32 @@ int main(int argc, const char *argv[])
 		cpu->tasks[cpu->tasks_count - 1] = params;
 	}
 
+	if (stress)
+		for (i = 0; i < nr_cpus; i++) {
+			struct task_params params;
+			struct cpu_tasks *cpu = &cpus[i];
+
+			if(cpu->tasks_count + 1> cpu->capacity) {
+				size_t size;
+				cpu->capacity += cpu->capacity / 2;
+				size = cpu->capacity * sizeof(struct task_params);
+				cpu->tasks =
+					(struct task_params *) realloc(cpu->tasks, size);
+				if (!cpu->tasks) {
+					perror("realloc");
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			params.type = FPU_STRESS;
+			params.fp = UFPS;
+			params.cpu = cpu;
+			params.thread = 0;
+			params.swt.index = cpu->tasks_count;
+			params.swt.flags = 0;
+			cpu->tasks[cpu->tasks_count] = params;
+		}
+
 	/* For best compatibility with both LinuxThreads and NPTL, block the
 	   termination signals on all threads. */
 	sigemptyset(&mask);
@@ -1146,10 +1259,6 @@ int main(int argc, const char *argv[])
 	pthread_attr_setschedparam(&rt_attr, &sp);
 	pthread_attr_setstacksize(&rt_attr, 20 * 1024);
 
-	/* Prepare attribute for sleeper tasks. */
-	pthread_attr_init(&sleeper_attr);
-	pthread_attr_setstacksize(&sleeper_attr, 20 * 1024);
-
 	printf("== Threads:");
 	/* Create and register all tasks. */
 	for (i = 0; i < nr_cpus; i ++) {
@@ -1166,9 +1275,15 @@ int main(int argc, const char *argv[])
 			goto failure;
 		}
 
-		for (j = 0; j < cpu->tasks_count; j++) {
+		if (stress &&
+		    ioctl(cpu->fd, RTTST_RTIOC_SWTEST_SET_PAUSE, stress)) {
+			perror("ioctl(RTTST_RTIOC_SWTEST_SET_PAUSE)");
+			goto failure;
+		}
+
+		for (j = 0; j < cpu->tasks_count + !!stress; j++) {
 			struct task_params *param = &cpu->tasks[j];
-			if (task_create(cpu, param, &rt_attr, &sleeper_attr)) {
+			if (task_create(cpu, param, &rt_attr)) {
 			  failure:
 				status = EXIT_FAILURE;
 				goto cleanup;
@@ -1198,7 +1313,7 @@ int main(int argc, const char *argv[])
 		struct cpu_tasks *cpu = &cpus[i];
 
 		/* kill the user-space tasks. */
-		for (j = 0; j < cpu->tasks_count; j++) {
+		for (j = 0; j < cpu->tasks_count + !!stress; j++) {
 			struct task_params *param = &cpu->tasks[j];
 
 			if (param->type != RTK && param->thread)
@@ -1210,7 +1325,7 @@ int main(int argc, const char *argv[])
 		struct cpu_tasks *cpu = &cpus[i];
 
 		/* join the user-space tasks. */
-		for (j = 0; j < cpu->tasks_count; j++) {
+		for (j = 0; j < cpu->tasks_count + !!stress; j++) {
 			struct task_params *param = &cpu->tasks[j];
 
 			if (param->type != RTK && param->thread)

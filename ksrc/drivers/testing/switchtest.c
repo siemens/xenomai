@@ -10,7 +10,7 @@
 
 typedef struct {
 	struct rttst_swtest_task base;
-	xnsynch_t rt_synch;
+	rtdm_event_t rt_synch;
 	struct semaphore nrt_synch;
 	xnthread_t ktask;          /* For kernel-space real-time tasks. */
 } rtswitch_task_t;
@@ -22,6 +22,10 @@ typedef struct rtswitch_context {
 	struct semaphore lock;
 	unsigned cpu;
 	unsigned switches_count;
+
+	unsigned long pause_us;
+	unsigned next_task;
+	rtdm_timer_t wake_up_delay;
 
 	unsigned failed;
 	struct rttst_swtest_error error;
@@ -42,6 +46,7 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
                             unsigned idx)
 {
 	rtswitch_task_t *task;
+	int rc;
 
 	if (idx > ctx->tasks_count)
 		return -EINVAL;
@@ -49,13 +54,9 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 	task = &ctx->tasks[idx];
 	task->base.flags |= RTSWITCH_RT;
 
-	xnsynch_sleep_on(&task->rt_synch, XN_INFINITE, XN_RELATIVE);
-
-	if (xnthread_test_info(xnpod_current_thread(), XNBREAK))
-		return -EINTR;
-
-	if (xnthread_test_info(xnpod_current_thread(), XNRMID))
-		return -EIDRM;
+	rc = rtdm_event_wait(&task->rt_synch);
+	if (rc < 0)
+		return rc;
 
 	if (ctx->failed)
 		return 1;
@@ -63,16 +64,35 @@ static int rtswitch_pend_rt(rtswitch_context_t *ctx,
 	return 0;
 }
 
+static void timed_wake_up(rtdm_timer_t *timer)
+{
+	rtswitch_context_t *ctx =
+		container_of(timer, rtswitch_context_t, wake_up_delay);
+	rtswitch_task_t *task;
+
+	task = &ctx->tasks[ctx->next_task];
+
+	switch (task->base.flags & RTSWITCH_RT) {
+	case RTSWITCH_NRT:
+		rtswitch_utask[ctx->cpu] = task;
+		rtdm_nrtsig_pend(&rtswitch_wake_utask);
+		break;
+
+	case RTSWITCH_RT:
+		rtdm_event_signal(&task->rt_synch);
+	}
+}
+
 static int rtswitch_to_rt(rtswitch_context_t *ctx,
 			  unsigned from_idx,
 			  unsigned to_idx)
 {
 	rtswitch_task_t *from, *to;
-	spl_t s;
+	int rc;
 
 	if (from_idx > ctx->tasks_count || to_idx > ctx->tasks_count)
 		return -EINVAL;
-
+	
 	from = &ctx->tasks[from_idx];
 	to = &ctx->tasks[to_idx];
 
@@ -81,32 +101,34 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
 
-	switch (to->base.flags & RTSWITCH_RT) {
-	case RTSWITCH_NRT:
-		rtswitch_utask[ctx->cpu] = to;
-		rtdm_nrtsig_pend(&rtswitch_wake_utask);
-		xnlock_get_irqsave(&nklock, s);
-		break;
+	if (ctx->pause_us) {
+		ctx->next_task = to_idx;
+		rtdm_timer_start(&ctx->wake_up_delay,
+				 ctx->pause_us * 1000, 0,
+				 RTDM_TIMERMODE_RELATIVE);
+		xnpod_lock_sched();
+	} else
+		switch (to->base.flags & RTSWITCH_RT) {
+		case RTSWITCH_NRT:
+			rtswitch_utask[ctx->cpu] = to;
+			rtdm_nrtsig_pend(&rtswitch_wake_utask);
+			xnpod_lock_sched();
+			break;
 
-	case RTSWITCH_RT:
-		xnlock_get_irqsave(&nklock, s);
+		case RTSWITCH_RT:
+			xnpod_lock_sched();
+			rtdm_event_signal(&to->rt_synch);
+			break;
 
-		xnsynch_wakeup_one_sleeper(&to->rt_synch);
-		break;
+		default:
+			return -EINVAL;
+		}
 
-	default:
-		return -EINVAL;
-	}
+	rc = rtdm_event_wait(&from->rt_synch);
+	xnpod_unlock_sched();
 
-	xnsynch_sleep_on(&from->rt_synch, XN_INFINITE, XN_RELATIVE);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (xnthread_test_info(xnpod_current_thread(), XNBREAK))
-		return -EINTR;
-
-	if (xnthread_test_info(xnpod_current_thread(), XNRMID))
-		return -EIDRM;
+	if (rc < 0)
+		return rc;
 
 	if (ctx->failed)
 		return 1;
@@ -152,19 +174,24 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
 
-	switch (to->base.flags & RTSWITCH_RT) {
-	case RTSWITCH_NRT:
-		up(&to->nrt_synch);
-		break;
+	if (ctx->pause_us) {
+		ctx->next_task = to_idx;
+		rtdm_timer_start(&ctx->wake_up_delay,
+				 ctx->pause_us * 1000, 0,
+				 RTDM_TIMERMODE_RELATIVE);
+	} else
+		switch (to->base.flags & RTSWITCH_RT) {
+		case RTSWITCH_NRT:
+			up(&to->nrt_synch);
+			break;
 
-	case RTSWITCH_RT:
-		xnsynch_wakeup_one_sleeper(&to->rt_synch);
-		xnpod_schedule();
-		break;
+		case RTSWITCH_RT:
+			rtdm_event_signal(&to->rt_synch);
+			break;
 
-	default:
-		return -EINVAL;
-	}
+		default:
+			return -EINVAL;
+		}
 
 	if (down_interruptible(&from->nrt_synch))
 		return -EINTR;
@@ -218,7 +245,7 @@ static int rtswitch_register_task(rtswitch_context_t *ctx,
 	ctx->next_index++;
 	t->base = *arg;
 	sema_init(&t->nrt_synch, 0);
-	xnsynch_init(&t->rt_synch, XNSYNCH_FIFO);
+	rtdm_event_init(&t->rt_synch, 0);
 
 	up(&ctx->lock);
 
@@ -252,7 +279,7 @@ static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 			break;
 
 		case RTSWITCH_RT:
-			xnsynch_wakeup_one_sleeper(&task->rt_synch);
+			rtdm_event_signal(&task->rt_synch);
 			break;
 		}
 
@@ -359,6 +386,9 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 	init_MUTEX(&ctx->lock);
 	ctx->failed = 0;
 	ctx->error.last_switch.from = ctx->error.last_switch.to = -1;
+	ctx->pause_us = 0;
+
+	rtdm_timer_init(&ctx->wake_up_delay, timed_wake_up, "switchtest timer");
 
 	return 0;
 }
@@ -377,11 +407,11 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 
 			if (task->base.flags & RTSWITCH_KERNEL)
 				xnpod_delete_thread(&task->ktask);
-			xnsynch_destroy(&task->rt_synch);
+			rtdm_event_destroy(&task->rt_synch);
 		}
-		xnpod_schedule();
 		kfree(ctx->tasks);
 	}
+	rtdm_timer_destroy(&ctx->wake_up_delay);
 
 	return 0;
 }
@@ -408,6 +438,10 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 				return -EINVAL;
 
 			ctx->cpu = (unsigned long) arg;
+			return 0;
+
+		case RTTST_RTIOC_SWTEST_SET_PAUSE:
+			ctx->pause_us = (unsigned long) arg;
 			return 0;
 
 		case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
