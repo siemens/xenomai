@@ -1,3 +1,9 @@
+2009-01-31  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/drivers/testing/switchtest.c,
+	  src/testsuite/switchtest/switchtest.c: Add stress mode to
+	switchtest.
+
 2009-01-30  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/ia64, include/asm-ia64: Itanium port discontinued.

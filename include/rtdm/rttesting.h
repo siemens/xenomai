@@ -199,6 +199,9 @@ struct rttst_swtest_error {
 
 #define RTTST_RTIOC_SWTEST_GET_LAST_ERROR \
 	_IOR(RTIOC_TYPE_TESTING, 0x37, struct rttst_swtest_error)
+
+#define RTTST_RTIOC_SWTEST_SET_PAUSE \
+	_IOW(RTIOC_TYPE_TESTING, 0x38, unsigned long)
 /** @} */
 
 /** @} */
