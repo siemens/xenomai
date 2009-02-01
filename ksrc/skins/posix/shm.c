@@ -108,7 +108,7 @@ static void pse51_shm_destroy(pse51_shm_t * shm, int force)
 		xnheap_free(&shm->heapbase, shm->addr);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-		xnheap_destroy_mapped(&shm->heapbase, NULL);
+		xnheap_destroy_mapped(&shm->heapbase, NULL, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
 		xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent, NULL);
 #endif /* !CONFIG_XENO_OPT_PERVASIVE. */
@@ -527,7 +527,7 @@ int ftruncate(int fd, off_t len)
 
 			xnheap_free(&shm->heapbase, shm->addr);
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-			xnheap_destroy_mapped(&shm->heapbase, NULL);
+			xnheap_destroy_mapped(&shm->heapbase, NULL, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE. */
 			xnheap_destroy(&shm->heapbase, &pse51_free_heap_extent,
 				       NULL);

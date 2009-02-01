@@ -157,13 +157,14 @@ typedef cpumask_t xnarch_cpumask_t;
 #define xnarch_first_cpu(mask)            first_cpu(mask)
 #define XNARCH_CPU_MASK_ALL               CPU_MASK_ALL
 
+struct xnheap;
+ 
 typedef struct xnarch_heapcb {
 
     atomic_t numaps;	/* # of active user-space mappings. */
-
     int kmflags;	/* Kernel memory flags (0 if vmalloc()). */
-
     void *heapbase;	/* Shared heap memory base. */
+    void (*release)(struct xnheap *heap); /* callback upon last unmap */
 
 } xnarch_heapcb_t;
 
