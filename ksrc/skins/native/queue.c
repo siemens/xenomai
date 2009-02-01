@@ -284,6 +284,25 @@ int rt_queue_create(RT_QUEUE *q,
 	return err;
 }
 
+static void __queue_post_release(struct xnheap *heap) /* nklock held, IRQs off */
+{
+	RT_QUEUE *q = container_of(heap, RT_QUEUE, bufpool);
+
+	removeq(q->rqueue, &q->rlink);
+
+#ifdef CONFIG_XENO_OPT_REGISTRY
+	if (q->handle)
+		xnregistry_remove(q->handle);
+#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+	if (xnsynch_destroy(&q->synch_base) == XNSYNCH_RESCHED)
+		/*
+		 * Some task has been woken up as a result of
+		 * the deletion: reschedule now.
+		 */
+		xnpod_schedule();
+}
+
 /**
  * @fn int rt_queue_delete(RT_QUEUE *q)
  *
@@ -352,30 +371,18 @@ int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (q->mode & Q_SHARED)
-		err = xnheap_destroy_mapped(&q->bufpool, mapaddr);
+		err = xnheap_destroy_mapped(&q->bufpool,
+					    __queue_post_release, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 		err = xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!err) {
-		removeq(q->rqueue, &q->rlink);
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
-		if (q->handle)
-			xnregistry_remove(q->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
-
-		if (xnsynch_destroy(&q->synch_base) == XNSYNCH_RESCHED)
-			/* Some task has been woken up as a result of
-			   the deletion: reschedule now. */
-			xnpod_schedule();
-	} else
-		/* Deletion failed, likely due to a busy state;
-		 * restore the magic word, to re-enable the
-		 * descriptor. */
+	if (err)
 		q->magic = XENO_QUEUE_MAGIC;
+	else if (!(q->mode & Q_SHARED))
+		__queue_post_release(&q->bufpool);
 
 	xnlock_put_irqrestore(&nklock, s);
 

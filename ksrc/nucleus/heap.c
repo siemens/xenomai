@@ -944,10 +944,95 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 
 static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
 
+static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
+{
+	unsigned long vaddr, vabase;
+	void *ptr;
+
+	/* Size must be page-aligned. */
+
+	if (!kmflags || kmflags == XNHEAP_GFP_NONCACHED) {
+		if (!kmflags)
+			ptr = vmalloc(size);
+		else
+			ptr = __vmalloc(size,
+					GFP_KERNEL | __GFP_HIGHMEM,
+					pgprot_noncached(PAGE_KERNEL));
+		if (!ptr)
+			return NULL;
+
+		vabase = (unsigned long)ptr;
+
+		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+			SetPageReserved(vmalloc_to_page((void *)vaddr));
+	} else {
+		/*
+		 * Otherwise, we have been asked for some kmalloc()
+		 * space. Assume that we can wait to get the required memory.
+		 */
+
+		if (size <= KMALLOC_MAX_SIZE)
+			ptr = kmalloc(size, kmflags | GFP_KERNEL);
+		else
+			ptr = (void*) __get_free_pages(kmflags | GFP_KERNEL,
+						       get_order(size));
+
+		if (!ptr)
+			return NULL;
+
+		vabase = (unsigned long)ptr;
+
+		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+			SetPageReserved(virt_to_page(vaddr));
+	}
+
+	return ptr;
+}
+
+static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
+{
+	unsigned long vaddr, vabase;
+
+	/* Size must be page-aligned. */
+
+	vabase = (unsigned long)ptr;
+
+	if (!kmflags  || kmflags == XNHEAP_GFP_NONCACHED) {
+		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+			ClearPageReserved(vmalloc_to_page((void *)vaddr));
+
+		vfree(ptr);
+	} else {
+		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
+			ClearPageReserved(virt_to_page(vaddr));
+
+		if (size <= KMALLOC_MAX_SIZE)
+			kfree(ptr);
+		else
+			free_pages((unsigned long)ptr, get_order(size));
+	}
+}
+
 static void xnheap_vmclose(struct vm_area_struct *vma)
 {
 	xnheap_t *heap = vma->vm_private_data;
-	atomic_dec(&heap->archdep.numaps);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (atomic_dec_and_test(&heap->archdep.numaps)) {
+		if (heap->archdep.release) {
+			removeq(&kheapq, &heap->link);
+			xnlock_put_irqrestore(&nklock, s);
+			__unreserve_and_free_heap(heap->archdep.heapbase,
+						  xnheap_extentsize(heap),
+						  heap->archdep.kmflags);
+			xnlock_get_irqsave(&nklock, s);
+			heap->archdep.release(heap);
+		}
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static struct vm_operations_struct xnheap_vmops = {
@@ -1059,97 +1144,6 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	return 0;
 }
 
-static struct file_operations xnheap_fops = {
-	.owner = THIS_MODULE,
-	.open = &xnheap_open,
-	.ioctl = &xnheap_ioctl,
-	.mmap = &xnheap_mmap
-};
-
-static struct miscdevice xnheap_dev = {
-	XNHEAP_DEV_MINOR, "rtheap", &xnheap_fops
-};
-
-int xnheap_mount(void)
-{
-	return misc_register(&xnheap_dev);
-}
-
-void xnheap_umount(void)
-{
-	misc_deregister(&xnheap_dev);
-}
-
-static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
-{
-	unsigned long vaddr, vabase;
-	void *ptr;
-
-	/* Size must be page-aligned. */
-
-	if (!kmflags || kmflags == XNHEAP_GFP_NONCACHED) {
-		if (!kmflags)
-			ptr = vmalloc(size);
-		else
-			ptr = __vmalloc(size,
-					GFP_KERNEL | __GFP_HIGHMEM,
-					pgprot_noncached(PAGE_KERNEL));
-		if (!ptr)
-			return NULL;
-
-		vabase = (unsigned long)ptr;
-
-		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-			SetPageReserved(vmalloc_to_page((void *)vaddr));
-	} else {
-		/*
-		 * Otherwise, we have been asked for some kmalloc()
-		 * space. Assume that we can wait to get the required memory.
-		 */
-
-		if (size <= KMALLOC_MAX_SIZE)
-			ptr = kmalloc(size, kmflags | GFP_KERNEL);
-		else
-			ptr = (void*) __get_free_pages(kmflags | GFP_KERNEL,
-						       get_order(size));
-
-		if (!ptr)
-			return NULL;
-
-		vabase = (unsigned long)ptr;
-
-		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-			SetPageReserved(virt_to_page(vaddr));
-	}
-
-	return ptr;
-}
-
-static inline void __unreserve_and_free_heap(void *ptr, size_t size,
-					     int kmflags)
-{
-	unsigned long vaddr, vabase;
-
-	/* Size must be page-aligned. */
-
-	vabase = (unsigned long)ptr;
-
-	if (!kmflags  || kmflags == XNHEAP_GFP_NONCACHED) {
-		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-			ClearPageReserved(vmalloc_to_page((void *)vaddr));
-
-		vfree(ptr);
-	} else {
-		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
-			ClearPageReserved(virt_to_page(vaddr));
-
-		if (size <= KMALLOC_MAX_SIZE)
-			kfree(ptr);
-		else
-			free_pages((unsigned long)ptr, get_order(size));
-	}
-}
-
 int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 {
 	void *heapbase;
@@ -1175,6 +1169,7 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 
 	heap->archdep.kmflags = memflags;
 	heap->archdep.heapbase = heapbase;
+	heap->archdep.release = NULL;
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&kheapq, &heap->link);
@@ -1183,9 +1178,10 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	return 0;
 }
 
-int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
+int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
+			  void __user *mapaddr)
 {
-	int err = 0, ccheck;
+	int ret = 0, ccheck;
 	unsigned long len;
 	spl_t s;
 
@@ -1194,26 +1190,54 @@ int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
 	xnlock_get_irqsave(&nklock, s);
 
 	if (atomic_read(&heap->archdep.numaps) > ccheck) {
+		heap->archdep.release = release;
 		xnlock_put_irqrestore(&nklock, s);
 		return -EBUSY;
 	}
 
-	removeq(&kheapq, &heap->link);
-	/* From now on, this heap cannot be mapped anymore. */
-
+	removeq(&kheapq, &heap->link); /* Prevent further mapping. */
 	xnlock_put_irqrestore(&nklock, s);
 
 	len = xnheap_extentsize(heap);
 
 	if (mapaddr) {
 		down_write(&current->mm->mmap_sem);
-		err = do_munmap(current->mm, (unsigned long)mapaddr, len);
+		ret = do_munmap(current->mm, (unsigned long)mapaddr, len);
 		up_write(&current->mm->mmap_sem);
 	}
-	if (err == 0)
-		__unreserve_and_free_heap(heap->archdep.heapbase,
-					  len, heap->archdep.kmflags);
-	return err;
+
+	if (ret == 0) {
+		__unreserve_and_free_heap(heap->archdep.heapbase, len,
+					  heap->archdep.kmflags);
+		if (release) {
+			xnlock_get_irqsave(&nklock, s);
+			release(heap);
+			xnlock_put_irqrestore(&nklock, s);
+		}
+	}
+
+	return ret;
+}
+
+static struct file_operations xnheap_fops = {
+	.owner = THIS_MODULE,
+	.open = &xnheap_open,
+	.ioctl = &xnheap_ioctl,
+	.mmap = &xnheap_mmap
+};
+
+static struct miscdevice xnheap_dev = {
+	XNHEAP_DEV_MINOR, "rtheap", &xnheap_fops
+};
+
+int xnheap_mount(void)
+{
+	return misc_register(&xnheap_dev);
+}
+
+void xnheap_umount(void)
+{
+	misc_deregister(&xnheap_dev);
 }
 
 #elif !defined(__XENO_SIM__) /* !CONFIG_XENO_OPT_PERVASIVE */
@@ -1244,7 +1268,8 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	return -ENOMEM;
 }
 
-int xnheap_destroy_mapped(xnheap_t *heap, void __user *mapaddr)
+int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
+			  void __user *mapaddr)
 {
 	return xnheap_destroy(heap, &xnheap_free_extent, NULL);
 }

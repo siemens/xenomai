@@ -189,6 +189,7 @@ int xnheap_init_mapped(xnheap_t *heap,
 		       int memflags);
 
 int xnheap_destroy_mapped(xnheap_t *heap,
+			  void (*release)(struct xnheap *heap),
 			  void __user *mapaddr);
 
 #define xnheap_mapped_offset(heap,ptr) \

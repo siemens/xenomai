@@ -85,7 +85,7 @@ static void vrtxpt_delete_internal(vrtxpt_t *pt)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (pt->sysheap) {
-		xnheap_destroy_mapped(pt->sysheap, NULL);
+		xnheap_destroy_mapped(pt->sysheap, NULL, NULL);
 		xnfree(pt->sysheap);
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

@@ -1305,7 +1305,7 @@ void __exit __xeno_sys_exit(void)
 #endif /* __KERNEL__ */
 
 #ifndef __XENO_SIM__
-	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL);
+	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
 #endif
 
 	if (nkmsgbuf)

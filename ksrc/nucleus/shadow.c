@@ -1851,7 +1851,7 @@ static void *xnshadow_sys_event(int event, void *data)
 	case XNSHADOW_CLIENT_DETACH:
 		p = ppd2sys((xnshadow_ppd_t *) data);
 
-		xnheap_destroy_mapped(&p->sem_heap, NULL);
+		xnheap_destroy_mapped(&p->sem_heap, NULL, NULL);
 		xnarch_free_host_mem(p, sizeof(*p));
 
 		return NULL;
