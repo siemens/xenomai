@@ -2324,9 +2324,9 @@ static int __rt_queue_write(struct task_struct *curr, struct pt_regs *regs)
 {
 	RT_QUEUE_PLACEHOLDER ph;
 	void __user *buf, *mbuf;
+	int mode, ret;
 	RT_QUEUE *q;
 	size_t size;
-	int mode;
 
 	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(ph)))
 		return -EFAULT;
@@ -2358,7 +2358,11 @@ static int __rt_queue_write(struct task_struct *curr, struct pt_regs *regs)
 		__xn_copy_from_user(curr, mbuf, buf, size);
 	}
 
-	return rt_queue_send(q, mbuf, size, mode);
+	ret = rt_queue_send(q, mbuf, size, mode);
+	if (ret == 0)
+		rt_queue_free(q, mbuf); /* Nobody received, free the buffer. */
+
+	return ret;
 }
 
 /*
