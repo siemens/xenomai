@@ -124,8 +124,10 @@ static void __pipe_release_handler(void *xstate) /* nklock free */
 	if (pipe->bufpool == &pipe->privpool)
 		xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (pipe->cpid)
 		xnfree(pipe);
+#endif
 }
 
 int __native_pipe_pkg_init(void)
