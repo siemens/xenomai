@@ -2359,7 +2359,7 @@ static int __rt_queue_write(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	ret = rt_queue_send(q, mbuf, size, mode);
-	if (ret == 0)
+	if (ret == 0 && (mode & Q_BROADCAST))
 		rt_queue_free(q, mbuf); /* Nobody received, free the buffer. */
 
 	return ret;
