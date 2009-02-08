@@ -528,6 +528,16 @@ static inline int rthal_trace_pid(pid_t pid, short prio)
 	return 0;
 }
 
+static inline int rthal_trace_tick(unsigned long delay_tsc)
+{
+#ifdef __IPIPE_FEATURE_TRACE_EVENT
+	ipipe_trace_event(0, delay_tsc);
+	return 0;
+#else
+	return -ENOSYS;
+#endif
+}
+
 static inline int rthal_trace_panic_freeze(void)
 {
 	ipipe_trace_panic_freeze();
@@ -551,6 +561,7 @@ static inline int rthal_trace_panic_dump(void)
 #define rthal_trace_special(id, v)		({int err = -ENOSYS; err; })
 #define rthal_trace_special_u64(id, v)		({int err = -ENOSYS; err; })
 #define rthal_trace_pid(pid, prio)		({int err = -ENOSYS; err; })
+#define rthal_trace_tick(delay_tsc)		({int err = -ENOSYS; err; })
 #define rthal_trace_panic_freeze()		({int err = -ENOSYS; err; })
 #define rthal_trace_panic_dump()		({int err = -ENOSYS; err; })
 

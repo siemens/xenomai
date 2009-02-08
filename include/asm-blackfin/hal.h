@@ -46,7 +46,7 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <linux/irq.h>
 #endif
 #include <asm/system.h>
-#include <asm/mach/blackfin.h>
+#include <asm/blackfin.h>
 #include <asm/processor.h>
 #include <asm/xenomai/atomic.h>
 
@@ -72,9 +72,9 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		rthal_trigger_irq(RTHAL_TIMER_IRQ);
 	else {
 		bfin_write_TCOUNT(delay - 1);
-		__builtin_bfin_csync();
+		CSYNC();
 		bfin_write_TCNTL(3);	/* Oneshot mode, no auto-reload. */
-		__builtin_bfin_csync();
+		CSYNC();
 	}
 }
 

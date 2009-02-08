@@ -1,3 +1,7 @@
+2009-02-07  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/blackfin, include/asm-blackfin: Prepare for 2.6.28.
+
 2009-02-02  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/syscall.c (rt_queue_write): Fix memory leak.

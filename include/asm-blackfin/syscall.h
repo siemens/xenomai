@@ -64,7 +64,8 @@
     ({ int __err__ = __copy_to_user_inatomic(dstP,srcP,n); __err__; })
 #define __xn_put_user(task,src,dstP)           __put_user(src,dstP)
 #define __xn_get_user(task,dst,srcP)           __get_user(dst,srcP)
-#define __xn_strncpy_from_user(task,dstP,srcP,n)    strncpy_from_user(dstP,srcP,n)
+#define __xn_strncpy_from_user(task,dstP,srcP,n)    \
+  ({ int __err__ = strncpy_from_user(dstP,srcP,n); __err__; })
 
 #define __xn_access_ok(task,type,addr,size)  wrap_access_ok(task,addr,size)
 

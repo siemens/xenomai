@@ -42,14 +42,25 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+static inline int xnarch_start_timer(void (*tick_handler)(void), int cpu)
+{
+	return rthal_timer_request(tick_handler,
+				   xnarch_switch_htick_mode, xnarch_next_htick_shot,
+				   cpu);
+}
+#else
 /*
- * The I-pipe frees the Blackfin core timer for us, therefore we don't
- * need any host tick relay service since the regular Linux time
- * source is still ticking in parallel at the normal pace through
- * TIMER0.
+ * When GENERIC_CLOCKEVENTS are not available, the I-pipe frees the
+ * Blackfin core timer for us, therefore we don't need any host tick
+ * relay service since the regular Linux time source is still ticking
+ * in parallel at the normal pace through TIMER0.
  */
-#define xnarch_start_timer(tick_handler, cpu)	\
-	({ int __tickval = rthal_timer_request(tick_handler, cpu); __tickval; })
+static inline int xnarch_start_timer(void (*tick_handler)(void), int cpu)
+{
+	return rthal_timer_request(tick_handler, cpu);
+}
+#endif
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
@@ -183,12 +194,13 @@ static inline int xnarch_escalate(void)
 		return 1;
 	}
 
-	__ipipe_unlock_root();
-
 	if (rthal_current_domain == rthal_root_domain) {
 		rthal_trigger_irq(xnarch_escalation_virq);
+		__ipipe_unlock_root();
 		return 1;
 	}
+
+	__ipipe_unlock_root();
 
 	return 0;
 }

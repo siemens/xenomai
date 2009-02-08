@@ -76,6 +76,8 @@ static void xntimer_next_local_shot(xnsched_t *this_sched)
 	else if (delay > ULONG_MAX)
 		delay = ULONG_MAX;
 
+	xnarch_trace_tick((unsigned)delay);
+
 	xnarch_program_timer_shot(delay);
 }
 
