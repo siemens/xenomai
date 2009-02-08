@@ -48,6 +48,7 @@
 #define XNINIRQ		0x08000000	/* In IRQ handling context */
 #define XNSWLOCK	0x04000000	/* In context switch */
 #define XNRESCHED	0x02000000	/* Needs rescheduling */
+#define XNHDEFER	0x01000000	/* Host tick deferred */
 
 struct xnsched_rt {
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
@@ -160,9 +161,14 @@ struct xnsched_class {
 #endif /* CONFIG_SMP */
 
 /* Test all resched flags from the given scheduler mask. */
-static inline int xnsched_resched_p(xnsched_t *sched) 
+static inline int xnsched_resched_p(struct xnsched *sched)
 {
 	return !xnarch_cpus_empty(sched->resched);
+}
+
+static inline int xnsched_self_resched_p(struct xnsched *sched)
+{
+	return xnarch_cpu_isset(xnsched_cpu(sched), sched->resched);
 }
 
 /* Set self resched flag for the given scheduler. */

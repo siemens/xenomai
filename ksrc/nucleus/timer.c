@@ -55,18 +55,57 @@ static inline void xntimer_dequeue_aperiodic(xntimer_t *timer)
 	__setbits(timer->status, XNTIMER_DEQUEUED);
 }
 
-static void xntimer_next_local_shot(xnsched_t *this_sched)
+void xntimer_next_local_shot(xnsched_t *sched)
 {
-	xntimerh_t *holder = xntimerq_head(&this_sched->timerqueue);
+	struct xntimer *timer;
 	xnsticks_t delay;
-	xntimer_t *timer;
+	xntimerq_it_t it;
+	xntimerh_t *h;
 
-	/* Do not reprogram locally when inside the tick handler - will be
-	   done on exit anyway. Also exit if there is no pending timer. */
-	if (testbits(this_sched->status, XNINTCK) || !holder)
+	/*
+	 * Do not reprogram locally when inside the tick handler -
+	 * will be done on exit anyway. Also exit if there is no
+	 * pending timer.
+	 */
+	if (testbits(sched->status, XNINTCK))
 		return;
 
-	timer = aplink2timer(holder);
+	h = xntimerq_it_begin(&sched->timerqueue, &it);
+	if (h == NULL)
+		return;
+
+	/*
+	 * Here we try to defer the host tick heading the timer queue,
+	 * so that it does not preempt a real-time activity uselessly,
+	 * in two cases:
+	 *
+	 * 1) a rescheduling is pending for the current CPU. We may
+	 * assume that a real-time thread is about to resume, so we
+	 * want to move the host tick out of the way until the host
+	 * kernel resumes, unless there is no other outstanding
+	 * timers.
+	 *
+	 * 2) the current thread is running in primary mode, in which
+	 * case we may also defer the host tick until the host kernel
+	 * resumes.
+	 *
+	 * The host tick deferral is cleared whenever Xenomai is about
+	 * to yield control to the host kernel (see
+	 * __xnpod_schedule()), or a timer with an earlier timeout
+	 * date is scheduled, whichever comes first.
+	 */
+	__clrbits(sched->status, XNHDEFER);
+	timer = aplink2timer(h);
+	if (unlikely(timer == &sched->htimer)) {
+		if (xnsched_self_resched_p(sched) ||
+		    !xnthread_test_state(sched->curr, XNROOT)) {
+			h = xntimerq_it_next(&sched->timerqueue, &it, h);
+			if (h) {
+				__setbits(sched->status, XNHDEFER);
+				timer = aplink2timer(h);
+			}
+		}
+	}
 
 	delay = xntimerh_date(&timer->aplink) -
 		(xnarch_get_cpu_tsc() + nklatency);
@@ -81,9 +120,23 @@ static void xntimer_next_local_shot(xnsched_t *this_sched)
 	xnarch_program_timer_shot(delay);
 }
 
-static inline int xntimer_heading_p(xntimer_t *timer)
+static inline int xntimer_heading_p(struct xntimer *timer)
 {
-	return xntimerq_head(&timer->sched->timerqueue) == &timer->aplink;
+	struct xnsched *sched = timer->sched;
+	xntimerq_it_t it;
+	xntimerh_t *h;
+
+	h = xntimerq_it_begin(&sched->timerqueue, &it);
+	if (h == &timer->aplink)
+		return 1;
+
+	if (testbits(sched->status, XNHDEFER)) {
+		h = xntimerq_it_next(&sched->timerqueue, &it, h);
+		if (h == &timer->aplink)
+			return 1;
+	}
+
+	return 0;
 }
 
 static inline void xntimer_next_remote_shot(xnsched_t *sched)
@@ -339,11 +392,15 @@ void xntimer_tick_aperiodic(void)
 				continue;
 			}
 		} else {
-			/* By postponing the propagation of the low-priority host
-			   tick to the interrupt epilogue (see
-			   xnintr_irq_handler()), we save some I-cache, which
-			   translates into precious microsecs on low-end hw. */
+			/*
+			 * By postponing the propagation of the
+			 * low-priority host tick to the interrupt
+			 * epilogue (see xnintr_irq_handler()), we
+			 * save some I-cache, which translates into
+			 * precious microsecs on low-end hw.
+			 */
 			__setbits(sched->status, XNHTICK);
+			__clrbits(sched->status, XNHDEFER);
 			if (!testbits(timer->status, XNTIMER_PERIODIC))
 				continue;
 		}

@@ -410,6 +410,8 @@ static inline void xntimer_set_name(xntimer_t *timer, const char *name)
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 
+void xntimer_next_local_shot(struct xnsched *sched);
+
 /*!
  * \addtogroup timer
  *@{ */
