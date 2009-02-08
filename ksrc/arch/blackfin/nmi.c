@@ -52,11 +52,11 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 		return -EBUSY;
 
 	rthal_nmi_disarm();
-	__builtin_bfin_csync();
+	CSYNC();
 	rthal_nmi_emergency = emergency;
 	rthal_old_nmi_handler = (void *)bfin_read_EVT2();
 	bfin_write_EVT2(&rthal_nmi_handler);
-	__builtin_bfin_csync();
+	CSYNC();
 
 	return 0;
 }
@@ -67,25 +67,25 @@ void rthal_nmi_release(void)
 		return;
 
 	rthal_nmi_disarm();
-	__builtin_bfin_csync();
+	CSYNC();
 	bfin_write_EVT2(rthal_old_nmi_handler);
-	__builtin_bfin_csync();
+	CSYNC();
 	rthal_nmi_emergency = NULL;
 }
 
 void rthal_nmi_arm(unsigned long delay)
 {
 	bfin_write_WDOG_CTL(0xad0);	/* Disable */
-	__builtin_bfin_csync();
+	CSYNC();
 	bfin_write_WDOG_CNT(delay);
 	bfin_write_WDOG_CTL(0x2);	/* Enable, generate NMIs */
-	__builtin_bfin_csync();
+	CSYNC();
 }
 
 void rthal_nmi_disarm(void)
 {
 	bfin_write_WDOG_CTL(0xad0);	/* Disable */
-	__builtin_bfin_csync();
+	CSYNC();
 }
 
 EXPORT_SYMBOL(rthal_nmi_request);

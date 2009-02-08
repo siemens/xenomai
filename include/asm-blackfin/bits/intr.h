@@ -24,6 +24,9 @@
 
 static inline void xnarch_relay_tick(void)
 {
+#ifdef CONFIG_GENERIC_CLOCKEVENTS
+	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
+#endif
 }
 
 static inline void xnarch_announce_tick(void)

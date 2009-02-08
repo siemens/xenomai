@@ -341,10 +341,6 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 /* VM */
 
-#ifndef CONFIG_MMU
-#define pgprot_noncached(p) (p)
-#endif /* CONFIG_MMU */
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) && defined(CONFIG_MMU)
 #define wrap_remap_vm_page(vma,from,to) ({ \
     vma->vm_flags |= VM_RESERVED; \
@@ -501,6 +497,9 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #else /* LINUX_VERSION_CODE < 2.6.27 */
 #include <asm/semaphore.h>
+#ifndef CONFIG_MMU
+#define pgprot_noncached(p) (p)
+#endif /* !CONFIG_MMU */
 #endif /* LINUX_VERSION_CODE < 2.6.27 */
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
