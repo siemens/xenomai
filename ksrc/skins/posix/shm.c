@@ -516,7 +516,13 @@ int ftruncate(int fd, off_t len)
 		size_t size = 0;
 
 		if (shm->addr) {
-			size = shm->size;
+			if (len == xnheap_extentsize(&shm->heapbase)) {
+				/* Size unchanged, skip copy and reinit. */
+				err = 0;
+				goto err_up;
+			}
+
+			size = xnheap_max_contiguous(&shm->heapbase);
 			addr = xnarch_alloc_host_mem(size);
 			if (!addr) {
 				err = ENOMEM;
@@ -562,12 +568,13 @@ int ftruncate(int fd, off_t len)
 			shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
 			/* Required. */
 			memset(shm->addr, '\0', shm->size);
-			shm->size -= PAGE_SIZE;
 
 			/* Copy the previous contents. */
 			if (addr)
 				memcpy(shm->addr, addr,
 				       shm->size < size ? shm->size : size);
+
+			shm->size -= PAGE_SIZE;
 		}
 
 		if (addr)
