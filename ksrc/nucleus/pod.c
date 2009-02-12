@@ -844,8 +844,8 @@ int xnpod_start_thread(xnthread_t *thread,
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnshadow_start(thread);
-		xnpod_schedule();
-		return 0;
+		xnlock_get_irqsave(&nklock, s);
+		goto callout;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -861,7 +861,8 @@ int xnpod_start_thread(xnthread_t *thread,
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
-	if (!emptyq_p(&nkpod->tstartq) && !xnthread_test_state(thread, XNROOT)) {
+ callout:
+	if (!emptyq_p(&nkpod->tstartq)) {
 		trace_mark(xn_nucleus_thread_callout,
 			   "thread %p thread_name %s hook %s",
 			   thread, xnthread_name(thread), "START");

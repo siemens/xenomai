@@ -1,3 +1,8 @@
+2009-02-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_start_thread): Run start hook for
+	user-space threads as well.
+
 2009-02-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin, include/asm-blackfin: Prepare for 2.6.28.
