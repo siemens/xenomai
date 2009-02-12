@@ -1,3 +1,12 @@
+2009-02-12  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/nucleus/pod.c (xnpod_start_thread): Run start hook for
+	user-space threads as well.
+
+2009-02-11  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/posix/shm.c (ftruncate): Remove GFP_USER hint.
+
 2009-02-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/blackfin, include/asm-blackfin: Prepare for 2.6.28.

@@ -781,8 +781,8 @@ int xnpod_start_thread(struct xnthread *thread,
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnshadow_start(thread);
-		xnpod_schedule();
-		return 0;
+		xnlock_get_irqsave(&nklock, s);
+		goto run_hooks;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -799,6 +799,7 @@ int xnpod_start_thread(struct xnthread *thread,
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
+run_hooks:
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 
 schedule:
