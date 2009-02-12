@@ -951,18 +951,17 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 
 	/* Size must be page-aligned. */
 
-	if (!kmflags || kmflags == XNHEAP_GFP_NONCACHED) {
-		if (!kmflags)
+	if ((kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
+		if (kmflags == 0)
 			ptr = vmalloc(size);
 		else
 			ptr = __vmalloc(size,
 					GFP_KERNEL | __GFP_HIGHMEM,
 					pgprot_noncached(PAGE_KERNEL));
-		if (!ptr)
+		if (ptr == NULL)
 			return NULL;
 
 		vabase = (unsigned long)ptr;
-
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 			SetPageReserved(vmalloc_to_page((void *)vaddr));
 	} else {
@@ -970,18 +969,15 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 		 * Otherwise, we have been asked for some kmalloc()
 		 * space. Assume that we can wait to get the required memory.
 		 */
-
 		if (size <= KMALLOC_MAX_SIZE)
 			ptr = kmalloc(size, kmflags | GFP_KERNEL);
 		else
-			ptr = (void*) __get_free_pages(kmflags | GFP_KERNEL,
+			ptr = (void *)__get_free_pages(kmflags | GFP_KERNEL,
 						       get_order(size));
-
-		if (!ptr)
+		if (ptr == NULL)
 			return NULL;
 
 		vabase = (unsigned long)ptr;
-
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 			SetPageReserved(virt_to_page(vaddr));
 	}
@@ -997,7 +993,7 @@ static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
 
 	vabase = (unsigned long)ptr;
 
-	if (!kmflags  || kmflags == XNHEAP_GFP_NONCACHED) {
+	if ((kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
 			ClearPageReserved(vmalloc_to_page((void *)vaddr));
 
@@ -1036,7 +1032,7 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 }
 
 static struct vm_operations_struct xnheap_vmops = {
-      close:&xnheap_vmclose
+      .close = &xnheap_vmclose
 };
 
 static int xnheap_open(struct inode *inode, struct file *file)
@@ -1116,8 +1112,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	vaddr = (unsigned long)heap->archdep.heapbase;
 
-	if (!heap->archdep.kmflags
-	    || heap->archdep.kmflags == XNHEAP_GFP_NONCACHED) {
+	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		unsigned long maddr = vma->vm_start;
 
 		if (heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
@@ -1134,7 +1129,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	} else if (xnarch_remap_io_page_range(file,vma,
 					      vma->vm_start,
 					      virt_to_phys((void *)vaddr),
-					      size, PAGE_SHARED))
+					      size, vma->vm_page_prot))
 		return -EAGAIN;
 
 	xnarch_fault_range(vma);
