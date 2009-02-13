@@ -1,3 +1,10 @@
+2009-02-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+
+	* ksrc/skins/posix/shm.c (ftruncate): Use XNARCH_SHARED_HEAP_FLAGS
+
+	* include/asm-generic/system.h, include/asm-arm/hal.h: Define
+	XNARCH_SHARED_HEAP_FLAGS.
+
 2009-02-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_start_thread): Run start hook for

@@ -137,6 +137,12 @@ typedef struct { atomic_t owner; } xnlock_t;
 #define xnarch_logerr(fmt,args...)   printk(KERN_ERR XNARCH_PROMPT fmt , ##args)
 #define xnarch_printf(fmt,args...)   printk(KERN_INFO XNARCH_PROMPT fmt , ##args)
 
+#ifndef RTHAL_SHARED_HEAP_FLAGS
+#define XNARCH_SHARED_HEAP_FLAGS 0
+#else /* !RTHAL_SHARED_HEAP_FLAGS */
+#define XNARCH_SHARED_HEAP_FLAGS RTHAL_SHARED_HEAP_FLAGS
+#endif /* !RTHAL_SHARED_HEAP_FLAGS */
+
 typedef cpumask_t xnarch_cpumask_t;
 
 #ifdef CONFIG_SMP
