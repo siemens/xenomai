@@ -6,6 +6,9 @@
 	* ksrc/nucleus/heap.c (xnheap_mmap): Allow partial mapping in
 	user-space of a nucleus heap.
 
+	* ksrc/nucleus/sched.c, include/nucleus/sched.h: Introduce
+	sched->cpu field member.
+
 2009-02-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/pod.c (xnpod_start_thread): Run start hook for

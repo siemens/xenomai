@@ -82,14 +82,15 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
 
-void xnsched_init(struct xnsched *sched)
+void xnsched_init(struct xnsched *sched, int cpu)
 {
 	char htimer_name[XNOBJECT_NAME_LEN];
 	char root_name[XNOBJECT_NAME_LEN];
 	union xnsched_policy_param param;
 	struct xnthread_init_attr attr;
-	int cpu = xnsched_cpu(sched);
 	struct xnsched_class *p;
+
+	sched->cpu = cpu;
 
 	for_each_xnsched_class(p) {
 		if (p->sched_init)

@@ -407,7 +407,7 @@ int xnpod_init(void)
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		sched = &pod->sched[cpu];
-		xnsched_init(sched);
+		xnsched_init(sched, cpu);
 		appendq(&pod->threadq, &sched->rootcb.glink);
 	}
 

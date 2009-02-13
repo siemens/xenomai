@@ -64,6 +64,7 @@ struct xnsched_rt {
 typedef struct xnsched {
 
 	xnflags_t status;		/*!< Scheduler specific status bitmask. */
+	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
 	xnarch_cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
 
@@ -155,7 +156,7 @@ struct xnsched_class {
 #define XNSCHED_RUNPRIO   0x80000000
 
 #ifdef CONFIG_SMP
-#define xnsched_cpu(__sched__)	((__sched__) - &nkpod->sched[0])
+#define xnsched_cpu(__sched__)	((__sched__)->cpu)
 #else /* !CONFIG_SMP */
 #define xnsched_cpu(__sched__)	({ (void)__sched__; 0; })
 #endif /* CONFIG_SMP */
@@ -228,7 +229,7 @@ static inline void xnsched_reset_watchdog(struct xnsched *sched)
 
 int xnsched_register_class(struct xnsched_class *sched_class);
 
-void xnsched_init(struct xnsched *sched);
+void xnsched_init(struct xnsched *sched, int cpu);
 
 void xnsched_destroy(struct xnsched *sched);
 
