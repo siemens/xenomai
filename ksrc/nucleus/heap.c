@@ -1097,15 +1097,11 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EINVAL;	/* COW unsupported. */
 
 	offset = vma->vm_pgoff << PAGE_SHIFT;
-
-	if (offset != 0)
-		return -ENXIO;	/* We must map the entire heap. */
-
 	size = vma->vm_end - vma->vm_start;
 	heap = (xnheap_t *)file->private_data;
 
-	if (size != xnheap_extentsize(heap))
-		return -ENXIO;	/* Doesn't match the heap size. */
+	if (offset + size > xnheap_extentsize(heap))
+		return -ENXIO;
 
 	if (countq(&heap->extents) > 1)
 		/* Cannot map multi-extent heaps, we need the memory
@@ -1115,7 +1111,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	vma->vm_ops = &xnheap_vmops;
 	vma->vm_private_data = file->private_data;
 
-	vaddr = (unsigned long)heap->archdep.heapbase;
+	vaddr = (unsigned long)heap->archdep.heapbase + offset;
 
 	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		unsigned long maddr = vma->vm_start;

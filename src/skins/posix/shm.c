@@ -113,8 +113,7 @@ void *__wrap_mmap(void *addr,
 	if (err)
 		goto err_mmap_epilogue;
 
-	/* map the whole heap. */
-	uaddr = __real_mmap(NULL, map.mapsize, prot, flags, fildes, 0);
+	uaddr = __real_mmap(addr, len, prot, flags, fildes, off + map.offset);
 
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
@@ -123,16 +122,6 @@ void *__wrap_mmap(void *addr,
 		return MAP_FAILED;
 	}
 
-	/* Forbid access to map.offset first bytes. */
-	mprotect(uaddr, map.offset, PROT_NONE);
-
-	uaddr = (char *)uaddr + map.offset;
-
-	/* Forbid access to the last mapsize - offset - len bytes. */
-	if (len < map.mapsize - map.offset)
-		mprotect((char *)uaddr + len, map.mapsize - map.offset - len,
-			 PROT_NONE);
-
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,
 				 __pse51_mmap_epilogue,
 				 (unsigned long)uaddr, &map);
@@ -140,7 +129,7 @@ void *__wrap_mmap(void *addr,
 	if (!err)
 		return uaddr;
 
-	__real_munmap(uaddr, map.mapsize);
+	__real_munmap(uaddr, len);
 
       error:
 	errno = err;
@@ -196,8 +185,7 @@ void *__wrap_mmap64(void *addr,
 	if (err)
 		goto err_mmap_epilogue;
 
-	/* map the whole heap. */
-	uaddr = __real_mmap64(NULL, map.mapsize, prot, flags, fildes, 0);
+	uaddr = __real_mmap64(addr, len, prot, flags, fildes, map.offset + off);
 
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
@@ -206,16 +194,6 @@ void *__wrap_mmap64(void *addr,
 		return MAP_FAILED;
 	}
 
-	/* Forbid access to map.offset first bytes. */
-	mprotect(uaddr, map.offset, PROT_NONE);
-
-	uaddr = (char *)uaddr + map.offset;
-
-	/* Forbid access to the last mapsize - offset - len bytes. */
-	if (len < map.mapsize - map.offset)
-		mprotect((char *)uaddr + len, map.mapsize - map.offset - len,
-			 PROT_NONE);
-
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,
 				 __pse51_mmap_epilogue,
 				 (unsigned long)uaddr, &map);
@@ -223,7 +201,7 @@ void *__wrap_mmap64(void *addr,
 	if (!err)
 		return uaddr;
 
-	__real_munmap(uaddr, map.mapsize);
+	__real_munmap(uaddr, len);
 
       error:
 	errno = err;
@@ -261,7 +239,7 @@ int __wrap_munmap(void *addr, size_t len)
 	if (err)
 		goto error;
 
-	if (__real_munmap((char *)addr - map.offset, map.mapsize))
+	if (__real_munmap(addr, len))
 		return -1;
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,
