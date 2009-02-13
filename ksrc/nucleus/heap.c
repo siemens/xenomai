@@ -1198,6 +1198,7 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 
 	if (mapaddr) {
 		down_write(&current->mm->mmap_sem);
+		heap->archdep.release = NULL;
 		ret = do_munmap(current->mm, (unsigned long)mapaddr, len);
 		up_write(&current->mm->mmap_sem);
 	}
