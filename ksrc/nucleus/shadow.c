@@ -1838,9 +1838,7 @@ static void *xnshadow_sys_event(int event, void *data)
 
 		err = xnheap_init_mapped(&p->sem_heap,
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
-					 XNARCH_SHARED_HEAP_FLAGS ?:
-					 (CONFIG_XENO_OPT_SEM_HEAPSZ <= 128
-					  ? GFP_USER : 0));
+					 XNARCH_SHARED_HEAP_FLAGS);
 		if (err) {
 			xnarch_free_host_mem(p, sizeof(*p));
 			return ERR_PTR(err);
