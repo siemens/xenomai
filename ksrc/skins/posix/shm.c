@@ -184,6 +184,9 @@ static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
  * If @a oflags has the bit @a O_TRUNC set, the shared memory exists and is not
  * currently mapped, its size is truncated to 0.
  *
+ * If @a oflags has the bit @a O_DIRECT set, the shared memory will be suitable
+ * for direct memory access (allocated in physically contiguous memory).
+ *
  * @a name may be any arbitrary string, in which slashes have no particular
  * meaning. However, for portability, using a name which starts with a slash and
  * contains no other slash is recommended.
@@ -272,7 +275,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
 
   got_shm:
 	err = pse51_desc_create(&desc, &shm->nodebase,
-				oflags & PSE51_PERMS_MASK);
+				oflags & (PSE51_PERMS_MASK | O_DIRECT));
 	if (err)
 		goto err_shm_put;
 
@@ -427,7 +430,7 @@ int shm_unlink(const char *name)
  * shared memory object, the added space is zero-filled.
  *
  * Shared memory are suitable for direct memory access (allocated in physically
- * contiguous memory) if their size is less than or equal to 128 K.
+ * contiguous memory) if O_DIRECT was passed to shm_open.
  *
  * Shared memory objects may only be resized if they are not currently mapped.
  *
@@ -440,6 +443,7 @@ int shm_unlink(const char *name)
  * - EBADF, @a fd is not a valid file descriptor;
  * - EPERM, the caller context is invalid;
  * - EINVAL, the specified length is invalid;
+ * - EINVAL, the architecture can not honour the O_DIRECT flag;
  * - EINTR, this service was interrupted by a signal;
  * - EBUSY, @a fd is a shared memory object descriptor and the underlying shared
  *   memory is currently mapped;
@@ -531,8 +535,8 @@ int ftruncate(int fd, off_t len)
 		}
 
 		if (len) {
-			int flags = (XNARCH_SHARED_HEAP_FLAGS ?:
-				     len <= 128 * 1024 ? GFP_USER : 0);
+			int flags = XNARCH_SHARED_HEAP_FLAGS |
+				((desc_flags & O_DIRECT) ? GFP_DMA : 0);
 
 			err = -xnheap_init_mapped(&shm->heapbase, len, flags);
 			if (err)
@@ -672,7 +676,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		goto err_shm_put;
 	}
 
-	desc_flags = pse51_desc_getflags(desc);
+	desc_flags = pse51_desc_getflags(desc) & PSE51_PERMS_MASK;
 	xnlock_put_irqrestore(&nklock, s);
 
 	if ((desc_flags != O_RDWR && desc_flags != O_RDONLY) ||
