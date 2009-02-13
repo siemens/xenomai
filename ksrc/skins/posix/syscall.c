@@ -3,7 +3,7 @@
  * This file is part of the Xenomai project.
  *
  * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org> 
- * Copyright (C) 2005 Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
+ * Copyright (C) 2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as

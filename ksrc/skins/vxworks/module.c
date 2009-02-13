@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
@@ -24,7 +24,7 @@
 #endif /* __KERNEL__ */
 
 MODULE_DESCRIPTION("VxWorks(R) virtual machine");
-MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
+MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
 static u_long tick_arg = CONFIG_XENO_OPT_VXWORKS_PERIOD;

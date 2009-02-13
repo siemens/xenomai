@@ -1,5 +1,5 @@
 /*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  * Copyright (C) 2001,2002 IDEALX (http://www.idealx.com/).
  *
  * This program is free software; you can redistribute it and/or

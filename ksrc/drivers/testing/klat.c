@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Copyright (C) 2008 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ module_param(freeze_max, int, 0400);
 MODULE_PARM_DESC(freeze_max, "Freeze trace for each new max latency");
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
+MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 
 static RT_TASK klat_srvr;
 static RT_PIPE klat_pipe;
