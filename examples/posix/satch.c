@@ -366,7 +366,7 @@ int __xeno_user_init (void)
 }
 
 #ifdef __KERNEL__
-MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
+MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 module_init(__xeno_user_init);
 module_exit(__xeno_user_exit);

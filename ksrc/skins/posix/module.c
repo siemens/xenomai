@@ -1,5 +1,5 @@
 /*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -65,7 +65,7 @@
 #include <posix/shm.h>
 
 MODULE_DESCRIPTION("POSIX/PSE51 interface");
-MODULE_AUTHOR("gilles.chanteperdrix@laposte.net");
+MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
 static u_long tick_arg = CONFIG_XENO_OPT_POSIX_PERIOD;

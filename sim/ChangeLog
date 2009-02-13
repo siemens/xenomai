@@ -1,4 +1,4 @@
-2007-07-20  Gilles Chanteperdrix  <gilles.chanteperdrix@gmail.com>
+2007-07-20  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* skins/posix/testsuite/tclock.c: Implement posix clock unit test.
 
@@ -13,7 +13,7 @@
 	* vmutils/tclist++.{cc, h}, vmutils/strings.{cc, h}: Do not
 	overload main type ctors() with quad-type args on 64bit archs.
 
-2007-05-21  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2007-05-21  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* configure.in: Fix libpng detection to work with recent versions
 	of libpng.
@@ -22,7 +22,7 @@
 
 	* sim/vm/thread.cc, sim/vm/thread.h: Fix compilation w/ gcc-4.x.
 
-2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2006-06-09  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* skins/posix/testsuite/xntest.c: Make verbosity configurable.
 
@@ -51,12 +51,12 @@
 	to the inner last 32 frames in order to work-around issues GDB 6.x
 	has with ucontext(2) driven co-routines.
 
-2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2006-01-04  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* configure.in: Add nucleus scalable scheduler and watchdog
 	options.
 
-2005-12-19  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2005-12-19  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* gcic/GNUmakefile.am: reconfigure instrumented gcc whenever
 	installation directory changes.
@@ -135,7 +135,7 @@
 
 	* include/asm/rtai_xeno.h (xnarch_enter_root): Update prototype.
 
-2003-12-28  Gilles Chanteperdrix  <gilles.chanteperdrix@laposte.net>
+2003-12-28  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* vmutils: added tclUtil.c et tclUtil.h to remove the dependence
 	of libmvmutils upon libtcl.

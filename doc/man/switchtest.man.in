@@ -84,5 +84,5 @@ limit the test duration to <duration> seconds
 disables any use of FPU instructions
 .SH AUTHOR
 \fBswitchtest\fP was written by Philippe Gerum <rpm@xenomai.org> and Gilles
-Chanteperdrix <gilles.chanteperdrix@gmail.com>. This man page was written by
+Chanteperdrix <gilles.chanteperdrix@xenomai.org>. This man page was written by
 Roland Stigge <stigge@antcom.de>.

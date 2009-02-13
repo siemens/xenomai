@@ -1,5 +1,5 @@
 /*
- * Written by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  * Copyright (C) 2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * This program is free software; you can redistribute it and/or

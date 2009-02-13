@@ -5,7 +5,7 @@
  *   SMI workaround for x86.
  *
  *   Cut/Pasted from Vitor Angelo "smi" module.
- *   Adapted by Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>.
+ *   Adapted by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
