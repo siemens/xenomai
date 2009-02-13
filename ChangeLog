@@ -1,5 +1,8 @@
 2009-02-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
+	* src/skins/posix/shm.c (__wrap_mmap, __wrap_mmap64): Map only
+	part of the underlying nucleus heap.
+
 	* ksrc/nucleus/heap.c (xnheap_mmap): Allow partial mapping in
 	user-space of a nucleus heap.
 
