@@ -171,6 +171,7 @@ int xntbase_alloc(const char *name, u_long period, u_long flags,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xntbase_alloc);
 
 /*!
  * \fn void xntbase_free(xntbase_t *base)
@@ -212,6 +213,7 @@ void xntbase_free(xntbase_t *base)
 
 	xnarch_free_host_mem(base, sizeof(*base));
 }
+EXPORT_SYMBOL_GPL(xntbase_free);
 
 /*!
  * \fn int xntbase_update(xntbase_t *base, u_long period)
@@ -262,6 +264,7 @@ int xntbase_update(xntbase_t *base, u_long period)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xntbase_update);
 
 /*!
  * \fn int xntbase_switch(const char *name,u_long period,xntbase_t **basep)
@@ -344,6 +347,7 @@ int xntbase_switch(const char *name, u_long period, xntbase_t **basep)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xntbase_switch);
 
 /*!
  * \fn void xntbase_start(xntbase_t *base)
@@ -400,6 +404,7 @@ void xntbase_start(xntbase_t *base)
 
 	xntslave_start(base2slave(base), start_date, base->tickvalue);
 }
+EXPORT_SYMBOL_GPL(xntbase_start);
 
 /*!
  * \fn void xntbase_stop(xntbase_t *base)
@@ -438,6 +443,7 @@ void xntbase_stop(xntbase_t *base)
 
 	trace_mark(xn_nucleus_tbase_stop, "base %s", base->name);
 }
+EXPORT_SYMBOL_GPL(xntbase_stop);
 
 /*!
  * \fn void xntbase_tick(xntbase_t *base)
@@ -484,12 +490,14 @@ void xntbase_tick(xntbase_t *base)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xntbase_tick);
 
 xnticks_t xntbase_ns2ticks_ceil(xntbase_t *base, xntime_t t)
 {
 	return xnarch_ulldiv(t + xntbase_get_tickval(base) - 1,
 			     xntbase_get_tickval(base), NULL);
 }
+EXPORT_SYMBOL_GPL(xntbase_ns2ticks_ceil);
 
 /*!
  * \fn xnticks_t xntbase_convert(xntbase_t *srcbase,xnticks_t ticks,xntbase_t *dstbase)
@@ -535,16 +543,7 @@ xnticks_t xntbase_convert(xntbase_t *srcbase, xnticks_t ticks, xntbase_t *dstbas
 
 	return xntbase_ns2ticks(dstbase, xntbase_ticks2ns(srcbase, ticks));
 }
-
-EXPORT_SYMBOL(xntbase_alloc);
-EXPORT_SYMBOL(xntbase_free);
-EXPORT_SYMBOL(xntbase_update);
-EXPORT_SYMBOL(xntbase_switch);
-EXPORT_SYMBOL(xntbase_start);
-EXPORT_SYMBOL(xntbase_stop);
-EXPORT_SYMBOL(xntbase_tick);
-EXPORT_SYMBOL(xntbase_ns2ticks_ceil);
-EXPORT_SYMBOL(xntbase_convert);
+EXPORT_SYMBOL_GPL(xntbase_convert);
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
@@ -617,6 +616,7 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 	trace_mark(xn_nucleus_tbase_adjust, "base %s delta %Lu",
 		   base->name, delta);
 }
+EXPORT_SYMBOL_GPL(xntbase_adjust_time);
 
 /* The master time base - the most precise one, aperiodic, always valid. */
 
@@ -633,8 +633,6 @@ xntbase_t nktbase = {
 	.timerq = XNQUEUE_INITIALIZER(nktbase.timerq),
 #endif /* CONFIG_XENO_OPT_STATS */
 };
-
-EXPORT_SYMBOL(xntbase_adjust_time);
-EXPORT_SYMBOL(nktbase);
+EXPORT_SYMBOL_GPL(nktbase);
 
 /*@}*/

@@ -53,10 +53,15 @@
  * also runs over the simulator in user-space.
  */
 xnpod_t nkpod_struct;
+EXPORT_SYMBOL_GPL(nkpod_struct);
 
 DEFINE_XNLOCK(nklock);
+#ifdef CONFIG_SMP
+EXPORT_SYMBOL_GPL(nklock);
+#endif /* CONFIG_SMP */
 
 u_long nklatency = 0;
+EXPORT_SYMBOL_GPL(nklatency);
 
 /* Already accounted for in nklatency, kept separately for user information. */
 u_long nktimerlat = 0;
@@ -269,6 +274,7 @@ const char *xnpod_fatal_helper(const char *format, ...)
 
 	return nkmsgbuf;
 }
+EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
 
 void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
@@ -429,6 +435,7 @@ int xnpod_init(void)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpod_init);
 
 /*! 
  * \fn void xnpod_shutdown(int xtype)
@@ -514,6 +521,7 @@ void xnpod_shutdown(int xtype)
 	xnheap_destroy(&kstacks, &xnpod_flush_stackpool, NULL);
 #endif
 }
+EXPORT_SYMBOL_GPL(xnpod_shutdown);
 
 void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
 {
@@ -656,6 +664,7 @@ int xnpod_init_thread(struct xnthread *thread,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpod_init_thread);
 
 /*! 
  * \fn int xnpod_start_thread(struct xnthread *thread,const struct xnthread_start_attr *attr)
@@ -811,6 +820,7 @@ unlock_and_exit:
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnpod_start_thread);
 
 /*! 
  * @internal
@@ -893,6 +903,7 @@ void xnpod_stop_thread(struct xnthread *thread)
 
 	xnpod_schedule();
 }
+EXPORT_SYMBOL_GPL(xnpod_stop_thread);
 
 /*! 
  * \fn void xnpod_restart_thread(xnthread_t *thread)
@@ -953,6 +964,7 @@ void xnpod_restart_thread(xnthread_t *thread)
 
 	xnpod_schedule();
 }
+EXPORT_SYMBOL_GPL(xnpod_restart_thread);
 
 /*! 
  * \fn void xnpod_set_thread_mode(xnthread_t *thread,xnflags_t clrmask,xnflags_t setmask)
@@ -1027,6 +1039,7 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 
 	return oldmode;
 }
+EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
 
 /*! 
  * \fn void xnpod_delete_thread(xnthread_t *thread)
@@ -1201,6 +1214,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_delete_thread);
 
 /*! 
  * \fn void xnpod_abort_thread(xnthread_t *thread)
@@ -1241,6 +1255,7 @@ void xnpod_abort_thread(xnthread_t *thread)
 	xnpod_delete_thread(thread);
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_abort_thread);
 
 /*!
  * \fn void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
@@ -1473,6 +1488,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
 
 /*!
  * \fn void xnpod_resume_thread(struct xnthread *thread,xnflags_t mask)
@@ -1630,6 +1646,7 @@ ready:
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_resume_thread);
 
 /*!
  * \fn int xnpod_unblock_thread(xnthread_t *thread)
@@ -1712,6 +1729,7 @@ int xnpod_unblock_thread(xnthread_t *thread)
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
 
 /*!
  * \fn int xnpod_set_thread_schedparam(struct xnthread *thread,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
@@ -1774,6 +1792,7 @@ int xnpod_set_thread_schedparam(struct xnthread *thread,
 {
 	return __xnpod_set_thread_schedparam(thread, sched_class, sched_param, 1);
 }
+EXPORT_SYMBOL_GPL(xnpod_set_thread_schedparam);
 
 int __xnpod_set_thread_schedparam(struct xnthread *thread,
 				  struct xnsched_class *sched_class,
@@ -1918,6 +1937,7 @@ int xnpod_migrate_thread(int cpu)
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 
 /*! 
  * @internal
@@ -2012,6 +2032,7 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 
 	xnsched_resched_after_unlocked_switch();
 }
+EXPORT_SYMBOL_GPL(xnpod_welcome_thread);
 
 static inline void xnpod_switch_to(xnsched_t *sched,
 				   xnthread_t *prev, xnthread_t *next)
@@ -2250,6 +2271,7 @@ void __xnpod_schedule(struct xnsched *sched)
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
+EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
 void xnpod_lock_sched(void)
 {
@@ -2265,6 +2287,7 @@ void xnpod_lock_sched(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_lock_sched);
 
 void xnpod_unlock_sched(void)
 {
@@ -2283,6 +2306,7 @@ void xnpod_unlock_sched(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnpod_unlock_sched);
 
 /*! 
  * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))
@@ -2375,6 +2399,7 @@ int xnpod_add_hook(int type, void (*routine) (xnthread_t *))
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnpod_add_hook);
 
 /*! 
  * \fn int xnpod_remove_hook(int type,void (*routine)(xnthread_t *))
@@ -2451,6 +2476,7 @@ int xnpod_remove_hook(int type, void (*routine) (xnthread_t *))
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnpod_remove_hook);
 
 /*! 
  * \fn void xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
@@ -2539,6 +2565,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpod_trap_fault);
 
 /*! 
  * \fn int xnpod_enable_timesource(void)
@@ -2676,6 +2703,7 @@ int xnpod_enable_timesource(void)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
 
 /*! 
  * \fn void xnpod_disable_timesource(void)
@@ -2724,6 +2752,7 @@ void xnpod_disable_timesource(void)
 	   xnarch_stop_timer() has been called. In any case, no
 	   resource is associated with this object. */
 }
+EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
 
 /*!
  * \fn int xnpod_set_thread_periodic(xnthread_t *thread,xnticks_t idate,xnticks_t period)
@@ -2834,6 +2863,7 @@ int xnpod_set_thread_periodic(xnthread_t *thread,
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnpod_set_thread_periodic);
 
 /**
  * @fn int xnpod_wait_thread_period(unsigned long *overruns_r)
@@ -2931,6 +2961,7 @@ int xnpod_wait_thread_period(unsigned long *overruns_r)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
 
 /**
  * @fn int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
@@ -3004,39 +3035,6 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
 
 /*@}*/
-
-EXPORT_SYMBOL_GPL(xnpod_add_hook);
-EXPORT_SYMBOL_GPL(xnpod_delete_thread);
-EXPORT_SYMBOL_GPL(xnpod_abort_thread);
-EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
-EXPORT_SYMBOL_GPL(xnpod_init);
-EXPORT_SYMBOL_GPL(xnpod_init_thread);
-EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
-EXPORT_SYMBOL_GPL(xnpod_remove_hook);
-EXPORT_SYMBOL_GPL(xnpod_set_thread_schedparam);
-EXPORT_SYMBOL_GPL(xnpod_restart_thread);
-EXPORT_SYMBOL_GPL(xnpod_resume_thread);
-EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
-EXPORT_SYMBOL_GPL(xnpod_set_thread_periodic);
-EXPORT_SYMBOL_GPL(xnpod_shutdown);
-EXPORT_SYMBOL_GPL(xnpod_start_thread);
-EXPORT_SYMBOL_GPL(xnpod_stop_thread);
-EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
-EXPORT_SYMBOL_GPL(xnpod_disable_timesource);
-EXPORT_SYMBOL_GPL(xnpod_suspend_thread);
-EXPORT_SYMBOL_GPL(xnpod_trap_fault);
-EXPORT_SYMBOL_GPL(xnpod_unblock_thread);
-EXPORT_SYMBOL_GPL(xnpod_wait_thread_period);
-EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
-EXPORT_SYMBOL_GPL(xnpod_welcome_thread);
-EXPORT_SYMBOL_GPL(xnpod_lock_sched);
-EXPORT_SYMBOL_GPL(xnpod_unlock_sched);
-EXPORT_SYMBOL(__xnpod_schedule);
-
-EXPORT_SYMBOL(nkpod_struct);
-#ifdef CONFIG_SMP
-EXPORT_SYMBOL(nklock);
-#endif /* CONFIG_SMP */
-EXPORT_SYMBOL_GPL(nklatency);

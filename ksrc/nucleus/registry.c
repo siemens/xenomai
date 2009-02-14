@@ -668,6 +668,7 @@ int xnregistry_enter(const char *key,
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnregistry_enter);
 
 /**
  * @fn int xnregistry_bind(const char *key,xnticks_t timeout,int timeout_mode,xnhandle_t *phandle)
@@ -801,6 +802,7 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnregistry_bind);
 
 /**
  * @fn int xnregistry_remove(xnhandle_t handle)
@@ -881,6 +883,7 @@ int xnregistry_remove(xnhandle_t handle)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnregistry_remove);
 
 /**
  * @fn int xnregistry_remove_safe(xnhandle_t handle,xnticks_t timeout)
@@ -1012,6 +1015,7 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnregistry_remove_safe);
 
 /**
  * @fn void *xnregistry_get(xnhandle_t handle)
@@ -1069,6 +1073,7 @@ void *xnregistry_get(xnhandle_t handle)
 
 	return objaddr;
 }
+EXPORT_SYMBOL_GPL(xnregistry_get);
 
 /**
  * @fn u_long xnregistry_put(xnhandle_t handle)
@@ -1136,6 +1141,7 @@ u_long xnregistry_put(xnhandle_t handle)
 
 	return newlock;
 }
+EXPORT_SYMBOL_GPL(xnregistry_put);
 
 /**
  * @fn u_long xnregistry_fetch(xnhandle_t handle)
@@ -1180,13 +1186,6 @@ void *xnregistry_fetch(xnhandle_t handle)
 	return object->objaddr;
 
 }
+EXPORT_SYMBOL_GPL(xnregistry_fetch);
 
 /*@}*/
-
-EXPORT_SYMBOL(xnregistry_enter);
-EXPORT_SYMBOL(xnregistry_bind);
-EXPORT_SYMBOL(xnregistry_remove);
-EXPORT_SYMBOL(xnregistry_remove_safe);
-EXPORT_SYMBOL(xnregistry_get);
-EXPORT_SYMBOL(xnregistry_fetch);
-EXPORT_SYMBOL(xnregistry_put);

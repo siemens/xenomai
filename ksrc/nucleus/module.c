@@ -46,13 +46,14 @@ module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
 MODULE_PARM_DESC(sysheap_size, "System heap size (Kb)");
 
 xnqueue_t xnmod_glink_queue;
+EXPORT_SYMBOL_GPL(xnmod_glink_queue);
 
 u_long xnmod_sysheap_size;
 
 int xeno_nucleus_status = -EINVAL;
 
 struct xnsys_ppd __xnsys_global_ppd;
-EXPORT_SYMBOL(__xnsys_global_ppd);
+EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
 
 void xnmod_alloc_glinks(xnqueue_t *freehq)
 {
@@ -80,6 +81,7 @@ void xnmod_alloc_glinks(xnqueue_t *freehq)
 		appendq(freehq, &sholder->glink.plink);
 	}
 }
+EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
 #if defined(CONFIG_PROC_FS) && defined(__KERNEL__)
 
@@ -752,8 +754,7 @@ static int lock_read_proc(char *page,
 
 	return len;
 }
-
-EXPORT_SYMBOL(xnlock_stats);
+EXPORT_SYMBOL_GPL(xnlock_stats);
 
 #endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
 
@@ -1311,9 +1312,6 @@ void __exit __xeno_sys_exit(void)
 
 	xnloginfo("real-time nucleus unloaded.\n");
 }
-
-EXPORT_SYMBOL(xnmod_glink_queue);
-EXPORT_SYMBOL(xnmod_alloc_glinks);
 
 module_init(__xeno_sys_init);
 module_exit(__xeno_sys_exit);

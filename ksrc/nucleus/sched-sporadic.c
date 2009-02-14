@@ -438,7 +438,6 @@ struct xnsched_class xnsched_class_sporadic = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"pss"
 };
-
 EXPORT_SYMBOL_GPL(xnsched_class_sporadic);
 
 static int __init register_sched_class(void)

@@ -123,6 +123,7 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, xnarch_atomic_t *fastl
 	initpq(&synch->pendq);
 	xnarch_init_display_context(synch);
 }
+EXPORT_SYMBOL_GPL(xnsynch_init);
 
 /*!
  * \fn void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
@@ -189,6 +190,7 @@ void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
 /*!
  * \fn struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
@@ -255,6 +257,7 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 
 	return thread;
 }
+EXPORT_SYMBOL_GPL(xnsynch_wakeup_one_sleeper);
 
 /*!
  * \fn void xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnpholder *holder);
@@ -324,6 +327,7 @@ struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnph
 
 	return nholder;
 }
+EXPORT_SYMBOL_GPL(xnsynch_wakeup_this_sleeper);
 
 /*
  * xnsynch_renice_thread() -- This service is used by the PIP code to
@@ -539,6 +543,7 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xnsynch_acquire);
 
 /*! 
  * @internal
@@ -645,6 +650,7 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 		xnsynch_renice_thread(owner, thread);
 	}
 }
+EXPORT_SYMBOL_GPL(xnsynch_requeue_sleeper);
 
 /*!
  * \fn struct xnthread *xnsynch_release(struct xnsynch *synch);
@@ -735,6 +741,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch)
 
 	return newowner;
 }
+EXPORT_SYMBOL_GPL(xnsynch_release);
 
 /*! 
  * \fn struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch);
@@ -773,6 +780,7 @@ struct xnthread *xnsynch_peek_pendq(struct xnsynch *synch)
 
 	return thread;
 }
+EXPORT_SYMBOL_GPL(xnsynch_peek_pendq);
 
 /*! 
  * \fn void xnsynch_flush(struct xnsynch *synch, xnflags_t reason);
@@ -854,6 +862,7 @@ int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 
 	return status;
 }
+EXPORT_SYMBOL_GPL(xnsynch_flush);
 
 /*! 
  * @internal
@@ -918,6 +927,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 
 	xnarch_post_graph_if(synch, 0, emptypq_p(&synch->pendq));
 }
+EXPORT_SYMBOL_GPL(xnsynch_forget_sleeper);
 
 /*! 
  * @internal
@@ -951,17 +961,6 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 			synch->cleanup(synch);
 	}
 }
+EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
 
 /*@}*/
-
-EXPORT_SYMBOL(xnsynch_flush);
-EXPORT_SYMBOL(xnsynch_forget_sleeper);
-EXPORT_SYMBOL(xnsynch_init);
-EXPORT_SYMBOL(xnsynch_release_all_ownerships);
-EXPORT_SYMBOL(xnsynch_requeue_sleeper);
-EXPORT_SYMBOL(xnsynch_sleep_on);
-EXPORT_SYMBOL(xnsynch_wakeup_one_sleeper);
-EXPORT_SYMBOL(xnsynch_wakeup_this_sleeper);
-EXPORT_SYMBOL(xnsynch_peek_pendq);
-EXPORT_SYMBOL(xnsynch_acquire);
-EXPORT_SYMBOL(xnsynch_release);

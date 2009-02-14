@@ -639,6 +639,7 @@ int xnintr_init(xnintr_t *intr,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnintr_init);
 
 /*!
  * \fn int xnintr_destroy (xnintr_t *intr)
@@ -671,6 +672,7 @@ int xnintr_destroy(xnintr_t *intr)
 	xnintr_detach(intr);
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnintr_destroy);
 
 /*!
  * \fn int xnintr_attach (xnintr_t *intr, void *cookie);
@@ -733,6 +735,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnintr_attach);
 
 /*!
  * \fn int xnintr_detach (xnintr_t *intr)
@@ -783,6 +786,7 @@ int xnintr_detach(xnintr_t *intr)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnintr_detach);
 
 /*!
  * \fn int xnintr_enable (xnintr_t *intr)
@@ -815,6 +819,7 @@ int xnintr_enable(xnintr_t *intr)
 
 	return xnarch_enable_irq(intr->irq);
 }
+EXPORT_SYMBOL_GPL(xnintr_enable);
 
 /*!
  * \fn int xnintr_disable (xnintr_t *intr)
@@ -846,6 +851,7 @@ int xnintr_disable(xnintr_t *intr)
 
 	return xnarch_disable_irq(intr->irq);
 }
+EXPORT_SYMBOL_GPL(xnintr_disable);
 
 /*!
  * \fn xnarch_cpumask_t xnintr_affinity (xnintr_t *intr, xnarch_cpumask_t cpumask)
@@ -873,6 +879,7 @@ xnarch_cpumask_t xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
 
 	return xnarch_set_irq_affinity(intr->irq, cpumask);
 }
+EXPORT_SYMBOL_GPL(xnintr_affinity);
 
 #ifdef CONFIG_PROC_FS
 int xnintr_irq_proc(unsigned int irq, char *str)
@@ -998,13 +1005,5 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	return err;
 }
 #endif /* CONFIG_XENO_OPT_STATS */
-
-EXPORT_SYMBOL(xnintr_attach);
-EXPORT_SYMBOL(xnintr_destroy);
-EXPORT_SYMBOL(xnintr_detach);
-EXPORT_SYMBOL(xnintr_disable);
-EXPORT_SYMBOL(xnintr_enable);
-EXPORT_SYMBOL(xnintr_affinity);
-EXPORT_SYMBOL(xnintr_init);
 
 /*@}*/

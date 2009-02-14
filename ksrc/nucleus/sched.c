@@ -406,6 +406,7 @@ int xnsched_set_policy(struct xnthread *thread,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnsched_set_policy);
 
 /* Must be called with nklock locked, interrupts off. */
 void xnsched_track_policy(struct xnthread *thread,
@@ -653,5 +654,3 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 }
 
 #endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */
-
-EXPORT_SYMBOL(xnsched_set_policy);

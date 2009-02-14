@@ -69,10 +69,11 @@ HEAP {
 #include <nucleus/assert.h>
 #include <asm/xenomai/bits/heap.h>
 
-xnheap_t kheap;			/* System heap */
+xnheap_t kheap;		/* System heap */
+EXPORT_SYMBOL_GPL(kheap);
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-xnheap_t kstacks;		/* Private stack pool */
+xnheap_t kstacks;	/* Private stack pool */
 #endif
 
 static void init_extent(xnheap_t *heap, xnextent_t *extent)
@@ -235,6 +236,7 @@ int xnheap_init(xnheap_t *heap,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnheap_init);
 
 /*! 
  * \fn void xnheap_destroy(xnheap_t *heap, void (*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)
@@ -288,6 +290,7 @@ int xnheap_destroy(xnheap_t *heap,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnheap_destroy);
 
 /*
  * get_free_range() -- Obtain a range of contiguous free pages to
@@ -523,6 +526,7 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 
 	return block;
 }
+EXPORT_SYMBOL_GPL(xnheap_alloc);
 
 /*! 
  * \fn int xnheap_test_and_free(xnheap_t *heap,void *block,int (*ckfn)(void *block))
@@ -749,6 +753,7 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnheap_test_and_free);
 
 /*! 
  * \fn int xnheap_free(xnheap_t *heap, void *block)
@@ -787,6 +792,7 @@ int xnheap_free(xnheap_t *heap, void *block)
 {
 	return xnheap_test_and_free(heap, block, NULL);
 }
+EXPORT_SYMBOL_GPL(xnheap_free);
 
 /*! 
  * \fn int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
@@ -832,6 +838,7 @@ int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnheap_extend);
 
 /*! 
  * \fn int xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
@@ -882,6 +889,7 @@ void xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
 	heap->idleq[cpu] = link;
 	xnlock_put_irqrestore(&heap->lock, s);
 }
+EXPORT_SYMBOL_GPL(xnheap_schedule_free);
 
 void xnheap_finalize_free_inner(xnheap_t *heap, int cpu)
 {
@@ -892,6 +900,7 @@ void xnheap_finalize_free_inner(xnheap_t *heap, int cpu)
 		xnheap_free(heap, holder->last);
 	}
 }
+EXPORT_SYMBOL_GPL(xnheap_finalize_free_inner);
 
 int xnheap_check_block(xnheap_t *heap, void *block)
 {
@@ -933,6 +942,7 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnheap_check_block);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 
@@ -1267,19 +1277,7 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
-EXPORT_SYMBOL(xnheap_init_mapped);
-EXPORT_SYMBOL(xnheap_destroy_mapped);
+EXPORT_SYMBOL_GPL(xnheap_init_mapped);
+EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);
 
 /*@}*/
-
-EXPORT_SYMBOL(xnheap_alloc);
-EXPORT_SYMBOL(xnheap_destroy);
-EXPORT_SYMBOL(xnheap_extend);
-EXPORT_SYMBOL(xnheap_test_and_free);
-EXPORT_SYMBOL(xnheap_free);
-EXPORT_SYMBOL(xnheap_init);
-EXPORT_SYMBOL(xnheap_schedule_free);
-EXPORT_SYMBOL(xnheap_finalize_free_inner);
-EXPORT_SYMBOL(xnheap_check_block);
-
-EXPORT_SYMBOL(kheap);

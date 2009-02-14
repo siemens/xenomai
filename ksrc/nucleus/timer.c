@@ -272,6 +272,7 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xntimer_start_aperiodic);
 
 void xntimer_stop_aperiodic(xntimer_t *timer)
 {
@@ -287,11 +288,13 @@ void xntimer_stop_aperiodic(xntimer_t *timer)
 	if (heading && xntimer_sched(timer) == xnpod_current_sched())
 		xntimer_next_local_shot(xntimer_sched(timer));
 }
+EXPORT_SYMBOL_GPL(xntimer_stop_aperiodic);
 
 xnticks_t xntimer_get_date_aperiodic(xntimer_t *timer)
 {
 	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink));
 }
+EXPORT_SYMBOL_GPL(xntimer_get_date_aperiodic);
 
 xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer)
 {
@@ -302,16 +305,19 @@ xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer)
 
 	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink) - tsc);
 }
+EXPORT_SYMBOL_GPL(xntimer_get_timeout_aperiodic);
 
 xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer)
 {
 	return xnarch_tsc_to_ns_rounded(timer->interval);
 }
+EXPORT_SYMBOL_GPL(xntimer_get_interval_aperiodic);
 
 xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer)
 {
 	return xntimerh_date(&timer->aplink);
 }
+EXPORT_SYMBOL_GPL(xntimer_get_raw_expiry_aperiodic);
 
 /*!
  * @internal
@@ -869,6 +875,7 @@ void __xntimer_init(xntimer_t *timer, xntbase_t *base,
 
 	xnarch_init_display_context(timer);
 }
+EXPORT_SYMBOL_GPL(__xntimer_init);
 
 /*! 
  * \fn void xntimer_destroy(xntimer_t *timer)
@@ -907,6 +914,7 @@ void xntimer_destroy(xntimer_t *timer)
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xntimer_destroy);
 
 #ifdef CONFIG_SMP
 /**
@@ -974,6 +982,8 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xntimer_migrate);
+
 #endif /* CONFIG_SMP */
 
 /**
@@ -1003,6 +1013,7 @@ unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now)
 	timer->pexpect += period;
 	return overruns;
 }
+EXPORT_SYMBOL_GPL(xntimer_get_overruns);
 
 /*!
  * @internal
@@ -1051,6 +1062,7 @@ void xntimer_freeze(void)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
+EXPORT_SYMBOL_GPL(xntimer_freeze);
 
 xntbops_t nktimer_ops_aperiodic = {
 
@@ -1064,17 +1076,3 @@ xntbops_t nktimer_ops_aperiodic = {
 };
 
 /*@}*/
-
-EXPORT_SYMBOL(xntimer_start_aperiodic);
-EXPORT_SYMBOL(xntimer_stop_aperiodic);
-EXPORT_SYMBOL(xntimer_get_date_aperiodic);
-EXPORT_SYMBOL(xntimer_get_timeout_aperiodic);
-EXPORT_SYMBOL(xntimer_get_interval_aperiodic);
-EXPORT_SYMBOL(xntimer_get_raw_expiry_aperiodic);
-EXPORT_SYMBOL(__xntimer_init);
-EXPORT_SYMBOL(xntimer_destroy);
-EXPORT_SYMBOL(xntimer_freeze);
-EXPORT_SYMBOL(xntimer_get_overruns);
-#ifdef CONFIG_SMP
-EXPORT_SYMBOL(xntimer_migrate);
-#endif /* CONFIG_SMP */

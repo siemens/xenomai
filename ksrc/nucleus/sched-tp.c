@@ -225,12 +225,14 @@ void xnsched_tp_start_schedule(struct xnsched *sched)
 	tp->tf_start = xnpod_get_cpu_time();
 	tp_schedule_next(&sched->tp);
 }
+EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);
 
 void xnsched_tp_stop_schedule(struct xnsched *sched)
 {
 	struct xnsched_tp *tp = &sched->tp;
 	xntimer_stop(&tp->tf_timer);
 }
+EXPORT_SYMBOL_GPL(xnsched_tp_stop_schedule);
 
 struct xnsched_tp_schedule *
 xnsched_tp_set_schedule(struct xnsched *sched,
@@ -262,6 +264,7 @@ xnsched_tp_set_schedule(struct xnsched *sched,
 
 	return old_gps;
 }
+EXPORT_SYMBOL_GPL(xnsched_tp_set_schedule);
 
 int xnsched_tp_get_partition(struct xnsched *sched)
 {
@@ -272,6 +275,7 @@ int xnsched_tp_get_partition(struct xnsched *sched)
 
 	return tp->tps - tp->partitions;
 }
+EXPORT_SYMBOL_GPL(xnsched_tp_get_partition);
 
 struct xnsched_class xnsched_class_tp = {
 
@@ -291,12 +295,7 @@ struct xnsched_class xnsched_class_tp = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"tp"
 };
-
 EXPORT_SYMBOL_GPL(xnsched_class_tp);
-EXPORT_SYMBOL_GPL(xnsched_tp_set_schedule);
-EXPORT_SYMBOL_GPL(xnsched_tp_start_schedule);
-EXPORT_SYMBOL_GPL(xnsched_tp_stop_schedule);
-EXPORT_SYMBOL_GPL(xnsched_tp_get_partition);
 
 static int __init register_sched_class(void)
 {

@@ -354,6 +354,7 @@ int xnpipe_connect(int minor, struct xnpipe_operations *ops, void *xstate)
 
 	return minor;
 }
+EXPORT_SYMBOL_GPL(xnpipe_connect);
 
 int xnpipe_disconnect(int minor)
 {
@@ -422,6 +423,7 @@ cleanup:
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpipe_disconnect);
 
 ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 {
@@ -480,6 +482,7 @@ ssize_t xnpipe_send(int minor, struct xnpipe_mh *mh, size_t size, int flags)
 
 	return (ssize_t) size;
 }
+EXPORT_SYMBOL_GPL(xnpipe_send);
 
 ssize_t xnpipe_mfixup(int minor, struct xnpipe_mh *mh, ssize_t size)
 {
@@ -508,6 +511,7 @@ ssize_t xnpipe_mfixup(int minor, struct xnpipe_mh *mh, ssize_t size)
 
 	return (ssize_t) size;
 }
+EXPORT_SYMBOL_GPL(xnpipe_mfixup);
 
 ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 {
@@ -574,6 +578,7 @@ ssize_t xnpipe_recv(int minor, struct xnpipe_mh **pmh, xnticks_t timeout)
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnpipe_recv);
 
 int xnpipe_flush(int minor, int mode)
 {
@@ -611,6 +616,7 @@ int xnpipe_flush(int minor, int mode)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnpipe_flush);
 
 /* Must be entered with nklock held, interrupts off. */
 #define xnpipe_cleanup_user_conn(__state, __s)				\
@@ -1132,10 +1138,3 @@ void xnpipe_umount(void)
 
 	class_destroy(xnpipe_class);
 }
-
-EXPORT_SYMBOL(xnpipe_connect);
-EXPORT_SYMBOL(xnpipe_disconnect);
-EXPORT_SYMBOL(xnpipe_send);
-EXPORT_SYMBOL(xnpipe_mfixup);
-EXPORT_SYMBOL(xnpipe_recv);
-EXPORT_SYMBOL(xnpipe_flush);

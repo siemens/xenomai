@@ -68,7 +68,7 @@ void xnselect_init(struct xnselect *select_block)
 {
 	initq(&select_block->bindings);
 }
-EXPORT_SYMBOL(xnselect_init);
+EXPORT_SYMBOL_GPL(xnselect_init);
 
 static inline int xnselect_wakeup(struct xnselector *selector)
 {
@@ -132,7 +132,7 @@ int xnselect_bind(struct xnselect *select_block,
 
 	return 0;
 }
-EXPORT_SYMBOL(xnselect_bind);
+EXPORT_SYMBOL_GPL(xnselect_bind);
 
 /* Must be called with nklock locked irqs off */
 int __xnselect_signal(struct xnselect *select_block, unsigned state)
@@ -163,7 +163,7 @@ int __xnselect_signal(struct xnselect *select_block, unsigned state)
 
 	return resched;
 }
-EXPORT_SYMBOL(__xnselect_signal);
+EXPORT_SYMBOL_GPL(__xnselect_signal);
 
 /** 
  * Destroy the @a xnselect structure associated with a file descriptor.
@@ -198,7 +198,7 @@ void xnselect_destroy(struct xnselect *select_block)
 	}
 	xnlock_put_irqrestore(&nklock, s);
 }
-EXPORT_SYMBOL(xnselect_destroy);
+EXPORT_SYMBOL_GPL(xnselect_destroy);
 
 static unsigned
 fd_set_andnot(fd_set *result, fd_set *first, fd_set *second, unsigned n)
@@ -282,7 +282,7 @@ int xnselector_init(struct xnselector *selector)
 	initq(&selector->bindings);
 	return 0;
 }
-EXPORT_SYMBOL(xnselector_init);
+EXPORT_SYMBOL_GPL(xnselector_init);
 
 /** 
  * Check the state of a number of file descriptors, wait for a state change if
@@ -377,7 +377,7 @@ int xnselect(struct xnselector *selector,
 
 	return 0; /* Timeout */
 }
-EXPORT_SYMBOL(xnselect);
+EXPORT_SYMBOL_GPL(xnselect);
 
 /** 
  * Destroy a selector block.
@@ -411,6 +411,6 @@ void xnselector_destroy(struct xnselector *selector)
 	if (xnsynch_destroy(&selector->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 }
-EXPORT_SYMBOL(xnselector_destroy);
+EXPORT_SYMBOL_GPL(xnselector_destroy);
 
 /*@}*/

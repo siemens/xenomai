@@ -261,5 +261,4 @@ int *xnthread_get_errno_location(xnthread_t *thread)
 
 	return &thread->errcode;
 }
-
-EXPORT_SYMBOL(xnthread_get_errno_location);
+EXPORT_SYMBOL_GPL(xnthread_get_errno_location);

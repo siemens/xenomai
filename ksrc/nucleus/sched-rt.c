@@ -179,7 +179,6 @@ struct xnsched_class xnsched_class_rt = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"rt"
 };
-
 EXPORT_SYMBOL_GPL(xnsched_class_rt);
 
 static int __init register_sched_class(void)

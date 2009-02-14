@@ -62,7 +62,10 @@ static int xn_gid_arg = -1;
 module_param_named(xenomai_gid, xn_gid_arg, int, 0644);
 MODULE_PARM_DESC(xenomai_gid, "GID of the group with access to Xenomai services");
 
-int nkthrptd, nkerrptd;
+int nkthrptd;
+EXPORT_SYMBOL_GPL(nkthrptd);
+int nkerrptd;
+EXPORT_SYMBOL_GPL(nkerrptd);
 
 struct xnskin_slot muxtable[XENOMAI_MUX_NR];
 
@@ -1010,6 +1013,7 @@ redo:
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(xnshadow_harden);
 
 /*! 
  * @internal
@@ -1109,6 +1113,7 @@ void xnshadow_relax(int notify)
 		  "thread %p thread_name %s comm %s",
 		  thread, xnthread_name(thread), current->comm);
 }
+EXPORT_SYMBOL_GPL(xnshadow_relax);
 
 void xnshadow_exit(void)
 {
@@ -1273,6 +1278,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(xnshadow_map);
 
 void xnshadow_unmap(xnthread_t *thread)
 {
@@ -1303,6 +1309,7 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
+EXPORT_SYMBOL_GPL(xnshadow_unmap);
 
 int xnshadow_wait_barrier(struct pt_regs *regs)
 {
@@ -1346,6 +1353,7 @@ int xnshadow_wait_barrier(struct pt_regs *regs)
 
 	return xnshadow_harden();
 }
+EXPORT_SYMBOL_GPL(xnshadow_wait_barrier);
 
 void xnshadow_start(struct xnthread *thread)
 {
@@ -1362,6 +1370,7 @@ void xnshadow_start(struct xnthread *thread)
 		/* Wakeup the Linux mate waiting on the barrier. */
 		schedule_linux_call(LO_START_REQ, p, 0);
 }
+EXPORT_SYMBOL_GPL(xnshadow_start);
 
 /* Called with nklock locked, Xenomai interrupts off. */
 void xnshadow_renice(struct xnthread *thread)
@@ -1386,6 +1395,7 @@ void xnshadow_suspend(struct xnthread *thread)
 	/* Called with nklock locked, Xenomai interrupts off. */
 	xnshadow_send_sig(thread, SIGSHADOW, SIGSHADOW_ACTION_HARDEN, 1);
 }
+EXPORT_SYMBOL_GPL(xnshadow_suspend);
 
 static int xnshadow_sys_migrate(struct pt_regs *regs)
 {
@@ -1683,6 +1693,7 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 
 	read_unlock(&tasklist_lock);
 }
+EXPORT_SYMBOL_GPL(xnshadow_signal_completion);
 
 static int xnshadow_sys_completion(struct pt_regs *regs)
 {
@@ -1880,6 +1891,7 @@ void xnshadow_send_sig(xnthread_t *thread, int sig, int arg, int specific)
 			    xnthread_user_task(thread),
 			    xnshadow_sig_mux(sig, specific ? arg : 0));
 }
+EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 
 static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 {
@@ -2465,6 +2477,7 @@ int xnshadow_register_interface(struct xnskin_props *props)
 
 	return -ENOBUFS;
 }
+EXPORT_SYMBOL_GPL(xnshadow_register_interface);
 
 /*
  * xnshadow_unregister_interface() -- Unregister a skin/interface.
@@ -2502,6 +2515,7 @@ int xnshadow_unregister_interface(int muxid)
 
 	return err;
 }
+EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
 
 /**
  * Return the per-process data attached to the calling process.
@@ -2526,6 +2540,7 @@ xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid)
 
 	return NULL;
 }
+EXPORT_SYMBOL_GPL(xnshadow_ppd_get);
 
 void xnshadow_grab_events(void)
 {
@@ -2640,18 +2655,3 @@ void xnshadow_cleanup(void)
 }
 
 /*@}*/
-
-EXPORT_SYMBOL(xnshadow_map);
-EXPORT_SYMBOL(xnshadow_register_interface);
-EXPORT_SYMBOL(xnshadow_harden);
-EXPORT_SYMBOL(xnshadow_relax);
-EXPORT_SYMBOL(xnshadow_start);
-EXPORT_SYMBOL(xnshadow_signal_completion);
-EXPORT_SYMBOL(xnshadow_unmap);
-EXPORT_SYMBOL(xnshadow_send_sig);
-EXPORT_SYMBOL(xnshadow_unregister_interface);
-EXPORT_SYMBOL(xnshadow_wait_barrier);
-EXPORT_SYMBOL(xnshadow_suspend);
-EXPORT_SYMBOL(xnshadow_ppd_get);
-EXPORT_SYMBOL(nkthrptd);
-EXPORT_SYMBOL(nkerrptd);
