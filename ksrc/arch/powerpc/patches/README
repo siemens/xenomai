@@ -63,7 +63,7 @@ Patch			        Based on GIT commit # / TAG
 2.6.25-DENX-*/powerpc		DENX-v2.6.25-stable
 2.6.26-DENX-*/powerpc		DENX-v2.6.26-stable
 2.6.27-DENX-*/powerpc		DENX-v2.6.27-stable
-2.6.28-DENX-2.4-03/powerpc	002d71a004e229f09ac95c2c4f4297eb565f06b4
+2.6.28.5-DENX-*/powerpc		DENX-v2.6.28-stable
 
 [1] http://www.gna.org/projects/adeos/
 [2] git://www.denx.de/git/linuxppc_2_4_devel

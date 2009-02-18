@@ -1,6 +1,6 @@
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/Makefile b/Makefile
-index 345673d..99a954f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/Makefile
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/Makefile b/Makefile
+index 5b886d4..1f105eb 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/Makefile
 +++ b/Makefile
 @@ -525,6 +525,10 @@ endif
  # Arch Makefiles may override this setting
@@ -13,11 +13,11 @@ index 345673d..99a954f 100644
  ifdef CONFIG_FRAME_POINTER
  KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
  else
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 525c13a..ce89d59 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/Kconfig
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index de93c07..8d74c91 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/Kconfig
 +++ b/arch/powerpc/Kconfig
-@@ -136,6 +136,10 @@ config SYSVIPC_COMPAT
+@@ -137,6 +137,10 @@ config SYSVIPC_COMPAT
  	depends on COMPAT && SYSVIPC
  	default y
  
@@ -28,7 +28,7 @@ index 525c13a..ce89d59 100644
  # All PPC32s use generic nvram driver through ppc_md
  config GENERIC_NVRAM
  	bool
-@@ -233,6 +237,24 @@ source "arch/powerpc/platforms/Kconfig"
+@@ -234,6 +238,24 @@ source "arch/powerpc/platforms/Kconfig"
  
  menu "Kernel options"
  
@@ -53,9 +53,9 @@ index 525c13a..ce89d59 100644
  config HIGHMEM
  	bool "High memory support"
  	depends on PPC32
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/boot/Makefile b/arch/powerpc/boot/Makefile
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/boot/Makefile b/arch/powerpc/boot/Makefile
 index 3d3daa6..1da08f0 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/boot/Makefile
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/boot/Makefile
 +++ b/arch/powerpc/boot/Makefile
 @@ -29,6 +29,14 @@ ifdef CONFIG_DEBUG_INFO
  BOOTCFLAGS	+= -g
@@ -72,9 +72,9 @@ index 3d3daa6..1da08f0 100644
  ifeq ($(call cc-option-yn, -fstack-protector),y)
  BOOTCFLAGS	+= -fno-stack-protector
  endif
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/exception.h b/arch/powerpc/include/asm/exception.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/exception.h b/arch/powerpc/include/asm/exception.h
 index d3d4534..3f7addf 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/exception.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/exception.h
 +++ b/arch/powerpc/include/asm/exception.h
 @@ -47,6 +47,30 @@
  #define EX_R3		64
@@ -227,9 +227,9 @@ index d3d4534..3f7addf 100644
  /*
   * When the idle code in power4_idle puts the CPU into NAP mode,
   * it has to do so in a loop, and relies on the external interrupt
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/hw_irq.h b/arch/powerpc/include/asm/hw_irq.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/hw_irq.h b/arch/powerpc/include/asm/hw_irq.h
 index f75a5fc..32242c5 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/hw_irq.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/hw_irq.h
 +++ b/arch/powerpc/include/asm/hw_irq.h
 @@ -14,6 +14,8 @@
  extern void timer_interrupt(struct pt_regs *);
@@ -553,9 +553,9 @@ index f75a5fc..32242c5 100644
  
  #define hard_irq_enable()	local_irq_enable()
  #define hard_irq_disable()	local_irq_disable()
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..0b128b5
+index 0000000..d7f08b0
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,235 @@
@@ -606,10 +606,10 @@ index 0000000..0b128b5
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.4-03"
++#define IPIPE_ARCH_STRING	"2.4-04"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -794,7 +794,7 @@ index 0000000..0b128b5
 +#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
 +
 +#endif /* !__ASM_POWERPC_IPIPE_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
 new file mode 100644
 index 0000000..bc21d83
 --- /dev/null
@@ -955,9 +955,9 @@ index 0000000..bc21d83
 +#endif /* CONFIG_IPIPE */
 +
 +#endif	/* !__ASM_POWERPC_IPIPE_BASE_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/mmu_context.h b/arch/powerpc/include/asm/mmu_context.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/mmu_context.h b/arch/powerpc/include/asm/mmu_context.h
 index 6b993ef..368a8ba 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/mmu_context.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/mmu_context.h
 +++ b/arch/powerpc/include/asm/mmu_context.h
 @@ -166,6 +166,8 @@ static inline void destroy_context(struct mm_struct *mm)
  	preempt_enable();
@@ -1116,9 +1116,9 @@ index 6b993ef..368a8ba 100644
 -#endif /* CONFIG_PPC64 */
  #endif /* __KERNEL__ */
  #endif /* __ASM_POWERPC_MMU_CONTEXT_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/mpic.h b/arch/powerpc/include/asm/mpic.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/mpic.h b/arch/powerpc/include/asm/mpic.h
 index 8fc3776..0e5e861 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/mpic.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/mpic.h
 +++ b/arch/powerpc/include/asm/mpic.h
 @@ -281,7 +281,7 @@ struct mpic
  #ifdef CONFIG_MPIC_U3_HT_IRQS
@@ -1129,9 +1129,9 @@ index 8fc3776..0e5e861 100644
  #endif
  
  	/* Register access method */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/paca.h b/arch/powerpc/include/asm/paca.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/paca.h b/arch/powerpc/include/asm/paca.h
 index 082b3ae..dfe2114 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/paca.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/paca.h
 +++ b/arch/powerpc/include/asm/paca.h
 @@ -96,8 +96,12 @@ struct paca_struct {
  	u64 saved_r1;			/* r1 save for RTAS calls */
@@ -1146,9 +1146,9 @@ index 082b3ae..dfe2114 100644
  	u8 io_sync;			/* writel() needs spin_unlock sync */
  
  	/* Stuff for accurate time accounting */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/ptrace.h b/arch/powerpc/include/asm/ptrace.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/ptrace.h b/arch/powerpc/include/asm/ptrace.h
 index c9c678f..670f23a 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/ptrace.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/ptrace.h
 +++ b/arch/powerpc/include/asm/ptrace.h
 @@ -36,7 +36,7 @@ struct pt_regs {
  	unsigned long xer;
@@ -1159,9 +1159,9 @@ index c9c678f..670f23a 100644
  #else
  	unsigned long mq;		/* 601 only (not used at present) */
  					/* Used on APUS to hold IPL value. */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/qe_ic.h b/arch/powerpc/include/asm/qe_ic.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/qe_ic.h b/arch/powerpc/include/asm/qe_ic.h
 index 56a7745..13fe7a3 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/qe_ic.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/qe_ic.h
 +++ b/arch/powerpc/include/asm/qe_ic.h
 @@ -64,6 +64,12 @@ int qe_ic_set_high_priority(unsigned int virq, unsigned int priority, int high);
  struct qe_ic;
@@ -1221,9 +1221,9 @@ index 56a7745..13fe7a3 100644
  
  	desc->chip->eoi(irq);
  }
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/reg.h b/arch/powerpc/include/asm/reg.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/reg.h b/arch/powerpc/include/asm/reg.h
 index e6885c5..499ac30 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/reg.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/reg.h
 +++ b/arch/powerpc/include/asm/reg.h
 @@ -769,7 +769,7 @@
  
@@ -1234,9 +1234,9 @@ index e6885c5..499ac30 100644
  
  extern void ppc64_runlatch_on(void);
  extern void ppc64_runlatch_off(void);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/smp.h b/arch/powerpc/include/asm/smp.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/smp.h b/arch/powerpc/include/asm/smp.h
 index 1866cec..d422880 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/smp.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/smp.h
 +++ b/arch/powerpc/include/asm/smp.h
 @@ -80,6 +80,7 @@ extern int cpu_to_core_id(int cpu);
  #define PPC_MSG_RESCHEDULE      1
@@ -1246,9 +1246,9 @@ index 1866cec..d422880 100644
  
  void smp_init_iSeries(void);
  void smp_init_pSeries(void);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/thread_info.h b/arch/powerpc/include/asm/thread_info.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/thread_info.h b/arch/powerpc/include/asm/thread_info.h
 index 9665a26..51ce8a9 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/thread_info.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/thread_info.h
 +++ b/arch/powerpc/include/asm/thread_info.h
 @@ -112,6 +112,7 @@ static inline struct thread_info *current_thread_info(void)
  #define TIF_FREEZE		14	/* Freezing for suspend */
@@ -1266,9 +1266,9 @@ index 9665a26..51ce8a9 100644
  #define _TIF_SYSCALL_T_OR_A	(_TIF_SYSCALL_TRACE|_TIF_SYSCALL_AUDIT|_TIF_SECCOMP)
  
  #define _TIF_USER_WORK_MASK	(_TIF_SIGPENDING | _TIF_NEED_RESCHED | \
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/time.h b/arch/powerpc/include/asm/time.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/time.h b/arch/powerpc/include/asm/time.h
 index 3178691..af89c26 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/include/asm/time.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/include/asm/time.h
 +++ b/arch/powerpc/include/asm/time.h
 @@ -30,6 +30,7 @@ extern unsigned long tb_ticks_per_usec;
  extern unsigned long tb_ticks_per_sec;
@@ -1278,9 +1278,9 @@ index 3178691..af89c26 100644
  
  struct rtc_time;
  extern void to_tm(int tim, struct rtc_time * tm);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/Makefile b/arch/powerpc/kernel/Makefile
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/Makefile b/arch/powerpc/kernel/Makefile
 index 92673b4..9919e9c 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/Makefile
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/Makefile
 +++ b/arch/powerpc/kernel/Makefile
 @@ -38,6 +38,12 @@ obj-$(CONFIG_PPC64)		+= setup_64.o sys_ppc32.o \
  obj64-$(CONFIG_RELOCATABLE)	+= reloc_64.o
@@ -1295,9 +1295,9 @@ index 92673b4..9919e9c 100644
  obj-$(CONFIG_PPC_970_NAP)	+= idle_power4.o
  obj-$(CONFIG_PPC_OF)		+= of_device.o of_platform.o prom_parse.o
  obj-$(CONFIG_PPC_CLOCK)		+= clock.o
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/asm-offsets.c b/arch/powerpc/kernel/asm-offsets.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/asm-offsets.c b/arch/powerpc/kernel/asm-offsets.c
 index 75c5dd0..799070e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/asm-offsets.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/asm-offsets.c
 +++ b/arch/powerpc/kernel/asm-offsets.c
 @@ -124,8 +124,12 @@ int main(void)
  	DEFINE(PACATOC, offsetof(struct paca_struct, kernel_toc));
@@ -1322,9 +1322,9 @@ index 75c5dd0..799070e 100644
  
  	/* These _only_ to be used with {PROM,RTAS}_FRAME_SIZE!!! */
  	DEFINE(_SRR0, STACK_FRAME_OVERHEAD+sizeof(struct pt_regs));
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/cputable.c b/arch/powerpc/kernel/cputable.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/cputable.c b/arch/powerpc/kernel/cputable.c
 index 7e87195..b847eef 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/cputable.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/cputable.c
 +++ b/arch/powerpc/kernel/cputable.c
 @@ -1649,7 +1649,7 @@ static struct cpu_spec __initdata cpu_specs[] = {
  
@@ -1335,9 +1335,9 @@ index 7e87195..b847eef 100644
  {
  	struct cpu_spec *s = cpu_specs;
  	struct cpu_spec *t = &the_cpu_spec;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/entry_32.S b/arch/powerpc/kernel/entry_32.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/entry_32.S b/arch/powerpc/kernel/entry_32.S
 index 7ecc0d1..6de9651 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/entry_32.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/entry_32.S
 +++ b/arch/powerpc/kernel/entry_32.S
 @@ -174,8 +174,25 @@ transfer_to_handler:
           * check for stack overflow
@@ -1486,9 +1486,9 @@ index 7ecc0d1..6de9651 100644
  /*
   * PROM code for specific machines follows.  Put it
   * here so it's easy to add arch-specific sections later.
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/entry_64.S b/arch/powerpc/kernel/entry_64.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/entry_64.S b/arch/powerpc/kernel/entry_64.S
 index 3d1850a..a4f9212 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/entry_64.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/entry_64.S
 +++ b/arch/powerpc/kernel/entry_64.S
 @@ -105,6 +105,7 @@ system_call_common:
  	addi	r9,r1,STACK_FRAME_OVERHEAD
@@ -1739,9 +1739,9 @@ index 3d1850a..a4f9212 100644
  	/* There is no way it is acceptable to get here with interrupts enabled,
  	 * check it with the asm equivalent of WARN_ON
  	 */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_32.S b/arch/powerpc/kernel/head_32.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_32.S b/arch/powerpc/kernel/head_32.S
 index 0c32682..0a6bc6c 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_32.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_32.S
 +++ b/arch/powerpc/kernel/head_32.S
 @@ -316,6 +316,12 @@ i##n:								\
  	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
@@ -1780,9 +1780,9 @@ index 0c32682..0a6bc6c 100644
  
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_40x.S b/arch/powerpc/kernel/head_40x.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_40x.S b/arch/powerpc/kernel/head_40x.S
 index 56d8e5d..aee104e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_40x.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_40x.S
 +++ b/arch/powerpc/kernel/head_40x.S
 @@ -233,6 +233,12 @@ label:
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
@@ -1821,9 +1821,9 @@ index 56d8e5d..aee104e 100644
  
  #if 0
  /* NOTE:
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_44x.S b/arch/powerpc/kernel/head_44x.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_44x.S b/arch/powerpc/kernel/head_44x.S
 index f3a1ea9..e0b7f44 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_44x.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_44x.S
 +++ b/arch/powerpc/kernel/head_44x.S
 @@ -298,8 +298,11 @@ interrupt_base:
  		/* Instruction Storage Interrupt */
@@ -1839,9 +1839,9 @@ index f3a1ea9..e0b7f44 100644
  
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_64.S b/arch/powerpc/kernel/head_64.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_64.S b/arch/powerpc/kernel/head_64.S
 index a63b294..e7f66ce 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_64.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_64.S
 +++ b/arch/powerpc/kernel/head_64.S
 @@ -368,6 +368,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_REAL_LE)
  	STD_EXCEPTION_PSERIES(., altivec_unavailable)
@@ -2043,9 +2043,9 @@ index a63b294..e7f66ce 100644
  
  	bl	.start_kernel
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_8xx.S b/arch/powerpc/kernel/head_8xx.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_8xx.S b/arch/powerpc/kernel/head_8xx.S
 index 3c9452d..731677d 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_8xx.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_8xx.S
 +++ b/arch/powerpc/kernel/head_8xx.S
 @@ -184,6 +184,12 @@ i##n:								\
  	EXC_XFER_TEMPLATE(n, hdlr, n, NOCOPY, transfer_to_handler_full,	\
@@ -2084,9 +2084,9 @@ index 3c9452d..731677d 100644
  
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_booke.h b/arch/powerpc/kernel/head_booke.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_booke.h b/arch/powerpc/kernel/head_booke.h
 index fce2df9..e85cb35 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_booke.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_booke.h
 +++ b/arch/powerpc/kernel/head_booke.h
 @@ -209,6 +209,12 @@ label:
  	EXC_XFER_TEMPLATE(hdlr, n, MSR_KERNEL, NOCOPY, transfer_to_handler_full, \
@@ -2125,9 +2125,9 @@ index fce2df9..e85cb35 100644
  
  #define FP_UNAVAILABLE_EXCEPTION					      \
  	START_EXCEPTION(FloatingPointUnavailable)			      \
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_fsl_booke.S b/arch/powerpc/kernel/head_fsl_booke.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_fsl_booke.S b/arch/powerpc/kernel/head_fsl_booke.S
 index 590304c..790f2a3 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/head_fsl_booke.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/head_fsl_booke.S
 +++ b/arch/powerpc/kernel/head_fsl_booke.S
 @@ -485,7 +485,11 @@ interrupt_base:
  	INSTRUCTION_STORAGE_EXCEPTION
@@ -2141,9 +2141,9 @@ index 590304c..790f2a3 100644
  
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/idle.c b/arch/powerpc/kernel/idle.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/idle.c b/arch/powerpc/kernel/idle.c
 index 31982d0..3d6772f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/idle.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/idle.c
 +++ b/arch/powerpc/kernel/idle.c
 @@ -59,6 +59,7 @@ void cpu_idle(void)
  		tick_nohz_stop_sched_tick(1);
@@ -2169,9 +2169,9 @@ index 31982d0..3d6772f 100644
  				set_thread_flag(TIF_POLLING_NRFLAG);
  
  			} else {
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/idle_power4.S b/arch/powerpc/kernel/idle_power4.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/idle_power4.S b/arch/powerpc/kernel/idle_power4.S
 index 5328709..8c3a2b7 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/idle_power4.S
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/idle_power4.S
 +++ b/arch/powerpc/kernel/idle_power4.S
 @@ -34,9 +34,11 @@ END_FTR_SECTION_IFCLR(CPU_FTR_CAN_NAP)
  	rldicl	r0,r7,48,1
@@ -2198,7 +2198,7 @@ index 5328709..8c3a2b7 100644
  BEGIN_FTR_SECTION
  	DSSALL
  	sync
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
 index 0000000..9eea55e
 --- /dev/null
@@ -3019,9 +3019,9 @@ index 0000000..9eea55e
 +void notrace _mcount(void);
 +EXPORT_SYMBOL(_mcount);
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/irq.c b/arch/powerpc/kernel/irq.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/irq.c b/arch/powerpc/kernel/irq.c
 index ac222d0..e86600d 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/irq.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/irq.c
 +++ b/arch/powerpc/kernel/irq.c
 @@ -71,7 +71,7 @@
  #endif
@@ -3051,7 +3051,7 @@ index ac222d0..e86600d 100644
  #endif /* CONFIG_PPC64 */
  
  int show_interrupts(struct seq_file *p, void *v)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/mcount_32.S b/arch/powerpc/kernel/mcount_32.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/mcount_32.S b/arch/powerpc/kernel/mcount_32.S
 new file mode 100644
 index 0000000..9b6ceaa
 --- /dev/null
@@ -3132,7 +3132,7 @@ index 0000000..9b6ceaa
 + /* ...unwind the stack frame, and return to your usual programming.  */
 +	addi	r1,r1,48
 +	bctr
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/mcount_64.S b/arch/powerpc/kernel/mcount_64.S
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/mcount_64.S b/arch/powerpc/kernel/mcount_64.S
 new file mode 100644
 index 0000000..725f65a
 --- /dev/null
@@ -3200,9 +3200,9 @@ index 0000000..725f65a
 +2:	
 +	ld	r3, -16(r1)
 +	blr
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/process.c b/arch/powerpc/kernel/process.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/process.c b/arch/powerpc/kernel/process.c
 index d5d1417..8ef4be4 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/process.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/process.c
 +++ b/arch/powerpc/kernel/process.c
 @@ -398,7 +398,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
  	}
@@ -3240,9 +3240,9 @@ index d5d1417..8ef4be4 100644
  void ppc64_runlatch_on(void)
  {
  	unsigned long ctrl;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/prom_init_check.sh b/arch/powerpc/kernel/prom_init_check.sh
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/prom_init_check.sh b/arch/powerpc/kernel/prom_init_check.sh
 index ea3a2ec..0c233d3 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/prom_init_check.sh
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/prom_init_check.sh
 +++ b/arch/powerpc/kernel/prom_init_check.sh
 @@ -20,7 +20,7 @@ WHITELIST="add_reloc_offset __bss_start __bss_stop copy_and_flush
  _end enter_prom memcpy memset reloc_offset __secondary_hold
@@ -3253,9 +3253,9 @@ index ea3a2ec..0c233d3 100644
  
  NM="$1"
  OBJ="$2"
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/setup_64.c b/arch/powerpc/kernel/setup_64.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/setup_64.c b/arch/powerpc/kernel/setup_64.c
 index 169d74c..351c010 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/setup_64.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/setup_64.c
 +++ b/arch/powerpc/kernel/setup_64.c
 @@ -236,8 +236,10 @@ void early_setup_secondary(void)
  {
@@ -3292,9 +3292,9 @@ index 169d74c..351c010 100644
  }
  #endif
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/smp.c b/arch/powerpc/kernel/smp.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/smp.c b/arch/powerpc/kernel/smp.c
 index ff9f701..2fc340f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/smp.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/smp.c
 +++ b/arch/powerpc/kernel/smp.c
 @@ -145,8 +145,12 @@ void arch_send_call_function_ipi(cpumask_t mask)
  #ifdef CONFIG_DEBUGGER
@@ -3331,9 +3331,9 @@ index ff9f701..2fc340f 100644
  	atomic_inc(&init_mm.mm_count);
  	current->active_mm = &init_mm;
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/time.c b/arch/powerpc/kernel/time.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/time.c b/arch/powerpc/kernel/time.c
 index 38b0dc1..685c162 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/time.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/time.c
 +++ b/arch/powerpc/kernel/time.c
 @@ -124,6 +124,8 @@ struct decrementer_clock {
  
@@ -3406,9 +3406,9 @@ index 38b0dc1..685c162 100644
  	set_irq_regs(old_regs);
  }
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/traps.c b/arch/powerpc/kernel/traps.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/traps.c b/arch/powerpc/kernel/traps.c
 index f5def6c..bad29c0 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/kernel/traps.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/kernel/traps.c
 +++ b/arch/powerpc/kernel/traps.c
 @@ -485,6 +485,9 @@ void machine_check_exception(struct pt_regs *regs)
  {
@@ -3574,9 +3574,9 @@ index f5def6c..bad29c0 100644
  	die("Unrecoverable exception", regs, SIGABRT);
  }
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/lib/code-patching.c b/arch/powerpc/lib/code-patching.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/lib/code-patching.c b/arch/powerpc/lib/code-patching.c
 index 7c975d4..0c163f2 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/lib/code-patching.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/lib/code-patching.c
 +++ b/arch/powerpc/lib/code-patching.c
 @@ -15,17 +15,20 @@
  #include <asm/code-patching.h>
@@ -3673,9 +3673,9 @@ index 7c975d4..0c163f2 100644
  unsigned int translate_branch(const unsigned int *dest, const unsigned int *src)
  {
  	unsigned long target;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/lib/feature-fixups.c b/arch/powerpc/lib/feature-fixups.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/lib/feature-fixups.c b/arch/powerpc/lib/feature-fixups.c
 index 8c5a03b..84cb78c 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/lib/feature-fixups.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/lib/feature-fixups.c
 +++ b/arch/powerpc/lib/feature-fixups.c
 @@ -28,6 +28,7 @@ struct fixup_entry {
  	long		alt_end_off;
@@ -3717,9 +3717,9 @@ index 8c5a03b..84cb78c 100644
  void do_lwsync_fixups(unsigned long value, void *fixup_start, void *fixup_end)
  {
  	unsigned int *start, *end, *dest;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/fault.c b/arch/powerpc/mm/fault.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/fault.c b/arch/powerpc/mm/fault.c
 index 565b7a2..a911a95 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/fault.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/fault.c
 +++ b/arch/powerpc/mm/fault.c
 @@ -124,6 +124,9 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
  	int trap = TRAP(regs);
@@ -3731,9 +3731,9 @@ index 565b7a2..a911a95 100644
  #if !(defined(CONFIG_4xx) || defined(CONFIG_BOOKE))
  	/*
  	 * Fortunately the bit assignments in SRR1 for an instruction
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/hash_native_64.c b/arch/powerpc/mm/hash_native_64.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/hash_native_64.c b/arch/powerpc/mm/hash_native_64.c
 index c22caff..ebeb85e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/hash_native_64.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/hash_native_64.c
 +++ b/arch/powerpc/mm/hash_native_64.c
 @@ -37,9 +37,9 @@
  #define HPTE_LOCK_BIT 3
@@ -3861,9 +3861,9 @@ index c22caff..ebeb85e 100644
  	want_v = hpte_encode_v(va, psize, ssize);
  	native_lock_hpte(hptep);
  	hpte_v = hptep->v;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/hash_utils_64.c b/arch/powerpc/mm/hash_utils_64.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/hash_utils_64.c b/arch/powerpc/mm/hash_utils_64.c
 index 8d5b475..976d988 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/hash_utils_64.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/hash_utils_64.c
 +++ b/arch/powerpc/mm/hash_utils_64.c
 @@ -111,7 +111,7 @@ int mmu_ci_restrictions;
  #ifdef CONFIG_DEBUG_PAGEALLOC
@@ -3914,9 +3914,9 @@ index 8d5b475..976d988 100644
  	if (user_mode(regs)) {
  #ifdef CONFIG_PPC_SUBPAGE_PROT
  		if (rc == -2)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/slb.c b/arch/powerpc/mm/slb.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/slb.c b/arch/powerpc/mm/slb.c
 index 267b2b0..b3399c7 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/mm/slb.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/mm/slb.c
 +++ b/arch/powerpc/mm/slb.c
 @@ -105,8 +105,11 @@ void slb_flush_and_rebolt(void)
  	 * appropriately too. */
@@ -3953,9 +3953,9 @@ index 267b2b0..b3399c7 100644
  }
  
  void slb_vmalloc_update(void)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/cell/spu_base.c b/arch/powerpc/platforms/cell/spu_base.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/cell/spu_base.c b/arch/powerpc/platforms/cell/spu_base.c
 index a5bdb89..86d3b71 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/cell/spu_base.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/cell/spu_base.c
 +++ b/arch/powerpc/platforms/cell/spu_base.c
 @@ -57,7 +57,7 @@ EXPORT_SYMBOL_GPL(force_sig_info);
  /*
@@ -3966,9 +3966,9 @@ index a5bdb89..86d3b71 100644
  
  /*
   * List of all spus in the system.
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/iseries/irq.c b/arch/powerpc/platforms/iseries/irq.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/iseries/irq.c b/arch/powerpc/platforms/iseries/irq.c
 index 701d929..331c422 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/iseries/irq.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/iseries/irq.c
 +++ b/arch/powerpc/platforms/iseries/irq.c
 @@ -80,7 +80,7 @@ struct pci_event {
  	} data;
@@ -3979,9 +3979,9 @@ index 701d929..331c422 100644
  static int num_pending_irqs;
  static int pending_irqs[NR_IRQS];
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/powermac/pic.c b/arch/powerpc/platforms/powermac/pic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/powermac/pic.c b/arch/powerpc/platforms/powermac/pic.c
 index 6d149ae..c46a3f7 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/powermac/pic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/powermac/pic.c
 +++ b/arch/powerpc/platforms/powermac/pic.c
 @@ -57,7 +57,7 @@ static int max_irqs;
  static int max_real_irqs;
@@ -3992,9 +3992,9 @@ index 6d149ae..c46a3f7 100644
  
  #define NR_MASK_WORDS	((NR_IRQS + 31) / 32)
  static unsigned long ppc_lost_interrupts[NR_MASK_WORDS];
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/ps3/htab.c b/arch/powerpc/platforms/ps3/htab.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/ps3/htab.c b/arch/powerpc/platforms/ps3/htab.c
 index 6eb1d4d..574dc71 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/ps3/htab.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/ps3/htab.c
 +++ b/arch/powerpc/platforms/ps3/htab.c
 @@ -41,7 +41,7 @@ enum ps3_lpar_vas_id {
  };
@@ -4005,9 +4005,9 @@ index 6eb1d4d..574dc71 100644
  
  static long ps3_hpte_insert(unsigned long hpte_group, unsigned long va,
  	unsigned long pa, unsigned long rflags, unsigned long vflags,
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/ps3/interrupt.c b/arch/powerpc/platforms/ps3/interrupt.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/ps3/interrupt.c b/arch/powerpc/platforms/ps3/interrupt.c
 index e59634f..e9a6b5f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/ps3/interrupt.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/ps3/interrupt.c
 +++ b/arch/powerpc/platforms/ps3/interrupt.c
 @@ -72,7 +72,7 @@ struct ps3_bmp {
  		u64 unused_2[3];
@@ -4018,9 +4018,9 @@ index e59634f..e9a6b5f 100644
  };
  
  /**
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/pseries/lpar.c b/arch/powerpc/platforms/pseries/lpar.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/pseries/lpar.c b/arch/powerpc/platforms/pseries/lpar.c
 index 52a80e5..1145792 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/platforms/pseries/lpar.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/platforms/pseries/lpar.c
 +++ b/arch/powerpc/platforms/pseries/lpar.c
 @@ -334,7 +334,7 @@ static long pSeries_lpar_hpte_insert(unsigned long hpte_group,
  	return (slot & 7) | (!!(vflags & HPTE_V_SECONDARY) << 3);
@@ -4031,9 +4031,9 @@ index 52a80e5..1145792 100644
  
  static long pSeries_lpar_hpte_remove(unsigned long hpte_group)
  {
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
 index b16ca3e..6996709 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/cpm2_pic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/cpm2_pic.c
 +++ b/arch/powerpc/sysdev/cpm2_pic.c
 @@ -82,24 +82,32 @@ static void cpm2_mask_irq(unsigned int virq)
  {
@@ -4097,9 +4097,9 @@ index b16ca3e..6996709 100644
  	}
  }
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
 index a96584a..c037c88 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/i8259.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/i8259.c
 +++ b/arch/powerpc/sysdev/i8259.c
 @@ -23,7 +23,7 @@ static unsigned char cached_8259[2] = { 0xff, 0xff };
  #define cached_A1 (cached_8259[0])
@@ -4110,9 +4110,9 @@ index a96584a..c037c88 100644
  
  static struct irq_host *i8259_host;
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/ipic.c b/arch/powerpc/sysdev/ipic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/ipic.c b/arch/powerpc/sysdev/ipic.c
 index 88a983e..5614dbc 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/ipic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/ipic.c
 +++ b/arch/powerpc/sysdev/ipic.c
 @@ -32,7 +32,7 @@
  
@@ -4123,9 +4123,9 @@ index 88a983e..5614dbc 100644
  
  static struct ipic_info ipic_info[] = {
  	[1] = {
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/mpc8xx_pic.c b/arch/powerpc/sysdev/mpc8xx_pic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/mpc8xx_pic.c b/arch/powerpc/sysdev/mpc8xx_pic.c
 index 5d2d552..5903a16 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/mpc8xx_pic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/mpc8xx_pic.c
 +++ b/arch/powerpc/sysdev/mpc8xx_pic.c
 @@ -29,24 +29,30 @@ static void mpc8xx_unmask_irq(unsigned int virq)
  {
@@ -4158,9 +4158,9 @@ index 5d2d552..5903a16 100644
  }
  
  static void mpc8xx_ack(unsigned int virq)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
 index 1890fb0..df584e2 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/mpic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/mpic.c
 +++ b/arch/powerpc/sysdev/mpic.c
 @@ -46,7 +46,7 @@
  
@@ -4350,9 +4350,9 @@ index 1890fb0..df584e2 100644
  		err = request_irq(vipi, mpic_ipi_action,
  				  IRQF_DISABLED|IRQF_PERCPU,
  				  ipi_names[i], (void *)i);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/qe_lib/qe_ic.c b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/qe_lib/qe_ic.c b/arch/powerpc/sysdev/qe_lib/qe_ic.c
 index 63cdf98..e5a35fb 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/qe_lib/qe_ic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/qe_lib/qe_ic.c
 +++ b/arch/powerpc/sysdev/qe_lib/qe_ic.c
 @@ -33,7 +33,7 @@
  
@@ -4384,9 +4384,9 @@ index 63cdf98..e5a35fb 100644
  static struct irq_chip qe_ic_irq_chip = {
  	.typename = " QEIC  ",
  	.unmask = qe_ic_unmask_irq,
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/tsi108_pci.c b/arch/powerpc/sysdev/tsi108_pci.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/tsi108_pci.c b/arch/powerpc/sysdev/tsi108_pci.c
 index 24e1f5a..cb8ffa8 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/tsi108_pci.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/tsi108_pci.c
 +++ b/arch/powerpc/sysdev/tsi108_pci.c
 @@ -250,7 +250,9 @@ static void tsi108_pci_int_mask(u_int irq)
  {
@@ -4440,9 +4440,9 @@ index 24e1f5a..cb8ffa8 100644
  	mb();
  }
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
 index d35405c..f2ffcb4 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/arch/powerpc/sysdev/uic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/arch/powerpc/sysdev/uic.c
 +++ b/arch/powerpc/sysdev/uic.c
 @@ -49,7 +49,7 @@ struct uic {
  	int index;
@@ -4486,9 +4486,9 @@ index d35405c..f2ffcb4 100644
  
  uic_irq_ret:
  	spin_lock(&desc->lock);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/drivers/pci/htirq.c b/drivers/pci/htirq.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index bf7d6ce..0ffac4e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/drivers/pci/htirq.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/drivers/pci/htirq.c
 +++ b/drivers/pci/htirq.c
 @@ -21,7 +21,7 @@
   * With multiple simultaneous hypertransport irq devices it might pay
@@ -4499,15 +4499,15 @@ index bf7d6ce..0ffac4e 100644
  
  struct ht_irq_cfg {
  	struct pci_dev *dev;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/drivers/serial/8250.c b/drivers/serial/8250.c
-index fc3832d..1d73621 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/drivers/serial/8250.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/drivers/serial/8250.c b/drivers/serial/8250.c
+index fc3832d..a14424f 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/drivers/serial/8250.c
 +++ b/drivers/serial/8250.c
-@@ -57,6 +57,51 @@ static unsigned int share_irqs = SERIAL8250_SHARE_IRQS;
+@@ -3031,6 +3031,51 @@ static int serial8250_resume(struct platform_device *dev)
+ 	return 0;
+ }
  
- static unsigned int nr_uarts = CONFIG_SERIAL_8250_RUNTIME_UARTS;
- 
-+#ifdef CONFIG_IPIPE_DEBUG
++#if defined(CONFIG_IPIPE_DEBUG) && defined(CONFIG_SERIAL_8250_CONSOLE)
 +
 +#include <stdarg.h>
 +
@@ -4552,24 +4552,48 @@ index fc3832d..1d73621 100644
 +
 +#endif
 +
- static struct uart_driver serial8250_reg;
- 
- static int serial_index(struct uart_port *port)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
-index b2ba2fc..4764463 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/asm-generic/cmpxchg-local.h
+ static struct platform_driver serial8250_isa_driver = {
+ 	.probe		= serial8250_probe,
+ 	.remove		= __devexit_p(serial8250_remove),
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
+index b2ba2fc..ed01ab9 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/asm-generic/cmpxchg-local.h
 +++ b/include/asm-generic/cmpxchg-local.h
-@@ -1,6 +1,7 @@
- #ifndef __ASM_GENERIC_CMPXCHG_LOCAL_H
- #define __ASM_GENERIC_CMPXCHG_LOCAL_H
+@@ -20,7 +20,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
+ 	if (size == 8 && sizeof(unsigned long) != 8)
+ 		wrong_size_cmpxchg(ptr);
  
-+#include <asm/ipipe_base.h>
- #include <linux/types.h>
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	switch (size) {
+ 	case 1: prev = *(u8 *)ptr;
+ 		if (prev == old)
+@@ -41,7 +41,7 @@ static inline unsigned long __cmpxchg_local_generic(volatile void *ptr,
+ 	default:
+ 		wrong_size_cmpxchg(ptr);
+ 	}
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return prev;
+ }
  
- extern unsigned long wrong_size_cmpxchg(volatile void *ptr);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/hardirq.h b/include/linux/hardirq.h
+@@ -54,11 +54,11 @@ static inline u64 __cmpxchg64_local_generic(volatile void *ptr,
+ 	u64 prev;
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	prev = *(u64 *)ptr;
+ 	if (prev == old)
+ 		*(u64 *)ptr = new;
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return prev;
+ }
+ 
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/hardirq.h b/include/linux/hardirq.h
 index 181006c..bc69d94 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/hardirq.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/hardirq.h
 +++ b/include/linux/hardirq.h
 @@ -161,7 +161,22 @@ extern void irq_enter(void);
   */
@@ -4596,12 +4620,12 @@ index 181006c..bc69d94 100644
 +	} while (0)
  
  #endif /* LINUX_HARDIRQ_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe.h b/include/linux/ipipe.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..bd9fdd0
+index 0000000..065a43d
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,672 @@
+@@ -0,0 +1,673 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5261,6 +5285,7 @@ index 0000000..bd9fdd0
 +
 +#define ipipe_root_domain_p		1
 +#define ipipe_safe_current		current
++#define ipipe_processor_id()		smp_processor_id()
 +
 +#define ipipe_nmi_enter()		do { } while (0)
 +#define ipipe_nmi_exit()		do { } while (0)
@@ -5274,7 +5299,7 @@ index 0000000..bd9fdd0
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
 index 0000000..c49fe14
 --- /dev/null
@@ -5370,7 +5395,7 @@ index 0000000..c49fe14
 +#endif	/* CONFIG_IPIPE */
 +
 +#endif	/* !__LINUX_IPIPE_BASE_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe_compat.h b/include/linux/ipipe_compat.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe_compat.h b/include/linux/ipipe_compat.h
 new file mode 100644
 index 0000000..50a245c
 --- /dev/null
@@ -5430,7 +5455,7 @@ index 0000000..50a245c
 +#endif /* CONFIG_IPIPE_COMPAT */
 +
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
 index 0000000..2f41af3
 --- /dev/null
@@ -5520,7 +5545,7 @@ index 0000000..2f41af3
 +#define ipipe_head_cpudom_var(var)	ipipe_head_cpudom_ptr()->var
 +
 +#endif	/* !__LINUX_IPIPE_PERCPU_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe_tickdev.h b/include/linux/ipipe_tickdev.h
 new file mode 100644
 index 0000000..4a1cb1b
 --- /dev/null
@@ -5584,7 +5609,7 @@ index 0000000..4a1cb1b
 +#endif /* CONFIG_IPIPE && CONFIG_GENERIC_CLOCKEVENTS */
 +
 +#endif /* !__LINUX_IPIPE_TICKDEV_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/ipipe_trace.h b/include/linux/ipipe_trace.h
 new file mode 100644
 index 0000000..627b354
 --- /dev/null
@@ -5662,9 +5687,9 @@ index 0000000..627b354
 +#endif
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/irq.h b/include/linux/irq.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/irq.h b/include/linux/irq.h
 index 3dddfa7..6ce9115 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/irq.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/irq.h
 +++ b/include/linux/irq.h
 @@ -114,6 +114,9 @@ struct irq_chip {
  
@@ -5689,9 +5714,9 @@ index 3dddfa7..6ce9115 100644
  	unsigned int		irq;
  	irq_flow_handler_t	handle_irq;
  	struct irq_chip		*chip;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/kernel.h b/include/linux/kernel.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/kernel.h b/include/linux/kernel.h
 index dc7e0d0..88d5034 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/kernel.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/kernel.h
 +++ b/include/linux/kernel.h
 @@ -14,6 +14,7 @@
  #include <linux/compiler.h>
@@ -5716,9 +5741,9 @@ index dc7e0d0..88d5034 100644
  #endif
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/linkage.h b/include/linux/linkage.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/linkage.h b/include/linux/linkage.h
 index 9fd1f85..8018d53 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/linkage.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/linkage.h
 +++ b/include/linux/linkage.h
 @@ -93,4 +93,8 @@
  #define ATTRIB_NORET  __attribute__((noreturn))
@@ -5729,9 +5754,9 @@ index 9fd1f85..8018d53 100644
 +#endif
 +
  #endif
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/mm.h b/include/linux/mm.h
-index ffee2f7..afe330b 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/mm.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/mm.h b/include/linux/mm.h
+index 86b836d..3abd1bc 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/mm.h
 +++ b/include/linux/mm.h
 @@ -115,6 +115,8 @@ extern unsigned int kobjsize(const void *objp);
  #define VM_MIXEDMAP	0x10000000	/* Can contain "struct page" and pure PFN pages */
@@ -5742,9 +5767,9 @@ index ffee2f7..afe330b 100644
  #ifndef VM_STACK_DEFAULT_FLAGS		/* arch can override this */
  #define VM_STACK_DEFAULT_FLAGS VM_DATA_DEFAULT_FLAGS
  #endif
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/preempt.h b/include/linux/preempt.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/preempt.h b/include/linux/preempt.h
 index 72b1a10..80553be 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/preempt.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/preempt.h
 +++ b/include/linux/preempt.h
 @@ -9,13 +9,20 @@
  #include <linux/thread_info.h>
@@ -5769,9 +5794,9 @@ index 72b1a10..80553be 100644
  #endif
  
  #define inc_preempt_count() add_preempt_count(1)
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/sched.h b/include/linux/sched.h
-index c8ba4c5..16db6c8 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/sched.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/sched.h b/include/linux/sched.h
+index 71a0ede..53d5e06 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -59,6 +59,7 @@ struct sched_param {
  #include <linux/errno.h>
@@ -5781,23 +5806,7 @@ index c8ba4c5..16db6c8 100644
  
  #include <asm/system.h>
  #include <asm/page.h>
-@@ -158,6 +159,15 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
- }
- #endif
- 
-+#ifdef CONFIG_IPIPE
-+extern void update_root_process_times(struct pt_regs *regs);
-+#else  /* !CONFIG_IPIPE */
-+static inline void update_root_process_times(struct pt_regs *regs)
-+{
-+	update_process_times(user_mode(regs));
-+}
-+#endif /* CONFIG_IPIPE */
-+
- extern unsigned long long time_sync_thresh;
- 
- /*
-@@ -181,6 +191,13 @@ extern unsigned long long time_sync_thresh;
+@@ -181,6 +182,13 @@ extern unsigned long long time_sync_thresh;
  /* in tsk->state again */
  #define TASK_DEAD		64
  #define TASK_WAKEKILL		128
@@ -5811,7 +5820,23 @@ index c8ba4c5..16db6c8 100644
  
  /* Convenience macros for the sake of set_task_state */
  #define TASK_KILLABLE		(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)
-@@ -1336,6 +1353,9 @@ struct task_struct {
+@@ -289,6 +297,15 @@ extern void account_process_tick(struct task_struct *task, int user);
+ extern void update_process_times(int user);
+ extern void scheduler_tick(void);
+ 
++#ifdef CONFIG_IPIPE
++extern void update_root_process_times(struct pt_regs *regs);
++#else  /* !CONFIG_IPIPE */
++static inline void update_root_process_times(struct pt_regs *regs)
++{
++	update_process_times(user_mode(regs));
++}
++#endif /* CONFIG_IPIPE */
++
+ extern void sched_show_task(struct task_struct *p);
+ 
+ #ifdef CONFIG_DETECT_SOFTLOCKUP
+@@ -1335,6 +1352,9 @@ struct task_struct {
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -5821,7 +5846,7 @@ index c8ba4c5..16db6c8 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1547,6 +1567,11 @@ extern cputime_t task_gtime(struct task_struct *p);
+@@ -1546,6 +1566,11 @@ extern cputime_t task_gtime(struct task_struct *p);
  #define PF_EXITING	0x00000004	/* getting shut down */
  #define PF_EXITPIDONE	0x00000008	/* pi exit done on shut down */
  #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
@@ -5833,9 +5858,9 @@ index c8ba4c5..16db6c8 100644
  #define PF_FORKNOEXEC	0x00000040	/* forked but didn't exec */
  #define PF_SUPERPRIV	0x00000100	/* used super-user privileges */
  #define PF_DUMPCORE	0x00000200	/* dumped core */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/spinlock.h b/include/linux/spinlock.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/spinlock.h b/include/linux/spinlock.h
 index e0c0fcc..2044388 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/spinlock.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -90,10 +90,14 @@ extern int __lockfunc generic__raw_read_trylock(raw_rwlock_t *lock);
  # include <linux/spinlock_up.h>
@@ -6110,9 +6135,9 @@ index e0c0fcc..2044388 100644
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/spinlock_types.h b/include/linux/spinlock_types.h
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/spinlock_types.h b/include/linux/spinlock_types.h
 index 68d88f7..f5ce3c4 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/include/linux/spinlock_types.h
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/include/linux/spinlock_types.h
 +++ b/include/linux/spinlock_types.h
 @@ -31,6 +31,10 @@ typedef struct {
  #endif
@@ -6147,9 +6172,9 @@ index 68d88f7..f5ce3c4 100644
 +#endif
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/init/Kconfig b/init/Kconfig
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/init/Kconfig b/init/Kconfig
 index 6878f25..65b2741 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/init/Kconfig
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/init/Kconfig
 +++ b/init/Kconfig
 @@ -73,6 +73,7 @@ config INIT_ENV_ARG_LIMIT
  
@@ -6159,9 +6184,9 @@ index 6878f25..65b2741 100644
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/init/main.c b/init/main.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/init/main.c b/init/main.c
 index 5f45d7f..f79bb85 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/init/main.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/init/main.c
 +++ b/init/main.c
 @@ -556,7 +556,7 @@ asmlinkage void __init start_kernel(void)
  	debug_objects_early_init();
@@ -6192,9 +6217,9 @@ index 5f45d7f..f79bb85 100644
  	do_initcalls();
  }
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/Makefile b/kernel/Makefile
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/Makefile b/kernel/Makefile
 index 19fad00..e36e4e3 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/Makefile
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/Makefile
 +++ b/kernel/Makefile
 @@ -79,6 +79,7 @@ ifeq ($(CONFIG_PREEMPT_RCU),y)
  obj-$(CONFIG_RCU_TRACE) += rcupreempt_trace.o
@@ -6204,9 +6229,9 @@ index 19fad00..e36e4e3 100644
  obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/exit.c b/kernel/exit.c
-index 2d8be7e..9a96afa 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/exit.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/exit.c b/kernel/exit.c
+index 10e393b..c74548a 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/exit.c
 +++ b/kernel/exit.c
 @@ -1072,6 +1072,7 @@ NORET_TYPE void do_exit(long code)
  		acct_process();
@@ -6216,9 +6241,9 @@ index 2d8be7e..9a96afa 100644
  	exit_sem(tsk);
  	exit_files(tsk);
  	exit_fs(tsk);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/fork.c b/kernel/fork.c
-index 3aa053f..7b7e592 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/fork.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/fork.c b/kernel/fork.c
+index c2f4d1e..3d3edf3 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -493,6 +493,7 @@ void mmput(struct mm_struct *mm)
  	if (atomic_dec_and_test(&mm->mm_users)) {
@@ -6247,7 +6272,7 @@ index 3aa053f..7b7e592 100644
  	return p;
  
  bad_fork_free_pid:
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
 index 0000000..de5e6a3
 --- /dev/null
@@ -6288,7 +6313,7 @@ index 0000000..de5e6a3
 +       bool
 +       depends on IPIPE
 +       default n
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
 index 0000000..64a692c
 --- /dev/null
@@ -6382,7 +6407,7 @@ index 0000000..64a692c
 +	default 1 if IPIPE_TRACE_ENABLE
 +
 +endif
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/ipipe/Makefile b/kernel/ipipe/Makefile
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/ipipe/Makefile b/kernel/ipipe/Makefile
 new file mode 100644
 index 0000000..6257dfa
 --- /dev/null
@@ -6391,7 +6416,7 @@ index 0000000..6257dfa
 +
 +obj-$(CONFIG_IPIPE)	+= core.o
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/ipipe/core.c b/kernel/ipipe/core.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
 index 0000000..97e6aae
 --- /dev/null
@@ -8110,7 +8135,7 @@ index 0000000..97e6aae
 +EXPORT_SYMBOL(ipipe_critical_exit);
 +EXPORT_SYMBOL(ipipe_trigger_irq);
 +EXPORT_SYMBOL(ipipe_get_sysinfo);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/ipipe/tracer.c b/kernel/ipipe/tracer.c
 new file mode 100644
 index 0000000..ee63f67
 --- /dev/null
@@ -9500,9 +9525,9 @@ index 0000000..ee63f67
 +	__ipipe_create_trace_proc_val(trace_dir, "enable",
 +	                              &ipipe_trace_enable);
 +}
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/irq/chip.c b/kernel/irq/chip.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/irq/chip.c b/kernel/irq/chip.c
 index 10b5092..4b835aa 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/irq/chip.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -351,7 +351,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
  	irqreturn_t action_ret;
@@ -9707,9 +9732,9 @@ index 10b5092..4b835aa 100644
  
  	if (handle != handle_bad_irq && is_chained) {
  		desc->status &= ~IRQ_DISABLED;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/irq/handle.c b/kernel/irq/handle.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/irq/handle.c b/kernel/irq/handle.c
 index c815b42..f2efd4e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/irq/handle.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/irq/handle.c
 +++ b/kernel/irq/handle.c
 @@ -179,8 +179,10 @@ unsigned int __do_IRQ(unsigned int irq)
  		/*
@@ -9733,9 +9758,9 @@ index c815b42..f2efd4e 100644
  	/*
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/lockdep.c b/kernel/lockdep.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/lockdep.c b/kernel/lockdep.c
 index 46a4041..bc57809 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/lockdep.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/lockdep.c
 +++ b/kernel/lockdep.c
 @@ -2188,7 +2188,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
  	/* we'll do an OFF -> ON transition: */
@@ -9755,9 +9780,9 @@ index 46a4041..bc57809 100644
  		return;
  
  	if (curr->hardirqs_enabled) {
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/panic.c b/kernel/panic.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/panic.c b/kernel/panic.c
 index 4d50883..1afea02 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/panic.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/panic.c
 +++ b/kernel/panic.c
 @@ -21,6 +21,7 @@
  #include <linux/debug_locks.h>
@@ -9776,9 +9801,9 @@ index 4d50883..1afea02 100644
  	debug_locks_off(); /* can't trust the integrity of the kernel anymore */
  	do_oops_enter_exit();
  }
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/power/disk.c b/kernel/power/disk.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/power/disk.c b/kernel/power/disk.c
 index c9d7408..e6915f2 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/power/disk.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/power/disk.c
 +++ b/kernel/power/disk.c
 @@ -208,6 +208,7 @@ static int create_image(int platform_mode)
  
@@ -9812,9 +9837,9 @@ index c9d7408..e6915f2 100644
  	local_irq_enable();
  	device_pm_unlock();
  	return error;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/printk.c b/kernel/printk.c
-index bbe1827..09f7bc4 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/printk.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/printk.c b/kernel/printk.c
+index f001bd7..d23fa4e 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/printk.c
 +++ b/kernel/printk.c
 @@ -638,6 +638,41 @@ static int have_callable_console(void)
  	return 0;
@@ -9930,9 +9955,9 @@ index bbe1827..09f7bc4 100644
  
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/sched.c b/kernel/sched.c
-index e4bb1dd..470d43d 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/sched.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/sched.c b/kernel/sched.c
+index db66874..c5bc8dc 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -2255,7 +2255,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
  	smp_wmb();
@@ -10108,9 +10133,9 @@ index e4bb1dd..470d43d 100644
 +EXPORT_SYMBOL(ipipe_reenter_root);
 +
 +#endif /* CONFIG_IPIPE */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/signal.c b/kernel/signal.c
-index 4530fc6..6858bd5 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/signal.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/signal.c b/kernel/signal.c
+index 28859a9..734c5c0 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/signal.c
 +++ b/kernel/signal.c
 @@ -494,6 +494,7 @@ void signal_wake_up(struct task_struct *t, int resume)
  	unsigned int mask;
@@ -10120,9 +10145,9 @@ index 4530fc6..6858bd5 100644
  
  	/*
  	 * For SIGKILL, we want to wake it up in the stopped/traced/killable
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/spinlock.c b/kernel/spinlock.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/spinlock.c b/kernel/spinlock.c
 index 29ab207..c21e314 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/spinlock.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/spinlock.c
 +++ b/kernel/spinlock.c
 @@ -87,7 +87,7 @@ unsigned long __lockfunc _spin_lock_irqsave(spinlock_t *lock)
  	 * _raw_spin_lock_flags() code, because lockdep assumes
@@ -10142,9 +10167,9 @@ index 29ab207..c21e314 100644
  	LOCK_CONTENDED(lock, _raw_spin_trylock, _raw_spin_lock);
  #else
  	_raw_spin_lock_flags(lock, &flags);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/time/tick-common.c b/kernel/time/tick-common.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/time/tick-common.c b/kernel/time/tick-common.c
 index df12434..3d63445 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/time/tick-common.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/time/tick-common.c
 +++ b/kernel/time/tick-common.c
 @@ -69,7 +69,7 @@ static void tick_periodic(int cpu)
  		write_sequnlock(&xtime_lock);
@@ -10166,9 +10191,9 @@ index df12434..3d63445 100644
  	/*
  	 * When the device is not per cpu, pin the interrupt to the
  	 * current cpu:
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
 index 342fc9c..3665e47 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/time/tick-sched.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/time/tick-sched.c
 +++ b/kernel/time/tick-sched.c
 @@ -507,7 +507,7 @@ static void tick_nohz_handler(struct clock_event_device *dev)
  		ts->idle_jiffies++;
@@ -10188,9 +10213,9 @@ index 342fc9c..3665e47 100644
  		profile_tick(CPU_PROFILING);
  	}
  
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/timer.c b/kernel/timer.c
-index dbd50fa..0c2a5ec 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/timer.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/timer.c b/kernel/timer.c
+index a5eaea2..6ecc85e 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/timer.c
 +++ b/kernel/timer.c
 @@ -1052,6 +1052,26 @@ void update_process_times(int user_tick)
  	run_posix_cpu_timers(p);
@@ -10219,9 +10244,9 @@ index dbd50fa..0c2a5ec 100644
  /*
   * Nr of active tasks - counted in fixed-point numbers
   */
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/trace/Kconfig b/kernel/trace/Kconfig
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/trace/Kconfig b/kernel/trace/Kconfig
 index 33dbefd..fd9736e 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/kernel/trace/Kconfig
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/kernel/trace/Kconfig
 +++ b/kernel/trace/Kconfig
 @@ -33,7 +33,7 @@ menu "Tracers"
  
@@ -10232,9 +10257,9 @@ index 33dbefd..fd9736e 100644
  	depends on DEBUG_KERNEL
  	select FRAME_POINTER
  	select TRACING
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/Kconfig.debug b/lib/Kconfig.debug
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/Kconfig.debug b/lib/Kconfig.debug
 index b0f239e..fdc111b 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/Kconfig.debug
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
 @@ -128,6 +128,8 @@ config DEBUG_SECTION_MISMATCH
  	  - Enable verbose reporting from modpost to help solving
@@ -10245,9 +10270,9 @@ index b0f239e..fdc111b 100644
  config DEBUG_KERNEL
  	bool "Kernel debugging"
  	help
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/bust_spinlocks.c b/lib/bust_spinlocks.c
 index 486da62..9a0f064 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/bust_spinlocks.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/bust_spinlocks.c
 +++ b/lib/bust_spinlocks.c
 @@ -12,6 +12,7 @@
  #include <linux/tty.h>
@@ -10265,9 +10290,9 @@ index 486da62..9a0f064 100644
  		if (--oops_in_progress == 0)
  			wake_up_klogd();
  	}
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/ioremap.c b/lib/ioremap.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/ioremap.c b/lib/ioremap.c
 index 14c6078..a275469 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/ioremap.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/ioremap.c
 +++ b/lib/ioremap.c
 @@ -85,8 +85,8 @@ int ioremap_page_range(unsigned long addr,
  		if (err)
@@ -10280,9 +10305,9 @@ index 14c6078..a275469 100644
  
  	return err;
  }
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/smp_processor_id.c b/lib/smp_processor_id.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/smp_processor_id.c b/lib/smp_processor_id.c
 index 0f8fc22..90dc46f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/smp_processor_id.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/smp_processor_id.c
 +++ b/lib/smp_processor_id.c
 @@ -12,10 +12,13 @@ notrace unsigned int debug_smp_processor_id(void)
  	unsigned long preempt_count = preempt_count();
@@ -10299,9 +10324,9 @@ index 0f8fc22..90dc46f 100644
  		goto out;
  
  	/*
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/spinlock_debug.c b/lib/spinlock_debug.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/spinlock_debug.c b/lib/spinlock_debug.c
 index 9c4b025..08f096b 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/lib/spinlock_debug.c
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/lib/spinlock_debug.c
 +++ b/lib/spinlock_debug.c
 @@ -133,6 +133,8 @@ void _raw_spin_lock(spinlock_t *lock)
  	debug_spin_lock_after(lock);
@@ -10377,9 +10402,9 @@ index 9c4b025..08f096b 100644
  }
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/memory.c b/mm/memory.c
-index 164951c..b3b1d8f 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/memory.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/memory.c b/mm/memory.c
+index fe2257f..d710733 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/memory.c
 +++ b/mm/memory.c
 @@ -52,6 +52,7 @@
  #include <linux/writeback.h>
@@ -10658,11 +10683,11 @@ index 164951c..b3b1d8f 100644
 +EXPORT_SYMBOL(ipipe_disable_ondemand_mappings);
 +
 +#endif
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/mlock.c b/mm/mlock.c
-index 1ada366..2d7ff28 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/mlock.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/mlock.c b/mm/mlock.c
+index 64dca47..4058ba6 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/mlock.c
 +++ b/mm/mlock.c
-@@ -572,10 +572,10 @@ asmlinkage long sys_munlock(unsigned long start, size_t len)
+@@ -532,10 +532,10 @@ SYSCALL_DEFINE2(munlock, unsigned long, start, size_t, len)
  static int do_mlockall(int flags)
  {
  	struct vm_area_struct * vma, * prev = NULL;
@@ -10675,25 +10700,16 @@ index 1ada366..2d7ff28 100644
  	current->mm->def_flags = def_flags;
  	if (flags == MCL_FUTURE)
  		goto out;
-diff --git linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/vmalloc.c b/mm/vmalloc.c
-index 1ddb77b..00a13dd 100644
---- linux-2.6-denx-002d71a004e229f09ac95c2c4f4297eb565f06b4/mm/vmalloc.c
+diff --git linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/vmalloc.c b/mm/vmalloc.c
+index 0380ea5..858feeb 100644
+--- linux-2.6-denx-f999b11fbf0dc2d240005b4dcf4d60ed6a5bb41a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
-@@ -155,7 +155,7 @@ static int vmap_page_range(unsigned long addr, unsigned long end,
- 				pgprot_t prot, struct page **pages)
- {
- 	pgd_t *pgd;
--	unsigned long next;
-+	unsigned long next, start_addr = addr;
- 	int err = 0;
- 	int nr = 0;
- 
-@@ -171,6 +171,9 @@ static int vmap_page_range(unsigned long addr, unsigned long end,
+@@ -173,6 +173,9 @@ static int vmap_page_range(unsigned long start, unsigned long end,
  
  	if (unlikely(err))
  		return err;
 +
-+ 	__ipipe_pin_range_globally(start_addr, end);
++ 	__ipipe_pin_range_globally(start, end);
 +
  	return nr;
  }

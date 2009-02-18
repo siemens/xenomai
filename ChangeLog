@@ -2,6 +2,9 @@
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.27.13-x86-2.2-05.
 
+	* ksrc/arch/powerpc/patches: Upgrade to
+	2.6.28.5-powerpc-DENX-2.4-04.
+
 2009-02-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
 	* src/skins/posix/shm.c (__wrap_mmap, __wrap_mmap64): Map only
