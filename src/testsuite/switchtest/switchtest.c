@@ -1008,7 +1008,7 @@ int check_fpu(void)
 int main(int argc, const char *argv[])
 {
 	unsigned i, j, nr_cpus, use_fp = 1, stress = 0;
-	pthread_attr_t rt_attr, sleeper_attr;
+	pthread_attr_t rt_attr;
 	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
 	struct sched_param sp;
