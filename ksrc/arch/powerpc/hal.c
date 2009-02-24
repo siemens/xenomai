@@ -175,11 +175,14 @@ int rthal_timer_request(
 			 struct clock_event_device *cdev),
 	int cpu)
 {
+	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
-	unsigned long tmfreq;
+
+	if (rthal_timerfreq_arg == 0)
+		tmfreq = &rthal_tunables.timer_freq;
 
 	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
-				    &tmfreq);
+				    tmfreq);
 	/*
 	 * Ignore the returned timer freq; the timebase freq is more
 	 * accurate (CPU_FREQ == timebase freq for this port).

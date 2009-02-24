@@ -69,10 +69,13 @@ int rthal_timer_request(void (*handler)(void),
     unsigned long flags;
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
-    unsigned long tmfreq;
+    unsigned long dummy, *tmfreq = &dummy;
+
+    if (rthal_timerfreq_arg == 0)
+        tmfreq = &rthal_tunables.timer_freq;
 
     int res = ipipe_request_tickdev(RTHAL_TIMER_DEVICE, mode_emul,
-				    tick_emul, cpu, &tmfreq);
+				    tick_emul, cpu, tmfreq);
     
     switch (res) {
     case CLOCK_EVT_MODE_PERIODIC:
@@ -99,9 +102,6 @@ int rthal_timer_request(void (*handler)(void),
 	    return res;
     }
     rthal_ktimer_saved_mode = res;
-
-    if (rthal_timerfreq_arg == 0)
-	    rthal_tunables.timer_freq = tmfreq;
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
     tickval = 1000000000UL / HZ;
     rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
