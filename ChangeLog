@@ -1,3 +1,7 @@
+2009-02-24  Philippe Gerum  <rpm@eclipse.xenomai.org>
+
+	* 
+
 2009-02-23  Paul Corner <paul_c@tuxcnc.org>
 
 	debian/prepare-patch.sh: Fix patch generation rules.
@@ -98,10 +102,9 @@
 	* ksrc/arch/powerpc/patches: Upgrade to 2.6.27-powerpc-2.4-03,
 	2.6.28-powerpc-2.4-03.
 
-2009-01-14  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
+2009-01-14  Jan Kiszka  <jan.kiszka@siemens.com>
 
-	* ksrc/nucleus/pod.c (__xnpod_schedule): Fix handling of relaxed
-	shadow epilogue.
+	ksrc/arch/x86/hal-common.c (rthal_timer_request): Fix race.
 
 2009-01-13  Gilles Chanteperdrix  <gilles.chanteperdrix@xenomai.org>
 
