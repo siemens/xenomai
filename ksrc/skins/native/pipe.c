@@ -957,7 +957,7 @@ RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe, size_t size)
 	RT_PIPE_MSG *msg;
 
 	msg = xnheap_alloc(pipe->bufpool, size + sizeof(RT_PIPE_MSG));
-	if (likely(msg)) {
+	if (likely(msg != NULL)) {
 		inith(&msg->link);
 		msg->size = size;
 	}
