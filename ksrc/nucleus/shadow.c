@@ -822,8 +822,8 @@ static int gatekeeper_thread(void *data)
 {
 	struct task_struct *this_task = current;
 	DECLARE_WAITQUEUE(wait, this_task);
-	struct xnsched *sched = data;
-	int cpu = xnsched_cpu(sched);
+	int cpu = (long)data;
+	struct xnsched *sched = xnpod_sched_slot(cpu);
 	struct xnthread *target;
 	cpumask_t cpumask;
 	spl_t s;
@@ -2584,8 +2584,8 @@ int xnshadow_mount(void)
 		sema_init(&sched->gksync, 0);
 		xnarch_memory_barrier();
 		sched->gatekeeper =
-		    kthread_create(&gatekeeper_thread, sched, "gatekeeper/%d",
-				   cpu);
+		    kthread_create(&gatekeeper_thread, (void *)(long)cpu,
+				   "gatekeeper/%d", cpu);
 		wake_up_process(sched->gatekeeper);
 		down(&sched->gksync);
 	}

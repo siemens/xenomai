@@ -1,6 +1,9 @@
-2009-01-14  Jan Kiszka  <jan.kiszka@siemens.com>
+2009-02-24  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/arch/x86/hal-common.c (rthal_timer_request): Fix race.
+
+	* ksrc/nucleus/shadow.c (gatekeeper_thread): Do not refer to
+	uninit sched slots.
 
 2009-02-23  Paul Corner <paul_c@tuxcnc.org>
 
