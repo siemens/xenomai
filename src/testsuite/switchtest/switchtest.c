@@ -1008,9 +1008,9 @@ int check_fpu(void)
 int main(int argc, const char *argv[])
 {
 	unsigned i, j, nr_cpus, use_fp = 1, stress = 0;
-	pthread_attr_t rt_attr, sleeper_attr;
 	const char *progname = argv[0];
 	struct cpu_tasks *cpus;
+	pthread_attr_t rt_attr;
 	struct sched_param sp;
 	char devname[21];
 	sigset_t mask;
