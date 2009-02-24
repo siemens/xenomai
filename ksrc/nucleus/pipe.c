@@ -264,7 +264,7 @@ static void *xnpipe_default_alloc_ibuf(size_t size, void *xstate)
 	void *buf;
 
 	buf = xnmalloc(size);
-	if (likely(buf))
+	if (likely(buf != NULL))
 		return buf;
 
 	if (size > xnheap_max_contiguous(&kheap))
