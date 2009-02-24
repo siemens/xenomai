@@ -144,16 +144,16 @@ config XENO_OPT_SYS_HEAPSZ
 config XENO_OPT_SYS_STACKPOOLSZ
         depends on XENO_GENERIC_STACKPOOL
 	int "Size of the private stack pool (Kb)"
-	default 32
-	range 0 128
+	default 32 if !64BIT && !BLACKFIN
+	default 64 if 64BIT || BLACKFIN
 	help
 
 	On this architecture, kernel-based Xenomai threads get the
 	stack space they need from a private memory pool.  If you
 	don't start any kernel-based thread (i.e. no RTDM driver
-	thread, and no real-time task created from an application
-	embodied into a kernel module), you may leave a zero value for
-	this option. The size is expressed in Kilobytes.
+	thread, no real-time task created from an application embodied
+	into a kernel module, no switchtest driver), you may leave a
+	zero value for this option. The size is expressed in Kilobytes.
 
 if !XENO_GENERIC_STACKPOOL
 config XENO_OPT_SYS_STACKPOOLSZ
