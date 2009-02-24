@@ -132,7 +132,7 @@ int rthal_timer_request(
 			 struct clock_event_device *cdev),
 	int cpu)
 {
-	unsigned long tmfreq;
+	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
 
 	if (cpu_timers_requested == 0) {
@@ -145,13 +145,16 @@ int rthal_timer_request(
 
 	/* This code works both for UP+LAPIC and SMP configurations. */
 
+	if (rthal_timerfreq_arg == 0)
+		tmfreq = &rthal_tunables.timer_freq;
+
 #ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
 	res = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu,
-				    &tmfreq);
+				    tmfreq);
 #else
+	*tmfreq = RTHAL_COMPAT_TIMERFREQ;
 	res = ipipe_request_tickdev("lapic", (compat_emumode_t)mode_emul,
 				    (compat_emutick_t)tick_emul, cpu);
-	tmfreq = RTHAL_COMPAT_TIMERFREQ;
 #endif
 
 	switch (res) {
@@ -182,9 +185,6 @@ int rthal_timer_request(
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = tmfreq;
 
 	/*
 	 * The rest of the initialization should only be performed
