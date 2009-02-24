@@ -375,62 +375,63 @@
 <a name="l00399"></a>00399         runthread = xnpod_current_sched()-&gt;runthread;
 <a name="l00400"></a>00400 
 <a name="l00401"></a>00401         <span class="keywordflow">if</span> (--xnthread_lock_count(runthread) == 0) {
-<a name="l00402"></a>00402                 xnthread_clear_state(runthread, <a class="code" href="group__nucleus__state__flags.html#g2defcfb1f04f077baeac9881cbdda627" title="Holds the scheduler lock (i.e.">XNLOCK</a>);
-<a name="l00403"></a>00403                 <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l00404"></a>00404         }
-<a name="l00405"></a>00405 
-<a name="l00406"></a>00406         xnlock_put_irqrestore(&amp;nklock, s);
-<a name="l00407"></a>00407 }
-<a name="l00408"></a>00408 
-<a name="l00409"></a>00409 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g072d9a7d5c9a369061786c8a5b05b7fc" title="Globally activate the round-robin scheduling.">xnpod_activate_rr</a>(xnticks_t quantum);
-<a name="l00410"></a>00410 
-<a name="l00411"></a>00411 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#gfbf6e230908235f55b905ba730dd1e9a" title="Globally deactivate the round-robin scheduling.">xnpod_deactivate_rr</a>(<span class="keywordtype">void</span>);
-<a name="l00412"></a>00412 
-<a name="l00413"></a>00413 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ged5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(xnthread_t *thread,
-<a name="l00414"></a>00414                               xnticks_t idate,
-<a name="l00415"></a>00415                               xnticks_t period);
-<a name="l00416"></a>00416 
-<a name="l00417"></a>00417 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
-<a name="l00418"></a>00418 
-<a name="l00419"></a>00419 <span class="keyword">static</span> <span class="keyword">inline</span> xntime_t xnpod_get_cpu_time(<span class="keywordtype">void</span>)
-<a name="l00420"></a>00420 {
-<a name="l00421"></a>00421         <span class="keywordflow">return</span> xnarch_get_cpu_time();
-<a name="l00422"></a>00422 }
-<a name="l00423"></a>00423 
-<a name="l00424"></a>00424 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#g96e6b70fb05da3603bebacde76b16f22" title="Install a nucleus hook.">xnpod_add_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
-<a name="l00425"></a>00425 
-<a name="l00426"></a>00426 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gce800481d23255eebe45f969e9434adf" title="Remove a nucleus hook.">xnpod_remove_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
-<a name="l00427"></a>00427 
-<a name="l00428"></a>00428 <span class="keywordtype">void</span> xnpod_check_context(<span class="keywordtype">int</span> mask);
-<a name="l00429"></a>00429 
-<a name="l00430"></a>00430 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_yield(<span class="keywordtype">void</span>)
-<a name="l00431"></a>00431 {
-<a name="l00432"></a>00432         <a class="code" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread</a>(xnpod_current_thread(), 0);
-<a name="l00433"></a>00433         <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
-<a name="l00434"></a>00434 }
-<a name="l00435"></a>00435 
-<a name="l00436"></a>00436 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay(xnticks_t timeout)
-<a name="l00437"></a>00437 {
-<a name="l00438"></a>00438         <a class="code" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c" title="Delayed.">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
-<a name="l00439"></a>00439 }
-<a name="l00440"></a>00440 
-<a name="l00441"></a>00441 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self(<span class="keywordtype">void</span>)
-<a name="l00442"></a>00442 {
-<a name="l00443"></a>00443         <a class="code" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#g6b605ad2bb16ae2386821be8ce8d341b" title="Suspended.">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
-<a name="l00444"></a>00444 }
-<a name="l00445"></a>00445 
-<a name="l00446"></a>00446 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self(<span class="keywordtype">void</span>)
-<a name="l00447"></a>00447 {
-<a name="l00448"></a>00448         <a class="code" href="group__pod.html#gd2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(xnpod_current_thread());
-<a name="l00449"></a>00449 }
-<a name="l00450"></a>00450 
-<a name="l00451"></a>00451 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00452"></a>00452 <span class="preprocessor"></span>}
-<a name="l00453"></a>00453 <span class="preprocessor">#endif</span>
-<a name="l00454"></a>00454 <span class="preprocessor"></span>
-<a name="l00457"></a>00457 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
+<a name="l00402"></a>00402                 xnsched_set_resched(runthread-&gt;sched);
+<a name="l00403"></a>00403                 xnthread_clear_state(runthread, <a class="code" href="group__nucleus__state__flags.html#g2defcfb1f04f077baeac9881cbdda627" title="Holds the scheduler lock (i.e.">XNLOCK</a>);
+<a name="l00404"></a>00404                 <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l00405"></a>00405         }
+<a name="l00406"></a>00406 
+<a name="l00407"></a>00407         xnlock_put_irqrestore(&amp;nklock, s);
+<a name="l00408"></a>00408 }
+<a name="l00409"></a>00409 
+<a name="l00410"></a>00410 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#g072d9a7d5c9a369061786c8a5b05b7fc" title="Globally activate the round-robin scheduling.">xnpod_activate_rr</a>(xnticks_t quantum);
+<a name="l00411"></a>00411 
+<a name="l00412"></a>00412 <span class="keywordtype">void</span> <a class="code" href="group__pod.html#gfbf6e230908235f55b905ba730dd1e9a" title="Globally deactivate the round-robin scheduling.">xnpod_deactivate_rr</a>(<span class="keywordtype">void</span>);
+<a name="l00413"></a>00413 
+<a name="l00414"></a>00414 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#ged5776a428e7c59b52b1da76f0d765fa" title="Make a thread periodic.">xnpod_set_thread_periodic</a>(xnthread_t *thread,
+<a name="l00415"></a>00415                               xnticks_t idate,
+<a name="l00416"></a>00416                               xnticks_t period);
+<a name="l00417"></a>00417 
+<a name="l00418"></a>00418 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gf836996e4a3378928f2a9f93a4915cfa" title="Wait for the next periodic release point.">xnpod_wait_thread_period</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *overruns_r);
+<a name="l00419"></a>00419 
+<a name="l00420"></a>00420 <span class="keyword">static</span> <span class="keyword">inline</span> xntime_t xnpod_get_cpu_time(<span class="keywordtype">void</span>)
+<a name="l00421"></a>00421 {
+<a name="l00422"></a>00422         <span class="keywordflow">return</span> xnarch_get_cpu_time();
+<a name="l00423"></a>00423 }
+<a name="l00424"></a>00424 
+<a name="l00425"></a>00425 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#g96e6b70fb05da3603bebacde76b16f22" title="Install a nucleus hook.">xnpod_add_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
+<a name="l00426"></a>00426 
+<a name="l00427"></a>00427 <span class="keywordtype">int</span> <a class="code" href="group__pod.html#gce800481d23255eebe45f969e9434adf" title="Remove a nucleus hook.">xnpod_remove_hook</a>(<span class="keywordtype">int</span> type, <span class="keywordtype">void</span> (*routine) (xnthread_t *));
+<a name="l00428"></a>00428 
+<a name="l00429"></a>00429 <span class="keywordtype">void</span> xnpod_check_context(<span class="keywordtype">int</span> mask);
+<a name="l00430"></a>00430 
+<a name="l00431"></a>00431 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_yield(<span class="keywordtype">void</span>)
+<a name="l00432"></a>00432 {
+<a name="l00433"></a>00433         <a class="code" href="group__pod.html#gc3a7bf9e973782a8cfd6495a1786e812" title="Resume a thread.">xnpod_resume_thread</a>(xnpod_current_thread(), 0);
+<a name="l00434"></a>00434         <a class="code" href="group__pod.html#gcf5b53f0405351327b89b0cc4976b962" title="Rescheduling procedure entry point.">xnpod_schedule</a>();
+<a name="l00435"></a>00435 }
+<a name="l00436"></a>00436 
+<a name="l00437"></a>00437 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delay(xnticks_t timeout)
+<a name="l00438"></a>00438 {
+<a name="l00439"></a>00439         <a class="code" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#ga31d298d298eb696ccf840473b94912c" title="Delayed.">XNDELAY</a>, timeout, XN_RELATIVE, NULL);
+<a name="l00440"></a>00440 }
+<a name="l00441"></a>00441 
+<a name="l00442"></a>00442 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_suspend_self(<span class="keywordtype">void</span>)
+<a name="l00443"></a>00443 {
+<a name="l00444"></a>00444         <a class="code" href="group__pod.html#g767221cf87c198c5dc071e9f597dcb3a" title="Suspend a thread.">xnpod_suspend_thread</a>(xnpod_current_thread(), <a class="code" href="group__nucleus__state__flags.html#g6b605ad2bb16ae2386821be8ce8d341b" title="Suspended.">XNSUSP</a>, XN_INFINITE, XN_RELATIVE, NULL);
+<a name="l00445"></a>00445 }
+<a name="l00446"></a>00446 
+<a name="l00447"></a>00447 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnpod_delete_self(<span class="keywordtype">void</span>)
+<a name="l00448"></a>00448 {
+<a name="l00449"></a>00449         <a class="code" href="group__pod.html#gd2b761fb70cad30339f092edb4a89587" title="Delete a thread.">xnpod_delete_thread</a>(xnpod_current_thread());
+<a name="l00450"></a>00450 }
+<a name="l00451"></a>00451 
+<a name="l00452"></a>00452 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00453"></a>00453 <span class="preprocessor"></span>}
+<a name="l00454"></a>00454 <span class="preprocessor">#endif</span>
+<a name="l00455"></a>00455 <span class="preprocessor"></span>
+<a name="l00458"></a>00458 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:26 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 24 22:55:00 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>

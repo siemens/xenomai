@@ -130,7 +130,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00429">xnheap_alloc()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00775">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00788">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -259,9 +259,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00270">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00788">xnheap_free()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00210">rt_pipe_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00225">rt_pipe_create()</a>.</p>
 
 </div>
 </div><p>
@@ -369,7 +369,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00788">xnheap_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00594">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00775">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00607">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00788">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -462,7 +462,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00982">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00478">rt_pipe_receive()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00995">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00491">rt_pipe_receive()</a>.</p>
 
 </div>
 </div><p>
@@ -542,7 +542,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00594">rt_pipe_read()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00607">rt_pipe_read()</a>.</p>
 
 </div>
 </div><p>
@@ -620,7 +620,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00775">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00788">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -768,12 +768,12 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00942">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00982">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00690">rt_pipe_send()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00955">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00995">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00703">rt_pipe_send()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sat Nov 8 19:15:29 2008 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 24 22:55:02 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>
