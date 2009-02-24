@@ -149,11 +149,14 @@ int rthal_timer_request(
 			 struct clock_event_device *cdev),
 	int cpu)
 {
+	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
-	unsigned long tmfreq;
+
+	if (rthal_timerfreq_arg == 0)
+		tmfreq = &rthal_tunables.timer_freq;
 
 	res = ipipe_request_tickdev("bfin_core_timer", mode_emul, tick_emul, cpu,
-				    &tmfreq);
+				    tmfreq);
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -179,9 +182,6 @@ int rthal_timer_request(
 		return res;
 	}
 	rthal_ktimer_saved_mode = res;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = tmfreq;
 
 	/*
 	 * The rest of the initialization should only be performed
