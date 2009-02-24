@@ -21599,10 +21599,10 @@ fi
 
 
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
-        set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_LINUX_ARCH-*
+        set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version*-$XENO_LINUX_ARCH-*
         ADEOS_PATCH=$1
 	if test ! -e $ADEOS_PATCH; then
-		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version-$XENO_TARGET_ARCH-*
+		set -- $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-*$linux_base_version*-$XENO_TARGET_ARCH-*
 		ADEOS_PATCH=$1
 	fi
   fi
@@ -22569,10 +22569,10 @@ case $XENO_TARGET_ARCH in
         ;;
  blackfin)
 	# Produce libraries in FDPIC format.
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -mfdpic"
-	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS -mfdpic"
-	XENO_USER_APP_CFLAGS="$XENO_USER_APP_CFLAGS -mfdpic"
-	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS -mfdpic"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
+	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS"
+	XENO_USER_APP_CFLAGS="$XENO_USER_APP_CFLAGS"
+	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS"
         ;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"

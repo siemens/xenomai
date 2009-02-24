@@ -1,3 +1,8 @@
+2009-02-24  Yi Li <liyi.dev@gmail.com>
+
+	* configure.in: Remove -mfdpic switch. Set by default by
+	bfin-linux-uclibc-gcc, and may cause error with bfin-uclinux-gcc.
+
 2009-02-24  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/{arm, blackfin, powerpc}/hal.c (rthal_timer_request):
