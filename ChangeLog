@@ -1,3 +1,8 @@
+2008-02-24  Stephane Fillod  <stephane.fillod@thomson.net>
+
+	* src/skins/posix/shm.c (__wrap_mmap64): Make real call depend on
+	configure detection (HAVE_MMAP64).
+	
 2009-02-24  Yi Li <liyi.dev@gmail.com>
 
 	* configure.in: Remove -mfdpic switch. Set by default by
