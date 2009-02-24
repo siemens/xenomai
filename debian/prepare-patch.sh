@@ -74,12 +74,11 @@ generate_patch() {
 }
 
 diff_addons() {
-    lines=`(echo ; echo ; cat $xenomai_root/scripts/Kconfig.frag) | wc -l`
+    lines=`cat $xenomai_root/scripts/Kconfig.frag | wc -l`
 
-    echo "--- linux/arch/$linux_arch/Kconfig	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
-    echo "+++ linux-patched/arch/$linux_arch/Kconfig	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
-    echo "@@ -40,2 +40,$lines @@" >> $patch_file
-    echo " source \"init/Kconfig\"" >> $patch_file
+    echo "--- linux/init/Kconfig	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
+    echo "+++ linux-patched/init/Kconfig	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
+    echo "@@ -950,0 +950,$lines @@" >> $patch_file
     sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag | sed 's/^/+/' >> $patch_file
     echo " " >> $patch_file
 }

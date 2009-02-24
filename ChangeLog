@@ -1,3 +1,7 @@
+2009-02-23  Paul Corner <paul_c@tuxcnc.org>
+
+	debian/prepare-patch.sh: Fix patch generation rules.
+
 2009-02-23  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/x86/patches: Upgrade to 2.6.27.19-x86-2.2-06,
