@@ -273,7 +273,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 	down(&nrt_dev_lock);
 
 	if ((device->device_flags & RTDM_DEVICE_TYPE_MASK) == RTDM_NAMED_DEVICE) {
-		trace_mark(xn_rtdm_nameddev_register, "device %p name %s "
+		trace_mark(xn_rtdm, nameddev_register, "device %p name %s "
 			   "flags %d class %d sub_class %d profile_version %d "
 			   "driver_version %d", device, device->device_name,
 			   device->device_flags, device->device_class,
@@ -307,7 +307,7 @@ int rtdm_dev_register(struct rtdm_device *device)
 
 		up(&nrt_dev_lock);
 	} else {
-		trace_mark(xn_rtdm_protocol_register, "device %p "
+		trace_mark(xn_rtdm, protocol_register, "device %p "
 			   "protocol_family %d socket_type %d flags %d "
 			   "class %d sub_class %d profile_version %d "
 			   "driver_version %d", device,
@@ -398,7 +398,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 	if (!reg_dev)
 		return -ENODEV;
 
-	trace_mark(xn_rtdm_dev_unregister, "device %p poll_delay %u",
+	trace_mark(xn_rtdm, dev_unregister, "device %p poll_delay %u",
 		   device, poll_delay);
 
 	down(&nrt_dev_lock);
@@ -410,7 +410,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 
 		if (!poll_delay) {
 			rtdm_dereference_device(reg_dev);
-			trace_mark(xn_rtdm_dev_busy, "device %p", device);
+			trace_mark(xn_rtdm, dev_busy, "device %p", device);
 			return -EAGAIN;
 		}
 
@@ -418,7 +418,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 			xnlogwarn("RTDM: device %s still in use - waiting for "
 				  "release...\n", reg_dev->device_name);
 		msleep(poll_delay);
-		trace_mark(xn_rtdm_dev_poll, "device %p", device);
+		trace_mark(xn_rtdm, dev_poll, "device %p", device);
 
 		down(&nrt_dev_lock);
 		xnlock_get_irqsave(&rt_dev_lock, s);

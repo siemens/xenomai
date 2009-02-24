@@ -280,7 +280,7 @@ static inline void xnpod_run_hooks(struct xnqueue *q,
 				   struct xnthread *thread, const char *type)
 {
 	if (!emptyq_p(q) && !xnthread_test_state(thread, XNROOT)) {
-		trace_mark(xn_nucleus_thread_callout,
+		trace_mark(xn_nucleus, thread_callout,
 			   "thread %p thread_name %s hook %s",
 			   thread, xnthread_name(thread), type);
 		xnpod_fire_callouts(q, thread);

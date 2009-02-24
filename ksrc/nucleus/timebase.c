@@ -384,7 +384,7 @@ void xntbase_start(xntbase_t *base)
 	if (base == &nktbase || xntbase_enabled_p(base))
 		return;
 
-	trace_mark(xn_nucleus_tbase_start, "base %s", base->name);
+	trace_mark(xn_nucleus, tbase_start, "base %s", base->name);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -441,7 +441,7 @@ void xntbase_stop(xntbase_t *base)
 	xntslave_stop(base2slave(base));
 	__clrbits(base->status, XNTBRUN | XNTBSET);
 
-	trace_mark(xn_nucleus_tbase_stop, "base %s", base->name);
+	trace_mark(xn_nucleus, tbase_stop, "base %s", base->name);
 }
 EXPORT_SYMBOL_GPL(xntbase_stop);
 
@@ -479,7 +479,7 @@ void xntbase_tick(xntbase_t *base)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_tbase_tick, "base %s", base->name);
+	trace_mark(xn_nucleus, tbase_tick, "base %s", base->name);
 
 	if (base == &nktbase)
 		xntimer_tick_aperiodic();
@@ -613,7 +613,7 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 	}
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-	trace_mark(xn_nucleus_tbase_adjust, "base %s delta %Lu",
+	trace_mark(xn_nucleus, tbase_adjust, "base %s delta %Lu",
 		   base->name, delta);
 }
 EXPORT_SYMBOL_GPL(xntbase_adjust_time);

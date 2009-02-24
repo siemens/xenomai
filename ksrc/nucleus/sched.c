@@ -71,7 +71,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 	}
 		
 	if (unlikely(++sched->wdcount >= CONFIG_XENO_OPT_WATCHDOG_TIMEOUT)) {
-		trace_mark(xn_nucleus_watchdog, "thread %p thread_name %s",
+		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
 			 xnthread_name(thread));
@@ -224,7 +224,7 @@ void xnsched_zombie_hooks(struct xnthread *thread)
 	XENO_BUGON(NUCLEUS, thread->sched->zombie != NULL);
 	thread->sched->zombie = thread;
 
-	trace_mark(xn_nucleus_sched_finalize,
+	trace_mark(xn_nucleus, sched_finalize,
 		   "thread_out %p thread_out_name %s",
 		   thread, xnthread_name(thread));
 
@@ -296,7 +296,7 @@ void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
 
 	xnsched_track_policy(root, target);
 
-	trace_mark(xn_nucleus_sched_reniceroot, MARK_NOARGS);
+	trace_mark(xn_nucleus, sched_reniceroot, MARK_NOARGS);
 	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(root)), root->cprio);
 
 	xnlock_put_irqrestore(&nklock, s);

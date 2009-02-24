@@ -177,7 +177,7 @@ void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_synch_sleepon,
+	trace_mark(xn_nucleus, synch_sleepon,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 
@@ -245,7 +245,7 @@ struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch)
 	if (holder) {
 		thread = link2thread(holder, plink);
 		thread->wchan = NULL;
-		trace_mark(xn_nucleus_synch_wakeup_one,
+		trace_mark(xn_nucleus, synch_wakeup_one,
 			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
@@ -316,7 +316,7 @@ struct xnpholder *xnsynch_wakeup_this_sleeper(struct xnsynch *synch, struct xnph
 	nholder = poppq(&synch->pendq, holder);
 	thread = link2thread(holder, plink);
 	thread->wchan = NULL;
-	trace_mark(xn_nucleus_synch_wakeup_this,
+	trace_mark(xn_nucleus, synch_wakeup_this,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 	xnpod_resume_thread(thread, XNPEND);
@@ -405,7 +405,7 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
-	trace_mark(xn_nucleus_synch_acquire, "synch %p", synch);
+	trace_mark(xn_nucleus, synch_acquire, "synch %p", synch);
 
       redo:
 
@@ -708,7 +708,7 @@ struct xnthread *xnsynch_release(struct xnsynch *synch)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_synch_release, "synch %p", synch);
+	trace_mark(xn_nucleus, synch_release, "synch %p", synch);
 
 	holder = getpq(&synch->pendq);
 	if (holder) {
@@ -839,7 +839,7 @@ int xnsynch_flush(struct xnsynch *synch, xnflags_t reason)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_synch_flush, "synch %p reason %lu",
+	trace_mark(xn_nucleus, synch_flush, "synch %p reason %lu",
 		   synch, reason);
 
 	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
@@ -889,7 +889,7 @@ void xnsynch_forget_sleeper(struct xnthread *thread)
 	struct xnthread *owner, *target;
 	struct xnpholder *h;
 
-	trace_mark(xn_nucleus_synch_forget,
+	trace_mark(xn_nucleus, synch_forget,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 

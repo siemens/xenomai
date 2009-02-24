@@ -431,7 +431,7 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 
 	XENO_ASSERT(RTDM, xnpod_root_p(), return;);
 
-	trace_mark(xn_rtdm_task_joinnrt, "thread %p poll_delay %u",
+	trace_mark(xn_rtdm, task_joinnrt, "thread %p poll_delay %u",
 		   task, poll_delay);
 
 	xnlock_get_irqsave(&nklock, s);
@@ -771,7 +771,8 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 {
 	spl_t s;
 
-	trace_mark(xn_rtdm_event_init, "event %p pending %lu", event, pending);
+	trace_mark(xn_rtdm, event_init,
+		   "event %p pending %lu", event, pending);
 
 	/* Make atomic for re-initialisation support */
 	xnlock_get_irqsave(&nklock, s);
@@ -852,7 +853,7 @@ void rtdm_event_signal(rtdm_event_t *event)
 	int resched = 0;
 	spl_t s;
 
-	trace_mark(xn_rtdm_event_signal, "event %p", event);
+	trace_mark(xn_rtdm, event_signal, "event %p", event);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -947,7 +948,7 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
-	trace_mark(xn_rtdm_event_timedwait,
+	trace_mark(xn_rtdm, event_timedwait,
 		   "event %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
 		   event, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
@@ -1021,7 +1022,7 @@ void rtdm_event_clear(rtdm_event_t *event)
 {
 	spl_t s;
 
-	trace_mark(xn_rtdm_event_clear, "event %p", event);
+	trace_mark(xn_rtdm, event_clear, "event %p", event);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1118,7 +1119,7 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 {
 	spl_t s;
 
-	trace_mark(xn_rtdm_sem_init, "sem %p value %lu", sem, value);
+	trace_mark(xn_rtdm, sem_init, "sem %p value %lu", sem, value);
 
 	/* Make atomic for re-initialisation support */
 	xnlock_get_irqsave(&nklock, s);
@@ -1232,7 +1233,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	XENO_ASSERT(RTDM, !xnpod_unblockable_p(), return -EPERM;);
 
-	trace_mark(xn_rtdm_sem_timedwait,
+	trace_mark(xn_rtdm, sem_timedwait,
 		   "sem %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
 		   sem, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
@@ -1300,7 +1301,7 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 {
 	spl_t s;
 
-	trace_mark(xn_rtdm_sem_up, "sem %p", sem);
+	trace_mark(xn_rtdm, sem_up, "sem %p", sem);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1523,7 +1524,7 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 	spl_t s;
 	int err = 0;
 
-	trace_mark(xn_rtdm_mutex_timedlock,
+	trace_mark(xn_rtdm, mutex_timedlock,
 		   "mutex %p timeout %Lu timeout_seq %p timeout_seq_value %Lu",
 		   mutex, (long long)timeout, timeout_seq, (long long)(timeout_seq ? *timeout_seq : 0));
 
