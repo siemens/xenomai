@@ -149,8 +149,10 @@ int __wrap_ftruncate64(int fildes, long long length)
 	if (!err)
 		return 0;
 
+#ifdef HAVE_FTRUNCATE64
 	if (err == EBADF || err == ENOSYS)
 		return __real_ftruncate64(fildes, length);
+#endif
 
 	errno = err;
 	return -1;
@@ -174,8 +176,10 @@ void *__wrap_mmap64(void *addr,
 				 ((unsigned long long) off < LONG_MAX
 				  ? (long) off : -1L), &map);
 
+#ifdef HAVE_MMAP64
 	if (err == EBADF || err == ENOSYS)
 		return __real_mmap64(addr, len, prot, flags, fildes, off);
+#endif
 
 	if (err)
 		goto error;
@@ -185,8 +189,11 @@ void *__wrap_mmap64(void *addr,
 	if (err)
 		goto err_mmap_epilogue;
 
+#ifdef HAVE_MMAP64
 	uaddr = __real_mmap64(addr, len, prot, flags, fildes, map.offset + off);
-
+#else
+	uaddr = MAP_FAILED;
+#endif
 	if (uaddr == MAP_FAILED) {
 	      err_mmap_epilogue:
 		XENOMAI_SKINCALL2(__pse51_muxid,

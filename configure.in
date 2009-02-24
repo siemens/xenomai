@@ -735,7 +735,7 @@ fi
 
 save_LIBS="$LIBS"
 LIBS="$LIBS -lrt"
-AC_CHECK_FUNCS([shm_open shm_unlink])
+AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64])
 LIBS="$save_LIBS"
 
 dnl
