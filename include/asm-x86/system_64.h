@@ -28,7 +28,7 @@
 #include <linux/ptrace.h>
 #include <asm-generic/xenomai/system.h>
 
-#define XNARCH_THREAD_STACKSZ	4096
+#define XNARCH_THREAD_STACKSZ	8192
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
 #define xnarch_stack_base(tcb)	((tcb)->stackbase)
