@@ -758,15 +758,30 @@ LIBS="$LIBS -lrt"
 AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64])
 LIBS="$save_LIBS"
 
+AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)
+AC_ARG_ENABLE(dlopen-skins,
+	AC_HELP_STRING([--enable-dlopen-skins], [Disable TLS features and
+automatic main thread mapping by the POSIX skin to allows dlopen'ing Xenomai
+libs.]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_LIBS_DLOPEN=y ;;
+	*) unset CONFIG_XENO_LIBS_DLOPEN ;;
+	esac])
+AC_MSG_RESULT(${CONFIG_XENO_LIBS_DLOPEN:-no})
+if test x$CONFIG_XENO_LIBS_DLOPEN = xy; then
+	AC_DEFINE(CONFIG_XENO_LIBS_DLOPEN,1,[config])
+fi
+
 XENO_DLOPEN_CONSTRAINT=
+
 AC_ARG_WITH([__thread],
 	    AC_HELP_STRING([--without-__thread],
-			   [do not use TLS features (allows for dlopen'ing Xenomai libs)]),
+			   [do not use TLS features]),
 	    [use__thread=$withval],
 	    [use__thread=yes])
 
 dnl Check whether the compiler supports the __thread keyword.
-if test "x$use__thread" != xno; then
+if test "x$use__thread" != xno -a "x$CONFIG_XENO_LIBS_DLOPEN" != xy; then
 	AC_CACHE_CHECK([for __thread], libc_cv_gcc___thread,
 	[cat > conftest.c <<\EOF
 __thread int a __attribute__ ((tls_model ("initial-exec"))) = 42;
