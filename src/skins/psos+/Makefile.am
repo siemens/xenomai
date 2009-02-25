@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libpsos.la
 
-libpsos_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libpsos_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 
 libpsos_la_SOURCES = \
 	asr.c \

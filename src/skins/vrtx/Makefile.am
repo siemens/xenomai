@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libvrtx.la
 
-libvrtx_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libvrtx_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 
 libvrtx_la_SOURCES = \
 	event.c \

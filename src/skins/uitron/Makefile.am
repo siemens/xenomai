@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libuitron.la
 
-libuitron_la_LDFLAGS = -version-info 0:0:0 -lpthread
+libuitron_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 
 libuitron_la_SOURCES = \
 	flag.c \

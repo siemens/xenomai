@@ -758,6 +758,7 @@ LIBS="$LIBS -lrt"
 AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64])
 LIBS="$save_LIBS"
 
+XENO_DLOPEN_CONSTRAINT=
 AC_ARG_WITH([__thread],
 	    AC_HELP_STRING([--without-__thread],
 			   [do not use TLS features (allows for dlopen'ing Xenomai libs)]),
@@ -778,6 +779,7 @@ EOF
 	rm -f conftest*])
 	if test "$libc_cv_gcc___thread" = yes; then
 		AC_DEFINE(HAVE___THREAD,1,[config])
+		XENO_DLOPEN_CONSTRAINT="-Wl,-z -Wl,nodlopen"
 	fi
 fi
 
@@ -799,6 +801,7 @@ AC_SUBST(XENO_USER_CFLAGS)
 AC_SUBST(XENO_USER_LDFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
+AC_SUBST(XENO_DLOPEN_CONSTRAINT)
 AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
         ['$(top_srcdir)/src/skins/posix/posix.wrappers'])
 AC_SUBST(XENO_POSIX_WRAPPERS)

@@ -164,6 +164,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
+XENO_DLOPEN_CONSTRAINT = @XENO_DLOPEN_CONSTRAINT@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
 XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
@@ -233,7 +234,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = librtai.la
-librtai_la_LDFLAGS = -version-info 0:0:0
+librtai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0
 librtai_la_SOURCES = init.c \
 	shm.c
 

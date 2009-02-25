@@ -170,6 +170,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
+XENO_DLOPEN_CONSTRAINT = @XENO_DLOPEN_CONSTRAINT@
 XENO_HOST_STRING = @XENO_HOST_STRING@
 XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
 XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
@@ -239,7 +240,7 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libpthread_rt.la
-libpthread_rt_la_LDFLAGS = -version-info 1:0:0 -lpthread
+libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
 libpthread_rt_la_SOURCES = \
 	init.c \
 	thread.c \
