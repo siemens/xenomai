@@ -47,7 +47,6 @@ void pse51_clock_init(int);
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
 {
-	struct sched_param parm;
 	int muxid, err;
 
 	muxid =
@@ -67,28 +66,42 @@ void __init_posix_interface(void)
 								 __rtdm_fdcount);
 	}
 
-	/* Shadow the main thread. mlock the whole memory for the time of the
-	   syscall, in order to avoid the SIGXCPU signal. */
+#ifdef CONFIG_XENO_LIBS_DLOPEN
+	/* Don't use auto-shadowing if we are likely invoked from dlopen, but
+	   take care of auto-mlockall. */
+#ifdef CONFIG_XENO_POSIX_AUTO_MLOCKALL
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
 	}
+#endif /* CONFIG_XENO_POSIX_AUTO_MLOCKALL */
+#else /* !CONFIG_XENO_LIBS_DLOPEN */
+	{
+		struct sched_param parm = { .sched_priority = 0 };
 
-	parm.sched_priority = 0;
-	err = __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
-					   &parm);
-	if (err) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"pthread_setschedparam: %s\n", strerror(err));
-		exit(EXIT_FAILURE);
-	}
+		/* Shadow the main thread. mlock the whole memory for the time
+		   of the syscall, in order to avoid the SIGXCPU signal. */
+		if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
+			perror("Xenomai Posix skin init: mlockall");
+			exit(EXIT_FAILURE);
+		}
+
+		err = __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
+						   &parm);
+		if (err) {
+			fprintf(stderr, "Xenomai Posix skin init: "
+				"pthread_setschedparam: %s\n", strerror(err));
+			exit(EXIT_FAILURE);
+		}
 
 #ifndef CONFIG_XENO_POSIX_AUTO_MLOCKALL
-	if (munlockall()) {
-		perror("Xenomai Posix skin init: munlockall");
-		exit(EXIT_FAILURE);
-	}
+		if (munlockall()) {
+			perror("Xenomai Posix skin init: munlockall");
+			exit(EXIT_FAILURE);
+		}
 #endif /* !CONFIG_XENO_POSIX_AUTO_MLOCKALL */
+	}
+#endif /* !CONFIG_XENO_LIBS_DLOPEN */
 
 	if (!fork_handler_registered) {
 		err = pthread_atfork(NULL, NULL, &__init_posix_interface);
