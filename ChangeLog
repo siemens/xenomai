@@ -1,3 +1,9 @@
+2009-02-26  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/arch/powerpc/patches: Update Adeos support to
+	2.6.24.6-powerpc-DENX-2.4-03 (compatible with MPC5121-ADS
+	hardware, see ksrc/arch/powerpc/patches/README).
+
 2008-02-24  Stephane Fillod  <stephane.fillod@thomson.net>
 
 	* src/skins/posix/shm.c (__wrap_mmap64): Make real call depend on
