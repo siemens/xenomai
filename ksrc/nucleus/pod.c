@@ -861,7 +861,9 @@ int xnpod_start_thread(xnthread_t *thread,
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
  callout:
+#endif
 	if (!emptyq_p(&nkpod->tstartq)) {
 		trace_mark(xn_nucleus_thread_callout,
 			   "thread %p thread_name %s hook %s",
