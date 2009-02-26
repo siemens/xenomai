@@ -808,7 +808,10 @@ int xnpod_start_thread(struct xnthread *thread,
 		nkpod->schedhook(thread, XNREADY);
 #endif /* __XENO_SIM__ */
 
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 run_hooks:
+#endif
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
 
 schedule:
