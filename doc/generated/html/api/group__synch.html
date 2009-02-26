@@ -186,7 +186,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01557">xnpod_resume_thread()</a>, and <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01559">xnpod_resume_thread()</a>, and <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00566">pthread_cond_broadcast()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00271">pthread_detach()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00364">rt_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00488">rt_sem_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01739">rt_task_send()</a>, <a class="el" href="drvlib_8c-source.html#l00829">rtdm_event_signal()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l01084">xnregistry_put()</a>.</p>
 
@@ -225,7 +225,7 @@ When the trace support is enabled (i.e. MVM), the idle state is posted to the sy
 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, and <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>.</p>
 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l01113">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01557">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l01358">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l01115">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01559">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l01360">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -350,7 +350,7 @@ This call is used internally to release all the ownerships obtained by a thread 
 
 <p>References <a class="el" href="synch_8c-source.html#l00376">xnsynch_wakeup_one_sleeper()</a>.</p>
 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l01113">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l00911">xnpod_restart_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l01115">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l00913">xnpod_restart_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -439,7 +439,7 @@ This service can be called from:<p>
 Rescheduling: always.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00045">XNBOOST</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01358">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00111">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00115">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNTIMEO</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00045">XNBOOST</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00112">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01360">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00111">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00115">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNTIMEO</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
 
 <p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00399">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00442">rt_cond_wait()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00458">rt_event_wait()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00523">rt_heap_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00351">rt_mutex_acquire()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00813">rt_queue_receive()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00356">rt_sem_p()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01932">rt_task_receive()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l01739">rt_task_send()</a>, <a class="el" href="drvlib_8c-source.html#l00920">rtdm_event_timedwait()</a>, <a class="el" href="drvlib_8c-source.html#l01497">rtdm_mutex_timedlock()</a>, <a class="el" href="drvlib_8c-source.html#l01205">rtdm_sem_timeddown()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00716">xnregistry_bind()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00912">xnregistry_remove_safe()</a>, and <a class="el" href="select_8c-source.html#l00310">xnselect()</a>.</p>
 
@@ -485,7 +485,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01557">xnpod_resume_thread()</a>, <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01559">xnpod_resume_thread()</a>, <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c-source.html#l00516">pthread_cond_signal()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00399">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00308">rt_cond_signal()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00442">rt_cond_wait()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c-source.html#l00440">rt_mutex_release()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00606">rt_queue_send()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00434">rt_sem_v()</a>, <a class="el" href="drvlib_8c-source.html#l01278">rtdm_sem_up()</a>, <a class="el" href="ksrc_2skins_2posix_2sem_8c-source.html#l00716">sem_post()</a>, and <a class="el" href="synch_8c-source.html#l00676">xnsynch_release_all_ownerships()</a>.</p>
 
@@ -541,14 +541,14 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01557">xnpod_resume_thread()</a>, <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00034">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01559">xnpod_resume_thread()</a>, <a class="el" href="synch_8c-source.html#l00268">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNWAKEN</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00329">rt_event_signal()</a>, and <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00642">rt_heap_free()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 24 22:55:02 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Feb 26 15:05:58 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.5 </small></address>
 </body>
