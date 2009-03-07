@@ -1,3 +1,10 @@
+2009-03-07  Philippe GERUM  <rpm@xenomai.org>
+
+	* src/skins/posix/shm.c (__wrap_munmap): Forward to glibc upon EBADF.
+
+	* ksrc/nucleus/Config.in, ksrc/arch/{powerpc, x86}/Config.in: Add
+	missing SYS_STACKPOOLSZ switch.
+
 2009-02-26  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update Adeos support to
