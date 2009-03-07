@@ -240,7 +240,7 @@ int __wrap_munmap(void *addr, size_t len)
 	err = -XENOMAI_SKINCALL3(__pse51_muxid,
 				 __pse51_munmap_prologue, addr, len, &map);
 
-	if (err == ENXIO || err == ENOSYS)
+	if (err == ENXIO || err == ENOSYS || err == EBADF)
 		return __real_munmap(addr, len);
 
 	if (err)
