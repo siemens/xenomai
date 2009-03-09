@@ -2137,7 +2137,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 void __xnpod_schedule(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr = sched->curr;
-	int zombie, switched = 0, need_resched, relaxing;
+	int zombie, switched = 0, need_resched, shadow;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -2174,9 +2174,9 @@ void __xnpod_schedule(struct xnsched *sched)
 		   next, xnthread_name(next));
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	relaxing = xnthread_test_state(prev, XNRELAX);
+	shadow = xnthread_test_state(prev, XNSHADOW);
 #else
-	(void)relaxing;
+	(void)shadow;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (xnthread_test_state(next, XNROOT)) {
@@ -2204,12 +2204,18 @@ void __xnpod_schedule(struct xnsched *sched)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/*
-	 * Test whether we are relaxing a thread. In such a case, we
-	 * are here the epilogue of Linux' schedule, and should skip
-	 * xnpod_schedule epilogue.
+	 * Test whether we transitioned from primary mode to secondary
+	 * over a shadow thread. This may happen in two cases:
+	 *
+	 * 1) the shadow thread just relaxed.
+	 * 2) the shadow TCB has just been deleted, in which case
+	 * we have to reap the mated Linux side as well.
+	 *
+	 * In both cases, we are running over the epilogue of Linux's
+	 * schedule, and should skip our epilogue code.
 	 */
-	if (relaxing)
-		goto relax_epilogue;
+	if (shadow && xnarch_root_domain_p())
+		goto shadow_epilogue;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	switched = 1;
@@ -2252,7 +2258,7 @@ void __xnpod_schedule(struct xnsched *sched)
 	return;
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-      relax_epilogue:
+      shadow_epilogue:
 	{
 		spl_t ignored;
 

@@ -311,6 +311,11 @@ static inline int xnarch_setimask (int imask)
 	return !!s;
 }
 
+static inline int xnarch_root_domain_p(void)
+{
+	return rthal_current_domain == rthal_root_domain;
+}
+
 #ifdef CONFIG_SMP
 
 #define xnlock_get(lock)		__xnlock_get(lock  XNLOCK_DBG_CONTEXT)
