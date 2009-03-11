@@ -1,4 +1,4 @@
-2009-03-07  Philippe GERUM  <rpm@comet>
+2009-03-07  Philippe GERUM  <rpm@xenomai.org>
 
 	* src/skins/posix/shm.c (__wrap_munmap): Forward to glibc upon EBADF.
 
