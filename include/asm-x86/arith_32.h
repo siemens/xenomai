@@ -135,6 +135,61 @@ __rthal_i386_ulldiv (const unsigned long long ull,
 	__ret;								\
 })
 
+#define XNARCH_WANT_NODIV_MULDIV
+
+static inline __attribute__((const)) unsigned long long
+__rthal_x86_nodiv_ullimd(const unsigned long long op,
+			 const unsigned long long frac,
+			 unsigned integ)
+{
+	register unsigned rl __asm__("ecx");
+	register unsigned rm __asm__("esi");
+	register unsigned rh __asm__("edi");
+	unsigned fracl, frach, opl, oph;
+	register unsigned long long t;
+
+	__rthal_u64tou32(op, oph, opl);
+	__rthal_u64tou32(frac, frach, fracl);
+
+	__asm__ ("mov %[oph], %%eax\n\t"
+		 "mull %[frach]\n\t"
+		 "mov %%eax, %[rm]\n\t"
+		 "mov %%edx, %[rh]\n\t"
+		 "mov %[opl], %%eax\n\t"
+		 "mull %[fracl]\n\t"
+		 "mov %%edx, %[rl]\n\t"
+		 "shl $1, %%eax\n\t"
+		 "adc $0, %[rl]\n\t"
+		 "adc $0, %[rm]\n\t"
+		 "adc $0, %[rh]\n\t"
+		 "mov %[oph], %%eax\n\t"
+		 "mull %[fracl]\n\t"
+		 "add %%eax, %[rl]\n\t"
+		 "adc %%edx, %[rm]\n\t"
+		 "adc $0, %[rh]\n\t"
+		 "mov %[opl], %%eax\n\t"
+		 "mull %[frach]\n\t"
+		 "add %%eax, %[rl]\n\t"
+		 "adc %%edx, %[rm]\n\t"
+		 "adc $0, %[rh]\n\t"
+		 "mov %[opl], %%eax\n\t"
+		 "mull %[integ]\n\t"
+		 "add %[rm], %%eax\n\t"
+		 "adc %%edx, %[rh]\n\t"
+		 "mov %[oph], %%edx\n\t"
+		 "imul %[integ], %%edx\n\t"
+		 "add %[rh], %%edx\n\t"
+		 : [rl]"=c"(rl), [rm]"=S"(rm), [rh]"=D"(rh), "=A"(t)
+		 : [opl]"m"(opl), [oph]"m"(oph),
+		   [fracl]"m"(fracl), [frach]"m"(frach), [integ]"m"(integ)
+		 : "cc");
+
+	return t;
+}
+
+#define rthal_nodiv_ullimd(op, frac, integ) \
+	__rthal_x86_nodiv_ullimd((op), (frac), (integ))
+
 #include <asm-generic/xenomai/arith.h>
 
 #endif /* _XENO_ASM_X86_ARITH_32_H */
