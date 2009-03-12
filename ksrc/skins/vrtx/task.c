@@ -122,7 +122,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 		user = vrtx_default_stacksz;
 
 	if (prio < 0 || prio > 255 || tid < -1 || tid > 255 ||
-	    (!(mode & 0x100) && user + sys < 1024)) {	/* Tiny kernel stack */
+	    (entry != NULL && user + sys < 1024)) {	/* Tiny kernel stack */
 		*errp = ER_IIP;
 		return -1;
 	}
@@ -151,7 +151,7 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	sprintf(name, "t%.3d", tid);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	if (mode & 0x100)
+	if (entry == NULL)
 		bflags |= XNSHADOW;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
@@ -194,9 +194,10 @@ int sc_tecreate_inner(vrtxtask_t *task,
 	appendq(&vrtx_task_q, &task->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnpod_start_thread(&task->threadbase,
-			   bmode, 0, XNPOD_ALL_CPUS, &vrtxtask_trampoline,
-			   task);
+	if ((bflags & XNSHADOW) == 0) /* Defer shadow thread startup. */
+		xnpod_start_thread(&task->threadbase,
+				   bmode, 0, XNPOD_ALL_CPUS, &vrtxtask_trampoline,
+				   task);
 	return tid;
 }
 
