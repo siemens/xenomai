@@ -157,10 +157,30 @@ typedef struct xnsynch {
 extern "C" {
 #endif
 
+#ifdef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+
+void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
+				  struct xnthread *sleeper);
+
+void xnsynch_detect_claimed_relax(struct xnthread *owner);
+
+#else /* !CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+
+void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
+				  struct xnthread *sleeper)
+{
+}
+
+void xnsynch_detect_claimed_relax(struct xnthread *owner)
+{
+}
+
+#endif /* !CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+
 void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
 		  xnarch_atomic_t *fastlock);
 
-#define xnsynch_destroy(synch)	xnsynch_flush(synch,XNRMID)
+#define xnsynch_destroy(synch)	xnsynch_flush(synch, XNRMID)
 
 static inline void xnsynch_set_owner(struct xnsynch *synch,
 				     struct xnthread *thread)

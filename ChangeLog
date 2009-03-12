@@ -1,3 +1,8 @@
+2009-03-12  Philippe GERUM  <rpm@xenomai.org>
+
+	* ksrc/nucleus/shadow.c, ksrc/nucleus/synch.c: Introduce debug
+	option to detect mutexes held in relaxed sections.
+
 2009-03-07  Philippe GERUM  <rpm@xenomai.org>
 
 	* src/skins/posix/shm.c (__wrap_munmap): Forward to glibc upon EBADF.

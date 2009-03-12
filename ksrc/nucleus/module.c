@@ -1229,7 +1229,7 @@ int __init __xeno_sys_init(void)
 	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
 		  XENO_VERSION_STRING, XENO_VERSION_NAME);
 
-#if XENO_DEBUG(NUCLEUS)
+#ifdef CONFIG_XENO_OPT_DEBUG
 	xnloginfo("debug mode enabled.\n");
 #endif
 

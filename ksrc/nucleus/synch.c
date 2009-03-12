@@ -472,6 +472,8 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		}
 	}
 
+	xnsynch_detect_relaxed_owner(synch, thread);
+
 	if (!testbits(synch->status, XNSYNCH_PRIO)) /* i.e. FIFO */
 		appendpq(&synch->pendq, &thread->plink);
 	else if (w_cprio(thread) > w_cprio(owner)) {
@@ -962,5 +964,45 @@ void xnsynch_release_all_ownerships(struct xnthread *thread)
 	}
 }
 EXPORT_SYMBOL_GPL(xnsynch_release_all_ownerships);
+
+#ifdef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+
+/*
+ * Detect when a thread is about to sleep on a synchronization
+ * object currently owned by someone running in secondary mode.
+ */
+void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleeper)
+{
+	if (xnthread_test_state(sleeper, XNTRAPSW) &&
+	    xnthread_test_state(synch->owner, XNRELAX))
+		xnshadow_send_sig(sleeper, SIGXCPU, 0, 1);
+}
+
+/*
+ * Detect when a thread is about to relax while holding a
+ * synchronization object currently claimed by someone else. By
+ * relying on the claim queue, we restrict the checks to PIP-enabled
+ * objects, but that already covers most of the use cases anyway.
+ */
+void xnsynch_detect_claimed_relax(struct xnthread *owner)
+{
+	struct xnpholder *hs, *ht;
+	struct xnthread *sleeper;
+	struct xnsynch *synch;
+
+	for (hs = getheadpq(&owner->claimq); hs != NULL;
+	     hs = nextpq(&owner->claimq, hs)) {
+		synch = link2synch(hs);
+		for (ht = getheadpq(&synch->pendq); ht != NULL;
+		     ht = nextpq(&synch->pendq, ht)) {
+			sleeper = link2thread(ht, plink);
+			if (xnthread_test_state(sleeper, XNRELAX))
+				xnshadow_send_sig(sleeper, SIGXCPU, 0, 1);
+		}
+	}
+}
+
+#endif /* CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+
 
 /*@}*/

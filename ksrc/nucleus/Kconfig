@@ -286,6 +286,31 @@ config XENO_OPT_DEBUG_TIMERS
 	This option activates debugging output for critical
 	timer-related operations performed by the Xenomai core.
 
+config XENO_OPT_DEBUG_SYNCH_RELAX
+	bool "Detect mutexes held in relaxed sections"
+	depends on XENO_OPT_PERVASIVE && XENO_OPT_DEBUG
+	help
+
+	This option detects situations where a real-time thread
+	attempts to sleep on a Xenomai mutex object, that is owned by
+	another thread currently running in secondary mode (i.e. plain
+	Linux execution mode). The SIGXCPU signal may be sent in such
+	a case to the sleeper, provided the WARNSW flag is enabled for
+	it, as set by e.g. rt_task_set_mode() or pthread_set_mode_np().
+
+	This particular situation is a possible source of unwanted
+	latency, since the current mutex owner may be unexpectedly
+	delayed as a result of using non-deterministic Linux services,
+	thus deferring the release of the mutex object for too long.
+
+	This option may introduce some overhead in case mutexes are
+	highly contended. Use this feature for debugging purposes
+	only.
+
+	NOTE: only Xenomai synchronization objects that may be
+	actually "owned" by a single thread at a time, can be
+	monitored this way (typically, mutexes).
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	depends on XENO_OPT_DEBUG
