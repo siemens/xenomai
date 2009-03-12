@@ -12,7 +12,9 @@ libvrtx_la_SOURCES = \
 	queue.c \
 	sem.c \
 	task.c \
-	time.c
+	time.c \
+	wrappers.c \
+	wrappers.h
 
 libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

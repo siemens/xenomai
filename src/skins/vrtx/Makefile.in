@@ -37,8 +37,13 @@ subdir = src/skins/vrtx
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
-	$(top_srcdir)/config/docbook.m4 $(top_srcdir)/config/version \
-	$(top_srcdir)/configure.in
+	$(top_srcdir)/config/docbook.m4 \
+	$(top_srcdir)/config/libtool.m4 \
+	$(top_srcdir)/config/ltoptions.m4 \
+	$(top_srcdir)/config/ltsugar.m4 \
+	$(top_srcdir)/config/ltversion.m4 \
+	$(top_srcdir)/config/lt~obsolete.m4 \
+	$(top_srcdir)/config/version $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -57,7 +62,7 @@ libvrtx_la_LIBADD =
 am_libvrtx_la_OBJECTS = libvrtx_la-event.lo libvrtx_la-heap.lo \
 	libvrtx_la-init.lo libvrtx_la-mb.lo libvrtx_la-mx.lo \
 	libvrtx_la-pt.lo libvrtx_la-queue.lo libvrtx_la-sem.lo \
-	libvrtx_la-task.lo libvrtx_la-time.lo
+	libvrtx_la-task.lo libvrtx_la-time.lo libvrtx_la-wrappers.lo
 libvrtx_la_OBJECTS = $(am_libvrtx_la_OBJECTS)
 libvrtx_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -248,7 +253,9 @@ libvrtx_la_SOURCES = \
 	queue.c \
 	sem.c \
 	task.c \
-	time.c
+	time.c \
+	wrappers.c \
+	wrappers.h
 
 libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
@@ -333,6 +340,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-sem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-task.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-time.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvrtx_la-wrappers.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -424,6 +432,13 @@ libvrtx_la-time.lo: time.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='time.c' object='libvrtx_la-time.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvrtx_la-time.lo `test -f 'time.c' || echo '$(srcdir)/'`time.c
+
+libvrtx_la-wrappers.lo: wrappers.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvrtx_la-wrappers.lo -MD -MP -MF $(DEPDIR)/libvrtx_la-wrappers.Tpo -c -o libvrtx_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libvrtx_la-wrappers.Tpo $(DEPDIR)/libvrtx_la-wrappers.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wrappers.c' object='libvrtx_la-wrappers.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvrtx_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvrtx_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

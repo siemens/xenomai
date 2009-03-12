@@ -42,8 +42,7 @@ static int __muxid;
 
 /*
  * int __sc_tecreate(struct vrtx_arg_bulk *bulk,
- *                   int *ptid,
- *                   xncompletion_t *completion)
+ *                   int *ptid)
  * bulk = {
  * a1: int tid;
  * a2: int prio;
@@ -54,7 +53,6 @@ static int __muxid;
 
 static int __sc_tecreate(struct pt_regs *regs)
 {
-	xncompletion_t __user *u_completion;
 	int prio, mode, tid, err, discarded;
 	struct vrtx_arg_bulk bulk;
 	vrtxtask_t *task;
@@ -68,29 +66,24 @@ static int __sc_tecreate(struct pt_regs *regs)
 	/* Task priority. */
 	prio = bulk.a2;
 	/* Task mode. */
-	mode = bulk.a3 | 0x100;
-
-	/* Completion descriptor our parent thread is pending on. */
-	u_completion = (xncompletion_t __user *)__xn_reg_arg3(regs);
+	mode = bulk.a3;
 
 	task = xnmalloc(sizeof(*task));
-
-	if (!task) {
+	if (task == NULL) {
 		err = ER_TCB;
 		goto done;
 	}
 
 	xnthread_clear_state(&task->threadbase, XNZOMBIE);
 
-	tid =
-	    sc_tecreate_inner(task, NULL, tid, prio, mode, 0, 0, NULL, 0, &err);
-
+ 	tid = sc_tecreate_inner(task, NULL, tid,
+ 				prio, mode, 0, 0, NULL, 0, &err);
 	if (err == RET_OK) {
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
 					   &tid, sizeof(tid)))
 			err = -EFAULT;
 		else {
-			err = xnshadow_map(&task->threadbase, u_completion,
+			err = xnshadow_map(&task->threadbase, NULL,
 					   (unsigned long __user *)bulk.a4);
 			if (!err)
 				goto done;
@@ -98,9 +91,6 @@ static int __sc_tecreate(struct pt_regs *regs)
 
 		sc_tdelete(tid, 0, &discarded);
 	}
-
-	if (u_completion)
-		xnshadow_signal_completion(u_completion, err);
 
 	if (!xnthread_test_state(&task->threadbase, XNZOMBIE))
 		xnfree(task);
