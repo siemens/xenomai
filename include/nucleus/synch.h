@@ -166,12 +166,12 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner);
 
 #else /* !CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
 
-void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
+static inline void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper)
 {
 }
 
-void xnsynch_detect_claimed_relax(struct xnthread *owner)
+static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
 }
 
