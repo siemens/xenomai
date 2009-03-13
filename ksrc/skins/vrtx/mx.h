@@ -31,8 +31,6 @@ typedef struct vrtxmx {
 
     int mid;
 
-    xnthread_t *owner;
-
     xnsynch_t synchbase;
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
