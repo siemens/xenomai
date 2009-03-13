@@ -1,3 +1,11 @@
+2009-03-13  Philippe GERUM  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/mx.c: Streamline mutex support.
+
+2009-03-12  Philippe GERUM  <rpm@xenomai.org>
+
+	* ksrc/skins/vrtx/task.c, src/skins/vrtx/task.c: Fix task creation.
+
 2009-03-12  Philippe GERUM  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c, ksrc/nucleus/synch.c: Introduce debug

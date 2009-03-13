@@ -32,19 +32,21 @@ static int __mutex_read_proc(char *page,
 			     off_t off, int count, int *eof, void *data)
 {
 	vrtxmx_t *mx = (vrtxmx_t *)data;
+	xnthread_t *owner;
 	char *p = page;
 	int len;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (mx->owner) {
+	owner = xnsynch_owner(&mx->synchbase);
+	if (owner) {
 		xnpholder_t *holder;
 
 		/* Locked mx -- dump owner and waiters, if any. */
 
 		p += sprintf(p, "=locked by %s\n",
-			     xnthread_name(mx->owner));
+			     xnthread_name(owner));
 
 		holder = getheadpq(xnsynch_wait_queue(&mx->synchbase));
 
@@ -144,15 +146,13 @@ int sc_mcreate(unsigned int opt, int *errp)
 		return 0;
 	}
 
-	mx = (vrtxmx_t *)xnmalloc(sizeof(*mx));
-
-	if (!mx) {
+	mx = xnmalloc(sizeof(*mx));
+	if (mx == NULL) {
 		*errp = ER_NOCB;
 		return -1;
 	}
 
 	mid = xnmap_enter(vrtx_mx_idmap, -1, mx);
-
 	if (mid < 0) {
 		xnfree(mx);
 		return -1;
@@ -160,7 +160,6 @@ int sc_mcreate(unsigned int opt, int *errp)
 
 	inith(&mx->link);
 	mx->mid = mid;
-	mx->owner = NULL;
 	xnsynch_init(&mx->synchbase, bflags | XNSYNCH_DREORD | XNSYNCH_OWNER,
 		     NULL);
 
@@ -180,24 +179,22 @@ int sc_mcreate(unsigned int opt, int *errp)
 
 void sc_mpost(int mid, int *errp)
 {
+	xnthread_t *cur = xnpod_current_thread();
 	vrtxmx_t *mx;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
-
-	if (mx == NULL || mx->owner == NULL) {
+	/* Return ER_ID if the poster does not own the mutex. */
+	if (mx == NULL || xnsynch_owner(&mx->synchbase) != cur) {
 		*errp = ER_ID;
 		goto unlock_and_exit;
 	}
 
-	/* Undefined behaviour if the poster does not own the mutex. */
-	mx->owner = xnsynch_release(&mx->synchbase);
-
 	*errp = RET_OK;
 
-	if (mx->owner)
+	if (xnsynch_release(&mx->synchbase))
 		xnpod_schedule();
 
       unlock_and_exit:
@@ -207,6 +204,7 @@ void sc_mpost(int mid, int *errp)
 
 void sc_mdelete(int mid, int opt, int *errp)
 {
+	xnthread_t *owner;
 	vrtxmx_t *mx;
 	spl_t s;
 
@@ -218,13 +216,13 @@ void sc_mdelete(int mid, int opt, int *errp)
 	xnlock_get_irqsave(&nklock, s);
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
-
 	if (mx == NULL) {
 		*errp = ER_ID;
 		goto unlock_and_exit;
 	}
 
-	if (mx->owner && (opt == 0 || xnpod_current_thread() != mx->owner)) {
+	owner = xnsynch_owner(&mx->synchbase);
+	if (owner && (opt == 0 || xnpod_current_thread() != owner)) {
 		*errp = ER_PND;
 		goto unlock_and_exit;
 	}
@@ -234,13 +232,14 @@ void sc_mdelete(int mid, int opt, int *errp)
 	if (mx_destroy_internal(mx) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 }
 
 void sc_mpend(int mid, unsigned long timeout, int *errp)
 {
+	xnthread_t *cur = xnpod_current_thread();
 	vrtxtask_t *task;
 	vrtxmx_t *mx;
 	spl_t s;
@@ -253,7 +252,6 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 	}
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
-
 	if (mx == NULL) {
 		*errp = ER_ID;
 		goto unlock_and_exit;
@@ -261,30 +259,28 @@ void sc_mpend(int mid, unsigned long timeout, int *errp)
 
 	*errp = RET_OK;
 
-	if (mx->owner != NULL) {
-		task = vrtx_current_task();
-		task->vrtxtcb.TCBSTAT = TBSMUTEX;
-
-		if (timeout)
-			task->vrtxtcb.TCBSTAT |= TBSDELAY;
-
-		xnsynch_acquire(&mx->synchbase, timeout, XN_RELATIVE);
-
-		if (xnthread_test_info(&task->threadbase, XNBREAK))
-			*errp = -EINTR;
-		else if (xnthread_test_info(&task->threadbase, XNRMID))
-			*errp = ER_DEL;	/* Mutex deleted while pending. */
-		else if (xnthread_test_info(&task->threadbase, XNTIMEO))
-			*errp = ER_TMO;	/* Timeout. */
-		else
-			goto grab_mutex;
-
+	if (xnsynch_owner(&mx->synchbase) == NULL) {
+		xnsynch_set_owner(&mx->synchbase, cur);
 		goto unlock_and_exit;
 	}
 
-      grab_mutex:
+	if (xnsynch_owner(&mx->synchbase) == cur)
+		goto unlock_and_exit;
 
-	mx->owner = xnpod_current_thread();
+	task = thread2vrtxtask(cur);
+	task->vrtxtcb.TCBSTAT = TBSMUTEX;
+
+	if (timeout)
+		task->vrtxtcb.TCBSTAT |= TBSDELAY;
+
+	xnsynch_acquire(&mx->synchbase, timeout, XN_RELATIVE);
+
+	if (xnthread_test_info(cur, XNBREAK))
+		*errp = -EINTR;
+	else if (xnthread_test_info(cur, XNRMID))
+		*errp = ER_DEL;	/* Mutex deleted while pending. */
+	else if (xnthread_test_info(cur, XNTIMEO))
+		*errp = ER_TMO;	/* Timeout. */
 
       unlock_and_exit:
 
@@ -304,19 +300,18 @@ void sc_maccept(int mid, int *errp)
 	}
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
-
 	if (mx == NULL) {
 		*errp = ER_ID;
 		goto unlock_and_exit;
 	}
 
-	if (mx->owner == NULL) {
-		mx->owner = xnpod_current_thread();
+	if (xnsynch_owner(&mx->synchbase) == NULL) {
+		xnsynch_set_owner(&mx->synchbase, xnpod_current_thread());
 		*errp = RET_OK;
 	} else
 		*errp = ER_PND;
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -324,21 +319,21 @@ void sc_maccept(int mid, int *errp)
 int sc_minquiry(int mid, int *errp)
 {
 	vrtxmx_t *mx;
-	int rc = 0;
 	spl_t s;
+	int rc;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	mx = xnmap_fetch(vrtx_mx_idmap, mid);
-
 	if (mx == NULL) {
+		rc = 0;
 		*errp = ER_ID;
 		goto unlock_and_exit;
 	}
 
-	rc = mx->owner == NULL;
+	rc = xnsynch_owner(&mx->synchbase) == NULL;
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
