@@ -330,7 +330,7 @@ void dump_stats(long *histogram, char *kind, double avg)
 	}
 
 	/* compute std-deviation (unbiased form) */
-	if (hits > 1) {
+	if (total_hits > 1) {
 		variance /= total_hits - 1;
 		variance = sqrt(variance);
 	} else
