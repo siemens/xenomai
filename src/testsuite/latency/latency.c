@@ -330,8 +330,11 @@ void dump_stats(long *histogram, char *kind, double avg)
 	}
 
 	/* compute std-deviation (unbiased form) */
-	variance /= total_hits - 1;
-	variance = sqrt(variance);
+	if (hits > 1) {
+		variance /= total_hits - 1;
+		variance = sqrt(variance);
+	} else
+		variance = 0;
 
 	printf("HSS|    %s| %9d| %10.3f| %10.3f\n",
 	       kind, total_hits, avg, variance);
