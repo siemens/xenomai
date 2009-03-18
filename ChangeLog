@@ -25,6 +25,9 @@
 	* ksrc/nucleus/shadow.c: Suppress switch warning upon signal
 	receipt when the process is being debugged.
 
+	* ksrc/nucleus/sched.c: Allow to change the watchdog timeout via a
+	module parameter.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

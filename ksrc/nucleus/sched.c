@@ -49,6 +49,10 @@ int xnsched_register_class(struct xnsched_class *sched_class)
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 
+static u_long wd_timeout_arg = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
+module_param_named(watchdog_timeout, wd_timeout_arg, ulong, 0444);
+MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
+
 /*! 
  * @internal
  * \fn void xnsched_watchdog_handler(struct xntimer *timer)
@@ -69,8 +73,8 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		xnsched_reset_watchdog(sched);
 		return;
 	}
-		
-	if (unlikely(++sched->wdcount >= CONFIG_XENO_OPT_WATCHDOG_TIMEOUT)) {
+
+	if (unlikely(++sched->wdcount >= wd_timeout_arg)) {
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
