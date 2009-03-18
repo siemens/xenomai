@@ -22,6 +22,9 @@
 
 	* ksrc/nucleus/shadow.c: Cleanup taskexit hook.
 
+	* ksrc/nucleus/shadow.c: Suppress switch warning upon signal
+	receipt when the process is being debugged.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

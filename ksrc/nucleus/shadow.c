@@ -667,7 +667,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 			__xn_error_return(regs,
 					  (sysflags & __xn_exec_norestart) ?
 					  -ERESTARTNOHAND : -ERESTARTSYS);
-			notify = 1;
+			notify = !xnthread_test_state(thread, XNDEBUG);
 		}
 
 		xnthread_clear_info(thread, XNKICKED);
