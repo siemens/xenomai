@@ -37,20 +37,20 @@
 	names. Instead, return -EINVAL when trying to create objects with
 	empty names.
 
-2009-03-13  Philippe GERUM  <rpm@xenomai.org>
+2009-03-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/mx.c: Streamline mutex support.
 
-2009-03-12  Philippe GERUM  <rpm@xenomai.org>
+2009-03-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/task.c, src/skins/vrtx/task.c: Fix task creation.
 
-2009-03-12  Philippe GERUM  <rpm@xenomai.org>
+2009-03-12  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/nucleus/shadow.c, ksrc/nucleus/synch.c: Introduce debug
 	option to detect mutexes held in relaxed sections.
 
-2009-03-07  Philippe GERUM  <rpm@xenomai.org>
+2009-03-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* src/skins/posix/shm.c (__wrap_munmap): Forward to glibc upon EBADF.
 
