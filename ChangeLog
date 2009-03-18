@@ -7,6 +7,9 @@
 
 	* src/rtdk/rt_print.c: suspend/resume printer thread.
 
+	* ksrc/skins/native/syscall.c, src/skins/native/task.c: Support
+	T_WARNSW on task creation.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

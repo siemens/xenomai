@@ -181,29 +181,35 @@ static int __rt_task_create(struct pt_regs *regs)
 	   the platform does not support it. */
 
 	err = rt_task_create(task, name, 0, prio, XNFPU | XNSHADOW | mode);
+	if (err)
+		goto fail;
 
-	if (err == 0) {
-		/* Apply CPU affinity */
-		set_cpus_allowed(p, task->affinity);
+	/* Apply CPU affinity */
+	set_cpus_allowed(p, task->affinity);
 
-		/* Copy back the registry handle to the ph struct. */
-		ph.opaque = xnthread_handle(&task->thread_base);
-		ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
-		if (__xn_safe_copy_to_user((void __user *)bulk.a1, &ph, sizeof(ph)))
-			err = -EFAULT;
-		else {
-			err = xnshadow_map(&task->thread_base, u_completion,
-					   (unsigned long __user *)bulk.a6);
-			if (!err)
-				goto out;
-		}
-
-		rt_task_delete(task);
+	/* Copy back the registry handle to the ph struct. */
+	ph.opaque = xnthread_handle(&task->thread_base);
+	ph.opaque2 = bulk.a5;	/* hidden pthread_t identifier. */
+	if (__xn_safe_copy_to_user((void __user *)bulk.a1, &ph, sizeof(ph))) {
+		err = -EFAULT;
+		goto delete;
 	}
-		
+
+	err = xnshadow_map(&task->thread_base, u_completion,
+			   (unsigned long __user *)bulk.a6);
+	if (err)
+		goto delete;
+
+	if (bulk.a4 & T_WARNSW)
+		xnpod_set_thread_mode(&task->thread_base, 0, XNTRAPSW);
+
+	return 0;
+
+delete:
+	rt_task_delete(task);
+
 fail:
 	/* Unblock and pass back error code. */
-
 	if (u_completion)
 		xnshadow_signal_completion(u_completion, err);
 
@@ -216,7 +222,7 @@ fail:
 	if (task != NULL
 	    && !xnthread_test_state(&task->thread_base, XNZOMBIE))
 		xnfree(task);
-out:
+
 	return err;
 }
 

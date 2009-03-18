@@ -40,6 +40,7 @@ extern pthread_key_t __native_tskey;
 #endif /* !HAVE___THREAD */
 
 extern int __native_muxid;
+extern int xeno_sigxcpu_no_mlock;
 
 /* Public Xenomai interface. */
 
@@ -99,6 +100,9 @@ static void *rt_task_trampoline(void *cookie)
 #ifdef HAVE___THREAD
 	__native_self = *task;
 #endif /* HAVE___THREAD */
+
+	if (iargs->mode & T_WARNSW)
+		xeno_sigxcpu_no_mlock = 0;
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -215,6 +219,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 		__native_self = *task;
 #endif /* HAVE___THREAD */
 		xeno_set_current();
+
+		if (mode & T_WARNSW)
+			xeno_sigxcpu_no_mlock = 0;
 	}
 
 	return err;
@@ -310,7 +317,6 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
 
 int rt_task_set_mode(int clrmask, int setmask, int *oldmode)
 {
-	extern int xeno_sigxcpu_no_mlock;
 	int err;
 
 	err = XENOMAI_SKINCALL3(__native_muxid,
