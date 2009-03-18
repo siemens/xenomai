@@ -68,14 +68,12 @@ case "$host" in
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
-	XENO_LINUX_INSTALL_TARGET=install_image
-	XENO_LINUX_IMAGE=arch/ppc/boot/images/uImage
+	XENO_LINUX_INSTALL_TARGET=install
         ;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=powerpc
-	XENO_LINUX_INSTALL_TARGET=install_image
-	XENO_LINUX_IMAGE=arch/powerpc/boot/uImage
+	XENO_LINUX_INSTALL_TARGET=install
         ;;
  ia64-*)
 	XENO_TARGET_ARCH=ia64
