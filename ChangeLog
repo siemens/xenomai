@@ -1,5 +1,9 @@
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
+	* ksrc/nucleus/shadow.c: Trace syscall exits.
+
+2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
+
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length
 	names. Instead, return -EINVAL when trying to create objects with
 	empty names.

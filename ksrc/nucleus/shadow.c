@@ -1928,7 +1928,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus, syscall_histage,
+	trace_mark(xn_nucleus, syscall_histage_entry,
 		   "thread %p thread_name %s muxid %d muxop %d",
 		   thread, thread ? xnthread_name(thread) : NULL,
 		   muxid, muxop);
@@ -1936,14 +1936,14 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	if (muxid < 0 || muxid > XENOMAI_MUX_NR ||
 	    muxop < 0 || muxop >= muxtable[muxid].props->nrcalls) {
 		__xn_error_return(regs, -ENOSYS);
-		return RTHAL_EVENT_STOP;
+		goto ret_handled;
 	}
 
 	sysflags = muxtable[muxid].props->systab[muxop].flags;
 
 	if ((sysflags & __xn_exec_shadow) != 0 && !thread) {
 		__xn_error_return(regs, -EPERM);
-		return RTHAL_EVENT_STOP;
+		goto ret_handled;
 	}
 
 	if ((sysflags & __xn_exec_conforming) != 0)
@@ -2022,6 +2022,10 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
 
+      ret_handled:
+
+	trace_mark(xn_nucleus, syscall_histage_exit,
+		   "ret %ld", __xn_reg_rval(regs));
 	return RTHAL_EVENT_STOP;
 
       linux_syscall:
@@ -2119,7 +2123,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus, syscall_lostage,
+	trace_mark(xn_nucleus, syscall_lostage_entry,
 		   "thread %p thread_name %s muxid %d muxop %d",
 		   xnpod_active_p() ? xnpod_current_thread() : NULL,
 		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
@@ -2141,7 +2145,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 		   syscall. */
 		if ((err = xnshadow_harden()) != 0) {
 			__xn_error_return(regs, err);
-			return RTHAL_EVENT_STOP;
+			goto ret_handled;
 		}
 
 		switched = 1;
@@ -2169,6 +2173,9 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_relax(0);
 
+      ret_handled:
+	trace_mark(xn_nucleus, syscall_lostage_exit,
+		   "ret %ld", __xn_reg_rval(regs));
 	return RTHAL_EVENT_STOP;
 }
 
