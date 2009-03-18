@@ -1,3 +1,7 @@
+2009-03-18  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/native/pipe.c: Fix streaming mode.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/nucleus/shadow.c: Trace syscall exits.
