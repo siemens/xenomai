@@ -2237,11 +2237,10 @@ static inline void do_taskexit_event(struct task_struct *p)
 	if (!thread)
 		return;
 
+	XENO_BUGON(NUCLEUS, !xnpod_root_p());
+
 	if (xnthread_test_state(thread, XNDEBUG))
 		unlock_timers();
-
-	if (xnpod_shadow_p())
-		xnshadow_relax(0);
 
 	magic = xnthread_get_magic(thread);
 
@@ -2251,7 +2250,6 @@ static inline void do_taskexit_event(struct task_struct *p)
 	xnthread_archtcb(thread)->user_task = NULL;
 	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
 	xnpod_delete_thread(thread);
-	xnsched_set_resched(thread->sched);
 	xnlock_put_irqrestore(&nklock, s);
 	xnpod_schedule();
 
