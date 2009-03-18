@@ -721,7 +721,7 @@ static int xnpipe_release(struct inode *inode, struct file *file)
 	/*
 	 * The extra state may not be available from now on, if
 	 * xnpipe_disconnect() entered lingering close before we got
-	 * thete; so calling xnpipe_cleanup_user_conn() should be the
+	 * there; so calling xnpipe_cleanup_user_conn() should be the
 	 * last thing we do.
 	 */
 	xnlock_put_irqrestore(&nklock, s);
