@@ -1811,9 +1811,9 @@ static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 	return __xn_safe_copy_to_user(us_hinfo, &hinfo, sizeof(*us_hinfo));
 }
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 static int xnshadow_sys_current(struct pt_regs *regs)
 {
+#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnthread_t *cur = xnshadow_thread(current);
 	xnhandle_t __user *us_handle;
 
@@ -1824,8 +1824,42 @@ static int xnshadow_sys_current(struct pt_regs *regs)
 
 	return __xn_safe_copy_to_user(us_handle, &xnthread_handle(cur),
 				      sizeof(*us_handle));
+#else /* !CONFIG_XENO_OPT_REGISTRY */
+	return -ENOSYS;
+#endif /* !CONFIG_XENO_OPT_REGISTRY */
 }
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+
+static int xnshadow_sys_current_info(struct pt_regs *regs)
+{
+	xnthread_info_t __user *us_info;
+	xnthread_info_t info;
+	xnthread_t *cur = xnshadow_thread(current);
+	xnticks_t raw_exectime;
+	int i;
+
+	if (!cur)
+		return -EPERM;
+
+	info.state = xnthread_state_flags(cur);
+	info.bprio = xnthread_base_priority(cur);
+	info.cprio = xnthread_current_priority(cur);
+	info.cpu = xnsched_cpu(xnthread_sched(cur));
+	for (i = 0, info.affinity = 0; i < BITS_PER_LONG; i++)
+		if (xnthread_affine_p(cur, i))
+			info.affinity |= 1UL << i;
+	info.relpoint = xntimer_get_date(&cur->ptimer);
+	raw_exectime = xnthread_get_exectime(cur) +
+		xnstat_exectime_now() - xnthread_get_lastswitch(cur);
+	info.exectime = xnarch_tsc_to_ns(raw_exectime);
+	info.modeswitches = xnstat_counter_get(&cur->stat.ssw);
+	info.ctxswitches = xnstat_counter_get(&cur->stat.csw);
+	info.pagefaults = xnstat_counter_get(&cur->stat.pf);
+	strcpy(info.name, xnthread_name(cur));
+
+	us_info = (xnthread_info_t __user *) __xn_reg_arg1(regs);
+
+	return __xn_safe_copy_to_user(us_info, &info, sizeof(*us_info));
+}
 
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
@@ -1836,9 +1870,9 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
 	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_any},
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+	[__xn_sys_current_info] =
+		{&xnshadow_sys_current_info, __xn_exec_shadow},
 };
 
 static void *xnshadow_sys_event(int event, void *data)

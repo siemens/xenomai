@@ -21,17 +21,18 @@
 #define _XENO_ASM_GENERIC_SYSCALL_H
 
 /* Xenomai multiplexer syscall. */
-#define __xn_sys_mux        555	/* Must fit within 15bit */
+#define __xn_sys_mux		555	/* Must fit within 15bit */
 /* Xenomai nucleus syscalls. */
-#define __xn_sys_bind       0	/* muxid = bind_to_interface(magic,featdep,abirev) */
-#define __xn_sys_completion 1	/* xnshadow_completion(&completion) */
-#define __xn_sys_migrate    2	/* switched = xnshadow_relax/harden() */
-#define __xn_sys_barrier    3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
-#define __xn_sys_info       4	/* xnshadow_get_info(muxid,&info) */
-#define __xn_sys_arch       5	/* r = xnarch_local_syscall(args) */
-#define __xn_sys_trace      6	/* r = xntrace_xxx(...) */
-#define __xn_sys_sem_heap   7
-#define __xn_sys_current    8
+#define __xn_sys_bind		0	/* muxid = bind_to_interface(magic,featdep,abirev) */
+#define __xn_sys_completion	1	/* xnshadow_completion(&completion) */
+#define __xn_sys_migrate	2	/* switched = xnshadow_relax/harden() */
+#define __xn_sys_barrier	3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
+#define __xn_sys_info		4	/* xnshadow_get_info(muxid,&info) */
+#define __xn_sys_arch		5	/* r = xnarch_local_syscall(args) */
+#define __xn_sys_trace		6	/* r = xntrace_xxx(...) */
+#define __xn_sys_sem_heap	7
+#define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
+#define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1

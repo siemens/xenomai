@@ -2,6 +2,9 @@
 
 	* ksrc/nucleus/shadow.c: Trace syscall exits.
 
+	* patching file include/asm-generic/syscall.h,
+	ksrc/nucleus/shadow.c: Add xn_sys_current_info.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

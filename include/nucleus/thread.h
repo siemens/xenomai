@@ -22,6 +22,8 @@
 #ifndef _XENO_NUCLEUS_THREAD_H
 #define _XENO_NUCLEUS_THREAD_H
 
+#include <nucleus/types.h>
+
 /*! @ingroup nucleus 
   @defgroup nucleus_state_flags Thread state flags.
   @brief Bits reporting permanent or transient states of thread.
@@ -120,6 +122,31 @@
 #define XNTHREAD_INFO_SPARES  0xf0000000
 
 /*! @} */ /* Ends doxygen comment group: nucleus_info_flags */
+
+/*!
+  @brief Structure containing thread information.
+*/
+typedef struct xnthread_info {
+
+	unsigned long state; /**< Thread state, @see nucleus_state_flags */
+
+	int bprio;  /**< Base priority. */
+	int cprio; /**< Current priority. May change through Priority Inheritance.*/
+
+	int cpu; /**< CPU the thread currently runs on. */
+	unsigned long affinity; /**< Thread's CPU affinity. */
+
+	unsigned long long relpoint; /**< Time of next release.*/
+
+	unsigned long long exectime; /**< Execution time in primary mode in nanoseconds. */
+
+	unsigned long modeswitches; /**< Number of primary->secondary mode switches. */
+	unsigned long ctxswitches; /**< Number of context switches. */
+	unsigned long pagefaults; /**< Number of triggered page faults. */
+
+	char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
+
+} xnthread_info_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
