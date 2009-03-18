@@ -58,6 +58,8 @@ void rt_print_cleanup(void);
 void rt_print_auto_init(int enable);
 const char *rt_print_buffer_name(void);
 
+void assert_nrt(void);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

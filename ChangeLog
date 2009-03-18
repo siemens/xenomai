@@ -28,8 +28,10 @@
 	* ksrc/nucleus/sched.c: Allow to change the watchdog timeout via a
 	module parameter.
 
-	ksrc/arch/x86/usercopy_{32, 64}.c: Fix miscompilation of
+	* ksrc/arch/x86/usercopy_{32, 64}.c: Fix miscompilation of
 	__do_strncpy_from_user.
+
+	* src/rtdk, include/rtdk.h: Add assert_context helpers.
 
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 

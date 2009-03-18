@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Jan Kiszka <jan.kiszka@web.de>.
+ * Copyright (C) 2008, 2009 Jan Kiszka <jan.kiszka@siemens.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,18 +16,30 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef _LIBRTUTILS_INTERNAL_H
-#define _LIBRTUTILS_INTERNAL_H
+#include <stdlib.h>
 
-#include <time.h>
-#include <sys/time.h>
+#include "internal.h"
 
-void __rt_print_init(void);
+__attribute__ ((weak))
+void *__real_malloc(size_t size)
+{
+	return malloc(size);
+}
 
-void __real_free(void *ptr);
-void *__real_malloc(size_t size);
+__attribute__ ((weak))
+void __real_free(void *ptr)
+{
+	free(ptr);
+}
 
-int __real_gettimeofday(struct timeval *tv, struct timezone *tz);
-int __real_clock_gettime(clockid_t clk_id, struct timespec *tp);
+__attribute__ ((weak))
+int __real_gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+	return gettimeofday(tv, tz);
+}
 
-#endif /* !_LIBRTUTILS_INTERNAL_H */
+__attribute__ ((weak))
+int __real_clock_gettime(clockid_t clk_id, struct timespec *tp)
+{
+	return clock_gettime(clk_id, tp);
+}
