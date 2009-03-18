@@ -3,6 +3,9 @@
 	ksrc/arch/x86/usercopy_{32, 64}.c: Fix miscompilation of
 	__do_strncpy_from_user.
 
+	* ksrc/nucleus/shadow.c: Suppress switch warning upon signal
+	receipt when the process is being debugged.
+
 2009-03-13  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/vrtx/mx.c: Streamline mutex support.
