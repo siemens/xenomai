@@ -600,6 +600,8 @@ static int __sem_open(struct pt_regs *regs)
 
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+	if (len == 0)
+		return -EINVAL;
 
 	oflags = __xn_reg_arg3(regs);
 
@@ -1663,11 +1665,13 @@ static int __mq_open(struct pt_regs *regs)
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
 					  sizeof(name));
-	if (len <= 0)
+	if (len < 0)
 		return -EFAULT;
 
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+	if (len == 0)
+		return -EINVAL;
 
 	oflags = __xn_reg_arg2(regs);
 	mode = __xn_reg_arg3(regs);
@@ -1736,7 +1740,7 @@ static int __mq_unlink(struct pt_regs *regs)
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
 					  sizeof(name));
-	if (len <= 0)
+	if (len < 0)
 		return -EFAULT;
 
 	if (len >= sizeof(name))
@@ -2440,11 +2444,13 @@ static int __shm_open(struct pt_regs *regs)
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
 					  sizeof(name));
-	if (len <= 0)
+	if (len < 0)
 		return -EFAULT;
 
 	if (len >= sizeof(name))
 		return -ENAMETOOLONG;
+	if (len == 0)
+		return -EINVAL;
 
 	oflag = (int)__xn_reg_arg2(regs);
 	mode = (mode_t) __xn_reg_arg3(regs);
@@ -2487,7 +2493,7 @@ static int __shm_unlink(struct pt_regs *regs)
 	len = __xn_safe_strncpy_from_user(name,
 					  (const char __user *)__xn_reg_arg1(regs),
 					  sizeof(name));
-	if (len <= 0)
+	if (len < 0)
 		return -EFAULT;
 
 	if (len >= sizeof(name))
