@@ -12,6 +12,8 @@
 
 	* src/skins/native/task.c: Avoid lazy non-TLS rt_task_self.
 
+	* src/skins/native/task.c: Silent migration before self-deletion.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

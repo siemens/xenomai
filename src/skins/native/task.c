@@ -121,6 +121,9 @@ static void *rt_task_trampoline(void *cookie)
 	if (!err)
 		entry(cookie);
 
+	/* Silently migrate to avoid raising SIGXCPU on regular exit. */
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+
       fail:
 
 	pthread_exit((void *)err);
@@ -265,12 +268,18 @@ int rt_task_delete(RT_TASK *task)
 {
 	int err;
 
-	if (task && task->opaque2) {
+	if (!task || task->opaque == rt_task_self()->opaque) {
+		/* Silently migrate to avoid raising SIGXCPU. */
+		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+
+		pthread_exit(NULL);
+	}
+
+	if (task->opaque2) {
 		err = pthread_cancel((pthread_t)task->opaque2);
 		if (err)
 			return -err;
-	} else if (!task)
-		pthread_exit(NULL);
+	}
 
 	err = XENOMAI_SKINCALL1(__native_muxid, __native_task_delete, task);
 	if (err == -ESRCH)
