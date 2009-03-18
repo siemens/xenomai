@@ -110,6 +110,7 @@ static void __pipe_free_handler(void *buf, void *xstate) /* nklock free */
 		/* Reset the streaming buffer. */
 		xnlock_get_irqsave(&nklock, s);
 		pipe->fillsz = 0;
+		xnpipe_m_size(pipe->buffer) = 0;
 		__clear_bit(P_SYNCWAIT, &pipe->status);
 		__clear_bit(P_ATOMIC, &pipe->status);
 		xnlock_put_irqrestore(&nklock, s);
@@ -284,8 +285,8 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 				       NULL);
 		return -ENOMEM;
 	}
-	inith(&pipe->buffer->link);
-	pipe->buffer->size = streamsz - sizeof(RT_PIPE_MSG);
+	inith(xnpipe_m_link(pipe->buffer));
+	xnpipe_m_size(pipe->buffer) = streamsz - sizeof(RT_PIPE_MSG);
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
 	ops.output = NULL;
@@ -881,8 +882,10 @@ ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
 		goto unlock_and_exit;
 	}
 
-	if (size > CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz)
-		outbytes = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ - pipe->fillsz;
+	if (size > CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ
+	    - sizeof(RT_PIPE_MSG) - pipe->fillsz)
+		outbytes = CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ
+			- sizeof(RT_PIPE_MSG) - pipe->fillsz;
 	else
 		outbytes = size;
 
