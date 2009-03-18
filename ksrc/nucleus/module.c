@@ -418,17 +418,22 @@ static int __stat_seq_open(struct inode *inode,
 				break; /* line unused or end of chain */
 			}
 
-			stat_info->cpu = intr_iter.cpu;
-			stat_info->csw = intr_iter.hits;
-			stat_info->exectime_period = intr_iter.exectime_period;
-			stat_info->account_period = intr_iter.account_period;
-			stat_info->exectime_total = intr_iter.exectime_total;
-			stat_info->pid = 0;
-			stat_info->state =  0;
-			stat_info->ssw = 0;
-			stat_info->pf = 0;
+			if (xnarch_cpu_supported(intr_iter.cpu)) {
+				stat_info->cpu = intr_iter.cpu;
+				stat_info->csw = intr_iter.hits;
+				stat_info->exectime_period =
+					intr_iter.exectime_period;
+				stat_info->account_period =
+					intr_iter.account_period;
+				stat_info->exectime_total =
+					intr_iter.exectime_total;
+				stat_info->pid = 0;
+				stat_info->state =  0;
+				stat_info->ssw = 0;
+				stat_info->pf = 0;
 
-			iter->nentries++;
+				iter->nentries++;
+			}
 		}
 
 	seq = file->private_data;
@@ -1022,7 +1027,7 @@ static int affinity_write_proc(struct file *file,
 	for (cpu = 0; cpu < sizeof(val) * 8; cpu++, val >>= 1)
 		if (val & 1)
 			xnarch_cpu_set(cpu, new_affinity);
-	nkaffinity = new_affinity;
+	xnarch_cpus_and(nkaffinity, new_affinity, xnarch_supported_cpus);
 
 	return count;
 }
@@ -1236,6 +1241,8 @@ int __init __xeno_sys_init(void)
 	initq(&xnmod_glink_queue);
 
 	xeno_nucleus_status = 0;
+
+	xnarch_cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
 
 	return 0;
 

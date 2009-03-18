@@ -414,7 +414,8 @@ int xnpod_init(void)
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		sched = &pod->sched[cpu];
 		xnsched_init(sched, cpu);
-		appendq(&pod->threadq, &sched->rootcb.glink);
+		if (xnarch_cpu_supported(cpu))
+			appendq(&pod->threadq, &sched->rootcb.glink);
 	}
 
 	xnarch_hook_ipi(&xnpod_schedule_handler);
@@ -2662,6 +2663,9 @@ int xnpod_enable_timesource(void)
 
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++) {
 
+		if (!xnarch_cpu_supported(cpu))
+			continue;
+
 		sched = xnpod_sched_slot(cpu);
 
 		htickval = xnarch_start_timer(&xnintr_clock_handler, cpu);
@@ -2752,7 +2756,8 @@ void xnpod_disable_timesource(void)
 	   timer, since this could cause deadlock situations to arise
 	   on SMP systems. */
 	for (cpu = 0; cpu < xnarch_num_online_cpus(); cpu++)
-		xnarch_stop_timer(cpu);
+		if (xnarch_cpu_supported(cpu))
+			xnarch_stop_timer(cpu);
 
 	xntimer_freeze();
 

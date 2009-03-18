@@ -263,6 +263,9 @@ typedef cpumask_t xnarch_cpumask_t;
 #define xnarch_first_cpu(mask)			first_cpu(mask)
 #define XNARCH_CPU_MASK_ALL			CPU_MASK_ALL
 
+#define xnarch_supported_cpus			rthal_supported_cpus
+#define xnarch_cpu_supported(cpu)		rthal_cpu_supported(cpu)
+
 struct xnheap;
 
 typedef struct xnarch_heapcb {

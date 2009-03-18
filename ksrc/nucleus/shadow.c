@@ -1227,6 +1227,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		}
 	}
 
+	/* Restrict affinity to a single CPU of nkaffinity & current set. */
+	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
+	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
+	set_cpus_allowed(current, affinity);
+
 	trace_mark(xn_nucleus, shadow_map,
 		   "thread %p thread_name %s pid %d priority %d",
 		   thread, xnthread_name(thread), current->pid,
@@ -1248,10 +1253,6 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
-	/* Restrict affinity to a single CPU of nkaffinity & current set. */
-	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
-	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
-	set_cpus_allowed(current, affinity);
 	thread->u_mode = u_mode;
 
 	if (u_completion) {
@@ -2638,6 +2639,9 @@ int xnshadow_mount(void)
 	    rthal_apc_alloc("lostage_handler", &lostage_handler, NULL);
 
 	for_each_online_cpu(cpu) {
+		if (!xnarch_cpu_supported(cpu))
+			continue;
+
 		sched = &nkpod_struct.sched[cpu];
 		sema_init(&sched->gksync, 0);
 		xnarch_memory_barrier();
@@ -2701,6 +2705,9 @@ void xnshadow_cleanup(void)
 	rthal_catch_hisyscall(NULL);
 
 	for_each_online_cpu(cpu) {
+		if (!xnarch_cpu_supported(cpu))
+			continue;
+
 		sched = &nkpod_struct.sched[cpu];
 		down(&sched->gksync);
 		sched->gktarget = NULL;

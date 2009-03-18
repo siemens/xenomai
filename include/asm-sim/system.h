@@ -120,6 +120,9 @@ typedef unsigned long xnarch_cpumask_t;
 #define xnarch_first_cpu(mask)           (ffnz(mask))
 #define XNARCH_CPU_MASK_ALL              (~0UL)
 
+#define xnarch_supported_cpus            (~0UL)
+#define xnarch_cpu_supported(cpu)        1
+
 #define xnarch_ullmod(ull,uld,rem)   ((*rem) = ((ull) % (uld)))
 #define xnarch_uldivrem(ull,uld,rem) ((u_long)xnarch_ulldiv((ull),(uld),(rem)))
 #define xnarch_uldiv(ull, d)         xnarch_uldivrem(ull, d, NULL)

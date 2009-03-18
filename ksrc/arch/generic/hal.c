@@ -58,6 +58,14 @@ module_param_named(cpufreq, rthal_cpufreq_arg, ulong, 0444);
 unsigned long rthal_timerfreq_arg;
 module_param_named(timerfreq, rthal_timerfreq_arg, ulong, 0444);
 
+#ifdef CONFIG_SMP
+static unsigned long supported_cpus_arg = -1;
+module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
+
+cpumask_t rthal_supported_cpus;
+EXPORT_SYMBOL(rthal_supported_cpus);
+#endif /* CONFIG_SMP */
+
 static struct {
 
     void (*handler) (void *cookie);
@@ -777,6 +785,16 @@ int rthal_init(void)
 
     if (err)
         goto out;
+
+#ifdef CONFIG_SMP
+    {
+        int cpu;
+        cpus_clear(rthal_supported_cpus);
+        for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
+            if (supported_cpus_arg & (1 << cpu))
+                cpu_set(cpu, rthal_supported_cpus);
+    }
+#endif /* CONFIG_SMP */
 
     /* The arch-dependent support must have updated the frequency args
        as required. */

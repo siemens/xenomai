@@ -465,6 +465,22 @@ int rthal_timer_request(void (*tick_handler)(void),
 
 void rthal_timer_release(int cpu);
 
+#ifdef CONFIG_SMP
+extern cpumask_t rthal_supported_cpus;
+
+static inline int rthal_cpu_supported(int cpu)
+{
+	return cpu_isset(cpu, rthal_supported_cpus);
+}
+#else  /* !CONFIG_SMP */
+#define rthal_supported_cpus CPU_MASK_ALL
+
+static inline int rthal_cpu_supported(int cpu)
+{
+	return 1;
+}
+#endif /* !CONFIG_SMP */
+
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 
