@@ -63,12 +63,7 @@ static void *psos_task_trampoline(void *cookie)
 	void (*entry)(u_long, u_long, u_long, u_long);
 	u_long dummy_args[4] = { 0, 0, 0, 0 }, *targs;
 	struct psos_arg_bulk bulk;
-	struct sched_param param;
-	int policy;
 	long err;
-
-	policy = psos_task_set_posix_priority(iargs->prio, &param);
-	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	sigshadow_install_once();

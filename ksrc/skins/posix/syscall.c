@@ -167,9 +167,9 @@ static int __pthread_create(struct pt_regs *regs)
 	   calling context. */
 
 	pthread_attr_init(&attr);
-	attr.policy = p->policy;
+	attr.policy = __xn_reg_arg2(regs);
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
-	attr.schedparam_ex.sched_priority = p->rt_priority;
+	attr.schedparam_ex.sched_priority = __xn_reg_arg3(regs);
 	attr.fp = 1;
 	attr.name = p->comm;
 
@@ -179,7 +179,7 @@ static int __pthread_create(struct pt_regs *regs)
 		return -err;	/* Conventionally, our error codes are negative. */
 
 	err = xnshadow_map(&k_tid->threadbase, NULL,
-			   (unsigned long __user *)__xn_reg_arg2(regs));
+			   (unsigned long __user *)__xn_reg_arg4(regs));
 
 	if (!err && !__pthread_hash(&hkey, k_tid))
 		err = -ENOMEM;

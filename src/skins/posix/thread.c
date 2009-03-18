@@ -203,8 +203,8 @@ static void *__pthread_trampoline(void *arg)
 
 	/* Do _not_ inline the call to pthread_self() in the syscall
 	   macro: this trashes the syscall regs on some archs. */
-	err = XENOMAI_SKINCALL2(__pse51_muxid, __pse51_thread_create, tid,
-				mode_buf);
+	err = XENOMAI_SKINCALL4(__pse51_muxid, __pse51_thread_create, tid,
+				iargs->policy, iargs->prio, mode_buf);
 	iargs->ret = -err;
 
 	/* We must save anything we'll need to use from *iargs on our own
@@ -221,11 +221,6 @@ static void *__pthread_trampoline(void *arg)
 	__real_sem_post(&iargs->sync);
 
 	if (!err) {
-		/* Broken pthread libs ignore some of the thread attribute specs
-		   passed to pthread_create(3), so we force the scheduling policy
-		   once again here. */
-		__real_pthread_setschedparam(tid, policy, &param);
-
 		/* If the thread running pthread_create runs with the same
 		   priority as us, we should leave it running, as if there never
 		   was a synchronization with a semaphore. */

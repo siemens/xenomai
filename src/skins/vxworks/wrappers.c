@@ -33,13 +33,6 @@
  */
 
 __attribute__ ((weak))
-int __real_pthread_setschedparam(pthread_t thread,
-				 int policy, const struct sched_param *param)
-{
-	return pthread_setschedparam(thread, policy, param);
-}
-
-__attribute__ ((weak))
 int __real_pthread_create(pthread_t *tid,
 			  const pthread_attr_t * attr,
 			  void *(*start) (void *), void *arg)

@@ -1255,6 +1255,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	thread->u_mode = u_mode;
 
 	if (u_completion) {
+		/*
+		 * Send the renice signal if we are not migrating so that user
+		 * space will immediately align Linux sched policy and prio.
+		 */
+		xnshadow_renice(thread);
+
  		/*
 		 * We still have the XNDORMANT bit set, so we can't
  		 * link to the RPI queue which only links _runnable_
@@ -1277,6 +1283,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	__xn_put_user(XNRELAX, u_mode);
 
 	ret = xnshadow_harden();
+
+	/*
+	 * Ensure that user space will receive the proper Linux task policy
+	 * and prio on next switch to secondary mode.
+	 */
+	xnthread_set_info(thread, XNPRIOSET);
 
 	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(thread)),
 			 xnthread_current_priority(thread));

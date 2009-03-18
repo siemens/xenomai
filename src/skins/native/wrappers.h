@@ -8,9 +8,6 @@ int __real_pthread_create(pthread_t *tid,
 			  const pthread_attr_t * attr,
 			  void *(*start) (void *), void *arg);
 
-int __real_pthread_setschedparam(pthread_t thread,
-				 int policy, const struct sched_param *param);
-
 int __real_pthread_kill(pthread_t tid, int sig);
 
 int __real_open(const char *path, int oflag, ...);

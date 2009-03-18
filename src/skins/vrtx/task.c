@@ -74,19 +74,10 @@ static void *vrtx_task_trampoline(void *cookie)
 	struct vrtx_task_iargs *iargs = cookie;
  	void (*entry)(void *arg), *arg;
 	struct vrtx_arg_bulk bulk;
-	struct sched_param param;
-	int policy;
 	long err;
 #ifndef HAVE___THREAD
 	TCB *tcb;
 #endif /* !HAVE___THREAD */
-
-	/*
-	 * Apply sched params here as some libpthread implementations
-	 * fail doing this properly via pthread_create.
-	 */
-	policy = vrtx_task_set_posix_priority(iargs->prio, &param);
-	__real_pthread_setschedparam(pthread_self(), policy, &param);
 
 	/* vrtx_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);

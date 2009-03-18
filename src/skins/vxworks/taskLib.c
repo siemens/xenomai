@@ -86,20 +86,11 @@ static void *wind_task_trampoline(void *cookie)
 	struct wind_task_iargs *iargs =
 	    (struct wind_task_iargs *)cookie, _iargs;
 	struct wind_arg_bulk bulk;
-	struct sched_param param;
 	WIND_TCB *pTcb;
-	int policy;
 	long err;
 
 	/* Backup the arg struct, it might vanish after completion. */
 	memcpy(&_iargs, iargs, sizeof(_iargs));
-
-	/*
-	 * Apply sched params here as some libpthread implementations
-	 * fail doing this properly via pthread_create.
-	 */
-	policy = wind_task_set_posix_priority(iargs->prio, &param);
-	__real_pthread_setschedparam(pthread_self(), policy, &param);
 
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);

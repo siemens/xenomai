@@ -14,6 +14,9 @@
 
 	* src/skins/native/task.c: Silent migration before self-deletion.
 
+	* src/skins, ksrc/nucleus/shadow.c: Rework initial Linux
+	schedparam setting.
+
 2009-03-18  Jan Kiszka  <jan.kiszka@siemens.com>
 
 	* ksrc/skins/posix/syscall.c: Do not return -EFAULT on zero-length

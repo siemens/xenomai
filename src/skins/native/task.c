@@ -56,7 +56,6 @@ static void *rt_task_trampoline(void *cookie)
 {
 	struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
 	void (*entry) (void *cookie);
-	struct sched_param param;
 	struct rt_arg_bulk bulk;
 	RT_TASK *task, *self;
 	long err;
@@ -67,16 +66,6 @@ static void *rt_task_trampoline(void *cookie)
 	self = malloc(sizeof(*self));
 	pthread_setspecific(__native_tskey, self);
 #endif /* !HAVE___THREAD */
-
-	if (iargs->prio > 0) {
-		/*
-		 * Re-apply sched params here as some libpthread
-		 * implementations fail doing this via pthread_create.
-		 */
-		memset(&param, 0, sizeof(param));
-		param.sched_priority = iargs->prio;
-		__real_pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-	}
 
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -191,7 +180,6 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
-	struct sched_param param;
 	struct rt_arg_bulk bulk;
 	RT_TASK task_desc;
 	RT_TASK *self;
@@ -214,13 +202,6 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	sigshadow_install_once();
-
-	if (prio > 0) {
-		/* Make sure the POSIX library caches the right priority. */
-		memset(&param, 0, sizeof(param));
-		param.sched_priority = prio;
-		__real_pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-	}
 
 	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)name;
