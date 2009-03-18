@@ -61,11 +61,13 @@ struct print_buffer {
 };
 
 static struct print_buffer *first_buffer;
+static int buffers;
 static uint32_t seq_no;
 static size_t default_buffer_size;
 static struct timespec print_period;
 static int auto_init;
 static pthread_mutex_t buffer_lock;
+static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
 static pthread_t printer_thread;
 
@@ -258,6 +260,9 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 		first_buffer->prev = buffer;
 	first_buffer = buffer;
 
+	buffers++;
+	pthread_cond_signal(&printer_wakeup);
+
 	pthread_mutex_unlock(&buffer_lock);
 
 	pthread_setspecific(buffer_key, buffer);
@@ -329,6 +334,8 @@ static void cleanup_buffer(struct print_buffer *buffer)
 	if (next)
 		next->prev = prev;
 
+	buffers--;
+
 	pthread_mutex_unlock(&buffer_lock);
 
 	free(buffer->ring);
@@ -397,13 +404,16 @@ static void print_buffers(void)
 static void *printer_loop(void *arg)
 {
 	while (1) {
-		nanosleep(&print_period, NULL);
-
 		pthread_mutex_lock(&buffer_lock);
+
+		while (buffers == 0)
+			pthread_cond_wait(&printer_wakeup, &buffer_lock);
 
 		print_buffers();
 
 		pthread_mutex_unlock(&buffer_lock);
+
+		nanosleep(&print_period, NULL);
 	}
 }
 
@@ -443,6 +453,8 @@ void __rt_print_init(void)
 
 	pthread_mutex_init(&buffer_lock, NULL);
 	pthread_key_create(&buffer_key, (void (*)(void*))cleanup_buffer);
+
+	pthread_cond_init(&printer_wakeup, NULL);
 
 	pthread_attr_init(&thattr);
 	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
