@@ -58,8 +58,15 @@ static void *rt_task_trampoline(void *cookie)
 	void (*entry) (void *cookie);
 	struct sched_param param;
 	struct rt_arg_bulk bulk;
-	RT_TASK *task;
+	RT_TASK *task, *self;
 	long err;
+
+#ifdef HAVE___THREAD
+	self = &__native_self;
+#else /* !HAVE___THREAD */
+	self = malloc(sizeof(*self));
+	pthread_setspecific(__native_tskey, self);
+#endif /* !HAVE___THREAD */
 
 	if (iargs->prio > 0) {
 		/*
@@ -95,11 +102,10 @@ static void *rt_task_trampoline(void *cookie)
 	if (err)
 		goto fail;
 
-	xeno_set_current();
+	if (self)
+		*self = *task;
 
-#ifdef HAVE___THREAD
-	__native_self = *task;
-#endif /* HAVE___THREAD */
+	xeno_set_current();
 
 	if (iargs->mode & T_WARNSW)
 		xeno_sigxcpu_no_mlock = 0;
@@ -185,7 +191,19 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	struct sched_param param;
 	struct rt_arg_bulk bulk;
 	RT_TASK task_desc;
+	RT_TASK *self;
 	int err;
+
+#ifdef HAVE___THREAD
+	self = &__native_self;
+#else /* !HAVE___THREAD */
+	self = pthread_getspecific(__native_tskey);
+
+	if (!self)
+		self = malloc(sizeof(*self));
+
+	pthread_setspecific(__native_tskey, self);
+#endif /* !HAVE___THREAD */
 
 	if (task == NULL)
 		task = &task_desc; /* Discarded. */
@@ -215,9 +233,9 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 				NULL);
 
 	if (!err) {
-#ifdef HAVE___THREAD
-		__native_self = *task;
-#endif /* HAVE___THREAD */
+		if (self)
+			*self = *task;
+
 		xeno_set_current();
 
 		if (mode & T_WARNSW)
@@ -343,22 +361,8 @@ RT_TASK *rt_task_self(void)
 
 	if (self->opaque == XN_NO_HANDLE)
 		return NULL;
-
 #else /* !HAVE___THREAD */
-	self = (RT_TASK *)pthread_getspecific(__native_tskey);
-
-	if (self)
-		return self;
-
-	self = (RT_TASK *)malloc(sizeof(*self));
-
-	if (!self ||
-	    XENOMAI_SKINCALL1(__native_muxid, __native_task_self, self) != 0) {
-		free(self);
-		return NULL;
-	}
-
-	pthread_setspecific(__native_tskey, self);
+	self = pthread_getspecific(__native_tskey);
 #endif /* !HAVE___THREAD */
 
 	return self;
