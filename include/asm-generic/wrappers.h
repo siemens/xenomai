@@ -509,4 +509,33 @@ unsigned long find_next_bit(const unsigned long *addr,
 #endif /* !CONFIG_MMU */
 #endif /* LINUX_VERSION_CODE < 2.6.27 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
+
+#ifndef current_cap
+#define current_cap()  ((current)->cap_effective)
+#endif
+
+static inline int wrap_raise_cap(int cap)
+{
+	cap_raise(current_cap(), cap);
+	return 0;
+}
+#else /* LINUX_VERSION_CODE >= 2.6.29 */
+
+#include <linux/cred.h>
+
+static inline int wrap_raise_cap(int cap)
+{
+	struct cred *new;
+
+	new = prepare_creds();
+	if (new == NULL)
+		return -ENOMEM;
+
+	cap_raise(new->cap_effective, cap);
+
+	return commit_creds(new);
+}
+#endif /* LINUX_VERSION_CODE >= 2.6.29 */
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

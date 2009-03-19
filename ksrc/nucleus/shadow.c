@@ -1514,14 +1514,14 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	if (!check_abi_revision(abirev))
 		return -ENOEXEC;
 
-	if (!cap_raised(current->cap_effective, CAP_SYS_NICE) &&
+	if (!capable(CAP_SYS_NICE) &&
 	    (xn_gid_arg == -1 || !in_group_p(xn_gid_arg)))
 		return -EPERM;
 
 	/* Raise capabilities for the caller in case they are lacking yet. */
-	cap_raise(current->cap_effective, CAP_SYS_NICE);
-	cap_raise(current->cap_effective, CAP_IPC_LOCK);
-	cap_raise(current->cap_effective, CAP_SYS_RAWIO);
+	wrap_raise_cap(CAP_SYS_NICE);
+	wrap_raise_cap(CAP_IPC_LOCK);
+	wrap_raise_cap(CAP_SYS_RAWIO);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -1964,9 +1964,11 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	if (!__xn_reg_mux_p(regs))
 		goto linux_syscall;
 
-	/* Executing Xenomai services requires CAP_SYS_NICE, except for
-	   __xn_sys_bind which does its own checks. */
-	if (unlikely(!cap_raised(p->cap_effective, CAP_SYS_NICE)) &&
+	/*
+	 * Executing Xenomai services requires CAP_SYS_NICE, except for
+	 * __xn_sys_bind which does its own checks.
+	 */
+	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
 	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind)) {
 		__xn_error_return(regs, -EPERM);
 		return RTHAL_EVENT_STOP;
