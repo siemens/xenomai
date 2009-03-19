@@ -192,14 +192,6 @@ void show_stack(struct task_struct *task,
 #define __GFP_BITS_SHIFT 20
 #define pgprot_noncached(p) (p)
 
-#define current_cap()  ((current)->cap_effective)
-
-static inline int wrap_raise_cap(int cap)
-{
-	cap_raise(current_cap(), cap);
-	return 0;
-}
-
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
