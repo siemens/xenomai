@@ -364,6 +364,8 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 
+#include <linux/sched.h>
+
 #ifndef current_cap
 #define current_cap()  ((current)->cap_effective)
 #endif
