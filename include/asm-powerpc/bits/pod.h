@@ -63,6 +63,7 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 {
 	struct task_struct *prev = out_tcb->active_task;
 	struct task_struct *next = in_tcb->user_task;
+	struct mm_struct *mm;
 
 	if (likely(next != NULL)) {
 		in_tcb->active_task = next;
@@ -73,14 +74,14 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	}
 
 	if (next && next != prev) {	/* Switch to new user-space thread? */
-		struct mm_struct *mm = next->active_mm;
+#ifdef CONFIG_ALTIVEC
+		if (cpu_has_feature(CPU_FTR_ALTIVEC))
+			asm volatile ("dssall;\n" :/*empty*/:);
+#endif
+		mm = next->active_mm;
 		/* Switch the mm context. */
 #ifdef CONFIG_PPC64
-#ifdef CONFIG_ALTIVEC
-		asm volatile ("dssall;\n" :/*empty*/:);
-#endif
-		if (!cpu_isset(rthal_processor_id(), mm->cpu_vm_mask))
-			cpu_set(rthal_processor_id(), mm->cpu_vm_mask);
+		cpu_set(rthal_processor_id(), mm->cpu_vm_mask);
 
 		if (cpu_has_feature(CPU_FTR_SLB))
 			switch_slb(next, mm);
@@ -89,20 +90,17 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
         }
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 #else /* PPC32 */
-#ifdef CONFIG_ALTIVEC
-		asm volatile ("dssall;\n"
-#ifndef CONFIG_POWER4
-			      "sync;\n"
-#endif
-			      :/*empty*/:);
-#endif /* CONFIG_ALTIVEC */
 		next->thread.pgdir = mm->pgd;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 		get_mmu_context(mm);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 		set_context(mm->context, mm->pgd);
 #else /* !(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))*/
 		set_context(mm->context.id, mm->pgd);
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
+		switch_mmu_context(prev->active_mm, mm);
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
 		current = prev;	/* Make sure r2 is valid. */
 	}
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
