@@ -104,13 +104,12 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 	next_mm = in_tcb->active_mm;
 
 	if (prev_mm != next_mm) {
-#ifdef CONFIG_PPC64
 #ifdef CONFIG_ALTIVEC
 		asm volatile ("dssall;\n" :/*empty*/:);
 #endif
+#ifdef CONFIG_PPC64
 		if (likely(next_mm)) {
-			if (!cpu_isset(rthal_processor_id(), next_mm->cpu_vm_mask))
-				cpu_set(rthal_processor_id(), next_mm->cpu_vm_mask);
+			cpu_set(rthal_processor_id(), next_mm->cpu_vm_mask);
 
 			if (cpu_has_feature(CPU_FTR_SLB))
 				switch_slb(next, next_mm);
@@ -120,23 +119,20 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
         }
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 #else /* PPC32 */
-#ifdef CONFIG_ALTIVEC
-		asm volatile ("dssall;\n"
-#ifndef CONFIG_POWER4
-			      "sync;\n"
-#endif
-			      :/*empty*/:);
-#endif /* CONFIG_ALTIVEC */
 		if (likely(next_mm)) {
 			next->thread.pgdir = next_mm->pgd;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 			get_mmu_context(next_mm);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
 			set_context(next_mm->context, next_mm->pgd);
 #else /* !(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))*/
 			set_context(next_mm->context.id, next_mm->pgd);
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
+			switch_mmu_context(prev_mm, next_mm);
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
+			current = prev;	/* Make sure r2 is valid. */
 		}
-		current = prev;	/* Make sure r2 is valid. */
 	}
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 #endif	/* PPC32 */
