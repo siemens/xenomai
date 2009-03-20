@@ -1,3 +1,8 @@
+2009-03-19  Philippe Gerum  <rpm@xenomai.org>
+
+	* include/asm-generic/wrappers.h, src/nucleus/shadow.c: Fix
+	generic bits for 2.6.29.
+
 2009-03-18  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/skins/native/pipe.c: Fix streaming mode.
