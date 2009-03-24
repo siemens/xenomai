@@ -1,3 +1,8 @@
+2009-03-23  Philippe Gerum  <rpm@xenomai.org>
+
+	* ksrc/skins/vxworks/semLib.c (sem_destroy_internal) : Add missing
+	rescheduling. Fix sem_read_proc().
+
 2009-03-19  Philippe Gerum  <rpm@xenomai.org>
 
 	* include/asm-generic/wrappers.h, src/nucleus/shadow.c: Fix

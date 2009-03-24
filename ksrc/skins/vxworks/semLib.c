@@ -40,26 +40,35 @@ static int sem_read_proc(char *page,
 			 off_t off, int count, int *eof, void *data)
 {
 	wind_sem_t *sem = (wind_sem_t *)data;
+	xnpholder_t *holder;
+	xnthread_t *sleeper;
 	char *p = page;
+	xnpqueue_t *q;
 	int len;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	p += sprintf(p, "type=%s:value=%u\n", sem->vtbl->type, sem->count);
+	p += sprintf(p, "type=%s:", sem->vtbl->type);
 
-	if (xnsynch_nsleepers(&sem->synchbase) == 0) {
-		xnpholder_t *holder;
+	if (sem->vtbl == &semm_vtbl) {
+		p += sprintf(p, "state=%s", xnsynch_owner(&sem->synchbase) ? "locked" : "unlocked");
+		if (xnsynch_owner(&sem->synchbase) != NULL)
+			p += sprintf(p, " (%s)\n",
+				     xnthread_name(xnsynch_owner(&sem->synchbase)));
+		else
+			p += sprintf(p, "\n");
+	} else
+		p += sprintf(p, "value=%u\n", sem->count);
 
+	q = xnsynch_wait_queue(&sem->synchbase);
+	if (xnsynch_nsleepers(&sem->synchbase) > 0) {
 		/* Pended semaphore -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&sem->synchbase));
-
+		holder = getheadpq(q);
 		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
+			sleeper = link2thread(holder, plink);
 			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&sem->synchbase), holder);
+			holder = nextpq(q, holder);
 		}
 	}
 
@@ -452,10 +461,11 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 
 static void sem_destroy_internal(wind_sem_t *sem)
 {
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	xnsynch_destroy(&sem->synchbase);
+	ret = xnsynch_destroy(&sem->synchbase);
 #ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(sem->handle);
 #endif /* CONFIG_XENO_OPT_REGISTRY */
@@ -464,4 +474,7 @@ static void sem_destroy_internal(wind_sem_t *sem)
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnfree(sem);
+
+	if (ret == XNSYNCH_RESCHED)
+		xnpod_schedule();
 }
