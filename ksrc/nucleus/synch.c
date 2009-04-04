@@ -173,7 +173,7 @@ void xnsynch_sleep_on(xnsynch_t *synch, xnticks_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_synch_sleepon,
+	trace_mark(xn_nucleus, synch_sleepon,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 
@@ -390,7 +390,7 @@ xnthread_t *xnsynch_wakeup_one_sleeper(xnsynch_t *synch)
 		thread->wwake = synch;
 		synch->owner = thread;
 		xnthread_set_info(thread, XNWAKEN);
-		trace_mark(xn_nucleus_synch_wakeup_one,
+		trace_mark(xn_nucleus, synch_wakeup_one,
 			   "thread %p thread_name %s synch %p",
 			   thread, xnthread_name(thread), synch);
 		xnpod_resume_thread(thread, XNPEND);
@@ -504,7 +504,7 @@ xnpholder_t *xnsynch_wakeup_this_sleeper(xnsynch_t *synch, xnpholder_t *holder)
 	thread->wwake = synch;
 	synch->owner = thread;
 	xnthread_set_info(thread, XNWAKEN);
-	trace_mark(xn_nucleus_synch_wakeup_all,
+	trace_mark(xn_nucleus, synch_wakeup_all,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 	xnpod_resume_thread(thread, XNPEND);
@@ -576,7 +576,7 @@ int xnsynch_flush(xnsynch_t *synch, xnflags_t reason)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	trace_mark(xn_nucleus_synch_flush, "synch %p reason %lu",
+	trace_mark(xn_nucleus, synch_flush, "synch %p reason %lu",
 		   synch, reason);
 
 	status = emptypq_p(&synch->pendq) ? XNSYNCH_DONE : XNSYNCH_RESCHED;
@@ -623,7 +623,7 @@ void xnsynch_forget_sleeper(xnthread_t *thread)
 {
 	xnsynch_t *synch = thread->wchan;
 
-	trace_mark(xn_nucleus_synch_forget,
+	trace_mark(xn_nucleus, synch_forget,
 		   "thread %p thread_name %s synch %p",
 		   thread, xnthread_name(thread), synch);
 

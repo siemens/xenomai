@@ -884,7 +884,7 @@ static void lostage_handler(void *cookie)
 		struct task_struct *p = rq->req[reqnum].task;
 		rq->out = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
 
-		trace_mark(xn_nucleus_lostage_work, "reqnum %d comm %s pid %d",
+		trace_mark(xn_nucleus, lostage_work, "reqnum %d comm %s pid %d",
 			   reqnum, p->comm, p->pid);
 
 		switch (rq->req[reqnum].type) {
@@ -1099,7 +1099,7 @@ redo:
 	   preemption and using the TASK_ATOMICSWITCH cumulative state
 	   provided by Adeos to Linux tasks. */
 
-	trace_mark(xn_nucleus_shadow_gohard,
+	trace_mark(xn_nucleus, shadow_gohard,
 		   "thread %p thread_name %s comm %s",
 		   thread, xnthread_name(thread), this_task->comm);
 
@@ -1148,7 +1148,7 @@ redo:
 	if (rpi_p(thread))
 		rpi_clear_remote(thread);
 
-	trace_mark(xn_nucleus_shadow_hardened, "thread %p thread_name %s",
+	trace_mark(xn_nucleus, shadow_hardened, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
 	return 0;
@@ -1194,7 +1194,7 @@ void xnshadow_relax(int notify)
 	   domain to the Linux domain.  This will cause the Linux task
 	   to resume using the register state of the shadow thread. */
 
-	trace_mark(xn_nucleus_shadow_gorelax, "thread %p thread_name %s",
+	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
 		  thread, xnthread_name(thread));
 
 	ishield_on(thread);
@@ -1240,7 +1240,7 @@ void xnshadow_relax(int notify)
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
-	trace_mark(xn_nucleus_shadow_relaxed,
+	trace_mark(xn_nucleus, shadow_relaxed,
 		   "thread %p thread_name %s comm %s",
 		   thread, xnthread_name(thread), current->comm);
 }
@@ -1340,7 +1340,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion)
 		}
 	}
 
-	trace_mark(xn_nucleus_shadow_map,
+	trace_mark(xn_nucleus, shadow_map,
 		   "thread %p thread_name %s pid %d priority %d",
 		   thread, xnthread_name(thread), current->pid,
 		   xnthread_base_priority(thread));
@@ -1399,7 +1399,7 @@ void xnshadow_unmap(xnthread_t *thread)
 	xnthread_clear_state(thread, XNMAPPED);
 	rpi_pop(thread);
 
-	trace_mark(xn_nucleus_shadow_unmap,
+	trace_mark(xn_nucleus, shadow_unmap,
 		   "thread %p thread_name %s pid %d",
 		   thread, xnthread_name(thread), p ? p->pid : -1);
 
@@ -1466,7 +1466,7 @@ void xnshadow_start(xnthread_t *thread)
 	/* A shadow always starts in relaxed mode. */
 	rpi_push(thread, xnsched_cpu(thread->sched));
 
-	trace_mark(xn_nucleus_shadow_start, "thread %p thread_name %s",
+	trace_mark(xn_nucleus, shadow_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 	xnpod_resume_thread(thread, XNDORMANT);
 
@@ -1908,7 +1908,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus_syscall_histage,
+	trace_mark(xn_nucleus, syscall_histage,
 		   "thread %p thread_name %s muxid %d muxop %d",
 		   thread, thread ? xnthread_name(thread) : NULL,
 		   muxid, muxop);
@@ -2086,7 +2086,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
 
-	trace_mark(xn_nucleus_syscall_lostage,
+	trace_mark(xn_nucleus, syscall_lostage,
 		   "thread %p thread_name %s muxid %d muxop %d",
 		   xnpod_active_p() ? xnpod_current_thread() : NULL,
 		   xnpod_active_p() ? xnthread_name(xnpod_current_thread()) : NULL,
@@ -2169,7 +2169,7 @@ static inline void do_taskexit_event(struct task_struct *p)
 	xnpod_schedule();
 
 	xnshadow_dereference_skin(magic);
-	trace_mark(xn_nucleus_shadow_exit, "thread %p thread_name %s",
+	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 }
 

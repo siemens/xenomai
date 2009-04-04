@@ -172,7 +172,7 @@ int xntimer_start_aperiodic(xntimer_t *timer,
 {
 	xnticks_t date, now;
 
-	trace_mark(xn_nucleus_timer_start,
+	trace_mark(xn_nucleus, timer_start,
 		   "timer %p base %s value %Lu interval %Lu mode %u",
 		   timer, xntimer_base(timer)->name, value, interval, mode);
 
@@ -224,7 +224,7 @@ void xntimer_stop_aperiodic(xntimer_t *timer)
 {
 	int heading;
 
-	trace_mark(xn_nucleus_timer_stop, "timer %p", timer);
+	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
 
 	heading = xntimer_heading_p(timer);
 	xntimer_dequeue_aperiodic(timer);
@@ -302,7 +302,7 @@ void xntimer_tick_aperiodic(void)
 			   dates are ordered by increasing values. */
 			break;
 
-		trace_mark(xn_nucleus_timer_expire, "timer %p", timer);
+		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
 
 		xntimer_dequeue_aperiodic(timer);
 		xnstat_counter_inc(&timer->fired);
@@ -382,7 +382,7 @@ static int xntimer_start_periodic(xntimer_t *timer,
 				  xnticks_t value, xnticks_t interval,
 				  xntmode_t mode)
 {
-	trace_mark(xn_nucleus_timer_start,
+	trace_mark(xn_nucleus, timer_start,
 		   "timer %p base %s value %Lu interval %Lu mode %u", timer,
 		   xntimer_base(timer)->name, value, interval, mode);
 
@@ -421,7 +421,7 @@ static int xntimer_start_periodic(xntimer_t *timer,
 
 static void xntimer_stop_periodic(xntimer_t *timer)
 {
-	trace_mark(xn_nucleus_timer_stop, "timer %p", timer);
+	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
 
 	xntimer_dequeue_periodic(timer);
 }
@@ -505,7 +505,7 @@ void xntimer_tick_periodic_inner(xntslave_t *slave)
 				  - base->jiffies) > 0)
 			break;
 
-		trace_mark(xn_nucleus_timer_expire, "timer %p", timer);
+		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
 
 		xntimer_dequeue_periodic(timer);
 		xnstat_counter_inc(&timer->fired);
@@ -644,7 +644,7 @@ void xntslave_start(xntslave_t *slave, xnticks_t start, xnticks_t interval)
 	int nr_cpus, cpu;
 	spl_t s;
 
-	trace_mark(xn_nucleus_tbase_start, "base %s", slave->base.name);
+	trace_mark(xn_nucleus, tbase_start, "base %s", slave->base.name);
 
 	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
 
@@ -663,7 +663,7 @@ void xntslave_stop(xntslave_t *slave)
 	int nr_cpus, cpu;
 	spl_t s;
 
-	trace_mark(xn_nucleus_tbase_stop, "base %s", slave->base.name);
+	trace_mark(xn_nucleus, tbase_stop, "base %s", slave->base.name);
 
 	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
 
@@ -860,7 +860,7 @@ int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
 	int queued;
 	spl_t s;
 
-	trace_mark(xn_nucleus_timer_migrate, "timer %p cpu %d",
+	trace_mark(xn_nucleus, timer_migrate, "timer %p cpu %d",
 		   timer, (int)xnsched_cpu(sched));
 
 	xnlock_get_irqsave(&nklock, s);
@@ -958,7 +958,7 @@ void xntimer_freeze(void)
 	int nr_cpus, cpu;
 	spl_t s;
 
-	trace_mark(xn_nucleus_timer_freeze, MARK_NOARGS);
+	trace_mark(xn_nucleus_timer, freeze, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
 

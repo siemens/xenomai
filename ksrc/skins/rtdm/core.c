@@ -204,7 +204,7 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_named_device(path);
-	trace_mark(xn_rtdm_open, "user_info %p path %s oflag %d device %p",
+	trace_mark(xn_rtdm, open, "user_info %p path %s oflag %d device %p",
 		   user_info, path, oflag, device);
 	ret = -ENODEV;
 	if (!device)
@@ -229,7 +229,7 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 
 	fildes->context = context;
 
-	trace_mark(xn_rtdm_fd_created, "device %p fd %d", device, context->fd);
+	trace_mark(xn_rtdm, fd_created, "device %p fd %d", device, context->fd);
 
 	return context->fd;
 
@@ -254,7 +254,7 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	int nrt_mode = !rtdm_in_rt_context();
 
 	device = get_protocol_device(protocol_family, socket_type);
-	trace_mark(xn_rtdm_socket, "user_info %p protocol_family %d "
+	trace_mark(xn_rtdm, socket, "user_info %p protocol_family %d "
 		   "socket_type %d protocol %d device %p",
 		   user_info, protocol_family, socket_type, protocol, device);
 	ret = -EAFNOSUPPORT;
@@ -280,7 +280,7 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 
 	fildes->context = context;
 
-	trace_mark(xn_rtdm_fd_created, "device %p fd %d", device, context->fd);
+	trace_mark(xn_rtdm, fd_created, "device %p fd %d", device, context->fd);
 
 	return context->fd;
 
@@ -301,7 +301,7 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 	int ret;
 	int nrt_mode = !rtdm_in_rt_context();
 
-	trace_mark(xn_rtdm_close, "user_info %p fd %d", user_info, fd);
+	trace_mark(xn_rtdm, close, "user_info %p fd %d", user_info, fd);
 
 	ret = -EBADF;
 	if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
@@ -361,7 +361,7 @@ again:
 			 test_bit(RTDM_CREATED_IN_NRT, &context->context_flags),
 			 s);
 
-	trace_mark(xn_rtdm_fd_closed, "fd %d", fd);
+	trace_mark(xn_rtdm, fd_closed, "fd %d", fd);
 
 	return ret;
 
@@ -426,7 +426,7 @@ do {									\
 	rtdm_context_unlock(context);					\
 									\
 err_out:								\
-	trace_mark(xn_rtdm_##operation##_done, "result %d", ret);	\
+	trace_mark(xn_rtdm, operation##_done, "result %d", ret);	\
 	return ret;							\
 } while (0)
 
@@ -445,7 +445,7 @@ int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
 	arg = va_arg(args, void __user *);
 	va_end(args);
 
-	trace_mark(xn_rtdm_ioctl, "user_info %p fd %d request %d arg %p",
+	trace_mark(xn_rtdm, ioctl, "user_info %p fd %d request %d arg %p",
 		   user_info, fd, request, arg);
 
 	MAJOR_FUNCTION_WRAPPER_TH(ioctl, (unsigned int)request, arg);
@@ -471,7 +471,7 @@ EXPORT_SYMBOL(__rt_dev_ioctl);
 ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
 		      size_t nbyte)
 {
-	trace_mark(xn_rtdm_read, "user_info %p fd %d buf %p nbyte %zu",
+	trace_mark(xn_rtdm, read, "user_info %p fd %d buf %p nbyte %zu",
 		   user_info, fd, buf, nbyte);
 	MAJOR_FUNCTION_WRAPPER(read, buf, nbyte);
 }
@@ -481,7 +481,7 @@ EXPORT_SYMBOL(__rt_dev_read);
 ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 		       size_t nbyte)
 {
-	trace_mark(xn_rtdm_write, "user_info %p fd %d buf %p nbyte %zu",
+	trace_mark(xn_rtdm, write, "user_info %p fd %d buf %p nbyte %zu",
 		   user_info, fd, buf, nbyte);
 	MAJOR_FUNCTION_WRAPPER(write, buf, nbyte);
 }
@@ -491,7 +491,7 @@ EXPORT_SYMBOL(__rt_dev_write);
 ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 			 struct msghdr *msg, int flags)
 {
-	trace_mark(xn_rtdm_recvmsg, "user_info %p fd %d msg_name %p "
+	trace_mark(xn_rtdm, recvmsg, "user_info %p fd %d msg_name %p "
 		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
 		   "msg_control %p msg_controllen %zu msg_flags %d",
 		   user_info, fd, msg->msg_name, msg->msg_namelen,
@@ -505,7 +505,7 @@ EXPORT_SYMBOL(__rt_dev_recvmsg);
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 			 const struct msghdr *msg, int flags)
 {
-	trace_mark(xn_rtdm_recvmsg, "user_info %p fd %d msg_name %p "
+	trace_mark(xn_rtdm, recvmsg, "user_info %p fd %d msg_name %p "
 		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
 		   "msg_control %p msg_controllen %zu msg_flags %d",
 		   user_info, fd, msg->msg_name, msg->msg_namelen,
