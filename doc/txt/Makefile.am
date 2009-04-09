@@ -9,4 +9,5 @@ dist_txtdoc_DATA = \
 	uITRON-skin.txt \
 	vrtx-skin.txt \
 	comedi-skin.txt \
-	vxworks-skin.txt
+	vxworks-skin.txt \
+	ChangeLog.pre-git
