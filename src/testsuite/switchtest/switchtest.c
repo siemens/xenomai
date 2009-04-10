@@ -17,6 +17,7 @@
 
 #include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
+#include <nucleus/trace.h>
 #include <rtdm/rttesting.h>
 
 #ifdef HAVE_RECENT_SETAFFINITY
@@ -31,7 +32,7 @@ typedef unsigned long cpu_set_t;
 #define do_sched_setaffinity(pid,len,mask) 0
 #ifndef CPU_ZERO
 #define	 CPU_ZERO(set)		do { *(set) = 0; } while(0)
-#define	 CPU_SET(n,set) 	do { *(set) |= (1 << n); } while(0)
+#define	 CPU_SET(n,set)	do { *(set) |= (1 << n); } while(0)
 #endif
 #endif /* HAVE_OLD_SETAFFINITY */
 #endif /* HAVE_RECENT_SETAFFINITY */
@@ -84,6 +85,7 @@ static int quiet, status;
 static struct timespec start;
 static pthread_mutex_t headers_lock;
 static unsigned long data_lines = 21;
+static unsigned freeze_on_error;
 
 static inline void clean_exit(int retval)
 {
@@ -107,7 +109,7 @@ static void timespec_substract(struct timespec *result,
 	}
 }
 
-static char *task_name(char *buf, size_t sz, 
+static char *task_name(char *buf, size_t sz,
 		       struct cpu_tasks *cpu, unsigned task)
 {
 	char *basename [] = {
@@ -147,13 +149,13 @@ static char *task_name(char *buf, size_t sz,
 		pos += snprintf(&buf[pos],
 				sz - pos, "_%s", flags[i].name);
 	}
-	
+
 #ifdef CONFIG_SMP
 	pos += snprintf(&buf[pos], sz - pos, "%u", cpu->index);
 #endif /* !CONFIG_SMP */
 
 	snprintf(&buf[pos], sz - pos, "-%u", param->swt.index);
-	
+
 	return buf;
 }
 
@@ -162,6 +164,9 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 	struct rttst_swtest_error err;
 	unsigned from, to;
 	char buffer[64];
+
+	if (freeze_on_error)
+		xntrace_user_freeze(0, 0);
 
 	ioctl(cpu->fd, RTTST_RTIOC_SWTEST_GET_LAST_ERROR, &err);
 
@@ -175,8 +180,20 @@ static void handle_bad_fpreg(struct cpu_tasks *cpu, unsigned fp_val)
 		from, task_name(buffer, sizeof(buffer), cpu, from));
 	fprintf(stderr, "to task %d(%s),\nFPU registers were set to %u ",
 		to, task_name(buffer, sizeof(buffer), cpu, to), fp_val);
-	fprintf(stderr, "(maybe task %s)\n", 
-		task_name(buffer, sizeof(buffer), cpu, fp_val % 1000));
+	fp_val %= 1000;
+	if (fp_val < 500)
+		fprintf(stderr, "(maybe task %s)\n",
+			task_name(buffer, sizeof(buffer), cpu, fp_val));
+	else {
+		fp_val -= 500;
+		if (fp_val > cpu->tasks_count)
+			fprintf(stderr, "(unidentified task)\n");
+		else
+			fprintf(stderr, "(maybe task %s, having used fpu in "
+				"kernel-space)\n",
+				task_name(buffer, sizeof(buffer), cpu, fp_val));
+	}
+
 	clean_exit(EXIT_FAILURE);
 }
 
@@ -196,7 +213,7 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 		perror("sleeper: ioctl(RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT)");
 		clean_exit(EXIT_FAILURE);
 	}
-	
+
 	if (switches_count &&
 	    switches_count == cpu->last_switches_count) {
 		fprintf(stderr, "No context switches during one second, "
@@ -217,7 +234,7 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 
 		timespec_substract(&diff, now, &start);
 		dt = diff.tv_sec;
-		
+
 		printf("RTT|  %.2ld:%.2ld:%.2ld\n",
 		       dt / 3600, (dt / 60) % 60, dt % 60);
 #ifdef CONFIG_SMP
@@ -245,12 +262,13 @@ void display_switches_count(struct cpu_tasks *cpu, struct timespec *now)
 static void *sleeper_switcher(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
-	unsigned tasks_count = param->cpu->tasks_count;
+	unsigned to, tasks_count = param->cpu->tasks_count;
 	struct timespec ts, last;
 	int fd = param->cpu->fd;
 	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
-	unsigned i = 0;
+	unsigned i = 1;		/* Start at 1 to avoid returning to a
+				   non-existing task. */
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
@@ -260,7 +278,7 @@ static void *sleeper_switcher(void *cookie)
 	}
 
 	rtsw.from = param->swt.index;
-	rtsw.to = param->swt.index;
+	to = param->swt.index;
 
 	ts.tv_sec = 0;
 	ts.tv_nsec = 1000000;
@@ -291,13 +309,24 @@ static void *sleeper_switcher(void *cookie)
 
 		if (tasks_count == 1)
 			continue;
-	
-		if (++rtsw.to == rtsw.from)
-			++rtsw.to;
-		if (rtsw.to > tasks_count - 1)
-			rtsw.to = 0;
-		if (rtsw.to == rtsw.from)
-			++rtsw.to;
+
+		switch (i % 3) {
+		case 0:
+			/* to == from means "return to last task" */
+			rtsw.to = rtsw.from;
+			break;
+
+		case 1:
+			if (++to == rtsw.from)
+				++to;
+			if (to > tasks_count - 1)
+				to = 0;
+			if (to == rtsw.from)
+				++to;
+			rtsw.to = to;
+
+			/* If i % 3 == 2, repeat the same switch. */
+		}
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPS)
@@ -340,7 +369,7 @@ static double dot(volatile double *a, volatile double *b, int n)
 
 static void *fpu_stress(void *cookie)
 {
-	static volatile double a[10000], b[sizeof(a)/sizeof(a[0])]; 
+	static volatile double a[10000], b[sizeof(a)/sizeof(a[0])];
 	struct task_params *param = (struct task_params *) cookie;
 	cpu_set_t cpu_set;
 	unsigned i;
@@ -368,7 +397,7 @@ static void *fpu_stress(void *cookie)
 static void *rtup(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
-	unsigned tasks_count = param->cpu->tasks_count;
+	unsigned to, tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
 	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
@@ -382,18 +411,18 @@ static void *rtup(void *cookie)
 	}
 
 	rtsw.from = param->swt.index;
-	rtsw.to = param->swt.index;
+	to = param->swt.index;
 
 	/* ioctl is not a cancellation point, but we want cancellation to be
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(PTHREAD_PRIMARY, 0))) {
+	if ((err = pthread_set_mode_np(0, PTHREAD_PRIMARY))) {
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
 		clean_exit(EXIT_FAILURE);
-	}    
+	}
 
 	do {
 		err = ioctl(fd, RTTST_RTIOC_SWTEST_PEND, &param->swt);
@@ -405,12 +434,23 @@ static void *rtup(void *cookie)
 	for (;;) {
 		unsigned expected, fp_val;
 
-		if (++rtsw.to == rtsw.from)
-			++rtsw.to;
-		if (rtsw.to > tasks_count - 1)
-			rtsw.to = 0;
-		if (rtsw.to == rtsw.from)
-			++rtsw.to;
+		switch (i % 3) {
+		case 0:
+			/* to == from means "return to last task" */
+			rtsw.to = rtsw.from;
+			break;
+
+		case 1:
+			if (++to == rtsw.from)
+				++to;
+			if (to > tasks_count - 1)
+				to = 0;
+			if (to == rtsw.from)
+				++to;
+			rtsw.to = to;
+
+			/* If i % 3 == 2, repeat the same switch. */
+		}
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPP)
@@ -443,7 +483,7 @@ static void *rtup(void *cookie)
 static void *rtus(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
-	unsigned tasks_count = param->cpu->tasks_count;
+	unsigned to, tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
 	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
@@ -457,13 +497,13 @@ static void *rtus(void *cookie)
 	}
 
 	rtsw.from = param->swt.index;
-	rtsw.to = param->swt.index;
+	to = param->swt.index;
 
 	/* ioctl is not a cancellation point, but we want cancellation to be
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(0, PTHREAD_PRIMARY))) {
+	if ((err = pthread_set_mode_np(PTHREAD_PRIMARY, 0))) {
 		fprintf(stderr,
 			"rtus: pthread_set_mode_np: %s\n",
 			strerror(err));
@@ -480,12 +520,23 @@ static void *rtus(void *cookie)
 	for (;;) {
 		unsigned expected, fp_val;
 
-		if (++rtsw.to == rtsw.from)
-			++rtsw.to;
-		if (rtsw.to > tasks_count - 1)
-			rtsw.to = 0;
-		if (rtsw.to == rtsw.from)
-			++rtsw.to;
+		switch (i % 3) {
+		case 0:
+			/* to == from means "return to last task" */
+			rtsw.to = rtsw.from;
+			break;
+
+		case 1:
+			if (++to == rtsw.from)
+				++to;
+			if (to > tasks_count - 1)
+				to = 0;
+			if (to == rtsw.from)
+				++to;
+			rtsw.to = to;
+
+			/* If i % 3 == 2, repeat the same switch. */
+		}
 
 		expected = rtsw.from + i * 1000;
 		if (param->fp & UFPS)
@@ -518,7 +569,7 @@ static void *rtus(void *cookie)
 static void *rtuo(void *cookie)
 {
 	struct task_params *param = (struct task_params *) cookie;
-	unsigned mode, tasks_count = param->cpu->tasks_count;
+	unsigned mode, to, tasks_count = param->cpu->tasks_count;
 	int err, fd = param->cpu->fd;
 	struct rttst_swtest_dir rtsw;
 	cpu_set_t cpu_set;
@@ -532,13 +583,13 @@ static void *rtuo(void *cookie)
 	}
 
 	rtsw.from = param->swt.index;
-	rtsw.to = param->swt.index;
+	to = param->swt.index;
 
 	/* ioctl is not a cancellation point, but we want cancellation to be
 	   allowed when suspended in ioctl. */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	if ((err = pthread_set_mode_np(PTHREAD_PRIMARY, 0))) {
+	if ((err = pthread_set_mode_np(0, PTHREAD_PRIMARY))) {
 		fprintf(stderr,
 			"rtup: pthread_set_mode_np: %s\n",
 			strerror(err));
@@ -555,12 +606,23 @@ static void *rtuo(void *cookie)
 	for (;;) {
 		unsigned expected, fp_val;
 
-		if (++rtsw.to == rtsw.from)
-			++rtsw.to;
-		if (rtsw.to > tasks_count - 1)
-			rtsw.to = 0;
-		if (rtsw.to == rtsw.from)
-			++rtsw.to;
+		switch (i % 3) {
+		case 0:
+			/* to == from means "return to last task" */
+			rtsw.to = rtsw.from;
+			break;
+
+		case 1:
+			if (++to == rtsw.from)
+				++to;
+			if (to > tasks_count - 1)
+				to = 0;
+			if (to == rtsw.from)
+				++to;
+			rtsw.to = to;
+
+			/* If i % 3 == 2, repeat the same switch. */
+		}
 
 		expected = rtsw.from + i * 1000;
 		if ((mode && param->fp & UFPP) || (!mode && param->fp & UFPS))
@@ -584,12 +646,15 @@ static void *rtuo(void *cookie)
 		}
 
 		/* Switch mode. */
-		mode = PTHREAD_PRIMARY - mode;
-		if ((err = pthread_set_mode_np(mode, PTHREAD_PRIMARY - mode))) {
-			fprintf(stderr,
-				"rtuo: pthread_set_mode_np: %s\n",
-				strerror(err));
-			clean_exit(EXIT_FAILURE);
+		if (i % 3 == 2) {
+			mode = PTHREAD_PRIMARY - mode;
+			if ((err = pthread_set_mode_np
+			     (PTHREAD_PRIMARY - mode, mode))) {
+				fprintf(stderr,
+					"rtuo: pthread_set_mode_np: %s\n",
+					strerror(err));
+				clean_exit(EXIT_FAILURE);
+			}
 		}
 
 		if(++i == 4000000)
@@ -649,7 +714,7 @@ static int parse_arg(struct task_params *param,
 
 	for(i = 0; i < sizeof(fp2flags)/sizeof(struct t2f); i++) {
 		size_t len = strlen(fp2flags[i].text);
-	
+
 		if(!strncmp(text, fp2flags[i].text, len)) {
 			param->fp |= fp2flags[i].flag;
 			text += len;
@@ -723,7 +788,8 @@ static int task_create(struct cpu_tasks *cpu,
 	switch(param->type) {
 	case RTK:
 		param->swt.flags = (param->fp & AFP ? RTTST_SWTEST_FPU : 0)
-			| (param->fp & UFPP ? RTTST_SWTEST_USE_FPU : 0);
+			| (param->fp & UFPP ? RTTST_SWTEST_USE_FPU : 0)
+			| (freeze_on_error ? RTTST_SWTEST_FREEZE : 0);
 
 		err=ioctl(cpu->fd,RTTST_RTIOC_SWTEST_CREATE_KTASK,&param->swt);
 		if (err) {
@@ -804,10 +870,10 @@ static int task_create(struct cpu_tasks *cpu,
 		return err;
 	}
 
-	err = pthread_set_name_np(param->thread, 
-				  task_name(buffer, sizeof(buffer), 
+	err = pthread_set_name_np(param->thread,
+				  task_name(buffer, sizeof(buffer),
 				  param->cpu,param->swt.index));
-			
+
 	if (err)
 		fprintf(stderr,"pthread_set_name_np: %s\n", strerror(err));
 
@@ -825,15 +891,15 @@ static int open_rttest(char *buf, size_t size, unsigned count)
 		snprintf(buf, size, "/dev/rttest%u", dev_nr);
 
 		status = fd = open(buf, O_RDWR);
-		
+
 		if (fd == -1)
 			goto next_dev;
-		
+
 		status = ioctl(fd, RTTST_RTIOC_SWTEST_SET_TASKS_COUNT, count);
 
 		if (status == 0)
 			break;
-		
+
 	  next_dev:
 		if (fd != -1)
 			close(fd);
@@ -934,7 +1000,8 @@ void usage(FILE *fd, const char *progname)
 		"--nofpu or -n, disables any use of FPU instructions.\n"
 		"--stress <period> or -s <period> enable a stress mode where:\n"
 		"  context switches occur every <period> us;\n"
-		"  a background task uses fpu (and check) fpu all the time.\n\n"
+		"  a background task uses fpu (and check) fpu all the time.\n"
+		"--freeze trace upon error.\n\n"
 		"Each 'threadspec' specifies the characteristics of a "
 		"thread to be created:\n"
 		"threadspec = (rtk|rtup|rtus|rtuo)(_fp|_ufpp|_ufps)*[0-9]*\n"
@@ -962,7 +1029,7 @@ void usage(FILE *fd, const char *progname)
 
 	fprintf(fd,
 		"\n\nPassing only the --nofpu or -n argument is equivalent to "
-                "running:\n%s", progname);
+		"running:\n%s", progname);
 
 	for (i = 0; i < nr_cpus; i++)
 		for (j = 0; j < sizeof(all_nofp)/sizeof(char *); j++)
@@ -978,7 +1045,11 @@ void illegal_instruction(int sig)
 	siglongjmp(jump, 1);
 }
 
-int check_fpu(void)
+/* We run the FPU check in a thread to avoid clobbering the main thread FPU
+   backup area. This is important on x86, where this results on all RT threads
+   FPU backup areas to be clobbered, and thus their FPU context being switched
+   systematically (and the case where FPU has never been used not to be tested). */
+void *check_fpu_thread(void *cookie)
 {
 	int check;
 
@@ -988,7 +1059,7 @@ int check_fpu(void)
 		fprintf(stderr, "== Hardware FPU not available on your board"
 			" or not enabled in Linux kernel\n== configuration:"
 			" skipping FPU switches tests.\n");
-		return 0;
+		return NULL;
 	}
 	signal(SIGILL, illegal_instruction);
 	fp_regs_set(1);
@@ -998,11 +1069,32 @@ int check_fpu(void)
 		fprintf(stderr,
 			"== FPU check routines: unimplemented, "
 			"skipping FPU switches tests.\n");
-		return 0;
+		return NULL;
 	}
 
 	fprintf(stderr, "== FPU check routines: OK.\n");
-	return 1;
+	return (void *) 1;
+}
+
+int check_fpu(void)
+{
+	pthread_t tid;
+	void *status;
+	int err;
+
+	err = __real_pthread_create(&tid, NULL, check_fpu_thread, NULL);
+	if (err) {
+		fprintf(stderr, "pthread_create: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	err = pthread_join(tid, &status);
+	if (err) {
+		fprintf(stderr, "pthread_join: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
+
+	return (int) status;
 }
 
 int main(int argc, const char *argv[])
@@ -1047,6 +1139,7 @@ int main(int argc, const char *argv[])
 	opterr = 0;
 	for (;;) {
 		static struct option long_options[] = {
+			{ "freeze",  0, NULL, 'f' },
 			{ "help",    0, NULL, 'h' },
 			{ "lines",   1, NULL, 'l' },
 			{ "nofpu",   0, NULL, 'n' },
@@ -1056,13 +1149,17 @@ int main(int argc, const char *argv[])
 			{ NULL,      0, NULL, 0   }
 		};
 		int i = 0;
-		int c = getopt_long(argc, (char *const *) argv, ":hl:nqs:T:",
+		int c = getopt_long(argc, (char *const *) argv, "fhl:nqs:T:",
 				    long_options, &i);
 
 		if (c == -1)
 			break;
 
 		switch(c) {
+		case 'f':
+			freeze_on_error = 1;
+			break;
+
 		case 'h':
 			usage(stdout, progname);
 			exit(EXIT_SUCCESS);
@@ -1163,7 +1260,7 @@ int main(int argc, const char *argv[])
 
 		cpus[i].tasks[0].type = stress ? SWITCHER : SLEEPER;
 		cpus[i].tasks[0].fp = use_fp ? UFPS : 0;
-		cpus[i].tasks[0].cpu = &cpus[i];	
+		cpus[i].tasks[0].cpu = &cpus[i];
 		cpus[i].tasks[0].thread = 0;
 		cpus[i].tasks[0].swt.index = cpus[i].tasks[0].swt.flags = 0;
 
@@ -1288,7 +1385,7 @@ int main(int argc, const char *argv[])
 				status = EXIT_FAILURE;
 				goto cleanup;
 			}
-			printf(" %s", 
+			printf(" %s",
 			       task_name(buffer, sizeof(buffer),
 					 param->cpu, param->swt.index));
 		}
@@ -1320,7 +1417,7 @@ int main(int argc, const char *argv[])
 				pthread_cancel(param->thread);
 		}
 	}
-	
+
 	for (i = 0; i < nr_cpus; i ++) {
 		struct cpu_tasks *cpu = &cpus[i];
 

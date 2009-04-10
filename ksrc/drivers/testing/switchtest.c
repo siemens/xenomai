@@ -1,5 +1,6 @@
 #include <nucleus/synch.h>
 #include <nucleus/thread.h>
+#include <nucleus/trace.h>
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
 #include <asm/xenomai/fptest.h>
@@ -13,6 +14,7 @@ typedef struct {
 	rtdm_event_t rt_synch;
 	struct semaphore nrt_synch;
 	xnthread_t ktask;          /* For kernel-space real-time tasks. */
+	unsigned last_switch;
 } rtswitch_task_t;
 
 typedef struct rtswitch_context {
@@ -42,8 +44,40 @@ MODULE_AUTHOR("Gilles.Chanteperdrix@laposte.net");
 static rtswitch_task_t *rtswitch_utask[NR_CPUS];
 static rtdm_nrtsig_t rtswitch_wake_utask;
 
+static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
+{
+	rtswitch_task_t *cur = &ctx->tasks[ctx->error.last_switch.to];
+	unsigned i;
+
+	ctx->failed = 1;
+	ctx->error.fp_val = fp_val;
+
+	if ((cur->base.flags & RTSWITCH_RT) == RTSWITCH_RT)
+		for (i = 0; i < ctx->tasks_count; i++) {
+			rtswitch_task_t *task = &ctx->tasks[i];
+
+			/* Find the first non kernel-space task. */
+			if ((task->base.flags & RTSWITCH_KERNEL))
+				continue;
+
+			/* Unblock it. */
+			switch(task->base.flags & RTSWITCH_RT) {
+			case RTSWITCH_NRT:
+				rtswitch_utask[ctx->cpu] = task;
+				rtdm_nrtsig_pend(&rtswitch_wake_utask);
+				break;
+
+			case RTSWITCH_RT:
+				rtdm_event_signal(&task->rt_synch);
+				break;
+			}
+
+			xnpod_suspend_self();
+		}
+}
+
 static int rtswitch_pend_rt(rtswitch_context_t *ctx,
-                            unsigned idx)
+			    unsigned idx)
 {
 	rtswitch_task_t *task;
 	int rc;
@@ -92,12 +126,17 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 
 	if (from_idx > ctx->tasks_count || to_idx > ctx->tasks_count)
 		return -EINVAL;
-	
+
+	/* to == from is a special case which means
+	   "return to the previous task". */
+	if (to_idx == from_idx)
+		to_idx = ctx->error.last_switch.from;
+
 	from = &ctx->tasks[from_idx];
 	to = &ctx->tasks[to_idx];
 
 	from->base.flags |= RTSWITCH_RT;
-	++ctx->switches_count;
+	from->last_switch = ++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
 
@@ -137,7 +176,7 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 }
 
 static int rtswitch_pend_nrt(rtswitch_context_t *ctx,
-                             unsigned idx)
+			     unsigned idx)
 {
 	rtswitch_task_t *task;
 
@@ -162,15 +201,26 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			   unsigned to_idx)
 {
 	rtswitch_task_t *from, *to;
+	unsigned expected, fp_val;
+	int fp_check;
 
 	if (from_idx > ctx->tasks_count || to_idx > ctx->tasks_count)
 		return -EINVAL;
 
+	/* to == from is a special case which means
+	   "return to the previous task". */
+	if (to_idx == from_idx)
+		to_idx = ctx->error.last_switch.from;
+
 	from = &ctx->tasks[from_idx];
 	to = &ctx->tasks[to_idx];
 
+	fp_check = ctx->switches_count == from->last_switch + 1
+		&& ctx->error.last_switch.from == to_idx
+		&& ctx->error.last_switch.to == from_idx;
+
 	from->base.flags &= ~RTSWITCH_RT;
-	++ctx->switches_count;
+	from->last_switch = ++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
 
@@ -182,10 +232,66 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 	} else
 		switch (to->base.flags & RTSWITCH_RT) {
 		case RTSWITCH_NRT:
+		switch_to_nrt:
 			up(&to->nrt_synch);
 			break;
 
 		case RTSWITCH_RT:
+
+			if (!fp_check || fp_kernel_begin() < 0) {
+				fp_check = 0;
+				goto signal_nofp;
+			}
+
+			expected = from_idx + 500 +
+				(ctx->switches_count % 4000000) * 1000;
+
+			fp_regs_set(expected);
+			rtdm_event_signal(&to->rt_synch);
+			fp_val = fp_regs_check(expected);
+			fp_kernel_end();
+
+			if(down_interruptible(&from->nrt_synch))
+				return -EINTR;
+			if (ctx->failed)
+				return 1;
+			if (fp_val != expected) {
+				handle_ktask_error(ctx, fp_val);
+				return 1;
+			}
+
+			from->base.flags &= ~RTSWITCH_RT;
+			from->last_switch = ++ctx->switches_count;
+			ctx->error.last_switch.from = from_idx;
+			ctx->error.last_switch.to = to_idx;
+			if ((to->base.flags & RTSWITCH_RT) == RTSWITCH_NRT)
+				goto switch_to_nrt;
+			expected = from_idx + 500 +
+				(ctx->switches_count % 4000000) * 1000;
+
+			fp_kernel_begin();
+			fp_regs_set(expected);
+			rtdm_event_signal(&to->rt_synch);
+			fp_val = fp_regs_check(expected);
+			fp_kernel_end();
+
+			if (down_interruptible(&from->nrt_synch))
+				return -EINTR;
+			if (ctx->failed)
+				return 1;
+			if (fp_val != expected) {
+				handle_ktask_error(ctx, fp_val);
+				return 1;
+			}
+
+			from->base.flags &= ~RTSWITCH_RT;
+			from->last_switch = ++ctx->switches_count;
+			ctx->error.last_switch.from = from_idx;
+			ctx->error.last_switch.to = to_idx;
+			if ((to->base.flags & RTSWITCH_RT) == RTSWITCH_NRT)
+				goto switch_to_nrt;
+
+		signal_nofp:
 			rtdm_event_signal(&to->rt_synch);
 			break;
 
@@ -229,7 +335,7 @@ static int rtswitch_set_tasks_count(rtswitch_context_t *ctx, unsigned count)
 }
 
 static int rtswitch_register_task(rtswitch_context_t *ctx,
-                                  struct rttst_swtest_task *arg)
+				  struct rttst_swtest_task *arg)
 {
 	rtswitch_task_t *t;
 
@@ -257,36 +363,6 @@ struct taskarg {
 	rtswitch_task_t *task;
 };
 
-static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
-{
-	unsigned i;
-	
-	ctx->failed = 1;
-	ctx->error.fp_val = fp_val;
-
-	for (i = 0; i < ctx->tasks_count; i++) {
-		rtswitch_task_t *task = &ctx->tasks[i];
-
-		/* Find the first non kernel-space task. */
-		if ((task->base.flags & RTSWITCH_KERNEL))
-			continue;
-
-		/* Unblock it. */
-		switch(task->base.flags & RTSWITCH_RT) {
-		case RTSWITCH_NRT:
-			rtswitch_utask[ctx->cpu] = task;
-			rtdm_nrtsig_pend(&rtswitch_wake_utask);
-			break;
-
-		case RTSWITCH_RT:
-			rtdm_event_signal(&task->rt_synch);
-			break;
-		}
-
-		xnpod_suspend_self();
-	}
-}
-
 static void rtswitch_ktask(void *cookie)
 {
 	struct taskarg *arg = (struct taskarg *) cookie;
@@ -299,33 +375,47 @@ static void rtswitch_ktask(void *cookie)
 	rtswitch_pend_rt(ctx, task->base.index);
 
 	for(;;) {
-		if (++to == task->base.index)
-			++to;
-		if (to > ctx->tasks_count - 1)
-			to = 0;
-		if (to == task->base.index)
-			++to;
-
 		if (task->base.flags & RTTST_SWTEST_USE_FPU)
 			fp_regs_set(task->base.index + i * 1000);
-		rtswitch_to_rt(ctx, task->base.index, to);
+
+		switch(i % 3) {
+		case 0:
+			/* to == from means "return to last task" */
+			rtswitch_to_rt(ctx, task->base.index, task->base.index);
+			break;
+		case 1:
+			if (++to == task->base.index)
+				++to;
+			if (to > ctx->tasks_count - 1)
+				to = 0;
+			if (to == task->base.index)
+				++to;
+
+			/* Fall through. */
+		case 2:
+			rtswitch_to_rt(ctx, task->base.index, to);
+		}
+
 		if (task->base.flags & RTTST_SWTEST_USE_FPU) {
 			unsigned fp_val, expected;
 
 			expected = task->base.index + i * 1000;
 			fp_val = fp_regs_check(expected);
 
-			if (fp_val != expected)
+			if (fp_val != expected) {
+				if (task->base.flags & RTTST_SWTEST_FREEZE)
+					xntrace_user_freeze(0, 0);
 				handle_ktask_error(ctx, fp_val);
+			}
 		}
-				
+
 		if (++i == 4000000)
 			i = 0;
 	}
 }
 
 static int rtswitch_create_ktask(rtswitch_context_t *ctx,
-                                 struct rttst_swtest_task *ptask)
+				 struct rttst_swtest_task *ptask)
 {
 	union xnsched_policy_param param;
 	struct xnthread_start_attr sattr;
@@ -392,8 +482,8 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 }
 
 static int rtswitch_open(struct rtdm_dev_context *context,
-                         rtdm_user_info_t *user_info,
-                         int oflags)
+			 rtdm_user_info_t *user_info,
+			 int oflags)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
 
@@ -410,7 +500,7 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 }
 
 static int rtswitch_close(struct rtdm_dev_context *context,
-                          rtdm_user_info_t *user_info)
+			  rtdm_user_info_t *user_info)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
 	unsigned i;
@@ -433,9 +523,9 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 }
 
 static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
-                              rtdm_user_info_t *user_info,
-                              unsigned int request,
-                              void *arg)
+			      rtdm_user_info_t *user_info,
+			      unsigned int request,
+			      void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
 	struct rttst_swtest_task task;
@@ -443,138 +533,147 @@ static int rtswitch_ioctl_nrt(struct rtdm_dev_context *context,
 	unsigned long count;
 	int err;
 
-	switch (request)
-		{
-		case RTTST_RTIOC_SWTEST_SET_TASKS_COUNT:
-			return rtswitch_set_tasks_count(ctx,
-							(unsigned long) arg);
+	switch (request) {
+	case RTTST_RTIOC_SWTEST_SET_TASKS_COUNT:
+		return rtswitch_set_tasks_count(ctx,
+						(unsigned long) arg);
 
-		case RTTST_RTIOC_SWTEST_SET_CPU:
-			if ((unsigned long) arg > xnarch_num_online_cpus() - 1)
-				return -EINVAL;
+	case RTTST_RTIOC_SWTEST_SET_CPU:
+		if ((unsigned long) arg > xnarch_num_online_cpus() - 1)
+			return -EINVAL;
 
-			ctx->cpu = (unsigned long) arg;
-			return 0;
+		ctx->cpu = (unsigned long) arg;
+		return 0;
 
-		case RTTST_RTIOC_SWTEST_SET_PAUSE:
-			ctx->pause_us = (unsigned long) arg;
-			return 0;
+	case RTTST_RTIOC_SWTEST_SET_PAUSE:
+		ctx->pause_us = (unsigned long) arg;
+		return 0;
 
-		case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
-			if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
-				return -EFAULT;
+	case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
+		if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
+			return -EFAULT;
 
-			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
+		rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
 
-			err = rtswitch_register_task(ctx, &task);
+		err = rtswitch_register_task(ctx, &task);
 
-			if (!err)
-				rtdm_copy_to_user(user_info,
-						  arg,
-						  &task,
-						  sizeof(task));
-
-			return err;
-
-		case RTTST_RTIOC_SWTEST_CREATE_KTASK:
-			if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
-				return -EFAULT;
-
-			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
-
-			err = rtswitch_create_ktask(ctx, &task);
-
-			if (!err)
-				rtdm_copy_to_user(user_info,
-						  arg,
-						  &task,
-						  sizeof(task));
-
-			return err;
-
-		case RTTST_RTIOC_SWTEST_PEND:
-			if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
-				return -EFAULT;
-
-			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
-
-			return rtswitch_pend_nrt(ctx, task.index);
-
-		case RTTST_RTIOC_SWTEST_SWITCH_TO:
-			if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
-				return -EFAULT;
-
-			rtdm_copy_from_user(user_info,
-					    &fromto,
-					    arg,
-					    sizeof(fromto));
-
-			return rtswitch_to_nrt(ctx, fromto.from, fromto.to);
-
-		case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
-			if (!rtdm_rw_user_ok(user_info, arg, sizeof(count)))
-				return -EFAULT;
-
-			count = ctx->switches_count;
-
-			rtdm_copy_to_user(user_info, arg, &count, sizeof(count));
-
-			return 0;
-
-		case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
-			if (!rtdm_rw_user_ok(user_info, arg, sizeof(ctx->error)))
-				return -EFAULT;
-
+		if (!err)
 			rtdm_copy_to_user(user_info,
 					  arg,
-					  &ctx->error,
-					  sizeof(ctx->error));
+					  &task,
+					  sizeof(task));
 
-			return 0;
+		return err;
 
-		default:
-			return -ENOTTY;
-		}
+	case RTTST_RTIOC_SWTEST_CREATE_KTASK:
+		if (!rtdm_rw_user_ok(user_info, arg, sizeof(task)))
+			return -EFAULT;
+
+		rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
+
+		err = rtswitch_create_ktask(ctx, &task);
+
+		if (!err)
+			rtdm_copy_to_user(user_info,
+					  arg,
+					  &task,
+					  sizeof(task));
+
+		return err;
+
+	case RTTST_RTIOC_SWTEST_PEND:
+		if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
+			return -EFAULT;
+
+		rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
+
+		return rtswitch_pend_nrt(ctx, task.index);
+
+	case RTTST_RTIOC_SWTEST_SWITCH_TO:
+		if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
+			return -EFAULT;
+
+		rtdm_copy_from_user(user_info,
+				    &fromto,
+				    arg,
+				    sizeof(fromto));
+
+		return rtswitch_to_nrt(ctx, fromto.from, fromto.to);
+
+	case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
+		if (!rtdm_rw_user_ok(user_info, arg, sizeof(count)))
+			return -EFAULT;
+
+		count = ctx->switches_count;
+
+		rtdm_copy_to_user(user_info, arg, &count, sizeof(count));
+
+		return 0;
+
+	case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
+		if (!rtdm_rw_user_ok(user_info, arg, sizeof(ctx->error)))
+			return -EFAULT;
+
+		rtdm_copy_to_user(user_info,
+				  arg,
+				  &ctx->error,
+				  sizeof(ctx->error));
+
+		return 0;
+
+	default:
+		return -ENOTTY;
+	}
 }
 
 static int rtswitch_ioctl_rt(struct rtdm_dev_context *context,
-                             rtdm_user_info_t *user_info,
-                             unsigned int request,
-                             void *arg)
+			     rtdm_user_info_t *user_info,
+			     unsigned int request,
+			     void *arg)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
 	struct rttst_swtest_task task;
 	struct rttst_swtest_dir fromto;
 
-	switch (request)
-		{
-		case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
-		case RTTST_RTIOC_SWTEST_CREATE_KTASK:
-		case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
-			return -ENOSYS;
+	switch (request) {
+	case RTTST_RTIOC_SWTEST_REGISTER_UTASK:
+	case RTTST_RTIOC_SWTEST_CREATE_KTASK:
+	case RTTST_RTIOC_SWTEST_GET_SWITCHES_COUNT:
+		return -ENOSYS;
 
-		case RTTST_RTIOC_SWTEST_PEND:
-			if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
-				return -EFAULT;
+	case RTTST_RTIOC_SWTEST_PEND:
+		if (!rtdm_read_user_ok(user_info, arg, sizeof(task)))
+			return -EFAULT;
 
-			rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
+		rtdm_copy_from_user(user_info, &task, arg, sizeof(task));
 
-			return rtswitch_pend_rt(ctx, task.index);
+		return rtswitch_pend_rt(ctx, task.index);
 
-		case RTTST_RTIOC_SWTEST_SWITCH_TO:
-			if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
-				return -EFAULT;
+	case RTTST_RTIOC_SWTEST_SWITCH_TO:
+		if (!rtdm_read_user_ok(user_info, arg, sizeof(fromto)))
+			return -EFAULT;
 
-			rtdm_copy_from_user(user_info,
-					    &fromto,
-					    arg,
-					    sizeof(fromto));
+		rtdm_copy_from_user(user_info,
+				    &fromto,
+				    arg,
+				    sizeof(fromto));
 
-			return rtswitch_to_rt(ctx, fromto.from, fromto.to);
+		return rtswitch_to_rt(ctx, fromto.from, fromto.to);
 
-		default:
-			return -ENOTTY;
-		}
+	case RTTST_RTIOC_SWTEST_GET_LAST_ERROR:
+		if (!rtdm_rw_user_ok(user_info, arg, sizeof(ctx->error)))
+			return -EFAULT;
+
+		rtdm_copy_to_user(user_info,
+				  arg,
+				  &ctx->error,
+				  sizeof(ctx->error));
+
+		return 0;
+
+	default:
+		return -ENOTTY;
+	}
 }
 
 static struct rtdm_device device = {

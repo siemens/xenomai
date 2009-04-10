@@ -3,6 +3,36 @@
 
 #ifdef __KERNEL__
 #include <linux/module.h>
+#include <asm/i387.h>
+
+static inline int fp_kernel_begin(void)
+{
+#if defined(CONFIG_X86_USE_3DNOW) \
+	|| defined(CONFIG_MD_RAID456) || defined(CONFIG_MD_RAID456_MODULE)
+	/* Ther kernel uses x86 FPU, we can not also use it in our tests. */
+	static int once = 0;
+	if (!once) {
+		once = 1;
+		printk("%s:%d: Warning: Linux is compiled to use FPU in "
+		       "kernel-space.\nFor this reason, switchtest can not "
+		       "test using FPU in Linux kernel-space.\n",
+		       __FILE__, __LINE__);
+	}
+	return -EBUSY;
+#endif /* 3DNow or RAID 456 */
+	kernel_fpu_begin();
+	/* kernel_fpu_begin() does no re-initialize the fpu context, but
+	   fp_regs_set() implicitely expects an initialized fpu context, so
+	   initialize it here. */
+	__asm__ __volatile__("fninit");
+	return 0;
+}
+
+static inline void fp_kernel_end(void)
+{
+	kernel_fpu_end();
+}
+
 #else /* !__KERNEL__ */
 #include <stdio.h>
 #define printk printf
@@ -32,5 +62,6 @@ static inline unsigned fp_regs_check(unsigned val)
 
 	return result;
 }
+
 
 #endif /* _XENO_ASM_X86_FPTEST_H */

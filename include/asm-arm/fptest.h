@@ -11,6 +11,15 @@
 #define have_vfp (0)
 #endif /* !CONFIG_VFP */
 
+static inline int fp_kernel_begin(void)
+{
+	return -ENOSYS;
+}
+
+static inline void fp_kernel_end(void)
+{
+}
+
 #else /* !__KERNEL__ */
 #include <stdio.h>
 #include <string.h>
@@ -51,7 +60,7 @@ static inline void fp_regs_set(unsigned val)
 
 		/* vldm %0!, {d0-d15},
 		   AKA fldmiax %0!, {d0-d15} */
-		__asm__ __volatile__("ldc p11, cr0, [%0],#32*4": 
+		__asm__ __volatile__("ldc p11, cr0, [%0],#32*4":
 				     "=r"(i): "0"(&e[0]): "memory");
 	}
 }
@@ -66,7 +75,7 @@ static inline unsigned fp_regs_check(unsigned val)
 
 		/* vstm %0!, {d0-d15},
 		   AKA fstmiax %0!, {d0-d15} */
-		__asm__ __volatile__("stc p11, cr0, [%0],#32*4": 
+		__asm__ __volatile__("stc p11, cr0, [%0],#32*4":
 				     "=r"(i): "0"(&e[0]): "memory");
 
 		for (i = 0; i < 16; i++)
@@ -79,4 +88,3 @@ static inline unsigned fp_regs_check(unsigned val)
 	return result;
 }
 #endif /* _XENO_ASM_ARM_FPTEST_H */
-

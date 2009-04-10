@@ -120,13 +120,15 @@ typedef struct rttst_irqbench_stats {
 	unsigned long long irqs_acknowledged;
 } rttst_irqbench_stats_t;
 
-#define RTTST_SWTEST_FPU		0x1
-#define RTTST_SWTEST_USE_FPU		0x2 /* Only for kernel-space tasks. */
-
 struct rttst_swtest_task {
 	unsigned index;
 	unsigned flags;
 };
+
+/* Possible values for struct rttst_swtest_task::flags. */
+#define RTTST_SWTEST_FPU		0x1
+#define RTTST_SWTEST_USE_FPU		0x2 /* Only for kernel-space tasks. */
+#define RTTST_SWTEST_FREEZE		0x4 /* Only for kernel-space tasks. */
 
 struct rttst_swtest_dir {
 	unsigned from;
