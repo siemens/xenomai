@@ -310,7 +310,8 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 		if (tcb->cr0_ts)
 			return;
 
-		if (!(task_thread_info(task)->status & TS_USEDFPU)) {
+		if (tcb->ts_usedfpu &&
+		    !(task_thread_info(task)->status & TS_USEDFPU)) {
 			xnarch_restore_fpu(tcb);
 			return;
 		}
