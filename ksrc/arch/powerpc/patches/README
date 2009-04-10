@@ -65,6 +65,7 @@ Patch			        Based on GIT commit # / TAG
 2.6.26-DENX-*/powerpc		DENX-v2.6.26-stable
 2.6.27-DENX-*/powerpc		DENX-v2.6.27-stable
 2.6.28.5-DENX-*/powerpc		DENX-v2.6.28-stable
+2.6.29-DENX/powerpc		DENX-v2.6.29
 
 (*) Use this patch to run on MPC5121-ADS.
 
