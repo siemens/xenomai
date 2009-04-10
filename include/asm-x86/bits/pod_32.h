@@ -227,11 +227,11 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 				return;
 
 			/* Tell Linux that we already saved the state of the FPU
-		   	hardware of this task. */
+			   hardware of this task. */
 			wrap_clear_fpu_used(task);
 		}
 	} else {
-		if (tcb->cr0_ts || 
+		if (tcb->cr0_ts ||
 		    (tcb->ts_usedfpu && !wrap_test_fpu_used(task)))
 			return;
 
@@ -268,8 +268,13 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 			return;
 		}
 
-		if (tcb->ts_usedfpu)
-			wrap_set_fpu_used(task);
+		if (tcb->ts_usedfpu && !wrap_test_fpu_used(task)) {
+			/* __switch_to saved the fpu context, no need to restore
+			   it since we are switching to root, where fpu can be
+			   in lazy state. */
+			stts();
+			return;
+		}
 	}
 
 	/* Restore the FPU hardware with valid fp registers from a
@@ -293,21 +298,18 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 			if (!xnarch_fpu_init_p(task))
 				return;
 
-			/* If "task" switched while in Linux domain, its FPU
-			 * context may have been overriden, restore it. */
-			if (!wrap_test_fpu_used(task)) {
-				xnarch_restore_fpu(tcb);
-				return;
-			}
+			/* We used to test here if __switch_to had not saved
+			   current fpu state, but this can not happen, since
+			   xnarch_enable_fpu may only be called when switching
+			   back to a user-space task after one or several
+			   switches to non-fpu kernel-space real-time tasks, so
+			   xnarch_switch_to never uses __switch_to. */
 		}
 	} else {
 		if (tcb->cr0_ts)
 			return;
 
-		if (tcb->ts_usedfpu && !wrap_test_fpu_used(task)) {
-			xnarch_restore_fpu(tcb);
-			return;
-		}
+		/* The comment in the non-root case applies here too. */
 	}
 
 	clts();

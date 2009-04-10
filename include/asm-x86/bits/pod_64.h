@@ -181,8 +181,8 @@ static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 	}
 }
 
-static inline int __save_i387_checking(struct i387_fxsave_struct __user *fx) 
-{ 
+static inline int __save_i387_checking(struct i387_fxsave_struct __user *fx)
+{
 	int err;
 
 	asm volatile("1:  rex64/fxsave (%[fx])\n\t"
@@ -199,7 +199,7 @@ static inline int __save_i387_checking(struct i387_fxsave_struct __user *fx)
 		     : [fx] "cdaSDb" (fx), "0" (0));
 
 	return err;
-} 
+}
 
 static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 {
@@ -216,7 +216,7 @@ static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 			task_thread_info(task)->status &= ~TS_USEDFPU;
 		}
 	} else {
-		if (tcb->cr0_ts || 
+		if (tcb->cr0_ts ||
 		    (tcb->ts_usedfpu && !(task_thread_info(task)->status & TS_USEDFPU)))
 			return;
 
@@ -229,7 +229,7 @@ static inline void xnarch_save_fpu(xnarchtcb_t *tcb)
 }
 
 static inline int __restore_i387_checking(struct i387_fxsave_struct *fx)
-{ 
+{
 	int err;
 
 	asm volatile("1:  rex64/fxrstor (%[fx])\n\t"
@@ -246,7 +246,7 @@ static inline int __restore_i387_checking(struct i387_fxsave_struct *fx)
 		     : [fx] "cdaSDb" (fx), "m" (*fx), "0" (0));
 
 	return err;
-} 
+}
 
 static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
@@ -270,8 +270,14 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 			return;
 		}
 
-		if (tcb->ts_usedfpu)
-			task_thread_info(task)->status |= TS_USEDFPU;
+		if (tcb->ts_usedfpu
+		    && !(task_thread_info(task)->status & TS_USEDFPU)) {
+			/* __switch_to saved the fpu context, no need to restore
+			   it since we are switching to root, where fpu can be
+			   in lazy state. */
+			stts();
+			return;
+		}
 	}
 
 	/* Restore the FPU hardware with valid fp registers from a
@@ -290,22 +296,18 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 			if (!xnarch_fpu_init_p(task))
 				return;
 
-			/* If "task" switched while in Linux domain, its FPU
-			 * context may have been overriden, restore it. */
-			if (!(task_thread_info(task)->status & TS_USEDFPU)) {
-				xnarch_restore_fpu(tcb);
-				return;
-			}
+			/* We used to test here if __switch_to had not saved
+			   current fpu state, but this can not happen, since
+			   xnarch_enable_fpu may only be called when switching
+			   back to a user-space task after one or several
+			   switches to non-fpu kernel-space real-time tasks, so
+			   xnarch_switch_to never uses __switch_to. */
 		}
 	} else {
 		if (tcb->cr0_ts)
 			return;
 
-		if (tcb->ts_usedfpu &&
-		    !(task_thread_info(task)->status & TS_USEDFPU)) {
-			xnarch_restore_fpu(tcb);
-			return;
-		}
+		/* The comment in the non-root case applies here too. */
 	}
 
 	clts();
