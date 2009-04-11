@@ -188,10 +188,13 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 #ifdef HAVE___THREAD
 	self = &__native_self;
 #else /* !HAVE___THREAD */
-	self = pthread_getspecific(__native_tskey);
-
+	if (pthread_getspecific(__native_tskey))
+		/* Current task is already a native taks. */
+		return -EBUSY;
+  
+	self = malloc(sizeof(*self));
 	if (!self)
-		self = malloc(sizeof(*self));
+		return -ENOMEM;
 
 	pthread_setspecific(__native_tskey, self);
 #endif /* !HAVE___THREAD */
@@ -210,22 +213,30 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	bulk.a5 = (u_long)pthread_self();
 	bulk.a6 = (u_long)xeno_init_current_mode();
 
-	if (!bulk.a6)
-		return -ENOMEM;
+	if (!bulk.a6) {
+		err = -ENOMEM;
+		goto fail;
+	}
 
 	err = XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
 				NULL);
+	if (err)
+		goto fail;
 
-	if (!err) {
-		if (self)
-			*self = *task;
+	*self = *task;
 
-		xeno_set_current();
+	xeno_set_current();
 
-		if (mode & T_WARNSW)
-			xeno_sigxcpu_no_mlock = 0;
-	}
+	if (mode & T_WARNSW)
+		xeno_sigxcpu_no_mlock = 0;
 
+	return 0;
+
+  fail:
+#ifndef HAVE___THREAD
+	pthread_setspecific(__native_tskey, NULL);
+	free(self);
+#endif /* !HAVE___THREAD */
 	return err;
 }
 
