@@ -195,6 +195,11 @@ static int __rt_task_create(struct pt_regs *regs)
 		goto delete;
 	}
 
+	if (!bulk.a6) {
+		err = -ENOMEM;
+		goto delete;
+	}
+
 	err = xnshadow_map(&task->thread_base, u_completion,
 			   (unsigned long __user *)bulk.a6);
 	if (err)

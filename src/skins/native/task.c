@@ -78,21 +78,21 @@ static void *rt_task_trampoline(void *cookie)
 	bulk.a3 = (u_long)iargs->prio;
 	bulk.a4 = (u_long)iargs->mode;
 	bulk.a5 = (u_long)pthread_self();
-	bulk.a6 = (u_long)xeno_init_current_mode();
-
-	if (!bulk.a6) {
-		err = -ENOMEM;
-		goto fail;
-	}
+	/* Signal allocation failures by setting bulk.a6 to 0, they will be
+	   propagated to the thread waiting in xn_sys_completion. */
+	bulk.a6 = !self ? 0UL : (u_long)xeno_init_current_mode();
 
 	err = XENOMAI_SKINCALL2(__native_muxid,
 				__native_task_create, &bulk,
 				iargs->completionp);
+	if (!bulk.a6) {
+		err = -ENOMEM;
+		goto fail;
+	}
 	if (err)
 		goto fail;
 
-	if (self)
-		*self = *task;
+	*self = *task;
 
 	xeno_set_current();
 
@@ -169,7 +169,11 @@ int rt_task_create(RT_TASK *task,
 		return -err;
 
 	/* Wait for sync with rt_task_trampoline() */
-	return XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+	err = XENOMAI_SYSCALL1(__xn_sys_completion, &completion);
+	if (err && (mode & T_JOINABLE))
+		pthread_join(thid, NULL);
+
+	return err;
 }
 
 int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
