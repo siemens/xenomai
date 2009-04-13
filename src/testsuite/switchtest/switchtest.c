@@ -1094,7 +1094,7 @@ int check_fpu(void)
 		exit(EXIT_FAILURE);
 	}
 
-	return (int) status;
+	return (long) status;
 }
 
 int main(int argc, const char *argv[])
