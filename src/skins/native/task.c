@@ -262,10 +262,11 @@ int rt_task_resume(RT_TASK *task)
 
 int rt_task_delete(RT_TASK *task)
 {
+	RT_TASK *self;
 	int err;
 
 	if (task == NULL ||
-	    (rt_task_self() && task->opaque == rt_task_self()->opaque)) {
+	    ((self = rt_task_self()) && self->opaque == task->opaque)) {
 		/* Silently migrate to avoid raising SIGXCPU. */
 		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
 		pthread_exit(NULL);
