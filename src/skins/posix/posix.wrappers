@@ -83,7 +83,6 @@
 --wrap timer_gettime
 --wrap ftruncate
 --wrap ftruncate64
---wrap close
 --wrap shm_open
 --wrap shm_unlink
 --wrap mmap

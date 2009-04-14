@@ -121,6 +121,12 @@ int __real_sem_post(sem_t *sem);
 
 int __real_sem_wait(sem_t *sem);
 
+int __real_sem_timedwait(sem_t *sem, const struct timespec *abs_timeout);
+
+int __real_sem_trywait(sem_t *sem);
+
+int __real_sem_getvalue(sem_t *sem, int *value);
+
 sem_t *__real_sem_open(const char *name, int oflags, ...);
 
 int __real_sem_close(sem_t *sem);

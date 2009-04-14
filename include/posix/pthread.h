@@ -477,6 +477,27 @@ int __real_pthread_setschedparam(pthread_t thread,
 				 const struct sched_param *param);
 int __real_pthread_yield(void);
 
+int __real_pthread_mutexattr_init(pthread_mutexattr_t *attr);
+
+int __real_pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
+
+int __real_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
+				     int *type);
+
+int __real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+
+int __real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
+					 int *proto);
+
+int __real_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
+					 int proto);
+
+int __real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
+					int *pshared);
+
+int __real_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
+					int pshared);
+
 int __real_pthread_mutex_init(pthread_mutex_t *mutex,
 			      const pthread_mutexattr_t *attr);
 
@@ -490,6 +511,21 @@ int __real_pthread_mutex_timedlock(pthread_mutex_t *mutex,
 int __real_pthread_mutex_trylock(pthread_mutex_t *mutex);
 
 int __real_pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+int __real_pthread_condattr_init(pthread_condattr_t *attr);
+
+int __real_pthread_condattr_destroy(pthread_condattr_t *attr);
+
+int __real_pthread_condattr_getclock(const pthread_condattr_t *attr,
+				     clockid_t *clk_id);
+
+int __real_pthread_condattr_setclock(pthread_condattr_t *attr,
+			      clockid_t clk_id);
+
+int __real_pthread_condattr_getpshared(const pthread_condattr_t *attr,
+				       int *pshared);
+
+int __real_pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
 
 int __real_pthread_cond_init (pthread_cond_t *cond,
 			      const pthread_condattr_t *attr);
