@@ -750,8 +750,8 @@ if test x$CONFIG_XENO_POSIX_UITRON_MLOCKALL = xy; then
 fi
 
 save_LIBS="$LIBS"
-LIBS="$LIBS -lrt"
-AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64])
+LIBS="$LIBS -lrt -lpthread"
+AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64 pthread_mutexattr_setprotocol pthread_condattr_setclock])
 LIBS="$save_LIBS"
 
 AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)

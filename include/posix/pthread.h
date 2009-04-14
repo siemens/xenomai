@@ -140,9 +140,12 @@ struct timespec;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
+#if defined(__KERNEL__) || defined(__XENO_SIM__) || \
+    !define(HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL)
 #define PTHREAD_PRIO_NONE    0
 #define PTHREAD_PRIO_INHERIT 1
 #define PTHREAD_PRIO_PROTECT 2
+#endif /* __KERNEL__ || __XENO_SIM__ || !HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL */
 
 #define PTHREAD_WARNSW     XNTRAPSW
 #define PTHREAD_LOCK_SCHED XNLOCK
@@ -418,17 +421,21 @@ int pthread_intr_control_np(pthread_intr_t intr,
 extern "C" {
 #endif
 
+#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 				  int *proto);
 
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 				  int proto);
+#endif
 
+#ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
 int pthread_condattr_getclock(const pthread_condattr_t *attr,
 			      clockid_t *clk_id);
 
 int pthread_condattr_setclock(pthread_condattr_t *attr,
 			      clockid_t clk_id);
+#endif
 
 int pthread_make_periodic_np(pthread_t thread,
 			     struct timespec *starttp,
