@@ -308,23 +308,6 @@ static inline void atomic_long_dec(atomic_long_t *l)
 	atomic_dec(v);
 }
 
-static inline int atomic_long_dec_and_test(atomic_long_t *l)
-{
-	atomic_t *v = (atomic_t *)l;
-
-	return atomic_dec_and_test(v);
-}
-
-static inline int atomic_long_inc_and_test(atomic_long_t *l)
-{
-	atomic_t *v = (atomic_t *)l;
-
-	return atomic_inc_and_test(v);
-}
-
-#define atomic_long_cmpxchg(l, old, new) \
-	(atomic_cmpxchg((atomic_t *)(l), (old), (new)))
-
 static inline unsigned long hweight_long(unsigned long w)
 {
 	return hweight32(w);
