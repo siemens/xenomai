@@ -284,9 +284,12 @@ int rt_queue_create(RT_QUEUE *q,
 	return err;
 }
 
-static void __queue_post_release(struct xnheap *heap) /* nklock held, IRQs off */
+static void __queue_post_release(struct xnheap *heap)
 {
 	RT_QUEUE *q = container_of(heap, RT_QUEUE, bufpool);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	removeq(q->rqueue, &q->rlink);
 
@@ -301,6 +304,8 @@ static void __queue_post_release(struct xnheap *heap) /* nklock held, IRQs off *
 		 * the deletion: reschedule now.
 		 */
 		xnpod_schedule();
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**

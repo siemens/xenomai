@@ -1033,8 +1033,8 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 			__unreserve_and_free_heap(heap->archdep.heapbase,
 						  xnheap_extentsize(heap),
 						  heap->archdep.kmflags);
-			xnlock_get_irqsave(&nklock, s);
 			heap->archdep.release(heap);
+			return;
 		}
 	}
 
@@ -1211,11 +1211,8 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 	if (ret == 0) {
 		__unreserve_and_free_heap(heap->archdep.heapbase, len,
 					  heap->archdep.kmflags);
-		if (release) {
-			xnlock_get_irqsave(&nklock, s);
+		if (release)
 			release(heap);
-			xnlock_put_irqrestore(&nklock, s);
-		}
 	}
 
 	return ret;

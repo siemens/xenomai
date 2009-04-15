@@ -321,9 +321,12 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	return err;
 }
 
-static void __heap_post_release(struct xnheap *h) /* nklock held, IRQs off */
+static void __heap_post_release(struct xnheap *h)
 {
 	RT_HEAP *heap = container_of(h, RT_HEAP, heap_base);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	removeq(heap->rqueue, &heap->rlink);
 
@@ -338,6 +341,8 @@ static void __heap_post_release(struct xnheap *h) /* nklock held, IRQs off */
 		 * deletion: reschedule now.
 		 */
 		xnpod_schedule();
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 /**

@@ -1888,6 +1888,12 @@ static xnsysent_t __systab[] = {
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
 };
 
+static void post_ppd_release(struct xnheap *h)
+{
+	struct xnsys_ppd *p = container_of(h, struct xnsys_ppd, sem_heap);
+	xnarch_free_host_mem(p, sizeof(*p));
+}
+
 static void *xnshadow_sys_event(int event, void *data)
 {
 	struct xnsys_ppd *p;
@@ -1912,8 +1918,8 @@ static void *xnshadow_sys_event(int event, void *data)
 	case XNSHADOW_CLIENT_DETACH:
 		p = ppd2sys((xnshadow_ppd_t *) data);
 
-		xnheap_destroy_mapped(&p->sem_heap, NULL, NULL);
-		xnarch_free_host_mem(p, sizeof(*p));
+		if (xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL) == 0)
+			xnarch_free_host_mem(p, sizeof(*p));
 
 		return NULL;
 	}
