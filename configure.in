@@ -71,11 +71,13 @@ case "$host" in
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=powerpc
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_FASTSYNCH=y
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
