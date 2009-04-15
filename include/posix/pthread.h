@@ -141,7 +141,7 @@ struct timespec;
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__) || \
-    !define(HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL)
+    !defined(HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL)
 #define PTHREAD_PRIO_NONE    0
 #define PTHREAD_PRIO_INHERIT 1
 #define PTHREAD_PRIO_PROTECT 2
