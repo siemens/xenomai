@@ -29,6 +29,7 @@ typedef unsigned long atomic_flags_t;
 #include <linux/bitops.h>
 #include <asm/atomic.h>
 #include <asm/system.h>
+#include <asm/xenomai/wrappers.h>
 
 #define xnarch_atomic_set(pcounter,i)	atomic_long_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)	atomic_long_read(pcounter)
