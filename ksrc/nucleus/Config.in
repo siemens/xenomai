@@ -48,6 +48,9 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	if [ "$CONFIG_XENO_OPT_DEBUG" = "y" ]; then
 		bool 'Nucleus Debugging support' CONFIG_XENO_OPT_DEBUG_NUCLEUS
 		bool 'Queue Debugging support' CONFIG_XENO_OPT_DEBUG_QUEUES
+		if [ "$CONFIG_XENO_OPT_PERVASIVE" != "n" ]; then
+		  bool 'Detect mutexes held in relaxed sections' CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+		fi
 		bool 'Watchdog support' CONFIG_XENO_OPT_WATCHDOG
 		if [ "$CONFIG_XENO_OPT_WATCHDOG" = "y" ]; then
 			int 'Watchdog timeout (seconds)' CONFIG_XENO_OPT_WATCHDOG_TIMEOUT 4
@@ -58,6 +61,7 @@ if [ "$CONFIG_XENO_OPT_NUCLEUS" != "n" ]; then
 	bool 'Core support for select-like services' CONFIG_XENO_OPT_SELECT
 
 	bool 'Enable periodic timing' CONFIG_XENO_OPT_TIMING_PERIODIC
+	int "Virtual tick duration in aperiodic mode (us)" CONFIG_XENO_OPT_TIMING_VIRTICK 1000
 	int 'Timer tuning latency (ns)' CONFIG_XENO_OPT_TIMING_TIMERLAT 0
 	int 'Scheduling latency (ns)' CONFIG_XENO_OPT_TIMING_SCHEDLAT 0
 
