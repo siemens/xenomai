@@ -39,7 +39,7 @@ xeno_nucleus-objs := \
 
 # CAUTION: the declaration order of scheduling classes is
 # significant. Lower priority classes shall be listed first.
-opt_objs-y := sched_idle.o sched_rt.o
+opt_objs-y := sched-idle.o sched-rt.o
 opt_objs-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 opt_objs-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 
