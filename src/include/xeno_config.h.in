@@ -80,6 +80,12 @@
 /* config */
 #undef HAVE_OLD_SETAFFINITY
 
+/* Define to 1 if you have the `pthread_condattr_setclock' function. */
+#undef HAVE_PTHREAD_CONDATTR_SETCLOCK
+
+/* Define to 1 if you have the `pthread_mutexattr_setprotocol' function. */
+#undef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+
 /* config */
 #undef HAVE_RECENT_SETAFFINITY
 
