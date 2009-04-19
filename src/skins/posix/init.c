@@ -47,7 +47,10 @@ void pse51_clock_init(int);
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
 {
-	int muxid, err;
+#ifndef CONFIG_XENO_LIBS_DLOPEN
+	struct sched_param parm;
+#endif /* !CONFIG_XENO_LIBS_DLOPEN */
+	int muxid, err, policy;
 
 	muxid =
 	    xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
@@ -55,7 +58,7 @@ void __init_posix_interface(void)
 #ifdef CONFIG_XENO_HW_DIRECT_TSC
 	pse51_clock_init(muxid);
 #endif /* CONFIG_XENO_HW_DIRECT_TSC */
-	
+
 	__pse51_muxid = __xn_mux_shifted_id(muxid);
 
 	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
@@ -66,63 +69,60 @@ void __init_posix_interface(void)
 								 __rtdm_fdcount);
 	}
 
-#ifdef CONFIG_XENO_LIBS_DLOPEN
-	/* Don't use auto-shadowing if we are likely invoked from dlopen, but
-	   take care of auto-mlockall. */
-#ifdef CONFIG_XENO_POSIX_AUTO_MLOCKALL
+	/* If not dlopening, we are going to shadow the main thread, so mlock
+	   the whole memory for the time of the syscall, in order to avoid the
+	   SIGXCPU signal. */
+#ifdef CONFIG_XENO_POSIX_AUTO_MLOCKALL || !defined(CONFIG_XENO_LIBS_DLOPEN)
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
 	}
-#endif /* CONFIG_XENO_POSIX_AUTO_MLOCKALL */
-#else /* !CONFIG_XENO_LIBS_DLOPEN */
-	{
-		struct sched_param parm = { .sched_priority = 0 };
+#endif /* auto mlockall || !dlopen */
 
-		/* Shadow the main thread. mlock the whole memory for the time
-		   of the syscall, in order to avoid the SIGXCPU signal. */
-		if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-			perror("Xenomai Posix skin init: mlockall");
-			exit(EXIT_FAILURE);
-		}
+	/* Don't use auto-shadowing if we are likely invoked from dlopen. */
+#ifndef CONFIG_XENO_LIBS_DLOPEN
+	err = __real_pthread_getschedparam(pthread_self(), &policy, &param);
+	if (err) {
+		fprintf(stderr, "Xenomai Posix skin init: "
+			"pthread_getschedparam: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
 
-		err = __wrap_pthread_setschedparam(pthread_self(), SCHED_OTHER,
-						   &parm);
-		if (err) {
-			fprintf(stderr, "Xenomai Posix skin init: "
-				"pthread_setschedparam: %s\n", strerror(err));
-			exit(EXIT_FAILURE);
-		}
+	err = __wrap_pthread_setschedparam(pthread_self(), policy, &parm);
+	if (err) {
+		fprintf(stderr, "Xenomai Posix skin init: "
+			"pthread_setschedparam: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
 
 #ifndef CONFIG_XENO_POSIX_AUTO_MLOCKALL
-		if (munlockall()) {
-			perror("Xenomai Posix skin init: munlockall");
-			exit(EXIT_FAILURE);
-		}
-#endif /* !CONFIG_XENO_POSIX_AUTO_MLOCKALL */
+	if (munlockall()) {
+		perror("Xenomai Posix skin init: munlockall");
+		exit(EXIT_FAILURE);
 	}
+#endif /* !CONFIG_XENO_POSIX_AUTO_MLOCKALL */
 #endif /* !CONFIG_XENO_LIBS_DLOPEN */
 
-	if (!fork_handler_registered) {
-		err = pthread_atfork(NULL, NULL, &__init_posix_interface);
-		if (err) {
-			fprintf(stderr, "Xenomai Posix skin init: "
-				"pthread_atfork: %s\n", strerror(err));
-			exit(EXIT_FAILURE);
-		}
-		fork_handler_registered = 1;
+	if (fork_handler_registered)
+		return;
 
-		if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
-			fprintf(stderr, "sizeof(pthread_mutex_t): %d <"
-				" sizeof(shadow_mutex): %d !\n",
-				(int) sizeof(pthread_mutex_t),
-				(int) sizeof(struct __shadow_mutex));
-			exit(EXIT_FAILURE);
-		}
-
-		/* Restore default state. */
-		sigaction(SIGSHADOW, &xeno_saved_sigshadow_action, NULL);
-		xeno_sigshadow_installed = PTHREAD_ONCE_INIT;		
+	err = pthread_atfork(NULL, NULL, &__init_posix_interface);
+	if (err) {
+		fprintf(stderr, "Xenomai Posix skin init: "
+			"pthread_atfork: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
 	}
-}
+	fork_handler_registered = 1;
 
+	if (sizeof(struct __shadow_mutex) > sizeof(pthread_mutex_t)) {
+		fprintf(stderr, "sizeof(pthread_mutex_t): %d <"
+			" sizeof(shadow_mutex): %d !\n",
+			(int) sizeof(pthread_mutex_t),
+			(int) sizeof(struct __shadow_mutex));
+		exit(EXIT_FAILURE);
+	}
+
+	/* Restore default state. */
+	sigaction(SIGSHADOW, &xeno_saved_sigshadow_action, NULL);
+	xeno_sigshadow_installed = PTHREAD_ONCE_INIT;
+}
