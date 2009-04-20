@@ -269,7 +269,7 @@ void xnsynch_renice_sleeper (xnthread_t *thread)
 	insertpqf(&synch->pendq, &thread->plink, thread->cprio);
 	owner = synch->owner;
 
-	if (owner != NULL && xnpod_compare_prio(thread->cprio, owner->cprio) > 0)
+	if (owner != NULL && xnpod_priocompare(thread->cprio, owner->cprio) > 0)
 	    {
 	    /* The new priority of the sleeping thread is higher than
 	     * the priority of the current owner of the resource: we
