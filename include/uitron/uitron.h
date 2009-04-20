@@ -467,7 +467,7 @@ extern "C" {
 /* Task Management Functions */
 
 ER cre_tsk(ID tskid,
-	   T_CTSK *pk_ctsk);
+	   T_CTSK *pk_ctsk) __deprecated_in_kernel__;
 
 ER shd_tsk(ID tskid, /* Shadow task - Xenomai extension. */
 	   T_CTSK *pk_ctsk);

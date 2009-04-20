@@ -267,7 +267,7 @@ int pthread_attr_setaffinity_np (pthread_attr_t *attr,
 int pthread_create(pthread_t *tid,
 		   const pthread_attr_t *attr,
 		   void *(*start) (void *),
-		   void *arg );
+		   void *arg ) __deprecated_in_kernel__;
 
 int pthread_detach(pthread_t thread);
 

@@ -22,17 +22,17 @@
 
 #if !defined(__IN_XENOMAI__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0))
 #define __deprecated_call__		__attribute__((deprecated))
-#if defined(__KERNEL__) || defined(__XENO_SIM__)
-#define __deprecated_call_in_user__
-#define __deprecated_call_in_kernel__	__deprecated_call__
-#else /* !(__KERNEL__ || __XENO_SIM__) */
-#define __deprecated_call_in_user__	__deprecated_call__
-#define __deprecated_call_in_kernel__
-#endif /* __KERNEL__ || __XENO_SIM__ */
+#ifdef __KERNEL__
+#ifdef CONFIG_XENO_OPT_NOWARN_DEPRECATED
+#define __deprecated_in_kernel__
+#else
+#define __deprecated_in_kernel__	__deprecated_call__
+#endif	/* CONFIG_XENO_OPT_NOWARN_DEPRECATED */
+#else
+#define __deprecated_in_kernel__
+#endif /* !__KERNEL__ */
 #else /* __IN_XENOMAI__ || !(__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0)) */
-#define __deprecated_call__
-#define __deprecated_call_in_user__
-#define __deprecated_call_in_kernel__
+#define __deprecated_in_kernel__
 #endif /* __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0) */
 
 #ifndef likely

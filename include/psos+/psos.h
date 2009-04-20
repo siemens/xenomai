@@ -350,7 +350,7 @@ u_long t_create(const char *name,
 		u_long sstack,
 		u_long ustack,
 		u_long flags,
-		u_long *tid_r);
+		u_long *tid_r) __deprecated_in_kernel__;
 
 u_long t_shadow(const char *name, /* Xenomai extension. */
 		u_long prio,

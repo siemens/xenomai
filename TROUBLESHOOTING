@@ -6,6 +6,34 @@ arch-specific or generic.
                            GENERIC
 ===================================================================
 
+Q: Since 2.5-rc2, I am receiving warning messages when compiling
+kernel code which invokes thread/task creation services from Xenomai
+skins, such as:
+
+  CC [M]  /home/kernel-based-app/module.o
+In file included from /home/kernel-based-app/module.c:7:
+include/xenomai/native/task.h: In function 'rt_task_spawn':
+include/xenomai/native/task.h:312: warning: 'rt_task_create' is
+deprecated (declared at include/xenomai/native/task.h:249)
+
+Why that?
+
+A: Starting with Xenomai 3, the skins will not export their interface
+to kernel modules anymore, at the notable exception of the RTDM device
+driver API, which by essence must be used from kernel space for
+writing real-time device drivers. Those warnings are there to remind
+you that application code should run in user-space context instead.
+
+The reason for this is fully explained in the project Roadmap document
+(see What Will Change With Xenomai 3):
+http://www.xenomai.org/index.php/Xenomai:Roadmap
+
+You may switch those warnings off by enabling the
+CONFIG_XENO_OPT_NOWARN_DEPRECATED option in your kernel configuration,
+but nevertheless, you have been WARNED.
+
+______________________________________________________________________
+
 Q: Which CONFIG_* items are latency killers, and should be avoided ?
 
 A: Heres an enumeration.  Several of these are discussed in greater

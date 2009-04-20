@@ -322,7 +322,7 @@ TASK_ID taskSpawn(const char *name,
 		  int stacksize,
 		  FUNCPTR entry,
 		  long arg0, long arg1, long arg2, long arg3, long arg4,
-		  long arg5, long arg6, long arg7, long arg8, long arg9);
+		  long arg5, long arg6, long arg7, long arg8, long arg9) __deprecated_in_kernel__;
 
 STATUS taskInit(WIND_TCB *pTcb,
 		const char *name,
@@ -332,7 +332,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 		int stacksize,
 		FUNCPTR entry,
 		long arg0, long arg1, long arg2, long arg3, long arg4,
-		long arg5, long arg6, long arg7, long arg8, long arg9);
+		long arg5, long arg6, long arg7, long arg8, long arg9) __deprecated_in_kernel__;
 
 STATUS taskActivate(TASK_ID task_id);
 

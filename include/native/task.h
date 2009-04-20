@@ -246,7 +246,7 @@ int rt_task_create(RT_TASK *task,
 		   const char *name,
 		   int stksize,
 		   int prio,
-		   int mode);
+		   int mode) __deprecated_in_kernel__;
 
 int rt_task_start(RT_TASK *task,
 		  void (*fun)(void *cookie),

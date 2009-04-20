@@ -19,6 +19,7 @@
 #ifndef _UITRON_SYSCALL_H
 #define _UITRON_SYSCALL_H
 
+#include <nucleus/compiler.h>
 #ifndef __XENO_SIM__
 #include <asm/xenomai/syscall.h>
 #endif /* __XENO_SIM__ */

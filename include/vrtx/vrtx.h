@@ -126,12 +126,12 @@ int sc_tecreate(void (*entry)(void *),
 		unsigned long sys,
 		char *paddr,
 		unsigned long psize,
-		int *errp);
+		int *errp) __deprecated_in_kernel__;
 
 int sc_tcreate(void (*entry)(void*),
 	       int tid,
 	       int prio,
-	       int *errp);
+	       int *errp) __deprecated_in_kernel__;
 
 void sc_tdelete(int tid,
 		int opt,

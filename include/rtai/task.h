@@ -146,7 +146,7 @@ int rt_task_init(RT_TASK *task,
 		 int stack_size,
 		 int priority,
 		 int uses_fpu,
-		 void (*sigfn)(void));
+		 void (*sigfn)(void)) __deprecated_in_kernel__;
 
 int rt_task_make_periodic(RT_TASK *task,
 			  RTIME start_time,
