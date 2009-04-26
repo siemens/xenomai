@@ -5,6 +5,7 @@ prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 libdir="@libdir@"
 datadir="@datadir@"
+datarootdir="@datarootdir@"
 pkgdatadir="${datadir}/@PACKAGE@"
 includedir="@includedir@"
 
@@ -21,7 +22,7 @@ XENO_UVM_CFLAGS="-I. -I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO_U
 XENO_UVM_LDFLAGS="-u__xeno_skin_init -L${staging}${libdir} -luvm -lnucleus -lpthread"
 XENO_LIBRARY_DIR="${staging}${libdir}"
 
-unset prefix exec_prefix libdir datadir pkgdatadir includedir
+unset prefix exec_prefix libdir datadir datarootdir pkgdatadir includedir
 
 usage ()
 {

@@ -60,12 +60,12 @@ linux/%: linux/.xenomai-prepared
 	     --arch=$(XENO_LINUX_ARCH) && \
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
-		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+		ARCH=$(XENO_LINUX_ARCH) CROSS_COMPILE=$$cross
 else
 linux/%: linux/.xenomai-prepared
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	cd linux && $(MAKE) $* \
-		ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross
+		ARCH=$(XENO_LINUX_ARCH) CROSS_COMPILE=$$cross
 endif
 
 linux/.xenomai-prepared: config.status
@@ -78,7 +78,7 @@ linux/install: linux/all
 	cross=`expr $(CC) : '\(.*\)gcc' || :` && \
 	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 	cd linux && $$sudo $(MAKE) $$targets \
-           ARCH=$(XENO_LINUX_ARCH) CC=$(CC) CROSS_COMPILE=$$cross \
+           ARCH=$(XENO_LINUX_ARCH) CROSS_COMPILE=$$cross \
            INSTALL_PATH=$(DESTDIR)/boot \
            INSTALL_MOD_PATH=$(DESTDIR)
 
