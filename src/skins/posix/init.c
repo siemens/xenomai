@@ -72,7 +72,7 @@ void __init_posix_interface(void)
 	/* If not dlopening, we are going to shadow the main thread, so mlock
 	   the whole memory for the time of the syscall, in order to avoid the
 	   SIGXCPU signal. */
-#ifdef CONFIG_XENO_POSIX_AUTO_MLOCKALL || !defined(CONFIG_XENO_LIBS_DLOPEN)
+#if defined(CONFIG_XENO_POSIX_AUTO_MLOCKALL) || !defined(CONFIG_XENO_LIBS_DLOPEN)
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		perror("Xenomai Posix skin init: mlockall");
 		exit(EXIT_FAILURE);
@@ -81,7 +81,7 @@ void __init_posix_interface(void)
 
 	/* Don't use auto-shadowing if we are likely invoked from dlopen. */
 #ifndef CONFIG_XENO_LIBS_DLOPEN
-	err = __real_pthread_getschedparam(pthread_self(), &policy, &param);
+	err = __real_pthread_getschedparam(pthread_self(), &policy, &parm);
 	if (err) {
 		fprintf(stderr, "Xenomai Posix skin init: "
 			"pthread_getschedparam: %s\n", strerror(err));
