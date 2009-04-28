@@ -161,6 +161,13 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_send_ipi(irq,cpus)	ipipe_send_ipi(irq,cpus)
 #define rthal_lock_irq(dom,cpu,irq)	__ipipe_lock_irq(dom,cpu,irq)
 #define rthal_unlock_irq(dom,irq)	__ipipe_unlock_irq(dom,irq)
+#ifdef __IPIPE_FEATURE_PIC_MUTE
+#define rthal_mute_pic()		ipipe_mute_pic()
+#define rthal_unmute_pic()		ipipe_unmute_pic()
+#else /* !__IPIPE_FEATURE_PIC_MUTE */
+#define rthal_mute_pic()		do { } while(0)
+#define rthal_unmute_pic()		do { } while(0)
+#endif /* __IPIPE_FEATURE_PIC_MUTE */
 
 #define rthal_processor_id()		ipipe_processor_id()
 
