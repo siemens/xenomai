@@ -59,6 +59,7 @@ void xnpod_delete_thread(struct xnthread *);
 
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
+	rthal_mute_pic();
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->tsp = &current->thread;
@@ -80,6 +81,7 @@ static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 	if (!rootcb->mm)
 		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
 #endif
+	rthal_unmute_pic();
 }
 
 struct xnlock;
