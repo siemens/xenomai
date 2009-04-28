@@ -733,33 +733,28 @@ static void lostage_handler(void *cookie)
 
 		switch (rq->req[reqnum].type) {
 		case LO_UNMAP_REQ:
-
 			xnshadow_dereference_skin(rq->req[reqnum].arg);
 
 			/* fall through */
 		case LO_WAKEUP_REQ:
-
-			/* We need to downgrade the root thread
-			   priority whenever the APC runs over a
-			   non-shadow, so that the temporary boost we
-			   applied in xnshadow_relax() is not
-			   spuriously inherited by the latter until
-			   the relaxed shadow actually resumes in
-			   secondary mode. */
-
+			/*
+			 * We need to downgrade the root thread
+			 * priority whenever the APC runs over a
+			 * non-shadow, so that the temporary boost we
+			 * applied in xnshadow_relax() is not
+			 * spuriously inherited by the latter until
+			 * the relaxed shadow actually resumes in
+			 * secondary mode.
+			 */
 			rpi_clear_local(xnshadow_thread(current));
+			xnpod_schedule();
 
 			/* fall through */
 		case LO_START_REQ:
-
 			wake_up_process(p);
-
-			xnpod_schedule();
-
 			break;
 
 		case LO_SIGTHR_REQ:
-
 			xnshadow_sig_demux(rq->req[reqnum].arg, sig, arg);
 			if (sig == SIGSHADOW) {
 				siginfo_t si;
@@ -773,7 +768,6 @@ static void lostage_handler(void *cookie)
 			break;
 
 		case LO_SIGGRP_REQ:
-
 			sig = rq->req[reqnum].arg;
 			kill_proc(p->pid, sig, 1);
 			break;
@@ -783,10 +777,8 @@ static void lostage_handler(void *cookie)
 
 static void schedule_linux_call(int type, struct task_struct *p, int arg)
 {
-	/* Do _not_ use smp_processor_id() here so we don't trigger Linux
-	   preemption debug traps inadvertently (see lib/smp_processor_id.c). */
 	int cpu = rthal_processor_id(), reqnum;
-	struct __lostagerq *rq = &lostagerq[cpu];
+	struct __lostagerq *rq;
 	spl_t s;
 
 	XENO_ASSERT(NUCLEUS, p,
@@ -797,17 +789,15 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 
 	splhigh(s);
 
+	rq = &lostagerq[cpu];
 	reqnum = rq->in;
-
-	if (XENO_DEBUG(NUCLEUS) &&
-	    ((reqnum + 1) & (LO_MAX_REQUESTS - 1)) == rq->out)
+	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
+	if (XENO_DEBUG(NUCLEUS) && rq->in == rq->out)
 	    xnpod_fatal("lostage queue overflow on CPU %d! "
 			"Increase LO_MAX_REQUESTS", cpu);
-
 	rq->req[reqnum].type = type;
 	rq->req[reqnum].task = p;
 	rq->req[reqnum].arg = arg;
-	rq->in = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
 	
 	splexit(s);
 
@@ -1060,16 +1050,11 @@ void xnshadow_relax(int notify)
 	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
 		  thread, xnthread_name(thread));
 
-	splhigh(s);
-
-	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
-
 	rpi_push(thread->sched, thread);
-
+	splhigh(s);
+	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 	clear_task_nowakeup(current);
-
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-
 	splexit(s);
 
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
