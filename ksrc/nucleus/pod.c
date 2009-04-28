@@ -1373,17 +1373,17 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		/*
 		 * If attempting to suspend a runnable (shadow) thread
 		 * which has received a Linux signal, just raise the
-		 * break condition and return immediately. Note: a
-		 * relaxed shadow never has the KICKED bit set, so
-		 * that xnshadow_relax() is never prevented from
-		 * blocking the current thread.
-		 */
-		if (xnthread_test_info(thread, XNKICKED)) {
-			XENO_ASSERT(NUCLEUS, (mask & XNRELAX) == 0,
-				    xnpod_fatal("Relaxing a kicked thread"
-						"(thread=%s, mask=%lx)?!",
-						thread->name, mask);
-				);
+		 * break condition and return immediately.  We may end
+		 * up suspending a kicked thread that has been
+		 * preempted on its relaxing path, which is a
+		 * perfectly valid situation: we just ignore the
+		 * signal notification in primary mode, and rely on
+		 * the wakeup call pending for that task in the root
+		 * context, to collect and act upon the pending Linux
+		 * signal.
+ 		 */
+		if ((mask & XNRELAX) == 0 &&
+		    xnthread_test_info(thread, XNKICKED)) {
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;
@@ -1432,12 +1432,19 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		nkpod->schedhook(thread, mask);
 #endif /* __XENO_SIM__ */
 
-	if (thread == sched->curr)
+	if (thread == sched->curr) {
+		spl_t ignored;
 		/*
 		 * If the thread is runnning on another CPU,
-		 * xnpod_schedule will just trigger the IPI.
+		 * xnpod_schedule will just trigger the IPI. We
+		 * release the interrupts shortly before rescheduling,
+		 * to pull any pending interrupt that may reorder the
+		 * scheduling state first.
 		 */
+		xnlock_clear_irqon(&nklock);
 		xnpod_schedule();
+		xnlock_get_irqsave(&nklock, ignored);
+	}
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/*
 	 * Ok, this one is an interesting corner case, which requires
