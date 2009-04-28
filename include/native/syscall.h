@@ -115,8 +115,8 @@
 #define __native_unimp_89           89
 #define __native_io_get_region      90
 #define __native_io_put_region      91
-#define __native_timer_ns2tsc       92
-#define __native_timer_tsc2ns       93
+#define __native_unimp_92           92
+#define __native_unimp_93           93
 #define __native_queue_write        94
 #define __native_queue_read         95
 #define __native_buffer_create      96

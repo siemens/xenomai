@@ -38,6 +38,8 @@
 #define _XENO_ASM_X86_ARITH_32_H
 #define _XENO_ASM_X86_ARITH_H
 
+#include <asm/xenomai/features.h>
+
 #define __rthal_u64tou32(ull, h, l) ({          \
     unsigned long long _ull = (ull);            \
     (l) = _ull & 0xffffffff;                    \
@@ -134,8 +136,6 @@ __rthal_i386_ulldiv (const unsigned long long ull,
 		: "ecx");						\
 	__ret;								\
 })
-
-#define XNARCH_WANT_NODIV_MULDIV
 
 static inline __attribute__((const)) unsigned long long
 __rthal_x86_nodiv_ullimd(const unsigned long long op,

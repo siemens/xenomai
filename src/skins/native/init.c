@@ -57,9 +57,7 @@ void __init_xeno_interface(void)
 	__native_muxid =
 	    xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native");
 
-#ifdef CONFIG_XENO_HW_DIRECT_TSC
 	native_timer_init(__native_muxid);
-#endif /* CONFIG_XENO_HW_DIRECT_TSC */
 	
 	__native_muxid = __xn_mux_shifted_id(__native_muxid);
 }

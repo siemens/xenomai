@@ -26,6 +26,8 @@
 #define _XENO_ASM_X86_ARITH_64_H
 #define _XENO_ASM_X86_ARITH_H
 
+#include <asm/xenomai/features.h>
+
 static inline __attribute__((__const__)) long long
 __rthal_x86_64_llimd (long long op, unsigned m, unsigned d)
 {
@@ -59,8 +61,6 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 	return result;
 }
 #define rthal_llmulshft(op, m, s) __rthal_x86_64_llmulshft((op), (m), (s))
-
-#define XNARCH_WANT_NODIV_MULDIV
 
 static inline __attribute__((__const__)) unsigned long long
 __rthal_x86_64_nodiv_ullimd(unsigned long long op,

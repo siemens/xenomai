@@ -108,4 +108,7 @@ static inline void xeno_x86_features_check(void)
 #define xeno_arch_features_check() xeno_x86_features_check()
 #endif /* __KERNEL__ */
 
+#define XNARCH_HAVE_LLMULSHFT    1
+#define XNARCH_HAVE_NODIV_LLIMD  1
+
 #endif /* !_XENO_ASM_X86_FEATURES_32_H */

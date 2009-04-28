@@ -20,7 +20,7 @@
 #ifndef _XENO_ASM_BLACKFIN_ARITH_H
 #define _XENO_ASM_BLACKFIN_ARITH_H
 
-#define XNARCH_WANT_NODIV_MULDIV
+#include <asm/xenomai/features.h>
 
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\

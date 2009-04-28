@@ -3,8 +3,6 @@
 
 #include <asm/xenomai/features.h>
 
-#define XNARCH_WANT_NODIV_MULDIV
-
 #if __LINUX_ARM_ARCH__ >= 4
 static inline __attribute__((__const__)) unsigned long long
 rthal_arm_nodiv_ullimd(const unsigned long long op,

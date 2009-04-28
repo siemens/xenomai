@@ -19,7 +19,7 @@
 #ifndef _XENO_ASM_POWERPC_ARITH_H
 #define _XENO_ASM_POWERPC_ARITH_H
 
-#define XNARCH_WANT_NODIV_MULDIV
+#include <asm/xenomai/features.h>
 
 #ifdef __powerpc64__
 

@@ -40,6 +40,7 @@
 #endif
 
 #else /* !__KERNEL__ */
+#include <stddef.h>
 #include <endian.h>
 
 #if __BYTE_ORDER == __BIG_ENDIAN
@@ -250,7 +251,7 @@ __rthal_generic_llmulshft(const long long op,
 #define rthal_llmulshft(ll, m, s) __rthal_generic_llmulshft((ll), (m), (s))
 #endif /* !rthal_llmulshft */
 
-#ifdef XNARCH_WANT_NODIV_MULDIV
+#ifdef XNARCH_HAVE_NODIV_LLIMD
 
 /* Representation of a 32 bits fraction. */
 typedef struct {
@@ -334,7 +335,7 @@ __rthal_generic_nodiv_llimd (long long op, unsigned long long frac, unsigned int
 #define rthal_nodiv_llimd(ll,frac,integ) __rthal_generic_nodiv_llimd((ll),(frac),(integ))
 #endif /* !rthal_nodiv_llimd */
 
-#endif /* XNARCH_WANT_NODIV_MULDIV */
+#endif /* XNARCH_HAVE_NODIV_LLIMD */
 
 static inline void xnarch_init_llmulshft(const unsigned m_in,
 					 const unsigned d_in,

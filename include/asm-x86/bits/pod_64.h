@@ -22,25 +22,6 @@
 #define _XENO_ASM_X86_BITS_POD_64_H
 #define _XENO_ASM_X86_BITS_POD_H
 
-unsigned xnarch_tsc_scale;
-unsigned xnarch_tsc_shift;
-unsigned xnarch_tsc_divide;
-rthal_u32frac_t xnarch_tsc_frac;
-
-long long xnarch_tsc_to_ns(long long ts)
-{
-	return xnarch_llmulshft(ts, xnarch_tsc_scale, xnarch_tsc_shift);
-}
-#define XNARCH_TSC_TO_NS
-
-long long xnarch_ns_to_tsc(long long ns)
-{
-	return xnarch_nodiv_llimd(ns,
-				  xnarch_tsc_frac.frac,
-				  xnarch_tsc_frac.integ);
-}
-#define XNARCH_NS_TO_TSC
-
 #include <asm-generic/xenomai/bits/pod.h>
 #include <asm/xenomai/switch.h>
 

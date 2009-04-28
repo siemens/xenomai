@@ -232,7 +232,14 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-generic
-includesub_HEADERS = arith.h features.h hal.h syscall.h system.h wrappers.h
+includesub_HEADERS = \
+	arith.h \
+	features.h \
+	hal.h \
+	syscall.h \
+	system.h \
+	wrappers.h
+
 SUBDIRS = bits
 all: all-recursive
 

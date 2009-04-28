@@ -966,27 +966,6 @@ static int __rt_timer_ns2ticks(struct pt_regs *regs)
 }
 
 /*
- * int __rt_timer_ns2tsc(SRTIME *ticksp, SRTIME *nsp)
- */
-
-static int __rt_timer_ns2tsc(struct pt_regs *regs)
-{
-	SRTIME ns, ticks;
-
-	if (__xn_safe_copy_from_user(&ns, (void __user *)__xn_reg_arg2(regs),
-				     sizeof(ns)))
-		return -EFAULT;
-
-	ticks = rt_timer_ns2tsc(ns);
-
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ticks,
-				   sizeof(ticks)))
-		return -EFAULT;
-
-	return 0;
-}
-
-/*
  * int __rt_timer_ticks2ns(SRTIME *nsp, SRTIME *ticksp)
  */
 
@@ -999,26 +978,6 @@ static int __rt_timer_ticks2ns(struct pt_regs *regs)
 		return -EFAULT;
 
 	ns = rt_timer_ticks2ns(ticks);
-
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
-		return -EFAULT;
-
-	return 0;
-}
-
-/*
- * int __rt_timer_tsc2ns(SRTIME *nsp, SRTIME *ticksp)
- */
-
-static int __rt_timer_tsc2ns(struct pt_regs *regs)
-{
-	SRTIME ticks, ns;
-
-	if (__xn_safe_copy_from_user(&ticks, (void __user *)__xn_reg_arg2(regs),
-				     sizeof(ticks)))
-		return -EFAULT;
-
-	ns = rt_timer_tsc2ns(ticks);
 
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ns, sizeof(ns)))
 		return -EFAULT;
@@ -4159,8 +4118,8 @@ static xnsysent_t __systab[] = {
 	[__native_unimp_89] = {&__rt_call_not_available, __xn_exec_any},
 	[__native_io_get_region] = {&__rt_io_get_region, __xn_exec_lostage},
 	[__native_io_put_region] = {&__rt_io_put_region, __xn_exec_lostage},
-	[__native_timer_ns2tsc] = {&__rt_timer_ns2tsc, __xn_exec_any},
-	[__native_timer_tsc2ns] = {&__rt_timer_tsc2ns, __xn_exec_any},
+	[__native_unimp_92] = {&__rt_call_not_available, __xn_exec_any},
+	[__native_unimp_93] = {&__rt_call_not_available, __xn_exec_any},
 	[__native_buffer_create] = {&__rt_buffer_create, __xn_exec_any},
 	[__native_buffer_bind] = {&__rt_buffer_bind, __xn_exec_conforming},
 	[__native_buffer_delete] = {&__rt_buffer_delete, __xn_exec_any},
