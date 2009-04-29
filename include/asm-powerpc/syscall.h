@@ -147,8 +147,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-#define CONFIG_XENO_HW_DIRECT_TSC  1
-
 static inline unsigned long long __xn_rdtsc(void)
 #if defined(__powerpc64__)
 {
@@ -174,9 +172,6 @@ static inline unsigned long long __xn_rdtsc(void)
 	return u.t;
 }
 #endif /* __powerpc64__ */
-
-#define CONFIG_XENO_HAVE_LLMULSHFT    1
-#define CONFIG_XENO_HAVE_NODIV_LLIMD  1
 
 #endif /* __KERNEL__ */
 

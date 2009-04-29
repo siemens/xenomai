@@ -20,6 +20,8 @@
 #ifndef _XENO_ASM_GENERIC_SYSCALL_H
 #define _XENO_ASM_GENERIC_SYSCALL_H
 
+#include <asm/xenomai/features.h>
+
 /* Xenomai multiplexer syscall. */
 #define __xn_sys_mux		555	/* Must fit within 15bit */
 /* Xenomai nucleus syscalls. */
@@ -153,10 +155,7 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 }
 
 #else /* !__KERNEL__ */
-
 #include <sys/types.h>
-#include <asm/xenomai/features.h>
-
 #endif /* __KERNEL__ */
 
 typedef struct xncompletion {

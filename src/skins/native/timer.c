@@ -56,11 +56,11 @@ RTIME rt_timer_tsc(void)
 {
 	RTIME tsc;
 
-#ifdef CONFIG_XENO_HW_DIRECT_TSC
+#ifdef XNARCH_HAVE_NONPRIV_TSC
 	tsc = __xn_rdtsc();
-#else /* !CONFIG_XENO_HW_DIRECT_TSC */
+#else /* !XNARCH_HAVE_NONPRIV_TSC */
 	XENOMAI_SKINCALL1(__native_muxid, __native_timer_tsc, &tsc);
-#endif /* CONFIG_XENO_HW_DIRECT_TSC */
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 	return tsc;
 }

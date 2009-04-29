@@ -211,10 +211,7 @@ asm (".L__X'%ebx = 1\n\t"
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_SKIN_MUX(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_SKIN_MUX(5,id,op,a1,a2,a3,a4,a5)
 
-#ifdef CONFIG_X86_TSC
-
-#define CONFIG_XENO_HW_DIRECT_TSC 1
-
+#ifdef XNARCH_HAVE_NONPRIV_TSC
 static inline unsigned long long __xn_rdtsc (void)
 
 {
@@ -222,8 +219,7 @@ static inline unsigned long long __xn_rdtsc (void)
     __asm__ __volatile__( "rdtsc" : "=A" (t));
     return t;
 }
-
-#endif  /* CONFIG_X86_TSC */
+#endif  /* XNARCH_HAVE_NONPRIV_TSC */
 
 #endif /* __KERNEL__ */
 

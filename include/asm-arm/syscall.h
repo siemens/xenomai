@@ -202,9 +202,9 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
 	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
-#define CONFIG_XENO_HW_DIRECT_TSC
-#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
+#ifdef XNARCH_ARM_TSC_TYPE
+#define XNARCH_HAVE_NONPRIV_TSC  1
+#endif /* XNARCH_ARM_TSC_TYPE */
 
 #endif /* __KERNEL__ */
 
@@ -229,12 +229,12 @@ struct __xn_tscinfo {
                 } dec;
         } u;
 };
-#define __XN_TSC_TYPE_NONE        0
-#define __XN_TSC_TYPE_FREERUNNING 1
-#define __XN_TSC_TYPE_DECREMENTER 2
+#define __XN_TSC_TYPE_NONE                  0
+#define __XN_TSC_TYPE_FREERUNNING           1
+#define __XN_TSC_TYPE_DECREMENTER           2
 #define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 3
 
-#define XENOMAI_SYSARCH_TSCINFO                 4
+#define XENOMAI_SYSARCH_TSCINFO             4
 
 #ifndef __KERNEL__
 #include <stdio.h>
@@ -250,10 +250,10 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
 	type: -1
 };
 
-#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
+#ifdef XNARCH_ARM_TSC_TYPE
 static inline unsigned long long __xn_rdtsc(void)
 {
-#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
         const unsigned mask = __xn_tscinfo.u.fr.mask;
@@ -267,7 +267,7 @@ static inline unsigned long long __xn_rdtsc(void)
         if ((counter & mask) < ((unsigned) result & mask))
                 result += mask + 1ULL;
         return (result & ~((unsigned long long) mask)) | (counter & mask);
-#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
 	const unsigned mask = __xn_tscinfo.u.fr.mask;
@@ -285,7 +285,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		before += mask + 1;
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
-#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
+#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
 	const unsigned mask = __xn_tscinfo.u.dec.mask;
 	unsigned long long after, before;
 	unsigned counter, last_cnt;
@@ -306,13 +306,13 @@ static inline unsigned long long __xn_rdtsc(void)
 		before += mask + 1ULL;
 	return (before + last_cnt - counter);
 
-#endif /* CONFIG_XENO_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
+#endif /* XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 }
-#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
+#endif /* XNARCH_ARM_TSC_TYPE */
 
 static inline void xeno_arm_features_check(void)
 {
-#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
+#ifdef XNARCH_ARM_TSC_TYPE
 	unsigned page_size;
 	int err, fd;
 	void *addr;
@@ -338,8 +338,8 @@ static inline void xeno_arm_features_check(void)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING		\
-	|| CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		\
+	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	case __XN_TSC_TYPE_FREERUNNING: {
 		unsigned long phys_addr;
 
@@ -354,7 +354,7 @@ static inline void xeno_arm_features_check(void)
 		__xn_tscinfo.u.fr.counter = 
 			((volatile unsigned *)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
-#if CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 		if (__xn_tscinfo.u.fr.mask >= ((1 << 28) - 1)) {
 			fprintf(stderr, "Hardware tsc is not a fast wrapping"
 				" one, select the correct platform, or fix\n"
@@ -364,7 +364,7 @@ static inline void xeno_arm_features_check(void)
 #endif /* __XN_TSC_TYPE_FREERUNNING_FAST_WRAP */
 		break;
 	}
-#elif CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER
+#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
 	case __XN_TSC_TYPE_DECREMENTER: {
 		unsigned long phys_addr;
 
@@ -381,7 +381,7 @@ static inline void xeno_arm_features_check(void)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
 		break;
 	}
-#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC == __XN_TSC_TYPE_DECREMENTER */
+#endif /* XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 		goto error;
 		
@@ -395,7 +395,7 @@ static inline void xeno_arm_features_check(void)
 		perror("Xenomai init: close(/dev/mem)");
 		exit(EXIT_FAILURE);
 	}
-#endif /* CONFIG_XENO_ARM_HW_DIRECT_TSC */
+#endif /* XNARCH_ARM_TSC_TYPE */
 }
 #define xeno_arch_features_check() xeno_arm_features_check()
 

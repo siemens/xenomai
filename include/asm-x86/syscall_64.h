@@ -159,8 +159,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_SKIN_MUX(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_SKIN_MUX(5,id,op,a1,a2,a3,a4,a5)
 
-#define CONFIG_XENO_HW_DIRECT_TSC 1 /* x86_64 always has a TSC */
-
 static inline unsigned long long __xn_rdtsc(void)
 {
 	unsigned long long t;

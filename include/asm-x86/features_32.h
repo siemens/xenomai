@@ -43,14 +43,15 @@
 
 #ifdef CONFIG_X86_TSC
 #define __xn_feat_x86_tsc_mask __xn_feat_x86_tsc
+#define XNARCH_HAVE_NONPRIV_TSC  1
 #else
-#define __xn_feat_x86_tsc_mask 0
+#define __xn_feat_x86_tsc_mask   0
 #endif
 
 #ifdef CONFIG_XENO_X86_SEP
-#define __xn_feat_x86_sep_mask __xn_feat_x86_sep
+#define __xn_feat_x86_sep_mask  __xn_feat_x86_sep
 #else
-#define __xn_feat_x86_sep_mask 0
+#define __xn_feat_x86_sep_mask   0
 #endif
 
 #define XENOMAI_FEAT_DEP  (__xn_feat_generic_mask| \

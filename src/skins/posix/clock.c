@@ -27,7 +27,7 @@
 
 extern int __pse51_muxid;
 
-#ifdef CONFIG_XENO_HW_DIRECT_TSC
+#ifdef XNARCH_HAVE_NONPRIV_TSC
 static xnsysinfo_t sysinfo;
 
 void pse51_clock_init(int muxid)
@@ -39,7 +39,7 @@ void pse51_clock_init(int muxid)
 		exit(EXIT_FAILURE);
 	}
 }
-#endif /* CONFIG_XENO_HW_DIRECT_TSC */
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {
@@ -58,7 +58,7 @@ int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int err;
-#ifdef CONFIG_XENO_HW_DIRECT_TSC
+#ifdef XNARCH_HAVE_NONPRIV_TSC
 	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
 		unsigned long long tsc;
 		unsigned long rem;
@@ -70,7 +70,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 		tp->tv_nsec = xnarch_imuldiv(rem, 1000000000, sysinfo.cpufreq);
 		return 0;
 	}
-#endif /* CONFIG_XENO_HW_DIRECT_TSC */
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 	err = -XENOMAI_SKINCALL2(__pse51_muxid,
 				 __pse51_clock_gettime,
