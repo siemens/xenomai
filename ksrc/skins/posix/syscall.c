@@ -2384,17 +2384,16 @@ static int __select(struct task_struct *curr, struct pt_regs *regs)
 	struct timeval tv;
 	pthread_t thread;
 	int i, err, nfds;
+	size_t fds_size;
 
 	thread = pse51_current_thread();
 	if (!thread)
 		return -EPERM;
 
 	if (__xn_reg_arg5(regs)) {
-		if (__xn_access_ok(curr, VERIFY_WRITE,
-				   __xn_reg_arg5(regs), sizeof(tv)))
-			return -EFAULT;
-
-		if (__xn_copy_from_user(curr, &tv,
+		if (!__xn_access_ok(curr, VERIFY_WRITE,
+				    __xn_reg_arg5(regs), sizeof(tv)) ||
+		    __xn_copy_from_user(curr, &tv,
 					(void __user *)__xn_reg_arg5(regs),
 					sizeof(tv)))
 			return -EFAULT;
@@ -2407,19 +2406,17 @@ static int __select(struct task_struct *curr, struct pt_regs *regs)
 	}
 
 	nfds = __xn_reg_arg1(regs);
+	fds_size = __FDELT(nfds + __NFDBITS - 1) * sizeof(long);
 
 	for (i = 0; i < XNSELECT_MAX_TYPES; i++)
 		if (ufd_sets[i]) {
 			in_fds[i] = &in_fds_storage[i];
 			out_fds[i] = & out_fds_storage[i];
-			if (__xn_access_ok(curr, VERIFY_WRITE,
-					   ufd_sets[i], sizeof(fd_set)))
-				return -EFAULT;
-
-			if (__xn_copy_from_user(curr, in_fds[i],
+			if (!__xn_access_ok(curr, VERIFY_WRITE,
+					    ufd_sets[i], sizeof(fd_set)) ||
+			    __xn_copy_from_user(curr, in_fds[i],
 						(void __user *) ufd_sets[i],
-						__FDELT(nfds + __NFDBITS - 1)
-						* sizeof(long)))
+						fds_size))
 				return -EFAULT;
 		}
 
