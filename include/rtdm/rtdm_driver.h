@@ -159,7 +159,9 @@ enum rtdm_selecttype {
  * NULL if kernel mode call
  * @param[in] oflag Open flags as passed by the user
  *
- * @return 0 on success, otherwise negative error code
+ * @return 0 on success. On failure return either -ENOSYS, to request that
+ * this handler be called again from the opposite realtime/non-realtime
+ * context, or another negative error code.
  *
  * @see @c open() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -174,7 +176,9 @@ typedef int (*rtdm_open_handler_t)(struct rtdm_dev_context *context,
  * NULL if kernel mode call
  * @param[in] protocol Protocol number as passed by the user
  *
- * @return 0 on success, otherwise negative error code
+ * @return 0 on success. On failure return either -ENOSYS, to request that
+ * this handler be called again from the opposite realtime/non-realtime
+ * context, or another negative error code.
  *
  * @see @c socket() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -188,7 +192,9 @@ typedef int (*rtdm_socket_handler_t)(struct rtdm_dev_context *context,
  * @param[in] user_info Opaque pointer to information about user mode caller,
  * NULL if kernel mode call
  *
- * @return 0 on success, otherwise negative error code
+ * @return 0 on success. On failure return either -ENOSYS, to request that
+ * this handler be called again from the opposite realtime/non-realtime
+ * context, or another negative error code.
  *
  * @see @c close() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -204,7 +210,9 @@ typedef int (*rtdm_close_handler_t)(struct rtdm_dev_context *context,
  * @param[in] request Request number as passed by the user
  * @param[in,out] arg Request argument as passed by the user
  *
- * @return Positiv value on success, otherwise negative error code
+ * @return A positive value or 0 on success. On failure return either
+ * -ENOSYS, to request that the function be called again from the opposite
+ * realtime/non-realtime context, or another negative error code.
  *
  * @see @c ioctl() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -221,7 +229,9 @@ typedef int (*rtdm_ioctl_handler_t)(struct rtdm_dev_context *context,
  * @param[in] fd_index Opaque value, to be passed to rtdm_event_select_bind or
  * rtdm_sem_select_bind unmodfied
  *
- * @return 0 on success, otherwise negative error code
+ * @return 0 on success. On failure return either -ENOSYS, to request that
+ * this handler be called again from the opposite realtime/non-realtime
+ * context, or another negative error code.
  */
 typedef int (*rtdm_select_bind_handler_t)(struct rtdm_dev_context *context,
 					  rtdm_selector_t *selector,
@@ -237,7 +247,9 @@ typedef int (*rtdm_select_bind_handler_t)(struct rtdm_dev_context *context,
  * @param[out] buf Input buffer as passed by the user
  * @param[in] nbyte Number of bytes the user requests to read
  *
- * @return On success, the number of bytes read, otherwise negative error code
+ * @return On success, the number of bytes read. On failure return either
+ * -ENOSYS, to request that this handler be called again from the opposite
+ * realtime/non-realtime context, or another negative error code.
  *
  * @see @c read() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -254,8 +266,9 @@ typedef ssize_t (*rtdm_read_handler_t)(struct rtdm_dev_context *context,
  * @param[in] buf Output buffer as passed by the user
  * @param[in] nbyte Number of bytes the user requests to write
  *
- * @return On success, the number of bytes written, otherwise negative error
- * code
+ * @return On success, the number of bytes written. On failure return
+ * either -ENOSYS, to request that this handler be called again from the
+ * opposite realtime/non-realtime context, or another negative error code.
  *
  * @see @c write() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -273,8 +286,9 @@ typedef ssize_t (*rtdm_write_handler_t)(struct rtdm_dev_context *context,
  * mirrored to safe kernel memory in case of user mode call
  * @param[in] flags Message flags as passed by the user
  *
- * @return On success, the number of bytes received, otherwise negative error
- * code
+ * @return On success, the number of bytes received. On failure return
+ * either -ENOSYS, to request that this handler be called again from the
+ * opposite realtime/non-realtime context, or another negative error code.
  *
  * @see @c recvmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -292,8 +306,9 @@ typedef ssize_t (*rtdm_recvmsg_handler_t)(struct rtdm_dev_context *context,
  * mirrored to safe kernel memory in case of user mode call
  * @param[in] flags Message flags as passed by the user
  *
- * @return On success, the number of bytes transmitted, otherwise negative
- * error code
+ * @return On success, the number of bytes transmitted. On failure return
+ * either -ENOSYS, to request that this handler be called again from the
+ * opposite realtime/non-realtime context, or another negative error code.
  *
  * @see @c sendmsg() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
