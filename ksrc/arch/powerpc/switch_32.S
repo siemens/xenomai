@@ -91,8 +91,6 @@ END_FTR_SECTION_IFSET(CPU_FTR_SPE)
 	mtspr	SPRN_SPRG3,r0	/* Update current THREAD phys addr */
 	addi	r2,r4,-THREAD	/* Update current */
 
-same_current:
-		
 #ifdef CONFIG_ALTIVEC
 BEGIN_FTR_SECTION
 	lwz	r0,THREAD_VRSAVE(r4)
@@ -110,6 +108,8 @@ END_FTR_SECTION_IFSET(CPU_FTR_SPE)
 #endif
 #endif /* CONFIG_SPE */
 
+same_current:
+		
 	lwz	r0,_CCR(r1)
 	mtcrf	0xFF,r0
 	REST_NVGPRS(r1)
