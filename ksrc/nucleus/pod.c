@@ -1432,19 +1432,12 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		nkpod->schedhook(thread, mask);
 #endif /* __XENO_SIM__ */
 
-	if (thread == sched->curr) {
-		spl_t ignored;
+	if (thread == sched->curr)
 		/*
 		 * If the thread is runnning on another CPU,
-		 * xnpod_schedule will just trigger the IPI. We
-		 * release the interrupts shortly before rescheduling,
-		 * to pull any pending interrupt that may reorder the
-		 * scheduling state first.
+		 * xnpod_schedule will just trigger the IPI.
 		 */
-		xnlock_clear_irqon(&nklock);
 		xnpod_schedule();
-		xnlock_get_irqsave(&nklock, ignored);
-	}
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/*
 	 * Ok, this one is an interesting corner case, which requires
