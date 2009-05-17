@@ -62,6 +62,7 @@
 static int xnarch_next_htick_shot(unsigned long delay, struct clock_event_device *cdev)
 {
 	xnsched_t *sched;
+	int ret;
 	spl_t s;
 
 #if !defined(__IPIPE_FEATURE_REQUEST_TICKDEV) && 0 /* Unused. */
@@ -70,10 +71,10 @@ static int xnarch_next_htick_shot(unsigned long delay, struct clock_event_device
 #endif
 	xnlock_get_irqsave(&nklock, s);
 	sched = xnpod_current_sched();
-	xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
+	ret = xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return ret ? -ETIME : 0;
 }
 
 /*!
