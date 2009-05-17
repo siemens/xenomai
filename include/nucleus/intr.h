@@ -42,6 +42,8 @@
 #include <nucleus/types.h>
 #include <nucleus/stat.h>
 
+struct xnsched;
+
 typedef struct xnintr {
 
 #ifdef CONFIG_XENO_OPT_SHIRQ
@@ -97,6 +99,8 @@ extern "C" {
 int xnintr_mount(void);
 
 void xnintr_clock_handler(void);
+
+void xnintr_host_tick(struct xnsched *sched);
 
 int xnintr_irq_proc(unsigned int irq, char *str);
 

@@ -83,6 +83,12 @@ static inline void xnintr_sync_stat_references(xnintr_t *intr) {}
 
 static void xnintr_irq_handler(unsigned irq, void *cookie);
 
+void xnintr_host_tick(struct xnsched *sched) /* Interrupts off. */
+{
+	__clrbits(sched->status, XNHTICK);
+	xnarch_relay_tick();
+}
+
 /* Low-level clock irq handler. */
 
 void xnintr_clock_handler(void)
@@ -114,16 +120,16 @@ void xnintr_clock_handler(void)
 		__clrbits(sched->status, XNINIRQ);
 		xnpod_schedule();
 	}
-
 	/*
-	 * Since the host tick is low priority, we can wait for
-	 * returning from the rescheduling procedure before actually
-	 * calling the propagation service, if it is pending.
+	 * If the clock interrupt preempted a real-time thread, any
+	 * transition to the root thread has already triggered a host
+	 * tick propagation from xnpod_schedule(), so at this point,
+	 * we only need to propagate the host tick in case the
+	 * interrupt preempted the root thread.
 	 */
-	if (testbits(sched->status, XNHTICK)) {
-		__clrbits(sched->status, XNHTICK);
-		xnarch_relay_tick();
-	}
+	if (testbits(sched->status, XNHTICK) &&
+	    xnthread_test_state(sched->curr, XNROOT))
+		xnintr_host_tick(sched);
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", XNARCH_TIMER_IRQ);
 	xnstat_exectime_switch(sched, prev);

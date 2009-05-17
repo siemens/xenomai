@@ -2193,6 +2193,8 @@ void __xnpod_schedule(struct xnsched *sched)
 	if (xnthread_test_state(prev, XNROOT))
 		xnarch_leave_root(xnthread_archtcb(prev));
 	else if (xnthread_test_state(next, XNROOT)) {
+		if (testbits(sched->status, XNHTICK))
+			xnintr_host_tick(sched);
 		if (testbits(sched->status, XNHDEFER))
 			xntimer_next_local_shot(sched);
 		xnarch_enter_root(xnthread_archtcb(next));
