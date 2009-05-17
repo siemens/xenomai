@@ -562,6 +562,8 @@ static inline void xnpod_switch_zombie(xnthread_t *threadout,
 	if (xnthread_test_state(threadin, XNROOT)) {
 		xnpod_reset_watchdog(sched);
 		xnfreesync();
+		if (testbits(sched->status, XNHTICK))
+			xnintr_host_tick(sched);
 		xnarch_enter_root(xnthread_archtcb(threadin));
 	}
 
@@ -2506,6 +2508,8 @@ void xnpod_schedule(void)
 	else if (xnthread_test_state(threadin, XNROOT)) {
 		xnpod_reset_watchdog(sched);
 		xnfreesync();
+		if (testbits(sched->status, XNHTICK))
+			xnintr_host_tick(sched);
 		xnarch_enter_root(xnthread_archtcb(threadin));
 	}
 
