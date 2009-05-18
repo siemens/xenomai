@@ -167,7 +167,6 @@ int test_attach(comedi_cxt_t *cxt,
 	priv->quanta_cnt = 1;
     }
 
-
     priv->timer_running = 0;
 
     ret = comedi_task_init(&priv->timer_task, 
@@ -281,11 +280,11 @@ static int __init comedi_fake_init(void)
 	return ret;
 
     /* Fills the driver structure main fields */
-    test_drv.owner=THIS_MODULE;
-    test_drv.board_name="comedi_fake";
-    test_drv.attach=test_attach;
-    test_drv.detach=test_detach;
-    test_drv.privdata_size=sizeof(tstprv_t);
+    test_drv.owner = THIS_MODULE;
+    test_drv.board_name = "comedi_fake";
+    test_drv.attach = test_attach;
+    test_drv.detach = test_detach;
+    test_drv.privdata_size = sizeof(tstprv_t);
 
     /* Initializes the subdevice structure */
     memset(&subd, 0, sizeof(comedi_subd_t));
