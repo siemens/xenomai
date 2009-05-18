@@ -36,28 +36,29 @@
 /* --- Common ranges declarations --- */
 
 comedi_rngtab_t rng_bipolar10 = { 1, {
-				      RANGE_V(-10, 10),
-				      }
-};
+		RANGE_V(-10, 10),
+}};
 comedi_rngdesc_t range_bipolar10 = RNG_GLOBAL(rng_bipolar10);
 
 comedi_rngtab_t rng_bipolar5 = { 1, {
-				     RANGE_V(-5, 5),
-				     }
-};
+		RANGE_V(-5, 5),
+}};
 comedi_rngdesc_t range_bipolar5 = RNG_GLOBAL(rng_bipolar5);
 
 comedi_rngtab_t rng_unipolar10 = { 1, {
-				       RANGE_V(0, 10),
-				       }
-};
+		RANGE_V(0, 10),
+}};
 comedi_rngdesc_t range_unipolar10 = RNG_GLOBAL(rng_unipolar10);
 
 comedi_rngtab_t rng_unipolar5 = { 1, {
-				      RANGE_V(0, 5),
-				      }
-};
-comedi_rngdesc_t range_unipolar5 = RNG_GLOBAL(rng_unipolar10);
+		RANGE_V(0, 5),
+}};
+comedi_rngdesc_t range_unipolar5 = RNG_GLOBAL(rng_unipolar5);
+
+comedi_rngtab_t rng_unknown = { 1, {
+		RANGE(0, 1),
+}};
+comedi_rngdesc_t range_unknown = RNG_GLOBAL(rng_unknown);
 
 /* --- Basic channel / range management functions --- */
 
@@ -90,7 +91,7 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 
 		if (CR_CHAN(chans[i]) >= subd->chan_desc->length) {
 			comedi_logerr
-			    ("comedi_check_chanlist: chan idx out_of range (%u>=%u)\n",
+			    ("comedi_check_chanlist: chan idx out_of range (%u>=%lu)\n",
 			     CR_CHAN(chans[i]), subd->chan_desc->length);
 			return -EINVAL;
 		}
