@@ -172,6 +172,7 @@ EXPORT_SYMBOL(range_bipolar10);
 EXPORT_SYMBOL(range_bipolar5);
 EXPORT_SYMBOL(range_unipolar10);
 EXPORT_SYMBOL(range_unipolar5);
+EXPORT_SYMBOL(range_unknown);
 
 /**
  * @brief Add a subdevice to the driver descriptor
