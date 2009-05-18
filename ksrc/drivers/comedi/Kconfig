@@ -12,5 +12,7 @@ config XENO_DRIVERS_COMEDI
 	over the RTDM interface.
 
 source drivers/xenomai/comedi/testing/Kconfig
+source drivers/xenomai/comedi/intel/Kconfig
+source drivers/xenomai/comedi/national_instruments/Kconfig
 
 endmenu
