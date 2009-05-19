@@ -158,17 +158,17 @@ static inline __attribute__((__const__)) int __rthal_generic_imuldiv(int i,
 #define rthal_imuldiv(i,m,d) __rthal_generic_imuldiv((i),(m),(d))
 #endif /* !rthal_imuldiv */
 
-#ifndef rthal_imuldiv_up
-static inline __attribute__((__const__)) int __rthal_generic_imuldiv_up(int i,
-									int mult,
-									int div)
+#ifndef rthal_imuldiv_ceil
+static inline __attribute__((__const__)) int __rthal_generic_imuldiv_ceil(int i,
+									  int mult,
+									  int div)
 {
 	/* Same as __rthal_generic_imuldiv, rounding up. */
 	const unsigned long long ull = rthal_ullmul(i, mult);
 	return rthal_uldivrem(ull + div - 1, div, NULL);
 }
-#define rthal_imuldiv_up(i,m,d) __rthal_generic_imuldiv_up((i),(m),(d))
-#endif /* !rthal_imuldiv_up */
+#define rthal_imuldiv_ceil(i,m,d) __rthal_generic_imuldiv_ceil((i),(m),(d))
+#endif /* !rthal_imuldiv_ceil */
 
 /* Division of an unsigned 96 bits ((h << 32) + l) by an unsigned 32 bits. 
    Building block for llimd. Without const qualifiers, gcc reload registers
@@ -380,7 +380,7 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 #define xnarch_mod64(a,b)            ({ unsigned long long _rem; \
 			                rthal_divmod64((a),(b),&_rem); _rem; })
 #define xnarch_imuldiv               rthal_imuldiv
-#define xnarch_imuldiv_up            rthal_imuldiv_up
+#define xnarch_imuldiv_ceil          rthal_imuldiv_ceil
 #define xnarch_llimd                 rthal_llimd
 #define xnarch_nodiv_llimd           rthal_nodiv_llimd
 #define xnarch_llmulshft             rthal_llmulshft
