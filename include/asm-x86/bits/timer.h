@@ -32,7 +32,7 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	 * now. Would a timer needs more, an extra call to the tick
 	 * handler would simply occur after 4 billions ticks.
 	 */
-	rthal_timer_program_shot(rthal_imuldiv
+	rthal_timer_program_shot(rthal_imuldiv_up
 				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 	{
