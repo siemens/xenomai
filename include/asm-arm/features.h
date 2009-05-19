@@ -98,6 +98,6 @@ static inline const char *get_feature_label (unsigned feature)
     }
 }
 
-#endif /* !_XENO_ASM_ARM_FEATURES_H */
+#define XNARCH_HAVE_LLMULSHFT    1
 
-// vim: ts=4 et sw=4 sts=4
+#endif /* !_XENO_ASM_ARM_FEATURES_H */

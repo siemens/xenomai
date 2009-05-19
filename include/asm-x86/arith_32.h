@@ -38,6 +38,8 @@
 #define _XENO_ASM_X86_ARITH_32_H
 #define _XENO_ASM_X86_ARITH_H
 
+#include <asm/xenomai/features.h>
+
 #define __rthal_u64tou32(ull, h, l) ({          \
     unsigned long long _ull = (ull);            \
     (l) = _ull & 0xffffffff;                    \

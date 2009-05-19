@@ -183,10 +183,7 @@ unsigned long long xnarch_get_host_time(void);
 
 long long xnarch_tsc_to_ns(long long ts);
 
-static inline long long xnarch_tsc_to_ns_rounded(long long ts)
-{
-    return (xnarch_llimd(ts, 1000000000, RTHAL_CPU_FREQ/2) + 1) / 2;
-}
+long long xnarch_tsc_to_ns_rounded(long long ts);
 
 long long xnarch_ns_to_tsc(long long ns);
 

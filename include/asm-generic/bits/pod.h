@@ -271,24 +271,6 @@ unsigned long long xnarch_get_host_time(void)
 
 EXPORT_SYMBOL(xnarch_get_host_time);
 
-#ifndef XNARCH_TSC_TO_NS
-long long xnarch_tsc_to_ns(long long ts)
-{
-    return xnarch_llimd(ts,1000000000,RTHAL_CPU_FREQ);
-}
-#endif /* !XNARCH_TSC_TO_NS */
-
-EXPORT_SYMBOL(xnarch_tsc_to_ns);
-
-#ifndef XNARCH_NS_TO_TSC
-long long xnarch_ns_to_tsc(long long ns)
-{
-    return xnarch_llimd(ns,RTHAL_CPU_FREQ,1000000000);
-}
-#endif /* !XNARCH_NS_TO_TSC */
-
-EXPORT_SYMBOL(xnarch_ns_to_tsc);
-
 unsigned long long xnarch_get_cpu_time(void)
 {
     return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());

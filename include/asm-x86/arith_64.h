@@ -26,6 +26,8 @@
 #define _XENO_ASM_X86_ARITH_64_H
 #define _XENO_ASM_X86_ARITH_H
 
+#include <asm/xenomai/features.h>
+
 static inline __attribute__((__const__)) long long
 __rthal_x86_64_llimd (long long op, unsigned m, unsigned d)
 {

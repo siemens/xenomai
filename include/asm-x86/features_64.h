@@ -39,4 +39,6 @@ static inline const char *get_feature_label (unsigned feature)
 	return get_generic_feature_label(feature);
 }
 
+#define XNARCH_HAVE_LLMULSHFT    1
+
 #endif /* !_XENO_ASM_X86_FEATURES_64_H */

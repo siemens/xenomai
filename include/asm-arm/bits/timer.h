@@ -29,7 +29,7 @@
 
 static inline void xnarch_program_timer_shot(unsigned long delay)
 {
-	rthal_timer_program_shot(rthal_imuldiv_up
+	rthal_timer_program_shot(rthal_imuldiv_ceil
 				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
 }
 

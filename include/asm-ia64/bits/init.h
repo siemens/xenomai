@@ -194,39 +194,39 @@ static void xnarch_stack_pool_destroy(void)
 
 static inline int xnarch_init(void)
 {
-	int err;
+	int ret;
 
-	err = rthal_init();
-
-	if (err)
-		return err;
+	ret = rthal_init();
+	if (ret)
+		return ret;
 
 #if defined(CONFIG_SMP) && defined(MODULE)
-	/* Make sure the init sequence is kept on the same CPU when
-	   running as a module. */
+	/*
+	 * Make sure the init sequence is kept on the same CPU when
+	 * running as a module.
+	 */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP && MODULE */
 
-	err = xnarch_calibrate_sched();
+	xnarch_init_timeconv(RTHAL_CPU_FREQ);
 
-	if (err)
-		return err;
+	ret = xnarch_calibrate_sched();
+	if (ret)
+		return ret;
 
 	xnarch_escalation_virq = rthal_alloc_virq();
-
 	if (xnarch_escalation_virq == 0)
 		return -ENOSYS;
 
 	rthal_virtualize_irq(&rthal_domain,
 			     xnarch_escalation_virq,
-			     (rthal_irq_handler_t) & xnpod_schedule_handler,
+			     (rthal_irq_handler_t)&xnpod_schedule_handler,
 			     NULL, NULL, IPIPE_HANDLE_MASK | IPIPE_WIRED_MASK);
 
 	xnarch_old_trap_handler = rthal_trap_catch(&xnarch_trap_fault);
 
-	err = xnarch_stack_pool_init();
-
-	if (!err)
+	ret = xnarch_stack_pool_init();
+	if (!ret)
 		return 0;
 
 	rthal_trap_catch(xnarch_old_trap_handler);
