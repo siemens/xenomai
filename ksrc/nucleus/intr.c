@@ -126,7 +126,7 @@ void xnintr_clock_handler(void)
 	 * interrupt preempted the root thread.
 	 */
 	if (testbits(sched->status, XNHTICK) &&
-	    xnthread_test_state(sched->curr, XNROOT))
+	    xnthread_test_state(sched->runthread, XNROOT))
 		xnintr_host_tick(sched);
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", XNARCH_TIMER_IRQ);
