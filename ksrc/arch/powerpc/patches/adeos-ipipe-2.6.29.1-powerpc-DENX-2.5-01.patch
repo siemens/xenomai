@@ -539,7 +539,7 @@ index f75a5fc..32242c5 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..4131197
+index 0000000..ba76b62
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,235 @@
@@ -590,10 +590,10 @@ index 0000000..4131197
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.5-00"
++#define IPIPE_ARCH_STRING	"2.5-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	5
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -622,7 +622,7 @@ index 0000000..4131197
 +	( {								\
 +		int x = !ipipe_root_domain_p;				\
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status)); \
-+		local_irq_enable_hw(); x;				\
++		if (!x) local_irq_enable_hw(); x;			\
 +	} )
 +
 +#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
@@ -1258,7 +1258,7 @@ index 923f87a..dded6e4 100644
  	struct cpu_spec *s = cpu_specs;
  	struct cpu_spec *t = &the_cpu_spec;
 diff --git a/arch/powerpc/kernel/entry_32.S b/arch/powerpc/kernel/entry_32.S
-index 6f7eb7e..8647704 100644
+index 6f7eb7e..ac06d31 100644
 --- a/arch/powerpc/kernel/entry_32.S
 +++ b/arch/powerpc/kernel/entry_32.S
 @@ -174,8 +174,25 @@ transfer_to_handler:
@@ -1344,57 +1344,42 @@ index 6f7eb7e..8647704 100644
  	REST_NVGPRS(r1)
  	bl	schedule_tail
  	li	r3,0
-@@ -709,6 +764,11 @@ ret_from_except:
+@@ -709,6 +764,12 @@ ret_from_except:
  	SYNC			/* Some chip revs have problems here... */
  	MTMSRD(r10)		/* disable interrupts */
  
 +#ifdef CONFIG_IPIPE
 +        bl __ipipe_check_root
 +        cmpwi   r3, 0
++	mfmsr	r10		/* this is used later, might be messed */
 +        beq- restore
 +#endif /* CONFIG_IPIPE */
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r0,r3,MSR_PR
  	beq	resume_kernel
-@@ -744,11 +804,37 @@ resume_kernel:
+@@ -732,6 +793,12 @@ restore_user:
+ #ifdef CONFIG_PREEMPT
+ 	b	restore
+ 
++#ifdef CONFIG_IPIPE
++#define PREEMPT_SCHEDULE_IRQ	__ipipe_preempt_schedule_irq
++#else
++#define PREEMPT_SCHEDULE_IRQ	preempt_schedule_irq
++#endif
++
+ /* N.B. the only way to get here is from the beq following ret_from_except. */
+ resume_kernel:
+ 	/* check current_thread_info->preempt_count */
+@@ -744,7 +811,7 @@ resume_kernel:
  	beq+	restore
  	andi.	r0,r3,MSR_EE	/* interrupts off? */
  	beq	restore		/* don't schedule if so */
-+#ifdef CONFIG_IPIPE	
-+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-+	lis	r3,(0x80000000)@h
-+	ori	r3,r3,(0x80000000)@l
-+	bl	ipipe_trace_end
-+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
-+	LOAD_MSR_KERNEL(r10,MSR_KERNEL)
-+	ori	r10,r10,MSR_EE
-+	SYNC
-+	MTMSRD(r10)
-+	bl	__ipipe_fast_stall_root
-+#endif /* CONFIG_IPIPE */	
- 1:	bl	preempt_schedule_irq
+-1:	bl	preempt_schedule_irq
++1:	bl	PREEMPT_SCHEDULE_IRQ
  	rlwinm	r9,r1,0,0,(31-THREAD_SHIFT)
  	lwz	r3,TI_FLAGS(r9)
  	andi.	r0,r3,_TIF_NEED_RESCHED
- 	bne-	1b
-+#ifdef CONFIG_IPIPE	
-+	bl	__ipipe_fast_unstall_root
-+	LOAD_MSR_KERNEL(r10,MSR_KERNEL)
-+	SYNC
-+	MTMSRD(r10)
-+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-+	lwz	r3,_MSR(r1)
-+	andi.	r0,r3,MSR_EE
-+	bne	restore
-+	lis	r3,(0x80000000)@h
-+	ori	r3,r3,(0x80000000)@l
-+	bl	ipipe_trace_begin
-+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
-+#endif /* CONFIG_IPIPE */	
- #else
- resume_kernel:
- #endif /* CONFIG_PREEMPT */
-@@ -1108,6 +1194,13 @@ ee_restarts:
+@@ -1108,6 +1175,13 @@ ee_restarts:
  	.space	4
  	.previous
  
@@ -2124,10 +2109,10 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..a883a38
+index 0000000..383a154
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,809 @@
+@@ -0,0 +1,828 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -2823,15 +2808,34 @@ index 0000000..a883a38
 +
 +#else
 +
-+notrace void __ipipe_fast_stall_root(void)
++#ifdef CONFIG_PREEMPT
++
++asmlinkage void __sched preempt_schedule_irq(void);
++
++void __sched  __ipipe_preempt_schedule_irq(void)
 +{
-+	set_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
++	struct ipipe_percpu_domain_data *p; 
++	unsigned long flags;  
++
++	BUG_ON(!irqs_disabled_hw());  
++	local_irq_save(flags);	
++	local_irq_enable_hw();	
++	preempt_schedule_irq(); /* Ok, may reschedule now. */  
++	local_irq_disable_hw(); 
++	/*
++	 * Flush any pending interrupt that may have been logged after
++	 * preempt_schedule_irq() stalled the root stage before
++	 * returning to us, and now.
++	 */
++	p = ipipe_root_cpudom_ptr(); 
++	if (unlikely(p->irqpend_himask != 0)) { 
++		__clear_bit(IPIPE_STALL_FLAG, &p->status); 
++		__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY); 
++	} 
++	local_irq_restore_nosync(flags);  
 +}
 +
-+notrace void __ipipe_fast_unstall_root(void)
-+{
-+	clear_bit_safe(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
-+}
++#endif /* CONFIG_PREEMPT */
 +
 +#endif
 +
@@ -3528,15 +3532,25 @@ index 8c5a03b..84cb78c 100644
  {
  	unsigned int *start, *end, *dest;
 diff --git a/arch/powerpc/mm/fault.c b/arch/powerpc/mm/fault.c
-index 91c7b86..cd9a2df 100644
+index 91c7b86..3d9c670 100644
 --- a/arch/powerpc/mm/fault.c
 +++ b/arch/powerpc/mm/fault.c
-@@ -125,6 +125,9 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+@@ -118,13 +118,18 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+ 			    unsigned long error_code)
+ {
+ 	struct vm_area_struct * vma;
+-	struct mm_struct *mm = current->mm;
++	struct mm_struct *mm;
+ 	siginfo_t info;
+ 	int code = SEGV_MAPERR;
+ 	int is_write = 0, ret;
  	int trap = TRAP(regs);
   	int is_exec = trap == 0x400;
  
 +	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
 +	    	return 0;
++
++	mm = current->mm;
 +
  #if !(defined(CONFIG_4xx) || defined(CONFIG_BOOKE))
  	/*
@@ -4289,10 +4303,10 @@ index bf7d6ce..0ffac4e 100644
  struct ht_irq_cfg {
  	struct pci_dev *dev;
 diff --git a/drivers/serial/8250.c b/drivers/serial/8250.c
-index 3f597cb..abf846f 100644
+index 3f597cb..a7b844c 100644
 --- a/drivers/serial/8250.c
 +++ b/drivers/serial/8250.c
-@@ -3139,6 +3139,51 @@ static int serial8250_resume(struct platform_device *dev)
+@@ -3139,6 +3139,34 @@ static int serial8250_resume(struct platform_device *dev)
  	return 0;
  }
  
@@ -4300,44 +4314,27 @@ index 3f597cb..abf846f 100644
 +
 +#include <stdarg.h>
 +
++static IPIPE_DEFINE_SPINLOCK(serial_lock);
++
 +void __ipipe_serial_debug(const char *fmt, ...)
 +{
 +        struct uart_8250_port *up = &serial8250_ports[0];
-+        unsigned int ier, count;
 +        unsigned long flags;
++        unsigned int count;
 +        char buf[128];
 +        va_list ap;
 +
 +        va_start(ap, fmt);
-+        vsprintf(buf, fmt, ap);
++        vsnprintf(buf, sizeof(buf), fmt, ap);
 +        va_end(ap);
 +        count = strlen(buf);
 +
-+        touch_nmi_watchdog();
-+
-+        local_irq_save_hw(flags);
-+
-+        /*
-+         *      First save the IER then disable the interrupts
-+        */
-+        ier = serial_in(up, UART_IER);
-+
-+        if (up->capabilities & UART_CAP_UUE)
-+                serial_out(up, UART_IER, UART_IER_UUE);
-+        else
-+                serial_out(up, UART_IER, 0);
-+
-+        uart_console_write(&up->port, buf, count, serial8250_console_putchar);
-+
-+        /*
-+         *      Finally, wait for transmitter to become empty
-+         *      and restore the IER
-+         */
-+        wait_for_xmitr(up, BOTH_EMPTY);
-+        serial_out(up, UART_IER, ier);
-+
-+        local_irq_restore_hw(flags);
++        spin_lock_irqsave(&serial_lock, flags);
++	uart_console_write(&up->port, buf, count, serial8250_console_putchar);
++        spin_unlock_irqrestore(&serial_lock, flags);
 +}
++
++EXPORT_SYMBOL_GPL(__ipipe_serial_debug);
 +
 +#endif
 +
@@ -5539,7 +5536,7 @@ index 7fa3718..7262a76 100644
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
 diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 065cdf8..9efe250 100644
+index 3daa05f..8a3b1b1 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
 @@ -105,6 +105,8 @@ extern unsigned int kobjsize(const void *objp);
@@ -10256,7 +10253,7 @@ index 9c4b025..08f096b 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index baa999e..e526a3c 100644
+index d7df5ba..5b40998 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -52,6 +52,7 @@
@@ -10391,7 +10388,7 @@ index baa999e..e526a3c 100644
  		progress += 8;
  	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
  
-@@ -1841,32 +1916,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
+@@ -1843,32 +1918,6 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  	return pte;
  }
  
@@ -10424,7 +10421,7 @@ index baa999e..e526a3c 100644
  /*
   * This routine handles present pages, when users try to write
   * to a shared page. It is done by copying the page to a new address
-@@ -3169,6 +3218,113 @@ void print_vma_addr(char *prefix, unsigned long ip)
+@@ -3171,6 +3220,113 @@ void print_vma_addr(char *prefix, unsigned long ip)
  	up_read(&current->mm->mmap_sem);
  }
  
