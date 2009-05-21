@@ -73,7 +73,7 @@ struct rtcan_ixxat_pci
 #define IXXAT_BASE_PORT_SIZE 0x0400
 
 static struct pci_device_id ixxat_pci_tbl[] = {
-	{IXXAT_PCI_VENDOR_ID, IXXAT_PCI_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+	{IXXAT_PCI_VENDOR_ID, IXXAT_PCI_DEVICE_ID, IXXAT_PCI_VENDOR_ID, IXXAT_PCI_SUB_SYS_ID, 0, 0, 0},
 	{ }
 };
 MODULE_DEVICE_TABLE (pci, ixxat_pci_tbl);
