@@ -165,7 +165,7 @@ static inline __attribute__((__const__)) int __rthal_generic_imuldiv_ceil(int i,
 {
 	/* Same as __rthal_generic_imuldiv, rounding up. */
 	const unsigned long long ull = rthal_ullmul(i, mult);
-	return rthal_uldivrem(ull + div - 1, div, NULL);
+	return rthal_uldivrem(ull + (unsigned)div - 1, div, NULL);
 }
 #define rthal_imuldiv_ceil(i,m,d) __rthal_generic_imuldiv_ceil((i),(m),(d))
 #endif /* !rthal_imuldiv_ceil */
