@@ -361,7 +361,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
         [ADEOS_PATCH="`/bin/bash -c \"echo $withval\"`"])
 
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
-        ADEOS_PATCH="`( ls $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-ipipe-$linux_version*-{$XENO_TARGET_ARCH,$XENO_LINUX_ARCH}-*|sort -r ) 2>/dev/null | head -n1`"
+        ADEOS_PATCH="`( ls $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-ipipe-$linux_base_version*-{$XENO_TARGET_ARCH,$XENO_LINUX_ARCH}-*|sort -r ) 2>/dev/null | head -n1`"
   fi
   if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
