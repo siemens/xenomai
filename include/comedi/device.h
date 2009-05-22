@@ -47,6 +47,9 @@ struct comedi_device {
 	   procedure */
 	comedi_drv_t *driver;
 
+	/* Hidden description stuff */
+	struct list_head subdvsq;
+
 	/* TODO: transfer should not be a pointer */
 	comedi_trf_t *transfer;
 

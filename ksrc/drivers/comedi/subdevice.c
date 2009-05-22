@@ -121,27 +121,33 @@ int comedi_get_nbchan(comedi_dev_t * dev, int subd_key)
 	return dev->transfer->subds[subd_key]->chan_desc->length;
 }
 
-int comedi_add_subd(comedi_drv_t * drv, comedi_subd_t * subd)
+comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
+				  void (*setup)(comedi_subd_t *))
+{
+	comedi_subd_t *subd;
+	
+	subd = comedi_kmalloc(sizeof(comedi_subd_t) + sizeof_priv);
+
+	if(subd != NULL && setup != NULL)
+		setup(subd);
+
+	return subd;
+}
+
+int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd)
 {
 	struct list_head *this;
-	comedi_subd_t *news;
 	int i = 0;
 
 	/* Basic checking */
-	if (drv == NULL || subd == NULL)
+	if (dev == NULL || subd == NULL)
 		return -EINVAL;
 
-	/* The driver developer does not have to manage instances
-	   of the subdevice structure; the allocation are done
-	   in the Comedi layer */
-	news = comedi_kmalloc(sizeof(comedi_subd_t));
-	if (news == NULL)
-		return -ENOMEM;
-	memcpy(news, subd, sizeof(comedi_subd_t));
+	list_add_tail(&subd->list, &dev->subdvsq);
 
-	list_add_tail(&news->list, &drv->subdvsq);
+	subd->dev = dev;
 
-	list_for_each(this, &drv->subdvsq) {
+	list_for_each(this, &dev->subdvsq) {
 		i++;
 	}
 

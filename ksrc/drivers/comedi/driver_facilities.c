@@ -63,23 +63,11 @@
  * instead of registering a fops structure, a Comedi driver must
  * register some comedi_driver structure.
  *
- * Before registrations, the following steps must have been performed:
- * - Initialize the structure thanks to comedi_init_drv();
- * - At least, one subdevice descriptor has to declared into the
- *   driver thanks to comedi_add_subd();
- * 
- * Eventually, the driver must be inserted into the Comedi drivers set
- * thanks to comedi_add_drv().
- *
- * In the cleanup module function, the driver must be unregistered
- * thanks to comedi_rm_drv() and destroyed by calling
- * comedi_cleanup_drv().
- *
  * @{
  */
 
 /**
- * @brief Add a driver to the Comedi driver list
+ * @brief Register a Comedi driver
  *
  * After initialising a driver structure, the driver must be made
  * available so as to be attached.
@@ -89,11 +77,11 @@
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_add_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_add_drv);
+int comedi_register_drv(comedi_drv_t * drv);
+EXPORT_SYMBOL(comedi_register_drv);
 
 /**
- * @brief Remove a driver from the Comedi driver list
+ * @brief Unregister a Comedi driver
  *
  * This function removes the driver descriptor from the Comedi driver
  * list. The driver cannot be attached anymore.
@@ -103,30 +91,8 @@ EXPORT_SYMBOL(comedi_add_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_rm_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_rm_drv);
-
-/**
- * @brief Initialize the driver descriptor's structure
- *
- * @param[in] drv Driver descriptor structure
- *
- * @return 0 on success, otherwise negative error code.
- *
- */
-int comedi_init_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_init_drv);
-
-/**
- * @brief Clean the driver descriptor's structure up
- *
- * @param[in] drv Driver descriptor structure
- *
- * @return 0 on success, otherwise negative error code.
- *
- */
-int comedi_cleanup_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_cleanup_drv);
+int comedi_unregister_drv(comedi_drv_t * drv);
+EXPORT_SYMBOL(comedi_unregister_drv);
 
 /** @} */
 
@@ -181,14 +147,14 @@ EXPORT_SYMBOL(range_unknown);
  * comedi_add_subd() must be used so to add some subdevices to the
  * driver.
  *
- * @param[in] drv Driver descriptor structure
+ * @param[in] dev Device descriptor structure
  * @param[in] subd Subdevice descriptor structure
  *
  * @return the index with which the subdevice has been registered, in
  * case of error a negative error code is returned.
  *
  */
-int comedi_add_subd(comedi_drv_t * drv, comedi_subd_t * subd);
+int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd);
 EXPORT_SYMBOL(comedi_add_subd);
 
 /**

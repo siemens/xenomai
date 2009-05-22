@@ -71,16 +71,8 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 		comedi_kfree(tsf->bufs);
 	}
 
+	/* Releases the pointers tab, if need be */
 	if (tsf->subds != NULL) {
-
-		/* If the driver is dynamic, the subdevices
-		   structures must be freed at transfer cleanup time */
-		if ((dev->driver->flags & COMEDI_DYNAMIC_DRV) != 0) {
-			for (i = 0; i < tsf->nb_subd; i++)
-				comedi_kfree(tsf->subds[i]);
-		}
-
-		/* Releases the pointers tab */
 		comedi_kfree(tsf->subds);
 	}
 
@@ -94,7 +86,6 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 {
 	comedi_dev_t *dev = NULL;
 	comedi_trf_t *tsf;
-	comedi_drv_t *drv;
 	comedi_subd_t *subd;
 	struct list_head *this;
 	int i = 0, ret = 0;
@@ -103,7 +94,6 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 		       comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
-	drv = dev->driver;
 
 	/* Allocates the main structure */
 	tsf = comedi_kmalloc(sizeof(comedi_trf_t));
@@ -125,7 +115,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 
 	/* Recovers the subdevices count 
 	   (as they are registered in a linked list */
-	list_for_each(this, &drv->subdvsq) {
+	list_for_each(this, &dev->subdvsq) {
 		tsf->nb_subd++;
 	}
 
@@ -138,7 +128,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	}
 
 	/* Recovers the subdevices pointers */
-	list_for_each(this, &drv->subdvsq) {
+	list_for_each(this, &dev->subdvsq) {
 		subd = list_entry(this, comedi_subd_t, list);
 
 		if (subd->flags & COMEDI_SUBD_AI)
@@ -188,18 +178,6 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 
 	if (ret != 0)
 		comedi_cleanup_transfer(cxt);
-
-	/* If the driver is dynamic, the subdevices are 
-	   added during attachment; then there must be no 
-	   subdevices in the list for the next attachment */
-	if ((drv->flags & COMEDI_DYNAMIC_DRV) != 0) {
-		while (&drv->subdvsq != drv->subdvsq.next) {
-			this = drv->subdvsq.next;
-			subd = list_entry(this, comedi_subd_t, list);
-			list_del(this);
-			comedi_kfree(subd);
-		}
-	}
 
 	return ret;
 }

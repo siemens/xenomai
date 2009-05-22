@@ -156,6 +156,9 @@ struct comedi_subdevice {
 	struct list_head list;
 			   /**< List stuff */
 
+	struct comedi_device *dev;
+			       /**< Containing device */
+
 	/* Descriptors stuff */
 	unsigned long flags;
 			 /**< Type flags */
@@ -186,6 +189,8 @@ struct comedi_subdevice {
 	int (*trigger) (comedi_cxt_t *, lsampl_t);
 					      /**< Callback for trigger operation */
 
+	char priv[0];
+		  /**< Private data */
 };
 typedef struct comedi_subdevice comedi_subd_t;
 
@@ -244,7 +249,10 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 			  unsigned char nb_chan, unsigned int *chans);
 
 /* --- Upper layer functions --- */
-int comedi_add_subd(struct comedi_driver *drv, comedi_subd_t * subd);
+
+comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
+				  void (*setup)(comedi_subd_t *));
+int comedi_add_subd(struct comedi_device *dev, comedi_subd_t * subd);
 int comedi_get_nbchan(struct comedi_device *dev, int subd_key);
 int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg);

@@ -301,6 +301,9 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 		comedi_loginfo
 		    ("comedi_assign_driver: warning! the field priv will not be usable\n");
 	else {
+
+		INIT_LIST_HEAD(&dev->subdvsq);
+	
 		dev->priv = comedi_kmalloc(drv->privdata_size);
 		if (dev->priv == NULL && drv->privdata_size != 0) {
 			comedi_logerr
@@ -343,10 +346,20 @@ int comedi_release_driver(comedi_cxt_t * cxt)
 	if ((ret = dev->driver->detach(cxt)) != 0)
 		goto out_release_driver;
 
-	/* Decreases module's count 
+	/* Decrease module's count 
 	   so as to allow module unloading */
 	module_put(dev->driver->owner);
 
+	/* In case, the driver developer did not free the subdevices */
+	while (&dev->subdvsq != dev->subdvsq.next) {
+		struct list_head *this = dev->subdvsq.next;
+		comedi_subd_t *tmp = list_entry(this, comedi_subd_t, list);
+
+		list_del(this);
+		comedi_kfree(tmp);
+	}
+
+	/* Free the private field */ 
 	comedi_kfree(dev->priv);
 	dev->driver = NULL;
 
