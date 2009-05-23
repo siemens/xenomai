@@ -147,7 +147,7 @@ static void test_task_proc(void *arg)
 /* --- Comedi Callbacks --- */
 
 /* Command callback */
-int test_cmd(comedi_subd_t *subd, , comedi_cmd_t *cmd)
+int test_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	comedi_dev_t *dev = subd->dev;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
