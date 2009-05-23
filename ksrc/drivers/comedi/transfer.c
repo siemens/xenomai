@@ -39,7 +39,7 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 	comedi_trf_t *tsf;
 	int i;
 
-	comedi_loginfo("comedi_cleanup_transfer: minor=%d\n",
+	__comedi_info("comedi_cleanup_transfer: minor=%d\n",
 		       comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
@@ -90,7 +90,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	struct list_head *this;
 	int i = 0, ret = 0;
 
-	comedi_loginfo("comedi_setup_transfer: minor=%d\n",
+	__comedi_info("comedi_setup_transfer: minor=%d\n",
 		       comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
@@ -98,7 +98,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	/* Allocates the main structure */
 	tsf = comedi_kmalloc(sizeof(comedi_trf_t));
 	if (tsf == NULL) {
-		comedi_logerr("comedi_setup_transfer: call1(alloc) failed \n");
+		__comedi_err("comedi_setup_transfer: call1(alloc) failed \n");
 		return -ENOMEM;
 	}
 	memset(tsf, 0, sizeof(comedi_trf_t));
@@ -122,7 +122,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	/* Allocates a suitable tab for the subdevices */
 	tsf->subds = comedi_kmalloc(tsf->nb_subd * sizeof(comedi_subd_t *));
 	if (tsf->subds == NULL) {
-		comedi_logerr("comedi_setup_transfer: call2(alloc) failed \n");
+		__comedi_err("comedi_setup_transfer: call2(alloc) failed \n");
 		ret = -ENOMEM;
 		goto out_setup_tsf;
 	}
@@ -152,8 +152,8 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 		if (tsf->subds[i]->flags & COMEDI_SUBD_CMD) {
 			tsf->bufs[i] = comedi_kmalloc(sizeof(comedi_buf_t));
 			if (tsf->bufs[i] == NULL) {
-				comedi_logerr
-				    ("comedi_setup_transfer: call5-6(alloc) failed \n");
+				__comedi_err("comedi_setup_transfer: "
+					     "call5-6(alloc) failed \n");
 				ret = -ENOMEM;
 				goto out_setup_tsf;
 			}
@@ -168,7 +168,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 
 	tsf->status = comedi_kmalloc(tsf->nb_subd * sizeof(unsigned long));
 	if (tsf->status == NULL) {
-		comedi_logerr("comedi_setup_transfer: call8(alloc) failed \n");
+		__comedi_err("comedi_setup_transfer: call8(alloc) failed \n");
 		ret = -ENOMEM;
 	}
 
@@ -186,7 +186,7 @@ int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_reserve_transfer: minor=%d idx=%d\n",
+	__comedi_info("comedi_reserve_transfer: minor=%d idx=%d\n",
 		       comedi_get_minor(cxt), idx_subd);
 
 	if (test_and_set_bit(COMEDI_TSF_BUSY,
@@ -201,7 +201,7 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	int i;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_init_transfer: minor=%d idx=%d\n",
+	__comedi_info("comedi_init_transfer: minor=%d idx=%d\n",
 		       comedi_get_minor(cxt), cmd->idx_subd);
 
 	/* Checks if the transfer system has to work in bulk mode */
@@ -257,9 +257,9 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	   the "cancel" function can be used as as to (re)initialize 
 	   some component) */
 	if (subd->cancel != NULL && (ret = subd->cancel(subd, idx_subd)) < 0) {
-		comedi_logerr
-		    ("comedi_cancel: subdevice %d cancel handler failed (ret=%d)\n",
-		     idx_subd, ret);
+		__comedi_err("comedi_cancel: "
+			     "subdevice %d cancel handler failed (ret=%d)\n",
+			     idx_subd, ret);
 	}
 
 	/* Clears the "busy" flag */

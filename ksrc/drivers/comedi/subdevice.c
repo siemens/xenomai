@@ -90,23 +90,23 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 		     COMEDI_CHAN_GLOBAL_CHANDESC) ? i : 0;
 
 		if (CR_CHAN(chans[i]) >= subd->chan_desc->length) {
-			comedi_logerr
-			    ("comedi_check_chanlist: chan idx out_of range (%u>=%lu)\n",
-			     CR_CHAN(chans[i]), subd->chan_desc->length);
+			__comedi_err("comedi_check_chanlist: "
+				     "chan idx out_of range (%u>=%lu)\n",
+				     CR_CHAN(chans[i]), subd->chan_desc->length);
 			return -EINVAL;
 		}
 		if (CR_RNG(chans[i]) > subd->rng_desc->rngtabs[j]->length) {
-			comedi_logerr
-			    ("comedi_check_chanlist: rng idx out_of range (%u>=%u)\n",
-			     CR_RNG(chans[i]),
-			     subd->rng_desc->rngtabs[j]->length);
+			__comedi_err("comedi_check_chanlist: "
+				     "rng idx out_of range (%u>=%u)\n",
+				     CR_RNG(chans[i]),
+				     subd->rng_desc->rngtabs[j]->length);
 			return -EINVAL;
 		}
 		if (CR_AREF(chans[i]) != 0 &&
 		    (CR_AREF(chans[i]) & subd->chan_desc->chans[k].flags) == 0)
 		{
-			comedi_logerr
-			    ("comedi_check_chanlist: bad channel type\n");
+			__comedi_err("comedi_check_chanlist: "
+				     "bad channel type\n");
 			return -EINVAL;
 		}
 	}

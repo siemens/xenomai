@@ -62,13 +62,13 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 
 	desc->chan_descs = tmpchans;
 
-	comedi_loginfo("comedi_fill_cmddesc: desc dump\n");
-	comedi_loginfo("\t->idx_subd=%u\n", desc->idx_subd);
-	comedi_loginfo("\t->flags=%lu\n", desc->flags);
-	comedi_loginfo("\t->nb_chan=%u\n", desc->nb_chan);
-	comedi_loginfo("\t->chan_descs=0x%x\n", *desc->chan_descs);
-	comedi_loginfo("\t->data_len=%u\n", desc->data_len);
-	comedi_loginfo("\t->pdata=0x%p\n", desc->data);
+	__comedi_info("comedi_fill_cmddesc: desc dump\n");
+	__comedi_info("\t->idx_subd=%u\n", desc->idx_subd);
+	__comedi_info("\t->flags=%lu\n", desc->flags);
+	__comedi_info("\t->nb_chan=%u\n", desc->nb_chan);
+	__comedi_info("\t->chan_descs=0x%x\n", *desc->chan_descs);
+	__comedi_info("\t->data_len=%u\n", desc->data_len);
+	__comedi_info("\t->pdata=0x%p\n", desc->data);
 
       out_cmddesc:
 
@@ -92,25 +92,24 @@ int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 	int ret = 0;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_check_cmddesc: minor=%d\n",
+	__comedi_info("comedi_check_cmddesc: minor=%d\n",
 		       comedi_get_minor(cxt));
 
 	if (desc->idx_subd >= dev->transfer->nb_subd) {
-		comedi_logerr
-		    ("comedi_check_cmddesc: subdevice index out of range (%u >= %u)\n",
-		     desc->idx_subd, dev->transfer->nb_subd);
+		__comedi_err("comedi_check_cmddesc: "
+			     "subdevice index out of range (%u >= %u)\n",
+			     desc->idx_subd, dev->transfer->nb_subd);
 		return -EINVAL;
 	}
 
 	if (dev->transfer->subds[desc->idx_subd]->flags & COMEDI_SUBD_UNUSED) {
-		comedi_logerr
-		    ("comedi_check_cmddesc: subdevice type incoherent\n");
+		__comedi_err("comedi_check_cmddesc: "
+			     "subdevice type incoherent\n");
 		return -EIO;
 	}
 
 	if (!(dev->transfer->subds[desc->idx_subd]->flags & COMEDI_SUBD_CMD)) {
-		comedi_logerr
-		    ("comedi_check_cmddesc: operation not supported\n");
+		__comedi_err("comedi_check_cmddesc: operation not supported\n");
 		return -EIO;
 	}
 
@@ -118,7 +117,7 @@ int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 		return -EBUSY;
 
 	if (ret != 0) {
-		comedi_logerr("comedi_check_cmddesc: subdevice busy\n");
+		__comedi_err("comedi_check_cmddesc: subdevice busy\n");
 		return ret;
 	}
 
@@ -254,7 +253,7 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 	comedi_cmd_t *cmd_desc = NULL;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_ioctl_cmd: minor=%d\n", comedi_get_minor(cxt));
+	__comedi_info("comedi_ioctl_cmd: minor=%d\n", comedi_get_minor(cxt));
 
 	/* Allocates the command */
 	cmd_desc = (comedi_cmd_t *) comedi_kmalloc(sizeof(comedi_cmd_t));

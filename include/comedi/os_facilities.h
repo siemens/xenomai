@@ -48,16 +48,37 @@
 
 #define RTDM_SUBCLASS_COMEDI 0
 
-#define __comedi_logerr(fmt, args...) rtdm_printk(KERN_ERR COMEDI_PROMPT fmt, ##args)
-#define __comedi_loginfo(fmt, args...) rtdm_printk(KERN_INFO COMEDI_PROMPT fmt, ##args)
+#define __comedi_err(fmt, args...) \
+	rtdm_printk(KERN_ERR COMEDI_PROMPT fmt, ##args)
 
-#define comedi_logerr(fmt, args...) __comedi_logerr(fmt, ##args)
+#define __comedi_warn(fmt, args...) \
+	rtdm_printk(KERN_WARNING COMEDI_PROMPT fmt, ##args)
 
 #ifdef COMEDI_DEBUG
-#define comedi_loginfo(fmt, args...) __comedi_loginfo(fmt, ##args)
+#define __comedi_info(fmt, args...) \
+	rtdm_printk(KERN_INFO COMEDI_PROMPT fmt, ##args)
 #else /* !COMEDI_DEBUG */
-#define comedi_loginfo(fmt, args...)
+#define __comedi_info(fmt, args...)
 #endif /* COMEDI_DEBUG */
+
+#define __comedi_dev_name(dev) \
+	(dev->driver == NULL) ? "unattached dev" : dev->driver->board_name
+
+#define comedi_err(dev, fmt, args...) \
+	__comedi_err("%s: " fmt, __comedi_dev_name, ##args)
+
+#define comedi_warn(dev, fmt, args...) \
+	__comedi_warn("%s: " fmt, __comedi_dev_name, ##args)
+
+#define comedi_info(dev, fmt, args...) \
+	__comedi_info("%s: " fmt, __comedi_dev_name, ##args)
+
+#define comedi_debug(level, debug, dev, fmt, args...)			\
+	do { 								\
+		if (debug >= (level))					\
+			rtdm_printk(KERN_DEBUG COMEDI_PROMPT "%s: " fmt, \
+				    __comedi_dev_name, ##args); 	\
+	} while (0)
 
 /* --- Allocation / MMU section --- */
 

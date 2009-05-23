@@ -78,8 +78,9 @@ static void loop_task_proc(void *arg)
 
 				if (ret == 0) {
 
-					comedi_loginfo("loop_task_proc: "
-						       "data available\n");
+					comedi_info(dev, 
+						    "loop_task_proc: "
+						    "data available\n");
 
 					comedi_buf_evt(dev, COMEDI_BUF_GET, 0);
 		    
@@ -106,7 +107,7 @@ int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
-	comedi_loginfo("loop_cmd: (subd=%d)\n",idx_subd);
+	comedi_info(dev, "loop_cmd: (subd=%d)\n",idx_subd);
 
 	priv->loop_running = 1;
   
@@ -119,7 +120,7 @@ int loop_cancel(comedi_subd_t *subd, int idx_subd)
 {
 	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
 
-	comedi_loginfo("loop_cancel: (subd=%d)\n",idx_subd);
+	comedi_info(dev, "loop_cancel: (subd=%d)\n",idx_subd);
 
 	priv->loop_running=0;
 

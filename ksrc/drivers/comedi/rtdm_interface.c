@@ -60,16 +60,16 @@ int comedi_init_proc(void)
 	/* Creates the global directory */
 	comedi_proc_root = create_proc_entry("comedi", S_IFDIR, 0);
 	if (comedi_proc_root == NULL) {
-		comedi_logerr
-		    ("comedi_proc_init: failed to create /proc/comedi\n");
+		__comedi_err("comedi_proc_init: "
+			     "failed to create /proc/comedi\n");
 		return -ENOMEM;
 	}
 
 	/* Creates the devices related file */
 	entry = create_proc_entry("devices", 0444, comedi_proc_root);
 	if (entry == NULL) {
-		comedi_logerr
-		    ("comedi_proc_init: failed to create /proc/comedi/devices\n");
+		__comedi_err("comedi_proc_init: "
+			     "failed to create /proc/comedi/devices\n");
 		ret = -ENOMEM;
 		goto err_proc_init;
 	}
@@ -83,8 +83,8 @@ int comedi_init_proc(void)
 	/* Creates the drivers related file */
 	entry = create_proc_entry("drivers", 0444, comedi_proc_root);
 	if (entry == NULL) {
-		comedi_logerr
-		    ("comedi_proc_init: failed to create /proc/comedi/drivers\n");
+		__comedi_err("comedi_proc_init: "
+			     "failed to create /proc/comedi/drivers\n");
 		ret = -ENOMEM;
 		goto err_proc_init;
 	}
@@ -124,7 +124,7 @@ int comedi_rt_open(struct rtdm_dev_context *context,
 
 	comedi_init_cxt(context, user_info, &cxt);
 	comedi_set_dev(&cxt);
-	comedi_loginfo("comedi_rt_open: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_open: minor=%d\n", comedi_get_minor(&cxt));
 
 	return 0;
 }
@@ -136,7 +136,7 @@ int comedi_rt_close(struct rtdm_dev_context *context,
 
 	comedi_init_cxt(context, user_info, &cxt);
 	comedi_set_dev(&cxt);
-	comedi_loginfo("comedi_rt_close: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_close: minor=%d\n", comedi_get_minor(&cxt));
 
 	return 0;
 }
@@ -151,7 +151,7 @@ ssize_t comedi_rt_read(struct rtdm_dev_context * context,
 	comedi_set_dev(&cxt);
 	dev = comedi_get_dev(&cxt);
 
-	comedi_loginfo("comedi_rt_read: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_read: minor=%d\n", comedi_get_minor(&cxt));
 
 	if (nbytes == 0)
 		return 0;
@@ -170,7 +170,7 @@ ssize_t comedi_rt_write(struct rtdm_dev_context * context,
 	comedi_set_dev(&cxt);
 	dev = comedi_get_dev(&cxt);
 
-	comedi_loginfo("comedi_rt_write: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_write: minor=%d\n", comedi_get_minor(&cxt));
 
 	if (nbytes == 0)
 		return 0;
@@ -186,7 +186,7 @@ int comedi_rt_ioctl(struct rtdm_dev_context *context,
 
 	comedi_init_cxt(context, user_info, &cxt);
 	comedi_set_dev(&cxt);
-	comedi_loginfo("comedi_rt_ioctl: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_ioctl: minor=%d\n", comedi_get_minor(&cxt));
 
 	return comedi_ioctl_functions[_IOC_NR(request)] (&cxt, arg);
 }
@@ -202,7 +202,7 @@ int comedi_rt_select(struct rtdm_dev_context *context,
 	   called */
 	comedi_init_cxt(context, NULL, &cxt);
 	comedi_set_dev(&cxt);
-	comedi_loginfo("comedi_rt_select: minor=%d\n", comedi_get_minor(&cxt));
+	__comedi_info("comedi_rt_select: minor=%d\n", comedi_get_minor(&cxt));
 
 	return comedi_select(&cxt, selector, type, fd_index);
 }

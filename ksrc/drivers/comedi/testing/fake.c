@@ -152,14 +152,15 @@ int test_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	comedi_dev_t *dev = subd->dev;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
-	comedi_loginfo("test_cmd: begin (subd=%d)\n",idx_subd);
+	comedi_info(dev, "test_cmd: begin (subd=%d)\n",idx_subd);
   
 	priv->scan_period_ns=cmd->scan_begin_arg;
 	priv->convert_period_ns=(cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
   
-	comedi_loginfo("test_cmd: scan_period=%luns convert_period=%luns\n",
-		       priv->scan_period_ns, priv->convert_period_ns);
+	comedi_info(dev, 
+		    "test_cmd: scan_period=%luns convert_period=%luns\n",
+		    priv->scan_period_ns, priv->convert_period_ns);
 
 	priv->last_ns = comedi_get_time();
 
