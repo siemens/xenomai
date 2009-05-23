@@ -304,7 +304,7 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 	/* Eventually launches the command */
 	ret = dev->transfer->subds[cmd_desc->idx_subd]->
 		do_cmd(dev->transfer->subds[cmd_desc->idx_subd], 
-		       cmd_desc->idx_subd);
+		       cmd_desc);
 
 	if (ret != 0) {
 		comedi_cancel_transfer(cxt, cmd_desc->idx_subd);

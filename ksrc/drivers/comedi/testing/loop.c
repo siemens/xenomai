@@ -102,7 +102,7 @@ static void loop_task_proc(void *arg)
 /* --- Comedi Callbacks --- */
 
 /* Command callback */
-int loop_cmd(comedi_subd_t *subd, int idx_subd)
+int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 

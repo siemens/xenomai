@@ -178,7 +178,7 @@ struct comedi_subdevice {
 							/**< Callback for the instruction "bits" */
 	int (*insn_config) (struct comedi_subdevice *, comedi_kinsn_t *);
 							  /**< Callback for the configuration instruction */
-	int (*do_cmd) (struct comedi_subdevice *, int);
+	int (*do_cmd) (struct comedi_subdevice *, comedi_cmd_t *);
 					/**< Callback for command handling */
 	int (*do_cmdtest) (struct comedi_subdevice *, comedi_cmd_t *);
 						       /**< Callback for command checking */
