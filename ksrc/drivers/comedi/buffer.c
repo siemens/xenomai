@@ -152,15 +152,21 @@ int comedi_get_chan(comedi_dev_t * dev, unsigned int type, int idx_subd)
 	   in this command... */
 	for (i = 0; i < cmd->nb_chan; i++)
 		tmp_size += dev->transfer->subds[idx]->chan_desc->
-		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits / 8;
+		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+
+	/* Translation bits -> bytes */
+	tmp_size /= 8;
 
 	tmp_count = dev->transfer->bufs[idx]->mng_count % tmp_size;
+
+	/* Translation bytes -> bits */
+	tmp_count *= 8;
 
 	/* ...and find the channel the last munged sample 
 	   was related with */
 	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++)
 		tmp_count -= dev->transfer->subds[idx]->chan_desc->
-		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits / 8;
+		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
 
 	if (tmp_count == 0)
 		return i;
