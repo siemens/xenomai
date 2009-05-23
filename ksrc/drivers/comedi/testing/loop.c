@@ -62,21 +62,21 @@ static void loop_task_proc(void *arg)
 	comedi_dev_t *dev = (comedi_dev_t*)arg;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
     
-	while(!comedi_check_dev(dev))
+	while (!comedi_check_dev(dev))
 		comedi_task_sleep(LOOP_TASK_PERIOD);
 
-	while(1) {
+	while (1) {
 	
-		if(priv->loop_running) {
+		if (priv->loop_running) {
 			sampl_t value;
 			int ret=0;
 	    
-			while(ret==0) {
+			while (ret==0) {
 		
 				ret = comedi_buf_get(dev, 
 						     &value, sizeof(sampl_t));
 
-				if(ret == 0) {
+				if (ret == 0) {
 
 					comedi_loginfo("loop_task_proc: "
 						       "data available\n");
@@ -87,7 +87,7 @@ static void loop_task_proc(void *arg)
 							   &value, 
 							   sizeof(sampl_t));
 
-					if(ret==0)
+					if (ret==0)
 						comedi_buf_evt(dev, 
 							       COMEDI_BUF_PUT, 
 							       0);
@@ -102,10 +102,9 @@ static void loop_task_proc(void *arg)
 /* --- Comedi Callbacks --- */
 
 /* Command callback */
-int loop_cmd(comedi_cxt_t *cxt, int idx_subd)
+int loop_cmd(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev=comedi_get_dev(cxt);
-	lpprv_t *priv=(lpprv_t *)dev->priv;
+	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
 	comedi_loginfo("loop_cmd: (subd=%d)\n",idx_subd);
 
@@ -116,10 +115,9 @@ int loop_cmd(comedi_cxt_t *cxt, int idx_subd)
 }
 
 /* Cancel callback */
-int loop_cancel(comedi_cxt_t *cxt, int idx_subd)
+int loop_cancel(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev=comedi_get_dev(cxt);
-	lpprv_t *priv=(lpprv_t *)dev->priv;
+	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
 
 	comedi_loginfo("loop_cancel: (subd=%d)\n",idx_subd);
 
@@ -129,13 +127,12 @@ int loop_cancel(comedi_cxt_t *cxt, int idx_subd)
 }
 
 /* Read instruction callback */
-int loop_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int loop_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	lpprv_t *priv = (lpprv_t*)dev->priv;
+	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
 	/* Checks the buffer size */
-	if(insn->data_size!=sizeof(sampl_t))
+	if (insn->data_size!=sizeof(sampl_t))
 		return -EINVAL;
 
 	/* Sets the memorized value */
@@ -145,13 +142,12 @@ int loop_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 }
 
 /* Write instruction callback */
-int loop_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int loop_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	lpprv_t *priv = (lpprv_t*)dev->priv;
+	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
 	/* Checks the buffer size */
-	if(insn->data_size!=sizeof(sampl_t))
+	if (insn->data_size!=sizeof(sampl_t))
 		return -EINVAL;
 
 	/* Retrieves the value to memorize */
@@ -189,32 +185,31 @@ void setup_output_subd(comedi_subd_t *subd)
 }
 
 /* Attach callback */
-int loop_attach(comedi_cxt_t *cxt,
+int loop_attach(comedi_dev_t *dev,
 		comedi_lnkdesc_t *arg)
 {
 	int ret = 0;
 	comedi_subd_t *subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	/* Add the fake input subdevice */
 	subd = comedi_alloc_subd(0, setup_input_subd); 
-	if(subd == NULL)
+	if (subd == NULL)
 		return -ENOMEM;  
 
 	ret = comedi_add_subd(dev, subd);
-	if(ret < 0)
+	if (ret < 0)
 		/* Let Comedi free the lately allocated subdevice */
 		return ret;
 
 	/* Add the fake output subdevice */
 	subd = comedi_alloc_subd(0, setup_output_subd); 
-	if(subd == NULL)
+	if (subd == NULL)
 		/* Let Comedi free the lately allocated subdevice */
 		return -ENOMEM;  
 
 	ret = comedi_add_subd(dev, subd);
-	if(ret < 0)
+	if (ret < 0)
 		/* Let Comedi free the lately allocated subdevices */
 		return ret;
 
@@ -230,9 +225,8 @@ int loop_attach(comedi_cxt_t *cxt,
 }
 
 /* Detach callback */
-int loop_detach(comedi_cxt_t *cxt)
+int loop_detach(comedi_dev_t *dev)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	comedi_task_destroy(&priv->loop_task);

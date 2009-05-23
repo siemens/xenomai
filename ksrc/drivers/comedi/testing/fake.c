@@ -147,11 +147,11 @@ static void test_task_proc(void *arg)
 /* --- Comedi Callbacks --- */
 
 /* Command callback */
-int test_cmd(comedi_cxt_t *cxt, int idx_subd)
+int test_cmd(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev=comedi_get_dev(cxt);
-	comedi_cmd_t *cmd=comedi_get_cmd(dev, 0, idx_subd);
-	tstprv_t *priv=(tstprv_t *)dev->priv;
+	comedi_dev_t *dev = subd->dev;
+	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
+	tstprv_t *priv = (tstprv_t *)dev->priv;
 
 	comedi_loginfo("test_cmd: begin (subd=%d)\n",idx_subd);
   
@@ -174,15 +174,15 @@ int test_cmd(comedi_cxt_t *cxt, int idx_subd)
 }
 
 /* Test command callback */
-int test_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
+int test_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	if(cmd->scan_begin_src==TRIG_TIMER)
+	if(cmd->scan_begin_src == TRIG_TIMER)
 	{
-		if(cmd->scan_begin_arg < 1000)
+		if (cmd->scan_begin_arg < 1000)
 			return -EINVAL;
 
-		if(cmd->convert_src==TRIG_TIMER &&
-		   cmd->scan_begin_arg<(cmd->convert_arg*cmd->nb_chan))
+		if (cmd->convert_src == TRIG_TIMER &&
+		   cmd->scan_begin_arg < (cmd->convert_arg * cmd->nb_chan))
 			return -EINVAL;
 	}
 
@@ -190,10 +190,9 @@ int test_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
 }
 
 /* Cancel callback */
-int test_cancel(comedi_cxt_t *cxt, int idx_subd)
+int test_cancel(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	tstprv_t *priv = (tstprv_t *)dev->priv;
+	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
 
 	priv->timer_running = 0;
 
@@ -201,10 +200,9 @@ int test_cancel(comedi_cxt_t *cxt, int idx_subd)
 }
 
 /* Read instruction callback */
-int test_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int test_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	tstprv_t *priv = (tstprv_t *)dev->priv;
+	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
 	int i;
 
 	for(i = 0; i < insn->data_size / sizeof(sampl_t); i++)
@@ -214,7 +212,7 @@ int test_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 }
 
 /* Munge callback */
-void test_ai_munge(comedi_cxt_t *cxt, 
+void test_ai_munge(comedi_dev_t *dev, 
 		   int idx_subd, void *buf, unsigned long size)
 {
 	int i;
@@ -234,7 +232,7 @@ void setup_test_subd(comedi_subd_t *subd)
 	subd->flags |= COMEDI_SUBD_MMAP;
 	subd->rng_desc = &test_rngdesc;
 	subd->chan_desc = &test_chandesc;
-	subd->do_cmd=test_cmd;
+	subd->do_cmd = test_cmd;
 	subd->do_cmdtest = test_cmdtest;
 	subd->cancel = test_cancel;
 	subd->munge = test_ai_munge;
@@ -243,12 +241,11 @@ void setup_test_subd(comedi_subd_t *subd)
 }
 
 /* Attach callback */
-int test_attach(comedi_cxt_t *cxt,
+int test_attach(comedi_dev_t *dev,
 		comedi_lnkdesc_t *arg)
 {
 	int ret = 0;  
 	comedi_subd_t *subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
 	if(arg->opts!=NULL) {
@@ -284,9 +281,8 @@ int test_attach(comedi_cxt_t *cxt,
 }
 
 /* Detach callback */
-int test_detach(comedi_cxt_t *cxt)
+int test_detach(comedi_dev_t *dev)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
 	comedi_task_destroy(&priv->timer_task);
