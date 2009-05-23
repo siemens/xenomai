@@ -313,7 +313,7 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 		}
 	}
 
-	if ((ret = drv->attach(cxt, link_arg)) != 0)
+	if ((ret = drv->attach(dev, link_arg)) != 0)
 		comedi_logerr
 		    ("comedi_assign_driver: call(drv->attach) failed (ret=%d)\n",
 		     ret);
@@ -343,7 +343,7 @@ int comedi_release_driver(comedi_cxt_t * cxt)
 
 	comedi_lock_irqsave(&dev->lock, flags);
 
-	if ((ret = dev->driver->detach(cxt)) != 0)
+	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
 	/* Decrease module's count 

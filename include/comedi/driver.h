@@ -27,9 +27,8 @@
 
 #include <linux/list.h>
 
-#include <comedi/context.h>
-
 struct comedi_link_desc;
+struct comedi_device;
 
 /** Structure containing driver declaration data.
  *
@@ -53,9 +52,9 @@ struct comedi_driver {
 		       /**< Size of the driver's private data */
 
 	/* Init/destroy procedures */
-	int (*attach) (comedi_cxt_t *, struct comedi_link_desc *);
-							     /**< Attach procedure */
-	int (*detach) (comedi_cxt_t *);
+	int (*attach) (struct comedi_device *, struct comedi_link_desc *);
+								      /**< Attach procedure */
+	int (*detach) (struct comedi_device *);
 				   /**< Detach procedure */
 
 };
