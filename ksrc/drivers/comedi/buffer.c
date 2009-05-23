@@ -508,7 +508,7 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 
 	/* Performs the munge if need be */
 	if (dev->transfer->subds[info.idx_subd]->munge != NULL) {
-		__munge(cxt,
+		__munge(dev,
 			dev->transfer->subds[info.idx_subd]->munge,
 			info.idx_subd, buf, tmp_cnt);
 
@@ -568,7 +568,7 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 			/* Performs the munge if need be */
 			if (dev->transfer->subds[idx_subd]->munge != NULL) {
-				__munge(cxt,
+				__munge(dev,
 					dev->transfer->subds[idx_subd]->munge,
 					idx_subd, buf, tmp_cnt);
 
@@ -665,7 +665,7 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 
 			/* Performs the munge if need be */
 			if (dev->transfer->subds[idx_subd]->munge != NULL) {
-				__munge(cxt,
+				__munge(dev,
 					dev->transfer->subds[idx_subd]->munge,
 					idx_subd, buf, tmp_cnt);
 

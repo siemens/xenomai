@@ -282,9 +282,9 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 
 	/* Tests the command with the cmdtest function */
 	if (dev->transfer->subds[cmd_desc->idx_subd]->do_cmdtest != NULL)
-		ret =
-		    dev->transfer->subds[cmd_desc->idx_subd]->do_cmdtest(cxt,
-									 cmd_desc);
+		ret = dev->transfer->subds[cmd_desc->idx_subd]->
+			do_cmdtest(dev->transfer->subds[cmd_desc->idx_subd], 
+				   cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
@@ -302,10 +302,10 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 	comedi_init_transfer(cxt, cmd_desc);
 
 	/* Eventually launches the command */
-	ret =
-	    dev->transfer->subds[cmd_desc->idx_subd]->do_cmd(cxt,
-							     cmd_desc->
-							     idx_subd);
+	ret = dev->transfer->subds[cmd_desc->idx_subd]->
+		do_cmd(dev->transfer->subds[cmd_desc->idx_subd], 
+		       cmd_desc->idx_subd);
+
 	if (ret != 0) {
 		comedi_cancel_transfer(cxt, cmd_desc->idx_subd);
 		goto out_ioctl_cmd;

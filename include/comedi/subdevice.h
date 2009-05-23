@@ -170,23 +170,23 @@ struct comedi_subdevice {
 			    /**< Command capabilities mask */
 
 	/* Functions stuff */
-	int (*insn_read) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_read) (struct comedi_subdevice *, comedi_kinsn_t *);
 							/**< Callback for the instruction "read" */
-	int (*insn_write) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_write) (struct comedi_subdevice *, comedi_kinsn_t *);
 							 /**< Callback for the instruction "write" */
-	int (*insn_bits) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_bits) (struct comedi_subdevice *, comedi_kinsn_t *);
 							/**< Callback for the instruction "bits" */
-	int (*insn_config) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_config) (struct comedi_subdevice *, comedi_kinsn_t *);
 							  /**< Callback for the configuration instruction */
-	int (*do_cmd) (comedi_cxt_t *, int);
+	int (*do_cmd) (struct comedi_subdevice *, int);
 					/**< Callback for command handling */
-	int (*do_cmdtest) (comedi_cxt_t *, comedi_cmd_t *);
+	int (*do_cmdtest) (struct comedi_subdevice *, comedi_cmd_t *);
 						       /**< Callback for command checking */
-	int (*cancel) (comedi_cxt_t *, int);
+	int (*cancel) (struct comedi_subdevice *, int);
 					 /**< Callback for asynchronous transfer cancellation */
-	void (*munge) (comedi_cxt_t *, int, void *, unsigned long);
+	void (*munge) (struct comedi_device *, int, void *, unsigned long);
 								/**< Callback for munge operation */
-	int (*trigger) (comedi_cxt_t *, lsampl_t);
+	int (*trigger) (struct comedi_subdevice *, lsampl_t);
 					      /**< Callback for trigger operation */
 
 	char priv[0];

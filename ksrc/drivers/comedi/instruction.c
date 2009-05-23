@@ -95,7 +95,7 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 		return -EINVAL;
 
 	/* Performs the trigger */
-	return subd->trigger(cxt, dsc->data[0]);;
+	return subd->trigger(subd, dsc->data[0]);
 }
 
 int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
@@ -208,16 +208,16 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	/* Lets the driver-specific code perform the instruction */
 	switch (dsc->type) {
 	case COMEDI_INSN_READ:
-		ret = subd->insn_read(cxt, dsc);
+		ret = subd->insn_read(subd, dsc);
 		break;
 	case COMEDI_INSN_WRITE:
-		ret = subd->insn_write(cxt, dsc);
+		ret = subd->insn_write(subd, dsc);
 		break;
 	case COMEDI_INSN_BITS:
-		ret = subd->insn_bits(cxt, dsc);
+		ret = subd->insn_bits(subd, dsc);
 		break;
 	case COMEDI_INSN_CONFIG:
-		ret = subd->insn_config(cxt, dsc);
+		ret = subd->insn_config(subd, dsc);
 		break;
 	default:
 		ret = -EINVAL;

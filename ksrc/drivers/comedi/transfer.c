@@ -256,7 +256,7 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	   if a command is under progress; we consider that 
 	   the "cancel" function can be used as as to (re)initialize 
 	   some component) */
-	if (subd->cancel != NULL && (ret = subd->cancel(cxt, idx_subd)) < 0) {
+	if (subd->cancel != NULL && (ret = subd->cancel(subd, idx_subd)) < 0) {
 		comedi_logerr
 		    ("comedi_cancel: subdevice %d cancel handler failed (ret=%d)\n",
 		     idx_subd, ret);
