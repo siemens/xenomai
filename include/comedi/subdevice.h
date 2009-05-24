@@ -186,7 +186,7 @@ struct comedi_subdevice {
 						       /**< Callback for command checking */
 	int (*cancel) (struct comedi_subdevice *, int);
 					 /**< Callback for asynchronous transfer cancellation */
-	void (*munge) (struct comedi_device *, int, void *, unsigned long);
+	void (*munge) (struct comedi_subdevice *, void *, unsigned long);
 								/**< Callback for munge operation */
 	int (*trigger) (struct comedi_subdevice *, lsampl_t);
 					      /**< Callback for trigger operation */

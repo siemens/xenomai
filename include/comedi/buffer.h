@@ -145,9 +145,9 @@ static inline int __consume(comedi_cxt_t * cxt,
 }
 
 /* Munge procedure */
-static inline void __munge(struct comedi_device * dev,
-			   void (*munge) (struct comedi_device *, int, void *,
-					  unsigned long), int idx_subd,
+static inline void __munge(struct comedi_subdevice * subd,
+			   void (*munge) (struct comedi_subdevice *, 
+					  void *, unsigned long),
 			   comedi_buf_t * buf, unsigned long count)
 {
 	unsigned long start_ptr = (buf->mng_count % buf->size);
@@ -159,7 +159,7 @@ static inline void __munge(struct comedi_device * dev,
 		    buf->size - start_ptr : tmp_cnt;
 
 		/* Performs the munge operation */
-		munge(dev, idx_subd, buf->buf + start_ptr, blk_size);
+		munge(subd, buf->buf + start_ptr, blk_size);
 
 		/* Updates the start pointer and the count */
 		tmp_cnt -= blk_size;

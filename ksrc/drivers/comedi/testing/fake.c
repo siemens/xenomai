@@ -212,8 +212,7 @@ int test_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 }
 
 /* Munge callback */
-void test_ai_munge(comedi_dev_t *dev, 
-		   int idx_subd, void *buf, unsigned long size)
+void test_ai_munge(comedi_subd_t *subd, void *buf, unsigned long size)
 {
 	int i;
 
