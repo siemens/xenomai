@@ -151,7 +151,9 @@ int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd)
 		i++;
 	}
 
-	return --i;
+	subd->idx = --i;
+
+	return i;
 }
 
 /* --- IOCTL / FOPS functions --- */

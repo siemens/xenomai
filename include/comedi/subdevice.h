@@ -158,6 +158,8 @@ struct comedi_subdevice {
 
 	struct comedi_device *dev;
 			       /**< Containing device */
+	unsigned int idx;
+		      /**< Subdevice index */
 
 	/* Descriptors stuff */
 	unsigned long flags;
