@@ -1,7 +1,6 @@
 #ifndef _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 #define _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 
-#include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 
@@ -50,8 +49,6 @@ xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 	if (xeno_sigwinch_handler(sig, si, ctxt))
 		return;
 
-	fprintf(stderr, "Not SIGSHADOW !\n");
-	
 	/* Not a signal sent by Xenomai nucleus */
 	if ((!(sa->sa_flags & SA_SIGINFO) && !sa->sa_handler)
 	    || ((sa->sa_flags & SA_SIGINFO) && !sa->sa_sigaction))
