@@ -48,6 +48,7 @@
 #define COMEDI_BUF_EOA (1 << COMEDI_BUF_EOA_NR)
 
 struct comedi_device;
+struct comedi_subdevice;
 
 /* Buffer descriptor structure */
 struct comedi_buffer {
@@ -336,7 +337,7 @@ comedi_cmd_t *comedi_get_cmd(struct comedi_device *dev, unsigned int type,
 
 /* --- Munge related function --- */
 
-int comedi_get_chan(struct comedi_device *dev, unsigned int type, int idx_subd);
+int comedi_get_chan(struct comedi_subdevice *subd);
 
 /* --- IOCTL / FOPS functions --- */
 

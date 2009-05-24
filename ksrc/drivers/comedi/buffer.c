@@ -118,31 +118,22 @@ comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
 
 /* --- Munge related function --- */
 
-int comedi_get_chan(comedi_dev_t * dev, unsigned int type, int idx_subd)
+int comedi_get_chan(comedi_subd_t *subd)
 {
-	int idx, i;
-	int tmp_count, tmp_size = 0;
+	comedi_dev_t *dev = subd->dev;
+	int i, tmp_count, tmp_size = 0;	
 	comedi_cmd_t *cmd;
-
-	/* If the field type is properly set, 
-	   it is used instead of idx_subd */
-	if (type == COMEDI_BUF_PUT)
-		idx = dev->transfer->idx_read_subd;
-	else if (type == COMEDI_BUF_GET)
-		idx = dev->transfer->idx_write_subd;
-	else
-		idx = idx_subd;
 
 	/* Check that subdevice supports commands */
 	if (dev->transfer->bufs == NULL)
 		return -EINVAL;
 
 	/* Check a command is executed */
-	if (dev->transfer->bufs[idx]->cur_cmd == NULL)
+	if (dev->transfer->bufs[subd->idx]->cur_cmd == NULL)
 		return -EINVAL;
 
 	/* Retrieve the proper command descriptor */
-	cmd = dev->transfer->bufs[idx]->cur_cmd;
+	cmd = dev->transfer->bufs[subd->idx]->cur_cmd;
 
 	/* There is no need to check the channel idx, 
 	   it has already been controlled in command_test */
@@ -151,13 +142,13 @@ int comedi_get_chan(comedi_dev_t * dev, unsigned int type, int idx_subd)
 	   so, we have to compute the global size of the channels
 	   in this command... */
 	for (i = 0; i < cmd->nb_chan; i++)
-		tmp_size += dev->transfer->subds[idx]->chan_desc->
-		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+		tmp_size += dev->transfer->subds[subd->idx]->chan_desc->
+			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
 
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
 
-	tmp_count = dev->transfer->bufs[idx]->mng_count % tmp_size;
+	tmp_count = dev->transfer->bufs[subd->idx]->mng_count % tmp_size;
 
 	/* Translation bytes -> bits */
 	tmp_count *= 8;
@@ -165,8 +156,8 @@ int comedi_get_chan(comedi_dev_t * dev, unsigned int type, int idx_subd)
 	/* ...and find the channel the last munged sample 
 	   was related with */
 	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++)
-		tmp_count -= dev->transfer->subds[idx]->chan_desc->
-		    chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+		tmp_count -= dev->transfer->subds[subd->idx]->chan_desc->
+			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
 
 	if (tmp_count == 0)
 		return i;
