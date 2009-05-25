@@ -703,9 +703,11 @@ static inline void __init mscan_chip_config(struct mscan_regs *regs)
 static inline void __init mscan_gpio_config(void)
 {
     struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
-    int can_to_psc2 = 0;
+    int can_to_psc2 = -1;
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_PSC2
+#if defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_ALT)
+    can_to_psc2 = 0;
+#elif defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_PSC2)
     can_to_psc2 = 1;
 #endif
 
@@ -723,6 +725,12 @@ static inline void __init mscan_gpio_config(void)
 		   "Please use PSC2 or I2C1/TMR01.\n", mscan_pins);	    
 	}
     }
+
+    if (!gpio || can_to_psc2 < 0) {
+	printk("%s: use pre-configure CAN routing\n", RTCAN_DRV_NAME);
+	return;
+    }
+
     if (can_to_psc2) {
 	gpio->port_config &= ~0x10000070;
 	gpio->port_config |= 0x00000010;
@@ -737,7 +745,7 @@ static inline void __init mscan_gpio_config(void)
 static inline int mscan_get_config(unsigned long *addr,
 				   unsigned int *irq)
 {
-#ifdef CONFIG_PPC_MERGE
+#if defined(CONFIG_PPC_MERGE) || LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)
     /* Use Open Firmware device tree */
     struct device_node *np = NULL;
     unsigned int i;
@@ -746,7 +754,9 @@ static inline int mscan_get_config(unsigned long *addr,
     for (i = 0; i < RTCAN_MSCAN_DEVS; i++) {
 	struct resource r[2] = {};
 
-	np = of_find_compatible_node(np, "mscan", "mpc5200-mscan");
+	np = of_find_compatible_node(np, NULL, "fsl,mpc5200-mscan");
+	if (np == NULL)
+	    np = of_find_compatible_node(np, NULL, "mpc5200-mscan");
 	if (np == NULL)
 	    break;
 	ret = of_address_to_resource(np, 0, &r[0]);
