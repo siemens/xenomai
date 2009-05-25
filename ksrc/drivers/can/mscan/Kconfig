@@ -27,8 +27,11 @@ config XENO_DRIVERS_CAN_MSCAN_CLOCK
 choice
 	depends on XENO_DRIVERS_CAN_MSCAN
 	prompt "Pin Configuration"
-	default I2C1/TMR01
+	default XENO_DRIVERS_CAN_MSCAN_PRE
 	help
+
+config XENO_DRIVERS_CAN_MSCAN_PRE
+	bool "Use pre-configured CAN routing"
 
 config XENO_DRIVERS_CAN_MSCAN_ALT
 	bool "CAN 1 on I2C1 pins, CAN 2 on TMR01 pins"

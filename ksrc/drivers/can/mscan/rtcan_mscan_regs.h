@@ -27,17 +27,23 @@
 
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
 #include <sysdev/fsl_soc.h>
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,22)
+#include <linux/of_platform.h>
+#else
 #include <asm/of_platform.h>
+#endif
 #include <asm/mpc52xx.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24)
-static inline void __iomem *mpc52xx_find_and_map(const char *compatible)
+static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 {
 	struct device_node *ofn;
-	ofn = of_find_compatible_node(NULL, NULL, compatible);
+	ofn = of_find_compatible_node(NULL, NULL, "mpc5200-gpio");
+	if (!ofn)
+	    ofn = of_find_compatible_node(NULL, NULL, "fsl,mpc5200-gpio");
 	return ofn ? of_iomap(ofn, 0) : NULL;
 }
 #endif
-#define MPC5xxx_GPIO    mpc52xx_find_and_map("mpc5200-gpio")
+#define MPC5xxx_GPIO    mpc5xxx_gpio_find_and_map()
 #define mpc5xxx_gpio	mpc52xx_gpio
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
 #include <asm/mpc5xxx.h>
