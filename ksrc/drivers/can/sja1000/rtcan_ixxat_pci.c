@@ -73,7 +73,8 @@ struct rtcan_ixxat_pci
 #define IXXAT_BASE_PORT_SIZE 0x0400
 
 static struct pci_device_id ixxat_pci_tbl[] = {
-	{IXXAT_PCI_VENDOR_ID, IXXAT_PCI_DEVICE_ID, IXXAT_PCI_VENDOR_ID, IXXAT_PCI_SUB_SYS_ID, 0, 0, 0},
+	{IXXAT_PCI_VENDOR_ID, IXXAT_PCI_DEVICE_ID,
+	 IXXAT_PCI_VENDOR_ID, IXXAT_PCI_SUB_SYS_ID, 0, 0, 0},
 	{ }
 };
 MODULE_DEVICE_TABLE (pci, ixxat_pci_tbl);
@@ -206,7 +207,6 @@ static int __devinit ixxat_pci_init_one (struct pci_dev *pdev,
 					 const struct pci_device_id *ent)
 {
     int ret, channel, conf_addr;
-    u16 sub_sys_id;
     unsigned long addr;
     void __iomem *base_addr;
     struct rtcan_device *master_dev = NULL;
@@ -217,14 +217,9 @@ static int __devinit ixxat_pci_init_one (struct pci_dev *pdev,
     if ((ret = pci_request_regions(pdev, RTCAN_DRV_NAME)))
 	goto failure;
 
-    if ((ret = pci_read_config_word(pdev, 0x2e, &sub_sys_id)))
-	goto failure_release_pci;
-
     RTCAN_DBG("%s: Initializing device %04x:%04x:%04x\n",
-	      RTCAN_DRV_NAME, pdev->vendor, pdev->device, sub_sys_id);
-
-    if (sub_sys_id != IXXAT_PCI_SUB_SYS_ID)
-	    return -ENODEV;
+	      RTCAN_DRV_NAME, pdev->vendor, pdev->device,
+	      pdev->subsystem_device);
 
     /* Enable memory and I/O space */
     if ((ret = pci_write_config_word(pdev, 0x04, 0x3)))
