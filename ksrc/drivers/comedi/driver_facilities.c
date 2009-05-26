@@ -158,16 +158,23 @@ int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd);
 EXPORT_SYMBOL(comedi_add_subd);
 
 /**
- * @brief Get the channels count registered on a specific subdevice.
+ * @brief Get a pointer to the subdevice descriptor referenced by its
+ * registration index
+ *
+ * This function is scarcely useful as all the drivers callbacks get
+ * the related subdevice descriptor as first argument. 
+ * This function is not optimized, it goes through a linked list to
+ * get the proper pointer. So it must not be used in real-time context
+ * but at initialization / cleanup time (attach / detach).
  *
  * @param[in] dev Device descriptor structure
- * @param[in] subd_key Subdevice index
+ * @param[in] idx Subdevice index
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_get_nbchan(comedi_dev_t * dev, int subd_key);
-EXPORT_SYMBOL(comedi_get_nbchan);
+comedi_subd_t *comedi_get_subd(comedi_dev_t *dev, int idx);
+EXPORT_SYMBOL(comedi_get_subd);
 
 /** @} */
 
