@@ -48,9 +48,8 @@ typedef struct subd_8255_struct {
 #define CR_A_MODE(a)	((a)<<5)
 #define CR_CW		0x80
 
-
-void subdev_8255_init(comedi_subd_t *subd, subd_8255_t *subd_8255);
-void subdev_8255_interrupt(comedi_dev_t *dev, subd_8255_t *subd_8255);
+void subdev_8255_init(comedi_subd_t *subd);
+void subdev_8255_interrupt(comedi_subd_t *subd);
 
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_8255 */
 
