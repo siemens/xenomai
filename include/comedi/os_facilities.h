@@ -65,19 +65,19 @@
 	(dev->driver == NULL) ? "unattached dev" : dev->driver->board_name
 
 #define comedi_err(dev, fmt, args...) \
-	__comedi_err("%s: " fmt, __comedi_dev_name, ##args)
+	__comedi_err("%s: " fmt, __comedi_dev_name(dev), ##args)
 
 #define comedi_warn(dev, fmt, args...) \
-	__comedi_warn("%s: " fmt, __comedi_dev_name, ##args)
+	__comedi_warn("%s: " fmt, __comedi_dev_name(dev), ##args)
 
 #define comedi_info(dev, fmt, args...) \
-	__comedi_info("%s: " fmt, __comedi_dev_name, ##args)
+	__comedi_info("%s: " fmt, __comedi_dev_name(dev), ##args)
 
 #define comedi_debug(level, debug, dev, fmt, args...)			\
 	do { 								\
 		if (debug >= (level))					\
 			rtdm_printk(KERN_DEBUG COMEDI_PROMPT "%s: " fmt, \
-				    __comedi_dev_name, ##args); 	\
+				    __comedi_dev_name(dev), ##args); 	\
 	} while (0)
 
 /* --- Allocation / MMU section --- */
