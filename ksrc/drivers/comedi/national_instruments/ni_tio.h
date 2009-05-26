@@ -1130,8 +1130,8 @@ extern comedi_cmd_t ni_tio_cmd_mask;
 
 int ni_tio_rinsn(struct ni_gpct *counter, comedi_kinsn_t *insn);
 int ni_tio_winsn(struct ni_gpct *counter, comedi_kinsn_t *insn);
-int ni_tio_input_inttrig(comedi_cxt_t *cxt, lsampl_t trignum);
-int ni_tio_cmd(comedi_cxt_t *cxt, int idx_subd, struct ni_gpct *counter);
+int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum);
+int ni_tio_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd);
 int ni_tio_cmdtest(struct ni_gpct *counter, comedi_cmd_t *cmd);
 int ni_tio_cancel(struct ni_gpct *counter);
 int ni_tio_insn_config(struct ni_gpct *counter, comedi_kinsn_t *insn);
