@@ -242,8 +242,9 @@ int dev_8255_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	int i, err = 0;
 
 	if(arg->opts == NULL || arg->opts_size == 0) {
-		rtdm_printk("dev_8255_attach: unable to detect any 8255 chip, "
-			    "chips addresses must be passed as attach arguments\n");
+		comedi_err(dev, 
+			   "dev_8255_attach: unable to detect any 8255 chip, "
+			   "chips addresses must be passed as attach arguments\n");
 		return -EINVAL;
 	}
 
