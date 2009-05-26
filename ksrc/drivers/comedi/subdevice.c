@@ -116,11 +116,6 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 
 /* --- Upper layer functions --- */
 
-int comedi_get_nbchan(comedi_dev_t * dev, int subd_key)
-{
-	return dev->transfer->subds[subd_key]->chan_desc->length;
-}
-
 comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
 				  void (*setup)(comedi_subd_t *))
 {
@@ -154,6 +149,23 @@ int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd)
 	subd->idx = --i;
 
 	return i;
+}
+
+comedi_subd_t *comedi_get_subd(comedi_dev_t *dev, int idx)
+{
+	int i = 0;
+	comedi_subd_t *subd = NULL;
+	struct list_head *this;
+
+	/* This function is not optimized as we do not go through the
+	   transfer structure */
+
+	list_for_each(this, &dev->subdvsq) {
+		if(idx == i++)
+			subd = list_entry(this, comedi_subd_t, list);		
+	}
+
+	return subd;
 }
 
 /* --- IOCTL / FOPS functions --- */

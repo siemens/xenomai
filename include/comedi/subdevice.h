@@ -252,10 +252,10 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 
 /* --- Upper layer functions --- */
 
+comedi_subd_t * comedi_get_subd(struct comedi_device *dev, int idx);
 comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
 				  void (*setup)(comedi_subd_t *));
 int comedi_add_subd(struct comedi_device *dev, comedi_subd_t * subd);
-int comedi_get_nbchan(struct comedi_device *dev, int subd_key);
 int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg);
