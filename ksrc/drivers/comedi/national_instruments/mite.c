@@ -101,16 +101,18 @@ static struct pci_driver mite_driver = {
 
 static void dump_chip_signature(u32 csigr_bits)
 {
-	rtdm_printk("MITE: version = %i, type = %i, mite mode = %i, "
-	       "interface mode = %i\n", 
-	       mite_csigr_version(csigr_bits), 
-	       mite_csigr_type(csigr_bits), 
-	       mite_csigr_mmode(csigr_bits), mite_csigr_imode(csigr_bits));
-	rtdm_printk("MITE: num channels = %i, write post fifo depth = %i, "
-	       "wins = %i, iowins = %i\n", 
-	       mite_csigr_dmac(csigr_bits), 
-	       mite_csigr_wpdep(csigr_bits), 
-	       mite_csigr_wins(csigr_bits), mite_csigr_iowins(csigr_bits));
+	__comedi_info("MITE: version = %i, type = %i, mite mode = %i, "
+		      "interface mode = %i\n", 
+		      mite_csigr_version(csigr_bits), 
+		      mite_csigr_type(csigr_bits), 
+		      mite_csigr_mmode(csigr_bits), 
+		      mite_csigr_imode(csigr_bits));
+	__comedi_info("MITE: num channels = %i, write post fifo depth = %i, "
+		      "wins = %i, iowins = %i\n", 
+		      mite_csigr_dmac(csigr_bits), 
+		      mite_csigr_wpdep(csigr_bits), 
+		      mite_csigr_wins(csigr_bits), 
+		      mite_csigr_iowins(csigr_bits));
 }
 
 int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
@@ -122,14 +124,14 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	unsigned unknown_dma_burst_bits;
 
 	if(pci_enable_device(mite->pcidev)){
-		rtdm_printk("error enabling mite\n");
+		__comedi_info("error enabling mite\n");
 		return -EIO;
 	}
 
 	pci_set_master(mite->pcidev);
 
 	if( pci_request_regions( mite->pcidev, "mite" ) ) {
-		rtdm_printk("failed to request mite io regions\n");
+		__comedi_info("failed to request mite io regions\n");
 		return -EIO;
 	};
 
@@ -140,12 +142,13 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->mite_phys_addr = addr;
 	mite->mite_io_addr = ioremap(addr, length);
 	if (!mite->mite_io_addr) {
-		rtdm_printk("failed to remap mite io memory address\n");
+		__comedi_info("failed to remap mite io memory address\n");
 		return -ENOMEM;
 	}
 
-	rtdm_printk("MITE: 0x%08llx mapped to %p ",
-		(unsigned long long)mite->mite_phys_addr, mite->mite_io_addr);
+	__comedi_info("MITE: 0x%08llx mapped to %p ",
+		      (unsigned long long)mite->mite_phys_addr, 
+		      mite->mite_io_addr);
 
 
 	/* The PCI BAR1 is the DAQ */
@@ -154,16 +157,17 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->daq_phys_addr = addr;
 	mite->daq_io_addr = ioremap(mite->daq_phys_addr, length);
 	if (!mite->daq_io_addr) {
-		rtdm_printk("failed to remap daq io memory address\n");
+		__comedi_info("failed to remap daq io memory address\n");
 		return -ENOMEM;
 	}
 
-	rtdm_printk("DAQ: 0x%08llx mapped to %p\n",
-		    (unsigned long long)mite->daq_phys_addr, mite->daq_io_addr);
+	__comedi_info("DAQ: 0x%08llx mapped to %p\n",
+		      (unsigned long long)mite->daq_phys_addr, 
+		      mite->daq_io_addr);
 
 	if (use_iodwbsr_1) {
 		writel(0, mite->mite_io_addr + MITE_IODWBSR);
-		rtdm_printk("MITE: using I/O Window Base Size register 1\n");
+		__comedi_info("MITE: using I/O Window Base Size register 1\n");
 		writel(mite->
 			daq_phys_addr | WENAB |
 			MITE_IODWBSR_1_WSIZE_bits(length),
@@ -234,17 +238,17 @@ void mite_list_devices(void)
 {
 	struct list_head *this;
 
-	rtdm_printk("MITE: Available NI device IDs:");
+	printk("Comedi: MITE: Available NI device IDs:");
 	list_for_each(this, &mite_devices) {
 		struct mite_struct *mite = 
 			list_entry(this, struct mite_struct, list);
 
-		rtdm_printk(" 0x%04x", mite_device_id(mite));
+		printk(" 0x%04x", mite_device_id(mite));
 		if(mite->used)
-			rtdm_printk("(used)");
+			printk("(used)");
 	}
 
-	rtdm_printk("\n");
+	printk("\n");
 }
 
 
@@ -445,8 +449,8 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		mcr |= CR_PSIZE32;
 		break;
 	default:
-		rtdm_printk
-			("MITE: bug! invalid mem bit width for dma transfer\n");
+		__comedi_info("MITE: bug! "
+			      "invalid mem bit width for dma transfer\n");
 		break;
 	}
 	writel(mcr, mite->mite_io_addr + MITE_MCR(mite_chan->channel));
@@ -465,8 +469,8 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		dcr |= CR_PSIZE32;
 		break;
 	default:
-		rtdm_printk
-			("MITE: bug! invalid dev bit width for dma transfer\n");
+		__comedi_info("MITE: bug! "
+			      "invalid dev bit width for dma transfer\n");
 		break;
 	}
 	writel(dcr, mite->mite_io_addr + MITE_DCR(mite_chan->channel));
@@ -542,7 +546,7 @@ int mite_sync_input_dma(struct mite_channel *mite_chan, comedi_dev_t *dev)
 	nbytes_ub = mite_bytes_written_to_memory_ub(mite_chan);
 
 	if(comedi_buf_prepare_absput(dev, nbytes_ub) != 0) {
-		rtdm_printk("MITE: DMA overwrite of free area\n");
+		__comedi_info("MITE: DMA overwrite of free area\n");
 		return -EPIPE;
 	}
 	
@@ -557,7 +561,7 @@ int mite_sync_output_dma(struct mite_channel *mite_chan, comedi_dev_t *dev)
 	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
 
 	if(comedi_buf_prepare_absget(dev, nbytes_ub) != 0) {
-		rtdm_printk("MITE: DMA underrun\n");
+		__comedi_info("MITE: DMA underrun\n");
 		return -EPIPE;
 	}
 
@@ -675,45 +679,45 @@ void mite_dump_regs(struct mite_channel *mite_chan)
 	unsigned long addr = 0;
 	unsigned long temp = 0;
 
-	rtdm_printk("mite_dump_regs ch%i\n", mite_chan->channel);
-	rtdm_printk("mite address is  =0x%08lx\n", mite_io_addr);
+	__comedi_info("mite_dump_regs ch%i\n", mite_chan->channel);
+	__comedi_info("mite address is  =0x%08lx\n", mite_io_addr);
 
 	addr = mite_io_addr + MITE_CHOR(channel);
-	rtdm_printk("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_CHOR_strings, temp);
 	addr = mite_io_addr + MITE_CHCR(channel);
-	rtdm_printk("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_CHCR_strings, temp);
 	addr = mite_io_addr + MITE_TCR(channel);
-	rtdm_printk("mite status[TCR] at 0x%08lx =0x%08x\n", addr, readl(addr));
+	__comedi_info("mite status[TCR] at 0x%08lx =0x%08x\n", addr, readl(addr));
 	addr = mite_io_addr + MITE_MCR(channel);
-	rtdm_printk("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_MCR_strings, temp);
 
 	addr = mite_io_addr + MITE_MAR(channel);
-	rtdm_printk("mite status[MAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
+	__comedi_info("mite status[MAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
 	addr = mite_io_addr + MITE_DCR(channel);
-	rtdm_printk("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_DCR_strings, temp);
 	addr = mite_io_addr + MITE_DAR(channel);
-	rtdm_printk("mite status[DAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
+	__comedi_info("mite status[DAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
 	addr = mite_io_addr + MITE_LKCR(channel);
-	rtdm_printk("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_LKCR_strings, temp);
 	addr = mite_io_addr + MITE_LKAR(channel);
-	rtdm_printk("mite status[LKAR]at 0x%08lx =0x%08x\n", addr, readl(addr));
+	__comedi_info("mite status[LKAR]at 0x%08lx =0x%08x\n", addr, readl(addr));
 
 	addr = mite_io_addr + MITE_CHSR(channel);
-	rtdm_printk("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
+	__comedi_info("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
 		readl(addr));
 	mite_decode(mite_CHSR_strings, temp);
 	addr = mite_io_addr + MITE_FCR(channel);
-	rtdm_printk("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr, readl(addr));
+	__comedi_info("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr, readl(addr));
 }
 
 static void mite_decode(char **bit_str, unsigned int bits)
@@ -722,10 +726,10 @@ static void mite_decode(char **bit_str, unsigned int bits)
 
 	for (i = 31; i >= 0; i--) {
 		if (bits & (1 << i)) {
-			rtdm_printk(" %s", bit_str[i]);
+			__comedi_info(" %s", bit_str[i]);
 		}
 	}
-	rtdm_printk("\n");
+	__comedi_info("\n");
 }
 #endif /* CONFIG_DEBUG_MITE */
 
