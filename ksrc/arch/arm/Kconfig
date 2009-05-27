@@ -17,6 +17,10 @@ menu "Machine"
 
 depends on XENO_OPT_NUCLEUS
 
+config IPIPE_WANT_PREEMPTIBLE_SWITCH
+	bool
+	default y
+
 config XENO_HW_FPU
 	bool "Enable FPU support"
 	default y
@@ -31,7 +35,6 @@ config XENO_HW_FPU
 
 config XENO_HW_UNLOCKED_SWITCH
 	bool "Enable unlocked context switch"
-	depends on IPIPE_UNMASKED_CONTEXT_SWITCH
 	default y
 	help
 	The nucleus may allow non-atomic execution of the
