@@ -68,14 +68,14 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 4000
 #elif defined(CONFIG_MVME7100)
 #define __sched_latency 1500
+#elif defined(CONFIG_TQM8548)
+#define __sched_latency 500
 /*
  * Check for the most generic configs at the bottom of this list, so
  * that the most specific choices available are picked first.
  */
-#elif defined(CONFIG_MPC8560)
-#define __sched_latency 1600
-#elif defined(CONFIG_MPC8540)
-#define __sched_latency 1800
+#elif defined(CONFIG_MPC85xx)
+#define __sched_latency 1500
 #elif defined(CONFIG_405GPR)
 #define __sched_latency 9000
 #elif defined(CONFIG_PPC_MPC52xx)
