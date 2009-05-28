@@ -16,38 +16,32 @@ is available from Denx's linuxppc_2_4_devel GIT tree [2]. Adeos
 patches for the 2.6 kernel series are currently based on releases from
 Denx's linux-2.6-denx GIT tree.
 
-As of 2.6.20, newest Adeos patches are based on the powerpc/ tree,
-instead of the deprecated ppc/ tree. However, a backport of
-2.6.23-2.0-03/powerpc has been made to 2.6.23-1.6-xx/ppc, in order to
-support a number of EVBs (32bit, uniprocessor only) which have not
-been moved to the powerpc/ tree yet. Since 2.6.24, support for the
-legacy ppc/ tree is directly available from the same patch which
-tracks the powerpc/ branch. To sum up, all-in-one patches against
-2.6.24 and beyond provide support for powerpc64, powerpc32, and legacy
-ppc32 architectures.
-
 Patches up to kernel 2.6.21 apply against vanilla releases from
 kernel.org. Patches from kernel 2.6.22 and on apply against milestones
 or snapshots from Denx's public GIT tree [3].
+
+Patches from 2.6.24 to 2.6.26 provide support for the legacy ppc/ tree
+(ppc32, uniprocessor only) in addition to the powerpc/ branch.
 
 Just apply one of those patches against the corresponding kernel
 release. You may want to have a look at the README.*INSTALL guides at
 the top of the Xenomai tree for more information.
 
-This directory only contains the most recent patches; you may find the
-complete collection of Adeos/I-pipe patches at the following
-locations (see note):
+This directory only contains the most recent patches used to validate
+this Xenomai release on powerpc platforms; you may find the complete
+collection of Adeos/I-pipe patches at the following locations (see
+note):
 
-* all existing I-pipe patches based on the powerpc/ tree, also
-including the combo patches for ppc32+ppc64 architectures:
+* current I-pipe patches based on the powerpc/ tree; each patch
+supports both ppc32 and ppc64 platforms:
 http://download.gna.org/adeos/patches/v2.6/powerpc/
 
-* older I-pipe patches based on the ppc/ tree, only for the standalone
+* older I-pipe patches based on the legacy ppc/ tree, only for the
 ppc32 architecture:
 http://download.gna.org/adeos/patches/v2.6/ppc/
 
 * older I-pipe patches based on the ppc64/ tree, only for the
-standalone ppc64 architecture:
+ppc64 architecture:
 http://download.gna.org/adeos/patches/v2.6/ppc64/
 
 NOTE: not all these patches are guaranteed to work with the current
@@ -59,15 +53,14 @@ Patch			        Based on GIT commit # / TAG
 2.4.25-DENX-1.2-02/ppc		6d7d0e61a0f7837da59369a19a4eaa0063653bbf
 2.6.23-DENX-1.6-00/ppc		208aa3df8645608ff3febb65f83219173dfe4979
 2.6.23-DENX-2.0-03/powerpc	3e44e7de644b521c5301c806d90da6feb99158d5
-2.6.24.6-DENX-2.4-03/powerpc(*)	331e1d1ac8b64e9c4c37906d3e005f9adda574ab
-2.6.24-DENX-*/powerpc		DENX-v2.6.24-stable
-2.6.25-DENX-*/powerpc		DENX-v2.6.25-stable
-2.6.26-DENX-*/powerpc		DENX-v2.6.26-stable
-2.6.27-DENX-*/powerpc		DENX-v2.6.27-stable
-2.6.28.5-DENX-*/powerpc		DENX-v2.6.28-stable
-2.6.29-DENX/powerpc		DENX-v2.6.29
-
-(*) Use this patch to run on MPC5121-ADS.
+2.6.24.6-DENX-2.4-03/powerpc	331e1d1ac8b64e9c4c37906d3e005f9adda574ab
+2.6.24-DENX-*/powerpc		031edb4f3cced0933e3e08f96a3fb4805c2e4cac
+2.6.25-DENX-*/powerpc		3d51d2d5fc46e87210575edf784263034edba1d7
+2.6.26-DENX-*/powerpc		7b56671345f62f1baf2772ad5736e4f59ed0f213
+2.6.27-DENX-*/powerpc		43b4f8924d387ef2f35c4956b94aae1f02d8e4ce
+2.6.28.5-DENX-*/powerpc		5931215bdb5412fdd80bebad1d66158dc149ea18
+2.6.29.1-DENX-*/powerpc		ad6bad4bf6888f89353945ba90df3b6a5b42b8fa
+2.6.29.4-DENX-*/powerpc		5e2fc2073ede8e33409fad91f4caf6db30cbfd76
 
 [1] http://www.gna.org/projects/adeos/
 [2] git://www.denx.de/git/linuxppc_2_4_devel
