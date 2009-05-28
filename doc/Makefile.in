@@ -434,9 +434,6 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
 check: check-recursive
 all-am: Makefile
@@ -525,7 +522,7 @@ uninstall-am:
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-generic clean-libtool \
-	ctags ctags-recursive dist-hook distclean distclean-generic \
+	ctags ctags-recursive distclean distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
@@ -539,14 +536,11 @@ uninstall-am:
 
 
 generate-doc:
-	@if test \! -e $(GENERATE_DOC) ; then \
+	@if test \! -e $(GENERATE_DOC) -o \! -e $(srcdir)/.git ; then \
 		echo "$@ may only be run from a GIT working tree." ; \
 	else \
 		srcdir=$(srcdir) $(GENERATE_DOC) ; \
 	fi
-
-dist-hook:
-	find $(distdir) -name .svn -depth -exec rm -fr \{\} \;
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
