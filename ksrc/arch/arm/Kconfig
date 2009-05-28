@@ -8,6 +8,10 @@ menu "Machine"
 
 depends on XENO_OPT_NUCLEUS
 
+config IPIPE_WANT_PREEMPTIBLE_SWITCH
+	bool
+	default y
+
 config XENO_HW_FPU
 	bool "Enable FPU support"
 	default y

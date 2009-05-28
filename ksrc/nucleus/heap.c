@@ -200,7 +200,7 @@ int xnheap_init(xnheap_t *heap,
 	 * static_part + pmapsize rounded to the minimum alignment
 	 * size.
 	*/
-	hdrsize = xnheap_overhead(heapsize, pagesize);
+	hdrsize = xnheap_internal_overhead(heapsize, pagesize);
 
 	/* Compute the page shiftmask from the page size (i.e. log2 value). */
 	for (pageshift = 0, shiftsize = pagesize;

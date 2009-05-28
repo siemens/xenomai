@@ -299,24 +299,13 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * tcb)
 		if (tcb->cr0_ts)
 			return;
 
-		if (wrap_test_fpu_used(task)) {
-			/* Fpu context was not even saved, do not restore */
-			clts();
+		if (tcb->ts_usedfpu && !wrap_test_fpu_used(task)) {
+			xnarch_restore_fpu(tcb);
 			return;
 		}
-		
-		xnarch_restore_fpu(tcb);
-		return;
 	}
 
 	clts();
-
-	if (!cpu_has_fxsr && task)
-		/* fnsave, called by switch_to, initialized the FPU state, so that on
-		   cpus prior to PII (i.e. without fxsr), we need to restore the saved
-		   state. */
-		__asm__ __volatile__("frstor %0": /* no output */
-				     :"m"(*tcb->fpup));
 }
 
 #else /* !CONFIG_XENO_HW_FPU */
