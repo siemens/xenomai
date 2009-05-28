@@ -320,13 +320,11 @@ int xnpod_init(void)
 	 * because on some architectures, vmalloc memory may not be
 	 * accessed while running in physical addressing mode
 	 * (e.g. exception trampoline code on powerpc with standard
-	 * MMU support - CONFIG_PPC_STD_MMU). Meanwhile, since we want
-	 * to allow the system heap to be larger than 128Kb in
-	 * contiguous memory, we can't restrict to using kmalloc()
-	 * memory for it either.  Therefore, we manage a private stack
-	 * pool for kernel-based threads which will be populated with
-	 * the kind of memory the underlying arch requires, still
-	 * allowing the system heap to rely on a vmalloc'ed segment.
+	 * MMU support - CONFIG_PPC_STD_MMU).  Therefore, we manage a
+	 * private stack pool for kernel-based threads which will be
+	 * populated with the kind of memory the underlying arch
+	 * requires, still allowing the system heap to rely on a
+	 * vmalloc'ed segment.
 	 */
 	heapaddr = xnarch_alloc_stack_mem(CONFIG_XENO_OPT_SYS_STACKPOOLSZ * 1024);
 
