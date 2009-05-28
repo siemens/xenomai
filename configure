@@ -12303,7 +12303,7 @@ fi
 echo $ECHO_N "checking for target architecture... $ECHO_C" >&6; }
 
 CONFIG_XENO_FASTSYNCH=
-case "$host" in
+case "$host_alias" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=i386
@@ -12343,7 +12343,7 @@ case "$host" in
         ;;
  *) echo ""
    echo "*******************************************"
-   echo "Still unsupported target: $host -- Sorry."
+   echo "Still unsupported target: $host_alias -- Sorry."
    echo "*******************************************"
    echo ""
    exit 1;;
@@ -12649,9 +12649,10 @@ echo "$as_me: error: Unknown Linux version $linux_full_version" >&2;}
 
   fi
 
+  unset ADEOS_PATCH
+  if test \! -e $XENO_LINUX_SRCDIR/kernel/ipipe; then
   { echo "$as_me:$LINENO: checking for Adeos patch" >&5
 echo $ECHO_N "checking for Adeos patch... $ECHO_C" >&6; }
-  unset ADEOS_PATCH
 
 # Check whether --with-adeos-patch was given.
 if test "${with_adeos_patch+set}" = set; then
@@ -12674,6 +12675,7 @@ echo "${ECHO_T}$ADEOS_PATCH" >&6; }
 	*-powerpc-*) XENO_LINUX_ARCH=powerpc;;
 	*-x86-*) XENO_LINUX_ARCH=x86;;
   esac
+  fi
 
 
   unset LNDIR
@@ -16472,7 +16474,7 @@ _LT_EOF
      if test -e linux/.xenomai-prepared ; then
         . linux/.xenomai-prepared
         if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
-           test x"`basename $ADEOS_PATCH`" != x"$PREPARED_ADEOS_PATCH" ; then
+           test x`basename "$ADEOS_PATCH"` != x"$PREPARED_ADEOS_PATCH" ; then
            echo "*** Warning: built version of linux and requested versions are "
            echo "*** different. If you want to build the requested version of "
            echo "*** linux, remove the file: linux/.xenomai-prepared."
@@ -16526,12 +16528,12 @@ _LT_EOF
               test -e .xenomai.config && mv .xenomai.config .config
            fi
            cd ..
-           $srcdir/scripts/prepare-kernel.sh \
+           $srcdir/scripts/prepare-kernel.sh --verbose \
              --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
            test -e .xenomai.config && mv .xenomai.config linux/.config || :
            cat > linux/.xenomai-prepared.tmp <<EOF
 PREPARED_LINUX_VERSION=$XENO_LINUX_VERSION
-PREPARED_ADEOS_PATCH=`basename $ADEOS_PATCH`
+PREPARED_ADEOS_PATCH=`basename "$ADEOS_PATCH"`
 EOF
            mv linux/.xenomai-prepared.tmp linux/.xenomai-prepared
      fi
