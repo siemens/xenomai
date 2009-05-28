@@ -445,7 +445,7 @@ index 0000000..2a0c0e3
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..2d5e3e6
+index 0000000..89c352b
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,200 @@
@@ -479,10 +479,10 @@ index 0000000..2d5e3e6
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.12-00"
++#define IPIPE_ARCH_STRING	"1.12-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	12
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -2737,7 +2737,7 @@ index 0000000..43a6d49
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
-+ * Copyright (C) 2007 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
++ * Copyright (C) 2007 Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
 + *
 + * Adaptation to AT91SAM926x:
 + * Copyright (C) 2007 Gregory CLEMENT, Adeneo
@@ -3740,7 +3740,7 @@ index eb8d5bd..856ec14 100644
 +
  #endif
 diff --git a/arch/arm/mach-imx/irq.c b/arch/arm/mach-imx/irq.c
-index 798f221..b769e3f 100644
+index 798f221..6e66d40 100644
 --- a/arch/arm/mach-imx/irq.c
 +++ b/arch/arm/mach-imx/irq.c
 @@ -26,13 +26,89 @@
@@ -3757,7 +3757,7 @@ index 798f221..b769e3f 100644
  
  #include <asm/mach/irq.h>
 -
-+#include <asm/arch/imx-regs.h>
++#include <mach/imx-regs.h>
 +
 +
 +/* Used for IMX INTERRUPT priority: Still Experimental */ 
@@ -3901,7 +3901,7 @@ index 798f221..b769e3f 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-imx/time.c b/arch/arm/mach-imx/time.c
-index 08be387..ef30b74 100644
+index 08be387..6ca6c90 100644
 --- a/arch/arm/mach-imx/time.c
 +++ b/arch/arm/mach-imx/time.c
 @@ -25,6 +25,57 @@
@@ -4041,7 +4041,7 @@ index 08be387..ef30b74 100644
  	/*
  	 * Make irqs happen for the system timer
  	 */
-@@ -218,3 +290,75 @@ static void __init imx_timer_init(void)
+@@ -218,3 +290,76 @@ static void __init imx_timer_init(void)
  struct sys_timer imx_timer = {
  	.init		= imx_timer_init,
  };
@@ -4049,6 +4049,7 @@ index 08be387..ef30b74 100644
 +#ifdef CONFIG_IPIPE
 +void __ipipe_mach_acktimer(void)
 +{
++	unsigned tstat = IMX_TSTAT(TIMER_BASE);
 +	IMX_TSTAT(TIMER_BASE) = 0;
 +}
 +
@@ -6167,7 +6168,7 @@ index 2dd8527..2c71a64 100644
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  	cpwait_ret lr, ip
 diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
-index 733e0ac..e0fc8ab 100644
+index 733e0ac..28354cb 100644
 --- a/arch/arm/plat-mxc/gpio.c
 +++ b/arch/arm/plat-mxc/gpio.c
 @@ -25,6 +25,13 @@
@@ -6258,6 +6259,18 @@ index 733e0ac..e0fc8ab 100644
  
  static struct irq_chip gpio_irq_chip = {
  	.ack = gpio_ack_irq,
+@@ -222,7 +285,11 @@ int __init mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 		for (j = port[i].virtual_irq_start;
+ 			j < port[i].virtual_irq_start + 32; j++) {
+ 			set_irq_chip(j, &gpio_irq_chip);
++#ifndef CONFIG_IPIPE
+ 			set_irq_handler(j, handle_edge_irq);
++#else /* CONFIG_IPIPE */
++			set_irq_handler(j, handle_level_irq);
++#endif /* CONFIG_IPIPE */
+ 			set_irq_flags(j, IRQF_VALID);
+ 		}
+ 
 diff --git a/arch/arm/plat-mxc/include/mach/irqs.h b/arch/arm/plat-mxc/include/mach/irqs.h
 index 228c4f6..55060e3 100644
 --- a/arch/arm/plat-mxc/include/mach/irqs.h
