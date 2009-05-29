@@ -12303,7 +12303,14 @@ fi
 echo $ECHO_N "checking for target architecture... $ECHO_C" >&6; }
 
 CONFIG_XENO_FASTSYNCH=
-case "$host_alias" in
+
+if test x$host_alias = x; then
+  build_for=$host
+else
+  build_for=$host_alias
+fi
+
+case "$build_for" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
         XENO_LINUX_ARCH=i386
@@ -12343,7 +12350,7 @@ case "$host_alias" in
         ;;
  *) echo ""
    echo "*******************************************"
-   echo "Still unsupported target: $host_alias -- Sorry."
+   echo "Still unsupported target: $build_for -- Sorry."
    echo "*******************************************"
    echo ""
    exit 1;;
