@@ -144,8 +144,8 @@ config XENO_OPT_SYS_HEAPSZ
 config XENO_OPT_SYS_STACKPOOLSZ
         depends on XENO_GENERIC_STACKPOOL
 	int "Size of the private stack pool (Kb)"
-	default 32 if !64BIT && !BLACKFIN
-	default 64 if 64BIT || BLACKFIN
+	default 32 if !64BIT && !BLACKFIN && !XENO_DRIVERS_SWITCHTEST
+	default 64 if 64BIT || BLACKFIN || XENO_DRIVERS_SWITCHTEST
 	help
 
 	On this architecture, kernel-based Xenomai threads get the
