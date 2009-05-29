@@ -270,12 +270,32 @@ same configuration.
 # the host immediately updates the target system with the installed
 # programs and libraries.
 
-2.1 Building for x86-32/64bit
+2.1 Building for x86_32/64bit
 -----------------------------
 
-Let's say that we want to build Xenomai for a Pentium-based x86 32bit
-platform running a 2.6.23 kernel, using the native host toolchain; the
-typical steps would be as follows:
+Since Linux 2.6.24, x86_32 and x86_64 trees are merged. Therefore,
+building Xenomai for 2.6.24 or later is almost the same, regardless of
+the 32/64bit issue. Assuming that you want to build natively for a
+x86_64 system (x86_32 cross-build options from x86_64 appear between
+brackets), you would typically run:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86 \
+  --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.29.4-x86-X.Y-ZZ.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make [ARCH=i386] xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make [ARCH=i386] bzImage modules # then install as needed
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --enable-x86-sep (*) \
+  [--host=i686-linux CFLAGS="-m32 -O2" LDFLAGS="-m32"]
+$ make install
+
+(*) Make sure to pass --enable-smp as well if building for a SMP-capable
+system.
+
+Now, let's say that you really want to build Xenomai for a
+Pentium-based x86 32bit platform running a legacy 2.6.23 kernel, using
+the native host toolchain; the typical steps would be as follows:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=i386 \
   --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-i386-X.Y-ZZ.patch \
@@ -287,7 +307,7 @@ $ mkdir $build_root && cd $build_root
 $ $xenomai_root/configure --enable-x86-sep
 $ make install
 
-Similarly, for a 64bit platform, we would use:
+Similarly, for a legacy kernel on a 64bit platform, you would use:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
   --adeos=$xenomai_root/ksrc/arch/x86/patches/adeos-ipipe-2.6.23-x86_64-X.Y-ZZ.patch \
@@ -300,7 +320,7 @@ $ $xenomai_root/configure
 $ make install
 
 Once the compilation has completed, /usr/xenomai should contain the
-user-space librairies and header files one would use to build
+user-space librairies and header files you would use to build
 applications that call Xenomai's real-time support in kernel space.
 
 The remaining examples illustrate how to cross-compile Xenomai for
@@ -311,9 +331,48 @@ build Xenomai.
 2.2 Building for the PowerPC architecture
 -----------------------------------------
 
+PowerPC has a legacy arch/ppc branch, and a newer, current
+arch/powerpc tree. Xenomai supports both, but using arch/powerpc is
+definitely recommended. To help the preparation script to pick the
+right one, you have to specify either --arch=powerpc (current) or
+--arch=ppc (legacy). Afterwards, the rest should be a no-brainer:
+
 A typical cross-compilation setup, in order to build Xenomai for a
-PowerPC-405-based system from a x86 host. Here we use an ELDK
-cross-compiler and a 2.6.14 kernel.
+lite5200 board running a recent 2.6.29.4 kernel. We use DENX's ELDK
+cross-compiler:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.29.4-powerpc-2.6-00.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- xconfig/gconfig/menuconfig
+# [select the kernel and Xenomai options, save the configuration]
+$ make ARCH=powerpc CROSS_COMPILE=ppc_6xx- uImage modules
+# [manually install the u-boot image and modules to the proper location]
+$ cd $build_root
+$ $xenomai_root/configure --host=powerpc-unknown-linux-gnu \
+  CC=ppc_6xx-gcc AR=ppc_6xx-ar LD=ppc_6xx-ld
+$ make DESTDIR=$staging_dir install
+
+Another cross-compilation setup, in order to build Xenomai for a
+powerpc64 PA-Semi board running a recent 2.6.29.4 kernel:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=powerpc \
+  --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.29.4-powerpc-2.6-00.patch \
+  --linux=$linux_tree
+$ cd $linux_tree
+$ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux- xconfig/gconfig/menuconfig
+# [select the kernel and Xenomai options, save the configuration]
+$ make ARCH=powerpc CROSS_COMPILE=powerpc64-linux-
+# [manually install the vmlinux image and modules to the proper location]
+$ cd $build_root
+$ $xenomai_root/configure --enable-smp --host=powerpc64-linux \
+  CC=powerpc64-linux-gcc AR=powerpc64-linux-ar LD=powerpc64-linux-ld
+$ make DESTDIR=$staging_dir install
+
+Yet another cross-compilation setup, this time for building Xenomai
+for a PowerPC-405-based system running a legacy arch/ppc 2.6.14
+kernel (we do support recent ones as well on this platform):
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=ppc \
   --adeos=$xenomai_root/ksrc/arch/powerpc/patches/adeos-ipipe-2.6.14-ppc-1.5-*.patch \
@@ -324,8 +383,8 @@ $ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root xconfig/gconfig/menuconfig
 $ make ARCH=ppc CROSS_COMPILE=ppc_4xx- O=$build_root bzImage modules
 # [manually install the kernel image, system map and modules to the proper location]
 $ cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu CC=ppc_4xx-gcc \
-  CXX=ppc_4xx-g++ LD=ppc_4xx-ld
+$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=ppc-unknown-linux-gnu \
+  CC=ppc_4xx-gcc LD=ppc_4xx-ld
 $ make DESTDIR=$staging_dir install
 
 2.3 Building for the Blackfin
@@ -345,8 +404,9 @@ $ make linux image
 $ cp images/linux /tftpboot/...
   # build the user-space support
 $ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=blackfin-unknown-linux-gnu CC=bfin-linux-uclibc-gcc CXX=bfin-linux-uclibc-gcc AR=bfin-linux-uclibc-ar LD=bfin-linux-uclibc-ld
-$ make install
+$ $xenomai_root/configure --host=blackfin-unknown-linux-gnu \
+  CC=bfin-linux-uclibc-gcc AR=bfin-linux-uclibc-ar LD=bfin-linux-uclibc-ld
+$ make DESTDIR=$staging_dir install
 
 You may also want to have a look at this hands-on description about
 configuring and building a Xenomai system for the Blackfin
@@ -357,37 +417,7 @@ architecture. In case of problem running the testsuite, try restarting
 the last two build steps, passing the --disable-shared option to the
 "configure" script.
 
-2.4 Building for x86 with the --enable-linux-build option
----------------------------------------------------------
-
-Build the Linux kernel as part of the user space support build process:
-
-$ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure --enable-linux-build=$linux_tree --enable-x86-sep
-$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make install
-
-When "make install" is finished, you should find the patched kernel installed
-in /boot, its module under /lib/modules, and Xenomai user-space libraries
-and tools under /usr/xenomai.
-
-2.5 Building for x86_64
------------------------
-
-Here are the typical steps for building Xenomai on a x86_64 host
-running a 2.6.19 kernel, using the native toolchain:
-
-$ $xenomai_root/scripts/prepare-kernel.sh --arch=x86_64 \
-  --adeos=$xenomai_root/ksrc/arch/x86_64/patches/adeos-ipipe-2.6.19-i386-X.Y-ZZ.patch \
-  --linux=$linux_tree
-$ cd $linux_tree
-$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
-$ make # then install as needed
-$ mkdir $build_root && cd $build_root
-$ $xenomai_root/configure
-$ make install
-
-2.6 Building for ARM
+2.4 Building for ARM
 --------------------
 
 If the ARM cross-compiler is called arm-linux-gcc and compiling for a
@@ -403,3 +433,21 @@ $ make ARCH=arm CROSS_COMPILE=arm-linux- O=$build_root bzImage modules
 $ cd $build_root
 $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=arm-linux --enable-arm-mach=at91rm9200 --enable-arm-tsc
 $ make DESTDIR=$staging_dir install
+
+2.5 Building with the --enable-linux-build option
+-------------------------------------------------
+
+Build the Linux kernel as part of the user space support build process:
+
+$ mkdir $build_root && cd $build_root
+$ $xenomai_root/configure --enable-linux-build=$linux_tree --enable-x86-sep
+$ make xconfig/gconfig/menuconfig # select the kernel and Xenomai options
+$ make install
+
+When "make install" is finished, you should find the patched kernel installed
+in /boot, its module under /lib/modules, and Xenomai user-space libraries
+and tools under /usr/xenomai.
+
+This method is NOT recommended for day-to-day work. However, it may be
+useful in some particular situations where an all-in-one build process
+is required.
