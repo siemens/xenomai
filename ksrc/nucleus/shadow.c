@@ -103,10 +103,6 @@ static int nucleus_muxid = -1;
 
 static DECLARE_MUTEX(completion_mutex);
 
-void xnpod_declare_iface_proc(struct xnskin_slot *iface);
-
-void xnpod_discard_iface_proc(const char *iface);
-
 static inline struct task_struct *get_switch_lock_owner(void)
 {
 	return switch_lock_owner[task_cpu(current)];
@@ -2512,11 +2508,7 @@ int xnshadow_register_interface(struct xnskin_props *props)
 			muxtable[muxid].props = props;
 			xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 			xnlock_put_irqrestore(&nklock, s);
-
-#ifdef CONFIG_PROC_FS
-			xnpod_declare_iface_proc(muxtable + muxid);
-#endif /* CONFIG_PROC_FS */
-
+			xnshadow_declare_proc(muxtable + muxid);
 			return muxid;
 		}
 	}
@@ -2532,10 +2524,9 @@ EXPORT_SYMBOL_GPL(xnshadow_register_interface);
  * NOTE: an interface can be unregistered without its pod being
  * necessarily active.
  */
-
 int xnshadow_unregister_interface(int muxid)
 {
-	int err = 0;
+	const char *name;
 	spl_t s;
 
 	if (muxid < 0 || muxid >= XENOMAI_MUX_NR)
@@ -2543,25 +2534,20 @@ int xnshadow_unregister_interface(int muxid)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (xnarch_atomic_get(&muxtable[muxid].refcnt) <= 0) {
-#ifdef CONFIG_PROC_FS
-		const char *name = muxtable[muxid].props->name;
-#endif /* CONFIG_PROC_FS */
-		muxtable[muxid].props = NULL;
-		xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
-#ifdef CONFIG_PROC_FS
-		{
-			xnlock_put_irqrestore(&nklock, s);
-			xnpod_discard_iface_proc(name);
-			return 0;
-		}
-#endif /* CONFIG_PROC_FS */
-	} else
-		err = -EBUSY;
+	if (xnarch_atomic_get(&muxtable[muxid].refcnt) > 0) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EBUSY;
+	}
+
+	name = muxtable[muxid].props->name;
+	muxtable[muxid].props = NULL;
+	xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return err;
+	xnshadow_remove_proc(name);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
 
@@ -2707,5 +2693,64 @@ void xnshadow_cleanup(void)
 	rthal_free_ptdkey(nkerrptd);
 	rthal_free_ptdkey(nkthrptd);
 }
+
+#ifdef CONFIG_PROC_FS
+
+#include <linux/proc_fs.h>
+
+static struct proc_dir_entry *iface_proc_root;
+
+static int iface_read_proc(char *page,
+			   char **start,
+			   off_t off, int count, int *eof, void *data)
+{
+	struct xnskin_slot *iface = data;
+	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
+
+	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
+
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+void xnshadow_declare_proc(struct xnskin_slot *iface)
+{
+	rthal_add_proc_leaf(iface->props->name,
+			    &iface_read_proc, NULL, iface,
+			    iface_proc_root);
+}
+
+void xnshadow_remove_proc(const char *iface_name)
+{
+	remove_proc_entry(iface_name, iface_proc_root);
+}
+
+void xnshadow_init_proc(void)
+{
+	iface_proc_root =
+	    create_proc_entry("interfaces", S_IFDIR, rthal_proc_root);
+}
+
+void xnshadow_cleanup_proc(void)
+{
+	int muxid;
+
+	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++)
+		if (muxtable[muxid].props && muxtable[muxid].props->name)
+			remove_proc_entry(muxtable[muxid].props->name,
+					  iface_proc_root);
+
+	remove_proc_entry("interfaces", rthal_proc_root);
+}
+
+#endif /* CONFIG_PROC_FS */
 
 /*@}*/

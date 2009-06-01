@@ -489,6 +489,7 @@ static inline int rthal_cpu_supported(int cpu)
 #endif /* !CONFIG_SMP */
 
 #ifdef CONFIG_PROC_FS
+
 #include <linux/proc_fs.h>
 
 extern struct proc_dir_entry *rthal_proc_root;
@@ -498,6 +499,11 @@ struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
 					   write_proc_t wrproc,
 					   void *data,
 					   struct proc_dir_entry *parent);
+
+struct proc_dir_entry *rthal_add_proc_seq(const char *name,
+					  struct file_operations *fops,
+					  size_t size,
+					  struct proc_dir_entry *parent);
 #endif /* CONFIG_PROC_FS */
 
 #ifdef CONFIG_IPIPE_TRACE

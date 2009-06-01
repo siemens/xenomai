@@ -102,7 +102,9 @@ void xnintr_clock_handler(void);
 
 void xnintr_host_tick(struct xnsched *sched);
 
-int xnintr_irq_proc(unsigned int irq, char *str);
+void xnintr_init_proc(void);
+
+void xnintr_cleanup_proc(void);
 
     /* Public interface. */
 

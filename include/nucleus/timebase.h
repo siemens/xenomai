@@ -30,10 +30,6 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
-
 struct xntimer;
 
 typedef struct xntbops {
@@ -317,16 +313,28 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta);
 do {						\
 	inith(&nktbase.link);			\
 	appendq(&nktimebaseq, &nktbase.link);	\
-	xnpod_declare_tbase_proc(&nktbase);	\
+	xntbase_declare_proc(&nktbase);	\
 } while (0)
 
 #define xntbase_umount()			\
 do {						\
-	xnpod_discard_tbase_proc(&nktbase);	\
+	xntbase_remove_proc(&nktbase);		\
 	removeq(&nktimebaseq, &nktbase.link);	\
 } while (0)
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
+
+void xntbase_init_proc(void);
+
+void xntbase_cleanup_proc(void);
+
+#ifdef CONFIG_XENO_OPT_STATS
+void xntbase_declare_proc(xntbase_t *base);
+void xntbase_remove_proc(xntbase_t *base);
+#else /* !CONFIG_XENO_OPT_STATS */
+static inline void xntbase_declare_proc(xntbase_t *base) { }
+static inline void xntbase_remove_proc(xntbase_t *base) { }
+#endif /* !CONFIG_XENO_OPT_STATS */
 
 /*@}*/
 

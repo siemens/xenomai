@@ -888,49 +888,6 @@ xnarch_cpumask_t xnintr_affinity(xnintr_t *intr, xnarch_cpumask_t cpumask)
 }
 EXPORT_SYMBOL_GPL(xnintr_affinity);
 
-#ifdef CONFIG_PROC_FS
-int xnintr_irq_proc(unsigned int irq, char *str)
-{
-	xnintr_t *intr;
-	char *p = str;
-	spl_t s;
-
-	if (rthal_virtual_irq_p(irq)) {
-		p += sprintf(p, "         [virtual]");
-		return p - str;
-	} else if (irq == XNARCH_TIMER_IRQ) {
-		p += sprintf(p, "         [timer]");
-		return p - str;
-#ifdef CONFIG_SMP
-	} else if (irq == RTHAL_SERVICE_IPI0) {
-		p += sprintf(p, "         [IPI]");
-		return p - str;
-	} else if (irq == RTHAL_CRITICAL_IPI) {
-		p += sprintf(p, "         [critical sync]");
-		return p - str;
-#endif /* CONFIG_SMP */
-	}
-
-	xnlock_get_irqsave(&intrlock, s);
-
-	intr = xnintr_shirq_first(irq);
-	if (intr) {
-		strcpy(p, "        "); p += 8;
-
-		do {
-			*p = ' '; p += 1;
-			strcpy(p, intr->name); p += strlen(intr->name);
-
-			intr = xnintr_shirq_next(intr);
-		} while (intr);
-	}
-
-	xnlock_put_irqrestore(&intrlock, s);
-
-	return p - str;
-}
-#endif /* CONFIG_PROC_FS */
-
 #ifdef CONFIG_XENO_OPT_STATS
 int xnintr_query_init(xnintr_iterator_t *iterator)
 {
@@ -1012,5 +969,167 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 	return err;
 }
 #endif /* CONFIG_XENO_OPT_STATS */
+
+#ifdef CONFIG_PROC_FS
+
+#include <linux/proc_fs.h>
+
+static int format_irq_proc(unsigned int irq, char *str)
+{
+	xnintr_t *intr;
+	char *p = str;
+	spl_t s;
+
+	if (rthal_virtual_irq_p(irq)) {
+		p += sprintf(p, "         [virtual]");
+		return p - str;
+	} else if (irq == XNARCH_TIMER_IRQ) {
+		p += sprintf(p, "         [timer]");
+		return p - str;
+#ifdef CONFIG_SMP
+	} else if (irq == RTHAL_SERVICE_IPI0) {
+		p += sprintf(p, "         [IPI]");
+		return p - str;
+	} else if (irq == RTHAL_CRITICAL_IPI) {
+		p += sprintf(p, "         [critical sync]");
+		return p - str;
+#endif /* CONFIG_SMP */
+	}
+
+	xnlock_get_irqsave(&intrlock, s);
+
+	intr = xnintr_shirq_first(irq);
+	if (intr) {
+		strcpy(p, "        "); p += 8;
+
+		do {
+			*p = ' '; p += 1;
+			strcpy(p, intr->name); p += strlen(intr->name);
+
+			intr = xnintr_shirq_next(intr);
+		} while (intr);
+	}
+
+	xnlock_put_irqrestore(&intrlock, s);
+
+	return p - str;
+}
+
+static int irq_read_proc(char *page,
+			 char **start,
+			 off_t off, int count, int *eof, void *data)
+{
+	int len = 0, cpu, irq;
+	char *p = page;
+
+	p += sprintf(p, "IRQ ");
+
+	for_each_online_cpu(cpu) {
+		p += sprintf(p, "        CPU%d", cpu);
+	}
+
+	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
+		if (rthal_irq_handler(&rthal_domain, irq) == NULL)
+			continue;
+
+		p += sprintf(p, "\n%3d:", irq);
+
+		for_each_online_cpu(cpu) {
+			p += sprintf(p, "%12lu",
+				     rthal_cpudata_irq_hits(&rthal_domain, cpu,
+							    irq));
+		}
+
+		p += format_irq_proc(irq, p);
+	}
+
+	p += sprintf(p, "\n");
+
+	len = p - page - off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+#ifdef CONFIG_SMP
+static int affinity_read_proc(char *page,
+			      char **start,
+			      off_t off, int count, int *eof, void *data)
+{
+	unsigned long val = 0;
+	int len, cpu;
+
+	for (cpu = 0; cpu < sizeof(val) * 8; cpu++)
+		if (xnarch_cpu_isset(cpu, nkaffinity))
+			val |= (1 << cpu);
+
+	len = sprintf(page, "%08lx\n", val);
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+static int affinity_write_proc(struct file *file,
+			       const char __user * buffer,
+			       unsigned long count, void *data)
+{
+	char *end, buf[16];
+	unsigned long val;
+	xnarch_cpumask_t new_affinity;
+	int n, cpu;
+
+	n = count > sizeof(buf) - 1 ? sizeof(buf) - 1 : count;
+
+	if (copy_from_user(buf, buffer, n))
+		return -EFAULT;
+
+	buf[n] = '\0';
+	val = simple_strtol(buf, &end, 0);
+
+	if (*end != '\0' && !isspace(*end))
+		return -EINVAL;
+
+	xnarch_cpus_clear(new_affinity);
+	for (cpu = 0; cpu < sizeof(val) * 8; cpu++, val >>= 1)
+		if (val & 1)
+			xnarch_cpu_set(cpu, new_affinity);
+	xnarch_cpus_and(nkaffinity, new_affinity, xnarch_supported_cpus);
+
+	return count;
+}
+#endif /* CONFIG_SMP */
+
+void xnintr_init_proc(void)
+{
+	rthal_add_proc_leaf("irq", &irq_read_proc, NULL, NULL,
+			    rthal_proc_root);
+#ifdef CONFIG_SMP
+	rthal_add_proc_leaf("affinity", &affinity_read_proc,
+			    &affinity_write_proc, NULL, rthal_proc_root);
+#endif /* CONFIG_SMP */
+}
+
+void xnintr_cleanup_proc(void)
+{
+#ifdef CONFIG_SMP
+	remove_proc_entry("affinity", rthal_proc_root);
+#endif /* CONFIG_SMP */
+	remove_proc_entry("irq", rthal_proc_root);
+}
+
+#endif /* CONFIG_PROC_FS */
 
 /*@}*/

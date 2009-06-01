@@ -60,13 +60,13 @@ static int registry_hash_entries;
 
 static xnsynch_t registry_hash_synch;
 
-static unsigned registry_exported_objects;
-
 #ifdef CONFIG_XENO_EXPORT_REGISTRY
 
 #include <linux/workqueue.h>
 
 extern struct proc_dir_entry *rthal_proc_root;
+
+static unsigned registry_exported_objects;
 
 static DECLARE_WORK_FUNC(registry_proc_callback);
 
@@ -193,37 +193,32 @@ int xnregistry_init(void)
 
 void xnregistry_cleanup(void)
 {
+#ifdef CONFIG_XENO_EXPORT_REGISTRY
 	xnobject_t *ecurr, *enext;
 	int n;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
-	for (n = 0; n < registry_hash_entries; n++) {
+	for (n = 0; n < registry_hash_entries; n++)
 		for (ecurr = registry_hash_table[n]; ecurr; ecurr = enext) {
 			enext = ecurr->hnext;
 
-			if (ecurr->pnode) {
-				remove_proc_entry(ecurr->key,
-						  ecurr->pnode->dir);
+			if (ecurr->pnode == NULL)
+				continue;
 
-				if (--ecurr->pnode->entries <= 0) {
-					remove_proc_entry(ecurr->pnode->
-							  type,
-							  ecurr->pnode->
-							  root->dir);
-					ecurr->pnode->dir = NULL;
+			remove_proc_entry(ecurr->key, ecurr->pnode->dir);
 
-					if (--ecurr->pnode->root->
-					    entries <= 0) {
-						remove_proc_entry(ecurr->
-								  pnode->root->
-								  name,
-								  registry_proc_root);
-						ecurr->pnode->root->
-						    dir = NULL;
-					}
-				}
+			if (--ecurr->pnode->entries > 0)
+				continue;
+
+			remove_proc_entry(ecurr->pnode->type,
+					  ecurr->pnode->root->dir);
+
+			ecurr->pnode->dir = NULL;
+
+			if (--ecurr->pnode->root->entries <= 0) {
+				remove_proc_entry(ecurr->pnode->root->name,
+						  registry_proc_root);
+				ecurr->pnode->root->dir = NULL;
 			}
-		}
 	}
 #endif /* CONFIG_XENO_EXPORT_REGISTRY */
 

@@ -33,6 +33,7 @@
  *@{*/
 
 #include <stdarg.h>
+#include <nucleus/version.h>
 #include <nucleus/pod.h>
 #include <nucleus/timer.h>
 #include <nucleus/synch.h>
@@ -3050,5 +3051,164 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
+
+#ifdef CONFIG_PROC_FS
+
+#include <linux/proc_fs.h>
+#include <linux/ctype.h>
+
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+
+xnlockinfo_t xnlock_stats[RTHAL_NR_CPUS];
+
+static int lock_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	xnlockinfo_t lockinfo;
+	int cpu, len = 0;
+	char *p = page;
+	spl_t s;
+
+	for_each_online_cpu(cpu) {
+
+		xnlock_get_irqsave(&nklock, s);
+		lockinfo = xnlock_stats[cpu];
+		xnlock_put_irqrestore(&nklock, s);
+
+		if (cpu > 0)
+			p += sprintf(p, "\n");
+
+		p += sprintf(p, "CPU%d:\n", cpu);
+
+		p += sprintf(p,
+			     "  longest locked section: %llu ns\n"
+			     "  spinning time: %llu ns\n"
+			     "  section entry: %s:%d (%s)\n",
+			     xnarch_tsc_to_ns(lockinfo.lock_time),
+			     xnarch_tsc_to_ns(lockinfo.spin_time),
+			     lockinfo.file, lockinfo.line, lockinfo.function);
+	}
+
+	len = p - page - off;
+
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+EXPORT_SYMBOL_GPL(xnlock_stats);
+
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
+
+static int latency_read_proc(char *page,
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
+{
+	int len;
+
+	len = sprintf(page, "%Lu\n", xnarch_tsc_to_ns(nklatency));
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+static int latency_write_proc(struct file *file,
+			      const char __user * buffer,
+			      unsigned long count, void *data)
+{
+	char *end, buf[16];
+	long ns;
+	int n;
+
+	n = count > sizeof(buf) - 1 ? sizeof(buf) - 1 : count;
+
+	if (copy_from_user(buf, buffer, n))
+		return -EFAULT;
+
+	buf[n] = '\0';
+	ns = simple_strtol(buf, &end, 0);
+
+	if ((*end != '\0' && !isspace(*end)) || ns < 0)
+		return -EINVAL;
+
+	nklatency = xnarch_ns_to_tsc(ns);
+
+	return count;
+}
+
+static int version_read_proc(char *page,
+			     char **start,
+			     off_t off, int count, int *eof, void *data)
+{
+	int len;
+
+	len = sprintf(page, "%s\n", XENO_VERSION_STRING);
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+void xnpod_init_proc(void)
+{
+	if (rthal_proc_root == NULL)
+		return;
+
+	xnsched_init_proc();
+	xntbase_init_proc();
+	xntimer_init_proc();
+	xnheap_init_proc();
+	xnintr_init_proc();
+	xnshadow_init_proc();
+
+	rthal_add_proc_leaf("latency",
+			    &latency_read_proc,
+			    &latency_write_proc, NULL, rthal_proc_root);
+
+	rthal_add_proc_leaf("version", &version_read_proc, NULL, NULL,
+			    rthal_proc_root);
+
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+	rthal_add_proc_leaf("lock", &lock_read_proc, NULL, NULL,
+			    rthal_proc_root);
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
+}
+
+void xnpod_cleanup_proc(void)
+{
+#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+	remove_proc_entry("lock", rthal_proc_root);
+#endif /* CONFIG_SMP && XENO_DEBUG(NUCLEUS) */
+	remove_proc_entry("version", rthal_proc_root);
+	remove_proc_entry("latency", rthal_proc_root);
+
+	xnshadow_cleanup_proc();
+	xnintr_cleanup_proc();
+	xnheap_cleanup_proc();
+	xntimer_cleanup_proc();
+	xntbase_cleanup_proc();
+	xnsched_cleanup_proc();
+}
+
+#endif /* CONFIG_PROC_FS */
 
 /*@}*/

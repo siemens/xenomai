@@ -1075,4 +1075,55 @@ xntbops_t nktimer_ops_aperiodic = {
 	.move_timer = &xntimer_move_aperiodic,
 };
 
+#ifdef CONFIG_PROC_FS
+
+#include <linux/proc_fs.h>
+
+static int timer_read_proc(char *page,
+			   char **start,
+			   off_t off, int count, int *eof, void *data)
+{
+	const char *tm_status, *wd_status = "";
+	int len;
+
+	if (xnpod_active_p() && xntbase_enabled_p(&nktbase)) {
+		tm_status = "on";
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+		wd_status = "+watchdog";
+#endif /* CONFIG_XENO_OPT_WATCHDOG */
+	}
+	else
+		tm_status = "off";
+
+	len = sprintf(page,
+		      "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
+		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
+		      xntbase_get_rawclock(&nktbase),
+		      XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
+
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+void xntimer_init_proc(void)
+{
+	rthal_add_proc_leaf("timer", &timer_read_proc, NULL, NULL,
+			    rthal_proc_root);
+}
+
+void xntimer_cleanup_proc(void)
+{
+	remove_proc_entry("timer", rthal_proc_root);
+}
+
+#endif /* CONFIG_PROC_FS */
+
 /*@}*/

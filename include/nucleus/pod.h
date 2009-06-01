@@ -103,6 +103,14 @@ extern xnarch_cpumask_t nkaffinity;
 
 extern xnpod_t nkpod_struct;
 
+#ifdef CONFIG_PROC_FS
+void xnpod_init_proc(void);
+void xnpod_cleanup_proc(void);
+#else /* !CONFIG_PROC_FS */
+static inline void xnpod_init_proc(void) {}
+static inline void xnpod_cleanup_proc(void) {}
+#endif /* !CONFIG_PROC_FS */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

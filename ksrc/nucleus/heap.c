@@ -1274,6 +1274,56 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
+#ifdef CONFIG_PROC_FS
+
+#include <linux/proc_fs.h>
+
+static int heap_read_proc(char *page,
+			  char **start,
+			  off_t off, int count, int *eof, void *data)
+{
+	int len;
+
+	if (!xnpod_active_p())
+		return -ESRCH;
+
+	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu  (main heap)\n",
+		      xnheap_usable_mem(&kheap),
+		      xnheap_used_mem(&kheap),
+		      xnheap_page_size(&kheap));
+
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	len += sprintf(page + len, "size=%lu:used=%lu:pagesz=%lu  (stack pool)\n",
+		       xnheap_usable_mem(&kstacks),
+		       xnheap_used_mem(&kstacks),
+		       xnheap_page_size(&kstacks));
+#endif
+
+	len -= off;
+	if (len <= off + count)
+		*eof = 1;
+	*start = page + off;
+	if (len > count)
+		len = count;
+	if (len < 0)
+		len = 0;
+
+	return len;
+}
+
+void xnheap_init_proc(void)
+{
+	rthal_add_proc_leaf("heap", &heap_read_proc, NULL, NULL,
+			    rthal_proc_root);
+}
+
+void xnheap_cleanup_proc(void)
+{
+	remove_proc_entry("heap", rthal_proc_root);
+}
+
+#endif /* CONFIG_PROC_FS */
+
 EXPORT_SYMBOL_GPL(xnheap_init_mapped);
 EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);
 

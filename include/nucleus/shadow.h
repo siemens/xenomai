@@ -22,9 +22,8 @@
 
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 
 #define XENOMAI_MUX_NR 16
 
@@ -44,7 +43,6 @@ struct timeval;
 struct xntbase;
 
 struct xnskin_props {
-
 	const char *name;
 	unsigned magic;
 	int nrcalls;
@@ -55,7 +53,6 @@ struct xnskin_props {
 };
 
 struct xnskin_slot {
-
 	struct xnskin_props *props;
 	atomic_counter_t refcnt;
 };
@@ -109,5 +106,19 @@ extern struct xnskin_slot muxtable[];
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_PROC_FS)
+void xnshadow_init_proc(void);
+void xnshadow_cleanup_proc(void);
+void xnshadow_declare_proc(struct xnskin_slot *iface);
+void xnshadow_remove_proc(const char *iface);
+#else
+static inline void xnshadow_init_proc(void) { }
+static inline void xnshadow_cleanup_proc(void) { }
+#define xnshadow_declare_proc(iface)	do { (void)iface; } while(0)
+#define xnshadow_remove_proc(iface)	do { (void)name; } while(0)
+#endif /* CONFIG_XENO_OPT_PERVASIVE && CONFIG_PROC_FS */
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

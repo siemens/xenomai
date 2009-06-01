@@ -184,6 +184,10 @@ int xnheap_mount(void);
 
 void xnheap_umount(void);
 
+void xnheap_init_proc(void);
+
+void xnheap_cleanup_proc(void);
+
 int xnheap_init_mapped(xnheap_t *heap,
 		       u_long heapsize,
 		       int memflags);

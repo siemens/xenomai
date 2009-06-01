@@ -720,6 +720,10 @@ static inline xnticks_t xntimer_get_raw_expiry (xntimer_t *timer)
 
 /*@}*/
 
+void xntimer_init_proc(void);
+
+void xntimer_cleanup_proc(void);
+
 unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now);
 
 void xntimer_freeze(void);

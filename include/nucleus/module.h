@@ -40,12 +40,4 @@ extern xnqueue_t xnmod_glink_queue;
 
 extern u_long xnmod_sysheap_size;
 
-#ifdef CONFIG_XENO_OPT_STATS
-void xnpod_declare_tbase_proc(xntbase_t *base);
-void xnpod_discard_tbase_proc(xntbase_t *base);
-#else /* !CONFIG_XENO_OPT_STATS */
-static inline void xnpod_declare_tbase_proc(xntbase_t *base) { }
-static inline void xnpod_discard_tbase_proc(xntbase_t *base) { }
-#endif /* !CONFIG_XENO_OPT_STATS */
-
 #endif /* !_XENO_NUCLEUS_MODULE_H */

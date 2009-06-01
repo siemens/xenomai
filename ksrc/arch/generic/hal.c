@@ -727,43 +727,62 @@ struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
                                            void *data,
                                            struct proc_dir_entry *parent)
 {
-    int mode = wrproc ? 0644 : 0444;
-    struct proc_dir_entry *entry;
+	int mode = wrproc ? 0644 : 0444;
+	struct proc_dir_entry *entry;
 
-    entry = create_proc_entry(name, mode, parent);
+	entry = create_proc_entry(name, mode, parent);
+	if (entry == NULL)
+		return NULL;
 
-    if (entry) {
-        entry->nlink = 1;
-        entry->data = data;
-        entry->read_proc = rdproc;
-        entry->write_proc = wrproc;
-        entry->owner = THIS_MODULE;
-    }
+	entry->nlink = 1;
+	entry->data = data;
+	entry->read_proc = rdproc;
+	entry->write_proc = wrproc;
+	entry->owner = THIS_MODULE;
 
-    return entry;
+	return entry;
 }
+EXPORT_SYMBOL_GPL(rthal_add_proc_leaf);
+
+struct proc_dir_entry *rthal_add_proc_seq(const char *name,
+					  struct file_operations *fops,
+					  size_t size,
+					  struct proc_dir_entry *parent)
+{
+	struct proc_dir_entry *entry;
+
+	entry = create_proc_entry(name, 0, parent);
+	if (entry == NULL)
+		return NULL;
+
+	entry->proc_fops = fops;
+	entry->owner = THIS_MODULE;
+
+	if (size)
+		entry->size = size;
+
+	return entry;
+}
+EXPORT_SYMBOL_GPL(rthal_add_proc_seq);
 
 static int rthal_proc_register(void)
 {
-    rthal_proc_root = create_proc_entry("xenomai", S_IFDIR, 0);
+	rthal_proc_root = create_proc_entry("xenomai", S_IFDIR, 0);
+	if (rthal_proc_root == NULL) {
+		printk(KERN_ERR "Xenomai: Unable to initialize /proc/xenomai.\n");
+		return -1;
+	}
 
-    if (!rthal_proc_root) {
-        printk(KERN_ERR "Xenomai: Unable to initialize /proc/xenomai.\n");
-        return -1;
-    }
+	rthal_proc_root->owner = THIS_MODULE;
 
-    rthal_proc_root->owner = THIS_MODULE;
+	rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("faults",
+			    &faults_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
 
-    rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
+	rthal_nmi_proc_register();
 
-    rthal_add_proc_leaf("faults",
-                        &faults_read_proc, NULL, NULL, rthal_proc_root);
-
-    rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
-
-    rthal_nmi_proc_register();
-
-    return 0;
+	return 0;
 }
 
 static void rthal_proc_unregister(void)
@@ -1083,7 +1102,6 @@ EXPORT_SYMBOL(rthal_timer_calibrate);
 EXPORT_SYMBOL(rthal_apc_alloc);
 EXPORT_SYMBOL(rthal_apc_free);
 EXPORT_SYMBOL(rthal_apc_schedule);
-EXPORT_SYMBOL(rthal_add_proc_leaf);
 
 EXPORT_SYMBOL(rthal_critical_enter);
 EXPORT_SYMBOL(rthal_critical_exit);

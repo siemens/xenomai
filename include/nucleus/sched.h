@@ -227,6 +227,10 @@ static inline void xnsched_reset_watchdog(struct xnsched *sched)
 #include <nucleus/sched-idle.h>
 #include <nucleus/sched-rt.h>
 
+void xnsched_init_proc(void);
+
+void xnsched_cleanup_proc(void);
+
 int xnsched_register_class(struct xnsched_class *sched_class);
 
 void xnsched_init(struct xnsched *sched, int cpu);

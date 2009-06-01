@@ -125,7 +125,7 @@ typedef struct xnstat_counter {
 #endif /* __XENO_SIM__ */
 } xnstat_counter_t;
 
-#define xnstat_counter_inc(c) ({ 0; })
+#define xnstat_counter_inc(c) ({ do { } while(0); 0; })
 #define xnstat_counter_get(c) ({ 0; })
 #define xnstat_counter_set(c, value) do { } while (0)
 #endif /* CONFIG_XENO_OPT_STATS */
