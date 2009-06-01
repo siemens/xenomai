@@ -37,6 +37,7 @@
 #include <posix/thread.h>	/* errno. */
 #include <posix/sig.h>		/* pse51_siginfo_t. */
 #ifdef __KERNEL__
+#include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 #include <posix/apc.h>
 #endif /* __KERNEL__ */
 

@@ -38,6 +38,7 @@
 #include <posix/internal.h>
 #include <posix/thread.h>
 #include <posix/shm.h>
+#include <linux/fs.h>		/* Make sure ERR_PTR is defined for all kernel versions */
 
 typedef struct pse51_shm {
 	pse51_node_t nodebase;
