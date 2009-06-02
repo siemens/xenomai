@@ -148,8 +148,6 @@ static struct pci_device_id ni_pci_table[] __devinitdata = {
 };
 MODULE_DEVICE_TABLE(pci, ni_pci_table);
 
-static comedi_drv_t pcimio_drv;
-
 /* These are not all the possible ao ranges for 628x boards.
  They can do OFFSET +- REFERENCE where OFFSET can be
  0V, 5V, APFI<0,1>, or AO<0...3> and RANGE can
@@ -1464,12 +1462,11 @@ static void init_6143(comedi_dev_t *dev)
 	ni_writew(devpriv->ai_calib_source, Calibration_Channel_6143);
 }
 
-static int pcimio_attach(comedi_cxt_t *cxt, comedi_lnkdesc_t *arg)
+static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 {
 	int ret, bus, slot, i, irq;
 	struct mite_struct *mite = NULL;
 	struct ni_board_struct * board = NULL;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	if(arg->opts == NULL || arg->opts_size == 0)
 		bus = slot = 0;
@@ -1488,10 +1485,6 @@ static int pcimio_attach(comedi_cxt_t *cxt, comedi_lnkdesc_t *arg)
 	if(mite == 0)
 		return -ENOENT;
 
-	ret = comedi_init_drv(&pcimio_drv);
-	if(ret!=0)
-		return ret;
-
 	devpriv->irq_polarity = PCIMIO_IRQ_POLARITY;
 	devpriv->irq_pin = 0;
 
@@ -1509,7 +1502,7 @@ static int pcimio_attach(comedi_cxt_t *cxt, comedi_lnkdesc_t *arg)
 	   devpriv->gpct_mite_ring[1] == NULL)
 		return -ENOMEM;
 
-	rtdm_printk("pcimio_attach: found %s board\n",boardtype.name);
+	comedi_info(dev, "pcimio_attach: found %s board\n", boardtype.name);
 
 	if(boardtype.reg_type & ni_reg_m_series_mask)
 	{
@@ -1528,7 +1521,7 @@ static int pcimio_attach(comedi_cxt_t *cxt, comedi_lnkdesc_t *arg)
 	ret = mite_setup(devpriv->mite, 0);
 	if(ret < 0)
 	{
-		printk(" error setting up mite\n");
+		comedi_err(dev, "pcmio_attach: error setting up mite\n");
 		return ret;
 	}
 
@@ -1540,27 +1533,25 @@ static int pcimio_attach(comedi_cxt_t *cxt, comedi_lnkdesc_t *arg)
 	irq = mite_irq(devpriv->mite);
 
 	if(irq == 0){
-		rtdm_printk("pcimio_attach: unknown irq (bad)\n\n");
+		comedi_warn(dev, "pcimio_attach: unknown irq (bad)\n\n");
 	}else{
-		rtdm_printk("pcimio_attach: found irq %u\n", irq);
+		comedi_info(dev, "pcimio_attach: found irq %u\n", irq);
 		ret = comedi_request_irq(dev,
 					 irq,
 					 ni_E_interrupt, COMEDI_IRQ_SHARED, dev);
 		if(ret < 0)
-			rtdm_printk("pcimio_attach: irq not available\n");
+			comedi_err(dev, "pcimio_attach: irq not available\n");
 	}
 
-	ret = ni_E_init(cxt, &pcimio_drv);
+	ret = ni_E_init(dev);
 	if(ret < 0)
 		return ret;
 
 	return ret;
 }
 
-static int pcimio_detach(comedi_cxt_t *cxt)
+static int pcimio_detach(comedi_dev_t *dev)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-
 	if(comedi_get_irq(dev)!=COMEDI_IRQ_UNUSED){
 		comedi_free_irq(dev,comedi_get_irq(dev));
 	}
@@ -1577,30 +1568,22 @@ static int pcimio_detach(comedi_cxt_t *cxt)
 	return 0;
 }
 
+static comedi_drv_t pcimio_drv = {
+	.owner = THIS_MODULE,
+	.board_name = "comedi_pcimio",
+	.attach = pcimio_attach,
+	.detach = pcimio_detach,
+	.privdata_size = sizeof(ni_private),
+};
+
 static int __init pcimio_init(void)
 {
-	int err;
-
-	/* Initializes the driver structure */
-	err = comedi_init_drv(&pcimio_drv);
-	if (err != 0)
-		return err;
-
-	/* Fills the driver structure main fields */
-	pcimio_drv.owner = THIS_MODULE;
-	pcimio_drv.board_name = "pcimio";
-	pcimio_drv.flags = COMEDI_DYNAMIC_DRV;
-	pcimio_drv.attach = pcimio_attach;
-	pcimio_drv.detach = pcimio_detach;
-	pcimio_drv.privdata_size = sizeof(ni_private);
-
-	return comedi_add_drv(&pcimio_drv);
+	return comedi_register_drv(&pcimio_drv);
 }
 
 static void __exit pcimio_cleanup(void)
 {
-	comedi_rm_drv(&pcimio_drv);
-	comedi_cleanup_drv(&pcimio_drv);
+	comedi_unregister_drv(&pcimio_drv);
 }
 
 MODULE_LICENSE("GPL");
