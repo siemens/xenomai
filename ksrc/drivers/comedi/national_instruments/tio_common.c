@@ -65,8 +65,6 @@ struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
 		enum ni_gpct_register reg), enum ni_gpct_variant variant,
 	unsigned int num_counters)
 {
-	unsigned int i;
-
 	struct ni_gpct_device *counter_dev =
 		comedi_kmalloc(sizeof(struct ni_gpct_device));
 	if (counter_dev == NULL)
@@ -82,19 +80,15 @@ struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
 	BUG_ON(num_counters == 0);
 
 	counter_dev->counters = 
-		comedi_kmalloc(sizeof(struct ni_gpct) * num_counters);
+		comedi_kmalloc(sizeof(struct ni_gpct *) * num_counters);
 
 	if (counter_dev->counters == NULL) {
 		 comedi_kfree(counter_dev);
 		return NULL;
 	}
 
-	memset(counter_dev->counters, 0, sizeof(struct ni_gpct) * num_counters);
+	memset(counter_dev->counters, 0, sizeof(struct ni_gpct *) * num_counters);
 
-	for (i = 0; i < num_counters; ++i) {
-		counter_dev->counters[i].counter_dev = counter_dev;
-		comedi_lock_init(&counter_dev->counters[i].lock);
-	}
 	counter_dev->num_counters = num_counters;
 	return counter_dev;
 }

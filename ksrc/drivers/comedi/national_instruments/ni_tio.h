@@ -525,7 +525,7 @@ struct ni_gpct_device {
 	unsigned (*read_register)(struct ni_gpct * counter,
 				   enum ni_gpct_register reg);
 	enum ni_gpct_variant variant;
-	struct ni_gpct *counters;
+	struct ni_gpct **counters;
 	unsigned num_counters;
 	unsigned regs[NITIO_Num_Registers];
 	comedi_lock_t regs_lock;

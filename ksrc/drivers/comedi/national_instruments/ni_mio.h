@@ -118,7 +118,7 @@ extern comedi_rngdesc_t range_ni_E_ao_ext;
 /* Misc functions declarations */
 
 int ni_E_interrupt(unsigned int irq, void *d);
-int ni_E_init(comedi_cxt_t *cxt, comedi_drv_t *drv);
+int ni_E_init(comedi_dev_t *dev);
 
 
 #endif /* !__COMEDI_NI_MIO_H__ */

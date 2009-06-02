@@ -249,9 +249,10 @@ static inline void ni_set_bitfield(comedi_dev_t *dev,
 		ni_writeb(devpriv->g0_g1_select_reg, G0_G1_Select);
 		break;
 	default:
-		rtdm_printk("Warning %s() called with invalid register\n",
-			__FUNCTION__);
-		rtdm_printk("reg is %d\n", reg);
+		comedi_err(dev, 
+			   "Warning %s() called with invalid register\n",
+			   __FUNCTION__);
+		comedi_err(dev,"reg is %d\n", reg);
 		break;
 	}
 
@@ -333,7 +334,8 @@ static int ni_request_ai_mite_channel(comedi_dev_t * dev)
 	if (devpriv->ai_mite_chan == NULL) {
 		comedi_unlock_irqrestore(&devpriv->mite_channel_lock,
 			flags);
-		rtdm_printk("ni_request_ai_mite_channel: "
+		comedi_err(dev, 
+			   "ni_request_ai_mite_channel: "
 			    "failed to reserve mite dma channel for analog input.");
 		return -EBUSY;
 	}
@@ -354,8 +356,9 @@ static int ni_request_ao_mite_channel(comedi_dev_t * dev)
 	if (devpriv->ao_mite_chan == NULL) {
 		comedi_unlock_irqrestore(&devpriv->mite_channel_lock,
 			flags);
-		rtdm_printk("ni_request_ao_mite_channel: "
-			    "failed to reserve mite dma channel for analog outut.");
+		comedi_err(dev,
+			   "ni_request_ao_mite_channel: "
+			   "failed to reserve mite dma channel for analog outut.");
 		return -EBUSY;
 	}
 	devpriv->ao_mite_chan->dir = COMEDI_OUTPUT;
@@ -372,18 +375,19 @@ static int ni_request_gpct_mite_channel(comedi_dev_t * dev,
 
 	BUG_ON(gpct_index >= NUM_GPCT);
 	comedi_lock_irqsave(&devpriv->mite_channel_lock, flags);
-	BUG_ON(devpriv->counter_dev->counters[gpct_index].mite_chan);
+	BUG_ON(devpriv->counter_dev->counters[gpct_index]->mite_chan);
 	mite_chan = mite_request_channel(devpriv->mite,
 					 devpriv->gpct_mite_ring[gpct_index]);
 	if (mite_chan == NULL) {
 		comedi_unlock_irqrestore(&devpriv->mite_channel_lock,
 			flags);
-		rtdm_printk("ni_request_gpct_mite_channel: "
-			    "failed to reserve mite dma channel for counter.");
+		comedi_err(dev, 
+			   "ni_request_gpct_mite_channel: "
+			   "failed to reserve mite dma channel for counter.");
 		return -EBUSY;
 	}
 	mite_chan->dir = direction;
-	ni_tio_set_mite_channel(&devpriv->counter_dev->counters[gpct_index],
+	ni_tio_set_mite_channel(devpriv->counter_dev->counters[gpct_index],
 				mite_chan);
 	ni_set_gpct_dma_channel(dev, gpct_index, mite_chan->channel);
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -402,9 +406,10 @@ int ni_request_cdo_mite_channel(comedi_dev_t *dev)
 	if (devpriv->cdo_mite_chan == NULL) {
 		comedi_unlock_irqrestore(&devpriv->mite_channel_lock,
 					 flags);
-		rtdm_printk("ni_request_cdo_mite_channel: "
-			    "failed to reserve mite dma channel "
-			    "for correlated digital outut.");
+		comedi_err(dev,
+			   "ni_request_cdo_mite_channel: "
+			   "failed to reserve mite dma channel "
+			   "for correlated digital outut.");
 		return -EBUSY;
 	}
 	devpriv->cdo_mite_chan->dir = COMEDI_OUTPUT;
@@ -451,12 +456,12 @@ void ni_release_gpct_mite_channel(comedi_dev_t *dev, unsigned gpct_index)
 
 	BUG_ON(gpct_index >= NUM_GPCT);
 	comedi_lock_irqsave(&devpriv->mite_channel_lock, flags);
-	if (devpriv->counter_dev->counters[gpct_index].mite_chan) {
+	if (devpriv->counter_dev->counters[gpct_index]->mite_chan) {
 		struct mite_channel *mite_chan =
-			devpriv->counter_dev->counters[gpct_index].mite_chan;
+			devpriv->counter_dev->counters[gpct_index]->mite_chan;
 
 		ni_set_gpct_dma_channel(dev, gpct_index, -1);
-		ni_tio_set_mite_channel(&devpriv->counter_dev->
+		ni_tio_set_mite_channel(devpriv->counter_dev->
 			counters[gpct_index], NULL);
 		mite_release_channel(mite_chan);
 	}
@@ -622,8 +627,9 @@ static int ni_ao_wait_for_dma_load(comedi_dev_t *dev)
 	}
 
 	if (i == timeout) {
-		rtdm_printk("ni_ao_wait_for_dma_load: "
-			    "timed out waiting for dma load");
+		comedi_err(dev, 
+			   "ni_ao_wait_for_dma_load: "
+			   "timed out waiting for dma load");
 		return -EPIPE;
 	}
 
@@ -666,7 +672,7 @@ static void ni_event(comedi_dev_t * dev)
 
 static void handle_gpct_interrupt(comedi_dev_t *dev, unsigned short counter_index)
 {
-	ni_tio_handle_interrupt(&devpriv->counter_dev->counters[counter_index],
+	ni_tio_handle_interrupt(devpriv->counter_dev->counters[counter_index],
 				dev);
 }
 
@@ -682,13 +688,13 @@ static void ni_mio_print_status_a(int status)
 {
 	int i;
 
-	rtdm_printk("A status:");
+	__comedi_info("A status:");
 	for (i = 15; i >= 0; i--) {
 		if (status & (1 << i)) {
-			rtdm_printk(" %s", status_a_strings[i]);
+			__comedi_info(" %s", status_a_strings[i]);
 		}
 	}
-	rtdm_printk("\n");
+	__comedi_info("\n");
 }
 
 static const char *const status_b_strings[] = {
@@ -702,13 +708,13 @@ static void ni_mio_print_status_b(int status)
 {
 	int i;
 
-	rtdm_printk("B status:");
+	__comedi_info("B status:");
 	for (i = 15; i >= 0; i--) {
 		if (status & (1 << i)) {
-			rtdm_printk(" %s", status_b_strings[i]);
+			__comedi_info(" %s", status_b_strings[i]);
 		}
 	}
-	rtdm_printk("\n");
+	__comedi_info("\n");
 }
 
 #else /* !CONFIG_DEBUG_MIO_COMMON */
@@ -747,8 +753,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 	   might generate an a interrupt. We should check that the
 	   subdevice type */
 
-	MDPRINTK("ni_mio_common: interrupt: "
-		 "a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
+	comedi_info(dev, "ni_mio_common: interrupt: "
+		    "a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
 	ni_mio_print_status_a(status);
 
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
@@ -758,7 +764,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 	if (ai_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
 			CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
 			CHSR_SABORT | CHSR_XFERR | CHSR_LxERR_mask)) {
-		rtdm_printk("ni_mio_common: interrupt: "
+		comedi_info(dev, "ni_mio_common: interrupt: "
 			    "unknown mite interrupt, ack! (ai_mite_status=%08x)\n",
 			    ai_mite_status);
 		comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
@@ -769,7 +775,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 	if (status & (AI_Overrun_St | AI_Overflow_St | AI_SC_TC_Error_St |
 			AI_SC_TC_St | AI_START1_St)) {
 		if (status == 0xffff) {
-			rtdm_printk("ni_mio_common: interrupt: "
+			comedi_info(dev, "ni_mio_common: interrupt: "
 				    "a_status=0xffff.  Card removed?\n");
 			/* TODO: we probably aren't even running a command now,
 			   so it's a good idea to be careful. 
@@ -780,7 +786,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		}
 		if (status & (AI_Overrun_St | AI_Overflow_St |
 				AI_SC_TC_Error_St)) {
-			rtdm_printk("ni_mio_common: interrupt: "
+			comedi_info(dev, "ni_mio_common: interrupt: "
 				    "ai error a_status=%04x\n", status);
 			ni_mio_print_status_a(status);
 
@@ -792,7 +798,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 			return;
 		}
 		if (status & AI_SC_TC_St) {
-			MDPRINTK("ni_mio_common: SC_TC interrupt\n");
+			comedi_info(dev, "ni_mio_common: SC_TC interrupt\n");
 			if (!devpriv->ai_continuous) {
 				shutdown_ai_command(dev);
 			}
@@ -824,8 +830,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 
 	status = devpriv->stc_readw(dev, AI_Status_1_Register);
 	if (status & Interrupt_A_St)
-		MDPRINTK("ni_mio_common: interrupt: "
-			 " didn't clear interrupt? status=0x%x\n", status);
+		comedi_info(dev, "ni_mio_common: interrupt: "
+			    " didn't clear interrupt? status=0x%x\n", status);
 }
 
 static void ack_b_interrupt(comedi_dev_t *dev, unsigned short b_status)
@@ -860,8 +866,8 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			       unsigned short b_status, unsigned int ao_mite_status)
 {
 
-	MDPRINTK("ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
-		b_status, ao_mite_status);
+	comedi_info(dev, "ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
+		    b_status, ao_mite_status);
 	ni_mio_print_status_b(b_status);
 
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
@@ -873,8 +879,7 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 	if (ao_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
 			CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
 			CHSR_SABORT | CHSR_XFERR | CHSR_LxERR_mask)) {
-		rtdm_printk
-			("unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
+		comedi_info(dev, "unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
 			ao_mite_status);
 		//mite_print_chsr(ao_mite_status);
 		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
@@ -884,17 +889,19 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 	if (b_status == 0xffff)
 		return;
 	if (b_status & AO_Overrun_St) {
-		rtdm_printk("ni_mio_common: interrupt: "
-			    "AO FIFO underrun status=0x%04x status2=0x%04x\n",
-			    b_status, 
-			    devpriv->stc_readw(dev, AO_Status_2_Register));
+		comedi_err(dev,
+			   "ni_mio_common: interrupt: "
+			   "AO FIFO underrun status=0x%04x status2=0x%04x\n",
+			   b_status, 
+			   devpriv->stc_readw(dev, AO_Status_2_Register));
 		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
 	}
 
 	if (b_status & AO_BC_TC_St) {
-		MDPRINTK("ni_mio_common: interrupt: "
-			 "AO BC_TC status=0x%04x status2=0x%04x\n", 
-			 b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
+		comedi_info(dev,
+			    "ni_mio_common: interrupt: "
+			    "AO BC_TC status=0x%04x status2=0x%04x\n", 
+			    b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
 		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_EOA);
 	}
 
@@ -904,7 +911,9 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 
 		ret = ni_ao_fifo_half_empty(dev);
 		if (!ret) {
-			rtdm_printk("ni_mio_common: interrupt: AO buffer underrun\n");
+			comedi_err(dev,
+				   "ni_mio_common: "
+				   "interrupt: AO buffer underrun\n");
 			ni_set_bits(dev, Interrupt_B_Enable_Register,
 				    AO_FIFO_Interrupt_Enable |
 				    AO_Error_Interrupt_Enable, 0);
@@ -1107,8 +1116,9 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 	} else {
 		if (n > sizeof(devpriv->ai_fifo_buffer) /
 			sizeof(devpriv->ai_fifo_buffer[0])) {
-			rtdm_printk("ni_ai_fifo_read: "
-				    "bug! ai_fifo_buffer too small");
+			comedi_err(dev,
+				   "ni_ai_fifo_read: "
+				   "bug! ai_fifo_buffer too small");
 			comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
 			return;
 		}
@@ -1150,8 +1160,11 @@ static int ni_ai_drain_dma(comedi_dev_t *dev)
 			comedi_udelay(5);
 		}
 		if (i == timeout) {
-			rtdm_printk("ni_mio_common: wait for dma drain timed out\n");
-			rtdm_printk("mite_bytes_in_transit=%i, "
+			comedi_info(dev, 
+				    "ni_mio_common: "
+				    "wait for dma drain timed out\n");
+			comedi_info(dev, 
+				    "mite_bytes_in_transit=%i, "
 				    "AI_Status1_Register=0x%x\n",
 				    mite_bytes_in_transit(devpriv->ai_mite_chan),
 				    devpriv->stc_readw(dev, AI_Status_1_Register));
@@ -1266,12 +1279,11 @@ static void get_last_sample_6143(comedi_dev_t *dev)
 	}
 }
 
-static void ni_ai_munge16(comedi_cxt_t *cxt, 
-			  int idx_subd, void *buf, unsigned long size)
+static void ni_ai_munge16(comedi_subd_t *subd, void *buf, unsigned long size)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
-	int chan_idx = comedi_get_chan(dev, 0, idx_subd);
+	comedi_dev_t *dev = subd->dev;
+	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	int chan_idx = comedi_get_chan(subd);
 	unsigned int i;
 	sampl_t *array = buf;
 
@@ -1285,12 +1297,11 @@ static void ni_ai_munge16(comedi_cxt_t *cxt,
 	}
 }
 
-static void ni_ai_munge32(comedi_cxt_t *cxt, 
-			  int idx_subd, void *buf, unsigned long size)
+static void ni_ai_munge32(comedi_subd_t *subd, void *buf, unsigned long size)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
-	int chan_idx = comedi_get_chan(dev, 0, idx_subd);
+	comedi_dev_t *dev = subd->dev;
+	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	int chan_idx = comedi_get_chan(subd);
 	unsigned int i;
 	lsampl_t *larray = buf;
 
@@ -1448,15 +1459,15 @@ static int ni_ai_reset(comedi_dev_t *dev)
 	return 0;
 }
 
-static int ni_ai_cancel(comedi_cxt_t *cxt, int idx_subd)
+static int ni_ai_cancel(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	return ni_ai_reset(dev);
 }
 
-static int ni_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	const unsigned int mask = (1 << boardtype.adbits) - 1;
 	int i, n;	
 	unsigned int signbits;
@@ -1494,7 +1505,8 @@ static int ni_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 				}
 			}
 			if (i == NI_TIMEOUT) {
-				rtdm_printk("ni_mio_common: "
+				comedi_warn(dev, 
+					    "ni_mio_common: "
 					    "timeout in 611x ni_ai_insn_read\n");
 				return -ETIME;
 			}
@@ -1518,7 +1530,8 @@ static int ni_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 				}
 			}
 			if (i == NI_TIMEOUT) {
-				rtdm_printk("ni_mio_common: "
+				comedi_warn(dev,
+					    "ni_mio_common: "
 					    "timeout in 6143 ni_ai_insn_read\n");
 				return -ETIME;
 			}
@@ -1535,7 +1548,8 @@ static int ni_ai_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 					break;
 			}
 			if (i == NI_TIMEOUT) {
-				rtdm_printk("ni_mio_common: "
+				comedi_warn(dev, 
+					    "ni_mio_common: "
 					    "timeout in ni_ai_insn_read\n");
 				return -ETIME;
 			}
@@ -1566,7 +1580,7 @@ void ni_prime_channelgain_list(comedi_dev_t *dev)
 		}
 		comedi_udelay(1);
 	}
-	rtdm_printk("ni_mio_common: timeout loading channel/gain list\n");
+	comedi_warn(dev, "ni_mio_common: timeout loading channel/gain list\n");
 }
 
 static void ni_m_series_load_channelgain_list(comedi_dev_t *dev,
@@ -1851,9 +1865,9 @@ static comedi_cmd_t mio_ai_cmd_mask = {
 	.stop_src = TRIG_COUNT | TRIG_NONE,
 };
 
-int ni_ai_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
+int ni_ai_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	if (trignum != 0)
 		return -EINVAL;
@@ -1864,9 +1878,9 @@ int ni_ai_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
 	return 1;
 }
 
-static int ni_ai_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t * cmd)
+static int ni_ai_cmdtest(comedi_subd_t *subd, comedi_cmd_t * cmd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);	
+	comedi_dev_t *dev = subd->dev;	
 	int tmp;
 
 	/* Make sure trigger sources are trivially valid */
@@ -2018,10 +2032,9 @@ static int ni_ai_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t * cmd)
 	return 0;
 }
 
-static int ni_ai_cmd(comedi_cxt_t *cxt, int idx_subd)
+static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
+	comedi_dev_t *dev = subd->dev;
 	int timer;
 	int mode1 = 0;		/* mode1 is needed for both stop and convert */
 	int mode2 = 0;
@@ -2029,9 +2042,10 @@ static int ni_ai_cmd(comedi_cxt_t *cxt, int idx_subd)
 	unsigned int stop_count;
 	int interrupt_a_enable = 0;
 
-	MDPRINTK("ni_ai_cmd\n");
+	comedi_info(dev, "ni_ai_cmd: start\n");
+
 	if (comedi_get_irq(dev) == COMEDI_IRQ_UNUSED) {
-		rtdm_printk("ni_ai_cmd: cannot run command without an irq");
+		comedi_err(dev, "ni_ai_cmd: cannot run command without an irq");
 		return -EIO;
 	}
 	ni_clear_ai_fifo(dev);
@@ -2268,14 +2282,15 @@ static int ni_ai_cmd(comedi_cxt_t *cxt, int idx_subd)
 		ni_set_bits(dev, Interrupt_A_Enable_Register,
 			interrupt_a_enable, 1);
 
-		MDPRINTK("Interrupt_A_Enable_Register = 0x%04x\n",
-			devpriv->int_a_enable_reg);
+		comedi_info(dev,
+			    "ni_ai_cmd: Interrupt_A_Enable_Register = 0x%04x\n",
+			    devpriv->int_a_enable_reg);
 	} else {
 		/* interrupt on nothing */
 		ni_set_bits(dev, Interrupt_A_Enable_Register, ~0, 0);
 
 		/* XXX start polling if necessary */
-		MDPRINTK("interrupting on nothing\n");
+		comedi_warn(dev, "ni_ai_cmd: interrupting on nothing\n");
 	}
 
 	/* end configuration */
@@ -2322,15 +2337,14 @@ static int ni_ai_cmd(comedi_cxt_t *cxt, int idx_subd)
 		break;
 	}
 
-	MDPRINTK("exit ni_ai_cmd\n");
+	comedi_info(dev, "ni_ai_cmd: exit\n");
 
 	return 0;
 }
 
-int ni_ai_config_analog_trig(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_ai_config_analog_trig(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-
+	comedi_dev_t *dev = subd->dev;
 	unsigned int a, b, modebits;
 	int err = 0;
 
@@ -2427,16 +2441,16 @@ int ni_ai_config_analog_trig(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_ai_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_ai_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	if (insn->data_size < 1)
 		return -EINVAL;
 
 	switch (insn->data[0]) {
 	case INSN_CONFIG_ANALOG_TRIG:
-		return ni_ai_config_analog_trig(cxt, insn);
+		return ni_ai_config_analog_trig(subd, insn);
 	case INSN_CONFIG_ALT_SOURCE:
 		if (boardtype.reg_type & ni_reg_m_series_mask) {
 			if (insn->data[1] & ~(MSeries_AI_Bypass_Cal_Sel_Pos_Mask |
@@ -2480,12 +2494,11 @@ int ni_ai_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 }
 
 /* munge data from unsigned to 2's complement for analog output bipolar modes */
-static void ni_ao_munge(comedi_cxt_t *cxt, 
-			int idx_subd, void *buf, unsigned long size)
+static void ni_ao_munge(comedi_subd_t *subd, void *buf, unsigned long size)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
-	int chan_idx = comedi_get_chan(dev, 0, idx_subd);
+	comedi_dev_t *dev = subd->dev;
+	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	int chan_idx = comedi_get_chan(subd);
 	sampl_t *array = buf;
 	unsigned int i, range, offset;
 
@@ -2505,19 +2518,15 @@ static void ni_ao_munge(comedi_cxt_t *cxt,
 	}
 }
 
-static int ni_m_series_ao_config_chan_descs(comedi_dev_t * dev,
-					  unsigned int idx_subd,
-					  unsigned int chanspec[], 
-					  unsigned int n_chans, int timed)
+static int ni_m_series_ao_config_chan_descs(comedi_subd_t *subd,
+					    unsigned int chanspec[], 
+					    unsigned int n_chans, int timed)
 {
-	/* TODO: this a huge hack!
-	   Something is missing in the kernel API. We must allow
-	   access on the proper subdevice descriptor */
-	comedi_subd_t *subd = dev->transfer->subds[idx_subd];
 	unsigned int range;
 	unsigned int chan;
 	unsigned int conf;
 	int i, invert = 0;
+	comedi_dev_t *dev = subd->dev;
 
 	for (i = 0; i < boardtype.n_aochan; ++i) {
 		ni_writeb(0xf, M_Offset_AO_Waveform_Order(i));
@@ -2557,8 +2566,9 @@ static int ni_m_series_ao_config_chan_descs(comedi_dev_t * dev,
 				M_Offset_AO_Reference_Attenuation(chan));
 			break;
 		default:
-			rtdm_printk("%s: bug! unhandled ao reference voltage\n",
-				__FUNCTION__);
+			comedi_err(subd->dev,
+				   "%s: bug! unhandled ao reference voltage\n",
+				   __FUNCTION__);
 			break;
 		}
 		switch (rng->max + rng->min) {
@@ -2569,8 +2579,9 @@ static int ni_m_series_ao_config_chan_descs(comedi_dev_t * dev,
 			conf |= MSeries_AO_DAC_Offset_5V_Bits;
 			break;
 		default:
-			rtdm_printk("%s: bug! unhandled ao offset voltage\n",
-				__FUNCTION__);
+			comedi_err(subd->dev,
+				   "%s: bug! unhandled ao offset voltage\n",
+				   __FUNCTION__);
 			break;
 		}
 		if (timed)
@@ -2582,14 +2593,15 @@ static int ni_m_series_ao_config_chan_descs(comedi_dev_t * dev,
 	return invert;
 }
 
-static int ni_old_ao_config_chan_descs(comedi_dev_t *dev, 
-				     unsigned int chanspec[], unsigned int n_chans)
+static int ni_old_ao_config_chan_descs(comedi_subd_t *subd, 
+				       unsigned int chanspec[], 
+				       unsigned int n_chans)
 {
+	comedi_dev_t *dev = subd->dev;
 	unsigned int range;
 	unsigned int chan;
 	unsigned int conf;
-	int i;
-	int invert = 0;
+	int i, invert = 0;
 
 	for (i = 0; i < n_chans; i++) {
 		chan = CR_CHAN(chanspec[i]);
@@ -2625,35 +2637,37 @@ static int ni_old_ao_config_chan_descs(comedi_dev_t *dev,
 	return invert;
 }
 
-static int ni_ao_config_chan_descs(comedi_dev_t *dev, 
-			  unsigned int idx_subd,
-			  unsigned int chanspec[], unsigned int n_chans, int timed)
+static int ni_ao_config_chan_descs(comedi_subd_t *subd,
+				   unsigned int chanspec[], 
+				   unsigned int n_chans, int timed)
 {
+	comedi_dev_t *dev = subd->dev;
+
 	if (boardtype.reg_type & ni_reg_m_series_mask)
-		return ni_m_series_ao_config_chan_descs(dev, 
-						      idx_subd, 
-						      chanspec, n_chans, timed);
+		return ni_m_series_ao_config_chan_descs(subd, 
+							chanspec, 
+							n_chans, timed);
 	else
-		return ni_old_ao_config_chan_descs(dev, chanspec, n_chans);
+		return ni_old_ao_config_chan_descs(subd, chanspec, n_chans);
 }
 
-int ni_ao_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_ao_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	insn->data[0] = devpriv->ao[CR_CHAN(insn->chan_desc)];
 
 	return 0;
 }
 
-int ni_ao_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_ao_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	unsigned int chan = CR_CHAN(insn->chan_desc);
 	unsigned int invert;
 
-	invert = ni_ao_config_chan_descs(dev, 
-					 insn->idx_subd, &insn->chan_desc, 1, 0);
+	invert = ni_ao_config_chan_descs(subd, 
+					 &insn->chan_desc, 1, 0);
 
 	devpriv->ao[chan] = insn->data[0];
 
@@ -2666,16 +2680,16 @@ int ni_ao_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_ao_insn_write_671x(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_ao_insn_write_671x(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	unsigned int chan = CR_CHAN(insn->chan_desc);
 	unsigned int invert;
 
 	ao_win_out(1 << chan, AO_Immediate_671x);
 	invert = 1 << (boardtype.aobits - 1);
 
-	ni_ao_config_chan_descs(dev, insn->idx_subd, &insn->chan_desc, 1, 0);
+	ni_ao_config_chan_descs(subd, &insn->chan_desc, 1, 0);
 
 	devpriv->ao[chan] = insn->data[0];
 	ao_win_out(insn->data[0] ^ invert, DACx_Direct_Data_671x(chan));
@@ -2683,9 +2697,9 @@ int ni_ao_insn_write_671x(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_ao_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
+int ni_ao_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	int ret, interrupt_b_bits, i;
 	static const int timeout = 1000;
 
@@ -2733,8 +2747,9 @@ int ni_ao_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
 			break;
 	}
 	if (i == timeout) {
-		rtdm_printk("ni_ao_inttrig: timed out "
-			    "waiting for AO_TMRDACWRs_In_Progress_St to clear");
+		comedi_err(dev, 
+			   "ni_ao_inttrig: timed out "
+			   "waiting for AO_TMRDACWRs_In_Progress_St to clear");
 		return -EIO;
 	}
 	/* stc manual says we are need to clear error interrupt after
@@ -2756,17 +2771,16 @@ int ni_ao_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
 	return 0;
 }
 
-int ni_ao_cmd(comedi_cxt_t *cxt, int idx_subd)
+int ni_ao_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	comedi_dev_t *dev=comedi_get_dev(cxt);
-	comedi_cmd_t *cmd=comedi_get_cmd(dev, 0, idx_subd);
+	comedi_dev_t *dev = subd->dev;
 
 	int bits;
 	int i;
 	unsigned trigvar;
 
 	if (comedi_get_irq(dev) == COMEDI_IRQ_UNUSED) {
-		rtdm_printk("ni_ao_cmd: cannot run command without an irq");
+		comedi_err(dev, "ni_ao_cmd: cannot run command without an irq");
 		return -EIO;
 	}
 
@@ -2788,7 +2802,7 @@ int ni_ao_cmd(comedi_cxt_t *cxt, int idx_subd)
 		ao_win_out(bits, AO_Timed_611x);
 	}
 
-	ni_ao_config_chan_descs(dev, idx_subd, cmd->chan_descs, cmd->nb_chan, 1);
+	ni_ao_config_chan_descs(subd, cmd->chan_descs, cmd->nb_chan, 1);
 
 	if (cmd->stop_src == TRIG_NONE) {
 		devpriv->ao_mode1 |= AO_Continuous;
@@ -2942,9 +2956,9 @@ comedi_cmd_t mio_ao_cmd_mask = {
 	.stop_src = TRIG_COUNT | TRIG_NONE,
 };
 
-int ni_ao_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
+int ni_ao_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	int err = 0;
 
@@ -3006,9 +3020,9 @@ int ni_ao_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
 	return 0;
 }
 
-int ni_ao_reset(comedi_cxt_t *cxt, int idx_subd)
+int ni_ao_reset(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	
 	ni_release_ao_mite_channel(dev);
 
@@ -3048,12 +3062,13 @@ int ni_ao_reset(comedi_cxt_t *cxt, int idx_subd)
 
 /* digital io */
 
-int ni_dio_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_dio_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_dio_insn_config() chan=%d io=%d\n",
+	comedi_info(dev,
+		    "ni_dio_insn_config() chan=%d io=%d\n",
 		    CR_CHAN(insn->chan_desc), insn->data[0]);
 #endif /* CONFIG_DEBUG_DIO */
 
@@ -3082,12 +3097,13 @@ int ni_dio_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 1;
 }
 
-int ni_dio_insn_bits(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_dio_insn_bits(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_dio_insn_bits() mask=0x%x bits=0x%x\n", 
+	comedi_info(dev, 
+		    "ni_dio_insn_bits() mask=0x%x bits=0x%x\n", 
 		    insn->data[0], insn->data[1]);
 #endif
 	if (insn->data_size != 2 * sizeof(lsampl_t))
@@ -3111,13 +3127,14 @@ int ni_dio_insn_bits(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_m_series_dio_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_m_series_dio_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_m_series_dio_insn_config() chan=%d io=%d\n",
-		CR_CHAN(insn->chan_desc), insn->data[0]);
+	comedi_info(dev, 
+		    "ni_m_series_dio_insn_config() chan=%d io=%d\n",
+		    CR_CHAN(insn->chan_desc), insn->data[0]);
 #endif
 	switch (insn->data[0]) {
 	case INSN_CONFIG_DIO_OUTPUT:
@@ -3142,14 +3159,16 @@ int ni_m_series_dio_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_m_series_dio_insn_bits(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_m_series_dio_insn_bits(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
+	comedi_info(dev, 
+		    "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
 		    insn->data[0], insn->data[1]);
 #endif
+
 	if (insn->data_size != 2 * sizeof(lsampl_t))
 		return -EINVAL;
 	if (insn->data[0]) {
@@ -3171,7 +3190,7 @@ comedi_cmd_t mio_dio_cmd_mask = {
 	.stop_src = TRIG_NONE,
 };
 
-int ni_cdio_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
+int ni_cdio_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	unsigned int i;
 
@@ -3211,11 +3230,9 @@ int ni_cdio_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
 	return 0;
 }
 
-int ni_cdio_cmd(comedi_cxt_t *cxt, int idx_subd)
+int ni_cdio_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, idx_subd);
-
+	comedi_dev_t *dev = subd->dev;
 	unsigned cdo_mode_bits = CDO_FIFO_Mode_Bit | CDO_Halt_On_Error_Bit;
 	int retval;
 
@@ -3238,8 +3255,9 @@ int ni_cdio_cmd(comedi_cxt_t *cxt, int idx_subd)
 		ni_writel(CDO_SW_Update_Bit, M_Offset_CDIO_Command);
 		ni_writel(devpriv->io_bits, M_Offset_CDO_Mask_Enable);
 	} else {
-		rtdm_printk("ni_cdio_cmd: attempted to run digital output command "
-			    "with no lines configured as outputs");
+		comedi_err(dev, 
+			   "ni_cdio_cmd: attempted to run digital "
+			   "output command with no lines configured as outputs");
 		return -EIO;
 	}
 	retval = ni_request_cdo_mite_channel(dev);
@@ -3252,9 +3270,9 @@ int ni_cdio_cmd(comedi_cxt_t *cxt, int idx_subd)
 	return 0;
 }
 
-int ni_cdio_cancel(comedi_cxt_t *cxt, int idx_subd)
+int ni_cdio_cancel(comedi_subd_t *subd, int idx_subd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	ni_writel(CDO_Disarm_Bit | CDO_Error_Interrupt_Enable_Clear_Bit |
 		CDO_Empty_FIFO_Interrupt_Enable_Clear_Bit |
 		CDO_FIFO_Request_Interrupt_Enable_Clear_Bit,
@@ -3265,9 +3283,9 @@ int ni_cdio_cancel(comedi_cxt_t *cxt, int idx_subd)
 	return 0;
 }
 
-int ni_cdo_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
+int ni_cdo_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	unsigned long flags;
 	int retval = 0;
 	unsigned i;
@@ -3283,7 +3301,7 @@ int ni_cdo_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
 		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
 		mite_dma_arm(devpriv->cdo_mite_chan);
 	} else {
-		rtdm_printk("ni_cdo_inttrig: BUG: no cdo mite channel?");
+		comedi_err(dev, "ni_cdo_inttrig: BUG: no cdo mite channel?");
 		retval = -EIO;
 	}
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -3297,8 +3315,8 @@ int ni_cdo_inttrig(comedi_cxt_t *cxt, lsampl_t trignum)
 		comedi_udelay(10);
 	}
 	if (i == timeout) {
-		rtdm_printk("ni_cdo_inttrig: dma failed to fill cdo fifo!");
-		ni_cdio_cancel(cxt, NI_DIO_SUBDEV);
+		comedi_err(dev, "ni_cdo_inttrig: dma failed to fill cdo fifo!");
+		ni_cdio_cancel(subd, NI_DIO_SUBDEV);
 		return -EIO;
 	}
 	ni_writel(CDO_Arm_Bit | CDO_Error_Interrupt_Enable_Set_Bit |
@@ -3347,7 +3365,8 @@ static int ni_serial_hw_readwrite8(comedi_dev_t * dev,
 	int err = 0, count = 20;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_serial_hw_readwrite8: outputting 0x%x\n", data_out);
+	comedi_info(dev, 
+		    "ni_serial_hw_readwrite8: outputting 0x%x\n", data_out);
 #endif
 
 	devpriv->dio_output &= ~DIO_Serial_Data_Mask;
@@ -3372,8 +3391,9 @@ static int ni_serial_hw_readwrite8(comedi_dev_t * dev,
 		/* Delay one bit per loop */
 		comedi_udelay((devpriv->serial_interval_ns + 999) / 1000);
 		if (--count < 0) {
-			rtdm_printk("ni_serial_hw_readwrite8: "
-				    "SPI serial I/O didn't finish in time!\n");
+			comedi_err(dev, 
+				   "ni_serial_hw_readwrite8: "
+				   "SPI serial I/O didn't finish in time!\n");
 			err = -ETIME;
 			goto Error;
 		}
@@ -3386,7 +3406,9 @@ static int ni_serial_hw_readwrite8(comedi_dev_t * dev,
 	if (data_in != NULL) {
 		*data_in = devpriv->stc_readw(dev, DIO_Serial_Input_Register);
 #ifdef CONFIG_DEBUG_DIO
-		rtdm_printk("ni_serial_hw_readwrite8: inputted 0x%x\n", *data_in);
+		comedi_info(dev, 
+			    "ni_serial_hw_readwrite8: inputted 0x%x\n", 
+			    *data_in);
 #endif
 	}
 
@@ -3402,7 +3424,8 @@ static int ni_serial_sw_readwrite8(comedi_dev_t * dev,
 	unsigned char mask, input = 0;
 
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_serial_sw_readwrite8: outputting 0x%x\n", data_out);
+	comedi_info(dev, 
+		    "ni_serial_sw_readwrite8: outputting 0x%x\n", data_out);
 #endif
 
 	/* Wait for one bit before transfer */
@@ -3440,7 +3463,7 @@ static int ni_serial_sw_readwrite8(comedi_dev_t * dev,
 		}
 	}
 #ifdef CONFIG_DEBUG_DIO
-	rtdm_printk("ni_serial_sw_readwrite8: inputted 0x%x\n", input);
+	comedi_info(dev, "ni_serial_sw_readwrite8: inputted 0x%x\n", input);
 #endif
 	if (data_in)
 		*data_in = input;
@@ -3448,9 +3471,9 @@ static int ni_serial_sw_readwrite8(comedi_dev_t * dev,
 	return 0;
 }
 
-int ni_serial_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_serial_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	int err = 0;
 	unsigned char byte_out, byte_in = 0;
 
@@ -3461,7 +3484,7 @@ int ni_serial_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	case INSN_CONFIG_SERIAL_CLOCK:
 
 #ifdef CONFIG_DEBUG_DIO
-		rtdm_printk("SPI serial clock Config cd\n", data[1]);
+		comedi_info(dev, "SPI serial clock Config cd\n", data[1]);
 #endif
 
 		devpriv->serial_hw_mode = 1;
@@ -3526,7 +3549,8 @@ int ni_serial_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 		} else if (devpriv->serial_interval_ns > 0) {
 			err = ni_serial_sw_readwrite8(dev, byte_out, &byte_in);
 		} else {
-			rtdm_printk("ni_serial_insn_config: serial disabled!\n");
+			comedi_err(dev, 
+				   "ni_serial_insn_config: serial disabled!\n");
 			return -EINVAL;
 		}
 		if (err < 0)
@@ -3644,8 +3668,8 @@ static unsigned int ni_gpct_to_stc_register(enum ni_gpct_register reg)
 		stc_register = Interrupt_B_Enable_Register;
 		break;
 	default:
-		rtdm_printk("%s: unhandled register 0x%x in switch.\n",
-			__FUNCTION__, reg);
+		__comedi_err("%s: unhandled register 0x%x in switch.\n",
+			     __FUNCTION__, reg);
 		BUG();
 		return 0;
 		break;
@@ -3753,16 +3777,16 @@ static unsigned int ni_gpct_read_register(struct ni_gpct *counter,
 	return 0;
 }
 
-int ni_freq_out_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_freq_out_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	insn->data[0] = FOUT_Divider(devpriv->clock_and_fout);
 	return 0;
 }
 
-int ni_freq_out_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_freq_out_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	devpriv->clock_and_fout &= ~FOUT_Enable;
 	devpriv->stc_writew(dev, devpriv->clock_and_fout,
@@ -3807,9 +3831,9 @@ static void ni_get_freq_out_clock(comedi_dev_t * dev,
 	}
 }
 
-int ni_freq_out_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+int ni_freq_out_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	switch (insn->data[0]) {
 	case INSN_CONFIG_SET_CLOCK_SRC:
@@ -3868,32 +3892,32 @@ static int ni_read_eeprom(comedi_dev_t *dev, int addr)
 	presents the EEPROM as a subdevice
 */
 
-static int ni_eeprom_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_eeprom_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	insn->data[0] = ni_read_eeprom(dev, CR_CHAN(insn->chan_desc));
 	return 0;
 }
 
 
-static int ni_m_series_eeprom_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_m_series_eeprom_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	insn->data[0] = devpriv->eeprom_buffer[CR_CHAN(insn->chan_desc)];
 	return 0;
 }
 
-static int ni_get_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_get_pwm_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	insn->data[1] = devpriv->pwm_up_count * devpriv->clock_ns;
 	insn->data[2] = devpriv->pwm_down_count * devpriv->clock_ns;
 	return 0;
 }
 
-static int ni_m_series_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_m_series_pwm_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	unsigned up_count, down_count;
 
 	switch (insn->data[0]) {
@@ -3946,7 +3970,7 @@ static int ni_m_series_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 		return 0;
 		break;
 	case INSN_CONFIG_GET_PWM_OUTPUT:
-		return ni_get_pwm_config(cxt, insn);
+		return ni_get_pwm_config(subd, insn);
 		break;
 	default:
 		return -EINVAL;
@@ -3955,9 +3979,9 @@ static int ni_m_series_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-static int ni_6143_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_6143_pwm_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	unsigned up_count, down_count;
 	switch (insn->data[0]) {
@@ -4008,7 +4032,7 @@ static int ni_6143_pwm_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 		return 0;
 		break;
 	case INSN_CONFIG_GET_PWM_OUTPUT:
-		return ni_get_pwm_config(cxt, insn);
+		return ni_get_pwm_config(subd, insn);
 	default:
 		return -EINVAL;
 		break;
@@ -4140,7 +4164,7 @@ static void caldac_setup(comedi_dev_t *dev, comedi_subd_t *subd)
 	if (diffbits) {
 
 		if (n_chans > MAX_N_CALDACS) {
-			printk("BUG! MAX_N_CALDACS too small\n");
+			comedi_err(dev, "BUG! MAX_N_CALDACS too small\n");
 		}
 
 		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
@@ -4191,111 +4215,81 @@ static void caldac_setup(comedi_dev_t *dev, comedi_subd_t *subd)
 	}
 }
 
-static int ni_calib_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_calib_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	ni_write_caldac(dev, CR_CHAN(insn->chan_desc), insn->data[0]);
 	return 0;
 }
 
-static int ni_calib_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_calib_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	insn->data[0] = devpriv->caldacs[CR_CHAN(insn->chan_desc)];
 	return 1;
 }
 
-static int ni_gpct_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_gpct_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-#if 0 /* TODO: add private field into subdevice structure */
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	struct ni_gpct *counter = s->private;
-	return ni_tio_insn_config(counter, insn, data);
-#else /* TODO: add private field into subdevice structure */
-	return 0;
-#endif /* TODO: add private field into subdevice structure */
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
+	return ni_tio_insn_config(counter, insn);
 }
 
-static int ni_gpct_insn_read(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_gpct_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-#if 0 /* TODO: add private field into subdevice structure */
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	struct ni_gpct *counter = s->private;
-	return ni_tio_rinsn(counter, insn, data);
-#else /* TODO: add private field into subdevice structure */
-	return 0;
-#endif /* TODO: add private field into subdevice structure */
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
+	return ni_tio_rinsn(counter, insn);
 }
 
-static int ni_gpct_insn_write(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_gpct_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-#if 0 /* TODO: add private field into subdevice structure */
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	struct ni_gpct *counter = s->private;
-	return ni_tio_winsn(counter, insn, data);
-#else /* TODO: add private field into subdevice structure */
-	return 0;
-#endif /* TODO: add private field into subdevice structure */
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
+	return ni_tio_winsn(counter, insn);
 }
 
-static int ni_gpct_cmd(comedi_cxt_t *cxt, int idx_subd)
+static int ni_gpct_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-	int retval;
-#if 0 /* TODO: add private field into subdevice structure */
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-#endif /* TODO: add private field into subdevice structure */
-
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
-
-#if 0 /* TODO: add private field into subdevice structure */
-	struct ni_gpct *counter = s->private;
+	int retval;
+	comedi_dev_t *dev = subd->dev;
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 
 	retval = ni_request_gpct_mite_channel(dev, 
 					      counter->counter_index,
 					      COMEDI_INPUT);
 	if (retval) {
-		rtdm_printk("ni_gpct_cmd: "
-			    "no dma channel available for use by counter");
+		comedi_err(dev,
+			   "ni_gpct_cmd: "
+			   "no dma channel available for use by counter");
 		return retval;
 	}
 	ni_tio_acknowledge_and_confirm(counter, NULL, NULL, NULL, NULL);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 1);
-	retval = ni_tio_cmd(cxt, idx_subd, counter);
+	retval = ni_tio_cmd(counter, cmd);
 
-#else /* TODO: add private field into subdevice structure */
-	retval = 0;
-#endif /* TODO: add private field into subdevice structure */
+	return retval;
 
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
-	retval = -ENOTSUPP;
+	return -ENOTSUPP;
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
-	return retval;
 }
 
-static int ni_gpct_cmdtest(comedi_cxt_t *cxt, comedi_cmd_t *cmd)
+static int ni_gpct_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-#if 0 /* TODO: add private field into subdevice structure */
-	struct ni_gpct *counter = s->private;
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 	return ni_tio_cmdtest(counter, cmd);
-#else /* TODO: add private field into subdevice structure */
-	return 0;
-#endif /* TODO: add private field into subdevice structure */
 }
 
-static int ni_gpct_cancel(comedi_cxt_t *cxt, int idx_subd)
+static int ni_gpct_cancel(comedi_subd_t *subd, int idx_subd)
 {
-#if 0 /* TODO: add private field into subdevice structure */
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	struct ni_gpct *counter = s->private;
+	comedi_dev_t *dev = subd->dev;
+	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 	int retval;
 
 	retval = ni_tio_cancel(counter);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 0);
 	ni_release_gpct_mite_channel(dev, counter->counter_index);
 	return retval;
-#else /* TODO: add private field into subdevice structure */
-	return 0;
-#endif /* TODO: add private field into subdevice structure */
 }
 
 /*
@@ -4360,7 +4354,8 @@ static unsigned int ni_old_get_pfi_routing(comedi_dev_t *dev,
 		return NI_PFI_OUTPUT_G_GATE0;
 		break;
 	default:
-		rtdm_printk("%s: bug, unhandled case in switch.\n", __FUNCTION__);
+		__comedi_err("%s: bug, unhandled case in switch.\n", 
+			     __FUNCTION__);
 		break;
 	}
 	return 0;
@@ -4415,9 +4410,9 @@ static int ni_config_filter(comedi_dev_t *dev,
 	return 0;
 }
 
-static int ni_pfi_insn_bits(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_pfi_insn_bits(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 	if ((boardtype.reg_type & ni_reg_m_series_mask) == 0) {
 		return -ENOTSUPP;
 	}
@@ -4430,10 +4425,10 @@ static int ni_pfi_insn_bits(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-static int ni_pfi_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
+static int ni_pfi_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 {	
 	unsigned int chan;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_dev_t *dev = subd->dev;
 
 	if (insn->data_size < 1)
 		return -EINVAL;
@@ -4468,90 +4463,96 @@ static int ni_pfi_insn_config(comedi_cxt_t *cxt, comedi_kinsn_t *insn)
 	return 0;
 }
 
-int ni_E_init(comedi_cxt_t *cxt, comedi_drv_t *drv)
+int ni_E_init(comedi_dev_t *dev)
 {
 	int ret;
 	unsigned int j, counter_variant;
-	comedi_subd_t subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	comedi_subd_t *subd;
 
 	if (boardtype.n_aochan > MAX_N_AO_CHAN) {
-		rtdm_printk("bug! boardtype.n_aochan > MAX_N_AO_CHAN\n");
+		comedi_err(dev, "bug! boardtype.n_aochan > MAX_N_AO_CHAN\n");
 		return -EINVAL;
 	}
 	
 	/* analog input subdevice */
-	memset(&subd, 0, sizeof(comedi_subd_t));
+
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
+
 	if (boardtype.n_adchan) {
 
-		subd.flags = COMEDI_SUBD_AI | COMEDI_SUBD_CMD;
-		subd.rng_desc = ni_range_lkup[boardtype.gainlkup];
+		subd->flags = COMEDI_SUBD_AI | COMEDI_SUBD_CMD;
+		subd->rng_desc = ni_range_lkup[boardtype.gainlkup];
 
-		subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 						sizeof(comedi_chan_t));
 
-		subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-		subd.chan_desc->length = boardtype.n_adchan;
-		subd.chan_desc->chans[0].flags = COMEDI_CHAN_AREF_DIFF;
+		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+		subd->chan_desc->length = boardtype.n_adchan;
+		subd->chan_desc->chans[0].flags = COMEDI_CHAN_AREF_DIFF;
 		if (boardtype.reg_type != ni_reg_611x)
-			subd.chan_desc->chans[0].flags |= COMEDI_CHAN_AREF_GROUND |
+			subd->chan_desc->chans[0].flags |= COMEDI_CHAN_AREF_GROUND |
 				COMEDI_CHAN_AREF_COMMON | COMEDI_CHAN_AREF_OTHER;
-		subd.chan_desc->chans[0].nb_bits = boardtype.adbits;
+		subd->chan_desc->chans[0].nb_bits = boardtype.adbits;
 
-		subd.insn_read = ni_ai_insn_read;
-		subd.insn_config = ni_ai_insn_config;
-		subd.do_cmdtest = ni_ai_cmdtest;
-		subd.do_cmd = ni_ai_cmd;
-		subd.cancel = ni_ai_cancel;
+		subd->insn_read = ni_ai_insn_read;
+		subd->insn_config = ni_ai_insn_config;
+		subd->do_cmdtest = ni_ai_cmdtest;
+		subd->do_cmd = ni_ai_cmd;
+		subd->cancel = ni_ai_cancel;
 
-		subd.munge = (boardtype.adbits > 16) ? 
+		subd->munge = (boardtype.adbits > 16) ? 
 			ni_ai_munge32 : ni_ai_munge16;
 
-		subd.cmd_mask = &mio_ai_cmd_mask;
+		subd->cmd_mask = &mio_ai_cmd_mask;
 	} else
-		subd.flags = COMEDI_SUBD_UNUSED;
+		subd->flags = COMEDI_SUBD_UNUSED;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_AI_SUBDEV)
 	    return ret;
 
-	/* analog output subdevice */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	if (boardtype.n_aochan) {
-		subd.flags = COMEDI_SUBD_AO;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
-		subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	/* analog output subdevice */
+	if (boardtype.n_aochan) {
+		subd->flags = COMEDI_SUBD_AO;
+
+		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 						sizeof(comedi_chan_t));
 
-		subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-		subd.chan_desc->length = boardtype.n_aochan;
-		subd.chan_desc->chans[0].flags = COMEDI_CHAN_AREF_GROUND;
-		subd.chan_desc->chans[0].nb_bits = boardtype.aobits;
+		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+		subd->chan_desc->length = boardtype.n_aochan;
+		subd->chan_desc->chans[0].flags = COMEDI_CHAN_AREF_GROUND;
+		subd->chan_desc->chans[0].nb_bits = boardtype.aobits;
 
-		subd.rng_desc = boardtype.ao_range_table;
+		subd->rng_desc = boardtype.ao_range_table;
 
-		subd.insn_read = ni_ao_insn_read;
+		subd->insn_read = ni_ao_insn_read;
 		if (boardtype.reg_type & ni_reg_6xxx_mask)
-			subd.insn_write = &ni_ao_insn_write_671x;
+			subd->insn_write = &ni_ao_insn_write_671x;
 		else
-			subd.insn_write = &ni_ao_insn_write;
+			subd->insn_write = &ni_ao_insn_write;
 		
 
 		if (boardtype.ao_fifo_depth) {
-			subd.flags |= COMEDI_SUBD_CMD;
-			subd.do_cmd = &ni_ao_cmd;
-			subd.cmd_mask = &mio_ao_cmd_mask;
-			subd.do_cmdtest = &ni_ao_cmdtest;
+			subd->flags |= COMEDI_SUBD_CMD;
+			subd->do_cmd = &ni_ao_cmd;
+			subd->cmd_mask = &mio_ao_cmd_mask;
+			subd->do_cmdtest = &ni_ao_cmdtest;
 			if ((boardtype.reg_type & ni_reg_m_series_mask) == 0)
-				subd.munge = &ni_ao_munge;
+				subd->munge = &ni_ao_munge;
 		}
 
-		subd.cancel = &ni_ao_reset;
+		subd->cancel = &ni_ao_reset;
 
 	} else
-		subd.flags = COMEDI_SUBD_UNUSED;
+		subd->flags = COMEDI_SUBD_UNUSED;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_AO_SUBDEV)
 	    return ret;
 	
@@ -4559,208 +4560,234 @@ int ni_E_init(comedi_cxt_t *cxt, comedi_drv_t *drv)
 		init_ao_67xx(dev);
 
 	/* digital i/o subdevice */
-	memset(&subd, 0, sizeof(comedi_subd_t));	
-	subd.flags = COMEDI_SUBD_DIO;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
+
+	subd->flags = COMEDI_SUBD_DIO;
+
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));
 	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->length = boardtype.num_p0_dio_channels;
-	subd.chan_desc->chans[0].flags = COMEDI_CHAN_AREF_GROUND;
-	subd.chan_desc->chans[0].nb_bits = 1;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->length = boardtype.num_p0_dio_channels;
+	subd->chan_desc->chans[0].flags = COMEDI_CHAN_AREF_GROUND;
+	subd->chan_desc->chans[0].nb_bits = 1;
 	devpriv->io_bits = 0; /* all bits input */
 
-	subd.rng_desc = &range_digital;
+	subd->rng_desc = &range_digital;
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 
-		subd.insn_bits = ni_m_series_dio_insn_bits;
-		subd.insn_config = ni_m_series_dio_insn_config;
-		subd.do_cmd = ni_cdio_cmd;
-		subd.do_cmdtest = ni_cdio_cmdtest;
-		subd.cmd_mask = &mio_dio_cmd_mask;
-		subd.cancel = ni_cdio_cancel;
+		subd->insn_bits = ni_m_series_dio_insn_bits;
+		subd->insn_config = ni_m_series_dio_insn_config;
+		subd->do_cmd = ni_cdio_cmd;
+		subd->do_cmdtest = ni_cdio_cmdtest;
+		subd->cmd_mask = &mio_dio_cmd_mask;
+		subd->cancel = ni_cdio_cancel;
 
 		ni_writel(CDO_Reset_Bit | CDI_Reset_Bit, M_Offset_CDIO_Command);
 		ni_writel(devpriv->io_bits, M_Offset_DIO_Direction);
 	} else {
-		subd.insn_bits = ni_dio_insn_bits;
-		subd.insn_config = ni_dio_insn_config;
+		subd->insn_bits = ni_dio_insn_bits;
+		subd->insn_config = ni_dio_insn_config;
 		devpriv->dio_control = DIO_Pins_Dir(devpriv->io_bits);
 		ni_writew(devpriv->dio_control, DIO_Control_Register);
 	}
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != COMEDI_SUBD_DIO)
 	    return ret;
 
 	/* 8255 device */
-	memset(&subd, 0, sizeof(comedi_subd_t));
+	subd = comedi_alloc_subd(sizeof(subd_8255_t), NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
 	if (boardtype.has_8255) {
 		devpriv->subd_8255.cb_arg = (unsigned long)dev;
 		devpriv->subd_8255.cb_func = ni_8255_callback;
-		subdev_8255_init(&subd, &(devpriv->subd_8255));
+		subdev_8255_init(subd);
 	} else
-		subd.flags = COMEDI_SUBD_UNUSED;
+		subd->flags = COMEDI_SUBD_UNUSED;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_8255_DIO_SUBDEV)
 	    return ret;
 
 	/* formerly general purpose counter/timer device, but no longer used */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_UNUSED;
-	ret = comedi_add_subd(drv, &subd);
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
+
+	subd->flags = COMEDI_SUBD_UNUSED;
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_UNUSED_SUBDEV)
 	    return ret;
 
 	/* calibration subdevice -- ai and ao */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_CALIB;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
+
+	subd->flags = COMEDI_SUBD_CALIB;
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 		/* internal PWM analog output
 		   used for AI nonlinearity calibration */
-		subd.insn_config = ni_m_series_pwm_config;
+		subd->insn_config = ni_m_series_pwm_config;
 		ni_writel(0x0, M_Offset_Cal_PWM);
 	} else if (boardtype.reg_type == ni_reg_6143) {
 		/* internal PWM analog output 
 		   used for AI nonlinearity calibration */
-		subd.insn_config = ni_6143_pwm_config;
+		subd->insn_config = ni_6143_pwm_config;
 	} else {
-		subd.insn_read = ni_calib_insn_read;
-		subd.insn_write = ni_calib_insn_write;
+		subd->insn_read = ni_calib_insn_read;
+		subd->insn_write = ni_calib_insn_write;
 
-		caldac_setup(dev, &subd);
+		caldac_setup(dev, subd);
 	}
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_CALIBRATION_SUBDEV)
 	    return ret;
 
 	/* EEPROM */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_MEMORY;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd->flags = COMEDI_SUBD_MEMORY;
+
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->chans[0].flags = 0;
-	subd.chan_desc->chans[0].nb_bits = 8;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->chans[0].flags = 0;
+	subd->chan_desc->chans[0].nb_bits = 8;
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
-		subd.chan_desc->length = M_SERIES_EEPROM_SIZE;
-		subd.insn_read = ni_m_series_eeprom_insn_read;
+		subd->chan_desc->length = M_SERIES_EEPROM_SIZE;
+		subd->insn_read = ni_m_series_eeprom_insn_read;
 	} else {
-		subd.chan_desc->length = 512;
-		subd.insn_read = ni_eeprom_insn_read;
+		subd->chan_desc->length = 512;
+		subd->insn_read = ni_eeprom_insn_read;
 	}
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_EEPROM_SUBDEV)
 	    return ret;
 
 	/* PFI */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_DIO;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd->flags = COMEDI_SUBD_DIO;
+
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->chans[0].flags = 0;
-	subd.chan_desc->chans[0].nb_bits = 1;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->chans[0].flags = 0;
+	subd->chan_desc->chans[0].nb_bits = 1;
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 		unsigned int i;
-		subd.chan_desc->length = 16;
+		subd->chan_desc->length = 16;
 		ni_writew(devpriv->dio_state, M_Offset_PFI_DO);
 		for (i = 0; i < NUM_PFI_OUTPUT_SELECT_REGS; ++i) {
 			ni_writew(devpriv->pfi_output_select_reg[i],
 				  M_Offset_PFI_Output_Select(i + 1));
 		}
 	} else
-		subd.chan_desc->length = 10;
+		subd->chan_desc->length = 10;
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
-		subd.insn_bits = ni_pfi_insn_bits;
+		subd->insn_bits = ni_pfi_insn_bits;
 	}
 
-	subd.insn_config = ni_pfi_insn_config;
+	subd->insn_config = ni_pfi_insn_config;
 	ni_set_bits(dev, IO_Bidirection_Pin_Register, ~0, 0);
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_PFI_DIO_SUBDEV)
 	    return ret;
 
 
 	/* cs5529 calibration adc */
-	memset(&subd, 0, sizeof(comedi_subd_t));
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
+
 #if 0 /* TODO: add subdevices callbacks */
-	subd.flags = COMEDI_SUBD_AI;
+	subd->flags = COMEDI_SUBD_AI;
 
 	if (boardtype.reg_type & ni_reg_67xx_mask) {
 
-		subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 						sizeof(comedi_chan_t));	
-		subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-		subd.chan_desc->length = boardtype.n_aochan;
-		subd.chan_desc->chans[0].flags = 0;
-		subd.chan_desc->chans[0].nb_bits = 16;
+		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+		subd->chan_desc->length = boardtype.n_aochan;
+		subd->chan_desc->chans[0].flags = 0;
+		subd->chan_desc->chans[0].nb_bits = 16;
 
 		/* one channel for each analog output channel */
-		subd.rng_desc = &range_unknown;	/* XXX */
+		subd->rng_desc = &range_unknown;	/* XXX */
 		s->insn_read = cs5529_ai_insn_read;
 		init_cs5529(dev);
 	} else
 #endif /* TODO: add subdevices callbacks */
-		subd.flags = COMEDI_SUBD_UNUSED;
+		subd->flags = COMEDI_SUBD_UNUSED;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_CS5529_CALIBRATION_SUBDEV)
 	    return ret;
 
 	/* Serial */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_SERIAL;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd->flags = COMEDI_SUBD_SERIAL;
+
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->length = 1;
-	subd.chan_desc->chans[0].flags = 0;
-	subd.chan_desc->chans[0].nb_bits = 8;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->length = 1;
+	subd->chan_desc->chans[0].flags = 0;
+	subd->chan_desc->chans[0].nb_bits = 8;
 
-	subd.insn_config = ni_serial_insn_config;
+	subd->insn_config = ni_serial_insn_config;
 
 	devpriv->serial_interval_ns = 0;
 	devpriv->serial_hw_mode = 0;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_SERIAL_SUBDEV)
 	    return ret;
 
 	/* RTSI */
-	memset(&subd, 0, sizeof(comedi_subd_t));
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 #if 1 /* TODO: add RTSI subdevice */
-	subd.flags = COMEDI_SUBD_UNUSED;
+	subd->flags = COMEDI_SUBD_UNUSED;
 #else /* TODO: add RTSI subdevice */
-	subd.flags = COMEDI_SUBD_DIO;
+	subd->flags = COMEDI_SUBD_DIO;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->length = 8;
-	subd.chan_desc->chans[0].flags = 0;
-	subd.chan_desc->chans[0].nb_bits = 1;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->length = 8;
+	subd->chan_desc->chans[0].flags = 0;
+	subd->chan_desc->chans[0].nb_bits = 1;
 
-	subd.insn_bits = ni_rtsi_insn_bits;
-	subd.insn_config = ni_rtsi_insn_config;
+	subd->insn_bits = ni_rtsi_insn_bits;
+	subd->insn_config = ni_rtsi_insn_config;
 	ni_rtsi_init(dev);
 
 #endif /* TODO: add RTSI subdevice */
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_RTSI_SUBDEV)
 	    return ret;
 
@@ -4775,60 +4802,67 @@ int ni_E_init(comedi_cxt_t *cxt, comedi_drv_t *drv)
 
 	/* General purpose counters */
 	for (j = 0; j < NUM_GPCT; ++j) {
+		struct ni_gpct *counter;
 
-		memset(&subd, 0, sizeof(comedi_subd_t));
-		subd.flags = COMEDI_SUBD_COUNTER;
+		subd = comedi_alloc_subd(sizeof(struct ni_gpct), NULL);
+		if(subd == NULL)
+			return -ENOMEM;
 
-		subd.flags |= COMEDI_SUBD_CMD;
+		subd->flags = COMEDI_SUBD_COUNTER;
 
-		subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+		subd->flags |= COMEDI_SUBD_CMD;
+
+		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 						sizeof(comedi_chan_t));	
-		subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-		subd.chan_desc->length = 3;
-		subd.chan_desc->chans[0].flags = 0;
+		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+		subd->chan_desc->length = 3;
+		subd->chan_desc->chans[0].flags = 0;
 
 		if (boardtype.reg_type & ni_reg_m_series_mask)
-			subd.chan_desc->chans[0].nb_bits = 32;
+			subd->chan_desc->chans[0].nb_bits = 32;
 		else
-			subd.chan_desc->chans[0].nb_bits = 24;
+			subd->chan_desc->chans[0].nb_bits = 24;
 
-		subd.insn_read = ni_gpct_insn_read;
-		subd.insn_write = ni_gpct_insn_write;
-		subd.insn_config = ni_gpct_insn_config;
-		subd.do_cmd = ni_gpct_cmd;
-		subd.do_cmdtest = ni_gpct_cmdtest;
-		subd.cmd_mask = &ni_tio_cmd_mask;
-		subd.cancel = ni_gpct_cancel;
+		subd->insn_read = ni_gpct_insn_read;
+		subd->insn_write = ni_gpct_insn_write;
+		subd->insn_config = ni_gpct_insn_config;
+		subd->do_cmd = ni_gpct_cmd;
+		subd->do_cmdtest = ni_gpct_cmdtest;
+		subd->cmd_mask = &ni_tio_cmd_mask;
+		subd->cancel = ni_gpct_cancel;
 
-#if 0 /* TODO: add private field into subdevice structure */
-		s->private = &devpriv->counter_dev->counters[j];
-#endif /* TODO: add private field into subdevice structure */
+		counter = (struct ni_gpct *)subd->priv;
+		comedi_lock_init(&counter->lock);
+		counter->chip_index = 0;
+		counter->counter_index = j;
+		devpriv->counter_dev->counters[j] = counter;
 
-		devpriv->counter_dev->counters[j].chip_index = 0;
-		devpriv->counter_dev->counters[j].counter_index = j;
-		ni_tio_init_counter(&devpriv->counter_dev->counters[j]);
-
-		ret = comedi_add_subd(drv, &subd);
+		ni_tio_init_counter(counter);
+		
+		ret = comedi_add_subd(dev, subd);
 		if(ret != NI_GPCT_SUBDEV(j))
 			return ret;
 	}
 
 	/* Frequency output */
-	memset(&subd, 0, sizeof(comedi_subd_t));
-	subd.flags = COMEDI_SUBD_COUNTER;
+	subd = comedi_alloc_subd(0, NULL);
+	if(subd == NULL)
+		return -ENOMEM;
 
-	subd.chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
+	subd->flags = COMEDI_SUBD_COUNTER;
+
+	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
 					sizeof(comedi_chan_t));	
-	subd.chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
-	subd.chan_desc->length = 1;
-	subd.chan_desc->chans[0].flags = 0;
-	subd.chan_desc->chans[0].nb_bits = 4;
+	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
+	subd->chan_desc->length = 1;
+	subd->chan_desc->chans[0].flags = 0;
+	subd->chan_desc->chans[0].nb_bits = 4;
 
-	subd.insn_read = ni_freq_out_insn_read;
-	subd.insn_write = ni_freq_out_insn_write;
-	subd.insn_config = ni_freq_out_insn_config;
+	subd->insn_read = ni_freq_out_insn_read;
+	subd->insn_write = ni_freq_out_insn_write;
+	subd->insn_config = ni_freq_out_insn_config;
 
-	ret = comedi_add_subd(drv, &subd);
+	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_FREQ_OUT_SUBDEV)
 		return ret;
 
@@ -4852,7 +4886,7 @@ int ni_E_init(comedi_cxt_t *cxt, comedi_drv_t *drv)
 		Clock_and_FOUT_Register);
 
 	/* analog output configuration */
-	ni_ao_reset(cxt, NI_AO_SUBDEV);
+	ni_ao_reset(comedi_get_subd(dev, NI_AO_SUBDEV), NI_AO_SUBDEV);
 
 	if (comedi_get_irq(dev) != COMEDI_IRQ_UNUSED) {
 		devpriv->stc_writew(dev,
