@@ -240,8 +240,7 @@ void setup_test_subd(comedi_subd_t *subd)
 }
 
 /* Attach callback */
-int test_attach(comedi_dev_t *dev,
-		comedi_lnkdesc_t *arg)
+int test_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 {
 	int ret = 0;  
 	comedi_subd_t *subd;
