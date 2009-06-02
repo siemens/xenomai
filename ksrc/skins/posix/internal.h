@@ -129,8 +129,8 @@ static inline pse51_kqueues_t *pse51_kqueues(int pshared)
 
 static inline void ticks2ts(struct timespec *ts, xnticks_t ticks)
 {
-	ts->tv_sec = xnarch_uldivrem(xntbase_ticks2ns(pse51_tbase, ticks),
-				     ONE_BILLION, &ts->tv_nsec);
+	ts->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(pse51_tbase, ticks),
+					   &ts->tv_nsec);
 }
 
 static inline xnticks_t ts2ticks_floor(const struct timespec *ts)
@@ -166,9 +166,8 @@ static inline xnticks_t tv2ticks_ceil(const struct timeval *tv)
 static inline void ticks2tv(struct timeval *tv, xnticks_t ticks)
 {
 	unsigned long nsecs;
-	tv->tv_sec = xnarch_uldivrem(xntbase_ticks2ns(pse51_tbase, ticks),
-				     ONE_BILLION,
-				     &nsecs);
+	tv->tv_sec = xnarch_divrem_billion(xntbase_ticks2ns(pse51_tbase, ticks),
+					   &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }
 
