@@ -27,6 +27,7 @@ static unsigned long long cpufreq;
 static unsigned int tsc_scale, tsc_shift;
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 static rthal_u32frac_t tsc_frac;
+static rthal_u32frac_t bln_frac;
 #endif
 #endif
 
@@ -56,10 +57,24 @@ long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_nodiv_llimd(ns, tsc_frac.frac, tsc_frac.integ);
 }
+unsigned long long xnarch_divrem_billion(unsigned long long value,
+					 unsigned long *rem)
+{
+	unsigned long long r;
+	r = xnarch_nodiv_ullimd(value, bln_frac.frac, bln_frac.integ);
+	*rem = value - xnarch_ullmul(r, 1000000000);
+	return r;
+}
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
 long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_llimd(ns, cpufreq, 1000000000);
+}
+unsigned long long xnarch_divrem_billion(unsigned long long value,
+					 unsigned long *rem)
+{
+	return xnarch_ulldiv(value, 1000000000, rem);
+
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
 
@@ -70,6 +85,7 @@ static inline void xnarch_init_timeconv(unsigned long long freq)
 	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	xnarch_init_u32frac(&tsc_frac, 1 << tsc_shift, tsc_scale);
+	xnarch_init_u32frac(&bln_frac, 1, 1000000000);
 #endif
 #endif
 }

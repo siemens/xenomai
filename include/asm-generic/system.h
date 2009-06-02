@@ -287,6 +287,9 @@ long long xnarch_ns_to_tsc(long long ns);
 
 unsigned long long xnarch_get_cpu_time(void);
 
+unsigned long long xnarch_divrem_billion(unsigned long long value,
+					 unsigned long *rem);
+
 static inline unsigned long long xnarch_get_cpu_freq(void)
 {
 	return RTHAL_CPU_FREQ;

@@ -418,6 +418,15 @@ static inline unsigned long long xnarch_ns_to_tsc (unsigned long long ns)
     return ns;
 }
 
+unsigned long long xnarch_divrem_billion(unsigned long long value,
+					 unsigned long *rem)
+{
+	unsigned long long r;
+	r = value / 1000000000ULL;
+	*rem = value - (r * 1000000000ULL);
+	return r;
+}
+
 static inline unsigned long long xnarch_get_cpu_time (void)
 {
     return mvm_get_cpu_time();

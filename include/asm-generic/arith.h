@@ -382,6 +382,7 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 #define xnarch_imuldiv               rthal_imuldiv
 #define xnarch_imuldiv_ceil          rthal_imuldiv_ceil
 #define xnarch_llimd                 rthal_llimd
+#define xnarch_nodiv_ullimd          rthal_nodiv_ullimd
 #define xnarch_nodiv_llimd           rthal_nodiv_llimd
 #define xnarch_llmulshft             rthal_llmulshft
 #define xnarch_get_cpu_tsc           rthal_rdtsc
