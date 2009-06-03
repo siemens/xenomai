@@ -655,7 +655,15 @@ typedef unsigned long rtdm_lockctx_t;
  *
  * Rescheduling: never.
  */
+#ifdef DOXYGEN_CPP /* Beautify doxygen output */
 #define rtdm_lock_get(lock)	rthal_spin_lock(lock)
+#else /* This is how it really works */
+#define rtdm_lock_get(lock)					\
+	do {							\
+		XENO_BUGON(RTDM, !rthal_local_irq_disabled());	\
+		rthal_spin_lock(lock);				\
+	} while (0)
+#endif
 
 /**
  * Release lock without preemption restoration
