@@ -595,13 +595,13 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 	<LEAVE_ATOMIC_SECTION>			\
 }
 #else /* This is how it really works */
-#define RTDM_EXECUTE_ATOMICALLY(code_block)	\
-{						\
-	spl_t s;				\
-						\
-	xnlock_get_irqsave(&nklock, s);		\
-	code_block;				\
-	xnlock_put_irqrestore(&nklock, s);	\
+#define RTDM_EXECUTE_ATOMICALLY(code_block)		\
+{							\
+	spl_t __rtdm_s;					\
+							\
+	xnlock_get_irqsave(&nklock, __rtdm_s);		\
+	code_block;					\
+	xnlock_put_irqrestore(&nklock, __rtdm_s);	\
 }
 #endif
 /** @} Global Lock across Scheduler Invocation */
