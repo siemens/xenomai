@@ -222,7 +222,8 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 		ret = device->open_rt(context, user_info, oflag);
 	}
 
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),
+		    rthal_local_irq_enable(););
 
 	if (unlikely(ret < 0))
 		goto cleanup_out;
@@ -274,7 +275,8 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 		ret = device->socket_rt(context, user_info, protocol);
 	}
 
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),
+		    rthal_local_irq_enable(););
 
 	if (unlikely(ret < 0))
 		goto cleanup_out;
@@ -336,7 +338,8 @@ again:
 		ret = context->ops->close_rt(context, user_info);
 	}
 
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),
+		    rthal_local_irq_enable(););
 
 	if (unlikely(ret == -EAGAIN) && nrt_mode) {
 		rtdm_context_unlock(context);
@@ -422,7 +425,8 @@ do {									\
 	else								\
 		ret = ops->operation##_nrt(context, user_info, args);	\
 									\
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable();)
+	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),			\
+		    rthal_local_irq_enable();)
 
 #define MAJOR_FUNCTION_WRAPPER_BH()					\
 	rtdm_context_unlock(context);					\
@@ -564,7 +568,8 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 
 	ret = ops->select_bind(context, selector, type, fd_index);
 
-	XENO_ASSERT(RTDM, !rthal_local_irq_test(), rthal_local_irq_enable(););
+	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),
+		    rthal_local_irq_enable(););
 
 	rtdm_context_unlock(context);
 
