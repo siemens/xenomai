@@ -386,6 +386,7 @@ int xnsched_set_policy(struct xnthread *thread,
 			if (ret)
 				return ret;
 		}
+		sched_class->nthreads++;
 	}
 
 	/*
@@ -665,7 +666,8 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 #ifdef CONFIG_PROC_FS
 
 #include <linux/seq_file.h>
-#include <linux/proc_fs.h>
+
+static struct proc_dir_entry *schedclass_proc_root;
 
 struct sched_seq_iterator {
 	xnticks_t start_time;
@@ -678,8 +680,8 @@ struct sched_seq_iterator {
 		char sched_class[XNOBJECT_NAME_LEN];
 		int cprio;
 		int dnprio;
-		xnticks_t period;
-		xnticks_t timeout;
+		int periodic;
+	  	xnticks_t timeout;
 		xnflags_t state;
 	} sched_info[1];
 };
@@ -715,11 +717,11 @@ static void sched_seq_stop(struct seq_file *seq, void *v)
 
 static int sched_seq_show(struct seq_file *seq, void *v)
 {
-	char sbuf[64], pbuf[16];
+	char sbuf[64], pbuf[16], tbuf[16];
 
 	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-5s  %-8s %-10s %-10s %-8s  %-10s %s\n",
-			   "CPU", "PID", "CLASS", "PRI", "PERIOD", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
+		seq_printf(seq, "%-3s  %-6s %-5s  %-8s %-8s  %-10s %-10s %s\n",
+			   "CPU", "PID", "CLASS", "PRI", "TIMEOUT", "TIMEBASE", "STAT", "NAME");
 	else {
 		struct sched_seq_info *p = v;
 
@@ -729,16 +731,18 @@ static int sched_seq_show(struct seq_file *seq, void *v)
 		else
 			snprintf(pbuf, sizeof(pbuf), "%3d", p->cprio);
 
-		seq_printf(seq, "%3u  %-6d %-5s  %-8s %-10Lu %-10Lu %-8s  %-10s %s\n",
+		xntimer_format_time(p->timeout, p->periodic, tbuf, sizeof(tbuf));
+		xnthread_format_status(p->state, sbuf, sizeof(sbuf));
+
+		seq_printf(seq, "%3u  %-6d %-5s  %-8s %-8s  %-10s %-10s %s\n",
 			   p->cpu,
 			   p->pid,
 			   p->sched_class,
 			   pbuf,
-			   p->period,
-			   p->timeout,
+			   tbuf,
 			   p->timebase,
-			   xnthread_symbolic_status(p->state, sbuf,
-						    sizeof(sbuf)), p->name);
+			   sbuf,
+			   p->name);
 	}
 
 	return 0;
@@ -754,8 +758,10 @@ static struct seq_operations sched_op = {
 static int sched_seq_open(struct inode *inode, struct file *file)
 {
 	struct sched_seq_iterator *iter = NULL;
+	xnticks_t period, timeout;
+	struct xnholder *holder;
+	struct sched_seq_info *p;
 	struct seq_file *seq;
-	xnholder_t *holder;
 	int err, count, rev;
 	spl_t s;
 
@@ -789,9 +795,10 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 	iter->nentries = 0;
 	iter->start_time = xntbase_get_jiffies(&nktbase);
 
-	/* Take a snapshot element-wise, restart if something changes
-	   underneath us. */
-
+	/*
+	 * Take a snapshot element-wise, restart if something changes
+	 * underneath us.
+	 */
 	while (holder) {
 		xnthread_t *thread;
 		int n;
@@ -800,25 +807,43 @@ static int sched_seq_open(struct inode *inode, struct file *file)
 
 		if (nkpod->threadq_rev != rev)
 			goto restart;
-		rev = nkpod->threadq_rev;
 
+		rev = nkpod->threadq_rev;
 		thread = link2thread(holder, glink);
 		n = iter->nentries++;
+		p = iter->sched_info + n;
 
-		iter->sched_info[n].cpu = xnsched_cpu(thread->sched);
-		iter->sched_info[n].pid = xnthread_user_pid(thread);
-		memcpy(iter->sched_info[n].name, thread->name, sizeof(iter->sched_info[n].name));
-		iter->sched_info[n].cprio = thread->cprio;
-		iter->sched_info[n].dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
-		iter->sched_info[n].period = xnthread_get_period(thread);
-		iter->sched_info[n].timeout = xnthread_get_timeout(thread, iter->start_time);
-		iter->sched_info[n].state = xnthread_state_flags(thread);
-		memcpy(iter->sched_info[n].timebase, xntbase_name(xnthread_time_base(thread)),
-		       sizeof(iter->sched_info[n].timebase));
-		xnobject_copy_name(iter->sched_info[n].sched_class, thread->sched_class->name);
+		p->cpu = xnsched_cpu(thread->sched);
+		p->pid = xnthread_user_pid(thread);
+		memcpy(p->name, thread->name, sizeof(p->name));
+		p->cprio = thread->cprio;
+		p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
+		p->state = xnthread_state_flags(thread);
+		memcpy(p->timebase, xntbase_name(xnthread_time_base(thread)),
+		       sizeof(p->timebase));
+		xnobject_copy_name(p->sched_class, thread->sched_class->name);
+		period = xnthread_get_period(thread);
+		timeout = xnthread_get_timeout(thread, iter->start_time);
+		/*
+		 * Here we cheat: thread is periodic and the sampling
+		 * rate may be high, so it is indeed possible that the
+		 * next tick date from the ptimer progresses fast
+		 * enough while we are busy collecting output data in
+		 * this loop, so that next_date - start_time >
+		 * period. In such a case, we simply ceil the value to
+		 * period to keep the result meaningful, even if not
+		 * necessarily accurate. But what does accuracy mean
+		 * when the sampling frequency is high, and the way to
+		 * read it has to go through the /proc interface
+		 * anyway?
+		 */
+		if (period > 0 && period < timeout &&
+		    !xntimer_running_p(&thread->rtimer))
+			timeout = period;
+		p->timeout = timeout;
+		p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
 
 		holder = nextq(&nkpod->threadq, holder);
-
 		xnlock_put_irqrestore(&nklock, s);
 	}
 
@@ -1103,7 +1128,21 @@ static struct file_operations acct_seq_operations = {
 
 void xnsched_init_proc(void)
 {
+	struct xnsched_class *p;
+
 	rthal_add_proc_seq("sched", &sched_seq_operations, 0, rthal_proc_root);
+	schedclass_proc_root =
+		create_proc_entry("schedclasses", S_IFDIR, rthal_proc_root);
+
+	for_each_xnsched_class(p) {
+		if (p->sched_init_proc == NULL)
+			continue;
+		p->proc = create_proc_entry(p->name, S_IFDIR,
+					    schedclass_proc_root);
+		if (p->proc)
+			p->sched_init_proc(p->proc);
+	}
+
 #ifdef CONFIG_XENO_OPT_STATS
 	rthal_add_proc_seq("stat", &stat_seq_operations, 0, rthal_proc_root);
 	rthal_add_proc_seq("acct", &acct_seq_operations, 0, rthal_proc_root);
@@ -1112,10 +1151,21 @@ void xnsched_init_proc(void)
 
 void xnsched_cleanup_proc(void)
 {
+	struct xnsched_class *p;
+
+	for_each_xnsched_class(p) {
+		if (p->proc == NULL)
+			continue;
+		if (p->sched_cleanup_proc)
+			p->sched_cleanup_proc(p->proc);
+		remove_proc_entry(p->name, schedclass_proc_root);
+	}
+
 #ifdef CONFIG_XENO_OPT_STATS
 	remove_proc_entry("acct", rthal_proc_root);
 	remove_proc_entry("stat", rthal_proc_root);
 #endif /* CONFIG_XENO_OPT_STATS */
+	remove_proc_entry("schedclasses", rthal_proc_root);
 	remove_proc_entry("sched", rthal_proc_root);
 }
 

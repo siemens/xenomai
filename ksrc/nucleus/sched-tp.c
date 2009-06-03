@@ -277,6 +277,172 @@ int xnsched_tp_get_partition(struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_get_partition);
 
+#ifdef CONFIG_PROC_FS
+
+#include <linux/seq_file.h>
+
+struct xnsched_tp_seq_iterator {
+	xnticks_t start_time;
+	int nentries;
+	struct xnsched_tp_info {
+		int cpu;
+		pid_t pid;
+		char name[XNOBJECT_NAME_LEN];
+		int prio;
+		int ptid;
+	} sched_info[1];
+};
+
+static void *xnsched_tp_seq_start(struct seq_file *seq, loff_t *pos)
+{
+	struct xnsched_tp_seq_iterator *iter = seq->private;
+
+	if (*pos > iter->nentries)
+		return NULL;
+
+	if (*pos == 0)
+		return SEQ_START_TOKEN;
+
+	return iter->sched_info + *pos - 1;
+}
+
+static void *xnsched_tp_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+{
+	struct xnsched_tp_seq_iterator *iter = seq->private;
+
+	++*pos;
+
+	if (*pos > iter->nentries)
+		return NULL;
+
+	return iter->sched_info + *pos - 1;
+}
+
+static void xnsched_tp_seq_stop(struct seq_file *seq, void *v)
+{
+}
+
+static int xnsched_tp_seq_show(struct seq_file *seq, void *v)
+{
+	struct xnsched_tp_info *p;
+
+	if (v == SEQ_START_TOKEN)
+		seq_printf(seq, "%-3s  %-6s %-4s %-4s  %s\n",
+			   "CPU", "PID", "PTID", "PRI", "NAME");
+	else {
+		p = v;
+
+		seq_printf(seq, "%3u  %-6d %-4d %-4d  %s\n",
+			   p->cpu,
+			   p->pid,
+			   p->ptid,
+			   p->prio,
+			   p->name);
+	}
+
+	return 0;
+}
+
+static struct seq_operations xnsched_tp_seq_op = {
+	.start = &xnsched_tp_seq_start,
+	.next = &xnsched_tp_seq_next,
+	.stop = &xnsched_tp_seq_stop,
+	.show = &xnsched_tp_seq_show
+};
+
+static int xnsched_tp_seq_open(struct inode *inode, struct file *file)
+{
+	struct xnsched_tp_seq_iterator *iter = NULL;
+	struct xnsched_tp_info *p;
+	struct xnholder *holder;
+	struct xnthread *thread;
+	int ret, count, rev, n;
+	struct seq_file *seq;
+	spl_t s;
+
+	if (!xnpod_active_p())
+		return -ESRCH;
+
+	xnlock_get_irqsave(&nklock, s);
+
+      restart:
+	rev = nkpod->threadq_rev;
+	count = xnsched_class_tp.nthreads;
+	holder = getheadq(&nkpod->threadq);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (iter)
+		kfree(iter);
+
+	if (count == 0)
+		return -ESRCH;
+
+	iter = kmalloc(sizeof(*iter)
+		       + (count - 1) * sizeof(struct xnsched_tp_info),
+		       GFP_KERNEL);
+	if (iter == NULL)
+		return -ENOMEM;
+
+	ret = seq_open(file, &xnsched_tp_seq_op);
+	if (ret) {
+		kfree(iter);
+		return ret;
+	}
+
+	iter->nentries = 0;
+	iter->start_time = xntbase_get_jiffies(&nktbase);
+
+	while (holder) {
+		xnlock_get_irqsave(&nklock, s);
+
+		if (nkpod->threadq_rev != rev)
+			goto restart;
+
+		rev = nkpod->threadq_rev;
+		thread = link2thread(holder, glink);
+
+		if (thread->base_class != &xnsched_class_tp)
+			goto skip;
+
+		n = iter->nentries++;
+		p = iter->sched_info + n;
+		p->cpu = xnsched_cpu(thread->sched);
+		p->pid = xnthread_user_pid(thread);
+		memcpy(p->name, thread->name, sizeof(p->name));
+		p->ptid = thread->tps - thread->sched->tp.partitions;
+		p->prio = thread->cprio;
+	skip:
+		holder = nextq(&nkpod->threadq, holder);
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	seq = file->private_data;
+	seq->private = iter;
+
+	return 0;
+}
+
+static struct file_operations xnsched_tp_seq_operations = {
+	.owner = THIS_MODULE,
+	.open = xnsched_tp_seq_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = seq_release_private,
+};
+
+void xnsched_tp_init_proc(struct proc_dir_entry *root)
+{
+	rthal_add_proc_seq("threads", &xnsched_tp_seq_operations, 0, root);
+}
+
+void xnsched_tp_cleanup_proc(struct proc_dir_entry *root)
+{
+	remove_proc_entry("threads", root);
+}
+
+#endif /* CONFIG_PROC_FS */
+
 struct xnsched_class xnsched_class_tp = {
 
 	.sched_init		=	xnsched_tp_init,
@@ -292,6 +458,10 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_trackprio	=	xnsched_tp_trackprio,
 	.sched_declare		=	xnsched_tp_declare,
 	.sched_forget		=	xnsched_tp_forget,
+#ifdef CONFIG_PROC_FS
+	.sched_init_proc	=	xnsched_tp_init_proc,
+	.sched_cleanup_proc	=	xnsched_tp_cleanup_proc,
+#endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(2),
 	.name			=	"tp"
 };

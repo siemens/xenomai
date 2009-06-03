@@ -144,6 +144,12 @@ struct xnsched_class {
 	void (*sched_suspend_rpi)(struct xnthread *thread);
 	void (*sched_resume_rpi)(struct xnthread *thread);
 #endif
+#ifdef CONFIG_PROC_FS
+	void (*sched_init_proc)(struct proc_dir_entry *root);
+	void (*sched_cleanup_proc)(struct proc_dir_entry *root);
+	struct proc_dir_entry *proc;
+#endif
+	int nthreads;
 	struct xnsched_class *next;
 	int weight;
 	const char *name;
@@ -394,6 +400,8 @@ static inline void xnsched_forget(struct xnthread *thread)
 {
 	struct xnsched_class *sched_class = thread->base_class;
 
+	--sched_class->nthreads;
+
 	if (sched_class->sched_forget)
 		sched_class->sched_forget(thread);
 }
@@ -505,6 +513,7 @@ static inline void xnsched_trackprio(struct xnthread *thread,
 
 static inline void xnsched_forget(struct xnthread *thread)
 {
+	--thread->base_class->nthreads;
 	__xnsched_rt_forget(thread);
 }
 

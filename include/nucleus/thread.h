@@ -387,66 +387,13 @@ int xnthread_init(struct xnthread *thread,
 
 void xnthread_cleanup_tcb(xnthread_t *thread);
 
-char *xnthread_symbolic_status(xnflags_t status, char *buf, int size);
+char *xnthread_format_status(xnflags_t status, char *buf, int size);
 
 int *xnthread_get_errno_location(xnthread_t *thread);
 
-static inline xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
-{
-	xnticks_t timeout;
-	xntimer_t *timer;
+xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns);
 
-	if (!xnthread_test_state(thread,XNDELAY))
-		return 0LL;
-
-	if (xntimer_running_p(&thread->rtimer))
-		timer = &thread->rtimer;
-	else if (xntimer_running_p(&thread->ptimer))
-		timer = &thread->ptimer;
-	else
-		return 0LL;
-
-	/*
-	 * The caller should have masked IRQs while collecting the
-	 * timeout(s), so no tick could be announced in the meantime,
-	 * and all timeouts would always use the same epoch
-	 * value. Obviously, this can't be a valid assumption for
-	 * aperiodic timers, which values are based on the hardware
-	 * TSC, and as such the current time will change regardless of
-	 * the interrupt state; for this reason, we use the "tsc_ns"
-	 * input parameter (TSC converted to nanoseconds) the caller
-	 * has passed us as the epoch value instead.
-	 */
-
-	if (xntbase_periodic_p(xnthread_time_base(thread)))
-		return xntimer_get_timeout(timer);
-
-	timeout = xntimer_get_date(timer);
-
-	if (timeout <= tsc_ns)
-		return 1;
-
-	return timeout - tsc_ns;
-}
-
-static inline xnticks_t xnthread_get_period(xnthread_t *thread)
-{
-	xnticks_t period = 0;
-
-	/*
-	 * The current thread period might be:
-	 * - the value of the timer interval for periodic threads (ns/ticks)
-	 * - or, the value of the alloted round-robin quantum (ticks)
-	 * - or zero, meaning "no periodic activity".
-	 */
-       
-	if (xntimer_running_p(&thread->ptimer))
-		period = xntimer_get_interval(&thread->ptimer);
-	else if (xnthread_test_state(thread,XNRRB))
-		period = xnthread_time_slice(thread);
-
-	return period;
-}
+xnticks_t xnthread_get_period(xnthread_t *thread);
 
 #ifdef CONFIG_XENO_OPT_REGISTRY
 static inline int xnthread_register(xnthread_t *thread, const char *name)

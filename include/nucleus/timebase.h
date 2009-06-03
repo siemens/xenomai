@@ -34,16 +34,16 @@ struct xntimer;
 
 typedef struct xntbops {
 
-    int (*start_timer)(struct xntimer *timer,
-		       xnticks_t value,
-		       xnticks_t interval,
-		       xntmode_t mode);
-    void (*stop_timer)(struct xntimer *timer);
-    xnticks_t (*get_timer_date)(struct xntimer *timer);
-    xnticks_t (*get_timer_timeout)(struct xntimer *timer);
-    xnticks_t (*get_timer_interval)(struct xntimer *timer);
-    xnticks_t (*get_timer_raw_expiry)(struct xntimer *timer);
-    void (*move_timer)(struct xntimer *timer);
+	int (*start_timer)(struct xntimer *timer,
+			   xnticks_t value,
+			   xnticks_t interval,
+			   xntmode_t mode);
+	void (*stop_timer)(struct xntimer *timer);
+	xnticks_t (*get_timer_date)(struct xntimer *timer);
+	xnticks_t (*get_timer_timeout)(struct xntimer *timer);
+	xnticks_t (*get_timer_interval)(struct xntimer *timer);
+	xnticks_t (*get_timer_raw_expiry)(struct xntimer *timer);
+	void (*move_timer)(struct xntimer *timer);
 
 } xntbops_t;
 

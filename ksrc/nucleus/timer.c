@@ -1064,6 +1064,40 @@ void xntimer_freeze(void)
 }
 EXPORT_SYMBOL_GPL(xntimer_freeze);
 
+char *xntimer_format_time(xnticks_t value, int periodic, char *buf, size_t bufsz)
+{
+	unsigned long ms, us, ns;
+	char *p = buf;
+	xnticks_t s;
+
+	if (periodic) {
+		snprintf(buf, bufsz, "%Lut", value);
+		return buf;
+	}
+
+	if (value == 0 && bufsz > 1) {
+		strcpy(buf, "-");
+		return buf;
+	}
+
+	s = xnarch_divrem_billion(value, &ns);
+	us = ns / 1000;
+	ms = us / 1000;
+	us %= 1000;
+
+	if (s)
+		p += snprintf(p, bufsz, "%Lus", s);
+
+	if (ms || (s && us))
+		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
+
+	if (us)
+		p += snprintf(p, bufsz - (p - buf), "%luus", us);
+
+	return buf;
+}
+EXPORT_SYMBOL_GPL(xntimer_format_time);
+
 xntbops_t nktimer_ops_aperiodic = {
 
 	.start_timer = &xntimer_start_aperiodic,

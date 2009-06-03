@@ -745,6 +745,8 @@ int xntimer_migrate(xntimer_t *timer,
 
 #define xntimer_set_sched(timer, sched)	xntimer_migrate(timer, sched)
 
+char *xntimer_format_time(xnticks_t value, int periodic,
+			  char *buf, size_t bufsz);
 #ifdef __cplusplus
 }
 #endif

@@ -179,7 +179,7 @@ void xnthread_cleanup_tcb(xnthread_t *thread)
 #endif /* CONFIG_XENO_OPT_REGISTRY */
 }
 
-char *xnthread_symbolic_status(xnflags_t status, char *buf, int size)
+char *xnthread_format_status(xnflags_t status, char *buf, int size)
 {
 	static const char labels[] = XNTHREAD_STATE_LABELS;
 	xnflags_t mask;
@@ -189,54 +189,43 @@ char *xnthread_symbolic_status(xnflags_t status, char *buf, int size)
 	for (mask = status & ~XNTHREAD_STATE_SPARES, pos = 0, wp = buf;
 	     mask != 0 && wp - buf < size - 2;	/* 1-letter label + \0 */
 	     mask >>= 1, pos++) {
+		if ((mask & 1) == 0)
+			continue;
+
 		c = labels[pos];
 
-		if (mask & 1) {
-			switch (1 << pos) {
-			case XNFPU:
-
-				/* Only output the FPU flag for kernel-based
-				   threads; Others get the same level of fp
-				   support than any user-space tasks on the
-				   current platform. */
-
-				if (status & (XNSHADOW | XNROOT))
-					continue;
-
-				break;
-
-			case XNROOT:
-
-				c = 'R';	/* Always mark root as runnable. */
-				break;
-
-			case XNDELAY:
-
-				/* Only report genuine delays here, not timed
-				   waits for resources. */
-
-				if (status & XNPEND)
-					continue;
-
-				break;
-
-			case XNPEND:
-
-				/* Report timed waits with lowercase symbol. */
-
-				if (status & XNDELAY)
-					c |= 0x20;
-
-				break;
-
-			default:
-
-				if (c == '.')
-					continue;
-			}
-
-			*wp++ = c;
+		switch (1 << pos) {
+		case XNFPU:
+			/*
+			 * Only output the FPU flag for kernel-based
+			 * threads; Others get the same level of fp
+			 * support than any user-space tasks on the
+			 * current platform.
+			 */
+			if (status & (XNSHADOW | XNROOT))
+				continue;
+			break;
+		case XNROOT:
+			c = 'R'; /* Always mark root as runnable. */
+			break;
+		case XNDELAY:
+			/*
+			 * Only report genuine delays here, not timed
+			 * waits for resources.
+			 */
+			if (status & XNPEND)
+				continue;
+			break;
+		case XNPEND:
+			/* Report timed waits with lowercase symbol. */
+			if (status & XNDELAY)
+				c |= 0x20;
+			break;
+		default:
+			if (c == '.')
+				continue;
 		}
+		*wp++ = c;
 	}
 
 	*wp = '\0';
@@ -262,3 +251,58 @@ int *xnthread_get_errno_location(xnthread_t *thread)
 	return &thread->errcode;
 }
 EXPORT_SYMBOL_GPL(xnthread_get_errno_location);
+
+xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns)
+{
+	xnticks_t timeout;
+	xntimer_t *timer;
+
+	if (!xnthread_test_state(thread,XNDELAY))
+		return 0LL;
+
+	if (xntimer_running_p(&thread->rtimer))
+		timer = &thread->rtimer;
+	else if (xntimer_running_p(&thread->ptimer))
+		timer = &thread->ptimer;
+	else
+		return 0LL;
+	/*
+	 * The caller should have masked IRQs while collecting the
+	 * timeout(s), so no tick could be announced in the meantime,
+	 * and all timeouts would always use the same epoch
+	 * value. Obviously, this can't be a valid assumption for
+	 * aperiodic timers, which values are based on the hardware
+	 * TSC, and as such the current time will change regardless of
+	 * the interrupt state; for this reason, we use the "tsc_ns"
+	 * input parameter (TSC converted to nanoseconds) the caller
+	 * has passed us as the epoch value instead.
+	 */
+	if (xntbase_periodic_p(xnthread_time_base(thread)))
+		return xntimer_get_timeout(timer);
+
+	timeout = xntimer_get_date(timer);
+
+	if (timeout <= tsc_ns)
+		return 1;
+
+	return timeout - tsc_ns;
+}
+EXPORT_SYMBOL_GPL(xnthread_get_timeout);
+
+xnticks_t xnthread_get_period(xnthread_t *thread)
+{
+	xnticks_t period = 0;
+	/*
+	 * The current thread period might be:
+	 * - the value of the timer interval for periodic threads (ns/ticks)
+	 * - or, the value of the alloted round-robin quantum (ticks)
+	 * - or zero, meaning "no periodic activity".
+	 */
+	if (xntimer_running_p(&thread->ptimer))
+		period = xntimer_get_interval(&thread->ptimer);
+	else if (xnthread_test_state(thread,XNRRB))
+		period = xnthread_time_slice(thread);
+
+	return period;
+}
+EXPORT_SYMBOL_GPL(xnthread_get_period);
