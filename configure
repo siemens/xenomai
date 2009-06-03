@@ -12442,7 +12442,7 @@ if test $XENO_TARGET_ARCH = arm ; then
   unset CONFIG_XENO_ARM_SA1100
   unset CONFIG_XENO_CPU_XSC3
   unset tsc_type
-  unset CONFIG_XENO_ARM_HW_DIRECT_TSC
+  unset XNARCH_ARM_TSC_TYPE
 
   { echo "$as_me:$LINENO: checking for ARM machine" >&5
 echo $ECHO_N "checking for ARM machine... $ECHO_C" >&6; }
@@ -12546,14 +12546,14 @@ echo $ECHO_N "checking for TSC emulation in user-space.... $ECHO_C" >&6; }
 	# Check whether --enable-arm-tsc was given.
 if test "${enable_arm_tsc+set}" = set; then
   enableval=$enable_arm_tsc; case "$enableval" in
-	y | yes) CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type ;;
-	*) unset CONFIG_XENO_ARM_HW_DIRECT_TSC ;;
+	y | yes) XNARCH_ARM_TSC_TYPE=$tsc_type ;;
+	*) unset XNARCH_ARM_TSC_TYPE ;;
 	esac
 else
-  CONFIG_XENO_ARM_HW_DIRECT_TSC=$tsc_type
+  XNARCH_ARM_TSC_TYPE=$tsc_type
 fi
 
-	if test $CONFIG_XENO_ARM_HW_DIRECT_TSC; then
+	if test $XNARCH_ARM_TSC_TYPE; then
 		{ echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 	else
@@ -13408,9 +13408,9 @@ cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_CPU_XSC3 1
 _ACEOF
 
-test $CONFIG_XENO_ARM_HW_DIRECT_TSC &&
+test $XNARCH_ARM_TSC_TYPE &&
 cat >>confdefs.h <<_ACEOF
-#define CONFIG_XENO_ARM_HW_DIRECT_TSC $CONFIG_XENO_ARM_HW_DIRECT_TSC
+#define XNARCH_ARM_TSC_TYPE $XNARCH_ARM_TSC_TYPE
 _ACEOF
 
 test x$CONFIG_XENO_ARM_EABI = xy &&

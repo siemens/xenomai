@@ -23,7 +23,7 @@
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <posix/syscall.h>
 #include <time.h>
-#include <asm/xenomai/arith.h>
+#include <asm-generic/xenomai/bits/timeconv.h>
 
 extern int __pse51_muxid;
 
@@ -38,6 +38,7 @@ void pse51_clock_init(int muxid)
 			"sys_info: %s\n", strerror(err));
 		exit(EXIT_FAILURE);
 	}
+	xnarch_init_timeconv(sysinfo.cpufreq);
 }
 #endif /* XNARCH_HAVE_NONPRIV_TSC */
 
@@ -60,14 +61,10 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 	int err;
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
-		unsigned long long tsc;
-		unsigned long rem;
+		unsigned long long ns;
 
-		tsc = __xn_rdtsc();
-		tp->tv_sec = xnarch_ulldiv(tsc, sysinfo.cpufreq, &rem);
-		/* Next line is 64 bits safe, since rem is less than
-		   sysinfo.cpufreq hence fits on 32 bits. */
-		tp->tv_nsec = xnarch_imuldiv(rem, 1000000000, sysinfo.cpufreq);
+		ns = xnarch_tsc_to_ns(__xn_rdtsc());
+		tp->tv_sec = xnarch_divrem_billion(ns, &tp->tv_nsec);
 		return 0;
 	}
 #endif /* XNARCH_HAVE_NONPRIV_TSC */

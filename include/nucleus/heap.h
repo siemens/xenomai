@@ -51,7 +51,7 @@
 #endif
 
 #define XNHEAP_PAGE_SIZE	512 /* A reasonable value for the xnheap page size */
-#define XNHEAP_PAGE_MASK  	(~(XNHEAP_PAGE_SIZE-1))
+#define XNHEAP_PAGE_MASK	(~(XNHEAP_PAGE_SIZE-1))
 #define XNHEAP_PAGE_ALIGN(addr)	(((addr)+XNHEAP_PAGE_SIZE-1)&XNHEAP_PAGE_MASK)
 
 #define XNHEAP_MINLOG2    3
@@ -102,7 +102,7 @@ typedef struct xnheap {
 
 	xnqueue_t extents;
 
-        DECLARE_XNLOCK(lock);
+	DECLARE_XNLOCK(lock);
 
 	struct xnbucket {
 		caddr_t freelist;
@@ -136,11 +136,23 @@ static inline size_t xnheap_align(size_t size, size_t al)
 	return ((size+al-1)&(~(al-1)));
 }
 
-static inline size_t xnheap_overhead(size_t hsize, size_t psize)
+static inline size_t xnheap_external_overhead(size_t hsize, size_t psize)
 {
-	size_t m = psize / sizeof(struct xnpagemap);
-	size_t q = (size_t)xnarch_llimd(hsize - sizeof(xnextent_t), m, m + 1);
-	return xnheap_align(hsize - q, XNHEAP_MINALIGNSZ);
+	size_t pages = (hsize + psize - 1) / psize;
+	return xnheap_align(sizeof(xnextent_t)
+			    + pages * sizeof(struct xnpagemap), psize);
+}
+
+static inline size_t xnheap_internal_overhead(size_t hsize, size_t psize)
+{
+	/* o = (h - o) * m / p + e
+	   o * p = (h - o) * m + e * p
+	   o * (p + m) = h * m + e * p
+	   o = (h * m + e *p) / (p + m)
+	*/
+	return xnheap_align((sizeof(xnextent_t) * psize
+			     + sizeof(struct xnpagemap) * hsize)
+			    / (psize + sizeof(struct xnpagemap)), psize);
 }
 
 #define xnmalloc(size)     xnheap_alloc(&kheap,size)
@@ -166,7 +178,7 @@ static inline size_t xnheap_rounded_size(size_t hsize, size_t psize)
 	 */
 	if (hsize < 2 * psize)
 		hsize = 2 * psize;
-	hsize += xnheap_overhead(hsize, psize);
+	hsize += xnheap_external_overhead(hsize, psize);
 	return xnheap_align(hsize, psize);
 }
 
@@ -246,7 +258,7 @@ static inline void xnheap_finalize_free(xnheap_t *heap)
 {
 	int cpu = xnarch_current_cpu();
 
-	XENO_ASSERT(NUCLEUS, 
+	XENO_ASSERT(NUCLEUS,
 		    spltest() != 0,
 		    xnpod_fatal("%s called in unsafe context", __FUNCTION__));
 

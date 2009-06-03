@@ -62,7 +62,7 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 {
 	unsigned long long r;
 	r = xnarch_nodiv_ullimd(value, bln_frac.frac, bln_frac.integ);
-	*rem = value - xnarch_ullmul(r, 1000000000);
+	*rem = value - r * 1000000000;
 	return r;
 }
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
