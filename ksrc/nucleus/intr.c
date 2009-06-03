@@ -973,6 +973,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 #ifdef CONFIG_PROC_FS
 
 #include <linux/proc_fs.h>
+#include <linux/ctype.h>
 
 static int format_irq_proc(unsigned int irq, char *str)
 {
