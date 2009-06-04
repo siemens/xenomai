@@ -46,15 +46,6 @@ index 69425b2..dccfb35 100644
  config HIGHMEM
  	bool "High memory support"
  	depends on PPC32
-diff --git a/arch/powerpc/Makefile b/arch/powerpc/Makefile
-index 72d17f5..fbd7e8d 100644
---- a/arch/powerpc/Makefile
-+++ b/arch/powerpc/Makefile
-@@ -239,4 +239,3 @@ checkbin:
- 	fi
- 
- CLEAN_FILES += $(TOUT)
--
 diff --git a/arch/powerpc/boot/Makefile b/arch/powerpc/boot/Makefile
 index e84df33..7fc0dfb 100644
 --- a/arch/powerpc/boot/Makefile
@@ -547,10 +538,10 @@ index f75a5fc..32242c5 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..8f6c818
+index 0000000..ae0e6ce
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
-@@ -0,0 +1,242 @@
+@@ -0,0 +1,253 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
 + *
@@ -598,10 +589,10 @@ index 0000000..8f6c818
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.6-00"
++#define IPIPE_ARCH_STRING	"2.6-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -733,6 +724,15 @@ index 0000000..8f6c818
 +
 +void __ipipe_handle_irq(int irq, struct pt_regs *regs);
 +
++static inline void ipipe_handle_chained_irq(unsigned int irq)
++{
++	struct pt_regs regs;	/* dummy */
++
++	ipipe_trace_irq_entry(irq);
++	__ipipe_handle_irq(irq, &regs);
++	ipipe_trace_irq_exit(irq);
++}
++
 +struct irq_desc;
 +void __ipipe_ack_level_irq(unsigned irq, struct irq_desc *desc);
 +void __ipipe_end_level_irq(unsigned irq, struct irq_desc *desc);
@@ -787,6 +787,8 @@ index 0000000..8f6c818
 +#else /* !CONFIG_IPIPE */
 +
 +#define task_hijacked(p)	0
++
++#define ipipe_handle_chained_irq(irq)	generic_handle_irq(irq)
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -4103,6 +4105,117 @@ index 6519058..d7bef4b 100644
  static void flush_range(struct mm_struct *mm, unsigned long start,
  			unsigned long end)
  {
+diff --git a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
+index ddf0bdc..1bbf650 100644
+--- a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
++++ b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
+@@ -24,7 +24,7 @@
+ 
+ #include "pq2.h"
+ 
+-static DEFINE_SPINLOCK(pci_pic_lock);
++static IPIPE_DEFINE_SPINLOCK(pci_pic_lock);
+ 
+ struct pq2ads_pci_pic {
+ 	struct device_node *node;
+@@ -38,18 +38,42 @@ struct pq2ads_pci_pic {
+ 
+ #define NUM_IRQS 32
+ 
++static inline void __pq2ads_pci_mask_irq(struct pq2ads_pci_pic *priv,
++					 unsigned int irq)
++{
++	setbits32(&priv->regs->mask, 1 << irq);
++	mb();
++}
++
++static inline void __pq2ads_pci_unmask_irq(struct pq2ads_pci_pic *priv,
++					   unsigned int irq)
++{
++	clrbits32(&priv->regs->mask, 1 << irq);
++}
++
+ static void pq2ads_pci_mask_irq(unsigned int virq)
+ {
+ 	struct pq2ads_pci_pic *priv = get_irq_chip_data(virq);
+ 	int irq = NUM_IRQS - virq_to_hw(virq) - 1;
++	unsigned long flags;
+ 
+ 	if (irq != -1) {
+-		unsigned long flags;
+ 		spin_lock_irqsave(&pci_pic_lock, flags);
++		__pq2ads_pci_mask_irq(priv, irq);
++		ipipe_irq_lock(virq);
++		spin_unlock_irqrestore(&pci_pic_lock, flags);
++	}
++}
+ 
+-		setbits32(&priv->regs->mask, 1 << irq);
+-		mb();
++static void pq2ads_pci_mask_ack_irq(unsigned int virq)
++{
++	struct pq2ads_pci_pic *priv = get_irq_chip_data(virq);
++	int irq = NUM_IRQS - virq_to_hw(virq) - 1;
+ 
++	if (irq != -1) {
++		unsigned long flags;
++		spin_lock_irqsave(&pci_pic_lock, flags);
++		__pq2ads_pci_mask_irq(priv, irq);
+ 		spin_unlock_irqrestore(&pci_pic_lock, flags);
+ 	}
+ }
+@@ -58,12 +82,12 @@ static void pq2ads_pci_unmask_irq(unsigned int virq)
+ {
+ 	struct pq2ads_pci_pic *priv = get_irq_chip_data(virq);
+ 	int irq = NUM_IRQS - virq_to_hw(virq) - 1;
++	unsigned long flags;
+ 
+ 	if (irq != -1) {
+-		unsigned long flags;
+-
+ 		spin_lock_irqsave(&pci_pic_lock, flags);
+-		clrbits32(&priv->regs->mask, 1 << irq);
++		__pq2ads_pci_unmask_irq(priv, irq);
++		ipipe_irq_unlock(virq);
+ 		spin_unlock_irqrestore(&pci_pic_lock, flags);
+ 	}
+ }
+@@ -73,7 +97,7 @@ static struct irq_chip pq2ads_pci_ic = {
+ 	.name = "PQ2 ADS PCI",
+ 	.end = pq2ads_pci_unmask_irq,
+ 	.mask = pq2ads_pci_mask_irq,
+-	.mask_ack = pq2ads_pci_mask_irq,
++	.mask_ack = pq2ads_pci_mask_ack_irq,
+ 	.ack = pq2ads_pci_mask_irq,
+ 	.unmask = pq2ads_pci_unmask_irq,
+ 	.enable = pq2ads_pci_unmask_irq,
+@@ -98,7 +122,7 @@ static void pq2ads_pci_irq_demux(unsigned int irq, struct irq_desc *desc)
+ 		for (bit = 0; pend != 0; ++bit, pend <<= 1) {
+ 			if (pend & 0x80000000) {
+ 				int virq = irq_linear_revmap(priv->host, bit);
+-				generic_handle_irq(virq);
++				ipipe_handle_chained_irq(virq);
+ 			}
+ 		}
+ 	}
+diff --git a/arch/powerpc/platforms/85xx/tqm85xx.c b/arch/powerpc/platforms/85xx/tqm85xx.c
+index 2933a8e..efbbde4 100644
+--- a/arch/powerpc/platforms/85xx/tqm85xx.c
++++ b/arch/powerpc/platforms/85xx/tqm85xx.c
+@@ -46,10 +46,10 @@ static void cpm2_cascade(unsigned int irq, struct irq_desc *desc)
+ {
+ 	int cascade_irq;
+ 
+-	while ((cascade_irq = cpm2_get_irq()) >= 0)
+-		generic_handle_irq(cascade_irq);
+-
+ 	desc->chip->eoi(irq);
++
++	while ((cascade_irq = cpm2_get_irq()) >= 0)
++		ipipe_handle_chained_irq(cascade_irq);
+ }
+ #endif /* CONFIG_CPM2 */
+ 
 diff --git a/arch/powerpc/platforms/cell/spu_base.c b/arch/powerpc/platforms/cell/spu_base.c
 index e487ad6..a681d87 100644
 --- a/arch/powerpc/platforms/cell/spu_base.c
@@ -4182,10 +4295,10 @@ index 52a80e5..1145792 100644
  static long pSeries_lpar_hpte_remove(unsigned long hpte_group)
  {
 diff --git a/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
-index 78f1f7c..1a59241 100644
+index 78f1f7c..91b47fd 100644
 --- a/arch/powerpc/sysdev/cpm2_pic.c
 +++ b/arch/powerpc/sysdev/cpm2_pic.c
-@@ -82,24 +82,32 @@ static void cpm2_mask_irq(unsigned int virq)
+@@ -82,44 +82,61 @@ static void cpm2_mask_irq(unsigned int virq)
  {
  	int	bit, word;
  	unsigned int irq_nr = virq_to_hw(virq);
@@ -4195,7 +4308,7 @@ index 78f1f7c..1a59241 100644
  	word = irq_to_siureg[irq_nr];
  
 +	local_irq_save_hw_cond(flags);
-+	ipipe_irq_lock(irq_nr);
++	ipipe_irq_lock(virq);
  	ppc_cached_irq_mask[word] &= ~(1 << bit);
  	out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
 +	local_irq_restore_hw_cond(flags);
@@ -4213,12 +4326,28 @@ index 78f1f7c..1a59241 100644
 +	local_irq_save_hw_cond(flags);
  	ppc_cached_irq_mask[word] |= 1 << bit;
  	out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
-+	ipipe_irq_unlock(irq_nr);
++	ipipe_irq_unlock(virq);
 +	local_irq_restore_hw_cond(flags);
  }
  
- static void cpm2_ack(unsigned int virq)
-@@ -117,15 +125,20 @@ static void cpm2_end_irq(unsigned int virq)
+-static void cpm2_ack(unsigned int virq)
++static void cpm2_mask_ack(unsigned int virq)
+ {
+ 	int	bit, word;
+ 	unsigned int irq_nr = virq_to_hw(virq);
++	unsigned long flags;
+ 
+ 	bit = irq_to_siubit[irq_nr];
+ 	word = irq_to_siureg[irq_nr];
+ 
++	local_irq_save_hw_cond(flags);
++	ppc_cached_irq_mask[word] &= ~(1 << bit);
++	out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
+ 	out_be32(&cpm2_intctl->ic_sipnrh + word, 1 << bit);
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static void cpm2_end_irq(unsigned int virq)
  {
  	int	bit, word;
  	unsigned int irq_nr = virq_to_hw(virq);
@@ -4234,14 +4363,7 @@ index 78f1f7c..1a59241 100644
  
  		bit = irq_to_siubit[irq_nr];
  		word = irq_to_siureg[irq_nr];
- 
- 		ppc_cached_irq_mask[word] |= 1 << bit;
- 		out_be32(&cpm2_intctl->ic_simrh + word, ppc_cached_irq_mask[word]);
-+		ipipe_irq_unlock(irq_nr);
- 
- 		/*
- 		 * Work around large numbers of spurious IRQs on PowerPC 82xx
-@@ -133,6 +146,8 @@ static void cpm2_end_irq(unsigned int virq)
+@@ -133,6 +150,8 @@ static void cpm2_end_irq(unsigned int virq)
  		 */
  		mb();
  	}
@@ -4250,6 +4372,15 @@ index 78f1f7c..1a59241 100644
  }
  
  static int cpm2_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -185,7 +204,7 @@ static struct irq_chip cpm2_pic = {
+ 	.typename = " CPM2 SIU ",
+ 	.mask = cpm2_mask_irq,
+ 	.unmask = cpm2_unmask_irq,
+-	.ack = cpm2_ack,
++	.mask_ack = cpm2_mask_ack,
+ 	.eoi = cpm2_end_irq,
+ 	.set_type = cpm2_set_irq_type,
+ };
 diff --git a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
 index a96584a..c037c88 100644
 --- a/arch/powerpc/sysdev/i8259.c
