@@ -72,6 +72,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 1500
 #elif defined(CONFIG_TQM8548)
 #define __sched_latency 500
+#elif defined(CONFIG_TQM8560)
+#define __sched_latency 1000
 /*
  * Check for the most generic configs at the bottom of this list, so
  * that the most specific choices available are picked first.
