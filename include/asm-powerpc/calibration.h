@@ -60,6 +60,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 2780
 #elif defined(CONFIG_YELLOWSTONE)
 #define __sched_latency 2700
+#elif defined(CONFIG_YOSEMITE)
+#define __sched_latency 2500
 #elif defined(CONFIG_MPC8349_ITX)
 #define __sched_latency 2500
 #elif defined(CONFIG_MPC836x_MDS)
