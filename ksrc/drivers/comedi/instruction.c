@@ -85,10 +85,10 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	if (dsc->data_size != 1)
 		return -EINVAL;
 
-	if (dsc->idx_subd >= dev->transfer->nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	subd = dev->transfer->subds[dsc->idx_subd];
+	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks that the concerned subdevice is trigger-compliant */
 	if ((subd->flags & COMEDI_SUBD_CMD) == 0 || subd->trigger == NULL)
@@ -182,11 +182,11 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	/* Checks the subdevice index */
-	if (dsc->idx_subd >= dev->transfer->nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
 	/* Recovers pointers on the proper subdevice */
-	subd = dev->transfer->subds[dsc->idx_subd];
+	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
 	if (((subd->flags & COMEDI_SUBD_UNUSED) != 0) ||
@@ -194,7 +194,7 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 		return -EINVAL;
 
 	/* Checks the channel descriptor */
-	ret = comedi_check_chanlist(dev->transfer->subds[dsc->idx_subd],
+	ret = comedi_check_chanlist(dev->transfer.subds[dsc->idx_subd],
 				    1, &dsc->chan_desc);
 	if (ret < 0)
 		return ret;

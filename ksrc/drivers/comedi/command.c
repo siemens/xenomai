@@ -95,25 +95,25 @@ int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 	__comedi_info("comedi_check_cmddesc: minor=%d\n",
 		       comedi_get_minor(cxt));
 
-	if (desc->idx_subd >= dev->transfer->nb_subd) {
+	if (desc->idx_subd >= dev->transfer.nb_subd) {
 		__comedi_err("comedi_check_cmddesc: "
 			     "subdevice index out of range (%u >= %u)\n",
-			     desc->idx_subd, dev->transfer->nb_subd);
+			     desc->idx_subd, dev->transfer.nb_subd);
 		return -EINVAL;
 	}
 
-	if (dev->transfer->subds[desc->idx_subd]->flags & COMEDI_SUBD_UNUSED) {
+	if (dev->transfer.subds[desc->idx_subd]->flags & COMEDI_SUBD_UNUSED) {
 		__comedi_err("comedi_check_cmddesc: "
 			     "subdevice type incoherent\n");
 		return -EIO;
 	}
 
-	if (!(dev->transfer->subds[desc->idx_subd]->flags & COMEDI_SUBD_CMD)) {
+	if (!(dev->transfer.subds[desc->idx_subd]->flags & COMEDI_SUBD_CMD)) {
 		__comedi_err("comedi_check_cmddesc: operation not supported\n");
 		return -EIO;
 	}
 
-	if (test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[desc->idx_subd])))
+	if (test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[desc->idx_subd])))
 		return -EBUSY;
 
 	if (ret != 0) {
@@ -121,7 +121,7 @@ int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 		return ret;
 	}
 
-	return comedi_check_chanlist(dev->transfer->subds[desc->idx_subd],
+	return comedi_check_chanlist(dev->transfer.subds[desc->idx_subd],
 				     desc->nb_chan, desc->chan_descs);
 }
 
@@ -203,7 +203,7 @@ int comedi_check_specific_cmdcnt(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 {
 	unsigned int tmp1, tmp2;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd_mask = dev->transfer->subds[desc->idx_subd]->cmd_mask;
+	comedi_cmd_t *cmd_mask = dev->transfer.subds[desc->idx_subd]->cmd_mask;
 
 	if (cmd_mask == NULL)
 		return 0;
@@ -280,9 +280,9 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 		goto out_ioctl_cmd;
 
 	/* Tests the command with the cmdtest function */
-	if (dev->transfer->subds[cmd_desc->idx_subd]->do_cmdtest != NULL)
-		ret = dev->transfer->subds[cmd_desc->idx_subd]->
-			do_cmdtest(dev->transfer->subds[cmd_desc->idx_subd], 
+	if (dev->transfer.subds[cmd_desc->idx_subd]->do_cmdtest != NULL)
+		ret = dev->transfer.subds[cmd_desc->idx_subd]->
+			do_cmdtest(dev->transfer.subds[cmd_desc->idx_subd], 
 				   cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
@@ -301,8 +301,8 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 	comedi_init_transfer(cxt, cmd_desc);
 
 	/* Eventually launches the command */
-	ret = dev->transfer->subds[cmd_desc->idx_subd]->
-		do_cmd(dev->transfer->subds[cmd_desc->idx_subd], 
+	ret = dev->transfer.subds[cmd_desc->idx_subd]->
+		do_cmd(dev->transfer.subds[cmd_desc->idx_subd], 
 		       cmd_desc);
 
 	if (ret != 0) {

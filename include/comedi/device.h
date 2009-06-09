@@ -50,8 +50,8 @@ struct comedi_device {
 	/* Hidden description stuff */
 	struct list_head subdvsq;
 
-	/* TODO: transfer should not be a pointer */
-	comedi_trf_t *transfer;
+	/* Context-dependent stuff */
+	comedi_trf_t transfer;
 
 	/* Private data useful for drivers functioning */
 	void *priv;

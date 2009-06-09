@@ -104,14 +104,14 @@ comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
 	/* If the field type is properly set, 
 	   it is used instead of idx_subd */
 	if (type == COMEDI_BUF_PUT)
-		idx = dev->transfer->idx_read_subd;
+		idx = dev->transfer.idx_read_subd;
 	else if (type == COMEDI_BUF_GET)
-		idx = dev->transfer->idx_write_subd;
+		idx = dev->transfer.idx_write_subd;
 	else
 		idx = idx_subd;
 
-	if (dev->transfer->bufs != NULL)
-		return dev->transfer->bufs[idx]->cur_cmd;
+	if (dev->transfer.bufs != NULL)
+		return dev->transfer.bufs[idx]->cur_cmd;
 	else
 		return NULL;
 }
@@ -125,15 +125,15 @@ int comedi_get_chan(comedi_subd_t *subd)
 	comedi_cmd_t *cmd;
 
 	/* Check that subdevice supports commands */
-	if (dev->transfer->bufs == NULL)
+	if (dev->transfer.bufs == NULL)
 		return -EINVAL;
 
 	/* Check a command is executed */
-	if (dev->transfer->bufs[subd->idx]->cur_cmd == NULL)
+	if (dev->transfer.bufs[subd->idx]->cur_cmd == NULL)
 		return -EINVAL;
 
 	/* Retrieve the proper command descriptor */
-	cmd = dev->transfer->bufs[subd->idx]->cur_cmd;
+	cmd = dev->transfer.bufs[subd->idx]->cur_cmd;
 
 	/* There is no need to check the channel idx, 
 	   it has already been controlled in command_test */
@@ -142,13 +142,13 @@ int comedi_get_chan(comedi_subd_t *subd)
 	   so, we have to compute the global size of the channels
 	   in this command... */
 	for (i = 0; i < cmd->nb_chan; i++)
-		tmp_size += dev->transfer->subds[subd->idx]->chan_desc->
+		tmp_size += dev->transfer.subds[subd->idx]->chan_desc->
 			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
 
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
 
-	tmp_count = dev->transfer->bufs[subd->idx]->mng_count % tmp_size;
+	tmp_count = dev->transfer.bufs[subd->idx]->mng_count % tmp_size;
 
 	/* Translation bytes -> bits */
 	tmp_count *= 8;
@@ -156,7 +156,7 @@ int comedi_get_chan(comedi_subd_t *subd)
 	/* ...and find the channel the last munged sample 
 	   was related with */
 	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++)
-		tmp_count -= dev->transfer->subds[subd->idx]->chan_desc->
+		tmp_count -= dev->transfer.subds[subd->idx]->chan_desc->
 			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
 
 	if (tmp_count == 0)
@@ -169,7 +169,7 @@ int comedi_get_chan(comedi_subd_t *subd)
 
 int comedi_buf_prepare_absput(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 
 	return __pre_abs_put(buf, count);
 }
@@ -177,21 +177,21 @@ int comedi_buf_prepare_absput(comedi_dev_t * dev, unsigned long count)
 int comedi_buf_commit_absput(comedi_dev_t * dev, unsigned long count)
 {
 
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 
 	return __abs_put(buf, count);
 }
 
 int comedi_buf_prepare_put(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 
 	return __pre_put(buf, count);
 }
 
 int comedi_buf_commit_put(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 
 	return __put(buf, count);
 }
@@ -199,7 +199,7 @@ int comedi_buf_commit_put(comedi_dev_t * dev, unsigned long count)
 int comedi_buf_put(comedi_dev_t * dev, void *bufdata, unsigned long count)
 {
 	int ret;
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 
 	if (__count_to_put(buf) < count)
 		return -EAGAIN;
@@ -214,28 +214,28 @@ int comedi_buf_put(comedi_dev_t * dev, void *bufdata, unsigned long count)
 
 int comedi_buf_prepare_absget(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 
 	return __pre_abs_get(buf, count);
 }
 
 int comedi_buf_commit_absget(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 
 	return __abs_get(buf, count);
 }
 
 int comedi_buf_prepare_get(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 
 	return __pre_get(buf, count);
 }
 
 int comedi_buf_commit_get(comedi_dev_t * dev, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 
 	return __get(buf, count);
 }
@@ -243,7 +243,7 @@ int comedi_buf_commit_get(comedi_dev_t * dev, unsigned long count)
 int comedi_buf_get(comedi_dev_t * dev, void *bufdata, unsigned long count)
 {
 	int ret;
-	comedi_buf_t *buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 
 	if (__count_to_get(buf) < count)
 		return -EAGAIN;
@@ -265,16 +265,16 @@ int comedi_buf_evt(comedi_dev_t * dev, unsigned int type, unsigned long evts)
 
 	/* Retrieves the subdevice's index */
 	if (type == COMEDI_BUF_PUT)
-		idx_subd = dev->transfer->idx_read_subd;
+		idx_subd = dev->transfer.idx_read_subd;
 	else if (type == COMEDI_BUF_GET)
-		idx_subd = dev->transfer->idx_write_subd;
+		idx_subd = dev->transfer.idx_write_subd;
 	else
 		return -EINVAL;
 
-	buf = dev->transfer->bufs[idx_subd];
+	buf = dev->transfer.bufs[idx_subd];
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
@@ -297,10 +297,10 @@ unsigned long comedi_buf_count(comedi_dev_t * dev, unsigned int type)
 	comedi_buf_t *buf;
 
 	if (type == COMEDI_BUF_PUT) {
-		buf = dev->transfer->bufs[dev->transfer->idx_read_subd];
+		buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
 		ret = __count_to_put(buf);
 	} else if (type == COMEDI_BUF_GET) {
-		buf = dev->transfer->bufs[dev->transfer->idx_write_subd];
+		buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
 		ret = __count_to_get(buf);
 	}
 
@@ -350,30 +350,30 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 		return -EFAULT;
 
 	/* Checks the subdevice */
-	if (map_cfg.idx_subd >= dev->transfer->nb_subd ||
-	    (dev->transfer->subds[map_cfg.idx_subd]->flags & COMEDI_SUBD_CMD) ==
+	if (map_cfg.idx_subd >= dev->transfer.nb_subd ||
+	    (dev->transfer.subds[map_cfg.idx_subd]->flags & COMEDI_SUBD_CMD) ==
 	    0
-	    || (dev->transfer->subds[map_cfg.idx_subd]->
+	    || (dev->transfer.subds[map_cfg.idx_subd]->
 		flags & COMEDI_SUBD_MMAP) == 0)
 		return -EINVAL;
 
 	/* Checks the buffer is not already mapped */
 	if (test_bit(COMEDI_TSF_MMAP,
-		     &(dev->transfer->status[map_cfg.idx_subd])))
+		     &(dev->transfer.status[map_cfg.idx_subd])))
 		return -EBUSY;
 
 	/* Basically checks the size to be mapped */
 	if ((map_cfg.size & ~(PAGE_MASK)) != 0 ||
-	    map_cfg.size > dev->transfer->bufs[map_cfg.idx_subd]->size)
+	    map_cfg.size > dev->transfer.bufs[map_cfg.idx_subd]->size)
 		return -EFAULT;
 
 	ret = rtdm_mmap_to_user(cxt->rtdm_usrinf,
-				dev->transfer->bufs[map_cfg.idx_subd]->buf,
+				dev->transfer.bufs[map_cfg.idx_subd]->buf,
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
 				&map_cfg.ptr,
 				&comedi_vm_ops,
-				&(dev->transfer->status[map_cfg.idx_subd]));
+				&(dev->transfer.status[map_cfg.idx_subd]));
 
 	if (ret < 0)
 		return ret;
@@ -404,7 +404,7 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 				  &buf_cfg, arg, sizeof(comedi_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	if (buf_cfg.idx_subd >= dev->transfer->nb_subd)
+	if (buf_cfg.idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
 	if (buf_cfg.buf_size > COMEDI_BUF_MAXSIZE)
@@ -413,19 +413,19 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 	/* If a transfer is occuring or if the buffer is mmapped,
 	   no buffer size change is allowed */
 	if (test_bit(COMEDI_TSF_BUSY,
-		     &(dev->transfer->status[buf_cfg.idx_subd])))
+		     &(dev->transfer.status[buf_cfg.idx_subd])))
 		return -EBUSY;
 
 	if (test_bit(COMEDI_TSF_MMAP,
-		     &(dev->transfer->status[buf_cfg.idx_subd])))
+		     &(dev->transfer.status[buf_cfg.idx_subd])))
 		return -EPERM;
 
 	/* Performs the re-allocation */
-	comedi_free_buffer(dev->transfer->bufs[buf_cfg.idx_subd]);
+	comedi_free_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
 
-	dev->transfer->bufs[buf_cfg.idx_subd]->size = buf_cfg.buf_size;
+	dev->transfer.bufs[buf_cfg.idx_subd]->size = buf_cfg.buf_size;
 
-	return comedi_alloc_buffer(dev->transfer->bufs[buf_cfg.idx_subd]);
+	return comedi_alloc_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
 }
 
 int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
@@ -447,17 +447,17 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 				  &info, arg, sizeof(comedi_bufinfo_t)) != 0)
 		return -EFAULT;
 
-	if (info.idx_subd > dev->transfer->nb_subd)
+	if (info.idx_subd > dev->transfer.nb_subd)
 		return -EINVAL;
 
-	if ((dev->transfer->subds[info.idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[info.idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
-	buf = dev->transfer->bufs[info.idx_subd];
+	buf = dev->transfer.bufs[info.idx_subd];
 
 	ret = __handle_event(buf);
 
-	if (info.idx_subd == dev->transfer->idx_read_subd) {
+	if (info.idx_subd == dev->transfer.idx_read_subd) {
 
 		/* Updates consume count if rw_count is not null */
 		if (info.rw_count != 0)
@@ -474,7 +474,7 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 			comedi_cancel_transfer(cxt, info.idx_subd);
 			return ret;
 		}
-	} else if (info.idx_subd == dev->transfer->idx_write_subd) {
+	} else if (info.idx_subd == dev->transfer.idx_write_subd) {
 
 		if (ret < 0) {
 			comedi_cancel_transfer(cxt, info.idx_subd);
@@ -504,9 +504,9 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 		return -EINVAL;
 
 	/* Performs the munge if need be */
-	if (dev->transfer->subds[info.idx_subd]->munge != NULL) {
-		__munge(dev->transfer->subds[info.idx_subd],
-			dev->transfer->subds[info.idx_subd]->munge,
+	if (dev->transfer.subds[info.idx_subd]->munge != NULL) {
+		__munge(dev->transfer.subds[info.idx_subd],
+			dev->transfer.subds[info.idx_subd]->munge,
 			buf, tmp_cnt);
 
 		/* Updates munge count */
@@ -526,19 +526,19 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
-	int idx_subd = dev->transfer->idx_read_subd;
-	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
+	int idx_subd = dev->transfer.idx_read_subd;
+	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
 	ssize_t count = 0;
 
 	/* Basic checkings */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	while (count < nbytes) {
@@ -564,9 +564,9 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 		if (tmp_cnt > 0) {
 
 			/* Performs the munge if need be */
-			if (dev->transfer->subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer->subds[idx_subd],
-					dev->transfer->subds[idx_subd]->munge,
+			if (dev->transfer.subds[idx_subd]->munge != NULL) {
+				__munge(dev->transfer.subds[idx_subd],
+					dev->transfer.subds[idx_subd]->munge,
 					buf, tmp_cnt);
 
 				/* Updates munge count */
@@ -590,7 +590,7 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
 			if (!test_bit(COMEDI_TSF_BULK,
-				      &(dev->transfer->status[idx_subd])))
+				      &(dev->transfer.status[idx_subd])))
 				goto out_comedi_read;
 		}
 		/* If the acquisition is not over, we must not
@@ -615,19 +615,19 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 		     const void *bufdata, size_t nbytes)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
-	int idx_subd = dev->transfer->idx_write_subd;
-	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
+	int idx_subd = dev->transfer.idx_write_subd;
+	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
 	ssize_t count = 0;
 
 	/* Basic checkings */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	while (count < nbytes) {
@@ -661,9 +661,9 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 			}
 
 			/* Performs the munge if need be */
-			if (dev->transfer->subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer->subds[idx_subd],
-					dev->transfer->subds[idx_subd]->munge,
+			if (dev->transfer.subds[idx_subd]->munge != NULL) {
+				__munge(dev->transfer.subds[idx_subd],
+					dev->transfer.subds[idx_subd]->munge,
 					buf, tmp_cnt);
 
 				/* Updates munge count */
@@ -679,7 +679,7 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
 			if (!test_bit(COMEDI_TSF_BULK,
-				      &(dev->transfer->status[idx_subd])))
+				      &(dev->transfer.status[idx_subd])))
 				goto out_comedi_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
@@ -704,9 +704,9 @@ int comedi_select(comedi_cxt_t *cxt,
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 	int idx_subd = (type == RTDM_SELECTTYPE_READ) ? 
-		dev->transfer->idx_read_subd :
-		dev->transfer->idx_write_subd;
-	comedi_buf_t *buf = dev->transfer->bufs[idx_subd];
+		dev->transfer.idx_read_subd :
+		dev->transfer.idx_write_subd;
+	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
 
 	/* Checks the RTDM select type 
 	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
@@ -718,11 +718,11 @@ int comedi_select(comedi_cxt_t *cxt,
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;	
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	/* Performs a bind on the Comedi synchronization element */
@@ -745,24 +745,24 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 		return -EFAULT;
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer->subds[poll.idx_subd]->flags &
+	if ((dev->transfer.subds[poll.idx_subd]->flags &
 	     COMEDI_SUBD_CMD) == 0 ||
-	    (dev->transfer->subds[poll.idx_subd]->flags &
+	    (dev->transfer.subds[poll.idx_subd]->flags &
 	     COMEDI_SUBD_MASK_SPECIAL) != 0)
 		return -EINVAL;
 
 	/* Checks a transfer is occuring */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[poll.idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[poll.idx_subd])))
 		return -EINVAL;
 
-	buf = dev->transfer->bufs[poll.idx_subd];
+	buf = dev->transfer.bufs[poll.idx_subd];
 
 	/* Checks the buffer events */
 	ret = __handle_event(buf);
 
 	/* Retrieves the data amount to compute 
 	   according to the subdevice type */
-	if ((dev->transfer->subds[poll.idx_subd]->flags &
+	if ((dev->transfer.subds[poll.idx_subd]->flags &
 	     COMEDI_SUBD_MASK_READ) != 0) {
 
 		tmp_cnt = __count_to_get(buf);
@@ -799,7 +799,7 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 
 	if (ret == 0) {
 		/* Retrieves the count once more */
-		if ((dev->transfer->subds[poll.idx_subd]->flags &
+		if ((dev->transfer.subds[poll.idx_subd]->flags &
 		     COMEDI_SUBD_MASK_READ) != 0)
 			tmp_cnt = __count_to_get(buf);
 		else

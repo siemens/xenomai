@@ -3577,7 +3577,7 @@ void mio_common_detach(comedi_dev_t * dev)
 
 static void init_ao_67xx(comedi_dev_t * dev)
 {
-	comedi_subd_t *subd = dev->transfer->subds[NI_AO_SUBDEV];
+	comedi_subd_t *subd = dev->transfer.subds[NI_AO_SUBDEV];
 	int i;
 
 	for (i = 0; i < subd->chan_desc->length; i++)

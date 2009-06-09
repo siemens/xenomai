@@ -39,9 +39,13 @@ static comedi_dev_t comedi_devs[COMEDI_NB_DEVICES];
 void comedi_init_devs(void)
 {
 	int i;
-	memset(comedi_devs, 0, COMEDI_NB_DEVICES * sizeof(comedi_dev_t));
-	for (i = 0; i < COMEDI_NB_DEVICES; i++)
+	memset(comedi_devs, 0, COMEDI_NB_DEVICES * sizeof(comedi_dev_t));	
+	for (i = 0; i < COMEDI_NB_DEVICES; i++) {		
 		comedi_lock_init(&comedi_devs[i].lock);
+		comedi_devs[i].transfer.irq = COMEDI_IRQ_UNUSED;
+		comedi_devs[i].transfer.idx_read_subd = COMEDI_IDX_UNUSED;
+		comedi_devs[i].transfer.idx_write_subd = COMEDI_IDX_UNUSED;
+	}
 }
 
 int comedi_check_cleanup_devs(void)
@@ -140,7 +144,7 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 	}
 
 	entry->nlink = 1;
-	entry->data = dev->transfer;
+	entry->data = &dev->transfer;
 	entry->write_proc = NULL;
 	entry->read_proc = comedi_rdproc_transfer;
 	wrap_proc_dir_entry_owner(entry);
@@ -466,9 +470,9 @@ int comedi_ioctl_devinfo(comedi_cxt_t * cxt, void *arg)
 		    COMEDI_NAMELEN : strlen(dev->driver->board_name);
 
 		memcpy(info.board_name, dev->driver->board_name, len);
-		info.nb_subd = dev->transfer->nb_subd;
-		info.idx_read_subd = dev->transfer->idx_read_subd;
-		info.idx_write_subd = dev->transfer->idx_write_subd;
+		info.nb_subd = dev->transfer.nb_subd;
+		info.idx_read_subd = dev->transfer.idx_read_subd;
+		info.idx_write_subd = dev->transfer.idx_write_subd;
 	}
 
 	if (comedi_copy_to_user(cxt, arg, &info, sizeof(comedi_dvinfo_t)) != 0)

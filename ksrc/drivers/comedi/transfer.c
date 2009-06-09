@@ -43,7 +43,7 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 		       comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
-	tsf = dev->transfer;
+	tsf = &dev->transfer;
 
 	if (tsf == NULL)
 		return -ENODEV;
@@ -76,9 +76,6 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 		comedi_kfree(tsf->subds);
 	}
 
-	comedi_kfree(tsf);
-	dev->transfer = NULL;
-
 	return 0;
 }
 
@@ -94,13 +91,9 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 		       comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
+	tsf = &dev->transfer;
 
-	/* Allocates the main structure */
-	tsf = comedi_kmalloc(sizeof(comedi_trf_t));
-	if (tsf == NULL) {
-		__comedi_err("comedi_setup_transfer: call1(alloc) failed \n");
-		return -ENOMEM;
-	}
+	/* Clear the structure */
 	memset(tsf, 0, sizeof(comedi_trf_t));
 
 	/* We consider 0 can be valid index */
@@ -110,8 +103,6 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	/* 0 is also considered as a valid IRQ, then 
 	   the IRQ number must be initialized with another value */
 	tsf->irq_desc.irq = COMEDI_IRQ_UNUSED;
-
-	dev->transfer = tsf;
 
 	/* Recovers the subdevices count 
 	   (as they are registered in a linked list */
@@ -190,7 +181,7 @@ int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd)
 		       comedi_get_minor(cxt), idx_subd);
 
 	if (test_and_set_bit(COMEDI_TSF_BUSY,
-			     &(dev->transfer->status[idx_subd])))
+			     &(dev->transfer.status[idx_subd])))
 		return -EBUSY;
 
 	return 0;
@@ -207,31 +198,31 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	/* Checks if the transfer system has to work in bulk mode */
 	if (cmd->flags & COMEDI_CMD_BULK)
 		set_bit(COMEDI_TSF_BULK,
-			&(dev->transfer->status[cmd->idx_subd]));
+			&(dev->transfer.status[cmd->idx_subd]));
 
 	/* Sets the working command */
-	dev->transfer->bufs[cmd->idx_subd]->cur_cmd = cmd;
+	dev->transfer.bufs[cmd->idx_subd]->cur_cmd = cmd;
 
 	/* Initializes the counts and the flag variable */
-	dev->transfer->bufs[cmd->idx_subd]->end_count = 0;
-	dev->transfer->bufs[cmd->idx_subd]->prd_count = 0;
-	dev->transfer->bufs[cmd->idx_subd]->cns_count = 0;
-	dev->transfer->bufs[cmd->idx_subd]->tmp_count = 0;
-	dev->transfer->bufs[cmd->idx_subd]->evt_flags = 0;
-	dev->transfer->bufs[cmd->idx_subd]->mng_count = 0;
+	dev->transfer.bufs[cmd->idx_subd]->end_count = 0;
+	dev->transfer.bufs[cmd->idx_subd]->prd_count = 0;
+	dev->transfer.bufs[cmd->idx_subd]->cns_count = 0;
+	dev->transfer.bufs[cmd->idx_subd]->tmp_count = 0;
+	dev->transfer.bufs[cmd->idx_subd]->evt_flags = 0;
+	dev->transfer.bufs[cmd->idx_subd]->mng_count = 0;
 
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
 			comedi_chan_t *chft;
 			chft =
-			    comedi_get_chfeat(dev->transfer->
+			    comedi_get_chfeat(dev->transfer.
 					      subds[cmd->idx_subd],
 					      CR_CHAN(cmd->chan_descs[i]));
-			dev->transfer->bufs[cmd->idx_subd]->end_count +=
+			dev->transfer.bufs[cmd->idx_subd]->end_count +=
 			    chft->nb_bits / 8;
 		}
-		dev->transfer->bufs[cmd->idx_subd]->end_count *= cmd->stop_arg;
+		dev->transfer.bufs[cmd->idx_subd]->end_count *= cmd->stop_arg;
 	}
 
 	/* Always returning 0 is here useless... for the moment */
@@ -245,11 +236,11 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return 0;
 
 	/* Retrieves the proper subdevice pointer */
-	subd = dev->transfer->subds[idx_subd];
+	subd = dev->transfer.subds[idx_subd];
 
 	/* If a "cancel" function is registered, call it
 	   (Note: this function is called before having checked 
@@ -263,20 +254,20 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	}
 
 	/* Clears the "busy" flag */
-	clear_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd]));
+	clear_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd]));
 
 	/* If the subdevice is command capable and 
 	   if there is a command is under progress, 
 	   disable it and free it... */
-	if (dev->transfer->bufs != NULL &&
-	    dev->transfer->bufs[idx_subd]->cur_cmd != NULL) {
+	if (dev->transfer.bufs != NULL &&
+	    dev->transfer.bufs[idx_subd]->cur_cmd != NULL) {
 
-		comedi_free_cmddesc(dev->transfer->bufs[idx_subd]->cur_cmd);
-		comedi_kfree(dev->transfer->bufs[idx_subd]->cur_cmd);
-		dev->transfer->bufs[idx_subd]->cur_cmd = NULL;
+		comedi_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
+		comedi_kfree(dev->transfer.bufs[idx_subd]->cur_cmd);
+		dev->transfer.bufs[idx_subd]->cur_cmd = NULL;
 
 		/* ...we must also clean the events flags */
-		dev->transfer->bufs[idx_subd]->evt_flags = 0;
+		dev->transfer.bufs[idx_subd]->evt_flags = 0;
 	}
 
 	return ret;
@@ -292,7 +283,7 @@ int comedi_request_irq(comedi_dev_t * dev,
 	int ret;
 	unsigned long __flags;
 
-	if (dev->transfer->irq_desc.irq != COMEDI_IRQ_UNUSED)
+	if (dev->transfer.irq_desc.irq != COMEDI_IRQ_UNUSED)
 		return -EBUSY;
 
 	/* A spinlock is used so as to prevent race conditions 
@@ -300,11 +291,11 @@ int comedi_request_irq(comedi_dev_t * dev,
 	   (even if such a case is bound not to happen) */
 	comedi_lock_irqsave(&dev->lock, __flags);
 
-	ret = __comedi_request_irq(&dev->transfer->irq_desc,
+	ret = __comedi_request_irq(&dev->transfer.irq_desc,
 				   irq, handler, flags, cookie);
 
 	if (ret != 0)
-		dev->transfer->irq_desc.irq = COMEDI_IRQ_UNUSED;
+		dev->transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
 
 	comedi_unlock_irqrestore(&dev->lock, __flags);
 
@@ -316,22 +307,22 @@ int comedi_free_irq(comedi_dev_t * dev, unsigned int irq)
 
 	int ret = 0;
 
-	if (dev->transfer->irq_desc.irq != irq)
+	if (dev->transfer.irq_desc.irq != irq)
 		return -EINVAL;
 
 	/* There is less need to use a spinlock 
 	   than for comedi_request_irq() */
-	ret = __comedi_free_irq(&dev->transfer->irq_desc);
+	ret = __comedi_free_irq(&dev->transfer.irq_desc);
 
 	if (ret == 0)
-		dev->transfer->irq_desc.irq = COMEDI_IRQ_UNUSED;
+		dev->transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
 
 	return 0;
 }
 
 unsigned int comedi_get_irq(comedi_dev_t * dev)
 {
-	return dev->transfer->irq_desc.irq;
+	return dev->transfer.irq_desc.irq;
 }
 
 /* --- Proc section --- */
@@ -426,18 +417,18 @@ int comedi_ioctl_cancel(comedi_cxt_t * cxt, void *arg)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 	comedi_subd_t *subd;
 
-	if (idx_subd >= dev->transfer->nb_subd)
+	if (idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	if (dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_UNUSED)
+	if (dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_UNUSED)
 		return -EIO;
 
-	if (!(dev->transfer->subds[idx_subd]->flags & COMEDI_SUBD_CMD))
+	if (!(dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD))
 		return -EIO;
 
-	subd = dev->transfer->subds[idx_subd];
+	subd = dev->transfer.subds[idx_subd];
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer->status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -EINVAL;
 
 	return comedi_cancel_transfer(cxt, idx_subd);
