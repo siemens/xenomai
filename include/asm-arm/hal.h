@@ -58,6 +58,9 @@
 #elif defined(CONFIG_ARCH_MXC)
 #define RTHAL_TIMER_DEVICE	"mxc_timer1"
 #define RTHAL_CLOCK_DEVICE	"mxc_timer1"
+#elif defined(CONFIG_ARCH_OMAP2) || defined(CONFIG_ARCH_OMAP3)
+#define RTHAL_TIMER_DEVICE	"gp timer"
+#define RTHAL_CLOCK_DEVICE	"gp timer"
 #elif defined(CONFIG_ARCH_PXA)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"

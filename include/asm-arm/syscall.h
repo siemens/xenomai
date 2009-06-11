@@ -286,18 +286,21 @@ static inline unsigned long long __xn_rdtsc(void)
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
+	volatile unsigned long long *const tscp = __xn_tscinfo.u.dec.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.u.dec.counter;
+	volatile unsigned *const last_cntp = __xn_tscinfo.u.dec.last_cnt;
 	const unsigned mask = __xn_tscinfo.u.dec.mask;
-	unsigned long long after, before;
+	register unsigned long long after, before;
 	unsigned counter, last_cnt;
 
+	__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
 	do {
-		before = *__xn_tscinfo.u.dec.tsc;
-		counter = *__xn_tscinfo.u.dec.counter;
-		last_cnt = *__xn_tscinfo.u.dec.last_cnt;
+		before = after;
+		counter = *counterp;
+		last_cnt = *last_cntp;
 		/* compiler barrier. */
 		__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
-
-		after = *__xn_tscinfo.u.dec.tsc;
+		__asm__ ("ldmia %1, %M0\n": "=r"(after): "r"(tscp), "m"(*tscp));
 	} while (after != before);
 
 	counter &= mask;

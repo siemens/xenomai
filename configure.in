@@ -182,6 +182,7 @@ if test $XENO_TARGET_ARCH = arm ; then
   unset CONFIG_XENO_ARM_SA1100
   unset CONFIG_XENO_CPU_XSC3
   unset tsc_type
+  unset vfp
   unset XNARCH_ARM_TSC_TYPE
 
   AC_MSG_CHECKING(for ARM machine)
@@ -194,6 +195,7 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	at91sam926x)   	arch=5
+			vfp=vfp
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	generic)	arch=4
@@ -216,6 +218,11 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	mx3)		arch=6
+			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	omap3)		arch=7
+			vfp=vfp3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	pxa) 		arch=5
@@ -253,8 +260,16 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 	CONFIG_XENO_ARM_ARCH=5
 	CONFIG_XENO_CPU_XSC3=y
   else
-	CONFIG_XENO_ARM_ARCH=$arch
+	CONFIG_XENO_ARM_ARCH="$arch"
   fi
+# Set the -march flag, FPU flags are set later.
+  case "$arch" in
+  4)	XENO_ARM_ARCH_FLAGS="-march=armv4t";;
+  5)	XENO_ARM_ARCH_FLAGS="-march=armv5";;
+  6)	XENO_ARM_ARCH_FLAGS="-march=armv6";;
+  7)	XENO_ARM_ARCH_FLAGS="-march=armv7-a";;
+  *)	AC_MSG_ERROR([Invalid architecture $arch, only 4, 5, xscale3, 6 and 7 are supported]);;
+  esac
   AC_MSG_RESULT($CONFIG_XENO_ARM_ARCH)
 
   AC_MSG_CHECKING(for ARM SA1100 architecture)
@@ -289,6 +304,17 @@ user-space]),
 	*) unset CONFIG_XENO_ARM_EABI ;;
 	esac])
   AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
+
+  # Set FPU flags, if EABI is not enabled, all libraries in the system
+  # must be compiled with the same FPU flags, as we do not know how
+  # other components are compiled, we can not set the flags.
+  if test x$CONFIG_XENO_ARM_EABI = xy; then
+     if test x"$vfp" != x; then
+     	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
+     else
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
+     fi
+  fi
 
   if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
 	CONFIG_XENO_FASTSYNCH=y
@@ -676,7 +702,7 @@ case $XENO_TARGET_ARCH in
 	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS"
         ;;
  arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -march=armv$CONFIG_XENO_ARM_ARCH"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe $XENO_ARM_ARCH_FLAGS"
         ;;
 esac
 
