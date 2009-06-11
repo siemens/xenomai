@@ -144,7 +144,7 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 	entry->data = dev->transfer;
 	entry->write_proc = NULL;
 	entry->read_proc = comedi_rdproc_transfer;
-	entry->owner = THIS_MODULE;
+	wrap_proc_dir_entry_owner(entry);
 
       out_setup_proc_transfer:
 	/* Frees the file name buffer */
