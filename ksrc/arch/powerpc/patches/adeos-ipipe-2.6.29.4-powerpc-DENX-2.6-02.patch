@@ -538,7 +538,7 @@ index f75a5fc..32242c5 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..ae0e6ce
+index 0000000..fc39c55
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,253 @@
@@ -589,10 +589,10 @@ index 0000000..ae0e6ce
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.6-01"
++#define IPIPE_ARCH_STRING	"2.6-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 +
@@ -4443,7 +4443,7 @@ index 5d2d552..5903a16 100644
  
  static void mpc8xx_ack(unsigned int virq)
 diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
-index a35297d..bd09f68 100644
+index a35297d..778feea 100644
 --- a/arch/powerpc/sysdev/mpic.c
 +++ b/arch/powerpc/sysdev/mpic.c
 @@ -46,7 +46,7 @@
@@ -4455,20 +4455,22 @@ index a35297d..bd09f68 100644
  
  #ifdef CONFIG_PPC32	/* XXX for now */
  #ifdef CONFIG_IRQ_ALL_CPUS
-@@ -671,8 +671,11 @@ void mpic_unmask_irq(unsigned int irq)
+@@ -666,33 +666,44 @@ static inline void mpic_eoi(struct mpic *mpic)
+  */
+ 
+ 
+-void mpic_unmask_irq(unsigned int irq)
++void __mpic_unmask_irq(unsigned int irq)
+ {
  	unsigned int loops = 100000;
  	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
-+	unsigned long flags;
-+
-+	DBG("%p: %s: unmask_irq: %d (src %d)\n", mpic, mpic->name, irq, src);
  
 -	DBG("%p: %s: enable_irq: %d (src %d)\n", mpic, mpic->name, irq, src);
-+	local_irq_save_hw_cond(flags);
- 
+-
  	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
  		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) &
-@@ -680,19 +683,21 @@ void mpic_unmask_irq(unsigned int irq)
+ 		       ~MPIC_VECPRI_MASK);
  	/* make sure mask gets to controller before we return to user */
  	do {
  		if (!loops--) {
@@ -4477,25 +4479,36 @@ index a35297d..bd09f68 100644
  			break;
  		}
  	} while(mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) & MPIC_VECPRI_MASK);
-+
-+	ipipe_irq_unlock(irq);
-+
-+	local_irq_restore_hw_cond(flags);
  }
  
 -void mpic_mask_irq(unsigned int irq)
-+static inline void __mpic_mask_irq(unsigned int irq)
++void mpic_unmask_irq(unsigned int irq)
  {
 -	unsigned int loops = 100000;
++#ifdef DEBUG
  	struct mpic *mpic = mpic_from_irq(irq);
- 	unsigned int src = mpic_irq_to_hw(irq);
--
+-	unsigned int src = mpic_irq_to_hw(irq);
++#endif
++	unsigned long flags;
+ 
 -	DBG("%s: disable_irq: %d (src %d)\n", mpic->name, irq, src);
++	DBG("%p: %s: unmask_irq: %d (src %d)\n", mpic, mpic->name, irq, src);
++
++	spin_lock_irqsave(&mpic_lock, flags);
++	__mpic_unmask_irq(irq);
++	ipipe_irq_unlock(irq);
++	spin_unlock_irqrestore(&mpic_lock, flags);
++}
++
++static inline void __mpic_mask_irq(unsigned int irq)
++{
++	struct mpic *mpic = mpic_from_irq(irq);
++	unsigned int src = mpic_irq_to_hw(irq);
 +	unsigned int loops = 100000;
  
  	mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI),
  		       mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI)) |
-@@ -701,12 +706,27 @@ void mpic_mask_irq(unsigned int irq)
+@@ -701,15 +712,31 @@ void mpic_mask_irq(unsigned int irq)
  	/* make sure mask gets to controller before we return to user */
  	do {
  		if (!loops--) {
@@ -4515,45 +4528,52 @@ index a35297d..bd09f68 100644
 +
 +	DBG("%s: mask_irq: irq %u (src %d)\n", mpic->name, irq, mpic_irq_to_hw(irq));
 +
-+	local_irq_save_hw_cond(flags);
++	spin_lock_irqsave(&mpic_lock, flags);
 +	__mpic_mask_irq(irq);
 +	ipipe_irq_lock(irq);
-+	local_irq_restore_hw_cond(flags);
++	spin_unlock_irqrestore(&mpic_lock, flags);
 +}
 +
  void mpic_end_irq(unsigned int irq)
  {
  	struct mpic *mpic = mpic_from_irq(irq);
-@@ -719,6 +739,10 @@ void mpic_end_irq(unsigned int irq)
++	unsigned long flags;
+ 
+ #ifdef DEBUG_IRQ
+ 	DBG("%s: end_irq: %d\n", mpic->name, irq);
+@@ -719,6 +746,14 @@ void mpic_end_irq(unsigned int irq)
  	 * latched another edge interrupt coming in anyway
  	 */
  
 +#ifdef CONFIG_IPIPE
++	spin_lock_irqsave(&mpic_lock, flags);
 +	if (!(irq_desc[irq].status & IRQ_NOREQUEST))
 +		__mpic_mask_irq(irq);
++	spin_unlock_irqrestore(&mpic_lock, flags);
++#else
++	(void)flags;
 +#endif
  	mpic_eoi(mpic);
  }
  
-@@ -728,11 +752,16 @@ static void mpic_unmask_ht_irq(unsigned int irq)
+@@ -728,8 +763,11 @@ static void mpic_unmask_ht_irq(unsigned int irq)
  {
  	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
 +	unsigned long flags;
-+
-+	local_irq_save_hw_cond(flags);
  
- 	mpic_unmask_irq(irq);
+-	mpic_unmask_irq(irq);
++	spin_lock_irqsave(&mpic_lock, flags);
++	__mpic_unmask_irq(irq);
++	spin_unlock_irqrestore(&mpic_lock, flags);
  
  	if (irq_desc[irq].status & IRQ_LEVEL)
  		mpic_ht_end_irq(mpic, src);
-+
-+	local_irq_restore_hw_cond(flags);
- }
- 
- static unsigned int mpic_startup_ht_irq(unsigned int irq)
-@@ -761,7 +790,11 @@ static void mpic_end_ht_irq(unsigned int irq)
+@@ -759,9 +797,18 @@ static void mpic_end_ht_irq(unsigned int irq)
+ {
+ 	struct mpic *mpic = mpic_from_irq(irq);
  	unsigned int src = mpic_irq_to_hw(irq);
++	unsigned long flags;
  
  #ifdef DEBUG_IRQ
 -	DBG("%s: end_irq: %d\n", mpic->name, irq);
@@ -4561,11 +4581,15 @@ index a35297d..bd09f68 100644
 +#endif
 +
 +#ifdef CONFIG_IPIPE
++	spin_lock_irqsave(&mpic_lock, flags);
 +	__mpic_mask_irq(irq);
++	spin_unlock_irqrestore(&mpic_lock, flags);
++#else
++	(void)flags;
  #endif
  	/* We always EOI on end_irq() even for edge interrupts since that
  	 * should only lower the priority, the MPIC should have properly
-@@ -780,9 +813,12 @@ static void mpic_unmask_ipi(unsigned int irq)
+@@ -780,9 +827,12 @@ static void mpic_unmask_ipi(unsigned int irq)
  {
  	struct mpic *mpic = mpic_from_ipi(irq);
  	unsigned int src = mpic_irq_to_hw(irq) - mpic->ipi_vecs[0];
@@ -4573,13 +4597,13 @@ index a35297d..bd09f68 100644
  
 -	DBG("%s: enable_ipi: %d (ipi %d)\n", mpic->name, irq, src);
 +	DBG("%s: unmask_ipi: %d (ipi %d)\n", mpic->name, irq, src);
-+	local_irq_save_hw_cond(flags);
++	spin_lock_irqsave(&mpic_lock, flags);
  	mpic_ipi_write(src, mpic_ipi_read(src) & ~MPIC_VECPRI_MASK);
-+	local_irq_restore_hw_cond(flags);
++	spin_unlock_irqrestore(&mpic_lock, flags);
  }
  
  static void mpic_mask_ipi(unsigned int irq)
-@@ -852,6 +888,7 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -852,6 +902,7 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	unsigned int src = mpic_irq_to_hw(virq);
  	struct irq_desc *desc = get_irq_desc(virq);
  	unsigned int vecpri, vold, vnew;
@@ -4587,7 +4611,7 @@ index a35297d..bd09f68 100644
  
  	DBG("mpic: set_irq_type(mpic:@%p,virq:%d,src:0x%x,type:0x%x)\n",
  	    mpic, virq, src, flow_type);
-@@ -876,6 +913,8 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -876,6 +927,8 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	else
  		vecpri = mpic_type_to_vecpri(mpic, flow_type);
  
@@ -4596,7 +4620,7 @@ index a35297d..bd09f68 100644
  	vold = mpic_irq_read(src, MPIC_INFO(IRQ_VECTOR_PRI));
  	vnew = vold & ~(MPIC_INFO(VECPRI_POLARITY_MASK) |
  			MPIC_INFO(VECPRI_SENSE_MASK));
-@@ -883,6 +922,8 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -883,6 +936,8 @@ int mpic_set_irq_type(unsigned int virq, unsigned int flow_type)
  	if (vold != vnew)
  		mpic_irq_write(src, MPIC_INFO(IRQ_VECTOR_PRI), vnew);
  
@@ -4605,7 +4629,7 @@ index a35297d..bd09f68 100644
  	return 0;
  }
  
-@@ -1534,6 +1575,7 @@ unsigned int mpic_get_mcirq(void)
+@@ -1534,6 +1589,7 @@ unsigned int mpic_get_mcirq(void)
  }
  
  #ifdef CONFIG_SMP
