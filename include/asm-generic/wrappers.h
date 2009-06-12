@@ -532,7 +532,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
     entry->owner = THIS_MODULE;
 }
 #else  /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
-#define wrap_proc_dir_entry_owner(entry)
+#define wrap_proc_dir_entry_owner(entry) do { (void)entry; } while(0)
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
 #endif /* CONFIG_PROC_FS */
 
