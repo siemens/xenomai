@@ -42,7 +42,7 @@ void comedi_init_devs(void)
 	memset(comedi_devs, 0, COMEDI_NB_DEVICES * sizeof(comedi_dev_t));	
 	for (i = 0; i < COMEDI_NB_DEVICES; i++) {		
 		comedi_lock_init(&comedi_devs[i].lock);
-		comedi_devs[i].transfer.irq = COMEDI_IRQ_UNUSED;
+		comedi_devs[i].transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
 		comedi_devs[i].transfer.idx_read_subd = COMEDI_IDX_UNUSED;
 		comedi_devs[i].transfer.idx_write_subd = COMEDI_IDX_UNUSED;
 	}
