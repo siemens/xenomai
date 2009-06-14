@@ -1282,7 +1282,7 @@ static void get_last_sample_6143(comedi_dev_t *dev)
 static void ni_ai_munge16(comedi_subd_t *subd, void *buf, unsigned long size)
 {
 	comedi_dev_t *dev = subd->dev;
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	comedi_cmd_t *cmd = comedi_get_cmd(subd);
 	int chan_idx = comedi_get_chan(subd);
 	unsigned int i;
 	sampl_t *array = buf;
@@ -1300,7 +1300,7 @@ static void ni_ai_munge16(comedi_subd_t *subd, void *buf, unsigned long size)
 static void ni_ai_munge32(comedi_subd_t *subd, void *buf, unsigned long size)
 {
 	comedi_dev_t *dev = subd->dev;
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	comedi_cmd_t *cmd = comedi_get_cmd(subd);
 	int chan_idx = comedi_get_chan(subd);
 	unsigned int i;
 	lsampl_t *larray = buf;
@@ -2497,7 +2497,7 @@ int ni_ai_insn_config(comedi_subd_t *subd, comedi_kinsn_t *insn)
 static void ni_ao_munge(comedi_subd_t *subd, void *buf, unsigned long size)
 {
 	comedi_dev_t *dev = subd->dev;
-	comedi_cmd_t *cmd = comedi_get_cmd(dev, 0, subd->idx);
+	comedi_cmd_t *cmd = comedi_get_cmd(subd);
 	int chan_idx = comedi_get_chan(subd);
 	sampl_t *array = buf;
 	unsigned int i, range, offset;

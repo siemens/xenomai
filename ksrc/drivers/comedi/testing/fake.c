@@ -98,6 +98,7 @@ static sampl_t test_output(tstprv_t *priv)
 static void test_task_proc(void *arg)
 {
 	comedi_dev_t *dev = (comedi_dev_t*)arg;
+	comedi_subd_t *subd = comedi_get_subd(dev, 0);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 	comedi_cmd_t *cmd = NULL;
 	u64 now_ns, elapsed_ns=0;
@@ -110,7 +111,7 @@ static void test_task_proc(void *arg)
 		{
 			int i = 0;
 
-			cmd = comedi_get_cmd(dev, COMEDI_BUF_PUT, 0);    
+			cmd = comedi_get_cmd(subd);    
 
 			now_ns = comedi_get_time();
 			elapsed_ns += now_ns - priv->last_ns + priv->reminder_ns;

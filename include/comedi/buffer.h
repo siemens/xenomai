@@ -332,8 +332,7 @@ unsigned long comedi_buf_count(struct comedi_device *dev, unsigned int type);
 
 /* --- Current Command management function --- */
 
-comedi_cmd_t *comedi_get_cmd(struct comedi_device *dev, unsigned int type,
-			     int idx_subd);
+comedi_cmd_t *comedi_get_cmd(struct comedi_subdevice *subd);
 
 /* --- Munge related function --- */
 

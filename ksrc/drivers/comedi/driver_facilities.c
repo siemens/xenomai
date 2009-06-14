@@ -500,21 +500,12 @@ EXPORT_SYMBOL(comedi_buf_count);
 /**
  * @brief Get the current Comedi command descriptor
  *
- * @param[in] dev Device descriptor structure
- * @param[in] type Buffer transfer type:
- * - COMEDI_BUF_PUT for device -> Comedi buffer -> user-process
- *   transfer.
- * - COMEDI_BUF_GET for user-process -> Comedi_buffer -> device
- *   transfer.
- * @param[in] idx_subd Subdevice key index; this argument is optional:
- * if the "type" is not correct, the last argument is used to select
- * the proper subdevice.
+ * @param[in] subd Subdevice descriptor structure
  *
  * @return the command descriptor.
  *
  */
-comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
-			     unsigned int type, int idx_subd);
+comedi_cmd_t *comedi_get_cmd(comedi_subd_t * subd);
 EXPORT_SYMBOL(comedi_get_cmd);
 
 

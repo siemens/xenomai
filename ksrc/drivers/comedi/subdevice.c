@@ -162,7 +162,7 @@ comedi_subd_t *comedi_get_subd(comedi_dev_t *dev, int idx)
 
 	list_for_each(this, &dev->subdvsq) {
 		if(idx == i++)
-			subd = list_entry(this, comedi_subd_t, list);		
+			subd = list_entry(this, comedi_subd_t, list);
 	}
 
 	return subd;

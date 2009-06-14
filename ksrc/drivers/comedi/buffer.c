@@ -96,24 +96,10 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 
 /* --- Current Command management function --- */
 
-comedi_cmd_t *comedi_get_cmd(comedi_dev_t * dev,
-			     unsigned int type, int idx_subd)
+comedi_cmd_t *comedi_get_cmd(comedi_subd_t *subd)
 {
-	int idx;
-
-	/* If the field type is properly set, 
-	   it is used instead of idx_subd */
-	if (type == COMEDI_BUF_PUT)
-		idx = dev->transfer.idx_read_subd;
-	else if (type == COMEDI_BUF_GET)
-		idx = dev->transfer.idx_write_subd;
-	else
-		idx = idx_subd;
-
-	if (dev->transfer.bufs != NULL)
-		return dev->transfer.bufs[idx]->cur_cmd;
-	else
-		return NULL;
+	comedi_dev_t *dev = subd->dev;
+	return dev->transfer.bufs[subd->idx]->cur_cmd;
 }
 
 /* --- Munge related function --- */
