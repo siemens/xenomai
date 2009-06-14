@@ -116,7 +116,7 @@ int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 }
 
 /* Cancel callback */
-int loop_cancel(comedi_subd_t *subd, int idx_subd)
+int loop_cancel(comedi_subd_t *subd)
 {
 	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
 

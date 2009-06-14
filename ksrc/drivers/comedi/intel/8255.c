@@ -127,7 +127,7 @@ int subd_8255_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	return 0;
 }
 
-int subd_8255_cancel(comedi_subd_t *subd, int idx_subd)
+int subd_8255_cancel(comedi_subd_t *subd)
 {	
 	/* FIXME */
 	return 0;

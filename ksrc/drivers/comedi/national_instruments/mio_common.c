@@ -1459,7 +1459,7 @@ static int ni_ai_reset(comedi_dev_t *dev)
 	return 0;
 }
 
-static int ni_ai_cancel(comedi_subd_t *subd, int idx_subd)
+static int ni_ai_cancel(comedi_subd_t *subd)
 {
 	comedi_dev_t *dev = subd->dev;
 	return ni_ai_reset(dev);
@@ -3020,7 +3020,7 @@ int ni_ao_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	return 0;
 }
 
-int ni_ao_reset(comedi_subd_t *subd, int idx_subd)
+int ni_ao_reset(comedi_subd_t *subd)
 {
 	comedi_dev_t *dev = subd->dev;
 	
@@ -3270,7 +3270,7 @@ int ni_cdio_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	return 0;
 }
 
-int ni_cdio_cancel(comedi_subd_t *subd, int idx_subd)
+int ni_cdio_cancel(comedi_subd_t *subd)
 {
 	comedi_dev_t *dev = subd->dev;
 	ni_writel(CDO_Disarm_Bit | CDO_Error_Interrupt_Enable_Clear_Bit |
@@ -3316,7 +3316,7 @@ int ni_cdo_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 	}
 	if (i == timeout) {
 		comedi_err(dev, "ni_cdo_inttrig: dma failed to fill cdo fifo!");
-		ni_cdio_cancel(subd, NI_DIO_SUBDEV);
+		ni_cdio_cancel(subd);
 		return -EIO;
 	}
 	ni_writel(CDO_Arm_Bit | CDO_Error_Interrupt_Enable_Set_Bit |
@@ -4280,7 +4280,7 @@ static int ni_gpct_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	return ni_tio_cmdtest(counter, cmd);
 }
 
-static int ni_gpct_cancel(comedi_subd_t *subd, int idx_subd)
+static int ni_gpct_cancel(comedi_subd_t *subd)
 {
 	comedi_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
@@ -4886,7 +4886,7 @@ int ni_E_init(comedi_dev_t *dev)
 		Clock_and_FOUT_Register);
 
 	/* analog output configuration */
-	ni_ao_reset(comedi_get_subd(dev, NI_AO_SUBDEV), NI_AO_SUBDEV);
+	ni_ao_reset(comedi_get_subd(dev, NI_AO_SUBDEV));
 
 	if (comedi_get_irq(dev) != COMEDI_IRQ_UNUSED) {
 		devpriv->stc_writew(dev,

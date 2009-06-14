@@ -190,7 +190,7 @@ int test_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 }
 
 /* Cancel callback */
-int test_cancel(comedi_subd_t *subd, int idx_subd)
+int test_cancel(comedi_subd_t *subd)
 {
 	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
 

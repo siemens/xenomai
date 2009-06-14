@@ -184,7 +184,7 @@ struct comedi_subdevice {
 					/**< Callback for command handling */
 	int (*do_cmdtest) (struct comedi_subdevice *, comedi_cmd_t *);
 						       /**< Callback for command checking */
-	int (*cancel) (struct comedi_subdevice *, int);
+	int (*cancel) (struct comedi_subdevice *);
 					 /**< Callback for asynchronous transfer cancellation */
 	void (*munge) (struct comedi_subdevice *, void *, unsigned long);
 								/**< Callback for munge operation */
