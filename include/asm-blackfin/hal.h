@@ -67,10 +67,11 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 	if (delay < 2)
 		rthal_schedule_irq_head(RTHAL_TIMER_IRQ);
 	else {
+		bfin_write_TCNTL(TMPWR);
+		CSYNC();
 		bfin_write_TCOUNT(delay - 1);
 		CSYNC();
-		bfin_write_TCNTL(3);	/* Oneshot mode, no auto-reload. */
-		CSYNC();
+		bfin_write_TCNTL(TMPWR | TMREN);
 	}
 }
 
