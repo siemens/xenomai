@@ -92,22 +92,25 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 
 static inline void rthal_setup_oneshot_coretmr(void)
 {
+	bfin_write_TCNTL(TMPWR);
+	CSYNC();
 	bfin_write_TSCALE(TIME_SCALE - 1);
+	bfin_write_TPERIOD(0);
 	bfin_write_TCOUNT(0);
-	bfin_write_TCNTL(TMPWR | TMREN);
 	CSYNC();
 }
 
 static inline void rthal_setup_periodic_coretmr(void)
 {
 	unsigned long tcount = ((get_cclk() / (HZ * TIME_SCALE)) - 1);
+
 	bfin_write_TCNTL(TMPWR);
-	bfin_write_TSCALE(TIME_SCALE - 1);
 	CSYNC();
+	bfin_write_TSCALE(TIME_SCALE - 1);
 	bfin_write_TPERIOD(tcount);
 	bfin_write_TCOUNT(tcount);
-	bfin_write_TCNTL(TMPWR | TMREN | TAUTORLD);
 	CSYNC();
+	bfin_write_TCNTL(TMPWR | TMREN | TAUTORLD);
 }
 
 static void rthal_timer_set_oneshot(int rt_mode)
@@ -159,7 +162,7 @@ int rthal_timer_request(
 				    tmfreq);
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
-		/* oneshot tick emulation callback won't be used, ask
+		/* Oneshot tick emulation callback won't be used, ask
 		 * the caller to start an internal timer for emulating
 		 * a periodic tick. */
 		tickval = 1000000000UL / HZ;
@@ -171,8 +174,15 @@ int rthal_timer_request(
 		break;
 
 	case CLOCK_EVT_MODE_UNUSED:
-		/* we don't need to emulate the tick at all. */
+		/*
+		 * We don't need to emulate the tick at all. However,
+		 * we have to update the timer frequency by ourselves,
+		 * and enable the CORETMR interrupt as well, since the
+		 * kernel did not do it.
+		 */
 		tickval = 0;
+		*tmfreq = get_cclk();
+		rthal_irq_enable(RTHAL_TIMER_IRQ);
 		break;
 
 	case CLOCK_EVT_MODE_SHUTDOWN:
@@ -215,6 +225,8 @@ void rthal_timer_release(int cpu)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
 		rthal_timer_set_oneshot(0);
+	else
+		rthal_irq_disable(RTHAL_TIMER_IRQ);
 }
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,
@@ -234,9 +246,10 @@ EXPORT_SYMBOL(rthal_timer_notify_switch);
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 /*
- * We do not have to override the system tick when the generic clock
- * event framework is not available, since the I-Pipe frees the core
- * timer for us.
+ * We never override the system tick when the generic clock event
+ * framework is not available, since the I-Pipe always makes the core
+ * timer exclusively available to us in such case, unconditionally
+ * moving the kernel tick source to GPTMR0.
  */
 int rthal_timer_request(void (*tick_handler) (void), int cpu)
 {
