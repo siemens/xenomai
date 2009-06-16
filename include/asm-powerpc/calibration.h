@@ -66,6 +66,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 2900
 #elif defined(CONFIG_MPC5121_ADS)
 #define __sched_latency 4000
+#elif defined(CONFIG_MPC8272_ADS)
+#define __sched_latency 5500
 #elif defined(CONFIG_MVME7100)
 #define __sched_latency 1500
 #elif defined(CONFIG_TQM8548)
