@@ -156,7 +156,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 #ifdef __POSIX_SKIN__
 		mutex = va_arg(ap, pthread_mutex_t *);
 		pthread_mutexattr_init(&mutexattr);
-#if _POSIX_THREAD_PRIO_INHERIT != -1
+#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 		if (va_arg(ap, int) != 0)
 			pthread_mutexattr_setprotocol(&mutexattr,
 						      PTHREAD_PRIO_INHERIT);
