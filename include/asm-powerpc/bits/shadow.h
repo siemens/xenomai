@@ -38,7 +38,9 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->tsp = &task->thread;
 	tcb->mm = task->mm;
 	tcb->active_mm = NULL;
+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 	tcb->tip = task_thread_info(task);
+#endif
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = task;
 	tcb->fpup = (rthal_fpenv_t *) & task->thread.fpr[0];

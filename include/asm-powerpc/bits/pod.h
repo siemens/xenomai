@@ -47,7 +47,9 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->tsp = &current->thread;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 	rootcb->tip = task_thread_info(current);
+#endif
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
@@ -104,7 +106,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
         }
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 #else /* PPC32 */
-		if (likely(next_mm)) {
+		if (likely(next_mm != NULL)) {
 			next->thread.pgdir = next_mm->pgd;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 			get_mmu_context(next_mm);
@@ -134,7 +136,9 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t *tcb,
 	tcb->tsp = &tcb->ts;
 	tcb->mm = current->mm;
 	tcb->active_mm = NULL;
+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
 	tcb->tip = &tcb->ti;
+#endif
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
 	tcb->fpup = NULL;
