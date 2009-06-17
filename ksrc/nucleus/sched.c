@@ -42,11 +42,10 @@ int xnsched_register_class(struct xnsched_class *sched_class)
 	 */
 	sched_class->next = xnsched_class_highest;
 	xnsched_class_highest = sched_class;
-#if XENO_DEBUG(NUCLEUS)
-	XENO_BUGON(sched_class->next &&
+	XENO_BUGON(NUCLEUS, sched_class->next &&
 		   sched_class->next->weight > sched_class->weight);
 	xnloginfo("scheduling class %s registered.\n", sched_class->name);
-#endif
+
 	return 0;
 }
 
@@ -393,7 +392,7 @@ int xnsched_set_policy(struct xnthread *thread,
 	 * As a special case, we may be called from xnthread_init()
 	 * with no previous scheduling class at all.
 	 */
-	if (likely(thread->base_class)) {
+	if (likely(thread->base_class != NULL)) {
 		if (xnthread_test_state(thread, XNREADY))
 			xnsched_dequeue(thread);
 
