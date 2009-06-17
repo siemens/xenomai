@@ -140,12 +140,15 @@ struct timespec;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
-#if defined(__KERNEL__) || defined(__XENO_SIM__) || \
-    !defined(HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL)
+#ifndef PTHREAD_PRIO_NONE
 #define PTHREAD_PRIO_NONE    0
+#endif /* !PTHREAD_PRIO_NONE */
+#ifndef PTHREAD_PRIO_INHERIT
 #define PTHREAD_PRIO_INHERIT 1
+#endif /* !PTHREAD_PRIO_INHERIT */
+#ifndef PTHREAD_PRIO_PROTECT
 #define PTHREAD_PRIO_PROTECT 2
-#endif /* __KERNEL__ || __XENO_SIM__ || !HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL */
+#endif /* !PTHREAD_PRIO_PROTECT */
 
 #define PTHREAD_WARNSW     XNTRAPSW
 #define PTHREAD_LOCK_SCHED XNLOCK
@@ -421,13 +424,11 @@ int pthread_intr_control_np(pthread_intr_t intr,
 extern "C" {
 #endif
 
-#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 				  int *proto);
 
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 				  int proto);
-#endif
 
 #ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
 int pthread_condattr_getclock(const pthread_condattr_t *attr,
@@ -486,11 +487,13 @@ int __real_pthread_mutexattr_gettype(const pthread_mutexattr_t *attr,
 
 int __real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 
+#ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int __real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 					 int *proto);
 
 int __real_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 					 int proto);
+#endif
 
 int __real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr,
 					int *pshared);
