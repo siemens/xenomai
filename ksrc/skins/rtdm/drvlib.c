@@ -33,10 +33,10 @@
 #include <linux/bitops.h>
 #include <linux/delay.h>
 #include <linux/mman.h>
-#include <linux/highmem.h>
 #include <asm/page.h>
 #include <asm/io.h>
 #include <asm/pgtable.h>
+#include <linux/highmem.h>
 
 #include <rtdm/rtdm_driver.h>
 
