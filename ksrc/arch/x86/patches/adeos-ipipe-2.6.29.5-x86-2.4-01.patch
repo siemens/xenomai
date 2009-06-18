@@ -6377,10 +6377,10 @@ index e4791b3..9517339 100644
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 diff --git a/kernel/exit.c b/kernel/exit.c
-index 467ffcd..61c67e7 100644
+index a33f399..0846d73 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
-@@ -1045,6 +1045,7 @@ NORET_TYPE void do_exit(long code)
+@@ -1040,6 +1040,7 @@ NORET_TYPE void do_exit(long code)
  		acct_process();
  	trace_sched_process_exit(tsk);
  
