@@ -62,9 +62,11 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
 		unsigned long long ns;
+		unsigned long rem;
 
 		ns = xnarch_tsc_to_ns(__xn_rdtsc());
-		tp->tv_sec = xnarch_divrem_billion(ns, &tp->tv_nsec);
+		tp->tv_sec = xnarch_divrem_billion(ns, &rem);
+		tp->tv_nsec = rem;
 		return 0;
 	}
 #endif /* XNARCH_HAVE_NONPRIV_TSC */
