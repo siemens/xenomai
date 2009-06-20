@@ -211,7 +211,7 @@ index c745a30..ef10c55 100644
  #endif /* _ASM_X86_IPI_H */
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..4dd8fb9
+index 0000000..9263dda
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,156 @@
@@ -242,10 +242,10 @@ index 0000000..4dd8fb9
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.4-01"
++#define IPIPE_ARCH_STRING	"2.4-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -6315,7 +6315,7 @@ index 68d88f7..f5ce3c4 100644
 +
  #endif /* __LINUX_SPINLOCK_TYPES_H */
 diff --git a/init/Kconfig b/init/Kconfig
-index 6a5c5fe..759609e 100644
+index 6a5c5fe..77c53d6 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -73,6 +73,7 @@ config INIT_ENV_ARG_LIMIT
@@ -6326,11 +6326,6 @@ index 6a5c5fe..759609e 100644
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-@@ -1064,4 +1065,3 @@ source "block/Kconfig"
- 
- config PREEMPT_NOTIFIERS
- 	bool
--
 diff --git a/init/main.c b/init/main.c
 index 83697e1..cb17ff5 100644
 --- a/init/main.c
@@ -9811,7 +9806,7 @@ index 0000000..3f6a97c
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 7de11bd..b051136 100644
+index 7de11bd..6167be8 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -353,8 +353,10 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
@@ -9949,7 +9944,7 @@ index 7de11bd..b051136 100644
  
  	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -559,6 +648,30 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -559,6 +648,28 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  
  	if (!handle)
  		handle = handle_bad_irq;
@@ -9970,17 +9965,15 @@ index 7de11bd..b051136 100644
 +		desc->ipipe_ack = &__ipipe_ack_fasteoi_irq;
 +		desc->ipipe_end = &__ipipe_end_fasteoi_irq;
 +	}
-+#ifdef CONFIG_SMP
 +	else if (handle == &handle_percpu_irq) {
 +		desc->ipipe_ack = &__ipipe_ack_percpu_irq;
 +		desc->ipipe_end = &__ipipe_end_percpu_irq;
 +	}
-+#endif /* CONFIG_SMP */
 +#endif /* CONFIG_IPIPE */
  	else if (desc->chip == &no_irq_chip) {
  		printk(KERN_WARNING "Trying to install %sinterrupt handler "
  		       "for IRQ%d\n", is_chained ? "chained " : "", irq);
-@@ -570,7 +683,21 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -570,7 +681,21 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		 * dummy_irq_chip for easy transition.
  		 */
  		desc->chip = &dummy_irq_chip;
@@ -10002,7 +9995,7 @@ index 7de11bd..b051136 100644
  
  	spin_lock_irqsave(&desc->lock, flags);
  
-@@ -582,9 +709,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -582,9 +707,17 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		}
  		desc->status |= IRQ_DISABLED;
  		desc->depth = 1;
