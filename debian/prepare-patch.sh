@@ -78,7 +78,7 @@ diff_addons() {
 
     echo "--- linux/init/Kconfig	1970-01-01 01:00:00.000000000 +0100" >> $patch_file
     echo "+++ linux-patched/init/Kconfig	2007-03-06 17:55:58.000000000 +0000" >> $patch_file
-    echo "@@ -950,0 +950,$lines @@" >> $patch_file
+    echo "@@ -1400,0 +1400,$lines @@" >> $patch_file
     sed -e "s,@LINUX_ARCH@,$linux_arch,g" $xenomai_root/scripts/Kconfig.frag | sed 's/^/+/' >> $patch_file
     echo " " >> $patch_file
 }
