@@ -40,7 +40,7 @@ int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
 	struct list_head *this;
 	int ret = -EINVAL;
 
-	__comedi_info("comedi_lct_drv: name=%s\n", pin);
+	__comedi_dbg(1, core_dbg, "comedi_lct_drv: name=%s\n", pin);
 
 	/* Goes through the linked list so as to find 
 	   a driver instance with the same name */
@@ -62,7 +62,7 @@ int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
 
 int comedi_register_drv(comedi_drv_t * drv)
 {
-	__comedi_info("comedi_add_drv: name=%s\n", drv->board_name);
+	__comedi_dbg(1, core_dbg, "comedi_add_drv: name=%s\n", drv->board_name);
 
 	if (comedi_lct_drv(drv->board_name, NULL) != 0) {
 		list_add(&drv->list, &comedi_drvs);
@@ -73,7 +73,7 @@ int comedi_register_drv(comedi_drv_t * drv)
 
 int comedi_unregister_drv(comedi_drv_t * drv)
 {
-	__comedi_info("comedi_rm_drv: name=%s\n", drv->board_name);
+	__comedi_dbg(1, core_dbg, "comedi_rm_drv: name=%s\n", drv->board_name);
 
 	if (comedi_lct_drv(drv->board_name, NULL) == 0) {
 		/* Here, we consider the argument is pointing

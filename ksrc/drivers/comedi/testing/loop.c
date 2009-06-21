@@ -107,7 +107,7 @@ int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
-	comedi_info(dev, "loop_cmd: (subd=%d)\n",idx_subd);
+	comedi_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
 
 	priv->loop_running = 1;
   
@@ -120,7 +120,7 @@ int loop_cancel(comedi_subd_t *subd)
 {
 	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
 
-	comedi_info(dev, "loop_cancel: (subd=%d)\n",idx_subd);
+	comedi_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
 	priv->loop_running=0;
 

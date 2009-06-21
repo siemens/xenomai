@@ -202,8 +202,8 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 	char *tmpname = NULL;
 	void *tmpopts = NULL;
 
-	__comedi_info("comedi_fill_lnkdesc: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_fill_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
 	ret = comedi_copy_from_user(cxt,
 				    link_arg, arg, sizeof(comedi_lnkdesc_t));
@@ -279,8 +279,8 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 
 void comedi_free_lnkdesc(comedi_cxt_t * cxt, comedi_lnkdesc_t * link_arg)
 {
-	__comedi_info("comedi_free_lnkdesc: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_free_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
 	if (link_arg->bname != NULL)
 		comedi_kfree(link_arg->bname);
@@ -295,14 +295,15 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 	int ret = 0;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_assign_driver: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_assign_driver: minor=%d\n", comedi_get_minor(cxt));
 
 	dev->driver = drv;
 
 	if (drv->privdata_size == 0)
-		__comedi_info
-		    ("comedi_assign_driver: warning! the field priv will not be usable\n");
+		__comedi_dbg(1, core_dbg, 
+			     "comedi_assign_driver: warning! "
+			     "the field priv will not be usable\n");
 	else {
 
 		INIT_LIST_HEAD(&dev->subdvsq);
@@ -341,8 +342,8 @@ int comedi_release_driver(comedi_cxt_t * cxt)
 	unsigned long flags;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_release_driver: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_release_driver: minor=%d\n", comedi_get_minor(cxt));
 
 	comedi_lock_irqsave(&dev->lock, flags);
 
@@ -378,8 +379,8 @@ int comedi_device_attach(comedi_cxt_t * cxt, void *arg)
 	comedi_lnkdesc_t link_arg;
 	comedi_drv_t *drv = NULL;
 
-	__comedi_info("comedi_device_attach: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_device_attach: minor=%d\n", comedi_get_minor(cxt));
 
 	if ((ret = comedi_fill_lnkdesc(cxt, &link_arg, arg)) != 0)
 		goto out_attach;
@@ -399,8 +400,8 @@ int comedi_device_detach(comedi_cxt_t * cxt)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_device_detach: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_device_detach: minor=%d\n", comedi_get_minor(cxt));
 
 	if (dev->driver == NULL)
 		return -ENXIO;
@@ -414,8 +415,8 @@ int comedi_ioctl_devcfg(comedi_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
 
-	__comedi_info("comedi_ioctl_devcfg: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_devcfg: minor=%d\n", comedi_get_minor(cxt));
 
 	if (comedi_test_rt() != 0)
 		return -EPERM;
@@ -460,8 +461,8 @@ int comedi_ioctl_devinfo(comedi_cxt_t * cxt, void *arg)
 	comedi_dvinfo_t info;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_ioctl_devinfo: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_devinfo: minor=%d\n", comedi_get_minor(cxt));
 
 	memset(&info, 0, sizeof(comedi_dvinfo_t));
 

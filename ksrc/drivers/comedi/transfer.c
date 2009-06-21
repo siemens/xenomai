@@ -39,8 +39,9 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 	comedi_trf_t *tsf;
 	int i;
 
-	__comedi_info("comedi_cleanup_transfer: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_cleanup_transfer: minor=%d\n", 
+		     comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
 	tsf = &dev->transfer;
@@ -87,8 +88,9 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	struct list_head *this;
 	int i = 0, ret = 0;
 
-	__comedi_info("comedi_setup_transfer: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_setup_transfer: minor=%d\n",
+		     comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
 	tsf = &dev->transfer;
@@ -177,8 +179,9 @@ int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_reserve_transfer: minor=%d idx=%d\n",
-		       comedi_get_minor(cxt), idx_subd);
+	__comedi_dbg(1, core_dbg,
+		     "comedi_reserve_transfer: minor=%d idx=%d\n",
+		     comedi_get_minor(cxt), idx_subd);
 
 	if (test_and_set_bit(COMEDI_TSF_BUSY,
 			     &(dev->transfer.status[idx_subd])))
@@ -192,8 +195,9 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	int i;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	__comedi_info("comedi_init_transfer: minor=%d idx=%d\n",
-		       comedi_get_minor(cxt), cmd->idx_subd);
+	__comedi_dbg(1, core_dbg,
+		     "comedi_init_transfer: minor=%d idx=%d\n",
+		     comedi_get_minor(cxt), cmd->idx_subd);
 
 	/* Checks if the transfer system has to work in bulk mode */
 	if (cmd->flags & COMEDI_CMD_BULK)

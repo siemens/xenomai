@@ -153,7 +153,7 @@ int test_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	comedi_dev_t *dev = subd->dev;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
-	comedi_info(dev, "test_cmd: begin (subd=%d)\n",idx_subd);
+	comedi_info(dev, "test_cmd: begin (subd=%d)\n", subd->idx);
   
 	priv->scan_period_ns=cmd->scan_begin_arg;
 	priv->convert_period_ns=(cmd->convert_src==TRIG_TIMER)?

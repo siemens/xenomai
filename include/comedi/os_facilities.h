@@ -54,12 +54,23 @@
 #define __comedi_warn(fmt, args...) \
 	rtdm_printk(KERN_WARNING COMEDI_PROMPT fmt, ##args)
 
-#ifdef COMEDI_DEBUG
 #define __comedi_info(fmt, args...) \
 	rtdm_printk(KERN_INFO COMEDI_PROMPT fmt, ##args)
-#else /* !COMEDI_DEBUG */
-#define __comedi_info(fmt, args...)
-#endif /* COMEDI_DEBUG */
+
+#ifdef CONFIG_XENO_DRIVERS_COMEDI_DEBUG
+
+#define __comedi_dbg(level, debug, fmt, args...)			\
+	do {								\
+	if ((debug) >= (level))						\
+		rtdm_printk(KERN_DEBUG COMEDI_PROMPT fmt, ##args); \
+	} while (0)
+
+#define core_dbg CONFIG_XENO_DRIVERS_COMEDI_DEBUG_LEVEL
+
+#else /* !CONFIG_XENO_DRIVERS_COMEDI_DEBUG */
+
+#define __comedi_dbg(level, debug, fmt, args...)
+#endif /* CONFIG_XENO_DRIVERS_COMEDI_DEBUG */
 
 #define __comedi_dev_name(dev) \
 	(dev->driver == NULL) ? "unattached dev" : dev->driver->board_name
@@ -73,12 +84,8 @@
 #define comedi_info(dev, fmt, args...) \
 	__comedi_info("%s: " fmt, __comedi_dev_name(dev), ##args)
 
-#define comedi_debug(level, debug, dev, fmt, args...)			\
-	do { 								\
-		if (debug >= (level))					\
-			rtdm_printk(KERN_DEBUG COMEDI_PROMPT "%s: " fmt, \
-				    __comedi_dev_name(dev), ##args); 	\
-	} while (0)
+#define comedi_dbg(level, debug, dev, fmt, args...)			\
+	__comedi_dbg(level, debug, "%s: " fmt, __comedi_dev_name(dev), ##args)
 
 /* --- Allocation / MMU section --- */
 

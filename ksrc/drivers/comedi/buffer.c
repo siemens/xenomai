@@ -317,7 +317,9 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 	comedi_mmap_t map_cfg;
 	comedi_dev_t *dev;
 	int ret;
-	__comedi_info("comedi_ioctl_mmap: minor=%d\n", comedi_get_minor(cxt));
+
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_mmap: minor=%d\n", comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
 
@@ -374,8 +376,8 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 	comedi_bufcfg_t buf_cfg;
 
-	__comedi_info("comedi_ioctl_bufcfg: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_bufcfg: minor=%d\n", comedi_get_minor(cxt));
 
 	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
@@ -422,8 +424,8 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 	unsigned long tmp_cnt;
 	int ret;
 
-	__comedi_info("comedi_ioctl_bufinfo: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_bufinfo: minor=%d\n", comedi_get_minor(cxt));
 
 	/* Basic checking */
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
@@ -452,8 +454,8 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount to read */
 		tmp_cnt = info.rw_count = __count_to_get(buf);
 
-		__comedi_info("comedi_ioctl_bufinfo: count to read=%lu\n",
-			       tmp_cnt);
+		__comedi_dbg(1, core_dbg, 
+			     "comedi_ioctl_bufinfo: count to read=%lu\n", tmp_cnt);
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
@@ -483,8 +485,9 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount which is writable */
 		info.rw_count = __count_to_put(buf);
 
-		__comedi_info("comedi_ioctl_bufinfo: count to write=%lu\n",
-			       info.rw_count);
+		__comedi_dbg(1, core_dbg, 
+			     "comedi_ioctl_bufinfo: count to write=%lu\n", 
+			     info.rw_count);
 
 	} else
 		return -EINVAL;
