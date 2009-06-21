@@ -124,14 +124,14 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	unsigned unknown_dma_burst_bits;
 
 	if(pci_enable_device(mite->pcidev)){
-		__comedi_info("error enabling mite\n");
+		__comedi_err("error enabling mite\n");
 		return -EIO;
 	}
 
 	pci_set_master(mite->pcidev);
 
-	if( pci_request_regions( mite->pcidev, "mite" ) ) {
-		__comedi_info("failed to request mite io regions\n");
+	if (pci_request_regions( mite->pcidev, "mite")) {
+		__comedi_err("failed to request mite io regions\n");
 		return -EIO;
 	};
 
@@ -142,7 +142,7 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->mite_phys_addr = addr;
 	mite->mite_io_addr = ioremap(addr, length);
 	if (!mite->mite_io_addr) {
-		__comedi_info("failed to remap mite io memory address\n");
+		__comedi_err("failed to remap mite io memory address\n");
 		return -ENOMEM;
 	}
 
@@ -157,7 +157,7 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->daq_phys_addr = addr;
 	mite->daq_io_addr = ioremap(mite->daq_phys_addr, length);
 	if (!mite->daq_io_addr) {
-		__comedi_info("failed to remap daq io memory address\n");
+		__comedi_err("failed to remap daq io memory address\n");
 		return -ENOMEM;
 	}
 
@@ -167,7 +167,7 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 
 	if (use_iodwbsr_1) {
 		writel(0, mite->mite_io_addr + MITE_IODWBSR);
-		__comedi_info("MITE: using I/O Window Base Size register 1\n");
+		__comedi_err("MITE: using I/O Window Base Size register 1\n");
 		writel(mite->
 			daq_phys_addr | WENAB |
 			MITE_IODWBSR_1_WSIZE_bits(length),
@@ -193,7 +193,9 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	csigr_bits = readl(mite->mite_io_addr + MITE_CSIGR);
 	mite->num_channels = mite_csigr_dmac(csigr_bits);
 	if (mite->num_channels > MAX_MITE_DMA_CHANNELS) {
-		printk("MITE: bug? chip claims to have %i dma channels.  Setting to %i.\n", mite->num_channels, MAX_MITE_DMA_CHANNELS);
+		__comedi_err("MITE: bug? chip claims to have %i dma channels. "
+			     "Setting to %i.\n", 
+			     mite->num_channels, MAX_MITE_DMA_CHANNELS);
 		mite->num_channels = MAX_MITE_DMA_CHANNELS;
 	}
 
