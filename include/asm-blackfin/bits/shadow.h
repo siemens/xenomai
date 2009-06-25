@@ -39,55 +39,6 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->name = name;
 }
 
-static inline void xnarch_grab_xirqs(rthal_irq_handler_t handler)
-{
-	unsigned irq;
-
-	for (irq = 0; irq < IPIPE_NR_XIRQS; irq++)
-		rthal_virtualize_irq(rthal_current_domain,
-				     irq,
-				     handler, NULL, NULL, IPIPE_HANDLE_MASK);
-}
-
-static inline void xnarch_lock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
-{
-	unsigned irq;
-
-	for (irq = 0; irq < IPIPE_NR_XIRQS; irq++) {
-		switch (irq) {
-#ifdef CONFIG_SMP
-		case RTHAL_CRITICAL_IPI:
-
-			/* Never lock out this one. */
-			continue;
-#endif /* CONFIG_SMP */
-
-		default:
-
-			rthal_lock_irq(ipd, cpuid, irq);
-		}
-	}
-}
-
-static inline void xnarch_unlock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
-{
-	unsigned irq;
-
-	for (irq = 0; irq < IPIPE_NR_XIRQS; irq++) {
-		switch (irq) {
-#ifdef CONFIG_SMP
-		case RTHAL_CRITICAL_IPI:
-
-			continue;
-#endif /* CONFIG_SMP */
-
-		default:
-
-			rthal_unlock_irq(ipd, irq);
-		}
-	}
-}
-
 static inline int xnarch_local_syscall(struct pt_regs *regs)
 {
 	unsigned long ptr, x, r, flags;
