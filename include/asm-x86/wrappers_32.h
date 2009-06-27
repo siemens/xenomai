@@ -139,14 +139,7 @@ static inline void wrap_switch_iobitmap(struct task_struct *p, int cpu)
 
 static inline void wrap_switch_iobitmap(struct task_struct *p, int cpu)
 {
-	struct thread_struct *thread = &p->thread;
-	struct tss_struct *tss;
-
-	if (test_tsk_thread_flag(p, TIF_IO_BITMAP)) {
-		tss = &per_cpu(init_tss, cpu);
-		memcpy(tss->io_bitmap, thread->io_bitmap_ptr,
-		       thread->io_bitmap_max);
-	} /* NOTE: We don't clear previous leftover io_bitmap in the tss */
+	/* I/O bitmap is eagerly switched in __switch_to() */
 }
 
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30) */
