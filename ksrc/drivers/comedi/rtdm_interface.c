@@ -78,7 +78,7 @@ int comedi_init_proc(void)
 	entry->data = NULL;
 	entry->write_proc = NULL;
 	entry->read_proc = comedi_rdproc_devs;
-	wrap_proc_dir_entry_owner(enrty);
+	wrap_proc_dir_entry_owner(entry);
 
 	/* Creates the drivers related file */
 	entry = create_proc_entry("drivers", 0444, comedi_proc_root);
@@ -93,7 +93,7 @@ int comedi_init_proc(void)
 	entry->data = NULL;
 	entry->write_proc = NULL;
 	entry->read_proc = comedi_rdproc_drvs;
-	wrap_proc_dir_entry_owner(enrty);
+	wrap_proc_dir_entry_owner(entry);
 
 	return 0;
 
