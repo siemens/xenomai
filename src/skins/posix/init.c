@@ -49,8 +49,9 @@ void __init_posix_interface(void)
 {
 #ifndef CONFIG_XENO_LIBS_DLOPEN
 	struct sched_param parm;
+	int policy;
 #endif /* !CONFIG_XENO_LIBS_DLOPEN */
-	int muxid, err, policy;
+	int muxid, err;
 
 	muxid =
 	    xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
