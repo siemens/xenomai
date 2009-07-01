@@ -38,13 +38,6 @@ static inline void xnarch_switch_to (xnarchtcb_t *out_tcb,
     __mvm_breakable(mvm_switch_threads)(out_tcb->vmthread,in_tcb->vmthread);
 }
 
-static inline void xnarch_init_root_tcb (xnarchtcb_t *tcb,
-					 struct xnthread *thread,
-					 const char *name)
-{
-    tcb->vmthread = mvm_thread_self();
-}
-
 static inline void xnarch_init_thread (xnarchtcb_t *tcb,
 				       void (*entry)(void *),
 				       void *cookie,

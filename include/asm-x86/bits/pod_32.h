@@ -121,19 +121,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	stts();
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
-					struct xnthread *thread,
-					const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->esp = 0;
-	tcb->espp = &tcb->esp;
-	tcb->eipp = &tcb->eip;
-	tcb->fpup = NULL;
-	tcb->is_root = 1;
-}
-
 asmlinkage static void xnarch_thread_redirect(struct xnthread *self,
 					      int imask,
 					      void (*entry) (void *),

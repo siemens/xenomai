@@ -69,19 +69,6 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
-					struct xnthread *thread,
-					const char *name)
-{
-	tcb->user_task = current;
-	tcb->tsp = &tcb->ts;
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
 asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t * tcb)
 {
 	xnpod_welcome_thread(tcb->self, tcb->imask);

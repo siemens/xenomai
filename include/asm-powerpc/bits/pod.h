@@ -127,29 +127,6 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 	barrier();
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t *tcb,
-					struct xnthread *thread,
-					const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->tsp = &tcb->ts;
-	tcb->mm = current->mm;
-	tcb->active_mm = NULL;
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
-	tcb->tip = &tcb->ti;
-#endif
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = NULL;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
 asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t * tcb)
 {
 	xnpod_welcome_thread(tcb->self, tcb->imask);

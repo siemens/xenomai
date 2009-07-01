@@ -98,27 +98,6 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 	rthal_thread_switch(prev, out_tcb->tip, in_tcb->tip);
 }
 
-static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
-					struct xnthread *thread,
-					const char *name)
-{
-	tcb->user_task = current;
-	tcb->active_task = NULL;
-	tcb->mm = current->mm;
-	tcb->active_mm = NULL;
-	tcb->tip = &tcb->ti;
-#ifdef CONFIG_XENO_HW_FPU
-	tcb->user_fpu_owner = NULL;
-	tcb->fpup = NULL;
-	tcb->is_root = 1;
-#endif /* CONFIG_XENO_HW_FPU */
-	tcb->entry = NULL;
-	tcb->cookie = NULL;
-	tcb->self = thread;
-	tcb->imask = 0;
-	tcb->name = name;
-}
-
 asmlinkage static void xnarch_thread_trampoline(xnarchtcb_t * tcb)
 {
 	xnpod_welcome_thread(tcb->self, tcb->imask);
