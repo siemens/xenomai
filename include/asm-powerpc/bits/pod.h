@@ -205,8 +205,7 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 static inline void xnarch_enable_fpu(xnarchtcb_t * current_tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-	if (!current_tcb->user_task)
-		rthal_enable_fpu();
+	rthal_enable_fpu();
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
