@@ -226,11 +226,8 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs) {
-			tcb->user_fpu_owner_prev_msr =
-			    tcb->user_fpu_owner->thread.regs->msr;
+		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
 			tcb->user_fpu_owner->thread.regs->msr &= ~MSR_FP;
-		}
 	}
 #endif /* CONFIG_XENO_HW_FPU */
 }
