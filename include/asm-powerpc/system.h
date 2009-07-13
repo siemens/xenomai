@@ -57,11 +57,11 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	   and SPE are not available to kernel-based nucleus threads. */
 	rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
 	struct task_struct *user_fpu_owner;
-	unsigned long user_fpu_owner_prev_msr;
-	/* Pointer the the FPU owner in userspace:
-	   - NULL for RT K threads,
-	   - last_task_used_math for Linux US threads (only current or NULL when MP)
-	   - current for RT US threads.
+	/*
+	 * Pointer to the FPU owner in userspace:
+	 * - NULL for RT K threads,
+	 * - last_task_used_math for Linux US threads (current or NULL when SMP)
+	 * - current for RT US threads.
 	 */
 #define xnarch_fpu_ptr(tcb)     ((tcb)->fpup)
 #else				/* !CONFIG_XENO_HW_FPU */
