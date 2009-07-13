@@ -121,18 +121,19 @@ asmlinkage void rthal_thread_trampoline(void);
 #ifdef CONFIG_XENO_HW_FPU
 
 typedef struct rthal_fpenv {
+	/*
+	 * This layout must follow exactely the definition of the FPU
+	 * backup area in a PPC thread struct available from
+	 * <arch/powerpc/include/asm/processor.h>. Specifically, fpr[]
+	 * an fpscr struct must be contiguous in memory (see
+	 * ksrc/arch/powerpc/fpu.S).
+	 */
+	double		fpr[32][TS_FPRWIDTH];
+	struct {
 
-	/* This layout must follow exactely the definition of the FPU
-	   backup area in a PPC thread struct available from
-	   <asm-ppc/processor.h>. Specifically, fpr[] an fpscr words must
-	   be contiguous in memory (see arch/powerpc/hal/fpu.S). */
-
-	double fpr[32];
-#ifndef CONFIG_PPC64
-	unsigned long fpscr_pad;	/* <= Hi-word of the FPR used to */
-#endif
-	unsigned long fpscr;	/* retrieve the FPSCR. */
-
+		unsigned int pad;
+		unsigned int val;	/* Floating point status */
+	} fpscr;
 } rthal_fpenv_t;
 
 void rthal_init_fpu(rthal_fpenv_t * fpuenv);
