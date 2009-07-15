@@ -27,7 +27,7 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
+static inline void xnarch_init_tcb(xnarchtcb_t *tcb)
 {
 	tcb->user_task = NULL;
 	tcb->active_task = NULL;
@@ -36,7 +36,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	memset(&tcb->ts, 0, sizeof(tcb->ts));
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = NULL;
-	tcb->fpup = (rthal_fpenv_t *) & tcb->ts.fpr[0];
+	tcb->fpup = &tcb->ts;
 #endif /* CONFIG_XENO_HW_FPU */
 	/* Must be followed by xnarch_init_thread(). */
 }

@@ -177,8 +177,4 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 #endif
 
-#ifndef TS_FPRWIDTH
-#define TS_FPRWIDTH  1
-#endif
-
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
