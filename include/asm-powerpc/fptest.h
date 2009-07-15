@@ -5,28 +5,6 @@
 #include <linux/module.h>
 #include <asm/system.h>
 
-#if defined(CONFIG_PPC_FPU)
-static inline int fp_kernel_begin(void)
-{
-	preempt_disable();
-	enable_kernel_fp();
-	return 0;
-}
-
-static inline void fp_kernel_end(void)
-{
-	unsigned long flags;
-	register unsigned long _msr;
-	local_irq_save_hw(flags);
-	__asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );
-	__asm__ __volatile__ ( "mtmsr %0"
-			       : /* no output */
-			       : "r"(_msr & ~(MSR_FP))
-			       : "memory" );
-	local_irq_restore_hw(flags);
-	preempt_enable();
-}
-#else /* ! CONFIG_PPC_FPU */
 static inline int fp_kernel_begin(void)
 {
 	return -ENOSYS;
@@ -35,7 +13,6 @@ static inline int fp_kernel_begin(void)
 static inline void fp_kernel_end(void)
 {
 }
-#endif /* !CONFIG_PPC_FPU */
 
 #else /* !__KERNEL__ */
 #include <stdint.h>

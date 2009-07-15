@@ -59,9 +59,11 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	struct thread_info ti;	/* Holds kernel-based thread info */
 #endif
 #ifdef CONFIG_XENO_HW_FPU
-	/* We only care for basic FPU handling in kernel-space; Altivec
-	   and SPE are not available to kernel-based nucleus threads. */
-	rthal_fpenv_t *fpup;	/* Pointer to the FPU backup area */
+	/*
+	 * We only care for basic FPU handling in kernel-space; Altivec
+	 * and SPE are not available to kernel-based nucleus threads.
+	 */
+	struct thread_struct *fpup;	/* Pointer to the FPU backup container */
 	struct task_struct *user_fpu_owner;
 	/*
 	 * Pointer to the FPU owner in userspace:

@@ -53,10 +53,8 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	rootcb->fpup = (rootcb->user_fpu_owner
-			? (rthal_fpenv_t *) & rootcb->user_fpu_owner->thread.
-			fpr[0]
-			: NULL);
+	rootcb->fpup = rootcb->user_fpu_owner ?
+		&rootcb->user_fpu_owner->thread : NULL;
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
@@ -198,20 +196,22 @@ static inline void xnarch_enable_fpu(xnarchtcb_t * current_tcb)
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
+static void xnarch_init_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-	/* Initialize the FPU for an emerging kernel-based RT thread. This
-	   must be run on behalf of the emerging thread. */
-	memset(&tcb->ts.fpr[0], 0, sizeof(rthal_fpenv_t));
-	rthal_init_fpu((rthal_fpenv_t *) & tcb->ts.fpr[0]);
+	/*
+	 * Initialize the FPU for an emerging kernel-based RT
+	 * thread. This must be run on behalf of the emerging thread.
+	 * xnarch_init_tcb() guarantees that all FPU regs are zeroed
+	 * in tcb.
+	 */
+	rthal_init_fpu(&tcb->ts);
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
+static void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
@@ -222,23 +222,23 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
+static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
-
-		/* Note: Only enable FP in MSR, if it was enabled when we saved the
-		 * fpu state.
+		/*
+		 * Note: Only enable FP in MSR, if it was enabled when
+		 * we saved the fpu state.
 		 */
 		if (tcb->user_fpu_owner &&
 		    tcb->user_fpu_owner->thread.regs)
 			tcb->user_fpu_owner->thread.regs->msr |= (MSR_FP|MSR_FE0|MSR_FE1);
 	}
-
-	/* FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
-	   whereas we could be much lazier. */
+	/*
+	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
+	 * whereas we could be much lazier.
+	 */
         if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 
