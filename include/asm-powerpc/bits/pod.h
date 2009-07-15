@@ -140,24 +140,26 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	unsigned long *ksp, flags;
 	struct pt_regs *childregs;
+	unsigned long flags;
 
 	rthal_local_irq_flags_hw(flags);
-
-#ifdef CONFIG_PPC64
-	ksp =
-	    (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
-			      RTHAL_SWITCH_FRAME_SIZE - 32);
-	childregs = (struct pt_regs *)ksp;
+	childregs = (struct pt_regs *)((unsigned long)tcb->stackbase +
+				       tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE);
 	memset(childregs, 0, sizeof(*childregs));
+	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
+	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
+	tcb->entry = entry;
+	tcb->cookie = cookie;
+	tcb->self = thread;
+	tcb->imask = imask;
+	tcb->name = name;
+#ifdef CONFIG_PPC64
 	childregs->nip = ((unsigned long *)&rthal_thread_trampoline)[0];
 	childregs->gpr[2] = ((unsigned long *)&rthal_thread_trampoline)[1];
-	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
 	childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0];	/* lr = entry addr. */
 	childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
 	childregs->gpr[17] = (unsigned long)tcb;
-	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 	if (cpu_has_feature(CPU_FTR_SLB)) {	/* from process.c/copy_thread */
 		unsigned long sp_vsid;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
@@ -180,23 +182,10 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 		tcb->ts.ksp_vsid = sp_vsid;
 	}
 #else /* !CONFIG_PPC64 */
-	ksp =
-	    (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
-			      RTHAL_SWITCH_FRAME_SIZE - 4);
-	childregs = (struct pt_regs *)ksp;
-	memset(childregs, 0, sizeof(*childregs));
 	childregs->nip = (unsigned long)&rthal_thread_trampoline;
-	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
 	childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
 	childregs->gpr[16] = (unsigned long)tcb;
-	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 #endif
-
-	tcb->entry = entry;
-	tcb->cookie = cookie;
-	tcb->self = thread;
-	tcb->imask = imask;
-	tcb->name = name;
 }
 
 /* No lazy FPU init on PPC. */
