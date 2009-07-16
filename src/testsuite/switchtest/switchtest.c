@@ -42,6 +42,18 @@ typedef unsigned long cpu_set_t;
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
 
+#if PTHREAD_STACK_MIN < 20 * 1024
+#define SMALL_STACK_MIN  20 * 1024
+#else
+#define SMALL_STACK_MIN  PTHREAD_STACK_MIN
+#endif
+
+#if PTHREAD_STACK_MIN < 50 * 1024
+#define LARGE_STACK_MIN  50 * 1024
+#else
+#define LARGE_STACK_MIN  PTHREAD_STACK_MIN
+#endif
+
 /* Thread type. */
 typedef enum {
 	SLEEPER = 0,
@@ -761,7 +773,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, 20 * 1024);
+		pthread_attr_setstacksize(&attr, SMALL_STACK_MIN);
 
 		err = __real_pthread_create(&param->thread,
 					    &attr,
@@ -781,7 +793,7 @@ static int task_create(struct cpu_tasks *cpu,
 		pthread_attr_t attr;
 
 		pthread_attr_init(&attr);
-		pthread_attr_setstacksize(&attr, 50 * 1024);
+		pthread_attr_setstacksize(&attr, LARGE_STACK_MIN);
 
 		err = __real_pthread_create(&param->thread,
 					    &attr,
@@ -1257,7 +1269,7 @@ int main(int argc, const char *argv[])
 	pthread_attr_setschedpolicy(&rt_attr, SCHED_FIFO);
 	sp.sched_priority = 1;
 	pthread_attr_setschedparam(&rt_attr, &sp);
-	pthread_attr_setstacksize(&rt_attr, 20 * 1024);
+	pthread_attr_setstacksize(&rt_attr, SMALL_STACK_MIN);
 
 	printf("== Threads:");
 	/* Create and register all tasks. */
