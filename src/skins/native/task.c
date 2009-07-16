@@ -146,10 +146,8 @@ int rt_task_create(RT_TASK *task,
 
 	pthread_attr_init(&thattr);
 
-	if (stksize == 0)
-		stksize = PTHREAD_STACK_MIN * 4;
-	else if (stksize < PTHREAD_STACK_MIN * 2)
-		stksize = PTHREAD_STACK_MIN * 2;
+	if (stksize < PTHREAD_STACK_MIN)
+		stksize = PTHREAD_STACK_MIN;
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	memset(&param, 0, sizeof(param));
