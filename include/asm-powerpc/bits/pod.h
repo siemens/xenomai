@@ -215,8 +215,9 @@ static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs)
-			tcb->user_fpu_owner->thread.regs->msr &= ~MSR_FP;
+		if (tcb->user_fpu_owner &&
+		    tcb->user_fpu_owner->thread.regs)
+			tcb->user_fpu_owner->thread.regs->msr &= ~(MSR_FP|MSR_FE0|MSR_FE1);
 	}
 #endif /* CONFIG_XENO_HW_FPU */
 }
@@ -233,7 +234,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 		 */
 		if (tcb->user_fpu_owner &&
 		    tcb->user_fpu_owner->thread.regs)
-			tcb->user_fpu_owner->thread.regs->msr |= MSR_FP;
+			tcb->user_fpu_owner->thread.regs->msr |= (MSR_FP|MSR_FE0|MSR_FE1);
 	}
 
 	/* FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
