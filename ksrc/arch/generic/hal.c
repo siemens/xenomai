@@ -739,7 +739,7 @@ struct proc_dir_entry *__rthal_add_proc_leaf(const char *name,
         entry->data = data;
         entry->read_proc = rdproc;
         entry->write_proc = wrproc;
-        entry->owner = THIS_MODULE;
+ 	wrap_proc_dir_entry_owner(entry);
     }
 
     return entry;
@@ -754,7 +754,7 @@ static int rthal_proc_register(void)
         return -1;
     }
 
-    rthal_proc_root->owner = THIS_MODULE;
+    wrap_proc_dir_entry_owner(rthal_proc_root);
 
     __rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
 

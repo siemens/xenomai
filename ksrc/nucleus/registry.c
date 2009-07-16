@@ -246,7 +246,7 @@ static struct proc_dir_entry *add_proc_leaf(const char *name,
 	entry->data = data;
 	entry->read_proc = rdproc;
 	entry->write_proc = wrproc;
-	entry->owner = THIS_MODULE;
+ 	wrap_proc_dir_entry_owner(entry);
 
 	return entry;
 }
@@ -267,7 +267,7 @@ static struct proc_dir_entry *add_proc_link(const char *name,
 	if (!entry)
 		return NULL;
 
-	entry->owner = THIS_MODULE;
+	wrap_proc_dir_entry_owner(entry);
 
 	return entry;
 }

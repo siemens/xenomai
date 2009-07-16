@@ -1001,7 +1001,7 @@ static struct proc_dir_entry *add_proc_leaf(const char *name,
 	entry->data = data;
 	entry->read_proc = rdproc;
 	entry->write_proc = wrproc;
-	entry->owner = THIS_MODULE;
+ 	wrap_proc_dir_entry_owner(entry);
 
 	return entry;
 }
@@ -1019,7 +1019,7 @@ static struct proc_dir_entry *add_proc_fops(const char *name,
 		return NULL;
 
 	entry->proc_fops = fops;
-	entry->owner = THIS_MODULE;
+ 	wrap_proc_dir_entry_owner(entry);
 
 	if (size)
 		entry->size = size;
