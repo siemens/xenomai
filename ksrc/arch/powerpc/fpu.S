@@ -71,9 +71,7 @@ _GLOBAL(rthal_save_fpu)
 /* r3 = &tcb->fpuenv */
 _GLOBAL(rthal_init_fpu)
 	mfmsr	r5
-	ori	r5,r5,MSR_FP|MSR_FE1	/* RT kernel threads always operate in */
-	li	r4,MSR_FE0		/* imprecise non-recoverable exception mode. */
-	andc	r5,r5,r4
+	ori	r5,r5,MSR_FP|MSR_FE0|MSR_FE1
 	SYNC
 	MTMSRD(r5)
 
