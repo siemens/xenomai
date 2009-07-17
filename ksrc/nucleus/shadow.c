@@ -2163,8 +2163,8 @@ static inline void do_taskexit_event(struct task_struct *p)
 	xnshadow_thrptd(p) = NULL;
 	xnthread_archtcb(thread)->user_task = NULL;
 	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
-	xnpod_delete_thread(thread);
 	xnsched_set_resched(thread->sched);
+	xnpod_delete_thread(thread);
 	xnlock_put_irqrestore(&nklock, s);
 	xnpod_schedule();
 
