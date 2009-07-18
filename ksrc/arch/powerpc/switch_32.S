@@ -196,4 +196,5 @@ _GLOBAL(rthal_thread_trampoline)
 	mtmsr	r14
 	mtlr	r15
 	mr	r3,r16
+	stwu	r1,-STACK_FRAME_OVERHEAD(r1)
 	blr
