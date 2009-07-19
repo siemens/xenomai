@@ -53,45 +53,16 @@ static inline void xnarch_lock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 {
 	unsigned irq;
 
-	for (irq = 0; irq < IPIPE_NR_XIRQS; irq++) {
-		switch (irq) {
-#ifdef CONFIG_SMP
-		case RTHAL_CRITICAL_IPI:
-		case ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR):
-		case ipipe_apic_vector_irq(CALL_FUNCTION_VECTOR):
-		case ipipe_apic_vector_irq(RESCHEDULE_VECTOR):
-
-			/* Never lock out these ones. */
-			continue;
-#endif /* CONFIG_SMP */
-
-		default:
-
-			rthal_lock_irq(ipd, cpuid, irq);
-		}
-	}
+	for (irq = 0; irq < NR_IRQS; irq++)
+		rthal_lock_irq(ipd, cpuid, irq);
 }
 
 static inline void xnarch_unlock_xirqs(rthal_pipeline_stage_t * ipd, int cpuid)
 {
 	unsigned irq;
 
-	for (irq = 0; irq < IPIPE_NR_XIRQS; irq++) {
-		switch (irq) {
-#ifdef CONFIG_SMP
-		case RTHAL_CRITICAL_IPI:
-		case ipipe_apic_vector_irq(INVALIDATE_TLB_VECTOR):
-		case ipipe_apic_vector_irq(CALL_FUNCTION_VECTOR):
-		case ipipe_apic_vector_irq(RESCHEDULE_VECTOR):
-
-			continue;
-#endif /* CONFIG_SMP */
-
-		default:
-
-			rthal_unlock_irq(ipd, irq);
-		}
-	}
+	for (irq = 0; irq < NR_IRQS; irq++)
+		rthal_unlock_irq(ipd, irq);
 }
 
 static inline int xnarch_local_syscall(struct pt_regs *regs)

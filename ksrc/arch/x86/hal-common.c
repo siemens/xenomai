@@ -107,9 +107,11 @@ static inline void send_IPI_allbutself(int vector)
 			  | vector);
 	rthal_local_irq_restore_hw(flags);
 }
-#elif defined(__i386__)
+#elif defined(__i386__) && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <mach_ipi.h>
-#endif
+#else
+#define send_IPI_allbutself(vector)	apic->send_IPI_allbutself(vector)
+#endif /* __i386__ && < 2.6.30 */
 
 DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
 {
