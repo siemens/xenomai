@@ -445,7 +445,7 @@ index 0000000..2a0c0e3
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..e8e76e1
+index 0000000..060c97c
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,226 @@
@@ -479,10 +479,10 @@ index 0000000..e8e76e1
 +
 +#include <linux/ipipe_percpu.h>
 +
-+#define IPIPE_ARCH_STRING	"1.12-02"
++#define IPIPE_ARCH_STRING	"1.12-03"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	12
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -2738,10 +2738,10 @@ index 5aafb2e..db52503 100644
  
  config MTD_AT91_DATAFLASH_CARD
 diff --git a/arch/arm/mach-at91/Makefile b/arch/arm/mach-at91/Makefile
-index cca612d..644ef85 100644
+index cca612d..6d8be0e 100644
 --- a/arch/arm/mach-at91/Makefile
 +++ b/arch/arm/mach-at91/Makefile
-@@ -70,3 +70,13 @@ obj-$(CONFIG_AT91_SLOW_CLOCK)	+= pm_slowclock.o
+@@ -70,3 +70,14 @@ obj-$(CONFIG_AT91_SLOW_CLOCK)	+= pm_slowclock.o
  ifeq ($(CONFIG_PM_DEBUG),y)
  CFLAGS_pm.o += -DDEBUG
  endif
@@ -2750,6 +2750,7 @@ index cca612d..644ef85 100644
 +obj-y := $(filter-out at91rm9200_time.o at91sam926x_time.o at91x40_time.o, $(obj-y))
 +obj-$(CONFIG_ARCH_AT91RM9200)   += at91_ipipe_time.o
 +obj-$(CONFIG_ARCH_AT91SAM9260)  += at91_ipipe_time.o
++obj-$(CONFIG_ARCH_AT91SAM9G20)  += at91_ipipe_time.o
 +obj-$(CONFIG_ARCH_AT91SAM9261)  += at91_ipipe_time.o
 +obj-$(CONFIG_ARCH_AT91SAM9263)	+= at91_ipipe_time.o
 +obj-$(CONFIG_ARCH_AT91SAM9RL)	+= at91_ipipe_time.o
@@ -2757,14 +2758,14 @@ index cca612d..644ef85 100644
 +endif
 diff --git a/arch/arm/mach-at91/at91_ipipe_time.c b/arch/arm/mach-at91/at91_ipipe_time.c
 new file mode 100644
-index 0000000..43a6d49
+index 0000000..61f51a0
 --- /dev/null
 +++ b/arch/arm/mach-at91/at91_ipipe_time.c
-@@ -0,0 +1,412 @@
+@@ -0,0 +1,414 @@
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
-+ * Copyright (C) 2007 Gilles Chanteperdrix <gilles.chanteperdrix@laposte.net>
++ * Copyright (C) 2007 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
 + *
 + * Adaptation to AT91SAM926x:
 + * Copyright (C) 2007 Gregory CLEMENT, Adeneo
@@ -2797,7 +2798,7 @@ index 0000000..43a6d49
 +#define AT91_ID_TC0 AT91RM9200_ID_TC0
 +#define AT91_ID_TC1 AT91RM9200_ID_TC1
 +#define AT91_ID_TC2 AT91RM9200_ID_TC2
-+#elif defined(CONFIG_ARCH_AT91SAM9260)
++#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20)
 +#define AT91_ID_TC0 AT91SAM9260_ID_TC0
 +#define AT91_ID_TC1 AT91SAM9260_ID_TC1
 +#define AT91_ID_TC2 AT91SAM9260_ID_TC2
@@ -3102,7 +3103,8 @@ index 0000000..43a6d49
 +	at91_sys_write(AT91_ST_IDR, AT91_ST_PITS | AT91_ST_WDOVF | AT91_ST_RTTINC | AT91_ST_ALMS);
 +	(void) at91_sys_read(AT91_ST_SR);	/* Clear any pending interrupts */	
 +#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9261) \
-+	|| defined(CONFIG_ARCH_AT91SAM9263) || defined(CONFIG_ARCH_AT91SAM9RL)
++	|| defined(CONFIG_ARCH_AT91SAM9263) || defined(CONFIG_ARCH_AT91SAM9RL) \
++	|| defined(CONFIG_ARCH_AT91SAM9RL) || defined(CONFIG_ARCH_AT91SAM9G20)
 +	at91_sys_write(AT91_PIT_MR, 0);
 +
 +	/* Clear any pending interrupts */
@@ -3162,7 +3164,8 @@ index 0000000..43a6d49
 +#ifdef CONFIG_ARCH_AT91RM9200
 +struct sys_timer at91rm9200_timer = {
 +#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9261) \
-+	|| defined(CONFIG_ARCH_AT91SAM9263) || defined(CONFIG_ARCH_AT91SAM9RL)
++	|| defined(CONFIG_ARCH_AT91SAM9263) || defined(CONFIG_ARCH_AT91SAM9RL) \
++	|| defined(CONFIG_ARCH_AT91SAM9RL) || defined(CONFIG_ARCH_AT91SAM9G20)
 +struct sys_timer at91sam926x_timer = {
 +#elif defined(CONFIG_ARCH_AT91X40)
 +struct sys_timer at91x40_timer = {
@@ -3619,7 +3622,7 @@ index 9b0447c..6e7c3c8 100644
  
  /*
 diff --git a/arch/arm/mach-at91/include/mach/hardware.h b/arch/arm/mach-at91/include/mach/hardware.h
-index da0b681..9f34c0a 100644
+index da0b681..f737d38 100644
 --- a/arch/arm/mach-at91/include/mach/hardware.h
 +++ b/arch/arm/mach-at91/include/mach/hardware.h
 @@ -61,6 +61,25 @@
@@ -3629,7 +3632,7 @@ index da0b681..9f34c0a 100644
 +#ifdef CONFIG_IPIPE
 +#if defined(CONFIG_ARCH_AT91RM9200)
 +#define AT91_BASE_TCB0 AT91RM9200_BASE_TCB0
-+#elif defined(CONFIG_ARCH_AT91SAM9260)
++#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20)
 +#define AT91_BASE_TCB0 AT91SAM9260_BASE_TCB0
 +#elif defined(CONFIG_ARCH_AT91SAM9261)
 +#define AT91_BASE_TCB0 AT91SAM9261_BASE_TCB0
@@ -3649,7 +3652,7 @@ index da0b681..9f34c0a 100644
  #define AT91_SRAM_MAX		SZ_1M
  #define AT91_VIRT_BASE		(AT91_IO_VIRT_BASE - AT91_SRAM_MAX)
 diff --git a/arch/arm/mach-at91/include/mach/irqs.h b/arch/arm/mach-at91/include/mach/irqs.h
-index 36bd55f..88d8a31 100644
+index 36bd55f..f187d91 100644
 --- a/arch/arm/mach-at91/include/mach/irqs.h
 +++ b/arch/arm/mach-at91/include/mach/irqs.h
 @@ -45,4 +45,35 @@
@@ -3663,7 +3666,7 @@ index 36bd55f..88d8a31 100644
 +#define __ipipe_mach_irq_mux_p(irq)					\
 +	((unsigned) (irq - AT91RM9200_ID_PIOA) < __ipipe_at91_gpio_banks)
 +
-+#elif defined(CONFIG_ARCH_AT91SAM9260)
++#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20)
 +#define __ipipe_mach_irq_mux_p(irq)					\
 +	((unsigned) (irq - AT91SAM9260_ID_PIOA) < __ipipe_at91_gpio_banks)
 +
@@ -4805,6 +4808,218 @@ index f902a7c..316a8d7 100644
  /*
   * The following uses standard kernel macros defined in arch.h in order to
   * initialize __mach_desc_MX31ADS data structure.
+diff --git a/arch/arm/mach-omap2/timer-gp.c b/arch/arm/mach-omap2/timer-gp.c
+index 589393b..7d34665 100644
+--- a/arch/arm/mach-omap2/timer-gp.c
++++ b/arch/arm/mach-omap2/timer-gp.c
+@@ -38,13 +38,74 @@
+ 
+ static struct omap_dm_timer *gptimer;
+ static struct clock_event_device clockevent_gpt;
++#ifndef CONFIG_OMAP_32K_TIMER
++static struct omap_dm_timer *gpt_clocksource;
++#endif /* !CONFIG_OMAP_32K_TIMER */
++
++#ifdef CONFIG_IPIPE
++#ifdef CONFIG_NO_IDLE_HZ
++#error "dynamic tick timer not yet supported with IPIPE"
++#endif /* CONFIG_NO_IDLE_HZ */
++int __ipipe_mach_timerint;
++EXPORT_SYMBOL(__ipipe_mach_timerint);
++
++int __ipipe_mach_timerstolen;
++EXPORT_SYMBOL(__ipipe_mach_timerstolen);
++
++unsigned int __ipipe_mach_ticks_per_jiffy;
++EXPORT_SYMBOL(__ipipe_mach_ticks_per_jiffy);
++
++static int omap2_timer_initialized;
++
++union tsc_reg {
++#ifdef __BIG_ENDIAN
++	struct {
++		unsigned long high;
++		unsigned long low;
++	};
++#else /* __LITTLE_ENDIAN */
++	struct {
++		unsigned long low;
++		unsigned long high;
++	};
++#endif /* __LITTLE_ENDIAN */
++	unsigned long long full;
++};
++
++#ifdef CONFIG_SMP
++static union tsc_reg tsc[NR_CPUS];
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_NONE;
++}
++
++#else /* !CONFIG_SMP */
++static union tsc_reg *tsc;
++
++void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
++{
++	info->type = IPIPE_TSC_TYPE_FREERUNNING;
++	info->u.fr.counter = (unsigned *)
++		omap_dm_timer_get_phys_counter_addr(gpt_clocksource);
++	info->u.fr.mask = 0xffffffff;
++	info->u.fr.tsc = &tsc->full;
++}
++#endif /* !CONFIG_SMP */
++
++static void ipipe_mach_update_tsc(void);
+ 
++#endif /* CONFIG_IPIPE */
+ static irqreturn_t omap2_gp_timer_interrupt(int irq, void *dev_id)
+ {
+-	struct omap_dm_timer *gpt = (struct omap_dm_timer *)dev_id;
+ 	struct clock_event_device *evt = &clockevent_gpt;
++#ifndef CONFIG_IPIPE
++	struct omap_dm_timer *gpt = (struct omap_dm_timer *)dev_id;
+ 
+ 	omap_dm_timer_write_status(gpt, OMAP_TIMER_INT_OVERFLOW);
++#else /* CONFIG_IPIPE */
++	ipipe_mach_update_tsc();
++#endif /* CONFIG_IPIPE */
+ 
+ 	evt->event_handler(evt);
+ 	return IRQ_HANDLED;
+@@ -95,6 +156,13 @@ static struct clock_event_device clockevent_gpt = {
+ 	.set_mode	= omap2_gp_timer_set_mode,
+ };
+ 
++#ifdef CONFIG_IPIPE
++int __ipipe_check_tickdev(const char *devname)
++{
++	return !strcmp(devname, clockevent_gpt.name);
++}
++#endif /* CONFIG_IPIPE */
++
+ static void __init omap2_gp_clockevent_init(void)
+ {
+ 	u32 tick_rate;
+@@ -110,6 +178,12 @@ static void __init omap2_gp_clockevent_init(void)
+ 	tick_rate = clk_get_rate(omap_dm_timer_get_fclk(gptimer));
+ 
+ 	omap2_gp_timer_irq.dev_id = (void *)gptimer;
++
++#ifdef CONFIG_IPIPE
++	__ipipe_mach_timerint = omap_dm_timer_get_irq(gptimer);
++	__ipipe_mach_ticks_per_jiffy = (tick_rate + HZ / 2) / HZ;
++#endif /* CONFIG_IPIPE */
++
+ 	setup_irq(omap_dm_timer_get_irq(gptimer), &omap2_gp_timer_irq);
+ 	omap_dm_timer_set_int_enable(gptimer, OMAP_TIMER_INT_OVERFLOW);
+ 
+@@ -136,7 +210,6 @@ static inline void __init omap2_gp_clocksource_init(void) {}
+ /*
+  * clocksource
+  */
+-static struct omap_dm_timer *gpt_clocksource;
+ static cycle_t clocksource_read_cycles(void)
+ {
+ 	return (cycle_t)omap_dm_timer_read_counter(gpt_clocksource);
+@@ -174,6 +247,16 @@ static void __init omap2_gp_clocksource_init(void)
+ 
+ 	clocksource_gpt.mult =
+ 		clocksource_khz2mult(tick_rate/1000, clocksource_gpt.shift);
++
++#ifdef CONFIG_IPIPE
++#ifndef CONFIG_SMP
++	tsc = (union tsc_reg *) __ipipe_tsc_area;
++	barrier();
++#endif /* CONFIG_SMP */
++
++	omap2_timer_initialized = 1;
++#endif /* CONFIG_IPIPE */
++
+ 	if (clocksource_register(&clocksource_gpt))
+ 		printk(err2, clocksource_gpt.name);
+ }
+@@ -190,3 +273,79 @@ static void __init omap2_gp_timer_init(void)
+ struct sys_timer omap_timer = {
+ 	.init	= omap2_gp_timer_init,
+ };
++
++#ifdef CONFIG_IPIPE
++void __ipipe_mach_acktimer(void)
++{
++	omap_dm_timer_write_status(gptimer, OMAP_TIMER_INT_OVERFLOW);
++	omap_dm_timer_read_status(gptimer);
++}
++
++static void ipipe_mach_update_tsc(void)
++{
++	union tsc_reg *local_tsc;
++	unsigned long stamp, flags;
++
++	if (likely(omap2_timer_initialized)) {
++		local_irq_save_hw(flags);
++		local_tsc = &tsc[ipipe_processor_id()];
++		stamp = omap_dm_timer_read_counter(gpt_clocksource);
++		if (unlikely(stamp < local_tsc->low))
++			/* 32 bit counter wrapped, increment high word. */
++			local_tsc->high++;
++		local_tsc->low = stamp;
++		local_irq_restore_hw(flags);
++	}
++}
++
++notrace unsigned long long __ipipe_mach_get_tsc(void)
++{
++	if (likely(omap2_timer_initialized)) {
++		union tsc_reg *local_tsc, result;
++		unsigned long stamp;
++
++		local_tsc = &tsc[ipipe_processor_id()];
++
++		__asm__ ("ldmia %1, %M0\n" :
++			 "=r"(result.full) : "r"(local_tsc), "m"(*local_tsc));
++		barrier();
++		stamp = omap_dm_timer_read_counter(gpt_clocksource);
++		if (unlikely(stamp < result.low))
++			/* 32 bit counter wrapped, increment high word. */
++			result.high++;
++		result.low = stamp;
++
++		return result.full;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(__ipipe_mach_get_tsc);
++
++/*
++ * Reprogram the timer
++ */
++
++void __ipipe_mach_set_dec(unsigned long delay)
++{
++	if (delay > 3)
++		omap_dm_timer_set_load_start(gptimer, 0, 0xffffffff - delay);
++	else
++		ipipe_trigger_irq(__ipipe_mach_timerint);
++}
++EXPORT_SYMBOL(__ipipe_mach_set_dec);
++
++void __ipipe_mach_release_timer(void)
++{
++	struct clock_event_device *ckdev = &clockevent_gpt;
++	ckdev->set_mode(ckdev->mode, ckdev);
++	if (ckdev->mode == CLOCK_EVT_MODE_ONESHOT)
++		ckdev->set_next_event(__ipipe_mach_ticks_per_jiffy, ckdev);
++}
++EXPORT_SYMBOL(__ipipe_mach_release_timer);
++
++unsigned long __ipipe_mach_get_dec(void)
++{
++	return 0xffffffff - omap_dm_timer_read_counter(gptimer);
++}
++#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-pxa/gpio.c b/arch/arm/mach-pxa/gpio.c
 index 14930cf..149b825 100644
 --- a/arch/arm/mach-pxa/gpio.c
@@ -6496,6 +6711,176 @@ index fd28f51..c3d7da2 100644
 +		- __raw_readl(TIMER_BASE + MXC_TCN);
 +}
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/plat-omap/Kconfig b/arch/arm/plat-omap/Kconfig
+index a94f0c4..ed2927f 100644
+--- a/arch/arm/plat-omap/Kconfig
++++ b/arch/arm/plat-omap/Kconfig
+@@ -115,7 +115,7 @@ config OMAP_MPU_TIMER
+ 
+ config OMAP_32K_TIMER
+ 	bool "Use 32KHz timer"
+-	depends on ARCH_OMAP16XX || ARCH_OMAP24XX || ARCH_OMAP34XX
++	depends on (ARCH_OMAP16XX || ARCH_OMAP24XX || ARCH_OMAP34XX) && !IPIPE
+ 	help
+ 	  Select this option if you want to enable the OMAP 32KHz timer.
+ 	  This timer saves power compared to the OMAP_MPU_TIMER, and has
+diff --git a/arch/arm/plat-omap/dmtimer.c b/arch/arm/plat-omap/dmtimer.c
+index 963c31c..6b1cb7a 100644
+--- a/arch/arm/plat-omap/dmtimer.c
++++ b/arch/arm/plat-omap/dmtimer.c
+@@ -423,6 +423,13 @@ int omap_dm_timer_get_irq(struct omap_dm_timer *timer)
+ 	return timer->irq;
+ }
+ 
++#ifdef CONFIG_IPIPE
++unsigned long omap_dm_timer_get_phys_counter_addr(struct omap_dm_timer *timer)
++{
++	return timer->phys_base + (OMAP_TIMER_COUNTER_REG & 0xff);
++}
++#endif /* CONFIG_IPIPE */
++
+ #if defined(CONFIG_ARCH_OMAP1)
+ 
+ /**
+diff --git a/arch/arm/plat-omap/gpio.c b/arch/arm/plat-omap/gpio.c
+index 424049d..dad956b 100644
+--- a/arch/arm/plat-omap/gpio.c
++++ b/arch/arm/plat-omap/gpio.c
+@@ -17,6 +17,7 @@
+ #include <linux/sysdev.h>
+ #include <linux/err.h>
+ #include <linux/clk.h>
++#include <linux/irq.h>		/* For irq_desc */
+ #include <linux/io.h>
+ 
+ #include <mach/hardware.h>
+@@ -1067,6 +1068,93 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 
+ }
+ 
++#ifdef CONFIG_IPIPE
++/* Same as function above, except it calls __ipipe_handle_irq. */
++void __ipipe_mach_demux_irq(unsigned int irq, struct pt_regs *regs)
++{
++	void __iomem *isr_reg = NULL;
++	u32 isr;
++	unsigned int gpio_irq;
++	struct gpio_bank *bank;
++	struct irq_desc *desc;
++	u32 retrigger = 0;
++	int unmasked = 0;
++
++	desc = &irq_desc[irq];
++
++	desc->chip->ack(irq);
++
++	bank = get_irq_data(irq);
++#ifdef CONFIG_ARCH_OMAP1
++	if (bank->method == METHOD_MPUIO)
++		isr_reg = bank->base + OMAP_MPUIO_GPIO_INT;
++#endif
++#ifdef CONFIG_ARCH_OMAP15XX
++	if (bank->method == METHOD_GPIO_1510)
++		isr_reg = bank->base + OMAP1510_GPIO_INT_STATUS;
++#endif
++#if defined(CONFIG_ARCH_OMAP16XX)
++	if (bank->method == METHOD_GPIO_1610)
++		isr_reg = bank->base + OMAP1610_GPIO_IRQSTATUS1;
++#endif
++#ifdef CONFIG_ARCH_OMAP730
++	if (bank->method == METHOD_GPIO_730)
++		isr_reg = bank->base + OMAP730_GPIO_INT_STATUS;
++#endif
++#if defined(CONFIG_ARCH_OMAP24XX) || defined(CONFIG_ARCH_OMAP34XX)
++	if (bank->method == METHOD_GPIO_24XX)
++		isr_reg = bank->base + OMAP24XX_GPIO_IRQSTATUS1;
++#endif
++	while (1) {
++		u32 isr_saved, level_mask = 0;
++		u32 enabled;
++
++		enabled = _get_gpio_irqbank_mask(bank);
++		isr_saved = isr = __raw_readl(isr_reg) & enabled;
++
++		if (cpu_is_omap15xx() && (bank->method == METHOD_MPUIO))
++			isr &= 0x0000ffff;
++
++		if (cpu_class_is_omap2())
++			level_mask = bank->level_mask & enabled;
++
++		/* clear edge sensitive interrupts before handler(s) are
++		called so that we don't miss any interrupt occurred while
++		executing them */
++		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 0);
++		_clear_gpio_irqbank(bank, isr_saved & ~level_mask);
++		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 1);
++
++		/* if there is only edge sensitive GPIO pin interrupts
++		configured, we could unmask GPIO bank interrupt immediately */
++		if (!level_mask && !unmasked) {
++			unmasked = 1;
++			desc->chip->unmask(irq);
++		}
++
++		isr |= retrigger;
++		retrigger = 0;
++		if (!isr)
++			break;
++
++		gpio_irq = bank->virtual_irq_start;
++		for (; isr != 0; isr >>= 1, gpio_irq++) {
++			if (!(isr & 1))
++				continue;
++
++			__ipipe_handle_irq(gpio_irq, regs);
++		}
++	}
++	/* if bank has any level sensitive GPIO pin interrupt
++	configured, we must unmask the bank interrupt only after
++	handler(s) are executed in order to avoid spurious bank
++	interrupt */
++	if (!unmasked)
++		desc->chip->unmask(irq);
++
++}
++#endif /* CONFIG_IPIPE */
++
+ static void gpio_irq_shutdown(unsigned int irq)
+ {
+ 	unsigned int gpio = irq - IH_GPIO_BASE;
+diff --git a/arch/arm/plat-omap/include/mach/dmtimer.h b/arch/arm/plat-omap/include/mach/dmtimer.h
+index 6dc7031..b2e8fcc 100644
+--- a/arch/arm/plat-omap/include/mach/dmtimer.h
++++ b/arch/arm/plat-omap/include/mach/dmtimer.h
+@@ -56,6 +56,9 @@ void omap_dm_timer_enable(struct omap_dm_timer *timer);
+ void omap_dm_timer_disable(struct omap_dm_timer *timer);
+ 
+ int omap_dm_timer_get_irq(struct omap_dm_timer *timer);
++#ifdef CONFIG_IPIPE
++unsigned long omap_dm_timer_get_phys_counter_addr(struct omap_dm_timer *timer);
++#endif /* CONFIG_IPIPE */
+ 
+ u32 omap_dm_timer_modify_idlect_mask(u32 inputmask);
+ struct clk *omap_dm_timer_get_fclk(struct omap_dm_timer *timer);
+diff --git a/arch/arm/plat-omap/include/mach/irqs.h b/arch/arm/plat-omap/include/mach/irqs.h
+index bed5274..6eaf67b 100644
+--- a/arch/arm/plat-omap/include/mach/irqs.h
++++ b/arch/arm/plat-omap/include/mach/irqs.h
+@@ -388,6 +388,14 @@
+ extern void omap_init_irq(void);
+ #endif
+ 
++#ifdef CONFIG_IPIPE
++#ifdef CONFIG_ARCH_OMAP34XX
++#define __ipipe_mach_irq_mux_p(irq) \
++	((unsigned) (irq - INT_34XX_GPIO_BANK1) \
++	 <= (INT_34XX_GPIO_BANK6 - INT_34XX_GPIO_BANK1))
++#endif /* OMAP34XX */
++#endif /* CONFIG_IPIPE */
++
+ #include <mach/hardware.h>
+ 
+ #endif
 diff --git a/arch/arm/plat-s3c24xx/irq.c b/arch/arm/plat-s3c24xx/irq.c
 index 963f7a4..4b94743 100644
 --- a/arch/arm/plat-s3c24xx/irq.c
