@@ -207,7 +207,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..5ee7fa4
+index 0000000..56ca2bd
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,156 @@
@@ -238,10 +238,10 @@ index 0000000..5ee7fa4
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.4-04"
++#define IPIPE_ARCH_STRING	"2.4-05"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -1276,18 +1276,48 @@ index 2bdab21..bcd2f5f 100644
  static inline int raw_irqs_disabled_flags(unsigned long flags)
  {
 diff --git a/arch/x86/include/asm/mmu_context.h b/arch/x86/include/asm/mmu_context.h
-index f923203..63454a0 100644
+index f923203..4b7020f 100644
 --- a/arch/x86/include/asm/mmu_context.h
 +++ b/arch/x86/include/asm/mmu_context.h
-@@ -72,8 +72,11 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+@@ -30,11 +30,14 @@ static inline void enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
+ #endif
+ }
  
+-static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+-			     struct task_struct *tsk)
++static inline void __switch_mm(struct mm_struct *prev, struct mm_struct *next,
++			       struct task_struct *tsk)
+ {
+ 	unsigned cpu = smp_processor_id();
+ 
++#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
++	WARN_ON_ONCE(!irqs_disabled_hw());
++#endif
+ 	if (likely(prev != next)) {
+ 		/* stop flush ipis for the previous mm */
+ 		cpu_clear(cpu, prev->cpu_vm_mask);
+@@ -70,10 +73,23 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+ #endif
+ }
+ 
++static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
++			     struct task_struct *tsk)
++{
++	unsigned long flags;
++	local_irq_save_hw_cond(flags);
++	__switch_mm(prev, next, tsk);
++	local_irq_restore_hw_cond(flags);
++}
++
++#define ipipe_mm_switch_protect(flags)	local_irq_save_hw_cond(flags)
++#define ipipe_mm_switch_unprotect(flags) \
++	local_irq_restore_hw_cond(flags)
++
  #define activate_mm(prev, next)			\
  do {						\
-+ 	unsigned long flags;			\
  	paravirt_activate_mm((prev), (next));	\
-+ 	local_irq_save_hw_cond(flags);		\
- 	switch_mm((prev), (next), NULL);	\
-+ 	local_irq_restore_hw_cond(flags);	\
+-	switch_mm((prev), (next), NULL);	\
++	__switch_mm((prev), (next), NULL);	\
  } while (0);
  
  #ifdef CONFIG_X86_32
@@ -4615,10 +4645,25 @@ index a03b727..6d8facc 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/x86/mm/tlb.c b/arch/x86/mm/tlb.c
-index 821e970..06bd681 100644
+index 821e970..9294287 100644
 --- a/arch/x86/mm/tlb.c
 +++ b/arch/x86/mm/tlb.c
-@@ -193,6 +193,9 @@ static void flush_tlb_others_ipi(const struct cpumask *cpumask,
+@@ -57,10 +57,14 @@ static union smp_flush_state flush_state[NUM_INVALIDATE_TLB_VECTORS];
+  */
+ void leave_mm(int cpu)
+ {
++	unsigned long flags;
++
+ 	if (percpu_read(cpu_tlbstate.state) == TLBSTATE_OK)
+ 		BUG();
++	local_irq_save_hw_cond(flags);
+ 	cpu_clear(cpu, percpu_read(cpu_tlbstate.active_mm)->cpu_vm_mask);
+ 	load_cr3(swapper_pg_dir);
++	local_irq_restore_hw_cond(flags);
+ }
+ EXPORT_SYMBOL_GPL(leave_mm);
+ 
+@@ -193,6 +197,9 @@ static void flush_tlb_others_ipi(const struct cpumask *cpumask,
  	apic->send_IPI_mask(to_cpumask(f->flush_cpumask),
  		      INVALIDATE_TLB_VECTOR_START + sender);
  
@@ -4697,6 +4742,51 @@ index a0127e9..6e151b0 100644
  static struct platform_driver serial8250_isa_driver = {
  	.probe		= serial8250_probe,
  	.remove		= __devexit_p(serial8250_remove),
+diff --git a/fs/aio.c b/fs/aio.c
+index 76da125..21d717c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -618,13 +618,16 @@ static void use_mm(struct mm_struct *mm)
+ {
+ 	struct mm_struct *active_mm;
+ 	struct task_struct *tsk = current;
++	unsigned long flags;
+ 
+ 	task_lock(tsk);
+ 	active_mm = tsk->active_mm;
+ 	atomic_inc(&mm->mm_count);
+ 	tsk->mm = mm;
++	ipipe_mm_switch_protect(flags);
+ 	tsk->active_mm = mm;
+-	switch_mm(active_mm, mm, tsk);
++	__switch_mm(active_mm, mm, tsk);
++	ipipe_mm_switch_unprotect(flags);
+ 	task_unlock(tsk);
+ 
+ 	mmdrop(active_mm);
+diff --git a/fs/exec.c b/fs/exec.c
+index 895823d..ec10cab 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -698,6 +698,7 @@ static int exec_mmap(struct mm_struct *mm)
+ {
+ 	struct task_struct *tsk;
+ 	struct mm_struct * old_mm, *active_mm;
++	unsigned long flags;
+ 
+ 	/* Notify parent that we're no longer interested in the old VM */
+ 	tsk = current;
+@@ -720,8 +721,10 @@ static int exec_mmap(struct mm_struct *mm)
+ 	task_lock(tsk);
+ 	active_mm = tsk->active_mm;
+ 	tsk->mm = mm;
++	ipipe_mm_switch_protect(flags);
+ 	tsk->active_mm = mm;
+ 	activate_mm(active_mm, mm);
++	ipipe_mm_switch_unprotect(flags);
+ 	task_unlock(tsk);
+ 	arch_pick_mmap_layout(mm);
+ 	if (old_mm) {
 diff --git a/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
 index b2ba2fc..ed01ab9 100644
 --- a/include/asm-generic/cmpxchg-local.h
@@ -4734,7 +4824,7 @@ index b2ba2fc..ed01ab9 100644
  }
  
 diff --git a/include/asm-generic/percpu.h b/include/asm-generic/percpu.h
-index d7d50d7..98ccc17 100644
+index d7d50d7..5d5b6ba 100644
 --- a/include/asm-generic/percpu.h
 +++ b/include/asm-generic/percpu.h
 @@ -56,6 +56,20 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
@@ -4742,7 +4832,7 @@ index d7d50d7..98ccc17 100644
  	(*SHIFT_PERCPU_PTR(&per_cpu_var(var), __my_cpu_offset))
  
 +#ifdef CONFIG_IPIPE
-+#if defined(CONFIG_IPIPE_DEBUG) && defined(CONFIG_SMP)
++#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +extern int __ipipe_check_percpu_access(void);
 +#define __ipipe_local_cpu_offset				\
 +	({							\
@@ -6476,7 +6566,7 @@ index abf9cf3..887651d 100644
  	exit_files(tsk);
  	exit_fs(tsk);
 diff --git a/kernel/fork.c b/kernel/fork.c
-index 875ffbd..0000b1a 100644
+index 875ffbd..899defb 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -488,6 +488,7 @@ void mmput(struct mm_struct *mm)
@@ -6506,6 +6596,21 @@ index 875ffbd..0000b1a 100644
  	return p;
  
  bad_fork_free_graph:
+@@ -1666,11 +1670,14 @@ SYSCALL_DEFINE1(unshare, unsigned long, unshare_flags)
+ 		}
+ 
+ 		if (new_mm) {
++			unsigned long flags;
+ 			mm = current->mm;
+ 			active_mm = current->active_mm;
+ 			current->mm = new_mm;
++			ipipe_mm_switch_protect(flags);
+ 			current->active_mm = new_mm;
+ 			activate_mm(active_mm, new_mm);
++			ipipe_mm_switch_unprotect(flags);
+ 			new_mm = mm;
+ 		}
+ 
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
 index 0000000..de5e6a3
@@ -6549,10 +6654,10 @@ index 0000000..de5e6a3
 +       default n
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
-index 0000000..6717b51
+index 0000000..c9b8abc
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig.debug
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,96 @@
 +config IPIPE_DEBUG
 +	bool "I-pipe debugging"
 +	depends on IPIPE
@@ -6566,6 +6671,15 @@ index 0000000..6717b51
 +	  verify the correct invocation context. On entry of critical
 +	  Linux services a warning is issued if the caller is not
 +	  running over the root domain.
++
++config IPIPE_DEBUG_INTERNAL
++	bool "Enable internal debug checks"
++	depends on IPIPE_DEBUG
++	default y
++	---help---
++	  When this feature is enabled, I-pipe will perform internal
++	  consistency checks of its subsystems, e.g. on per-cpu variable
++	  access.
 +
 +config IPIPE_TRACE
 +	bool "Latency tracing"
@@ -6651,7 +6765,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..eeaee66
+index 0000000..ffaceaa
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1794 @@
@@ -6967,7 +7081,7 @@ index 0000000..eeaee66
 +
 +        local_irq_disable_hw();
 +
-+#ifdef CONFIG_IPIPE_DEBUG
++#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +	/* This helps catching bad usage from assembly call sites. */
 +	BUG_ON(!__ipipe_root_domain_p);
 +#endif
@@ -6984,7 +7098,7 @@ index 0000000..eeaee66
 +
 +void __ipipe_restore_root(unsigned long x)
 +{
-+#ifdef CONFIG_IPIPE_DEBUG
++#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +	BUG_ON(!ipipe_root_domain_p);
 +#endif
 +
@@ -8354,7 +8468,7 @@ index 0000000..eeaee66
 +
 +#endif /* CONFIG_IPIPE_DEBUG_CONTEXT */
 +
-+#if defined(CONFIG_IPIPE_DEBUG) && defined(CONFIG_SMP)
++#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +
 +int notrace __ipipe_check_percpu_access(void)
 +{
@@ -8400,7 +8514,7 @@ index 0000000..eeaee66
 +	return ret;
 +}
 +
-+#endif /* CONFIG_IPIPE_DEBUG && CONFIG_SMP */
++#endif /* CONFIG_IPIPE_DEBUG_INTERNAL && CONFIG_SMP */
 +
 +EXPORT_SYMBOL(ipipe_virtualize_irq);
 +EXPORT_SYMBOL(ipipe_control_irq);
@@ -8437,7 +8551,7 @@ index 0000000..eeaee66
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_pend_irq);
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
-+#if defined(CONFIG_IPIPE_DEBUG) && defined(CONFIG_SMP)
++#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +EXPORT_SYMBOL(__ipipe_check_percpu_access);
 +#endif
 +#ifdef CONFIG_GENERIC_CLOCKEVENTS
@@ -10692,10 +10806,42 @@ index cffffad..0a3eac6 100644
   * This function runs timers and the timer-tq in bottom half context.
   */
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index f1ed080..f7c600d 100644
+index f1ed080..aa45f71 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
-@@ -2189,9 +2189,9 @@ static int ftrace_convert_nops(struct module *mod,
+@@ -28,6 +28,7 @@
+ #include <linux/ctype.h>
+ #include <linux/list.h>
+ #include <linux/hash.h>
++#include <linux/ipipe.h>
+ 
+ #include <trace/sched.h>
+ 
+@@ -627,6 +628,9 @@ static int __ftrace_modify_code(void *data)
+ 
+ static void ftrace_run_update_code(int command)
+ {
++#ifdef CONFIG_IPIPE
++	unsigned long flags;
++#endif /* CONFIG_IPIPE */
+ 	int ret;
+ 
+ 	ret = ftrace_arch_code_modify_prepare();
+@@ -634,7 +638,13 @@ static void ftrace_run_update_code(int command)
+ 	if (ret)
+ 		return;
+ 
++#ifdef CONFIG_IPIPE
++	flags = ipipe_critical_enter(NULL);
++	__ftrace_modify_code(&command);
++	ipipe_critical_exit(flags);
++#else  /* !CONFIG_IPIPE */
+ 	stop_machine(__ftrace_modify_code, &command, NULL);
++#endif /* !CONFIG_IPIPE */
+ 
+ 	ret = ftrace_arch_code_modify_post_process();
+ 	FTRACE_WARN_ON(ret);
+@@ -2189,9 +2199,9 @@ static int ftrace_convert_nops(struct module *mod,
  	}
  
  	/* disable interrupts to prevent kstop machine */
@@ -10707,7 +10853,7 @@ index f1ed080..f7c600d 100644
  	mutex_unlock(&ftrace_lock);
  
  	return 0;
-@@ -2216,9 +2216,9 @@ void __init ftrace_init(void)
+@@ -2216,9 +2226,9 @@ void __init ftrace_init(void)
  	/* Keep the ftrace pointer to the stub */
  	addr = (unsigned long)ftrace_stub;
  
