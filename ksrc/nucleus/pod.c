@@ -355,7 +355,8 @@ int xnpod_init(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (xnpod_active_p()) {
+	pod = &nkpod_struct;
+	if (pod->refcnt > 0) {
 		/*
 		 * Another skin has initialized the global pod
 		 * already; just increment the reference count.
@@ -365,7 +366,6 @@ int xnpod_init(void)
 		return 0;
 	}
 
-	pod = &nkpod_struct;
 	pod->status = 0;
 	pod->refcnt = 1;
 	initq(&pod->threadq);
