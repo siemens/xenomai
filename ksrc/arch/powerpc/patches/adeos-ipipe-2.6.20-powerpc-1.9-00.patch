@@ -1,3 +1,56 @@
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+index 060a71d..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,47 +0,0 @@
+-#
+-# NOTE! Don't add files that are generated in specific
+-# subdirectories here. Add them in the ".gitignore" file
+-# in that subdirectory instead.
+-#
+-# Normal rules
+-#
+-.*
+-*.o
+-*.a
+-*.s
+-*.ko
+-*.so
+-*.mod.c
+-*.i
+-*.lst
+-*.symtypes
+-
+-#
+-# Top-level generic files
+-#
+-tags
+-TAGS
+-vmlinux*
+-System.map
+-Module.symvers
+-
+-#
+-# Generated include files
+-#
+-include/asm
+-include/asm-*/asm-offsets.h
+-include/config
+-include/linux/autoconf.h
+-include/linux/compile.h
+-include/linux/version.h
+-include/linux/utsrelease.h
+-
+-# stgit generated dirs
+-patches-*
+-
+-# quilt's files
+-patches
+-series
+-
+-# cscope files
+-cscope.*
 diff --git a/Makefile b/Makefile
 index 7e2750f..055ab06 100644
 --- a/Makefile
@@ -82,7 +135,7 @@ index b742013..fa5752a 100644
  	struct fixup_entry {
  		unsigned long	mask;
 diff --git a/arch/powerpc/kernel/entry_32.S b/arch/powerpc/kernel/entry_32.S
-index c03e829..687a965 100644
+index c03e829..7e7224e 100644
 --- a/arch/powerpc/kernel/entry_32.S
 +++ b/arch/powerpc/kernel/entry_32.S
 @@ -132,8 +132,23 @@ transfer_to_handler:
@@ -166,57 +219,42 @@ index c03e829..687a965 100644
  	REST_NVGPRS(r1)
  	bl	schedule_tail
  	li	r3,0
-@@ -630,6 +683,11 @@ ret_from_except:
+@@ -630,6 +683,12 @@ ret_from_except:
  	SYNC			/* Some chip revs have problems here... */
  	MTMSRD(r10)		/* disable interrupts */
  
 +#ifdef CONFIG_IPIPE
 +        bl __ipipe_check_root
 +        cmpwi   r3, 0
++	mfmsr	r10		/* this is used later, might be messed */
 +        beq- restore
 +#endif /* CONFIG_IPIPE */
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r0,r3,MSR_PR
  	beq	resume_kernel
-@@ -665,11 +723,37 @@ resume_kernel:
+@@ -653,6 +712,12 @@ restore_user:
+ #ifdef CONFIG_PREEMPT
+ 	b	restore
+ 
++#ifdef CONFIG_IPIPE
++#define PREEMPT_SCHEDULE_IRQ	__ipipe_preempt_schedule_irq
++#else
++#define PREEMPT_SCHEDULE_IRQ	preempt_schedule_irq
++#endif
++
+ /* N.B. the only way to get here is from the beq following ret_from_except. */
+ resume_kernel:
+ 	/* check current_thread_info->preempt_count */
+@@ -665,7 +730,7 @@ resume_kernel:
  	beq+	restore
  	andi.	r0,r3,MSR_EE	/* interrupts off? */
  	beq	restore		/* don't schedule if so */
-+#ifdef CONFIG_IPIPE	
-+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-+	lis	r3,(0x80000000)@h
-+	ori	r3,r3,(0x80000000)@l
-+	bl	ipipe_trace_end
-+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
-+	LOAD_MSR_KERNEL(r10,MSR_KERNEL)
-+	ori	r10,r10,MSR_EE
-+	SYNC
-+	MTMSRD(r10)
-+	bl	__ipipe_fast_stall_root
-+#endif /* CONFIG_IPIPE */	
- 1:	bl	preempt_schedule_irq
+-1:	bl	preempt_schedule_irq
++1:	bl	PREEMPT_SCHEDULE_IRQ
  	rlwinm	r9,r1,0,0,(31-THREAD_SHIFT)
  	lwz	r3,TI_FLAGS(r9)
  	andi.	r0,r3,_TIF_NEED_RESCHED
- 	bne-	1b
-+#ifdef CONFIG_IPIPE	
-+	bl	__ipipe_fast_unstall_root
-+	LOAD_MSR_KERNEL(r10,MSR_KERNEL)
-+	SYNC
-+	MTMSRD(r10)
-+#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
-+	lwz	r3,_MSR(r1)
-+	andi.	r0,r3,MSR_EE
-+	bne	restore
-+	lis	r3,(0x80000000)@h
-+	ori	r3,r3,(0x80000000)@l
-+	bl	ipipe_trace_begin
-+#endif /* CONFIG_IPIPE_TRACE_IRQSOFF */
-+#endif /* CONFIG_IPIPE */	
- #else
- resume_kernel:
- #endif /* CONFIG_PREEMPT */
-@@ -929,6 +1013,13 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
+@@ -929,6 +994,13 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
  
  	.comm	ee_restarts,4
  
@@ -471,10 +509,10 @@ index 34ae114..10ea724 100644
  	u32 lc = c;
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..cfdc6cc
+index 0000000..36ad1b7
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,734 @@
+@@ -0,0 +1,777 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -1140,39 +1178,82 @@ index 0000000..cfdc6cc
 +
 +int __ipipe_syscall_root(struct pt_regs *regs) /* HW interrupts off */
 +{
-+	/*										     
-+	 * This routine either returns:							     
-+	 * 0 -- if the syscall is to be passed to Linux;				     
-+	 * >0 -- if the syscall should not be passed to Linux, and no			     
-+	 * tail work should be performed;						     
-+	 * <0 -- if the syscall should not be passed to Linux but the			     
-+	 * tail work has to be performed (for handling signals etc).			     
-+	 */
++	struct ipipe_percpu_domain_data *p;
++	unsigned long flags;
++        int ret;
 +
-+	if (__ipipe_syscall_watched_p(current, regs->gpr[0]) &&
-+	    __ipipe_event_monitored_p(IPIPE_EVENT_SYSCALL) &&
-+	    __ipipe_dispatch_event(IPIPE_EVENT_SYSCALL,regs) > 0) {
-+		if (ipipe_root_domain_p && !in_atomic()) {
-+			/*								     
-+			 * Sync pending VIRQs before _TIF_NEED_RESCHED			     
-+			 * is tested.							     
-+			 */
-+			local_irq_disable_hw();
-+			if ((ipipe_root_cpudom_var(irqpend_himask) & IPIPE_IRQMASK_VIRT) != 0)
-+				__ipipe_sync_pipeline(IPIPE_IRQMASK_VIRT);
-+			local_irq_enable_hw();
-+			return -1;
-+		}
++        /*
++         * This routine either returns:
++         * 0 -- if the syscall is to be passed to Linux;
++         * >0 -- if the syscall should not be passed to Linux, and no
++         * tail work should be performed;
++         * <0 -- if the syscall should not be passed to Linux but the
++         * tail work has to be performed (for handling signals etc).
++         */
++
++        if (!__ipipe_syscall_watched_p(current, regs->gpr[0]) ||
++            !__ipipe_event_monitored_p(IPIPE_EVENT_SYSCALL))
++                return 0;
++
++        ret = __ipipe_dispatch_event(IPIPE_EVENT_SYSCALL, regs);
++
++	local_irq_save_hw(flags);
++
++        if (!ipipe_root_domain_p) {
++		local_irq_restore_hw(flags);
 +		return 1;
 +	}
 +
-+	return 0;
++	p = ipipe_root_cpudom_ptr();
++	if ((p->irqpend_himask & IPIPE_IRQMASK_VIRT) != 0)
++		__ipipe_sync_pipeline(IPIPE_IRQMASK_VIRT);
++
++	local_irq_restore_hw(flags);
++
++	return -ret;
 +}
 +
 +void __ipipe_pin_range_globally(unsigned long start, unsigned long end)
 +{
 +	/* We don't support this. */
 +}
++
++#ifdef CONFIG_PREEMPT
++
++asmlinkage void __sched preempt_schedule_irq(void);
++
++void __sched  __ipipe_preempt_schedule_irq(void)
++{
++	struct ipipe_percpu_domain_data *p; 
++	unsigned long flags;  
++	/*
++	 * We have no IRQ state fixup on entry to exceptions, so we
++	 * have to stall the root stage before rescheduling.
++	 */  
++#ifdef CONFIG_IPIPE_DEBUG
++	BUG_ON(!irqs_disabled_hw());
++#endif
++	local_irq_save(flags);	
++	local_irq_enable_hw();	
++	preempt_schedule_irq(); /* Ok, may reschedule now. */  
++	local_irq_disable_hw(); 
++	/*
++	 * Flush any pending interrupt that may have been logged after
++	 * preempt_schedule_irq() stalled the root stage before
++	 * returning to us, and now.
++	 */
++	p = ipipe_root_cpudom_ptr(); 
++	if (unlikely(p->irqpend_himask != 0)) { 
++		add_preempt_count(PREEMPT_ACTIVE);
++		clear_bit(IPIPE_STALL_FLAG, &p->status); 
++		__ipipe_sync_pipeline(IPIPE_IRQMASK_ANY); 
++		sub_preempt_count(PREEMPT_ACTIVE);
++	} 
++
++	local_irq_restore_nosync(flags);  
++}
++
++#endif
 +
 +EXPORT_SYMBOL(__ipipe_decr_ticks);
 +EXPORT_PER_CPU_SYMBOL(__ipipe_decr_next);
@@ -1576,16 +1657,25 @@ index 535f506..30be7ee 100644
  }
  
 diff --git a/arch/powerpc/mm/fault.c b/arch/powerpc/mm/fault.c
-index 03aeb3a..1eb2e9e 100644
+index 03aeb3a..0754462 100644
 --- a/arch/powerpc/mm/fault.c
 +++ b/arch/powerpc/mm/fault.c
-@@ -160,6 +160,9 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+@@ -153,13 +153,17 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+ 			    unsigned long error_code)
+ {
+ 	struct vm_area_struct * vma;
+-	struct mm_struct *mm = current->mm;
++	struct mm_struct *mm;
+ 	siginfo_t info;
+ 	int code = SEGV_MAPERR;
+ 	int is_write = 0;
  	int trap = TRAP(regs);
   	int is_exec = trap == 0x400;
  
 +	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
 +	    	return 0;
 +
++	mm = current->mm;
  #if !(defined(CONFIG_4xx) || defined(CONFIG_BOOKE))
  	/*
  	 * Fortunately the bit assignments in SRR1 for an instruction
@@ -2496,6 +2586,71 @@ index 465f451..c5fac67 100644
  #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)
  	if (debugger_fault_handler && TRAP(regs) == 0x300) {
  		debugger_fault_handler(regs);
+diff --git a/arch/ppc/mm/hashtable.S b/arch/ppc/mm/hashtable.S
+index e756942..3daaeef 100644
+--- a/arch/ppc/mm/hashtable.S
++++ b/arch/ppc/mm/hashtable.S
+@@ -473,7 +473,11 @@ found_slot:
+  *
+  * We assume that there is a hash table in use (Hash != 0).
+  */
++#ifdef CONFIG_IPIPE
++_GLOBAL(__flush_hash_pages)
++#else	
+ _GLOBAL(flush_hash_pages)
++#endif	
+ 	tophys(r7,0)
+ 
+ 	/*
+@@ -601,5 +605,5 @@ _GLOBAL(flush_hash_patch_B)
+ 
+ 19:	mtmsr	r10
+ 	SYNC_601
+-	isync
++	sync
+ 	blr
+diff --git a/arch/ppc/mm/tlb.c b/arch/ppc/mm/tlb.c
+index fa29740..ce16a0c 100644
+--- a/arch/ppc/mm/tlb.c
++++ b/arch/ppc/mm/tlb.c
+@@ -95,6 +95,37 @@ void tlb_flush(struct mmu_gather *tlb)
+ #define FINISH_FLUSH	do { } while (0)
+ #endif
+ 
++#ifdef CONFIG_IPIPE
++
++int __flush_hash_pages(unsigned context, unsigned long va,
++		       unsigned long pmdval, int count);
++
++int flush_hash_pages(unsigned context, unsigned long va,
++		     unsigned long pmdval, int count)
++{
++	int bulk, ret = 0;
++	/*
++	 * Submitting flush requests on insanely large PTE counts
++	 * (e.g. HIGHMEM) may cause severe latency penalty on high
++	 * priority domains since this must be done with hw interrupts
++	 * off (typically, peaks over 400 us have been observed on
++	 * 864xD). We split flush requests in bulks of 64 PTEs to
++	 * prevent that; the modified assembly helper which performs
++	 * the actual flush (__flush_hash_pages()) will spin on the
++	 * mmu_lock with interrupts enabled to further reduce latency.
++	 */
++	while (count > 0) {
++		bulk = count > 64 ? 64 : count;
++		ret |= __flush_hash_pages(context, va, pmdval, bulk);
++		va += (bulk << PAGE_SHIFT);
++		count -= bulk;
++	}
++
++	return ret;
++}
++
++#endif /* CONFIG_IPIPE */
++
+ static void flush_range(struct mm_struct *mm, unsigned long start,
+ 			unsigned long end)
+ {
 diff --git a/arch/ppc/syslib/cpm2_pic.c b/arch/ppc/syslib/cpm2_pic.c
 index fb2d584..550b647 100644
 --- a/arch/ppc/syslib/cpm2_pic.c
@@ -3235,10 +3390,10 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..8342150
+index 0000000..9fa69d2
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
-@@ -0,0 +1,192 @@
+@@ -0,0 +1,198 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
 + *
@@ -3278,10 +3433,10 @@ index 0000000..8342150
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-06"
++#define IPIPE_ARCH_STRING	"1.9-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	6
++#define IPIPE_MINOR_NUMBER	9
++#define IPIPE_PATCH_NUMBER	0
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -3290,11 +3445,12 @@ index 0000000..8342150
 +	} while(0)
 +
 +#define task_hijacked(p)						\
-+	( {								\
-+		int x = !ipipe_root_domain_p;				\
++	({								\
++		int __x__ = ipipe_root_domain_p;			\
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status)); \
-+		local_irq_enable_hw(); x;				\
-+	} )
++		if (__x__) local_irq_enable_hw();			\
++		!__x__;							\
++	})
 +
 +struct ipipe_domain;
 +
@@ -3357,6 +3513,10 @@ index 0000000..8342150
 +
 +void __ipipe_enable_irqdesc(struct ipipe_domain *ipd, unsigned irq);
 +
++static inline void __ipipe_disable_irqdesc(struct ipipe_domain *ipd, unsigned irq)
++{
++}
++
 +void __ipipe_init_platform(void);
 +
 +void __ipipe_enable_pipeline(void);
@@ -3404,7 +3564,8 @@ index 0000000..8342150
 + * deferred for the latter. */
 +#define __ipipe_run_isr(ipd, irq)					\
 +do {									\
-+	local_irq_enable_nohead(ipd);					\
++	if (!__ipipe_pipeline_head_p(ipd))				\
++		local_irq_enable_hw();					\
 +	if (ipd == ipipe_root_domain)					\
 +		if (likely(!ipipe_virtual_irq_p(irq)))			\
 +			ipd->irqs[irq].handler(irq, NULL);		\
@@ -3418,7 +3579,7 @@ index 0000000..8342150
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);	\
 +		__set_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +	}								\
-+	local_irq_disable_nohead(ipd);					\
++	local_irq_disable_hw();						\
 +} while(0)
 +
 +#define __ipipe_syscall_watched_p(p, sc)	\
@@ -3711,10 +3872,10 @@ index 612472a..2b2574c 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..3434cfe
+index 0000000..a2e4b0d
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,576 @@
+@@ -0,0 +1,575 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -4197,18 +4358,6 @@ index 0000000..3434cfe
 +#define local_irq_restore_hw_cond(flags)	local_irq_restore_hw(flags)
 +#define local_irq_disable_head()		ipipe_stall_pipeline_head()
 +
-+#define local_irq_enable_nohead(ipd)			\
-+	do {						\
-+		if (!__ipipe_pipeline_head_p(ipd))	\
-+			local_irq_enable_hw();		\
-+	} while(0)
-+
-+#define local_irq_disable_nohead(ipd)		\
-+	do {						\
-+		if (!__ipipe_pipeline_head_p(ipd))	\
-+			local_irq_disable_hw();		\
-+	} while(0)
-+
 +#define local_irq_save_full(vflags, rflags)		\
 +	do {						\
 +		local_irq_save(vflags);			\
@@ -4220,6 +4369,16 @@ index 0000000..3434cfe
 +		local_irq_restore_hw(rflags);		\
 +		local_irq_restore(vflags);		\
 +	} while(0)
++
++static inline void local_irq_restore_nosync(unsigned long x)
++{
++	struct ipipe_percpu_domain_data *p = ipipe_root_cpudom_ptr();
++
++	if (raw_irqs_disabled_flags(x))
++		set_bit(IPIPE_STALL_FLAG, &p->status);
++	else
++		clear_bit(IPIPE_STALL_FLAG, &p->status);
++}
 +
 +#define ipipe_root_domain_p		(ipipe_current_domain == ipipe_root_domain)
 +
@@ -4243,6 +4402,7 @@ index 0000000..3434cfe
 +
 +#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
 +#define local_irq_restore_full(vflags, rflags)	do { (void)(vflags); local_irq_restore(rflags); } while(0)
++#define local_irq_restore_nosync(vflags)	local_irq_restore(vflags)
 +
 +#define ipipe_irq_lock(irq)		do { } while(0)
 +#define ipipe_irq_unlock(irq)		do { } while(0)
@@ -4439,10 +4599,10 @@ index 0000000..50a245c
 +#endif	/* !__LINUX_IPIPE_COMPAT_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..4b4d1f5
+index 0000000..e9d115e
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,72 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_percpu.h
 + *
@@ -4504,6 +4664,9 @@ index 0000000..4b4d1f5
 +
 +#define ipipe_percpu(var, cpu)		per_cpu(var, cpu)
 +#define ipipe_cpu_var(var)		__raw_get_cpu_var(var)
++
++#define ipipe_root_cpudom_ptr(var)	\
++	(&__raw_get_cpu_var(ipipe_percpu_darray)[0])
 +
 +#define ipipe_root_cpudom_var(var)	\
 +	__raw_get_cpu_var(ipipe_percpu_darray)[0].var
@@ -5231,10 +5394,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..8dd1532
+index 0000000..186c3f6
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1525 @@
+@@ -0,0 +1,1536 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -5790,6 +5953,7 @@ index 0000000..8dd1532
 +			 ipipe_irq_ackfn_t acknowledge,
 +			 unsigned modemask)
 +{
++	ipipe_irq_handler_t old_handler;
 +	unsigned long flags;
 +	int err;
 +
@@ -5805,10 +5969,11 @@ index 0000000..8dd1532
 +
 +	spin_lock_irqsave(&__ipipe_pipelock, flags);
 +
-+	if (handler != NULL) {
++	old_handler = ipd->irqs[irq].handler;
 +
++	if (handler != NULL) {
 +		if (handler == IPIPE_SAME_HANDLER) {
-+			handler = ipd->irqs[irq].handler;
++			handler = old_handler;
 +			cookie = ipd->irqs[irq].cookie;
 +
 +			if (handler == NULL) {
@@ -5816,7 +5981,7 @@ index 0000000..8dd1532
 +				goto unlock_and_exit;
 +			}
 +		} else if ((modemask & IPIPE_EXCLUSIVE_MASK) != 0 &&
-+			   ipd->irqs[irq].handler != NULL) {
++			   old_handler != NULL) {
 +			err = -EBUSY;
 +			goto unlock_and_exit;
 +		}
@@ -5841,8 +6006,10 @@ index 0000000..8dd1532
 +		      IPIPE_EXCLUSIVE_MASK | IPIPE_WIRED_MASK);
 +
 +	if (acknowledge == NULL && !ipipe_virtual_irq_p(irq))
-+		/* Acknowledge handler unspecified for a hw interrupt:
-+		   use the Linux-defined handler instead. */
++		/*
++		 * Acknowledge handler unspecified for a hw interrupt:
++		 * use the Linux-defined handler instead.
++		 */
 +		acknowledge = ipipe_root_domain->irqs[irq].acknowledge;
 +
 +	ipd->irqs[irq].handler = handler;
@@ -5850,22 +6017,27 @@ index 0000000..8dd1532
 +	ipd->irqs[irq].acknowledge = acknowledge;
 +	ipd->irqs[irq].control = modemask;
 +
-+	if (irq < NR_IRQS && handler != NULL && !ipipe_virtual_irq_p(irq)) {
-+		__ipipe_enable_irqdesc(ipd, irq);
++	if (irq < NR_IRQS && !ipipe_virtual_irq_p(irq)) {
++		if (handler != NULL) {
++			__ipipe_enable_irqdesc(ipd, irq);
 +
-+		if ((modemask & IPIPE_ENABLE_MASK) != 0) {
-+			if (ipd != ipipe_current_domain) {
-+				/* IRQ enable/disable state is domain-sensitive, so we may
-+				   not change it for another domain. What is allowed
-+				   however is forcing some domain to handle an interrupt
-+				   source, by passing the proper 'ipd' descriptor which
-+				   thus may be different from ipipe_current_domain. */
-+				err = -EPERM;
-+				goto unlock_and_exit;
++			if ((modemask & IPIPE_ENABLE_MASK) != 0) {
++				if (ipd != ipipe_current_domain) {
++		/*
++		 * IRQ enable/disable state is domain-sensitive, so we
++		 * may not change it for another domain. What is
++		 * allowed however is forcing some domain to handle an
++		 * interrupt source, by passing the proper 'ipd'
++		 * descriptor which thus may be different from
++		 * __ipipe_current_domain.
++		 */
++					err = -EPERM;
++					goto unlock_and_exit;
++				}
++				__ipipe_enable_irq(irq);
 +			}
-+
-+			__ipipe_enable_irq(irq);
-+		}
++		} else if (old_handler != NULL)
++				__ipipe_disable_irqdesc(ipd, irq);
 +	}
 +
 +	err = 0;
@@ -6103,11 +6275,13 @@ index 0000000..8dd1532
 +				continue;
 +
 +			__set_bit(IPIPE_STALL_FLAG, &ipipe_this_cpudom_var(status));
++			barrier();
 +
 +			if (ipd == ipipe_root_domain)
 +				trace_hardirqs_off();
 +
 +			__ipipe_run_isr(ipd, irq);
++			barrier();
 +#ifdef CONFIG_SMP
 +			{
 +				int newcpu = ipipe_processor_id();
