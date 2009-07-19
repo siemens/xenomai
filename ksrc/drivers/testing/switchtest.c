@@ -31,6 +31,9 @@ typedef struct rtswitch_context {
 
 	unsigned failed;
 	struct rttst_swtest_error error;
+
+	rtswitch_task_t *utask;
+	rtdm_nrtsig_t wake_utask;
 } rtswitch_context_t;
 
 static unsigned int start_index;
@@ -40,9 +43,6 @@ MODULE_PARM_DESC(start_index, "First device instance number to be used");
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Gilles.Chanteperdrix@laposte.net");
-
-static rtswitch_task_t *rtswitch_utask[NR_CPUS];
-static rtdm_nrtsig_t rtswitch_wake_utask;
 
 static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 {
@@ -63,8 +63,8 @@ static void handle_ktask_error(rtswitch_context_t *ctx, unsigned fp_val)
 			/* Unblock it. */
 			switch(task->base.flags & RTSWITCH_RT) {
 			case RTSWITCH_NRT:
-				rtswitch_utask[ctx->cpu] = task;
-				rtdm_nrtsig_pend(&rtswitch_wake_utask);
+				ctx->utask = task;
+				rtdm_nrtsig_pend(&ctx->wake_utask);
 				break;
 
 			case RTSWITCH_RT:
@@ -108,8 +108,8 @@ static void timed_wake_up(rtdm_timer_t *timer)
 
 	switch (task->base.flags & RTSWITCH_RT) {
 	case RTSWITCH_NRT:
-		rtswitch_utask[ctx->cpu] = task;
-		rtdm_nrtsig_pend(&rtswitch_wake_utask);
+		ctx->utask = task;
+		rtdm_nrtsig_pend(&ctx->wake_utask);
 		break;
 
 	case RTSWITCH_RT:
@@ -149,8 +149,8 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	} else
 		switch (to->base.flags & RTSWITCH_RT) {
 		case RTSWITCH_NRT:
-			rtswitch_utask[ctx->cpu] = to;
-			rtdm_nrtsig_pend(&rtswitch_wake_utask);
+			ctx->utask = to;
+			rtdm_nrtsig_pend(&ctx->wake_utask);
 			xnpod_lock_sched();
 			break;
 
@@ -350,6 +350,7 @@ static int rtswitch_register_task(rtswitch_context_t *ctx,
 	t = &ctx->tasks[arg->index];
 	ctx->next_index++;
 	t->base = *arg;
+	t->last_switch = 0;
 	sema_init(&t->nrt_synch, 0);
 	rtdm_event_init(&t->rt_synch, 0);
 
@@ -481,11 +482,18 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	return err;
 }
 
+static void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
+{
+	rtswitch_context_t *ctx = (rtswitch_context_t *)arg;
+	up(&ctx->utask->nrt_synch);
+}
+
 static int rtswitch_open(struct rtdm_dev_context *context,
 			 rtdm_user_info_t *user_info,
 			 int oflags)
 {
 	rtswitch_context_t *ctx = (rtswitch_context_t *) context->dev_private;
+	int err;
 
 	ctx->tasks = NULL;
 	ctx->tasks_count = ctx->next_index = ctx->cpu = ctx->switches_count = 0;
@@ -493,6 +501,10 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 	ctx->failed = 0;
 	ctx->error.last_switch.from = ctx->error.last_switch.to = -1;
 	ctx->pause_us = 0;
+
+	err = rtdm_nrtsig_init(&ctx->wake_utask, rtswitch_utask_waker, ctx);
+	if (err)
+		return err;
 
 	rtdm_timer_init(&ctx->wake_up_delay, timed_wake_up, "switchtest timer");
 
@@ -518,6 +530,7 @@ static int rtswitch_close(struct rtdm_dev_context *context,
 		kfree(ctx->tasks);
 	}
 	rtdm_timer_destroy(&ctx->wake_up_delay);
+	rtdm_nrtsig_destroy(&ctx->wake_utask);
 
 	return 0;
 }
@@ -716,19 +729,9 @@ static struct rtdm_device device = {
 	proc_name: device.device_name,
 };
 
-void rtswitch_utask_waker(rtdm_nrtsig_t sig, void *arg)
-{
-	up(&rtswitch_utask[xnarch_current_cpu()]->nrt_synch);
-}
-
 int __init __switchtest_init(void)
 {
 	int err;
-
-	err = rtdm_nrtsig_init(&rtswitch_wake_utask,
-			       rtswitch_utask_waker, NULL);
-	if (err)
-		return err;
 
 	do {
 		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN, "rttest%d",
@@ -744,7 +747,6 @@ int __init __switchtest_init(void)
 void __switchtest_exit(void)
 {
 	rtdm_dev_unregister(&device, 1000);
-	rtdm_nrtsig_destroy(&rtswitch_wake_utask);
 }
 
 module_init(__switchtest_init);
