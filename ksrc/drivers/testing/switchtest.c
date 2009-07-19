@@ -139,9 +139,11 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	from->last_switch = ++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
+	barrier();
 
 	if (ctx->pause_us) {
 		ctx->next_task = to_idx;
+		barrier();
 		rtdm_timer_start(&ctx->wake_up_delay,
 				 ctx->pause_us * 1000, 0,
 				 RTDM_TIMERMODE_RELATIVE);
@@ -150,6 +152,7 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 		switch (to->base.flags & RTSWITCH_RT) {
 		case RTSWITCH_NRT:
 			ctx->utask = to;
+			barrier();
 			rtdm_nrtsig_pend(&ctx->wake_utask);
 			xnpod_lock_sched();
 			break;
@@ -223,9 +226,11 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 	from->last_switch = ++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
+	barrier();
 
 	if (ctx->pause_us) {
 		ctx->next_task = to_idx;
+		barrier();
 		rtdm_timer_start(&ctx->wake_up_delay,
 				 ctx->pause_us * 1000, 0,
 				 RTDM_TIMERMODE_RELATIVE);
@@ -268,6 +273,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 				goto switch_to_nrt;
 			expected = from_idx + 500 +
 				(ctx->switches_count % 4000000) * 1000;
+			barrier();
 
 			fp_kernel_begin();
 			fp_regs_set(expected);
@@ -288,6 +294,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			from->last_switch = ++ctx->switches_count;
 			ctx->error.last_switch.from = from_idx;
 			ctx->error.last_switch.to = to_idx;
+			barrier();
 			if ((to->base.flags & RTSWITCH_RT) == RTSWITCH_NRT)
 				goto switch_to_nrt;
 
