@@ -180,7 +180,7 @@ void __native_task_pkg_cleanup(void)
  * substituted.
  *
  * @param prio The base priority of the new task. This value must
- * range from [1 .. 99] (inclusive) where 1 is the lowest effective
+ * range from [0 .. 99] (inclusive) where 0 is the lowest effective
  * priority.
  *
  * @param mode The task creation mode. The following flags can be
@@ -816,10 +816,10 @@ int rt_task_wait_period(unsigned long *overruns_r)
  *
  * @param task The descriptor address of the affected task.
  *
- * @param prio The new task priority. This value must range from [1
- * .. 99] (inclusive) where 1 is the lowest effective priority.
+ * @param prio The new task priority. This value must range from [0
+ * .. 99] (inclusive) where 0 is the lowest effective priority.
 
- * @return 0 is returned upon success. Otherwise:
+ * @return Upon success, the previously set priority is returned. Otherwise:
  *
  * - -EINVAL is returned if @a task is not a task descriptor, or if @a
  * prio is invalid.
@@ -2155,7 +2155,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * substituted.
  *
  * @param prio The base priority of the new task. This value must
- * range from [1 .. 99] (inclusive) where 1 is the lowest effective
+ * range from [0 .. 99] (inclusive) where 0 is the lowest effective
  * priority.
  *
  * @param mode The task creation mode. The following flags can be
@@ -2258,7 +2258,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * enabled for indexing the created task.
  *
  * @param prio The base priority which will be set for the current
- * task. This value must range from [1 .. 99] (inclusive) where 1 is
+ * task. This value must range from [0 .. 99] (inclusive) where 0 is
  * the lowest effective priority.
  *
  * @param mode The task creation mode. The following flags can be
