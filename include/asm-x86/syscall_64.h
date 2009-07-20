@@ -82,7 +82,11 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  * in kernel space.
  */
 
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
+#define LOAD_ARGS_0()	asm volatile ("" : /* */ : /* */ : "memory");
+#else
 #define LOAD_ARGS_0()
+#endif
 #define LOAD_REGS_0
 #define ASM_ARGS_0
 
