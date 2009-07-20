@@ -29,7 +29,7 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t *tcb,
 	tcb->tsp = &tcb->ts;
 	tcb->mm = current->mm;
 	tcb->active_mm = NULL;
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	tcb->tip = &tcb->ti;
 #endif
 #ifdef CONFIG_XENO_HW_FPU

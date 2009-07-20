@@ -54,7 +54,7 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 	/* Kernel mode side */
 	struct thread_struct ts;	/* Holds kernel-based thread context. */
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	struct thread_info *tip; /* Pointer to the active thread info (ti or user->thread_info). */
 	struct thread_info ti;	/* Holds kernel-based thread info */
 #endif

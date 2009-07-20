@@ -34,7 +34,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t *tcb)
 	tcb->tsp = &tcb->ts;
 	tcb->mm = NULL;
 	tcb->active_mm = NULL;
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	tcb->tip = &tcb->ti;
 #endif
 	/* Note: .pgdir(ppc32) == NULL for a Xenomai kthread. */

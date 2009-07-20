@@ -13,10 +13,10 @@ menu "Machine"
 
 depends on XENO_OPT_NUCLEUS
 
-config XENO_HW_WANTS_UNMASKED_CONTEXT_SWITCH
+config IPIPE_WANT_PREEMPTIBLE_SWITCH
         bool
-	select IPIPE_UNMASKED_CONTEXT_SWITCH
-	default y
+	default y if XENO_HW_UNLOCKED_SWITCH
+	default n if !XENO_HW_UNLOCKED_SWITCH
 
 config XENO_HW_FPU
 	bool "Enable FPU support"
@@ -33,7 +33,7 @@ config XENO_HW_FPU
 
 config XENO_HW_UNLOCKED_SWITCH
 	bool "Enable unlocked context switch"
-	depends on IPIPE_UNMASKED_CONTEXT_SWITCH
+	depends on IPIPE_HAVE_PREEMPTIBLE_SWITCH
 	default y
 	help
 

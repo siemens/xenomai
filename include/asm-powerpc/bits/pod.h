@@ -47,7 +47,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->tsp = &current->thread;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	rootcb->tip = task_thread_info(current);
 #endif
 #ifdef CONFIG_XENO_HW_FPU
@@ -60,7 +60,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
-#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 	if (!rootcb->mm)
 		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
 #endif
