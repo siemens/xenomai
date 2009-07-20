@@ -1,5 +1,5 @@
 diff --git 7cb16ec/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index cdc9a6f..cbd6b52 100644
+index cdc9a6f..a5fca21 100644
 --- 7cb16ec/arch/powerpc/Kconfig
 +++ b/arch/powerpc/Kconfig
 @@ -125,6 +125,7 @@ config PPC
@@ -21,11 +21,16 @@ index cdc9a6f..cbd6b52 100644
  # All PPC32s use generic nvram driver through ppc_md
  config GENERIC_NVRAM
  	bool
-@@ -244,6 +249,24 @@ source "arch/powerpc/platforms/Kconfig"
+@@ -244,6 +249,29 @@ source "arch/powerpc/platforms/Kconfig"
  
  menu "Kernel options"
  
 +source "kernel/ipipe/Kconfig"
++
++config IPIPE_HAVE_PREEMPTIBLE_SWITCH
++       bool
++       depends on IPIPE
++       default y
 +
 +if IPIPE
 +config RUNLATCH
@@ -567,7 +572,7 @@ index b7e034b..d769f6d 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git 7cb16ec/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..bbca6fc
+index 0000000..5e45e14
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,271 @@
@@ -618,12 +623,12 @@ index 0000000..bbca6fc
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.6-03"
++#define IPIPE_ARCH_STRING	"2.7-00"
 +#define IPIPE_MAJOR_NUMBER	2
-+#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_MINOR_NUMBER	7
++#define IPIPE_PATCH_NUMBER	0
 +
-+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -642,7 +647,7 @@ index 0000000..bbca6fc
 +		!__x__;							\
 +	})
 +
-+#else /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -657,7 +662,7 @@ index 0000000..bbca6fc
 +		if (__x__) local_irq_enable_hw(); !__x__;		\
 +	})
 +
-+#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
 +struct ipipe_domain;
 +
@@ -678,7 +683,7 @@ index 0000000..bbca6fc
 +extern cpumask_t __ipipe_dbrk_pending;
 +#endif
 +
-+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +struct mm;
 +DECLARE_PER_CPU(struct mm_struct *, ipipe_active_mm);
 +#define ipipe_mm_switch_protect(flags)					\
@@ -844,7 +849,7 @@ index 0000000..bbca6fc
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git 7cb16ec/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..9ccfc23
+index 0000000..8f2a661
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe_base.h
 @@ -0,0 +1,154 @@
@@ -997,7 +1002,7 @@ index 0000000..9ccfc23
 +
 +#endif /* !__ASSEMBLY__ */
 +
-+#define __IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH  1
++#define __IPIPE_FEATURE_PREEMPTIBLE_SWITCH  1
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -1026,7 +1031,7 @@ index 5f68ecf..7707090 100644
  /*
   * Most of the CPU's IRQ-state tracing is done from assembly code; we
 diff --git 7cb16ec/arch/powerpc/include/asm/mmu_context.h b/arch/powerpc/include/asm/mmu_context.h
-index b706366..68dd443 100644
+index b706366..a083d39 100644
 --- 7cb16ec/arch/powerpc/include/asm/mmu_context.h
 +++ b/arch/powerpc/include/asm/mmu_context.h
 @@ -27,11 +27,17 @@ extern void set_context(unsigned long id, pgd_t *pgd);
@@ -1041,7 +1046,7 @@ index b706366..68dd443 100644
 +	int cpu = smp_processor_id();
 +
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && \
-+	!defined(CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH)
++	!defined(CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH)
 +	WARN_ON_ONCE(!irqs_disabled_hw());
 +#endif
  	/* Mark this context has been used on the new CPU */
@@ -1054,7 +1059,7 @@ index b706366..68dd443 100644
  	/* The actual HW switching method differs between the various
  	 * sub architectures.
  	 */
-+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +#ifdef CONFIG_PPC_STD_MMU_64
 +	do {
 +		per_cpu(ipipe_active_mm, cpu) = NULL; /* mm state is undefined. */
@@ -1075,7 +1080,7 @@ index b706366..68dd443 100644
 +		per_cpu(ipipe_active_mm, cpu) = next;
 +	} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
 +#endif
-+#else /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
  #ifdef CONFIG_PPC_STD_MMU_64
  	if (cpu_has_feature(CPU_FTR_SLB))
  		switch_slb(tsk, next);
@@ -1083,20 +1088,20 @@ index b706366..68dd443 100644
  	/* Out of line for now */
  	switch_mmu_context(prev, next);
  #endif
-+#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +}
  
 +static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
 +			     struct task_struct *tsk)
 +{
-+#ifndef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +	unsigned long flags;
 +	local_irq_save_hw(flags);
-+#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +	__switch_mm(prev, next, tsk);
-+#ifndef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifndef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +	local_irq_restore_hw(flags);
-+#endif /* !CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH */
++#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +	return;
  }
  
@@ -2298,7 +2303,7 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git 7cb16ec/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..d6857dd
+index 0000000..261e6fb
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
 @@ -0,0 +1,863 @@
@@ -2351,7 +2356,7 @@ index 0000000..d6857dd
 +static void __ipipe_do_timer(unsigned irq, void *cookie);
 +
 +DEFINE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
-+#ifdef CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH
++#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +DEFINE_PER_CPU(struct mm_struct *, ipipe_active_mm);
 +EXPORT_PER_CPU_SYMBOL(ipipe_active_mm);
 +#endif
@@ -6860,10 +6865,10 @@ index 0ca8896..0e53d3b 100644
  
 diff --git 7cb16ec/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..de5e6a3
+index 0000000..934d57c
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,30 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -6891,11 +6896,6 @@ index 0000000..de5e6a3
 +	clients to get rid of such uses as soon as possible.
 +
 +config IPIPE_DELAYED_ATOMICSW
-+       bool
-+       depends on IPIPE
-+       default n
-+
-+config IPIPE_UNMASKED_CONTEXT_SWITCH
 +       bool
 +       depends on IPIPE
 +       default n
