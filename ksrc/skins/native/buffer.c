@@ -378,7 +378,9 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 	}
 
 	/* Some bytes were not consumed, move them to the buffer. */
+	ptr = (caddr_t)ptr + n;
 	rbytes -= n;
+	size = rbytes;
 	resched = 1;	/* Rescheduling is pending. */
 
 accumulate:
@@ -537,6 +539,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 		}
 
 		thread = xnpod_current_thread();
+		thread->wait_u.buffer.ptr = ptr;
 		thread->wait_u.buffer.size = size;
 		xnsynch_sleep_on(&bf->isynch_base, timeout, timeout_mode);
 
