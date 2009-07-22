@@ -27,6 +27,17 @@
  *
  * Buffer services.
  *
+ * A buffer is a lightweight IPC object, implementing a fast, one-way
+ * Producer-Consumer data path. All messages written are buffered in a
+ * single memory area in strict FIFO order, until read either in
+ * blocking or non-blocking mode.
+ *
+ * Message are always atomically handled on the write side (i.e. no
+ * interleave, no short writes), whilst only complete messages are
+ * normally returned to the read side. However, short reads may happen
+ * under a well-defined situation (see note in rt_buffer_read()),
+ * albeit they can be fully avoided by proper use of the buffer.
+ *
  *@{*/
 
 #include <nucleus/pod.h>
@@ -667,7 +678,7 @@ pull:
  * allowed to block until enough room is freed. Data written by
  * rt_buffer_write() calls can be read in FIFO order by subsequent
  * rt_buffer_read() calls. Messages sent via rt_buffer_write() are
- * handled atomically (no interleave).
+ * handled atomically (no interleave, no short writes).
  *
  * @param bf The descriptor address of the buffer to write to.
  *
@@ -742,7 +753,7 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
  *
  * Writes a message to the specified buffer. If not enough buffer
  * space is available on entry to hold the message, the caller is
- * allowed to block until enough room is freed.
+ * allowed to block until enough room is freed, or a timeout elapses.
  *
  * @param bf The descriptor address of the buffer to write to.
  *
@@ -787,27 +798,6 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
  * system heap to hold a temporary copy of the message (user-space
  * call only).
  *
- * A short read (i.e. fewer bytes returned than requested by @a size)
- * may happen whenever a pathological use of the buffer is
- * encountered. This condition only arises when the system detects
- * that one or more writers are waiting for sending data, while a
- * reader would have to wait for receiving a complete message at the
- * same time. For instance, consider the following sequence, involving
- * a 1024-byte buffer (bf) and two threads:
- *
- * writer thread > rt_write_buffer(&bf, ptr, 1, TM_INFINITE);
- *        (one byte to read, 1023 bytes available for sending)
- * writer thread > rt_write_buffer(&bf, ptr, 1024, TM_INFINITE);
- *        (writer blocks - no space for another 1024-byte message)
- * reader thread > rt_read_buffer(&bf, ptr, 1024, TM_INFINITE);
- *        (short read - a truncated 1023-byte message is returned)
- *
- * In order to prevent both threads to wait for each other
- * indefinitely, a short read is allowed, which may be completed by a
- * subsequent call to rt_buffer_read().  If that case arises, thread
- * priorities, buffer and/or message sizes should likely be fixed, in
- * order to eliminate such condition.
- *
  * Environments:
  *
  * This service can be called from:
@@ -845,9 +835,10 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * success with the received data.
  *
  * @param size The length in bytes of the memory area pointed to by @a
- * ptr. rt_buffer_read() only returns entire messages as specified by
- * the @a size argument, or an error value. No partial message is ever
- * returned.
+ * ptr. Under normal circumstances, rt_buffer_read() only returns
+ * entire messages as specified by the @a size argument, or an error
+ * value. However, short reads are allowed when a potential deadlock
+ * situation is detected (see note below).
  *
  * @param timeout The number of clock ticks to wait for a message to
  * be available from the buffer (see note). Passing TM_INFINITE causes
@@ -883,6 +874,27 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * system heap to hold a temporary copy of the message (user-space
  * call only).
  *
+ * @note A short read (i.e. fewer bytes returned than requested by @a
+ * size) may happen whenever a pathological use of the buffer is
+ * encountered. This condition only arises when the system detects
+ * that one or more writers are waiting for sending data, while a
+ * reader would have to wait for receiving a complete message at the
+ * same time. For instance, consider the following sequence, involving
+ * a 1024-byte buffer (bf) and two threads:
+ *
+ * writer thread > rt_write_buffer(&bf, ptr, 1, TM_INFINITE);
+ *        (one byte to read, 1023 bytes available for sending)
+ * writer thread > rt_write_buffer(&bf, ptr, 1024, TM_INFINITE);
+ *        (writer blocks - no space for another 1024-byte message)
+ * reader thread > rt_read_buffer(&bf, ptr, 1024, TM_INFINITE);
+ *        (short read - a truncated (1-byte) message is returned)
+ *
+ * In order to prevent both threads to wait for each other
+ * indefinitely, a short read is allowed, which may be completed by a
+ * subsequent call to rt_buffer_read() or rt_buffer_read_until().  If
+ * that case arises, thread priorities, buffer and/or message sizes
+ * should likely be fixed, in order to eliminate such condition.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -913,7 +925,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  *
  * Reads the next message from the specified buffer. If no message is
  * available on entry, the caller is allowed to block until enough
- * data is written to the buffer.
+ * data is written to the buffer, or a timeout elapses.
  *
  * @param bf The descriptor address of the buffer to read from.
  *
@@ -921,9 +933,10 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * success with the received data.
  *
  * @param size The length in bytes of the memory area pointed to by @a
- * ptr. rt_buffer_read() only returns entire messages as specified by
- * the @a size argument, or an error value. No partial message is ever
- * returned.
+ * ptr. Under normal circumstances, rt_buffer_read_until() only
+ * returns entire messages as specified by the @a size argument, or an
+ * error value. However, short reads are allowed when a potential
+ * deadlock situation is detected (see note below).
  *
  * @param timeout The absolute date specifying a time limit to wait
  * for a message to be available from the buffer (see note). Passing
@@ -957,6 +970,27 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * - -ENOMEM is returned if not enough memory is available from the
  * system heap to hold a temporary copy of the message (user-space
  * call only).
+ *
+ * @note A short read (i.e. fewer bytes returned than requested by @a
+ * size) may happen whenever a pathological use of the buffer is
+ * encountered. This condition only arises when the system detects
+ * that one or more writers are waiting for sending data, while a
+ * reader would have to wait for receiving a complete message at the
+ * same time. For instance, consider the following sequence, involving
+ * a 1024-byte buffer (bf) and two threads:
+ *
+ * writer thread > rt_write_buffer(&bf, ptr, 1, TM_INFINITE);
+ *        (one byte to read, 1023 bytes available for sending)
+ * writer thread > rt_write_buffer(&bf, ptr, 1024, TM_INFINITE);
+ *        (writer blocks - no space for another 1024-byte message)
+ * reader thread > rt_read_buffer(&bf, ptr, 1024, TM_INFINITE);
+ *        (short read - a truncated (1-byte) message is returned)
+ *
+ * In order to prevent both threads to wait for each other
+ * indefinitely, a short read is allowed, which may be completed by a
+ * subsequent call to rt_buffer_read() or rt_buffer_read_until().  If
+ * that case arises, thread priorities, buffer and/or message sizes
+ * should likely be fixed, in order to eliminate such condition.
  *
  * Environments:
  *
