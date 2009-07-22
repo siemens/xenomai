@@ -25,8 +25,8 @@
 #include <native/types.h>
 
 /* Creation flags. */
-#define B_PRIO  XNSYNCH_PRIO	/* Pend by task priority order. */
-#define B_FIFO  XNSYNCH_FIFO	/* Pend by FIFO order. */
+#define B_PRIO   XNSYNCH_PRIO	/* Pend by task priority order. */
+#define B_FIFO   XNSYNCH_FIFO	/* Pend by FIFO order. */
 
 typedef struct rt_buffer_info {
 
@@ -62,9 +62,12 @@ typedef struct rt_buffer {
 	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
 	int mode;		/* !< Creation mode. */
-	int rptr;		/* !< Read pointer. */
-	int wptr;		/* !< Write pointer. */
+	off_t rdoff;		/* !< Read offset. */
+	off_t wroff;		/* !< Write offset. */
 	size_t fillsz;		/* !< Filled space. */
+
+	u_long wrtoken;		/* !< Write token. */
+	u_long rdtoken;		/* !< Read token. */
 
 	size_t bufsz;		/* !< Buffer size. */
 	void *bufmem;		/* !< Buffer space. */
