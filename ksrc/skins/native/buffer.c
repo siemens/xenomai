@@ -182,8 +182,7 @@ static xnpnode_t __buffer_pnode = {
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
+ * - User-space task (switches to secondary mode)
  *
  * Rescheduling: possible.
  */
@@ -199,7 +198,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 	if (bufsz == 0)
 		return -EINVAL;
 
-	bf->bufmem = xnmalloc(bufsz);
+	bf->bufmem = xnarch_alloc_host_mem(bufsz);
 	if (bf->bufmem == NULL)
 		return -ENOMEM;
 
@@ -270,8 +269,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
  * This service can be called from:
  *
  * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
+ * - User-space task (switches to secondary mode)
  *
  * Rescheduling: possible.
  */
@@ -292,7 +290,7 @@ int rt_buffer_delete(RT_BUFFER *bf)
 		goto unlock_and_exit;
 	}
 
-	xnfree(bf->bufmem);
+	xnarch_free_host_mem(bf->bufmem, bf->bufsz);
 	removeq(bf->rqueue, &bf->rlink);
 	resched = xnsynch_destroy(&bf->isynch_base) == XNSYNCH_RESCHED;
 	resched += xnsynch_destroy(&bf->osynch_base) == XNSYNCH_RESCHED;
