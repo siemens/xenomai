@@ -169,6 +169,7 @@ struct xnsched;
 struct xnsched_class;
 struct xnsched_tpslot;
 union xnsched_policy_param;
+struct xnbufd;
 
 struct xnthread_operations {
 	int (*get_denormalized_prio)(struct xnthread *, int coreprio);
@@ -214,6 +215,8 @@ typedef struct xnthread {
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 	struct xnsched_sporadic_data *pss; /* Sporadic scheduling data. */
 #endif
+
+	unsigned idtag;			/* Unique ID tag */
 
 	xnarch_cpumask_t affinity;	/* Processor affinity. */
 

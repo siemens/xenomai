@@ -24,6 +24,8 @@
 #include <nucleus/module.h>
 #include <asm/xenomai/bits/thread.h>
 
+static unsigned idtags;
+
 static void xnthread_timeout_handler(xntimer_t *timer)
 {
 	xnthread_t *thread = container_of(timer, xnthread_t, rtimer);
@@ -70,6 +72,11 @@ int xnthread_init(struct xnthread *thread,
 		/* Align stack size on a natural word boundary */
 		stacksize &= ~(sizeof(long) - 1);
 	}
+
+	if (flags & XNROOT)
+		thread->idtag = 0;
+	else
+		thread->idtag = ++idtags ?: 1;
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ == 0
 #ifndef __XENO_SIM__
