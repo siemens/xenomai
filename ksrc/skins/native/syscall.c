@@ -22,6 +22,7 @@
 #include <linux/ioport.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
+#include <nucleus/bufd.h>
 #include <nucleus/shadow.h>
 #include <nucleus/registry.h>
 #include <nucleus/sys_ppd.h>
@@ -3552,7 +3553,7 @@ static int __rt_buffer_create(struct pt_regs *regs)
 	/* Creation mode. */
 	mode = __xn_reg_arg4(regs);
 
-	bf = (RT_BUFFER *)xnmalloc(sizeof(*bf));
+	bf = xnmalloc(sizeof(*bf));
 	if (!bf)
 		return -ENOMEM;
 
@@ -3608,7 +3609,7 @@ static int __rt_buffer_delete(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
+	bf = xnregistry_fetch(ph.opaque);
 	if (!bf)
 		return -ESRCH;
 
@@ -3629,9 +3630,9 @@ static int __rt_buffer_delete(struct pt_regs *regs)
 
 static int __rt_buffer_write(struct pt_regs *regs)
 {
-	char tmp_buf[RT_BUFFER_FSTORE_LIMIT], *tmp_area;
 	RT_BUFFER_PLACEHOLDER ph;
 	xntmode_t timeout_mode;
+	struct xnbufd bufd;
 	void __user *ptr;
 	RTIME timeout;
 	RT_BUFFER *bf;
@@ -3650,37 +3651,15 @@ static int __rt_buffer_write(struct pt_regs *regs)
 	size = __xn_reg_arg3(regs);
 	timeout_mode = __xn_reg_arg4(regs);
 
-	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
-	if (!bf)
+	bf = xnregistry_fetch(ph.opaque);
+	if (bf == NULL)
 		return -ESRCH;
 
-	/*
-	 * Unfortunately, we can't copy to/from userland while holding
-	 * the nklock, so we need to go through a temp buffer to hold
-	 * the message first.
-	 */
-	if (size > 0) {
-		if (size <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(size);
+	xnbufd_map_uread(&bufd, ptr, size);
+	ret = rt_buffer_write_inner(bf, &bufd, timeout_mode, timeout);
+	xnbufd_unmap_uread(&bufd);
 
-			if (tmp_area == NULL)
-				return -ENOMEM;
-		}
-		if (__xn_safe_copy_from_user(tmp_area, ptr, size)) {
-			ret = -EFAULT;
-			goto out;
-		}
-	} else
-		tmp_area = NULL;
-
-	ret = rt_buffer_write_inner(bf, tmp_area, size, timeout_mode, timeout);
-out:
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
-
-	return (int)ret;
+	return ret;
 }
 
 /*
@@ -3693,9 +3672,9 @@ out:
 
 static int __rt_buffer_read(struct pt_regs *regs)
 {
-	char tmp_buf[RT_BUFFER_FSTORE_LIMIT], *tmp_area;
 	RT_BUFFER_PLACEHOLDER ph;
 	xntmode_t timeout_mode;
+	struct xnbufd bufd;
 	void __user *ptr;
 	RTIME timeout;
 	RT_BUFFER *bf;
@@ -3714,35 +3693,15 @@ static int __rt_buffer_read(struct pt_regs *regs)
 	size = __xn_reg_arg3(regs);
 	timeout_mode = __xn_reg_arg4(regs);
 
-	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
-	if (!bf)
+	bf = xnregistry_fetch(ph.opaque);
+	if (bf == NULL)
 		return -ESRCH;
 
-	/*
-	 * Unfortunately, we can't copy to/from userland while holding
-	 * the nklock, so we need to go through a temp buffer to hold
-	 * the message first.
-	 */
-	if (size > 0) {
-		if (size <= sizeof(tmp_buf))
-			tmp_area = tmp_buf;
-		else {
-			tmp_area = xnmalloc(size);
+	xnbufd_map_uwrite(&bufd, ptr, size);
+	ret = rt_buffer_read_inner(bf, &bufd, timeout_mode, timeout);
+	xnbufd_unmap_uwrite(&bufd);
 
-			if (tmp_area == NULL)
-				return -ENOMEM;
-		}
-	} else
-		tmp_area = NULL;
-
-	ret = rt_buffer_read_inner(bf, tmp_area, size, timeout_mode, timeout);
-	if (ret > 0 && __xn_safe_copy_to_user(ptr, tmp_area, ret))
-		ret = -EFAULT;
-
-	if (tmp_area && tmp_area != tmp_buf)
-		xnfree(tmp_area);
-
-	return (int)ret;
+	return ret;
 }
 
 /*
@@ -3758,8 +3717,8 @@ static int __rt_buffer_clear(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
-	if (!bf)
+	bf = xnregistry_fetch(ph.opaque);
+	if (bf == NULL)
 		return -ESRCH;
 
 	return rt_buffer_clear(bf);
@@ -3781,8 +3740,8 @@ static int __rt_buffer_inquire(struct pt_regs *regs)
 				     sizeof(ph)))
 		return -EFAULT;
 
-	bf = (RT_BUFFER *)xnregistry_fetch(ph.opaque);
-	if (!bf)
+	bf = xnregistry_fetch(ph.opaque);
+	if (bf == NULL)
 		return -ESRCH;
 
 	ret = rt_buffer_inquire(bf, &info);

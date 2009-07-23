@@ -38,8 +38,6 @@ typedef struct rt_buffer_info {
 
 } RT_BUFFER_INFO;
 
-#define RT_BUFFER_FSTORE_LIMIT  64
-
 typedef struct rt_buffer_placeholder {
 	xnhandle_t opaque;
 } RT_BUFFER_PLACEHOLDER;
@@ -70,7 +68,7 @@ typedef struct rt_buffer {
 	u_long rdtoken;		/* !< Read token. */
 
 	size_t bufsz;		/* !< Buffer size. */
-	void *bufmem;		/* !< Buffer space. */
+	caddr_t bufmem;		/* !< Buffer space. */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	pid_t cpid;			/* !< Creator's pid. */
@@ -96,10 +94,12 @@ static inline void __native_buffer_flush_rq(xnqueue_t *rq)
 	xeno_flush_rq(RT_BUFFER, rq, buffer);
 }
 
-ssize_t rt_buffer_read_inner(RT_BUFFER *bf, void *ptr, size_t size,
+struct xnbufd;
+
+ssize_t rt_buffer_read_inner(RT_BUFFER *bf, struct xnbufd *bufd,
 			     xntmode_t timeout_mode, RTIME timeout);
 
-ssize_t rt_buffer_write_inner(RT_BUFFER *bf, const void *ptr, size_t size,
+ssize_t rt_buffer_write_inner(RT_BUFFER *bf, struct xnbufd *bufd,
 			      xntmode_t timeout_mode, RTIME timeout);
 
 #else /* !CONFIG_XENO_OPT_NATIVE_BUFFER */

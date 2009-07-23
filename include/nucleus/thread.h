@@ -258,9 +258,16 @@ typedef struct xnthread {
 
 	union {
 		struct {
+			/*
+			 * XXX: the buffer struct should disappear as
+			 * soon as all IPCs are converted to use
+			 * buffer descriptors instead (bufd).
+			 */
 			void *ptr;
 			size_t size;
 		} buffer;
+		struct xnbufd *bufd;
+		size_t size;
 	} wait_u;
 
 	struct {

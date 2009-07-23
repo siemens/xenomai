@@ -43,6 +43,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
 #include <nucleus/heap.h>
+#include <nucleus/bufd.h>
 #include <native/task.h>
 #include <native/buffer.h>
 #include <native/timer.h>
@@ -316,13 +317,13 @@ int rt_buffer_delete(RT_BUFFER *bf)
 }
 
 ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
-			      const void *ptr, size_t size,
+			      struct xnbufd *bufd,
 			      xntmode_t timeout_mode, RTIME timeout)
 {
 	xnthread_t *thread, *waiter;
-	off_t rdoff, wroff;
-	size_t rbytes, n;
+	size_t len, rbytes, n;
 	u_long wrtoken;
+	off_t wroff;
 	ssize_t ret;
 	spl_t s;
 
@@ -339,14 +340,16 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 	 * accepting messages which are larger than what the buffer
 	 * can hold.
 	 */
-	if (size > bf->bufsz) {
+	len = bufd->b_len;
+	if (len > bf->bufsz) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 
-	ret = (ssize_t)size;
-	if (ret == 0)
+	if (len == 0) {
+		ret = 0;
 		goto unlock_and_exit;
+	}
 
 	if (timeout_mode == XN_RELATIVE &&
 	    timeout != TM_NONBLOCK && timeout != TM_INFINITE) {
@@ -359,51 +362,13 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 		timeout += xntbase_get_time(__native_tbase);
 	}
 
-	/*
-	 * Let's optimize the case where the buffer is empty on entry,
-	 * and the leading task blocked on the input queue could be
-	 * satisfied by the incoming message; in such a case, we
-	 * directly copy the incoming data to the destination memory,
-	 * instead of having it transit through the buffer. Otherwise,
-	 * we simply accumulate the data into the buffer.
-	 */
-	if (bf->fillsz > 0)
-		/* Buffer has to be empty to keep FIFO ordering. */
-		goto accumulate;
-
-	waiter = xnsynch_peek_pendq(&bf->isynch_base);
-	if (waiter == NULL)
-		/* No blocked task. */
-		goto accumulate;
-
-	n = waiter->wait_u.buffer.size;
-	if (n > size)
-		/* Not enough data to satisfy the request. */
-		goto accumulate;
-
-	/* Ok, transfer the message directly, and wake up the task. */
-	memcpy(waiter->wait_u.buffer.ptr, ptr, n);
-	waiter->wait_u.buffer.size = 0; /* Flags a direct transfer. */
-	xnsynch_wakeup_one_sleeper(&bf->isynch_base);
-
-	if (n == size) {
-		/* Full message consumed - reschedule and exit. */
-		xnpod_schedule();
-		goto unlock_and_exit;
-	}
-
-	/* Some bytes were not consumed, move them to the buffer. */
-	ptr = (caddr_t)ptr + n;
-	size -= n;
-
-accumulate:
-
+redo:
 	for (;;) {
 		/*
-		 * We should be able to copy the entire message at
+		 * We should be able to write the entire message at
 		 * once, or block.
 		 */
-		if (bf->fillsz + size > bf->bufsz)
+		if (bf->fillsz + len > bf->bufsz)
 			goto wait;
 
 		/*
@@ -413,9 +378,8 @@ accumulate:
 		wrtoken = ++bf->wrtoken;
 
 		/* Write to the buffer in a circular way. */
-		rdoff = 0;
 		wroff = bf->wroff;
-		rbytes = size;
+		rbytes = len;
 
 		do {
 			if (wroff + rbytes > bf->bufsz)
@@ -428,8 +392,7 @@ accumulate:
 			 */
 			xnlock_put_irqrestore(&nklock, s);
 
-			memcpy((caddr_t)bf->bufmem + wroff,
-			       (caddr_t)ptr + rdoff, n);
+			xnbufd_copy_to_kmem(bf->bufmem + wroff, bufd, n);
 
 			xnlock_get_irqsave(&nklock, s);
 			/*
@@ -438,15 +401,15 @@ accumulate:
 			 * thing.
 			 */
 			if (bf->wrtoken != wrtoken)
-				goto accumulate;
+				goto redo;
 
 			wroff = (wroff + n) % bf->bufsz;
-			rdoff += n;
 			rbytes -= n;
 		} while (rbytes > 0);
 
-		bf->fillsz += size;
+		bf->fillsz += len;
 		bf->wroff = wroff;
+		ret = (ssize_t)len;
 
 		/*
 		 * Wake up all threads pending on the input wait
@@ -454,12 +417,18 @@ accumulate:
 		 * leading one.
 		 */
 		waiter = xnsynch_peek_pendq(&bf->isynch_base);
-		if (waiter && waiter->wait_u.buffer.size <= bf->fillsz) {
+		if (waiter && waiter->wait_u.bufd->b_len <= bf->fillsz) {
 			if (xnsynch_flush(&bf->isynch_base, 0) == XNSYNCH_RESCHED)
 				xnpod_schedule();
 		}
 
-		break;
+		/*
+		 * We cannot fail anymore once some data has been
+		 * copied via the buffer descriptor, so no need to
+		 * check for any reason to invalidate the latter.
+		 */
+		goto unlock_and_exit;
+
 	wait:
 		if (timeout_mode == XN_RELATIVE && timeout == TM_NONBLOCK) {
 			ret = -EWOULDBLOCK;
@@ -472,7 +441,7 @@ accumulate:
 		}
 
 		thread = xnpod_current_thread();
-		thread->wait_u.buffer.size = size;
+		thread->wait_u.size = len;
 		xnsynch_sleep_on(&bf->osynch_base, timeout, timeout_mode);
 
 		if (xnthread_test_info(thread, XNRMID)) {
@@ -504,13 +473,13 @@ accumulate:
 }
 
 ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
-			     void *ptr, size_t size,
+			     struct xnbufd *bufd,
 			     xntmode_t timeout_mode, RTIME timeout)
 {
 	xnthread_t *thread, *waiter;
-	off_t rdoff, wroff;
-	size_t rbytes, n;
+	size_t len, rbytes, n;
 	u_long rdtoken;
+	off_t rdoff;
 	ssize_t ret;
 	spl_t s;
 
@@ -527,12 +496,13 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 	 * is no point in waiting for messages which are larger than
 	 * what the buffer can hold.
 	 */
-	if (size > bf->bufsz) {
+	len = bufd->b_len;
+	if (len > bf->bufsz) {
 		ret = -EINVAL;
 		goto unlock_and_exit;
 	}
 
-	if (size == 0) {
+	if (len == 0) {
 		ret = 0;
 		goto unlock_and_exit;
 	}
@@ -547,14 +517,13 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 		timeout += xntbase_get_time(__native_tbase);
 	}
 
-pull:
-
+redo:
 	for (;;) {
 		/*
 		 * We should be able to read a complete message of the
-		 * requested size, or block.
+		 * requested length, or block.
 		 */
-		if (bf->fillsz < size)
+		if (bf->fillsz < len)
 			goto wait;
 
 		/*
@@ -564,9 +533,8 @@ pull:
 		rdtoken = ++bf->rdtoken;
 
 		/* Read from the buffer in a circular way. */
-		wroff = 0;
 		rdoff = bf->rdoff;
-		rbytes = size;
+		rbytes = len;
 
 		do {
 			if (rdoff + rbytes > bf->bufsz)
@@ -580,8 +548,7 @@ pull:
 
 			xnlock_put_irqrestore(&nklock, s);
 
-			memcpy((caddr_t)ptr + wroff,
-			       (caddr_t)bf->bufmem + rdoff, n);
+			xnbufd_copy_from_kmem(bufd, bf->bufmem + rdoff, n);
 
 			xnlock_get_irqsave(&nklock, s);
 			/*
@@ -590,16 +557,15 @@ pull:
 			 * thing.
 			 */
 			if (bf->rdtoken != rdtoken)
-				goto pull;
+				goto redo;
 
 			rdoff = (rdoff + n) % bf->bufsz;
-			wroff += n;
 			rbytes -= n;
 		} while (rbytes > 0);
 
-		bf->fillsz -= size;
+		bf->fillsz -= len;
 		bf->rdoff = rdoff;
-		ret = (ssize_t)size;
+		ret = (ssize_t)len;
 
 		/*
 		 * Wake up all threads pending on the output wait
@@ -607,12 +573,18 @@ pull:
 		 * to post its message.
 		 */
 		waiter = xnsynch_peek_pendq(&bf->osynch_base);
-		if (waiter && waiter->wait_u.buffer.size + bf->fillsz <= bf->bufsz) {
+		if (waiter && waiter->wait_u.size + bf->fillsz <= bf->bufsz) {
 			if (xnsynch_flush(&bf->osynch_base, 0) == XNSYNCH_RESCHED)
 				xnpod_schedule();
 		}
 
-		break;
+		/*
+		 * We cannot fail anymore once some data has been
+		 * copied via the buffer descriptor, so no need to
+		 * check for any reason to invalidate the latter.
+		 */
+		goto unlock_and_exit;
+
 	wait:
 		if (timeout_mode == XN_RELATIVE && timeout == TM_NONBLOCK) {
 			ret = -EWOULDBLOCK;
@@ -631,14 +603,14 @@ pull:
 		 * pathological use of the buffer. We must allow for a
 		 * short read to prevent a deadlock.
 		 */
-		if (xnsynch_nsleepers(&bf->osynch_base) > 0) {
-			size = bf->fillsz;
-			goto pull;
+		if (bf->fillsz > 0 &&
+		    xnsynch_nsleepers(&bf->osynch_base) > 0) {
+			len = bf->fillsz;
+			goto redo;
 		}
 
 		thread = xnpod_current_thread();
-		thread->wait_u.buffer.ptr = ptr;
-		thread->wait_u.buffer.size = size;
+		thread->wait_u.bufd =  bufd;
 		xnsynch_sleep_on(&bf->isynch_base, timeout, timeout_mode);
 
 		if (xnthread_test_info(thread, XNRMID)) {
@@ -653,11 +625,6 @@ pull:
 			ret = -EINTR;	/* Unblocked. */
 			break;
 		}
-		if (thread->wait_u.buffer.size == 0) {
-			/* Direct transfer tool place. */
-			ret = size;
-			break;
-		}
 	}
 
       unlock_and_exit:
@@ -668,7 +635,7 @@ pull:
 }
 
 /**
- * @fn int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ * @fn int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
  * @brief Write to a buffer.
  *
  * Writes a message to the specified buffer. If not enough buffer
@@ -683,7 +650,7 @@ pull:
  * @param ptr The address of the message data to be written to the
  * buffer.
  *
- * @param size The size in bytes of the message data. Zero is a valid
+ * @param len The length in bytes of the message data. Zero is a valid
  * value, in which case the buffer is left untouched, and zero is
  * returned to the caller. No partial message is ever sent.
  *
@@ -710,7 +677,7 @@ pull:
  * the message.
  *
  * - -EINVAL is returned if @a bf is not a buffer descriptor, or @a
- * size is greater than the actual buffer size.
+ * len is greater than the actual buffer length.
  *
  * - -EIDRM is returned if @a bf is a deleted buffer descriptor.
  *
@@ -740,13 +707,20 @@ pull:
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
 {
-	return rt_buffer_write_inner(bf, ptr, size, XN_RELATIVE, timeout);
+	struct xnbufd bufd;
+	ssize_t ret;
+
+	xnbufd_map_kread(&bufd, ptr, len);
+	ret = rt_buffer_write_inner(bf, &bufd, XN_RELATIVE, timeout);
+	xnbufd_unmap_kread(&bufd);
+
+	return ret;
 }
 
 /**
- * @fn int rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ * @fn int rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
  * @brief Write to a buffer (with absolute timeout date).
  *
  * Writes a message to the specified buffer. If not enough buffer
@@ -758,7 +732,7 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
  * @param ptr The address of the message data to be written to the
  * buffer.
  *
- * @param size The size in bytes of the message data. Zero is a valid
+ * @param len The length in bytes of the message data. Zero is a valid
  * value, in which case the buffer is left untouched, and zero is
  * returned to the caller.
  *
@@ -784,7 +758,7 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
  * the message.
  *
  * - -EINVAL is returned if @a bf is not a buffer descriptor, or @a
- * size is greater than the actual buffer size.
+ * len is greater than the actual buffer length.
  *
  * - -EIDRM is returned if @a bf is a deleted buffer descriptor.
  *
@@ -814,13 +788,21 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeo
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
 {
-	return rt_buffer_write_inner(bf, ptr, size, XN_REALTIME, timeout);
+
+	struct xnbufd bufd;
+	ssize_t ret;
+
+	xnbufd_map_kread(&bufd, ptr, len);
+	ret = rt_buffer_write_inner(bf, &bufd, XN_REALTIME, timeout);
+	xnbufd_unmap_kread(&bufd);
+
+	return ret;
 }
 
 /**
- * @fn int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ * @fn int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
  * @brief Read from a buffer.
  *
  * Reads the next message from the specified buffer. If no message is
@@ -832,9 +814,9 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * @param ptr A pointer to a memory area which will be written upon
  * success with the received data.
  *
- * @param size The length in bytes of the memory area pointed to by @a
+ * @param len The length in bytes of the memory area pointed to by @a
  * ptr. Under normal circumstances, rt_buffer_read() only returns
- * entire messages as specified by the @a size argument, or an error
+ * entire messages as specified by the @a len argument, or an error
  * value. However, short reads are allowed when a potential deadlock
  * situation is detected (see note below).
  *
@@ -860,7 +842,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * message.
  *
  * - -EINVAL is returned if @a bf is not a buffer descriptor, or @a
- * size is greater than the actual buffer size.
+ * len is greater than the actual buffer length.
  *
  * - -EIDRM is returned if @a bf is a deleted buffer descriptor.
  *
@@ -873,7 +855,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * call only).
  *
  * @note A short read (i.e. fewer bytes returned than requested by @a
- * size) may happen whenever a pathological use of the buffer is
+ * len) may happen whenever a pathological use of the buffer is
  * encountered. This condition only arises when the system detects
  * that one or more writers are waiting for sending data, while a
  * reader would have to wait for receiving a complete message at the
@@ -890,7 +872,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * In order to prevent both threads to wait for each other
  * indefinitely, a short read is allowed, which may be completed by a
  * subsequent call to rt_buffer_read() or rt_buffer_read_until().  If
- * that case arises, thread priorities, buffer and/or message sizes
+ * that case arises, thread priorities, buffer and/or message lengths
  * should likely be fixed, in order to eliminate such condition.
  *
  * Environments:
@@ -912,13 +894,20 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t size, RTIME
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
 {
-	return rt_buffer_read_inner(bf, ptr, size, XN_RELATIVE, timeout);
+	struct xnbufd bufd;
+	ssize_t ret;
+
+	xnbufd_map_kwrite(&bufd, ptr, len);
+	ret = rt_buffer_read_inner(bf, &bufd, XN_RELATIVE, timeout);
+	xnbufd_unmap_kwrite(&bufd);
+
+	return ret;
 }
 
 /**
- * @fn int rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ * @fn int rt_buffer_read_until(RT_BUFFER *bf, void *ptr, len_t len, RTIME timeout)
  * @brief Read from a buffer (with absolute timeout date).
  *
  * Reads the next message from the specified buffer. If no message is
@@ -930,9 +919,9 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * @param ptr A pointer to a memory area which will be written upon
  * success with the received data.
  *
- * @param size The length in bytes of the memory area pointed to by @a
+ * @param len The length in bytes of the memory area pointed to by @a
  * ptr. Under normal circumstances, rt_buffer_read_until() only
- * returns entire messages as specified by the @a size argument, or an
+ * returns entire messages as specified by the @a len argument, or an
  * error value. However, short reads are allowed when a potential
  * deadlock situation is detected (see note below).
  *
@@ -957,7 +946,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * message.
  *
  * - -EINVAL is returned if @a bf is not a buffer descriptor, or @a
- * size is greater than the actual buffer size.
+ * len is greater than the actual buffer length.
  *
  * - -EIDRM is returned if @a bf is a deleted buffer descriptor.
  *
@@ -970,7 +959,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * call only).
  *
  * @note A short read (i.e. fewer bytes returned than requested by @a
- * size) may happen whenever a pathological use of the buffer is
+ * len) may happen whenever a pathological use of the buffer is
  * encountered. This condition only arises when the system detects
  * that one or more writers are waiting for sending data, while a
  * reader would have to wait for receiving a complete message at the
@@ -987,7 +976,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * In order to prevent both threads to wait for each other
  * indefinitely, a short read is allowed, which may be completed by a
  * subsequent call to rt_buffer_read() or rt_buffer_read_until().  If
- * that case arises, thread priorities, buffer and/or message sizes
+ * that case arises, thread priorities, buffer and/or message lengths
  * should likely be fixed, in order to eliminate such condition.
  *
  * Environments:
@@ -1009,9 +998,16 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
  * CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise.
  */
 
-ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)
+ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
 {
-	return rt_buffer_read_inner(bf, ptr, size, XN_REALTIME, timeout);
+	struct xnbufd bufd;
+	ssize_t ret;
+
+	xnbufd_map_kwrite(&bufd, ptr, len);
+	ret = rt_buffer_read_inner(bf, &bufd, XN_REALTIME, timeout);
+	xnbufd_unmap_kwrite(&bufd);
+
+	return ret;
 }
 
 /**
