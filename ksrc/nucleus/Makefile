@@ -5,7 +5,7 @@ ifeq ($(PATCHLEVEL),6)
 obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
 xeno_nucleus-y := \
-	heap.o intr.o pod.o \
+	bufd.o heap.o intr.o pod.o \
 	synch.o thread.o timebase.o timer.o sched.o
 
 # CAUTION: the declaration order of scheduling classes is
@@ -38,7 +38,7 @@ obj-$(CONFIG_XENO_OPT_NUCLEUS) := xeno_nucleus.o
 list-multi := xeno_nucleus.o
 
 xeno_nucleus-objs := \
-	heap.o intr.o pod.o \
+	bufd.o heap.o intr.o pod.o \
 	synch.o thread.o timebase.o timer.o sched.o
 
 # CAUTION: the declaration order of scheduling classes is

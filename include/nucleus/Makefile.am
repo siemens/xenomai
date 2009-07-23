@@ -3,6 +3,7 @@ includesubdir = $(includedir)/nucleus
 includesub_HEADERS = \
 	assert.h \
 	bheap.h \
+	bufd.h \
 	compiler.h \
 	heap.h \
 	intr.h \
