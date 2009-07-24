@@ -95,7 +95,7 @@ static xnpnode_t __shm_pnode = {
 
 #elif defined(CONFIG_XENO_OPT_REGISTRY)
 
-static xnpnode_t __fifo_pnode = {
+static xnpnode_t __shm_pnode = {
 
 	.type = "fifo"
 };
