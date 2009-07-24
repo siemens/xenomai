@@ -20,10 +20,8 @@ guides at the top of the Xenomai tree for more information.
 
 [1] http://www.gna.org/projects/adeos/
 [2] http://blackfin.uclinux.org/
-[3] git://sources.blackfin.uclinux.org/git/readonly-mirrors/linux-kernel.git
+[3] git://git.kernel.org/pub/scm/linux/kernel/git/vapier/blackfin.git
 
 Patch			        Based on GIT commit # / TAG
 ------------------------------------------------------------------------
-2.6.28-blackfin.git-1.9-00	38a13eddc0a76bc73ebb2fe9e73361df5d0c35ff
-2.6.28.9-blackfin.git-1.9-01	95aafe680eaf39c5ba9c8b3ccae69db40cd21d2e
-2.6.28.10-blackfin.git-1.10-00	5165f860a03e9f19b387ba13c925831739305d0f
+2.6.30.1-blackfin.git-1.11-00	ed2e947905cb0858ff0645f34030856adab4dc7e
