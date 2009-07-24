@@ -25,7 +25,7 @@ static xnmap_t *vrtx_sem_idmap;
 
 static xnqueue_t vrtx_sem_q;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int sem_read_proc(char *page,
 			 char **start,
@@ -81,14 +81,14 @@ static xnpnode_t __sem_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __sem_pnode = {
 
 	.type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static int sem_destroy_internal(vrtxsem_t *sem)
 {
@@ -97,9 +97,7 @@ static int sem_destroy_internal(vrtxsem_t *sem)
 	removeq(&vrtx_sem_q, &sem->link);
 	xnmap_remove(vrtx_sem_idmap, sem->semid);
 	s = xnsynch_destroy(&sem->synchbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	vrtx_mark_deleted(sem);
 	xnfree(sem);
 
@@ -165,10 +163,8 @@ int sc_screate(unsigned initval, int opt, int *errp)
 	appendq(&vrtx_sem_q, &sem->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(sem->name, "sem%d", semid);
 	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

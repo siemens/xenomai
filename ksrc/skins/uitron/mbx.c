@@ -23,7 +23,7 @@
 
 static xnmap_t *ui_mbx_idmap;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __mbx_read_proc(char *page,
 			    char **start,
@@ -80,14 +80,14 @@ static xnpnode_t __mbx_pnode = {
 	.root = &__uitron_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __mbx_pnode = {
 
 	.type = "mailboxes"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int uimbx_init(void)
 {
@@ -149,10 +149,8 @@ ER cre_mbx(ID mbxid, T_CMBX *pk_cmbx)
 	mbx->wrptr = 0;
 	mbx->mcount = 0;
 	mbx->ring = ring;
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(mbx->name, "mbx%d", mbxid);
 	xnregistry_enter(mbx->name, mbx, &mbx->handle, &__mbx_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnarch_memory_barrier();
 	mbx->magic = uITRON_MBX_MAGIC;
 
@@ -181,9 +179,7 @@ ER del_mbx(ID mbxid)
 
 	xnmap_remove(ui_mbx_idmap, mbx->id);
 	ui_mark_deleted(mbx);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(mbx->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(mbx->ring);
 	xnfree(mbx);
 

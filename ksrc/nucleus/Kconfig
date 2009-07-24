@@ -155,12 +155,8 @@ config XENO_OPT_PIPE_NRDEV
 	in the system. Pipe devices are named /dev/rtpN where N is a
 	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
 
-config XENO_OPT_REGISTRY
-	bool
-
 config XENO_OPT_REGISTRY_NRSLOTS
 	int "Number of registry slots"
-	depends on XENO_OPT_REGISTRY
 	default 512
 	help
 

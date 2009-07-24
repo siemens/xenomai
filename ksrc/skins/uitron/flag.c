@@ -23,7 +23,7 @@
 
 static xnmap_t *ui_flag_idmap;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __flag_read_proc(char *page,
 			    char **start,
@@ -79,14 +79,14 @@ static xnpnode_t __flag_pnode = {
 	.root = &__uitron_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __flag_pnode = {
 
 	.type = "flags"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int uiflag_init(void)
 {
@@ -127,10 +127,8 @@ ER cre_flg(ID flgid, T_CFLG *pk_cflg)
 	flag->exinf = pk_cflg->exinf;
 	flag->flgatr = pk_cflg->flgatr;
 	flag->flgvalue = pk_cflg->iflgptn;
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(flag->name, "flg%d", flgid);
 	xnregistry_enter(flag->name, flag, &flag->handle, &__flag_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnarch_memory_barrier();
 	flag->magic = uITRON_FLAG_MAGIC;
 
@@ -160,9 +158,7 @@ ER del_flg(ID flgid)
 	xnmap_remove(ui_flag_idmap, flag->id);
 	ui_mark_deleted(flag);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(flag->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(flag);
 
 	if (xnsynch_destroy(&flag->synchbase) == XNSYNCH_RESCHED)

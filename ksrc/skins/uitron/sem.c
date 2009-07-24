@@ -23,7 +23,7 @@
 
 static xnmap_t *ui_sem_idmap;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __sem_read_proc(char *page,
 			   char **start,
@@ -79,14 +79,14 @@ static xnpnode_t __sem_pnode = {
 	.root = &__uitron_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __sem_pnode = {
 
 	.type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int uisem_init(void)
 {
@@ -135,10 +135,8 @@ ER cre_sem(ID semid, T_CSEM *pk_csem)
 	sem->sematr = pk_csem->sematr;
 	sem->semcnt = pk_csem->isemcnt;
 	sem->maxsem = pk_csem->maxsem;
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(sem->name, "sem%d", semid);
 	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnarch_memory_barrier();
 	sem->magic = uITRON_SEM_MAGIC;
 
@@ -168,9 +166,7 @@ ER del_sem(ID semid)
 	xnmap_remove(ui_sem_idmap, sem->id);
 	ui_mark_deleted(sem);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(sem);
 
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)

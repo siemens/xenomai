@@ -188,7 +188,7 @@ int pthread_create(pthread_t *tid,
 	xnflags_t flags = 0;
 	size_t stacksize;
 	const char *name;
-	int prio;
+	int prio, ret;
 	spl_t s;
 
 	if (attr && attr->magic != PSE51_THREAD_ATTR_MAGIC)
@@ -269,17 +269,13 @@ int pthread_create(pthread_t *tid,
 	thread->hkey.mm = NULL;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_FASTSYNCH
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
-	{
-		int ret = xnthread_register(&thread->threadbase, "");
-		if (ret) {
-			thread_destroy(thread);
-			return ret;
-		}
+	ret = xnthread_register(&thread->threadbase, "");
+	if (ret) {
+		thread_destroy(thread);
+		return ret;
 	}
-#endif /* CONFIG_XENO_FASTSYNCH */
 
 	*tid = thread;		/* Must be done before the thread is started. */
 

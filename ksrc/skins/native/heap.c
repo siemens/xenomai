@@ -49,7 +49,7 @@
 #include <native/task.h>
 #include <native/heap.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __heap_read_proc(char *page,
 			    char **start,
@@ -112,14 +112,14 @@ static xnpnode_t __heap_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __heap_pnode = {
 
 	.type = "heaps"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static void __heap_flush_private(xnheap_t *heap,
 				 void *heapmem, u_long heapsize, void *cookie)
@@ -304,11 +304,11 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	appendq(heap->rqueue, &heap->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(heap->name, heap, &heap->handle,
 				       &__heap_pnode);
@@ -316,7 +316,6 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		if (err)
 			rt_heap_delete(heap);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -330,10 +329,8 @@ static void __heap_post_release(struct xnheap *h)
 
 	removeq(heap->rqueue, &heap->rlink);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (heap->handle)
 		xnregistry_remove(heap->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (xnsynch_destroy(&heap->synch_base) == XNSYNCH_RESCHED)
 		/*

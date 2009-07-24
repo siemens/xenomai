@@ -28,7 +28,7 @@ static xnqueue_t vrtx_mbox_q;
  * the VRTX services are never dereferenced, but only used as hash
  * keys. */
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __mb_read_proc(char *page,
 			  char **start,
@@ -83,14 +83,14 @@ static xnpnode_t __mb_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __mb_pnode = {
 
 	.type = "mailboxes"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 #define MB_HASHBITS 8
 
@@ -177,9 +177,7 @@ void vrtxmb_cleanup(void)
 	while ((holder = getq(&vrtx_mbox_q)) != NULL) {
 		mb = link2vrtxmb(holder);
 		xnsynch_destroy(&mb->synchbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 		xnregistry_remove(mb->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 		mb_unhash(mb->mboxp);
 		xnfree(mb);
 	}
@@ -214,10 +212,8 @@ vrtxmb_t *mb_map(char **mboxp)
 	appendq(&vrtx_mbox_q, &mb->link);
 	mb_hash(mboxp, mb);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(mb->name, "mb@%p", mboxp);
 	xnregistry_enter(mb->name, mb, &mb->handle, &__mb_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return mb;
 }

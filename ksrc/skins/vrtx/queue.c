@@ -25,7 +25,7 @@ static xnmap_t *vrtx_queue_idmap;
 
 static xnqueue_t vrtx_queue_q;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __queue_read_proc(char *page,
 			     char **start,
@@ -81,14 +81,14 @@ static xnpnode_t __queue_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __queue_pnode = {
 
 	.type = "queues"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int queue_destroy_internal(vrtxqueue_t * queue)
 {
@@ -98,9 +98,7 @@ int queue_destroy_internal(vrtxqueue_t * queue)
 	s = xnsynch_destroy(&queue->synchbase);
 	xnmap_remove(vrtx_queue_idmap, queue->qid);
 	xnfree(queue->messages);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(queue->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	vrtx_mark_deleted(queue);
 	xnfree(queue);
 
@@ -179,10 +177,9 @@ int sc_qecreate(int qid, int qsize, int opt, int *errp)
 	appendq(&vrtx_queue_q, &queue->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(queue->name, "q%d", qid);
 	xnregistry_enter(queue->name, queue, &queue->handle, &__queue_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 	return qid;
 }
 

@@ -22,7 +22,7 @@
 
 static int msgq_destroy_internal(wind_msgq_t *queue);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int msgq_read_proc(char *page,
 			  char **start,
@@ -82,14 +82,14 @@ static xnpnode_t msgq_pnode = {
 	.root = &__vxworks_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t msgq_pnode = {
 
 	.type = "msgq"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 void wind_msgq_init(void)
 {
@@ -140,6 +140,7 @@ static inline wind_msg_t *unqueue_msg(wind_msgq_t *queue)
 
 MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 {
+	static unsigned long msgq_ids;
 	wind_msgq_t *queue;
 	xnflags_t bflags = 0;
 	int i, msg_size;
@@ -185,20 +186,14 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 	appendq(queue->rqueue, &queue->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long msgq_ids;
+	sprintf(queue->name, "mq%lu", msgq_ids++);
 
-		sprintf(queue->name, "mq%lu", msgq_ids++);
-
-		if (xnregistry_enter
-		    (queue->name, queue, &queue->handle, &msgq_pnode)) {
-			wind_errnoset(S_objLib_OBJ_ID_ERROR);
-			msgQDelete((MSG_Q_ID)queue);
-			return 0;
-		}
+	if (xnregistry_enter(queue->name, queue,
+			     &queue->handle, &msgq_pnode)) {
+		wind_errnoset(S_objLib_OBJ_ID_ERROR);
+		msgQDelete((MSG_Q_ID)queue);
+		return 0;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return (MSG_Q_ID)queue;
 }
@@ -391,9 +386,7 @@ STATUS msgQSend(MSG_Q_ID qid, const char *buf, UINT bytes, int to, int prio)
 static int msgq_destroy_internal(wind_msgq_t *queue)
 {
 	int s = xnsynch_destroy(&queue->synchbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(queue->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	wind_mark_deleted(queue);
 	removeq(queue->rqueue, &queue->rlink);
 	xnfree(queue);

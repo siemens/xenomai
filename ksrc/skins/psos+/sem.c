@@ -25,7 +25,7 @@ static xnqueue_t psossemq;
 
 static int sm_destroy_internal(psossem_t *sem);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int sem_read_proc(char *page,
 			 char **start,
@@ -81,14 +81,14 @@ static xnpnode_t sem_pnode = {
 	.root = &__psos_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t sem_pnode = {
 
 	.type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 void psossem_init(void)
 {
@@ -102,8 +102,9 @@ void psossem_cleanup(void)
 
 u_long sm_create(const char *name, u_long icount, u_long flags, u_long *smid)
 {
+	static unsigned long sem_ids;
+	int bflags = 0, ret;
 	psossem_t *sem;
-	int bflags = 0;
 	spl_t s;
 
 	sem = (psossem_t *)xnmalloc(sizeof(*sem));
@@ -127,23 +128,16 @@ u_long sm_create(const char *name, u_long icount, u_long flags, u_long *smid)
 	appendq(sem->rqueue, &sem->rlink);
 	appendq(&psossemq, &sem->link);
 	xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long sem_ids;
-		u_long err;
 
-		if (!*name)
-			sprintf(sem->name, "anon_sem%lu", sem_ids++);
+	if (!*name)
+		sprintf(sem->name, "anon_sem%lu", sem_ids++);
 
-		err = xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode);
-
-		if (err) {
-			sem->handle = XN_NO_HANDLE;
-			sm_delete((u_long)sem);
-			return err;
-		}
+	ret = xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode);
+	if (ret) {
+		sem->handle = XN_NO_HANDLE;
+		sm_delete((u_long)sem);
+		return (u_long)ret;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*smid = (u_long)sem;
 
@@ -157,10 +151,8 @@ static int sm_destroy_internal(psossem_t *sem)
 	removeq(sem->rqueue, &sem->rlink);
 	removeq(&psossemq, &sem->link);
 	rc = xnsynch_destroy(&sem->synchbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (sem->handle)
 		xnregistry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(sem);
 
 	xnfree(sem);

@@ -45,10 +45,8 @@ void tm_destroy_internal(psostm_t *tm)
 	xnlock_get_irqsave(&nklock, s);
 	removegq(&tm->owner->alarmq, tm);
 	xntimer_destroy(&tm->timerbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (tm->handle)
 		xnregistry_remove(tm->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	psos_mark_deleted(tm);
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -68,7 +66,9 @@ static void tm_evpost_handler(xntimer_t *timer)
 static u_long tm_start_event_timer(u_long ticks,
 				   u_long interval, u_long events, u_long *tmid)
 {
+	static unsigned long tm_ids;
 	psostm_t *tm;
+	int ret;
 	spl_t s;
 
 	tm = (psostm_t *)xnmalloc(sizeof(*tm));
@@ -88,22 +88,14 @@ static u_long tm_start_event_timer(u_long ticks,
 	appendgq(&tm->owner->alarmq, tm);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long tm_ids;
-		u_long err;
+	sprintf(tm->name, "anon_evtm%lu", tm_ids++);
 
-		sprintf(tm->name, "anon_evtm%lu", tm_ids++);
-
-		err = xnregistry_enter(tm->name, tm, &tm->handle, 0);
-
-		if (err) {
-			tm->handle = XN_NO_HANDLE;
-			tm_cancel((u_long)tm);
-			return err;
-		}
+	ret = xnregistry_enter(tm->name, tm, &tm->handle, 0);
+	if (ret) {
+		tm->handle = XN_NO_HANDLE;
+		tm_cancel((u_long)tm);
+		return (u_long)ret;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xnlock_get_irqsave(&nklock, s);
 	xntimer_start(&tm->timerbase, ticks, interval, XN_RELATIVE);

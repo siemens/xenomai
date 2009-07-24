@@ -25,7 +25,7 @@ static xnmap_t *vrtx_event_idmap;
 
 static xnqueue_t vrtx_event_q;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __event_read_proc(char *page,
 			     char **start,
@@ -88,14 +88,14 @@ static xnpnode_t __event_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __event_pnode = {
 
 	.type = "events"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static int event_destroy_internal(vrtxevent_t *evgroup)
 {
@@ -105,9 +105,7 @@ static int event_destroy_internal(vrtxevent_t *evgroup)
 	s = xnsynch_destroy(&evgroup->synchbase);
 	xnmap_remove(vrtx_event_idmap, evgroup->evid);
 	vrtx_mark_deleted(evgroup);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(evgroup->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(evgroup);
 
 	return s;
@@ -161,10 +159,8 @@ int sc_fcreate(int *errp)
 	appendq(&vrtx_event_q, &evgroup->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(evgroup->name, "ev%d", evid);
 	xnregistry_enter(evgroup->name, evgroup, &evgroup->handle, &__event_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

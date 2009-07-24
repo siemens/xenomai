@@ -56,9 +56,7 @@ typedef struct psosqueue {
 
     char name[XNOBJECT_NAME_LEN];
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #define link2psosqueue(ln) container_of(ln, psosqueue_t, link)
 

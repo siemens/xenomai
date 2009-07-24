@@ -52,14 +52,14 @@ xntbase_t *psos_tbase;
 
 psos_rholder_t __psos_global_rholder;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 xnptree_t __psos_ptree = {
 
 	.dir = NULL,
 	.name = "psos",
 	.entries = 0,
 };
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 void k_fatal(u_long err_code, u_long flags)
 {

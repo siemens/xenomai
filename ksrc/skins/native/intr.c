@@ -56,7 +56,7 @@ static unsigned long __intr_get_hits(RT_INTR *intr)
 	return sum;
 }
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __intr_read_proc(char *page,
 			    char **start,
@@ -119,14 +119,14 @@ static xnpnode_t __intr_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __intr_pnode = {
 
 	.type = "interrupts"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 /*! 
  * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,rt_isr_t isr,rt_iack_t iack,int mode)
@@ -281,16 +281,14 @@ int rt_intr_create(RT_INTR *intr,
 
 	err = xnintr_attach(&intr->intr_base, intr);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (!err && name)
 		err = xnregistry_enter(intr->name, intr, &intr->handle,
 				       &__intr_pnode);
-	
-#endif /* CONFIG_XENO_OPT_REGISTRY */
-
 	if (err)
 		rt_intr_delete(intr);
 
@@ -357,10 +355,8 @@ int rt_intr_delete(RT_INTR *intr)
 	rc = xnsynch_destroy(&intr->synch_base);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (intr->handle)
 		xnregistry_remove(intr->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(intr);
 

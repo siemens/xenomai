@@ -25,7 +25,7 @@ xnmap_t *vrtx_heap_idmap;
 
 static xnqueue_t vrtx_heap_q;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __heap_read_proc(char *page,
 			    char **start,
@@ -62,14 +62,14 @@ static xnpnode_t __heap_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __heap_pnode = {
 
 	.type = "heaps"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static void heap_destroy_internal(vrtxheap_t *heap)
 {
@@ -79,9 +79,7 @@ static void heap_destroy_internal(vrtxheap_t *heap)
 	removeq(&vrtx_heap_q, &heap->link);
 	xnmap_remove(vrtx_heap_idmap, heap->hid);
 	vrtx_mark_deleted(heap);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(heap->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnlock_clear_irqon(&nklock);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -220,10 +218,8 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 	appendq(&vrtx_heap_q, &heap->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(heap->name, "heap%d", hid);
 	xnregistry_enter(heap->name, heap, &heap->handle, &__heap_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

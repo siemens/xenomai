@@ -66,10 +66,8 @@ struct wind_sem {
 
 #define synch2wind_sem(syncb) container_of(syncb, wind_sem_t, synchbase)
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
     char name[XNOBJECT_NAME_LEN];
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     /*
      * count has a different meaning for the different kinds of
@@ -115,10 +113,8 @@ typedef struct wind_msgq {
 
     xnsynch_t synchbase;        /* pended readers or writers */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
     char name[XNOBJECT_NAME_LEN];
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xnholder_t rlink;		/* !< Link in resource queue. */
 #define rlink2msgQ(ln)	container_of(ln, wind_msgq_t, rlink)
@@ -142,10 +138,8 @@ typedef struct wind_wd {
     wind_timer_t handler;
     long arg;
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
     char name[XNOBJECT_NAME_LEN];
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     wind_rholder_t *rh;		/* !< Resource holder of owner. */

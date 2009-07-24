@@ -5,7 +5,6 @@ config XENO_GENERIC_STACKPOOL
 config XENO_FASTSYNCH
 	bool
 	default y
-	select XENO_OPT_REGISTRY
 
 source "kernel/xenomai/nucleus/Kconfig"
 

@@ -60,7 +60,7 @@ static int registry_hash_entries;
 
 static xnsynch_t registry_hash_synch;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 #include <linux/workqueue.h>
 
@@ -80,9 +80,6 @@ static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
 
 static int registry_proc_apc;
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
-
-#ifdef CONFIG_PROC_FS
 static struct proc_dir_entry *registry_proc_root;
 
 static int
@@ -111,6 +108,7 @@ registry_usage_read_proc(char *page, char **start, off_t off,
 
 	return len;
 }
+
 #endif /* CONFIG_PROC_FS */
 
 int xnregistry_init(void)
@@ -140,7 +138,6 @@ int xnregistry_init(void)
 	rthal_add_proc_leaf("usage", registry_usage_read_proc,
 			    NULL, NULL, registry_proc_root);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
 	registry_proc_apc =
 	    rthal_apc_alloc("registry_export", &registry_proc_schedule, NULL);
 
@@ -151,7 +148,6 @@ int xnregistry_init(void)
 	}
 
 	initq(&registry_obj_procq);
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 #endif /* CONFIG_PROC_FS */
 
 	initq(&registry_obj_freeq);
@@ -176,9 +172,7 @@ int xnregistry_init(void)
 #ifdef CONFIG_PROC_FS
 		remove_proc_entry("usage", registry_proc_root);
 		remove_proc_entry("registry", rthal_proc_root);
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
 		rthal_apc_free(registry_proc_apc);
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
 #endif /* CONFIG_PROC_FS */
 		return -ENOMEM;
 	}
@@ -193,7 +187,7 @@ int xnregistry_init(void)
 
 void xnregistry_cleanup(void)
 {
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 	xnobject_t *ecurr, *enext;
 	int n;
 
@@ -220,19 +214,16 @@ void xnregistry_cleanup(void)
 				ecurr->pnode->root->dir = NULL;
 			}
 	}
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 	xnarch_free_host_mem(registry_hash_table,
 		       sizeof(xnobject_t *) * registry_hash_entries);
 
 	xnsynch_destroy(&registry_hash_synch);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 	rthal_apc_free(registry_proc_apc);
 	flush_scheduled_work();
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
-
-#ifdef CONFIG_PROC_FS
 	remove_proc_entry("usage", registry_proc_root);
 	remove_proc_entry("registry", rthal_proc_root);
 #endif /* CONFIG_PROC_FS */
@@ -251,19 +242,19 @@ static inline xnobject_t *registry_validate(xnhandle_t handle)
 	return NULL;
 }
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
-
-/* The following stuff implements the mechanism for delegating
-   export/unexport requests to/from the /proc interface from the
-   Xenomai domain to the Linux kernel (i.e. the "lower stage"). This
-   ends up being a bit complex due to the fact that such requests
-   might lag enough before being processed by the Linux kernel so that
-   subsequent requests might just contradict former ones before they
-   even had a chance to be applied (e.g. export -> unexport in the
-   Xenomai domain for short-lived objects). This situation and the
-   like are hopefully properly handled due to a careful
-   synchronization of operations across domains. */
-
+#ifdef CONFIG_PROC_FS
+/*
+ * The following stuff implements the mechanism for delegating
+ * export/unexport requests to/from the /proc interface from the
+ * Xenomai domain to the Linux kernel (i.e. the "lower stage"). This
+ * ends up being a bit complex due to the fact that such requests
+ * might lag enough before being processed by the Linux kernel so that
+ * subsequent requests might just contradict former ones before they
+ * even had a chance to be applied (e.g. export -> unexport in the
+ * Xenomai domain for short-lived objects). This situation and the
+ * like are hopefully properly handled due to a careful
+ * synchronization of operations across domains.
+ */
 static struct proc_dir_entry *add_proc_link(const char *name,
 					    link_proc_t *link_proc,
 					    void *data,
@@ -443,7 +434,7 @@ static inline void registry_proc_unexport(xnobject_t *object)
 	}
 }
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 static unsigned registry_hash_crunch(const char *key)
 {
@@ -638,10 +629,10 @@ int xnregistry_enter(const char *key,
 	   rescheduling takes place. */
 	*phandle = object - registry_obj_slots;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 	if (pnode)
 		registry_proc_export(object, pnode);
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 	if (registry_wakeup_sleepers(key))
 		xnpod_schedule();
@@ -855,7 +846,7 @@ int xnregistry_remove(xnhandle_t handle)
 	if (object->key) {
 		registry_hash_remove(object);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 		if (object->pnode) {
 			registry_proc_unexport(object);
 
@@ -865,7 +856,7 @@ int xnregistry_remove(xnhandle_t handle)
 			if (object->pnode)
 				goto unlock_and_exit;
 		}
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 		removeq(&registry_obj_busyq, &object->link);
 	}

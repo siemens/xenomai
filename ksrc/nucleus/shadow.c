@@ -1807,7 +1807,6 @@ static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 
 static int xnshadow_sys_current(struct pt_regs *regs)
 {
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnthread_t *cur = xnshadow_thread(current);
 	xnhandle_t __user *us_handle;
 
@@ -1818,9 +1817,6 @@ static int xnshadow_sys_current(struct pt_regs *regs)
 
 	return __xn_safe_copy_to_user(us_handle, &xnthread_handle(cur),
 				      sizeof(*us_handle));
-#else /* !CONFIG_XENO_OPT_REGISTRY */
-	return -ENOSYS;
-#endif /* !CONFIG_XENO_OPT_REGISTRY */
 }
 
 static int xnshadow_sys_current_info(struct pt_regs *regs)

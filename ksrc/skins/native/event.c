@@ -45,7 +45,7 @@
 #include <native/task.h>
 #include <native/event.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __event_read_proc(char *page,
 			     char **start,
@@ -108,14 +108,14 @@ static xnpnode_t __event_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __event_pnode = {
 
 	.type = "events"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 /**
  * @fn int rt_event_create(RT_EVENT *event,const char *name,unsigned long ivalue,int mode)
@@ -198,11 +198,11 @@ int rt_event_create(RT_EVENT *event,
 	event->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(event->name, event, &event->handle,
 				       &__event_pnode);
@@ -210,7 +210,6 @@ int rt_event_create(RT_EVENT *event,
 		if (err)
 			rt_event_delete(event);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -267,10 +266,8 @@ int rt_event_delete(RT_EVENT *event)
 
 	rc = xnsynch_destroy(&event->synch_base);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (event->handle)
 		xnregistry_remove(event->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(event);
 

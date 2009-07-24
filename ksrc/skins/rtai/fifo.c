@@ -25,7 +25,7 @@
 
 static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 extern xnptree_t __rtai_ptree;
 
@@ -65,14 +65,14 @@ static xnpnode_t __fifo_pnode = {
 	.root = &__rtai_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __fifo_pnode = {
 
 	.type = "fifo"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 #define CALL_FIFO_HANDLER(fifo, type)	\
 	  ((int (*)(int, ...))((fifo)->handler))((fifo) - __fifo_table, (type))
@@ -238,13 +238,9 @@ int rtf_create(unsigned minor, int size)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		fifo->handle = 0;
-		snprintf(fifo->name, sizeof(fifo->name), "rtf%u", minor);
-		xnregistry_enter(fifo->name, fifo, &fifo->handle, &__fifo_pnode);
-	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+	fifo->handle = 0;
+	snprintf(fifo->name, sizeof(fifo->name), "rtf%u", minor);
+	xnregistry_enter(fifo->name, fifo, &fifo->handle, &__fifo_pnode);
 
 	return minor;
 
@@ -286,10 +282,9 @@ int rtf_destroy(unsigned minor)
 				goto unlock_and_exit;
 			}
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 			if (fifo->handle)
 				xnregistry_remove(fifo->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+
 			fifo->refcnt = 0;
 			xnlock_put_irqrestore(&nklock, s);
 			xnpipe_disconnect(minor);

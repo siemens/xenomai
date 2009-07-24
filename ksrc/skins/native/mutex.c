@@ -50,7 +50,7 @@
 #include <native/task.h>
 #include <native/mutex.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __mutex_read_proc(char *page,
 			     char **start,
@@ -124,14 +124,14 @@ static xnpnode_t __mutex_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __mutex_pnode = {
 
 	.type = "mutexes"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 			  xnarch_atomic_t *fastlock)
@@ -158,11 +158,11 @@ int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 	mutex->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(mutex->name, mutex, &mutex->handle,
 				       &__mutex_pnode);
@@ -170,7 +170,6 @@ int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 		if (err)
 			rt_mutex_delete_inner(mutex);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -261,10 +260,8 @@ int rt_mutex_delete_inner(RT_MUTEX *mutex)
 
 	rc = xnsynch_destroy(&mutex->synch_base);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (mutex->handle)
 		xnregistry_remove(mutex->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(mutex);
 

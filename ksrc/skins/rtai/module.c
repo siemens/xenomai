@@ -42,14 +42,14 @@ MODULE_PARM_DESC(sync_time, "Set non-zero to synchronize on master time base");
 
 xntbase_t *rtai_tbase;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 xnptree_t __rtai_ptree = {
 
 	.dir = NULL,
 	.name = "rtai",
 	.entries = 0,
 };
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* CONFIG_PROC_FS */
 
 static void rtai_shutdown(int xtype)
 {

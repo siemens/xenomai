@@ -47,7 +47,7 @@
 #include <native/task.h>
 #include <native/queue.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __queue_read_proc(char *page,
 			     char **start,
@@ -106,14 +106,14 @@ static xnpnode_t __queue_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __queue_pnode = {
 
 	.type = "queues"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static void __queue_flush_private(xnheap_t *heap,
 				  void *poolmem, u_long poolsize, void *cookie)
@@ -268,18 +268,16 @@ int rt_queue_create(RT_QUEUE *q,
 	appendq(q->rqueue, &q->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(q->name, q, &q->handle, &__queue_pnode);
-
 		if (err)
 			rt_queue_delete(q);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -293,10 +291,8 @@ static void __queue_post_release(struct xnheap *heap)
 
 	removeq(q->rqueue, &q->rlink);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (q->handle)
 		xnregistry_remove(q->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (xnsynch_destroy(&q->synch_base) == XNSYNCH_RESCHED)
 		/*

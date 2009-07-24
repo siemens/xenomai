@@ -48,7 +48,7 @@
 #include <native/buffer.h>
 #include <native/timer.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __buffer_read_proc(char *page,
 			      char **start,
@@ -120,14 +120,14 @@ static xnpnode_t __buffer_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __buffer_pnode = {
 
 	.type = "buffers"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 /**
  * @fn int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
@@ -227,7 +227,6 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	bf->magic = XENO_BUFFER_MAGIC;
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	/*
 	 * <!> Since xnregister_enter() may reschedule, only register
 	 * complete objects, so that the registry cannot return
@@ -240,7 +239,6 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 		if (ret)
 			rt_buffer_delete(bf);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return ret;
 }
@@ -295,10 +293,9 @@ int rt_buffer_delete(RT_BUFFER *bf)
 	removeq(bf->rqueue, &bf->rlink);
 	resched = xnsynch_destroy(&bf->isynch_base) == XNSYNCH_RESCHED;
 	resched += xnsynch_destroy(&bf->osynch_base) == XNSYNCH_RESCHED;
-#ifdef CONFIG_XENO_OPT_REGISTRY
+
 	if (bf->handle)
 		xnregistry_remove(bf->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(bf);
 

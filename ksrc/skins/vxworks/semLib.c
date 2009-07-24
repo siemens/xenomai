@@ -33,7 +33,7 @@ static const sem_vtbl_t semm_vtbl;
 static void sem_destroy_internal(wind_sem_t *sem);
 static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int sem_read_proc(char *page,
 			 char **start,
@@ -98,14 +98,14 @@ static xnpnode_t sem_pnode = {
 	.root = &__vxworks_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t sem_pnode = {
 
 	.type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 void wind_sem_init(void)
 {
@@ -425,6 +425,7 @@ static const sem_vtbl_t semm_vtbl = {
 
 static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 {
+	static unsigned long sem_ids;
 	wind_sem_t *sem;
 	spl_t s;
 
@@ -442,19 +443,14 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 	xnlock_get_irqsave(&nklock, s);
 	appendq(sem->rqueue, &sem->rlink);
 	xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long sem_ids;
 
-		sprintf(sem->name, "sem%lu", sem_ids++);
+	sprintf(sem->name, "sem%lu", sem_ids++);
 
-		if (xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode)) {
-			wind_errnoset(S_objLib_OBJ_ID_ERROR);
-			semDelete((SEM_ID)sem);
-			return 0;
-		}
+	if (xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode)) {
+		wind_errnoset(S_objLib_OBJ_ID_ERROR);
+		semDelete((SEM_ID)sem);
+		return 0;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return (SEM_ID)sem;
 }
@@ -466,9 +462,7 @@ static void sem_destroy_internal(wind_sem_t *sem)
 
 	xnlock_get_irqsave(&nklock, s);
 	ret = xnsynch_destroy(&sem->synchbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	wind_mark_deleted(sem);
 	removeq(sem->rqueue, &sem->rlink);
 	xnlock_put_irqrestore(&nklock, s);

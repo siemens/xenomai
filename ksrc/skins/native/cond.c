@@ -48,7 +48,7 @@
 #include <native/mutex.h>
 #include <native/cond.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __cond_read_proc(char *page,
 			    char **start,
@@ -103,14 +103,14 @@ static xnpnode_t __cond_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __cond_pnode = {
 
 	.type = "condvars"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 /**
  * @fn int rt_cond_create(RT_COND *cond, const char *name)
@@ -174,11 +174,11 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	cond->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(cond->name, cond, &cond->handle,
 				       &__cond_pnode);
@@ -186,7 +186,6 @@ int rt_cond_create(RT_COND *cond, const char *name)
 		if (err)
 			rt_cond_delete(cond);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -246,10 +245,8 @@ int rt_cond_delete(RT_COND *cond)
 
 	rc = xnsynch_destroy(&cond->synch_base);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (cond->handle)
 		xnregistry_remove(cond->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(cond);
 

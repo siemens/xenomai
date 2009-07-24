@@ -41,9 +41,7 @@ typedef struct psosrn {
 
     char name[XNOBJECT_NAME_LEN]; /* Name of region */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     struct mm_struct *mm;	/* !< Creator's mm. */

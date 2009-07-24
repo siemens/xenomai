@@ -296,12 +296,10 @@ typedef struct xnthread {
 
 	union xnsched_policy_param init_schedparam; /* Initial scheduling parameters */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	struct {
 		xnhandle_t handle;	/* Handle in registry */
 		const char *waitkey;	/* Pended key */
 	} registry;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	struct xnthread_operations *ops; /* Thread class operations. */
 
@@ -405,7 +403,6 @@ xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns);
 
 xnticks_t xnthread_get_period(xnthread_t *thread);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 static inline int xnthread_register(xnthread_t *thread, const char *name)
 {
 	return xnregistry_enter(name, thread, &xnthread_handle(thread), NULL);
@@ -417,17 +414,6 @@ static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
 
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
-#else /* !CONFIG_XENO_OPT_REGISTRY */
-static inline int xnthread_register(xnthread_t *thread, const char *name)
-{
-	return 0;
-}
-
-static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
-{
-	return NULL;
-}
-#endif /* !CONFIG_XENO_OPT_REGISTRY */
 
 #ifdef __cplusplus
 }

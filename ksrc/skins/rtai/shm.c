@@ -41,10 +41,8 @@ typedef struct xnshm_a {
 	void *chunk;
 	unsigned long name;
 	int size;
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	char szName[6];
 	xnhandle_t handle;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 } xnshm_a_t;
 
@@ -55,7 +53,7 @@ static inline xnshm_a_t *link2shma(xnholder_t *ln)
 
 xnqueue_t xnshm_allocq;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 extern xnptree_t __rtai_ptree;
 
@@ -93,14 +91,14 @@ static xnpnode_t __shm_pnode = {
 	.root = &__rtai_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __fifo_pnode = {
+static xnpnode_t __shm_pnode = {
 
 	.type = "fifo"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static xnshm_a_t *kalloc_new_shm(unsigned long name, int size)
 {
@@ -234,13 +232,9 @@ void *_shm_alloc(unsigned long name, int size, int suprt, int in_kheap,
 	*opaque = (unsigned long)p->heap;
 	appendq(&xnshm_allocq, &p->link);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		p->handle = 0;
-		num2nam(p->name, p->szName);
-		xnregistry_enter(p->szName, p, &p->handle, &__shm_pnode);
-	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
+	p->handle = 0;
+	num2nam(p->name, p->szName);
+	xnregistry_enter(p->szName, p, &p->handle, &__shm_pnode);
 
 	ret = p->chunk;
 
@@ -288,10 +282,8 @@ static int _shm_free(unsigned long name)
 		p = link2shma(holder);
 
 		if (p->name == name && --p->ref == 0) {
-#ifdef CONFIG_XENO_OPT_REGISTRY
 			if (p->handle)
 				xnregistry_remove(p->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 			if (p->heap == &kheap)
 				xnheap_free(&kheap, p->chunk);
 			else {

@@ -28,10 +28,6 @@
 
 #define XNOBJECT_SELF  XN_NO_HANDLE
 
-#if defined(CONFIG_PROC_FS) && defined(CONFIG_XENO_OPT_REGISTRY)
-#define CONFIG_XENO_EXPORT_REGISTRY 1
-#endif /* CONFIG_PROC_FS && CONFIG_XENO_OPT_REGISTRY */
-
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/synch.h>

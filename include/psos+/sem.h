@@ -36,9 +36,7 @@ typedef struct psossem {
 
     char name[XNOBJECT_NAME_LEN]; /* Name of semaphore */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
     xnhandle_t handle;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
     xnsynch_t synchbase;
 

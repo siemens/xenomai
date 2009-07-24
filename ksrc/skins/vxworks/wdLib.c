@@ -24,7 +24,7 @@
 
 static void wd_destroy_internal(wind_wd_t *wd);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int wd_read_proc(char *page,
 			char **start,
@@ -79,14 +79,14 @@ static xnpnode_t wd_pnode = {
 	.root = &__vxworks_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t wd_pnode = {
 
 	.type = "watchdogs"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 static void wind_wd_trampoline(xntimer_t *timer)
 {
@@ -106,6 +106,7 @@ void wind_wd_cleanup(void)
 
 WDOG_ID wdCreate(void)
 {
+	static unsigned long wd_ids;
 	wind_wd_t *wd;
 	spl_t s;
 
@@ -126,19 +127,13 @@ WDOG_ID wdCreate(void)
 	appendq(wd->rqueue, &wd->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long wd_ids;
+	sprintf(wd->name, "wd%lu", wd_ids++);
 
-		sprintf(wd->name, "wd%lu", wd_ids++);
-
-		if (xnregistry_enter(wd->name, wd, &wd->handle, &wd_pnode)) {
-			wind_errnoset(S_objLib_OBJ_ID_ERROR);
-			wdDelete((WDOG_ID)wd);
-			return 0;
-		}
+	if (xnregistry_enter(wd->name, wd, &wd->handle, &wd_pnode)) {
+		wind_errnoset(S_objLib_OBJ_ID_ERROR);
+		wdDelete((WDOG_ID)wd);
+		return 0;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return (WDOG_ID)wd;
 }
@@ -213,9 +208,7 @@ static void wd_destroy_internal(wind_wd_t *wd)
 {
 	removeq(wd->rqueue, &wd->rlink);
 	xntimer_destroy(&wd->timerbase);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(wd->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (wd->plink.last != wd->plink.next)
 		/* Deleted watchdog was pending for delivery to the

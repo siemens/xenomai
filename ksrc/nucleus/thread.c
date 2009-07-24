@@ -122,10 +122,8 @@ int xnthread_init(struct xnthread *thread,
 	thread->wchan = NULL;
 	thread->wwake = NULL;
 	thread->errcode = 0;
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	memset(&thread->stat, 0, sizeof(thread->stat));
 
 	/* These will be filled by xnpod_start_thread() */
@@ -178,12 +176,10 @@ void xnthread_cleanup_tcb(xnthread_t *thread)
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	xnarch_free_stack(xnthread_archtcb(thread));
 #endif
-
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (thread->registry.handle != XN_NO_HANDLE)
 		xnregistry_remove(thread->registry.handle);
+
 	thread->registry.handle = XN_NO_HANDLE;
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 }
 
 char *xnthread_format_status(xnflags_t status, char *buf, int size)

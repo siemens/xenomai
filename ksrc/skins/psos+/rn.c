@@ -29,7 +29,7 @@ static void *rn0addr;
 
 static int rn_destroy_internal(psosrn_t *rn);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int rn_read_proc(char *page,
 			char **start,
@@ -86,14 +86,14 @@ static xnpnode_t rn_pnode = {
 	.root = &__psos_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t rn_pnode = {
 
 	.type = "regions"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int psosrn_init(u_long rn0size)
 {
@@ -137,10 +137,8 @@ static int rn_destroy_internal(psosrn_t *rn)
 	removeq(&psosrnq, &rn->link);
 	rc = xnsynch_destroy(&rn->synchbase);
 	psos_mark_deleted(rn);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (rn->handle)
 		xnregistry_remove(rn->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnheap_mapped_p(&rn->heapbase))
 		xnheap_destroy_mapped(&rn->heapbase, NULL, NULL);
@@ -158,7 +156,8 @@ u_long rn_create(const char *name,
 		 u_long rnsize,
 		 u_long usize, u_long flags, u_long *rnid, u_long *allocsize)
 {
-	int bflags = 0;
+	static unsigned long rn_ids;
+	int bflags = 0, ret;
 	psosrn_t *rn;
 	spl_t s;
 
@@ -223,23 +222,16 @@ u_long rn_create(const char *name,
 	appendq(rn->rqueue, &rn->rlink);
 	appendq(&psosrnq, &rn->link);
 	xnlock_put_irqrestore(&nklock, s);
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long rn_ids;
-		u_long err;
 
-		if (!*name)
-			sprintf(rn->name, "anon_rn%lu", rn_ids++);
+	if (!*name)
+		sprintf(rn->name, "anon_rn%lu", rn_ids++);
 
-		err = xnregistry_enter(rn->name, rn, &rn->handle, &rn_pnode);
-
-		if (err) {
-			rn->handle = XN_NO_HANDLE;
-			rn_delete((u_long)rn);
-			return err;
-		}
+	ret = xnregistry_enter(rn->name, rn, &rn->handle, &rn_pnode);
+	if (ret) {
+		rn->handle = XN_NO_HANDLE;
+		rn_delete((u_long)rn);
+		return (u_long)ret;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*rnid = (u_long)rn;
 	*allocsize = rn->rnsize;

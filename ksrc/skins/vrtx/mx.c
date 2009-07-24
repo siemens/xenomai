@@ -25,7 +25,7 @@ static xnmap_t *vrtx_mx_idmap;
 
 static xnqueue_t vrtx_mx_q;
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __mutex_read_proc(char *page,
 			     char **start,
@@ -87,23 +87,21 @@ static xnpnode_t __mutex_pnode = {
 	.root = &__vrtx_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __mutex_pnode = {
 
 	.type = "mutexes"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 int mx_destroy_internal(vrtxmx_t *mx)
 {
 	int s = xnsynch_destroy(&mx->synchbase);
 	xnmap_remove(vrtx_mx_idmap, mx->mid);
 	removeq(&vrtx_mx_q, &mx->link);
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	xnregistry_remove(mx->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 	xnfree(mx);
 	return s;
 }
@@ -167,10 +165,8 @@ int sc_mcreate(unsigned int opt, int *errp)
 	appendq(&vrtx_mx_q, &mx->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	sprintf(mx->name, "mx%d", mid);
 	xnregistry_enter(mx->name, mx, &mx->handle, &__mutex_pnode);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*errp = RET_OK;
 

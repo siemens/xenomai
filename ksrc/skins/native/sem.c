@@ -48,7 +48,7 @@
 #include <native/task.h>
 #include <native/sem.h>
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int __sem_read_proc(char *page,
 			   char **start,
@@ -106,14 +106,14 @@ static xnpnode_t __sem_pnode = {
 	.root = &__native_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t __sem_pnode = {
 
 	.type = "semaphores"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 /**
  * @fn int rt_sem_create(RT_SEM *sem,const char *name,unsigned long icount,int mode)
@@ -197,19 +197,17 @@ int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 	sem->cpid = 0;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	/* <!> Since xnregister_enter() may reschedule, only register
-	   complete objects, so that the registry cannot return handles to
-	   half-baked objects... */
-
+	/*
+	 * <!> Since xnregister_enter() may reschedule, only register
+	 * complete objects, so that the registry cannot return
+	 * handles to half-baked objects...
+	 */
 	if (name) {
 		err = xnregistry_enter(sem->name, sem, &sem->handle,
 				       &__sem_pnode);
-
 		if (err)
 			rt_sem_delete(sem);
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	return err;
 }
@@ -266,10 +264,8 @@ int rt_sem_delete(RT_SEM *sem)
 
 	rc = xnsynch_destroy(&sem->synch_base);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (sem->handle)
 		xnregistry_remove(sem->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	xeno_mark_deleted(sem);
 

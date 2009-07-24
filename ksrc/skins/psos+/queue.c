@@ -29,7 +29,7 @@ static xnqueue_t psosmbufq;	/* Shared msg buffers (in chunks) */
 
 static u_long q_destroy_internal(psosqueue_t *queue);
 
-#ifdef CONFIG_XENO_EXPORT_REGISTRY
+#ifdef CONFIG_PROC_FS
 
 static int msgq_read_proc(char *page,
 			  char **start,
@@ -87,14 +87,14 @@ static xnpnode_t msgq_pnode = {
 	.root = &__psos_ptree,
 };
 
-#elif defined(CONFIG_XENO_OPT_REGISTRY)
+#else /* !CONFIG_PROC_FS */
 
 static xnpnode_t msgq_pnode = {
 
 	.type = "queues"
 };
 
-#endif /* CONFIG_XENO_EXPORT_REGISTRY */
+#endif /* !CONFIG_PROC_FS */
 
 void psosqueue_init(void)
 {
@@ -184,8 +184,9 @@ static u_long q_create_internal(const char *name,
 				u_long maxnum,
 				u_long maxlen, u_long flags, u_long *qid)
 {
+	static unsigned long msgq_ids;
 	psosqueue_t *queue;
-	int bflags;
+	int bflags, ret;
 	u_long rc;
 	spl_t s;
 
@@ -271,23 +272,15 @@ static u_long q_create_internal(const char *name,
 	appendq(&psosqueueq, &queue->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
-	{
-		static unsigned long msgq_ids;
-		u_long err;
+	if (!*name)
+		sprintf(queue->name, "anon_q%lu", msgq_ids++);
 
-		if (!*name)
-			sprintf(queue->name, "anon_q%lu", msgq_ids++);
-
-		err = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
-
-		if (err) {
-			queue->handle = XN_NO_HANDLE;
-			q_delete((u_long)queue);
-			return err;
-		}
+	ret = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
+	if (ret) {
+		queue->handle = XN_NO_HANDLE;
+		q_delete((u_long)queue);
+		return (u_long)ret;
 	}
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	*qid = (u_long)queue;
 
@@ -315,10 +308,8 @@ static u_long q_destroy_internal(psosqueue_t *queue)
 	psos_mark_deleted(queue);
 	xnsynch_destroy(&queue->synchbase);
 
-#ifdef CONFIG_XENO_OPT_REGISTRY
 	if (queue->handle)
 		xnregistry_remove(queue->handle);
-#endif /* CONFIG_XENO_OPT_REGISTRY */
 
 	if (testbits(flags, Q_NOCACHE)) {
 		/* No cache used -- return the buffers waiting to be received
