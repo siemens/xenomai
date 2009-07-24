@@ -56,7 +56,7 @@
  *       ret = xnbufd_copy_from_kmem(bufd, bulk, min(bufd->b_len, len));
  *       free_bulk(bulk);
  *
- *       ret = this_will_fail();
+ *       ret = this_may_fail();
  *       if (ret)
  *  	       xnbufd_invalidate(bufd);
  *
@@ -159,7 +159,8 @@
  * \brief Initialize a buffer descriptor for reading from kernel memory.
  *
  * The new buffer descriptor may be used to copy data from kernel
- * memory.
+ * memory. This routine should be used in pair with
+ * xnbufd_unmap_kread().
  *
  * @param bufd The address of the buffer descriptor which will map a
  * @a len bytes kernel memory area, starting from @a ptr.
@@ -184,7 +185,8 @@
  * \brief Initialize a buffer descriptor for writing to kernel memory.
  *
  * The new buffer descriptor may be used to copy data to kernel
- * memory.
+ * memory. This routine should be used in pair with
+ * xnbufd_unmap_kwrite().
  *
  * @param bufd The address of the buffer descriptor which will map a
  * @a len bytes kernel memory area, starting from @a ptr.
@@ -219,11 +221,12 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  * \brief Initialize a buffer descriptor for reading from user memory.
  *
  * The new buffer descriptor may be used to copy data from user
- * memory.
+ * memory. This routine should be used in pair with
+ * xnbufd_unmap_uread().
  *
  * @param bufd The address of the buffer descriptor which will map a
  * @a len bytes user memory area, starting from @a ptr. @a ptr is
- * never dereferenced directly, since it should refer to a buffer that
+ * never dereferenced directly, since it may refer to a buffer that
  * lives in another address space.
  *
  * @param ptr The start of the user buffer to map.
@@ -245,11 +248,12 @@ EXPORT_SYMBOL_GPL(xnbufd_map_kmem);
  * \brief Initialize a buffer descriptor for writing to user memory.
  *
  * The new buffer descriptor may be used to copy data to user
- * memory.
+ * memory. This routine should be used in pair with
+ * xnbufd_unmap_uwrite().
  *
  * @param bufd The address of the buffer descriptor which will map a
  * @a len bytes user memory area, starting from @a ptr. @a ptr is
- * never dereferenced directly, since it should refer to a buffer that
+ * never dereferenced directly, since it may refer to a buffer that
  * lives in another address space.
  *
  * @param ptr The start of the user buffer to map.
@@ -291,8 +295,9 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  * The source address space is dealt with, according to the following
  * rules:
  *
- * - if @a bufd refers to readable writable kernel area (i.e. see
- *   xnbufd_map_kread()), the copy is performed with no restriction.
+ * - if @a bufd refers to readable kernel area (i.e. see
+ *   xnbufd_map_kread()), the copy is immediately and fully performed
+ *   with no restriction.
  *
  * - if @a bufd refers to a readable user area (i.e. see
  *   xnbufd_map_uread()), the copy is performed only if that area
@@ -301,7 +306,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  *   which may arise while reading from that memory.
  *
  * - any attempt to read from @a bufd from a non-suitable context is
- *   considered as a bug, and will raise a panic error when the
+ *   considered as a bug, and will raise a panic assertion when the
  *   nucleus is compiled in debug mode.
  *
  * @param to The start address of the kernel memory to copy to.
@@ -314,7 +319,7 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  * @return The number of bytes read so far from the memory area
  * covered by @a ubufd. Otherwise:
  *
- * - -EINVAL is returned upon attempt to write to the user area from
+ * - -EINVAL is returned upon attempt to read from the user area from
  *   an invalid context. This error is only returned when the debug
  *   mode is disabled; otherwise a panic assertion is raised.
  *
@@ -331,7 +336,8 @@ EXPORT_SYMBOL_GPL(xnbufd_map_umem);
  * (Linux-wise).
  *
  * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine.
+ * is invalid when calling this routine, and doing so would trigger a
+ * debug assertion.
  */
 
 ssize_t xnbufd_copy_to_kmem(void *to, struct xnbufd *bufd, size_t len)
@@ -401,7 +407,8 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  * following rules:
  *
  * - if @a bufd refers to a writable kernel area (i.e. see
- *   xnbufd_map_kwrite()), the copy is performed with no restriction.
+ *   xnbufd_map_kwrite()), the copy is immediatly and fully performed
+ *   with no restriction.
  *
  * - if @a bufd refers to a writable user area (i.e. see
  *   xnbufd_map_uwrite()), the copy is performed only if that area
@@ -411,8 +418,8 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  *
  * - if @a bufd refers to a user area which may not be immediately
  *   written to from the current context, the copy is postponed until
- *   xnbufd_unmap_uwrite() is involved for @a ubufd, at which point
- *   the copy will take place. In such a case, the source memory is
+ *   xnbufd_unmap_uwrite() is invoked for @a ubufd, at which point the
+ *   copy will take place. In such a case, the source memory is
  *   transferred to a carry over buffer allocated internally; this
  *   operation may lead to request dynamic memory from the nucleus
  *   heap if @a len is greater than 64 bytes.
@@ -443,7 +450,8 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_to_kmem);
  * section (Linux-wise).
  *
  * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine.
+ * is invalid when calling this routine, and doing so would trigger a
+ * debug assertion.
  */
 
 ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd, void *from, size_t len)
@@ -541,7 +549,8 @@ EXPORT_SYMBOL_GPL(xnbufd_copy_from_kmem);
  * Rescheduling: never.
  *
  * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine.
+ * is invalid when calling this routine, and doing so would trigger a
+ * debug assertion.
  */
 
 ssize_t xnbufd_unmap_uread(struct xnbufd *bufd)
@@ -584,7 +593,8 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uread);
  * Rescheduling: never.
  *
  * @note Holding the nklock or running real-time interrupts disabled
- * is invalid when calling this routine.
+ * is invalid when calling this routine, and doing so would trigger a
+ * debug assertion.
  */
 
 ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd)
@@ -625,14 +635,16 @@ EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
  * \brief Invalidate a buffer descriptor.
  *
  * The buffer descriptor is invalidated, making it unusable for
- * further copy operations. If an outstanding carry over buffer is
- * allocated, it is immediately freed so that no data transfer will
- * happen when the memory area is unmapped from the descriptor.
+ * further copy operations. If an outstanding carry over buffer was
+ * allocated by a previous call to xnbufd_copy_from_kmem(), it is
+ * immediately freed so that no data transfer will happen when the
+ * descriptor is finalized.
  *
  * The only action that may subsequently be performed on an
  * invalidated descriptor is calling the relevant unmapping routine
- * for it. For that reason, xnbufd_invalidate() is usually invoked on
- * the error path.
+ * for it. For that reason, xnbufd_invalidate() should be invoked on
+ * the error path when data may have been transferred to the carry
+ * over buffer.
  *
  * @param bufd The address of the buffer descriptor to invalidate.
  *
