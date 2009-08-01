@@ -356,7 +356,7 @@ unsigned long find_next_bit(const unsigned long *addr,
 #include <linux/pid.h>
 
 #define find_task_by_pid(nr)		\
-  find_task_by_pid_type_ns(PIDTYPE_PID, nr, &init_pid_ns)
+  find_task_by_pid_ns(nr, &init_pid_ns)
 #define kill_proc(pid, sig, priv)	\
   kill_proc_info(sig, (priv) ? SEND_SIG_PRIV : SEND_SIG_NOINFO, pid)
 
