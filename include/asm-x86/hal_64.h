@@ -125,7 +125,9 @@ static const char *const rthal_fault_labels[] = {
 #include <asm/mach_apic.h>
 #else
 #include <asm/apic.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <mach_ipi.h>
+#endif
 #endif
 
 static inline void rthal_setup_periodic_apic(int count, int vector)
