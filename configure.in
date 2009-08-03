@@ -668,9 +668,9 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
 AC_SUBST(XENO_POSIX_WRAPPERS)
 
 base=asm-$XENO_TARGET_ARCH
-AC_CONFIG_LINKS([src/include/asm/xenomai:include/$base])
+AC_CONFIG_LINKS([src/include/asm/xenomai:$srcdir/include/$base])
 base=asm-generic
-AC_CONFIG_LINKS([src/include/$base/xenomai:include/$base])
+AC_CONFIG_LINKS([src/include/$base/xenomai:$srcdir/include/$base])
 
 AC_CONFIG_FILES([ \
 	Makefile \
