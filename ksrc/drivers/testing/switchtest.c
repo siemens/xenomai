@@ -81,10 +81,12 @@ static int rtswitch_to_rt(rtswitch_context_t *ctx,
 	++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
+	barrier();
 
 	switch (to->base.flags & RTSWITCH_RT) {
 	case RTSWITCH_NRT:
 		rtswitch_utask[ctx->cpu] = to;
+		barrier();
 		rtdm_nrtsig_pend(&rtswitch_wake_utask);
 		xnlock_get_irqsave(&nklock, s);
 		break;
@@ -152,6 +154,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 	++ctx->switches_count;
 	ctx->error.last_switch.from = from_idx;
 	ctx->error.last_switch.to = to_idx;
+	barrier();
 
 	switch (to->base.flags & RTSWITCH_RT) {
 	case RTSWITCH_NRT:

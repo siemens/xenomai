@@ -643,11 +643,13 @@ static unsigned long shield_sync;
 static void engage_irq_shield(void)
 {
 	unsigned long flags;
-	rthal_declare_cpuid;
+	int cpu;
 
-	rthal_lock_cpu(flags);
+	rthal_local_irq_save_hw(flags);
 
-	if (xnarch_cpu_test_and_set(cpuid, shielded_cpus))
+	cpu = rthal_processor_id();
+
+	if (xnarch_cpu_test_and_set(cpu, shielded_cpus))
 		goto unmask_and_exit;
 
 	while (test_bit(0, &shield_sync))
@@ -655,23 +657,25 @@ static void engage_irq_shield(void)
 		 * long, so we spin IRQS off. */
 		cpu_relax();
 
-	xnarch_cpu_clear(cpuid, unshielded_cpus);
+	xnarch_cpu_clear(cpu, unshielded_cpus);
 
-	xnarch_lock_xirqs(&irq_shield, cpuid);
+	xnarch_lock_xirqs(&irq_shield, cpu);
 
       unmask_and_exit:
 
-	rthal_unlock_cpu(flags);
+	rthal_local_irq_restore_hw(flags);
 }
 
 static void disengage_irq_shield(void)
 {
 	unsigned long flags;
-	rthal_declare_cpuid;
+	int cpu;
 
-	rthal_lock_cpu(flags);
+	rthal_local_irq_save_hw(flags);
 
-	if (xnarch_cpu_test_and_set(cpuid, unshielded_cpus))
+	cpu = rthal_processor_id();
+
+	if (xnarch_cpu_test_and_set(cpu, unshielded_cpus))
 		goto unmask_and_exit;
 
 	/* Prevent other CPUs from engaging the shield while we
@@ -679,7 +683,7 @@ static void disengage_irq_shield(void)
 	set_bit(0, &shield_sync);
 
 	/* Ok, this one is now unshielded. */
-	xnarch_cpu_clear(cpuid, shielded_cpus);
+	xnarch_cpu_clear(cpu, shielded_cpus);
 
 	smp_mb__after_clear_bit();
 
@@ -697,12 +701,12 @@ static void disengage_irq_shield(void)
 	   the shield stage on the local CPU in order to flush it the same
 	   way. */
 
-	xnarch_unlock_xirqs(&irq_shield, cpuid);
+	xnarch_unlock_xirqs(&irq_shield, cpu);
 
 #ifdef CONFIG_SMP
 	{
 		cpumask_t other_cpus = xnarch_cpu_online_map;
-		xnarch_cpu_clear(cpuid, other_cpus);
+		xnarch_cpu_clear(cpu, other_cpus);
 		rthal_send_ipi(RTHAL_SERVICE_IPI1, other_cpus);
 	}
 #endif /* CONFIG_SMP */
@@ -717,7 +721,7 @@ clear_sync:
 
 unmask_and_exit:
 
-	rthal_unlock_cpu(flags);
+	rthal_local_irq_restore_hw(flags);
 }
 
 static inline void reset_shield(xnthread_t *thread)
@@ -2040,7 +2044,7 @@ static inline void do_schedule_event(struct task_struct *next)
 {
 	struct task_struct *prev;
 	xnthread_t *threadin;
-	rthal_declare_cpuid;
+	int cpuid;
 
 	if (!nkpod || testbits(nkpod->status, XNPIDLE))
 		return;
@@ -2048,7 +2052,7 @@ static inline void do_schedule_event(struct task_struct *next)
 	prev = current;
 	threadin = xnshadow_thread(next);
 	set_switch_lock_owner(prev);
-	rthal_load_cpuid();
+	cpuid = rthal_processor_id();
 
 	if (threadin) {
 		/*

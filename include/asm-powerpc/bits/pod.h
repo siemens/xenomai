@@ -48,10 +48,8 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
 	/* So that xnarch_save_fpu() will operate on the right FPU area. */
-	rootcb->fpup = (rootcb->user_fpu_owner
-			? (rthal_fpenv_t *) & rootcb->user_fpu_owner->thread.
-			fpr[0]
-			: NULL);
+	rootcb->fpup = rootcb->user_fpu_owner ?
+		&rootcb->user_fpu_owner->thread : NULL;
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
@@ -156,24 +154,26 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	unsigned long *ksp, flags;
 	struct pt_regs *childregs;
+	unsigned long flags;
 
 	rthal_local_irq_flags_hw(flags);
-
-#ifdef CONFIG_PPC64
-	ksp =
-	    (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
-			      RTHAL_SWITCH_FRAME_SIZE - 32);
-	childregs = (struct pt_regs *)ksp;
+	childregs = (struct pt_regs *)((unsigned long)tcb->stackbase +
+				       tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE);
 	memset(childregs, 0, sizeof(*childregs));
+	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
+	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
+	tcb->entry = entry;
+	tcb->cookie = cookie;
+	tcb->self = thread;
+	tcb->imask = imask;
+	tcb->name = name;
+#ifdef CONFIG_PPC64
 	childregs->nip = ((unsigned long *)&rthal_thread_trampoline)[0];
 	childregs->gpr[2] = ((unsigned long *)&rthal_thread_trampoline)[1];
-	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
 	childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0];	/* lr = entry addr. */
 	childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
 	childregs->gpr[17] = (unsigned long)tcb;
-	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 	if (cpu_has_feature(CPU_FTR_SLB)) {	/* from process.c/copy_thread */
 		unsigned long sp_vsid = get_kernel_vsid(tcb->ts.ksp);
 
@@ -185,23 +185,10 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 		tcb->ts.ksp_vsid = sp_vsid;
 	}
 #else /* !CONFIG_PPC64 */
-	ksp =
-	    (unsigned long *)((unsigned long)tcb->stackbase + tcb->stacksize -
-			      RTHAL_SWITCH_FRAME_SIZE - 4);
-	childregs = (struct pt_regs *)ksp;
-	memset(childregs, 0, sizeof(*childregs));
 	childregs->nip = (unsigned long)&rthal_thread_trampoline;
-	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
 	childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
 	childregs->gpr[16] = (unsigned long)tcb;
-	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
 #endif
-
-	tcb->entry = entry;
-	tcb->cookie = cookie;
-	tcb->self = thread;
-	tcb->imask = imask;
-	tcb->name = name;
 }
 
 /* No lazy FPU init on PPC. */
@@ -210,57 +197,54 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 static inline void xnarch_enable_fpu(xnarchtcb_t * current_tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-	if (!current_tcb->user_task)
-		rthal_enable_fpu();
+	rthal_enable_fpu();
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
+static void xnarch_init_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-	/* Initialize the FPU for an emerging kernel-based RT thread. This
-	   must be run on behalf of the emerging thread. */
-	memset(&tcb->ts.fpr[0], 0, sizeof(rthal_fpenv_t));
-	rthal_init_fpu((rthal_fpenv_t *) & tcb->ts.fpr[0]);
+	/*
+	 * Initialize the FPU for an emerging kernel-based RT
+	 * thread. This must be run on behalf of the emerging thread.
+	 * xnarch_init_tcb() guarantees that all FPU regs are zeroed
+	 * in tcb.
+	 */
+	rthal_init_fpu(&tcb->ts);
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_save_fpu(xnarchtcb_t * tcb)
+static void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
-		if (tcb->user_fpu_owner && tcb->user_fpu_owner->thread.regs) {
-			tcb->user_fpu_owner_prev_msr =
-			    tcb->user_fpu_owner->thread.regs->msr;
-			tcb->user_fpu_owner->thread.regs->msr &= ~MSR_FP;
-		}
+		if (tcb->user_fpu_owner &&
+		    tcb->user_fpu_owner->thread.regs)
+			tcb->user_fpu_owner->thread.regs->msr &= ~(MSR_FP|MSR_FE0|MSR_FE1);
 	}
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
-static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
+static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
-
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
-
-		/* Note: Only enable FP in MSR, if it was enabled when we saved the
-		 * fpu state. We might have preempted Linux when it had disabled FP
-		 * for the thread, but not yet set last_task_used_math to NULL 
+		/*
+		 * Note: Only enable FP in MSR, if it was enabled when
+		 * we saved the fpu state.
 		 */
 		if (tcb->user_fpu_owner &&
-		    tcb->user_fpu_owner->thread.regs &&
-		    ((tcb->user_fpu_owner_prev_msr & MSR_FP) != 0))
-			tcb->user_fpu_owner->thread.regs->msr |= MSR_FP;
+		    tcb->user_fpu_owner->thread.regs)
+			tcb->user_fpu_owner->thread.regs->msr |= (MSR_FP|MSR_FE0|MSR_FE1);
 	}
-
-	/* FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
-	   whereas we could be much lazier. */
-	if (tcb->user_task)
+	/*
+	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
+	 * whereas we could be much lazier.
+	 */
+        if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 
 #endif /* CONFIG_XENO_HW_FPU */

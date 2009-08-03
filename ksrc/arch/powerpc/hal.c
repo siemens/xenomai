@@ -58,7 +58,7 @@
 #define DBG(fmt...)
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && IPIPE_MAJOR_NUMBER < 2
 #define rthal_decr_next(cpuid)	__ipipe_decr_next[cpuid]
 #else
 #define rthal_decr_next(cpuid)	per_cpu(__ipipe_decr_next, cpuid)
@@ -86,10 +86,10 @@ static int rthal_periodic_p;
  */
 static void rthal_set_local_cpu_timer(void)
 {
-    rthal_declare_cpuid;
+    int cpuid;
     long ticks;
 
-    rthal_load_cpuid();
+    cpuid = rthal_processor_id();
 
     disarm_decr[cpuid] = (__ipipe_decr_ticks != tb_ticks_per_jiffy);
 #ifdef CONFIG_40x
@@ -108,8 +108,7 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
 {
     unsigned long ticks;
     unsigned long offset, previous_tb;
-    int i;
-    rthal_declare_cpuid;
+    int i, cpuid;
 
     DBG("rthal_set_cpu_timers_unsafe: %lu\n", ns);
 
@@ -125,7 +124,7 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
     }
 
     /* space timers on SMP to prevent lock contention in the handler */
-    rthal_load_cpuid();
+    cpuid = rthal_processor_id();
     offset = ticks / cpus_weight(cpu_online_map);
     DBG("rthal_set_cpu_timers_unsafe(%d): ticks=%lu offset=%lu\n", cpuid, ticks,
         offset);
@@ -146,9 +145,9 @@ static int rthal_set_cpu_timers_unsafe(unsigned long ns)
 static void rthal_critical_sync(void)
 {
 #ifdef CONFIG_SMP
-    rthal_declare_cpuid;
+    int cpuid;
 
-    rthal_load_cpuid();
+    cpuid = rthal_processor_id();
     switch (rthal_sync_op) {
         case 1:
             /* timer_request */
@@ -184,8 +183,7 @@ static void rthal_smp_relay_tick(unsigned irq, void *cookie)
 int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 {
     unsigned long flags;
-    int err = 0;
-    rthal_declare_cpuid;
+    int err = 0, cpuid;
 
     flags = rthal_critical_enter(&rthal_critical_sync);
 
@@ -203,7 +201,7 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 #endif /* CONFIG_40x */
         rthal_timer_program_shot(tb_ticks_per_jiffy);
     }
-    rthal_load_cpuid();
+    cpuid = rthal_processor_id();
 
     if (err)
         goto out;
@@ -249,13 +247,13 @@ int rthal_timer_request(void (*handler) (void), unsigned long nstick)
 void rthal_timer_release(void)
 {
     unsigned long flags;
-    rthal_declare_cpuid;
+    int cpuid;
 
     flags = rthal_critical_enter(&rthal_critical_sync);
 
     rthal_sync_op = 2;
 
-    rthal_load_cpuid();
+    cpuid = rthal_processor_id();
 
     if (rthal_periodic_p)
         rthal_set_cpu_timers_unsafe(0);
@@ -358,9 +356,7 @@ int rthal_irq_end(unsigned irq)
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
-    rthal_declare_cpuid;
-
-    rthal_load_cpuid();
+    int cpuid = rthal_processor_id();
 
     if (domid == RTHAL_DOMAIN_ID) {
         rthal_realtime_faults[cpuid][event]++;

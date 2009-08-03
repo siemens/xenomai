@@ -1,3 +1,7 @@
+2009-08-03  Philippe Gerum  <rpm@xenomai.org>
+
+	* Moving to GIT. Commit messages will replace this file.
+
 2008-06-07  Philippe Gerum  <rpm@xenomai.org>
 
 	* ksrc/arch/powerpc/patches: Update to

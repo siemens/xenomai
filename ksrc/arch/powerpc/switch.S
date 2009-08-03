@@ -36,7 +36,7 @@
 #endif
 
 /*
- * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
+ * struct task_struct *rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
 	.align	7
 _GLOBAL(rthal_thread_switch)
@@ -55,9 +55,15 @@ BEGIN_FTR_SECTION
 END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 #endif /* CONFIG_ALTIVEC */
 #ifdef CONFIG_SPE
+#ifdef CPU_FTR_SPE
+BEGIN_FTR_SECTION
+#endif
 	oris	r0,r0,MSR_SPE@h	 /* Disable SPE */
 	mfspr	r12,SPRN_SPEFSCR /* save spefscr register value */
 	stw	r12,THREAD_SPEFSCR(r3)
+#ifdef CPU_FTR_SPE
+END_FTR_SECTION_IFSET(CPU_FTR_SPE)
+#endif
 #endif /* CONFIG_SPE */
 	and.	r0,r0,r11	/* FP or altivec or SPE enabled? */
 	beq+	1f
@@ -85,8 +91,6 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 	mtspr	SPRN_SPRG3,r0	/* Update current THREAD phys addr */
 	addi	r2,r4,-THREAD	/* Update current */
 
-same_current:
-		
 #ifdef CONFIG_ALTIVEC
 BEGIN_FTR_SECTION
 	lwz	r0,THREAD_VRSAVE(r4)
@@ -94,10 +98,18 @@ BEGIN_FTR_SECTION
 END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 #endif /* CONFIG_ALTIVEC */
 #ifdef CONFIG_SPE
+#ifdef CPU_FTR_SPE
+BEGIN_FTR_SECTION
+#endif
 	lwz	r0,THREAD_SPEFSCR(r4)
 	mtspr	SPRN_SPEFSCR,r0		/* restore SPEFSCR reg */
+#ifdef CPU_FTR_SPE
+END_FTR_SECTION_IFSET(CPU_FTR_SPE)
+#endif
 #endif /* CONFIG_SPE */
 
+same_current:
+		
 	lwz	r0,_CCR(r1)
 	mtcrf	0xFF,r0
 	REST_NVGPRS(r1)
@@ -184,4 +196,5 @@ _GLOBAL(rthal_thread_trampoline)
 	mtmsr	r14
 	mtlr	r15
 	mr	r3,r16
+	stwu	r1,-STACK_FRAME_OVERHEAD(r1)
 	blr

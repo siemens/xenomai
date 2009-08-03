@@ -97,26 +97,11 @@ asmlinkage void rthal_thread_trampoline(void);
 
 #ifdef CONFIG_XENO_HW_FPU
 
-typedef struct rthal_fpenv {
+void rthal_init_fpu(struct thread_struct *ts);
 
-	/* This layout must follow exactely the definition of the FPU
-	   backup area in a PPC thread struct available from
-	   <asm-ppc/processor.h>. Specifically, fpr[] an fpscr words must
-	   be contiguous in memory (see arch/powerpc/hal/fpu.S). */
+void rthal_save_fpu(struct thread_struct *ts);
 
-	double fpr[32];
-#ifndef CONFIG_PPC64
-	unsigned long fpscr_pad;	/* <= Hi-word of the FPR used to */
-#endif
-	unsigned long fpscr;	/* retrieve the FPSCR. */
-
-} rthal_fpenv_t;
-
-void rthal_init_fpu(rthal_fpenv_t * fpuenv);
-
-void rthal_save_fpu(rthal_fpenv_t * fpuenv);
-
-void rthal_restore_fpu(rthal_fpenv_t * fpuenv);
+void rthal_restore_fpu(struct thread_struct *ts);
 
 #ifndef CONFIG_SMP
 #define rthal_get_fpu_owner(cur) last_task_used_math

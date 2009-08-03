@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2001,2002,2003,2004 Philippe Gerum.
+ * Copyright (C) 2004-2009 Philippe Gerum.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <linux/version.h>
 #include <asm/processor.h>
 #include <asm/cputable.h>
 #include <asm/ppc_asm.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+#include "ppc_defs.h"
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)
+#include <asm/offsets.h>
+#else
+#include <asm/asm-offsets.h>
+#endif
 
 #ifdef CONFIG_PPC601_SYNC_FIX
 #define SYNC				\
@@ -31,65 +39,58 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
 #define	SYNC
 #endif /* CONFIG_PPC601_SYNC_FIX */
 
+#ifdef CONFIG_PPC64
 #ifndef MTMSRD
-#if defined(CONFIG_PPC64) || defined(CONFIG_PPC64BRIDGE)
-#define MTMSRD(r)	.long	(0x7c000164 + ((r) << 21))	/* mtmsrd */
-#else
-#define MTMSRD(r)	mtmsr	r
-#endif /* CONFIG_PPC64 || CONFIG_PPC64BRIDGE */
+#define MTMSRD(r)	mtmsrd	r
 #endif
+#ifndef MTFSF_L
+#define MTFSF_L(REG) \
+	.long (0xfc00058e | ((0xff) << 17) | ((REG) << 11) | (1 << 25))
+#endif
+#else /* !CONFIG_PPC64 */
+#ifndef MTMSRD
+#define MTMSRD(r)	mtmsr	r
+#endif
+#ifndef MTFSF_L
+#define MTFSF_L(REG)	mtfsf	0xff, (REG)
+#endif
+#endif /* !CONFIG_PPC64 */
 
-#define RTHAL_FPSAVE(n, base)	stfd n,8*(n)(base)
-#define RTHAL_FPSAVE2(n, base)	RTHAL_FPSAVE(n, base); RTHAL_FPSAVE(n+1, base)
-#define RTHAL_FPSAVE4(n, base)	RTHAL_FPSAVE2(n, base); RTHAL_FPSAVE2(n+2, base)
-#define RTHAL_FPSAVE8(n, base)	RTHAL_FPSAVE4(n, base); RTHAL_FPSAVE4(n+4, base)
-#define RTHAL_FPSAVE16(n, base)	RTHAL_FPSAVE8(n, base); RTHAL_FPSAVE8(n+8, base)
-#define RTHAL_FPSAVE32(n, base)	RTHAL_FPSAVE16(n, base); RTHAL_FPSAVE16(n+16, base)
+/*
+ * The following accessor has to work with ancient kernel versions,
+ * for which THREAD_FPSCR is not usable for 64bit save/restore.
+ */
+#define __FPSCR(base)	THREAD_FPR0+32*8(base)
 
-/* r3 = &tcb->fpuenv */
+/* r3 = &thread_struct (tcb->fpup) */
 _GLOBAL(rthal_save_fpu)
 	mfmsr	r5
-	ori	r5,r5,MSR_FP		/* Re-enable use of FPU. */
-#ifdef CONFIG_PPC64BRIDGE
-	clrldi	r5,r5,1			/* Turn off 64-bit mode. */
-#endif /* CONFIG_PPC64BRIDGE */
+	ori	r5,r5,MSR_FP
 	SYNC
-	MTMSRD(r5)			/* Enable use of fpu. */
+	MTMSRD(r5)
 	isync
-	RTHAL_FPSAVE32(0,r3)
+	SAVE_32FPRS(0,r3)
 	mffs	fr0
-	stfd	fr0,8*32(r3)
+	stfd	fr0,__FPSCR(r3)
 	blr
 
-#define RTHAL_FPLOAD(n, base)	lfd n,8*(n)(base)
-#define RTHAL_FPLOAD2(n, base)	RTHAL_FPLOAD(n, base); RTHAL_FPLOAD(n+1, base)
-#define RTHAL_FPLOAD4(n, base)	RTHAL_FPLOAD2(n, base); RTHAL_FPLOAD2(n+2, base)
-#define RTHAL_FPLOAD8(n, base)	RTHAL_FPLOAD4(n, base); RTHAL_FPLOAD4(n+4, base)
-#define RTHAL_FPLOAD16(n, base)	RTHAL_FPLOAD8(n, base); RTHAL_FPLOAD8(n+8, base)
-#define RTHAL_FPLOAD32(n, base)	RTHAL_FPLOAD16(n, base); RTHAL_FPLOAD16(n+16, base)
-
-/* r3 = &tcb->fpuenv */
+/* r3 = &thread_struct */
 _GLOBAL(rthal_init_fpu)
 	mfmsr	r5
-	ori	r5,r5,MSR_FP|MSR_FE1	/* RT kernel threads always operate in */
-	li	r4,MSR_FE0		/* imprecise non-recoverable exception mode. */
-	andc	r5,r5,r4
+	ori	r5,r5,MSR_FP|MSR_FE0|MSR_FE1
 	SYNC
 	MTMSRD(r5)
 
 	/* Fallback wanted. */
 	
-/* r3 = &tcb->fpuenv */
+/* r3 = &thread_struct (tcb->fpup) */
 _GLOBAL(rthal_restore_fpu)
 	mfmsr	r5
-	ori	r5,r5,MSR_FP		/* Re-enable use of FPU. */
-#ifdef CONFIG_PPC64BRIDGE
-	clrldi	r5,r5,1			/* Turn off 64-bit mode. */
-#endif /* CONFIG_PPC64BRIDGE */
+	ori	r5,r5,MSR_FP
 	SYNC
-	MTMSRD(r5)			/* Enable use of fpu. */
+	MTMSRD(r5)
 	isync
-	lfd	fr0,8*32(r3)
-	mtfsf	0xff,0
-	RTHAL_FPLOAD32(0,r3)
+	lfd	fr0,__FPSCR(r3)
+	MTFSF_L(fr0)
+	REST_32FPRS(0,r3)
 	blr

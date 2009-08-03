@@ -1,3 +1,56 @@
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+index 060a71d..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,47 +0,0 @@
+-#
+-# NOTE! Don't add files that are generated in specific
+-# subdirectories here. Add them in the ".gitignore" file
+-# in that subdirectory instead.
+-#
+-# Normal rules
+-#
+-.*
+-*.o
+-*.a
+-*.s
+-*.ko
+-*.so
+-*.mod.c
+-*.i
+-*.lst
+-*.symtypes
+-
+-#
+-# Top-level generic files
+-#
+-tags
+-TAGS
+-vmlinux*
+-System.map
+-Module.symvers
+-
+-#
+-# Generated include files
+-#
+-include/asm
+-include/asm-*/asm-offsets.h
+-include/config
+-include/linux/autoconf.h
+-include/linux/compile.h
+-include/linux/version.h
+-include/linux/utsrelease.h
+-
+-# stgit generated dirs
+-patches-*
+-
+-# quilt's files
+-patches
+-series
+-
+-# cscope files
+-cscope.*
 diff --git a/Makefile b/Makefile
 index 7e2750f..055ab06 100644
 --- a/Makefile
@@ -82,7 +135,7 @@ index b742013..fa5752a 100644
  	struct fixup_entry {
  		unsigned long	mask;
 diff --git a/arch/powerpc/kernel/entry_32.S b/arch/powerpc/kernel/entry_32.S
-index c03e829..687a965 100644
+index c03e829..0e0804f 100644
 --- a/arch/powerpc/kernel/entry_32.S
 +++ b/arch/powerpc/kernel/entry_32.S
 @@ -132,8 +132,23 @@ transfer_to_handler:
@@ -166,19 +219,20 @@ index c03e829..687a965 100644
  	REST_NVGPRS(r1)
  	bl	schedule_tail
  	li	r3,0
-@@ -630,6 +683,11 @@ ret_from_except:
+@@ -630,6 +683,12 @@ ret_from_except:
  	SYNC			/* Some chip revs have problems here... */
  	MTMSRD(r10)		/* disable interrupts */
  
 +#ifdef CONFIG_IPIPE
 +        bl __ipipe_check_root
 +        cmpwi   r3, 0
++	mfmsr	r10		/* this is used later, might be messed */
 +        beq- restore
 +#endif /* CONFIG_IPIPE */
  	lwz	r3,_MSR(r1)	/* Returning to user mode? */
  	andi.	r0,r3,MSR_PR
  	beq	resume_kernel
-@@ -665,11 +723,37 @@ resume_kernel:
+@@ -665,11 +724,37 @@ resume_kernel:
  	beq+	restore
  	andi.	r0,r3,MSR_EE	/* interrupts off? */
  	beq	restore		/* don't schedule if so */
@@ -216,7 +270,7 @@ index c03e829..687a965 100644
  #else
  resume_kernel:
  #endif /* CONFIG_PREEMPT */
-@@ -929,6 +1013,13 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
+@@ -929,6 +1014,13 @@ END_FTR_SECTION_IFSET(CPU_FTR_601)
  
  	.comm	ee_restarts,4
  
@@ -471,10 +525,10 @@ index 34ae114..10ea724 100644
  	u32 lc = c;
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..863f3ed
+index 0000000..cfdc6cc
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,731 @@
+@@ -0,0 +1,734 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -1061,8 +1115,11 @@ index 0000000..863f3ed
 +	set_dec(0x7fffffff);
 +#endif
 +
-+	__raw_get_cpu_var(__ipipe_tick_regs).msr = regs->msr; /* for timer_interrupt() */
 +	__raw_get_cpu_var(__ipipe_tick_regs).nip = regs->nip;
++	__raw_get_cpu_var(__ipipe_tick_regs).msr = regs->msr;
++
++	if (!ipipe_root_domain_p)
++		__raw_get_cpu_var(__ipipe_tick_regs).msr &= ~MSR_EE;
 +
 +	__ipipe_handle_irq(IPIPE_TIMER_VIRQ, NULL);
 +
@@ -1336,7 +1393,7 @@ index 61c65d1..82c1141 100644
  	unsigned long offset = reloc_offset();
  	struct cpu_spec *spec;
 diff --git a/arch/powerpc/kernel/time.c b/arch/powerpc/kernel/time.c
-index f6f0c6b..4fd2828 100644
+index f6f0c6b..a73bd9f 100644
 --- a/arch/powerpc/kernel/time.c
 +++ b/arch/powerpc/kernel/time.c
 @@ -74,6 +74,8 @@
@@ -1348,7 +1405,33 @@ index f6f0c6b..4fd2828 100644
  /* keep track of when we need to update the rtc */
  time_t last_rtc_update;
  #ifdef CONFIG_PPC_ISERIES
-@@ -625,7 +627,9 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -296,7 +298,25 @@ static void snapshot_purr(void)
+ 
+ #else /* ! CONFIG_VIRT_CPU_ACCOUNTING */
+ #define calc_cputime_factors()
++#ifdef CONFIG_IPIPE
++static void account_process_time(struct pt_regs *regs)
++{
++	int cpu, user_tick = user_mode(regs);
++
++	if (regs->msr & MSR_EE) {
++		update_process_times(user_tick);
++		return;
++	}
++
++	run_local_timers();
++	cpu = smp_processor_id();
++	if (rcu_pending(cpu))
++		rcu_check_callbacks(cpu, user_tick);
++	run_posix_cpu_timers(current);
++}
++#else
+ #define account_process_time(regs)	update_process_times(user_mode(regs))
++#endif
+ #define calculate_steal_time()		do { } while (0)
+ #endif
+ 
+@@ -625,7 +645,9 @@ void timer_interrupt(struct pt_regs * regs)
  #endif
  
  	old_regs = set_irq_regs(regs);
@@ -1358,7 +1441,7 @@ index f6f0c6b..4fd2828 100644
  
  	profile_tick(CPU_PROFILING);
  	calculate_steal_time();
-@@ -672,7 +676,8 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -672,7 +694,8 @@ void timer_interrupt(struct pt_regs * regs)
  	}
  	
  	next_dec = tb_ticks_per_jiffy - ticks;
@@ -1368,7 +1451,7 @@ index f6f0c6b..4fd2828 100644
  
  #ifdef CONFIG_PPC_ISERIES
  	if (firmware_has_feature(FW_FEATURE_ISERIES) && hvlpevent_is_pending())
-@@ -687,7 +692,9 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -687,7 +710,9 @@ void timer_interrupt(struct pt_regs * regs)
  	}
  #endif
  
@@ -1547,16 +1630,25 @@ index 535f506..30be7ee 100644
  }
  
 diff --git a/arch/powerpc/mm/fault.c b/arch/powerpc/mm/fault.c
-index 03aeb3a..1eb2e9e 100644
+index 03aeb3a..0754462 100644
 --- a/arch/powerpc/mm/fault.c
 +++ b/arch/powerpc/mm/fault.c
-@@ -160,6 +160,9 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+@@ -153,13 +153,17 @@ int __kprobes do_page_fault(struct pt_regs *regs, unsigned long address,
+ 			    unsigned long error_code)
+ {
+ 	struct vm_area_struct * vma;
+-	struct mm_struct *mm = current->mm;
++	struct mm_struct *mm;
+ 	siginfo_t info;
+ 	int code = SEGV_MAPERR;
+ 	int is_write = 0;
  	int trap = TRAP(regs);
   	int is_exec = trap == 0x400;
  
 +	if (ipipe_trap_notify(IPIPE_TRAP_ACCESS,regs))
 +	    	return 0;
 +
++	mm = current->mm;
  #if !(defined(CONFIG_4xx) || defined(CONFIG_BOOKE))
  	/*
  	 * Fortunately the bit assignments in SRR1 for an instruction
@@ -2201,10 +2293,18 @@ index 3c506af..d56e855 100644
  early_init(int r3, int r4, int r5)
  {
 diff --git a/arch/ppc/kernel/time.c b/arch/ppc/kernel/time.c
-index 18ee851..0dac490 100644
+index 18ee851..96d6fda 100644
 --- a/arch/ppc/kernel/time.c
 +++ b/arch/ppc/kernel/time.c
-@@ -70,6 +70,8 @@ unsigned long disarm_decr[NR_CPUS];
+@@ -54,6 +54,7 @@
+ #include <linux/kernel_stat.h>
+ #include <linux/mc146818rtc.h>
+ #include <linux/time.h>
++#include <linux/posix-timers.h>
+ #include <linux/init.h>
+ #include <linux/profile.h>
+ 
+@@ -70,6 +71,8 @@ unsigned long disarm_decr[NR_CPUS];
  
  extern struct timezone sys_tz;
  
@@ -2213,7 +2313,41 @@ index 18ee851..0dac490 100644
  /* keep track of when we need to update the rtc */
  time_t last_rtc_update;
  
-@@ -140,7 +142,9 @@ void timer_interrupt(struct pt_regs * regs)
+@@ -101,6 +104,33 @@ static inline int tb_delta(unsigned *jiffy_stamp) {
+ 	return delta;
+ }
+ 
++#ifdef CONFIG_IPIPE
++
++static inline void update_root_process_times(struct pt_regs *regs)
++{
++	int cpu, user_tick = user_mode(regs);
++
++	if (regs->msr & MSR_EE) {
++		update_process_times(user_tick);
++		return;
++	}
++
++	run_local_timers();
++	cpu = smp_processor_id();
++	if (rcu_pending(cpu))
++		rcu_check_callbacks(cpu, user_tick);
++	run_posix_cpu_timers(current);
++}
++
++#else /* !CONFIG_IPIPE */
++
++static inline void update_root_process_times(struct pt_regs *regs)
++{
++	update_process_times(user_mode(regs));
++}
++
++#endif	/* !CONFIG_IPIPE */
++
+ #ifdef CONFIG_SMP
+ unsigned long profile_pc(struct pt_regs *regs)
+ {
+@@ -140,13 +170,15 @@ void timer_interrupt(struct pt_regs * regs)
  		do_IRQ(regs);
  
  	old_regs = set_irq_regs(regs);
@@ -2223,7 +2357,14 @@ index 18ee851..0dac490 100644
  
  	while ((next_dec = tb_ticks_per_jiffy - tb_delta(&jiffy_stamp)) <= 0) {
  		jiffy_stamp += tb_ticks_per_jiffy;
-@@ -183,14 +187,16 @@ void timer_interrupt(struct pt_regs * regs)
+ 		
+ 		profile_tick(CPU_PROFILING);
+-		update_process_times(user_mode(regs));
++		update_root_process_times(regs);
+ 
+ 	  	if (smp_processor_id())
+ 			continue;
+@@ -183,14 +215,16 @@ void timer_interrupt(struct pt_regs * regs)
  		}
  		write_sequnlock(&xtime_lock);
  	}
@@ -3157,7 +3298,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..238921c
+index 0000000..53a5fcb
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,192 @@
@@ -3200,10 +3341,10 @@ index 0000000..238921c
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.8-00"
++#define IPIPE_ARCH_STRING	"1.8-07"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	7
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -3215,7 +3356,7 @@ index 0000000..238921c
 +	( {								\
 +		int x = !ipipe_root_domain_p;				\
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_root_cpudom_var(status)); \
-+		local_irq_enable_hw(); x;				\
++		if (!x) local_irq_enable_hw(); x;			\
 +	} )
 +
 +struct ipipe_domain;
@@ -5014,10 +5155,10 @@ index d57118d..d827f37 100644
  bad_fork_cleanup_namespaces:
 diff --git a/kernel/ipipe/Kconfig b/kernel/ipipe/Kconfig
 new file mode 100644
-index 0000000..d523b18
+index 0000000..934d57c
 --- /dev/null
 +++ b/kernel/ipipe/Kconfig
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,30 @@
 +config IPIPE
 +	bool "Interrupt pipeline"
 +	default y
@@ -5043,6 +5184,11 @@ index 0000000..d523b18
 +	deprecated in future I-pipe releases, and removed from the
 +	compatibility support as time passes. Please fix I-pipe
 +	clients to get rid of such uses as soon as possible.
++
++config IPIPE_DELAYED_ATOMICSW
++       bool
++       depends on IPIPE
++       default n
 diff --git a/kernel/ipipe/Kconfig.debug b/kernel/ipipe/Kconfig.debug
 new file mode 100644
 index 0000000..64a692c
@@ -5148,10 +5294,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..e5d0673
+index 0000000..8dd1532
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1515 @@
+@@ -0,0 +1,1525 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -6005,6 +6151,16 @@ index 0000000..e5d0673
 +
 +			if (ipipe_this_cpudom_var(irqpend_lomask)[level] == 0)
 +				__clear_bit(level, &ipipe_this_cpudom_var(irqpend_himask));
++			/*
++			 * Make sure the compiler will not postpone
++			 * the pending bitmask updates before calling
++			 * the interrupt handling routine. Otherwise,
++			 * those late updates could overwrite any
++			 * change to irqpend_hi/lomask due to a nested
++			 * interrupt, leaving the latter unprocessed
++			 * (seen on mpc836x).
++			 */
++			barrier();
 +
 +			if (test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))
 +				continue;
@@ -8232,6 +8388,31 @@ index d27b258..96723be 100644
  	}
  	desc->handle_irq = handle;
  	desc->name = name;
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index aff1f0f..676fd5d 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -177,16 +177,20 @@ fastcall unsigned int __do_IRQ(unsigned int irq)
+ 		/*
+ 		 * No locking required for CPU-local interrupts:
+ 		 */
++#ifndef CONFIG_IPIPE
+ 		if (desc->chip->ack)
+ 			desc->chip->ack(irq);
++#endif
+ 		action_ret = handle_IRQ_event(irq, desc->action);
+ 		desc->chip->end(irq);
+ 		return 1;
+ 	}
+ 
+ 	spin_lock(&desc->lock);
++#ifndef CONFIG_IPIPE
+ 	if (desc->chip->ack)
+ 		desc->chip->ack(irq);
++#endif
+ 	/*
+ 	 * REPLAY is when Linux resends an IRQ that was dropped earlier
+ 	 * WAITING is used by probe to mark irqs that are being tested
 diff --git a/kernel/power/swsusp.c b/kernel/power/swsusp.c
 index 31aa039..69376db 100644
 --- a/kernel/power/swsusp.c
@@ -8372,7 +8553,7 @@ index c770e1a..f077940 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index cca93cc..26f9c28 100644
+index cca93cc..fa42b52 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -1409,7 +1409,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state, int sync)
@@ -8380,7 +8561,7 @@ index cca93cc..26f9c28 100644
  	rq = task_rq_lock(p, &flags);
  	old_state = p->state;
 -	if (!(old_state & state))
-+	if (!(old_state & state) || (old_state & TASK_NOWAKEUP))
++	if (!(old_state & state) || (old_state & (TASK_NOWAKEUP|TASK_ATOMICSWITCH)))
  		goto out;
  
  	if (p->array)
@@ -8410,30 +8591,45 @@ index cca93cc..26f9c28 100644
  		printk(KERN_ERR "BUG: scheduling while atomic: "
  			"%s/0x%08x/%d\n",
  			current->comm, preempt_count(), current->pid);
-@@ -3436,8 +3441,13 @@ asmlinkage void __sched schedule(void)
+@@ -3436,8 +3441,16 @@ asmlinkage void __sched schedule(void)
  	}
  	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
  
 +	if (unlikely(current->state & TASK_ATOMICSWITCH)) {
++#ifndef CONFIG_IPIPE_DELAYED_ATOMICSW
 +		current->state &= ~TASK_ATOMICSWITCH;
++#endif
 +		goto need_resched_nodisable;
 +	}
++
  need_resched:
  	preempt_disable();
 +need_resched_nodisable:
  	prev = current;
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3555,6 +3565,8 @@ switch_tasks:
+@@ -3555,20 +3568,27 @@ switch_tasks:
  		prepare_task_switch(rq, next);
  		prev = context_switch(rq, prev, next);
  		barrier();
++#ifdef CONFIG_IPIPE_DELAYED_ATOMICSW
++		current->state &= ~TASK_ATOMICSWITCH;
++#endif
 + 		if (task_hijacked(prev))
-+ 		    return;
++			return;
  		/*
  		 * this_rq must be evaluated again because prev may have moved
  		 * CPUs since it called schedule(), thus the 'rq' on its stack
-@@ -3568,7 +3580,7 @@ switch_tasks:
+ 		 * frame will be invalid.
+ 		 */
+ 		finish_task_switch(this_rq(), prev);
+-	} else
++	} else {
++		prev->state &= ~TASK_ATOMICSWITCH;
+ 		spin_unlock_irq(&rq->lock);
++	}
+ 
+ 	prev = current;
  	if (unlikely(reacquire_kernel_lock(prev) < 0))
  		goto need_resched_nonpreemptible;
  	preempt_enable_no_resched();
@@ -8442,7 +8638,7 @@ index cca93cc..26f9c28 100644
  		goto need_resched;
  }
  EXPORT_SYMBOL(schedule);
-@@ -3586,6 +3598,7 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -3586,6 +3606,7 @@ asmlinkage void __sched preempt_schedule(void)
  	struct task_struct *task = current;
  	int saved_lock_depth;
  #endif
@@ -8450,7 +8646,7 @@ index cca93cc..26f9c28 100644
  	/*
  	 * If there is a non-zero preempt_count or interrupts are disabled,
  	 * we do not want to preempt the current task.  Just return..
-@@ -4284,6 +4297,7 @@ recheck:
+@@ -4284,6 +4305,7 @@ recheck:
  		deactivate_task(p, rq);
  	oldprio = p->prio;
  	__setscheduler(p, policy, param->sched_priority);
@@ -8458,7 +8654,7 @@ index cca93cc..26f9c28 100644
  	if (array) {
  		__activate_task(p, rq);
  		/*
-@@ -7057,3 +7071,50 @@ void set_curr_task(int cpu, struct task_struct *p)
+@@ -7057,3 +7079,50 @@ void set_curr_task(int cpu, struct task_struct *p)
  }
  
  #endif
@@ -8711,7 +8907,7 @@ index 479fd46..5e135ef 100644
 +
 +EXPORT_SYMBOL(_raw_write_unlock);
 diff --git a/mm/memory.c b/mm/memory.c
-index ef09f0a..3f8dafb 100644
+index ef09f0a..e44da86 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -50,6 +50,7 @@
@@ -8922,7 +9118,7 @@ index ef09f0a..3f8dafb 100644
 +	pmd = pmd_offset(pud, addr);
 +	do {
 +		next = pmd_addr_end(addr, end);
-+		if (pmd_none_or_clear_bad(pmd))
++		if (pmd_none(*pmd) || unlikely(pmd_bad(*pmd)))
 +			continue;
 +		if (ipipe_pin_pte_range(mm, pmd, vma, addr, next))
 +			return -ENOMEM;
@@ -8940,7 +9136,7 @@ index ef09f0a..3f8dafb 100644
 +	pud = pud_offset(pgd, addr);
 +	do {
 +		next = pud_addr_end(addr, end);
-+		if (pud_none_or_clear_bad(pud))
++		if (pud_none(*pud) || unlikely(pud_bad(*pud)))
 +			continue;
 +		if (ipipe_pin_pmd_range(mm, pud, vma, addr, next))
 +			return -ENOMEM;
@@ -8974,7 +9170,7 @@ index ef09f0a..3f8dafb 100644
 +		pgd = pgd_offset(mm, addr);
 +		do {
 +			next = pgd_addr_end(addr, end);
-+			if (pgd_none_or_clear_bad(pgd))
++			if (pgd_none(*pgd) || unlikely(pgd_bad(*pgd)))
 +				continue;
 +			if (ipipe_pin_pud_range(mm, pgd, vma, addr, next)) {
 +				result = -ENOMEM;

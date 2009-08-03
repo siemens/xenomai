@@ -38,7 +38,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->tsp = &task->thread;
 #ifdef CONFIG_XENO_HW_FPU
 	tcb->user_fpu_owner = task;
-	tcb->fpup = (rthal_fpenv_t *) & task->thread.fpr[0];
+	tcb->fpup = &task->thread;
 #endif /* CONFIG_XENO_HW_FPU */
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
