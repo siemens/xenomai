@@ -1,10 +1,9 @@
-<area shape="rect" href="$pod_8h.html" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="372,84,481,111">
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="296,161,424,188">
-<area shape="rect" href="$include_2nucleus_2timer_8h&#45;source.html" title="nucleus/timer.h" alt="" coords="200,239,317,265">
-<area shape="rect" title="Copyright (C) 2001,2002,2003 Philippe Gerum &lt;rpm@xenomai.org&gt;." alt="" coords="505,84,689,111">
-<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="428,239,532,265">
-<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="188,316,313,343">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="188,471,308,497">
-<area shape="rect" href="$include_2nucleus_2core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="335,393,447,420">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="185,393,311,420">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="504,548,643,575">
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="356,80,457,107">
+<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="283,155,400,181">
+<area shape="rect" href="$include_2nucleus_2timer_8h-source.html" title="nucleus/timer.h" alt="" coords="191,229,300,256">
+<area shape="rect" href="$include_2nucleus_2intr_8h-source.html" title="nucleus/intr.h" alt="" coords="408,229,507,256">
+<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="180,304,295,331">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="179,453,291,480">
+<area shape="rect" href="$include_2nucleus_2core_8h-source.html" title="nucleus/core.h" alt="" coords="317,379,424,405">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="176,379,293,405">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="472,528,600,555">

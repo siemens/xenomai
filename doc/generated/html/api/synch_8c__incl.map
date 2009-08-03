@@ -1,13 +1,12 @@
-<area shape="rect" title="Thread synchronization services." alt="" coords="19,84,93,111">
-<area shape="rect" href="$pod_8h.html" title="Thread synchronization services." alt="" coords="269,84,379,111">
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="240,161,368,188">
-<area shape="rect" href="$synch_8h&#45;source.html" title="Thread synchronization services." alt="" coords="5,161,128,188">
-<area shape="rect" href="$module_8h&#45;source.html" title="Thread synchronization services." alt="" coords="88,239,221,265">
-<area shape="rect" href="$ltt_8h&#45;source.html" title="Thread synchronization services." alt="" coords="468,161,567,188">
-<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="Real&#45;time pod interface header." alt="" coords="387,239,491,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h&#45;source.html" title="nucleus/timer.h" alt="" coords="245,239,363,265">
-<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="140,316,265,343">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="285,471,405,497">
-<area shape="rect" href="$include_2nucleus_2core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="289,393,401,420">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="89,393,215,420">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="601,548,740,575">
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="259,80,360,107">
+<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="229,155,347,181">
+<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="5,155,120,181">
+<area shape="rect" href="$module_8h-source.html" title="nucleus/module.h" alt="" coords="87,229,209,256">
+<area shape="rect" href="$ltt_8h-source.html" title="nucleus/ltt.h" alt="" coords="447,155,537,181">
+<area shape="rect" href="$include_2nucleus_2intr_8h-source.html" title="nucleus/intr.h" alt="" coords="367,229,465,256">
+<area shape="rect" href="$include_2nucleus_2timer_8h-source.html" title="nucleus/timer.h" alt="" coords="233,229,343,256">
+<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="133,304,248,331">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="269,453,381,480">
+<area shape="rect" href="$include_2nucleus_2core_8h-source.html" title="nucleus/core.h" alt="" coords="272,379,379,405">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="80,379,197,405">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="563,528,691,555">
