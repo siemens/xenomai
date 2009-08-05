@@ -85,15 +85,19 @@ ENTRY(_rthal_defer_switch_p)
 	r1 = EVT_IVG15 (z);
         r0 = r0 & r1;
 	cc = r0 == 0;
-	if !cc jump 1f; 
+	if !cc jump 1f;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	p2.l = lo(IPEND);
         p2.h = hi(IPEND);
 	csync;
         r2 = [p2];
-        r1 = 1;
-        r1 = r2 - r1;
+        r1 = LO(~0x13) (Z);
         r0 = r2 & r1;
+        cc = r0 == 0;
+        if cc jump 1f;
+        r1 = 1;
+        r1 = r0 - r1;
+        r0 = r0 & r1;
 1:
 	rts
 
@@ -108,4 +112,4 @@ ENTRY(_rthal_nmi_handler)
 	RESTORE_ALL_SYS
 	rtn; 
 		
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX */
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
