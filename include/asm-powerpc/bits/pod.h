@@ -236,15 +236,23 @@ static void xnarch_save_fpu(xnarchtcb_t * tcb)
 static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
+	struct thread_struct *ts;
+	struct pt_regs *regs;
+
 	if (tcb->fpup) {
 		rthal_restore_fpu(tcb->fpup);
 		/*
 		 * Note: Only enable FP in MSR, if it was enabled when
 		 * we saved the fpu state.
 		 */
-		if (tcb->user_fpu_owner &&
-		    tcb->user_fpu_owner->thread.regs)
-			tcb->user_fpu_owner->thread.regs->msr |= (MSR_FP|MSR_FE0|MSR_FE1);
+		if (tcb->user_fpu_owner) {
+			ts = &tcb->user_fpu_owner->thread;
+			regs = ts->regs;
+			if (regs) {
+				regs->msr &= ~(MSR_FE0|MSR_FE1);
+				regs->msr |= (MSR_FP|ts->fpexc_mode);
+			}
+		}
 	}
 	/*
 	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
