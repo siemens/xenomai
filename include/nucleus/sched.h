@@ -210,9 +210,13 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 #ifdef CONFIG_SMP
-#define xnsched_finish_unlocked_switch(__sched__)	xnpod_current_sched()
+#define xnsched_finish_unlocked_switch(__sched__)	\
+	({ XENO_BUGON(NUCLEUS, !irqs_disabled_hw());	\
+		xnpod_current_sched(); })
 #else /* !CONFIG_SMP */
-#define xnsched_finish_unlocked_switch(__sched__)	(__sched__)
+#define xnsched_finish_unlocked_switch(__sched__)	\
+	({ XENO_BUGON(NUCLEUS, !irqs_disabled_hw());	\
+		(__sched__); })
 #endif /* !CONFIG_SMP */
 
 #define xnsched_resched_after_unlocked_switch()		do { } while(0)

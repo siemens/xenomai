@@ -967,8 +967,6 @@ redo:
 		return -ERESTARTSYS;
 	}
 
-	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
-
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
 
