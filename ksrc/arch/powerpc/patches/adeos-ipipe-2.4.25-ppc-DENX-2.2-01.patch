@@ -1,14 +1,15 @@
 diff --git a/arch/ppc/config.in b/arch/ppc/config.in
-index 08c6c40..133e8d8 100644
+index 08c6c40..32a937c 100644
 --- a/arch/ppc/config.in
 +++ b/arch/ppc/config.in
-@@ -892,6 +892,11 @@ else
+@@ -892,6 +892,12 @@ else
    fi
  fi
  
 +bool 'Interrupt pipeline' CONFIG_IPIPE
 +if [ "$CONFIG_IPIPE" = "y" ]; then
 +  bool 'Check for illicit cross-domain calls' CONFIG_IPIPE_DEBUG_CONTEXT
++  bool 'Detect soft lockup' CONFIG_IPIPE_DEBUG_SOFTLOCK
 +fi
 +
  bool 'Networking support' CONFIG_NET
@@ -401,10 +402,10 @@ index 2ee19ac..5d85ee6 100644
  struct hw_interrupt_type ipic = {
 diff --git a/arch/ppc/kernel/ipipe.c b/arch/ppc/kernel/ipipe.c
 new file mode 100644
-index 0000000..c08400d
+index 0000000..d7e600e
 --- /dev/null
 +++ b/arch/ppc/kernel/ipipe.c
-@@ -0,0 +1,405 @@
+@@ -0,0 +1,433 @@
 +/* -*- linux-c -*-
 + * linux/arch/ppc/kernel/ipipe.c
 + *
@@ -458,6 +459,12 @@ index 0000000..c08400d
 +
 +#define DECREMENTER_MAX	0x7fffffff
 +
++/* Current reload value for the decrementer. */
++unsigned long __ipipe_decr_ticks;
++
++/* Next tick date (timebase value). */
++DEFINE_PER_CPU(unsigned long long, __ipipe_decr_next);
++
 +/*
 + * ipipe_critical_enter() -- Grab the superlock excluding all CPUs
 + * but the current one from a critical section. This lock is used when
@@ -494,6 +501,8 @@ index 0000000..c08400d
 +	if (virq != IPIPE_TIMER_VIRQ)
 +		panic("I-pipe: cannot reserve timer virq #%d (got #%d)",
 +		      IPIPE_TIMER_VIRQ, virq);
++
++	__ipipe_decr_ticks = tb_ticks_per_jiffy;
 +}
 +
 +void __ipipe_end_irq(unsigned irq)
@@ -545,6 +554,8 @@ index 0000000..c08400d
 +			     IPIPE_TIMER_VIRQ,
 +			     &__ipipe_do_timer, NULL,
 +			     NULL, IPIPE_HANDLE_MASK | IPIPE_PASS_MASK);
++
++	per_cpu(__ipipe_decr_next, ipipe_processor_id()) = __ipipe_read_timebase() + get_dec();
 +
 +	ipipe_critical_exit(flags);
 +}
@@ -743,6 +754,22 @@ index 0000000..c08400d
 +	else
 +		__ipipe_handle_irq(IPIPE_TIMER_VIRQ, NULL);
 +
++#ifndef CONFIG_40x
++	if (__ipipe_decr_ticks != tb_ticks_per_jiffy) {
++		unsigned long long next_date, now;
++		int cpuid = ipipe_processor_id();
++
++		next_date = per_cpu(__ipipe_decr_next, cpuid);
++
++		while ((now = __ipipe_read_timebase()) >= next_date)
++			next_date += __ipipe_decr_ticks;
++
++		set_dec(next_date - now);
++
++		per_cpu(__ipipe_decr_next, cpuid) = next_date;
++	}
++#endif	/* !CONFIG_40x */
++
 +	if (ipd == &ipipe_root) {
 +		if (!test_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status)))
 +			return 1;
@@ -810,6 +837,8 @@ index 0000000..c08400d
 +EXPORT_SYMBOL_GPL(print_backtrace);
 +EXPORT_SYMBOL_GPL(ioremap_bot);
 +EXPORT_SYMBOL_GPL(vmalloc_start);
++EXPORT_SYMBOL(__ipipe_decr_ticks);
++EXPORT_PER_CPU_SYMBOL(__ipipe_decr_next);
 diff --git a/arch/ppc/kernel/irq.c b/arch/ppc/kernel/irq.c
 index 8c9f63d..2558665 100644
 --- a/arch/ppc/kernel/irq.c
@@ -1040,7 +1069,7 @@ index d90d323..513c65d 100644
  EXPORT_SYMBOL(timer_interrupt);
  EXPORT_SYMBOL(do_IRQ_intercept);
 diff --git a/arch/ppc/kernel/process.c b/arch/ppc/kernel/process.c
-index b78fee1..05b9286 100644
+index b78fee1..d39f5d7 100644
 --- a/arch/ppc/kernel/process.c
 +++ b/arch/ppc/kernel/process.c
 @@ -211,7 +211,7 @@ _switch_to(struct task_struct *prev, struct task_struct *new,
@@ -1052,16 +1081,22 @@ index b78fee1..05b9286 100644
  
  	__save_flags(s);
  	__cli();
-@@ -276,7 +276,9 @@ _switch_to(struct task_struct *prev, struct task_struct *new,
+@@ -219,6 +219,7 @@ _switch_to(struct task_struct *prev, struct task_struct *new,
+ 	check_stack(prev);
+ 	check_stack(new);
  #endif
- 	new_thread = &new->thread;
- 	old_thread = &current->thread;
 +	local_irq_save_hw_cond(flags);
+ 
+ #ifdef CONFIG_SMP
+ 	/* avoid complexity of lazy save/restore of fpu
+@@ -278,6 +279,7 @@ _switch_to(struct task_struct *prev, struct task_struct *new,
+ 	old_thread = &current->thread;
  	*last = _switch(old_thread, new_thread);
-+	local_irq_restore_hw_cond(flags);
  	__restore_flags(s);
++	local_irq_restore_hw_cond(flags);
  }
  
+ void show_regs(struct pt_regs * regs)
 diff --git a/arch/ppc/kernel/traps.c b/arch/ppc/kernel/traps.c
 index aa4eaff..6f37807 100644
 --- a/arch/ppc/kernel/traps.c
@@ -1307,10 +1342,10 @@ index 8f0e170..ba649dc 100644
  extern void do_lost_interrupts(unsigned long);
 diff --git a/include/asm-ppc/ipipe.h b/include/asm-ppc/ipipe.h
 new file mode 100644
-index 0000000..6e6fad1
+index 0000000..448348c
 --- /dev/null
 +++ b/include/asm-ppc/ipipe.h
-@@ -0,0 +1,183 @@
+@@ -0,0 +1,187 @@
 +/*
 + *   include/asm-ppc/ipipe.h
 + *
@@ -1351,10 +1386,10 @@ index 0000000..6e6fad1
 +#include <asm/irq.h>
 +#include <asm/bitops.h>
 +
-+#define IPIPE_ARCH_STRING	"2.1-00"
++#define IPIPE_ARCH_STRING	"2.2-01"
 +#define IPIPE_MAJOR_NUMBER	2
-+#define IPIPE_MINOR_NUMBER	1
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_MINOR_NUMBER	2
++#define IPIPE_PATCH_NUMBER	1
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
@@ -1429,6 +1464,10 @@ index 0000000..6e6fad1
 +void __ipipe_end_irq(unsigned irq);
 +
 +#define __ipipe_hook_critical_ipi(ipd)	do { } while(0)
++
++extern unsigned long __ipipe_decr_ticks;
++
++DECLARE_PER_CPU(unsigned long long, __ipipe_decr_next);
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
 +
@@ -2650,7 +2689,7 @@ index 23b9ae4..4dfb3fc 100644
 +
  #endif
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 90bd418..405121d 100644
+index 90bd418..6f1fbd2 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -13,6 +13,7 @@ extern unsigned long event;
@@ -2689,17 +2728,65 @@ index 90bd418..405121d 100644
  #define	MAX_SCHEDULE_TIMEOUT	LONG_MAX
  extern signed long FASTCALL(schedule_timeout(signed long timeout));
  asmlinkage void schedule(void);
-@@ -418,6 +433,9 @@ struct task_struct {
+@@ -418,8 +433,57 @@ struct task_struct {
  #ifdef CONFIG_SHOW_PNAME_ON_DISPLAY
  	char PName[8]; /* 8 characters from the ProcessName for the Display */
  #endif
 +#ifdef CONFIG_IPIPE
 +	void *ptd[IPIPE_ROOT_NPTDKEYS];
++#ifdef CONFIG_IPIPE_DEBUG_SOFTLOCK
++	int softlock_count;
++#endif
 +#endif
  };
  
++#ifdef CONFIG_IPIPE_DEBUG_SOFTLOCK
++
++#define SOFTLOCK_THRESHOLD  1000
++
++static inline void softlock_incr(struct task_struct *p)
++{
++	p->softlock_count++;
++}
++static inline void softlock_reset(struct task_struct *p)
++{
++	p->softlock_count = 0;
++}
++
++void softlock_warn(struct task_struct *p);
++
++static inline void softlock_test(struct task_struct *p)
++{
++	if (p->softlock_count >= SOFTLOCK_THRESHOLD)
++		softlock_warn(p);
++}
++
++void softlock_timer(void);
++
++#else /* !CONFIG_IPIPE_DEBUG_SOFTLOCK */
++
++static inline void softlock_incr(struct task_struct *p)
++{
++}
++
++static inline void softlock_reset(struct task_struct *p)
++{
++}
++
++static inline void softlock_test(struct task_struct *p)
++{
++}
++
++static inline void softlock_timer(void)
++{
++}
++
++#endif
++
  /*
-@@ -427,6 +445,11 @@ struct task_struct {
+  * Per process flags
+  */
+@@ -427,6 +491,11 @@ struct task_struct {
  					/* Not implemented yet, only for 486*/
  #define PF_STARTING	0x00000002	/* being created */
  #define PF_EXITING	0x00000004	/* getting shut down */
@@ -2914,7 +3001,7 @@ index 35283a3..33cbfc8 100644
  	lock_kernel();
  	sem_exit();
 diff --git a/kernel/fork.c b/kernel/fork.c
-index c146ad4..9b14c0d 100644
+index c146ad4..eae6aae 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -271,6 +271,7 @@ struct mm_struct * mm_alloc(void)
@@ -2942,12 +3029,15 @@ index c146ad4..9b14c0d 100644
  	new_flags |= PF_FORKNOEXEC;
  	if (!(clone_flags & CLONE_PTRACE))
  		p->ptrace = 0;
-@@ -815,6 +817,10 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
+@@ -815,6 +817,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
  	nr_threads++;
  	write_unlock_irq(&tasklist_lock);
  
 +#ifdef CONFIG_IPIPE
 +	memset(p->ptd, 0, sizeof(p->ptd));
++#ifdef CONFIG_IPIPE_DEBUG_SOFTLOCK
++	p->softlock_count = 0;
++#endif
 +#endif /* CONFIG_IPIPE */
 +
  	if (p->ptrace & PT_PTRACED)
@@ -4590,7 +4680,7 @@ index c2d6893..adbc6e9 100644
  
  /**
 diff --git a/kernel/sched.c b/kernel/sched.c
-index afd6d35..115f07b 100644
+index afd6d35..57af996 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -29,6 +29,7 @@
@@ -4672,7 +4762,20 @@ index afd6d35..115f07b 100644
  }
  
  /*
-@@ -673,6 +730,8 @@ repeat_schedule:
+@@ -641,9 +698,12 @@ repeat_schedule:
+ 	if (unlikely(prev == next)) {
+ 		/* We won't go through the normal tail, so do this by hand */
+ 		prev->policy &= ~SCHED_YIELD;
++		if (prev != idle_task(this_cpu))
++			softlock_incr(prev);
+ 		goto same_process;
+ 	}
+ 
++	softlock_reset(prev);
+ #ifdef CONFIG_SMP
+  	/*
+  	 * maintain the per-process 'last schedule' value.
+@@ -673,6 +733,8 @@ repeat_schedule:
  	 * This might sound slightly confusing but makes tons of sense.
  	 */
  	prepare_to_switch();
@@ -4681,7 +4784,7 @@ index afd6d35..115f07b 100644
  	{
  		struct mm_struct *mm = next->mm;
  		struct mm_struct *oldmm = prev->active_mm;
-@@ -706,6 +765,9 @@ repeat_schedule:
+@@ -706,12 +768,16 @@ repeat_schedule:
  	}
  #endif
  	switch_to(prev, next, prev);
@@ -4691,7 +4794,14 @@ index afd6d35..115f07b 100644
  	__schedule_tail(prev);
  
  same_process:
-@@ -1004,6 +1066,7 @@ static int setscheduler(pid_t pid, int policy,
+ 	reacquire_kernel_lock(current);
+ 	if (current->need_resched)
+ 		goto need_resched_back;
++	softlock_test(current);
+ 	return;
+ }
+ 
+@@ -1004,6 +1070,7 @@ static int setscheduler(pid_t pid, int policy,
  	retval = 0;
  	p->policy = policy;
  	p->rt_priority = lp.sched_priority;
@@ -4699,7 +4809,7 @@ index afd6d35..115f07b 100644
  
  	current->need_resched = 1;
  
-@@ -1408,3 +1471,34 @@ void __init sched_init(void)
+@@ -1408,3 +1475,61 @@ void __init sched_init(void)
  	atomic_inc(&init_mm.mm_count);
  	enter_lazy_tlb(&init_mm, current, cpu);
  }
@@ -4733,6 +4843,33 @@ index afd6d35..115f07b 100644
 +	return 0;
 +}
 +
++#ifdef CONFIG_IPIPE_DEBUG_SOFTLOCK
++
++void softlock_warn(struct task_struct *p)
++{
++	printk(KERN_ERR "softlock detected: task=%s[%d]\n",
++	       p->comm, p->pid);
++	p->softlock_count = 0;
++	/*
++	 * Downgrade the process priority to let the system breath
++	 * again.
++	 */
++	ipipe_setscheduler_root(p, SCHED_OTHER, 0);
++}
++
++void softlock_timer(void)
++{
++	struct task_struct *p = current;
++	int this_cpu = p->processor;
++
++	if (p != idle_task(this_cpu)) {
++		softlock_incr(p);
++		softlock_test(p);
++	}
++}
++
++#endif /* CONFIG_IPIPE_DEBUG_SOFTLOCK */
++
 +#endif /* CONFIG_IPIPE */
 diff --git a/kernel/signal.c b/kernel/signal.c
 index 77371a0..7fb130d 100644
@@ -4746,3 +4883,16 @@ index 77371a0..7fb130d 100644
  
  #ifdef CONFIG_SMP
  	/*
+diff --git a/kernel/timer.c b/kernel/timer.c
+index 1c626d5..3265202 100644
+--- a/kernel/timer.c
++++ b/kernel/timer.c
+@@ -707,6 +707,8 @@ void do_timer(struct pt_regs *regs)
+ 	mark_bh(TIMER_BH);
+ 	if (TQ_ACTIVE(tq_timer))
+ 		mark_bh(TQUEUE_BH);
++
++	softlock_timer();
+ }
+ 
+ #if !defined(__alpha__) && !defined(__ia64__)
