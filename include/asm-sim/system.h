@@ -67,6 +67,7 @@ typedef int spl_t;
 #define splnone()   mvm_set_irqmask(0)
 #define spltest()   (mvm_get_irqmask() != 0)
 #define splget(x)   ((x) = mvm_get_irqmask())
+#define irqs_disabled_hw() spltest()
 
 typedef unsigned long xnlock_t;
 
