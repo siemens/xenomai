@@ -189,13 +189,6 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 /* No lazy FPU init on PPC. */
 #define xnarch_fpu_init_p(task) (1)
 
-static inline void xnarch_enable_fpu(xnarchtcb_t * current_tcb)
-{
-#ifdef CONFIG_XENO_HW_FPU
-	rthal_enable_fpu();
-#endif /* CONFIG_XENO_HW_FPU */
-}
-
 static void xnarch_init_fpu(xnarchtcb_t * tcb)
 {
 #ifdef CONFIG_XENO_HW_FPU
@@ -206,6 +199,18 @@ static void xnarch_init_fpu(xnarchtcb_t * tcb)
 	 * in tcb.
 	 */
 	rthal_init_fpu(&tcb->ts);
+#endif /* CONFIG_XENO_HW_FPU */
+}
+
+static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
+{
+#ifdef CONFIG_XENO_HW_FPU
+	struct task_struct *task = tcb->user_task;
+
+        if (task && task != tcb->user_fpu_owner)
+		rthal_disable_fpu();
+	else
+		rthal_enable_fpu();
 #endif /* CONFIG_XENO_HW_FPU */
 }
 
