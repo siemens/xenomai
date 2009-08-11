@@ -1108,6 +1108,7 @@ redo:
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 	wake_up_interruptible_sync(&gk->waitq);
 	schedule();	/* Will preempt_enable() thanks to TASK_ATOMICSWITCH */
+	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/* Rare case: we might have been awaken by a signal before the
