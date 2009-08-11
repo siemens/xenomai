@@ -948,7 +948,6 @@ redo:
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
 	wake_up_interruptible_sync(&sched->gkwaitq);
 	schedule();	/* Will preempt_enable() thanks to TASK_ATOMICSWITCH */
-	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/*
@@ -967,6 +966,8 @@ redo:
 			     thread->name, xnthread_user_pid(thread));
 		return -ERESTARTSYS;
 	}
+
+	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 
 	/* "current" is now running into the Xenomai domain. */
 	sched = xnsched_finish_unlocked_switch(thread->sched);
