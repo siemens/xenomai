@@ -109,8 +109,10 @@ struct pthread_iargs {
 static void *__pthread_trampoline(void *arg)
 {
 	struct pthread_iargs *iargs = (struct pthread_iargs *)arg;
+	/* Avoid smart versions of gcc to trashes the syscall
+	   registers (again, see later comment). */
+	volatile pthread_t tid = pthread_self();
 	void *(*start) (void *), *cookie;
-	pthread_t tid = pthread_self();
 	struct sched_param param;
 	void *status = NULL;
 	int parent_prio, policy;
