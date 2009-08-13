@@ -95,6 +95,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  * services in kernel space.
  */
 
+#if defined(HAVE___THREAD) && __GNUC__ == 4 && __GNUC_MINOR__ >= 3
+#error __thread is too buggy with gcc 4.3 and later, please do not pass --with-__thread to configure
+#endif
+
 #define LOADARGS_0(muxcode, dummy...)		\
 	__a0 = (unsigned long) (muxcode)
 #define LOADARGS_1(muxcode, arg1)		\
@@ -112,6 +116,13 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
 	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
 	__a5 = (unsigned long) (arg5)
+
+#define CLOBBER_REGS_0 "r0"
+#define CLOBBER_REGS_1 CLOBBER_REGS_0, "r1"
+#define CLOBBER_REGS_2 CLOBBER_REGS_1, "r2"
+#define CLOBBER_REGS_3 CLOBBER_REGS_2, "r3"
+#define CLOBBER_REGS_4 CLOBBER_REGS_3, "r4"
+#define CLOBBER_REGS_5 CLOBBER_REGS_4, "r5"
 
 #define LOADREGS_0 __r0 = __a0
 #define LOADREGS_1 LOADREGS_0; __r1 = __a1
@@ -133,7 +144,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define ASM_INDECL_5 ASM_INDECL_4;					\
 	unsigned long __a5; register unsigned long __r5  __asm__ ("r5")
 
-#define ASM_INPUT_0 "r" (__r0)
+#define ASM_INPUT_0 "0" (__r0)
 #define ASM_INPUT_1 ASM_INPUT_0, "r" (__r1)
 #define ASM_INPUT_2 ASM_INPUT_1, "r" (__r2)
 #define ASM_INPUT_3 ASM_INPUT_2, "r" (__r3)
@@ -144,12 +155,14 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define __sys1(x)	__sys2(x)
 
 #ifdef CONFIG_XENO_ARM_EABI
-#define __SYS_REG register unsigned long __r7 __asm__ ("r7");
-#define __SYS_REG_SET __r7 = XENO_ARM_SYSCALL;
+#define __SYS_REG , "r7"
+#define __SYS_REG_DECL register unsigned long __r7 __asm__ ("r7")
+#define __SYS_REG_SET __r7 = XENO_ARM_SYSCALL
 #define __SYS_REG_INPUT ,"r" (__r7)
 #define __xn_syscall "swi\t0"
 #else
 #define __SYS_REG
+#define __SYS_REG_DECL
 #define __SYS_REG_SET
 #define __SYS_REG_INPUT
 #define __NR_OABI_SYSCALL_BASE	0x900000
@@ -158,20 +171,19 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
 	({								\
-		unsigned long __res;					\
-		register unsigned long __res_r0 __asm__ ("r0");		\
 		ASM_INDECL_##nr;					\
-		__SYS_REG;						\
+		__SYS_REG_DECL;						\
 		LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
+		__asm__ __volatile__ ("" : /* */ : /* */ :		\
+				      CLOBBER_REGS_##nr __SYS_REG);	\
 		LOADREGS_##nr;						\
 		__SYS_REG_SET;						\
 		__asm__ __volatile__ (					\
 			__xn_syscall					\
-			: "=r" (__res_r0)				\
+			: "=r" (__r0)					\
 			: ASM_INPUT_##nr __SYS_REG_INPUT		\
 			: "memory");					\
-		__res = __res_r0;					\
-		(int) __res;						\
+		(int) __r0;						\
 	})
 
 #define XENOMAI_SYSCALL0(op)			\
