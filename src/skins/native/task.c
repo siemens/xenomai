@@ -132,6 +132,8 @@ int rt_task_create(RT_TASK *task,
 
 	pthread_attr_init(&thattr);
 
+	if (!stksize)
+		stksize = 32 * 1024;
 	if (stksize < PTHREAD_STACK_MIN)
 		stksize = PTHREAD_STACK_MIN;
 
