@@ -67,6 +67,7 @@ else
   build_for=$host_alias
 fi
 
+use__thread=yes
 case "$build_for" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
@@ -92,6 +93,7 @@ case "$build_for" in
 	XENO_LINUX_INSTALL_TARGET=install
         ;;
  arm*-*)
+	use__thread=no
  	XENO_TARGET_ARCH=arm
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
@@ -805,8 +807,7 @@ XENO_DLOPEN_CONSTRAINT=
 AC_ARG_WITH([__thread],
 	    AC_HELP_STRING([--without-__thread],
 			   [do not use TLS features]),
-	    [use__thread=$withval],
-	    [use__thread=yes])
+	    [use__thread=$withval])
 
 dnl Check whether the compiler supports the __thread keyword.
 if test "x$use__thread" != xno -a "x$CONFIG_XENO_LIBS_DLOPEN" != xy; then
