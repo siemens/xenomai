@@ -25,6 +25,7 @@ static inline void __xeno_set_current(xnhandle_t current)
 	xeno_current = current;
 }
 #else /* !HAVE___THREAD */
+pthread_once_t xeno_init_current_keys_once __attribute__((weak));
 pthread_key_t xeno_current_key __attribute__ ((weak));
 pthread_key_t xeno_current_mode_key __attribute__ ((weak));
 
@@ -46,8 +47,7 @@ static void cleanup_current_mode(void *ptr)
 	free(ptr);
 }
 
-static __attribute__ ((constructor))
-void init_current_keys(void)
+static void __init_current_keys(void)
 {
 	int err = pthread_key_create(&xeno_current_key, NULL);
 	if (err)
@@ -60,6 +60,12 @@ void init_current_keys(void)
 			strerror(-err));
 		exit(1);
 	}
+}
+
+static __attribute__((constructor))
+void init_current_keys(void)
+{
+	pthread_once(&xeno_init_current_keys_once, __init_current_keys);
 }
 #endif /* !HAVE___THREAD */
 
