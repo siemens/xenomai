@@ -280,7 +280,6 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 	/* Unlock mutex, with its previous recursive lock count stored
 	   in "*count_ptr". */
 	err = mutex_save_count(cur, mutex, count_ptr);
-
 	if (err)
 		goto unlock_and_return;
 
