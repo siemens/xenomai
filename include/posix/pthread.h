@@ -424,11 +424,13 @@ int pthread_intr_control_np(pthread_intr_t intr,
 extern "C" {
 #endif
 
+#ifndef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *attr,
 				  int *proto);
 
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr,
 				  int proto);
+#endif
 
 #ifndef HAVE_PTHREAD_CONDATTR_SETCLOCK
 int pthread_condattr_getclock(const pthread_condattr_t *attr,
