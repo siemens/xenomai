@@ -18,14 +18,14 @@
 #include <pthread.h>
 #include <native/timer.h>
 
-#ifdef __POSIX_SKIN__
-#include <posix/syscall.h>
-#else /* __NATIVE_SKIN__ */
+#ifndef XENO_POSIX
 #include <native/task.h>
 #include <native/mutex.h>
 #include <native/sem.h>
 #include <native/cond.h>
-#endif
+#endif /* __NATIVE_SKIN */
+#include <asm-generic/bits/current.h> /* For internal use, do not use
+				         in your code. */
 
 #define MUTEX_CREATE	1
 #define MUTEX_LOCK	2
@@ -41,7 +41,7 @@
 
 #define NS_PER_MS	1000000
 
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 typedef pthread_mutex_t mutex_t;
 typedef	pthread_t thread_t;
 typedef pthread_cond_t cond_t;
@@ -53,7 +53,7 @@ typedef RT_COND cond_t;
 
 void ms_sleep(int time)
 {
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	struct timespec ts;
 
 	ts.tv_sec = 0;
@@ -68,7 +68,7 @@ void ms_sleep(int time)
 void check_current_prio(int expected_prio)
 {
 	int current_prio;
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 # ifdef __pse51_get_current_prio
 	extern unsigned __pse51_muxid;
 
@@ -97,37 +97,23 @@ void check_current_prio(int expected_prio)
 
 void check_current_mode(int expected_primary_mode)
 {
-#if 0
-	int current_in_primary, ret;
-#ifdef __POSIX_SKIN__
-	pthread_info_t thread_info;
+	int current_in_primary;
 
-	if ((ret = pthread_inquire_np(pthread_self(), &thread_info)) > 0) {
-		fprintf(stderr, "Thread inquire: %i (%s)\n", ret, strerror(ret));
-		exit(EXIT_FAILURE);
-	}
-	current_in_primary = !!(thread_info.status & PTHREAD_PRIMARY);
-#else /* __NATIVE_SKIN__ */
-	RT_TASK_INFO task_info;
-
-	if ((ret = rt_task_inquire(NULL, &task_info)) < 0) {
-		fprintf(stderr, "Task inquire: %i (%s)\n", -ret, strerror(-ret));
-		exit(EXIT_FAILURE);
-	}
-	current_in_primary = !!(task_info.status & T_PRIMARY);
-#endif /* __NATIVE_SKIN__ */
-
+        /* This is a unit test, and in this circonstance, we are allowed to
+	   call xeno_get_current_mode. But please do not do that in your
+	   own code. */
+	current_in_primary = !(xeno_get_current_mode() & XNRELAX);
+	
 	if (current_in_primary != expected_primary_mode) {
 		fprintf(stderr, "current mode (%d) != expected mode (%d)\n",
 			current_in_primary, expected_primary_mode);
 		exit(EXIT_FAILURE);
 	}
-#endif
 }
 
 void yield(void)
 {
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	sched_yield();
 #else /* __NATIVE_SKIN__ */
 	rt_task_yield();
@@ -141,7 +127,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 	void *handler;
 	va_list ap;
 	int status;
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	struct sched_param param;
 	pthread_attr_t threadattr;
 	pthread_mutexattr_t mutexattr;
@@ -153,7 +139,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 	va_start(ap, check);
 	switch (service_type) {
 	case MUTEX_CREATE:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		mutex = va_arg(ap, pthread_mutex_t *);
 		pthread_mutexattr_init(&mutexattr);
 #ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
@@ -171,7 +157,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case MUTEX_LOCK:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_mutex_lock(va_arg(ap, pthread_mutex_t *));
 #else /* __NATIVE_SKIN__ */
 		status =
@@ -180,7 +166,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case MUTEX_TRYLOCK:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_mutex_trylock(va_arg(ap, pthread_mutex_t *));
 #else /* __NATIVE_SKIN__ */
 		status =
@@ -189,7 +175,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case MUTEX_UNLOCK:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_mutex_unlock(va_arg(ap, pthread_mutex_t *));
 #else /* __NATIVE_SKIN__ */
 		status = -rt_mutex_release(va_arg(ap, RT_MUTEX *));
@@ -197,7 +183,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case MUTEX_DESTROY:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_mutex_destroy(va_arg(ap, pthread_mutex_t *));
 #else /* __NATIVE_SKIN__ */
 		status = -rt_mutex_delete(va_arg(ap, RT_MUTEX *));
@@ -205,7 +191,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case COND_CREATE:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_cond_init(va_arg(ap, pthread_cond_t *), NULL);
 #else /* __NATIVE_SKIN__ */
 		status = -rt_cond_create(va_arg(ap, RT_COND *), NULL);
@@ -213,7 +199,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case COND_SIGNAL:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_cond_signal(va_arg(ap, pthread_cond_t *));
 #else /* __NATIVE_SKIN__ */
 		status = -rt_cond_signal(va_arg(ap, RT_COND *));
@@ -221,7 +207,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 	
 	case COND_WAIT:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		cond = va_arg(ap, pthread_cond_t *);
 		status =
 		    pthread_cond_wait(cond, va_arg(ap, pthread_mutex_t *));
@@ -233,14 +219,14 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		break;
 
 	case COND_DESTROY:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		status = pthread_cond_destroy(va_arg(ap, pthread_cond_t *));
 #else /* __NATIVE_SKIN__ */
 		status = -rt_cond_delete(va_arg(ap, RT_COND *));
 #endif /* __NATIVE_SKIN__ */
 		break;
 
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	case THREAD_DETACH:
 		status = pthread_detach(pthread_self());
 		break;
@@ -250,7 +236,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 #endif /* __NATIVE_SKIN__ */
 
 	case THREAD_CREATE:
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 		thread = va_arg(ap, pthread_t *);
 		pthread_attr_init(&threadattr);
 		pthread_attr_setschedpolicy(&threadattr, SCHED_FIFO);
@@ -258,6 +244,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
+		pthread_attr_setstacksize(&threadattr, 32768);
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));
@@ -369,7 +356,7 @@ void recursive_wait(void)
 
 void errorcheck_wait(void)
 {
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	/* This test only makes sense under POSIX */
 	unsigned long long start, diff;
 	mutex_t mutex;
@@ -411,7 +398,7 @@ void errorcheck_wait(void)
 	}
 	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
 	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, &mutex);
-#endif /* __POSIX_SKIN__ */
+#endif /* XENO_POSIX */
 }
 
 void mode_switch(void)
@@ -514,7 +501,7 @@ void lock_stealing(void)
 		ms_sleep(6);
 
 		dispatch("lock_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	} else if (trylock_result != EBUSY) {
 #else /* __NATIVE_SKIN__ */
 	} else if (trylock_result != EWOULDBLOCK) {
@@ -659,7 +646,7 @@ void recursive_condwait(void)
 
 int main(void)
 {
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	struct sched_param sparam;
 #else /* __NATIVE_SKIN__ */
 	RT_TASK main_tid;
@@ -668,7 +655,7 @@ int main(void)
 	mlockall(MCL_CURRENT | MCL_FUTURE);
 
 	/* Set scheduling parameters for the current process */
-#ifdef __POSIX_SKIN__
+#ifdef XENO_POSIX
 	sparam.sched_priority = 2;
 	sched_setscheduler(0, SCHED_FIFO, &sparam);
 #else /* __NATIVE_SKIN__ */
