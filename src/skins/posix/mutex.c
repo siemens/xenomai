@@ -294,11 +294,11 @@ int __wrap_pthread_mutex_trylock(pthread_mutex_t *mutex)
 
 	if (unlikely(xeno_get_current_mode() & XNRELAX)) {
 		do {
-			err = -XENOMAI_SYSCALL1(__xn_sys_migrate,
-						XENOMAI_XENO_DOMAIN);
-		} while (err == EINTR);
+			err = XENOMAI_SYSCALL1(__xn_sys_migrate,
+					       XENOMAI_XENO_DOMAIN);
+		} while (err == -EINTR);
 
-		if (err)
+		if (err < 0)
 			goto out;
 	}
 
