@@ -4590,6 +4590,7 @@ int ni_E_init(comedi_dev_t *dev)
 		ni_writel(CDO_Reset_Bit | CDI_Reset_Bit, M_Offset_CDIO_Command);
 		ni_writel(devpriv->io_bits, M_Offset_DIO_Direction);
 	} else {
+
 		subd->insn_bits = ni_dio_insn_bits;
 		subd->insn_config = ni_dio_insn_config;
 		devpriv->dio_control = DIO_Pins_Dir(devpriv->io_bits);
@@ -4597,7 +4598,8 @@ int ni_E_init(comedi_dev_t *dev)
 	}
 
 	ret = comedi_add_subd(dev, subd);
-	if(ret != COMEDI_SUBD_DIO)
+
+	if(ret != NI_DIO_SUBDEV)
 	    return ret;
 
 	/* 8255 device */
@@ -4711,7 +4713,6 @@ int ni_E_init(comedi_dev_t *dev)
 	ret = comedi_add_subd(dev, subd);
 	if(ret != NI_PFI_DIO_SUBDEV)
 	    return ret;
-
 
 	/* cs5529 calibration adc */
 	subd = comedi_alloc_subd(0, NULL);
@@ -4835,6 +4836,7 @@ int ni_E_init(comedi_dev_t *dev)
 		comedi_lock_init(&counter->lock);
 		counter->chip_index = 0;
 		counter->counter_index = j;
+		counter->counter_dev = devpriv->counter_dev;
 		devpriv->counter_dev->counters[j] = counter;
 
 		ni_tio_init_counter(counter);
