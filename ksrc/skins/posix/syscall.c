@@ -2717,6 +2717,8 @@ static int __munmap_epilogue(struct pt_regs *regs)
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
 	err = munmap(umap->kaddr, len);
+	if (!err)
+		xnfree(umap);
 
 	return !err ? 0 : -thread_get_errno();
 }
