@@ -632,7 +632,7 @@ redo:
 }
 
 /**
- * @fn int rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
+ * @fn ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
  * @brief Write to a buffer.
  *
  * Writes a message to the specified buffer. If not enough buffer
@@ -717,7 +717,7 @@ ssize_t rt_buffer_write(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeou
 }
 
 /**
- * @fn int rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
+ * @fn ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME timeout)
  * @brief Write to a buffer (with absolute timeout date).
  *
  * Writes a message to the specified buffer. If not enough buffer
@@ -799,7 +799,7 @@ ssize_t rt_buffer_write_until(RT_BUFFER *bf, const void *ptr, size_t len, RTIME 
 }
 
 /**
- * @fn int rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
+ * @fn ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
  * @brief Read from a buffer.
  *
  * Reads the next message from the specified buffer. If no message is
@@ -904,7 +904,7 @@ ssize_t rt_buffer_read(RT_BUFFER *bf, void *ptr, size_t len, RTIME timeout)
 }
 
 /**
- * @fn int rt_buffer_read_until(RT_BUFFER *bf, void *ptr, len_t len, RTIME timeout)
+ * @fn ssize_t rt_buffer_read_until(RT_BUFFER *bf, void *ptr, len_t len, RTIME timeout)
  * @brief Read from a buffer (with absolute timeout date).
  *
  * Reads the next message from the specified buffer. If no message is
