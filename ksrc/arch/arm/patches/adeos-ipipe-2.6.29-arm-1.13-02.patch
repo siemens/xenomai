@@ -428,7 +428,7 @@ index 0000000..11e5388
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..f0e83e9
+index 0000000..3a14347
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,243 @@
@@ -463,10 +463,10 @@ index 0000000..f0e83e9
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.13-01"
++#define IPIPE_ARCH_STRING	"1.13-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	13
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -6198,6 +6198,18 @@ index 0fa9bf3..80c202a 100644
  		}
  		return;
  	}
+diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
+index 9f88dd3..bc37e52 100644
+--- a/arch/arm/mm/ioremap.c
++++ b/arch/arm/mm/ioremap.c
+@@ -310,6 +310,7 @@ __arm_ioremap_pfn(unsigned long pfn, unsigned long offset, size_t size,
+  	}
+ 
+ 	flush_cache_vmap(addr, addr + size);
++	__ipipe_pin_range_globally(addr, addr + size);
+ 	return (void __iomem *) (offset + addr);
+ }
+ EXPORT_SYMBOL(__arm_ioremap_pfn);
 diff --git a/arch/arm/mm/mmap.c b/arch/arm/mm/mmap.c
 index f7457fe..5ab0357 100644
 --- a/arch/arm/mm/mmap.c
