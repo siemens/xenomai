@@ -17,9 +17,9 @@ echo "done"
 echo -n "running aclocal..."
 if test -r acinclude.m4; then
    touch acinclude.m4
-   aclocal-1.10
+   aclocal
 else
-   aclocal-1.10 -I config
+   aclocal -I config
 fi
 if [ "$?" != "0" ]; then die "running aclocal"; fi
 echo "done"
@@ -40,7 +40,7 @@ if [ "$?" != "0" ]; then die "running autoconf"; fi
 echo "done"
 
 echo -n "running automake..."
-automake-1.10 -a -c
+automake -a -c
 if [ "$?" != "0" ]; then die "running automake"; fi
 echo "done"
 
