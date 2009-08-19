@@ -268,6 +268,56 @@ index c03e829..7e7224e 100644
  /*
   * PROM code for specific machines follows.  Put it
   * here so it's easy to add arch-specific sections later.
+diff --git a/arch/powerpc/kernel/fpu.S b/arch/powerpc/kernel/fpu.S
+index 821e152..0eabdf0 100644
+--- a/arch/powerpc/kernel/fpu.S
++++ b/arch/powerpc/kernel/fpu.S
+@@ -94,7 +94,17 @@ _GLOBAL(load_up_fpu)
+  * Enables the FPU for use in the kernel on return.
+  */
+ _GLOBAL(giveup_fpu)
++#ifdef CONFIG_IPIPE
++	mfmsr	r6
++#ifdef CONFIG_PPC64	
++	rldicl	r5,r6,48,1		/* clear MSR_EE */
++	rotldi	r5,r5,16
++#else
++	rlwinm	r5,r6,0,17,15		/* clear MSR_EE */
++#endif	
++#else	
+ 	mfmsr	r5
++#endif	
+ 	ori	r5,r5,MSR_FP
+ 	SYNC_601
+ 	ISYNC_601
+@@ -102,7 +112,7 @@ _GLOBAL(giveup_fpu)
+ 	SYNC_601
+ 	isync
+ 	PPC_LCMPI	0,r3,0
+-	beqlr-				/* if no previous owner, done */
++	beq-	2f			/* if no previous owner, done */
+ 	addi	r3,r3,THREAD	        /* want THREAD of task */
+ 	PPC_LL	r5,PT_REGS(r3)
+ 	PPC_LCMPI	0,r5,0
+@@ -120,6 +130,18 @@ _GLOBAL(giveup_fpu)
+ 	LOAD_REG_ADDRBASE(r4,last_task_used_math)
+ 	PPC_STL	r5,ADDROFF(last_task_used_math)(r4)
+ #endif /* CONFIG_SMP */
++2:
++#ifdef CONFIG_IPIPE		/* restore interrupt state */
++	andi.	r6,r6,MSR_EE
++	beqlr
++	mfmsr	r5
++	ori	r5,r5,MSR_EE
++	SYNC_601
++	ISYNC_601
++	MTMSRD(r5)
++	SYNC_601
++	isync
++#endif
+ 	blr
+ 
+ /*
 diff --git a/arch/powerpc/kernel/head_32.S b/arch/powerpc/kernel/head_32.S
 index 9417cf5..7da03a5 100644
 --- a/arch/powerpc/kernel/head_32.S
@@ -3390,7 +3440,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..9fa69d2
+index 0000000..1f21224
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,198 @@
@@ -3433,10 +3483,10 @@ index 0000000..9fa69d2
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.9-00"
++#define IPIPE_ARCH_STRING	"1.9-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
