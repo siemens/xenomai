@@ -34,15 +34,6 @@
 </h1>Thread scheduling services.  
 <a href="#_details">More...</a>
 <p>
-
-<p>
-<div class="dynheader">
-Collaboration diagram for Threads scheduling services.:</div>
-<div class="dynsection">
-<center><table><tr><td><img src="group__posix__sched.png" border="0" alt="" usemap="#group____posix____sched_map">
-<map name="group____posix____sched_map">
-<area shape="rect" href="group__posix__thread.html" title="Threads management services." alt="" coords="7,5,209,32"></map></td></tr></table></center>
-</div>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
@@ -242,7 +233,7 @@ If, however, you install a signal handler for SIGWINCH after creating or shadowi
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcan__rtt_8c-example.html#a3">rtcan_rtt.c</a>.</dl>
-<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01792">xnpod_set_thread_schedparam()</a>, and <a class="el" href="pod_8c-source.html#l03022">xnpod_set_thread_tslice()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01788">xnpod_set_thread_schedparam()</a>, and <a class="el" href="pod_8c-source.html#l03018">xnpod_set_thread_tslice()</a>.</p>
 
 <p>Referenced by <a class="el" href="skins_2posix_2sched_8c-source.html#l00415">pthread_setschedparam_ex()</a>.</p>
 
@@ -297,7 +288,7 @@ an error number if:<ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">Specification.</a> </dd></dl>
 
-<p>References <a class="el" href="skins_2posix_2sched_8c-source.html#l00338">pthread_setschedparam()</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01792">xnpod_set_thread_schedparam()</a>, and <a class="el" href="pod_8c-source.html#l03022">xnpod_set_thread_tslice()</a>.</p>
+<p>References <a class="el" href="skins_2posix_2sched_8c-source.html#l00338">pthread_setschedparam()</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, <a class="el" href="pod_8c-source.html#l01788">xnpod_set_thread_schedparam()</a>, and <a class="el" href="pod_8c-source.html#l03018">xnpod_set_thread_tslice()</a>.</p>
 
 </div>
 </div><p>
@@ -453,7 +444,7 @@ This function move the current thread at the end of its priority group.<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 18 13:24:28 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Aug 19 14:43:09 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

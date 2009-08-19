@@ -37,24 +37,7 @@
 <h1>include/native/buffer.h File Reference</h1>This file is part of the Xenomai project.  
 <a href="#_details">More...</a>
 <p>
-
-<p>
-<div class="dynheader">
-Include dependency graph for buffer.h:</div>
-<div class="dynsection">
-<p><center><img src="native_2buffer_8h__incl.png" border="0" usemap="#include/native/buffer.h_map" alt=""></center>
-<map name="include/native/buffer.h_map">
-<area shape="rect" href="native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="313,80,417,107"><area shape="rect" href="nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="309,155,421,181"><area shape="rect" href="compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="301,229,429,256"><area shape="rect" href="assert_8h-source.html" title="nucleus/assert.h" alt="" coords="453,229,571,256"></map>
-</div>
-
-<p>
-<div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
-<div class="dynsection">
-<p><center><img src="native_2buffer_8h__dep__incl.png" border="0" usemap="#include/native/buffer.hdep_map" alt=""></center>
-<map name="include/native/buffer.hdep_map">
-<area shape="rect" href="ksrc_2skins_2native_2buffer_8c.html" title="This file is part of the Xenomai project." alt="" coords="5,80,171,107"><area shape="rect" href="native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="195,80,371,107"></map>
-</div>
+<code>#include &lt;<a class="el" href="native_2types_8h-source.html">native/types.h</a>&gt;</code><br>
 
 <p>
 <a href="native_2buffer_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
@@ -72,18 +55,15 @@ This graph shows which files directly or indirectly include this file:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#gbd852c3c957d2dd37c15899119a3551e">rt_buffer_delete</a> (RT_BUFFER *bf)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Delete a buffer.  <a href="group__buffer.html#gbd852c3c957d2dd37c15899119a3551e"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g2ca66b283211381a978c4e905af05e96">rt_buffer_write</a> (RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g1819fcb58ee95c4ce13513039f5c447a">rt_buffer_write</a> (RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to a buffer.  <a href="group__buffer.html#g2ca66b283211381a978c4e905af05e96"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#gb2ff96871bd86e4d7304b05ea401ed72">rt_buffer_write_until</a> (RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to a buffer.  <a href="group__buffer.html#g1819fcb58ee95c4ce13513039f5c447a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g8050d5c2639b0b6ac56d926acd8f938c">rt_buffer_write_until</a> (RT_BUFFER *bf, const void *ptr, size_t size, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to a buffer (with absolute timeout date).  <a href="group__buffer.html#gb2ff96871bd86e4d7304b05ea401ed72"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g4211643dcc88b52233c815fb9ba921e5">rt_buffer_read</a> (RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write to a buffer (with absolute timeout date).  <a href="group__buffer.html#g8050d5c2639b0b6ac56d926acd8f938c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g24686310221a83682adcdf3347ac7dea">rt_buffer_read</a> (RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read from a buffer.  <a href="group__buffer.html#g4211643dcc88b52233c815fb9ba921e5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#g7f640c6665eec926ff7f55f23bd4211a">rt_buffer_read_until</a> (RT_BUFFER *bf, void *ptr, size_t size, RTIME timeout)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read from a buffer (with absolute timeout date).  <a href="group__buffer.html#g7f640c6665eec926ff7f55f23bd4211a"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read from a buffer.  <a href="group__buffer.html#g24686310221a83682adcdf3347ac7dea"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#gf78c43664dda8a17c5c63ad4be2da179">rt_buffer_clear</a> (RT_BUFFER *bf)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear a buffer.  <a href="group__buffer.html#gf78c43664dda8a17c5c63ad4be2da179"></a><br></td></tr>
@@ -98,7 +78,7 @@ This file is part of the Xenomai project.
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 18 13:24:25 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Aug 19 14:43:09 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

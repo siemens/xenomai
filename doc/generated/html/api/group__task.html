@@ -31,16 +31,7 @@
 <h1>Task management services.<br>
 <small>
 [<a class="el" href="group__native.html">Native Xenomai API.</a>]</small>
-</h1>
-<p>
-<div class="dynheader">
-Collaboration diagram for Task management services.:</div>
-<div class="dynsection">
-<center><table><tr><td><img src="group__task.png" border="0" alt="" usemap="#group____task_map">
-<map name="group____task_map">
-<area shape="rect" href="group__native.html" title="Native Xenomai API." alt="" coords="5,5,149,32"></map></td></tr></table></center>
-</div>
-<table border="0" cellpadding="0" cellspacing="0">
+</h1><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Files</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">file &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ksrc_2skins_2native_2task_8c.html">task.c</a></td></tr>
@@ -199,7 +190,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="pod_8c-source.html#l02371">xnpod_add_hook()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02367">xnpod_add_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -369,7 +360,7 @@ The task is left in an innocuous state until it is actually started by <a class=
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created task.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [0 .. 99] (inclusive) where 0 is the lowest effective priority.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The task creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new task:</td></tr>
   </table>
 </dl>
@@ -407,7 +398,7 @@ When creating or shadowing a Xenomai thread for the first time in user-space, Xe
 If, however, you install a signal handler for SIGWINCH after creating or shadowing the first Xenomai thread, you have to explicitly call the function xeno_sigwinch_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). xeno_sigwinch_handler prototype is:<p>
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. 
-<p>References <a class="el" href="thread__attr_8c-source.html#l00081">pthread_attr_init()</a>, <a class="el" href="thread__attr_8c-source.html#l00197">pthread_attr_setdetachstate()</a>, <a class="el" href="thread__attr_8c-source.html#l00373">pthread_attr_setinheritsched()</a>, <a class="el" href="thread__attr_8c-source.html#l00622">pthread_attr_setschedparam()</a>, <a class="el" href="thread__attr_8c-source.html#l00467">pthread_attr_setschedpolicy()</a>, <a class="el" href="thread__attr_8c-source.html#l00283">pthread_attr_setstacksize()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00450">pthread_join()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00061">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01083">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l00637">xnpod_init_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00062">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="thread__attr_8c-source.html#l00081">pthread_attr_init()</a>, <a class="el" href="thread__attr_8c-source.html#l00197">pthread_attr_setdetachstate()</a>, <a class="el" href="thread__attr_8c-source.html#l00373">pthread_attr_setinheritsched()</a>, <a class="el" href="thread__attr_8c-source.html#l00622">pthread_attr_setschedparam()</a>, <a class="el" href="thread__attr_8c-source.html#l00467">pthread_attr_setschedpolicy()</a>, <a class="el" href="thread__attr_8c-source.html#l00283">pthread_attr_setstacksize()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00446">pthread_join()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00061">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l00633">xnpod_init_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00062">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
 
 <p>Referenced by <a class="el" href="task_8h-source.html#l00304">rt_task_spawn()</a>.</p>
 
@@ -462,7 +453,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>Any user-space context (conforming call)</li></ul>
 <p>
 Rescheduling: always if <em>task</em> is NULL, and possible if the deleted task is currently running into a safe section. 
-<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00392">pthread_exit()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00361">rt_task_self()</a>, and <a class="el" href="pod_8c-source.html#l01083">xnpod_delete_thread()</a>.</p>
+<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00388">pthread_exit()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00361">rt_task_self()</a>, and <a class="el" href="pod_8c-source.html#l01079">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -561,7 +552,7 @@ This service can be called from:<p>
 <li>User-space task.</li></ul>
 <p>
 Rescheduling: always unless the task was already terminated. 
-<p>References <a class="el" href="skins_2posix_2thread_8c-source.html#l00450">pthread_join()</a>.</p>
+<p>References <a class="el" href="skins_2posix_2thread_8c-source.html#l00446">pthread_join()</a>.</p>
 
 </div>
 </div><p>
@@ -754,7 +745,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="pod_8c-source.html#l02442">xnpod_remove_hook()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02438">xnpod_remove_hook()</a>.</p>
 
 </div>
 </div><p>
@@ -818,7 +809,7 @@ This service can be called from:<p>
 Rescheduling: Always.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>When called from a user-space task, this service may need to allocate some temporary buffer space from the system heap to hold the reply data if the size of the latter exceeds a certain amount; the threshold before allocation is currently set to 64 bytes. </dd></dl>
 
-<p>References <a class="el" href="task_8h-source.html#l00111">rt_task_mcb::data</a>, <a class="el" href="task_8h-source.html#l00109">rt_task_mcb::opcode</a>, <a class="el" href="task_8h-source.html#l00113">rt_task_mcb::size</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01550">xnpod_resume_thread()</a>, and <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="task_8h-source.html#l00111">rt_task_mcb::data</a>, <a class="el" href="task_8h-source.html#l00109">rt_task_mcb::opcode</a>, <a class="el" href="task_8h-source.html#l00113">rt_task_mcb::size</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c-source.html#l01546">xnpod_resume_thread()</a>, and <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -861,7 +852,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if the suspension nesting level falls down to zero as a result of the current invocation. 
-<p>References <a class="el" href="pod_8c-source.html#l01550">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l01546">xnpod_resume_thread()</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>.</p>
 
 </div>
 </div><p>
@@ -1083,7 +1074,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible, if T_LOCK has been passed into <em>clrmask</em> and the calling context is a task. 
-<p>References <a class="el" href="task_8h-source.html#l00048">T_LOCK</a>, <a class="el" href="task_8h-source.html#l00049">T_NOSIG</a>, <a class="el" href="task_8h-source.html#l00050">T_WARNSW</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01015">xnpod_set_thread_mode()</a>.</p>
+<p>References <a class="el" href="task_8h-source.html#l00048">T_LOCK</a>, <a class="el" href="task_8h-source.html#l00049">T_NOSIG</a>, <a class="el" href="task_8h-source.html#l00050">T_WARNSW</a>, <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01011">xnpod_set_thread_mode()</a>.</p>
 
 </div>
 </div><p>
@@ -1156,7 +1147,7 @@ This service can be called from:<p>
 Rescheduling: always if the operation affects the current task and <em>idate</em> has not elapsed yet.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>idate</em> and <em>period</em> values will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="pod_8c-source.html#l02824">xnpod_set_thread_periodic()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02820">xnpod_set_thread_periodic()</a>.</p>
 
 </div>
 </div><p>
@@ -1192,10 +1183,10 @@ Changing the base priority of a task does not affect the priority boost the targ
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The descriptor address of the affected task.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The new task priority. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The new task priority. This value must range from [0 .. 99] (inclusive) where 0 is the lowest effective priority.</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>Upon success, the previously set priority is returned. Otherwise:</dd></dl>
 <ul>
 <li>-EINVAL is returned if <em>task</em> is not a task descriptor, or if <em>prio</em> is invalid.</li></ul>
 <p>
@@ -1221,7 +1212,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible if <em>task</em> is the current one. 
-<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01792">xnpod_set_thread_schedparam()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01788">xnpod_set_thread_schedparam()</a>.</p>
 
 </div>
 </div><p>
@@ -1276,7 +1267,7 @@ The current context is switched to primary execution mode and returns immediatel
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created task.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority which will be set for the current task. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority which will be set for the current task. This value must range from [0 .. 99] (inclusive) where 0 is the lowest effective priority.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The task creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new task:</td></tr>
   </table>
 </dl>
@@ -1315,7 +1306,7 @@ If, however, you install a signal handler for SIGWINCH after creating or shadowi
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcanrecv_8c-example.html#a31">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a25">rtcansend.c</a>.</dl>
-<p>References <a class="el" href="tsd_8c-source.html#l00215">pthread_getspecific()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00559">pthread_self()</a>, <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, <a class="el" href="tsd_8c-source.html#l00174">pthread_setspecific()</a>, and <a class="el" href="task_8h-source.html#l00050">T_WARNSW</a>.</p>
+<p>References <a class="el" href="tsd_8c-source.html#l00215">pthread_getspecific()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00555">pthread_self()</a>, <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, <a class="el" href="tsd_8c-source.html#l00174">pthread_setspecific()</a>, and <a class="el" href="task_8h-source.html#l00050">T_WARNSW</a>.</p>
 
 </div>
 </div><p>
@@ -1362,7 +1353,7 @@ This service can be called from:<p>
 Rescheduling: always unless a null delay is given.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>delay</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDELAY</a>, and <a class="el" href="pod_8c-source.html#l01337">xnpod_suspend_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDELAY</a>, and <a class="el" href="pod_8c-source.html#l01333">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -1410,7 +1401,7 @@ This service can be called from:<p>
 Rescheduling: always unless a date in the past is given.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>date</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01337">xnpod_suspend_thread()</a>, and <a class="el" href="timebase_8h-source.html#l00299">xntbase_get_time()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00037">XNDELAY</a>, <a class="el" href="pod_8c-source.html#l01333">xnpod_suspend_thread()</a>, and <a class="el" href="timebase_8h-source.html#l00299">xntbase_get_time()</a>.</p>
 
 </div>
 </div><p>
@@ -1467,7 +1458,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>quantum</em> value is always interpreted as a count of ticks. If the task undergoes aperiodic timing, the tick duration is defined by CONFIG_XENO_OPT_TIMING_VIRTICK. </dd></dl>
 
-<p>References <a class="el" href="pod_8c-source.html#l03022">xnpod_set_thread_tslice()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l03018">xnpod_set_thread_tslice()</a>.</p>
 
 </div>
 </div><p>
@@ -1535,7 +1526,7 @@ Creates and immediately starts a real-time task, either running in a kernel modu
     <tr><td valign="top"></td><td valign="top"><em>task</em>&nbsp;</td><td>The address of a task descriptor Xenomai will use to store the task-related data. This descriptor must always be valid while the task is active therefore it must be allocated in permanent memory.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>name</em>&nbsp;</td><td>An ASCII string standing for the symbolic name of the task. When non-NULL and non-empty, this string is copied to a safe place into the descriptor, and passed to the registry package if enabled for indexing the created task.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>stksize</em>&nbsp;</td><td>The size of the stack (in bytes) for the new task. If zero is passed, a reasonable pre-defined size will be substituted.</td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [1 .. 99] (inclusive) where 1 is the lowest effective priority.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>prio</em>&nbsp;</td><td>The base priority of the new task. This value must range from [0 .. 99] (inclusive) where 0 is the lowest effective priority.</td></tr>
     <tr><td valign="top"></td><td valign="top"><em>mode</em>&nbsp;</td><td>The task creation mode. The following flags can be OR'ed into this bitmask, each of them affecting the new task:</td></tr>
   </table>
 </dl>
@@ -1645,7 +1636,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNDORMANT</a>, and <a class="el" href="pod_8c-source.html#l00741">xnpod_start_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNDORMANT</a>, and <a class="el" href="pod_8c-source.html#l00737">xnpod_start_thread()</a>.</p>
 
 <p>Referenced by <a class="el" href="task_8h-source.html#l00304">rt_task_spawn()</a>.</p>
 
@@ -1700,7 +1691,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always if <em>task</em> is NULL. 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="pod_8c-source.html#l01337">xnpod_suspend_thread()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="pod_8c-source.html#l01333">xnpod_suspend_thread()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>.</p>
 
 </div>
 </div><p>
@@ -1775,7 +1766,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01688">xnpod_unblock_thread()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00240">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01684">xnpod_unblock_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -1823,7 +1814,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (switches to primary mode)</li></ul>
 <p>
 Rescheduling: always, unless the current release point has already been reached. In the latter case, the current task immediately returns from this service without being delayed. 
-<p>References <a class="el" href="pod_8c-source.html#l02925">xnpod_wait_thread_period()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02921">xnpod_wait_thread_period()</a>.</p>
 
 </div>
 </div><p>
@@ -1860,7 +1851,7 @@ Rescheduling: always if a next equal-priority task is ready to run, otherwise, t
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 18 13:24:26 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Aug 19 14:43:09 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

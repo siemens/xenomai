@@ -37,15 +37,19 @@
 <h1>ksrc/skins/native/module.c File Reference</h1>This file is part of the Xenomai project.  
 <a href="#_details">More...</a>
 <p>
-
-<p>
-<div class="dynheader">
-Include dependency graph for module.c:</div>
-<div class="dynsection">
-<p><center><img src="skins_2native_2module_8c__incl.png" border="0" usemap="#ksrc/skins/native/module.c_map" alt=""></center>
-<map name="ksrc/skins/native/module.c_map">
-<area shape="rect" href="task_8h.html" title="This file is part of the Xenomai project." alt="" coords="613,155,709,181"><area shape="rect" href="include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="491,155,589,181"><area shape="rect" href="include_2native_2sem_8h.html" title="This file is part of the Xenomai project." alt="" coords="733,155,829,181"><area shape="rect" href="event_8h.html" title="This file is part of the Xenomai project." alt="" coords="904,155,1008,181"><area shape="rect" href="include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="360,155,467,181"><area shape="rect" href="include_2native_2cond_8h.html" title="This file is part of the Xenomai project." alt="" coords="468,80,567,107"><area shape="rect" href="native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="1333,80,1429,107"><area shape="rect" href="native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="1199,80,1305,107"><area shape="rect" href="native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="1567,80,1665,107"><area shape="rect" href="alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="1071,80,1175,107"><area shape="rect" href="include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="248,155,336,181"><area shape="rect" href="misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="909,80,1008,107"><area shape="rect" href="include_2native_2syscall_8h-source.html" title="native/syscall.h" alt="" coords="1737,80,1849,107"><area shape="rect" href="sched_8h.html" title="Scheduler interface header." alt="" coords="709,304,824,331"><area shape="rect" href="native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="759,229,863,256"><area shape="rect" href="include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="891,379,1008,405"><area shape="rect" href="schedqueue_8h-source.html" title="nucleus/schedqueue.h" alt="" coords="967,528,1119,555"><area shape="rect" href="sched-tp_8h.html" title="Definitions for the TP scheduling class." alt="" coords="381,379,512,405"><area shape="rect" href="sched-sporadic_8h.html" title="Definitions for the SSP scheduling class." alt="" coords="536,379,704,405"><area shape="rect" href="sched-idle_8h.html" title="Definitions for the IDLE scheduling class." alt="" coords="728,379,867,405"><area shape="rect" href="sched-rt_8h.html" title="Definitions for the RT scheduling class." alt="" coords="229,379,357,405"><area shape="rect" href="nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="616,677,728,704"><area shape="rect" href="stat_8h-source.html" title="nucleus/stat.h" alt="" coords="504,528,608,555"><area shape="rect" href="include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="475,453,584,480"><area shape="rect" href="include_2nucleus_2registry_8h.html" title="This file is part of the Xenomai project." alt="" coords="709,453,832,480"><area shape="rect" href="schedparam_8h-source.html" title="nucleus/schedparam.h" alt="" coords="856,453,1008,480"><area shape="rect" href="compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="541,752,669,779"><area shape="rect" href="assert_8h-source.html" title="nucleus/assert.h" alt="" coords="808,752,925,779"><area shape="rect" href="timebase_8h.html" title="nucleus/timebase.h" alt="" coords="787,528,920,555"><area shape="rect" href="nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="1064,603,1179,629"><area shape="rect" href="synch_8h-source.html" title="nucleus/synch.h" alt="" coords="1143,528,1257,555"><area shape="rect" href="nucleus_2pipe_8h-source.html" title="nucleus/pipe.h" alt="" coords="1357,304,1461,331"><area shape="rect" href="nucleus_2heap_8h-source.html" title="nucleus/heap.h" alt="" coords="1581,229,1691,256"><area shape="rect" href="native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="1336,155,1427,181"><area shape="rect" href="pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="1308,229,1409,256"><area shape="rect" href="nucleus_2ppd_8h-source.html" title="nucleus/ppd.h" alt="" coords="1516,304,1617,331"><area shape="rect" href="include_2nucleus_2intr_8h-source.html" title="nucleus/intr.h" alt="" coords="5,453,104,480"></map>
-</div>
+<code>#include &lt;<a class="el" href="task_8h-source.html">native/task.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2native_2timer_8h-source.html">native/timer.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2native_2sem_8h-source.html">native/sem.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="event_8h-source.html">native/event.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2native_2mutex_8h-source.html">native/mutex.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2native_2cond_8h-source.html">native/cond.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="native_2pipe_8h-source.html">native/pipe.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="native_2queue_8h-source.html">native/queue.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="native_2heap_8h-source.html">native/heap.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="alarm_8h-source.html">native/alarm.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="include_2native_2intr_8h-source.html">native/intr.h</a>&gt;</code><br>
+<code>#include &lt;<a class="el" href="misc_8h-source.html">native/misc.h</a>&gt;</code><br>
+<code>#include &lt;native/syscall.h&gt;</code><br>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 </table>
@@ -56,7 +60,7 @@ This file is part of the Xenomai project.
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.<p>
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.<p>
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 18 13:24:25 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Aug 19 14:43:09 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

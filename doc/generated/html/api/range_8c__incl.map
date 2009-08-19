@@ -1,9 +1,0 @@
-<area shape="rect" href="$comedi_8h.html" title="Comedilib for RTDM, library facilities." alt="" coords="176,80,296,107">
-<area shape="rect" href="$comedi_2types_8h.html" title="Comedi for RTDM, misc declarations." alt="" coords="232,379,341,405">
-<area shape="rect" href="$descriptor_8h.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="431,155,564,181">
-<area shape="rect" href="$subdevice_8h.html" title="Comedi for RTDM, subdevice related features." alt="" coords="429,229,565,256">
-<area shape="rect" href="$device_8h.html" title="Comedi for RTDM, device related features." alt="" coords="589,229,704,256">
-<area shape="rect" href="$context_8h.html" title="Comedi for RTDM, context structure / macros declarations." alt="" coords="544,379,664,405">
-<area shape="rect" href="$instruction_8h.html" title="Comedi for RTDM, instruction related features." alt="" coords="428,304,567,331">
-<area shape="rect" href="$command_8h.html" title="Comedi for RTDM, driver facilities." alt="" coords="641,304,777,331">
-<area shape="rect" href="$channel__range_8h.html" title="Comedi for RTDM, channel, range related features." alt="" coords="801,304,964,331">

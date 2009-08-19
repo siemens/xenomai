@@ -31,16 +31,7 @@
 <h1>Synchronisation Services<br>
 <small>
 [<a class="el" href="group__driverapi.html">Driver Development API</a>,&nbsp;<a class="el" href="group__devregister.html">Device Registration Services</a>]</small>
-</h1>
-<p>
-<div class="dynheader">
-Collaboration diagram for Synchronisation Services:</div>
-<div class="dynsection">
-<center><table><tr><td><img src="group__rtdmsync.png" border="0" alt="" usemap="#group____rtdmsync_map">
-<map name="group____rtdmsync_map">
-<area shape="rect" href="group__devregister.html" title="Device Registration Services" alt="" coords="5,5,195,32"><area shape="rect" href="group__driverapi.html" title="Driver Development API" alt="" coords="20,56,180,83"></map></td></tr></table></center>
-</div>
-<table border="0" cellpadding="0" cellspacing="0">
+</h1><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtdmsync.html#g0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind</a> (int fd, rtdm_selector_t *selector, enum <a class="el" href="group__rtdmsync.html#ge18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, unsigned fd_index)</td></tr>
@@ -763,7 +754,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00107">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00170">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="drvlib_8c-source.html#l00900">rtdm_event_wait()</a>.</p>
+<p>Referenced by <a class="el" href="drvlib_8c-source.html#l00898">rtdm_event_wait()</a>.</p>
 
 </div>
 </div><p>
@@ -808,7 +799,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="drvlib_8c-source.html#l00942">rtdm_event_timedwait()</a>.</p>
+<p>References <a class="el" href="drvlib_8c-source.html#l00940">rtdm_event_timedwait()</a>.</p>
 
 </div>
 </div><p>
@@ -917,7 +908,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="drvlib_8c-source.html#l01520">rtdm_mutex_timedlock()</a>.</p>
+<p>References <a class="el" href="drvlib_8c-source.html#l01518">rtdm_mutex_timedlock()</a>.</p>
 
 </div>
 </div><p>
@@ -984,7 +975,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00107">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00398">xnsynch_acquire()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01479">rtdm_mutex_lock()</a>.</p>
+<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01477">rtdm_mutex_lock()</a>.</p>
 
 </div>
 </div><p>
@@ -1163,7 +1154,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="drvlib_8c-source.html#l01227">rtdm_sem_timeddown()</a>.</p>
+<p>References <a class="el" href="drvlib_8c-source.html#l01225">rtdm_sem_timeddown()</a>.</p>
 
 </div>
 </div><p>
@@ -1346,7 +1337,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="ksrc_2skins_2posix_2sem_8c-source.html#l00670">sem_timedwait()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00107">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00170">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00106">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01182">rtdm_sem_down()</a>.</p>
+<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01180">rtdm_sem_down()</a>.</p>
 
 </div>
 </div><p>
@@ -1447,7 +1438,7 @@ Rescheduling: never.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Thu Jun 18 13:24:27 2009 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Aug 19 14:43:09 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
