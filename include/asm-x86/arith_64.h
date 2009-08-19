@@ -51,7 +51,7 @@ __rthal_x86_64_llmulshft(long long op, unsigned m, unsigned s)
 	long long result;
 
 	__asm__ (
-		"imul %[m]\n\t"
+		"imulq %[m]\n\t"
 		"shrd %%cl,%%rdx,%%rax\n\t"
 		: "=a,a" (result)
 		: "a,a" (op), [m] "m,r" ((unsigned long long)m),
