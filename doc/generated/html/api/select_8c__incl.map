@@ -1,14 +1,14 @@
-<area shape="rect" href="$nucleus_2heap_8h&#45;source.html" title="nucleus/heap.h" alt="" coords="627,155,736,181">
-<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="268,80,369,107">
-<area shape="rect" href="$synch_8h&#45;source.html" title="nucleus/synch.h" alt="" coords="488,155,603,181">
-<area shape="rect" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="393,80,508,107">
-<area shape="rect" href="$nucleus_2queue_8h&#45;source.html" title="nucleus/queue.h" alt="" coords="507,379,621,405">
-<area shape="rect" href="$nucleus_2types_8h&#45;source.html" title="nucleus/types.h" alt="" coords="328,453,440,480">
-<area shape="rect" href="$assert_8h&#45;source.html" title="nucleus/assert.h" alt="" coords="453,528,571,555">
-<area shape="rect" href="$core_8h&#45;source.html" title="nucleus/core.h" alt="" coords="549,453,656,480">
-<area shape="rect" href="$compiler_8h&#45;source.html" title="nucleus/compiler.h" alt="" coords="187,528,315,555">
-<area shape="rect" href="$include_2nucleus_2thread_8h&#45;source.html" title="nucleus/thread.h" alt="" coords="344,155,461,181">
-<area shape="rect" href="$include_2nucleus_2intr_8h&#45;source.html" title="nucleus/intr.h" alt="" coords="249,229,348,256">
-<area shape="rect" href="$stat_8h&#45;source.html" title="nucleus/stat.h" alt="" coords="332,304,436,331">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="423,229,532,256">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="460,304,593,331">
+<area shape="rect" href="$nucleus_2heap_8h-source.html" title="nucleus/heap.h" alt="" coords="687,161,807,188">
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="295,84,407,111">
+<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="535,161,663,188">
+<area shape="rect" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="431,84,561,111">
+<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="556,393,687,420">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="360,471,488,497">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="499,548,629,575">
+<area shape="rect" href="$core_8h-source.html" title="nucleus/core.h" alt="" coords="601,471,719,497">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="205,548,349,575">
+<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="376,161,509,188">
+<area shape="rect" href="$include_2nucleus_2intr_8h-source.html" title="nucleus/intr.h" alt="" coords="279,239,388,265">
+<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="365,316,483,343">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="463,239,585,265">
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="507,316,659,343">
