@@ -228,7 +228,8 @@ int rt_queue_create(RT_QUEUE *q,
 
 		err = xnheap_init_mapped(&q->bufpool,
 					 poolsize,
-					 (mode & Q_DMA) ? GFP_DMA : 0);
+					 ((mode & Q_DMA) ? GFP_DMA 
+					  : XNARCH_SHARED_HEAP_FLAGS));
 		if (err)
 			return err;
 

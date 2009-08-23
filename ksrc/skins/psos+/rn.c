@@ -191,7 +191,8 @@ u_long rn_create(const char *name,
 		u_long err;
 
 		rnsize = xnheap_rounded_size(rnsize, PAGE_SIZE),
-		err = xnheap_init_mapped(&rn->heapbase, rnsize, 0);
+		err = xnheap_init_mapped(&rn->heapbase, rnsize, 
+					 XNARCH_SHARED_HEAP_FLAGS);
 
 		if (err)
 			return err;

@@ -1135,7 +1135,7 @@ static int __sc_pcreate(struct task_struct *curr, struct pt_regs *regs)
 	/* Block size. */
 	bsize = __xn_reg_arg3(regs);
 
-	err = xnheap_init_mapped(ptheap, ptsize, 0);
+	err = xnheap_init_mapped(ptheap, ptsize, XNARCH_SHARED_HEAP_FLAGS);
 
 	if (err)
 		goto free_heap;
