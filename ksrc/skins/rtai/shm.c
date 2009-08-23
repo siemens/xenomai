@@ -150,7 +150,8 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 
 	err = xnheap_init_mapped(p->heap,
 				 heapsize,
-				 suprt == USE_GFP_KERNEL ? GFP_KERNEL : 0);
+				 (suprt == USE_GFP_KERNEL ? GFP_KERNEL : 0)
+				 | XNARCH_SHARED_HEAP_FLAGS);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 	{
 		void *heapmem;
