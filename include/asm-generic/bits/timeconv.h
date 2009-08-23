@@ -60,10 +60,17 @@ long long xnarch_ns_to_tsc(long long ns)
 unsigned long long xnarch_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
-	unsigned long long r;
-	r = xnarch_nodiv_ullimd(value, bln_frac.frac, bln_frac.integ);
-	*rem = value - r * 1000000000;
-	return r;
+	unsigned long long q;
+	unsigned r;
+
+	q = xnarch_nodiv_ullimd(value, bln_frac.frac, bln_frac.integ);
+	r = value - q * 1000000000;
+	if (r >= 1000000000) {
+		++q;
+		r -= 1000000000;
+	}
+	*rem = r;
+	return q;
 }
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
 long long xnarch_ns_to_tsc(long long ns)
