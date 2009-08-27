@@ -102,9 +102,11 @@ ENTRY(rthal_thread_switch)
     strex   r5, r4, [ip]                    @ Clear exclusive monitor
 #endif
 #endif
+#if 0	
 #if defined(CONFIG_CPU_XSCALE) && !defined(CONFIG_IWMMXT)
     mra     r4, r5, acc0
     stmia   ip, {r4, r5}
+#endif
 #endif
 #if defined(CONFIG_HAS_TLS_REG)
     mcr     p15, 0, r3, c13, c0, 3          @ set TLS register
@@ -129,6 +131,7 @@ ENTRY(rthal_thread_switch)
 #endif
     VFPFMXR FPEXC, r4
 #endif
+#if 0
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18) &&  defined(CONFIG_IWMMXT)
     bl      iwmmxt_task_switch
 #endif
@@ -137,13 +140,16 @@ ENTRY(rthal_thread_switch)
     ldmib   r4, {r4, r5}
     mar     acc0, r4, r5
 #endif
+#endif
     add	    r4, r2, #TI_CPU_SAVE
+#if 0	
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18) && defined(CONFIG_IWMMXT)
     mov	    r5, r0
     mov     r0, r2
     bl	    iwmmxt_task_switch
     mov	    r0, r5
-#endif	
+#endif
+#endif
     ldmia   r4, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
 
 /*
