@@ -428,7 +428,7 @@ index 0000000..11e5388
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..b25c801
+index 0000000..bcc62f1
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,273 @@
@@ -463,10 +463,10 @@ index 0000000..b25c801
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.14-00"
++#define IPIPE_ARCH_STRING	"1.14-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	14
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -1336,11 +1336,14 @@ index 1845892..cc9b9ff 100644
  
  union debug_insn {
 diff --git a/arch/arm/include/asm/system.h b/arch/arm/include/asm/system.h
-index d65b2f5..e2b0c3c 100644
+index d65b2f5..b7f40fc 100644
 --- a/arch/arm/include/asm/system.h
 +++ b/arch/arm/include/asm/system.h
-@@ -215,7 +215,9 @@ extern struct task_struct *__switch_to(struct task_struct *, struct thread_info
+@@ -213,10 +213,19 @@ static inline void set_copro_access(unsigned int val)
+  */
+ extern struct task_struct *__switch_to(struct task_struct *, struct thread_info *, struct thread_info *);
  
++#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
  #define switch_to(prev,next,last)					\
  do {									\
 -	last = __switch_to(prev,task_thread_info(prev), task_thread_info(next));	\
@@ -1348,9 +1351,16 @@ index d65b2f5..e2b0c3c 100644
 +	last = __switch_to(prev,task_thread_info(prev), task_thread_info(next)); \
 +	local_irq_enable_hw_cond();					\
  } while (0)
++#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
++#define switch_to(prev,next,last)					\
++do {									\
++	last = __switch_to(prev,task_thread_info(prev), task_thread_info(next)); \
++} while (0)
++#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
  
  #if defined(CONFIG_CPU_SA1100) || defined(CONFIG_CPU_SA110)
-@@ -277,17 +279,17 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
+ /*
+@@ -277,17 +286,17 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
  #error SMP is not supported on this platform
  #endif
  	case 1:
@@ -4029,7 +4039,7 @@ index 531b95d..101e683 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-imx/time.c b/arch/arm/mach-imx/time.c
-index 5aef18b..1d19de7 100644
+index 5aef18b..a4a958b 100644
 --- a/arch/arm/mach-imx/time.c
 +++ b/arch/arm/mach-imx/time.c
 @@ -25,6 +25,57 @@
@@ -4169,7 +4179,7 @@ index 5aef18b..1d19de7 100644
  	/*
  	 * Make irqs happen for the system timer
  	 */
-@@ -218,3 +290,76 @@ static void __init imx_timer_init(void)
+@@ -218,3 +290,77 @@ static void __init imx_timer_init(void)
  struct sys_timer imx_timer = {
  	.init		= imx_timer_init,
  };
@@ -4179,6 +4189,7 @@ index 5aef18b..1d19de7 100644
 +{
 +	unsigned tstat = IMX_TSTAT(TIMER_BASE);
 +	IMX_TSTAT(TIMER_BASE) = 0;
++	(void) tstat;
 +}
 +
 +static void ipipe_mach_update_tsc(void)
