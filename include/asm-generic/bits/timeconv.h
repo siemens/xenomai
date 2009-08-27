@@ -41,16 +41,6 @@ long long xnarch_tsc_to_ns_rounded(long long ticks)
 	unsigned int shift = tsc_shift - 1;
 	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
 }
-#else  /* !XNARCH_HAVE_LLMULSHFT */
-long long xnarch_tsc_to_ns(long long ticks)
-{
-	return xnarch_llimd(ticks, 1000000000, cpufreq);
-}
-long long xnarch_tsc_to_ns_rounded(long long ticks)
-{
-	return (xnarch_llimd(ticks, 1000000000, cpufreq/2) + 1) / 2;
-}
-#endif /* !XNARCH_HAVE_LLMULSHFT */
 
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 long long xnarch_ns_to_tsc(long long ns)
@@ -75,8 +65,25 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
 long long xnarch_ns_to_tsc(long long ns)
 {
+	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
+}
+#endif /* !XNARCH_HAVE_NODIV_LLIMD */
+#else  /* !XNARCH_HAVE_LLMULSHFT */
+long long xnarch_tsc_to_ns(long long ticks)
+{
+	return xnarch_llimd(ticks, 1000000000, cpufreq);
+}
+long long xnarch_tsc_to_ns_rounded(long long ticks)
+{
+	return (xnarch_llimd(ticks, 1000000000, cpufreq/2) + 1) / 2;
+}
+long long xnarch_ns_to_tsc(long long ns)
+{
 	return xnarch_llimd(ns, cpufreq, 1000000000);
 }
+#endif /* !XNARCH_HAVE_LLMULSHFT */
+
+#ifndef XNARCH_HAVE_NODIV_LLIMD
 unsigned long long xnarch_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
