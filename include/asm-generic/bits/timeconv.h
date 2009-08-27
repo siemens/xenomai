@@ -37,6 +37,10 @@ long long xnarch_tsc_to_ns_rounded(long long ticks)
 	unsigned int shift = tsc_shift - 1;
 	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
 }
+long long xnarch_ns_to_tsc(long long ns)
+{
+	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
+}
 #else  /* !XNARCH_HAVE_LLMULSHFT */
 long long xnarch_tsc_to_ns(long long ticks)
 {
@@ -46,12 +50,11 @@ long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
 	return (xnarch_llimd(ticks, 1000000000, cpufreq/2) + 1) / 2;
 }
-#endif /* !XNARCH_HAVE_LLMULSHFT */
-
 long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_llimd(ns, cpufreq, 1000000000);
 }
+#endif /* !XNARCH_HAVE_LLMULSHFT */
 
 static inline void xnarch_init_timeconv(unsigned long long freq)
 {
