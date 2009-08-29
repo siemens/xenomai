@@ -428,7 +428,7 @@ index 0000000..11e5388
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..bcc62f1
+index 0000000..8330d78
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,273 @@
@@ -463,10 +463,10 @@ index 0000000..bcc62f1
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.14-01"
++#define IPIPE_ARCH_STRING	"1.14-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	14
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -6953,7 +6953,7 @@ index 7f57ee6..ac494bc 100644
  
  #endif
 diff --git a/arch/arm/plat-pxa/gpio.c b/arch/arm/plat-pxa/gpio.c
-index abc79d4..9bb16fe 100644
+index abc79d4..6a30b57 100644
 --- a/arch/arm/plat-pxa/gpio.c
 +++ b/arch/arm/plat-pxa/gpio.c
 @@ -17,6 +17,7 @@
@@ -6964,7 +6964,7 @@ index abc79d4..9bb16fe 100644
  
  #include <mach/gpio.h>
  
-@@ -232,6 +233,34 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
+@@ -232,6 +233,35 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
  	} while (loop);
  }
  
@@ -6988,7 +6988,8 @@ index abc79d4..9bb16fe 100644
 +			while (n < BITS_PER_LONG) {
 +				loop = 1;
 +
-+				__ipipe_handle_irq(gpio_base + n, regs);
++				__ipipe_handle_irq(
++					gpio_to_irq(gpio_base + n), regs);
 +				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
 +			}
 +		}
@@ -6999,6 +7000,18 @@ index abc79d4..9bb16fe 100644
  static void pxa_ack_muxed_gpio(unsigned int irq)
  {
  	int gpio = irq_to_gpio(irq);
+@@ -290,7 +320,11 @@ void __init pxa_init_gpio(int mux_irq, int start, int end, set_wake_t fn)
+ 
+ 	for (irq  = gpio_to_irq(start); irq <= gpio_to_irq(end); irq++) {
+ 		set_irq_chip(irq, &pxa_muxed_gpio_chip);
++#ifndef CONFIG_IPIPE
+ 		set_irq_handler(irq, handle_edge_irq);
++#else /* CONFIG_IPIPE */
++		set_irq_handler(irq, handle_level_irq);
++#endif /* CONFIG_IPIPE */
+ 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
+ 	}
+ 
 diff --git a/arch/arm/plat-s3c/time.c b/arch/arm/plat-s3c/time.c
 index 3b27b29..8e6e479 100644
 --- a/arch/arm/plat-s3c/time.c
