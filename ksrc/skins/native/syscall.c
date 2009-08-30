@@ -2118,6 +2118,7 @@ static int __rt_queue_alloc(struct pt_regs *regs)
 
 	if (!q) {
 		err = -ESRCH;
+		buf = NULL;
 		goto unlock_and_exit;
 	}
 
