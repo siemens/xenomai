@@ -112,6 +112,40 @@ index d2ded19..06dd614 100644
  ifeq ($(CONFIG_PPC_MERGE),y)
  
  extra-$(CONFIG_PPC_STD_MMU)	:= head_32.o
+diff --git a/arch/powerpc/kernel/align.c b/arch/powerpc/kernel/align.c
+index 4734b5d..18d72cd 100644
+--- a/arch/powerpc/kernel/align.c
++++ b/arch/powerpc/kernel/align.c
+@@ -492,10 +492,11 @@ int fix_alignment(struct pt_regs *regs)
+ 		if (flags & S) {
+ 			/* Single-precision FP store requires conversion... */
+ #ifdef CONFIG_PPC_FPU
+-			preempt_disable();
++			unsigned long irqflags;
++			ipipe_preempt_disable(irqflags);
+ 			enable_kernel_fp();
+ 			cvt_df(&data.dd, (float *)&data.v[4], &current->thread);
+-			preempt_enable();
++			ipipe_preempt_enable(irqflags);
+ #else
+ 			return 0;
+ #endif
+@@ -535,10 +536,13 @@ int fix_alignment(struct pt_regs *regs)
+ 	/* Single-precision FP load requires conversion... */
+ 	case LD+F+S:
+ #ifdef CONFIG_PPC_FPU
+-		preempt_disable();
++	{
++		unsigned long irqflags;
++		ipipe_preempt_disable(irqflags);
+ 		enable_kernel_fp();
+ 		cvt_fd((float *)&data.v[4], &data.dd, &current->thread);
+-		preempt_enable();
++		ipipe_preempt_enable(irqflags);
++	}
+ #else
+ 		return 0;
+ #endif
 diff --git a/arch/powerpc/kernel/cputable.c b/arch/powerpc/kernel/cputable.c
 index b742013..fa5752a 100644
 --- a/arch/powerpc/kernel/cputable.c
@@ -1435,10 +1469,64 @@ index 0000000..83faab8
 +	addi	r1,r1,48
 +	bctr
 diff --git a/arch/powerpc/kernel/process.c b/arch/powerpc/kernel/process.c
-index f3d4dd5..611683b 100644
+index f3d4dd5..55cbda3 100644
 --- a/arch/powerpc/kernel/process.c
 +++ b/arch/powerpc/kernel/process.c
-@@ -326,7 +326,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
+@@ -63,6 +63,8 @@ struct task_struct *last_task_used_spe = NULL;
+  */
+ void flush_fp_to_thread(struct task_struct *tsk)
+ {
++	unsigned long flags;
++
+ 	if (tsk->thread.regs) {
+ 		/*
+ 		 * We need to disable preemption here because if we didn't,
+@@ -72,7 +74,7 @@ void flush_fp_to_thread(struct task_struct *tsk)
+ 		 * FPU, and then when we get scheduled again we would store
+ 		 * bogus values for the remaining FP registers.
+ 		 */
+-		preempt_disable();
++		ipipe_preempt_disable(flags);
+ 		if (tsk->thread.regs->msr & MSR_FP) {
+ #ifdef CONFIG_SMP
+ 			/*
+@@ -86,13 +88,13 @@ void flush_fp_to_thread(struct task_struct *tsk)
+ #endif
+ 			giveup_fpu(current);
+ 		}
+-		preempt_enable();
++		ipipe_preempt_enable(flags);
+ 	}
+ }
+ 
+ void enable_kernel_fp(void)
+ {
+-	WARN_ON(preemptible());
++	WARN_ON(ipipe_root_domain_p && preemptible());
+ 
+ #ifdef CONFIG_SMP
+ 	if (current->thread.regs && (current->thread.regs->msr & MSR_FP))
+@@ -177,15 +179,17 @@ EXPORT_SYMBOL(enable_kernel_spe);
+ 
+ void flush_spe_to_thread(struct task_struct *tsk)
+ {
++ 	unsigned long flags;
++ 
+ 	if (tsk->thread.regs) {
+-		preempt_disable();
++		ipipe_preempt_disable(flags);
+ 		if (tsk->thread.regs->msr & MSR_SPE) {
+ #ifdef CONFIG_SMP
+ 			BUG_ON(tsk != current);
+ #endif
+ 			giveup_spe(current);
+ 		}
+-		preempt_enable();
++ 		ipipe_preempt_enable(flags);
+ 	}
+ }
+ 
+@@ -326,7 +330,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
  	}
  #endif
  
@@ -1447,7 +1535,7 @@ index f3d4dd5..611683b 100644
  
  	account_system_vtime(current);
  	account_process_vtime(current);
-@@ -334,7 +334,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
+@@ -334,7 +338,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
  
  	last = _switch(old_thread, new_thread);
  
@@ -1539,7 +1627,7 @@ index f6f0c6b..a73bd9f 100644
  }
  
 diff --git a/arch/powerpc/kernel/traps.c b/arch/powerpc/kernel/traps.c
-index 535f506..30be7ee 100644
+index 535f506..34554e7 100644
 --- a/arch/powerpc/kernel/traps.c
 +++ b/arch/powerpc/kernel/traps.c
 @@ -321,6 +321,9 @@ void machine_check_exception(struct pt_regs *regs)
@@ -1608,17 +1696,29 @@ index 535f506..30be7ee 100644
  	if (reason & REASON_FP) {
  		/* IEEE FP exception */
  		parse_fpe(regs);
-@@ -801,6 +820,9 @@ void alignment_exception(struct pt_regs *regs)
+@@ -801,6 +820,10 @@ void alignment_exception(struct pt_regs *regs)
  {
  	int sig, code, fixed = 0;
  
-+	if (ipipe_trap_notify(IPIPE_TRAP_ALIGNMENT,regs))
++	if (test_bit(IPIPE_NOSTACK_FLAG, &ipipe_this_cpudom_var(status)) &&
++	    ipipe_trap_notify(IPIPE_TRAP_ALIGNMENT, regs))
 +	    	return;
 +
  	/* we don't implement logging of alignment exceptions */
  	if (!(current->thread.align_ctl & PR_UNALIGN_SIGBUS))
  		fixed = fix_alignment(regs);
-@@ -838,6 +860,8 @@ void nonrecoverable_exception(struct pt_regs *regs)
+@@ -811,6 +834,10 @@ void alignment_exception(struct pt_regs *regs)
+ 		return;
+ 	}
+ 
++	if (!ipipe_root_domain_p &&
++	    ipipe_trap_notify(IPIPE_TRAP_ALIGNMENT, regs))
++		return;
++
+ 	/* Operand address was bad */
+ 	if (fixed == -EFAULT) {
+ 		sig = SIGSEGV;
+@@ -838,6 +865,8 @@ void nonrecoverable_exception(struct pt_regs *regs)
  {
  	printk(KERN_ERR "Non-recoverable exception at PC=%lx MSR=%lx\n",
  	       regs->nip, regs->msr);
@@ -1627,7 +1727,7 @@ index 535f506..30be7ee 100644
  	debugger(regs);
  	die("nonrecoverable exception", regs, SIGKILL);
  }
-@@ -853,11 +877,16 @@ void kernel_fp_unavailable_exception(struct pt_regs *regs)
+@@ -853,11 +882,16 @@ void kernel_fp_unavailable_exception(struct pt_regs *regs)
  {
  	printk(KERN_EMERG "Unrecoverable FP Unavailable Exception "
  			  "%lx at %lx\n", regs->trap, regs->nip);
@@ -1644,7 +1744,7 @@ index 535f506..30be7ee 100644
  	if (user_mode(regs)) {
  		/* A user program has executed an altivec instruction,
  		   but this kernel doesn't support altivec. */
-@@ -882,6 +911,9 @@ void SoftwareEmulation(struct pt_regs *regs)
+@@ -882,6 +916,9 @@ void SoftwareEmulation(struct pt_regs *regs)
  	extern int Soft_emulate_8xx(struct pt_regs *);
  	int errcode;
  
@@ -1654,7 +1754,7 @@ index 535f506..30be7ee 100644
  	CHECK_FULL_REGS(regs);
  
  	if (!user_mode(regs)) {
-@@ -910,6 +942,9 @@ void SoftwareEmulation(struct pt_regs *regs)
+@@ -910,6 +947,9 @@ void SoftwareEmulation(struct pt_regs *regs)
  
  void DebugException(struct pt_regs *regs, unsigned long debug_status)
  {
@@ -1664,7 +1764,7 @@ index 535f506..30be7ee 100644
  	if (debug_status & DBSR_IC) {	/* instruction completion */
  		regs->msr &= ~MSR_DE;
  		if (user_mode(regs)) {
-@@ -940,6 +975,9 @@ void altivec_assist_exception(struct pt_regs *regs)
+@@ -940,6 +980,9 @@ void altivec_assist_exception(struct pt_regs *regs)
  {
  	int err;
  
@@ -1674,7 +1774,7 @@ index 535f506..30be7ee 100644
  	if (!user_mode(regs)) {
  		printk(KERN_EMERG "VMX/Altivec assist exception in kernel mode"
  		       " at %lx\n", regs->nip);
-@@ -977,8 +1015,11 @@ void CacheLockingException(struct pt_regs *regs, unsigned long address,
+@@ -977,8 +1020,11 @@ void CacheLockingException(struct pt_regs *regs, unsigned long address,
  	 * as priv ops, in the future we could try to do
  	 * something smarter
  	 */
@@ -1687,7 +1787,7 @@ index 535f506..30be7ee 100644
  	return;
  }
  #endif /* CONFIG_FSL_BOOKE */
-@@ -990,6 +1031,9 @@ void SPEFloatingPointException(struct pt_regs *regs)
+@@ -990,6 +1036,9 @@ void SPEFloatingPointException(struct pt_regs *regs)
  	int fpexc_mode;
  	int code = 0;
  
@@ -1697,7 +1797,7 @@ index 535f506..30be7ee 100644
  	spefscr = current->thread.spefscr;
  	fpexc_mode = current->thread.fpexc_mode;
  
-@@ -1029,6 +1073,8 @@ void unrecoverable_exception(struct pt_regs *regs)
+@@ -1029,6 +1078,8 @@ void unrecoverable_exception(struct pt_regs *regs)
  {
  	printk(KERN_EMERG "Unrecoverable exception %lx at %lx\n",
  	       regs->trap, regs->nip);
@@ -3440,7 +3540,7 @@ index 9e4dd98..ed8ae98 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/include/asm-powerpc/ipipe.h b/include/asm-powerpc/ipipe.h
 new file mode 100644
-index 0000000..1f21224
+index 0000000..9ec6a94
 --- /dev/null
 +++ b/include/asm-powerpc/ipipe.h
 @@ -0,0 +1,198 @@
@@ -3483,10 +3583,10 @@ index 0000000..1f21224
 +#include <linux/cache.h>
 +#include <linux/threads.h>
 +
-+#define IPIPE_ARCH_STRING	"1.9-01"
++#define IPIPE_ARCH_STRING	"1.9-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#define prepare_arch_switch(next)			\
 +	do {						\
