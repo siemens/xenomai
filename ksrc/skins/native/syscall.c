@@ -2180,6 +2180,7 @@ static int __rt_queue_alloc(struct task_struct *curr, struct pt_regs *regs)
 
 	if (!q) {
 		err = -ESRCH;
+		buf = NULL;
 		goto unlock_and_exit;
 	}
 
