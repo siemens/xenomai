@@ -62,15 +62,17 @@ static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
 }
 
-static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
+static inline void xnarch_switch_to(xnarchtcb_t *out_tcb, xnarchtcb_t *in_tcb)
 {
 	struct task_struct *prev = out_tcb->active_task;
 	struct task_struct *next = in_tcb->user_task;
 
 	if (likely(next != NULL)) {
 		if (task_thread_info(prev)->status & TS_USEDFPU)
-			/* __switch_to will try and use __unlazy_fpu, so we need to
-			   clear the ts bit. */
+			/*
+			 * __switch_to will try and use __unlazy_fpu,
+			 * so we need to clear the ts bit.
+			 */
 			clts();
 		in_tcb->active_task = next;
 		rthal_clear_foreign_stack(&rthal_domain);
@@ -82,15 +84,21 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 
 	if (next && next != prev) {
 		struct mm_struct *oldmm = prev->active_mm;
-
 		switch_mm(oldmm, next->active_mm, next);
-
-		if (!next->mm)
+		if (next->mm == NULL)
 			enter_lazy_tlb(oldmm, next);
 	}
 
-	xnarch_switch_threads(prev, next, out_tcb->rspp, in_tcb->rspp, out_tcb->ripp, in_tcb->ripp);
+#ifdef CONFIG_CC_STACKPROTECTOR
+#define xnarch_switch_canary  in_tcb->canary
+#else
+#define xnarch_switch_canary  0
+#endif
 
+	xnarch_switch_threads(prev, next,
+			      out_tcb->rspp, in_tcb->rspp,
+			      out_tcb->ripp, in_tcb->ripp,
+			      xnarch_switch_canary);
 	stts();
 }
 
@@ -126,7 +134,10 @@ static inline void xnarch_init_thread(xnarchtcb_t *tcb,
 	childregs->eflags = flags & ~X86_EFLAGS_IF;
 	childregs->arg = (unsigned long)tcb;
 	childregs->entry = (unsigned long)&xnarch_thread_trampoline;
-
+#ifdef CONFIG_CC_STACKPROTECTOR
+	tcb->canary = (unsigned long)xnarch_get_cpu_tsc() ^ childregs->arg;
+	childregs->canary = tcb->canary;
+#endif
 	tcb->rsp = (unsigned long)childregs;
 	tcb->rip = (unsigned long)&__thread_head; /* Will branch there at startup. */
 	tcb->entry = entry;
