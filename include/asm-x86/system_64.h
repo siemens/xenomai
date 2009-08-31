@@ -52,7 +52,9 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 	x86_fpustate i387;
 	unsigned long rsp;
 	unsigned long rip;
-
+#ifdef CONFIG_CC_STACKPROTECTOR
+	unsigned long canary;
+#endif
 	/* FPU context bits for the root thread. */
 	unsigned long is_root: 1;
 	unsigned long ts_usedfpu: 1;
