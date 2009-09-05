@@ -119,6 +119,7 @@ typedef int64_t nanosecs_rel_t;
 #define RTDM_CLASS_NETWORK		4
 #define RTDM_CLASS_RTMAC		5
 #define RTDM_CLASS_TESTING		6
+#define RTDM_CLASS_RTIPC		7
 /*
 #define RTDM_CLASS_USB			?
 #define RTDM_CLASS_FIREWIRE		?

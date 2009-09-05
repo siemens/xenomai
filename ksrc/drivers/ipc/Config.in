@@ -1,0 +1,15 @@
+#
+# Xenomai configuration for Linux v2.4
+#
+
+mainmenu_option next_comment
+comment 'Real-time IPC drivers'
+
+dep_tristate 'RTIPC protocol family' CONFIG_XENO_DRIVERS_RTIPC $CONFIG_XENO_SKIN_RTDM
+
+if [ "$CONFIG_XENO_DRIVERS_RTIPC" != "n" ]; then 
+   bool 'XDDP cross-domain protocol' CONFIG_XENO_DRIVERS_RTIPC_XDDP
+   bool 'IDDP intra-domain protocol' CONFIG_XENO_DRIVERS_RTIPC_IDDP
+fi
+
+endmenu

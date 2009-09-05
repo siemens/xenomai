@@ -1,0 +1,71 @@
+/**
+ * This file is part of the Xenomai project.
+ *
+ * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org> 
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#ifndef _RTIPC_INTERNAL_H
+#define _RTIPC_INTERNAL_H
+
+#include <rtdm/rtdm.h>
+#include <rtdm/rtdm_driver.h>
+
+struct rtipc_protocol;
+
+struct rtipc_private {
+	struct rtipc_protocol *proto;
+	void *state;
+};
+
+struct rtipc_protocol {
+	const char *proto_name;
+	int proto_statesz;
+	int (*proto_init)(void);
+	struct {
+		int (*socket)(struct rtipc_private *priv,
+			      rtdm_user_info_t *user_info);
+		int (*close)(struct rtipc_private *priv,
+			     rtdm_user_info_t *user_info);
+		ssize_t (*recvmsg)(struct rtipc_private *priv,
+				   rtdm_user_info_t *user_info,
+				   struct msghdr *msg, int flags);
+		ssize_t (*sendmsg)(struct rtipc_private *priv,
+				   rtdm_user_info_t *user_info,
+				   const struct msghdr *msg, int flags);
+		ssize_t (*read)(struct rtipc_private *priv,
+				rtdm_user_info_t *user_info,
+				void *buf, size_t len);
+		ssize_t (*write)(struct rtipc_private *priv,
+				 rtdm_user_info_t *user_info,
+				 const void *buf, size_t len);
+		int (*ioctl)(struct rtipc_private *priv,
+			     rtdm_user_info_t *user_info,
+			     unsigned int request, void *arg);
+	} proto_ops;
+};
+
+extern struct rtipc_protocol xddp_proto_driver;
+
+extern struct rtipc_protocol iddp_proto_driver;
+
+int rtipc_get_arg(rtdm_user_info_t *user_info,
+		  void *dst, const void *src, size_t len);
+
+int rtipc_put_arg(rtdm_user_info_t *user_info,
+		  void *dst, const void *src, size_t len);
+
+#endif /* !_RTIPC_INTERNAL_H */

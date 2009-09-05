@@ -6,5 +6,6 @@ source "drivers/xenomai/serial/Kconfig"
 source "drivers/xenomai/testing/Kconfig"
 source "drivers/xenomai/can/Kconfig"
 source "drivers/xenomai/comedi/Kconfig"
+source "drivers/xenomai/ipc/Kconfig"
 
 endmenu

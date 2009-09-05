@@ -8,4 +8,5 @@ includesub_HEADERS = \
 	rtdm_driver.h \
 	rtserial.h \
 	rttesting.h \
-	rtcan.h
+	rtcan.h \
+	rtipc.h
