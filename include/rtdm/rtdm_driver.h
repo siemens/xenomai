@@ -405,6 +405,34 @@ struct rtdm_dev_context {
 	char dev_private[0];
 };
 
+/**
+ * Locate the driver private area associated to a device context structure
+ *
+ * @param[in] context Context structure associated with opened device instance
+ *
+ * @return The address of the private driver area associated to @a
+ * context.
+ */
+static inline void *
+rtdm_context_to_private(struct rtdm_dev_context *context)
+{
+	return (void *)context->dev_private;
+}
+
+/**
+ * Locate a device context structure from its driver private area
+ *
+ * @param[in] dev_private Address of a private context area
+ *
+ * @return The address of the device context structure defining @a
+ * dev_private.
+ */
+static inline struct rtdm_dev_context *
+rtdm_private_to_context(void *dev_private)
+{
+	return container_of(dev_private, struct rtdm_dev_context, dev_private);
+}
+
 struct rtdm_dev_reserved {
 	struct list_head entry;
 	atomic_t refcount;
