@@ -41,21 +41,6 @@ config XENO_DRIVERS_RTIPC_IDDP
 	Xenomai's IDDP protocol enables real-time threads to exchange
 	datagrams within the Xenomai domain.
 
-config XENO_OPT_IDDP_POOLSZ
-	depends on XENO_DRIVERS_RTIPC_IDDP
-	int "Size of message pool (Kb)"
-	default 32
-	help
-
-	Memory consumed by outstanding datagrams is obtained from a
-	local memory pool managed by the IDDP protocol driver. This
-	parameter selects the size of such pool.  The size is
-	expressed in Kilobytes.
-
-	NOTE: senders may stall until enough memory is available from
-	the pool, as the receivers consume the pending
-	datagrams. Therefore, this parameter may affect performances.
-
 config XENO_OPT_IDDP_NRPORT
 	depends on XENO_DRIVERS_RTIPC_IDDP
 	int "Number of communication ports"

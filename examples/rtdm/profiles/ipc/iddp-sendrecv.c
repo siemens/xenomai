@@ -56,11 +56,23 @@ void *server(void *arg)
 	struct sockaddr_ipc saddr, claddr;
 	socklen_t addrlen;
 	char buf[128];
+	size_t poolsz;
 	int ret, s;
 
 	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_IDDP);
 	if (s < 0)
 		fail("socket");
+
+	/*
+	 * Set a local 32k pool for the server endpoint. Memory needed
+	 * to convey datagrams will be pulled from this pool, instead
+	 * of Xenomai's system pool.
+	 */
+	poolsz = 32768; /* bytes */
+	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLOCALPOOL,
+			 &poolsz, sizeof(poolsz));
+	if (ret)
+		fail("setsockopt");
 
 	saddr.sipc_family = AF_RTIPC;
 	saddr.sipc_port = IDDP_SVPORT;
