@@ -57,6 +57,7 @@ struct xddp_socket {
 	size_t reqbufsz;	/* Requested streaming buffer size */
 
 	int (*monitor)(int s, int event, long arg);
+	struct rtipc_private *priv;
 };
 
 static struct sockaddr_ipc nullsa = {
@@ -259,6 +260,7 @@ static int xddp_socket(struct rtipc_private *priv,
 	sk->reqbufsz = 0;
 	sk->monitor = NULL;
 	rtdm_lock_init(&sk->lock);
+	sk->priv = priv;
 
 	return 0;
 }
@@ -501,7 +503,7 @@ static ssize_t __xddp_sendmsg(struct rtipc_private *priv,
 			if (!test_bit(_XDDP_BOUND, &rsk->status))
 				ret = -ECONNREFUSED;
 			else {
-				rcontext = rtdm_private_to_context(priv);
+				rcontext = rtdm_private_to_context(rsk->priv);
 				rtdm_context_lock(rcontext);
 				ret = 0;
 			}
@@ -701,7 +703,6 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 		return ret;
 
 	poolsz = sk->poolsz;
-
 	if (poolsz > 0) {
 		poolsz = xnheap_rounded_size(poolsz + sk->reqbufsz, XNHEAP_PAGE_SIZE);
 		poolmem = xnarch_alloc_host_mem(poolsz);
@@ -1088,8 +1089,8 @@ static int xddp_ioctl(struct rtipc_private *priv,
 		      rtdm_user_info_t *user_info,
 		      unsigned int request, void *arg)
 {
-	struct sockaddr_ipc saddr, *saddrp;
 	struct xddp_socket *sk = priv->state;
+	struct sockaddr_ipc saddr, *saddrp;
 	int ret;
 
 	if (rtdm_in_rt_context() || request != _RTIOC_BIND)
