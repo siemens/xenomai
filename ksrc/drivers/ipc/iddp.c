@@ -631,35 +631,45 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
-	nanosecs_rel_t timeout;
+	struct timeval tv;
 	int ret = 0;
 	size_t len;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
 
+	if (sopt.level == SOL_SOCKET) {
+		switch (sopt.optname) {
+
+		case SO_RCVTIMEO:
+			if (sopt.optlen != sizeof(tv))
+				return -EINVAL;
+			if (rtipc_get_arg(user_info, &tv,
+					  sopt.optval, sizeof(tv)))
+				return -EFAULT;
+			sk->rx_timeout = rtipc_timeval_to_ns(&tv);
+			break;
+
+		case SO_SNDTIMEO:
+			if (sopt.optlen != sizeof(tv))
+				return -EINVAL;
+			if (rtipc_get_arg(user_info, &tv,
+					  sopt.optval, sizeof(tv)))
+				return -EFAULT;
+			sk->tx_timeout = rtipc_timeval_to_ns(&tv);
+			break;
+
+		default:
+			ret = -EINVAL;
+		}
+
+		return ret;
+	}
+
 	if (sopt.level != SOL_RTIPC)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
-
-	case IDDP_SETRXTIMEOUT:
-		if (sopt.optlen != sizeof(timeout))
-			return -EINVAL;
-		if (rtipc_get_arg(user_info, &timeout,
-				  sopt.optval, sizeof(timeout)))
-			return -EFAULT;
-		sk->rx_timeout = timeout;
-		break;
-
-	case IDDP_SETTXTIMEOUT:
-		if (sopt.optlen != sizeof(timeout))
-			return -EINVAL;
-		if (rtipc_get_arg(user_info, &timeout,
-				  sopt.optval, sizeof(timeout)))
-			return -EFAULT;
-		sk->tx_timeout = timeout;
-		break;
 
 	case IDDP_SETLOCALPOOL:
 		if (sopt.optlen != sizeof(len))
@@ -700,6 +710,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
+	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
 
@@ -708,6 +719,34 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 
 	if (rtipc_get_arg(user_info, &len, sopt.optlen, sizeof(len)))
 		return -EFAULT;
+
+	if (sopt.level == SOL_SOCKET) {
+		switch (sopt.optname) {
+
+		case SO_RCVTIMEO:
+			if (len != sizeof(tv))
+				return -EINVAL;
+			rtipc_ns_to_timeval(&tv, sk->rx_timeout);
+			if (rtipc_put_arg(user_info, sopt.optval,
+					  &tv, sizeof(tv)))
+				return -EFAULT;
+			break;
+
+		case SO_SNDTIMEO:
+			if (len != sizeof(tv))
+				return -EINVAL;
+			rtipc_ns_to_timeval(&tv, sk->tx_timeout);
+			if (rtipc_put_arg(user_info, sopt.optval,
+					  &tv, sizeof(tv)))
+				return -EFAULT;
+			break;
+
+		default:
+			ret = -EINVAL;
+		}
+
+		return ret;
+	}
 
 	if (sopt.level != SOL_RTIPC)
 		return -ENOPROTOOPT;

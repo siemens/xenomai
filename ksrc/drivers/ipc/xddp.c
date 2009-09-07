@@ -795,11 +795,11 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label exists, connect() blocks
-	 * for the requested amount of time until a socket is bound to
-	 * the same label, unless the internal timeout (see
-	 * XDDP_SETTIMEOUT) specifies a non-blocking operation
-	 * (RTDM_TIMEOUT_NONE).
+	 * - If sipc_port is -1 and a label was set via XDDP_SETLABEL,
+	 * connect() blocks for the requested amount of time until a
+	 * socket is bound to the same label, unless the internal
+	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
+	 * operation (RTDM_TIMEOUT_NONE).
 	 *
 	 * - If sipc_port is -1 and no label is given, the default
 	 * destination address is cleared, meaning that any subsequent
@@ -900,12 +900,31 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 	struct _rtdm_setsockopt_args sopt;
 	char label[XDDP_LABEL_LEN];
 	rtdm_lockctx_t lockctx;
-	nanosecs_rel_t timeout;
+	struct timeval tv;
 	int ret = 0;
 	size_t len;
 
 	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
 		return -EFAULT;
+
+	if (sopt.level == SOL_SOCKET) {
+		switch (sopt.optname) {
+
+		case SO_RCVTIMEO:
+			if (sopt.optlen != sizeof(tv))
+				return -EINVAL;
+			if (rtipc_get_arg(user_info, &tv,
+					  sopt.optval, sizeof(tv)))
+				return -EFAULT;
+			sk->timeout = rtipc_timeval_to_ns(&tv);
+			break;
+
+		default:
+			ret = -EINVAL;
+		}
+
+		return ret;
+	}
 
 	if (sopt.level != SOL_RTIPC)
 		return -ENOPROTOOPT;
@@ -951,15 +970,6 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		);
 		break;
 
-	case XDDP_SETTIMEOUT:
-		if (sopt.optlen != sizeof(timeout))
-			return -EINVAL;
-		if (rtipc_get_arg(user_info, &timeout,
-				  sopt.optval, sizeof(timeout)))
-			return -EFAULT;
-		sk->timeout = timeout;
-		break;
-
 	case XDDP_SETMONITOR:
 		/* Monitoring is available from kernel-space only. */
 		if (user_info)
@@ -1002,6 +1012,7 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 {
 	struct _rtdm_getsockopt_args sopt;
 	char label[XDDP_LABEL_LEN];
+	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
 
@@ -1010,6 +1021,25 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 
 	if (rtipc_get_arg(user_info, &len, sopt.optlen, sizeof(len)))
 		return -EFAULT;
+
+	if (sopt.level == SOL_SOCKET) {
+		switch (sopt.optname) {
+
+		case SO_RCVTIMEO:
+			if (len != sizeof(tv))
+				return -EINVAL;
+			rtipc_ns_to_timeval(&tv, sk->timeout);
+			if (rtipc_put_arg(user_info, sopt.optval,
+					  &tv, sizeof(tv)))
+				return -EFAULT;
+			break;
+
+		default:
+			ret = -EINVAL;
+		}
+
+		return ret;
+	}
 
 	if (sopt.level != SOL_RTIPC)
 		return -ENOPROTOOPT;

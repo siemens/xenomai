@@ -116,7 +116,7 @@ void *realtime_thread1(void *arg)
 	 */
 	strcpy(label, XDDP_PORT_LABEL);
 	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
-			 &label, sizeof(label));
+			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
 	/*
@@ -155,8 +155,8 @@ void *realtime_thread2(void *arg)
 	char label[XDDP_LABEL_LEN];
 	struct sockaddr_ipc saddr;
 	int ret, s, n = 0, len;
-	nanosecs_rel_t timeout;
 	struct timespec ts;
+	struct timeval tv;
 	socklen_t addrlen;
 	char buf[128];
 
@@ -173,9 +173,10 @@ void *realtime_thread2(void *arg)
 	 * one second until a socket is bound to a port using the same
 	 * label, or return with a timeout error.
 	 */
-	timeout = 1000000000ULL; /* nanoseconds */
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETTIMEOUT,
-			 &timeout, sizeof(timeout));
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	ret = setsockopt(s, SOL_SOCKET, SO_RCVTIMEO,
+			 &tv, sizeof(tv));
 	if (ret)
 		fail("setsockopt");
 
@@ -185,7 +186,7 @@ void *realtime_thread2(void *arg)
 	 */
 	strcpy(label, XDDP_PORT_LABEL);
 	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
-			 &label, sizeof(label));
+			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
 
