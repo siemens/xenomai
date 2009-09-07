@@ -59,7 +59,10 @@ struct xddp_socket {
 	int (*monitor)(int s, int event, long arg);
 };
 
-static struct sockaddr_ipc nullsa = { .sipc_port = -1 };
+static struct sockaddr_ipc nullsa = {
+	.sipc_family = AF_RTIPC,
+	.sipc_port = -1
+};
 
 static struct xddp_socket *portmap[CONFIG_XENO_OPT_PIPE_NRDEV];
 
