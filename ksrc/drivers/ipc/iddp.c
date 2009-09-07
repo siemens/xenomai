@@ -579,6 +579,41 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 	return ret;
 }
 
+static int __iddp_getsockopt(struct iddp_socket *sk,
+			     rtdm_user_info_t *user_info,
+			     void *arg)
+{
+	struct _rtdm_getsockopt_args sopt;
+	socklen_t len;
+	int ret = 0;
+
+	if (rtipc_get_arg(user_info, &sopt, arg, sizeof(sopt)))
+		return -EFAULT;
+
+	if (rtipc_get_arg(user_info, &len, sopt.optlen, sizeof(len)))
+		return -EFAULT;
+
+	if (sopt.level != SOL_RTIPC)
+		return -ENOPROTOOPT;
+
+	switch (sopt.optname) {
+
+	case IDDP_GETSTALLCOUNT:
+		if (len < sizeof(sk->stalls))
+			return -EINVAL;
+		if (rtipc_put_arg(user_info, sopt.optval,
+				  &sk->stalls, sizeof(sk->stalls)))
+			return -EFAULT;
+		break;
+
+
+	default:
+		ret = -EINVAL;
+	}
+
+	return ret;
+}
+
 static int iddp_ioctl(struct rtipc_private *priv,
 		      rtdm_user_info_t *user_info,
 		      unsigned int request, void *arg)
@@ -615,6 +650,10 @@ static int iddp_ioctl(struct rtipc_private *priv,
 
 	case _RTIOC_SETSOCKOPT:
 		ret = __iddp_setsockopt(sk, user_info, arg);
+		break;
+
+	case _RTIOC_GETSOCKOPT:
+		ret = __iddp_getsockopt(sk, user_info, arg);
 		break;
 
 	case _RTIOC_LISTEN:
