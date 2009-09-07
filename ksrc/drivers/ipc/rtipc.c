@@ -188,7 +188,14 @@ int __init __rtipc_init(void)
 
 void __rtipc_exit(void)
 {
+	int n;
+
 	rtdm_dev_unregister(&device, 1000);
+
+	for (n = 0; n < IPCPROTO_MAX; n++) {
+		if (protocols[n] && protocols[n]->proto_exit)
+			protocols[n]->proto_exit();
+	}
 }
 
 module_init(__rtipc_init);

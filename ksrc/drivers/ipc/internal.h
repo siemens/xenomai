@@ -35,6 +35,7 @@ struct rtipc_protocol {
 	const char *proto_name;
 	int proto_statesz;
 	int (*proto_init)(void);
+	void (*proto_exit)(void);
 	struct {
 		int (*socket)(struct rtipc_private *priv,
 			      rtdm_user_info_t *user_info);
