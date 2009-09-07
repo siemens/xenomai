@@ -186,7 +186,7 @@ int __init __rtipc_init(void)
 	return rtdm_dev_register(&device);
 }
 
-void __rtipc_exit(void)
+void __exit __rtipc_exit(void)
 {
 	int n;
 
