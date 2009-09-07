@@ -40,8 +40,8 @@ struct xddp_socket {
 	struct sockaddr_ipc peer;
 
 	int minor;
-	xnhandle_t handle;
 	size_t poolsz;
+	xnhandle_t handle;
 	char label[XDDP_LABEL_LEN];
 
 	struct xddp_message *buffer;
@@ -706,14 +706,16 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	if (poolsz > 0) {
 		poolsz = xnheap_rounded_size(poolsz + sk->reqbufsz, XNHEAP_PAGE_SIZE);
 		poolmem = xnarch_alloc_host_mem(poolsz);
-		if (poolmem == NULL)
-			return -ENOMEM;
+		if (poolmem == NULL) {
+			ret = -ENOMEM;
+			goto fail;
+		}
 
 		ret = xnheap_init(&sk->privpool,
 				  poolmem, poolsz, XNHEAP_PAGE_SIZE);
 		if (ret) {
 			xnarch_free_host_mem(poolmem, poolsz);
-			return ret;
+			goto fail;
 		}
 
 		sk->bufpool = &sk->privpool;
@@ -724,7 +726,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 		sk->buffer = xnheap_alloc(sk->bufpool, sk->reqbufsz);
 		if (sk->buffer == NULL) {
 			ret = -ENOMEM;
-			goto fail;
+			goto fail_freeheap;
 		}
 		sk->curbufsz = sk->reqbufsz;
 	}
@@ -739,10 +741,12 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	ret = xnpipe_connect(sa->sipc_port, &ops,
 			     rtdm_private_to_context(priv));
 	if (ret < 0) {
-	fail:
+	fail_freeheap:
 		if (sk->bufpool == &sk->privpool)
 			xnheap_destroy(&sk->privpool,
 				       __xddp_flush_pool, NULL);
+	fail:
+		clear_bit(_XDDP_BINDING, &sk->status);
 		return ret;
 	}
 
