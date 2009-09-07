@@ -939,6 +939,8 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		if (rtipc_get_arg(user_info, &len,
 				  sopt.optval, sizeof(len)))
 			return -EFAULT;
+		if (len == 0)
+			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
 			if (test_bit(_XDDP_BOUND, &sk->status) ||
 			    test_bit(_XDDP_BINDING, &sk->status))
