@@ -48,7 +48,10 @@ struct iddp_socket {
 	unsigned long stalls;	/* Buffer stall counter. */
 };
 
-static struct sockaddr_ipc nullsa = { .sipc_port = -1 };
+static struct sockaddr_ipc nullsa = {
+	.sipc_family = AF_RTIPC,
+	.sipc_port = -1
+};
 
 static struct iddp_socket *portmap[CONFIG_XENO_OPT_IDDP_NRPORT];
 
@@ -431,6 +434,11 @@ static ssize_t iddp_write(struct rtipc_private *priv,
 static int __iddp_bind_socket(struct iddp_socket *sk,
 			      struct sockaddr_ipc *sa)
 {
+	if (sa == NULL) {
+		sa = &nullsa;
+		goto set_binding;
+	}
+
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
 
@@ -438,6 +446,7 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
 
+ set_binding:
 	RTDM_EXECUTE_ATOMICALLY(
 		if (sk->name.sipc_port >= 0) /* Clear previous binding. */
 			portmap[sk->name.sipc_port] = NULL;
@@ -466,10 +475,10 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
 
+set_assoc:
 	ret = __iddp_bind_socket(sk, sa); /* Set listening port. */
 	if (ret)
 		return ret;
-set_assoc:
 	RTDM_EXECUTE_ATOMICALLY(
 		/* Set default destination. */
 		sk->peer = *sa;
@@ -504,7 +513,7 @@ static int __iddp_getuser_address(rtdm_user_info_t *user_info,
 }
 
 static int __iddp_putuser_address(rtdm_user_info_t *user_info, void *arg,
-				  const struct sockaddr_ipc *sockaddr)
+				  const struct sockaddr_ipc *saddr)
 {
 	struct _rtdm_getsockaddr_args getaddr;
 	socklen_t len;
@@ -517,14 +526,14 @@ static int __iddp_putuser_address(rtdm_user_info_t *user_info, void *arg,
 			  &len, getaddr.addrlen, sizeof(len)))
 		return -EFAULT;
 
-	if (len < sizeof(*sockaddr))
+	if (len < sizeof(*saddr))
 		return -EINVAL;
 
 	if (rtipc_put_arg(user_info,
-			  getaddr.addr, sockaddr, sizeof(*sockaddr)))
+			  getaddr.addr, saddr, sizeof(*saddr)))
 		return -EFAULT;
 
-	len = sizeof(*sockaddr);
+	len = sizeof(*saddr);
 	if (rtipc_put_arg(user_info,
 			  getaddr.addrlen, &len, sizeof(len)))
 		return -EFAULT;
@@ -626,17 +635,15 @@ static int iddp_ioctl(struct rtipc_private *priv,
 	
 	case _RTIOC_CONNECT:
 		ret = __iddp_getuser_address(user_info, arg, &saddrp);
-		if (ret == 0)
-			ret = __iddp_connect_socket(sk, saddrp);
+		if (ret)
+		  return ret;
+		ret = __iddp_connect_socket(sk, saddrp);
 		break;
 
 	case _RTIOC_BIND:
 		ret = __iddp_getuser_address(user_info, arg, &saddrp);
 		if (ret)
 			return ret;
-		if (saddrp == NULL)
-			return -EFAULT;
-
 		ret = __iddp_bind_socket(sk, saddrp);
 		break;
 
