@@ -21,6 +21,7 @@
 #ifndef _RTIPC_INTERNAL_H
 #define _RTIPC_INTERNAL_H
 
+#include <nucleus/registry.h>
 #include <rtdm/rtdm.h>
 #include <rtdm/rtdm_driver.h>
 
@@ -80,6 +81,8 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 extern struct rtipc_protocol xddp_proto_driver;
 
 extern struct rtipc_protocol iddp_proto_driver;
+
+extern struct xnptree rtipc_ptree;
 
 int rtipc_get_arg(rtdm_user_info_t *user_info,
 		  void *dst, const void *src, size_t len);

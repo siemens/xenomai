@@ -28,6 +28,8 @@
 
 #define trace(m,a...) printk(KERN_WARNING "%s: " m "\n", __FUNCTION__, ##a)
 
+#define IDDP_SOCKET_MAGIC 0xa37a37a8
+
 struct iddp_message {
 	struct list_head next;
 	int from;
@@ -37,6 +39,7 @@ struct iddp_message {
 };
 
 struct iddp_socket {
+	int magic;
 	struct sockaddr_ipc name;
 	struct sockaddr_ipc peer;
 
@@ -50,6 +53,8 @@ struct iddp_socket {
 	rtdm_sem_t insem;
 	struct list_head inq;
 	u_long status;
+	xnhandle_t handle;
+	char label[IDDP_LABEL_LEN];
 
 	nanosecs_rel_t rx_timeout;
 	nanosecs_rel_t tx_timeout;
@@ -72,6 +77,33 @@ static int poolwait;
 #define MAX_IOV_NUMBER  64
 
 #define _IDDP_BINDING  0
+#define _IDDP_BOUND    1
+
+#ifdef CONFIG_PROC_FS
+
+static ssize_t __iddp_link_proc(char *buf, int count, void *data)
+{
+	struct iddp_socket *sk = data;
+	return snprintf(buf, count, "%d", sk->name.sipc_port);
+}
+
+static struct xnpnode __iddp_pnode = {
+
+	.dir = NULL,
+	.type = "iddp",
+	.entries = 0,
+	.link_proc = &__iddp_link_proc,
+	.root = &rtipc_ptree,
+};
+
+#else /* !CONFIG_PROC_FS */
+
+static struct xnpnode __iddp_pnode = {
+
+	.type = "iddp"
+};
+
+#endif /* !CONFIG_PROC_FS */
 
 static inline void __iddp_init_mbuf(struct iddp_message *mbuf, size_t len)
 {
@@ -152,7 +184,7 @@ static int iddp_socket(struct rtipc_private *priv,
 {
 	struct iddp_socket *sk = priv->state;
 
-	rtdm_sem_init(&sk->insem, 0);
+	sk->magic = IDDP_SOCKET_MAGIC;
 	sk->name = nullsa;	/* Unbound */
 	sk->peer = nullsa;
 	sk->bufpool = &kheap;
@@ -163,7 +195,9 @@ static int iddp_socket(struct rtipc_private *priv,
 	sk->rx_timeout = RTDM_TIMEOUT_INFINITE;
 	sk->tx_timeout = RTDM_TIMEOUT_INFINITE;
 	sk->stalls = 0;
+	*sk->label = 0;
 	INIT_LIST_HEAD(&sk->inq);
+	rtdm_sem_init(&sk->insem, 0);
 	sk->priv = priv;
 
 	return 0;
@@ -182,6 +216,9 @@ static int iddp_close(struct rtipc_private *priv,
 	);
 
 	rtdm_sem_destroy(&sk->insem);
+
+	if (sk->handle)
+		xnregistry_remove(sk->handle);
 
 	if (sk->bufpool != &kheap) {
 		xnheap_destroy(&sk->privpool, __iddp_flush_pool, NULL);
@@ -209,6 +246,9 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	int nvec, rdoff, ret, dofree;
 	struct iddp_message *mbuf;
 	nanosecs_rel_t timeout;
+
+	if (!test_bit(_IDDP_BOUND, &sk->status))
+		return -EAGAIN;
 
 	/* Compute available iovec space to maxlen. */
 	for (maxlen = 0, nvec = 0; nvec < iovlen; nvec++) {
@@ -486,20 +526,20 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	size_t poolsz;
 	int ret = 0;
 
-	if (sa == NULL) {
-		sa = &nullsa;
-		goto set_binding;
-	}
-
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
 
-	if (sa->sipc_port < -1 ||
+	if (sa->sipc_port < 0 ||
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
 
-	if (test_and_set_bit(_IDDP_BINDING, &sk->status))
-		return -EINPROGRESS;
+	RTDM_EXECUTE_ATOMICALLY(
+		if (test_bit(_IDDP_BOUND, &sk->status) ||
+		    __test_and_set_bit(_IDDP_BINDING, &sk->status))
+			ret = -EADDRINUSE;
+	);
+	if (ret)
+		return ret;
 
 	/*
 	 * Allocate a local buffer pool if we were told to do so via
@@ -511,41 +551,55 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 		poolmem = xnarch_alloc_host_mem(poolsz);
 		if (poolmem == NULL) {
 			ret = -ENOMEM;
-			goto out;
+			goto fail;
 		}
 
 		ret = xnheap_init(&sk->privpool,
 				  poolmem, poolsz, XNHEAP_PAGE_SIZE);
 		if (ret) {
 			xnarch_free_host_mem(poolmem, poolsz);
-			goto out;
+			goto fail;
 		}
 
-		RTDM_EXECUTE_ATOMICALLY(
-			sk->poolevt = &sk->privevt;
-			sk->poolwait = &sk->privwait;
-			sk->bufpool = &sk->privpool;
-		);
+		sk->poolevt = &sk->privevt;
+		sk->poolwait = &sk->privwait;
+		sk->bufpool = &sk->privpool;
 	}
 
- set_binding:
+	sk->name = *sa;
+	/* Set default destination if unset at binding time. */
+	if (sk->peer.sipc_port < 0)
+		sk->peer = *sa;
+
+	if (*sk->label) {
+		ret = xnregistry_enter(sk->label, sk,
+				       &sk->handle, &__iddp_pnode);
+		if (ret) {
+			if (poolsz > 0)
+				xnheap_destroy(&sk->privpool,
+					       __iddp_flush_pool, NULL);
+			return ret;
+		}
+	}
+
 	RTDM_EXECUTE_ATOMICALLY(
-		if (sk->name.sipc_port >= 0) /* Clear previous binding. */
-			portmap[sk->name.sipc_port] = NULL;
-		if (sa->sipc_port >= 0) /* Set next binding. */
-			portmap[sa->sipc_port] = sk;
-		sk->name = *sa;
+		portmap[sa->sipc_port] = sk;
+		__clear_bit(_IDDP_BINDING, &sk->status);
+		__set_bit(_IDDP_BOUND, &sk->status);
 	);
 
-out:
+	return 0;
+fail:
 	clear_bit(_IDDP_BINDING, &sk->status);
-
+	
 	return ret;
 }
 
 static int __iddp_connect_socket(struct iddp_socket *sk,
 				 struct sockaddr_ipc *sa)
 {
+	struct iddp_socket *rsk;
+	xnhandle_t h;
 	int ret;
 
 	if (sa == NULL) {
@@ -559,12 +613,48 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	if (sa->sipc_port < -1 ||
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
+	/*
+	 * - If a valid sipc_port is passed in the [0..NRPORT-1] range,
+	 * it is used verbatim and the connection succeeds
+	 * immediately, regardless of whether the destination is
+	 * bound at the time of the call.
+	 *
+	 * - If sipc_port is -1 and a label was set via IDDP_SETLABEL,
+	 * connect() blocks for the requested amount of time until a
+	 * socket is bound to the same label, unless the internal
+	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
+	 * operation (RTDM_TIMEOUT_NONE).
+	 *
+	 * - If sipc_port is -1 and no label is given, the default
+	 * destination address is cleared, meaning that any subsequent
+	 * write() to the socket will return -EDESTADDRREQ, until a
+	 * valid destination address is set via connect() or bind().
+	 *
+	 * - In all other cases, -EINVAL is returned.
+	 */
+	if (sa->sipc_port < 0 && *sk->label) {
+		ret = xnregistry_bind(sk->label,
+				      sk->rx_timeout, XN_RELATIVE, &h);
+		if (ret)
+			return ret;
+
+		RTDM_EXECUTE_ATOMICALLY(
+			rsk = xnregistry_fetch(h);
+			if (rsk == NULL || rsk->magic != IDDP_SOCKET_MAGIC)
+				ret = -EINVAL;
+			else
+				/* Fetch labeled port number. */
+				sa->sipc_port = rsk->name.sipc_port;
+		);
+		if (ret)
+			return ret;
+	}
 
 set_assoc:
-	ret = __iddp_bind_socket(sk, sa); /* Set listening port. */
-	if (ret)
-		return ret;
 	RTDM_EXECUTE_ATOMICALLY(
+		if (!test_bit(_IDDP_BOUND, &sk->status))
+			/* Set default name. */
+			sk->name = *sa;
 		/* Set default destination. */
 		sk->peer = *sa;
 	);
@@ -631,6 +721,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
+	char label[IDDP_LABEL_LEN];
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
@@ -684,8 +775,8 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			 * We may not do this more than once, and we
 			 * have to do this before the first binding.
 			 */
-			if (test_bit(_IDDP_BINDING, &sk->status) ||
-			    sk->bufpool != &kheap)
+			if (test_bit(_IDDP_BOUND, &sk->status) ||
+			    test_bit(_IDDP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else
 				sk->poolsz = len;
@@ -696,6 +787,26 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		if (rtipc_put_arg(user_info, arg,
 				  &sk->stalls, sizeof(sk->stalls)))
 			return -EFAULT;
+		break;
+
+	case IDDP_SETLABEL:
+		if (sopt.optlen < sizeof(label))
+			return -EINVAL;
+		if (rtipc_get_arg(user_info, label,
+				  sopt.optval, sizeof(label) - 1))
+			return -EFAULT;
+		RTDM_EXECUTE_ATOMICALLY(
+			/*
+			 * We may attach a label to a client socket
+			 * which was previously bound in IDDP.
+			 */
+			if (test_bit(_IDDP_BINDING, &sk->status))
+				ret = -EALREADY;
+			else {
+				strcpy(sk->label, label);
+				sk->label[IDDP_LABEL_LEN-1] = 0;
+			}
+		);
 		break;
 
 	default:
@@ -710,6 +821,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
+	char label[IDDP_LABEL_LEN];
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -761,6 +873,16 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 			return -EFAULT;
 		break;
 
+	case IDDP_GETLABEL:
+		if (len < sizeof(label))
+			return -EINVAL;
+		RTDM_EXECUTE_ATOMICALLY(
+			strcpy(label, sk->label);
+		);
+		if (rtipc_put_arg(user_info, sopt.optval,
+				  label, sizeof(label)))
+			return -EFAULT;
+		break;
 
 	default:
 		ret = -EINVAL;
@@ -835,6 +957,8 @@ static int iddp_ioctl(struct rtipc_private *priv,
 	ret = __iddp_getuser_address(user_info, arg, &saddrp);
 	if (ret)
 		return ret;
+	if (saddrp == NULL)
+		return -EFAULT;
 
 	return __iddp_bind_socket(sk, saddrp);
 }

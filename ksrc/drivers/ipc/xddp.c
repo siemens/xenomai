@@ -23,7 +23,6 @@
 #include <nucleus/heap.h>
 #include <nucleus/bufd.h>
 #include <nucleus/pipe.h>
-#include <nucleus/registry.h>
 #include <rtdm/rtipc.h>
 #include "internal.h"
 
@@ -76,30 +75,24 @@ static struct xddp_socket *portmap[CONFIG_XENO_OPT_PIPE_NRDEV];
 
 #ifdef CONFIG_PROC_FS
 
-static xnptree_t __xddp_ptree = {
-	.dir = NULL,
-	.name = "rtdm",
-	.entries = 0,
-};
-
 static ssize_t __xddp_link_proc(char *buf, int count, void *data)
 {
 	struct xddp_socket *sk = data;
 	return snprintf(buf, count, "/dev/rtp%d", sk->minor);
 }
 
-static xnpnode_t __xddp_pnode = {
+static struct xnpnode __xddp_pnode = {
 
 	.dir = NULL,
 	.type = "xddp",
 	.entries = 0,
 	.link_proc = &__xddp_link_proc,
-	.root = &__xddp_ptree,
+	.root = &rtipc_ptree,
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __xddp_pnode = {
+static struct xnpnode __xddp_pnode = {
 
 	.type = "xddp"
 };

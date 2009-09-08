@@ -31,20 +31,20 @@
  *
  * The example code below illustrates the following process:
  *
- * realtime_thread1----------------------------->-------+
- *   =>  get socket                                     |
- *   =>  bind socket to port "demo"                     |
- *   =>  read traffic from NRT domain via recvfrom() <--+--+
- *                                                      |  |
- * realtime_thread2-------------------------------------+  |
- *   =>  get socket                                     |  |
- *   =>  connect socket to port "demo"                  |  |
- *   =>  write traffic to NRT domain via sendto()       v  |
- *                                                      |  ^
- * regular_thread---------------------------------------+  |
- *   =>  open /proc/xenomai/registry/rtdm/xddp/demo     |  |
- *   =>  read traffic from RT domain via read()         |  |
- *   =>  mirror traffic to RT domain via write()        +--+
+ * realtime_thread1----------------------------->----------+
+ *   =>  get socket                                        |
+ *   =>  bind socket to port "xddp-demo                    |
+ *   =>  read traffic from NRT domain via recvfrom()    <--+--+
+ *                                                         |  |
+ * realtime_thread2----------------------------------------+  |
+ *   =>  get socket                                        |  |
+ *   =>  connect socket to port "xddp-demo"                |  |
+ *   =>  write traffic to NRT domain via sendto()          v  |
+ *                                                         |  ^
+ * regular_thread------------------------------------------+  |
+ *   =>  open /proc/xenomai/registry/rtipc/xddp/xddp-demo  |  |
+ *   =>  read traffic from RT domain via read()            |  |
+ *   =>  mirror traffic to RT domain via write()           +--+
  *
  * See Makefile in this directory for build directives.
  *
@@ -65,7 +65,7 @@
 
 pthread_t rt1, rt2, nrt;
 
-#define XDDP_PORT_LABEL  "demo"
+#define XDDP_PORT_LABEL  "xddp-demo"
 
 static const char *msg[] = {
     "Surfing With The Alien",
@@ -125,7 +125,7 @@ void *realtime_thread1(void *arg)
 	 * so that peers may use a descriptive information to locate
 	 * it. For instance, the pseudo-device matching our RT
 	 * endpoint will appear as
-	 * /proc/xenomai/registry/rtdm/xddp/<XDDP_PORT_LABEL> in the
+	 * /proc/xenomai/registry/rtipc/xddp/<XDDP_PORT_LABEL> in the
 	 * Linux domain, once the socket is bound.
 	 *
 	 * saddr.sipc_port specifies the port number to use. If -1 is
@@ -245,7 +245,7 @@ void *regular_thread(void *arg)
 	int fd, ret;
 
 	if (asprintf(&devname,
-		     "/proc/xenomai/registry/rtdm/xddp/%s",
+		     "/proc/xenomai/registry/rtipc/xddp/%s",
 		     XDDP_PORT_LABEL) < 0)
 		fail("asprintf");
 

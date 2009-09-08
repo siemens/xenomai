@@ -85,8 +85,11 @@ enum {
 #define XDDP_GETLABEL		5
 #define IDDP_SETLOCALPOOL	6
 #define IDDP_GETSTALLCOUNT	7
+#define IDDP_SETLABEL		8
+#define IDDP_GETLABEL		9
 
 #define XDDP_LABEL_LEN		XNOBJECT_NAME_LEN
+#define IDDP_LABEL_LEN		XNOBJECT_NAME_LEN
 
  /*
   * Valid port ranges:

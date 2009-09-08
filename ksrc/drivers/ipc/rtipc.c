@@ -32,6 +32,15 @@ static struct rtipc_protocol *protocols[IPCPROTO_MAX] = {
 #endif
 };
 
+#ifdef CONFIG_PROC_FS
+struct xnptree rtipc_ptree = {
+
+	.dir = NULL,
+	.name = "rtipc",
+	.entries = 0,
+};
+#endif /* CONFIG_PROC_FS */
+
 int rtipc_get_arg(rtdm_user_info_t *user_info,
 		  void *dst, const void *src, size_t len)
 {

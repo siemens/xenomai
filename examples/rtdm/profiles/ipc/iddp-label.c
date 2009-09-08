@@ -1,12 +1,17 @@
 /*
- * IDDP-based client/server demo, using the sendto(2)/recvfrom(2)
+ * IDDP-based client/server demo, using the write(2)/recvfrom(2)
  * system calls to exchange data.
  *
  * In this example, two sockets are created.  A server thread (reader)
- * is bound to a real-time port and receives datagrams sent to this
- * port from a client thread (writer). The client socket is bound to a
- * different port, only to provide a valid peer name; this is
- * optional.
+ * is bound to a labeled real-time port and receives datagrams sent to
+ * this port from a client thread (writer). The client thread attaches
+ * to the port opened by the server using a labeled connection
+ * request. The client socket is bound to a different port, only to
+ * provide a valid peer name; this is optional.
+ *
+ * ASCII labels can be attached to bound ports, in order to connect
+ * sockets to them in a more descriptive way than using plain numeric
+ * port values.
  *
  * See Makefile in this directory for build directives.
  */
@@ -25,6 +30,8 @@ pthread_t svtid, cltid;
 
 #define IDDP_SVPORT 12
 #define IDDP_CLPORT 13
+
+#define IDDP_PORT_LABEL  "iddp-demo"
 
 static const char *msg[] = {
     "Surfing With The Alien",
@@ -54,9 +61,9 @@ static void fail(const char *reason)
 void *server(void *arg)
 {
 	struct sockaddr_ipc saddr, claddr;
+	char label[IDDP_LABEL_LEN];
 	socklen_t addrlen;
 	char buf[128];
-	size_t poolsz;
 	int ret, s;
 
 	s = socket(AF_RTIPC, SOCK_DGRAM, IPCPROTO_IDDP);
@@ -64,16 +71,27 @@ void *server(void *arg)
 		fail("socket");
 
 	/*
-	 * Set a local 32k pool for the server endpoint. Memory needed
-	 * to convey datagrams will be pulled from this pool, instead
-	 * of Xenomai's system pool.
+	 * We will use Xenomai's system heap for datagram, so no
+	 * IDDP_SETLOCALPOOL required here.
 	 */
-	poolsz = 32768; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLOCALPOOL,
-			 &poolsz, sizeof(poolsz));
+
+	/*
+	 * Set a port label. This name will be registered when
+	 * binding, in addition to the port number (if given).
+	 */
+	strcpy(label, IDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
+			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
 
+	/*
+	 * Bind the socket to the port. Assign that port a label, so
+	 * that peers may use a descriptive information to locate
+	 * it. Labeled ports will appear in the
+	 * /proc/xenomai/registry/rtipc/iddp directory once the socket
+	 * is bound.
+	 */
 	saddr.sipc_family = AF_RTIPC;
 	saddr.sipc_port = IDDP_SVPORT;
 	ret = bind(s, (struct sockaddr *)&saddr, sizeof(saddr));
@@ -98,6 +116,7 @@ void *server(void *arg)
 void *client(void *arg)
 {
 	struct sockaddr_ipc svsaddr, clsaddr;
+	char label[IDDP_LABEL_LEN];
 	int ret, s, n = 0, len;
 	struct timespec ts;
 	char buf[128];
@@ -106,18 +125,41 @@ void *client(void *arg)
 	if (s < 0)
 		fail("socket");
 
+	/*
+	 * Set a name on the client socket. This is strictly optional,
+	 * and only done here for the purpose of getting back a
+	 * different port number in recvfrom().
+	 */
 	clsaddr.sipc_family = AF_RTIPC;
 	clsaddr.sipc_port = IDDP_CLPORT;
 	ret = bind(s, (struct sockaddr *)&clsaddr, sizeof(clsaddr));
 	if (ret)
 		fail("bind");
 
+	/*
+	 * Set the port label. This name will be used to find the peer
+	 * when connecting, instead of the port number. The label must
+	 * be set _after_ the socket is bound to the port, so that
+	 * IDDP does not try to register this label for the client
+	 * port as well (like the server thread did).
+	 */
+	strcpy(label, IDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
+			 label, sizeof(label));
+	if (ret)
+		fail("setsockopt");
+
+	memset(&svsaddr, 0, sizeof(svsaddr));
 	svsaddr.sipc_family = AF_RTIPC;
-	svsaddr.sipc_port = IDDP_SVPORT;
+	svsaddr.sipc_port = -1;	/* Tell IDDP to search by label. */
+	ret = connect(s, (struct sockaddr *)&svsaddr, sizeof(svsaddr));
+	if (ret)
+		fail("connect");
+
 	for (;;) {
 		len = strlen(msg[n]);
-		ret = sendto(s, msg[n], len, 0,
-			     (struct sockaddr *)&svsaddr, sizeof(svsaddr));
+		/* Send to default destination we connected to. */
+		ret = write(s, msg[n], len);
 		if (ret < 0) {
 			close(s);
 			fail("sendto");
