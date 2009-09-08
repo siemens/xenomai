@@ -28,8 +28,7 @@
 
 pthread_t svtid, cltid;
 
-#define IDDP_SVPORT 12
-#define IDDP_CLPORT 13
+#define IDDP_CLPORT  27
 
 #define IDDP_PORT_LABEL  "iddp-demo"
 
@@ -91,9 +90,12 @@ void *server(void *arg)
 	 * it. Labeled ports will appear in the
 	 * /proc/xenomai/registry/rtipc/iddp directory once the socket
 	 * is bound.
+	 *
+	 * saddr.sipc_port specifies the port number to use. If -1 is
+	 * passed, the IDDP driver will auto-select an idle port.
 	 */
 	saddr.sipc_family = AF_RTIPC;
-	saddr.sipc_port = IDDP_SVPORT;
+	saddr.sipc_port = -1;	/* Pick next free */
 	ret = bind(s, (struct sockaddr *)&saddr, sizeof(saddr));
 	if (ret)
 		fail("bind");

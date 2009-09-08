@@ -23,6 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
 #include <nucleus/heap.h>
+#include <nucleus/map.h>
 #include <rtdm/rtipc.h>
 #include "internal.h"
 
@@ -67,6 +68,8 @@ static struct sockaddr_ipc nullsa = {
 	.sipc_family = AF_RTIPC,
 	.sipc_port = -1
 };
+
+static struct xnmap *portbits;
 
 static struct iddp_socket *portmap[CONFIG_XENO_OPT_IDDP_NRPORT];
 
@@ -210,10 +213,10 @@ static int iddp_close(struct rtipc_private *priv,
 	struct iddp_message *mbuf;
 	LIST_HEAD(head);
 
-	RTDM_EXECUTE_ATOMICALLY(
-		if (sk->name.sipc_port > -1)
-			portmap[sk->name.sipc_port] = NULL;
-	);
+	if (sk->name.sipc_port > -1) {
+		portmap[sk->name.sipc_port] = NULL;
+		xnmap_remove(portbits, sk->name.sipc_port);
+	}
 
 	rtdm_sem_destroy(&sk->insem);
 
@@ -522,14 +525,14 @@ static ssize_t iddp_write(struct rtipc_private *priv,
 static int __iddp_bind_socket(struct iddp_socket *sk,
 			      struct sockaddr_ipc *sa)
 {
+	int ret = 0, port;
 	void *poolmem;
 	size_t poolsz;
-	int ret = 0;
 
 	if (sa->sipc_family != AF_RTIPC)
 		return -EINVAL;
 
-	if (sa->sipc_port < 0 ||
+	if (sa->sipc_port < -1 ||
 	    sa->sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
 		return -EINVAL;
 
@@ -540,6 +543,14 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	);
 	if (ret)
 		return ret;
+
+	port = sa->sipc_port;
+	/* Will auto-select a free port number if unspec (-1). */
+	port = xnmap_enter(portbits, port, sk);
+	if (port < 0)
+		return port == -EEXIST ? -EADDRINUSE : -ENOMEM;
+	trace("selected port %d", port);
+	sa->sipc_port = port;
 
 	/*
 	 * Allocate a local buffer pool if we were told to do so via
@@ -908,6 +919,10 @@ static int iddp_ioctl(struct rtipc_private *priv,
 
 static int __init iddp_init(void)
 {
+	portbits = xnmap_create(CONFIG_XENO_OPT_IDDP_NRPORT, 0, 0);
+	if (portbits == NULL)
+		return -ENOMEM;
+
 	rtdm_event_init(&poolevt, 0);
 
 	return 0;
@@ -916,6 +931,7 @@ static int __init iddp_init(void)
 static void __exit iddp_exit(void)
 {
 	rtdm_event_destroy(&poolevt);
+	xnmap_delete(portbits);
 }
 
 struct rtipc_protocol iddp_proto_driver = {
