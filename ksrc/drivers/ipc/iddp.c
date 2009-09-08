@@ -551,7 +551,7 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	port = xnmap_enter(portbits, port, sk);
 	if (port < 0)
 		return port == -EEXIST ? -EADDRINUSE : -ENOMEM;
-	trace("selected port %d", port);
+
 	sa->sipc_port = port;
 
 	/*
