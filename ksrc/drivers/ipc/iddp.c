@@ -195,6 +195,7 @@ static int iddp_socket(struct rtipc_private *priv,
 	sk->poolwait = &poolwait;
 	sk->poolsz = 0;
 	sk->status = 0;
+	sk->handle = 0;
 	sk->rx_timeout = RTDM_TIMEOUT_INFINITE;
 	sk->tx_timeout = RTDM_TIMEOUT_INFINITE;
 	sk->stalls = 0;
