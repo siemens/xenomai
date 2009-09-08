@@ -595,7 +595,7 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 			if (poolsz > 0)
 				xnheap_destroy(&sk->privpool,
 					       __iddp_flush_pool, NULL);
-			return ret;
+			goto fail;
 		}
 	}
 
@@ -607,6 +607,7 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 
 	return 0;
 fail:
+	xnmap_remove(portbits, port);
 	clear_bit(_IDDP_BINDING, &sk->status);
 	
 	return ret;
