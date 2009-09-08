@@ -23,6 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/vmalloc.h>
 #include <nucleus/heap.h>
+#include <nucleus/bufd.h>
 #include <nucleus/map.h>
 #include <rtdm/rtipc.h>
 #include "internal.h"
@@ -255,6 +256,7 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	int nvec, rdoff, ret, dofree;
 	struct iddp_message *mbuf;
 	nanosecs_rel_t timeout;
+	struct xnbufd bufd;
 
 	if (!test_bit(_IDDP_BOUND, &sk->status))
 		return -EAGAIN;
@@ -301,13 +303,20 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	);
 
 	/* Now, write "len" bytes from mbuf->data to the vector cells */
-	for (nvec = 0, wrlen = len; wrlen > 0; nvec++) {
+	for (nvec = 0, wrlen = len; nvec < iovlen && wrlen > 0; nvec++) {
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = wrlen >= iov[nvec].iov_len ? iov[nvec].iov_len : wrlen;
-		ret = rtdm_safe_copy_to_user(user_info, iov[nvec].iov_base,
-					     mbuf->data + rdoff, vlen);
-		if (ret)
+		if (user_info) {
+			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
+			xnbufd_unmap_uread(&bufd);
+		} else {
+			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
+			xnbufd_unmap_kread(&bufd);
+		}
+		if (ret < 0)
 			break;
 		iov[nvec].iov_base += vlen;
 		iov[nvec].iov_len -= vlen;
@@ -385,6 +394,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	struct iddp_message *mbuf;
 	int nvec, wroff, ret, to;
 	ssize_t len, rdlen, vlen;
+	struct xnbufd bufd;
 
 	/* Compute the required buffer space. */
 	for (len = 0, nvec = 0; nvec < iovlen; nvec++) {
@@ -419,13 +429,21 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	}
 
 	/* Now, move "len" bytes to mbuf->data from the vector cells */
-	for (nvec = 0, rdlen = len, wroff = 0; rdlen > 0; nvec++) {
+	for (nvec = 0, rdlen = len, wroff = 0;
+	     nvec < iovlen && rdlen > 0; nvec++) {
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = rdlen >= iov[nvec].iov_len ? iov[nvec].iov_len : rdlen;
-		ret = rtdm_safe_copy_from_user(user_info, mbuf->data + wroff,
-					       iov[nvec].iov_base, vlen);
-		if (ret)
+		if (user_info) {
+			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_to_kmem(mbuf->data + wroff, &bufd, vlen);
+			xnbufd_unmap_uread(&bufd);
+		} else {
+			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_to_kmem(mbuf->data + wroff, &bufd, vlen);
+			xnbufd_unmap_kread(&bufd);
+		}
+		if (ret < 0)
 			goto fail;
 		iov[nvec].iov_base += vlen;
 		iov[nvec].iov_len -= vlen;

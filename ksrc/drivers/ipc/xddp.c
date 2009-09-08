@@ -294,6 +294,7 @@ static ssize_t __xddp_recvmsg(struct rtipc_private *priv,
 	nanosecs_rel_t timeout;
 	struct xnpipe_mh *mh;
 	int nvec, rdoff, ret;
+	struct xnbufd bufd;
 
 	if (!test_bit(_XDDP_BOUND, &sk->status))
 		return -EAGAIN;
@@ -325,14 +326,22 @@ static ssize_t __xddp_recvmsg(struct rtipc_private *priv,
 		*saddr = sk->name;
 
 	/* Write "len" bytes from mbuf->data to the vector cells */
-	for (ret = 0, nvec = 0, rdoff = 0, wrlen = len; wrlen > 0; nvec++) {
+	for (ret = 0, nvec = 0, rdoff = 0, wrlen = len;
+	     nvec < iovlen && wrlen > 0; nvec++) {
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = wrlen >= iov[nvec].iov_len ? iov[nvec].iov_len : wrlen;
-		ret = rtipc_put_arg(user_info, iov[nvec].iov_base,
-				    mbuf->data + rdoff, vlen);
-		if (ret)
-			break;
+		if (user_info) {
+			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
+			xnbufd_unmap_uread(&bufd);
+		} else {
+			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
+			xnbufd_unmap_kread(&bufd);
+		}
+		if (ret < 0)
+			goto out;
 		iov[nvec].iov_base += vlen;
 		iov[nvec].iov_len -= vlen;
 		wrlen -= vlen;
@@ -406,6 +415,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
  	size_t fillptr, rembytes;
 	rtdm_lockctx_t lockctx;
 	ssize_t outbytes;
+	int ret;
 
 	/*
 	 * xnpipe_msend() and xnpipe_mfixup() routines will only grab
@@ -435,16 +445,19 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 	repeat:
 		/* Mark the beginning of a should-be-atomic section. */
 		__set_bit(_XDDP_ATOMIC, &sk->status);
-
 		fillptr = sk->fillsz;
 		sk->fillsz += outbytes;
 
 		rtdm_lock_put_irqrestore(&sk->lock, lockctx);
-
-		xnbufd_copy_to_kmem(mbuf->data + fillptr,
-				    bufd, outbytes);
-
+		ret = xnbufd_copy_to_kmem(mbuf->data + fillptr,
+					  bufd, outbytes);
 		rtdm_lock_get_irqsave(&sk->lock, lockctx);
+
+		if (ret < 0) {
+			outbytes = ret;
+			__clear_bit(_XDDP_ATOMIC, &sk->status);
+			goto out;
+		}
 
 		/* We haven't been atomic, let's try again. */
 		if (!__test_and_clear_bit(_XDDP_ATOMIC, &sk->status))
@@ -523,7 +536,8 @@ static ssize_t __xddp_sendmsg(struct rtipc_private *priv,
 	 * given. Yummie.
 	 */
 	if (flags & MSG_MORE) {
-		for (rdlen = sublen, wrlen = 0; rdlen > 0; nvec++) {
+		for (rdlen = sublen, wrlen = 0;
+		     nvec < iovlen && rdlen > 0; nvec++) {
 			if (iov[nvec].iov_len == 0)
 				continue;
 			vlen = rdlen >= iov[nvec].iov_len ? iov[nvec].iov_len : rdlen;
@@ -566,13 +580,20 @@ nostream:
 	/*
 	 * Move "sublen" bytes to mbuf->data from the vector cells
 	 */
-	for (rdlen = sublen, wrlen = 0; rdlen > 0; nvec++) {
+	for (rdlen = sublen, wrlen = 0; nvec < iovlen && rdlen > 0; nvec++) {
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = rdlen >= iov[nvec].iov_len ? iov[nvec].iov_len : rdlen;
-		ret = rtipc_get_arg(user_info, mbuf->data + wrlen,
-				    iov[nvec].iov_base, vlen);
-		if (ret)
+		if (user_info) {
+			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_to_kmem(mbuf->data + wrlen, &bufd, vlen);
+			xnbufd_unmap_uread(&bufd);
+		} else {
+			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
+			ret = xnbufd_copy_to_kmem(mbuf->data + wrlen, &bufd, vlen);
+			xnbufd_unmap_kread(&bufd);
+		}
+		if (ret < 0)
 			goto fail_freebuf;
 		iov[nvec].iov_base += vlen;
 		iov[nvec].iov_len -= vlen;
