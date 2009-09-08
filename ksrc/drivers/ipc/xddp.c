@@ -299,6 +299,9 @@ static ssize_t __xddp_recvmsg(struct rtipc_private *priv,
 	struct xnpipe_mh *mh;
 	int nvec, rdoff, ret;
 
+	if (!test_bit(_XDDP_BOUND, &sk->status))
+		return -EAGAIN;
+
 	/* Compute available iovec space to maxlen. */
 	for (maxlen = 0, nvec = 0; nvec < iovlen; nvec++) {
 		ssize_t l = iov[nvec].iov_len;
