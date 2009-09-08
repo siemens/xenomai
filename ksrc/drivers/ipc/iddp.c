@@ -201,6 +201,7 @@ static int iddp_socket(struct rtipc_private *priv,
 	*sk->label = 0;
 	INIT_LIST_HEAD(&sk->inq);
 	rtdm_sem_init(&sk->insem, 0);
+	rtdm_event_init(&sk->privevt, 0);
 	sk->priv = priv;
 
 	return 0;
@@ -219,6 +220,7 @@ static int iddp_close(struct rtipc_private *priv,
 	}
 
 	rtdm_sem_destroy(&sk->insem);
+	rtdm_event_destroy(&sk->privevt);
 
 	if (sk->handle)
 		xnregistry_remove(sk->handle);
