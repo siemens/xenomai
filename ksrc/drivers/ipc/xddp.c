@@ -1010,20 +1010,29 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 	return ret;
 }
 
-static int __xddp_ioctl(struct xddp_socket *sk,
+static int __xddp_ioctl(struct rtipc_private *priv,
 			rtdm_user_info_t *user_info,
 			unsigned int request, void *arg)
 {
-	struct sockaddr_ipc saddr, *saddrp;
+	struct sockaddr_ipc saddr, *saddrp = &saddr;
+	struct xddp_socket *sk = priv->state;
 	int ret = 0;
 
 	switch (request) {
 	
 	case _RTIOC_CONNECT:
-		saddrp = &saddr;
 		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 		if (ret == 0)
 			ret = __xddp_connect_socket(sk, saddrp);
+		break;
+
+	case _RTIOC_BIND:
+		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
+		if (ret)
+			return ret;
+		if (saddrp == NULL)
+			return -EFAULT;
+		ret = __xddp_bind_socket(priv, saddrp);
 		break;
 
 	case _RTIOC_GETSOCKNAME:
@@ -1041,9 +1050,6 @@ static int __xddp_ioctl(struct xddp_socket *sk,
 	case _RTIOC_GETSOCKOPT:
 		ret = __xddp_getsockopt(sk, user_info, arg);
 		break;
-
-	case _RTIOC_BIND:
-		return -ENOSYS; /* Downgrade to NRT */
 
 	case _RTIOC_LISTEN:
 	case _RTIOC_ACCEPT:
@@ -1065,21 +1071,10 @@ static int xddp_ioctl(struct rtipc_private *priv,
 		      rtdm_user_info_t *user_info,
 		      unsigned int request, void *arg)
 {
-	struct xddp_socket *sk = priv->state;
-	struct sockaddr_ipc saddr, *saddrp;
-	int ret;
+	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
+		return -ENOSYS;	/* Try downgrading to NRT */
 
-	if (rtdm_in_rt_context() || request != _RTIOC_BIND)
-		return __xddp_ioctl(sk, user_info, request, arg);
-
-	saddrp = &saddr;
-	ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
-	if (ret)
-		return ret;
-	if (saddrp == NULL)
-		return -EFAULT;
-
-	return __xddp_bind_socket(priv, saddrp);
+	return __xddp_ioctl(priv, user_info, request, arg);
 }
 
 struct rtipc_protocol xddp_proto_driver = {

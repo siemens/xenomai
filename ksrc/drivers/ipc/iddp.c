@@ -854,7 +854,13 @@ static int __iddp_ioctl(struct iddp_socket *sk,
 		break;
 
 	case _RTIOC_BIND:
-		return -ENOSYS; /* Downgrade to NRT */
+		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
+		if (ret)
+			return ret;
+		if (saddrp == NULL)
+			return -EFAULT;
+		ret = __iddp_bind_socket(sk, saddrp);
+		break;
 
 	case _RTIOC_GETSOCKNAME:
 		ret = rtipc_put_sockaddr(user_info, arg, &sk->name);
@@ -893,20 +899,11 @@ static int iddp_ioctl(struct rtipc_private *priv,
 		      unsigned int request, void *arg)
 {
 	struct iddp_socket *sk = priv->state;
-	struct sockaddr_ipc saddr, *saddrp;
-	int ret;
 
-	if (rtdm_in_rt_context() || request != _RTIOC_BIND)
-		return __iddp_ioctl(sk, user_info, request, arg);
+	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
+		return -ENOSYS;	/* Try downgrading to NRT */
 
-	saddrp = &saddr;
-	ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
-	if (ret)
-		return ret;
-	if (saddrp == NULL)
-		return -EFAULT;
-
-	return __iddp_bind_socket(sk, saddrp);
+	return __iddp_ioctl(sk, user_info, request, arg);
 }
 
 static int __init iddp_init(void)
