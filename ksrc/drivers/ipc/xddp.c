@@ -838,60 +838,6 @@ set_assoc:
 	return 0;
 }
 
-static int __xddp_getuser_address(rtdm_user_info_t *user_info,
-				  void *arg, struct sockaddr_ipc **sockaddrp)
-{
-	struct _rtdm_setsockaddr_args setaddr;
-
-	if (rtipc_get_arg(user_info,
-			  &setaddr, arg, sizeof(setaddr)))
-		return -EFAULT;
-
-	if (setaddr.addrlen > 0) {
-		if (setaddr.addrlen != sizeof(**sockaddrp))
-			return -EINVAL;
-
-		if (rtipc_get_arg(user_info, *sockaddrp,
-				  setaddr.addr, sizeof(**sockaddrp)))
-			return -EFAULT;
-	} else {
-		if (setaddr.addr)
-			return -EINVAL;
-		*sockaddrp = NULL;
-	}
-
-	return 0;
-}
-
-static int __xddp_putuser_address(rtdm_user_info_t *user_info, void *arg,
-				  const struct sockaddr_ipc *sockaddr)
-{
-	struct _rtdm_getsockaddr_args getaddr;
-	socklen_t len;
-
-	if (rtipc_get_arg(user_info,
-			  &getaddr, arg, sizeof(getaddr)))
-		return -EFAULT;
-
-	if (rtipc_get_arg(user_info,
-			  &len, getaddr.addrlen, sizeof(len)))
-		return -EFAULT;
-
-	if (len < sizeof(*sockaddr))
-		return -EINVAL;
-
-	if (rtipc_put_arg(user_info,
-			  getaddr.addr, sockaddr, sizeof(*sockaddr)))
-		return -EFAULT;
-
-	len = sizeof(*sockaddr);
-	if (rtipc_put_arg(user_info,
-			  getaddr.addrlen, &len, sizeof(len)))
-		return -EFAULT;
-
-	return 0;
-}
-
 static int __xddp_setsockopt(struct xddp_socket *sk,
 			     rtdm_user_info_t *user_info,
 			     void *arg)
@@ -1075,17 +1021,17 @@ static int __xddp_ioctl(struct xddp_socket *sk,
 	
 	case _RTIOC_CONNECT:
 		saddrp = &saddr;
-		ret = __xddp_getuser_address(user_info, arg, &saddrp);
+		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 		if (ret == 0)
 			ret = __xddp_connect_socket(sk, saddrp);
 		break;
 
 	case _RTIOC_GETSOCKNAME:
-		ret = __xddp_putuser_address(user_info, arg, &sk->name);
+		ret = rtipc_put_sockaddr(user_info, arg, &sk->name);
 		break;
 
 	case _RTIOC_GETPEERNAME:
-		ret = __xddp_putuser_address(user_info, arg, &sk->peer);
+		ret = rtipc_put_sockaddr(user_info, arg, &sk->peer);
 		break;
 
 	case _RTIOC_SETSOCKOPT:
@@ -1127,7 +1073,7 @@ static int xddp_ioctl(struct rtipc_private *priv,
 		return __xddp_ioctl(sk, user_info, request, arg);
 
 	saddrp = &saddr;
-	ret = __xddp_getuser_address(user_info, arg, &saddrp);
+	ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 	if (ret)
 		return ret;
 	if (saddrp == NULL)

@@ -78,16 +78,22 @@ static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 	tv->tv_usec = nsecs / 1000;
 }
 
-extern struct rtipc_protocol xddp_proto_driver;
-
-extern struct rtipc_protocol iddp_proto_driver;
-
-extern struct xnptree rtipc_ptree;
-
 int rtipc_get_arg(rtdm_user_info_t *user_info,
 		  void *dst, const void *src, size_t len);
 
 int rtipc_put_arg(rtdm_user_info_t *user_info,
 		  void *dst, const void *src, size_t len);
+
+int rtipc_get_sockaddr(rtdm_user_info_t *user_info,
+		       const void *arg, struct sockaddr_ipc **saddrp);
+
+int rtipc_put_sockaddr(rtdm_user_info_t *user_info, void *arg,
+		       const struct sockaddr_ipc *saddr);
+
+extern struct rtipc_protocol xddp_proto_driver;
+
+extern struct rtipc_protocol iddp_proto_driver;
+
+extern struct xnptree rtipc_ptree;
 
 #endif /* !_RTIPC_INTERNAL_H */

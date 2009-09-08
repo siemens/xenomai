@@ -662,60 +662,6 @@ set_assoc:
 	return 0;
 }
 
-static int __iddp_getuser_address(rtdm_user_info_t *user_info,
-				  void *arg, struct sockaddr_ipc **sockaddrp)
-{
-	struct _rtdm_setsockaddr_args setaddr;
-
-	if (rtipc_get_arg(user_info,
-			  &setaddr, arg, sizeof(setaddr)))
-		return -EFAULT;
-
-	if (setaddr.addrlen > 0) {
-		if (setaddr.addrlen != sizeof(**sockaddrp))
-			return -EINVAL;
-
-		if (rtipc_get_arg(user_info, *sockaddrp,
-				  setaddr.addr, sizeof(**sockaddrp)))
-			return -EFAULT;
-	} else {
-		if (setaddr.addr)
-			return -EINVAL;
-		*sockaddrp = NULL;
-	}
-
-	return 0;
-}
-
-static int __iddp_putuser_address(rtdm_user_info_t *user_info, void *arg,
-				  const struct sockaddr_ipc *saddr)
-{
-	struct _rtdm_getsockaddr_args getaddr;
-	socklen_t len;
-
-	if (rtipc_get_arg(user_info,
-			  &getaddr, arg, sizeof(getaddr)))
-		return -EFAULT;
-
-	if (rtipc_get_arg(user_info,
-			  &len, getaddr.addrlen, sizeof(len)))
-		return -EFAULT;
-
-	if (len < sizeof(*saddr))
-		return -EINVAL;
-
-	if (rtipc_put_arg(user_info,
-			  getaddr.addr, saddr, sizeof(*saddr)))
-		return -EFAULT;
-
-	len = sizeof(*saddr);
-	if (rtipc_put_arg(user_info,
-			  getaddr.addrlen, &len, sizeof(len)))
-		return -EFAULT;
-
-	return 0;
-}
-
 static int __iddp_setsockopt(struct iddp_socket *sk,
 			     rtdm_user_info_t *user_info,
 			     void *arg)
@@ -901,7 +847,7 @@ static int __iddp_ioctl(struct iddp_socket *sk,
 	switch (request) {
 	
 	case _RTIOC_CONNECT:
-		ret = __iddp_getuser_address(user_info, arg, &saddrp);
+		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 		if (ret)
 		  return ret;
 		ret = __iddp_connect_socket(sk, saddrp);
@@ -911,11 +857,11 @@ static int __iddp_ioctl(struct iddp_socket *sk,
 		return -ENOSYS; /* Downgrade to NRT */
 
 	case _RTIOC_GETSOCKNAME:
-		ret = __iddp_putuser_address(user_info, arg, &sk->name);
+		ret = rtipc_put_sockaddr(user_info, arg, &sk->name);
 		break;
 
 	case _RTIOC_GETPEERNAME:
-		ret = __iddp_putuser_address(user_info, arg, &sk->peer);
+		ret = rtipc_put_sockaddr(user_info, arg, &sk->peer);
 		break;
 
 	case _RTIOC_SETSOCKOPT:
@@ -954,7 +900,7 @@ static int iddp_ioctl(struct rtipc_private *priv,
 		return __iddp_ioctl(sk, user_info, request, arg);
 
 	saddrp = &saddr;
-	ret = __iddp_getuser_address(user_info, arg, &saddrp);
+	ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 	if (ret)
 		return ret;
 	if (saddrp == NULL)

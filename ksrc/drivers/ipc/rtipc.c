@@ -65,6 +65,60 @@ int rtipc_put_arg(rtdm_user_info_t *user_info,
 	return 0;
 }
 
+int rtipc_get_sockaddr(rtdm_user_info_t *user_info,
+		       const void *arg, struct sockaddr_ipc **saddrp)
+{
+	struct _rtdm_setsockaddr_args setaddr;
+
+	if (rtipc_get_arg(user_info,
+			  &setaddr, arg, sizeof(setaddr)))
+		return -EFAULT;
+
+	if (setaddr.addrlen > 0) {
+		if (setaddr.addrlen != sizeof(**saddrp))
+			return -EINVAL;
+
+		if (rtipc_get_arg(user_info, *saddrp,
+				  setaddr.addr, sizeof(**saddrp)))
+			return -EFAULT;
+	} else {
+		if (setaddr.addr)
+			return -EINVAL;
+		*saddrp = NULL;
+	}
+
+	return 0;
+}
+
+int rtipc_put_sockaddr(rtdm_user_info_t *user_info, void *arg,
+		       const struct sockaddr_ipc *saddr)
+{
+	struct _rtdm_getsockaddr_args getaddr;
+	socklen_t len;
+
+	if (rtipc_get_arg(user_info,
+			  &getaddr, arg, sizeof(getaddr)))
+		return -EFAULT;
+
+	if (rtipc_get_arg(user_info,
+			  &len, getaddr.addrlen, sizeof(len)))
+		return -EFAULT;
+
+	if (len < sizeof(*saddr))
+		return -EINVAL;
+
+	if (rtipc_put_arg(user_info,
+			  getaddr.addr, saddr, sizeof(*saddr)))
+		return -EFAULT;
+
+	len = sizeof(*saddr);
+	if (rtipc_put_arg(user_info,
+			  getaddr.addrlen, &len, sizeof(len)))
+		return -EFAULT;
+
+	return 0;
+}
+
 static int rtipc_socket(struct rtdm_dev_context *context,
 			rtdm_user_info_t *user_info, int protocol)
 {
