@@ -445,6 +445,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 			else
 				list_add_tail(&mbuf->next, &rsk->inq);
 			rtdm_sem_up(&rsk->insem);
+			ret = 0;
 		}
 	);
 	if (unlikely(ret)) {
