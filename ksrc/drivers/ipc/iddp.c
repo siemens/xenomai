@@ -216,9 +216,6 @@ static int iddp_close(struct rtipc_private *priv,
 	struct iddp_message *mbuf;
 	LIST_HEAD(head);
 
-	if (rtdm_in_rt_context() && sk->bufpool != &kheap)
-		return -ENOSYS;	/* Downgrade to NRT */
-
 	if (sk->name.sipc_port > -1) {
 		portmap[sk->name.sipc_port] = NULL;
 		xnmap_remove(portbits, sk->name.sipc_port);

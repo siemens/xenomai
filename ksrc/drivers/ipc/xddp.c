@@ -264,9 +264,6 @@ static int xddp_close(struct rtipc_private *priv,
 	struct xddp_socket *sk = priv->state;
 	int bound;
 
-	if (rtdm_in_rt_context())
-		return -ENOSYS;	/* Downgrade to NRT */
-
 	RTDM_EXECUTE_ATOMICALLY(
 		bound = test_bit(_XDDP_BOUND, &sk->status);
 		if (bound)
