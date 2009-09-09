@@ -78,8 +78,6 @@ static rtdm_event_t poolevt;
 
 static int poolwait;
 
-#define MAX_IOV_NUMBER  64
-
 #define _IDDP_BINDING  0
 #define _IDDP_BOUND    1
 
@@ -324,7 +322,7 @@ static ssize_t iddp_recvmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
 			    struct msghdr *msg, int flags)
 {
-	struct iovec iov[MAX_IOV_NUMBER];
+	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
 	ssize_t ret;
 
@@ -337,7 +335,7 @@ static ssize_t iddp_recvmsg(struct rtipc_private *priv,
 	} else if (msg->msg_namelen != 0)
 		return -EINVAL;
 
-	if (msg->msg_iovlen >= MAX_IOV_NUMBER)
+	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
 		return -EINVAL;
 
 	/* Copy I/O vector in */
@@ -468,7 +466,7 @@ static ssize_t iddp_sendmsg(struct rtipc_private *priv,
 			    const struct msghdr *msg, int flags)
 {
 	struct iddp_socket *sk = priv->state;
-	struct iovec iov[MAX_IOV_NUMBER];
+	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
 
@@ -495,7 +493,7 @@ static ssize_t iddp_sendmsg(struct rtipc_private *priv,
 			return -ENOTCONN;
 	}
 
-	if (msg->msg_iovlen >= MAX_IOV_NUMBER)
+	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
 		return -EINVAL;
 
 	/* Copy I/O vector in */

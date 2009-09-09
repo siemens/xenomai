@@ -25,6 +25,8 @@
 #include <rtdm/rtdm.h>
 #include <rtdm/rtdm_driver.h>
 
+#define RTIPC_IOV_MAX  64
+
 struct rtipc_protocol;
 
 struct rtipc_private {

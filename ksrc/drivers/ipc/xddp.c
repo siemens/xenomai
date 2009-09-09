@@ -66,8 +66,6 @@ static struct sockaddr_ipc nullsa = {
 
 static struct xddp_socket *portmap[CONFIG_XENO_OPT_PIPE_NRDEV];
 
-#define MAX_IOV_NUMBER  64
-
 #define _XDDP_SYNCWAIT  0
 #define _XDDP_ATOMIC    1
 #define _XDDP_BINDING   2
@@ -348,7 +346,7 @@ static ssize_t xddp_recvmsg(struct rtipc_private *priv,
 			    rtdm_user_info_t *user_info,
 			    struct msghdr *msg, int flags)
 {
-	struct iovec iov[MAX_IOV_NUMBER];
+	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc saddr;
 	ssize_t ret;
 
@@ -361,7 +359,7 @@ static ssize_t xddp_recvmsg(struct rtipc_private *priv,
 	} else if (msg->msg_namelen != 0)
 		return -EINVAL;
 
-	if (msg->msg_iovlen >= MAX_IOV_NUMBER)
+	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
 		return -EINVAL;
 
 	/* Copy I/O vector in */
@@ -607,7 +605,7 @@ static ssize_t xddp_sendmsg(struct rtipc_private *priv,
 			    const struct msghdr *msg, int flags)
 {
 	struct xddp_socket *sk = priv->state;
-	struct iovec iov[MAX_IOV_NUMBER];
+	struct iovec iov[RTIPC_IOV_MAX];
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
 
@@ -646,7 +644,7 @@ static ssize_t xddp_sendmsg(struct rtipc_private *priv,
 			return -ENOTCONN;
 	}
 
-	if (msg->msg_iovlen >= MAX_IOV_NUMBER)
+	if (msg->msg_iovlen >= RTIPC_IOV_MAX)
 		return -EINVAL;
 
 	/* Copy I/O vector in */
