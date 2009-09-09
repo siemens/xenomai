@@ -294,15 +294,4 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * Rescheduling: never.
  */
 
-void *xnmap_fetch(xnmap_t *map, int key)
-{
-	int ofkey = key - map->offset;
-
-	if (ofkey < 0 || ofkey >= map->nkeys)
-		return NULL;
-
-	return map->objarray[ofkey];
-}
-EXPORT_SYMBOL(xnmap_fetch);
-
 /*@}*/
