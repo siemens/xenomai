@@ -147,11 +147,11 @@ __iddp_alloc_mbuf(struct iddp_socket *sk, size_t len,
 			 * by this construct.
 			 */
 			++sk->stalls;
-			++sk->poolwait;
+			(*sk->poolwait)++;
 			ret = rtdm_event_timedwait(sk->poolevt,
 						   timeout,
 						   &timeout_seq);
-			sk->poolwait--;
+			(*sk->poolwait)--;
 			if (unlikely(ret == -EIDRM))
 				ret = -ECONNRESET;
 		);
@@ -212,7 +212,6 @@ static int iddp_close(struct rtipc_private *priv,
 {
 	struct iddp_socket *sk = priv->state;
 	struct iddp_message *mbuf;
-	LIST_HEAD(head);
 
 	if (sk->name.sipc_port > -1) {
 		portmap[sk->name.sipc_port] = NULL;
@@ -231,11 +230,10 @@ static int iddp_close(struct rtipc_private *priv,
 	}
 
 	/* Send unread datagrams back to the system heap. */
-	list_splice(&sk->inq, &head);
-	while (!list_empty(&head)) {
-		mbuf = list_entry(head.next, struct iddp_message, next);
+	while (!list_empty(&sk->inq)) {
+		mbuf = list_entry(sk->inq.next, struct iddp_message, next);
 		list_del(&mbuf->next);
-		__iddp_free_mbuf(sk, mbuf);
+		xnheap_free(&kheap, mbuf);
 	}
 
 	return 0;
