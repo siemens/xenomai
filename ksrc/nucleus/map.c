@@ -294,4 +294,31 @@ EXPORT_SYMBOL_GPL(xnmap_remove);
  * Rescheduling: never.
  */
 
+/*!
+ * \fn void xnmap_fetch_nocheck(xnmap_t *map, int key)
+ * \brief Search an object into a map - unchecked form.
+ *
+ * Retrieve an object reference from the given map by its index key,
+ * but does not perform any sanity check on the provided key.
+ *
+ * @param map The address of the map to retrieve from.
+ *
+ * @param key The key to be searched for in the map index.
+ *
+ * @return The indexed object address is returned on success,
+ * otherwise NULL is returned when no object is currently indexed on
+ * @a key.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
 /*@}*/

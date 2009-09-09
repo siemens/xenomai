@@ -57,6 +57,12 @@ int xnmap_enter(xnmap_t *map,
 int xnmap_remove(xnmap_t *map,
 		 int key);
 
+static inline void *xnmap_fetch_nocheck(xnmap_t *map, int key)
+{
+	int ofkey = key - map->offset;
+	return map->objarray[ofkey];
+}
+
 static inline void *xnmap_fetch(xnmap_t *map, int key)
 {
 	int ofkey = key - map->offset;
