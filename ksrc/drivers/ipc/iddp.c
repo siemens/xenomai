@@ -261,14 +261,7 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 	if (!test_bit(_IDDP_BOUND, &sk->status))
 		return -EAGAIN;
 
-	/* Compute available iovec space to maxlen. */
-	for (maxlen = 0, nvec = 0; nvec < iovlen; nvec++) {
-		ssize_t l = iov[nvec].iov_len;
-		if (l < 0 || maxlen + l < maxlen) /* SuS wants this. */
-			return -EINVAL;
-		maxlen += l;
-	}
-
+	maxlen = rtipc_get_iov_flatlen(iov, iovlen);
 	if (maxlen == 0)
 		return 0;
 
@@ -396,14 +389,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	ssize_t len, rdlen, vlen;
 	struct xnbufd bufd;
 
-	/* Compute the required buffer space. */
-	for (len = 0, nvec = 0; nvec < iovlen; nvec++) {
-		ssize_t l = iov[nvec].iov_len;
-		if (l < 0 || len + l < len) /* SuS wants this. */
-			return -EINVAL;
-		len += l;
-	}
-
+	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
 		return 0;
 

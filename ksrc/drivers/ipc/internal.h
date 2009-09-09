@@ -90,6 +90,8 @@ int rtipc_get_sockaddr(rtdm_user_info_t *user_info,
 int rtipc_put_sockaddr(rtdm_user_info_t *user_info, void *arg,
 		       const struct sockaddr_ipc *saddr);
 
+ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen);
+
 extern struct rtipc_protocol xddp_proto_driver;
 
 extern struct rtipc_protocol iddp_proto_driver;

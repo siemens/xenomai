@@ -119,6 +119,22 @@ int rtipc_put_sockaddr(rtdm_user_info_t *user_info, void *arg,
 	return 0;
 }
 
+ssize_t rtipc_get_iov_flatlen(struct iovec *iov, int iovlen)
+{
+	ssize_t len;
+	int nvec;
+
+	/* Return the flattened vector length. */
+	for (len = 0, nvec = 0; nvec < iovlen; nvec++) {
+		ssize_t l = iov[nvec].iov_len;
+		if (l < 0 || len + l < len) /* SuS wants this. */
+			return -EINVAL;
+		len += l;
+	}
+
+	return len;
+}
+
 static int rtipc_socket(struct rtdm_dev_context *context,
 			rtdm_user_info_t *user_info, int protocol)
 {
