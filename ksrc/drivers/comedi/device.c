@@ -440,6 +440,8 @@ int comedi_ioctl_devcfg(comedi_cxt_t * cxt, void *arg)
 		if (test_bit
 		    (COMEDI_DEV_ATTACHED, &(comedi_get_dev(cxt)->flags)))
 			return -EINVAL;
+		/* Pre-initialization of the transfer structure */
+		comedi_presetup_transfer(cxt);
 		/* Links the device with the driver */
 		if ((ret = comedi_device_attach(cxt, arg)) != 0)
 			return ret;

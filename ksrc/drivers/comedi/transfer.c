@@ -80,16 +80,13 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 	return 0;
 }
 
-int comedi_setup_transfer(comedi_cxt_t * cxt)
+void comedi_presetup_transfer(comedi_cxt_t *cxt)
 {
 	comedi_dev_t *dev = NULL;
 	comedi_trf_t *tsf;
-	comedi_subd_t *subd;
-	struct list_head *this;
-	int i = 0, ret = 0;
 
 	__comedi_dbg(1, core_dbg, 
-		     "comedi_setup_transfer: minor=%d\n",
+		     "comedi_presetup_transfer: minor=%d\n",
 		     comedi_get_minor(cxt));
 
 	dev = comedi_get_dev(cxt);
@@ -105,6 +102,22 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	/* 0 is also considered as a valid IRQ, then 
 	   the IRQ number must be initialized with another value */
 	tsf->irq_desc.irq = COMEDI_IRQ_UNUSED;
+}
+
+int comedi_setup_transfer(comedi_cxt_t * cxt)
+{
+	comedi_dev_t *dev = NULL;
+	comedi_trf_t *tsf;
+	comedi_subd_t *subd;
+	struct list_head *this;
+	int i = 0, ret = 0;
+
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_setup_transfer: minor=%d\n",
+		     comedi_get_minor(cxt));
+
+	dev = comedi_get_dev(cxt);
+	tsf = &dev->transfer;
 
 	/* Recovers the subdevices count 
 	   (as they are registered in a linked list */
