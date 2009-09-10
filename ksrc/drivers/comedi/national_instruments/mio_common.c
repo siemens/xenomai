@@ -665,9 +665,21 @@ static void ni_handle_eos(comedi_dev_t * dev)
 	}
 }
 
-static void ni_event(comedi_dev_t * dev)
+static void ni_event(comedi_subd_t * subd)
 {
-	/* TODO: implement this function */
+       	
+	/* Temporary hack */
+	comedi_dev_t *dev = subd->dev;
+	comedi_buf_t *buf = dev->transfer.bufs[subd->idx];
+
+	if(test_bit(COMEDI_BUF_ERROR, &buf->evt_flags)) {
+
+		if (subd->cancel != NULL)
+			subd->cancel(subd);
+	}
+
+	comedi_buf_evt(subd, 0);
+
 }
 
 static void handle_gpct_interrupt(comedi_dev_t *dev, unsigned short counter_index)
@@ -738,8 +750,10 @@ static void ack_a_interrupt(comedi_dev_t *dev, unsigned short a_status)
 		ack |= AI_START_Interrupt_Ack;
 	}
 	if (a_status & AI_STOP_St) {
-		/* not sure why we used to ack the START here also, instead of doing it independently. Frank Hess 2007-07-06 */
-		ack |= AI_STOP_Interrupt_Ack /*| AI_START_Interrupt_Ack */ ;
+		/* not sure why we used to ack the START here also,
+		   instead of doing it independently. Frank Hess
+		   2007-07-06 */
+		ack |= AI_STOP_Interrupt_Ack;
 	}
 	if (ack)
 		devpriv->stc_writew(dev, ack, Interrupt_A_Ack_Register);
@@ -749,9 +763,13 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 			       unsigned short status,unsigned int ai_mite_status)
 {
 
-	/* TODO: 67xx boards don't have ai subdevice, but their gpct0
-	   might generate an a interrupt. We should check that the
-	   subdevice type */
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_AI_SUBDEV);
+
+	/* 67xx boards don't have ai subdevice, but their gpct0
+	   might generate an a interrupt. */
+
+	if((subd->flags & COMEDI_SUBD_TYPES) == COMEDI_SUBD_UNUSED)
+		return;
 
 	comedi_info(dev, "ni_mio_common: interrupt: "
 		    "a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
@@ -767,7 +785,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		comedi_info(dev, "ni_mio_common: interrupt: "
 			    "unknown mite interrupt, ack! (ai_mite_status=%08x)\n",
 			    ai_mite_status);
-		comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
@@ -780,8 +798,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 			/* TODO: we probably aren't even running a command now,
 			   so it's a good idea to be careful. 
 			   we should check the transfer status */
-			comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
-			ni_event(dev);
+			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
+			ni_event(subd);
 			return;
 		}
 		if (status & (AI_Overrun_St | AI_Overflow_St |
@@ -792,8 +810,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 
 			shutdown_ai_command(dev);
 
-			comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
-			ni_event(dev);
+			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
+			ni_event(subd);
 
 			return;
 		}
@@ -826,7 +844,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		ni_handle_eos(dev);
 	}
 
-	ni_event(dev);
+	ni_event(subd);
 
 	status = devpriv->stc_readw(dev, AI_Status_1_Register);
 	if (status & Interrupt_A_St)
@@ -866,6 +884,8 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			       unsigned short b_status, unsigned int ao_mite_status)
 {
 
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_AO_SUBDEV);
+
 	comedi_info(dev, "ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
 		    b_status, ao_mite_status);
 	ni_mio_print_status_b(b_status);
@@ -880,9 +900,8 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
 			CHSR_SABORT | CHSR_XFERR | CHSR_LxERR_mask)) {
 		comedi_info(dev, "unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
-			ao_mite_status);
-		//mite_print_chsr(ao_mite_status);
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+			    ao_mite_status);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
@@ -894,7 +913,7 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			   "AO FIFO underrun status=0x%04x status2=0x%04x\n",
 			   b_status, 
 			   devpriv->stc_readw(dev, AO_Status_2_Register));
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 
 	if (b_status & AO_BC_TC_St) {
@@ -902,7 +921,7 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			    "ni_mio_common: interrupt: "
 			    "AO BC_TC status=0x%04x status2=0x%04x\n", 
 			    b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_EOA);
+		comedi_buf_evt(subd, COMEDI_BUF_EOA);
 	}
 
 #ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
@@ -917,12 +936,12 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 			ni_set_bits(dev, Interrupt_B_Enable_Register,
 				    AO_FIFO_Interrupt_Enable |
 				    AO_Error_Interrupt_Enable, 0);
-			comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 		}
 	}
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
-	ni_event(dev);
+	ni_event(subd);
 }
 
 int ni_E_interrupt(unsigned int irq, void *d)
@@ -935,7 +954,7 @@ int ni_E_interrupt(unsigned int irq, void *d)
 	unsigned long flags;
 	struct mite_struct *mite = devpriv->mite;
 
-	if(comedi_check_dev(dev))
+	if(!comedi_check_dev(dev))
 		return IRQ_NONE;
 
 	/* Make sure dev->attached is checked before handler does
@@ -988,6 +1007,8 @@ static void ni_ao_fifo_load(comedi_dev_t * dev, int n)
 	u32 packed_data;
 	int err = 1;
 
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
+
 	for (i = 0; i < n; i++) {
 		err = comedi_buf_get(dev, &d, sizeof(sampl_t));
 		if (err != 0)
@@ -1009,7 +1030,7 @@ static void ni_ao_fifo_load(comedi_dev_t * dev, int n)
 		}
 	}
 	if (err != 0) {
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 }
 
@@ -1033,9 +1054,11 @@ static int ni_ao_fifo_half_empty(comedi_dev_t * dev)
 {
 	int n;
 
-	n = comedi_buf_count(dev, COMEDI_BUF_GET);
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
+
+	n = comedi_buf_count(subd);
 	if (n == 0) {
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 		return 0;
 	}
 
@@ -1052,13 +1075,15 @@ static int ni_ao_prep_fifo(comedi_dev_t *dev)
 {
 	int n;
 
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
+
 	/* Reset fifo */
 	devpriv->stc_writew(dev, 1, DAC_FIFO_Clear);
 	if (boardtype.reg_type & ni_reg_6xxx_mask)
 		ni_ao_win_outl(dev, 0x6, AO_FIFO_Offset_Load_611x);
 
 	/* Load some data */
-	n = comedi_buf_count(dev, COMEDI_BUF_GET);
+	n = comedi_buf_count(subd);
 	if (n == 0)
 		return 0;
 
@@ -1074,6 +1099,8 @@ static int ni_ao_prep_fifo(comedi_dev_t *dev)
 static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 {
 	int i;
+
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_AI_SUBDEV);
 
 	if (boardtype.reg_type == ni_reg_611x) {
 		sampl_t data[2];
@@ -1119,7 +1146,7 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 			comedi_err(dev,
 				   "ni_ai_fifo_read: "
 				   "bug! ai_fifo_buffer too small");
-			comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
+			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 			return;
 		}
 		for (i = 0; i < n; i++) {
@@ -1163,6 +1190,7 @@ static int ni_ai_drain_dma(comedi_dev_t *dev)
 			comedi_info(dev, 
 				    "ni_mio_common: "
 				    "wait for dma drain timed out\n");
+
 			comedi_info(dev, 
 				    "mite_bytes_in_transit=%i, "
 				    "AI_Status1_Register=0x%x\n",
@@ -1887,6 +1915,7 @@ static int ni_ai_cmdtest(comedi_subd_t *subd, comedi_cmd_t * cmd)
 
 	if ((boardtype.reg_type != ni_reg_611x) &&
 	    (boardtype.reg_type != ni_reg_6143) && 
+	    (boardtype.reg_type != ni_reg_622x) && 
 	    (cmd->scan_begin_src == TRIG_NOW))
 		return -EINVAL;
 	
@@ -2277,7 +2306,12 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 			break;
 		}
 
-		devpriv->stc_writew(dev, AI_Error_Interrupt_Ack | AI_STOP_Interrupt_Ack | AI_START_Interrupt_Ack | AI_START2_Interrupt_Ack | AI_START1_Interrupt_Ack | AI_SC_TC_Interrupt_Ack | AI_SC_TC_Error_Confirm, Interrupt_A_Ack_Register);	/* clear interrupts */
+		/* Clear interrupts */
+		devpriv->stc_writew(dev, 
+				    AI_Error_Interrupt_Ack | AI_STOP_Interrupt_Ack | 
+				    AI_START_Interrupt_Ack | AI_START2_Interrupt_Ack | 
+				    AI_START1_Interrupt_Ack | AI_SC_TC_Interrupt_Ack | 
+				    AI_SC_TC_Error_Confirm, Interrupt_A_Ack_Register);	/* clear interrupts */
 
 		ni_set_bits(dev, Interrupt_A_Enable_Register,
 			interrupt_a_enable, 1);
@@ -2316,10 +2350,6 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 		if (retval)
 			return retval;
 	}
-
-#if 0 
-	mite_dump_regs(devpriv->mite);
-#endif
 
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
@@ -3328,6 +3358,7 @@ static void handle_cdio_interrupt(comedi_dev_t *dev)
 {
 	unsigned cdio_status;
 	unsigned long flags;
+	comedi_subd_t *subd = comedi_get_subd(dev, NI_DIO_SUBDEV);
 
 	if ((boardtype.reg_type & ni_reg_m_series_mask) == 0) {
 		return;
@@ -3349,13 +3380,13 @@ static void handle_cdio_interrupt(comedi_dev_t *dev)
 	if (cdio_status & (CDO_Overrun_Bit | CDO_Underflow_Bit)) {
 		/* XXX just guessing this is needed and does something useful */
 		ni_writel(CDO_Error_Interrupt_Confirm_Bit, M_Offset_CDIO_Command);
-		comedi_buf_evt(dev, COMEDI_BUF_GET, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 	if (cdio_status & CDO_FIFO_Empty_Bit) {
 		ni_writel(CDO_Empty_FIFO_Interrupt_Enable_Clear_Bit,
 			M_Offset_CDIO_Command);
 	}
-	comedi_buf_evt(dev, COMEDI_BUF_GET, 0);
+	comedi_buf_evt(subd, 0);
 }
 
 static int ni_serial_hw_readwrite8(comedi_dev_t * dev,
