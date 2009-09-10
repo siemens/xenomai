@@ -105,15 +105,17 @@
 /** 
  * Mask which gathers all the types
  */
-#define COMEDI_SUBD_TYPES (COMEDI_SUBD_UNUSED | \
-			   COMEDI_SUBD_AI | \
-			   COMEDI_SUBD_AO | \
-			   COMEDI_SUBD_DI | \
-			   COMEDI_SUBD_DO | \
-			   COMEDI_SUBD_DIO | \
+#define COMEDI_SUBD_TYPES (COMEDI_SUBD_UNUSED |	 \
+			   COMEDI_SUBD_AI |	 \
+			   COMEDI_SUBD_AO |	 \
+			   COMEDI_SUBD_DI |	 \
+			   COMEDI_SUBD_DO |	 \
+			   COMEDI_SUBD_DIO |	 \
 			   COMEDI_SUBD_COUNTER | \
-			   COMEDI_SUBD_CALIB | \
-			   COMEDI_SUBD_PROC | \
+			   COMEDI_SUBD_TIMER |	 \
+			   COMEDI_SUBD_MEMORY |	 \
+			   COMEDI_SUBD_CALIB |	 \
+			   COMEDI_SUBD_PROC |	 \
 			   COMEDI_SUBD_SERIAL)
 
 	  /*! @} COMEDI_SUBD_xxx */
