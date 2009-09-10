@@ -1126,6 +1126,36 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_GPCT_FILTER_2x_TIMEBASE_1	0x5
 #define NI_GPCT_FILTER_2x_TIMEBASE_3	0x6
 
+/* Master clock sources for ni mio boards and
+   INSN_CONFIG_SET_CLOCK_SRC */
+#define NI_MIO_INTERNAL_CLOCK		0
+#define NI_MIO_RTSI_CLOCK		1
+/* Doesn't work for m-series, use NI_MIO_PLL_RTSI_CLOCK() the
+   NI_MIO_PLL_* sources are m-series only */
+#define NI_MIO_PLL_PXI_STAR_TRIGGER_CLOCK 2
+#define NI_MIO_PLL_PXI10_CLOCK		3
+#define NI_MIO_PLL_RTSI0_CLOCK		4
+
+#define NI_MIO_PLL_RTSI_CLOCK(x) (NI_MIO_PLL_RTSI0_CLOCK + (x))
+
+/* Signals which can be routed to an NI RTSI pin with
+   INSN_CONFIG_SET_ROUTING. The numbers assigned are not arbitrary, they
+   correspond to the bits required to program the board. */
+#define NI_RTSI_OUTPUT_ADR_START1	0
+#define NI_RTSI_OUTPUT_ADR_START2	1
+#define NI_RTSI_OUTPUT_SCLKG		2
+#define NI_RTSI_OUTPUT_DACUPDN		3
+#define NI_RTSI_OUTPUT_DA_START1	4
+#define NI_RTSI_OUTPUT_G_SRC0		5
+#define NI_RTSI_OUTPUT_G_GATE0		6
+#define NI_RTSI_OUTPUT_RGOUT0		7
+#define NI_RTSI_OUTPUT_RTSI_BRD_0	8
+/* Pre-m-series always have RTSI clock on line 7 */
+#define NI_RTSI_OUTPUT_RTSI_OSC		12
+
+#define NI_RTSI_OUTPUT_RTSI_BRD(x) (NI_RTSI_OUTPUT_RTSI_BRD_0 + (x))
+
+
 extern comedi_cmd_t ni_tio_cmd_mask;
 
 int ni_tio_rinsn(struct ni_gpct *counter, comedi_kinsn_t *insn);
