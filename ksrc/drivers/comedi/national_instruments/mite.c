@@ -46,6 +46,12 @@
 
 #include "mite.h"
 
+#ifdef CONFIG_DEBUG_MITE
+#define MDPRINTK(fmt, args...) rtdm_printk(fmt, ##args)
+#else /* !CONFIG_DEBUG_MITE */
+#define MDPRINTK(fmt, args...)
+#endif /* CONFIG_DEBUG_MITE */
+
 static LIST_HEAD(mite_devices);
 
 static struct pci_device_id mite_id[] = {
@@ -327,7 +333,7 @@ void mite_dma_arm(struct mite_channel *mite_chan)
 	int chor;
 	unsigned long flags;
 
-	MDPRINTK("mite_dma_arm ch%i\n", channel);
+	MDPRINTK("mite_dma_arm ch%i\n", mite_chan->channel);
 	/* Memory barrier is intended to insure any twiddling with the buffer
 	   is done before writing to the mite to arm dma transfer */
 	smp_mb();
@@ -433,7 +439,8 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		   */
 		chcr |= CHCR_BYTE_SWAP_DEVICE | CHCR_BYTE_SWAP_MEMORY;
 	}
-	if (mite_chan->dir == COMEDI_BUF_PUT) {
+
+	if (mite_chan->dir == COMEDI_INPUT) {
 		chcr |= CHCR_DEV_TO_MEM;
 	}
 	writel(chcr, mite->mite_io_addr + MITE_CHCR(mite_chan->channel));
@@ -603,7 +610,7 @@ int mite_done(struct mite_channel *mite_chan)
 
 #ifdef CONFIG_DEBUG_MITE
 
-static void mite_decode(char **bit_str, unsigned int bits);
+static void mite_decode(const char *const bit_str[], unsigned int bits);
 
 /* names of bits in mite registers */
 
@@ -681,59 +688,67 @@ void mite_dump_regs(struct mite_channel *mite_chan)
 	unsigned long addr = 0;
 	unsigned long temp = 0;
 
-	__comedi_info("mite_dump_regs ch%i\n", mite_chan->channel);
-	__comedi_info("mite address is  =0x%08lx\n", mite_io_addr);
+	printk("mite_dump_regs ch%i\n", mite_chan->channel);
+	printk("mite address is  =0x%08lx\n", mite_io_addr);
 
-	addr = mite_io_addr + MITE_CHOR(channel);
-	__comedi_info("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_CHOR(mite_chan->channel);
+	printk("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_CHOR_strings, temp);
-	addr = mite_io_addr + MITE_CHCR(channel);
-	__comedi_info("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_CHCR(mite_chan->channel);
+	printk("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_CHCR_strings, temp);
-	addr = mite_io_addr + MITE_TCR(channel);
-	__comedi_info("mite status[TCR] at 0x%08lx =0x%08x\n", addr, readl(addr));
-	addr = mite_io_addr + MITE_MCR(channel);
-	__comedi_info("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_TCR(mite_chan->channel);
+	printk("mite status[TCR] at 0x%08lx =0x%08x\n", addr, 
+		      readl((void *)addr));
+	addr = mite_io_addr + MITE_MCR(mite_chan->channel);
+	printk("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_MCR_strings, temp);
 
-	addr = mite_io_addr + MITE_MAR(channel);
-	__comedi_info("mite status[MAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
-	addr = mite_io_addr + MITE_DCR(channel);
-	__comedi_info("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_MAR(mite_chan->channel);
+	printk("mite status[MAR] at 0x%08lx =0x%08x\n", addr, 
+		      readl((void *)addr));
+	addr = mite_io_addr + MITE_DCR(mite_chan->channel);
+	printk("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_DCR_strings, temp);
-	addr = mite_io_addr + MITE_DAR(channel);
-	__comedi_info("mite status[DAR] at 0x%08lx =0x%08x\n", addr, readl(addr));
-	addr = mite_io_addr + MITE_LKCR(channel);
-	__comedi_info("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_DAR(mite_chan->channel);
+	printk("mite status[DAR] at 0x%08lx =0x%08x\n", addr, 
+		      readl((void *)addr));
+	addr = mite_io_addr + MITE_LKCR(mite_chan->channel);
+	printk("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_LKCR_strings, temp);
-	addr = mite_io_addr + MITE_LKAR(channel);
-	__comedi_info("mite status[LKAR]at 0x%08lx =0x%08x\n", addr, readl(addr));
+	addr = mite_io_addr + MITE_LKAR(mite_chan->channel);
+	printk("mite status[LKAR]at 0x%08lx =0x%08x\n", addr, 
+		      readl((void *)addr));
 
-	addr = mite_io_addr + MITE_CHSR(channel);
-	__comedi_info("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl(addr));
+	addr = mite_io_addr + MITE_CHSR(mite_chan->channel);
+	printk("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
+		readl((void *)addr));
 	mite_decode(mite_CHSR_strings, temp);
-	addr = mite_io_addr + MITE_FCR(channel);
-	__comedi_info("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr, readl(addr));
+	addr = mite_io_addr + MITE_FCR(mite_chan->channel);
+	printk("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr, 
+		      readl((void *)addr));
 }
 
-static void mite_decode(char **bit_str, unsigned int bits)
+
+static void mite_decode(const char *const bit_str[], unsigned int bits)
 {
 	int i;
 
 	for (i = 31; i >= 0; i--) {
 		if (bits & (1 << i)) {
-			__comedi_info(" %s", bit_str[i]);
+			printk(" %s", bit_str[i]);
 		}
 	}
-	__comedi_info("\n");
+	printk("\n");
 }
+
 #endif /* CONFIG_DEBUG_MITE */
+
 
 static int __init mite_init(void)
 {

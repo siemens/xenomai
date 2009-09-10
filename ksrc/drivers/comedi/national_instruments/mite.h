@@ -25,12 +25,6 @@
 
 #include <comedi/comedi_driver.h>
 
-#ifdef CONFIG_DEBUG_MITE
-#define MDPRINTK(fmt, args...) rtdm_printk(format, ##args)
-#else /* !CONFIG_DEBUG_MITE */
-#define MDPRINTK(fmt, args...)
-#endif /* CONFIG_DEBUG_MITE */
-
 #define PCI_VENDOR_ID_NATINST 0x1093
 #define PCI_MITE_SIZE 4096
 #define PCI_DAQ_SIZE 4096
