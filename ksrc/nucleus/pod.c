@@ -1085,11 +1085,6 @@ void xnpod_delete_thread(xnthread_t *thread)
 		    xnpod_fatal("attempt to delete the root thread");
 		);
 
-#ifdef __XENO_SIM__
-	if (nkpod->schedhook)
-		nkpod->schedhook(thread, XNDELETED);
-#endif /* __XENO_SIM__ */
-
 	xnlock_get_irqsave(&nklock, s);
 
 	if (xnthread_test_state(thread, XNZOMBIE))
@@ -1148,6 +1143,33 @@ void xnpod_delete_thread(xnthread_t *thread)
 		goto unlock_and_exit;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+	/*
+	 * If thread is not current, has the deferred cancelability
+	 * bit set, and is currently blocked on a synchronization
+	 * object, then unblock it immediately but defer actual
+	 * deletion if it became runnable (i.e. XNSUSP/XNHELP might be
+	 * set as well). The code responsible for putting that thread
+	 * to sleep should process the XNCANPND condition on the
+	 * resumption path, then eventually call xnpod_delete_self()
+	 * as soon as all cleanup actions are done.
+	 *
+	 * In other words, XNDEFCAN pertains to the thread management
+	 * logic, to allow wait state finalization code to run before
+	 * kernel threads are actually wiped out from the system.
+	 */
+	if (sched->curr != thread &&
+	    xnthread_test_state(thread, XNDEFCAN) &&
+	    xnpod_unblock_thread(thread) &&
+	    xnthread_test_state(thread, XNTHREAD_BLOCK_BITS) == 0) {
+		xnthread_set_info(thread, XNCANPND);
+		goto unlock_and_exit;
+	}
+
+#ifdef __XENO_SIM__
+	if (nkpod->schedhook)
+		nkpod->schedhook(thread, XNDELETED);
+#endif /* __XENO_SIM__ */
 
 	trace_mark(xn_nucleus, thread_delete, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
@@ -2287,7 +2309,7 @@ void xnpod_lock_sched(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	curr = xnpod_current_sched()->curr;
+	curr = xnpod_current_thread();
 
 	if (xnthread_lock_count(curr)++ == 0)
 		xnthread_set_state(curr, XNLOCK);
@@ -2303,7 +2325,7 @@ void xnpod_unlock_sched(void)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	curr = xnpod_current_sched()->curr;
+	curr = xnpod_current_thread();
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);

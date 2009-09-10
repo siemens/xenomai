@@ -50,17 +50,18 @@
 #define XNLOCK    0x00004000 /**< Holds the scheduler lock (i.e. not preemptible) */
 #define XNRRB     0x00008000 /**< Undergoes a round-robin scheduling */
 #define XNASDI    0x00010000 /**< ASR are disabled */
+#define XNDEFCAN  0x00020000 /**< Deferred cancelability mode (self-set only) */
 
 /*
  * Some skins may depend on the following fields to live in the high
  * 16-bit word, in order to be combined with the emulated RTOS flags
  * which use the low one, so don't change them carelessly.
  */
-#define XNTRAPSW  0x00020000 /**< Trap execution mode switches */
-#define XNRPIOFF  0x00040000 /**< Stop priority coupling (shadow only) */
-#define XNFPU     0x00080000 /**< Thread uses FPU */
-#define XNSHADOW  0x00100000 /**< Shadow thread */
-#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
+#define XNTRAPSW  0x00040000 /**< Trap execution mode switches */
+#define XNRPIOFF  0x00080000 /**< Stop priority coupling (shadow only) */
+#define XNFPU     0x00100000 /**< Thread uses FPU */
+#define XNSHADOW  0x00200000 /**< Shadow thread */
+#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -83,7 +84,7 @@
   'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
-#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr.tof.."
+#define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr..tof.."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
 #define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW|XNRPIOFF)
@@ -113,6 +114,7 @@
 #define XNAFFSET  0x00000080 /**< CPU affinity changed from primary mode */
 #define XNPRIOSET 0x00000100 /**< Priority changed from primary mode */
 #define XNABORT   0x00000200 /**< Thread is being aborted */
+#define XNCANPND  0x00000400 /**< Cancellation request is pending */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -192,6 +194,10 @@ struct xnthread_start_attr {
 	void *cookie;
 };
 
+struct xnthread_wait_context {
+	unsigned long oldstate;
+};
+
 typedef void (*xnasr_t)(xnsigmask_t sigs);
 
 typedef struct xnthread {
@@ -238,7 +244,7 @@ typedef struct xnthread {
 
 	xnholder_t glink;		/* Thread holder in global queue */
 
-#define link2thread(ln, fld)	container_of(ln, xnthread_t, fld)
+#define link2thread(ln, fld)	container_of(ln, struct xnthread, fld)
 
 	xnpqueue_t claimq;		/* Owned resources claimed by others (PIP) */
 
@@ -269,6 +275,9 @@ typedef struct xnthread {
 		struct xnbufd *bufd;
 		size_t size;
 	} wait_u;
+
+	/* Active wait context - Obsoletes wait_u. */
+	struct xnthread_wait_context *wcontext;
 
 	struct {
 		xnstat_counter_t ssw;	/* Primary -> secondary mode switch count */
@@ -324,7 +333,7 @@ typedef struct xnthread {
 typedef struct xnhook {
 	xnholder_t link;
 #define link2hook(ln)		container_of(ln, xnhook_t, link)
-	void (*routine)(xnthread_t *thread);
+	void (*routine)(struct xnthread *thread);
 } xnhook_t;
 
 #define xnthread_name(thread)               ((thread)->name)
@@ -372,15 +381,34 @@ typedef struct xnhook {
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
 
 /* Class-level operations for threads. */
-static inline int xnthread_get_denormalized_prio(xnthread_t *t, int coreprio)
+static inline int xnthread_get_denormalized_prio(struct xnthread *t, int coreprio)
 {
 	return t->ops && t->ops->get_denormalized_prio
 		? t->ops->get_denormalized_prio(t, coreprio) : coreprio;
 }
 
-static inline unsigned xnthread_get_magic(xnthread_t *t)
+static inline unsigned xnthread_get_magic(struct xnthread *t)
 {
 	return t->ops ? t->ops->get_magic() : 0;
+}
+
+static inline
+struct xnthread_wait_context *xnthread_get_wait_context(struct xnthread *thread)
+{
+	return thread->wcontext;
+}
+
+static inline
+int xnthread_register(struct xnthread *thread, const char *name)
+{
+	return xnregistry_enter(name, thread, &xnthread_handle(thread), NULL);
+}
+
+static inline
+struct xnthread *xnthread_lookup(xnhandle_t threadh)
+{
+	struct xnthread *thread = xnregistry_fetch(threadh);
+	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
 
 #ifdef __cplusplus
@@ -393,27 +421,20 @@ int xnthread_init(struct xnthread *thread,
 		  struct xnsched_class *sched_class,
 		  const union xnsched_policy_param *sched_param);
 
-void xnthread_cleanup_tcb(xnthread_t *thread);
+void xnthread_cleanup_tcb(struct xnthread *thread);
 
 char *xnthread_format_status(xnflags_t status, char *buf, int size);
 
-int *xnthread_get_errno_location(xnthread_t *thread);
+int *xnthread_get_errno_location(struct xnthread *thread);
 
-xnticks_t xnthread_get_timeout(xnthread_t *thread, xnticks_t tsc_ns);
+xnticks_t xnthread_get_timeout(struct xnthread *thread, xnticks_t tsc_ns);
 
-xnticks_t xnthread_get_period(xnthread_t *thread);
+xnticks_t xnthread_get_period(struct xnthread *thread);
 
-static inline int xnthread_register(xnthread_t *thread, const char *name)
-{
-	return xnregistry_enter(name, thread, &xnthread_handle(thread), NULL);
-}
+void xnthread_prepare_wait(struct xnthread_wait_context *wc);
 
-static inline xnthread_t *xnthread_lookup(xnhandle_t threadh)
-{
-  xnthread_t *thread = (struct xnthread *)xnregistry_fetch(threadh);
-
-	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
-}
+void xnthread_finish_wait(struct xnthread_wait_context *wc,
+			  void (*cleanup)(struct xnthread_wait_context *wc));
 
 #ifdef __cplusplus
 }

@@ -121,6 +121,7 @@ int xnthread_init(struct xnthread *thread,
 	thread->rrcredit = XN_INFINITE;
 	thread->wchan = NULL;
 	thread->wwake = NULL;
+	thread->wcontext = NULL;
 	thread->errcode = 0;
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
@@ -309,3 +310,32 @@ xnticks_t xnthread_get_period(xnthread_t *thread)
 	return period;
 }
 EXPORT_SYMBOL_GPL(xnthread_get_period);
+
+/* NOTE: caller must provide locking */
+void xnthread_prepare_wait(struct xnthread_wait_context *wc)
+{
+	struct xnthread *curr = xnpod_current_thread();
+
+	curr->wcontext = wc;
+	wc->oldstate = xnthread_test_state(curr, XNDEFCAN);
+	xnthread_set_state(curr, XNDEFCAN);
+}
+EXPORT_SYMBOL_GPL(xnthread_prepare_wait);
+
+/* NOTE: caller must provide locking */
+void xnthread_finish_wait(struct xnthread_wait_context *wc,
+			  void (*cleanup)(struct xnthread_wait_context *wc))
+{
+	struct xnthread *curr = xnpod_current_thread();
+
+	curr->wcontext = NULL;
+	if ((wc->oldstate & XNDEFCAN) == 0)
+		xnthread_clear_state(curr, wc->oldstate);
+
+	if (xnthread_test_state(curr, XNCANPND)) {
+		if (cleanup)
+			cleanup(wc);
+		xnpod_delete_self();
+	}
+}
+EXPORT_SYMBOL_GPL(xnthread_finish_wait);
