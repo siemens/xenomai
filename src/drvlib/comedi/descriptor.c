@@ -50,7 +50,8 @@ static int comedi_leaf_add(comedi_root_t * rt,
 			   comedi_leaf_t ** lfchild, unsigned long lfsize)
 {
 	/* Basic checking */
-	if (rt->offset + lfsize > ((void *)rt) + rt->gsize)
+	if (rt->offset + 
+	    sizeof(comedi_leaf_t) + lfsize > ((void *)rt) + rt->gsize)
 		return -ENOMEM;
 
 	if (lf->nb_leaf != 0) {
@@ -104,8 +105,10 @@ static int __comedi_get_sbsize(int fd, comedi_desc_t * dsc)
 	    dsc->nb_subd * (sizeof(comedi_sbinfo_t) + sizeof(comedi_leaf_t));
 
 	for (i = 0; i < dsc->nb_subd; i++) {
+
 		if ((ret = comedi_sys_nbchaninfo(fd, i, &nb_chan)) < 0)
 			return ret;
+
 		res +=
 		    nb_chan * (sizeof(comedi_chinfo_t) + sizeof(comedi_leaf_t));
 		for (j = 0; j < nb_chan; j++) {
@@ -137,8 +140,15 @@ static int __comedi_fill_desc(int fd, comedi_desc_t * dsc)
 	for (i = 0; i < dsc->nb_subd; i++) {
 		comedi_leaf_t *lfs;
 		comedi_chinfo_t *chinfo;
+
+		/* For each subd, add a leaf for the channels even if
+		   the subd does not own any channel */
 		comedi_leaf_add(rt, (comedi_leaf_t *) rt, &lfs,
 				sbinfo[i].nb_chan * sizeof(comedi_chinfo_t));
+
+		/* If there is no channel, no need to go further */
+		if(sbinfo[i].nb_chan == 0)
+			continue;
 
 		chinfo = (comedi_chinfo_t *) lfs->data;
 
@@ -147,9 +157,16 @@ static int __comedi_fill_desc(int fd, comedi_desc_t * dsc)
 		for (j = 0; j < sbinfo[i].nb_chan; j++) {
 			comedi_leaf_t *lfc;
 			comedi_rnginfo_t *rnginfo;
+
+			/* For each channel, add a leaf for the ranges
+			   even if no range descriptor is available */
 			comedi_leaf_add(rt, lfs, &lfc,
 					chinfo[j].nb_rng *
 					sizeof(comedi_rnginfo_t));
+
+			/* If there is no range, no need to go further */
+			if(chinfo[j].nb_rng ==0)
+				continue;
 
 			rnginfo = (comedi_rnginfo_t *) lfc->data;
 			if ((ret = comedi_sys_rnginfo(fd, i, j, rnginfo)) < 0)
