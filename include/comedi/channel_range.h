@@ -304,6 +304,7 @@ extern comedi_rngdesc_t range_bipolar5;
 extern comedi_rngdesc_t range_unipolar10;
 extern comedi_rngdesc_t range_unipolar5;
 extern comedi_rngdesc_t range_unknown;
+extern comedi_rngdesc_t range_fake;
 
 #define range_digital range_unipolar5
 
