@@ -60,6 +60,11 @@ comedi_rngtab_t rng_unknown = { 1, {
 }};
 comedi_rngdesc_t range_unknown = RNG_GLOBAL(rng_unknown);
 
+comedi_rngtab_t rng_fake = { 0, {
+		RANGE(0, 0),
+}};
+comedi_rngdesc_t range_fake = RNG_GLOBAL(rng_fake);
+
 /* --- Basic channel / range management functions --- */
 
 comedi_chan_t *comedi_get_chfeat(comedi_subd_t * sb, int idx)
@@ -123,8 +128,11 @@ comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
 	
 	subd = comedi_kmalloc(sizeof(comedi_subd_t) + sizeof_priv);
 
-	if(subd != NULL && setup != NULL)
-		setup(subd);
+	if(subd != NULL) {
+		memset(subd, 0 , sizeof(comedi_subd_t) + sizeof_priv);
+		if(setup != NULL) 
+			setup(subd);
+	}
 
 	return subd;
 }
@@ -188,8 +196,9 @@ int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg)
 	for (i = 0; i < dev->transfer.nb_subd; i++) {
 		subd_info[i].flags = dev->transfer.subds[i]->flags;
 		subd_info[i].status = dev->transfer.status[i];
-		subd_info[i].nb_chan =
-		    dev->transfer.subds[i]->chan_desc->length;
+		subd_info[i].nb_chan = 
+			(dev->transfer.subds[i]->chan_desc != NULL) ?
+			dev->transfer.subds[i]->chan_desc->length : 0;
 	}
 
 	if (comedi_copy_to_user(cxt,
@@ -221,9 +230,11 @@ int comedi_ioctl_nbchaninfo(comedi_cxt_t * cxt, void *arg)
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	inarg.info =
-	    (void *)(unsigned long)dev->transfer.subds[inarg.idx_subd]->
-	    chan_desc->length;
+	if(dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
+		inarg.info = (void *)0;
+	else
+		inarg.info = (void *)(unsigned long)
+			dev->transfer.subds[inarg.idx_subd]->chan_desc->length;
 
 	if (comedi_copy_to_user(cxt,
 				arg, &inarg, sizeof(comedi_chinfo_arg_t)) != 0)
@@ -251,10 +262,16 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
-		return -EINVAL;
+		return -EINVAL;	
 
 	chan_desc = dev->transfer.subds[inarg.idx_subd]->chan_desc;
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
+	
+	if (chan_desc == NULL)
+		return -EINVAL;
+
+	if(rng_desc == NULL)
+		rng_desc = &range_fake;
 
 	chan_info = comedi_kmalloc(chan_desc->length * sizeof(comedi_chinfo_t));
 	if (chan_info == NULL)
@@ -278,8 +295,7 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 	if (comedi_copy_to_user(cxt,
 				inarg.info,
 				chan_info,
-				chan_desc->length * sizeof(comedi_chinfo_t)) !=
-	    0)
+				chan_desc->length * sizeof(comedi_chinfo_t)) != 0)
 		return -EFAULT;
 
 	comedi_kfree(chan_info);
@@ -303,13 +319,25 @@ int comedi_ioctl_nbrnginfo(comedi_cxt_t * cxt, void *arg)
 				  arg, sizeof(comedi_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
+	if (inarg.idx_subd >= dev->transfer.nb_subd)
+		return -EINVAL;
+
+	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
+		return -EINVAL;
+	
 	if (inarg.idx_chan >=
 	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length)
 		return -EINVAL;
 
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
-	i = (rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ? inarg.idx_chan : 0;
-	inarg.info = (void *)(unsigned long)rng_desc->rngtabs[i]->length;
+	if (rng_desc != NULL) {
+		i = (rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ? 
+			inarg.idx_chan : 0;
+		inarg.info = (void *)(unsigned long)
+			rng_desc->rngtabs[i]->length;
+	} else
+		inarg.info = (void *)0;
+	
 
 	if (comedi_copy_to_user(cxt,
 				arg, &inarg, sizeof(comedi_rnginfo_arg_t)) != 0)
@@ -339,13 +367,19 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
+	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
+		return -EINVAL;
+
 	if (inarg.idx_chan >=
 	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length)
 		return -EINVAL;
 
+	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
+	if (rng_desc == NULL)
+		return -EINVAL;
+
 	/* If the range descriptor is global, 
 	   we take the first instance */
-	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
 	tmp = (rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ?
 	    inarg.idx_chan : 0;
 
