@@ -70,9 +70,7 @@ static struct sockaddr_ipc nullsa = {
 	.sipc_port = -1
 };
 
-static struct xnmap *portbits;
-
-static struct iddp_socket *portmap[CONFIG_XENO_OPT_IDDP_NRPORT];
+static struct xnmap *portmap;
 
 static rtdm_event_t poolevt;
 
@@ -213,10 +211,8 @@ static int iddp_close(struct rtipc_private *priv,
 	struct iddp_socket *sk = priv->state;
 	struct iddp_message *mbuf;
 
-	if (sk->name.sipc_port > -1) {
-		portmap[sk->name.sipc_port] = NULL;
-		xnmap_remove(portbits, sk->name.sipc_port);
-	}
+	if (sk->name.sipc_port > -1)
+		xnmap_remove(portmap, sk->name.sipc_port);
 
 	rtdm_sem_destroy(&sk->insem);
 	rtdm_event_destroy(&sk->privevt);
@@ -389,7 +385,7 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	to = daddr->sipc_port;
 
 	RTDM_EXECUTE_ATOMICALLY(
-		rsk = portmap[to];
+		rsk = xnmap_fetch_nocheck(portmap, to);
 		if (unlikely(rsk == NULL))
 			ret = -ECONNRESET;
 		else {
@@ -431,33 +427,24 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 	}
 
 	RTDM_EXECUTE_ATOMICALLY(
-		rsk = portmap[to];
-		/*
-		 * IDDP ports may be unbound dynamically, and we only
-		 * hold closure, so we have to test this again.
-		 */
-		if (unlikely(rsk == NULL))
-			ret = -ECONNRESET;
-		else {
-			mbuf->from = sk->name.sipc_port;
-			if (flags & MSG_OOB)
-				list_add(&mbuf->next, &rsk->inq);
-			else
-				list_add_tail(&mbuf->next, &rsk->inq);
-			rtdm_sem_up(&rsk->insem);
-			ret = 0;
-		}
+		mbuf->from = sk->name.sipc_port;
+		if (flags & MSG_OOB)
+			list_add(&mbuf->next, &rsk->inq);
+		else
+			list_add_tail(&mbuf->next, &rsk->inq);
+		rtdm_sem_up(&rsk->insem);
 	);
-	if (unlikely(ret)) {
-	fail:
-		__iddp_free_mbuf(rsk, mbuf);
-		rtdm_context_unlock(rcontext);
-		return ret;
-	}
 
 	rtdm_context_unlock(rcontext);
 
 	return len;
+
+fail:
+	__iddp_free_mbuf(rsk, mbuf);
+
+	rtdm_context_unlock(rcontext);
+
+	return ret;
 }
 
 static ssize_t iddp_sendmsg(struct rtipc_private *priv,
@@ -550,7 +537,7 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 
 	port = sa->sipc_port;
 	/* Will auto-select a free port number if unspec (-1). */
-	port = xnmap_enter(portbits, port, sk);
+	port = xnmap_enter(portmap, port, sk);
 	if (port < 0)
 		return port == -EEXIST ? -EADDRINUSE : -ENOMEM;
 
@@ -598,14 +585,13 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	}
 
 	RTDM_EXECUTE_ATOMICALLY(
-		portmap[sa->sipc_port] = sk;
 		__clear_bit(_IDDP_BINDING, &sk->status);
 		__set_bit(_IDDP_BOUND, &sk->status);
 	);
 
 	return 0;
 fail:
-	xnmap_remove(portbits, port);
+	xnmap_remove(portmap, port);
 	clear_bit(_IDDP_BINDING, &sk->status);
 	
 	return ret;
@@ -924,8 +910,8 @@ static int iddp_ioctl(struct rtipc_private *priv,
 
 static int __init iddp_init(void)
 {
-	portbits = xnmap_create(CONFIG_XENO_OPT_IDDP_NRPORT, 0, 0);
-	if (portbits == NULL)
+	portmap = xnmap_create(CONFIG_XENO_OPT_IDDP_NRPORT, 0, 0);
+	if (portmap == NULL)
 		return -ENOMEM;
 
 	rtdm_event_init(&poolevt, 0);
@@ -936,7 +922,7 @@ static int __init iddp_init(void)
 static void __exit iddp_exit(void)
 {
 	rtdm_event_destroy(&poolevt);
-	xnmap_delete(portbits);
+	xnmap_delete(portmap);
 }
 
 struct rtipc_protocol iddp_proto_driver = {
