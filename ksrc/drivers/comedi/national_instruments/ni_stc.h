@@ -1111,7 +1111,7 @@ unsigned int MSeries_PLL_In_Source_Select_RTSI_Bits(unsigned int RTSI_channel)
 	else return MSeries_PLL_In_Source_Select_RTSI0_Bits + RTSI_channel;
 }
 
-#define MSeries_PLL_Enable_Bit					0x1000,
+#define MSeries_PLL_Enable_Bit					0x1000
 #define MSeries_PLL_VCO_Mode_200_325MHz_Bits			0x0
 #define MSeries_PLL_VCO_Mode_175_225MHz_Bits			0x2000
 #define MSeries_PLL_VCO_Mode_100_225MHz_Bits			0x4000
