@@ -243,24 +243,14 @@ int comedi_buf_get(comedi_dev_t * dev, void *bufdata, unsigned long count)
 	return ret;
 }
 
-int comedi_buf_evt(comedi_dev_t * dev, unsigned int type, unsigned long evts)
+int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts)
 {
-	unsigned int idx_subd;
-	comedi_buf_t *buf;
+	comedi_dev_t *dev = subd->dev;
+	comedi_buf_t *buf = dev->transfer.bufs[subd->idx];
 	int tmp;
 
-	/* Retrieves the subdevice's index */
-	if (type == COMEDI_BUF_PUT)
-		idx_subd = dev->transfer.idx_read_subd;
-	else if (type == COMEDI_BUF_GET)
-		idx_subd = dev->transfer.idx_write_subd;
-	else
-		return -EINVAL;
-
-	buf = dev->transfer.bufs[idx_subd];
-
 	/* Basic checking */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[subd->idx])))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
@@ -277,18 +267,16 @@ int comedi_buf_evt(comedi_dev_t * dev, unsigned int type, unsigned long evts)
 	return 0;
 }
 
-unsigned long comedi_buf_count(comedi_dev_t * dev, unsigned int type)
+unsigned long comedi_buf_count(comedi_subd_t *subd)
 {
 	unsigned long ret = 0;
-	comedi_buf_t *buf;
+	comedi_dev_t *dev = subd->dev;
+	comedi_buf_t *buf = dev->transfer.bufs[subd->idx];
 
-	if (type == COMEDI_BUF_PUT) {
-		buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+	if (subd->flags & COMEDI_SUBD_MASK_READ)
 		ret = __count_to_put(buf);
-	} else if (type == COMEDI_BUF_GET) {
-		buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
-		ret = __count_to_get(buf);
-	}
+	else if (subd->flags & COMEDI_SUBD_MASK_WRITE)
+		ret = __count_to_get(buf);	
 
 	return ret;
 }

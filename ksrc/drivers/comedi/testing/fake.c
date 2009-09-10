@@ -4,6 +4,8 @@
 #define TEST_TASK_PERIOD 1000000
 #define TEST_NB_BITS 16
 
+#define TEST_INPUT_SUBD 0
+
 /* --- Driver related structures --- */
 
 /* Device private structure */
@@ -98,7 +100,7 @@ static sampl_t test_output(tstprv_t *priv)
 static void test_task_proc(void *arg)
 {
 	comedi_dev_t *dev = (comedi_dev_t*)arg;
-	comedi_subd_t *subd = comedi_get_subd(dev, 0);
+	comedi_subd_t *subd = comedi_get_subd(dev, TEST_INPUT_SUBD);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 	comedi_cmd_t *cmd = NULL;
 	u64 now_ns, elapsed_ns=0;
@@ -137,7 +139,7 @@ static void test_task_proc(void *arg)
 			priv->current_ns += i * priv->scan_period_ns;
 			priv->reminder_ns = elapsed_ns;
 
-			comedi_buf_evt(dev, COMEDI_BUF_PUT, 0);
+			comedi_buf_evt(subd, 0);
 		}
 
 		comedi_task_sleep(TEST_TASK_PERIOD);
@@ -266,8 +268,8 @@ int test_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 		return -ENOMEM;
 
 	ret = comedi_add_subd(dev, subd);
-	if(ret < 0)
-		return ret;
+	if(ret != TEST_INPUT_SUBD)
+		return (ret < 0) ? ret : -EINVAL;
 
 	priv->timer_running = 0;
 

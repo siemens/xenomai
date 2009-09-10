@@ -139,6 +139,7 @@ EXPORT_SYMBOL(range_bipolar5);
 EXPORT_SYMBOL(range_unipolar10);
 EXPORT_SYMBOL(range_unipolar5);
 EXPORT_SYMBOL(range_unknown);
+EXPORT_SYMBOL(range_fake);
 
 /**
  * @brief Add a subdevice to the driver descriptor
@@ -461,12 +462,7 @@ EXPORT_SYMBOL(comedi_buf_get);
  * - To notify the user-process an error has occured during the
  *   acquistion.
  *
- * @param[in] dev Device descriptor structure
- * @param[in] type Buffer transfer type:
- * - COMEDI_BUF_PUT for device -> Comedi buffer -> user-process
- *   transfer.
- * - COMEDI_BUF_GET for user-process -> Comedi_buffer -> device
- *   transfer
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] evts Some specific event to notify:
  * - COMEDI_BUF_ERROR to indicate some error has occured during the
  *   transfer
@@ -476,25 +472,18 @@ EXPORT_SYMBOL(comedi_buf_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_evt(comedi_dev_t * dev, unsigned int type, unsigned long evts);
+int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts);
 EXPORT_SYMBOL(comedi_buf_evt);
 
 /**
  * @brief Get the data amount available in the Comedi buffer 
  *
- * @param[in] dev Device descriptor structure
- * @param[in] type Buffer transfer type:
- * - COMEDI_BUF_PUT for device -> Comedi buffer -> user-process
- *   transfer; in this case, the returned count is the free space in
- *   the Comedi buffer in which the driver can put acquired data.
- * - COMEDI_BUF_GET for user-process -> Comedi_buffer -> device
- *   transfer; in that case, the returned count is the data amount
- *   available for sending to the device.
+ * @param[in] subd Subdevice descriptor structure
  *
  * @return the amount of data available in the Comedi buffer.
  *
  */
-unsigned long comedi_buf_count(comedi_dev_t * dev, unsigned int type);
+unsigned long comedi_buf_count(comedi_subd_t *subd);
 EXPORT_SYMBOL(comedi_buf_count);
 
 /**

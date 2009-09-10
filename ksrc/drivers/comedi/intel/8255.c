@@ -62,7 +62,7 @@ void subdev_8255_interrupt(comedi_subd_t *subd)
 	/* ...and send it */
 	comedi_buf_put(subd->dev, &d, sizeof(sampl_t));
 
-	comedi_buf_evt(subd->dev, COMEDI_BUF_PUT, 0);
+	comedi_buf_evt(subd, 0);
 }
 
 static int subdev_8255_cb(int dir, int port, int data, unsigned long arg)

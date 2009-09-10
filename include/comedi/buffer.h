@@ -325,10 +325,9 @@ int comedi_buf_commit_get(struct comedi_device *dev, unsigned long count);
 int comedi_buf_get(struct comedi_device *dev,
 		   void *bufdata, unsigned long count);
 
-int comedi_buf_evt(struct comedi_device *dev,
-		   unsigned int type, unsigned long evts);
+int comedi_buf_evt(struct comedi_subdevice *subd, unsigned long evts);
 
-unsigned long comedi_buf_count(struct comedi_device *dev, unsigned int type);
+unsigned long comedi_buf_count(struct comedi_subdevice *subd);
 
 /* --- Current Command management function --- */
 

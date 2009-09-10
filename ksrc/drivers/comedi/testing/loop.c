@@ -4,6 +4,9 @@
 #define LOOP_TASK_PERIOD 1000000
 #define LOOP_NB_BITS 16
 
+#define LOOP_INPUT_SUBD 0 
+#define LOOP_OUTPUT_SUBD 1
+
 /* Channels descriptor */
 static comedi_chdesc_t loop_chandesc = {
 	.mode = COMEDI_CHAN_GLOBAL_CHANDESC,
@@ -60,10 +63,19 @@ static void loop_task_proc(void *arg);
 static void loop_task_proc(void *arg)
 {
 	comedi_dev_t *dev = (comedi_dev_t*)arg;
+	comedi_subd_t *input_subd, *output_subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
     
 	while (!comedi_check_dev(dev))
 		comedi_task_sleep(LOOP_TASK_PERIOD);
+
+	input_subd = comedi_get_subd(dev, LOOP_INPUT_SUBD);
+	output_subd = comedi_get_subd(dev, LOOP_OUTPUT_SUBD);
+
+	if (input_subd == NULL || output_subd == NULL) {
+		comedi_err(dev, "loop_task_proc: subdevices unavailable\n");
+		return;
+	}
 
 	while (1) {
 	
@@ -82,16 +94,14 @@ static void loop_task_proc(void *arg)
 						    "loop_task_proc: "
 						    "data available\n");
 
-					comedi_buf_evt(dev, COMEDI_BUF_GET, 0);
+					comedi_buf_evt(output_subd, 0);
 		    
-					ret=comedi_buf_put(dev, 
-							   &value, 
-							   sizeof(sampl_t));
+					ret = comedi_buf_put(dev, 
+							     &value, 
+							     sizeof(sampl_t));
 
 					if (ret==0)
-						comedi_buf_evt(dev, 
-							       COMEDI_BUF_PUT, 
-							       0);
+						comedi_buf_evt(input_subd, 0);
 				}
 			}
 		}
@@ -199,9 +209,9 @@ int loop_attach(comedi_dev_t *dev,
 		return -ENOMEM;  
 
 	ret = comedi_add_subd(dev, subd);
-	if (ret < 0)
+	if (ret != LOOP_INPUT_SUBD)
 		/* Let Comedi free the lately allocated subdevice */
-		return ret;
+		return (ret < 0) ? ret : -EINVAL;
 
 	/* Add the fake output subdevice */
 	subd = comedi_alloc_subd(0, setup_output_subd); 
@@ -210,9 +220,9 @@ int loop_attach(comedi_dev_t *dev,
 		return -ENOMEM;  
 
 	ret = comedi_add_subd(dev, subd);
-	if (ret < 0)
+	if (ret != LOOP_OUTPUT_SUBD)
 		/* Let Comedi free the lately allocated subdevices */
-		return ret;
+		return (ret < 0) ? ret : -EINVAL;
 
 	priv->loop_running = 0;
 	priv->loop_insn_value = 0;

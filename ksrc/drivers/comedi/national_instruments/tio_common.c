@@ -43,6 +43,7 @@
 #include <comedi/comedi_driver.h>
 
 #include "ni_tio.h"
+#include "ni_mio.h"
 
 static inline void write_register(struct ni_gpct *counter, 
 				  unsigned int bits, enum ni_gpct_register reg)
@@ -1899,15 +1900,17 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
 	int gate_error;
 	int tc_error;
 	int perm_stale_data;
+	comedi_subd_t *subd = 
+		comedi_get_subd(dev, NI_GPCT_SUBDEV(counter->counter_index));
 
 	ni_tio_acknowledge_and_confirm(counter, &gate_error, &tc_error,
 		&perm_stale_data, NULL);
 	if (gate_error) {
 		__comedi_err("%s: Gi_Gate_Error detected.\n", __FUNCTION__);
-		comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 	if (perm_stale_data) {
-		comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
+		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 	}
 	switch (counter->counter_dev->variant) {
 	case ni_gpct_variant_m_series:
@@ -1916,7 +1919,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
 				  NITIO_Gi_DMA_Status_Reg(counter->counter_index)) 
 		    & Gi_DRQ_Error_Bit) {
 			__comedi_err("%s: Gi_DRQ_Error detected.\n", __FUNCTION__);
-			comedi_buf_evt(dev, COMEDI_BUF_PUT, COMEDI_BUF_ERROR);
+			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 		}
 		break;
 	case ni_gpct_variant_e_series:
