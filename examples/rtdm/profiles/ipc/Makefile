@@ -1,7 +1,10 @@
 ###### CONFIGURATION ######
 
 ### List of applications to be built
-APPLICATIONS = xddp-echo xddp-label xddp-stream iddp-sendrecv iddp-label
+APPLICATIONS = \
+	xddp-echo xddp-label xddp-stream \
+	iddp-sendrecv iddp-label \
+	bufp-readwrite bufp-label
 
 ### Note: to override the search path for the xeno-config script, use "make XENO=..."
 

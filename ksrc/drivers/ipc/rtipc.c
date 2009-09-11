@@ -30,6 +30,9 @@ static struct rtipc_protocol *protocols[IPCPROTO_MAX] = {
 #ifdef CONFIG_XENO_DRIVERS_RTIPC_IDDP
 	[IPCPROTO_IDDP - 1] = &iddp_proto_driver,
 #endif
+#ifdef CONFIG_XENO_DRIVERS_RTIPC_BUFP
+	[IPCPROTO_BUFP - 1] = &bufp_proto_driver,
+#endif
 };
 
 #ifdef CONFIG_PROC_FS

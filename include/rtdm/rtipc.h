@@ -58,9 +58,6 @@
 #include <nucleus/types.h>
 #include <rtdm/rtdm.h>
 
-#define RTDM_SUBCLASS_XDDP	0
-#define RTDM_SUBCLASS_IDDP	1
-
 /* Address family */
 #define AF_RTIPC		111
 
@@ -71,7 +68,21 @@ enum {
 	IPCPROTO_IPC  = 0,	/* Default protocol (IDDP) */
 	IPCPROTO_XDDP = 1,	/* Cross-domain datagram protocol */
 	IPCPROTO_IDDP = 2,	/* Intra-domain datagram protocol */
+	IPCPROTO_BUFP = 3,	/* Buffer protocol */
 	IPCPROTO_MAX
+};
+
+ /*
+  * Valid port ranges:
+  * XDDP = [0..OPT_PIPE_NRDEV-1]
+  * IDDP = [0..OPT_IDDP_NRPORT-1]
+  * BUFP = [0..OPT_BUFP_NRPORT-1]
+  */
+typedef int16_t rtipc_port_t;
+
+struct sockaddr_ipc {
+	sa_family_t sipc_family; /* AF_RTIPC */
+	rtipc_port_t sipc_port;
 };
 
 /* RTIPC socket level */
@@ -87,21 +98,13 @@ enum {
 #define IDDP_GETSTALLCOUNT	7
 #define IDDP_SETLABEL		8
 #define IDDP_GETLABEL		9
+#define BUFP_SETBUFFER		10
+#define BUFP_SETLABEL		11
+#define BUFP_GETLABEL		12
 
 #define XDDP_LABEL_LEN		XNOBJECT_NAME_LEN
 #define IDDP_LABEL_LEN		XNOBJECT_NAME_LEN
-
- /*
-  * Valid port ranges:
-  * XDDP = [0..OPT_PIPE_NRDEV-1]
-  * IDDP = [0..OPT_IDDP_NRPORT-1]
-  */
-typedef int16_t rtipc_port_t;
-
-struct sockaddr_ipc {
-	sa_family_t sipc_family; /* AF_RTIPC */
-	rtipc_port_t sipc_port;
-};
+#define BUFP_LABEL_LEN		XNOBJECT_NAME_LEN
 
 /* XDDP in-kernel monitored events */
 #define XDDP_EVTIN	1

@@ -10,6 +10,7 @@ xeno_rtipc-y := rtipc.o
 
 xeno_rtipc-$(CONFIG_XENO_DRIVERS_RTIPC_XDDP) += xddp.o
 xeno_rtipc-$(CONFIG_XENO_DRIVERS_RTIPC_IDDP) += iddp.o
+xeno_rtipc-$(CONFIG_XENO_DRIVERS_RTIPC_BUFP) += bufp.o
 
 else
 
@@ -24,6 +25,7 @@ xeno_rtipc-objs := rtipc.o
 opt_objs-y :=
 opt_objs-$(CONFIG_XENO_DRIVERS_RTIPC_XDDP) += xddp.o
 opt_objs-$(CONFIG_XENO_DRIVERS_RTIPC_IDDP) += iddp.o
+opt_objs-$(CONFIG_XENO_DRIVERS_RTIPC_BUFP) += bufp.o
 
 xeno_rtipc-objs += $(opt_objs-y)
 

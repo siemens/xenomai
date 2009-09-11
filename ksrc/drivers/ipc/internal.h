@@ -98,6 +98,22 @@ extern struct rtipc_protocol xddp_proto_driver;
 
 extern struct rtipc_protocol iddp_proto_driver;
 
+extern struct rtipc_protocol bufp_proto_driver;
+
 extern struct xnptree rtipc_ptree;
+
+#define rtipc_wait_context		xnthread_wait_context
+#define rtipc_prepare_wait		xnthread_prepare_wait
+#define rtipc_finish_wait		xnthread_finish_wait
+#define rtipc_get_wait_context		xnthread_get_wait_context
+
+#define rtipc_peek_wait_head(obj)	xnsynch_peek_pendq(&(obj)->synch_base)
+#define rtipc_enter_atomic(lockctx)	xnlock_get_irqsave(&nklock, (lockctx))
+#define rtipc_leave_atomic(lockctx)	xnlock_put_irqrestore(&nklock, (lockctx))
+
+static inline int rtipc_socket_locked(struct rtdm_dev_context *context)
+{
+	return atomic_read(&context->close_lock_count);
+}
 
 #endif /* !_RTIPC_INTERNAL_H */
