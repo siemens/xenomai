@@ -126,8 +126,8 @@ void xnsynch_init(struct xnsynch *synch, xnflags_t flags, xnarch_atomic_t *fastl
 EXPORT_SYMBOL_GPL(xnsynch_init);
 
 /*!
- * \fn void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
- *                           xntmode_t timeout_mode);
+ * \fn xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
+ *                                xntmode_t timeout_mode);
  * \brief Sleep on an ownerless synchronization object.
  *
  * Makes the calling thread sleep on the specified synchronization
@@ -152,6 +152,11 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
  * xntimer_start()).
  *
+ * @return A bitmask which may include zero or one information bit
+ * among XNRMID, XNTIMEO and XNBREAK, which should be tested by the
+ * caller, for detecting respectively: object deletion, timeout or
+ * signal/unblock conditions which might have happened while waiting.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -167,8 +172,8 @@ EXPORT_SYMBOL_GPL(xnsynch_init);
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
-		      xntmode_t timeout_mode)
+xnflags_t xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
+			   xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread();
 	spl_t s;
@@ -189,6 +194,8 @@ void xnsynch_sleep_on(struct xnsynch *synch, xnticks_t timeout,
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_sleep_on);
 
@@ -354,8 +361,8 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 }
 
 /*! 
- * \fn void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
- *                          xntmode_t timeout_mode);
+ * \fn xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
+ *                               xntmode_t timeout_mode);
  * \brief Acquire the ownership of a synchronization object.
  *
  * This service should be called by upper interfaces wanting the
@@ -380,6 +387,11 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * either be set to XN_RELATIVE, XN_ABSOLUTE, or XN_REALTIME (see also
  * xntimer_start()).
  *
+ * @return A bitmask which may include zero or one information bit
+ * among XNRMID, XNTIMEO and XNBREAK, which should be tested by the
+ * caller, for detecting respectively: object deletion, timeout or
+ * signal/unblock conditions which might have happened while waiting.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -395,8 +407,8 @@ static void xnsynch_renice_thread(struct xnthread *thread,
  * xnpod_init_thread), or nanoseconds otherwise.
  */
 
-void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
-		     xntmode_t timeout_mode)
+xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
+			  xntmode_t timeout_mode)
 {
 	struct xnthread *thread = xnpod_current_thread(), *owner;
 	xnhandle_t threadh = xnthread_handle(thread), fastlock, old;
@@ -418,7 +430,7 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 		if (likely(fastlock == XN_NO_HANDLE)) {
 			xnthread_clear_info(thread,
 					    XNRMID | XNTIMEO | XNBREAK);
-			return;
+			return 0;
 		}
 
 		xnlock_get_irqsave(&nklock, s);
@@ -544,6 +556,8 @@ void xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	xnthread_clear_info(thread, XNWAKEN);
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	return xnthread_test_info(thread, XNRMID|XNTIMEO|XNBREAK);
 }
 EXPORT_SYMBOL_GPL(xnsynch_acquire);
 

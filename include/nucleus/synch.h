@@ -194,18 +194,18 @@ static inline void xnsynch_register_cleanup(struct xnsynch *synch,
 	synch->cleanup = handler;
 }
 
-void xnsynch_sleep_on(struct xnsynch *synch,
-		      xnticks_t timeout,
-		      xntmode_t timeout_mode);
+xnflags_t xnsynch_sleep_on(struct xnsynch *synch,
+			   xnticks_t timeout,
+			   xntmode_t timeout_mode);
 
 struct xnthread *xnsynch_wakeup_one_sleeper(struct xnsynch *synch);
 
 xnpholder_t *xnsynch_wakeup_this_sleeper(struct xnsynch *synch,
 					 xnpholder_t *holder);
 
-void xnsynch_acquire(struct xnsynch *synch,
-		     xnticks_t timeout,
-		     xntmode_t timeout_mode);
+xnflags_t xnsynch_acquire(struct xnsynch *synch,
+			  xnticks_t timeout,
+			  xntmode_t timeout_mode);
 
 struct xnthread *xnsynch_release(struct xnsynch *synch);
 
