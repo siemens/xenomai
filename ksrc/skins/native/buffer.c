@@ -389,7 +389,9 @@ redo:
 			 */
 			xnlock_put_irqrestore(&nklock, s);
 
-			xnbufd_copy_to_kmem(bf->bufmem + wroff, bufd, n);
+			ret = xnbufd_copy_to_kmem(bf->bufmem + wroff, bufd, n);
+			if (ret < 0)
+				return ret;
 
 			xnlock_get_irqsave(&nklock, s);
 			/*
@@ -545,7 +547,9 @@ redo:
 
 			xnlock_put_irqrestore(&nklock, s);
 
-			xnbufd_copy_from_kmem(bufd, bf->bufmem + rdoff, n);
+			ret = xnbufd_copy_from_kmem(bufd, bf->bufmem + rdoff, n);
+			if (ret < 0)
+				return ret;
 
 			xnlock_get_irqsave(&nklock, s);
 			/*
