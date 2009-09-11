@@ -2445,6 +2445,26 @@ static int __rt_queue_inquire(struct pt_regs *regs)
 	return 0;
 }
 
+/*
+ * int __rt_queue_flush(RT_QUEUE_PLACEHOLDER *ph)
+ */
+
+static int __rt_queue_flush(struct pt_regs *regs)
+{
+	RT_QUEUE_PLACEHOLDER ph;
+	RT_QUEUE *q;
+
+	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(ph)))
+		return -EFAULT;
+
+	q = xnregistry_fetch(ph.opaque);
+	if (q == NULL)
+		return -ESRCH;
+
+	return rt_queue_flush(q);
+}
+
 #else /* !CONFIG_XENO_OPT_NATIVE_QUEUE */
 
 #define __rt_queue_create    __rt_call_not_available
@@ -2457,6 +2477,7 @@ static int __rt_queue_inquire(struct pt_regs *regs)
 #define __rt_queue_inquire   __rt_call_not_available
 #define __rt_queue_read      __rt_call_not_available
 #define __rt_queue_write     __rt_call_not_available
+#define __rt_queue_flush     __rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_QUEUE */
 
@@ -4051,6 +4072,7 @@ static xnsysent_t __systab[] = {
 	[__native_queue_receive] = {&__rt_queue_receive, __xn_exec_primary},
 	[__native_queue_read] = {&__rt_queue_read, __xn_exec_primary},
 	[__native_queue_inquire] = {&__rt_queue_inquire, __xn_exec_any},
+	[__native_queue_flush] = {&__rt_queue_flush, __xn_exec_any},
 	[__native_heap_create] = {&__rt_heap_create, __xn_exec_lostage},
 	[__native_heap_bind] = {&__rt_heap_bind, __xn_exec_conforming},
 	[__native_heap_delete] = {&__rt_heap_delete, __xn_exec_lostage},

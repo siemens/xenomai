@@ -126,6 +126,7 @@
 #define __native_buffer_write       100
 #define __native_buffer_clear       101
 #define __native_buffer_inquire     102
+#define __native_queue_flush        103
 
 struct rt_arg_bulk {
 

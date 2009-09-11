@@ -218,6 +218,8 @@ ssize_t rt_queue_read_until(RT_QUEUE *q,
 			    size_t size,
 			    RTIME timeout);
 
+int rt_queue_flush(RT_QUEUE *q);
+
 int rt_queue_inquire(RT_QUEUE *q,
 		     RT_QUEUE_INFO *info);
 

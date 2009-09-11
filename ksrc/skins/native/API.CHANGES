@@ -272,3 +272,11 @@ ___________________________________________________________________
        * rt_task_set_mode() does not support the T_RRB bit
          anymore. Round-robin scheduling should be controlled using
          the rt_task_slice() service instead.
+
+___________________________________________________________________
+
+
+2.5-rc3 -> 2.5-rc4
+
+       * New rt_queue_flush() service to discard all unread messages
+       from a queue.

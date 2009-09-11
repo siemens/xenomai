@@ -1113,6 +1113,72 @@ ssize_t rt_queue_read_until(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)
 }
 
 /**
+ * @fn int rt_queue_flush(RT_QUEUE *q)
+ *
+ * @brief Flush a message queue.
+ *
+ * This service discards all unread messages from a message queue.
+ *
+ * @param q The descriptor address of the affected queue.
+ *
+ * @return The number of messages flushed is returned upon
+ * success. Otherwise:
+ *
+ * - -EINVAL is returned if @a q is not a message queue descriptor.
+ *
+ * - -EIDRM is returned if @a q is a deleted queue descriptor.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+int rt_queue_flush(RT_QUEUE *q)
+{
+	struct rt_queue_msg *msg;
+	struct xnqueue tmpq;
+	struct xnholder *h;
+	int ret, count;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	q = xeno_h2obj_validate(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+	if (q == NULL) {
+		ret = xeno_handle_error(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+		xnlock_put_irqrestore(&nklock, s);
+		return ret;
+	}
+
+	/*
+	 * Transfer the contents to a private queue by moving queue
+	 * heads, so that we may free any number of messages without
+	 * holding the nklock.
+	 */ 
+	initq(&tmpq);
+	moveq(&tmpq, &q->pendq);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	count = countq(&tmpq);
+
+	while ((h = getq(&tmpq)) != NULL) {
+		msg = link2rtmsg(h);
+		/* no need to check anything - msg must be valid */
+		xnheap_test_and_free(&q->bufpool, msg, NULL);
+	}
+
+	return count;
+}
+
+/**
  * @fn int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
  *
  * @brief Inquire about a message queue.
@@ -1285,4 +1351,5 @@ EXPORT_SYMBOL(rt_queue_receive);
 EXPORT_SYMBOL(rt_queue_receive_until);
 EXPORT_SYMBOL(rt_queue_read);
 EXPORT_SYMBOL(rt_queue_read_until);
+EXPORT_SYMBOL(rt_queue_flush);
 EXPORT_SYMBOL(rt_queue_inquire);

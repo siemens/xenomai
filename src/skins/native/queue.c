@@ -184,3 +184,8 @@ int rt_queue_inquire(RT_QUEUE *q, RT_QUEUE_INFO *info)
 	return XENOMAI_SKINCALL2(__native_muxid, __native_queue_inquire, q,
 				 info);
 }
+
+int rt_queue_flush(RT_QUEUE *q)
+{
+	return XENOMAI_SKINCALL1(__native_muxid, __native_queue_flush, q);
+}
