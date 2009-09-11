@@ -52,6 +52,17 @@ config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
 	working, Xenomai's shared interrupt support must be enabled.
 
 
+config XENO_DRIVERS_CAN_SJA1000_ESD_PCI
+	depends on XENO_DRIVERS_CAN_SJA1000
+	tristate "ESD PCI Cards"
+	help
+
+	This driver supports the esd PCI CAN cards CAN-PCI/200,
+	CAN-PCI/266, CAN-PMC/266 (PMC), CAN-CPCI/200 (CompactPCI),
+	CAN-PCIe2000 (PCI Express) and CAN-PCI104/200 (PCI104)
+	from the esd electronic system design gmbh (http://www.esd.eu).
+
+
 config XENO_DRIVERS_CAN_SJA1000_PEAK_DNG
 	depends on XENO_DRIVERS_CAN_SJA1000
 	tristate "PEAK Parallel Port Dongle"
