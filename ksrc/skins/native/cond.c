@@ -377,6 +377,7 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 {
 	int err, kicked = 0;
 	xnthread_t *thread;
+	xnflags_t info;
 	int lockcnt;
 	spl_t s;
 
@@ -420,13 +421,13 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 	xnsynch_release(&mutex->synch_base);
 	/* Scheduling deferred */
 
-	xnsynch_sleep_on(&cond->synch_base, timeout, timeout_mode);
-
-	if (xnthread_test_info(thread, XNRMID))
+	info = xnsynch_sleep_on(&cond->synch_base,
+				timeout, timeout_mode);
+	if (info & XNRMID)
 		err = -EIDRM;	/* Condvar deleted while pending. */
-	else if (xnthread_test_info(thread, XNTIMEO))
+	else if (info & XNTIMEO)
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(thread, XNBREAK)) {
+	else if (info & XNBREAK) {
 		err = -EINTR;	/* Unblocked. */
 		kicked = xnthread_test_info(thread, XNKICKED);
 	}

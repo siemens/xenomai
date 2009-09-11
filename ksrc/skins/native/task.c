@@ -108,6 +108,7 @@ void __native_task_unsafe(RT_TASK *task)
 int __native_task_safewait(RT_TASK *task)
 {
 	/* Must be called nklock locked, interrupts off. */
+	xnflags_t info;
 	u_long cstamp;
 
 	if (task->safelock == 0)
@@ -116,13 +117,11 @@ int __native_task_safewait(RT_TASK *task)
 	cstamp = task->cstamp;
 
 	do {
-		xnsynch_sleep_on(&task->safesynch, XN_INFINITE, XN_RELATIVE);
-
-		if (xnthread_test_info
-		    (&xeno_current_task()->thread_base, XNBREAK))
-			return -EINTR;
-	}
-	while (task->safelock > 0);
+	  info = xnsynch_sleep_on(&task->safesynch,
+				  XN_INFINITE, XN_RELATIVE);
+	  if (info & XNBREAK)
+		  return -EINTR;
+	} while (task->safelock > 0);
 
 	if (task->cstamp != cstamp)
 		return -EIDRM;
@@ -1719,6 +1718,7 @@ ssize_t rt_task_send(RT_TASK *task,
 		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
 	RT_TASK *client;
+	xnflags_t info;
 	size_t rsize;
 	ssize_t err;
 	spl_t s;
@@ -1770,30 +1770,32 @@ ssize_t rt_task_send(RT_TASK *task,
 	else
 		client->wait_args.mps.mcb_r.size = 0;
 
-	/* Wake up the server if it is currently waiting for a
-	   message, then sleep on the send queue, waiting for the
-	   remote reply. xnsynch_sleep_on() will reschedule as
-	   needed. */
-
+	/*
+	 * Wake up the server if it is currently waiting for a
+	 * message, then sleep on the send queue, waiting for the
+	 * remote reply. xnsynch_sleep_on() will reschedule as
+	 * needed.
+	 */
 	xnsynch_flush(&task->mrecv, 0);
 
-	/* Since the server is perpetually marked as the current owner
-	   of its own send queue which has been declared as a
-	   PIP-enabled object, it will inherit the priority of the
-	   client in the case required by the priority inheritance
-	   protocol (i.e. prio(client) > prio(server)). */
-
-	xnsynch_acquire(&task->msendq, timeout, XN_RELATIVE);
-
-	/* At this point, the server task might have exited right
+	/*
+	 * Since the server is perpetually marked as the current owner
+	 * of its own send queue which has been declared as a
+	 * PIP-enabled object, it will inherit the priority of the
+	 * client in the case required by the priority inheritance
+	 * protocol (i.e. prio(client) > prio(server)).
+	 */
+	info = xnsynch_acquire(&task->msendq, timeout, XN_RELATIVE);
+	/*
+	 * At this point, the server task might have exited right
 	 * after having replied to us, so do not make optimistic
-	 * assumption regarding its existence. */
-
-	if (xnthread_test_info(&client->thread_base, XNRMID))
+	 * assumption regarding its existence.
+	 */
+	if (info & XNRMID)
 		err = -EIDRM;	/* Receiver deleted while pending. */
-	else if (xnthread_test_info(&client->thread_base, XNTIMEO))
+	else if (info & XNTIMEO)
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(&client->thread_base, XNBREAK))
+	else if (info & XNBREAK)
 		err = -EINTR;	/* Unblocked. */
 	else {
 		rsize = client->wait_args.mps.mcb_r.size;
@@ -1912,6 +1914,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 {
 	RT_TASK *server, *client;
 	xnpholder_t *holder;
+	xnflags_t info;
 	size_t rsize;
 	int err;
 	spl_t s;
@@ -1942,18 +1945,19 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 		goto unlock_and_exit;
 	}
 
-	/* Wait on our receive slot for some client to enqueue itself in
-	   our send queue. */
-
-	xnsynch_sleep_on(&server->mrecv, timeout, XN_RELATIVE);
-
-	/* XNRMID cannot happen, since well, the current task would be the
-	   deleted object, so... */
-
-	if (xnthread_test_info(&server->thread_base, XNTIMEO)) {
+	/*
+	 * Wait on our receive slot for some client to enqueue itself
+	 * in our send queue.
+	 */
+	info = xnsynch_sleep_on(&server->mrecv, timeout, XN_RELATIVE);
+	/*
+	 * XNRMID cannot happen, since well, the current task would be the
+	 * deleted object, so...
+	 */
+	if (info & XNTIMEO) {
 		err = -ETIMEDOUT;	/* Timeout. */
 		goto unlock_and_exit;
-	} else if (xnthread_test_info(&server->thread_base, XNBREAK)) {
+	} else if (info & XNBREAK) {
 		err = -EINTR;	/* Unblocked. */
 		goto unlock_and_exit;
 	}

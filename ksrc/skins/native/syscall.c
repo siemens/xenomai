@@ -2885,6 +2885,7 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 	union xnsched_policy_param param;
 	RT_ALARM_PLACEHOLDER ph;
 	RT_ALARM *alarm;
+	xnflags_t info;
 	int err = 0;
 	spl_t s;
 
@@ -2909,11 +2910,10 @@ static int __rt_alarm_wait(struct pt_regs *regs)
 		xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
 	}
 
-	xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
-
-	if (xnthread_test_info(thread, XNRMID))
+	info = xnsynch_sleep_on(&alarm->synch_base, XN_INFINITE, XN_RELATIVE);
+	if (info & XNRMID)
 		err = -EIDRM;	/* Alarm deleted while pending. */
-	else if (xnthread_test_info(thread, XNBREAK))
+	else if (info & XNBREAK)
 		err = -EINTR;	/* Unblocked. */
 
       unlock_and_exit:
@@ -3103,6 +3103,7 @@ static int __rt_intr_wait(struct pt_regs *regs)
 	union xnsched_policy_param param;
 	RT_INTR_PLACEHOLDER ph;
 	xnthread_t *thread;
+	xnflags_t info;
 	RTIME timeout;
 	RT_INTR *intr;
 	int err = 0;
@@ -3139,13 +3140,13 @@ static int __rt_intr_wait(struct pt_regs *regs)
 			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
 		}
 
-		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
-
-		if (xnthread_test_info(thread, XNRMID))
+		info = xnsynch_sleep_on(&intr->synch_base,
+					timeout, XN_RELATIVE);
+		if (info & XNRMID)
 			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
+		else if (info & XNTIMEO)
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
+		else if (info & XNBREAK)
 			err = -EINTR;	/* Unblocked. */
 		else
 			err = intr->pending;

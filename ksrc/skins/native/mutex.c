@@ -327,6 +327,7 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 			   xntmode_t timeout_mode)
 {
 	xnthread_t *thread;
+	xnflags_t info;
 
 	if (xnpod_unblockable_p())
 		return -EPERM;
@@ -366,12 +367,12 @@ int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout,
 #endif /* !CONFIG_XENO_FASTSYNCH */
 	}
 
-	xnsynch_acquire(&mutex->synch_base, timeout, timeout_mode);
-
-	if (unlikely(xnthread_test_info(thread, XNBREAK | XNRMID | XNTIMEO))) {
-		if (xnthread_test_info(thread, XNBREAK))
+	info = xnsynch_acquire(&mutex->synch_base,
+			       timeout, timeout_mode);
+	if (unlikely(info)) {
+		if (info & XNBREAK)
 			return -EINTR;
-		else if (xnthread_test_info(thread, XNTIMEO))
+		else if (info & XNTIMEO)
 			return -ETIMEDOUT;
 		else /* XNRMID */
 			return -EIDRM;

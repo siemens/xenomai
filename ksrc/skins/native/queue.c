@@ -745,6 +745,7 @@ ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 	xnthread_t *thread;
 	xnholder_t *holder;
 	ssize_t err = 0;
+	xnflags_t info;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -772,17 +773,16 @@ ssize_t rt_queue_receive_inner(RT_QUEUE *q, void **bufp,
 			goto unlock_and_exit;
 		}
 
-		xnsynch_sleep_on(&q->synch_base, timeout, timeout_mode);
-
-		thread = xnpod_current_thread();
-
-		if (xnthread_test_info(thread, XNRMID))
+		info = xnsynch_sleep_on(&q->synch_base,
+					timeout, timeout_mode);
+		if (info & XNRMID)
 			err = -EIDRM;	/* Queue deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
-			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
+		else if (info & XNTIMEO)
+			err = -ETIMEDOUT; /* Timeout. */
+		else if (info & XNBREAK)
 			err = -EINTR;	/* Unblocked. */
 		else {
+			thread = xnpod_current_thread();
 			msg = thread->wait_u.buffer.ptr;
 			thread->wait_u.buffer.ptr = NULL;
 		}

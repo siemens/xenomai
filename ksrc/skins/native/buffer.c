@@ -319,6 +319,7 @@ ssize_t rt_buffer_write_inner(RT_BUFFER *bf,
 {
 	xnthread_t *thread, *waiter;
 	size_t len, rbytes, n;
+	xnflags_t info;
 	u_long wrtoken;
 	off_t wroff;
 	ssize_t ret;
@@ -441,17 +442,15 @@ redo:
 
 		thread = xnpod_current_thread();
 		thread->wait_u.size = len;
-		xnsynch_sleep_on(&bf->osynch_base, timeout, timeout_mode);
-
-		if (xnthread_test_info(thread, XNRMID)) {
+		info = xnsynch_sleep_on(&bf->osynch_base,
+					timeout, timeout_mode);
+		if (info & XNRMID) {
 			ret = -EIDRM;	/* Buffer deleted while pending. */
 			break;
-		}
-		if (xnthread_test_info(thread, XNTIMEO)) {
+		} if (info & XNTIMEO) {
 			ret = -ETIMEDOUT;	/* Timeout. */
 			break;
-		}
-		if (xnthread_test_info(thread, XNBREAK)) {
+		} if (info & XNBREAK) {
 			ret = -EINTR;	/* Unblocked. */
 			break;
 		}
@@ -477,6 +476,7 @@ ssize_t rt_buffer_read_inner(RT_BUFFER *bf,
 {
 	xnthread_t *thread, *waiter;
 	size_t len, rbytes, n;
+	xnflags_t info;
 	u_long rdtoken;
 	off_t rdoff;
 	ssize_t ret;
@@ -612,17 +612,15 @@ redo:
 
 		thread = xnpod_current_thread();
 		thread->wait_u.bufd =  bufd;
-		xnsynch_sleep_on(&bf->isynch_base, timeout, timeout_mode);
-
-		if (xnthread_test_info(thread, XNRMID)) {
+		info = xnsynch_sleep_on(&bf->isynch_base,
+					timeout, timeout_mode);
+		if (info & XNRMID) {
 			ret = -EIDRM;	/* Buffer deleted while pending. */
 			break;
-		}
-		if (xnthread_test_info(thread, XNTIMEO)) {
+		} else if (info & XNTIMEO) {
 			ret = -ETIMEDOUT;	/* Timeout. */
 			break;
-		}
-		if (xnthread_test_info(thread, XNBREAK)) {
+		} if (info & XNBREAK) {
 			ret = -EINTR;	/* Unblocked. */
 			break;
 		}

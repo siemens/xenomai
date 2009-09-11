@@ -283,6 +283,7 @@ int rt_sem_delete(RT_SEM *sem)
 
 int rt_sem_p_inner(RT_SEM *sem, xntmode_t timeout_mode, RTIME timeout)
 {
+	xnflags_t info;
 	int err = 0;
 	spl_t s;
 
@@ -312,15 +313,13 @@ int rt_sem_p_inner(RT_SEM *sem, xntmode_t timeout_mode, RTIME timeout)
 	if (sem->count > 0)
 		--sem->count;
 	else {
-		xnthread_t *thread = xnpod_current_thread();
-
-		xnsynch_sleep_on(&sem->synch_base, timeout, timeout_mode);
-
-		if (xnthread_test_info(thread, XNRMID))
+		info = xnsynch_sleep_on(&sem->synch_base,
+					timeout, timeout_mode);
+		if (info & XNRMID)
 			err = -EIDRM;	/* Semaphore deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
+		else if (info & XNTIMEO)
 			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
+		else if (info & XNBREAK)
 			err = -EINTR;	/* Unblocked. */
 	}
 

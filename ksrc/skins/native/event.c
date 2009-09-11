@@ -369,6 +369,7 @@ int rt_event_wait_inner(RT_EVENT *event,
 			int mode, xntmode_t timeout_mode, RTIME timeout)
 {
 	RT_TASK *task;
+	xnflags_t info;
 	int err = 0;
 	spl_t s;
 
@@ -413,17 +414,19 @@ int rt_event_wait_inner(RT_EVENT *event,
 	task = xeno_current_task();
 	task->wait_args.event.mode = mode;
 	task->wait_args.event.mask = mask;
-	xnsynch_sleep_on(&event->synch_base, timeout, timeout_mode);
-	/* The returned mask is only significant if the operation has
-	   succeeded, but do always write it back anyway. */
-	*mask_r = task->wait_args.event.mask;
-
-	if (xnthread_test_info(&task->thread_base, XNRMID))
+	info = xnsynch_sleep_on(&event->synch_base,
+				timeout, timeout_mode);
+	if (info & XNRMID)
 		err = -EIDRM;	/* Event group deleted while pending. */
-	else if (xnthread_test_info(&task->thread_base, XNTIMEO))
+	else if (info & XNTIMEO)
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (xnthread_test_info(&task->thread_base, XNBREAK))
+	else if (info & XNBREAK)
 		err = -EINTR;	/* Unblocked. */
+	/*
+	 * The returned mask is only significant if the operation has
+	 * succeeded, but do always write it back anyway.
+	 */
+	*mask_r = task->wait_args.event.mask;
 
       unlock_and_exit:
 
