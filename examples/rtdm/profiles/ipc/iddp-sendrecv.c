@@ -1,6 +1,6 @@
 /*
  * IDDP-based client/server demo, using the sendto(2)/recvfrom(2)
- * system calls to exchange data.
+ * system calls to exchange data over a socket.
  *
  * In this example, two sockets are created.  A server thread (reader)
  * is bound to a real-time port and receives datagrams sent to this
