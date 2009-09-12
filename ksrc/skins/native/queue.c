@@ -1171,8 +1171,14 @@ int rt_queue_flush(RT_QUEUE *q)
 
 	while ((h = getq(&tmpq)) != NULL) {
 		msg = link2rtmsg(h);
-		/* no need to check anything - msg must be valid */
-		xnheap_test_and_free(&q->bufpool, msg, NULL);
+		/*
+		 * It's a bit of a pain, but since rt_queue_delete()
+		 * may run concurrently, we need to revalidate the
+		 * queue descriptor for each buffer.
+		 */
+		ret = rt_queue_free(q, msg + 1);
+		if (ret)
+			break;
 	}
 
 	return count;
