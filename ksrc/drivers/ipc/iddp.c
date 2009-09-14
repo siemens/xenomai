@@ -372,30 +372,30 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 			      const struct sockaddr_ipc *daddr)
 {
 	struct iddp_socket *sk = priv->state, *rsk;
-	struct rtdm_dev_context *rcontext = NULL; /* Fake GCC */
+	struct rtdm_dev_context *rcontext;
 	struct iddp_message *mbuf;
-	int nvec, wroff, ret, to;
 	ssize_t len, rdlen, vlen;
+	int nvec, wroff, ret;
 	struct xnbufd bufd;
+	void *p;
 
 	len = rtipc_get_iov_flatlen(iov, iovlen);
 	if (len == 0)
 		return 0;
 
-	to = daddr->sipc_port;
+	p = xnmap_fetch_nocheck(portmap, daddr->sipc_port);
+	if (p == NULL)
+		return -ECONNRESET;
 
-	RTDM_EXECUTE_ATOMICALLY(
-		rsk = xnmap_fetch_nocheck(portmap, to);
-		if (unlikely(rsk == NULL))
-			ret = -ECONNRESET;
-		else {
-			rcontext = rtdm_private_to_context(rsk->priv);
-			rtdm_context_lock(rcontext);
-			ret = 0;
-		}
-	);
-	if (ret)
-		return ret;
+	rcontext = rtdm_context_get(rtipc_map2fd(p));
+	if (rcontext == NULL)
+		return -ECONNRESET;
+
+	rsk = rtipc_context_to_state(rcontext);
+	if (!test_bit(_IDDP_BOUND, &rsk->status)) {
+		rtdm_context_unlock(rcontext);
+		return -ECONNREFUSED;
+	}
 
 	mbuf = __iddp_alloc_mbuf(rsk, len, flags, sk->tx_timeout, &ret);
 	if (unlikely(ret)) {
@@ -513,10 +513,11 @@ static ssize_t iddp_write(struct rtipc_private *priv,
 	return __iddp_sendmsg(priv, user_info, &iov, 1, 0, &sk->peer);
 }
 
-static int __iddp_bind_socket(struct iddp_socket *sk,
+static int __iddp_bind_socket(struct rtipc_private *priv,
 			      struct sockaddr_ipc *sa)
 {
-	int ret = 0, port;
+	struct iddp_socket *sk = priv->state;
+	int ret = 0, port, fd;
 	void *poolmem;
 	size_t poolsz;
 
@@ -535,9 +536,10 @@ static int __iddp_bind_socket(struct iddp_socket *sk,
 	if (ret)
 		return ret;
 
-	port = sa->sipc_port;
 	/* Will auto-select a free port number if unspec (-1). */
-	port = xnmap_enter(portmap, port, sk);
+	port = sa->sipc_port;
+	fd = rtdm_private_to_context(priv)->fd;
+	port = xnmap_enter(portmap, port, rtipc_fd2map(fd));
 	if (port < 0)
 		return port == -EEXIST ? -EADDRINUSE : -ENOMEM;
 
@@ -839,11 +841,12 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	return ret;
 }
 
-static int __iddp_ioctl(struct iddp_socket *sk,
+static int __iddp_ioctl(struct rtipc_private *priv,
 			rtdm_user_info_t *user_info,
 			unsigned int request, void *arg)
 {
 	struct sockaddr_ipc saddr, *saddrp = &saddr;
+	struct iddp_socket *sk = priv->state;
 	int ret = 0;
 
 	switch (request) {
@@ -861,7 +864,7 @@ static int __iddp_ioctl(struct iddp_socket *sk,
 			return ret;
 		if (saddrp == NULL)
 			return -EFAULT;
-		ret = __iddp_bind_socket(sk, saddrp);
+		ret = __iddp_bind_socket(priv, saddrp);
 		break;
 
 	case _RTIOC_GETSOCKNAME:
@@ -900,12 +903,10 @@ static int iddp_ioctl(struct rtipc_private *priv,
 		      rtdm_user_info_t *user_info,
 		      unsigned int request, void *arg)
 {
-	struct iddp_socket *sk = priv->state;
-
 	if (rtdm_in_rt_context() && request == _RTIOC_BIND)
 		return -ENOSYS;	/* Try downgrading to NRT */
 
-	return __iddp_ioctl(sk, user_info, request, arg);
+	return __iddp_ioctl(priv, user_info, request, arg);
 }
 
 static int __init iddp_init(void)

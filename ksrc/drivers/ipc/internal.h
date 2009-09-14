@@ -62,6 +62,22 @@ struct rtipc_protocol {
 	} proto_ops;
 };
 
+static inline void *rtipc_context_to_state(struct rtdm_dev_context *context)
+{
+	struct rtipc_private *p = rtdm_context_to_private(context);
+	return p->state;
+}
+
+static inline void *rtipc_fd2map(int fd)
+{
+	return (void *)(fd + 1);
+}
+
+static inline int rtipc_map2fd(void *p)
+{
+	return (int)(p) - 1;
+}
+
 static inline nanosecs_rel_t rtipc_timeval_to_ns(const struct timeval *tv)
 {
 	nanosecs_rel_t ns = tv->tv_usec * 1000;

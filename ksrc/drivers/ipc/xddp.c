@@ -64,7 +64,7 @@ static struct sockaddr_ipc nullsa = {
 	.sipc_port = -1
 };
 
-static struct xddp_socket *portmap[CONFIG_XENO_OPT_PIPE_NRDEV];
+static int portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
 
 #define _XDDP_SYNCWAIT  0
 #define _XDDP_ATOMIC    1
@@ -260,17 +260,13 @@ static int xddp_close(struct rtipc_private *priv,
 		      rtdm_user_info_t *user_info)
 {
 	struct xddp_socket *sk = priv->state;
-	int bound;
 
-	RTDM_EXECUTE_ATOMICALLY(
-		bound = test_bit(_XDDP_BOUND, &sk->status);
-		if (bound)
-			portmap[sk->name.sipc_port] = NULL;
-		sk->monitor = NULL;
-	);
+	sk->monitor = NULL;
 
-	if (!bound)
+	if (!test_bit(_XDDP_BOUND, &sk->status))
 		return 0;
+
+	portmap[sk->name.sipc_port] = -1;
 
 	if (sk->handle)
 		xnregistry_remove(sk->handle);
@@ -476,8 +472,8 @@ static ssize_t __xddp_sendmsg(struct rtipc_private *priv,
 			      const struct sockaddr_ipc *daddr)
 {
 	ssize_t len, rdlen, wrlen, vlen, ret, sublen;
-	struct rtdm_dev_context *rcontext = NULL; /* Fake GCC */
 	struct xddp_socket *sk = priv->state;
+	struct rtdm_dev_context *rcontext;
 	struct xddp_message *mbuf;
 	struct xddp_socket *rsk;
 	int nvec, to, from;
@@ -490,21 +486,15 @@ static ssize_t __xddp_sendmsg(struct rtipc_private *priv,
 	from = sk->name.sipc_port;
 	to = daddr->sipc_port;
 
-	RTDM_EXECUTE_ATOMICALLY(
-		rsk = portmap[to];
-		if (rsk) {
-			if (!test_bit(_XDDP_BOUND, &rsk->status))
-				ret = -ECONNREFUSED;
-			else {
-				rcontext = rtdm_private_to_context(rsk->priv);
-				rtdm_context_lock(rcontext);
-				ret = 0;
-			}
-		} else
-			ret = -ECONNRESET;
-	);
-	if (ret)
-		return ret;
+	rcontext = rtdm_context_get(portmap[to]);
+	if (rcontext == NULL)
+		return -ECONNRESET;
+
+	rsk = rtipc_context_to_state(rcontext);
+	if (!test_bit(_XDDP_BOUND, &rsk->status)) {
+		rtdm_context_unlock(rcontext);
+		return -ECONNREFUSED;
+	}
 
 	sublen = len;
 	nvec = 0;
@@ -742,6 +732,8 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	ret = xnpipe_connect(sa->sipc_port, &ops,
 			     rtdm_private_to_context(priv));
 	if (ret < 0) {
+		if (ret == -EBUSY)
+			ret = -EADDRINUSE;
 	fail_freeheap:
 		if (sk->bufpool == &sk->privpool)
 			xnheap_destroy(&sk->privpool,
@@ -752,6 +744,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	}
 
 	sk->minor = ret;
+	sa->sipc_port = ret;
 	sk->name = *sa;
 	/* Set default destination if unset at binding time. */
 	if (sk->peer.sipc_port < 0)
@@ -768,7 +761,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	}
 
 	RTDM_EXECUTE_ATOMICALLY(
-		portmap[sk->minor] = sk;
+		portmap[sk->minor] = rtdm_private_to_context(priv)->fd;
 		__clear_bit(_XDDP_BINDING, &sk->status);
 		__set_bit(_XDDP_BOUND, &sk->status);
 	);
