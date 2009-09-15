@@ -41,10 +41,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 
 static inline int xnarch_local_syscall(struct pt_regs *regs)
 {
-	unsigned long ptr, x, r, flags;
-	int err = 0;
-
-	local_irq_save_hw(flags);
+	unsigned long ptr, x, r;
 
 	switch (__xn_reg_arg1(regs)) {
 	case __xn_lsys_xchg:
@@ -58,12 +55,10 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 
 	default:
 
-		err = -ENOSYS;
+		return -ENOSYS;
 	}
 
-	local_irq_restore_hw(flags);
-
-	return err;
+	return 0;
 }
 
 #define xnarch_schedule_tail(prev) do { } while(0)
