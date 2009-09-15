@@ -58,6 +58,9 @@ module_param_named(cpufreq, rthal_cpufreq_arg, ulong, 0444);
 unsigned long rthal_timerfreq_arg;
 module_param_named(timerfreq, rthal_timerfreq_arg, ulong, 0444);
 
+unsigned long rthal_clockfreq_arg;
+module_param_named(clockfreq, rthal_clockfreq_arg, ulong, 0444);
+
 #ifdef CONFIG_SMP
 static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
@@ -815,13 +818,18 @@ int rthal_init(void)
     }
 #endif /* CONFIG_SMP */
 
-    /* The arch-dependent support must have updated the frequency args
-       as required. */
+    /*
+     * The arch-dependent support must have updated the various
+     * frequency args as required.
+     */
     rthal_tunables.cpu_freq = rthal_cpufreq_arg;
     rthal_tunables.timer_freq = rthal_timerfreq_arg;
+    rthal_tunables.clock_freq = rthal_clockfreq_arg;
 
-    /* Allocate a virtual interrupt to handle apcs within the Linux
-       domain. */
+    /*
+     * Allocate a virtual interrupt to handle apcs within the Linux
+     * domain.
+     */
     rthal_apc_virq = rthal_alloc_virq();
 
     if (!rthal_apc_virq) {

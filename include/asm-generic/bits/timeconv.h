@@ -21,7 +21,7 @@
 
 #include <asm/xenomai/arith.h>
 
-static unsigned long long cpufreq;
+static unsigned long long clockfreq;
 
 #ifdef XNARCH_HAVE_LLMULSHFT
 static unsigned int tsc_scale, tsc_shift;
@@ -71,15 +71,15 @@ long long xnarch_ns_to_tsc(long long ns)
 #else  /* !XNARCH_HAVE_LLMULSHFT */
 long long xnarch_tsc_to_ns(long long ticks)
 {
-	return xnarch_llimd(ticks, 1000000000, cpufreq);
+	return xnarch_llimd(ticks, 1000000000, clockfreq);
 }
 long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
-	return (xnarch_llimd(ticks, 1000000000, cpufreq/2) + 1) / 2;
+	return (xnarch_llimd(ticks, 1000000000, clockfreq/2) + 1) / 2;
 }
 long long xnarch_ns_to_tsc(long long ns)
 {
-	return xnarch_llimd(ns, cpufreq, 1000000000);
+	return xnarch_llimd(ns, clockfreq, 1000000000);
 }
 #endif /* !XNARCH_HAVE_LLMULSHFT */
 
@@ -94,7 +94,7 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 
 static inline void xnarch_init_timeconv(unsigned long long freq)
 {
-	cpufreq = freq;
+	clockfreq = freq;
 #ifdef XNARCH_HAVE_LLMULSHFT
 	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
 #ifdef XNARCH_HAVE_NODIV_LLIMD

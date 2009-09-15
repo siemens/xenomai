@@ -46,6 +46,7 @@
 #define RTHAL_DOMAIN_ID		0x58454e4f
 
 #define RTHAL_TIMER_FREQ	(rthal_tunables.timer_freq)
+#define RTHAL_CLOCK_FREQ	(rthal_tunables.clock_freq)
 #define RTHAL_CPU_FREQ		(rthal_tunables.cpu_freq)
 #define RTHAL_NR_APCS		BITS_PER_LONG
 
@@ -177,11 +178,36 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_emergency_console()	ipipe_set_printk_sync(ipipe_current_domain)
 #define rthal_read_tsc(v)		ipipe_read_tsc(v)
 
+#ifdef __IPIPE_FEATURE_SYSINFO_V2
+	
 static inline unsigned long rthal_get_cpufreq(void)
 {
-    struct ipipe_sysinfo sysinfo;
-    rthal_get_sysinfo(&sysinfo);
-    return (unsigned long)sysinfo.cpufreq;
+	struct ipipe_sysinfo sysinfo;
+	rthal_get_sysinfo(&sysinfo);
+	return (unsigned long)sysinfo.sys_cpu_freq;
+}
+
+static inline unsigned long rthal_get_timerfreq(void)
+{
+	struct ipipe_sysinfo sysinfo;
+	rthal_get_sysinfo(&sysinfo);
+	return (unsigned long)sysinfo.sys_hrtimer_freq;
+}
+
+static inline unsigned long rthal_get_clockfreq(void)
+{
+	struct ipipe_sysinfo sysinfo;
+	rthal_get_sysinfo(&sysinfo);
+	return (unsigned long)sysinfo.sys_hrclock_freq;
+}
+
+#else /* !__IPIPE_FEATURE_SYSINFO_V2 */
+
+static inline unsigned long rthal_get_cpufreq(void)
+{
+	struct ipipe_sysinfo sysinfo;
+	rthal_get_sysinfo(&sysinfo);
+	return (unsigned long)sysinfo.cpufreq;
 }
 
 static inline unsigned long rthal_get_timerfreq(void)
@@ -190,6 +216,13 @@ static inline unsigned long rthal_get_timerfreq(void)
 	rthal_get_sysinfo(&sysinfo);
 	return (unsigned long)sysinfo.archdep.tmfreq;
 }
+
+static inline unsigned long rthal_get_clockfreq(void)
+{
+	return rthal_get_cpufreq();
+}
+
+#endif /* !__IPIPE_FEATURE_SYSINFO_V2 */
 
 #define RTHAL_DECLARE_EVENT(hdlr)				       \
 static int hdlr (unsigned event, struct ipipe_domain *ipd, void *data) \
@@ -345,9 +378,9 @@ typedef ipipe_irq_handler_t rthal_irq_handler_t;
 typedef ipipe_irq_ackfn_t   rthal_irq_ackfn_t;
 
 struct rthal_calibration_data {
-
-    unsigned long cpu_freq;
-    unsigned long timer_freq;
+	unsigned long cpu_freq;
+	unsigned long timer_freq;
+	unsigned long clock_freq;
 };
 
 typedef int (*rthal_trap_handler_t)(unsigned trapno,
@@ -357,6 +390,8 @@ typedef int (*rthal_trap_handler_t)(unsigned trapno,
 extern unsigned long rthal_cpufreq_arg;
 
 extern unsigned long rthal_timerfreq_arg;
+
+extern unsigned long rthal_clockfreq_arg;
 
 extern rthal_pipeline_stage_t rthal_domain;
 
