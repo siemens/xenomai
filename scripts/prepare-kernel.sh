@@ -316,6 +316,10 @@ while : ; do
       linux_arch=blackfin
       xenomai_arch=blackfin
       ;;
+   nios2)
+      linux_arch=nios2
+      xenomai_arch=nios2
+      ;;
    arm)
       linux_arch=arm
       xenomai_arch=arm

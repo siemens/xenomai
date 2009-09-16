@@ -46,8 +46,12 @@ typedef unsigned long cpu_set_t;
 #endif /* !HAVE_OLD_SETAFFINITY */
 #endif /* !HAVE_RECENT_SETAFFINITY */
 
-/* Test for true conformance (due to broken uClibc < 0.9.29) */
-#if defined(_POSIX_SPIN_LOCKS) && _POSIX_SPIN_LOCKS == 200112L
+/*
+ * We can't really trust POSIX headers to check for features, since
+ * some archs may not implement all of the declared uClibc POSIX
+ * features (e.g. NIOS2).
+ */
+#ifdef HAVE_PTHREAD_SPIN_LOCK
 pthread_spinlock_t lock;
 #define init_lock(lock)				pthread_spin_init(lock, 0)
 #define acquire_lock(lock)			pthread_spin_lock(lock)
