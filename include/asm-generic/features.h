@@ -21,9 +21,29 @@
 
 #ifdef __KERNEL__
 #include <linux/version.h>
+#ifndef xnfeatinfo_archdep
+#define collect_arch_features(finfo) do { (void)(finfo); } while (0)
+#endif /* !xnfeatinfo_archdep */
 #else /* !__KERNEL__ */
 #include <xeno_config.h>
 #endif /* __KERNEL__ */
+
+#define XNFEAT_STRING_LEN 64
+
+typedef struct xnfeatinfo {
+	unsigned long feat_all;	/* Available feature set. */
+	char feat_all_s[XNFEAT_STRING_LEN];
+	unsigned long feat_man;	/* Mandatory features (when requested). */
+	char feat_man_s[XNFEAT_STRING_LEN];
+	unsigned long feat_req;	/* Requested feature set. */
+	char feat_req_s[XNFEAT_STRING_LEN];
+	unsigned long feat_mis;	/* Missing features. */
+	char feat_mis_s[XNFEAT_STRING_LEN];
+#ifdef xnfeatinfo_archdep
+	struct xnfeatinfo_archdep feat_arch; /* Arch-dep extension. */
+#endif	
+	unsigned long feat_abirev; /* ABI revision level. */
+} xnfeatinfo_t;
 
 #define __xn_feat_smp         0x80000000
 #define __xn_feat_nosmp       0x40000000
