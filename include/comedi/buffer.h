@@ -34,10 +34,6 @@
 
 #include <comedi/context.h>
 
-/* Buffer copies directions */
-#define COMEDI_BUF_PUT 1
-#define COMEDI_BUF_GET 2
-
 /* Events bits */
 #define COMEDI_BUF_EOBUF_NR 0
 #define COMEDI_BUF_ERROR_NR 1
