@@ -99,6 +99,11 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 comedi_cmd_t *comedi_get_cmd(comedi_subd_t *subd)
 {
 	comedi_dev_t *dev = subd->dev;
+
+	/* Check that subdevice supports commands */
+	if (dev->transfer.bufs == NULL)
+		return NULL;
+
 	return dev->transfer.bufs[subd->idx]->cur_cmd;
 }
 
