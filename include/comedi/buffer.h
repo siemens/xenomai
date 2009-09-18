@@ -303,26 +303,34 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc);
 
 void comedi_free_buffer(comedi_buf_t * buf_desc);
 
-int comedi_buf_prepare_absput(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_absput(struct comedi_subdevice *subd, 
+			      unsigned long count);
 
-int comedi_buf_commit_absput(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_absput(struct comedi_subdevice *subd, 
+			     unsigned long count);
 
-int comedi_buf_prepare_put(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_put(struct comedi_subdevice *subd, 
+			   unsigned long count);
 
-int comedi_buf_commit_put(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_put(struct comedi_subdevice *subd, 
+			  unsigned long count);
 
-int comedi_buf_put(struct comedi_device *dev,
+int comedi_buf_put(struct comedi_subdevice *subd,
 		   void *bufdata, unsigned long count);
 
-int comedi_buf_prepare_absget(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_absget(struct comedi_subdevice *subd, 
+			      unsigned long count);
 
-int comedi_buf_commit_absget(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_absget(struct comedi_subdevice *subd, 
+			     unsigned long count);
 
-int comedi_buf_prepare_get(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_get(struct comedi_subdevice *subd, 
+			   unsigned long count);
 
-int comedi_buf_commit_get(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_get(struct comedi_subdevice *subd, 
+			  unsigned long count);
 
-int comedi_buf_get(struct comedi_device *dev,
+int comedi_buf_get(struct comedi_subdevice *subd,
 		   void *bufdata, unsigned long count);
 
 int comedi_buf_evt(struct comedi_subdevice *subd, unsigned long evts);

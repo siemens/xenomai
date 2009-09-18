@@ -85,7 +85,7 @@ static void loop_task_proc(void *arg)
 	    
 			while (ret==0) {
 		
-				ret = comedi_buf_get(dev, 
+				ret = comedi_buf_get(output_subd, 
 						     &value, sizeof(sampl_t));
 
 				if (ret == 0) {
@@ -96,7 +96,7 @@ static void loop_task_proc(void *arg)
 
 					comedi_buf_evt(output_subd, 0);
 		    
-					ret = comedi_buf_put(dev, 
+					ret = comedi_buf_put(input_subd, 
 							     &value, 
 							     sizeof(sampl_t));
 

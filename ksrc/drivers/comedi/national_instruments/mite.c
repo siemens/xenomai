@@ -547,34 +547,34 @@ u32 mite_bytes_read_from_memory_ub(struct mite_channel * mite_chan)
 	return mite_device_bytes_transferred(mite_chan) + in_transit_count;
 }
 
-int mite_sync_input_dma(struct mite_channel *mite_chan, comedi_dev_t *dev)
+int mite_sync_input_dma(struct mite_channel *mite_chan, comedi_subd_t *subd)
 {
 	unsigned int nbytes_lb, nbytes_ub;
 
 	nbytes_lb = mite_bytes_written_to_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_written_to_memory_ub(mite_chan);
 
-	if(comedi_buf_prepare_absput(dev, nbytes_ub) != 0) {
+	if(comedi_buf_prepare_absput(subd, nbytes_ub) != 0) {
 		__comedi_info("MITE: DMA overwrite of free area\n");
 		return -EPIPE;
 	}
 	
-	return comedi_buf_commit_absput(dev, nbytes_lb);
+	return comedi_buf_commit_absput(subd, nbytes_lb);
 }
 
-int mite_sync_output_dma(struct mite_channel *mite_chan, comedi_dev_t *dev)
+int mite_sync_output_dma(struct mite_channel *mite_chan, comedi_subd_t *subd)
 {
 	unsigned int nbytes_ub, nbytes_lb;
 
 	nbytes_lb = mite_bytes_read_from_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
 
-	if(comedi_buf_prepare_absget(dev, nbytes_ub) != 0) {
+	if(comedi_buf_prepare_absget(subd, nbytes_ub) != 0) {
 		__comedi_info("MITE: DMA underrun\n");
 		return -EPIPE;
 	}
 
-	return comedi_buf_commit_absget(dev, nbytes_lb);
+	return comedi_buf_commit_absget(subd, nbytes_lb);
 }
 
 u32 mite_get_status(struct mite_channel *mite_chan)

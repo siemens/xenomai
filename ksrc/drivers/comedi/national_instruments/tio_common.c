@@ -1936,7 +1936,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
 			counter->mite_chan->mite->mite_io_addr +
 			MITE_CHOR(counter->mite_chan->channel));
 	}
-	mite_sync_input_dma(counter->mite_chan, dev);
+	mite_sync_input_dma(counter->mite_chan, subd);
 	comedi_unlock_irqrestore(&counter->lock, flags);
 }
 

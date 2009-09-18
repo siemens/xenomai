@@ -153,94 +153,165 @@ int comedi_get_chan(comedi_subd_t *subd)
 
 /* --- Transfer / copy functions --- */
 
-int comedi_buf_prepare_absput(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_prepare_absput(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __pre_abs_put(buf, count);
 }
 
-int comedi_buf_commit_absput(comedi_dev_t * dev, unsigned long count)
-{
 
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+int comedi_buf_commit_absput(comedi_subd_t *subd, unsigned long count)
+{
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __abs_put(buf, count);
 }
 
-int comedi_buf_prepare_put(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_prepare_put(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __pre_put(buf, count);
 }
 
-int comedi_buf_commit_put(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_commit_put(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+		return -EINVAL;
 
-	return __put(buf, count);
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
+
+	return __put(buf, count);	
 }
 
-int comedi_buf_put(comedi_dev_t * dev, void *bufdata, unsigned long count)
+int comedi_buf_put(comedi_subd_t *subd, void *bufdata, unsigned long count)
 {
-	int ret;
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_read_subd];
+	int err;
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	if (__count_to_put(buf) < count)
 		return -EAGAIN;
-	ret = __produce(NULL, buf, bufdata, count);
-	if (ret < 0)
-		return ret;
 
-	ret = __put(buf, count);
+	err = __produce(NULL, buf, bufdata, count);
+	if (err < 0)
+		return err;	
 
-	return ret;
+	err = __put(buf, count);
+
+	return err;
 }
 
-int comedi_buf_prepare_absget(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_prepare_absget(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __pre_abs_get(buf, count);
 }
 
-int comedi_buf_commit_absget(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_commit_absget(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __abs_get(buf, count);
 }
 
-int comedi_buf_prepare_get(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_prepare_get(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __pre_get(buf, count);
 }
 
-int comedi_buf_commit_get(comedi_dev_t * dev, unsigned long count)
+int comedi_buf_commit_get(comedi_subd_t *subd, unsigned long count)
 {
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	return __get(buf, count);
 }
 
-int comedi_buf_get(comedi_dev_t * dev, void *bufdata, unsigned long count)
+int comedi_buf_get(comedi_subd_t *subd, void *bufdata, unsigned long count)
 {
-	int ret;
-	comedi_buf_t *buf = dev->transfer.bufs[dev->transfer.idx_write_subd];
+	int err;
+	comedi_dev_t *dev;
+	comedi_buf_t *buf;
+	
+	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+		return -EINVAL;
+
+	dev = subd->dev;
+	buf = dev->transfer.bufs[subd->idx];
 
 	if (__count_to_get(buf) < count)
 		return -EAGAIN;
 
-	ret = __consume(NULL, buf, bufdata, count);
-	if (ret < 0)
-		return ret;
+	err = __consume(NULL, buf, bufdata, count);
+	if (err < 0)
+		return err;
 
-	ret = __get(buf, count);
+	err = __get(buf, count);
 
-	return ret;
+	return err;
 }
 
 int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts)

@@ -60,7 +60,7 @@ void subdev_8255_interrupt(comedi_subd_t *subd)
 	d |= (CALLBACK_FUNC(0, _8255_DATA + 1, 0, CALLBACK_ARG) << 8);
 
 	/* ...and send it */
-	comedi_buf_put(subd->dev, &d, sizeof(sampl_t));
+	comedi_buf_put(subd, &d, sizeof(sampl_t));
 
 	comedi_buf_evt(subd, 0);
 }

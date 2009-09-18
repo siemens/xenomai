@@ -248,7 +248,7 @@ EXPORT_SYMBOL(comedi_get_subd);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred during the next
  * DMA shot plus the data count which have been copied since the start
  * of the acquisition
@@ -256,7 +256,7 @@ EXPORT_SYMBOL(comedi_get_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absput(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_prepare_absput(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_absput);
 
 /**
@@ -272,7 +272,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absput);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count transferred to the buffer during
  * the last DMA shot plus the data count which have been sent /
  * retrieved since the beginning of the acquisition
@@ -280,7 +280,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absput(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_commit_absput(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_absput);
 
 /**
@@ -295,13 +295,13 @@ EXPORT_SYMBOL(comedi_buf_commit_absput);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_put(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_prepare_put(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_put);
 
 /**
@@ -316,13 +316,13 @@ EXPORT_SYMBOL(comedi_buf_prepare_put);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The amount of data transferred
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_put(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_commit_put(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_put);
 
 /**
@@ -333,14 +333,14 @@ EXPORT_SYMBOL(comedi_buf_commit_put);
  * intermediate area between the device driver and the user-space
  * program, which is supposed to recover the acquired data.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] bufdata The data buffer to copy into the Comedi buffer
  * @param[in] count The amount of data to copy
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_put(comedi_dev_t * dev, void *bufdata, unsigned long count);
+int comedi_buf_put(comedi_subd_t *subd, void *bufdata, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_put);
 
 /**
@@ -356,7 +356,7 @@ EXPORT_SYMBOL(comedi_buf_put);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred during the next
  * DMA shot plus the data count which have been copied since the start
  * of the acquisition
@@ -364,7 +364,7 @@ EXPORT_SYMBOL(comedi_buf_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absget(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_prepare_absget(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_absget);
 
 /**
@@ -380,7 +380,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absget);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count transferred to the device during
  * the last DMA shot plus the data count which have been sent since
  * the beginning of the acquisition
@@ -388,7 +388,7 @@ EXPORT_SYMBOL(comedi_buf_prepare_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absget(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_commit_absget(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_absget);
 
 /**
@@ -403,13 +403,13 @@ EXPORT_SYMBOL(comedi_buf_commit_absget);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_get(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_prepare_get(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_prepare_get);
 
 /**
@@ -424,13 +424,13 @@ EXPORT_SYMBOL(comedi_buf_prepare_get);
  * performing data shots from / to the Comedi buffer. However, some
  * pointers stil have to be updated so as to monitor the tranfers.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] count The amount of data transferred
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_get(comedi_dev_t * dev, unsigned long count);
+int comedi_buf_commit_get(comedi_subd_t *subd, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_commit_get);
 
 /**
@@ -442,14 +442,14 @@ EXPORT_SYMBOL(comedi_buf_commit_get);
  * program, which is supposed to provide the data to send to the
  * device.
  *
- * @param[in] dev Device descriptor structure
+ * @param[in] subd Subdevice descriptor structure
  * @param[in] bufdata The data buffer to copy into the Comedi buffer
  * @param[in] count The amount of data to copy
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_get(comedi_dev_t * dev, void *bufdata, unsigned long count);
+int comedi_buf_get(comedi_subd_t *subd, void *bufdata, unsigned long count);
 EXPORT_SYMBOL(comedi_buf_get);
 
 /**
@@ -506,7 +506,7 @@ EXPORT_SYMBOL(comedi_get_cmd);
  * @return the channel index.
  *
  */
-int comedi_get_chan(struct comedi_subdevice *subd);
+int comedi_get_chan(comedi_subd_t *subd);
 EXPORT_SYMBOL(comedi_get_chan);
 
 /** @} */

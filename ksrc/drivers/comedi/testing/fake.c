@@ -127,7 +127,7 @@ static void test_task_proc(void *arg)
 				{
 					sampl_t value = test_output(priv);
 
-					comedi_buf_put(dev, &value, sizeof(sampl_t));
+					comedi_buf_put(subd, &value, sizeof(sampl_t));
 
 				}
 

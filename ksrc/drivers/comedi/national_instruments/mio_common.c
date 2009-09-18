@@ -198,17 +198,17 @@ comedi_rngdesc_t *ni_range_lkup[] = {
 
 static const int num_adc_stages_611x = 3;
 
-static int ni_ai_drain_dma(comedi_dev_t *dev);
-static void ni_handle_fifo_dregs(comedi_dev_t *dev);
-static void get_last_sample_611x(comedi_dev_t *dev);
-static void get_last_sample_6143(comedi_dev_t *dev);
+static int ni_ai_drain_dma(comedi_subd_t *subd);
+static void ni_handle_fifo_dregs(comedi_subd_t *subd);
+static void get_last_sample_611x(comedi_subd_t *subd);
+static void get_last_sample_6143(comedi_subd_t *subd);
 static void handle_cdio_interrupt(comedi_dev_t *dev);
 static void ni_load_channelgain_list(comedi_dev_t *dev, 
 				     unsigned int n_chan, unsigned int *list);
 
 #ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
-static void ni_handle_fifo_half_full(comedi_dev_t *dev);
-static int ni_ao_fifo_half_empty(comedi_dev_t * dev);
+static void ni_handle_fifo_half_full(comedi_subd_t *subd);
+static int ni_ao_fifo_half_empty(comedi_subd_t *subd);
 #endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
 static inline void ni_set_bitfield(comedi_dev_t *dev, 
@@ -590,23 +590,25 @@ static inline void ni_set_bits(comedi_dev_t *dev,
 	ni_set_bitfield(dev, reg, bits, bit_values);
 }
 
-void ni_sync_ai_dma(comedi_dev_t *dev)
+void ni_sync_ai_dma(comedi_subd_t *subd)
 {
-	unsigned long flags;
+	comedi_dev_t *dev = subd->dev;
+	unsigned long flags;	
 
 	comedi_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ai_mite_chan)
-		mite_sync_input_dma(devpriv->ai_mite_chan, dev);
+		mite_sync_input_dma(devpriv->ai_mite_chan, subd);
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 }
 
-void mite_handle_b_linkc(comedi_dev_t *dev)
+void mite_handle_b_linkc(comedi_subd_t *subd)
 {
+	comedi_dev_t *dev = subd->dev;
 	unsigned long flags;
 
 	comedi_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan)
-		mite_sync_output_dma(devpriv->ao_mite_chan, dev);
+		mite_sync_output_dma(devpriv->ao_mite_chan, subd);
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 }
 
@@ -636,24 +638,26 @@ static int ni_ao_wait_for_dma_load(comedi_dev_t *dev)
 	return 0;
 }
 
-static void shutdown_ai_command(comedi_dev_t * dev)
+static void shutdown_ai_command(comedi_subd_t *subd)
 {
-	ni_ai_drain_dma(dev);
-	ni_handle_fifo_dregs(dev);
-	get_last_sample_611x(dev);
-	get_last_sample_6143(dev);
+	ni_ai_drain_dma(subd);
+	ni_handle_fifo_dregs(subd);
+	get_last_sample_611x(subd);
+	get_last_sample_6143(subd);
 
 	/* TODO: stop the acquisiton */
 }
 
-static void ni_handle_eos(comedi_dev_t * dev)
+static void ni_handle_eos(comedi_subd_t *subd)
 {
+	comedi_dev_t *dev = subd->dev;
+
 	if (devpriv->aimode == AIMODE_SCAN) {
 		static const int timeout = 10;
 		int i;
 
 		for (i = 0; i < timeout; i++) {
-			ni_sync_ai_dma(dev);
+			ni_sync_ai_dma(subd);
 			/* TODO: stop when the transfer is really over */
 			comedi_udelay(1);
 		}
@@ -661,7 +665,7 @@ static void ni_handle_eos(comedi_dev_t * dev)
 
 	/* Handle special case of single scan using AI_End_On_End_Of_Scan */
 	if ((devpriv->ai_cmd2 & AI_End_On_End_Of_Scan)) {
-		shutdown_ai_command(dev);
+		shutdown_ai_command(subd);
 	}
 }
 
@@ -777,7 +781,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
 	if (ai_mite_status & CHSR_LINKC)
-		ni_sync_ai_dma(dev);
+		ni_sync_ai_dma(subd);
 
 	if (ai_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
 			CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
@@ -808,7 +812,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 				    "ai error a_status=%04x\n", status);
 			ni_mio_print_status_a(status);
 
-			shutdown_ai_command(dev);
+			shutdown_ai_command(subd);
 
 			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
 			ni_event(subd);
@@ -818,7 +822,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		if (status & AI_SC_TC_St) {
 			comedi_info(dev, "ni_mio_common: SC_TC interrupt\n");
 			if (!devpriv->ai_continuous) {
-				shutdown_ai_command(dev);
+				shutdown_ai_command(subd);
 			}
 		}
 	}
@@ -832,7 +836,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		   interrupts if we fail to get the fifo less than half
 		   full, so loop to be sure. */
 		for (i = 0; i < timeout; ++i) {
-			ni_handle_fifo_half_full(dev);
+			ni_handle_fifo_half_full(subd);
 			if ((devpriv->stc_readw(dev, AI_Status_1_Register) &
 			     AI_FIFO_Half_Full_St) == 0)
 				break;
@@ -841,7 +845,7 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 #endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
 	if ((status & AI_STOP_St)) {
-		ni_handle_eos(dev);
+		ni_handle_eos(subd);
 	}
 
 	ni_event(subd);
@@ -893,7 +897,7 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
 	/* Currently, mite.c requires us to handle LINKC */
 	if (ao_mite_status & CHSR_LINKC) {
-		mite_handle_b_linkc(dev);
+		mite_handle_b_linkc(subd);
 	}
 
 	if (ao_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
@@ -928,7 +932,7 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 	if (b_status & AO_FIFO_Request_St) {
 		int ret;
 
-		ret = ni_ao_fifo_half_empty(dev);
+		ret = ni_ao_fifo_half_empty(subd);
 		if (!ret) {
 			comedi_err(dev,
 				   "ni_mio_common: "
@@ -1000,17 +1004,15 @@ int ni_E_interrupt(unsigned int irq, void *d)
 
 #ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
 
-static void ni_ao_fifo_load(comedi_dev_t * dev, int n)
+static void ni_ao_fifo_load(comedi_subd_t *subd, int n)
 {
 	int i;
 	sampl_t d;
 	u32 packed_data;
 	int err = 1;
 
-	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
-
 	for (i = 0; i < n; i++) {
-		err = comedi_buf_get(dev, &d, sizeof(sampl_t));
+		err = comedi_buf_get(subd, &d, sizeof(sampl_t));
 		if (err != 0)
 			break;
 
@@ -1018,7 +1020,7 @@ static void ni_ao_fifo_load(comedi_dev_t * dev, int n)
 			packed_data = d & 0xffff;
 			/* 6711 only has 16 bit wide ao fifo */
 			if (boardtype.reg_type != ni_reg_6711) {
-				err = comedi_buf_get(dev, &d, sizeof(sampl_t));
+				err = comedi_buf_get(subd, &d, sizeof(sampl_t));
 				if (err != 0)
 					break;
 				i++;
@@ -1050,11 +1052,9 @@ static void ni_ao_fifo_load(comedi_dev_t * dev, int n)
  *  RT code, as RT code might purposely be running close to the
  *  metal.  Needs to be fixed eventually.
  */
-static int ni_ao_fifo_half_empty(comedi_dev_t * dev)
+static int ni_ao_fifo_half_empty(comedi_subd_t *subd)
 {
 	int n;
-
-	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
 
 	n = comedi_buf_count(subd);
 	if (n == 0) {
@@ -1066,16 +1066,15 @@ static int ni_ao_fifo_half_empty(comedi_dev_t * dev)
 	if (n > boardtype.ao_fifo_depth / 2)
 		n = boardtype.ao_fifo_depth / 2;
 
-	ni_ao_fifo_load(dev, n);
+	ni_ao_fifo_load(subd, n);
 
 	return 1;
 }
 
-static int ni_ao_prep_fifo(comedi_dev_t *dev)
+static int ni_ao_prep_fifo(comedi_subd_t *subd)
 {
+	comedi_dev_t *dev = subd->dev;
 	int n;
-
-	comedi_subd_t *subd = comedi_get_subd(dev, NI_A0_SUBDEV);
 
 	/* Reset fifo */
 	devpriv->stc_writew(dev, 1, DAC_FIFO_Clear);
@@ -1091,16 +1090,14 @@ static int ni_ao_prep_fifo(comedi_dev_t *dev)
 	if (n > boardtype.ao_fifo_depth)
 		n = boardtype.ao_fifo_depth;
 
-	ni_ao_fifo_load(dev, n);
+	ni_ao_fifo_load(subd, n);
 
 	return n;
 }
 
-static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
+static void ni_ai_fifo_read(comedi_dev_t *subd, int n)
 {
 	int i;
-
-	comedi_subd_t *subd = comedi_get_subd(dev, NI_AI_SUBDEV);
 
 	if (boardtype.reg_type == ni_reg_611x) {
 		sampl_t data[2];
@@ -1111,13 +1108,13 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 			/* This may get the hi/lo data in the wrong order */
 			data[0] = (dl >> 16) & 0xffff;
 			data[1] = dl & 0xffff;
-			comedi_buf_put(dev, data, sizeof(sampl_t) * 2);
+			comedi_buf_put(subd, data, sizeof(sampl_t) * 2);
 		}
 		/* Check if there's a single sample stuck in the FIFO */
 		if (n % 2) {
 			dl = ni_readl(ADC_FIFO_Data_611x);
 			data[0] = dl & 0xffff;
-			comedi_buf_put(dev, &data[0], sizeof(sampl_t));
+			comedi_buf_put(subd, &data[0], sizeof(sampl_t));
 		}
 	} else if (boardtype.reg_type == ni_reg_6143) {
 		sampl_t data[2];
@@ -1130,7 +1127,7 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 
 			data[0] = (dl >> 16) & 0xffff;
 			data[1] = dl & 0xffff;
-			comedi_buf_put(dev, data, sizeof(sampl_t) * 2);
+			comedi_buf_put(subd, data, sizeof(sampl_t) * 2);
 		}
 		if (n % 2) {
 			/* Assume there is a single sample stuck in the FIFO.
@@ -1138,7 +1135,7 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 			ni_writel(0x01, AIFIFO_Control_6143);
 			dl = ni_readl(AIFIFO_Data_6143);
 			data[0] = (dl >> 16) & 0xffff;
-			comedi_buf_put(dev, &data[0], sizeof(sampl_t));
+			comedi_buf_put(subd, &data[0], sizeof(sampl_t));
 		}
 	} else {
 		if (n > sizeof(devpriv->ai_fifo_buffer) /
@@ -1153,27 +1150,28 @@ static void ni_ai_fifo_read(comedi_dev_t *dev, int n)
 			devpriv->ai_fifo_buffer[i] =
 				ni_readw(ADC_FIFO_Data_Register);
 		}
-		comedi_buf_put(dev, 
+		comedi_buf_put(subd, 
 			       devpriv->ai_fifo_buffer, 
 			       n * sizeof(devpriv->ai_fifo_buffer[0]));
 	}
 }
 
-static void ni_handle_fifo_half_full(comedi_dev_t *dev)
+static void ni_handle_fifo_half_full(comedi_subd_t *subd)
 {
-	ni_ai_fifo_read(dev, boardtype.ai_fifo_depth / 2);
+	ni_ai_fifo_read(subd, boardtype.ai_fifo_depth / 2);
 }
 
 #endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
 #ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
 
-static int ni_ai_drain_dma(comedi_dev_t *dev)
+static int ni_ai_drain_dma(comedi_subd_t *subd)
 {
 	int i;
 	static const int timeout = 10000;
 	unsigned long flags;
 	int retval = 0;
+	comedi_dev_t *dev = subd->dev;
 
 	comedi_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ai_mite_chan) {
@@ -1201,7 +1199,7 @@ static int ni_ai_drain_dma(comedi_dev_t *dev)
 	}
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
-	ni_sync_ai_dma(dev);
+	ni_sync_ai_dma(subd);
 
 	return retval;
 }
@@ -1209,12 +1207,13 @@ static int ni_ai_drain_dma(comedi_dev_t *dev)
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
 /* Empties the AI fifo */
-static void ni_handle_fifo_dregs(comedi_dev_t *dev)
+static void ni_handle_fifo_dregs(comedi_subd_t *subd)
 {
 	sampl_t data[2];
 	u32 dl;
 	short fifo_empty;
 	int i;
+	comedi_dev_t *dev = subd->dev;
 
 	if (boardtype.reg_type == ni_reg_611x) {
 		while ((devpriv->stc_readw(dev,
@@ -1225,7 +1224,7 @@ static void ni_handle_fifo_dregs(comedi_dev_t *dev)
 			/* This may get the hi/lo data in the wrong order */
 			data[0] = (dl >> 16);
 			data[1] = (dl & 0xffff);
-			comedi_buf_put(dev, data, sizeof(sampl_t) * 2);
+			comedi_buf_put(subd, data, sizeof(sampl_t) * 2);
 		}
 	} else if (boardtype.reg_type == ni_reg_6143) {
 		i = 0;
@@ -1235,7 +1234,7 @@ static void ni_handle_fifo_dregs(comedi_dev_t *dev)
 			/* This may get the hi/lo data in the wrong order */
 			data[0] = (dl >> 16);
 			data[1] = (dl & 0xffff);
-			comedi_buf_put(dev, data, sizeof(sampl_t) * 2);
+			comedi_buf_put(subd, data, sizeof(sampl_t) * 2);
 			i += 2;
 		}
 		// Check if stranded sample is present
@@ -1243,7 +1242,7 @@ static void ni_handle_fifo_dregs(comedi_dev_t *dev)
 			ni_writel(0x01, AIFIFO_Control_6143);	// Get stranded sample into FIFO
 			dl = ni_readl(AIFIFO_Data_6143);
 			data[0] = (dl >> 16) & 0xffff;
-			comedi_buf_put(dev, &data[0], sizeof(sampl_t));
+			comedi_buf_put(subd, &data[0], sizeof(sampl_t));
 		}
 
 	} else {
@@ -1264,17 +1263,18 @@ static void ni_handle_fifo_dregs(comedi_dev_t *dev)
 				devpriv->ai_fifo_buffer[i] =
 					ni_readw(ADC_FIFO_Data_Register);
 			}
-			comedi_buf_put(dev, 
+			comedi_buf_put(subd, 
 				       devpriv->ai_fifo_buffer, 
 				       i * sizeof(devpriv->ai_fifo_buffer[0]));
 		}
 	}
 }
 
-static void get_last_sample_611x(comedi_dev_t *dev)
+static void get_last_sample_611x(comedi_subd_t *subd)
 {
 	sampl_t data;
 	u32 dl;
+	comedi_dev_t *dev = subd->dev;
 
 	if (boardtype.reg_type != ni_reg_611x)
 		return;
@@ -1283,14 +1283,15 @@ static void get_last_sample_611x(comedi_dev_t *dev)
 	if (ni_readb(XXX_Status) & 0x80) {
 		dl = ni_readl(ADC_FIFO_Data_611x);
 		data = (dl & 0xffff);
-		comedi_buf_put(dev, &data, sizeof(sampl_t));
+		comedi_buf_put(subd, &data, sizeof(sampl_t));
 	}
 }
 
-static void get_last_sample_6143(comedi_dev_t *dev)
+static void get_last_sample_6143(comedi_subd_t *subd)
 {
 	sampl_t data;
 	u32 dl;
+	comedi_dev_t *dev = subd->dev;
 
 	if (boardtype.reg_type != ni_reg_6143)
 		return;
@@ -1303,7 +1304,7 @@ static void get_last_sample_6143(comedi_dev_t *dev)
 
 		/* This may get the hi/lo data in the wrong order */
 		data = (dl >> 16) & 0xffff;
-		comedi_buf_put(dev, &data, sizeof(sampl_t));
+		comedi_buf_put(subd, &data, sizeof(sampl_t));
 	}
 }
 
@@ -1399,8 +1400,10 @@ static int ni_ao_setup_MITE_dma(comedi_dev_t *dev)
 
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
-static int ni_ai_reset(comedi_dev_t *dev)
+static int ni_ai_reset(comedi_subd_t *subd)
 {
+	comedi_dev_t *dev = subd->dev;
+
 	ni_release_ai_mite_channel(dev);
 
 	/* ai configuration */
@@ -1485,12 +1488,6 @@ static int ni_ai_reset(comedi_dev_t *dev)
 	devpriv->stc_writew(dev, AI_Configuration_End, Joint_Reset_Register);
 
 	return 0;
-}
-
-static int ni_ai_cancel(comedi_subd_t *subd)
-{
-	comedi_dev_t *dev = subd->dev;
-	return ni_ai_reset(dev);
 }
 
 static int ni_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
@@ -2758,7 +2755,7 @@ int ni_ao_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 	if (ret < 0)
 		return ret;
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
-	ret = ni_ao_prep_fifo(dev);
+	ret = ni_ao_prep_fifo(subd);
 	if (ret == 0)
 		return -EPIPE;
 
@@ -3372,7 +3369,7 @@ static void handle_cdio_interrupt(comedi_dev_t *dev)
 				devpriv->mite->mite_io_addr +
 				MITE_CHOR(devpriv->cdo_mite_chan->channel));
 		}
-		mite_sync_output_dma(devpriv->cdo_mite_chan, dev);
+		mite_sync_output_dma(devpriv->cdo_mite_chan, subd);
 	}
 	comedi_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
@@ -4756,7 +4753,7 @@ int ni_E_init(comedi_dev_t *dev)
 		subd->insn_config = ni_ai_insn_config;
 		subd->do_cmdtest = ni_ai_cmdtest;
 		subd->do_cmd = ni_ai_cmd;
-		subd->cancel = ni_ai_cancel;
+		subd->cancel = ni_ai_reset;
 
 		subd->munge = (boardtype.adbits > 16) ? 
 			ni_ai_munge32 : ni_ai_munge16;
@@ -5127,7 +5124,7 @@ int ni_E_init(comedi_dev_t *dev)
 		return ret;
 
 	/* ai configuration */
-	ni_ai_reset(dev);
+	ni_ai_reset(comedi_get_subd(dev, NI_AI_SUBDEV));
 	if ((boardtype.reg_type & ni_reg_6xxx_mask) == 0) {
 		// BEAM is this needed for PCI-6143 ??
 		devpriv->clock_and_fout =
