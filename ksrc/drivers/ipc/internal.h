@@ -70,12 +70,12 @@ static inline void *rtipc_context_to_state(struct rtdm_dev_context *context)
 
 static inline void *rtipc_fd2map(int fd)
 {
-	return (void *)(fd + 1);
+	return (void *)(long)(fd + 1);
 }
 
 static inline int rtipc_map2fd(void *p)
 {
-	return (int)(p) - 1;
+	return (long)p - 1;
 }
 
 static inline nanosecs_rel_t rtipc_timeval_to_ns(const struct timeval *tv)
