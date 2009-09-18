@@ -123,7 +123,7 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 	char *entry_name, *p;
 
 	/* Allocates the buffer for the file name */
-	entry_name = comedi_kmalloc(COMEDI_NAMELEN + 4);
+	entry_name = rtdm_malloc(COMEDI_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
 		__comedi_err("comedi_proc_attach: failed to allocate buffer\n");
 		return -ENOMEM;
@@ -151,7 +151,7 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 
       out_setup_proc_transfer:
 	/* Frees the file name buffer */
-	comedi_kfree(entry_name);
+	rtdm_free(entry_name);
 
 	return ret;
 }
@@ -162,7 +162,7 @@ void comedi_proc_detach(comedi_cxt_t * cxt)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	/* Allocates the buffer for the file name */
-	entry_name = comedi_kmalloc(COMEDI_NAMELEN + 4);
+	entry_name = rtdm_malloc(COMEDI_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
 		__comedi_err("comedi_proc_detach: "
 			     "failed to allocate filename buffer\n");
@@ -177,7 +177,7 @@ void comedi_proc_detach(comedi_cxt_t * cxt)
 	remove_proc_entry(entry_name, comedi_proc_root);
 
 	/* Frees the temporary buffer */
-	comedi_kfree(entry_name);
+	rtdm_free(entry_name);
 }
 
 #else /* !CONFIG_PROC_FS */
@@ -214,7 +214,7 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 	}
 
 	if (link_arg->bname_size != 0 && link_arg->bname != NULL) {
-		tmpname = comedi_kmalloc(link_arg->bname_size + 1);
+		tmpname = rtdm_malloc(link_arg->bname_size + 1);
 		if (tmpname == NULL) {
 			__comedi_err("comedi_fill_lnkdesc: "
 				     "call1(alloc) failed\n");
@@ -239,7 +239,7 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 	}
 
 	if (link_arg->opts_size != 0 && link_arg->opts != NULL) {
-		tmpopts = comedi_kmalloc(link_arg->opts_size);
+		tmpopts = rtdm_malloc(link_arg->opts_size);
 
 		if (tmpopts == NULL) {
 			__comedi_err("comedi_fill_lnkdesc: "
@@ -283,10 +283,10 @@ void comedi_free_lnkdesc(comedi_cxt_t * cxt, comedi_lnkdesc_t * link_arg)
 		     "comedi_free_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
 	if (link_arg->bname != NULL)
-		comedi_kfree(link_arg->bname);
+		rtdm_free(link_arg->bname);
 
 	if (link_arg->opts != NULL)
-		comedi_kfree(link_arg->opts);
+		rtdm_free(link_arg->opts);
 }
 
 int comedi_assign_driver(comedi_cxt_t * cxt,
@@ -308,7 +308,7 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 
 		INIT_LIST_HEAD(&dev->subdvsq);
 	
-		dev->priv = comedi_kmalloc(drv->privdata_size);
+		dev->priv = rtdm_malloc(drv->privdata_size);
 		if (dev->priv == NULL && drv->privdata_size != 0) {
 			__comedi_err("comedi_assign_driver: "
 				     "call(alloc) failed\n");
@@ -329,7 +329,7 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 		ret = -ENODEV;
 
 	if (ret != 0 && dev->priv != NULL) {
-		comedi_kfree(dev->priv);
+		rtdm_free(dev->priv);
 		dev->driver = NULL;
 	}
 
@@ -360,11 +360,11 @@ int comedi_release_driver(comedi_cxt_t * cxt)
 		comedi_subd_t *tmp = list_entry(this, comedi_subd_t, list);
 
 		list_del(this);
-		comedi_kfree(tmp);
+		rtdm_free(tmp);
 	}
 
 	/* Free the private field */ 
-	comedi_kfree(dev->priv);
+	rtdm_free(dev->priv);
 	dev->driver = NULL;
 
       out_release_driver:

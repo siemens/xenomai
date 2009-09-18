@@ -113,7 +113,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 	}
 
 	if (dsc->data_size != 0 && dsc->data != NULL) {
-		tmp_data = comedi_kmalloc(dsc->data_size);
+		tmp_data = rtdm_malloc(dsc->data_size);
 		if (tmp_data == NULL) {
 			ret = -ENOMEM;
 			goto out_insndsc;
@@ -134,7 +134,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
       out_insndsc:
 
 	if (ret != 0 && tmp_data != NULL)
-		comedi_kfree(tmp_data);
+		rtdm_free(tmp_data);
 
 	return ret;
 }
@@ -149,7 +149,7 @@ int comedi_free_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 					  dsc->data, dsc->data_size);
 
 	if (dsc->data != NULL)
-		comedi_kfree(dsc->data);
+		rtdm_free(dsc->data);
 
 	return ret;
 }
@@ -279,7 +279,7 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 	/* Keeps the user pointer in an opaque field */
 	dsc->__uinsns = dsc->insns;
 
-	dsc->insns = comedi_kmalloc(dsc->count * sizeof(comedi_kinsn_t));
+	dsc->insns = rtdm_malloc(dsc->count * sizeof(comedi_kinsn_t));
 	if (dsc->insns == NULL)
 		return -ENOMEM;
 
@@ -292,7 +292,7 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 
 	/* In case of error, frees the allocated memory */
 	if (ret < 0 && dsc->insns != NULL)
-		comedi_kfree(dsc->insns);
+		rtdm_free(dsc->insns);
 
 	return ret;
 }
@@ -311,7 +311,7 @@ int comedi_free_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc)
 			i++;
 		}
 
-		comedi_kfree(dsc->insns);
+		rtdm_free(dsc->insns);
 	}
 
 	return ret;

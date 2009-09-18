@@ -126,7 +126,7 @@ comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
 {
 	comedi_subd_t *subd;
 	
-	subd = comedi_kmalloc(sizeof(comedi_subd_t) + sizeof_priv);
+	subd = rtdm_malloc(sizeof(comedi_subd_t) + sizeof_priv);
 
 	if(subd != NULL) {
 		memset(subd, 0 , sizeof(comedi_subd_t) + sizeof_priv);
@@ -189,7 +189,7 @@ int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg)
 		return -EINVAL;
 
 	subd_info =
-	    comedi_kmalloc(dev->transfer.nb_subd * sizeof(comedi_sbinfo_t));
+	    rtdm_malloc(dev->transfer.nb_subd * sizeof(comedi_sbinfo_t));
 	if (subd_info == NULL)
 		return -ENOMEM;
 
@@ -207,7 +207,7 @@ int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg)
 				sizeof(comedi_sbinfo_t)) != 0)
 		ret = -EFAULT;
 
-	comedi_kfree(subd_info);
+	rtdm_free(subd_info);
 
 	return ret;
 
@@ -273,7 +273,7 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 	if(rng_desc == NULL)
 		rng_desc = &range_fake;
 
-	chan_info = comedi_kmalloc(chan_desc->length * sizeof(comedi_chinfo_t));
+	chan_info = rtdm_malloc(chan_desc->length * sizeof(comedi_chinfo_t));
 	if (chan_info == NULL)
 		return -ENOMEM;
 
@@ -298,7 +298,7 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 				chan_desc->length * sizeof(comedi_chinfo_t)) != 0)
 		return -EFAULT;
 
-	comedi_kfree(chan_info);
+	rtdm_free(chan_info);
 
 	return ret;
 }
@@ -383,7 +383,7 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 	tmp = (rng_desc->mode != COMEDI_RNG_GLOBAL_RNGDESC) ?
 	    inarg.idx_chan : 0;
 
-	rng_info = comedi_kmalloc(rng_desc->rngtabs[tmp]->length *
+	rng_info = rtdm_malloc(rng_desc->rngtabs[tmp]->length *
 				  sizeof(comedi_rnginfo_t));
 	if (rng_info == NULL)
 		return -ENOMEM;
@@ -404,7 +404,7 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 				sizeof(comedi_rnginfo_t)) != 0)
 		return -EFAULT;
 
-	comedi_kfree(rng_info);
+	rtdm_free(rng_info);
 
 	return ret;
 }

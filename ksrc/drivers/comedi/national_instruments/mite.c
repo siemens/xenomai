@@ -64,7 +64,7 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	int i;
 	struct mite_struct *mite;
 
-	mite = comedi_kmalloc(sizeof(struct mite_struct));
+	mite = kmalloc(sizeof(struct mite_struct), GFP_KERNEL);
 	if(mite == NULL)
 		return -ENOMEM;
 
@@ -92,7 +92,7 @@ static void mite_remove(struct pci_dev *dev)
 		
 		if(mite->pcidev == dev) {
 			list_del(this);
-			comedi_kfree(mite);
+			kfree(mite);
 			break;
 		}			
 	}
@@ -776,7 +776,7 @@ static void __exit mite_cleanup(void)
 			list_entry(this, struct mite_struct, list);
 		
 		list_del(this);
-		comedi_kfree(mite);
+		kfree(mite);
 	}
 }
 

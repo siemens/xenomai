@@ -67,7 +67,7 @@ struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
 	unsigned int num_counters)
 {
 	struct ni_gpct_device *counter_dev =
-		comedi_kmalloc(sizeof(struct ni_gpct_device));
+		kmalloc(sizeof(struct ni_gpct_device), GFP_KERNEL);
 	if (counter_dev == NULL)
 		return NULL;
 	
@@ -81,10 +81,10 @@ struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
 	BUG_ON(num_counters == 0);
 
 	counter_dev->counters = 
-		comedi_kmalloc(sizeof(struct ni_gpct *) * num_counters);
+		kmalloc(sizeof(struct ni_gpct *) * num_counters, GFP_KERNEL);
 
 	if (counter_dev->counters == NULL) {
-		 comedi_kfree(counter_dev);
+		 kfree(counter_dev);
 		return NULL;
 	}
 
@@ -98,8 +98,8 @@ void ni_gpct_device_destroy(struct ni_gpct_device *counter_dev)
 {
 	if (counter_dev->counters == NULL)
 		return;
-	comedi_kfree(counter_dev->counters);
-	comedi_kfree(counter_dev);
+	kfree(counter_dev->counters);
+	kfree(counter_dev);
 }
 
 static 

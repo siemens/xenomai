@@ -47,7 +47,7 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 		goto out_cmddesc;
 	}
 
-	tmpchans = comedi_kmalloc(desc->nb_chan * sizeof(unsigned int));
+	tmpchans = rtdm_malloc(desc->nb_chan * sizeof(unsigned int));
 	if (tmpchans == NULL) {
 		ret = -ENOMEM;
 		goto out_cmddesc;
@@ -74,7 +74,7 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 
 	if (ret != 0) {
 		if (tmpchans != NULL)
-			comedi_kfree(tmpchans);
+			rtdm_free(tmpchans);
 		desc->chan_descs = NULL;
 	}
 
@@ -84,7 +84,7 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 void comedi_free_cmddesc(comedi_cmd_t * desc)
 {
 	if (desc->chan_descs != NULL)
-		comedi_kfree(desc->chan_descs);
+		rtdm_free(desc->chan_descs);
 }
 
 int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
@@ -257,7 +257,7 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 		     "comedi_ioctl_cmd: minor=%d\n", comedi_get_minor(cxt));
 
 	/* Allocates the command */
-	cmd_desc = (comedi_cmd_t *) comedi_kmalloc(sizeof(comedi_cmd_t));
+	cmd_desc = (comedi_cmd_t *) rtdm_malloc(sizeof(comedi_cmd_t));
 	if (cmd_desc == NULL)
 		return -ENOMEM;
 	memset(cmd_desc, 0, sizeof(comedi_cmd_t));
@@ -314,7 +314,7 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
       out_ioctl_cmd:
 	if (ret != 0 || simul_flag == 1) {
 		comedi_free_cmddesc(cmd_desc);
-		comedi_kfree(cmd_desc);
+		rtdm_free(cmd_desc);
 	}
 
 	return ret;

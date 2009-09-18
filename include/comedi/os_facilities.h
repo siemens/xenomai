@@ -89,16 +89,6 @@
 
 /* --- Allocation / MMU section --- */
 
-static inline void *comedi_kmalloc(int size)
-{
-	return rtdm_malloc(size);
-}
-
-static inline void comedi_kfree(void *pinp)
-{
-	rtdm_free(pinp);
-}
-
 static inline int __comedi_copy_from_user(rtdm_user_info_t * user_info,
 					  void *pind, void *pins, int size)
 {

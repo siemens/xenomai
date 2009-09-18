@@ -59,22 +59,22 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 
 	/* Releases the various buffers */
 	if (tsf->status != NULL)
-		comedi_kfree(tsf->status);
+		rtdm_free(tsf->status);
 
 	if (tsf->bufs != NULL) {
 		for (i = 0; i < tsf->nb_subd; i++) {
 			if (tsf->bufs[i] != NULL) {
 				comedi_free_buffer(tsf->bufs[i]);
 				comedi_cleanup_sync(&tsf->bufs[i]->sync);
-				comedi_kfree(tsf->bufs[i]);
+				rtdm_free(tsf->bufs[i]);
 			}
 		}
-		comedi_kfree(tsf->bufs);
+		rtdm_free(tsf->bufs);
 	}
 
 	/* Releases the pointers tab, if need be */
 	if (tsf->subds != NULL) {
-		comedi_kfree(tsf->subds);
+		rtdm_free(tsf->subds);
 	}
 
 	return 0;
@@ -126,7 +126,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	}
 
 	/* Allocates a suitable tab for the subdevices */
-	tsf->subds = comedi_kmalloc(tsf->nb_subd * sizeof(comedi_subd_t *));
+	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(comedi_subd_t *));
 	if (tsf->subds == NULL) {
 		__comedi_err("comedi_setup_transfer: call2(alloc) failed \n");
 		ret = -ENOMEM;
@@ -147,7 +147,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	}
 
 	/* Allocates various buffers */
-	tsf->bufs = comedi_kmalloc(tsf->nb_subd * sizeof(comedi_buf_t *));
+	tsf->bufs = rtdm_malloc(tsf->nb_subd * sizeof(comedi_buf_t *));
 	if (tsf->bufs == NULL) {
 		ret = -ENOMEM;
 		goto out_setup_tsf;
@@ -156,7 +156,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 
 	for (i = 0; i < tsf->nb_subd; i++) {
 		if (tsf->subds[i]->flags & COMEDI_SUBD_CMD) {
-			tsf->bufs[i] = comedi_kmalloc(sizeof(comedi_buf_t));
+			tsf->bufs[i] = rtdm_malloc(sizeof(comedi_buf_t));
 			if (tsf->bufs[i] == NULL) {
 				__comedi_err("comedi_setup_transfer: "
 					     "call5-6(alloc) failed \n");
@@ -172,7 +172,7 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 		}
 	}
 
-	tsf->status = comedi_kmalloc(tsf->nb_subd * sizeof(unsigned long));
+	tsf->status = rtdm_malloc(tsf->nb_subd * sizeof(unsigned long));
 	if (tsf->status == NULL) {
 		__comedi_err("comedi_setup_transfer: call8(alloc) failed \n");
 		ret = -ENOMEM;
@@ -280,7 +280,7 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	    dev->transfer.bufs[idx_subd]->cur_cmd != NULL) {
 
 		comedi_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
-		comedi_kfree(dev->transfer.bufs[idx_subd]->cur_cmd);
+		rtdm_free(dev->transfer.bufs[idx_subd]->cur_cmd);
 		dev->transfer.bufs[idx_subd]->cur_cmd = NULL;
 
 		/* ...we must also clean the events flags */

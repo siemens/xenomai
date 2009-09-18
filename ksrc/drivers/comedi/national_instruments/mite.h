@@ -76,7 +76,7 @@ static inline
 struct mite_dma_descriptor_ring *mite_alloc_ring(struct	mite_struct *mite)
 {
 	struct mite_dma_descriptor_ring *ring =
-		comedi_kmalloc(sizeof(struct mite_dma_descriptor_ring));
+		kmalloc(sizeof(struct mite_dma_descriptor_ring), GFP_DMA);
 
 	if (ring == NULL)
 		return ring;
@@ -85,7 +85,7 @@ struct mite_dma_descriptor_ring *mite_alloc_ring(struct	mite_struct *mite)
 
 	ring->pcidev = mite->pcidev;
 	if (ring->pcidev == NULL) {
-		comedi_kfree(ring);
+		kfree(ring);
 		return NULL;
 	}
 
@@ -102,7 +102,7 @@ static inline void mite_free_ring(struct mite_dma_descriptor_ring *ring)
 				sizeof(struct mite_dma_descriptor),
 				ring->descriptors, ring->descriptors_dma_addr);
 		}
-		comedi_kfree(ring);
+		kfree(ring);
 	}
 };
 

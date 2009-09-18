@@ -38,7 +38,7 @@
 void comedi_free_buffer(comedi_buf_t * buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
-		comedi_kfree(buf_desc->pg_list);
+		rtdm_free(buf_desc->pg_list);
 		buf_desc->pg_list = NULL;
 	}
 
@@ -75,7 +75,7 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 	     vaddr += PAGE_SIZE)
 		SetPageReserved(vmalloc_to_page(vaddr));
 
-	buf_desc->pg_list = comedi_kmalloc(((buf_desc->size) >> PAGE_SHIFT) *
+	buf_desc->pg_list = rtdm_malloc(((buf_desc->size) >> PAGE_SHIFT) *
 					   sizeof(unsigned long));
 	if (buf_desc->pg_list == NULL) {
 		ret = -ENOMEM;

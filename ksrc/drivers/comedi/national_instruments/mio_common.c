@@ -4195,8 +4195,8 @@ static void caldac_setup(comedi_dev_t *dev, comedi_subd_t *subd)
 			comedi_err(dev, "BUG! MAX_N_CALDACS too small\n");
 		}
 
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						n_chans * sizeof(comedi_chan_t));
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  n_chans * sizeof(comedi_chan_t), GFP_KERNEL);
 
 		memset(subd->chan_desc, 
 		       0, 
@@ -4223,8 +4223,8 @@ static void caldac_setup(comedi_dev_t *dev, comedi_subd_t *subd)
 			ni_write_caldac(dev, chan, tmp);
 		}
 	} else {
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						 sizeof(comedi_chan_t));
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  sizeof(comedi_chan_t), GFP_KERNEL);
 		
 		memset(subd->chan_desc, 
 		       0, sizeof(comedi_chdesc_t) + sizeof(comedi_chan_t));
@@ -4738,8 +4738,8 @@ int ni_E_init(comedi_dev_t *dev)
 		subd->flags = COMEDI_SUBD_AI | COMEDI_SUBD_CMD;
 		subd->rng_desc = ni_range_lkup[boardtype.gainlkup];
 
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						sizeof(comedi_chan_t));
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  sizeof(comedi_chan_t), GFP_KERNEL);
 
 		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = boardtype.n_adchan;
@@ -4774,8 +4774,8 @@ int ni_E_init(comedi_dev_t *dev)
 	if (boardtype.n_aochan) {
 		subd->flags = COMEDI_SUBD_AO;
 
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						sizeof(comedi_chan_t));
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  sizeof(comedi_chan_t), GFP_KERNEL);
 
 		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = boardtype.n_aochan;
@@ -4820,8 +4820,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	subd->flags = COMEDI_SUBD_DIO;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);
 	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = boardtype.num_p0_dio_channels;
@@ -4914,8 +4914,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	subd->flags = COMEDI_SUBD_MEMORY;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));	
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->chans[0].flags = 0;
 	subd->chan_desc->chans[0].nb_bits = 8;
@@ -4939,8 +4939,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	subd->flags = COMEDI_SUBD_DIO;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));	
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->chans[0].flags = 0;
 	subd->chan_desc->chans[0].nb_bits = 1;
@@ -4977,8 +4977,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	if (boardtype.reg_type & ni_reg_67xx_mask) {
 
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						sizeof(comedi_chan_t));	
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  sizeof(comedi_chan_t), GFP_KERNEL);	
 		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = boardtype.n_aochan;
 		subd->chan_desc->chans[0].flags = 0;
@@ -5003,8 +5003,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	subd->flags = COMEDI_SUBD_SERIAL;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));	
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 1;
 	subd->chan_desc->chans[0].flags = 0;
@@ -5030,8 +5030,8 @@ int ni_E_init(comedi_dev_t *dev)
 #else /* TODO: add RTSI subdevice */
 	subd->flags = COMEDI_SUBD_DIO;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));	
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 8;
 	subd->chan_desc->chans[0].flags = 0;
@@ -5068,8 +5068,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 		subd->flags |= COMEDI_SUBD_CMD;
 
-		subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-						sizeof(comedi_chan_t));	
+		subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+					  sizeof(comedi_chan_t), GFP_KERNEL);	
 		subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = 3;
 		subd->chan_desc->chans[0].flags = 0;
@@ -5108,8 +5108,8 @@ int ni_E_init(comedi_dev_t *dev)
 
 	subd->flags = COMEDI_SUBD_COUNTER;
 
-	subd->chan_desc = comedi_kmalloc(sizeof(comedi_chdesc_t) + 
-					sizeof(comedi_chan_t));	
+	subd->chan_desc = kmalloc(sizeof(comedi_chdesc_t) + 
+				  sizeof(comedi_chan_t), GFP_KERNEL);	
 	subd->chan_desc->mode = COMEDI_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 1;
 	subd->chan_desc->chans[0].flags = 0;
