@@ -43,7 +43,6 @@
 #define COMEDI_BUF_ERROR (1 << COMEDI_BUF_ERROR_NR)
 #define COMEDI_BUF_EOA (1 << COMEDI_BUF_EOA_NR)
 
-struct comedi_device;
 struct comedi_subdevice;
 
 /* Buffer descriptor structure */
