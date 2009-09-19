@@ -29,7 +29,9 @@
 #include <linux/version.h>
 #include <linux/nmi.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
+#include <asm/perf_counter.h>
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
 #include <asm/intel_arch_perfmon.h>
 #endif /* Linux < 2.6.19 */
 #include <asm/nmi.h>
