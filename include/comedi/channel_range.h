@@ -163,7 +163,7 @@ comedi_rngdesc_t example_rng = RNG_GLOBAL(example_tab);
 
 struct comedi_channel {
 	unsigned long flags; /*!< Channel flags to define the reference. */
-	unsigned char nb_bits; /*!< Channel resolution. */	                
+	unsigned long nb_bits; /*!< Channel resolution. */	                
 };
 typedef struct comedi_channel comedi_chan_t;
 
@@ -191,8 +191,8 @@ typedef struct comedi_channel comedi_chan_t;
  */
 
 struct comedi_channels_desc {
-	unsigned char mode; /*!< Declaration mode (global or per channel) */
-	unsigned char length; /*!< Channels count */
+	unsigned long mode; /*!< Declaration mode (global or per channel) */
+	unsigned long length; /*!< Channels count */
 	comedi_chan_t chans[GCC_ZERO_LENGTH_ARRAY]; /*!< Channels tab */
 };
 typedef struct comedi_channels_desc comedi_chdesc_t;
@@ -216,16 +216,21 @@ typedef struct comedi_channels_desc comedi_chdesc_t;
  */
 #define COMEDI_RNG_NO_UNIT 0x2
 /** 
+ * External unit range flag
+ */
+#define COMEDI_RNG_EXT_UNIT 0x4
+/** 
  * Macro to retrieve the range unit from the range flags
  */
 #define COMEDI_RNG_UNIT(x) (x & (COMEDI_RNG_VOLT_UNIT | \
 				 COMEDI_RNG_MAMP_UNIT | \
-				 COMEDI_RNG_NO_UNIT))
+				 COMEDI_RNG_NO_UNIT | \
+				 COMEDI_RNG_EXT_UNIT))
 
 /** 
  * Internal use flag (must not be used by driver developer)
  */
-#define COMEDI_RNG_GLOBAL 0x4
+#define COMEDI_RNG_GLOBAL 0x8
 
 /*! 
  * @brief Structure describing a (unique) range
@@ -253,6 +258,12 @@ typedef struct comedi_range comedi_rng_t;
  */
 #define RANGE_mA(x,y) {(x * COMEDI_RNG_FACTOR),(y * COMEDI_RNG_FACTOR), \
 	    COMEDI_RNG_MAMP_UNIT}
+/** 
+ * Macro to declare a (unique) range in some external reference
+ */
+#define RANGE_ext(x,y) {(x * COMEDI_RNG_FACTOR),(y * COMEDI_RNG_FACTOR), \
+	    COMEDI_RNG_EXT_UNIT}
+
 
 /* Ranges tab descriptor */
 #define COMEDI_RNGTAB(x) \
@@ -292,6 +303,10 @@ extern comedi_rngdesc_t range_bipolar10;
 extern comedi_rngdesc_t range_bipolar5;
 extern comedi_rngdesc_t range_unipolar10;
 extern comedi_rngdesc_t range_unipolar5;
+extern comedi_rngdesc_t range_unknown;
+extern comedi_rngdesc_t range_fake;
+
+#define range_digital range_unipolar5
 
 	  /*! @} channelrange */
 

@@ -27,11 +27,8 @@
 
 #include <linux/list.h>
 
-#include <comedi/context.h>
-
 struct comedi_link_desc;
-
-#define COMEDI_DYNAMIC_DRV 0x1
+struct comedi_device;
 
 /** Structure containing driver declaration data.
  *
@@ -54,14 +51,10 @@ struct comedi_driver {
 	int privdata_size;
 		       /**< Size of the driver's private data */
 
-	/* Hidden description stuff */
-	struct list_head subdvsq;
-			      /**< List containing the subdevices pointers */
-
 	/* Init/destroy procedures */
-	int (*attach) (comedi_cxt_t *, struct comedi_link_desc *);
-							     /**< Attach procedure */
-	int (*detach) (comedi_cxt_t *);
+	int (*attach) (struct comedi_device *, struct comedi_link_desc *);
+								      /**< Attach procedure */
+	int (*detach) (struct comedi_device *);
 				   /**< Detach procedure */
 
 };
@@ -71,19 +64,14 @@ typedef struct comedi_driver comedi_drv_t;
 
 /* Driver list related functions */
 
-int comedi_add_drv(comedi_drv_t * drv);
-int comedi_rm_drv(comedi_drv_t * drv);
+int comedi_register_drv(comedi_drv_t * drv);
+int comedi_unregister_drv(comedi_drv_t * drv);
 int comedi_lct_drv(char *pin, comedi_drv_t ** pio);
 #ifdef CONFIG_PROC_FS
 int comedi_rdproc_drvs(char *page,
 		       char **start,
 		       off_t off, int count, int *eof, void *data);
 #endif /* CONFIG_PROC_FS */
-
-/* Driver related functions */
-
-int comedi_init_drv(comedi_drv_t * drv);
-int comedi_cleanup_drv(comedi_drv_t * drv);
 
 #endif /* !DOXYGEN_CPP */
 

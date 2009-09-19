@@ -82,6 +82,85 @@
  */
 #define COMEDI_INSN_WAIT_MAX 100000
 
+/*!
+ * @anchor INSN_CONFIG_xxx @name Configuration instruction type
+ * @brief Values to define the type of configuration instruction
+ * @{
+ */
+
+#define INSN_CONFIG_DIO_INPUT			0
+#define INSN_CONFIG_DIO_OUTPUT			1
+#define INSN_CONFIG_DIO_OPENDRAIN		2
+#define INSN_CONFIG_ANALOG_TRIG			16
+#define INSN_CONFIG_ALT_SOURCE			20
+#define INSN_CONFIG_DIGITAL_TRIG		21
+#define INSN_CONFIG_BLOCK_SIZE			22
+#define INSN_CONFIG_TIMER_1			23
+#define INSN_CONFIG_FILTER			24
+#define INSN_CONFIG_CHANGE_NOTIFY		25
+#define INSN_CONFIG_SERIAL_CLOCK		26
+#define INSN_CONFIG_BIDIRECTIONAL_DATA		27
+#define INSN_CONFIG_DIO_QUERY			28
+#define INSN_CONFIG_PWM_OUTPUT			29
+#define INSN_CONFIG_GET_PWM_OUTPUT		30
+#define INSN_CONFIG_ARM				31
+#define INSN_CONFIG_DISARM			32
+#define INSN_CONFIG_GET_COUNTER_STATUS		33
+#define INSN_CONFIG_RESET			34
+#define INSN_CONFIG_GPCT_SINGLE_PULSE_GENERATOR	1001	/* Use CTR as single pulsegenerator */
+#define INSN_CONFIG_GPCT_PULSE_TRAIN_GENERATOR	1002	/* Use CTR as pulsetraingenerator */
+#define INSN_CONFIG_GPCT_QUADRATURE_ENCODER	1003	/* Use the counter as encoder */
+#define INSN_CONFIG_SET_GATE_SRC		2001	/* Set gate source */
+#define INSN_CONFIG_GET_GATE_SRC		2002	/* Get gate source */
+#define INSN_CONFIG_SET_CLOCK_SRC		2003	/* Set master clock source */
+#define INSN_CONFIG_GET_CLOCK_SRC		2004	/* Get master clock source */
+#define INSN_CONFIG_SET_OTHER_SRC		2005	/* Set other source */
+#define INSN_CONFIG_SET_COUNTER_MODE		4097
+#define INSN_CONFIG_SET_ROUTING			4099
+#define INSN_CONFIG_GET_ROUTING			4109
+
+	  /*! @} INSN_CONFIG_xxx */
+
+/*!
+ * @anchor COMEDI_COUNTER_xxx @name Counter status bits
+ * @brief Status bits for INSN_CONFIG_GET_COUNTER_STATUS
+ * @{
+ */
+
+#define COMEDI_COUNTER_ARMED			0x1
+#define COMEDI_COUNTER_COUNTING			0x2
+#define COMEDI_COUNTER_TERMINAL_COUNT		0x4
+
+	  /*! @} COMEDI_COUNTER_xxx */
+
+/*!
+ * @anchor COMEDI_IO_DIRECTION @name IO direction
+ * @brief Values to define the IO polarity
+ * @{
+ */
+
+#define COMEDI_INPUT 0
+#define COMEDI_OUTPUT 1
+#define COMEDI_OPENDRAIN 2
+
+	  /*! @} COMEDI_IO_DIRECTION */
+
+
+/*!
+ * @anchor COMEDI_EV_xxx @name Events types
+ * @brief Values to define the Comedi events. They might used to send
+ * some specific events through the instruction interface.
+ * @{
+ */
+
+#define COMEDI_EV_START		0x00040000
+#define COMEDI_EV_SCAN_BEGIN	0x00080000
+#define COMEDI_EV_CONVERT	0x00100000
+#define COMEDI_EV_SCAN_END	0x00200000
+#define COMEDI_EV_STOP		0x00400000
+
+	  /*! @} COMEDI_EV_xxx */
+
 /*! 
  * @brief Structure describing the synchronous instruction
  * @see comedi_snd_insn()

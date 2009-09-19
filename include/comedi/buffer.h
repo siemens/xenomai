@@ -34,10 +34,6 @@
 
 #include <comedi/context.h>
 
-/* Buffer copies directions */
-#define COMEDI_BUF_PUT 1
-#define COMEDI_BUF_GET 2
-
 /* Events bits */
 #define COMEDI_BUF_EOBUF_NR 0
 #define COMEDI_BUF_ERROR_NR 1
@@ -47,7 +43,7 @@
 #define COMEDI_BUF_ERROR (1 << COMEDI_BUF_ERROR_NR)
 #define COMEDI_BUF_EOA (1 << COMEDI_BUF_EOA_NR)
 
-struct comedi_device;
+struct comedi_subdevice;
 
 /* Buffer descriptor structure */
 struct comedi_buffer {
@@ -144,9 +140,9 @@ static inline int __consume(comedi_cxt_t * cxt,
 }
 
 /* Munge procedure */
-static inline void __munge(comedi_cxt_t * cxt,
-			   void (*munge) (comedi_cxt_t *, int, void *,
-					  unsigned long), int idx_subd,
+static inline void __munge(struct comedi_subdevice * subd,
+			   void (*munge) (struct comedi_subdevice *, 
+					  void *, unsigned long),
 			   comedi_buf_t * buf, unsigned long count)
 {
 	unsigned long start_ptr = (buf->mng_count % buf->size);
@@ -158,7 +154,7 @@ static inline void __munge(comedi_cxt_t * cxt,
 		    buf->size - start_ptr : tmp_cnt;
 
 		/* Performs the munge operation */
-		munge(cxt, idx_subd, buf->buf + start_ptr, blk_size);
+		munge(subd, buf->buf + start_ptr, blk_size);
 
 		/* Updates the start pointer and the count */
 		tmp_cnt -= blk_size;
@@ -302,41 +298,47 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc);
 
 void comedi_free_buffer(comedi_buf_t * buf_desc);
 
-int comedi_buf_prepare_absput(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_absput(struct comedi_subdevice *subd, 
+			      unsigned long count);
 
-int comedi_buf_commit_absput(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_absput(struct comedi_subdevice *subd, 
+			     unsigned long count);
 
-int comedi_buf_prepare_put(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_put(struct comedi_subdevice *subd, 
+			   unsigned long count);
 
-int comedi_buf_commit_put(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_put(struct comedi_subdevice *subd, 
+			  unsigned long count);
 
-int comedi_buf_put(struct comedi_device *dev,
+int comedi_buf_put(struct comedi_subdevice *subd,
 		   void *bufdata, unsigned long count);
 
-int comedi_buf_prepare_absget(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_absget(struct comedi_subdevice *subd, 
+			      unsigned long count);
 
-int comedi_buf_commit_absget(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_absget(struct comedi_subdevice *subd, 
+			     unsigned long count);
 
-int comedi_buf_prepare_get(struct comedi_device *dev, unsigned long count);
+int comedi_buf_prepare_get(struct comedi_subdevice *subd, 
+			   unsigned long count);
 
-int comedi_buf_commit_get(struct comedi_device *dev, unsigned long count);
+int comedi_buf_commit_get(struct comedi_subdevice *subd, 
+			  unsigned long count);
 
-int comedi_buf_get(struct comedi_device *dev,
+int comedi_buf_get(struct comedi_subdevice *subd,
 		   void *bufdata, unsigned long count);
 
-int comedi_buf_evt(struct comedi_device *dev,
-		   unsigned int type, unsigned long evts);
+int comedi_buf_evt(struct comedi_subdevice *subd, unsigned long evts);
 
-unsigned long comedi_buf_count(struct comedi_device *dev, unsigned int type);
+unsigned long comedi_buf_count(struct comedi_subdevice *subd);
 
 /* --- Current Command management function --- */
 
-comedi_cmd_t *comedi_get_cmd(struct comedi_device *dev, unsigned int type,
-			     int idx_subd);
+comedi_cmd_t *comedi_get_cmd(struct comedi_subdevice *subd);
 
 /* --- Munge related function --- */
 
-int comedi_get_chan(struct comedi_device *dev, unsigned int type, int idx_subd);
+int comedi_get_chan(struct comedi_subdevice *subd);
 
 /* --- IOCTL / FOPS functions --- */
 

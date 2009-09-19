@@ -4,7 +4,7 @@ ifeq ($(PATCHLEVEL),6)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/comedi
 
-obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o testing/
+obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o testing/ intel/ national_instruments/
 
 xeno_comedi-y := \
 	buffer.o \
@@ -27,6 +27,8 @@ O_TARGET := built-in.o
 
 subdir-$(CONFIG_XENO_DRIVERS_COMEDI_FAKE) += testing
 subdir-$(CONFIG_XENO_DRIVERS_COMEDI_LOOP) += testing
+subdir-$(CONFIG_XENO_DRIVERS_COMEDI_8255) += intel
+subdir-$(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) += national_instruments
 
 obj-$(CONFIG_XENO_DRIVERS_COMEDI) += xeno_comedi.o
 

@@ -85,17 +85,17 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	if (dsc->data_size != 1)
 		return -EINVAL;
 
-	if (dsc->idx_subd >= dev->transfer->nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	subd = dev->transfer->subds[dsc->idx_subd];
+	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks that the concerned subdevice is trigger-compliant */
 	if ((subd->flags & COMEDI_SUBD_CMD) == 0 || subd->trigger == NULL)
 		return -EINVAL;
 
 	/* Performs the trigger */
-	return subd->trigger(cxt, dsc->data[0]);;
+	return subd->trigger(subd, dsc->data[0]);
 }
 
 int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
@@ -113,7 +113,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 	}
 
 	if (dsc->data_size != 0 && dsc->data != NULL) {
-		tmp_data = comedi_kmalloc(dsc->data_size);
+		tmp_data = rtdm_malloc(dsc->data_size);
 		if (tmp_data == NULL) {
 			ret = -ENOMEM;
 			goto out_insndsc;
@@ -134,7 +134,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
       out_insndsc:
 
 	if (ret != 0 && tmp_data != NULL)
-		comedi_kfree(tmp_data);
+		rtdm_free(tmp_data);
 
 	return ret;
 }
@@ -149,7 +149,7 @@ int comedi_free_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 					  dsc->data, dsc->data_size);
 
 	if (dsc->data != NULL)
-		comedi_kfree(dsc->data);
+		rtdm_free(dsc->data);
 
 	return ret;
 }
@@ -182,11 +182,11 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	/* Checks the subdevice index */
-	if (dsc->idx_subd >= dev->transfer->nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
 	/* Recovers pointers on the proper subdevice */
-	subd = dev->transfer->subds[dsc->idx_subd];
+	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
 	if (((subd->flags & COMEDI_SUBD_UNUSED) != 0) ||
@@ -194,7 +194,7 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 		return -EINVAL;
 
 	/* Checks the channel descriptor */
-	ret = comedi_check_chanlist(dev->transfer->subds[dsc->idx_subd],
+	ret = comedi_check_chanlist(dev->transfer.subds[dsc->idx_subd],
 				    1, &dsc->chan_desc);
 	if (ret < 0)
 		return ret;
@@ -208,16 +208,16 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	/* Lets the driver-specific code perform the instruction */
 	switch (dsc->type) {
 	case COMEDI_INSN_READ:
-		ret = subd->insn_read(cxt, dsc);
+		ret = subd->insn_read(subd, dsc);
 		break;
 	case COMEDI_INSN_WRITE:
-		ret = subd->insn_write(cxt, dsc);
+		ret = subd->insn_write(subd, dsc);
 		break;
 	case COMEDI_INSN_BITS:
-		ret = subd->insn_bits(cxt, dsc);
+		ret = subd->insn_bits(subd, dsc);
 		break;
 	case COMEDI_INSN_CONFIG:
-		ret = subd->insn_config(cxt, dsc);
+		ret = subd->insn_config(subd, dsc);
 		break;
 	default:
 		ret = -EINVAL;
@@ -279,7 +279,7 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 	/* Keeps the user pointer in an opaque field */
 	dsc->__uinsns = dsc->insns;
 
-	dsc->insns = comedi_kmalloc(dsc->count * sizeof(comedi_kinsn_t));
+	dsc->insns = rtdm_malloc(dsc->count * sizeof(comedi_kinsn_t));
 	if (dsc->insns == NULL)
 		return -ENOMEM;
 
@@ -292,7 +292,7 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 
 	/* In case of error, frees the allocated memory */
 	if (ret < 0 && dsc->insns != NULL)
-		comedi_kfree(dsc->insns);
+		rtdm_free(dsc->insns);
 
 	return ret;
 }
@@ -311,7 +311,7 @@ int comedi_free_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc)
 			i++;
 		}
 
-		comedi_kfree(dsc->insns);
+		rtdm_free(dsc->insns);
 	}
 
 	return ret;

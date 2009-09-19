@@ -9,6 +9,8 @@ dep_tristate 'COMEDI interface' CONFIG_XENO_DRIVERS_COMEDI $CONFIG_XENO_SKIN_RTD
 
 if [ "$CONFIG_XENO_DRIVERS_COMEDI" != "n" ]; then 
    source drivers/xenomai/comedi/testing/Config.in
+   source drivers/xenomai/comedi/intel/Config.in
+   source drivers/xenomai/comedi/national_instruments/Config.in
 fi
 
 endmenu

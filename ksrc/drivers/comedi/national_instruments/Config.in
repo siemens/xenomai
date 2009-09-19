@@ -1,0 +1,8 @@
+
+#
+# Xenomai configuration for Linux v2.4
+#
+
+if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
+   dep_tristate 'NI MITE driver (EXPERIMENTAL)' CONFIG_XENO_DRIVERS_COMEDI_NI_MITE $CONFIG_XENO_DRIVERS_COMEDI
+fi

@@ -105,15 +105,17 @@
 /** 
  * Mask which gathers all the types
  */
-#define COMEDI_SUBD_TYPES (COMEDI_SUBD_UNUSED | \
-			   COMEDI_SUBD_AI | \
-			   COMEDI_SUBD_AO | \
-			   COMEDI_SUBD_DI | \
-			   COMEDI_SUBD_DO | \
-			   COMEDI_SUBD_DIO | \
+#define COMEDI_SUBD_TYPES (COMEDI_SUBD_UNUSED |	 \
+			   COMEDI_SUBD_AI |	 \
+			   COMEDI_SUBD_AO |	 \
+			   COMEDI_SUBD_DI |	 \
+			   COMEDI_SUBD_DO |	 \
+			   COMEDI_SUBD_DIO |	 \
 			   COMEDI_SUBD_COUNTER | \
-			   COMEDI_SUBD_CALIB | \
-			   COMEDI_SUBD_PROC | \
+			   COMEDI_SUBD_TIMER |	 \
+			   COMEDI_SUBD_MEMORY |	 \
+			   COMEDI_SUBD_CALIB |	 \
+			   COMEDI_SUBD_PROC |	 \
 			   COMEDI_SUBD_SERIAL)
 
 	  /*! @} COMEDI_SUBD_xxx */
@@ -156,6 +158,11 @@ struct comedi_subdevice {
 	struct list_head list;
 			   /**< List stuff */
 
+	struct comedi_device *dev;
+			       /**< Containing device */
+	unsigned int idx;
+		      /**< Subdevice index */
+
 	/* Descriptors stuff */
 	unsigned long flags;
 			 /**< Type flags */
@@ -167,25 +174,27 @@ struct comedi_subdevice {
 			    /**< Command capabilities mask */
 
 	/* Functions stuff */
-	int (*insn_read) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_read) (struct comedi_subdevice *, comedi_kinsn_t *);
 							/**< Callback for the instruction "read" */
-	int (*insn_write) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_write) (struct comedi_subdevice *, comedi_kinsn_t *);
 							 /**< Callback for the instruction "write" */
-	int (*insn_bits) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_bits) (struct comedi_subdevice *, comedi_kinsn_t *);
 							/**< Callback for the instruction "bits" */
-	int (*insn_config) (comedi_cxt_t *, comedi_kinsn_t *);
+	int (*insn_config) (struct comedi_subdevice *, comedi_kinsn_t *);
 							  /**< Callback for the configuration instruction */
-	int (*do_cmd) (comedi_cxt_t *, int);
+	int (*do_cmd) (struct comedi_subdevice *, comedi_cmd_t *);
 					/**< Callback for command handling */
-	int (*do_cmdtest) (comedi_cxt_t *, comedi_cmd_t *);
+	int (*do_cmdtest) (struct comedi_subdevice *, comedi_cmd_t *);
 						       /**< Callback for command checking */
-	int (*cancel) (comedi_cxt_t *, int);
+	int (*cancel) (struct comedi_subdevice *);
 					 /**< Callback for asynchronous transfer cancellation */
-	void (*munge) (comedi_cxt_t *, int, void *, unsigned long);
+	void (*munge) (struct comedi_subdevice *, void *, unsigned long);
 								/**< Callback for munge operation */
-	int (*trigger) (comedi_cxt_t *, lsampl_t);
+	int (*trigger) (struct comedi_subdevice *, lsampl_t);
 					      /**< Callback for trigger operation */
 
+	char priv[0];
+		  /**< Private data */
 };
 typedef struct comedi_subdevice comedi_subd_t;
 
@@ -244,8 +253,11 @@ int comedi_check_chanlist(comedi_subd_t * subd,
 			  unsigned char nb_chan, unsigned int *chans);
 
 /* --- Upper layer functions --- */
-int comedi_add_subd(struct comedi_driver *drv, comedi_subd_t * subd);
-int comedi_get_nbchan(struct comedi_device *dev, int subd_key);
+
+comedi_subd_t * comedi_get_subd(struct comedi_device *dev, int idx);
+comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
+				  void (*setup)(comedi_subd_t *));
+int comedi_add_subd(struct comedi_device *dev, comedi_subd_t * subd);
 int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg);
 int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg);

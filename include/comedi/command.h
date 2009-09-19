@@ -44,6 +44,10 @@
  * Perform data recovery / transmission in bulk mode
  */
 #define COMEDI_CMD_BULK 0x2
+/** 
+ * Perform a command which will write data to the device
+ */
+#define COMEDI_CMD_WRITE 0x4
 
 	  /*! @} COMEDI_CMD_xxx */
 
@@ -126,15 +130,27 @@
 /** 
  * Channel indication macro
  */
-#define CHAN(a) ((a)&0xffff)
+#define CHAN(a) ((a) & 0xffff)
 /** 
  * Range definition macro
  */
-#define RNG(a) (((a)&0xff)<<16)
+#define RNG(a) (((a) & 0xff) << 16)
 /** 
  * Reference definition macro
  */
-#define AREF(a) (((a)&0xf)<<24)
+#define AREF(a) (((a) & 0xf) << 24)
+/** 
+ * Flags definition macro
+ */
+#define FLAGS(a) ((a) & CR_FLAGS_MASK)
+/** 
+ * Channel + range + reference definition macro
+ */
+#define PACK(a, b, c) (CHAN(a) | RNG(b) | AREF(c))
+/** 
+ * Channel + range + reference + flags definition macro
+ */
+#define PACK_FLAGS(a, b, c, d) (CHAN(a) | RNG(b) | AREF(c) | FLAGS(d))
 
 /** 
  * Analog reference is analog ground

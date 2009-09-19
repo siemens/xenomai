@@ -39,9 +39,13 @@ static comedi_dev_t comedi_devs[COMEDI_NB_DEVICES];
 void comedi_init_devs(void)
 {
 	int i;
-	memset(comedi_devs, 0, COMEDI_NB_DEVICES * sizeof(comedi_dev_t));
-	for (i = 0; i < COMEDI_NB_DEVICES; i++)
+	memset(comedi_devs, 0, COMEDI_NB_DEVICES * sizeof(comedi_dev_t));	
+	for (i = 0; i < COMEDI_NB_DEVICES; i++) {		
 		comedi_lock_init(&comedi_devs[i].lock);
+		comedi_devs[i].transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
+		comedi_devs[i].transfer.idx_read_subd = COMEDI_IDX_UNUSED;
+		comedi_devs[i].transfer.idx_write_subd = COMEDI_IDX_UNUSED;
+	}
 }
 
 int comedi_check_cleanup_devs(void)
@@ -119,10 +123,9 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 	char *entry_name, *p;
 
 	/* Allocates the buffer for the file name */
-	entry_name = comedi_kmalloc(COMEDI_NAMELEN + 4);
+	entry_name = rtdm_malloc(COMEDI_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
-		comedi_logerr
-		    ("comedi_proc_attach: failed to allocate buffer\n");
+		__comedi_err("comedi_proc_attach: failed to allocate buffer\n");
 		return -ENOMEM;
 	}
 
@@ -133,22 +136,22 @@ int comedi_proc_attach(comedi_cxt_t * cxt)
 	/* Creates the proc entry */
 	entry = create_proc_entry(entry_name, 0444, comedi_proc_root);
 	if (entry == NULL) {
-		comedi_logerr
-		    ("comedi_proc_attach: failed to create /proc/comedi/%s\n",
-		     entry_name);
+		__comedi_err("comedi_proc_attach: "
+			     "failed to create /proc/comedi/%s\n",
+			     entry_name);
 		ret = -ENOMEM;
 		goto out_setup_proc_transfer;
 	}
 
 	entry->nlink = 1;
-	entry->data = dev->transfer;
+	entry->data = &dev->transfer;
 	entry->write_proc = NULL;
 	entry->read_proc = comedi_rdproc_transfer;
 	wrap_proc_dir_entry_owner(entry);
 
       out_setup_proc_transfer:
 	/* Frees the file name buffer */
-	comedi_kfree(entry_name);
+	rtdm_free(entry_name);
 
 	return ret;
 }
@@ -159,10 +162,10 @@ void comedi_proc_detach(comedi_cxt_t * cxt)
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
 	/* Allocates the buffer for the file name */
-	entry_name = comedi_kmalloc(COMEDI_NAMELEN + 4);
+	entry_name = rtdm_malloc(COMEDI_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
-		comedi_logerr
-		    ("comedi_proc_detach: failed to allocate filename buffer\n");
+		__comedi_err("comedi_proc_detach: "
+			     "failed to allocate filename buffer\n");
 		return;
 	}
 
@@ -174,7 +177,7 @@ void comedi_proc_detach(comedi_cxt_t * cxt)
 	remove_proc_entry(entry_name, comedi_proc_root);
 
 	/* Frees the temporary buffer */
-	comedi_kfree(entry_name);
+	rtdm_free(entry_name);
 }
 
 #else /* !CONFIG_PROC_FS */
@@ -199,22 +202,22 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 	char *tmpname = NULL;
 	void *tmpopts = NULL;
 
-	comedi_loginfo("comedi_fill_lnkdesc: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_fill_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
 	ret = comedi_copy_from_user(cxt,
 				    link_arg, arg, sizeof(comedi_lnkdesc_t));
 	if (ret != 0) {
-		comedi_logerr
-		    ("comedi_fill_lnkdesc: call1(copy_from_user) failed\n");
+		__comedi_err("comedi_fill_lnkdesc: "
+			     "call1(copy_from_user) failed\n");
 		goto out_get_lnkdesc;
 	}
 
 	if (link_arg->bname_size != 0 && link_arg->bname != NULL) {
-		tmpname = comedi_kmalloc(link_arg->bname_size + 1);
+		tmpname = rtdm_malloc(link_arg->bname_size + 1);
 		if (tmpname == NULL) {
-			comedi_logerr
-			    ("comedi_fill_lnkdesc: call1(alloc) failed\n");
+			__comedi_err("comedi_fill_lnkdesc: "
+				     "call1(alloc) failed\n");
 			ret = -ENOMEM;
 			goto out_get_lnkdesc;
 		}
@@ -225,22 +228,22 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 					    link_arg->bname,
 					    link_arg->bname_size);
 		if (ret != 0) {
-			comedi_logerr
-			    ("comedi_fill_lnkdesc: call2(copy_from_user) failed\n");
+			__comedi_err("comedi_fill_lnkdesc: "
+				     "call2(copy_from_user) failed\n");
 			goto out_get_lnkdesc;
 		}
 	} else {
-		comedi_logerr("comedi_fill_lnkdesc: board name missing\n");
+		__comedi_err("comedi_fill_lnkdesc: board name missing\n");
 		ret = -EINVAL;
 		goto out_get_lnkdesc;
 	}
 
 	if (link_arg->opts_size != 0 && link_arg->opts != NULL) {
-		tmpopts = comedi_kmalloc(link_arg->opts_size);
+		tmpopts = rtdm_malloc(link_arg->opts_size);
 
 		if (tmpopts == NULL) {
-			comedi_logerr
-			    ("comedi_fill_lnkdesc: call2(alloc) failed\n");
+			__comedi_err("comedi_fill_lnkdesc: "
+				     "call2(alloc) failed\n");
 			ret = -ENOMEM;
 			goto out_get_lnkdesc;
 		}
@@ -250,8 +253,8 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 					    link_arg->opts,
 					    link_arg->opts_size);
 		if (ret != 0) {
-			comedi_logerr
-			    ("comedi_fill_lnkdesc: call3(copy_from_user) failed\n");
+			__comedi_err("comedi_fill_lnkdesc: "
+				     "call3(copy_from_user) failed\n");
 			goto out_get_lnkdesc;
 		}
 	}
@@ -276,14 +279,14 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 
 void comedi_free_lnkdesc(comedi_cxt_t * cxt, comedi_lnkdesc_t * link_arg)
 {
-	comedi_loginfo("comedi_free_lnkdesc: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_free_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
 	if (link_arg->bname != NULL)
-		comedi_kfree(link_arg->bname);
+		rtdm_free(link_arg->bname);
 
 	if (link_arg->opts != NULL)
-		comedi_kfree(link_arg->opts);
+		rtdm_free(link_arg->opts);
 }
 
 int comedi_assign_driver(comedi_cxt_t * cxt,
@@ -292,27 +295,31 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 	int ret = 0;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_assign_driver: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_assign_driver: minor=%d\n", comedi_get_minor(cxt));
 
 	dev->driver = drv;
 
 	if (drv->privdata_size == 0)
-		comedi_loginfo
-		    ("comedi_assign_driver: warning! the field priv will not be usable\n");
+		__comedi_dbg(1, core_dbg, 
+			     "comedi_assign_driver: warning! "
+			     "the field priv will not be usable\n");
 	else {
-		dev->priv = comedi_kmalloc(drv->privdata_size);
+
+		INIT_LIST_HEAD(&dev->subdvsq);
+	
+		dev->priv = rtdm_malloc(drv->privdata_size);
 		if (dev->priv == NULL && drv->privdata_size != 0) {
-			comedi_logerr
-			    ("comedi_assign_driver: call(alloc) failed\n");
+			__comedi_err("comedi_assign_driver: "
+				     "call(alloc) failed\n");
 			ret = -ENOMEM;
 			goto out_assign_driver;
 		}
 	}
 
-	if ((ret = drv->attach(cxt, link_arg)) != 0)
-		comedi_logerr
-		    ("comedi_assign_driver: call(drv->attach) failed (ret=%d)\n",
+	if ((ret = drv->attach(dev, link_arg)) != 0)
+		__comedi_err("comedi_assign_driver: "
+			     "call(drv->attach) failed (ret=%d)\n",
 		     ret);
 
       out_assign_driver:
@@ -322,7 +329,7 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 		ret = -ENODEV;
 
 	if (ret != 0 && dev->priv != NULL) {
-		comedi_kfree(dev->priv);
+		rtdm_free(dev->priv);
 		dev->driver = NULL;
 	}
 
@@ -335,19 +342,29 @@ int comedi_release_driver(comedi_cxt_t * cxt)
 	unsigned long flags;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_release_driver: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_release_driver: minor=%d\n", comedi_get_minor(cxt));
 
 	comedi_lock_irqsave(&dev->lock, flags);
 
-	if ((ret = dev->driver->detach(cxt)) != 0)
+	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
-	/* Decreases module's count 
+	/* Decrease module's count 
 	   so as to allow module unloading */
 	module_put(dev->driver->owner);
 
-	comedi_kfree(dev->priv);
+	/* In case, the driver developer did not free the subdevices */
+	while (&dev->subdvsq != dev->subdvsq.next) {
+		struct list_head *this = dev->subdvsq.next;
+		comedi_subd_t *tmp = list_entry(this, comedi_subd_t, list);
+
+		list_del(this);
+		rtdm_free(tmp);
+	}
+
+	/* Free the private field */ 
+	rtdm_free(dev->priv);
 	dev->driver = NULL;
 
       out_release_driver:
@@ -362,8 +379,8 @@ int comedi_device_attach(comedi_cxt_t * cxt, void *arg)
 	comedi_lnkdesc_t link_arg;
 	comedi_drv_t *drv = NULL;
 
-	comedi_loginfo("comedi_device_attach: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_device_attach: minor=%d\n", comedi_get_minor(cxt));
 
 	if ((ret = comedi_fill_lnkdesc(cxt, &link_arg, arg)) != 0)
 		goto out_attach;
@@ -383,8 +400,8 @@ int comedi_device_detach(comedi_cxt_t * cxt)
 {
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_device_detach: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_device_detach: minor=%d\n", comedi_get_minor(cxt));
 
 	if (dev->driver == NULL)
 		return -ENXIO;
@@ -398,8 +415,8 @@ int comedi_ioctl_devcfg(comedi_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
 
-	comedi_loginfo("comedi_ioctl_devcfg: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_devcfg: minor=%d\n", comedi_get_minor(cxt));
 
 	if (comedi_test_rt() != 0)
 		return -EPERM;
@@ -423,6 +440,8 @@ int comedi_ioctl_devcfg(comedi_cxt_t * cxt, void *arg)
 		if (test_bit
 		    (COMEDI_DEV_ATTACHED, &(comedi_get_dev(cxt)->flags)))
 			return -EINVAL;
+		/* Pre-initialization of the transfer structure */
+		comedi_presetup_transfer(cxt);
 		/* Links the device with the driver */
 		if ((ret = comedi_device_attach(cxt, arg)) != 0)
 			return ret;
@@ -444,8 +463,8 @@ int comedi_ioctl_devinfo(comedi_cxt_t * cxt, void *arg)
 	comedi_dvinfo_t info;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
 
-	comedi_loginfo("comedi_ioctl_devinfo: minor=%d\n",
-		       comedi_get_minor(cxt));
+	__comedi_dbg(1, core_dbg, 
+		     "comedi_ioctl_devinfo: minor=%d\n", comedi_get_minor(cxt));
 
 	memset(&info, 0, sizeof(comedi_dvinfo_t));
 
@@ -454,9 +473,9 @@ int comedi_ioctl_devinfo(comedi_cxt_t * cxt, void *arg)
 		    COMEDI_NAMELEN : strlen(dev->driver->board_name);
 
 		memcpy(info.board_name, dev->driver->board_name, len);
-		info.nb_subd = dev->transfer->nb_subd;
-		info.idx_read_subd = dev->transfer->idx_read_subd;
-		info.idx_write_subd = dev->transfer->idx_write_subd;
+		info.nb_subd = dev->transfer.nb_subd;
+		info.idx_read_subd = dev->transfer.idx_read_subd;
+		info.idx_write_subd = dev->transfer.idx_write_subd;
 	}
 
 	if (comedi_copy_to_user(cxt, arg, &info, sizeof(comedi_dvinfo_t)) != 0)

@@ -1,0 +1,8 @@
+
+#
+# Xenomai configuration for Linux v2.4
+#
+
+if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
+   dep_tristate '8255 driver (EXPERIMENTAL)' CONFIG_XENO_DRIVERS_COMEDI_8255 $CONFIG_XENO_DRIVERS_COMEDI
+fi

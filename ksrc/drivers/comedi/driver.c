@@ -40,7 +40,7 @@ int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
 	struct list_head *this;
 	int ret = -EINVAL;
 
-	comedi_loginfo("comedi_lct_drv: name=%s\n", pin);
+	__comedi_dbg(1, core_dbg, "comedi_lct_drv: name=%s\n", pin);
 
 	/* Goes through the linked list so as to find 
 	   a driver instance with the same name */
@@ -60,9 +60,9 @@ int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
 	return ret;
 }
 
-int comedi_add_drv(comedi_drv_t * drv)
+int comedi_register_drv(comedi_drv_t * drv)
 {
-	comedi_loginfo("comedi_add_drv: name=%s\n", drv->board_name);
+	__comedi_dbg(1, core_dbg, "comedi_add_drv: name=%s\n", drv->board_name);
 
 	if (comedi_lct_drv(drv->board_name, NULL) != 0) {
 		list_add(&drv->list, &comedi_drvs);
@@ -71,9 +71,9 @@ int comedi_add_drv(comedi_drv_t * drv)
 		return -EINVAL;
 }
 
-int comedi_rm_drv(comedi_drv_t * drv)
+int comedi_unregister_drv(comedi_drv_t * drv)
 {
-	comedi_loginfo("comedi_rm_drv: name=%s\n", drv->board_name);
+	__comedi_dbg(1, core_dbg, "comedi_rm_drv: name=%s\n", drv->board_name);
 
 	if (comedi_lct_drv(drv->board_name, NULL) == 0) {
 		/* Here, we consider the argument is pointing
@@ -126,34 +126,5 @@ int comedi_rdproc_drvs(char *page,
 }
 
 #endif /* CONFIG_PROC_FS */
-
-/* --- Driver initialization / cleanup functions --- */
-
-int comedi_init_drv(comedi_drv_t * drv)
-{
-	if (drv == NULL)
-		return -EINVAL;
-
-	memset(drv, 0, sizeof(comedi_drv_t));
-	/* The linked list initialization is the only reason 
-	   why comedi_init_drv() is mandatory before 
-	   registering the driver */
-	INIT_LIST_HEAD(&drv->subdvsq);
-
-	return 0;
-}
-
-int comedi_cleanup_drv(comedi_drv_t * drv)
-{
-	while (&drv->subdvsq != drv->subdvsq.next) {
-		struct list_head *this = drv->subdvsq.next;
-		comedi_subd_t *tmp = list_entry(this, comedi_subd_t, list);
-
-		list_del(this);
-		comedi_kfree(tmp);
-	}
-
-	return 0;
-}
 
 #endif /* !DOXYGEN_CPP */

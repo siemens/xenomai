@@ -79,6 +79,7 @@ int comedi_rdproc_transfer(char *page,
 
 /* --- Upper layer functions --- */
 
+void comedi_presetup_transfer(comedi_cxt_t * cxt);
 int comedi_setup_transfer(comedi_cxt_t * cxt);
 int comedi_cleanup_transfer(comedi_cxt_t * cxt);
 int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd);
