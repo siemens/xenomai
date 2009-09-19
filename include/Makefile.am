@@ -9,6 +9,7 @@ SUBDIRS = \
 	asm-x86 \
 	asm-powerpc \
 	asm-arm \
+	asm-nios2 \
 	asm-sim \
 	comedi \
 	native \

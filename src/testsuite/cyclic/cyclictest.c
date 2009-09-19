@@ -349,8 +349,8 @@ static int max_cycles;
 static int clocksel = 0;
 static int verbose;
 static int quiet;
-static int interval = 1000;
-static int distance = 500;
+static int interval;
+static int distance;
 
 static int clocksources[] = {
 	CLOCK_MONOTONIC,
@@ -462,6 +462,12 @@ int main(int argc, char **argv)
 #endif
 
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+
+	if (CONFIG_XENO_DEFAULT_PERIOD > 1000000)
+		interval = CONFIG_XENO_DEFAULT_PERIOD;
+	else
+		interval = 1000000;
+	distance = interval / 2;
 
 	process_options(argc, argv);
 

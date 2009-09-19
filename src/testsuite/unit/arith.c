@@ -10,7 +10,6 @@
 static volatile unsigned nsec_per_sec = 1000000000;
 static volatile unsigned sample_freq = 33000000;
 static volatile long long arg = 0x3ffffffffffffffULL;
-static unsigned threshold = 20000; /* 15 usecs */
 
 #define bench(display, f)						\
 	do {								\
@@ -18,14 +17,16 @@ static unsigned threshold = 20000; /* 15 usecs */
 		avg = rejected = 0;					\
 		for (i = 0; i < 10000; i++) {				\
 			unsigned long long start, end;			\
+			unsigned long delta;				\
 									\
 			start = rt_timer_tsc();				\
 			result = (f);					\
 			end = rt_timer_tsc();				\
+			delta = end - start;				\
 									\
-			if (end - start < threshold)			\
-				avg += (end - start);			\
-			else						\
+			if (i == 0 || delta < (avg / i) * 2) {		\
+				avg += delta;				\
+			} else						\
 				++rejected;				\
 		}							\
 		if (rejected < 10000) {					\
@@ -56,7 +57,6 @@ int main(void)
 	xnarch_init_u32frac(&frac, nsec_per_sec, sample_freq);
 	fprintf(stderr, "integ: %d, frac: 0x%08llx\n", frac.integ, frac.frac);
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
-	threshold = rt_timer_ns2tsc(threshold);
 
 	bench("inline calibration", 0);
 	calib = avg;

@@ -1,0 +1,7 @@
+config XENO_GENERIC_STACKPOOL
+	bool
+	default y
+
+source "kernel/xenomai/nucleus/Kconfig"
+source "kernel/xenomai/skins/Kconfig"
+source "drivers/xenomai/Kconfig"

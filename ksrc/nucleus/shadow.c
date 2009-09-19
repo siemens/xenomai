@@ -1466,9 +1466,10 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	featmis = (~XENOMAI_FEAT_DEP & (featdep & XENOMAI_FEAT_MAN));
 
 	if (infarg) {
-		/* Pass back the supported feature set and the ABI revision
-		   level to user-space. */
-
+		/*
+		 * Pass back the supported feature set and the ABI revision
+		 * level to user-space.
+		 */
 		finfo.feat_all = XENOMAI_FEAT_DEP;
 		stringify_feature_set(XENOMAI_FEAT_DEP, finfo.feat_all_s,
 				      sizeof(finfo.feat_all_s));
@@ -1481,7 +1482,8 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 		finfo.feat_req = featdep;
 		stringify_feature_set(featdep, finfo.feat_req_s,
 				      sizeof(finfo.feat_req_s));
-		finfo.abirev = XENOMAI_ABI_REV;
+		finfo.feat_abirev = XENOMAI_ABI_REV;
+		collect_arch_features(&finfo);
 
 		if (__xn_safe_copy_to_user((void *)infarg, &finfo, sizeof(finfo)))
 			return -EFAULT;

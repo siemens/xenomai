@@ -25,6 +25,9 @@
 #undef CONFIG_XENO_CPU_XSC3
 
 /* config */
+#undef CONFIG_XENO_DEFAULT_PERIOD
+
+/* config */
 #undef CONFIG_XENO_FASTSYNCH
 
 /* Host system alias */
@@ -82,6 +85,9 @@
 
 /* Define to 1 if you have the `pthread_mutexattr_setprotocol' function. */
 #undef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+
+/* Define to 1 if you have the `pthread_spin_lock' function. */
+#undef HAVE_PTHREAD_SPIN_LOCK
 
 /* config */
 #undef HAVE_RECENT_SETAFFINITY

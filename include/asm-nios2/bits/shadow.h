@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
+ * Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
  * 02111-1307, USA.
  */
 
-#ifndef _XENO_ASM_BLACKFIN_BITS_SHADOW_H
-#define _XENO_ASM_BLACKFIN_BITS_SHADOW_H
+#ifndef _XENO_ASM_NIOS2_BITS_SHADOW_H
+#define _XENO_ASM_NIOS2_BITS_SHADOW_H
 
 #ifndef __KERNEL__
 #error "Pure kernel header included from user-space!"
@@ -63,4 +63,4 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 
 #define xnarch_schedule_tail(prev) do { } while(0)
 
-#endif /* !_XENO_ASM_BLACKFIN_BITS_SHADOW_H */
+#endif /* !_XENO_ASM_NIOS2_BITS_SHADOW_H */

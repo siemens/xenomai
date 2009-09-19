@@ -154,6 +154,8 @@ void __attribute__((weak)) xeno_sigill_handler(int sig)
 	exit(1);
 }
 
+struct xnfeatinfo xeno_featinfo;
+
 static inline int
 xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 {
@@ -186,7 +188,7 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 
 		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
 		fprintf(stderr, "(needed=%lu, current=%lu).\n",
-			XENOMAI_ABI_REV, finfo.abirev);
+			XENOMAI_ABI_REV, finfo.feat_abirev);
 		exit(1);
 
 	case -ENOSYS:
@@ -237,6 +239,8 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
+	xeno_featinfo = finfo;
+
 	return muxid;
 }
 
@@ -271,7 +275,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 
 		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
 		fprintf(stderr, "(needed=%lu, current=%lu).\n",
-			XENOMAI_ABI_REV, finfo.abirev);
+			XENOMAI_ABI_REV, finfo.feat_abirev);
 		exit(1);
 
 	case -ENOSYS:
@@ -310,6 +314,8 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 		}
 	}
 #endif /* CONFIG_XENO_FASTSYNCH */
+
+	xeno_featinfo = finfo;
 
 	return muxid;
 }

@@ -53,7 +53,6 @@ AC_DEFINE_UNQUOTED(CONFIG_XENO_COMPILER,"`$CC -v 2>&1 | tail -n 1`",[Compiler])
 
 AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2])
 AM_MAINTAINER_MODE
-AC_PROG_LIBTOOL
 AM_PROG_AS
 AM_PROG_LEX
 
@@ -74,23 +73,27 @@ case "$build_for" in
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=powerpc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  arm*-*)
 	use__thread=no
@@ -98,6 +101,7 @@ case "$build_for" in
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
+	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
 	# are running
 	;;
@@ -106,6 +110,14 @@ case "$build_for" in
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
+        ;;
+ nios2-*)
+	XENO_TARGET_ARCH=nios2
+        XENO_LINUX_ARCH=nios2
+	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=10000000
+	AC_DISABLE_SHARED
         ;;
  *) echo ""
    echo "*******************************************"
@@ -116,6 +128,7 @@ case "$build_for" in
 esac
 
 AC_MSG_RESULT([$XENO_TARGET_ARCH])
+AC_PROG_LIBTOOL
 AM_CONDITIONAL(XENO_LINUX_ARCH_I386,[test $XENO_LINUX_ARCH = i386])
 
 dnl
@@ -473,6 +486,7 @@ patch. Default is to infer the patch name from Linux kernel version.]),
 	      test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
               test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
+              test x"$CONFIG_NIOS2" = xy && cfg_arch=nios2 || :
 	      if test -e $XENO_LINUX_SRCDIR/arch/x86; then
 		  case $cfg_arch in
 		  i386|x86_64) cfg_arch=x86;;
@@ -606,6 +620,9 @@ test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
 test $XNARCH_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(XNARCH_ARM_TSC_TYPE,$XNARCH_ARM_TSC_TYPE,[config])
 test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
 
+# Default sampling period (ns) used in various tests
+AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
+
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the
 dnl Autoconf-produced symbols to be defined only when compiling
@@ -682,7 +699,7 @@ fi
 AC_MSG_RESULT([done])
 
 dnl Common CFLAGS and LDFLAGS
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe"
 XENO_USER_LDFLAGS=
 
 dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
@@ -691,20 +708,19 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 
 case $XENO_TARGET_ARCH in
  x86)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe -fstrict-aliasing $gcc_w_noalias"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fstrict-aliasing $gcc_w_noalias"
         ;;
  powerpc)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
         ;;
  blackfin)
 	# Produce libraries in FDPIC format.
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe"
-	XENO_USER_LDFLAGS="$XENO_USER_CFLAGS"
-	XENO_USER_APP_CFLAGS="$XENO_USER_APP_CFLAGS"
-	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS"
         ;;
  arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -Wall -pipe $XENO_ARM_ARCH_FLAGS"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS $XENO_ARM_ARCH_FLAGS"
+        ;;
+ nios2)
+	XENO_USER_LDFLAGS="$XENO_USER_LDFLAGS -Wl,-elf2flt"
+	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS -Wl,-elf2flt"
         ;;
 esac
 
@@ -785,7 +801,7 @@ fi
 
 save_LIBS="$LIBS"
 LIBS="$LIBS -lrt -lpthread"
-AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64 pthread_mutexattr_setprotocol pthread_condattr_setclock])
+AC_CHECK_FUNCS([shm_open shm_unlink mmap64 ftruncate64 pthread_mutexattr_setprotocol pthread_condattr_setclock pthread_spin_lock])
 LIBS="$save_LIBS"
 
 AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)
@@ -899,6 +915,8 @@ AC_CONFIG_FILES([ \
        	include/asm-powerpc/bits/Makefile \
        	include/asm-arm/Makefile \
        	include/asm-arm/bits/Makefile \
+       	include/asm-nios2/Makefile \
+       	include/asm-nios2/bits/Makefile \
        	include/asm-sim/Makefile \
        	include/asm-sim/bits/Makefile \
        	include/native/Makefile \

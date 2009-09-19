@@ -39,27 +39,9 @@
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
 
-typedef struct xnfeatinfo {
-
-#define XNFEAT_STRING_LEN 64
-
-    unsigned long feat_all;	/* Available feature set. */
-    char feat_all_s[XNFEAT_STRING_LEN];
-    unsigned long feat_man;	/* Mandatory features (when requested). */
-    char feat_man_s[XNFEAT_STRING_LEN];
-    unsigned long feat_req;	/* Requested feature set. */
-    char feat_req_s[XNFEAT_STRING_LEN];
-    unsigned long feat_mis;	/* Missing features. */
-    char feat_mis_s[XNFEAT_STRING_LEN];
-
-    unsigned long abirev;	/* ABI revision level. */
-
-} xnfeatinfo_t;
-
 typedef struct xnsysinfo {
-
-    unsigned long long cpufreq;	/* CPU frequency */
-    unsigned long tickval;	/* Tick duration (ns) */
+	unsigned long long cpufreq;	/* CPU frequency */
+	unsigned long tickval;		/* Tick duration (ns) */
 } xnsysinfo_t;
 
 #define SIGSHADOW  SIGWINCH
@@ -159,10 +141,8 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 #endif /* __KERNEL__ */
 
 typedef struct xncompletion {
-
-    long syncflag;		/* Semaphore variable. */
-    pid_t pid;			/* Single waiter ID. */
-
+	long syncflag;		/* Semaphore variable. */
+	pid_t pid;		/* Single waiter ID. */
 } xncompletion_t;
 
 #endif /* !_XENO_ASM_GENERIC_SYSCALL_H */
