@@ -5559,23 +5559,27 @@ case "$build_for" in
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=powerpc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  arm*-*)
 	use__thread=no
@@ -5583,6 +5587,7 @@ case "$build_for" in
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
+	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
 	# are running
 	;;
@@ -5591,11 +5596,13 @@ case "$build_for" in
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  nios2-*)
 	XENO_TARGET_ARCH=nios2
         XENO_LINUX_ARCH=nios2
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	# Check whether --enable-shared was given.
 if test "${enable_shared+set}" = set; then
   enableval=$enable_shared; p=${PACKAGE-default}
@@ -6257,13 +6264,13 @@ if test "${lt_cv_nm_interface+set}" = set; then
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6260: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6267: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6263: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6270: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6266: output\"" >&5)
+  (eval echo "\"\$as_me:6273: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7361,7 +7368,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7364 "configure"' > conftest.$ac_ext
+  echo '#line 7371 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8952,11 +8959,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8955: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8962: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8959: \$? = $ac_status" >&5
+   echo "$as_me:8966: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9276,11 +9283,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9279: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9286: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:9283: \$? = $ac_status" >&5
+   echo "$as_me:9290: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9381,11 +9388,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9384: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9391: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9388: \$? = $ac_status" >&5
+   echo "$as_me:9395: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9436,11 +9443,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9439: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9446: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9443: \$? = $ac_status" >&5
+   echo "$as_me:9450: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12241,7 +12248,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 12244 "configure"
+#line 12251 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12341,7 +12348,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 12344 "configure"
+#line 12351 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13664,6 +13671,13 @@ _ACEOF
 test x$CONFIG_XENO_ARM_EABI = xy &&
 cat >>confdefs.h <<\_ACEOF
 #define CONFIG_XENO_ARM_EABI 1
+_ACEOF
+
+
+# Default sampling period (ns) used in various tests
+
+cat >>confdefs.h <<_ACEOF
+#define CONFIG_XENO_DEFAULT_PERIOD $CONFIG_XENO_DEFAULT_PERIOD
 _ACEOF
 
 

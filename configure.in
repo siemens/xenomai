@@ -73,23 +73,27 @@ case "$build_for" in
         XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
         XENO_LINUX_ARCH=powerpc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
         XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  arm*-*)
 	use__thread=no
@@ -97,6 +101,7 @@ case "$build_for" in
  	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
+	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
 	# are running
 	;;
@@ -105,11 +110,13 @@ case "$build_for" in
         XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
+	CONFIG_XENO_DEFAULT_PERIOD=100000
         ;;
  nios2-*)
 	XENO_TARGET_ARCH=nios2
         XENO_LINUX_ARCH=nios2
 	XENO_LINUX_INSTALL_TARGET=install
+	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	AC_DISABLE_SHARED
         ;;
  *) echo ""
@@ -612,6 +619,9 @@ test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config
 test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
 test $XNARCH_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(XNARCH_ARM_TSC_TYPE,$XNARCH_ARM_TSC_TYPE,[config])
 test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
+
+# Default sampling period (ns) used in various tests
+AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
 
 dnl CAUTION: We need to have the CONFIG_XENO_XX symbols always
 dnl defined when the configuration header is read, but we want the

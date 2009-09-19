@@ -537,7 +537,7 @@ int main(int argc, char **argv)
 		cleanup();
 
 	if (period_ns == 0)
-		period_ns = 100000LL;	/* ns */
+		period_ns = CONFIG_XENO_DEFAULT_PERIOD;	/* ns */
 
 	if (priority <= T_LOPRIO)
 		priority = T_LOPRIO + 1;

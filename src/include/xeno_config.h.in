@@ -25,6 +25,9 @@
 #undef CONFIG_XENO_CPU_XSC3
 
 /* config */
+#undef CONFIG_XENO_DEFAULT_PERIOD
+
+/* config */
 #undef CONFIG_XENO_FASTSYNCH
 
 /* Host system alias */
