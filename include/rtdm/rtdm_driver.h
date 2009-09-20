@@ -1112,7 +1112,7 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending);
 int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 			   enum rtdm_selecttype type, unsigned fd_index);
 #else /* !CONFIG_XENO_OPT_RTDM_SELECT */
-#define rtdm_event_select_bind(e, s, t, i) ({ -EBADF; })
+#define rtdm_event_select_bind(e, s, t, i) ({ (void)(e); -EBADF; })
 #endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_event_wait(rtdm_event_t *event);
 int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
@@ -1151,7 +1151,7 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value);
 int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 			 enum rtdm_selecttype type, unsigned fd_index);
 #else /* !CONFIG_XENO_OPT_RTDM_SELECT */
-#define rtdm_sem_select_bind(s, se, t, i) ({ -EBADF; })
+#define rtdm_sem_select_bind(s, se, t, i) ({ (void)(s); -EBADF; })
 #endif /* !CONFIG_XENO_OPT_RTDM_SELECT */
 int rtdm_sem_down(rtdm_sem_t *sem);
 int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
