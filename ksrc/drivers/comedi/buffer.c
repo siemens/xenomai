@@ -397,8 +397,8 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 		return -EPERM;
 
 	/* Recovers the argument structure */
-	if (comedi_copy_from_user(cxt,
-				  &map_cfg, arg, sizeof(comedi_mmap_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &map_cfg, arg, sizeof(comedi_mmap_t)) != 0)
 		return -EFAULT;
 
 	/* Checks the subdevice */
@@ -419,7 +419,7 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 	    map_cfg.size > dev->transfer.bufs[map_cfg.idx_subd]->size)
 		return -EFAULT;
 
-	ret = rtdm_mmap_to_user(cxt->rtdm_usrinf,
+	ret = rtdm_mmap_to_user(cxt->user_info,
 				dev->transfer.bufs[map_cfg.idx_subd]->buf,
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
@@ -430,7 +430,8 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 	if (ret < 0)
 		return ret;
 
-	return comedi_copy_to_user(cxt, arg, &map_cfg, sizeof(comedi_mmap_t));
+	return rtdm_safe_copy_to_user(cxt->user_info, 
+				      arg, &map_cfg, sizeof(comedi_mmap_t));
 }
 
 /* --- IOCTL / FOPS functions --- */
@@ -452,8 +453,9 @@ int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
 	if (comedi_test_rt() != 0)
 		return -EPERM;
 
-	if (comedi_copy_from_user(cxt,
-				  &buf_cfg, arg, sizeof(comedi_bufcfg_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &buf_cfg, 
+				     arg, sizeof(comedi_bufcfg_t)) != 0)
 		return -EFAULT;
 
 	if (buf_cfg.idx_subd >= dev->transfer.nb_subd)
@@ -495,8 +497,8 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt,
-				  &info, arg, sizeof(comedi_bufinfo_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &info, arg, sizeof(comedi_bufinfo_t)) != 0)
 		return -EFAULT;
 
 	if (info.idx_subd > dev->transfer.nb_subd)
@@ -570,7 +572,8 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 	info.buf_size = buf->size;
 
 	/* Sends the structure back to user space */
-	if (comedi_copy_to_user(cxt, arg, &info, sizeof(comedi_bufinfo_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   arg, &info, sizeof(comedi_bufinfo_t)) != 0)
 		return -EFAULT;
 
 	return 0;
@@ -794,7 +797,8 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt, &poll, arg, sizeof(comedi_poll_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info, 
+				     &poll, arg, sizeof(comedi_poll_t)) != 0)
 		return -EFAULT;
 
 	/* Checks the subdevice capabilities */
@@ -864,7 +868,8 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 	poll.arg = tmp_cnt;
 
 	/* Sends the structure back to user space */
-	ret = comedi_copy_to_user(cxt, arg, &poll, sizeof(comedi_poll_t));
+	ret = rtdm_safe_copy_to_user(cxt->user_info, 
+				     arg, &poll, sizeof(comedi_poll_t));
 
 	return ret;
 }

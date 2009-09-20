@@ -201,10 +201,10 @@ int comedi_ioctl_subdinfo(comedi_cxt_t * cxt, void *arg)
 			dev->transfer.subds[i]->chan_desc->length : 0;
 	}
 
-	if (comedi_copy_to_user(cxt,
-				arg,
-				subd_info, dev->transfer.nb_subd *
-				sizeof(comedi_sbinfo_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   arg,
+				   subd_info, dev->transfer.nb_subd *
+				   sizeof(comedi_sbinfo_t)) != 0)
 		ret = -EFAULT;
 
 	rtdm_free(subd_info);
@@ -222,9 +222,9 @@ int comedi_ioctl_nbchaninfo(comedi_cxt_t * cxt, void *arg)
 	if (!dev->flags & COMEDI_DEV_ATTACHED)
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt,
-				  &inarg, arg,
-				  sizeof(comedi_chinfo_arg_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &inarg, arg,
+				     sizeof(comedi_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
@@ -236,8 +236,9 @@ int comedi_ioctl_nbchaninfo(comedi_cxt_t * cxt, void *arg)
 		inarg.info = (void *)(unsigned long)
 			dev->transfer.subds[inarg.idx_subd]->chan_desc->length;
 
-	if (comedi_copy_to_user(cxt,
-				arg, &inarg, sizeof(comedi_chinfo_arg_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   arg, 
+				   &inarg, sizeof(comedi_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
 	return 0;
@@ -256,9 +257,9 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt,
-				  &inarg, arg,
-				  sizeof(comedi_chinfo_arg_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &inarg, arg,
+				     sizeof(comedi_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
@@ -292,10 +293,11 @@ int comedi_ioctl_chaninfo(comedi_cxt_t * cxt, void *arg)
 			chan_info[i].chan_flags |= COMEDI_CHAN_GLOBAL;
 	}
 
-	if (comedi_copy_to_user(cxt,
-				inarg.info,
-				chan_info,
-				chan_desc->length * sizeof(comedi_chinfo_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   inarg.info,
+				   chan_info,
+				   chan_desc->length * 
+				   sizeof(comedi_chinfo_t)) != 0)
 		return -EFAULT;
 
 	rtdm_free(chan_info);
@@ -314,9 +316,9 @@ int comedi_ioctl_nbrnginfo(comedi_cxt_t * cxt, void *arg)
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt,
-				  &inarg,
-				  arg, sizeof(comedi_rnginfo_arg_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &inarg,
+				     arg, sizeof(comedi_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
@@ -339,8 +341,9 @@ int comedi_ioctl_nbrnginfo(comedi_cxt_t * cxt, void *arg)
 		inarg.info = (void *)0;
 	
 
-	if (comedi_copy_to_user(cxt,
-				arg, &inarg, sizeof(comedi_rnginfo_arg_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   arg, 
+				   &inarg, sizeof(comedi_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
 	return 0;
@@ -359,9 +362,9 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (comedi_copy_from_user(cxt,
-				  &inarg,
-				  arg, sizeof(comedi_rnginfo_arg_t)) != 0)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &inarg,
+				     arg, sizeof(comedi_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd)
@@ -397,11 +400,11 @@ int comedi_ioctl_rnginfo(comedi_cxt_t * cxt, void *arg)
 			rng_info[i].flags |= COMEDI_RNG_GLOBAL;
 	}
 
-	if (comedi_copy_to_user(cxt,
-				inarg.info,
-				rng_info,
-				rng_desc->rngtabs[tmp]->length *
-				sizeof(comedi_rnginfo_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info,
+				   inarg.info,
+				   rng_info,
+				   rng_desc->rngtabs[tmp]->length *
+				   sizeof(comedi_rnginfo_t)) != 0)
 		return -EFAULT;
 
 	rtdm_free(rng_info);

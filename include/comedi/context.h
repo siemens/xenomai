@@ -35,7 +35,7 @@ struct comedi_context {
 	   setting it at the head of the structure may save 
 	   useless operations */
 	struct comedi_device *dev;
-	rtdm_user_info_t *rtdm_usrinf;
+	rtdm_user_info_t *user_info;
 	struct rtdm_dev_context *rtdm_cxt;
 };
 typedef struct comedi_context comedi_cxt_t;
@@ -45,15 +45,9 @@ typedef struct comedi_context comedi_cxt_t;
 #define comedi_init_cxt(c, u, x)			\
     {							\
 	(x)->rtdm_cxt = c;				\
-	(x)->rtdm_usrinf = u;				\
+	(x)->user_info = u;				\
 	(x)->dev = NULL;				\
     }
-
-#define comedi_copy_from_user(x, d, r, s) \
-    __comedi_copy_from_user(x->rtdm_usrinf, d, r, s)
-
-#define comedi_copy_to_user(x, d, r, s) \
-    __comedi_copy_to_user(x->rtdm_usrinf, d, r, s)
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */
 

@@ -38,7 +38,8 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 	int ret = 0;
 	unsigned int *tmpchans = NULL;
 
-	ret = comedi_copy_from_user(cxt, desc, arg, sizeof(comedi_cmd_t));
+	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+				       desc, arg, sizeof(comedi_cmd_t));
 	if (ret != 0)
 		goto out_cmddesc;
 
@@ -53,10 +54,10 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 		goto out_cmddesc;
 	}
 
-	ret = comedi_copy_from_user(cxt,
-				    tmpchans,
-				    desc->chan_descs,
-				    desc->nb_chan * sizeof(unsigned long));
+	ret = rtdm_safe_copy_from_user(cxt->user_info,
+				       tmpchans,
+				       desc->chan_descs,
+				       desc->nb_chan * sizeof(unsigned long));
 	if (ret != 0)
 		goto out_cmddesc;
 

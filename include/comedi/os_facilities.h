@@ -87,26 +87,6 @@
 #define comedi_dbg(level, debug, dev, fmt, args...)			\
 	__comedi_dbg(level, debug, "%s: " fmt, __comedi_dev_name(dev), ##args)
 
-/* --- Allocation / MMU section --- */
-
-static inline int __comedi_copy_from_user(rtdm_user_info_t * user_info,
-					  void *pind, void *pins, int size)
-{
-	if (rtdm_read_user_ok(user_info, pins, size))
-		return rtdm_copy_from_user(user_info, pind, pins, size);
-	else
-		return -EFAULT;
-}
-
-static inline int __comedi_copy_to_user(rtdm_user_info_t * user_info,
-					void *pind, void *pins, int size)
-{
-	if (rtdm_rw_user_ok(user_info, pind, size))
-		return rtdm_copy_to_user(user_info, pind, pins, size);
-	else
-		return -EFAULT;
-}
-
 /* --- Spinlock section --- */
 
 typedef rtdm_lock_t comedi_lock_t;

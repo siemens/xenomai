@@ -95,9 +95,9 @@ static inline int __produce(comedi_cxt_t * cxt,
 		if (cxt == NULL)
 			memcpy(buf->buf + start_ptr, pin, blk_size);
 		else
-			ret = comedi_copy_from_user(cxt,
-						    buf->buf + start_ptr,
-						    pin, blk_size);
+			ret = rtdm_safe_copy_from_user(cxt->user_info,
+						       buf->buf + start_ptr,
+						       pin, blk_size);
 
 		/* Updates pointers/counts */
 		pin += blk_size;
@@ -125,10 +125,10 @@ static inline int __consume(comedi_cxt_t * cxt,
 		if (cxt == NULL)
 			memcpy(pout, buf->buf + start_ptr, blk_size);
 		else
-			ret = comedi_copy_to_user(cxt,
-						  pout,
-						  buf->buf + start_ptr,
-						  blk_size);
+			ret = rtdm_safe_copy_to_user(cxt->user_info,
+						     pout,
+						     buf->buf + start_ptr,
+						     blk_size);
 
 		/* Updates pointers/counts */
 		pout += blk_size;

@@ -103,7 +103,8 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 	int ret = 0;
 	void *tmp_data = NULL;
 
-	ret = comedi_copy_from_user(cxt, dsc, arg, sizeof(comedi_insn_t));
+	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+				       dsc, arg, sizeof(comedi_insn_t));
 	if (ret != 0)
 		goto out_insndsc;
 
@@ -120,9 +121,9 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 		}
 
 		if ((dsc->type & COMEDI_INSN_MASK_WRITE) != 0) {
-			ret = comedi_copy_from_user(cxt,
-						    tmp_data, dsc->data,
-						    dsc->data_size);
+			ret = rtdm_safe_copy_from_user(cxt->user_info,
+						       tmp_data, dsc->data,
+						       dsc->data_size);
 			if (ret < 0)
 				goto out_insndsc;
 		}
@@ -144,9 +145,9 @@ int comedi_free_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	int ret = 0;
 
 	if ((dsc->type & COMEDI_INSN_MASK_READ) != 0)
-		ret = comedi_copy_to_user(cxt,
-					  dsc->__udata,
-					  dsc->data, dsc->data_size);
+		ret = rtdm_safe_copy_to_user(cxt->user_info,
+					     dsc->__udata,
+					     dsc->data, dsc->data_size);
 
 	if (dsc->data != NULL)
 		rtdm_free(dsc->data);
@@ -268,7 +269,8 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 	dsc->insns = NULL;
 
 	/* Recovers the structure from user space */
-	ret = comedi_copy_from_user(cxt, dsc, arg, sizeof(comedi_insnlst_t));
+	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+				       dsc, arg, sizeof(comedi_insnlst_t));
 	if (ret < 0)
 		return ret;
 

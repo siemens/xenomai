@@ -205,8 +205,8 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 	__comedi_dbg(1, core_dbg, 
 		     "comedi_fill_lnkdesc: minor=%d\n", comedi_get_minor(cxt));
 
-	ret = comedi_copy_from_user(cxt,
-				    link_arg, arg, sizeof(comedi_lnkdesc_t));
+	ret = rtdm_safe_copy_from_user(cxt->user_info,
+				       link_arg, arg, sizeof(comedi_lnkdesc_t));
 	if (ret != 0) {
 		__comedi_err("comedi_fill_lnkdesc: "
 			     "call1(copy_from_user) failed\n");
@@ -223,10 +223,10 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 		}
 		tmpname[link_arg->bname_size] = 0;
 
-		ret = comedi_copy_from_user(cxt,
-					    tmpname,
-					    link_arg->bname,
-					    link_arg->bname_size);
+		ret = rtdm_safe_copy_from_user(cxt->user_info,
+					       tmpname,
+					       link_arg->bname,
+					       link_arg->bname_size);
 		if (ret != 0) {
 			__comedi_err("comedi_fill_lnkdesc: "
 				     "call2(copy_from_user) failed\n");
@@ -248,10 +248,10 @@ int comedi_fill_lnkdesc(comedi_cxt_t * cxt,
 			goto out_get_lnkdesc;
 		}
 
-		ret = comedi_copy_from_user(cxt,
-					    tmpopts,
-					    link_arg->opts,
-					    link_arg->opts_size);
+		ret = rtdm_safe_copy_from_user(cxt->user_info,
+					       tmpopts,
+					       link_arg->opts,
+					       link_arg->opts_size);
 		if (ret != 0) {
 			__comedi_err("comedi_fill_lnkdesc: "
 				     "call3(copy_from_user) failed\n");
@@ -478,7 +478,8 @@ int comedi_ioctl_devinfo(comedi_cxt_t * cxt, void *arg)
 		info.idx_write_subd = dev->transfer.idx_write_subd;
 	}
 
-	if (comedi_copy_to_user(cxt, arg, &info, sizeof(comedi_dvinfo_t)) != 0)
+	if (rtdm_safe_copy_to_user(cxt->user_info, 
+				   arg, &info, sizeof(comedi_dvinfo_t)) != 0)
 		return -EINVAL;
 
 	return 0;
