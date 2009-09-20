@@ -1,5 +1,7 @@
 testdir = $(exec_prefix)/share/xenomai/testsuite/cyclic
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 bin_PROGRAMS = cyclictest
 
 cyclictest_SOURCES = cyclictest.c

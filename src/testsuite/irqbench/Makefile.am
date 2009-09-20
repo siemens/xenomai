@@ -1,5 +1,7 @@
 testdir = $(exec_prefix)/share/xenomai/testsuite/irqbench
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 bin_PROGRAMS = irqloop
 
 if XENO_LINUX_ARCH_I386

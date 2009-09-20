@@ -1,5 +1,7 @@
 testdir = $(exec_prefix)/share/xenomai/testsuite/unit
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 bin_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
