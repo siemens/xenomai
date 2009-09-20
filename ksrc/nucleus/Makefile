@@ -6,12 +6,9 @@ obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
 xeno_nucleus-y := \
 	bufd.o heap.o intr.o pod.o registry.o \
-	synch.o thread.o timebase.o timer.o sched.o
+	synch.o thread.o timebase.o timer.o sched.o \
+	sched-idle.o sched-rt.o
 
-# CAUTION: the declaration order of scheduling classes is
-# significant. Lower priority classes shall be listed first.
-xeno_nucleus-y += sched-idle.o
-xeno_nucleus-y += sched-rt.o
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 
@@ -38,11 +35,9 @@ list-multi := xeno_nucleus.o
 
 xeno_nucleus-objs := \
 	bufd.o heap.o intr.o pod.o registry.o \
-	synch.o thread.o timebase.o timer.o sched.o
+	synch.o thread.o timebase.o timer.o sched.o \
+	sched-idle.o sched-rt.o
 
-# CAUTION: the declaration order of scheduling classes is
-# significant. Lower priority classes shall be listed first.
-opt_objs-y := sched-idle.o sched-rt.o
 opt_objs-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
 opt_objs-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
 

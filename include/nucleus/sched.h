@@ -241,7 +241,7 @@ void xnsched_init_proc(void);
 
 void xnsched_cleanup_proc(void);
 
-int xnsched_register_class(struct xnsched_class *sched_class);
+void xnsched_register_classes(void);
 
 void xnsched_init(struct xnsched *sched, int cpu);
 

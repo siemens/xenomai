@@ -64,10 +64,3 @@ struct xnsched_class xnsched_class_idle = {
 	.weight			=	XNSCHED_CLASS_WEIGHT(0),
 	.name			=	"idle"
 };
-
-static int __init register_sched_class(void)
-{
-	return xnsched_register_class(&xnsched_class_idle);
-}
-
-__initcall(register_sched_class);

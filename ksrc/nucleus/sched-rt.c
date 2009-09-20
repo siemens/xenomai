@@ -363,10 +363,3 @@ struct xnsched_class xnsched_class_rt = {
 	.name			=	"rt"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_rt);
-
-static int __init register_sched_class(void)
-{
-	return xnsched_register_class(&xnsched_class_rt);
-}
-
-__initcall(register_sched_class);

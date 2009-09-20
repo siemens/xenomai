@@ -630,10 +630,3 @@ struct xnsched_class xnsched_class_sporadic = {
 	.name			=	"pss"
 };
 EXPORT_SYMBOL_GPL(xnsched_class_sporadic);
-
-static int __init register_sched_class(void)
-{
-	return xnsched_register_class(&xnsched_class_sporadic);
-}
-
-__initcall(register_sched_class);

@@ -33,20 +33,31 @@ static struct xnsched_class *xnsched_class_highest;
 #define for_each_xnsched_class(p) \
    for (p = xnsched_class_highest; p; p = p->next)
 
-int xnsched_register_class(struct xnsched_class *sched_class)
+static void xnsched_register_class(struct xnsched_class *sched_class)
 {
-	/*
-	 * The build rules shall ensure that scheduling classes are
-	 * registered by increasing priority order via initcalls, so
-	 * that the highest priority class is always registered last.
-	 */
 	sched_class->next = xnsched_class_highest;
 	xnsched_class_highest = sched_class;
+
+	/*
+	 * Classes shall be registered by increasing priority order,
+	 * idle first and up.
+	 */
 	XENO_BUGON(NUCLEUS, sched_class->next &&
 		   sched_class->next->weight > sched_class->weight);
-	xnloginfo("scheduling class %s registered.\n", sched_class->name);
 
-	return 0;
+	xnloginfo("scheduling class %s registered.\n", sched_class->name);
+}
+
+void xnsched_register_classes(void)
+{
+	xnsched_register_class(&xnsched_class_idle);
+	xnsched_register_class(&xnsched_class_rt);
+#ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
+	xnsched_register_class(&xnsched_class_sporadic);
+#endif
+#ifdef CONFIG_XENO_OPT_SCHED_TP
+	xnsched_register_class(&xnsched_class_tp);
+#endif
 }
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG

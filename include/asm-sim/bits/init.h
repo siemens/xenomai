@@ -64,14 +64,6 @@ void mvm_root (void *cookie)
 	__mvm_breakable(mvm_terminate)(0);
 }
 
-static inline void __register_sched_classes(void)
-{
-	xnsched_register_class(&xnsched_class_idle);
-	xnsched_register_class(&xnsched_class_rt);
-	xnsched_register_class(&xnsched_class_sporadic);
-	xnsched_register_class(&xnsched_class_tp);
-}
-
 int main (int argc, char *argv[])
 {
 	xnarchtcb_t tcb;
@@ -81,7 +73,7 @@ int main (int argc, char *argv[])
 	if (err)
 		__mvm_breakable(mvm_fatal)("sys_init() failed, err=%x\n",err);
 
-	__register_sched_classes();
+	xnsched_register_classes();
 
 	mvm_init(argc,argv);
 

@@ -111,6 +111,17 @@ static inline void xnpod_init_proc(void) {}
 static inline void xnpod_cleanup_proc(void) {}
 #endif /* !CONFIG_PROC_FS */
 
+static inline void xnpod_mount(void)
+{
+	xnsched_register_classes();
+	xnpod_init_proc();
+}
+
+static inline void xnpod_umount(void)
+{
+	xnpod_cleanup_proc();
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif

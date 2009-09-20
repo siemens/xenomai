@@ -83,50 +83,45 @@ EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
 int __init __xeno_sys_init(void)
 {
-	int err;
+	int ret;
 
 	xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
 
 	nkmsgbuf = xnarch_alloc_host_mem(XNPOD_FATAL_BUFSZ);
 	if (nkmsgbuf == NULL) {
-		err = -ENOMEM;
+		ret = -ENOMEM;
 		goto fail;
 	}
 
-	err = xnarch_init();
-
-	if (err)
+	ret = xnarch_init();
+	if (ret)
 		goto fail;
 
 #ifndef __XENO_SIM__
-	err = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
+	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
 				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
 				 XNARCH_SHARED_HEAP_FLAGS);
-	if (err)
+	if (ret)
 		goto cleanup_arch;
 #endif
 	
 #ifdef __KERNEL__
-	xnpod_init_proc();
-
+	xnpod_mount();
 	xnintr_mount();
 
 #ifdef CONFIG_XENO_OPT_PIPE
-	err = xnpipe_mount();
-
-	if (err)
+	ret = xnpipe_mount();
+	if (ret)
 		goto cleanup_proc;
 #endif /* CONFIG_XENO_OPT_PIPE */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	err = xnshadow_mount();
-
-	if (err)
+	ret = xnshadow_mount();
+	if (ret)
 		goto cleanup_pipe;
 
-	err = xnheap_mount();
-
-	if (err)
+	ret = xnheap_mount();
+	if (ret)
 		goto cleanup_shadow;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */
@@ -167,7 +162,7 @@ int __init __xeno_sys_init(void)
 
 #endif /* CONFIG_XENO_OPT_PIPE */
 
-	xnpod_cleanup_proc();
+	xnpod_umount();
 
       cleanup_arch:
 
@@ -177,11 +172,11 @@ int __init __xeno_sys_init(void)
 
       fail:
 
-	xnlogerr("system init failed, code %d.\n", err);
+	xnlogerr("system init failed, code %d.\n", ret);
 
-	xeno_nucleus_status = err;
+	xeno_nucleus_status = ret;
 
-	return err;
+	return ret;
 }
 
 void __exit __xeno_sys_exit(void)
@@ -189,13 +184,12 @@ void __exit __xeno_sys_exit(void)
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* Must take place before xnpod_cleanup_proc. */
+	/* Must take place before xnpod_umount(). */
 	xnshadow_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	xntbase_umount();
-
-	xnpod_cleanup_proc();
+	xnpod_umount();
 
 	xnarch_exit();
 
