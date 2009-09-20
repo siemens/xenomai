@@ -319,7 +319,7 @@ int comedi_assign_driver(comedi_cxt_t * cxt,
 		/* Initialize the private data even if it not our role
 		   (the driver should do it), that may prevent hard to
 		   find bugs */
-		memset(dev->priv, 0, drv->prvdata_size);
+		memset(dev->priv, 0, drv->privdata_size);
 	}
 
 	if ((ret = drv->attach(dev, link_arg)) != 0)
