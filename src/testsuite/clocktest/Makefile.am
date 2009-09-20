@@ -1,5 +1,7 @@
 testdir = $(exec_prefix)/share/xenomai/testsuite/clocktest
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 bin_PROGRAMS = clocktest
 
 clocktest_SOURCES = clocktest.c

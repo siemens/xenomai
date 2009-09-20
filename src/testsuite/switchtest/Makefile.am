@@ -1,5 +1,7 @@
 testdir = $(exec_prefix)/share/xenomai/testsuite/switchtest
 
+CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
+
 bin_PROGRAMS = switchtest
 
 switchtest_SOURCES = switchtest.c
