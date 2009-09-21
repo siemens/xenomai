@@ -2987,8 +2987,6 @@ int ni_ao_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
 	comedi_dev_t *dev = subd->dev;
 
-	int err = 0;
-
 	/* Make sure trigger sources are unique and mutually compatible */
 
 	if (cmd->stop_src != TRIG_COUNT && cmd->stop_src != TRIG_NONE)
@@ -2998,19 +2996,21 @@ int ni_ao_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 
 	if (cmd->start_arg != 0) {
 		cmd->start_arg = 0;
-		err++;
+		return -EINVAL;
 	}
+
 	if (cmd->scan_begin_src == TRIG_TIMER) {
 		if (cmd->scan_begin_arg < boardtype.ao_speed) {
 			cmd->scan_begin_arg = boardtype.ao_speed;
-			err++;
+			return -EINVAL;
 		}
 		if (cmd->scan_begin_arg > devpriv->clock_ns * 0xffffff) {	
 			/* XXX check */
 			cmd->scan_begin_arg = devpriv->clock_ns * 0xffffff;
-			err++;
+			return -EINVAL;
 		}
 	}
+
 	if (cmd->convert_arg != 0) {
 		cmd->convert_arg = 0;
 		return -EINVAL;
