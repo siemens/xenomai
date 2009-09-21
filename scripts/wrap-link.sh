@@ -169,6 +169,7 @@ while test $# -gt 0; do
 done
 
 $verbose && set -x
-$cc -o "$output.tmp" -Wl,-Ur -nostdlib $stage1_args
-$cc -o "$output" "$output.tmp" $stage2_args
-rm -f $output.tmp
+tmpobj="$output.wl$$"
+$cc -o "$tmpobj" -Wl,-Ur -nostdlib $stage1_args
+$cc -o "$output" "$tmpobj" $stage2_args
+rm -f $tmpobj
