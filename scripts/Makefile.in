@@ -238,8 +238,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-bin_SCRIPTS = xeno-config xeno-load xeno-test xeno-info
-EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info \
+bin_SCRIPTS = xeno-config xeno-load xeno-test xeno-info wrap-link.sh
+EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info wrap-link.sh \
 	Kconfig.frag Modules.frag defconfig.frag \
 	help_from_kconfig.pl $(wildcard postinstall.sh)
 
