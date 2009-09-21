@@ -1,4 +1,4 @@
-bin_SCRIPTS=xeno-config xeno-load xeno-test xeno-info
+bin_SCRIPTS=xeno-config xeno-load xeno-test xeno-info wrap-link.sh
 
 install-exec-local:
 	@if test -r $(srcdir)/postinstall.sh ; then \
@@ -6,6 +6,6 @@ install-exec-local:
 	   $(srcdir)/postinstall.sh ; \
 	fi
 
-EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info \
+EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info wrap-link.sh \
 	Kconfig.frag Modules.frag defconfig.frag \
 	help_from_kconfig.pl $(wildcard postinstall.sh)
