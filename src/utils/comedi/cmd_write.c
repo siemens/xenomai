@@ -49,7 +49,7 @@
 
 static unsigned char buf[BUF_SIZE];
 static char *filename = FILENAME;
-static char *str_chans = "0,1,2,3";
+static char *str_chans = "0,1";
 static unsigned int chans[MAX_NB_CHAN];
 static int verbose = 0;
 static int real_time = 0;
@@ -59,20 +59,20 @@ static RT_TASK rt_task_desc;
 
 /* The command to send by default */
 comedi_cmd_t cmd = {
-      idx_subd:ID_SUBD,
-      flags:0,
-      start_src:TRIG_NOW,
-      start_arg:0,
-      scan_begin_src:TRIG_TIMER,
-      scan_begin_arg:2000000,	/* in ns */
-      convert_src:TRIG_TIMER,
-      convert_arg:500000,	/* in ns */
-      scan_end_src:TRIG_COUNT,
-      scan_end_arg:0,
-      stop_src:TRIG_COUNT,
-      stop_arg:NB_SCAN,
-      nb_chan:0,
-      chan_descs:chans,
+      .idx_subd = ID_SUBD,
+      .flags = 0,
+      .start_src = TRIG_INT,
+      .start_arg = 0,
+      .scan_begin_src = TRIG_TIMER,
+      .scan_begin_arg = 2000000, /* in ns */
+      .convert_src = TRIG_NOW,
+      .convert_arg = 0, /* in ns */
+      .scan_end_src = TRIG_COUNT,
+      .scan_end_arg = 0,
+      .stop_src = TRIG_COUNT,
+      .stop_arg = NB_SCAN,
+      .nb_chan = 0,
+      .chan_descs = chans,
 };
 
 struct option cmd_write_opts[] = {
@@ -292,11 +292,15 @@ int main(int argc, char *argv[])
 	for (i = 0; i < BUF_SIZE; i++)
 		buf[i] = i;
 
-	ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-	if (ret < 0) {
-		fprintf(stderr, "cmd_read: rt_task_set_mode failed (ret=%d)\n",
-			ret);
-		goto out_main;
+	if (real_time != 0) {
+
+		ret = rt_task_set_mode(0, T_PRIMARY, NULL);
+		if (ret < 0) {
+			fprintf(stderr, 
+				"cmd_read: rt_task_set_mode failed (ret=%d)\n",
+				ret);
+			goto out_main;
+		}
 	}
 
 	if (use_mmap == 0) {
