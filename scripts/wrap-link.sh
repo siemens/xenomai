@@ -6,7 +6,7 @@ set -e
 
 usage() {
     cat <<EOF
-$progname [options] command-line
+$1 [options] command-line
 
 Split command-line in two parts for linking static applications with
 Xenomai user-space posix skin in two stages.
@@ -16,21 +16,25 @@ Options:
 -v be verbose (print each command before running it)
 
 Example:
-$progname -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
+$1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
 will print and run:
-+ gcc -o foo.tmp -Wl,-r -nostdlib tmp foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib
-+ gcc -o foo foo.tmp -lpthread_rt -lpthread -lrt
++ gcc -o foo.tmp -Wl,-Ur -nostdlib foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib
++ gcc -o foo foo.tmp -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
 + rm foo.tmp
 EOF
 }
+
+add_2stages() {
+    stage1_args="$stage1_args $@"
+    stage2_args="$stage2_args $@"
+}   
 
 add_linker_flag() {
     if $next_is_wrapped_symbol; then
 	stage1_args="$stage1_args -Wl,--wrap $@"
 	next_is_wrapped_symbol=false
     else
-	stage1_args="$stage1_args $@"
-	stage2_args="$stage2_args $@"
+	add_2stages "$@"
     fi
 }
 
@@ -47,10 +51,10 @@ if test -n "$V" && test $V -gt 0; then
 else
     verbose=false
 fi
-progname=$0
+progname="$0"
 
 if test $# -eq 0; then
-    usage
+    usage "$progname"
     exit 0
 fi
 
@@ -58,11 +62,6 @@ while test $# -gt 0; do
     arg="$1"
     shift
     case "$arg" in
-	"")
-	    usage
-	    exit 0
-	    ;;
-
 	-v) 
 	    verbose=:
 	    ;;
@@ -81,7 +80,7 @@ while test $# -gt 0; do
 	    ;;
 
 	*ld)
-	    usage
+	    usage "$progname"
 	    /bin/echo -e "\nlinker must be gcc or g++, not ld"
 	    exit 1
 	    ;;
@@ -93,6 +92,8 @@ while test $# -gt 0; do
 done
 
 next_is_wrapped_symbol=false
+
+onestage_args="$@"
 stage1_args=""
 stage2_args=""
 stage2=false
@@ -100,7 +101,7 @@ while test $# -gt 0; do
     arg="$1"
     shift
     case "$arg" in
-	*pthread_rt*|-lpthread)
+	*pthread_rt*)
 	    stage2_args="$stage2_args $arg"
 	    stage2=:
 	    ;;
@@ -140,7 +141,7 @@ while test $# -gt 0; do
 	    ;;
 
 	-o*)
-	    output=`expr $arg : '-o\(.*\)'`
+	    output=`expr "$arg" : '-o\(.*\)'`
 	    ;;
 	
 	-l) 
@@ -161,15 +162,18 @@ while test $# -gt 0; do
 	    if test -e "$arg"; then
 		add_linker_obj $arg
 	    else
-		stage1_args="$stage1_args $arg"
-		stage2_args="$stage2_args $arg"
+		add_2stages "$arg"
 	    fi
 	   ;;
     esac
 done
 
-$verbose && set -x
-tmpobj="$output.wl$$"
-$cc -o "$tmpobj" -Wl,-Ur -nostdlib $stage1_args
-$cc -o "$output" "$tmpobj" $stage2_args
-rm -f $tmpobj
+if $stage2; then
+    $verbose && set -x
+    $cc -o "$output.tmp" -Wl,-Ur -nostdlib $stage1_args
+    $cc -o "$output" "$output.tmp" $stage2_args
+    rm -f $output.tmp
+else
+    $verbose && set -x
+    $cc -o "$output" $onestage_args
+fi
