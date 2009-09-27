@@ -80,11 +80,14 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 {
 	comedi_subd_t *subd;
 	comedi_dev_t *dev = comedi_get_dev(cxt);
+	lsampl_t trignum;
 
 	/* Basic checkings */
-	if (dsc->data_size != 1)
+	if (dsc->data_size > 1)
 		return -EINVAL;
-
+	
+	trignum = (dsc->data_size == 1) ? dsc->data[0] : 0;
+	
 	if (dsc->idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
@@ -95,7 +98,7 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 		return -EINVAL;
 
 	/* Performs the trigger */
-	return subd->trigger(subd, dsc->data[0]);
+	return subd->trigger(subd, trignum);
 }
 
 int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
