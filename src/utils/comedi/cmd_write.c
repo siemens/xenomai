@@ -75,6 +75,12 @@ comedi_cmd_t cmd = {
       .chan_descs = chans,
 };
 
+comedi_insn_t insn = {
+	.type = COMEDI_INSN_INTTRIG,
+	.idx_subd = ID_SUBD,
+	.data_size = 0,
+};
+
 struct option cmd_write_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
 	{"real-time", no_argument, NULL, 'r'},
@@ -123,7 +129,7 @@ int main(int argc, char *argv[])
 			filename = optarg;
 			break;
 		case 's':
-			cmd.idx_subd = strtoul(optarg, NULL, 0);
+			cmd.idx_subd = insn.idx_subd = strtoul(optarg, NULL, 0);
 			break;
 		case 'S':
 			cmd.stop_arg = strtoul(optarg, NULL, 0);
@@ -319,8 +325,17 @@ int main(int argc, char *argv[])
 					ret);
 				goto out_main;
 			}
-
 			cnt += ret;
+
+			if (cnt == ret && cnt != 0) {
+				ret = comedi_snd_insn(&dsc, &insn);
+				if (ret < 0) {
+					fprintf(stderr,
+						"cmd_write: triggering failed (ret=%d)\n",
+						ret);
+					goto out_main;					
+				}
+			}
 		}
 	} else {
 		unsigned long front = 0;
@@ -371,6 +386,16 @@ int main(int argc, char *argv[])
 					"cmd_write: comedi_mark_bufrw() failed (ret=%d)\n",
 					ret);
 				goto out_main;
+			}
+			
+			if (cnt == front && cnt != 0) {
+				ret = comedi_snd_insn(&dsc, &insn);
+				if (ret < 0) {
+					fprintf(stderr,
+						"cmd_write: triggering failed (ret=%d)\n",
+						ret);
+					goto out_main;					
+				}				
 			}
 		}
 	}
