@@ -4754,6 +4754,7 @@ int ni_E_init(comedi_dev_t *dev)
 		subd->do_cmdtest = ni_ai_cmdtest;
 		subd->do_cmd = ni_ai_cmd;
 		subd->cancel = ni_ai_reset;
+		subd->trigger = ni_ai_inttrig;
 
 		subd->munge = (boardtype.adbits > 16) ? 
 			ni_ai_munge32 : ni_ai_munge16;
@@ -4796,6 +4797,7 @@ int ni_E_init(comedi_dev_t *dev)
 			subd->do_cmd = &ni_ao_cmd;
 			subd->cmd_mask = &mio_ao_cmd_mask;
 			subd->do_cmdtest = &ni_ao_cmdtest;
+			subd->trigger = ni_ao_inttrig;
 			if ((boardtype.reg_type & ni_reg_m_series_mask) == 0)
 				subd->munge = &ni_ao_munge;
 		}
