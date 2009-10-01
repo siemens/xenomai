@@ -458,7 +458,7 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		mcr |= CR_PSIZE32;
 		break;
 	default:
-		__comedi_info("MITE: bug! "
+		__comedi_err("MITE: bug! "
 			      "invalid mem bit width for dma transfer\n");
 		break;
 	}
