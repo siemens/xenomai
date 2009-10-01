@@ -142,6 +142,7 @@ struct xnthread;
 struct xnsched;
 struct xnsynch;
 struct xnrpi;
+struct xnselector;
 
 typedef struct xnthrops {
 
@@ -207,6 +208,9 @@ typedef struct xnthread {
 	xnstat_exectime_t account; /* Execution time accounting entity */
 	xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
     } stat;
+#ifdef CONFIG_XENO_OPT_SELECT
+    struct xnselector *selector;    /* For select. */
+#endif /* CONFIG_XENO_OPT_SELECT */
 
     int errcode;		/* Local errno */
 

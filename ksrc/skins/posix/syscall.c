@@ -2370,11 +2370,11 @@ static int __select(struct task_struct *curr, struct pt_regs *regs)
 	xntmode_t mode = XN_RELATIVE;
 	struct xnselector *selector;
 	struct timeval tv;
-	pthread_t thread;
+	xnthread_t *thread;
 	int i, err, nfds;
 	size_t fds_size;
 
-	thread = pse51_current_thread();
+	thread = xnpod_current_thread();
 	if (!thread)
 		return -EPERM;
 

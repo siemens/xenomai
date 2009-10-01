@@ -123,6 +123,9 @@ int xnthread_init(xnthread_t *thread,
 	initph(&thread->xlink);
 	thread->rpi = NULL;
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
+#ifdef CONFIG_XENO_OPT_SELECT
+	thread->selector = NULL;
+#endif /* CONFIG_XENO_OPT_SELECT */
 	initpq(&thread->claimq);
 
 	xnarch_init_display_context(thread);
