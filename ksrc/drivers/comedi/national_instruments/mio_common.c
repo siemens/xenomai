@@ -1367,8 +1367,13 @@ static int ni_ai_setup_MITE_dma(comedi_dev_t *dev)
 		break;
 	};
 
+	/* Huge hack */
+	mite_buf_change(devpriv->ai_mite_chan->ring, 
+			dev->transfer.bufs[NI_AI_SUBDEV]);
+
 	/* start the MITE */
 	mite_dma_arm(devpriv->ai_mite_chan);
+
 	return 0;
 }
 
