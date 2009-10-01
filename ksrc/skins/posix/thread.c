@@ -66,9 +66,6 @@ static void thread_trampoline(void *cookie)
 static void thread_delete_hook(xnthread_t *xnthread)
 {
 	pthread_t thread = thread2pthread(xnthread);
-#ifdef CONFIG_XENO_OPT_POSIX_SELECT
-	struct xnselector *selector = NULL;
-#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 	spl_t s;
 
 	if (!thread)
@@ -81,13 +78,6 @@ static void thread_delete_hook(xnthread_t *xnthread)
 	pse51_mark_deleted(thread);
 	pse51_signal_cleanup_thread(thread);
 	pse51_timer_cleanup_thread(thread);
-#ifdef CONFIG_XENO_OPT_POSIX_SELECT
-	if (thread->selector) {
-		xnselector_destroy(thread->selector);
-		selector = thread->selector;
-		thread->selector = NULL;
-	}
-#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
 	switch (thread_getdetachstate(thread)) {
 	case PTHREAD_CREATE_DETACHED:
@@ -109,11 +99,6 @@ static void thread_delete_hook(xnthread_t *xnthread)
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
-
-#ifdef CONFIG_XENO_OPT_POSIX_SELECT
-	if (selector)
-		xnfree(selector);
-#endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 }
 
 /**
@@ -254,7 +239,6 @@ int pthread_create(pthread_t *tid,
 	pse51_signal_init_thread(thread, cur);
 	pse51_tsd_init_thread(thread);
 	pse51_timer_init_thread(thread);
-	thread->selector = NULL;
 
 	if (thread->attr.policy == SCHED_RR)
 		xnpod_set_thread_tslice(&thread->threadbase, pse51_time_slice);

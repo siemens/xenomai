@@ -43,6 +43,7 @@
 #include <nucleus/module.h>
 #include <nucleus/stat.h>
 #include <nucleus/assert.h>
+#include <nucleus/select.h>
 #include <asm/xenomai/bits/pod.h>
 
 #ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
@@ -1186,6 +1187,15 @@ void xnpod_delete_thread(xnthread_t *thread)
 	xntimer_destroy(&thread->rtimer);
 	xntimer_destroy(&thread->ptimer);
 
+#ifdef CONFIG_XENO_OPT_SELECT
+	if (thread->selector) {
+		xnselector_destroy(thread->selector);
+		xnheap_schedule_free(&kheap, thread->selector, 
+				     (xnholder_t *)thread->selector);
+		thread->selector = NULL;
+	}
+#endif /* CONFIG_XENO_OPT_SELECT */
+
 	if (xnthread_test_state(thread, XNPEND))
 		xnsynch_forget_sleeper(thread);
 
@@ -1274,6 +1284,8 @@ void xnpod_abort_thread(xnthread_t *thread)
 				     XN_INFINITE, XN_RELATIVE, NULL);
 	xnthread_set_info(thread, XNABORT);
 	xnpod_delete_thread(thread);
+	/* FIXME: in case thread has a selector, the xnfree(selector)
+	   happens with nklock locked. */
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnpod_abort_thread);

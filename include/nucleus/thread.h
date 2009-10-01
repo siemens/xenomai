@@ -168,6 +168,7 @@ typedef struct xnthread_info {
 struct xnthread;
 struct xnsynch;
 struct xnsched;
+struct xnselector;
 struct xnsched_class;
 struct xnsched_tpslot;
 union xnsched_policy_param;
@@ -286,6 +287,10 @@ typedef struct xnthread {
 		xnstat_exectime_t account; /* Execution time accounting entity */
 		xnstat_exectime_t lastperiod; /* Interval marker for execution time reports */
 	} stat;
+
+#ifdef CONFIG_XENO_OPT_SELECT
+	struct xnselector *selector;    /* For select. */
+#endif /* CONFIG_XENO_OPT_SELECT */
 
 	int errcode;			/* Local errno */
 
