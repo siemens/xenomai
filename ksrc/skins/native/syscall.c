@@ -2270,6 +2270,9 @@ static int __rt_queue_write(struct pt_regs *regs)
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
 
+	if (!q)
+		return -ESRCH;
+
 	/* Buffer to write to the queue. */
 	buf = (void __user *)__xn_reg_arg2(regs);
 
@@ -2384,6 +2387,9 @@ static int __rt_queue_read(struct pt_regs *regs)
 		return -EFAULT;
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
+
+	if (!q)
+		return -ESRCH;
 
 	/* Address of message space to write to. */
 	buf = (void __user *)__xn_reg_arg2(regs);

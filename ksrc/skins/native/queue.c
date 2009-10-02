@@ -713,6 +713,8 @@ int rt_queue_send(RT_QUEUE *q, void *mbuf, size_t size, int mode)
  * defined for the queue at creation, or if no memory can be obtained
  * to convey the message data internally.
  *
+ * - -ESRCH is returned if a @a q represents a stale userland handle
+ *
  * Environments:
  *
  * This service can be called from:
