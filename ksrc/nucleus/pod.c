@@ -2533,7 +2533,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	thread = xnpod_current_thread();
 
 	trace_mark(xn_nucleus, thread_fault,
-		   "thread %p thread_name %s address %lu type %d",
+		   "thread %p thread_name %s ip %p type %d",
 		   thread, xnthread_name(thread), xnarch_fault_pc(fltinfo),
 		   xnarch_fault_trap(fltinfo));
 
