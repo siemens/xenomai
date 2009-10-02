@@ -404,18 +404,21 @@ int __wrap_accept(int fd, struct sockaddr *addr, socklen_t * addrlen)
 
 		pthread_setcanceltype(oldtype, NULL);
 
-		if (fd >= 0)
-			fd += __rtdm_fd_start;
+		if (fd < 0)
+			return set_errno(fd);
+
+		return fd + __rtdm_fd_start;
 	} else {
 		fd = __real_accept(fd, addr, addrlen);
 
 		if (fd >= __rtdm_fd_start) {
 			__real_close(fd);
-			fd = -EMFILE;
+			errno = EMFILE;
+			fd = -1;
 		}
-	}
 
-	return set_errno(fd);
+		return fd;
+	}
 }
 
 int __wrap_getsockname(int fd, struct sockaddr *name, socklen_t * namelen)
