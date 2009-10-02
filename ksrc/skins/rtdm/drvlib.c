@@ -928,6 +928,9 @@ EXPORT_SYMBOL(rtdm_event_wait);
  * - -EPERM @e may be returned if an illegal invocation environment is
  * detected.
  *
+ * - -EWOULDBLOCK is returned if a negative @a timeout (i.e., non-blocking
+ * operation) has been specified.
+ *
  * Environments:
  *
  * This service can be called from:
