@@ -64,7 +64,7 @@ config XENO_OPT_POSIX_SELECT
 
 config XENO_OPT_DEBUG_POSIX
 	bool "Debugging support"
-	default y
+	default n
 	help
 
 	When enabled, this option makes the skin warn about not properly
