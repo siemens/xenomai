@@ -4,12 +4,17 @@
 #ifdef __KERNEL__
 #include <linux/module.h>
 
-static inline int fp_kernel_begin(void)
+static inline int fp_kernel_supported(void)
+{
+	return 0;
+}
+
+static inline int fp_linux_begin(void)
 {
 	return -ENOSYS;
 }
 
-static inline void fp_kernel_end(void)
+static inline void fp_linux_end(void)
 {
 }
 

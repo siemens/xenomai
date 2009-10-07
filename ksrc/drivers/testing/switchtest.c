@@ -243,7 +243,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 
 		case RTSWITCH_RT:
 
-			if (!fp_check || fp_kernel_begin() < 0) {
+			if (!fp_check || fp_linux_begin() < 0) {
 				fp_check = 0;
 				goto signal_nofp;
 			}
@@ -254,7 +254,7 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 			fp_regs_set(expected);
 			rtdm_event_signal(&to->rt_synch);
 			fp_val = fp_regs_check(expected);
-			fp_kernel_end();
+			fp_linux_end();
 
 			if(down_interruptible(&from->nrt_synch))
 				return -EINTR;
@@ -275,11 +275,11 @@ static int rtswitch_to_nrt(rtswitch_context_t *ctx,
 				(ctx->switches_count % 4000000) * 1000;
 			barrier();
 
-			fp_kernel_begin();
+			fp_linux_begin();
 			fp_regs_set(expected);
 			rtdm_event_signal(&to->rt_synch);
 			fp_val = fp_regs_check(expected);
-			fp_kernel_end();
+			fp_linux_end();
 
 			if (down_interruptible(&from->nrt_synch))
 				return -EINTR;
@@ -434,6 +434,15 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	char name[30];
 	int err;
 
+	/*
+	 * Silently disable FP tests in kernel if FPU is not supported
+	 * there. Typical case is math emulation support: we can use
+	 * it from userland as a synthetic FPU, but there is no sane
+	 * way to use it from kernel-based threads (Xenomai or Linux).
+	 */
+	if (!fp_kernel_supported())
+		ptask->flags &= ~RTTST_SWTEST_USE_FPU;
+		
 	ptask->flags |= RTSWITCH_KERNEL;
 	err = rtswitch_register_task(ctx, ptask);
 

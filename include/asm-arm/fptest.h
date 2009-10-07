@@ -11,12 +11,17 @@
 #define have_vfp (0)
 #endif /* !CONFIG_VFP */
 
-static inline int fp_kernel_begin(void)
+static inline int fp_kernel_supported(void)
+{
+	return 1;
+}
+
+static inline int fp_linux_begin(void)
 {
 	return -ENOSYS;
 }
 
-static inline void fp_kernel_end(void)
+static inline void fp_linux_end(void)
 {
 }
 

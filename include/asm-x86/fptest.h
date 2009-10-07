@@ -5,7 +5,12 @@
 #include <linux/module.h>
 #include <asm/i387.h>
 
-static inline int fp_kernel_begin(void)
+static inline int fp_kernel_supported(void)
+{
+	return 1;
+}
+
+static inline int fp_linux_begin(void)
 {
 #if defined(CONFIG_X86_USE_3DNOW) \
 	|| defined(CONFIG_MD_RAID456) || defined(CONFIG_MD_RAID456_MODULE)
@@ -28,7 +33,7 @@ static inline int fp_kernel_begin(void)
 	return 0;
 }
 
-static inline void fp_kernel_end(void)
+static inline void fp_linux_end(void)
 {
 	kernel_fpu_end();
 }
