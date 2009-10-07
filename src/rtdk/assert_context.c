@@ -66,6 +66,7 @@ int __wrap_gettimeofday(struct timeval *tv, struct timezone *tz)
 	return __real_gettimeofday(tv, tz);
 }
 
+__attribute__ ((weak))
 int __wrap_clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
 	assert_nrt();
