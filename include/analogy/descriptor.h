@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedilib for RTDM, descriptor related features
+ * Analogy for Linux, descriptor related features
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -19,11 +19,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef __COMEDI_LIB_CORE__
-#define __COMEDI_LIB_CORE__
+#ifndef __ANALOGY_LIB_CORE__
+#define __ANALOGY_LIB_CORE__
 
-#include <comedi/subdevice.h>
-#include <comedi/device.h>
+#include <analogy/subdevice.h>
+#include <analogy/device.h>
 
 /* --- Descriptor precompilation constants --- */
 
@@ -37,7 +37,7 @@
  */
 
 /*!
- * @anchor COMEDI_xxx_DESC   @name COMEDI_xxx_DESC
+ * @anchor ANALOGY_xxx_DESC   @name ANALOGY_xxx_DESC
  * @brief Constants used as argument so as to define the description
  * depth to recover
  * @{
@@ -46,25 +46,25 @@
 /** 
  * BSC stands for basic descriptor (device data)
  */
-#define COMEDI_BSC_DESC 0x0
+#define BSC_DESC 0x0
 
 /** 
  * CPLX stands for complex descriptor (subdevice + channel + range
  * data)
  */
-#define COMEDI_CPLX_DESC 0x1
+#define CPLX_DESC 0x1
 
-	  /*! @} COMEDI_xxx_DESC */
+	  /*! @} ANALOGY_xxx_DESC */
 
 /* --- Descriptor structure --- */
 
 /*! 
  * @brief Structure containing device-information useful to users
- * @see comedi_get_desc()
+ * @see a4l_get_desc()
  */
 
-struct comedi_descriptor {
-	char board_name[COMEDI_NAMELEN];
+struct a4l_descriptor {
+	char board_name[A4L_NAMELEN];
 				     /**< Board name. */
 	int nb_subd;
 		 /**< Subdevices count. */
@@ -81,8 +81,8 @@ struct comedi_descriptor {
 	void *sbdata;
 		 /**< Data buffer pointer. */
 };
-typedef struct comedi_descriptor comedi_desc_t;
+typedef struct a4l_descriptor a4l_desc_t;
 
 	  /*! @} descriptor_sys */
 
-#endif /* __COMEDI_LIB_CORE__ */
+#endif /* __ANALOGY_LIB_CORE__ */

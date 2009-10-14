@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, driver related features
+ * Analogy for Linux, driver related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,22 +20,22 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_DRIVER__
-#define __COMEDI_DRIVER__
+#ifndef __ANALOGY_DRIVER__
+#define __ANALOGY_DRIVER__
 
 #ifdef __KERNEL__
 
 #include <linux/list.h>
 
-struct comedi_link_desc;
-struct comedi_device;
+struct a4l_link_desc;
+struct a4l_device;
 
 /** Structure containing driver declaration data.
  *
  *  @see rt_task_inquire()
  */
-/* Comedi driver descriptor */
-struct comedi_driver {
+/* Analogy driver descriptor */
+struct a4l_driver {
 
 	/* List stuff */
 	struct list_head list;
@@ -52,29 +52,29 @@ struct comedi_driver {
 		       /**< Size of the driver's private data */
 
 	/* Init/destroy procedures */
-	int (*attach) (struct comedi_device *, struct comedi_link_desc *);
+	int (*attach) (struct a4l_device *, struct a4l_link_desc *);
 								      /**< Attach procedure */
-	int (*detach) (struct comedi_device *);
+	int (*detach) (struct a4l_device *);
 				   /**< Detach procedure */
 
 };
-typedef struct comedi_driver comedi_drv_t;
+typedef struct a4l_driver a4l_drv_t;
 
 #ifndef DOXYGEN_CPP
 
 /* Driver list related functions */
 
-int comedi_register_drv(comedi_drv_t * drv);
-int comedi_unregister_drv(comedi_drv_t * drv);
-int comedi_lct_drv(char *pin, comedi_drv_t ** pio);
+int a4l_register_drv(a4l_drv_t * drv);
+int a4l_unregister_drv(a4l_drv_t * drv);
+int a4l_lct_drv(char *pin, a4l_drv_t ** pio);
 #ifdef CONFIG_PROC_FS
-int comedi_rdproc_drvs(char *page,
-		       char **start,
-		       off_t off, int count, int *eof, void *data);
+int a4l_rdproc_drvs(char *page,
+		    char **start,
+		    off_t off, int count, int *eof, void *data);
 #endif /* CONFIG_PROC_FS */
 
 #endif /* !DOXYGEN_CPP */
 
 #endif /* __KERNEL__ */
 
-#endif /* __COMEDI_DRIVER__ */
+#endif /* __ANALOGY_DRIVER__ */

@@ -1,10 +1,10 @@
-includesubdir = $(includedir)/comedi
+includesubdir = $(includedir)/analogy
 
 includesub_HEADERS = 	\
 	buffer.h	\
 	channel_range.h	\
-	comedi_driver.h	\
-	comedi.h	\
+	analogy_driver.h \
+	analogy.h	\
 	command.h	\
 	context.h	\
 	descriptor.h	\

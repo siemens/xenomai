@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, transfer related features
+ * Analogy for Linux, transfer related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,86 +20,86 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_TRANSFER__
-#define __COMEDI_TRANSFER__
+#ifndef __ANALOGY_TRANSFER__
+#define __ANALOGY_TRANSFER__
 
 #ifndef DOXYGEN_CPP
 
-#include <comedi/context.h>
-#include <comedi/subdevice.h>
-#include <comedi/buffer.h>
+#include <analogy/context.h>
+#include <analogy/subdevice.h>
+#include <analogy/buffer.h>
 
 /* Status flags / bits */
-#define COMEDI_TSF_BUSY 0
-#define COMEDI_TSF_BULK 1
-#define COMEDI_TSF_MMAP 2
+#define A4L_TSF_BUSY 0
+#define A4L_TSF_BULK 1
+#define A4L_TSF_MMAP 2
 
 /* Fields init values */
-#define COMEDI_IRQ_UNUSED (unsigned int)((unsigned short)(~0))
-#define COMEDI_IDX_UNUSED (unsigned int)(~0)
+#define A4L_IRQ_UNUSED (unsigned int)((unsigned short)(~0))
+#define A4L_IDX_UNUSED (unsigned int)(~0)
 
 /* IRQ types */
-#define COMEDI_IRQ_SHARED RTDM_IRQTYPE_SHARED
-#define COMEDI_IRQ_EDGE RTDM_IRQTYPE_EDGE
-#define COMEDI_IRQ_DISABLED 0
+#define A4L_IRQ_SHARED RTDM_IRQTYPE_SHARED
+#define A4L_IRQ_EDGE RTDM_IRQTYPE_EDGE
+#define A4L_IRQ_DISABLED 0
 
 /* Poll timeout values */
-#define COMEDI_INFINITE 0
-#define COMEDI_NONBLOCK (-1)
+#define A4L_INFINITE 0
+#define A4L_NONBLOCK (-1)
 
 #ifdef __KERNEL__
 
-struct comedi_device;
+struct a4l_device;
 
-/* Comedi transfer descriptor */
-struct comedi_transfer {
+/* Analogy transfer descriptor */
+struct a4l_transfer {
 
 	/* Subdevices desc */
 	unsigned int nb_subd;
-	comedi_subd_t **subds;
+	a4l_subd_t **subds;
 	int idx_read_subd;
 	int idx_write_subd;
 
 	/* Buffer desc */
-	comedi_buf_t **bufs;
+	a4l_buf_t **bufs;
 
 	/* IRQ in use */
-	comedi_irq_desc_t irq_desc;
+	a4l_irq_desc_t irq_desc;
 
 	/* Events/status desc */
 	unsigned long *status;
 };
-typedef struct comedi_transfer comedi_trf_t;
+typedef struct a4l_transfer a4l_trf_t;
 
 /* --- Proc function --- */
 
-int comedi_rdproc_transfer(char *page,
-			   char **start,
-			   off_t off, int count, int *eof, void *data);
+int a4l_rdproc_transfer(char *page,
+			char **start,
+			off_t off, int count, int *eof, void *data);
 
 /* --- Upper layer functions --- */
 
-void comedi_presetup_transfer(comedi_cxt_t * cxt);
-int comedi_setup_transfer(comedi_cxt_t * cxt);
-int comedi_cleanup_transfer(comedi_cxt_t * cxt);
-int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd);
-int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd);
-int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd);
+void a4l_presetup_transfer(a4l_cxt_t * cxt);
+int a4l_setup_transfer(a4l_cxt_t * cxt);
+int a4l_cleanup_transfer(a4l_cxt_t * cxt);
+int a4l_reserve_transfer(a4l_cxt_t * cxt, int idx_subd);
+int a4l_init_transfer(a4l_cxt_t * cxt, a4l_cmd_t * cmd);
+int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd);
 
-ssize_t comedi_put(comedi_cxt_t * cxt, void *buf, size_t nbytes);
-ssize_t comedi_get(comedi_cxt_t * cxt, void *buf, size_t nbytes);
+ssize_t a4l_put(a4l_cxt_t * cxt, void *buf, size_t nbytes);
+ssize_t a4l_get(a4l_cxt_t * cxt, void *buf, size_t nbytes);
 
-int comedi_request_irq(struct comedi_device *dev,
-		       unsigned int irq,
-		       comedi_irq_hdlr_t handler,
-		       unsigned long flags, void *cookie);
-int comedi_free_irq(struct comedi_device *dev, unsigned int irq);
-unsigned int comedi_get_irq(struct comedi_device *dev);
+int a4l_request_irq(struct a4l_device *dev,
+		    unsigned int irq,
+		    a4l_irq_hdlr_t handler,
+		    unsigned long flags, void *cookie);
+int a4l_free_irq(struct a4l_device *dev, unsigned int irq);
+unsigned int a4l_get_irq(struct a4l_device *dev);
 
-int comedi_ioctl_cancel(comedi_cxt_t * cxt, void *arg);
+int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg);
 
 #endif /* __KERNEL__ */
 
 #endif /* !DOXYGEN_CPP */
 
-#endif /* __COMEDI_TRANSFER__ */
+#endif /* __ANALOGY_TRANSFER__ */

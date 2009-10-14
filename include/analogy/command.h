@@ -23,7 +23,7 @@
 #ifndef __ANALOGY_CMD__
 #define __ANALOGY_CMD__
 
-#include <comedi/context.h>
+#include <analogy/context.h>
 
 /*!
  * @addtogroup async1_lib
@@ -86,7 +86,7 @@
  */
 #define TRIG_EXT	0x00000040
 /** 
- * Trigger on comedi-internal signal N
+ * Trigger on analogy-internal signal N
  */
 #define TRIG_INT	0x00000080
 /** 
@@ -187,10 +187,10 @@
 
 /*! 
  * @brief Structure describing the asynchronous instruction
- * @see analogy_snd_command()
+ * @see a4l_snd_command()
  */
 
-struct analogy_cmd_desc {
+struct a4l_cmd_desc {
 	unsigned char idx_subd;
 			    /**< Subdevice to which the command will be applied. */
 
@@ -230,17 +230,17 @@ struct analogy_cmd_desc {
 	sampl_t *data;
 		   /**< Driver specific buffer pointer */
 };
-typedef struct analogy_cmd_desc analogy_cmd_t;
+typedef struct a4l_cmd_desc a4l_cmd_t;
 
 	  /*! @} async1_lib */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
 /* --- Command related function --- */
-void a4l_free_cmddesc(analogy_cmd_t * desc);
+void a4l_free_cmddesc(a4l_cmd_t * desc);
 
 /* --- Upper layer functions --- */
-int a4l_check_cmddesc(a4l_cxt_t * cxt, analogy_cmd_t * desc);
+int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc);
 int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg);
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */

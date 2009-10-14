@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, misc declarations
+ * Analogy for Linux, misc declarations
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,21 +20,21 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_TYPES__
-#define __COMEDI_TYPES__
+#ifndef __ANALOGY_TYPES__
+#define __ANALOGY_TYPES__
 
 #ifndef DOXYGEN_CPP
 
 /* --- Misc precompilation constants --- */
 
-#define COMEDI_DEFAULT_BFSIZE 0x1000
-#define COMEDI_NAMELEN 20
+#define A4L_DEFAULT_BFSIZE 0x1000
+#define A4L_NAMELEN 20
 
-/* --- Common Comedi types --- */
+/* --- Common Analogy types --- */
 
 typedef unsigned short sampl_t;
 typedef unsigned long lsampl_t;
 
 #endif /* !DOXYGEN_CPP */
 
-#endif /* __COMEDI_TYPES__ */
+#endif /* __ANALOGY_TYPES__ */

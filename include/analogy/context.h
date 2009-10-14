@@ -25,7 +25,7 @@
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
-#include <comedi/os_facilities.h>
+#include <analogy/os_facilities.h>
 
 struct a4l_device;
 
