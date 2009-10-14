@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, driver facilities
+ * Analogy for Linux, driver facilities
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -21,27 +21,27 @@
  */
 
 /*!
- * @defgroup Comedi4RTDM Comedi API.
+ * @defgroup Analogy4Linux Analogy API.
  *
- * This is the API interface of Comedi4RTDM (kernel layer and user
+ * This is the API interface of Analogy (kernel layer and user
  * layer)
  *
  */
 
 /*!
- * @ingroup Comedi4RTDM
+ * @ingroup Analogy4Linux
  * @defgroup driverfacilities Driver API.
  *
- * This is the API interface of Comedi provided to device drivers.
+ * This is the API interface of Analogy provided to device drivers.
  *
  */
 
 #include <linux/module.h>
 #include <linux/fs.h>
 
-#include <comedi/context.h>
-#include <comedi/device.h>
-#include <comedi/comedi_driver.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
+#include <analogy/analogy_driver.h>
 
 /* --- Driver section --- */
 
@@ -49,25 +49,25 @@
  * @ingroup driverfacilities
  * @defgroup driver Driver management services
  *
- * Comedi driver registration / unregistration
+ * Analogy driver registration / unregistration
  *
  * In a common Linux char driver, the developer has to register a fops
  * structure filled with callbacks for read / write / mmap / ioctl
  * operations.
  *
- * Comedi drivers do not have to implement read / write / mmap / ioctl
- * functions, these procedures are implemented in the Comedi generic
- * layer. Then, the transfers between user-space and kernel-space are
- * already managed. Comedi drivers work with commands and instructions
- * which are some kind of more dedicated read / write operations. And,
- * instead of registering a fops structure, a Comedi driver must
- * register some comedi_driver structure.
+ * Analogy drivers do not have to implement read / write / mmap /
+ * ioctl functions, these procedures are implemented in the Analogy
+ * generic layer. Then, the transfers between user-space and
+ * kernel-space are already managed. Analogy drivers work with commands
+ * and instructions which are some kind of more dedicated read / write
+ * operations. And, instead of registering a fops structure, a Analogy
+ * driver must register some a4l_driver structure.
  *
  * @{
  */
 
 /**
- * @brief Register a Comedi driver
+ * @brief Register an Analogy driver
  *
  * After initialising a driver structure, the driver must be made
  * available so as to be attached.
@@ -77,13 +77,13 @@
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_register_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_register_drv);
+int a4l_register_drv(a4l_drv_t * drv);
+EXPORT_SYMBOL(a4l_register_drv);
 
 /**
- * @brief Unregister a Comedi driver
+ * @brief Unregister an Analogy driver
  *
- * This function removes the driver descriptor from the Comedi driver
+ * This function removes the driver descriptor from the Analogy driver
  * list. The driver cannot be attached anymore.
  *
  * @param[in] drv Driver descriptor structure
@@ -91,8 +91,8 @@ EXPORT_SYMBOL(comedi_register_drv);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_unregister_drv(comedi_drv_t * drv);
-EXPORT_SYMBOL(comedi_unregister_drv);
+int a4l_unregister_drv(a4l_drv_t * drv);
+EXPORT_SYMBOL(a4l_unregister_drv);
 
 /** @} */
 
@@ -104,7 +104,7 @@ EXPORT_SYMBOL(comedi_unregister_drv);
  *
  * Subdevice declaration in a driver
  *
- * The subdevice structure is the most complex one in the Comedi
+ * The subdevice structure is the most complex one in the Analogy
  * driver layer. It contains some description fields to fill and some
  * callbacks to declare.
  *
@@ -129,7 +129,7 @@ EXPORT_SYMBOL(comedi_unregister_drv);
  *   synchronous acquisition operations.
  *
  * Once the subdevice is filled, it must be inserted into the driver
- * structure thanks to comedi_add_subd().
+ * structure thanks to a4l_add_subd().
  *
  * @{
  */
@@ -162,7 +162,7 @@ EXPORT_SYMBOL(comedi_alloc_subd);
  * @brief Add a subdevice to the driver descriptor
  * 
  * Once the driver descriptor structure is initialized, the function
- * comedi_add_subd() must be used so to add some subdevices to the
+ * a4l_add_subd() must be used so to add some subdevices to the
  * driver.
  *
  * @param[in] dev Device descriptor structure
@@ -172,8 +172,8 @@ EXPORT_SYMBOL(comedi_alloc_subd);
  * case of error a negative error code is returned.
  *
  */
-int comedi_add_subd(comedi_dev_t * dev, comedi_subd_t * subd);
-EXPORT_SYMBOL(comedi_add_subd);
+int a4l_add_subd(a4l_dev_t *dev, a4l_subd_t *subd);
+EXPORT_SYMBOL(a4l_add_subd);
 
 /**
  * @brief Get a pointer to the subdevice descriptor referenced by its
@@ -191,8 +191,8 @@ EXPORT_SYMBOL(comedi_add_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-comedi_subd_t *comedi_get_subd(comedi_dev_t *dev, int idx);
-EXPORT_SYMBOL(comedi_get_subd);
+a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx);
+EXPORT_SYMBOL(a4l_get_subd);
 
 /** @} */
 
@@ -200,12 +200,12 @@ EXPORT_SYMBOL(comedi_get_subd);
 
 /*!
  * @ingroup driverfacilities
- * @defgroup comedi_buffer Buffer management services
+ * @defgroup analogy_buffer Buffer management services
  *
  * Buffer management services
  *
- * The buffer is the key component of the Comedi infrastructure. It
- * manages transfers between the user-space and the Comedi drivers
+ * The buffer is the key component of the Analogy infrastructure. It
+ * manages transfers between the user-space and the Analogy drivers
  * thanks to generic functions which are described hereafter. Thanks
  * to the buffer subsystem, the driver developer does not have to care
  * about the way the user program retrieves or sends data.
@@ -214,9 +214,9 @@ EXPORT_SYMBOL(comedi_get_subd);
  * structure so as to provide transfer operations to the user program
  * (read, write, ioctl and mmap if need be).
  *
- * The Comedi infrastructure manages the whole interface with the
+ * The Analogy infrastructure manages the whole interface with the
  * userspace; the common read, write, mmap, etc. callbacks are generic
- * Comedi functions. These functions manage (and perform, if need be)
+ * Analogy functions. These functions manage (and perform, if need be)
  * tranfers between the user-space and an asynchronous buffer thanks
  * to lockless mechanisms.
  *
@@ -225,11 +225,11 @@ EXPORT_SYMBOL(comedi_get_subd);
  * buffer.
  *
  * Here are listed the functions:
- * - comedi_buf_prepare_(abs)put() and comedi_buf_commit_(abs)put()
- * - comedi_buf_prepare_(abs)get() and comedi_buf_commit_(abs)get()
- * - comedi_buf_put()
- * - comedi_buf_get()
- * - comedi_buf_evt().
+ * - a4l_buf_prepare_(abs)put() and a4l_buf_commit_(abs)put()
+ * - a4l_buf_prepare_(abs)get() and a4l_buf_commit_(abs)get()
+ * - a4l_buf_put()
+ * - a4l_buf_get()
+ * - a4l_buf_evt().
  *
  * The functions count might seem high; however, the developer needs a
  * few of them to write a driver. Having so many functions enables to
@@ -237,17 +237,16 @@ EXPORT_SYMBOL(comedi_get_subd);
  * - If some DMA controller is available, there is no need to make the
  *   driver copy the acquired data into the asynchronous buffer, the
  *   DMA controller must directly trigger DMA shots into / from the
- *   buffer. In that case, a function comedi_buf_prepare_*() must be
- *   used so as to set up the DMA transfer and a function
- *   comedi_buf_commit_*() has to be called to complete the
- *   transfer().
+ *   buffer. In that case, a function a4l_buf_prepare_*() must be used
+ *   so as to set up the DMA transfer and a function
+ *   a4l_buf_commit_*() has to be called to complete the transfer().
  * - For DMA controllers which need to work with global counter (the
  *   transfered data count since the beginning of the acquisition),
- *   the functions comedi_buf_*_abs_*() have been made available.
+ *   the functions a4l_buf_*_abs_*() have been made available.
  * - If no DMA controller is available, the driver has to perform the
  *   copy between the hardware component and the asynchronous
- *   buffer. In such cases, the functions comedi_buf_get() and
- *   comedi_buf_put() are useful.
+ *   buffer. In such cases, the functions a4l_buf_get() and
+ *   a4l_buf_put() are useful.
  *
  * @{
  */
@@ -257,13 +256,13 @@ EXPORT_SYMBOL(comedi_get_subd);
  * the buffer since the start of the acquisition and after the next
  * DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(absg)et() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(absg)et() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However, some
+ * pointers still have to be updated so as to monitor the tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred during the next
@@ -273,21 +272,22 @@ EXPORT_SYMBOL(comedi_get_subd);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absput(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_prepare_absput);
+int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_prepare_absput);
 
 /**
  * @brief Set the absolute count of data which was sent from the
  * device to the buffer since the start of the acquisition and until
  * the last DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count transferred to the buffer during
@@ -297,20 +297,21 @@ EXPORT_SYMBOL(comedi_buf_prepare_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absput(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_commit_absput);
+int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_commit_absput);
 
 /**
  * @brief Set the count of data which is to be sent to the buffer at
  * the next DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred
@@ -318,20 +319,21 @@ EXPORT_SYMBOL(comedi_buf_commit_absput);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_put(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_prepare_put);
+int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_prepare_put);
 
 /**
  * @brief Set the count of data sent to the buffer during the last
  * completed DMA shots
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The amount of data transferred
@@ -339,39 +341,40 @@ EXPORT_SYMBOL(comedi_buf_prepare_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_put(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_commit_put);
+int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_commit_put);
 
 /**
  * @brief Copy some data from the device driver to the buffer
  *
- * The function comedi_buf_put() must copy data coming from some
- * acquisition device to the Comedi buffer. This ring-buffer is an
+ * The function a4l_buf_put() must copy data coming from some
+ * acquisition device to the Analogy buffer. This ring-buffer is an
  * intermediate area between the device driver and the user-space
  * program, which is supposed to recover the acquired data.
  *
  * @param[in] subd Subdevice descriptor structure
- * @param[in] bufdata The data buffer to copy into the Comedi buffer
+ * @param[in] bufdata The data buffer to copy into the Analogy buffer
  * @param[in] count The amount of data to copy
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_put(comedi_subd_t *subd, void *bufdata, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_put);
+int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_put);
 
 /**
  * @brief Update the absolute count of data sent from the buffer to
  * the device since the start of the acquisition and after the next
  * DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(absg)et() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(absg)et() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred during the next
@@ -381,21 +384,22 @@ EXPORT_SYMBOL(comedi_buf_put);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_absget(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_prepare_absget);
+int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_prepare_absget);
 
 /**
  * @brief Set the absolute count of data which was sent from the
  * buffer to the device since the start of the acquisition and until
  * the last DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count transferred to the device during
@@ -405,20 +409,21 @@ EXPORT_SYMBOL(comedi_buf_prepare_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_absget(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_commit_absget);
+int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_commit_absget);
 
 /**
  * @brief Set the count of data which is to be sent from the buffer to
  * the device at the next DMA shot
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The data count to be transferred
@@ -426,20 +431,21 @@ EXPORT_SYMBOL(comedi_buf_commit_absget);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_prepare_get(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_prepare_get);
+int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_prepare_get);
 
 /**
  * @brief Set the count of data sent from the buffer to the device
  * during the last completed DMA shots
  *
- * The functions comedi_buf_prepare_(abs)put(),
- * comedi_buf_commit_(abs)put(), comedi_buf_prepare_(abs)get() and
- * comedi_buf_commit_(abs)get() have been made available for DMA
+ * The functions a4l_buf_prepare_(abs)put(),
+ * a4l_buf_commit_(abs)put(), a4l_buf_prepare_(abs)get() and
+ * a4l_buf_commit_(abs)get() have been made available for DMA
  * transfers. In such situations, no data copy is needed between the
- * Comedi buffer and the device as some DMA controller is in charge of
- * performing data shots from / to the Comedi buffer. However, some
- * pointers stil have to be updated so as to monitor the tranfers.
+ * Analogy buffer and the device as some DMA controller is in charge
+ * of performing data shots from / to the Analogy buffer. However,
+ * some pointers still have to be updated so as to monitor the
+ * tranfers.
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] count The amount of data transferred
@@ -447,33 +453,33 @@ EXPORT_SYMBOL(comedi_buf_prepare_get);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_commit_get(comedi_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_commit_get);
+int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_commit_get);
 
 /**
  * @brief Copy some data from the buffer to the device driver
  *
- * The function comedi_buf_get() must copy data coming from the Comedi
+ * The function a4l_buf_get() must copy data coming from the Analogy
  * buffer to some acquisition device. This ring-buffer is an
  * intermediate area between the device driver and the user-space
  * program, which is supposed to provide the data to send to the
  * device.
  *
  * @param[in] subd Subdevice descriptor structure
- * @param[in] bufdata The data buffer to copy into the Comedi buffer
+ * @param[in] bufdata The data buffer to copy into the Analogy buffer
  * @param[in] count The amount of data to copy
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_get(comedi_subd_t *subd, void *bufdata, unsigned long count);
-EXPORT_SYMBOL(comedi_buf_get);
+int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count);
+EXPORT_SYMBOL(a4l_buf_get);
 
 /**
- * @brief Signal some event(s) to a uer-space program involved in some
- * read / write operation
+ * @brief Signal some event(s) to a user-space program involved in
+ * some read / write operation
  *
- * The function comedi_buf_evt() is useful in many cases:
+ * The function a4l_buf_evt() is useful in many cases:
  * - To wake-up a process waiting for some data to read.
  * - To wake-up a process waiting for some data to write.
  * - To notify the user-process an error has occured during the
@@ -481,38 +487,38 @@ EXPORT_SYMBOL(comedi_buf_get);
  *
  * @param[in] subd Subdevice descriptor structure
  * @param[in] evts Some specific event to notify:
- * - COMEDI_BUF_ERROR to indicate some error has occured during the
+ * - A4L_BUF_ERROR to indicate some error has occured during the
  *   transfer
- * - COMEDI_BUF_EOA to indicate the acquisition is complete (this
+ * - A4L_BUF_EOA to indicate the acquisition is complete (this
  *   event is automatically set, it should not be used).
  *
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts);
-EXPORT_SYMBOL(comedi_buf_evt);
+int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts);
+EXPORT_SYMBOL(a4l_buf_evt);
 
 /**
- * @brief Get the data amount available in the Comedi buffer 
+ * @brief Get the data amount available in the Analogy buffer 
  *
  * @param[in] subd Subdevice descriptor structure
  *
- * @return the amount of data available in the Comedi buffer.
+ * @return the amount of data available in the Analogy buffer.
  *
  */
-unsigned long comedi_buf_count(comedi_subd_t *subd);
-EXPORT_SYMBOL(comedi_buf_count);
+unsigned long a4l_buf_count(a4l_subd_t *subd);
+EXPORT_SYMBOL(a4l_buf_count);
 
 /**
- * @brief Get the current Comedi command descriptor
+ * @brief Get the current Analogy command descriptor
  *
  * @param[in] subd Subdevice descriptor structure
  *
  * @return the command descriptor.
  *
  */
-comedi_cmd_t *comedi_get_cmd(comedi_subd_t * subd);
-EXPORT_SYMBOL(comedi_get_cmd);
+a4l_cmd_t *a4l_get_cmd(a4l_subd_t * subd);
+EXPORT_SYMBOL(a4l_get_cmd);
 
 
 /**
@@ -523,8 +529,8 @@ EXPORT_SYMBOL(comedi_get_cmd);
  * @return the channel index.
  *
  */
-int comedi_get_chan(comedi_subd_t *subd);
-EXPORT_SYMBOL(comedi_get_chan);
+int a4l_get_chan(a4l_subd_t *subd);
+EXPORT_SYMBOL(a4l_get_chan);
 
 /** @} */
 
@@ -532,7 +538,7 @@ EXPORT_SYMBOL(comedi_get_chan);
 
 /*!
  * @ingroup driverfacilities
- * @defgroup comedi_interrupt Interrupt management services
+ * @defgroup analogy_interrupt Interrupt management services
  * @{
  */
 
@@ -541,12 +547,12 @@ EXPORT_SYMBOL(comedi_get_chan);
  *
  * @param[in] dev Device descriptor structure
  *
- * @return the line number used or COMEDI_IRQ_UNUSED if no interrupt
+ * @return the line number used or A4L_IRQ_UNUSED if no interrupt
  * is registered.
  *
  */
-unsigned int comedi_get_irq(comedi_dev_t * dev);
-EXPORT_SYMBOL(comedi_get_irq);
+unsigned int a4l_get_irq(a4l_dev_t * dev);
+EXPORT_SYMBOL(a4l_get_irq);
 
 /**
  * @brief Register an interrupt handler for a specific device
@@ -555,12 +561,12 @@ EXPORT_SYMBOL(comedi_get_irq);
  * @param[in] irq Line number of the addressed IRQ
  * @param[in] handler Interrupt handler
  * @param[in] flags Registration flags:
- * - COMEDI_IRQ_SHARED: enable IRQ-sharing with other drivers
+ * - A4L_IRQ_SHARED: enable IRQ-sharing with other drivers
  *   (Warning: real-time drivers and non-real-time drivers cannot
  *   share an interrupt line).
- * - COMEDI_IRQ_EDGE: mark IRQ as edge-triggered (Warning: this flag
+ * - A4L_IRQ_EDGE: mark IRQ as edge-triggered (Warning: this flag
  *   is meaningless in RTDM-less context).
- * - COMEDI_IRQ_DISABLED: keep IRQ disabled when calling the action
+ * - A4L_IRQ_DISABLED: keep IRQ disabled when calling the action
  *   handler (Warning: this flag is ignored in RTDM-enabled
  *   configuration).
  * @param[in] cookie Pointer to be passed to the interrupt handler on
@@ -569,11 +575,11 @@ EXPORT_SYMBOL(comedi_get_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_request_irq(comedi_dev_t * dev,
+int a4l_request_irq(a4l_dev_t * dev,
 		       unsigned int irq,
-		       comedi_irq_hdlr_t handler,
+		       a4l_irq_hdlr_t handler,
 		       unsigned long flags, void *cookie);
-EXPORT_SYMBOL(comedi_request_irq);
+EXPORT_SYMBOL(a4l_request_irq);
 
 /**
  * @brief Release an interrupt handler for a specific device
@@ -584,8 +590,8 @@ EXPORT_SYMBOL(comedi_request_irq);
  * @return 0 on success, otherwise negative error code.
  *
  */
-int comedi_free_irq(comedi_dev_t * dev, unsigned int irq);
-EXPORT_SYMBOL(comedi_free_irq);
+int a4l_free_irq(a4l_dev_t * dev, unsigned int irq);
+EXPORT_SYMBOL(a4l_free_irq);
 
 /** @} */
 
@@ -600,11 +606,11 @@ EXPORT_SYMBOL(comedi_free_irq);
 #ifdef DOXYGEN_CPP		/* Only used for doxygen doc generation */
 
 /**
- * @brief Intialise and start a Comedi task
+ * @brief Intialise and start an Analogy task
  *
  * This function belongs to a minimal set of task management services
- * (with comedi_task_destroy() and comedi_task_sleep()). Such features
- * are not critical for Comedi driver development.
+ * (with a4l_task_destroy() and a4l_task_sleep()). Such features
+ * are not critical for Analogy driver development.
  *
  * @param[in,out] task Task handle
  * @param[in] name Optional task name
@@ -615,36 +621,36 @@ EXPORT_SYMBOL(comedi_free_irq);
  * @return 0 on success, otherwise negative error code
  *
  */
-int comedi_task_init(comedi_task_t * task,
-		     const char *name,
-		     comedi_task_proc_t proc, void *arg, int priority);
+int a4l_task_init(a4l_task_t * task,
+		  const char *name,
+		  a4l_task_proc_t proc, void *arg, int priority);
 
 /**
- * @brief Destroy a Comedi task
+ * @brief Destroy an Analogy task
  *
  * This function belongs to a minimal set of task management services
- * (with comedi_task_init() and comedi_task_sleep()). Such features
- * are not critical for Comedi driver development.
+ * (with a4l_task_init() and a4l_task_sleep()). Such features
+ * are not critical for Analogy driver development.
  *
  * @param[in,out] task Task handle
  *
  */
-void comedi_task_destroy(comedi_task_t * task);
+void a4l_task_destroy(a4l_task_t * task);
 
 /**
- * @brief Make the current Comedi task passively wait a defined delay
+ * @brief Make the current Analogy task passively wait a defined delay
  *
  * This function belongs to a minimal set of task management services
- * (with comedi_task_init() and comedi_task_destroy()). Such features
- * are not critical for Comedi driver development.
+ * (with a4l_task_init() and a4l_task_destroy()). Such features
+ * are not critical for Analogy driver development.
  *
  * @param[in] nsdelay Amount of time expressed in nanoseconds during
- * which the Comedi task must be sleeping.
+ * which the Analogy task must be sleeping.
  *
  * @return 0 on success, otherwise negative error code
  *
  */
-int comedi_task_sleep(unsigned long long nsdelay);
+int a4l_task_sleep(unsigned long long nsdelay);
 
 #endif /* DOXYGEN_CPP */
 
@@ -654,7 +660,7 @@ int comedi_task_sleep(unsigned long long nsdelay);
  * @return the absolute time expressed in nanoseconds
  *
  */
-unsigned long long comedi_get_time(void);
-EXPORT_SYMBOL(comedi_get_time);
+unsigned long long a4l_get_time(void);
+EXPORT_SYMBOL(a4l_get_time);
 
 /** @} */

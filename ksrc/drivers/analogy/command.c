@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, command related features
+ * Analogy for Linux, command related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -28,18 +28,18 @@
 #include <asm/io.h>
 #include <asm/errno.h>
 
-#include <comedi/context.h>
-#include <comedi/device.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
 
 /* --- Command descriptor management functions --- */
 
-int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
+int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
 {
 	int ret = 0;
 	unsigned int *tmpchans = NULL;
 
 	ret = rtdm_safe_copy_from_user(cxt->user_info, 
-				       desc, arg, sizeof(comedi_cmd_t));
+				       desc, arg, sizeof(a4l_cmd_t));
 	if (ret != 0)
 		goto out_cmddesc;
 
@@ -63,13 +63,13 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 
 	desc->chan_descs = tmpchans;
 
-	__comedi_dbg(1, core_dbg, "comedi_fill_cmddesc: desc dump\n");
-	__comedi_dbg(1, core_dbg, "\t->idx_subd=%u\n", desc->idx_subd);
-	__comedi_dbg(1, core_dbg, "\t->flags=%lu\n", desc->flags);
-	__comedi_dbg(1, core_dbg, "\t->nb_chan=%u\n", desc->nb_chan);
-	__comedi_dbg(1, core_dbg, "\t->chan_descs=0x%x\n", *desc->chan_descs);
-	__comedi_dbg(1, core_dbg, "\t->data_len=%u\n", desc->data_len);
-	__comedi_dbg(1, core_dbg, "\t->pdata=0x%p\n", desc->data);
+	__a4l_dbg(1, core_dbg, "a4l_fill_cmddesc: desc dump\n");
+	__a4l_dbg(1, core_dbg, "\t->idx_subd=%u\n", desc->idx_subd);
+	__a4l_dbg(1, core_dbg, "\t->flags=%lu\n", desc->flags);
+	__a4l_dbg(1, core_dbg, "\t->nb_chan=%u\n", desc->nb_chan);
+	__a4l_dbg(1, core_dbg, "\t->chan_descs=0x%x\n", *desc->chan_descs);
+	__a4l_dbg(1, core_dbg, "\t->data_len=%u\n", desc->data_len);
+	__a4l_dbg(1, core_dbg, "\t->pdata=0x%p\n", desc->data);
 
       out_cmddesc:
 
@@ -82,53 +82,53 @@ int comedi_fill_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc, void *arg)
 	return ret;
 }
 
-void comedi_free_cmddesc(comedi_cmd_t * desc)
+void a4l_free_cmddesc(a4l_cmd_t * desc)
 {
 	if (desc->chan_descs != NULL)
 		rtdm_free(desc->chan_descs);
 }
 
-int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc)
+int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 {
 	int ret = 0;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_check_cmddesc: minor=%d\n", comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		     "a4l_check_cmddesc: minor=%d\n", a4l_get_minor(cxt));
 
 	if (desc->idx_subd >= dev->transfer.nb_subd) {
-		__comedi_err("comedi_check_cmddesc: "
+		__a4l_err("a4l_check_cmddesc: "
 			     "subdevice index out of range (%u >= %u)\n",
 			     desc->idx_subd, dev->transfer.nb_subd);
 		return -EINVAL;
 	}
 
-	if (dev->transfer.subds[desc->idx_subd]->flags & COMEDI_SUBD_UNUSED) {
-		__comedi_err("comedi_check_cmddesc: "
+	if (dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_UNUSED) {
+		__a4l_err("a4l_check_cmddesc: "
 			     "subdevice type incoherent\n");
 		return -EIO;
 	}
 
-	if (!(dev->transfer.subds[desc->idx_subd]->flags & COMEDI_SUBD_CMD)) {
-		__comedi_err("comedi_check_cmddesc: operation not supported\n");
+	if (!(dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_CMD)) {
+		__a4l_err("a4l_check_cmddesc: operation not supported\n");
 		return -EIO;
 	}
 
-	if (test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[desc->idx_subd])))
+	if (test_bit(A4L_TSF_BUSY, &(dev->transfer.status[desc->idx_subd])))
 		return -EBUSY;
 
 	if (ret != 0) {
-		__comedi_err("comedi_check_cmddesc: subdevice busy\n");
+		__a4l_err("a4l_check_cmddesc: subdevice busy\n");
 		return ret;
 	}
 
-	return comedi_check_chanlist(dev->transfer.subds[desc->idx_subd],
+	return a4l_check_chanlist(dev->transfer.subds[desc->idx_subd],
 				     desc->nb_chan, desc->chan_descs);
 }
 
 /* --- Command checking functions --- */
 
-int comedi_check_generic_cmdcnt(comedi_cmd_t * desc)
+int a4l_check_generic_cmdcnt(a4l_cmd_t * desc)
 {
 	unsigned int tmp1, tmp2;
 
@@ -200,11 +200,11 @@ int comedi_check_generic_cmdcnt(comedi_cmd_t * desc)
 	return 0;
 }
 
-int comedi_check_specific_cmdcnt(comedi_cxt_t * cxt, comedi_cmd_t * desc)
+int a4l_check_specific_cmdcnt(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 {
 	unsigned int tmp1, tmp2;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_cmd_t *cmd_mask = dev->transfer.subds[desc->idx_subd]->cmd_mask;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_cmd_t *cmd_mask = dev->transfer.subds[desc->idx_subd]->cmd_mask;
 
 	if (cmd_mask == NULL)
 		return 0;
@@ -248,36 +248,36 @@ int comedi_check_specific_cmdcnt(comedi_cxt_t * cxt, comedi_cmd_t * desc)
 
 /* --- IOCTL / FOPS function --- */
 
-int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0, simul_flag = 0;
-	comedi_cmd_t *cmd_desc = NULL;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_cmd_t *cmd_desc = NULL;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_ioctl_cmd: minor=%d\n", comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		     "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
 
 	/* Allocates the command */
-	cmd_desc = (comedi_cmd_t *) rtdm_malloc(sizeof(comedi_cmd_t));
+	cmd_desc = (a4l_cmd_t *) rtdm_malloc(sizeof(a4l_cmd_t));
 	if (cmd_desc == NULL)
 		return -ENOMEM;
-	memset(cmd_desc, 0, sizeof(comedi_cmd_t));
+	memset(cmd_desc, 0, sizeof(a4l_cmd_t));
 
 	/* Gets the command */
-	ret = comedi_fill_cmddesc(cxt, cmd_desc, arg);
+	ret = a4l_fill_cmddesc(cxt, cmd_desc, arg);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
 	/* Checks the command */
-	ret = comedi_check_cmddesc(cxt, cmd_desc);
+	ret = a4l_check_cmddesc(cxt, cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	ret = comedi_check_generic_cmdcnt(cmd_desc);
+	ret = a4l_check_generic_cmdcnt(cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	ret = comedi_check_specific_cmdcnt(cxt, cmd_desc);
+	ret = a4l_check_specific_cmdcnt(cxt, cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
@@ -289,18 +289,18 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	if (cmd_desc->flags & COMEDI_CMD_SIMUL) {
+	if (cmd_desc->flags & A4L_CMD_SIMUL) {
 		simul_flag = 1;
 		goto out_ioctl_cmd;
 	}
 
 	/* Sets the concerned subdevice as busy */
-	ret = comedi_reserve_transfer(cxt, cmd_desc->idx_subd);
+	ret = a4l_reserve_transfer(cxt, cmd_desc->idx_subd);
 	if (ret < 0)
 		goto out_ioctl_cmd;
 
 	/* Gets the transfer system ready */
-	comedi_init_transfer(cxt, cmd_desc);
+	a4l_init_transfer(cxt, cmd_desc);
 
 	/* Eventually launches the command */
 	ret = dev->transfer.subds[cmd_desc->idx_subd]->
@@ -308,13 +308,13 @@ int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg)
 		       cmd_desc);
 
 	if (ret != 0) {
-		comedi_cancel_transfer(cxt, cmd_desc->idx_subd);
+		a4l_cancel_transfer(cxt, cmd_desc->idx_subd);
 		goto out_ioctl_cmd;
 	}
 
       out_ioctl_cmd:
 	if (ret != 0 || simul_flag == 1) {
-		comedi_free_cmddesc(cmd_desc);
+		a4l_free_cmddesc(cmd_desc);
 		rtdm_free(cmd_desc);
 	}
 

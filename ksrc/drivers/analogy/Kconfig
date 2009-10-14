@@ -1,0 +1,34 @@
+menu "ANALOGY drivers"
+
+config XENO_DRIVERS_ANALOGY
+	depends on XENO_SKIN_RTDM
+	tristate "ANALOGY interface"
+	help
+
+	ANALOGY is a framework aimed at supporting data acquisition
+	drivers.
+
+config XENO_DRIVERS_ANALOGY_DEBUG
+       bool "Analogy debug trace"
+       default y
+       help
+
+       Enable debugging traces in Analogy so as to monitor Analogy's
+       core and drivers behaviours.
+
+config XENO_DRIVERS_ANALOGY_DEBUG_LEVEL
+       int "Analogy core debug level threshold"
+       default 0
+       help
+
+       Define the level above which the debugging traces will not be
+       displayed.
+
+       WARNING: this threshold is only applied on the Analogy
+       core. That will not affect the driver.
+
+source drivers/xenomai/analogy/testing/Kconfig
+source drivers/xenomai/analogy/intel/Kconfig
+source drivers/xenomai/analogy/national_instruments/Kconfig
+
+endmenu

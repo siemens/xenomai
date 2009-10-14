@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, procfs related features
+ * Analogy for Linux, procfs related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,15 +20,15 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_PROC_H__
-#define __COMEDI_PROC_H__
+#ifndef __ANALOGY_PROC_H__
+#define __ANALOGY_PROC_H__
 
 #ifdef __KERNEL__
 
 #ifdef CONFIG_PROC_FS
-extern struct proc_dir_entry *comedi_proc_root;
+extern struct proc_dir_entry *a4l_proc_root;
 #endif /* CONFIG_PROC_FS */
 
 #endif /* __KERNEL__ */
 
-#endif /* __COMEDI_PROC_H__ */
+#endif /* __ANALOGY_PROC_H__ */

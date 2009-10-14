@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, driver facilities
+ * Analogy for Linux, driver facilities
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,8 +20,8 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_CMD__
-#define __COMEDI_CMD__
+#ifndef __ANALOGY_CMD__
+#define __ANALOGY_CMD__
 
 #include <comedi/context.h>
 
@@ -31,7 +31,7 @@
  */
 
 /*!
- * @anchor COMEDI_CMD_xxx @name COMEDI_CMD_xxx
+ * @anchor ANALOGY_CMD_xxx @name ANALOGY_CMD_xxx
  * @brief Common command flags definitions
  * @{
  */
@@ -39,17 +39,17 @@
 /** 
  * Do not execute the command, just check it
  */
-#define COMEDI_CMD_SIMUL 0x1
+#define CMD_SIMUL 0x1
 /** 
  * Perform data recovery / transmission in bulk mode
  */
-#define COMEDI_CMD_BULK 0x2
+#define CMD_BULK 0x2
 /** 
  * Perform a command which will write data to the device
  */
-#define COMEDI_CMD_WRITE 0x4
+#define CMD_WRITE 0x4
 
-	  /*! @} COMEDI_CMD_xxx */
+	  /*! @} ANALOGY_CMD_xxx */
 
 /*!
  * @anchor TRIG_xxx @name TRIG_xxx
@@ -187,10 +187,10 @@
 
 /*! 
  * @brief Structure describing the asynchronous instruction
- * @see comedi_snd_command()
+ * @see analogy_snd_command()
  */
 
-struct comedi_cmd_desc {
+struct analogy_cmd_desc {
 	unsigned char idx_subd;
 			    /**< Subdevice to which the command will be applied. */
 
@@ -230,19 +230,19 @@ struct comedi_cmd_desc {
 	sampl_t *data;
 		   /**< Driver specific buffer pointer */
 };
-typedef struct comedi_cmd_desc comedi_cmd_t;
+typedef struct analogy_cmd_desc analogy_cmd_t;
 
 	  /*! @} async1_lib */
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
 /* --- Command related function --- */
-void comedi_free_cmddesc(comedi_cmd_t * desc);
+void a4l_free_cmddesc(analogy_cmd_t * desc);
 
 /* --- Upper layer functions --- */
-int comedi_check_cmddesc(comedi_cxt_t * cxt, comedi_cmd_t * desc);
-int comedi_ioctl_cmd(comedi_cxt_t * cxt, void *arg);
+int a4l_check_cmddesc(a4l_cxt_t * cxt, analogy_cmd_t * desc);
+int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg);
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */
 
-#endif /* __COMEDI_CMD__ */
+#endif /* __ANALOGY_CMD__ */

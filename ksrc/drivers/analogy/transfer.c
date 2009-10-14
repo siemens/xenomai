@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, transfer related features
+ * Analogy for Linux, transfer related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -26,34 +26,34 @@
 #include <linux/fs.h>
 #include <asm/errno.h>
 
-#include <comedi/context.h>
-#include <comedi/device.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
 
 #include "proc.h"
 
 /* --- Initialization / cleanup / cancel functions --- */
 
-int comedi_cleanup_transfer(comedi_cxt_t * cxt)
+int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 {
-	comedi_dev_t *dev;
-	comedi_trf_t *tsf;
+	a4l_dev_t *dev;
+	a4l_trf_t *tsf;
 	int i;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_cleanup_transfer: minor=%d\n", 
-		     comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_cleanup_transfer: minor=%d\n", 
+		  a4l_get_minor(cxt));
 
-	dev = comedi_get_dev(cxt);
+	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
 	if (tsf == NULL)
 		return -ENODEV;
 
 	for (i = 0; i < tsf->nb_subd; i++) {
-		if (test_bit(COMEDI_TSF_BUSY, &(tsf->status[i])))
+		if (test_bit(A4L_TSF_BUSY, &(tsf->status[i])))
 			return EBUSY;
 
-		if (test_bit(COMEDI_TSF_MMAP, &(tsf->status[i])))
+		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i])))
 			return -EPERM;
 	}
 
@@ -64,8 +64,8 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 	if (tsf->bufs != NULL) {
 		for (i = 0; i < tsf->nb_subd; i++) {
 			if (tsf->bufs[i] != NULL) {
-				comedi_free_buffer(tsf->bufs[i]);
-				comedi_cleanup_sync(&tsf->bufs[i]->sync);
+				a4l_free_buffer(tsf->bufs[i]);
+				a4l_cleanup_sync(&tsf->bufs[i]->sync);
 				rtdm_free(tsf->bufs[i]);
 			}
 		}
@@ -80,43 +80,43 @@ int comedi_cleanup_transfer(comedi_cxt_t * cxt)
 	return 0;
 }
 
-void comedi_presetup_transfer(comedi_cxt_t *cxt)
+void a4l_presetup_transfer(a4l_cxt_t *cxt)
 {
-	comedi_dev_t *dev = NULL;
-	comedi_trf_t *tsf;
+	a4l_dev_t *dev = NULL;
+	a4l_trf_t *tsf;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_presetup_transfer: minor=%d\n",
-		     comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_presetup_transfer: minor=%d\n",
+		  a4l_get_minor(cxt));
 
-	dev = comedi_get_dev(cxt);
+	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
 	/* Clear the structure */
-	memset(tsf, 0, sizeof(comedi_trf_t));
+	memset(tsf, 0, sizeof(a4l_trf_t));
 
 	/* We consider 0 can be valid index */
-	tsf->idx_read_subd = COMEDI_IDX_UNUSED;
-	tsf->idx_write_subd = COMEDI_IDX_UNUSED;
+	tsf->idx_read_subd = A4L_IDX_UNUSED;
+	tsf->idx_write_subd = A4L_IDX_UNUSED;
 
 	/* 0 is also considered as a valid IRQ, then 
 	   the IRQ number must be initialized with another value */
-	tsf->irq_desc.irq = COMEDI_IRQ_UNUSED;
+	tsf->irq_desc.irq = A4L_IRQ_UNUSED;
 }
 
-int comedi_setup_transfer(comedi_cxt_t * cxt)
+int a4l_setup_transfer(a4l_cxt_t * cxt)
 {
-	comedi_dev_t *dev = NULL;
-	comedi_trf_t *tsf;
-	comedi_subd_t *subd;
+	a4l_dev_t *dev = NULL;
+	a4l_trf_t *tsf;
+	a4l_subd_t *subd;
 	struct list_head *this;
 	int i = 0, ret = 0;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_setup_transfer: minor=%d\n",
-		     comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_setup_transfer: minor=%d\n",
+		  a4l_get_minor(cxt));
 
-	dev = comedi_get_dev(cxt);
+	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
 	/* Recovers the subdevices count 
@@ -126,95 +126,95 @@ int comedi_setup_transfer(comedi_cxt_t * cxt)
 	}
 
 	/* Allocates a suitable tab for the subdevices */
-	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(comedi_subd_t *));
+	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(a4l_subd_t *));
 	if (tsf->subds == NULL) {
-		__comedi_err("comedi_setup_transfer: call2(alloc) failed \n");
+		__a4l_err("a4l_setup_transfer: call2(alloc) failed \n");
 		ret = -ENOMEM;
 		goto out_setup_tsf;
 	}
 
 	/* Recovers the subdevices pointers */
 	list_for_each(this, &dev->subdvsq) {
-		subd = list_entry(this, comedi_subd_t, list);
+		subd = list_entry(this, a4l_subd_t, list);
 
-		if (subd->flags & COMEDI_SUBD_AI)
+		if (subd->flags & A4L_SUBD_AI)
 			tsf->idx_read_subd = i;
 
-		if (subd->flags & COMEDI_SUBD_AO)
+		if (subd->flags & A4L_SUBD_AO)
 			tsf->idx_write_subd = i;
 
 		tsf->subds[i++] = subd;
 	}
 
 	/* Allocates various buffers */
-	tsf->bufs = rtdm_malloc(tsf->nb_subd * sizeof(comedi_buf_t *));
+	tsf->bufs = rtdm_malloc(tsf->nb_subd * sizeof(a4l_buf_t *));
 	if (tsf->bufs == NULL) {
 		ret = -ENOMEM;
 		goto out_setup_tsf;
 	}
-	memset(tsf->bufs, 0, tsf->nb_subd * sizeof(comedi_buf_t *));
+	memset(tsf->bufs, 0, tsf->nb_subd * sizeof(a4l_buf_t *));
 
 	for (i = 0; i < tsf->nb_subd; i++) {
-		if (tsf->subds[i]->flags & COMEDI_SUBD_CMD) {
-			tsf->bufs[i] = rtdm_malloc(sizeof(comedi_buf_t));
+		if (tsf->subds[i]->flags & A4L_SUBD_CMD) {
+			tsf->bufs[i] = rtdm_malloc(sizeof(a4l_buf_t));
 			if (tsf->bufs[i] == NULL) {
-				__comedi_err("comedi_setup_transfer: "
-					     "call5-6(alloc) failed \n");
+				__a4l_err("a4l_setup_transfer: "
+					  "call5-6(alloc) failed \n");
 				ret = -ENOMEM;
 				goto out_setup_tsf;
 			}
 
-			memset(tsf->bufs[i], 0, sizeof(comedi_buf_t));
-			comedi_init_sync(&(tsf->bufs[i]->sync));
+			memset(tsf->bufs[i], 0, sizeof(a4l_buf_t));
+			a4l_init_sync(&(tsf->bufs[i]->sync));
 
-			if ((ret = comedi_alloc_buffer(tsf->bufs[i])) != 0)
+			if ((ret = a4l_alloc_buffer(tsf->bufs[i])) != 0)
 				goto out_setup_tsf;
 		}
 	}
 
 	tsf->status = rtdm_malloc(tsf->nb_subd * sizeof(unsigned long));
 	if (tsf->status == NULL) {
-		__comedi_err("comedi_setup_transfer: call8(alloc) failed \n");
+		__a4l_err("a4l_setup_transfer: call8(alloc) failed \n");
 		ret = -ENOMEM;
 	}
 
 	memset(tsf->status, 0, tsf->nb_subd * sizeof(unsigned long));
 
-      out_setup_tsf:
+out_setup_tsf:
 
 	if (ret != 0)
-		comedi_cleanup_transfer(cxt);
+		a4l_cleanup_transfer(cxt);
 
 	return ret;
 }
 
-int comedi_reserve_transfer(comedi_cxt_t * cxt, int idx_subd)
+int a4l_reserve_transfer(a4l_cxt_t * cxt, int idx_subd)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__comedi_dbg(1, core_dbg,
-		     "comedi_reserve_transfer: minor=%d idx=%d\n",
-		     comedi_get_minor(cxt), idx_subd);
+	__a4l_dbg(1, core_dbg,
+		  "a4l_reserve_transfer: minor=%d idx=%d\n",
+		  a4l_get_minor(cxt), idx_subd);
 
-	if (test_and_set_bit(COMEDI_TSF_BUSY,
+	if (test_and_set_bit(A4L_TSF_BUSY,
 			     &(dev->transfer.status[idx_subd])))
 		return -EBUSY;
 
 	return 0;
 }
 
-int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
+int a4l_init_transfer(a4l_cxt_t * cxt, a4l_cmd_t * cmd)
 {
 	int i;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__comedi_dbg(1, core_dbg,
-		     "comedi_init_transfer: minor=%d idx=%d\n",
-		     comedi_get_minor(cxt), cmd->idx_subd);
+	__a4l_dbg(1, core_dbg,
+		  "a4l_init_transfer: minor=%d idx=%d\n",
+		  a4l_get_minor(cxt), cmd->idx_subd);
 
 	/* Checks if the transfer system has to work in bulk mode */
-	if (cmd->flags & COMEDI_CMD_BULK)
-		set_bit(COMEDI_TSF_BULK,
+	if (cmd->flags & A4L_CMD_BULK)
+		set_bit(A4L_TSF_BULK,
 			&(dev->transfer.status[cmd->idx_subd]));
 
 	/* Sets the working command */
@@ -231,13 +231,13 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
-			comedi_chan_t *chft;
+			a4l_chan_t *chft;
 			chft =
-			    comedi_get_chfeat(dev->transfer.
-					      subds[cmd->idx_subd],
-					      CR_CHAN(cmd->chan_descs[i]));
+				a4l_get_chfeat(dev->transfer.
+					       subds[cmd->idx_subd],
+					       CR_CHAN(cmd->chan_descs[i]));
 			dev->transfer.bufs[cmd->idx_subd]->end_count +=
-			    chft->nb_bits / 8;
+				chft->nb_bits / 8;
 		}
 		dev->transfer.bufs[cmd->idx_subd]->end_count *= cmd->stop_arg;
 	}
@@ -246,14 +246,14 @@ int comedi_init_transfer(comedi_cxt_t * cxt, comedi_cmd_t * cmd)
 	return 0;
 }
 
-int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
+int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd)
 {
 	int ret = 0;
-	comedi_subd_t *subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_subd_t *subd;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return 0;
 
 	/* Retrieves the proper subdevice pointer */
@@ -265,13 +265,13 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	   the "cancel" function can be used as as to (re)initialize 
 	   some component) */
 	if (subd->cancel != NULL && (ret = subd->cancel(subd)) < 0) {
-		__comedi_err("comedi_cancel: "
-			     "subdevice %d cancel handler failed (ret=%d)\n",
-			     idx_subd, ret);
+		__a4l_err("a4l_cancel: "
+			  "subdevice %d cancel handler failed (ret=%d)\n",
+			  idx_subd, ret);
 	}
 
 	/* Clears the "busy" flag */
-	clear_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd]));
+	clear_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]));
 
 	/* If the subdevice is command capable and 
 	   if there is a command is under progress, 
@@ -279,7 +279,7 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 	if (dev->transfer.bufs != NULL &&
 	    dev->transfer.bufs[idx_subd]->cur_cmd != NULL) {
 
-		comedi_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
+		a4l_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
 		rtdm_free(dev->transfer.bufs[idx_subd]->cur_cmd);
 		dev->transfer.bufs[idx_subd]->cur_cmd = NULL;
 
@@ -292,34 +292,34 @@ int comedi_cancel_transfer(comedi_cxt_t * cxt, int idx_subd)
 
 /* --- IRQ handling section --- */
 
-int comedi_request_irq(comedi_dev_t * dev,
-		       unsigned int irq,
-		       comedi_irq_hdlr_t handler,
-		       unsigned long flags, void *cookie)
+int a4l_request_irq(a4l_dev_t * dev,
+		    unsigned int irq,
+		    a4l_irq_hdlr_t handler,
+		    unsigned long flags, void *cookie)
 {
 	int ret;
 	unsigned long __flags;
 
-	if (dev->transfer.irq_desc.irq != COMEDI_IRQ_UNUSED)
+	if (dev->transfer.irq_desc.irq != A4L_IRQ_UNUSED)
 		return -EBUSY;
 
 	/* A spinlock is used so as to prevent race conditions 
 	   on the field "irq" of the IRQ descriptor 
 	   (even if such a case is bound not to happen) */
-	comedi_lock_irqsave(&dev->lock, __flags);
+	a4l_lock_irqsave(&dev->lock, __flags);
 
-	ret = __comedi_request_irq(&dev->transfer.irq_desc,
-				   irq, handler, flags, cookie);
+	ret = __a4l_request_irq(&dev->transfer.irq_desc,
+				irq, handler, flags, cookie);
 
 	if (ret != 0)
-		dev->transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
+		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 
-	comedi_unlock_irqrestore(&dev->lock, __flags);
+	a4l_unlock_irqrestore(&dev->lock, __flags);
 
 	return ret;
 }
 
-int comedi_free_irq(comedi_dev_t * dev, unsigned int irq)
+int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
 {
 
 	int ret = 0;
@@ -328,16 +328,16 @@ int comedi_free_irq(comedi_dev_t * dev, unsigned int irq)
 		return -EINVAL;
 
 	/* There is less need to use a spinlock 
-	   than for comedi_request_irq() */
-	ret = __comedi_free_irq(&dev->transfer.irq_desc);
+	   than for a4l_request_irq() */
+	ret = __a4l_free_irq(&dev->transfer.irq_desc);
 
 	if (ret == 0)
-		dev->transfer.irq_desc.irq = COMEDI_IRQ_UNUSED;
+		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 
 	return 0;
 }
 
-unsigned int comedi_get_irq(comedi_dev_t * dev)
+unsigned int a4l_get_irq(a4l_dev_t * dev)
 {
 	return dev->transfer.irq_desc.irq;
 }
@@ -346,13 +346,13 @@ unsigned int comedi_get_irq(comedi_dev_t * dev)
 
 #ifdef CONFIG_PROC_FS
 
-int comedi_rdproc_transfer(char *page,
-			   char **start,
-			   off_t off, int count, int *eof, void *data)
+int a4l_rdproc_transfer(char *page,
+			char **start,
+			off_t off, int count, int *eof, void *data)
 {
 	int i, len = 0;
 	char *p = page;
-	comedi_trf_t *transfer = (comedi_trf_t *) data;
+	a4l_trf_t *transfer = (a4l_trf_t *) data;
 
 	p += sprintf(p, "--  Subdevices --\n\n");
 	p += sprintf(p, "| idx | type\n");
@@ -360,41 +360,41 @@ int comedi_rdproc_transfer(char *page,
 	/* Gives the subdevice type's name */
 	for (i = 0; i < transfer->nb_subd; i++) {
 		char *type;
-		switch (transfer->subds[i]->flags & COMEDI_SUBD_TYPES) {
-		case COMEDI_SUBD_UNUSED:
+		switch (transfer->subds[i]->flags & A4L_SUBD_TYPES) {
+		case A4L_SUBD_UNUSED:
 			type = "Unused subdevice";
 			break;
-		case COMEDI_SUBD_AI:
+		case A4L_SUBD_AI:
 			type = "Analog input subdevice";
 			break;
-		case COMEDI_SUBD_AO:
+		case A4L_SUBD_AO:
 			type = "Analog output subdevice";
 			break;
-		case COMEDI_SUBD_DI:
+		case A4L_SUBD_DI:
 			type = "Digital input subdevice";
 			break;
-		case COMEDI_SUBD_DO:
+		case A4L_SUBD_DO:
 			type = "Digital output subdevice";
 			break;
-		case COMEDI_SUBD_DIO:
+		case A4L_SUBD_DIO:
 			type = "Digital input/output subdevice";
 			break;
-		case COMEDI_SUBD_COUNTER:
+		case A4L_SUBD_COUNTER:
 			type = "Counter subdevice";
 			break;
-		case COMEDI_SUBD_TIMER:
+		case A4L_SUBD_TIMER:
 			type = "Timer subdevice";
 			break;
-		case COMEDI_SUBD_MEMORY:
+		case A4L_SUBD_MEMORY:
 			type = "Memory subdevice";
 			break;
-		case COMEDI_SUBD_CALIB:
+		case A4L_SUBD_CALIB:
 			type = "Calibration subdevice";
 			break;
-		case COMEDI_SUBD_PROC:
+		case A4L_SUBD_PROC:
 			type = "Processor subdevice";
 			break;
-		case COMEDI_SUBD_SERIAL:
+		case A4L_SUBD_SERIAL:
 			type = "Serial subdevice";
 			break;
 		default:
@@ -428,27 +428,27 @@ int comedi_rdproc_transfer(char *page,
 
 /* --- IOCTL / FOPS functions --- */
 
-int comedi_ioctl_cancel(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 {
 	unsigned int idx_subd = (unsigned long)arg;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_subd_t *subd;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_subd_t *subd;
 
 	if (idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	if (dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_UNUSED)
+	if (dev->transfer.subds[idx_subd]->flags & A4L_SUBD_UNUSED)
 		return -EIO;
 
-	if (!(dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD))
+	if (!(dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD))
 		return -EIO;
 
 	subd = dev->transfer.subds[idx_subd];
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -EINVAL;
 
-	return comedi_cancel_transfer(cxt, idx_subd);
+	return a4l_cancel_transfer(cxt, idx_subd);
 }
 
 #endif /* !DOXYGEN_CPP */

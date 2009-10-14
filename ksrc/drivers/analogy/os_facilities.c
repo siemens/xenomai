@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, OS facilities
+ * Analogy for Linux, OS facilities
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -27,34 +27,34 @@
 #include <linux/fs.h>
 #include <asm/atomic.h>
 
-#include <comedi/os_facilities.h>
+#include <analogy/os_facilities.h>
 
 /* --- Time section --- */
 
-static unsigned long long comedi_clkofs;
+static unsigned long long a4l_clkofs;
 
-void comedi_init_time(void)
+void a4l_init_time(void)
 {
 	unsigned long long t1, t2;
 	struct timeval tv;
-	t1 = comedi_get_rawtime();
+	t1 = a4l_get_rawtime();
 	do_gettimeofday(&tv);
 	t2 = 1000000000 * ((unsigned long long)tv.tv_sec) +
-	    1000000 * ((unsigned long long)tv.tv_usec);
-	comedi_clkofs = t2 - t1;
+		1000000 * ((unsigned long long)tv.tv_usec);
+	a4l_clkofs = t2 - t1;
 }
 
-unsigned long long comedi_get_time(void)
+unsigned long long a4l_get_time(void)
 {
-	return comedi_clkofs + comedi_get_rawtime();
+	return a4l_clkofs + a4l_get_rawtime();
 }
 
 /* --- IRQ section --- */
 
-static int comedi_handle_irq(rtdm_irq_t *irq_handle)
+static int a4l_handle_irq(rtdm_irq_t *irq_handle)
 {
-	comedi_irq_desc_t *dsc =
-	    rtdm_irq_get_arg(irq_handle, comedi_irq_desc_t);
+	a4l_irq_desc_t *dsc =
+		rtdm_irq_get_arg(irq_handle, a4l_irq_desc_t);
 
 	if (dsc->handler((unsigned int)irq_handle->irq, dsc->cookie) == 0)
 		return RTDM_IRQ_HANDLED;
@@ -62,10 +62,10 @@ static int comedi_handle_irq(rtdm_irq_t *irq_handle)
 		return RTDM_IRQ_NONE;
 }
 
-int __comedi_request_irq(comedi_irq_desc_t *dsc,
-			 unsigned int irq,
-			 comedi_irq_hdlr_t handler,
-			 unsigned long flags, void *cookie)
+int __a4l_request_irq(a4l_irq_desc_t *dsc,
+		      unsigned int irq,
+		      a4l_irq_hdlr_t handler,
+		      unsigned long flags, void *cookie)
 {
 	/* Fills the IRQ descriptor */
 	dsc->handler = handler;
@@ -75,23 +75,23 @@ int __comedi_request_irq(comedi_irq_desc_t *dsc,
 	/* Registers the RT IRQ handler */
 	return rtdm_irq_request(&dsc->rtdm_desc,
 				(int)irq,
-				comedi_handle_irq, flags, "Comedi device", dsc);
+				a4l_handle_irq, flags, "Analogy device", dsc);
 }
 
-int __comedi_free_irq(comedi_irq_desc_t * dsc)
+int __a4l_free_irq(a4l_irq_desc_t * dsc)
 {
 	return rtdm_irq_free(&dsc->rtdm_desc);
 }
 
 /* --- Synchronization section --- */
 
-static void comedi_nrt_sync_handler(rtdm_nrtsig_t nrt_sig, void *arg)
+static void a4l_nrt_sync_handler(rtdm_nrtsig_t nrt_sig, void *arg)
 {
-	comedi_sync_t *snc = (comedi_sync_t *) arg;
+	a4l_sync_t *snc = (a4l_sync_t *) arg;
 	wake_up_interruptible(&snc->wq);
 }
 
-int comedi_init_sync(comedi_sync_t *snc)
+int a4l_init_sync(a4l_sync_t *snc)
 {
 	int ret = 0;
 
@@ -105,18 +105,18 @@ int comedi_init_sync(comedi_sync_t *snc)
 	rtdm_event_init(&snc->rtdm_evt, 0);
 
 	/* Initializes the gateway to NRT context */
-	ret = rtdm_nrtsig_init(&snc->nrt_sig, comedi_nrt_sync_handler, snc);
+	ret = rtdm_nrtsig_init(&snc->nrt_sig, a4l_nrt_sync_handler, snc);
 
 	return ret;
 }
 
-void comedi_cleanup_sync(comedi_sync_t *snc)
+void a4l_cleanup_sync(a4l_sync_t *snc)
 {
 	rtdm_nrtsig_destroy(&snc->nrt_sig);
 	rtdm_event_destroy(&snc->rtdm_evt);
 }
 
-int comedi_wait_sync(comedi_sync_t *snc, int rt)
+int a4l_wait_sync(a4l_sync_t *snc, int rt)
 {
 	int ret = 0;
 
@@ -137,15 +137,15 @@ int comedi_wait_sync(comedi_sync_t *snc, int rt)
 							&snc->status));
 	}
 
-      out_wait:
+out_wait:
 
 	clear_bit(__EVT_PDING, &snc->status);
 
 	return ret;
 }
 
-int comedi_timedwait_sync(comedi_sync_t * snc,
-			  int rt, unsigned long long ns_timeout)
+int a4l_timedwait_sync(a4l_sync_t * snc,
+		       int rt, unsigned long long ns_timeout)
 {
 	int ret = 0;
 	unsigned long timeout;
@@ -177,20 +177,20 @@ int comedi_timedwait_sync(comedi_sync_t * snc,
 						       timeout);
 	}
 
-      out_wait:
+out_wait:
 
 	clear_bit(__EVT_PDING, &snc->status);
 
 	return ret;
 }
 
-void comedi_signal_sync(comedi_sync_t * snc)
+void a4l_signal_sync(a4l_sync_t * snc)
 {
 	int hit = 0;
 
 	set_bit(__EVT_PDING, &snc->status);
 
-	/* comedi_signal_sync() is bound not to be called upon the right
+	/* a4l_signal_sync() is bound not to be called upon the right
 	   user process context; so, the status flags stores its mode.
 	   Thus the proper event signaling function is called */
 

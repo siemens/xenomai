@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, buffer related features
+ * Analogy for Linux, buffer related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -28,14 +28,14 @@
 #include <linux/vmalloc.h>
 #include <asm/errno.h>
 #include <rtdm/rtdm_driver.h>
-#include <comedi/context.h>
-#include <comedi/device.h>
-#include <comedi/buffer.h>
-#include <comedi/transfer.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
+#include <analogy/buffer.h>
+#include <analogy/transfer.h>
 
 /* --- Buffer allocation / free functions --- */
 
-void comedi_free_buffer(comedi_buf_t * buf_desc)
+void a4l_free_buffer(a4l_buf_t * buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
@@ -52,13 +52,13 @@ void comedi_free_buffer(comedi_buf_t * buf_desc)
 	}
 }
 
-int comedi_alloc_buffer(comedi_buf_t * buf_desc)
+int a4l_alloc_buffer(a4l_buf_t * buf_desc)
 {
 	int ret = 0;
 	char *vaddr, *vabase;
 
 	if (buf_desc->size == 0)
-		buf_desc->size = COMEDI_BUF_DEFSIZE;
+		buf_desc->size = A4L_BUF_DEFSIZE;
 
 	buf_desc->size = PAGE_ALIGN(buf_desc->size);
 
@@ -76,7 +76,7 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 		SetPageReserved(vmalloc_to_page(vaddr));
 
 	buf_desc->pg_list = rtdm_malloc(((buf_desc->size) >> PAGE_SHIFT) *
-					   sizeof(unsigned long));
+					sizeof(unsigned long));
 	if (buf_desc->pg_list == NULL) {
 		ret = -ENOMEM;
 		goto out_virt_contig_alloc;
@@ -87,18 +87,18 @@ int comedi_alloc_buffer(comedi_buf_t * buf_desc)
 		buf_desc->pg_list[(vaddr - vabase) >> PAGE_SHIFT] =
 			(unsigned long) page_to_phys(vmalloc_to_page(vaddr));
 
-      out_virt_contig_alloc:
+out_virt_contig_alloc:
 	if (ret != 0)
-		comedi_free_buffer(buf_desc);
+		a4l_free_buffer(buf_desc);
 
 	return ret;
 }
 
 /* --- Current Command management function --- */
 
-comedi_cmd_t *comedi_get_cmd(comedi_subd_t *subd)
+a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
 {
-	comedi_dev_t *dev = subd->dev;
+	a4l_dev_t *dev = subd->dev;
 
 	/* Check that subdevice supports commands */
 	if (dev->transfer.bufs == NULL)
@@ -109,11 +109,11 @@ comedi_cmd_t *comedi_get_cmd(comedi_subd_t *subd)
 
 /* --- Munge related function --- */
 
-int comedi_get_chan(comedi_subd_t *subd)
+int a4l_get_chan(a4l_subd_t *subd)
 {
-	comedi_dev_t *dev = subd->dev;
+	a4l_dev_t *dev = subd->dev;
 	int i, tmp_count, tmp_size = 0;	
-	comedi_cmd_t *cmd;
+	a4l_cmd_t *cmd;
 
 	/* Check that subdevice supports commands */
 	if (dev->transfer.bufs == NULL)
@@ -158,12 +158,12 @@ int comedi_get_chan(comedi_subd_t *subd)
 
 /* --- Transfer / copy functions --- */
 
-int comedi_buf_prepare_absput(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -173,12 +173,12 @@ int comedi_buf_prepare_absput(comedi_subd_t *subd, unsigned long count)
 }
 
 
-int comedi_buf_commit_absput(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -187,12 +187,12 @@ int comedi_buf_commit_absput(comedi_subd_t *subd, unsigned long count)
 	return __abs_put(buf, count);
 }
 
-int comedi_buf_prepare_put(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -201,12 +201,12 @@ int comedi_buf_prepare_put(comedi_subd_t *subd, unsigned long count)
 	return __pre_put(buf, count);
 }
 
-int comedi_buf_commit_put(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -215,13 +215,13 @@ int comedi_buf_commit_put(comedi_subd_t *subd, unsigned long count)
 	return __put(buf, count);	
 }
 
-int comedi_buf_put(comedi_subd_t *subd, void *bufdata, unsigned long count)
+int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
 	int err;
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -239,12 +239,12 @@ int comedi_buf_put(comedi_subd_t *subd, void *bufdata, unsigned long count)
 	return err;
 }
 
-int comedi_buf_prepare_absget(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -253,12 +253,12 @@ int comedi_buf_prepare_absget(comedi_subd_t *subd, unsigned long count)
 	return __pre_abs_get(buf, count);
 }
 
-int comedi_buf_commit_absget(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -267,12 +267,12 @@ int comedi_buf_commit_absget(comedi_subd_t *subd, unsigned long count)
 	return __abs_get(buf, count);
 }
 
-int comedi_buf_prepare_get(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -281,12 +281,12 @@ int comedi_buf_prepare_get(comedi_subd_t *subd, unsigned long count)
 	return __pre_get(buf, count);
 }
 
-int comedi_buf_commit_get(comedi_subd_t *subd, unsigned long count)
+int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 {
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -295,13 +295,13 @@ int comedi_buf_commit_get(comedi_subd_t *subd, unsigned long count)
 	return __get(buf, count);
 }
 
-int comedi_buf_get(comedi_subd_t *subd, void *bufdata, unsigned long count)
+int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
 	int err;
-	comedi_dev_t *dev;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	
-	if ((subd->flags & COMEDI_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
 		return -EINVAL;
 
 	dev = subd->dev;
@@ -319,14 +319,14 @@ int comedi_buf_get(comedi_subd_t *subd, void *bufdata, unsigned long count)
 	return err;
 }
 
-int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts)
+int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 {
-	comedi_dev_t *dev = subd->dev;
-	comedi_buf_t *buf = dev->transfer.bufs[subd->idx];
+	a4l_dev_t *dev = subd->dev;
+	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
 	int tmp;
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[subd->idx])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[subd->idx])))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
@@ -338,20 +338,20 @@ int comedi_buf_evt(comedi_subd_t *subd, unsigned long evts)
 	}
 
 	/* Notifies the user-space side */
-	comedi_signal_sync(&buf->sync);
+	a4l_signal_sync(&buf->sync);
 
 	return 0;
 }
 
-unsigned long comedi_buf_count(comedi_subd_t *subd)
+unsigned long a4l_buf_count(a4l_subd_t *subd)
 {
 	unsigned long ret = 0;
-	comedi_dev_t *dev = subd->dev;
-	comedi_buf_t *buf = dev->transfer.bufs[subd->idx];
+	a4l_dev_t *dev = subd->dev;
+	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
 
-	if (subd->flags & COMEDI_SUBD_MASK_READ)
+	if (subd->flags & A4L_SUBD_MASK_READ)
 		ret = __count_to_put(buf);
-	else if (subd->flags & COMEDI_SUBD_MASK_WRITE)
+	else if (subd->flags & A4L_SUBD_MASK_WRITE)
 		ret = __count_to_get(buf);	
 
 	return ret;
@@ -359,58 +359,58 @@ unsigned long comedi_buf_count(comedi_subd_t *subd)
 
 /* --- Mmap functions --- */
 
-void comedi_map(struct vm_area_struct *area)
+void a4l_map(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	set_bit(COMEDI_TSF_MMAP, status);
+	set_bit(A4L_TSF_MMAP, status);
 }
 
-void comedi_unmap(struct vm_area_struct *area)
+void a4l_unmap(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	clear_bit(COMEDI_TSF_MMAP, status);
+	clear_bit(A4L_TSF_MMAP, status);
 }
 
-static struct vm_operations_struct comedi_vm_ops = {
-      open:comedi_map,
-      close:comedi_unmap,
+static struct vm_operations_struct a4l_vm_ops = {
+open:a4l_map,
+close:a4l_unmap,
 };
 
-int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg)
 {
-	comedi_mmap_t map_cfg;
-	comedi_dev_t *dev;
+	a4l_mmap_t map_cfg;
+	a4l_dev_t *dev;
 	int ret;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_ioctl_mmap: minor=%d\n", comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_mmap: minor=%d\n", a4l_get_minor(cxt));
 
-	dev = comedi_get_dev(cxt);
+	dev = a4l_get_dev(cxt);
 
 	/* Basically checks the device */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
-	if (comedi_test_rt() != 0)
+	if (a4l_test_rt() != 0)
 		return -EPERM;
 
 	/* Recovers the argument structure */
 	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &map_cfg, arg, sizeof(comedi_mmap_t)) != 0)
+				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
 		return -EFAULT;
 
 	/* Checks the subdevice */
 	if (map_cfg.idx_subd >= dev->transfer.nb_subd ||
-	    (dev->transfer.subds[map_cfg.idx_subd]->flags & COMEDI_SUBD_CMD) ==
+	    (dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) ==
 	    0
 	    || (dev->transfer.subds[map_cfg.idx_subd]->
-		flags & COMEDI_SUBD_MMAP) == 0)
+		flags & A4L_SUBD_MMAP) == 0)
 		return -EINVAL;
 
 	/* Checks the buffer is not already mapped */
-	if (test_bit(COMEDI_TSF_MMAP,
+	if (test_bit(A4L_TSF_MMAP,
 		     &(dev->transfer.status[map_cfg.idx_subd])))
 		return -EBUSY;
 
@@ -424,87 +424,87 @@ int comedi_ioctl_mmap(comedi_cxt_t * cxt, void *arg)
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
 				&map_cfg.ptr,
-				&comedi_vm_ops,
+				&a4l_vm_ops,
 				&(dev->transfer.status[map_cfg.idx_subd]));
 
 	if (ret < 0)
 		return ret;
 
 	return rtdm_safe_copy_to_user(cxt->user_info, 
-				      arg, &map_cfg, sizeof(comedi_mmap_t));
+				      arg, &map_cfg, sizeof(a4l_mmap_t));
 }
 
 /* --- IOCTL / FOPS functions --- */
 
-int comedi_ioctl_bufcfg(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_bufcfg_t buf_cfg;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_bufcfg_t buf_cfg;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_ioctl_bufcfg: minor=%d\n", comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
-	if (comedi_test_rt() != 0)
+	if (a4l_test_rt() != 0)
 		return -EPERM;
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &buf_cfg, 
-				     arg, sizeof(comedi_bufcfg_t)) != 0)
+				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
 	if (buf_cfg.idx_subd >= dev->transfer.nb_subd)
 		return -EINVAL;
 
-	if (buf_cfg.buf_size > COMEDI_BUF_MAXSIZE)
+	if (buf_cfg.buf_size > A4L_BUF_MAXSIZE)
 		return -EINVAL;
 
 	/* If a transfer is occuring or if the buffer is mmapped,
 	   no buffer size change is allowed */
-	if (test_bit(COMEDI_TSF_BUSY,
+	if (test_bit(A4L_TSF_BUSY,
 		     &(dev->transfer.status[buf_cfg.idx_subd])))
 		return -EBUSY;
 
-	if (test_bit(COMEDI_TSF_MMAP,
+	if (test_bit(A4L_TSF_MMAP,
 		     &(dev->transfer.status[buf_cfg.idx_subd])))
 		return -EPERM;
 
 	/* Performs the re-allocation */
-	comedi_free_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
+	a4l_free_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
 
 	dev->transfer.bufs[buf_cfg.idx_subd]->size = buf_cfg.buf_size;
 
-	return comedi_alloc_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
+	return a4l_alloc_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
 }
 
-int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_bufinfo_t info;
-	comedi_buf_t *buf;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_bufinfo_t info;
+	a4l_buf_t *buf;
 	unsigned long tmp_cnt;
 	int ret;
 
-	__comedi_dbg(1, core_dbg, 
-		     "comedi_ioctl_bufinfo: minor=%d\n", comedi_get_minor(cxt));
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &info, arg, sizeof(comedi_bufinfo_t)) != 0)
+				     &info, arg, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
 	if (info.idx_subd > dev->transfer.nb_subd)
 		return -EINVAL;
 
-	if ((dev->transfer.subds[info.idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	buf = dev->transfer.bufs[info.idx_subd];
@@ -520,18 +520,18 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount to read */
 		tmp_cnt = info.rw_count = __count_to_get(buf);
 
-		__comedi_dbg(1, core_dbg, 
-			     "comedi_ioctl_bufinfo: count to read=%lu\n", tmp_cnt);
+		__a4l_dbg(1, core_dbg, 
+			  "a4l_ioctl_bufinfo: count to read=%lu\n", tmp_cnt);
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
-			comedi_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_transfer(cxt, info.idx_subd);
 			return ret;
 		}
 	} else if (info.idx_subd == dev->transfer.idx_write_subd) {
 
 		if (ret < 0) {
-			comedi_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_transfer(cxt, info.idx_subd);
 			if (info.rw_count != 0)
 				return ret;
 		}
@@ -551,9 +551,9 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount which is writable */
 		info.rw_count = __count_to_put(buf);
 
-		__comedi_dbg(1, core_dbg, 
-			     "comedi_ioctl_bufinfo: count to write=%lu\n", 
-			     info.rw_count);
+		__a4l_dbg(1, core_dbg, 
+			  "a4l_ioctl_bufinfo: count to write=%lu\n", 
+			  info.rw_count);
 
 	} else
 		return -EINVAL;
@@ -573,28 +573,28 @@ int comedi_ioctl_bufinfo(comedi_cxt_t * cxt, void *arg)
 
 	/* Sends the structure back to user space */
 	if (rtdm_safe_copy_to_user(cxt->user_info,
-				   arg, &info, sizeof(comedi_bufinfo_t)) != 0)
+				   arg, &info, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
 	return 0;
 }
 
-ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
+ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 	int idx_subd = dev->transfer.idx_read_subd;
-	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	while (count < nbytes) {
@@ -612,9 +612,9 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
-			comedi_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_transfer(cxt, idx_subd);
 			count = ret;
-			goto out_comedi_read;
+			goto out_a4l_read;
 		}
 
 		if (tmp_cnt > 0) {
@@ -634,7 +634,7 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 			if (ret < 0) {
 				count = ret;
-				goto out_comedi_read;
+				goto out_a4l_read;
 			}
 
 			/* Updates consume count */
@@ -645,45 +645,45 @@ ssize_t comedi_read(comedi_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(COMEDI_TSF_BULK,
+			if (!test_bit(A4L_TSF_BULK,
 				      &(dev->transfer.status[idx_subd])))
-				goto out_comedi_read;
+				goto out_a4l_read;
 		}
 		/* If the acquisition is not over, we must not
 		   leave the function without having read a least byte */
 		else if (ret != -ENOENT) {
-			ret = comedi_wait_sync(&(buf->sync), comedi_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
 				count = ret;
-				goto out_comedi_read;
+				goto out_a4l_read;
 			}
 		}
 	}
 
-      out_comedi_read:
+out_a4l_read:
 
 	return count;
 }
 
-ssize_t comedi_write(comedi_cxt_t *cxt, 
-		     const void *bufdata, size_t nbytes)
+ssize_t a4l_write(a4l_cxt_t *cxt, 
+		  const void *bufdata, size_t nbytes)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 	int idx_subd = dev->transfer.idx_write_subd;
-	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
 		return -EINVAL;
 
 	while (count < nbytes) {
@@ -700,20 +700,20 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 			tmp_cnt = nbytes - count;
 
 		if (ret < 0) {
-			comedi_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_transfer(cxt, idx_subd);
 			count = (ret == -ENOENT) ? -EINVAL : ret;
-			goto out_comedi_write;
+			goto out_a4l_write;
 		}
 
 		if (tmp_cnt > 0) {
 
 			/* Performs the copy */
 			ret =
-			    __produce(cxt, buf, (void *)bufdata + count,
-				      tmp_cnt);
+				__produce(cxt, buf, (void *)bufdata + count,
+					  tmp_cnt);
 			if (ret < 0) {
 				count = ret;
-				goto out_comedi_write;
+				goto out_a4l_write;
 			}
 
 			/* Performs the munge if need be */
@@ -734,35 +734,35 @@ ssize_t comedi_write(comedi_cxt_t *cxt,
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(COMEDI_TSF_BULK,
+			if (!test_bit(A4L_TSF_BULK,
 				      &(dev->transfer.status[idx_subd])))
-				goto out_comedi_write;
+				goto out_a4l_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
-			ret = comedi_wait_sync(&(buf->sync), comedi_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
 				count = ret;
-				goto out_comedi_write;
+				goto out_a4l_write;
 			}
 		}
 	}
 
-      out_comedi_write:
+out_a4l_write:
 
 	return count;
 }
 
-int comedi_select(comedi_cxt_t *cxt, 
-		  rtdm_selector_t *selector,
-		  enum rtdm_selecttype type, unsigned fd_index)
+int a4l_select(a4l_cxt_t *cxt, 
+	       rtdm_selector_t *selector,
+	       enum rtdm_selecttype type, unsigned fd_index)
 {
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 	int idx_subd = (type == RTDM_SELECTTYPE_READ) ? 
 		dev->transfer.idx_read_subd :
 		dev->transfer.idx_write_subd;
-	comedi_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
 
 	/* Checks the RTDM select type 
 	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
@@ -771,45 +771,45 @@ int comedi_select(comedi_cxt_t *cxt,
 		return -EINVAL;
 
 	/* Basic checkings */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
 		return -ENOENT;	
 
 	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & COMEDI_SUBD_CMD) == 0)
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
 		return -EINVAL;
 
-	/* Performs a bind on the Comedi synchronization element */
-	return comedi_select_sync(&(buf->sync), selector, type, fd_index);	
+	/* Performs a bind on the Analogy synchronization element */
+	return a4l_select_sync(&(buf->sync), selector, type, fd_index);	
 }
 
-int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
 	unsigned long tmp_cnt = 0;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
-	comedi_buf_t *buf;
-	comedi_poll_t poll;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_buf_t *buf;
+	a4l_poll_t poll;
 
 	/* Basic checking */
-	if (!test_bit(COMEDI_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
 		return -EINVAL;
 
 	if (rtdm_safe_copy_from_user(cxt->user_info, 
-				     &poll, arg, sizeof(comedi_poll_t)) != 0)
+				     &poll, arg, sizeof(a4l_poll_t)) != 0)
 		return -EFAULT;
 
 	/* Checks the subdevice capabilities */
 	if ((dev->transfer.subds[poll.idx_subd]->flags &
-	     COMEDI_SUBD_CMD) == 0 ||
+	     A4L_SUBD_CMD) == 0 ||
 	    (dev->transfer.subds[poll.idx_subd]->flags &
-	     COMEDI_SUBD_MASK_SPECIAL) != 0)
+	     A4L_SUBD_MASK_SPECIAL) != 0)
 		return -EINVAL;
 
 	/* Checks a transfer is occuring */
-	if (!test_bit(COMEDI_TSF_BUSY, &(dev->transfer.status[poll.idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[poll.idx_subd])))
 		return -EINVAL;
 
 	buf = dev->transfer.bufs[poll.idx_subd];
@@ -820,7 +820,7 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 	/* Retrieves the data amount to compute 
 	   according to the subdevice type */
 	if ((dev->transfer.subds[poll.idx_subd]->flags &
-	     COMEDI_SUBD_MASK_READ) != 0) {
+	     A4L_SUBD_MASK_READ) != 0) {
 
 		tmp_cnt = __count_to_get(buf);
 
@@ -829,47 +829,47 @@ int comedi_ioctl_poll(comedi_cxt_t * cxt, void *arg)
 		    /* ...or if we reached the end of the input transfer... */
 		    (ret == -ENOENT && tmp_cnt == 0)) {
 			/* ...cancel the transfer */
-			comedi_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_transfer(cxt, poll.idx_subd);
 			return ret;
 		}
 	} else {
 
 		/* If some error was detected, cancel the transfer */
 		if (ret < 0) {
-			comedi_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_transfer(cxt, poll.idx_subd);
 			return ret;
 		}
 
 		tmp_cnt = __count_to_put(buf);
 	}
 
-	if (poll.arg == COMEDI_NONBLOCK || tmp_cnt != 0)
+	if (poll.arg == A4L_NONBLOCK || tmp_cnt != 0)
 		goto out_poll;
 
-	if (poll.arg == COMEDI_INFINITE)
-		ret = comedi_wait_sync(&(buf->sync), comedi_test_rt());
+	if (poll.arg == A4L_INFINITE)
+		ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
 	else {
 		unsigned long long ns = ((unsigned long long)poll.arg) *
-		    ((unsigned long long)NSEC_PER_MSEC);
-		ret = comedi_timedwait_sync(&(buf->sync), comedi_test_rt(), ns);
+			((unsigned long long)NSEC_PER_MSEC);
+		ret = a4l_timedwait_sync(&(buf->sync), a4l_test_rt(), ns);
 	}
 
 	if (ret == 0) {
 		/* Retrieves the count once more */
 		if ((dev->transfer.subds[poll.idx_subd]->flags &
-		     COMEDI_SUBD_MASK_READ) != 0)
+		     A4L_SUBD_MASK_READ) != 0)
 			tmp_cnt = __count_to_get(buf);
 		else
 			tmp_cnt = __count_to_put(buf);
 	}
 
-      out_poll:
+out_poll:
 
 	poll.arg = tmp_cnt;
 
 	/* Sends the structure back to user space */
 	ret = rtdm_safe_copy_to_user(cxt->user_info, 
-				     arg, &poll, sizeof(comedi_poll_t));
+				     arg, &poll, sizeof(a4l_poll_t));
 
 	return ret;
 }

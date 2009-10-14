@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, context structure / macros declarations
+ * Analogy for Linux, driver facilities
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -20,35 +20,16 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_CONTEXT__
-#define __COMEDI_CONTEXT__
+#ifndef __ANALOGY_ANALOGY_DRIVER__
+#define __ANALOGY_ANALOGY_DRIVER__
 
-#if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
+#ifndef __KERNEL__
+#error This header is for kernel space usage only. \
+       You are likely looking for <analogy/analogy.h>...
+#endif /* !__KERNEL__ */
 
-#include <comedi/os_facilities.h>
+#include <analogy/os_facilities.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
 
-struct comedi_device;
-
-struct comedi_context {
-
-	/* This field is redundant with the following parameters;
-	   setting it at the head of the structure may save 
-	   useless operations */
-	struct comedi_device *dev;
-	rtdm_user_info_t *user_info;
-	struct rtdm_dev_context *rtdm_cxt;
-};
-typedef struct comedi_context comedi_cxt_t;
-
-#define comedi_get_minor(x) ((x)->rtdm_cxt->device->device_id)
-
-#define comedi_init_cxt(c, u, x)			\
-    {							\
-	(x)->rtdm_cxt = c;				\
-	(x)->user_info = u;				\
-	(x)->dev = NULL;				\
-    }
-
-#endif /* __KERNEL__ && !DOXYGEN_CPP */
-
-#endif /* __COMEDI_CONTEXT__ */
+#endif /* __ANALOGY_ANALOGY_DRIVER__ */

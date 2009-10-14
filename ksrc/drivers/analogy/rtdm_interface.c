@@ -1,0 +1,323 @@
+/**
+ * @file
+ * Analogy for Linux, user interface (open, read, write, ioctl, proc)
+ *
+ * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ *
+ * Xenomai is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Xenomai is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Xenomai; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#ifndef DOXYGEN_CPP
+
+#include <linux/module.h>
+#include <linux/ioport.h>
+#include <linux/fs.h>
+#include <linux/proc_fs.h>
+#include <asm/uaccess.h>
+
+#include <rtdm/rtdm_driver.h>
+
+#include <analogy/context.h>
+#include <analogy/ioctl.h>
+#include <analogy/device.h>
+
+int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
+	a4l_ioctl_devcfg,
+	a4l_ioctl_devinfo,
+	a4l_ioctl_subdinfo,
+	a4l_ioctl_chaninfo,
+	a4l_ioctl_rnginfo,
+	a4l_ioctl_cmd,
+	a4l_ioctl_cancel,
+	a4l_ioctl_insnlist,
+	a4l_ioctl_insn,
+	a4l_ioctl_bufcfg,
+	a4l_ioctl_bufinfo,
+	a4l_ioctl_poll,
+	a4l_ioctl_mmap, 
+	a4l_ioctl_nbchaninfo, 
+	a4l_ioctl_nbrnginfo
+};
+
+#ifdef CONFIG_PROC_FS
+struct proc_dir_entry *a4l_proc_root;
+
+int a4l_init_proc(void)
+{
+	int ret = 0;
+	struct proc_dir_entry *entry;
+
+	/* Creates the global directory */
+	a4l_proc_root = create_proc_entry("analogy", S_IFDIR, 0);
+	if (a4l_proc_root == NULL) {
+		__a4l_err("a4l_proc_init: "
+			  "failed to create /proc/analogy\n");
+		return -ENOMEM;
+	}
+
+	/* Creates the devices related file */
+	entry = create_proc_entry("devices", 0444, a4l_proc_root);
+	if (entry == NULL) {
+		__a4l_err("a4l_proc_init: "
+			  "failed to create /proc/analogy/devices\n");
+		ret = -ENOMEM;
+		goto err_proc_init;
+	}
+
+	entry->nlink = 1;
+	entry->data = NULL;
+	entry->write_proc = NULL;
+	entry->read_proc = a4l_rdproc_devs;
+	wrap_proc_dir_entry_owner(entry);
+
+	/* Creates the drivers related file */
+	entry = create_proc_entry("drivers", 0444, a4l_proc_root);
+	if (entry == NULL) {
+		__a4l_err("a4l_proc_init: "
+			  "failed to create /proc/analogy/drivers\n");
+		ret = -ENOMEM;
+		goto err_proc_init;
+	}
+
+	entry->nlink = 1;
+	entry->data = NULL;
+	entry->write_proc = NULL;
+	entry->read_proc = a4l_rdproc_drvs;
+	wrap_proc_dir_entry_owner(entry);
+
+	return 0;
+
+err_proc_init:
+	remove_proc_entry("devices", a4l_proc_root);
+	remove_proc_entry("analogy", NULL);
+	return ret;
+}
+
+void a4l_cleanup_proc(void)
+{
+	remove_proc_entry("drivers", a4l_proc_root);
+	remove_proc_entry("devices", a4l_proc_root);
+	remove_proc_entry("analogy", NULL);
+}
+
+#else /* !CONFIG_PROC_FS */
+
+#define a4l_init_proc() 0
+#define a4l_cleanup_proc()
+
+#endif /* CONFIG_PROC_FS */
+
+int a4l_rt_open(struct rtdm_dev_context *context,
+		rtdm_user_info_t * user_info, int flags)
+{
+	a4l_cxt_t cxt;
+
+	a4l_init_cxt(context, user_info, &cxt);
+	a4l_set_dev(&cxt);
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_rt_open: minor=%d\n", a4l_get_minor(&cxt));
+
+	return 0;
+}
+
+int a4l_rt_close(struct rtdm_dev_context *context,
+		 rtdm_user_info_t * user_info)
+{
+	a4l_cxt_t cxt;
+
+	a4l_init_cxt(context, user_info, &cxt);
+	a4l_set_dev(&cxt);
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_rt_close: minor=%d\n", a4l_get_minor(&cxt));
+
+	return 0;
+}
+
+ssize_t a4l_rt_read(struct rtdm_dev_context * context,
+		    rtdm_user_info_t * user_info, void *buf, size_t nbytes)
+{
+	a4l_cxt_t cxt;
+	a4l_dev_t *dev;
+
+	a4l_init_cxt(context, user_info, &cxt);
+	a4l_set_dev(&cxt);
+	dev = a4l_get_dev(&cxt);
+
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_rt_read: minor=%d\n", a4l_get_minor(&cxt));
+
+	if (nbytes == 0)
+		return 0;
+
+	return a4l_read(&cxt, buf, nbytes);
+}
+
+ssize_t a4l_rt_write(struct rtdm_dev_context * context,
+		     rtdm_user_info_t * user_info, const void *buf,
+		     size_t nbytes)
+{
+	a4l_cxt_t cxt;
+	a4l_dev_t *dev;
+
+	a4l_init_cxt(context, user_info, &cxt);
+	a4l_set_dev(&cxt);
+	dev = a4l_get_dev(&cxt);
+
+	__a4l_dbg(1, core_dbg, "a4l_rt_write: minor=%d\n", a4l_get_minor(&cxt));
+
+	if (nbytes == 0)
+		return 0;
+
+	return a4l_write(&cxt, buf, nbytes);
+}
+
+int a4l_rt_ioctl(struct rtdm_dev_context *context,
+		 rtdm_user_info_t * user_info,
+		 unsigned int request, void *arg)
+{
+	a4l_cxt_t cxt;
+
+	a4l_init_cxt(context, user_info, &cxt);
+	a4l_set_dev(&cxt);
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_rt_ioctl: minor=%d\n", a4l_get_minor(&cxt));
+
+	return a4l_ioctl_functions[_IOC_NR(request)] (&cxt, arg);
+}
+
+int a4l_rt_select(struct rtdm_dev_context *context,
+		  rtdm_selector_t *selector,
+		  enum rtdm_selecttype type, unsigned fd_index)
+{
+	a4l_cxt_t cxt;
+
+	/* The user_info argument is not available, fortunately it is
+	   not critical as no copy_from_user / copy_to_user are to be
+	   called */
+	a4l_init_cxt(context, NULL, &cxt);
+	a4l_set_dev(&cxt);
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_rt_select: minor=%d\n", a4l_get_minor(&cxt));
+
+	return a4l_select(&cxt, selector, type, fd_index);
+}
+
+struct a4l_dummy_context {
+	int nouse;
+};
+
+static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
+{[0 ... A4L_NB_DEVICES - 1] = {
+		.struct_version =	RTDM_DEVICE_STRUCT_VER,
+		.device_flags =		RTDM_NAMED_DEVICE,
+		.context_size =		sizeof(struct a4l_dummy_context),
+		.device_name = 		"",
+
+		.open_rt =		a4l_rt_open,
+		.open_nrt =		a4l_rt_open,
+
+		.ops = {
+			.close_rt =	a4l_rt_close,
+			.ioctl_rt =	a4l_rt_ioctl,
+			.read_rt =	a4l_rt_read,
+			.write_rt =	a4l_rt_write,
+
+			.close_nrt =	a4l_rt_close,
+			.ioctl_nrt =	a4l_rt_ioctl,
+			.read_nrt =	a4l_rt_read,
+			.write_nrt =	a4l_rt_write,
+		      
+			.select_bind =	a4l_rt_select,
+		},
+
+		.device_class =		RTDM_CLASS_EXPERIMENTAL,
+		.device_sub_class =	RTDM_SUBCLASS_ANALOGY,
+		.driver_name =		"rtdm_analogy",
+		.driver_version =	RTDM_DRIVER_VER(1, 0, 0),
+		.peripheral_name =	"Analogy",
+		.provider_name =	"Alexis Berlemont",
+	}
+};
+
+int a4l_register(void)
+{
+	int i, ret = 0;
+
+	for (i = 0; i < A4L_NB_DEVICES && ret == 0; i++) {
+
+		/* Sets the device name through which 
+		   user process can access the Analogy layer */
+		snprintf(rtdm_devs[i].device_name,
+			 RTDM_MAX_DEVNAME_LEN, "analogy%d", i);
+		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
+
+		/* To keep things simple, the RTDM device ID 
+		   is the Analogy device index */
+		rtdm_devs[i].device_id = i;
+
+		ret = rtdm_dev_register(&(rtdm_devs[i]));
+	}
+
+	return ret;
+}
+
+void a4l_unregister(void)
+{
+	int i;
+	for (i = 0; i < A4L_NB_DEVICES; i++)
+		rtdm_dev_unregister(&(rtdm_devs[i]), 1000);
+}
+
+MODULE_DESCRIPTION("Analogy");
+MODULE_LICENSE("GPL");
+
+static int __init a4l_init(void)
+{
+	int ret;
+
+	/* Initializes the devices */
+	a4l_init_devs();
+
+	/* Initializes Analogy time management */
+	a4l_init_time();
+
+	/* Registers RTDM / fops interface */
+	ret = a4l_register();
+	if (ret != 0) {
+		a4l_unregister();
+		goto out_a4l_init;
+	}
+
+	/* Initializes Analogy proc layer */
+	ret = a4l_init_proc();
+
+out_a4l_init:
+	return ret;
+}
+
+static void __exit a4l_cleanup(void)
+{
+	/* Removes Analogy proc files */
+	a4l_cleanup_proc();
+
+	/* Unregisters RTDM / fops interface */
+	a4l_unregister();
+}
+
+module_init(a4l_init);
+module_exit(a4l_cleanup);
+
+#endif /* !DOXYGEN_CPP */
