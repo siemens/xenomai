@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef __COMEDI_NI_STC_H__
-#define __COMEDI_NI_STC_H__
+#ifndef __ANALOGY_NI_STC_H__
+#define __ANALOGY_NI_STC_H__
 
 #include "ni_tio.h"
 
@@ -1284,7 +1284,7 @@ typedef struct ni_board_struct{
 
 	int n_aochan;
 	int aobits;
-	comedi_rngdesc_t *ao_range_table;
+	a4l_rngdesc_t *ao_range_table;
 	int ao_fifo_depth;
 
 	unsigned ao_speed;
@@ -1306,10 +1306,10 @@ typedef struct ni_board_struct{
 #define NUM_GPCT 2
 
 #define NI_PRIVATE_COMMON					\
-	uint16_t (*stc_readw)(comedi_dev_t *dev, int register);	\
-	uint32_t (*stc_readl)(comedi_dev_t *dev, int register);	\
-	void (*stc_writew)(comedi_dev_t *dev, uint16_t value, int register);	\
-	void (*stc_writel)(comedi_dev_t *dev, uint32_t value, int register);	\
+	uint16_t (*stc_readw)(a4l_dev_t *dev, int register);	\
+	uint32_t (*stc_readl)(a4l_dev_t *dev, int register);	\
+	void (*stc_writew)(a4l_dev_t *dev, uint16_t value, int register);	\
+	void (*stc_writel)(a4l_dev_t *dev, uint32_t value, int register);	\
 	\
 	int dio_state;						\
 	int pfi_state;						\
@@ -1328,9 +1328,9 @@ typedef struct ni_board_struct{
 	int n_left;						\
 	unsigned int ai_calib_source;				\
 	unsigned int ai_calib_source_enabled;			\
-	comedi_lock_t window_lock; \
-	comedi_lock_t soft_reg_copy_lock; \
-	comedi_lock_t mite_channel_lock; \
+	a4l_lock_t window_lock; \
+	a4l_lock_t soft_reg_copy_lock; \
+	a4l_lock_t mite_channel_lock; \
 								\
 	int changain_state;					\
 	unsigned int changain_spec;				\
@@ -1416,5 +1416,5 @@ typedef struct {
 #define NI_FREQ_OUT_TIMEBASE_1_DIV_2_CLOCK_SRC	0 /* 10 MHz */
 #define NI_FREQ_OUT_TIMEBASE_2_CLOCK_SRC	1 /* 100 KHz */
 
-#endif /* _COMEDI_NI_STC_H */
+#endif /* _ANALOGY_NI_STC_H */
 

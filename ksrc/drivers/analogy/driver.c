@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, driver related features
+ * Analogy for Linux, driver related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -25,27 +25,27 @@
 #include <linux/module.h>
 #include <linux/fs.h>
 
-#include <comedi/context.h>
-#include <comedi/device.h>
-#include <comedi/driver.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
+#include <analogy/driver.h>
 
 #include "proc.h"
 
-static LIST_HEAD(comedi_drvs);
+static LIST_HEAD(a4l_drvs);
 
 /* --- Driver list management functions --- */
 
-int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
+int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
 {
 	struct list_head *this;
 	int ret = -EINVAL;
 
-	__comedi_dbg(1, core_dbg, "comedi_lct_drv: name=%s\n", pin);
+	__a4l_dbg(1, core_dbg, "a4l_lct_drv: name=%s\n", pin);
 
 	/* Goes through the linked list so as to find 
 	   a driver instance with the same name */
-	list_for_each(this, &comedi_drvs) {
-		comedi_drv_t *drv = list_entry(this, comedi_drv_t, list);
+	list_for_each(this, &a4l_drvs) {
+		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
 
 		if (strcmp(drv->board_name, pin) == 0) {
 			/* The argument pio can be NULL 
@@ -60,22 +60,22 @@ int comedi_lct_drv(char *pin, comedi_drv_t ** pio)
 	return ret;
 }
 
-int comedi_register_drv(comedi_drv_t * drv)
+int a4l_register_drv(a4l_drv_t * drv)
 {
-	__comedi_dbg(1, core_dbg, "comedi_add_drv: name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "a4l_add_drv: name=%s\n", drv->board_name);
 
-	if (comedi_lct_drv(drv->board_name, NULL) != 0) {
-		list_add(&drv->list, &comedi_drvs);
+	if (a4l_lct_drv(drv->board_name, NULL) != 0) {
+		list_add(&drv->list, &a4l_drvs);
 		return 0;
 	} else
 		return -EINVAL;
 }
 
-int comedi_unregister_drv(comedi_drv_t * drv)
+int a4l_unregister_drv(a4l_drv_t * drv)
 {
-	__comedi_dbg(1, core_dbg, "comedi_rm_drv: name=%s\n", drv->board_name);
+	__a4l_dbg(1, core_dbg, "a4l_rm_drv: name=%s\n", drv->board_name);
 
-	if (comedi_lct_drv(drv->board_name, NULL) == 0) {
+	if (a4l_lct_drv(drv->board_name, NULL) == 0) {
 		/* Here, we consider the argument is pointing
 		   to a real driver struct (not a blank structure
 		   with only the name field properly set */
@@ -89,18 +89,18 @@ int comedi_unregister_drv(comedi_drv_t * drv)
 
 /* --- Driver list proc section --- */
 
-int comedi_rdproc_drvs(char *page,
+int a4l_rdproc_drvs(char *page,
 		       char **start, off_t off, int count, int *eof, void *data)
 {
 	int i = 0, len = 0;
 	char *p = page;
 	struct list_head *this;
 
-	p += sprintf(p, "--  Comedi drivers --\n\n");
+	p += sprintf(p, "--  Analogy drivers --\n\n");
 	p += sprintf(p, "| idx | driver name\n");
 
-	list_for_each(this, &comedi_drvs) {
-		comedi_drv_t *drv = list_entry(this, comedi_drv_t, list);
+	list_for_each(this, &a4l_drvs) {
+		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
 
 		p += sprintf(p, "|  %02d | %s\n", i++, drv->board_name);
 	}

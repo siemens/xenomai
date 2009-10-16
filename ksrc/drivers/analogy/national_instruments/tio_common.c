@@ -40,7 +40,7 @@
  *
  */
 
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #include "ni_tio.h"
 #include "ni_mio.h"
@@ -59,7 +59,7 @@ static inline unsigned int read_register(struct ni_gpct *counter,
 	return counter->counter_dev->read_register(counter, reg);
 }
 
-struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
+struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 	void (*write_register) (struct ni_gpct * counter, unsigned int bits,
 		enum ni_gpct_register reg),
 	unsigned int (*read_register) (struct ni_gpct * counter,
@@ -77,7 +77,7 @@ struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
 	counter_dev->write_register = write_register;
 	counter_dev->read_register = read_register;
 	counter_dev->variant = variant;
-	comedi_lock_init(&counter_dev->regs_lock);
+	a4l_lock_init(&counter_dev->regs_lock);
 	BUG_ON(num_counters == 0);
 
 	counter_dev->counters = 
@@ -149,14 +149,14 @@ void ni_tio_set_bits_transient(struct ni_gpct *counter,
 	unsigned long flags;
 	
 	BUG_ON(register_index >= NITIO_Num_Registers);
-	comedi_lock_irqsave(&counter_dev->regs_lock, flags);
+	a4l_lock_irqsave(&counter_dev->regs_lock, flags);
 	counter_dev->regs[register_index] &= ~bit_mask;
 	counter_dev->regs[register_index] |= (bit_values & bit_mask);
 	write_register(counter,
 		       counter_dev->regs[register_index] | transient_bit_values,
 		       register_index);
 	mmiowb();
-	comedi_unlock_irqrestore(&counter_dev->regs_lock, flags);
+	a4l_unlock_irqrestore(&counter_dev->regs_lock, flags);
 }
 
 /* ni_tio_set_bits( ) is for safely writing to registers whose bits
@@ -184,9 +184,9 @@ unsigned int ni_tio_get_soft_copy(const struct ni_gpct *counter,
 	unsigned value;
 
 	BUG_ON(register_index >= NITIO_Num_Registers);
-	comedi_lock_irqsave(&counter_dev->regs_lock, flags);
+	a4l_lock_irqsave(&counter_dev->regs_lock, flags);
 	value = counter_dev->regs[register_index];
-	comedi_unlock_irqrestore(&counter_dev->regs_lock, flags);
+	a4l_unlock_irqrestore(&counter_dev->regs_lock, flags);
 	return value;
 }
 
@@ -248,9 +248,9 @@ static lsampl_t ni_tio_counter_status(struct ni_gpct *counter)
 
 	bits = read_register(counter,NITIO_Gxx_Status_Reg(counter->counter_index));
 	if (bits & Gi_Armed_Bit(counter->counter_index)) {
-		status |= COMEDI_COUNTER_ARMED;
+		status |= A4L_COUNTER_ARMED;
 		if (bits & Gi_Counting_Bit(counter->counter_index))
-			status |= COMEDI_COUNTER_COUNTING;
+			status |= A4L_COUNTER_COUNTING;
 	}
 	return status;
 }
@@ -535,7 +535,7 @@ static unsigned int ni_m_series_source_select_bits(lsampl_t clock_source)
 		}
 		if (i <= ni_m_series_max_pfi_channel)
 			break;
-		__comedi_err("invalid clock source 0x%lx\n",
+		__a4l_err("invalid clock source 0x%lx\n",
 			     (unsigned long)clock_source);
 		BUG();
 		ni_m_series_clock = 0;
@@ -1398,46 +1398,46 @@ static int ni_tio_get_gate_src(struct ni_gpct *counter,
 	return 0;
 }
 
-int ni_tio_insn_config(struct ni_gpct *counter, comedi_kinsn_t *insn)
+int ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn)
 {
 	switch (insn->data[0]) {
-	case INSN_CONFIG_SET_COUNTER_MODE:
+	case A4L_INSN_CONFIG_SET_COUNTER_MODE:
 		return ni_tio_set_counter_mode(counter, insn->data[1]);
 		break;
-	case INSN_CONFIG_ARM:
+	case A4L_INSN_CONFIG_ARM:
 		return ni_tio_arm(counter, 1, insn->data[1]);
 		break;
-	case INSN_CONFIG_DISARM:
+	case A4L_INSN_CONFIG_DISARM:
 		ni_tio_arm(counter, 0, 0);
 		return 0;
 		break;
-	case INSN_CONFIG_GET_COUNTER_STATUS:
+	case A4L_INSN_CONFIG_GET_COUNTER_STATUS:
 		insn->data[1] = ni_tio_counter_status(counter);
 		insn->data[2] = counter_status_mask;
 		return 0;
 		break;
-	case INSN_CONFIG_SET_CLOCK_SRC:
+	case A4L_INSN_CONFIG_SET_CLOCK_SRC:
 		return ni_tio_set_clock_src(counter, 
 					    insn->data[1], insn->data[2]);
 		break;
-	case INSN_CONFIG_GET_CLOCK_SRC:
+	case A4L_INSN_CONFIG_GET_CLOCK_SRC:
 		ni_tio_get_clock_src(counter, 
 				     &insn->data[1], &insn->data[2]);
 		return 0;
 		break;
-	case INSN_CONFIG_SET_GATE_SRC:
+	case A4L_INSN_CONFIG_SET_GATE_SRC:
 		return ni_tio_set_gate_src(counter, 
 					   insn->data[1], insn->data[2]);
 		break;
-	case INSN_CONFIG_GET_GATE_SRC:
+	case A4L_INSN_CONFIG_GET_GATE_SRC:
 		return ni_tio_get_gate_src(counter, 
 					   insn->data[1], &insn->data[2]);
 		break;
-	case INSN_CONFIG_SET_OTHER_SRC:
+	case A4L_INSN_CONFIG_SET_OTHER_SRC:
 		return ni_tio_set_other_src(counter, 
 					    insn->data[1], insn->data[2]);
 		break;
-	case INSN_CONFIG_RESET:
+	case A4L_INSN_CONFIG_RESET:
 		ni_tio_reset_count_and_disarm(counter);
 		return 0;
 		break;
@@ -1447,7 +1447,7 @@ int ni_tio_insn_config(struct ni_gpct *counter, comedi_kinsn_t *insn)
 	return -EINVAL;
 }
 
-int ni_tio_rinsn(struct ni_gpct *counter, comedi_kinsn_t *insn)
+int ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	const unsigned int channel = CR_CHAN(insn->chan_desc);
@@ -1514,7 +1514,7 @@ static unsigned int ni_tio_next_load_register(struct ni_gpct *counter)
 	}
 }
 
-int ni_tio_winsn(struct ni_gpct *counter, comedi_kinsn_t *insn)
+int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	const unsigned int channel = CR_CHAN(insn->chan_desc);
@@ -1608,12 +1608,12 @@ int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum)
 	if (trignum != 0)
 		return -EINVAL;
 
-	comedi_lock_irqsave(&counter->lock, flags);
+	a4l_lock_irqsave(&counter->lock, flags);
 	if (counter->mite_chan)
 		mite_dma_arm(counter->mite_chan);
 	else
 		retval = -EIO;
-	comedi_unlock_irqrestore(&counter->lock, flags);
+	a4l_unlock_irqrestore(&counter->lock, flags);
 	if (retval < 0)
 		return retval;
 	retval = ni_tio_arm(counter, 1, NI_GPCT_ARM_IMMEDIATE);
@@ -1626,12 +1626,12 @@ int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum)
 	return retval;
 }
 
-static int ni_tio_input_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd) 
+static int ni_tio_input_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd) 
 {	
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	int retval = 0;
 
-	counter->mite_chan->dir = COMEDI_INPUT;
+	counter->mite_chan->dir = A4L_INPUT;
 	switch (counter_dev->variant) {
 	case ni_gpct_variant_m_series:
 	case ni_gpct_variant_660x:
@@ -1667,13 +1667,13 @@ static int ni_tio_input_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd)
 	return retval;
 }
 
-static int ni_tio_output_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd)
+static int ni_tio_output_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
 {
-	__comedi_err("ni_tio: output commands not yet implemented.\n");
+	__a4l_err("ni_tio: output commands not yet implemented.\n");
 	return -ENOTSUPP;
 }
 
-static int ni_tio_cmd_setup(struct ni_gpct *counter, comedi_cmd_t *cmd)
+static int ni_tio_cmd_setup(struct ni_gpct *counter, a4l_cmd_t *cmd)
 {
 	int retval = 0, set_gate_source = 0;
 	unsigned int gate_source;
@@ -1697,31 +1697,31 @@ static int ni_tio_cmd_setup(struct ni_gpct *counter, comedi_cmd_t *cmd)
 	return retval;
 }
 
-int ni_tio_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd)
+int ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
 {
 	int retval = 0;
 	unsigned long flags;
 
-	comedi_lock_irqsave(&counter->lock, flags);
+	a4l_lock_irqsave(&counter->lock, flags);
 	if (counter->mite_chan == NULL) {
-		__comedi_err("ni_tio_cmd: commands only supported with DMA."
+		__a4l_err("ni_tio_cmd: commands only supported with DMA."
 			     " Interrupt-driven commands not yet implemented.\n");
 		retval = -EIO;
 	} else {
 		retval = ni_tio_cmd_setup(counter, cmd);
 		if (retval == 0) {
-			if (cmd->flags & COMEDI_CMD_WRITE) {
+			if (cmd->flags & A4L_CMD_WRITE) {
 				retval = ni_tio_output_cmd(counter, cmd);
 			} else {
 				retval = ni_tio_input_cmd(counter, cmd);
 			}
 		}
 	}
-	comedi_unlock_irqrestore(&counter->lock, flags);
+	a4l_unlock_irqrestore(&counter->lock, flags);
 	return retval;
 }
 
-comedi_cmd_t ni_tio_cmd_mask = {
+a4l_cmd_t ni_tio_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW | TRIG_INT | TRIG_OTHER | TRIG_EXT,
 	.scan_begin_src = TRIG_FOLLOW | TRIG_EXT | TRIG_OTHER,
@@ -1730,7 +1730,7 @@ comedi_cmd_t ni_tio_cmd_mask = {
 	.stop_src = TRIG_NONE,
 };
 
-int ni_tio_cmdtest(struct ni_gpct *counter, comedi_cmd_t *cmd)
+int ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd)
 {
 	/* Make sure trigger sources are trivially valid */
 
@@ -1781,11 +1781,11 @@ int ni_tio_cancel(struct ni_gpct *counter)
 	unsigned long flags;
 
 	ni_tio_arm(counter, 0, 0);
-	comedi_lock_irqsave(&counter->lock, flags);
+	a4l_lock_irqsave(&counter->lock, flags);
 	if (counter->mite_chan) {
 		mite_dma_disarm(counter->mite_chan);
 	}
-	comedi_unlock_irqrestore(&counter->lock, flags);
+	a4l_unlock_irqrestore(&counter->lock, flags);
 	ni_tio_configure_dma(counter, 0, 0);
 
 	ni_tio_set_bits(counter,
@@ -1811,15 +1811,15 @@ static int should_ack_gate(struct ni_gpct *counter)
 		return 1;
 		break;
 	case ni_gpct_variant_e_series:
-		comedi_lock_irqsave(&counter->lock, flags);
+		a4l_lock_irqsave(&counter->lock, flags);
 		{
 			if (counter->mite_chan == NULL ||
-				counter->mite_chan->dir != COMEDI_INPUT ||
+				counter->mite_chan->dir != A4L_INPUT ||
 				(mite_done(counter->mite_chan))) {
 				retval = 1;
 			}
 		}
-		comedi_unlock_irqrestore(&counter->lock, flags);
+		a4l_unlock_irqrestore(&counter->lock, flags);
 		break;
 	}
 	return retval;
@@ -1884,7 +1884,7 @@ void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 				NITIO_Gxx_Joint_Status2_Reg(counter->
 					counter_index)) &
 			Gi_Permanent_Stale_Bit(counter->counter_index)) {
-			__comedi_err("%s: Gi_Permanent_Stale_Data detected.\n",
+			__a4l_err("%s: Gi_Permanent_Stale_Data detected.\n",
 				    __FUNCTION__);
 			if (perm_stale_data)
 				*perm_stale_data = 1;
@@ -1892,25 +1892,25 @@ void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 	}
 }
 
-/* TODO: to be adapted after comedi_buf_evt review */ 
-void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
+/* TODO: to be adapted after a4l_buf_evt review */ 
+void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 {
 	unsigned gpct_mite_status;
 	unsigned long flags;
 	int gate_error;
 	int tc_error;
 	int perm_stale_data;
-	comedi_subd_t *subd = 
-		comedi_get_subd(dev, NI_GPCT_SUBDEV(counter->counter_index));
+	a4l_subd_t *subd = 
+		a4l_get_subd(dev, NI_GPCT_SUBDEV(counter->counter_index));
 
 	ni_tio_acknowledge_and_confirm(counter, &gate_error, &tc_error,
 		&perm_stale_data, NULL);
 	if (gate_error) {
-		__comedi_err("%s: Gi_Gate_Error detected.\n", __FUNCTION__);
-		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
+		__a4l_err("%s: Gi_Gate_Error detected.\n", __FUNCTION__);
+		a4l_buf_evt(subd, A4L_BUF_ERROR);
 	}
 	if (perm_stale_data) {
-		comedi_buf_evt(subd, COMEDI_BUF_ERROR);
+		a4l_buf_evt(subd, A4L_BUF_ERROR);
 	}
 	switch (counter->counter_dev->variant) {
 	case ni_gpct_variant_m_series:
@@ -1918,16 +1918,16 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
 		if (read_register(counter,
 				  NITIO_Gi_DMA_Status_Reg(counter->counter_index)) 
 		    & Gi_DRQ_Error_Bit) {
-			__comedi_err("%s: Gi_DRQ_Error detected.\n", __FUNCTION__);
-			comedi_buf_evt(subd, COMEDI_BUF_ERROR);
+			__a4l_err("%s: Gi_DRQ_Error detected.\n", __FUNCTION__);
+			a4l_buf_evt(subd, A4L_BUF_ERROR);
 		}
 		break;
 	case ni_gpct_variant_e_series:
 		break;
 	}
-	comedi_lock_irqsave(&counter->lock, flags);
+	a4l_lock_irqsave(&counter->lock, flags);
 	if (counter->mite_chan == NULL) {
-		comedi_unlock_irqrestore(&counter->lock, flags);
+		a4l_unlock_irqrestore(&counter->lock, flags);
 		return;
 	}
 	gpct_mite_status = mite_get_status(counter->mite_chan);
@@ -1937,7 +1937,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev)
 			MITE_CHOR(counter->mite_chan->channel));
 	}
 	mite_sync_input_dma(counter->mite_chan, subd);
-	comedi_unlock_irqrestore(&counter->lock, flags);
+	a4l_unlock_irqrestore(&counter->lock, flags);
 }
 
 void ni_tio_set_mite_channel(struct ni_gpct *counter, 
@@ -1945,9 +1945,9 @@ void ni_tio_set_mite_channel(struct ni_gpct *counter,
 {
 	unsigned long flags;
 
-	comedi_lock_irqsave(&counter->lock, flags);
+	a4l_lock_irqsave(&counter->lock, flags);
 	counter->mite_chan = mite_chan;
-	comedi_unlock_irqrestore(&counter->lock, flags);
+	a4l_unlock_irqrestore(&counter->lock, flags);
 }
 
 

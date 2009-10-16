@@ -18,23 +18,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef __COMEDI_8255_H__
-#define __COMEDI_8255_H__
+#ifndef __ANALOGY_8255_H__
+#define __ANALOGY_8255_H__
 
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
-typedef int (*comedi_8255_cb_t)(int, int, int, unsigned long);
+typedef int (*a4l_8255_cb_t)(int, int, int, unsigned long);
 
 typedef struct subd_8255_struct {
 	unsigned long cb_arg;
-	comedi_8255_cb_t cb_func;
+	a4l_8255_cb_t cb_func;
 	unsigned int status;
 	int have_irq;
 	int io_bits; 
 } subd_8255_t;
 
-#if (defined(CONFIG_XENO_DRIVERS_COMEDI_8255) || \
-     defined(CONFIG_XENO_DRIVERS_COMEDI_8255_MODULE))
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_8255) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_8255_MODULE))
 
 #define _8255_SIZE 4
 
@@ -49,14 +49,14 @@ typedef struct subd_8255_struct {
 #define CR_A_MODE(a)	((a)<<5)
 #define CR_CW		0x80
 
-void subdev_8255_init(comedi_subd_t *subd);
-void subdev_8255_interrupt(comedi_subd_t *subd);
+void subdev_8255_init(a4l_subd_t *subd);
+void subdev_8255_interrupt(a4l_subd_t *subd);
 
-#else /* !CONFIG_XENO_DRIVERS_COMEDI_8255 */
+#else /* !CONFIG_XENO_DRIVERS_ANALOGY_8255 */
 
 #define subdev_8255_init(x)		do { } while(0)
 #define subdev_8255_interrupt(x)	do { } while(0)
 
-#endif /* CONFIG_XENO_DRIVERS_COMEDI_8255 */
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_8255 */
 
-#endif /* !__COMEDI_8255_H__ */
+#endif /* !__ANALOGY_8255_H__ */

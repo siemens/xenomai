@@ -1,6 +1,6 @@
 /**
  * @file
- * Comedi for RTDM, instruction related features
+ * Analogy for Linux, instruction related features
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -30,10 +30,10 @@
 #include <asm/io.h>
 #include <asm/errno.h>
 
-#include <comedi/context.h>
-#include <comedi/device.h>
+#include <analogy/context.h>
+#include <analogy/device.h>
 
-int comedi_do_insn_gettime(comedi_kinsn_t * dsc)
+int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 {
 	unsigned long long ns;
 	unsigned long ns2;
@@ -42,7 +42,7 @@ int comedi_do_insn_gettime(comedi_kinsn_t * dsc)
 	if (dsc->data_size != 2)
 		return -EINVAL;
 
-	ns = comedi_get_time();
+	ns = a4l_get_time();
 
 	ns2 = do_div(ns, 1000000000);
 	dsc->data[0] = (lsampl_t) ns;
@@ -51,7 +51,7 @@ int comedi_do_insn_gettime(comedi_kinsn_t * dsc)
 	return 0;
 }
 
-int comedi_do_insn_wait(comedi_kinsn_t * dsc)
+int a4l_do_insn_wait(a4l_kinsn_t * dsc)
 {
 	unsigned int us;
 
@@ -59,10 +59,10 @@ int comedi_do_insn_wait(comedi_kinsn_t * dsc)
 	if (dsc->data_size != 1)
 		return -EINVAL;
 
-	if (dsc->data[0] > COMEDI_INSN_WAIT_MAX)
+	if (dsc->data[0] > A4L_INSN_WAIT_MAX)
 		return -EINVAL;
 
-	/* As we use (comedi_)udelay, we have to convert the delay into
+	/* As we use (a4l_)udelay, we have to convert the delay into
 	   microseconds */
 	us = dsc->data[0] / 1000;
 
@@ -71,15 +71,15 @@ int comedi_do_insn_wait(comedi_kinsn_t * dsc)
 		us = 1;
 
 	/* Performs the busy waiting */
-	comedi_udelay(us);
+	a4l_udelay(us);
 
 	return 0;
 }
 
-int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
+int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
-	comedi_subd_t *subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_subd_t *subd;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 	lsampl_t trignum;
 
 	/* Basic checkings */
@@ -94,20 +94,20 @@ int comedi_do_insn_trig(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks that the concerned subdevice is trigger-compliant */
-	if ((subd->flags & COMEDI_SUBD_CMD) == 0 || subd->trigger == NULL)
+	if ((subd->flags & A4L_SUBD_CMD) == 0 || subd->trigger == NULL)
 		return -EINVAL;
 
 	/* Performs the trigger */
 	return subd->trigger(subd, trignum);
 }
 
-int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
+int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
 {
 	int ret = 0;
 	void *tmp_data = NULL;
 
 	ret = rtdm_safe_copy_from_user(cxt->user_info, 
-				       dsc, arg, sizeof(comedi_insn_t));
+				       dsc, arg, sizeof(a4l_insn_t));
 	if (ret != 0)
 		goto out_insndsc;
 
@@ -123,7 +123,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 			goto out_insndsc;
 		}
 
-		if ((dsc->type & COMEDI_INSN_MASK_WRITE) != 0) {
+		if ((dsc->type & A4L_INSN_MASK_WRITE) != 0) {
 			ret = rtdm_safe_copy_from_user(cxt->user_info,
 						       tmp_data, dsc->data,
 						       dsc->data_size);
@@ -135,7 +135,7 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 	dsc->__udata = dsc->data;
 	dsc->data = tmp_data;
 
-      out_insndsc:
+out_insndsc:
 
 	if (ret != 0 && tmp_data != NULL)
 		rtdm_free(tmp_data);
@@ -143,11 +143,11 @@ int comedi_fill_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc, void *arg)
 	return ret;
 }
 
-int comedi_free_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
+int a4l_free_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
 	int ret = 0;
 
-	if ((dsc->type & COMEDI_INSN_MASK_READ) != 0)
+	if ((dsc->type & A4L_INSN_MASK_READ) != 0)
 		ret = rtdm_safe_copy_to_user(cxt->user_info,
 					     dsc->__udata,
 					     dsc->data, dsc->data_size);
@@ -158,19 +158,19 @@ int comedi_free_insndsc(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	return ret;
 }
 
-int comedi_do_special_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
+int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
 	int ret = 0;
 
 	switch (dsc->type) {
-	case COMEDI_INSN_GTOD:
-		ret = comedi_do_insn_gettime(dsc);
+	case A4L_INSN_GTOD:
+		ret = a4l_do_insn_gettime(dsc);
 		break;
-	case COMEDI_INSN_WAIT:
-		ret = comedi_do_insn_wait(dsc);
+	case A4L_INSN_WAIT:
+		ret = a4l_do_insn_wait(dsc);
 		break;
-	case COMEDI_INSN_INTTRIG:
-		ret = comedi_do_insn_trig(cxt, dsc);
+	case A4L_INSN_INTTRIG:
+		ret = a4l_do_insn_trig(cxt, dsc);
 		break;
 	default:
 		ret = -EINVAL;
@@ -179,11 +179,11 @@ int comedi_do_special_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	return ret;
 }
 
-int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
+int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
 	int ret;
-	comedi_subd_t *subd;
-	comedi_dev_t *dev = comedi_get_dev(cxt);
+	a4l_subd_t *subd;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	/* Checks the subdevice index */
 	if (dsc->idx_subd >= dev->transfer.nb_subd)
@@ -193,79 +193,79 @@ int comedi_do_insn(comedi_cxt_t * cxt, comedi_kinsn_t * dsc)
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
-	if (((subd->flags & COMEDI_SUBD_UNUSED) != 0) ||
-	    ((subd->flags & COMEDI_SUBD_CMD) == 0))
+	if (((subd->flags & A4L_SUBD_UNUSED) != 0) ||
+	    ((subd->flags & A4L_SUBD_CMD) == 0))
 		return -EINVAL;
 
 	/* Checks the channel descriptor */
-	ret = comedi_check_chanlist(dev->transfer.subds[dsc->idx_subd],
-				    1, &dsc->chan_desc);
+	ret = a4l_check_chanlist(dev->transfer.subds[dsc->idx_subd],
+				 1, &dsc->chan_desc);
 	if (ret < 0)
 		return ret;
 
 	/* Prevents the subdevice from being used during 
 	   the following operations */
-	ret = comedi_reserve_transfer(cxt, dsc->idx_subd);
+	ret = a4l_reserve_transfer(cxt, dsc->idx_subd);
 	if (ret < 0)
 		goto out_do_insn;
 
 	/* Lets the driver-specific code perform the instruction */
 	switch (dsc->type) {
-	case COMEDI_INSN_READ:
+	case A4L_INSN_READ:
 		ret = subd->insn_read(subd, dsc);
 		break;
-	case COMEDI_INSN_WRITE:
+	case A4L_INSN_WRITE:
 		ret = subd->insn_write(subd, dsc);
 		break;
-	case COMEDI_INSN_BITS:
+	case A4L_INSN_BITS:
 		ret = subd->insn_bits(subd, dsc);
 		break;
-	case COMEDI_INSN_CONFIG:
+	case A4L_INSN_CONFIG:
 		ret = subd->insn_config(subd, dsc);
 		break;
 	default:
 		ret = -EINVAL;
 	}
 
-      out_do_insn:
+out_do_insn:
 
 	/* Releases the subdevice from its reserved state */
-	comedi_cancel_transfer(cxt, dsc->idx_subd);
+	a4l_cancel_transfer(cxt, dsc->idx_subd);
 
 	return ret;
 }
 
-int comedi_ioctl_insn(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
-	comedi_kinsn_t insn;
+	a4l_kinsn_t insn;
 
 	/* Recovers the instruction descriptor */
-	ret = comedi_fill_insndsc(cxt, &insn, arg);
+	ret = a4l_fill_insndsc(cxt, &insn, arg);
 	if (ret != 0)
 		goto err_ioctl_insn;
 
 	/* Performs the instruction */
-	if ((insn.type & COMEDI_INSN_MASK_SPECIAL) != 0)
-		ret = comedi_do_special_insn(cxt, &insn);
+	if ((insn.type & A4L_INSN_MASK_SPECIAL) != 0)
+		ret = a4l_do_special_insn(cxt, &insn);
 	else
-		ret = comedi_do_insn(cxt, &insn);
+		ret = a4l_do_insn(cxt, &insn);
 
 	if (ret < 0)
 		goto err_ioctl_insn;
 
 	/* Frees the used memory and sends back some
 	   data, if need be */
-	ret = comedi_free_insndsc(cxt, &insn);
+	ret = a4l_free_insndsc(cxt, &insn);
 
 	return ret;
 
-      err_ioctl_insn:
-	comedi_free_insndsc(cxt, &insn);
+err_ioctl_insn:
+	a4l_free_insndsc(cxt, &insn);
 	return ret;
 }
 
-int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
+int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 {
 	int i, ret = 0;
 
@@ -273,7 +273,7 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 
 	/* Recovers the structure from user space */
 	ret = rtdm_safe_copy_from_user(cxt->user_info, 
-				       dsc, arg, sizeof(comedi_insnlst_t));
+				       dsc, arg, sizeof(a4l_insnlst_t));
 	if (ret < 0)
 		return ret;
 
@@ -284,16 +284,16 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 	/* Keeps the user pointer in an opaque field */
 	dsc->__uinsns = dsc->insns;
 
-	dsc->insns = rtdm_malloc(dsc->count * sizeof(comedi_kinsn_t));
+	dsc->insns = rtdm_malloc(dsc->count * sizeof(a4l_kinsn_t));
 	if (dsc->insns == NULL)
 		return -ENOMEM;
 
 	/* Recovers the instructions, one by one. This part is not 
 	   optimized */
 	for (i = 0; i < dsc->count && ret == 0; i++)
-		ret = comedi_fill_insndsc(cxt,
-					  &(dsc->insns[i]),
-					  &(dsc->__uinsns[i]));
+		ret = a4l_fill_insndsc(cxt,
+				       &(dsc->insns[i]),
+				       &(dsc->__uinsns[i]));
 
 	/* In case of error, frees the allocated memory */
 	if (ret < 0 && dsc->insns != NULL)
@@ -302,17 +302,17 @@ int comedi_fill_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc, void *arg)
 	return ret;
 }
 
-int comedi_free_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc)
+int a4l_free_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc)
 {
 	int i, ret = 0;
 
 	if (dsc->insns != NULL) {
 
 		for (i = 0; i < dsc->count && ret == 0; i++)
-			ret = comedi_free_insndsc(cxt, &(dsc->insns[i]));
+			ret = a4l_free_insndsc(cxt, &(dsc->insns[i]));
 
 		while (i < dsc->count) {
-			comedi_free_insndsc(cxt, &(dsc->insns[i]));
+			a4l_free_insndsc(cxt, &(dsc->insns[i]));
 			i++;
 		}
 
@@ -325,29 +325,29 @@ int comedi_free_ilstdsc(comedi_cxt_t * cxt, comedi_kilst_t * dsc)
 /* This function is not optimized in terms of memory footprint and
    CPU charge; however, the whole comedi instruction system was not
    designed for performance issues */
-int comedi_ioctl_insnlist(comedi_cxt_t * cxt, void *arg)
+int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 {
 	int i, ret = 0;
-	comedi_kilst_t ilst;
+	a4l_kilst_t ilst;
 
-	if ((ret = comedi_fill_ilstdsc(cxt, &ilst, arg)) < 0)
+	if ((ret = a4l_fill_ilstdsc(cxt, &ilst, arg)) < 0)
 		return ret;
 
 	/* Performs the instructions */
 	for (i = 0; i < ilst.count && ret == 0; i++) {
-		if ((ilst.insns[i].type & COMEDI_INSN_MASK_SPECIAL) != 0)
-			ret = comedi_do_special_insn(cxt, &ilst.insns[i]);
+		if ((ilst.insns[i].type & A4L_INSN_MASK_SPECIAL) != 0)
+			ret = a4l_do_special_insn(cxt, &ilst.insns[i]);
 		else
-			ret = comedi_do_insn(cxt, &ilst.insns[i]);
+			ret = a4l_do_insn(cxt, &ilst.insns[i]);
 	}
 
 	if (ret < 0)
 		goto err_ioctl_ilst;
 
-	return comedi_free_ilstdsc(cxt, &ilst);
+	return a4l_free_ilstdsc(cxt, &ilst);
 
-      err_ioctl_ilst:
-	comedi_free_ilstdsc(cxt, &ilst);
+err_ioctl_ilst:
+	a4l_free_ilstdsc(cxt, &ilst);
 	return ret;
 }
 

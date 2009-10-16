@@ -46,11 +46,11 @@
  * Note that the PCI-6143 is a simultaneous sampling device with 8
  * convertors. With this board all of the convertors perform one
  * simultaneous sample during a scan interval. The period for a scan
- * is used for the convert time in a Comedi cmd. The convert trigger
+ * is used for the convert time in an Analgoy cmd. The convert trigger
  * source is normally set to TRIG_NOW by default.
  *
- * The RTSI trigger bus is supported on these cards on
- * subdevice 10. See the comedilib documentation for details.
+ * The RTSI trigger bus is supported on these cards on subdevice
+ * 10. See the Analogy library documentation for details.
  *
  * References:
  * 341079b.pdf  PCI E Series Register-Level Programmer Manual
@@ -60,7 +60,7 @@
  * 322138a.pdf  PCI-6052E and DAQPad-6052E User Manual
  *
  * ISSUES:
- * - When DMA is enabled, COMEDI_EV_CONVERT does not work correctly.
+ * - When DMA is enabled, XXX_EV_CONVERT does not work correctly.
  * - Calibration is not fully implemented
  * - SCXI is probably broken for m-series boards
  * - Digital I/O may not work on 673x.
@@ -73,7 +73,7 @@
  * - Need to add other CALDAC type
  * - Need to slow down DAC loading.  I don't trust NI's claim that two
  *   writes to the PCI bus slows IO enough.  I would prefer to use
- *   comedi_udelay().  Timing specs: (clock)
+ *   a4l_udelay().  Timing specs: (clock)
  *     AD8522   30ns
  *     DAC8043  120ns
  *     DAC8800  60ns
@@ -82,7 +82,7 @@
  */
 
 #include <linux/module.h>
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #include "../intel/8255.h"
 #include "ni_stc.h"
@@ -156,7 +156,7 @@ MODULE_DEVICE_TABLE(pci, ni_pci_table);
  can not act as it's own OFFSET or REFERENCE.
 */
 
-static comedi_rngtab_t rng_ni_M_628x_ao = { 8, {
+static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
 	RANGE(-10, 10),
 	RANGE(-5, 5),
 	RANGE(-2, 2),
@@ -167,21 +167,21 @@ static comedi_rngtab_t rng_ni_M_628x_ao = { 8, {
 	RANGE(4, 6),
 	RANGE_ext(-1, 1)
 }};
-static comedi_rngdesc_t range_ni_M_628x_ao = 
+static a4l_rngdesc_t range_ni_M_628x_ao = 
 	RNG_GLOBAL(rng_ni_M_628x_ao);
 
-static comedi_rngtab_t rng_ni_M_625x_ao = { 3, {
+static a4l_rngtab_t rng_ni_M_625x_ao = { 3, {
 	RANGE(-10, 10),
 	RANGE(-5, 5),
 	RANGE_ext(-1, 1)
 }};
-static comedi_rngdesc_t range_ni_M_625x_ao = 
+static a4l_rngdesc_t range_ni_M_625x_ao = 
 	RNG_GLOBAL(rng_ni_M_625x_ao);
 
-static comedi_rngtab_t rng_ni_M_622x_ao = { 1, {
+static a4l_rngtab_t rng_ni_M_622x_ao = { 1, {
 	RANGE(-10, 10),
 }};
-static comedi_rngdesc_t range_ni_M_622x_ao = 
+static a4l_rngdesc_t range_ni_M_622x_ao = 
 	RNG_GLOBAL(rng_ni_M_622x_ao);
 
 static ni_board ni_boards[]={
@@ -1113,30 +1113,30 @@ static ni_board ni_boards[]={
 /* However, the 611x boards still aren't working, so I'm disabling
  * non-windowed STC access temporarily */
 
-static void e_series_win_out(comedi_dev_t *dev, uint16_t data, int reg)
+static void e_series_win_out(a4l_dev_t *dev, uint16_t data, int reg)
 {
 	unsigned long flags;
 
-	comedi_lock_irqsave(&devpriv->window_lock, flags);
+	a4l_lock_irqsave(&devpriv->window_lock, flags);
 	ni_writew(reg, Window_Address);
 	ni_writew(data, Window_Data);
-	comedi_unlock_irqrestore(&devpriv->window_lock, flags);
+	a4l_unlock_irqrestore(&devpriv->window_lock, flags);
 }
 
-static uint16_t e_series_win_in(comedi_dev_t *dev, int reg)
+static uint16_t e_series_win_in(a4l_dev_t *dev, int reg)
 {
 	unsigned long flags;
 	uint16_t ret;
 
-	comedi_lock_irqsave(&devpriv->window_lock, flags);
+	a4l_lock_irqsave(&devpriv->window_lock, flags);
 	ni_writew(reg, Window_Address);
 	ret = ni_readw(Window_Data);
-	comedi_unlock_irqrestore(&devpriv->window_lock,flags);
+	a4l_unlock_irqrestore(&devpriv->window_lock,flags);
 
 	return ret;
 }
 
-static void m_series_stc_writew(comedi_dev_t *dev, uint16_t data, int reg)
+static void m_series_stc_writew(a4l_dev_t *dev, uint16_t data, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1290,7 +1290,7 @@ static void m_series_stc_writew(comedi_dev_t *dev, uint16_t data, int reg)
 	ni_writew(data, offset);
 }
 
-static uint16_t m_series_stc_readw(comedi_dev_t *dev, int reg)
+static uint16_t m_series_stc_readw(a4l_dev_t *dev, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1327,7 +1327,7 @@ static uint16_t m_series_stc_readw(comedi_dev_t *dev, int reg)
 	return ni_readw(offset);
 }
 
-static void m_series_stc_writel(comedi_dev_t *dev, uint32_t data, int reg)
+static void m_series_stc_writel(a4l_dev_t *dev, uint32_t data, int reg)
 {
 	unsigned offset;
 
@@ -1369,7 +1369,7 @@ static void m_series_stc_writel(comedi_dev_t *dev, uint32_t data, int reg)
 	ni_writel(data, offset);
 }
 
-static uint32_t m_series_stc_readl(comedi_dev_t *dev, int reg)
+static uint32_t m_series_stc_readl(a4l_dev_t *dev, int reg)
 {
 	unsigned offset;
 	switch(reg)
@@ -1395,13 +1395,13 @@ static uint32_t m_series_stc_readl(comedi_dev_t *dev, int reg)
 	return ni_readl(offset);
 }
 
-static void win_out2(comedi_dev_t *dev, uint32_t data, int reg)
+static void win_out2(a4l_dev_t *dev, uint32_t data, int reg)
 {
 	devpriv->stc_writew(dev, data >> 16, reg);
 	devpriv->stc_writew(dev, data & 0xffff, reg + 1);
 }
 
-static uint32_t win_in2(comedi_dev_t *dev, int reg)
+static uint32_t win_in2(a4l_dev_t *dev, int reg)
 {
 	uint32_t bits;
 	bits = devpriv->stc_readw(dev, reg) << 16;
@@ -1409,7 +1409,7 @@ static uint32_t win_in2(comedi_dev_t *dev, int reg)
 	return bits;
 }
 
-static void m_series_init_eeprom_buffer(comedi_dev_t *dev)
+static void m_series_init_eeprom_buffer(a4l_dev_t *dev)
 {
 	static const int Start_Cal_EEPROM = 0x400;
 	static const unsigned window_size = 10;
@@ -1438,7 +1438,7 @@ static void m_series_init_eeprom_buffer(comedi_dev_t *dev)
 	writel(0x0, devpriv->mite->mite_io_addr + 0x30);
 }
 
-static void init_6143(comedi_dev_t *dev)
+static void init_6143(a4l_dev_t *dev)
 {
 	/* Disable interrupts */
 	devpriv->stc_writew(dev, 0, Interrupt_Control_Register);
@@ -1462,7 +1462,7 @@ static void init_6143(comedi_dev_t *dev)
 	ni_writew(devpriv->ai_calib_source, Calibration_Channel_6143);
 }
 
-static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
+static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
 	int ret, bus, slot, i, irq;
 	struct mite_struct *mite = NULL;
@@ -1502,7 +1502,7 @@ static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	   devpriv->gpct_mite_ring[1] == NULL)
 		return -ENOMEM;
 
-	comedi_info(dev, "pcimio_attach: found %s board\n", boardtype.name);
+	a4l_info(dev, "pcimio_attach: found %s board\n", boardtype.name);
 
 	if(boardtype.reg_type & ni_reg_m_series_mask)
 	{
@@ -1521,7 +1521,7 @@ static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	ret = mite_setup(devpriv->mite, 0);
 	if(ret < 0)
 	{
-		comedi_err(dev, "pcmio_attach: error setting up mite\n");
+		a4l_err(dev, "pcmio_attach: error setting up mite\n");
 		return ret;
 	}
 
@@ -1533,14 +1533,14 @@ static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	irq = mite_irq(devpriv->mite);
 
 	if(irq == 0){
-		comedi_warn(dev, "pcimio_attach: unknown irq (bad)\n\n");
+		a4l_warn(dev, "pcimio_attach: unknown irq (bad)\n\n");
 	}else{
-		comedi_info(dev, "pcimio_attach: found irq %u\n", irq);
-		ret = comedi_request_irq(dev,
+		a4l_info(dev, "pcimio_attach: found irq %u\n", irq);
+		ret = a4l_request_irq(dev,
 					 irq,
-					 ni_E_interrupt, COMEDI_IRQ_SHARED, dev);
+					 ni_E_interrupt, A4L_IRQ_SHARED, dev);
 		if(ret < 0)
-			comedi_err(dev, "pcimio_attach: irq not available\n");
+			a4l_err(dev, "pcimio_attach: irq not available\n");
 	}
 
 	ret = ni_E_init(dev);
@@ -1550,10 +1550,10 @@ static int pcimio_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	return ret;
 }
 
-static int pcimio_detach(comedi_dev_t *dev)
+static int pcimio_detach(a4l_dev_t *dev)
 {
-	if(comedi_get_irq(dev)!=COMEDI_IRQ_UNUSED){
-		comedi_free_irq(dev,comedi_get_irq(dev));
+	if(a4l_get_irq(dev)!=A4L_IRQ_UNUSED){
+		a4l_free_irq(dev,a4l_get_irq(dev));
 	}
 
 	if(dev->priv != NULL && devpriv->mite != NULL)
@@ -1568,9 +1568,9 @@ static int pcimio_detach(comedi_dev_t *dev)
 	return 0;
 }
 
-static comedi_drv_t pcimio_drv = {
+static a4l_drv_t pcimio_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "comedi_pcimio",
+	.board_name = "a4l_pcimio",
 	.attach = pcimio_attach,
 	.detach = pcimio_detach,
 	.privdata_size = sizeof(ni_private),
@@ -1578,12 +1578,12 @@ static comedi_drv_t pcimio_drv = {
 
 static int __init pcimio_init(void)
 {
-	return comedi_register_drv(&pcimio_drv);
+	return a4l_register_drv(&pcimio_drv);
 }
 
 static void __exit pcimio_cleanup(void)
 {
-	comedi_unregister_drv(&pcimio_drv);
+	a4l_unregister_drv(&pcimio_drv);
 }
 
 MODULE_LICENSE("GPL");

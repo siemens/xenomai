@@ -18,12 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef __COMEDI_NI_MITE_H__
-#define __COMEDI_NI_MITE_H__
+#ifndef __ANALOGY_NI_MITE_H__
+#define __ANALOGY_NI_MITE_H__
 
 #include <linux/pci.h>
 
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #define PCI_VENDOR_ID_NATINST 0x1093
 #define PCI_MITE_SIZE 4096
@@ -58,7 +58,7 @@ struct mite_channel {
 
 struct mite_struct {
 	struct list_head list;
-	comedi_lock_t lock;
+	a4l_lock_t lock;
 	u32 used;
 	u32 num_channels;
 
@@ -133,8 +133,8 @@ void mite_release_channel(struct mite_channel *mite_chan);
 
 void mite_dma_arm(struct mite_channel *mite_chan);
 void mite_dma_disarm(struct mite_channel *mite_chan);
-int mite_sync_input_dma(struct mite_channel *mite_chan, comedi_subd_t *subd);
-int mite_sync_output_dma(struct mite_channel *mite_chan, comedi_subd_t *subd);
+int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
+int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
 u32 mite_bytes_written_to_memory_lb(struct mite_channel *mite_chan);
 u32 mite_bytes_written_to_memory_ub(struct mite_channel *mite_chan);
 u32 mite_bytes_read_from_memory_lb(struct mite_channel *mite_chan);
@@ -144,7 +144,7 @@ u32 mite_get_status(struct mite_channel *mite_chan);
 int mite_done(struct mite_channel *mite_chan);
 void mite_prep_dma(struct mite_channel *mite_chan,
 		   unsigned int num_device_bits, unsigned int num_memory_bits);
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, comedi_buf_t *buf);
+int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_buf_t *buf);
 
 #ifdef CONFIG_DEBUG_MITE
 void mite_print_chsr(unsigned int chsr);
@@ -387,7 +387,8 @@ static inline int CR_RL(unsigned int retry_limit)
 		value++;
 	}
 	if (value > 0x7)
-		rtdm_printk("Comedi: bug! retry_limit too large\n");
+		__a4l_err("bug! retry_limit too large\n");
+
 	return (value & 0x7) << 21;
 }
 
@@ -432,4 +433,4 @@ static inline void mite_dma_reset(struct mite_channel *mite_chan)
 		mite_chan->mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 };
 
-#endif /* !__COMEDI_NI_MITE_H__ */
+#endif /* !__ANALOGY_NI_MITE_H__ */

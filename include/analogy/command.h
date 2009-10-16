@@ -39,15 +39,15 @@
 /** 
  * Do not execute the command, just check it
  */
-#define CMD_SIMUL 0x1
+#define A4L_CMD_SIMUL 0x1
 /** 
  * Perform data recovery / transmission in bulk mode
  */
-#define CMD_BULK 0x2
+#define A4L_CMD_BULK 0x2
 /** 
  * Perform a command which will write data to the device
  */
-#define CMD_WRITE 0x4
+#define A4L_CMD_WRITE 0x4
 
 	  /*! @} ANALOGY_CMD_xxx */
 

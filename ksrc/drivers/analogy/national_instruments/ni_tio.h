@@ -18,10 +18,10 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __COMEDI_NI_TIO_H__
-#define __COMEDI_NI_TIO_H__
+#ifndef __ANALOGY_NI_TIO_H__
+#define __ANALOGY_NI_TIO_H__
 
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #include "mite.h"
 
@@ -515,11 +515,11 @@ struct ni_gpct {
 	unsigned chip_index;
 	uint64_t clock_period_ps; /* clock period in picoseconds */
 	struct mite_channel *mite_chan;
-	comedi_lock_t lock;
+	a4l_lock_t lock;
 };
 
 struct ni_gpct_device {
-	comedi_dev_t *dev;
+	a4l_dev_t *dev;
 	void (*write_register)(struct ni_gpct * counter, 
 				unsigned int bits, enum ni_gpct_register reg);
 	unsigned (*read_register)(struct ni_gpct * counter,
@@ -528,7 +528,7 @@ struct ni_gpct_device {
 	struct ni_gpct **counters;
 	unsigned num_counters;
 	unsigned regs[NITIO_Num_Registers];
-	comedi_lock_t regs_lock;
+	a4l_lock_t regs_lock;
 };
 
 #define Gi_Auto_Increment_Mask 		0xff
@@ -987,7 +987,7 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 	return bit;
 }
 
-#define counter_status_mask (COMEDI_COUNTER_ARMED | COMEDI_COUNTER_COUNTING)
+#define counter_status_mask (A4L_COUNTER_ARMED | A4L_COUNTER_COUNTING)
 
 #define NI_USUAL_PFI_SELECT(x)	((x < 10) ? (0x1 + x) : (0xb + x))
 #define NI_USUAL_RTSI_SELECT(x)	((x < 7 ) ? (0xb + x) : (0x1b + x))
@@ -1156,24 +1156,24 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_RTSI_OUTPUT_RTSI_BRD(x) (NI_RTSI_OUTPUT_RTSI_BRD_0 + (x))
 
 
-extern comedi_cmd_t ni_tio_cmd_mask;
+extern a4l_cmd_t ni_tio_cmd_mask;
 
-int ni_tio_rinsn(struct ni_gpct *counter, comedi_kinsn_t *insn);
-int ni_tio_winsn(struct ni_gpct *counter, comedi_kinsn_t *insn);
+int ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
+int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
 int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum);
-int ni_tio_cmd(struct ni_gpct *counter, comedi_cmd_t *cmd);
-int ni_tio_cmdtest(struct ni_gpct *counter, comedi_cmd_t *cmd);
+int ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd);
+int ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd);
 int ni_tio_cancel(struct ni_gpct *counter);
-int ni_tio_insn_config(struct ni_gpct *counter, comedi_kinsn_t *insn);
+int ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn);
 void ni_tio_init_counter(struct ni_gpct *counter);
-struct ni_gpct_device *ni_gpct_device_construct(comedi_dev_t * dev,
+struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 	void (*write_register) (struct ni_gpct * counter, unsigned int bits,
 		enum ni_gpct_register reg),
 	unsigned int (*read_register) (struct ni_gpct * counter,
 		enum ni_gpct_register reg), enum ni_gpct_variant variant,
 	unsigned int num_counters);
 void ni_gpct_device_destroy(struct ni_gpct_device *counter_dev);
-void ni_tio_handle_interrupt(struct ni_gpct *counter, comedi_dev_t *dev);
+void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev);
 void ni_tio_set_mite_channel(struct ni_gpct *counter, 
 			     struct mite_channel *mite_chan);
 void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter, 
@@ -1181,4 +1181,4 @@ void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 				    int *tc_error, 
 				    int *perm_stale_data, int *stale_data);
 
-#endif /* !__COMEDI_NI_TIO_H__ */
+#endif /* !__ANALOGY_NI_TIO_H__ */

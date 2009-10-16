@@ -68,7 +68,7 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	if(mite == NULL)
 		return -ENOMEM;
 
-	comedi_lock_init(&mite->lock);
+	a4l_lock_init(&mite->lock);
 	mite->pcidev = dev;
 
 	for(i = 0; i < MAX_MITE_DMA_CHANNELS; i++) {
@@ -107,18 +107,18 @@ static struct pci_driver mite_driver = {
 
 static void dump_chip_signature(u32 csigr_bits)
 {
-	__comedi_info("MITE: version = %i, type = %i, mite mode = %i, "
-		      "interface mode = %i\n", 
-		      mite_csigr_version(csigr_bits), 
-		      mite_csigr_type(csigr_bits), 
-		      mite_csigr_mmode(csigr_bits), 
-		      mite_csigr_imode(csigr_bits));
-	__comedi_info("MITE: num channels = %i, write post fifo depth = %i, "
-		      "wins = %i, iowins = %i\n", 
-		      mite_csigr_dmac(csigr_bits), 
-		      mite_csigr_wpdep(csigr_bits), 
-		      mite_csigr_wins(csigr_bits), 
-		      mite_csigr_iowins(csigr_bits));
+	__a4l_info("MITE: version = %i, type = %i, mite mode = %i, "
+		   "interface mode = %i\n", 
+		   mite_csigr_version(csigr_bits), 
+		   mite_csigr_type(csigr_bits), 
+		   mite_csigr_mmode(csigr_bits), 
+		   mite_csigr_imode(csigr_bits));
+	__a4l_info("MITE: num channels = %i, write post fifo depth = %i, "
+		   "wins = %i, iowins = %i\n", 
+		   mite_csigr_dmac(csigr_bits), 
+		   mite_csigr_wpdep(csigr_bits), 
+		   mite_csigr_wins(csigr_bits), 
+		   mite_csigr_iowins(csigr_bits));
 }
 
 int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
@@ -130,14 +130,14 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	unsigned unknown_dma_burst_bits;
 
 	if(pci_enable_device(mite->pcidev)){
-		__comedi_err("error enabling mite\n");
+		__a4l_err("error enabling mite\n");
 		return -EIO;
 	}
 
 	pci_set_master(mite->pcidev);
 
 	if (pci_request_regions( mite->pcidev, "mite")) {
-		__comedi_err("failed to request mite io regions\n");
+		__a4l_err("failed to request mite io regions\n");
 		return -EIO;
 	};
 
@@ -148,13 +148,13 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->mite_phys_addr = addr;
 	mite->mite_io_addr = ioremap(addr, length);
 	if (!mite->mite_io_addr) {
-		__comedi_err("failed to remap mite io memory address\n");
+		__a4l_err("failed to remap mite io memory address\n");
 		return -ENOMEM;
 	}
 
-	__comedi_info("MITE: 0x%08llx mapped to %p ",
-		      (unsigned long long)mite->mite_phys_addr, 
-		      mite->mite_io_addr);
+	__a4l_info("MITE: 0x%08llx mapped to %p ",
+		   (unsigned long long)mite->mite_phys_addr, 
+		   mite->mite_io_addr);
 
 
 	/* The PCI BAR1 is the DAQ */
@@ -163,25 +163,25 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	mite->daq_phys_addr = addr;
 	mite->daq_io_addr = ioremap(mite->daq_phys_addr, length);
 	if (!mite->daq_io_addr) {
-		__comedi_err("failed to remap daq io memory address\n");
+		__a4l_err("failed to remap daq io memory address\n");
 		return -ENOMEM;
 	}
 
-	__comedi_info("DAQ: 0x%08llx mapped to %p\n",
-		      (unsigned long long)mite->daq_phys_addr, 
-		      mite->daq_io_addr);
+	__a4l_info("DAQ: 0x%08llx mapped to %p\n",
+		   (unsigned long long)mite->daq_phys_addr, 
+		   mite->daq_io_addr);
 
 	if (use_iodwbsr_1) {
 		writel(0, mite->mite_io_addr + MITE_IODWBSR);
-		__comedi_err("MITE: using I/O Window Base Size register 1\n");
+		__a4l_err("MITE: using I/O Window Base Size register 1\n");
 		writel(mite->
-			daq_phys_addr | WENAB |
-			MITE_IODWBSR_1_WSIZE_bits(length),
-			mite->mite_io_addr + MITE_IODWBSR_1);
+		       daq_phys_addr | WENAB |
+		       MITE_IODWBSR_1_WSIZE_bits(length),
+		       mite->mite_io_addr + MITE_IODWBSR_1);
 		writel(0, mite->mite_io_addr + MITE_IODWCR_1);
 	} else {
 		writel(mite->daq_phys_addr | WENAB,
-			mite->mite_io_addr + MITE_IODWBSR);
+		       mite->mite_io_addr + MITE_IODWBSR);
 	}
 	
 	/* Make sure dma bursts work.  I got this from running a bus analyzer
@@ -189,19 +189,19 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	   of 0x61f and bursts worked.  6281 powered up with register value of
 	   0x1f and bursts didn't work.  The NI windows driver reads the register,
 	   then does a bitwise-or of 0x600 with it and writes it back.
-	 */
+	*/
 	unknown_dma_burst_bits =
 		readl(mite->mite_io_addr + MITE_UNKNOWN_DMA_BURST_REG);
 	unknown_dma_burst_bits |= UNKNOWN_DMA_BURST_ENABLE_BITS;
 	writel(unknown_dma_burst_bits,
-		mite->mite_io_addr + MITE_UNKNOWN_DMA_BURST_REG);
+	       mite->mite_io_addr + MITE_UNKNOWN_DMA_BURST_REG);
 
 	csigr_bits = readl(mite->mite_io_addr + MITE_CSIGR);
 	mite->num_channels = mite_csigr_dmac(csigr_bits);
 	if (mite->num_channels > MAX_MITE_DMA_CHANNELS) {
-		__comedi_err("MITE: bug? chip claims to have %i dma channels. "
-			     "Setting to %i.\n", 
-			     mite->num_channels, MAX_MITE_DMA_CHANNELS);
+		__a4l_err("MITE: bug? chip claims to have %i dma channels. "
+			  "Setting to %i.\n", 
+			  mite->num_channels, MAX_MITE_DMA_CHANNELS);
 		mite->num_channels = MAX_MITE_DMA_CHANNELS;
 	}
 
@@ -211,9 +211,9 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 		writel(CHOR_DMARESET, mite->mite_io_addr + MITE_CHOR(i));
 		/* Disable interrupts */
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE | CHCR_CLR_SAR_IE |
-			CHCR_CLR_DONE_IE | CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
-			CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
-			mite->mite_io_addr + MITE_CHCR(i));
+		       CHCR_CLR_DONE_IE | CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
+		       CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
+		       mite->mite_io_addr + MITE_CHCR(i));
 	}
 
 	mite->used = 1;
@@ -292,7 +292,7 @@ struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 	struct mite_channel *channel = NULL;
 
 	/* spin lock so mite_release_channel can be called safely from interrupts */
-	comedi_lock_irqsave(&mite->lock, flags);
+	a4l_lock_irqsave(&mite->lock, flags);
 	for (i = min_channel; i <= max_channel; ++i) {
 		if (mite->channel_allocated[i] == 0) {
 			mite->channel_allocated[i] = 1;
@@ -301,7 +301,7 @@ struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 			break;
 		}
 	}
-	comedi_unlock_irqrestore(&mite->lock, flags);
+	a4l_unlock_irqrestore(&mite->lock, flags);
 	return channel;
 }
 
@@ -311,21 +311,21 @@ void mite_release_channel(struct mite_channel *mite_chan)
 	unsigned long flags;
 
 	// spin lock to prevent races with mite_request_channel
-	comedi_lock_irqsave(&mite->lock, flags);
+	a4l_lock_irqsave(&mite->lock, flags);
 	if (mite->channel_allocated[mite_chan->channel]) {
 		// disable all channel's interrupts
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE |
-			CHCR_CLR_SAR_IE | CHCR_CLR_DONE_IE |
-			CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
-			CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
-			mite->mite_io_addr + MITE_CHCR(mite_chan->channel));
+		       CHCR_CLR_SAR_IE | CHCR_CLR_DONE_IE |
+		       CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
+		       CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
+		       mite->mite_io_addr + MITE_CHCR(mite_chan->channel));
 		mite_dma_disarm(mite_chan);
 		mite_dma_reset(mite_chan);
 		mite->channel_allocated[mite_chan->channel] = 0;
 		mite_chan->ring = NULL;
 		mmiowb();
 	}
-	comedi_unlock_irqrestore(&mite->lock, flags);
+	a4l_unlock_irqrestore(&mite->lock, flags);
 }
 
 void mite_dma_arm(struct mite_channel *mite_chan)
@@ -340,11 +340,11 @@ void mite_dma_arm(struct mite_channel *mite_chan)
 	smp_mb();
 	/* arm */
 	chor = CHOR_START;
-	comedi_lock_irqsave(&mite->lock, flags);
+	a4l_lock_irqsave(&mite->lock, flags);
 	mite_chan->done = 0;
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 	mmiowb();
-	comedi_unlock_irqrestore(&mite->lock, flags);
+	a4l_unlock_irqrestore(&mite->lock, flags);
 }
 
 void mite_dma_disarm(struct mite_channel *mite_chan)
@@ -357,7 +357,7 @@ void mite_dma_disarm(struct mite_channel *mite_chan)
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 }
 
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, comedi_buf_t *buf)
+int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_buf_t *buf)
 {
 	unsigned int n_links;
 	int i;
@@ -437,11 +437,11 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		   transfers to the analog out of a pxi-6281, which
 		   has mite version = 1, type = 4.  This also works
 		   for dma reads from the counters on e-series boards.
-		   */
+		*/
 		chcr |= CHCR_BYTE_SWAP_DEVICE | CHCR_BYTE_SWAP_MEMORY;
 	}
 
-	if (mite_chan->dir == COMEDI_INPUT) {
+	if (mite_chan->dir == A4L_INPUT) {
 		chcr |= CHCR_DEV_TO_MEM;
 	}
 	writel(chcr, mite->mite_io_addr + MITE_CHCR(mite_chan->channel));
@@ -459,8 +459,8 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		mcr |= CR_PSIZE32;
 		break;
 	default:
-		__comedi_err("MITE: bug! "
-			      "invalid mem bit width for dma transfer\n");
+		__a4l_err("MITE: bug! "
+			  "invalid mem bit width for dma transfer\n");
 		break;
 	}
 	writel(mcr, mite->mite_io_addr + MITE_MCR(mite_chan->channel));
@@ -479,8 +479,8 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 		dcr |= CR_PSIZE32;
 		break;
 	default:
-		__comedi_info("MITE: bug! "
-			      "invalid dev bit width for dma transfer\n");
+		__a4l_info("MITE: bug! "
+			   "invalid dev bit width for dma transfer\n");
 		break;
 	}
 	writel(dcr, mite->mite_io_addr + MITE_DCR(mite_chan->channel));
@@ -494,7 +494,7 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 
 	/* starting address for link chaining */
 	writel(mite_chan->ring->descriptors_dma_addr,
-		mite->mite_io_addr + MITE_LKAR(mite_chan->channel));
+	       mite->mite_io_addr + MITE_LKAR(mite_chan->channel));
 
 	MDPRINTK("exit mite_prep_dma\n");
 }
@@ -509,7 +509,7 @@ u32 mite_bytes_in_transit(struct mite_channel * mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	return readl(mite->mite_io_addr +
-		MITE_FCR(mite_chan->channel)) & 0x000000FF;
+		     MITE_FCR(mite_chan->channel)) & 0x000000FF;
 }
 
 /* Returns lower bound for number of bytes transferred from device to memory */
@@ -548,34 +548,34 @@ u32 mite_bytes_read_from_memory_ub(struct mite_channel * mite_chan)
 	return mite_device_bytes_transferred(mite_chan) + in_transit_count;
 }
 
-int mite_sync_input_dma(struct mite_channel *mite_chan, comedi_subd_t *subd)
+int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
 	unsigned int nbytes_lb, nbytes_ub;
 
 	nbytes_lb = mite_bytes_written_to_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_written_to_memory_ub(mite_chan);
 
-	if(comedi_buf_prepare_absput(subd, nbytes_ub) != 0) {
-		__comedi_info("MITE: DMA overwrite of free area\n");
+	if(a4l_buf_prepare_absput(subd, nbytes_ub) != 0) {
+		__a4l_info("MITE: DMA overwrite of free area\n");
 		return -EPIPE;
 	}
 	
-	return comedi_buf_commit_absput(subd, nbytes_lb);
+	return a4l_buf_commit_absput(subd, nbytes_lb);
 }
 
-int mite_sync_output_dma(struct mite_channel *mite_chan, comedi_subd_t *subd)
+int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
 	unsigned int nbytes_ub, nbytes_lb;
 
 	nbytes_lb = mite_bytes_read_from_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
 
-	if(comedi_buf_prepare_absget(subd, nbytes_ub) != 0) {
-		__comedi_info("MITE: DMA underrun\n");
+	if(a4l_buf_prepare_absget(subd, nbytes_ub) != 0) {
+		__a4l_info("MITE: DMA underrun\n");
 		return -EPIPE;
 	}
 
-	return comedi_buf_commit_absget(subd, nbytes_lb);
+	return a4l_buf_commit_absget(subd, nbytes_lb);
 }
 
 u32 mite_get_status(struct mite_channel *mite_chan)
@@ -584,15 +584,15 @@ u32 mite_get_status(struct mite_channel *mite_chan)
 	u32 status;
 	unsigned long flags;
 
-	comedi_lock_irqsave(&mite->lock, flags);
+	a4l_lock_irqsave(&mite->lock, flags);
 	status = readl(mite->mite_io_addr + MITE_CHSR(mite_chan->channel));
 	if (status & CHSR_DONE) {
 		mite_chan->done = 1;
 		writel(CHOR_CLRDONE,
-			mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
+		       mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 	}
 	mmiowb();
-	comedi_unlock_irqrestore(&mite->lock, flags);
+	a4l_unlock_irqrestore(&mite->lock, flags);
 	return status;
 }
 
@@ -603,9 +603,9 @@ int mite_done(struct mite_channel *mite_chan)
 	int done;
 
 	mite_get_status(mite_chan);
-	comedi_lock_irqsave(&mite->lock, flags);
+	a4l_lock_irqsave(&mite->lock, flags);
 	done = mite_chan->done;
-	comedi_unlock_irqrestore(&mite->lock, flags);
+	a4l_unlock_irqrestore(&mite->lock, flags);
 	return done;
 }
 
@@ -694,45 +694,45 @@ void mite_dump_regs(struct mite_channel *mite_chan)
 
 	addr = mite_io_addr + MITE_CHOR(mite_chan->channel);
 	printk("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_CHOR_strings, temp);
 	addr = mite_io_addr + MITE_CHCR(mite_chan->channel);
 	printk("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_CHCR_strings, temp);
 	addr = mite_io_addr + MITE_TCR(mite_chan->channel);
 	printk("mite status[TCR] at 0x%08lx =0x%08x\n", addr, 
-		      readl((void *)addr));
+	       readl((void *)addr));
 	addr = mite_io_addr + MITE_MCR(mite_chan->channel);
 	printk("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_MCR_strings, temp);
 
 	addr = mite_io_addr + MITE_MAR(mite_chan->channel);
 	printk("mite status[MAR] at 0x%08lx =0x%08x\n", addr, 
-		      readl((void *)addr));
+	       readl((void *)addr));
 	addr = mite_io_addr + MITE_DCR(mite_chan->channel);
 	printk("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_DCR_strings, temp);
 	addr = mite_io_addr + MITE_DAR(mite_chan->channel);
 	printk("mite status[DAR] at 0x%08lx =0x%08x\n", addr, 
-		      readl((void *)addr));
+	       readl((void *)addr));
 	addr = mite_io_addr + MITE_LKCR(mite_chan->channel);
 	printk("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_LKCR_strings, temp);
 	addr = mite_io_addr + MITE_LKAR(mite_chan->channel);
 	printk("mite status[LKAR]at 0x%08lx =0x%08x\n", addr, 
-		      readl((void *)addr));
+	       readl((void *)addr));
 
 	addr = mite_io_addr + MITE_CHSR(mite_chan->channel);
 	printk("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
-		readl((void *)addr));
+	       readl((void *)addr));
 	mite_decode(mite_CHSR_strings, temp);
 	addr = mite_io_addr + MITE_FCR(mite_chan->channel);
 	printk("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr, 
-		      readl((void *)addr));
+	       readl((void *)addr));
 }
 
 

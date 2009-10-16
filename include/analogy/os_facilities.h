@@ -44,7 +44,7 @@
 
 /* --- Kernel traces functions --- */
 
-#define AL4_PROMPT "a4l: "
+#define A4L_PROMPT "a4l: "
 
 #define RTDM_SUBCLASS_ANALOGY 0
 
