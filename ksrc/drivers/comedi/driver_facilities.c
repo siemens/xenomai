@@ -142,6 +142,23 @@ EXPORT_SYMBOL(range_unknown);
 EXPORT_SYMBOL(range_fake);
 
 /**
+ * @brief Allocate a subdevice descriptor
+ * 
+ * This is a helper function so as to get a suitable subdevice
+ * descriptor
+ *
+ * @param[in] sizeof_priv Size of the subdevice's private data
+ * @param[in] setup Setup function to be called after the allocation
+ *
+ * @return the index with which the subdevice has been registered, in
+ * case of error a negative error code is returned.
+ *
+ */
+comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
+				  void (*setup)(comedi_subd_t *));
+EXPORT_SYMBOL(comedi_alloc_subd);
+
+/**
  * @brief Add a subdevice to the driver descriptor
  * 
  * Once the driver descriptor structure is initialized, the function
