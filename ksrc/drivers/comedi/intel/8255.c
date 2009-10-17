@@ -51,10 +51,6 @@ void subdev_8255_interrupt(comedi_subd_t *subd)
 {
 	sampl_t d;
 
-	/* Considering the current Comedi API, using asynchronous
-	   buffer is only possible on the main read/write subdevice.
-	   Then, this function needs only one argument: the device */
-
 	/* Retrieve the sample... */
 	d = CALLBACK_FUNC(0, _8255_DATA, 0, CALLBACK_ARG);
 	d |= (CALLBACK_FUNC(0, _8255_DATA + 1, 0, CALLBACK_ARG) << 8);
@@ -64,6 +60,7 @@ void subdev_8255_interrupt(comedi_subd_t *subd)
 
 	comedi_buf_evt(subd, 0);
 }
+EXPORT_SYMBOL(subdev_8255_interrupt);
 
 static int subdev_8255_cb(int dir, int port, int data, unsigned long arg)
 {
@@ -229,6 +226,7 @@ void subdev_8255_init(comedi_subd_t *subd)
 
 	do_config(subd);
 }
+EXPORT_SYMBOL(subdev_8255_init);
 
 /*
 

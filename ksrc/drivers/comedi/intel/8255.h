@@ -33,7 +33,8 @@ typedef struct subd_8255_struct {
 	int io_bits; 
 } subd_8255_t;
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_8255
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_8255) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_8255_MODULE))
 
 #define _8255_SIZE 4
 

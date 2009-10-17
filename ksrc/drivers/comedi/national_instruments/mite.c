@@ -280,6 +280,7 @@ struct mite_struct * mite_find_device(int bus, int slot, unsigned short device_i
 
 	return NULL;
 }
+EXPORT_SYMBOL(mite_find_device);
 
 struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 						   struct mite_dma_descriptor_ring *ring, 

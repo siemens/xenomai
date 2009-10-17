@@ -206,7 +206,8 @@ static void handle_cdio_interrupt(comedi_dev_t *dev);
 static void ni_load_channelgain_list(comedi_dev_t *dev, 
 				     unsigned int n_chan, unsigned int *list);
 
-#ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (!defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) && \
+     !defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 static void ni_handle_fifo_half_full(comedi_subd_t *subd);
 static int ni_ao_fifo_half_empty(comedi_subd_t *subd);
 #endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
@@ -779,7 +780,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		    "a_status=%04x ai_mite_status=%08x\n",status, ai_mite_status);
 	ni_mio_print_status_a(status);
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	if (ai_mite_status & CHSR_LINKC)
 		ni_sync_ai_dma(subd);
 
@@ -827,8 +829,8 @@ static void handle_a_interrupt(comedi_dev_t *dev,
 		}
 	}
 
-#ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
-
+#if (!defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) && \
+     !defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	if (status & AI_FIFO_Half_Full_St) {
 		int i;
 		static const int timeout = 10;
@@ -894,7 +896,8 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 		    b_status, ao_mite_status);
 	ni_mio_print_status_b(b_status);
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	/* Currently, mite.c requires us to handle LINKC */
 	if (ao_mite_status & CHSR_LINKC) {
 		mite_handle_b_linkc(subd);
@@ -928,7 +931,8 @@ static void handle_b_interrupt(comedi_dev_t * dev,
 		comedi_buf_evt(subd, COMEDI_BUF_EOA);
 	}
 
-#ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (!defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) && \
+     !defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	if (b_status & AO_FIFO_Request_St) {
 		int ret;
 
@@ -1002,7 +1006,8 @@ int ni_E_interrupt(unsigned int irq, void *d)
 	return 0;
 }
 
-#ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (!defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) && \
+     !defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 
 static void ni_ao_fifo_load(comedi_subd_t *subd, int n)
 {
@@ -1163,7 +1168,8 @@ static void ni_handle_fifo_half_full(comedi_subd_t *subd)
 
 #endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 
 static int ni_ai_drain_dma(comedi_subd_t *subd)
 {
@@ -1317,7 +1323,8 @@ static void ni_ai_munge16(comedi_subd_t *subd, void *buf, unsigned long size)
 	sampl_t *array = buf;
 
 	for (i = 0; i < size / sizeof(sampl_t); i++) {
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 		array[i] = le16_to_cpu(array[i]);
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 		array[i] += devpriv->ai_offset[chan_idx];
@@ -1335,7 +1342,8 @@ static void ni_ai_munge32(comedi_subd_t *subd, void *buf, unsigned long size)
 	lsampl_t *larray = buf;
 
 	for (i = 0; i < size / sizeof(lsampl_t); i++) {
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 		larray[i] = le32_to_cpu(larray[i]);
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 		larray[i] += devpriv->ai_offset[chan_idx];
@@ -1344,7 +1352,8 @@ static void ni_ai_munge32(comedi_subd_t *subd, void *buf, unsigned long size)
 	}
 }
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 
 static int ni_ai_setup_MITE_dma(comedi_dev_t *dev)
 {
@@ -2266,9 +2275,10 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 		interrupt_a_enable |= AI_Error_Interrupt_Enable |
 			AI_SC_TC_Interrupt_Enable;
 
-#ifndef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (!defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) && \
+     !defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 		interrupt_a_enable |= AI_FIFO_Interrupt_Enable;
-#endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
+#endif /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
 		if (cmd->flags & TRIG_WAKE_EOS
 			|| (devpriv->ai_cmd2 & AI_End_On_End_Of_Scan)) {
@@ -2281,7 +2291,8 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 		switch (devpriv->aimode) {
 		case AIMODE_HALF_FULL:
 			/* generate FIFO interrupts and DMA requests on half-full */
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 			devpriv->stc_writew(dev, AI_FIFO_Mode_HF_to_E,
 				AI_Mode_3_Register);
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
@@ -2295,7 +2306,8 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 				AI_Mode_3_Register);
 			break;
 		case AIMODE_SCAN:
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 			devpriv->stc_writew(dev, AI_FIFO_Mode_NE,
 				AI_Mode_3_Register);
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
@@ -2346,7 +2358,8 @@ static int ni_ai_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 		break;
 	}
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	{
 		int retval = ni_ai_setup_MITE_dma(dev);
 		if (retval)
@@ -2541,7 +2554,8 @@ static void ni_ao_munge(comedi_subd_t *subd, void *buf, unsigned long size)
 		if (boardtype.ao_unipolar == 0 || (range & 1) == 0)
 			array[i] -= offset;
 
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 		array[i] = cpu_to_le16(array[i]);
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 
@@ -2749,7 +2763,8 @@ int ni_ao_inttrig(comedi_subd_t *subd, lsampl_t trignum)
 	ni_set_bits(dev, Interrupt_B_Enable_Register,
 		AO_FIFO_Interrupt_Enable | AO_Error_Interrupt_Enable, 0);
 	interrupt_b_bits = AO_Error_Interrupt_Enable;
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	devpriv->stc_writew(dev, 1, DAC_FIFO_Clear);
 	if (boardtype.reg_type & ni_reg_6xxx_mask)
 		ni_ao_win_outl(dev, 0x6, AO_FIFO_Offset_Load_611x);
@@ -2943,7 +2958,8 @@ int ni_ao_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 	devpriv->stc_writew(dev, devpriv->ao_mode3, AO_Mode_3_Register);
 
 	devpriv->ao_mode2 &= ~AO_FIFO_Mode_Mask;
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	devpriv->ao_mode2 |= AO_FIFO_Mode_HF_to_F;
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_NI_MITE */
 	devpriv->ao_mode2 |= AO_FIFO_Mode_HF;
@@ -4282,7 +4298,8 @@ static int ni_gpct_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 
 static int ni_gpct_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 {
-#ifdef CONFIG_XENO_DRIVERS_COMEDI_NI_MITE
+#if (defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_COMEDI_NI_MITE_MODULE))
 	int retval;
 	comedi_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
