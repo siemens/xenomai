@@ -53,8 +53,8 @@ void subdev_8255_interrupt(comedi_subd_t *subd);
 
 #else /* !CONFIG_XENO_DRIVERS_COMEDI_8255 */
 
-#define subdev_8255_init(x, y)		do { } while(0)
-#define subdev_8255_interrupt(x, y)	do { } while(0)
+#define subdev_8255_init(x)		do { } while(0)
+#define subdev_8255_interrupt(x)	do { } while(0)
 
 #endif /* CONFIG_XENO_DRIVERS_COMEDI_8255 */
 
