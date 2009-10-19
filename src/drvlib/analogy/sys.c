@@ -1,6 +1,7 @@
 /**
  * @file
- * Comedilib for RTDM, descriptor related features  
+ * Analogy for Linux, descriptor related features  
+ *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -20,15 +21,15 @@
  */
 
 /*!
- * @ingroup Comedi4RTDM
- * @defgroup Comedilib4RTDM Library API.
+ * @ingroup Analogy4Linux
+ * @defgroup Analogylib4Linux Library API.
  *
- * This is the API interface of Comedi4RTDM library
+ * This is the API interface of Analogy library
  *
  */
 
 /*!
- * @ingroup Comedilib4RTDM
+ * @ingroup Analogylib4Linux
  * @defgroup syscall Level 0 API (Syscall API)
  *
  * This is the API interface which encapsulates common syscalls
@@ -36,8 +37,8 @@
  * Warning: this API level should not be used
  */
 
-#include <comedi/ioctl.h>
-#include <comedi/comedi.h>
+#include <analogy/ioctl.h>
+#include <analogy/analogy.h>
 
 #include "syscall.h"
 
@@ -48,7 +49,7 @@
  */
 
 /**
- * @brief Open a Comedi device
+ * @brief Open an Analogy device
  *
  * @param[in] fname Device name
  *
@@ -56,56 +57,56 @@
  * error code.
  *
  */
-int comedi_sys_open(const char *fname)
+int a4l_sys_open(const char *fname)
 {
 	return __sys_open(fname);
 }
 
 /**
- * @brief Close a Comedi device
+ * @brief Close an Analogy device
  *
- * @param[in] fd File descriptor as returned by comedi_sys_open()
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
  *
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sys_close(int fd)
+int a4l_sys_close(int fd)
 {
 	return __sys_close(fd);
 }
 
 /**
- * @brief Read from a Comedi device
+ * @brief Read from an Analogy device
  *
- * The function comedi_read() is only useful for acquisition
- * configured through a Comedi command.
+ * The function a4l_read() is only useful for acquisition
+ * configured through an Analogy command.
  *
- * @param[in] fd File descriptor as returned by comedi_sys_open()
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
  * @param[out] buf Input buffer
  * @param[in] nbyte Number of bytes to read
  *
  * @return Number of bytes read, otherwise negative error code.
  *
  */
-int comedi_sys_read(int fd, void *buf, size_t nbyte)
+int a4l_sys_read(int fd, void *buf, size_t nbyte)
 {
 	return __sys_read(fd, buf, nbyte);
 }
 
 /**
- * @brief Write to a Comedi device
+ * @brief Write to an Analogy device
  *
- * The function comedi_write() is only useful for acquisition
- * configured through a Comedi command.
+ * The function a4l_write() is only useful for acquisition
+ * configured through an Analogy command.
  *
- * @param[in] fd File descriptor as returned by comedi_sys_open()
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
  * @param[in] buf Output buffer
  * @param[in] nbyte Number of bytes to write
  *
  * @return Number of bytes written, otherwise negative error code.
  *
  */
-int comedi_sys_write(int fd, void *buf, size_t nbyte)
+int a4l_sys_write(int fd, void *buf, size_t nbyte)
 {
 	return __sys_write(fd, buf, nbyte);
 }
@@ -119,30 +120,30 @@ int comedi_sys_write(int fd, void *buf, size_t nbyte)
  */
 
 /**
- * @brief Attach a Comedi device to a driver
+ * @brief Attach an Analogy device to a driver
  *
- * @param[in] fd File descriptor as returned by comedi_sys_open()
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
  * @param[in] arg Link descriptor argument
  *
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sys_attach(int fd, comedi_lnkdesc_t * arg)
+int a4l_sys_attach(int fd, a4l_lnkdesc_t * arg)
 {
-	return __sys_ioctl(fd, COMEDI_DEVCFG, arg);
+	return __sys_ioctl(fd, A4L_DEVCFG, arg);
 }
 
 /**
- * @brief Detach a Comedi device from a driver
+ * @brief Detach an Analogy device from a driver
  *
- * @param[in] fd File descriptor as returned by comedi_sys_open()
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
  *
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_sys_detach(int fd)
+int a4l_sys_detach(int fd)
 {
-	return __sys_ioctl(fd, COMEDI_DEVCFG, NULL);
+	return __sys_ioctl(fd, A4L_DEVCFG, NULL);
 }
 
 /** @} */

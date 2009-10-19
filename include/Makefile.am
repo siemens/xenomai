@@ -11,7 +11,7 @@ SUBDIRS = \
 	asm-arm \
 	asm-nios2 \
 	asm-sim \
-	comedi \
+	analogy \
 	native \
 	nucleus \
 	posix \

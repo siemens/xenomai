@@ -1,6 +1,7 @@
 /**
  * @file
- * Comedilib for RTDM, range related features  
+ * Analogy for Linux, range related features
+ *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -22,7 +23,7 @@
 #include <errno.h>
 #include <math.h>
 
-#include <comedi/comedi.h>
+#include <analogy/analogy.h>
 
 #ifndef DOXYGEN_CPP
 
@@ -67,8 +68,8 @@ void data8_set(void *dst, lsampl_t val)
 /**
  * @brief Find the must suitable range
  *
- * @param[in] dsc Device descriptor filled by comedi_open() and
- * comedi_fill_desc()
+ * @param[in] dsc Device descriptor filled by a4l_open() and
+ * a4l_fill_desc()
  *
  * @param[in] idx_subd Index of the concerned subdevice
  * @param[in] idx_chan Index of the concerned channel
@@ -80,43 +81,43 @@ void data8_set(void *dst, lsampl_t val)
  * @return 0 on success, otherwise a negative error code.
  *
  */
-int comedi_find_range(comedi_desc_t * dsc,
-		      unsigned int idx_subd,
-		      unsigned int idx_chan,
-		      unsigned long unit,
-		      double min, double max, comedi_rnginfo_t ** rng)
+int a4l_find_range(a4l_desc_t * dsc,
+		   unsigned int idx_subd,
+		   unsigned int idx_chan,
+		   unsigned long unit,
+		   double min, double max, a4l_rnginfo_t ** rng)
 {
 	int i, ret;
 	long lmin, lmax;
-	comedi_chinfo_t *chinfo;
-	comedi_rnginfo_t *rnginfo;
+	a4l_chinfo_t *chinfo;
+	a4l_rnginfo_t *rnginfo;
 
 	/* Basic checkings */
 	if (dsc == NULL || rng == NULL)
 		return -EINVAL;
 
-	/* comedi_fill_desc() must have been called on this descriptor */
+	/* a4l_fill_desc() must have been called on this descriptor */
 	if (dsc->magic != MAGIC_CPLX_DESC)
 		return -EINVAL;
 
 	/* Retrieves the ranges count */
-	ret = comedi_get_chinfo(dsc, idx_subd, idx_chan, &chinfo);
+	ret = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chinfo);
 	if (ret < 0)
 		goto out_get_range;
 
 	/* Initializes variables */
-	lmin = (long)(min * COMEDI_RNG_FACTOR);
-	lmax = (long)(max * COMEDI_RNG_FACTOR);
+	lmin = (long)(min * A4L_RNG_FACTOR);
+	lmax = (long)(max * A4L_RNG_FACTOR);
 	*rng = NULL;
 
 	/* Performs the research */
 	for (i = 0; i < chinfo->nb_rng; i++) {
 
-		ret = comedi_get_rnginfo(dsc, idx_subd, idx_chan, i, &rnginfo);
+		ret = a4l_get_rnginfo(dsc, idx_subd, idx_chan, i, &rnginfo);
 		if (ret < 0)
 			goto out_get_range;
 
-		if (COMEDI_RNG_UNIT(rnginfo->flags) == unit &&
+		if (A4L_RNG_UNIT(rnginfo->flags) == unit &&
 		    rnginfo->min <= lmin && rnginfo->max >= lmax) {
 
 			if (*rng != NULL) {
@@ -128,7 +129,7 @@ int comedi_find_range(comedi_desc_t * dsc,
 		}
 	}
 
-      out_get_range:
+out_get_range:
 
 	if (ret < 0)
 		*rng = NULL;
@@ -149,8 +150,8 @@ int comedi_find_range(comedi_desc_t * dsc,
  * error code.
  *
  */
-int comedi_to_phys(comedi_chinfo_t * chan,
-		   comedi_rnginfo_t * rng, double *dst, void *src, int cnt)
+int a4l_to_phys(a4l_chinfo_t * chan,
+		a4l_rnginfo_t * rng, double *dst, void *src, int cnt)
 {
 	int i = 0, j = 0;
 	lsampl_t tmp;
@@ -183,8 +184,8 @@ int comedi_to_phys(comedi_chinfo_t * chan,
 
 	/* Computes the translation factor and the constant only once */
 	a = ((double)(rng->max - rng->min)) /
-	    (((1ULL << chan->nb_bits) - 1) * COMEDI_RNG_FACTOR);
-	b = (double)rng->min / COMEDI_RNG_FACTOR;
+		(((1ULL << chan->nb_bits) - 1) * A4L_RNG_FACTOR);
+	b = (double)rng->min / A4L_RNG_FACTOR;
 
 	while (i < cnt) {
 
@@ -215,8 +216,8 @@ int comedi_to_phys(comedi_chinfo_t * chan,
  * error code.
  *
  */
-int comedi_from_phys(comedi_chinfo_t * chan,
-		     comedi_rnginfo_t * rng, void *dst, double *src, int cnt)
+int a4l_from_phys(a4l_chinfo_t * chan,
+		  a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
 {
 	int i = 0, j = 0;
 
@@ -247,10 +248,10 @@ int comedi_from_phys(comedi_chinfo_t * chan,
 	};
 
 	/* Computes the translation factor and the constant only once */
-	a = (((double)COMEDI_RNG_FACTOR) / (rng->max - rng->min)) *
-	    ((1ULL << chan->nb_bits) - 1);
+	a = (((double)A4L_RNG_FACTOR) / (rng->max - rng->min)) *
+		((1ULL << chan->nb_bits) - 1);
 	b = ((double)(rng->min) / (rng->max - rng->min)) *
-	    ((1ULL << chan->nb_bits) - 1);
+		((1ULL << chan->nb_bits) - 1);
 
 	while (i < cnt) {
 

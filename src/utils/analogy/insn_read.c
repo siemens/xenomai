@@ -1,8 +1,9 @@
 /**
- * Comedi for RTDM, instruction test program
+ * @file
+ * Analogy for Linux, instruction test program
  *
- * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -27,9 +28,9 @@
 
 #include <native/task.h>
 
-#include <comedi/comedi.h>
+#include <analogy/analogy.h>
 
-#define FILENAME "comedi0"
+#define FILENAME "analogy0"
 #define BUF_SIZE 10000
 #define SCAN_CNT 10
 
@@ -64,7 +65,7 @@ void do_print_usage(void)
 	fprintf(stdout,
 		"\t\t -r, --real-time: enable real-time acquisition mode\n");
 	fprintf(stdout,
-		"\t\t -d, --device: device filename (comedi0, comedi1, ...)\n");
+		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channel: channel to use\n");
@@ -76,9 +77,9 @@ int main(int argc, char *argv[])
 {
 	int ret = 0, i;
 	unsigned int cnt = 0;
-	comedi_desc_t dsc;
-	comedi_chinfo_t *chinfo;
-	comedi_rnginfo_t *rnginfo;
+	a4l_desc_t dsc;
+	a4l_chinfo_t *chinfo;
+	a4l_rnginfo_t *rnginfo;
 
 	/* Computes arguments */
 	while ((ret = getopt_long(argc,
@@ -140,9 +141,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Opens the device */
-	ret = comedi_open(&dsc, FILENAME);
+	ret = a4l_open(&dsc, FILENAME);
 	if (ret < 0) {
-		fprintf(stderr, "insn_read: comedi_open %s failed (ret=%d)\n",
+		fprintf(stderr, "insn_read: a4l_open %s failed (ret=%d)\n",
 			FILENAME, ret);
 		return ret;
 	}
@@ -172,9 +173,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Gets this data */
-	ret = comedi_fill_desc(&dsc);
+	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
-		fprintf(stderr, "insn_read: comedi_fill_desc failed (ret=%d)\n",
+		fprintf(stderr, "insn_read: a4l_fill_desc failed (ret=%d)\n",
 			ret);
 		goto out_insn_read;
 	}
@@ -185,8 +186,8 @@ int main(int argc, char *argv[])
 	if (idx_rng >= 0) {
 
 		ret =
-		    comedi_get_rnginfo(&dsc, idx_subd, idx_chan, idx_rng,
-				       &rnginfo);
+			a4l_get_rnginfo(&dsc, idx_subd, idx_chan, idx_rng,
+					&rnginfo);
 		if (ret < 0) {
 			fprintf(stderr,
 				"insn_read: failed to recover range descriptor\n");
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Retrieves the subdevice data size */
-	ret = comedi_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
+	ret = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
 	if (ret < 0) {
 		fprintf(stderr,
 			"insn_read: info for channel %d on subdevice %d not available (ret=%d)\n",
@@ -220,7 +221,7 @@ int main(int argc, char *argv[])
 
 	while (cnt < scan_size) {
 		int tmp = (scan_size - cnt) < BUF_SIZE ?
-		    (scan_size - cnt) : BUF_SIZE;
+			(scan_size - cnt) : BUF_SIZE;
 
 		/* Switches to RT primary mode */
 		if (real_time != 0) {
@@ -234,15 +235,15 @@ int main(int argc, char *argv[])
 		}
 
 		/* Performs the synchronous read */
-		ret = comedi_sync_read(&dsc,
-				       idx_subd, 0, CHAN(idx_chan), buf, tmp);
+		ret = a4l_sync_read(&dsc,
+				    idx_subd, 0, CHAN(idx_chan), buf, tmp);
 
 		if (ret < 0)
 			goto out_insn_read;
 
 		/* If a range was selected, converts the samples */
 		if (idx_rng >= 0) {
-			if (comedi_to_phys(chinfo, rnginfo, dbuf, buf, ret) < 0) {
+			if (a4l_to_phys(chinfo, rnginfo, dbuf, buf, ret) < 0) {
 				fprintf(stderr,
 					"insn_read: data conversion failed (ret=%d)\n",
 					ret);
@@ -256,10 +257,10 @@ int main(int argc, char *argv[])
 			/* Prints the output byte by byte */
 			printf("0x%x ", buf[i]);
 
-			/* Unlike comedi_async_read(), comedi_sync_read() cannot
+			/* Unlike a4l_async_read(), a4l_sync_read() cannot
 			   retrieve data which are not aligned with the channel
 			   width; so, it is easier to properly print data.
-			 */
+			*/
 			if ((i + 1) % (chinfo->nb_bits / 8) == 0) {
 
 				/* If a range was selected, prints the converted value */
@@ -278,14 +279,14 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("insn_read: %u bytes successfully received\n", cnt);
 
-      out_insn_read:
+out_insn_read:
 
 	/* Frees the information buffer */
 	if (dsc.sbdata != NULL)
 		free(dsc.sbdata);
 
 	/* Releases the file descriptor */
-	comedi_close(&dsc);
+	a4l_close(&dsc);
 
 	return ret;
 }

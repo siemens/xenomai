@@ -890,7 +890,7 @@ AC_CONFIG_FILES([ \
        	src/skins/rtai/Makefile \
        	src/skins/uitron/Makefile \
        	src/drvlib/Makefile \
-       	src/drvlib/comedi/Makefile \
+       	src/drvlib/analogy/Makefile \
 	src/include/Makefile \
        	src/testsuite/Makefile \
        	src/testsuite/latency/Makefile \
@@ -902,7 +902,7 @@ AC_CONFIG_FILES([ \
        	src/testsuite/unit/Makefile \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
-	src/utils/comedi/Makefile \
+	src/utils/analogy/Makefile \
 	src/utils/ps/Makefile \
        	include/Makefile \
        	include/asm-generic/Makefile \
@@ -926,7 +926,7 @@ AC_CONFIG_FILES([ \
        	include/psos+/Makefile \
        	include/rtai/Makefile \
        	include/rtdm/Makefile \
-       	include/comedi/Makefile \
+       	include/analogy/Makefile \
        	include/uitron/Makefile \
        	include/vrtx/Makefile \
        	include/vxworks/Makefile \

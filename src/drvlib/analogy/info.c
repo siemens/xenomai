@@ -1,6 +1,7 @@
 /**
  * @file
- * Comedilib for RTDM, device, subdevice, etc. related features  
+ * Analogy for Linux, device, subdevice, etc. related features
+ *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -21,67 +22,67 @@
 
 #include <errno.h>
 
-#include <comedi/ioctl.h>
-#include <comedi/comedi.h>
+#include <analogy/ioctl.h>
+#include <analogy/analogy.h>
 
 #include "syscall.h"
 
 #ifndef DOXYGEN_CPP
 
-int comedi_sys_devinfo(int fd, comedi_dvinfo_t * info)
+int a4l_sys_devinfo(int fd, a4l_dvinfo_t * info)
 {
-	return __sys_ioctl(fd, COMEDI_DEVINFO, info);
+	return __sys_ioctl(fd, A4L_DEVINFO, info);
 }
 
-int comedi_sys_subdinfo(int fd, comedi_sbinfo_t * info)
+int a4l_sys_subdinfo(int fd, a4l_sbinfo_t * info)
 {
-	return __sys_ioctl(fd, COMEDI_SUBDINFO, info);
+	return __sys_ioctl(fd, A4L_SUBDINFO, info);
 }
 
-int comedi_sys_nbchaninfo(int fd, unsigned int idx_subd, unsigned int *nb)
+int a4l_sys_nbchaninfo(int fd, unsigned int idx_subd, unsigned int *nb)
 {
 	int ret;
-	comedi_chinfo_arg_t arg = { idx_subd, NULL };
+	a4l_chinfo_arg_t arg = { idx_subd, NULL };
 
 	if (nb == NULL)
 		return -EINVAL;
 
-	ret = __sys_ioctl(fd, COMEDI_NBCHANINFO, &arg);
+	ret = __sys_ioctl(fd, A4L_NBCHANINFO, &arg);
 	*nb = (unsigned long)arg.info;
 
 	return ret;
 }
 
-int comedi_sys_chaninfo(int fd, unsigned int idx_subd, comedi_chinfo_t * info)
+int a4l_sys_chaninfo(int fd, unsigned int idx_subd, a4l_chinfo_t * info)
 {
-	comedi_chinfo_arg_t arg = { idx_subd, info };
+	a4l_chinfo_arg_t arg = { idx_subd, info };
 
-	return __sys_ioctl(fd, COMEDI_CHANINFO, &arg);
+	return __sys_ioctl(fd, A4L_CHANINFO, &arg);
 }
 
-int comedi_sys_nbrnginfo(int fd,
-			 unsigned int idx_subd,
-			 unsigned int idx_chan, unsigned int *nb)
+int a4l_sys_nbrnginfo(int fd,
+		      unsigned int idx_subd,
+		      unsigned int idx_chan, unsigned int *nb)
 {
 	int ret;
-	comedi_rnginfo_arg_t arg = { idx_subd, idx_chan, NULL };
+	a4l_rnginfo_arg_t arg = { idx_subd, idx_chan, NULL };
 
 	if (nb == NULL)
 		return -EINVAL;
 
-	ret = __sys_ioctl(fd, COMEDI_NBRNGINFO, &arg);
+	ret = __sys_ioctl(fd, A4L_NBRNGINFO, &arg);
 	*nb = (unsigned long)arg.info;
 
 	return ret;
 }
 
-int comedi_sys_rnginfo(int fd,
-		       unsigned int idx_subd,
-		       unsigned int idx_chan, comedi_rnginfo_t * info)
+int a4l_sys_rnginfo(int fd,
+		    unsigned int idx_subd,
+		    unsigned int idx_chan, a4l_rnginfo_t * info)
 {
-	comedi_rnginfo_arg_t arg = { idx_subd, idx_chan, info };
+	a4l_rnginfo_arg_t arg = { idx_subd, idx_chan, info };
 
-	return __sys_ioctl(fd, COMEDI_RNGINFO, &arg);
+	return __sys_ioctl(fd, A4L_RNGINFO, &arg);
 }
 
 #endif /* !DOXYGEN_CPP */

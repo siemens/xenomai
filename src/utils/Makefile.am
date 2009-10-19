@@ -1,2 +1,2 @@
 
-SUBDIRS = can comedi ps
+SUBDIRS = can analogy ps

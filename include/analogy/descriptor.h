@@ -46,13 +46,13 @@
 /** 
  * BSC stands for basic descriptor (device data)
  */
-#define BSC_DESC 0x0
+#define A4L_BSC_DESC 0x0
 
 /** 
  * CPLX stands for complex descriptor (subdevice + channel + range
  * data)
  */
-#define CPLX_DESC 0x1
+#define A4L_CPLX_DESC 0x1
 
 	  /*! @} ANALOGY_xxx_DESC */
 

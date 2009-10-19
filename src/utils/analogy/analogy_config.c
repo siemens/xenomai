@@ -1,8 +1,9 @@
 /**
- * Comedi for RTDM, configuration program
+ * @file
+ * Analogy for Linux, configuration program
  *
- * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
 
 #include <xeno_config.h>
 
-#include <comedi/comedi.h>
+#include <analogy/analogy.h>
 
 /* Declares precompilation constants */
 #define __NBMIN_ARG 2
@@ -38,7 +39,7 @@
 /* Declares prog variables */
 int vlevel = 1;
 int unatt_act = 0;
-struct option comedi_conf_opts[] = {
+struct option a4l_conf_opts[] = {
 	{"help", no_argument, NULL, 'h'},
 	{"verbose", no_argument, NULL, 'v'},
 	{"quiet", no_argument, NULL, 'q'},
@@ -70,7 +71,7 @@ int compute_opts(char *opts, unsigned int *nb, unsigned int *res)
 		opts += ofs + 1;
 	} while (len != ofs);
 
-      out_compute_opts:
+out_compute_opts:
 	(*nb) *= sizeof(unsigned int);
 	return ret;
 }
@@ -78,13 +79,13 @@ int compute_opts(char *opts, unsigned int *nb, unsigned int *res)
 /* Misc functions */
 void do_print_version(void)
 {
-	fprintf(stdout, "comedi_config: version %s\n", PACKAGE_VERSION);
+	fprintf(stdout, "analogy_config: version %s\n", PACKAGE_VERSION);
 }
 
 void do_print_usage(void)
 {
 	fprintf(stdout,
-		"usage:\tcomedi_config [OPTS] <device file> <driver>\n");
+		"usage:\tanalogy_config [OPTS] <device file> <driver>\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout, "\t\t -q, --quiet: quiet output\n");
 	fprintf(stdout, "\t\t -V, --version: print program version\n");
@@ -99,20 +100,20 @@ int main(int argc, char *argv[])
 {
 	int c;
 	char *devfile;
-	comedi_lnkdesc_t lnkdsc;
+	a4l_lnkdesc_t lnkdsc;
 	int chk_nb, ret = 0, fd = -1;
 
 	/* Inits the descriptor structure */
-	memset(&lnkdsc, 0, sizeof(comedi_lnkdesc_t));
+	memset(&lnkdsc, 0, sizeof(a4l_lnkdesc_t));
 
 	/* Computes arguments */
 	while ((c =
-		getopt_long(argc, argv, "hvqVrR:W:", comedi_conf_opts,
+		getopt_long(argc, argv, "hvqVrR:W:", a4l_conf_opts,
 			    NULL)) >= 0) {
 		switch (c) {
 		case 'h':
 			do_print_usage();
-			goto out_comedi_config;
+			goto out_a4l_config;
 		case 'v':
 			vlevel = 2;
 			break;
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'V':
 			do_print_version();
-			goto out_comedi_config;
+			goto out_a4l_config;
 		case 'r':
 			unatt_act = 1;
 			break;
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
 	chk_nb = (unatt_act == 0) ? __NBMIN_ARG : __NBMIN_ARG - 1;
 	if (argc - optind < chk_nb) {
 		do_print_usage();
-		goto out_comedi_config;
+		goto out_a4l_config;
 	}
 
 	/* Gets the device file name */
@@ -155,57 +156,57 @@ int main(int argc, char *argv[])
 		char *opts = argv[optind + __NBMAX_ARG - 1];
 		if ((ret = compute_opts(opts, &lnkdsc.opts_size, NULL)) < 0) {
 			fprintf(stderr,
-				"comedi_config: specific-driver options recovery failed\n");
+				"analogy_config: specific-driver options recovery failed\n");
 			fprintf(stderr,
 				"\twarning: specific-driver options must be integer value\n");
 			do_print_usage();
-			goto out_comedi_config;
+			goto out_a4l_config;
 		}
 
 		lnkdsc.opts = malloc(lnkdsc.opts_size);
 		if (lnkdsc.opts == NULL) {
 			fprintf(stderr,
-				"comedi_config: memory allocation failed\n");
+				"analogy_config: memory allocation failed\n");
 			ret = -ENOMEM;
-			goto out_comedi_config;
+			goto out_a4l_config;
 		}
 
 		if ((ret =
 		     compute_opts(opts, &lnkdsc.opts_size, lnkdsc.opts)) < 0) {
 			fprintf(stderr,
-				"comedi_config: specific-driver options recovery failed\n");
+				"analogy_config: specific-driver options recovery failed\n");
 			fprintf(stderr,
 				"\twarning: specific-driver options must be integer value\n");
 			do_print_usage();
-			goto out_comedi_config;
+			goto out_a4l_config;
 		}
 	}
 
 	/* Opens the specified file */
-	fd = comedi_sys_open(devfile);
+	fd = a4l_sys_open(devfile);
 	if (fd < 0) {
 		ret = fd;
-		fprintf(stderr, "comedi_config: comedi_open failed ret=%d\n",
+		fprintf(stderr, "analogy_config: a4l_open failed ret=%d\n",
 			ret);
-		goto out_comedi_config;
+		goto out_a4l_config;
 	}
 
 	/* Triggers the ioctl */
 	if (unatt_act == 0)
-		ret = comedi_sys_attach(fd, &lnkdsc);
+		ret = a4l_sys_attach(fd, &lnkdsc);
 	else
-		ret = comedi_sys_detach(fd);
+		ret = a4l_sys_detach(fd);
 	if (ret < 0) {
-		fprintf(stderr, "comedi_config: %s failed ret=%d\n",
+		fprintf(stderr, "analogy_config: %s failed ret=%d\n",
 			(unatt_act ==
-			 0) ? "comedi_snd_attach" : "comedi_snd_detach", ret);
-		goto out_comedi_config;
+			 0) ? "a4l_snd_attach" : "a4l_snd_detach", ret);
+		goto out_a4l_config;
 	}
 
-      out_comedi_config:
+out_a4l_config:
 
 	if (fd >= 0)
-		comedi_sys_close(fd);
+		a4l_sys_close(fd);
 
 	if (lnkdsc.opts != NULL)
 		free(lnkdsc.opts);

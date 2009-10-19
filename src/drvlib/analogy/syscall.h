@@ -1,6 +1,7 @@
 /**
  * @file
- * Comedilib for RTDM, root / leaf system  
+ * Analogy for Linux, internal declarations
+ *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
@@ -19,35 +20,38 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#ifndef __COMEDI_ROOT_LEAF_H__
-#define __COMEDI_ROOT_LEAF_H__
+#ifndef __ANALOGY_LIB_INTERNAL__
+#define __ANALOGY_LIB_INTERNAL__
+
+#include <rtdm/rtdm.h>
 
 #ifndef DOXYGEN_CPP
 
-#include <errno.h>
+static inline int __sys_open(const char *fname)
+{
+	return rt_dev_open(fname, 0);
+}
 
-struct comedi_leaf {
-	unsigned int id;
-	unsigned int nb_leaf;
-	struct comedi_leaf *lfnxt;
-	struct comedi_leaf *lfchd;
-	void *data;
-};
-typedef struct comedi_leaf comedi_leaf_t;
+static inline int __sys_close(int fd)
+{
+	return rt_dev_close(fd);
+}
 
-struct comedi_root {
-	/* Same fields as comedi_leaf_t */
-	unsigned int id;
-	unsigned int nb_leaf;
-	struct comedi_leaf *lfnxt;
-	struct comedi_leaf *lfchd;
-	void *data;
-	/* Root specific: buffer control stuff */
-	void *offset;
-	unsigned long gsize;
-};
-typedef struct comedi_root comedi_root_t;
+static inline int __sys_ioctl(int fd, int request, void *arg)
+{
+	return rt_dev_ioctl(fd, request, arg);
+}
+
+static inline ssize_t __sys_read(int fd, void *buf, size_t nbyte)
+{
+	return rt_dev_read(fd, buf, nbyte);
+}
+
+static inline ssize_t __sys_write(int fd, void *buf, size_t nbyte)
+{
+	return rt_dev_write(fd, buf, nbyte);
+}
 
 #endif /* !DOXYGEN_CPP */
 
-#endif /* __COMEDI_ROOT_LEAF_H__ */
+#endif /* __ANALOGY_LIB_INTERNAL__ */

@@ -1,8 +1,9 @@
 /**
- * Comedi for RTDM, input command test program
+ * @file
+ * Analogy for Linux, input command test program
  *
- * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
+ * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
+ * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
  *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@
 
 #include <native/task.h>
 
-#include <comedi/comedi.h>
+#include <analogy/analogy.h>
 
 /* Default command's parameters */
 
@@ -43,7 +44,7 @@
 /* One hundred triggered scans by default */
 #define NB_SCAN 100
 
-#define FILENAME "comedi0"
+#define FILENAME "analogy0"
 
 #define BUF_SIZE 10000
 
@@ -58,21 +59,21 @@ static int use_mmap = 0;
 static RT_TASK rt_task_desc;
 
 /* The command to send by default */
-comedi_cmd_t cmd = {
-      idx_subd:ID_SUBD,
-      flags:0,
-      start_src:TRIG_NOW,
-      start_arg:0,
-      scan_begin_src:TRIG_TIMER,
-      scan_begin_arg:2000000,	/* in ns */
-      convert_src:TRIG_TIMER,
-      convert_arg:500000,	/* in ns */
-      scan_end_src:TRIG_COUNT,
-      scan_end_arg:0,
-      stop_src:TRIG_COUNT,
-      stop_arg:NB_SCAN,
-      nb_chan:0,
-      chan_descs:chans,
+a4l_cmd_t cmd = {
+	.idx_subd = ID_SUBD,
+	.flags = 0,
+	.start_src = TRIG_NOW,
+	.start_arg = 0,
+	.scan_begin_src = TRIG_TIMER,
+	.scan_begin_arg = 2000000,	/* in ns */
+	.convert_src = TRIG_TIMER,
+	.convert_arg = 500000,	/* in ns */
+	.scan_end_src = TRIG_COUNT,
+	.scan_end_arg = 0,
+	.stop_src = TRIG_COUNT,
+	.stop_arg = NB_SCAN,
+	.nb_chan = 0,
+	.chan_descs = chans,
 };
 
 struct option cmd_read_opts[] = {
@@ -94,7 +95,7 @@ void do_print_usage(void)
 	fprintf(stdout,
 		"\t\t -r, --real-time: enable real-time acquisition mode\n");
 	fprintf(stdout,
-		"\t\t -d, --device: device filename (comedi0, comedi1, ...)\n");
+		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
@@ -108,7 +109,7 @@ int main(int argc, char *argv[])
 	unsigned int i, scan_size = 0, cnt = 0;
 	unsigned long buf_size;
 	void *map = NULL;
-	comedi_desc_t dsc;
+	a4l_desc_t dsc;
 
 	/* Computes arguments */
 	while ((ret = getopt_long(argc,
@@ -184,9 +185,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* Opens the device */
-	ret = comedi_open(&dsc, filename);
+	ret = a4l_open(&dsc, filename);
 	if (ret < 0) {
-		fprintf(stderr, "cmd_read: comedi_open %s failed (ret=%d)\n",
+		fprintf(stderr, "cmd_read: a4l_open %s failed (ret=%d)\n",
 			filename, ret);
 		return ret;
 	}
@@ -208,10 +209,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* Gets this data */
-	ret = comedi_fill_desc(&dsc);
+	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
 		fprintf(stderr,
-			"cmd_read: comedi_fill_desc failed (ret=%d)\n", ret);
+			"cmd_read: a4l_fill_desc failed (ret=%d)\n", ret);
 		goto out_main;
 	}
 
@@ -220,13 +221,13 @@ int main(int argc, char *argv[])
 
 	/* Gets the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
-		comedi_chinfo_t *info;
+		a4l_chinfo_t *info;
 
-		ret = comedi_get_chinfo(&dsc,
-					cmd.idx_subd, cmd.chan_descs[i], &info);
+		ret = a4l_get_chinfo(&dsc,
+				     cmd.idx_subd, cmd.chan_descs[i], &info);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_read: comedi_get_chinfo failed (ret=%d)\n",
+				"cmd_read: a4l_get_chinfo failed (ret=%d)\n",
 				ret);
 			goto out_main;
 		}
@@ -247,15 +248,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* Cancels any former command which might be in progress */
-	comedi_snd_cancel(&dsc, cmd.idx_subd);
+	a4l_snd_cancel(&dsc, cmd.idx_subd);
 
 	if (use_mmap != 0) {
 
 		/* Gets the buffer size to map */
-		ret = comedi_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
+		ret = a4l_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_read: comedi_get_bufsize() failed (ret=%d)\n",
+				"cmd_read: a4l_get_bufsize() failed (ret=%d)\n",
 				ret);
 			goto out_main;
 		}
@@ -264,25 +265,25 @@ int main(int argc, char *argv[])
 			printf("cmd_read: buffer size = %lu bytes\n", buf_size);
 
 		/* Maps the analog input subdevice buffer */
-		ret = comedi_mmap(&dsc, cmd.idx_subd, buf_size, &map);
+		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_read: comedi_mmap() failed (ret=%d)\n",
+				"cmd_read: a4l_mmap() failed (ret=%d)\n",
 				ret);
 			goto out_main;
 		}
 
 		if (verbose != 0)
 			printf
-			    ("cmd_read: mmap performed successfully (map=0x%p)\n",
-			     map);
+				("cmd_read: mmap performed successfully (map=0x%p)\n",
+				 map);
 	}
 
 	/* Sends the command to the input device */
-	ret = comedi_snd_command(&dsc, &cmd);
+	ret = a4l_snd_command(&dsc, &cmd);
 	if (ret < 0) {
 		fprintf(stderr,
-			"cmd_read: comedi_snd_command failed (ret=%d)\n", ret);
+			"cmd_read: a4l_snd_command failed (ret=%d)\n", ret);
 		goto out_main;
 	}
 
@@ -306,10 +307,10 @@ int main(int argc, char *argv[])
 		while (cnt < cmd.stop_arg * scan_size) {
 
 			/* Performs the read operation */
-			ret = comedi_sys_read(dsc.fd, buf, BUF_SIZE);
+			ret = a4l_sys_read(dsc.fd, buf, BUF_SIZE);
 			if (ret < 0) {
 				fprintf(stderr,
-					"cmd_read: comedi_read failed (ret=%d)\n",
+					"cmd_read: a4l_read failed (ret=%d)\n",
 					ret);
 				goto out_main;
 			}
@@ -343,26 +344,26 @@ int main(int argc, char *argv[])
 			   (In input case, we recover how many bytes are available
 			   to read) */
 			ret =
-			    comedi_mark_bufrw(&dsc, cmd.idx_subd, front,
-					      &front);
+				a4l_mark_bufrw(&dsc, cmd.idx_subd, front,
+					       &front);
 			if (ret < 0) {
 				fprintf(stderr,
-					"cmd_read: comedi_mark_bufrw() failed (ret=%d)\n",
+					"cmd_read: a4l_mark_bufrw() failed (ret=%d)\n",
 					ret);
 				goto out_main;
 			}
 
 			/* If there is nothing to read, wait for an event
-			   (Note that comedi_poll() also retrieves the data amount
+			   (Note that a4l_poll() also retrieves the data amount
 			   to read; in our case it is useless as we have to update
 			   the data read counter) */
 			if (front == 0) {
 				ret =
-				    comedi_poll(&dsc, cmd.idx_subd,
-						COMEDI_INFINITE);
+					a4l_poll(&dsc, cmd.idx_subd,
+						 A4L_INFINITE);
 				if (ret < 0) {
 					fprintf(stderr,
-						"cmd_read: comedi_poll() failed (ret=%d)\n",
+						"cmd_read: a4l_poll() failed (ret=%d)\n",
 						ret);
 					goto out_main;
 				}
@@ -400,7 +401,7 @@ int main(int argc, char *argv[])
 
 	ret = 0;
 
-      out_main:
+out_main:
 
 	if (use_mmap != 0)
 		/* Cleans the pages table */
@@ -410,7 +411,7 @@ int main(int argc, char *argv[])
 	free(dsc.sbdata);
 
 	/* Releases the file descriptor */
-	comedi_close(&dsc);
+	a4l_close(&dsc);
 
 	return ret;
 }

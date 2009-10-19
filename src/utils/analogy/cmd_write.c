@@ -1,5 +1,6 @@
 /**
- * Comedi for RTDM, output command test program
+ * @file
+ * Analogy for Linux, output command test program
  *
  * Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -28,7 +29,7 @@
 
 #include <native/task.h>
 
-#include <comedi/comedi.h>
+#include <analogy/analogy.h>
 
 /* Default command's parameters */
 
@@ -43,7 +44,7 @@
 /* One hundred triggered scans by default */
 #define NB_SCAN 100
 
-#define FILENAME "comedi0"
+#define FILENAME "analogy0"
 
 #define BUF_SIZE 10000
 
@@ -58,25 +59,25 @@ static int use_mmap = 0;
 static RT_TASK rt_task_desc;
 
 /* The command to send by default */
-comedi_cmd_t cmd = {
-      .idx_subd = ID_SUBD,
-      .flags = 0,
-      .start_src = TRIG_INT,
-      .start_arg = 0,
-      .scan_begin_src = TRIG_TIMER,
-      .scan_begin_arg = 2000000, /* in ns */
-      .convert_src = TRIG_NOW,
-      .convert_arg = 0, /* in ns */
-      .scan_end_src = TRIG_COUNT,
-      .scan_end_arg = 0,
-      .stop_src = TRIG_COUNT,
-      .stop_arg = NB_SCAN,
-      .nb_chan = 0,
-      .chan_descs = chans,
+a4l_cmd_t cmd = {
+	.idx_subd = ID_SUBD,
+	.flags = 0,
+	.start_src = TRIG_INT,
+	.start_arg = 0,
+	.scan_begin_src = TRIG_TIMER,
+	.scan_begin_arg = 2000000, /* in ns */
+	.convert_src = TRIG_NOW,
+	.convert_arg = 0, /* in ns */
+	.scan_end_src = TRIG_COUNT,
+	.scan_end_arg = 0,
+	.stop_src = TRIG_COUNT,
+	.stop_arg = NB_SCAN,
+	.nb_chan = 0,
+	.chan_descs = chans,
 };
 
-comedi_insn_t insn = {
-	.type = COMEDI_INSN_INTTRIG,
+a4l_insn_t insn = {
+	.type = A4L_INSN_INTTRIG,
 	.idx_subd = ID_SUBD,
 	.data_size = 0,
 };
@@ -98,7 +99,8 @@ void do_print_usage(void)
 	fprintf(stdout, "usage:\tcmd_write [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout,
-		"\t\t -d, --device: device filename (comedi0, comedi1, ...)\n");
+		"\t\t -d, --device: "
+		"device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
@@ -112,7 +114,7 @@ int main(int argc, char *argv[])
 	unsigned int i, scan_size = 0, cnt = 0;
 	unsigned long buf_size;
 	void *map = NULL;
-	comedi_desc_t dsc;
+	a4l_desc_t dsc;
 
 	/* Computes arguments */
 	while ((ret = getopt_long(argc,
@@ -187,10 +189,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* Opens the device */
-	ret = comedi_open(&dsc, filename);
+	ret = a4l_open(&dsc, filename);
 	if (ret < 0) {
 		fprintf(stderr,
-			"cmd_write: comedi_open %s failed (ret=%d)\n",
+			"cmd_write: a4l_open %s failed (ret=%d)\n",
 			FILENAME, ret);
 		return ret;
 	}
@@ -212,10 +214,10 @@ int main(int argc, char *argv[])
 	}
 
 	/* Gets this data */
-	ret = comedi_fill_desc(&dsc);
+	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
 		fprintf(stderr,
-			"cmd_write: comedi_get_desc failed (ret=%d)\n", ret);
+			"cmd_write: a4l_get_desc failed (ret=%d)\n", ret);
 		goto out_main;
 	}
 
@@ -224,13 +226,13 @@ int main(int argc, char *argv[])
 
 	/* Gets the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
-		comedi_chinfo_t *info;
+		a4l_chinfo_t *info;
 
-		ret = comedi_get_chinfo(&dsc,
-					cmd.idx_subd, cmd.chan_descs[i], &info);
+		ret = a4l_get_chinfo(&dsc,
+				     cmd.idx_subd, cmd.chan_descs[i], &info);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_write: comedi_get_chinfo failed (ret=%d)\n",
+				"cmd_write: a4l_get_chinfo failed (ret=%d)\n",
 				ret);
 			goto out_main;
 		}
@@ -251,16 +253,16 @@ int main(int argc, char *argv[])
 	}
 
 	/* Cancels any former command which might be in progress */
-	comedi_snd_cancel(&dsc, cmd.idx_subd);
+	a4l_snd_cancel(&dsc, cmd.idx_subd);
 
 	if (use_mmap != 0) {
 
 		/* Gets the buffer size to map */
-		ret = comedi_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
+		ret = a4l_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_write: comedi_get_bufsize() failed (ret=%d)\n",
-				ret);
+				"cmd_write: a4l_get_bufsize() failed "
+				"(ret=%d)\n", ret);
 			goto out_main;
 		}
 
@@ -269,25 +271,24 @@ int main(int argc, char *argv[])
 			       buf_size);
 
 		/* Maps the analog input subdevice buffer */
-		ret = comedi_mmap(&dsc, cmd.idx_subd, buf_size, &map);
+		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
 		if (ret < 0) {
 			fprintf(stderr,
-				"cmd_write: comedi_mmap() failed (ret=%d)\n",
+				"cmd_write: a4l_mmap() failed (ret=%d)\n",
 				ret);
 			goto out_main;
 		}
 
 		if (verbose != 0)
-			printf
-			    ("cmd_write: mmap performed successfully (map=0x%p)\n",
-			     map);
+			printf("cmd_write: mmap performed successfully "
+			       "(map=0x%p)\n", map);
 	}
 
 	/* Sends the command to the output device */
-	ret = comedi_snd_command(&dsc, &cmd);
+	ret = a4l_snd_command(&dsc, &cmd);
 	if (ret < 0) {
 		fprintf(stderr,
-			"cmd_write: comedi_snd_command failed (ret=%d)\n", ret);
+			"cmd_write: a4l_snd_command failed (ret=%d)\n", ret);
 		goto out_main;
 	}
 
@@ -313,22 +314,21 @@ int main(int argc, char *argv[])
 
 		/* Sends data */
 		while (cnt < scan_size * cmd.stop_arg) {
-			unsigned int tmp =
-			    (scan_size * cmd.stop_arg - cnt) >
-			    BUF_SIZE ? BUF_SIZE : (scan_size * cmd.stop_arg -
-						   cnt);
+			unsigned int tmp = 
+				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ? 
+				BUF_SIZE : (scan_size * cmd.stop_arg - cnt);
 
-			ret = comedi_sys_write(dsc.fd, buf, tmp);
+			ret = a4l_sys_write(dsc.fd, buf, tmp);
 			if (ret < 0) {
 				fprintf(stderr,
-					"cmd_write: comedi_write failed (ret=%d)\n",
+					"cmd_write: a4l_write failed (ret=%d)\n",
 					ret);
 				goto out_main;
 			}
 			cnt += ret;
 
 			if (cnt == ret && cnt != 0) {
-				ret = comedi_snd_insn(&dsc, &insn);
+				ret = a4l_snd_insn(&dsc, &insn);
 				if (ret < 0) {
 					fprintf(stderr,
 						"cmd_write: triggering failed (ret=%d)\n",
@@ -344,16 +344,14 @@ int main(int argc, char *argv[])
 		while (cnt < cmd.stop_arg * scan_size) {
 
 			/* If the buffer is full, wait for an event
-			   (Note that comedi_poll() also retrieves the data amount
+			   (Note that a4l_poll() also retrieves the data amount
 			   to read; in our case it is useless as we have to update
 			   the data read counter) */
 			if (front == 0) {
-				ret =
-				    comedi_poll(&dsc, cmd.idx_subd,
-						COMEDI_INFINITE);
+				ret = a4l_poll(&dsc, cmd.idx_subd, A4L_INFINITE);
 				if (ret < 0) {
 					fprintf(stderr,
-						"cmd_write: comedi_mark_bufrw() failed (ret=%d)\n",
+						"cmd_write: a4l_mark_bufrw() failed (ret=%d)\n",
 						ret);
 					goto out_main;
 				} else
@@ -378,18 +376,16 @@ int main(int argc, char *argv[])
 			/* Retrieves and update the buffer's state
 			   (In output case, we recover how many bytes can be
 			   written into the shared buffer) */
-			ret =
-			    comedi_mark_bufrw(&dsc, cmd.idx_subd, front,
-					      &front);
+			ret = a4l_mark_bufrw(&dsc, cmd.idx_subd, front, &front);
 			if (ret < 0) {
 				fprintf(stderr,
-					"cmd_write: comedi_mark_bufrw() failed (ret=%d)\n",
+					"cmd_write: a4l_mark_bufrw() failed (ret=%d)\n",
 					ret);
 				goto out_main;
 			}
 			
 			if (cnt == front && cnt != 0) {
-				ret = comedi_snd_insn(&dsc, &insn);
+				ret = a4l_snd_insn(&dsc, &insn);
 				if (ret < 0) {
 					fprintf(stderr,
 						"cmd_write: triggering failed (ret=%d)\n",
@@ -405,13 +401,13 @@ int main(int argc, char *argv[])
 
 	ret = 0;
 
-      out_main:
+out_main:
 
 	/* Frees the buffer used as device descriptor */
 	free(dsc.sbdata);
 
 	/* Releases the file descriptor */
-	comedi_close(&dsc);
+	a4l_close(&dsc);
 
 	return ret;
 }

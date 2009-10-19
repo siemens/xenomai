@@ -1,2 +1,2 @@
 
-SUBDIRS = comedi
+SUBDIRS = analogy
