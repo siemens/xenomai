@@ -47,6 +47,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/registry.h>
 #include <nucleus/heap.h>
+#include <nucleus/sys_ppd.h>
 #include <native/task.h>
 #include <native/mutex.h>
 
@@ -316,8 +317,17 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 	err = rt_mutex_delete_inner(mutex);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	if (!err)
-		xnfree(mutex->synch_base.fastlock);
+	if (!err) {
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+		if (mutex->cpid) {
+			int global = xnsynch_test_flags(&mutex->synch_base,
+							RT_MUTEX_EXPORTED);
+			xnheap_free(&xnsys_ppd_get(global)->sem_heap,
+				    mutex->synch_base.fastlock);
+		} else
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+			xnfree(mutex->synch_base.fastlock);
+	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;
