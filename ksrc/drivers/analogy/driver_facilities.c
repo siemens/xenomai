@@ -154,9 +154,9 @@ EXPORT_SYMBOL(range_fake);
  * case of error a negative error code is returned.
  *
  */
-comedi_subd_t * comedi_alloc_subd(int sizeof_priv,
-				  void (*setup)(comedi_subd_t *));
-EXPORT_SYMBOL(comedi_alloc_subd);
+a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
+				  void (*setup)(a4l_subd_t *));
+EXPORT_SYMBOL(a4l_alloc_subd);
 
 /**
  * @brief Add a subdevice to the driver descriptor
