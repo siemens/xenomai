@@ -947,8 +947,10 @@ EXPORT_SYMBOL_GPL(xnheap_check_block);
 #include <linux/device.h>
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
+#include <linux/spinlock.h>
 
 static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
+static DEFINE_SPINLOCK(kheapq_lock);
 
 static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 {
@@ -1018,14 +1020,13 @@ static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
 static void xnheap_vmclose(struct vm_area_struct *vma)
 {
 	xnheap_t *heap = vma->vm_private_data;
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+	spin_lock(&kheapq_lock);
 
 	if (atomic_dec_and_test(&heap->archdep.numaps)) {
 		if (heap->archdep.release) {
 			removeq(&kheapq, &heap->link);
-			xnlock_put_irqrestore(&nklock, s);
+			spin_unlock(&kheapq_lock);
 			__unreserve_and_free_heap(heap->archdep.heapbase,
 						  xnheap_extentsize(heap),
 						  heap->archdep.kmflags);
@@ -1034,7 +1035,7 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 		}
 	}
 
-	xnlock_put_irqrestore(&nklock, s);
+	spin_unlock(&kheapq_lock);
 }
 
 static struct vm_operations_struct xnheap_vmops = {
@@ -1064,9 +1065,8 @@ static int xnheap_ioctl(struct inode *inode,
 {
 	xnheap_t *heap;
 	int err = 0;
-	spl_t s;
 
-	xnlock_get_irqsave(&nklock, s);
+	spin_lock(&kheapq_lock);
 
 	heap = __validate_heap_addr((void *)arg);
 
@@ -1079,7 +1079,7 @@ static int xnheap_ioctl(struct inode *inode,
 
       unlock_and_exit:
 
-	xnlock_put_irqrestore(&nklock, s);
+	spin_unlock(&kheapq_lock);
 
 	return err;
 }
@@ -1144,7 +1144,6 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 {
 	void *heapbase;
-	spl_t s;
 	int err;
 
 	/* Caller must have accounted for internal overhead. */
@@ -1168,9 +1167,9 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	heap->archdep.heapbase = heapbase;
 	heap->archdep.release = NULL;
 
-	xnlock_get_irqsave(&nklock, s);
+	spin_lock(&kheapq_lock);
 	appendq(&kheapq, &heap->link);
-	xnlock_put_irqrestore(&nklock, s);
+	spin_unlock(&kheapq_lock);
 
 	return 0;
 }
@@ -1180,20 +1179,19 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 {
 	int ret = 0, ccheck;
 	unsigned long len;
-	spl_t s;
 
 	ccheck = mapaddr ? 1 : 0;
 
-	xnlock_get_irqsave(&nklock, s);
+	spin_lock(&kheapq_lock);
 
 	if (atomic_read(&heap->archdep.numaps) > ccheck) {
 		heap->archdep.release = release;
-		xnlock_put_irqrestore(&nklock, s);
+		spin_unlock(&kheapq_lock);
 		return -EBUSY;
 	}
 
 	removeq(&kheapq, &heap->link); /* Prevent further mapping. */
-	xnlock_put_irqrestore(&nklock, s);
+	spin_unlock(&kheapq_lock);
 
 	len = xnheap_extentsize(heap);
 
