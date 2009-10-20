@@ -340,6 +340,11 @@ static void __heap_post_release(struct xnheap *h)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (heap->cpid)
+		xnfree(heap);
+#endif
 }
 
 /**

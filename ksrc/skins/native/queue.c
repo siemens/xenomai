@@ -303,6 +303,11 @@ static void __queue_post_release(struct xnheap *heap)
 		xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (q->cpid)
+		xnfree(q);
+#endif
 }
 
 /**
