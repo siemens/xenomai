@@ -226,12 +226,12 @@ int xnheap_init(xnheap_t *heap,
 		u_long heapsize,
 		u_long pagesize);
 
-int xnheap_destroy(xnheap_t *heap,
-		   void (*flushfn)(xnheap_t *heap,
-				   void *extaddr,
-				   u_long extsize,
-				   void *cookie),
-		   void *cookie);
+void xnheap_destroy(xnheap_t *heap,
+		    void (*flushfn)(xnheap_t *heap,
+				    void *extaddr,
+				    u_long extsize,
+				    void *cookie),
+		    void *cookie);
 
 int xnheap_extend(xnheap_t *heap,
 		  void *extaddr,

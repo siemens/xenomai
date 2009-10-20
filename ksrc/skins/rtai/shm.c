@@ -295,9 +295,8 @@ static int _shm_free(unsigned long name)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 				ret = xnheap_destroy_mapped(p->heap, NULL, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
-				ret =
-				    xnheap_destroy(p->heap,
-						   &__heap_flush_private, NULL);
+				xnheap_destroy(p->heap,
+					       &__heap_flush_private, NULL);
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 				if (ret)
 					goto unlock_and_exit;

@@ -253,9 +253,6 @@ EXPORT_SYMBOL_GPL(xnheap_init);
  * @param cookie If @a flushfn is non-NULL, @a cookie is an opaque
  * pointer which will be passed unmodified to @a flushfn.
  *
- * @return 0 is returned on success, or -EBUSY if external mappings
- * are still pending on the heap memory.
- *
  * Environments:
  *
  * This service can be called from:
@@ -267,16 +264,17 @@ EXPORT_SYMBOL_GPL(xnheap_init);
  * Rescheduling: never.
  */
 
-int xnheap_destroy(xnheap_t *heap,
-		   void (*flushfn) (xnheap_t *heap,
+void xnheap_destroy(xnheap_t *heap,
+		    void (*flushfn)(xnheap_t *heap,
 				    void *extaddr,
-				    u_long extsize, void *cookie), void *cookie)
+				    u_long extsize, void *cookie),
+		    void *cookie)
 {
 	xnholder_t *holder;
 	spl_t s;
 
 	if (!flushfn)
-		return 0;
+		return;
 
 	xnlock_get_irqsave(&heap->lock, s);
 
@@ -287,8 +285,6 @@ int xnheap_destroy(xnheap_t *heap,
 	}
 
 	xnlock_put_irqrestore(&heap->lock, s);
-
-	return 0;
 }
 EXPORT_SYMBOL_GPL(xnheap_destroy);
 
@@ -1270,7 +1266,8 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 			  void __user *mapaddr)
 {
-	return xnheap_destroy(heap, &xnheap_free_extent, NULL);
+	xnheap_destroy(heap, &xnheap_free_extent, NULL);
+	return 0;
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 

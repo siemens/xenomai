@@ -377,7 +377,7 @@ int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 					    __queue_post_release, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-		err = xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
+		xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
 
 	xnlock_get_irqsave(&nklock, s);
 

@@ -415,7 +415,7 @@ int rt_heap_delete_inner(RT_HEAP *heap, void __user *mapaddr)
 					    __heap_post_release, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-		err = xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
+		xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
 
 	xnlock_get_irqsave(&nklock, s);
 
