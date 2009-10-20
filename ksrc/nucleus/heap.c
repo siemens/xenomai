@@ -1023,7 +1023,7 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 
 	spin_lock(&kheapq_lock);
 
-	if (atomic_dec_and_test(&heap->archdep.numaps)) {
+	if (--heap->archdep.numaps == 0) {
 		if (heap->archdep.release) {
 			removeq(&kheapq, &heap->link);
 			spin_unlock(&kheapq_lock);
@@ -1063,31 +1063,15 @@ static inline xnheap_t *__validate_heap_addr(void *addr)
 static int xnheap_ioctl(struct inode *inode,
 			struct file *file, unsigned int cmd, unsigned long arg)
 {
-	xnheap_t *heap;
-	int err = 0;
-
-	spin_lock(&kheapq_lock);
-
-	heap = __validate_heap_addr((void *)arg);
-
-	if (!heap) {
-		err = -EINVAL;
-		goto unlock_and_exit;
-	}
-
-	file->private_data = heap;
-
-      unlock_and_exit:
-
-	spin_unlock(&kheapq_lock);
-
-	return err;
+	file->private_data = (void *)arg;
+	return 0;
 }
 
 static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	unsigned long offset, size, vaddr;
 	xnheap_t *heap;
+	int err;
 
 	if (vma->vm_ops != NULL || file->private_data == NULL)
 		/* Caller should mmap() once for a given file instance, after
@@ -1099,21 +1083,34 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	offset = vma->vm_pgoff << PAGE_SHIFT;
 	size = vma->vm_end - vma->vm_start;
-	heap = (xnheap_t *)file->private_data;
 
+	spin_lock(&kheapq_lock);
+
+	heap = __validate_heap_addr(file->private_data);
+	if (!heap) {
+		spin_unlock(&kheapq_lock);
+		return -EINVAL;
+	}
+
+	heap->archdep.numaps++;
+
+	spin_unlock(&kheapq_lock);
+
+	err = -ENXIO;
 	if (offset + size > xnheap_extentsize(heap))
-		return -ENXIO;
+		goto deref_out;
 
 	if (countq(&heap->extents) > 1)
 		/* Cannot map multi-extent heaps, we need the memory
 		   area we map from to be contiguous. */
-		return -ENXIO;
+		goto deref_out;
 
 	vma->vm_ops = &xnheap_vmops;
 	vma->vm_private_data = file->private_data;
 
 	vaddr = (unsigned long)heap->archdep.heapbase + offset;
 
+	err = -EAGAIN;
 	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		unsigned long maddr = vma->vm_start;
 
@@ -1122,7 +1119,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 		while (size > 0) {
 			if (xnarch_remap_vm_page(vma, maddr, vaddr))
-				return -EAGAIN;
+				goto deref_out;
 
 			maddr += PAGE_SIZE;
 			vaddr += PAGE_SIZE;
@@ -1132,13 +1129,15 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 					      vma->vm_start,
 					      virt_to_phys((void *)vaddr),
 					      size, vma->vm_page_prot))
-		return -EAGAIN;
+		goto deref_out;
 
 	xnarch_fault_range(vma);
 
-	atomic_inc(&heap->archdep.numaps);
-
 	return 0;
+
+deref_out:
+	xnheap_vmclose(vma);
+	return err;
 }
 
 int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
@@ -1184,7 +1183,7 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 
 	spin_lock(&kheapq_lock);
 
-	if (atomic_read(&heap->archdep.numaps) > ccheck) {
+	if (heap->archdep.numaps > ccheck) {
 		heap->archdep.release = release;
 		spin_unlock(&kheapq_lock);
 		return -EBUSY;

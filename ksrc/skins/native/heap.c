@@ -60,11 +60,12 @@ static int __heap_read_proc(char *page,
 	int len;
 	spl_t s;
 
-	p += sprintf(p, "type=%s:size=%lu:used=%lu:numaps=%d\n",
+	p += sprintf(p, "type=%s:size=%lu:used=%lu:numaps=%lu\n",
 		     (heap->mode & H_SHARED) == H_SHARED ? "shared" :
 		     (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
-		     xnheap_usable_mem(&heap->heap_base), xnheap_used_mem(&heap->heap_base),
-		     atomic_read(&heap->heap_base.archdep.numaps));
+		     xnheap_usable_mem(&heap->heap_base),
+		     xnheap_used_mem(&heap->heap_base),
+		     heap->heap_base.archdep.numaps);
 
 	xnlock_get_irqsave(&nklock, s);
 

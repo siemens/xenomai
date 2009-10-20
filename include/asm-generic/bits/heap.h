@@ -27,7 +27,7 @@
 static inline void xnarch_init_heapcb (xnarch_heapcb_t *hcb)
 
 {
-    atomic_set(&hcb->numaps,0);
+    hcb->numaps = 0;
     hcb->kmflags = 0;
     hcb->heapbase = NULL;
 }

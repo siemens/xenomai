@@ -270,7 +270,7 @@ struct xnheap;
 
 typedef struct xnarch_heapcb {
 
-	atomic_t numaps;	/* # of active user-space mappings. */
+	unsigned long numaps;	/* # of active user-space mappings. */
 	int kmflags;		/* Kernel memory flags (0 if vmalloc()). */
 	void *heapbase;		/* Shared heap memory base. */
 	void (*release)(struct xnheap *heap); /* callback upon last unmap */
