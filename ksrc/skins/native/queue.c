@@ -312,6 +312,13 @@ static void __queue_post_release(struct xnheap *heap) /* nklock held, IRQs off *
 		 * the deletion: reschedule now.
 		 */
 		xnpod_schedule();
+
+	xnlock_put_irqrestore(&nklock, s);
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (q->cpid)
+		xnfree(q);
+#endif
 }
 
 /**
