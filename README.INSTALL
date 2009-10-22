@@ -434,7 +434,55 @@ $ cd $build_root
 $ $xenomai_root/configure --build=i686-pc-linux-gnu --host=arm-linux --enable-arm-mach=at91rm9200 --enable-arm-tsc
 $ make DESTDIR=$staging_dir install
 
-2.5 Building with the --enable-linux-build option
+2.5 Building for NIOS II
+--------------------
+
+NIOS II is a softcore processor developped by Altera and is dedicated to the Altera's FPGA circuits. 
+NIOS II with no MMU enabled is supported by the uClinux distribution.
+
+2.5.1 Minimum hardware requirements
+
+You have to start with a minimal system with at least:
+* A Nios II processor in f or s core version, with hardware multiplier, (f-core suggested, s-core is slower) and with no MMU enabled.
+* SDRAM (minimum requirement 8MB).
+* One full featured timer named sys_clk_timer used for uClinux.
+* A jtag/serial uart or a real serial uart (preferred).
+
+Note in Linux, IRQ 0 means auto-detected, so you must not use IRQ 0 for ANY devices.
+
+The Xenomai port for NIOS II uses extra hardware that you have to add in SOPC builder:
+- A  full featured 32-bit Timer named hrtimer with a 1 µs period.
+- A  full featured High Resolution 64-bit Timer named hrclock used for time stamping (1 µs period for example).
+
+PLEASE RESPECT hrtimer, hrclock names because the Xenomai port is based on them!
+
+You have to use Altera's Quartus II version 9.0 at least for synthesis.
+
+A good start for your design is to use reference design shipped with your target board.
+For example, with an Altera's board, you may use the 'standard' design. 'Standard' reference designs for Altera's boards are available here: http://www.altera.com/support/examples/nios2/exm-nios2.html
+
+2.5.2 Xenomai compilation for NIOS II
+
+You should first verify that uClinux without Xenomai can run on the target board.
+The typical actions for building the uClinux kernel for NIOS II (available here: http://www.nioswiki.com/) are:
+If $uClinux-dist is the path of NIOS II uClinux release, for example: /home/test/nios2-linux/uClinux-dist 
+
+$ cd $uClinux-dist
+$ make menuconfig
+$ make vendor_hwselect SYSPTF=<path to your system ptf>
+$ make
+
+If the NIOS II cross-compiler is called nios2-linux-gcc, a typical compilation will look like:
+
+$ $xenomai_root/scripts/prepare-kernel.sh --arch=nios2 \
+  --adeos=$xenomai_root/ksrc/arch/nios2/patches/adeos-ipipe-2.6.26-rc6-nios2-* \
+  --linux=$linux_tree
+$ $xenomai_root/configure --host=nios2-linux
+$ make install DESTDIR=$uClinux-dist/romf
+$ cd $uClinux-dist
+$ make
+
+2.6 Building with the --enable-linux-build option
 -------------------------------------------------
 
 Build the Linux kernel as part of the user space support build process:
