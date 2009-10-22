@@ -129,7 +129,7 @@ void __native_queue_pkg_cleanup(void);
 
 static inline void __native_queue_flush_rq(xnqueue_t *rq)
 {
-	xeno_flush_rq(RT_QUEUE, rq, queue);
+	xeno_flush_rq_norelease(RT_QUEUE, rq, queue);
 }
 
 int rt_queue_delete_inner(RT_QUEUE *q,
