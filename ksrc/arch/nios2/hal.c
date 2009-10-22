@@ -47,8 +47,8 @@ static struct {
 
 /*
  * We have a dedicated high resolution timer defined by our design
- * (na_timer_xenomai), which the interrupt pipeline core initialized
- * at boot up. Therefore, there is not much left to do here.
+ * (na_hrtimer), which the interrupt pipeline core initialized at boot
+ * up. Therefore, there is not much left to do here.
  */
 int rthal_timer_request(void (*tick_handler) (void), int cpu)
 {
