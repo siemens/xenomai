@@ -1,0 +1,31 @@
+-- arch/nios2/patches
+
+Xenomai needs special kernel support to deliver fast and deterministic
+response time to external interrupts, and also to provide real-time
+services highly integrated with the standard Linux kernel.
+
+This support is provided by the Adeos real-time enabler [1], in the
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
+latter kernel.
+
+For the NIOS2 architecture, I-pipe patches are based on Thomas Chou's
+<thomas@wytron.com.tw> public tree [2].
+
+This directory only contains the most recent patches used to validate
+this Xenomai release on nios2 platforms; you may find the complete
+collection of Adeos/I-pipe patches at the following location (see
+note): http://download.gna.org/adeos/patches/v2.6/nios2
+
+NOTE: not all these patches are guaranteed to work with the current
+Xenomai release.  However, there is a good chance most of them do,
+since we try hard to maintain backward compatibility.
+
+Patch			        Based on GIT commit # / TAG
+------------------------------------------------------------------------
+
+2.6.26-rc6 / 1.0		ae75a3e1bd017d887591dd01ca2d5a715f4baa40
+2.6.26-rc6 / 1.1		f06a7f143cfca65c75730a06317400d885a63565
+
+[1] http://www.gna.org/projects/adeos/
+[2] git://sopc.et.ntust.edu.tw/git/linux-2.6.git

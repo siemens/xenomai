@@ -63,7 +63,7 @@ index 2f2425f..e12b3c7 100644
  obj-$(CONFIG_PIO_DEVICES) += pio.o
  obj-$(CONFIG_AVALON_DMA) += dma.o
 diff --git a/arch/nios2/kernel/entry.S b/arch/nios2/kernel/entry.S
-index 71acc1e..7a15e36 100644
+index 8e275fb..7a15e36 100644
 --- a/arch/nios2/kernel/entry.S
 +++ b/arch/nios2/kernel/entry.S
 @@ -52,6 +52,23 @@ ENTRY(system_call)
@@ -155,15 +155,7 @@ index 71acc1e..7a15e36 100644
  	call	schedule_tail
  	br	ret_from_exception
  
-@@ -321,6 +369,7 @@ ENTRY(sys_sigaltstack)
- 
- ENTRY(sys_rt_sigreturn)
- 	SAVE_SWITCH_STACK
-+	mov	r4,sp
- 	call	do_rt_sigreturn
- 	RESTORE_SWITCH_STACK
- 	ret
-@@ -363,6 +412,10 @@ ENTRY(sys_rt_sigreturn)
+@@ -364,6 +412,10 @@ ENTRY(sys_rt_sigreturn)
        * Explicitly allow the use of r1 (the assembler temporary register)
        * within this code. This register is normally reserved for the use of
        * the compiler.
@@ -176,7 +168,7 @@ index 71acc1e..7a15e36 100644
  ENTRY(instruction_trap)
 diff --git a/arch/nios2/kernel/ipipe.c b/arch/nios2/kernel/ipipe.c
 new file mode 100644
-index 0000000..12121ac
+index 0000000..e88d788
 --- /dev/null
 +++ b/arch/nios2/kernel/ipipe.c
 @@ -0,0 +1,446 @@
@@ -263,7 +255,7 @@ index 0000000..12121ac
 +void __ipipe_init_hrclock(void)
 +{
 +	__ipipe_hrclock_membase =
-+		(unsigned long)ioremap_nocache(na_high_res_timer, 64);
++		(unsigned long)ioremap_nocache(na_hrclock, 64);
 +	BUG_ON(__ipipe_hrclock_membase == 0);
 +
 +	outw(~0, __ipipe_hrclock_membase + ALTERA_TIMER64_PERIOD0_REG);
@@ -298,7 +290,7 @@ index 0000000..12121ac
 +void __ipipe_init_hrtimer(void)
 +{
 +	__ipipe_hrtimer_membase =
-+		(unsigned long)ioremap_nocache(na_timer_xenomai, 32);
++		(unsigned long)ioremap_nocache(na_hrtimer, 32);
 +	BUG_ON(__ipipe_hrtimer_membase == 0);
 +
 +	outw(ALTERA_TIMER_CONTROL_STOP_MSK,
@@ -764,40 +756,6 @@ index 0000000..d3390a7
 +	addi	sp,sp,52
 +1:
 +	ret
-diff --git a/arch/nios2/kernel/signal.c b/arch/nios2/kernel/signal.c
-index 1b5fcbd..4b45bb2 100644
---- a/arch/nios2/kernel/signal.c
-+++ b/arch/nios2/kernel/signal.c
-@@ -315,10 +315,12 @@ rt_restore_ucontext(struct pt_regs *regs, struct switch_stack *sw,
- 	err |= __get_user(sw->r22, &gregs[21]);
- 	err |= __get_user(sw->r23, &gregs[22]);
- 	err |= __get_user(usp, &gregs[23]);
-+	regs->sp = usp;
- 	err |= __get_user(sw->fp, &gregs[24]);  // Verify, should this be settable
- 	err |= __get_user(sw->gp, &gregs[25]);  // Verify, should this be settable
- 
- 	err |= __get_user(temp, &gregs[26]);  // Not really necessary no user settable bits
-+	err |= __get_user(regs->ea, &gregs[27]);
- 	regs->estatus = (regs->estatus & 0xffffffff) | (temp & 0x0);
- 	err |= __get_user(regs->status_extension, 
- 			  &uc->uc_mcontext.status_extension);
-@@ -365,7 +367,7 @@ badframe:
- 
- asmlinkage int do_rt_sigreturn(struct switch_stack *sw)
- {
--	struct pt_regs *regs = (struct pt_regs *) sw + 1;
-+	struct pt_regs *regs = (struct pt_regs *)(sw + 1);
- 	struct rt_sigframe *frame = (struct rt_sigframe *) regs->sp;  // Verify, can we follow the stack back
- 	sigset_t set;
- 	int rval;
-@@ -435,6 +437,7 @@ static inline int rt_setup_ucontext(struct ucontext *uc, struct pt_regs *regs)
- 	err |= __put_user(regs->sp, &gregs[23]);
- 	err |= __put_user(sw->fp, &gregs[24]);
- 	err |= __put_user(sw->gp, &gregs[25]);
-+	err |= __put_user(regs->ea, &gregs[27]);
- 	return err;
- }
- 
 diff --git a/arch/nios2/kernel/time.c b/arch/nios2/kernel/time.c
 index ffb15b1..071cc2d 100644
 --- a/arch/nios2/kernel/time.c
@@ -1292,7 +1250,7 @@ index fb627de..344d01e 100644
  /* Atomic operations are already serializing on SH */
 diff --git a/include/asm-nios2/ipipe.h b/include/asm-nios2/ipipe.h
 new file mode 100644
-index 0000000..049a2fa
+index 0000000..64af93d
 --- /dev/null
 +++ b/include/asm-nios2/ipipe.h
 @@ -0,0 +1,220 @@
@@ -1334,9 +1292,9 @@ index 0000000..049a2fa
 +#error "I-pipe: CONFIG_SMP not supported"
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"1.0-00"
++#define IPIPE_ARCH_STRING	"1.1-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	0
++#define IPIPE_MINOR_NUMBER	1
 +#define IPIPE_PATCH_NUMBER	0
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
@@ -1422,7 +1380,7 @@ index 0000000..049a2fa
 +#define __ipipe_disable_irqdesc(ipd, irq)	do { } while(0)
 +
 +#define __ipipe_hrtimer_freq	1000000 /* 1 us */
-+#define __ipipe_hrtimer_irq	na_timer_xenomai_irq
++#define __ipipe_hrtimer_irq	na_hrtimer_irq
 +#define __ipipe_hrclock_freq	nasys_clock_freq
 +
 +extern unsigned long __ipipe_hrclock_membase;
