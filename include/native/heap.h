@@ -117,7 +117,7 @@ void __native_heap_pkg_cleanup(void);
 
 static inline void __native_heap_flush_rq(xnqueue_t *rq)
 {
-	xeno_flush_rq(RT_HEAP, rq, heap);
+	xeno_flush_rq_norelease(RT_HEAP, rq, heap);
 }
 
 int rt_heap_delete_inner(RT_HEAP *heap,
