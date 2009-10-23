@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include <rtdk.h>
 #include <asm/xenomai/system.h>
@@ -37,9 +38,12 @@
 
 #define RT_PRINT_LINE_BREAK		256
 
+#define RT_PRINT_SYSLOG_STREAM		NULL
+
 struct entry_head {
 	FILE *dest;
 	uint32_t seq_no;
+	int priority;
 	char text[1];
 } __attribute__((packed));
 
@@ -76,7 +80,8 @@ static void print_buffers(void);
 
 /* *** rt_print API *** */
 
-int rt_vfprintf(FILE *stream, const char *format, va_list args)
+static int print_to_buffer(FILE *stream, int priority, const char *format,
+			   va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
@@ -115,6 +120,7 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args)
 			/* Write out empty entry */
 			head = buffer->ring + write_pos;
 			head->seq_no = seq_no;
+			head->priority = 0;
 			head->text[0] = 0;
 
 			/* Forward to the ring buffer start */
@@ -148,6 +154,7 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args)
 	/* If we were able to write some text, finalise the entry */
 	if (len > 0) {
 		head->seq_no = ++seq_no;
+		head->priority = priority;
 		head->dest = stream;
 
 		/* Move forward by text and head length */
@@ -160,6 +167,7 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args)
 		/* An empty entry marks the wrap-around */
 		head = buffer->ring + write_pos;
 		head->seq_no = seq_no;
+		head->priority = priority;
 		head->text[0] = 0;
 
 		write_pos = 0;
@@ -171,6 +179,11 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args)
 	buffer->write_pos = write_pos;
 
 	return res;
+}
+
+int rt_vfprintf(FILE *stream, const char *format, va_list args)
+{
+	return print_to_buffer(stream, 0, format, args);
 }
 
 int rt_vprintf(const char *format, va_list args)
@@ -200,6 +213,20 @@ int rt_printf(const char *format, ...)
 	va_end(args);
 
 	return n;
+}
+
+void rt_syslog(int priority, char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, format, args);
+	va_end(args);
+}
+
+void rt_vsyslog(int priority, char *format, va_list args)
+{
+	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, format, args);
 }
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)
@@ -311,7 +338,6 @@ const char *rt_print_buffer_name(void)
 	return buffer->name;
 }
 
-
 /* *** Deferred Output Management *** */
 
 static void cleanup_buffer(struct print_buffer *buffer)
@@ -384,7 +410,14 @@ static void print_buffers(void)
 
 		if (len) {
 			/* Print out non-empty entry and proceed */
-			fprintf(head->dest, "%s", head->text);
+			/* Check if output goes to syslog */
+			if (head->dest == RT_PRINT_SYSLOG_STREAM) {
+				syslog(head->priority, "%s", head->text);
+			} else {
+				/* Output goes to specified stream */
+				fprintf(head->dest, "%s", head->text);
+			}
+
 			read_pos += sizeof(*head) + len;
 		} else {
 			/* Emptry entries mark the wrap-around */
