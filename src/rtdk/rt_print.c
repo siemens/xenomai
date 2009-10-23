@@ -417,9 +417,35 @@ static void *printer_loop(void *arg)
 	}
 }
 
-void __rt_print_init(void)
+static void spawn_printer_thread(void)
 {
 	pthread_attr_t thattr;
+
+	pthread_attr_init(&thattr);
+	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
+	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
+}
+
+static void forked_child_init(void)
+{
+	struct print_buffer *my_buffer = pthread_getspecific(buffer_key);
+	struct print_buffer **pbuffer = &first_buffer;
+
+	/* re-init to avoid finding it locked by some parent thread */
+	pthread_mutex_init(&buffer_lock, NULL);
+
+	while (*pbuffer) {
+		if (*pbuffer == my_buffer)
+			pbuffer = &(*pbuffer)->next;
+		else
+			cleanup_buffer(*pbuffer);
+	}
+
+	spawn_printer_thread();
+}
+
+void __rt_print_init(void)
+{
 	const char *value_str;
 	unsigned long long period;
 
@@ -456,7 +482,6 @@ void __rt_print_init(void)
 
 	pthread_cond_init(&printer_wakeup, NULL);
 
-	pthread_attr_init(&thattr);
-	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
-	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
+	spawn_printer_thread();
+	pthread_atfork(NULL, NULL, forked_child_init);
 }
