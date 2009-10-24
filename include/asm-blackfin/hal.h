@@ -83,12 +83,21 @@ extern int rthal_periodic_p;
 #define rthal_periodic_p  0
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-asmlinkage struct task_struct *rthal_thread_switch(struct thread_struct *prev,
-						   struct thread_struct *next);
+asmlinkage struct task_struct *
+rthal_thread_switch(struct thread_struct *prev,
+		    struct thread_struct *next);
 
 asmlinkage void rthal_thread_trampoline(void);
 
 asmlinkage int rthal_defer_switch_p(void);
+
+#ifndef CONFIG_SMP
+asmlinkage void rthal_atomic_set_mask(unsigned long *addr,
+				      unsigned long mask);
+
+asmlinkage void rthal_atomic_clear_mask(unsigned long *addr,
+					unsigned long mask);
+#endif
 
 static const char *const rthal_fault_labels[] = {
 	[1] = "Single step",

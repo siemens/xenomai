@@ -22,6 +22,7 @@
 
 #ifdef __KERNEL__
 
+#include <linux/version.h>
 #include <linux/bitops.h>
 #include <asm/atomic.h>
 #include <asm/system.h>
@@ -29,15 +30,21 @@
 #define xnarch_atomic_xchg(ptr,v)   xchg(ptr,v)
 #define xnarch_memory_barrier()     smp_mb()
 
-#define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
-#define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
-#define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
-#define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)
-#define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)
-#define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,(atomic_t*)pflags)
-#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,(atomic_t*)pflags)
-#define xnarch_atomic_cmpxchg(pcounter,old,new) atomic_cmpxchg((pcounter),(old),(new))
+#define xnarch_atomic_set(pcounter,i)           atomic_set(pcounter,i)
+#define xnarch_atomic_get(pcounter)             atomic_read(pcounter)
+#define xnarch_atomic_inc(pcounter)             atomic_inc(pcounter)
+#define xnarch_atomic_dec(pcounter)             atomic_dec(pcounter)
+#define xnarch_atomic_inc_and_test(pcounter)    atomic_inc_and_test(pcounter)
+#define xnarch_atomic_dec_and_test(pcounter)    atomic_dec_and_test(pcounter)
+
+#define xnarch_atomic_set_mask(pflags, mask)	\
+	rthal_atomic_set_mask((pflags), (mask))
+
+#define xnarch_atomic_clear_mask(pflags, mask)	\
+	rthal_atomic_clear_mask((pflags), (mask))
+
+#define xnarch_atomic_cmpxchg(pcounter, old, new) \
+	atomic_cmpxchg((pcounter), (old), (new))
 
 typedef atomic_t atomic_counter_t;
 typedef atomic_t xnarch_atomic_t;
@@ -47,7 +54,7 @@ typedef atomic_t xnarch_atomic_t;
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 
-typedef struct { int counter;} xnarch_atomic_t;
+typedef struct { int counter; } xnarch_atomic_t;
 
 #define xnarch_atomic_get(v)		((v)->counter)
 #define xnarch_atomic_set(v, i)	(((v)->counter) = i)
