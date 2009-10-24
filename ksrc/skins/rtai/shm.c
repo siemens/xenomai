@@ -260,19 +260,24 @@ void *rt_heap_open(unsigned long name, int size, int suprt)
 	return _shm_alloc(name, size, suprt, 0, &opaque);
 }
 
-#ifndef CONFIG_XENO_OPT_PERVASIVE
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+static void __heap_flush_shared(xnheap_t *heap)
+{
+	xnheap_free(&kheap, heap);
+}
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
 static void __heap_flush_private(xnheap_t *heap,
 				 void *heapmem, u_long heapsize, void *cookie)
 {
 	xnarch_free_host_mem(heapmem, heapsize);
 }
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 static int _shm_free(unsigned long name)
 {
-	int ret = 0;
 	xnholder_t *holder;
 	xnshm_a_t *p;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -283,27 +288,29 @@ static int _shm_free(unsigned long name)
 		p = link2shma(holder);
 
 		if (p->name == name && --p->ref == 0) {
+			removeq(&xnshm_allocq, &p->link);
 			if (p->handle)
 				xnregistry_remove(p->handle);
+
+			xnlock_put_irqrestore(&nklock, s);
+
 			if (p->heap == &kheap)
 				xnheap_free(&kheap, p->chunk);
 			else {
-				/* Should release lock here? 
-				 * Can destroy_mapped suspend ?
-				 * [YES!]
-				 */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-				xnheap_destroy_mapped(p->heap, NULL, NULL);
+				xnheap_destroy_mapped(p->heap,
+						      __heap_flush_shared,
+						      NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 				xnheap_destroy(p->heap,
 					       &__heap_flush_private, NULL);
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 				xnheap_free(&kheap, p->heap);
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 			}
-			removeq(&xnshm_allocq, &p->link);
 			ret = p->size;
 			xnheap_free(&kheap, p);
-			break;
+
+			return ret;
 		}
 
 		holder = nextq(&xnshm_allocq, holder);
@@ -311,7 +318,7 @@ static int _shm_free(unsigned long name)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return 0;
 }
 
 int rt_shm_free(unsigned long name)
