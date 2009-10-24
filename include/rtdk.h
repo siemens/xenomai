@@ -52,6 +52,8 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args);
 int rt_vprintf(const char *format, va_list args);
 int rt_fprintf(FILE *stream, const char *format, ...);
 int rt_printf(const char *format, ...);
+void rt_syslog(int priority, char *format, ...);
+void rt_vsyslog(int priority, char *format, va_list args);
 
 int rt_print_init(size_t buffer_size, const char *name);
 void rt_print_cleanup(void);
