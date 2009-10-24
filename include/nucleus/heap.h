@@ -204,9 +204,9 @@ int xnheap_init_mapped(xnheap_t *heap,
 		       u_long heapsize,
 		       int memflags);
 
-int xnheap_destroy_mapped(xnheap_t *heap,
-			  void (*release)(struct xnheap *heap),
-			  void __user *mapaddr);
+void xnheap_destroy_mapped(xnheap_t *heap,
+			   void (*release)(struct xnheap *heap),
+			   void __user *mapaddr);
 
 #define xnheap_mapped_offset(heap,ptr) \
 (((caddr_t)(ptr)) - ((caddr_t)(heap)->archdep.heapbase))

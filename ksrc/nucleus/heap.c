@@ -990,6 +990,7 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 			SetPageReserved(virt_to_page(vaddr));
 	}
 
+	printk("%s: ptr %p\n", __FUNCTION__, ptr);
 	return ptr;
 }
 
@@ -1000,6 +1001,7 @@ static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
 	/* Size must be page-aligned. */
 
 	vabase = (unsigned long)ptr;
+	printk("%s: ptr %p\n", __FUNCTION__, ptr);
 
 	if ((kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
@@ -1173,42 +1175,51 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	return 0;
 }
 
-int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
-			  void __user *mapaddr)
+void xnheap_destroy_mapped(xnheap_t *heap,
+			   void (*release)(struct xnheap *heap),
+			   void __user *mapaddr)
 {
-	int ret = 0, ccheck;
 	unsigned long len;
 
-	ccheck = mapaddr ? 1 : 0;
+	/*
+	 * Trying to unmap user memory without providing a release
+	 * handler for deferred cleanup is a bug.
+	 */
+	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release, /* nop */);
 
 	spin_lock(&kheapq_lock);
 
-	if (heap->archdep.numaps > ccheck) {
-		heap->archdep.release = release;
-		spin_unlock(&kheapq_lock);
-		return -EBUSY;
-	}
-
 	removeq(&kheapq, &heap->link); /* Prevent further mapping. */
+
+	heap->archdep.release = release;
+
+	if (heap->archdep.numaps == 0)
+		mapaddr = NULL; /* nothing left to unmap */
+	else
+		release = NULL; /* will be called by Linux on unmap */
+
 	spin_unlock(&kheapq_lock);
 
 	len = xnheap_extentsize(heap);
 
 	if (mapaddr) {
 		down_write(&current->mm->mmap_sem);
-		heap->archdep.release = NULL;
-		ret = do_munmap(current->mm, (unsigned long)mapaddr, len);
+		do_munmap(current->mm, (unsigned long)mapaddr, len);
 		up_write(&current->mm->mmap_sem);
 	}
 
-	if (ret == 0) {
+	if (heap->archdep.numaps > 0) {
+		/* The release handler is supposed to clean up the rest. */
+		XENO_ASSERT(NUCLEUS, heap->archdep.release, /* nop */);
+		return;
+	}
+
+	if (mapaddr == NULL) {
 		__unreserve_and_free_heap(heap->archdep.heapbase, len,
 					  heap->archdep.kmflags);
 		if (release)
 			release(heap);
 	}
-
-	return ret;
 }
 
 static struct file_operations xnheap_fops = {
@@ -1260,11 +1271,11 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 	return -ENOMEM;
 }
 
-int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
-			  void __user *mapaddr)
+void xnheap_destroy_mapped(xnheap_t *heap,
+			   void (*release)(struct xnheap *heap),
+			   void __user *mapaddr)
 {
 	xnheap_destroy(heap, &xnheap_free_extent, NULL);
-	return 0;
 }
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
 

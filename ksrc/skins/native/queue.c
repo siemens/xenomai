@@ -331,9 +331,6 @@ static void __queue_post_release(struct xnheap *heap)
  * - -EPERM is returned if this service was called from an
  * asynchronous context.
  *
- * - -EBUSY is returned if an attempt is made to delete a shared queue
- * which is still bound to a process.
- *
  * Environments:
  *
  * This service can be called from:
@@ -346,7 +343,7 @@ static void __queue_post_release(struct xnheap *heap)
 
 int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 {
-	int err = 0;
+	int err;
 	spl_t s;
 
 	if (xnpod_asynch_p())
@@ -371,29 +368,23 @@ int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 
 	/*
 	 * The queue descriptor has been marked as deleted before we
-	 * released the superlock thus preventing any sucessful
-	 * subsequent calls of rt_queue_delete(), so now we can
-	 * actually destroy the associated heap safely.
+	 * released the superlock thus preventing any subsequent call
+	 * to rt_queue_delete() to succeed, so now we can actually
+	 * destroy the associated heap safely.
 	 */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (q->mode & Q_SHARED)
-		err = xnheap_destroy_mapped(&q->bufpool,
-					    __queue_post_release, mapaddr);
+		xnheap_destroy_mapped(&q->bufpool,
+				      __queue_post_release, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+	{
 		xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (err)
-		q->magic = XENO_QUEUE_MAGIC;
-	else if (!(q->mode & Q_SHARED))
 		__queue_post_release(&q->bufpool);
+	}
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return 0;
 }
 
 int rt_queue_delete(RT_QUEUE *q)

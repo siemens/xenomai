@@ -362,9 +362,6 @@ static void __heap_post_release(struct xnheap *h)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EBUSY is returned if @a heap is in use by another process and the
- * descriptor is not destroyed.
- *
  * - -EINVAL is returned if @a heap is not a heap descriptor.
  *
  * - -EIDRM is returned if @a heap is a deleted heap descriptor.
@@ -384,7 +381,7 @@ static void __heap_post_release(struct xnheap *h)
 
 int rt_heap_delete_inner(RT_HEAP *heap, void __user *mapaddr)
 {
-	int err = 0;
+	int err;
 	spl_t s;
 
 	if (!xnpod_root_p())
@@ -410,29 +407,23 @@ int rt_heap_delete_inner(RT_HEAP *heap, void __user *mapaddr)
 
 	/*
 	 * The heap descriptor has been marked as deleted before we
-	 * released the superlock thus preventing any sucessful
-	 * subsequent calls of rt_heap_delete(), so now we can
-	 * actually destroy it safely.
+	 * released the superlock thus preventing any subsequent call
+	 * to rt_heap_delete() to succeed, so now we can actually
+	 * destroy it safely.
 	 */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (heap->mode & H_MAPPABLE)
-		err = xnheap_destroy_mapped(&heap->heap_base,
-					    __heap_post_release, mapaddr);
+		xnheap_destroy_mapped(&heap->heap_base,
+				      __heap_post_release, mapaddr);
 	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+	{
 		xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (err)
-		heap->magic = XENO_HEAP_MAGIC;
-	else if (!(heap->mode & H_MAPPABLE))
 		__heap_post_release(&heap->heap_base);
+	}
 
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return 0;
 }
 
 int rt_heap_delete(RT_HEAP *heap)

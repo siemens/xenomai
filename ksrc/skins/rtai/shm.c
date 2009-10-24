@@ -293,13 +293,11 @@ static int _shm_free(unsigned long name)
 				 * [YES!]
 				 */
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-				ret = xnheap_destroy_mapped(p->heap, NULL, NULL);
+				xnheap_destroy_mapped(p->heap, NULL, NULL);
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 				xnheap_destroy(p->heap,
 					       &__heap_flush_private, NULL);
 #endif /* !CONFIG_XENO_OPT_PERVASIVE */
-				if (ret)
-					goto unlock_and_exit;
 				xnheap_free(&kheap, p->heap);
 			}
 			removeq(&xnshm_allocq, &p->link);
@@ -310,8 +308,6 @@ static int _shm_free(unsigned long name)
 
 		holder = nextq(&xnshm_allocq, holder);
 	}
-
-      unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
