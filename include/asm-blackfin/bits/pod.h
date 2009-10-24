@@ -59,12 +59,65 @@ static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
 }
 
+#ifdef CONFIG_MPU
+
+static inline
+struct task_struct *mpu_get_prev(struct xnarchtcb *tcb)
+{
+	return tcb->active_task;
+}
+
+static inline
+void mpu_set_next(struct xnarchtcb *tcb,
+		  struct task_struct *next)
+{
+	tcb->active_task = next;
+}
+
+static inline void mpu_switch(struct task_struct *prev,
+			      struct task_struct *next)
+{
+	if (next && next != prev) {
+		struct mm_struct *oldmm = prev->active_mm;
+		switch_mm(oldmm, next->active_mm, next);
+	}
+}
+
+#else /* !CONFIG_MPU */
+
+static inline
+struct task_struct *mpu_get_prev(struct xnarchtcb *tcb)
+{
+	return NULL;
+}
+
+static inline
+void mpu_set_next(struct xnarchtcb *tcb,
+		  struct task_struct *next)
+{
+}
+
+static inline void mpu_switch(struct task_struct *prev,
+			      struct task_struct *next)
+{
+}
+
+#endif /* CONFIG_MPU */
+
 static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 {
-	if (in_tcb->user_task)
+	struct task_struct *prev = mpu_get_prev(out_tcb);
+	struct task_struct *next = in_tcb->user_task;
+
+	if (likely(next != NULL)) {
+		mpu_set_next(in_tcb, next);
 		rthal_clear_foreign_stack(&rthal_domain);
-	else
+	} else {
+		mpu_set_next(in_tcb, prev);
 		rthal_set_foreign_stack(&rthal_domain);
+	}
+
+	mpu_switch(prev, next);
 
 	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 }

@@ -49,6 +49,9 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
     struct thread_struct ts;	/* Holds kernel-based thread context. */
     struct task_struct *user_task; /* Shadowed user-space task */
+#ifdef CONFIG_MPU
+    struct task_struct *active_task;    /* Active user-space task */
+#endif
     struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 
     /* Init block */
