@@ -527,7 +527,7 @@ int rthal_apc_alloc(const char *name,
 
     if (rthal_apc_map != ~0) {
         apc = ffz(rthal_apc_map);
-        set_bit(apc, &rthal_apc_map);
+        __set_bit(apc, &rthal_apc_map);
         rthal_apc_table[apc].handler = handler;
         rthal_apc_table[apc].cookie = cookie;
         rthal_apc_table[apc].name = name;
