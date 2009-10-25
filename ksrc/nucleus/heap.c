@@ -990,7 +990,6 @@ static inline void *__alloc_and_reserve_heap(size_t size, int kmflags)
 			SetPageReserved(virt_to_page(vaddr));
 	}
 
-	printk("%s: ptr %p\n", __FUNCTION__, ptr);
 	return ptr;
 }
 
@@ -1001,7 +1000,6 @@ static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
 	/* Size must be page-aligned. */
 
 	vabase = (unsigned long)ptr;
-	printk("%s: ptr %p\n", __FUNCTION__, ptr);
 
 	if ((kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		for (vaddr = vabase; vaddr < vabase + size; vaddr += PAGE_SIZE)
