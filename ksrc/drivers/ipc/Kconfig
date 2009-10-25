@@ -11,6 +11,7 @@ config XENO_DRIVERS_RTIPC
 config XENO_DRIVERS_RTIPC_XDDP
 	depends on XENO_DRIVERS_RTIPC
 	select XENO_OPT_PIPE
+	default y
 	bool "XDDP cross-domain datagram protocol"
 	help
 
@@ -36,6 +37,7 @@ config XENO_DRIVERS_RTIPC_XDDP
 config XENO_DRIVERS_RTIPC_IDDP
 	depends on XENO_DRIVERS_RTIPC
 	select XENO_OPT_MAP
+	default y
 	bool "IDDP intra-domain datagram protocol"
 	help
 
@@ -55,6 +57,7 @@ config XENO_OPT_IDDP_NRPORT
 config XENO_DRIVERS_RTIPC_BUFP
 	depends on XENO_DRIVERS_RTIPC
 	select XENO_OPT_MAP
+	default y
 	bool "Buffer protocol"
 	help
 
