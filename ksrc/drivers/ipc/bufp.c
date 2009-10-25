@@ -1034,7 +1034,7 @@ static int __init bufp_init(void)
 	return 0;
 }
 
-static void __exit bufp_exit(void)
+static void bufp_exit(void)
 {
 	xnmap_delete(portmap);
 }

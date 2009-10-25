@@ -920,7 +920,7 @@ static int __init iddp_init(void)
 	return 0;
 }
 
-static void __exit iddp_exit(void)
+static void iddp_exit(void)
 {
 	rtdm_event_destroy(&poolevt);
 	xnmap_delete(portmap);
