@@ -25,6 +25,9 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 					const char *name)
 {
 	tcb->user_task = current;
+#ifdef CONFIG_MPU
+	tcb->active_task = NULL;
+#endif
 	tcb->tsp = &tcb->ts;
 	tcb->entry = NULL;
 	tcb->cookie = NULL;

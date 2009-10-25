@@ -52,6 +52,9 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = current;
+#ifdef CONFIG_MPU
+	rootcb->active_task = current;
+#endif
 	rootcb->tsp = &current->thread;
 }
 

@@ -28,6 +28,9 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 {
 
 	tcb->user_task = NULL;
+#ifdef CONFIG_MPU
+	tcb->active_task = NULL;
+#endif
 	tcb->tsp = &tcb->ts;
 	/* Must be followed by xnarch_init_thread(). */
 }
