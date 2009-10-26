@@ -337,7 +337,7 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 		clear_bit(tmp, &evts);
 	}
 
-	/* Notifies the user-space side */
+	/* Notify the user-space side */
 	a4l_signal_sync(&buf->sync);
 
 	return 0;
@@ -376,7 +376,7 @@ open:a4l_map,
 close:a4l_unmap,
 };
 
-int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg)
+int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 {
 	a4l_mmap_t map_cfg;
 	a4l_dev_t *dev;
@@ -387,34 +387,44 @@ int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg)
 
 	dev = a4l_get_dev(cxt);
 
-	/* Basically checks the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	/* Basically check the device */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_mmap: cannot mmap on "
+			  "an unattached device\n");
 		return -EINVAL;
+	}
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
-	if (a4l_test_rt() != 0)
+	if (a4l_test_rt() != 0) {
+		__a4l_err("a4l_ioctl_mmap: mmap must be done in NRT context\n");
 		return -EPERM;
+	}
 
-	/* Recovers the argument structure */
+	/* Recover the argument structure */
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
 		return -EFAULT;
 
-	/* Checks the subdevice */
+	/* Check the subdevice */
 	if (map_cfg.idx_subd >= dev->transfer.nb_subd ||
 	    (dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) ==
 	    0
 	    || (dev->transfer.subds[map_cfg.idx_subd]->
-		flags & A4L_SUBD_MMAP) == 0)
+		flags & A4L_SUBD_MMAP) == 0) {
+		__a4l_err("a4l_ioctl_mmap: wrong subdevice selected (idx=%d)\n",
+			  map_cfg.idx_subd);
 		return -EINVAL;
+	}
 
-	/* Checks the buffer is not already mapped */
+	/* Check the buffer is not already mapped */
 	if (test_bit(A4L_TSF_MMAP,
-		     &(dev->transfer.status[map_cfg.idx_subd])))
+		     &(dev->transfer.status[map_cfg.idx_subd]))) {
+		__a4l_err("a4l_ioctl_mmap: mmap is already done\n");
 		return -EBUSY;
+	}
 
-	/* Basically checks the size to be mapped */
+	/* Basically check the size to be mapped */
 	if ((map_cfg.size & ~(PAGE_MASK)) != 0 ||
 	    map_cfg.size > dev->transfer.bufs[map_cfg.idx_subd]->size)
 		return -EFAULT;
@@ -427,8 +437,11 @@ int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg)
 				&a4l_vm_ops,
 				&(dev->transfer.status[map_cfg.idx_subd]));
 
-	if (ret < 0)
+	if (ret < 0) {
+		__a4l_err("a4l_ioctl_mmap: internal error, "
+			  "rtdm_mmap_to_user failed (err=%d)\n", ret);
 		return ret;
+	}
 
 	return rtdm_safe_copy_to_user(cxt->user_info, 
 				      arg, &map_cfg, sizeof(a4l_mmap_t));
@@ -445,34 +458,49 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
 		return -EINVAL;
+	}
 
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
-	if (a4l_test_rt() != 0)
+	if (a4l_test_rt() != 0) {
+		__a4l_err("a4l_ioctl_bufcfg: buffer config must done "
+			  "in NRT context\n");
 		return -EPERM;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &buf_cfg, 
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	if (buf_cfg.idx_subd >= dev->transfer.nb_subd)
+	if (buf_cfg.idx_subd >= dev->transfer.nb_subd ||
+	    (dev->transfer.subds[buf_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_ioctl_bufcfg: wrong subdevice selected\n");
 		return -EINVAL;
+	}
 
-	if (buf_cfg.buf_size > A4L_BUF_MAXSIZE)
+	if (buf_cfg.buf_size > A4L_BUF_MAXSIZE) {
+		__a4l_err("a4l_ioctl_bufcfg: buffer size too big (<=16MB)\n");
 		return -EINVAL;
+	}
 
 	/* If a transfer is occuring or if the buffer is mmapped,
 	   no buffer size change is allowed */
 	if (test_bit(A4L_TSF_BUSY,
-		     &(dev->transfer.status[buf_cfg.idx_subd])))
+		     &(dev->transfer.status[buf_cfg.idx_subd]))) {
+		__a4l_err("a4l_ioctl_bufcfg: buffer size too big (<=16MB)\n");
 		return -EBUSY;
+	}
 
 	if (test_bit(A4L_TSF_MMAP,
-		     &(dev->transfer.status[buf_cfg.idx_subd])))
+		     &(dev->transfer.status[buf_cfg.idx_subd]))) {
+		__a4l_err("a4l_ioctl_bufcfg: please unmap before "
+			  "configuring buffer\n");
 		return -EPERM;
+	}
 
 	/* Performs the re-allocation */
 	a4l_free_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
@@ -494,18 +522,20 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_bufinfo: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &info, arg, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
-	if (info.idx_subd > dev->transfer.nb_subd)
+	if (info.idx_subd >= dev->transfer.nb_subd ||
+	    (dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_ioctl_bufinfo: wrong subdevice selected\n");
 		return -EINVAL;
-
-	if ((dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0)
-		return -EINVAL;
+	}
 
 	buf = dev->transfer.bufs[info.idx_subd];
 
@@ -555,8 +585,10 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 			  "a4l_ioctl_bufinfo: count to write=%lu\n", 
 			  info.rw_count);
 
-	} else
+	} else {
+		__a4l_err("a4l_ioctl_bufinfo: wrong subdevice selected\n");
 		return -EINVAL;
+	}
 
 	/* Performs the munge if need be */
 	if (dev->transfer.subds[info.idx_subd]->munge != NULL) {
@@ -587,25 +619,32 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_read: unattached device\n");
 		return -EINVAL;
+	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
+		__a4l_err("a4l_read: idle subdevice\n");
 		return -ENOENT;
+	}
 
-	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
+	/* TODO: to be removed
+	   Check the subdevice capabilities */
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {	       
+		__a4l_err("a4l_read: incoherent state\n");
 		return -EINVAL;
+	}
 
 	while (count < nbytes) {
 
-		/* Checks the events */
+		/* Check the events */
 		int ret = __handle_event(buf);
 
-		/* Computes the data amount to copy */
+		/* Compute the data amount to copy */
 		unsigned long tmp_cnt = __count_to_get(buf);
 
-		/* Checks tmp_cnt count is not higher than
+		/* Check tmp_cnt count is not higher than
 		   the global count to read */
 		if (tmp_cnt > nbytes - count)
 			tmp_cnt = nbytes - count;
@@ -676,25 +715,32 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_write: unattached device\n");
 		return -EINVAL;
+	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
+		__a4l_err("a4l_write: idle subdevice\n");
 		return -ENOENT;
+	}
 
-	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
+	/* TODO: to be removed
+	   Check the subdevice capabilities */
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {       
+		__a4l_err("a4l_write: incoherent state\n");
 		return -EINVAL;
+	}
 
 	while (count < nbytes) {
 
-		/* Checks the events */
+		/* Check the events */
 		int ret = __handle_event(buf);
 
-		/* Computes the data amount to copy */
+		/* Compute the data amount to copy */
 		unsigned long tmp_cnt = __count_to_put(buf);
 
-		/* Checks tmp_cnt count is not higher than
+		/* Check tmp_cnt count is not higher than
 		   the global count to write */
 		if (tmp_cnt > nbytes - count)
 			tmp_cnt = nbytes - count;
@@ -764,20 +810,27 @@ int a4l_select(a4l_cxt_t *cxt,
 		dev->transfer.idx_write_subd;
 	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
 
-	/* Checks the RTDM select type 
+	/* Check the RTDM select type 
 	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
 	if(type != RTDM_SELECTTYPE_READ && 
-	   type != RTDM_SELECTTYPE_WRITE)
+	   type != RTDM_SELECTTYPE_WRITE) {
+		__a4l_err("a4l_select: wrong select argument\n");
 		return -EINVAL;
+	}
 
 	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_select: unattached device\n");
 		return -EINVAL;
+	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
+		__a4l_err("a4l_select: idle subdevice\n");
 		return -ENOENT;	
+	}
 
-	/* Checks the subdevice capabilities */
+	/* TODO: to be removed
+	   Check the subdevice capabilities */
 	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
 		return -EINVAL;
 
@@ -794,8 +847,10 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_poll_t poll;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_poll: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info, 
 				     &poll, arg, sizeof(a4l_poll_t)) != 0)
@@ -805,12 +860,16 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	if ((dev->transfer.subds[poll.idx_subd]->flags &
 	     A4L_SUBD_CMD) == 0 ||
 	    (dev->transfer.subds[poll.idx_subd]->flags &
-	     A4L_SUBD_MASK_SPECIAL) != 0)
+	     A4L_SUBD_MASK_SPECIAL) != 0) {
+		__a4l_err("a4l_poll: wrong subdevice selected\n");
 		return -EINVAL;
+	}
 
 	/* Checks a transfer is occuring */
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[poll.idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[poll.idx_subd]))) {
+		__a4l_err("a4l_poll: idle subdevice\n");
 		return -EINVAL;
+	}
 
 	buf = dev->transfer.bufs[poll.idx_subd];
 

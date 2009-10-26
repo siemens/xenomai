@@ -196,7 +196,7 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 /* --- Attach / detach section --- */
 
 int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
-			a4l_lnkdesc_t * link_arg, void *arg)
+		     a4l_lnkdesc_t * link_arg, void *arg)
 {
 	int ret;
 	char *tmpname = NULL;
@@ -330,8 +330,11 @@ int a4l_assign_driver(a4l_cxt_t * cxt,
       out_assign_driver:
 
 	/* Increments module's count */
-	if (ret == 0 && (!try_module_get(drv->owner)))
+	if (ret == 0 && (!try_module_get(drv->owner))) {
+		__a4l_err("a4l_assign_driver: "
+			  "driver's owner field wrongly set\n");
 		ret = -ENODEV;
+	}
 
 	if (ret != 0 && dev->priv != NULL) {
 		rtdm_free(dev->priv);
@@ -390,8 +393,11 @@ int a4l_device_attach(a4l_cxt_t * cxt, void *arg)
 	if ((ret = a4l_fill_lnkdesc(cxt, &link_arg, arg)) != 0)
 		goto out_attach;
 
-	if ((ret = a4l_lct_drv(link_arg.bname, &drv)) != 0)
+	if ((ret = a4l_lct_drv(link_arg.bname, &drv)) != 0) {
+		__a4l_err("a4l_device_attach: "
+			  "cannot find board name %s\n", link_arg.bname);
 		goto out_attach;
+	}
 
 	if ((ret = a4l_assign_driver(cxt, drv, &link_arg)) != 0)
 		goto out_attach;
@@ -408,8 +414,11 @@ int a4l_device_detach(a4l_cxt_t * cxt)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_device_detach: minor=%d\n", a4l_get_minor(cxt));
 
-	if (dev->driver == NULL)
+	if (dev->driver == NULL) {
+		__a4l_err("a4l_device_detach: "
+			  "incoherent state, driver not reachable\n");
 		return -ENXIO;
+	}
 
 	return a4l_release_driver(cxt);
 }
@@ -429,8 +438,11 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 	if (arg == NULL) {
 		/* Basic checking */
 		if (!test_bit
-		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags)))
+		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
+			__a4l_err("a4l_ioctl_devcfg: "
+				  "free device, no driver to detach\n");
 			return -EINVAL;
+		}
 		/* Removes the related proc file */
 		a4l_proc_detach(cxt);
 		/* Frees the transfer structure and its related data */
@@ -443,8 +455,11 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 	} else {
 		/* Basic checking */
 		if (test_bit
-		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags)))
+		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
+			__a4l_err("a4l_ioctl_devcfg: "
+				  "linked device, cannot attach more driver\n");
 			return -EINVAL;
+		}
 		/* Pre-initialization of the transfer structure */
 		a4l_presetup_transfer(cxt);
 		/* Links the device with the driver */

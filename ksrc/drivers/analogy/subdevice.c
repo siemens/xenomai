@@ -88,10 +88,9 @@ int a4l_check_chanlist(a4l_subd_t * subd,
 		return -EINVAL;
 
 	for (i = 0; i < nb_chan; i++) {
-		int j =
-			(subd->rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ? i : 0;
-		int k =
-			(subd->chan_desc->mode !=
+		int j =	(subd->rng_desc->mode != 
+			 A4L_RNG_GLOBAL_RNGDESC) ? i : 0;
+		int k =	(subd->chan_desc->mode !=
 			 A4L_CHAN_GLOBAL_CHANDESC) ? i : 0;
 
 		if (CR_CHAN(chans[i]) >= subd->chan_desc->length) {
@@ -185,11 +184,13 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 	a4l_sbinfo_t *subd_info;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_subdinfo: unattached device\n");
 		return -EINVAL;
+	}
 
-	subd_info =
-		rtdm_malloc(dev->transfer.nb_subd * sizeof(a4l_sbinfo_t));
+	subd_info = rtdm_malloc(dev->transfer.nb_subd * 
+				sizeof(a4l_sbinfo_t));
 	if (subd_info == NULL)
 		return -ENOMEM;
 
@@ -219,16 +220,20 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 	a4l_chinfo_arg_t inarg;
 
 	/* Basic checking */
-	if (!dev->flags & A4L_DEV_ATTACHED)
+	if (!dev->flags & A4L_DEV_ATTACHED) {
+		__a4l_err("a4l_ioctl_nbchaninfo: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &inarg, arg,
 				     sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
-	if (inarg.idx_subd >= dev->transfer.nb_subd)
+	if (inarg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_nbchaninfo: bad subdevice index\n");
 		return -EINVAL;
+	}
 
 	if(dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
 		inarg.info = (void *)0;
@@ -254,22 +259,29 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rngdesc_t *rng_desc;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_chaninfo: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &inarg, arg,
 				     sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
-	if (inarg.idx_subd >= dev->transfer.nb_subd)
-		return -EINVAL;	
+	if (inarg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_chaninfo: bad subdevice index\n");
+		return -EINVAL;
+	}
 
 	chan_desc = dev->transfer.subds[inarg.idx_subd]->chan_desc;
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
 	
-	if (chan_desc == NULL)
+	if (chan_desc == NULL) {
+		__a4l_err("a4l_ioctl_chaninfo: no channel descriptor "
+			  "for subdevice %d\n", inarg.idx_subd);
 		return -EINVAL;
+	}
 
 	if(rng_desc == NULL)
 		rng_desc = &range_fake;
@@ -313,23 +325,32 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rngdesc_t *rng_desc;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_nbrnginfo: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &inarg,
 				     arg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
-	if (inarg.idx_subd >= dev->transfer.nb_subd)
+	if (inarg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_nbrnginfo: bad subdevice index\n");
 		return -EINVAL;
+	}
 
-	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
+	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL) {
+		__a4l_err("a4l_ioctl_nbrnginfo: no channel descriptor "
+			  "for subdevice %d\n", inarg.idx_subd);
 		return -EINVAL;
+	}
 	
 	if (inarg.idx_chan >=
-	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length)
+	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length) {
+		__a4l_err("a4l_ioctl_nbrnginfo: bad channel index\n");
 		return -EINVAL;
+	}
 
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
 	if (rng_desc != NULL) {
@@ -359,27 +380,39 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rnginfo_arg_t inarg;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_rnginfo: unattached device\n");
 		return -EINVAL;
+	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &inarg,
 				     arg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
-	if (inarg.idx_subd >= dev->transfer.nb_subd)
+	if (inarg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_rnginfo: bad subdevice index\n");
 		return -EINVAL;
+	}
 
-	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL)
+	if (dev->transfer.subds[inarg.idx_subd]->chan_desc == NULL) {
+		__a4l_err("a4l_ioctl_rnginfo: no channel descriptor "
+			  "for subdevice %d\n", inarg.idx_subd);
 		return -EINVAL;
+	}
 
 	if (inarg.idx_chan >=
-	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length)
+	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length) {
+		__a4l_err("a4l_ioctl_rnginfo: bad channel index\n");
 		return -EINVAL;
+	}
 
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
-	if (rng_desc == NULL)
+	if (rng_desc == NULL) {
+		__a4l_err("a4l_ioctl_rnginfo: no range descriptor "
+			  "for channel %d\n", inarg.idx_chan);
 		return -EINVAL;
+	}
 
 	/* If the range descriptor is global, 
 	   we take the first instance */

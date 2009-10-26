@@ -136,66 +136,96 @@ int a4l_check_generic_cmdcnt(a4l_cmd_t * desc)
 	tmp1 =
 	    desc->start_src & ~(TRIG_NOW | TRIG_INT | TRIG_EXT | TRIG_FOLLOW);
 	tmp2 = desc->start_src & (TRIG_NOW | TRIG_INT | TRIG_EXT | TRIG_FOLLOW);
-	if (tmp1 != 0 || tmp2 == 0)
+	if (tmp1 != 0 || tmp2 == 0) {
+		__a4l_err("a4l_check_cmddesc: start_src, weird trigger\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->scan_begin_src & ~(TRIG_TIMER | TRIG_EXT | TRIG_FOLLOW);
 	tmp2 = desc->scan_begin_src & (TRIG_TIMER | TRIG_EXT | TRIG_FOLLOW);
-	if (tmp1 != 0 || tmp2 == 0)
+	if (tmp1 != 0 || tmp2 == 0) {
+		__a4l_err("a4l_check_cmddesc: scan_begin_src, , weird trigger\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->convert_src & ~(TRIG_TIMER | TRIG_EXT | TRIG_NOW);
 	tmp2 = desc->convert_src & (TRIG_TIMER | TRIG_EXT | TRIG_NOW);
-	if (tmp1 != 0 || tmp2 == 0)
+	if (tmp1 != 0 || tmp2 == 0) {
+		__a4l_err("a4l_check_cmddesc: convert_src, weird trigger\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->scan_end_src & ~(TRIG_COUNT);
-	if (tmp1 != 0)
+	if (tmp1 != 0) {
+		__a4l_err("a4l_check_cmddesc: scan_end_src, weird trigger\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->stop_src & ~(TRIG_COUNT | TRIG_NONE);
 	tmp2 = desc->stop_src & (TRIG_COUNT | TRIG_NONE);
-	if (tmp1 != 0 || tmp2 == 0)
+	if (tmp1 != 0 || tmp2 == 0) {
+		__a4l_err("a4l_check_cmddesc: stop_src, weird trigger\n");
 		return -EINVAL;
+	}
 
 	/* Makes sure trigger sources are unique */
 	if (desc->start_src != TRIG_NOW &&
 	    desc->start_src != TRIG_INT &&
-	    desc->start_src != TRIG_EXT && desc->start_src != TRIG_FOLLOW)
+	    desc->start_src != TRIG_EXT && desc->start_src != TRIG_FOLLOW) {
+		__a4l_err("a4l_check_cmddesc: start_src, "
+			  "only one trigger should be set\n");
 		return -EINVAL;
+	}
 
 	if (desc->scan_begin_src != TRIG_TIMER &&
 	    desc->scan_begin_src != TRIG_EXT &&
-	    desc->scan_begin_src != TRIG_FOLLOW)
+	    desc->scan_begin_src != TRIG_FOLLOW) {
+		__a4l_err("a4l_check_cmddesc: scan_begin_src, "
+			  "only one trigger should be set\n");
 		return -EINVAL;
+	}
 
 	if (desc->convert_src != TRIG_TIMER &&
-	    desc->convert_src != TRIG_EXT && desc->convert_src != TRIG_NOW)
+	    desc->convert_src != TRIG_EXT && desc->convert_src != TRIG_NOW) {
+		__a4l_err("a4l_check_cmddesc: convert_src, "
+			  "only one trigger should be set\n");
 		return -EINVAL;
+	}
 
-	if (desc->stop_src != TRIG_COUNT && desc->stop_src != TRIG_NONE)
+	if (desc->stop_src != TRIG_COUNT && desc->stop_src != TRIG_NONE) {
+		__a4l_err("a4l_check_cmddesc: stop_src, "
+			  "only one trigger should be set\n");
 		return -EINVAL;
+	}
 
 	/* Makes sure arguments are trivially compatible */
 	tmp1 = desc->start_src & (TRIG_NOW | TRIG_FOLLOW | TRIG_INT);
 	tmp2 = desc->start_arg;
-	if (tmp1 != 0 && tmp2 != 0)
+	if (tmp1 != 0 && tmp2 != 0) {
+		__a4l_err("a4l_check_cmddesc: no start_arg expected\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->scan_begin_src & TRIG_FOLLOW;
 	tmp2 = desc->scan_begin_arg;
-	if (tmp1 != 0 && tmp2 != 0)
+	if (tmp1 != 0 && tmp2 != 0) {
+		__a4l_err("a4l_check_cmddesc: no scan_begin_arg expected\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->convert_src & TRIG_NOW;
 	tmp2 = desc->convert_arg;
-	if (tmp1 != 0 && tmp2 != 0)
+	if (tmp1 != 0 && tmp2 != 0) {
+		__a4l_err("a4l_check_cmddesc: no convert_arg expected\n");
 		return -EINVAL;
+	}
 
 	tmp1 = desc->stop_src & TRIG_NONE;
 	tmp2 = desc->stop_arg;
-	if (tmp1 != 0 && tmp2 != 0)
+	if (tmp1 != 0 && tmp2 != 0) {
+		__a4l_err("a4l_check_cmddesc: no stop_arg expected\n");
 		return -EINVAL;
+	}
 
 	return 0;
 }
@@ -212,35 +242,50 @@ int a4l_check_specific_cmdcnt(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 	if (cmd_mask->start_src != 0) {
 		tmp1 = desc->start_src & ~(cmd_mask->start_src);
 		tmp2 = desc->start_src & (cmd_mask->start_src);
-		if (tmp1 != 0 || tmp2 == 0)
+		if (tmp1 != 0 || tmp2 == 0) {
+			__a4l_err("a4l_check_cmddesc: start_src, "
+				  "trigger unsupported\n");
 			return -EINVAL;
+		}
 	}
 
 	if (cmd_mask->scan_begin_src != 0) {
 		tmp1 = desc->scan_begin_src & ~(cmd_mask->scan_begin_src);
 		tmp2 = desc->scan_begin_src & (cmd_mask->scan_begin_src);
-		if (tmp1 != 0 || tmp2 == 0)
+		if (tmp1 != 0 || tmp2 == 0) {
+			__a4l_err("a4l_check_cmddesc: scan_begin_src, "
+				  "trigger unsupported\n");
 			return -EINVAL;
+		}
 	}
 
 	if (cmd_mask->convert_src != 0) {
 		tmp1 = desc->convert_src & ~(cmd_mask->convert_src);
 		tmp2 = desc->convert_src & (cmd_mask->convert_src);
-		if (tmp1 != 0 || tmp2 == 0)
+		if (tmp1 != 0 || tmp2 == 0) {
+			__a4l_err("a4l_check_cmddesc: convert_src, "
+				  "trigger unsupported\n");
 			return -EINVAL;
+		}
 	}
 
 	if (cmd_mask->scan_end_src != 0) {
 		tmp1 = desc->scan_end_src & ~(cmd_mask->scan_end_src);
-		if (tmp1 != 0)
+		if (tmp1 != 0) {
+			__a4l_err("a4l_check_cmddesc: scan_end_src, "
+				  "trigger unsupported\n");
 			return -EINVAL;
+		}
 	}
 
 	if (cmd_mask->stop_src != 0) {
 		tmp1 = desc->stop_src & ~(cmd_mask->stop_src);
 		tmp2 = desc->stop_src & (cmd_mask->stop_src);
-		if (tmp1 != 0 || tmp2 == 0)
+		if (tmp1 != 0 || tmp2 == 0) {
+			__a4l_err("a4l_check_cmddesc: stop_src, "
+				  "trigger unsupported\n");
 			return -EINVAL;
+		}
 	}
 
 	return 0;
@@ -255,7 +300,14 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	__a4l_dbg(1, core_dbg, 
-		     "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
+		  "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
+
+	/* Basically check the device */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_cmd: cannot command "
+			  "an unattached device\n");
+		return -EINVAL;
+	}
 
 	/* Allocates the command */
 	cmd_desc = (a4l_cmd_t *) rtdm_malloc(sizeof(a4l_cmd_t));
@@ -281,6 +333,9 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_cmd: 1st cmd checks passed\n");
+
 	/* Tests the command with the cmdtest function */
 	if (dev->transfer.subds[cmd_desc->idx_subd]->do_cmdtest != NULL)
 		ret = dev->transfer.subds[cmd_desc->idx_subd]->
@@ -288,6 +343,9 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 				   cmd_desc);
 	if (ret != 0)
 		goto out_ioctl_cmd;
+
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_cmd: driver's cmd checks passed\n");
 
 	if (cmd_desc->flags & A4L_CMD_SIMUL) {
 		simul_flag = 1;

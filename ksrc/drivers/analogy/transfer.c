@@ -46,15 +46,24 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
-	if (tsf == NULL)
+	if (tsf == NULL) {
+		__a4l_err("a4l_cleanup_transfer: "
+			  "incoherent status, transfer block not reachable\n");
 		return -ENODEV;
+	}
 
 	for (i = 0; i < tsf->nb_subd; i++) {
-		if (test_bit(A4L_TSF_BUSY, &(tsf->status[i])))
+		if (test_bit(A4L_TSF_BUSY, &(tsf->status[i]))) {
+			__a4l_err("a4l_cleanup_transfer: "
+				  "device busy, acquisition occuring\n");
 			return EBUSY;
+		}
 
-		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i])))
+		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i]))) {
+			__a4l_err("a4l_cleanup_transfer: "
+				  "device busy, buffer must be unmapped\n");
 			return -EPERM;
+		}
 	}
 
 	/* Releases the various buffers */
@@ -128,7 +137,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 	/* Allocates a suitable tab for the subdevices */
 	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(a4l_subd_t *));
 	if (tsf->subds == NULL) {
-		__a4l_err("a4l_setup_transfer: call2(alloc) failed \n");
+		__a4l_err("a4l_setup_transfer: call1(alloc) failed \n");
 		ret = -ENOMEM;
 		goto out_setup_tsf;
 	}
@@ -149,6 +158,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 	/* Allocates various buffers */
 	tsf->bufs = rtdm_malloc(tsf->nb_subd * sizeof(a4l_buf_t *));
 	if (tsf->bufs == NULL) {
+		__a4l_err("a4l_setup_transfer: call2(alloc) failed \n");
 		ret = -ENOMEM;
 		goto out_setup_tsf;
 	}
@@ -159,7 +169,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 			tsf->bufs[i] = rtdm_malloc(sizeof(a4l_buf_t));
 			if (tsf->bufs[i] == NULL) {
 				__a4l_err("a4l_setup_transfer: "
-					  "call5-6(alloc) failed \n");
+					  "call3(alloc) failed \n");
 				ret = -ENOMEM;
 				goto out_setup_tsf;
 			}
@@ -174,7 +184,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 
 	tsf->status = rtdm_malloc(tsf->nb_subd * sizeof(unsigned long));
 	if (tsf->status == NULL) {
-		__a4l_err("a4l_setup_transfer: call8(alloc) failed \n");
+		__a4l_err("a4l_setup_transfer: call4(alloc) failed \n");
 		ret = -ENOMEM;
 	}
 
@@ -197,8 +207,10 @@ int a4l_reserve_transfer(a4l_cxt_t * cxt, int idx_subd)
 		  a4l_get_minor(cxt), idx_subd);
 
 	if (test_and_set_bit(A4L_TSF_BUSY,
-			     &(dev->transfer.status[idx_subd])))
+			     &(dev->transfer.status[idx_subd]))) {
+		__a4l_err("a4l_reserve_transfer: device currently busy\n");
 		return -EBUSY;
+	}
 
 	return 0;
 }
@@ -311,8 +323,10 @@ int a4l_request_irq(a4l_dev_t * dev,
 	ret = __a4l_request_irq(&dev->transfer.irq_desc,
 				irq, handler, flags, cookie);
 
-	if (ret != 0)
+	if (ret != 0) {
+		__a4l_err("a4l_request_irq: IRQ registration failed\n");
 		dev->transfer.irq_desc.irq = A4L_IRQ_UNUSED;
+	}
 
 	a4l_unlock_irqrestore(&dev->lock, __flags);
 
@@ -434,19 +448,27 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_subd_t *subd;
 
-	if (idx_subd >= dev->transfer.nb_subd)
+	if (idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
 		return -EINVAL;
+	}
 
-	if (dev->transfer.subds[idx_subd]->flags & A4L_SUBD_UNUSED)
+	if (dev->transfer.subds[idx_subd]->flags & A4L_SUBD_UNUSED) {
+		__a4l_err("a4l_ioctl_cancel: non functional subdevice\n");
 		return -EIO;
+	}
 
-	if (!(dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD))
+	if (!(dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD)) {
+		__a4l_err("a4l_ioctl_cancel: synchronous only subdevice\n");
 		return -EIO;
+	}
 
 	subd = dev->transfer.subds[idx_subd];
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
+	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
+		__a4l_err("a4l_ioctl_cancel: subdevice currently idle\n");
 		return -EINVAL;
+	}
 
 	return a4l_cancel_transfer(cxt, idx_subd);
 }

@@ -122,17 +122,18 @@ int a4l_sync_write(a4l_desc_t * dsc,
 	int ret;
 	a4l_insn_t insn_tab[2] = {
 		{
-		type:A4L_INSN_WRITE,
-		idx_subd:idx_subd,
-		chan_desc:chan_desc,
-		data_size:0,
-		data:buf},
-		{
-		type:A4L_INSN_WAIT,
-		idx_subd:idx_subd,
-		chan_desc:chan_desc,
-		data_size:1,
-		data:NULL}
+			.type = A4L_INSN_WRITE,
+			.idx_subd = idx_subd,
+			.chan_desc = chan_desc,
+			.data_size = 0,
+			.data = buf
+		}, {
+			.type = A4L_INSN_WAIT,
+			.idx_subd = idx_subd,
+			.chan_desc = chan_desc,
+			.data_size = 1,
+			.data = NULL
+		}
 	};
 
 	/* If some delay needs to be applied,
@@ -141,8 +142,8 @@ int a4l_sync_write(a4l_desc_t * dsc,
 		int ret;
 		lsampl_t _delay = (lsampl_t) ns_delay;
 		a4l_insnlst_t insnlst = {
-		count:2,
-		insns:insn_tab
+			.count = 2,
+			.insns = insn_tab
 		};
 
 		/* Sets the delay to wait */

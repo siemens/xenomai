@@ -173,6 +173,8 @@ int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 		ret = a4l_do_insn_trig(cxt, dsc);
 		break;
 	default:
+		__a4l_err("a4l_do_special_insn: "
+			  "incoherent instruction code\n");
 		ret = -EINVAL;
 	}
 
@@ -186,16 +188,20 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	/* Checks the subdevice index */
-	if (dsc->idx_subd >= dev->transfer.nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_do_insn: bad subdevice index\n");
 		return -EINVAL;
+	}
 
 	/* Recovers pointers on the proper subdevice */
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
 	if (((subd->flags & A4L_SUBD_UNUSED) != 0) ||
-	    ((subd->flags & A4L_SUBD_CMD) == 0))
+	    ((subd->flags & A4L_SUBD_CMD) == 0)) {
+		__a4l_err("a4l_do_insn: wrong subdevice selected\n");
 		return -EINVAL;
+	}
 
 	/* Checks the channel descriptor */
 	ret = a4l_check_chanlist(dev->transfer.subds[dsc->idx_subd],
@@ -239,6 +245,13 @@ int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
 	a4l_kinsn_t insn;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+
+	/* Basic checking */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_insn: unattached device\n");
+		return -EINVAL;
+	}
 
 	/* Recovers the instruction descriptor */
 	ret = a4l_fill_insndsc(cxt, &insn, arg);
@@ -329,6 +342,13 @@ int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 {
 	int i, ret = 0;
 	a4l_kilst_t ilst;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+
+	/* Basic checking */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_insnlist: unattached device\n");
+		return -EINVAL;
+	}
 
 	if ((ret = a4l_fill_ilstdsc(cxt, &ilst, arg)) < 0)
 		return ret;
