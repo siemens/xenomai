@@ -9,6 +9,7 @@ config XENO_DRIVERS_ANALOGY
 	drivers.
 
 config XENO_DRIVERS_ANALOGY_DEBUG
+       depends on XENO_DRIVERS_ANALOGY
        bool "Analogy debug trace"
        default y
        help
@@ -17,6 +18,7 @@ config XENO_DRIVERS_ANALOGY_DEBUG
        core and drivers behaviours.
 
 config XENO_DRIVERS_ANALOGY_DEBUG_LEVEL
+       depends on XENO_DRIVERS_ANALOGY_DEBUG
        int "Analogy core debug level threshold"
        default 0
        help
