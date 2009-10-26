@@ -1,5 +1,5 @@
 #include <linux/module.h>
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #define TEST_TASK_PERIOD 1000000
 #define TEST_NB_BITS 16
@@ -12,7 +12,7 @@
 struct test_priv {
 
 	/* Task descriptor */
-	comedi_task_t timer_task;
+	a4l_task_t timer_task;
   
 	/* Specific timing fields */
 	unsigned long scan_period_ns;
@@ -39,16 +39,16 @@ typedef struct test_attach_arg tstattr_t;
 /* --- Channels / ranges part --- */
 
 /* Channels descriptor */
-static comedi_chdesc_t test_chandesc = {
-	.mode = COMEDI_CHAN_GLOBAL_CHANDESC,
+static a4l_chdesc_t test_chandesc = {
+	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = { 
-		{COMEDI_CHAN_AREF_GROUND, TEST_NB_BITS},
+		{A4L_CHAN_AREF_GROUND, TEST_NB_BITS},
 	},
 };
 
 /* Ranges tab */
-static comedi_rngtab_t test_rngtab = {
+static a4l_rngtab_t test_rngtab = {
 	.length = 2,
 	.rngs = {
 		RANGE_V(-5,5),
@@ -56,10 +56,10 @@ static comedi_rngtab_t test_rngtab = {
 	},
 };
 /* Ranges descriptor */
-comedi_rngdesc_t test_rngdesc = RNG_GLOBAL(test_rngtab);
+a4l_rngdesc_t test_rngdesc = RNG_GLOBAL(test_rngtab);
 
 /* Command options mask */
-static comedi_cmd_t test_cmd_mask = {
+static a4l_cmd_t test_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_TIMER,
@@ -75,21 +75,21 @@ static sampl_t output_tab[8] = {
 	0x8000, 0xa000, 0xc000, 0xffff 
 };
 static unsigned int output_idx;
-static comedi_lock_t output_lock = COMEDI_LOCK_UNLOCKED;
+static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
 
 static sampl_t test_output(tstprv_t *priv)
 {
 	unsigned long flags;
 	unsigned int idx;
     
-	comedi_lock_irqsave(&output_lock, flags);
+	a4l_lock_irqsave(&output_lock, flags);
 
 	output_idx += priv->quanta_cnt;
 	if(output_idx == 8)
 		output_idx = 0; 
 	idx = output_idx;
 
-	comedi_unlock_irqrestore(&output_lock, flags);
+	a4l_unlock_irqrestore(&output_lock, flags);
     
 	return output_tab[idx] / priv->amplitude_div;
 }
@@ -99,23 +99,23 @@ static sampl_t test_output(tstprv_t *priv)
 /* Timer task routine */
 static void test_task_proc(void *arg)
 {
-	comedi_dev_t *dev = (comedi_dev_t*)arg;
-	comedi_subd_t *subd = comedi_get_subd(dev, TEST_INPUT_SUBD);
+	a4l_dev_t *dev = (a4l_dev_t*)arg;
+	a4l_subd_t *subd = a4l_get_subd(dev, TEST_INPUT_SUBD);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
-	comedi_cmd_t *cmd = NULL;
+	a4l_cmd_t *cmd = NULL;
 	u64 now_ns, elapsed_ns=0;
 
-	while(!comedi_check_dev(dev))
-		comedi_task_sleep(TEST_TASK_PERIOD);
+	while(!a4l_check_dev(dev))
+		a4l_task_sleep(TEST_TASK_PERIOD);
 
 	while(1) {
 		if(priv->timer_running != 0)
 		{
 			int i = 0;
 
-			cmd = comedi_get_cmd(subd);    
+			cmd = a4l_get_cmd(subd);    
 
-			now_ns = comedi_get_time();
+			now_ns = a4l_get_time();
 			elapsed_ns += now_ns - priv->last_ns + priv->reminder_ns;
 			priv->last_ns = now_ns;
 
@@ -127,7 +127,7 @@ static void test_task_proc(void *arg)
 				{
 					sampl_t value = test_output(priv);
 
-					comedi_buf_put(subd, &value, sizeof(sampl_t));
+					a4l_buf_put(subd, &value, sizeof(sampl_t));
 
 				}
 
@@ -139,33 +139,33 @@ static void test_task_proc(void *arg)
 			priv->current_ns += i * priv->scan_period_ns;
 			priv->reminder_ns = elapsed_ns;
 
-			comedi_buf_evt(subd, 0);
+			a4l_buf_evt(subd, 0);
 		}
 
-		comedi_task_sleep(TEST_TASK_PERIOD);
+		a4l_task_sleep(TEST_TASK_PERIOD);
 
 	}
 }
 
-/* --- Comedi Callbacks --- */
+/* --- Analogy Callbacks --- */
 
 /* Command callback */
-int test_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
+int test_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	comedi_dev_t *dev = subd->dev;
+	a4l_dev_t *dev = subd->dev;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
-	comedi_info(dev, "test_cmd: begin (subd=%d)\n", subd->idx);
+	a4l_info(dev, "test_cmd: begin (subd=%d)\n", subd->idx);
   
 	priv->scan_period_ns=cmd->scan_begin_arg;
 	priv->convert_period_ns=(cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
   
-	comedi_info(dev, 
-		    "test_cmd: scan_period=%luns convert_period=%luns\n",
-		    priv->scan_period_ns, priv->convert_period_ns);
+	a4l_info(dev, 
+		 "test_cmd: scan_period=%luns convert_period=%luns\n",
+		 priv->scan_period_ns, priv->convert_period_ns);
 
-	priv->last_ns = comedi_get_time();
+	priv->last_ns = a4l_get_time();
 
 	priv->current_ns = ((unsigned long)priv->last_ns);
 	priv->reminder_ns = 0;
@@ -177,7 +177,7 @@ int test_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 }
 
 /* Test command callback */
-int test_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
+int test_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	if(cmd->scan_begin_src == TRIG_TIMER)
 	{
@@ -185,7 +185,7 @@ int test_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 			return -EINVAL;
 
 		if (cmd->convert_src == TRIG_TIMER &&
-		   cmd->scan_begin_arg < (cmd->convert_arg * cmd->nb_chan))
+		    cmd->scan_begin_arg < (cmd->convert_arg * cmd->nb_chan))
 			return -EINVAL;
 	}
 
@@ -193,7 +193,7 @@ int test_cmdtest(comedi_subd_t *subd, comedi_cmd_t *cmd)
 }
 
 /* Cancel callback */
-int test_cancel(comedi_subd_t *subd)
+int test_cancel(a4l_subd_t *subd)
 {
 	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
 
@@ -203,7 +203,7 @@ int test_cancel(comedi_subd_t *subd)
 }
 
 /* Read instruction callback */
-int test_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
+int test_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
 	int i;
@@ -215,7 +215,7 @@ int test_ai_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 }
 
 /* Munge callback */
-void test_ai_munge(comedi_subd_t *subd, void *buf, unsigned long size)
+void test_ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 {
 	int i;
 
@@ -223,15 +223,15 @@ void test_ai_munge(comedi_subd_t *subd, void *buf, unsigned long size)
 		((sampl_t*)buf)[i] += 1;
 }
 
-void setup_test_subd(comedi_subd_t *subd)
+void setup_test_subd(a4l_subd_t *subd)
 {
 	/* Initialize the subdevice structure */
-	memset(subd, 0, sizeof(comedi_subd_t));
+	memset(subd, 0, sizeof(a4l_subd_t));
 	
 	/* Fill the subdevice structure */
-	subd->flags |= COMEDI_SUBD_AI;
-	subd->flags |= COMEDI_SUBD_CMD;
-	subd->flags |= COMEDI_SUBD_MMAP;
+	subd->flags |= A4L_SUBD_AI;
+	subd->flags |= A4L_SUBD_CMD;
+	subd->flags |= A4L_SUBD_MMAP;
 	subd->rng_desc = &test_rngdesc;
 	subd->chan_desc = &test_chandesc;
 	subd->do_cmd = test_cmd;
@@ -243,10 +243,10 @@ void setup_test_subd(comedi_subd_t *subd)
 }
 
 /* Attach callback */
-int test_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
+int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
 	int ret = 0;  
-	comedi_subd_t *subd;
+	a4l_subd_t *subd;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
 	if(arg->opts!=NULL) {
@@ -263,56 +263,56 @@ int test_attach(comedi_dev_t *dev, comedi_lnkdesc_t *arg)
 	}
 
 	/* Adds the subdevice to the device */
-	subd = comedi_alloc_subd(0, setup_test_subd);
+	subd = a4l_alloc_subd(0, setup_test_subd);
 	if(subd == NULL)
 		return -ENOMEM;
 
-	ret = comedi_add_subd(dev, subd);
+	ret = a4l_add_subd(dev, subd);
 	if(ret != TEST_INPUT_SUBD)
 		return (ret < 0) ? ret : -EINVAL;
 
 	priv->timer_running = 0;
 
-	ret = comedi_task_init(&priv->timer_task, 
-			       "comedi_test task", 
-			       test_task_proc, 
-			       dev, COMEDI_TASK_HIGHEST_PRIORITY);
+	ret = a4l_task_init(&priv->timer_task, 
+			    "a4l_test task", 
+			    test_task_proc, 
+			    dev, A4L_TASK_HIGHEST_PRIORITY);
 
 	return ret;
 }
 
 /* Detach callback */
-int test_detach(comedi_dev_t *dev)
+int test_detach(a4l_dev_t *dev)
 {
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
-	comedi_task_destroy(&priv->timer_task);
+	a4l_task_destroy(&priv->timer_task);
 
 	return 0;
 }
 
 /* --- Module part --- */
 
-static comedi_drv_t test_drv = {
+static a4l_drv_t test_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "comedi_fake",
+	.board_name = "a4l_fake",
 	.attach = test_attach,
 	.detach = test_detach,
 	.privdata_size = sizeof(tstprv_t),
 };
 
-static int __init comedi_fake_init(void)
+static int __init a4l_fake_init(void)
 {
-	return comedi_register_drv(&test_drv);
+	return a4l_register_drv(&test_drv);
 }
 
-static void __exit comedi_fake_cleanup(void)
+static void __exit a4l_fake_cleanup(void)
 {
-	comedi_unregister_drv(&test_drv);
+	a4l_unregister_drv(&test_drv);
 }
 
-MODULE_DESCRIPTION("Comedi fake driver");
+MODULE_DESCRIPTION("Analogy fake driver");
 MODULE_LICENSE("GPL");
 
-module_init(comedi_fake_init);
-module_exit(comedi_fake_cleanup);
+module_init(a4l_fake_init);
+module_exit(a4l_fake_cleanup);

@@ -1,5 +1,5 @@
 #include <linux/module.h>
-#include <comedi/comedi_driver.h>
+#include <analogy/analogy_driver.h>
 
 #define LOOP_TASK_PERIOD 1000000
 #define LOOP_NB_BITS 16
@@ -8,16 +8,16 @@
 #define LOOP_OUTPUT_SUBD 1
 
 /* Channels descriptor */
-static comedi_chdesc_t loop_chandesc = {
-	.mode = COMEDI_CHAN_GLOBAL_CHANDESC,
+static a4l_chdesc_t loop_chandesc = {
+	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = { 
-		{COMEDI_CHAN_AREF_GROUND, LOOP_NB_BITS},
+		{A4L_CHAN_AREF_GROUND, LOOP_NB_BITS},
 	},
 };
 
 /* Ranges tab */
-static comedi_rngtab_t loop_rngtab = {
+static a4l_rngtab_t loop_rngtab = {
 	.length =  2,
 	.rngs = {
 		RANGE_V(-5,5),
@@ -25,10 +25,10 @@ static comedi_rngtab_t loop_rngtab = {
 	},
 };
 /* Ranges descriptor */
-comedi_rngdesc_t loop_rngdesc = RNG_GLOBAL(loop_rngtab);
+a4l_rngdesc_t loop_rngdesc = RNG_GLOBAL(loop_rngtab);
 
 /* Command options mask */
-static comedi_cmd_t loop_cmd_mask = {
+static a4l_cmd_t loop_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_TIMER,
@@ -41,7 +41,7 @@ static comedi_cmd_t loop_cmd_mask = {
 struct loop_priv {
 
 	/* Task descriptor */
-	comedi_task_t loop_task;
+	a4l_task_t loop_task;
 
 	/* Misc fields */
 	volatile int loop_running:1;
@@ -62,18 +62,18 @@ static void loop_task_proc(void *arg);
 /* Timer task routine  */
 static void loop_task_proc(void *arg)
 {
-	comedi_dev_t *dev = (comedi_dev_t*)arg;
-	comedi_subd_t *input_subd, *output_subd;
+	a4l_dev_t *dev = (a4l_dev_t*)arg;
+	a4l_subd_t *input_subd, *output_subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
     
-	while (!comedi_check_dev(dev))
-		comedi_task_sleep(LOOP_TASK_PERIOD);
+	while (!a4l_check_dev(dev))
+		a4l_task_sleep(LOOP_TASK_PERIOD);
 
-	input_subd = comedi_get_subd(dev, LOOP_INPUT_SUBD);
-	output_subd = comedi_get_subd(dev, LOOP_OUTPUT_SUBD);
+	input_subd = a4l_get_subd(dev, LOOP_INPUT_SUBD);
+	output_subd = a4l_get_subd(dev, LOOP_OUTPUT_SUBD);
 
 	if (input_subd == NULL || output_subd == NULL) {
-		comedi_err(dev, "loop_task_proc: subdevices unavailable\n");
+		a4l_err(dev, "loop_task_proc: subdevices unavailable\n");
 		return;
 	}
 
@@ -85,39 +85,39 @@ static void loop_task_proc(void *arg)
 	    
 			while (ret==0) {
 		
-				ret = comedi_buf_get(output_subd, 
-						     &value, sizeof(sampl_t));
+				ret = a4l_buf_get(output_subd, 
+						  &value, sizeof(sampl_t));
 
 				if (ret == 0) {
 
-					comedi_info(dev, 
-						    "loop_task_proc: "
-						    "data available\n");
+					a4l_info(dev, 
+						 "loop_task_proc: "
+						 "data available\n");
 
-					comedi_buf_evt(output_subd, 0);
+					a4l_buf_evt(output_subd, 0);
 		    
-					ret = comedi_buf_put(input_subd, 
-							     &value, 
-							     sizeof(sampl_t));
+					ret = a4l_buf_put(input_subd, 
+							  &value, 
+							  sizeof(sampl_t));
 
 					if (ret==0)
-						comedi_buf_evt(input_subd, 0);
+						a4l_buf_evt(input_subd, 0);
 				}
 			}
 		}
 
-		comedi_task_sleep(LOOP_TASK_PERIOD);
+		a4l_task_sleep(LOOP_TASK_PERIOD);
 	}
 }
 
-/* --- Comedi Callbacks --- */
+/* --- Analogy Callbacks --- */
 
 /* Command callback */
-int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
+int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
-	comedi_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
 
 	priv->loop_running = 1;
   
@@ -126,11 +126,11 @@ int loop_cmd(comedi_subd_t *subd, comedi_cmd_t *cmd)
 }
 
 /* Cancel callback */
-int loop_cancel(comedi_subd_t *subd)
+int loop_cancel(a4l_subd_t *subd)
 {
 	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
 
-	comedi_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
 	priv->loop_running=0;
 
@@ -138,7 +138,7 @@ int loop_cancel(comedi_subd_t *subd)
 }
 
 /* Read instruction callback */
-int loop_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
+int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
@@ -153,7 +153,7 @@ int loop_insn_read(comedi_subd_t *subd, comedi_kinsn_t *insn)
 }
 
 /* Write instruction callback */
-int loop_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
+int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
@@ -167,13 +167,13 @@ int loop_insn_write(comedi_subd_t *subd, comedi_kinsn_t *insn)
 	return 0;
 }
 
-void setup_input_subd(comedi_subd_t *subd)
+void setup_input_subd(a4l_subd_t *subd)
 {
-	memset(subd, 0, sizeof(comedi_subd_t));
+	memset(subd, 0, sizeof(a4l_subd_t));
 
-	subd->flags |= COMEDI_SUBD_AI;
-	subd->flags |= COMEDI_SUBD_CMD;
-	subd->flags |= COMEDI_SUBD_MMAP;
+	subd->flags |= A4L_SUBD_AI;
+	subd->flags |= A4L_SUBD_CMD;
+	subd->flags |= A4L_SUBD_MMAP;
 	subd->rng_desc = &loop_rngdesc;
 	subd->chan_desc = &loop_chandesc;
 	subd->do_cmd = loop_cmd;
@@ -184,89 +184,89 @@ void setup_input_subd(comedi_subd_t *subd)
 	subd->insn_write = loop_insn_write;
 }
 
-void setup_output_subd(comedi_subd_t *subd)
+void setup_output_subd(a4l_subd_t *subd)
 {
-	memset(subd, 0, sizeof(comedi_subd_t));
+	memset(subd, 0, sizeof(a4l_subd_t));
 
-	subd->flags = COMEDI_SUBD_AO;
-	subd->flags |= COMEDI_SUBD_CMD;
-	subd->flags |= COMEDI_SUBD_MMAP;
+	subd->flags = A4L_SUBD_AO;
+	subd->flags |= A4L_SUBD_CMD;
+	subd->flags |= A4L_SUBD_MMAP;
 	subd->insn_read = loop_insn_read;
 	subd->insn_write = loop_insn_write;
 }
 
 /* Attach callback */
-int loop_attach(comedi_dev_t *dev,
-		comedi_lnkdesc_t *arg)
+int loop_attach(a4l_dev_t *dev,
+		a4l_lnkdesc_t *arg)
 {
 	int ret = 0;
-	comedi_subd_t *subd;
+	a4l_subd_t *subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	/* Add the fake input subdevice */
-	subd = comedi_alloc_subd(0, setup_input_subd); 
+	subd = a4l_alloc_subd(0, setup_input_subd); 
 	if (subd == NULL)
 		return -ENOMEM;  
 
-	ret = comedi_add_subd(dev, subd);
+	ret = a4l_add_subd(dev, subd);
 	if (ret != LOOP_INPUT_SUBD)
-		/* Let Comedi free the lately allocated subdevice */
+		/* Let Analogy free the lately allocated subdevice */
 		return (ret < 0) ? ret : -EINVAL;
 
 	/* Add the fake output subdevice */
-	subd = comedi_alloc_subd(0, setup_output_subd); 
+	subd = a4l_alloc_subd(0, setup_output_subd); 
 	if (subd == NULL)
-		/* Let Comedi free the lately allocated subdevice */
+		/* Let Analogy free the lately allocated subdevice */
 		return -ENOMEM;  
 
-	ret = comedi_add_subd(dev, subd);
+	ret = a4l_add_subd(dev, subd);
 	if (ret != LOOP_OUTPUT_SUBD)
-		/* Let Comedi free the lately allocated subdevices */
+		/* Let Analogy free the lately allocated subdevices */
 		return (ret < 0) ? ret : -EINVAL;
 
 	priv->loop_running = 0;
 	priv->loop_insn_value = 0;
 
-	ret = comedi_task_init(&priv->loop_task, 
-			       "comedi_loop task", 
-			       loop_task_proc,
-			       dev, COMEDI_TASK_HIGHEST_PRIORITY);
+	ret = a4l_task_init(&priv->loop_task, 
+			    "a4l_loop task", 
+			    loop_task_proc,
+			    dev, A4L_TASK_HIGHEST_PRIORITY);
 
 	return ret;
 }
 
 /* Detach callback */
-int loop_detach(comedi_dev_t *dev)
+int loop_detach(a4l_dev_t *dev)
 {
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
-	comedi_task_destroy(&priv->loop_task);
+	a4l_task_destroy(&priv->loop_task);
 
 	return 0;
 }
 
 /* --- Module part --- */
 
-static comedi_drv_t loop_drv = {
+static a4l_drv_t loop_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "comedi_loop",
+	.board_name = "a4l_loop",
 	.attach = loop_attach,
 	.detach = loop_detach,
 	.privdata_size = sizeof(lpprv_t),
 };
 
-static int __init comedi_loop_init(void)
+static int __init a4l_loop_init(void)
 {
-	return comedi_register_drv(&loop_drv);
+	return a4l_register_drv(&loop_drv);
 }
 
-static void __exit comedi_loop_cleanup(void)
+static void __exit a4l_loop_cleanup(void)
 {
-	comedi_unregister_drv(&loop_drv);
+	a4l_unregister_drv(&loop_drv);
 }
 
-MODULE_DESCRIPTION("Comedi loop driver");
+MODULE_DESCRIPTION("Analogy loop driver");
 MODULE_LICENSE("GPL");
 
-module_init(comedi_loop_init);
-module_exit(comedi_loop_cleanup);
+module_init(a4l_loop_init);
+module_exit(a4l_loop_cleanup);
