@@ -1,9 +1,11 @@
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="387,84,520,111">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="345,239,463,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="441,161,564,188">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="340,393,468,420">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="331,471,475,497">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="499,471,629,497">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="487,239,639,265">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="497,316,628,343">
-<area shape="rect" href="$core_8h-source.html" title="nucleus/core.h" alt="" coords="600,393,717,420">
+<map id="G" name="G">
+<area shape="rect" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="356,83,473,112"/>
+<area shape="rect" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="317,237,421,267"/>
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="407,160,516,189"/>
+<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="313,392,425,421"/>
+<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="301,469,432,499"/>
+<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,469,573,499"/>
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="445,237,579,267"/>
+<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="455,315,569,344"/>
+<area shape="rect" href="$core_8h_source.html" title="nucleus/core.h" alt="" coords="549,392,656,421"/>
+</map>

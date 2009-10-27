@@ -1,10 +1,12 @@
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="360,393,488,420">
-<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="620,161,748,188">
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="399,84,532,111">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="205,471,349,497">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="499,471,629,497">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="517,316,648,343">
-<area shape="rect" href="$core_8h-source.html" title="nucleus/core.h" alt="" coords="601,393,719,420">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="365,239,483,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="461,161,584,188">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="507,239,659,265">
+<map id="G" name="G">
+<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="331,392,443,421"/>
+<area shape="rect" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="567,160,681,189"/>
+<area shape="rect" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="365,83,483,112"/>
+<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="187,469,317,499"/>
+<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,469,573,499"/>
+<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="472,315,587,344"/>
+<area shape="rect" href="$core_8h_source.html" title="nucleus/core.h" alt="" coords="552,392,659,421"/>
+<area shape="rect" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="335,237,439,267"/>
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="424,160,533,189"/>
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="463,237,596,267"/>
+</map>

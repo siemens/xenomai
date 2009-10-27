@@ -1,18 +1,20 @@
-<area shape="rect" href="$xenomai_8h-source.html" title="nucleus/xenomai.h" alt="" coords="459,84,603,111">
-<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="171,161,283,188">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="579,625,709,652">
-<area shape="rect" href="$core_8h-source.html" title="nucleus/core.h" alt="" coords="728,548,845,575">
-<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="568,161,696,188">
-<area shape="rect" href="$nucleus_2heap_8h-source.html" title="nucleus/heap.h" alt="" coords="720,161,840,188">
-<area shape="rect" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="253,84,384,111">
-<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="1153,84,1257,111">
-<area shape="rect" href="$include_2nucleus_2intr_8h-source.html" title="nucleus/intr.h" alt="" coords="279,239,388,265">
-<area shape="rect" href="$module_8h-source.html" title="nucleus/module.h" alt="" coords="463,316,599,343">
-<area shape="rect" href="$version_8h-source.html" title="nucleus/version.h" alt="" coords="357,161,493,188">
-<area shape="rect" href="$include_2nucleus_2thread_8h-source.html" title="nucleus/thread.h" alt="" coords="84,239,217,265">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="211,393,328,420">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="181,316,304,343">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="373,548,501,575">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="411,625,555,652">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="429,393,581,420">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="579,471,709,497">
+<map id="G" name="G">
+<area shape="rect" href="$xenomai_8h_source.html" title="nucleus/xenomai.h" alt="" coords="421,83,552,112"/>
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="151,160,252,189"/>
+<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="533,624,651,653"/>
+<area shape="rect" href="$core_8h_source.html" title="nucleus/core.h" alt="" coords="673,547,780,576"/>
+<area shape="rect" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="524,160,639,189"/>
+<area shape="rect" href="$nucleus_2heap_8h_source.html" title="nucleus/heap.h" alt="" coords="663,160,772,189"/>
+<area shape="rect" href="$select_8h.html" title="file descriptors events multiplexing header." alt="" coords="232,83,347,112"/>
+<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="1076,83,1164,112"/>
+<area shape="rect" href="$include_2nucleus_2intr_8h_source.html" title="nucleus/intr.h" alt="" coords="252,237,351,267"/>
+<area shape="rect" href="$module_8h_source.html" title="nucleus/module.h" alt="" coords="425,315,548,344"/>
+<area shape="rect" href="$version_8h_source.html" title="nucleus/version.h" alt="" coords="327,160,449,189"/>
+<area shape="rect" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="72,237,189,267"/>
+<area shape="rect" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="191,392,295,421"/>
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="161,315,271,344"/>
+<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="345,547,457,576"/>
+<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="379,624,509,653"/>
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="396,392,529,421"/>
+<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="535,469,649,499"/>
+</map>

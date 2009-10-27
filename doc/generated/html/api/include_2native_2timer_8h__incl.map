@@ -1,9 +1,11 @@
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="247,239,367,265">
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="344,84,467,111">
-<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="339,316,467,343">
-<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="331,393,475,420">
-<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="499,393,629,420">
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="487,161,639,188">
-<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="345,161,463,188">
-<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="497,239,628,265">
-<area shape="rect" href="$core_8h-source.html" title="nucleus/core.h" alt="" coords="600,316,717,343">
+<map id="G" name="G">
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="229,237,333,267"/>
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="319,83,428,112"/>
+<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="312,315,424,344"/>
+<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="301,392,432,421"/>
+<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,392,573,421"/>
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="447,160,580,189"/>
+<area shape="rect" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="319,160,423,189"/>
+<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="456,237,571,267"/>
+<area shape="rect" href="$core_8h_source.html" title="nucleus/core.h" alt="" coords="551,315,657,344"/>
+</map>
