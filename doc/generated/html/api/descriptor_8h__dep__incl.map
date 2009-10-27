@@ -1,7 +1,0 @@
-<area shape="rect" href="$comedi_8h.html" title="Comedilib for RTDM, library facilities." alt="" coords="449,84,636,111">
-<area shape="rect" href="$descriptor_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="5,161,221,188">
-<area shape="rect" href="$async_8c.html" title="Comedilib for RTDM, command, transfer, etc." alt="" coords="245,161,432,188">
-<area shape="rect" href="$info_8c.html" title="Comedilib for RTDM, device, subdevice, etc." alt="" coords="456,161,629,188">
-<area shape="rect" href="$range_8c.html" title="Comedilib for RTDM, range related features." alt="" coords="653,161,840,188">
-<area shape="rect" href="$sync_8c.html" title="Comedilib for RTDM, instruction related features." alt="" coords="864,161,1043,188">
-<area shape="rect" href="$sys_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="1067,161,1237,188">

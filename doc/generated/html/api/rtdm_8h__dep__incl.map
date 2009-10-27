@@ -1,15 +1,12 @@
-<area shape="rect" href="$rtcan_8h.html" title="Real&#45;Time Driver Model for RT&#45;Socket&#45;CAN, CAN device profile header." alt="" coords="211,84,368,111">
-<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="392,84,589,111">
-<area shape="rect" href="$rtserial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header." alt="" coords="613,84,781,111">
-<area shape="rect" href="$rttesting_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header." alt="" coords="805,84,987,111">
-<area shape="rect" href="$src_2drvlib_2comedi_2syscall_8h.html" title="Comedilib for RTDM, internal declarations." alt="" coords="1025,84,1217,111">
-<area shape="rect" href="$rtdm_2internal_8h-source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="195,161,381,188">
-<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="405,161,576,188">
-<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="5,239,173,265">
-<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="197,239,379,265">
-<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="403,239,589,265">
-<area shape="rect" href="$async_8c.html" title="Comedilib for RTDM, command, transfer, etc." alt="" coords="600,161,787,188">
-<area shape="rect" href="$descriptor_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="811,161,1027,188">
-<area shape="rect" href="$info_8c.html" title="Comedilib for RTDM, device, subdevice, etc." alt="" coords="1051,161,1224,188">
-<area shape="rect" href="$sync_8c.html" title="Comedilib for RTDM, instruction related features." alt="" coords="1248,161,1427,188">
-<area shape="rect" href="$sys_8c.html" title="Comedilib for RTDM, descriptor related features." alt="" coords="1451,161,1621,188">
+<map id="G" name="G">
+<area shape="rect" href="$rtcan_8h.html" title="Real&#45;Time Driver Model for RT&#45;Socket&#45;CAN, CAN device profile header." alt="" coords="5,83,141,112"/>
+<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="165,83,336,112"/>
+<area shape="rect" href="$rtipc_8h.html" title="This file is part of the Xenomai project." alt="" coords="360,83,491,112"/>
+<area shape="rect" href="$rtserial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header." alt="" coords="515,83,661,112"/>
+<area shape="rect" href="$rttesting_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header." alt="" coords="685,83,840,112"/>
+<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="79,160,236,189"/>
+<area shape="rect" href="$rtdm_2internal_8h_source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="260,160,428,189"/>
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="87,237,239,267"/>
+<area shape="rect" href="$device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="263,237,425,267"/>
+<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="449,237,617,267"/>
+</map>
