@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux for 8255 chip
+ * Analogy subdevice driver for 8255 chip
  * @note Copyright (C) 1999 David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -258,8 +258,8 @@ int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 				"dev_8255_attach: "
 				"unable to allocate subdevice\n");
 			/* There is no need to free previously
-			   allocated structure(s), the comedi layer will do
-			   it for us */
+			   allocated structure(s), the analogy layer will
+			   do it for us */
 			err = -ENOMEM;
 			goto out_attach;
 		}		
@@ -269,7 +269,7 @@ int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 		subd_8255 = (subd_8255_t *)subd->priv;		
 		
-		if(request_region(addrs[i], _8255_SIZE, "Comedi 8255") == 0) {	       
+		if(request_region(addrs[i], _8255_SIZE, "Analogy 8255") == 0) {	       
 			subd->flags = A4L_SUBD_UNUSED;
 			a4l_warn(dev, 
 				 "dev_8255_attach: "
@@ -324,6 +324,8 @@ static void __exit drv_8255_cleanup(void)
 {
 	a4l_unregister_drv(&drv_8255);
 }
+MODULE_DESCRIPTION("Analogy driver for 8255 chip");
+MODULE_LICENSE("GPL");
 
 module_init(drv_8255_init);
 module_exit(drv_8255_cleanup);

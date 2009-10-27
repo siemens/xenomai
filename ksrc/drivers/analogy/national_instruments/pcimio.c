@@ -1586,6 +1586,8 @@ static void __exit pcimio_cleanup(void)
 	a4l_unregister_drv(&pcimio_drv);
 }
 
+MODULE_DESCRIPTION("Analogy driver for NI PCI-MIO series cards");
 MODULE_LICENSE("GPL");
+
 module_init(pcimio_init);
 module_exit(pcimio_cleanup);

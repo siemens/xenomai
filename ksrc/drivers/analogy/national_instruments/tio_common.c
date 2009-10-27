@@ -1960,7 +1960,7 @@ static void __exit ni_tio_cleanup_module(void)
 {
 }
 
-MODULE_DESCRIPTION("Comedi support for NI general-purpose counters");
+MODULE_DESCRIPTION("Analogy support for NI general-purpose counters");
 MODULE_LICENSE("GPL");
 
 module_init(ni_tio_init_module);

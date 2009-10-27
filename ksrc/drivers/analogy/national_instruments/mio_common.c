@@ -5196,6 +5196,9 @@ int ni_E_init(a4l_dev_t *dev)
 	return 0;
 }
 
+MODULE_DESCRIPTION("Analogy support for NI DAQ-STC based boards");
+MODULE_LICENSE("GPL");
+
 EXPORT_SYMBOL(range_ni_E_ai);
 EXPORT_SYMBOL(range_ni_E_ai_limited);
 EXPORT_SYMBOL(range_ni_E_ai_limited14);
