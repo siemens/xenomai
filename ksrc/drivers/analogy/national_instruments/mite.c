@@ -246,7 +246,7 @@ void mite_list_devices(void)
 {
 	struct list_head *this;
 
-	printk("Comedi: MITE: Available NI device IDs:");
+	printk("Analogy: MITE: Available NI device IDs:");
 	list_for_each(this, &mite_devices) {
 		struct mite_struct *mite = 
 			list_entry(this, struct mite_struct, list);

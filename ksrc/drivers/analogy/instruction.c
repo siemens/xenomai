@@ -336,7 +336,7 @@ int a4l_free_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc)
 }
 
 /* This function is not optimized in terms of memory footprint and
-   CPU charge; however, the whole comedi instruction system was not
+   CPU charge; however, the whole analogy instruction system was not
    designed for performance issues */
 int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 {
