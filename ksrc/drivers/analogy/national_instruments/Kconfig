@@ -10,7 +10,7 @@ config XENO_DRIVERS_ANALOGY_NI_TIO
 	default n
 
 config XENO_DRIVERS_ANALOGY_NI_MIO
-	depends on XENO_DRIVERS_ANALOGY
+	depends on XENO_DRIVERS_ANALOGY && XENO_DRIVERS_ANALOGY_NI_TIO
 	tristate "NI MIO driver"
 	default n
 
