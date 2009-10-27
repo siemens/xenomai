@@ -322,6 +322,9 @@ int main(int argc, char *argv[])
 					printf("\n");
 			}
 
+			/* Update the counter */
+			cnt += ret;
+
 			if (real_time != 0) {
 				ret = rt_task_set_mode(0, T_PRIMARY, NULL);
 				if (ret < 0) {
@@ -331,7 +334,6 @@ int main(int argc, char *argv[])
 					goto out_main;
 				}
 			}
-			cnt += ret;
 		}
 
 	} else {
