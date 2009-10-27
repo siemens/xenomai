@@ -298,6 +298,9 @@ int rt_queue_create(RT_QUEUE *q,
 static void __queue_post_release(struct xnheap *heap) /* nklock held, IRQs off */
 {
 	RT_QUEUE *q = container_of(heap, RT_QUEUE, bufpool);
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
 
 	removeq(q->rqueue, &q->rlink);
 
