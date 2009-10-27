@@ -67,7 +67,7 @@ cd "$abs_srcdir"
 echo -n 'Removing files...'
 cat "$builddir/tmp-dist/removed" | while read -a file; do
     rm "${file[*]}"
-    git remove "${file[*]}"
+    git rm "${file[*]}"
 done
 echo `cat "$builddir/tmp-dist/removed"` done.
 
