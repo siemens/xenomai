@@ -224,6 +224,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_ATOMIC_SET_MASK		1
 #define XENOMAI_SYSARCH_ATOMIC_CLEAR_MASK	2
 #define XENOMAI_SYSARCH_XCHG			3
+#define XENOMAI_SYSARCH_TSCINFO                 4
 
 struct __xn_tscinfo {
         int type;		/* Must remain first member */
@@ -245,8 +246,7 @@ struct __xn_tscinfo {
 #define __XN_TSC_TYPE_FREERUNNING           1
 #define __XN_TSC_TYPE_DECREMENTER           2
 #define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 3
-
-#define XENOMAI_SYSARCH_TSCINFO             4
+#define __XN_TSC_TYPE_FREERUNNING_COUNTDOWN 4
 
 #ifndef __KERNEL__
 #include <stdio.h>
@@ -277,6 +277,20 @@ static inline unsigned long long __xn_rdtsc(void)
         counter = *counterp;
 
         if ((counter & mask) < ((unsigned) result & mask))
+                result += mask + 1ULL;
+        return (result & ~((unsigned long long) mask)) | (counter & mask);
+#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
+	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
+        const unsigned mask = __xn_tscinfo.u.fr.mask;
+	register unsigned long long result;
+        unsigned counter;
+
+        __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+        __asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+        counter = mask - *counterp;
+
+        if ((counter & mask) > ((unsigned) result & mask))
                 result += mask + 1ULL;
         return (result & ~((unsigned long long) mask)) | (counter & mask);
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
@@ -353,9 +367,11 @@ static inline void xeno_arm_features_check(void)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		\
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		      \
+	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN \
 	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
-	case __XN_TSC_TYPE_FREERUNNING: {
+	case __XN_TSC_TYPE_FREERUNNING:
+	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN: {
 		unsigned long phys_addr;
 
 		phys_addr = (unsigned long) __xn_tscinfo.u.fr.counter;
