@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
 
-	/* Computes arguments */
+	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
 				  "vrd:s:S:c:R:h", insn_read_opts,
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 		if (verbose != 0)
 			printf("insn_read: switching to real-time mode\n");
 
-		/* Prevents any memory-swapping for this program */
+		/* Prevent any memory-swapping for this program */
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret < 0) {
 			ret = errno;
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 			goto out_insn_read;
 		}
 
-		/* Turns the current process into an RT task */
+		/* Turn the current process into an RT task */
 		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
 	}
 
-	/* Opens the device */
+	/* Open the device */
 	ret = a4l_open(&dsc, FILENAME);
 	if (ret < 0) {
 		fprintf(stderr, "insn_read: a4l_open %s failed (ret=%d)\n",
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* Checks there is an input subdevice */
+	/* Check there is an input subdevice */
 	if (dsc.idx_read_subd < 0) {
 		ret = -ENOENT;
 		fprintf(stderr, "insn_read: no input subdevice available\n");
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
 	}
 
-	/* Allocates a buffer so as to get more info (subd, chan, rng) */
+	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
 		ret = -ENOMEM;
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 		goto out_insn_read;
 	}
 
-	/* Gets this data */
+	/* Get this data */
 	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
 		fprintf(stderr, "insn_read: a4l_fill_desc failed (ret=%d)\n",
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Retrieves the subdevice data size */
+	/* Retrieve the subdevice data size */
 	ret = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 		goto out_insn_read;
 	}
 
-	/* Sets the data size to read */
+	/* Set the data size to read */
 	scan_size *= chinfo->nb_bits / 8;
 
 	if (verbose != 0) {
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 		int tmp = (scan_size - cnt) < BUF_SIZE ?
 			(scan_size - cnt) : BUF_SIZE;
 
-		/* Switches to RT primary mode */
+		/* Switch to RT primary mode */
 		if (real_time != 0) {
 			ret = rt_task_set_mode(0, T_PRIMARY, NULL);
 			if (ret < 0) {
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		/* Performs the synchronous read */
+		/* Perform the synchronous read */
 		ret = a4l_sync_read(&dsc,
 				    idx_subd, 0, CHAN(idx_chan), buf, tmp);
 
@@ -251,10 +251,10 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		/* Dumps the results */
+		/* Dump the results */
 		for (i = 0; i < ret; i++) {
 
-			/* Prints the output byte by byte */
+			/* Print the output byte by byte */
 			printf("0x%x ", buf[i]);
 
 			/* Unlike a4l_async_read(), a4l_sync_read() cannot
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		/* Updates the count */
+		/* Update the count */
 		cnt += ret;
 	}
 
@@ -281,11 +281,11 @@ int main(int argc, char *argv[])
 
 out_insn_read:
 
-	/* Frees the information buffer */
+	/* Free the information buffer */
 	if (dsc.sbdata != NULL)
 		free(dsc.sbdata);
 
-	/* Releases the file descriptor */
+	/* Release the file descriptor */
 	a4l_close(&dsc);
 
 	return ret;

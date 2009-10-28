@@ -31,12 +31,12 @@
 
 #include <analogy/analogy.h>
 
-/* Declares precompilation constants */
+/* Declare precompilation constants */
 #define __NBMIN_ARG 2
 #define __NBMAX_ARG 3
 #define __OPTS_DELIMITER ","
 
-/* Declares prog variables */
+/* Declare prog variables */
 int vlevel = 1;
 int unatt_act = 0;
 struct option a4l_conf_opts[] = {
@@ -55,7 +55,7 @@ int compute_opts(char *opts, unsigned int *nb, unsigned int *res)
 
 	int ret = 0, len, ofs;
 
-	/* Checks arg and inits it */
+	/* Check arg and inits it */
 	if (nb == NULL)
 		return -EINVAL;
 	*nb = 0;
@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
 	a4l_lnkdesc_t lnkdsc;
 	int chk_nb, ret = 0, fd = -1;
 
-	/* Inits the descriptor structure */
+	/* Init the descriptor structure */
 	memset(&lnkdsc, 0, sizeof(a4l_lnkdesc_t));
 
-	/* Computes arguments */
+	/* Compute arguments */
 	while ((c =
 		getopt_long(argc, argv, "hvqVrR:W:", a4l_conf_opts,
 			    NULL)) >= 0) {
@@ -133,23 +133,23 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Checks the last arguments */
+	/* Check the last arguments */
 	chk_nb = (unatt_act == 0) ? __NBMIN_ARG : __NBMIN_ARG - 1;
 	if (argc - optind < chk_nb) {
 		do_print_usage();
 		goto out_a4l_config;
 	}
 
-	/* Gets the device file name */
+	/* Get the device file name */
 	devfile = argv[optind];
 
-	/* Fills the descriptor with the driver name */
+	/* Fill the descriptor with the driver name */
 	if (unatt_act == 0) {
 		lnkdsc.bname = argv[optind + 1];
 		lnkdsc.bname_size = strlen(argv[optind + 1]);
 	}
 
-	/* Handles the last arguments: the driver-specific args */
+	/* Handle the last arguments: the driver-specific args */
 	if (unatt_act == 1 || argc - optind != __NBMAX_ARG)
 		lnkdsc.opts_size = 0;
 	else {
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Opens the specified file */
+	/* Open the specified file */
 	fd = a4l_sys_open(devfile);
 	if (fd < 0) {
 		ret = fd;
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 		goto out_a4l_config;
 	}
 
-	/* Triggers the ioctl */
+	/* Trigger the ioctl */
 	if (unatt_act == 0)
 		ret = a4l_sys_attach(fd, &lnkdsc);
 	else

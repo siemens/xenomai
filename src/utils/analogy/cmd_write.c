@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	void *map = NULL;
 	a4l_desc_t dsc;
 
-	/* Computes arguments */
+	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
 				  "vrd:s:S:c:mh", cmd_write_opts, NULL)) >= 0) {
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Recovers the channels to compute */
+	/* Recover the channels to compute */
 	do {
 		cmd.nb_chan++;
 		len = strlen(str_chans);
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 		str_chans += ofs + 1;
 	} while (len != ofs);
 
-	/* Updates the command structure */
+	/* Update the command structure */
 	cmd.scan_end_arg = cmd.nb_chan;
 
 	if (real_time != 0) {
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 		if (verbose != 0)
 			printf("cmd_write: switching to real-time mode\n");
 
-		/* Prevents any memory-swapping for this program */
+		/* Prevent any memory-swapping for this program */
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret < 0) {
 			ret = errno;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 			goto out_main;
 		}
 
-		/* Turns the current process into an RT task */
+		/* Turn the current process into an RT task */
 		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Opens the device */
+	/* Open the device */
 	ret = a4l_open(&dsc, filename);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -206,14 +206,14 @@ int main(int argc, char *argv[])
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
 	}
 
-	/* Allocates a buffer so as to get more info (subd, chan, rng) */
+	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
 		fprintf(stderr, "cmd_write: malloc failed \n");
 		return -ENOMEM;
 	}
 
-	/* Gets this data */
+	/* Get this data */
 	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("cmd_write: complex descriptor retrieved\n");
 
-	/* Gets the size of a single acquisition */
+	/* Get the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
 		a4l_chinfo_t *info;
 
@@ -252,12 +252,12 @@ int main(int argc, char *argv[])
 		       scan_size * cmd.stop_arg);
 	}
 
-	/* Cancels any former command which might be in progress */
+	/* Cancel any former command which might be in progress */
 	a4l_snd_cancel(&dsc, cmd.idx_subd);
 
 	if (use_mmap != 0) {
 
-		/* Gets the buffer size to map */
+		/* Get the buffer size to map */
 		ret = a4l_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 			printf("cmd_write: buffer size = %lu bytes\n",
 			       buf_size);
 
-		/* Maps the analog input subdevice buffer */
+		/* Map the analog input subdevice buffer */
 		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 			       "(map=0x%p)\n", map);
 	}
 
-	/* Sends the command to the output device */
+	/* Send the command to the output device */
 	ret = a4l_snd_command(&dsc, &cmd);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("cmd_write: command successfully sent\n");
 
-	/* Sets up the buffer to be written */
+	/* Set up the buffer to be written */
 	for (i = 0; i < BUF_SIZE; i++)
 		buf[i] = i;
 
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 
 	if (use_mmap == 0) {
 
-		/* Sends data */
+		/* Send data */
 		while (cnt < scan_size * cmd.stop_arg) {
 			unsigned int tmp = 
 				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ? 
@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
 	} else {
 		unsigned long front = 0;
 
-		/* Sends data through the shared buffer */
+		/* Send data through the shared buffer */
 		while (cnt < cmd.stop_arg * scan_size) {
 
 			/* If the buffer is full, wait for an event
@@ -358,22 +358,22 @@ int main(int argc, char *argv[])
 					front = (unsigned long)ret;
 			}
 
-			/* Updates the variable front according to the data amount
+			/* Update the variable front according to the data amount
 			   we still have to send */
 			if (front > (scan_size * cmd.stop_arg - cnt))
 				front = scan_size * cmd.stop_arg - cnt;
 
-			/* Performs the copy 
+			/* Perform the copy 
 			   (Usually, such an operation should be avoided: the shared
 			   buffer should be used without any intermediate buffer,
 			   the "mmaped" buffer is interesting for saving data copy) */
 			memcpy(map + (cnt % buf_size),
 			       buf + (cnt % BUF_SIZE), front);
 
-			/* Updates the counter */
+			/* Update the counter */
 			cnt += front;
 
-			/* Retrieves and update the buffer's state
+			/* Retrieve and update the buffer's state
 			   (In output case, we recover how many bytes can be
 			   written into the shared buffer) */
 			ret = a4l_mark_bufrw(&dsc, cmd.idx_subd, front, &front);
@@ -403,10 +403,10 @@ int main(int argc, char *argv[])
 
 out_main:
 
-	/* Frees the buffer used as device descriptor */
+	/* Free the buffer used as device descriptor */
 	free(dsc.sbdata);
 
-	/* Releases the file descriptor */
+	/* Release the file descriptor */
 	a4l_close(&dsc);
 
 	return ret;

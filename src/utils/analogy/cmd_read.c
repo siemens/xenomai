@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 	void *map = NULL;
 	a4l_desc_t dsc;
 
-	/* Computes arguments */
+	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
 				  "vrd:s:S:c:mh", cmd_read_opts, NULL)) >= 0) {
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Recovers the channels to compute */
+	/* Recover the channels to compute */
 	do {
 		cmd.nb_chan++;
 		len = strlen(str_chans);
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 		str_chans += ofs + 1;
 	} while (len != ofs);
 
-	/* Updates the command structure */
+	/* Update the command structure */
 	cmd.scan_end_arg = cmd.nb_chan;
 
 	if (real_time != 0) {
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 		if (verbose != 0)
 			printf("cmd_read: switching to real-time mode\n");
 
-		/* Prevents any memory-swapping for this program */
+		/* Prevent any memory-swapping for this program */
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret < 0) {
 			ret = errno;
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 			goto out_main;
 		}
 
-		/* Turns the current process into an RT task */
+		/* Turn the current process into an RT task */
 		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 	}
 
-	/* Opens the device */
+	/* Open the device */
 	ret = a4l_open(&dsc, filename);
 	if (ret < 0) {
 		fprintf(stderr, "cmd_read: a4l_open %s failed (ret=%d)\n",
@@ -201,14 +201,14 @@ int main(int argc, char *argv[])
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
 	}
 
-	/* Allocates a buffer so as to get more info (subd, chan, rng) */
+	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
 		fprintf(stderr, "cmd_read: malloc failed \n");
 		return -ENOMEM;
 	}
 
-	/* Gets this data */
+	/* Get this data */
 	ret = a4l_fill_desc(&dsc);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("cmd_read: complex descriptor retrieved\n");
 
-	/* Gets the size of a single acquisition */
+	/* Get the size of a single acquisition */
 	for (i = 0; i < cmd.nb_chan; i++) {
 		a4l_chinfo_t *info;
 
@@ -247,12 +247,12 @@ int main(int argc, char *argv[])
 		       scan_size * cmd.stop_arg);
 	}
 
-	/* Cancels any former command which might be in progress */
+	/* Cancel any former command which might be in progress */
 	a4l_snd_cancel(&dsc, cmd.idx_subd);
 
 	if (use_mmap != 0) {
 
-		/* Gets the buffer size to map */
+		/* Get the buffer size to map */
 		ret = a4l_get_bufsize(&dsc, cmd.idx_subd, &buf_size);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 		if (verbose != 0)
 			printf("cmd_read: buffer size = %lu bytes\n", buf_size);
 
-		/* Maps the analog input subdevice buffer */
+		/* Map the analog input subdevice buffer */
 		ret = a4l_mmap(&dsc, cmd.idx_subd, buf_size, &map);
 		if (ret < 0) {
 			fprintf(stderr,
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 				 map);
 	}
 
-	/* Sends the command to the input device */
+	/* Send the command to the input device */
 	ret = a4l_snd_command(&dsc, &cmd);
 	if (ret < 0) {
 		fprintf(stderr,
@@ -303,10 +303,10 @@ int main(int argc, char *argv[])
 
 	if (use_mmap == 0) {
 
-		/* Fetches data */
+		/* Fetch data */
 		while (cnt < cmd.stop_arg * scan_size) {
 
-			/* Performs the read operation */
+			/* Perform the read operation */
 			ret = a4l_sys_read(dsc.fd, buf, BUF_SIZE);
 			if (ret < 0) {
 				fprintf(stderr,
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 				goto out_main;
 			}
 
-			/* Dumps the results */
+			/* Dump the results */
 			for (i = 0; i < ret; i++) {
 				printf("0x%x ", buf[i]);
 				if (((cnt + i + 1) % scan_size) == 0)
@@ -339,10 +339,10 @@ int main(int argc, char *argv[])
 	} else {
 		unsigned long front = 0;
 
-		/* Fetches data without any memcpy */
+		/* Fetch data without any memcpy */
 		while (cnt < cmd.stop_arg * scan_size) {
 
-			/* Retrieves and update the buffer's state
+			/* Retrieve and update the buffer's state
 			   (In input case, we recover how many bytes are available
 			   to read) */
 			ret =
@@ -371,14 +371,14 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			/* Displays the results */
+			/* Display the results */
 			for (i = cnt; i < cnt + front; i++) {
-				/* Prints char by char */
+				/* Print char by char */
 				fprintf(stdout,
 					"0x%x ",
 					((unsigned char *)map)[i % buf_size]);
 
-				/* Returns to the next line after each scan */
+				/* Return to the next line after each scan */
 				if (((cnt + i + 1) % scan_size) == 0)
 					fprintf(stdout, "\n");
 			}
@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			/* Updates the counter */
+			/* Update the counter */
 			cnt += front;
 		}
 	}
@@ -406,13 +406,13 @@ int main(int argc, char *argv[])
 out_main:
 
 	if (use_mmap != 0)
-		/* Cleans the pages table */
+		/* Clean the pages table */
 		munmap(map, buf_size);
 
-	/* Frees the buffer used as device descriptor */
+	/* Free the buffer used as device descriptor */
 	free(dsc.sbdata);
 
-	/* Releases the file descriptor */
+	/* Release the file descriptor */
 	a4l_close(&dsc);
 
 	return ret;
