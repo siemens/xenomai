@@ -784,8 +784,6 @@ ADEOS_PATCH
 XENO_LINUX_IMAGE
 XENO_LINUX_INSTALL_TARGET
 XENO_LINUX_ALL_TARGETS
-XENO_LINUX_ARCH_I386_FALSE
-XENO_LINUX_ARCH_I386_TRUE
 OTOOL64
 OTOOL
 LIPO
@@ -804,6 +802,8 @@ EGREP
 GREP
 SED
 LIBTOOL
+XENO_LINUX_ARCH_I386_FALSE
+XENO_LINUX_ARCH_I386_TRUE
 LEXLIB
 LEX_OUTPUT_ROOT
 LEX
@@ -5281,6 +5281,28 @@ case "$build_for" in
         XENO_LINUX_ARCH=nios2
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
+        ;;
+ *) echo ""
+   echo "*******************************************"
+   echo "Still unsupported target: $build_for -- Sorry."
+   echo "*******************************************"
+   echo ""
+   exit 1;;
+esac
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TARGET_ARCH" >&5
+$as_echo "$XENO_TARGET_ARCH" >&6; }
+ if test $XENO_LINUX_ARCH = i386; then
+  XENO_LINUX_ARCH_I386_TRUE=
+  XENO_LINUX_ARCH_I386_FALSE='#'
+else
+  XENO_LINUX_ARCH_I386_TRUE='#'
+  XENO_LINUX_ARCH_I386_FALSE=
+fi
+
+
+case "$XENO_TARGET_ARCH" in
+ nios2)
 	# Check whether --enable-shared was given.
 if test "${enable_shared+set}" = set; then :
   enableval=$enable_shared; p=${PACKAGE-default}
@@ -5312,17 +5334,38 @@ fi
 
 
 
-        ;;
- *) echo ""
-   echo "*******************************************"
-   echo "Still unsupported target: $build_for -- Sorry."
-   echo "*******************************************"
-   echo ""
-   exit 1;;
-esac
+	;;
+ *)
+	# Check whether --enable-shared was given.
+if test "${enable_shared+set}" = set; then :
+  enableval=$enable_shared; p=${PACKAGE-default}
+    case $enableval in
+    yes) enable_shared=yes ;;
+    no) enable_shared=no ;;
+    *)
+      enable_shared=no
+      # Look at the argument we got.  We use all the common list separators.
+      lt_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR,"
+      for pkg in $enableval; do
+	IFS="$lt_save_ifs"
+	if test "X$pkg" = "X$p"; then
+	  enable_shared=yes
+	fi
+      done
+      IFS="$lt_save_ifs"
+      ;;
+    esac
+else
+  enable_shared=yes
+fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TARGET_ARCH" >&5
-$as_echo "$XENO_TARGET_ARCH" >&6; }
+
+
+
+
+
+	;;
+esac
 case `pwd` in
   *\ * | *\	*)
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libtool does not cope well with whitespace in \`pwd\`" >&5
@@ -5932,13 +5975,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5935: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5978: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5938: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5981: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5941: output\"" >&5)
+  (eval echo "\"\$as_me:5984: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7036,7 +7079,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7039 "configure"' > conftest.$ac_ext
+  echo '#line 7082 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8399,11 +8442,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8402: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8445: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8406: \$? = $ac_status" >&5
+   echo "$as_me:8449: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8723,11 +8766,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8726: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8769: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8730: \$? = $ac_status" >&5
+   echo "$as_me:8773: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8828,11 +8871,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8831: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8874: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8835: \$? = $ac_status" >&5
+   echo "$as_me:8878: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8883,11 +8926,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8886: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8929: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8890: \$? = $ac_status" >&5
+   echo "$as_me:8933: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11255,7 +11298,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11258 "configure"
+#line 11301 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11355,7 +11398,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11358 "configure"
+#line 11401 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11585,14 +11628,6 @@ CC="$lt_save_CC"
 
 # Only expand once:
 
-
- if test $XENO_LINUX_ARCH = i386; then
-  XENO_LINUX_ARCH_I386_TRUE=
-  XENO_LINUX_ARCH_I386_FALSE='#'
-else
-  XENO_LINUX_ARCH_I386_TRUE='#'
-  XENO_LINUX_ARCH_I386_FALSE=
-fi
 
 
 
