@@ -117,7 +117,6 @@ case "$build_for" in
         XENO_LINUX_ARCH=nios2
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
-	AC_DISABLE_SHARED
         ;;
  *) echo ""
    echo "*******************************************"
@@ -128,8 +127,17 @@ case "$build_for" in
 esac
 
 AC_MSG_RESULT([$XENO_TARGET_ARCH])
-AC_PROG_LIBTOOL
 AM_CONDITIONAL(XENO_LINUX_ARCH_I386,[test $XENO_LINUX_ARCH = i386])
+
+case "$XENO_TARGET_ARCH" in
+ nios2)
+	AC_DISABLE_SHARED
+	;;
+ *)
+	AC_ENABLE_SHARED
+	;;
+esac
+AC_PROG_LIBTOOL
 
 dnl
 dnl Parse options
