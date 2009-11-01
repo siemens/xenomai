@@ -50,12 +50,11 @@ static int __map_queue_memory(RT_QUEUE *q, RT_QUEUE_PLACEHOLDER * php)
 					     php->mapsize,
 					     PROT_READ | PROT_WRITE,
 					     MAP_SHARED, heapfd, 0L);
-
 	if (php->mapbase != MAP_FAILED)
 		/* Copy back a complete placeholder only if all is ok. */
 		*q = *php;
 	else
-		err = -ENOMEM;
+		err = -errno;
 
       close_and_exit:
 

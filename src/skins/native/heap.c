@@ -50,12 +50,11 @@ static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER * php)
 					     php->mapsize,
 					     PROT_READ | PROT_WRITE,
 					     MAP_SHARED, heapfd, 0L);
-
 	if (php->mapbase != MAP_FAILED)
 		/* Copy back a complete placeholder only if all is ok. */
 		*heap = *php;
 	else
-		err = -ENOMEM;
+		err = -errno;
 
       close_and_exit:
 
