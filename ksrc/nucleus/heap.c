@@ -1249,10 +1249,13 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 * some mapping still remains on the same heap, arming the
 	 * deferred release handler to clean it up via vmclose().
 	 */
+	spin_lock(&kheapq_lock);
+
 	if (heap->archdep.numaps > 0) {
 		/* The release handler is supposed to clean up the rest. */
-		XENO_ASSERT(NUCLEUS, release != NULL, /* nop */);
 		heap->archdep.release = release;
+		spin_unlock(&kheapq_lock);
+		XENO_ASSERT(NUCLEUS, release != NULL, /* nop */);
 		return;
 	}
 
@@ -1264,8 +1267,8 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 * been removed, because __validate_heap_addr() will deny
 	 * access to heaps pending a release.
 	 */
-	spin_lock(&kheapq_lock);
 	removeq(&kheapq, &heap->link);
+
 	spin_unlock(&kheapq_lock);
 
 	__unreserve_and_free_heap(heap->archdep.heapbase, len,
