@@ -1023,16 +1023,14 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 
 	spin_lock(&kheapq_lock);
 
-	if (--heap->archdep.numaps == 0) {
-		if (heap->archdep.release) {
-			removeq(&kheapq, &heap->link);
-			spin_unlock(&kheapq_lock);
-			__unreserve_and_free_heap(heap->archdep.heapbase,
-						  xnheap_extentsize(heap),
-						  heap->archdep.kmflags);
-			heap->archdep.release(heap);
-			return;
-		}
+	if (--heap->archdep.numaps == 0 && heap->archdep.release) {
+		removeq(&kheapq, &heap->link);
+		spin_unlock(&kheapq_lock);
+		__unreserve_and_free_heap(heap->archdep.heapbase,
+					  xnheap_extentsize(heap),
+					  heap->archdep.kmflags);
+		heap->archdep.release(heap);
+		return;
 	}
 
 	spin_unlock(&kheapq_lock);
@@ -1048,14 +1046,16 @@ static int xnheap_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static inline xnheap_t *__validate_heap_addr(void *addr)
+static inline struct xnheap *__validate_heap_addr(void *addr)
 {
-	xnholder_t *holder;
+	struct xnheap *heap;
+	struct xnholder *h;
 
-	for (holder = getheadq(&kheapq); holder;
-	     holder = nextq(&kheapq, holder))
-		if (link2heap(holder) == addr)
-			return addr;
+	for (h = getheadq(&kheapq); h; h = nextq(&kheapq, h)) {
+		heap = link2heap(h);
+		if (heap == addr && heap->archdep.release == NULL)
+			return heap;
+	}
 
 	return NULL;
 }
@@ -1087,7 +1087,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	spin_lock(&kheapq_lock);
 
 	heap = __validate_heap_addr(file->private_data);
-	if (!heap) {
+	if (heap == NULL) {
 		spin_unlock(&kheapq_lock);
 		return -EINVAL;
 	}
@@ -1196,7 +1196,7 @@ int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 		return -EINVAL;
 
 	heapbase = __alloc_and_reserve_heap(heapsize, memflags);
-	if (!heapbase)
+	if (heapbase == NULL)
 		return -ENOMEM;
 
 	err = xnheap_init(heap, heapbase, heapsize, PAGE_SIZE);
@@ -1228,39 +1228,50 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 */
 	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release, /* nop */);
 
-	spin_lock(&kheapq_lock);
-
-	removeq(&kheapq, &heap->link); /* Prevent further mapping. */
-
-	heap->archdep.release = release;
-
-	if (heap->archdep.numaps == 0)
-		mapaddr = NULL; /* nothing left to unmap */
-	else
-		release = NULL; /* will be called by Linux on unmap */
-
-	spin_unlock(&kheapq_lock);
-
 	len = xnheap_extentsize(heap);
 
+	/*
+	 * If the caller has an active mapping on that heap, remove it
+	 * now. Note that we don't want to run the release handler
+	 * indirectly on top of vmclose() by calling do_munmap(); we
+	 * just clear it so that we may fall down to the common
+	 * epilogue in case no more mapping exists.
+	 */
 	if (mapaddr) {
 		down_write(&current->mm->mmap_sem);
+		heap->archdep.release = NULL;
 		do_munmap(current->mm, (unsigned long)mapaddr, len);
 		up_write(&current->mm->mmap_sem);
 	}
 
+	/*
+	 * At that point, the caller dropped its mapping. Return if
+	 * some mapping still remains on the same heap, arming the
+	 * deferred release handler to clean it up via vmclose().
+	 */
 	if (heap->archdep.numaps > 0) {
 		/* The release handler is supposed to clean up the rest. */
-		XENO_ASSERT(NUCLEUS, heap->archdep.release, /* nop */);
+		XENO_ASSERT(NUCLEUS, release != NULL, /* nop */);
+		heap->archdep.release = release;
 		return;
 	}
 
-	if (mapaddr == NULL) {
-		__unreserve_and_free_heap(heap->archdep.heapbase, len,
-					  heap->archdep.kmflags);
-		if (release)
-			release(heap);
-	}
+	/*
+	 * No more mapping, remove the heap from the global queue,
+	 * unreserve its memory and release its descriptor if a
+	 * cleanup handler is available. Note that we may allow the
+	 * heap to linger in the global queue until all mappings have
+	 * been removed, because __validate_heap_addr() will deny
+	 * access to heaps pending a release.
+	 */
+	spin_lock(&kheapq_lock);
+	removeq(&kheapq, &heap->link);
+	spin_unlock(&kheapq_lock);
+
+	__unreserve_and_free_heap(heap->archdep.heapbase, len,
+				  heap->archdep.kmflags);
+	if (release)
+		release(heap);
 }
 
 static struct file_operations xnheap_fops = {
