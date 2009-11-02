@@ -1111,6 +1111,7 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	vma->vm_ops = &xnheap_vmops;
 	vma->vm_private_data = file->private_data;
 
+#ifdef CONFIG_MMU
 	vaddr = (unsigned long)heap->archdep.heapbase + offset;
 
 	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
@@ -1134,11 +1135,54 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EAGAIN;
 
 	xnarch_fault_range(vma);
+#else /* !CONFIG_MMU */
+	(void)vaddr;
+	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) != 0 ||
+	    heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+#endif /* !CONFIG_MMU */
 
 	atomic_inc(&heap->archdep.numaps);
 
 	return 0;
 }
+
+#ifndef CONFIG_MMU
+static unsigned long xnheap_get_unmapped_area(struct file *file,
+					      unsigned long addr,
+					      unsigned long len,
+					      unsigned long pgoff,
+					      unsigned long flags)
+{
+	unsigned long uaddr, offset;
+	struct xnheap *heap;
+	int ret;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	ret = -EINVAL;
+	heap = __validate_heap_addr(file->private_data);
+	if (heap == NULL)
+		goto fail;
+
+	offset = pgoff << PAGE_SHIFT;
+	if (offset + len > xnheap_extentsize(heap))
+		goto fail;
+
+	uaddr = (unsigned long)heap->archdep.heapbase + offset;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return uaddr;
+fail:
+	xnlock_put_irqrestore(&nklock, s);
+
+	return (unsigned long)ret;
+}
+#else /* CONFIG_MMU */
+#define xnheap_get_unmapped_area  NULL
+#endif /* CONFIG_MMU */
 
 int xnheap_init_mapped(xnheap_t *heap, u_long heapsize, int memflags)
 {
@@ -1215,9 +1259,10 @@ int xnheap_destroy_mapped(xnheap_t *heap, void (*release)(struct xnheap *heap),
 
 static struct file_operations xnheap_fops = {
 	.owner = THIS_MODULE,
-	.open = &xnheap_open,
-	.ioctl = &xnheap_ioctl,
-	.mmap = &xnheap_mmap
+	.open = xnheap_open,
+	.ioctl = xnheap_ioctl,
+	.mmap = xnheap_mmap,
+	.get_unmapped_area = xnheap_get_unmapped_area
 };
 
 static struct miscdevice xnheap_dev = {
