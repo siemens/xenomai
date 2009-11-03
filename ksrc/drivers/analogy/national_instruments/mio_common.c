@@ -1359,6 +1359,10 @@ static int ni_ai_setup_MITE_dma(a4l_dev_t *dev)
 	if (retval)
 		return retval;
 
+	/* Huge hack */
+	mite_buf_change(devpriv->ai_mite_chan->ring, 
+			dev->transfer.bufs[NI_AI_SUBDEV]);
+
 	switch (boardtype.reg_type) {
 	case ni_reg_611x:
 	case ni_reg_6143:
@@ -1371,10 +1375,6 @@ static int ni_ai_setup_MITE_dma(a4l_dev_t *dev)
 		mite_prep_dma(devpriv->ai_mite_chan, 16, 16);
 		break;
 	};
-
-	/* Huge hack */
-	mite_buf_change(devpriv->ai_mite_chan->ring, 
-			dev->transfer.bufs[NI_AI_SUBDEV]);
 
 	/* start the MITE */
 	mite_dma_arm(devpriv->ai_mite_chan);
@@ -1390,6 +1390,8 @@ static int ni_ao_setup_MITE_dma(a4l_dev_t *dev)
 	retval = ni_request_ao_mite_channel(dev);
 	if (retval)
 		return retval;
+
+	/* TODO: mite_buf_change should be called */
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan) {
