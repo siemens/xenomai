@@ -1096,6 +1096,8 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	spin_unlock(&kheapq_lock);
 
+	vma->vm_private_data = file->private_data;
+
 	err = -ENXIO;
 	if (offset + size > xnheap_extentsize(heap))
 		goto deref_out;
@@ -1106,7 +1108,6 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 		goto deref_out;
 
 	vma->vm_ops = &xnheap_vmops;
-	vma->vm_private_data = file->private_data;
 
 #ifdef CONFIG_MMU
 	vaddr = (unsigned long)heap->archdep.heapbase + offset;
