@@ -1391,7 +1391,9 @@ static int ni_ao_setup_MITE_dma(a4l_dev_t *dev)
 	if (retval)
 		return retval;
 
-	/* TODO: mite_buf_change should be called */
+	/* Huge hack */
+	mite_buf_change(devpriv->ao_mite_chan->ring, 
+			dev->transfer.bufs[NI_AO_SUBDEV]);
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan) {
