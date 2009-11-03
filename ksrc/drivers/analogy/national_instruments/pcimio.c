@@ -1570,7 +1570,7 @@ static int pcimio_detach(a4l_dev_t *dev)
 
 static a4l_drv_t pcimio_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "a4l_pcimio",
+	.board_name = "analogy_ni_pcimio",
 	.attach = pcimio_attach,
 	.detach = pcimio_detach,
 	.privdata_size = sizeof(ni_private),

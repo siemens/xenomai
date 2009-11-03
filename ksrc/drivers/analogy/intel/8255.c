@@ -309,7 +309,7 @@ int dev_8255_detach(a4l_dev_t *dev)
 
 static a4l_drv_t drv_8255 = {
 	.owner = THIS_MODULE,
-	.board_name = "8255",
+	.board_name = "analogy_8255",
 	.attach = dev_8255_attach,
 	.detach = dev_8255_detach,	
 	.privdata_size = 0,
