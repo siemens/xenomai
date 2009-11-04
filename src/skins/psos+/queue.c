@@ -82,6 +82,10 @@ u_long q_vreceive(u_long qid, u_long flags, u_long timeout,
 		u_long flags;
 		u_long timeout;
 	} modifiers;	/* Combine to fit into available arg space (i.e. 5) */
+
+	modifiers.flags=flags;
+	modifiers.timeout=timeout;
+
 	return XENOMAI_SKINCALL5(__psos_muxid, __psos_q_vreceive,
 				 qid, &modifiers, msgbuf_r, buflen, msglen_r);
 }
