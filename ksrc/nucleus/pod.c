@@ -1148,7 +1148,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 	 * If thread is not current, has the deferred cancelability
 	 * bit set, and is currently blocked on a synchronization
 	 * object, then unblock it immediately but defer actual
-	 * deletion if it became runnable (i.e. XNSUSP/XNHELP might be
+	 * deletion if it became runnable (i.e. XNSUSP/XNHELD might be
 	 * set as well). The code responsible for putting that thread
 	 * to sleep should process the XNCANPND condition on the
 	 * resumption path, then eventually call xnpod_delete_self()
