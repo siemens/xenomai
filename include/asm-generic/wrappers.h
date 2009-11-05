@@ -480,16 +480,33 @@ unsigned long find_next_bit(const unsigned long *addr,
 #include <linux/semaphore.h>
 #include <linux/pid.h>
 
-#define find_task_by_pid(nr)		\
-  find_task_by_pid_ns(nr, &init_pid_ns)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
+
+static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
+{
+	return pid_task(find_pid_ns(nr, &init_pid_ns), PIDTYPE_PID);
+}
+
+#else /* LINUX_VERSION_CODE < 2.6.31 */
+
+#define wrap_find_task_by_pid(nr)	\
+	find_task_by_pid_ns(nr, &init_pid_ns)
+
+#endif /* LINUX_VERSION_CODE < 2.6.31 */
+
 #define kill_proc(pid, sig, priv)	\
   kill_proc_info(sig, (priv) ? SEND_SIG_PRIV : SEND_SIG_NOINFO, pid)
 
 #else /* LINUX_VERSION_CODE < 2.6.27 */
+
 #include <asm/semaphore.h>
+
 #ifndef CONFIG_MMU
 #define pgprot_noncached(p) (p)
 #endif /* !CONFIG_MMU */
+
+#define wrap_find_task_by_pid(nr)  find_task_by_pid(nr)
+
 #endif /* LINUX_VERSION_CODE < 2.6.27 */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)

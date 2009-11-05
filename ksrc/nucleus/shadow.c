@@ -1687,7 +1687,7 @@ void xnshadow_signal_completion(xncompletion_t __user *u_completion, int err)
 
 	read_lock(&tasklist_lock);
 
-	p = find_task_by_pid(completion.pid);
+	p = wrap_find_task_by_pid(completion.pid);
 
 	if (p)
 		wake_up_process(p);
