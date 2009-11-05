@@ -41,6 +41,7 @@ struct xnselector {
 		fd_set expected;
 		fd_set pending;
 	} fds [XNSELECT_MAX_TYPES];
+	xnholder_t destroy_link;
 	xnqueue_t bindings; /* only used by xnselector_destroy */
 };
 
@@ -105,6 +106,10 @@ int xnselect(struct xnselector *selector,
 	     xnticks_t timeout, xntmode_t timeout_mode);
 
 void xnselector_destroy(struct xnselector *selector);
+
+int xnselect_mount(void);
+
+int xnselect_umount(void);
 
 #ifdef __cplusplus
 }

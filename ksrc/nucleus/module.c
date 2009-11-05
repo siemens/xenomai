@@ -34,6 +34,7 @@
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 #include <nucleus/core.h>
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+#include <nucleus/select.h>
 #include <asm/xenomai/bits/init.h>
 
 MODULE_DESCRIPTION("Xenomai nucleus");
@@ -1171,11 +1172,18 @@ int __init __xeno_sys_init(void)
 		goto cleanup_arch;
 #endif /* CONFIG_XENO_OPT_PIPE */
 
+#ifdef CONFIG_XENO_OPT_SELECT
+	err = xnselect_mount();
+
+	if (err)
+		goto cleanup_pipe;
+#endif /* CONFIG_XENO_OPT_SELECT */
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = xnshadow_mount();
 
 	if (err)
-		goto cleanup_pipe;
+		goto cleanup_select;
 
 	err = xnheap_mount();
 
@@ -1201,9 +1209,14 @@ int __init __xeno_sys_init(void)
 
 	xnshadow_cleanup();
 
-      cleanup_pipe:
-
+      cleanup_select:
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+#ifdef CONFIG_XENO_OPT_SELECT
+	xnselect_umount();
+	
+      cleanup_pipe:
+#endif /* CONFIG_XENO_OPT_SELECT */
 
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
