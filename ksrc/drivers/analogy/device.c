@@ -500,7 +500,7 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 
 	if (rtdm_safe_copy_to_user(cxt->user_info, 
 				   arg, &info, sizeof(a4l_dvinfo_t)) != 0)
-		return -EINVAL;
+		return -EFAULT;
 
 	return 0;
 }

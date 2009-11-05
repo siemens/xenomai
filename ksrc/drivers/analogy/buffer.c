@@ -407,13 +407,20 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		return -EFAULT;
 
 	/* Check the subdevice */
-	if (map_cfg.idx_subd >= dev->transfer.nb_subd ||
-	    (dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) ==
-	    0
-	    || (dev->transfer.subds[map_cfg.idx_subd]->
-		flags & A4L_SUBD_MMAP) == 0) {
-		__a4l_err("a4l_ioctl_mmap: wrong subdevice selected (idx=%d)\n",
-			  map_cfg.idx_subd);
+	if (map_cfg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_mmap: subdevice index "
+			  "out of range (idx=%d)\n", map_cfg.idx_subd);
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_ioctl_mmap: operation not supported, "
+			  "synchronous only subdevice\n");
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_MMAP) == 0) {
+		__a4l_err("a4l_ioctl_mmap: mmap not allowed on this subdevice\n");
 		return -EINVAL;
 	}
 
@@ -476,9 +483,16 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	if (buf_cfg.idx_subd >= dev->transfer.nb_subd ||
-	    (dev->transfer.subds[buf_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_bufcfg: wrong subdevice selected\n");
+	/* Check the subdevice */
+	if (buf_cfg.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_bufcfg: subdevice index "
+			  "out of range (idx=%d)\n", buf_cfg.idx_subd);
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[buf_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_ioctl_bufcfg: operation not supported, "
+			  "synchronous only subdevice\n");
 		return -EINVAL;
 	}
 
@@ -491,7 +505,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	   no buffer size change is allowed */
 	if (test_bit(A4L_TSF_BUSY,
 		     &(dev->transfer.status[buf_cfg.idx_subd]))) {
-		__a4l_err("a4l_ioctl_bufcfg: buffer size too big (<=16MB)\n");
+		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
 		return -EBUSY;
 	}
 
@@ -531,9 +545,16 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 				     &info, arg, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
-	if (info.idx_subd >= dev->transfer.nb_subd ||
-	    (dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_bufinfo: wrong subdevice selected\n");
+	/* Check the subdevice */
+	if (info.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_bufinfo: subdevice index "
+			  "out of range (idx=%d)\n", info.idx_subd);
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_ioctl_bufinfo: operation not supported, "
+			  "synchronous only subdevice\n");
 		return -EINVAL;
 	}
 
@@ -829,11 +850,6 @@ int a4l_select(a4l_cxt_t *cxt,
 		return -ENOENT;	
 	}
 
-	/* TODO: to be removed
-	   Check the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0)
-		return -EINVAL;
-
 	/* Performs a bind on the Analogy synchronization element */
 	return a4l_select_sync(&(buf->sync), selector, type, fd_index);	
 }
@@ -856,10 +872,20 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 				     &poll, arg, sizeof(a4l_poll_t)) != 0)
 		return -EFAULT;
 
-	/* Checks the subdevice capabilities */
-	if ((dev->transfer.subds[poll.idx_subd]->flags &
-	     A4L_SUBD_CMD) == 0 ||
-	    (dev->transfer.subds[poll.idx_subd]->flags &
+	/* Check the subdevice */
+	if (poll.idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_poll: subdevice index out of range (idx=%d)\n", 
+			  buf_cfg.idx_subd);
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[poll.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
+		__a4l_err("a4l_poll: operation not supported, "
+			  "synchronous only subdevice\n");
+		return -EINVAL;
+	}
+
+	if ((dev->transfer.subds[poll.idx_subd]->flags & 
 	     A4L_SUBD_MASK_SPECIAL) != 0) {
 		__a4l_err("a4l_poll: wrong subdevice selected\n");
 		return -EINVAL;

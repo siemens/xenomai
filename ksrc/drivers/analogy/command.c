@@ -98,19 +98,20 @@ int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 
 	if (desc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_check_cmddesc: "
-			     "subdevice index out of range (%u >= %u)\n",
-			     desc->idx_subd, dev->transfer.nb_subd);
+			  "subdevice index out of range (%u >= %u)\n",
+			  desc->idx_subd, dev->transfer.nb_subd);
 		return -EINVAL;
 	}
 
 	if (dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_UNUSED) {
 		__a4l_err("a4l_check_cmddesc: "
-			     "subdevice type incoherent\n");
+			  "subdevice type incoherent\n");
 		return -EIO;
 	}
 
 	if (!(dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_CMD)) {
-		__a4l_err("a4l_check_cmddesc: operation not supported\n");
+		__a4l_err("a4l_check_cmddesc: operation not supported, "
+			  "synchronous only subdevice\n");
 		return -EIO;
 	}
 

@@ -189,7 +189,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 
 	/* Checks the subdevice index */
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_do_insn: bad subdevice index\n");
+		__a4l_err("a4l_do_insn: subdevice index out of range\n");
 		return -EINVAL;
 	}
 

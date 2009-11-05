@@ -448,6 +448,13 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_subd_t *subd;
 
+	/* Basically check the device */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_cancel: operation not supported on "
+			  "an unattached device\n");
+		return -EINVAL;
+	}
+
 	if (idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
 		return -EINVAL;
@@ -459,7 +466,8 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	}
 
 	if (!(dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD)) {
-		__a4l_err("a4l_ioctl_cancel: synchronous only subdevice\n");
+		__a4l_err("a4l_ioctl_cancel: operation not supported, "
+			  "synchronous only subdevice\n");
 		return -EIO;
 	}
 

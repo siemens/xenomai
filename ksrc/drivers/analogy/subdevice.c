@@ -231,7 +231,8 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 		return -EFAULT;
 
 	if (inarg.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_nbchaninfo: bad subdevice index\n");
+		__a4l_err("a4l_ioctl_nbchaninfo: subdevice index "
+			  "out of range\n");
 		return -EINVAL;
 	}
 
