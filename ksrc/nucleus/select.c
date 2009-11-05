@@ -53,6 +53,9 @@
 #include <linux/types.h>
 #include <linux/bitops.h>	/* For hweight_long */
 
+static xnqueue_t xnselectors;
+static int xnselect_apc;
+
 #define link2binding(baddr, memb)				\
 	container_of(baddr, struct xnselect_binding, memb)
 
@@ -388,29 +391,67 @@ EXPORT_SYMBOL_GPL(xnselect);
  */
 void xnselector_destroy(struct xnselector *selector)
 {
+	spl_t s;
+
+	inith(&selector->destroy_link);
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&xnselectors, &selector->destroy_link);
+	xnlock_put_irqrestore(&nklock, s);
+
+	rthal_apc_schedule(xnselect_apc);
+}
+EXPORT_SYMBOL_GPL(xnselector_destroy);
+
+static void xnselector_destroy_loop(void *cookie)
+{
+	struct xnselector *selector;
 	xnholder_t *holder;
+	int resched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	while ((holder = getq(&selector->bindings))) {
-		struct xnselect_binding *binding;
-		struct xnselect *fd;
-		spl_t dummy;
+	while ((holder = getq(&xnselectors))) {
+		selector = container_of(holder, struct xnselector, destroy_link);
+		while ((holder = getq(&selector->bindings))) {
+			struct xnselect_binding *binding;
+			struct xnselect *fd;
 
-		binding = link2binding(holder, slink);
-		fd = binding->fd;
-		removeq(&fd->bindings, &binding->link);
-		xnlock_clear_irqon(&nklock);
+			binding = link2binding(holder, slink);
+			fd = binding->fd;
+			removeq(&fd->bindings, &binding->link);
+			xnlock_put_irqrestore(&nklock, s);
 
-		xnfree(binding);
+			xnfree(binding);
 
-		xnlock_get_irqsave(&nklock, dummy);
+			xnlock_get_irqsave(&nklock, s);
+		}
+		resched = 
+			xnsynch_destroy(&selector->synchbase) == XNSYNCH_RESCHED;
+		xnlock_put_irqrestore(&nklock, s);
+
+		xnfree(selector);
+		if (resched)
+			xnpod_schedule();
+
+		xnlock_get_irqsave(&nklock, s);
 	}
 	xnlock_put_irqrestore(&nklock, s);
-
-	if (xnsynch_destroy(&selector->synchbase) == XNSYNCH_RESCHED)
-		xnpod_schedule();
 }
-EXPORT_SYMBOL_GPL(xnselector_destroy);
+
+int xnselect_mount(void)
+{
+	initq(&xnselectors);
+	xnselect_apc = rthal_apc_alloc("xnselectors_destroy", 
+				       xnselector_destroy_loop, NULL);
+	if (xnselect_apc < 0)
+		return xnselect_apc;
+
+	return 0;
+}
+
+int xnselect_umount(void)
+{
+	return rthal_apc_free(xnselect_apc);
+}
 
 /*@}*/
