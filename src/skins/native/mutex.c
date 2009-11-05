@@ -96,6 +96,20 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 
 		if (timeout == TM_NONBLOCK && mode == XN_RELATIVE)
 			return -EWOULDBLOCK;
+	} else if (xnsynch_fast_owner_check(mutex->fastlock, cur) == 0) {
+		/*
+		 * The application is buggy as it jumped to secondary mode
+		 * while holding the mutex. Nevertheless, we have to keep the
+		 * mutex state consistent.
+		 *
+		 * We make no efforts to migrate or warn here. There is
+		 * CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX to catch such bugs.
+		 */
+		if (mutex->lockcnt == UINT_MAX)
+			return -EAGAIN;
+
+		mutex->lockcnt++;
+		return 0;
 	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
