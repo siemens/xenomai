@@ -207,6 +207,8 @@ do {									\
 		schedule_timeout(t);				\
 } while(0)
 
+#define DEFINE_SPINLOCK(x)	spinlock_t x = SPIN_LOCK_UNLOCKED
+
 #ifndef NSEC_PER_MSEC
 #define NSEC_PER_MSEC	1000000L
 #endif
