@@ -5,6 +5,6 @@ config XENO_DRIVERS_ANALOGY_8255
 	default n
 
 config XENO_DRIVERS_ANALOGY_PARPORT
-	depends on XENO_DRIVERS_ANALOGY
+	depends on XENO_DRIVERS_ANALOGY && X86
 	tristate "Standard parallel port driver"
 	default n
