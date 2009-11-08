@@ -875,7 +875,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	/* Check the subdevice */
 	if (poll.idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_poll: subdevice index out of range (idx=%d)\n", 
-			  buf_cfg.idx_subd);
+			  poll.idx_subd);
 		return -EINVAL;
 	}
 
