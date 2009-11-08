@@ -3,6 +3,4 @@
 # Xenomai configuration for Linux v2.4
 #
 
-if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
-   dep_tristate 'NI MITE driver' CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE $CONFIG_XENO_DRIVERS_ANALOGY
-fi
+dep_tristate 'NI MITE driver' CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE $CONFIG_XENO_DRIVERS_ANALOGY
