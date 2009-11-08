@@ -234,7 +234,7 @@ EXPORT_SYMBOL(subdev_8255_init);
 
 */
 
-int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
+static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
 	unsigned long *addrs; 	
 	int i, err = 0;
@@ -293,7 +293,7 @@ out_attach:
 	return err;
 }
 
-int dev_8255_detach(a4l_dev_t *dev)
+static int dev_8255_detach(a4l_dev_t *dev)
 {
 	a4l_subd_t *subd;
 	int i = 0;
