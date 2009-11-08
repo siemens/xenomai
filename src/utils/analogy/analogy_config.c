@@ -50,7 +50,7 @@ struct option a4l_conf_opts[] = {
 	{0},
 };
 
-int compute_opts(char *opts, unsigned int *nb, unsigned int *res)
+int compute_opts(char *opts, unsigned int *nb, unsigned long *res)
 {
 
 	int ret = 0, len, ofs;
@@ -60,19 +60,26 @@ int compute_opts(char *opts, unsigned int *nb, unsigned int *res)
 		return -EINVAL;
 	*nb = 0;
 
+	/* We set errno to 0 so as to be sure that 
+	   strtoul did not fail */
+	errno = 0;
+
 	do {
 		(*nb)++;
 		len = strlen(opts);
 		ofs = strcspn(opts, __OPTS_DELIMITER);
-		if (res != NULL && sscanf(opts, "%u", &res[(*nb) - 1]) == 0) {
-			ret = -EINVAL;
-			goto out_compute_opts;
+		if (res != NULL) {
+			res[(*nb) - 1] = strtoul(opts, NULL, 0);
+			if (errno != 0) {
+				ret = -errno;
+				goto out_compute_opts;
+			}				
 		}
 		opts += ofs + 1;
 	} while (len != ofs);
 
 out_compute_opts:
-	(*nb) *= sizeof(unsigned int);
+	(*nb) *= sizeof(unsigned long);
 	return ret;
 }
 
@@ -85,7 +92,8 @@ void do_print_version(void)
 void do_print_usage(void)
 {
 	fprintf(stdout,
-		"usage:\tanalogy_config [OPTS] <device file> <driver>\n");
+		"usage:\tanalogy_config [OPTS] devfile driver "
+		"<driver options, ex: 0x378,7>\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout, "\t\t -q, --quiet: quiet output\n");
 	fprintf(stdout, "\t\t -V, --version: print program version\n");
