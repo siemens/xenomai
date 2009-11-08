@@ -822,6 +822,13 @@ int rthal_init(void)
      * The arch-dependent support must have updated the various
      * frequency args as required.
      */
+
+    /* check the CPU frequency first and abort if it's invalid */
+    if (rthal_cpufreq_arg == 0) {
+        printk(KERN_ERR "Xenomai has detected a CPU frequency of 0. Aborting.\n");
+        return -ENODEV;
+    }
+
     rthal_tunables.cpu_freq = rthal_cpufreq_arg;
     rthal_tunables.timer_freq = rthal_timerfreq_arg;
     rthal_tunables.clock_freq = rthal_clockfreq_arg;
