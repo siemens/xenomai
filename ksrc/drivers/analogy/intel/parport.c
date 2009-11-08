@@ -56,7 +56,7 @@
    subdevice 2 is digital output.  Unlike other Analogy devices,
    subdevice 0 defaults to output.
 
-   Pins 13 and 14 are inverted once by Comedi and once by the
+   Pins 13 and 14 are inverted once by Analogy and once by the
    hardware, thus cancelling the effect.
 
    Pin 1 is a strobe, thus acts like one.  There's no way in software
@@ -80,6 +80,9 @@
 #define PARPORT_A 0
 #define PARPORT_B 1
 #define PARPORT_C 2
+
+#define DEFAULT_ADDRESS 0x378
+#define DEFAULT_IRQ 7
 
 typedef struct parport_subd_priv {
 	unsigned long io_bits;
@@ -325,24 +328,28 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	unsigned long io_base;
 
 	if(arg->opts == NULL || arg->opts_size < sizeof(unsigned long)) {
-		a4l_err(dev, 
-			"dev_parport_attach: "
-			"unable to detect any parallel port, "
-			"no addresses / IRQ passed as attach arguments\n");
-		return -EINVAL;
+
+		a4l_warn(dev, 
+			 "dev_parport_attach: no attach options specified, "
+			 "taking default options (addr=0x%x, irq=%d)\n",
+			 DEFAULT_ADDRESS, DEFAULT_IRQ);
+
+		io_base = DEFAULT_ADDRESS;
+		irq = DEFAULT_IRQ;
+	} else {
+
+		io_base = ((unsigned long *)arg->opts)[0];
+
+		if (arg->opts_size >= 2 * sizeof(unsigned long))
+			irq = (int) ((unsigned long *)arg->opts)[1];
 	}
-
-	io_base = ((unsigned long *)arg->opts)[0];
-
+	
 	if (!request_region(io_base, PARPORT_SIZE, "analogy_parport")) {
 		a4l_err(dev, "dev_parport_attach: I/O port conflict");
 		return -EIO;
 	}
 
 	a4l_info(dev, "dev_parport_attach: address = 0x%lx\n", io_base);
-	
-	if (arg->opts_size == 2 * sizeof(unsigned long))
-		irq = (int) ((unsigned long *)arg->opts)[1];
 
 	for (i = 0; i < 3; i++) {
 		
@@ -360,7 +367,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 		a4l_subd_t *subd;
 
-		a4l_info(dev, "dev_parport_attach: irq = 0x%d\n", irq);
+		a4l_info(dev, "dev_parport_attach: irq = %d\n", irq);
 
 		err = a4l_request_irq(dev, irq, parport_interrupt, 0, dev);
 		if (err < 0) {
