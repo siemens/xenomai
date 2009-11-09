@@ -98,6 +98,16 @@ typedef spinlock_t rthal_spinlock_t;
 
 #define rthal_cpudata_irq_hits(ipd,cpu,irq)	__ipipe_cpudata_irq_hits(ipd,cpu,irq)
 
+#ifndef local_irq_save_hw_smp
+#ifdef CONFIG_SMP
+#define local_irq_save_hw_smp(flags)	local_irq_save_hw(flags)
+#define local_irq_restore_hw_smp(flags)	local_irq_restore_hw(flags)
+#else /* !CONFIG_SMP */
+#define local_irq_save_hw_smp(flags)	do { (void)(flags); } while (0)
+#define local_irq_restore_hw_smp(flags)	do { } while (0)
+#endif /* !CONFIG_SMP */
+#endif /* !local_irq_save_hw_smp */
+
 /* I-pipe domain priorities and virtual interrupt mask handling. If
    the invariant pipeline head feature is enabled for Xenomai, use
    it. */
@@ -117,7 +127,14 @@ typedef spinlock_t rthal_spinlock_t;
 #endif /* !CONFIG_XENO_OPT_PIPELINE_HEAD */
 #define rthal_local_irq_flags(x)	((x) = ipipe_test_pipeline_from(&rthal_domain) & 1)
 #define rthal_local_irq_test()		ipipe_test_pipeline_from(&rthal_domain)
-#define rthal_local_irq_disabled()	ipipe_test_pipeline_from(&rthal_domain)
+#define rthal_local_irq_disabled()				\
+({								\
+	unsigned long __flags, __ret;				\
+	local_irq_save_hw_smp(__flags);				\
+	__ret = ipipe_test_pipeline_from(&rthal_domain);	\
+	local_irq_restore_hw_smp(__flags);			\
+	__ret;							\
+})
 #define rthal_stage_irq_enable(dom)	ipipe_unstall_pipeline_from(dom)
 #define rthal_local_irq_save_hw(x)	local_irq_save_hw(x)
 #define rthal_local_irq_restore_hw(x)	local_irq_restore_hw(x)
