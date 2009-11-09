@@ -1017,6 +1017,15 @@ static void __unreserve_and_free_heap(void *ptr, size_t size, int kmflags)
 	}
 }
 
+static void xnheap_vmopen(struct vm_area_struct *vma)
+{
+	xnheap_t *heap = vma->vm_private_data;
+
+	spin_lock(&kheapq_lock);
+	heap->archdep.numaps++;
+	spin_unlock(&kheapq_lock);
+}
+
 static void xnheap_vmclose(struct vm_area_struct *vma)
 {
 	xnheap_t *heap = vma->vm_private_data;
@@ -1037,7 +1046,8 @@ static void xnheap_vmclose(struct vm_area_struct *vma)
 }
 
 static struct vm_operations_struct xnheap_vmops = {
-      .close = &xnheap_vmclose
+	.open = &xnheap_vmopen,
+	.close = &xnheap_vmclose
 };
 
 static int xnheap_open(struct inode *inode, struct file *file)
