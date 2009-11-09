@@ -165,7 +165,7 @@ int __init __xeno_sys_init(void)
 	xnselect_umount();
 	
       cleanup_pipe:
-#endif CONFIG_XENO_OPT_SELECT
+#endif /* CONFIG_XENO_OPT_SELECT */
 
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
