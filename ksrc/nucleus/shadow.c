@@ -716,20 +716,27 @@ static void xnshadow_dereference_skin(unsigned magic)
 
 static void lostage_handler(void *cookie)
 {
-	int cpu = smp_processor_id(), reqnum, sig, arg;
-	struct __lostagerq *rq = &lostagerq[cpu];
+	struct __lostagerq *rq = &lostagerq[smp_processor_id()];
+	int reqnum, type, arg, sig, sigarg;
+	struct task_struct *p;
 
 	while ((reqnum = rq->out) != rq->in) {
-		struct task_struct *p = rq->req[reqnum].task;
+		type = rq->req[reqnum].type;
+		p = rq->req[reqnum].task;
+		arg = rq->req[reqnum].arg;
+
+		/* make sure we read the request before releasing its slot */
+		barrier();
+
 		rq->out = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
 
 		trace_mark(xn_nucleus, lostage_work,
 			   "reqnum %d comm %s pid %d",
 			   reqnum, p->comm, p->pid);
 
-		switch (rq->req[reqnum].type) {
+		switch (type) {
 		case LO_UNMAP_REQ:
-			xnshadow_dereference_skin(rq->req[reqnum].arg);
+			xnshadow_dereference_skin(arg);
 
 			/* fall through */
 		case LO_WAKEUP_REQ:
@@ -751,21 +758,20 @@ static void lostage_handler(void *cookie)
 			break;
 
 		case LO_SIGTHR_REQ:
-			xnshadow_sig_demux(rq->req[reqnum].arg, sig, arg);
+			xnshadow_sig_demux(arg, sig, sigarg);
 			if (sig == SIGSHADOW) {
 				siginfo_t si;
 				memset(&si, '\0', sizeof(si));
 				si.si_signo = sig;
 				si.si_code = SI_QUEUE;
-				si.si_int = arg;
+				si.si_int = sigarg;
 				send_sig_info(sig, &si, p);
 			} else
 				send_sig(sig, p, 1);
 			break;
 
 		case LO_SIGGRP_REQ:
-			sig = rq->req[reqnum].arg;
-			kill_proc(p->pid, sig, 1);
+			kill_proc(p->pid, arg, 1);
 			break;
 		}
 	}
