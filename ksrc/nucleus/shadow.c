@@ -731,8 +731,8 @@ static void lostage_handler(void *cookie)
 		rq->out = (reqnum + 1) & (LO_MAX_REQUESTS - 1);
 
 		trace_mark(xn_nucleus, lostage_work,
-			   "reqnum %d comm %s pid %d",
-			   reqnum, p->comm, p->pid);
+			   "type %d comm %s pid %d",
+			   type, p->comm, p->pid);
 
 		switch (type) {
 		case LO_UNMAP_REQ:
