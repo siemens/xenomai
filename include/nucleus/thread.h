@@ -62,6 +62,7 @@
 #define XNFPU     0x00100000 /**< Thread uses FPU */
 #define XNSHADOW  0x00200000 /**< Shadow thread */
 #define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
+#define XNSWREP   0x00800000 /**< Mode switch already reported */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
