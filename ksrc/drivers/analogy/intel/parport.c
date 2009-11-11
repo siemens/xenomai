@@ -118,13 +118,30 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	a4l_dev_t *dev = subd->dev;
 	parport_spriv_t *spriv = (parport_spriv_t *)subd->priv;
 
-	if (insn->data[0]) {
+	/* No need to check the channel descriptor; the input / output
+	   setting is global for all channels */
+
+	switch (insn->data[0]) {
+
+	case A4L_INSN_CONFIG_DIO_OUTPUT:
 		spriv->io_bits = 0xff;
-		devpriv->c_data &= ~(1 << 5);
-	} else {
+		devpriv->c_data &= ~(1 << 5);		
+		break;
+
+	case A4L_INSN_CONFIG_DIO_INPUT:
 		spriv->io_bits = 0;
 		devpriv->c_data |= (1 << 5);
+		break;
+
+	case A4L_INSN_CONFIG_DIO_QUERY:
+		insn->data[1] = (spriv->io_bits == 0xff) ? 
+			A4L_OUTPUT: A4L_INPUT;
+		break;
+
+	default:
+		return -EINVAL;
 	}
+
 	outb(devpriv->c_data, devpriv->io_base + PARPORT_C);
 
 	return 0;
