@@ -2542,7 +2542,8 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 	trace_mark(xn_nucleus, thread_fault,
 		   "thread %p thread_name %s ip %p type %d",
-		   thread, xnthread_name(thread), xnarch_fault_pc(fltinfo),
+		   thread, xnthread_name(thread),
+		   (void *)xnarch_fault_pc(fltinfo),
 		   xnarch_fault_trap(fltinfo));
 
 #ifdef __KERNEL__
