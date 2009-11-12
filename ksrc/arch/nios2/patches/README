@@ -24,8 +24,8 @@ since we try hard to maintain backward compatibility.
 Patch			        Based on GIT commit # / TAG
 ------------------------------------------------------------------------
 
-2.6.26-rc6 / 1.0		ae75a3e1bd017d887591dd01ca2d5a715f4baa40
-2.6.26-rc6 / 1.1		f06a7f143cfca65c75730a06317400d885a63565
+2.6.26-rc6			ae75a3e1bd017d887591dd01ca2d5a715f4baa40
+2.6.30				d01303a1035a39e445007c7522d89ad985c4153c
 
 [1] http://www.gna.org/projects/adeos/
 [2] git://sopc.et.ntust.edu.tw/git/linux-2.6.git
