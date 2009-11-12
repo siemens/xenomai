@@ -376,6 +376,12 @@ unsigned long find_next_bit(const unsigned long *addr,
 #define __GFP_BITS_SHIFT 20
 #endif
 
+#include <asm/pgtable.h>
+
+#ifndef pgprot_noncached
+#define pgprot_noncached(p) (p)
+#endif /* !pgprot_noncached */
+
 #define wrap_switch_mm(prev,next,task)	\
     switch_mm(prev,next,task)
 #define wrap_enter_lazy_tlb(mm,task)	\
@@ -502,10 +508,6 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 #else /* LINUX_VERSION_CODE < 2.6.27 */
 
 #include <asm/semaphore.h>
-
-#ifndef CONFIG_MMU
-#define pgprot_noncached(p) (p)
-#endif /* !CONFIG_MMU */
 
 #define wrap_find_task_by_pid(nr)  find_task_by_pid(nr)
 
