@@ -128,11 +128,11 @@ int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 /* Cancel callback */
 int loop_cancel(a4l_subd_t *subd)
 {
-	lpprv_t *priv=(lpprv_t *)subd->dev->priv;
+	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
 	a4l_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
-	priv->loop_running=0;
+	priv->loop_running = 0;
 
 	return 0;
 }
@@ -143,11 +143,11 @@ int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
 	/* Checks the buffer size */
-	if (insn->data_size!=sizeof(sampl_t))
+	if (insn->data_size != sizeof(sampl_t))
 		return -EINVAL;
 
 	/* Sets the memorized value */
-	insn->data[0]=priv->loop_insn_value;
+	insn->data[0] = priv->loop_insn_value;
     
 	return 0;
 }
@@ -158,11 +158,11 @@ int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
 
 	/* Checks the buffer size */
-	if (insn->data_size!=sizeof(sampl_t))
+	if (insn->data_size != sizeof(sampl_t))
 		return -EINVAL;
 
 	/* Retrieves the value to memorize */
-	priv->loop_insn_value=insn->data[0];
+	priv->loop_insn_value = insn->data[0];
     
 	return 0;
 }
