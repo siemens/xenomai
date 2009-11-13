@@ -249,7 +249,7 @@ int loop_detach(a4l_dev_t *dev)
 
 static a4l_drv_t loop_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "a4l_loop",
+	.board_name = "analogy_loop",
 	.attach = loop_attach,
 	.detach = loop_detach,
 	.privdata_size = sizeof(lpprv_t),

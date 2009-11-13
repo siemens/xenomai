@@ -295,7 +295,7 @@ int test_detach(a4l_dev_t *dev)
 
 static a4l_drv_t test_drv = {
 	.owner = THIS_MODULE,
-	.board_name = "a4l_fake",
+	.board_name = "analogy_fake",
 	.attach = test_attach,
 	.detach = test_detach,
 	.privdata_size = sizeof(tstprv_t),
