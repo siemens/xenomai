@@ -127,9 +127,9 @@
  * @{
  */
 
-#define A4L_COUNTER_ARMED			0x1
+#define A4L_COUNTER_ARMED		0x1
 #define A4L_COUNTER_COUNTING		0x2
-#define A4L_COUNTER_TERMINAL_COUNT		0x4
+#define A4L_COUNTER_TERMINAL_COUNT	0x4
 
 	  /*! @} ANALOGY_COUNTER_xxx */
 
@@ -139,9 +139,9 @@
  * @{
  */
 
-#define A4L_INPUT 0
-#define A4L_OUTPUT 1
-#define A4L_OPENDRAIN 2
+#define A4L_INPUT	0
+#define A4L_OUTPUT	1
+#define A4L_OPENDRAIN	2
 
 	  /*! @} ANALOGY_IO_DIRECTION */
 
