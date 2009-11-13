@@ -36,7 +36,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 sbin_PROGRAMS = analogy_config$(EXEEXT)
-bin_PROGRAMS = cmd_read$(EXEEXT) cmd_write$(EXEEXT) insn_read$(EXEEXT)
+bin_PROGRAMS = cmd_read$(EXEEXT) cmd_write$(EXEEXT) insn_read$(EXEEXT) \
+	insn_write$(EXEEXT)
 subdir = src/utils/analogy
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -68,6 +69,9 @@ cmd_write_DEPENDENCIES =
 am_insn_read_OBJECTS = insn_read.$(OBJEXT)
 insn_read_OBJECTS = $(am_insn_read_OBJECTS)
 insn_read_DEPENDENCIES =
+am_insn_write_OBJECTS = insn_write.$(OBJEXT)
+insn_write_OBJECTS = $(am_insn_write_OBJECTS)
+insn_write_DEPENDENCIES =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -82,9 +86,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(analogy_config_SOURCES) $(cmd_read_SOURCES) \
-	$(cmd_write_SOURCES) $(insn_read_SOURCES)
+	$(cmd_write_SOURCES) $(insn_read_SOURCES) \
+	$(insn_write_SOURCES)
 DIST_SOURCES = $(analogy_config_SOURCES) $(cmd_read_SOURCES) \
-	$(cmd_write_SOURCES) $(insn_read_SOURCES)
+	$(cmd_write_SOURCES) $(insn_read_SOURCES) \
+	$(insn_write_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -263,6 +269,8 @@ cmd_write_SOURCES = cmd_write.c
 cmd_write_LDADD = -lanalogy -lnative -lrtdm
 insn_read_SOURCES = insn_read.c
 insn_read_LDADD = -lanalogy -lnative -lrtdm
+insn_write_SOURCES = insn_write.c
+insn_write_LDADD = -lanalogy -lnative -lrtdm
 all: all-am
 
 .SUFFIXES:
@@ -395,6 +403,9 @@ cmd_write$(EXEEXT): $(cmd_write_OBJECTS) $(cmd_write_DEPENDENCIES)
 insn_read$(EXEEXT): $(insn_read_OBJECTS) $(insn_read_DEPENDENCIES) 
 	@rm -f insn_read$(EXEEXT)
 	$(LINK) $(insn_read_OBJECTS) $(insn_read_LDADD) $(LIBS)
+insn_write$(EXEEXT): $(insn_write_OBJECTS) $(insn_write_DEPENDENCIES) 
+	@rm -f insn_write$(EXEEXT)
+	$(LINK) $(insn_write_OBJECTS) $(insn_write_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -406,6 +417,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd_read.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd_write.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_read.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/insn_write.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
