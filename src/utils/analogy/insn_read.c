@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, instruction test program
+ * Analogy for Linux, instruction read test program
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -36,7 +36,7 @@
 
 static unsigned char buf[BUF_SIZE];
 static double dbuf[BUF_SIZE];
-static char *filename;
+static char *filename = FILENAME;
 static int verbose;
 static int real_time;
 static int idx_subd;
@@ -141,10 +141,11 @@ int main(int argc, char *argv[])
 	}
 
 	/* Open the device */
-	ret = a4l_open(&dsc, FILENAME);
+	ret = a4l_open(&dsc, filename);
 	if (ret < 0) {
-		fprintf(stderr, "insn_read: a4l_open %s failed (ret=%d)\n",
-			FILENAME, ret);
+		fprintf(stderr, 
+			"insn_read: a4l_open %s failed (ret=%d)\n",
+			filename, ret);
 		return ret;
 	}
 
