@@ -511,7 +511,7 @@ EXPORT_SYMBOL(__rt_dev_recvmsg);
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 			 const struct msghdr *msg, int flags)
 {
-	trace_mark(xn_rtdm, recvmsg, "user_info %p fd %d msg_name %p "
+	trace_mark(xn_rtdm, sendmsg, "user_info %p fd %d msg_name %p "
 		   "msg_namelen %u msg_iov %p msg_iovlen %zu "
 		   "msg_control %p msg_controllen %zu msg_flags %d",
 		   user_info, fd, msg->msg_name, msg->msg_namelen,
