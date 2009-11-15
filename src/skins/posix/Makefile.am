@@ -26,6 +26,8 @@ libpthread_rt_la_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/posix
 
+libpthread_rt_la_LIBADD = ../common/libxeno_common.la
+
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) $(srcdir)/posix.wrappers $(DESTDIR)$(libdir)

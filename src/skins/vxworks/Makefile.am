@@ -20,3 +20,5 @@ libvxworks_la_SOURCES = \
 libvxworks_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+libvxworks_la_LIBADD = ../common/libxeno_common.la

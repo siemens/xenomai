@@ -14,3 +14,5 @@ libpsos_la_SOURCES = \
 libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+libpsos_la_LIBADD = ../common/libxeno_common.la

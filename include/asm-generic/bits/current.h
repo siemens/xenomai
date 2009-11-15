@@ -24,6 +24,7 @@ static inline unsigned long *xeno_init_current_mode(void)
 	return &xeno_current_mode;
 }
 
+#define xeno_init_current_keys() do { } while (0)
 #else /* ! HAVE___THREAD */
 extern pthread_key_t xeno_current_key;
 extern pthread_key_t xeno_current_mode_key;
@@ -44,6 +45,8 @@ static inline unsigned long xeno_get_current_mode(void)
 }
 
 unsigned long *xeno_init_current_mode(void);
+
+void xeno_init_current_keys(void);
 #endif /* ! HAVE___THREAD */
 
 void xeno_set_current(void);

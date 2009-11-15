@@ -620,6 +620,8 @@ dnl
 test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
 test x$CONFIG_XENO_FASTSYNCH = xy && AC_DEFINE(CONFIG_XENO_FASTSYNCH,1,[config])
+AM_CONDITIONAL(CONFIG_XENO_FASTSYNCH,[test "$CONFIG_XENO_FASTSYNCH" = y])
+
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
 test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 
@@ -627,6 +629,7 @@ test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config
 test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
 test $XNARCH_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(XNARCH_ARM_TSC_TYPE,$XNARCH_ARM_TSC_TYPE,[config])
 test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
+
 
 # Default sampling period (ns) used in various tests
 AC_DEFINE_UNQUOTED(CONFIG_XENO_DEFAULT_PERIOD,$CONFIG_XENO_DEFAULT_PERIOD,[config])
@@ -889,6 +892,7 @@ AC_CONFIG_FILES([ \
 	src/Makefile \
 	src/rtdk/Makefile \
 	src/skins/Makefile \
+	src/skins/common/Makefile \
        	src/skins/posix/Makefile \
        	src/skins/native/Makefile \
        	src/skins/vxworks/Makefile \

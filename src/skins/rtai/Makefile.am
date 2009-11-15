@@ -8,3 +8,5 @@ librtai_la_SOURCES = init.c \
 librtai_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+librtai_la_LIBADD = ../common/libxeno_common.la

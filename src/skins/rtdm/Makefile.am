@@ -9,3 +9,5 @@ librtdm_la_SOURCES = \
 librtdm_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+librtdm_la_LIBADD = ../common/libxeno_common.la

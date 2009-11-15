@@ -23,3 +23,5 @@ libnative_la_SOURCES = \
 libnative_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
+
+libnative_la_LIBADD = ../common/libxeno_common.la
