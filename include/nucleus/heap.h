@@ -115,6 +115,10 @@ typedef struct xnheap {
 
 	XNARCH_DECL_DISPLAY_CONTEXT();
 
+	xnholder_t stat_link;	/* Link in heapq */
+
+	char label[XNOBJECT_NAME_LEN+16];
+
 } xnheap_t;
 
 extern xnheap_t kheap;
@@ -225,6 +229,8 @@ int xnheap_init(xnheap_t *heap,
 		void *heapaddr,
 		u_long heapsize,
 		u_long pagesize);
+
+void xnheap_set_label(xnheap_t *heap, const char *name, ...);
 
 void xnheap_destroy(xnheap_t *heap,
 		    void (*flushfn)(xnheap_t *heap,

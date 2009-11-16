@@ -197,6 +197,7 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 			return 0;
 		}
 	}
+	xnheap_set_label(&heap->sysheap, "vrtx sysheap");
 
 	heap->magic = VRTX_HEAP_MAGIC;
 	inith(&heap->link);

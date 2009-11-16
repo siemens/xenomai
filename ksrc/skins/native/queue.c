@@ -255,6 +255,7 @@ int rt_queue_create(RT_QUEUE *q,
 			return err;
 		}
 	}
+	xnheap_set_label(&q->bufpool, "rt_queue: %s", name);
 
 	xnsynch_init(&q->synch_base, mode & (Q_PRIO | Q_FIFO), NULL);
 	initq(&q->pendq);

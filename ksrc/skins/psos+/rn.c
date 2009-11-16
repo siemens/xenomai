@@ -209,6 +209,8 @@ u_long rn_create(const char *name,
 		if (xnheap_init(&rn->heapbase, rnaddr, rnsize, XNHEAP_PAGE_SIZE) != 0)
 			return ERR_TINYRN;
 
+	xnheap_set_label(&rn->heapbase, "psosrn: %s", name);
+
 	inith(&rn->link);
 	rn->rnsize = rnsize;
 	rn->usize = usize;

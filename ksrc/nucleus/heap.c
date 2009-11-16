@@ -76,6 +76,9 @@ EXPORT_SYMBOL_GPL(kheap);
 xnheap_t kstacks;	/* Private stack pool */
 #endif
 
+static DEFINE_XNQUEUE(heapq);	/* Heap list for /proc reporting */
+static unsigned long heapq_rev;
+
 static void init_extent(xnheap_t *heap, xnextent_t *extent)
 {
 	caddr_t freepage;
@@ -167,6 +170,7 @@ int xnheap_init(xnheap_t *heap,
 	unsigned cpu, nr_cpus = xnarch_num_online_cpus();
 	u_long hdrsize, shiftsize, pageshift;
 	xnextent_t *extent;
+	spl_t s;
 
 	/*
 	 * Perform some parametrical checks first.
@@ -232,11 +236,56 @@ int xnheap_init(xnheap_t *heap,
 
 	appendq(&heap->extents, &extent->link);
 
+	snprintf(heap->label, sizeof(heap->label), "unlabeled @0x%p", heap);
+
+	xnlock_get_irqsave(&nklock, s);
+	appendq(&heapq, &heap->stat_link);
+	heapq_rev++;
+	xnlock_put_irqrestore(&nklock, s);
+
 	xnarch_init_display_context(heap);
 
 	return 0;
 }
 EXPORT_SYMBOL_GPL(xnheap_init);
+
+/*!
+ * \fn xnheap_set_label(xnheap_t *heap,const char *label,...)
+ * \brief Set the heap's label string.
+ *
+ * Set the heap label that will be used in statistic outputs.
+ *
+ * @param heap The address of a heap descriptor.
+ *
+ * @param label Label string displayed in statistic outputs. This parameter
+ * can be a format string, in which case succeeding parameters will be used
+ * to resolve the final label.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task
+ *
+ * Rescheduling: never.
+ */
+
+void xnheap_set_label(xnheap_t *heap, const char *label, ...)
+{
+	va_list args;
+	spl_t s;
+
+	va_start(args, label);
+
+	xnlock_get_irqsave(&nklock, s);
+	vsnprintf(heap->label, sizeof(heap->label), label, args);
+	xnlock_put_irqrestore(&nklock, s);
+
+	va_end(args);
+}
+EXPORT_SYMBOL_GPL(xnheap_set_label);
 
 /*! 
  * \fn void xnheap_destroy(xnheap_t *heap, void (*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)
@@ -272,6 +321,11 @@ void xnheap_destroy(xnheap_t *heap,
 {
 	xnholder_t *holder;
 	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+	removeq(&heapq, &heap->stat_link);
+	heapq_rev++;
+	xnlock_put_irqrestore(&nklock, s);
 
 	if (!flushfn)
 		return;
@@ -1232,12 +1286,18 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 			   void __user *mapaddr)
 {
 	unsigned long len;
+	spl_t s;
 
 	/*
 	 * Trying to unmap user memory without providing a release
 	 * handler for deferred cleanup is a bug.
 	 */
 	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release, /* nop */);
+
+	xnlock_get_irqsave(&nklock, s);
+	removeq(&heapq, &heap->stat_link);
+	heapq_rev++;
+	xnlock_put_irqrestore(&nklock, s);
 
 	len = xnheap_extentsize(heap);
 
@@ -1354,22 +1414,41 @@ static int heap_read_proc(char *page,
 			  char **start,
 			  off_t off, int count, int *eof, void *data)
 {
+	unsigned long rev;
+	xnholder_t *entry;
+	xnheap_t *heap;
 	int len;
+	spl_t s;
 
 	if (!xnpod_active_p())
 		return -ESRCH;
 
-	len = sprintf(page, "size=%lu:used=%lu:pagesz=%lu  (main heap)\n",
-		      xnheap_usable_mem(&kheap),
-		      xnheap_used_mem(&kheap),
-		      xnheap_page_size(&kheap));
+	xnlock_get_irqsave(&nklock, s);
 
-#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	len += sprintf(page + len, "size=%lu:used=%lu:pagesz=%lu  (stack pool)\n",
-		       xnheap_usable_mem(&kstacks),
-		       xnheap_used_mem(&kstacks),
-		       xnheap_page_size(&kstacks));
-#endif
+restart:
+	len = 0;
+
+	entry = getheadq(&heapq);
+	while (entry) {
+		heap = container_of(entry, xnheap_t, stat_link);
+		len += sprintf(page + len,
+			       "size=%lu:used=%lu:pagesz=%lu  (%s)\n",
+			       xnheap_usable_mem(heap),
+			       xnheap_used_mem(heap),
+			       xnheap_page_size(heap),
+			       heap->label);
+
+		rev = heapq_rev;
+
+		xnlock_sync_irq(&nklock, s);
+
+		if (heapq_rev != rev)
+			goto restart;
+
+		entry = nextq(&heapq, entry);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
 
 	len -= off;
 	if (len <= off + count)

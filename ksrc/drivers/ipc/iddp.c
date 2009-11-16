@@ -564,6 +564,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 			xnarch_free_host_mem(poolmem, poolsz);
 			goto fail;
 		}
+		xnheap_set_label(&sk->privpool, "ippd: %d", port);
 
 		sk->poolevt = &sk->privevt;
 		sk->poolwait = &sk->privwait;

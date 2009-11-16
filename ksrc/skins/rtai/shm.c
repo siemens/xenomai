@@ -176,6 +176,7 @@ static xnshm_a_t *create_new_heap(unsigned long name, int heapsize, int suprt)
 		xnheap_free(&kheap, p);
 		return NULL;
 	}
+	xnheap_set_label(p->heap, "rtai heap: 0x%lx", name);
 
 	p->chunk = xnheap_mapped_address(p->heap, 0);
 

@@ -543,6 +543,9 @@ int ftruncate(int fd, off_t len)
 			if (err)
 				goto err_up;
 
+			xnheap_set_label(&shm->heapbase,
+					 "posix shm: %s", shm->nodebase.name);
+
 			shm->size = xnheap_max_contiguous(&shm->heapbase);
 			shm->addr = xnheap_alloc(&shm->heapbase, shm->size);
 			/* Required. */

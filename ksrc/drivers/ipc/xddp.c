@@ -750,6 +750,9 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 	if (sk->peer.sipc_port < 0)
 		sk->peer = *sa;
 
+	if (poolsz > 0)
+		xnheap_set_label(sk->bufpool, "xddp: %d", sa->sipc_port);
+
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk, &sk->handle,
 				       &__xddp_pnode);

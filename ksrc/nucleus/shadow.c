@@ -1897,6 +1897,8 @@ static void *xnshadow_sys_event(int event, void *data)
 			xnarch_free_host_mem(p, sizeof(*p));
 			return ERR_PTR(err);
 		}
+		xnheap_set_label(&p->sem_heap,
+				 "private sem heap [%d]", current->pid);
 
 		return &p->ppd;
 

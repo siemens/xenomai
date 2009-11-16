@@ -1057,6 +1057,8 @@ static int __sc_pcreate(struct pt_regs *regs)
 	if (err)
 		goto free_heap;
 
+	xnheap_set_label(ptheap, "vrtx ptheap");
+
 	/* Allocate the partition space as a single shared heap block. */
 	ptaddr = xnheap_alloc(ptheap, ptsize);
 	pid = sc_pcreate(pid, ptaddr, ptsize, bsize, &err);

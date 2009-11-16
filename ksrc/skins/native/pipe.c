@@ -300,6 +300,8 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 			xnarch_free_host_mem(poolmem, poolsize);
 			return err;
 		}
+		xnheap_set_label(&pipe->privpool,
+				 "rt_pipe: %d / %s", minor, name);
 
 		pipe->bufpool = &pipe->privpool;
 	}

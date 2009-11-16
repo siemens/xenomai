@@ -104,6 +104,8 @@ int __init __xeno_sys_init(void)
 				 XNARCH_SHARED_HEAP_FLAGS);
 	if (ret)
 		goto cleanup_arch;
+
+	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
 #endif
 	
 #ifdef __KERNEL__

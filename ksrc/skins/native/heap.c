@@ -292,6 +292,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 			return err;
 		}
 	}
+	xnheap_set_label(&heap->heap_base, "rt_heap: %s", name);
 
 	xnsynch_init(&heap->synch_base, mode & (H_PRIO | H_FIFO), NULL);
 	heap->handle = 0;	/* i.e. (still) unregistered heap. */

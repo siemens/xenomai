@@ -388,6 +388,7 @@ int xnpod_init(void)
 			XNHEAP_PAGE_SIZE) != 0) {
 		return -ENOMEM;
 	}
+	xnheap_set_label(&kheap, "main heap");
 
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
 	/*
@@ -409,6 +410,7 @@ int xnpod_init(void)
 		xnheap_destroy(&kheap, &xnpod_flush_heap, NULL);
 		return -ENOMEM;
 	}
+	xnheap_set_label(&kstacks, "stack pool");
 #endif /* CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0 */
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
