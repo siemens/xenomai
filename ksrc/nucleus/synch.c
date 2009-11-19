@@ -326,8 +326,10 @@ void xnsynch_renice_sleeper(xnthread_t *thread)
 			 * and boost the owner. */
 			__setbits(synch->status, XNSYNCH_CLAIMED);
 			insertpqf(&owner->claimq, &synch->link, thread->cprio);
-			owner->bprio = owner->cprio;
-			xnthread_set_state(owner, XNBOOST);
+			if (!xnthread_test_state(owner, XNBOOST)) {
+				owner->bprio = owner->cprio;
+				xnthread_set_state(owner, XNBOOST);
+			}
 		}
 		/* Renice the owner thread, progressing in the PI
 		   chain as needed. */
