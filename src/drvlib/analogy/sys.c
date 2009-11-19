@@ -85,7 +85,14 @@ int a4l_sys_close(int fd)
  * @param[out] buf Input buffer
  * @param[in] nbyte Number of bytes to read
  *
- * @return Number of bytes read, otherwise negative error code.
+ * @return Number of bytes read. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -ENOENT is returned if the device's reading subdevice is idle (no
+ *    command was sent)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -EINTR is returned if calling task has been unblocked by a signal
  *
  */
 int a4l_sys_read(int fd, void *buf, size_t nbyte)
@@ -103,7 +110,14 @@ int a4l_sys_read(int fd, void *buf, size_t nbyte)
  * @param[in] buf Output buffer
  * @param[in] nbyte Number of bytes to write
  *
- * @return Number of bytes written, otherwise negative error code.
+ * @return Number of bytes written. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -ENOENT is returned if the device's writing subdevice is idle (no
+ *    command was sent)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -EINTR is returned if calling task has been unblocked by a signal
  *
  */
 int a4l_sys_write(int fd, void *buf, size_t nbyte)
@@ -125,7 +139,16 @@ int a4l_sys_write(int fd, void *buf, size_t nbyte)
  * @param[in] fd File descriptor as returned by a4l_sys_open()
  * @param[in] arg Link descriptor argument
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -ENOMEM is returned if the system is out of memory
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -ENODEV is returned in case of internal error (Please, type
+ *    "dmesg" for more info)
+ * - -ENXIO is returned in case of internal error (Please, type
+ *    "dmesg" for more info)
  *
  */
 int a4l_sys_attach(int fd, a4l_lnkdesc_t * arg)
@@ -138,7 +161,17 @@ int a4l_sys_attach(int fd, a4l_lnkdesc_t * arg)
  *
  * @param[in] fd File descriptor as returned by a4l_sys_open()
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EBUSY is returned if the device to be detached is in use
+ * - -EPERM is returned if the devive to be detached still has some
+ *    buffer mapped in user-space
+ * - -ENODEV is returned in case of internal error (Please, type
+ *    "dmesg" for more info)
+ * - -ENXIO is returned in case of internal error (Please, type
+ *    "dmesg" for more info)
  *
  */
 int a4l_sys_detach(int fd)
