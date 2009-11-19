@@ -656,8 +656,10 @@ void xnsynch_requeue_sleeper(struct xnthread *thread)
 			__setbits(synch->status, XNSYNCH_CLAIMED);
 			insertpqf(&owner->claimq, &synch->link,
 				  w_cprio(thread));
-			owner->bprio = owner->cprio;
-			xnthread_set_state(owner, XNBOOST);
+			if (!xnthread_test_state(owner, XNBOOST)) {
+				owner->bprio = owner->cprio;
+				xnthread_set_state(owner, XNBOOST);
+			}
 		}
 		/*
 		 * Renice the owner thread, progressing in the PI
