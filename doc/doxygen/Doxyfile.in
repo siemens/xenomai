@@ -27,9 +27,9 @@ INPUT                  = \
         @top_srcdir@/include/rtdm \
         @top_srcdir@/src/skins/rtdm \
         @top_srcdir@/ksrc/skins/rtdm \
-        @top_srcdir@/include/comedi \
-        @top_srcdir@/src/drvlib/comedi \
-        @top_srcdir@/ksrc/drivers/comedi \
+        @top_srcdir@/include/analogy \
+        @top_srcdir@/src/drvlib/analogy \
+        @top_srcdir@/ksrc/drivers/analogy \
         @top_srcdir@/ksrc/skins/posix \
         @top_srcdir@/doc/doxygen
 
@@ -253,9 +253,9 @@ LATEX_HIDE_INDICES     = NO
 INCLUDE_PATH           = \
 @top_srcdir@/ksrc/skins/native \
 @top_srcdir@/ksrc/skins/rtdm \
-@top_srcdir@/ksrc/drivers/comedi \
+@top_srcdir@/ksrc/drivers/analogy \
 @top_srcdir@/ksrc/skins \
 @top_builddir@/include \
 @top_srcdir@/include \
 @top_srcdir@/include/posix \
-@top_srcdir@/include/comedi \
+@top_srcdir@/include/analogy \
