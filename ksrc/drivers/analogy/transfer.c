@@ -56,7 +56,7 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 		if (test_bit(A4L_TSF_BUSY, &(tsf->status[i]))) {
 			__a4l_err("a4l_cleanup_transfer: "
 				  "device busy, acquisition occuring\n");
-			return EBUSY;
+			return -EBUSY;
 		}
 
 		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i]))) {
