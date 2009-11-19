@@ -775,9 +775,8 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 		if (tmp_cnt > 0) {
 
 			/* Performs the copy */
-			ret =
-				__produce(cxt, buf, (void *)bufdata + count,
-					  tmp_cnt);
+			ret = __produce(cxt, 
+					buf, (void *)bufdata + count, tmp_cnt);
 			if (ret < 0) {
 				count = ret;
 				goto out_a4l_write;
