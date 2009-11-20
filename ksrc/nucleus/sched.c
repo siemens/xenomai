@@ -63,7 +63,7 @@ void xnsched_register_classes(void)
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 
 static u_long wd_timeout_arg = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
-module_param_named(watchdog_timeout, wd_timeout_arg, ulong, 0444);
+module_param_named(watchdog_timeout, wd_timeout_arg, ulong, 0644);
 MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
 
 /*! 
