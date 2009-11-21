@@ -39,8 +39,10 @@ int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 	unsigned long ns2;
 
 	/* Basic checkings */
-	if (dsc->data_size != 2)
+	if (dsc->data_size != 2) {
+		__a4l_err("a4l_do_insn_gettime: data size should be 2\n");
 		return -EINVAL;
+	}
 
 	ns = a4l_get_time();
 
@@ -56,11 +58,15 @@ int a4l_do_insn_wait(a4l_kinsn_t * dsc)
 	unsigned int us;
 
 	/* Basic checkings */
-	if (dsc->data_size != 1)
+	if (dsc->data_size != 1) {
+		__a4l_err("a4l_do_insn_wait: data size should be 1\n");
 		return -EINVAL;
+	}
 
-	if (dsc->data[0] > A4L_INSN_WAIT_MAX)
+	if (dsc->data[0] > A4L_INSN_WAIT_MAX) {
+		__a4l_err("a4l_do_insn_wait: wait duration is out of range\n");
 		return -EINVAL;
+	}
 
 	/* As we use (a4l_)udelay, we have to convert the delay into
 	   microseconds */
@@ -83,19 +89,27 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	lsampl_t trignum;
 
 	/* Basic checkings */
-	if (dsc->data_size > 1)
+	if (dsc->data_size > 1) {
+		__a4l_err("a4l_do_insn_trig: data size should not be > 1\n");
 		return -EINVAL;
+	}
 	
 	trignum = (dsc->data_size == 1) ? dsc->data[0] : 0;
 	
-	if (dsc->idx_subd >= dev->transfer.nb_subd)
+	if (dsc->idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_do_insn_trig: "
+			  "subdevice index is out of range\n");
 		return -EINVAL;
+	}
 
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks that the concerned subdevice is trigger-compliant */
-	if ((subd->flags & A4L_SUBD_CMD) == 0 || subd->trigger == NULL)
+	if ((subd->flags & A4L_SUBD_CMD) == 0 || subd->trigger == NULL) {
+		__a4l_err("a4l_do_insn_trig: subdevice does not support "
+			  "triggering or asynchronous acquisition\n");
 		return -EINVAL;
+	}
 
 	/* Performs the trigger */
 	return subd->trigger(subd, trignum);
@@ -112,6 +126,7 @@ int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
 		goto out_insndsc;
 
 	if (dsc->data_size != 0 && dsc->data == NULL) {
+		__a4l_err("a4l_fill_insndsc: no data pointer specified\n");
 		ret = -EINVAL;
 		goto out_insndsc;
 	}
@@ -197,8 +212,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
-	if (((subd->flags & A4L_SUBD_UNUSED) != 0) ||
-	    ((subd->flags & A4L_SUBD_CMD) == 0)) {
+	if ((subd->flags & A4L_SUBD_UNUSED) != 0) {
 		__a4l_err("a4l_do_insn: wrong subdevice selected\n");
 		return -EINVAL;
 	}
@@ -291,8 +305,10 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 		return ret;
 
 	/* Some basic checking */
-	if (dsc->count == 0)
+	if (dsc->count == 0) {
+		__a4l_err("a4l_fill_ilstdsc: instruction list's count is 0\n");
 		return -EINVAL;
+	}
 
 	/* Keeps the user pointer in an opaque field */
 	dsc->__uinsns = dsc->insns;
