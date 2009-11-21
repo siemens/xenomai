@@ -212,7 +212,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set the data size to write */
-	scan_size *= chinfo->nb_bits / 8;
+	scan_size *= (chinfo->nb_bits % 8 == 0) ? 
+		chinfo->nb_bits / 8 : (chinfo->nb_bits / 8) + 1;
 
 	if (verbose != 0) {
 		printf("insn_write: channel width is %u bits\n",

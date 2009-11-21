@@ -243,7 +243,8 @@ int main(int argc, char *argv[])
 			printf("\t range's size = %d (bits)\n", info->nb_bits);
 		}
 
-		scan_size += info->nb_bits / 8;
+		scan_size += (info->nb_bits % 8 == 0) ? 
+			info->nb_bits / 8 : (info->nb_bits / 8) + 1;
 	}
 
 	if (verbose != 0) {
