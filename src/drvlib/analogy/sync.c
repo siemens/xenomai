@@ -49,7 +49,12 @@
  * optionally a4l_fill_desc())
  * @param[in] arg Instructions list structure
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -ENOMEM is returned if the system is out of memory
  *
  */
 int a4l_snd_insnlist(a4l_desc_t * dsc, a4l_insnlst_t * arg)
@@ -70,7 +75,12 @@ int a4l_snd_insnlist(a4l_desc_t * dsc, a4l_insnlst_t * arg)
  * optionally a4l_fill_desc())
  * @param[in] arg Instruction structure
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -ENOMEM is returned if the system is out of memory
  *
  */
 int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t * arg)
@@ -111,7 +121,12 @@ int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t * arg)
  * @param[in] buf Output buffer
  * @param[in] nbyte Number of bytes to write
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -ENOMEM is returned if the system is out of memory
  *
  */
 int a4l_sync_write(a4l_desc_t * dsc,
@@ -179,7 +194,12 @@ int a4l_sync_write(a4l_desc_t * dsc,
  * @param[in] buf Input buffer
  * @param[in] nbyte Number of bytes to read
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -ENOMEM is returned if the system is out of memory
  *
  */
 int a4l_sync_read(a4l_desc_t * dsc,
