@@ -78,7 +78,12 @@ void data8_set(void *dst, lsampl_t val)
  * @param[in] max Maximal limit value
  * @param[out] rng Found range
  *
- * @return 0 on success, otherwise a negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    idx_subd, idx_chan and the dsc pointer should be checked; check
+ *    also the kernel log ("dmesg"); WARNING: a4l_fill_desc() should
+ *    be called before using a4l_find_range()
  *
  */
 int a4l_find_range(a4l_desc_t * dsc,
@@ -147,7 +152,12 @@ out_get_range:
  * @param[in] cnt Count of conversion to perform
  *
  * @return the count of conversion performed, otherwise a negative
- * error code.
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_to_phys()
  *
  */
 int a4l_to_phys(a4l_chinfo_t * chan,
@@ -213,7 +223,12 @@ int a4l_to_phys(a4l_chinfo_t * chan,
  * @param[in] cnt Count of conversion to perform
  *
  * @return the count of conversion performed, otherwise a negative
- * error code.
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_from_phys()
  *
  */
 int a4l_from_phys(a4l_chinfo_t * chan,

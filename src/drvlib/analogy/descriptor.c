@@ -336,6 +336,7 @@ int a4l_close(a4l_desc_t * dsc)
  * - -EINVAL is returned if some argument is missing or wrong; the
  *    the dsc pointer should be checked; check also the kernel log
  *    ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
 int a4l_fill_desc(a4l_desc_t * dsc)
@@ -363,8 +364,8 @@ int a4l_fill_desc(a4l_desc_t * dsc)
  *
  * - -EINVAL is returned if some argument is missing or wrong; subd
  *    and the dsc pointer should be checked; check also the kernel log
- *    ("dmesg")
- * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ *    ("dmesg"); WARNING: a4l_fill_desc() should be called before
+ *    using a4l_get_subdinfo().
  *
  */
 int a4l_get_subdinfo(a4l_desc_t * dsc,
@@ -400,8 +401,8 @@ int a4l_get_subdinfo(a4l_desc_t * dsc,
  *
  * - -EINVAL is returned if some argument is missing or wrong; subd,
  *    chan and the dsc pointer should be checked; check also the
- *    kernel log ("dmesg")
- * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_get_chinfo()
  *
  */
 int a4l_get_chinfo(a4l_desc_t * dsc,
@@ -444,8 +445,8 @@ int a4l_get_chinfo(a4l_desc_t * dsc,
  *
  * - -EINVAL is returned if some argument is missing or wrong; subd,
  *    chan, rng and the dsc pointer should be checked; check also the
- *    kernel log ("dmesg")
- * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_get_rnginfo()
  *
  */
 int a4l_get_rnginfo(a4l_desc_t * dsc,
