@@ -46,7 +46,7 @@
 #define __xn_feat_arm_tsc               0x00000008
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   2UL
+#define XENOMAI_ABI_REV   3UL
 
 #if __LINUX_ARM_ARCH__ >= 6
 /* ARMv6 has both atomic xchg and atomic_inc/dec etc. */

@@ -49,6 +49,7 @@
 #define __xn_reg_arg3(regs)     ((regs)->ARM_r3)
 #define __xn_reg_arg4(regs)     ((regs)->ARM_r4)
 #define __xn_reg_arg5(regs)     ((regs)->ARM_r5)
+#define __xn_reg_sigp(regs)     ((regs)->ARM_r6)
 
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
@@ -86,6 +87,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 
 #else /* !__KERNEL__ */
 
+#include <errno.h>		/* For -ERESTART */
+
 /*
  * Some of the following macros have been adapted from Linux's
  * implementation of the syscall mechanism in <asm-arm/unistd.h>:
@@ -99,32 +102,33 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #error __thread is too buggy with gcc 4.3 and later, please do not pass --with-__thread to configure
 #endif
 
-#define LOADARGS_0(muxcode, dummy...)		\
-	__a0 = (unsigned long) (muxcode)
-#define LOADARGS_1(muxcode, arg1)		\
-	LOADARGS_0(muxcode);			\
+#define LOADARGS_0(muxcode, sigp, dummy...)	\
+	__a0 = (unsigned long) (muxcode);	\
+	__a6 = (unsigned long) (sigp)
+#define LOADARGS_1(muxcode, sigp, arg1)		\
+	LOADARGS_0(muxcode, sigp);		\
 	__a1 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)       	\
-	LOADARGS_1(muxcode, arg1);		\
+#define LOADARGS_2(muxcode, sigp, arg1, arg2)	\
+	LOADARGS_1(muxcode, sigp, arg1);	\
 	__a2 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3) 	\
-	LOADARGS_2(muxcode, arg1, arg2);	\
+#define LOADARGS_3(muxcode, sigp, arg1, arg2, arg3) 	\
+	LOADARGS_2(muxcode, sigp, arg1, arg2);		\
 	__a3 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)	\
-	LOADARGS_3(muxcode, arg1, arg2, arg3);		\
+#define LOADARGS_4(muxcode, sigp, arg1, arg2, arg3, arg4)	\
+	LOADARGS_3(muxcode, sigp, arg1, arg2, arg3);		\
 	__a4 = (unsigned long) (arg4)
-#define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);	    	\
+#define LOADARGS_5(muxcode, sigp, arg1, arg2, arg3, arg4, arg5)	\
+	LOADARGS_4(muxcode, sigp, arg1, arg2, arg3, arg4);	\
 	__a5 = (unsigned long) (arg5)
 
-#define CLOBBER_REGS_0 "r0"
+#define CLOBBER_REGS_0 "r0", "r6"
 #define CLOBBER_REGS_1 CLOBBER_REGS_0, "r1"
 #define CLOBBER_REGS_2 CLOBBER_REGS_1, "r2"
 #define CLOBBER_REGS_3 CLOBBER_REGS_2, "r3"
 #define CLOBBER_REGS_4 CLOBBER_REGS_3, "r4"
 #define CLOBBER_REGS_5 CLOBBER_REGS_4, "r5"
 
-#define LOADREGS_0 __r0 = __a0
+#define LOADREGS_0 __r0 = __a0; __r6 = __a6
 #define LOADREGS_1 LOADREGS_0; __r1 = __a1
 #define LOADREGS_2 LOADREGS_1; __r2 = __a2
 #define LOADREGS_3 LOADREGS_2; __r3 = __a3
@@ -132,7 +136,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define LOADREGS_5 LOADREGS_4; __r5 = __a5
 
 #define ASM_INDECL_0							\
-	unsigned long __a0; register unsigned long __r0  __asm__ ("r0")
+	unsigned long __a0; register unsigned long __r0  __asm__ ("r0"); \
+	unsigned long __a6; register unsigned long __r6  __asm__ ("r6")
 #define ASM_INDECL_1 ASM_INDECL_0;					\
 	unsigned long __a1; register unsigned long __r1  __asm__ ("r1")
 #define ASM_INDECL_2 ASM_INDECL_1;					\
@@ -144,7 +149,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define ASM_INDECL_5 ASM_INDECL_4;					\
 	unsigned long __a5; register unsigned long __r5  __asm__ ("r5")
 
-#define ASM_INPUT_0 "0" (__r0)
+#define ASM_INPUT_0 "0" (__r0), "r" (__r6)
 #define ASM_INPUT_1 ASM_INPUT_0, "r" (__r1)
 #define ASM_INPUT_2 ASM_INPUT_1, "r" (__r2)
 #define ASM_INPUT_3 ASM_INPUT_2, "r" (__r3)
@@ -169,7 +174,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define __xn_syscall "swi\t" __sys1(__NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) ""
 #endif
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+#define XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, op, args...)		\
 	({								\
 		ASM_INDECL_##nr;					\
 		__SYS_REG_DECL;						\
@@ -184,6 +189,27 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			: ASM_INPUT_##nr __SYS_REG_INPUT		\
 			: "memory");					\
 		(int) __r0;						\
+	})
+
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+	({								\
+		int err, res = -ERESTART;				\
+		struct xnsig sigs;					\
+									\
+		do {							\
+			sigs.nsigs = 0;					\
+			err = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id,	\
+						       op, &sigs, args); \
+			res = xnsig_dispatch(&sigs, res, err);		\
+									\
+			while (sigs.nsigs && sigs.remaining) {		\
+				sigs.nsigs = 0;				\
+				err = XENOMAI_DO_SYSCALL_INNER		\
+					(0, 0, __xn_sys_get_next_sigs, &sigs); \
+				res = xnsig_dispatch_next(&sigs, res, err); \
+			}						\
+		} while (res == -ERESTART);				\
+		res;							\
 	})
 
 #define XENOMAI_SYSCALL0(op)			\
@@ -259,7 +285,7 @@ struct __xn_tscinfo {
 #include <limits.h>
 
 __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
-	type: -1
+  type: -1
 };
 
 #ifdef XNARCH_ARM_TSC_TYPE
@@ -367,8 +393,8 @@ static inline void xeno_arm_features_check(void)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		      \
-	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN \
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING			\
+	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN	\
 	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	case __XN_TSC_TYPE_FREERUNNING:
 	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN: {
