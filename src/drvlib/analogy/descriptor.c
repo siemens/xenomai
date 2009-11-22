@@ -110,14 +110,12 @@ static int __a4l_get_sbsize(int fd, a4l_desc_t * dsc)
 		if ((ret = a4l_sys_nbchaninfo(fd, i, &nb_chan)) < 0)
 			return ret;
 
-		res +=
-			nb_chan * (sizeof(a4l_chinfo_t) + sizeof(a4l_leaf_t));
+		res += nb_chan * (sizeof(a4l_chinfo_t) + sizeof(a4l_leaf_t));
 		for (j = 0; j < nb_chan; j++) {
 			if ((ret = a4l_sys_nbrnginfo(fd, i, j, &nb_rng)) < 0)
 				return ret;
-			res +=
-				nb_rng * (sizeof(a4l_rnginfo_t) +
-					  sizeof(a4l_leaf_t));
+			res += nb_rng * (sizeof(a4l_rnginfo_t) + 
+					 sizeof(a4l_leaf_t));
 		}
 	}
 
@@ -218,9 +216,15 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
  *   is filled with characteristics about the subdevices, the channels
  *   and the ranges.
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; the
+ *    pass argument should be checked; check also the kernel log
+ *    ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
+
 int a4l_sys_desc(int fd, a4l_desc_t * dsc, int pass)
 {
 	int ret = 0;
@@ -267,7 +271,12 @@ out_a4l_sys_desc:
  * @param[out] dsc Device descriptor
  * @param[in] fname Device name
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; the
+ *    fname and the dsc pointer should be checked; check also the
+ *    kernel log ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
 int a4l_open(a4l_desc_t * dsc, const char *fname)
@@ -300,7 +309,11 @@ int a4l_open(a4l_desc_t * dsc, const char *fname)
  *
  * @param[in] dsc Device descriptor
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; the
+ *    the dsc pointer should be checked; check also the kernel log
+ *    ("dmesg")
  *
  */
 int a4l_close(a4l_desc_t * dsc)
@@ -318,7 +331,11 @@ int a4l_close(a4l_desc_t * dsc)
  *
  * @param[in] dsc Device descriptor partly filled by a4l_open().
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; the
+ *    the dsc pointer should be checked; check also the kernel log
+ *    ("dmesg")
  *
  */
 int a4l_fill_desc(a4l_desc_t * dsc)
@@ -342,7 +359,12 @@ int a4l_fill_desc(a4l_desc_t * dsc)
  * @param[in] subd Subdevice index
  * @param[out] info Subdevice information structure
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; subd
+ *    and the dsc pointer should be checked; check also the kernel log
+ *    ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
 int a4l_get_subdinfo(a4l_desc_t * dsc,
@@ -374,7 +396,12 @@ int a4l_get_subdinfo(a4l_desc_t * dsc,
  * @param[in] chan Channel index
  * @param[out] info Channel information structure
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; subd,
+ *    chan and the dsc pointer should be checked; check also the
+ *    kernel log ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
 int a4l_get_chinfo(a4l_desc_t * dsc,
@@ -413,7 +440,12 @@ int a4l_get_chinfo(a4l_desc_t * dsc,
  * @param[in] rng Range index
  * @param[out] info Range information structure
  *
- * @return 0 on success, otherwise negative error code.
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong; subd,
+ *    chan, rng and the dsc pointer should be checked; check also the
+ *    kernel log ("dmesg")
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
 int a4l_get_rnginfo(a4l_desc_t * dsc,

@@ -208,9 +208,9 @@ int a4l_get_bufsize(a4l_desc_t * dsc,
  *
  * @return 0 on success. Otherwise:
  *
- * - -EINVAL is returned if some argument is missing or wrong, the
+ * - -EINVAL is returned if some argument is missing or wrong; the
  *    descriptor and the new pointer should be checked; check also the
- *    kernel log
+ *    kernel log ("dmesg")
  * - -EFAULT is returned if a user <-> kernel transfer went wrong
  *
  */
