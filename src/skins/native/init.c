@@ -55,7 +55,7 @@ static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
 	__native_muxid =
-	    xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native");
+		xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native", NULL);
 
 	native_timer_init(__native_muxid);
 	

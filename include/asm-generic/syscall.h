@@ -21,6 +21,16 @@
 #define _XENO_ASM_GENERIC_SYSCALL_H
 
 #include <asm/xenomai/features.h>
+#ifdef __KERNEL__
+#include <linux/types.h>
+#include <linux/signal.h>
+#include <asm/uaccess.h>
+#include <asm/xenomai/wrappers.h>
+#include <asm/xenomai/hal.h>
+#else /* !__KERNEL__ */
+#include <sys/types.h>
+#include <signal.h>
+#endif /* !__KERNEL__ */
 
 /* Xenomai multiplexer syscall. */
 #define __xn_sys_mux		555	/* Must fit within 15bit */
@@ -35,6 +45,7 @@
 #define __xn_sys_sem_heap	7
 #define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
 #define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
+#define __xn_sys_get_next_sigs 10	/* only unqueue pending signals. */
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
@@ -51,12 +62,20 @@ typedef struct xnsysinfo {
 #define sigshadow_arg(code) (((code) >> 8) & 0xff)
 #define sigshadow_int(action, arg) ((action) | ((arg) << 8))
 
-#ifdef __KERNEL__
+union xnsiginfo {
+	struct siginfo pse51_si;
+};
 
-#include <linux/types.h>
-#include <asm/uaccess.h>
-#include <asm/xenomai/wrappers.h>
-#include <asm/xenomai/hal.h>
+struct xnsig {
+	unsigned nsigs;
+	unsigned remaining;
+	struct {
+		unsigned muxid;
+		union xnsiginfo si;
+	} pending[16];
+};
+
+#ifdef __KERNEL__
 
 struct task_struct;
 struct pt_regs;
@@ -137,8 +156,33 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 }
 
 #else /* !__KERNEL__ */
-#include <sys/types.h>
-#endif /* __KERNEL__ */
+
+#ifdef __cplusplus
+extern "C"
+#endif /* __cplusplus */
+int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error);
+
+/* Called to dispatch signals which interrupted a system call. */
+static inline int xnsig_dispatch(struct xnsig *sigs, int cumul, int last)
+{
+	if (sigs->nsigs)
+		return __xnsig_dispatch(sigs, cumul, last);
+	return last;
+}
+
+/* Called to dispatch additional signals (received with the special
+   system call __xn_sys_get_next_sigs), it may happen that this
+   syscall was in fact called whereas no additional signal was
+   pending, in this case, ignore the syscall return value (last) and
+   preserve the cumulated error. */
+static inline int xnsig_dispatch_next(struct xnsig *sigs, int cumul, int last)
+{
+	if (sigs->nsigs)
+		return __xnsig_dispatch(sigs, cumul, last);
+	return cumul;
+}
+
+#endif /* !__KERNEL__ */
 
 typedef struct xncompletion {
 	long syncflag;		/* Semaphore variable. */

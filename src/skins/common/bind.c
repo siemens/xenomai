@@ -9,6 +9,8 @@
 #include <asm-generic/xenomai/bits/current.h>
 #include "sem_heap.h"
 
+static xnsighandler *xnsig_handlers[32];
+
 void __attribute__((weak)) xeno_sigill_handler(int sig)
 {
 	fprintf(stderr, "Xenomai or CONFIG_XENO_OPT_PERVASIVE disabled.\n"
@@ -18,8 +20,25 @@ void __attribute__((weak)) xeno_sigill_handler(int sig)
 
 struct xnfeatinfo xeno_featinfo;
 
+int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error)
+{
+	unsigned i;
+
+	for (i = 0; i < sigs->nsigs; i++) {
+		xnsighandler *handler;
+		
+		handler = xnsig_handlers[sigs->pending[i].muxid];
+		if (handler)
+			handler(&sigs->pending[i].si);
+	}
+	if (cumulated_error == -ERESTART)
+		cumulated_error = last_error;
+	return cumulated_error;
+}
+
 int 
-xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
+xeno_bind_skin_opt(unsigned skin_magic, const char *skin, 
+		   const char *module, xnsighandler *handler)
 {
 	sighandler_t old_sigill_handler;
 	xnfeatinfo_t finfo;
@@ -63,6 +82,8 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 			strerror(-muxid));
 		exit(EXIT_FAILURE);
 	}
+
+	xnsig_handlers[muxid] = handler;
 
 #ifdef xeno_arch_features_check
 	xeno_arch_features_check();

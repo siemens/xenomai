@@ -33,7 +33,8 @@ void __init_rtdm_interface(void)
 	   device or socket. */
 
 	__rtdm_muxid =
-		xeno_bind_skin_opt(RTDM_SKIN_MAGIC, "rtdm", "xeno_rtdm");
+		xeno_bind_skin_opt(RTDM_SKIN_MAGIC, 
+				   "rtdm", "xeno_rtdm", NULL);
 	__rtdm_muxid = __xn_mux_shifted_id(__rtdm_muxid);
 
 }
