@@ -1219,7 +1219,7 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
 		      struct vm_operations_struct *vm_ops,
 		      void *vm_private_data);
 int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
-		       unsigned long src_addr, size_t len,
+		       phys_addr_t src_addr, size_t len,
 		       int prot, void **pptr,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data);

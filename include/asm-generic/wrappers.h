@@ -544,6 +544,10 @@ static inline int wrap_raise_cap(int cap)
 }
 #endif /* LINUX_VERSION_CODE >= 2.6.29 */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
+typedef unsigned long phys_addr_t;
+#endif
+
 #ifdef CONFIG_PROC_FS
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <linux/module.h>
