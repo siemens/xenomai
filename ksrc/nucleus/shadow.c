@@ -652,6 +652,89 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+/** 
+ * Mark the per-thread per-skin signal condition for the skin whose
+ * muxid is @a muxid.
+ * 
+ * @param thread the target thread;
+ * @param muxid the muxid of the skin for which the signal is marked
+ * pending.
+ * 
+ * @return whether rescheduling is needed.
+ */
+int xnshadow_mark_sig(xnthread_t *thread, unsigned muxid)
+{
+	int need_resched = 0;
+
+	if (xnthread_test_state(thread, XNMAPPED)) {
+		spl_t s;
+
+		xnlock_get_irqsave(&nklock, s);
+		thread->u_sigpending |= (1 << muxid);
+		need_resched = xnpod_unblock_thread(thread);
+		xnlock_put_irqrestore(&nklock, s);
+	}
+
+	return need_resched;
+}
+EXPORT_SYMBOL_GPL(xnshadow_mark_sig);
+
+/** 
+ * Clear the per-thrad per-skin signal condition.
+ * 
+ * Called with nklock locked irqs off.
+ *
+ * @param thread the target thrad
+ * @param muxid 
+ */
+void xnshadow_clear_sig(xnthread_t *thread, unsigned muxid)
+{
+	thread->u_sigpending &= ~(1 << muxid);
+}
+EXPORT_SYMBOL_GPL(xnshadow_clear_sig);
+
+static inline void handle_rt_signals(xnthread_t *thread,
+				     struct pt_regs *regs,
+				     int sysflags)
+{
+	int (*sig_unqueue)(xnthread_t *thread, union xnsiginfo __user *si);
+	struct xnsig __user *u_sigs;
+	const unsigned max_sigs = ARRAY_SIZE(u_sigs->pending);
+	unsigned muxid, i, pending;
+	int rc, res;
+
+	u_sigs = (struct xnsig __user *) __xn_reg_sigp(regs);
+	res = -ERESTART;
+	i = 0;
+
+	pending = xnthread_sigpending(thread);
+	do {
+		muxid = ffnz(pending);
+		sig_unqueue = muxtable[muxid].props->sig_unqueue;
+
+		do {
+			__xn_put_user(muxid, &u_sigs->pending[i].muxid);
+			rc = sig_unqueue(thread, &u_sigs->pending[i].si);
+			if (res == -ERESTART)
+				res = rc;
+			++i;
+			pending = xnthread_sigpending(thread);
+		} while ((pending & (1 << muxid)) && i < max_sigs);
+
+	} while (pending && i < max_sigs);
+	__xn_put_user(i, &u_sigs->nsigs);
+	__xn_put_user(pending != 0, &u_sigs->remaining);
+
+/* In the case when we are going to handle linux signals, do not let
+   the kernel handle the syscall restart to give a chance to the
+   xenomai handlers to be executed. */
+	if (__xn_interrupted_p(regs) 
+	    || __xn_reg_rval(regs) == -ERESTARTSYS
+	    || __xn_reg_rval(regs) == -ERESTARTNOHAND)
+		__xn_error_return(regs, ((sysflags & __xn_exec_norestart)
+					 ? -EINTR : res));
+}
+
 static inline void request_syscall_restart(xnthread_t *thread,
 					   struct pt_regs *regs,
 					   int sysflags)
@@ -1296,6 +1379,8 @@ void xnshadow_unmap(xnthread_t *thread)
 	p = xnthread_archtcb(thread)->user_task;
 
 	xnthread_clear_state(thread, XNMAPPED);
+	xnthread_set_sigpending(thread, 0); /* thread->sipending must be 0 for
+				     non mapped threads. */
 	rpi_pop(thread);
 
 	trace_mark(xn_nucleus, shadow_unmap,
@@ -1859,6 +1944,11 @@ static int xnshadow_sys_current_info(struct pt_regs *regs)
 	return __xn_safe_copy_to_user(us_info, &info, sizeof(*us_info));
 }
 
+static int xnshadow_sys_get_next_sigs(struct pt_regs *regs)
+{
+	return -EINTR;
+}
+
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -1871,6 +1961,8 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
 	[__xn_sys_current_info] =
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
+	[__xn_sys_get_next_sigs] = 
+		{&xnshadow_sys_get_next_sigs, __xn_exec_conforming},
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -1918,6 +2010,7 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = xnshadow_sys_event,
+	.sig_unqueue = NULL,
 	.timebasep = NULL,
 	.module = NULL
 };
@@ -1939,7 +2032,7 @@ EXPORT_SYMBOL_GPL(xnshadow_send_sig);
 static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 {
 	struct pt_regs *regs = (struct pt_regs *)data;
-	int muxid, muxop, switched, err;
+	int muxid, muxop, switched, err, sigs;
 	struct task_struct *p;
 	xnthread_t *thread;
 	u_long sysflags;
@@ -2057,9 +2150,16 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
 	__xn_status_return(regs, err);
 
-	if (xnpod_shadow_p() && signal_pending(p))
+	sigs = 0;
+	if (xnpod_shadow_p() && signal_pending(p)) {
+		sigs = 1;
 		request_syscall_restart(thread, regs, sysflags);
-	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
+	}
+	if (thread && xnthread_sigpending(thread)) {
+		sigs = 1;
+		handle_rt_signals(thread, regs, sysflags);
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_harden();	/* -EPERM will be trapped later if needed. */
 
       ret_handled:
@@ -2137,9 +2237,9 @@ RTHAL_DECLARE_EVENT(hisyscall_event);
 
 static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 {
+	int muxid, muxop, sysflags, switched, err, sigs;
 	struct pt_regs *regs = (struct pt_regs *)data;
 	xnthread_t *thread = xnshadow_thread(current);
-	int muxid, muxop, sysflags, switched, err;
 
 	if (__xn_reg_mux_p(regs))
 		goto xenomai_syscall;
@@ -2208,9 +2308,16 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 
 	__xn_status_return(regs, err);
 
-	if (xnpod_active_p() && xnpod_shadow_p() && signal_pending(current))
+	sigs = 0;
+	if (xnpod_active_p() && xnpod_shadow_p() && signal_pending(current)) {
+		sigs = 1;
 		request_syscall_restart(xnshadow_thread(current), regs, sysflags);
-	else if ((sysflags & __xn_exec_switchback) != 0 && switched)
+	}
+	if (thread && xnthread_sigpending(thread)) {
+		sigs = 1;
+		handle_rt_signals(thread, regs, sysflags);
+	}
+	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
 		xnshadow_relax(0);
 
       ret_handled:

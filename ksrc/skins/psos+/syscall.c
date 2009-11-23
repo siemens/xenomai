@@ -1432,6 +1432,7 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &psos_shadow_eventcb,
+	.sig_unqueue = NULL,
 	.timebasep = &psos_tbase,
 	.module = THIS_MODULE
 };

@@ -41,12 +41,14 @@ struct pt_regs;
 struct timespec;
 struct timeval;
 struct xntbase;
+union xnsiginfo;
 
 struct xnskin_props {
 	const char *name;
 	unsigned magic;
 	int nrcalls;
 	void *(*eventcb)(int, void *);
+	int (*sig_unqueue)(struct xnthread *thread, union xnsiginfo __user *si);
 	xnsysent_t *systab;
 	struct xntbase **timebasep;
 	struct module *module;
@@ -102,6 +104,10 @@ void xnshadow_send_sig(struct xnthread *thread,
 void xnshadow_rpi_check(void);
 
 extern struct xnskin_slot muxtable[];
+
+int xnshadow_mark_sig(struct xnthread *thread, unsigned muxid);
+
+void xnshadow_clear_sig(struct xnthread *thread, unsigned muxid);
 
 #ifdef __cplusplus
 }

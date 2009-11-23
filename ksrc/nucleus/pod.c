@@ -1409,8 +1409,9 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * context, to collect and act upon the pending Linux
 		 * signal.
  		 */
-		if ((mask & XNRELAX) == 0 &&
-		    xnthread_test_info(thread, XNKICKED)) {
+		if ((mask & XNRELAX) == 0 
+		    && (xnthread_sigpending(thread) 
+			|| xnthread_test_info(thread, XNKICKED))) {
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;

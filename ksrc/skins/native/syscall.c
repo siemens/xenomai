@@ -4111,6 +4111,7 @@ static struct xnskin_props __props = {
 	.nrcalls = sizeof(__systab) / sizeof(__systab[0]),
 	.systab = __systab,
 	.eventcb = &__shadow_eventcb,
+	.sig_unqueue = NULL,
 	.timebasep = &__native_tbase,
 	.module = THIS_MODULE
 };
