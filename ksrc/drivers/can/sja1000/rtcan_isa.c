@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
  *
- * Copyright (C) 2005, 2006 Sebastian Smolorz
- *                          <Sebastian.Smolorz@stud.uni-hannover.de>
+ * Copyright (C) 2005, 2006, 2009 Sebastian Smolorz
+ *                               <smolorz@rts.uni-hannover.de>
  *
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -189,6 +189,7 @@ static void rtcan_isa_exit(void)
 		if (!dev)
 			continue;
 		rtcan_sja1000_unregister(dev);
+		release_region(io[i], RTCAN_ISA_PORT_SIZE);
 		rtcan_dev_free(dev);
 	}
 }
