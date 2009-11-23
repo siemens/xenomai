@@ -1789,7 +1789,7 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
 #if defined(CONFIG_XENO_OPT_PERVASIVE) || defined(DOXYGEN_CPP)
 struct rtdm_mmap_data {
 	void *src_vaddr;
-	unsigned long src_paddr;
+	phys_addr_t src_paddr;
 	struct vm_operations_struct *vm_ops;
 	void *vm_private_data;
 };
@@ -1797,14 +1797,15 @@ struct rtdm_mmap_data {
 static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 {
 	struct rtdm_mmap_data *mmap_data = filp->private_data;
-	unsigned long vaddr, paddr, maddr, size;
+	unsigned long vaddr, maddr, size;
+	phys_addr_t paddr;
 	int ret;
 
 	vma->vm_ops = mmap_data->vm_ops;
 	vma->vm_private_data = mmap_data->vm_private_data;
 
 	vaddr = (unsigned long)mmap_data->src_vaddr;
-	paddr = (unsigned long)mmap_data->src_paddr;
+	paddr = mmap_data->src_paddr;
 	if (!paddr)
 		/* kmalloc memory */
 		paddr = virt_to_phys((void *)vaddr);
@@ -2006,7 +2007,7 @@ EXPORT_SYMBOL(rtdm_mmap_to_user);
  * Rescheduling: possible.
  */
 int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
-		       unsigned long src_addr, size_t len,
+		       phys_addr_t src_addr, size_t len,
 		       int prot, void **pptr,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data)

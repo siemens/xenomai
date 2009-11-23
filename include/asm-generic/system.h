@@ -442,7 +442,7 @@ static inline int xnarch_remap_vm_page(struct vm_area_struct *vma,
 static inline int xnarch_remap_io_page_range(struct file *filp,
 					     struct vm_area_struct *vma,
 					     unsigned long from,
-					     unsigned long to,
+					     phys_addr_t to,
 					     unsigned long size,
 					     pgprot_t prot)
 {
