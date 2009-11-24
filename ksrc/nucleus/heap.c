@@ -227,6 +227,7 @@ int xnheap_init(xnheap_t *heap,
 	for (cpu = 0; cpu < nr_cpus; cpu++)
 		heap->idleq[cpu] = NULL;
 	inith(&heap->link);
+	inith(&heap->stat_link);
 	initq(&heap->extents);
 	xnlock_init(&heap->lock);
 	xnarch_init_heapcb(&heap->archdep);
