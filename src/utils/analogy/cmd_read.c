@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	unsigned int i, scan_size = 0, cnt = 0;
 	unsigned long buf_size;
 	void *map = NULL;
-	a4l_desc_t dsc;
+	a4l_desc_t dsc = { .sbdata = NULL };
 
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
@@ -411,7 +411,8 @@ out_main:
 		munmap(map, buf_size);
 
 	/* Free the buffer used as device descriptor */
-	free(dsc.sbdata);
+	if (dsc.sbdata != NULL)
+		free(dsc.sbdata);
 
 	/* Release the file descriptor */
 	a4l_close(&dsc);

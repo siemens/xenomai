@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 	unsigned int cnt = 0;
-	a4l_desc_t dsc;
+	a4l_desc_t dsc = { .sbdata = NULL };
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
 
