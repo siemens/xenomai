@@ -43,6 +43,7 @@
 #define __xn_reg_arg3(regs)   ((regs)->gpr[5])
 #define __xn_reg_arg4(regs)   ((regs)->gpr[6])
 #define __xn_reg_arg5(regs)   ((regs)->gpr[7])
+#define __xn_reg_sigp(regs)   ((regs)->gpr[8])
 
 #define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 16) & 0xff)
@@ -75,6 +76,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 
 #else /* !__KERNEL__ */
 
+#include <errno.h>
+
 /*
  * Some of the following macros have been adapted from Linux's
  * implementation of the syscall mechanism in <asm-ppc[64]/unistd.h>:
@@ -84,32 +87,33 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  * services in kernel space.
  */
 
-#define LOADARGS_0(muxcode, dummy...)				\
-	__sc_0 = muxcode
-#define LOADARGS_1(muxcode, arg1)				\
-	LOADARGS_0(muxcode);					\
+#define LOADARGS_0(muxcode, sigp, dummy...)			\
+	__sc_0 = (unsigned long)(muxcode);			\
+	__sc_8 = (unsigned long) (sigp)
+#define LOADARGS_1(muxcode, sigp, arg1)				\
+	LOADARGS_0(muxcode, sigp);				\
 	__sc_3 = (unsigned long) (arg1)
-#define LOADARGS_2(muxcode, arg1, arg2)			\
-	LOADARGS_1(muxcode, arg1);				\
+#define LOADARGS_2(muxcode, sigp, arg1, arg2)			\
+	LOADARGS_1(muxcode, sigp, arg1);			\
 	__sc_4 = (unsigned long) (arg2)
-#define LOADARGS_3(muxcode, arg1, arg2, arg3)			\
-	LOADARGS_2(muxcode, arg1, arg2);			\
+#define LOADARGS_3(muxcode, sigp, arg1, arg2, arg3)		\
+	LOADARGS_2(muxcode, sigp, arg1, arg2);			\
 	__sc_5 = (unsigned long) (arg3)
-#define LOADARGS_4(muxcode, arg1, arg2, arg3, arg4)		\
-	LOADARGS_3(muxcode, arg1, arg2, arg3);			\
+#define LOADARGS_4(muxcode, sigp, arg1, arg2, arg3, arg4)	\
+	LOADARGS_3(muxcode, sigp, arg1, arg2, arg3);		\
 	__sc_6 = (unsigned long) (arg4)
-#define LOADARGS_5(muxcode, arg1, arg2, arg3, arg4, arg5)	\
-	LOADARGS_4(muxcode, arg1, arg2, arg3, arg4);		\
+#define LOADARGS_5(muxcode, sigp, arg1, arg2, arg3, arg4, arg5)	\
+	LOADARGS_4(muxcode, sigp, arg1, arg2, arg3, arg4);	\
 	__sc_7 = (unsigned long) (arg5)
 
-#define ASM_INPUT_0 "0" (__sc_0)
+#define ASM_INPUT_0 "0" (__sc_0), "6" (__sc_8)
 #define ASM_INPUT_1 ASM_INPUT_0, "1" (__sc_3)
 #define ASM_INPUT_2 ASM_INPUT_1, "2" (__sc_4)
 #define ASM_INPUT_3 ASM_INPUT_2, "3" (__sc_5)
 #define ASM_INPUT_4 ASM_INPUT_3, "4" (__sc_6)
 #define ASM_INPUT_5 ASM_INPUT_4, "5" (__sc_7)
 
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)	\
+#define XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, op, args...)	\
   ({								\
 	register unsigned long __sc_0  __asm__ ("r0");		\
 	register unsigned long __sc_3  __asm__ ("r3");		\
@@ -117,6 +121,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 	register unsigned long __sc_5  __asm__ ("r5");		\
 	register unsigned long __sc_6  __asm__ ("r6");		\
 	register unsigned long __sc_7  __asm__ ("r7");		\
+	register unsigned long __sc_8  __asm__ ("r8");		\
 								\
 	LOADARGS_##nr(__xn_mux_code(shifted_id,op), args);	\
 	__asm__ __volatile__					\
@@ -125,12 +130,33 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		: "=&r" (__sc_0),				\
 		  "=&r" (__sc_3),  "=&r" (__sc_4),		\
 		  "=&r" (__sc_5),  "=&r" (__sc_6),		\
-		  "=&r" (__sc_7)				\
+		  "=&r" (__sc_7), "=&r" (__sc_8)		\
 		: ASM_INPUT_##nr				\
 		: "cr0", "ctr", "memory",			\
-		  "r8", "r9", "r10","r11", "r12");		\
+		  "r9", "r10","r11", "r12");			\
 	(int)((__sc_0 & (1 << 28)) ? -__sc_3 : __sc_3);		\
   })
+
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
+	({								\
+		int err, res = -ERESTART;				\
+		struct xnsig sigs;					\
+									\
+		do {							\
+			sigs.nsigs = 0;					\
+			err = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id,	\
+						       op, &sigs, args); \
+			res = xnsig_dispatch(&sigs, res, err);		\
+									\
+			while (sigs.nsigs && sigs.remaining) {		\
+				sigs.nsigs = 0;				\
+				err = XENOMAI_DO_SYSCALL_INNER		\
+					(0, 0, __xn_sys_get_next_sigs, &sigs); \
+				res = xnsig_dispatch_next(&sigs, res, err); \
+			}						\
+		} while (res == -ERESTART);				\
+		res;							\
+	})
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
 #define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
