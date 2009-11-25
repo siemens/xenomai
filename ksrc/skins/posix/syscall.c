@@ -1560,24 +1560,15 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 						    &mx.shadow_mutex,
 						    &count, timed, XN_INFINITE);
 
-	if (err == EINTR) {
-		do {
-			xnthread_clear_info(cur, XNKICKED);
-			err =
-			    pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-							  &mx.shadow_mutex,
-							  count);
-		}
-		while (err == -EINTR);
-		xnthread_set_info(cur, XNKICKED);
-		err = EINTR;
-	}
+	if (err == 0 || err == ETIMEDOUT)
+		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
+					    	    &mx.shadow_mutex, count);
 
-	if (!err || err == EINTR || err == ETIMEDOUT)
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-					   &count, sizeof(count)))
+	if (err == EINTR
+	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				      &count, sizeof(count)))
 			err = EFAULT;
-
+	
 	return -err;
 }
 
@@ -2771,7 +2762,8 @@ static xnsysent_t __systab[] = {
 	[__pse51_clock_getres] = {&__clock_getres, __xn_exec_any},
 	[__pse51_clock_gettime] = {&__clock_gettime, __xn_exec_any},
 	[__pse51_clock_settime] = {&__clock_settime, __xn_exec_any},
-	[__pse51_clock_nanosleep] = {&__clock_nanosleep, __xn_exec_primary},
+	[__pse51_clock_nanosleep] = {&__clock_nanosleep, 
+				     __xn_exec_primary | __xn_exec_norestart},
 	[__pse51_mutex_init] = {&__pthread_mutex_init, __xn_exec_any},
 	[__pse51_mutex_destroy] = {&__pthread_mutex_destroy, __xn_exec_any},
 	[__pse51_mutex_lock] = {&__pthread_mutex_lock, __xn_exec_primary},
@@ -2786,7 +2778,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
 	[__pse51_cond_wait_prologue] =
-	    {&__pthread_cond_wait_prologue, __xn_exec_primary},
+	    {&__pthread_cond_wait_prologue, __xn_exec_primary | __xn_exec_norestart},
 	[__pse51_cond_wait_epilogue] =
 	    {&__pthread_cond_wait_epilogue, __xn_exec_primary},
 	[__pse51_cond_signal] = {&__pthread_cond_signal, __xn_exec_any},
