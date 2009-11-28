@@ -201,6 +201,8 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	int ret;
 	a4l_subd_t *subd;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+	int (*hdlr) (a4l_subd_t *, a4l_kinsn_t *) = NULL;
+
 
 	/* Checks the subdevice index */
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
@@ -223,29 +225,41 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	if (ret < 0)
 		return ret;
 
+	/* Choose the proper handler, we can check the pointer because
+	   the subdevice was memset to 0 at allocation time */
+	switch (dsc->type) {
+	case A4L_INSN_READ:
+		hdlr = subd->insn_read;
+		break;
+	case A4L_INSN_WRITE:
+		hdlr = subd->insn_write;
+		break;
+	case A4L_INSN_BITS:
+		hdlr = subd->insn_bits;
+		break;
+	case A4L_INSN_CONFIG:
+		hdlr = subd->insn_config;
+		break;
+	default:
+		ret = -EINVAL;
+	}
+
+	/* We check the instruction type */
+	if (ret < 0)
+		return ret;
+
+	/* We check whether a handler is available */
+	if (hdlr == NULL)
+		return -ENOSYS;
+
 	/* Prevents the subdevice from being used during 
 	   the following operations */
 	ret = a4l_reserve_transfer(cxt, dsc->idx_subd);
 	if (ret < 0)
 		goto out_do_insn;
 
-	/* Lets the driver-specific code perform the instruction */
-	switch (dsc->type) {
-	case A4L_INSN_READ:
-		ret = subd->insn_read(subd, dsc);
-		break;
-	case A4L_INSN_WRITE:
-		ret = subd->insn_write(subd, dsc);
-		break;
-	case A4L_INSN_BITS:
-		ret = subd->insn_bits(subd, dsc);
-		break;
-	case A4L_INSN_CONFIG:
-		ret = subd->insn_config(subd, dsc);
-		break;
-	default:
-		ret = -EINVAL;
-	}
+	/* Let's the driver-specific code perform the instruction */
+	ret = hdlr(subd, dsc);
 
 out_do_insn:
 
