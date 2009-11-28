@@ -30,16 +30,23 @@
 
 #include <analogy/analogy.h>
 
-#define FILENAME "analogy0"
-#define BUF_SIZE 10000
+/* For write operation, we consider 
+   the default subdevice index is 1 */
+#define ID_SUBD 1
+
+/* Ten triggered scans by default */
 #define SCAN_CNT 10
+
+#define FILENAME "analogy0"
+
+#define BUF_SIZE 10000
 
 static unsigned char buf[BUF_SIZE]= {[0 ... BUF_SIZE - 1] = 0x5a};
 static double dbuf[BUF_SIZE] = {[0 ... BUF_SIZE - 1] = 0};
 static char *filename = FILENAME;
 static int verbose;
 static int real_time;
-static int idx_subd;
+static int idx_subd = ID_SUBD;
 static int idx_chan;
 static int idx_rng = -1;
 static unsigned int scan_size = SCAN_CNT;
