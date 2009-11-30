@@ -372,14 +372,13 @@ int rt_cond_broadcast(RT_COND *cond)
 	return err;
 }
 
-int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
+int rt_cond_wait_prologue(RT_COND *cond, RT_MUTEX *mutex, unsigned *plockcnt,
 		       xntmode_t timeout_mode, RTIME timeout)
 {
-	int err, kicked = 0;
 	xnthread_t *thread;
 	xnflags_t info;
-	int lockcnt;
 	spl_t s;
+	int err;
 
 	if (timeout == TM_NONBLOCK)
 		return -EWOULDBLOCK;
@@ -414,7 +413,7 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 	 * We can't use rt_mutex_release since that might reschedule
 	 * before enter xnsynch_sleep_on.
 	 */
-	lockcnt = mutex->lockcnt; /* Leave even if mutex is nested */
+	*plockcnt = mutex->lockcnt; /* Leave even if mutex is nested */
 
 	mutex->lockcnt = 0;
 
@@ -429,15 +428,7 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 		err = -ETIMEDOUT;	/* Timeout. */
 	else if (info & XNBREAK) {
 		err = -EINTR;	/* Unblocked. */
-		kicked = xnthread_test_info(thread, XNKICKED);
 	}
-
-	rt_mutex_acquire(mutex, TM_INFINITE);
-
-	mutex->lockcnt = lockcnt; /* Adjust lockcnt */
-
-	if (kicked)
-		xnthread_set_info(thread, XNKICKED);
 
       unlock_and_exit:
 
@@ -446,6 +437,48 @@ int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 	return err;
 }
 
+int rt_cond_wait_epilogue(RT_MUTEX *mutex, unsigned lockcnt)
+{
+	int err;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
+
+	err = rt_mutex_acquire(mutex, TM_INFINITE);
+
+	if(!err) 
+		mutex->lockcnt = lockcnt; /* Adjust lockcnt */
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return err;
+}
+
+static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
+		       	      xntmode_t timeout_mode, RTIME timeout)
+{
+	unsigned lockcnt;
+	int err;
+
+	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, 
+				    timeout_mode, timeout);
+
+	if(!err || err == -ETIMEDOUT || err == -EINTR)
+		do {
+			err = rt_cond_wait_epilogue(mutex, lockcnt);
+		} while (err == -EINTR);
+
+	return err;
+}
 /**
  * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  * @brief Wait on a condition.

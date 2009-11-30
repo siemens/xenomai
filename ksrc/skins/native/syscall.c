@@ -1826,19 +1826,22 @@ static int __rt_cond_delete(struct pt_regs *regs)
 }
 
 /*
- * int __rt_cond_wait(RT_COND_PLACEHOLDER *cph,
- *                    RT_MUTEX_PLACEHOLDER *mph,
- *                    xntmode_t timeout_mode,
- *                    RTIME *timeoutp)
+ * int __rt_cond_wait_prologue(RT_COND_PLACEHOLDER *cph,
+ *                    	       RT_MUTEX_PLACEHOLDER *mph,
+ *		      	       unsigned *plockcnt,
+ *                    	       xntmode_t timeout_mode,
+ *                    	       RTIME *timeoutp)
  */
 
-static int __rt_cond_wait(struct pt_regs *regs)
+static int __rt_cond_wait_prologue(struct pt_regs *regs)
 {
 	RT_COND_PLACEHOLDER cph, mph;
 	xntmode_t timeout_mode;
+	unsigned lockcnt;
 	RT_MUTEX *mutex;
 	RT_COND *cond;
 	RTIME timeout;
+	int err;
 
 	if (__xn_safe_copy_from_user(&cph, (void __user *)__xn_reg_arg1(regs),
 				     sizeof(cph)))
@@ -1858,13 +1861,47 @@ static int __rt_cond_wait(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	timeout_mode = __xn_reg_arg3(regs);
+	timeout_mode = __xn_reg_arg4(regs);
 
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
+	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	return rt_cond_wait_inner(cond, mutex, timeout_mode, timeout);
+	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, timeout_mode, timeout);
+
+	if (err == 0 || err == -ETIMEDOUT)
+		err = rt_cond_wait_epilogue(mutex, lockcnt);
+	
+	if (err == -EINTR && __xn_reg_arg3(regs)
+	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				      &lockcnt, sizeof(lockcnt)))
+		return -EFAULT;
+
+	return err;
+}
+
+/*
+ * int __rt_cond_wait_epilogue(RT_MUTEX_PLACEHOLODER *mph, unsigned lockcnt)
+ */
+
+static int __rt_cond_wait_epilogue(struct pt_regs *regs)
+{
+	RT_COND_PLACEHOLDER mph;
+	unsigned lockcnt;
+	RT_MUTEX *mutex;
+
+	if (__xn_safe_copy_from_user(&mph, (void __user *)__xn_reg_arg1(regs),
+				     sizeof(mph)))
+		return -EFAULT;
+
+	mutex = (RT_MUTEX *)xnregistry_fetch(mph.opaque);
+
+	if (!mutex)
+		return -ESRCH;
+
+	lockcnt = __xn_reg_arg2(regs);
+
+	return rt_cond_wait_epilogue(mutex, lockcnt);
 }
 
 /*
@@ -1944,13 +1981,14 @@ static int __rt_cond_inquire(struct pt_regs *regs)
 
 #else /* !CONFIG_XENO_OPT_NATIVE_COND */
 
-#define __rt_cond_create    __rt_call_not_available
-#define __rt_cond_bind      __rt_call_not_available
-#define __rt_cond_delete    __rt_call_not_available
-#define __rt_cond_wait      __rt_call_not_available
-#define __rt_cond_signal    __rt_call_not_available
-#define __rt_cond_broadcast __rt_call_not_available
-#define __rt_cond_inquire   __rt_call_not_available
+#define __rt_cond_create    	__rt_call_not_available
+#define __rt_cond_bind      	__rt_call_not_available
+#define __rt_cond_delete    	__rt_call_not_available
+#define __rt_cond_wait_prologue __rt_call_not_available
+#define __rt_cond_wait_epilogue __rt_call_not_available
+#define __rt_cond_signal    	__rt_call_not_available
+#define __rt_cond_broadcast 	__rt_call_not_available
+#define __rt_cond_inquire   	__rt_call_not_available
 
 #endif /* CONFIG_XENO_OPT_NATIVE_COND */
 
@@ -4051,7 +4089,10 @@ static xnsysent_t __systab[] = {
 	[__native_cond_create] = {&__rt_cond_create, __xn_exec_any},
 	[__native_cond_bind] = {&__rt_cond_bind, __xn_exec_conforming},
 	[__native_cond_delete] = {&__rt_cond_delete, __xn_exec_any},
-	[__native_cond_wait] = {&__rt_cond_wait, __xn_exec_primary},
+	[__native_cond_wait_prologue] = 
+		{&__rt_cond_wait_prologue, __xn_exec_primary},
+	[__native_cond_wait_epilogue] = 
+		{&__rt_cond_wait_epilogue, __xn_exec_primary},
 	[__native_cond_signal] = {&__rt_cond_signal, __xn_exec_any},
 	[__native_cond_broadcast] = {&__rt_cond_broadcast, __xn_exec_any},
 	[__native_cond_inquire] = {&__rt_cond_inquire, __xn_exec_any},

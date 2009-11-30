@@ -75,7 +75,7 @@
 #define __native_cond_create        49
 #define __native_cond_bind          50
 #define __native_cond_delete        51
-#define __native_cond_wait          52
+#define __native_cond_wait_prologue 52
 #define __native_cond_signal        53
 #define __native_cond_broadcast     54
 #define __native_cond_inquire       55
@@ -127,6 +127,7 @@
 #define __native_buffer_clear       101
 #define __native_buffer_inquire     102
 #define __native_queue_flush        103
+#define __native_cond_wait_epilogue 104
 
 struct rt_arg_bulk {
 
