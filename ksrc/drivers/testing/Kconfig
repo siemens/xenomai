@@ -1,6 +1,6 @@
 menu "Testing drivers"
 
-config XENO_KLATENCY_MODULE
+config XENO_TESTING_MODULE
         depends on MODULES
 	def_tristate m
 
@@ -13,7 +13,7 @@ config XENO_DRIVERS_TIMERBENCH
 	See testsuite/latency for a possible front-end.
 
 config XENO_DRIVERS_KLATENCY
-	depends on XENO_DRIVERS_TIMERBENCH && XENO_KLATENCY_MODULE
+	depends on XENO_DRIVERS_TIMERBENCH && XENO_TESTING_MODULE
 	tristate "Kernel-only latency measurement module"
 	help
 	Kernel module for kernel-only latency measurement.
@@ -33,5 +33,11 @@ config XENO_DRIVERS_SWITCHTEST
 	help
 	Kernel-based driver for unit testing context switches and
 	FPU switches.
+
+config XENO_SKIN_SIGTEST
+       depends on XENO_TESTING_MODULE
+       tristate "User-space real-time signals testing module"
+       help
+       Elementary skin for unit testing user-space real-time signals.
 
 endmenu

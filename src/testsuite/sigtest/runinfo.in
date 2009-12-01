@@ -1,0 +1,1 @@
+sigtest:posix+rtdm+sigtest:!@exec_prefix@/bin/sigtest;popall:control_c

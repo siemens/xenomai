@@ -912,6 +912,7 @@ AC_CONFIG_FILES([ \
 	src/testsuite/clocktest/Makefile \
        	src/testsuite/klatency/Makefile \
        	src/testsuite/unit/Makefile \
+       	src/testsuite/sigtest/Makefile \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
 	src/utils/analogy/Makefile \

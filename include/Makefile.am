@@ -41,4 +41,4 @@ uninstall-local:
 dist-hook:
 	find $(distdir)/compat -name .svn -depth -exec rm -fr \{\} \;
 
-EXTRA_DIST = compat
+EXTRA_DIST = compat testing

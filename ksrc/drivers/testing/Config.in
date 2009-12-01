@@ -13,4 +13,6 @@ dep_tristate 'Context switches test driver' CONFIG_XENO_DRIVERS_SWITCHTEST $CONF
 
 dep_tristate 'Kernel-only latency measurement module' CONFIG_XENO_DRIVERS_KLATENCY $XENO_DRIVERS_TIMERBENCH
 
+dep_tristate 'User-space real-time signals testing module' CONFIG_XENO_SKIN_SIGTEST
+
 endmenu

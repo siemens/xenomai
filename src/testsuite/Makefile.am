@@ -1,1 +1,1 @@
-SUBDIRS = latency cyclic switchtest irqbench clocktest klatency unit
+SUBDIRS = latency cyclic switchtest irqbench clocktest klatency unit sigtest

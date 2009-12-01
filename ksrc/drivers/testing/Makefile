@@ -8,6 +8,7 @@ obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 obj-$(CONFIG_XENO_DRIVERS_KLATENCY)   += xeno_klat.o
+obj-$(CONFIG_XENO_SKIN_SIGTEST)    += xeno_sigtest.o
 
 xeno_timerbench-y := timerbench.o
 
@@ -16,6 +17,8 @@ xeno_irqbench-y := irqbench.o
 xeno_switchtest-y := switchtest.o
 
 xeno_klat-y := klat.o
+
+xeno_sigtest-y := sigtest_module.o
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
@@ -29,6 +32,7 @@ obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 obj-$(CONFIG_XENO_DRIVERS_KLATENCY)   += xeno_klat.o
+obj-$(CONFIG_XENO_SKIN_SIGTEST)	      += xeno_sigtest.o
 xeno_timerbench-objs := timerbench.o
 
 xeno_irqbench-objs := irqbench.o
@@ -37,8 +41,10 @@ xeno_switchtest-objs := switchtest.o
 
 xeno_klat-objs := klat.o
 
+xeno_sigtest-objs := sigtest_module.o
+
 export-objs := $(xeno_timerbench-objs) $(xeno_irqbench-objs) \
-	$(xeno_switchtest-objs) $(xeno_klat-objs)
+	$(xeno_switchtest-objs) $(xeno_klat-objs) $(xeno_sigtest-objs)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
