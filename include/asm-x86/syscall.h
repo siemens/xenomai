@@ -48,6 +48,7 @@
 #define __xn_reg_arg3(regs)   ((regs)->x86reg_dx)
 #define __xn_reg_arg4(regs)   ((regs)->r10) /* entry.S convention here. */
 #define __xn_reg_arg5(regs)   ((regs)->r8)
+#define __xn_reg_sigp(regs)   ((regs)->r9)
 #endif /* x86_64 */
 
 #define __xn_reg_mux_p(regs)  ((__xn_reg_mux(regs) & 0x7fff) == __xn_sys_mux)
@@ -78,6 +79,8 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 }
 
 #else /* !__KERNEL__ */
+
+#include <errno.h>		/* For -ERESTART */
 
 /*
  * Some of the following macros have been adapted from glibc's syscall
@@ -213,64 +216,89 @@ asm (".L__X'%ebx = 1\n\t"
 #else /* x86_64 */
 
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
-#define LOAD_ARGS_0()	asm volatile ("" : /* */ : /* */ : "memory");
+#define LOAD_ARGS_0(sigp, dummy...)			\
+	long int __arg6 = (long)(sigp);		\
+	asm volatile ("" : /* */ : /* */ : "memory");
 #else
-#define LOAD_ARGS_0()
+#define LOAD_ARGS_0(sigp, dummy...)			\
+	long int __arg6 = (long)(sigp);
 #endif
-#define LOAD_REGS_0
-#define ASM_ARGS_0
+#define LOAD_REGS_0 \
+	register long int _a6 asm ("r9") = __arg6;
+#define ASM_ARGS_0      , "r" (_a6)
 
-#define LOAD_ARGS_1(a1)					\
+#define LOAD_ARGS_1(sigp, a1)				\
 	long int __arg1 = (long) (a1);			\
-	LOAD_ARGS_0()
+	LOAD_ARGS_0(sigp)
 #define LOAD_REGS_1					\
 	register long int _a1 asm ("rdi") = __arg1;	\
 	LOAD_REGS_0
 #define ASM_ARGS_1	ASM_ARGS_0, "r" (_a1)
 
-#define LOAD_ARGS_2(a1, a2)				\
+#define LOAD_ARGS_2(sigp, a1, a2)			\
 	long int __arg2 = (long) (a2);			\
-	LOAD_ARGS_1(a1)
+	LOAD_ARGS_1(sigp, a1)
 #define LOAD_REGS_2					\
 	register long int _a2 asm ("rsi") = __arg2;	\
 	LOAD_REGS_1
 #define ASM_ARGS_2	ASM_ARGS_1, "r" (_a2)
 
-#define LOAD_ARGS_3(a1, a2, a3)				\
+#define LOAD_ARGS_3(sigp, a1, a2, a3)			\
 	long int __arg3 = (long) (a3);			\
-	LOAD_ARGS_2 (a1, a2)
+	LOAD_ARGS_2 (sigp, a1, a2)
 #define LOAD_REGS_3					\
 	register long int _a3 asm ("rdx") = __arg3;	\
 	LOAD_REGS_2
 #define ASM_ARGS_3	ASM_ARGS_2, "r" (_a3)
 
-#define LOAD_ARGS_4(a1, a2, a3, a4)			\
+#define LOAD_ARGS_4(sigp, a1, a2, a3, a4)		\
 	long int __arg4 = (long) (a4);			\
-	LOAD_ARGS_3 (a1, a2, a3)
+	LOAD_ARGS_3 (sigp, a1, a2, a3)
 #define LOAD_REGS_4					\
 	register long int _a4 asm ("r10") = __arg4;	\
 	LOAD_REGS_3
 #define ASM_ARGS_4	ASM_ARGS_3, "r" (_a4)
 
-#define LOAD_ARGS_5(a1, a2, a3, a4, a5)			\
+#define LOAD_ARGS_5(sigp, a1, a2, a3, a4, a5)		\
 	long int __arg5 = (long) (a5);			\
-	LOAD_ARGS_4 (a1, a2, a3, a4)
+	LOAD_ARGS_4 (sigp, a1, a2, a3, a4)
 #define LOAD_REGS_5					\
 	register long int _a5 asm ("r8") = __arg5;	\
 	LOAD_REGS_4
 #define ASM_ARGS_5	ASM_ARGS_4, "r" (_a5)
 
-#define DO_SYSCALL(name, nr, args...)			\
-({							\
-	unsigned long __resultvar;			\
-	LOAD_ARGS_##nr(args)				\
-	LOAD_REGS_##nr					\
-	asm volatile (					\
-		"syscall\n\t"				\
-		: "=a" (__resultvar)			\
-		: "0" (name) ASM_ARGS_##nr		\
-		: "memory", "cc", "r11", "cx");		\
-	(long) __resultvar;				\
+#define DO_SYSCALL_INNER(name, nr, args...)	\
+({						\
+	unsigned long __resultvar;		\
+	LOAD_ARGS_##nr(args)			\
+	LOAD_REGS_##nr				\
+	asm volatile (				\
+		"syscall\n\t"			\
+		: "=a" (__resultvar)		\
+		: "0" (name) ASM_ARGS_##nr	\
+		: "memory", "cc", "r11", "cx");	\
+	(long) __resultvar;			\
+})
+
+#define DO_SYSCALL(name, nr, args...)					\
+({									\
+	int err, res = -ERESTART;					\
+	struct xnsig sigs;						\
+									\
+	do {								\
+		sigs.nsigs = 0;						\
+		err = DO_SYSCALL_INNER(name, nr, &sigs, args);		\
+		res = xnsig_dispatch(&sigs, res, err);			\
+									\
+		while (sigs.nsigs && sigs.remaining) {			\
+			sigs.nsigs = 0;					\
+			err = DO_SYSCALL_INNER				\
+				(__xn_mux_code(0,__xn_sys_get_next_sigs), \
+				 0, &sigs);				\
+			res = xnsig_dispatch_next(&sigs, res, err);	\
+		}							\
+	} while (res == -ERESTART);					\
+	res;								\
 })
 
 #define XENOMAI_SYS_MUX(nr, op, args...) \
