@@ -42,6 +42,7 @@
 #define __xn_reg_arg3(regs)   ((regs)->x86reg_dx)
 #define __xn_reg_arg4(regs)   ((regs)->x86reg_si)
 #define __xn_reg_arg5(regs)   ((regs)->x86reg_di)
+#define __xn_reg_sigp(regs)   ((regs)->x86reg_bp - sizeof(struct xnsig))
 #else /* x86_64 */
 #define __xn_reg_arg1(regs)   ((regs)->x86reg_di)
 #define __xn_reg_arg2(regs)   ((regs)->x86reg_si)
@@ -54,6 +55,7 @@
 #define __xn_reg_mux_p(regs)  ((__xn_reg_mux(regs) & 0x7fff) == __xn_sys_mux)
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)     ((__xn_reg_mux(regs) >> 24) & 0xff)
+
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
@@ -138,13 +140,41 @@ asm (".L__X'%ebx = 1\n\t"
      ".endif\n\t"
      ".endm\n\t");
 
-#define XENOMAI_SYS_MUX(nr, op, args...)			\
+/* We want ebp to be both a valid frame pointer for correct backtraces,
+   and allow kernel-space to find deterministically the starting
+   address of the xnsig structure. So, we build a phony stack frame
+   which contains the xnsig structure.
+
+   Furthermore, since ebp is used by inline assembly to generate
+   references to memory operands, we can not touch it before all
+   memory operands have been referenced, so we make ebp point to this
+   phony frame only for the time of the syscall instruction.
+*/
+struct frame {
+	struct xnsig sigs;
+	void *last_fp;
+	void *fn_addr;
+};
+
+static inline void __xn_get_eip(void **dest)
+{
+        asm volatile("movl $1f, %0; 1:": "=m"(*dest));
+}
+
+static inline void __xn_get_ebp(void **dest)
+{
+        asm volatile("movl %%ebp, %0": "=m"(*dest));
+}
+
+#define XENOMAI_SYS_MUX_INNER(nr, op, args...)			\
 ({								\
 	unsigned __resultvar;					\
 	asm volatile (						\
 		LOADARGS_##nr					\
 		"movl %1, %%eax\n\t"				\
+		"movl %2, %%ebp\n\t"				\
 		DOSYSCALL					\
+		"movl (%%ebp), %%ebp\n\t"			\
 		RESTOREARGS_##nr				\
 		: "=a" (__resultvar)				\
 		: "i" (__xn_mux_code(0, op)) ASMFMT_##nr(args)	\
@@ -152,13 +182,39 @@ asm (".L__X'%ebx = 1\n\t"
 	(int) __resultvar;					\
 })
 
-#define XENOMAI_SYS_MUX_SAFE(nr, op, args...)			\
+#define XENOMAI_SYS_MUX(nr, op, args...)				\
+({									\
+	int err, res = -ERESTART;					\
+	void **volatile fp;						\
+	struct frame f;							\
+									\
+	__xn_get_eip(&f.fn_addr);					\
+	__xn_get_ebp(&f.last_fp);					\
+	fp = &f.last_fp;						\
+	do {								\
+		f.sigs.nsigs = 0;					\
+		err = XENOMAI_SYS_MUX_INNER(nr, op, fp, args);		\
+		res = xnsig_dispatch(&f.sigs, res, err);		\
+									\
+		while (f.sigs.nsigs && f.sigs.remaining) {		\
+			f.sigs.nsigs = 0;				\
+			err = XENOMAI_SYS_MUX_INNER			\
+				(0, __xn_sys_get_next_sigs, fp);	\
+			res = xnsig_dispatch_next(&f.sigs, res, err);	\
+		}							\
+	} while (res == -ERESTART);					\
+	res;								\
+})
+
+#define XENOMAI_SYS_MUX_SAFE_INNER(nr, op, args...)		\
 ({								\
 	unsigned __resultvar;					\
 	asm volatile (						\
 		LOADARGS_##nr					\
 		"movl %1, %%eax\n\t"				\
+		"movl %2, %%ebp\n\t"				\
 		DOSYSCALLSAFE					\
+		"movl (%%ebp), %%ebp\n\t"			\
 		RESTOREARGS_##nr				\
 		: "=a" (__resultvar)				\
 		: "i" (__xn_mux_code(0, op)) ASMFMT_##nr(args)	\
@@ -166,14 +222,40 @@ asm (".L__X'%ebx = 1\n\t"
 	(int) __resultvar;					\
 })
 
-#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...)		\
+#define XENOMAI_SYS_MUX_SAFE(nr, op, args...)				\
+({									\
+	int err, res = -ERESTART;					\
+	void **volatile fp;						\
+	struct frame f;							\
+									\
+	__xn_get_eip(&f.fn_addr);					\
+	__xn_get_ebp(&f.last_fp);					\
+	fp = &f.last_fp;						\
+	do {								\
+		f.sigs.nsigs = 0;					\
+		err = XENOMAI_SYS_MUX_SAFE_INNER(nr, op, fp, args);	\
+		res = xnsig_dispatch(&f.sigs, res, err);		\
+									\
+		while (f.sigs.nsigs && f.sigs.remaining) {		\
+			f.sigs.nsigs = 0;				\
+			err = XENOMAI_SYS_MUX_SAFE_INNER		\
+				(0, __xn_sys_get_next_sigs, fp);	\
+			res = xnsig_dispatch_next(&f.sigs, res, err);	\
+		}							\
+	} while (res == -ERESTART);					\
+	res;								\
+})
+
+#define XENOMAI_SKIN_MUX_INNER(nr, shifted_id, op, args...)	\
 ({								\
 	int __muxcode = __xn_mux_code(shifted_id, op);		\
 	unsigned __resultvar;					\
 	asm volatile (						\
 		LOADARGS_##nr					\
 		"movl %1, %%eax\n\t"				\
+		"movl %2, %%ebp\n\t"				\
 		DOSYSCALL					\
+		"movl (%%ebp), %%ebp\n\t"			\
 		RESTOREARGS_##nr				\
 		: "=a" (__resultvar)				\
 		: "m" (__muxcode) ASMFMT_##nr(args)		\
@@ -181,10 +263,34 @@ asm (".L__X'%ebx = 1\n\t"
 	(int) __resultvar;					\
 })
 
+#define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...)			\
+({									\
+	int err, res = -ERESTART;					\
+	void **volatile fp;						\
+	struct frame f;							\
+									\
+	__xn_get_eip(&f.fn_addr);					\
+	__xn_get_ebp(&f.last_fp);					\
+	fp = &f.last_fp;						\
+	do {								\
+		f.sigs.nsigs = 0;					\
+		err = XENOMAI_SKIN_MUX_INNER(nr, shifted_id, op, fp, args); \
+		res = xnsig_dispatch(&f.sigs, res, err);		\
+									\
+		while (f.sigs.nsigs && f.sigs.remaining) {		\
+			f.sigs.nsigs = 0;				\
+			err = XENOMAI_SYS_MUX_INNER			\
+				(0, __xn_sys_get_next_sigs, fp);	\
+			res = xnsig_dispatch_next(&f.sigs, res, err);	\
+		}							\
+	} while (res == -ERESTART);					\
+	res;								\
+})
+
 #define LOADARGS_0
 #define LOADARGS_1 \
-	"bpushl .L__X'%k2, %k2\n\t" \
-	"bmovl .L__X'%k2, %k2\n\t"
+	"bpushl .L__X'%k3, %k3\n\t" \
+	"bmovl .L__X'%k3, %k3\n\t"
 #define LOADARGS_2	LOADARGS_1
 #define LOADARGS_3	LOADARGS_1
 #define LOADARGS_4	LOADARGS_1
@@ -192,23 +298,24 @@ asm (".L__X'%ebx = 1\n\t"
 
 #define RESTOREARGS_0
 #define RESTOREARGS_1 \
-	"bpopl .L__X'%k2, %k2\n\t"
+	"bpopl .L__X'%k3, %k3\n\t"
 #define RESTOREARGS_2	RESTOREARGS_1
 #define RESTOREARGS_3	RESTOREARGS_1
 #define RESTOREARGS_4	RESTOREARGS_1
 #define RESTOREARGS_5	RESTOREARGS_1
 
-#define ASMFMT_0()
-#define ASMFMT_1(arg1) \
-	, "acdSD" (arg1)
-#define ASMFMT_2(arg1, arg2) \
-	, "adSD" (arg1), "c" (arg2)
-#define ASMFMT_3(arg1, arg2, arg3) \
-	, "aSD" (arg1), "c" (arg2), "d" (arg3)
-#define ASMFMT_4(arg1, arg2, arg3, arg4) \
-	, "aD" (arg1), "c" (arg2), "d" (arg3), "S" (arg4)
-#define ASMFMT_5(arg1, arg2, arg3, arg4, arg5) \
-	, "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
+#define ASMFMT_0(fp, dummy...) \
+	, "m" (fp)
+#define ASMFMT_1(fp, arg1) \
+	ASMFMT_0(fp), "acdSD" (arg1)
+#define ASMFMT_2(fp, arg1, arg2) \
+	ASMFMT_0(fp), "adSD" (arg1), "c" (arg2)
+#define ASMFMT_3(fp, arg1, arg2, arg3) \
+	ASMFMT_0(fp), "aSD" (arg1), "c" (arg2), "d" (arg3)
+#define ASMFMT_4(fp, arg1, arg2, arg3, arg4) \
+	ASMFMT_0(fp), "aD" (arg1), "c" (arg2), "d" (arg3), "S" (arg4)
+#define ASMFMT_5(fp, arg1, arg2, arg3, arg4, arg5) \
+	ASMFMT_0(fp), "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
 
 #define XENOMAI_SYSBIND(a1,a2,a3,a4) \
 	XENOMAI_SYS_MUX_SAFE(4,__xn_sys_bind,a1,a2,a3,a4)
