@@ -59,12 +59,12 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 
 #else /* !CONFIG_XENO_FASTSYNCH */
 	err = XENOMAI_SKINCALL5(__native_muxid,
-				 __native_cond_wait, cond, mutex,
+				 __native_cond_wait_prologue, cond, mutex,
 				 &saved_lockcnt, XN_RELATIVE, &timeout);
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__native_muxid,
-					__native_cond_wait_epilogue, mutex
+					__native_cond_wait_epilogue, mutex,
 					saved_lockcnt);
 
 #endif /* !CONFIG_XENO_FASTSYNCH */
