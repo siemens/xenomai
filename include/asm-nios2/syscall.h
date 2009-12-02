@@ -98,7 +98,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			: "r"(muxcode),				\
 			  "i"(TRAP_ID_SYSCALL),			\
 			  "r"((long)sigp)			\
-			: "r2", "r3", "r9"			\
+			: "r2", "r3", "r9", "memory"		\
 		);						\
 		__ret;						\
 	})
@@ -119,7 +119,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r9"		\
+			: "r2", "r3", "r4", "r9", "memory"	\
 		);						\
 		__ret;						\
 	})
@@ -142,7 +142,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r9"		\
+			: "r2", "r3", "r4", "r5", "r9", "memory"	\
 		);						\
 		__ret;						\
 	})
@@ -167,7 +167,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r9"	\
+			: "r2", "r3", "r4", "r5", "r6", "r9", "memory"	\
 		);						\
 		__ret;						\
 	})
@@ -194,7 +194,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a3),			\
 			  "r" ((long)a4),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r7", "r9"	\
+			: "r2", "r3", "r4", "r5", "r6", "r7", "r9", "memory" \
 		);						\
 		__ret;						\
 	})
@@ -223,7 +223,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a4),			\
 			  "r" ((long)a5),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9" \
+			: "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "memory" \
 		);						\
 		__ret;						\
 	})
@@ -245,7 +245,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 				__sigs__.nsigs = 0;			\
 				__err__ = XENOMAI_DO_SYSCALL_INNER	\
 					(0, 0, __xn_sys_get_next_sigs, &__sigs__);	\
-				__res__ = xnsig_dispatch(&__sigs__, __res__, __err__);	\
+				__res__ = xnsig_dispatch_next(&__sigs__, __res__, __err__); \
 			}						\
 		} while (__res__ == -ERESTART);				\
 		__res__;						\
