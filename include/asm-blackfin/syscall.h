@@ -92,12 +92,10 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
 		"r5=%2;\n\t"						\
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d" (muxcode),					\
 		  "a" ((long)(sigp))					\
@@ -109,13 +107,11 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
 		"r5=%3;\n\t"						\
 		"r0=%2;\n\t"						\
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d" (muxcode),					\
 		  "a" ((long)(a1)),					\
@@ -128,14 +124,12 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
 		"r5=%4;\n\t"						\
 		"r1=%3;\n\t"						\
 		"r0=%2;\n\t"						\
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d" (muxcode),					\
 		  "a" ((long)(a1)),					\
@@ -149,7 +143,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
 		"r5=%5;\n\t"						\
 		"r2=%4;\n\t"						\
 		"r1=%3;\n\t"						\
@@ -157,7 +150,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d"   (muxcode),					\
 		  "a"   ((long)(a1)),					\
@@ -172,8 +164,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
-		"[--sp] = r3;\n\t"					\
 		"r5=%6;\n\t"						\
 		"r3=%5;\n\t"						\
 		"r2=%4;\n\t"						\
@@ -182,8 +172,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r3 = [sp++];\n\t"					\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d"  (muxcode),					\
 		  "a"  ((long)(a1)),					\
@@ -199,9 +187,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
-		"[--sp] = r5;\n\t"					\
-		"[--sp] = r4;\n\t"					\
-		"[--sp] = r3;\n\t"					\
 		"r5=%7;\n\t"						\
 		"r4=%6;\n\t"						\
 		"r3=%5;\n\t"						\
@@ -211,9 +196,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		"p0=%1;\n\t"						\
 		"excpt 0;\n\t"						\
 		"%0=r0;\n\t"						\
-		"r3 = [sp++];\n\t"					\
-		"r4 = [sp++];\n\t"					\
-		"r5 = [sp++];\n\t"					\
 		: "=da" (__res)						\
 		: "d"  (muxcode),					\
 		  "rm"  ((long)(a1)),					\
