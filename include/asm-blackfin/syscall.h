@@ -101,7 +101,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		: "=da" (__res)						\
 		: "d" (muxcode),					\
 		  "a" ((long)(sigp))					\
-		: "CC","R5","P0");					\
+		: "CC","R5","P0","memory");				\
 	__res;								\
 })
 
@@ -120,7 +120,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		: "d" (muxcode),					\
 		  "a" ((long)(a1)),					\
 		  "a" ((long)(sigp))					\
-		: "CC","R0","R5","P0");					\
+		: "CC","R0","R5","P0","memory");			\
 	__res;								\
 })
 
@@ -141,7 +141,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		  "a" ((long)(a1)),					\
 		  "a" ((long)(a2)),					\
 		  "a" ((long)(sigp))					\
-		: "CC","R0","R1","R5","P0");				\
+		: "CC","R0","R1","R5","P0","memory");			\
 	__res;								\
 })
 
@@ -164,7 +164,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		  "a"   ((long)(a2)),					\
 		  "a"   ((long)(a3)),					\
 		  "a"   ((long)(sigp))					\
-		: "CC","R0","R1","R2","R5","P0");			\
+		: "CC","R0","R1","R2","R5","P0","memory");		\
 	__res;								\
 })
 
@@ -191,7 +191,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		  "a"  ((long)(a3)),					\
 		  "a"  ((long)(a4)),					\
 		  "a"  ((long)(sigp))					\
-		: "CC","R0","R1","R2","R3","R5","P0");			\
+		: "CC","R0","R1","R2","R3","R5","P0","memory");		\
 	__res;								\
 })
 
@@ -222,7 +222,7 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		  "rm"  ((long)(a4)),					\
 		  "rm"  ((long)(a5)),					\
 		  "rm"  ((long)(sigp))					\
-		: "CC","R0","R1","R2","R3","R4","R5","P0");		\
+		: "CC","R0","R1","R2","R3","R4","R5","P0","memory");	\
 	__res;								\
 })
 
@@ -236,14 +236,14 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 									\
 		do {							\
 			__sigs__.nsigs = 0;				\
-			__err__ = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id,	\
-						       op, &__sigs__, ##args);	\
-			__res__ = xnsig_dispatch(&__sigs__, __res__, __err__);	\
+			__err__ = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, \
+							   op, &__sigs__, ##args); \
+			__res__ = xnsig_dispatch(&__sigs__, __res__, __err__); \
 			while (__sigs__.nsigs && __sigs__.remaining) {	\
 				__sigs__.nsigs = 0;			\
 				__err__ = XENOMAI_DO_SYSCALL_INNER	\
-					(0, 0, __xn_sys_get_next_sigs, &__sigs__);	\
-				__res__ = xnsig_dispatch(&__sigs__, __res__, __err__);	\
+					(0, 0, __xn_sys_get_next_sigs, &__sigs__); \
+				__res__ = xnsig_dispatch_next(&__sigs__, __res__, __err__); \
 			}						\
 		} while (__res__ == -ERESTART);				\
 		__res__;						\
