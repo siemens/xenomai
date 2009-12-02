@@ -4,9 +4,9 @@
 
 #include <unistd.h>
 #include <sys/mman.h>
-#ifdef __GLIBC__
+#ifndef __UCLIBC__
 #include <execinfo.h>
-#endif /* __GLIBC__ */
+#endif /* !__UCLIBC__ */
 
 #include <asm-generic/xenomai/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
@@ -65,14 +65,14 @@ void mark_seen_2(int sig)
 
 void mark_seen_2_bt(int sig)
 {
-#ifdef __GLIBC__
+#ifndef __UCLIBC__
 	void *buf[200];
 	int nelems = backtrace(buf, sizeof(buf)/sizeof(buf[0]));
 	fputs("\n>>>>>>>>>>>>>>>>>>>>> Please "
 	      "check that the following backtrace looks correct:\n", stderr);
 	backtrace_symbols_fd(buf, nelems, 2);
 	fputs("<<<<<<<<<<<<<<<<<<<<< End of backtrace\n\n", stderr);
-#endif /* __GLIBC__ */
+#endif /* !__UCLIBC__ */
 	seen |= 2;
 }
 
