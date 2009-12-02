@@ -67,7 +67,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 	case -ENOEXEC:
 
 		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
-		fprintf(stderr, "(needed=%lu, current=%lu).\n",
+		fprintf(stderr, "(user-space requires '%lu', kernel provides '%lu').\n",
 			XENOMAI_ABI_REV, finfo.feat_abirev);
 		exit(EXIT_FAILURE);
 
