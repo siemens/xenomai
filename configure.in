@@ -374,8 +374,8 @@ patch. Default is to infer the patch name from Linux kernel version.]),
 	  cd conftest2.dir && $LNDIR -silent -ignorelinks ../conftest1.dir \
 		&& cd ..
 	  test -e conftest2.dir/foo && LNDIR="$LNDIR -silent -ignorelinks"
-	  rm -Rf contest1.dir conftest2.dir
     fi
+    rm -Rf contest1.dir conftest2.dir
     if test "x$LNDIR" = "xlndir"; then
 	AC_MSG_RESULT(no)
     else
@@ -424,8 +424,12 @@ patch. Default is to infer the patch name from Linux kernel version.]),
 	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
               test x"$CONFIG_IA64" = xy && cfg_arch=ia64 || :
-              test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
-              test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
+	      if test x"$CONFIG_PPC" = xy; then
+	      	   cfg_arch=ppc
+  	           test x"$CONFIG_PPC32" = xy && cfg_arch=powerpc || :
+              	   test x"$CONFIG_PPC64" = xy && cfg_arch=powerpc || :
+	      	   test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
+	      fi
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
               test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               if test $cfg_arch = $XENO_LINUX_ARCH ; then
