@@ -24,6 +24,7 @@ int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error)
 {
 	unsigned i;
 
+  dispatch:
 	for (i = 0; i < sigs->nsigs; i++) {
 		xnsighandler *handler;
 		
@@ -31,10 +32,47 @@ int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error)
 		if (handler)
 			handler(&sigs->pending[i].si);
 	}
+
 	if (cumulated_error == -ERESTART)
 		cumulated_error = last_error;
+
+	if (sigs->remaining) {
+		sigs->nsigs = 0;
+		last_error = XENOMAI_SYSSIGS(sigs);
+		if (sigs->nsigs)
+			goto dispatch;
+	}
+
 	return cumulated_error;
 }
+
+#ifdef XENOMAI_SYSSIGS_SAFE
+int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_error)
+{
+	unsigned i;
+
+  dispatch:
+	for (i = 0; i < sigs->nsigs; i++) {
+		xnsighandler *handler;
+		
+		handler = xnsig_handlers[sigs->pending[i].muxid];
+		if (handler)
+			handler(&sigs->pending[i].si);
+	}
+
+	if (cumulated_error == -ERESTART)
+		cumulated_error = last_error;
+
+	if (sigs->remaining) {
+		sigs->nsigs = 0;
+		last_error = XENOMAI_SYSSIGS_SAFE(sigs);
+		if (sigs->nsigs)
+			goto dispatch;
+	}
+
+	return cumulated_error;
+}
+#endif /* XENOMAI_SYSSIGS_SAFE */
 
 int 
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, 
