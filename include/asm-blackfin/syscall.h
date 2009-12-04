@@ -101,117 +101,111 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  */
 
 #define __emit_syscall0(muxcode)					\
-({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "p0 = %1;\n\t"							\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-  : "=da" (__res) 							\
-  : "d" (muxcode)							\
-  : "CC", "P0");							\
-  __res;								\
-})
+	({								\
+		long __res;						\
+		__asm__ __volatile__ (					\
+			"p0 = %1;\n\t"					\
+			"excpt 0;\n\t"					\
+			"%0=r0;\n\t"					\
+			: "=da" (__res)					\
+			: "d" (muxcode)					\
+			: "CC","P0","memory");				\
+		__res;							\
+	})
 
 #define __emit_syscall1(muxcode,a1)					\
-({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "r0=%2;\n\t"								\
-  "p0=%1;\n\t"								\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-        : "=da" (__res)							\
-        : "d" (muxcode),						\
-	  "a" ((long)(a1))						\
-	: "CC", "R0", "P0");						\
-  __res;								\
-})
+	({								\
+		long __res;						\
+		__asm__ __volatile__ (					\
+			"r0=%2;\n\t"					\
+			"p0=%1;\n\t"					\
+			"excpt 0;\n\t"					\
+			"%0=r0;\n\t"					\
+			: "=da" (__res)					\
+			: "d" (muxcode),				\
+			  "a" ((long)(a1))				\
+			: "CC", "R0","P0","memory");			\
+		__res;							\
+	})
 
 #define __emit_syscall2(muxcode,a1,a2)					\
-({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "r1=%3;\n\t"								\
-  "r0=%2;\n\t"								\
-  "p0=%1;\n\t"								\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-        : "=da" (__res)							\
-        : "d" (muxcode),						\
-	  "a" ((long)(a1)),						\
-	  "a" ((long)(a2))						\
-	: "CC", "R0","R1", "P0");					\
-  __res;								\
-})
+	({								\
+		long __res;						\
+		__asm__ __volatile__ (					\
+			"r1=%3;\n\t"					\
+			"r0=%2;\n\t"					\
+			"p0=%1;\n\t"					\
+			"excpt 0;\n\t"					\
+			"%0=r0;\n\t"					\
+			: "=da" (__res)					\
+			: "d" (muxcode),				\
+			  "a" ((long)(a1)),				\
+			  "a" ((long)(a2))				\
+			: "CC", "R0","R1","P0","memory");		\
+		__res;							\
+	})
 
 #define __emit_syscall3(muxcode,a1,a2,a3)				\
-({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "r2=%4;\n\t"								\
-  "r1=%3;\n\t"								\
-  "r0=%2;\n\t"								\
-  "p0=%1;\n\t"								\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-        : "=da" (__res)							\
-        : "d"   (muxcode),						\
-	  "a"   ((long)(a1)),						\
-	  "a"   ((long)(a2)),						\
-	  "a"   ((long)(a3))						\
-        : "CC", "R0","R1","R2", "P0");					\
-  __res;								\
-})
+	({								\
+		long __res;						\
+		__asm__ __volatile__ (					\
+			"r2=%4;\n\t"					\
+			"r1=%3;\n\t"					\
+			"r0=%2;\n\t"					\
+			"p0=%1;\n\t"					\
+			"excpt 0;\n\t"					\
+			"%0=r0;\n\t"					\
+			: "=da" (__res)					\
+			: "d"   (muxcode),				\
+			  "a"   ((long)(a1)),				\
+			  "a"   ((long)(a2)),				\
+			  "a"   ((long)(a3))				\
+			: "CC", "R0","R1","R2","P0","memory");		\
+		__res;							\
+	})
 
 #define __emit_syscall4(muxcode,a1,a2,a3,a4)				\
 ({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "[--sp] = r3;\n\t"							\
-  "r3=%5;\n\t"								\
-  "r2=%4;\n\t"								\
-  "r1=%3;\n\t"								\
-  "r0=%2;\n\t"								\
-  "p0=%1;\n\t"								\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-  "r3 = [sp++];\n\t"							\
-  	: "=da" (__res)							\
-  	: "d"  (muxcode),						\
-	  "a"  ((long)(a1)),						\
-	  "a"  ((long)(a2)),						\
-	  "a"  ((long)(a3)),						\
-	  "a"  ((long)(a4))						\
-  	: "CC", "R0","R1","R2","R3", "P0");				\
-  __res;								\
+	long __res;							\
+	__asm__ __volatile__ (						\
+		"r3=%5;\n\t"						\
+		"r2=%4;\n\t"						\
+		"r1=%3;\n\t"						\
+		"r0=%2;\n\t"						\
+		"p0=%1;\n\t"						\
+		"excpt 0;\n\t"						\
+		"%0=r0;\n\t"						\
+		: "=da" (__res)						\
+		: "d"  (muxcode),					\
+		  "a"  ((long)(a1)),					\
+		  "a"  ((long)(a2)),					\
+		  "a"  ((long)(a3)),					\
+		  "a"  ((long)(a4))					\
+		: "CC", "R0","R1","R2","R3","P0","memory");		\
+	__res;								\
 })
 
 #define __emit_syscall5(muxcode,a1,a2,a3,a4,a5)				\
 ({									\
-  long __res;								\
-  __asm__ __volatile__ (						\
-  "[--sp] = r4;\n\t"                                                    \
-  "[--sp] = r3;\n\t"                                                    \
-  "r4=%6;\n\t"								\
-  "r3=%5;\n\t"								\
-  "r2=%4;\n\t"								\
-  "r1=%3;\n\t"								\
-  "r0=%2;\n\t"								\
-  "p0=%1;\n\t"								\
-  "excpt 0;\n\t" 							\
-  "%0=r0;\n\t"								\
-  "r3 = [sp++];\n\t" 							\
-  "r4 = [sp++];\n\t"                                                    \
-  	: "=da" (__res)							\
-  	: "d"  (muxcode),						\
-	  "rm"  ((long)(a1)),						\
-	  "rm"  ((long)(a2)),						\
-	  "rm"  ((long)(a3)),						\
-	  "rm"  ((long)(a4)),						\
-	  "rm"  ((long)(a5))						\
-	: "CC","R0","R1","R2","R3","R4","P0");				\
-  __res;								\
+	long __res;							\
+	__asm__ __volatile__ (						\
+		"r4=%6;\n\t"						\
+		"r3=%5;\n\t"						\
+		"r2=%4;\n\t"						\
+		"r1=%3;\n\t"						\
+		"r0=%2;\n\t"						\
+		"p0=%1;\n\t"						\
+		"excpt 0;\n\t"						\
+		"%0=r0;\n\t"						\
+		: "=da" (__res)						\
+		: "d"  (muxcode),					\
+		  "rm"  ((long)(a1)),					\
+		  "rm"  ((long)(a2)),					\
+		  "rm"  ((long)(a3)),					\
+		  "rm"  ((long)(a4)),					\
+		  "rm"  ((long)(a5))					\
+		: "CC","R0","R1","R2","R3","R4","P0","memory");		\
+	__res;								\
 })
 
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...) \
