@@ -8,7 +8,10 @@ sigtest_SOURCES = sigtest.c
 
 sigtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 
-sigtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS) -rdynamic
+sigtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
+if CONFIG_XENO_SHARED
+sigtest_LDFLAGS += -rdynamic
+endif
 
 sigtest_LDADD = \
 	../../skins/posix/libpthread_rt.la -lpthread -lrt
