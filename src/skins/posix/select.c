@@ -23,7 +23,7 @@ int __wrap_select (int __nfds, fd_set *__restrict __readfds,
 		return __real_select(__nfds, __readfds,
 				     __writefds, __exceptfds, __timeout);
 
-	if (err > 0)
+	if (err >= 0)
 		return err;
 
 	errno = -err;
