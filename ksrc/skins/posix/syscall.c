@@ -2811,7 +2811,8 @@ static xnsysent_t __systab[] = {
 	[__pse51_clock_getres] = {&__clock_getres, __xn_exec_any},
 	[__pse51_clock_gettime] = {&__clock_gettime, __xn_exec_any},
 	[__pse51_clock_settime] = {&__clock_settime, __xn_exec_any},
-	[__pse51_clock_nanosleep] = {&__clock_nanosleep, __xn_exec_primary},
+	[__pse51_clock_nanosleep] = 
+	{&__clock_nanosleep, __xn_exec_primary | __xn_exec_norestart},
 	[__pse51_mutex_init] = {&__pthread_mutex_init, __xn_exec_any},
 	[__pse51_mutex_destroy] = {&__pthread_mutex_destroy, __xn_exec_any},
 	[__pse51_mutex_lock] = {&__pthread_mutex_lock, __xn_exec_primary},
