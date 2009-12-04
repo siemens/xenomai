@@ -1518,18 +1518,6 @@ static int __pthread_cond_wait_prologue(struct task_struct *curr,
 						    timed,
 						    XN_INFINITE);
 
-	if (err == EINTR) {
-		do {
-			xnthread_clear_info(cur, XNKICKED);
-			err = pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-							    &mx.shadow_mutex, count);
-		}
-		while (err == EINTR);
-		xnthread_set_info(cur, XNKICKED);
-		err = EINTR;
-	}
-
-
 	if (!err || err == EINTR || err == ETIMEDOUT)
 		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg3(regs),
 				  &count, sizeof(count));
@@ -2834,7 +2822,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},
 	[__pse51_cond_destroy] = {&__pthread_cond_destroy, __xn_exec_any},
 	[__pse51_cond_wait_prologue] =
-	{&__pthread_cond_wait_prologue, __xn_exec_primary},
+	{&__pthread_cond_wait_prologue, __xn_exec_primary | __xn_exec_norestart},
 	[__pse51_cond_wait_epilogue] =
 	    {&__pthread_cond_wait_epilogue, __xn_exec_primary},
 	[__pse51_cond_signal] = {&__pthread_cond_signal, __xn_exec_any},
