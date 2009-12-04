@@ -86,7 +86,7 @@ struct pse51_cond_cleanup_t {
 	unsigned count;
 };
 
-static void __pthread_cond_relock_mutex(void *data)
+static void __pthread_cond_cleanup(void *data)
 {
 	struct pse51_cond_cleanup_t *c = (struct pse51_cond_cleanup_t *) data;
 	int err;
@@ -111,7 +111,7 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
 		return EINVAL;
 
-	pthread_cleanup_push(&__pthread_cond_relock_mutex, &c);
+	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
@@ -124,10 +124,12 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 	pthread_cleanup_pop(0);
 
-	if (err == EINTR) {
-		err = 0;
-		__pthread_cond_relock_mutex(&c);
-	}
+	while (err == EINTR)
+		err = -XENOMAI_SKINCALL3(__pse51_muxid,
+					 __pse51_cond_wait_epilogue,
+					 &c.cond->shadow_cond,
+					 &c.mutex->shadow_mutex,
+					 c.count);
 
 	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 
@@ -149,7 +151,7 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 	if (cb_try_read_lock(&c.mutex->shadow_mutex.lock, s))
 		return EINVAL;
 
-	pthread_cleanup_push(&__pthread_cond_relock_mutex, &c);
+	pthread_cleanup_push(&__pthread_cond_cleanup, &c);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
@@ -161,10 +163,12 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 
 	pthread_cleanup_pop(0);
 
-	if (err == EINTR) {
-		err = 0;
-		__pthread_cond_relock_mutex(&c);
-	}
+	while (err == EINTR)
+		err = -XENOMAI_SKINCALL3(__pse51_muxid,
+					 __pse51_cond_wait_epilogue,
+					 &c.cond->shadow_cond,
+					 &c.mutex->shadow_mutex,
+					 c.count);
 
 	cb_read_unlock(&c.mutex->shadow_mutex.lock, s);
 
