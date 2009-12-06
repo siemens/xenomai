@@ -8,7 +8,7 @@ obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 obj-$(CONFIG_XENO_DRIVERS_KLATENCY)   += xeno_klat.o
-obj-$(CONFIG_XENO_SKIN_SIGTEST)    += xeno_sigtest.o
+obj-$(CONFIG_XENO_DRIVERS_SIGTEST)    += xeno_sigtest.o
 
 xeno_timerbench-y := timerbench.o
 
@@ -32,7 +32,8 @@ obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
 obj-$(CONFIG_XENO_DRIVERS_KLATENCY)   += xeno_klat.o
-obj-$(CONFIG_XENO_SKIN_SIGTEST)	      += xeno_sigtest.o
+obj-$(CONFIG_XENO_DRIVERS_SIGTEST)    += xeno_sigtest.o
+
 xeno_timerbench-objs := timerbench.o
 
 xeno_irqbench-objs := irqbench.o
@@ -61,5 +62,8 @@ xeno_switchtest.o: $(xeno_switchtest-objs)
 
 xeno_klat.o: $(xeno_klat-objs)
 	$(LD) -r -o $@ $(xeno_klat-objs)
+
+xeno_sigtest.o: $(xeno_sigtest-objs)
+	$(LD) -r -o $@ $(xeno_sigtest-objs)
 
 endif
