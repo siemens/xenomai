@@ -12,7 +12,6 @@ analogy_8255-y := 8255.o
 
 analogy_parport-y := parport.o
 
-
 else
 
 # Makefile frag for Linux v2.4
@@ -27,13 +26,13 @@ analogy_8255-objs := 8255.o
 
 analogy_parport-objs := parport.o
 
-export-objs := $(analgoy_8255-objs) $(analgoy_parport-objs)
+export-objs := $(analogy_8255-objs) $(analogy_parport-objs)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
 
 include $(TOPDIR)/Rules.make
 
-analogy_8255.o: $(analogy_8255-objs) $(analgoy_parport-objs)
-	$(LD) -r -o $@ $(analogy_8255-objs) $(analgoy_parport-objs)
+analogy_8255.o: $(analogy_8255-objs) $(analogy_parport-objs)
+	$(LD) -r -o $@ $(analogy_8255-objs) $(analogy_parport-objs)
 
 endif
