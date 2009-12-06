@@ -168,7 +168,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..ec73274
+index 0000000..749e699
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,156 @@
@@ -199,10 +199,10 @@ index 0000000..ec73274
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.4-07"
++#define IPIPE_ARCH_STRING	"2.4-08"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	4
-+#define IPIPE_PATCH_NUMBER	7
++#define IPIPE_PATCH_NUMBER	8
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -2959,10 +2959,10 @@ index df89102..cfb29a2 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..d4789c8
+index 0000000..0d17fbe
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,985 @@
+@@ -0,0 +1,983 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -3938,12 +3938,10 @@ index 0000000..d4789c8
 +EXPORT_SYMBOL_GPL(__switch_to);
 +EXPORT_SYMBOL_GPL(show_stack);
 +
-+#ifdef CONFIG_X86_32
 +EXPORT_PER_CPU_SYMBOL_GPL(init_tss);
 +#ifdef CONFIG_SMP
 +EXPORT_PER_CPU_SYMBOL_GPL(cpu_tlbstate);
 +#endif /* CONFIG_SMP */
-+#endif /* !CONFIG_X86_32 */
 +
 +#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
 +EXPORT_SYMBOL(tasklist_lock);
