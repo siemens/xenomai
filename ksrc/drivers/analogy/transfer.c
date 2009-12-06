@@ -286,9 +286,10 @@ int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd)
 	clear_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]));
 
 	/* If the subdevice is command capable and 
-	   if there is a command is under progress, 
+	   if a command is under progress, 
 	   disable it and free it... */
 	if (dev->transfer.bufs != NULL &&
+	    dev->transfer.bufs[idx_subd] != NULL &&
 	    dev->transfer.bufs[idx_subd]->cur_cmd != NULL) {
 
 		a4l_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
