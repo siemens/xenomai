@@ -319,7 +319,15 @@ static inline unsigned long hweight_long(unsigned long w)
 unsigned long find_next_bit(const unsigned long *addr,
                             unsigned long size, unsigned long offset);
 
+typedef phys_addr_t resource_size_t;
+
+#define mmiowb()	barrier()
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
+typedef unsigned long phys_addr_t;
+#endif
 
 #define compat_module_param_array(name, type, count, perm) \
 	module_param_array(name, type, NULL, perm)
@@ -543,10 +551,6 @@ static inline int wrap_raise_cap(int cap)
 	return commit_creds(new);
 }
 #endif /* LINUX_VERSION_CODE >= 2.6.29 */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)
-typedef unsigned long phys_addr_t;
-#endif
 
 #ifdef CONFIG_PROC_FS
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
