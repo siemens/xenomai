@@ -37,8 +37,8 @@ Collaboration diagram for Utility Services:</div>
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gadf5ddcdee106f1eaf4b93b2d633da441">rtdm_mmap_to_user</a> (rtdm_user_info_t *user_info, void *src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map a kernel memory range into the address space of the user.  <a href="#gadf5ddcdee106f1eaf4b93b2d633da441"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gad3cd99bd0049763a4bf4c41edb249785">rtdm_iomap_to_user</a> (rtdm_user_info_t *user_info, unsigned long src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map an I/O memory range into the address space of the user.  <a href="#gad3cd99bd0049763a4bf4c41edb249785"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gaa49b4fbd57a98a9ccda1f243b40bc519">rtdm_iomap_to_user</a> (rtdm_user_info_t *user_info, phys_addr_t src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Map an I/O memory range into the address space of the user.  <a href="#gaa49b4fbd57a98a9ccda1f243b40bc519"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5">rtdm_munmap</a> (rtdm_user_info_t *user_info, void *ptr, size_t len)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unmap a user memory range.  <a href="#gaa6a363aa6e2e017d3493a9c175755fa5"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#ga7fe4c8a85d03bec31852634a681791e3">rtdm_printk</a> (const char *format,...)</td></tr>
@@ -255,7 +255,7 @@ Collaboration diagram for Utility Services:</div>
 
 </div>
 </div>
-<a class="anchor" id="gad3cd99bd0049763a4bf4c41edb249785"></a><!-- doxytag: member="drvlib.c::rtdm_iomap_to_user" ref="gad3cd99bd0049763a4bf4c41edb249785" args="(rtdm_user_info_t *user_info, unsigned long src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)" -->
+<a class="anchor" id="gaa49b4fbd57a98a9ccda1f243b40bc519"></a><!-- doxytag: member="drvlib.c::rtdm_iomap_to_user" ref="gaa49b4fbd57a98a9ccda1f243b40bc519" args="(rtdm_user_info_t *user_info, phys_addr_t src_addr, size_t len, int prot, void **pptr, struct vm_operations_struct *vm_ops, void *vm_private_data)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -268,7 +268,7 @@ Collaboration diagram for Utility Services:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">unsigned long&nbsp;</td>
+          <td class="paramtype">phys_addr_t&nbsp;</td>
           <td class="paramname"> <em>src_addr</em>, </td>
         </tr>
         <tr>
@@ -336,7 +336,7 @@ Collaboration diagram for Utility Services:</div>
 <ul>
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li>
 </ul>
-<dl class="note"><dt><b>Note:</b></dt><dd>RTDM supports two models for unmapping the user memory range again. One is explicit unmapping via <a class="el" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5" title="Unmap a user memory range.">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#ga01ff21bc70401bee9b80c350763087f7" title="Unmap pages of memory.">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gad3cd99bd0049763a4bf4c41edb249785" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
+<dl class="note"><dt><b>Note:</b></dt><dd>RTDM supports two models for unmapping the user memory range again. One is explicit unmapping via <a class="el" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5" title="Unmap a user memory range.">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#ga01ff21bc70401bee9b80c350763087f7" title="Unmap pages of memory.">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gaa49b4fbd57a98a9ccda1f243b40bc519" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
 <p>Environments:</p>
 <p>This service can be called from:</p>
 <ul>
@@ -464,7 +464,7 @@ Collaboration diagram for Utility Services:</div>
 <ul>
 <li>-EPERM <em>may</em> be returned if an illegal invocation environment is detected.</li>
 </ul>
-<dl class="note"><dt><b>Note:</b></dt><dd>This service only works on memory regions allocated via kmalloc() or vmalloc(). To map physical I/O memory to user-space use <a class="el" href="group__util.html#gad3cd99bd0049763a4bf4c41edb249785" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user()</a> instead.</dd>
+<dl class="note"><dt><b>Note:</b></dt><dd>This service only works on memory regions allocated via kmalloc() or vmalloc(). To map physical I/O memory to user-space use <a class="el" href="group__util.html#gaa49b4fbd57a98a9ccda1f243b40bc519" title="Map an I/O memory range into the address space of the user.">rtdm_iomap_to_user()</a> instead.</dd>
 <dd>
 RTDM supports two models for unmapping the user memory range again. One is explicit unmapping via <a class="el" href="group__util.html#gaa6a363aa6e2e017d3493a9c175755fa5" title="Unmap a user memory range.">rtdm_munmap()</a>, either performed when the user requests it via an IOCTL etc. or when the related device is closed. The other is automatic unmapping, triggered by the user invoking standard <a class="el" href="group__posix__shm.html#ga01ff21bc70401bee9b80c350763087f7" title="Unmap pages of memory.">munmap()</a> or by the termination of the related process. To track release of the mapping and therefore relinquishment of the referenced physical memory, the caller of <a class="el" href="group__util.html#gadf5ddcdee106f1eaf4b93b2d633da441" title="Map a kernel memory range into the address space of the user.">rtdm_mmap_to_user()</a> can pass a vm_operations_struct on invocation, defining a close handler for the vm_area. See Linux documentaion (e.g. Linux Device Drivers book) on virtual memory management for details.</dd></dl>
 <p>Environments:</p>
@@ -874,7 +874,7 @@ RTDM supports two models for unmapping the user memory range again. One is expli
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:24 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:28 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

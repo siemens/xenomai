@@ -41,6 +41,10 @@ Collaboration diagram for Real-time shadow services.:</div>
 <br/></td></tr>
 </p>
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga08736069c2893e0c4b59b7180ffe4079">xnshadow_mark_sig</a> (xnthread_t *thread, unsigned muxid)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mark the per-thread per-skin signal condition for the skin whose muxid is <em>muxid</em>.  <a href="#ga08736069c2893e0c4b59b7180ffe4079"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga36220a39184a95755f212ee41b108654">xnshadow_clear_sig</a> (xnthread_t *thread, unsigned muxid)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clear the per-thrad per-skin signal condition.  <a href="#ga36220a39184a95755f212ee41b108654"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">xnshadow_harden</a> (void)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Migrate a Linux task to the Xenomai domain.  <a href="#ga5f631762c7381866d70177afb2ba123b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__shadow.html#ga6eace6b375473013d1bb91d035330d6b">xnshadow_relax</a> (int notify)</td></tr>
@@ -53,6 +57,43 @@ Collaboration diagram for Real-time shadow services.:</div>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Real-time shadow services. </p>
 <hr/><h2>Function Documentation</h2>
+<a class="anchor" id="ga36220a39184a95755f212ee41b108654"></a><!-- doxytag: member="shadow.c::xnshadow_clear_sig" ref="ga36220a39184a95755f212ee41b108654" args="(xnthread_t *thread, unsigned muxid)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void xnshadow_clear_sig </td>
+          <td>(</td>
+          <td class="paramtype">xnthread_t *&nbsp;</td>
+          <td class="paramname"> <em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&nbsp;</td>
+          <td class="paramname"> <em>muxid</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Clear the per-thrad per-skin signal condition. </p>
+<p>Called with nklock locked irqs off.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>the target thrad </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>muxid</em>&nbsp;</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="ga5f631762c7381866d70177afb2ba123b"></a><!-- doxytag: member="shadow.c::xnshadow_harden" ref="ga5f631762c7381866d70177afb2ba123b" args="(void)" -->
 <div class="memitem">
 <div class="memproto">
@@ -77,9 +118,9 @@ This service causes the transition of "current" from the Linux domain to Xenomai
 </ul>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00113">XNATOMIC</a>, and <a class="el" href="pod_8c_source.html#l01974">xnpod_dispatch_signals()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00114">XNATOMIC</a>, and <a class="el" href="pod_8c_source.html#l01985">xnpod_dispatch_signals()</a>.</p>
 
-<p>Referenced by <a class="el" href="shadow_8c_source.html#l01172">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="shadow_8c_source.html#l01261">xnshadow_map()</a>.</p>
 
 </div>
 </div>
@@ -143,7 +184,46 @@ Environments:This service can be called from:<ul>
 </ul>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00043">XNMAPPED</a>, <a class="el" href="pod_8c_source.html#l00737">xnpod_start_thread()</a>, <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00115">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00063">XNSHADOW</a>, and <a class="el" href="shadow_8c_source.html#l00894">xnshadow_harden()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00043">XNMAPPED</a>, <a class="el" href="pod_8c_source.html#l00740">xnpod_start_thread()</a>, <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00063">XNSHADOW</a>, and <a class="el" href="shadow_8c_source.html#l00983">xnshadow_harden()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga08736069c2893e0c4b59b7180ffe4079"></a><!-- doxytag: member="shadow.c::xnshadow_mark_sig" ref="ga08736069c2893e0c4b59b7180ffe4079" args="(xnthread_t *thread, unsigned muxid)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int xnshadow_mark_sig </td>
+          <td>(</td>
+          <td class="paramtype">xnthread_t *&nbsp;</td>
+          <td class="paramname"> <em>thread</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned&nbsp;</td>
+          <td class="paramname"> <em>muxid</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Mark the per-thread per-skin signal condition for the skin whose muxid is <em>muxid</em>. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>thread</em>&nbsp;</td><td>the target thread; </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>muxid</em>&nbsp;</td><td>the muxid of the skin for which the signal is marked pending.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>whether rescheduling is needed. </dd></dl>
+
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00043">XNMAPPED</a>, and <a class="el" href="pod_8c_source.html#l01717">xnpod_unblock_thread()</a>.</p>
 
 </div>
 </div>
@@ -209,14 +289,14 @@ This service yields the control of the running shadow back to Linux. This is obt
 Rescheduling: always.<dl class="note"><dt><b>Note:</b></dt><dd>"current" is valid here since the shadow runs with the properties of the Linux task. </dd></dl>
 </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00114">XNAFFSET</a>, <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00115">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00064">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00060">XNTRAPSW</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00115">XNAFFSET</a>, <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00064">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00060">XNTRAPSW</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00682">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c_source.html#l02525">xnpod_trap_fault()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00666">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c_source.html#l02536">xnpod_trap_fault()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:27 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

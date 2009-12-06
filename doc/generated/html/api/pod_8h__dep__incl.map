@@ -34,7 +34,7 @@
 <area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="5239,83,5401,112"/>
 <area shape="rect" href="$posix_2internal_8h_source.html" title="ksrc/skins/posix/internal.h" alt="" coords="381,160,555,189"/>
 <area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="539,237,696,267"/>
-<area shape="rect" href="$device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="576,315,739,344"/>
+<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="576,315,739,344"/>
 <area shape="rect" href="$ksrc_2skins_2posix_2mutex_8h_source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="384,315,552,344"/>
 <area shape="rect" href="$ksrc_2skins_2posix_2thread_8h_source.html" title="ksrc/skins/posix/thread.h" alt="" coords="233,237,401,267"/>
 <area shape="rect" href="$ksrc_2skins_2posix_2cond_8h_source.html" title="ksrc/skins/posix/cond.h" alt="" coords="419,392,579,421"/>

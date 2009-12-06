@@ -39,6 +39,7 @@
     <ul>
       <li><a href="globals.html#index_a"><span>a</span></a></li>
       <li><a href="globals_0x63.html#index_c"><span>c</span></a></li>
+      <li><a href="globals_0x66.html#index_f"><span>f</span></a></li>
       <li><a href="globals_0x6e.html#index_n"><span>n</span></a></li>
       <li><a href="globals_0x70.html#index_p"><span>p</span></a></li>
       <li><a href="globals_0x72.html#index_r"><span>r</span></a></li>
@@ -102,6 +103,9 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 </li>
 <li>xnheap_schedule_free()
 : <a class="el" href="group__heap.html#ga548f69835e12bf259b6d417b11338a11">heap.c</a>
+</li>
+<li>xnheap_set_label()
+: <a class="el" href="group__heap.html#gabfa339d98cfd2271b5d80d64b20c0e2c">heap.c</a>
 </li>
 <li>xnheap_test_and_free()
 : <a class="el" href="group__heap.html#gacb0151aaff9d56134c7c217bfa67c816">heap.c</a>
@@ -233,8 +237,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 , <a class="el" href="group__registry.html#gaf781f03f25b1667eb7f31cb6a246613a">registry.c</a>
 </li>
 <li>xnregistry_get()
-: <a class="el" href="group__registry.html#gaef3e8b27ad29f355d9aedcfdf1f23ab1">registry.c</a>
-, <a class="el" href="group__registry.html#gaef3e8b27ad29f355d9aedcfdf1f23ab1">registry.h</a>
+: <a class="el" href="group__registry.html#gaef3e8b27ad29f355d9aedcfdf1f23ab1">registry.h</a>
+, <a class="el" href="group__registry.html#gaef3e8b27ad29f355d9aedcfdf1f23ab1">registry.c</a>
 </li>
 <li>xnregistry_put()
 : <a class="el" href="group__registry.html#ga632c1545496b004eecb7ce8d41b3aabd">registry.h</a>
@@ -272,11 +276,17 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>xnselector_init()
 : <a class="el" href="group__select.html#gaf5576af13d5ffd6056311c2746a706a0">select.c</a>
 </li>
+<li>xnshadow_clear_sig()
+: <a class="el" href="group__shadow.html#ga36220a39184a95755f212ee41b108654">shadow.c</a>
+</li>
 <li>xnshadow_harden()
 : <a class="el" href="group__shadow.html#ga5f631762c7381866d70177afb2ba123b">shadow.c</a>
 </li>
 <li>xnshadow_map()
 : <a class="el" href="group__shadow.html#gaea016c86d43254322f82199bf9e6afb3">shadow.c</a>
+</li>
+<li>xnshadow_mark_sig()
+: <a class="el" href="group__shadow.html#ga08736069c2893e0c4b59b7180ffe4079">shadow.c</a>
 </li>
 <li>xnshadow_ppd_get()
 : <a class="el" href="group__shadow.html#ga14c8b586498491f886d7b5335f92c3b1">shadow.c</a>
@@ -355,8 +365,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 , <a class="el" href="group__timer.html#ga782e10b2cd24a5c303b316375940ca15">timer.h</a>
 </li>
 <li>xntimer_freeze()
-: <a class="el" href="group__timer.html#ga5cad677279089ef19d3710b1b6452a71">timer.h</a>
-, <a class="el" href="group__timer.html#ga5cad677279089ef19d3710b1b6452a71">timer.c</a>
+: <a class="el" href="group__timer.html#ga5cad677279089ef19d3710b1b6452a71">timer.c</a>
+, <a class="el" href="group__timer.html#ga5cad677279089ef19d3710b1b6452a71">timer.h</a>
 </li>
 <li>xntimer_get_date()
 : <a class="el" href="group__timer.html#gae87b875cf9f6831afffcfee8dabd67a8">timer.h</a>
@@ -365,8 +375,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__timer.html#gab0d00a02bf04fdd48987d5d4efa68190">timer.h</a>
 </li>
 <li>xntimer_get_overruns()
-: <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.c</a>
-, <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.h</a>
+: <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.h</a>
+, <a class="el" href="group__timer.html#ga5609dd2602efe2c5b04eda28b22b9720">timer.c</a>
 </li>
 <li>xntimer_get_timeout()
 : <a class="el" href="group__timer.html#ga00d603a038b09e436717b84975b00abf">timer.h</a>
@@ -381,16 +391,16 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__timer.html#ga1244411df9784d63d3e2f99016d62643">timer.h</a>
 </li>
 <li>xntimer_tick_aperiodic()
-: <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.h</a>
-, <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.c</a>
+: <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.c</a>
+, <a class="el" href="group__timer.html#ga26727f15ac845719913dcb703bf0c3fa">timer.h</a>
 </li>
 <li>xntimer_tick_periodic()
-: <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.c</a>
-, <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
+: <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
+, <a class="el" href="group__timer.html#ga9b5391e752a8e16d89fb6a99c76bb7b1">timer.c</a>
 </li>
 </ul>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:24 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:30 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

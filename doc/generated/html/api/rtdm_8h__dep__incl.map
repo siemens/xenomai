@@ -4,9 +4,15 @@
 <area shape="rect" href="$rtipc_8h.html" title="This file is part of the Xenomai project." alt="" coords="360,83,491,112"/>
 <area shape="rect" href="$rtserial_8h.html" title="Real&#45;Time Driver Model for Xenomai, serial device profile header." alt="" coords="515,83,661,112"/>
 <area shape="rect" href="$rttesting_8h.html" title="Real&#45;Time Driver Model for Xenomai, testing device profile header." alt="" coords="685,83,840,112"/>
-<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="79,160,236,189"/>
-<area shape="rect" href="$rtdm_2internal_8h_source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="260,160,428,189"/>
-<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="87,237,239,267"/>
-<area shape="rect" href="$device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="263,237,425,267"/>
-<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="449,237,617,267"/>
+<area shape="rect" href="$src_2drvlib_2analogy_2syscall_8h.html" title="Analogy for Linux, internal declarations." alt="" coords="864,83,1043,112"/>
+<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="36,160,193,189"/>
+<area shape="rect" href="$rtdm_2internal_8h_source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="217,160,385,189"/>
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="44,237,196,267"/>
+<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="220,237,383,267"/>
+<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="407,237,575,267"/>
+<area shape="rect" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="460,160,631,189"/>
+<area shape="rect" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="655,160,849,189"/>
+<area shape="rect" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="873,160,1033,189"/>
+<area shape="rect" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="1057,160,1223,189"/>
+<area shape="rect" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="1247,160,1407,189"/>
 </map>

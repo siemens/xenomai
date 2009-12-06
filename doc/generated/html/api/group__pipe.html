@@ -113,9 +113,9 @@ Collaboration diagram for Message pipe services.:</div>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00426">xnheap_alloc()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00481">xnheap_alloc()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00803">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00805">rt_pipe_write()</a>.</p>
 
 </div>
 </div>
@@ -199,7 +199,7 @@ Collaboration diagram for Message pipe services.:</div>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>References <a class="el" href="src_2skins_2native_2pipe_8c_source.html#l00037">rt_pipe_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00426">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00267">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00164">xnheap_init()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l00582">xnregistry_enter()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2pipe_8c_source.html#l00037">rt_pipe_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00481">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00317">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00276">xnheap_set_label()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l00582">xnregistry_enter()</a>.</p>
 
 </div>
 </div>
@@ -360,9 +360,9 @@ Collaboration diagram for Message pipe services.:</div>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00787">xnheap_free()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00842">xnheap_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00622">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00803">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00624">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00805">rt_pipe_write()</a>.</p>
 
 </div>
 </div>
@@ -523,7 +523,7 @@ Collaboration diagram for Message pipe services.:</div>
 <p>Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01012">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00506">rt_pipe_receive()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00508">rt_pipe_receive()</a>.</p>
 
 </div>
 </div>
@@ -603,7 +603,7 @@ Collaboration diagram for Message pipe services.:</div>
 <p>Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00622">rt_pipe_read()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00624">rt_pipe_read()</a>.</p>
 
 </div>
 </div>
@@ -683,7 +683,7 @@ Collaboration diagram for Message pipe services.:</div>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00803">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00805">rt_pipe_write()</a>.</p>
 
 </div>
 </div>
@@ -837,12 +837,12 @@ Collaboration diagram for Message pipe services.:</div>
 </ul>
 <p>Rescheduling: possible. </p>
 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00972">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01012">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00718">rt_pipe_send()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00974">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00720">rt_pipe_send()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:23 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:27 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

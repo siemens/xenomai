@@ -101,7 +101,7 @@ Collaboration diagram for Timer services.:</div>
 
 <p>References <a class="el" href="include_2nucleus_2timer_8h_source.html#l00505">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="drvlib_8c_source.html#l00526">rtdm_timer_destroy()</a>, <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c_source.html#l00462">xnpod_shutdown()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="drvlib_8c_source.html#l00526">rtdm_timer_destroy()</a>, <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c_source.html#l00465">xnpod_shutdown()</a>.</p>
 
 </div>
 </div>
@@ -131,7 +131,7 @@ This routine deactivates all active timers atomically.Environments:This service 
 </ul>
 Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l02756">xnpod_disable_timesource()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l02768">xnpod_disable_timesource()</a>.</p>
 
 </div>
 </div>
@@ -249,7 +249,7 @@ Rescheduling: never. </p>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>the number of overruns of <em>timer</em> at date <em>now</em> </dd></dl>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l02943">xnpod_wait_thread_period()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l02955">xnpod_wait_thread_period()</a>.</p>
 
 </div>
 </div>
@@ -345,7 +345,7 @@ Rescheduling: never. </p>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00133">timer_create()</a>, and <a class="el" href="pod_8c_source.html#l00342">xnpod_init()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00133">timer_create()</a>, and <a class="el" href="pod_8c_source.html#l00343">xnpod_init()</a>.</p>
 
 </div>
 </div>
@@ -411,7 +411,7 @@ Rescheduling: never. </p>
 <dd>
 Must be called with nklock held, IRQs off. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00358">rt_alarm_start()</a>, <a class="el" href="drvlib_8c_source.html#l00564">rtdm_timer_start()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c_source.html#l02651">xnpod_enable_timesource()</a>, <a class="el" href="pod_8c_source.html#l02842">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c_source.html#l03040">xnpod_set_thread_tslice()</a>, and <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00358">rt_alarm_start()</a>, <a class="el" href="drvlib_8c_source.html#l00564">rtdm_timer_start()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c_source.html#l02663">xnpod_enable_timesource()</a>, <a class="el" href="pod_8c_source.html#l02854">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c_source.html#l03052">xnpod_set_thread_tslice()</a>, and <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div>
@@ -450,7 +450,7 @@ Must be called with nklock held, IRQs off. </dd></dl>
 <p>Rescheduling: never.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>Must be called with nklock held, IRQs off. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00408">rt_alarm_stop()</a>, <a class="el" href="drvlib_8c_source.html#l00597">rtdm_timer_stop()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l02842">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c_source.html#l03040">xnpod_set_thread_tslice()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c_source.html#l00903">xntimer_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00408">rt_alarm_stop()</a>, <a class="el" href="drvlib_8c_source.html#l00597">rtdm_timer_stop()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c_source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l02854">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c_source.html#l03052">xnpod_set_thread_tslice()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c_source.html#l00903">xntimer_destroy()</a>.</p>
 
 </div>
 </div>
@@ -518,7 +518,7 @@ Rescheduling: never.<dl class="note"><dt><b>Note:</b></dt><dd>Only active timers
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:27 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

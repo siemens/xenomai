@@ -122,7 +122,7 @@ Collaboration diagram for Thread synchronization services.:</div>
 <p>Rescheduling: possible.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00048">XNBOOST</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00112">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00107">XNTIMEO</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00111">XNWAKEN</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00048">XNBOOST</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00110">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNRMID</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00113">XNROBBED</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNTIMEO</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00112">XNWAKEN</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00251">pthread_mutex_destroy()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l01717">rt_task_send()</a>, and <a class="el" href="drvlib_8c_source.html#l01521">rtdm_mutex_timedlock()</a>.</p>
 
@@ -168,7 +168,7 @@ This service is called internally whenever a synchronization object is not claim
 
 <p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00048">XNBOOST</a>.</p>
 
-<p>Referenced by <a class="el" href="synch_8c_source.html#l00850">xnsynch_flush()</a>, <a class="el" href="synch_8c_source.html#l00902">xnsynch_forget_sleeper()</a>, and <a class="el" href="synch_8c_source.html#l00709">xnsynch_release()</a>.</p>
+<p>Referenced by <a class="el" href="synch_8c_source.html#l00852">xnsynch_flush()</a>, <a class="el" href="synch_8c_source.html#l00904">xnsynch_forget_sleeper()</a>, and <a class="el" href="synch_8c_source.html#l00711">xnsynch_release()</a>.</p>
 
 </div>
 </div>
@@ -231,9 +231,9 @@ This service is called internally whenever a synchronization object is not claim
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, and <a class="el" href="synch_8c_source.html#l00581">xnsynch_clear_boost()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, and <a class="el" href="synch_8c_source.html#l00581">xnsynch_clear_boost()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00576">pthread_cond_broadcast()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00318">pthread_detach()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l01039">rt_buffer_clear()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00351">rt_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00541">rt_sem_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l01717">rt_task_send()</a>, <a class="el" href="drvlib_8c_source.html#l00849">rtdm_event_signal()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l01096">xnregistry_put()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00576">pthread_cond_broadcast()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00302">pthread_detach()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l01039">rt_buffer_clear()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00351">rt_cond_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00541">rt_sem_broadcast()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l01717">rt_task_send()</a>, <a class="el" href="drvlib_8c_source.html#l00849">rtdm_event_signal()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l01096">xnregistry_put()</a>.</p>
 
 </div>
 </div>
@@ -267,7 +267,7 @@ Performs all the necessary housekeeping chores to stop a thread from waiting on 
 
 <p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, and <a class="el" href="synch_8c_source.html#l00581">xnsynch_clear_boost()</a>.</p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div>
@@ -339,7 +339,7 @@ Performs all the necessary housekeeping chores to stop a thread from waiting on 
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00106">pthread_cond_init()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00180">pthread_create()</a>, <a class="el" href="ksrc_2skins_2posix_2intr_8c_source.html#l00102">pthread_intr_attach_np()</a>, <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l00191">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c_source.html#l00250">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00173">rt_sem_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00249">rt_task_create()</a>, <a class="el" href="drvlib_8c_source.html#l00768">rtdm_event_init()</a>, <a class="el" href="drvlib_8c_source.html#l01403">rtdm_mutex_init()</a>, <a class="el" href="drvlib_8c_source.html#l01119">rtdm_sem_init()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="select_8c_source.html#l00273">xnselector_init()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00106">pthread_cond_init()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00165">pthread_create()</a>, <a class="el" href="ksrc_2skins_2posix_2intr_8c_source.html#l00102">pthread_intr_attach_np()</a>, <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l00191">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c_source.html#l00250">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00209">rt_queue_create()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00173">rt_sem_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00249">rt_task_create()</a>, <a class="el" href="drvlib_8c_source.html#l00768">rtdm_event_init()</a>, <a class="el" href="drvlib_8c_source.html#l01403">rtdm_mutex_init()</a>, <a class="el" href="drvlib_8c_source.html#l01119">rtdm_sem_init()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="select_8c_source.html#l00276">xnselector_init()</a>.</p>
 
 </div>
 </div>
@@ -423,9 +423,9 @@ Performs all the necessary housekeeping chores to stop a thread from waiting on 
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, <a class="el" href="synch_8c_source.html#l00581">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00111">XNWAKEN</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, <a class="el" href="synch_8c_source.html#l00581">xnsynch_clear_boost()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00112">XNWAKEN</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00590">pthread_mutex_unlock()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c_source.html#l00563">rt_mutex_release()</a>, and <a class="el" href="synch_8c_source.html#l00962">xnsynch_release_all_ownerships()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00590">pthread_mutex_unlock()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c_source.html#l00563">rt_mutex_release()</a>, and <a class="el" href="synch_8c_source.html#l00964">xnsynch_release_all_ownerships()</a>.</p>
 
 </div>
 </div>
@@ -457,9 +457,9 @@ This call is used internally to release all the ownerships obtained by a thread 
 <dl class="note"><dt><b>Note:</b></dt><dd>This routine must be entered nklock locked, interrupts off. </dd></dl>
 </p>
 
-<p>References <a class="el" href="synch_8c_source.html#l00709">xnsynch_release()</a>.</p>
+<p>References <a class="el" href="synch_8c_source.html#l00711">xnsynch_release()</a>.</p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div>
@@ -548,9 +548,9 @@ This service is used by the PIP code to update the pending priority of a sleepin
 <p>Rescheduling: always.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNRMID</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00107">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00110">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNRMID</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00446">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00511">rt_heap_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l01913">rt_task_receive()</a>, <a class="el" href="drvlib_8c_source.html#l00943">rtdm_event_timedwait()</a>, <a class="el" href="drvlib_8c_source.html#l01228">rtdm_sem_timeddown()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00724">xnregistry_bind()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00926">xnregistry_remove_safe()</a>, and <a class="el" href="select_8c_source.html#l00310">xnselect()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00430">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00512">rt_heap_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l01913">rt_task_receive()</a>, <a class="el" href="drvlib_8c_source.html#l00943">rtdm_event_timedwait()</a>, <a class="el" href="drvlib_8c_source.html#l01228">rtdm_sem_timeddown()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00724">xnregistry_bind()</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00926">xnregistry_remove_safe()</a>, and <a class="el" href="select_8c_source.html#l00313">xnselect()</a>.</p>
 
 </div>
 </div>
@@ -597,9 +597,9 @@ This service is used by the PIP code to update the pending priority of a sleepin
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, and <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, and <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00526">pthread_cond_signal()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00446">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00295">rt_cond_signal()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00594">rt_queue_send()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00487">rt_sem_v()</a>, <a class="el" href="drvlib_8c_source.html#l01301">rtdm_sem_up()</a>, and <a class="el" href="ksrc_2skins_2posix_2sem_8c_source.html#l00716">sem_post()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2posix_2cond_8c_source.html#l00526">pthread_cond_signal()</a>, <a class="el" href="skins_2posix_2thread_8c_source.html#l00430">pthread_join()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00295">rt_cond_signal()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00595">rt_queue_send()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00487">rt_sem_v()</a>, <a class="el" href="drvlib_8c_source.html#l01301">rtdm_sem_up()</a>, and <a class="el" href="ksrc_2skins_2posix_2sem_8c_source.html#l00716">sem_post()</a>.</p>
 
 </div>
 </div>
@@ -656,14 +656,14 @@ This service is used by the PIP code to update the pending priority of a sleepin
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, and <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00036">XNPEND</a>, and <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00315">rt_event_signal()</a>, and <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00630">rt_heap_free()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00315">rt_event_signal()</a>, and <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00631">rt_heap_free()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:27 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

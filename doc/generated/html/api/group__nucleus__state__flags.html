@@ -101,6 +101,9 @@ Collaboration diagram for Thread state flags.:</div>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga73d7b1a4f5a25545ff21140a0598075a"></a><!-- doxytag: member="nucleus_state_flags::XNROOT" ref="ga73d7b1a4f5a25545ff21140a0598075a" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#ga73d7b1a4f5a25545ff21140a0598075a">XNROOT</a>&nbsp;&nbsp;&nbsp;0x00400000</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Root thread (that is, Linux/IDLE). <br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga0ca4243f1dcc26eb4de261bbd63a9980"></a><!-- doxytag: member="nucleus_state_flags::XNSWREP" ref="ga0ca4243f1dcc26eb4de261bbd63a9980" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__nucleus__state__flags.html#ga0ca4243f1dcc26eb4de261bbd63a9980">XNSWREP</a>&nbsp;&nbsp;&nbsp;0x00800000</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Mode switch already reported. <br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Bits reporting permanent or transient states of thread. </p>
@@ -118,7 +121,7 @@ Collaboration diagram for Thread state flags.:</div>
 
 <p>Thread is held to process emergency. </p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div>
@@ -136,7 +139,7 @@ Collaboration diagram for Thread state flags.:</div>
 <p>Holds the scheduler lock (i.e. </p>
 <p>not preemptible) </p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00682">pthread_set_mode_np()</a>, <a class="el" href="pod_8c_source.html#l01011">xnpod_set_thread_mode()</a>, and <a class="el" href="pod_8c_source.html#l02029">xnpod_welcome_thread()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c_source.html#l00666">pthread_set_mode_np()</a>, <a class="el" href="pod_8c_source.html#l01014">xnpod_set_thread_mode()</a>, and <a class="el" href="pod_8c_source.html#l02040">xnpod_welcome_thread()</a>.</p>
 
 </div>
 </div>
@@ -153,7 +156,7 @@ Collaboration diagram for Thread state flags.:</div>
 
 <p>Thread is currently migrating to another CPU. </p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div>
@@ -170,7 +173,7 @@ Collaboration diagram for Thread state flags.:</div>
 
 <p>Sleep-wait for a resource. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l02059">rt_task_reply()</a>, <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l01706">xnpod_unblock_thread()</a>, <a class="el" href="synch_8c_source.html#l00410">xnsynch_acquire()</a>, <a class="el" href="synch_8c_source.html#l00850">xnsynch_flush()</a>, <a class="el" href="synch_8c_source.html#l00902">xnsynch_forget_sleeper()</a>, <a class="el" href="synch_8c_source.html#l00709">xnsynch_release()</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, <a class="el" href="synch_8c_source.html#l00241">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="synch_8c_source.html#l00313">xnsynch_wakeup_this_sleeper()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l02059">rt_task_reply()</a>, <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l01717">xnpod_unblock_thread()</a>, <a class="el" href="synch_8c_source.html#l00410">xnsynch_acquire()</a>, <a class="el" href="synch_8c_source.html#l00852">xnsynch_flush()</a>, <a class="el" href="synch_8c_source.html#l00904">xnsynch_forget_sleeper()</a>, <a class="el" href="synch_8c_source.html#l00711">xnsynch_release()</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, <a class="el" href="synch_8c_source.html#l00241">xnsynch_wakeup_one_sleeper()</a>, and <a class="el" href="synch_8c_source.html#l00313">xnsynch_wakeup_this_sleeper()</a>.</p>
 
 </div>
 </div>
@@ -187,7 +190,7 @@ Collaboration diagram for Thread state flags.:</div>
 
 <p>Linked to the ready queue. </p>
 
-<p>Referenced by <a class="el" href="pod_8c_source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01568">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l00737">xnpod_start_thread()</a>, and <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c_source.html#l01082">xnpod_delete_thread()</a>, <a class="el" href="pod_8c_source.html#l01579">xnpod_resume_thread()</a>, <a class="el" href="pod_8c_source.html#l00740">xnpod_start_thread()</a>, and <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div>
@@ -204,12 +207,12 @@ Collaboration diagram for Thread state flags.:</div>
 
 <p>Suspended. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00249">rt_task_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00514">rt_task_resume()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00447">rt_task_suspend()</a>, <a class="el" href="pod_8c_source.html#l00633">xnpod_init_thread()</a>, <a class="el" href="pod_8c_source.html#l00737">xnpod_start_thread()</a>, <a class="el" href="pod_8c_source.html#l01355">xnpod_suspend_thread()</a>, and <a class="el" href="pod_8c_source.html#l02525">xnpod_trap_fault()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00249">rt_task_create()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00514">rt_task_resume()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c_source.html#l00447">rt_task_suspend()</a>, <a class="el" href="pod_8c_source.html#l00636">xnpod_init_thread()</a>, <a class="el" href="pod_8c_source.html#l00740">xnpod_start_thread()</a>, <a class="el" href="pod_8c_source.html#l01365">xnpod_suspend_thread()</a>, and <a class="el" href="pod_8c_source.html#l02536">xnpod_trap_fault()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:26 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

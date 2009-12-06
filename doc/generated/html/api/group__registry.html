@@ -137,7 +137,7 @@ Collaboration diagram for Registry services.:</div>
 <p>Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNBREAK</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h_source.html#l00299">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00107">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00110">XNBREAK</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h_source.html#l00299">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNTIMEO</a>.</p>
 
 </div>
 </div>
@@ -325,7 +325,7 @@ Collaboration diagram for Registry services.:</div>
 </ul>
 <p>Rescheduling: possible if the lock count falls down to zero and some thread is currently waiting for the object to be unlocked. </p>
 
-<p>References <a class="el" href="pod_8h_source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c_source.html#l00850">xnsynch_flush()</a>.</p>
+<p>References <a class="el" href="pod_8h_source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c_source.html#l00852">xnsynch_flush()</a>.</p>
 
 </div>
 </div>
@@ -365,7 +365,7 @@ Collaboration diagram for Registry services.:</div>
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l00276">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00227">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00248">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c_source.html#l00334">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00393">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00246">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l00926">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c_source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c_source.html#l00276">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c_source.html#l00227">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c_source.html#l00248">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c_source.html#l00334">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00395">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c_source.html#l00246">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c_source.html#l00926">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div>
@@ -431,12 +431,12 @@ Collaboration diagram for Registry services.:</div>
 <p>Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.</p>
 <dl class="note"><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00109">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00818">xnregistry_remove()</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00107">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h_source.html#l00110">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c_source.html#l00818">xnregistry_remove()</a>, <a class="el" href="synch_8c_source.html#l00175">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h_source.html#l00108">XNTIMEO</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:27 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

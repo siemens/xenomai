@@ -11,7 +11,7 @@
 <area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="1071,83,1175,112"/>
 <area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="248,160,336,189"/>
 <area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="909,83,1008,112"/>
-<area shape="rect" href="$native_2syscall_8h_source.html" title="native/syscall.h" alt="" coords="1737,83,1849,112"/>
+<area shape="rect" href="$include_2native_2syscall_8h_source.html" title="native/syscall.h" alt="" coords="1737,83,1849,112"/>
 <area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="709,315,824,344"/>
 <area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="759,237,863,267"/>
 <area shape="rect" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="891,392,1008,421"/>

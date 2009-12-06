@@ -43,6 +43,8 @@ Collaboration diagram for Dynamic memory allocation services.:</div>
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gad65beaf18754ad1f85c479eaf9219042">xnheap_init</a> (xnheap_t *heap, void *heapaddr, u_long heapsize, u_long pagesize)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initialize a memory heap.  <a href="#gad65beaf18754ad1f85c479eaf9219042"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gabfa339d98cfd2271b5d80d64b20c0e2c">xnheap_set_label</a> (xnheap_t *heap, const char *label,...)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set the heap's label string.  <a href="#gabfa339d98cfd2271b5d80d64b20c0e2c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gaf33cea7788162687767ca7c8c149f6ab">xnheap_destroy</a> (xnheap_t *heap, void(*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Destroys a memory heap.  <a href="#gaf33cea7788162687767ca7c8c149f6ab"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__heap.html#gaaa8ae99881c9e6a4f8b56aa79f983bdb">xnheap_alloc</a> (xnheap_t *heap, u_long size)</td></tr>
@@ -128,7 +130,7 @@ HEAP {
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="shm_8c_source.html#l00462">ftruncate()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00153">pthread_mutex_init()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00511">rt_heap_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00630">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00972">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, and <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00425">rt_queue_alloc()</a>.</p>
+<p>Referenced by <a class="el" href="shm_8c_source.html#l00462">ftruncate()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00153">pthread_mutex_init()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00512">rt_heap_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00631">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00974">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, and <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00426">rt_queue_alloc()</a>.</p>
 
 </div>
 </div>
@@ -182,7 +184,7 @@ HEAP {
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, <a class="el" href="pod_8c_source.html#l00342">xnpod_init()</a>, and <a class="el" href="pod_8c_source.html#l00462">xnpod_shutdown()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, <a class="el" href="pod_8c_source.html#l00343">xnpod_init()</a>, and <a class="el" href="pod_8c_source.html#l00465">xnpod_shutdown()</a>.</p>
 
 </div>
 </div>
@@ -291,9 +293,9 @@ HEAP {
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00567">xnheap_test_and_free()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00622">xnheap_test_and_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="shm_8c_source.html#l00462">ftruncate()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00153">pthread_mutex_init()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00630">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c_source.html#l00313">rt_mutex_delete()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01012">rt_pipe_free()</a>.</p>
+<p>Referenced by <a class="el" href="shm_8c_source.html#l00462">ftruncate()</a>, <a class="el" href="ksrc_2skins_2posix_2mutex_8c_source.html#l00153">pthread_mutex_init()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00631">rt_heap_free()</a>, <a class="el" href="ksrc_2skins_2native_2mutex_8c_source.html#l00313">rt_mutex_delete()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l01014">rt_pipe_free()</a>.</p>
 
 </div>
 </div>
@@ -368,7 +370,7 @@ HEAP {
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00209">rt_queue_create()</a>, and <a class="el" href="pod_8c_source.html#l00342">xnpod_init()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00209">rt_queue_create()</a>, and <a class="el" href="pod_8c_source.html#l00343">xnpod_init()</a>.</p>
 
 </div>
 </div>
@@ -425,6 +427,59 @@ HEAP {
 
 </div>
 </div>
+<a class="anchor" id="gabfa339d98cfd2271b5d80d64b20c0e2c"></a><!-- doxytag: member="heap.c::xnheap_set_label" ref="gabfa339d98cfd2271b5d80d64b20c0e2c" args="(xnheap_t *heap, const char *label,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void xnheap_set_label </td>
+          <td>(</td>
+          <td class="paramtype">xnheap_t *&nbsp;</td>
+          <td class="paramname"> <em>heap</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Set the heap's label string. </p>
+<p>Set the heap label that will be used in statistic outputs.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>heap</em>&nbsp;</td><td>The address of a heap descriptor.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>label</em>&nbsp;</td><td>Label string displayed in statistic outputs. This parameter can be a format string, in which case succeeding parameters will be used to resolve the final label.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Environments:</p>
+<p>This service can be called from:</p>
+<ul>
+<li>Kernel module initialization/cleanup code</li>
+<li>Kernel-based task</li>
+<li>User-space task</li>
+</ul>
+<p>Rescheduling: never. </p>
+
+<p>Referenced by <a class="el" href="shm_8c_source.html#l00462">ftruncate()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c_source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c_source.html#l00252">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00209">rt_queue_create()</a>, and <a class="el" href="pod_8c_source.html#l00343">xnpod_init()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="gacb0151aaff9d56134c7c217bfa67c816"></a><!-- doxytag: member="heap.c::xnheap_test_and_free" ref="gacb0151aaff9d56134c7c217bfa67c816" args="(xnheap_t *heap, void *block, int(*ckfn)(void *block))" -->
 <div class="memitem">
 <div class="memproto">
@@ -477,12 +532,12 @@ HEAP {
 </ul>
 <p>Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00500">rt_queue_free()</a>, and <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00787">xnheap_free()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c_source.html#l00501">rt_queue_free()</a>, and <a class="el" href="ksrc_2nucleus_2heap_8c_source.html#l00842">xnheap_free()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Tue Oct 27 19:09:22 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:26 2009 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <map id="G" name="G">
 <area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="1235,160,1381,189"/>
-<area shape="rect" href="$buffer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1891,160,2040,189"/>
+<area shape="rect" href="$native_2buffer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1891,160,2040,189"/>
 <area shape="rect" href="$event_8h.html" title="This file is part of the Xenomai project." alt="" coords="397,160,544,189"/>
 <area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="568,160,712,189"/>
 <area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="1077,160,1211,189"/>

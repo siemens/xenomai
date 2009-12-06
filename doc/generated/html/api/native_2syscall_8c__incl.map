@@ -5,7 +5,7 @@
 <area shape="rect" href="$bufd_8h.html" title="nucleus/bufd.h" alt="" coords="2093,624,2200,653"/>
 <area shape="rect" href="$shadow_8h_source.html" title="nucleus/shadow.h" alt="" coords="2205,83,2331,112"/>
 <area shape="rect" href="$sys__ppd_8h_source.html" title="nucleus/sys_ppd.h" alt="" coords="227,160,357,189"/>
-<area shape="rect" href="$native_2syscall_8h_source.html" title="native/syscall.h" alt="" coords="2372,83,2484,112"/>
+<area shape="rect" href="$include_2native_2syscall_8h_source.html" title="native/syscall.h" alt="" coords="2372,83,2484,112"/>
 <area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="1531,160,1627,189"/>
 <area shape="rect" href="$include_2native_2timer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1701,160,1800,189"/>
 <area shape="rect" href="$include_2native_2sem_8h.html" title="This file is part of the Xenomai project." alt="" coords="1104,160,1200,189"/>
@@ -17,7 +17,7 @@
 <area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="964,83,1068,112"/>
 <area shape="rect" href="$include_2native_2intr_8h.html" title="This file is part of the Xenomai project." alt="" coords="1955,160,2043,189"/>
 <area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="647,83,743,112"/>
-<area shape="rect" href="$buffer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1403,160,1507,189"/>
+<area shape="rect" href="$native_2buffer_8h.html" title="This file is part of the Xenomai project." alt="" coords="1403,160,1507,189"/>
 <area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="1315,83,1413,112"/>
 <area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="1391,315,1505,344"/>
 <area shape="rect" href="$include_2nucleus_2thread_8h_source.html" title="nucleus/thread.h" alt="" coords="1675,392,1792,421"/>
