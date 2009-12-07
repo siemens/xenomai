@@ -87,14 +87,29 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		return;
 	}
 
-	if (unlikely(++sched->wdcount >= wd_timeout_arg)) {
+	if (likely(++sched->wdcount < wd_timeout_arg))
+		return;
+
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	if (xnthread_test_state(thread, XNSHADOW) &&
+	    !xnthread_amok_p(thread)) {
+		trace_mark(xn_nucleus, watchdog_signal,
+			   "thread %p thread_name %s",
+			   thread, xnthread_name(thread));
+		xnprintf("watchdog triggered -- signaling runaway thread "
+			 "'%s'\n", xnthread_name(thread));
+		xnthread_set_info(thread, XNAMOK | XNKICKED);
+		xnshadow_send_sig(thread, SIGXCPU, 0, 1);
+	} else
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+	{
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- killing runaway thread '%s'\n",
 			 xnthread_name(thread));
 		xnpod_delete_thread(thread);
-		xnsched_reset_watchdog(sched);
 	}
+	xnsched_reset_watchdog(sched);
 }
 
 #endif /* CONFIG_XENO_OPT_WATCHDOG */

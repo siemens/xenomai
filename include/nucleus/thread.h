@@ -116,6 +116,7 @@
 #define XNPRIOSET 0x00000100 /**< Priority changed from primary mode */
 #define XNABORT   0x00000200 /**< Thread is being aborted */
 #define XNCANPND  0x00000400 /**< Cancellation request is pending */
+#define XNAMOK    0x00000800 /**< Runaway, watchdog signal pending (shadow only) */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -392,6 +393,13 @@ typedef struct xnhook {
 #define xnthread_set_sigpending(thread, pending) \
 	((thread)->u_sigpending = (pending))
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
+#ifdef CONFIG_XENO_OPT_WATCHDOG
+#define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
+#define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)
+#else /* !CONFIG_XENO_OPT_WATCHDOG */
+#define xnthread_amok_p(thread)            (0)
+#define xnthread_clear_amok(thread)        do { } while (0)
+#endif /* !CONFIG_XENO_OPT_WATCHDOG */
 
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(struct xnthread *t, int coreprio)

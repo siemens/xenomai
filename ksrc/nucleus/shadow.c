@@ -2151,8 +2151,10 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	__xn_status_return(regs, err);
 
 	sigs = 0;
-	if (xnpod_shadow_p() && signal_pending(p)) {
+	if (xnpod_shadow_p() &&
+	    (signal_pending(p) || xnthread_amok_p(thread))) {
 		sigs = 1;
+		xnthread_clear_amok(thread);
 		request_syscall_restart(thread, regs, sysflags);
 	}
 	if (thread && xnthread_sigpending(thread)) {
