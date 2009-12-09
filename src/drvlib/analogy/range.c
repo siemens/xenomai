@@ -143,7 +143,7 @@ out_get_range:
 }
 
 /**
- * @brief Convert samples to physical units
+ * @brief Convert physical units to samples
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
@@ -160,8 +160,8 @@ out_get_range:
  *    before using a4l_to_phys()
  *
  */
-int a4l_to_phys(a4l_chinfo_t * chan,
-		a4l_rnginfo_t * rng, double *dst, void *src, int cnt)
+int a4l_from_phys(a4l_chinfo_t * chan,
+		  a4l_rnginfo_t * rng, double *dst, void *src, int cnt)
 {
 	int i = 0, j = 0;
 	lsampl_t tmp;
@@ -197,7 +197,7 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 		(((1ULL << chan->nb_bits) - 1) * A4L_RNG_FACTOR);
 	b = (double)rng->min / A4L_RNG_FACTOR;
 
-	while (i < cnt) {
+	while (j < cnt) {
 
 		/* Properly retrieves the data */
 		tmp = datax_get(src + i);
@@ -214,7 +214,7 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 }
 
 /**
- * @brief Convert physical units to samples
+ * @brief Convert samples to physical units
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
@@ -231,7 +231,7 @@ int a4l_to_phys(a4l_chinfo_t * chan,
  *    before using a4l_from_phys()
  *
  */
-int a4l_from_phys(a4l_chinfo_t * chan,
+int a4l_to_phys(a4l_chinfo_t * chan,
 		  a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
 {
 	int i = 0, j = 0;
@@ -268,7 +268,7 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 	b = ((double)(rng->min) / (rng->max - rng->min)) *
 		((1ULL << chan->nb_bits) - 1);
 
-	while (i < cnt) {
+	while (j < cnt) {
 
 		/* Performs the conversion */
 		datax_set(dst + i, (lsampl_t) (a * src[j] - b));

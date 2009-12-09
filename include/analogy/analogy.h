@@ -136,13 +136,11 @@ int a4l_find_range(a4l_desc_t * dsc,
 		   unsigned long unit,
 		   double min, double max, a4l_rnginfo_t ** rng);
 
-int a4l_to_phys(a4l_chinfo_t * chan,
-		a4l_rnginfo_t * rng, double *dst, void *src,
-		int cnt);
-    
 int a4l_from_phys(a4l_chinfo_t * chan,
-		  a4l_rnginfo_t * rng, void *dst, double *src,
-		  int cnt);
+		  a4l_rnginfo_t * rng, double *dst, void *src, int cnt);
+
+int a4l_to_phys(a4l_chinfo_t * chan,
+		a4l_rnginfo_t * rng, void *dst, double *src, int cnt);
 
 #endif /* !DOXYGEN_CPP */
 

@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 
 		/* If a range was selected, converts the samples */
 		if (idx_rng >= 0) {
-			if (a4l_to_phys(chinfo, rnginfo, dbuf, buf, ret) < 0) {
+			if (a4l_from_phys(chinfo, rnginfo, dbuf, buf, ret) < 0) {
 				fprintf(stderr,
 					"insn_read: data conversion failed (ret=%d)\n",
 					ret);
