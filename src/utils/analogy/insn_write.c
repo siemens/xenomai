@@ -41,15 +41,14 @@
 
 #define BUF_SIZE 10000
 
-static unsigned char buf[BUF_SIZE]= {[0 ... BUF_SIZE - 1] = 0x5a};
-static double dbuf[BUF_SIZE] = {[0 ... BUF_SIZE - 1] = 0};
+static int value = 0;
+static double dvalue = 0;
 static char *filename = FILENAME;
 static int verbose;
 static int real_time;
 static int idx_subd = ID_SUBD;
 static int idx_chan;
 static int idx_rng = -1;
-static unsigned int scan_size = SCAN_CNT;
 
 static RT_TASK rt_task_desc;
 
@@ -74,24 +73,24 @@ void do_print_usage(void)
 	fprintf(stdout,
 		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
-	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channel: channel to use\n");
 	fprintf(stdout, "\t\t -R, --range: range to use\n");
+	fprintf(stdout, "\t\t -V, --value: value to write\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
 
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-	unsigned int cnt = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
+	unsigned int scan_size;
 
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:R:h", insn_write_opts,
+				  "vrd:s:c:R:V:h", insn_write_opts,
 				  NULL)) >= 0) {
 		switch (ret) {
 		case 'v':
@@ -106,19 +105,36 @@ int main(int argc, char *argv[])
 		case 's':
 			idx_subd = strtoul(optarg, NULL, 0);
 			break;
-		case 'S':
-			scan_size = strtoul(optarg, NULL, 0);
-			break;
 		case 'c':
 			idx_chan = strtoul(optarg, NULL, 0);
 			break;
 		case 'R':
 			idx_rng = strtoul(optarg, NULL, 0);
 			break;
+		case 'V':
+			/* Do not perform the conversion until we know
+			   which variable we need */
+			break;
 		case 'h':
 		default:
 			do_print_usage();
 			return 0;
+		}
+	}
+
+	/* Restart the argument scanning */
+	optind = 1;
+
+	while ((ret = getopt_long(argc,
+				  argv,
+				  "vrd:s:c:R:V:h", insn_write_opts,
+				  NULL)) >= 0) {
+		switch (ret) {
+		case 'V':
+			if (idx_rng < 0)
+				value = (int)strtoul(optarg, NULL, 0);
+			else
+				dvalue = strtod(optarg, NULL);
 		}
 	}
 
@@ -219,7 +235,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set the data size to write */
-	scan_size *= (chinfo->nb_bits % 8 == 0) ? 
+	scan_size = (chinfo->nb_bits % 8 == 0) ? 
 		chinfo->nb_bits / 8 : (chinfo->nb_bits / 8) + 1;
 
 	if (verbose != 0) {
@@ -230,13 +246,25 @@ int main(int argc, char *argv[])
 
 	/* If a range was selected, converts the samples */
 	if (idx_rng >= 0) {
-		if (a4l_from_phys(chinfo, rnginfo, buf, dbuf, BUF_SIZE) < 0) {
+		if (a4l_to_phys(chinfo, rnginfo, &value, &dvalue, 1) < 0) {
 			fprintf(stderr,
 				"insn_write: data conversion failed (ret=%d)\n",
 				ret);
 			goto out_insn_write;
 		}
-	}
+
+		if (verbose != 0)
+			printf("insn_write: writing value %F (phys=0x%x)\n",
+			       dvalue, value);
+
+	} else if (verbose != 0)
+		printf("insn_write: writing physical value 0x%x\n", value);
+
+	/* Handle little endian case with bit range < 32 */
+	if (scan_size == sizeof(char))
+		value *= 0x01010101;
+	else if (scan_size == sizeof(short))
+		value *= 0x00010001;
 
 	/* Switch to RT primary mode */
 	if (real_time != 0) {
@@ -249,24 +277,15 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	/* Perform the write operation */
+	ret = a4l_sync_write(&dsc, 
+			     idx_subd, 0, CHAN(idx_chan), &value, scan_size);
 
-	while (cnt < scan_size) {
-		int tmp = (scan_size - cnt) < BUF_SIZE ?
-			(scan_size - cnt) : BUF_SIZE;
-
-		/* Perform the synchronous write */
-		ret = a4l_sync_write(&dsc,
-				    idx_subd, 0, CHAN(idx_chan), buf, tmp);
-
-		if (ret < 0)
-			goto out_insn_write;
-
-		/* Update the count */
-		cnt += ret;
-	}
+	if (ret < 0)
+		goto out_insn_write;
 
 	if (verbose != 0)
-		printf("insn_write: %u bytes successfully sent\n", cnt);
+		printf("insn_write: %u bytes successfully sent\n", scan_size);
 
 out_insn_write:
 
