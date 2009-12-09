@@ -38,9 +38,7 @@
 #define ID_SUBD 0
 /* For simplicity sake, a maximum channel 
    count is defined */
-#define MAX_NB_CHAN 10
-/* Four channels used by default */
-#define NB_CHAN 4
+#define MAX_NB_CHAN 32
 /* One hundred triggered scans by default */
 #define NB_SCAN 100
 
@@ -65,7 +63,7 @@ a4l_cmd_t cmd = {
 	.start_src = TRIG_NOW,
 	.start_arg = 0,
 	.scan_begin_src = TRIG_TIMER,
-	.scan_begin_arg = 2000000,	/* in ns */
+	.scan_begin_arg = 8000000,	/* in ns */
 	.convert_src = TRIG_TIMER,
 	.convert_arg = 500000,	/* in ns */
 	.scan_end_src = TRIG_COUNT,
