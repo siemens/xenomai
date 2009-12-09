@@ -342,8 +342,10 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 		ret = dev->transfer.subds[cmd_desc->idx_subd]->
 			do_cmdtest(dev->transfer.subds[cmd_desc->idx_subd], 
 				   cmd_desc);
-	if (ret != 0)
+	if (ret != 0) {
+		__a4l_err("a4l_ioctl_cmd: driver's cmd_test failed\n");
 		goto out_ioctl_cmd;
+	}
 
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_cmd: driver's cmd checks passed\n");
