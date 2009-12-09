@@ -191,6 +191,8 @@ void setup_output_subd(a4l_subd_t *subd)
 	subd->flags = A4L_SUBD_AO;
 	subd->flags |= A4L_SUBD_CMD;
 	subd->flags |= A4L_SUBD_MMAP;
+	subd->rng_desc = &loop_rngdesc;
+	subd->chan_desc = &loop_chandesc;
 	subd->insn_read = loop_insn_read;
 	subd->insn_write = loop_insn_write;
 }
