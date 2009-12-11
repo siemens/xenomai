@@ -166,6 +166,11 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 	int i = 0, j = 0;
 	lsampl_t tmp;
 
+	/* Bytes count used for conversion; the bit width may be
+	   different from the acquisition bits size:
+	   Ex.: acq_size = 12 bits => conv_size = 16 bits */
+	int conv_size;
+
 	/* Temporary values used for conversion
 	   (phys = a * src + b) */
 	double a, b;
@@ -176,16 +181,20 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 	if (rng == NULL || chan == NULL)
 		return 0;
 
+	/* Computes the conversion width */
+	conv_size = (chan->nb_bits % 8 == 0) ? 
+		chan->nb_bits / 8 : (chan->nb_bits / 8) + 1;
+
 	/* This converting function only works 
 	   if acquired data width is 8, 16 or 32 */
-	switch (chan->nb_bits) {
-	case 32:
+	switch (conv_size) {
+	case 4:
 		datax_get = data32_get;
 		break;
-	case 16:
+	case 2:
 		datax_get = data16_get;
 		break;
-	case 8:
+	case 1:
 		datax_get = data8_get;
 		break;
 	default:
@@ -206,7 +215,7 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 		dst[j] = a * tmp + b;
 
 		/* Updates the counters */
-		i += chan->nb_bits / 8;
+		i += conv_size;
 		j++;
 	}
 
@@ -236,6 +245,11 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 {
 	int i = 0, j = 0;
 
+	/* Bytes count used for conversion; the bit width may be
+	   different from the acquisition bits size:
+	   Ex.: acq_size = 12 bits => conv_size = 16 bits */
+	int conv_size;
+
 	/* Temporary values used for conversion
 	   (dst = a * phys - b) */
 	double a, b;
@@ -246,16 +260,20 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 	if (rng == NULL || chan == NULL)
 		return 0;
 
+	/* Computes the conversion width */
+	conv_size = (chan->nb_bits % 8 == 0) ? 
+		chan->nb_bits / 8 : (chan->nb_bits / 8) + 1;
+
 	/* This converting function only works 
 	   if acquired data width is 8, 16 or 32 */
-	switch (chan->nb_bits) {
-	case 32:
+	switch (conv_size) {
+	case 4:
 		datax_set = data32_set;
 		break;
-	case 16:
+	case 2:
 		datax_set = data16_set;
 		break;
-	case 8:
+	case 1:
 		datax_set = data8_set;
 		break;
 	default:
@@ -274,7 +292,7 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 		datax_set(dst + i, (lsampl_t) (a * src[j] - b));
 
 		/* Updates the counters */
-		i += chan->nb_bits / 8;
+		i += conv_size;
 		j++;
 	}
 
