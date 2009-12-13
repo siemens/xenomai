@@ -23,7 +23,7 @@
    additional parallel ports from old computers or your neighbors'
    computers.
 
-   Option list:
+   Attach options list:
    0: I/O port base for the parallel port.
    1: IRQ
 
