@@ -22,7 +22,7 @@ config XENO_DRIVERS_CAN_SJA1000_MEM
 	be defined via module parameters.
 
 config XENO_DRIVERS_CAN_SJA1000_PEAK_PCI
-	depends on XENO_DRIVERS_CAN_SJA1000
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
 	tristate "PEAK PCI Card"
 	help
 
@@ -32,7 +32,7 @@ config XENO_DRIVERS_CAN_SJA1000_PEAK_PCI
 	must be enabled.
 
 config XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI
-	depends on XENO_DRIVERS_CAN_SJA1000
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
 	tristate "IXXAT PCI Card"
 	help
 
@@ -43,7 +43,7 @@ config XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI
 
 
 config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
-	depends on XENO_DRIVERS_CAN_SJA1000
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
 	tristate "EMS CPC PCI Card"
 	help
 
@@ -53,7 +53,7 @@ config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
 
 
 config XENO_DRIVERS_CAN_SJA1000_ESD_PCI
-	depends on XENO_DRIVERS_CAN_SJA1000
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
 	tristate "ESD PCI Cards"
 	help
 
@@ -64,7 +64,7 @@ config XENO_DRIVERS_CAN_SJA1000_ESD_PCI
 
 
 config XENO_DRIVERS_CAN_SJA1000_PEAK_DNG
-	depends on XENO_DRIVERS_CAN_SJA1000
+	depends on XENO_DRIVERS_CAN_SJA1000 && !PARPORT
 	tristate "PEAK Parallel Port Dongle"
 	help
 
