@@ -35,6 +35,14 @@
 #include <asm/intel_arch_perfmon.h>
 #endif /* Linux < 2.6.19 */
 #include <asm/nmi.h>
+#else /* Linux < 2.6 */
+#define X86_FEATURE_ARCH_PERFMON (3*32+11) /* Intel Architecture PerfMon */
+#define rdmsrl(reg, val) 					\
+	({ 							\
+		unsigned val1, val2; 				\
+		rdmsr(reg, val1, val2); 			\
+		asm ( "": "=A"(val) : "a"(val1), "d"(val2));	\
+	})
 #endif /* Linux < 2.6 */
 #include <asm/msr.h>
 #include <asm/xenomai/hal.h>
