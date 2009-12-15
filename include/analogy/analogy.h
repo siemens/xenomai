@@ -129,7 +129,9 @@ int a4l_sync_read(a4l_desc_t * dsc,
 		  unsigned int idx_subd,
 		  unsigned int chan_desc,
 		  unsigned int delay, void *buf, size_t nbyte);
-	
+
+int a4l_sizeof_chan(a4l_chinfo_t * chan);
+
 int a4l_find_range(a4l_desc_t * dsc,
 		   unsigned int idx_subd,
 		   unsigned int idx_chan,

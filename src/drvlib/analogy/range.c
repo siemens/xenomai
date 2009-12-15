@@ -66,6 +66,38 @@ void data8_set(void *dst, lsampl_t val)
  */
 
 /**
+ * @brief Get the size in memory of an acquired element
+ *
+ * According to the board, the channels have various acquisition
+ * widths. With values like 8, 16 or 32, there is no problem finding
+ * out the size in memory (1, 2, 4); however with widths like 12 or
+ * 24, this function might be helpful to guess the size needed in RAM
+ * for a single acquired element.
+ *
+ * @param[in] chan Channel descriptor
+ *
+ * @return the size in memory of an acquired element, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if the argument chan is NULL
+ *
+ */
+int a4l_sizeof_chan(a4l_chinfo_t * chan)
+{
+	/* So far, it seems there is no 64 bit acquistion stuff */
+	int i = 0, sizes[3] = {8, 16, 32};
+
+	if (chan == NULL)
+		return -EINVAL;
+
+	while (i < 3 && sizes[i] < chan->nb_bits)
+		i++;
+
+	return (i == 3) ? -EINVAL : sizes[i] / 8;
+}
+
+
+/**
  * @brief Find the must suitable range
  *
  * @param[in] dsc Device descriptor filled by a4l_open() and
@@ -241,7 +273,7 @@ int a4l_from_phys(a4l_chinfo_t * chan,
  *
  */
 int a4l_to_phys(a4l_chinfo_t * chan,
-		  a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
+		a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
 {
 	int i = 0, j = 0;
 
