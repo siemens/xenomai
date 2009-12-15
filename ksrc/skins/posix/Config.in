@@ -14,7 +14,7 @@ if [ "$CONFIG_XENO_SKIN_POSIX" != "n" ]; then
 	fi
 	bool 'Shared memory' CONFIG_XENO_OPT_POSIX_SHM
 	bool 'Interrupts' CONFIG_XENO_OPT_POSIX_INTR
-        if [ "$CONFIG_XENO_SKIN_POSIX" != "y" -o "$CONFIG_XENO_SKIN_RTDM" != "m"]; then
+        if [ "$CONFIG_XENO_SKIN_POSIX" != "y" -o "$CONFIG_XENO_SKIN_RTDM" != "m" ]; then
 		if [ "$CONFIG_XENO_OPT_SELECT" = "n" ]; then
 			comment "Support for POSIX skin select needs nucleus support for select-like services"
 		else
