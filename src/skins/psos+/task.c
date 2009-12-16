@@ -73,6 +73,7 @@ static void *psos_task_trampoline(void *cookie)
 	struct sched_param param;
 	int policy;
 	long err;
+	struct psos_arg_bulk bulk;
 
 	policy = psos_task_set_posix_priority(iargs->prio, &param);
 	pthread_setschedparam(pthread_self(), policy, &param);
@@ -81,10 +82,14 @@ static void *psos_task_trampoline(void *cookie)
 
 	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
 
-	err = XENOMAI_SKINCALL5(__psos_muxid,
-				__psos_t_create,
-				iargs->name, iargs->prio, iargs->flags,
-				iargs->tid_r, iargs->completionp);
+	bulk.a1 = (u_long)iargs->name;
+	bulk.a2 = (u_long)iargs->prio;
+	bulk.a3 = (u_long)iargs->flags;
+	bulk.a4 = (u_long)iargs->tid_r;
+	bulk.a5 = (u_long)pthread_self();
+
+	err = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_create, &bulk, iargs->completionp);
+
 	if (err)
 		goto fail;
 
@@ -172,14 +177,19 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 		u_long flags,
 		u_long *tid_r)
 {
+	struct psos_arg_bulk bulk;
+
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
 	old_sigharden_handler = signal(SIGHARDEN, &psos_task_sigharden);
 
-	return XENOMAI_SKINCALL5(__psos_muxid,
-				 __psos_t_create,
-				 name, prio, flags,
-				 tid_r, NULL);
+	bulk.a1 = (u_long)name;
+	bulk.a2 = (u_long)prio;
+	bulk.a3 = (u_long)flags;
+	bulk.a4 = (u_long)tid_r;
+	bulk.a5 = (u_long)pthread_self();
+
+	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_create, &bulk, NULL);
 }
 
 u_long t_start(u_long tid,
@@ -196,7 +206,36 @@ u_long t_start(u_long tid,
 
 u_long t_delete(u_long tid)
 {
-	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
+	long err;
+	u_long ptid;
+
+	if (tid == 0)
+		goto self_delete;
+
+	err = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_getpth, tid, &ptid);
+	if (err)
+		return err;
+
+	if ((pthread_t)ptid == pthread_self())
+		goto self_delete;
+
+	err = pthread_cancel((pthread_t)ptid);
+	if (err)
+		return -err; /* differentiate from pSOS codes */
+
+	err = XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
+	if (err == ERR_OBJID)
+		return SUCCESS;
+
+	return err;
+
+self_delete:
+
+	 /* Silently migrate to avoid raising SIGXCPU. */
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+	pthread_exit(NULL);
+
+	return SUCCESS; /* not reached */
 }
 
 u_long t_suspend(u_long tid)

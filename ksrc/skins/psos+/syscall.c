@@ -67,29 +67,36 @@ static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 	xncompletion_t __user *u_completion;
 	u_long prio, flags, tid, err;
 	char name[XNOBJECT_NAME_LEN];
+	struct psos_arg_bulk bulk;
 	psostask_t *task;
 
-	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), 4))
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg1(regs), sizeof(bulk)))
+		return -EFAULT;
+
+	__xn_copy_from_user(curr, &bulk, (void __user *)__xn_reg_arg1(regs),
+			    sizeof(bulk));
+
+	if (!__xn_access_ok(curr, VERIFY_READ, bulk.a1, sizeof(name)))
 		return -EFAULT;
 
 	/* Get task name. */
-	__xn_strncpy_from_user(curr, name, (const char __user *)__xn_reg_arg1(regs),
+	__xn_strncpy_from_user(curr, name, (const char __user *)bulk.a1,
 			       sizeof(name) - 1);
 	name[sizeof(name) - 1] = '\0';
 	strncpy(curr->comm, name, sizeof(curr->comm));
 	curr->comm[sizeof(curr->comm) - 1] = '\0';
 
 	if (!__xn_access_ok
-	    (curr, VERIFY_WRITE, __xn_reg_arg4(regs), sizeof(tid)))
+		(curr, VERIFY_WRITE, bulk.a4, sizeof(tid)))
 		return -EFAULT;
 
 	/* Task priority. */
-	prio = __xn_reg_arg2(regs);
+	prio = bulk.a2;
 	/* Task flags. Force FPU support in user-space. This will lead
 	   to a no-op if the platform does not support it. */
-	flags = __xn_reg_arg3(regs) | T_SHADOW | T_FPU;
+	flags = bulk.a3 | T_SHADOW | T_FPU;
 	/* Completion descriptor our parent thread is pending on. */
-	u_completion = (xncompletion_t __user *)__xn_reg_arg5(regs);
+	u_completion = (xncompletion_t __user *)__xn_reg_arg2(regs);
 
 	err = t_create(name, prio, 0, 0, flags, &tid);
 
@@ -99,7 +106,8 @@ static int __t_create(struct task_struct *curr, struct pt_regs *regs)
 		 * about the new thread id, so we can manipulate its
 		 * TCB pointer freely. */
 		tid = xnthread_handle(&task->threadbase);
-		__xn_copy_to_user(curr, (void __user *)__xn_reg_arg4(regs), &tid,
+		task->pthread = bulk.a5; /* hidden pthread_t identifier. */
+		__xn_copy_to_user(curr, (void __user *) bulk.a4, &tid,
 				  sizeof(tid));
 		err = xnshadow_map(&task->threadbase, u_completion); /* May be NULL */
 	} else {
@@ -1443,6 +1451,43 @@ static int __as_send(struct task_struct *curr, struct pt_regs *regs)
 	return as_send((u_long)task, signals);
 }
 
+
+/*
+ * int __t_getpth(u_long tid, u_long *pthread)
+ */
+static int __t_getpth(struct task_struct *curr, struct pt_regs *regs)
+{
+	xnhandle_t handle;
+	psostask_t *task;
+	spl_t s;
+	u_long err = SUCCESS;
+	u_long pthread;
+
+	handle = __xn_reg_arg1(regs);
+
+	if (!__xn_access_ok(curr, VERIFY_READ, __xn_reg_arg2(regs), sizeof(u_long)))
+		return -EFAULT;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (handle)
+		task = (psostask_t *)xnregistry_fetch(handle);
+	else
+		task = __psos_task_current(curr);
+
+	if (!task)
+		err = ERR_OBJID;
+	else
+		pthread = task->pthread; /* hidden pthread_t identifier. */
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if(err == SUCCESS)
+		__xn_copy_to_user(curr, (void __user *) __xn_reg_arg2(regs), &pthread, sizeof(u_long));
+
+	return err;
+}
+
 static void *psos_shadow_eventcb(int event, void *data)
 {
 	struct psos_resource_holder *rh;
@@ -1524,6 +1569,7 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_signal] = {&__tm_signal, __xn_exec_primary},
 	[__psos_as_send] = {&__as_send, __xn_exec_conforming},
 	[__psos_tm_getc] = {&__tm_getc, __xn_exec_any},
+	[__psos_t_getpth] = {&__t_getpth, __xn_exec_any},
 };
 
 extern xntbase_t *psos_tbase;
