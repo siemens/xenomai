@@ -791,7 +791,6 @@ EXPORT_SYMBOL(mite_sync_input_dma);
 EXPORT_SYMBOL(mite_sync_output_dma);
 EXPORT_SYMBOL(mite_setup);
 EXPORT_SYMBOL(mite_unsetup);
-EXPORT_SYMBOL(mite_devices);
 EXPORT_SYMBOL(mite_list_devices);
 EXPORT_SYMBOL(mite_request_channel_in_range);
 EXPORT_SYMBOL(mite_release_channel);
