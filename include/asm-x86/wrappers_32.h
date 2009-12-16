@@ -78,6 +78,10 @@ static inline int fls(int x)
 	return r+1;
 }
 
+typedef unsigned long phys_addr_t;
+
+typedef phys_addr_t resource_size_t;
+
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot)  (prot)
