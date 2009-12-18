@@ -1498,7 +1498,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	}
 
 	if (((clrmask | setmask) &
-	     ~(T_LOCK | T_RRB | T_NOSIG | T_SHIELD | T_WARNSW)) != 0)
+	     ~(T_LOCK | T_RRB | T_NOSIG | T_SHIELD | T_WARNSW | T_RPIOFF)) != 0)
 		return -EINVAL;
 
 	if (!xnpod_primary_p())
