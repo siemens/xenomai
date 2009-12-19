@@ -11764,6 +11764,10 @@ if test "${enable_arm_mach+set}" = set; then :
 			CONFIG_XENO_ARM_SA1100=y
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
+	orion)		arch=5
+			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
+
 	*)as_fn_error "Invalid machine selected: \"$enableval\"" "$LINENO" 5;;
 	esac
 else
