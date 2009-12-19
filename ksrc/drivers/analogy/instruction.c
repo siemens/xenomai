@@ -203,10 +203,11 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	int (*hdlr) (a4l_subd_t *, a4l_kinsn_t *) = NULL;
 
-
 	/* Checks the subdevice index */
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_do_insn: subdevice index out of range\n");
+		__a4l_err("a4l_do_insn: "
+			  "subdevice index out of range (idx=%d)\n",
+			  dsc->idx_subd);
 		return -EINVAL;
 	}
 
@@ -325,7 +326,7 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 	}
 
 	/* Keeps the user pointer in an opaque field */
-	dsc->__uinsns = dsc->insns;
+	dsc->__uinsns = (a4l_insn_t *)dsc->insns;
 
 	dsc->insns = rtdm_malloc(dsc->count * sizeof(a4l_kinsn_t));
 	if (dsc->insns == NULL)

@@ -210,7 +210,7 @@ typedef struct a4l_kernel_instruction a4l_kinsn_t;
 struct a4l_kernel_instruction_list {
 	unsigned int count;
 	a4l_kinsn_t *insns;
-	a4l_kinsn_t *__uinsns;
+	a4l_insn_t *__uinsns;
 };
 typedef struct a4l_kernel_instruction_list a4l_kilst_t;
 
