@@ -24,5 +24,5 @@ guides at the top of the Xenomai tree for more information.
 
 Patch			        Based on GIT commit # / TAG
 ------------------------------------------------------------------------
-2.6.30.1-blackfin.git-1.11-00	ed2e947905cb0858ff0645f34030856adab4dc7e
-2.6.31.2-blackfin.git-1.12-00	fc27539e54d16d1693f358e875786fa8326b4a8d
+2.6.30.1-blackfin.git-1.11-00	2120b68f31d3b08be99010b3992f58f07794b8b0
+2.6.31.2-blackfin.git-1.12-00	8ac22ecfa13d44496d0dadd957704f5e1622c503
