@@ -152,6 +152,14 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			info.u.dec.last_cnt = ipipe_info.archdep.tsc.u.dec.last_cnt;
 			info.u.dec.tsc = ipipe_info.archdep.tsc.u.dec.tsc;
 			break;
+#ifdef IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN
+		case IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN:
+			info.type = __XN_TSC_TYPE_FREERUNNING_COUNTDOWN,
+			info.u.fr.counter = ipipe_info.archdep.tsc.u.fr.counter;
+			info.u.fr.mask = ipipe_info.archdep.tsc.u.fr.mask;
+			info.u.fr.tsc = ipipe_info.archdep.tsc.u.fr.tsc;
+			break;
+#endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
 		case IPIPE_TSC_TYPE_NONE:
 			return -ENOSYS;
 			
