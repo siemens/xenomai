@@ -121,7 +121,7 @@ int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t * arg)
  * @param[in] buf Output buffer
  * @param[in] nbyte Number of bytes to write
  *
- * @return 0 on success. Otherwise:
+ * @return Number of bytes written, otherwise negative error code:
  *
  * - -EINVAL is returned if some argument is missing or wrong (Please,
  *    type "dmesg" for more info)
@@ -194,7 +194,7 @@ int a4l_sync_write(a4l_desc_t * dsc,
  * @param[in] buf Input buffer
  * @param[in] nbyte Number of bytes to read
  *
- * @return 0 on success. Otherwise:
+ * @return Number of bytes read, otherwise negative error code:
  *
  * - -EINVAL is returned if some argument is missing or wrong (Please,
  *    type "dmesg" for more info)
