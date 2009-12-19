@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
@@ -82,6 +83,7 @@ struct option cmd_read_opts[] = {
 	{"scan-count", required_argument, NULL, 'S'},
 	{"channels", required_argument, NULL, 'c'},
 	{"mmap", no_argument, NULL, 'm'},
+	{"raw", no_argument, NULL, 'w'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
 };
@@ -98,7 +100,81 @@ void do_print_usage(void)
 	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channels: channels to use (ex.: -c 0,1)\n");
 	fprintf(stdout, "\t\t -m, --mmap: mmap the buffer\n");
+	fprintf(stdout, "\t\t -w, --raw: dump data in raw format\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
+}
+
+int dump_raw(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
+{
+	return fwrite(buf, size, 1, stdout);
+}
+
+int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
+{
+	static int cur_chan;
+
+	int i, err = 0, tmp_size = 0;
+	char *fmts[MAX_NB_CHAN];
+	a4l_chinfo_t *chans[MAX_NB_CHAN];
+
+	for (i = 0; i < cmd->nb_chan; i++) {
+		int width;
+
+		err = a4l_get_chinfo(dsc,
+				     cmd->idx_subd, 
+				     cmd->chan_descs[i], &chans[i]);
+		if (err < 0) {
+			fprintf(stderr,
+				"cmd_read: a4l_get_chinfo failed (ret=%d)\n",
+				err);
+			goto out;
+		}
+
+		width = a4l_sizeof_chan(chans[i]);
+		if (width < 0) {
+			fprintf(stderr,
+				"cmd_read: incoherent info for channel %d\n",
+				cmd->chan_descs[i]);
+			err = width;
+			goto out;
+		}
+
+		switch(width) {
+		case 1:
+			fmts[i] = "0x%02x ";
+			break;
+		case 2:
+			fmts[i] = "0x%04x ";
+			break;
+		case 4:
+		default:
+			fmts[i] = "0x%08x ";
+			break;
+		}
+	}
+
+	while (tmp_size < size) {
+		unsigned long value;
+
+		err = a4l_rawtoul(chans[cur_chan], &value, buf + tmp_size, 1);
+		if (err < 0)
+			goto out;
+
+		fprintf(stdout, fmts[cur_chan], value);
+
+		/* We assume a4l_sizeof_chan() cannot return because
+		   we already called it on the very same channel
+		   descriptor */
+		tmp_size += a4l_sizeof_chan(chans[cur_chan]);
+		
+		if(++cur_chan == cmd->nb_chan) {
+			fprintf(stdout, "\n");
+			cur_chan = 0;
+		}
+	}
+
+out:
+	return err;
 }
 
 int main(int argc, char *argv[])
@@ -109,10 +185,13 @@ int main(int argc, char *argv[])
 	void *map = NULL;
 	a4l_desc_t dsc = { .sbdata = NULL };
 
+	int (*dump_function) (a4l_desc_t *, a4l_cmd_t*, unsigned char *, int) = 
+		dump_text;
+
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:mh", cmd_read_opts, NULL)) >= 0) {
+				  "vrd:s:S:c:mwh", cmd_read_opts, NULL)) >= 0) {
 		switch (ret) {
 		case 'v':
 			verbose = 1;
@@ -135,11 +214,20 @@ int main(int argc, char *argv[])
 		case 'm':
 			use_mmap = 1;
 			break;
+		case 'w':
+			dump_function = dump_raw;
+			break;
 		case 'h':
 		default:
 			do_print_usage();
 			return 0;
 		}
+	}
+
+	if (isatty(STDOUT_FILENO) && dump_function == dump_raw) {
+		fprintf(stderr, 
+			"cmd_read: cannot dump raw data on a terminal\n\n");
+		return -EINVAL;
 	}
 
 	/* Recover the channels to compute */
@@ -179,7 +267,6 @@ int main(int argc, char *argv[])
 				ret);
 			goto out_main;
 		}
-
 	}
 
 	/* Open the device */
@@ -191,8 +278,8 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose != 0) {
-		printf("cmd_read: device %s opened (fd=%d)\n", filename,
-		       dsc.fd);
+		printf("cmd_read: device %s opened (fd=%d)\n", 
+		       filename, dsc.fd);
 		printf("cmd_read: basic descriptor retrieved\n");
 		printf("\t subdevices count = %d\n", dsc.nb_subd);
 		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
@@ -233,11 +320,10 @@ int main(int argc, char *argv[])
 		if (verbose != 0) {
 			printf("cmd_read: channel %x\n", cmd.chan_descs[i]);
 			printf("\t ranges count = %d\n", info->nb_rng);
-			printf("\t range's size = %d (bits)\n", info->nb_bits);
+			printf("\t bit width = %d (bits)\n", info->nb_bits);
 		}
 
-		scan_size += (info->nb_bits % 8 == 0) ? 
-			info->nb_bits / 8 : (info->nb_bits / 8) + 1;
+		scan_size += a4l_sizeof_chan(info);
 	}
 
 	if (verbose != 0) {
@@ -314,11 +400,10 @@ int main(int argc, char *argv[])
 				goto out_main;
 			}
 
-			/* Dump the results */
-			for (i = 0; i < ret; i++) {
-				printf("0x%x ", buf[i]);
-				if (((cnt + i + 1) % scan_size) == 0)
-					printf("\n");
+			/* Display the results */
+			if(dump_function(&dsc, &cmd, buf, ret) < 0) {
+				ret = -EIO;
+				goto out_main;
 			}
 
 			/* Update the counter */
@@ -344,9 +429,7 @@ int main(int argc, char *argv[])
 			/* Retrieve and update the buffer's state
 			   (In input case, we recover how many bytes are available
 			   to read) */
-			ret =
-				a4l_mark_bufrw(&dsc, cmd.idx_subd, front,
-					       &front);
+			ret = a4l_mark_bufrw(&dsc, cmd.idx_subd, front, &front);
 			if (ret < 0) {
 				fprintf(stderr,
 					"cmd_read: a4l_mark_bufrw() failed (ret=%d)\n",
@@ -359,9 +442,7 @@ int main(int argc, char *argv[])
 			   to read; in our case it is useless as we have to update
 			   the data read counter) */
 			if (front == 0) {
-				ret =
-					a4l_poll(&dsc, cmd.idx_subd,
-						 A4L_INFINITE);
+				ret = a4l_poll(&dsc, cmd.idx_subd, A4L_INFINITE);
 				if (ret < 0) {
 					fprintf(stderr,
 						"cmd_read: a4l_poll() failed (ret=%d)\n",
@@ -371,15 +452,12 @@ int main(int argc, char *argv[])
 			}
 
 			/* Display the results */
-			for (i = cnt; i < cnt + front; i++) {
-				/* Print char by char */
-				fprintf(stdout,
-					"0x%x ",
-					((unsigned char *)map)[i % buf_size]);
-
-				/* Return to the next line after each scan */
-				if (((cnt + i + 1) % scan_size) == 0)
-					fprintf(stdout, "\n");
+			if (dump_function(&dsc, 
+					  &cmd, 
+					  &((unsigned char *)map)[cnt % buf_size],
+					  front) < 0) {
+				ret = -EIO;
+				goto out_main;
 			}
 
 			if (real_time != 0) {
