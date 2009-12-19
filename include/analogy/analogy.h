@@ -68,33 +68,33 @@ int a4l_sys_rnginfo(int fd,
 
 /* --- Level 1 API (supposed to be used) --- */
     
-int a4l_get_desc(int fd, a4l_desc_t * dsc, int pass);
+int a4l_get_desc(int fd, a4l_desc_t *dsc, int pass);
 
-int a4l_open(a4l_desc_t * dsc, const char *fname);
+int a4l_open(a4l_desc_t *dsc, const char *fname);
 
-int a4l_close(a4l_desc_t * dsc);
+int a4l_close(a4l_desc_t *dsc);
 
-int a4l_fill_desc(a4l_desc_t * dsc);
+int a4l_fill_desc(a4l_desc_t *dsc);
 
-int a4l_get_subdinfo(a4l_desc_t * dsc,
-		     unsigned int subd, a4l_sbinfo_t ** info);
+int a4l_get_subdinfo(a4l_desc_t *dsc,
+		     unsigned int subd, a4l_sbinfo_t **info);
 
-int a4l_get_chinfo(a4l_desc_t * dsc,
+int a4l_get_chinfo(a4l_desc_t *dsc,
 		   unsigned int subd,
-		   unsigned int chan, a4l_chinfo_t ** info);
+		   unsigned int chan, a4l_chinfo_t **info);
 
 #define a4l_get_chan_max(x) (1ULL << (x)->nb_bits)
 
 #define a4l_is_chan_global(x) ((x)->chan_flags & A4L_CHAN_GLOBAL)
 
-int a4l_get_rnginfo(a4l_desc_t * dsc,
+int a4l_get_rnginfo(a4l_desc_t *dsc,
 		    unsigned int subd,
 		    unsigned int chan,
 		    unsigned int rng, a4l_rnginfo_t ** info);
 
 #define a4l_is_rng_global(x) ((x)->flags & A4L_RNG_GLOBAL)
 
-int a4l_snd_command(a4l_desc_t * dsc, a4l_cmd_t * cmd);
+int a4l_snd_command(a4l_desc_t * dsc, a4l_cmd_t *cmd);
     
 int a4l_snd_cancel(a4l_desc_t * dsc, unsigned int idx_subd);
 
@@ -116,7 +116,7 @@ int a4l_mmap(a4l_desc_t * dsc,
 
 int a4l_snd_insnlist(a4l_desc_t * dsc, a4l_insnlst_t * arg);
 
-int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t * arg);
+int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t *arg);
 
 /* --- Level 2 API (supposed to be used) --- */
 
@@ -138,11 +138,21 @@ int a4l_find_range(a4l_desc_t * dsc,
 		   unsigned long unit,
 		   double min, double max, a4l_rnginfo_t ** rng);
 
-int a4l_from_phys(a4l_chinfo_t * chan,
-		  a4l_rnginfo_t * rng, double *dst, void *src, int cnt);
+int a4l_rawtoul(a4l_chinfo_t * chan, unsigned long *dst, void *src, int cnt);
 
-int a4l_to_phys(a4l_chinfo_t * chan,
-		a4l_rnginfo_t * rng, void *dst, double *src, int cnt);
+int a4l_rawtof(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, float *dst, void *src, int cnt);
+
+int a4l_rawtod(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, double *dst, void *src, int cnt);
+
+int a4l_ultoraw(a4l_chinfo_t * chan, void *dst, unsigned long *src, int cnt);
+
+int a4l_ftoraw(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, void *dst, float *src, int cnt);
+
+int a4l_dtoraw(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, void *dst, double *src, int cnt);
 
 #endif /* !DOXYGEN_CPP */
 

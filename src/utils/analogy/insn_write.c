@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
 	/* If a range was selected, converts the samples */
 	if (idx_rng >= 0) {
-		if (a4l_to_phys(chinfo, rnginfo, &value, &dvalue, 1) < 0) {
+		if (a4l_dtoraw(chinfo, rnginfo, &value, &dvalue, 1) < 0) {
 			fprintf(stderr,
 				"insn_write: data conversion failed (ret=%d)\n",
 				ret);
@@ -254,11 +254,11 @@ int main(int argc, char *argv[])
 		}
 
 		if (verbose != 0)
-			printf("insn_write: writing value %F (phys=0x%x)\n",
+			printf("insn_write: writing value %F (raw=0x%x)\n",
 			       dvalue, value);
 
 	} else if (verbose != 0)
-		printf("insn_write: writing physical value 0x%x\n", value);
+		printf("insn_write: writing raw value 0x%x\n", value);
 
 	/* Handle little endian case with bit range < 32 */
 	if (scan_size == sizeof(char))
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 
 	/* Perform the write operation */
 	ret = a4l_sync_write(&dsc, 
-			     idx_subd, 0, CHAN(idx_chan), &value, scan_size);
+			     idx_subd, CHAN(idx_chan), 0, &value, scan_size);
 
 	if (ret < 0)
 		goto out_insn_write;

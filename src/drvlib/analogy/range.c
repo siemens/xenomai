@@ -96,7 +96,6 @@ int a4l_sizeof_chan(a4l_chinfo_t * chan)
 	return (i == 3) ? -EINVAL : sizes[i] / 8;
 }
 
-
 /**
  * @brief Find the must suitable range
  *
@@ -175,7 +174,71 @@ out_get_range:
 }
 
 /**
- * @brief Convert physical units to samples
+ * @brief Unpack raw data (from the driver) into unsigned long values
+ *
+ * This function takes as input driver-specific data and scatters each
+ * element into an entry of an unsigned long table. It is a
+ * convenience routine which performs no conversion, just copy.
+ *
+ * @param[in] chan Channel descriptor
+ * @param[in] rng Range descriptor
+ * @param[out] dst Ouput buffer 
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of transfer to copy
+ *
+ * @return the count of copy performed, otherwise a negative error
+ * code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_ultoraw()
+ *
+ */
+int a4l_rawtoul(a4l_chinfo_t * chan, unsigned long *dst, void *src, int cnt)
+{
+	int size, i = 0, j = 0;
+
+	/* Temporary data accessor */
+	lsampl_t(*datax_get) (void *);
+
+	/* Basic checking */
+	if (chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */ 
+	size = a4l_sizeof_chan(chan);
+
+	/* Get the suitable accessor */
+	switch (size) {
+	case 4:
+		datax_get = data32_get;
+		break;
+	case 2:
+		datax_get = data16_get;
+		break;
+	case 1:
+		datax_get = data8_get;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	while (j < cnt) {
+
+		/* Properly copy the data */
+		dst[j] = (unsigned long)datax_get(src + i);
+
+		/* Update the counters */
+		i += size;
+		j++;
+	}
+
+	return j;	
+}
+
+/**
+ * @brief Convert raw data (from the driver) to float-typed samples
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
@@ -189,19 +252,87 @@ out_get_range:
  * - -EINVAL is returned if some argument is missing or wrong;
  *    chan, rng and the pointers should be checked; check also the
  *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
- *    before using a4l_to_phys()
+ *    before using a4l_rawtod()
  *
  */
-int a4l_from_phys(a4l_chinfo_t * chan,
-		  a4l_rnginfo_t * rng, double *dst, void *src, int cnt)
+int a4l_rawtof(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, float *dst, void *src, int cnt)
 {
-	int i = 0, j = 0;
+	int size, i = 0, j = 0;
 	lsampl_t tmp;
 
-	/* Bytes count used for conversion; the bit width may be
-	   different from the acquisition bits size:
-	   Ex.: acq_size = 12 bits => conv_size = 16 bits */
-	int conv_size;
+	/* Temporary values used for conversion
+	   (phys = a * src + b) */
+	float a, b;
+	/* Temporary data accessor */
+	lsampl_t(*datax_get) (void *);
+
+	/* Basic checking */
+	if (rng == NULL || chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */ 
+	size = a4l_sizeof_chan(chan);
+
+	/* Get the suitable accessor */
+	switch (a4l_sizeof_chan(chan)) {
+	case 4:
+		datax_get = data32_get;
+		break;
+	case 2:
+		datax_get = data16_get;
+		break;
+	case 1:
+		datax_get = data8_get;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	/* Compute the translation factor and the constant only once */
+	a = ((float)(rng->max - rng->min)) /
+		(((1ULL << chan->nb_bits) - 1) * A4L_RNG_FACTOR);
+	b = ((float)rng->min) / A4L_RNG_FACTOR;
+
+	while (j < cnt) {
+
+		/* Properly retrieve the data */
+		tmp = datax_get(src + i);
+
+		/* Perform the conversion */
+		dst[j] = a * tmp + b;
+
+		/* Update the counters */
+		i += size;
+		j++;
+	}
+
+	return j;
+}
+
+/**
+ * @brief Convert raw data (from the driver) to double-typed samples
+ *
+ * @param[in] chan Channel descriptor
+ * @param[in] rng Range descriptor
+ * @param[out] dst Ouput buffer 
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of conversion to perform
+ *
+ * @return the count of conversion performed, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_rawtod()
+ *
+ */
+int a4l_rawtod(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, double *dst, void *src, int cnt)
+{
+	int size, i = 0, j = 0;
+	lsampl_t tmp;
 
 	/* Temporary values used for conversion
 	   (phys = a * src + b) */
@@ -211,15 +342,13 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 
 	/* Basic checking */
 	if (rng == NULL || chan == NULL)
-		return 0;
+		return -EINVAL;
 
-	/* Computes the conversion width */
-	conv_size = (chan->nb_bits % 8 == 0) ? 
-		chan->nb_bits / 8 : (chan->nb_bits / 8) + 1;
+	/* Find out the size in memory */ 
+	size = a4l_sizeof_chan(chan);
 
-	/* This converting function only works 
-	   if acquired data width is 8, 16 or 32 */
-	switch (conv_size) {
+	/* Get the suitable accessor */
+	switch (a4l_sizeof_chan(chan)) {
 	case 4:
 		datax_get = data32_get;
 		break;
@@ -236,18 +365,18 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 	/* Computes the translation factor and the constant only once */
 	a = ((double)(rng->max - rng->min)) /
 		(((1ULL << chan->nb_bits) - 1) * A4L_RNG_FACTOR);
-	b = (double)rng->min / A4L_RNG_FACTOR;
+	b = ((double)rng->min) / A4L_RNG_FACTOR;
 
 	while (j < cnt) {
 
-		/* Properly retrieves the data */
+		/* Properly retrieve the data */
 		tmp = datax_get(src + i);
 
-		/* Performs the conversion */
+		/* Perform the conversion */
 		dst[j] = a * tmp + b;
 
-		/* Updates the counters */
-		i += conv_size;
+		/* Update the counters */
+		i += size;
 		j++;
 	}
 
@@ -255,7 +384,71 @@ int a4l_from_phys(a4l_chinfo_t * chan,
 }
 
 /**
- * @brief Convert samples to physical units
+ * @brief Pack unsigned long values into raw data (for the driver)
+ *
+ * This function takes as input a table of unsigned long values and
+ * gather them according to the channel width. It is a convenience
+ * routine which performs no conversion, just formatting.
+ *
+ * @param[in] chan Channel descriptor
+ * @param[in] rng Range descriptor
+ * @param[out] dst Ouput buffer 
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of transfer to copy
+ *
+ * @return the count of copy performed, otherwise a negative error
+ * code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_ultoraw()
+ *
+ */
+int a4l_ultoraw(a4l_chinfo_t * chan, void *dst, unsigned long *src, int cnt)
+{
+	int size, i = 0, j = 0;
+
+	/* Temporary data accessor */
+	void (*datax_set) (void *, lsampl_t);
+
+	/* Basic checking */
+	if (chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */
+	size = a4l_sizeof_chan(chan);
+
+	/* Select the suitable accessor */
+	switch (size) {
+	case 4:
+		datax_set = data32_set;
+		break;
+	case 2:
+		datax_set = data16_set;
+		break;
+	case 1:
+		datax_set = data8_set;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	while (j < cnt) {
+
+		/* Perform the copy */
+		datax_set(dst + i, (lsampl_t)src[j]);
+
+		/* Update the counters */
+		i += size;
+		j++;
+	}
+
+	return j;	
+}
+
+/**
+ * @brief Convert float-typed samples to raw data (for the driver)
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
@@ -269,18 +462,83 @@ int a4l_from_phys(a4l_chinfo_t * chan,
  * - -EINVAL is returned if some argument is missing or wrong;
  *    chan, rng and the pointers should be checked; check also the
  *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
- *    before using a4l_from_phys()
+ *    before using a4l_ftoraw()
  *
  */
-int a4l_to_phys(a4l_chinfo_t * chan,
-		a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
+int a4l_ftoraw(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, void *dst, float *src, int cnt)
 {
-	int i = 0, j = 0;
+	int size, i = 0, j = 0;
 
-	/* Bytes count used for conversion; the bit width may be
-	   different from the acquisition bits size:
-	   Ex.: acq_size = 12 bits => conv_size = 16 bits */
-	int conv_size;
+	/* Temporary values used for conversion
+	   (dst = a * phys - b) */
+	float a, b;
+	/* Temporary data accessor */
+	void (*datax_set) (void *, lsampl_t);
+
+	/* Basic checking */
+	if (rng == NULL || chan == NULL)
+		return -EINVAL;
+
+	/* Find out the size in memory */
+	size = a4l_sizeof_chan(chan);
+
+	/* Select the suitable accessor */
+	switch (size) {
+	case 4:
+		datax_set = data32_set;
+		break;
+	case 2:
+		datax_set = data16_set;
+		break;
+	case 1:
+		datax_set = data8_set;
+		break;
+	default:
+		return -EINVAL;
+	};
+
+	/* Computes the translation factor and the constant only once */
+	a = (((float)A4L_RNG_FACTOR) / (rng->max - rng->min)) *
+		((1ULL << chan->nb_bits) - 1);
+	b = ((float)(rng->min) / (rng->max - rng->min)) *
+		((1ULL << chan->nb_bits) - 1);
+
+	while (j < cnt) {
+
+		/* Performs the conversion */
+		datax_set(dst + i, (lsampl_t) (a * src[j] - b));
+
+		/* Updates the counters */
+		i += size;
+		j++;
+	}
+
+	return j;
+}
+
+/**
+ * @brief Convert double-typed samples to raw data (for the driver)
+ *
+ * @param[in] chan Channel descriptor
+ * @param[in] rng Range descriptor
+ * @param[out] dst Ouput buffer 
+ * @param[in] src Input buffer
+ * @param[in] cnt Count of conversion to perform
+ *
+ * @return the count of conversion performed, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong;
+ *    chan, rng and the pointers should be checked; check also the
+ *    kernel log ("dmesg"); WARNING: a4l_fill_desc() should be called
+ *    before using a4l_dtoraw()
+ *
+ */
+int a4l_dtoraw(a4l_chinfo_t * chan,
+	       a4l_rnginfo_t * rng, void *dst, double *src, int cnt)
+{
+	int size, i = 0, j = 0;
 
 	/* Temporary values used for conversion
 	   (dst = a * phys - b) */
@@ -290,15 +548,13 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 
 	/* Basic checking */
 	if (rng == NULL || chan == NULL)
-		return 0;
+		return -EINVAL;
 
-	/* Computes the conversion width */
-	conv_size = (chan->nb_bits % 8 == 0) ? 
-		chan->nb_bits / 8 : (chan->nb_bits / 8) + 1;
+	/* Find out the size in memory */
+	size = a4l_sizeof_chan(chan);
 
-	/* This converting function only works 
-	   if acquired data width is 8, 16 or 32 */
-	switch (conv_size) {
+	/* Select the suitable accessor */
+	switch (size) {
 	case 4:
 		datax_set = data32_set;
 		break;
@@ -324,11 +580,10 @@ int a4l_to_phys(a4l_chinfo_t * chan,
 		datax_set(dst + i, (lsampl_t) (a * src[j] - b));
 
 		/* Updates the counters */
-		i += conv_size;
+		i += size;
 		j++;
 	}
 
 	return j;
 }
-
 /** @} Range / conversion  API */

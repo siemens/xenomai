@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
@@ -35,7 +36,6 @@
 #define SCAN_CNT 10
 
 static unsigned char buf[BUF_SIZE];
-static double dbuf[BUF_SIZE];
 static char *filename = FILENAME;
 static int verbose;
 static int real_time;
@@ -54,6 +54,7 @@ struct option insn_read_opts[] = {
 	{"scan-count", required_argument, NULL, 'S'},
 	{"channel", required_argument, NULL, 'c'},
 	{"range", required_argument, NULL, 'R'},
+	{"raw", no_argument, NULL, 'w'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
 };
@@ -70,21 +71,140 @@ void do_print_usage(void)
 	fprintf(stdout, "\t\t -S, --scan-count: count of scan to perform\n");
 	fprintf(stdout, "\t\t -c, --channel: channel to use\n");
 	fprintf(stdout, "\t\t -R, --range: range to use\n");
+	fprintf(stdout, "\t\t -w, --raw: dump data in raw format\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
+}
+
+int dump_raw(a4l_desc_t *dsc, unsigned char *buf, int size)
+{
+	return fwrite(buf, size, 1, stdout);
+}
+
+int dump_text(a4l_desc_t *dsc, unsigned char *buf, int size)
+{
+	int err = 0, width, tmp_size = 0;
+	char *fmt;
+	a4l_chinfo_t *chan;	
+
+	/* Retrieve the subdevice data size */
+	err = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chan);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: info for channel %d "
+			"on subdevice %d not available (err=%d)\n",
+			idx_chan, idx_subd, err);
+		goto out;
+	}
+
+	width = a4l_sizeof_chan(chan);
+	if (width < 0) {
+		fprintf(stderr,
+			"insn_read: incoherent info for channel %d\n",
+			idx_chan);
+		err = width;
+		goto out;
+	}
+
+	switch(width) {
+	case 1:
+		fmt = "0x%02x\n";
+		break;
+	case 2:
+		fmt = "0x%04x\n";
+		break;
+	case 4:
+	default:
+		fmt = "0x%08x\n";
+		break;
+	}
+
+	while (size - tmp_size > 0) {
+		unsigned long values[64];
+		int i, tmp_cnt = ((size - tmp_size) / width > 64) ? 
+			64 : ((size - tmp_size) / width);
+
+		err = a4l_rawtoul(chan, values, buf + tmp_size, tmp_cnt);
+		if (err < 0)
+			goto out;
+
+		for (i = 0; i < tmp_cnt; i++) {
+			fprintf(stdout, fmt, values[i]);
+		}
+		
+		tmp_size += tmp_cnt * width;
+	}
+
+out:
+	return err;
+}
+
+int dump_converted(a4l_desc_t *dsc, unsigned char *buf, int size)
+{
+	int err = 0, width, tmp_size = 0;
+	a4l_chinfo_t *chan;
+	a4l_rnginfo_t *rng;
+
+	/* Retrieve the channel info */
+	err = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chan);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: info for channel %d "
+			"on subdevice %d not available (err=%d)\n",
+			idx_chan, idx_subd, err);
+		goto out;
+	}
+
+	/* Retrieve the range info */
+	err = a4l_get_rnginfo(dsc, idx_subd, idx_chan, idx_rng, &rng);
+	if (err < 0) {
+		fprintf(stderr,
+			"insn_read: failed to recover range descriptor\n");
+		goto out;
+	}
+
+	width = a4l_sizeof_chan(chan);
+	if (width < 0) {
+		fprintf(stderr,
+			"insn_read: incoherent info for channel %d\n",
+			idx_chan);
+		err = width;
+		goto out;
+	}
+
+	while (size - tmp_size > 0) {
+		double values[64];
+		int i, tmp_cnt = ((size - tmp_size) / width > 64) ? 
+			64 : ((size - tmp_size) / width);
+
+		err = a4l_rawtod(chan, rng, values, buf + tmp_size, tmp_cnt);
+		if (err < 0)
+			goto out;
+
+		for (i = 0; i < tmp_cnt; i++) {
+			fprintf(stdout, "%F\n", values[i]);
+		}
+		
+		tmp_size += tmp_cnt * width;
+	}
+
+out:
+	return err;
 }
 
 int main(int argc, char *argv[])
 {
-	int ret = 0, i;
+	int ret = 0;
 	unsigned int cnt = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
 
+	int (*dump_function) (a4l_desc_t *, unsigned char *, int) = dump_text;
+
 	/* Compute arguments */
 	while ((ret = getopt_long(argc,
 				  argv,
-				  "vrd:s:S:c:R:h", insn_read_opts,
+				  "vrd:s:S:c:R:wh", insn_read_opts,
 				  NULL)) >= 0) {
 		switch (ret) {
 		case 'v':
@@ -107,6 +227,10 @@ int main(int argc, char *argv[])
 			break;
 		case 'R':
 			idx_rng = strtoul(optarg, NULL, 0);
+			dump_function = dump_converted;
+			break;
+		case 'w':
+			dump_function = dump_raw;
 			break;
 		case 'h':
 		default:
@@ -115,6 +239,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (isatty(STDOUT_FILENO) && dump_function == dump_raw) {
+		fprintf(stderr, 
+			"insn_read: cannot dump raw data on a terminal\n\n");
+		return -EINVAL;
+	}
+	
 	if (real_time != 0) {
 
 		if (verbose != 0)
@@ -186,9 +316,8 @@ int main(int argc, char *argv[])
 
 	if (idx_rng >= 0) {
 
-		ret =
-			a4l_get_rnginfo(&dsc, idx_subd, idx_chan, idx_rng,
-					&rnginfo);
+		ret = a4l_get_rnginfo(&dsc, 
+				      idx_subd, idx_chan, idx_rng, &rnginfo);
 		if (ret < 0) {
 			fprintf(stderr,
 				"insn_read: failed to recover range descriptor\n");
@@ -212,8 +341,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set the data size to read */
-	scan_size *= (chinfo->nb_bits % 8 == 0) ? 
-		chinfo->nb_bits / 8 : (chinfo->nb_bits / 8) + 1;
+	scan_size *= a4l_sizeof_chan(chinfo);
 
 	if (verbose != 0) {
 		printf("insn_read: channel width is %u bits\n",
@@ -238,40 +366,16 @@ int main(int argc, char *argv[])
 
 		/* Perform the synchronous read */
 		ret = a4l_sync_read(&dsc,
-				    idx_subd, 0, CHAN(idx_chan), buf, tmp);
+				    idx_subd, CHAN(idx_chan), 0, buf, tmp);
 
 		if (ret < 0)
 			goto out_insn_read;
 
-		/* If a range was selected, converts the samples */
-		if (idx_rng >= 0) {
-			if (a4l_from_phys(chinfo, rnginfo, dbuf, buf, ret) < 0) {
-				fprintf(stderr,
-					"insn_read: data conversion failed (ret=%d)\n",
-					ret);
-				goto out_insn_read;
-			}
-		}
-
-		/* Dump the results */
-		for (i = 0; i < ret; i++) {
-
-			/* Print the output byte by byte */
-			printf("0x%x ", buf[i]);
-
-			/* Unlike a4l_async_read(), a4l_sync_read() cannot
-			   retrieve data which are not aligned with the channel
-			   width; so, it is easier to properly print data.
-			*/
-			if ((i + 1) % (chinfo->nb_bits / 8) == 0) {
-
-				/* If a range was selected, prints the converted value */
-				if (idx_rng >= 0)
-					printf("\t-> %F",
-					       dbuf[i / (chinfo->nb_bits / 8)]);
-
-				printf("\n");
-			}
+		/* Dump the read data */
+		tmp = dump_function(&dsc, buf, ret);
+		if (tmp < 0) {
+			ret = tmp;
+			goto out_insn_read;
 		}
 
 		/* Update the count */
