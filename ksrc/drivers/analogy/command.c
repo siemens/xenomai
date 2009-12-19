@@ -98,8 +98,8 @@ int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 
 	if (desc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_check_cmddesc: "
-			  "subdevice index out of range (%u >= %u)\n",
-			  desc->idx_subd, dev->transfer.nb_subd);
+			  "subdevice index out of range (idx=%u)\n",
+			  desc->idx_subd);
 		return -EINVAL;
 	}
 
