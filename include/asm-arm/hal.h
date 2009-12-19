@@ -70,6 +70,9 @@
 #elif defined(CONFIG_ARCH_SA1100)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
+#elif defined(CONFIG_PLAT_ORION)
+#define RTHAL_TIMER_DEVICE	"orion_tick"
+#define RTHAL_CLOCK_DEVICE	"orion_clocksource"
 #else
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
