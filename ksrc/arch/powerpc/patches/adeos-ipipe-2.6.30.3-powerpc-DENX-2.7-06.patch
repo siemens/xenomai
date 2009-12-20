@@ -572,7 +572,7 @@ index b7e034b..d769f6d 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..5fdbbb8
+index 0000000..71327e4
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,271 @@
@@ -623,10 +623,10 @@ index 0000000..5fdbbb8
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.7-04"
++#define IPIPE_ARCH_STRING	"2.7-06"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	6
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -2303,7 +2303,7 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..304d39b
+index 0000000..6db07d9
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
 @@ -0,0 +1,865 @@
@@ -2472,7 +2472,7 @@ index 0000000..304d39b
 +	if (cpus_empty(cpumask))
 +		return CPU_MASK_NONE;	/* Error -- bad mask value or non-routable IRQ. */
 +
-+	cpumask_copy(&oldmask, &irq_to_desc(irq)->affinity);
++	cpumask_copy(&oldmask, irq_to_desc(irq)->affinity);
 +	irq_to_desc(irq)->chip->set_affinity(irq, &cpumask);
 +
 +	return oldmask;
@@ -7173,7 +7173,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ffaceaa
+index 0000000..aa2e5a0
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1794 @@
@@ -7491,7 +7491,7 @@ index 0000000..ffaceaa
 +
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +	/* This helps catching bad usage from assembly call sites. */
-+	BUG_ON(!__ipipe_root_domain_p);
++	BUG_ON(!__ipipe_root_domain_p && !oops_in_progress);
 +#endif
 +
 +	p = ipipe_root_cpudom_ptr();
@@ -7507,7 +7507,7 @@ index 0000000..ffaceaa
 +void __ipipe_restore_root(unsigned long x)
 +{
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
-+	BUG_ON(!ipipe_root_domain_p);
++	BUG_ON(!ipipe_root_domain_p && !oops_in_progress);
 +#endif
 +
 +	if (x)
@@ -8855,7 +8855,7 @@ index 0000000..ffaceaa
 +
 +	ipipe_context_check_off();
 +	ipipe_trace_panic_freeze();
-+	ipipe_set_printk_sync(__ipipe_current_domain);
++	oops_in_progress = 1;
 +
 +	if (this_domain->priority > border_domain->priority)
 +		printk(KERN_ERR "I-pipe: Detected illicit call from domain "
@@ -11214,7 +11214,7 @@ index cffffad..0a3eac6 100644
   * This function runs timers and the timer-tq in bottom half context.
   */
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index f1ed080..aa45f71 100644
+index f1ed080..28fbd5b 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -28,6 +28,7 @@
@@ -11249,30 +11249,26 @@ index f1ed080..aa45f71 100644
  
  	ret = ftrace_arch_code_modify_post_process();
  	FTRACE_WARN_ON(ret);
-@@ -2189,9 +2199,9 @@ static int ftrace_convert_nops(struct module *mod,
- 	}
+@@ -2190,7 +2200,9 @@ static int ftrace_convert_nops(struct module *mod,
  
  	/* disable interrupts to prevent kstop machine */
--	local_irq_save(flags);
-+	local_irq_save_hw_notrace(flags);
+ 	local_irq_save(flags);
++	local_irq_disable_hw();
  	ftrace_update_code(mod);
--	local_irq_restore(flags);
-+	local_irq_restore_hw_notrace(flags);
++	local_irq_enable_hw();
+ 	local_irq_restore(flags);
  	mutex_unlock(&ftrace_lock);
  
- 	return 0;
-@@ -2216,9 +2226,9 @@ void __init ftrace_init(void)
- 	/* Keep the ftrace pointer to the stub */
+@@ -2217,7 +2229,9 @@ void __init ftrace_init(void)
  	addr = (unsigned long)ftrace_stub;
  
--	local_irq_save(flags);
-+	local_irq_save_hw_notrace(flags);
+ 	local_irq_save(flags);
++	local_irq_disable_hw();
  	ftrace_dyn_arch_init(&addr);
--	local_irq_restore(flags);
-+	local_irq_restore_hw_notrace(flags);
++	local_irq_enable_hw();
+ 	local_irq_restore(flags);
  
  	/* ftrace_dyn_arch_init places the return code in addr */
- 	if (addr)
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
 index 3be4b7c..c970fab 100644
 --- a/lib/Kconfig.debug
