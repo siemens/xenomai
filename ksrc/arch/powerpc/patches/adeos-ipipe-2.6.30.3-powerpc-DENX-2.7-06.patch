@@ -572,7 +572,7 @@ index b7e034b..d769f6d 100644
  #define hard_irq_disable()	local_irq_disable()
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..6d6b831
+index 0000000..71327e4
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,271 @@
@@ -623,10 +623,10 @@ index 0000000..6d6b831
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.7-05"
++#define IPIPE_ARCH_STRING	"2.7-06"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	5
++#define IPIPE_PATCH_NUMBER	6
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -2303,7 +2303,7 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..304d39b
+index 0000000..6db07d9
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
 @@ -0,0 +1,865 @@
@@ -2472,7 +2472,7 @@ index 0000000..304d39b
 +	if (cpus_empty(cpumask))
 +		return CPU_MASK_NONE;	/* Error -- bad mask value or non-routable IRQ. */
 +
-+	cpumask_copy(&oldmask, &irq_to_desc(irq)->affinity);
++	cpumask_copy(&oldmask, irq_to_desc(irq)->affinity);
 +	irq_to_desc(irq)->chip->set_affinity(irq, &cpumask);
 +
 +	return oldmask;
