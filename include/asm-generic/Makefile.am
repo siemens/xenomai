@@ -4,6 +4,7 @@ includesub_HEADERS = \
 	arith.h \
 	features.h \
 	hal.h \
+	pci_ids.h \
 	syscall.h \
 	system.h \
 	wrappers.h

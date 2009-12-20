@@ -1,0 +1,25 @@
+#ifndef _XENO_ASM_GENERIC_PCI_IDS_H
+#define _XENO_ASM_GENERIC_PCI_IDS_H
+
+#include <linux/pci_ids.h>
+
+/* SMI */
+#ifndef PCI_DEVICE_ID_INTEL_ICH7_0
+#define PCI_DEVICE_ID_INTEL_ICH7_0 0x27b8
+#endif
+#ifndef PCI_DEVICE_ID_INTEL_ICH7_1
+#define PCI_DEVICE_ID_INTEL_ICH7_1 0x27b9
+#endif
+#ifndef PCI_DEVICE_ID_INTEL_ICH8_4
+#define PCI_DEVICE_ID_INTEL_ICH8_4 0x2815
+#endif
+
+/* RTCAN */
+#ifndef PCI_VENDOR_ID_ESDGMBH
+#define PCI_VENDOR_ID_ESDGMBH 0x12fe
+#endif
+#ifndef PCI_DEVICE_ID_PLX_9030
+#define PCI_DEVICE_ID_PLX_9030 0x9030
+#endif
+
+#endif /* _XENO_ASM_GENERIC_PCI_IDS_H */
