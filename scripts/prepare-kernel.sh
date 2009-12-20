@@ -403,7 +403,8 @@ else
 fi
 
 asm_ipipe_h=unknown
-if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
+if test -r $linux_tree/arch/$linux_arch/include/asm/ipipe.h \
+   && grep -q IPIPE $linux_tree/arch/$linux_arch/include/asm/ipipe.h; then
    linux_include_asm=arch/$linux_arch/include/asm
    asm_ipipe_h=$linux_tree/$linux_include_asm/ipipe.h
 else
