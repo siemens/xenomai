@@ -29,18 +29,8 @@
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
 #include <linux/reboot.h>
+#include <asm-generic/xenomai/pci_ids.h>
 #include <asm/xenomai/hal.h>
-
-/* DEVICE_IDs needed for 2.4 support */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-#ifndef PCI_DEVICE_ID_INTEL_ICH7_0
-#define PCI_DEVICE_ID_INTEL_ICH7_0 0x27b8
-#define PCI_DEVICE_ID_INTEL_ICH7_1 0x27b9
-#endif
-#ifndef PCI_DEVICE_ID_INTEL_ICH8_4
-#define PCI_DEVICE_ID_INTEL_ICH8_4 0x2815
-#endif
-#endif
 
 static struct pci_device_id rthal_smi_pci_tbl[] = {
 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_0)},
