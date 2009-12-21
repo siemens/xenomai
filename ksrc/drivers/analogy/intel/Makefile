@@ -32,7 +32,9 @@ EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include
 
 include $(TOPDIR)/Rules.make
 
-analogy_8255.o: $(analogy_8255-objs) $(analogy_parport-objs)
-	$(LD) -r -o $@ $(analogy_8255-objs) $(analogy_parport-objs)
+analogy_8255.o: $(analogy_8255-objs)
+	$(LD) -r -o $@ $(analogy_8255-objs)
 
+analogy_parport.o: $(analogy_parport-objs)
+	$(LD) -r -o $@ $(analogy_parport-objs)
 endif
