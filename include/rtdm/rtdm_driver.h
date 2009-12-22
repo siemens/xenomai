@@ -43,6 +43,9 @@
 
 /* debug support */
 #include <nucleus/assert.h>
+#ifdef CONFIG_PCI
+#include <asm-generic/xenomai/pci_ids.h>
+#endif /* CONFIG_PCI */
 
 #ifndef CONFIG_XENO_OPT_DEBUG_RTDM
 #define CONFIG_XENO_OPT_DEBUG_RTDM	0
