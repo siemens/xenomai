@@ -23,7 +23,6 @@
 #include <linux/delay.h>
 #include <linux/pci.h>
 #include <asm/io.h>
-#include <asm-generic/xenomai/pci_ids.h>
 
 #include <rtdm/rtdm_driver.h>
 

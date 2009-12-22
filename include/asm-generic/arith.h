@@ -275,9 +275,13 @@ static inline void xnarch_init_u32frac(rthal_u32frac_t *const f,
 				       const unsigned m,
 				       const unsigned d)
 {
+	/* Avoid clever compiler optimizations to occur when d is
+	   known at compile-time. The performance of this function is
+	   not critical since it is only called at init time. */
+	volatile unsigned vol_d = d;
 	f->integ = m / d;
-	f->frac = __rthal_generic_div96by32(__rthal_u64fromu32(m % d, 0),
-					    0, d, NULL);
+	f->frac = __rthal_generic_div96by32
+		(__rthal_u64fromu32(m % d, 0), 0, vol_d, NULL);
 }
 
 #ifndef rthal_nodiv_imuldiv
@@ -354,12 +358,16 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 					 unsigned *m_out,
 					 unsigned *s_out)
 {
+	/* Avoid clever compiler optimizations to occur when d is
+	   known at compile-time. The performance of this function is
+	   not critical since it is only called at init time. */
+	volatile unsigned vol_d = d_in;
 	unsigned long long mult;
 
 	*s_out = 31;
 	while (1) {
 		mult = ((unsigned long long)m_in) << *s_out;
-		do_div(mult, d_in);
+		do_div(mult, vol_d);
 		if (mult <= 0x7FFFFFFF)
 			break;
 		(*s_out)--;
