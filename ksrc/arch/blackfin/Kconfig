@@ -13,6 +13,7 @@ menu "NMI watchdog"
 config XENO_HW_NMI_DEBUG_LATENCY
         bool "Enable NMI watchdog"
         default n
+	select DEBUG_ICACHE_CHECK
         help
         Enabling this option allows the NMI watchdog to be used in order
         to debug abnormal (timer) interrupt latencies.

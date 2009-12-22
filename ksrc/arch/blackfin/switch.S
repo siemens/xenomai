@@ -103,6 +103,8 @@ ENTRY(_rthal_defer_switch_p)
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
+#include <asm/context.S>
+
 ENTRY(_rthal_nmi_handler)
 	SAVE_ALL_SYS
 	r0 = sp;
