@@ -428,7 +428,7 @@ index 0000000..11e5388
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..8b47644
+index 0000000..a7ec9df
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,273 @@
@@ -463,10 +463,10 @@ index 0000000..8b47644
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.14-03"
++#define IPIPE_ARCH_STRING	"1.14-04"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	14
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -1915,10 +1915,10 @@ index 87ab4e1..f72280f 100644
   * These are the registers used in the syscall handler, and allow us to
 diff --git a/arch/arm/kernel/fcse.c b/arch/arm/kernel/fcse.c
 new file mode 100644
-index 0000000..119758e
+index 0000000..22f5669
 --- /dev/null
 +++ b/arch/arm/kernel/fcse.c
-@@ -0,0 +1,171 @@
+@@ -0,0 +1,172 @@
 +#include <linux/bitops.h>
 +#include <linux/memory.h>
 +#include <linux/spinlock.h>
@@ -2057,6 +2057,7 @@ index 0000000..119758e
 +
 +	return res;
 +}
++EXPORT_SYMBOL_GPL(fcse_needs_flush);
 +
 +/* Called with mm->mmap_sem write-locked. */
 +void fcse_relocate_mm_to_null_pid(struct mm_struct *mm)
@@ -2092,10 +2093,10 @@ index 0000000..119758e
 +#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..bcf6f33
+index 0000000..07d89db
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,512 @@
+@@ -0,0 +1,517 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -2606,8 +2607,13 @@ index 0000000..bcf6f33
 +#endif
 +EXPORT_SYMBOL_GPL(__check_kvm_seq);
 +#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
-+EXPORT_SYMBOL(tasklist_lock);
++EXPORT_SYMBOL_GPL(tasklist_lock);
 +#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
++
++#ifdef CONFIG_CPU_HAS_ASID
++EXPORT_SYMBOL_GPL(__new_context);
++EXPORT_SYMBOL_GPL(cpu_last_asid);
++#endif /* CONFIG_CPU_HAS_ASID */
 diff --git a/arch/arm/kernel/irq.c b/arch/arm/kernel/irq.c
 index 6874c7d..ce6bf64 100644
 --- a/arch/arm/kernel/irq.c
@@ -2816,10 +2822,10 @@ index c69ff23..228b8e9 100644
 +endif
 diff --git a/arch/arm/mach-at91/at91_ipipe_time.c b/arch/arm/mach-at91/at91_ipipe_time.c
 new file mode 100644
-index 0000000..bc1386c
+index 0000000..1621ffc
 --- /dev/null
 +++ b/arch/arm/mach-at91/at91_ipipe_time.c
-@@ -0,0 +1,416 @@
+@@ -0,0 +1,418 @@
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
@@ -2923,7 +2929,7 @@ index 0000000..bc1386c
 +		unsigned long high;
 +	};
 +#endif /* __LITTLE_ENDIAN */
-+	cycle_t full;
++	unsigned long long full;
 +};
 +static unsigned max_delta_ticks, min_delta_ticks;
 +static struct clock_event_device clkevt;
@@ -3156,8 +3162,8 @@ index 0000000..bc1386c
 +
 +void __init at91_timer_init(void)
 +{
-+	unsigned char tc_divisors[] = { 2, 8, 32, 128, };
-+	unsigned master_freq, divided_freq = AT91_SLOW_CLOCK;
++	unsigned char tc_divisors[] = { 2, 8, 32, 128, 0, };
++	unsigned master_freq, divisor = 0, divided_freq = 0;
 +	unsigned long long wrap_ns;
 +
 +	/* Disable (boot loader) timer interrupts. */
@@ -3176,8 +3182,10 @@ index 0000000..bc1386c
 +	master_freq = clk_get_rate(clk_get(NULL, "mck"));
 +	/* Find the first frequency above 1 MHz */
 +	for (tc_timer_clock = ARRAY_SIZE(tc_divisors) - 1;
-+		tc_timer_clock >= 0; tc_timer_clock--) {
-+		divided_freq = master_freq / tc_divisors[tc_timer_clock];
++	     tc_timer_clock >= 0; tc_timer_clock--) {
++		divisor = tc_divisors[tc_timer_clock];
++		divided_freq = (divisor
++				? master_freq / divisor : AT91_SLOW_CLOCK);
 +		if (divided_freq > 1000000)
 +			break;
 +	}
@@ -3190,7 +3198,7 @@ index 0000000..bc1386c
 +		       " frequency greater than 1MHz\n");
 +
 +	printk(KERN_INFO "AT91 I-pipe timer: div: %u, freq: %u.%06u MHz, wrap: "
-+	       "%u.%06u ms\n", master_freq / divided_freq,
++	       "%u.%06u ms\n", divisor,
 +	       divided_freq / 1000000, divided_freq % 1000000,
 +	       (unsigned) wrap_ns / 1000000, (unsigned) wrap_ns % 1000000);
 +
@@ -7810,6 +7818,35 @@ index 895823d..ec10cab 100644
  	task_unlock(tsk);
  	arch_pick_mmap_layout(mm);
  	if (old_mm) {
+diff --git a/include/asm-generic/bitops/atomic.h b/include/asm-generic/bitops/atomic.h
+index 4657f3e..4b23b45 100644
+--- a/include/asm-generic/bitops/atomic.h
++++ b/include/asm-generic/bitops/atomic.h
+@@ -20,20 +20,20 @@ extern raw_spinlock_t __atomic_hash[ATOMIC_HASH_SIZE] __lock_aligned;
+  * this is the substitute */
+ #define _atomic_spin_lock_irqsave(l,f) do {	\
+ 	raw_spinlock_t *s = ATOMIC_HASH(l);	\
+-	local_irq_save(f);			\
++	local_irq_save_hw(f);			\
+ 	__raw_spin_lock(s);			\
+ } while(0)
+ 
+ #define _atomic_spin_unlock_irqrestore(l,f) do {	\
+ 	raw_spinlock_t *s = ATOMIC_HASH(l);		\
+ 	__raw_spin_unlock(s);				\
+-	local_irq_restore(f);				\
++	local_irq_restore_hw(f);			\
+ } while(0)
+ 
+ 
+ #else
+-#  define _atomic_spin_lock_irqsave(l,f) do { local_irq_save(f); } while (0)
+-#  define _atomic_spin_unlock_irqrestore(l,f) do { local_irq_restore(f); } while (0)
++#  define _atomic_spin_lock_irqsave(l,f) do { local_irq_save_hw(f); } while (0)
++#  define _atomic_spin_unlock_irqrestore(l,f) do { local_irq_restore_hw(f); } while (0)
+ #endif
+ 
+ /*
 diff --git a/include/asm-generic/cmpxchg-local.h b/include/asm-generic/cmpxchg-local.h
 index b2ba2fc..ed01ab9 100644
 --- a/include/asm-generic/cmpxchg-local.h
@@ -8624,10 +8661,10 @@ index 0000000..8983e2c
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..2960ecf
+index 0000000..6ade9d6
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,102 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -8689,8 +8726,21 @@ index 0000000..2960ecf
 +
 +void __ipipe_restore_root(unsigned long x);
 +
-+#define ipipe_preempt_disable(flags)	local_irq_save_hw(flags)
-+#define ipipe_preempt_enable(flags)	local_irq_restore_hw(flags)
++#define ipipe_preempt_disable(flags)		\
++	do {					\
++		local_irq_save_hw(flags);	\
++		if (__ipipe_root_domain_p)	\
++			preempt_disable();	\
++	} while (0)
++#define ipipe_preempt_enable(flags)			\
++	do {						\
++		if (__ipipe_root_domain_p) {		\
++			preempt_enable_no_resched();	\
++			local_irq_restore_hw(flags);	\
++			preempt_check_resched();	\
++		} else					\
++			local_irq_restore_hw(flags);	\
++	} while (0)
 + 
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +void ipipe_check_context(struct ipipe_domain *border_ipd);
