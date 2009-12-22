@@ -2,7 +2,8 @@ testdir = $(exec_prefix)/share/xenomai/testsuite/unit
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-bin_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native
+bin_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native \
+               xnvdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
@@ -50,6 +51,18 @@ mutex_torture_native_CPPFLAGS = \
 mutex_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
 
 mutex_torture_native_LDADD = \
+	../../skins/native/libnative.la \
+	-lpthread -lm
+
+xnvdso_SOURCES = xnvdso.c
+
+xnvdso_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
+
+xnvdso_LDFLAGS = @XENO_USER_LDFLAGS@
+
+xnvdso_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
 
