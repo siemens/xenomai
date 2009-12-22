@@ -73,13 +73,15 @@
 #define __psos_as_send      45
 /* Xenomai extension: get raw count of jiffies */
 #define __psos_tm_getc      46
+/* Xenomai internal: get hidden pthread_t identifier. */
+#define __psos_t_getpth     47
 
 struct psos_arg_bulk {
-
     u_long a1;
     u_long a2;
     u_long a3;
     u_long a4;
+    u_long a5;
 };
 
 #ifdef __KERNEL__

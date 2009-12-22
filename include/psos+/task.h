@@ -64,6 +64,10 @@ typedef struct psostask {
 
     } waitargs;
 
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+	u_long pthread; /* hidden pthread_t identifier. */
+#endif
+
 } psostask_t;
 
 static inline psostask_t *thread2psostask (xnthread_t *t)

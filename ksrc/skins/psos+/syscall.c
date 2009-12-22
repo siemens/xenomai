@@ -68,6 +68,7 @@ static psostask_t *__psos_task_current(struct task_struct *p)
  * a2: u_long prio;
  * a3: u_long flags;
  * a4: unsigned long *mode;
+ * a5: unsigned long ptid;
  */
 
 static int __t_create(struct pt_regs *regs)
@@ -108,6 +109,7 @@ static int __t_create(struct pt_regs *regs)
 		 * about the new thread id, so we can manipulate its
 		 * TCB pointer freely. */
 		tid = xnthread_handle(&task->threadbase);
+		task->pthread = bulk.a5; /* hidden pthread_t identifier. */
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &tid,
 					   sizeof(tid)))
 			return -EFAULT;
@@ -1340,6 +1342,41 @@ static int __as_send(struct pt_regs *regs)
 	return as_send((u_long)task, signals);
 }
 
+
+/*
+ * int __t_getpth(u_long tid, u_long *pthread)
+ */
+static int __t_getpth(struct pt_regs *regs)
+{
+	u_long ret = SUCCESS, pthread;
+	xnhandle_t handle;
+	psostask_t *task;
+	spl_t s;
+
+	handle = __xn_reg_arg1(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (handle)
+		task = __psos_task_lookup(handle);
+	else
+		task = __psos_task_current(current);
+
+	if (task == NULL)
+		ret = ERR_OBJID;
+	else
+		pthread = task->pthread; /* hidden pthread_t identifier. */
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (ret == SUCCESS &&
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   &pthread, sizeof(pthread)))
+			ret = -EFAULT;
+
+	return ret;
+}
+
 static void *psos_shadow_eventcb(int event, void *data)
 {
 	struct psos_resource_holder *rh;
@@ -1422,6 +1459,7 @@ static xnsysent_t __systab[] = {
 	[__psos_tm_signal] = {&__tm_signal, __xn_exec_primary},
 	[__psos_as_send] = {&__as_send, __xn_exec_conforming},
 	[__psos_tm_getc] = {&__tm_getc, __xn_exec_any},
+	[__psos_t_getpth] = {&__t_getpth, __xn_exec_any},
 };
 
 extern xntbase_t *psos_tbase;

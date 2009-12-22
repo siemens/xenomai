@@ -72,6 +72,7 @@ static void *psos_task_trampoline(void *cookie)
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
 	bulk.a4 = (u_long)xeno_init_current_mode();
+	bulk.a5 = (u_long)pthread_self();
 
 	if (!bulk.a4) {
 		err = -ENOMEM;
@@ -170,20 +171,23 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 		u_long flags,
 		u_long *tid_r)
 {
-	int err;
+	struct psos_arg_bulk bulk;
+	int ret;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	sigshadow_install_once();
 
-	err = XENOMAI_SKINCALL5(__psos_muxid,
-				__psos_t_create,
-				name, prio, flags,
-				tid_r, NULL);
+	bulk.a1 = (u_long)name;
+	bulk.a2 = (u_long)prio;
+	bulk.a3 = (u_long)flags;
+	bulk.a4 = (u_long)tid_r;
+	bulk.a5 = (u_long)pthread_self();
 
-	if (!err)
+	ret = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_create, &bulk, NULL);
+	if (!ret)
 		xeno_set_current();
 
-	return err;
+	return ret;
 }
 
 u_long t_start(u_long tid,
@@ -200,7 +204,36 @@ u_long t_start(u_long tid,
 
 u_long t_delete(u_long tid)
 {
-	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
+	u_long ptid;
+	long err;
+
+	if (tid == 0)
+		goto self_delete;
+
+	err = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_getpth, tid, &ptid);
+	if (err)
+		return err;
+
+	if ((pthread_t)ptid == pthread_self())
+		goto self_delete;
+
+	err = pthread_cancel((pthread_t)ptid);
+	if (err)
+		return -err; /* differentiate from pSOS codes */
+
+	err = XENOMAI_SKINCALL1(__psos_muxid, __psos_t_delete, tid);
+	if (err == ERR_OBJID)
+		return SUCCESS;
+
+	return err;
+
+self_delete:
+
+	 /* Silently migrate to avoid raising SIGXCPU. */
+	XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_LINUX_DOMAIN);
+	pthread_exit(NULL);
+
+	return SUCCESS; /* not reached */
 }
 
 u_long t_suspend(u_long tid)
