@@ -35,20 +35,24 @@
 
 int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 {
-	unsigned long long ns;
-	unsigned long ns2;
+	nanosecs_abs_t ns;
+	uint32_t ns2;
+
+	uint32_t *data = (uint32_t *)dsc->data;
 
 	/* Basic checkings */
-	if (dsc->data_size != 2) {
+	if (dsc->data_size != 2 * sizeof(uint32_t)) {
 		__a4l_err("a4l_do_insn_gettime: data size should be 2\n");
 		return -EINVAL;
 	}
 
+	/* Get a timestamp */
 	ns = a4l_get_time();
 
+	/* Perform the conversion */
 	ns2 = do_div(ns, 1000000000);
-	dsc->data[0] = (lsampl_t) ns;
-	dsc->data[1] = (lsampl_t) ns2 / 1000;
+	data[0] = (uint32_t) ns;
+	data[1] = (uint32_t) ns2 / 1000;
 
 	return 0;
 }

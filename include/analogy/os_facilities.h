@@ -123,13 +123,13 @@ static inline void a4l_udelay(unsigned int us)
 	rtdm_task_busy_sleep(((nanosecs_rel_t) us) * 1000);
 }
 
-static inline unsigned long long a4l_get_rawtime(void)
+static inline nanosecs_abs_t a4l_get_rawtime(void)
 {
 	return rtdm_clock_read();
 }
 
 /* Function which gives absolute time */
-unsigned long long a4l_get_time(void);
+nanosecs_abs_t a4l_get_time(void);
 
 /* Function for setting up the absolute time recovery */
 void a4l_init_time(void);

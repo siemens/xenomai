@@ -31,20 +31,20 @@
 
 /* --- Time section --- */
 
-static unsigned long long a4l_clkofs;
+static nanosecs_abs_t a4l_clkofs;
 
 void a4l_init_time(void)
 {
-	unsigned long long t1, t2;
+	nanosecs_abs_t t1, t2;
 	struct timeval tv;
 	t1 = a4l_get_rawtime();
 	do_gettimeofday(&tv);
-	t2 = 1000000000 * ((unsigned long long)tv.tv_sec) +
-		1000000 * ((unsigned long long)tv.tv_usec);
+	t2 = 1000000000 * ((nanosecs_abs_t)tv.tv_sec) +
+		1000000 * ((nanosecs_abs_t)tv.tv_usec);
 	a4l_clkofs = t2 - t1;
 }
 
-unsigned long long a4l_get_time(void)
+nanosecs_abs_t a4l_get_time(void)
 {
 	return a4l_clkofs + a4l_get_rawtime();
 }
