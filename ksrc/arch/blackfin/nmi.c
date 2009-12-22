@@ -29,7 +29,6 @@
 #include <linux/module.h>
 #include <asm/system.h>
 #include <asm/atomic.h>
-#include <asm/irqchip.h>
 #include <asm/io.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>

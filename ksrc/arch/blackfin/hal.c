@@ -198,6 +198,10 @@ int rthal_timer_request(
 
 	rthal_timer_set_oneshot(1);
 
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+	rthal_nmi_init(&rthal_latency_above_max);
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
+
 out:
 	return tickval;
 }
@@ -209,6 +213,9 @@ void rthal_timer_release(int cpu)
 	if (--cpu_timers_requested > 0)
 		return;
 
+#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
+	rthal_nmi_release();
+#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 	rthal_irq_release(RTHAL_TIMER_IRQ);
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
