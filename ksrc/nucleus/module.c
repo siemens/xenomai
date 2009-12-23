@@ -35,6 +35,11 @@
 #endif /* CONFIG_XENO_OPT_PIPE */
 #include <nucleus/select.h>
 #include <asm/xenomai/bits/init.h>
+#ifdef CONFIG_XENO_OPT_PERVASIVE
+#include <nucleus/xnvdso.h>
+#else
+static inline void xnheap_init_vdso(void) { }
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 MODULE_DESCRIPTION("Xenomai nucleus");
 MODULE_AUTHOR("rpm@xenomai.org");
@@ -106,6 +111,8 @@ int __init __xeno_sys_init(void)
 		goto cleanup_arch;
 
 	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
+
+	xnheap_init_vdso();
 #endif
 	
 #ifdef __KERNEL__

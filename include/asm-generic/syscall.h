@@ -53,6 +53,7 @@
 typedef struct xnsysinfo {
 	unsigned long long cpufreq;	/* CPU frequency */
 	unsigned long tickval;		/* Tick duration (ns) */
+	unsigned long xnvdso_off;  	/* Offset of xnvdso in the sem heap */
 } xnsysinfo_t;
 
 #define SIGSHADOW  SIGWINCH

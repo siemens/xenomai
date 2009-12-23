@@ -34,4 +34,5 @@ includesub_HEADERS = \
 	trace.h \
 	types.h \
 	version.h \
-	xenomai.h
+	xenomai.h \
+	xnvdso.h

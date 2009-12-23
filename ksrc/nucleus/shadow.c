@@ -50,6 +50,7 @@
 #include <nucleus/trace.h>
 #include <nucleus/stat.h>
 #include <nucleus/sys_ppd.h>
+#include <nucleus/xnvdso.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
@@ -692,6 +693,24 @@ void xnshadow_clear_sig(xnthread_t *thread, unsigned muxid)
 	thread->u_sigpending &= ~(1 << muxid);
 }
 EXPORT_SYMBOL_GPL(xnshadow_clear_sig);
+
+struct xnvdso *xnvdso;
+EXPORT_SYMBOL_GPL(xnvdso);
+
+/*
+ * We re-use the global semaphore heap to provide a multi-purpose shared
+ * memory area between Xenomai and Linux - for both kernel and userland
+ */
+void __init xnheap_init_vdso(void)
+{
+	xnvdso = (struct xnvdso *)xnheap_alloc(&__xnsys_global_ppd.sem_heap,
+						  sizeof(*xnvdso));
+
+	if (!xnvdso)
+		xnpod_fatal("Xenomai: cannot allocate memory for xnvdso!\n");
+
+	xnvdso->features = XNVDSO_FEATURES;
+}
 
 static inline void handle_rt_signals(xnthread_t *thread,
 				     struct pt_regs *regs,
@@ -1745,6 +1764,9 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 	xnlock_put_irqrestore(&nklock, s);
 
 	info.cpufreq = xnarch_get_cpu_freq();
+
+	info.xnvdso_off =
+	  xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, xnvdso);
 
 	return __xn_safe_copy_to_user((void __user *)infarg, &info, sizeof(info));
 }
