@@ -1007,10 +1007,10 @@ int ni_E_interrupt(unsigned int irq, void *d)
 
 static void ni_ao_fifo_load(a4l_subd_t *subd, int n)
 {
-	int i;
+	a4l_dev_t *dev = subd->dev;
 	sampl_t d;
 	u32 packed_data;
-	int err = 1;
+	int i, err = 1;
 
 	for (i = 0; i < n; i++) {
 		err = a4l_buf_get(subd, &d, sizeof(sampl_t));
@@ -1055,6 +1055,7 @@ static void ni_ao_fifo_load(a4l_subd_t *subd, int n)
  */
 static int ni_ao_fifo_half_empty(a4l_subd_t *subd)
 {
+	a4l_dev_t *dev = subd->dev;
 	int n;
 
 	n = a4l_buf_count(subd);
@@ -1098,6 +1099,7 @@ static int ni_ao_prep_fifo(a4l_subd_t *subd)
 
 static void ni_ai_fifo_read(a4l_dev_t *subd, int n)
 {
+	a4l_dev_t *dev = subd->dev;
 	int i;
 
 	if (boardtype.reg_type == ni_reg_611x) {
