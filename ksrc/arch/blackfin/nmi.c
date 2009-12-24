@@ -72,18 +72,24 @@ void rthal_nmi_release(void)
 	rthal_nmi_emergency = NULL;
 }
 
+#ifdef CONFIG_BF561
+#define write_wdog(reg, val)	bfin_write_WDOGA_##reg(val)
+#else
+#define write_wdog(reg, val)	bfin_write_WDOG_##reg(val)
+#endif
+
 void rthal_nmi_arm(unsigned long delay)
 {
-	bfin_write_WDOG_CTL(0xad0);	/* Disable */
+	write_wdog(CTL, 0xad0);	/* Disable */
 	CSYNC();
-	bfin_write_WDOG_CNT(delay);
-	bfin_write_WDOG_CTL(0x2);	/* Enable, generate NMIs */
+	write_wdog(CNT, delay);
+	write_wdog(CTL, 0x2);	/* Enable, generate NMIs */
 	CSYNC();
 }
 
 void rthal_nmi_disarm(void)
 {
-	bfin_write_WDOG_CTL(0xad0);	/* Disable */
+	write_wdog(CTL, 0xad0);	/* Disable */
 	CSYNC();
 }
 
