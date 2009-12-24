@@ -1560,6 +1560,9 @@ int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 	return 0;
 }
 
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
 static void ni_tio_configure_dma(struct ni_gpct *counter, 
 				 short enable, short read_not_write)
 {
@@ -1954,6 +1957,7 @@ void ni_tio_set_mite_channel(struct ni_gpct *counter,
 	a4l_unlock_irqrestore(&counter->lock, flags);
 }
 
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 static int __init ni_tio_init_module(void)
 {
@@ -1972,15 +1976,21 @@ module_exit(ni_tio_cleanup_module);
 
 EXPORT_SYMBOL_GPL(ni_tio_rinsn);
 EXPORT_SYMBOL_GPL(ni_tio_winsn);
+EXPORT_SYMBOL_GPL(ni_tio_insn_config);
+EXPORT_SYMBOL_GPL(ni_tio_init_counter);
+EXPORT_SYMBOL_GPL(ni_gpct_device_construct);
+EXPORT_SYMBOL_GPL(ni_gpct_device_destroy);
+
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
 EXPORT_SYMBOL_GPL(ni_tio_input_inttrig);
 EXPORT_SYMBOL_GPL(ni_tio_cmd);
 EXPORT_SYMBOL_GPL(ni_tio_cmd_mask);
 EXPORT_SYMBOL_GPL(ni_tio_cmdtest);
 EXPORT_SYMBOL_GPL(ni_tio_cancel);
-EXPORT_SYMBOL_GPL(ni_tio_insn_config);
-EXPORT_SYMBOL_GPL(ni_tio_init_counter);
-EXPORT_SYMBOL_GPL(ni_gpct_device_construct);
-EXPORT_SYMBOL_GPL(ni_gpct_device_destroy);
 EXPORT_SYMBOL_GPL(ni_tio_handle_interrupt);
 EXPORT_SYMBOL_GPL(ni_tio_set_mite_channel);
 EXPORT_SYMBOL_GPL(ni_tio_acknowledge_and_confirm);
+
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */

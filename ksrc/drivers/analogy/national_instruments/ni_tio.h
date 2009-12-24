@@ -1156,16 +1156,11 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_RTSI_OUTPUT_RTSI_BRD(x) (NI_RTSI_OUTPUT_RTSI_BRD_0 + (x))
 
 
-extern a4l_cmd_t ni_tio_cmd_mask;
-
 int ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
 int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn);
-int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum);
-int ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd);
-int ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd);
-int ni_tio_cancel(struct ni_gpct *counter);
 int ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn);
 void ni_tio_init_counter(struct ni_gpct *counter);
+
 struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 	void (*write_register) (struct ni_gpct * counter, unsigned int bits,
 		enum ni_gpct_register reg),
@@ -1173,6 +1168,17 @@ struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 		enum ni_gpct_register reg), enum ni_gpct_variant variant,
 	unsigned int num_counters);
 void ni_gpct_device_destroy(struct ni_gpct_device *counter_dev);
+
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+extern a4l_cmd_t ni_tio_cmd_mask;
+
+int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum);
+int ni_tio_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd);
+int ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd);
+int ni_tio_cancel(struct ni_gpct *counter);
+
 void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev);
 void ni_tio_set_mite_channel(struct ni_gpct *counter, 
 			     struct mite_channel *mite_chan);
@@ -1180,5 +1186,7 @@ void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 				    int *gate_error,
 				    int *tc_error, 
 				    int *perm_stale_data, int *stale_data);
+
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 #endif /* !__ANALOGY_NI_TIO_H__ */

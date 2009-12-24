@@ -198,7 +198,6 @@ a4l_rngdesc_t *ni_range_lkup[] = {
 
 static const int num_adc_stages_611x = 3;
 
-static int ni_ai_drain_dma(a4l_subd_t *subd);
 static void ni_handle_fifo_dregs(a4l_subd_t *subd);
 static void get_last_sample_611x(a4l_subd_t *subd);
 static void get_last_sample_6143(a4l_subd_t *subd);
@@ -260,6 +259,11 @@ static inline void ni_set_bitfield(a4l_dev_t *dev,
 	mmiowb();
 	a4l_unlock_irqrestore(&devpriv->soft_reg_copy_lock, flags);
 }
+
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+static int ni_ai_drain_dma(a4l_subd_t *subd);
 
 static inline void ni_set_ai_dma_channel(a4l_dev_t * dev, int channel)
 {
@@ -395,7 +399,7 @@ static int ni_request_gpct_mite_channel(a4l_dev_t * dev,
 	return 0;
 }
 
-int ni_request_cdo_mite_channel(a4l_dev_t *dev)
+static int ni_request_cdo_mite_channel(a4l_dev_t *dev)
 {
 	unsigned long flags;
 
@@ -479,6 +483,98 @@ void ni_release_cdo_mite_channel(a4l_dev_t *dev)
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
 }
+
+void ni_sync_ai_dma(a4l_subd_t *subd)
+{
+	a4l_dev_t *dev = subd->dev;
+	unsigned long flags;	
+
+	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
+	if (devpriv->ai_mite_chan)
+		mite_sync_input_dma(devpriv->ai_mite_chan, subd);
+	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
+}
+
+void mite_handle_b_linkc(a4l_subd_t *subd)
+{
+	a4l_dev_t *dev = subd->dev;
+	unsigned long flags;
+
+	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
+	if (devpriv->ao_mite_chan)
+		mite_sync_output_dma(devpriv->ao_mite_chan, subd);
+	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
+}
+
+static int ni_ao_wait_for_dma_load(a4l_dev_t *dev)
+{
+	static const int timeout = 10000;
+	int i;
+
+	for (i = 0; i < timeout; i++) {
+		unsigned short b_status;
+
+		b_status = devpriv->stc_readw(dev, AO_Status_1_Register);
+		if (b_status & AO_FIFO_Half_Full_St)
+			break;
+		/* If we poll too often, the pci bus activity seems
+		   to slow the dma transfer down */
+		a4l_udelay(10);
+	}
+
+	if (i == timeout) {
+		a4l_err(dev, 
+			"ni_ao_wait_for_dma_load: "
+			"timed out waiting for dma load");
+		return -EPIPE;
+	}
+
+	return 0;
+}
+
+
+#else /* !CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
+
+static inline int ni_ai_drain_dma(a4l_subd_t *subd)
+{
+	return -ENOTSUPP;	
+}
+
+static inline int ni_request_ai_mite_channel(a4l_dev_t * dev)
+{
+	return -ENOTSUPP;	
+}
+
+static inline int ni_request_ao_mite_channel(a4l_dev_t * dev)
+{
+	return -ENOTSUPP;	
+}
+
+static inline 
+int ni_request_gpct_mite_channel(a4l_dev_t * dev,
+				 unsigned gpct_index, int direction)
+{
+	return -ENOTSUPP;
+}
+
+static inline int ni_request_cdo_mite_channel(a4l_dev_t *dev)
+{
+	return -ENOTSUPP;
+}
+
+#define ni_release_ai_mite_channel(x) do { } while (0)
+#define ni_release_ao_mite_channel(x) do { } while (0)
+#define ni_release_gpct_mite_channel(x) do { } while (0)
+#define ni_release_cdo_mite_channel(x) do { } while (0)
+#define ni_sync_ai_dma(x) do { } while (0)
+#define mite_handle_b_linkc(x) do { } while (0)
+
+static inline int ni_ao_wait_for_dma_load(a4l_dev_t *dev)
+{
+	return -ENOTSUPP;
+}
+
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 /* E-series boards use the second irq signals to generate dma requests
    for their counters */
@@ -586,54 +682,6 @@ static inline void ni_set_bits(a4l_dev_t *dev,
 	ni_set_bitfield(dev, reg, bits, bit_values);
 }
 
-void ni_sync_ai_dma(a4l_subd_t *subd)
-{
-	a4l_dev_t *dev = subd->dev;
-	unsigned long flags;	
-
-	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
-	if (devpriv->ai_mite_chan)
-		mite_sync_input_dma(devpriv->ai_mite_chan, subd);
-	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
-}
-
-void mite_handle_b_linkc(a4l_subd_t *subd)
-{
-	a4l_dev_t *dev = subd->dev;
-	unsigned long flags;
-
-	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
-	if (devpriv->ao_mite_chan)
-		mite_sync_output_dma(devpriv->ao_mite_chan, subd);
-	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
-}
-
-static int ni_ao_wait_for_dma_load(a4l_dev_t *dev)
-{
-	static const int timeout = 10000;
-	int i;
-
-	for (i = 0; i < timeout; i++) {
-		unsigned short b_status;
-
-		b_status = devpriv->stc_readw(dev, AO_Status_1_Register);
-		if (b_status & AO_FIFO_Half_Full_St)
-			break;
-		/* If we poll too often, the pci bus activity seems
-		   to slow the dma transfer down */
-		a4l_udelay(10);
-	}
-
-	if (i == timeout) {
-		a4l_err(dev, 
-			"ni_ao_wait_for_dma_load: "
-			"timed out waiting for dma load");
-		return -EPIPE;
-	}
-
-	return 0;
-}
-
 static void shutdown_ai_command(a4l_subd_t *subd)
 {
 	ni_ai_drain_dma(subd);
@@ -684,8 +732,11 @@ static void ni_event(a4l_subd_t * subd)
 
 static void handle_gpct_interrupt(a4l_dev_t *dev, unsigned short counter_index)
 {
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 	ni_tio_handle_interrupt(devpriv->counter_dev->counters[counter_index],
 				dev);
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 }
 
 #ifdef CONFIG_DEBUG_MIO_COMMON
@@ -970,7 +1021,8 @@ int ni_E_interrupt(unsigned int irq, void *d)
 	a_status = devpriv->stc_readw(dev, AI_Status_1_Register);
 	b_status = devpriv->stc_readw(dev, AO_Status_1_Register);
 	if (mite) {
-
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
  		a4l_lock(&devpriv->mite_channel_lock);
 		if (devpriv->ai_mite_chan) {
 			ai_mite_status = mite_get_status(devpriv->ai_mite_chan);
@@ -987,6 +1039,7 @@ int ni_E_interrupt(unsigned int irq, void *d)
 				       MITE_CHOR(devpriv->ao_mite_chan->channel));
 		}
 		a4l_unlock(&devpriv->mite_channel_lock);
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 	}
 	ack_a_interrupt(dev, a_status);
 	ack_b_interrupt(dev, b_status);
@@ -1097,7 +1150,7 @@ static int ni_ao_prep_fifo(a4l_subd_t *subd)
 	return n;
 }
 
-static void ni_ai_fifo_read(a4l_dev_t *subd, int n)
+static void ni_ai_fifo_read(a4l_subd_t *subd, int n)
 {
 	a4l_dev_t *dev = subd->dev;
 	int i;
@@ -1161,6 +1214,7 @@ static void ni_ai_fifo_read(a4l_dev_t *subd, int n)
 
 static void ni_handle_fifo_half_full(a4l_subd_t *subd)
 {
+	a4l_dev_t *dev = subd->dev;
 	ni_ai_fifo_read(subd, boardtype.ai_fifo_depth / 2);
 }
 
@@ -3272,6 +3326,8 @@ int ni_m_series_dio_insn_bits_32(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
 a4l_cmd_t mio_dio_cmd_mask = {
 	.idx_subd = 0,
@@ -3416,8 +3472,12 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	return 0;
 }
 
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
+
 static void handle_cdio_interrupt(a4l_dev_t *dev)
 {
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 	unsigned cdio_status;
 	unsigned long flags;
 	a4l_subd_t *subd = a4l_get_subd(dev, NI_DIO_SUBDEV);
@@ -3449,6 +3509,7 @@ static void handle_cdio_interrupt(a4l_dev_t *dev)
 			  M_Offset_CDIO_Command);
 	}
 	a4l_buf_evt(subd, 0);
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 }
 
 static int ni_serial_hw_readwrite8(a4l_dev_t * dev,
@@ -4363,10 +4424,11 @@ static int ni_gpct_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return ni_tio_winsn(counter, insn);
 }
 
-static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
-{
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+{
 	int retval;
 	a4l_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
@@ -4385,10 +4447,6 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	retval = ni_tio_cmd(counter, cmd);
 
 	return retval;
-
-#else /* !CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
-	return -ENOTSUPP;
-#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 }
 
 static int ni_gpct_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
@@ -4408,6 +4466,9 @@ static int ni_gpct_cancel(a4l_subd_t *subd)
 	ni_release_gpct_mite_channel(dev, counter->counter_index);
 	return retval;
 }
+
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
+
 
 /*
  *
@@ -4929,10 +4990,15 @@ int ni_E_init(a4l_dev_t *dev)
 		else
 			subd->insn_bits = ni_m_series_dio_insn_bits_32;
 		subd->insn_config = ni_m_series_dio_insn_config;
+
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+		subd->flags |= A4L_SUBD_CMD;
 		subd->do_cmd = ni_cdio_cmd;
 		subd->do_cmdtest = ni_cdio_cmdtest;
 		subd->cmd_mask = &mio_dio_cmd_mask;
 		subd->cancel = ni_cdio_cancel;
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 		ni_writel(CDO_Reset_Bit | CDI_Reset_Bit, M_Offset_CDIO_Command);
 		ni_writel(devpriv->io_bits, M_Offset_DIO_Direction);
@@ -5160,8 +5226,6 @@ int ni_E_init(a4l_dev_t *dev)
 
 		subd->flags = A4L_SUBD_COUNTER;
 
-		subd->flags |= A4L_SUBD_CMD;
-
 		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
 					  sizeof(a4l_chan_t), GFP_KERNEL);	
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
@@ -5176,10 +5240,15 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->insn_read = ni_gpct_insn_read;
 		subd->insn_write = ni_gpct_insn_write;
 		subd->insn_config = ni_gpct_insn_config;
+
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+		subd->flags |= A4L_SUBD_CMD;		
+		subd->cmd_mask = &ni_tio_cmd_mask;
 		subd->do_cmd = ni_gpct_cmd;
 		subd->do_cmdtest = ni_gpct_cmdtest;
-		subd->cmd_mask = &ni_tio_cmd_mask;
 		subd->cancel = ni_gpct_cancel;
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 		counter = (struct ni_gpct *)subd->priv;
 		a4l_lock_init(&counter->lock);
