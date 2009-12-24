@@ -5340,14 +5340,14 @@ int ni_E_init(a4l_dev_t *dev)
 MODULE_DESCRIPTION("Analogy support for NI DAQ-STC based boards");
 MODULE_LICENSE("GPL");
 
-EXPORT_SYMBOL(range_ni_E_ai);
-EXPORT_SYMBOL(range_ni_E_ai_limited);
-EXPORT_SYMBOL(range_ni_E_ai_limited14);
-EXPORT_SYMBOL(range_ni_E_ai_bipolar4);
-EXPORT_SYMBOL(range_ni_E_ai_611x);
-EXPORT_SYMBOL(range_ni_M_ai_622x);
-EXPORT_SYMBOL(range_ni_M_ai_628x);
-EXPORT_SYMBOL(range_ni_S_ai_6143);
-EXPORT_SYMBOL(range_ni_E_ao_ext);
-EXPORT_SYMBOL(ni_E_interrupt);
-EXPORT_SYMBOL(ni_E_init);
+EXPORT_SYMBOL_GPL(range_ni_E_ai);
+EXPORT_SYMBOL_GPL(range_ni_E_ai_limited);
+EXPORT_SYMBOL_GPL(range_ni_E_ai_limited14);
+EXPORT_SYMBOL_GPL(range_ni_E_ai_bipolar4);
+EXPORT_SYMBOL_GPL(range_ni_E_ai_611x);
+EXPORT_SYMBOL_GPL(range_ni_M_ai_622x);
+EXPORT_SYMBOL_GPL(range_ni_M_ai_628x);
+EXPORT_SYMBOL_GPL(range_ni_S_ai_6143);
+EXPORT_SYMBOL_GPL(range_ni_E_ao_ext);
+EXPORT_SYMBOL_GPL(ni_E_interrupt);
+EXPORT_SYMBOL_GPL(ni_E_init);

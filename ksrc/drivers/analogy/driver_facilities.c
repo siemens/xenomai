@@ -78,7 +78,7 @@
  *
  */
 int a4l_register_drv(a4l_drv_t * drv);
-EXPORT_SYMBOL(a4l_register_drv);
+EXPORT_SYMBOL_GPL(a4l_register_drv);
 
 /**
  * @brief Unregister an Analogy driver
@@ -92,7 +92,7 @@ EXPORT_SYMBOL(a4l_register_drv);
  *
  */
 int a4l_unregister_drv(a4l_drv_t * drv);
-EXPORT_SYMBOL(a4l_unregister_drv);
+EXPORT_SYMBOL_GPL(a4l_unregister_drv);
 
 /** @} */
 
@@ -134,12 +134,12 @@ EXPORT_SYMBOL(a4l_unregister_drv);
  * @{
  */
 
-EXPORT_SYMBOL(range_bipolar10);
-EXPORT_SYMBOL(range_bipolar5);
-EXPORT_SYMBOL(range_unipolar10);
-EXPORT_SYMBOL(range_unipolar5);
-EXPORT_SYMBOL(range_unknown);
-EXPORT_SYMBOL(range_fake);
+EXPORT_SYMBOL_GPL(range_bipolar10);
+EXPORT_SYMBOL_GPL(range_bipolar5);
+EXPORT_SYMBOL_GPL(range_unipolar10);
+EXPORT_SYMBOL_GPL(range_unipolar5);
+EXPORT_SYMBOL_GPL(range_unknown);
+EXPORT_SYMBOL_GPL(range_fake);
 
 /**
  * @brief Allocate a subdevice descriptor
@@ -156,7 +156,7 @@ EXPORT_SYMBOL(range_fake);
  */
 a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
 				  void (*setup)(a4l_subd_t *));
-EXPORT_SYMBOL(a4l_alloc_subd);
+EXPORT_SYMBOL_GPL(a4l_alloc_subd);
 
 /**
  * @brief Add a subdevice to the driver descriptor
@@ -173,7 +173,7 @@ EXPORT_SYMBOL(a4l_alloc_subd);
  *
  */
 int a4l_add_subd(a4l_dev_t *dev, a4l_subd_t *subd);
-EXPORT_SYMBOL(a4l_add_subd);
+EXPORT_SYMBOL_GPL(a4l_add_subd);
 
 /**
  * @brief Get a pointer to the subdevice descriptor referenced by its
@@ -192,7 +192,7 @@ EXPORT_SYMBOL(a4l_add_subd);
  *
  */
 a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx);
-EXPORT_SYMBOL(a4l_get_subd);
+EXPORT_SYMBOL_GPL(a4l_get_subd);
 
 /** @} */
 
@@ -273,7 +273,7 @@ EXPORT_SYMBOL(a4l_get_subd);
  *
  */
 int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_prepare_absput);
+EXPORT_SYMBOL_GPL(a4l_buf_prepare_absput);
 
 /**
  * @brief Set the absolute count of data which was sent from the
@@ -298,7 +298,7 @@ EXPORT_SYMBOL(a4l_buf_prepare_absput);
  *
  */
 int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_commit_absput);
+EXPORT_SYMBOL_GPL(a4l_buf_commit_absput);
 
 /**
  * @brief Set the count of data which is to be sent to the buffer at
@@ -320,7 +320,7 @@ EXPORT_SYMBOL(a4l_buf_commit_absput);
  *
  */
 int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_prepare_put);
+EXPORT_SYMBOL_GPL(a4l_buf_prepare_put);
 
 /**
  * @brief Set the count of data sent to the buffer during the last
@@ -342,7 +342,7 @@ EXPORT_SYMBOL(a4l_buf_prepare_put);
  *
  */
 int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_commit_put);
+EXPORT_SYMBOL_GPL(a4l_buf_commit_put);
 
 /**
  * @brief Copy some data from the device driver to the buffer
@@ -360,7 +360,7 @@ EXPORT_SYMBOL(a4l_buf_commit_put);
  *
  */
 int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_put);
+EXPORT_SYMBOL_GPL(a4l_buf_put);
 
 /**
  * @brief Update the absolute count of data sent from the buffer to
@@ -385,7 +385,7 @@ EXPORT_SYMBOL(a4l_buf_put);
  *
  */
 int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_prepare_absget);
+EXPORT_SYMBOL_GPL(a4l_buf_prepare_absget);
 
 /**
  * @brief Set the absolute count of data which was sent from the
@@ -410,7 +410,7 @@ EXPORT_SYMBOL(a4l_buf_prepare_absget);
  *
  */
 int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_commit_absget);
+EXPORT_SYMBOL_GPL(a4l_buf_commit_absget);
 
 /**
  * @brief Set the count of data which is to be sent from the buffer to
@@ -432,7 +432,7 @@ EXPORT_SYMBOL(a4l_buf_commit_absget);
  *
  */
 int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_prepare_get);
+EXPORT_SYMBOL_GPL(a4l_buf_prepare_get);
 
 /**
  * @brief Set the count of data sent from the buffer to the device
@@ -454,7 +454,7 @@ EXPORT_SYMBOL(a4l_buf_prepare_get);
  *
  */
 int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_commit_get);
+EXPORT_SYMBOL_GPL(a4l_buf_commit_get);
 
 /**
  * @brief Copy some data from the buffer to the device driver
@@ -473,7 +473,7 @@ EXPORT_SYMBOL(a4l_buf_commit_get);
  *
  */
 int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count);
-EXPORT_SYMBOL(a4l_buf_get);
+EXPORT_SYMBOL_GPL(a4l_buf_get);
 
 /**
  * @brief Signal some event(s) to a user-space program involved in
@@ -496,7 +496,7 @@ EXPORT_SYMBOL(a4l_buf_get);
  *
  */
 int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts);
-EXPORT_SYMBOL(a4l_buf_evt);
+EXPORT_SYMBOL_GPL(a4l_buf_evt);
 
 /**
  * @brief Get the data amount available in the Analogy buffer 
@@ -507,7 +507,7 @@ EXPORT_SYMBOL(a4l_buf_evt);
  *
  */
 unsigned long a4l_buf_count(a4l_subd_t *subd);
-EXPORT_SYMBOL(a4l_buf_count);
+EXPORT_SYMBOL_GPL(a4l_buf_count);
 
 /**
  * @brief Get the current Analogy command descriptor
@@ -518,7 +518,7 @@ EXPORT_SYMBOL(a4l_buf_count);
  *
  */
 a4l_cmd_t *a4l_get_cmd(a4l_subd_t * subd);
-EXPORT_SYMBOL(a4l_get_cmd);
+EXPORT_SYMBOL_GPL(a4l_get_cmd);
 
 
 /**
@@ -530,7 +530,7 @@ EXPORT_SYMBOL(a4l_get_cmd);
  *
  */
 int a4l_get_chan(a4l_subd_t *subd);
-EXPORT_SYMBOL(a4l_get_chan);
+EXPORT_SYMBOL_GPL(a4l_get_chan);
 
 /** @} */
 
@@ -552,7 +552,7 @@ EXPORT_SYMBOL(a4l_get_chan);
  *
  */
 unsigned int a4l_get_irq(a4l_dev_t * dev);
-EXPORT_SYMBOL(a4l_get_irq);
+EXPORT_SYMBOL_GPL(a4l_get_irq);
 
 /**
  * @brief Register an interrupt handler for a specific device
@@ -579,7 +579,7 @@ int a4l_request_irq(a4l_dev_t * dev,
 		       unsigned int irq,
 		       a4l_irq_hdlr_t handler,
 		       unsigned long flags, void *cookie);
-EXPORT_SYMBOL(a4l_request_irq);
+EXPORT_SYMBOL_GPL(a4l_request_irq);
 
 /**
  * @brief Release an interrupt handler for a specific device
@@ -591,7 +591,7 @@ EXPORT_SYMBOL(a4l_request_irq);
  *
  */
 int a4l_free_irq(a4l_dev_t * dev, unsigned int irq);
-EXPORT_SYMBOL(a4l_free_irq);
+EXPORT_SYMBOL_GPL(a4l_free_irq);
 
 /** @} */
 
@@ -661,6 +661,6 @@ int a4l_task_sleep(unsigned long long nsdelay);
  *
  */
 unsigned long long a4l_get_time(void);
-EXPORT_SYMBOL(a4l_get_time);
+EXPORT_SYMBOL_GPL(a4l_get_time);
 
 /** @} */

@@ -280,7 +280,7 @@ struct mite_struct * mite_find_device(int bus, int slot, unsigned short device_i
 
 	return NULL;
 }
-EXPORT_SYMBOL(mite_find_device);
+EXPORT_SYMBOL_GPL(mite_find_device);
 
 struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 						   struct mite_dma_descriptor_ring *ring, 
@@ -785,26 +785,26 @@ MODULE_LICENSE("GPL");
 module_init(mite_init);
 module_exit(mite_cleanup);
 
-EXPORT_SYMBOL(mite_dma_arm);
-EXPORT_SYMBOL(mite_dma_disarm);
-EXPORT_SYMBOL(mite_sync_input_dma);
-EXPORT_SYMBOL(mite_sync_output_dma);
-EXPORT_SYMBOL(mite_setup);
-EXPORT_SYMBOL(mite_unsetup);
-EXPORT_SYMBOL(mite_list_devices);
-EXPORT_SYMBOL(mite_request_channel_in_range);
-EXPORT_SYMBOL(mite_release_channel);
-EXPORT_SYMBOL(mite_prep_dma);
-EXPORT_SYMBOL(mite_buf_change);
-EXPORT_SYMBOL(mite_bytes_written_to_memory_lb);
-EXPORT_SYMBOL(mite_bytes_written_to_memory_ub);
-EXPORT_SYMBOL(mite_bytes_read_from_memory_lb);
-EXPORT_SYMBOL(mite_bytes_read_from_memory_ub);
-EXPORT_SYMBOL(mite_bytes_in_transit);
-EXPORT_SYMBOL(mite_get_status);
-EXPORT_SYMBOL(mite_done);
+EXPORT_SYMBOL_GPL(mite_dma_arm);
+EXPORT_SYMBOL_GPL(mite_dma_disarm);
+EXPORT_SYMBOL_GPL(mite_sync_input_dma);
+EXPORT_SYMBOL_GPL(mite_sync_output_dma);
+EXPORT_SYMBOL_GPL(mite_setup);
+EXPORT_SYMBOL_GPL(mite_unsetup);
+EXPORT_SYMBOL_GPL(mite_list_devices);
+EXPORT_SYMBOL_GPL(mite_request_channel_in_range);
+EXPORT_SYMBOL_GPL(mite_release_channel);
+EXPORT_SYMBOL_GPL(mite_prep_dma);
+EXPORT_SYMBOL_GPL(mite_buf_change);
+EXPORT_SYMBOL_GPL(mite_bytes_written_to_memory_lb);
+EXPORT_SYMBOL_GPL(mite_bytes_written_to_memory_ub);
+EXPORT_SYMBOL_GPL(mite_bytes_read_from_memory_lb);
+EXPORT_SYMBOL_GPL(mite_bytes_read_from_memory_ub);
+EXPORT_SYMBOL_GPL(mite_bytes_in_transit);
+EXPORT_SYMBOL_GPL(mite_get_status);
+EXPORT_SYMBOL_GPL(mite_done);
 #ifdef CONFIG_DEBUG_MITE
-EXPORT_SYMBOL(mite_decode);
-EXPORT_SYMBOL(mite_dump_regs);
+EXPORT_SYMBOL_GPL(mite_decode);
+EXPORT_SYMBOL_GPL(mite_dump_regs);
 #endif /* CONFIG_DEBUG_MITE */
 

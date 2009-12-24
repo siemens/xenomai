@@ -59,7 +59,7 @@ void subdev_8255_interrupt(a4l_subd_t *subd)
 
 	a4l_buf_evt(subd, 0);
 }
-EXPORT_SYMBOL(subdev_8255_interrupt);
+EXPORT_SYMBOL_GPL(subdev_8255_interrupt);
 
 static int subdev_8255_cb(int dir, int port, int data, unsigned long arg)
 {
@@ -227,7 +227,7 @@ void subdev_8255_init(a4l_subd_t *subd)
 
 	do_config(subd);
 }
-EXPORT_SYMBOL(subdev_8255_init);
+EXPORT_SYMBOL_GPL(subdev_8255_init);
 
 /*
 
