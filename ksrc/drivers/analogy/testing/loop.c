@@ -45,7 +45,7 @@ struct loop_priv {
 
 	/* Misc fields */
 	volatile int loop_running:1;
-	sampl_t loop_insn_value;
+	uint16_t loop_insn_value;
 };
 typedef struct loop_priv lpprv_t;
 
@@ -80,13 +80,13 @@ static void loop_task_proc(void *arg)
 	while (1) {
 	
 		if (priv->loop_running) {
-			sampl_t value;
+			uint16_t value;
 			int ret=0;
 	    
 			while (ret==0) {
 		
 				ret = a4l_buf_get(output_subd, 
-						  &value, sizeof(sampl_t));
+						  &value, sizeof(uint16_t));
 
 				if (ret == 0) {
 
@@ -98,7 +98,7 @@ static void loop_task_proc(void *arg)
 		    
 					ret = a4l_buf_put(input_subd, 
 							  &value, 
-							  sizeof(sampl_t));
+							  sizeof(uint16_t));
 
 					if (ret==0)
 						a4l_buf_evt(input_subd, 0);
@@ -141,13 +141,14 @@ int loop_cancel(a4l_subd_t *subd)
 int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
+	uint16_t *data = (uint16_t *)insn->data;
 
 	/* Checks the buffer size */
-	if (insn->data_size != sizeof(sampl_t))
+	if (insn->data_size != sizeof(uint16_t))
 		return -EINVAL;
 
 	/* Sets the memorized value */
-	insn->data[0] = priv->loop_insn_value;
+	data[0] = priv->loop_insn_value;
     
 	return 0;
 }
@@ -156,13 +157,14 @@ int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
+	uint16_t *data = (uint16_t *)insn->data;	
 
 	/* Checks the buffer size */
-	if (insn->data_size != sizeof(sampl_t))
+	if (insn->data_size != sizeof(uint16_t))
 		return -EINVAL;
 
 	/* Retrieves the value to memorize */
-	priv->loop_insn_value = insn->data[0];
+	priv->loop_insn_value = data[0];
     
 	return 0;
 }

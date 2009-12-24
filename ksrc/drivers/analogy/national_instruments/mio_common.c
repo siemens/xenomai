@@ -1512,6 +1512,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	unsigned int signbits;
 	unsigned short d;
 	unsigned long dl;
+	uint16_t *data = (uint16_t *)insn->data;
 
 	ni_load_channelgain_list(dev, 1, &insn->chan_desc);
 
@@ -1524,7 +1525,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 					    AI_Command_1_Register);
 			a4l_udelay(1);
 		}
-		for (n = 0; n < insn->data_size / sizeof(sampl_t); n++) {
+		for (n = 0; n < insn->data_size / sizeof(uint16_t); n++) {
 			devpriv->stc_writew(dev, AI_CONVERT_Pulse,
 					    AI_Command_1_Register);
 			/* The 611x has screwy 32-bit FIFOs. */
@@ -1550,10 +1551,10 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 				return -ETIME;
 			}
 			d += signbits;
-			insn->data[n] = d;
+			data[n] = d;
 		}
 	} else if (boardtype.reg_type == ni_reg_6143) {
-		for (n = 0; n < insn->data_size / sizeof(sampl_t); n++) {
+		for (n = 0; n < insn->data_size / sizeof(uint16_t); n++) {
 			devpriv->stc_writew(dev, AI_CONVERT_Pulse,
 					    AI_Command_1_Register);
 
@@ -1574,10 +1575,10 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 					 "timeout in 6143 ni_ai_insn_read\n");
 				return -ETIME;
 			}
-			insn->data[n] = (((dl >> 16) & 0xFFFF) + signbits) & 0xFFFF;
+			data[n] = (((dl >> 16) & 0xFFFF) + signbits) & 0xFFFF;
 		}
 	} else {
-		for (n = 0; n < insn->data_size / sizeof(sampl_t); n++) {
+		for (n = 0; n < insn->data_size / sizeof(uint16_t); n++) {
 			devpriv->stc_writew(dev, AI_CONVERT_Pulse,
 					    AI_Command_1_Register);
 			for (i = 0; i < NI_TIMEOUT; i++) {
@@ -1593,13 +1594,12 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 				return -ETIME;
 			}
 			if (boardtype.reg_type & ni_reg_m_series_mask) {
-				insn->data[n] = 
-					ni_readl(M_Offset_AI_FIFO_Data) & mask;
+				data[n] = ni_readl(M_Offset_AI_FIFO_Data) & mask;
 			} else {
 				d = ni_readw(ADC_FIFO_Data_Register);
 				/* subtle: needs to be short addition */
 				d += signbits;	
-				insn->data[n] = d;
+				data[n] = d;
 			}
 		}
 	}
@@ -2392,6 +2392,7 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	a4l_dev_t *dev = subd->dev;
 	unsigned int a, b, modebits;
 	int err = 0;
+	uint32_t *data = (uint32_t *)insn->data;
 
 	/* data[1] is flags
 	 * data[2] is analog line
@@ -2400,20 +2401,20 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	if (!boardtype.has_analog_trig)
 		return -EINVAL;
 
-	if ((insn->data[1] & 0xffff0000) != A4L_EV_SCAN_BEGIN) {
-		insn->data[1] &= (A4L_EV_SCAN_BEGIN | 0xffff);
+	if ((data[1] & 0xffff0000) != A4L_EV_SCAN_BEGIN) {
+		data[1] &= (A4L_EV_SCAN_BEGIN | 0xffff);
 		err++;
 	}
-	if (insn->data[2] >= boardtype.n_adchan) {
-		insn->data[2] = boardtype.n_adchan - 1;
+	if (data[2] >= boardtype.n_adchan) {
+		data[2] = boardtype.n_adchan - 1;
 		err++;
 	}
-	if (insn->data[3] > 255) {	/* a */
-		insn->data[3] = 255;
+	if (data[3] > 255) {	/* a */
+		data[3] = 255;
 		err++;
 	}
-	if (insn->data[4] > 255) {	/* b */
-		insn->data[4] = 255;
+	if (data[4] > 255) {	/* b */
+		data[4] = 255;
 		err++;
 	}
 	/*
@@ -2431,17 +2432,17 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	 *     middle mode              10 01 01 10
 	 */
 
-	a = insn->data[3];
-	b = insn->data[4];
-	modebits = insn->data[1] & 0xff;
+	a = data[3];
+	b = data[4];
+	modebits = data[1] & 0xff;
 	if (modebits & 0xf0) {
 		/* two level mode */
 		if (b < a) {
 			/* swap order */
-			a = insn->data[4];
-			b = insn->data[3];
-			modebits = ((insn->data[1] & 0xf) << 4) | 
-				((insn->data[1] & 0xf0) >> 4);
+			a = data[4];
+			b = data[3];
+			modebits = ((data[1] & 0xf) << 4) | 
+				((data[1] & 0xf0) >> 4);
 		}
 		devpriv->atrig_low = a;
 		devpriv->atrig_high = b;
@@ -2456,13 +2457,13 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			devpriv->atrig_mode = 2;
 			break;
 		default:
-			insn->data[1] &= ~0xff;
+			data[1] &= ~0xff;
 			err++;
 		}
 	} else {
 		/* one level mode */
 		if (b != 0) {
-			insn->data[4] = 0;
+			data[4] = 0;
 			err++;
 		}
 		switch (modebits) {
@@ -2475,7 +2476,7 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			devpriv->atrig_mode = 1;
 			break;
 		default:
-			insn->data[1] &= ~0xff;
+			data[1] &= ~0xff;
 			err++;
 		}
 	}
@@ -2489,26 +2490,27 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 int ni_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	unsigned int *data = (unsigned int *)insn->data;
 
-	if (insn->data_size < 1)
+	if (insn->data_size < sizeof(unsigned int))
 		return -EINVAL;
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_ANALOG_TRIG:
 		return ni_ai_config_analog_trig(subd, insn);
 	case A4L_INSN_CONFIG_ALT_SOURCE:
 		if (boardtype.reg_type & ni_reg_m_series_mask) {
-			if (insn->data[1] & ~(MSeries_AI_Bypass_Cal_Sel_Pos_Mask |
-					      MSeries_AI_Bypass_Cal_Sel_Neg_Mask |
-					      MSeries_AI_Bypass_Mode_Mux_Mask |
-					      MSeries_AO_Bypass_AO_Cal_Sel_Mask)) {
+			if (data[1] & ~(MSeries_AI_Bypass_Cal_Sel_Pos_Mask |
+					MSeries_AI_Bypass_Cal_Sel_Neg_Mask |
+					MSeries_AI_Bypass_Mode_Mux_Mask |
+					MSeries_AO_Bypass_AO_Cal_Sel_Mask)) {
 				return -EINVAL;
 			}
-			devpriv->ai_calib_source = insn->data[1];
+			devpriv->ai_calib_source = data[1];
 		} else if (boardtype.reg_type == ni_reg_6143) {
 			unsigned int calib_source;
 
-			calib_source = insn->data[1] & 0xf;
+			calib_source = data[1] & 0xf;
 
 			if (calib_source > 0xF)
 				return -EINVAL;
@@ -2519,8 +2521,8 @@ int ni_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			unsigned int calib_source;
 			unsigned int calib_source_adjust;
 
-			calib_source = insn->data[1] & 0xf;
-			calib_source_adjust = (insn->data[1] >> 4) & 0xff;
+			calib_source = data[1] & 0xf;
+			calib_source_adjust = (data[1] >> 4) & 0xff;
 
 			if (calib_source >= 8)
 				return -EINVAL;
@@ -2544,11 +2546,11 @@ static void ni_ao_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 	a4l_dev_t *dev = subd->dev;
 	a4l_cmd_t *cmd = a4l_get_cmd(subd);
 	int chan_idx = a4l_get_chan(subd);
-	sampl_t *array = buf;
+	uint16_t *array = buf;
 	unsigned int i, range, offset;
 
 	offset = 1 << (boardtype.aobits - 1);
-	for (i = 0; i < size / sizeof(sampl_t); i++) {
+	for (i = 0; i < size / sizeof(uint16_t); i++) {
 
 		range = CR_RNG(cmd->chan_descs[chan_idx]);
 		if (boardtype.ao_unipolar == 0 || (range & 1) == 0)
@@ -2700,8 +2702,9 @@ static int ni_ao_config_chan_descs(a4l_subd_t *subd,
 int ni_ao_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint16_t *data = (uint16_t *)insn->data;
 
-	insn->data[0] = devpriv->ao[CR_CHAN(insn->chan_desc)];
+	data[0] = devpriv->ao[CR_CHAN(insn->chan_desc)];
 
 	return 0;
 }
@@ -2710,17 +2713,18 @@ int ni_ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
 	unsigned int chan = CR_CHAN(insn->chan_desc);
+	uint16_t *data = (uint16_t *)insn->data;
 	unsigned int invert;
 
 	invert = ni_ao_config_chan_descs(subd, 
 					 &insn->chan_desc, 1, 0);
 
-	devpriv->ao[chan] = insn->data[0];
+	devpriv->ao[chan] = data[0];
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
-		ni_writew(insn->data[0], M_Offset_DAC_Direct_Data(chan));
+		ni_writew(data[0], M_Offset_DAC_Direct_Data(chan));
 	} else
-		ni_writew(insn->data[0] ^ invert,
+		ni_writew(data[0] ^ invert,
 			  (chan) ? DAC1_Direct_Data : DAC0_Direct_Data);
 
 	return 0;
@@ -2730,6 +2734,7 @@ int ni_ao_insn_write_671x(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
 	unsigned int chan = CR_CHAN(insn->chan_desc);
+	uint16_t *data = (uint16_t *)insn->data;
 	unsigned int invert;
 
 	ao_win_out(1 << chan, AO_Immediate_671x);
@@ -2737,8 +2742,8 @@ int ni_ao_insn_write_671x(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	ni_ao_config_chan_descs(subd, &insn->chan_desc, 1, 0);
 
-	devpriv->ao[chan] = insn->data[0];
-	ao_win_out(insn->data[0] ^ invert, DACx_Direct_Data_671x(chan));
+	devpriv->ao[chan] = data[0];
+	ao_win_out(data[0] ^ invert, DACx_Direct_Data_671x(chan));
 
 	return 0;
 }
@@ -3115,14 +3120,15 @@ int ni_ao_reset(a4l_subd_t *subd)
 int ni_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	unsigned int *data = (unsigned int *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
 	a4l_info(dev,
 		 "ni_dio_insn_config() chan=%d io=%d\n",
-		 CR_CHAN(insn->chan_desc), insn->data[0]);
+		 CR_CHAN(insn->chan_desc), data[0]);
 #endif /* CONFIG_DEBUG_DIO */
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
 		devpriv->io_bits |= 1 << CR_CHAN(insn->chan_desc);
 		break;
@@ -3130,10 +3136,9 @@ int ni_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->io_bits &= ~(1 << CR_CHAN(insn->chan_desc));
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		insn->data[1] =
-			(devpriv->io_bits & (1 << CR_CHAN(insn->
-							  chan_desc))) ? A4L_OUTPUT :
-		A4L_INPUT;
+		data[1] = (devpriv->io_bits & 
+			   (1 << CR_CHAN(insn->chan_desc))) ? 
+			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
 	default:
@@ -3150,43 +3155,50 @@ int ni_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 int ni_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
 	a4l_info(dev, 
-		 "ni_dio_insn_bits() mask=0x%x bits=0x%x\n", 
-		 insn->data[0], insn->data[1]);
+		 "ni_dio_insn_bits_8() mask=0x%x bits=0x%x\n", 
+		 data[0], data[1]);
 #endif
-	if (insn->data_size != 2 * sizeof(lsampl_t))
+
+	if (insn->data_size != 2 * sizeof(uint8_t))
 		return -EINVAL;
-	if (insn->data[0]) {
+
+	if (data[0]) {
 		/* Perform check to make sure we're not using the
 		   serial part of the dio */
-		if ((insn->data[0] & (DIO_SDIN | DIO_SDOUT))
+		if ((data[0] & (DIO_SDIN | DIO_SDOUT))
 		    && devpriv->serial_interval_ns)
 			return -EBUSY;
 
-		devpriv->dio_state &= ~insn->data[0];
-		devpriv->dio_state |= (insn->data[0] & insn->data[1]);
+		devpriv->dio_state &= ~data[0];
+		devpriv->dio_state |= (data[0] & data[1]);
 		devpriv->dio_output &= ~DIO_Parallel_Data_Mask;
-		devpriv->dio_output |= DIO_Parallel_Data_Out(devpriv->dio_state);
+		devpriv->dio_output |= 
+			DIO_Parallel_Data_Out(devpriv->dio_state);
 		devpriv->stc_writew(dev, devpriv->dio_output,
 				    DIO_Output_Register);
 	}
-	insn->data[1] = devpriv->stc_readw(dev, DIO_Parallel_Input_Register);
 
+	data[1] = (uint8_t) 
+		devpriv->stc_readw(dev, DIO_Parallel_Input_Register);
+	
 	return 0;
 }
 
 int ni_m_series_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	unsigned int *data = (unsigned int *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
 	a4l_info(dev, 
 		 "ni_m_series_dio_insn_config() chan=%d io=%d\n",
-		 CR_CHAN(insn->chan_desc), insn->data[0]);
+		 CR_CHAN(insn->chan_desc), data[0]);
 #endif
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
 		devpriv->io_bits |= 1 << CR_CHAN(insn->chan_desc);
 		break;
@@ -3194,9 +3206,8 @@ int ni_m_series_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->io_bits &= ~(1 << CR_CHAN(insn->chan_desc));
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		insn->data[1] =
-			(devpriv->io_bits & 
-			 (1 << CR_CHAN(insn->chan_desc))) ? 
+		data[1] = (devpriv->io_bits & 
+			   (1 << CR_CHAN(insn->chan_desc))) ? 
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
@@ -3209,27 +3220,56 @@ int ni_m_series_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-int ni_m_series_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+int ni_m_series_dio_insn_bits_8(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
 	a4l_info(dev, 
 		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
-		 insn->data[0], insn->data[1]);
+		 data[0], data[1]);
 #endif
 
-	if (insn->data_size != 2 * sizeof(lsampl_t))
+	if (insn->data_size != 2 * sizeof(uint8_t))
 		return -EINVAL;
-	if (insn->data[0]) {
-		devpriv->dio_state &= ~insn->data[0];
-		devpriv->dio_state |= (insn->data[0] & insn->data[1]);
+
+	if (data[0]) {
+		devpriv->dio_state &= ~data[0];
+		devpriv->dio_state |= (data[0] & data[1]);
 		ni_writel(devpriv->dio_state, M_Offset_Static_Digital_Output);
 	}
-	insn->data[1] = ni_readl(M_Offset_Static_Digital_Input);
+
+	data[1] = (uint8_t) ni_readl(M_Offset_Static_Digital_Input);
 
 	return 0;
 }
+
+int ni_m_series_dio_insn_bits_32(a4l_subd_t *subd, a4l_kinsn_t *insn)
+{
+	a4l_dev_t *dev = subd->dev;
+	uint32_t *data = (uint32_t *)insn->data;
+
+#ifdef CONFIG_DEBUG_DIO
+	a4l_info(dev, 
+		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
+		 data[0], data[1]);
+#endif
+
+	if (insn->data_size != 2 * sizeof(uint32_t))
+		return -EINVAL;
+
+	if (data[0]) {
+		devpriv->dio_state &= ~data[0];
+		devpriv->dio_state |= (data[0] & data[1]);
+		ni_writel(devpriv->dio_state, M_Offset_Static_Digital_Output);
+	}
+
+	data[1] = ni_readl(M_Offset_Static_Digital_Input);
+
+	return 0;
+}
+
 
 a4l_cmd_t mio_dio_cmd_mask = {
 	.idx_subd = 0,
@@ -3527,11 +3567,12 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	a4l_dev_t *dev = subd->dev;
 	int err = 0;
 	unsigned char byte_out, byte_in = 0;
+	unsigned int *data = (unsigned int *)insn->data;
 
-	if (insn->data_size != 2 * sizeof(lsampl_t))
+	if (insn->data_size != 2 * sizeof(unsigned int))
 		return -EINVAL;
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_SERIAL_CLOCK:
 
 #ifdef CONFIG_DEBUG_DIO
@@ -3541,27 +3582,27 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->serial_hw_mode = 1;
 		devpriv->dio_control |= DIO_HW_Serial_Enable;
 
-		if (insn->data[1] == SERIAL_DISABLED) {
+		if (data[1] == SERIAL_DISABLED) {
 			devpriv->serial_hw_mode = 0;
 			devpriv->dio_control &= ~(DIO_HW_Serial_Enable |
 						  DIO_Software_Serial_Control);
-			insn->data[1] = SERIAL_DISABLED;
-			devpriv->serial_interval_ns = insn->data[1];
-		} else if (insn->data[1] <= SERIAL_600NS) {
+			data[1] = SERIAL_DISABLED;
+			devpriv->serial_interval_ns = data[1];
+		} else if (data[1] <= SERIAL_600NS) {
 			/* Warning: this clock speed is too fast to reliably
 			   control SCXI. */
 			devpriv->dio_control &= ~DIO_HW_Serial_Timebase;
 			devpriv->clock_and_fout |= Slow_Internal_Timebase;
 			devpriv->clock_and_fout &= ~DIO_Serial_Out_Divide_By_2;
-			insn->data[1] = SERIAL_600NS;
-			devpriv->serial_interval_ns = insn->data[1];
-		} else if (insn->data[1] <= SERIAL_1_2US) {
+			data[1] = SERIAL_600NS;
+			devpriv->serial_interval_ns = data[1];
+		} else if (data[1] <= SERIAL_1_2US) {
 			devpriv->dio_control &= ~DIO_HW_Serial_Timebase;
 			devpriv->clock_and_fout |= Slow_Internal_Timebase |
 				DIO_Serial_Out_Divide_By_2;
-			insn->data[1] = SERIAL_1_2US;
-			devpriv->serial_interval_ns = insn->data[1];
-		} else if (insn->data[1] <= SERIAL_10US) {
+			data[1] = SERIAL_1_2US;
+			devpriv->serial_interval_ns = data[1];
+		} else if (data[1] <= SERIAL_10US) {
 			devpriv->dio_control |= DIO_HW_Serial_Timebase;
 			devpriv->clock_and_fout |= Slow_Internal_Timebase |
 				DIO_Serial_Out_Divide_By_2;
@@ -3569,14 +3610,14 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			   600ns/1.2us. If you turn divide_by_2 off with the
 			   slow clock, you will still get 10us, except then
 			   all your delays are wrong. */
-			insn->data[1] = SERIAL_10US;
-			devpriv->serial_interval_ns = insn->data[1];
+			data[1] = SERIAL_10US;
+			devpriv->serial_interval_ns = data[1];
 		} else {
 			devpriv->dio_control &= ~(DIO_HW_Serial_Enable |
 						  DIO_Software_Serial_Control);
 			devpriv->serial_hw_mode = 0;
-			insn->data[1] = (insn->data[1] / 1000) * 1000;
-			devpriv->serial_interval_ns = insn->data[1];
+			data[1] = (data[1] / 1000) * 1000;
+			devpriv->serial_interval_ns = data[1];
 		}
 
 		devpriv->stc_writew(dev, devpriv->dio_control,
@@ -3593,7 +3634,7 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			return -EINVAL;
 		}
 
-		byte_out = insn->data[1] & 0xFF;
+		byte_out = data[1] & 0xFF;
 
 		if (devpriv->serial_hw_mode) {
 			err = ni_serial_hw_readwrite8(dev, byte_out, &byte_in);
@@ -3606,7 +3647,7 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		}
 		if (err < 0)
 			return err;
-		insn->data[1] = byte_in & 0xFF;
+		data[1] = byte_in & 0xFF;
 		return 0;
 
 		break;
@@ -3830,20 +3871,24 @@ static unsigned int ni_gpct_read_register(struct ni_gpct *counter,
 
 int ni_freq_out_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
-	a4l_dev_t *dev = subd->dev;
-	insn->data[0] = FOUT_Divider(devpriv->clock_and_fout);
+	a4l_dev_t *dev = subd->dev;	
+	uint8_t *data = (uint8_t *)insn->data;
+
+	data[0] = FOUT_Divider(devpriv->clock_and_fout);
+
 	return 0;
 }
 
 int ni_freq_out_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
 	devpriv->clock_and_fout &= ~FOUT_Enable;
 	devpriv->stc_writew(dev, devpriv->clock_and_fout,
 			    Clock_and_FOUT_Register);
 	devpriv->clock_and_fout &= ~FOUT_Divider_mask;
-	devpriv->clock_and_fout |= FOUT_Divider(insn->data[0]);
+	devpriv->clock_and_fout |= FOUT_Divider(data[0]);
 	devpriv->clock_and_fout |= FOUT_Enable;
 	devpriv->stc_writew(dev, devpriv->clock_and_fout,
 			    Clock_and_FOUT_Register);
@@ -3870,8 +3915,8 @@ static int ni_set_freq_out_clock(a4l_dev_t * dev, lsampl_t clock_source)
 }
 
 static void ni_get_freq_out_clock(a4l_dev_t * dev, 
-				  lsampl_t * clock_source, 
-				  lsampl_t * clock_period_ns)
+				  unsigned int * clock_source, 
+				  unsigned int * clock_period_ns)
 {
 	if (devpriv->clock_and_fout & FOUT_Timebase_Select) {
 		*clock_source = NI_FREQ_OUT_TIMEBASE_2_CLOCK_SRC;
@@ -3885,17 +3930,19 @@ static void ni_get_freq_out_clock(a4l_dev_t * dev,
 int ni_freq_out_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	unsigned int *data = (unsigned int *)insn->data;
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_SET_CLOCK_SRC:
-		return ni_set_freq_out_clock(dev, insn->data[1]);
+		return ni_set_freq_out_clock(dev, data[1]);
 		break;
 	case A4L_INSN_CONFIG_GET_CLOCK_SRC:
-		ni_get_freq_out_clock(dev, &insn->data[1], &insn->data[2]);
+		ni_get_freq_out_clock(dev, &data[1], &data[2]);
 		return 0;
 	default:
 		break;
 	}
+
 	return -EINVAL;
 }
 
@@ -3946,7 +3993,10 @@ static int ni_read_eeprom(a4l_dev_t *dev, int addr)
 static int ni_eeprom_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	insn->data[0] = ni_read_eeprom(dev, CR_CHAN(insn->chan_desc));
+	uint8_t *data = (uint8_t *)insn->data;
+
+	data[0] = ni_read_eeprom(dev, CR_CHAN(insn->chan_desc));
+
 	return 0;
 }
 
@@ -3954,63 +4004,70 @@ static int ni_eeprom_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 static int ni_m_series_eeprom_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	insn->data[0] = devpriv->eeprom_buffer[CR_CHAN(insn->chan_desc)];
+	uint8_t *data = (uint8_t *)insn->data;
+
+	data[0] = devpriv->eeprom_buffer[CR_CHAN(insn->chan_desc)];
+
 	return 0;
 }
 
 static int ni_get_pwm_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	insn->data[1] = devpriv->pwm_up_count * devpriv->clock_ns;
-	insn->data[2] = devpriv->pwm_down_count * devpriv->clock_ns;
+	unsigned int *data = (unsigned int*)insn->data;
+
+	data[1] = devpriv->pwm_up_count * devpriv->clock_ns;
+	data[2] = devpriv->pwm_down_count * devpriv->clock_ns;
+
 	return 0;
 }
 
 static int ni_m_series_pwm_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	unsigned up_count, down_count;
+	unsigned int up_count, down_count;
+	unsigned int *data = (unsigned int*)insn->data;
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_PWM_OUTPUT:
-		switch (insn->data[1]) {
+		switch (data[1]) {
 		case TRIG_ROUND_NEAREST:
 			up_count =
-				(insn->data[2] +
+				(data[2] +
 				 devpriv->clock_ns / 2) / devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_DOWN:
-			up_count = insn->data[2] / devpriv->clock_ns;
+			up_count = data[2] / devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_UP:
-			up_count =(insn->data[2] + devpriv->clock_ns - 1) /
+			up_count =(data[2] + devpriv->clock_ns - 1) /
 				devpriv->clock_ns;
 			break;
 		default:
 			return -EINVAL;
 			break;
 		}
-		switch (insn->data[3]) {
+		switch (data[3]) {
 		case TRIG_ROUND_NEAREST:
-			down_count = (insn->data[4] + devpriv->clock_ns / 2) /
+			down_count = (data[4] + devpriv->clock_ns / 2) /
 				devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_DOWN:
-			down_count = insn->data[4] / devpriv->clock_ns;
+			down_count = data[4] / devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_UP:
 			down_count =
-				(insn->data[4] + devpriv->clock_ns - 1) /
+				(data[4] + devpriv->clock_ns - 1) /
 				devpriv->clock_ns;
 			break;
 		default:
 			return -EINVAL;
 			break;
 		}
-		if (up_count * devpriv->clock_ns != insn->data[2] ||
-		    down_count * devpriv->clock_ns != insn->data[4]) {
-			insn->data[2] = up_count * devpriv->clock_ns;
-			insn->data[4] = down_count * devpriv->clock_ns;
+		if (up_count * devpriv->clock_ns != data[2] ||
+		    down_count * devpriv->clock_ns != data[4]) {
+			data[2] = up_count * devpriv->clock_ns;
+			data[4] = down_count * devpriv->clock_ns;
 			return -EAGAIN;
 		}
 		ni_writel(MSeries_Cal_PWM_High_Time_Bits(up_count) |
@@ -4033,47 +4090,48 @@ static int ni_m_series_pwm_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 static int ni_6143_pwm_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	unsigned int *data = (unsigned int*)insn->data;
 
 	unsigned up_count, down_count;
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_PWM_OUTPUT:
-		switch (insn->data[1]) {
+		switch (data[1]) {
 		case TRIG_ROUND_NEAREST:
 			up_count =
-				(insn->data[2] + devpriv->clock_ns / 2) /
+				(data[2] + devpriv->clock_ns / 2) /
 				devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_DOWN:
-			up_count = insn->data[2] / devpriv->clock_ns;
+			up_count = data[2] / devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_UP:
-			up_count = (insn->data[2] + devpriv->clock_ns - 1) /
+			up_count = (data[2] + devpriv->clock_ns - 1) /
 				devpriv->clock_ns;
 			break;
 		default:
 			return -EINVAL;
 			break;
 		}
-		switch (insn->data[3]) {
+		switch (data[3]) {
 		case TRIG_ROUND_NEAREST:
-			down_count = (insn->data[4] + devpriv->clock_ns / 2) /
+			down_count = (data[4] + devpriv->clock_ns / 2) /
 				devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_DOWN:
-			down_count = insn->data[4] / devpriv->clock_ns;
+			down_count = data[4] / devpriv->clock_ns;
 			break;
 		case TRIG_ROUND_UP:
-			down_count = (insn->data[4] + devpriv->clock_ns - 1) /
+			down_count = (data[4] + devpriv->clock_ns - 1) /
 				devpriv->clock_ns;
 			break;
 		default:
 			return -EINVAL;
 			break;
 		}
-		if (up_count * devpriv->clock_ns != insn->data[2] ||
-		    down_count * devpriv->clock_ns != insn->data[4]) {
-			insn->data[2] = up_count * devpriv->clock_ns;
-			insn->data[4] = down_count * devpriv->clock_ns;
+		if (up_count * devpriv->clock_ns != data[2] ||
+		    down_count * devpriv->clock_ns != data[4]) {
+			data[2] = up_count * devpriv->clock_ns;
+			data[4] = down_count * devpriv->clock_ns;
 			return -EAGAIN;
 		}
 		ni_writel(up_count, Calibration_HighTime_6143);
@@ -4269,15 +4327,20 @@ static void caldac_setup(a4l_dev_t *dev, a4l_subd_t *subd)
 static int ni_calib_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	ni_write_caldac(dev, CR_CHAN(insn->chan_desc), insn->data[0]);
+	uint16_t *data = (uint16_t *)insn->data;
+
+	ni_write_caldac(dev, CR_CHAN(insn->chan_desc), data[0]);
 	return 0;
 }
 
 static int ni_calib_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	insn->data[0] = devpriv->caldacs[CR_CHAN(insn->chan_desc)];
-	return 1;
+	uint16_t *data = (uint16_t *)insn->data;
+
+	data[0] = devpriv->caldacs[CR_CHAN(insn->chan_desc)];
+
+	return 0;
 }
 
 static int ni_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
@@ -4465,29 +4528,30 @@ static int ni_config_filter(a4l_dev_t *dev,
 static int ni_pfi_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
-	if ((boardtype.reg_type & ni_reg_m_series_mask) == 0) {
-		return -ENOTSUPP;
-	}
-	if (insn->data[0]) {
-		devpriv->pfi_state &= ~insn->data[0];
-		devpriv->pfi_state |= (insn->data[0] & insn->data[1]);
+	uint16_t *data = (uint16_t *)insn->data;
+
+	if (data[0]) {
+		devpriv->pfi_state &= ~data[0];
+		devpriv->pfi_state |= (data[0] & data[1]);
 		ni_writew(devpriv->pfi_state, M_Offset_PFI_DO);
 	}
-	insn->data[1] = ni_readw(M_Offset_PFI_DI);
+
+	data[1] = ni_readw(M_Offset_PFI_DI);
+
 	return 0;
 }
 
 static int ni_pfi_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {	
-	unsigned int chan;
 	a4l_dev_t *dev = subd->dev;
+	unsigned int chan, *data = (unsigned int *)insn->data;
 
-	if (insn->data_size < 1)
+	if (insn->data_size < sizeof(unsigned int))
 		return -EINVAL;
 
 	chan = CR_CHAN(insn->chan_desc);
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_OUTPUT:
 		ni_set_bits(dev, IO_Bidirection_Pin_Register, 1 << chan, 1);
 		break;
@@ -4495,19 +4559,18 @@ static int ni_pfi_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		ni_set_bits(dev, IO_Bidirection_Pin_Register, 1 << chan, 0);
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		insn->data[1] =
-			(devpriv->io_bidirection_pin_reg & (1 << chan)) ? 
+		data[1] = (devpriv->io_bidirection_pin_reg & (1 << chan)) ? 
 			A4L_OUTPUT :	A4L_INPUT;
 		return 0;
 		break;
 	case A4L_INSN_CONFIG_SET_ROUTING:
-		return ni_set_pfi_routing(dev, chan, insn->data[1]);
+		return ni_set_pfi_routing(dev, chan, data[1]);
 		break;
 	case A4L_INSN_CONFIG_GET_ROUTING:
-		insn->data[1] = ni_get_pfi_routing(dev, chan);
+		data[1] = ni_get_pfi_routing(dev, chan);
 		break;
 	case A4L_INSN_CONFIG_FILTER:
-		return ni_config_filter(dev, chan, insn->data[1]);
+		return ni_config_filter(dev, chan, data[1]);
 		break;
 	default:
 		return -EINVAL;
@@ -4859,7 +4922,10 @@ int ni_E_init(a4l_dev_t *dev)
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 
-		subd->insn_bits = ni_m_series_dio_insn_bits;
+		if (subd->chan_desc->length == 8)
+			subd->insn_bits = ni_m_series_dio_insn_bits_8;
+		else
+			subd->insn_bits = ni_m_series_dio_insn_bits_32;
 		subd->insn_config = ni_m_series_dio_insn_config;
 		subd->do_cmd = ni_cdio_cmd;
 		subd->do_cmdtest = ni_cdio_cmdtest;

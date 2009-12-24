@@ -831,8 +831,8 @@ static uint64_t ni_tio_clock_period_ps(const struct ni_gpct *counter,
 }
 
 static void ni_tio_get_clock_src(struct ni_gpct *counter,
-				 lsampl_t * clock_source, 
-				 lsampl_t * period_ns)
+				 unsigned int * clock_source, 
+				 unsigned int * period_ns)
 {
 	static const unsigned int pico_per_nano = 1000;
 	uint64_t temp64;
@@ -1110,7 +1110,7 @@ static int ni_tio_set_gate_src(struct ni_gpct *counter,
 }
 
 static int ni_tio_set_other_src(struct ni_gpct *counter, 
-				unsigned int index, lsampl_t source)
+				unsigned int index, unsigned int source)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 
@@ -1307,7 +1307,8 @@ static unsigned int ni_m_series_second_gate_to_generic_gate_source(unsigned int
 };
 
 static int ni_tio_get_gate_src(struct ni_gpct *counter, 
-			       unsigned int gate_index, lsampl_t * gate_source)
+			       unsigned int gate_index, 
+			       unsigned int * gate_source)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	const unsigned int mode_bits = ni_tio_get_soft_copy(counter,
@@ -1400,42 +1401,39 @@ static int ni_tio_get_gate_src(struct ni_gpct *counter,
 
 int ni_tio_insn_config(struct ni_gpct *counter, a4l_kinsn_t *insn)
 {
-	switch (insn->data[0]) {
+	unsigned int *data = (unsigned int *)insn->data;
+
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_SET_COUNTER_MODE:
-		return ni_tio_set_counter_mode(counter, insn->data[1]);
+		return ni_tio_set_counter_mode(counter, data[1]);
 		break;
 	case A4L_INSN_CONFIG_ARM:
-		return ni_tio_arm(counter, 1, insn->data[1]);
+		return ni_tio_arm(counter, 1, data[1]);
 		break;
 	case A4L_INSN_CONFIG_DISARM:
 		ni_tio_arm(counter, 0, 0);
 		return 0;
 		break;
 	case A4L_INSN_CONFIG_GET_COUNTER_STATUS:
-		insn->data[1] = ni_tio_counter_status(counter);
-		insn->data[2] = counter_status_mask;
+		data[1] = ni_tio_counter_status(counter);
+		data[2] = counter_status_mask;
 		return 0;
 		break;
 	case A4L_INSN_CONFIG_SET_CLOCK_SRC:
-		return ni_tio_set_clock_src(counter, 
-					    insn->data[1], insn->data[2]);
+		return ni_tio_set_clock_src(counter, data[1], data[2]);
 		break;
 	case A4L_INSN_CONFIG_GET_CLOCK_SRC:
-		ni_tio_get_clock_src(counter, 
-				     &insn->data[1], &insn->data[2]);
+		ni_tio_get_clock_src(counter, &data[1], &data[2]);
 		return 0;
 		break;
 	case A4L_INSN_CONFIG_SET_GATE_SRC:
-		return ni_tio_set_gate_src(counter, 
-					   insn->data[1], insn->data[2]);
+		return ni_tio_set_gate_src(counter, data[1], data[2]);
 		break;
 	case A4L_INSN_CONFIG_GET_GATE_SRC:
-		return ni_tio_get_gate_src(counter, 
-					   insn->data[1], &insn->data[2]);
+		return ni_tio_get_gate_src(counter, data[1], &data[2]);
 		break;
 	case A4L_INSN_CONFIG_SET_OTHER_SRC:
-		return ni_tio_set_other_src(counter, 
-					    insn->data[1], insn->data[2]);
+		return ni_tio_set_other_src(counter, data[1], data[2]);
 		break;
 	case A4L_INSN_CONFIG_RESET:
 		ni_tio_reset_count_and_disarm(counter);
@@ -1455,8 +1453,11 @@ int ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 	unsigned int second_read;
 	unsigned int correct_read;
 
-	if (insn->data_size < 1)
-		return 0;
+	uint32_t *data = (uint32_t *)insn->data;
+
+	if (insn->data_size != sizeof(uint32_t))
+		return -EINVAL;
+
 	switch (channel) {
 	case 0:
 		ni_tio_set_bits(counter,
@@ -1485,20 +1486,19 @@ int ni_tio_rinsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 				NITIO_Gi_SW_Save_Reg(counter->counter_index));
 		else
 			correct_read = first_read;
-		insn->data[0] = correct_read;
+		data[0] = correct_read;
 		return 0;
 		break;
 	case 1:
-		insn->data[0] =
-			counter_dev->regs[NITIO_Gi_LoadA_Reg(counter->
-				counter_index)];
+		data[0] = counter_dev->regs
+			[NITIO_Gi_LoadA_Reg(counter->counter_index)];
 		break;
 	case 2:
-		insn->data[0] =
-			counter_dev->regs[NITIO_Gi_LoadB_Reg(counter->
-				counter_index)];
+		data[0] = counter_dev->regs
+			[NITIO_Gi_LoadB_Reg(counter->counter_index)];
 		break;
 	};
+
 	return 0;
 }
 
@@ -1520,8 +1520,11 @@ int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 	const unsigned int channel = CR_CHAN(insn->chan_desc);
 	unsigned int load_reg;
 
-	if (insn->data_size < 1)
-		return 0;
+	uint32_t *data = (uint32_t *)insn->data;
+
+	if (insn->data_size != sizeof(uint32_t))
+		return -EINVAL;
+
 	switch (channel) {
 	case 0:
 		/* Unsafe if counter is armed.  Should probably check
@@ -1529,7 +1532,7 @@ int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 		/* Don't disturb load source select, just use
 		   whichever load register is already selected. */
 		load_reg = ni_tio_next_load_register(counter);
-		write_register(counter, insn->data[0], load_reg);
+		write_register(counter, data[0], load_reg);
 		ni_tio_set_bits_transient(counter,
 			NITIO_Gi_Command_Reg(counter->counter_index), 0, 0,
 			Gi_Load_Bit);
@@ -1539,20 +1542,21 @@ int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 		break;
 	case 1:
 		counter_dev->regs[NITIO_Gi_LoadA_Reg(counter->counter_index)] =
-			insn->data[0];
-		write_register(counter, insn->data[0],
+			data[0];
+		write_register(counter, data[0],
 			NITIO_Gi_LoadA_Reg(counter->counter_index));
 		break;
 	case 2:
 		counter_dev->regs[NITIO_Gi_LoadB_Reg(counter->counter_index)] =
-			insn->data[0];
-		write_register(counter, insn->data[0],
+			data[0];
+		write_register(counter, data[0],
 			NITIO_Gi_LoadB_Reg(counter->counter_index));
 		break;
 	default:
 		return -EINVAL;
 		break;
 	}
+	
 	return 0;
 }
 

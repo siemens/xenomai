@@ -100,15 +100,16 @@ typedef struct parport_priv {
 static int parport_insn_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
-	if (insn->data[0]) {
-		devpriv->a_data &= ~insn->data[0];
-		devpriv->a_data |= (insn->data[0] & insn->data[1]);
+	if (data[0]) {
+		devpriv->a_data &= ~data[0];
+		devpriv->a_data |= (data[0] & data[1]);
 
 		outb(devpriv->a_data, devpriv->io_base + PARPORT_A);
 	}
 
-	insn->data[1] = inb(devpriv->io_base + PARPORT_A);
+	data[1] = inb(devpriv->io_base + PARPORT_A);
 
 	return 0;
 }
@@ -117,11 +118,12 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
 	parport_spriv_t *spriv = (parport_spriv_t *)subd->priv;
+	unsigned int *data = (unsigned int *)insn->data;
 
 	/* No need to check the channel descriptor; the input / output
 	   setting is global for all channels */
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
 		spriv->io_bits = 0xff;
@@ -134,7 +136,7 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		break;
 
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		insn->data[1] = (spriv->io_bits == 0xff) ? 
+		data[1] = (spriv->io_bits == 0xff) ? 
 			A4L_OUTPUT: A4L_INPUT;
 		break;
 
@@ -150,12 +152,13 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 static int parport_insn_b(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
-	if (insn->data[0]) {
+	if (data[0]) {
 		/* should writes be ignored? */
 	}
 
-	insn->data[1] = (inb(devpriv->io_base + PARPORT_B) >> 3);
+	data[1] = (inb(devpriv->io_base + PARPORT_B) >> 3);
 
 	return 0;
 }
@@ -163,26 +166,29 @@ static int parport_insn_b(a4l_subd_t *subd, a4l_kinsn_t *insn)
 static int parport_insn_c(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
+	uint8_t *data = (uint8_t *)insn->data;
 
-	insn->data[0] &= 0x0f;
-	if (insn->data[0]) {
-		devpriv->c_data &= ~insn->data[0];
-		devpriv->c_data |= (insn->data[0] & insn->data[1]);
+	data[0] &= 0x0f;
+	if (data[0]) {
+		devpriv->c_data &= ~data[0];
+		devpriv->c_data |= (data[0] & data[1]);
 
 		outb(devpriv->c_data, devpriv->io_base + PARPORT_C);
 	}
 
-	insn->data[1] = devpriv->c_data & 0xf;
+	data[1] = devpriv->c_data & 0xf;
 
 	return 2;
 }
 
 static int parport_intr_insn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
-	if (insn->data_size < 1)
+	uint8_t *data = (uint8_t *)insn->data;
+
+	if (insn->data_size < sizeof(uint8_t))
 		return -EINVAL;
 
-	insn->data[1] = 0;
+	data[1] = 0;
 	return 0;
 }
 

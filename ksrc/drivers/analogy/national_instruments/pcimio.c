@@ -982,6 +982,7 @@ static ni_board ni_boards[]={
 		.caldac = {caldac_none},
 		has_8255:	0,
 	},
+#if 0 /* TODO: fix data size */
 	{	device_id:      0x70b6,
 		name:           "pci-6280",
 		n_adchan:       16,
@@ -1068,6 +1069,7 @@ static ni_board ni_boards[]={
 		.caldac = {caldac_none},
 		has_8255:	0,
 	},
+#endif /* TODO: fix data size */
 	{	device_id:      0x70C0,
 		name:           "pci-6143",
 		n_adchan:       8,

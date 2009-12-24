@@ -175,7 +175,7 @@ struct a4l_instruction {
 			    /**< Channel descriptor */
 	unsigned int data_size;
 			    /**< Size of the intruction data */
-	lsampl_t *data;
+	void *data;
 		    /**< Instruction data */
 };
 typedef struct a4l_instruction a4l_insn_t;
@@ -202,8 +202,8 @@ struct a4l_kernel_instruction {
 	unsigned int idx_subd;
 	unsigned int chan_desc;
 	unsigned int data_size;
-	lsampl_t *data;
-	lsampl_t *__udata;
+	void *data;
+	void *__udata;
 };
 typedef struct a4l_kernel_instruction a4l_kinsn_t;
 

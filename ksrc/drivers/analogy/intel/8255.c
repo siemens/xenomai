@@ -132,28 +132,29 @@ int subd_8255_cancel(a4l_subd_t *subd)
 int subd_8255_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
+	uint32_t *data = (uint32_t *)insn->data;
 
-	if (insn->data[0]) {
+	if (data[0]) {
 
-		subd_8255->status &= ~insn->data[0];
-		subd_8255->status |= (insn->data[0] & insn->data[1]);
+		subd_8255->status &= ~data[0];
+		subd_8255->status |= (data[0] & data[1]);
 
-		if (insn->data[0] & 0xff)
+		if (data[0] & 0xff)
 			CALLBACK_FUNC(1, _8255_DATA, 
 				      subd_8255->status & 0xff, CALLBACK_ARG);
-		if (insn->data[0] & 0xff00)
+		if (data[0] & 0xff00)
 			CALLBACK_FUNC(1, _8255_DATA + 1, 
 				      (subd_8255->status >> 8) & 0xff, 
 				      CALLBACK_ARG);
-		if (insn->data[0] & 0xff0000)
+		if (data[0] & 0xff0000)
 			CALLBACK_FUNC(1, _8255_DATA + 2,
 				      (subd_8255->status >> 16) & 0xff, 
 				      CALLBACK_ARG);
 	}
 
-	insn->data[1] = CALLBACK_FUNC(0, _8255_DATA, 0, CALLBACK_ARG);
-	insn->data[1] |= (CALLBACK_FUNC(0, _8255_DATA + 1, 0, CALLBACK_ARG) << 8);
-	insn->data[1] |= (CALLBACK_FUNC(0, _8255_DATA + 2, 0, CALLBACK_ARG) << 16);
+	data[1] = CALLBACK_FUNC(0, _8255_DATA, 0, CALLBACK_ARG);
+	data[1] |= (CALLBACK_FUNC(0, _8255_DATA + 1, 0, CALLBACK_ARG) << 8);
+	data[1] |= (CALLBACK_FUNC(0, _8255_DATA + 2, 0, CALLBACK_ARG) << 16);
 
 	return 0;
 }
@@ -163,6 +164,7 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	unsigned int mask;
 	unsigned int bits;
 	subd_8255_t *subd_8255 = (subd_8255_t *)subd->priv;
+	unsigned int *data = (unsigned int *)insn->data;
 
 	mask = 1 << CR_CHAN(insn->chan_desc);
 
@@ -176,7 +178,7 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		bits = 0xf00000;
 	}
 
-	switch (insn->data[0]) {
+	switch (data[0]) {
 	case A4L_INSN_CONFIG_DIO_INPUT:
 		subd_8255->io_bits &= ~bits;
 		break;
@@ -184,7 +186,7 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		subd_8255->io_bits |= bits;
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		insn->data[1] = (subd_8255->io_bits & bits) ? 
+		data[1] = (subd_8255->io_bits & bits) ? 
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;

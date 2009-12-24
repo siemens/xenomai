@@ -70,14 +70,14 @@ static a4l_cmd_t test_cmd_mask = {
 
 /* --- Analog input simulation --- */
 
-static sampl_t output_tab[8] = { 
+static uint16_t output_tab[8] = { 
 	0x0001, 0x2000, 0x4000, 0x6000, 
 	0x8000, 0xa000, 0xc000, 0xffff 
 };
 static unsigned int output_idx;
 static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
 
-static sampl_t test_output(tstprv_t *priv)
+static uint16_t test_output(tstprv_t *priv)
 {
 	unsigned long flags;
 	unsigned int idx;
@@ -103,7 +103,7 @@ static void test_task_proc(void *arg)
 	a4l_subd_t *subd = a4l_get_subd(dev, TEST_INPUT_SUBD);
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 	a4l_cmd_t *cmd = NULL;
-	u64 now_ns, elapsed_ns=0;
+	uint64_t now_ns, elapsed_ns=0;
 
 	while(!a4l_check_dev(dev))
 		a4l_task_sleep(TEST_TASK_PERIOD);
@@ -125,9 +125,9 @@ static void test_task_proc(void *arg)
 
 				for(j = 0; j < cmd->nb_chan; j++)
 				{
-					sampl_t value = test_output(priv);
+					uint16_t value = test_output(priv);
 
-					a4l_buf_put(subd, &value, sizeof(sampl_t));
+					a4l_buf_put(subd, &value, sizeof(uint16_t));
 
 				}
 
@@ -206,10 +206,11 @@ int test_cancel(a4l_subd_t *subd)
 int test_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
+	uint16_t *data = (uint16_t *)insn->data;
 	int i;
 
-	for(i = 0; i < insn->data_size / sizeof(sampl_t); i++)
-		((sampl_t*)insn->data)[i] = test_output(priv);
+	for(i = 0; i < insn->data_size / sizeof(uint16_t); i++)
+		data[i] = test_output(priv);
 
 	return 0;
 }
@@ -219,8 +220,8 @@ void test_ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 {
 	int i;
 
-	for(i = 0; i < size / sizeof(sampl_t); i++)
-		((sampl_t*)buf)[i] += 1;
+	for(i = 0; i < size / sizeof(uint16_t); i++)
+		((uint16_t *)buf)[i] += 1;
 }
 
 void setup_test_subd(a4l_subd_t *subd)

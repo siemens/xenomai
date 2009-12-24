@@ -38,10 +38,10 @@ int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 	nanosecs_abs_t ns;
 	uint32_t ns2;
 
-	uint32_t *data = (uint32_t *)dsc->data;
+	unsigned int *data = (unsigned int *)dsc->data;
 
 	/* Basic checkings */
-	if (dsc->data_size != 2 * sizeof(uint32_t)) {
+	if (dsc->data_size != 2 * sizeof(unsigned int)) {
 		__a4l_err("a4l_do_insn_gettime: data size should be 2\n");
 		return -EINVAL;
 	}
@@ -51,8 +51,8 @@ int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 
 	/* Perform the conversion */
 	ns2 = do_div(ns, 1000000000);
-	data[0] = (uint32_t) ns;
-	data[1] = (uint32_t) ns2 / 1000;
+	data[0] = (unsigned int) ns;
+	data[1] = (unsigned int) ns2 / 1000;
 
 	return 0;
 }
@@ -60,21 +60,22 @@ int a4l_do_insn_gettime(a4l_kinsn_t * dsc)
 int a4l_do_insn_wait(a4l_kinsn_t * dsc)
 {
 	unsigned int us;
+	unsigned int *data = (unsigned int *)dsc->data;
 
 	/* Basic checkings */
-	if (dsc->data_size != 1) {
+	if (dsc->data_size != sizeof(unsigned int)) {
 		__a4l_err("a4l_do_insn_wait: data size should be 1\n");
 		return -EINVAL;
 	}
 
-	if (dsc->data[0] > A4L_INSN_WAIT_MAX) {
+	if (data[0] > A4L_INSN_WAIT_MAX) {
 		__a4l_err("a4l_do_insn_wait: wait duration is out of range\n");
 		return -EINVAL;
 	}
 
 	/* As we use (a4l_)udelay, we have to convert the delay into
 	   microseconds */
-	us = dsc->data[0] / 1000;
+	us = data[0] / 1000;
 
 	/* At least, the delay is rounded up to 1 microsecond */
 	if (us == 0)
@@ -90,7 +91,8 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 {
 	a4l_subd_t *subd;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	lsampl_t trignum;
+	unsigned int trignum;
+	unsigned int *data = (unsigned int*)dsc->data;
 
 	/* Basic checkings */
 	if (dsc->data_size > 1) {
@@ -98,7 +100,7 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 		return -EINVAL;
 	}
 	
-	trignum = (dsc->data_size == 1) ? dsc->data[0] : 0;
+	trignum = (dsc->data_size == sizeof(unsigned int)) ? data[0] : 0;
 	
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_do_insn_trig: "
