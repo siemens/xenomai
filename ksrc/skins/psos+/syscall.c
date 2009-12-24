@@ -1348,9 +1348,9 @@ static int __as_send(struct pt_regs *regs)
  */
 static int __t_getpth(struct pt_regs *regs)
 {
-	u_long ret = SUCCESS, pthread;
 	xnhandle_t handle;
 	psostask_t *task;
+	u_long pthread;
 	spl_t s;
 
 	handle = __xn_reg_arg1(regs);
@@ -1362,19 +1362,20 @@ static int __t_getpth(struct pt_regs *regs)
 	else
 		task = __psos_task_current(current);
 
-	if (task == NULL)
-		ret = ERR_OBJID;
-	else
-		pthread = task->pthread; /* hidden pthread_t identifier. */
+	if (task == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ERR_OBJID;
+	}
+
+	pthread = task->pthread; /* hidden pthread_t identifier. */
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (ret == SUCCESS &&
-	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
 				   &pthread, sizeof(pthread)))
-			ret = -EFAULT;
+		return -EFAULT;
 
-	return ret;
+	return SUCCESS;
 }
 
 static void *psos_shadow_eventcb(int event, void *data)
