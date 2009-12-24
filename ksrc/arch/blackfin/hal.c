@@ -77,7 +77,11 @@ static void rthal_latency_above_max(struct pt_regs *regs)
 	ilat = bfin_read_ILAT();
 	ipend = bfin_read_IPEND();
 	imask = bfin_read_IMASK();
+#ifdef CONFIG_BF561
+	sic_imask = bfin_read_SIC_IMASK(0);
+#else
 	sic_imask = bfin_read_SIC_IMASK();
+#endif
 
 	rthal_emergency_console();
 	printk("NMI watchdog detected timer latency above %u us\n",
