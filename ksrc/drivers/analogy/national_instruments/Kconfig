@@ -1,6 +1,6 @@
 
 config XENO_DRIVERS_ANALOGY_NI_MITE
-	depends on XENO_DRIVERS_ANALOGY
+	depends on XENO_DRIVERS_ANALOGY && PCI
 	tristate "NI MITE driver"
 	default n
 
