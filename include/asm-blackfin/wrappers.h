@@ -27,6 +27,10 @@
 #include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 #include <linux/interrupt.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+#undef CAN_ERR_MASK
+#endif
+
 #define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
 
 #define wrap_access_ok(task,addr,size) _access_ok((unsigned long)(addr),(size))
