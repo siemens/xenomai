@@ -414,3 +414,7 @@ EXPORT_SYMBOL(rthal_arch_cleanup);
 EXPORT_SYMBOL(rthal_thread_switch);
 EXPORT_SYMBOL(rthal_thread_trampoline);
 EXPORT_SYMBOL(rthal_defer_switch_p);
+#ifndef CONFIG_SMP
+EXPORT_SYMBOL(rthal_atomic_set_mask);
+EXPORT_SYMBOL(rthal_atomic_clear_mask);
+#endif
