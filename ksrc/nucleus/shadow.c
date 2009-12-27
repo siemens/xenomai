@@ -694,8 +694,8 @@ void xnshadow_clear_sig(xnthread_t *thread, unsigned muxid)
 }
 EXPORT_SYMBOL_GPL(xnshadow_clear_sig);
 
-struct xnvdso *xnvdso;
-EXPORT_SYMBOL_GPL(xnvdso);
+struct xnvdso *nkvdso;
+EXPORT_SYMBOL_GPL(nkvdso);
 
 /*
  * We re-use the global semaphore heap to provide a multi-purpose shared
@@ -703,13 +703,13 @@ EXPORT_SYMBOL_GPL(xnvdso);
  */
 void __init xnheap_init_vdso(void)
 {
-	xnvdso = (struct xnvdso *)xnheap_alloc(&__xnsys_global_ppd.sem_heap,
-						  sizeof(*xnvdso));
+	nkvdso = (struct xnvdso *)
+		xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
 
-	if (!xnvdso)
+	if (!nkvdso)
 		xnpod_fatal("Xenomai: cannot allocate memory for xnvdso!\n");
 
-	xnvdso->features = XNVDSO_FEATURES;
+	nkvdso->features = XNVDSO_FEATURES;
 }
 
 static inline void handle_rt_signals(xnthread_t *thread,
@@ -1765,8 +1765,8 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 
 	info.cpufreq = xnarch_get_cpu_freq();
 
-	info.xnvdso_off =
-	  xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, xnvdso);
+	info.vdso =
+		xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, nkvdso);
 
 	return __xn_safe_copy_to_user((void __user *)infarg, &info, sizeof(info));
 }

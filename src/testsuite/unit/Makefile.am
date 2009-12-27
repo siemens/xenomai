@@ -3,7 +3,7 @@ testdir = $(exec_prefix)/share/xenomai/testsuite/unit
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 bin_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native \
-               xnvdso
+               check-vdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
@@ -54,15 +54,15 @@ mutex_torture_native_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
 
-xnvdso_SOURCES = xnvdso.c
+check_vdso_SOURCES = check-vdso.c
 
-xnvdso_CPPFLAGS = \
+check_vdso_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-xnvdso_LDFLAGS = @XENO_USER_LDFLAGS@
+check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
 
-xnvdso_LDADD = \
+check_vdso_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
 

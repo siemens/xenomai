@@ -42,19 +42,19 @@ struct xnvdso {
  * empty.
  */
 /*
-#define XNVDSO_FEAT_A	0x0000000000000001
-#define XNVDSO_FEAT_B	0x0000000000000002
-#define XNVDSO_FEAT_C	0x0000000000000004
+#define XNVDSO_FEAT_A	0x0000000000000001ULL
+#define XNVDSO_FEAT_B	0x0000000000000002ULL
+#define XNVDSO_FEAT_C	0x0000000000000004ULL
 #define XNVDSO_FEATURES	(XNVDSO_FEAT_A | XNVDSO_FEAT_B | XVDSO_FEAT_C)
 */
 
-#define XNVDSO_FEATURES 0x0000000000000000
+#define XNVDSO_FEATURES 0x0000000000000000ULL
 
-extern struct xnvdso *xnvdso;
+extern struct xnvdso *nkvdso;
 
 static inline int xnvdso_test_feature(unsigned long long feature)
 {
-	return testbits(xnvdso->features, feature);
+	return testbits(nkvdso->features, feature);
 }
 
 extern void xnheap_init_vdso(void);

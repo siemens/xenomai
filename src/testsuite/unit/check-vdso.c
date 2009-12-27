@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
 	int err;
 	xnsysinfo_t sysinfo;
-	struct xnvdso *xnvdso;
+	struct xnvdso *nkvdso;
 	unsigned long long test_features;
 
 	if (argc != 2) {
@@ -39,14 +39,14 @@ int main(int argc, char **argv)
 
 	printf("Address of the global semaphore heap: 0x%lx\n",
 	       xeno_sem_heap[1]);
-	printf("Offset of xnvdso: %lu\n", sysinfo.xnvdso_off);
+	printf("Offset of xnvdso: %lu\n", sysinfo.vdso);
 
-	xnvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.xnvdso_off);
-	printf("Contents of the features flag: %llu\n", xnvdso->features);
+	nkvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.vdso);
+	printf("Contents of the features flag: %llu\n", nkvdso->features);
 
-	if (xnvdso->features == test_features)
+	if (nkvdso->features == test_features)
 		return 0;
 
-	fprintf(stderr, "error: xnvdso->features != %llu\n", test_features);
+	fprintf(stderr, "error: nkvdso->features != %llu\n", test_features);
 	return 1;
 }
