@@ -156,6 +156,7 @@ MODULE_DEVICE_TABLE(pci, ni_pci_table);
  can not act as it's own OFFSET or REFERENCE.
 */
 
+#if 0
 static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
 	RANGE(-10, 10),
 	RANGE(-5, 5),
@@ -169,6 +170,7 @@ static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
 }};
 static a4l_rngdesc_t range_ni_M_628x_ao = 
 	RNG_GLOBAL(rng_ni_M_628x_ao);
+#endif
 
 static a4l_rngtab_t rng_ni_M_625x_ao = { 3, {
 	RANGE(-10, 10),
