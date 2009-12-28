@@ -36,7 +36,7 @@
 #include <nucleus/select.h>
 #include <asm/xenomai/bits/init.h>
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-#include <nucleus/xnvdso.h>
+#include <nucleus/vdso.h>
 #else
 static inline void xnheap_init_vdso(void) { }
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

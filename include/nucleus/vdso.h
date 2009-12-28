@@ -1,7 +1,7 @@
-#ifndef _XENO_NUCLEUS_XNVDSO_H
-#define _XENO_NUCLEUS_XNVDSO_H
+#ifndef _XENO_NUCLEUS_VDSO_H
+#define _XENO_NUCLEUS_VDSO_H
 
-/*!\file xnvdso.h
+/*!\file vdso.h
  * \brief Definitions for global semaphore heap shared objects
  * \author Wolfgang Mauerer
  *
@@ -58,4 +58,4 @@ static inline int xnvdso_test_feature(unsigned long long feature)
 }
 
 extern void xnheap_init_vdso(void);
-#endif /* _XENO_NUCLEUS_XNVDSO_H */
+#endif /* _XENO_NUCLEUS_VDSO_H */

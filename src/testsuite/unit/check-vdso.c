@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <asm/xenomai/syscall.h>
-#include <nucleus/xnvdso.h>
+#include <nucleus/vdso.h>
 
 extern unsigned long xeno_sem_heap[2];
 

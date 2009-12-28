@@ -33,6 +33,6 @@ includesub_HEADERS = \
 	timer.h \
 	trace.h \
 	types.h \
+	vdso.h \
 	version.h \
-	xenomai.h \
-	xnvdso.h
+	xenomai.h

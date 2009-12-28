@@ -36,7 +36,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 bin_PROGRAMS = arith$(EXEEXT) wakeup-time$(EXEEXT) \
-	mutex-torture-posix$(EXEEXT) mutex-torture-native$(EXEEXT)
+	mutex-torture-posix$(EXEEXT) mutex-torture-native$(EXEEXT) \
+	check-vdso$(EXEEXT)
 subdir = src/testsuite/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -63,6 +64,12 @@ arith_DEPENDENCIES = ../../skins/native/libnative.la
 arith_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(arith_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_check_vdso_OBJECTS = check_vdso-check-vdso.$(OBJEXT)
+check_vdso_OBJECTS = $(am_check_vdso_OBJECTS)
+check_vdso_DEPENDENCIES = ../../skins/native/libnative.la
+check_vdso_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(check_vdso_LDFLAGS) $(LDFLAGS) -o $@
 am_mutex_torture_native_OBJECTS =  \
 	mutex_torture_native-mutex-torture.$(OBJEXT)
 mutex_torture_native_OBJECTS = $(am_mutex_torture_native_OBJECTS)
@@ -96,10 +103,12 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(arith_SOURCES) $(mutex_torture_native_SOURCES) \
-	$(mutex_torture_posix_SOURCES) $(wakeup_time_SOURCES)
-DIST_SOURCES = $(arith_SOURCES) $(mutex_torture_native_SOURCES) \
-	$(mutex_torture_posix_SOURCES) $(wakeup_time_SOURCES)
+SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
+	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
+	$(wakeup_time_SOURCES)
+DIST_SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
+	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
+	$(wakeup_time_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -305,6 +314,16 @@ mutex_torture_native_LDADD = \
 	../../skins/native/libnative.la \
 	-lpthread -lm
 
+check_vdso_SOURCES = check-vdso.c
+check_vdso_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
+
+check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
+check_vdso_LDADD = \
+	../../skins/native/libnative.la \
+	-lpthread -lm
+
 EXTRA_DIST = runinfo.in
 all: all-am
 
@@ -386,6 +405,9 @@ clean-binPROGRAMS:
 arith$(EXEEXT): $(arith_OBJECTS) $(arith_DEPENDENCIES) 
 	@rm -f arith$(EXEEXT)
 	$(arith_LINK) $(arith_OBJECTS) $(arith_LDADD) $(LIBS)
+check-vdso$(EXEEXT): $(check_vdso_OBJECTS) $(check_vdso_DEPENDENCIES) 
+	@rm -f check-vdso$(EXEEXT)
+	$(check_vdso_LINK) $(check_vdso_OBJECTS) $(check_vdso_LDADD) $(LIBS)
 mutex-torture-native$(EXEEXT): $(mutex_torture_native_OBJECTS) $(mutex_torture_native_DEPENDENCIES) 
 	@rm -f mutex-torture-native$(EXEEXT)
 	$(mutex_torture_native_LINK) $(mutex_torture_native_OBJECTS) $(mutex_torture_native_LDADD) $(LIBS)
@@ -404,6 +426,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arith-arith-noinline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arith-arith.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_vdso-check-vdso.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_native-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_posix-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wakeup_time-wakeup-time.Po@am__quote@
@@ -456,6 +479,20 @@ arith-arith-noinline.obj: arith-noinline.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='arith-noinline.c' object='arith-arith-noinline.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(arith_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o arith-arith-noinline.obj `if test -f 'arith-noinline.c'; then $(CYGPATH_W) 'arith-noinline.c'; else $(CYGPATH_W) '$(srcdir)/arith-noinline.c'; fi`
+
+check_vdso-check-vdso.o: check-vdso.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(check_vdso_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT check_vdso-check-vdso.o -MD -MP -MF $(DEPDIR)/check_vdso-check-vdso.Tpo -c -o check_vdso-check-vdso.o `test -f 'check-vdso.c' || echo '$(srcdir)/'`check-vdso.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/check_vdso-check-vdso.Tpo $(DEPDIR)/check_vdso-check-vdso.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='check-vdso.c' object='check_vdso-check-vdso.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(check_vdso_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o check_vdso-check-vdso.o `test -f 'check-vdso.c' || echo '$(srcdir)/'`check-vdso.c
+
+check_vdso-check-vdso.obj: check-vdso.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(check_vdso_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT check_vdso-check-vdso.obj -MD -MP -MF $(DEPDIR)/check_vdso-check-vdso.Tpo -c -o check_vdso-check-vdso.obj `if test -f 'check-vdso.c'; then $(CYGPATH_W) 'check-vdso.c'; else $(CYGPATH_W) '$(srcdir)/check-vdso.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/check_vdso-check-vdso.Tpo $(DEPDIR)/check_vdso-check-vdso.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='check-vdso.c' object='check_vdso-check-vdso.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(check_vdso_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o check_vdso-check-vdso.obj `if test -f 'check-vdso.c'; then $(CYGPATH_W) 'check-vdso.c'; else $(CYGPATH_W) '$(srcdir)/check-vdso.c'; fi`
 
 mutex_torture_native-mutex-torture.o: mutex-torture.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mutex_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutex_torture_native-mutex-torture.o -MD -MP -MF $(DEPDIR)/mutex_torture_native-mutex-torture.Tpo -c -o mutex_torture_native-mutex-torture.o `test -f 'mutex-torture.c' || echo '$(srcdir)/'`mutex-torture.c
