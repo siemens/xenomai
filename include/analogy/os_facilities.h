@@ -57,20 +57,22 @@
 #define __a4l_info(fmt, args...) \
 	rtdm_printk(KERN_INFO A4L_PROMPT fmt, ##args)
 
-#ifdef CONFIG_XENO_DRIVERS_A4L_DEBUG
+#ifdef CONFIG_XENO_DRIVERS_ANALOGY_DEBUG
 
 #define __a4l_dbg(level, debug, fmt, args...)			\
-	do {								\
-	if ((debug) >= (level))						\
+	do {							\
+	if ((debug) >= (level))					\
 		rtdm_printk(KERN_DEBUG A4L_PROMPT fmt, ##args); \
 	} while (0)
 
 #define core_dbg CONFIG_XENO_DRIVERS_ANALOGY_DEBUG_LEVEL
+#define drv_dbg CONFIG_XENO_DRIVERS_ANALOGY_DRIVER_DEBUG_LEVEL
 
-#else /* !CONFIG_XENO_DRIVERS_A4L_DEBUG */
+#else /* !CONFIG_XENO_DRIVERS_ANALOGY_DEBUG */
 
 #define __a4l_dbg(level, debug, fmt, args...)
-#endif /* CONFIG_XENO_DRIVERS_A4L_DEBUG */
+
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_DEBUG */
 
 #define __a4l_dev_name(dev) \
 	(dev->driver == NULL) ? "unattached dev" : dev->driver->board_name
