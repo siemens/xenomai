@@ -26,6 +26,11 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#ifdef CONFIG_CC_STACKPROTECTOR
+#warning "Buffer overflow detection not supported in 32bit mode"
+#error "Disable CONFIG_CC_STACKPROTECTOR in your kernel configuration"
+#endif
+
 static inline void xnarch_switch_threads(xnarchtcb_t *out_tcb,
 					 xnarchtcb_t *in_tcb,
 					 struct task_struct *outproc,
