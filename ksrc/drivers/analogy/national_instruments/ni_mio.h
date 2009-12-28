@@ -25,9 +25,9 @@
 
 #ifdef CONFIG_DEBUG_MIO
 #define MDPRINTK(fmt, args...) rtdm_printk(format, ##args)
-#else /* !CONFIG_DEBUG_MITE */
+#else /* !CONFIG_DEBUG_MIO */
 #define MDPRINTK(fmt, args...)
-#endif /* CONFIG_DEBUG_MITE */
+#endif /* CONFIG_DEBUG_MIO */
 
 /* Subdevice related defines */
 
