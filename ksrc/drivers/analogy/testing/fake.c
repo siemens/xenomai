@@ -250,6 +250,8 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	a4l_subd_t *subd;
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
+	a4l_dbg(1, drv_dbg, dev, "starting attach procedure...\n");
+
 	if(arg->opts!=NULL) {
 		tstattr_t *attr = (tstattr_t*) arg->opts;
 
@@ -263,6 +265,11 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		priv->quanta_cnt = 1;
 	}
 
+	a4l_dbg(1, drv_dbg, dev, 
+		"amplitude divisor = %lu...\n", priv->amplitude_div);
+	a4l_dbg(1, drv_dbg, dev, 
+		"quanta count = %lu...\n", priv->quanta_cnt);
+
 	/* Adds the subdevice to the device */
 	subd = a4l_alloc_subd(0, setup_test_subd);
 	if(subd == NULL)
@@ -272,12 +279,16 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	if(ret != TEST_INPUT_SUBD)
 		return (ret < 0) ? ret : -EINVAL;
 
+	a4l_dbg(1, drv_dbg, dev, "AI subdevice registered\n");
+
 	priv->timer_running = 0;
 
 	ret = a4l_task_init(&priv->timer_task, 
 			    "a4l_test task", 
 			    test_task_proc, 
 			    dev, A4L_TASK_HIGHEST_PRIORITY);
+
+	a4l_dbg(1, drv_dbg, dev, "attach procedure complete\n");
 
 	return ret;
 }
@@ -288,6 +299,8 @@ int test_detach(a4l_dev_t *dev)
 	tstprv_t *priv = (tstprv_t *)dev->priv;
 
 	a4l_task_destroy(&priv->timer_task);
+
+	a4l_dbg(1, drv_dbg, dev, "detach procedure complete\n");
 
 	return 0;
 }
