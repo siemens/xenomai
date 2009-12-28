@@ -4879,11 +4879,18 @@ int ni_E_init(a4l_dev_t *dev)
 	
 	/* analog input subdevice */
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: starting attach procedure...\n");
+
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: registering AI subdevice...\n");
+
 	if (boardtype.n_adchan) {
+
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: AI: %d channels\n", boardtype.n_adchan);
 
 		subd->flags = A4L_SUBD_AI | A4L_SUBD_CMD;
 		subd->rng_desc = ni_range_lkup[boardtype.gainlkup];
@@ -4910,21 +4917,31 @@ int ni_E_init(a4l_dev_t *dev)
 			ni_ai_munge32 : ni_ai_munge16;
 
 		subd->cmd_mask = &mio_ai_cmd_mask;
-	} else
+	} else {
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: AI subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
+	}
 
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_AI_SUBDEV)
 		return ret;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: AI subdevice registered\n");
+
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: registering AO subdevice...\n");
+
 	/* analog output subdevice */
 	if (boardtype.n_aochan) {
-		subd->flags = A4L_SUBD_AO;
 
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: AO: %d channels\n", boardtype.n_aochan);
+
+		subd->flags = A4L_SUBD_AO;
 		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
 					  sizeof(a4l_chan_t), GFP_KERNEL);
 
@@ -4954,12 +4971,17 @@ int ni_E_init(a4l_dev_t *dev)
 
 		subd->cancel = &ni_ao_reset;
 
-	} else
+	} else {
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: AO subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
+	}
 
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_AO_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: AO subdevice registered\n");
 	
 	if ((boardtype.reg_type & ni_reg_67xx_mask))
 		init_ao_67xx(dev);
@@ -4970,11 +4992,15 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: registering DIO subdevice...\n");
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: DIO: %d channels\n", 
+		boardtype.num_p0_dio_channels);
+
 	subd->flags = A4L_SUBD_DIO;
 
 	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
 				  sizeof(a4l_chan_t), GFP_KERNEL);
-	
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = boardtype.num_p0_dio_channels;
 	subd->chan_desc->chans[0].flags = A4L_CHAN_AREF_GROUND;
@@ -4993,6 +5019,10 @@ int ni_E_init(a4l_dev_t *dev)
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: DIO: command feature available\n");
+
 		subd->flags |= A4L_SUBD_CMD;
 		subd->do_cmd = ni_cdio_cmd;
 		subd->do_cmdtest = ni_cdio_cmdtest;
@@ -5011,25 +5041,33 @@ int ni_E_init(a4l_dev_t *dev)
 	}
 
 	ret = a4l_add_subd(dev, subd);
-
 	if(ret != NI_DIO_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: DIO subdevice registered\n");
 
 	/* 8255 device */
 	subd = a4l_alloc_subd(sizeof(subd_8255_t), NULL);
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: registering 8255 subdevice...\n");
+
 	if (boardtype.has_8255) {
 		devpriv->subd_8255.cb_arg = (unsigned long)dev;
 		devpriv->subd_8255.cb_func = ni_8255_callback;
 		subdev_8255_init(subd);
-	} else
+	} else {
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: 8255 subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
+	}
 
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_8255_DIO_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: 8255 subdevice registered\n");
 
 	/* formerly general purpose counter/timer device, but no longer used */
 	subd = a4l_alloc_subd(0, NULL);
@@ -5046,20 +5084,27 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: registering calib subdevice...\n");
+
 	subd->flags = A4L_SUBD_CALIB;
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 		/* internal PWM analog output
 		   used for AI nonlinearity calibration */
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: calib: M series calibration");
 		subd->insn_config = ni_m_series_pwm_config;
 		ni_writel(0x0, M_Offset_Cal_PWM);
 	} else if (boardtype.reg_type == ni_reg_6143) {
 		/* internal PWM analog output 
 		   used for AI nonlinearity calibration */
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: calib: 6143 calibration");
 		subd->insn_config = ni_6143_pwm_config;
 	} else {
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: calib: common calibration");
 		subd->insn_read = ni_calib_insn_read;
 		subd->insn_write = ni_calib_insn_write;
-
 		caldac_setup(dev, subd);
 	}
 
@@ -5067,10 +5112,15 @@ int ni_E_init(a4l_dev_t *dev)
 	if(ret != NI_CALIBRATION_SUBDEV)
 		return ret;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: calib subdevice registered\n");
+
 	/* EEPROM */
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
+
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: registering EEPROM subdevice...\n");
 
 	subd->flags = A4L_SUBD_MEMORY;
 
@@ -5088,14 +5138,22 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->insn_read = ni_eeprom_insn_read;
 	}
 
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: EEPROM: size = %lu\n", subd->chan_desc->length);
+
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_EEPROM_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: EEPROM subdevice registered\n");
 
 	/* PFI */
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
+
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: registering PFI(DIO) subdevice...\n");
 
 	subd->flags = A4L_SUBD_DIO;
 
@@ -5116,6 +5174,9 @@ int ni_E_init(a4l_dev_t *dev)
 	} else
 		subd->chan_desc->length = 10;
 
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: PFI: %lu bits...\n", subd->chan_desc->length);
+
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 		subd->insn_bits = ni_pfi_insn_bits;
 	}
@@ -5126,6 +5187,8 @@ int ni_E_init(a4l_dev_t *dev)
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_PFI_DIO_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: PFI subdevice registered\n");
 
 	/* cs5529 calibration adc */
 	subd = a4l_alloc_subd(0, NULL);
@@ -5161,6 +5224,9 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: registering serial subdevice...\n");
+
 	subd->flags = A4L_SUBD_SERIAL;
 
 	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
@@ -5179,10 +5245,13 @@ int ni_E_init(a4l_dev_t *dev)
 	if(ret != NI_SERIAL_SUBDEV)
 		return ret;
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: serial subdevice registered\n");
+
 	/* RTSI */
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
+
 #if 1 /* TODO: add RTSI subdevice */
 	subd->flags = A4L_SUBD_UNUSED;
 	ni_rtsi_init(dev);
@@ -5224,6 +5293,9 @@ int ni_E_init(a4l_dev_t *dev)
 		if(subd == NULL)
 			return -ENOMEM;
 
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: registering GPCT[%d] subdevice...\n", j);
+
 		subd->flags = A4L_SUBD_COUNTER;
 
 		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
@@ -5237,12 +5309,19 @@ int ni_E_init(a4l_dev_t *dev)
 		else
 			subd->chan_desc->chans[0].nb_bits = 24;
 
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: GPCT[%d]: %lu bits\n", 
+			j, subd->chan_desc->chans[0].nb_bits);
+
 		subd->insn_read = ni_gpct_insn_read;
 		subd->insn_write = ni_gpct_insn_write;
 		subd->insn_config = ni_gpct_insn_config;
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: GPCT[%d]: command feature available\n", j);
 		subd->flags |= A4L_SUBD_CMD;		
 		subd->cmd_mask = &ni_tio_cmd_mask;
 		subd->do_cmd = ni_gpct_cmd;
@@ -5262,12 +5341,18 @@ int ni_E_init(a4l_dev_t *dev)
 		ret = a4l_add_subd(dev, subd);
 		if(ret != NI_GPCT_SUBDEV(j))
 			return ret;
+
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: GCPT[%d] subdevice registered\n", j);
 	}
 
 	/* Frequency output */
 	subd = a4l_alloc_subd(0, NULL);
 	if(subd == NULL)
 		return -ENOMEM;
+
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: registering counter subdevice...\n");
 
 	subd->flags = A4L_SUBD_COUNTER;
 
@@ -5285,6 +5370,11 @@ int ni_E_init(a4l_dev_t *dev)
 	ret = a4l_add_subd(dev, subd);
 	if(ret != NI_FREQ_OUT_SUBDEV)
 		return ret;
+
+	a4l_dbg(1, drv_dbg, dev, 
+		"mio_common: counter subdevice registered\n");
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: initializing AI...\n");
 
 	/* ai configuration */
 	ni_ai_reset(a4l_get_subd(dev, NI_AI_SUBDEV));
@@ -5305,6 +5395,10 @@ int ni_E_init(a4l_dev_t *dev)
 	devpriv->stc_writew(dev, devpriv->clock_and_fout,
 			    Clock_and_FOUT_Register);
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: AI initialization OK\n");
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: initializing A0...\n");
+
 	/* analog output configuration */
 	ni_ao_reset(a4l_get_subd(dev, NI_AO_SUBDEV));
 
@@ -5318,7 +5412,12 @@ int ni_E_init(a4l_dev_t *dev)
 				    Interrupt_Control_Register);
 	}
 
+	a4l_dbg(1, drv_dbg, dev, "mio_common: A0 initialization OK\n");
+
 	/* DMA setup */
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: DMA setup\n");
+
 	ni_writeb(devpriv->ai_ao_select_reg, AI_AO_Select);
 	ni_writeb(devpriv->g0_g1_select_reg, G0_G1_Select);
 
@@ -5333,6 +5432,8 @@ int ni_E_init(a4l_dev_t *dev)
 		}
 		ni_writeb(0x0, M_Offset_AO_Calibration);
 	}
+
+	a4l_dbg(1, drv_dbg, dev, "mio_common: attach procedure complete\n");
 
 	return 0;
 }
