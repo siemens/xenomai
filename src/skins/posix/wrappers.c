@@ -32,6 +32,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/select.h>
+#include <xeno_config.h>
 
 #undef __real_ftruncate
 #undef __real_mmap
