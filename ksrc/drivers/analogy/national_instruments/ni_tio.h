@@ -23,7 +23,9 @@
 
 #include <analogy/analogy_driver.h>
 
+#ifdef CONFIG_PCI
 #include "mite.h"
+#endif
 
 enum ni_gpct_register {
 	NITIO_G0_Autoincrement_Reg,
