@@ -29,12 +29,15 @@
 #include <linux/version.h>
 #include <linux/nmi.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+#include <asm/perf_event.h>
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
 #include <asm/perf_counter.h>
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
 #include <asm/intel_arch_perfmon.h>
-#endif /* Linux < 2.6.19 */
+#else /* Linux < 2.6.19 */
 #include <asm/nmi.h>
+#endif /* Linux < 2.6.19 */
 #else /* Linux < 2.6 */
 #define X86_FEATURE_ARCH_PERFMON (3*32+11) /* Intel Architecture PerfMon */
 #define rdmsrl(reg, val) 					\
