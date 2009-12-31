@@ -107,7 +107,7 @@ extern void show_registers(struct pt_regs *regs);
 
 extern spinlock_t nmi_print_lock;
 
-void die_nmi(struct pt_regs *regs, const char *msg)
+void die_nmi(const char *msg, struct pt_regs *regs, int do_panic)
 {
 	spin_lock(&nmi_print_lock);
 	/*
@@ -124,7 +124,11 @@ void die_nmi(struct pt_regs *regs, const char *msg)
 	do_exit(SIGSEGV);
 }
 
-#endif /* Linux < 2.6 */
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
+#define die_nmi(msg, regs, do_panic)	die_nmi(regs, msg)
+#else /* Linux >= 2.6.27 */
+#include <asm/nmi.h>
+#endif /* Linux >= 2.6.27 */
 
 void rthal_latency_above_max(struct pt_regs *regs)
 {
@@ -136,7 +140,7 @@ void rthal_latency_above_max(struct pt_regs *regs)
 			 sizeof(buf),
 			 "NMI watchdog detected timer latency above %u us\n",
 			 rthal_maxlat_us);
-		die_nmi(regs, buf);
+		die_nmi(buf, regs, 1);
 	}
 }
 

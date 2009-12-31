@@ -29,7 +29,23 @@
 #include <linux/version.h>
 #include <linux/nmi.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+#include <asm/perf_event.h>
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
+#include <asm/perf_counter.h>
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
+#include <asm/intel_arch_perfmon.h>
+#else /* Linux < 2.6.19 */
 #include <asm/nmi.h>
+#endif /* Linux < 2.6.19 */
+#else /* Linux < 2.6 */
+#define X86_FEATURE_ARCH_PERFMON (3*32+11) /* Intel Architecture PerfMon */
+#define rdmsrl(reg, val) 					\
+	({ 							\
+		unsigned val1, val2; 				\
+		rdmsr(reg, val1, val2); 			\
+		asm ( "": "=A"(val) : "a"(val1), "d"(val2));	\
+	})
 #endif /* Linux < 2.6 */
 #include <asm/msr.h>
 #include <asm/xenomai/hal.h>
