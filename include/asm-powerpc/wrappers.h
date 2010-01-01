@@ -28,66 +28,20 @@
 
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-
-#include <asm/mmu.h>
-
-#define CONFIG_MMU 1
-
-#define wrap_phys_mem_prot(filp,pfn,size,prot)  \
-  __pgprot(pgprot_val(prot) | _PAGE_NO_CACHE | _PAGE_GUARDED)
-
-#define atomic_inc_and_test(v) (atomic_inc_return(v) == 0)
-#define show_stack(p,sp)       print_backtrace(sp)	/* Only works for current. */
-
-#define wrap_range_ok(task,addr,size) \
-    (segment_eq((task)->thread.fs, KERNEL_DS) || __user_ok((unsigned long)(addr),(size)))
-
-/*
- * fls: find last (most-significant) bit set.
- * Note fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32.
- */
-static __inline__ int fls(unsigned int x)
-{
-	int lz;
-
-	asm ("cntlzw %0,%1" : "=r" (lz) : "r" (x));
-	return 32 - lz;
-}
-
-typedef phys_addr_t resource_size_t;
-
-#define setbits8(_addr, _v) out_8((_addr), in_8(_addr) |  (_v))
-#define clrbits8(_addr, _v) out_8((_addr), in_8(_addr) & ~(_v))
-
-#else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
-
 #define wrap_phys_mem_prot(filp,pfn,size,prot) \
   phys_mem_access_prot(filp, pfn, size, prot)
 
 #ifdef CONFIG_PPC64
 #define wrap_range_ok(task,addr,size) \
     __access_ok(((__force unsigned long)(addr)),(size),(task->thread.fs))
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
-#define arch_leave_lazy_mmu_mode()  flush_tlb_pending()
-#endif
 #else /* !CONFIG_PPC64 */
 #define wrap_range_ok(task,addr,size) \
     ((unsigned long)(addr) <= (task)->thread.fs.seg			\
      && ((size) == 0 || (size) - 1 <= (task)->thread.fs.seg - (unsigned long)(addr)))
 #endif /* !CONFIG_PPC64 */
 
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
-
 #include <asm-generic/xenomai/wrappers.h>	/* Read the generic portion. */
 #include <linux/interrupt.h>
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
-
-#define wrap_put_user(src,dstP)           __put_user(src,dstP)
-#define wrap_get_user(dst,srcP)           __get_user(dst,srcP)
-
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
 
 /* from linux/include/asm-powerpc/uaccess.h */
 #define wrap_get_user(x, ptr)					\
@@ -113,59 +67,10 @@ typedef phys_addr_t resource_size_t;
 	__pu_err;						\
 })
 
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) */
-
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->handler
-#else
-#define rthal_irq_handlerp(irq) rthal_irq_descp(irq)->chip
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
-						void *dev_id,
-						struct pt_regs *regs);
-#else
+#define rthal_irq_handlerp(irq)		rthal_irq_descp(irq)->chip
 typedef irq_handler_t rthal_irq_host_handler_t;
-#endif
 
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,19)
-#define rthal_irq_chip_enable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (rthal_irq_handlerp(irq) == NULL ||			\
-		    rthal_irq_handlerp(irq)->enable == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			rthal_irq_handlerp(irq)->enable(irq);		\
-		__err__;						\
-	})
-#define rthal_irq_chip_disable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (rthal_irq_handlerp(irq) == NULL ||			\
-		    rthal_irq_handlerp(irq)->disable == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			rthal_irq_handlerp(irq)->disable(irq);		\
-		__err__;						\
-	})
-#define rthal_irq_chip_end(irq)						\
-	({									\
-		int __err__ = 0;						\
-		if (rthal_irq_handlerp(irq) != NULL) {				\
-			if (rthal_irq_handlerp(irq)->end != NULL)		\
-				rthal_irq_handlerp(irq)->end(irq); 		\
-			else if	(rthal_irq_handlerp(irq)->enable != NULL) 	\
-				rthal_irq_handlerp(irq)->enable(irq); 		\
-		} else								\
-			__err__ = -ENODEV;					\
-		__err__;							\
-	})
-#else /* > 2.6.19 */
 #if !defined(CONFIG_GENERIC_HARDIRQS) \
 	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)					\
@@ -177,6 +82,7 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 			rthal_irq_handlerp(irq)->unmask(irq);		\
 		__err__;						\
 	})
+
 #define rthal_irq_chip_disable(irq)					\
 	({								\
 		int __err__ = 0;					\
@@ -187,8 +93,9 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 		__err__;						\
 	})
 #endif
-#define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
-#endif
+
+#define rthal_irq_chip_end(irq)						\
+	({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
 #define mpc5xxx_get_bus_frequency(node)	mpc52xx_find_ipb_freq(node)

@@ -12,7 +12,4 @@ EXTRA_DIST = \
 	prepare-patch.sh \
 	wrap-link.sh \
 	Kconfig.frag \
-	Modules.frag \
-	defconfig.frag \
-	help_from_kconfig.pl \
 	$(wildcard postinstall.sh)

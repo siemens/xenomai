@@ -60,10 +60,8 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
-#ifdef TIF_MMSWITCH_INT
 	if (!rootcb->mm)
 		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
-#endif /* TIF_MMSWITCH_INT */
 	rthal_unmute_pic();
 }
 

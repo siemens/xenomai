@@ -25,10 +25,7 @@
 #include <linux/ioport.h>
 #include <linux/version.h>
 #include <linux/delay.h>
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/pnp.h>
-#endif /* Linux >= 2.6.0 */
 
 #include <rtdm/rtdm_driver.h>
 
@@ -55,9 +52,9 @@ static char   *type[RTCAN_PEAK_DNG_MAX_DEV];
 static ushort io[RTCAN_PEAK_DNG_MAX_DEV];
 static char   irq[RTCAN_PEAK_DNG_MAX_DEV];
 
-compat_module_param_array(type, charp,  RTCAN_PEAK_DNG_MAX_DEV, 0444);
-compat_module_param_array(io,   ushort, RTCAN_PEAK_DNG_MAX_DEV, 0444);
-compat_module_param_array(irq,  byte,   RTCAN_PEAK_DNG_MAX_DEV, 0444);
+module_param_array(type, charp,  NULL, 0444);
+module_param_array(io,   ushort, NULL, 0444);
+module_param_array(irq,  byte,   NULL, 0444);
 
 MODULE_PARM_DESC(type, "The type of interface (sp, epp)");
 MODULE_PARM_DESC(io,   "The io-port address");
@@ -320,7 +317,6 @@ void rtcan_peak_dng_exit_one(struct rtcan_device *dev)
     rtcan_dev_free(dev);
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 static const struct pnp_device_id rtcan_peak_dng_pnp_tbl[] = {
     /* Standard LPT Printer Port */
     {.id = "PNP0400", .driver_data = 0},
@@ -342,7 +338,6 @@ static struct pnp_driver rtcan_peak_dng_pnp_driver = {
 };
 
 static int pnp_registered;
-#endif /* Linux >= 2.6.0 */
 
 /** Cleanup module */
 static void rtcan_peak_dng_exit(void)
@@ -355,10 +350,8 @@ static void rtcan_peak_dng_exit(void)
 	 i++)
 	rtcan_peak_dng_exit_one(dev);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     if (pnp_registered)
 	pnp_unregister_driver(&rtcan_peak_dng_pnp_driver);
-#endif /* Linux >= 2.6.0 */
 }
 
 /** Init module */
@@ -366,10 +359,8 @@ static int __init rtcan_peak_dng_init(void)
 {
     int i, ret = -EINVAL, done = 0;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     if (pnp_register_driver(&rtcan_peak_dng_pnp_driver) == 0)
 	pnp_registered = 1;
-#endif /* Linux >= 2.6.0 */
 
     for (i = 0;
 	 i < RTCAN_PEAK_DNG_MAX_DEV && type[i] != 0;

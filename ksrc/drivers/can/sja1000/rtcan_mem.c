@@ -59,11 +59,11 @@ static u32 can_clock[RTCAN_MEM_MAX_DEV];
 static u8 ocr[RTCAN_MEM_MAX_DEV];
 static u8 cdr[RTCAN_MEM_MAX_DEV];
 
-compat_module_param_array(mem, uint, RTCAN_MEM_MAX_DEV, 0444);
-compat_module_param_array(irq, int, RTCAN_MEM_MAX_DEV, 0444);
-compat_module_param_array(can_clock, uint, RTCAN_MEM_MAX_DEV, 0444);
-compat_module_param_array(ocr, byte, RTCAN_MEM_MAX_DEV, 0444);
-compat_module_param_array(cdr, byte, RTCAN_MEM_MAX_DEV, 0444);
+module_param_array(mem, uint, NULL, 0444);
+module_param_array(irq, int, NULL, 0444);
+module_param_array(can_clock, uint, NULL, 0444);
+module_param_array(ocr, byte, NULL, 0444);
+module_param_array(cdr, byte, NULL, 0444);
 
 MODULE_PARM_DESC(mem, "The io-memory address");
 MODULE_PARM_DESC(irq, "The interrupt number");

@@ -47,12 +47,10 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 	struct task_struct *user_task; /* Shadowed user-space task */
 	struct task_struct *active_task; /* Active user-space task */
 	x86_fpustate *fpup;	/* &i387 or &user->thread.i387 */
-#ifdef XNARCH_HAVE_MAYDAY
 	struct {
 		unsigned long eip;
 		unsigned long eax;
 	} mayday;
-#endif
 
 	/* Private context for kernel threads. */
 	x86_fpustate i387;
@@ -88,7 +86,7 @@ typedef struct xnarch_fltinfo {
 
 #define xnarch_fault_trap(fi)   ((fi)->vector)
 #define xnarch_fault_code(fi)   ((fi)->errcode)
-#define xnarch_fault_pc(fi)     ((fi)->regs->x86reg_ip)
+#define xnarch_fault_pc(fi)     ((fi)->regs->ip)
 /* fault is caused by use FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(fi)  ((fi)->vector == 7)
 /* The following predicates are only usable over a regular Linux stack

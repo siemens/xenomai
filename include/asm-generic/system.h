@@ -85,7 +85,7 @@ typedef unsigned long spl_t;
 #endif /* !CONFIG_SMP */
 #define splmax()    rthal_local_irq_disable()
 #define splnone()   rthal_local_irq_enable()
-#define spltest()   rthal_local_irq_test()
+#define spltest()   rthal_local_irq_disabled()
 #define splget(x)   rthal_local_irq_flags(x)
 
 static inline unsigned xnarch_current_cpu(void)
@@ -445,7 +445,8 @@ static inline int xnarch_remap_vm_page(struct vm_area_struct *vma,
 				       unsigned long from,
 				       unsigned long to)
 {
-	return wrap_remap_vm_page(vma, from, to);
+	vma->vm_flags |= VM_RESERVED;
+	return vm_insert_page(vma, from, vmalloc_to_page((void *)to));
 }
 
 static inline int xnarch_remap_io_page_range(struct file *filp,
@@ -455,9 +456,10 @@ static inline int xnarch_remap_io_page_range(struct file *filp,
 					     unsigned long size,
 					     pgprot_t prot)
 {
- 	return wrap_remap_io_page_range(vma, from, to, size,
- 					wrap_phys_mem_prot(filp, (to) >> PAGE_SHIFT,
- 							   size, prot));
+	prot = wrap_phys_mem_prot(filp, to >> PAGE_SHIFT, size, prot);
+	(vma)->vm_page_prot = pgprot_noncached((vma)->vm_page_prot);
+	/* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */
+	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
 }
 
 static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
@@ -466,7 +468,8 @@ static inline int xnarch_remap_kmem_page_range(struct vm_area_struct *vma,
 					       unsigned long size,
 					       pgprot_t prot)
 {
-    return wrap_remap_kmem_page_range(vma,from,to,size,prot);
+	/* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */
+	return remap_pfn_range(vma, from, to >> PAGE_SHIFT, size, prot);
 }
 
 #define xnarch_finalize_no_switch(dead_tcb) do { } while(0)

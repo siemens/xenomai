@@ -34,43 +34,12 @@
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-extern spinlock_t irq_controller_lock;
-
-#define rthal_irq_desc_lock(irq) (&irq_controller_lock)
-#define rthal_irq_chip_enable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (rthal_irq_descp(irq)->chip->unmask == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			rthal_irq_descp(irq)->chip->unmask(irq);	\
-		__err__;						\
-	})
-#define rthal_irq_chip_disable(irq)					\
-	({								\
-		int __err__ = 0;					\
-		if (rthal_irq_descp(irq)->chip->mask == NULL)		\
-			__err__ = -ENODEV;				\
-		else							\
-			rthal_irq_descp(irq)->chip->mask(irq);		\
-		__err__;						\
-	})
-typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
-						void *dev_id,
-						struct pt_regs *regs);
-#define rthal_irq_chip_end(irq)	rthal_irq_chip_enable(irq)
-#define rthal_mark_irq_disabled(irq) (rthal_irq_descp(irq)->disable_depth = 1)
-#define rthal_mark_irq_enabled(irq) (rthal_irq_descp(irq)->disable_depth = 0)
-
-extern void (*fp_init)(union fp_state *);
-#else /* >= 2.6.19 */
 #if !defined(CONFIG_GENERIC_HARDIRQS) \
 	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
 #endif
-#define rthal_irq_desc_lock(irq) (&rthal_irq_descp(irq)->lock)
+#define rthal_irq_desc_lock(irq)	(&rthal_irq_descp(irq)->lock)
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
 #define rthal_mark_irq_disabled(irq) do {              \
@@ -85,28 +54,4 @@ static inline void fp_init(union fp_state *state)
     memset(state, 0, sizeof(*state));
 }
 
-#endif
-
-#if IPIPE_MAJOR_NUMBER == 1 && /* There is no version 0. */ 	\
-	(IPIPE_MINOR_NUMBER < 5 || \
-	 (IPIPE_MINOR_NUMBER == 5 && IPIPE_PATCH_NUMBER < 3))
-#define __ipipe_mach_release_timer()  \
-	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy)
-#endif /* IPIPE < 1.5-03 */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-#define FPEXC_EN FPEXC_ENABLE
-#endif
-
-#if !defined(__IPIPE_FEATURE_UNMASKED_CONTEXT_SWITCH) && defined(TIF_MMSWITCH_INT)
-/*
- * Legacy ARM patches might provide unmasked context switch support
- * without defining the common config option; force this support in.
- */
-#define CONFIG_IPIPE_UNMASKED_CONTEXT_SWITCH	1
-#define CONFIG_XENO_HW_UNLOCKED_SWITCH		1
-#endif
-
 #endif /* _XENO_ASM_ARM_WRAPPERS_H */
-
-// vim: ts=4 et sw=4 sts=4

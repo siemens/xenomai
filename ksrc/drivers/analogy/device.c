@@ -148,7 +148,6 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 	entry->data = &dev->transfer;
 	entry->write_proc = NULL;
 	entry->read_proc = a4l_rdproc_transfer;
-	wrap_proc_dir_entry_owner(entry);
 
       out_setup_proc_transfer:
 	/* Free the file name buffer */

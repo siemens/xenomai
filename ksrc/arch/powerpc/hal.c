@@ -68,11 +68,7 @@ enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 static inline void rthal_disarm_decr(int disarmed)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-	disarm_decr[rthal_processor_id()] = disarmed;
-#else
 	per_cpu(disarm_decr, rthal_processor_id()) = disarmed;
-#endif
 }
 
 static inline void rthal_setup_oneshot_dec(void)

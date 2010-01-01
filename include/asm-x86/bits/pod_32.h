@@ -79,18 +79,16 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 		rthal_set_foreign_stack(&rthal_domain);
 	}
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,20)
 	if (next)
 		next->fpu_counter = 0;
-#endif /* Linux version >= 2.6.20 */
 
 	if (next && next != prev) {
 		struct mm_struct *oldmm = prev->active_mm;
 
-		wrap_switch_mm(oldmm, next->active_mm, next);
+		switch_mm(oldmm, next->active_mm, next);
 
-		if (!next->mm)
-			wrap_enter_lazy_tlb(oldmm, next);
+		if (next->mm == NULL)
+			enter_lazy_tlb(oldmm, next);
 	}
 
 	if (out_tcb->user_task) {
@@ -104,20 +102,9 @@ static inline void xnarch_switch_to(xnarchtcb_t * out_tcb, xnarchtcb_t * in_tcb)
 	xnarch_switch_threads(out_tcb, in_tcb, prev, next);
 
 	if (xnarch_shadow_p(out_tcb, prev)) {
-
 		loadsegment(fs, fs);
 		loadsegment(gs, gs);
-
 		barrier();
-
-		/* Eagerly reinstate the I/O bitmap of any incoming shadow
-		   thread which has previously requested I/O permissions. We
-		   don't want the unexpected latencies induced by lazy update
-		   from the GPF handler to bite shadow threads that
-		   explicitly told the kernel that they would need to perform
-		   raw I/O ops. */
-
-		wrap_switch_iobitmap(prev, rthal_processor_id());
 	}
 
 	stts();
@@ -157,13 +144,8 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 
 #ifdef CONFIG_XENO_HW_FPU
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 11)
-#define xnarch_fpu_init_p(task)   ((task)->used_math)
-#define xnarch_set_fpu_init(task) ((task)->used_math = 1)
-#else
 #define xnarch_fpu_init_p(task)   tsk_used_math(task)
 #define xnarch_set_fpu_init(task) set_stopped_child_used_math(task)
-#endif
 
 static inline void xnarch_init_fpu(xnarchtcb_t * tcb)
 {

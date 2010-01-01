@@ -1,2 +1,0 @@
-
-dep_tristate 'Sensoray Model 526 driver' CONFIG_XENO_DRIVERS_ANALOGY_S526 $CONFIG_XENO_DRIVERS_ANALOGY

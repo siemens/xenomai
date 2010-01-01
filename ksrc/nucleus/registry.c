@@ -67,13 +67,13 @@ static struct xnsynch registry_hash_synch;
 
 static unsigned registry_exported_objects;
 
-static DECLARE_WORK_FUNC(registry_proc_callback);
+static void registry_proc_callback(struct work_struct *work);
 
 static void registry_proc_schedule(void *cookie);
 
 static xnqueue_t registry_obj_procq;	/* Objects waiting for /proc handling. */
 
-static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
+static DECLARE_WORK(registry_proc_work, &registry_proc_callback);
 
 static int registry_proc_apc;
 
@@ -237,7 +237,7 @@ static DEFINE_SEMAPHORE(export_mutex);
  * like are hopefully properly handled due to a careful
  * synchronization of operations across domains.
  */
-static DECLARE_WORK_FUNC(registry_proc_callback)
+static void registry_proc_callback(struct work_struct *work)
 {
 	struct xnvfile_directory *rdir, *dir;
 	const char *rname, *type;

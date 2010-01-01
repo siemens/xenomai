@@ -21,13 +21,7 @@
 #include <asm/processor.h>
 #include <asm/cputable.h>
 #include <asm/ppc_asm.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#include "ppc_defs.h"
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)
-#include <asm/offsets.h>
-#else
 #include <asm/asm-offsets.h>
-#endif
 
 #ifdef CONFIG_PPC601_SYNC_FIX
 #define SYNC				\

@@ -82,22 +82,11 @@ static inline unsigned long long rthal_rdtsc(void)
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
-/* With head-optimization, callers are expected to have switched off
-   hard-IRQs already -- no need for additional protection in this
-   case. */
-#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-	unsigned long flags;
-
-	rthal_local_irq_save_hw(flags);
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 	if (likely(delay))
 		apic_write(APIC_TMICT,delay);
 	else
 		/* Pend the timer interrupt. */
 		rthal_schedule_irq_head(RTHAL_APIC_TIMER_IPI);
-#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-	rthal_local_irq_restore_hw(flags);
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
 static const char *const rthal_fault_labels[] = {
@@ -126,11 +115,7 @@ static const char *const rthal_fault_labels[] = {
 
 #ifdef CONFIG_X86_LOCAL_APIC
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
-#include <asm/mach_apic.h>
-#else
 #include <asm/apic.h>
-#endif
 
 static inline void rthal_setup_periodic_apic(int count, int vector)
 {

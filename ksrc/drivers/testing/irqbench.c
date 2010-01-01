@@ -19,10 +19,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/ioport.h>
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/pnp.h>
-#endif /* Linux >= 2.6.0 */
 
 #include <rtdm/rttesting.h>
 #include <rtdm/rtdm_driver.h>
@@ -486,7 +483,6 @@ static struct rtdm_device device = {
 	.proc_name         = device.device_name,
 };
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 static const struct pnp_device_id irqbench_pnp_tbl[] = {
 	/* Standard LPT Printer Port */
 	{.id = "PNP0400", .driver_data = 0},
@@ -508,7 +504,6 @@ static struct pnp_driver irqbench_pnp_driver = {
 };
 
 static int pnp_registered;
-#endif /* Linux >= 2.6.0 */
 
 static int __init __irqbench_init(void)
 {
@@ -523,10 +518,8 @@ static int __init __irqbench_init(void)
 		start_index++;
 	} while (err == -EEXIST);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	if (!err && pnp_register_driver(&irqbench_pnp_driver) == 0)
 		pnp_registered = 1;
-#endif /* Linux >= 2.6.0 */
 
 	return err;
 }
@@ -535,10 +528,8 @@ static void __exit __irqbench_exit(void)
 {
 	rtdm_dev_unregister(&device, 1000);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	if (pnp_registered)
 		pnp_unregister_driver(&irqbench_pnp_driver);
-#endif /* Linux >= 2.6.0 */
 }
 
 module_init(__irqbench_init);

@@ -16,7 +16,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) && defined(CONFIG_PNP) && \
+#if defined(CONFIG_PNP) && \
     (defined(CONFIG_XENO_DRIVERS_16550A_PIO) || \
      defined(CONFIG_XENO_DRIVERS_16550A_ANY))
 
@@ -379,9 +379,9 @@ static inline void rt_16550_pnp_cleanup(void)
 		pnp_unregister_driver(&rt_16550_pnp_driver);
 }
 
-#else /* Linux < 2.6.0 || !CONFIG_PNP || !(..._16550A_IO || ..._16550A_ANY) */
+#else /* !CONFIG_PNP || !(..._16550A_IO || ..._16550A_ANY) */
 
 #define rt_16550_pnp_init()	do { } while (0)
 #define rt_16550_pnp_cleanup()	do { } while (0)
 
-#endif /* Linux < 2.6.0 || !CONFIG_PNP || !(..._16550A_IO || ..._16550A_ANY) */
+#endif /* !CONFIG_PNP || !(..._16550A_IO || ..._16550A_ANY) */

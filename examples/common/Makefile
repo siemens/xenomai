@@ -70,21 +70,6 @@ EXTRA_CFLAGS := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/posix $(ADD_
 all::
 	$(MAKE) -C $(KSRC) SUBDIRS=$(PWD) modules
 
-### Kernel 2.4
-else
-
-ARCH    ?= $(shell uname -i)
-INCLUDE := -I$(KSRC)/include/xenomai -I$(KSRC)/include/xenomai/compat -I$(KSRC)/include/xenomai/posix
-CFLAGS  += $(shell $(MAKE) -s -C $(KSRC) CC=$(CC) ARCH=$(ARCH) SUBDIRS=$(PWD) modules) $(INCLUDE)
-
-all:: $(OBJS)
-
-endif
-
-## Target for capturing 2.4 module CFLAGS
-modules:
-	@echo "$(CFLAGS)"
-
 clean::
 	$(RM) $(CLEANMOD) *.o *.ko *.mod.c Module*.symvers Module.markers modules.order
 	$(RM) -R .tmp*

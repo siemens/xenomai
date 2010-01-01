@@ -324,7 +324,7 @@ static int vfile_snapshot_release(struct inode *inode, struct file *file)
 ssize_t vfile_snapshot_write(struct file *file, const char __user *buf,
 			     size_t size, loff_t *ppos)
 {
-	struct proc_dir_entry *pde = PDE(wrap_f_inode(file));
+	struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
 	struct xnvfile_snapshot *vfile = pde->data;
 	struct xnvfile_input input;
 	ssize_t ret;
@@ -425,11 +425,9 @@ int xnvfile_init_snapshot(const char *name,
 		return -ENOMEM;
 
 	pde->proc_fops = &vfile_snapshot_fops;
-	wrap_proc_dir_entry_owner(pde);
-
+	pde->data = vfile;
 	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
-	pde->data = vfile;
 
 	return 0;
 }
@@ -582,7 +580,7 @@ static int vfile_regular_release(struct inode *inode, struct file *file)
 ssize_t vfile_regular_write(struct file *file, const char __user *buf,
 			    size_t size, loff_t *ppos)
 {
-	struct proc_dir_entry *pde = PDE(wrap_f_inode(file));
+	struct proc_dir_entry *pde = PDE(file->f_path.dentry->d_inode);
 	struct xnvfile_regular *vfile = pde->data;
 	struct xnvfile_input input;
 	ssize_t ret;
@@ -663,11 +661,9 @@ int xnvfile_init_regular(const char *name,
 		return -ENOMEM;
 
 	pde->proc_fops = &vfile_regular_fops;
-	wrap_proc_dir_entry_owner(pde);
-
+	pde->data = vfile;
 	vfile->entry.parent = parent;
 	vfile->entry.pde = pde;
-	pde->data = vfile;
 
 	return 0;
 }
@@ -711,7 +707,6 @@ int xnvfile_init_dir(const char *name,
 	vdir->entry.pde = pde;
 	vdir->entry.lockops = NULL;
 	vdir->entry.private = NULL;
-	wrap_proc_dir_entry_owner(pde);
 
 	return 0;
 }
@@ -759,7 +754,6 @@ int xnvfile_init_link(const char *from,
 	vlink->entry.pde = pde;
 	vlink->entry.lockops = NULL;
 	vlink->entry.private = NULL;
-	wrap_proc_dir_entry_owner(pde);
 
 	return 0;
 }
@@ -979,7 +973,6 @@ int __init xnvfile_init_root(void)
 	vdir->entry.pde = pde;
 	vdir->entry.lockops = NULL;
 	vdir->entry.private = NULL;
-	wrap_proc_dir_entry_owner(pde);
 
 	return 0;
 }

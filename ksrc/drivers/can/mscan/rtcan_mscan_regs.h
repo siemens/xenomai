@@ -25,16 +25,9 @@
 #ifndef __RTCAN_MSCAN_REGS_H_
 #define __RTCAN_MSCAN_REGS_H_
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) || \
-  defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD)
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,22)
 #include <linux/of_platform.h>
-#else
-#include <asm/of_platform.h>
-#endif
 #include <asm/mpc52xx.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24)
+
 static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 {
 	struct device_node *ofn;
@@ -43,25 +36,9 @@ static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 		ofn = of_find_compatible_node(NULL, NULL, "fsl,mpc5200-gpio");
 	return ofn ? of_iomap(ofn, 0) : NULL;
 }
+
 #define MPC5xxx_GPIO	mpc5xxx_gpio_find_and_map()
-#else
-#define MPC5xxx_GPIO	mpc52xx_find_and_map("mpc5200-gpio")
-#endif
 #define mpc5xxx_gpio	mpc52xx_gpio
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
-#include <asm/mpc5xxx.h>
-#define MSCAN_MBAR	MPC5xxx_MBAR
-#define MSCAN_CAN1_IRQ	MPC5xxx_CAN1_IRQ
-#define MSCAN_CAN2_IRQ	MPC5xxx_CAN2_IRQ
-#else
-#include <asm/mpc52xx.h>
-#define MSCAN_MBAR	MPC52xx_MBAR
-#define MSCAN_CAN1_IRQ	MPC52xx_MSCAN1_IRQ
-#define MSCAN_CAN2_IRQ	MPC52xx_MSCAN2_IRQ
-#define MPC5xxx_GPIO	MPC52xx_VA(MPC52xx_GPIO_OFFSET)
-#define mpc5xxx_gpio	mpc52xx_gpio
-#endif
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
 #define mpc5xxx_get_of_node(ofdev) (ofdev)->dev.of_node

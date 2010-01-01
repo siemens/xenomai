@@ -46,13 +46,6 @@ void xnpod_delete_thread(struct xnthread *);
 unsigned long get_stack_vsid(unsigned long ksp)
 {
 	unsigned long vsid;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-	vsid = get_kernel_vsid(ksp);
-	vsid <<= SLB_VSID_SHIFT;
-	vsid |= SLB_VSID_KERNEL;
-	if (cpu_has_feature(CPU_FTR_16M_PAGE))
-		vsid |= SLB_VSID_L;
-#else /* LINUX_VERSION_CODE >= 2.6.24 */
 	unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
@@ -66,7 +59,6 @@ unsigned long get_stack_vsid(unsigned long ksp)
 		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_256M)
 			<< SLB_VSID_SHIFT;
 	vsid |= SLB_VSID_KERNEL | llp;
-#endif /* LINUX_VERSION_CODE >= 2.6.24 */
 
 	return vsid;
 }
@@ -147,16 +139,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 #else /* PPC32 */
 		if (likely(next_mm != NULL)) {
 			next->thread.pgdir = next_mm->pgd;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
-			get_mmu_context(next_mm);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-			set_context(next_mm->context, next_mm->pgd);
-#else /* !(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))*/
-			set_context(next_mm->context.id, next_mm->pgd);
-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
-#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
 			switch_mmu_context(prev_mm, next_mm);
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29) */
 			current = prev;	/* Make sure r2 is valid. */
 		}
 	}

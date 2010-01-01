@@ -23,7 +23,6 @@
 #include <asm-generic/xenomai/features.h>
 
 #ifdef __KERNEL__
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 /*
  * The kernel will deal dynamically with the actual SEP support
  * whether the CPU provides it or not; we just need to make sure that
@@ -32,7 +31,6 @@
  * included from asm-generic/xenomai/features.h.
  */
 #define CONFIG_XENO_X86_SEP  1
-#endif /* KERNEL_VERSION >= 2.6.0 */
 #endif /* __KERNEL__ */
 
 #define __xn_feat_x86_sep 0x00000001

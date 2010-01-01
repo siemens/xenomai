@@ -34,18 +34,18 @@
 
 /* Register mapping for accessing syscall args. */
 
-#define __xn_reg_mux(regs)    ((regs)->x86reg_origax)
-#define __xn_reg_rval(regs)   ((regs)->x86reg_ax)
+#define __xn_reg_mux(regs)    ((regs)->orig_ax)
+#define __xn_reg_rval(regs)   ((regs)->ax)
 #ifdef __i386__
-#define __xn_reg_arg1(regs)   ((regs)->x86reg_bx)
-#define __xn_reg_arg2(regs)   ((regs)->x86reg_cx)
-#define __xn_reg_arg3(regs)   ((regs)->x86reg_dx)
-#define __xn_reg_arg4(regs)   ((regs)->x86reg_si)
-#define __xn_reg_arg5(regs)   ((regs)->x86reg_di)
+#define __xn_reg_arg1(regs)   ((regs)->bx)
+#define __xn_reg_arg2(regs)   ((regs)->cx)
+#define __xn_reg_arg3(regs)   ((regs)->dx)
+#define __xn_reg_arg4(regs)   ((regs)->si)
+#define __xn_reg_arg5(regs)   ((regs)->di)
 #else /* x86_64 */
-#define __xn_reg_arg1(regs)   ((regs)->x86reg_di)
-#define __xn_reg_arg2(regs)   ((regs)->x86reg_si)
-#define __xn_reg_arg3(regs)   ((regs)->x86reg_dx)
+#define __xn_reg_arg1(regs)   ((regs)->di)
+#define __xn_reg_arg2(regs)   ((regs)->si)
+#define __xn_reg_arg3(regs)   ((regs)->dx)
 #define __xn_reg_arg4(regs)   ((regs)->r10) /* entry.S convention here. */
 #define __xn_reg_arg5(regs)   ((regs)->r8)
 #endif /* x86_64 */

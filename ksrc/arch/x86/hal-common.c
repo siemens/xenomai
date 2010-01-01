@@ -127,15 +127,8 @@ int rthal_timer_request(
 	if (rthal_timerfreq_arg == 0)
 		tmfreq = &rthal_tunables.timer_freq;
 
-#ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
 	res = ipipe_request_tickdev("lapic", mode_emul, tick_emul, cpu,
 				    tmfreq);
-#else
-	*tmfreq = RTHAL_COMPAT_TIMERFREQ;
-	res = ipipe_request_tickdev("lapic", (compat_emumode_t)mode_emul,
-				    (compat_emutick_t)tick_emul, cpu);
-#endif
-
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -177,26 +170,9 @@ int rthal_timer_request(
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#include <asm/smpboot.h>
-static inline void send_IPI_allbutself(int vector)
-{
-	unsigned long flags;
-
-	rthal_local_irq_save_hw(flags);
-	apic_wait_icr_idle();
-	apic_write(APIC_ICR,
-			  APIC_DM_FIXED | APIC_DEST_ALLBUT | INT_DEST_ADDR_MODE
-			  | vector);
-	rthal_local_irq_restore_hw(flags);
-}
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
-#include <mach_ipi.h>
-#else
 #define send_IPI_allbutself(vector)	apic->send_IPI_allbutself(vector)
-#endif /* __i386__ && < 2.6.30 */
 
-DECLARE_LINUX_IRQ_HANDLER(rthal_broadcast_to_local_timers, irq, dev_id)
+irqreturn_t rthal_broadcast_to_local_timers(int irq, void *dev_id)
 {
 #ifdef CONFIG_SMP
 	send_IPI_allbutself(LOCAL_TIMER_VECTOR);
@@ -377,30 +353,34 @@ int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
 		       void *data)
 {
 	/* Notes:
-
-	   1) GPF needs to be propagated downstream whichever domain caused
-	   it. This is required so that we don't spuriously raise a fatal
-	   error when some fixup code is available to solve the error
-	   condition. For instance, Linux always attempts to reload the %gs
-	   segment register when switching a process in (__switch_to()),
-	   regardless of its value. It is then up to Linux's GPF handling
-	   code to search for a possible fixup whenever some exception
-	   occurs. In the particular case of the %gs register, such an
-	   exception could be raised for an exiting process if a preemption
-	   occurs inside a short time window, after the process's LDT has
-	   been dropped, but before the kernel lock is taken.  The same goes
-	   for Xenomai switching back a Linux thread in non-RT mode which
-	   happens to have been preempted inside do_exit() after the MM
-	   context has been dropped (thus the LDT too). In such a case, %gs
-	   could be reloaded with what used to be the TLS descriptor of the
-	   exiting thread, but unfortunately after the LDT itself has been
-	   dropped. Since the default LDT is only 5 entries long, any attempt
-	   to refer to an LDT-indexed descriptor above this value would cause
-	   a GPF.  2) NMI is not pipelined. */
+	 * 
+	 * 1) GPF needs to be propagated downstream whichever domain
+	 * caused it. This is required so that we don't spuriously
+	 * raise a fatal error when some fixup code is available to
+	 * solve the error condition. For instance, Linux/x86 always
+	 * attempts to reload the %gs segment register when switching
+	 * a process in (__switch_to()), regardless of its value. It
+	 * is then up to Linux's GPF handling code to search for a
+	 * possible fixup whenever some exception occurs. In the
+	 * particular case of the %gs register, such an exception
+	 * could be raised for an exiting process if a preemption
+	 * occurs inside a short time window, after the process's LDT
+	 * has been dropped, but before the kernel lock is taken.  The
+	 * same goes for Xenomai switching back a Linux thread in
+	 * non-RT mode which happens to have been preempted inside
+	 * do_exit() after the MM context has been dropped (thus the
+	 * LDT too). In such a case, %gs could be reloaded with what
+	 * used to be the TLS descriptor of the exiting thread, but
+	 * unfortunately after the LDT itself has been dropped. Since
+	 * the default LDT is only 5 entries long, any attempt to
+	 * refer to an LDT-indexed descriptor above this value would
+	 * cause a GPF.
+	 *
+	 * 2) NMI is not pipelined.
+	 */
 
 	if (stage == &rthal_domain) {
 		rthal_realtime_faults[rthal_processor_id()][event]++;
-
 		if (rthal_trap_handler != NULL &&
 		    rthal_trap_handler(event, stage, data) != 0)
 			return RTHAL_EVENT_STOP;

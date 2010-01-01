@@ -37,6 +37,13 @@
 #include <nucleus/compiler.h>
 #include <nucleus/assert.h>
 
+#ifdef CONFIG_LTT
+#include <linux/marker.h>
+#else
+#undef trace_mark
+#define trace_mark(channel, ev, fmt, args...)	do { } while (0)
+#endif
+
 #if BITS_PER_LONG == 32
 #define __natural_word_type int
 #else  /* defaults to long otherwise */

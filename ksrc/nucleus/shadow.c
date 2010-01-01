@@ -41,6 +41,7 @@
 #include <linux/kthread.h>
 #include <linux/mman.h>
 #include <linux/mm.h>
+#include <linux/cred.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
@@ -114,6 +115,8 @@ static int nucleus_muxid = -1;
 static struct semaphore completion_mutex;
 
 static DEFINE_SEMAPHORE(registration_mutex);
+
+static void *mayday_page;
 
 static inline struct task_struct *get_switch_lock_owner(void)
 {
@@ -812,7 +815,7 @@ static void lostage_handler(void *cookie)
 			break;
 
 		case LO_SIGGRP_REQ:
-			kill_proc(p->pid, arg, 1);
+			kill_proc_info(arg, SEND_SIG_PRIV, p->pid);
 			break;
 		}
 	}
@@ -1593,10 +1596,6 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
 	}
 }
 
-#ifdef XNARCH_HAVE_MAYDAY
-
-static void *mayday_page;
-
 static int mayday_map(struct file *filp, struct vm_area_struct *vma)
 {
 	vma->vm_pgoff = (unsigned long)mayday_page >> PAGE_SHIFT;
@@ -1709,31 +1708,30 @@ static inline void do_mayday_event(struct pt_regs *regs)
 
 RTHAL_DECLARE_MAYDAY_EVENT(mayday_event);
 
-#else /* !XNARCH_HAVE_MAYDAY */
-
-static int xnshadow_sys_mayday(struct pt_regs *regs)
+static inline int raise_cap(int cap)
 {
-	return -ENOSYS;
+	struct cred *new;
+
+	new = prepare_creds();
+	if (new == NULL)
+		return -ENOMEM;
+
+	cap_raise(new->cap_effective, cap);
+
+	return commit_creds(new);
 }
 
-static inline int mayday_init_page(void)
-{
-	return 0;
-}
-
-static inline void mayday_cleanup_page(void)
-{
-}
-
-#endif /* XNARCH_HAVE_MAYDAY */
-
-static int xnshadow_sys_bind(struct pt_regs *regs)
+static int xnshadow_sys_bind(unsigned int magic,
+			     unsigned long featdep,
+			     unsigned long abirev,
+			     xnsysinfo_t __user *u_info)
 {
 	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
 	unsigned magic = __xn_reg_arg1(regs);
 	u_long featdep = __xn_reg_arg2(regs);
 	u_long abirev = __xn_reg_arg3(regs);
 	u_long infarg = __xn_reg_arg4(regs);
+	struct cred *newcred;
 	xnfeatinfo_t finfo;
 	u_long featmis;
 	int muxid, err;
@@ -1778,9 +1776,14 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 		return -EPERM;
 
 	/* Raise capabilities for the caller in case they are lacking yet. */
-	wrap_raise_cap(CAP_SYS_NICE);
-	wrap_raise_cap(CAP_IPC_LOCK);
-	wrap_raise_cap(CAP_SYS_RAWIO);
+	newcred = prepare_creds();
+	if (newcred == NULL)
+		return -ENOMEM;
+
+	cap_raise(newcred->cap_effective, CAP_SYS_NICE);
+	cap_raise(newcred->cap_effective, CAP_SYS_RAWIO);
+	cap_raise(newcred->cap_effective, CAP_IPC_LOCK);
+	commit_creds(newcred);
 
 	xnlock_get_irqsave(&nklock, s);
 
@@ -2625,7 +2628,9 @@ static inline void do_schedule_event(struct task_struct *next_task)
 				 * expose us to deadlock situations on
 				 * SMP.
 				 */
-				wrap_get_sigpending(&pending, next_task);
+				sigorsets(&pending,
+					  &next_task->pending.signal,
+					  &next_task->signal->shared_pending.signal);
 
 				if (sigismember(&pending, SIGSTOP) ||
 				    sigismember(&pending, SIGINT))
@@ -2681,7 +2686,9 @@ static inline void do_sigwake_event(struct task_struct *p)
 		sigset_t pending;
 
 		/* We already own the siglock. */
-		wrap_get_sigpending(&pending, p);
+		sigorsets(&pending,
+			  &p->pending.signal,
+			  &p->signal->shared_pending.signal);
 
 		if (sigismember(&pending, SIGTRAP) ||
 		    sigismember(&pending, SIGSTOP)
@@ -2719,7 +2726,8 @@ static inline void do_sigwake_event(struct task_struct *p)
 	 * signals. Make sure we keep the additional state flags
 	 * unmodified so that we don't break any undergoing ptrace.
 	 */
-	set_task_nowakeup(p);
+	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
+                set_task_state(p, p->state | TASK_NOWAKEUP);
 
 	/*
 	 * Tricky case: a ready thread does not actually run, but

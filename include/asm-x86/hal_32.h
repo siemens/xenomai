@@ -78,20 +78,12 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #include <asm/io.h>
 #include <asm/timex.h>
 #include <asm/processor.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
 #include <asm/i8259.h>
-#else
-#include <io_ports.h>
-#endif
 #ifdef CONFIG_X86_LOCAL_APIC
 #include <asm/fixmap.h>
 #include <asm/apic.h>
 #endif /* CONFIG_X86_LOCAL_APIC */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)
-#include <linux/i8253.h>
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23)
 #include <asm/i8253.h>
-#endif
 #include <asm/msr.h>
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/smi.h>
@@ -108,17 +100,9 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 #define RTHAL_TIMER_IRQ		RTHAL_APIC_TIMER_IPI
 #define RTHAL_HOST_TICK_IRQ	ipipe_apic_vector_irq(LOCAL_TIMER_VECTOR)
 #define RTHAL_BCAST_TICK_IRQ	0	/* Tick broadcasting interrupt. */
-#ifndef ipipe_apic_vector_irq
-/* Older I-pipe versions do not differentiate the normal IRQ space
-   from the system IRQ range, which is wrong... */
-#define ipipe_apic_vector_irq(vec) (vec - FIRST_EXTERNAL_VECTOR)
-#endif
-
 #else /* !CONFIG_X86_LOCAL_APIC */
-
 #define RTHAL_TIMER_IRQ		0	/* i8253 PIT interrupt. */
 #define RTHAL_HOST_TICK_IRQ	0	/* Host tick is emulated by Xenomai. */
-
 #endif /* CONFIG_X86_LOCAL_APIC */
 
 #define RTHAL_NMICLK_FREQ	RTHAL_CPU_FREQ
@@ -150,13 +134,6 @@ rthal_time_t rthal_get_8254_tsc(void);
 
 static inline void rthal_timer_program_shot(unsigned long delay)
 {
-/* With head-optimization, callers are expected to have switched off
-   hard-IRQs already -- no need for additional protection in this case. */
-#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-	unsigned long flags;
-
-	rthal_local_irq_save_hw(flags);
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (!delay) {
 		/* Pend the timer interrupt. */
@@ -176,9 +153,6 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 		outb(delay >> 8, PIT_CH0);
 	}
 #endif /* CONFIG_X86_LOCAL_APIC */
-#ifndef CONFIG_XENO_OPT_PIPELINE_HEAD
-	rthal_local_irq_restore_hw(flags);
-#endif /* CONFIG_XENO_OPT_PIPELINE_HEAD */
 }
 
 static const char *const rthal_fault_labels[] = {

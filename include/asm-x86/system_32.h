@@ -42,31 +42,29 @@ struct task_struct;
 
 typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 
-    /* Kernel mode side */
-    x86_fpustate fpuenv __attribute__ ((aligned (16))); /* FPU backup area */
-    unsigned stacksize;         /* Aligned size of stack (bytes) */
-    unsigned long *stackbase;   /* Stack space */
-    unsigned long esp;          /* Saved ESP for kernel-based threads */
-    unsigned long eip;          /* Saved EIP for kernel-based threads */
-#ifdef XNARCH_HAVE_MAYDAY
+	/* Kernel mode side */
+	x86_fpustate fpuenv __attribute__ ((aligned (16))); /* FPU backup area */
+	unsigned stacksize;         /* Aligned size of stack (bytes) */
+	unsigned long *stackbase;   /* Stack space */
+	unsigned long esp;          /* Saved ESP for kernel-based threads */
+	unsigned long eip;          /* Saved EIP for kernel-based threads */
 	struct {
 		unsigned long eip;
 		unsigned long eax;
 	} mayday;
-#endif
 
-    /* User mode side */
-    struct task_struct *user_task;      /* Shadowed user-space task */
-    struct task_struct *active_task;    /* Active user-space task */
+	/* User mode side */
+	struct task_struct *user_task;      /* Shadowed user-space task */
+	struct task_struct *active_task;    /* Active user-space task */
 
-    unsigned long *espp;        /* Pointer to ESP backup area (&esp or &user->thread.esp) */
-    unsigned long *eipp;        /* Pointer to EIP backup area (&eip or &user->thread.eip) */
-    x86_fpustate *fpup;		/* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
+	unsigned long *espp;        /* Pointer to ESP backup area (&esp or &user->thread.esp) */
+	unsigned long *eipp;        /* Pointer to EIP backup area (&eip or &user->thread.eip) */
+	x86_fpustate *fpup;		/* Pointer to the FPU backup area (&fpuenv or &user->thread.i387.f[x]save */
 
-    /* FPU context bits for root thread. */
-    unsigned is_root: 1;
-    unsigned ts_usedfpu: 1;
-    unsigned cr0_ts: 1;
+	/* FPU context bits for root thread. */
+	unsigned is_root: 1;
+	unsigned ts_usedfpu: 1;
+	unsigned cr0_ts: 1;
 
 } xnarchtcb_t;
 
@@ -80,7 +78,7 @@ typedef struct xnarch_fltinfo {
 
 #define xnarch_fault_trap(fi)   ((fi)->vector)
 #define xnarch_fault_code(fi)   ((fi)->errcode)
-#define xnarch_fault_pc(fi)     ((fi)->regs->x86reg_ip)
+#define xnarch_fault_pc(fi)     ((fi)->regs->ip)
 /* fault is caused by use FPU while FPU disabled. */
 #define xnarch_fault_fpu_p(fi)  ((fi)->vector == 7)
 /* The following predicates are only usable over a regular Linux stack
@@ -124,7 +122,7 @@ static inline void xnarch_free_stack_mem(void *chunk, u_long bytes)
 
 static inline int xnarch_shadow_p (xnarchtcb_t *tcb, struct task_struct *task)
 {
-    return tcb->espp == &task->thread.x86reg_sp;
+    return tcb->espp == &task->thread.sp;
 }
 
 #ifdef __cplusplus

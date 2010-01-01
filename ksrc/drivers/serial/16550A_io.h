@@ -23,7 +23,7 @@ typedef enum { MODE_PIO, MODE_MMIO } io_mode_t;
 #if defined(CONFIG_XENO_DRIVERS_16550A_PIO) || \
     defined(CONFIG_XENO_DRIVERS_16550A_ANY)
 static unsigned long io[MAX_DEVICES];
-compat_module_param_array(io, ulong, MAX_DEVICES, 0400);
+module_param_array(io, ulong, NULL, 0400);
 MODULE_PARM_DESC(io, "I/O port addresses of the serial devices");
 #endif /* CONFIG_XENO_DRIVERS_16550A_PIO || CONFIG_XENO_DRIVERS_16550A_ANY */
 
@@ -31,7 +31,7 @@ MODULE_PARM_DESC(io, "I/O port addresses of the serial devices");
     defined(CONFIG_XENO_DRIVERS_16550A_ANY)
 static unsigned long mem[MAX_DEVICES];
 static void *mapped_io[MAX_DEVICES];
-compat_module_param_array(mem, ulong, MAX_DEVICES, 0400);
+module_param_array(mem, ulong, NULL, 0400);
 MODULE_PARM_DESC(mem, "I/O memory addresses of the serial devices");
 #endif /* CONFIG_XENO_DRIVERS_16550A_MMIO || CONFIG_XENO_DRIVERS_16550A_ANY */
 

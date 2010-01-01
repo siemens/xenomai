@@ -295,8 +295,6 @@ includesub_HEADERS = \
 	system_32.h	\
 	system_64.h	\
 	system.h	\
-	wrappers_32.h	\
-	wrappers_64.h	\
 	wrappers.h
 
 SUBDIRS = bits

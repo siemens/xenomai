@@ -51,12 +51,11 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 	struct mm_struct *mm;
 	struct mm_struct *active_mm;
-#ifdef XNARCH_HAVE_MAYDAY
 	struct {
 		unsigned long nip;
 		unsigned long r0;
 	} mayday;
-#endif
+
 	/* Kernel mode side */
 	struct thread_struct ts;	/* Holds kernel-based thread context. */
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH

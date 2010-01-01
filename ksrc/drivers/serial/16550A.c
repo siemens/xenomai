@@ -126,9 +126,9 @@ static unsigned int baud_base[MAX_DEVICES];
 static int tx_fifo[MAX_DEVICES];
 static unsigned int start_index;
 
-compat_module_param_array(irq, uint, MAX_DEVICES, 0400);
-compat_module_param_array(baud_base, uint, MAX_DEVICES, 0400);
-compat_module_param_array(tx_fifo, int, MAX_DEVICES, 0400);
+module_param_array(irq, uint, NULL, 0400);
+module_param_array(baud_base, uint, NULL, 0400);
+module_param_array(tx_fifo, int, NULL, 0400);
 
 MODULE_PARM_DESC(irq, "IRQ numbers of the serial devices");
 MODULE_PARM_DESC(baud_base, "Maximum baud rate of the serial device "

@@ -67,7 +67,7 @@ int port[RTCAN_MSCAN_DEVS] = {
 #endif
 #endif
 };
-compat_module_param_array(port, int, RTCAN_MSCAN_DEVS, 0444);
+module_param_array(port, int, RTCAN_MSCAN_DEVS, 0444);
 MODULE_PARM_DESC(port, "Enabled CAN ports (1,1 or 0,1 or 0,1)");
 
 /*
@@ -133,7 +133,6 @@ static inline void __init mscan_gpio_config(void)
 
 static inline int mscan_get_config(unsigned long *addr, unsigned int *irq)
 {
-#if defined(CONFIG_PPC_MERGE) || LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)
 	/* Use Open Firmware device tree */
 	struct device_node *np = NULL;
 	unsigned int i;
@@ -155,13 +154,6 @@ static inline int mscan_get_config(unsigned long *addr, unsigned int *irq)
 		irq[i] = r[1].start;
 		rtcan_mscan_count++;
 	}
-#else
-	addr[0] = MSCAN_CAN1_ADDR;
-	irq[0] = MSCAN_CAN1_IRQ;
-	addr[1] = MSCAN_CAN2_ADDR;
-	irq[1] = MSCAN_CAN2_IRQ;
-	rtcan_mscan_count = 2;
-#endif
 	return 0;
 }
 

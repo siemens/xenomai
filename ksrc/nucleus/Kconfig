@@ -53,27 +53,6 @@ config XENO_OPT_PRIOCPL
 
 	If in doubt, say Y.
 
-config XENO_OPT_PIPELINE_HEAD
-	bool "Optimize as pipeline head (DEPRECATED)"
-	default y
-	help
-
-	This option causes Xenomai to declare itself as always leading
-	the interrupt pipeline, which in turn allows Adeos to optimize
-	for faster interrupt delivery and stall/unstall operations.
-
-	However, enabling this option prevents inserting Adeos domains
-	with higher priority than Xenomai in the pipeline, which
-	should be rarely needed though.
-
-	This feature requires Adeos to support invariant pipeline head
-	optimizations, which some older patches might not provide. In
-	the latter case, this option will simply have no effect. If in
-	doubt, say 'Y' here.
-
-	NOTE: this feature is forced in when running over the pipeline
-	core series.
-
 config XENO_OPT_SCHED_CLASSES
 	bool "Extra scheduling classes"
 	default n

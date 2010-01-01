@@ -45,7 +45,7 @@ struct xnqueue xnpipe_sleepq, xnpipe_asyncq;
 
 int xnpipe_wakeup_apc;
 
-static DECLARE_DEVCLASS(xnpipe_class);
+static struct class *xnpipe_class;
 
 /* Allocation of minor values */
 
@@ -1070,6 +1070,7 @@ static struct file_operations xnpipe_fops = {
 int xnpipe_mount(void)
 {
 	struct xnpipe_state *state;
+	struct device *cldev;
 	int i;
 
 	for (state = &xnpipe_states[0];
@@ -1093,10 +1094,9 @@ int xnpipe_mount(void)
 	}
 
 	for (i = 0; i < XNPIPE_NDEVS; i++) {
-		DECLARE_DEVHANDLE(cldev);
-		cldev = wrap_device_create(xnpipe_class, NULL,
-					   MKDEV(XNPIPE_DEV_MAJOR, i),
-					   NULL, "rtp%d", i);
+		cldev = device_create(xnpipe_class, NULL,
+				      MKDEV(XNPIPE_DEV_MAJOR, i),
+				      NULL, "rtp%d", i);
 		if (IS_ERR(cldev)) {
 			xnlogerr
 			    ("can't add device class, major=%d, minor=%d, err=%ld\n",
@@ -1127,7 +1127,7 @@ void xnpipe_umount(void)
 	unregister_chrdev(XNPIPE_DEV_MAJOR, "rtpipe");
 
 	for (i = 0; i < XNPIPE_NDEVS; i++)
-		wrap_device_destroy(xnpipe_class, MKDEV(XNPIPE_DEV_MAJOR, i));
+		device_destroy(xnpipe_class, MKDEV(XNPIPE_DEV_MAJOR, i));
 
 	class_destroy(xnpipe_class);
 }

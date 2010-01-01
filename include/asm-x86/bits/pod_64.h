@@ -45,7 +45,7 @@ static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
-	rootcb->rspp = &current->thread.x86reg_sp;
+	rootcb->rspp = &current->thread.sp;
 	rootcb->ripp = &current->thread.rip;
 	rootcb->ts_usedfpu = !!(task_thread_info(current)->status & TS_USEDFPU);
 	rootcb->cr0_ts = (read_cr0() & 8) != 0;

@@ -1,7 +1,0 @@
-
-#
-# Xenomai configuration for Linux v2.4
-#
-
-dep_tristate 'Fake driver' CONFIG_XENO_DRIVERS_ANALOGY_FAKE $CONFIG_XENO_DRIVERS_ANALOGY
-

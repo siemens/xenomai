@@ -53,20 +53,7 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 #include <stdarg.h>
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#if !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
-#include <linux/vt_kern.h>
-
-static void (*old_mksound) (unsigned int hz, unsigned int ticks);
-
-static void dummy_mksound(unsigned int hz, unsigned int ticks)
-{
-}
-#endif /* !CONFIG_X86_TSC && CONFIG_VT */
-#else /* Linux < 2.6 */
 #include <asm/nmi.h>
-#endif
 
 #ifdef CONFIG_X86_LOCAL_APIC
 
@@ -197,17 +184,8 @@ int rthal_timer_request(
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 	unsigned long tmfreq;
 
-#ifdef __IPIPE_FEATURE_REQUEST_TICKDEV
 	int res = ipipe_request_tickdev("pit", mode_emul, tick_emul, cpu,
 					&tmfreq);
-#else
-	int res = ipipe_request_tickdev("pit",
-					(compat_emumode_t)mode_emul,
-					(compat_emutick_t)tick_emul,
-					cpu);
-	tmfreq = RTHAL_COMPAT_TIMERFREQ;
-#endif
-
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -337,13 +315,7 @@ int rthal_arch_init(void)
 		rthal_smi_restore();
 		return -ENODEV;
 	}
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
-	/* Prevent the speaker code from bugging our TSC emulation, also
-	   based on PIT channel 2. kd_mksound is exported by the Adeos
-	   patch. */
-	old_mksound = kd_mksound;
-	kd_mksound = &dummy_mksound;
-#endif /* !CONFIG_X86_LOCAL_APIC && Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
+#endif /* CONFIG_X86_LOCAL_APIC */
 
 	if (rthal_cpufreq_arg == 0)
 #ifdef CONFIG_X86_TSC
@@ -363,10 +335,6 @@ int rthal_arch_init(void)
 
 void rthal_arch_cleanup(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && !defined(CONFIG_X86_TSC) && defined(CONFIG_VT)
-	/* Restore previous PC speaker code. */
-	kd_mksound = old_mksound;
-#endif /* Linux < 2.6 && !CONFIG_X86_TSC && CONFIG_VT */
 	printk(KERN_INFO "Xenomai: hal/i386 stopped.\n");
 }
 

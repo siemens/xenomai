@@ -33,9 +33,6 @@
 #include <asm/byteorder.h>
 
 #ifdef CONFIG_VFP
-#if defined(CONFIG_XENO_HW_FPU) && !__IPIPE_FEATURE_VFP_SAFE
-#error "Xenomai requires a more recent I-pipe patch to use VFP hardware"
-#endif /* defined(CONFIG_XENO_HW_FPU) && !__IPIPE_FEATURE_VFP_SAFE */
 #include <asm/vfp.h>
 #endif /* CONFIG_VFP */
 
@@ -192,15 +189,7 @@ static inline void rthal_timer_program_shot (unsigned long delay)
 
 static inline struct mm_struct *rthal_get_active_mm(void)
 {
-#ifdef TIF_MMSWITCH_INT
-#ifdef CONFIG_IPIPE_CORE
-	return __this_cpu_read(ipipe_percpu.active_mm);
-#else
 	return per_cpu(ipipe_active_mm, smp_processor_id());
-#endif
-#else /* !TIF_MMSWITCH_INT */
-	return current->active_mm;
-#endif /* !TIF_MMSWITCH_INT */
 }
 
 /* Private interface -- Internal use only */
@@ -222,14 +211,8 @@ typedef struct rthal_fpenv {
      */
     __u8                    used_cp[16];    /* thread used copro */
     unsigned long           tp_value;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
     struct crunch_state     crunchstate;
-#endif /* Linux version >= 2.6.18 */
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 15)
-    union fp_state          fpstate;
-#else /* Linux version >= 2.6.16 */
     union fp_state          fpstate __attribute__((aligned(8)));
-#endif /* Linux version >= 2.6.16 */
     union vfp_state         vfpstate;
 } rthal_fpenv_t;
 

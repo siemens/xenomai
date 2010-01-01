@@ -35,11 +35,7 @@
 #include <linux/console.h>
 #include <linux/kallsyms.h>
 #include <linux/bitops.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/hardirq.h>
-#else
-#include <asm/hardirq.h>
-#endif
 #include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/xenomai/hal.h>
@@ -803,6 +799,4 @@ EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
 EXPORT_SYMBOL_GPL(rthal_apc_virq);
 EXPORT_SYMBOL_GPL(rthal_apc_pending);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
 EXPORT_SYMBOL_GPL(kill_proc_info);
-#endif

@@ -44,8 +44,8 @@ struct rtdm_fildes fildes_table[RTDM_FD_MAX] =
 static unsigned long used_fildes[FD_BITMAP_SIZE];
 int open_fildes;	/* number of used descriptors */
 
-static DECLARE_WORK_FUNC(close_callback);
-static DECLARE_DELAYED_WORK_NODATA(close_work, close_callback);
+static void close_callback(struct work_struct *work);
+static DECLARE_DELAYED_WORK(close_work, close_callback);
 static LIST_HEAD(cleanup_queue);
 
 xntbase_t *rtdm_tbase;
@@ -212,7 +212,7 @@ static void cleanup_instance(struct rtdm_device *device,
 	rtdm_dereference_device(device);
 }
 
-static DECLARE_WORK_FUNC(close_callback)
+static void close_callback(struct work_struct *work)
 {
 	struct rtdm_dev_context *context;
 	LIST_HEAD(deferred_list);

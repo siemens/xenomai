@@ -21,9 +21,6 @@
 #define _XENO_NUCLEUS_SHADOW_H
 
 #include <asm/xenomai/atomic.h>
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-
 #include <asm/xenomai/syscall.h>
 
 #define XENOMAI_MUX_NR 16
@@ -97,29 +94,18 @@ void xnshadow_send_sig(struct xnthread *thread,
 
 void xnshadow_rpi_check(void);
 
-#ifdef RTHAL_HAVE_RETURN_EVENT
-#define XNARCH_HAVE_MAYDAY  1
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
-#else
-static inline void xnshadow_call_mayday(struct xnthread *thread,
-					int sigtype)
-{
-	/* no luck, I-pipe too old. Nobody hears you screaming... */
-}
-#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_OPT_VFILE)
+#ifdef CONFIG_XENO_OPT_VFILE
 void xnshadow_init_proc(void);
 void xnshadow_cleanup_proc(void);
 #else
 static inline void xnshadow_init_proc(void) { }
 static inline void xnshadow_cleanup_proc(void) { }
-#endif /* CONFIG_XENO_OPT_PERVASIVE && CONFIG_XENO_OPT_VFILE */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

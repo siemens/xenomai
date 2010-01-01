@@ -44,29 +44,27 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 #define xnarch_fpu_ptr(tcb)     NULL /* No FPU handling at all. */
 
-    unsigned stacksize;		/* Aligned size of stack (bytes) */
-    unsigned long *stackbase;	/* Stack space */
+	unsigned stacksize;		/* Aligned size of stack (bytes) */
+	unsigned long *stackbase;	/* Stack space */
 
-    struct thread_struct ts;	/* Holds kernel-based thread context. */
-    struct task_struct *user_task; /* Shadowed user-space task */
+	struct thread_struct ts;	/* Holds kernel-based thread context. */
+	struct task_struct *user_task; /* Shadowed user-space task */
 #ifdef CONFIG_MPU
-    struct task_struct *active_task;    /* Active user-space task */
+	struct task_struct *active_task;    /* Active user-space task */
 #endif
-    struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
-#ifdef XNARCH_HAVE_MAYDAY
+	struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
 	struct {
 		unsigned long pc;
 		unsigned long p0;
 		unsigned long r5;
 	} mayday;
-#endif
-
+	
     /* Init block */
-    struct xnthread *self;
-    int imask;
-    const char *name;
-    void (*entry)(void *cookie);
-    void *cookie;
+	struct xnthread *self;
+	int imask;
+	const char *name;
+	void (*entry)(void *cookie);
+	void *cookie;
 
 } xnarchtcb_t;
 

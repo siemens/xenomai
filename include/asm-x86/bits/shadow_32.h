@@ -34,8 +34,8 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->user_task = task;
 	tcb->active_task = NULL;
 	tcb->esp = 0;
-	tcb->espp = &task->thread.x86reg_sp;
-	tcb->eipp = &task->thread.x86reg_ip;
+	tcb->espp = &task->thread.sp;
+	tcb->eipp = &task->thread.ip;
 	tcb->fpup = x86_fpustate_ptr(&task->thread);
 }
 
@@ -46,10 +46,7 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 
 static void xnarch_schedule_tail(struct task_struct *prev)
 {
-	wrap_switch_iobitmap(prev, rthal_processor_id());
 }
-
-#ifdef XNARCH_HAVE_MAYDAY
 
 static inline void xnarch_setup_mayday_page(void *page)
 {
@@ -138,7 +135,5 @@ static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
 	regs->x86reg_ip = tcb->mayday.eip;
 	regs->x86reg_ax = tcb->mayday.eax;
 }
-
-#endif /* XNARCH_HAVE_MAYDAY */
 
 #endif /* !_XENO_ASM_X86_BITS_SHADOW_32_H */
