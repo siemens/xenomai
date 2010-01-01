@@ -107,7 +107,7 @@
 <a name="l00172"></a>00172         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="structa4l__instruction.html#a2ce723188a437c94b474d62b690d241b" title="Subdevice to which the instruction will be applied.">idx_subd</a>;
 <a name="l00174"></a>00174         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="structa4l__instruction.html#ac13c98dc1071dabdbc02035437c913d1" title="Channel descriptor.">chan_desc</a>;
 <a name="l00176"></a>00176         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="structa4l__instruction.html#a57a3362a9c56de0a3318116eda8583fe" title="Size of the intruction data.">data_size</a>;
-<a name="l00178"></a>00178         lsampl_t *<a class="code" href="structa4l__instruction.html#ae699b69c96df8c543225969419f72212" title="Instruction data.">data</a>;
+<a name="l00178"></a>00178         <span class="keywordtype">void</span> *<a class="code" href="structa4l__instruction.html#aea22840417a04202cd0740515420d467" title="Instruction data.">data</a>;
 <a name="l00180"></a>00180 };
 <a name="l00181"></a>00181 <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="structa4l__instruction.html" title="Structure describing the synchronous instruction.">a4l_instruction</a> <a class="code" href="structa4l__instruction.html" title="Structure describing the synchronous instruction.">a4l_insn_t</a>;
 <a name="l00182"></a>00182 
@@ -124,15 +124,15 @@
 <a name="l00202"></a>00202         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
 <a name="l00203"></a>00203         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc;
 <a name="l00204"></a>00204         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> data_size;
-<a name="l00205"></a>00205         lsampl_t *data;
-<a name="l00206"></a>00206         lsampl_t *__udata;
+<a name="l00205"></a>00205         <span class="keywordtype">void</span> *data;
+<a name="l00206"></a>00206         <span class="keywordtype">void</span> *__udata;
 <a name="l00207"></a>00207 };
 <a name="l00208"></a>00208 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_kernel_instruction a4l_kinsn_t;
 <a name="l00209"></a>00209 
 <a name="l00210"></a>00210 <span class="keyword">struct </span>a4l_kernel_instruction_list {
 <a name="l00211"></a>00211         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> count;
 <a name="l00212"></a>00212         a4l_kinsn_t *insns;
-<a name="l00213"></a>00213         a4l_kinsn_t *__uinsns;
+<a name="l00213"></a>00213         <a class="code" href="structa4l__instruction.html" title="Structure describing the synchronous instruction.">a4l_insn_t</a> *__uinsns;
 <a name="l00214"></a>00214 };
 <a name="l00215"></a>00215 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_kernel_instruction_list a4l_kilst_t;
 <a name="l00216"></a>00216 
@@ -146,7 +146,7 @@
 <a name="l00224"></a>00224 
 <a name="l00225"></a>00225 <span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_INSTRUCTION__ */</span>
 </pre></div></div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:24 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Fri Jan 1 10:42:42 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

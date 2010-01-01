@@ -39,12 +39,22 @@ Include dependency graph for range.c:</div>
 </div>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gae9709df63a769dc56c1014a90c7a6c64">a4l_sizeof_chan</a> (a4l_chinfo_t *chan)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the size in memory of an acquired element.  <a href="group__rng2__lib.html#gae9709df63a769dc56c1014a90c7a6c64"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61">a4l_find_range</a> (<a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *dsc, unsigned int idx_subd, unsigned int idx_chan, unsigned long unit, double min, double max, a4l_rnginfo_t **rng)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find the must suitable range.  <a href="group__rng2__lib.html#gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gade5a80130c27b5f7e4a35fda3bb67d20">a4l_to_phys</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert samples to physical units.  <a href="group__rng2__lib.html#gade5a80130c27b5f7e4a35fda3bb67d20"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga73ce99e1c6bcf4ecf8c375a3f5dc21e7">a4l_from_phys</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert physical units to samples.  <a href="group__rng2__lib.html#ga73ce99e1c6bcf4ecf8c375a3f5dc21e7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gae6191220fcfda0105b48df7bd364b584">a4l_rawtoul</a> (a4l_chinfo_t *chan, unsigned long *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unpack raw data (from the driver) into unsigned long values.  <a href="group__rng2__lib.html#gae6191220fcfda0105b48df7bd364b584"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gad9dd1255cb2a5f99b141bd9265b7ca95">a4l_rawtof</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, float *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert raw data (from the driver) to float-typed samples.  <a href="group__rng2__lib.html#gad9dd1255cb2a5f99b141bd9265b7ca95"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gab8b5ff35fe75d3f32a828f4d64604e8b">a4l_rawtod</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert raw data (from the driver) to double-typed samples.  <a href="group__rng2__lib.html#gab8b5ff35fe75d3f32a828f4d64604e8b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777">a4l_ultoraw</a> (a4l_chinfo_t *chan, void *dst, unsigned long *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pack unsigned long values into raw data (for the driver).  <a href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga67ad3bedbc8f87f2c7421a075a7c2b59">a4l_ftoraw</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, float *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert float-typed samples to raw data (for the driver).  <a href="group__rng2__lib.html#ga67ad3bedbc8f87f2c7421a075a7c2b59"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gaf7be342501248ba2138d7dc3b2cfeeed">a4l_dtoraw</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert double-typed samples to raw data (for the driver).  <a href="group__rng2__lib.html#gaf7be342501248ba2138d7dc3b2cfeeed"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <p>Analogy for Linux, range related features. </p>
@@ -55,7 +65,7 @@ Copyright (C) 2008 Alexis Berlemont &lt;<a href="mailto:alexis.berlemont@free.fr
 <p>This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.</p>
 <p>You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA. </p>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:26 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Fri Jan 1 10:42:43 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>

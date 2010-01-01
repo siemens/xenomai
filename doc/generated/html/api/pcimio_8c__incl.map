@@ -1,10 +1,10 @@
 <map id="G" name="G">
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="183,315,348,344"/>
+<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="257,237,423,267"/>
 <area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="307,83,373,112"/>
-<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="344,237,400,267"/>
-<area shape="rect" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="448,83,517,112"/>
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="31,392,180,421"/>
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="204,392,327,421"/>
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="351,392,471,421"/>
+<area shape="rect" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="397,83,467,112"/>
+<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="491,83,547,112"/>
+<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="105,315,255,344"/>
+<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="279,315,401,344"/>
+<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="425,315,545,344"/>
 <area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="308,160,372,189"/>
 </map>

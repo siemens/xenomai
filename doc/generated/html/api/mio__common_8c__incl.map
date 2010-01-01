@@ -1,10 +1,10 @@
 <map id="G" name="G">
-<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="144,237,200,267"/>
-<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="207,83,273,112"/>
-<area shape="rect" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="297,83,367,112"/>
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="157,315,323,344"/>
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,392,155,421"/>
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="179,392,301,421"/>
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="325,392,445,421"/>
-<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="208,160,272,189"/>
+<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="161,83,217,112"/>
+<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="241,83,308,112"/>
+<area shape="rect" href="$ni__mio_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="332,83,401,112"/>
+<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="157,237,323,267"/>
+<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,315,155,344"/>
+<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="179,315,301,344"/>
+<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="325,315,445,344"/>
+<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="243,160,307,189"/>
 </map>

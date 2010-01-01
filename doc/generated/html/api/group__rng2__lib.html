@@ -35,14 +35,87 @@ Collaboration diagram for Range / conversion API:</div>
 </p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gae9709df63a769dc56c1014a90c7a6c64">a4l_sizeof_chan</a> (a4l_chinfo_t *chan)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get the size in memory of an acquired element.  <a href="#gae9709df63a769dc56c1014a90c7a6c64"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61">a4l_find_range</a> (<a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *dsc, unsigned int idx_subd, unsigned int idx_chan, unsigned long unit, double min, double max, a4l_rnginfo_t **rng)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find the must suitable range.  <a href="#gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gade5a80130c27b5f7e4a35fda3bb67d20">a4l_to_phys</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert samples to physical units.  <a href="#gade5a80130c27b5f7e4a35fda3bb67d20"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga73ce99e1c6bcf4ecf8c375a3f5dc21e7">a4l_from_phys</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert physical units to samples.  <a href="#ga73ce99e1c6bcf4ecf8c375a3f5dc21e7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gae6191220fcfda0105b48df7bd364b584">a4l_rawtoul</a> (a4l_chinfo_t *chan, unsigned long *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unpack raw data (from the driver) into unsigned long values.  <a href="#gae6191220fcfda0105b48df7bd364b584"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gad9dd1255cb2a5f99b141bd9265b7ca95">a4l_rawtof</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, float *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert raw data (from the driver) to float-typed samples.  <a href="#gad9dd1255cb2a5f99b141bd9265b7ca95"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gab8b5ff35fe75d3f32a828f4d64604e8b">a4l_rawtod</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert raw data (from the driver) to double-typed samples.  <a href="#gab8b5ff35fe75d3f32a828f4d64604e8b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777">a4l_ultoraw</a> (a4l_chinfo_t *chan, void *dst, unsigned long *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Pack unsigned long values into raw data (for the driver).  <a href="#ga8bdf03857c96f739e43a699c0ee8b777"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#ga67ad3bedbc8f87f2c7421a075a7c2b59">a4l_ftoraw</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, float *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert float-typed samples to raw data (for the driver).  <a href="#ga67ad3bedbc8f87f2c7421a075a7c2b59"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rng2__lib.html#gaf7be342501248ba2138d7dc3b2cfeeed">a4l_dtoraw</a> (a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert double-typed samples to raw data (for the driver).  <a href="#gaf7be342501248ba2138d7dc3b2cfeeed"></a><br/></td></tr>
 </table>
 <hr/><h2>Function Documentation</h2>
+<a class="anchor" id="gaf7be342501248ba2138d7dc3b2cfeeed"></a><!-- doxytag: member="range.c::a4l_dtoraw" ref="gaf7be342501248ba2138d7dc3b2cfeeed" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_dtoraw </td>
+          <td>(</td>
+          <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
+          <td class="paramname"> <em>chan</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">a4l_rnginfo_t *&nbsp;</td>
+          <td class="paramname"> <em>rng</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&nbsp;</td>
+          <td class="paramname"> <em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cnt</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Convert double-typed samples to raw data (for the driver). </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of conversion to perform</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>the count of conversion performed, otherwise a negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#gaf7be342501248ba2138d7dc3b2cfeeed" title="Convert double-typed samples to raw data (for the driver).">a4l_dtoraw()</a> </li>
+</ul>
+
+<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>, and <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61"></a><!-- doxytag: member="range.c::a4l_find_range" ref="gabcbfa9c2b9d5dc5c0e7f06faf1f8bc61" args="(a4l_desc_t *dsc, unsigned int idx_subd, unsigned int idx_chan, unsigned long unit, double min, double max, a4l_rnginfo_t **rng)" -->
 <div class="memitem">
 <div class="memproto">
@@ -120,12 +193,12 @@ Collaboration diagram for Range / conversion API:</div>
 
 </div>
 </div>
-<a class="anchor" id="ga73ce99e1c6bcf4ecf8c375a3f5dc21e7"></a><!-- doxytag: member="range.c::a4l_from_phys" ref="ga73ce99e1c6bcf4ecf8c375a3f5dc21e7" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, double *src, int cnt)" -->
+<a class="anchor" id="ga67ad3bedbc8f87f2c7421a075a7c2b59"></a><!-- doxytag: member="range.c::a4l_ftoraw" ref="ga67ad3bedbc8f87f2c7421a075a7c2b59" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, void *dst, float *src, int cnt)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int a4l_from_phys </td>
+          <td class="memname">int a4l_ftoraw </td>
           <td>(</td>
           <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
           <td class="paramname"> <em>chan</em>, </td>
@@ -145,7 +218,7 @@ Collaboration diagram for Range / conversion API:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double *&nbsp;</td>
+          <td class="paramtype">float *&nbsp;</td>
           <td class="paramname"> <em>src</em>, </td>
         </tr>
         <tr>
@@ -163,7 +236,7 @@ Collaboration diagram for Range / conversion API:</div>
 </div>
 <div class="memdoc">
 
-<p>Convert physical units to samples. </p>
+<p>Convert float-typed samples to raw data (for the driver). </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
@@ -176,19 +249,19 @@ Collaboration diagram for Range / conversion API:</div>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>the count of conversion performed, otherwise a negative error code:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga73ce99e1c6bcf4ecf8c375a3f5dc21e7" title="Convert physical units to samples.">a4l_from_phys()</a> </li>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga67ad3bedbc8f87f2c7421a075a7c2b59" title="Convert float-typed samples to raw data (for the driver).">a4l_ftoraw()</a> </li>
 </ul>
 
-<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>.</p>
+<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>, and <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="gade5a80130c27b5f7e4a35fda3bb67d20"></a><!-- doxytag: member="range.c::a4l_to_phys" ref="gade5a80130c27b5f7e4a35fda3bb67d20" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)" -->
+<a class="anchor" id="gab8b5ff35fe75d3f32a828f4d64604e8b"></a><!-- doxytag: member="range.c::a4l_rawtod" ref="gab8b5ff35fe75d3f32a828f4d64604e8b" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, double *dst, void *src, int cnt)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int a4l_to_phys </td>
+          <td class="memname">int a4l_rawtod </td>
           <td>(</td>
           <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
           <td class="paramname"> <em>chan</em>, </td>
@@ -226,7 +299,7 @@ Collaboration diagram for Range / conversion API:</div>
 </div>
 <div class="memdoc">
 
-<p>Convert samples to physical units. </p>
+<p>Convert raw data (from the driver) to double-typed samples. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
@@ -239,15 +312,227 @@ Collaboration diagram for Range / conversion API:</div>
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>the count of conversion performed, otherwise a negative error code:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#gade5a80130c27b5f7e4a35fda3bb67d20" title="Convert samples to physical units.">a4l_to_phys()</a> </li>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#gab8b5ff35fe75d3f32a828f4d64604e8b" title="Convert raw data (from the driver) to double-typed samples.">a4l_rawtod()</a> </li>
 </ul>
 
-<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>.</p>
+<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>, and <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gad9dd1255cb2a5f99b141bd9265b7ca95"></a><!-- doxytag: member="range.c::a4l_rawtof" ref="gad9dd1255cb2a5f99b141bd9265b7ca95" args="(a4l_chinfo_t *chan, a4l_rnginfo_t *rng, float *dst, void *src, int cnt)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_rawtof </td>
+          <td>(</td>
+          <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
+          <td class="paramname"> <em>chan</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">a4l_rnginfo_t *&nbsp;</td>
+          <td class="paramname"> <em>rng</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cnt</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Convert raw data (from the driver) to float-typed samples. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of conversion to perform</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>the count of conversion performed, otherwise a negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#gab8b5ff35fe75d3f32a828f4d64604e8b" title="Convert raw data (from the driver) to double-typed samples.">a4l_rawtod()</a> </li>
+</ul>
+
+<p>References <a class="el" href="channel__range_8h_source.html#l00204">A4L_RNG_FACTOR</a>, and <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gae6191220fcfda0105b48df7bd364b584"></a><!-- doxytag: member="range.c::a4l_rawtoul" ref="gae6191220fcfda0105b48df7bd364b584" args="(a4l_chinfo_t *chan, unsigned long *dst, void *src, int cnt)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_rawtoul </td>
+          <td>(</td>
+          <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
+          <td class="paramname"> <em>chan</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cnt</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Unpack raw data (from the driver) into unsigned long values. </p>
+<p>This function takes as input driver-specific data and scatters each element into an entry of an unsigned long table. It is a convenience routine which performs no conversion, just copy.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of transfer to copy</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>the count of copy performed, otherwise a negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
+</ul>
+
+<p>References <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gae9709df63a769dc56c1014a90c7a6c64"></a><!-- doxytag: member="range.c::a4l_sizeof_chan" ref="gae9709df63a769dc56c1014a90c7a6c64" args="(a4l_chinfo_t *chan)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_sizeof_chan </td>
+          <td>(</td>
+          <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
+          <td class="paramname"> <em>chan</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Get the size in memory of an acquired element. </p>
+<p>According to the board, the channels have various acquisition widths. With values like 8, 16 or 32, there is no problem finding out the size in memory (1, 2, 4); however with widths like 12 or 24, this function might be helpful to guess the size needed in RAM for a single acquired element.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>the size in memory of an acquired element, otherwise a negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if the argument chan is NULL </li>
+</ul>
+
+<p>Referenced by <a class="el" href="range_8c_source.html#l00538">a4l_dtoraw()</a>, <a class="el" href="range_8c_source.html#l00468">a4l_ftoraw()</a>, <a class="el" href="range_8c_source.html#l00331">a4l_rawtod()</a>, <a class="el" href="range_8c_source.html#l00258">a4l_rawtof()</a>, <a class="el" href="range_8c_source.html#l00198">a4l_rawtoul()</a>, and <a class="el" href="range_8c_source.html#l00408">a4l_ultoraw()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ga8bdf03857c96f739e43a699c0ee8b777"></a><!-- doxytag: member="range.c::a4l_ultoraw" ref="ga8bdf03857c96f739e43a699c0ee8b777" args="(a4l_chinfo_t *chan, void *dst, unsigned long *src, int cnt)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_ultoraw </td>
+          <td>(</td>
+          <td class="paramtype">a4l_chinfo_t *&nbsp;</td>
+          <td class="paramname"> <em>chan</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long *&nbsp;</td>
+          <td class="paramname"> <em>src</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>cnt</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Pack unsigned long values into raw data (for the driver). </p>
+<p>This function takes as input a table of unsigned long values and gather them according to the channel width. It is a convenience routine which performs no conversion, just formatting.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>chan</em>&nbsp;</td><td>Channel descriptor </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>rng</em>&nbsp;</td><td>Range descriptor </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>dst</em>&nbsp;</td><td>Ouput buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>src</em>&nbsp;</td><td>Input buffer </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cnt</em>&nbsp;</td><td>Count of transfer to copy</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>the count of copy performed, otherwise a negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong; chan, rng and the pointers should be checked; check also the kernel log ("dmesg"); WARNING: <a class="el" href="group__descriptor1__lib.html#ga4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a> should be called before using <a class="el" href="group__rng2__lib.html#ga8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw()</a> </li>
+</ul>
+
+<p>References <a class="el" href="range_8c_source.html#l00085">a4l_sizeof_chan()</a>.</p>
 
 </div>
 </div>
 </div>
-<hr size="1"/><address style="text-align: right;"><small>Generated on Sun Dec 6 18:25:28 2009 for Xenomai API by&nbsp;
+<hr size="1"/><address style="text-align: right;"><small>Generated on Fri Jan 1 10:42:46 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.6.1 </small></address>
 </body>
