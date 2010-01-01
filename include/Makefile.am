@@ -16,11 +16,7 @@ SUBDIRS = \
 	native \
 	nucleus \
 	posix \
-	psos+ \
-	rtdm \
-	uitron \
-	vrtx \
-	vxworks
+	rtdm
 
 install-data-local:
 	rm -f $(DESTDIR)$(includedir)/asm

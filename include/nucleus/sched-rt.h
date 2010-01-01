@@ -37,10 +37,7 @@
  * POSIX, native and RTDM, only use a sub-range of the available
  * priority levels from the RT scheduling class, in order to exhibit a
  * 1:1 mapping with Linux's SCHED_FIFO ascending priority scale
- * [1..99]. Non-core APIs with inverted priority scales (e.g. VxWorks,
- * VRTX), normalize the priority values internally when calling the
- * priority-sensitive services of the nucleus, so that they fit into
- * the RT priority scale.
+ * [1..99].
  */
 #define XNSCHED_LOW_PRIO	0
 #define XNSCHED_HIGH_PRIO	99

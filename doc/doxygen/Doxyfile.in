@@ -40,8 +40,6 @@ INPUT                  = \
 EXAMPLE_PATH           = @top_srcdir@/ksrc/skins/native/snippets \
 		         @top_srcdir@/ksrc/skins/native/demos \
 		         @top_srcdir@/ksrc/skins/posix/demos \
-		         @top_srcdir@/ksrc/skins/psos+/demos \
-		         @top_srcdir@/ksrc/skins/vxworks/demos \
 		         @top_srcdir@/src/utils \
 			 @top_srcdir@/examples
 

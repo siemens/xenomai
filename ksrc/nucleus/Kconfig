@@ -382,9 +382,7 @@ config XENO_OPT_TIMING_PERIODIC
 	ticks, which duration can be fixed by configuration or set
 	at runtime. In the aperiodic case, timings are directly
 	specified in nanoseconds. Selecting this option allows you to
-	run skins depending on a periodic time base, like most
-	traditional RTOS emulators do (e.g. VxWorks, pSOS, VRTX and
-	uITRON).
+	run skins depending on a periodic time base.
 
 	You can leave this option disabled in order to save a few
 	hundreds bytes and some cycles on the fast path if you plan to

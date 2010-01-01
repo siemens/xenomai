@@ -4,34 +4,6 @@ depends on XENO_OPT_NUCLEUS
 
 source "kernel/xenomai/skins/native/Kconfig"
 source "kernel/xenomai/skins/posix/Kconfig"
-source "kernel/xenomai/skins/psos+/Kconfig"
-source "kernel/xenomai/skins/uitron/Kconfig"
-source "kernel/xenomai/skins/vrtx/Kconfig"
-source "kernel/xenomai/skins/vxworks/Kconfig"
-
-config XENO_OPT_NOWARN_DEPRECATED
-	bool "Do not warn about deprecated skin usage"
-	default n
-	help
-
-	Starting with Xenomai 3, the skins will not export their
-	interface to kernel modules anymore, at the notable exception
-	of the RTDM device driver API, which by essence must be used
-	from kernel space for writing real-time device
-	drivers.
-
-	Warnings will be emitted at build time when kernel code
-	invokes thread/task creation services from Xenomai skins to
-	remind you that application code should run in user-space
-	context instead.
-
-	The reason for this is fully explained in the project Roadmap
-	document (see What Will Change With Xenomai 3):
-	http://www.xenomai.org/index.php/Xenomai:Roadmap
-
-	You may switch those warnings off by enabling this option, but
-	nevertheless, you have been WARNED.
-
 source "kernel/xenomai/skins/rtdm/Kconfig"
 
 endmenu

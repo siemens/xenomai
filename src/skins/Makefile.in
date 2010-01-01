@@ -248,7 +248,11 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+<<<<<<< HEAD:src/skins/Makefile.in
 SUBDIRS = common native posix rtdm vxworks psos+ vrtx uitron
+=======
+SUBDIRS = common native posix rtdm
+>>>>>>> skins: retain support for core APIs only:src/skins/Makefile.in
 all: all-recursive
 
 .SUFFIXES:

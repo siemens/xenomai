@@ -19,7 +19,7 @@ Description: Xenomai runtime utilities
  support to user-space applications, seamlessly integrated into the GNU/Linux
  environment. Xenomai provides its own API and emulation layers ("skins") to
  make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
- uiTRON, RTAI, POSIX.
+ uiTRON, POSIX.
  .
  This package contains the runtime programs and the testsuite for the Xenomai
  realtime system.
@@ -35,7 +35,7 @@ Description: Linux kernel patches for Xenomai
  support to user-space applications, seamlessly integrated into the GNU/Linux
  environment. Xenomai provides its own API and emulation layers ("skins") to
  make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
- uiTRON, RTAI, POSIX.
+ uiTRON, POSIX.
  .
  This package contains patches for 2.6 series kernels - These are intended for
  use with kernel-package and a virgin Linux source tree. Note: These patches
@@ -58,7 +58,7 @@ Description: Shared libraries for Xenomai
  support to user-space applications, seamlessly integrated into the GNU/Linux
  environment. Xenomai provides its own API and emulation layers ("skins") to
  make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
- uiTRON, RTAI, POSIX.
+ uiTRON, POSIX.
  .
  This package contains the shared libraries.
 
@@ -75,7 +75,7 @@ Description: Headers and static libs for Xenomai
  support to user-space applications, seamlessly integrated into the GNU/Linux
  environment. Xenomai provides its own API and emulation layers ("skins") to
  make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
- uiTRON, RTAI, POSIX.
+ uiTRON, POSIX.
  .
  This package contains development files (header files), the static libraries
  and scripts used to compile realtime applications.
@@ -93,6 +93,6 @@ Description: Xenomai documentation
  support to user-space applications, seamlessly integrated into the GNU/Linux
  environment. Xenomai provides its own API and emulation layers ("skins") to
  make migration from other RTOS easier. Examples are: pSOS+, VxWorks, VRTX,
- uiTRON, RTAI, POSIX.
+ uiTRON, POSIX.
  .
  Documentation for Xenomai realtime API.

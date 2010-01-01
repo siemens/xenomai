@@ -91,8 +91,8 @@ case "$build_for" in
  arm*-*)
 	XENO_TARGET_ARCH=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
-	# We set CONFIG_XENO_FASTSYNCH in asm/features.h, when we know
-	# what architecture we are running
+	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
+	# are running
 	;;
  x86_64-*|amd64-*)
 	use__thread=yes
@@ -188,10 +188,15 @@ fi
 dnl ARCH support for ARM (default: 4)
 
 if test $XENO_TARGET_ARCH = arm ; then
+  CONFIG_XENO_ARM_ARCH=4
+  CONFIG_XENO_ARM_SA1100=
+  CONFIX_XENO_ARM_EABI=
 
   unset CONFIG_XENO_ARM_SA1100
   unset CONFIG_XENO_CPU_XSC3
-  CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER
+  unset tsc_type
+  unset vfp
+  unset XNARCH_ARM_TSC_TYPE
 
   AC_MSG_CHECKING(for ARM tsc type)
   AC_ARG_ENABLE(arm-tsc,
@@ -203,49 +208,159 @@ In that case, this option allows to select the machine for which a
 user-space tsc emulation should be generated. Valid machines are at91,
 kuser, imx, ixp4xx, omap, orion, pxa, s3c24x, sa1100.]),
 	[case "$enableval" in
-	at91*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
-
-	integrator) unset tsc_type;;
-
-	ixp4xx)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	imx*|mx*)   CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	kuser)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_KUSER;;
-
-	omap*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	orion)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
-
-	pxa*)	    CONFIG_XENO_CPU_XSC3=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	s3c24*)	    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_DECREMENTER;;
-
-	sa1100)	    CONFIG_XENO_ARM_SA1100=y
-		    CONFIG_XENO_ARM_TSC_TYPE=__XN_TSC_TYPE_FREERUNNING;;
-
-	n | no)	    unset CONFIG_XENO_ARM_TSC_TYPE;;
-
-	*)AC_MSG_ERROR([Invalid SOC selected: "$enableval"]);;
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
 	esac])
-  AC_MSG_RESULT(${enable_arm_tsc:-kuser})
+  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
 
-  AC_ARG_ENABLE(arm-quirks,
-	AS_HELP_STRING([--enable-arm-quirks], [Enable quirks for
-	specific systems. Currently supported quirks are for sa1100 and
-	xscale3.]),
+  AC_MSG_CHECKING(for ARM machine)
+  AC_ARG_ENABLE(arm-mach,
+	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
+compiling. Valid machines are at91rm9200, at91sam926x, at91sam9, generic,
+generic-vfp, imx, imx21, imx51, integrator, ixp4xx, mx2, mx3, mx5,
+omap3, orion, pxa, pxa3xx, s3c2410, sa1100.]),
 	[case "$enableval" in
-	sa1100)	 CONFIG_XENO_ARM_SA1100=y;;
-	xscale3) CONFIG_XENO_CPU_XSC3=y;;
-	*)AC_MSG_ERROR([Invalid SOC selected: "$enableval"]);;
+	at91rm9200)	arch=4
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
+
+	at91sam926x|at91sam9)	arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
+
+	generic)	arch=4
+			CONFIG_XENO_ARM_SA1100=y
+			unset tsc_type;;
+
+	generic-vfp)	arch=5
+			vfp=vfp
+			unset tsc_type;;
+
+	integrator)	arch=choose
+			unset tsc_type;;
+
+	ixp4xx)		arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx1|imx)	arch=4
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx2|imx21)	arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx3)		arch=6
+			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx5|imx51)	arch=7
+			vfp=vfp3
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	omap3)		arch=7
+			vfp=vfp3
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	orion)		arch=5
+			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
+
+	pxa)		arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	pxa3xx)		arch=xscale3
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	s3c2410)	arch=4
+			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
+
+	sa1100)		arch=4
+			CONFIG_XENO_ARM_SA1100=y
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	*)AC_MSG_ERROR([Invalid machine selected: "$enableval"]);;
+	esac],
+	[AC_MSG_ERROR([Selecting a machine with --enable-arm-mach is mandatory])
+	])
+  AC_MSG_RESULT(${enable_arm_mach:-no})
+
+  AC_MSG_CHECKING(for ARM EABI interface)
+  AC_ARG_ENABLE(arm-eabi,
+	AS_HELP_STRING([--enable-arm-eabi], [Enable ARM EABI interface]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
 	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
+
+  AC_MSG_CHECKING(for ARM architecture version)
+  if test $arch = choose; then
+	AC_ARG_ENABLE(arm-arch,
+	AS_HELP_STRING([--enable-arm-arch=<version>], [Select ARM architecture version, if the machine selected with --enable-arm-mach supports several architecture versions]),
+	[
+		case "$enableval" in
+		"" | y | ye | yes | n | no)
+		AC_MSG_ERROR([You must supply an argument to --enable-arm-arch.])
+		;;
+		esac
+		CONFIG_XENO_ARM_ARCH="$enableval"
+	])
+  elif test $arch = xscale3; then
+	CONFIG_XENO_ARM_ARCH=5
+	CONFIG_XENO_CPU_XSC3=y
+  else
+	CONFIG_XENO_ARM_ARCH="$arch"
+  fi
+  case "$CONFIG_XENO_ARM_ARCH" in
+  4)	XENO_ARM_ARCH_FLAGS="-march=armv4";;
+  5)	XENO_ARM_ARCH_FLAGS="-march=armv5";;
+  6)	XENO_ARM_ARCH_FLAGS="-march=armv6";;
+  7)	XENO_ARM_ARCH_FLAGS="-march=armv7-a";;
+  *)	AC_MSG_ERROR([Invalid architecture $arch, only 4, 5, xscale3, 6 and 7 are supported]);;
+  esac
+
+  # Enable interworking
+  if test x$CONFIG_XENO_ARM_EABI = xy -a $CONFIG_XENO_ARM_ARCH -lt 6; then
+     XENO_ARM_ARCH_FLAGS="${XENO_ARM_ARCH_FLAGS}t"
+  fi
+
+  # Set FPU flags, if EABI is not enabled, all libraries in the system
+  # must be compiled with the same FPU flags, as we do not know how
+  # other components are compiled, we can not set the flags.
+  if test x$CONFIG_XENO_ARM_EABI = xy; then
+     if test x"$vfp" != x; then
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
+     else
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
+     fi
+  fi
+
+  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
+	CONFIG_XENO_FASTSYNCH=y
+  fi
+
+  AC_MSG_RESULT($CONFIG_XENO_ARM_ARCH)
 
   AC_MSG_CHECKING(for ARM SA1100 architecture)
   AC_MSG_RESULT(${CONFIG_XENO_ARM_SA1100:-no})
 
   AC_MSG_CHECKING(for ARM Xscale3 architecture)
   AC_MSG_RESULT(${CONFIG_XENO_CPU_XSC3:-no})
+
+  AC_MSG_CHECKING(for TSC emulation in user-space.)
+  if test $tsc_type; then
+	AC_ARG_ENABLE(arm-tsc,
+		AS_HELP_STRING([--disable-arm-tsc], [Disable TSC emulation in
+user-space]),
+	[case "$enableval" in
+	y | yes) XNARCH_ARM_TSC_TYPE=$tsc_type ;;
+	*) unset XNARCH_ARM_TSC_TYPE ;;
+	esac], [XNARCH_ARM_TSC_TYPE=$tsc_type])
+	if test $XNARCH_ARM_TSC_TYPE; then
+		AC_MSG_RESULT(yes)
+	else
+		AC_MSG_RESULT(no)
+	fi
+  else
+	AC_MSG_RESULT(not supported by this board)
+  fi
 fi
 
 dnl Documentation package.
@@ -357,6 +472,7 @@ test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
 test x$CONFIG_XENO_FASTSYNCH = xy && AC_DEFINE(CONFIG_XENO_FASTSYNCH,1,[config])
 AM_CONDITIONAL(CONFIG_XENO_FASTSYNCH,[test "$CONFIG_XENO_FASTSYNCH" = y])
+
 dnl
 dnl Userland may want to know about MMU availability on the target.
 dnl For now, we assume that having fork() means having an MMU.
@@ -364,10 +480,12 @@ dnl
 test x$ac_cv_func_fork = xyes && AC_DEFINE(CONFIG_MMU,1,[config])
 
 test x$CONFIG_X86_TSC = xy && AC_DEFINE(CONFIG_X86_TSC,1,[config])
+test -n "$CONFIG_XENO_ARM_ARCH" && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_ARCH,$CONFIG_XENO_ARM_ARCH,[config])
 
 test x$CONFIG_XENO_ARM_SA1100 = xy && AC_DEFINE(CONFIG_XENO_ARM_SA1100,1,[config])
 test x$CONFIG_XENO_CPU_XSC3 = xy && AC_DEFINE(CONFIG_XENO_CPU_XSC3,1,[config])
-test $CONFIG_XENO_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(CONFIG_XENO_ARM_TSC_TYPE,$CONFIG_XENO_ARM_TSC_TYPE,[config])
+test $XNARCH_ARM_TSC_TYPE && AC_DEFINE_UNQUOTED(XNARCH_ARM_TSC_TYPE,$XNARCH_ARM_TSC_TYPE,[config])
+test x$CONFIG_XENO_ARM_EABI = xy && AC_DEFINE(CONFIG_XENO_ARM_EABI,1,[config])
 AM_CONDITIONAL(CONFIG_XENO_SHARED,[test "$enable_shared" = 'yes'])
 
 # Default sampling period (ns) used in various tests
@@ -449,7 +567,7 @@ fi
 AC_MSG_RESULT([done])
 
 dnl Common CFLAGS and LDFLAGS
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -Werror-implicit-function-declaration -pipe"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe"
 XENO_USER_LDFLAGS=
 
 dnl Exported CFLAGS and LDFLAGS, may be enhanced per-arch below
@@ -466,7 +584,7 @@ case $XENO_TARGET_ARCH in
 	# Produce libraries in FDPIC format.
 	;;
  arm)
-	XENO_USER_CFLAGS="$XENO_USER_CFLAGS"
+	XENO_USER_CFLAGS="$XENO_USER_CFLAGS $XENO_ARM_ARCH_FLAGS"
 	;;
 esac
 
@@ -499,7 +617,6 @@ fi
 AC_MSG_RESULT(${ac_cv_ld_file_option:-no})
 LD_FILE_OPTION=$ac_cv_ld_file_option
 AC_SUBST(LD_FILE_OPTION)
-AM_CONDITIONAL(CONFIG_XENO_FAST_WRAP,[test "$LD_FILE_OPTION" = "yes"])
 
 AC_MSG_CHECKING(whether the POSIX skin library automatically calls mlockall)
 AC_ARG_ENABLE(posix-auto-mlockall,
@@ -514,36 +631,6 @@ unmodified with Xenomai POSIX skin]),
 AC_MSG_RESULT(${CONFIG_XENO_POSIX_AUTO_MLOCKALL:-no})
 if test x$CONFIG_XENO_POSIX_AUTO_MLOCKALL = xy; then
 	AC_DEFINE(CONFIG_XENO_POSIX_AUTO_MLOCKALL,1,[config])
-fi
-
-AC_MSG_CHECKING(whether the pSOS skin library automatically calls mlockall)
-AC_ARG_ENABLE(psos-auto-mlockall,
-	AS_HELP_STRING([--enable-psos-auto-mlockall], [Enable the
-Xenomai pSOS skin library to automatically call mlockall at
-process startup. Unless this option is switched on, the application
-will have to lock its memory explicitly while initializing.]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_PSOS_AUTO_MLOCKALL=y ;;
-	*) unset CONFIG_XENO_PSOS_AUTO_MLOCKALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_PSOS_AUTO_MLOCKALL:-no})
-if test x$CONFIG_XENO_POSIX_PSOS_MLOCKALL = xy; then
-	AC_DEFINE(CONFIG_XENO_PSOS_AUTO_MLOCKALL,1,[config])
-fi
-
-AC_MSG_CHECKING(whether the uITRON skin library automatically calls mlockall)
-AC_ARG_ENABLE(uitron-auto-mlockall,
-	AS_HELP_STRING([--enable-uitron-auto-mlockall], [Enable the
-Xenomai uITRON skin library to automatically call mlockall at
-process startup. Unless this option is switched on, the application
-will have to lock its memory explicitly while initializing.]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_UITRON_AUTO_MLOCKALL=y ;;
-	*) unset CONFIG_XENO_UITRON_AUTO_MLOCKALL ;;
-	esac])
-AC_MSG_RESULT(${CONFIG_XENO_UITRON_AUTO_MLOCKALL:-no})
-if test x$CONFIG_XENO_POSIX_UITRON_MLOCKALL = xy; then
-	AC_DEFINE(CONFIG_XENO_UITRON_AUTO_MLOCKALL,1,[config])
 fi
 
 AC_MSG_CHECKING(whether to enable dlopen support for skin libraries)
@@ -633,21 +720,12 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config \
 	scripts/xeno \
 	src/Makefile \
+	src/rtdk/Makefile \
 	src/skins/Makefile \
 	src/skins/common/Makefile \
 	src/skins/posix/Makefile \
 	src/skins/native/Makefile \
-	src/skins/native/libxenomai_native.pc \
-	src/skins/vxworks/Makefile \
-	src/skins/vxworks/libxenomai_vxworks.pc \
-	src/skins/psos+/Makefile \
-	src/skins/psos+/libxenomai_psos+.pc \
-	src/skins/vrtx/Makefile \
-	src/skins/vrtx/libxenomai_vrtx.pc \
 	src/skins/rtdm/Makefile \
-	src/skins/rtdm/libxenomai_rtdm.pc \
-	src/skins/uitron/Makefile \
-	src/skins/uitron/libxenomai_uitron.pc \
 	src/drvlib/Makefile \
 	src/drvlib/analogy/Makefile \
 	src/include/Makefile \
@@ -689,19 +767,9 @@ AC_CONFIG_FILES([ \
 	include/nucleus/Makefile \
 	include/posix/Makefile \
 	include/posix/sys/Makefile \
-	include/psos+/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
-	include/uitron/Makefile \
-	include/vrtx/Makefile \
-	include/vxworks/Makefile \
 	])
-
-if test x"$LD_FILE_OPTION" = x"yes" ; then
-      AC_CONFIG_FILES([ \
-	src/skins/posix/libxenomai_posix.pc \
-	])
-fi
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
       AC_CONFIG_FILES([ \

@@ -290,11 +290,15 @@ SUBDIRS = \
 	native \
 	nucleus \
 	posix \
+<<<<<<< HEAD:include/Makefile.in
 	psos+ \
 	rtdm \
 	uitron \
 	vrtx \
 	vxworks
+=======
+	rtdm
+>>>>>>> skins: retain support for core APIs only:include/Makefile.in
 
 EXTRA_DIST = compat testing
 all: all-recursive
