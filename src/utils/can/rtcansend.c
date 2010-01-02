@@ -9,7 +9,6 @@
 
 #include <native/task.h>
 #include <native/timer.h>
-#include <native/pipe.h>
 
 #include <rtdm/rtcan.h>
 

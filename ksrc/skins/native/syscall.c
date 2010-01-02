@@ -37,7 +37,6 @@
 #include <native/heap.h>
 #include <native/alarm.h>
 #include <native/intr.h>
-#include <native/pipe.h>
 #include <native/buffer.h>
 #include <native/misc.h>
 
@@ -3331,281 +3330,6 @@ static int __rt_intr_inquire(struct pt_regs *regs)
 
 #endif /* CONFIG_XENO_OPT_NATIVE_INTR */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_PIPE
-
-/*
- * int __rt_pipe_create(RT_PIPE_PLACEHOLDER *ph,
- *                      const char *name,
- *                      int minor,
- *                      size_t poolsize)
- */
-
-static int __rt_pipe_create(struct pt_regs *regs)
-{
-	struct task_struct *p = current;
-	char name[XNOBJECT_NAME_LEN];
-	RT_PIPE_PLACEHOLDER ph;
-	int err, minor;
-	size_t poolsize;
-	RT_PIPE *pipe;
-
-	if (__xn_reg_arg2(regs)) {
-		if (__xn_safe_strncpy_from_user(name,
-						(const char __user *)__xn_reg_arg2(regs),
-						sizeof(name) - 1) < 0)
-			return -EFAULT;
-
-		name[sizeof(name) - 1] = '\0';
-	} else
-		*name = '\0';
-
-	/* Device minor. */
-	minor = (int)__xn_reg_arg3(regs);
-
-	/* Buffer pool size. */
-	poolsize = (size_t) __xn_reg_arg4(regs);
-
-	pipe = (RT_PIPE *)xnmalloc(sizeof(*pipe));
-
-	if (!pipe)
-		return -ENOMEM;
-
-	err = rt_pipe_create(pipe, name, minor, poolsize);
-
-	if (likely(err == 0)) {
-		pipe->cpid = p->pid;
-		/* Copy back the registry handle to the ph struct. */
-		ph.opaque = pipe->handle;
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-					   sizeof(ph)))
-			err = -EFAULT;
-	} else
-		xnfree(pipe);
-
-	return err;
-}
-
-/*
- * int __rt_pipe_bind(RT_PIPE_PLACEHOLDER *ph,
- *                    const char *name,
- *                    RTIME *timeoutp)
- */
-
-static int __rt_pipe_bind(struct pt_regs *regs)
-{
-	struct task_struct *p = current;
-	RT_PIPE_PLACEHOLDER ph;
-	int err;
-
-	err = __rt_bind_helper(p, regs, &ph.opaque, XENO_PIPE_MAGIC, NULL, 0);
-
-	if (err)
-		return err;
-
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-				   sizeof(ph)))
-		return -EFAULT;
-
-	return 0;
-}
-
-/*
- * int __rt_pipe_delete(RT_PIPE_PLACEHOLDER *ph)
- */
-
-static int __rt_pipe_delete(struct pt_regs *regs)
-{
-	RT_PIPE_PLACEHOLDER ph;
-	RT_PIPE *pipe;
-
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
-		return -EFAULT;
-
-	pipe = xnregistry_fetch(ph.opaque);
-	if (pipe == NULL)
-		return -ESRCH;
-
-	return rt_pipe_delete(pipe);
-}
-
-/*
- * int __rt_pipe_read(RT_PIPE_PLACEHOLDER *ph,
- *                    void *buf,
- *                    size_t size,
- *                    RTIME timeout)
- */
-
-static int __rt_pipe_read(struct pt_regs *regs)
-{
-	RT_PIPE_PLACEHOLDER ph;
-	RT_PIPE_MSG *msg;
-	RT_PIPE *pipe;
-	RTIME timeout;
-	size_t size;
-	ssize_t err;
-
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
-		return -EFAULT;
-
-	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
-
-	if (!pipe)
-		return -ESRCH;
-
-	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
-				     sizeof(timeout)))
-		return -EFAULT;
-
-	size = (size_t) __xn_reg_arg3(regs);
-
-	err = rt_pipe_receive(pipe, &msg, timeout);
-
-	if (err < 0)
-		return err;
-
-	if (msg == NULL)	/* Closed by peer? */
-		return 0;
-
-	if (size < P_MSGSIZE(msg))
-		err = -ENOBUFS;
-	else if (P_MSGSIZE(msg) > 0 &&
-		 __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
-					P_MSGPTR(msg), P_MSGSIZE(msg)))
-		err = -EFAULT;
-
-	/* Zero-sized messages are allowed, so we still need to free the
-	   message buffer even if no data copy took place. */
-
-	rt_pipe_free(pipe, msg);
-
-	return err;
-}
-
-/*
- * int __rt_pipe_write(RT_PIPE_PLACEHOLDER *ph,
- *                     const void *buf,
- *                     size_t size,
- *                     int mode)
- */
-
-static int __rt_pipe_write(struct pt_regs *regs)
-{
-	RT_PIPE_PLACEHOLDER ph;
-	RT_PIPE_MSG *msg;
-	RT_PIPE *pipe;
-	size_t size;
-	ssize_t err;
-	int mode;
-
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
-		return -EFAULT;
-
-	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
-
-	if (!pipe)
-		return -ESRCH;
-
-	size = (size_t) __xn_reg_arg3(regs);
-	mode = (int)__xn_reg_arg4(regs);
-
-	if (size == 0)
-		/* Try flushing the streaming buffer in any case. */
-		return rt_pipe_send(pipe, NULL, 0, mode);
-
-	msg = rt_pipe_alloc(pipe, size);
-
-	if (!msg)
-		return -ENOMEM;
-
-	if (__xn_safe_copy_from_user(P_MSGPTR(msg),
-				     (void __user *)__xn_reg_arg2(regs), size)) {
-		rt_pipe_free(pipe, msg);
-		return -EFAULT;
-	}
-
-	err = rt_pipe_send(pipe, msg, size, mode);
-
-	if (err != size)
-		/* If the operation failed, we need to free the message buffer
-		   by ourselves. */
-		rt_pipe_free(pipe, msg);
-
-	return err;
-}
-
-/*
- * int __rt_pipe_stream(RT_PIPE_PLACEHOLDER *ph,
- *                      const void *buf,
- *                      size_t size)
- */
-
-static int __rt_pipe_stream(struct pt_regs *regs)
-{
-	RT_PIPE_PLACEHOLDER ph;
-	RT_PIPE_MSG *msg;
-	char tmp_buf[64];
-	RT_PIPE *pipe;
-	size_t size;
-	ssize_t err;
-	void *buf;
-
-	if (__xn_safe_copy_from_user(&ph, (void __user *)__xn_reg_arg1(regs),
-				     sizeof(ph)))
-		return -EFAULT;
-
-	pipe = (RT_PIPE *)xnregistry_fetch(ph.opaque);
-
-	if (!pipe)
-		return -ESRCH;
-
-	size = (size_t) __xn_reg_arg3(regs);
-
-	if (size == 0)
-		/* Try flushing the streaming buffer in any case. */
-		return rt_pipe_stream(pipe, NULL, 0);
-
-	/* Try using a local fast buffer if the sent data fits into it. */
-
-	if (size <= sizeof(tmp_buf)) {
-		msg = NULL;
-		buf = tmp_buf;
-	} else {
-		msg = rt_pipe_alloc(pipe, size);
-
-		if (!msg)
-			return -ENOMEM;
-
-		buf = P_MSGPTR(msg);
-	}
-
-	if (__xn_safe_copy_from_user(buf, (void __user *)__xn_reg_arg2(regs), size)) {
-		err = -EFAULT;
-		goto out;
-	}
-
-	err = rt_pipe_stream(pipe, buf, size);
-
-out:
-	if (msg)
-		rt_pipe_free(pipe, msg);
-
-	return err;
-}
-
-#else /* !CONFIG_XENO_OPT_NATIVE_PIPE */
-
-#define __rt_pipe_create   __rt_call_not_available
-#define __rt_pipe_bind     __rt_call_not_available
-#define __rt_pipe_delete   __rt_call_not_available
-#define __rt_pipe_read     __rt_call_not_available
-#define __rt_pipe_write    __rt_call_not_available
-#define __rt_pipe_stream   __rt_call_not_available
-
-#endif /* CONFIG_XENO_OPT_NATIVE_PIPE */
-
 #ifdef CONFIG_XENO_OPT_NATIVE_BUFFER
 
 /*
@@ -4031,7 +3755,6 @@ static void *__shadow_eventcb(int event, void *data)
 		initq(&rh->heapq);
 		initq(&rh->intrq);
 		initq(&rh->mutexq);
-		initq(&rh->pipeq);
 		initq(&rh->queueq);
 		initq(&rh->semq);
 		initq(&rh->ioregionq);
@@ -4048,7 +3771,6 @@ static void *__shadow_eventcb(int event, void *data)
 		__native_heap_flush_rq(&rh->heapq);
 		__native_intr_flush_rq(&rh->intrq);
 		__native_mutex_flush_rq(&rh->mutexq);
-		__native_pipe_flush_rq(&rh->pipeq);
 		__native_queue_flush_rq(&rh->queueq);
 		__native_sem_flush_rq(&rh->semq);
 		__native_ioregion_flush_rq(&rh->ioregionq);
@@ -4157,12 +3879,6 @@ static xnsysent_t __systab[] = {
 	[__native_intr_enable] = {&__rt_intr_enable, __xn_exec_any},
 	[__native_intr_disable] = {&__rt_intr_disable, __xn_exec_any},
 	[__native_intr_inquire] = {&__rt_intr_inquire, __xn_exec_any},
-	[__native_pipe_create] = {&__rt_pipe_create, __xn_exec_lostage},
-	[__native_pipe_bind] = {&__rt_pipe_bind, __xn_exec_conforming},
-	[__native_pipe_delete] = {&__rt_pipe_delete, __xn_exec_lostage},
-	[__native_pipe_read] = {&__rt_pipe_read, __xn_exec_primary},
-	[__native_pipe_write] = {&__rt_pipe_write, __xn_exec_any},
-	[__native_pipe_stream] = {&__rt_pipe_stream, __xn_exec_any},
 	[__native_unimp_89] = {&__rt_call_not_available, __xn_exec_any},
 	[__native_io_get_region] = {&__rt_io_get_region, __xn_exec_lostage},
 	[__native_io_put_region] = {&__rt_io_put_region, __xn_exec_lostage},

@@ -8,7 +8,6 @@
 #include <sys/mman.h>
 
 #include <native/task.h>
-#include <native/pipe.h>
 
 #include <rtdm/rtcan.h>
 

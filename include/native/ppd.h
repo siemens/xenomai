@@ -38,7 +38,6 @@ typedef struct xeno_resource_holder {
 	xnqueue_t heapq;
 	xnqueue_t intrq;
 	xnqueue_t mutexq;
-	xnqueue_t pipeq;
 	xnqueue_t queueq;
 	xnqueue_t semq;
 	xnqueue_t ioregionq;

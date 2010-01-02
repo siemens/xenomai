@@ -9,7 +9,7 @@ config XENO_DRIVERS_TIMERBENCH
 	See testsuite/latency for a possible front-end.
 
 config XENO_DRIVERS_KLATENCY
-	depends on XENO_DRIVERS_TIMERBENCH && m
+	depends on XENO_DRIVERS_TIMERBENCH && m && OBSOLETE
 	tristate "Kernel-only latency measurement module"
 	help
 	Kernel module for kernel-only latency measurement.

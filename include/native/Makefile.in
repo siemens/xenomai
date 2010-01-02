@@ -245,7 +245,6 @@ includesub_HEADERS = \
 	intr.h \
 	misc.h \
 	mutex.h \
-	pipe.h \
 	ppd.h \
 	queue.h \
 	sem.h \

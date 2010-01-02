@@ -34,7 +34,6 @@
 #include <native/event.h>
 #include <native/mutex.h>
 #include <native/cond.h>
-#include <native/pipe.h>
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/alarm.h>
@@ -66,7 +65,6 @@ int SKIN_INIT(native)
 	initq(&__native_global_rholder.heapq);
 	initq(&__native_global_rholder.intrq);
 	initq(&__native_global_rholder.mutexq);
-	initq(&__native_global_rholder.pipeq);
 	initq(&__native_global_rholder.queueq);
 	initq(&__native_global_rholder.semq);
 	initq(&__native_global_rholder.ioregionq);
@@ -114,15 +112,10 @@ int SKIN_INIT(native)
 	if (err)
 		goto cleanup_mutex;
 
-	err = __native_pipe_pkg_init();
-
-	if (err)
-		goto cleanup_cond;
-
 	err = __native_queue_pkg_init();
 
 	if (err)
-		goto cleanup_pipe;
+		goto cleanup_cond;
 
 	err = __native_heap_pkg_init();
 
@@ -163,10 +156,6 @@ int SKIN_INIT(native)
       cleanup_queue:
 
 	__native_queue_pkg_cleanup();
-
-      cleanup_pipe:
-
-	__native_pipe_pkg_cleanup();
 
       cleanup_cond:
 
@@ -213,7 +202,6 @@ void SKIN_EXIT(native)
 	__native_alarm_pkg_cleanup();
 	__native_heap_pkg_cleanup();
 	__native_queue_pkg_cleanup();
-	__native_pipe_pkg_cleanup();
 	__native_cond_pkg_cleanup();
 	__native_mutex_pkg_cleanup();
 	__native_event_pkg_cleanup();

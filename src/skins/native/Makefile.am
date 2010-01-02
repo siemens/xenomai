@@ -14,7 +14,6 @@ libnative_la_SOURCES = \
 	intr.c \
 	misc.c \
 	mutex.c \
-	pipe.c \
 	queue.c \
 	sem.c \
 	task.c \

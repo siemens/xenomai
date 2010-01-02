@@ -25,31 +25,6 @@ config XENO_OPT_NATIVE_PERIOD
 
 	If in doubt, leave zero in this field.
 
-config XENO_OPT_NATIVE_PIPE
-	bool "Message pipes"
-	select XENO_OPT_PIPE
-	default y
-	help
-	
-	Message pipes are bi-directional FIFO communication
-	channels allowing data exchange between real-time tasks
-	and regular user-space processes. Pipes natively preserve
-	message boundaries, but can also be used in byte stream mode
-	from kernel to user space.
-
-	The maximum number of pipes available in the system can be
-	configured using the XENO_OPT_PIPE_NRDEV option from the
-	Nucleus menu.
-
-config XENO_OPT_NATIVE_PIPE_BUFSZ
-	int "Bytes in buffer space"
-	depends on XENO_OPT_NATIVE_PIPE
-	default 1024
-	help
-	
-	This option sets the memory size available for per-pipe
-	buffering when message pipes are used in byte stream mode.
-
 config XENO_OPT_NATIVE_SEM
 	bool "Counting semaphores"
 	default y

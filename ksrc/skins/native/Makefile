@@ -3,8 +3,6 @@ obj-$(CONFIG_XENO_SKIN_NATIVE) += xeno_native.o
 
 xeno_native-y := module.o task.o timer.o syscall.o
 
-xeno_native-$(CONFIG_XENO_OPT_NATIVE_PIPE) += pipe.o
-
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_SEM) += sem.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_EVENT) += event.o
