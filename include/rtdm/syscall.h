@@ -46,12 +46,10 @@ extern int __rtdm_muxid;
 
 int __init rtdm_syscall_init(void);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 static inline void rtdm_syscall_cleanup(void)
 {
 	xnshadow_unregister_interface(__rtdm_muxid);
 }
-#endif
 
 #ifdef __cplusplus
 }

@@ -72,7 +72,7 @@ typedef struct {
 	xnqueue_t timerq;
 } pse51_kqueues_t;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 typedef struct {
 	pse51_kqueues_t kqueues;
 	pse51_assocq_t uqds;
@@ -88,13 +88,13 @@ typedef struct {
 } pse51_queues_t;
 
 extern int pse51_muxid;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 extern xntbase_t *pse51_tbase;
 
 extern pse51_kqueues_t pse51_global_kqueues;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 static inline pse51_queues_t *pse51_queues(void)
 {
 	xnshadow_ppd_t *ppd;
@@ -111,20 +111,20 @@ static inline pse51_queues_t *pse51_queues(void)
 
 	return ppd2queues(ppd);
 }
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 static inline pse51_kqueues_t *pse51_kqueues(int pshared)
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	xnshadow_ppd_t *ppd;
 
 	if (pshared || !(ppd = xnshadow_ppd_get(pse51_muxid)))
 		return &pse51_global_kqueues;
 
 	return &ppd2queues(ppd)->kqueues;
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#else /* __XENO_SIM__ */
 	return &pse51_global_kqueues;
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __XENO_SIM__ */
 }
 
 static inline void ticks2ts(struct timespec *ts, xnticks_t ticks)

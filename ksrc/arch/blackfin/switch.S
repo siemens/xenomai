@@ -86,7 +86,6 @@ ENTRY(_rthal_thread_trampoline)
 
 ENTRY(_rthal_defer_switch_p)
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	p2.l = lo(ILAT);
 	p2.h = hi(ILAT);
 	r0 = [p2];
@@ -94,7 +93,6 @@ ENTRY(_rthal_defer_switch_p)
 	r0 = r0 & r1;
 	cc = r0 == 0;
 	if !cc jump 1f;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	p2.l = lo(IPEND);
 	p2.h = hi(IPEND);
 	csync;

@@ -248,10 +248,10 @@ int pthread_create(pthread_t *tid,
 	appendq(thread->container, &thread->link);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	thread->hkey.u_tid = 0;
 	thread->hkey.mm = NULL;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/* We need an anonymous registry entry to obtain a handle for fast
 	   mutex locking. */
@@ -668,10 +668,10 @@ int pthread_set_mode_np(int clrmask, int setmask)
 	xnthread_t *cur = xnpod_current_thread();
 	xnflags_t valid_flags = XNLOCK;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(cur, XNSHADOW))
 		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW | XNRPIOFF;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */
 
@@ -686,10 +686,8 @@ int pthread_set_mode_np(int clrmask, int setmask)
 		/* Reschedule if the scheduler has been unlocked. */
 		xnpod_schedule();
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0, 0);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return 0;
 }

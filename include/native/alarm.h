@@ -60,11 +60,11 @@ typedef struct rt_alarm {
 
     unsigned long expiries;	/* !< Number of expiries. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
     pid_t cpid;			/* !< Creator's pid. */
 
     xnsynch_t synch_base;	/* !< Synch. base for user-space tasks. */
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
     xnholder_t rlink;		/* !< Link in resource queue. */
 
@@ -104,12 +104,12 @@ int rt_alarm_create(RT_ALARM *alarm,
 		    rt_alarm_t handler,
 		    void *cookie);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 
 void rt_alarm_handler(RT_ALARM *alarm,
 		      void *cookie);
 
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 #ifdef __cplusplus
 }

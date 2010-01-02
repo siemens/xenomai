@@ -103,7 +103,7 @@ void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 #ifdef CONFIG_XENO_OPT_VFILE
 void xnshadow_init_proc(void);
 void xnshadow_cleanup_proc(void);
-#else
+#else /* !CONFIG_XENO_OPT_VFILE */
 static inline void xnshadow_init_proc(void) { }
 static inline void xnshadow_cleanup_proc(void) { }
 #endif /* CONFIG_XENO_OPT_VFILE */

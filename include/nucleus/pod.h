@@ -168,16 +168,16 @@ void __xnpod_schedule(struct xnsched *sched);
 #define xnpod_current_root() \
     (&xnpod_current_sched()->rootcb)
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifdef __XENO_SIM__
+#define xnpod_current_p(thread) \
+    (xnpod_current_thread() == (thread))
+#else /* !__XENO_SIM__ */
 #define xnpod_current_p(thread)						\
     ({ int __shadow_p = xnthread_test_state(thread, XNSHADOW);		\
        int __curr_p = __shadow_p ? xnshadow_thread(current) == thread	\
 	   : thread == xnpod_current_thread();				\
        __curr_p;})
-#else
-#define xnpod_current_p(thread) \
-    (xnpod_current_thread() == (thread))
-#endif
+#endif /* !__XENO_SIM__ */
 
 #define xnpod_locked_p() \
     xnthread_test_state(xnpod_current_thread(), XNLOCK)

@@ -26,11 +26,9 @@ pse51_msg_t *pse51_mq_timedrcv_inner(pse51_mq_t **mqp, mqd_t fd, size_t len,
 
 int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-
+#ifndef __XENO_SIM__
 void pse51_mq_uqds_cleanup(pse51_queues_t *q);
-
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 int pse51_mq_pkg_init(void);
 

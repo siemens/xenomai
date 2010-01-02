@@ -28,7 +28,15 @@
 
 #include <nucleus/types.h>
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifdef __XENO_SIM__
+
+struct xnbufd {
+	caddr_t b_ptr;		/* src/dst buffer address */
+	size_t b_len;		/* total length of buffer */
+	off_t b_off;		/* # of bytes read/written */
+};
+
+#else /* !__XENO_SIM__ */
 
 struct mm_struct;
 
@@ -60,15 +68,7 @@ ssize_t xnbufd_unmap_uread(struct xnbufd *bufd);
 
 ssize_t xnbufd_unmap_uwrite(struct xnbufd *bufd);
 
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-
-struct xnbufd {
-	caddr_t b_ptr;		/* src/dst buffer address */
-	size_t b_len;		/* total length of buffer */
-	off_t b_off;		/* # of bytes read/written */
-};
-
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 void xnbufd_map_kmem(struct xnbufd *bufd,
 		     void *ptr, size_t len);

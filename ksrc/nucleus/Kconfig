@@ -7,20 +7,7 @@ config XENO_OPT_NUCLEUS
 
 if XENO_OPT_NUCLEUS != n
 
-config XENO_OPT_PERVASIVE
-	bool "Pervasive real-time support in user-space"
-	select IPIPE_DELAYED_ATOMICSW
-	default y
-	help
-
-	Enable pervasive real-time support for user-space Linux
-	processes, which is the default operating mode for
-	Xenomai. Switching this option out only leaves the minimal
-	support needed for running in-kernel applications, which
-	directly call the real-time APIs from kernel modules.
-
 config XENO_OPT_PRIOCPL
-	depends on XENO_OPT_PERVASIVE
 	bool "Priority coupling support"
 	default y
 	help
@@ -284,7 +271,7 @@ config XENO_OPT_DEBUG_TIMERS
 
 config XENO_OPT_DEBUG_SYNCH_RELAX
 	bool "Detect mutexes held in relaxed sections"
-	depends on XENO_OPT_PERVASIVE && XENO_OPT_DEBUG
+	depends on XENO_OPT_DEBUG
 	default y
 	help
 

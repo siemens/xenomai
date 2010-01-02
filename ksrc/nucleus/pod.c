@@ -146,7 +146,6 @@ void xnpod_switch_fpu(xnsched_t *sched)
 
 static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnarchtcb_t *tcb = xnthread_archtcb(thread);
 
 	if (xnpod_shadow_p() && !xnarch_fpu_init_p(tcb->user_task)) {
@@ -159,7 +158,6 @@ static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
 		xnarch_init_fpu(tcb);
 		return 1;
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return 0;
 }
@@ -773,14 +771,14 @@ int xnpod_start_thread(struct xnthread *thread,
 	trace_mark(xn_nucleus, thread_start, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNSHADOW)) {
 		xnlock_put_irqrestore(&nklock, s);
 		xnshadow_start(thread);
 		xnlock_get_irqsave(&nklock, s);
 		goto run_hooks;
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 	/* Setup the initial stack frame. */
 
@@ -796,7 +794,7 @@ int xnpod_start_thread(struct xnthread *thread,
 #endif /* __XENO_SIM__ */
 
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 run_hooks:
 #endif
 	xnpod_run_hooks(&nkpod->tstartq, thread, "START");
@@ -1083,7 +1081,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 
 	sched = thread->sched;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	/*
 	 * This block serves two purposes:
 	 *
@@ -1133,7 +1131,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 		 */
 		goto unlock_and_exit;
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 	/*
 	 * If thread is not current, has the deferred cancelability
@@ -1384,7 +1382,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 
 	/* Is the thread ready to run? */
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS)) {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 		/*
 		 * If attempting to suspend a runnable (shadow) thread
 		 * which has received a Linux signal, just raise the
@@ -1407,7 +1405,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 			xnthread_set_info(thread, XNBREAK);
 			goto unlock_and_exit;
 		}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 		xnthread_clear_info(thread, XNRMID | XNTIMEO | XNBREAK | XNWAKEN | XNROBBED);
 	}
@@ -1481,7 +1479,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 */
 		xnpod_schedule();
 	}
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	/*
 	 * Ok, this one is an interesting corner case, which requires
 	 * a bit of background first. Here, we handle the case of
@@ -1501,8 +1499,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * thread in secondary mode would just keep running into the
 	 * Linux domain, thus breaking the most common assumptions
 	 * regarding suspended threads. We only care for threads that
-	 * are not current, and for XNSUSP, XNDELAY and XNDORMANT
-	 * conditions, because:
+	 * are not current, and for XNSUSP, XNDELAY, XNDORMANT and
+	 * XNHELD conditions, because:
 	 *
 	 * - skins are supposed to ask for primary mode switch when
 	 * processing any syscall which may block the caller; IOW,
@@ -1529,7 +1527,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		  * send a migration signal.
 		  */
 		xnshadow_suspend(thread);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
       unlock_and_exit:
 
@@ -1899,14 +1897,14 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 	if (!xnthread_test_state(thread, XNTHREAD_BLOCK_BITS|XNREADY|XNLOCK))
 		xnsched_putback(thread);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (propagate) {
 		if (xnthread_test_state(thread, XNRELAX))
 			xnshadow_renice(thread);
 		else if (xnthread_test_state(thread, XNSHADOW))
 			xnthread_set_info(thread, XNPRIOSET);
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 unlock_and_exit:
 
@@ -2227,11 +2225,11 @@ reschedule:
 		   prev, xnthread_name(prev),
 		   next, xnthread_name(next));
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	shadow = xnthread_test_state(prev, XNSHADOW);
 #else
 	(void)shadow;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __XENO_SIM__ */
 
 	if (xnthread_test_state(next, XNROOT)) {
 		xnsched_reset_watchdog(sched);
@@ -2258,7 +2256,7 @@ reschedule:
 
 	xnpod_switch_to(sched, prev, next);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	/*
 	 * Test whether we transitioned from primary mode to secondary
 	 * over a shadow thread. This may happen in two cases:
@@ -2272,7 +2270,7 @@ reschedule:
 	 */
 	if (shadow && xnarch_root_domain_p())
 		goto shadow_epilogue;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __XENO_SIM__ */
 
 	switched = 1;
 	sched = xnsched_finish_unlocked_switch(sched);
@@ -2314,7 +2312,7 @@ reschedule:
 
 	return;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
       shadow_epilogue:
 	/* Shadow on entry and root without shadow extension on exit?
 	   Mmmm... This must be the user-space mate of a deleted real-time
@@ -2332,7 +2330,7 @@ reschedule:
 	   thread. */
 	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
 	return;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
 
@@ -2590,13 +2588,13 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 		return 1;
 	}
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	/* If we experienced a trap on behalf of a shadow thread, just
-	   move the second to the Linux domain, so that the host O/S
-	   (e.g. Linux) can attempt to process the exception. This is
-	   especially useful in order to handle user-space errors or debug
-	   stepping properly. */
-
+	/*
+	 * If we experienced a trap on behalf of a shadow thread, just
+	 * move the second to the Linux domain, so that the host O/S
+	 * (e.g. Linux) can attempt to process the exception. This is
+	 * especially useful in order to handle user-space errors or
+	 * debug stepping properly.
+	 */
 	if (xnpod_shadow_p()) {
 #if XENO_DEBUG(NUCLEUS)
 		if (!xnarch_fault_um(fltinfo)) {
@@ -2625,7 +2623,6 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 		xnshadow_relax(xnarch_fault_notify(fltinfo),
 			       SIGDEBUG_MIGRATE_FAULT);
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */
 
 	return 0;

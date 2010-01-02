@@ -227,9 +227,9 @@ int rt_sem_create(RT_SEM *sem, const char *name, unsigned long icount, int mode)
 	appendq(sem->rqueue, &sem->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	sem->cpid = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/*
 	 * <!> Since xnregister_enter() may reschedule, only register

@@ -328,9 +328,9 @@ typedef struct xnthread {
 
 	void *cookie;		/* Cookie to pass to the entry routine */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	unsigned long *u_mode;	/* Thread mode variable shared with userland. */
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#ifndef __XENO_SIM__
+	unsigned long __user *u_mode;	/* Thread mode variable shared with userland. */
+#endif /* !__XENO_SIM__ */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
 
@@ -389,14 +389,11 @@ typedef struct xnhook {
 #define xnthread_affine_p(thread, cpu)     xnarch_cpu_isset(cpu, (thread)->affinity)
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-#define xnthread_inc_rescnt(thread)        do { } while (0)
-#define xnthread_dec_rescnt(thread)        do { } while (0)
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 #define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
 #define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)

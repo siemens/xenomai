@@ -146,7 +146,7 @@
 #include <nucleus/bufd.h>
 #include <nucleus/assert.h>
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 
 #include <asm/xenomai/syscall.h>
 
@@ -689,7 +689,7 @@ void xnbufd_invalidate(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_invalidate);
 
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#else /* __XENO_SIM__ */
 
 void xnbufd_map_kmem(struct xnbufd *bufd, void *ptr, size_t len)
 {
@@ -732,7 +732,7 @@ void xnbufd_invalidate(struct xnbufd *bufd)
 }
 EXPORT_SYMBOL_GPL(xnbufd_invalidate);
 
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __XENO_SIM__ */
 
 /*!
  * \fn void xnbufd_unmap_kread(struct xnbufd *bufd)

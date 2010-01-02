@@ -95,10 +95,8 @@ static void pse51_shutdown(int xtype)
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
 	pse51_intr_pkg_cleanup();
 #endif /* CONFIG_XENO_OPT_POSIX_INTR */
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	pse51_syscall_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 #ifdef __KERNEL__
+	pse51_syscall_cleanup();
 	pse51_apc_pkg_cleanup();
 #endif /* __KERNEL__ */
 	xntbase_free(pse51_tbase);
@@ -125,11 +123,9 @@ int SKIN_INIT(posix)
 	err = pse51_apc_pkg_init();
 	if (err)
 		goto fail_free_tbase;
+	err = pse51_syscall_init();
 #endif /* __KERNEL__ */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	err = pse51_syscall_init();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	if (err != 0) {
 #ifdef __KERNEL__
 		pse51_apc_pkg_cleanup();

@@ -65,7 +65,7 @@ int rt_ioregion_delete(RT_IOREGION *iorn);
 
 static inline void __native_ioregion_flush_rq(xnqueue_t *rq)
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	xeno_flush_rq(RT_IOREGION, rq, ioregion);
 #endif
 }
@@ -77,7 +77,7 @@ static inline int __native_misc_pkg_init(void)
 
 static inline void __native_misc_pkg_cleanup(void)
 {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	__native_ioregion_flush_rq(&__native_global_rholder.ioregionq);
 #endif
 }

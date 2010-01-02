@@ -162,11 +162,9 @@ static int create_instance(struct rtdm_device *device,
 	context->ops = &device->ops;
 	atomic_set(&context->close_lock_count, 1);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnlock_get_irqsave(&nklock, s);
 	ppd = xnshadow_ppd_get(__rtdm_muxid);
 	xnlock_put_irqrestore(&nklock, s);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	context->reserved.owner =
 	    ppd ? container_of(ppd, struct rtdm_process, ppd) : NULL;

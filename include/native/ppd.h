@@ -48,7 +48,7 @@ typedef struct xeno_resource_holder {
 
 extern xeno_rholder_t __native_global_rholder;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 
 extern int __native_muxid;
 
@@ -68,7 +68,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 			xnfree(obj);		\
 	} while(0)
 
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#else /* __XENO_SIM__ */
 
 static inline xeno_rholder_t *xeno_get_rholder(void)
 {
@@ -77,7 +77,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 
 #define __xeno_release_obj(obj)		do { } while(0)
 
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+#endif /* __XENO_SIM__ */
 
 #if XENO_DEBUG(NATIVE)
 #define __xeno_trace_release(__name, __obj, __err)		\

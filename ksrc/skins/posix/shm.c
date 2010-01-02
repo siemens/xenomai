@@ -499,11 +499,7 @@ int ftruncate(int fd, off_t len)
 	/* Allocate one more page for alignment (the address returned by mmap
 	   must be aligned on a page boundary). */
 	if (len)
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 		len = xnheap_rounded_size(len + PAGE_SIZE, PAGE_SIZE);
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-		len = xnheap_rounded_size(len + PAGE_SIZE, XNHEAP_PAGE_SIZE);
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 	err = 0;
 	if (emptyq_p(&shm->mappings)) {
@@ -861,7 +857,6 @@ int munmap(void *addr, size_t len)
 	return -1;
 }
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 int pse51_xnheap_get(xnheap_t **pheap, void *addr)
 {
 	pse51_shm_t *shm;
@@ -906,8 +901,6 @@ void pse51_shm_umaps_cleanup(pse51_queues_t *q)
 {
 	pse51_assocq_destroy(&q->umaps, &umap_cleanup);
 }
-
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 int pse51_shm_pkg_init(void)
 {

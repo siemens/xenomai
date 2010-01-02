@@ -226,8 +226,7 @@ static void __heap_flush_private(xnheap_t *heap,
  * - H_MAPPABLE causes the heap to be sharable between kernel and
  * user-space contexts. Otherwise, the new heap is only available for
  * kernel-based usage. This flag is implicitely set when the caller is
- * running in user-space. This feature requires the real-time support
- * in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
+ * running in user-space.
  *
  * - H_SINGLE causes the entire heap space to be managed as a single
  * memory block.
@@ -300,7 +299,6 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		if (!name || !*name)
 			return -EINVAL;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 		heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
 
 		err = xnheap_init_mapped(&heap->heap_base,
@@ -313,9 +311,6 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 			return err;
 
 		heap->cpid = 0;
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-		return -ENOSYS;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	} else
 #endif /* __KERNEL__ */
 	{
@@ -385,7 +380,7 @@ static void __heap_post_release(struct xnheap *h)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (heap->cpid)
 		xnfree(heap);
 #endif
@@ -455,12 +450,12 @@ int rt_heap_delete_inner(RT_HEAP *heap, void __user *mapaddr)
 	 * destroy it safely.
 	 */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (heap->mode & H_MAPPABLE)
 		xnheap_destroy_mapped(&heap->heap_base,
 				      __heap_post_release, mapaddr);
 	else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 	{
 		xnheap_destroy(&heap->heap_base, &__heap_flush_private, NULL);
 		__heap_post_release(&heap->heap_base);

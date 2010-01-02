@@ -49,9 +49,7 @@ static void __exit rtdm_skin_shutdown(int xtype)
 {
 	rtdm_dev_cleanup();
 	rtdm_proc_cleanup();
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rtdm_syscall_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	xntbase_free(rtdm_tbase);
 	xnpod_shutdown(xtype);
 }
@@ -79,11 +77,9 @@ static int __init SKIN_INIT(rtdm)
 	if (err)
 		goto cleanup_dev;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = rtdm_syscall_init();
 	if (err)
 		goto cleanup_proc;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifndef MODULE
 	rtdm_initialised = 1;
@@ -93,9 +89,7 @@ static int __init SKIN_INIT(rtdm)
 
 	return 0;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 cleanup_proc:
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	rtdm_proc_cleanup();
 
 cleanup_dev:

@@ -202,9 +202,7 @@ static inline void xnarch_notify_shutdown(void)
 	   when running as a module. */
 	set_cpus_allowed(current, cpumask_of_cpu(0));
 #endif /* CONFIG_SMP && MODULE */
-#ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_release_events();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
     /* Wait for the currently processed events to drain. */
     set_current_state(TASK_UNINTERRUPTIBLE);
     schedule_timeout(50);
@@ -214,9 +212,7 @@ static inline void xnarch_notify_shutdown(void)
 static void xnarch_notify_ready (void)
 {
     rthal_grab_control();
-#ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_grab_events();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 
 unsigned long long xnarch_get_host_time(void)

@@ -115,10 +115,10 @@ int pthread_intr_attach_np(pthread_intr_t * intrp,
 
 	xnintr_init(&intr->intr_base, NULL, irq, isr, iack, 0);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO, NULL);
 	intr->pending = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 	intr->magic = PSE51_INTR_MAGIC;
 	inith(&intr->link);
 	intr->owningq = pse51_kqueues(0);
@@ -156,9 +156,9 @@ static int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q, int 
 		thread_set_errno(EPERM);
 		return -1;
 	}
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	rc = xnsynch_destroy(&intr->synch_base);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	pse51_mark_deleted(intr);
 

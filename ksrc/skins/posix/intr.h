@@ -35,15 +35,14 @@ struct pse51_interrupt {
 
 #define link2intr(ln) container_of(ln, struct pse51_interrupt, link)
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-
+#ifndef __XENO_SIM__
     int mode;		/* !< Interrupt control mode. */
 
     int pending;	/* !< Pending hits to process. */
 
     xnsynch_t synch_base; /* !< Base synchronization object. */
+#endif /* !__XENO_SIM__ */
 
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
     pse51_kqueues_t *owningq;
 };
 

@@ -46,9 +46,9 @@
  *
  *@{*/
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 #include <nucleus/shadow.h>
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 #include <asm/xenomai/system.h>	/* For xnlock. */
 #include <posix/timer.h>	/* For pse51_timer_notified. */
 #include <posix/sig.h>
@@ -324,7 +324,7 @@ int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 		thread->threadbase.signals = 1;
 	}
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(&thread->threadbase, XNSHADOW)) {
 		pse51_schedule_lostage(PSE51_LO_SIGNAL_REQ, thread, 0);
 		if (xnthread_test_state(&thread->threadbase,
@@ -338,7 +338,7 @@ int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
 		} else
 			return thread == pse51_current_thread();
 	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 	return thread == pse51_current_thread()
 		|| xnpod_unblock_thread(&thread->threadbase);
@@ -1091,7 +1091,7 @@ static void pse51_dispatch_signals(xnsigmask_t sigs)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 {
 	spl_t dummy;
@@ -1137,7 +1137,7 @@ void pse51_signal_handle_request(pthread_t thread)
 
 	xnlock_put_irqrestore(&nklock, s);
 }
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 {
@@ -1152,11 +1152,11 @@ void pse51_signal_init_thread(pthread_t newthread, const pthread_t parent)
 	else
 		emptyset(&newthread->sigmask);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (testbits(newthread->threadbase.state, XNSHADOW))
 		newthread->threadbase.asr = &pse51_dispatch_shadow_signals;
 	else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 		newthread->threadbase.asr = &pse51_dispatch_signals;
 
 	newthread->threadbase.asrmode = 0;

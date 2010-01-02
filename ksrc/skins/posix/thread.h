@@ -89,10 +89,10 @@ struct pse51_thread {
 
     /* For timers. */
     xnqueue_t timersq;
-
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+    
+#ifndef __XENO_SIM__
     struct pse51_hkey hkey;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 };
 
 #define PSE51_JOINED_DETACHED XNTHREAD_INFO_SPARE0

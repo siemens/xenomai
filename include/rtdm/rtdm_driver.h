@@ -1283,7 +1283,6 @@ static inline void rtdm_free(void *ptr)
 	xnfree(ptr);
 }
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
 		      void *src_addr, size_t len,
 		      int prot, void **pptr,
@@ -1354,27 +1353,6 @@ static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 	return (user_info ? xnshadow_thread(user_info) != NULL
 			  : !xnpod_root_p());
 }
-
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-/* Define void user<->kernel services that simply fail */
-#define rtdm_mmap_to_user(...)		({ -ENOSYS; })
-#define rtdm_munmap(...)		({ -ENOSYS; })
-#define rtdm_read_user_ok(...)		({ 0; })
-#define rtdm_rw_user_ok(...)		({ 0; })
-#define rtdm_copy_from_user(...)	({ -ENOSYS; })
-#define rtdm_safe_copy_from_user(...)	({ -ENOSYS; })
-#define rtdm_copy_to_user(...)		({ -ENOSYS; })
-#define rtdm_safe_copy_to_user(...)	({ -ENOSYS; })
-#define rtdm_strncpy_from_user(...)	({ -ENOSYS; })
-
-static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
-{
-	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return 0;);
-
-	return !xnpod_root_p();
-}
-
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 static inline int rtdm_in_rt_context(void)
 {

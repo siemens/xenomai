@@ -76,7 +76,7 @@ typedef struct rt_intr {
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
     int mode;			/* !< Interrupt control mode. */
 
     int pending;		/* !< Pending hits to process. */
@@ -84,7 +84,7 @@ typedef struct rt_intr {
     xnsynch_t synch_base;	/* !< Base synchronization object. */
 
     pid_t cpid;			/* !< Creator's pid. */
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
     xnholder_t rlink;		/* !< Link in resource queue. */
 
@@ -129,9 +129,9 @@ int rt_intr_create(RT_INTR *intr,
 		   rt_iack_t iack,
 		   int mode);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 int rt_intr_handler(xnintr_t *cookie);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 #ifdef __cplusplus
 }

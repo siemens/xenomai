@@ -89,9 +89,9 @@ typedef struct rt_queue {
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
     pid_t cpid;			/* !< Creator's pid. */
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
     xnholder_t rlink;		/* !< Link in resource queue. */
 

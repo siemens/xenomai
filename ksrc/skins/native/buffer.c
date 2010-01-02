@@ -260,9 +260,9 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 	bf->rdtoken = 0;
 	bf->wrtoken = 0;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	bf->cpid = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 	bf->magic = XENO_BUFFER_MAGIC;
 
 	/*

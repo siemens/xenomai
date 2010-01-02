@@ -18,8 +18,8 @@ xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 
 	if (muxid == -1) {
 		fprintf(stderr,
-			"Xenomai: %s skin or CONFIG_XENO_OPT_PERVASIVE disabled.\n"
-			"(modprobe %s?)\n", skin, module);
+			"Xenomai: %s skin disabled (modprobe %s?)\n",
+			skin, module);
 		exit(EXIT_FAILURE);
 	}
 

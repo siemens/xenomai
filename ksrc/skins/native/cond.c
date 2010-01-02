@@ -192,9 +192,9 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	appendq(cond->rqueue, &cond->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	cond->cpid = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/*
 	 * <!> Since xnregister_enter() may reschedule, only register

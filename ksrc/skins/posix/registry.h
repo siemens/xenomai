@@ -77,7 +77,7 @@ int pse51_desc_destroy(pse51_desc_t *desc);
 
 /* Associative lists, used for association of user-space to kernel-space
    objects. */
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 struct mm_struct;
 
 DECLARE_EXTERN_XNLOCK(pse51_assoc_lock);
@@ -115,7 +115,7 @@ pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
 				  u_long key);
 
 pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
-				  u_long key);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+                                  u_long key);
+#endif /* !__XENO_SIM__ */
 
 #endif /* PSE51_REGISTRY_H */

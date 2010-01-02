@@ -1084,7 +1084,7 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 }
 EXPORT_SYMBOL_GPL(xnheap_check_block);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 
 #include <asm/io.h>
 #include <linux/miscdevice.h>
@@ -1476,7 +1476,8 @@ void xnheap_umount(void)
 	misc_deregister(&xnheap_dev);
 }
 
-#elif !defined(__XENO_SIM__) /* !CONFIG_XENO_OPT_PERVASIVE */
+#else /* __XENO_SIM__ */
+
 static void xnheap_free_extent(xnheap_t *heap,
 			       void *extent, u_long size, void *cookie)
 {
@@ -1510,7 +1511,8 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 {
 	xnheap_destroy(heap, &xnheap_free_extent, NULL);
 }
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
+
+#endif /* __XENO_SIM__ */
 
 EXPORT_SYMBOL_GPL(xnheap_init_mapped);
 EXPORT_SYMBOL_GPL(xnheap_destroy_mapped);

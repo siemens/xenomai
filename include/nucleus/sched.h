@@ -109,7 +109,7 @@ typedef struct xnsched {
 	xnflags_t rpistatus;
 #endif
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	struct task_struct *gatekeeper;
 	struct semaphore gksync;
 	struct xnthread *gktarget;

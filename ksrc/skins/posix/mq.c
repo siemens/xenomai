@@ -1289,7 +1289,7 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 }
 #endif /* CONFIG_XENO_OPT_POSIX_SELECT */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 static void uqd_cleanup(pse51_assoc_t *assoc)
 {
 	pse51_ufd_t *ufd = assoc2ufd(assoc);
@@ -1305,7 +1305,7 @@ void pse51_mq_uqds_cleanup(pse51_queues_t *q)
 {
 	pse51_assocq_destroy(&q->uqds, &uqd_cleanup);
 }
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 int pse51_mq_pkg_init(void)
 {

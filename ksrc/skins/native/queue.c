@@ -209,8 +209,7 @@ static void __queue_flush_private(xnheap_t *heap,
  * - Q_SHARED causes the queue to be sharable between kernel and
  * user-space tasks. Otherwise, the new queue is only available for
  * kernel-based usage. This flag is implicitely set when the caller is
- * running in user-space. This feature requires the real-time support
- * in user-space to be configured in (CONFIG_XENO_OPT_PERVASIVE).
+ * running in user-space.
  *
  * - Q_DMA causes the buffer pool associated to the queue to be
  * allocated in physically contiguous memory, suitable for DMA
@@ -265,7 +264,6 @@ int rt_queue_create(RT_QUEUE *q,
 		if (!name || !*name)
 			return -EINVAL;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 		poolsize = xnheap_rounded_size(poolsize, PAGE_SIZE);
 
 		err = xnheap_init_mapped(&q->bufpool,
@@ -276,9 +274,6 @@ int rt_queue_create(RT_QUEUE *q,
 			return err;
 
 		q->cpid = 0;
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-		return -ENOSYS;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	} else
 #endif /* __KERNEL__ */
 	{
@@ -348,7 +343,7 @@ static void __queue_post_release(struct xnheap *heap)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (q->cpid)
 		xnfree(q);
 #endif
@@ -417,12 +412,12 @@ int rt_queue_delete_inner(RT_QUEUE *q, void __user *mapaddr)
 	 * destroy the associated heap safely.
 	 */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (q->mode & Q_SHARED)
 		xnheap_destroy_mapped(&q->bufpool,
 				      __queue_post_release, mapaddr);
 	else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 	{
 		xnheap_destroy(&q->bufpool, &__queue_flush_private, NULL);
 		__queue_post_release(&q->bufpool);

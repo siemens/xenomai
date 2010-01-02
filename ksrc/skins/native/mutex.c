@@ -204,9 +204,9 @@ int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name, int global)
 	appendq(mutex->rqueue, &mutex->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	mutex->cpid = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/*
 	 * <!> Since xnregister_enter() may reschedule, only register

@@ -256,13 +256,13 @@ int *xnthread_get_errno_location(xnthread_t *thread)
 	if (unlikely(!xnpod_active_p()))
 		return &fallback_errno;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNSHADOW))
 		return &thread->errcode;
 
 	if (xnthread_test_state(thread, XNROOT))
 		return &xnshadow_errno(current);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 
 	return &thread->errcode;
 }

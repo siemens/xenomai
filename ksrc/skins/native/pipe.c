@@ -163,7 +163,7 @@ static void __pipe_release_handler(void *xstate) /* nklock free */
 	else if (pipe->buffer)
 		xnheap_free(pipe->bufpool, pipe->buffer);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (pipe->cpid)
 		xnfree(pipe);
 #endif
@@ -353,9 +353,9 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	appendq(pipe->rqueue, &pipe->rlink);
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	pipe->cpid = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	/*
 	 * <!> Since xnregister_enter() may reschedule, only register

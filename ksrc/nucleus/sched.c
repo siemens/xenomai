@@ -90,7 +90,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 	if (likely(++sched->wdcount < wd_timeout_arg))
 		return;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNSHADOW) &&
 	    !xnthread_amok_p(thread)) {
 		trace_mark(xn_nucleus, watchdog_signal,
@@ -101,7 +101,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		xnthread_set_info(thread, XNAMOK);
 		xnshadow_call_mayday(thread, SIGDEBUG_WATCHDOG);
 	} else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 	{
 		trace_mark(xn_nucleus, watchdog, "thread %p thread_name %s",
 			   thread, xnthread_name(thread));

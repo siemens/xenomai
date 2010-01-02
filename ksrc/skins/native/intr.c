@@ -294,12 +294,10 @@ int rt_intr_create(RT_INTR *intr,
 		xnobject_create_name(intr->name, sizeof(intr->name), isr);
 
 	xnintr_init(&intr->intr_base, intr->name, irq, isr, iack, mode);
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	xnsynch_init(&intr->synch_base, XNSYNCH_PRIO, NULL);
 	intr->pending = 0;
 	intr->cpid = 0;
 	intr->mode = 0;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 	intr->magic = XENO_INTR_MAGIC;
 	intr->handle = 0;	/* i.e. (still) unregistered interrupt. */
 	inith(&intr->rlink);
@@ -380,9 +378,7 @@ int rt_intr_delete(RT_INTR *intr)
 
 	removeq(intr->rqueue, &intr->rlink);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	rc = xnsynch_destroy(&intr->synch_base);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	if (intr->handle)
 		xnregistry_remove(intr->handle);

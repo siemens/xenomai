@@ -1806,7 +1806,6 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @{
  */
 
-#if defined(CONFIG_XENO_OPT_PERVASIVE) || defined(DOXYGEN_CPP)
 struct rtdm_mmap_data {
 	void *src_vaddr;
 	phys_addr_t src_paddr;
@@ -2107,9 +2106,9 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 
 	return err;
 }
-
 EXPORT_SYMBOL_GPL(rtdm_munmap);
-#endif /* CONFIG_XENO_OPT_PERVASIVE || DOXYGEN_CPP */
+
+#endif /* DOXYGEN_CPP */
 
 /**
  * @brief Enforces a rate limit

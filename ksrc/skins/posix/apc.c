@@ -62,7 +62,7 @@ static void pse51_lostage_handle_request(void *cookie)
 		rq->out = (reqnum + 1) & (PSE51_LO_MAX_REQUESTS - 1);
 
 		switch (req->type){
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 		case PSE51_LO_SIGNAL_REQ:
 			pse51_signal_handle_request((pthread_t) req->arg);
 			break;

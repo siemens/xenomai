@@ -35,24 +35,7 @@
 #endif /* CONFIG_XENO_OPT_PIPE */
 #include <nucleus/select.h>
 #include <asm/xenomai/bits/init.h>
-#include <asm/xenomai/hal.h>
 #include <nucleus/vdso.h>
-
-#ifndef CONFIG_XENO_OPT_PERVASIVE
-/*
- * We need an instance of struct xnvdso even in the non-pervasive case,
- * for example to implement hostrt support.
- */
-static struct xnvdso static_nkvdso;
-struct xnvdso *nkvdso;
-EXPORT_SYMBOL_GPL(nkvdso);
-
-void __init xnheap_init_vdso(void)
-{
-	static_nkvdso.features = XNVDSO_FEATURES;
-	nkvdso = &static_nkvdso;
-}
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_HOSTRT
 static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
@@ -181,7 +164,6 @@ int __init __xeno_sys_init(void)
 		goto cleanup_pipe;
 #endif /* CONFIG_XENO_OPT_SELECT */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 	ret = xnshadow_mount();
 	if (ret)
 		goto cleanup_select;
@@ -189,7 +171,6 @@ int __init __xeno_sys_init(void)
 	ret = xnheap_mount();
 	if (ret)
 		goto cleanup_shadow;
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */
 
 	xntbase_mount();
@@ -211,14 +192,11 @@ int __init __xeno_sys_init(void)
 
 #ifdef __KERNEL__
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-
       cleanup_shadow:
 
 	xnshadow_cleanup();
 
       cleanup_select:
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #ifdef CONFIG_XENO_OPT_SELECT
 	xnselect_umount();
@@ -254,28 +232,23 @@ void __exit __xeno_sys_exit(void)
 {
 	xnpod_shutdown(XNPOD_NORMAL_EXIT);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	/* Must take place before xnpod_umount(). */
 	xnshadow_cleanup();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 
 	xntbase_umount();
 	xnpod_umount();
 
 	xnarch_exit();
 
-#ifdef __KERNEL__
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	xnheap_umount();
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
 #ifdef CONFIG_XENO_OPT_PIPE
 	xnpipe_umount();
-#endif /* CONFIG_XENO_OPT_PIPE */
-#endif /* __KERNEL__ */
-
-#ifndef __XENO_SIM__
-	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
 #endif
+	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
+#endif /* !__XENO_SIM__ */
 
 	xnloginfo("real-time nucleus unloaded.\n");
 }

@@ -348,12 +348,12 @@ static void xnsynch_renice_thread(struct xnthread *thread,
 	if (thread->wchan)
 		xnsynch_requeue_sleeper(thread);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	if (xnthread_test_state(thread, XNRELAX))
 		xnshadow_renice(thread);
 	else if (xnthread_test_state(thread, XNSHADOW))
 		xnthread_set_info(thread, XNPRIOSET);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif /* !__XENO_SIM__ */
 }
 
 /*!

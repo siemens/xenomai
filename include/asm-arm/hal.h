@@ -158,11 +158,7 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #define RTHAL_TSC_INFO(p)	((p)->archdep.tsc)
 #endif /* __IPIPE_FEATURE_SYSINFO_V2 */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
 #define RTHAL_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-#define RTHAL_SHARED_HEAP_FLAGS 0
-#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)

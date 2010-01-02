@@ -18,8 +18,7 @@ static pthread_t xeno_main_tid;
 
 static void xeno_sigill_handler(int sig)
 {
-	fprintf(stderr, "Xenomai or CONFIG_XENO_OPT_PERVASIVE disabled.\n"
-		"(modprobe xeno_nucleus?)\n");
+	fprintf(stderr, "Xenomai disabled (modprobe xeno_nucleus?)\n");
 	exit(EXIT_FAILURE);
 }
 

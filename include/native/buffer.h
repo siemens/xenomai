@@ -70,9 +70,9 @@ typedef struct rt_buffer {
 	size_t bufsz;		/* !< Buffer size. */
 	caddr_t bufmem;		/* !< Buffer space. */
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
+#ifndef __XENO_SIM__
 	pid_t cpid;			/* !< Creator's pid. */
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#endif
 	xnholder_t rlink;		/* !< Link in resource queue. */
 #define rlink2buffer(ln)	container_of(ln, RT_BUFFER, rlink)
 	xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
