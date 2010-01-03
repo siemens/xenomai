@@ -39,7 +39,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->fpup = x86_fpustate_ptr(&task->thread);
 }
 
-static inline int xnarch_local_syscall(struct pt_regs *regs)
+int xnarch_local_syscall(void)
 {
 	return -ENOSYS;
 }

@@ -23,7 +23,7 @@
 #include <asm/xenomai/atomic.h>
 #include <asm/xenomai/syscall.h>
 
-#define XENOMAI_MUX_NR 16
+#define XENOMAI_SKINS_NR 16
 
 /* Events sent to the interface callback */
 #define XNSHADOW_CLIENT_ATTACH  0
@@ -45,7 +45,7 @@ struct xnskin_props {
 	unsigned magic;
 	int nrcalls;
 	void *(*eventcb)(int, void *);
-	xnsysent_t *systab;
+	struct xnsysent *systab;
 	struct xntbase **timebasep;
 	struct module *module;
 };
@@ -71,8 +71,6 @@ void xnshadow_relax(int notify, int reason);
 void xnshadow_renice(struct xnthread *thread);
 
 void xnshadow_suspend(struct xnthread *thread);
-
-int xnshadow_wait_barrier(struct pt_regs *regs);
 
 void xnshadow_start(struct xnthread *thread);
 

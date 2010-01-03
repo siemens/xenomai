@@ -51,11 +51,13 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->name = name;
 }
 
-static inline int xnarch_local_syscall(struct pt_regs *regs)
+int xnarch_local_syscall(unsigned long a1, unsigned long a2,
+			 unsigned long a3, unsigned long a4,
+			 unsigned long a5)
 {
 	int error = 0;
 
-	switch (__xn_reg_arg1(regs)) {
+	switch (a1) {
 	case XENOMAI_SYSARCH_ATOMIC_ADD_RETURN:{
 			int i;
 			atomic_t *v, val;
@@ -63,8 +65,8 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			unsigned long flags;
 
 			local_irq_save_hw(flags);
-			__xn_get_user(i, (int *)__xn_reg_arg2(regs));
-			__xn_get_user(v, (atomic_t **) __xn_reg_arg3(regs));
+			__xn_get_user(i, (int *)a2);
+			__xn_get_user(v, (atomic_t **)a3);
 			if (__xn_copy_from_user(&val, v, sizeof(atomic_t))) {
 				error = -EFAULT;
 				goto unlock;
@@ -74,7 +76,7 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 				error = -EFAULT;
 				goto unlock;
 			}
-			__xn_put_user(ret, (int *)__xn_reg_arg4(regs));
+			__xn_put_user(ret, (int *)a4);
 		  unlock:
 			local_irq_restore_hw(flags);
 			break;
@@ -85,8 +87,8 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			unsigned long flags;
 
 			local_irq_save_hw(flags);
-			__xn_get_user(mask, (unsigned long *)__xn_reg_arg2(regs));
-			__xn_get_user(addr, (unsigned long **)__xn_reg_arg3(regs));
+			__xn_get_user(mask, (unsigned long *)a2);
+			__xn_get_user(addr, (unsigned long **)a3);
 			__xn_get_user(val, (unsigned long *)addr);
 			val |= mask;
 			__xn_put_user(val, (unsigned long *)addr);
@@ -99,8 +101,8 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			unsigned long flags;
 
 			local_irq_save_hw(flags);
-			__xn_get_user(mask, (unsigned long *)__xn_reg_arg2(regs));
-			__xn_get_user(addr, (unsigned long **)__xn_reg_arg3(regs));
+			__xn_get_user(mask, (unsigned long *)a2);
+			__xn_get_user(addr, (unsigned long **)a3);
 			__xn_get_user(val, (unsigned long *)addr);
 			val &= ~mask;
 			__xn_put_user(val, (unsigned long *)addr);
@@ -115,22 +117,23 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 			unsigned long flags;
 
 			local_irq_save_hw(flags);
-			__xn_get_user(ptr, (unsigned char **)__xn_reg_arg2(regs));
-			__xn_get_user(x, (unsigned long *)__xn_reg_arg3(regs));
-			__xn_get_user(size, (unsigned int *)__xn_reg_arg4(regs));
+			__xn_get_user(ptr, (unsigned char **)a2);
+			__xn_get_user(x, (unsigned long *)a3);
+			__xn_get_user(size, (unsigned int *)a4);
 			if (size == 4) {
 				unsigned long val;
 				__xn_get_user(val, (unsigned long *)ptr);
 				ret = xnarch_atomic_xchg(&val, x);
 			} else
 				error = -EINVAL;
-			__xn_put_user(ret, (unsigned long *)__xn_reg_arg5(regs));
+			__xn_put_user(ret, (unsigned long *)a5);
 			local_irq_restore_hw(flags);
 			break;
 		}
-
-/* If I-pipe supports user-space tsc emulation, add a syscall for retrieving tsc
-   infos. */
+/*
+ * If I-pipe supports user-space tsc emulation, add a syscall for
+ * retrieving tsc infos.
+ */
 #ifdef IPIPE_TSC_TYPE_NONE
 	case XENOMAI_SYSARCH_TSCINFO:{
 		struct ipipe_sysinfo ipipe_info;
@@ -168,9 +171,8 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 		default:
 			return -EINVAL;
 		}
-
-		if (__xn_copy_to_user((void *)__xn_reg_arg2(regs),
-				      &info, sizeof(info)))
+		
+		if (__xn_copy_to_user((void *)a2, &info, sizeof(info)))
 			return -EFAULT;
 		break;
 	}

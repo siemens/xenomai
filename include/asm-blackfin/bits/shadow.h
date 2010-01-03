@@ -44,22 +44,21 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->name = name;
 }
 
-static inline int xnarch_local_syscall(struct pt_regs *regs)
+int xnarch_local_syscall(unsigned long a1, unsigned long a2,
+			 unsigned long a3, unsigned long a4,
+			 unsigned long a5)
 {
-	unsigned long ptr, x, r;
+	unsigned long r;
 
-	switch (__xn_reg_arg1(regs)) {
+	switch (a1) {
 	case __xn_lsys_xchg:
 
 		/* lsys_xchg(ptr,newval,&oldval) */
-		ptr = __xn_reg_arg2(regs);
-		x = __xn_reg_arg3(regs);
-		r = xchg((unsigned long *)ptr, x);
-		__xn_put_user(r, (unsigned long *)__xn_reg_arg4(regs));
+		r = xchg((unsigned long *)a2, a3);
+		__xn_put_user(r, (unsigned long *)a4);
 		break;
 
 	default:
-
 		return -ENOSYS;
 	}
 

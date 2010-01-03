@@ -74,9 +74,9 @@ struct pt_regs;
 
 #define XENOMAI_MAX_SYSENT 255
 
-typedef struct _xnsysent {
+struct xnsysent {
 
-    int (*svc)(struct pt_regs *regs);
+	int (*svc)(u_long arg, ...);
 
 /* Syscall must run into the Linux domain. */
 #define __xn_exec_lostage    0x1
@@ -96,16 +96,28 @@ typedef struct _xnsysent {
 #define __xn_exec_norestart  0x80
 /* Context-agnostic syscall. Will actually run in Xenomai domain. */
 #define __xn_exec_any        0x0
-/* Short-hand for shadow init syscall. */
+/* Shorthand for shadow init syscall. */
 #define __xn_exec_init       __xn_exec_lostage
-/* Short-hand for shadow syscall in Xenomai space. */
+/* Shorthand for shadow syscall in Xenomai space. */
 #define __xn_exec_primary   (__xn_exec_shadow|__xn_exec_histage)
-/* Short-hand for shadow syscall in Linux space. */
+/* Shorthand for shadow syscall in Linux space. */
 #define __xn_exec_secondary (__xn_exec_shadow|__xn_exec_lostage)
+/* Shorthand for syscall in Linux space with switchback if shadow. */
+#define __xn_exec_downup    (__xn_exec_lostage|__xn_exec_switchback)
+/* Shorthand for non-restartable primary syscall. */
+#define __xn_exec_nonrestartable (__xn_exec_primary|__xn_exec_norestart)
+/* Shorthand for domain probing syscall */
+#define __xn_exec_probing   (__xn_exec_current|__xn_exec_adaptive)
+/* Shorthand for oneway trap - does not return to call site. */
+#define __xn_exec_oneway    (__xn_exec_any|__xn_exec_norestart)
 
-    unsigned long flags;
+	unsigned long flags;
+};
 
-} xnsysent_t;
+#define __syscast__(fn)	((int (*)(u_long, ...))(fn))
+
+#define SKINCALL_DEF(nr, fn, fl)	\
+	[nr] = { .svc = __syscast__(fn), .flags = __xn_exec_##fl }
 
 extern int nkthrptd;
 
@@ -118,6 +130,13 @@ extern int nkerrptd;
 
 #define access_rok(addr, size)	access_ok(VERIFY_READ, (addr), (size))
 #define access_wok(addr, size)	access_ok(VERIFY_WRITE, (addr), (size))
+
+#define __xn_reg_arglist(regs)	\
+	__xn_reg_arg1(regs),	\
+	__xn_reg_arg2(regs),	\
+	__xn_reg_arg3(regs),	\
+	__xn_reg_arg4(regs),	\
+	__xn_reg_arg5(regs)
 
 #define __xn_copy_from_user(dstP, srcP, n)	__copy_from_user_inatomic(dstP, srcP, n)
 #define __xn_copy_to_user(dstP, srcP, n)	__copy_to_user_inatomic(dstP, srcP, n)

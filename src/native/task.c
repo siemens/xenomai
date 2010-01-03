@@ -57,9 +57,9 @@ static void *rt_task_trampoline(void *cookie)
 {
 	struct rt_task_iargs *iargs = (struct rt_task_iargs *)cookie;
 	volatile pthread_t tid = pthread_self();
+	struct native_hidden_desc desc;
 	void (*entry) (void *cookie);
 	unsigned long mode_offset;
-	struct rt_arg_bulk bulk;
 	RT_TASK *task, *self;
 	long err;
 
@@ -76,23 +76,28 @@ static void *rt_task_trampoline(void *cookie)
 	xeno_sigshadow_install_once();
 
 	task = iargs->task;
-	bulk.a1 = (u_long)task;
-	bulk.a2 = (u_long)iargs->name;
-	bulk.a3 = (u_long)iargs->prio;
-	bulk.a4 = (u_long)iargs->mode;
-	bulk.a5 = (u_long)tid;
-	/* Signal allocation failures by setting bulk.a6 to 0, they will be
-	   propagated to the thread waiting in xn_sys_completion. */
-	bulk.a6 = !self ? 0UL : (u_long)&mode_offset;
+	desc.opaque_handle = (u_long)tid;
+	/*
+	 * Signal allocation failures by setting desc.writeback to
+	 * NULL, they will be propagated to the thread waiting in
+	 * xn_sys_completion.
+	 */
+	desc.writeback = !self ? NULL : &mode_offset;
+	desc.completion = iargs->completionp;
 
-	asm volatile("nop;nop;nop");
-	err = XENOMAI_SKINCALL2(__native_muxid,
-				__native_task_create, &bulk,
-				iargs->completionp);
-	if (!bulk.a6) {
+	err = XENOMAI_SKINCALL5(__native_muxid,
+				__native_task_create,
+				(u_long)task,
+				(u_long)iargs->name,
+				(u_long)iargs->prio,
+				(u_long)iargs->mode,
+				&desc);
+
+	if (desc.writeback == NULL) {
 		err = -ENOMEM;
 		goto fail;
 	}
+
 	if (err)
 		goto fail;
 
@@ -183,8 +188,8 @@ int rt_task_start(RT_TASK *task, void (*entry) (void *cookie), void *cookie)
 
 int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 {
+	struct native_hidden_desc desc;
 	unsigned long mode_offset;
-	struct rt_arg_bulk bulk;
 	RT_TASK task_desc;
 	RT_TASK *self;
 	int err;
@@ -212,15 +217,22 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	xeno_sigshadow_install_once();
 
-	bulk.a1 = (u_long)task;
-	bulk.a2 = (u_long)name;
-	bulk.a3 = (u_long)prio;
-	bulk.a4 = (u_long)mode;
-	bulk.a5 = (u_long)pthread_self();
-	bulk.a6 = (u_long)&mode_offset;
+	desc.opaque_handle = (u_long)pthread_self();
+	desc.writeback = &mode_offset;
+	desc.completion = NULL;
 
-	err = XENOMAI_SKINCALL2(__native_muxid, __native_task_create, &bulk,
-				NULL);
+	if (desc.writeback == NULL) {
+		err = -ENOMEM;
+		goto fail;
+	}
+
+	err = XENOMAI_SKINCALL5(__native_muxid,
+				__native_task_create,
+				(u_long)task,
+				(u_long)name,
+				(u_long)prio,
+				(u_long)mode,
+				&desc);
 	if (err)
 		goto fail;
 

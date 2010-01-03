@@ -129,14 +129,10 @@
 #define __native_queue_flush        103
 #define __native_cond_wait_epilogue 104
 
-struct rt_arg_bulk {
-
-	u_long a1;
-	u_long a2;
-	u_long a3;
-	u_long a4;
-	u_long a5;
-	u_long a6;
+struct native_hidden_desc {
+	u_long opaque_handle;
+	u_long *writeback;
+	struct xncompletion *completion;
 };
 
 #ifndef __XENO_SIM__

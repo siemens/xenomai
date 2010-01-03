@@ -43,7 +43,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->name = name;
 }
 
-static inline int xnarch_local_syscall(struct pt_regs *regs)
+int xnarch_local_syscall(void)
 {
 	return -ENOSYS;
 }
