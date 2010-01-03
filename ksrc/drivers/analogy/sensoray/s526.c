@@ -39,7 +39,7 @@
 #include <asm/byteorder.h>
 #include <analogy/analogy_driver.h>
 
-#define BOARD_NAME "Sensoray Model 526"
+#define BOARD_NAME "analogy_s526"
 #define S526_GPCT_CHANS	4
 #define S526_GPCT_BITS	24
 #define S526_AI_CHANS	10	/* 8 regular differential inputs
