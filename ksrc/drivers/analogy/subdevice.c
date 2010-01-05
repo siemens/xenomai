@@ -82,16 +82,13 @@ a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb, int chidx, int rngidx)
 int a4l_check_chanlist(a4l_subd_t * subd,
 		       unsigned char nb_chan, unsigned int *chans)
 {
-	int i;
+	int i, j;
 
 	if (nb_chan > subd->chan_desc->length)
 		return -EINVAL;
 
 	for (i = 0; i < nb_chan; i++) {
-		int j =	(subd->rng_desc->mode != 
-			 A4L_RNG_GLOBAL_RNGDESC) ? i : 0;
-		int k =	(subd->chan_desc->mode !=
-			 A4L_CHAN_GLOBAL_CHANDESC) ? i : 0;
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? i : 0;
 
 		if (CR_CHAN(chans[i]) >= subd->chan_desc->length) {
 			__a4l_err("a4l_check_chanlist: "
@@ -99,18 +96,26 @@ int a4l_check_chanlist(a4l_subd_t * subd,
 				  CR_CHAN(chans[i]), subd->chan_desc->length);
 			return -EINVAL;
 		}
+		if (CR_AREF(chans[i]) != 0 &&
+		    (CR_AREF(chans[i]) & subd->chan_desc->chans[j].flags) == 0)
+		{
+			__a4l_err("a4l_check_chanlist: "
+				  "bad channel type\n");
+			return -EINVAL;
+		}
+	}
+
+	if (subd->rng_desc == NULL)
+		return 0;
+
+	for (i = 0; i < nb_chan; i++) {
+		j = (subd->rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ? i : 0;
+
 		if (CR_RNG(chans[i]) > subd->rng_desc->rngtabs[j]->length) {
 			__a4l_err("a4l_check_chanlist: "
 				  "rng idx out_of range (%u>=%u)\n",
 				  CR_RNG(chans[i]),
 				  subd->rng_desc->rngtabs[j]->length);
-			return -EINVAL;
-		}
-		if (CR_AREF(chans[i]) != 0 &&
-		    (CR_AREF(chans[i]) & subd->chan_desc->chans[k].flags) == 0)
-		{
-			__a4l_err("a4l_check_chanlist: "
-				  "bad channel type\n");
 			return -EINVAL;
 		}
 	}
