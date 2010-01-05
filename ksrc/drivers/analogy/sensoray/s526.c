@@ -39,13 +39,13 @@
 #include <asm/byteorder.h>
 #include <analogy/analogy_driver.h>
 
-#define BOARD_NAME "analogy_s526"
 #define S526_GPCT_CHANS	4
 #define S526_GPCT_BITS	24
 #define S526_AI_CHANS	10	/* 8 regular differential inputs
 				 * channel 8 is "reference 0" (+10V)
 				 * channel 9 is "reference 1" (0V) */
 #define S526_AI_BITS	16
+#define S526_AI_TIMEOUT 100
 #define S526_AO_CHANS	4
 #define S526_AO_BITS	16
 #define S526_HAVE_DIO	1
@@ -60,7 +60,7 @@
 #define S526_DEFAULT_ADDRESS	0x2C0 /* Manufacturing default */
 #define S526_NUM_PORTS		27
 
-/* registers */
+/* Registers */
 #define REG_TCR 0x00
 #define REG_WDC 0x02
 #define REG_DAC 0x04
@@ -221,40 +221,37 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	short value;
 	union cmReg cmReg;
 
-	/* a4l_info(dev, "s526_gpct_insn_config: Configuring Channel %d\n", subdev_channel); */
+	a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring Channel %d\n", subdev_channel);
 
 	for (i = 0; i < MAX_GPCT_CONFIG_DATA; i++) {
-		/* subdpriv->config[subdev_channel].data[i] = insn->data[i]; */
 		subdpriv->config[subdev_channel].data[i] = data[i];
-		/* a4l_info(dev, "data[%d]=%x\n", i, insn->data[i]); */
+		a4l_dbg(1, drv_dbg, dev, "data[%d]=%x\n", i, data[i]);
 	}
 
-	/*  Check what type of Counter the user requested, data[0] contains */
-	/*  the Application type */
 	switch (data[0]) {
 	case A4L_INSN_CONFIG_GPCT_QUADRATURE_ENCODER:
 		/*
-		   data[0]: Application Type
-		   data[1]: Counter Mode Register Value
-		   data[2]: Pre-load Register Value
-		   data[3]: Conter Control Register
+		 * data[0]: Application Type
+		 * data[1]: Counter Mode Register Value
+		 * data[2]: Pre-load Register Value
+		 * data[3]: Conter Control Register
 		 */
-		/* a4l_info(dev, "s526_gpct_insn_config: Configuring Encoder\n"); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring Encoder\n");
 		subdpriv->config[subdev_channel].app = PositionMeasurement;
 
 #if 0
 		/* Example of Counter Application */
 		/* One-shot (software trigger) */
-		cmReg.reg.coutSource = 0;	/*  out RCAP */
-		cmReg.reg.coutPolarity = 1;	/*  Polarity inverted */
-		cmReg.reg.autoLoadResetRcap = 0;	/*  Auto load disabled */
-		cmReg.reg.hwCtEnableSource = 3;	/*  NOT RCAP */
-		cmReg.reg.ctEnableCtrl = 2;	/*  Hardware */
-		cmReg.reg.clockSource = 2;	/*  Internal */
-		cmReg.reg.countDir = 1;	/*  Down */
-		cmReg.reg.countDirCtrl = 1;	/*  Software */
-		cmReg.reg.outputRegLatchCtrl = 0;	/*  latch on read */
-		cmReg.reg.preloadRegSel = 0;	/*  PR0 */
+		cmReg.reg.coutSource = 0;	  /* out RCAP */
+		cmReg.reg.coutPolarity = 1;	  /* Polarity inverted */
+		cmReg.reg.autoLoadResetRcap = 0;  /* Auto load disabled */
+		cmReg.reg.hwCtEnableSource = 3;	  /* NOT RCAP */
+		cmReg.reg.ctEnableCtrl = 2;	  /* Hardware */
+		cmReg.reg.clockSource = 2;	  /* Internal */
+		cmReg.reg.countDir = 1;		  /* Down */
+		cmReg.reg.countDirCtrl = 1;	  /* Software */
+		cmReg.reg.outputRegLatchCtrl = 0; /* latch on read */
+		cmReg.reg.preloadRegSel = 0;	  /* PR0 */
 		cmReg.reg.reserved = 0;
 
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
@@ -262,29 +259,28 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		outw(0x0001, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 		outw(0x3C68, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/*  Reset the counter */
-		outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/*  Load the counter from PR0 */
-
-		outw(0x0008, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/*  Reset RCAP (fires one-shot) */
+		outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
+		outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Load the counter from PR0 */
+		outw(0x0008, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset RCAP (fires one-shot) */
 
 #endif
 
 #if 1
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = data[1] & 0xFFFF;
 
-		/* a44_info(dev, "Counter Mode register=%x\n", cmReg.value); */
+		a4l_dbg(1, drv_dbg, dev, "Counter Mode register=%x\n", cmReg.value);
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Reset the counter if it is software preload */
+		/* Reset the counter if it is software preload */
 		if (cmReg.reg.autoLoadResetRcap == 0) {
-			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/* Reset the counter */
-			/* outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel));*/    /* Load the counter from PR0 */
+			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
+			/* outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/\* Load the counter from PR0 *\/ */
 		}
 #else
-		cmReg.reg.countDirCtrl = 0;	/*  0 quadrature, 1 software control */
+		cmReg.reg.countDirCtrl = 0; /* 0 quadrature, 1 software control */
 
-		/*  data[1] contains GPCT_X1, GPCT_X2 or GPCT_X4 */
+		/* data[1] contains GPCT_X1, GPCT_X2 or GPCT_X4 */
 		if (data[1] == GPCT_X2) {
 			cmReg.reg.clockSource = 1;
 		} else if (data[1] == GPCT_X4) {
@@ -293,79 +289,79 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			cmReg.reg.clockSource = 0;
 		}
 
-		/*  When to take into account the indexpulse: */
+		/* When to take into account the indexpulse: */
 		if (data[2] == GPCT_IndexPhaseLowLow) {
 		} else if (data[2] == GPCT_IndexPhaseLowHigh) {
 		} else if (data[2] == GPCT_IndexPhaseHighLow) {
 		} else if (data[2] == GPCT_IndexPhaseHighHigh) {
 		}
-		/*  Take into account the index pulse? */
+		/* Take into account the index pulse? */
 		if (data[3] == GPCT_RESET_COUNTER_ON_INDEX)
-			cmReg.reg.autoLoadResetRcap = 4;	/*  Auto load with INDEX^ */
+			cmReg.reg.autoLoadResetRcap = 4; /* Auto load with INDEX^ */
 
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = (short)(data[1] & 0xFFFF);
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Load the pre-load register high word */
+		/* Load the pre-load register high word */
 		value = (short)((data[2] >> 16) & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 
-		/*  Load the pre-load register low word */
+		/* Load the pre-load register low word */
 		value = (short)(data[2] & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		/*  Write the Counter Control Register */
+		/* Write the Counter Control Register */
 		if (data[3] != 0) {
 			value = (short)(data[3] & 0xFFFF);
 			outw(value, ADDR_CHAN_REG(REG_C0C, subdev_channel));
 		}
-		/*  Reset the counter if it is software preload */
+		/* Reset the counter if it is software preload */
 		if (cmReg.reg.autoLoadResetRcap == 0) {
-			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/*  Reset the counter */
-			outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/*  Load the counter from PR0 */
+			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
+			outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Load the counter from PR0 */
 		}
 #endif
 		break;
 
 	case A4L_INSN_CONFIG_GPCT_SINGLE_PULSE_GENERATOR:
 		/*
-		   data[0]: Application Type
-		   data[1]: Counter Mode Register Value
-		   data[2]: Pre-load Register 0 Value
-		   data[3]: Pre-load Register 1 Value
-		   data[4]: Conter Control Register
+		 * data[0]: Application Type
+		 * data[1]: Counter Mode Register Value
+		 * data[2]: Pre-load Register 0 Value
+		 * data[3]: Pre-load Register 1 Value
+		 * data[4]: Conter Control Register
 		 */
-		/* a4l_info(dev, "s526_gpct_insn_config: Configuring SPG\n"); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring SPG\n");
 		subdpriv->config[subdev_channel].app = SinglePulseGeneration;
 
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = (short)(data[1] & 0xFFFF);
-		cmReg.reg.preloadRegSel = 0;	/*  PR0 */
+		cmReg.reg.preloadRegSel = 0; /* PR0 */
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Load the pre-load register 0 high word */
+		/* Load the pre-load register 0 high word */
 		value = (short)((data[2] >> 16) & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 
-		/*  Load the pre-load register 0 low word */
+		/* Load the pre-load register 0 low word */
 		value = (short)(data[2] & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = (short)(data[1] & 0xFFFF);
-		cmReg.reg.preloadRegSel = 1;	/*  PR1 */
+		cmReg.reg.preloadRegSel = 1; /* PR1 */
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Load the pre-load register 1 high word */
+		/* Load the pre-load register 1 high word */
 		value = (short)((data[3] >> 16) & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 
-		/*  Load the pre-load register 1 low word */
+		/* Load the pre-load register 1 low word */
 		value = (short)(data[3] & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		/*  Write the Counter Control Register */
+		/* Write the Counter Control Register */
 		if (data[4] != 0) {
 			value = (short)(data[4] & 0xFFFF);
 			outw(value, ADDR_CHAN_REG(REG_C0C, subdev_channel));
@@ -374,42 +370,42 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	case A4L_INSN_CONFIG_GPCT_PULSE_TRAIN_GENERATOR:
 		/*
-		   data[0]: Application Type
-		   data[1]: Counter Mode Register Value
-		   data[2]: Pre-load Register 0 Value
-		   data[3]: Pre-load Register 1 Value
-		   data[4]: Conter Control Register
+		 * data[0]: Application Type
+		 * data[1]: Counter Mode Register Value
+		 * data[2]: Pre-load Register 0 Value
+		 * data[3]: Pre-load Register 1 Value
+		 * data[4]: Conter Control Register
 		 */
-		/* a4l_info(dev, "s526_gpct_insn_config: Configuring PTG\n"); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring PTG\n");
 		subdpriv->config[subdev_channel].app = PulseTrainGeneration;
 
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = (short)(data[1] & 0xFFFF);
-		cmReg.reg.preloadRegSel = 0;	/*  PR0 */
+		cmReg.reg.preloadRegSel = 0; /* PR0 */
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Load the pre-load register 0 high word */
+		/* Load the pre-load register 0 high word */
 		value = (short)((data[2] >> 16) & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 
-		/*  Load the pre-load register 0 low word */
+		/* Load the pre-load register 0 low word */
 		value = (short)(data[2] & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		/*  Set Counter Mode Register */
+		/* Set Counter Mode Register */
 		cmReg.value = (short)(data[1] & 0xFFFF);
-		cmReg.reg.preloadRegSel = 1;	/*  PR1 */
+		cmReg.reg.preloadRegSel = 1; /* PR1 */
 		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
 
-		/*  Load the pre-load register 1 high word */
+		/* Load the pre-load register 1 high word */
 		value = (short)((data[3] >> 16) & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
 
-		/*  Load the pre-load register 1 low word */
+		/* Load the pre-load register 1 low word */
 		value = (short)(data[3] & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 
-		/*  Write the Counter Control Register */
+		/* Write the Counter Control Register */
 		if (data[4] != 0) {
 			value = (short)(data[4] & 0xFFFF);
 			outw(value, ADDR_CHAN_REG(REG_C0C, subdev_channel));
@@ -444,7 +440,7 @@ static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		datahigh = inw(ADDR_CHAN_REG(REG_C0H, counter_channel));
 		data[i] = (int)(datahigh & 0x00FF);
 		data[i] = (data[i] << 16) | (datalow & 0xFFFF);
-		/* a4l_info(dev, "s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n", counter_channel, data[i], datahigh, datalow); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n", counter_channel, data[i], datahigh, datalow);
 	}
 
 	return 0;
@@ -456,20 +452,19 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	struct s526_subd_gpct_priv *subdpriv =
 	    (struct s526_subd_gpct_priv *)subd->priv;
 	uint32_t *data = (uint32_t *)insn->data;
-	int subdev_channel = CR_CHAN(insn->chan_desc);	/*  Unpack chanspec */
+	int subdev_channel = CR_CHAN(insn->chan_desc);
 	short value;
 	union cmReg cmReg;
 
-
-	/* a4l_info(dev, "s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n", subdev_channel); */
+	a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n", subdev_channel);
 
 	cmReg.value = inw(ADDR_CHAN_REG(REG_C0M, subdev_channel));
-	/* a4l_info(dev, "s526_gpct_winsn: Counter Mode Register: %x\n", cmReg.value); */
+	a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: Counter Mode Register: %x\n", cmReg.value);
 
-	/*  Check what Application of Counter this channel is configured for */
+	/* Check what Application of Counter this channel is configured for */
 	switch (subdpriv->config[subdev_channel].app) {
 	case PositionMeasurement:
-		/* a4l_info(dev, "s526_gpct_winsn: INSN_WRITE: PM\n"); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: INSN_WRITE: PM\n");
 		outw(0xFFFF & ((*data) >> 16), ADDR_CHAN_REG(REG_C0H,
 							     subdev_channel));
 		outw(0xFFFF & (*data),
@@ -477,7 +472,7 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		break;
 
 	case SinglePulseGeneration:
-		/* a4l_info(dev, "s526_gpct_winsn: INSN_WRITE: SPG\n"); */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: INSN_WRITE: SPG\n");
 		outw(0xFFFF & ((*data) >> 16), ADDR_CHAN_REG(REG_C0H,
 							     subdev_channel));
 		outw(0xFFFF & (*data),
@@ -485,13 +480,14 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		break;
 
 	case PulseTrainGeneration:
-		/* data[0] contains the PULSE_WIDTH
-		   data[1] contains the PULSE_PERIOD
-		   @pre PULSE_PERIOD > PULSE_WIDTH > 0
-		   The above periods must be expressed as a multiple of the
-		   pulse frequency on the selected source
-		*/
-		/* a4l_info(dev, "s526_gpct_winsn: INSN_WRITE: PTG\n"); */
+		/*
+		 * data[0] contains the PULSE_WIDTH
+		 * data[1] contains the PULSE_PERIOD
+		 * @pre PULSE_PERIOD > PULSE_WIDTH > 0
+		 * The above periods must be expressed as a multiple of the
+		 * pulse frequency on the selected source
+		 */
+		a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: INSN_WRITE: PTG\n");
 		if ((data[1] > data[0]) && (data[0] > 0)) {
 			(subdpriv->config[subdev_channel]).data[0] = data[0];
 			(subdpriv->config[subdev_channel]).data[1] = data[1];
@@ -506,7 +502,7 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		value = (short)(*data & 0xFFFF);
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 		break;
-	default:		/*  Impossible */
+	default:		/* Impossible */
 		a4l_err(dev, "s526_gpct_winsn: INSN_WRITE: Functionality %d not implemented yet\n",
 			 subdpriv->config[subdev_channel].app);
 		return -EINVAL;
@@ -528,20 +524,21 @@ static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		return -EINVAL;
 
 	/* data[0] : channels was set in relevant bits.
-	   data[1] : delay
+	 * data[1] : delay
 	 */
 	/* COMMENT: abbotti 2008-07-24: I don't know why you'd want to
 	 * enable channels here.  The channel should be enabled in the
 	 * INSN_READ handler. */
 
-	/*  Enable ADC interrupt */
+	/* Enable ADC interrupt */
 	outw(ISR_ADC_DONE, ADDR_REG(REG_IER));
-	/* a4l_info(dev, "s526_ai_insn_config: ADC current value: 0x%04x\n", inw(ADDR_REG(REG_ADC))); */
+	a4l_dbg(1, drv_dbg, dev, "s526_ai_insn_config: ADC current value: 0x%04x\n", inw(ADDR_REG(REG_ADC)));
+
 	subdpriv->config = (data[0] & 0x3FF) << 5;
 	if (data[1] > 0)
-		subdpriv->config |= 0x8000;	/* set the delay */
+		subdpriv->config |= 0x8000; /* set the delay */
 
-	subdpriv->config |= 0x0001;	/*  ADC start bit. */
+	subdpriv->config |= 0x0001; /* ADC start bit. */
 
 	return 0;
 }
@@ -567,27 +564,25 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	for (n = 0; n < insn->data_size; n++) {
 		/* trigger conversion */
 		outw(value, ADDR_REG(REG_ADC));
-		/* a4l_info(dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n", value); */
-		/* a4l_info(dev, "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
-
-#define TIMEOUT 100
+		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n", value);
+		/* a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
 
 		/* wait for conversion to end */
-		for (i = 0; i < TIMEOUT; i++) {
+		for (i = 0; i < S526_AI_TIMEOUT; i++) {
 			status = inw(ADDR_REG(REG_ISR));
 			if (status & ISR_ADC_DONE) {
 				outw(ISR_ADC_DONE, ADDR_REG(REG_ISR));
 				break;
 			}
 		}
-		if (i == TIMEOUT) {
+		if (i == S526_AI_TIMEOUT) {
 			a4l_warn(dev, "s526_ai_rinsn: ADC(0x%04x) timeout\n", inw(ADDR_REG(REG_ISR)));
 			return -ETIMEDOUT;
 		}
 
 		/* read data */
 		d = inw(ADDR_REG(REG_ADD));
-		/* a4l_info(dev "s526_ai_rinsn: AI[%d]=0x%04x\n", n, (unsigned short)(d & 0xFFFF)); */
+		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: AI[%d]=0x%04x\n", n, (uint16_t)(d & 0xFFFF));
 
 		/* munge data */
 		data[n] = d ^ 0x8000;
@@ -613,9 +608,9 @@ static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	 * very useful, but that's how the interface is defined. */
 	for (i = 0; i < insn->data_size; i++) {
 		/* a typical programming sequence */
-		outw(data[i], ADDR_REG(REG_ADD));	/*  write the data to preload register */
+		outw(data[i], ADDR_REG(REG_ADD)); /* write the data to preload register */
 		subdpriv->readback[chan] = data[i];
-		outw(val + 1, ADDR_REG(REG_DAC));	/*  starts the D/A conversion. */
+		outw(val + 1, ADDR_REG(REG_DAC)); /* starts the D/A conversion. */
 	}
 
 	return 0;
@@ -648,15 +643,16 @@ static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	group = chan >> 2;
 	mask = 0xF << (group << 2);
+
 	switch (data[0]) {
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
-		subdpriv->state |= 1 << (group + 10);	/* bit 10/11 set the group
-							   1/2's mode */
+		subdpriv->state |= 1 << (group + 10); /* bit 10/11 set the
+						       * group 1/2's mode */
 		subdpriv->io_bits |= mask;
 		break;
 	case A4L_INSN_CONFIG_DIO_INPUT:
-		subdpriv->state &= ~(1 << (group + 10));	/* 1 is output, 0 is
-								 * input. */
+		subdpriv->state &= ~(1 << (group + 10)); /* 1 is output, 0 is
+							  * input. */
 		subdpriv->io_bits &= ~mask;
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
@@ -666,6 +662,7 @@ static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	default:
 		return -EINVAL;
 	}
+
 	outw(subdpriv->state, ADDR_REG(REG_DIO));
 
 	return 0;
@@ -695,10 +692,10 @@ static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		outw(subdpriv->state, ADDR_REG(REG_DIO));
 	}
 
-	/* on return, data[1] contains the value of the digital
+	/* On return, data[1] contains the value of the digital
 	 * input and output lines. */
-	data[1] = inw(ADDR_REG(REG_DIO)) & 0xFF;	/*  low 8 bits are the data */
-	/* or we could just return the software copy of the output values if
+	data[1] = inw(ADDR_REG(REG_DIO)) & 0xFF; /* low 8 bits are the data */
+	/* Or we could just return the software copy of the output values if
 	 * it was a purely digital output subdevice */
 	/* insn->data[1]=subdpriv->state & 0xFF; */
 
@@ -749,13 +746,6 @@ static void setup_subd_gpct(a4l_subd_t *subd)
 	subd->insn_read = s526_gpct_rinsn;
 	subd->insn_config = s526_gpct_insn_config;
 	subd->insn_write = s526_gpct_winsn;
-
-	/* Command are not implemented yet, however they are necessary to
-	   allocate the necessary memory for the comedi_async struct (used
-	   to trigger the GPCT in case of pulsegenerator function */
-	/* subd->do_cmd = s526_gpct_cmd; */
-	/* subd->do_cmdtest = s526_gpct_cmdtest; */
-	/* subd->cancel = s526_gpct_cancel; */
 }
 
 /* Analog input subdevice */
@@ -826,17 +816,16 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	if (arg->opts == NULL || arg->opts_size < sizeof(unsigned long)) {
 		a4l_warn(dev,
-			 "dev_s526_attach: no attach options specified."
-			 "taking default options (addr=0x%x)\n",
+			 "dev_s526_attach: no attach options specified; "
+			 "using defaults: addr=0x%x\n",
 			 S526_DEFAULT_ADDRESS);
-
 		io_base = S526_DEFAULT_ADDRESS;
 	} else {
 		io_base = ((unsigned long *)arg->opts)[0];
 	}
 
 	if (!request_region(io_base, S526_IOSIZE, "s526")) {
-		a4l_err(dev, "dev_s526_attach: I/O port conflict");
+		a4l_err(dev, "dev_s526_attach: I/O port conflict\n");
 		return -EIO;
 	}
 
@@ -855,7 +844,7 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	devpriv->io_base = io_base;
 
-	a4l_info(dev, "dev_s526_attach: atached (address = 0x%x)\n", io_base);
+	a4l_info(dev, "dev_s526_attach: attached (address = 0x%x)\n", io_base);
 
 	return 0;
 
@@ -886,7 +875,7 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 #else
 
-	/*  Set Counter Mode Register */
+	/* Set Counter Mode Register */
 	cmReg.reg.coutSource = 0;	  /* out RCAP */
 	cmReg.reg.coutPolarity = 0;	  /* Polarity inverted */
 	cmReg.reg.autoLoadResetRcap = 0;  /* Auto load disabled */
@@ -900,11 +889,11 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	cmReg.reg.reserved = 0;
 
 	n = 0;
-	/* a4l_info(dev, "Mode reg=0x%04x, 0x%04lx\n", */
-	/* 	cmReg.value, ADDR_CHAN_REG(REG_C0M, n)); */
+	a4l_dbg(1, drv_dbg, dev, "Mode reg=0x%04x, 0x%04lx\n",
+		cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
 	outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
 	/* udelay(1000); */
-	/* a4l_info(dev, "Read back mode reg=0x%04x\n", */
+	/* a4l_dbg(1, drv_dbg, dev, "Read back mode reg=0x%04x\n", */
 	/* 	inw(ADDR_CHAN_REG(REG_C0M, n))); */
 
 	/*  Load the pre-load register high word */
@@ -927,14 +916,14 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
 	/* udelay(1000); */
-	/* a4l_info(dev, "Read back mode reg=0x%04x\n", */
+	/* a4l_dbg(1, drv_dbg, dev, "Read back mode reg=0x%04x\n", */
 	/* 	inw(ADDR_CHAN_REG(REG_C0M, n))); */
 
 #endif
-	/* a4l_info(dev, "Current registres:\n"); */
+	/* a4l_dbg(1, drv_dbg, dev, "Current registres:\n"); */
 
 	/* for (i = 0; i < S526_NUM_PORTS; i++) { */
-	/* 	a4l_info(dev, "0x%02lx: 0x%04x\n", */
+	/* 	a4l_dbg(1, drv_dbg, dev, "0x%02lx: 0x%04x\n", */
 	/* 		ADDR_REG(s526_ports[i]), inw(ADDR_REG(s526_ports[i]))); */
 	/* } */
 	return 0;
@@ -952,7 +941,7 @@ static int dev_s526_detach(a4l_dev_t *dev)
 
 static a4l_drv_t drv_s526 = {
 	.owner = THIS_MODULE,
-	.board_name = BOARD_NAME,
+	.board_name = "analogy_s526",
 	.attach = dev_s526_attach,
 	.detach = dev_s526_detach,
 	.privdata_size = sizeof(s526_priv_t),
