@@ -461,7 +461,8 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (dev->transfer.subds[idx_subd]->flags & A4L_SUBD_UNUSED) {
+	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_TYPES) == 
+	    A4L_SUBD_UNUSED) {
 		__a4l_err("a4l_ioctl_cancel: non functional subdevice\n");
 		return -EIO;
 	}
