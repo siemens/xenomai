@@ -3732,8 +3732,13 @@ void mio_common_detach(a4l_dev_t * dev)
 
 static void init_ao_67xx(a4l_dev_t * dev)
 {
-	a4l_subd_t *subd = dev->transfer.subds[NI_AO_SUBDEV];
+	a4l_subd_t *subd = a4l_get_subd(dev, NI_AO_SUBDEV);
 	int i;
+
+	if (subd == NULL) {
+		a4l_err(dev, "%s: unable to find AO subdevice\n", __FUNCTION__);
+		return;
+	}
 
 	for (i = 0; i < subd->chan_desc->length; i++)
 		ni_ao_win_outw(dev, AO_Channel(i) | 0x0,
