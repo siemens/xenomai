@@ -119,6 +119,8 @@ static const int s526_ports[] = {
 	REG_EEC
 };
 
+#define ISR_ADC_DONE 0x4
+
 struct counter_mode_register_t {
 #if defined (__LITTLE_ENDIAN_BITFIELD)
 	unsigned short coutSource:1;
@@ -154,10 +156,7 @@ union cmReg {
 	unsigned short value;
 };
 
-#define MAX_GPCT_CONFIG_DATA 6
-
-/* Different Application Classes for GPCT Subdevices */
-/* The list is not exhaustive and needs discussion! */
+/* Application Classes for GPCT Subdevices */
 enum S526_GPCT_APP_CLASS {
 	CountingAndTimeMeasurement,
 	SinglePulseGeneration,
@@ -166,9 +165,8 @@ enum S526_GPCT_APP_CLASS {
 	Miscellaneous
 };
 
-/* Config struct for different GPCT subdevice Application Classes and
- * their options
- */
+/* GPCT subdevices configuration */
+#define MAX_GPCT_CONFIG_DATA 6
 struct s526GPCTConfig {
 	enum S526_GPCT_APP_CLASS app;
 	int data[MAX_GPCT_CONFIG_DATA];
@@ -221,7 +219,9 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	short value;
 	union cmReg cmReg;
 
-	a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring Channel %d\n", subdev_channel);
+	a4l_dbg(1, drv_dbg, dev,
+		"s526_gpct_insn_config: Configuring Channel %d\n",
+		subdev_channel);
 
 	for (i = 0; i < MAX_GPCT_CONFIG_DATA; i++) {
 		subdpriv->config[subdev_channel].data[i] = data[i];
@@ -368,8 +368,8 @@ static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		datahigh = inw(ADDR_CHAN_REG(REG_C0H, counter_channel));
 		data[i] = (int)(datahigh & 0x00FF);
 		data[i] = (data[i] << 16) | (datalow & 0xFFFF);
-		a4l_dbg(1, drv_dbg, dev, 
-			"s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n", 
+		a4l_dbg(1, drv_dbg, dev,
+			"s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n",
 			counter_channel, data[i], datahigh, datalow);
 	}
 
@@ -386,12 +386,12 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	short value;
 	union cmReg cmReg;
 
-	a4l_dbg(1, drv_dbg, dev, 
-		"s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n", 
+	a4l_dbg(1, drv_dbg, dev,
+		"s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n",
 		subdev_channel);
 
 	cmReg.value = inw(ADDR_CHAN_REG(REG_C0M, subdev_channel));
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"s526_gpct_winsn: Counter Mode Register: %x\n", cmReg.value);
 
 	/* Check what Application of Counter this channel is configured for */
@@ -425,7 +425,8 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			(subdpriv->config[subdev_channel]).data[0] = data[0];
 			(subdpriv->config[subdev_channel]).data[1] = data[1];
 		} else {
-			a4l_err(dev, "s526_gpct_winsn: INSN_WRITE: PTG: Problem with Pulse params -> %du %du\n",
+			a4l_err(dev,
+				"s526_gpct_winsn: INSN_WRITE: PTG: Problem with Pulse params -> %du %du\n",
 				data[0], data[1]);
 			return -EINVAL;
 		}
@@ -436,16 +437,15 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
 		break;
 	default:		/* Impossible */
-		a4l_err(dev, "s526_gpct_winsn: INSN_WRITE: Functionality %d not implemented yet\n",
+		a4l_err(dev,
+			"s526_gpct_winsn: INSN_WRITE: Functionality %d not implemented yet\n",
 			 subdpriv->config[subdev_channel].app);
 		return -EINVAL;
-		break;
 	}
 
 	return 0;
 }
 
-#define ISR_ADC_DONE 0x4
 static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
@@ -465,7 +465,9 @@ static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	/* Enable ADC interrupt */
 	outw(ISR_ADC_DONE, ADDR_REG(REG_IER));
-	a4l_dbg(1, drv_dbg, dev, "s526_ai_insn_config: ADC current value: 0x%04x\n", inw(ADDR_REG(REG_ADC)));
+	a4l_dbg(1, drv_dbg, dev,
+		"s526_ai_insn_config: ADC current value: 0x%04x\n",
+		inw(ADDR_REG(REG_ADC)));
 
 	subdpriv->config = (data[0] & 0x3FF) << 5;
 	if (data[1] > 0)
@@ -497,8 +499,9 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	for (n = 0; n < insn->data_size / sizeof(uint16_t); n++) {
 		/* trigger conversion */
 		outw(value, ADDR_REG(REG_ADC));
-		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n", value);
-		/* a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n",
+			value);
+		/* a4l_dbg(1, drv_dbg, dev,
 		           "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
 
 		/* wait for conversion to end */
@@ -510,13 +513,15 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			}
 		}
 		if (i == S526_AI_TIMEOUT) {
-			a4l_warn(dev, "s526_ai_rinsn: ADC(0x%04x) timeout\n", inw(ADDR_REG(REG_ISR)));
+			a4l_warn(dev, "s526_ai_rinsn: ADC(0x%04x) timeout\n",
+				 inw(ADDR_REG(REG_ISR)));
 			return -ETIMEDOUT;
 		}
 
 		/* read data */
 		d = inw(ADDR_REG(REG_ADD));
-		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: AI[%d]=0x%04x\n", n, (uint16_t)(d & 0xFFFF));
+		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: AI[%d]=0x%04x\n",
+			n, (uint16_t)(d & 0xFFFF));
 
 		/* munge data */
 		data[n] = d ^ 0x8000;
@@ -538,10 +543,7 @@ static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	val = chan << 1;
 	outw(val, ADDR_REG(REG_DAC));
 
-	/* Writing a list of values to an AO channel is probably not
-	 * very useful, but that's how the interface is defined. */
 	for (i = 0; i < insn->data_size / sizeof(uint16_t); i++) {
-		/* a typical programming sequence */
 		outw(data[i], ADDR_REG(REG_ADD)); /* write the data to preload register */
 		subdpriv->readback[chan] = data[i];
 		outw(val + 1, ADDR_REG(REG_DAC)); /* starts the D/A conversion. */
@@ -550,8 +552,6 @@ static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-/* AO subdevices should have a read insn as well as a write insn.
- * Usually this means copying a value stored in devpriv. */
 static int s526_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct s526_subd_ao_priv *subdpriv =
@@ -602,11 +602,6 @@ static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
-/* DIO devices are slightly special.  Although it is possible to
- * implement the insn_read/insn_write interface, it is much more
- * useful to applications if you implement the insn_bits interface.
- * This allows packed reading/writing of the DIO channels.  The
- * comedi core can convert between insn_bits and insn_read/write */
 static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
@@ -617,21 +612,14 @@ static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	if (insn->data_size != 2 * sizeof(uint8_t))
 		return -EINVAL;
 
-	/* The insn data is a mask in data[0] and the new data
-	 * in data[1], each channel cooresponding to a bit. */
 	if (data[0]) {
 		subdpriv->state &= ~(data[0]);
 		subdpriv->state |= data[0] & data[1];
-		/* Write out the new digital output lines */
+
 		outw(subdpriv->state, ADDR_REG(REG_DIO));
 	}
 
-	/* On return, data[1] contains the value of the digital
-	 * input and output lines. */
 	data[1] = inw(ADDR_REG(REG_DIO)) & 0xFF; /* low 8 bits are the data */
-	/* Or we could just return the software copy of the output values if
-	 * it was a purely digital output subdevice */
-	/* insn->data[1]=subdpriv->state & 0xFF; */
 
 	return 0;
 }
