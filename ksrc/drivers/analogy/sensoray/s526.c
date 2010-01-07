@@ -817,8 +817,6 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	int io_base;
 	int i;
 	int err = 0;
-	int n;
-	union cmReg cmReg;
 
 	if (arg->opts == NULL || arg->opts_size < sizeof(unsigned long)) {
 		a4l_warn(dev,
@@ -852,86 +850,6 @@ static int dev_s526_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_info(dev, "dev_s526_attach: attached (address = 0x%x)\n", io_base);
 
-	return 0;
-
-#if 0
-	/* Example of Counter Application */
-	/* One-shot (software trigger) */
-	cmReg.reg.coutSource = 0;	 /* out RCAP */
-	cmReg.reg.coutPolarity = 1;	 /* Polarity inverted */
-	cmReg.reg.autoLoadResetRcap = 1; /* Auto load 0:disabled, 1:enabled */
-	cmReg.reg.hwCtEnableSource = 3;	 /* NOT RCAP */
-	cmReg.reg.ctEnableCtrl = 2;	 /* Hardware */
-	cmReg.reg.clockSource = 2;	 /* Internal */
-	cmReg.reg.countDir = 1;		 /* Down */
-	cmReg.reg.countDirCtrl = 1;	 /* Software */
-	cmReg.reg.outputRegLatchCtrl = 0; /* latch on read */
-	cmReg.reg.preloadRegSel = 0;	  /* PR0 */
-	cmReg.reg.reserved = 0;
-
-	outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
-
-	outw(0x0001, ADDR_CHAN_REG(REG_C0H, subdev_channel));
-	outw(0x3C68, ADDR_CHAN_REG(REG_C0L, subdev_channel));
-
-	outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
-	outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Load the counter from PR0 */
-
-	outw(0x0008, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset RCAP (fires one-shot) */
-
-#else
-
-	/* Set Counter Mode Register */
-	cmReg.reg.coutSource = 0;	  /* out RCAP */
-	cmReg.reg.coutPolarity = 0;	  /* Polarity inverted */
-	cmReg.reg.autoLoadResetRcap = 0;  /* Auto load disabled */
-	cmReg.reg.hwCtEnableSource = 2;	  /* NOT RCAP */
-	cmReg.reg.ctEnableCtrl = 1;	  /* 1: Software,  >1 : Hardware */
-	cmReg.reg.clockSource = 3;	  /* x4 */
-	cmReg.reg.countDir = 0;		  /* up */
-	cmReg.reg.countDirCtrl = 0;	  /* quadrature */
-	cmReg.reg.outputRegLatchCtrl = 0; /* latch on read */
-	cmReg.reg.preloadRegSel = 0;	  /* PR0 */
-	cmReg.reg.reserved = 0;
-
-	n = 0;
-	a4l_dbg(1, drv_dbg, dev, "Mode reg=0x%04x, 0x%04lx\n",
-		cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
-	outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
-	/* udelay(1000); */
-	/* a4l_dbg(1, drv_dbg, dev, "Read back mode reg=0x%04x\n", */
-	/* 	inw(ADDR_CHAN_REG(REG_C0M, n))); */
-
-	/*  Load the pre-load register high word */
-
-        /* value = (short) (0x55); */
-	/* outw(value, ADDR_CHAN_REG(REG_C0H, n)) */
-
-	/*  Load the pre-load register low word */
-	/* value = (short)(0xaa55); */
-	/* outw(value, ADDR_CHAN_REG(REG_C0L, n)); */
-
-	/*  Write the Counter Control Register */
-	/* outw(value, ADDR_CHAN_REG(REG_C0C, 0)); */
-
-	/*  Reset the counter if it is software preload */
-	if (cmReg.reg.autoLoadResetRcap == 0) {
-		outw(0x8000, ADDR_CHAN_REG(REG_C0C, n)); /* Reset the counter */
-		outw(0x4000, ADDR_CHAN_REG(REG_C0C, n)); /* Load the counter from PR0 */
-	}
-
-	outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, n));
-	/* udelay(1000); */
-	/* a4l_dbg(1, drv_dbg, dev, "Read back mode reg=0x%04x\n", */
-	/* 	inw(ADDR_CHAN_REG(REG_C0M, n))); */
-
-#endif
-	/* a4l_dbg(1, drv_dbg, dev, "Current registres:\n"); */
-
-	/* for (i = 0; i < S526_NUM_PORTS; i++) { */
-	/* 	a4l_dbg(1, drv_dbg, dev, "0x%02lx: 0x%04x\n", */
-	/* 		ADDR_REG(s526_ports[i]), inw(ADDR_REG(s526_ports[i]))); */
-	/* } */
 	return 0;
 }
 
