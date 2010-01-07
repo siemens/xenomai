@@ -239,33 +239,6 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		a4l_dbg(1, drv_dbg, dev, "s526_gpct_insn_config: Configuring Encoder\n");
 		subdpriv->config[subdev_channel].app = PositionMeasurement;
 
-#if 0
-		/* Example of Counter Application */
-		/* One-shot (software trigger) */
-		cmReg.reg.coutSource = 0;	  /* out RCAP */
-		cmReg.reg.coutPolarity = 1;	  /* Polarity inverted */
-		cmReg.reg.autoLoadResetRcap = 0;  /* Auto load disabled */
-		cmReg.reg.hwCtEnableSource = 3;	  /* NOT RCAP */
-		cmReg.reg.ctEnableCtrl = 2;	  /* Hardware */
-		cmReg.reg.clockSource = 2;	  /* Internal */
-		cmReg.reg.countDir = 1;		  /* Down */
-		cmReg.reg.countDirCtrl = 1;	  /* Software */
-		cmReg.reg.outputRegLatchCtrl = 0; /* latch on read */
-		cmReg.reg.preloadRegSel = 0;	  /* PR0 */
-		cmReg.reg.reserved = 0;
-
-		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
-
-		outw(0x0001, ADDR_CHAN_REG(REG_C0H, subdev_channel));
-		outw(0x3C68, ADDR_CHAN_REG(REG_C0L, subdev_channel));
-
-		outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
-		outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Load the counter from PR0 */
-		outw(0x0008, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset RCAP (fires one-shot) */
-
-#endif
-
-#if 1
 		/* Set Counter Mode Register */
 		cmReg.value = data[1] & 0xFFFF;
 
@@ -277,51 +250,6 @@ static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
 			/* outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel));	/\* Load the counter from PR0 *\/ */
 		}
-#else
-		cmReg.reg.countDirCtrl = 0; /* 0 quadrature, 1 software control */
-
-		/* data[1] contains GPCT_X1, GPCT_X2 or GPCT_X4 */
-		if (data[1] == GPCT_X2) {
-			cmReg.reg.clockSource = 1;
-		} else if (data[1] == GPCT_X4) {
-			cmReg.reg.clockSource = 2;
-		} else {
-			cmReg.reg.clockSource = 0;
-		}
-
-		/* When to take into account the indexpulse: */
-		if (data[2] == GPCT_IndexPhaseLowLow) {
-		} else if (data[2] == GPCT_IndexPhaseLowHigh) {
-		} else if (data[2] == GPCT_IndexPhaseHighLow) {
-		} else if (data[2] == GPCT_IndexPhaseHighHigh) {
-		}
-		/* Take into account the index pulse? */
-		if (data[3] == GPCT_RESET_COUNTER_ON_INDEX)
-			cmReg.reg.autoLoadResetRcap = 4; /* Auto load with INDEX^ */
-
-		/* Set Counter Mode Register */
-		cmReg.value = (short)(data[1] & 0xFFFF);
-		outw(cmReg.value, ADDR_CHAN_REG(REG_C0M, subdev_channel));
-
-		/* Load the pre-load register high word */
-		value = (short)((data[2] >> 16) & 0xFFFF);
-		outw(value, ADDR_CHAN_REG(REG_C0H, subdev_channel));
-
-		/* Load the pre-load register low word */
-		value = (short)(data[2] & 0xFFFF);
-		outw(value, ADDR_CHAN_REG(REG_C0L, subdev_channel));
-
-		/* Write the Counter Control Register */
-		if (data[3] != 0) {
-			value = (short)(data[3] & 0xFFFF);
-			outw(value, ADDR_CHAN_REG(REG_C0C, subdev_channel));
-		}
-		/* Reset the counter if it is software preload */
-		if (cmReg.reg.autoLoadResetRcap == 0) {
-			outw(0x8000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Reset the counter */
-			outw(0x4000, ADDR_CHAN_REG(REG_C0C, subdev_channel)); /* Load the counter from PR0 */
-		}
-#endif
 		break;
 
 	case A4L_INSN_CONFIG_GPCT_SINGLE_PULSE_GENERATOR:
