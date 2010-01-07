@@ -431,16 +431,18 @@ static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	int i;
 
 	if (insn->data_size <= 0) {
-		a4l_err(dev, "s526_gpct_rinsn: n should be > 0\n");
+		a4l_err(dev, "s526_gpct_rinsn: data size should be > 0\n");
 		return -EINVAL;
 	}
 
-	for (i = 0; i < insn->data_size; i++) {
+	for (i = 0; i < insn->data_size / sizeof(uint32_t); i++) {
 		datalow = inw(ADDR_CHAN_REG(REG_C0L, counter_channel));
 		datahigh = inw(ADDR_CHAN_REG(REG_C0H, counter_channel));
 		data[i] = (int)(datahigh & 0x00FF);
 		data[i] = (data[i] << 16) | (datalow & 0xFFFF);
-		a4l_dbg(1, drv_dbg, dev, "s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n", counter_channel, data[i], datahigh, datalow);
+		a4l_dbg(1, drv_dbg, dev, 
+			"s526_gpct_rinsn GPCT[%d]: %x(0x%04x, 0x%04x)\n", 
+			counter_channel, data[i], datahigh, datalow);
 	}
 
 	return 0;
@@ -456,10 +458,13 @@ static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	short value;
 	union cmReg cmReg;
 
-	a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n", subdev_channel);
+	a4l_dbg(1, drv_dbg, dev, 
+		"s526_gpct_winsn: GPCT_INSN_WRITE on channel %d\n", 
+		subdev_channel);
 
 	cmReg.value = inw(ADDR_CHAN_REG(REG_C0M, subdev_channel));
-	a4l_dbg(1, drv_dbg, dev, "s526_gpct_winsn: Counter Mode Register: %x\n", cmReg.value);
+	a4l_dbg(1, drv_dbg, dev, 
+		"s526_gpct_winsn: Counter Mode Register: %x\n", cmReg.value);
 
 	/* Check what Application of Counter this channel is configured for */
 	switch (subdpriv->config[subdev_channel].app) {
@@ -520,7 +525,7 @@ static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	    (struct s526_subd_ai_priv *)subd->priv;
 	unsigned int *data = (unsigned int *)insn->data;
 
-	if (insn->data_size < 1)
+	if (insn->data_size < sizeof(unsigned int))
 		return -EINVAL;
 
 	/* data[0] : channels was set in relevant bits.
@@ -561,11 +566,12 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	    ((1 << 5) << chan) | (chan << 1) | 0x0001;
 
 	/* convert n samples */
-	for (n = 0; n < insn->data_size; n++) {
+	for (n = 0; n < insn->data_size / sizeof(uint16_t); n++) {
 		/* trigger conversion */
 		outw(value, ADDR_REG(REG_ADC));
 		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n", value);
-		/* a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
+		/* a4l_dbg(1, drv_dbg, dev, 
+		           "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
 
 		/* wait for conversion to end */
 		for (i = 0; i < S526_AI_TIMEOUT; i++) {
@@ -606,7 +612,7 @@ static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	/* Writing a list of values to an AO channel is probably not
 	 * very useful, but that's how the interface is defined. */
-	for (i = 0; i < insn->data_size; i++) {
+	for (i = 0; i < insn->data_size / sizeof(uint16_t); i++) {
 		/* a typical programming sequence */
 		outw(data[i], ADDR_REG(REG_ADD)); /* write the data to preload register */
 		subdpriv->readback[chan] = data[i];
@@ -626,7 +632,7 @@ static int s526_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	int i;
 	int chan = CR_CHAN(insn->chan_desc);
 
-	for (i = 0; i < insn->data_size; i++)
+	for (i = 0; i < insn->data_size / sizeof(uint16_t); i++)
 		data[i] = subdpriv->readback[chan];
 
 	return 0;
@@ -658,7 +664,7 @@ static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	case A4L_INSN_CONFIG_DIO_QUERY:
 		data[1] =
 		    (subdpriv->io_bits & mask) ? A4L_OUTPUT : A4L_INPUT;
-		return insn->data_size;
+		return 0;
 	default:
 		return -EINVAL;
 	}
@@ -680,7 +686,7 @@ static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		(struct s526_subd_dio_priv *)subd->priv;
 	uint8_t *data = (uint8_t *)insn->data;
 
-	if (insn->data_size != 2)
+	if (insn->data_size != 2 * sizeof(uint8_t))
 		return -EINVAL;
 
 	/* The insn data is a mask in data[0] and the new data
