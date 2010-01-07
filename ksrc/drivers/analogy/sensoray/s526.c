@@ -48,7 +48,6 @@
 #define S526_AI_TIMEOUT 100
 #define S526_AO_CHANS	4
 #define S526_AO_BITS	16
-#define S526_HAVE_DIO	1
 #define S526_DIO_CHANS	8
 #define S526_DIO_BITS	1
 
@@ -693,15 +692,11 @@ static void setup_subd_ao(a4l_subd_t *subd)
 /* Digital i/o subdevice */
 static void setup_subd_dio(a4l_subd_t *subd)
 {
-	if (S526_HAVE_DIO > 0) {
-		subd->flags = A4L_SUBD_DIO;
-		subd->chan_desc = &s526_chan_desc_dio;
-		subd->rng_desc = &range_digital;
-		subd->insn_bits = s526_dio_insn_bits;
-		subd->insn_config = s526_dio_insn_config;
-	} else {
-		subd->flags = A4L_SUBD_UNUSED;
-	}
+	subd->flags = A4L_SUBD_DIO;
+	subd->chan_desc = &s526_chan_desc_dio;
+	subd->rng_desc = &range_digital;
+	subd->insn_bits = s526_dio_insn_bits;
+	subd->insn_config = s526_dio_insn_config;
 }
 
 struct setup_subd {
