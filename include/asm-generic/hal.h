@@ -311,12 +311,12 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 	set_task_state(p, p->state & ~TASK_NOWAKEUP);
 }
 
-#ifdef VM_PINNED
+#if defined(VM_PINNED) || defined(MMF_VM_PINNED)
 #define rthal_disable_ondemand_mappings(tsk)   ipipe_disable_ondemand_mappings(tsk)
-#else /* !VM_PINNED */
+#else /* !(VM_PINNED || MMF_VM_PINNED) */
 /* In case the I-pipe does not allow disabling ondemand mappings. */
 #define rthal_disable_ondemand_mappings(tsk)   (0)
-#endif	/* !VM_PINNED */
+#endif	/* !(VM_PINNED || MMF_VM_PINNED) */
 
 #ifdef CONFIG_KGDB
 #define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
