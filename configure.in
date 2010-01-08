@@ -217,8 +217,7 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 	at91rm9200)   	arch=4
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
-	at91sam926x)   	arch=5
-			vfp=vfp
+	at91sam926x|at91sam9) 	arch=5
 	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	generic)	arch=4
@@ -248,6 +247,10 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 			vfp=vfp3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
+	orion)		arch=5
+			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
+
 	pxa) 		arch=5
 	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
@@ -260,10 +263,6 @@ integrator, ixp4xx, mx2, mx3, pxa, pxa3xx, s3c2410, sa1100.]),
 	sa1100) 	arch=4
 			CONFIG_XENO_ARM_SA1100=y
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
-
-	orion)		arch=5
-			vfp=vfp
-			tsc_type=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
 
 	*)AC_MSG_ERROR([Invalid machine selected: "$enableval"]);;
 	esac],
