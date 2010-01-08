@@ -28,6 +28,7 @@
 #include <psos+/psos.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
+#include <asm-generic/stacksize.h>
 
 extern int __psos_muxid;
 
@@ -141,10 +142,7 @@ u_long t_create(const char *name,
 
 	ustack += sstack;
 
-	if (ustack == 0)
-		ustack = PTHREAD_STACK_MIN * 4;
-	else if (ustack < PTHREAD_STACK_MIN * 2)
-		ustack = PTHREAD_STACK_MIN * 2;
+	ustack = xeno_stacksize(ustack);
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	policy = psos_task_set_posix_priority(prio, &param);

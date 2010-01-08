@@ -28,6 +28,7 @@
 #include <posix/syscall.h>
 #include <asm-generic/bits/current.h>
 #include <asm-generic/bits/sigshadow.h>
+#include <asm-generic/stacksize.h>
 
 extern int __pse51_muxid;
 
@@ -244,10 +245,11 @@ int __wrap_pthread_create(pthread_t *tid,
 			  void *(*start) (void *), void *arg)
 {
 	struct pthread_iargs iargs;
+	struct sched_param param;
 	pthread_attr_t iattr;
 	int inherit, err;
-	struct sched_param param;
 	pthread_t ltid;
+	unsigned stksz;
 
 	if (!attr)
 		attr = &default_attr;
@@ -274,6 +276,8 @@ int __wrap_pthread_create(pthread_t *tid,
 		/* Get the created thread to temporarily inherit pthread_create
 		   caller priority */
 		pthread_attr_setinheritsched(&iattr, PTHREAD_INHERIT_SCHED);
+	pthread_attr_getstacksize(&iattr, &stksz);
+	pthread_attr_setstacksize(&iattr, xeno_stacksize(stksz));
 	attr = &iattr;
 
 	/* First start a native POSIX thread, then associate a Xenomai shadow to

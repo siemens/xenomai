@@ -127,10 +127,7 @@ ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)
 
 	pthread_attr_init(&thattr);
 
-	if (pk_ctsk->stksz == 0)
-		pk_ctsk->stksz = PTHREAD_STACK_MIN * 4;
-	else if (pk_ctsk->stksz < PTHREAD_STACK_MIN * 2)
-		pk_ctsk->stksz = PTHREAD_STACK_MIN * 2;
+	pk_ctsk->stksz = xeno_stacksize(pk_ctsk->stksz);
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	policy = uitron_task_set_posix_priority(pk_ctsk->itskpri, &param);

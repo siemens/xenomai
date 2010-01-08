@@ -30,6 +30,7 @@
 #include <vxworks/vxworks.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
+#include <asm-generic/stacksize.h>
 #include "wrappers.h"
 
 #ifdef HAVE___THREAD
@@ -184,10 +185,7 @@ STATUS taskInit(WIND_TCB *pTcb,
 
 	pthread_attr_init(&thattr);
 
-	if (stacksize == 0)
-		stacksize = PTHREAD_STACK_MIN * 4;
-	else if (stacksize < PTHREAD_STACK_MIN * 2)
-		stacksize = PTHREAD_STACK_MIN * 2;
+	stacksize = xeno_stacksize(stacksize);
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	policy = wind_task_set_posix_priority(prio, &param);

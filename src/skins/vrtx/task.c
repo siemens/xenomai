@@ -31,6 +31,7 @@
 #include <vrtx/vrtx.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
+#include <asm-generic/stacksize.h>
 #include "wrappers.h"
 
 #ifdef HAVE___THREAD
@@ -150,10 +151,7 @@ int sc_tecreate(void (*entry) (void *),
 
 	pthread_attr_init(&thattr);
 
-	if (ustacksz == 0)
-		ustacksz = PTHREAD_STACK_MIN * 4;
-	else if (ustacksz < PTHREAD_STACK_MIN * 2)
-		ustacksz = PTHREAD_STACK_MIN * 2;
+	ustacksz = xeno_stacksize(ustacksz);
 
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
 	policy = vrtx_task_set_posix_priority(prio, &param);

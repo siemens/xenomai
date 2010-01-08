@@ -455,7 +455,7 @@ static void spawn_printer_thread(void)
 	pthread_attr_t thattr;
 
 	pthread_attr_init(&thattr);
-	pthread_attr_setstacksize(&thattr, PTHREAD_STACK_MIN);
+	pthread_attr_setstacksize(&thattr, xeno_stacksize(0));
 	pthread_create(&printer_thread, &thattr, printer_loop, NULL);
 }
 

@@ -17,6 +17,7 @@
 
 #include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
+#include <asm-generic/stacksize.h>
 #include <nucleus/trace.h>
 #include <rtdm/rttesting.h>
 
@@ -43,17 +44,8 @@ typedef unsigned long cpu_set_t;
 #define smp_sched_setaffinity(pid,len,mask) 0
 #endif /* !CONFIG_SMP */
 
-#if PTHREAD_STACK_MIN < 20 * 1024
-#define SMALL_STACK_MIN  20 * 1024
-#else
-#define SMALL_STACK_MIN  PTHREAD_STACK_MIN
-#endif
-
-#if PTHREAD_STACK_MIN < 50 * 1024
-#define LARGE_STACK_MIN  50 * 1024
-#else
-#define LARGE_STACK_MIN  PTHREAD_STACK_MIN
-#endif
+#define SMALL_STACK_MIN xeno_stacksize(20 * 1024)
+#define LARGE_STACK_MIN xeno_stacksize(50 * 1024)
 
 /* Thread type. */
 typedef enum {
