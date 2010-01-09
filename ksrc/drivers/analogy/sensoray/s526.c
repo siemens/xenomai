@@ -39,6 +39,7 @@
 #include <asm/byteorder.h>
 #include <analogy/analogy_driver.h>
 
+/* Board description */
 #define S526_GPCT_CHANS	4
 #define S526_GPCT_BITS	24
 #define S526_AI_CHANS	10	/* 8 regular differential inputs
@@ -51,13 +52,9 @@
 #define S526_DIO_CHANS	8
 #define S526_DIO_BITS	1
 
-#define S526_START_AI_CONV  0
-#define S526_AI_READ        0
-
 /* Ports */
 #define S526_IOSIZE		0x40  /* 64 bytes */
 #define S526_DEFAULT_ADDRESS	0x2C0 /* Manufacturing default */
-#define S526_NUM_PORTS		27
 
 /* Registers */
 #define REG_TCR 0x00
@@ -87,36 +84,6 @@
 #define REG_C3C 0x30
 #define REG_EED 0x32
 #define REG_EEC 0x34
-
-static const int s526_ports[] = {
-	REG_TCR,
-	REG_WDC,
-	REG_DAC,
-	REG_ADC,
-	REG_ADD,
-	REG_DIO,
-	REG_IER,
-	REG_ISR,
-	REG_MSC,
-	REG_C0L,
-	REG_C0H,
-	REG_C0M,
-	REG_C0C,
-	REG_C1L,
-	REG_C1H,
-	REG_C1M,
-	REG_C1C,
-	REG_C2L,
-	REG_C2H,
-	REG_C2M,
-	REG_C2C,
-	REG_C3L,
-	REG_C3H,
-	REG_C3M,
-	REG_C3C,
-	REG_EED,
-	REG_EEC
-};
 
 #define ISR_ADC_DONE 0x4
 
@@ -197,15 +164,6 @@ struct s526_subd_dio_priv {
 #define ADDR_REG(reg) (devpriv->io_base + (reg))
 #define ADDR_CHAN_REG(reg, chan) (devpriv->io_base + (reg) + (chan) * 8)
 
-static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_gpct_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_gpct_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_ai_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_ao_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn);
-static int s526_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn);
 
 static int s526_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
@@ -500,8 +458,6 @@ static int s526_ai_rinsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		outw(value, ADDR_REG(REG_ADC));
 		a4l_dbg(1, drv_dbg, dev, "s526_ai_rinsn: Wrote 0x%04x to ADC\n",
 			value);
-		/* a4l_dbg(1, drv_dbg, dev,
-		           "s526_ai_rinsn: ADC reg=0x%04x\n", inw(ADDR_REG(REG_ADC))); */
 
 		/* wait for conversion to end */
 		for (i = 0; i < S526_AI_TIMEOUT; i++) {
