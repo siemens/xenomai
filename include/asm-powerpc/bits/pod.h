@@ -40,15 +40,46 @@ void xnpod_delete_thread(struct xnthread *);
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
+#ifdef CONFIG_PPC64
+
+/* from process.c/copy_thread */
+unsigned long get_stack_vsid(unsigned long ksp)
+{
+	unsigned long vsid;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
+	vsid = get_kernel_vsid(ksp);
+	vsid <<= SLB_VSID_SHIFT;
+	vsid |= SLB_VSID_KERNEL;
+	if (cpu_has_feature(CPU_FTR_16M_PAGE))
+		vsid |= SLB_VSID_L;
+#else /* LINUX_VERSION_CODE >= 2.6.24 */
+	unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
+
+	if (cpu_has_feature(CPU_FTR_1T_SEGMENT))
+		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_1T)
+			<< SLB_VSID_SHIFT_1T;
+	else
+		vsid = get_kernel_vsid(ksp, MMU_SEGSIZE_256M)
+			<< SLB_VSID_SHIFT;
+	vsid |= SLB_VSID_KERNEL | llp;
+#endif /* LINUX_VERSION_CODE >= 2.6.24 */
+
+	return vsid;
+}
+
+#endif /* CONFIG_PPC64 */
+
 static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 {
+	struct task_struct *p = current;
+
 	rthal_mute_pic();
 	/* Remember the preempted Linux task pointer. */
-	rootcb->user_task = rootcb->active_task = current;
-	rootcb->tsp = &current->thread;
+	rootcb->user_task = rootcb->active_task = p;
+	rootcb->tsp = &p->thread;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
 #ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-	rootcb->tip = task_thread_info(current);
+	rootcb->tip = task_thread_info(p);
 #endif
 #ifdef CONFIG_XENO_HW_FPU
 	rootcb->user_fpu_owner = rthal_get_fpu_owner(rootcb->user_task);
@@ -158,27 +189,8 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0];	/* lr = entry addr. */
 	childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
 	childregs->gpr[17] = (unsigned long)tcb;
-	if (cpu_has_feature(CPU_FTR_SLB)) {	/* from process.c/copy_thread */
-		unsigned long sp_vsid;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
-		sp_vsid = get_kernel_vsid(tcb->ts.ksp);
-		sp_vsid <<= SLB_VSID_SHIFT;
-		sp_vsid |= SLB_VSID_KERNEL;
-		if (cpu_has_feature(CPU_FTR_16M_PAGE))
-			sp_vsid |= SLB_VSID_L;
-#else
-		unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
-
-		if (cpu_has_feature(CPU_FTR_1T_SEGMENT))
-			sp_vsid = get_kernel_vsid(tcb->ts.ksp, MMU_SEGSIZE_1T)
-				<< SLB_VSID_SHIFT_1T;
-		else
-			sp_vsid = get_kernel_vsid(tcb->ts.ksp, MMU_SEGSIZE_256M)
-				<< SLB_VSID_SHIFT;
-		sp_vsid |= SLB_VSID_KERNEL | llp;
-#endif
-		tcb->ts.ksp_vsid = sp_vsid;
-	}
+	if (cpu_has_feature(CPU_FTR_SLB))
+		tcb->ts.ksp_vsid = get_stack_vsid(tcb->ts.ksp);
 #else /* !CONFIG_PPC64 */
 	childregs->nip = (unsigned long)&rthal_thread_trampoline;
 	childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
