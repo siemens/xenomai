@@ -20,6 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <stdarg.h>
 #include <errno.h>
 
 #include <analogy/ioctl.h>
@@ -251,6 +252,83 @@ int a4l_sync_read(a4l_desc_t * dsc,
 	ret = a4l_snd_insn(dsc, insn_tab);
 
 	return (ret == 0) ? nbyte : ret;
+}
+
+/**
+ * @brief Configure a subdevice
+ *
+ * a4l_config_subd() takes a variable count of arguments. According to
+ * the configuration type, some additional argument is necessary:
+ * - A4L_INSN_CONFIG_DIO_INPUT: the channel index (unsigned int)
+ * - A4L_INSN_CONFIG_DIO_OUTPUT: the channel index (unsigned int)
+ * - A4L_INSN_CONFIG_DIO_QUERY: the returned DIO polarity (unsigned
+ *   int *)
+ *
+ * @param[in] dsc Device descriptor filled by a4l_open() (and
+ * optionally a4l_fill_desc())
+ * @param[in] idx_subd Index of the concerned subdevice
+ * @param[in] type Configuration parameter 
+ *
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -ENOSYS is returned if the configuration parameter is not
+ *    supported
+ *
+ */
+int a4l_config_subd(a4l_desc_t * dsc,
+		    unsigned int idx_subd, unsigned int type, ...)
+{
+	unsigned int values[4] = {type, 0, 0, 0};
+	a4l_insn_t insn = {
+		.type = A4L_INSN_CONFIG,
+		.idx_subd = idx_subd,
+		.data = values,
+	};
+	int ret = 0;
+	va_list args;
+
+	va_start(args, type);
+
+	/* So far, few config types are supported */
+	switch (type) {
+	case A4L_INSN_CONFIG_DIO_OUTPUT:
+	case A4L_INSN_CONFIG_DIO_INPUT:
+	{
+		unsigned int idx_chan = va_arg(args, unsigned int);
+		insn.chan_desc = CHAN(idx_chan);
+		insn.data_size = sizeof(unsigned int);
+		break;
+	}
+	case A4L_INSN_CONFIG_DIO_QUERY:
+		insn.data_size = 2 * sizeof(unsigned int);
+		break;
+	default:
+		return -ENOSYS;
+	}
+
+	/* Send the config instruction */
+	ret = a4l_snd_insn(dsc, &insn);
+	if (ret < 0)
+		goto out;
+	
+	/* Retrieve the result(s), if need be */
+	switch (type) {
+	case A4L_INSN_CONFIG_DIO_QUERY:
+	{
+		unsigned int *value = va_arg(args, unsigned int *);
+		*value = values[1];
+		break;
+	}
+	default:
+		break;
+	}
+
+out:
+	va_end(args);	
+	
+	return ret;
 }
 
 /** @} Synchronous acquisition API */
