@@ -201,9 +201,10 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 /* No lazy FPU init on PPC. */
 #define xnarch_fpu_init_p(task) (1)
 
+#ifdef CONFIG_XENO_HW_FPU
+
 static void xnarch_init_fpu(xnarchtcb_t * tcb)
 {
-#ifdef CONFIG_XENO_HW_FPU
 	/*
 	 * Initialize the FPU for an emerging kernel-based RT
 	 * thread. This must be run on behalf of the emerging thread.
@@ -211,24 +212,20 @@ static void xnarch_init_fpu(xnarchtcb_t * tcb)
 	 * in tcb.
 	 */
 	rthal_init_fpu(&tcb->ts);
-#endif /* CONFIG_XENO_HW_FPU */
 }
 
 static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
-#ifdef CONFIG_XENO_HW_FPU
 	struct task_struct *task = tcb->user_task;
 
         if (task && task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 	else
 		rthal_enable_fpu();
-#endif /* CONFIG_XENO_HW_FPU */
 }
 
 static void xnarch_save_fpu(xnarchtcb_t * tcb)
 {
-#ifdef CONFIG_XENO_HW_FPU
 	if (tcb->fpup) {
 		rthal_save_fpu(tcb->fpup);
 
@@ -236,12 +233,10 @@ static void xnarch_save_fpu(xnarchtcb_t * tcb)
 		    tcb->user_fpu_owner->thread.regs)
 			tcb->user_fpu_owner->thread.regs->msr &= ~(MSR_FP|MSR_FE0|MSR_FE1);
 	}
-#endif /* CONFIG_XENO_HW_FPU */
 }
 
 static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 {
-#ifdef CONFIG_XENO_HW_FPU
 	struct thread_struct *ts;
 	struct pt_regs *regs;
 
@@ -266,9 +261,9 @@ static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	 */
         if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
+}
 
 #endif /* CONFIG_XENO_HW_FPU */
-}
 
 static inline int xnarch_escalate(void)
 {
