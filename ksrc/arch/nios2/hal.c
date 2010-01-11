@@ -132,11 +132,15 @@ int rthal_irq_host_request(unsigned irq,
 	    rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
+	rthal_irqdesc_lock(irq, flags);
+
 	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
 		rthal_linux_irq[irq].flags =
 		    rthal_irq_descp(irq)->action->flags;
 		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
 	}
+
+	rthal_irqdesc_unlock(irq, flags);
 
 	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
 }
@@ -150,9 +154,13 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 
 	free_irq(irq, dev_id);
 
+	rthal_irqdesc_lock(irq, flags);
+
 	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
 		rthal_irq_descp(irq)->action->flags =
 		    rthal_linux_irq[irq].flags;
+
+	rthal_irqdesc_unlock(irq, flags);
 
 	return 0;
 }
