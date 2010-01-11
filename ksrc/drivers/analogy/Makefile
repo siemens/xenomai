@@ -4,7 +4,7 @@ ifeq ($(PATCHLEVEL),6)
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai -Idrivers/xenomai/analogy
 
-obj-$(CONFIG_XENO_DRIVERS_ANALOGY) += xeno_analogy.o testing/ intel/ national_instruments/
+obj-$(CONFIG_XENO_DRIVERS_ANALOGY) += xeno_analogy.o testing/ intel/ national_instruments/ sensoray/
 
 xeno_analogy-y := \
 	buffer.o \
@@ -29,6 +29,7 @@ subdir-$(CONFIG_XENO_DRIVERS_ANALOGY_FAKE) += testing
 subdir-$(CONFIG_XENO_DRIVERS_ANALOGY_LOOP) += testing
 subdir-$(CONFIG_XENO_DRIVERS_ANALOGY_8255) += intel
 subdir-$(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) += national_instruments
+subdir-$(CONFIG_XENO_DRIVERS_ANALOGY_S526) += sensoray
 
 obj-$(CONFIG_XENO_DRIVERS_ANALOGY) += xeno_analogy.o
 

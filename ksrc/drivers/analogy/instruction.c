@@ -221,7 +221,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	subd = dev->transfer.subds[dsc->idx_subd];
 
 	/* Checks the subdevice's characteristics */
-	if ((subd->flags & A4L_SUBD_UNUSED) != 0) {
+	if ((subd->flags & A4L_SUBD_TYPES) == A4L_SUBD_UNUSED) {
 		__a4l_err("a4l_do_insn: wrong subdevice selected\n");
 		return -EINVAL;
 	}

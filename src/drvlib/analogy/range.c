@@ -97,6 +97,51 @@ int a4l_sizeof_chan(a4l_chinfo_t * chan)
 }
 
 /**
+ * @brief Get the size in memory of a digital acquired element
+ *
+ * This function is only useful for DIO subdevices. Digital subdevices
+ * are a specific kind of subdevice on which channels are regarded as
+ * bits composing the subdevice's bitfield. During a DIO acquisition,
+ * all bits are sampled. Therefore, a4l_sizeof_chan() is useless in
+ * this case and we have to use a4l_sizeof_subd().
+ * With bitfields which sizes are 8, 16 or 32, there is no problem
+ * finding out the size in memory (1, 2, 4); however with widths like
+ * 12 or 24, this function might be helpful to guess the size needed
+ * in RAM for a single acquired element.
+ *
+ * @param[in] subd Subdevice descriptor
+ *
+ * @return the size in memory of an acquired element, otherwise a negative
+ * error code:
+ *
+ * - -EINVAL is returned if the argument chan is NULL or if the
+ *    subdevice is not a digital subdevice
+ *
+ */
+int a4l_sizeof_subd(a4l_sbinfo_t *subd)
+{
+	/* So far, it seems there is no 64 bit acquistion stuff */
+	int i = 0, sizes[3] = {8, 16, 32};
+
+	if (subd == NULL)
+		return -EINVAL;
+
+	/* This function is only useful for DIO subdevice (all
+	   channels are acquired in one shot); for other kind of
+	   subdevice, the user must use a4l_sizeof_chan() so as to
+	   find out the size of the channel he wants to use */
+	if ((subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO && 
+	    (subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI &&
+	    (subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO)
+		return -EINVAL;
+
+	while (i < 3 && sizes[i] < subd->nb_chan)
+		i++;
+
+	return (i == 3) ? -EINVAL : sizes[i] / 8;
+}
+
+/**
  * @brief Find the must suitable range
  *
  * @param[in] dsc Device descriptor filled by a4l_open() and

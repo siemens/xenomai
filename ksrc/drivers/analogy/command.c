@@ -103,7 +103,8 @@ int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 		return -EINVAL;
 	}
 
-	if (dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_UNUSED) {
+	if ((dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_TYPES) == 
+	    A4L_SUBD_UNUSED) {
 		__a4l_err("a4l_check_cmddesc: "
 			  "subdevice type incoherent\n");
 		return -EIO;
