@@ -208,6 +208,9 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	dump_chip_signature(csigr_bits);
 
 	for (i = 0; i < mite->num_channels; i++) {
+		/* Registers the channel as a free one */
+		mite->channel_allocated[i] = 0;
+		/* Reset the channel */
 		writel(CHOR_DMARESET, mite->mite_io_addr + MITE_CHOR(i));
 		/* Disable interrupts */
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE | CHCR_CLR_SAR_IE |
