@@ -312,7 +312,7 @@ unsigned long rthal_timer_calibrate(void)
 
 int rthal_irq_enable(unsigned irq)
 {
-	if (irq >= IPIPE_NR_XIRQS)
+	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
 	rthal_irq_desc_status(irq) &= ~IRQ_DISABLED;
@@ -323,7 +323,7 @@ int rthal_irq_enable(unsigned irq)
 int rthal_irq_disable(unsigned irq)
 {
 
-	if (irq >= IPIPE_NR_XIRQS)
+	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
 	rthal_irq_desc_status(irq) |= IRQ_DISABLED;
@@ -333,7 +333,7 @@ int rthal_irq_disable(unsigned irq)
 
 int rthal_irq_end(unsigned irq)
 {
-	if (irq >= IPIPE_NR_XIRQS)
+	if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
 	return rthal_irq_chip_end(irq);
@@ -343,8 +343,12 @@ int rthal_irq_host_request(unsigned irq,
 			   rthal_irq_host_handler_t handler,
 			   char *name, void *dev_id)
 {
-	if (irq >= IPIPE_NR_XIRQS || !handler)
+	if (irq >= IPIPE_NR_XIRQS ||
+	    handler == NULL ||
+	    rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
+
+	rthal_irqdesc_lock(irq, flags);
 
 	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
 		rthal_linux_irq[irq].flags =
@@ -352,19 +356,27 @@ int rthal_irq_host_request(unsigned irq,
 		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
 	}
 
+	rthal_irqdesc_unlock(irq, flags);
+
 	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
 }
 
 int rthal_irq_host_release(unsigned irq, void *dev_id)
 {
-	if (irq >= IPIPE_NR_XIRQS || rthal_linux_irq[irq].count == 0)
+	if (irq >= IPIPE_NR_XIRQS ||
+	    rthal_linux_irq[irq].count == 0 ||
+	    rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
 	free_irq(irq, dev_id);
 
+	rthal_irqdesc_lock(irq, flags);
+
 	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
 		rthal_irq_descp(irq)->action->flags =
 		    rthal_linux_irq[irq].flags;
+
+	rthal_irqdesc_unlock(irq, flags);
 
 	return 0;
 }

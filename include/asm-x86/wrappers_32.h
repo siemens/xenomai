@@ -152,7 +152,6 @@ static inline void wrap_switch_iobitmap(struct task_struct *p, int cpu)
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) */
 
-#define rthal_irq_descp(irq)		(irq_desc + irq)
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)

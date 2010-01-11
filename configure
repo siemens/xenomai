@@ -15488,9 +15488,12 @@ _LT_EOF
               . $XENO_LINUX_SRCDIR/.config
 	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
               test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-              test x"$CONFIG_PPC" = xy && cfg_arch=ppc || :
-              test x"$CONFIG_PPC64" = xy && cfg_arch=ppc64 || :
-	      test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
+	      if test x"$CONFIG_PPC" = xy; then
+	         cfg_arch=ppc
+	         test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
+	         test x"$CONFIG_WORD_SIZE" = x32 && cfg_arch=powerpc || :
+	         test x"$CONFIG_WORD_SIZE" = x64 && cfg_arch=powerpc || :
+              fi
               test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
               test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
               test x"$CONFIG_NIOS2" = xy && cfg_arch=nios2 || :

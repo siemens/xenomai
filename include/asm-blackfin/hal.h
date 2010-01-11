@@ -50,8 +50,6 @@ static inline __attribute_const__ unsigned long ffnz(unsigned long ul)
 /* The NMI watchdog timer is clocked by the system clock. */
 #define RTHAL_NMICLK_FREQ	get_sclk()
 
-#define rthal_irq_descp(irq)	(&irq_desc[(irq)])
-
 #define rthal_grab_control()     do { } while(0)
 #define rthal_release_control()  do { } while(0)
 
