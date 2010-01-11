@@ -368,7 +368,7 @@ int rthal_irq_host_request(unsigned irq,
 	    rthal_irq_descp(irq) == NULL)
 		return -EINVAL;
 
-	spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
+	rthal_irqdesc_lock(irq, flags);
 
 	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
 		rthal_linux_irq[irq].flags =
@@ -376,7 +376,7 @@ int rthal_irq_host_request(unsigned irq,
 		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
 	}
 
-	spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
+	rthal_irqdesc_unlock(irq, flags);
 
 	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
 }
@@ -392,13 +392,13 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 
 	free_irq(irq, dev_id);
 
-	spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags);
+	rthal_irqdesc_lock(irq, flags);
 
 	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
 		rthal_irq_descp(irq)->action->flags =
 		    rthal_linux_irq[irq].flags;
 
-	spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags);
+	rthal_irqdesc_unlock(irq, flags);
 
 	return 0;
 }
