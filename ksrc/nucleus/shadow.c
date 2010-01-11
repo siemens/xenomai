@@ -807,14 +807,7 @@ static void xnshadow_dereference_skin(unsigned magic)
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
 		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic) {
-			if (xnarch_atomic_dec_and_test(&muxtable[0].refcnt))
-				xnarch_atomic_dec(&muxtable[0].refcnt);
-			if (xnarch_atomic_dec_and_test(&muxtable[muxid].refcnt))
-
-				/* We were the last thread, decrement the counter,
-				   since it was incremented by the xn_sys_bind
-				   operation. */
-				xnarch_atomic_dec(&muxtable[muxid].refcnt);
+			xnarch_atomic_dec(&muxtable[muxid].refcnt);
 			if (muxtable[muxid].props->module)
 				module_put(muxtable[muxid].props->module);
 
@@ -1314,11 +1307,10 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
 		if (muxtable[muxid].props && muxtable[muxid].props->magic == magic) {
-			xnarch_atomic_inc(&muxtable[muxid].refcnt);
-			xnarch_atomic_inc(&muxtable[0].refcnt);
 			if (muxtable[muxid].props->module
 			    && !try_module_get(muxtable[muxid].props->module))
 				return -ENOSYS;
+			xnarch_atomic_inc(&muxtable[muxid].refcnt);
 			break;
 		}
 	}
@@ -1635,15 +1627,6 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 
       do_bind:
 
-	/* Increment the reference count now (actually, only the first
-	   call to bind_to_interface() really increments the counter), so
-	   that the interface cannot be removed under our feet. */
-
-	if (!xnarch_atomic_inc_and_test(&muxtable[muxid].refcnt))
-		xnarch_atomic_dec(&muxtable[muxid].refcnt);
-	if (!xnarch_atomic_inc_and_test(&muxtable[0].refcnt))
-		xnarch_atomic_dec(&muxtable[0].refcnt);
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	/* Since the pod might be created by the event callback and not
@@ -1657,17 +1640,14 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	if (sys_ppd)
 		goto muxid_eventcb;
 
-	sys_ppd = (xnshadow_ppd_t *) muxtable[0].props->eventcb(XNSHADOW_CLIENT_ATTACH,
-								 current);
-
+	sys_ppd = muxtable[0].props->eventcb(XNSHADOW_CLIENT_ATTACH, current);
 	if (IS_ERR(sys_ppd)) {
 		err = PTR_ERR(sys_ppd);
 		goto fail;
 	}
 
-	if (!sys_ppd)
+	if (sys_ppd == NULL)
 		goto muxid_eventcb;
-
 
 	sys_ppd->key.muxid = 0;
 	sys_ppd->key.mm = current->mm;
@@ -1679,7 +1659,8 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 		sys_ppd = NULL;
 	}
 
-  muxid_eventcb:
+muxid_eventcb:
+
 	if (!muxtable[muxid].props->eventcb)
 		goto eventcb_done;
 
@@ -1691,8 +1672,7 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 	if (ppd)
 		goto eventcb_done;
 
-	ppd = (xnshadow_ppd_t *) muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_ATTACH,
-								current);
+	ppd = muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_ATTACH, current);
 
 	if (IS_ERR(ppd)) {
 		err = PTR_ERR(ppd);
@@ -1739,10 +1719,6 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 			muxtable[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
 		}
 	      fail:
-		if (!xnarch_atomic_get(&muxtable[muxid].refcnt))
-			xnarch_atomic_dec(&muxtable[muxid].refcnt);
-		if (!xnarch_atomic_get(&muxtable[muxid].refcnt))
-			xnarch_atomic_dec(&muxtable[0].refcnt);
 		return err;
 	}
 
@@ -2007,8 +1983,8 @@ static void *xnshadow_sys_event(int event, void *data)
 
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
-		p = (struct xnsys_ppd *) xnarch_alloc_host_mem(sizeof(*p));
-		if (!p)
+		p = xnarch_alloc_host_mem(sizeof(*p));
+		if (p == NULL)
 			return ERR_PTR(-ENOMEM);
 
 		err = xnheap_init_mapped(&p->sem_heap,
@@ -2020,12 +1996,13 @@ static void *xnshadow_sys_event(int event, void *data)
 		}
 		xnheap_set_label(&p->sem_heap,
 				 "private sem heap [%d]", current->pid);
-
+		xnarch_atomic_inc(&muxtable[0].refcnt);
 		return &p->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
-		p = ppd2sys((xnshadow_ppd_t *) data);
+		p = ppd2sys(data);
 		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
+		xnarch_atomic_dec(&muxtable[0].refcnt);
 
 		return NULL;
 	}
@@ -2640,9 +2617,10 @@ int xnshadow_register_interface(struct xnskin_props *props)
 	int muxid;
 	spl_t s;
 
-	/* We can only handle up to 256 syscalls per skin, check for over-
-	   and underflow (MKL). */
-
+	/*
+	 * We can only handle up to MAX_SYSENT syscalls per skin,
+	 * check for over- and underflow (MKL).
+	 */
 	if (XENOMAI_MAX_SYSENT < props->nrcalls || 0 > props->nrcalls)
 		return -EINVAL;
 
@@ -2651,16 +2629,20 @@ int xnshadow_register_interface(struct xnskin_props *props)
 	for (muxid = 0; muxid < XENOMAI_MUX_NR; muxid++) {
 		if (muxtable[muxid].props == NULL) {
 			muxtable[muxid].props = props;
-			xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
-			xnlock_put_irqrestore(&nklock, s);
-			xnshadow_declare_proc(muxtable + muxid);
-			return muxid;
+			xnarch_atomic_set(&muxtable[muxid].refcnt, 0);
+			break;
 		}
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return -ENOBUFS;
+	if (muxid >= XENOMAI_MUX_NR)
+		return -ENOBUFS;
+
+	xnshadow_declare_proc(muxtable + muxid);
+
+	return muxid;
+
 }
 EXPORT_SYMBOL_GPL(xnshadow_register_interface);
 
@@ -2686,7 +2668,6 @@ int xnshadow_unregister_interface(int muxid)
 
 	name = muxtable[muxid].props->name;
 	muxtable[muxid].props = NULL;
-	xnarch_atomic_set(&muxtable[muxid].refcnt, -1);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -2850,9 +2831,10 @@ static int iface_read_proc(char *page,
 			   off_t off, int count, int *eof, void *data)
 {
 	struct xnskin_slot *iface = data;
-	int len, refcnt = xnarch_atomic_get(&iface->refcnt);
+	int len, refcnt;
 
-	len = sprintf(page, "%d\n", refcnt < 0 ? 0 : refcnt);
+	refcnt = xnarch_atomic_get(&iface->refcnt);
+	len = sprintf(page, "%d\n", refcnt);
 
 	len -= off;
 	if (len <= off + count)
