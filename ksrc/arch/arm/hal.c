@@ -224,9 +224,9 @@ int rthal_irq_disable(unsigned irq)
     return rthal_irq_chip_disable(irq);
 }
 
-int rthal_irq_end(unsigned irq || rthal_irq_descp(irq) == NULL)
+int rthal_irq_end(unsigned irq)
 {
-    if (irq >= IPIPE_NR_XIRQS)
+    if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
         return -EINVAL;
 
     return rthal_irq_chip_end(irq);
