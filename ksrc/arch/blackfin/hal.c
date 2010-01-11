@@ -343,6 +343,8 @@ int rthal_irq_host_request(unsigned irq,
 			   rthal_irq_host_handler_t handler,
 			   char *name, void *dev_id)
 {
+	unsigned long flags;
+
 	if (irq >= IPIPE_NR_XIRQS ||
 	    handler == NULL ||
 	    rthal_irq_descp(irq) == NULL)
@@ -363,6 +365,8 @@ int rthal_irq_host_request(unsigned irq,
 
 int rthal_irq_host_release(unsigned irq, void *dev_id)
 {
+	unsigned long flags;
+
 	if (irq >= IPIPE_NR_XIRQS ||
 	    rthal_linux_irq[irq].count == 0 ||
 	    rthal_irq_descp(irq) == NULL)
