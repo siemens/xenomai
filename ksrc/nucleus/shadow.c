@@ -174,10 +174,9 @@ static inline void set_switch_lock_owner(struct task_struct *p)
 
 #define rpi_p(t)	((t)->rpi != NULL)
 
-static inline struct xnthread *rpi_next(struct xnsched *sched)
+static struct xnthread *rpi_next(struct xnsched *sched, spl_t s)
 {
 	struct xnthread *thread;
-	spl_t s;
 
 	thread = xnsched_peek_rpi(sched);
 	while (thread && 
@@ -271,7 +270,7 @@ static void rpi_pop(struct xnthread *thread)
 		return;
 	}
 
-	top = rpi_next(sched);
+	top = rpi_next(sched, s);
 	if (likely(top == NULL)) {
 		prio = XNSCHED_IDLE_PRIO;
 		sched_class = &xnsched_class_idle;
@@ -345,7 +344,7 @@ static void rpi_clear_remote(struct xnthread *thread)
 	xnsched_pop_rpi(thread);
 	thread->rpi = NULL;
 
-	if (rpi_next(rpi) == NULL)
+	if (rpi_next(rpi, s) == NULL)
 		rcpu = xnsched_cpu(rpi);
 
 	xnlock_put_irqrestore(&rpi->rpilock, s);
@@ -414,7 +413,7 @@ static inline void rpi_switch(struct task_struct *next_task)
 	    xnthread_test_state(next, XNRPIOFF)) {
 		xnlock_get_irqsave(&sched->rpilock, s);
 
-		top = rpi_next(sched);
+		top = rpi_next(sched, s);
 		if (top) {
 			newprio = top->cprio;
 			newclass = top->sched_class;
@@ -500,10 +499,11 @@ void xnshadow_rpi_check(void)
 {
 	struct xnsched *sched = xnpod_current_sched();
 	struct xnthread *top;
+	spl_t s;
  
- 	xnlock_get(&sched->rpilock);
- 	top = rpi_next(sched);
- 	xnlock_put(&sched->rpilock);
+ 	xnlock_get_irqsave(&sched->rpilock, s);
+ 	top = rpi_next(sched, s);
+ 	xnlock_put_irqrestore(&sched->rpilock, s);
 
 	if (top == NULL && xnsched_root_class(sched) != &xnsched_class_idle)
 		xnsched_renice_root(sched, NULL);
