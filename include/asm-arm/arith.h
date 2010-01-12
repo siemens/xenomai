@@ -14,9 +14,9 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 #else /* arm <= v3 */
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\
-		__asm__ ("adds %2, %4\n\t"		\
-			 "adcs %1, %3\n\t"		\
-			 "adc %0, #0\n\t"		\
+		__asm__ ("adds %2, %2, %4\n\t"		\
+			 "adcs %1, %1, %3\n\t"		\
+			 "adc %0, %0, #0\n\t"		\
 			 : "+r"(l0), "+r"(l1), "+r"(l2)	\
 			 : "r"(s0), "r"(s1): "cc");	\
 	} while (0)
@@ -46,17 +46,17 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 	
 	__asm__ ("umull %[tl], %[rl], %[opl], %[fracl]\n\t"
 		 "umull %[rm], %[rh], %[oph], %[frach]\n\t"
-		 "adds %[rl], %[tl], lsr #31\n\t"
-		 "adcs %[rm], #0\n\t"
-		 "adc %[rh], #0\n\t"
+		 "adds %[rl], %[rl], %[tl], lsr #31\n\t"
+		 "adcs %[rm], %[rm], #0\n\t"
+		 "adc %[rh], %[rh], #0\n\t"
 		 "umull %[tl], %[th], %[oph], %[fracl]\n\t"
-		 "adds %[rl], %[tl]\n\t"
-		 "adcs %[rm], %[th]\n\t"
-		 "adc %[rh], #0\n\t"
+		 "adds %[rl], %[rl], %[tl]\n\t"
+		 "adcs %[rm], %[rm], %[th]\n\t"
+		 "adc %[rh], %[rh], #0\n\t"
 		 "umull %[tl], %[th], %[opl], %[frach]\n\t"
-		 "adds %[rl], %[tl]\n\t"
-		 "adcs %[rm], %[th]\n\t"
-		 "adc %[rh], #0\n\t"
+		 "adds %[rl], %[rl], %[tl]\n\t"
+		 "adcs %[rm], %[rm], %[th]\n\t"
+		 "adc %[rh], %[rh], #0\n\t"
 		 "umlal %[rm], %[rh], %[opl], %[integ]\n\t"
 		 "mla %[rh], %[oph], %[integ], %[rh]\n\t"
 		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
