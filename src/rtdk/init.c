@@ -22,3 +22,8 @@ static __attribute__ ((constructor)) void __init_rtdk(void)
 {
 	__rt_print_init();
 }
+
+static __attribute__ ((destructor)) void __exit_rtdk(void)
+{
+	__rt_print_exit();
+}

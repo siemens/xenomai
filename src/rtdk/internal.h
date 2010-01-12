@@ -23,6 +23,7 @@
 #include <sys/time.h>
 
 void __rt_print_init(void);
+void __rt_print_exit(void);
 
 void __real_free(void *ptr);
 void *__real_malloc(size_t size);
