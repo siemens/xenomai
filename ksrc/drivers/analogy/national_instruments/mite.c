@@ -68,6 +68,8 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	if(mite == NULL)
 		return -ENOMEM;
 
+	memset(mite, 0, sizeof(struct mite_struct));
+
 	a4l_lock_init(&mite->lock);
 	mite->pcidev = dev;
 
