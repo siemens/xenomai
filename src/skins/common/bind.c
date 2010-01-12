@@ -7,8 +7,10 @@
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/bind.h>
 #include <asm-generic/xenomai/bits/current.h>
+#include <asm-generic/xenomai/stacksize.h>
 #include "sem_heap.h"
 
+static pthread_t xeno_main_tid;
 static xnsighandler *xnsig_handlers[32];
 
 void __attribute__((weak)) xeno_sigill_handler(int sig)
@@ -133,5 +135,17 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 
 	xeno_featinfo = finfo;
 
+	xeno_main_tid = pthread_self();
+	
 	return muxid;
+}
+
+void xeno_fault_stack(void)
+{
+	char stk[xeno_stacksize(1)];
+
+	if (pthread_self() != xeno_main_tid)
+		return;
+
+	stk[0] = stk[sizeof(stk) - 1] = 0xA5;
 }

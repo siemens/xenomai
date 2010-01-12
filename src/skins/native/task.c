@@ -187,6 +187,8 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	RT_TASK *self;
 	int err;
 
+	xeno_fault_stack();
+
 #ifdef HAVE___THREAD
 	self = &__native_self;
 #else /* !HAVE___THREAD */

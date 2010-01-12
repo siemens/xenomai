@@ -37,4 +37,6 @@ xeno_bind_skin(unsigned skin_magic, const char *skin,
 	return muxid;
 }
 
+void xeno_fault_stack(void);
+
 #endif /* _XENO_ASM_GENERIC_BITS_BIND_H */

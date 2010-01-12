@@ -43,6 +43,8 @@ int __wrap_pthread_setschedparam(pthread_t thread,
 	int err, promoted;
 
 	if (thread == myself) {
+		xeno_fault_stack();
+
 #ifdef HAVE___THREAD
 		mode_buf = xeno_init_current_mode();
 #else /* !HAVE___THREAD */
