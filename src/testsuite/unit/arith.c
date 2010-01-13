@@ -24,7 +24,7 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 			end = rt_timer_tsc();				\
 			delta = end - start;				\
 									\
-			if (i == 0 || delta < (avg / i) * 2) {		\
+			if (i == 0 || delta < (avg / i) * 4) {		\
 				avg += delta;				\
 			} else						\
 				++rejected;				\
@@ -58,6 +58,8 @@ int main(void)
 	fprintf(stderr, "integ: %d, frac: 0x%08llx\n", frac.integ, frac.frac);
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 
+	fprintf(stderr, "\nsigned positive operation: 0x%016llx * %u / %d\n",
+		arg, nsec_per_sec, sample_freq);
 	bench("inline calibration", 0);
 	calib = avg;
 	bench("inlined llimd", rthal_llimd(arg, nsec_per_sec, sample_freq));
@@ -76,6 +78,46 @@ int main(void)
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 	bench("out of line nodiv_llimd",
 	      do_nodiv_llimd(arg, frac.frac, frac.integ));
+#endif /* XNARCH_HAVE_NODIV_LLIMD */
+
+
+	fprintf(stderr, "\nsigned negative operation: 0x%016llx * %u / %d\n",
+		-arg, nsec_per_sec, sample_freq);
+	calib = 0;
+	bench("inline calibration", 0);
+	calib = avg;
+	bench("inlined llimd", rthal_llimd(-arg, nsec_per_sec, sample_freq));
+	bench("inlined llmulshft", rthal_llmulshft(-arg, mul, shft));
+#ifdef XNARCH_HAVE_NODIV_LLIMD
+	bench("inlined nodiv_llimd",
+	      rthal_nodiv_llimd(-arg, frac.frac, frac.integ));
+#endif /* XNARCH_HAVE_NODIV_LLIMD */
+
+	calib = 0;
+	bench("out of line calibration", dummy());
+	calib = avg;
+	bench("out of line llimd",
+	      do_llimd(-arg, nsec_per_sec, sample_freq));
+	bench("out of line llmulshft", do_llmulshft(-arg, mul, shft));
+#ifdef XNARCH_HAVE_NODIV_LLIMD
+	bench("out of line nodiv_llimd",
+	      do_nodiv_llimd(-arg, frac.frac, frac.integ));
+#endif /* XNARCH_HAVE_NODIV_LLIMD */
+
+#ifdef XNARCH_HAVE_NODIV_LLIMD
+	fprintf(stderr, "\nunsigned operation: 0x%016llx * %u / %d\n",
+		arg, nsec_per_sec, sample_freq);
+	calib = 0;
+	bench("inline calibration", 0);
+	calib = avg;
+	bench("inlined nodiv_ullimd",
+	      rthal_nodiv_ullimd(arg, frac.frac, frac.integ));
+
+	calib = 0;
+	bench("out of line calibration", dummy());
+	calib = avg;
+	bench("out of line nodiv_ullimd",
+	      do_nodiv_ullimd(arg, frac.frac, frac.integ));
 #endif /* XNARCH_HAVE_NODIV_LLIMD */
 	return 0;
 }

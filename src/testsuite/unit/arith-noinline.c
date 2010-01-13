@@ -21,6 +21,12 @@ do_llmulshft(long long ll, unsigned m, unsigned s)
 }
 
 #ifdef XNARCH_HAVE_NODIV_LLIMD
+unsigned long long
+do_nodiv_ullimd(unsigned long long ll, unsigned long long frac, unsigned integ)
+{
+	return rthal_nodiv_ullimd(ll, frac, integ);
+}
+
 long long
 do_nodiv_llimd(long long ll, unsigned long long frac, unsigned integ)
 {
