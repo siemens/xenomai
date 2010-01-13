@@ -11,6 +11,14 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 
 #define rthal_nodiv_ullimd(op, frac, integ) \
 	rthal_arm_nodiv_ullimd((op), (frac), (integ))
+
+static inline __attribute__((__const__)) long long
+rthal_arm_nodiv_llimd(const long long op,
+		       const unsigned long long frac,
+		       const unsigned rhs_integ);
+
+#define rthal_nodiv_llimd(op, frac, integ) \
+	rthal_arm_nodiv_llimd((op), (frac), (integ))
 #else /* arm <= v3 */
 #define __rthal_add96and64(l0, l1, l2, s0, s1)		\
 	do {						\
@@ -23,6 +31,24 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 #endif /* arm <= v3 */
 
 #include <asm-generic/xenomai/arith.h>
+
+#define rthal_arm_nodiv_ullimd_str			\
+	"umull %[tl], %[rl], %[opl], %[fracl]\n\t"	\
+	"umull %[rm], %[rh], %[oph], %[frach]\n\t"	\
+	"adds %[rl], %[rl], %[tl], lsr #31\n\t"		\
+	"adcs %[rm], %[rm], #0\n\t"			\
+	"adc %[rh], %[rh], #0\n\t"			\
+	"umull %[tl], %[th], %[oph], %[fracl]\n\t"	\
+	"adds %[rl], %[rl], %[tl]\n\t"			\
+	"adcs %[rm], %[rm], %[th]\n\t"			\
+	"adc %[rh], %[rh], #0\n\t"			\
+	"umull %[tl], %[th], %[opl], %[frach]\n\t"	\
+	"adds %[rl], %[rl], %[tl]\n\t"			\
+	"adcs %[rm], %[rm], %[th]\n\t"			\
+	"adc %[rh], %[rh], #0\n\t"			\
+	"umlal %[rm], %[rh], %[opl], %[integ]\n\t"	\
+	"mla %[rh], %[oph], %[integ], %[rh]\n\t"
+
 
 #if __LINUX_ARM_ARCH__ >= 4
 static inline __attribute__((__const__)) unsigned long long
@@ -44,23 +70,50 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 	__rthal_u64tou32(op, oph, opl);
 	__rthal_u64tou32(frac, frach, fracl);
 	
-	__asm__ ("umull %[tl], %[rl], %[opl], %[fracl]\n\t"
-		 "umull %[rm], %[rh], %[oph], %[frach]\n\t"
-		 "adds %[rl], %[rl], %[tl], lsr #31\n\t"
-		 "adcs %[rm], %[rm], #0\n\t"
-		 "adc %[rh], %[rh], #0\n\t"
-		 "umull %[tl], %[th], %[oph], %[fracl]\n\t"
-		 "adds %[rl], %[rl], %[tl]\n\t"
-		 "adcs %[rm], %[rm], %[th]\n\t"
-		 "adc %[rh], %[rh], #0\n\t"
-		 "umull %[tl], %[th], %[opl], %[frach]\n\t"
-		 "adds %[rl], %[rl], %[tl]\n\t"
-		 "adcs %[rm], %[rm], %[th]\n\t"
-		 "adc %[rh], %[rh], #0\n\t"
-		 "umlal %[rm], %[rh], %[opl], %[integ]\n\t"
-		 "mla %[rh], %[oph], %[integ], %[rh]\n\t"
+	__asm__ (rthal_arm_nodiv_ullimd_str
 		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
 		   [tl]"=r"(tl), [th]"=r"(th)
+		 : [opl]"r"(opl), [oph]"r"(oph),
+		   [fracl]"r"(fracl), [frach]"r"(frach),
+		   [integ]"r"(integ)
+		 : "cc");
+
+	return __rthal_u64fromu32(rh, rm);
+}
+
+static inline __attribute__((__const__)) long long
+rthal_arm_nodiv_llimd(const long long op,
+		       const unsigned long long frac,
+		       const unsigned rhs_integ)
+{
+	register unsigned rl __asm__("r5");
+	register unsigned rm __asm__("r0");
+	register unsigned rh __asm__("r1");
+	register unsigned fracl __asm__ ("r2");
+	register unsigned frach __asm__ ("r3");
+	register unsigned integ __asm__("r4") = rhs_integ;
+	register unsigned opl __asm__ ("r6");
+	register unsigned oph __asm__ ("r7");
+	register unsigned tl __asm__("r8");
+	register unsigned th __asm__("r9");
+	register unsigned s __asm__("r10");
+
+	__rthal_u64tou32(op, oph, opl);
+	__rthal_u64tou32(frac, frach, fracl);
+	
+	__asm__ ("lsrs %[s], %[oph], #30\n\t"
+		 "beq 1f\n\t"
+		 "rsbs  %[opl], %[opl], #0\n\t"
+		 "rsc  %[oph], %[oph], #0\n"
+		 "1:\t"
+		 rthal_arm_nodiv_ullimd_str
+		 "teq %[s], #0\n\t"
+		 "beq 2f\n\t"
+		 "rsbs  %[rm], %[rm], #0\n\t"
+		 "rsc  %[rh], %[rh], #0\n"
+		 "2:\t"
+		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
+		   [tl]"=r"(tl), [th]"=r"(th), [s]"=r"(s)
 		 : [opl]"r"(opl), [oph]"r"(oph),
 		   [fracl]"r"(fracl), [frach]"r"(frach),
 		   [integ]"r"(integ)
