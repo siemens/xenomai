@@ -28,7 +28,8 @@
 #include "rtcan_internal.h"
 #include "rtcan_mscan_regs.h"
 
-#define MSCAN_REG_ARGS(reg) "%-8s 0x%02x\n", #reg, (int)((regs)->reg) & 0xff
+#define MSCAN_REG_ARGS(reg) \
+	"%-8s 0x%02x\n", #reg, (int)(in_8(&regs->reg)) & 0xff
 
 #ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 
@@ -38,30 +39,34 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 	struct rtcan_device *dev = (struct rtcan_device *)data;
 	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 	struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
+	u8 canctl0, canctl1;
+	u32 port_config;
 	RTCAN_PROC_PRINT_VARS(80);
 
 	if (!RTCAN_PROC_PRINT("MSCAN registers at %p\n", regs))
 		goto done;
+	canctl0 = in_8(&regs->canctl0);
 	if (!RTCAN_PROC_PRINT("canctl0  0x%02x%s%s%s%s%s%s%s%s\n",
-			      regs->canctl0,
-			      (regs->canctl0 & MSCAN_RXFRM) ? " rxfrm" :"",
-			      (regs->canctl0 & MSCAN_RXACT) ? " rxact" :"",
-			      (regs->canctl0 & MSCAN_CSWAI) ? " cswai" :"",
-			      (regs->canctl0 & MSCAN_SYNCH) ? " synch" :"",
-			      (regs->canctl0 & MSCAN_TIME)  ? " time"  :"",
-			      (regs->canctl0 & MSCAN_WUPE)  ? " wupe"  :"",
-			      (regs->canctl0 & MSCAN_SLPRQ) ? " slprq" :"",
-			      (regs->canctl0 & MSCAN_INITRQ)? " initrq":"" ))
+			      canctl0,
+			      (canctl0 & MSCAN_RXFRM) ? " rxfrm" :"",
+			      (canctl0 & MSCAN_RXACT) ? " rxact" :"",
+			      (canctl0 & MSCAN_CSWAI) ? " cswai" :"",
+			      (canctl0 & MSCAN_SYNCH) ? " synch" :"",
+			      (canctl0 & MSCAN_TIME)  ? " time"  :"",
+			      (canctl0 & MSCAN_WUPE)  ? " wupe"  :"",
+			      (canctl0 & MSCAN_SLPRQ) ? " slprq" :"",
+			      (canctl0 & MSCAN_INITRQ)? " initrq":"" ))
 		goto done;
+	canctl1 = in_8(&regs->canctl1);
 	if (!RTCAN_PROC_PRINT("canctl1  0x%02x%s%s%s%s%s%s%s\n",
-			      regs->canctl1,
-			      (regs->canctl1 & MSCAN_CANE)  ? " cane"  :"",
-			      (regs->canctl1 & MSCAN_CLKSRC)? " clksrc":"",
-			      (regs->canctl1 & MSCAN_LOOPB) ? " loopb" :"",
-			      (regs->canctl1 & MSCAN_LISTEN)? " listen":"",
-			      (regs->canctl1 & MSCAN_WUPM)  ? " wump"  :"",
-			      (regs->canctl1 & MSCAN_SLPAK) ? " slpak" :"",
-			      (regs->canctl1 & MSCAN_INITAK)? " initak":""))
+			       canctl1,
+			      (canctl1 & MSCAN_CANE)  ? " cane"  :"",
+			      (canctl1 & MSCAN_CLKSRC)? " clksrc":"",
+			      (canctl1 & MSCAN_LOOPB) ? " loopb" :"",
+			      (canctl1 & MSCAN_LISTEN)? " listen":"",
+			      (canctl1 & MSCAN_WUPM)  ? " wump"  :"",
+			      (canctl1 & MSCAN_SLPAK) ? " slpak" :"",
+			      (canctl1 & MSCAN_INITAK)? " initak":""))
 		goto done;
 	if (!RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr0 )) |
 	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canbtr1 )) |
@@ -95,10 +100,11 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 
 	if (!RTCAN_PROC_PRINT("GPIO registers\n"))
 		goto done;
-	if (!RTCAN_PROC_PRINT("port_config 0x%08x %s\n", gpio->port_config,
-			      (gpio->port_config & 0x10000000 ?
+	port_config = in_be32(&gpio->port_config);
+	if (!RTCAN_PROC_PRINT("port_config 0x%08x %s\n", port_config,
+			      (port_config & 0x10000000 ?
 			       "CAN1 on I2C1, CAN2 on TMR0/1 pins":
-			       (gpio->port_config & 0x70) == 0x10 ?
+			       (port_config & 0x70) == 0x10 ?
 			       "CAN1/2 on PSC2 pins": "MSCAN1/2 not routed")))
 		goto done;
 
