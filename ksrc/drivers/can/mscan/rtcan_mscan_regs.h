@@ -39,12 +39,12 @@ static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 	struct device_node *ofn;
 	ofn = of_find_compatible_node(NULL, NULL, "mpc5200-gpio");
 	if (!ofn)
-	    ofn = of_find_compatible_node(NULL, NULL, "fsl,mpc5200-gpio");
+		ofn = of_find_compatible_node(NULL, NULL, "fsl,mpc5200-gpio");
 	return ofn ? of_iomap(ofn, 0) : NULL;
 }
-#define MPC5xxx_GPIO    mpc5xxx_gpio_find_and_map()
+#define MPC5xxx_GPIO	mpc5xxx_gpio_find_and_map()
 #else
-#define MPC5xxx_GPIO    mpc52xx_find_and_map("mpc5200-gpio")
+#define MPC5xxx_GPIO	mpc52xx_find_and_map("mpc5200-gpio")
 #endif
 #define mpc5xxx_gpio	mpc52xx_gpio
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
@@ -63,7 +63,7 @@ static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 
 #define MSCAN_CAN1_ADDR	(MSCAN_MBAR + 0x0900) /* MSCAN Module 1 */
 #define MSCAN_CAN2_ADDR	(MSCAN_MBAR + 0x0980) /* MSCAN Module 2 */
-#define MSCAN_SIZE      0x80
+#define MSCAN_SIZE	0x80
 
 /* MSCAN control register 0 (CANCTL0) bits */
 #define MSCAN_RXFRM	0x80
@@ -202,35 +202,37 @@ struct mscan_regs {
 
 /* Message type access macros.
  */
-#define MSCAN_BUF_STD_RTR       0x10
-#define MSCAN_BUF_EXT_RTR       0x01
-#define MSCAN_BUF_EXTENDED      0x08
+#define MSCAN_BUF_STD_RTR	0x10
+#define MSCAN_BUF_EXT_RTR	0x01
+#define MSCAN_BUF_EXTENDED	0x08
 
-#define MSCAN_IDAM1	0x20
+#define MSCAN_IDAM1		0x20
 /* Value for the interrupt enable register */
-#define MSCAN_RIER 	(MSCAN_OVRIE | \
-			 MSCAN_RXFIE | \
-			 MSCAN_WUPIF | \
-			 MSCAN_CSCIE | \
-			 MSCAN_RSTATE0 | \
-			 MSCAN_RSTATE1 | \
-			 MSCAN_TSTATE0 | \
-			 MSCAN_TSTATE1)
+#define MSCAN_RIER		(MSCAN_OVRIE |		\
+				 MSCAN_RXFIE |		\
+				 MSCAN_WUPIF |		\
+				 MSCAN_CSCIE |		\
+				 MSCAN_RSTATE0 |	\
+				 MSCAN_RSTATE1 |	\
+				 MSCAN_TSTATE0 |	\
+				 MSCAN_TSTATE1)
 
-#define BTR0_BRP_MASK 	 	0x3f
-#define BTR0_SJW_SHIFT 	 	6
-#define BTR0_SJW_MASK 	 	(0x3 << BTR0_SJW_SHIFT)
+#define BTR0_BRP_MASK		0x3f
+#define BTR0_SJW_SHIFT		6
+#define BTR0_SJW_MASK		(0x3 << BTR0_SJW_SHIFT)
 
-#define BTR1_TSEG1_MASK	 	0xf
-#define BTR1_TSEG2_SHIFT  	4
-#define BTR1_TSEG2_MASK  	(0x7 << BTR1_TSEG2_SHIFT)
-#define BTR1_SAM_SHIFT 	  	7
+#define BTR1_TSEG1_MASK		0xf
+#define BTR1_TSEG2_SHIFT	4
+#define BTR1_TSEG2_MASK		(0x7 << BTR1_TSEG2_SHIFT)
+#define BTR1_SAM_SHIFT		7
 
-#define BTR0_SET_BRP(brp) 	(((brp) - 1) & BTR0_BRP_MASK)
-#define BTR0_SET_SJW(sjw) 	((((sjw) - 1) << BTR0_SJW_SHIFT) & BTR0_SJW_MASK)
+#define BTR0_SET_BRP(brp)	(((brp) - 1) & BTR0_BRP_MASK)
+#define BTR0_SET_SJW(sjw)	((((sjw) - 1) << BTR0_SJW_SHIFT) & \
+				 BTR0_SJW_MASK)
 
-#define BTR1_SET_TSEG1(tseg1) 	(((tseg1) - 1) & BTR1_TSEG1_MASK)
-#define BTR1_SET_TSEG2(tseg2) 	((((tseg2) - 1) << BTR1_TSEG2_SHIFT) & BTR1_TSEG2_MASK)
-#define BTR1_SET_SAM(sam) 	(((sam) & 1) << BTR1_SAM_SHIFT)
+#define BTR1_SET_TSEG1(tseg1)	(((tseg1) - 1) & BTR1_TSEG1_MASK)
+#define BTR1_SET_TSEG2(tseg2)	((((tseg2) - 1) << BTR1_TSEG2_SHIFT) & \
+				 BTR1_TSEG2_MASK)
+#define BTR1_SET_SAM(sam)	(((sam) & 1) << BTR1_SAM_SHIFT)
 
 #endif /* __RTCAN_MSCAN_REGS_H_ */

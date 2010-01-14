@@ -14,9 +14,9 @@ else
 
 O_TARGET := built-in.o
 
-obj-$(CONFIG_XENO_DRIVERS_CAN_MSCAN) := xeno_can_mscan.o 
+obj-$(CONFIG_XENO_DRIVERS_CAN_MSCAN) := xeno_can_mscan.o
 
-list-multi := xeno_can_mscan.o 
+list-multi := xeno_can_mscan.o
 
 xeno_can_mscan-objs := rtcan_mscan.o rtcan_mscan_proc.o
 
