@@ -1,7 +1,22 @@
 config XENO_DRIVERS_CAN_MSCAN
-	depends on XENO_DRIVERS_CAN && PPC_MPC52xx
-	tristate "MSCAN driver for MPC52xx"
+	depends on XENO_DRIVERS_CAN && (PPC_MPC52xx || PPC_MPC512x)
+	tristate "MSCAN driver for MPC52xx and MPC512x"
 	default n
+	help
+
+	This driver is for the MSCAN on the MPC5200 and MPC512x processor
+	from Freescale.
+
+config XENO_DRIVERS_CAN_MSCAN_OLD
+	depends on XENO_DRIVERS_CAN_MSCAN && PPC_MPC52xx
+	bool "Use old MSCAN driver for old kernel version"
+	default n
+	help
+
+	For backward compatibility with older kernel versions, you may
+	want to select the old MSCAN driver for the MPC5200.
+
+if XENO_DRIVERS_CAN_MSCAN_OLD
 
 config XENO_DRIVERS_CAN_MSCAN_1
 	depends on XENO_DRIVERS_CAN_MSCAN
@@ -40,4 +55,6 @@ config XENO_DRIVERS_CAN_MSCAN_PSC2
 	bool "CAN 1 and 2 on PSC2 pins"
 
 endchoice
+
+endif
 

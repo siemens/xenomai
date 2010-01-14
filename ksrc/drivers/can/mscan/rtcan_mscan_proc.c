@@ -38,9 +38,11 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 {
 	struct rtcan_device *dev = (struct rtcan_device *)data;
 	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
 	struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
-	u8 canctl0, canctl1;
 	u32 port_config;
+#endif
+	u8 canctl0, canctl1;
 	RTCAN_PROC_PRINT_VARS(80);
 
 	if (!RTCAN_PROC_PRINT("MSCAN registers at %p\n", regs))
@@ -98,6 +100,7 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr7)))
 		goto done;
 
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
 	if (!RTCAN_PROC_PRINT("GPIO registers\n"))
 		goto done;
 	port_config = in_be32(&gpio->port_config);
@@ -107,6 +110,7 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 			       (port_config & 0x70) == 0x10 ?
 			       "CAN1/2 on PSC2 pins": "MSCAN1/2 not routed")))
 		goto done;
+#endif
 
 done:
 	RTCAN_PROC_PRINT_DONE;

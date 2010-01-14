@@ -25,6 +25,7 @@
 #ifndef __RTCAN_MSCAN_REGS_H_
 #define __RTCAN_MSCAN_REGS_H_
 
+#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
 #include <sysdev/fsl_soc.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,22)
@@ -59,6 +60,7 @@ static inline void __iomem *mpc5xxx_gpio_find_and_map(void)
 #define MSCAN_CAN2_IRQ	MPC52xx_MSCAN2_IRQ
 #define MPC5xxx_GPIO	MPC52xx_VA(MPC52xx_GPIO_OFFSET)
 #define mpc5xxx_gpio	mpc52xx_gpio
+#endif
 #endif
 
 #define MSCAN_CAN1_ADDR	(MSCAN_MBAR + 0x0900) /* MSCAN Module 1 */
@@ -199,6 +201,12 @@ struct mscan_regs {
 	struct mscan_msgbuf canrxfg;	/* MSCAN + 0x40 */    /* Foreground receive buffer */
 	struct mscan_msgbuf cantxfg;	/* MSCAN + 0x60 */    /* Foreground transmit buffer */
 };
+
+/* Clock source selection
+ */
+#define MSCAN_CLKSRC_BUS	0
+#define MSCAN_CLKSRC_XTAL	MSCAN_CLKSRC
+#define MSCAN_CLKSRC_IPS	MSCAN_CLKSRC
 
 /* Message type access macros.
  */

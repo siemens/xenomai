@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
+ * Copyright (C) 2006-2010 Wolfgang Grandegger <wg@grandegger.com>
  *
  * Copyright (C) 2005, 2006 Sebastian Smolorz
  *                          <Sebastian.Smolorz@stud.uni-hannover.de>
@@ -38,57 +38,7 @@
 #include "rtcan_raw.h"
 #include "rtcan_internal.h"
 #include "rtcan_mscan_regs.h"
-
-extern int rtcan_mscan_create_proc(struct rtcan_device* dev);
-extern void rtcan_mscan_remove_proc(struct rtcan_device* dev);
-
-#define RTCAN_DEV_NAME    "rtcan%d"
-#define RTCAN_DRV_NAME    "MSCAN"
-#define RTCAN_MSCAN_DEVS  2
-
-static char *mscan_ctlr_name  = "MSCAN-MPC5200";
-static char *mscan_board_name = "unkown";
-
-MODULE_AUTHOR("Wolfgang Grandegger <wg@grandegger.com>");
-MODULE_DESCRIPTION("RT-Socket-CAN driver for MSCAN-MPC2500");
-MODULE_SUPPORTED_DEVICE("MSCAN-MPC5200 CAN controller");
-MODULE_LICENSE("GPL");
-
-/** Module parameter for the CAN controllers' */
-
-int port[RTCAN_MSCAN_DEVS] = {
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_1
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_2
-	1, 1  /* Enable CAN 1 and 2 */
-#else
-	1, 0  /* Enable CAN 1 only  */
-#endif
-#else
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_2
-	0, 1  /* Enable CAN 2 only  */
-#else
-#error "No CAN controller enabled, fix configuration!"
-#endif
-#endif
-};
-compat_module_param_array(port, int, RTCAN_MSCAN_DEVS, 0444);
-MODULE_PARM_DESC(port, "Enabled CAN ports (1,1 or 0,1 or 0,1)");
-
-/*
- * Note: on the MPC5200 the MSCAN clock source is the IP bus
- * clock (IP_CLK) while on the MPC5200B it is the oscillator
- * clock (SYS_XTAL_IN).
- */
-unsigned int mscan_clock = CONFIG_XENO_DRIVERS_CAN_MSCAN_CLOCK;
-module_param(mscan_clock, int, 0444);
-MODULE_PARM_DESC(mscan_clock, "Clock frequency in Hz");
-
-char *mscan_pins = NULL;
-module_param(mscan_pins, charp, 0444);
-MODULE_PARM_DESC(mscan_pins, "Routing to GPIO pins (PSC2 or I2C1/TMR01)");
-
-static struct rtcan_device *rtcan_mscan_devs[RTCAN_MSCAN_DEVS];
-static int rtcan_mscan_count;
+#include "rtcan_mscan.h"
 
 /**
  *  Reception Interrupt handler
@@ -472,9 +422,9 @@ static int rtcan_mscan_mode_start(struct rtcan_device *dev,
 	return ret;
 }
 
-int rtcan_mscan_set_bit_time(struct rtcan_device *dev,
-			     struct can_bittime *bit_time,
-			     rtdm_lockctx_t *lock_ctx)
+static int rtcan_mscan_set_bit_time(struct rtcan_device *dev,
+				    struct can_bittime *bit_time,
+				    rtdm_lockctx_t *lock_ctx)
 {
 	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 	u8 btr0, btr1;
@@ -506,9 +456,9 @@ int rtcan_mscan_set_bit_time(struct rtcan_device *dev,
 	return 0;
 }
 
-int rtcan_mscan_set_mode(struct rtcan_device *dev,
-			 can_mode_t mode,
-			 rtdm_lockctx_t *lock_ctx)
+static int rtcan_mscan_set_mode(struct rtcan_device *dev,
+				can_mode_t mode,
+				rtdm_lockctx_t *lock_ctx)
 {
 	int ret = 0, retries = 0;
 	can_state_t state;
@@ -675,11 +625,13 @@ static int rtcan_mscan_start_xmit(struct rtcan_device *dev, can_frame_t *frame)
  *
  *  @param[in] dev Device ID of the controller to be configured
  */
-static inline void __init mscan_chip_config(struct mscan_regs *regs)
+static inline void __init mscan_chip_config(struct mscan_regs *regs,
+					    int mscan_clksrc)
 {
 	/* Choose IP bus as clock source.
 	 */
-	setbits8(&regs->canctl1, MSCAN_CLKSRC);
+	if (mscan_clksrc)
+		setbits8(&regs->canctl1, MSCAN_CLKSRC);
 	clrbits8(&regs->canctl1, MSCAN_LISTEN);
 
 	/* Configure MSCAN to accept all incoming messages.
@@ -703,106 +655,18 @@ static inline void __init mscan_chip_config(struct mscan_regs *regs)
 	clrbits8(&regs->canidac, MSCAN_IDAM0 | MSCAN_IDAM1);
 }
 
-static inline void __init mscan_gpio_config(void)
-{
-	struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
-	int can_to_psc2 = -1;
-	u32 port_config;
-
-#if defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_ALT)
-	can_to_psc2 = 0;
-#elif defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_PSC2)
-	can_to_psc2 = 1;
-#endif
-
-	/* Configure CAN routing to GPIO pins.
-	 */
-	if (mscan_pins != NULL) {
-		if (strncmp(mscan_pins, "psc2", 4) == 0 ||
-		    !strncmp(mscan_pins, "PSC2", 4))
-			can_to_psc2 = 1;
-		else if (strncmp(mscan_pins, "i2c1/tmr01", 10) == 0 ||
-			 strncmp(mscan_pins, "I2C1/TMR01", 10) == 0)
-			can_to_psc2 = 0;
-		else {
-			printk("Module parameter mscan_pins=%s is invalid. "
-			       "Please use PSC2 or I2C1/TMR01.\n", mscan_pins);
-		}
-	}
-
-	if (!gpio || can_to_psc2 < 0) {
-		printk("%s: use pre-configure CAN routing\n", RTCAN_DRV_NAME);
-		return;
-	}
-
-	port_config = in_be32(&gpio->port_config);
-	if (can_to_psc2) {
-		port_config &= ~0x10000070;
-		port_config |= 0x00000010;
-		printk("%s: CAN 1 and 2 routed to PSC2 pins\n", RTCAN_DRV_NAME);
-	} else {
-		port_config |= 0x10000000;
-		printk("%s: CAN 1 routed to I2C1 pins and CAN2 to TMR01 pins\n",
-		       RTCAN_DRV_NAME);
-	}
-	out_be32(&gpio->port_config, port_config);
-}
-
-static inline int mscan_get_config(unsigned long *addr, unsigned int *irq)
-{
-#if defined(CONFIG_PPC_MERGE) || LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)
-	/* Use Open Firmware device tree */
-	struct device_node *np = NULL;
-	unsigned int i;
-	int ret;
-
-	for (i = 0; i < RTCAN_MSCAN_DEVS; i++) {
-		struct resource r[2] = {};
-
-		np = of_find_compatible_node(np, NULL, "fsl,mpc5200-mscan");
-		if (np == NULL)
-			np = of_find_compatible_node(np, NULL, "mpc5200-mscan");
-		if (np == NULL)
-			break;
-		ret = of_address_to_resource(np, 0, &r[0]);
-		if (ret)
-			return ret;
-		of_irq_to_resource(np, 0, &r[1]);
-		addr[i] = r[0].start;
-		irq[i] = r[1].start;
-		rtcan_mscan_count++;
-	}
-#else
-	addr[0] = MSCAN_CAN1_ADDR;
-	irq[0] = MSCAN_CAN1_IRQ;
-	addr[1] = MSCAN_CAN2_ADDR;
-	irq[1] = MSCAN_CAN2_IRQ;
-	rtcan_mscan_count = 2;
-#endif
-	return 0;
-}
-
-int __init rtcan_mscan_init_one(int idx, unsigned long addr, int irq)
+/**
+ *  MSCAN Chip registration
+ *
+ *  Called during @ref init_module.
+ *
+ *  @param[in] dev Device ID of the controller to be registered
+ *  @param[in] mscan_clksrc clock source to be used
+ */
+int rtcan_mscan_register(struct rtcan_device *dev, int irq, int mscan_clksrc)
 {
 	int ret;
-	struct rtcan_device *dev;
 	struct mscan_regs *regs;
-
-	if ((dev = rtcan_dev_alloc(0, 0)) == NULL) {
-		return -ENOMEM;
-	}
-
-	dev->ctrl_name = mscan_ctlr_name;
-	dev->board_name = mscan_board_name;
-
-	dev->can_sys_clock = mscan_clock;
-
-	dev->base_addr = (unsigned long)ioremap(addr, MSCAN_SIZE);
-	if (dev->base_addr == 0) {
-		ret = -ENOMEM;
-		printk("ERROR! ioremap of %#lx failed\n", addr);
-		goto out_dev_free;
-	}
 
 	regs = (struct mscan_regs *)dev->base_addr;
 
@@ -826,15 +690,14 @@ int __init rtcan_mscan_init_one(int idx, unsigned long addr, int irq)
 	dev->do_set_bit_time = rtcan_mscan_set_bit_time;
 
 	/* Register IRQ handler and pass device structure as arg */
-	ret = rtdm_irq_request(&dev->irq_handle, irq,
-			       rtcan_mscan_interrupt,
+	ret = rtdm_irq_request(&dev->irq_handle, irq, rtcan_mscan_interrupt,
 			       0, RTCAN_DRV_NAME, (void *)dev);
 	if (ret) {
 		printk("ERROR! rtdm_irq_request for IRQ %d failed\n", irq);
-		goto out_iounmap;
+		goto out_can_disable;
 	}
 
-	mscan_chip_config(regs);
+	mscan_chip_config(regs, mscan_clksrc);
 
 	/* Register RTDM device */
 	ret = rtcan_dev_register(dev);
@@ -846,74 +709,38 @@ int __init rtcan_mscan_init_one(int idx, unsigned long addr, int irq)
 
 	rtcan_mscan_create_proc(dev);
 
-	/* Remember initialized devices */
-	rtcan_mscan_devs[idx] = dev;
-
-	printk("%s: %s driver loaded (port %d, base-addr 0x%lx irq %d)\n",
-	       dev->name, RTCAN_DRV_NAME, idx + 1, addr, irq);
-
 	return 0;
 
 out_irq_free:
 	rtdm_irq_free(&dev->irq_handle);
 
-out_iounmap:
+out_can_disable:
 	/* Disable MSCAN module. */
 	clrbits8(&regs->canctl1, MSCAN_CANE);
-	iounmap((void *)dev->base_addr);
-
-out_dev_free:
-	rtcan_dev_free(dev);
 
 	return ret;
-
 }
 
-static void rtcan_mscan_exit(void)
+/**
+ *  MSCAN Chip deregistration
+ *
+ *  Called during @ref cleanup_module
+ *
+ *  @param[in] dev Device ID of the controller to be registered
+ */
+int rtcan_mscan_unregister(struct rtcan_device *dev)
 {
-	int i;
-	struct rtcan_device *dev;
+	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
 
-	for (i = 0; i < rtcan_mscan_count; i++) {
+	printk("Unregistering %s device %s\n", RTCAN_DRV_NAME, dev->name);
 
-		if ((dev = rtcan_mscan_devs[i]) == NULL)
-			continue;
+	rtcan_mscan_mode_stop(dev, NULL);
+	rtdm_irq_free(&dev->irq_handle);
+	rtcan_mscan_remove_proc(dev);
+	rtcan_dev_unregister(dev);
 
-		printk("Unloading %s device %s\n", RTCAN_DRV_NAME, dev->name);
-
-		rtcan_mscan_mode_stop(dev, NULL);
-		rtdm_irq_free(&dev->irq_handle);
-		rtcan_mscan_remove_proc(dev);
-		rtcan_dev_unregister(dev);
-		iounmap((void *)dev->base_addr);
-		rtcan_dev_free(dev);
-	}
-
-}
-
-static int __init rtcan_mscan_init(void)
-{
-	int i, err;
-	int unsigned long addr[RTCAN_MSCAN_DEVS];
-	int irq[RTCAN_MSCAN_DEVS];
-
-	if ((err = mscan_get_config(addr, irq)))
-		return err;
-	mscan_gpio_config();
-
-	for (i = 0; i < rtcan_mscan_count; i++) {
-		if (!port[i])
-			continue;
-
-		err = rtcan_mscan_init_one(i, addr[i], irq[i]);
-		if (err) {
-			rtcan_mscan_exit();
-			return err;
-		}
-	}
+	/* Disable MSCAN module. */
+	clrbits8(&regs->canctl1, MSCAN_CANE);
 
 	return 0;
 }
-
-module_init(rtcan_mscan_init);
-module_exit(rtcan_mscan_exit);
