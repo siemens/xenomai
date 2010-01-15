@@ -38,7 +38,7 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 {
 	struct rtcan_device *dev = (struct rtcan_device *)data;
 	struct mscan_regs *regs = (struct mscan_regs *)dev->base_addr;
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
+#ifdef MPC5xxx_GPIO
 	struct mpc5xxx_gpio *gpio = (struct mpc5xxx_gpio *)MPC5xxx_GPIO;
 	u32 port_config;
 #endif
@@ -100,7 +100,7 @@ static int rtcan_mscan_proc_regs(char *buf, char **start, off_t offset,
 	    !RTCAN_PROC_PRINT(MSCAN_REG_ARGS(canidmr7)))
 		goto done;
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
+#ifdef MPC5xxx_GPIO
 	if (!RTCAN_PROC_PRINT("GPIO registers\n"))
 		goto done;
 	port_config = in_be32(&gpio->port_config);

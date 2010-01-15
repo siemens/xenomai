@@ -25,9 +25,9 @@
 #ifndef __RTCAN_MSCAN_REGS_H_
 #define __RTCAN_MSCAN_REGS_H_
 
-#ifdef CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0) || \
+  defined(CONFIG_XENO_DRIVERS_CAN_MSCAN_OLD)
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,20)
-#include <sysdev/fsl_soc.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,22)
 #include <linux/of_platform.h>
 #else

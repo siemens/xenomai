@@ -57,6 +57,9 @@ static __inline__ int fls(unsigned int x)
 
 typedef phys_addr_t resource_size_t;
 
+#define setbits8(_addr, _v) out_8((_addr), in_8(_addr) |  (_v))
+#define clrbits8(_addr, _v) out_8((_addr), in_8(_addr) & ~(_v))
+
 #else /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)  */
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot) \
@@ -182,6 +185,10 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 		__err__;						\
 	})
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+#define mpc5xxx_get_bus_frequency(node)	mpc52xx_find_ipb_freq(node)
 #endif
 
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */
