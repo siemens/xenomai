@@ -38,6 +38,7 @@ static void a4l_root_setup(a4l_root_t * rt,
 	rt->offset = ((void *)rt + sizeof(a4l_root_t));
 	rt->gsize = gsize;
 	rt->id = 0xffffffff;
+	rt->nb_leaf = 0;
 	rt->lfnxt = NULL;
 	rt->lfchd = NULL;
 
@@ -142,8 +143,10 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
 
 		/* For each subd, add a leaf for the channels even if
 		   the subd does not own any channel */
-		a4l_leaf_add(rt, (a4l_leaf_t *) rt, &lfs,
+		ret = a4l_leaf_add(rt, (a4l_leaf_t *) rt, &lfs,
 			     sbinfo[i].nb_chan * sizeof(a4l_chinfo_t));
+		if (ret < 0)
+			return ret;
 
 		/* If there is no channel, no need to go further */
 		if(sbinfo[i].nb_chan == 0)
@@ -153,15 +156,19 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
 
 		if ((ret = a4l_sys_chaninfo(fd, i, chinfo)) < 0)
 			return ret;
+
 		for (j = 0; j < sbinfo[i].nb_chan; j++) {
 			a4l_leaf_t *lfc;
 			a4l_rnginfo_t *rnginfo;
 
 			/* For each channel, add a leaf for the ranges
 			   even if no range descriptor is available */
-			a4l_leaf_add(rt, lfs, &lfc,
+			ret = a4l_leaf_add(rt, lfs, &lfc,
 				     chinfo[j].nb_rng *
 				     sizeof(a4l_rnginfo_t));
+			if (ret < 0)
+				return ret;
+
 
 			/* If there is no range, no need to go further */
 			if(chinfo[j].nb_rng ==0)
@@ -228,6 +235,7 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
 int a4l_sys_desc(int fd, a4l_desc_t * dsc, int pass)
 {
 	int ret = 0;
+
 	if (dsc == NULL ||
 	    (pass != A4L_BSC_DESC && dsc->magic != MAGIC_BSC_DESC))
 		return -EINVAL;

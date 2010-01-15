@@ -68,6 +68,8 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	if(mite == NULL)
 		return -ENOMEM;
 
+	memset(mite, 0, sizeof(struct mite_struct));
+
 	a4l_lock_init(&mite->lock);
 	mite->pcidev = dev;
 
@@ -105,22 +107,6 @@ static struct pci_driver mite_driver = {
 	.remove = mite_remove,
 };
 
-static void dump_chip_signature(u32 csigr_bits)
-{
-	__a4l_info("MITE: version = %i, type = %i, mite mode = %i, "
-		   "interface mode = %i\n", 
-		   mite_csigr_version(csigr_bits), 
-		   mite_csigr_type(csigr_bits), 
-		   mite_csigr_mmode(csigr_bits), 
-		   mite_csigr_imode(csigr_bits));
-	__a4l_info("MITE: num channels = %i, write post fifo depth = %i, "
-		   "wins = %i, iowins = %i\n", 
-		   mite_csigr_dmac(csigr_bits), 
-		   mite_csigr_wpdep(csigr_bits), 
-		   mite_csigr_wins(csigr_bits), 
-		   mite_csigr_iowins(csigr_bits));
-}
-
 int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 {
 	unsigned long length;
@@ -128,6 +114,8 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	int i;
 	u32 csigr_bits;
 	unsigned unknown_dma_burst_bits;
+
+	__a4l_dbg(1, drv_dbg, "mite: starting setup...\n");
 
 	if(pci_enable_device(mite->pcidev)){
 		__a4l_err("error enabling mite\n");
@@ -152,9 +140,10 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 		return -ENOMEM;
 	}
 
-	__a4l_info("MITE: 0x%08llx mapped to %p ",
-		   (unsigned long long)mite->mite_phys_addr, 
-		   mite->mite_io_addr);
+	__a4l_dbg(1, drv_dbg, 
+		  "mite: bar0(mite) 0x%08llx mapped to %p\n",
+		  (unsigned long long)mite->mite_phys_addr, 
+		  mite->mite_io_addr);
 
 
 	/* The PCI BAR1 is the DAQ */
@@ -167,13 +156,17 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 		return -ENOMEM;
 	}
 
-	__a4l_info("DAQ: 0x%08llx mapped to %p\n",
-		   (unsigned long long)mite->daq_phys_addr, 
-		   mite->daq_io_addr);
+	__a4l_dbg(1, drv_dbg, 
+		  "mite: bar0(daq) 0x%08llx mapped to %p\n",
+		  (unsigned long long)mite->daq_phys_addr, 
+		  mite->daq_io_addr);
 
 	if (use_iodwbsr_1) {
+
+		__a4l_dbg(1, drv_dbg, 
+			  "mite: using I/O Window Base Size register 1\n");
+
 		writel(0, mite->mite_io_addr + MITE_IODWBSR);
-		__a4l_err("MITE: using I/O Window Base Size register 1\n");
 		writel(mite->
 		       daq_phys_addr | WENAB |
 		       MITE_IODWBSR_1_WSIZE_bits(length),
@@ -205,15 +198,33 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 		mite->num_channels = MAX_MITE_DMA_CHANNELS;
 	}
 
-	dump_chip_signature(csigr_bits);
+	__a4l_dbg(1, drv_dbg,
+		  "mite: version = %i, type = %i, mite mode = %i, "
+		  "interface mode = %i\n", 
+		  mite_csigr_version(csigr_bits), 
+		  mite_csigr_type(csigr_bits), 
+		  mite_csigr_mmode(csigr_bits), 
+		  mite_csigr_imode(csigr_bits));
+	__a4l_dbg(1, drv_dbg,
+		  "mite: num channels = %i, write post fifo depth = %i, "
+		  "wins = %i, iowins = %i\n", 
+		  mite_csigr_dmac(csigr_bits), 
+		  mite_csigr_wpdep(csigr_bits), 
+		  mite_csigr_wins(csigr_bits), 
+		  mite_csigr_iowins(csigr_bits));
 
 	for (i = 0; i < mite->num_channels; i++) {
+		/* Registers the channel as a free one */
+		mite->channel_allocated[i] = 0;
+		/* Reset the channel */
 		writel(CHOR_DMARESET, mite->mite_io_addr + MITE_CHOR(i));
 		/* Disable interrupts */
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE | CHCR_CLR_SAR_IE |
 		       CHCR_CLR_DONE_IE | CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
 		       CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
 		       mite->mite_io_addr + MITE_CHCR(i));
+
+		__a4l_dbg(1, drv_dbg, "mite: channel[%d] initialized\n", i);
 	}
 
 	mite->used = 1;
@@ -291,9 +302,20 @@ struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 	unsigned long flags;
 	struct mite_channel *channel = NULL;
 
+	__a4l_dbg(1, drv_dbg, 
+		  "mite: mite_request_channel_in_range: "
+		  "min_channel = %u, max_channel = %u\n", 
+		  min_channel, max_channel);
+
 	/* spin lock so mite_release_channel can be called safely from interrupts */
 	a4l_lock_irqsave(&mite->lock, flags);
 	for (i = min_channel; i <= max_channel; ++i) {
+
+	__a4l_dbg(1, drv_dbg, 
+		  "mite: mite_request_channel_in_range: "
+		  "channel[%d] allocated = %d\n", 
+		  i, mite->channel_allocated[i]);
+
 		if (mite->channel_allocated[i] == 0) {
 			mite->channel_allocated[i] = 1;
 			channel = &mite->channels[i];
