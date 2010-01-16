@@ -65,17 +65,17 @@ typedef struct xnqueue {
 
 	xnholder_t head;
 	int elems;
-#if defined(__KERNEL__) && XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
-	xnlock_t lock;
-#endif				/* __KERNEL__ && XENO_DEBUG(QUEUES) && CONFIG_SMP */
+#if defined(__KERNEL__) && XENO_DEBUG(QUEUES)
+	DECLARE_XNLOCK(lock);
+#endif /* __KERNEL__ && XENO_DEBUG(QUEUES) */
 
 } xnqueue_t;
 
-#if XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
+#if XENO_DEBUG(QUEUES) && (defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK))
 #define XNQUEUE_INITIALIZER(q) { { &(q).head, &(q).head }, 0, XNARCH_LOCK_UNLOCKED }
-#else /* !(XENO_DEBUG(QUEUES) && CONFIG_SMP) */
+#else /* !(XENO_DEBUG(QUEUES) */
 #define XNQUEUE_INITIALIZER(q) { { &(q).head, &(q).head }, 0 }
-#endif /* XENO_DEBUG(QUEUES) && CONFIG_SMP */
+#endif /* XENO_DEBUG(QUEUES) */
 
 #define DEFINE_XNQUEUE(q) xnqueue_t q = XNQUEUE_INITIALIZER(q)
 
@@ -83,9 +83,9 @@ static inline void initq(xnqueue_t *qslot)
 {
 	inith(&qslot->head);
 	qslot->elems = 0;
-#if defined(__KERNEL__) && XENO_DEBUG(QUEUES) && defined(CONFIG_SMP)
+#if defined(__KERNEL__) && XENO_DEBUG(QUEUES)
 	xnlock_init(&qslot->lock);
-#endif /* __KERNEL__ && XENO_DEBUG(QUEUES) && CONFIG_SMP */
+#endif /* __KERNEL__ && XENO_DEBUG(QUEUES) */
 }
 
 #if XENO_DEBUG(QUEUES)

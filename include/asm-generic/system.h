@@ -43,8 +43,8 @@
 /* debug support */
 #include <nucleus/assert.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
+#ifndef CONFIG_XENO_OPT_DEBUG_XNLOCK
+#define CONFIG_XENO_OPT_DEBUG_XNLOCK 0
 #endif
 
 #ifdef __cplusplus
@@ -91,7 +91,7 @@ static inline unsigned xnarch_current_cpu(void)
 	return rthal_processor_id();
 }
 
-#if defined(CONFIG_SMP) && XENO_DEBUG(NUCLEUS)
+#if XENO_DEBUG(XNLOCK)
 
 typedef struct {
 
@@ -148,11 +148,14 @@ xnlock_dbg_spinning(xnlock_t *lock, int cpu, unsigned int *spin_limit,
 	if (--*spin_limit == 0) {
 		rthal_emergency_console();
 		printk(KERN_ERR "Xenomai: stuck on nucleus lock %p\n"
-				"         waiter = %s:%u (%s(), CPU #%d)\n"
-				"         owner  = %s:%u (%s(), CPU #%d)\n",
+				"	  waiter = %s:%u (%s(), CPU #%d)\n"
+				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
 		       lock, file, line, function, cpu,
 		       lock->file, lock->line, lock->function, lock->cpu);
 		show_stack(NULL, NULL);
+#ifndef CONFIG_SMP
+		BUG();
+#endif
 	}
 }
 
@@ -198,7 +201,7 @@ static inline int xnlock_dbg_release(xnlock_t *lock)
 	return 0;
 }
 
-#else /* !(CONFIG_SMP && XENO_DEBUG(NUCLEUS)) */
+#else /* !XENO_DEBUG(XNLOCK) */
 
 typedef struct { atomic_t owner; } xnlock_t;
 
@@ -222,7 +225,7 @@ static inline int xnlock_dbg_release(xnlock_t *lock)
 	return 0;
 }
 
-#endif /* !(CONFIG_SMP && XENO_DEBUG(NUCLEUS)) */
+#endif /* !XENO_DEBUG(XNLOCK) */
 
 #define XNARCH_NR_CPUS			RTHAL_NR_CPUS
 
@@ -319,7 +322,7 @@ static inline int xnarch_root_domain_p(void)
 	return rthal_current_domain == rthal_root_domain;
 }
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
 
 #define xnlock_get(lock)		__xnlock_get(lock  XNLOCK_DBG_CONTEXT)
 #define xnlock_get_irqsave(lock,x) \
@@ -395,7 +398,11 @@ static inline void xnlock_put_irqrestore(xnlock_t *lock, spl_t flags)
 
 static inline int xnarch_send_ipi(xnarch_cpumask_t cpumask)
 {
+#ifdef CONFIG_SMP
 	return rthal_send_ipi(RTHAL_SERVICE_IPI0, cpumask);
+#else /* !CONFIG_SMP */
+	return 0;
+#endif /* !CONFIG_SMP */
 }
 
 static inline int xnlock_is_owner(xnlock_t *lock)
@@ -403,7 +410,7 @@ static inline int xnlock_is_owner(xnlock_t *lock)
 	return atomic_read(&lock->owner) == xnarch_current_cpu();
 }
 
-#else /* !CONFIG_SMP */
+#else /* !(CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
 #define xnlock_init(lock)		do { } while(0)
 #define xnlock_get(lock)		do { } while(0)
@@ -424,7 +431,7 @@ static inline int xnarch_send_ipi (xnarch_cpumask_t cpumask)
 	return 0;
 }
 
-#endif /* !CONFIG_SMP */
+#endif /* !(CONFIG_SMP || XENO_DEBUG(XNLOCK)) */
 
 #define xnlock_sync_irq(lock, x)			\
 	do {						\

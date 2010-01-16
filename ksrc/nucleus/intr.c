@@ -404,7 +404,7 @@ static inline int xnintr_irq_detach(xnintr_t *intr)
 
 #else /* !CONFIG_XENO_OPT_SHIRQ */
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
 typedef struct xnintr_irq {
 
 	DECLARE_XNLOCK(lock);
@@ -412,7 +412,7 @@ typedef struct xnintr_irq {
 } ____cacheline_aligned_in_smp xnintr_irq_t;
 
 static xnintr_irq_t xnirqs[XNARCH_NR_IRQS];
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_SMP || XENO_DEBUG(XNLOCK) */
 
 static inline xnintr_t *xnintr_shirq_first(unsigned irq)
 {

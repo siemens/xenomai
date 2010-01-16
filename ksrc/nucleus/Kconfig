@@ -255,6 +255,18 @@ config XENO_OPT_DEBUG_NUCLEUS
 	Do not switch this option on unless you really know what you
 	are doing.
 
+config XENO_OPT_DEBUG_XNLOCK
+	bool "Spinlocks Debugging support"
+	depends on XENO_OPT_DEBUG
+	default y if SMP
+	help
+
+	This option activates measurements of Xenomai spinlocks
+	spinning time and duration. It should have a low overhad, and
+	helps finding latency spots due to masking
+	sections. Statistics about the longest masking section may be
+	found in /proc/xenomai/lock.
+
 config XENO_OPT_DEBUG_QUEUES
 	bool "Queue Debugging support"
 	depends on XENO_OPT_DEBUG
