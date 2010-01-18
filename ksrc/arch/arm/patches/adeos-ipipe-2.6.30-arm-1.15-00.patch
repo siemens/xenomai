@@ -40,6 +40,43 @@ index b371fba..a15a320 100644
  		.ltorg
  reloc_end:
  
+diff --git a/arch/arm/common/it8152.c b/arch/arm/common/it8152.c
+index 2793447..5ec1999 100644
+--- a/arch/arm/common/it8152.c
++++ b/arch/arm/common/it8152.c
+@@ -26,6 +26,7 @@
+ #include <linux/ioport.h>
+ #include <linux/irq.h>
+ #include <linux/io.h>
++#include <linux/ipipe.h>
+ 
+ #include <asm/mach/pci.h>
+ #include <asm/hardware/it8152.h>
+@@ -120,21 +121,21 @@ void it8152_irq_demux(unsigned int irq, struct irq_desc *desc)
+ 	       bits_pd &= ((1 << IT8152_PD_IRQ_COUNT) - 1);
+ 	       while (bits_pd) {
+ 		       i = __ffs(bits_pd);
+-		       generic_handle_irq(IT8152_PD_IRQ(i));
++		       ipipe_handle_irq_cond(IT8152_PD_IRQ(i));
+ 		       bits_pd &= ~(1 << i);
+ 	       }
+ 
+ 	       bits_lp &= ((1 << IT8152_LP_IRQ_COUNT) - 1);
+ 	       while (bits_lp) {
+ 		       i = __ffs(bits_lp);
+-		       generic_handle_irq(IT8152_LP_IRQ(i));
++		       ipipe_handle_irq_cond(IT8152_LP_IRQ(i));
+ 		       bits_lp &= ~(1 << i);
+ 	       }
+ 
+ 	       bits_ld &= ((1 << IT8152_LD_IRQ_COUNT) - 1);
+ 	       while (bits_ld) {
+ 		       i = __ffs(bits_ld);
+-		       generic_handle_irq(IT8152_LD_IRQ(i));
++		       ipipe_handle_irq_cond(IT8152_LD_IRQ(i));
+ 		       bits_ld &= ~(1 << i);
+ 	       }
+        }
 diff --git a/arch/arm/include/asm/assembler.h b/arch/arm/include/asm/assembler.h
 index 15f8a09..6865028 100644
 --- a/arch/arm/include/asm/assembler.h
@@ -333,10 +370,10 @@ index f073a6d..41526a7 100644
  extern void cpu_reset(unsigned long addr) __attribute__((noreturn));
 diff --git a/arch/arm/include/asm/fcse.h b/arch/arm/include/asm/fcse.h
 new file mode 100644
-index 0000000..11e5388
+index 0000000..28dc372
 --- /dev/null
 +++ b/arch/arm/include/asm/fcse.h
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,90 @@
 +/*
 + * Filename:    arch/arm/include/asm/fcse.h
 + * Description: ARM Process ID (PID) includes for Fast Address Space Switching
@@ -376,14 +413,15 @@ index 0000000..11e5388
 +static inline void fcse_pid_set(unsigned long pid)
 +{
 +	__asm__ __volatile__ ("mcr p15, 0, %0, c13, c0, 0"
-+			      : /* */: "r" (pid) : "memory");
++			      : /* */ : "r" (pid) : "memory", "cc");
 +}
 +
 +/* Returns the state of the CPU's PID Register */
 +static inline unsigned long fcse_pid_get(void)
 +{
 +	unsigned long pid;
-+	__asm__ __volatile__("mrc p15, 0, %0, c13, c0, 0" : "=&r" (pid));
++	__asm__ __volatile__("mrc p15, 0, %0, c13, c0, 0" 
++			     : "=&r" (pid) : /* */ : "cc");
 +	return pid & ~FCSE_PID_MASK;
 +}
 +
@@ -428,10 +466,10 @@ index 0000000..11e5388
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..a7ec9df
+index 0000000..96dfb4a
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
-@@ -0,0 +1,273 @@
+@@ -0,0 +1,274 @@
 +/* -*- linux-c -*-
 + * arch/arm/include/asm/ipipe.h
 + *
@@ -463,10 +501,10 @@ index 0000000..a7ec9df
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.14-04"
++#define IPIPE_ARCH_STRING	"1.15-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	14
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_MINOR_NUMBER	15
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -492,19 +530,15 @@ index 0000000..a7ec9df
 +		x;							\
 +	})
 +
-+#define ipipe_mm_switch_protect(flags)					\
-+	do {								\
-+		preempt_disable();					\
-+		per_cpu(ipipe_active_mm, smp_processor_id()) = NULL;    \
-+		barrier();						\
-+		(void)(flags);						\
-+	} while(0)
++#define ipipe_mm_switch_protect(flags) \
++	do {					\
++		(void) (flags);			\
++	} while (0)
 +
 +#define ipipe_mm_switch_unprotect(flags)	\
 +	do {					\
-+		preempt_enable();		\
-+		(void)(flags);			\
-+	} while(0)
++		(void) (flags);			\
++	} while (0)
 +
 +#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
@@ -585,7 +619,6 @@ index 0000000..a7ec9df
 +extern void __ipipe_mach_set_dec(unsigned long);
 +extern void __ipipe_mach_release_timer(void);
 +extern unsigned long __ipipe_mach_get_dec(void);
-+extern void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs);
 +void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info);
 +int __ipipe_check_tickdev(const char *devname);
 +
@@ -605,6 +638,9 @@ index 0000000..a7ec9df
 +	do_div(delta, ipipe_cpu_freq() / 1000000 + 1); \
 +	(unsigned long)delta; \
 +})
++
++#define ipipe_handle_irq_cond(irq) \
++	__ipipe_handle_irq(irq, (struct pt_regs *)1)
 +
 +/* Private interface -- Internal use only */
 +
@@ -691,6 +727,9 @@ index 0000000..a7ec9df
 +#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
 +
 +#define smp_processor_id_hw()		smp_processor_id()
++
++#define ipipe_handle_irq_cond(irq) \
++	generic_handle_irq(irq)
 +
 +#define ipipe_mm_switch_protect(flags) \
 +	do {					\
@@ -1070,7 +1109,7 @@ index b561584..d651a80 100644
  } mm_context_t;
  
 diff --git a/arch/arm/include/asm/mmu_context.h b/arch/arm/include/asm/mmu_context.h
-index 263fed0..a1f6dbc 100644
+index 263fed0..e21967e 100644
 --- a/arch/arm/include/asm/mmu_context.h
 +++ b/arch/arm/include/asm/mmu_context.h
 @@ -19,6 +19,7 @@
@@ -1133,7 +1172,7 @@ index 263fed0..a1f6dbc 100644
  
  /*
   * This is called when "tsk" is about to enter lazy TLB mode.
-@@ -93,26 +132,60 @@ enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
+@@ -93,26 +132,59 @@ enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
   * actually changed.
   */
  static inline void
@@ -1152,6 +1191,8 @@ index 263fed0..a1f6dbc 100644
  		__flush_icache_all();
  #endif
 -	if (!cpu_test_and_set(cpu, next->cpu_vm_mask) || prev != next) {
++	if (cache_is_vivt() && prev && prev != next)
++		cpu_clear(cpu, fcse_tlb_mask(prev));
 +	if (!cpu_test_and_set(cpu, fcse_tlb_mask(next)) || prev != next) {
 +		fcse_cpu_set_vm_mask(cpu, next);
  		check_context(next);
@@ -1168,8 +1209,7 @@ index 263fed0..a1f6dbc 100644
 +				cpu_switch_mm(next->pgd, next,
 +					      fcse_needs_flush(prev, next));
 +				barrier();
-+				prev = xchg(&per_cpu(ipipe_active_mm, cpu),
-+					    next);
++				per_cpu(ipipe_active_mm, cpu) = next;
 +			} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
 +		else
 +#endif /* CONFIG_IPIPE */
@@ -1178,8 +1218,6 @@ index 263fed0..a1f6dbc 100644
 +				cpu_switch_mm(next->pgd, next,
 +					      fcse_needs_flush(prev, next));
 +			}
-+		if (cache_is_vivt() && prev)
-+			cpu_clear(cpu, fcse_tlb_mask(prev));
  	}
  #endif
  }
@@ -1302,10 +1340,10 @@ index 110295c..a015f40 100644
  /* Find an entry in the second-level page table.. */
  #define pmd_offset(dir, addr)	((pmd_t *)(dir))
 diff --git a/arch/arm/include/asm/proc-fns.h b/arch/arm/include/asm/proc-fns.h
-index 3976412..af267bf 100644
+index 3976412..9fa2436 100644
 --- a/arch/arm/include/asm/proc-fns.h
 +++ b/arch/arm/include/asm/proc-fns.h
-@@ -239,7 +239,8 @@
+@@ -239,12 +239,13 @@
  
  #ifdef CONFIG_MMU
  
@@ -1315,6 +1353,12 @@ index 3976412..af267bf 100644
  
  #define cpu_get_pgd()	\
  	({						\
+ 		unsigned long pg;			\
+-		__asm__("mrc	p15, 0, %0, c2, c0, 0"	\
++		__asm__ __volatile__ ("mrc	p15, 0, %0, c2, c0, 0"	\
+ 			 : "=r" (pg) : : "cc");		\
+ 		pg &= ~0x3fff;				\
+ 		(pgd_t *)phys_to_virt(pg);		\
 diff --git a/arch/arm/include/asm/processor.h b/arch/arm/include/asm/processor.h
 index 1845892..cc9b9ff 100644
 --- a/arch/arm/include/asm/processor.h
@@ -2093,7 +2137,7 @@ index 0000000..22f5669
 +#endif /* CONFIG_ARM_FCSE_BEST_EFFORT */
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..07d89db
+index 0000000..1094f74
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
 @@ -0,0 +1,517 @@
@@ -2252,8 +2296,6 @@ index 0000000..07d89db
 +	spin_lock_irqsave(&__ipipe_irqbits_lock, flags);
 +	__ipipe_irqbits[irq / BITS_PER_LONG] &= ~(1 << (irq % BITS_PER_LONG));
 +	spin_unlock_irqrestore(&__ipipe_irqbits_lock, flags);
-+	printk("__ipipe_irqbits(after en)[%u]: 0x%08lx\n",
-+	       irq / BITS_PER_LONG, __ipipe_irqbits[irq / BITS_PER_LONG]);
 +#else
 +	(void) flags;
 +#endif /* __IPIPE_FEATURE_PIC_MUTE */
@@ -2271,10 +2313,10 @@ index 0000000..07d89db
 +	spin_lock_irqsave(&__ipipe_irqbits_lock, flags);
 +	__ipipe_irqbits[irq / BITS_PER_LONG] |= 1 << (irq % BITS_PER_LONG);
 +	spin_unlock_irqrestore(&__ipipe_irqbits_lock, flags);
-+	printk("__ipipe_irqbits(after dis)[%u]: 0x%08lx\n",
-+	       irq / BITS_PER_LONG, __ipipe_irqbits[irq / BITS_PER_LONG]);
 +}
 +EXPORT_SYMBOL(__ipipe_disable_irqdesc);
++EXPORT_SYMBOL(ipipe_mute_pic);
++EXPORT_SYMBOL(ipipe_unmute_pic);
 +#endif /* __IPIPE_FEATURE_PIC_MUTE */
 +
 +/*
@@ -2285,6 +2327,12 @@ index 0000000..07d89db
 +{
 +	unsigned long flags;
 +	unsigned irq;
++
++/* We do not want "wfi" to be called in arm926ejs based processor, as
++   this causes the I-cache to be disabled when idle. */
++#ifdef CONFIG_CPU_ARM926T
++	disable_hlt();
++#endif
 +
 +	flags = ipipe_critical_enter(NULL);
 +
@@ -2588,11 +2636,7 @@ index 0000000..07d89db
 +	ipipe_trace_begin(regs->ARM_ORIG_r0);
 +#endif
 +
-+	if (__ipipe_mach_irq_mux_p(irq)) {
-+                __ipipe_mach_demux_irq(irq, regs);
-+                status = ipipe_root_domain_p && !__ipipe_test_root();
-+        } else
-+		status = __ipipe_handle_irq(irq, regs);
++	status = __ipipe_handle_irq(irq, regs);
 +
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +	ipipe_trace_end(regs->ARM_ORIG_r0);
@@ -3591,17 +3635,16 @@ index 211c5c1..9cdad31 100644
  
  void __init at91sam9rl_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91/gpio.c b/arch/arm/mach-at91/gpio.c
-index f2236f0..04a0aa1 100644
+index f2236f0..36f7dd0 100644
 --- a/arch/arm/mach-at91/gpio.c
 +++ b/arch/arm/mach-at91/gpio.c
-@@ -25,6 +25,14 @@
+@@ -25,6 +25,13 @@
  #include <mach/gpio.h>
  
  #include <asm/gpio.h>
 +#ifdef CONFIG_IPIPE
 +#include <asm/irq.h>
 +
-+unsigned __ipipe_at91_gpio_banks = 0;
 +#ifdef __IPIPE_FEATURE_PIC_MUTE
 +DEFINE_PER_CPU(__ipipe_irqbits_t, __ipipe_muted_irqs);
 +#endif /* __IPIPE_FEATURE_PIC_MUTE */
@@ -3609,7 +3652,7 @@ index f2236f0..04a0aa1 100644
  
  #include "generic.h"
  
-@@ -377,6 +385,10 @@ static int gpio_irq_type(unsigned pin, unsigned type)
+@@ -377,6 +384,10 @@ static int gpio_irq_type(unsigned pin, unsigned type)
  
  static struct irq_chip gpio_irqchip = {
  	.name		= "GPIO",
@@ -3620,75 +3663,30 @@ index f2236f0..04a0aa1 100644
  	.mask		= gpio_irq_mask,
  	.unmask		= gpio_irq_unmask,
  	.set_type	= gpio_irq_type,
-@@ -435,6 +447,93 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+@@ -424,7 +435,7 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+ 					gpio_irq_mask(pin);
+ 				}
+ 				else
+-					generic_handle_irq(pin);
++					ipipe_handle_irq_cond(pin);
+ 			}
+ 			pin++;
+ 			gpio++;
+@@ -435,6 +446,38 @@ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
  	/* now it may re-trigger */
  }
  
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	struct irq_desc *desc = &irq_desc[irq];
-+	unsigned	pin;
-+	struct irq_desc	*gpio;
-+	struct at91_gpio_chip *at91_gpio;
-+	void __iomem	*pio;
-+	u32		isr;
-+
-+	at91_gpio = get_irq_chip_data(irq);
-+	pio = at91_gpio->regbase;
-+
-+	/* temporarily mask (level sensitive) parent IRQ */
-+	desc->chip->ack(irq);
-+	for (;;) {
-+		/* Reading ISR acks pending (edge triggered) GPIO interrupts.
-+		 * When there none are pending, we're finished unless we need
-+		 * to process multiple banks (like ID_PIOCDE on sam9263).
-+		 */
-+		isr = __raw_readl(pio + PIO_ISR) & __raw_readl(pio + PIO_IMR);
-+		if (!isr) {
-+			if (!at91_gpio->next)
-+				break;
-+			at91_gpio = at91_gpio->next;
-+			pio = at91_gpio->regbase;
-+			continue;
-+		}
-+
-+		pin = at91_gpio->chip.base;
-+		gpio = &irq_desc[pin];
-+
-+		while (isr) {
-+			if (isr & 1) {
-+				if (unlikely(gpio->depth)) {
-+					/*
-+					 * The core ARM interrupt handler lazily disables IRQs so
-+					 * another IRQ must be generated before it actually gets
-+					 * here to be disabled on the GPIO controller.
-+					 */
-+					gpio_irq_mask(pin);
-+				}
-+				else
-+					__ipipe_handle_irq(pin, regs);
-+			}
-+			pin++;
-+			gpio++;
-+			isr >>= 1;
-+		}
-+	}
-+	desc->chip->unmask(irq);
-+	/* now it may re-trigger */
-+}
-+
-+#ifdef __IPIPE_FEATURE_PIC_MUTE
++#if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
 +void ipipe_mute_pic(void)
 +{
 +	unsigned long unmasked, muted;
 +	unsigned i;
 +
-+	for (i = 0; i < __ipipe_at91_gpio_banks; i++) {
-+		unmasked = __raw_readl(gpio[i].regbase + PIO_IMR);
++	for (i = 0; i < gpio_banks; i++) {
++		unmasked = __raw_readl(gpio_chip[i].regbase + PIO_IMR);
 +		muted = unmasked & __ipipe_irqbits[i + 1];
 +		__raw_get_cpu_var(__ipipe_muted_irqs)[i + 1] = muted;
-+		__raw_writel(muted, gpio[i].regbase + PIO_IDR);
++		__raw_writel(muted, gpio_chip[i].regbase + PIO_IDR);
 +	}
 +
 +	unmasked = at91_sys_read(AT91_AIC_IMR);
@@ -3702,19 +3700,18 @@ index f2236f0..04a0aa1 100644
 +	unsigned i;
 +
 +	at91_sys_write(AT91_AIC_IECR, __raw_get_cpu_var(__ipipe_muted_irqs)[0]);
-+	for (i = 0; i < __ipipe_at91_gpio_banks; i++) {
++	for (i = 0; i < gpio_banks; i++) {
 +		unsigned long muted;
 +		muted = __raw_get_cpu_var(__ipipe_muted_irqs)[i + 1];
-+		__raw_writel(muted, gpio[i].regbase + PIO_IER);
++		__raw_writel(muted, gpio_chip[i].regbase + PIO_IER);
 +	}
 +}
-+#endif /* __IPIPE_FEATURE_PIC_MUTE */
-+#endif /* CONFIG_IPIPE */
++#endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
 +
  /*--------------------------------------------------------------------------*/
  
  #ifdef CONFIG_DEBUG_FS
-@@ -511,6 +610,11 @@ void __init at91_gpio_irq_setup(void)
+@@ -511,6 +554,11 @@ void __init at91_gpio_irq_setup(void)
  	unsigned		pioc, pin;
  	struct at91_gpio_chip	*this, *prev;
  
@@ -3726,7 +3723,7 @@ index f2236f0..04a0aa1 100644
  	for (pioc = 0, pin = PIN_BASE, this = gpio_chip, prev = NULL;
  			pioc++ < gpio_banks;
  			prev = this, this++) {
-@@ -540,8 +644,18 @@ void __init at91_gpio_irq_setup(void)
+@@ -540,6 +588,9 @@ void __init at91_gpio_irq_setup(void)
  
  		set_irq_chip_data(id, this);
  		set_irq_chained_handler(id, gpio_irq_handler);
@@ -3735,16 +3732,7 @@ index f2236f0..04a0aa1 100644
 +#endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
  	}
  	pr_info("AT91: %d gpio irqs in %d banks\n", pin - PIN_BASE, gpio_banks);
-+#ifdef CONFIG_IPIPE
-+	__ipipe_at91_gpio_banks = gpio_banks;
-+#if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
-+	printk("__ipipe_gpio_parent_mask: 0x%08lx\n",
-+	       __ipipe_irqbits[0]);
-+#endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
-+#endif /* CONFIG_IPIPE */
  }
- 
- /* gpiolib support */
 diff --git a/arch/arm/mach-at91/include/mach/hardware.h b/arch/arm/mach-at91/include/mach/hardware.h
 index da0b681..f737d38 100644
 --- a/arch/arm/mach-at91/include/mach/hardware.h
@@ -3776,45 +3764,14 @@ index da0b681..f737d38 100644
  #define AT91_SRAM_MAX		SZ_1M
  #define AT91_VIRT_BASE		(AT91_IO_VIRT_BASE - AT91_SRAM_MAX)
 diff --git a/arch/arm/mach-at91/include/mach/irqs.h b/arch/arm/mach-at91/include/mach/irqs.h
-index 36bd55f..02e8acf 100644
+index 36bd55f..cedaab2 100644
 --- a/arch/arm/mach-at91/include/mach/irqs.h
 +++ b/arch/arm/mach-at91/include/mach/irqs.h
-@@ -45,4 +45,37 @@
+@@ -45,4 +45,6 @@
  /* FIQ is AIC source 0. */
  #define FIQ_START AT91_ID_FIQ
  
-+#if defined(CONFIG_IPIPE) && !defined(__ASSEMBLY__)
-+extern unsigned __ipipe_at91_gpio_banks;
-+
-+#if defined(CONFIG_ARCH_AT91RM9200)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91RM9200_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#elif defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91SAM9260_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#elif defined(CONFIG_ARCH_AT91SAM9261)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91SAM9261_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#elif defined(CONFIG_ARCH_AT91SAM9263)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91SAM9263_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#elif defined(CONFIG_ARCH_AT91SAM9RL)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91SAM9RL_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#elif defined(CONFIG_ARCH_AT91X40)
-+#define __ipipe_mach_irq_mux_p(irq)					\
-+	((unsigned) (irq - AT91X40_ID_PIOA) < __ipipe_at91_gpio_banks)
-+
-+#endif /* CONFIG_ARCH_AT91X40 */
-+
-+/* #define __IPIPE_FEATURE_PIC_MUTE */
-+
-+#endif /* CONFIG_IPIPE && !__ASSEMBLY__ */
++#define __IPIPE_FEATURE_PIC_MUTE
 +
  #endif
 diff --git a/arch/arm/mach-at91/include/mach/timex.h b/arch/arm/mach-at91/include/mach/timex.h
@@ -3865,29 +3822,17 @@ index 490297f..7dba005 100644
   *  General purpose timers
   */
 diff --git a/arch/arm/mach-imx/include/mach/irqs.h b/arch/arm/mach-imx/include/mach/irqs.h
-index 67812c5..3cd3a3e 100644
+index 67812c5..6e874d2 100644
 --- a/arch/arm/mach-imx/include/mach/irqs.h
 +++ b/arch/arm/mach-imx/include/mach/irqs.h
-@@ -118,4 +118,17 @@ extern int imx_set_irq_fiq(unsigned int irq, unsigned int type);
+@@ -118,4 +118,5 @@ extern int imx_set_irq_fiq(unsigned int irq, unsigned int type);
  
  #define NR_IRQS (IRQ_GPIOD(32) + 1)
  #define IRQ_GPIO(x)
 +
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_irqbit(irq) (1ULL << (irq))
-+
-+#define __ipipe_muxed_irqmask (__ipipe_irqbit(GPIO_INT_PORTA) | \
-+                               __ipipe_irqbit(GPIO_INT_PORTB) | \
-+                               __ipipe_irqbit(GPIO_INT_PORTC) | \
-+                               __ipipe_irqbit(GPIO_INT_PORTD))
-+
-+#define __ipipe_mach_irq_mux_p(irq) (__ipipe_irqbit(irq) \
-+                                     & __ipipe_muxed_irqmask)
-+#endif /* CONFIG_IPIPE */
-+
  #endif
 diff --git a/arch/arm/mach-imx/irq.c b/arch/arm/mach-imx/irq.c
-index 531b95d..101e683 100644
+index 531b95d..857bf40 100644
 --- a/arch/arm/mach-imx/irq.c
 +++ b/arch/arm/mach-imx/irq.c
 @@ -27,12 +27,89 @@
@@ -3980,6 +3925,15 @@ index 531b95d..101e683 100644
  /*
   *
   * We simply use the ENABLE DISABLE registers inside of the IMX
+@@ -204,7 +281,7 @@ imx_gpio_handler(unsigned int mask, unsigned int irq,
+ 	while (mask) {
+ 		if (mask & 1) {
+ 			DEBUG_IRQ("handling irq %d\n", irq);
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 		}
+ 		irq++;
+ 		mask >>= 1;
 @@ -255,6 +332,9 @@ static struct irq_chip imx_internal_chip = {
  	.name = "MPU",
  	.ack = imx_mask_irq,
@@ -4027,25 +3981,6 @@ index 531b95d..101e683 100644
  	set_irq_chained_handler(GPIO_INT_PORTA, imx_gpioa_demux_handler);
  	set_irq_chained_handler(GPIO_INT_PORTB, imx_gpiob_demux_handler);
  	set_irq_chained_handler(GPIO_INT_PORTC, imx_gpioc_demux_handler);
-@@ -309,3 +410,18 @@ imx_init_irq(void)
- 	init_FIQ();
- #endif
- }
-+
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+        unsigned int i, base, mask;
-+
-+        /* GPPIOA, GPIOB, GPIOC, GPIOD are INT 11,12,13 and 62 */
-+	i = ((irq & 7) - 3);
-+	base = (i << 5) + IMX_IRQS;
-+
-+	/* Get all multiplexed ITs from given GPIO */
-+	while ((mask = ISR(i)))
-+		__ipipe_handle_irq(base + __ffs(mask), regs);
-+}
-+#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-imx/time.c b/arch/arm/mach-imx/time.c
 index 5aef18b..a4a958b 100644
 --- a/arch/arm/mach-imx/time.c
@@ -4521,16 +4456,14 @@ index 7649c57..ab3623d 100644
  		bne	1002f
  		add	\irqnr, \irqnr, #4
 diff --git a/arch/arm/mach-integrator/include/mach/irqs.h b/arch/arm/mach-integrator/include/mach/irqs.h
-index 1fbe6d1..82ac5e9 100644
+index 1fbe6d1..dea6390 100644
 --- a/arch/arm/mach-integrator/include/mach/irqs.h
 +++ b/arch/arm/mach-integrator/include/mach/irqs.h
-@@ -80,3 +80,6 @@
+@@ -79,4 +79,3 @@
+ #define IRQ_SIC_END			46
  
  #define NR_IRQS                         47
- 
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_mach_irq_mux_p(irq) ((irq) == IRQ_CP_CPPLDINT)
-+#endif /* CONFIG_IPIPE */
+-
 diff --git a/arch/arm/mach-integrator/include/mach/platform.h b/arch/arm/mach-integrator/include/mach/platform.h
 index e00a262..3b39ce3 100644
 --- a/arch/arm/mach-integrator/include/mach/platform.h
@@ -4571,7 +4504,7 @@ index 1dcb420..a04653a 100644
 -#define CLOCK_TICK_RATE		(50000000 / 16)
 +#define CLOCK_TICK_RATE		(1000000)
 diff --git a/arch/arm/mach-integrator/integrator_cp.c b/arch/arm/mach-integrator/integrator_cp.c
-index 4ac0405..e78feb0 100644
+index 4ac0405..a78d046 100644
 --- a/arch/arm/mach-integrator/integrator_cp.c
 +++ b/arch/arm/mach-integrator/integrator_cp.c
 @@ -2,6 +2,7 @@
@@ -4620,38 +4553,16 @@ index 4ac0405..e78feb0 100644
  	.unmask	= sic_unmask_irq,
  };
  
-@@ -222,6 +233,30 @@ sic_handle_irq(unsigned int irq, struct irq_desc *desc)
+@@ -218,7 +229,7 @@ sic_handle_irq(unsigned int irq, struct irq_desc *desc)
+ 
+ 		irq += IRQ_SIC_START;
+ 
+-		generic_handle_irq(irq);
++		ipipe_handle_irq_cond(irq);
  	} while (status);
  }
  
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	unsigned long status = sic_readl(INTCP_VA_SIC_BASE + IRQ_STATUS);
-+	struct irq_desc *desc_unused = irq_desc + irq;
-+
-+	if (status == 0) {
-+		do_bad_IRQ(irq, desc_unused);
-+		return;
-+	}
-+
-+	do {
-+		irq = ffs(status) - 1;
-+		status &= ~(1 << irq);
-+
-+		irq += IRQ_SIC_START;
-+
-+		__ipipe_handle_irq(irq, regs);
-+
-+		status = sic_readl(INTCP_VA_SIC_BASE + IRQ_STATUS);
-+	} while (status);
-+}
-+#endif /* CONFIG_IPIPE */
-+
- static void __init intcp_init_irq(void)
- {
- 	unsigned int i;
-@@ -569,9 +604,14 @@ static void __init intcp_init(void)
+@@ -569,9 +580,14 @@ static void __init intcp_init(void)
  
  #define TIMER_CTRL_IE	(1 << 5)			/* Interrupt Enable */
  
@@ -4668,18 +4579,15 @@ index 4ac0405..e78feb0 100644
  
  static struct sys_timer cp_timer = {
 diff --git a/arch/arm/mach-ixp4xx/common.c b/arch/arm/mach-ixp4xx/common.c
-index 1e93dfe..fde4433 100644
+index 1e93dfe..8374fa2 100644
 --- a/arch/arm/mach-ixp4xx/common.c
 +++ b/arch/arm/mach-ixp4xx/common.c
-@@ -45,6 +45,68 @@ static int __init ixp4xx_clocksource_init(void);
+@@ -45,6 +45,65 @@ static int __init ixp4xx_clocksource_init(void);
  static int __init ixp4xx_clockevent_init(void);
  static struct clock_event_device clockevent_ixp4xx;
  
 +#ifdef CONFIG_IPIPE
 +#include <linux/ipipe.h>
-+
-+/* We have no cascaded interrupts. */
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs) {}
 +
 +#ifdef CONFIG_NO_IDLE_HZ
 +#error "dynamic tick timer not yet supported with IPIPE"
@@ -4740,7 +4648,7 @@ index 1e93dfe..fde4433 100644
  /*************************************************************************
   * IXP4xx chipset I/O mapping
   *************************************************************************/
-@@ -269,8 +331,12 @@ static irqreturn_t ixp4xx_timer_interrupt(int irq, void *dev_id)
+@@ -269,8 +328,12 @@ static irqreturn_t ixp4xx_timer_interrupt(int irq, void *dev_id)
  {
  	struct clock_event_device *evt = &clockevent_ixp4xx;
  
@@ -4753,7 +4661,7 @@ index 1e93dfe..fde4433 100644
  
  	evt->event_handler(evt);
  
-@@ -294,6 +360,14 @@ void __init ixp4xx_timer_init(void)
+@@ -294,6 +357,14 @@ void __init ixp4xx_timer_init(void)
  	/* Reset time-stamp counter */
  	*IXP4XX_OSTS = 0;
  
@@ -4768,7 +4676,7 @@ index 1e93dfe..fde4433 100644
  	/* Connect the interrupt handler and enable the interrupt */
  	setup_irq(IRQ_IXP4XX_TIMER1, &ixp4xx_timer_irq);
  
-@@ -470,6 +544,13 @@ static void ixp4xx_set_mode(enum clock_event_mode mode,
+@@ -470,6 +541,13 @@ static void ixp4xx_set_mode(enum clock_event_mode mode,
  	*IXP4XX_OSRT1 = osrt | opts;
  }
  
@@ -4782,7 +4690,7 @@ index 1e93dfe..fde4433 100644
  static struct clock_event_device clockevent_ixp4xx = {
  	.name		= "ixp4xx timer1",
  	.features       = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT,
-@@ -492,3 +573,98 @@ static int __init ixp4xx_clockevent_init(void)
+@@ -492,3 +570,98 @@ static int __init ixp4xx_clockevent_init(void)
  	clockevents_register_device(&clockevent_ixp4xx);
  	return 0;
  }
@@ -4881,21 +4789,6 @@ index 1e93dfe..fde4433 100644
 +EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
 +#endif /* CONFIG_IPIPE */
-diff --git a/arch/arm/mach-ixp4xx/include/mach/irqs.h b/arch/arm/mach-ixp4xx/include/mach/irqs.h
-index f4d74de..7e2b905 100644
---- a/arch/arm/mach-ixp4xx/include/mach/irqs.h
-+++ b/arch/arm/mach-ixp4xx/include/mach/irqs.h
-@@ -70,6 +70,10 @@
- 
- #define	XSCALE_PMU_IRQ		(IRQ_IXP4XX_XSCALE_PMU)
- 
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_mach_irq_mux_p(irq) 0 /* We have no cascaded interrupts. */
-+#endif
-+
- /*
-  * IXDP425 board IRQs
-  */
 diff --git a/arch/arm/mach-mx3/mx31ads.c b/arch/arm/mach-mx3/mx31ads.c
 index a6d6efe..69ff543 100644
 --- a/arch/arm/mach-mx3/mx31ads.c
@@ -5146,21 +5039,6 @@ index f36aba1..f3910e4 100644
 +	return 0xffffffff - omap_dm_timer_read_counter(gptimer);
 +}
 +#endif /* CONFIG_IPIPE */
-diff --git a/arch/arm/mach-pxa/include/mach/irqs.h b/arch/arm/mach-pxa/include/mach/irqs.h
-index 32bb4a2..9061d96 100644
---- a/arch/arm/mach-pxa/include/mach/irqs.h
-+++ b/arch/arm/mach-pxa/include/mach/irqs.h
-@@ -90,6 +90,10 @@
- #define IRQ_TO_GPIO_2_x(i)	((i) - PXA_GPIO_IRQ_BASE)
- #define IRQ_TO_GPIO(i)	(((i) < IRQ_GPIO(2)) ? ((i) - IRQ_GPIO0) : IRQ_TO_GPIO_2_x(i))
- 
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_mach_irq_mux_p(irq) ((irq) == IRQ_GPIO_2_x)
-+#endif /* CONFIG_IPIPE */
-+
- /*
-  * The next 16 interrupts are for board specific purposes.  Since
-  * the kernel can only run on one machine at a time, we can re-use
 diff --git a/arch/arm/mach-pxa/irq.c b/arch/arm/mach-pxa/irq.c
 index f6e0300..a4ffded 100644
 --- a/arch/arm/mach-pxa/irq.c
@@ -5211,6 +5089,90 @@ index db4af5e..c204cd4 100644
  
  #include <mach/hardware.h>
  #include <asm/leds.h>
+diff --git a/arch/arm/mach-pxa/lpd270.c b/arch/arm/mach-pxa/lpd270.c
+index d64395f..ac4990a 100644
+--- a/arch/arm/mach-pxa/lpd270.c
++++ b/arch/arm/mach-pxa/lpd270.c
+@@ -24,6 +24,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
+ #include <linux/pwm_backlight.h>
++#include <linux/ipipe.h>
+ 
+ #include <asm/types.h>
+ #include <asm/setup.h>
+@@ -124,7 +125,7 @@ static void lpd270_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 		GEDR(0) = GPIO_bit(0);  /* clear useless edge notification */
+ 		if (likely(pending)) {
+ 			irq = LPD270_IRQ(0) + __ffs(pending);
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 
+ 			pending = __raw_readw(LPD270_INT_STATUS) &
+ 						lpd270_irq_enabled;
+diff --git a/arch/arm/mach-pxa/lubbock.c b/arch/arm/mach-pxa/lubbock.c
+index f04c833..2b78dad 100644
+--- a/arch/arm/mach-pxa/lubbock.c
++++ b/arch/arm/mach-pxa/lubbock.c
+@@ -22,6 +22,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
+ #include <linux/smc91x.h>
++#include <linux/ipipe.h>
+ 
+ #include <linux/spi/spi.h>
+ #include <linux/spi/ads7846.h>
+@@ -161,7 +162,7 @@ static void lubbock_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 		GEDR(0) = GPIO_bit(0);	/* clear our parent irq */
+ 		if (likely(pending)) {
+ 			irq = LUBBOCK_IRQ(0) + __ffs(pending);
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 		}
+ 		pending = LUB_IRQ_SET_CLR & lubbock_irq_enabled;
+ 	} while (pending);
+diff --git a/arch/arm/mach-pxa/mainstone.c b/arch/arm/mach-pxa/mainstone.c
+index a6c8429..01124f2 100644
+--- a/arch/arm/mach-pxa/mainstone.c
++++ b/arch/arm/mach-pxa/mainstone.c
+@@ -27,6 +27,7 @@
+ #include <linux/gpio_keys.h>
+ #include <linux/pwm_backlight.h>
+ #include <linux/smc91x.h>
++#include <linux/ipipe.h>
+ 
+ #include <asm/types.h>
+ #include <asm/setup.h>
+@@ -165,7 +166,7 @@ static void mainstone_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 		GEDR(0) = GPIO_bit(0);  /* clear useless edge notification */
+ 		if (likely(pending)) {
+ 			irq = MAINSTONE_IRQ(0) + __ffs(pending);
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 		}
+ 		pending = MST_INTSETCLR & mainstone_irq_enabled;
+ 	} while (pending);
+diff --git a/arch/arm/mach-pxa/pcm990-baseboard.c b/arch/arm/mach-pxa/pcm990-baseboard.c
+index 6c12b5a..66cdc23 100644
+--- a/arch/arm/mach-pxa/pcm990-baseboard.c
++++ b/arch/arm/mach-pxa/pcm990-baseboard.c
+@@ -24,6 +24,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/i2c.h>
+ #include <linux/pwm_backlight.h>
++#include <linux/ipipe.h>
+ 
+ #include <media/soc_camera.h>
+ 
+@@ -263,7 +264,7 @@ static void pcm990_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 					GPIO_bit(PCM990_CTRL_INT_IRQ_GPIO);
+ 		if (likely(pending)) {
+ 			irq = PCM027_IRQ(0) + __ffs(pending);
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 		}
+ 		pending = (~PCM990_INTSETCLR) & pcm990_irq_enabled;
+ 	} while (pending);
 diff --git a/arch/arm/mach-pxa/time.c b/arch/arm/mach-pxa/time.c
 index 750c448..2b7e7f8 100644
 --- a/arch/arm/mach-pxa/time.c
@@ -5411,8 +5373,29 @@ index 750c448..2b7e7f8 100644
 +	return OSMR0 - OSCR;
 +}
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mach-pxa/viper.c b/arch/arm/mach-pxa/viper.c
+index dd031cc..daca7b1 100644
+--- a/arch/arm/mach-pxa/viper.c
++++ b/arch/arm/mach-pxa/viper.c
+@@ -41,6 +41,7 @@
+ #include <linux/mtd/mtd.h>
+ #include <linux/mtd/partitions.h>
+ #include <linux/mtd/physmap.h>
++#include <linux/ipipe.h>
+ 
+ #include <mach/pxa25x.h>
+ #include <mach/audio.h>
+@@ -270,7 +271,7 @@ static void viper_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 
+ 		if (likely(pending)) {
+ 			irq = viper_bit_to_irq(__ffs(pending));
+-			generic_handle_irq(irq);
++			ipipe_handle_irq_cond(irq);
+ 		}
+ 		pending = viper_irq_pending();
+ 	} while (pending);
 diff --git a/arch/arm/mach-s3c2410/include/mach/irqs.h b/arch/arm/mach-s3c2410/include/mach/irqs.h
-index 2a2384f..c2ac60b 100644
+index 2a2384f..71e9313 100644
 --- a/arch/arm/mach-s3c2410/include/mach/irqs.h
 +++ b/arch/arm/mach-s3c2410/include/mach/irqs.h
 @@ -3,6 +3,8 @@
@@ -5424,47 +5407,8 @@ index 2a2384f..c2ac60b 100644
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of the GNU General Public License version 2 as
   * published by the Free Software Foundation.
-@@ -167,4 +169,38 @@
- /* Our FIQs are routable from IRQ_EINT0 to IRQ_ADCPARENT */
- #define FIQ_START		IRQ_EINT0
- 
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_irqbit(irq)	(1 << ((irq) - S3C2410_CPUIRQ_OFFSET))
-+
-+#ifdef CONFIG_CPU_S3C2440
-+#define __ipipe_muxed_irqmask	(__ipipe_irqbit(IRQ_UART0)	|	\
-+				 __ipipe_irqbit(IRQ_UART1)	|	\
-+				 __ipipe_irqbit(IRQ_UART2)	|	\
-+				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
-+				 __ipipe_irqbit(IRQ_WDT)	|	\
-+				 __ipipe_irqbit(IRQ_CAM)	|	\
-+				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
-+				 __ipipe_irqbit(IRQ_EINT8t23))
-+#elif defined CONFIG_CPU_S3C244X
-+#define __ipipe_muxed_irqmask	(__ipipe_irqbit(IRQ_UART0)	|	\
-+				 __ipipe_irqbit(IRQ_UART1)	|	\
-+				 __ipipe_irqbit(IRQ_UART2)	|	\
-+				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
-+				 __ipipe_irqbit(IRQ_CAM)	|	\
-+				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
-+				 __ipipe_irqbit(IRQ_EINT8t23))
-+#else
-+#define __ipipe_muxed_irqmask	(__ipipe_irqbit(IRQ_UART0)	|	\
-+				 __ipipe_irqbit(IRQ_UART1)	|	\
-+				 __ipipe_irqbit(IRQ_UART2)	|	\
-+				 __ipipe_irqbit(IRQ_ADCPARENT)	|	\
-+				 __ipipe_irqbit(IRQ_EINT4t7)	|	\
-+				 __ipipe_irqbit(IRQ_EINT8t23))
-+#endif
-+
-+#define __ipipe_mach_irq_mux_p(irq)	((irq) <= IRQ_ADCPARENT  &&	\
-+					 (__ipipe_irqbit(irq) &		\
-+					  __ipipe_muxed_irqmask))
-+#endif /* CONFIG_IPIPE */
-+
- #endif /* __ASM_ARCH_IRQ_H */
 diff --git a/arch/arm/mach-s3c2440/irq.c b/arch/arm/mach-s3c2440/irq.c
-index 63c5ab6..316bfc5 100644
+index 63c5ab6..089b68f 100644
 --- a/arch/arm/mach-s3c2440/irq.c
 +++ b/arch/arm/mach-s3c2440/irq.c
 @@ -3,6 +3,8 @@
@@ -5484,49 +5428,21 @@ index 63c5ab6..316bfc5 100644
  
  #include <mach/hardware.h>
  #include <asm/irq.h>
-@@ -92,6 +95,25 @@ static struct irq_chip s3c_irq_wdtac97 = {
- 	.ack	    = s3c_irq_wdtac97_ack,
- };
+@@ -57,10 +60,10 @@ static void s3c_irq_demux_wdtac97(unsigned int irq,
  
-+#ifdef CONFIG_IPIPE
-+void __ipipe_s3c_irq_demux_wdtac97(unsigned int subsrc, struct pt_regs *regs)
-+{
-+	subsrc >>= 13;
-+	subsrc &= 3;
-+
-+	if (subsrc != 0) {
-+		if (subsrc & 1) {
-+			__ipipe_handle_irq(IRQ_S3C2440_WDT, regs);
-+			return;
-+		}
-+		if (subsrc & 2) {
-+			__ipipe_handle_irq(IRQ_S3C2440_AC97, regs);
-+			return;
-+		}
-+	}
-+}
-+#endif /* CONFIG_IPIPE */
-+
- static int s3c2440_irq_add(struct sys_device *sysdev)
- {
- 	unsigned int irqno;
-diff --git a/arch/arm/mach-sa1100/include/mach/irqs.h b/arch/arm/mach-sa1100/include/mach/irqs.h
-index ae81f80..c70b319 100644
---- a/arch/arm/mach-sa1100/include/mach/irqs.h
-+++ b/arch/arm/mach-sa1100/include/mach/irqs.h
-@@ -144,6 +144,10 @@
- #define IRQ_LOCOMO_SPI_REND	(IRQ_BOARD_END + 20)
- #define IRQ_LOCOMO_SPI_TEND	(IRQ_BOARD_END + 21)
- 
-+#ifdef CONFIG_IPIPE
-+#define __ipipe_mach_irq_mux_p(irq) ((irq) == IRQ_GPIO11_27)
-+#endif /* CONFIG_IPIPE */
-+
- /*
-  * Figure out the MAX IRQ number.
-  *
+ 	if (subsrc != 0) {
+ 		if (subsrc & 1) {
+-			generic_handle_irq(IRQ_S3C2440_WDT);
++			ipipe_handle_irq_cond(IRQ_S3C2440_WDT);
+ 		}
+ 		if (subsrc & 2) {
+-			generic_handle_irq(IRQ_S3C2440_AC97);
++			ipipe_handle_irq_cond(IRQ_S3C2440_AC97);
+ 		}
+ 	}
+ }
 diff --git a/arch/arm/mach-sa1100/irq.c b/arch/arm/mach-sa1100/irq.c
-index 3093d46..99455f1 100644
+index 3093d46..04a56d2 100644
 --- a/arch/arm/mach-sa1100/irq.c
 +++ b/arch/arm/mach-sa1100/irq.c
 @@ -15,6 +15,7 @@
@@ -5537,41 +5453,16 @@ index 3093d46..99455f1 100644
  
  #include <mach/hardware.h>
  #include <asm/mach/irq.h>
-@@ -134,6 +135,33 @@ sa1100_high_gpio_handler(unsigned int irq, struct irq_desc *desc)
- 	} while (mask);
- }
- 
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	unsigned int mask;
-+
-+	mask = GEDR & 0xfffff800;
-+	do {
-+		/*
-+		 * clear down all currently active IRQ sources.
-+		 * We will be processing them all.
-+		 */
-+		GEDR = mask;
-+
-+		irq = IRQ_GPIO11;
-+		mask >>= 11;
-+		do {
-+			if (mask & 1)
-+				__ipipe_handle_irq(irq, regs);
-+			mask >>= 1;
-+			irq++;
-+		} while (mask);
-+
-+		mask = GEDR & 0xfffff800;
-+	} while (mask);
-+}
-+#endif /* CONFIG_IPIPE */
-+
- /*
-  * Like GPIO0 to 10, GPIO11-27 IRQs need to be handled specially.
-  * In addition, the IRQs are all collected up into one bit in the
-@@ -217,6 +245,9 @@ static struct irq_chip sa1100_normal_chip = {
+@@ -125,7 +126,7 @@ sa1100_high_gpio_handler(unsigned int irq, struct irq_desc *desc)
+ 		mask >>= 11;
+ 		do {
+ 			if (mask & 1)
+-				generic_handle_irq(irq);
++				ipipe_handle_irq_cond(irq);
+ 			mask >>= 1;
+ 			irq++;
+ 		} while (mask);
+@@ -217,6 +218,9 @@ static struct irq_chip sa1100_normal_chip = {
  	.name		= "SC",
  	.ack		= sa1100_mask_irq,
  	.mask		= sa1100_mask_irq,
@@ -6475,7 +6366,7 @@ index 0cce37b..f167699 100644
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  	cpwait_ret lr, ip
 diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
-index 89e9579..acdcb2e 100644
+index 89e9579..9190e1e 100644
 --- a/arch/arm/plat-mxc/gpio.c
 +++ b/arch/arm/plat-mxc/gpio.c
 @@ -25,6 +25,13 @@
@@ -6492,81 +6383,35 @@ index 89e9579..acdcb2e 100644
  
  static struct mxc_gpio_port *mxc_gpio_ports;
  static int gpio_table_size;
-@@ -127,7 +134,37 @@ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+@@ -110,8 +117,7 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
+ 			continue;
+ 
+ 		BUG_ON(!(irq_desc[gpio_irq_no].handle_irq));
+-		irq_desc[gpio_irq_no].handle_irq(gpio_irq_no,
+-				&irq_desc[gpio_irq_no]);
++		ipipe_handle_irq_cond(gpio_irq_no);
+ 	}
+ }
+ 
+@@ -127,7 +133,7 @@ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
  
  	mxc_gpio_irq_handler(port, irq_stat);
  }
 -#endif
-+
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	struct mxc_gpio_port *port = (struct mxc_gpio_port *)get_irq_data(irq);
-+	u32 irq_stat, gpio_irq_no;
-+
-+	irq_stat = __raw_readl(port->base + GPIO_ISR) &
-+			__raw_readl(port->base + GPIO_IMR);
-+	BUG_ON(!irq_stat);
-+
-+	gpio_irq_no = port->virtual_irq_start;
-+
-+	for (; irq_stat != 0; irq_stat >>= 1, gpio_irq_no++) {
-+                if ((irq_stat & 1) == 0)
-+                        continue;
-+
-+#ifdef CONFIG_MACH_MX31ADS
-+		if (gpio_irq_no == EXPIO_PARENT_INT) {
-+			extern void mx31ads_demux_expio(u32,
-+							struct pt_regs *regs);
-+			mx31ads_demux_expio(gpio_irq_no, regs);
-+			continue;
-+		}
-+#endif /* CONFIG_MACH_MX31ADS */
-+
-+		__ipipe_handle_irq(gpio_irq_no, regs);
-+        }
-+}
-+#endif /* CONFIG_IPIPE */
 +#endif /* CONFIG_ARCH_MX3 */
  
  #ifdef CONFIG_ARCH_MX2
  /* MX2 has one interrupt *for all* gpio ports */
-@@ -148,7 +185,33 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+@@ -148,7 +154,7 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
  			mxc_gpio_irq_handler(&port[i], irq_stat);
  	}
  }
 -#endif
-+
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	struct mxc_gpio_port *port = (struct mxc_gpio_port *)get_irq_data(irq);
-+	u32 irq_msk, irq_stat, gpio_irq_no;
-+	int i;
-+
-+	for (i = 0; i < gpio_table_size; i++) {
-+		irq_msk = __raw_readl(port->base + GPIO_IMR);
-+		if (!irq_msk)
-+			continue;
-+
-+		irq_stat = __raw_readl(port->base + GPIO_ISR) & irq_msk;
-+
-+		gpio_irq_no = port[i].virtual_irq_start;
-+
-+		for (; irq_stat != 0; irq_stat >>= 1, gpio_irq_no++) {
-+			if ((irq_stat & 1) == 0)
-+				continue;
-+
-+			__ipipe_handle_irq(gpio_irq_no, regs);
-+		}
-+	}
-+}
-+#endif /* CONFIG_IPIPE */
 +#endif /* CONFIG_ARCH_MX2 */
  
  static struct irq_chip gpio_irq_chip = {
  	.ack = gpio_ack_irq,
-@@ -222,7 +285,11 @@ int __init mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+@@ -222,7 +228,11 @@ int __init mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
  		for (j = port[i].virtual_irq_start;
  			j < port[i].virtual_irq_start + 32; j++) {
  			set_irq_chip(j, &gpio_irq_chip);
@@ -6578,26 +6423,6 @@ index 89e9579..acdcb2e 100644
  			set_irq_flags(j, IRQF_VALID);
  		}
  
-diff --git a/arch/arm/plat-mxc/include/mach/irqs.h b/arch/arm/plat-mxc/include/mach/irqs.h
-index 518a365..d0d7a8a 100644
---- a/arch/arm/plat-mxc/include/mach/irqs.h
-+++ b/arch/arm/plat-mxc/include/mach/irqs.h
-@@ -52,4 +52,15 @@ extern int imx_irq_set_priority(unsigned char irq, unsigned char prio);
- /* switch betwean IRQ and FIQ */
- extern int mxc_set_irq_fiq(unsigned int irq, unsigned int type);
- 
-+#ifdef CONFIG_IPIPE
-+#include <mach/hardware.h>
-+#ifdef CONFIG_ARCH_MX3
-+#define __ipipe_mach_irq_mux_p(irq)				\
-+	((irq) == MXC_INT_GPIO1					\
-+	 || (irq) == MXC_INT_GPIO2 || (irq) == MXC_INT_GPIO3)
-+#elif CONFIG_ARCH_MX2
-+#define __ipipe_mach_irq_mux_p(irq) ((irq) == MXC_INT_GPIO)
-+#endif /* CONFIG_ARCH_MX2 */
-+#endif /* CONFIG_IPIPE */
-+
- #endif /* __ASM_ARCH_MXC_IRQS_H__ */
 diff --git a/arch/arm/plat-mxc/time.c b/arch/arm/plat-mxc/time.c
 index dab3357..6d855f8 100644
 --- a/arch/arm/plat-mxc/time.c
@@ -6822,7 +6647,7 @@ index 55bb996..d546288 100644
  
  /**
 diff --git a/arch/arm/plat-omap/gpio.c b/arch/arm/plat-omap/gpio.c
-index ee0b21f..88eeb57 100644
+index ee0b21f..4675f00 100644
 --- a/arch/arm/plat-omap/gpio.c
 +++ b/arch/arm/plat-omap/gpio.c
 @@ -17,6 +17,7 @@
@@ -6833,100 +6658,15 @@ index ee0b21f..88eeb57 100644
  #include <linux/io.h>
  
  #include <mach/hardware.h>
-@@ -1123,6 +1124,93 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+@@ -1111,7 +1112,7 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 			if (!(isr & 1))
+ 				continue;
  
- }
- 
-+#ifdef CONFIG_IPIPE
-+/* Same as function above, except it calls __ipipe_handle_irq. */
-+void __ipipe_mach_demux_irq(unsigned int irq, struct pt_regs *regs)
-+{
-+	void __iomem *isr_reg = NULL;
-+	u32 isr;
-+	unsigned int gpio_irq;
-+	struct gpio_bank *bank;
-+	struct irq_desc *desc;
-+	u32 retrigger = 0;
-+	int unmasked = 0;
-+
-+	desc = &irq_desc[irq];
-+
-+	desc->chip->ack(irq);
-+
-+	bank = get_irq_data(irq);
-+#ifdef CONFIG_ARCH_OMAP1
-+	if (bank->method == METHOD_MPUIO)
-+		isr_reg = bank->base + OMAP_MPUIO_GPIO_INT;
-+#endif
-+#ifdef CONFIG_ARCH_OMAP15XX
-+	if (bank->method == METHOD_GPIO_1510)
-+		isr_reg = bank->base + OMAP1510_GPIO_INT_STATUS;
-+#endif
-+#if defined(CONFIG_ARCH_OMAP16XX)
-+	if (bank->method == METHOD_GPIO_1610)
-+		isr_reg = bank->base + OMAP1610_GPIO_IRQSTATUS1;
-+#endif
-+#ifdef CONFIG_ARCH_OMAP730
-+	if (bank->method == METHOD_GPIO_730)
-+		isr_reg = bank->base + OMAP730_GPIO_INT_STATUS;
-+#endif
-+#if defined(CONFIG_ARCH_OMAP24XX) || defined(CONFIG_ARCH_OMAP34XX)
-+	if (bank->method == METHOD_GPIO_24XX)
-+		isr_reg = bank->base + OMAP24XX_GPIO_IRQSTATUS1;
-+#endif
-+	while (1) {
-+		u32 isr_saved, level_mask = 0;
-+		u32 enabled;
-+
-+		enabled = _get_gpio_irqbank_mask(bank);
-+		isr_saved = isr = __raw_readl(isr_reg) & enabled;
-+
-+		if (cpu_is_omap15xx() && (bank->method == METHOD_MPUIO))
-+			isr &= 0x0000ffff;
-+
-+		if (cpu_class_is_omap2())
-+			level_mask = bank->level_mask & enabled;
-+
-+		/* clear edge sensitive interrupts before handler(s) are
-+		called so that we don't miss any interrupt occurred while
-+		executing them */
-+		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 0);
-+		_clear_gpio_irqbank(bank, isr_saved & ~level_mask);
-+		_enable_gpio_irqbank(bank, isr_saved & ~level_mask, 1);
-+
-+		/* if there is only edge sensitive GPIO pin interrupts
-+		configured, we could unmask GPIO bank interrupt immediately */
-+		if (!level_mask && !unmasked) {
-+			unmasked = 1;
-+			desc->chip->unmask(irq);
-+		}
-+
-+		isr |= retrigger;
-+		retrigger = 0;
-+		if (!isr)
-+			break;
-+
-+		gpio_irq = bank->virtual_irq_start;
-+		for (; isr != 0; isr >>= 1, gpio_irq++) {
-+			if (!(isr & 1))
-+				continue;
-+
-+			__ipipe_handle_irq(gpio_irq, regs);
-+		}
-+	}
-+	/* if bank has any level sensitive GPIO pin interrupt
-+	configured, we must unmask the bank interrupt only after
-+	handler(s) are executed in order to avoid spurious bank
-+	interrupt */
-+	if (!unmasked)
-+		desc->chip->unmask(irq);
-+
-+}
-+#endif /* CONFIG_IPIPE */
-+
- static void gpio_irq_shutdown(unsigned int irq)
- {
- 	unsigned int gpio = irq - IH_GPIO_BASE;
+-			generic_handle_irq(gpio_irq);
++			ipipe_handle_irq_cond(gpio_irq);
+ 		}
+ 	}
+ 	/* if bank has any level sensitive GPIO pin interrupt
 diff --git a/arch/arm/plat-omap/include/mach/dmtimer.h b/arch/arm/plat-omap/include/mach/dmtimer.h
 index 20f1054..42a0b8d 100644
 --- a/arch/arm/plat-omap/include/mach/dmtimer.h
@@ -6941,27 +6681,8 @@ index 20f1054..42a0b8d 100644
  
  u32 omap_dm_timer_modify_idlect_mask(u32 inputmask);
  struct clk *omap_dm_timer_get_fclk(struct omap_dm_timer *timer);
-diff --git a/arch/arm/plat-omap/include/mach/irqs.h b/arch/arm/plat-omap/include/mach/irqs.h
-index 7f57ee6..ac494bc 100644
---- a/arch/arm/plat-omap/include/mach/irqs.h
-+++ b/arch/arm/plat-omap/include/mach/irqs.h
-@@ -469,6 +469,14 @@
- extern void omap_init_irq(void);
- #endif
- 
-+#ifdef CONFIG_IPIPE
-+#ifdef CONFIG_ARCH_OMAP34XX
-+#define __ipipe_mach_irq_mux_p(irq) \
-+	((unsigned) (irq - INT_34XX_GPIO_BANK1) \
-+	 <= (INT_34XX_GPIO_BANK6 - INT_34XX_GPIO_BANK1))
-+#endif /* OMAP34XX */
-+#endif /* CONFIG_IPIPE */
-+
- #include <mach/hardware.h>
- 
- #endif
 diff --git a/arch/arm/plat-pxa/gpio.c b/arch/arm/plat-pxa/gpio.c
-index abc79d4..6a30b57 100644
+index abc79d4..caaf694 100644
 --- a/arch/arm/plat-pxa/gpio.c
 +++ b/arch/arm/plat-pxa/gpio.c
 @@ -17,6 +17,7 @@
@@ -6972,51 +6693,21 @@ index abc79d4..6a30b57 100644
  
  #include <mach/gpio.h>
  
-@@ -232,6 +233,35 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
- 	} while (loop);
- }
+@@ -225,7 +226,7 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
+ 			while (n < BITS_PER_LONG) {
+ 				loop = 1;
  
-+#ifdef CONFIG_IPIPE
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	struct pxa_gpio_chip *c;
-+	int loop, gpio, gpio_base, n;
-+	unsigned long gedr;
-+
-+	do {
-+		loop = 0;
-+		for_each_gpio_chip(gpio, c) {
-+			gpio_base = c->chip.base;
-+
-+			gedr = __raw_readl(c->regbase + GEDR_OFFSET);
-+			gedr = gedr & c->irq_mask;
-+			__raw_writel(gedr, c->regbase + GEDR_OFFSET);
-+
-+			n = find_first_bit(&gedr, BITS_PER_LONG);
-+			while (n < BITS_PER_LONG) {
-+				loop = 1;
-+
-+				__ipipe_handle_irq(
-+					gpio_to_irq(gpio_base + n), regs);
-+				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
-+			}
-+		}
-+	} while (loop);
-+}
-+#endif /* CONFIG_IPIPE */
-+
- static void pxa_ack_muxed_gpio(unsigned int irq)
- {
- 	int gpio = irq_to_gpio(irq);
-@@ -290,7 +320,11 @@ void __init pxa_init_gpio(int mux_irq, int start, int end, set_wake_t fn)
+-				generic_handle_irq(gpio_to_irq(gpio_base + n));
++				ipipe_handle_irq_cond(gpio_to_irq(gpio_base + n));
+ 				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
+ 			}
+ 		}
+@@ -290,7 +291,7 @@ void __init pxa_init_gpio(int mux_irq, int start, int end, set_wake_t fn)
  
  	for (irq  = gpio_to_irq(start); irq <= gpio_to_irq(end); irq++) {
  		set_irq_chip(irq, &pxa_muxed_gpio_chip);
-+#ifndef CONFIG_IPIPE
- 		set_irq_handler(irq, handle_edge_irq);
-+#else /* CONFIG_IPIPE */
+-		set_irq_handler(irq, handle_edge_irq);
 +		set_irq_handler(irq, handle_level_irq);
-+#endif /* CONFIG_IPIPE */
  		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
  	}
  
@@ -7342,7 +7033,7 @@ index 3b27b29..8e6e479 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/plat-s3c24xx/irq.c b/arch/arm/plat-s3c24xx/irq.c
-index 9587377..e747de2 100644
+index 9587377..c63d393 100644
 --- a/arch/arm/plat-s3c24xx/irq.c
 +++ b/arch/arm/plat-s3c24xx/irq.c
 @@ -3,6 +3,8 @@
@@ -7417,128 +7108,54 @@ index 9587377..e747de2 100644
  };
  
  /* ADC and Touchscreen */
-@@ -493,6 +516,121 @@ s3c_irq_demux_extint4t7(unsigned int irq,
+@@ -385,10 +408,10 @@ static void s3c_irq_demux_adc(unsigned int irq,
+ 
+ 	if (subsrc != 0) {
+ 		if (subsrc & 1) {
+-			generic_handle_irq(IRQ_TC);
++			ipipe_handle_irq_cond(IRQ_TC);
+ 		}
+ 		if (subsrc & 2) {
+-			generic_handle_irq(IRQ_ADC);
++			ipipe_handle_irq_cond(IRQ_ADC);
+ 		}
+ 	}
+ }
+@@ -413,13 +436,13 @@ static void s3c_irq_demux_uart(unsigned int start)
+ 
+ 	if (subsrc != 0) {
+ 		if (subsrc & 1)
+-			generic_handle_irq(start);
++			ipipe_handle_irq_cond(start);
+ 
+ 		if (subsrc & 2)
+-			generic_handle_irq(start+1);
++			ipipe_handle_irq_cond(start+1);
+ 
+ 		if (subsrc & 4)
+-			generic_handle_irq(start+2);
++			ipipe_handle_irq_cond(start+2);
  	}
  }
  
-+#ifdef CONFIG_IPIPE
-+static void __ipipe_s3c_irq_demux_uart(unsigned int start,
-+					unsigned int subsrc,
-+					struct pt_regs *regs)
-+{
-+	unsigned int offset = start - IRQ_S3CUART_RX0;
-+
-+	subsrc >>= offset;
-+	subsrc &= 7;
-+
-+	if (subsrc != 0) {
-+		if (subsrc & 1) {
-+			__ipipe_handle_irq(start, regs);
-+			return;
-+		}
-+		if (subsrc & 2) {
-+			__ipipe_handle_irq(start+1, regs);
-+			return;
-+		}
-+		if (subsrc & 4) {
-+			__ipipe_handle_irq(start+2, regs);
-+			return;
-+		}
-+	}
-+}
-+
-+static void __ipipe_s3c_irq_demux_adc(unsigned int subsrc,
-+					struct pt_regs *regs)
-+{
-+	subsrc >>= 9;
-+	subsrc &= 3;
-+
-+	if (subsrc != 0) {
-+		if (subsrc & 1) {
-+			__ipipe_handle_irq(IRQ_TC, regs);
-+			return;
-+		}
-+		if (subsrc & 2) {
-+			__ipipe_handle_irq(IRQ_ADC, regs);
-+			return;
-+		}
-+	}
-+}
-+
-+static void __ipipe_s3c_irq_demux_extint(unsigned long mask,
-+						struct pt_regs *regs)
-+{
-+	unsigned int irq;
-+	unsigned long eintpnd = __raw_readl(S3C24XX_EINTPEND);
-+	unsigned long eintmsk = __raw_readl(S3C24XX_EINTMASK);
-+
-+	while ((eintpnd &= ~eintmsk & mask)) {
-+		irq = __ffs(eintpnd);
-+
-+		irq += (IRQ_EINT4 - 4);
-+
-+		__ipipe_handle_irq(irq, regs);
-+
-+		eintpnd = __raw_readl(S3C24XX_EINTPEND);
-+		eintmsk = __raw_readl(S3C24XX_EINTMASK);
-+	}
-+}
-+
-+void __ipipe_mach_demux_irq(unsigned irq, struct pt_regs *regs)
-+{
-+	unsigned int subsrc, submsk;
-+
-+	/* read the current pending interrupts, and the mask
-+	 * for what it is available */
-+	for(;;) {
-+		subsrc = __raw_readl(S3C2410_SUBSRCPND);
-+		submsk = __raw_readl(S3C2410_INTSUBMSK);
-+
-+		subsrc &= ~submsk;
-+
-+		if (!subsrc)
-+			break;
-+
-+		switch (irq) {
-+		case IRQ_UART0:
-+			__ipipe_s3c_irq_demux_uart(IRQ_S3CUART_RX0,
-+						   subsrc, regs);
-+			break;
-+		case IRQ_UART1:
-+			__ipipe_s3c_irq_demux_uart(IRQ_S3CUART_RX1,
-+						   subsrc, regs);
-+			break;
-+		case IRQ_UART2:
-+			__ipipe_s3c_irq_demux_uart(IRQ_S3CUART_RX2,
-+						   subsrc, regs);
-+			break;
-+		case IRQ_ADCPARENT:
-+			__ipipe_s3c_irq_demux_adc(subsrc, regs);
-+			break;
-+		case IRQ_EINT4t7:
-+			__ipipe_s3c_irq_demux_extint(0xff, regs);
-+			break;
-+		case IRQ_EINT8t23:
-+			__ipipe_s3c_irq_demux_extint(0xffffff00, regs);
-+			break;
-+#ifdef CONFIG_CPU_S3C2440
-+		case IRQ_WDT:
-+			__ipipe_s3c_irq_demux_wdtac97(subsrc, regs);
-+			break;
-+#endif /* CONFIG_CPU_S3C2440 */
-+#ifdef CONFIG_CPU_S3C244X
-+		case IRQ_CAM:
-+			__ipipe_s3c_irq_demux_cam(subsrc, regs);
-+			break;
-+#endif /* CONFIG_CPU_S3C244X */
-+		}
-+	}
-+}
-+#endif /* CONFIG_IPIPE */
-+
- /* s3c24xx_init_irq
-  *
-  * Initialise S3C2410 IRQ system
+@@ -466,7 +489,7 @@ s3c_irq_demux_extint8(unsigned int irq,
+ 		eintpnd &= ~(1<<irq);
+ 
+ 		irq += (IRQ_EINT4 - 4);
+-		generic_handle_irq(irq);
++		ipipe_handle_irq_cond(irq);
+ 	}
+ 
+ }
+@@ -489,7 +512,7 @@ s3c_irq_demux_extint4t7(unsigned int irq,
+ 
+ 		irq += (IRQ_EINT4 - 4);
+ 
+-		generic_handle_irq(irq);
++		ipipe_handle_irq_cond(irq);
+ 	}
+ }
+ 
 diff --git a/arch/arm/plat-s3c24xx/s3c244x-irq.c b/arch/arm/plat-s3c24xx/s3c244x-irq.c
 index 0902afd..be1bd1a 100644
 --- a/arch/arm/plat-s3c24xx/s3c244x-irq.c
@@ -7967,7 +7584,7 @@ index 4525747..0ceffc3 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..8983e2c
+index 0000000..8cbcb53
 --- /dev/null
 +++ b/include/linux/ipipe.h
 @@ -0,0 +1,688 @@
@@ -8130,7 +7747,7 @@ index 0000000..8983e2c
 +	ipipe_event_handler_t evhand[IPIPE_NR_EVENTS]; /* Event handlers. */
 +	unsigned long long evself;	/* Self-monitored event bits. */
 +
-+	struct {
++	struct ipipe_irqdesc {
 +		unsigned long control;
 +		ipipe_irq_ackfn_t acknowledge;
 +		ipipe_irq_handler_t handler;
@@ -9846,7 +9463,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..ffaceaa
+index 0000000..aa2e5a0
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1794 @@
@@ -10164,7 +9781,7 @@ index 0000000..ffaceaa
 +
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
 +	/* This helps catching bad usage from assembly call sites. */
-+	BUG_ON(!__ipipe_root_domain_p);
++	BUG_ON(!__ipipe_root_domain_p && !oops_in_progress);
 +#endif
 +
 +	p = ipipe_root_cpudom_ptr();
@@ -10180,7 +9797,7 @@ index 0000000..ffaceaa
 +void __ipipe_restore_root(unsigned long x)
 +{
 +#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
-+	BUG_ON(!ipipe_root_domain_p);
++	BUG_ON(!ipipe_root_domain_p && !oops_in_progress);
 +#endif
 +
 +	if (x)
@@ -11528,7 +11145,7 @@ index 0000000..ffaceaa
 +
 +	ipipe_context_check_off();
 +	ipipe_trace_panic_freeze();
-+	ipipe_set_printk_sync(__ipipe_current_domain);
++	oops_in_progress = 1;
 +
 +	if (this_domain->priority > border_domain->priority)
 +		printk(KERN_ERR "I-pipe: Detected illicit call from domain "
@@ -13899,7 +13516,7 @@ index 417d198..ebc8e96 100644
  	help
           This option will modify all the calls to ftrace dynamically
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index f1ed080..aa45f71 100644
+index f1ed080..28fbd5b 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -28,6 +28,7 @@
@@ -13934,30 +13551,26 @@ index f1ed080..aa45f71 100644
  
  	ret = ftrace_arch_code_modify_post_process();
  	FTRACE_WARN_ON(ret);
-@@ -2189,9 +2199,9 @@ static int ftrace_convert_nops(struct module *mod,
- 	}
+@@ -2190,7 +2200,9 @@ static int ftrace_convert_nops(struct module *mod,
  
  	/* disable interrupts to prevent kstop machine */
--	local_irq_save(flags);
-+	local_irq_save_hw_notrace(flags);
+ 	local_irq_save(flags);
++	local_irq_disable_hw();
  	ftrace_update_code(mod);
--	local_irq_restore(flags);
-+	local_irq_restore_hw_notrace(flags);
++	local_irq_enable_hw();
+ 	local_irq_restore(flags);
  	mutex_unlock(&ftrace_lock);
  
- 	return 0;
-@@ -2216,9 +2226,9 @@ void __init ftrace_init(void)
- 	/* Keep the ftrace pointer to the stub */
+@@ -2217,7 +2229,9 @@ void __init ftrace_init(void)
  	addr = (unsigned long)ftrace_stub;
  
--	local_irq_save(flags);
-+	local_irq_save_hw_notrace(flags);
+ 	local_irq_save(flags);
++	local_irq_disable_hw();
  	ftrace_dyn_arch_init(&addr);
--	local_irq_restore(flags);
-+	local_irq_restore_hw_notrace(flags);
++	local_irq_enable_hw();
+ 	local_irq_restore(flags);
  
  	/* ftrace_dyn_arch_init places the return code in addr */
- 	if (addr)
 diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
 index 6cdcf38..96d98a6 100644
 --- a/lib/Kconfig.debug
