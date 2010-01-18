@@ -45,14 +45,21 @@
 #include <limits.h>
 #include <getopt.h>
 #include <netinet/in.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#ifdef __XENO__
 #include <rtdm/rtcan.h>
+#else
+#include <linux/can.h>
+#include <linux/can/raw.h>
+#endif
 
 #define NSEC_PER_SEC 1000000000
 
 static unsigned int cycle = 10000; /* 10 ms */
-static can_id_t can_id = 0x1;
+static canid_t can_id = 0x1;
 
 static pthread_t txthread, rxthread;
 static int txsock, rxsock;
@@ -94,6 +101,9 @@ void *transmitter(void *arg)
     frame.can_id = can_id;
     frame.can_dlc = sizeof(*rtt_time);
 
+#ifdef __XENO__
+    pthread_set_name_np(pthread_self(), "rtcan_rtt_transmitter");
+#endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
     clock_gettime(CLOCK_MONOTONIC, &next_period);
@@ -113,10 +123,10 @@ void *transmitter(void *arg)
 	}
 
         clock_gettime(CLOCK_MONOTONIC, &time);
-	*rtt_time = time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
+	*rtt_time = (long long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
 
         /* Transmit the message containing the local time */
-	if (send(txsock, (void *)&frame, sizeof(can_frame_t), 0) < 0) {
+	if (send(txsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
             if (errno == EBADF)
                 printf("terminating transmitter thread\n");
             else
@@ -136,12 +146,16 @@ void *receiver(void *arg)
     long long *rtt_time = (long long *)frame.data;
     struct rtt_stat rtt_stat = {0, 1000000000000000000LL, -1000000000000000000LL,
 				0, 0, 0};
+
+#ifdef __XENO__
+    pthread_set_name_np(pthread_self(), "rtcan_rtt_receiver");
+#endif
     pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
 
     rtt_stat.counts_per_sec = 1000000 / cycle;
 
     while (1) {
-	if (recv(rxsock, (void *)&frame, sizeof(can_frame_t), 0) < 0) {
+	if (recv(rxsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
 	    if (errno == EBADF)
                 printf("terminating receiver thread\n");
             else
@@ -150,7 +164,7 @@ void *receiver(void *arg)
         }
 	if (repeater) {
 	    /* Transmit the message back as is */
-	    if (send(txsock, (void *)&frame, sizeof(can_frame_t), 0) < 0) {
+	    if (send(txsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
 		if (errno == EBADF)
 		    printf("terminating transmitter thread\n");
 		else
@@ -161,7 +175,7 @@ void *receiver(void *arg)
 	} else {
 	    clock_gettime(CLOCK_MONOTONIC, &time);
 	    if (rxcount > 0) {
-		rtt_stat.rtt = (time.tv_sec * 1000000000LL +
+		rtt_stat.rtt = ((long long)time.tv_sec * 1000000000LL +
 				time.tv_nsec - *rtt_time);
 		rtt_stat.rtt_sum += rtt_stat.rtt;
 		if (rtt_stat.rtt <  rtt_stat.rtt_min)
@@ -201,7 +215,7 @@ int main(int argc, char *argv[])
     struct option long_options[] = {
 	{ "id", required_argument, 0, 'i'},
 	{ "cycle", required_argument, 0, 'c'},
-	{ "repeater", required_argument, 0, 'r'},
+	{ "repeater", no_argument, 0, 'r'},
 	{ "help", no_argument, 0, 'h'},
 	{ 0, 0, 0, 0},
     };
