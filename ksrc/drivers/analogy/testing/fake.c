@@ -1,15 +1,20 @@
 #include <linux/module.h>
 #include <analogy/analogy_driver.h>
 
-#define TEST_TASK_PERIOD 1000000
-#define TEST_NB_BITS 16
+#define AI_TASK_PERIOD 1000000
 
-#define TEST_INPUT_SUBD 0
+#define AI_SUBD 0
+#define DIO_SUBD 1
 
 /* --- Driver related structures --- */
 
-/* Device private structure */
-struct test_priv {
+struct fake_priv {
+	/* Configuration parameters */
+	unsigned long amplitude_div;
+	unsigned long quanta_cnt;
+};
+
+struct ai_priv {
 
 	/* Task descriptor */
 	a4l_task_t timer_task;
@@ -27,28 +32,33 @@ struct test_priv {
 	volatile int timer_running;
 
 };
-typedef struct test_priv tstprv_t;
 
-/* Attach options structure */
-struct test_attach_arg {
-	unsigned long amplitude_div;
-	unsigned long quanta_cnt;
+struct dio_priv {
+	/* Bits status */
+	uint16_t bits_values;
 };
-typedef struct test_attach_arg tstattr_t;
 
 /* --- Channels / ranges part --- */
 
 /* Channels descriptor */
-static a4l_chdesc_t test_chandesc = {
+static a4l_chdesc_t ai_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
 	.chans = { 
-		{A4L_CHAN_AREF_GROUND, TEST_NB_BITS},
+		{A4L_CHAN_AREF_GROUND, 16},
+	},
+};
+
+static a4l_chdesc_t dio_chandesc = {
+	.mode = A4L_CHAN_GLOBAL_CHANDESC,
+	.length = 16,
+	.chans = { 
+		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
 
 /* Ranges tab */
-static a4l_rngtab_t test_rngtab = {
+static a4l_rngtab_t ai_rngtab = {
 	.length = 2,
 	.rngs = {
 		RANGE_V(-5,5),
@@ -56,7 +66,7 @@ static a4l_rngtab_t test_rngtab = {
 	},
 };
 /* Ranges descriptor */
-a4l_rngdesc_t test_rngdesc = RNG_GLOBAL(test_rngtab);
+static a4l_rngdesc_t ai_rngdesc = RNG_GLOBAL(ai_rngtab);
 
 /* Command options mask */
 static a4l_cmd_t test_cmd_mask = {
@@ -70,18 +80,18 @@ static a4l_cmd_t test_cmd_mask = {
 
 /* --- Analog input simulation --- */
 
-static uint16_t output_tab[8] = { 
-	0x0001, 0x2000, 0x4000, 0x6000, 
-	0x8000, 0xa000, 0xc000, 0xffff 
-};
-static unsigned int output_idx;
-static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
-
-static uint16_t test_output(tstprv_t *priv)
+static uint16_t ai_value_output(struct ai_priv *priv)
 {
+	static uint16_t output_tab[8] = { 
+		0x0001, 0x2000, 0x4000, 0x6000, 
+		0x8000, 0xa000, 0xc000, 0xffff 
+	};
+	static unsigned int output_idx;
+	static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
+
 	unsigned long flags;
 	unsigned int idx;
-    
+	
 	a4l_lock_irqsave(&output_lock, flags);
 
 	output_idx += priv->quanta_cnt;
@@ -97,16 +107,15 @@ static uint16_t test_output(tstprv_t *priv)
 /* --- Task part --- */
 
 /* Timer task routine */
-static void test_task_proc(void *arg)
+static void ai_task_proc(void *arg)
 {
-	a4l_dev_t *dev = (a4l_dev_t*)arg;
-	a4l_subd_t *subd = a4l_get_subd(dev, TEST_INPUT_SUBD);
-	tstprv_t *priv = (tstprv_t *)dev->priv;
+	a4l_subd_t *subd = (a4l_subd_t *)arg;
+	struct ai_priv *priv = (struct ai_priv *)subd->priv;
 	a4l_cmd_t *cmd = NULL;
 	uint64_t now_ns, elapsed_ns=0;
 
-	while(!a4l_check_dev(dev))
-		a4l_task_sleep(TEST_TASK_PERIOD);
+	while(!a4l_check_dev(subd->dev))
+		a4l_task_sleep(AI_TASK_PERIOD);
 
 	while(1) {
 		if(priv->timer_running != 0)
@@ -125,8 +134,7 @@ static void test_task_proc(void *arg)
 
 				for(j = 0; j < cmd->nb_chan; j++)
 				{
-					uint16_t value = test_output(priv);
-
+					uint16_t value = ai_value_output(priv);
 					a4l_buf_put(subd, &value, sizeof(uint16_t));
 
 				}
@@ -142,28 +150,23 @@ static void test_task_proc(void *arg)
 			a4l_buf_evt(subd, 0);
 		}
 
-		a4l_task_sleep(TEST_TASK_PERIOD);
-
+		a4l_task_sleep(AI_TASK_PERIOD);
 	}
 }
 
-/* --- Analogy Callbacks --- */
+/* --- Asynchronous AI functions --- */
 
-/* Command callback */
-int test_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
+static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	a4l_dev_t *dev = subd->dev;
-	tstprv_t *priv = (tstprv_t *)dev->priv;
-
-	a4l_info(dev, "test_cmd: begin (subd=%d)\n", subd->idx);
+	struct ai_priv *priv = (struct ai_priv *)subd->priv;
   
-	priv->scan_period_ns=cmd->scan_begin_arg;
-	priv->convert_period_ns=(cmd->convert_src==TRIG_TIMER)?
+	priv->scan_period_ns = cmd->scan_begin_arg;
+	priv->convert_period_ns = (cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
   
-	a4l_info(dev, 
-		 "test_cmd: scan_period=%luns convert_period=%luns\n",
-		 priv->scan_period_ns, priv->convert_period_ns);
+	a4l_dbg(1, drv_dbg, subd->dev, 
+		"ai_cmd: scan_period=%luns convert_period=%luns\n",
+		priv->scan_period_ns, priv->convert_period_ns);
 
 	priv->last_ns = a4l_get_time();
 
@@ -176,8 +179,7 @@ int test_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
   
 }
 
-/* Test command callback */
-int test_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
+static int ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	if(cmd->scan_begin_src == TRIG_TIMER)
 	{
@@ -192,31 +194,16 @@ int test_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	return 0;
 }
 
-/* Cancel callback */
-int test_cancel(a4l_subd_t *subd)
+static int ai_cancel(a4l_subd_t *subd)
 {
-	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
+	struct ai_priv *priv = (struct ai_priv *)subd->priv;
 
 	priv->timer_running = 0;
 
 	return 0;
 }
 
-/* Read instruction callback */
-int test_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
-{
-	tstprv_t *priv = (tstprv_t *)subd->dev->priv;
-	uint16_t *data = (uint16_t *)insn->data;
-	int i;
-
-	for(i = 0; i < insn->data_size / sizeof(uint16_t); i++)
-		data[i] = test_output(priv);
-
-	return 0;
-}
-
-/* Munge callback */
-void test_ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
+static void ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 {
 	int i;
 
@@ -224,79 +211,135 @@ void test_ai_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 		((uint16_t *)buf)[i] += 1;
 }
 
-void setup_test_subd(a4l_subd_t *subd)
+/* --- Synchronous AI functions --- */
+
+static int ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
-	/* Initialize the subdevice structure */
-	memset(subd, 0, sizeof(a4l_subd_t));
+	struct ai_priv *priv = (struct ai_priv *)subd->priv;
+	uint16_t *data = (uint16_t *)insn->data;
+	int i;
+
+	for(i = 0; i < insn->data_size / sizeof(uint16_t); i++)
+		data[i] = ai_value_output(priv);
+
+	return 0;
+}
+
+/* --- Synchronous DIO function --- */
+
+static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
+{
+	struct dio_priv *priv = (struct dio_priv *)subd->priv;
+	uint16_t *data = (uint16_t *)insn->data;
 	
+	if (insn->data_size != 2 * sizeof(uint16_t))
+		return -EINVAL;
+	
+	if (data[0] != 0) {
+		priv->bits_values &= ~(data[0]);
+		priv->bits_values |= (data[0] & data[1]);
+	}
+
+	data[1] = priv->bits_values;
+
+	return 0;
+}
+
+/* --- Initialization functions --- */
+
+void setup_ai_subd(a4l_subd_t *subd)
+{
 	/* Fill the subdevice structure */
 	subd->flags |= A4L_SUBD_AI;
 	subd->flags |= A4L_SUBD_CMD;
 	subd->flags |= A4L_SUBD_MMAP;
-	subd->rng_desc = &test_rngdesc;
-	subd->chan_desc = &test_chandesc;
-	subd->do_cmd = test_cmd;
-	subd->do_cmdtest = test_cmdtest;
-	subd->cancel = test_cancel;
-	subd->munge = test_ai_munge;
+	subd->rng_desc = &ai_rngdesc;
+	subd->chan_desc = &ai_chandesc;
+	subd->do_cmd = ai_cmd;
+	subd->do_cmdtest = ai_cmdtest;
+	subd->cancel = ai_cancel;
+	subd->munge = ai_munge;
 	subd->cmd_mask = &test_cmd_mask;
-	subd->insn_read = test_ai_insn_read;
+	subd->insn_read = ai_insn_read;
 }
 
-/* Attach callback */
+void setup_dio_subd(a4l_subd_t *subd)
+{
+	/* Fill the subdevice structure */
+	subd->flags |= A4L_SUBD_DIO;
+	subd->chan_desc = &dio_chandesc;
+	subd->rng_desc = &range_digital;
+	subd->insn_bits = dio_insn_bits;
+}
+
+/* --- Attach / detach functions ---  */
+
 int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
 	int ret = 0;  
 	a4l_subd_t *subd;
-	tstprv_t *priv = (tstprv_t *)dev->priv;
+	struct fake_priv *priv = (struct fake_priv *)dev->priv;
+	struct ai_priv * ai_priv;
 
 	a4l_dbg(1, drv_dbg, dev, "starting attach procedure...\n");
 
-	if(arg->opts!=NULL) {
-		tstattr_t *attr = (tstattr_t*) arg->opts;
-
-		priv->amplitude_div = attr->amplitude_div;
-		priv->quanta_cnt = 
-			(attr->quanta_cnt > 7 || attr->quanta_cnt == 0) ? 
-			1 : attr->quanta_cnt;
-	}
-	else {
+	if (arg->opts_size < sizeof(unsigned long)) {
 		priv->amplitude_div = 1;
 		priv->quanta_cnt = 1;
-	}
+	} else {
+		unsigned long *args = (unsigned long *)arg->opts;
+		priv->amplitude_div = args[0];
 
+		if (arg->opts_size == 2 * sizeof(unsigned long))
+			priv->quanta_cnt = (args[1] > 7 || args[1] == 0) ? 
+				1 : args[1];
+	}
+	
 	a4l_dbg(1, drv_dbg, dev, 
 		"amplitude divisor = %lu...\n", priv->amplitude_div);
 	a4l_dbg(1, drv_dbg, dev, 
 		"quanta count = %lu...\n", priv->quanta_cnt);
 
-	/* Adds the subdevice to the device */
-	subd = a4l_alloc_subd(0, setup_test_subd);
+	/* Adds the AI subdevice to the device */
+	subd = a4l_alloc_subd(sizeof(struct ai_priv), setup_ai_subd);
 	if(subd == NULL)
 		return -ENOMEM;
 
+	ai_priv = (struct ai_priv*)subd->priv;
+	ai_priv->timer_running = 0;
+	ai_priv->amplitude_div = priv->amplitude_div;
+	ai_priv->quanta_cnt = priv->quanta_cnt;
+
+	ret = a4l_task_init(&ai_priv->timer_task, 
+			    "Fake AI task", 
+			    ai_task_proc, 
+			    subd, A4L_TASK_HIGHEST_PRIORITY);
+
 	ret = a4l_add_subd(dev, subd);
-	if(ret != TEST_INPUT_SUBD)
+	if(ret != AI_SUBD)
 		return (ret < 0) ? ret : -EINVAL;
 
 	a4l_dbg(1, drv_dbg, dev, "AI subdevice registered\n");
 
-	priv->timer_running = 0;
+	/* Adds the DIO subdevice to the device */
+	subd = a4l_alloc_subd(sizeof(struct dio_priv), setup_dio_subd);
+	if(subd == NULL)
+		return -ENOMEM;
 
-	ret = a4l_task_init(&priv->timer_task, 
-			    "a4l_test task", 
-			    test_task_proc, 
-			    dev, A4L_TASK_HIGHEST_PRIORITY);
+	ret = a4l_add_subd(dev, subd);
+	if(ret != DIO_SUBD)
+		return (ret < 0) ? ret : -EINVAL;
+
+	a4l_dbg(1, drv_dbg, dev, "DIO subdevice registered\n");
 
 	a4l_dbg(1, drv_dbg, dev, "attach procedure complete\n");
 
 	return ret;
 }
 
-/* Detach callback */
 int test_detach(a4l_dev_t *dev)
 {
-	tstprv_t *priv = (tstprv_t *)dev->priv;
+	struct ai_priv *priv = (struct ai_priv *)dev->priv;
 
 	a4l_task_destroy(&priv->timer_task);
 
@@ -305,14 +348,14 @@ int test_detach(a4l_dev_t *dev)
 	return 0;
 }
 
-/* --- Module part --- */
+/* --- Module stuff --- */
 
 static a4l_drv_t test_drv = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_fake",
 	.attach = test_attach,
 	.detach = test_detach,
-	.privdata_size = sizeof(tstprv_t),
+	.privdata_size = sizeof(struct fake_priv),
 };
 
 static int __init a4l_fake_init(void)
