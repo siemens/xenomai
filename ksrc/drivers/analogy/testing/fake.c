@@ -114,9 +114,6 @@ static void ai_task_proc(void *arg)
 	a4l_cmd_t *cmd = NULL;
 	uint64_t now_ns, elapsed_ns=0;
 
-	while(!a4l_check_dev(subd->dev))
-		a4l_task_sleep(AI_TASK_PERIOD);
-
 	while(1) {
 		if(priv->timer_running != 0)
 		{
@@ -300,7 +297,7 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	a4l_dbg(1, drv_dbg, dev, 
 		"quanta count = %lu...\n", priv->quanta_cnt);
 
-	/* Adds the AI subdevice to the device */
+	/* Add the AI subdevice to the device */
 	subd = a4l_alloc_subd(sizeof(struct ai_priv), setup_ai_subd);
 	if(subd == NULL)
 		return -ENOMEM;
@@ -321,7 +318,7 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_dbg(1, drv_dbg, dev, "AI subdevice registered\n");
 
-	/* Adds the DIO subdevice to the device */
+	/* Add the DIO subdevice to the device */
 	subd = a4l_alloc_subd(sizeof(struct dio_priv), setup_dio_subd);
 	if(subd == NULL)
 		return -ENOMEM;
@@ -334,7 +331,7 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_dbg(1, drv_dbg, dev, "attach procedure complete\n");
 
-	return ret;
+	return 0;
 }
 
 int test_detach(a4l_dev_t *dev)
