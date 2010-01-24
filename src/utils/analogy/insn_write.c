@@ -281,8 +281,11 @@ int main(int argc, char *argv[])
 	ret = a4l_sync_write(&dsc, 
 			     idx_subd, CHAN(idx_chan), 0, &value, scan_size);
 
-	if (ret < 0)
+	if (ret < 0) {
+		fprintf(stderr, 
+			"insn_write: a4l_sync_write failed (err=%d)\n", ret);
 		goto out_insn_write;
+	}
 
 	if (verbose != 0)
 		printf("insn_write: %u bytes successfully sent\n", scan_size);
