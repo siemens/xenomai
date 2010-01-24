@@ -58,6 +58,7 @@ Patch			        Based on GIT commit # / TAG
 2.6.29.4-DENX-*/powerpc		5e2fc2073ede8e33409fad91f4caf6db30cbfd76
 2.6.30-DENX-*/powerpc		7cb16ec2590815a67e5fb5c8994ead536613d922
 2.6.30.3-DENX-*/powerpc		193e7866fc30ae29454fcc4d110166a86a963c9f
+2.6.32.3-DENX-*/powerpc		224f363857f05ab44dab3441112965f0a7966788
 
 [1] http://www.gna.org/projects/adeos/
 [2] git://www.denx.de/git/linuxppc_2_4_devel
