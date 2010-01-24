@@ -368,8 +368,12 @@ int main(int argc, char *argv[])
 		ret = a4l_sync_read(&dsc,
 				    idx_subd, CHAN(idx_chan), 0, buf, tmp);
 
-		if (ret < 0)
+		if (ret < 0) {
+			fprintf(stderr, 
+				"insn_read: a4l_sync_read failed (err=%d)\n",
+				ret);
 			goto out_insn_read;
+		}
 
 		/* Dump the read data */
 		tmp = dump_function(&dsc, buf, ret);
