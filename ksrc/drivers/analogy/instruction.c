@@ -196,8 +196,13 @@ int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	default:
 		__a4l_err("a4l_do_special_insn: "
 			  "incoherent instruction code\n");
-		ret = -EINVAL;
+		return -EINVAL;
 	}
+
+	if (ret < 0) 
+		__a4l_err("a4l_do_special_insn: "
+			  "execution of the instruction failed (err=%d)\n",
+			  ret);
 
 	return ret;
 }
@@ -267,6 +272,11 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 
 	/* Let's the driver-specific code perform the instruction */
 	ret = hdlr(subd, dsc);
+
+	if (ret < 0) 
+		__a4l_err("a4l_do_insn: "
+			  "execution of the instruction failed (err=%d)\n",
+			  ret);
 
 out_do_insn:
 
