@@ -284,7 +284,7 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 		.data = values,
 	};
 
-	int ret;
+	int ret, size;
 	a4l_sbinfo_t *subd;
 
 	/* Get the subdevice descriptor */
@@ -293,18 +293,23 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 		return ret;
 
 	/* Get the size in memory of a DIO acquisition */
-	switch(a4l_sizeof_subd(subd)) {
+	size = a4l_sizeof_subd(subd);
+
+	switch(size) {
 	case 4:
 		((uint32_t *)values)[0] = *((uint32_t *)mask);
 		((uint32_t *)values)[1] = *((uint32_t *)buf);
+		insn.data_size = 2 * sizeof(uint32_t);
 		break;
 	case 2: 
 		((uint16_t *)values)[0] = *((uint16_t *)mask);
 		((uint16_t *)values)[1] = *((uint16_t *)buf);
+		insn.data_size = 2 * sizeof(uint16_t);
 		break;
 	case 1: 
 		((uint8_t *)values)[0] = *((uint8_t *)mask);
 		((uint8_t *)values)[1] = *((uint8_t *)buf);
+		insn.data_size = 2 * sizeof(uint8_t);
 		break;
 	default:
 		return -EINVAL;
@@ -312,6 +317,19 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 
 	/* Send the config instruction */
 	ret = a4l_snd_insn(dsc, &insn);
+
+	/* Update the buffer if need be */
+	switch(size) {
+	case 4:
+		*((uint32_t *)buf) = ((uint32_t *)values)[1];
+		break;
+	case 2: 
+		*((uint16_t *)buf) = ((uint16_t *)values)[1];
+		break;
+	case 1: 
+		*((uint8_t *)buf) = ((uint8_t *)values)[1];
+		break;
+	}	
 	
 	return ret;
 }
