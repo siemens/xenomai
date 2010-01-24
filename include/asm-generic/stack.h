@@ -2,6 +2,8 @@
 #define STACKSIZE_H
 
 #include <stdint.h>
+
+#include <unistd.h>
 #include <pthread.h>
 
 #ifdef __cplusplus
@@ -22,6 +24,8 @@ static inline unsigned xeno_stacksize(unsigned size)
 
 	return size;
 }
+
+void xeno_fault_stack(void);
 
 #ifdef __cplusplus
 }

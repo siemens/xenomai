@@ -27,7 +27,7 @@
 #include <asm/xenomai/system.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 #include <asm-generic/bits/bind.h>
 #include <nucleus/sched.h>
 #include <uitron/uitron.h>

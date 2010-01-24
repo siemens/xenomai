@@ -17,7 +17,7 @@
 
 #include <xeno_config.h>
 #include <asm/xenomai/fptest.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 #include <nucleus/trace.h>
 #include <rtdm/rttesting.h>
 

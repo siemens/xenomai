@@ -29,7 +29,7 @@
 
 #include <rtdk.h>
 #include <asm/xenomai/system.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
 #define RT_PRINT_DEFAULT_BUFFER		16*1024

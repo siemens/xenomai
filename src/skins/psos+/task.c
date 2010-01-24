@@ -28,7 +28,7 @@
 #include <psos+/psos.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 
 extern int __psos_muxid;
 

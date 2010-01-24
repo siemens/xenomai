@@ -5,7 +5,7 @@ includesub_HEADERS = \
 	features.h \
 	hal.h \
 	pci_ids.h \
-	stacksize.h \
+	stack.h \
 	syscall.h \
 	system.h \
 	wrappers.h

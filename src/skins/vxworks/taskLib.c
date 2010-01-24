@@ -30,7 +30,7 @@
 #include <vxworks/vxworks.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <asm-generic/bits/current.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 #include "wrappers.h"
 
 #ifdef HAVE___THREAD

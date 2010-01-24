@@ -28,7 +28,7 @@
 #include <posix/syscall.h>
 #include <asm-generic/bits/current.h>
 #include <asm-generic/bits/sigshadow.h>
-#include <asm-generic/stacksize.h>
+#include <asm-generic/stack.h>
 
 extern int __pse51_muxid;
 
@@ -251,7 +251,7 @@ int __wrap_pthread_create(pthread_t *tid,
 	pthread_attr_t iattr;
 	int inherit, err;
 	pthread_t ltid;
-	unsigned stksz;
+	size_t stksz;
 
 	if (!attr)
 		attr = &default_attr;

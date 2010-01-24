@@ -7,7 +7,7 @@
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/bind.h>
 #include <asm-generic/xenomai/bits/current.h>
-#include <asm-generic/xenomai/stacksize.h>
+#include <asm-generic/xenomai/stack.h>
 #include "sem_heap.h"
 
 static pthread_t xeno_main_tid;
