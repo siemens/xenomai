@@ -1,6 +1,6 @@
 sbin_PROGRAMS = analogy_config
 
-bin_PROGRAMS = cmd_read cmd_write insn_read insn_write
+bin_PROGRAMS = cmd_read cmd_write insn_read insn_write insn_bits
 
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
@@ -26,3 +26,6 @@ insn_read_LDADD = -lanalogy -lnative -lrtdm
 
 insn_write_SOURCES = insn_write.c
 insn_write_LDADD = -lanalogy -lnative -lrtdm
+
+insn_bits_SOURCES = insn_bits.c
+insn_bits_LDADD = -lanalogy -lrtdm
