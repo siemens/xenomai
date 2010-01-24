@@ -1476,9 +1476,9 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		bus = slot = 0;
 	else {
 		bus = arg->opts_size >= sizeof(unsigned long) ?
-			((int* )arg->opts)[0] : 0;
+			((unsigned long *)arg->opts)[0] : 0;
 		slot = arg->opts_size >= sizeof(unsigned long) * 2 ?
-			((int* )arg->opts)[1] : 0;
+			((unsigned long *)arg->opts)[1] : 0;
 	}
 
 	for(i = 0; i < n_pcimio_boards && mite == NULL; i++) {
