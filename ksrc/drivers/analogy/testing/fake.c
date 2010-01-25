@@ -293,9 +293,9 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	}
 	
 	a4l_dbg(1, drv_dbg, dev, 
-		"amplitude divisor = %lu...\n", priv->amplitude_div);
+		"amplitude divisor = %lu\n", priv->amplitude_div);
 	a4l_dbg(1, drv_dbg, dev, 
-		"quanta count = %lu...\n", priv->quanta_cnt);
+		"quanta count = %lu\n", priv->quanta_cnt);
 
 	/* Add the AI subdevice to the device */
 	subd = a4l_alloc_subd(sizeof(struct ai_priv), setup_ai_subd);
