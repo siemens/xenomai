@@ -336,7 +336,8 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 int test_detach(a4l_dev_t *dev)
 {
-	struct ai_priv *priv = (struct ai_priv *)dev->priv;
+	a4l_subd_t *subd = a4l_get_subd(dev, AI_SUBD);
+	struct ai_priv *priv = (struct ai_priv *)subd->priv;
 
 	a4l_task_destroy(&priv->timer_task);
 
