@@ -75,7 +75,7 @@ void xnshadow_unmap(struct xnthread *thread);
 
 int xnshadow_harden(void);
 
-void xnshadow_relax(int notify);
+void xnshadow_relax(int notify, int reason);
 
 void xnshadow_renice(struct xnthread *thread);
 

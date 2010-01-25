@@ -2599,7 +2599,8 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 			   locking anyway. */
 			xnstat_counter_inc(&thread->stat.pf);
 
-		xnshadow_relax(xnarch_fault_notify(fltinfo));
+		xnshadow_relax(xnarch_fault_notify(fltinfo),
+			       SIGDEBUG_MIGRATE_FAULT);
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 #endif /* __KERNEL__ */

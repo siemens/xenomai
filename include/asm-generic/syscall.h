@@ -63,6 +63,15 @@ typedef struct xnsysinfo {
 #define sigshadow_arg(code) (((code) >> 8) & 0xff)
 #define sigshadow_int(action, arg) ((action) | ((arg) << 8))
 
+#define SIGDEBUG			SIGXCPU
+#define SIGDEBUG_UNDEFINED		0
+#define SIGDEBUG_MIGRATE_SIGNAL		1
+#define SIGDEBUG_MIGRATE_SYSCALL	2
+#define SIGDEBUG_MIGRATE_FAULT		3
+#define SIGDEBUG_MIGRATE_PRIOINV	4
+#define SIGDEBUG_NOMLOCK		5
+#define SIGDEBUG_WATCHDOG		6
+
 union xnsiginfo {
 	struct siginfo pse51_si;
 };

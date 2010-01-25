@@ -778,7 +778,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 		xnthread_clear_info(thread, XNKICKED);
 	}
 
-	xnshadow_relax(notify);
+	xnshadow_relax(notify, SIGDEBUG_MIGRATE_SIGNAL);
 }
 
 static inline void set_linux_task_priority(struct task_struct *p, int prio)
@@ -861,7 +861,7 @@ static void lostage_handler(void *cookie)
 
 		case LO_SIGTHR_REQ:
 			xnshadow_sig_demux(arg, sig, sigarg);
-			if (sig == SIGSHADOW) {
+			if (sig == SIGSHADOW || sig == SIGDEBUG) {
 				siginfo_t si;
 				memset(&si, '\0', sizeof(si));
 				si.si_signo = sig;
@@ -1112,7 +1112,7 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
 
 /*! 
  * @internal
- * \fn void xnshadow_relax(int notify);
+ * \fn void xnshadow_relax(int notify, int reason);
  * \brief Switch a shadow thread back to the Linux domain.
  *
  * This service yields the control of the running shadow back to
@@ -1122,9 +1122,11 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  * behalf of the root thread.
  *
  * @param notify A boolean flag indicating whether threads monitored
- * from secondary mode switches should be sent a SIGXCPU signal. For
+ * from secondary mode switches should be sent a SIGDEBUG signal. For
  * instance, some internal operations like task exit should not
  * trigger such signal.
+ *
+ * @param reason The reason to report along with the SIGDEBUG signal.
  *
  * Environments:
  *
@@ -1138,9 +1140,10 @@ EXPORT_SYMBOL_GPL(xnshadow_harden);
  * properties of the Linux task.
  */
 
-void xnshadow_relax(int notify)
+void xnshadow_relax(int notify, int reason)
 {
 	xnthread_t *thread = xnpod_current_thread();
+	siginfo_t si;
 	int prio;
 	spl_t s;
 
@@ -1172,10 +1175,14 @@ void xnshadow_relax(int notify)
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
 	if (notify) {
-		if (xnthread_test_state(thread, XNTRAPSW))
+		if (xnthread_test_state(thread, XNTRAPSW)) {
 			/* Help debugging spurious relaxes. */
-			send_sig(SIGXCPU, current, 1);
-
+			memset(&si, 0, sizeof(si));
+			si.si_signo = SIGDEBUG;
+			si.si_code = SI_QUEUE;
+			si.si_int = reason;
+			send_sig_info(SIGDEBUG, &si, current);
+		}
 		xnsynch_detect_claimed_relax(thread);
 	}
 
@@ -1295,9 +1302,15 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		return -EFAULT;
 
 #ifdef CONFIG_MMU
-	if (!(current->mm->def_flags & VM_LOCKED))
-		send_sig(SIGXCPU, current, 1);
-	else
+	if (!(current->mm->def_flags & VM_LOCKED)) {
+		siginfo_t si;
+
+		memset(&si, 0, sizeof(si));
+		si.si_signo = SIGDEBUG;
+		si.si_code = SI_QUEUE;
+		si.si_int = SIGDEBUG_NOMLOCK;
+		send_sig_info(SIGDEBUG, &si, current);
+	} else
 		if ((ret = rthal_disable_ondemand_mappings(current)))
 			return ret;
 #endif /* CONFIG_MMU */
@@ -1529,7 +1542,7 @@ static int xnshadow_sys_migrate(struct pt_regs *regs)
 			return 0;
 	else /* rthal_current_domain != rthal_root_domain */
     if (__xn_reg_arg1(regs) == XENOMAI_LINUX_DOMAIN) {
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 		return 1;
 	} else
 		return 0;
@@ -2114,7 +2127,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 		if (domid == RTHAL_DOMAIN_ID) {
 			/* Request originates from the Xenomai domain: just relax the
 			   caller and execute the syscall immediately after. */
-			xnshadow_relax(1);
+			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 			switched = 1;
 		} else
 			/* Request originates from the Linux domain: propagate the
@@ -2208,7 +2221,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	 * it. Before we let it go, ensure that the current thread has
 	 * properly entered the Linux domain.
 	 */
-	xnshadow_relax(1);
+	xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 
 	goto propagate_syscall;
 
@@ -2305,7 +2318,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	if (err == -ENOSYS && (sysflags & __xn_exec_adaptive) != 0) {
 		if (switched) {
 			switched = 0;
-			xnshadow_relax(1);
+			xnshadow_relax(1, SIGDEBUG_MIGRATE_SYSCALL);
 		}
 
 		sysflags ^=
@@ -2326,7 +2339,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 		handle_rt_signals(thread, regs, sysflags);
 	}
 	if (!sigs && (sysflags & __xn_exec_switchback) != 0 && switched)
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 
       ret_handled:
 	trace_mark(xn_nucleus, syscall_lostage_exit,

@@ -992,7 +992,8 @@ void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleepe
 	if (xnthread_test_state(sleeper, XNTRAPSW|XNSWREP) == XNTRAPSW &&
 	    xnthread_test_state(synch->owner, XNRELAX)) {
 		xnthread_set_state(sleeper, XNSWREP);
-		xnshadow_send_sig(sleeper, SIGXCPU, 0, 1);
+		xnshadow_send_sig(sleeper, SIGDEBUG,
+				  SIGDEBUG_MIGRATE_PRIOINV, 1);
 	} else
 		xnthread_clear_state(sleeper,  XNSWREP);
 }
@@ -1017,7 +1018,8 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 			sleeper = link2thread(ht, plink);
 			if (xnthread_test_state(sleeper, XNRELAX)) {
 				xnthread_set_state(sleeper, XNSWREP);
-				xnshadow_send_sig(sleeper, SIGXCPU, 0, 1);
+				xnshadow_send_sig(sleeper, SIGDEBUG,
+						  SIGDEBUG_MIGRATE_PRIOINV, 1);
 			}
 		}
 	}
