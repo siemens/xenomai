@@ -347,7 +347,6 @@ out_assign_driver:
 int a4l_release_driver(a4l_cxt_t * cxt)
 {
 	int ret = 0;
-	unsigned long flags;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
 	__a4l_dbg(1, core_dbg, 
