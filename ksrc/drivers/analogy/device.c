@@ -327,7 +327,7 @@ int a4l_assign_driver(a4l_cxt_t * cxt,
 			  "call(drv->attach) failed (ret=%d)\n",
 		     ret);
 
-      out_assign_driver:
+out_assign_driver:
 
 	/* Increments module's count */
 	if (ret == 0 && (!try_module_get(drv->owner))) {
@@ -353,8 +353,6 @@ int a4l_release_driver(a4l_cxt_t * cxt)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_release_driver: minor=%d\n", a4l_get_minor(cxt));
 
-	a4l_lock_irqsave(&dev->lock, flags);
-
 	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
@@ -375,9 +373,7 @@ int a4l_release_driver(a4l_cxt_t * cxt)
 	rtdm_free(dev->priv);
 	dev->driver = NULL;
 
-      out_release_driver:
-	a4l_unlock_irqrestore(&dev->lock, flags);
-
+out_release_driver:
 	return ret;
 }
 
