@@ -597,7 +597,7 @@ static int __rt_task_set_mode(struct pt_regs *regs)
 		return err;
 
 	if ((clrmask & T_PRIMARY) != 0)
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 	else
 		mode_r |= T_PRIMARY;
 
@@ -2092,7 +2092,7 @@ static int __rt_queue_bind(struct pt_regs *regs)
 	   might have entered it in primary mode. */
 
 	if (xnpod_primary_p())
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 
 	return 0;
 
@@ -2616,7 +2616,7 @@ static int __rt_heap_bind(struct pt_regs *regs)
 	   might have entered it in primary mode. */
 
 	if (xnpod_primary_p())
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 
 	return 0;
 

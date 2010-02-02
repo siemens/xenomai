@@ -99,7 +99,7 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		xnprintf("watchdog triggered -- signaling runaway thread "
 			 "'%s'\n", xnthread_name(thread));
 		xnthread_set_info(thread, XNAMOK | XNKICKED);
-		xnshadow_send_sig(thread, SIGXCPU, 0, 1);
+		xnshadow_send_sig(thread, SIGDEBUG, SIGDEBUG_WATCHDOG, 1);
 	} else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	{

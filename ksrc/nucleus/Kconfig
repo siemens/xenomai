@@ -301,7 +301,7 @@ config XENO_OPT_DEBUG_SYNCH_RELAX
 	This option detects situations where a real-time thread
 	attempts to sleep on a Xenomai mutex object, that is owned by
 	another thread currently running in secondary mode (i.e. plain
-	Linux execution mode). The SIGXCPU signal may be sent in such
+	Linux execution mode). The SIGDEBUG signal may be sent in such
 	a case to the sleeper, provided the WARNSW flag is enabled for
 	it, as set by e.g. rt_task_set_mode() or pthread_set_mode_np().
 

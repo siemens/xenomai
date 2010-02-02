@@ -684,7 +684,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
-		xnshadow_relax(0);
+		xnshadow_relax(0, 0);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 	return 0;
