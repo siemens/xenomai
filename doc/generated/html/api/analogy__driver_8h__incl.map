@@ -1,5 +1,3 @@
-<map id="G" name="G">
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,83,155,112"/>
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="179,83,301,112"/>
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="325,83,445,112"/>
-</map>
+<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="5,84,165,111">
+<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="189,84,325,111">
+<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="349,84,477,111">

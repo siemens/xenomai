@@ -1,6 +1,4 @@
-<map id="G" name="G">
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="315,83,419,112"/>
-<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="311,160,423,189"/>
-<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="301,237,432,267"/>
-<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,237,573,267"/>
-</map>
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="336,84,448,111">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="332,161,452,188">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="323,239,461,265">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,239,611,265">

@@ -1,7 +1,5 @@
-<map id="G" name="G">
-<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="324,237,436,267"/>
-<area shape="rect" href="$synch_8h_source.html" title="nucleus/synch.h" alt="" coords="417,83,532,112"/>
-<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="301,315,432,344"/>
-<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,315,573,344"/>
-<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="417,160,532,189"/>
-</map>
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="345,239,465,265">
+<area shape="rect" href="$synch_8h-source.html" title="nucleus/synch.h" alt="" coords="443,84,565,111">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="323,316,461,343">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,316,611,343">
+<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="443,161,568,188">

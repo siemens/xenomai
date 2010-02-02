@@ -1,10 +1,8 @@
-<map id="G" name="G">
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="245,237,349,267"/>
-<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="335,83,444,112"/>
-<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="331,315,443,344"/>
-<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="187,392,317,421"/>
-<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,392,573,421"/>
-<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="463,160,596,189"/>
-<area shape="rect" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="335,160,439,189"/>
-<area shape="rect" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="457,237,572,267"/>
-</map>
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="263,239,375,265">
+<area shape="rect" href="$include_2nucleus_2timer_8h.html" title="nucleus/timer.h" alt="" coords="356,84,476,111">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="352,316,472,343">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="200,393,339,420">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,393,611,420">
+<area shape="rect" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="492,161,639,188">
+<area shape="rect" href="$stat_8h-source.html" title="nucleus/stat.h" alt="" coords="356,161,468,188">
+<area shape="rect" href="$nucleus_2queue_8h-source.html" title="nucleus/queue.h" alt="" coords="485,239,611,265">

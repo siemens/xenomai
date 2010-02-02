@@ -1,7 +1,5 @@
-<map id="G" name="G">
-<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="313,83,420,112"/>
-<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="315,160,419,189"/>
-<area shape="rect" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="311,237,423,267"/>
-<area shape="rect" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="301,315,432,344"/>
-<area shape="rect" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="456,315,573,344"/>
-</map>
+<area shape="rect" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="333,84,451,111">
+<area shape="rect" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="336,161,448,188">
+<area shape="rect" href="$nucleus_2types_8h-source.html" title="nucleus/types.h" alt="" coords="332,239,452,265">
+<area shape="rect" href="$compiler_8h-source.html" title="nucleus/compiler.h" alt="" coords="323,316,461,343">
+<area shape="rect" href="$assert_8h-source.html" title="nucleus/assert.h" alt="" coords="485,316,611,343">

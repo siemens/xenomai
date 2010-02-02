@@ -1,6 +1,4 @@
-<map id="G" name="G">
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="253,83,419,112"/>
-<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="101,160,251,189"/>
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="275,160,397,189"/>
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="421,160,541,189"/>
-</map>
+<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="272,84,451,111">
+<area shape="rect" href="$os__facilities_8h.html" title="Analogy for Linux, Operation system facilities." alt="" coords="109,161,269,188">
+<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="293,161,429,188">
+<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="453,161,581,188">

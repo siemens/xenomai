@@ -1,5 +1,3 @@
-<map id="G" name="G">
-<area shape="rect" href="$structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction." alt="" coords="5,101,109,131"/>
-<area shape="rect" href="$structa4l__channels__desc.html" title="Structure describing a channels set." alt="" coords="133,101,264,131"/>
-<area shape="rect" href="$structa4l__channel.html" title="Structure describing some channel&#39;s characteristics." alt="" coords="153,5,244,35"/>
-</map>
+<area shape="rect" href="$structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction." alt="" coords="5,103,117,129">
+<area shape="rect" href="$structa4l__channels__desc.html" title="Structure describing a channels set." alt="" coords="141,103,283,129">
+<area shape="rect" href="$structa4l__channel.html" title="Structure describing some channel&#39;s characteristics." alt="" coords="164,7,260,33">

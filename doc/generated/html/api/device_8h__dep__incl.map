@@ -1,22 +1,21 @@
-<map id="G" name="G">
-<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="676,83,887,112"/>
-<area shape="rect" href="$driver__facilities_8c.html" title="Analogy for Linux, driver facilities." alt="" coords="112,160,352,189"/>
-<area shape="rect" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="1665,83,1849,112"/>
-<area shape="rect" href="$8255_8c.html" title="Analogy subdevice driver for 8255 chip." alt="" coords="1428,237,1636,267"/>
-<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="1401,160,1609,189"/>
-<area shape="rect" href="$parport_8c.html" title="Analogy driver for standard parallel port." alt="" coords="376,160,597,189"/>
-<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="345,237,647,267"/>
-<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="709,315,1024,344"/>
-<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="724,160,1031,189"/>
-<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="1057,237,1404,267"/>
-<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="331,315,685,344"/>
-<area shape="rect" href="$mite_8c.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="5,315,307,344"/>
-<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="721,237,1033,267"/>
-<area shape="rect" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="2063,160,2233,189"/>
-<area shape="rect" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="1660,237,1855,267"/>
-<area shape="rect" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="2252,237,2423,267"/>
-<area shape="rect" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="2447,237,2607,267"/>
-<area shape="rect" href="$range_8c.html" title="Analogy for Linux, range related features." alt="" coords="2631,237,2801,267"/>
-<area shape="rect" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="1879,237,2044,267"/>
-<area shape="rect" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="2068,237,2228,267"/>
-</map>
+<area shape="rect" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="1013,84,1213,111">
+<area shape="rect" href="$analogy__driver_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="1917,84,2144,111">
+<area shape="rect" href="$driver__facilities_8c.html" title="Analogy for Linux, driver facilities." alt="" coords="1165,161,1421,188">
+<area shape="rect" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="605,161,789,188">
+<area shape="rect" href="$descriptor_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="1008,239,1219,265">
+<area shape="rect" href="$async_8c.html" title="Analogy for Linux, command, transfer, etc." alt="" coords="605,239,789,265">
+<area shape="rect" href="$info_8c.html" title="Analogy for Linux, device, subdevice, etc." alt="" coords="813,239,984,265">
+<area shape="rect" href="$range_8c.html" title="Analogy for Linux, range related features." alt="" coords="5,239,189,265">
+<area shape="rect" href="$sync_8c.html" title="Analogy for Linux, instruction related features." alt="" coords="213,239,389,265">
+<area shape="rect" href="$sys_8c.html" title="Analogy for Linux, descriptor related features." alt="" coords="413,239,581,265">
+<area shape="rect" href="$8255_8c.html" title="Analogy subdevice driver for 8255 chip." alt="" coords="2365,239,2592,265">
+<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="2501,161,2728,188">
+<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="2259,316,2603,343">
+<area shape="rect" href="$parport_8c.html" title="Analogy driver for standard parallel port." alt="" coords="1445,161,1685,188">
+<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="1243,239,1573,265">
+<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="1760,161,2096,188">
+<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="1960,239,2341,265">
+<area shape="rect" href="$s526_8c.html" title="Analogy driver for Sensoray Model 526 board." alt="" coords="2171,161,2427,188">
+<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="1584,316,1973,343">
+<area shape="rect" href="$mite_8c.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="1229,316,1560,343">
+<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="1597,239,1936,265">

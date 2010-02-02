@@ -1,6 +1,4 @@
-<map id="G" name="G">
-<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="205,83,517,112"/>
-<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="541,83,888,112"/>
-<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="5,160,360,189"/>
-<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="384,160,699,189"/>
-</map>
+<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="225,84,564,111">
+<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="588,84,969,111">
+<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="5,161,395,188">
+<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="419,161,763,188">

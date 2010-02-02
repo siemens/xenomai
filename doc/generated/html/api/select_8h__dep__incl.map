@@ -1,18 +1,16 @@
-<map id="G" name="G">
-<area shape="rect" href="$pod_8c.html" title="Real&#45;time pod services." alt="" coords="5,83,136,112"/>
-<area shape="rect" href="$select_8c.html" title="file descriptors events multiplexing." alt="" coords="160,83,304,112"/>
-<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="328,83,499,112"/>
-<area shape="rect" href="$posix_2internal_8h_source.html" title="ksrc/skins/posix/internal.h" alt="" coords="615,83,788,112"/>
-<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="148,160,305,189"/>
-<area shape="rect" href="$rtdm_2internal_8h_source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="329,160,497,189"/>
-<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="63,237,215,267"/>
-<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="239,237,401,267"/>
-<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="425,237,593,267"/>
-<area shape="rect" href="$ksrc_2skins_2posix_2mutex_8h_source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="617,237,785,267"/>
-<area shape="rect" href="$ksrc_2skins_2posix_2thread_8h_source.html" title="ksrc/skins/posix/thread.h" alt="" coords="739,160,907,189"/>
-<area shape="rect" href="$ksrc_2skins_2posix_2cond_8h_source.html" title="ksrc/skins/posix/cond.h" alt="" coords="575,315,735,344"/>
-<area shape="rect" href="$posix_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="737,392,908,421"/>
-<area shape="rect" href="$ksrc_2skins_2posix_2sem_8h_source.html" title="ksrc/skins/posix/sem.h" alt="" coords="860,315,1015,344"/>
-<area shape="rect" href="$sig_8h_source.html" title="ksrc/skins/posix/sig.h" alt="" coords="977,237,1124,267"/>
-<area shape="rect" href="$ksrc_2skins_2posix_2timer_8h_source.html" title="ksrc/skins/posix/timer.h" alt="" coords="1039,315,1199,344"/>
-</map>
+<area shape="rect" href="$pod_8c.html" title="Real&#45;time pod services." alt="" coords="143,84,281,111">
+<area shape="rect" href="$select_8c.html" title="file descriptors events multiplexing." alt="" coords="305,84,457,111">
+<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="481,84,671,111">
+<area shape="rect" href="$posix_2internal_8h-source.html" title="ksrc/skins/posix/internal.h" alt="" coords="725,84,909,111">
+<area shape="rect" href="$rtdm_2internal_8h-source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="244,161,425,188">
+<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="492,161,660,188">
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="408,239,568,265">
+<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="5,239,179,265">
+<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="203,239,384,265">
+<area shape="rect" href="$ksrc_2skins_2posix_2thread_8h-source.html" title="ksrc/skins/posix/thread.h" alt="" coords="728,161,907,188">
+<area shape="rect" href="$ksrc_2skins_2posix_2mutex_8h-source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="991,239,1167,265">
+<area shape="rect" href="$sig_8h-source.html" title="ksrc/skins/posix/sig.h" alt="" coords="687,239,841,265">
+<area shape="rect" href="$posix_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="828,393,1004,420">
+<area shape="rect" href="$ksrc_2skins_2posix_2sem_8h-source.html" title="ksrc/skins/posix/sem.h" alt="" coords="835,316,997,343">
+<area shape="rect" href="$ksrc_2skins_2posix_2timer_8h-source.html" title="ksrc/skins/posix/timer.h" alt="" coords="643,316,811,343">
+<area shape="rect" href="$ksrc_2skins_2posix_2cond_8h-source.html" title="ksrc/skins/posix/cond.h" alt="" coords="1021,316,1189,343">

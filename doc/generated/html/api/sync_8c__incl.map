@@ -1,14 +1,12 @@
-<map id="G" name="G">
-<area shape="rect" href="$ioctl_8h.html" title="Analogy for Linux, IOCTLs declarations." alt="" coords="91,83,195,112"/>
-<area shape="rect" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="219,83,344,112"/>
-<area shape="rect" href="$src_2drvlib_2analogy_2syscall_8h.html" title="Analogy for Linux, internal declarations." alt="" coords="539,83,611,112"/>
-<area shape="rect" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="145,392,257,421"/>
-<area shape="rect" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="276,160,415,189"/>
-<area shape="rect" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="276,237,415,267"/>
-<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="439,237,559,267"/>
-<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="460,392,583,421"/>
-<area shape="rect" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="343,315,484,344"/>
-<area shape="rect" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="559,315,697,344"/>
-<area shape="rect" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="721,315,887,344"/>
-<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="759,160,847,189"/>
-</map>
+<area shape="rect" href="$ioctl_8h.html" title="Analogy for Linux, IOCTLs declarations." alt="" coords="195,84,307,111">
+<area shape="rect" href="$analogy_8h.html" title="Analogy for Linux, library facilities." alt="" coords="331,84,467,111">
+<area shape="rect" href="$src_2drvlib_2analogy_2syscall_8h.html" title="Analogy for Linux, internal declarations." alt="" coords="669,84,744,111">
+<area shape="rect" href="$analogy_2types_8h.html" title="Analogy for Linux, misc declarations." alt="" coords="252,393,375,420">
+<area shape="rect" href="$descriptor_8h.html" title="Analogy for Linux, descriptor related features." alt="" coords="388,161,537,188">
+<area shape="rect" href="$subdevice_8h.html" title="Analogy for Linux, subdevice related features." alt="" coords="387,239,539,265">
+<area shape="rect" href="$device_8h.html" title="Analogy for Linux, device related features." alt="" coords="563,239,691,265">
+<area shape="rect" href="$context_8h.html" title="Analogy for Linux, context structure / macros declarations." alt="" coords="581,393,717,420">
+<area shape="rect" href="$instruction_8h.html" title="Analogy for Linux, instruction related features." alt="" coords="457,316,612,343">
+<area shape="rect" href="$command_8h.html" title="Analogy for Linux, driver facilities." alt="" coords="687,316,839,343">
+<area shape="rect" href="$channel__range_8h.html" title="Analogy for Linux, channel, range related features." alt="" coords="863,316,1044,343">
+<area shape="rect" href="$rtdm_8h.html" title="Real&#45;Time Driver Model for Xenomai, user API header." alt="" coords="895,161,993,188">

@@ -1,13 +1,12 @@
-<map id="G" name="G">
-<area shape="rect" href="$driver__facilities_8c.html" title="Analogy for Linux, driver facilities." alt="" coords="5,83,245,112"/>
-<area shape="rect" href="$8255_8c.html" title="Analogy subdevice driver for 8255 chip." alt="" coords="179,160,387,189"/>
-<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="320,83,528,112"/>
-<area shape="rect" href="$parport_8c.html" title="Analogy driver for standard parallel port." alt="" coords="552,83,773,112"/>
-<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="411,160,712,189"/>
-<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="928,237,1243,267"/>
-<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="848,83,1155,112"/>
-<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="1072,160,1419,189"/>
-<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="549,237,904,267"/>
-<area shape="rect" href="$mite_8c.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="224,237,525,267"/>
-<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="736,160,1048,189"/>
-</map>
+<area shape="rect" href="$driver__facilities_8c.html" title="Analogy for Linux, driver facilities." alt="" coords="111,84,367,111">
+<area shape="rect" href="$8255_8c.html" title="Analogy subdevice driver for 8255 chip." alt="" coords="372,161,599,188">
+<area shape="rect" href="$8255_8h.html" title="Hardware driver for 8255 chip." alt="" coords="492,84,719,111">
+<area shape="rect" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="773,239,1117,265">
+<area shape="rect" href="$parport_8c.html" title="Analogy driver for standard parallel port." alt="" coords="1204,84,1444,111">
+<area shape="rect" href="$mite_8h.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="17,161,348,188">
+<area shape="rect" href="$ni__tio_8h.html" title="Hardware driver for NI general purpose counter." alt="" coords="793,84,1129,111">
+<area shape="rect" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="1156,161,1537,188">
+<area shape="rect" href="$s526_8c.html" title="Analogy driver for Sensoray Model 526 board." alt="" coords="1468,84,1724,111">
+<area shape="rect" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="360,239,749,265">
+<area shape="rect" href="$mite_8c.html" title="Hardware driver for NI Mite PCI interface chip." alt="" coords="5,239,336,265">
+<area shape="rect" href="$ni__stc_8h.html" title="Register descriptions for NI DAQ&#45;STC chip." alt="" coords="793,161,1132,188">
