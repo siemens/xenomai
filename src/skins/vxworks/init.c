@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <vxworks/vxworks.h>
-#include <asm-generic/bits/bind.h>
+#include <asm/xenomai/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
 
 int __vxworks_muxid = -1;

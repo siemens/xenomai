@@ -34,7 +34,7 @@
    be the __real variants */
 #define XENO_WRAPPED_OPEN
 
-#include <asm-generic/bits/bind.h>
+#include <asm/xenomai/bits/bind.h>
 
 int __pse51_muxid = -1;
 int __rtdm_muxid = -1;

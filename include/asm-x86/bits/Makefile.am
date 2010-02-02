@@ -1,6 +1,7 @@
 includesubdir = $(includedir)/asm-x86/bits
 
 includesub_HEADERS =	\
+	bind.h		\
 	heap.h		\
 	init_32.h	\
 	init_64.h	\

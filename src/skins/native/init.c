@@ -24,8 +24,8 @@
 #include <pthread.h>
 #include <native/syscall.h>
 #include <native/task.h>
-#include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
+#include <asm/xenomai/bits/bind.h>
 
 int __native_muxid = -1;
 void native_timer_init(int);

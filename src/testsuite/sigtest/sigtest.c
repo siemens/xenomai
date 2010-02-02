@@ -8,10 +8,10 @@
 #include <execinfo.h>
 #endif /* !__UCLIBC__ */
 
-#include <asm-generic/xenomai/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <testing/sigtest_syscall.h>
+#include <asm/xenomai/bits/bind.h>
 
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof(array[0]))
 

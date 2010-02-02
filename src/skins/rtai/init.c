@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rtai/syscall.h>
-#include <asm-generic/bits/bind.h>
 #include <asm-generic/bits/mlock_alert.h>
+#include <asm/xenomai/bits/bind.h>
 
 int __rtai_muxid = -1;
 
