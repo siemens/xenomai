@@ -1,3 +1,12 @@
 includesubdir = $(includedir)/asm-nios2/bits
 
-includesub_HEADERS = bind.h pod.h intr.h heap.h thread.h shadow.h timer.h init.h sched.h
+includesub_HEADERS =	\
+	bind.h		\
+	heap.h		\
+	init.h		\
+	intr.h		\
+	pod.h		\
+	sched.h		\
+	shadow.h	\
+	thread.h	\
+	timer.h

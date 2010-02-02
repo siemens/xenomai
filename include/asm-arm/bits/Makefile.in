@@ -224,7 +224,17 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 includesubdir = $(includedir)/asm-arm/bits
-includesub_HEADERS = bind.h pod.h intr.h heap.h thread.h shadow.h timer.h init.h sched.h
+includesub_HEADERS = \
+	bind.h		\
+	heap.h		\
+	init.h		\
+	intr.h		\
+	pod.h		\
+	sched.h		\
+	shadow.h	\
+	thread.h	\
+	timer.h
+
 all: all-am
 
 .SUFFIXES:
