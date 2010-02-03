@@ -559,14 +559,18 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
 #endif /* CONFIG_PROC_FS */
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 #define rthal_irq_descp(irq)	(irq_desc + (irq))
+#else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32) */
+#define rthal_irq_descp(irq)	irq_to_desc(irq)
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32) */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)
 #define rthal_irqdesc_lock(irq, flags)					\
 	spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags)
 #define rthal_irqdesc_unlock(irq, flags)				\
 	spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags)
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33) */
-#define rthal_irq_descp(irq)	irq_to_desc(irq)
 #define rthal_irqdesc_lock(irq, flags)					\
 	raw_spin_lock_irqsave(&rthal_irq_descp(irq)->lock, flags)
 #define rthal_irqdesc_unlock(irq, flags)				\
