@@ -91,11 +91,15 @@ for dir in ${1+"$@"}; do
 
     $ECHO Changing files and directories modes...
     find $dir/doc/generated $dir/doc/nodist | xargs chmod u=rwX,g=rwX,o=rX
+    chmod u=rw,g=rw $dir/TROUBLESHOOTING $dir/README.INSTALL
     $ECHO done.
 
     $ECHO Copying to $installdir/$dir...
     mkdir -p $installdir/$dir
-    $RSYNC -e ssh -prltgDz --delete --delete-after $dir/doc/generated/ $dir/doc/nodist/ $installdir/$dir/
+    $RSYNC -e ssh -prltgDz --delete --delete-after \
+	$dir/doc/generated/ $dir/doc/nodist/ \
+	$dir/README.INSTALL $dir/TROUBLESHOOTING \
+	$installdir/$dir/
     $ECHO done.
 done
 
