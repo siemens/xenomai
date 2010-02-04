@@ -32,6 +32,7 @@ rthal_arm_nodiv_llimd(const long long op,
 
 #include <asm-generic/xenomai/arith.h>
 
+#if __LINUX_ARM_ARCH__ >= 4
 #define rthal_arm_nodiv_ullimd_str			\
 	"umull %[tl], %[rl], %[opl], %[fracl]\n\t"	\
 	"umull %[rm], %[rh], %[oph], %[frach]\n\t"	\
@@ -49,8 +50,6 @@ rthal_arm_nodiv_llimd(const long long op,
 	"umlal %[rm], %[rh], %[opl], %[integ]\n\t"	\
 	"mla %[rh], %[oph], %[integ], %[rh]\n\t"
 
-
-#if __LINUX_ARM_ARCH__ >= 4
 static inline __attribute__((__const__)) unsigned long long
 rthal_arm_nodiv_ullimd(const unsigned long long op,
 		       const unsigned long long frac,
@@ -101,7 +100,7 @@ rthal_arm_nodiv_llimd(const long long op,
 	__rthal_u64tou32(op, oph, opl);
 	__rthal_u64tou32(frac, frach, fracl);
 	
-	__asm__ ("lsrs %[s], %[oph], #30\n\t"
+	__asm__ ("movs %[s], %[oph], lsr #30\n\t"
 		 "beq 1f\n\t"
 		 "rsbs  %[opl], %[opl], #0\n\t"
 		 "rsc  %[oph], %[oph], #0\n"
