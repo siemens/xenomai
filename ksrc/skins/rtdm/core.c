@@ -396,7 +396,7 @@ void cleanup_owned_contexts(void *owner)
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 
 		if (context) {
-			if (XENO_DEBUG(RTDM))
+			if (XENO_DEBUG(RTDM_APPL))
 				xnprintf("RTDM: closing file descriptor %d.\n",
 					 fd);
 

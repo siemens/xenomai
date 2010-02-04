@@ -55,4 +55,13 @@ config XENO_OPT_DEBUG_RTDM
 	It is a recommended option for analysing potential issues in RTDM
 	drivers. A minor runtime overhead is added.
 
+config XENO_OPT_DEBUG_RTDM_APPL
+	bool "RTDM application debugging support"
+	depends on XENO_OPT_DEBUG
+	default y
+	help
+
+	When enabled, this option makes the RTDM skin warn about
+	auto-clean operations executed upon application termination.
+
 endif
