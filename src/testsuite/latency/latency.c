@@ -9,7 +9,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#ifndef __UCLIBC__
 #include <execinfo.h>
+#endif /* !__UCLIBC__ */
 
 #include <native/task.h>
 #include <native/timer.h>
@@ -447,7 +449,13 @@ void faulthand(int sig)
 
 void mode_sw(int sig)
 {
+#ifndef __UCLIBC__
 	const char buffer[] = "Mode switch, aborting. Backtrace:\n";
+#else /* __UCLIBC__ */
+	const char buffer[] = "Mode switch, aborting."
+		" Backtrace unavailable with uclibc.\n";
+#endif /* __UCLIBC__ */
+	
 	static void *bt[200];
 	unsigned n;
 
@@ -457,8 +465,10 @@ void mode_sw(int sig)
 	}
 
 	write(STDERR_FILENO, buffer, sizeof(buffer));
+#ifndef __UCLIBC__
 	n = backtrace(bt, sizeof(bt)/sizeof(bt[0]));
 	backtrace_symbols_fd(bt, n, STDERR_FILENO);
+#endif /* !__UCLIBC__ */
 
 	signal(sig, SIG_DFL);
 	kill(getpid(), sig);
