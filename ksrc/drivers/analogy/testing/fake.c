@@ -125,26 +125,24 @@ static void ai_task_proc(void *arg)
 			elapsed_ns += now_ns - priv->last_ns + priv->reminder_ns;
 			priv->last_ns = now_ns;
 
-			while(elapsed_ns >= priv->scan_period_ns)
-			{
+			while(elapsed_ns >= priv->scan_period_ns) {
 				int j;
-
-				for(j = 0; j < cmd->nb_chan; j++)
-				{
+				
+				for(j = 0; j < cmd->nb_chan; j++) {
 					uint16_t value = ai_value_output(priv);
 					a4l_buf_put(subd, &value, sizeof(uint16_t));
-
 				}
-
+				
 				elapsed_ns -= priv->scan_period_ns;
 				i++;
 
-			}
+			}		       
 
 			priv->current_ns += i * priv->scan_period_ns;
 			priv->reminder_ns = elapsed_ns;
 
-			a4l_buf_evt(subd, 0);
+			if (i != 0)
+				a4l_buf_evt(subd, 0);
 		}
 
 		a4l_task_sleep(AI_TASK_PERIOD);
