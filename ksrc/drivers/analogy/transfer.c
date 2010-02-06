@@ -232,13 +232,16 @@ int a4l_init_transfer(a4l_cxt_t * cxt, a4l_cmd_t * cmd)
 	/* Sets the working command */
 	dev->transfer.bufs[cmd->idx_subd]->cur_cmd = cmd;
 
-	/* Initializes the counts and the flag variable */
+	/* Initializes the counts */
 	dev->transfer.bufs[cmd->idx_subd]->end_count = 0;
 	dev->transfer.bufs[cmd->idx_subd]->prd_count = 0;
 	dev->transfer.bufs[cmd->idx_subd]->cns_count = 0;
 	dev->transfer.bufs[cmd->idx_subd]->tmp_count = 0;
-	dev->transfer.bufs[cmd->idx_subd]->evt_flags = 0;
 	dev->transfer.bufs[cmd->idx_subd]->mng_count = 0;
+
+	/* Flush pending events */
+	dev->transfer.bufs[cmd->idx_subd]->evt_flags = 0;
+	a4l_flush_sync(&dev->transfer.bufs[cmd->idx_subd]->sync);
 
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
