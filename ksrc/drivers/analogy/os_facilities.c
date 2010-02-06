@@ -184,6 +184,15 @@ out_wait:
 	return ret;
 }
 
+void a4l_flush_sync(a4l_sync_t * snc)
+{
+	/* Clear the status bitfield */
+	snc->status = 0;
+
+	/* Flush the RTDM event */
+	rtdm_event_clear(&snc->rtdm_evt);
+}
+
 void a4l_signal_sync(a4l_sync_t * snc)
 {
 	int hit = 0;
@@ -193,12 +202,15 @@ void a4l_signal_sync(a4l_sync_t * snc)
 	/* a4l_signal_sync() is bound not to be called upon the right
 	   user process context; so, the status flags stores its mode.
 	   Thus the proper event signaling function is called */
-
-	if (test_and_clear_bit(__RT_WAITER, &snc->status))
+	if (test_and_clear_bit(__RT_WAITER, &snc->status)) {
 		rtdm_event_signal(&snc->rtdm_evt);
+		hit++;
+	}
 
-	if (test_and_clear_bit(__NRT_WAITER, &snc->status))
+	if (test_and_clear_bit(__NRT_WAITER, &snc->status)) {
 		rtdm_nrtsig_pend(&snc->nrt_sig);
+		hit++;
+	}
 
 	if (hit == 0) {
 		/* At first signaling, we may not know the proper way

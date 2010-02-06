@@ -179,6 +179,7 @@ typedef struct a4l_sync a4l_sync_t;
 
 int a4l_init_sync(a4l_sync_t * snc);
 void a4l_cleanup_sync(a4l_sync_t * snc);
+void a4l_flush_sync(a4l_sync_t * snc);
 int a4l_wait_sync(a4l_sync_t * snc, int rt);
 int a4l_timedwait_sync(a4l_sync_t * snc,
 		       int rt, unsigned long long ns_timeout);
