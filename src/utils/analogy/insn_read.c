@@ -27,8 +27,6 @@
 #include <errno.h>
 #include <getopt.h>
 
-#include <native/task.h>
-
 #include <analogy/analogy.h>
 
 #define FILENAME "analogy0"
@@ -38,17 +36,13 @@
 static unsigned char buf[BUF_SIZE];
 static char *filename = FILENAME;
 static int verbose;
-static int real_time;
-static int idx_subd;
+static int idx_subd = -1;
 static int idx_chan;
 static int idx_rng = -1;
 static unsigned int scan_size = SCAN_CNT;
 
-static RT_TASK rt_task_desc;
-
 struct option insn_read_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
-	{"real-time", no_argument, NULL, 'r'},
 	{"device", required_argument, NULL, 'd'},
 	{"subdevice", required_argument, NULL, 's'},
 	{"scan-count", required_argument, NULL, 'S'},
@@ -63,8 +57,6 @@ void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\tinsn_read [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
-	fprintf(stdout,
-		"\t\t -r, --real-time: enable real-time acquisition mode\n");
 	fprintf(stdout,
 		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
@@ -193,25 +185,23 @@ out:
 
 int main(int argc, char *argv[])
 {
-	int ret = 0;
+	int i = 0, err = 0;
 	unsigned int cnt = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
+	a4l_sbinfo_t *sbinfo;
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
 
 	int (*dump_function) (a4l_desc_t *, unsigned char *, int) = dump_text;
 
 	/* Compute arguments */
-	while ((ret = getopt_long(argc,
+	while ((err = getopt_long(argc,
 				  argv,
 				  "vrd:s:S:c:R:wh", insn_read_opts,
 				  NULL)) >= 0) {
-		switch (ret) {
+		switch (err) {
 		case 'v':
 			verbose = 1;
-			break;
-		case 'r':
-			real_time = 1;
 			break;
 		case 'd':
 			filename = optarg;
@@ -245,43 +235,18 @@ int main(int argc, char *argv[])
 		return -EINVAL;
 	}
 	
-	if (real_time != 0) {
-
-		if (verbose != 0)
-			printf("insn_read: switching to real-time mode\n");
-
-		/* Prevent any memory-swapping for this program */
-		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-		if (ret < 0) {
-			ret = errno;
-			fprintf(stderr, "insn_read: mlockall failed (ret=%d)\n",
-				ret);
-			goto out_insn_read;
-		}
-
-		/* Turn the current process into an RT task */
-		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
-		if (ret < 0) {
-			fprintf(stderr,
-				"insn_read: rt_task_shadow failed (ret=%d)\n",
-				ret);
-			goto out_insn_read;
-		}
-
-	}
-
 	/* Open the device */
-	ret = a4l_open(&dsc, filename);
-	if (ret < 0) {
+	err = a4l_open(&dsc, filename);
+	if (err < 0) {
 		fprintf(stderr, 
-			"insn_read: a4l_open %s failed (ret=%d)\n",
-			filename, ret);
-		return ret;
+			"insn_read: a4l_open %s failed (err=%d)\n",
+			filename, err);
+		return err;
 	}
 
 	/* Check there is an input subdevice */
 	if (dsc.idx_read_subd < 0) {
-		ret = -ENOENT;
+		err = -ENOENT;
 		fprintf(stderr, "insn_read: no input subdevice available\n");
 		goto out_insn_read;
 	}
@@ -298,27 +263,52 @@ int main(int argc, char *argv[])
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
-		ret = -ENOMEM;
+		err = -ENOMEM;
 		fprintf(stderr, "insn_read: info buffer allocation failed\n");
 		goto out_insn_read;
 	}
 
 	/* Get this data */
-	ret = a4l_fill_desc(&dsc);
-	if (ret < 0) {
-		fprintf(stderr, "insn_read: a4l_fill_desc failed (ret=%d)\n",
-			ret);
+	err = a4l_fill_desc(&dsc);
+	if (err < 0) {
+		fprintf(stderr, "insn_read: a4l_fill_desc failed (err=%d)\n",
+			err);
 		goto out_insn_read;
 	}
 
 	if (verbose != 0)
 		printf("insn_read: complex descriptor retrieved\n");
 
+	/* If no subdevice index was set, look for an analog input
+	   subdevice (the first found will be selected) */
+	while (idx_subd == -1 && i < dsc.nb_subd) {
+		
+		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
+		if (err < 0) {
+			fprintf(stderr, 
+				"insn_read: get_sbinfo(%d) failed (err = %d)\n",
+				i, err);
+			goto out_insn_read;
+		}
+		
+		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_AI)
+			idx_subd = i;
+
+		i++;
+	}
+
+	if (idx_subd == -1) {
+		fprintf(stderr, 
+			"insn_read: no analog input subdevice available\n");
+		err = -EINVAL;
+		goto  out_insn_read;
+	}
+
 	if (idx_rng >= 0) {
 
-		ret = a4l_get_rnginfo(&dsc, 
+		err = a4l_get_rnginfo(&dsc, 
 				      idx_subd, idx_chan, idx_rng, &rnginfo);
-		if (ret < 0) {
+		if (err < 0) {
 			fprintf(stderr,
 				"insn_read: failed to recover range descriptor\n");
 			goto out_insn_read;
@@ -332,11 +322,11 @@ int main(int argc, char *argv[])
 	}
 
 	/* Retrieve the subdevice data size */
-	ret = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
-	if (ret < 0) {
+	err = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
+	if (err < 0) {
 		fprintf(stderr,
-			"insn_read: info for channel %d on subdevice %d not available (ret=%d)\n",
-			idx_chan, idx_subd, ret);
+			"insn_read: info for channel %d on subdevice %d not available (err=%d)\n",
+			idx_chan, idx_subd, err);
 		goto out_insn_read;
 	}
 
@@ -353,41 +343,32 @@ int main(int argc, char *argv[])
 		int tmp = (scan_size - cnt) < BUF_SIZE ?
 			(scan_size - cnt) : BUF_SIZE;
 
-		/* Switch to RT primary mode */
-		if (real_time != 0) {
-			ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-			if (ret < 0) {
-				fprintf(stderr,
-					"insn_read: rt_task_set_mode failed (ret=%d)\n",
-					ret);
-				goto out_insn_read;
-			}
-		}
-
 		/* Perform the synchronous read */
-		ret = a4l_sync_read(&dsc,
+		err = a4l_sync_read(&dsc,
 				    idx_subd, CHAN(idx_chan), 0, buf, tmp);
 
-		if (ret < 0) {
+		if (err < 0) {
 			fprintf(stderr, 
 				"insn_read: a4l_sync_read failed (err=%d)\n",
-				ret);
+				err);
 			goto out_insn_read;
 		}
 
 		/* Dump the read data */
-		tmp = dump_function(&dsc, buf, ret);
+		tmp = dump_function(&dsc, buf, err);
 		if (tmp < 0) {
-			ret = tmp;
+			err = tmp;
 			goto out_insn_read;
 		}
 
 		/* Update the count */
-		cnt += ret;
+		cnt += err;
 	}
 
 	if (verbose != 0)
 		printf("insn_read: %u bytes successfully received\n", cnt);
+
+	err = 0;
 
 out_insn_read:
 
@@ -398,5 +379,5 @@ out_insn_read:
 	/* Release the file descriptor */
 	a4l_close(&dsc);
 
-	return ret;
+	return err;
 }
