@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
 	if (use_mmap == 0) {
 
 		/* Fetch data */
-		while (cnt < cmd.stop_arg * scan_size) {
+		do {
 
 			/* Perform the read operation */
 			ret = a4l_sys_read(dsc.fd, buf, BUF_SIZE);
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 			}
 
 			/* Display the results */
-			if(dump_function(&dsc, &cmd, buf, ret) < 0) {
+			if (dump_function(&dsc, &cmd, buf, ret) < 0) {
 				ret = -EIO;
 				goto out_main;
 			}
@@ -418,19 +418,21 @@ int main(int argc, char *argv[])
 					goto out_main;
 				}
 			}
-		}
+		} while (ret > 0);
 
 	} else {
 		unsigned long front = 0;
 
 		/* Fetch data without any memcpy */
-		while (cnt < cmd.stop_arg * scan_size) {
+		do {
 
 			/* Retrieve and update the buffer's state
 			   (In input case, we recover how many bytes are available
 			   to read) */
 			ret = a4l_mark_bufrw(&dsc, cmd.idx_subd, front, &front);
-			if (ret < 0) {
+			if (ret == -ENOENT)
+				break;
+			else if (ret < 0) {
 				fprintf(stderr,
 					"cmd_read: a4l_mark_bufrw() failed (ret=%d)\n",
 					ret);
@@ -443,7 +445,9 @@ int main(int argc, char *argv[])
 			   the data read counter) */
 			if (front == 0) {
 				ret = a4l_poll(&dsc, cmd.idx_subd, A4L_INFINITE);
-				if (ret < 0) {
+				if (ret == 0)
+					break;
+				else if (ret < 0) {
 					fprintf(stderr,
 						"cmd_read: a4l_poll() failed (ret=%d)\n",
 						ret);
@@ -472,7 +476,8 @@ int main(int argc, char *argv[])
 
 			/* Update the counter */
 			cnt += front;
-		}
+
+		} while (1);
 	}
 
 	if (verbose != 0)
