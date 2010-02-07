@@ -161,9 +161,11 @@ asm (".L__X'%ebx = 1\n\t"
      ".endif\n\t"
      ".endm\n\t");
 
-static inline void __xn_get_eip(void **dest)
+__attribute__((always_inline))
+extern inline void __xn_get_eip(void **dest)
 {
-        asm volatile("movl $1f, %0; 1:": "=m"(*dest));
+addr:
+	*dest = &&addr;
 }
 
 static inline void __xn_get_ebp(void **dest)
