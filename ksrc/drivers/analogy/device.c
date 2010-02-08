@@ -95,7 +95,7 @@ int a4l_rdproc_devs(char *page,
 		p += sprintf(p, "|  %02d | %s | %s\n", i, status, name);
 	}
 
-	/* Handles any proc-file reading way */
+	/* Handle any proc-file reading way */
 	len = p - page - off;
 	/* If the requested size is greater than we provide,
 	   the read operation is over */
@@ -122,18 +122,18 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 	struct proc_dir_entry *entry;
 	char *entry_name, *p;
 
-	/* Allocates the buffer for the file name */
+	/* Allocate the buffer for the file name */
 	entry_name = rtdm_malloc(A4L_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
 		__a4l_err("a4l_proc_attach: failed to allocate buffer\n");
 		return -ENOMEM;
 	}
 
-	/* Creates the proc file name */
+	/* Create the proc file name */
 	p += sprintf(p, "%02d-", a4l_get_minor(cxt));
 	strncpy(p, dev->driver->board_name, A4L_NAMELEN);
 
-	/* Creates the proc entry */
+	/* Create the proc entry */
 	entry = create_proc_entry(entry_name, 0444, a4l_proc_root);
 	if (entry == NULL) {
 		__a4l_err("a4l_proc_attach: "
@@ -150,7 +150,7 @@ int a4l_proc_attach(a4l_cxt_t * cxt)
 	wrap_proc_dir_entry_owner(entry);
 
       out_setup_proc_transfer:
-	/* Frees the file name buffer */
+	/* Free the file name buffer */
 	rtdm_free(entry_name);
 
 	return ret;
@@ -161,7 +161,7 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 	char *entry_name, *p;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	/* Allocates the buffer for the file name */
+	/* Allocate the buffer for the file name */
 	entry_name = rtdm_malloc(A4L_NAMELEN + 4);
 	if ((p = entry_name) == NULL) {
 		__a4l_err("a4l_proc_detach: "
@@ -169,14 +169,14 @@ void a4l_proc_detach(a4l_cxt_t * cxt)
 		return;
 	}
 
-	/* Builds the name */
+	/* Build the name */
 	p += sprintf(p, "%02d-", a4l_get_minor(cxt));
 	strncpy(p, dev->driver->board_name, A4L_NAMELEN);
 
-	/* Removes the proc file */
+	/* Remove the proc file */
 	remove_proc_entry(entry_name, a4l_proc_root);
 
-	/* Frees the temporary buffer */
+	/* Free the temporary buffer */
 	rtdm_free(entry_name);
 }
 
@@ -460,10 +460,10 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 		}
 		/* Pre-initialization of the transfer structure */
 		a4l_presetup_transfer(cxt);
-		/* Links the device with the driver */
+		/* Link the device with the driver */
 		if ((ret = a4l_device_attach(cxt, arg)) != 0)
 			return ret;
-		/* Creates the transfer structure and
+		/* Create the transfer structure and
 		   the related proc file */
 		if ((ret = a4l_setup_transfer(cxt)) != 0 ||
 		    (ret = a4l_proc_attach(cxt)) != 0)
