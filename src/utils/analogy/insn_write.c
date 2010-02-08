@@ -26,13 +26,7 @@
 #include <errno.h>
 #include <getopt.h>
 
-#include <native/task.h>
-
 #include <analogy/analogy.h>
-
-/* For write operation, we consider 
-   the default subdevice index is 1 */
-#define ID_SUBD 1
 
 /* Ten triggered scans by default */
 #define SCAN_CNT 10
@@ -45,16 +39,12 @@ static int value = 0;
 static double dvalue = 0;
 static char *filename = FILENAME;
 static int verbose;
-static int real_time;
-static int idx_subd = ID_SUBD;
+static int idx_subd = -1;
 static int idx_chan;
 static int idx_rng = -1;
 
-static RT_TASK rt_task_desc;
-
 struct option insn_write_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
-	{"real-time", no_argument, NULL, 'r'},
 	{"device", required_argument, NULL, 'd'},
 	{"subdevice", required_argument, NULL, 's'},
 	{"scan-count", required_argument, NULL, 'S'},
@@ -69,9 +59,8 @@ void do_print_usage(void)
 	fprintf(stdout, "usage:\tinsn_write [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout,
-		"\t\t -r, --real-time: enable real-time acquisition mode\n");
-	fprintf(stdout,
-		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
+		"\t\t -d, --device: "
+		"device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -c, --channel: channel to use\n");
 	fprintf(stdout, "\t\t -R, --range: range to use\n");
@@ -81,23 +70,21 @@ void do_print_usage(void)
 
 int main(int argc, char *argv[])
 {
-	int ret = 0;
+	int i = 0, err = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
+	a4l_sbinfo_t *sbinfo;
 	a4l_chinfo_t *chinfo;
 	a4l_rnginfo_t *rnginfo;
 	unsigned int scan_size;
 
 	/* Compute arguments */
-	while ((ret = getopt_long(argc,
+	while ((err = getopt_long(argc,
 				  argv,
 				  "vrd:s:c:R:V:h", insn_write_opts,
 				  NULL)) >= 0) {
-		switch (ret) {
+		switch (err) {
 		case 'v':
 			verbose = 1;
-			break;
-		case 'r':
-			real_time = 1;
 			break;
 		case 'd':
 			filename = optarg;
@@ -125,11 +112,11 @@ int main(int argc, char *argv[])
 	/* Restart the argument scanning */
 	optind = 1;
 
-	while ((ret = getopt_long(argc,
+	while ((err = getopt_long(argc,
 				  argv,
 				  "vrd:s:c:R:V:h", insn_write_opts,
 				  NULL)) >= 0) {
-		switch (ret) {
+		switch (err) {
 		case 'V':
 			if (idx_rng < 0)
 				value = (int)strtoul(optarg, NULL, 0);
@@ -138,43 +125,18 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (real_time != 0) {
-
-		if (verbose != 0)
-			printf("insn_write: switching to real-time mode\n");
-
-		/* Prevent any memory-swapping for this program */
-		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
-		if (ret < 0) {
-			ret = errno;
-			fprintf(stderr, "insn_write: mlockall failed (ret=%d)\n",
-				ret);
-			goto out_insn_write;
-		}
-
-		/* Turn the current process into an RT task */
-		ret = rt_task_shadow(&rt_task_desc, NULL, 1, 0);
-		if (ret < 0) {
-			fprintf(stderr,
-				"insn_write: rt_task_shadow failed (ret=%d)\n",
-				ret);
-			goto out_insn_write;
-		}
-
-	}
-
 	/* Open the device */
-	ret = a4l_open(&dsc, filename);
-	if (ret < 0) {
+	err = a4l_open(&dsc, filename);
+	if (err < 0) {
 		fprintf(stderr, 
-			"insn_write: a4l_open %s failed (ret=%d)\n", 
-			filename, ret);
-		return ret;
+			"insn_write: a4l_open %s failed (err=%d)\n", 
+			filename, err);
+		return err;
 	}
 
 	/* Check there is an input subdevice */
 	if (dsc.idx_write_subd < 0) {
-		ret = -ENOENT;
+		err = -ENOENT;
 		fprintf(stderr, "insn_write: no output subdevice available\n");
 		goto out_insn_write;
 	}
@@ -191,27 +153,52 @@ int main(int argc, char *argv[])
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
-		ret = -ENOMEM;
+		err = -ENOMEM;
 		fprintf(stderr, "insn_write: info buffer allocation failed\n");
 		goto out_insn_write;
 	}
 
 	/* Get this data */
-	ret = a4l_fill_desc(&dsc);
-	if (ret < 0) {
-		fprintf(stderr, "insn_write: a4l_fill_desc failed (ret=%d)\n",
-			ret);
+	err = a4l_fill_desc(&dsc);
+	if (err < 0) {
+		fprintf(stderr, "insn_write: a4l_fill_desc failed (err=%d)\n",
+			err);
 		goto out_insn_write;
 	}
 
 	if (verbose != 0)
 		printf("insn_write: complex descriptor retrieved\n");
 
+	/* If no subdevice index was set, look for an analog output
+	   subdevice (the first found will be selected) */
+	while (idx_subd == -1 && i < dsc.nb_subd) {
+		
+		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
+		if (err < 0) {
+			fprintf(stderr, 
+				"insn_write: "
+				"get_sbinfo(%d) failed (err = %d)\n", i, err);
+			goto out_insn_write;
+		}
+		
+		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_AO)
+			idx_subd = i;
+
+		i++;
+	}
+
+	if (idx_subd == -1) {
+		fprintf(stderr, 
+			"insn_write: no analog output subdevice available\n");
+		err = -EINVAL;
+		goto  out_insn_write;
+	}
+
 	if (idx_rng >= 0) {
 
-		ret = a4l_get_rnginfo(&dsc, 
+		err = a4l_get_rnginfo(&dsc, 
 				      idx_subd, idx_chan, idx_rng, &rnginfo);
-		if (ret < 0) {
+		if (err < 0) {
 			fprintf(stderr,
 				"insn_write: failed to recover range descriptor\n");
 			goto out_insn_write;
@@ -225,12 +212,12 @@ int main(int argc, char *argv[])
 	}
 
 	/* Retrieve the subdevice data size */
-	ret = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
-	if (ret < 0) {
+	err = a4l_get_chinfo(&dsc, idx_subd, idx_chan, &chinfo);
+	if (err < 0) {
 		fprintf(stderr,
 			"insn_write: info for channel %d on subdevice %d "
-			"not available (ret=%d)\n",
-			idx_chan, idx_subd, ret);
+			"not available (err=%d)\n",
+			idx_chan, idx_subd, err);
 		goto out_insn_write;
 	}
 
@@ -248,8 +235,8 @@ int main(int argc, char *argv[])
 	if (idx_rng >= 0) {
 		if (a4l_dtoraw(chinfo, rnginfo, &value, &dvalue, 1) < 0) {
 			fprintf(stderr,
-				"insn_write: data conversion failed (ret=%d)\n",
-				ret);
+				"insn_write: data conversion failed (err=%d)\n",
+				err);
 			goto out_insn_write;
 		}
 
@@ -266,24 +253,13 @@ int main(int argc, char *argv[])
 	else if (scan_size == sizeof(short))
 		value *= 0x00010001;
 
-	/* Switch to RT primary mode */
-	if (real_time != 0) {
-		ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-		if (ret < 0) {
-			fprintf(stderr,
-				"insn_write: rt_task_set_mode failed (ret=%d)\n",
-				ret);
-			goto out_insn_write;
-		}
-	}
-
 	/* Perform the write operation */
-	ret = a4l_sync_write(&dsc, 
+	err = a4l_sync_write(&dsc, 
 			     idx_subd, CHAN(idx_chan), 0, &value, scan_size);
 
-	if (ret < 0) {
+	if (err < 0) {
 		fprintf(stderr, 
-			"insn_write: a4l_sync_write failed (err=%d)\n", ret);
+			"insn_write: a4l_sync_write failed (err=%d)\n", err);
 		goto out_insn_write;
 	}
 
@@ -299,5 +275,5 @@ out_insn_write:
 	/* Release the file descriptor */
 	a4l_close(&dsc);
 
-	return ret;
+	return err;
 }
