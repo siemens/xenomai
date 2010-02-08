@@ -33,6 +33,57 @@
 
 /* --- Initialization / cleanup / cancel functions --- */
 
+int a4l_precleanup_transfer(a4l_cxt_t * cxt)
+{
+	a4l_dev_t *dev;
+	a4l_trf_t *tsf;
+	int i, err = 0;
+
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_precleanup_transfer: minor=%d\n", 
+		  a4l_get_minor(cxt));
+
+	dev = a4l_get_dev(cxt);
+	tsf = &dev->transfer;
+
+	if (tsf == NULL) {
+		__a4l_err("a4l_precleanup_transfer: "
+			  "incoherent status, transfer block not reachable\n");
+		return -ENODEV;
+	}
+
+	for (i = 0; i < tsf->nb_subd; i++) {
+
+		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i]))) {
+			__a4l_err("a4l_precleanup_transfer: "
+				  "device busy, buffer must be unmapped\n");
+			err = -EPERM;
+			goto out_error;
+		}
+
+		if (test_and_set_bit(A4L_TSF_BUSY, &(tsf->status[i]))) {
+			__a4l_err("a4l_precleanup_transfer: "
+				  "device busy, acquisition occuring\n");
+			err = -EBUSY;
+			goto out_error;
+		} else
+			set_bit(A4L_TSF_CLEAN, &(tsf->status[i]));
+	}
+
+	return 0;
+
+out_error:
+	for (i = 0; i < tsf->nb_subd; i++) {
+
+		if (test_bit(A4L_TSF_CLEAN, &(tsf->status[i]))){
+			clear_bit(A4L_TSF_BUSY, &(tsf->status[i]));
+			clear_bit(A4L_TSF_CLEAN, &(tsf->status[i]));
+		}
+	}
+
+	return err;
+}
+
 int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 {
 	a4l_dev_t *dev;
@@ -45,26 +96,6 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
-
-	if (tsf == NULL) {
-		__a4l_err("a4l_cleanup_transfer: "
-			  "incoherent status, transfer block not reachable\n");
-		return -ENODEV;
-	}
-
-	for (i = 0; i < tsf->nb_subd; i++) {
-		if (test_bit(A4L_TSF_BUSY, &(tsf->status[i]))) {
-			__a4l_err("a4l_cleanup_transfer: "
-				  "device busy, acquisition occuring\n");
-			return -EBUSY;
-		}
-
-		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i]))) {
-			__a4l_err("a4l_cleanup_transfer: "
-				  "device busy, buffer must be unmapped\n");
-			return -EPERM;
-		}
-	}
 
 	/* Releases the various buffers */
 	if (tsf->status != NULL)

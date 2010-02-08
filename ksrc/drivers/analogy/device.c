@@ -432,18 +432,21 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 
 	if (arg == NULL) {
 		/* Basic checking */
-		if (!test_bit
-		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
+		if (!test_bit(A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
 			__a4l_err("a4l_ioctl_devcfg: "
 				  "free device, no driver to detach\n");
 			return -EINVAL;
 		}
-		/* Removes the related proc file */
+		/* Pre-cleanup of the transfer structure, we ensure
+		   that nothing is busy */
+		if ((ret = a4l_precleanup_transfer(cxt)) != 0)
+			return ret;
+		/* Remove the related proc file */
 		a4l_proc_detach(cxt);
-		/* Frees the transfer structure and its related data */
+		/* Free the transfer structure and its related data */
 		if ((ret = a4l_cleanup_transfer(cxt)) != 0)
 			return ret;
-		/* Frees the device and the driver from each other */
+		/* Free the device and the driver from each other */
 		if ((ret = a4l_device_detach(cxt)) == 0)
 			clear_bit(A4L_DEV_ATTACHED,
 				  &(a4l_get_dev(cxt)->flags));
