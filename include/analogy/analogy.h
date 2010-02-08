@@ -130,6 +130,9 @@ int a4l_sync_read(a4l_desc_t * dsc,
 		  unsigned int chan_desc,
 		  unsigned int delay, void *buf, size_t nbyte);
 
+int a4l_config_subd(a4l_desc_t * dsc,
+		    unsigned int idx_subd, unsigned int type, ...);
+
 int a4l_sync_dio(a4l_desc_t *dsc,
 		 unsigned int idx_subd, void *mask, void *buf);
 
