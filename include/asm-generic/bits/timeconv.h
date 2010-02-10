@@ -21,14 +21,13 @@
 
 #include <asm/xenomai/arith.h>
 
-unsigned long long xnarch_clockfreq __attribute__ ((weak));
+static unsigned long long clockfreq;
 
 #ifdef XNARCH_HAVE_LLMULSHFT
-unsigned int xnarch_tsc_scale __attribute__ ((weak));
-unsigned int xnarch_tsc_shift __attribute__ ((weak));
+static unsigned int tsc_scale, tsc_shift;
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-rthal_u32frac_t xnarch_tsc_frac __attribute__ ((weak));
-rthal_u32frac_t xnarch_bln_frac __attribute__ ((weak));
+static rthal_u32frac_t tsc_frac;
+static rthal_u32frac_t bln_frac;
 #endif
 #endif
 
@@ -36,20 +35,19 @@ rthal_u32frac_t xnarch_bln_frac __attribute__ ((weak));
 __attribute__ ((weak))
 long long xnarch_tsc_to_ns(long long ticks)
 {
-	return xnarch_llmulshft(ticks, xnarch_tsc_scale, xnarch_tsc_shift);
+	return xnarch_llmulshft(ticks, tsc_scale, tsc_shift);
 }
 __attribute__ ((weak))
 long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
-	unsigned int shift = xnarch_tsc_shift - 1;
-	return (xnarch_llmulshft(ticks, xnarch_tsc_scale, shift) + 1) / 2;
+	unsigned int shift = tsc_shift - 1;
+	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
 }
 #ifdef XNARCH_HAVE_NODIV_LLIMD
 __attribute__ ((weak))
 long long xnarch_ns_to_tsc(long long ns)
 {
-	return xnarch_nodiv_llimd(ns, xnarch_tsc_frac.frac,
-				  xnarch_tsc_frac.integ);
+	return xnarch_nodiv_llimd(ns, tsc_frac.frac, tsc_frac.integ);
 }
 __attribute__ ((weak))
 unsigned long long xnarch_divrem_billion(unsigned long long value,
@@ -58,8 +56,7 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 	unsigned long long q;
 	unsigned r;
 
-	q = xnarch_nodiv_ullimd(value, xnarch_bln_frac.frac,
-				xnarch_bln_frac.integ);
+	q = xnarch_nodiv_ullimd(value, bln_frac.frac, bln_frac.integ);
 	r = value - q * 1000000000;
 	if (r >= 1000000000) {
 		++q;
@@ -72,24 +69,24 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 __attribute__ ((weak))
 long long xnarch_ns_to_tsc(long long ns)
 {
-	return xnarch_llimd(ns, 1 << xnarch_tsc_shift, xnarch_tsc_scale);
+	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
 #else  /* !XNARCH_HAVE_LLMULSHFT */
 __attribute__ ((weak))
 long long xnarch_tsc_to_ns(long long ticks)
 {
-	return xnarch_llimd(ticks, 1000000000, xnarch_clockfreq);
+	return xnarch_llimd(ticks, 1000000000, clockfreq);
 }
 __attribute__ ((weak))
 long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
-	return (xnarch_llimd(ticks, 1000000000, xnarch_clockfreq/2) + 1) / 2;
+	return (xnarch_llimd(ticks, 1000000000, clockfreq/2) + 1) / 2;
 }
 __attribute__ ((weak))
 long long xnarch_ns_to_tsc(long long ns)
 {
-	return xnarch_llimd(ns, xnarch_clockfreq, 1000000000);
+	return xnarch_llimd(ns, clockfreq, 1000000000);
 }
 #endif /* !XNARCH_HAVE_LLMULSHFT */
 
@@ -103,17 +100,14 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
 
-__attribute__ ((weak))
-void xnarch_init_timeconv(unsigned long long freq)
+static inline void xnarch_init_timeconv(unsigned long long freq)
 {
-	xnarch_clockfreq = freq;
+	clockfreq = freq;
 #ifdef XNARCH_HAVE_LLMULSHFT
-	xnarch_init_llmulshft(1000000000, freq, &xnarch_tsc_scale,
-			      &xnarch_tsc_shift);
+	xnarch_init_llmulshft(1000000000, freq, &tsc_scale, &tsc_shift);
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-	xnarch_init_u32frac(&xnarch_tsc_frac, 1 << xnarch_tsc_shift,
-			    xnarch_tsc_scale);
-	xnarch_init_u32frac(&xnarch_bln_frac, 1, 1000000000);
+	xnarch_init_u32frac(&tsc_frac, 1 << tsc_shift, tsc_scale);
+	xnarch_init_u32frac(&bln_frac, 1, 1000000000);
 #endif
 #endif
 }
