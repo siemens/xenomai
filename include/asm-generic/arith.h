@@ -393,7 +393,9 @@ static inline void xnarch_init_llmulshft(const unsigned m_in,
 #define xnarch_nodiv_ullimd          rthal_nodiv_ullimd
 #define xnarch_nodiv_llimd           rthal_nodiv_llimd
 #define xnarch_llmulshft             rthal_llmulshft
-#define xnarch_get_cpu_tsc           rthal_rdtsc
+
+unsigned long long xnarch_divrem_billion(unsigned long long value,
+					 unsigned long *rem);
 
 /*@}*/
 

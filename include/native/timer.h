@@ -48,6 +48,7 @@ typedef struct rt_timer_info {
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/timer.h>
+#include <asm-generic/xenomai/timeconv.h>
 
 extern xntbase_t *__native_tbase;
 

@@ -20,23 +20,9 @@
 #include <stdlib.h>
 #include <native/syscall.h>
 #include <native/timer.h>
-#include <asm-generic/xenomai/bits/timeconv.h>
+#include <asm-generic/xenomai/timeconv.h>
 
 extern int __native_muxid;
-
-static xnsysinfo_t sysinfo;
-
-void native_timer_init(int muxid)
-{
-	int err = XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
-	if (err) {
-		fprintf(stderr, "Native skin init: "
-			"sys_info: %s\n", strerror(-err));
-		exit(EXIT_FAILURE);
-	}
-
-	xnarch_init_timeconv(sysinfo.cpufreq);
-}
 
 int rt_timer_set_mode(RTIME tickval)
 {

@@ -23,24 +23,10 @@
 #include <pthread.h>		/* For pthread_setcanceltype. */
 #include <posix/syscall.h>
 #include <time.h>
-#include <asm-generic/xenomai/bits/timeconv.h>
+#include <asm/xenomai/arith.h>
+#include <asm-generic/xenomai/timeconv.h>
 
 extern int __pse51_muxid;
-
-#ifdef XNARCH_HAVE_NONPRIV_TSC
-static xnsysinfo_t sysinfo;
-
-void pse51_clock_init(int muxid)
-{
-	int err = -XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
-	if (err) {
-		fprintf(stderr, "Xenomai Posix skin init: "
-			"sys_info: %s\n", strerror(err));
-		exit(EXIT_FAILURE);
-	}
-	xnarch_init_timeconv(sysinfo.cpufreq);
-}
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {

@@ -32,24 +32,23 @@ static rthal_u32frac_t bln_frac;
 #endif
 
 #ifdef XNARCH_HAVE_LLMULSHFT
-__attribute__ ((weak))
 long long xnarch_tsc_to_ns(long long ticks)
 {
 	return xnarch_llmulshft(ticks, tsc_scale, tsc_shift);
 }
-__attribute__ ((weak))
+
 long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
 	unsigned int shift = tsc_shift - 1;
 	return (xnarch_llmulshft(ticks, tsc_scale, shift) + 1) / 2;
 }
+
 #ifdef XNARCH_HAVE_NODIV_LLIMD
-__attribute__ ((weak))
 long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_nodiv_llimd(ns, tsc_frac.frac, tsc_frac.integ);
 }
-__attribute__ ((weak))
+
 unsigned long long xnarch_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
@@ -66,24 +65,24 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 	return q;
 }
 #else /* !XNARCH_HAVE_NODIV_LLIMD */
-__attribute__ ((weak))
 long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_llimd(ns, 1 << tsc_shift, tsc_scale);
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
+
 #else  /* !XNARCH_HAVE_LLMULSHFT */
-__attribute__ ((weak))
+
 long long xnarch_tsc_to_ns(long long ticks)
 {
 	return xnarch_llimd(ticks, 1000000000, clockfreq);
 }
-__attribute__ ((weak))
+
 long long xnarch_tsc_to_ns_rounded(long long ticks)
 {
 	return (xnarch_llimd(ticks, 1000000000, clockfreq/2) + 1) / 2;
 }
-__attribute__ ((weak))
+
 long long xnarch_ns_to_tsc(long long ns)
 {
 	return xnarch_llimd(ns, clockfreq, 1000000000);
@@ -91,7 +90,6 @@ long long xnarch_ns_to_tsc(long long ns)
 #endif /* !XNARCH_HAVE_LLMULSHFT */
 
 #ifndef XNARCH_HAVE_NODIV_LLIMD
-__attribute__ ((weak))
 unsigned long long xnarch_divrem_billion(unsigned long long value,
 					 unsigned long *rem)
 {
@@ -100,7 +98,7 @@ unsigned long long xnarch_divrem_billion(unsigned long long value,
 }
 #endif /* !XNARCH_HAVE_NODIV_LLIMD */
 
-static inline void xnarch_init_timeconv(unsigned long long freq)
+static void xnarch_init_timeconv(unsigned long long freq)
 {
 	clockfreq = freq;
 #ifdef XNARCH_HAVE_LLMULSHFT

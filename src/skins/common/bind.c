@@ -6,6 +6,7 @@
 
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/current.h>
+#include <asm-generic/xenomai/timeconv.h>
 #include <asm-generic/xenomai/stack.h>
 #include <asm/xenomai/bits/bind.h>
 #include "sem_heap.h"
@@ -136,6 +137,8 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 	xeno_featinfo = finfo;
 
 	xeno_main_tid = pthread_self();
+
+	xeno_init_timeconv(muxid);
 	
 	return muxid;
 }

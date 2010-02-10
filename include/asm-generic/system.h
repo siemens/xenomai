@@ -38,6 +38,7 @@
 #include <asm/ptrace.h>
 #include <asm/xenomai/hal.h>
 #include <asm/xenomai/atomic.h>
+#include <asm-generic/xenomai/timeconv.h>
 #include <nucleus/shadow.h>
 
 /* debug support */
@@ -282,21 +283,14 @@ typedef struct xnarch_heapcb {
 
 unsigned long long xnarch_get_host_time(void);
 
-long long xnarch_tsc_to_ns(long long ts);
-
-long long xnarch_tsc_to_ns_rounded(long long ts);
-
-long long xnarch_ns_to_tsc(long long ns);
-
 unsigned long long xnarch_get_cpu_time(void);
-
-unsigned long long xnarch_divrem_billion(unsigned long long value,
-					 unsigned long *rem);
 
 static inline unsigned long long xnarch_get_cpu_freq(void)
 {
 	return RTHAL_CPU_FREQ;
 }
+
+#define xnarch_get_cpu_tsc			rthal_rdtsc
 
 #define xnarch_halt(emsg)				\
 	do {						\
