@@ -131,7 +131,8 @@ int xnselect_bind(struct xnselect *select_block,
 		__FD_SET(index, &selector->fds[type].pending);
 		if (xnselect_wakeup(selector))
 			xnpod_schedule();
-	}
+	} else
+		__FD_CLR(index, &selector->fds[type].pending);
 
 	return 0;
 }
@@ -178,6 +179,7 @@ EXPORT_SYMBOL_GPL(__xnselect_signal);
 void xnselect_destroy(struct xnselect *select_block)
 {
 	xnholder_t *holder;
+	int resched;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -190,8 +192,13 @@ void xnselect_destroy(struct xnselect *select_block)
 
 		__FD_CLR(binding->bit_index,
 			 &selector->fds[binding->type].expected);
-		__FD_CLR(binding->bit_index,
-			 &selector->fds[binding->type].pending);
+		if (!__FD_ISSET(binding->bit_index,
+				&selector->fds[binding->type].pending)) {
+			__FD_SET(binding->bit_index,
+				 &selector->fds[binding->type].pending);
+			if (xnselect_wakeup(selector))
+				resched = 1;
+		}
 		removeq(&selector->bindings, &binding->slink);
 		xnlock_put_irqrestore(&nklock, s);
 
@@ -199,6 +206,8 @@ void xnselect_destroy(struct xnselect *select_block)
 		
 		xnlock_get_irqsave(&nklock, s);
 	}
+	if (resched)
+		xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
 }
 EXPORT_SYMBOL_GPL(xnselect_destroy);
