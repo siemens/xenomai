@@ -152,6 +152,26 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("insn_bits: selected subdevice index = %d\n", idx_subd);
 
+	/* We must check that the subdevice is really a digital one
+	   (in case, the subdevice index was set with the option -s) */
+	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
+	if (err < 0) {
+		fprintf(stderr, 
+			"insn_bits: get_sbinfo(%d) failed (err = %d)\n",
+			idx_subd, err);
+		err = -EINVAL;
+		goto out_insn_bits;
+	}
+
+	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
+	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI &&
+	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO) {
+		fprintf(stderr, 
+			"insn_bits: selected subdevice is not digital\n");
+		err = -EINVAL;
+		goto out_insn_bits;		
+	}
+	
 	/* Set the data size to read / write */
 	scan_size = a4l_sizeof_subd(sbinfo);
 

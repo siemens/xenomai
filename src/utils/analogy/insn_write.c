@@ -70,7 +70,7 @@ void do_print_usage(void)
 
 int main(int argc, char *argv[])
 {
-	int i = 0, err = 0;
+	int err = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	a4l_sbinfo_t *sbinfo;
 	a4l_chinfo_t *chinfo;
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	/* Compute arguments */
 	while ((err = getopt_long(argc,
 				  argv,
-				  "vrd:s:c:R:V:h", insn_write_opts,
+				  "vd:s:c:R:V:h", insn_write_opts,
 				  NULL)) >= 0) {
 		switch (err) {
 		case 'v':
@@ -134,13 +134,6 @@ int main(int argc, char *argv[])
 		return err;
 	}
 
-	/* Check there is an input subdevice */
-	if (dsc.idx_write_subd < 0) {
-		err = -ENOENT;
-		fprintf(stderr, "insn_write: no output subdevice available\n");
-		goto out_insn_write;
-	}
-
 	if (verbose != 0) {
 		printf("insn_write: device %s opened (fd=%d)\n", filename,
 		       dsc.fd);
@@ -170,28 +163,37 @@ int main(int argc, char *argv[])
 		printf("insn_write: complex descriptor retrieved\n");
 
 	/* If no subdevice index was set, look for an analog output
-	   subdevice (the first found will be selected) */
-	while (idx_subd == -1 && i < dsc.nb_subd) {
-		
-		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
-		if (err < 0) {
-			fprintf(stderr, 
-				"insn_write: "
-				"get_sbinfo(%d) failed (err = %d)\n", i, err);
-			goto out_insn_write;
-		}
-		
-		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_AO)
-			idx_subd = i;
-
-		i++;
-	}
+	   subdevice */
+	if (idx_subd == -1)
+		idx_subd = dsc.idx_write_subd;
 
 	if (idx_subd == -1) {
 		fprintf(stderr, 
 			"insn_write: no analog output subdevice available\n");
 		err = -EINVAL;
 		goto  out_insn_write;
+	}
+
+	if (verbose != 0)
+		printf("insn_write: selected subdevice index = %d\n", idx_subd);
+
+	/* We must check that the subdevice is really an AO one
+	   (in case, the subdevice index was set with the option -s) */
+	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
+	if (err < 0) {
+		fprintf(stderr, 
+			"insn_write: get_sbinfo(%d) failed (err = %d)\n",
+			idx_subd, err);
+		err = -EINVAL;
+		goto out_insn_write;
+	}
+
+	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_AO) {
+		fprintf(stderr, 
+			"insn_write: wrong subdevice selected "
+			"(not an analog output)\n");
+		err = -EINVAL;
+		goto out_insn_write;		
 	}
 
 	if (idx_rng >= 0) {
