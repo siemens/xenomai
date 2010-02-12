@@ -105,7 +105,7 @@ static inline xeno_rholder_t *xeno_get_rholder(void)
 			if (unlikely(err)) {				\
 				if ((__rq) != &__native_global_rholder.__name##q) { \
 					xnlock_get_irqsave(&nklock, s);	\
-					nholder = popq((rq), holder);	\
+					nholder = popq((__rq), holder);	\
 					appendq(&__native_global_rholder.__name##q, holder); \
 					obj->rqueue = &__native_global_rholder.__name##q; \
 				}					\
