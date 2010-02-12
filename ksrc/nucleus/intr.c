@@ -426,13 +426,28 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
-	return xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
+	int err;
+
+	if (__testbits(intr->flags, XN_ISR_ATTACHED))
+		return -EPERM;
+
+	err = xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
 			       (rthal_irq_ackfn_t)intr->iack, intr);
+
+	if (!err)
+		__setbits(intr->flags, XN_ISR_ATTACHED);
+
+	return err;
 }
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
 {
 	int irq = intr->irq, err;
+
+	if (!__testbits(intr->flags, XN_ISR_ATTACHED))
+		return -EPERM;
+
+	__clrbits(intr->flags, XN_ISR_ATTACHED);
 
 	xnlock_get(&xnirqs[irq].lock);
 	err = xnarch_release_irq(irq);
@@ -659,7 +674,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
  * @param intr The descriptor address of the interrupt object to
  * destroy.
  *
- * @return 0 is returned on success. Otherwise, -EBUSY is returned if
+ * @return 0 is returned on success. Otherwise, -EINVAL is returned if
  * an error occurred while detaching the interrupt (see
  * xnintr_detach()).
  *
@@ -675,8 +690,7 @@ EXPORT_SYMBOL_GPL(xnintr_init);
 
 int xnintr_destroy(xnintr_t *intr)
 {
-	xnintr_detach(intr);
-	return 0;
+	return xnintr_detach(intr);
 }
 EXPORT_SYMBOL_GPL(xnintr_destroy);
 
