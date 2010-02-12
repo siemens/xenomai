@@ -34,7 +34,14 @@ add_linker_flag() {
 	stage1_args="$stage1_args -Wl,--wrap $@"
 	next_is_wrapped_symbol=false
     else
-	add_2stages "$@"
+	case "$@" in
+	*--as-needed*)
+		stage2_args="$stage2_args $@"
+		;;
+	*)
+		add_2stages "$@"
+		;;
+	esac
     fi
 }
 
