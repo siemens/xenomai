@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -65,24 +65,32 @@ static void unmap_sem_heap(unsigned long heap_addr, unsigned shared)
 	munmap((void *) heap_addr, hinfo.size);
 }
 
-void xeno_init_sem_heaps(void)
+static void remap_on_fork(void)
 {
-	/* In case we forked, we need to map the new local semaphore heap */
-	if (xeno_sem_heap[0])
-		unmap_sem_heap(xeno_sem_heap[0], 0);
+	unmap_sem_heap(xeno_sem_heap[0], 0);
+
 	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
 	if (xeno_sem_heap[0] == (unsigned long) MAP_FAILED) {
 		perror("Xenomai: mmap(local sem heap)");
 		exit(EXIT_FAILURE);
 	}
+}
 
-	/* Even if we forked the global semaphore heap did not change, no need
-	  to map it anew */
-	if (!xeno_sem_heap[1]) {
-		xeno_sem_heap[1] = (unsigned long) map_sem_heap(1);
-		if (xeno_sem_heap[1] == (unsigned long) MAP_FAILED) {
-			perror("Xenomai: mmap(global sem heap)");
-			exit(EXIT_FAILURE);
-		}
+void xeno_init_sem_heaps(void)
+{
+	if (xeno_sem_heap[0])
+		return;
+
+	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
+	if (xeno_sem_heap[0] == (unsigned long) MAP_FAILED) {
+		perror("Xenomai: mmap(local sem heap)");
+		exit(EXIT_FAILURE);
+	}
+	pthread_atfork(NULL, NULL, remap_on_fork);
+
+	xeno_sem_heap[1] = (unsigned long) map_sem_heap(1);
+	if (xeno_sem_heap[1] == (unsigned long) MAP_FAILED) {
+		perror("Xenomai: mmap(global sem heap)");
+		exit(EXIT_FAILURE);
 	}
 }
