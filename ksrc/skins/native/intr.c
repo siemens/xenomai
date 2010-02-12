@@ -362,8 +362,7 @@ int rt_intr_delete(RT_INTR *intr)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	err = xnintr_detach(&intr->intr_base);
-	xnintr_destroy(&intr->intr_base);
+	err = xnintr_destroy(&intr->intr_base);
 
 	if (rc == XNSYNCH_RESCHED)
 		/* Some task has been woken up as a result of the deletion:
