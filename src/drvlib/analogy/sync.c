@@ -315,7 +315,7 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 		return -EINVAL;
 	}
 
-	/* Send the config instruction */
+	/* Send the insn_bits instruction */
 	ret = a4l_snd_insn(dsc, &insn);
 
 	/* Update the buffer if need be */
@@ -375,6 +375,7 @@ int a4l_config_subd(a4l_desc_t * dsc,
 	switch (type) {
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
 	case A4L_INSN_CONFIG_DIO_INPUT:
+	case A4L_INSN_CONFIG_DIO_OPENDRAIN:
 	{
 		unsigned int idx_chan = va_arg(args, unsigned int);
 		insn.chan_desc = CHAN(idx_chan);
