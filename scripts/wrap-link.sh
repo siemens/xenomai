@@ -165,6 +165,11 @@ while test $# -gt 0; do
 	    stage2_args="$stage2_args $arg"
 	    ;;
 
+	*.o)
+	    # Force .o to stage1 regardless of its position
+	    stage1_args="$stage1_args $arg"
+	    ;;
+
 	*) 
 	    if test -e "$arg"; then
 		add_linker_obj $arg
