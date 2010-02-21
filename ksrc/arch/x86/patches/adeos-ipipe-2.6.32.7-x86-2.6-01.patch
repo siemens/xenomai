@@ -168,7 +168,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..0d7eb46
+index 0000000..35d21c2
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,156 @@
@@ -199,10 +199,10 @@ index 0000000..0d7eb46
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.6-00"
++#define IPIPE_ARCH_STRING	"2.6-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -1353,7 +1353,7 @@ index 873f81f..aada533 100644
  
  static void flat_send_IPI_mask(const struct cpumask *cpumask, int vector)
 diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index dc69f28..c0235cf 100644
+index dc69f28..d1674f6 100644
 --- a/arch/x86/kernel/apic/io_apic.c
 +++ b/arch/x86/kernel/apic/io_apic.c
 @@ -75,8 +75,11 @@
@@ -1396,7 +1396,7 @@ index dc69f28..c0235cf 100644
  	__mask_IO_APIC_irq(cfg);
  	spin_unlock_irqrestore(&ioapic_lock, flags);
  }
-@@ -625,6 +633,11 @@ static void unmask_IO_APIC_irq_desc(struct irq_desc *desc)
+@@ -625,7 +633,13 @@ static void unmask_IO_APIC_irq_desc(struct irq_desc *desc)
  	unsigned long flags;
  
  	spin_lock_irqsave(&ioapic_lock, flags);
@@ -1406,9 +1406,11 @@ index dc69f28..c0235cf 100644
 +	else
 +#endif
  	__unmask_IO_APIC_irq(cfg);
++	ipipe_irq_unlock(desc->irq);
  	spin_unlock_irqrestore(&ioapic_lock, flags);
  }
-@@ -2200,6 +2213,7 @@ static unsigned int startup_ioapic_irq(unsigned int irq)
+ 
+@@ -2200,6 +2214,7 @@ static unsigned int startup_ioapic_irq(unsigned int irq)
  	}
  	cfg = irq_cfg(irq);
  	__unmask_IO_APIC_irq(cfg);
@@ -1416,7 +1418,7 @@ index dc69f28..c0235cf 100644
  	spin_unlock_irqrestore(&ioapic_lock, flags);
  
  	return was_pending;
-@@ -2479,23 +2493,61 @@ static void irq_complete_move(struct irq_desc **descp)
+@@ -2479,23 +2494,61 @@ static void irq_complete_move(struct irq_desc **descp)
  static inline void irq_complete_move(struct irq_desc **descp) {}
  #endif
  
@@ -1480,7 +1482,7 @@ index dc69f28..c0235cf 100644
  	int do_unmask_irq = 0;
  
  	irq_complete_move(&desc);
-@@ -2578,6 +2630,26 @@ static void ack_apic_level(unsigned int irq)
+@@ -2578,6 +2631,26 @@ static void ack_apic_level(unsigned int irq)
  		__unmask_and_level_IO_APIC_irq(cfg);
  		spin_unlock(&ioapic_lock);
  	}
@@ -1507,7 +1509,7 @@ index dc69f28..c0235cf 100644
  }
  
  #ifdef CONFIG_INTR_REMAP
-@@ -2606,14 +2678,14 @@ eoi_ioapic_irq(struct irq_desc *desc)
+@@ -2606,14 +2679,14 @@ eoi_ioapic_irq(struct irq_desc *desc)
  
  static void ir_ack_apic_edge(unsigned int irq)
  {
@@ -1524,7 +1526,7 @@ index dc69f28..c0235cf 100644
  	eoi_ioapic_irq(desc);
  }
  #endif /* CONFIG_INTR_REMAP */
-@@ -2627,6 +2699,9 @@ static struct irq_chip ioapic_chip __read_mostly = {
+@@ -2627,6 +2700,9 @@ static struct irq_chip ioapic_chip __read_mostly = {
  	.eoi		= ack_apic_level,
  #ifdef CONFIG_SMP
  	.set_affinity	= set_ioapic_affinity_irq,
@@ -1534,7 +1536,7 @@ index dc69f28..c0235cf 100644
  #endif
  	.retrigger	= ioapic_retrigger_irq,
  };
-@@ -2641,6 +2716,9 @@ static struct irq_chip ir_ioapic_chip __read_mostly = {
+@@ -2641,6 +2717,9 @@ static struct irq_chip ir_ioapic_chip __read_mostly = {
  	.eoi		= ir_ack_apic_level,
  #ifdef CONFIG_SMP
  	.set_affinity	= set_ir_ioapic_affinity_irq,
@@ -1544,7 +1546,7 @@ index dc69f28..c0235cf 100644
  #endif
  #endif
  	.retrigger	= ioapic_retrigger_irq,
-@@ -2686,23 +2764,29 @@ static inline void init_IO_APIC_traps(void)
+@@ -2686,23 +2765,29 @@ static inline void init_IO_APIC_traps(void)
  
  static void mask_lapic_irq(unsigned int irq)
  {
@@ -1577,7 +1579,7 @@ index dc69f28..c0235cf 100644
  }
  
  static struct irq_chip lapic_chip __read_mostly = {
-@@ -2710,6 +2794,9 @@ static struct irq_chip lapic_chip __read_mostly = {
+@@ -2710,6 +2795,9 @@ static struct irq_chip lapic_chip __read_mostly = {
  	.mask		= mask_lapic_irq,
  	.unmask		= unmask_lapic_irq,
  	.ack		= ack_lapic_irq,
@@ -1587,7 +1589,7 @@ index dc69f28..c0235cf 100644
  };
  
  static void lapic_register_intr(int irq, struct irq_desc *desc)
-@@ -2957,6 +3044,10 @@ static inline void __init check_timer(void)
+@@ -2957,6 +3045,10 @@ static inline void __init check_timer(void)
  		    "...trying to set up timer as Virtual Wire IRQ...\n");
  
  	lapic_register_intr(0, desc);
@@ -1598,7 +1600,7 @@ index dc69f28..c0235cf 100644
  	apic_write(APIC_LVT0, APIC_DM_FIXED | cfg->vector);	/* Fixed mode */
  	enable_8259A_irq(0);
  
-@@ -3361,6 +3452,9 @@ static struct irq_chip msi_chip = {
+@@ -3361,6 +3453,9 @@ static struct irq_chip msi_chip = {
  	.ack		= ack_apic_edge,
  #ifdef CONFIG_SMP
  	.set_affinity	= set_msi_irq_affinity,
@@ -1608,7 +1610,7 @@ index dc69f28..c0235cf 100644
  #endif
  	.retrigger	= ioapic_retrigger_irq,
  };
-@@ -3373,6 +3467,9 @@ static struct irq_chip msi_ir_chip = {
+@@ -3373,6 +3468,9 @@ static struct irq_chip msi_ir_chip = {
  	.ack		= ir_ack_apic_edge,
  #ifdef CONFIG_SMP
  	.set_affinity	= ir_set_msi_irq_affinity,
@@ -1618,7 +1620,7 @@ index dc69f28..c0235cf 100644
  #endif
  #endif
  	.retrigger	= ioapic_retrigger_irq,
-@@ -3661,6 +3758,9 @@ static struct irq_chip ht_irq_chip = {
+@@ -3661,6 +3759,9 @@ static struct irq_chip ht_irq_chip = {
  	.ack		= ack_apic_edge,
  #ifdef CONFIG_SMP
  	.set_affinity	= set_ht_irq_affinity,
@@ -1628,7 +1630,7 @@ index dc69f28..c0235cf 100644
  #endif
  	.retrigger	= ioapic_retrigger_irq,
  };
-@@ -4032,6 +4132,14 @@ int acpi_get_override_irq(int bus_irq, int *trigger, int *polarity)
+@@ -4032,6 +4133,14 @@ int acpi_get_override_irq(int bus_irq, int *trigger, int *polarity)
  	return 0;
  }
  
