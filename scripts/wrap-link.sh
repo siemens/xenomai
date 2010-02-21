@@ -14,6 +14,7 @@ Xenomai user-space posix skin in two stages.
 Options:
 -q be quiet
 -v be verbose (print each command before running it)
+-n dry run (print all commands but don't run any)
 
 Example:
 $1 -v gcc -o foo foo.o -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lpthread -lrt
@@ -58,6 +59,7 @@ if test -n "$V" && test $V -gt 0; then
 else
     verbose=false
 fi
+dryrun=
 progname="$0"
 
 if test $# -eq 0; then
@@ -75,6 +77,10 @@ while test $# -gt 0; do
 
 	-q) 
 	    verbose=false
+	    ;;
+
+	-n) 
+	    dryrun="echo # "
 	    ;;
 
 	-*)
@@ -98,6 +104,7 @@ while test $# -gt 0; do
     esac
 done
 
+test -z "$dryrun" || verbose=false
 next_is_wrapped_symbol=false
 
 onestage_args="$@"
@@ -182,10 +189,10 @@ done
 
 if $stage2; then
     $verbose && set -x
-    $cc -o "$output.tmp" -Wl,-Ur -nostdlib $stage1_args
-    $cc -o "$output" "$output.tmp" $stage2_args
-    rm -f $output.tmp
+    $dryrun $cc -o "$output.tmp" -Wl,-Ur -nostdlib $stage1_args
+    $dryrun $cc -o "$output" "$output.tmp" $stage2_args
+    $dryrun rm -f $output.tmp
 else
     $verbose && set -x
-    $cc -o "$output" $onestage_args
+    $dryrun $cc -o "$output" $onestage_args
 fi
