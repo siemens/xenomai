@@ -41,7 +41,8 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/rtcansend.man.in $(srcdir)/runinfo.man.in \
 	$(srcdir)/switchbench.man.in $(srcdir)/switchtest.man.in \
 	$(srcdir)/xeno-config.man.in $(srcdir)/xeno-info.man.in \
-	$(srcdir)/xeno-load.man.in $(srcdir)/xeno-test.man.in
+	$(srcdir)/xeno-load.man.in $(srcdir)/xeno-test.man.in \
+	$(srcdir)/xeno.man.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -58,8 +59,8 @@ CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES = clocktest.man cyclictest.man irqbench.man \
 	irqloop.man klatency.man latency.man rtcanconfig.man \
 	rtcanrecv.man rtcansend.man switchbench.man switchtest.man \
-	runinfo.man xeno-config.man xeno-info.man xeno-load.man \
-	xeno-test.man
+	runinfo.man xeno.man xeno-config.man xeno-info.man \
+	xeno-load.man xeno-test.man
 SOURCES =
 DIST_SOURCES =
 man1dir = $(mandir)/man1
@@ -231,7 +232,7 @@ man1_MANS = xeno-config.man xeno-info.man xeno-load.man xeno-test.man \
 	    clocktest.man cyclictest.man irqbench.man irqloop.man \
 	    klatency.man latency.man rtcanconfig.man \
 	    rtcanrecv.man rtcansend.man switchbench.man \
-	    switchtest.man
+	    switchtest.man xeno.man
 
 man5_MANS = runinfo.man
 all: all-am
@@ -289,6 +290,8 @@ switchbench.man: $(top_builddir)/config.status $(srcdir)/switchbench.man.in
 switchtest.man: $(top_builddir)/config.status $(srcdir)/switchtest.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 runinfo.man: $(top_builddir)/config.status $(srcdir)/runinfo.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+xeno.man: $(top_builddir)/config.status $(srcdir)/xeno.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno-config.man: $(top_builddir)/config.status $(srcdir)/xeno-config.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

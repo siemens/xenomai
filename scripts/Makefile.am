@@ -1,4 +1,4 @@
-bin_SCRIPTS=xeno-config xeno-load xeno-test xeno-info wrap-link.sh
+bin_SCRIPTS=xeno-config xeno-load xeno-test xeno-info xeno wrap-link.sh
 
 install-exec-local:
 	@if test -r $(srcdir)/postinstall.sh ; then \

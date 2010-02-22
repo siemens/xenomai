@@ -895,6 +895,7 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config \
 	scripts/xeno-load \
 	scripts/xeno-test \
+	scripts/xeno \
 	src/Makefile \
 	src/rtdk/Makefile \
 	src/skins/Makefile \
@@ -968,6 +969,7 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/switchbench.man \
 	doc/man/switchtest.man \
 	doc/man/runinfo.man \
+	doc/man/xeno.man \
 	doc/man/xeno-config.man \
 	doc/man/xeno-info.man \
 	doc/man/xeno-load.man \
