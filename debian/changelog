@@ -1,3 +1,43 @@
+xenomai (2.5.1-3) unstable; urgency=low
+
+  * xenomai-runtime: Replaced "xenomai-" prefixed executables with
+    wrapper script /usr/bin/xeno to call original executables from
+    /usr/lib/xenomai/, e.g. "xeno latency"
+  * debian/prepare-patch.sh: Synchronized from upstream (Closes: #569721)
+  * Removed 2.6.24 adeos-ipipe patches
+  * Enabled patching/use of Debian's kernel (2.6.32)
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 14 Feb 2010 13:35:15 +0100
+
+xenomai (2.5.1-2) unstable; urgency=low
+
+  * xenomai-runtime: Renamed /usr/bin/* to /usr/bin/xenomai-* (Closes: #569357)
+
+ -- Roland Stigge <stigge@antcom.de>  Fri, 12 Feb 2010 21:18:00 +0100
+
+xenomai (2.5.1-1) unstable; urgency=low
+
+  * New upstream release (Closes: #553334, #566566, #536731)
+  * debian/control: Standards-Version: 3.8.4
+
+ -- Roland Stigge <stigge@antcom.de>  Sat, 06 Feb 2010 11:05:50 +0100
+
+xenomai (2.4.8-2) unstable; urgency=low
+
+  * debian/libxenomai1.{postinst,postrm}: "set -e"
+  * debian/control: linux-patch-xenomai: Section: kernel
+
+ -- Roland Stigge <stigge@antcom.de>  Wed, 24 Jun 2009 17:47:41 +0200
+
+xenomai (2.4.8-1) unstable; urgency=low
+
+  * New upstream release
+    - includes limits.h include as in patch from Peter Green (Closes: #527654)
+  * debian/control:
+    - Standards-Version: 3.8.2
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 22 Jun 2009 22:50:23 +0200
+
 xenomai (2.4.4-3) unstable; urgency=low
 
   * debian/rules: Fixed concurrent ./configure + make runs, thanks to Albin
