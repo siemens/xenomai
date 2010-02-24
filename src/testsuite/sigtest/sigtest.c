@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <unistd.h>
+#include <pthread.h>
 #include <sys/mman.h>
 #ifndef __UCLIBC__
 #include <execinfo.h>

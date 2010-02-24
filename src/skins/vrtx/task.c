@@ -94,7 +94,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	pthread_setspecific(__vrtx_tskey, tcb);
 #endif /* !HAVE___THREAD */
 
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	bulk.a1 = (u_long)iargs->tid;
 	bulk.a2 = (u_long)iargs->prio;

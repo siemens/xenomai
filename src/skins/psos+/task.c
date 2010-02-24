@@ -67,7 +67,7 @@ static void *psos_task_trampoline(void *cookie)
 	long err;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
@@ -175,7 +175,7 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 	xeno_fault_stack();
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	bulk.a1 = (u_long)name;
 	bulk.a2 = (u_long)prio;

@@ -7,25 +7,44 @@ CPPFLAGS = \
 	-I$(top_srcdir)/include
 
 LDFLAGS = \
-	@XENO_USER_LDFLAGS@ \
-	-L../../drvlib/analogy \
-	-L../../skins/native \
-	-L../../skins/rtdm
+	@XENO_USER_LDFLAGS@
 
 analogy_config_SOURCES = analogy_config.c
-analogy_config_LDADD = -lanalogy -lrtdm
+analogy_config_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 cmd_read_SOURCES = cmd_read.c
-cmd_read_LDADD = -lanalogy -lnative -lrtdm
+cmd_read_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 cmd_write_SOURCES = cmd_write.c
-cmd_write_LDADD = -lanalogy -lnative -lrtdm
+cmd_write_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 insn_read_SOURCES = insn_read.c
-insn_read_LDADD = -lanalogy -lnative -lrtdm
+insn_read_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 insn_write_SOURCES = insn_write.c
-insn_write_LDADD = -lanalogy -lnative -lrtdm
+insn_write_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 insn_bits_SOURCES = insn_bits.c
-insn_bits_LDADD = -lanalogy -lrtdm
+insn_bits_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la

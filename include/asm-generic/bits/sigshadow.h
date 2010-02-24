@@ -1,16 +1,6 @@
 #ifndef _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 #define _XENO_ASM_GENERIC_BITS_SIGSHADOW_H
 
-#include <pthread.h>
-#include <signal.h>
+void xeno_sigshadow_install_once(void);
 
-extern pthread_once_t xeno_sigshadow_installed;
-extern struct sigaction xeno_saved_sigshadow_action;
-
-void xeno_sigshadow_install(void);
-
-static inline void sigshadow_install_once(void)
-{
-	pthread_once(&xeno_sigshadow_installed, xeno_sigshadow_install);
-}
 #endif /* _XENO_ASM_GENERIC_BITS_SIGSHADOW_H */

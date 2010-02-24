@@ -71,7 +71,7 @@ static void *rt_task_trampoline(void *cookie)
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	task = iargs->task;
 	bulk.a1 = (u_long)task;
@@ -208,7 +208,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	/* rt_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	bulk.a1 = (u_long)task;
 	bulk.a2 = (u_long)name;

@@ -8,21 +8,26 @@ CPPFLAGS = \
 	-I$(top_srcdir)/include
 
 LDFLAGS = \
-	@XENO_USER_LDFLAGS@ \
-	-L../../skins/native \
-	-L../../skins/rtdm
+	@XENO_USER_LDFLAGS@
 
 
 rtcanconfig_SOURCES = rtcanconfig.c
 
-rtcanconfig_LDADD = -lrtdm
-
+rtcanconfig_LDADD = \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 rtcanrecv_SOURCES = rtcanrecv.c
 
-rtcanrecv_LDADD = -lnative -lrtdm
+rtcanrecv_LDADD = \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 
 
 rtcansend_SOURCES = rtcansend.c
 
-rtcansend_LDADD = -lnative -lrtdm
+rtcansend_LDADD = \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la

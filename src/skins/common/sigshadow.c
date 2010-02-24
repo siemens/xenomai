@@ -1,7 +1,9 @@
+#include <pthread.h>
+#include <signal.h>
+
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/sigshadow.h>
 
-pthread_once_t xeno_sigshadow_installed = PTHREAD_ONCE_INIT;
 static struct sigaction xeno_saved_sigshadow_action;
 
 int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
@@ -69,4 +71,10 @@ void xeno_sigshadow_install(void)
 		  &new_sigshadow_action, &xeno_saved_sigshadow_action);
 	if (!(xeno_saved_sigshadow_action.sa_flags & SA_NODEFER))
 		sigaddset(&xeno_saved_sigshadow_action.sa_mask, SIGSHADOW);
+}
+
+void xeno_sigshadow_install_once(void)
+{
+	static pthread_once_t sigshadow_installed = PTHREAD_ONCE_INIT;
+	pthread_once(&sigshadow_installed, xeno_sigshadow_install);
 }

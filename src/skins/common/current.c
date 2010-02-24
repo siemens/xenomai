@@ -18,15 +18,15 @@ static inline void __xeno_set_current(xnhandle_t current)
 #else /* !HAVE___THREAD */
 #include <pthread.h>
 
-static pthread_key_t xeno_current_key;
-static pthread_key_t xeno_current_mode_key;
+pthread_key_t xeno_current_key;
+pthread_key_t xeno_current_mode_key;
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
 	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
-static unsigned long *xeno_init_current_mode(void)
+unsigned long *xeno_init_current_mode(void)
 {
 	unsigned long *mode = malloc(sizeof(unsigned long));
 	pthread_setspecific(xeno_current_mode_key, mode);

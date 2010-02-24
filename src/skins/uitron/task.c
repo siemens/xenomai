@@ -75,7 +75,7 @@ static void *uitron_task_trampoline(void *cookie)
 	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	mode = xeno_init_current_mode();
 	if (!mode) {
@@ -159,7 +159,7 @@ ER shd_tsk(ID tskid, T_CTSK *pk_ctsk) /* Xenomai extension. */
 	pthread_setschedparam(pthread_self(), policy, &param);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	err = XENOMAI_SKINCALL3(__uitron_muxid,
 				__uitron_cre_tsk,

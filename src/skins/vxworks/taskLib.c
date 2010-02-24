@@ -95,7 +95,7 @@ static void *wind_task_trampoline(void *cookie)
 
 	/* wind_task_delete requires asynchronous cancellation */
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-	sigshadow_install_once();
+	xeno_sigshadow_install_once();
 
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
