@@ -12,5 +12,3 @@ libuitron_la_SOURCES = \
 libuitron_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
-
-libuitron_la_LIBADD = ../common/libxeno_common.la

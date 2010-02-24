@@ -12,7 +12,6 @@
 
 #include "sem_heap.h"
 
-__attribute__ ((weak))
 unsigned long xeno_sem_heap[2] = { 0, 0 };
 
 static void *map_sem_heap(unsigned shared)

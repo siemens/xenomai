@@ -11,7 +11,9 @@ cyclictest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -DIPIPE_
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 cyclictest_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)

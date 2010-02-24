@@ -1,12 +1,10 @@
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/sigshadow.h>
 
-pthread_once_t __attribute__((weak))
-	xeno_sigshadow_installed = PTHREAD_ONCE_INIT;
-struct sigaction __attribute__((weak)) xeno_saved_sigshadow_action;
+pthread_once_t xeno_sigshadow_installed = PTHREAD_ONCE_INIT;
+static struct sigaction xeno_saved_sigshadow_action;
 
-int __attribute__((weak))
-xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
+int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 {
 	int action;
 
@@ -37,8 +35,7 @@ xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 	return 1;
 }
 
-void __attribute__((weak))
-xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
+static void xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 {
 	const struct sigaction *const sa = &xeno_saved_sigshadow_action;
 	sigset_t saved_sigset;
@@ -60,7 +57,7 @@ xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 	return;
 }
 
-void __attribute__((weak)) xeno_sigshadow_install(void)
+void xeno_sigshadow_install(void)
 {
 	struct sigaction new_sigshadow_action;
 

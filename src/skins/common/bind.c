@@ -11,10 +11,11 @@
 #include <asm/xenomai/bits/bind.h>
 #include "sem_heap.h"
 
+int xeno_sigxcpu_no_mlock = 1;
 static pthread_t xeno_main_tid;
 static xnsighandler *xnsig_handlers[32];
 
-void __attribute__((weak)) xeno_sigill_handler(int sig)
+static void xeno_sigill_handler(int sig)
 {
 	fprintf(stderr, "Xenomai or CONFIG_XENO_OPT_PERVASIVE disabled.\n"
 		"(modprobe xeno_nucleus?)\n");
@@ -151,4 +152,26 @@ void xeno_fault_stack(void)
 		return;
 
 	stk[0] = stk[sizeof(stk) - 1] = 0xA5;
+}
+
+void xeno_handle_mlock_alert(int sig)
+{
+	struct sigaction sa;
+
+	if (xeno_sigxcpu_no_mlock) {
+		fprintf(stderr, "Xenomai: process memory not locked "
+			"(missing mlockall?)\n");
+		fflush(stderr);
+		exit(4);
+	}
+
+	/* XNTRAPSW was set for the thread but no user-defined handler
+	   has been set to override our internal handler, so let's
+	   invoke the default signal action. */
+
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sigaction(SIGXCPU, &sa, NULL);
+	pthread_kill(pthread_self(), SIGXCPU);
 }

@@ -14,7 +14,9 @@ sigtest_LDFLAGS += -rdynamic
 endif
 
 sigtest_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(testdir)
