@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <psos+/psos.h>
-#include <asm-generic/bits/mlock_alert.h>
 #include <asm/xenomai/bits/bind.h>
 
 int __psos_muxid = -1;

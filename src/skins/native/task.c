@@ -41,7 +41,6 @@ extern pthread_key_t __native_tskey;
 #endif /* !HAVE___THREAD */
 
 extern int __native_muxid;
-extern int xeno_sigxcpu_no_mlock;
 
 /* Public Xenomai interface. */
 
@@ -96,9 +95,6 @@ static void *rt_task_trampoline(void *cookie)
 	*self = *task;
 
 	xeno_set_current();
-
-	if (iargs->mode & T_WARNSW)
-		xeno_sigxcpu_no_mlock = 0;
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -231,9 +227,6 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 
 	xeno_set_current();
 
-	if (mode & T_WARNSW)
-		xeno_sigxcpu_no_mlock = 0;
-
 	return 0;
 
   fail:
@@ -346,14 +339,6 @@ int rt_task_set_mode(int clrmask, int setmask, int *oldmode)
 	err = XENOMAI_SKINCALL3(__native_muxid,
 				__native_task_set_mode, clrmask, setmask,
 				oldmode);
-
-	/* Silently deactivate our internal handler for SIGXCPU. At that
-	   point, we know that the process memory has been properly
-	   locked, otherwise we would have caught the latter signal upon
-	   thread creation. */
-
-	if (!err && xeno_sigxcpu_no_mlock)
-		xeno_sigxcpu_no_mlock = !(setmask & T_WARNSW);
 
 	return err;
 }

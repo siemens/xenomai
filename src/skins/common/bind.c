@@ -154,11 +154,11 @@ void xeno_fault_stack(void)
 	stk[0] = stk[sizeof(stk) - 1] = 0xA5;
 }
 
-void xeno_handle_mlock_alert(int sig)
+void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context)
 {
 	struct sigaction sa;
 
-	if (xeno_sigxcpu_no_mlock) {
+	if (si->si_value.sival_int == SIGDEBUG_NOMLOCK) {
 		fprintf(stderr, "Xenomai: process memory not locked "
 			"(missing mlockall?)\n");
 		fflush(stderr);

@@ -9,7 +9,7 @@ union xnsiginfo;
 
 typedef void xnsighandler(union xnsiginfo *si);
 
-void xeno_handle_mlock_alert(int sig);
+void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context);
 
 int 
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, 
@@ -29,9 +29,9 @@ xeno_bind_skin(unsigned skin_magic, const char *skin,
 		exit(EXIT_FAILURE);
 	}
 
-	sa.sa_handler = &xeno_handle_mlock_alert;
+	sa.sa_sigaction = xeno_handle_mlock_alert;
 	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
+	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGXCPU, &sa, NULL);
 
 	return muxid;
