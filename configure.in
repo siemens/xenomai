@@ -860,6 +860,19 @@ EOF
 	fi
 fi
 
+AC_MSG_CHECKING(location for test binaries)
+AC_ARG_WITH(testdir,
+    AS_HELP_STRING([--with-testdir=<test-binaries-dir>],[location for test binaries (defaults to $bindir)]),
+    [
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    AC_MSG_ERROR([You must supply an argument to --with-testdir.])
+	  ;;
+	esac
+	XENO_TEST_DIR="$withval"
+    ], [XENO_TEST_DIR=$bindir])
+AC_MSG_RESULT($XENO_TEST_DIR)
+
 dnl
 dnl Build the Makefiles
 dnl
@@ -879,6 +892,7 @@ AC_SUBST(XENO_USER_LDFLAGS)
 AC_SUBST(XENO_USER_APP_CFLAGS)
 AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_DLOPEN_CONSTRAINT)
+AC_SUBST(XENO_TEST_DIR)
 AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
         ['$(top_srcdir)/src/skins/posix/posix.wrappers'])
 AC_SUBST(XENO_POSIX_WRAPPERS)

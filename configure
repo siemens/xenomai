@@ -748,6 +748,7 @@ ac_subst_vars='LTLIBOBJS
 LIBOBJS
 XENO_POSIX_WRAPPERS
 CONFIG_STATUS_DEPENDENCIES
+XENO_TEST_DIR
 XENO_DLOPEN_CONSTRAINT
 XENO_USER_APP_LDFLAGS
 XENO_USER_APP_CFLAGS
@@ -950,6 +951,7 @@ enable_psos_auto_mlockall
 enable_uitron_auto_mlockall
 enable_dlopen_skins
 with___thread
+with_testdir
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1659,6 +1661,8 @@ Optional Packages:
                           is to use well-known locations (or network if
                           --enable-dbx-network was passed)
   --without-__thread      do not use TLS features
+  --with-testdir=<test-binaries-dir>
+                          location for test binaries (defaults to $bindir)
 
 Some influential environment variables:
   CC          C compiler command
@@ -5940,13 +5944,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5943: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5947: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5946: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5950: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5949: output\"" >&5)
+  (eval echo "\"\$as_me:5953: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7044,7 +7048,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7047 "configure"' > conftest.$ac_ext
+  echo '#line 7051 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8407,11 +8411,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8410: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8414: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8414: \$? = $ac_status" >&5
+   echo "$as_me:8418: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8731,11 +8735,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8734: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8738: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8738: \$? = $ac_status" >&5
+   echo "$as_me:8742: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8836,11 +8840,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8839: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8843: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8843: \$? = $ac_status" >&5
+   echo "$as_me:8847: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8891,11 +8895,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8894: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8898: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8898: \$? = $ac_status" >&5
+   echo "$as_me:8902: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11263,7 +11267,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11266 "configure"
+#line 11270 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11363,7 +11367,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11366 "configure"
+#line 11370 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12852,6 +12856,27 @@ $as_echo "#define HAVE___THREAD 1" >>confdefs.h
 		XENO_DLOPEN_CONSTRAINT="-Wl,-z -Wl,nodlopen"
 	fi
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking location for test binaries" >&5
+$as_echo_n "checking location for test binaries... " >&6; }
+
+# Check whether --with-testdir was given.
+if test "${with_testdir+set}" = set; then :
+  withval=$with_testdir;
+	case "$withval" in
+	"" | y | ye | yes | n | no)
+	    as_fn_error "You must supply an argument to --with-testdir." "$LINENO" 5
+	  ;;
+	esac
+	XENO_TEST_DIR="$withval"
+
+else
+  XENO_TEST_DIR=$bindir
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TEST_DIR" >&5
+$as_echo "$XENO_TEST_DIR" >&6; }
+
 
 
 

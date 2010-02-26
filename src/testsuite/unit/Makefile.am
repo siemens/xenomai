@@ -1,8 +1,9 @@
-testdir = $(exec_prefix)/share/xenomai/testsuite/unit
+rundir = $(exec_prefix)/share/xenomai/testsuite/unit
+testdir = @XENO_TEST_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-bin_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native \
+test_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native \
                check-vdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
@@ -72,14 +73,14 @@ check_vdso_LDADD = \
 	-lpthread -lm
 
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(testdir)
-	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(testdir)/.runinfo
-	@echo "#!/bin/sh" > $(DESTDIR)$(testdir)/run
-	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" >> $(DESTDIR)$(testdir)/run
-	@chmod +x $(DESTDIR)$(testdir)/run
+	$(mkinstalldirs) $(DESTDIR)$(rundir)
+	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(rundir)/.runinfo
+	@echo "#!/bin/sh" > $(DESTDIR)$(rundir)/run
+	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" >> $(DESTDIR)$(rundir)/run
+	@chmod +x $(DESTDIR)$(rundir)/run
 
 uninstall-local:
-	$(RM) $(DESTDIR)$(testdir)/.runinfo $(DESTDIR)$(testdir)/run
+	$(RM) $(DESTDIR)$(rundir)/.runinfo $(DESTDIR)$(rundir)/run
 
 run: all
 	@$(top_srcdir)/scripts/xeno-load --verbose
