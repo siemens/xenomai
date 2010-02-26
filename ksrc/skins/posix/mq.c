@@ -1284,6 +1284,7 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 
       unlock_and_error:
 	xnlock_put_irqrestore(&nklock, s);
+	xnfree(binding);
 	return err;
 }
 #endif /* CONFIG_XENO_OPT_POSIX_SELECT */

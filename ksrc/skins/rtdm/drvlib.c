@@ -1089,6 +1089,9 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 						       RTDM_EVENT_PENDING));
 	xnlock_put_irqrestore(&nklock, s);
 
+	if (err)
+		xnfree(binding);
+
 	return err;
 }
 EXPORT_SYMBOL(rtdm_event_select_bind);
@@ -1369,6 +1372,9 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 		err = xnselect_bind(&sem->select_block, binding, selector,
 				    type, fd_index, (sem->value > 0));
 	xnlock_put_irqrestore(&nklock, s);
+
+	if (err)
+		xnfree(binding);
 
 	return err;
 }
