@@ -3,8 +3,10 @@ testdir = @XENO_TEST_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
-test_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native \
-               check-vdso
+test_PROGRAMS = arith wakeup-time mutex-torture-posix mutex-torture-native
+if CONFIG_XENO_FASTSYNCH
+test_PROGRAMS += check-vdso
+endif
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
@@ -59,6 +61,8 @@ mutex_torture_native_LDADD = \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
 
+if CONFIG_XENO_FASTSYNCH
+
 check_vdso_SOURCES = check-vdso.c
 
 check_vdso_CPPFLAGS = \
@@ -71,6 +75,8 @@ check_vdso_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
+
+endif
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(rundir)
