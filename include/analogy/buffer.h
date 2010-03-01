@@ -201,12 +201,36 @@ static inline int __pre_put(a4l_buf_t * buf, unsigned long count)
 
 static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 {
-	if (!(buf->tmp_count == 0 && buf->cns_count == 0) &&
-	    (long)(count - buf->tmp_count) > 0) {
+
+	/* The first time, we expect the buffer to be properly filled
+	before the trigger occurence; by the way, we need tmp_count to
+	have been initialized and tmp_count is updated right here */
+	if (buf->tmp_count == 0 || buf->cns_count == 0) 
+		goto out;
+
+	/* At the end of the acquisition, the user application has
+	written the defined amount of data into the buffer; so the
+	last time, the DMA channel can easily overtake the tmp
+	frontier because no more data were sent from user space;
+	therefore no useless alarm should be sent */
+	if ((long)(count - buf->end_count) > 0)
+		goto out;
+
+	/* Once the exception are passed, we check that the DMA
+	transfer has not overtaken the last record of the production
+	count (tmp_count was updated with prd_count the last time
+	__pre_abs_get was called). We must understand that we cannot
+	compare the current DMA count with the current production
+	count because even if, right now, the production count is
+	higher than the DMA count, it does not mean that the DMA count
+	was not greater a few cycles before; in such case, the DMA
+	channel would have retrieved the wrong data */
+	if ((long)(count - buf->tmp_count) > 0) {
 		set_bit(A4L_BUF_ERROR_NR, &buf->evt_flags);
 		return -EPIPE;
 	}
 
+out:
 	buf->tmp_count = buf->prd_count;
 
 	return 0;
