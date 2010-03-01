@@ -167,11 +167,19 @@ static int create_instance(struct rtdm_device *device,
 	return 0;
 }
 
-/* call with rt_fildes_lock acquired - will release it */
-static void cleanup_instance(struct rtdm_device *device,
-			     struct rtdm_dev_context *context,
-			     struct rtdm_fildes *fildes, int nrt_mem, spl_t s)
+static int cleanup_instance(struct rtdm_device *device,
+			    struct rtdm_dev_context *context,
+			    struct rtdm_fildes *fildes, int nrt_mem)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&rt_fildes_lock, s);
+
+	if (unlikely(atomic_read(&context->close_lock_count) > 1)) {
+		xnlock_put_irqrestore(&rt_fildes_lock, s);
+		return -EAGAIN;
+	}
+
 	if (fildes) {
 		clear_bit((fildes - fildes_table), used_fildes);
 		fildes->context = NULL;
@@ -192,6 +200,8 @@ static void cleanup_instance(struct rtdm_device *device,
 	}
 
 	rtdm_dereference_device(device);
+
+	return 0;
 }
 
 int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
@@ -199,7 +209,6 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	struct rtdm_device *device;
 	struct rtdm_fildes *fildes;
 	struct rtdm_dev_context *context;
-	spl_t s;
 	int ret;
 	int nrt_mode = !rtdm_in_rt_context();
 
@@ -236,8 +245,7 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	return context->fd;
 
 cleanup_out:
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-	cleanup_instance(device, context, fildes, nrt_mode, s);
+	cleanup_instance(device, context, fildes, nrt_mode);
 
 err_out:
 	return ret;
@@ -251,7 +259,6 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	struct rtdm_device *device;
 	struct rtdm_fildes *fildes;
 	struct rtdm_dev_context *context;
-	spl_t s;
 	int ret;
 	int nrt_mode = !rtdm_in_rt_context();
 
@@ -289,8 +296,7 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	return context->fd;
 
 cleanup_out:
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-	cleanup_instance(device, context, fildes, nrt_mode, s);
+	cleanup_instance(device, context, fildes, nrt_mode);
 
 err_out:
 	return ret;
@@ -348,23 +354,18 @@ again:
 	} else if (unlikely(ret < 0))
 		goto unlock_out;
 
-	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	if (unlikely(atomic_read(&context->close_lock_count) > 1)) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-
-		if (!nrt_mode) {
-			ret = -EAGAIN;
-			goto unlock_out;
-		}
+	ret = cleanup_instance(context->device, context, &fildes_table[fd],
+			       test_bit(RTDM_CREATED_IN_NRT,
+			       &context->context_flags));
+	if (ret < 0) {
 		rtdm_context_unlock(context);
+
+		if (!nrt_mode)
+			goto err_out;
+
 		msleep(CLOSURE_RETRY_PERIOD);
 		goto again;
 	}
-
-	cleanup_instance(context->device, context, &fildes_table[fd],
-			 test_bit(RTDM_CREATED_IN_NRT, &context->context_flags),
-			 s);
 
 	trace_mark(xn_rtdm, fd_closed, "fd %d", fd);
 
