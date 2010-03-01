@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
+
 #include <unistd.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -75,11 +76,8 @@ static void remap_on_fork(void)
 	}
 }
 
-void xeno_init_sem_heaps(void)
+static void xeno_init_sem_heaps_inner(void)
 {
-	if (xeno_sem_heap[0])
-		return;
-
 	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
 	if (xeno_sem_heap[0] == (unsigned long) MAP_FAILED) {
 		perror("Xenomai: mmap(local sem heap)");
@@ -92,4 +90,10 @@ void xeno_init_sem_heaps(void)
 		perror("Xenomai: mmap(global sem heap)");
 		exit(EXIT_FAILURE);
 	}
+}
+
+void xeno_init_sem_heaps(void)
+{
+	static pthread_once_t init_sem_heaps_once = PTHREAD_ONCE_INIT;
+	pthread_once(&init_sem_heaps_once, &xeno_init_sem_heaps_inner);
 }
