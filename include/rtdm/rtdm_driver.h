@@ -554,6 +554,7 @@ static inline void rtdm_context_lock(struct rtdm_dev_context *context)
 
 static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
+	smp_mb__before_atomic_dec();
 	atomic_dec(&context->close_lock_count);
 }
 
