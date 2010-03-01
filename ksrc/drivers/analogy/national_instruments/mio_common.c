@@ -506,17 +506,28 @@ void mite_handle_b_linkc(a4l_subd_t *subd)
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 }
 
-static int ni_ao_wait_for_dma_load(a4l_dev_t *dev)
+static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 {
 	static const int timeout = 10000;
+
+	a4l_dev_t *dev = subd->dev;
+	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+
 	int i;
 
 	for (i = 0; i < timeout; i++) {
+		
+		int buffer_filled;
 		unsigned short b_status;
 
 		b_status = devpriv->stc_readw(dev, AO_Status_1_Register);
-		if (b_status & AO_FIFO_Half_Full_St)
+
+		buffer_filled = test_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		buffer_filled |= (b_status & AO_FIFO_Half_Full_St);
+
+		if (buffer_filled)
 			break;
+
 		/* If we poll too often, the pci bus activity seems
 		   to slow the dma transfer down */
 		a4l_udelay(10);
@@ -569,7 +580,7 @@ static inline int ni_request_cdo_mite_channel(a4l_dev_t *dev)
 #define ni_sync_ai_dma(x) do { } while (0)
 #define mite_handle_b_linkc(x) do { } while (0)
 
-static inline int ni_ao_wait_for_dma_load(a4l_dev_t *dev)
+static inline int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 {
 	return -ENOTSUPP;
 }
@@ -714,14 +725,12 @@ static void ni_handle_eos(a4l_subd_t *subd)
 }
 
 static void ni_event(a4l_subd_t * subd)
-{
-       	
+{       	
 	/* Temporary hack */
 	a4l_dev_t *dev = subd->dev;
 	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
 
-	if(test_bit(A4L_BUF_ERROR, &buf->evt_flags)) {
-
+	if(test_bit(A4L_BUF_ERROR_NR, &buf->evt_flags)) {
 		if (subd->cancel != NULL)
 			subd->cancel(subd);
 	}
@@ -939,28 +948,15 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 
 	a4l_subd_t *subd = a4l_get_subd(dev, NI_AO_SUBDEV);
 
-	a4l_info(dev, "ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
-		 b_status, ao_mite_status);
+	a4l_dbg(1, drv_dbg, dev, 
+		"ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
+		b_status, ao_mite_status);
+
 	ni_mio_print_status_b(b_status);
-
-#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
-     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
-	/* Currently, mite.c requires us to handle LINKC */
-	if (ao_mite_status & CHSR_LINKC) {
-		mite_handle_b_linkc(subd);
-	}
-
-	if (ao_mite_status & ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
-			       CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
-			       CHSR_SABORT | CHSR_XFERR | CHSR_LxERR_mask)) {
-		a4l_info(dev, "unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
-			 ao_mite_status);
-		a4l_buf_evt(subd, A4L_BUF_ERROR);
-	}
-#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 	if (b_status == 0xffff)
 		return;
+
 	if (b_status & AO_Overrun_St) {
 		a4l_err(dev,
 			"ni_mio_common: interrupt: "
@@ -971,15 +967,38 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 	}
 
 	if (b_status & AO_BC_TC_St) {
-		a4l_info(dev,
-			 "ni_mio_common: interrupt: "
-			 "AO BC_TC status=0x%04x status2=0x%04x\n", 
-			 b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
+		a4l_dbg(1, drv_dbg, dev,
+			"ni_mio_common: interrupt: "
+			"AO BC_TC status=0x%04x status2=0x%04x\n", 
+			b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
 		a4l_buf_evt(subd, A4L_BUF_EOA);
 	}
 
+#if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
+     defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
+	if (ao_mite_status & CHSR_STOPS) {
+		a4l_dbg(1, drv_dbg, dev,
+			"ni_mio_common: interrupt: MITE transfer stopped\n");
+	} else if (ao_mite_status & CHSR_LINKC) {
+		/* Currently, mite.c requires us to handle LINKC */
+		mite_handle_b_linkc(subd);
+	}
+
+	if (ao_mite_status & 
+	    ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
+	      CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
+	      CHSR_SABORT | CHSR_STOPS | CHSR_XFERR | CHSR_LxERR_mask)) {
+		a4l_err(dev, 
+			"unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
+			 ao_mite_status);
+		a4l_buf_evt(subd, A4L_BUF_ERROR);
+	}
+#endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
+
 #if (!defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) && \
      !defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
+
 	if (b_status & AO_FIFO_Request_St) {
 		int ret;
 
@@ -2813,9 +2832,6 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	if (trignum != 0)
 		return -EINVAL;
 
-	/* TODO: ni_ao_inttrig should allow the retrieval of the
-	   subdevice index */
-
 	/* TODO: disable trigger until a command is recorded.
 	   Null trig at beginning prevent ao start trigger from executing
 	   more than once per command (and doing things like trying to
@@ -2833,7 +2849,7 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	ret = ni_ao_setup_MITE_dma(dev);
 	if (ret)
 		return ret;
-	ret = ni_ao_wait_for_dma_load(dev);
+	ret = ni_ao_wait_for_dma_load(subd);
 	if (ret < 0)
 		return ret;
 #else /* !CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
@@ -2850,8 +2866,7 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	/* wait for DACs to be loaded */
 	for (i = 0; i < timeout; i++) {
 		a4l_udelay(1);
-		if ((devpriv->stc_readw(dev,
-					Joint_Status_2_Register) &
+		if ((devpriv->stc_readw(dev,Joint_Status_2_Register) &
 		     AO_TMRDACWRs_In_Progress_St) == 0)
 			break;
 	}
@@ -2869,12 +2884,14 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	ni_set_bits(dev, Interrupt_B_Enable_Register, interrupt_b_bits, 1);
 
 	devpriv->stc_writew(dev,
-			    devpriv->
-			    ao_cmd1 | AO_UI_Arm | AO_UC_Arm | AO_BC_Arm |
-			    AO_DAC1_Update_Mode | AO_DAC0_Update_Mode,
+			    devpriv->ao_cmd1 | 
+			    AO_UI_Arm | AO_UC_Arm | 
+			    AO_BC_Arm | AO_DAC1_Update_Mode | 
+			    AO_DAC0_Update_Mode,
 			    AO_Command_1_Register);
 
-	devpriv->stc_writew(dev, devpriv->ao_cmd2 | AO_START1_Pulse,
+	devpriv->stc_writew(dev, 
+			    devpriv->ao_cmd2 | AO_START1_Pulse,
 			    AO_Command_2_Register);
 
 	return 0;
@@ -2992,8 +3009,7 @@ int ni_ao_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		if (cmd->scan_end_arg > 1) {
 			devpriv->ao_mode1 |= AO_Multiple_Channels;
 			devpriv->stc_writew(dev,
-					    AO_Number_Of_Channels(cmd->scan_end_arg -
-								  1) |
+					    AO_Number_Of_Channels(cmd->scan_end_arg - 1) |
 					    AO_UPDATE_Output_Select
 					    (AO_Update_Output_High_Z),
 					    AO_Output_Control_Register);

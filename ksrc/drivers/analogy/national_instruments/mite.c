@@ -587,17 +587,30 @@ int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 
 int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
+	a4l_dev_t *dev = subd->dev;
+	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+	int err;
 	unsigned int nbytes_ub, nbytes_lb;
 
 	nbytes_lb = mite_bytes_read_from_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
 
-	if(a4l_buf_prepare_absget(subd, nbytes_ub) != 0) {
+	err = a4l_buf_prepare_absget(subd, nbytes_ub);
+	if(err < 0) {
 		__a4l_info("MITE: DMA underrun\n");
 		return -EPIPE;
 	}
 
-	return a4l_buf_commit_absget(subd, nbytes_lb);
+	err = a4l_buf_commit_absget(subd, nbytes_lb);
+
+	/* If the MITE has already transfered more than required, we
+	   can disable it */
+	if (test_bit(A4L_BUF_EOA_NR, &buf->evt_flags))
+		writel(CHOR_STOP, 
+		       mite_chan->mite->mite_io_addr + 
+		       MITE_CHOR(mite_chan->channel));
+
+	return err;
 }
 
 u32 mite_get_status(struct mite_channel *mite_chan)
