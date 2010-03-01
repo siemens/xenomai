@@ -55,7 +55,8 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_switchtest_OBJECTS = switchtest-switchtest.$(OBJEXT)
 switchtest_OBJECTS = $(am_switchtest_OBJECTS)
-switchtest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
+switchtest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la
 switchtest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(switchtest_LDFLAGS) $(LDFLAGS) -o $@
@@ -240,7 +241,9 @@ switchtest_SOURCES = switchtest.c
 switchtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 switchtest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 switchtest_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 EXTRA_DIST = runinfo.in
 all: all-am

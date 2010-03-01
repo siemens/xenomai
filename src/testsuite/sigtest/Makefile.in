@@ -56,7 +56,8 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_sigtest_OBJECTS = sigtest-sigtest.$(OBJEXT)
 sigtest_OBJECTS = $(am_sigtest_OBJECTS)
-sigtest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
+sigtest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la
 sigtest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(sigtest_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -242,7 +243,9 @@ sigtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_
 sigtest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS) \
 	$(am__append_1)
 sigtest_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 EXTRA_DIST = runinfo.in
 all: all-am

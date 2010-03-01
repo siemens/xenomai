@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libpthread_rt_la_DEPENDENCIES = ../common/libxeno_common.la
+libpthread_rt_la_LIBADD =
 am_libpthread_rt_la_OBJECTS = libpthread_rt_la-init.lo \
 	libpthread_rt_la-thread.lo libpthread_rt_la-timer.lo \
 	libpthread_rt_la-semaphore.lo libpthread_rt_la-clock.lo \
@@ -268,7 +268,6 @@ libpthread_rt_la_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/posix
 
-libpthread_rt_la_LIBADD = ../common/libxeno_common.la
 EXTRA_DIST = posix.wrappers
 all: all-am
 

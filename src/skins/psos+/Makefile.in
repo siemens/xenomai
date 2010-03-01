@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libpsos_la_DEPENDENCIES = ../common/libxeno_common.la
+libpsos_la_LIBADD =
 am_libpsos_la_OBJECTS = libpsos_la-asr.lo libpsos_la-init.lo \
 	libpsos_la-queue.lo libpsos_la-rn.lo libpsos_la-sem.lo \
 	libpsos_la-task.lo libpsos_la-tm.lo
@@ -257,7 +257,6 @@ libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-libpsos_la_LIBADD = ../common/libxeno_common.la
 all: all-am
 
 .SUFFIXES:

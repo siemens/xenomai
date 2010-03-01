@@ -58,22 +58,32 @@ sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_analogy_config_OBJECTS = analogy_config.$(OBJEXT)
 analogy_config_OBJECTS = $(am_analogy_config_OBJECTS)
-analogy_config_DEPENDENCIES =
+analogy_config_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
 am_cmd_read_OBJECTS = cmd_read.$(OBJEXT)
 cmd_read_OBJECTS = $(am_cmd_read_OBJECTS)
-cmd_read_DEPENDENCIES =
+cmd_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 am_cmd_write_OBJECTS = cmd_write.$(OBJEXT)
 cmd_write_OBJECTS = $(am_cmd_write_OBJECTS)
-cmd_write_DEPENDENCIES =
+cmd_write_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 am_insn_bits_OBJECTS = insn_bits.$(OBJEXT)
 insn_bits_OBJECTS = $(am_insn_bits_OBJECTS)
-insn_bits_DEPENDENCIES =
+insn_bits_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
 am_insn_read_OBJECTS = insn_read.$(OBJEXT)
 insn_read_OBJECTS = $(am_insn_read_OBJECTS)
-insn_read_DEPENDENCIES =
+insn_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 am_insn_write_OBJECTS = insn_write.$(OBJEXT)
 insn_write_OBJECTS = $(am_insn_write_OBJECTS)
-insn_write_DEPENDENCIES =
+insn_write_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -153,10 +163,7 @@ LATEX_BATCHMODE = @LATEX_BATCHMODE@
 LATEX_MODE = @LATEX_MODE@
 LD = @LD@
 LDFLAGS = \
-	@XENO_USER_LDFLAGS@ \
-	-L../../drvlib/analogy \
-	-L../../skins/native \
-	-L../../skins/rtdm
+	@XENO_USER_LDFLAGS@
 
 LD_FILE_OPTION = @LD_FILE_OPTION@
 LEX = @LEX@
@@ -263,17 +270,45 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 analogy_config_SOURCES = analogy_config.c
-analogy_config_LDADD = -lanalogy -lrtdm
+analogy_config_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 cmd_read_SOURCES = cmd_read.c
-cmd_read_LDADD = -lanalogy -lnative -lrtdm
+cmd_read_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 cmd_write_SOURCES = cmd_write.c
-cmd_write_LDADD = -lanalogy -lnative -lrtdm
+cmd_write_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 insn_read_SOURCES = insn_read.c
-insn_read_LDADD = -lanalogy -lnative -lrtdm
+insn_read_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 insn_write_SOURCES = insn_write.c
-insn_write_LDADD = -lanalogy -lnative -lrtdm
+insn_write_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 insn_bits_SOURCES = insn_bits.c
-insn_bits_LDADD = -lanalogy -lrtdm
+insn_bits_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 all: all-am
 
 .SUFFIXES:

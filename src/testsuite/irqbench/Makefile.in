@@ -63,7 +63,8 @@ irqbench_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 am_irqloop_OBJECTS = irqloop-irqloop.$(OBJEXT)
 irqloop_OBJECTS = $(am_irqloop_OBJECTS)
-irqloop_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
+irqloop_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la
 irqloop_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(irqloop_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -255,7 +256,9 @@ irqloop_LDFLAGS = \
 	$(XENO_USER_LDFLAGS)
 
 irqloop_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 irqbench_SOURCES = irqbench.c
 irqbench_CPPFLAGS = \

@@ -55,7 +55,8 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_cyclictest_OBJECTS = cyclictest-cyclictest.$(OBJEXT)
 cyclictest_OBJECTS = $(am_cyclictest_OBJECTS)
-cyclictest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la
+cyclictest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la
 cyclictest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cyclictest_LDFLAGS) $(LDFLAGS) -o $@
@@ -240,7 +241,9 @@ cyclictest_SOURCES = cyclictest.c
 cyclictest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -DIPIPE_TRACE=1 -I$(top_srcdir)/include
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 cyclictest_LDADD = \
-	../../skins/posix/libpthread_rt.la -lpthread -lrt
+	../../skins/posix/libpthread_rt.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt
 
 EXTRA_DIST = runinfo.in
 all: all-am

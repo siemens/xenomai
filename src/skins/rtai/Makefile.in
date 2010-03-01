@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-librtai_la_DEPENDENCIES = ../common/libxeno_common.la
+librtai_la_LIBADD =
 am_librtai_la_OBJECTS = librtai_la-init.lo librtai_la-shm.lo
 librtai_la_OBJECTS = $(am_librtai_la_OBJECTS)
 librtai_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -249,7 +249,6 @@ librtai_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-librtai_la_LIBADD = ../common/libxeno_common.la
 all: all-am
 
 .SUFFIXES:

@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libvrtx_la_DEPENDENCIES = ../common/libxeno_common.la
+libvrtx_la_LIBADD =
 am_libvrtx_la_OBJECTS = libvrtx_la-event.lo libvrtx_la-heap.lo \
 	libvrtx_la-init.lo libvrtx_la-mb.lo libvrtx_la-mx.lo \
 	libvrtx_la-pt.lo libvrtx_la-queue.lo libvrtx_la-sem.lo \
@@ -263,7 +263,6 @@ libvrtx_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-libvrtx_la_LIBADD = ../common/libxeno_common.la
 all: all-am
 
 .SUFFIXES:

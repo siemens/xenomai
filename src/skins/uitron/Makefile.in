@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libuitron_la_DEPENDENCIES = ../common/libxeno_common.la
+libuitron_la_LIBADD =
 am_libuitron_la_OBJECTS = libuitron_la-flag.lo libuitron_la-init.lo \
 	libuitron_la-mbx.lo libuitron_la-sem.lo libuitron_la-task.lo
 libuitron_la_OBJECTS = $(am_libuitron_la_OBJECTS)
@@ -254,7 +254,6 @@ libuitron_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-libuitron_la_LIBADD = ../common/libxeno_common.la
 all: all-am
 
 .SUFFIXES:

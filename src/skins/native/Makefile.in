@@ -58,7 +58,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libnative_la_DEPENDENCIES = ../common/libxeno_common.la
+libnative_la_LIBADD =
 am_libnative_la_OBJECTS = libnative_la-alarm.lo libnative_la-buffer.lo \
 	libnative_la-cond.lo libnative_la-event.lo \
 	libnative_la-heap.lo libnative_la-init.lo libnative_la-intr.lo \
@@ -270,7 +270,6 @@ libnative_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
 
-libnative_la_LIBADD = ../common/libxeno_common.la
 all: all-am
 
 .SUFFIXES:

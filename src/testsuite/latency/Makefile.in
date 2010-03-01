@@ -56,7 +56,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_latency_OBJECTS = latency-latency.$(OBJEXT)
 latency_OBJECTS = $(am_latency_OBJECTS)
 latency_DEPENDENCIES = ../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la
+	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
 latency_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(latency_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -246,6 +246,7 @@ latency_LDFLAGS = @XENO_USER_LDFLAGS@
 latency_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la \
 	-lpthread -lm
 
 EXTRA_DIST = runinfo.in
