@@ -1051,8 +1051,6 @@ EXPORT_SYMBOL(rtdm_event_clear);
  *
  * @return 0 on success, otherwise:
  *
- * - -EIDRM is returned if @a event has been destroyed.
- *
  * - -ENOMEM is returned if there is insufficient memory to establish the
  * dynamic binding.
  *
@@ -1080,13 +1078,11 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 		return -ENOMEM;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (unlikely(testbits(event->synch_base.status, RTDM_SYNCH_DELETED)))
-		err = -EIDRM;
-	else
-		err = xnselect_bind(&event->select_block,
-				    binding, selector, type, fd_index,
-				    xnsynch_test_flags(&event->synch_base,
-						       RTDM_EVENT_PENDING));
+	err = xnselect_bind(&event->select_block,
+			    binding, selector, type, fd_index,
+			    xnsynch_test_flags(&event->synch_base,
+					       RTDM_SYNCH_DELETED |
+					       RTDM_EVENT_PENDING));
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
@@ -1337,8 +1333,6 @@ EXPORT_SYMBOL(rtdm_sem_up);
  *
  * @return 0 on success, otherwise:
  *
- * - -EIDRM is returned if @a sem has been destroyed.
- *
  * - -ENOMEM is returned if there is insufficient memory to establish the
  * dynamic binding.
  *
@@ -1366,11 +1360,11 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 		return -ENOMEM;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (unlikely(testbits(sem->synch_base.status, RTDM_SYNCH_DELETED)))
-		err = -EIDRM;
-	else
-		err = xnselect_bind(&sem->select_block, binding, selector,
-				    type, fd_index, (sem->value > 0));
+	err = xnselect_bind(&sem->select_block, binding, selector,
+			    type, fd_index,
+			    (sem->value > 0) ||
+			    xnsynch_test_flags(&sem->synch_base,
+					       RTDM_SYNCH_DELETED));
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (err)
