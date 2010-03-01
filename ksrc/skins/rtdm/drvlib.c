@@ -955,7 +955,8 @@ int rtdm_event_timedwait(rtdm_event_t *event, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(testbits(event->synch_base.status, RTDM_SYNCH_DELETED)))
+	if (unlikely(xnsynch_test_flags(&event->synch_base,
+					RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
 	else if (likely(xnsynch_test_flags(&event->synch_base,
 					   RTDM_EVENT_PENDING))) {
@@ -1239,7 +1240,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(testbits(sem->synch_base.status, RTDM_SYNCH_DELETED)))
+	if (unlikely(xnsynch_test_flags(&sem->synch_base, RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
 	else if (sem->value > 0) {
 		if(!--sem->value)
@@ -1533,7 +1534,8 @@ int rtdm_mutex_timedlock(rtdm_mutex_t *mutex, nanosecs_rel_t timeout,
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (unlikely(testbits(mutex->synch_base.status, RTDM_SYNCH_DELETED)))
+	if (unlikely(xnsynch_test_flags(&mutex->synch_base,
+					RTDM_SYNCH_DELETED)))
 		err = -EIDRM;
 	else if (likely(xnsynch_owner(&mutex->synch_base) == NULL))
 		xnsynch_set_owner(&mutex->synch_base, curr_thread);
