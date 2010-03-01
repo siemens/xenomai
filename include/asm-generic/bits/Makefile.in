@@ -230,7 +230,6 @@ includesub_HEADERS = \
 	current.h \
 	heap.h \
 	intr.h \
-	mlock_alert.h \
 	pod.h \
 	sigshadow.h \
 	timeconv.h

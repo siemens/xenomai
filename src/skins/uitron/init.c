@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <uitron/uitron.h>
-#include <asm-generic/bits/mlock_alert.h>
 #include <asm/xenomai/bits/bind.h>
 
 int __uitron_muxid = -1;

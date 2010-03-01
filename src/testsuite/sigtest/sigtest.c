@@ -9,7 +9,6 @@
 #include <execinfo.h>
 #endif /* !__UCLIBC__ */
 
-#include <asm-generic/bits/mlock_alert.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <testing/sigtest_syscall.h>
 #include <asm/xenomai/bits/bind.h>

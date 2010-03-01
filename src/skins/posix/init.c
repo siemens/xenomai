@@ -26,7 +26,6 @@
 #include <posix/posix.h>
 #include <posix/syscall.h>
 #include <rtdm/syscall.h>
-#include <asm-generic/bits/mlock_alert.h>
 #include <asm-generic/bits/sigshadow.h>
 #include <posix/mutex.h>
 
