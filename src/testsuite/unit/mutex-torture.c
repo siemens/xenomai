@@ -27,17 +27,18 @@
 #include <asm-generic/bits/current.h> /* For internal use, do not use
 				         in your code. */
 
-#define MUTEX_CREATE	1
-#define MUTEX_LOCK	2
-#define MUTEX_TRYLOCK	3
-#define MUTEX_UNLOCK	4
-#define MUTEX_DESTROY	5
-#define COND_CREATE	6
-#define COND_SIGNAL	7
-#define COND_WAIT	8
-#define COND_DESTROY	9
-#define THREAD_DETACH	10
-#define THREAD_CREATE	11
+#define MUTEX_CREATE		1
+#define MUTEX_LOCK		2
+#define MUTEX_TRYLOCK		3
+#define MUTEX_TIMED_LOCK	4
+#define MUTEX_UNLOCK		5
+#define MUTEX_DESTROY		6
+#define COND_CREATE		7
+#define COND_SIGNAL		8
+#define COND_WAIT		9
+#define COND_DESTROY		10
+#define THREAD_DETACH		11
+#define THREAD_CREATE		12
 
 #define NS_PER_MS	1000000
 
@@ -50,6 +51,16 @@ typedef RT_MUTEX mutex_t;
 typedef RT_TASK thread_t;
 typedef RT_COND cond_t;
 #endif /* __NATIVE_SKIN__ */
+
+void timespec_add(struct timespec *ts, unsigned long long value)
+{
+	ts->tv_sec += value / 1000000000;
+	ts->tv_nsec += value % 1000000000;
+	if (ts->tv_nsec > 1000000000) {
+		ts->tv_sec++;
+		ts->tv_nsec -= 1000000000;
+	}
+}
 
 void ms_sleep(int time)
 {
@@ -82,14 +93,16 @@ void check_current_prio(int expected_prio)
 	RT_TASK_INFO task_info;
 
 	if ((ret = rt_task_inquire(NULL, &task_info)) < 0) {
-		fprintf(stderr, "Task inquire: %i (%s)\n", -ret, strerror(-ret));
+		fprintf(stderr,
+			"FAILURE: Task inquire: %i (%s)\n", -ret, strerror(-ret));
 		exit(EXIT_FAILURE);
 	}
 	current_prio = task_info.cprio;
 #endif /* __NATIVE_SKIN__ */
 
 	if (current_prio != expected_prio) {
-		fprintf(stderr, "current prio (%d) != expected prio (%d)\n",
+		fprintf(stderr,
+			"FAILURE: current prio (%d) != expected prio (%d)\n",
 			current_prio, expected_prio);
 		exit(EXIT_FAILURE);
 	}
@@ -105,7 +118,8 @@ void check_current_mode(int expected_primary_mode)
 	current_in_primary = !(xeno_get_current_mode() & XNRELAX);
 	
 	if (current_in_primary != expected_primary_mode) {
-		fprintf(stderr, "current mode (%d) != expected mode (%d)\n",
+		fprintf(stderr,
+			"FAILURE: current mode (%d) != expected mode (%d)\n",
 			current_in_primary, expected_primary_mode);
 		exit(EXIT_FAILURE);
 	}
@@ -122,16 +136,18 @@ void yield(void)
 
 int dispatch(const char *service_name, int service_type, int check, ...)
 {
+	unsigned long long timeout;
 	thread_t *thread;
 	cond_t *cond;
 	void *handler;
 	va_list ap;
 	int status;
+	mutex_t *mutex;
 #ifdef XENO_POSIX
 	struct sched_param param;
 	pthread_attr_t threadattr;
 	pthread_mutexattr_t mutexattr;
-	pthread_mutex_t *mutex;
+	struct timespec ts;
 #else /* __NATIVE_SKIN__ */
 	int prio;
 #endif /* __NATIVE_SKIN__ */
@@ -171,6 +187,18 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 #else /* __NATIVE_SKIN__ */
 		status =
 		    -rt_mutex_acquire(va_arg(ap, RT_MUTEX *), TM_NONBLOCK);
+#endif /* __NATIVE_SKIN__ */
+		break;
+
+	case MUTEX_TIMED_LOCK:
+		mutex = va_arg(ap, mutex_t *);
+		timeout = va_arg(ap, unsigned long long);
+#ifdef XENO_POSIX
+		clock_gettime(CLOCK_REALTIME, &ts);
+		timespec_add(&ts, timeout);
+		status = pthread_mutex_timedlock(mutex, &ts);
+#else /* __NATIVE_SKIN__ */
+		status = -rt_mutex_acquire(mutex, timeout);
 #endif /* __NATIVE_SKIN__ */
 		break;
 
@@ -264,7 +292,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 	va_end(ap);
 
 	if (status > 0 && check) {
-		fprintf(stderr, "%s: %i (%s)\n", 
+		fprintf(stderr, "FAILURE: %s: %i (%s)\n", 
 			service_name, status, strerror(status));
 		exit(EXIT_FAILURE);
 	}
@@ -281,7 +309,7 @@ void *waiter(void *cookie)
 	dispatch("waiter mutex_lock", MUTEX_LOCK, 1, mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "waiter, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: waiter, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -311,7 +339,7 @@ void simple_wait(void)
 	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -346,7 +374,7 @@ void recursive_wait(void)
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -371,7 +399,7 @@ void errorcheck_wait(void)
 
 	err = pthread_mutex_lock(&mutex);
 	if (err != EDEADLK) {
-		fprintf(stderr, "errorcheck mutex_lock 2: %s\n",
+		fprintf(stderr, "FAILURE: errorcheck mutex_lock 2: %s\n",
 			strerror(err));
 		exit(EXIT_FAILURE);
 	}
@@ -383,7 +411,7 @@ void errorcheck_wait(void)
 	yield();
 	err = pthread_mutex_unlock(&mutex);
 	if (err != EPERM) {
-		fprintf(stderr, "errorcheck mutex_unlock 2: %s\n",
+		fprintf(stderr, "FAILURE: errorcheck mutex_unlock 2: %s\n",
 			strerror(err));
 		exit(EXIT_FAILURE);
 	}
@@ -392,13 +420,58 @@ void errorcheck_wait(void)
 	dispatch("errorcheck mutex_lock 3", MUTEX_LOCK, 1, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
 	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
 	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, &mutex);
 #endif /* XENO_POSIX */
+}
+
+void *timed_waiter(void *cookie)
+{
+	mutex_t *mutex = (mutex_t *) cookie;
+	unsigned long long start, diff;
+	int result;
+
+	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1);
+
+	start = rt_timer_tsc();
+	result = dispatch("timed_waiter mutex_timed_lock", MUTEX_TIMED_LOCK,
+			  0, mutex, 10000000);
+	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+
+	if (result != ETIMEDOUT) {
+		fprintf(stderr,
+			"FAILURE: timed_waiter mutex_timed_lock: %i (%s)\n",
+			result, strerror(result));
+		exit(EXIT_FAILURE);
+	}
+	if (diff < 10000000) {
+		fprintf(stderr, "FAILURE: timed_waiter, waited %Ld.%03u us\n",
+			diff / 1000, (unsigned) (diff % 1000));
+		exit(EXIT_FAILURE);
+	}
+
+	return cookie;
+}
+
+void timed_mutex(void)
+{
+	mutex_t mutex;
+	thread_t waiter_tid;
+
+	fprintf(stderr, "timed_mutex\n");
+
+	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, &mutex, 1, 0);
+	dispatch("timed_mutex mutex_lock 1", MUTEX_LOCK, 1, &mutex);
+	dispatch("timed_mutex thread_create", THREAD_CREATE, 1, &waiter_tid,
+		 2, timed_waiter, &mutex);
+	ms_sleep(20);
+	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+
 }
 
 void mode_switch(void)
@@ -448,7 +521,7 @@ void pi_wait(void)
 	dispatch("pi mutex_lock 2", MUTEX_LOCK, 1, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -506,7 +579,8 @@ void lock_stealing(void)
 #else /* __NATIVE_SKIN__ */
 	} else if (trylock_result != EWOULDBLOCK) {
 #endif /* __NATIVE_SKIN__ */
-		fprintf(stderr, "lock_stealing mutex_trylock: %i (%s)\n",
+		fprintf(stderr,
+			"FAILURE: lock_stealing mutex_trylock: %i (%s)\n",
 			trylock_result, strerror(trylock_result));
 		exit(EXIT_FAILURE);
 	}
@@ -525,7 +599,7 @@ void lock_stealing(void)
 
 	if (trylock_result != 0)
 		fprintf(stderr,
-			"lock_stealing mutex_trylock: not supported\n");
+			"NOTE: lock_stealing mutex_trylock: not supported\n");
 }
 
 struct cond_mutex {
@@ -546,7 +620,7 @@ void *cond_signaler(void *cookie)
 
 	if (diff < 10000000) {
 		fprintf(stderr,
-			"cond_signaler, mutex_lock waited %Ld.%03u us\n",
+			"FAILURE: cond_signaler, mutex_lock waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -560,7 +634,7 @@ void *cond_signaler(void *cookie)
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr,
-			"cond_signaler, mutex_lock 2 waited %Ld.%03u us\n",
+			"FAILURE: cond_signaler, mutex_lock 2 waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -593,7 +667,7 @@ void simple_condwait(void)
 	dispatch("simple_condwait cond_wait", COND_WAIT, 1, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -631,7 +705,7 @@ void recursive_condwait(void)
 	dispatch("rec_condwait cond_wait", COND_WAIT, 1, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
-		fprintf(stderr, "main, waited %Ld.%03u us\n",
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
@@ -666,6 +740,7 @@ int main(void)
 	simple_wait();
 	recursive_wait();
 	errorcheck_wait();
+	timed_mutex();
 	mode_switch();
 	pi_wait();
 	lock_stealing();
