@@ -1560,9 +1560,16 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 						    &mx.shadow_mutex,
 						    &count, timed, XN_INFINITE);
 
-	if (err == 0 || err == ETIMEDOUT)
+	if (err == 0 || err == ETIMEDOUT) {
 		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    	    &mx.shadow_mutex, count);
+		if (err == 0 &&
+		    __xn_safe_copy_to_user((void __user *)
+					   &umx->shadow_mutex.lockcnt,
+					   &mx.shadow_mutex.lockcnt,
+					   sizeof(umx->shadow_mutex.lockcnt)))
+			err = -EFAULT;
+	}
 
 	if (err == EINTR
 	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
