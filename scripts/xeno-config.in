@@ -107,6 +107,9 @@ while test $# -gt 0; do
 	    skin="$2"
 	    shift
 	    ;;
+	--skin=*)
+	    skin=`expr "$1" : '--skin=\(.*\)'`
+	    ;;
 	--cflags)
 	    case "$skin" in
 		native|rtdm)
