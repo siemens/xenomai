@@ -116,7 +116,7 @@ while test $# -gt 0; do
 		    if [ "x$skin" = "xpsos" ]; then
 			skin="psos+"
 		    fi
-		    echo $XENO_BASE_CFLAGS -I{staging}${includedir}/$skin
+		    echo $XENO_BASE_CFLAGS -I${staging}${includedir}/$skin
 		    ;;
 		"")
 		    echo skin not set, please pass --skin before --cflags 1>&2
