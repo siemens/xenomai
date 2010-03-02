@@ -28,6 +28,20 @@
 
 extern int __pse51_muxid;
 
+#ifdef XNARCH_HAVE_NONPRIV_TSC
+static xnsysinfo_t __pse51_sysinfo;
+
+void pse51_clock_init(int muxid)
+{
+	int err = -XENOMAI_SYSCALL2(__xn_sys_info, muxid, &__pse51_sysinfo);
+	if (err) {
+		fprintf(stderr, "Xenomai Posix skin init: "
+			"sys_info: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
+}
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
+
 int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 {
 	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
@@ -46,7 +60,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int err;
 #ifdef XNARCH_HAVE_NONPRIV_TSC
-	if (clock_id == CLOCK_MONOTONIC && sysinfo.tickval == 1) {
+	if (clock_id == CLOCK_MONOTONIC && __pse51_sysinfo.tickval == 1) {
 		unsigned long long ns;
 		unsigned long rem;
 

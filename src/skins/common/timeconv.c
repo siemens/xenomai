@@ -25,21 +25,25 @@
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/timeconv.h>
 
-xnsysinfo_t sysinfo;
+static unsigned long long xeno_cpufreq;
 
 static void xeno_init_timeconv_inner(void)
 {
-	xnarch_init_timeconv(sysinfo.cpufreq);
+	xnarch_init_timeconv(xeno_cpufreq);
 }
 
 void xeno_init_timeconv(int muxid)
 {
 	static pthread_once_t init_timeconv_once = PTHREAD_ONCE_INIT;
-	int err = XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
+	xnsysinfo_t sysinfo;
+	int err;
+
+	err = XENOMAI_SYSCALL2(__xn_sys_info, muxid, &sysinfo);
 	if (err) {
 		fprintf(stderr, "Xenomai: sys_info failed: %s\n",
 			strerror(-err));
 		exit(EXIT_FAILURE);
 	}
+	xeno_cpufreq = sysinfo.cpufreq;
 	pthread_once(&init_timeconv_once, &xeno_init_timeconv_inner);
 }

@@ -41,6 +41,7 @@ int __rtdm_fd_start = INT_MAX;
 static int fork_handler_registered;
 
 int __wrap_pthread_setschedparam(pthread_t, int, const struct sched_param *);
+void pse51_clock_init(int);
 
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
@@ -52,6 +53,10 @@ void __init_posix_interface(void)
 	int muxid, err;
 
 	muxid = xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix", NULL);
+
+#ifdef XNARCH_HAVE_NONPRIV_TSC
+	pse51_clock_init(muxid);
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 	__pse51_muxid = __xn_mux_shifted_id(muxid);
 
