@@ -467,17 +467,17 @@ static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 		       	      xntmode_t timeout_mode, RTIME timeout)
 {
 	unsigned lockcnt;
-	int err;
+	int err, epilogue_err = 0;
 
 	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, 
 				    timeout_mode, timeout);
 
 	if(!err || err == -ETIMEDOUT || err == -EINTR)
 		do {
-			err = rt_cond_wait_epilogue(mutex, lockcnt);
-		} while (err == -EINTR);
+			epilogue_err = rt_cond_wait_epilogue(mutex, lockcnt);
+		} while (epilogue_err == -EINTR);
 
-	return err;
+	return err ? err : epilogue_err;
 }
 /**
  * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
