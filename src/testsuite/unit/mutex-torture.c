@@ -657,7 +657,7 @@ int main(void)
 	/* Set scheduling parameters for the current process */
 #ifdef XENO_POSIX
 	sparam.sched_priority = 2;
-	sched_setscheduler(0, SCHED_FIFO, &sparam);
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 #else /* __NATIVE_SKIN__ */
 	rt_task_shadow(&main_tid, "main_task", 2, 0);
 #endif /* __NATIVE_SKIN__ */
