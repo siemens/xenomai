@@ -1568,13 +1568,13 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 					   &umx->shadow_mutex.lockcnt,
 					   &mx.shadow_mutex.lockcnt,
 					   sizeof(umx->shadow_mutex.lockcnt)))
-			err = -EFAULT;
+			return -EFAULT;
 	}
 
 	if (err == EINTR
 	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
 				      &count, sizeof(count)))
-			err = EFAULT;
+			return -EFAULT;
 	
 	return -err;
 }
