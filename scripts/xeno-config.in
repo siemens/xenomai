@@ -165,7 +165,7 @@ while test $# -gt 0; do
             ;;
         --posix-cflags)
 	    echo "$1" is deprecated, use --skin=posix --cflags instead 1>&2 
-            echo $XENO_POSIX_CFLAGS
+	    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/posix
             ;;
         --posix-ldflags)
 	    echo "$1" is deprecated, use --skin=posix --ldflags instead 1>&2 
