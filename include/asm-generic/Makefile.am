@@ -8,6 +8,7 @@ includesub_HEADERS = \
 	stack.h \
 	syscall.h \
 	system.h \
+	timeconv.h \
 	wrappers.h
 
 SUBDIRS = bits
