@@ -87,7 +87,7 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
@@ -108,8 +108,8 @@ binary-indep: build install
 	dh_testdir -i
 	dh_testroot -i
 	dh_installdocs -i -A CREDITS README.INSTALL TROUBLESHOOTING
-	dh_installchangelogs -i
 	dh_link -i
+	dh_installchangelogs -i
 	dh_strip -i
 	dh_compress -i -X.pdf
 	dh_fixperms -i
@@ -131,8 +131,8 @@ binary-arch: build install
 	dh_testroot -s
 	dh_installman -s
 	dh_installdocs -s -A CREDITS README.INSTALL TROUBLESHOOTING
-	dh_installchangelogs -s
 	dh_link -s
+	dh_installchangelogs -s
 	dh_strip -s
 	dh_compress -s
 	dh_fixperms -s

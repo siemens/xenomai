@@ -1,2 +1,2 @@
 # no contained shared library names refer to "xenomai", therefore own name
-libxenomai1: package-name-doesnt-match-sonames libanalogy1 libnative3 libpsos0 libpthread-rt1 librtai0 librtdk0 librtdm1 libuitron0 libvrtx0 libvxworks1
+libxenomai1: package-name-doesnt-match-sonames libanalogy1 libnative3 libpsos0 libpthread-rt1 librtai0 librtdk0 librtdm1 libuitron0 libvrtx0 libvxworks1 libxenomai0

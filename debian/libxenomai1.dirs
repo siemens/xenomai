@@ -1,2 +1,2 @@
-etc/udev
+etc/udev/rules.d
 usr/share/lintian/overrides
