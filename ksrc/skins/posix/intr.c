@@ -166,13 +166,12 @@ static int pse51_intr_detach_inner(pthread_intr_t intr, pse51_kqueues_t *q, int 
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	xnintr_detach(&intr->intr_base);
 	xnintr_destroy(&intr->intr_base);
+
+	xnfree(intr);
 
 	if (rc == XNSYNCH_RESCHED)
 		xnpod_schedule();
-
-	xnfree(intr);
 
 	return 0;
 }
