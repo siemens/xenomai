@@ -311,7 +311,7 @@ int rt_intr_create(RT_INTR *intr,
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a intr is not a interrupt object
+ * - -EINVAL is returned if @a intr is not a valid interrupt object
  * descriptor.
  *
  * - -EIDRM is returned if @a intr is a deleted interrupt object

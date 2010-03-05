@@ -679,9 +679,12 @@ EXPORT_SYMBOL_GPL(xnintr_destroy);
  * interrupt object descriptor for further retrieval by the ISR/ISR
  * handlers.
  *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * a low-level error occurred while attaching the interrupt. -EBUSY is
- * specifically returned if the interrupt object was already attached.
+ * @return 0 is returned on success. Otherwise:
+ *
+ * - -EINVAL is returned if a low-level error occurred while attaching
+ * the interrupt.
+ *
+ * - -EBUSY is returned if the interrupt object was already attached.
  *
  * @note The caller <b>must not</b> hold nklock when invoking this service,
  * this would cause deadlocks.
@@ -722,7 +725,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	}
 
 	if (__testbits(intr->flags, XN_ISR_ATTACHED)) {
-		ret = -EPERM;
+		ret = -EBUSY;
 		goto out;
 	}
 
@@ -752,10 +755,11 @@ EXPORT_SYMBOL_GPL(xnintr_attach);
  * @param intr The descriptor address of the interrupt object to
  * detach.
  *
- * @return 0 is returned on success. Otherwise, -EINVAL is returned if
- * a low-level error occurred while detaching the interrupt. Detaching
- * a non-attached interrupt object leads to a null-effect and returns
- * 0.
+ * @return 0 is returned on success. Otherwise:
+ *
+ * - -EINVAL is returned if a low-level error occurred while detaching
+ * the interrupt, or if the interrupt object was not attached. In both
+ * cases, no action is performed.
  *
  * @note The caller <b>must not</b> hold nklock when invoking this service,
  * this would cause deadlocks.
@@ -784,7 +788,7 @@ int xnintr_detach(xnintr_t *intr)
 	}
 
 	if (!__testbits(intr->flags, XN_ISR_ATTACHED)) {
-		ret = -EPERM;
+		ret = -EINVAL;
 		goto out;
 	}
 
