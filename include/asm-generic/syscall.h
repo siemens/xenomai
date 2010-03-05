@@ -46,6 +46,7 @@
 #define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
 #define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
 #define __xn_sys_get_next_sigs 10	/* only unqueue pending signals. */
+#define __xn_sys_drop_u_mode   11	/* stop updating thread->u_mode */
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1

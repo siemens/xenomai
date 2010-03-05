@@ -1018,7 +1018,8 @@ redo:
 		/* Grab the request token. */
 		return -ERESTARTSYS;
 
-	__xn_put_user(0, thread->u_mode);
+	if (thread->u_mode)
+		__xn_put_user(0, thread->u_mode);
 
 	preempt_disable();
 
@@ -1208,7 +1209,8 @@ void xnshadow_relax(int notify, int reason)
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
-	__xn_put_user(XNRELAX, thread->u_mode);
+	if (thread->u_mode)
+		__xn_put_user(XNRELAX, thread->u_mode);
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -1382,7 +1384,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (ret)
 		return ret;
 
-	__xn_put_user(XNRELAX, u_mode);
+	if (thread->u_mode)
+		__xn_put_user(XNRELAX, u_mode);
 
 	ret = xnshadow_harden();
 
@@ -1967,6 +1970,18 @@ static int xnshadow_sys_get_next_sigs(struct pt_regs *regs)
 	return -EINTR;
 }
 
+static int xnshadow_sys_drop_u_mode(struct pt_regs *regs)
+{
+	xnthread_t *cur = xnshadow_thread(current);
+
+	if (!cur)
+		return -EPERM;
+
+	cur->u_mode = NULL;
+
+	return 0;
+}
+
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -1981,6 +1996,8 @@ static xnsysent_t __systab[] = {
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
 	[__xn_sys_get_next_sigs] = 
 		{&xnshadow_sys_get_next_sigs, __xn_exec_conforming},
+	[__xn_sys_drop_u_mode] =
+		{&xnshadow_sys_drop_u_mode, __xn_exec_shadow},
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -2034,8 +2051,30 @@ static struct xnskin_props __props = {
 	.module = NULL
 };
 
-static inline int substitute_linux_syscall(struct pt_regs *regs)
+static void handle_shadow_exit(xnthread_t *thread)
 {
+	static int warned;
+
+	/*
+	 * If user space did not deregister u_mode at this point, we
+	 * are confronted with old libraries and should warn about
+	 * potential instabilities.
+	 */
+	if (thread->u_mode && !warned) {
+		warned = 1;
+		printk(KERN_WARNING
+		       "Xenomai: old Xenomai libs detected which may crash "
+		       "on thread termination\n");
+	}
+	thread->u_mode = NULL;
+}
+
+static inline int
+substitute_linux_syscall(xnthread_t *thread, struct pt_regs *regs)
+{
+	if (unlikely(__xn_linux_mux_p(regs, __NR_exit)))
+		handle_shadow_exit(thread);
+
 	/* No real-time replacement for now -- let Linux handle this call. */
 	return 0;
 }
@@ -2204,7 +2243,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	 * From now on, we know that we have a valid shadow thread
 	 * pointer.
 	 */
-	if (substitute_linux_syscall(regs))
+	if (substitute_linux_syscall(thread, regs))
 		/*
 		 * This is a Linux syscall issued on behalf of a
 		 * shadow thread running inside the Xenomai
@@ -2265,7 +2304,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	if (__xn_reg_mux_p(regs))
 		goto xenomai_syscall;
 
-	if (!thread || !substitute_linux_syscall(regs))
+	if (!thread || !substitute_linux_syscall(thread, regs))
 		/* Fall back to Linux syscall handling. */
 		return RTHAL_EVENT_PROPAGATE;
 

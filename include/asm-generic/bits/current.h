@@ -2,7 +2,9 @@
 #define _XENO_ASM_GENERIC_CURRENT_H
 
 #include <pthread.h>
-#include <nucleus/types.h>
+#include <nucleus/thread.h>
+
+extern pthread_key_t xeno_current_mode_key;
 
 #ifdef HAVE___THREAD
 extern __thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec")));
@@ -19,15 +21,13 @@ static inline unsigned long xeno_get_current_mode(void)
 	return xeno_current_mode;
 }
 
-static inline unsigned long *xeno_init_current_mode(void)
+static inline int xeno_primary_mode(void)
 {
-	return &xeno_current_mode;
+	return xeno_current_mode & XNRELAX;
 }
 
-#define xeno_init_current_keys() do { } while (0)
 #else /* ! HAVE___THREAD */
 extern pthread_key_t xeno_current_key;
-extern pthread_key_t xeno_current_mode_key;
 
 static inline xnhandle_t xeno_get_current(void)
 {
@@ -41,14 +41,22 @@ static inline xnhandle_t xeno_get_current(void)
 
 static inline unsigned long xeno_get_current_mode(void)
 {
-	return *(unsigned long *)pthread_getspecific(xeno_current_mode_key);
+	unsigned long *mode = pthread_getspecific(xeno_current_mode_key);
+
+	return mode ? *mode : -1;
 }
 
-unsigned long *xeno_init_current_mode(void);
+static inline int xeno_primary_mode(void)
+{
+	unsigned long *mode = pthread_getspecific(xeno_current_mode_key);
 
-void xeno_init_current_keys(void);
+	return mode ? (*mode & XNRELAX) : 0;
+}
 #endif /* ! HAVE___THREAD */
 
 void xeno_set_current(void);
+
+unsigned long *xeno_init_current_mode(void);
+void xeno_init_current_keys(void);
 
 #endif /* _XENO_ASM_GENERIC_CURRENT_H */
