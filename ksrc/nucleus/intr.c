@@ -348,8 +348,6 @@ static inline int xnintr_irq_attach(xnintr_t *intr)
 			return err;
 	}
 
-	__setbits(intr->flags, XN_ISR_ATTACHED);
-
 	intr->next = NULL;
 
 	/* Add the given interrupt object. No need to synchronise with the IRQ
@@ -412,16 +410,8 @@ static inline xnintr_t *xnintr_shirq_next(xnintr_t *prev)
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
 {
-	int ret;
-
-	ret = xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
-			      (rthal_irq_ackfn_t)intr->iack, intr);
-	if (ret)
-		return ret;
-
-	__setbits(intr->flags, XN_ISR_ATTACHED);
-
-	return 0;
+	return xnarch_hook_irq(intr->irq, &xnintr_irq_handler,
+			       (rthal_irq_ackfn_t)intr->iack, intr);
 }
 
 static inline int xnintr_irq_detach(xnintr_t *intr)
@@ -740,6 +730,7 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 	if (ret)
 		goto out;
 
+	__setbits(intr->flags, XN_ISR_ATTACHED);
 	xnintr_stat_counter_inc();
 out:
 	xnlock_put_irqrestore(&intrlock, s);
