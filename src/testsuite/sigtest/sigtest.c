@@ -166,7 +166,11 @@ void *dual_signals2(void *cookie)
 
 int main(void)
 {
+	struct sched_param sparam = { .sched_priority = 1 };
+
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
 	int one_restart[] = { -ERESTART, };
 	mysh = mark_seen;

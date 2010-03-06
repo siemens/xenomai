@@ -28,6 +28,9 @@ static void sigtest_timer_handler(xntimer_t *timer)
 static int __sigtest_queue(struct pt_regs *regs)
 {
 	target = xnshadow_thread(current);
+	if (!target)
+		return -EPERM;
+
 	nr_sigs = (size_t)__xn_reg_arg2(regs);
 	sigs = xnmalloc(sizeof(*sigs) * nr_sigs);
 	next_sig = 0;
