@@ -290,6 +290,11 @@ static inline unsigned long long xnarch_get_cpu_freq(void)
 	return RTHAL_CPU_FREQ;
 }
 
+static inline unsigned long long xnarch_get_clock_freq(void)
+{
+	return RTHAL_CLOCK_FREQ;
+}
+
 #define xnarch_get_cpu_tsc			rthal_rdtsc
 
 #define xnarch_halt(emsg)				\

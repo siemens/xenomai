@@ -1759,7 +1759,7 @@ static int xnshadow_sys_info(struct pt_regs *regs)
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	info.cpufreq = xnarch_get_cpu_freq();
+	info.clockfreq = xnarch_get_clock_freq();
 
 	info.vdso =
 		xnheap_mapped_offset(&xnsys_ppd_get(1)->sem_heap, nkvdso);
