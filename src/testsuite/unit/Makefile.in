@@ -35,6 +35,7 @@ host_triplet = @host@
 target_triplet = @target@
 test_PROGRAMS = arith$(EXEEXT) wakeup-time$(EXEEXT) \
 	mutex-torture-posix$(EXEEXT) mutex-torture-native$(EXEEXT) \
+	cond-torture-posix$(EXEEXT) cond-torture-native$(EXEEXT) \
 	$(am__EXEEXT_1)
 @CONFIG_XENO_FASTSYNCH_TRUE@am__append_1 = check-vdso
 subdir = src/testsuite/unit
@@ -75,6 +76,23 @@ check_vdso_OBJECTS = $(am_check_vdso_OBJECTS)
 check_vdso_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(check_vdso_LDFLAGS) $(LDFLAGS) -o $@
+am_cond_torture_native_OBJECTS =  \
+	cond_torture_native-cond-torture.$(OBJEXT)
+cond_torture_native_OBJECTS = $(am_cond_torture_native_OBJECTS)
+cond_torture_native_DEPENDENCIES = ../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la
+cond_torture_native_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(cond_torture_native_LDFLAGS) $(LDFLAGS) -o $@
+am_cond_torture_posix_OBJECTS =  \
+	cond_torture_posix-cond-torture.$(OBJEXT)
+cond_torture_posix_OBJECTS = $(am_cond_torture_posix_OBJECTS)
+cond_torture_posix_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la
+cond_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(cond_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
 am_mutex_torture_native_OBJECTS =  \
 	mutex_torture_native-mutex-torture.$(OBJEXT)
 mutex_torture_native_OBJECTS = $(am_mutex_torture_native_OBJECTS)
@@ -111,9 +129,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
+	$(cond_torture_native_SOURCES) $(cond_torture_posix_SOURCES) \
 	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
 	$(wakeup_time_SOURCES)
 DIST_SOURCES = $(arith_SOURCES) $(am__check_vdso_SOURCES_DIST) \
+	$(cond_torture_native_SOURCES) $(cond_torture_posix_SOURCES) \
 	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
 	$(wakeup_time_SOURCES)
 ETAGS = etags
@@ -327,6 +347,29 @@ mutex_torture_native_LDADD = \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
 
+cond_torture_posix_SOURCES = cond-torture.c
+cond_torture_posix_CPPFLAGS = \
+	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX \
+	-I$(top_srcdir)/include
+
+cond_torture_posix_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+cond_torture_posix_LDADD = \
+	../../skins/posix/libpthread_rt.la \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt -lm
+
+cond_torture_native_SOURCES = cond-torture.c
+cond_torture_native_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include
+
+cond_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
+cond_torture_native_LDADD = \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lm
+
 @CONFIG_XENO_FASTSYNCH_TRUE@check_vdso_SOURCES = check-vdso.c
 @CONFIG_XENO_FASTSYNCH_TRUE@check_vdso_CPPFLAGS = \
 @CONFIG_XENO_FASTSYNCH_TRUE@	@XENO_USER_CFLAGS@ \
@@ -406,6 +449,12 @@ arith$(EXEEXT): $(arith_OBJECTS) $(arith_DEPENDENCIES)
 check-vdso$(EXEEXT): $(check_vdso_OBJECTS) $(check_vdso_DEPENDENCIES) 
 	@rm -f check-vdso$(EXEEXT)
 	$(check_vdso_LINK) $(check_vdso_OBJECTS) $(check_vdso_LDADD) $(LIBS)
+cond-torture-native$(EXEEXT): $(cond_torture_native_OBJECTS) $(cond_torture_native_DEPENDENCIES) 
+	@rm -f cond-torture-native$(EXEEXT)
+	$(cond_torture_native_LINK) $(cond_torture_native_OBJECTS) $(cond_torture_native_LDADD) $(LIBS)
+cond-torture-posix$(EXEEXT): $(cond_torture_posix_OBJECTS) $(cond_torture_posix_DEPENDENCIES) 
+	@rm -f cond-torture-posix$(EXEEXT)
+	$(cond_torture_posix_LINK) $(cond_torture_posix_OBJECTS) $(cond_torture_posix_LDADD) $(LIBS)
 mutex-torture-native$(EXEEXT): $(mutex_torture_native_OBJECTS) $(mutex_torture_native_DEPENDENCIES) 
 	@rm -f mutex-torture-native$(EXEEXT)
 	$(mutex_torture_native_LINK) $(mutex_torture_native_OBJECTS) $(mutex_torture_native_LDADD) $(LIBS)
@@ -425,6 +474,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arith-arith-noinline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arith-arith.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_vdso-check-vdso.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_torture_native-cond-torture.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_torture_posix-cond-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_native-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_posix-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wakeup_time-wakeup-time.Po@am__quote@
@@ -491,6 +542,34 @@ check_vdso-check-vdso.obj: check-vdso.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='check-vdso.c' object='check_vdso-check-vdso.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(check_vdso_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o check_vdso-check-vdso.obj `if test -f 'check-vdso.c'; then $(CYGPATH_W) 'check-vdso.c'; else $(CYGPATH_W) '$(srcdir)/check-vdso.c'; fi`
+
+cond_torture_native-cond-torture.o: cond-torture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cond_torture_native-cond-torture.o -MD -MP -MF $(DEPDIR)/cond_torture_native-cond-torture.Tpo -c -o cond_torture_native-cond-torture.o `test -f 'cond-torture.c' || echo '$(srcdir)/'`cond-torture.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/cond_torture_native-cond-torture.Tpo $(DEPDIR)/cond_torture_native-cond-torture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cond-torture.c' object='cond_torture_native-cond-torture.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cond_torture_native-cond-torture.o `test -f 'cond-torture.c' || echo '$(srcdir)/'`cond-torture.c
+
+cond_torture_native-cond-torture.obj: cond-torture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cond_torture_native-cond-torture.obj -MD -MP -MF $(DEPDIR)/cond_torture_native-cond-torture.Tpo -c -o cond_torture_native-cond-torture.obj `if test -f 'cond-torture.c'; then $(CYGPATH_W) 'cond-torture.c'; else $(CYGPATH_W) '$(srcdir)/cond-torture.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/cond_torture_native-cond-torture.Tpo $(DEPDIR)/cond_torture_native-cond-torture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cond-torture.c' object='cond_torture_native-cond-torture.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cond_torture_native-cond-torture.obj `if test -f 'cond-torture.c'; then $(CYGPATH_W) 'cond-torture.c'; else $(CYGPATH_W) '$(srcdir)/cond-torture.c'; fi`
+
+cond_torture_posix-cond-torture.o: cond-torture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_posix_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cond_torture_posix-cond-torture.o -MD -MP -MF $(DEPDIR)/cond_torture_posix-cond-torture.Tpo -c -o cond_torture_posix-cond-torture.o `test -f 'cond-torture.c' || echo '$(srcdir)/'`cond-torture.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/cond_torture_posix-cond-torture.Tpo $(DEPDIR)/cond_torture_posix-cond-torture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cond-torture.c' object='cond_torture_posix-cond-torture.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_posix_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cond_torture_posix-cond-torture.o `test -f 'cond-torture.c' || echo '$(srcdir)/'`cond-torture.c
+
+cond_torture_posix-cond-torture.obj: cond-torture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_posix_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cond_torture_posix-cond-torture.obj -MD -MP -MF $(DEPDIR)/cond_torture_posix-cond-torture.Tpo -c -o cond_torture_posix-cond-torture.obj `if test -f 'cond-torture.c'; then $(CYGPATH_W) 'cond-torture.c'; else $(CYGPATH_W) '$(srcdir)/cond-torture.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/cond_torture_posix-cond-torture.Tpo $(DEPDIR)/cond_torture_posix-cond-torture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cond-torture.c' object='cond_torture_posix-cond-torture.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(cond_torture_posix_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cond_torture_posix-cond-torture.obj `if test -f 'cond-torture.c'; then $(CYGPATH_W) 'cond-torture.c'; else $(CYGPATH_W) '$(srcdir)/cond-torture.c'; fi`
 
 mutex_torture_native-mutex-torture.o: mutex-torture.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mutex_torture_native_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mutex_torture_native-mutex-torture.o -MD -MP -MF $(DEPDIR)/mutex_torture_native-mutex-torture.Tpo -c -o mutex_torture_native-mutex-torture.o `test -f 'mutex-torture.c' || echo '$(srcdir)/'`mutex-torture.c
