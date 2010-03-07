@@ -177,10 +177,6 @@ int rthal_timer_request(
 
 	res = ipipe_request_tickdev("decrementer", mode_emul, tick_emul, cpu,
 				    tmfreq);
-	/*
-	 * Ignore the returned timer freq; the timebase freq is more
-	 * accurate (CPU_FREQ == timebase freq for this port).
-	 */
 	switch (res) {
 	case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -332,7 +328,7 @@ void rthal_timer_release(int cpu)
 
 unsigned long rthal_timer_calibrate(void)
 {
-	return 1000000000 / RTHAL_CPU_FREQ;
+	return 1000000000 / RTHAL_CLOCK_FREQ;
 }
 
 int rthal_irq_host_request(unsigned irq,
@@ -447,9 +443,13 @@ int rthal_arch_init(void)
 #endif /* CONFIG_ALTIVEC */
 
 	if (rthal_cpufreq_arg == 0)
-		/* The CPU frequency is expressed as the timebase frequency
-		   for this port. */
 		rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
+
+	if (rthal_timerfreq_arg == 0)
+		rthal_timerfreq_arg = (unsigned long)rthal_get_timerfreq();
+
+	if (rthal_clockfreq_arg == 0)
+		rthal_clockfreq_arg = (unsigned long)rthal_get_clockfreq();
 
 	return 0;
 }
