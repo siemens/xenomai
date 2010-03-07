@@ -11,41 +11,49 @@ latter kernel.
 
 On the PowerPC 32bit architecture, Xenomai is supported on both the
 v2.4 and v2.6 Linux kernel series, for which the appropriate Adeos
-patches exist. The v2.4 kernel tree of reference for Xenomai/PowerPC
-is available from Denx's linuxppc_2_4_devel GIT tree [2]. Adeos
-patches for the 2.6 kernel series are currently based on releases from
-Denx's linux-2.6-denx GIT tree.
-
-Patches up to kernel 2.6.21 apply against vanilla releases from
-kernel.org. Patches from kernel 2.6.22 and on apply against milestones
-or snapshots from Denx's public GIT tree [3].
-
-Patches from 2.6.24 to 2.6.26 provide support for the legacy ppc/ tree
-(ppc32, uniprocessor only) in addition to the powerpc/ branch.
-
-Just apply one of those patches against the corresponding kernel
-release. You may want to have a look at the README.*INSTALL guides at
-the top of the Xenomai tree for more information.
+patches exist. Apply one of those patches against the corresponding
+kernel release. You may want to have a look at the README.*INSTALL
+guides at the top of the Xenomai tree for more information.
 
 This directory only contains the most recent patches used to validate
 this Xenomai release on powerpc platforms; you may find the complete
 collection of Adeos/I-pipe patches at the following locations (see
 note):
 
-* current I-pipe patches based on the powerpc/ tree; each patch
-supports both ppc32 and ppc64 platforms:
-http://download.gna.org/adeos/patches/v2.6/powerpc/
+* http://download.gna.org/adeos/patches/v2.6/powerpc/
 
 * older I-pipe patches are available from:
 http://download.gna.org/adeos/patches/v2.6/powerpc/older/
 
 NOTE: not all older patches are guaranteed to work with the current
 Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility.
+since we try hard to maintain backward compatibility. In other words,
+you are NOT absolutely required to upgrade your working kernel setup
+to run this newer Xenomai release, albeit bugs have probably been
+fixed in more recent I-pipe patches. YMMV.
 
-Patch			        Based on GIT commit # / TAG
-------------------------------------------------------------------------
-2.4.25-DENX-1.2-02/ppc		6d7d0e61a0f7837da59369a19a4eaa0063653bbf
+The reference kernel tree those patches are based on varied over time,
+here is a map detailing this evolution:
+
+		Linux v2.4.x
+		~~~~~~~~~~~~
+
+From git://www.denx.de/git/linuxppc_2_4_devel
+
+Patch release		Commit #
+----------------------	----------------------------------------
+2.4.25-DENX-1.2-xx/ppc	6d7d0e61a0f7837da59369a19a4eaa0063653bbf
+2.4.25-DENX-2.2-xx/ppc	5bab6d641ff5ba139f9f41869502cb7c96d785bc
+
+
+		from Linux v2.6.22 to v2.6.32
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From git://www.denx.de/git/linux-2.6-denx.git
+
+Patch release			Commit #
+----------------------------	----------------------------------------
+2.6.22-DENX-*/powerpc		3e833ffb06a4ce14f2680a0afe9abd5342188e17
 2.6.23-DENX-1.6-00/ppc		208aa3df8645608ff3febb65f83219173dfe4979
 2.6.23-DENX-2.0-03/powerpc	3e44e7de644b521c5301c806d90da6feb99158d5
 2.6.24.6-DENX-2.4-03/powerpc	331e1d1ac8b64e9c4c37906d3e005f9adda574ab
@@ -60,6 +68,10 @@ Patch			        Based on GIT commit # / TAG
 2.6.30.3-DENX-*/powerpc		193e7866fc30ae29454fcc4d110166a86a963c9f
 2.6.32.3-DENX-*/powerpc		224f363857f05ab44dab3441112965f0a7966788
 
-[1] http://www.gna.org/projects/adeos/
-[2] git://www.denx.de/git/linuxppc_2_4_devel
-[3] git://www.denx.de/git/linux-2.6-denx.git
+		from Linux v2.6.20 to v2.6.21
+		from Linux v2.6.33 onward
+		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From ftp://ftp.free.fr/mirrors/ftp.kernel.org/linux/kernel/v2.6/
+
+	All patches are based on mainline kernel releases.
