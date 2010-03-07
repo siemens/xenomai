@@ -514,7 +514,12 @@ static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
  * variable has been signaled.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the condition variable has been signaled.
+ * waiting task, or a signal has been received before the condition
+ * variable has been signaled. Note that the condition variable may be
+ * signaled right after this interruption, so when using -EINTR, the
+ * code must not call rt_cond_wait() immediately again, or a condition
+ * signal may be missed. With respect to restartint rt_cond_wait(),
+ * -EINTR should be handled as if 0 had been returned.
  *
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
  *
@@ -574,7 +579,12 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  * before the condition variable is signaled.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the condition variable has been signaled.
+ * waiting task before the condition variable has been signaled. Note
+ * that the condition variable may be signaled right after this
+ * interruption, so when using -EINTR, the code must not call
+ * rt_cond_wait() immediately again, or a condition signal may be
+ * missed. With respect to restartint rt_cond_wait(), -EINTR should be
+ * handled as if 0 had been returned.
  *
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
  *
