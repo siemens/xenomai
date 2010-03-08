@@ -24,8 +24,9 @@
 #include <native/sem.h>
 #include <native/cond.h>
 #endif /* __NATIVE_SKIN */
-#include <asm-generic/bits/current.h> /* For internal use, do not use
+#include <asm-generic/xenomai/bits/current.h> /* For internal use, do not use
 				         in your code. */
+#include <asm-generic/xenomai/stack.h>
 
 #define MUTEX_CREATE		1
 #define MUTEX_LOCK		2
@@ -134,7 +135,8 @@ void yield(void)
 #endif /* __NATIVE_SKIN__ */
 }
 
-int dispatch(const char *service_name, int service_type, int check, ...)
+int dispatch(const char *service_name, 
+	     int service_type, int check, int expected, ...)
 {
 	unsigned long long timeout;
 	thread_t *thread;
@@ -152,7 +154,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 	int prio;
 #endif /* __NATIVE_SKIN__ */
 
-	va_start(ap, check);
+	va_start(ap, expected);
 	switch (service_type) {
 	case MUTEX_CREATE:
 #ifdef XENO_POSIX
@@ -272,7 +274,7 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 		pthread_attr_setschedparam(&threadattr, &param);
 		pthread_attr_setinheritsched(&threadattr,
 					     PTHREAD_EXPLICIT_SCHED);
-		pthread_attr_setstacksize(&threadattr, 32768);
+		pthread_attr_setstacksize(&threadattr, xeno_stacksize(0));
 		handler = va_arg(ap, void *);
 		status = pthread_create(thread, &threadattr, handler,
 					va_arg(ap, void *));
@@ -291,9 +293,9 @@ int dispatch(const char *service_name, int service_type, int check, ...)
 	}
 	va_end(ap);
 
-	if (status > 0 && check) {
-		fprintf(stderr, "FAILURE: %s: %i (%s)\n", 
-			service_name, status, strerror(status));
+	if (check && status != expected) {
+		fprintf(stderr, "FAILURE: %s: %i (%s) instead of %i\n", 
+			service_name, status, strerror(status), expected);
 		exit(EXIT_FAILURE);
 	}
 	return status;
@@ -304,9 +306,9 @@ void *waiter(void *cookie)
 	mutex_t *mutex = (mutex_t *) cookie;
 	unsigned long long start, diff;
 
-	dispatch("waiter pthread_detach", THREAD_DETACH, 1);
+	dispatch("waiter pthread_detach", THREAD_DETACH, 1, 0);
 	start = rt_timer_tsc();
-	dispatch("waiter mutex_lock", MUTEX_LOCK, 1, mutex);
+	dispatch("waiter mutex_lock", MUTEX_LOCK, 1, 0, mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: waiter, waited %Ld.%03u us\n",
@@ -314,7 +316,7 @@ void *waiter(void *cookie)
 		exit(EXIT_FAILURE);
 	}
 	ms_sleep(11);
-	dispatch("waiter mutex_unlock", MUTEX_UNLOCK, 1, mutex);
+	dispatch("waiter mutex_unlock", MUTEX_UNLOCK, 1, 0, mutex);
 
 	return cookie;
 }
@@ -327,16 +329,16 @@ void simple_wait(void)
 
 	fprintf(stderr, "simple_wait\n");
 
-	dispatch("simple mutex_init", MUTEX_CREATE, 1, &mutex, 0, 0);
-	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, &mutex);
-	dispatch("simple thread_create", THREAD_CREATE, 1, &waiter_tid, 2,
+	dispatch("simple mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0, 0);
+	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
 	ms_sleep(10);
-	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
 	start = rt_timer_tsc();
-	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, &mutex);
+	dispatch("simple mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
@@ -344,8 +346,8 @@ void simple_wait(void)
 		exit(EXIT_FAILURE);
 	}
 
-	dispatch("simple mutex_unlock 2", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("simple mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("simple mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 void recursive_wait(void)
@@ -356,21 +358,21 @@ void recursive_wait(void)
 
 	fprintf(stderr, "recursive_wait\n");
 
-	dispatch("rec mutex_init", MUTEX_CREATE, 1, &mutex, 0,
+	dispatch("rec mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_RECURSIVE);
-	dispatch("rec mutex_lock 1", MUTEX_LOCK, 1, &mutex);
-	dispatch("rec mutex_lock 2", MUTEX_LOCK, 1, &mutex);
+	dispatch("rec mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("rec mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
 
-	dispatch("rec thread_create", THREAD_CREATE, 1, &waiter_tid, 2,
+	dispatch("rec thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
 
-	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, &mutex); 
+	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex); 
 	ms_sleep(10);
-	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
 	start = rt_timer_tsc();
-	dispatch("rec mutex_lock 3", MUTEX_LOCK, 1, &mutex);
+	dispatch("rec mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 
 	if (diff < 10000000) {
@@ -378,8 +380,8 @@ void recursive_wait(void)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	dispatch("rec mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("rec mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("rec mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 void errorcheck_wait(void)
@@ -393,9 +395,9 @@ void errorcheck_wait(void)
 
 	fprintf(stderr, "errorcheck_wait\n");
 
-	dispatch("errorcheck mutex_init", MUTEX_CREATE, 1, &mutex, 0,
+	dispatch("errorcheck mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_ERRORCHECK);
-	dispatch("errorcheck mutex_lock 1", MUTEX_LOCK, 1, &mutex);
+	dispatch("errorcheck mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	err = pthread_mutex_lock(&mutex);
 	if (err != EDEADLK) {
@@ -404,10 +406,10 @@ void errorcheck_wait(void)
 		exit(EXIT_FAILURE);
 	}
 
-	dispatch("errorcheck thread_create", THREAD_CREATE, 1, &waiter_tid, 2,
+	dispatch("errorcheck thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
 	ms_sleep(10);
-	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 	err = pthread_mutex_unlock(&mutex);
 	if (err != EPERM) {
@@ -417,15 +419,15 @@ void errorcheck_wait(void)
 	}
 
 	start = rt_timer_tsc();
-	dispatch("errorcheck mutex_lock 3", MUTEX_LOCK, 1, &mutex);
+	dispatch("errorcheck mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("errorcheck mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("errorcheck mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 #endif /* XENO_POSIX */
 }
 
@@ -435,19 +437,12 @@ void *timed_waiter(void *cookie)
 	unsigned long long start, diff;
 	int result;
 
-	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1);
+	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1, 0);
 
 	start = rt_timer_tsc();
-	result = dispatch("timed_waiter mutex_timed_lock", MUTEX_TIMED_LOCK,
-			  0, mutex, 10000000);
+	dispatch("timed_waiter mutex_timed_lock", MUTEX_TIMED_LOCK, 1,
+		 ETIMEDOUT, mutex, 10000000ULL);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
-
-	if (result != ETIMEDOUT) {
-		fprintf(stderr,
-			"FAILURE: timed_waiter mutex_timed_lock: %i (%s)\n",
-			result, strerror(result));
-		exit(EXIT_FAILURE);
-	}
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: timed_waiter, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
@@ -464,13 +459,14 @@ void timed_mutex(void)
 
 	fprintf(stderr, "timed_mutex\n");
 
-	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, &mutex, 1, 0);
-	dispatch("timed_mutex mutex_lock 1", MUTEX_LOCK, 1, &mutex);
-	dispatch("timed_mutex thread_create", THREAD_CREATE, 1, &waiter_tid,
+	dispatch("timed_mutex mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("timed_mutex mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("timed_mutex thread_create", THREAD_CREATE, 1, 0, &waiter_tid,
 		 2, timed_waiter, &mutex);
 	ms_sleep(20);
-	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
+	ms_sleep(10);
+	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
 }
 
@@ -480,16 +476,16 @@ void mode_switch(void)
 
 	fprintf(stderr, "mode_switch\n");
 
-	dispatch("switch mutex_init", MUTEX_CREATE, 1, &mutex, 1, 0);
+	dispatch("switch mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
 
 	check_current_mode(0);
 
-	dispatch("switch mutex_lock", MUTEX_LOCK, 1, &mutex);
+	dispatch("switch mutex_lock", MUTEX_LOCK, 1, 0, &mutex);
 
 	check_current_mode(1);
 
-	dispatch("switch mutex_unlock", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("switch mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("switch mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("switch mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 void pi_wait(void)
@@ -500,33 +496,33 @@ void pi_wait(void)
 
 	fprintf(stderr, "pi_wait\n");
 
-	dispatch("pi mutex_init", MUTEX_CREATE, 1, &mutex, 1, 0);
-	dispatch("pi mutex_lock 1", MUTEX_LOCK, 1, &mutex);
+	dispatch("pi mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("pi mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	check_current_prio(2);
 
 	/* Give waiter a higher priority than main thread */
-	dispatch("pi thread_create", THREAD_CREATE, 1, &waiter_tid, 3, waiter,
+	dispatch("pi thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 3, waiter,
 		 &mutex);
 	ms_sleep(10);
 
 	check_current_prio(3);
 
-	dispatch("pi mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("pi mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
 	check_current_prio(2);
 
 	start = rt_timer_tsc();
-	dispatch("pi mutex_lock 2", MUTEX_LOCK, 1, &mutex);
+	dispatch("pi mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	dispatch("pi mutex_unlock 2", MUTEX_UNLOCK, 1, &mutex);
-	dispatch("pi mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("pi mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+	dispatch("pi mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 }
 
 void lock_stealing(void)
@@ -541,39 +537,39 @@ void lock_stealing(void)
 
 	fprintf(stderr, "lock_stealing\n");
 
-	dispatch("lock_stealing mutex_init", MUTEX_CREATE, 1, &mutex, 1, 0);
-	dispatch("lock_stealing mutex_lock 1", MUTEX_LOCK, 1, &mutex);
+	dispatch("lock_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("lock_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 
 	/* Main thread should have higher priority */
-	dispatch("lock_stealing thread_create 1", THREAD_CREATE, 1,
+	dispatch("lock_stealing thread_create 1", THREAD_CREATE, 1, 0,
 		 &lowprio_tid, 1, waiter, &mutex);
 
 	/* Give lowprio thread 1 more ms to block on the mutex */
 	ms_sleep(6);
 
-	dispatch("lock_stealing mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("lock_stealing mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 
 	/* Try to stealing the lock from low prio task */
 	trylock_result = dispatch("lock_stealing mutex_trylock",
-				  MUTEX_TRYLOCK, 0, &mutex);
+				  MUTEX_TRYLOCK, 0, 0, &mutex);
 	if (trylock_result == 0) {
 		ms_sleep(6);
 
-		dispatch("lock_stealing mutex_unlock 2", MUTEX_UNLOCK, 1,
+		dispatch("lock_stealing mutex_unlock 2", MUTEX_UNLOCK, 1, 0,
 			 &mutex);
 
 		/* Let waiter_lowprio a chance to run */
 		ms_sleep(20);
 
-		dispatch("lock_stealing mutex_lock 3", MUTEX_LOCK, 1, &mutex);
+		dispatch("lock_stealing mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
 
 		/* Restart the waiter */
-		dispatch("lock_stealing thread_create 2", THREAD_CREATE, 1,
+		dispatch("lock_stealing thread_create 2", THREAD_CREATE, 1, 0,
 			 &lowprio_tid, 1, waiter, &mutex);
 
 		ms_sleep(6);
 
-		dispatch("lock_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, &mutex);
+		dispatch("lock_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
 #ifdef XENO_POSIX
 	} else if (trylock_result != EBUSY) {
 #else /* __NATIVE_SKIN__ */
@@ -586,16 +582,16 @@ void lock_stealing(void)
 	}
 
 	/* Stealing the lock (again) from low prio task */
-	dispatch("lock_stealing mutex_lock 4", MUTEX_LOCK, 1, &mutex);
+	dispatch("lock_stealing mutex_lock 4", MUTEX_LOCK, 1, 0, &mutex);
 
 	ms_sleep(6);
 
-	dispatch("lock_stealing mutex_unlock 4", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("lock_stealing mutex_unlock 4", MUTEX_UNLOCK, 1, 0, &mutex);
 
 	/* Let waiter_lowprio a chance to run */
 	ms_sleep(20);
 
-	dispatch("lock_stealing mutex_destroy", MUTEX_DESTROY, 1, &mutex);
+	dispatch("lock_stealing mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
 	if (trylock_result != 0)
 		fprintf(stderr,
@@ -612,10 +608,10 @@ void *cond_signaler(void *cookie)
 	struct cond_mutex *cm = (struct cond_mutex *) cookie;
 	unsigned long long start, diff;
 
-	dispatch("cond_signaler pthread_detach", THREAD_DETACH, 1);
+	dispatch("cond_signaler pthread_detach", THREAD_DETACH, 1, 0);
 
 	start = rt_timer_tsc();
-	dispatch("cond_signaler mutex_lock 1", MUTEX_LOCK, 1, cm->mutex);
+	dispatch("cond_signaler mutex_lock 1", MUTEX_LOCK, 1, 0, cm->mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 
 	if (diff < 10000000) {
@@ -625,12 +621,12 @@ void *cond_signaler(void *cookie)
 		exit(EXIT_FAILURE);
 	}
 	ms_sleep(10);
-	dispatch("cond_signaler cond_signal", COND_SIGNAL, 1, cm->cond);
-	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, cm->mutex);
+	dispatch("cond_signaler cond_signal", COND_SIGNAL, 1, 0, cm->cond);
+	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
 	yield();
 
 	start = rt_timer_tsc();
-	dispatch("cond_signaler mutex_lock 2", MUTEX_LOCK, 1, cm->mutex);
+	dispatch("cond_signaler mutex_lock 2", MUTEX_LOCK, 1, 0, cm->mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr,
@@ -638,7 +634,7 @@ void *cond_signaler(void *cookie)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, cm->mutex);
+	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
 
 	return cookie;
 }
@@ -656,15 +652,15 @@ void simple_condwait(void)
 
 	fprintf(stderr, "simple_condwait\n");
 
-	dispatch("simple_condwait mutex_init", MUTEX_CREATE, 1, &mutex);
-	dispatch("simple_condwait cond_init", COND_CREATE, 1, &cond);
-	dispatch("simple_condwait mutex_lock", MUTEX_LOCK, 1, &mutex);
-	dispatch("simple_condwait thread_create", THREAD_CREATE, 1,
+	dispatch("simple_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex);
+	dispatch("simple_condwait cond_init", COND_CREATE, 1, 0, &cond);
+	dispatch("simple_condwait mutex_lock", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("simple_condwait thread_create", THREAD_CREATE, 1, 0,
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
 	ms_sleep(11);
 	start = rt_timer_tsc();
-	dispatch("simple_condwait cond_wait", COND_WAIT, 1, &cond, &mutex);
+	dispatch("simple_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
@@ -672,11 +668,11 @@ void simple_condwait(void)
 		exit(EXIT_FAILURE);
 	}
 	ms_sleep(10);
-	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
-	dispatch("simple_condwait mutex_destroy", MUTEX_DESTROY, 1, &mutex);
-	dispatch("simple_condwait cond_destroy", COND_DESTROY, 1, &cond);
+	dispatch("simple_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+	dispatch("simple_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
 }
 
 void recursive_condwait(void)
@@ -692,30 +688,30 @@ void recursive_condwait(void)
 
 	fprintf(stderr, "recursive_condwait\n");
 
-	dispatch("rec_condwait mutex_init", MUTEX_CREATE, 1, &mutex, 0,
+	dispatch("rec_condwait mutex_init", MUTEX_CREATE, 1, 0, &mutex, 0,
 		 PTHREAD_MUTEX_RECURSIVE);
-	dispatch("rec_condwait cond_init", COND_CREATE, 1, &cond);
-	dispatch("rec_condwait mutex_lock 1", MUTEX_LOCK, 1, &mutex);
-	dispatch("rec_condwait mutex_lock 2", MUTEX_LOCK, 1, &mutex);
-	dispatch("rec_condwait thread_create", THREAD_CREATE, 1,
+	dispatch("rec_condwait cond_init", COND_CREATE, 1, 0, &cond);
+	dispatch("rec_condwait mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("rec_condwait mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("rec_condwait thread_create", THREAD_CREATE, 1, 0,
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
 	ms_sleep(10);
 	start = rt_timer_tsc();
-	dispatch("rec_condwait cond_wait", COND_WAIT, 1, &cond, &mutex);
+	dispatch("rec_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
 	if (diff < 10000000) {
 		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	dispatch("rec_condwait mutex_unlock 1", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("rec_condwait mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	ms_sleep(10);
-	dispatch("rec_condwait mutex_unlock 2", MUTEX_UNLOCK, 1, &mutex);
+	dispatch("rec_condwait mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
-	dispatch("rec_condwait mutex_destroy", MUTEX_DESTROY, 1, &mutex);
-	dispatch("rec_condwait cond_destroy", COND_DESTROY, 1, &cond);
+	dispatch("rec_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+	dispatch("rec_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
 }
 
 int main(void)
