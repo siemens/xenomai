@@ -12,10 +12,8 @@ extern unsigned long xeno_sem_heap[2];
 
 int main(int argc, char **argv)
 {
-	int err;
-	xnsysinfo_t sysinfo;
-	struct xnvdso *nkvdso;
 	unsigned long long test_features;
+	int err;
 
 	if (argc != 2) {
 		printf("No specific feature(s) given, using XNVDSO_FEATURE\n");
@@ -30,18 +28,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	/* The muxid is irrelevant for this test as long as it's valid */
-	err = XENOMAI_SYSCALL2(__xn_sys_info, 1, &sysinfo);
-	if (err < 0) {
-		fprintf(stderr, "sys_sys_info failed: %d\n", err);
-		return 1;
-	}
-
-	printf("Address of the global semaphore heap: 0x%lx\n",
-	       xeno_sem_heap[1]);
-	printf("Offset of xnvdso: %lu\n", sysinfo.vdso);
-
-	nkvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.vdso);
 	printf("Contents of the features flag: %llu\n", nkvdso->features);
 
 	if (nkvdso->features == test_features)

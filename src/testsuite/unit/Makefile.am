@@ -9,10 +9,8 @@ test_PROGRAMS = \
 	mutex-torture-posix \
 	mutex-torture-native \
 	cond-torture-posix \
-	cond-torture-native
-if CONFIG_XENO_FASTSYNCH
-test_PROGRAMS += check-vdso
-endif
+	cond-torture-native \
+	check-vdso
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 

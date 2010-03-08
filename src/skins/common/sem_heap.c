@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
 #include <pthread.h>
@@ -14,6 +15,7 @@
 #include "sem_heap.h"
 
 unsigned long xeno_sem_heap[2] = { 0, 0 };
+struct xnvdso *nkvdso;
 
 static void *map_sem_heap(unsigned shared)
 {
@@ -76,6 +78,21 @@ static void remap_on_fork(void)
 	}
 }
 
+static void xeno_init_vdso(void)
+{
+	xnsysinfo_t sysinfo;
+	int err;
+
+	err = XENOMAI_SYSCALL2(__xn_sys_info, 0, &sysinfo);
+	if (err < 0) {
+		fprintf(stderr, "Xenomai: sys_info failed: %s\n",
+			strerror(-err));
+		exit(EXIT_FAILURE);
+	}
+
+	nkvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.vdso);
+}
+
 static void xeno_init_sem_heaps_inner(void)
 {
 	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
@@ -90,6 +107,8 @@ static void xeno_init_sem_heaps_inner(void)
 		perror("Xenomai: mmap(global sem heap)");
 		exit(EXIT_FAILURE);
 	}
+
+	xeno_init_vdso();
 }
 
 void xeno_init_sem_heaps(void)

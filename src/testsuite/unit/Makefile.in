@@ -36,8 +36,7 @@ target_triplet = @target@
 test_PROGRAMS = arith$(EXEEXT) wakeup-time$(EXEEXT) \
 	mutex-torture-posix$(EXEEXT) mutex-torture-native$(EXEEXT) \
 	cond-torture-posix$(EXEEXT) cond-torture-native$(EXEEXT) \
-	$(am__EXEEXT_1)
-@CONFIG_XENO_FASTSYNCH_TRUE@am__append_1 = check-vdso
+	check-vdso$(EXEEXT)
 subdir = src/testsuite/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -54,7 +53,6 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES =
-@CONFIG_XENO_FASTSYNCH_TRUE@am__EXEEXT_1 = check-vdso$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(testdir)"
 testPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(test_PROGRAMS)
