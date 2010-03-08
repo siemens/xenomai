@@ -333,7 +333,7 @@ void simple_wait(void)
 	dispatch("simple mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
 	dispatch("simple thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("simple mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -367,7 +367,7 @@ void recursive_wait(void)
 		 waiter, &mutex);
 
 	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex); 
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -408,7 +408,7 @@ void errorcheck_wait(void)
 
 	dispatch("errorcheck thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("errorcheck mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 	err = pthread_mutex_unlock(&mutex);
@@ -465,7 +465,7 @@ void timed_mutex(void)
 		 2, timed_waiter, &mutex);
 	ms_sleep(20);
 	dispatch("timed_mutex mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("timed_mutex mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 
 }
@@ -504,7 +504,7 @@ void pi_wait(void)
 	/* Give waiter a higher priority than main thread */
 	dispatch("pi thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 3, waiter,
 		 &mutex);
-	ms_sleep(10);
+	ms_sleep(11);
 
 	check_current_prio(3);
 
@@ -620,7 +620,7 @@ void *cond_signaler(void *cookie)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("cond_signaler cond_signal", COND_SIGNAL, 1, 0, cm->cond);
 	dispatch("cond_signaler mutex_unlock 2", MUTEX_UNLOCK, 1, 0, cm->mutex);
 	yield();
@@ -667,7 +667,7 @@ void simple_condwait(void)
 			diff / 1000, (unsigned) (diff % 1000));
 		exit(EXIT_FAILURE);
 	}
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("simple_condwait mutex_unlock", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
@@ -696,7 +696,7 @@ void recursive_condwait(void)
 	dispatch("rec_condwait thread_create", THREAD_CREATE, 1, 0,
 		 &cond_signaler_tid, 2, cond_signaler, &cm);
 
-	ms_sleep(10);
+	ms_sleep(11);
 	start = rt_timer_tsc();
 	dispatch("rec_condwait cond_wait", COND_WAIT, 1, 0, &cond, &mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -706,7 +706,7 @@ void recursive_condwait(void)
 		exit(EXIT_FAILURE);
 	}
 	dispatch("rec_condwait mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
-	ms_sleep(10);
+	ms_sleep(11);
 	dispatch("rec_condwait mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
 
