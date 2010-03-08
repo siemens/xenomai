@@ -365,6 +365,9 @@ int rthal_arch_init(void)
 	rthal_setup_8254_tsc();
 #endif /* CONFIG_X86_TSC */
 
+	if (rthal_clockfreq_arg == 0)
+		rthal_clockfreq_arg = rthal_get_clockfreq();
+
 	return 0;
 }
 

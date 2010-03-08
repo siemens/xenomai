@@ -79,6 +79,9 @@ int rthal_arch_init(void)
 		/* FIXME: 4Ghz barrier is close... */
 		rthal_cpufreq_arg = rthal_get_cpufreq();
 
+	if (rthal_clockfreq_arg == 0)
+		rthal_clockfreq_arg = rthal_get_clockfreq();
+
 	return 0;
 }
 
