@@ -204,7 +204,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a cond is not a condition variable
+ * - -EINVAL or -ESRCH is returned if @a cond is not a condition variable
  * descriptor.
  *
  * - -EIDRM is returned if @a cond is a deleted condition variable
