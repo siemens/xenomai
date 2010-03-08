@@ -416,17 +416,15 @@ RTHAL_DECLARE_DOMAIN(rthal_domain_entry);
 int rthal_arch_init(void)
 {
 	if (rthal_cpufreq_arg == 0)
-		rthal_cpufreq_arg = (unsigned long)rthal_get_cpufreq();
+		rthal_cpufreq_arg = rthal_get_cpufreq();
 
-#ifndef CONFIG_GENERIC_CLOCKEVENTS
-	if (rthal_timerfreq_arg == 0)
-		/*
-		 * Define the global timer frequency as being the one
-		 * of the core timer, which is running at the core
-		 * clock (CCLK) rate.
-		 */
-		rthal_timerfreq_arg = get_cclk();
-#endif
+	if (rthal_clockfreq_arg == 0)
+		rthal_clockfreq_arg = rthal_get_clockfreq();
+
+	/*
+	 * Timer frequency is determined later when grabbing the
+	 * system timer.
+	 */
 
 	return 0;
 }
