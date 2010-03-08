@@ -5,6 +5,7 @@
 
 #include <asm/xenomai/syscall.h>
 #include <nucleus/types.h>
+#include <nucleus/thread.h>
 
 pthread_key_t xeno_current_mode_key;
 
@@ -107,6 +108,16 @@ void xeno_init_current_keys(void)
 	pthread_once(&xeno_init_current_keys_once, init_current_keys);
 }
 
+xnhandle_t xeno_slow_get_current(void)
+{
+	xnhandle_t current;
+	int err;
+
+	err = XENOMAI_SYSCALL1(__xn_sys_current, &current);
+
+	return err ? XN_NO_HANDLE : current;
+}
+
 void xeno_set_current(void)
 {
 	xnhandle_t current;
@@ -127,4 +138,16 @@ unsigned long *xeno_init_current_mode(void)
 
 	pthread_setspecific(xeno_current_mode_key, mode);
 	return mode;
+}
+
+unsigned long xeno_slow_get_current_mode(void)
+{
+	xnthread_info_t info;
+	int err;
+
+	err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
+	if (err < 0)
+		return XNRELAX;
+
+	return info.state & XNRELAX;
 }

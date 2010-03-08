@@ -2051,8 +2051,9 @@ static struct xnskin_props __props = {
 	.module = NULL
 };
 
-static void handle_shadow_exit(xnthread_t *thread)
+static void handle_shadow_exit(void)
 {
+	xnthread_t *thread = xnshadow_thread(current);
 	static int warned;
 
 	/*
@@ -2063,17 +2064,18 @@ static void handle_shadow_exit(xnthread_t *thread)
 	if (thread->u_mode && !warned) {
 		warned = 1;
 		printk(KERN_WARNING
-		       "Xenomai: old Xenomai libs detected which may crash "
-		       "on thread termination\n");
+		       "Xenomai: User-space support anterior to 2.5.2"
+		       " detected, may corrupt memory upon\n"
+		       "thread termination. Upgrade is recommended\n");
 	}
 	thread->u_mode = NULL;
 }
 
 static inline int
-substitute_linux_syscall(xnthread_t *thread, struct pt_regs *regs)
+substitute_linux_syscall(struct pt_regs *regs)
 {
 	if (unlikely(__xn_linux_mux_p(regs, __NR_exit)))
-		handle_shadow_exit(thread);
+		handle_shadow_exit();
 
 	/* No real-time replacement for now -- let Linux handle this call. */
 	return 0;
@@ -2243,7 +2245,7 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	 * From now on, we know that we have a valid shadow thread
 	 * pointer.
 	 */
-	if (substitute_linux_syscall(thread, regs))
+	if (substitute_linux_syscall(regs))
 		/*
 		 * This is a Linux syscall issued on behalf of a
 		 * shadow thread running inside the Xenomai
@@ -2304,7 +2306,7 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	if (__xn_reg_mux_p(regs))
 		goto xenomai_syscall;
 
-	if (!thread || !substitute_linux_syscall(thread, regs))
+	if (!thread || !substitute_linux_syscall(regs))
 		/* Fall back to Linux syscall handling. */
 		return RTHAL_EVENT_PROPAGATE;
 

@@ -30,12 +30,9 @@ void assert_nrt(void)
 	xnthread_info_t info;
 	int err;
 
-	if (xeno_get_current() != XN_NO_HANDLE)
-		return;
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX))) {
 
-	info.state = xeno_get_current_mode();
-
-	if (unlikely(!(info.state & XNRELAX) || info.state == -1)) {
 		err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
 
 		if (err) {
@@ -44,7 +41,7 @@ void assert_nrt(void)
 			return;
 		}
 
-		if ((info.state & (XNRELAX | XNTRAPSW)) == XNTRAPSW)
+		if (info.state & XNTRAPSW)
 			pthread_kill(pthread_self(), SIGXCPU);
 	}
 }
