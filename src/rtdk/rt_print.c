@@ -449,6 +449,8 @@ static void *printer_loop(void *arg)
 
 		nanosleep(&print_period, NULL);
 	}
+
+	return NULL;
 }
 
 static void spawn_printer_thread(void)
