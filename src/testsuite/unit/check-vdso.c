@@ -13,7 +13,6 @@ extern unsigned long xeno_sem_heap[2];
 int main(int argc, char **argv)
 {
 	unsigned long long test_features;
-	int err;
 
 	if (argc != 2) {
 		printf("No specific feature(s) given, using XNVDSO_FEATURE\n");

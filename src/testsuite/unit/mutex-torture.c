@@ -435,7 +435,6 @@ void *timed_waiter(void *cookie)
 {
 	mutex_t *mutex = (mutex_t *) cookie;
 	unsigned long long start, diff;
-	int result;
 
 	dispatch("timed_waiter pthread_detach", THREAD_DETACH, 1, 0);
 

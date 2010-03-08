@@ -50,15 +50,17 @@ int mutex_init(mutex_t *mutex, int type, int pi)
 	if (pi != 0)
 #ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
 		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+
+	err = pthread_mutex_init(mutex, &mattr);
 #else
 	else {
 		err = ENOSYS;
 		goto out;
 	}
-#endif
 	err = pthread_mutex_init(mutex, &mattr);
 
   out:
+#endif
 	pthread_mutexattr_destroy(&mattr);
 
 	return -err;
@@ -254,6 +256,8 @@ void *cond_signaler(void *cookie)
 	thread_msleep(10);
 	check("cond_signal", cond_signal(cm->cond), 0);
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
+
+	return NULL;
 }
 
 void simple_condwait(void)
@@ -343,6 +347,8 @@ void *cond_killer(void *cookie)
 	thread_msleep(10);
 	check("thread_kill", thread_kill(cm->tid, SIGRTMIN), 0);
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
+
+	return NULL;
 }
 
 volatile int sig_seen;
@@ -458,6 +464,8 @@ void *mutex_killer(void *cookie)
 	thread_msleep(10);
 	check("thread_kill", thread_kill(cm->tid, SIGRTMIN), 0);
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
+
+	return NULL;
 }
 
 void sig_norestart_condwait_mutex(void)
@@ -552,6 +560,8 @@ void *double_killer(void *cookie)
 	thread_msleep(10);
 	check("thread_kill 2", thread_kill(cm->tid, SIGRTMIN), 0);
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
+
+	return NULL;
 }
 
 void sig_norestart_double(void)
@@ -650,6 +660,8 @@ void *cond_destroyer(void *cookie)
 	check("cond_destroy", cond_destroy(cm->cond), 0);
 #endif /* native */
 	check("mutex_unlock", mutex_unlock(cm->mutex), 0);
+
+	return NULL;
 }
 
 void cond_destroy_whilewait(void)
