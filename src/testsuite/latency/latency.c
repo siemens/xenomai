@@ -464,7 +464,7 @@ void mode_sw(int sig)
 		return;
 	}
 
-	write(STDERR_FILENO, buffer, sizeof(buffer));
+	n = write(STDERR_FILENO, buffer, sizeof(buffer));
 #ifndef __UCLIBC__
 	n = backtrace(bt, sizeof(bt)/sizeof(bt[0]));
 	backtrace_symbols_fd(bt, n, STDERR_FILENO);

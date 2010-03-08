@@ -396,6 +396,8 @@ static void *fpu_stress(void *cookie)
 		}
 		pthread_testcancel();
 	}
+
+	return NULL;
 }
 
 static void *rtup(void *cookie)
