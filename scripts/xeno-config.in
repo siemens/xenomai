@@ -136,7 +136,8 @@ while test $# -gt 0; do
 	--ldflags)
 	    case "$skin" in
 		posix)
-		    echo $XENO_POSIX_LDFLAGS
+		    posix_ldflags
+		    echo
 		    ;;
 		native|psos|psos+|rtai|uitron|vrtx|vxworks)
 		    if [ "x$skin" = "xpsos+" ]; then
