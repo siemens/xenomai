@@ -4,26 +4,52 @@ Xenomai needs special kernel support to deliver fast and deterministic
 response time to external interrupts, and also to provide real-time
 services highly integrated with the standard Linux kernel.
 
-This support is provided by the Adeos real-time enabler [1], in the
-form of a kernel patch you have to apply against a vanilla kernel
-tree, before you attempt to compile the Xenomai codebase against the
-latter kernel.
+This support is provided by the Adeos real-time enabler, in the form
+of a kernel patch you have to apply against a vanilla kernel tree,
+before you attempt to compile the Xenomai codebase against the latter
+kernel.
 
-On the Blackfin architecture, Xenomai is supported on the BF527,
-BF533, BF537, BF548 and BF561(*) boards, either based on the uClinux
-releases published by the Blackfin project [2], or based on snapshots
-[3] of its development tree [4].
-
-Just apply the provided patch against the corresponding kernel
+Apply the provided patch against the corresponding kernel
 release/milestone. You may want to have a look at the README.*INSTALL
 guides at the top of the Xenomai tree for more information.
 
-[1] http://www.gna.org/projects/adeos/
-[2] http://blackfin.uclinux.org/
-[3] git://git.denx.de/ipipe-blackfin.git
-[4] git://git.kernel.org/pub/scm/linux/kernel/git/vapier/blackfin.git
+On the Blackfin architecture, Xenomai is supported on the BF527,
+BF533, BF537, BF548 and BF561(*) boards.
 
-Patch			        Based on snapshot from ipipe-blackfin.git
--------------------------------------------------------------------------
+This directory only contains the most recent patches used to validate
+this Xenomai release on Blackfin boards; you may find the complete
+collection of Adeos/I-pipe patches at the following locations (see
+note):
+
+* http://download.gna.org/adeos/patches/v2.6/blackfin/
+
+* older I-pipe patches are available from:
+http://download.gna.org/adeos/patches/v2.6/blackfin/older/
+
+NOTE: not all older patches are guaranteed to work with the current
+Xenomai release.  However, there is a good chance most of them do,
+since we try hard to maintain backward compatibility. In other words,
+you are NOT absolutely required to upgrade your working kernel setup
+to run this newer Xenomai release, albeit bugs have probably been
+fixed in more recent I-pipe patches. YMMV.
+
+The reference kernel tree the validated patches are based on varied
+over time:
+
+		Linux v2.6.30 to v2.6.31.6
+		~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From git://git.denx.de/ipipe-blackfin.git
+
+Patch release			Tag
+----------------------		--------------
 2.6.30.6-blackfin-1.11-00	v2.6.30.6-bfin
 2.6.31.6-blackfin-1.12-00	v2.6.31.6-bfin
+
+
+		from Linux v2.6.33 onward
+		~~~~~~~~~~~~~~~~~~~~~~~~~
+
+From ftp://ftp.free.fr/mirrors/ftp.kernel.org/linux/kernel/v2.6/
+
+	All patches are based on mainline kernel releases.
