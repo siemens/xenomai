@@ -392,3 +392,8 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	return XENOMAI_SKINCALL2(__native_muxid,
 				 __native_task_reply, flowid, mcb_s);
 }
+
+int rt_task_same(RT_TASK *task1, RT_TASK *task2)
+{
+	return task1->opaque == task2->opaque;
+}

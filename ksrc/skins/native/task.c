@@ -2426,6 +2426,31 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * Rescheduling: always unless the task was already terminated.
  */
 
+/**
+ * @fn int rt_task_same(RT_TASK *task1, RT_TASK *task2)
+ *
+ * @brief Compare two task descriptors.
+ *
+ * This service checks whether two task descriptors refer to the same
+ * task. This service is particularly useful in user-space, since
+ * rt_task_self() does return a task descriptor which is different
+ * from the original descriptor used by the application, but still
+ * refers to the same task internally.
+ *
+ * @param task1 The address of the first task descriptor to compare.
+ * @param task2 The address of the second task descriptor to compare.
+ *
+ * @return non-zero whenever the two task descriptors refer to the
+ * same task, zero otherwise.
+ *
+ * This service can be called from:
+ *
+ * - Kernel-based task.
+ * - User-space task.
+ *
+ * Rescheduling: never.
+ */
+
 /*@}*/
 
 EXPORT_SYMBOL(rt_task_create);
