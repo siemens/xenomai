@@ -280,3 +280,11 @@ ___________________________________________________________________
 
        * New rt_queue_flush() service to discard all unread messages
        from a queue.
+
+___________________________________________________________________
+
+
+2.5.1 -> 2.5.2
+
+       * New rt_task_same() call. Returns true whenever two task
+         descriptors refer to the same task, false otherwise.

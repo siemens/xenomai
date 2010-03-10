@@ -200,6 +200,11 @@ int rt_task_remove_hook(int type,
 
 int rt_task_catch(void (*handler)(rt_sigset_t));
 
+static inline int rt_task_same(RT_TASK *task1, RT_TASK *task2)
+{
+	return task1 == task2;
+}
+
 #ifdef __cplusplus
 }
 #endif
@@ -316,6 +321,8 @@ static inline int rt_task_spawn(RT_TASK *task,
 
     return err;
 }
+
+int rt_task_same(RT_TASK *task1, RT_TASK *task2);
 
 #ifdef __cplusplus
 }
