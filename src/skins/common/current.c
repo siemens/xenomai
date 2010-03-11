@@ -29,6 +29,11 @@ static inline unsigned long *create_current_mode(void)
 
 static inline void free_current_mode(unsigned long *mode) { }
 
+#define XENO_MODE_LEAK_WARNING \
+	"Xenomai: WARNING, this version of Xenomai kernel is anterior to" \
+	" 2.5.2.\nIt can cause memory corruption on thread termination.\n" \
+	"Upgrade is recommended.\n"
+
 #else /* !HAVE___THREAD */
 
 pthread_key_t xeno_current_key;
@@ -55,8 +60,9 @@ static inline void free_current_mode(unsigned long *mode)
 
 #define XENO_MODE_LEAK_WARNING \
 	"Xenomai: WARNING, this version of Xenomai kernel is anterior to" \
-	" 2.5.2.\nIn order to avoid getting memory corruption, we leak 4" \
-	" bytes per thread.\nUpgrade is recommended.\n"
+	" 2.5.2.\nIn order to avoid getting memory corruption on thread " \
+	"termination, we leak\nup to 8 bytes per thread. Upgrade is " \
+	"recommended.\n"
 
 #endif /* !HAVE___THREAD */
 
@@ -71,7 +77,6 @@ static void cleanup_current_mode(void *key)
 
 	if (!err)
 		free_current_mode(mode);
-#ifdef XENO_MODE_LEAK_WARNING
 	else {
 		static int warned;
 
@@ -80,7 +85,6 @@ static void cleanup_current_mode(void *key)
 			fprintf(stderr, XENO_MODE_LEAK_WARNING);
 		}
 	}
-#endif /* XENO_MODE_LEAK_WARNING */
 }
 
 static void init_current_keys(void)
