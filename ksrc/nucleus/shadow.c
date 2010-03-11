@@ -2113,10 +2113,8 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	 * __xn_sys_bind which does its own checks.
 	 */
 	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
-	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind)) {
-		__xn_error_return(regs, -EPERM);
-		return RTHAL_EVENT_STOP;
-	}
+	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind))
+		goto no_permission;
 
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
@@ -2134,7 +2132,12 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
 	sysflags = muxtable[muxid].props->systab[muxop].flags;
 
-	if ((sysflags & __xn_exec_shadow) != 0 && !thread) {
+	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
+	no_permission:
+		if (XENO_DEBUG(NUCLEUS))
+			printk(KERN_WARNING
+			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
+			       current->comm, current->pid);
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}
