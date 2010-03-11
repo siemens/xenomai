@@ -19,6 +19,8 @@ static inline xnhandle_t xeno_get_current(void)
 	return xeno_current;
 }
 
+#define xeno_get_current_fast() xeno_get_current()
+
 static inline unsigned long xeno_get_current_mode(void)
 {
 	unsigned long mode = xeno_current_mode;
@@ -34,6 +36,14 @@ static inline xnhandle_t xeno_get_current(void)
 	void *val = pthread_getspecific(xeno_current_key);
 
 	return (xnhandle_t)val ?: xeno_slow_get_current();
+}
+
+/* syscall-free, but unreliable in TSD destructor context */
+static inline xnhandle_t xeno_get_current_fast(void)
+{
+	void *val = pthread_getspecific(xeno_current_key);
+
+	return (xnhandle_t)val ?: XN_NO_HANDLE;
 }
 
 static inline unsigned long xeno_get_current_mode(void)
