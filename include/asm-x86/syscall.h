@@ -162,12 +162,12 @@ asm (".L__X'%ebx = 1\n\t"
      ".endif\n\t"
      ".endm\n\t");
 
-__attribute__((always_inline))
-extern inline void __xn_get_eip(void **dest)
-{
-addr:
-	*dest = &&addr;
-}
+#define __xn_get_eip(dest)			\
+	({					\
+		__label__ __here;		\
+	  __here:				\
+		*dest = &&__here;		\
+	})
 
 static inline void __xn_get_ebp(void **dest)
 {
