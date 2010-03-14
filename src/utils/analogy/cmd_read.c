@@ -410,14 +410,16 @@ int main(int argc, char *argv[])
 			cnt += ret;
 
 			if (real_time != 0) {
-				ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-				if (ret < 0) {
+				int err = rt_task_set_mode(0, T_PRIMARY, NULL);
+				if (err < 0) {
 					fprintf(stderr,
 						"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-						ret);
+						err);
+					ret = err;
 					goto out_main;
 				}
 			}
+
 		} while (ret > 0);
 
 	} else {
@@ -465,11 +467,12 @@ int main(int argc, char *argv[])
 			}
 
 			if (real_time != 0) {
-				ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-				if (ret < 0) {
+				int err = rt_task_set_mode(0, T_PRIMARY, NULL);
+				if (err < 0) {
 					fprintf(stderr,
 						"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-						ret);
+						err);
+					ret = err;
 					goto out_main;
 				}
 			}
