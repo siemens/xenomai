@@ -397,8 +397,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
 	if (a4l_test_rt() != 0) {
-		__a4l_err("a4l_ioctl_mmap: mmap must be done in NRT context\n");
-		return -EPERM;
+		return -ENOSYS;
 	}
 
 	/* Recover the argument structure */
@@ -473,9 +472,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
 	if (a4l_test_rt() != 0) {
-		__a4l_err("a4l_ioctl_bufcfg: buffer config must done "
-			  "in NRT context\n");
-		return -EPERM;
+		return -ENOSYS;
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,

@@ -428,7 +428,7 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 		  "a4l_ioctl_devcfg: minor=%d\n", a4l_get_minor(cxt));
 
 	if (a4l_test_rt() != 0)
-		return -EPERM;
+		return -ENOSYS;
 
 	if (arg == NULL) {
 		/* Basic checking */
