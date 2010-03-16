@@ -375,17 +375,6 @@ int main(int argc, char *argv[])
 	if (verbose != 0)
 		printf("cmd_read: command successfully sent\n");
 
-	if (real_time != 0) {
-
-		ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-		if (ret < 0) {
-			fprintf(stderr,
-				"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-	}
-
 	if (use_mmap == 0) {
 
 		/* Fetch data */
@@ -408,17 +397,6 @@ int main(int argc, char *argv[])
 
 			/* Update the counter */
 			cnt += ret;
-
-			if (real_time != 0) {
-				int err = rt_task_set_mode(0, T_PRIMARY, NULL);
-				if (err < 0) {
-					fprintf(stderr,
-						"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-						err);
-					ret = err;
-					goto out_main;
-				}
-			}
 
 		} while (ret > 0);
 
@@ -464,17 +442,6 @@ int main(int argc, char *argv[])
 					  front) < 0) {
 				ret = -EIO;
 				goto out_main;
-			}
-
-			if (real_time != 0) {
-				int err = rt_task_set_mode(0, T_PRIMARY, NULL);
-				if (err < 0) {
-					fprintf(stderr,
-						"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-						err);
-					ret = err;
-					goto out_main;
-				}
 			}
 
 			/* Update the counter */

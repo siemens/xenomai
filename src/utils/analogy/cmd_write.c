@@ -300,17 +300,6 @@ int main(int argc, char *argv[])
 	for (i = 0; i < BUF_SIZE; i++)
 		buf[i] = i;
 
-	if (real_time != 0) {
-
-		ret = rt_task_set_mode(0, T_PRIMARY, NULL);
-		if (ret < 0) {
-			fprintf(stderr, 
-				"cmd_read: rt_task_set_mode failed (ret=%d)\n",
-				ret);
-			goto out_main;
-		}
-	}
-
 	if (use_mmap == 0) {
 
 		/* Send data */
