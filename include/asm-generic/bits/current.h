@@ -2,7 +2,12 @@
 #define _XENO_ASM_GENERIC_CURRENT_H
 
 #include <pthread.h>
-#include <nucleus/types.h>
+#include <nucleus/thread.h>
+
+extern pthread_key_t xeno_current_mode_key;
+
+xnhandle_t xeno_slow_get_current(void);
+unsigned long xeno_slow_get_current_mode(void);
 
 #ifdef HAVE___THREAD
 extern __thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec")));
@@ -14,41 +19,45 @@ static inline xnhandle_t xeno_get_current(void)
 	return xeno_current;
 }
 
+#define xeno_get_current_fast() xeno_get_current()
+
 static inline unsigned long xeno_get_current_mode(void)
 {
-	return xeno_current_mode;
+	unsigned long mode = xeno_current_mode;
+
+	return mode == -1 ? xeno_slow_get_current_mode() : mode;
 }
 
-static inline unsigned long *xeno_init_current_mode(void)
-{
-	return &xeno_current_mode;
-}
-
-#define xeno_init_current_keys() do { } while (0)
 #else /* ! HAVE___THREAD */
 extern pthread_key_t xeno_current_key;
-extern pthread_key_t xeno_current_mode_key;
 
 static inline xnhandle_t xeno_get_current(void)
 {
 	void *val = pthread_getspecific(xeno_current_key);
 
-	if (!val)
-		return XN_NO_HANDLE;
+	return (xnhandle_t)val ?: xeno_slow_get_current();
+}
 
-	return (xnhandle_t)val;
+/* syscall-free, but unreliable in TSD destructor context */
+static inline xnhandle_t xeno_get_current_fast(void)
+{
+	void *val = pthread_getspecific(xeno_current_key);
+
+	return (xnhandle_t)val ?: XN_NO_HANDLE;
 }
 
 static inline unsigned long xeno_get_current_mode(void)
 {
-	return *(unsigned long *)pthread_getspecific(xeno_current_mode_key);
+	unsigned long *mode = pthread_getspecific(xeno_current_mode_key);
+
+	return mode ? (*mode) : xeno_slow_get_current_mode();
 }
 
-unsigned long *xeno_init_current_mode(void);
-
-void xeno_init_current_keys(void);
 #endif /* ! HAVE___THREAD */
 
 void xeno_set_current(void);
+
+unsigned long *xeno_init_current_mode(void);
+void xeno_init_current_keys(void);
 
 #endif /* _XENO_ASM_GENERIC_CURRENT_H */

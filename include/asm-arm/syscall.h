@@ -55,9 +55,13 @@
 #ifdef CONFIG_OABI_COMPAT
 #define __xn_reg_mux_p(regs)    ( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
                                   ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL) )
-#else
+#define __xn_linux_mux_p(regs, nr) \
+				( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + (nr)) || \
+				  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + (nr)) )
+#else /* !CONFIG_OABI_COMPAT */
 #define __xn_reg_mux_p(regs)      ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL)
-#endif
+#define __xn_linux_mux_p(regs, nr) ((regs)->ARM_r7 == __NR_SYSCALL_BASE + (nr))
+#endif /* !CONFIG_OABI_COMPAT */
 
 #define __xn_mux_id(regs)       ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)       ((__xn_reg_mux(regs) >> 24) & 0xff)

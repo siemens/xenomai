@@ -423,8 +423,8 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 					    &count, 0, XN_INFINITE);
 
 	if (!err || err == EINTR)
-		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
-							      mutex, count))
+		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+							       mutex, count))
 			;
 
 #ifdef CONFIG_XENO_FASTSYNCH
@@ -491,8 +491,8 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
 					    ts2ticks_ceil(abstime) + 1);
 
 	if (!err || err == EINTR || err == ETIMEDOUT)
-		while (EINTR == pse51_cond_timedwait_epilogue(cur, cond,
-							      mutex, count))
+		while (-EINTR == pse51_cond_timedwait_epilogue(cur, cond,
+							       mutex, count))
 			;
 
 #ifdef CONFIG_XENO_FASTSYNCH

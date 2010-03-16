@@ -111,23 +111,6 @@ static unsigned failed, success;
 		}							\
 	})
 
-void *cancel_with_signals(void *cookie)
-{
-	int *run = (int *)cookie;
-	int one_restart[] = { -ERESTART, };
-	struct timespec ts;
-
-	pthread_set_name_np(pthread_self(), "cancel_with_signals");
-
-	check(sigtest_queue(one_restart, ARRAY_SIZE(one_restart)), 0);
-	ts.tv_sec = 0;
-	ts.tv_nsec = 20000000;
-	__real_nanosleep(&ts, NULL);	/* Wait for the signals to be
-					 * delivered. */
-	*run = 1;
-	pthread_exit(NULL);
-}
-
 struct cond {
 	pthread_mutex_t mx;
 	pthread_cond_t cnd;
@@ -166,7 +149,11 @@ void *dual_signals2(void *cookie)
 
 int main(void)
 {
+	struct sched_param sparam = { .sched_priority = 1 };
+
 	mlockall(MCL_CURRENT | MCL_FUTURE);
+
+	pthread_setschedparam(pthread_self(), SCHED_FIFO, &sparam);
 
 	int one_restart[] = { -ERESTART, };
 	mysh = mark_seen;
@@ -261,20 +248,11 @@ int main(void)
 	check(sigtest_wait_sec(), 0);
 	test_assert(cascade_res == ~0);
 
-	/* Try and destroy a thread with pending signals. They should
-	   be discarded. */
-	pthread_t tid;
-	int run = 0;
-	mysh = mark_seen;
-	seen = 0;
-	pthread_create(&tid, NULL, cancel_with_signals, &run);
-	pthread_join(tid, NULL);
-	test_assert(run == 1 && seen == 0);
-
 	/* Try and mix linux signals and xeno signals (this test does
 	   not work as expected, but turns out to be a good test for
 	   pthread_cond_wait and signals, so, keep it). */
 	struct timespec ts;
+	pthread_t tid;
 	struct cond c;
 	mysh = mark_seen;
 	seen = 0;

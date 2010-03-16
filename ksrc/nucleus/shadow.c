@@ -1018,7 +1018,8 @@ redo:
 		/* Grab the request token. */
 		return -ERESTARTSYS;
 
-	__xn_put_user(0, thread->u_mode);
+	if (thread->u_mode)
+		__xn_put_user(0, thread->u_mode);
 
 	preempt_disable();
 
@@ -1208,7 +1209,8 @@ void xnshadow_relax(int notify, int reason)
 	/* "current" is now running into the Linux domain on behalf of the
 	   root thread. */
 
-	__xn_put_user(XNRELAX, thread->u_mode);
+	if (thread->u_mode)
+		__xn_put_user(XNRELAX, thread->u_mode);
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -1382,7 +1384,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (ret)
 		return ret;
 
-	__xn_put_user(XNRELAX, u_mode);
+	if (thread->u_mode)
+		__xn_put_user(XNRELAX, u_mode);
 
 	ret = xnshadow_harden();
 
@@ -1967,6 +1970,18 @@ static int xnshadow_sys_get_next_sigs(struct pt_regs *regs)
 	return -EINTR;
 }
 
+static int xnshadow_sys_drop_u_mode(struct pt_regs *regs)
+{
+	xnthread_t *cur = xnshadow_thread(current);
+
+	if (!cur)
+		return -EPERM;
+
+	cur->u_mode = NULL;
+
+	return 0;
+}
+
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -1981,6 +1996,8 @@ static xnsysent_t __systab[] = {
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
 	[__xn_sys_get_next_sigs] = 
 		{&xnshadow_sys_get_next_sigs, __xn_exec_conforming},
+	[__xn_sys_drop_u_mode] =
+		{&xnshadow_sys_drop_u_mode, __xn_exec_shadow},
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -2034,8 +2051,32 @@ static struct xnskin_props __props = {
 	.module = NULL
 };
 
-static inline int substitute_linux_syscall(struct pt_regs *regs)
+static void handle_shadow_exit(void)
 {
+	xnthread_t *thread = xnshadow_thread(current);
+	static int warned;
+
+	/*
+	 * If user space did not deregister u_mode at this point, we
+	 * are confronted with old libraries and should warn about
+	 * potential instabilities.
+	 */
+	if (thread->u_mode && !warned) {
+		warned = 1;
+		printk(KERN_WARNING
+		       "Xenomai: User-space support anterior to 2.5.2"
+		       " detected, may corrupt memory upon\n"
+		       "thread termination. Upgrade is recommended\n");
+	}
+	thread->u_mode = NULL;
+}
+
+static inline int
+substitute_linux_syscall(struct pt_regs *regs)
+{
+	if (unlikely(__xn_linux_mux_p(regs, __NR_exit)))
+		handle_shadow_exit();
+
 	/* No real-time replacement for now -- let Linux handle this call. */
 	return 0;
 }
@@ -2072,10 +2113,8 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	 * __xn_sys_bind which does its own checks.
 	 */
 	if (unlikely(!cap_raised(current_cap(), CAP_SYS_NICE)) &&
-	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind)) {
-		__xn_error_return(regs, -EPERM);
-		return RTHAL_EVENT_STOP;
-	}
+	    __xn_reg_mux(regs) != __xn_mux_code(0, __xn_sys_bind))
+		goto no_permission;
 
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
@@ -2093,7 +2132,12 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 
 	sysflags = muxtable[muxid].props->systab[muxop].flags;
 
-	if ((sysflags & __xn_exec_shadow) != 0 && !thread) {
+	if ((sysflags & __xn_exec_shadow) != 0 && thread == NULL) {
+	no_permission:
+		if (XENO_DEBUG(NUCLEUS))
+			printk(KERN_WARNING
+			       "Xenomai: non-shadow %s[%d] was denied a real-time call\n",
+			       current->comm, current->pid);
 		__xn_error_return(regs, -EPERM);
 		goto ret_handled;
 	}

@@ -77,6 +77,7 @@ struct frame {
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)
 #define __xn_mux_op(regs)     ((__xn_reg_mux(regs) >> 24) & 0xff)
 
+#define __xn_linux_mux_p(regs, nr)  (__xn_reg_mux(regs) == (nr))
 
 /* Purposedly used inlines and not macros for the following routines
    so that we don't risk spurious side-effects on the value arg. */
@@ -161,12 +162,12 @@ asm (".L__X'%ebx = 1\n\t"
      ".endif\n\t"
      ".endm\n\t");
 
-__attribute__((always_inline))
-extern inline void __xn_get_eip(void **dest)
-{
-addr:
-	*dest = &&addr;
-}
+#define __xn_get_eip(dest)			\
+	({					\
+		__label__ __here;		\
+	  __here:				\
+		*dest = &&__here;		\
+	})
 
 static inline void __xn_get_ebp(void **dest)
 {

@@ -25,25 +25,40 @@
 #include <asm-generic/syscall.h>
 #include <asm-generic/bits/current.h>
 
-void assert_nrt(void)
+static void assert_nrt_inner(void)
 {
 	xnthread_info_t info;
 	int err;
 
-	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
-		     !(xeno_get_current_mode() & XNRELAX))) {
+	err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
 
-		err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
-
-		if (err) {
-			fprintf(stderr, "__xn_sys_current_info failed: %s\n",
-				strerror(-err));
-			return;
-		}
-
-		if (info.state & XNTRAPSW)
-			pthread_kill(pthread_self(), SIGXCPU);
+	if (err) {
+		fprintf(stderr, "__xn_sys_current_info failed: %s\n",
+			strerror(-err));
+		return;
 	}
+
+	if (info.state & XNTRAPSW)
+		pthread_kill(pthread_self(), SIGXCPU);
+}
+
+void assert_nrt(void)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		assert_nrt_inner();
+}
+
+/*
+ * Note: Works without syscalls but may not catch all errors when used inside
+ * TSD destructors (as registered via pthread_key_create) when TLS support
+ * (__thread) is disabled.
+ */
+void assert_nrt_fast(void)
+{
+	if (unlikely(xeno_get_current_fast() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		assert_nrt_inner();
 }
 
 /* Memory allocation services */

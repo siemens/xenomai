@@ -41,6 +41,8 @@
 #include <native/buffer.h>
 #include <native/misc.h>
 
+#define rt_task_errno (*xnthread_get_errno_location(xnpod_current_thread()))
+
 /*
  * This file implements the Xenomai syscall wrappers.  All skin
  * services (re-)check the object descriptor they are passed; so there
@@ -1837,11 +1839,11 @@ static int __rt_cond_wait_prologue(struct pt_regs *regs)
 {
 	RT_COND_PLACEHOLDER cph, mph;
 	xntmode_t timeout_mode;
+	int err, perr = 0;
 	unsigned lockcnt;
 	RT_MUTEX *mutex;
 	RT_COND *cond;
 	RTIME timeout;
-	int err;
 
 	if (__xn_safe_copy_from_user(&cph, (void __user *)__xn_reg_arg1(regs),
 				     sizeof(cph)))
@@ -1869,15 +1871,27 @@ static int __rt_cond_wait_prologue(struct pt_regs *regs)
 
 	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, timeout_mode, timeout);
 
-	if (err == 0 || err == -ETIMEDOUT)
+	switch(err) {
+	case 0:
+	case -ETIMEDOUT:
+	case -EIDRM:
+		perr = rt_task_errno = err;
 		err = rt_cond_wait_epilogue(mutex, lockcnt);
-	
-	if (err == -EINTR && __xn_reg_arg3(regs)
+		break;
+
+	case -EINTR:
+		perr = err;
+		rt_task_errno = 0; /* epilogue should return 0. */
+		break;
+	}
+
+	if (err == -EINTR
+	    && __xn_reg_arg3(regs)
 	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
 				      &lockcnt, sizeof(lockcnt)))
 		return -EFAULT;
 
-	return err;
+	return err == 0 ? perr : err;
 }
 
 /*
@@ -1889,6 +1903,7 @@ static int __rt_cond_wait_epilogue(struct pt_regs *regs)
 	RT_COND_PLACEHOLDER mph;
 	unsigned lockcnt;
 	RT_MUTEX *mutex;
+	int err;
 
 	if (__xn_safe_copy_from_user(&mph, (void __user *)__xn_reg_arg1(regs),
 				     sizeof(mph)))
@@ -1901,7 +1916,9 @@ static int __rt_cond_wait_epilogue(struct pt_regs *regs)
 
 	lockcnt = __xn_reg_arg2(regs);
 
-	return rt_cond_wait_epilogue(mutex, lockcnt);
+	err = rt_cond_wait_epilogue(mutex, lockcnt);
+
+	return err == 0 ? rt_task_errno : err;
 }
 
 /*
@@ -4090,7 +4107,8 @@ static xnsysent_t __systab[] = {
 	[__native_cond_bind] = {&__rt_cond_bind, __xn_exec_conforming},
 	[__native_cond_delete] = {&__rt_cond_delete, __xn_exec_any},
 	[__native_cond_wait_prologue] = 
-		{&__rt_cond_wait_prologue, __xn_exec_primary},
+		{&__rt_cond_wait_prologue, 
+		 __xn_exec_primary | __xn_exec_norestart},
 	[__native_cond_wait_epilogue] = 
 		{&__rt_cond_wait_epilogue, __xn_exec_primary},
 	[__native_cond_signal] = {&__rt_cond_signal, __xn_exec_any},

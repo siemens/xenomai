@@ -34,7 +34,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@CONFIG_XENO_FASTSYNCH_TRUE@am__append_1 = sem_heap.c
 subdir = src/skins/common
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -62,12 +61,9 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libxenomai_la_LIBADD =
-am__libxenomai_la_SOURCES_DIST = bind.c current.c sigshadow.c \
-	timeconv.c sem_heap.c
-@CONFIG_XENO_FASTSYNCH_TRUE@am__objects_1 = libxenomai_la-sem_heap.lo
 am_libxenomai_la_OBJECTS = libxenomai_la-bind.lo \
 	libxenomai_la-current.lo libxenomai_la-sigshadow.lo \
-	libxenomai_la-timeconv.lo $(am__objects_1)
+	libxenomai_la-timeconv.lo libxenomai_la-sem_heap.lo
 libxenomai_la_OBJECTS = $(am_libxenomai_la_OBJECTS)
 libxenomai_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -85,7 +81,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libxenomai_la_SOURCES)
-DIST_SOURCES = $(am__libxenomai_la_SOURCES_DIST)
+DIST_SOURCES = $(libxenomai_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -252,8 +248,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libxenomai.la
 noinst_HEADERS = sem_heap.h
-libxenomai_la_SOURCES = bind.c current.c sigshadow.c timeconv.c \
-	$(am__append_1)
+libxenomai_la_SOURCES = bind.c current.c sigshadow.c timeconv.c sem_heap.c
 libxenomai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 libxenomai_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \

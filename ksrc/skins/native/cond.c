@@ -204,7 +204,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
  *
  * @return 0 is returned upon success. Otherwise:
  *
- * - -EINVAL is returned if @a cond is not a condition variable
+ * - -EINVAL or -ESRCH is returned if @a cond is not a condition variable
  * descriptor.
  *
  * - -EIDRM is returned if @a cond is a deleted condition variable
@@ -467,17 +467,17 @@ static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 		       	      xntmode_t timeout_mode, RTIME timeout)
 {
 	unsigned lockcnt;
-	int err;
+	int err, epilogue_err = 0;
 
 	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, 
 				    timeout_mode, timeout);
 
 	if(!err || err == -ETIMEDOUT || err == -EINTR)
 		do {
-			err = rt_cond_wait_epilogue(mutex, lockcnt);
-		} while (err == -EINTR);
+			epilogue_err = rt_cond_wait_epilogue(mutex, lockcnt);
+		} while (epilogue_err == -EINTR);
 
-	return err;
+	return err ? err : epilogue_err;
 }
 /**
  * @fn int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
@@ -514,7 +514,12 @@ static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
  * variable has been signaled.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the condition variable has been signaled.
+ * waiting task, or a signal has been received before the condition
+ * variable has been signaled. Note that the condition variable may be
+ * signaled right after this interruption, so when using -EINTR, the
+ * code must not call rt_cond_wait() immediately again, or a condition
+ * signal may be missed. With respect to restartint rt_cond_wait(),
+ * -EINTR should be handled as if 0 had been returned.
  *
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
  *
@@ -574,7 +579,12 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
  * before the condition variable is signaled.
  *
  * - -EINTR is returned if rt_task_unblock() has been called for the
- * waiting task before the condition variable has been signaled.
+ * waiting task before the condition variable has been signaled. Note
+ * that the condition variable may be signaled right after this
+ * interruption, so when using -EINTR, the code must not call
+ * rt_cond_wait() immediately again, or a condition signal may be
+ * missed. With respect to restartint rt_cond_wait(), -EINTR should be
+ * handled as if 0 had been returned.
  *
  * - -EWOULDBLOCK is returned if @a timeout equals TM_NONBLOCK.
  *

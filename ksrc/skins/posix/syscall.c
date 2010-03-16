@@ -1520,7 +1520,7 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 	union __xeno_mutex mx, *umx;
 	unsigned timed, count;
 	struct timespec ts;
-	int err;
+	int err, perr = 0;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1560,7 +1560,10 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 						    &mx.shadow_mutex,
 						    &count, timed, XN_INFINITE);
 
-	if (err == 0 || err == ETIMEDOUT) {
+	switch(err) {
+	case 0:
+	case ETIMEDOUT:
+		perr = errno = err;
 		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
 					    	    &mx.shadow_mutex, count);
 		if (err == 0 &&
@@ -1568,15 +1571,21 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 					   &umx->shadow_mutex.lockcnt,
 					   &mx.shadow_mutex.lockcnt,
 					   sizeof(umx->shadow_mutex.lockcnt)))
-			err = -EFAULT;
+			return -EFAULT;
+		break;
+
+	case EINTR:
+		perr = err;
+		errno = 0;	/* epilogue should return 0. */
+		break;
 	}
 
-	if (err == EINTR
-	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				      &count, sizeof(count)))
-			err = EFAULT;
-	
-	return -err;
+	if (err == EINTR 
+	    &&__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				     &count, sizeof(count)))
+			return -EFAULT;
+
+	return err == 0 ? -perr : -err;
 }
 
 /* pthread_cond_wait_epilogue(cond, mutex, count) */
@@ -1618,7 +1627,7 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 				      sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return err;
+	return err == 0 ? -errno : err;
 }
 
 static int __pthread_cond_signal(struct pt_regs *regs)
