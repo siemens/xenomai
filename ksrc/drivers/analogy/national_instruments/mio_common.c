@@ -4913,7 +4913,7 @@ int ni_E_init(a4l_dev_t *dev)
 		a4l_dbg(1, drv_dbg, dev, 
 			"mio_common: AI: %d channels\n", boardtype.n_adchan);
 
-		subd->flags = A4L_SUBD_AI | A4L_SUBD_CMD;
+		subd->flags = A4L_SUBD_AI | A4L_SUBD_CMD | A4L_SUBD_MMAP;
 		subd->rng_desc = ni_range_lkup[boardtype.gainlkup];
 
 		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
@@ -4981,7 +4981,7 @@ int ni_E_init(a4l_dev_t *dev)
 		
 
 		if (boardtype.ao_fifo_depth) {
-			subd->flags |= A4L_SUBD_CMD;
+			subd->flags |= A4L_SUBD_CMD | A4L_SUBD_MMAP;
 			subd->do_cmd = &ni_ao_cmd;
 			subd->cmd_mask = &mio_ao_cmd_mask;
 			subd->do_cmdtest = &ni_ao_cmdtest;
