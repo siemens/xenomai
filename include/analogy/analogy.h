@@ -114,6 +114,12 @@ int a4l_poll(a4l_desc_t * dsc,
 int a4l_mmap(a4l_desc_t * dsc,
 	     unsigned int idx_subd, unsigned long size, void **ptr);
 
+int a4l_async_read(a4l_desc_t * dsc,
+		   void *buf, size_t nbyte, unsigned long ms_timeout);
+
+int a4l_async_write(a4l_desc_t * dsc,
+		    void *buf, size_t nbyte, unsigned long ms_timeout);
+
 int a4l_snd_insnlist(a4l_desc_t * dsc, a4l_insnlst_t * arg);
 
 int a4l_snd_insn(a4l_desc_t * dsc, a4l_insn_t *arg);
