@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ? 
 				BUF_SIZE : (scan_size * cmd.stop_arg - cnt);
 
-			ret = a4l_sys_write(dsc.fd, buf, tmp);
+			ret = a4l_async_write(&dsc, buf, tmp, A4L_INFINITE);
 			if (ret < 0) {
 				fprintf(stderr,
 					"cmd_write: a4l_write failed (ret=%d)\n",

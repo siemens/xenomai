@@ -379,9 +379,8 @@ int main(int argc, char *argv[])
 
 		/* Fetch data */
 		do {
-
 			/* Perform the read operation */
-			ret = a4l_sys_read(dsc.fd, buf, BUF_SIZE);
+			ret = a4l_async_read(&dsc, buf, BUF_SIZE, A4L_INFINITE);
 			if (ret < 0) {
 				fprintf(stderr,
 					"cmd_read: a4l_read failed (ret=%d)\n",
