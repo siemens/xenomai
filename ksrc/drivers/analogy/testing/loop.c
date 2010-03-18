@@ -30,11 +30,11 @@ a4l_rngdesc_t loop_rngdesc = RNG_GLOBAL(loop_rngtab);
 /* Command options mask */
 static a4l_cmd_t loop_cmd_mask = {
 	.idx_subd = 0,
-	.start_src = TRIG_NOW,
+	.start_src = TRIG_NOW | TRIG_INT,
 	.scan_begin_src = TRIG_TIMER,
-	.convert_src = TRIG_NOW|TRIG_TIMER,
+	.convert_src = TRIG_NOW | TRIG_TIMER,
 	.scan_end_src = TRIG_COUNT,
-	.stop_src = TRIG_COUNT|TRIG_NONE,
+	.stop_src = TRIG_COUNT| TRIG_NONE,
 };
 
 /* Private data organization */
@@ -115,14 +115,17 @@ static void loop_task_proc(void *arg)
 /* Command callback */
 int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
-
-	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
-
-	priv->loop_running = 1;
-  
+	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);  
 	return 0;
   
+}
+
+/* Trigger callback */
+int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
+{
+	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
+	priv->loop_running = 1;
+	return 0;
 }
 
 /* Cancel callback */
@@ -179,7 +182,6 @@ void setup_input_subd(a4l_subd_t *subd)
 	subd->rng_desc = &loop_rngdesc;
 	subd->chan_desc = &loop_chandesc;
 	subd->do_cmd = loop_cmd;
-	subd->do_cmdtest = NULL;
 	subd->cancel = loop_cancel;
 	subd->cmd_mask = &loop_cmd_mask;
 	subd->insn_read = loop_insn_read;
@@ -195,6 +197,9 @@ void setup_output_subd(a4l_subd_t *subd)
 	subd->flags |= A4L_SUBD_MMAP;
 	subd->rng_desc = &loop_rngdesc;
 	subd->chan_desc = &loop_chandesc;
+	subd->do_cmd = loop_cmd;
+	subd->trigger = loop_trigger;
+	subd->cmd_mask = &loop_cmd_mask;
 	subd->insn_read = loop_insn_read;
 	subd->insn_write = loop_insn_write;
 }
