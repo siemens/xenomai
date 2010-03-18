@@ -557,6 +557,14 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 	buf = dev->transfer.bufs[info.idx_subd];
 
+	/* If a transfer is not occuring, simply return buffer
+	   informations, otherwise make the transfer progress */
+	if (!test_bit(A4L_TSF_BUSY,
+		       &(dev->transfer.status[info.idx_subd]))) {
+		info.rw_count = 0;
+		goto a4l_ioctl_bufinfo_out;
+	}
+
 	ret = __handle_event(buf);
 
 	if (info.idx_subd == dev->transfer.idx_read_subd) {
@@ -617,6 +625,8 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		/* Updates munge count */
 		buf->mng_count += tmp_cnt;
 	}
+
+a4l_ioctl_bufinfo_out:	
 
 	/* Sets the buffer size */
 	info.buf_size = buf->size;
