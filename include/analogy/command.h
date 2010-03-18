@@ -94,7 +94,7 @@
  */
 #define TRIG_OTHER	0x00000100
 /** 
- * Trigger not implemented yet
+ * Wake up on end-of-scan
  */
 #define TRIG_WAKE_EOS	0x0020
 /** 
