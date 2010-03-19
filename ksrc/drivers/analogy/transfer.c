@@ -337,6 +337,22 @@ int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd)
 	return ret;
 }
 
+int a4l_cancel_transfers(a4l_cxt_t * cxt)
+{
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	int i, ret = 0;
+
+	/* The caller of a4l_cancel_transfers is bound not to have
+	   checked whether the subdevice was attached; so we do it here */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
+		return 0;
+
+	for (i = 0; i < dev->transfer.nb_subd && ret == 0; i++)
+		ret = a4l_cancel_transfer(cxt, i);
+
+	return ret;
+}
+
 /* --- IRQ handling section --- */
 
 int a4l_request_irq(a4l_dev_t * dev,

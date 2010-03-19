@@ -33,6 +33,7 @@
 #include <analogy/context.h>
 #include <analogy/ioctl.h>
 #include <analogy/device.h>
+#include <analogy/transfer.h>
 
 int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
 	a4l_ioctl_devcfg,
@@ -141,9 +142,9 @@ int a4l_rt_close(struct rtdm_dev_context *context,
 	a4l_init_cxt(context, user_info, &cxt);
 	a4l_set_dev(&cxt);
 	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_close: minor=%d\n", a4l_get_minor(&cxt));
+		  "a4l_rt_close: minor=%d\n", a4l_get_minor(&cxt));	
 
-	return 0;
+	return a4l_cancel_transfers(&cxt);;
 }
 
 ssize_t a4l_rt_read(struct rtdm_dev_context * context,
