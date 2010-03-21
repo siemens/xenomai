@@ -87,11 +87,11 @@ static inline int __produce(a4l_cxt_t * cxt,
 	int ret = 0;
 
 	while (ret == 0 && tmp_cnt != 0) {
-		/* Checks the data copy can be performed contiguously */
+		/* Check the data copy can be performed contiguously */
 		unsigned long blk_size = (start_ptr + tmp_cnt > buf->size) ?
 			buf->size - start_ptr : tmp_cnt;
 
-		/* Performs the copy */
+		/* Perform the copy */
 		if (cxt == NULL)
 			memcpy(buf->buf + start_ptr, pin, blk_size);
 		else
@@ -99,7 +99,7 @@ static inline int __produce(a4l_cxt_t * cxt,
 						       buf->buf + start_ptr,
 						       pin, blk_size);
 
-		/* Updates pointers/counts */
+		/* Update pointers/counts */
 		pin += blk_size;
 		tmp_cnt -= blk_size;
 		start_ptr = 0;
@@ -117,11 +117,11 @@ static inline int __consume(a4l_cxt_t * cxt,
 	int ret = 0;
 
 	while (ret == 0 && tmp_cnt != 0) {
-		/* Checks the data copy can be performed contiguously */
+		/* Check the data copy can be performed contiguously */
 		unsigned long blk_size = (start_ptr + tmp_cnt > buf->size) ?
 			buf->size - start_ptr : tmp_cnt;
 
-		/* Performs the copy */
+		/* Perform the copy */
 		if (cxt == NULL)
 			memcpy(pout, buf->buf + start_ptr, blk_size);
 		else
@@ -130,7 +130,7 @@ static inline int __consume(a4l_cxt_t * cxt,
 						     buf->buf + start_ptr,
 						     blk_size);
 
-		/* Updates pointers/counts */
+		/* Update pointers/counts */
 		pout += blk_size;
 		tmp_cnt -= blk_size;
 		start_ptr = 0;
@@ -149,14 +149,14 @@ static inline void __munge(struct a4l_subdevice * subd,
 	unsigned long tmp_cnt = count;
 
 	while (tmp_cnt != 0) {
-		/* Checks the data copy can be performed contiguously */
+		/* Check the data copy can be performed contiguously */
 		unsigned long blk_size = (start_ptr + tmp_cnt > buf->size) ?
 			buf->size - start_ptr : tmp_cnt;
 
-		/* Performs the munge operation */
+		/* Perform the munge operation */
 		munge(subd, buf->buf + start_ptr, blk_size);
 
-		/* Updates the start pointer and the count */
+		/* Update the start pointer and the count */
 		tmp_cnt -= blk_size;
 		start_ptr = 0;
 	}
@@ -245,7 +245,7 @@ static inline int __abs_put(a4l_buf_t * buf, unsigned long count)
 {
 	unsigned long old = buf->prd_count;
 
-	if (buf->prd_count >= count)
+	if ((long)(buf->prd_count - count) >= 0)
 		return -EINVAL;
 
 	buf->prd_count = count;
@@ -253,7 +253,7 @@ static inline int __abs_put(a4l_buf_t * buf, unsigned long count)
 	if ((old / buf->size) != (count / buf->size))
 		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
 
-	if (count >= buf->end_count)
+	if ((long)(count - buf->end_count) >= 0)
 		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
 
 	return 0;
@@ -268,7 +268,7 @@ static inline int __abs_get(a4l_buf_t * buf, unsigned long count)
 {
 	unsigned long old = buf->cns_count;
 
-	if (buf->cns_count >= count)
+	if ((long)(buf->cns_count - count) >= 0)
 		return -EINVAL;
 
 	buf->cns_count = count;
@@ -276,7 +276,7 @@ static inline int __abs_get(a4l_buf_t * buf, unsigned long count)
 	if ((old / buf->size) != count / buf->size)
 		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
 
-	if (count >= buf->end_count)
+	if ((long)(count - buf->end_count) >= 0)
 		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
 
 	return 0;
@@ -291,7 +291,7 @@ static inline unsigned long __count_to_put(a4l_buf_t * buf)
 {
 	unsigned long ret;
 
-	if (buf->size + buf->cns_count > buf->prd_count)
+	if ((long) (buf->size + buf->cns_count - buf->prd_count) > 0)
 		ret = buf->size + buf->cns_count - buf->prd_count;
 	else
 		ret = 0;
@@ -303,12 +303,12 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 {
 	unsigned long ret;
 
-	if (buf->end_count != 0 && (buf->end_count > buf->prd_count))
+	if (buf->end_count != 0 && (long)(buf->end_count - buf->prd_count) > 0)
 		ret = buf->prd_count;
 	else
 		ret = buf->end_count;
 
-	if (ret > buf->cns_count)
+	if ((long)(ret - buf->cns_count) > 0)
 		ret -= buf->cns_count;
 	else
 		ret = 0;
