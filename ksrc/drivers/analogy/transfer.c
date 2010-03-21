@@ -278,10 +278,9 @@ int a4l_init_transfer(a4l_cxt_t * cxt, a4l_cmd_t * cmd)
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
 			a4l_chan_t *chft;
-			chft =
-				a4l_get_chfeat(dev->transfer.
-					       subds[cmd->idx_subd],
-					       CR_CHAN(cmd->chan_descs[i]));
+			chft = a4l_get_chfeat(dev->transfer.
+					      subds[cmd->idx_subd],
+					      CR_CHAN(cmd->chan_descs[i]));
 			dev->transfer.bufs[cmd->idx_subd]->end_count +=
 				chft->nb_bits / 8;
 		}
