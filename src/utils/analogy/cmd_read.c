@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
 
 	/* Update the command structure */
 	cmd.scan_end_arg = cmd.nb_chan;
+	cmd.stop_src = cmd.stop_arg != 0 ? TRIG_COUNT : TRIG_NONE;
 
 	if (real_time != 0) {
 
@@ -328,8 +329,9 @@ int main(int argc, char *argv[])
 
 	if (verbose != 0) {
 		printf("cmd_read: scan size = %u\n", scan_size);
-		printf("cmd_read: size to read = %u\n",
-		       scan_size * cmd.stop_arg);
+		if (cmd.stop_arg != 0)
+			printf("cmd_read: size to read = %u\n",
+			       scan_size * cmd.stop_arg);
 	}
 
 	/* Cancel any former command which might be in progress */
