@@ -201,7 +201,6 @@ static inline int __pre_put(a4l_buf_t * buf, unsigned long count)
 
 static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 {
-
 	/* The first time, we expect the buffer to be properly filled
 	before the trigger occurence; by the way, we need tmp_count to
 	have been initialized and tmp_count is updated right here */
@@ -213,7 +212,7 @@ static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 	last time, the DMA channel can easily overtake the tmp
 	frontier because no more data were sent from user space;
 	therefore no useless alarm should be sent */
-	if ((long)(count - buf->end_count) > 0)
+	if (buf->end_count != 0 && (long)(count - buf->end_count) > 0)
 		goto out;
 
 	/* Once the exception are passed, we check that the DMA
@@ -253,7 +252,7 @@ static inline int __abs_put(a4l_buf_t * buf, unsigned long count)
 	if ((old / buf->size) != (count / buf->size))
 		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
 
-	if ((long)(count - buf->end_count) >= 0)
+	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
 		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
 
 	return 0;
@@ -276,7 +275,7 @@ static inline int __abs_get(a4l_buf_t * buf, unsigned long count)
 	if ((old / buf->size) != count / buf->size)
 		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
 
-	if ((long)(count - buf->end_count) >= 0)
+	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
 		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
 
 	return 0;
@@ -303,7 +302,9 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 {
 	unsigned long ret;
 
-	if (buf->end_count != 0 && (long)(buf->end_count - buf->prd_count) > 0)
+	/* If the acquisition is unlimited (end_count == 0), we must
+	   not take into account end_count */
+	if (buf->end_count == 0 || (long)(buf->end_count - buf->prd_count) > 0)
 		ret = buf->prd_count;
 	else
 		ret = buf->end_count;
