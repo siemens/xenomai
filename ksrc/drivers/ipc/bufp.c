@@ -273,10 +273,12 @@ redo:
 		wait.len = len;
 		wait.sk = sk;
 		rtipc_prepare_wait(&wait.wc);
-		rtipc_leave_atomic(wait.lockctx);
+		/*
+		 * Keep the nucleus lock across the wait call, so that
+		 * we don't miss a pulse.
+		 */
 		ret = rtdm_event_timedwait(&sk->i_event,
 					   sk->rx_timeout, &toseq);
-		rtipc_enter_atomic(wait.lockctx);
 		rtipc_finish_wait(&wait.wc, __bufp_cleanup_handler);
 
 		if (unlikely(ret))
@@ -504,10 +506,12 @@ redo:
 		wait.len = len;
 		wait.sk = rsk;
 		rtipc_prepare_wait(&wait.wc);
-		rtipc_leave_atomic(wait.lockctx);
+		/*
+		 * Keep the nucleus lock across the wait call, so that
+		 * we don't miss a pulse.
+		 */
 		ret = rtdm_event_timedwait(&rsk->o_event,
 					   sk->tx_timeout, &toseq);
-		rtipc_enter_atomic(wait.lockctx);
 		rtipc_finish_wait(&wait.wc, __bufp_cleanup_handler);
 		if (unlikely(ret))
 			break;
