@@ -208,200 +208,224 @@
 <a name="l00201"></a>00201 
 <a name="l00202"></a>00202 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __pre_abs_get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
 <a name="l00203"></a>00203 {
-<a name="l00204"></a>00204         <span class="keywordflow">if</span> (!(buf-&gt;tmp_count == 0 &amp;&amp; buf-&gt;cns_count == 0) &amp;&amp;
-<a name="l00205"></a>00205             (<span class="keywordtype">long</span>)(count - buf-&gt;tmp_count) &gt; 0) {
-<a name="l00206"></a>00206                 set_bit(A4L_BUF_ERROR_NR, &amp;buf-&gt;evt_flags);
-<a name="l00207"></a>00207                 <span class="keywordflow">return</span> -EPIPE;
-<a name="l00208"></a>00208         }
-<a name="l00209"></a>00209 
-<a name="l00210"></a>00210         buf-&gt;tmp_count = buf-&gt;prd_count;
-<a name="l00211"></a>00211 
-<a name="l00212"></a>00212         <span class="keywordflow">return</span> 0;
-<a name="l00213"></a>00213 }
-<a name="l00214"></a>00214 
-<a name="l00215"></a>00215 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __pre_get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
-<a name="l00216"></a>00216 {
-<a name="l00217"></a>00217         <span class="keywordflow">return</span> __pre_abs_get(buf, buf-&gt;tmp_count + count);
-<a name="l00218"></a>00218 }
-<a name="l00219"></a>00219 
-<a name="l00220"></a>00220 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __abs_put(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
-<a name="l00221"></a>00221 {
-<a name="l00222"></a>00222         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> old = buf-&gt;prd_count;
-<a name="l00223"></a>00223 
-<a name="l00224"></a>00224         <span class="keywordflow">if</span> (buf-&gt;prd_count &gt;= count)
-<a name="l00225"></a>00225                 <span class="keywordflow">return</span> -EINVAL;
-<a name="l00226"></a>00226 
-<a name="l00227"></a>00227         buf-&gt;prd_count = count;
-<a name="l00228"></a>00228 
-<a name="l00229"></a>00229         <span class="keywordflow">if</span> ((old / buf-&gt;size) != (count / buf-&gt;size))
-<a name="l00230"></a>00230                 set_bit(A4L_BUF_EOBUF_NR, &amp;buf-&gt;evt_flags);
-<a name="l00231"></a>00231 
-<a name="l00232"></a>00232         <span class="keywordflow">if</span> (count &gt;= buf-&gt;end_count)
-<a name="l00233"></a>00233                 set_bit(A4L_BUF_EOA_NR, &amp;buf-&gt;evt_flags);
-<a name="l00234"></a>00234 
-<a name="l00235"></a>00235         <span class="keywordflow">return</span> 0;
-<a name="l00236"></a>00236 }
-<a name="l00237"></a>00237 
-<a name="l00238"></a>00238 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __put(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
-<a name="l00239"></a>00239 {
-<a name="l00240"></a>00240         <span class="keywordflow">return</span> __abs_put(buf, buf-&gt;prd_count + count);
-<a name="l00241"></a>00241 }
-<a name="l00242"></a>00242 
-<a name="l00243"></a>00243 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __abs_get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
-<a name="l00244"></a>00244 {
-<a name="l00245"></a>00245         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> old = buf-&gt;cns_count;
-<a name="l00246"></a>00246 
-<a name="l00247"></a>00247         <span class="keywordflow">if</span> (buf-&gt;cns_count &gt;= count)
-<a name="l00248"></a>00248                 <span class="keywordflow">return</span> -EINVAL;
-<a name="l00249"></a>00249 
-<a name="l00250"></a>00250         buf-&gt;cns_count = count;
-<a name="l00251"></a>00251 
-<a name="l00252"></a>00252         <span class="keywordflow">if</span> ((old / buf-&gt;size) != count / buf-&gt;size)
-<a name="l00253"></a>00253                 set_bit(A4L_BUF_EOBUF_NR, &amp;buf-&gt;evt_flags);
-<a name="l00254"></a>00254 
-<a name="l00255"></a>00255         <span class="keywordflow">if</span> (count &gt;= buf-&gt;end_count)
-<a name="l00256"></a>00256                 set_bit(A4L_BUF_EOA_NR, &amp;buf-&gt;evt_flags);
-<a name="l00257"></a>00257 
-<a name="l00258"></a>00258         <span class="keywordflow">return</span> 0;
-<a name="l00259"></a>00259 }
-<a name="l00260"></a>00260 
-<a name="l00261"></a>00261 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
-<a name="l00262"></a>00262 {
-<a name="l00263"></a>00263         <span class="keywordflow">return</span> __abs_get(buf, buf-&gt;cns_count + count);
-<a name="l00264"></a>00264 }
-<a name="l00265"></a>00265 
-<a name="l00266"></a>00266 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __count_to_put(a4l_buf_t * buf)
-<a name="l00267"></a>00267 {
-<a name="l00268"></a>00268         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ret;
-<a name="l00269"></a>00269 
-<a name="l00270"></a>00270         <span class="keywordflow">if</span> (buf-&gt;size + buf-&gt;cns_count &gt; buf-&gt;prd_count)
-<a name="l00271"></a>00271                 ret = buf-&gt;size + buf-&gt;cns_count - buf-&gt;prd_count;
-<a name="l00272"></a>00272         <span class="keywordflow">else</span>
-<a name="l00273"></a>00273                 ret = 0;
-<a name="l00274"></a>00274 
-<a name="l00275"></a>00275         <span class="keywordflow">return</span> ret;
-<a name="l00276"></a>00276 }
-<a name="l00277"></a>00277 
-<a name="l00278"></a>00278 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __count_to_get(a4l_buf_t * buf)
-<a name="l00279"></a>00279 {
-<a name="l00280"></a>00280         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ret;
+<a name="l00204"></a>00204 
+<a name="l00205"></a>00205         <span class="comment">/* The first time, we expect the buffer to be properly filled</span>
+<a name="l00206"></a>00206 <span class="comment">        before the trigger occurence; by the way, we need tmp_count to</span>
+<a name="l00207"></a>00207 <span class="comment">        have been initialized and tmp_count is updated right here */</span>
+<a name="l00208"></a>00208         <span class="keywordflow">if</span> (buf-&gt;tmp_count == 0 || buf-&gt;cns_count == 0) 
+<a name="l00209"></a>00209                 <span class="keywordflow">goto</span> out;
+<a name="l00210"></a>00210 
+<a name="l00211"></a>00211         <span class="comment">/* At the end of the acquisition, the user application has</span>
+<a name="l00212"></a>00212 <span class="comment">        written the defined amount of data into the buffer; so the</span>
+<a name="l00213"></a>00213 <span class="comment">        last time, the DMA channel can easily overtake the tmp</span>
+<a name="l00214"></a>00214 <span class="comment">        frontier because no more data were sent from user space;</span>
+<a name="l00215"></a>00215 <span class="comment">        therefore no useless alarm should be sent */</span>
+<a name="l00216"></a>00216         <span class="keywordflow">if</span> ((<span class="keywordtype">long</span>)(count - buf-&gt;end_count) &gt; 0)
+<a name="l00217"></a>00217                 <span class="keywordflow">goto</span> out;
+<a name="l00218"></a>00218 
+<a name="l00219"></a>00219         <span class="comment">/* Once the exception are passed, we check that the DMA</span>
+<a name="l00220"></a>00220 <span class="comment">        transfer has not overtaken the last record of the production</span>
+<a name="l00221"></a>00221 <span class="comment">        count (tmp_count was updated with prd_count the last time</span>
+<a name="l00222"></a>00222 <span class="comment">        __pre_abs_get was called). We must understand that we cannot</span>
+<a name="l00223"></a>00223 <span class="comment">        compare the current DMA count with the current production</span>
+<a name="l00224"></a>00224 <span class="comment">        count because even if, right now, the production count is</span>
+<a name="l00225"></a>00225 <span class="comment">        higher than the DMA count, it does not mean that the DMA count</span>
+<a name="l00226"></a>00226 <span class="comment">        was not greater a few cycles before; in such case, the DMA</span>
+<a name="l00227"></a>00227 <span class="comment">        channel would have retrieved the wrong data */</span>
+<a name="l00228"></a>00228         <span class="keywordflow">if</span> ((<span class="keywordtype">long</span>)(count - buf-&gt;tmp_count) &gt; 0) {
+<a name="l00229"></a>00229                 set_bit(A4L_BUF_ERROR_NR, &amp;buf-&gt;evt_flags);
+<a name="l00230"></a>00230                 <span class="keywordflow">return</span> -EPIPE;
+<a name="l00231"></a>00231         }
+<a name="l00232"></a>00232 
+<a name="l00233"></a>00233 out:
+<a name="l00234"></a>00234         buf-&gt;tmp_count = buf-&gt;prd_count;
+<a name="l00235"></a>00235 
+<a name="l00236"></a>00236         <span class="keywordflow">return</span> 0;
+<a name="l00237"></a>00237 }
+<a name="l00238"></a>00238 
+<a name="l00239"></a>00239 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __pre_get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
+<a name="l00240"></a>00240 {
+<a name="l00241"></a>00241         <span class="keywordflow">return</span> __pre_abs_get(buf, buf-&gt;tmp_count + count);
+<a name="l00242"></a>00242 }
+<a name="l00243"></a>00243 
+<a name="l00244"></a>00244 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __abs_put(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
+<a name="l00245"></a>00245 {
+<a name="l00246"></a>00246         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> old = buf-&gt;prd_count;
+<a name="l00247"></a>00247 
+<a name="l00248"></a>00248         <span class="keywordflow">if</span> (buf-&gt;prd_count &gt;= count)
+<a name="l00249"></a>00249                 <span class="keywordflow">return</span> -EINVAL;
+<a name="l00250"></a>00250 
+<a name="l00251"></a>00251         buf-&gt;prd_count = count;
+<a name="l00252"></a>00252 
+<a name="l00253"></a>00253         <span class="keywordflow">if</span> ((old / buf-&gt;size) != (count / buf-&gt;size))
+<a name="l00254"></a>00254                 set_bit(A4L_BUF_EOBUF_NR, &amp;buf-&gt;evt_flags);
+<a name="l00255"></a>00255 
+<a name="l00256"></a>00256         <span class="keywordflow">if</span> (count &gt;= buf-&gt;end_count)
+<a name="l00257"></a>00257                 set_bit(A4L_BUF_EOA_NR, &amp;buf-&gt;evt_flags);
+<a name="l00258"></a>00258 
+<a name="l00259"></a>00259         <span class="keywordflow">return</span> 0;
+<a name="l00260"></a>00260 }
+<a name="l00261"></a>00261 
+<a name="l00262"></a>00262 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __put(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
+<a name="l00263"></a>00263 {
+<a name="l00264"></a>00264         <span class="keywordflow">return</span> __abs_put(buf, buf-&gt;prd_count + count);
+<a name="l00265"></a>00265 }
+<a name="l00266"></a>00266 
+<a name="l00267"></a>00267 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __abs_get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
+<a name="l00268"></a>00268 {
+<a name="l00269"></a>00269         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> old = buf-&gt;cns_count;
+<a name="l00270"></a>00270 
+<a name="l00271"></a>00271         <span class="keywordflow">if</span> (buf-&gt;cns_count &gt;= count)
+<a name="l00272"></a>00272                 <span class="keywordflow">return</span> -EINVAL;
+<a name="l00273"></a>00273 
+<a name="l00274"></a>00274         buf-&gt;cns_count = count;
+<a name="l00275"></a>00275 
+<a name="l00276"></a>00276         <span class="keywordflow">if</span> ((old / buf-&gt;size) != count / buf-&gt;size)
+<a name="l00277"></a>00277                 set_bit(A4L_BUF_EOBUF_NR, &amp;buf-&gt;evt_flags);
+<a name="l00278"></a>00278 
+<a name="l00279"></a>00279         <span class="keywordflow">if</span> (count &gt;= buf-&gt;end_count)
+<a name="l00280"></a>00280                 set_bit(A4L_BUF_EOA_NR, &amp;buf-&gt;evt_flags);
 <a name="l00281"></a>00281 
-<a name="l00282"></a>00282         <span class="keywordflow">if</span> (buf-&gt;end_count != 0 &amp;&amp; (buf-&gt;end_count &gt; buf-&gt;prd_count))
-<a name="l00283"></a>00283                 ret = buf-&gt;prd_count;
-<a name="l00284"></a>00284         <span class="keywordflow">else</span>
-<a name="l00285"></a>00285                 ret = buf-&gt;end_count;
-<a name="l00286"></a>00286 
-<a name="l00287"></a>00287         <span class="keywordflow">if</span> (ret &gt; buf-&gt;cns_count)
-<a name="l00288"></a>00288                 ret -= buf-&gt;cns_count;
-<a name="l00289"></a>00289         <span class="keywordflow">else</span>
-<a name="l00290"></a>00290                 ret = 0;
-<a name="l00291"></a>00291 
-<a name="l00292"></a>00292         <span class="keywordflow">return</span> ret;
-<a name="l00293"></a>00293 }
-<a name="l00294"></a>00294 
-<a name="l00295"></a>00295 <span class="comment">/* --- Buffer internal functions --- */</span>
-<a name="l00296"></a>00296 
-<a name="l00297"></a>00297 <span class="keywordtype">int</span> a4l_alloc_buffer(a4l_buf_t * buf_desc);
+<a name="l00282"></a>00282         <span class="keywordflow">return</span> 0;
+<a name="l00283"></a>00283 }
+<a name="l00284"></a>00284 
+<a name="l00285"></a>00285 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> __get(a4l_buf_t * buf, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count)
+<a name="l00286"></a>00286 {
+<a name="l00287"></a>00287         <span class="keywordflow">return</span> __abs_get(buf, buf-&gt;cns_count + count);
+<a name="l00288"></a>00288 }
+<a name="l00289"></a>00289 
+<a name="l00290"></a>00290 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __count_to_put(a4l_buf_t * buf)
+<a name="l00291"></a>00291 {
+<a name="l00292"></a>00292         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ret;
+<a name="l00293"></a>00293 
+<a name="l00294"></a>00294         <span class="keywordflow">if</span> (buf-&gt;size + buf-&gt;cns_count &gt; buf-&gt;prd_count)
+<a name="l00295"></a>00295                 ret = buf-&gt;size + buf-&gt;cns_count - buf-&gt;prd_count;
+<a name="l00296"></a>00296         <span class="keywordflow">else</span>
+<a name="l00297"></a>00297                 ret = 0;
 <a name="l00298"></a>00298 
-<a name="l00299"></a>00299 <span class="keywordtype">void</span> a4l_free_buffer(a4l_buf_t * buf_desc);
-<a name="l00300"></a>00300 
-<a name="l00301"></a>00301 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g8ffbc9832255a701624fe874d319e5f4" title="Update the absolute count of data sent from the device to the buffer since the start...">a4l_buf_prepare_absput</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00302"></a>00302                            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
-<a name="l00303"></a>00303 
-<a name="l00304"></a>00304 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g8d053d9fc6e19eb47f9c08abf485cea9" title="Set the absolute count of data which was sent from the device to the buffer since...">a4l_buf_commit_absput</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00305"></a>00305                           <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
-<a name="l00306"></a>00306 
-<a name="l00307"></a>00307 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g582e96ac8358717a19995e0c8c41dffc" title="Set the count of data which is to be sent to the buffer at the next DMA shot.">a4l_buf_prepare_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00308"></a>00308                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
-<a name="l00309"></a>00309 
-<a name="l00310"></a>00310 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gb03dcc685bcb3ad9111c9aa3dbe3baf5" title="Set the count of data sent to the buffer during the last completed DMA shots.">a4l_buf_commit_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00311"></a>00311                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
-<a name="l00312"></a>00312 
-<a name="l00313"></a>00313 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gec920d203e34f2020eb51ddad3461d1c" title="Copy some data from the device driver to the buffer.">a4l_buf_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd,
-<a name="l00314"></a>00314                 <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00299"></a>00299         <span class="keywordflow">return</span> ret;
+<a name="l00300"></a>00300 }
+<a name="l00301"></a>00301 
+<a name="l00302"></a>00302 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> __count_to_get(a4l_buf_t * buf)
+<a name="l00303"></a>00303 {
+<a name="l00304"></a>00304         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ret;
+<a name="l00305"></a>00305 
+<a name="l00306"></a>00306         <span class="keywordflow">if</span> (buf-&gt;end_count != 0 &amp;&amp; (buf-&gt;end_count &gt; buf-&gt;prd_count))
+<a name="l00307"></a>00307                 ret = buf-&gt;prd_count;
+<a name="l00308"></a>00308         <span class="keywordflow">else</span>
+<a name="l00309"></a>00309                 ret = buf-&gt;end_count;
+<a name="l00310"></a>00310 
+<a name="l00311"></a>00311         <span class="keywordflow">if</span> (ret &gt; buf-&gt;cns_count)
+<a name="l00312"></a>00312                 ret -= buf-&gt;cns_count;
+<a name="l00313"></a>00313         <span class="keywordflow">else</span>
+<a name="l00314"></a>00314                 ret = 0;
 <a name="l00315"></a>00315 
-<a name="l00316"></a>00316 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g7fecd99d23d53c69381aacee4d9222d8" title="Update the absolute count of data sent from the buffer to the device since the start...">a4l_buf_prepare_absget</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00317"></a>00317                            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00316"></a>00316         <span class="keywordflow">return</span> ret;
+<a name="l00317"></a>00317 }
 <a name="l00318"></a>00318 
-<a name="l00319"></a>00319 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gdadad4789e1da9236fed49a33b1b2284" title="Set the absolute count of data which was sent from the buffer to the device since...">a4l_buf_commit_absget</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00320"></a>00320                           <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
-<a name="l00321"></a>00321 
-<a name="l00322"></a>00322 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gf9fe0b2fe2279e4f753ddec776d10c5f" title="Set the count of data which is to be sent from the buffer to the device at the next...">a4l_buf_prepare_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00323"></a>00323                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00319"></a>00319 <span class="comment">/* --- Buffer internal functions --- */</span>
+<a name="l00320"></a>00320 
+<a name="l00321"></a>00321 <span class="keywordtype">int</span> a4l_alloc_buffer(a4l_buf_t * buf_desc);
+<a name="l00322"></a>00322 
+<a name="l00323"></a>00323 <span class="keywordtype">void</span> a4l_free_buffer(a4l_buf_t * buf_desc);
 <a name="l00324"></a>00324 
-<a name="l00325"></a>00325 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gbd70bc9f8bb4615f60c0107d51ca1f29" title="Set the count of data sent from the buffer to the device during the last completed...">a4l_buf_commit_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
-<a name="l00326"></a>00326                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00325"></a>00325 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g8ffbc9832255a701624fe874d319e5f4" title="Update the absolute count of data sent from the device to the buffer since the start...">a4l_buf_prepare_absput</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00326"></a>00326                            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
 <a name="l00327"></a>00327 
-<a name="l00328"></a>00328 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g6af2dcaaecfd2cd9f0deb6e9167d3cff" title="Copy some data from the buffer to the device driver.">a4l_buf_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd,
-<a name="l00329"></a>00329                 <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00328"></a>00328 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g8d053d9fc6e19eb47f9c08abf485cea9" title="Set the absolute count of data which was sent from the device to the buffer since...">a4l_buf_commit_absput</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00329"></a>00329                           <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
 <a name="l00330"></a>00330 
-<a name="l00331"></a>00331 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gc275c834264a50b9443304d33908f657" title="Signal some event(s) to a user-space program involved in some read / write operation...">a4l_buf_evt</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> evts);
-<a name="l00332"></a>00332 
-<a name="l00333"></a>00333 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__analogy__buffer.html#gd9e80150586b4a869562d3d098f49d36" title="Get the data amount available in the Analogy buffer.">a4l_buf_count</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
-<a name="l00334"></a>00334 
-<a name="l00335"></a>00335 <span class="comment">/* --- Current Command management function --- */</span>
+<a name="l00331"></a>00331 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g582e96ac8358717a19995e0c8c41dffc" title="Set the count of data which is to be sent to the buffer at the next DMA shot.">a4l_buf_prepare_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00332"></a>00332                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00333"></a>00333 
+<a name="l00334"></a>00334 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gb03dcc685bcb3ad9111c9aa3dbe3baf5" title="Set the count of data sent to the buffer during the last completed DMA shots.">a4l_buf_commit_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00335"></a>00335                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
 <a name="l00336"></a>00336 
-<a name="l00337"></a>00337 <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *<a class="code" href="group__analogy__buffer.html#g2386d5a9d84393b5db9beb22ae7674e9" title="Get the current Analogy command descriptor.">a4l_get_cmd</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
-<a name="l00338"></a>00338 
-<a name="l00339"></a>00339 <span class="comment">/* --- Munge related function --- */</span>
-<a name="l00340"></a>00340 
-<a name="l00341"></a>00341 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g6e33ba6f8a06e3dbbfe3896b0258857f" title="Get the channel index according to its type.">a4l_get_chan</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
+<a name="l00337"></a>00337 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gec920d203e34f2020eb51ddad3461d1c" title="Copy some data from the device driver to the buffer.">a4l_buf_put</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd,
+<a name="l00338"></a>00338                 <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00339"></a>00339 
+<a name="l00340"></a>00340 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g7fecd99d23d53c69381aacee4d9222d8" title="Update the absolute count of data sent from the buffer to the device since the start...">a4l_buf_prepare_absget</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00341"></a>00341                            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
 <a name="l00342"></a>00342 
-<a name="l00343"></a>00343 <span class="comment">/* --- IOCTL / FOPS functions --- */</span>
-<a name="l00344"></a>00344 
-<a name="l00345"></a>00345 <span class="keywordtype">int</span> a4l_ioctl_mmap(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00346"></a>00346 <span class="keywordtype">int</span> a4l_ioctl_bufcfg(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00347"></a>00347 <span class="keywordtype">int</span> a4l_ioctl_bufinfo(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00348"></a>00348 <span class="keywordtype">int</span> a4l_ioctl_poll(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00349"></a>00349 ssize_t a4l_read(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">size_t</span> nbytes);
-<a name="l00350"></a>00350 ssize_t a4l_write(a4l_cxt_t * cxt, 
-<a name="l00351"></a>00351                   <span class="keyword">const</span> <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">size_t</span> nbytes);
-<a name="l00352"></a>00352 <span class="keywordtype">int</span> a4l_select(a4l_cxt_t *cxt, 
-<a name="l00353"></a>00353                rtdm_selector_t *selector,
-<a name="l00354"></a>00354                <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#ge18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
-<a name="l00355"></a>00355 
-<a name="l00356"></a>00356 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-<a name="l00357"></a>00357 
-<a name="l00358"></a>00358 <span class="comment">/* MMAP ioctl argument structure */</span>
-<a name="l00359"></a>00359 <span class="keyword">struct </span>a4l_mmap_arg {
-<a name="l00360"></a>00360         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
-<a name="l00361"></a>00361         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size;
-<a name="l00362"></a>00362         <span class="keywordtype">void</span> *ptr;
-<a name="l00363"></a>00363 };
-<a name="l00364"></a>00364 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_mmap_arg a4l_mmap_t;
-<a name="l00365"></a>00365 
-<a name="l00366"></a>00366 <span class="comment">/* Constants related with buffer size</span>
-<a name="l00367"></a>00367 <span class="comment">   (might be used with BUFCFG ioctl) */</span>
-<a name="l00368"></a>00368 <span class="preprocessor">#define A4L_BUF_MAXSIZE 0x1000000</span>
-<a name="l00369"></a>00369 <span class="preprocessor"></span><span class="preprocessor">#define A4L_BUF_DEFSIZE 0x10000</span>
-<a name="l00370"></a>00370 <span class="preprocessor"></span>
-<a name="l00371"></a>00371 <span class="comment">/* BUFCFG ioctl argument structure */</span>
-<a name="l00372"></a>00372 <span class="keyword">struct </span>a4l_buffer_config {
-<a name="l00373"></a>00373         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
-<a name="l00374"></a>00374         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> buf_size;
-<a name="l00375"></a>00375 };
-<a name="l00376"></a>00376 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_buffer_config a4l_bufcfg_t;
-<a name="l00377"></a>00377 
-<a name="l00378"></a>00378 <span class="comment">/* BUFINFO ioctl argument structure */</span>
-<a name="l00379"></a>00379 <span class="keyword">struct </span>a4l_buffer_info {
-<a name="l00380"></a>00380         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
-<a name="l00381"></a>00381         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> buf_size;
-<a name="l00382"></a>00382         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rw_count;
-<a name="l00383"></a>00383 };
-<a name="l00384"></a>00384 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_buffer_info a4l_bufinfo_t;
-<a name="l00385"></a>00385 
-<a name="l00386"></a>00386 <span class="comment">/* POLL ioctl argument structure */</span>
-<a name="l00387"></a>00387 <span class="keyword">struct </span><a class="code" href="group__async1__lib.html#g43ab969b00aae973ef4b67c234b17720" title="Get the available data count.">a4l_poll</a> {
-<a name="l00388"></a>00388         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
-<a name="l00389"></a>00389         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> arg;
-<a name="l00390"></a>00390 };
-<a name="l00391"></a>00391 <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="group__async1__lib.html#g43ab969b00aae973ef4b67c234b17720" title="Get the available data count.">a4l_poll</a> a4l_poll_t;
-<a name="l00392"></a>00392 
-<a name="l00393"></a>00393 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00394"></a>00394 
-<a name="l00395"></a>00395 <span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_BUFFER_H__ */</span>
+<a name="l00343"></a>00343 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gdadad4789e1da9236fed49a33b1b2284" title="Set the absolute count of data which was sent from the buffer to the device since...">a4l_buf_commit_absget</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00344"></a>00344                           <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00345"></a>00345 
+<a name="l00346"></a>00346 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gf9fe0b2fe2279e4f753ddec776d10c5f" title="Set the count of data which is to be sent from the buffer to the device at the next...">a4l_buf_prepare_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00347"></a>00347                         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00348"></a>00348 
+<a name="l00349"></a>00349 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gbd70bc9f8bb4615f60c0107d51ca1f29" title="Set the count of data sent from the buffer to the device during the last completed...">a4l_buf_commit_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, 
+<a name="l00350"></a>00350                        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00351"></a>00351 
+<a name="l00352"></a>00352 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g6af2dcaaecfd2cd9f0deb6e9167d3cff" title="Copy some data from the buffer to the device driver.">a4l_buf_get</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd,
+<a name="l00353"></a>00353                 <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> count);
+<a name="l00354"></a>00354 
+<a name="l00355"></a>00355 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#gc275c834264a50b9443304d33908f657" title="Signal some event(s) to a user-space program involved in some read / write operation...">a4l_buf_evt</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> evts);
+<a name="l00356"></a>00356 
+<a name="l00357"></a>00357 <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <a class="code" href="group__analogy__buffer.html#gd9e80150586b4a869562d3d098f49d36" title="Get the data amount available in the Analogy buffer.">a4l_buf_count</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
+<a name="l00358"></a>00358 
+<a name="l00359"></a>00359 <span class="comment">/* --- Current Command management function --- */</span>
+<a name="l00360"></a>00360 
+<a name="l00361"></a>00361 <a class="code" href="structa4l__cmd__desc.html" title="Structure describing the asynchronous instruction.">a4l_cmd_t</a> *<a class="code" href="group__analogy__buffer.html#g2386d5a9d84393b5db9beb22ae7674e9" title="Get the current Analogy command descriptor.">a4l_get_cmd</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
+<a name="l00362"></a>00362 
+<a name="l00363"></a>00363 <span class="comment">/* --- Munge related function --- */</span>
+<a name="l00364"></a>00364 
+<a name="l00365"></a>00365 <span class="keywordtype">int</span> <a class="code" href="group__analogy__buffer.html#g6e33ba6f8a06e3dbbfe3896b0258857f" title="Get the channel index according to its type.">a4l_get_chan</a>(<span class="keyword">struct</span> <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subdevice</a> *subd);
+<a name="l00366"></a>00366 
+<a name="l00367"></a>00367 <span class="comment">/* --- IOCTL / FOPS functions --- */</span>
+<a name="l00368"></a>00368 
+<a name="l00369"></a>00369 <span class="keywordtype">int</span> a4l_ioctl_mmap(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00370"></a>00370 <span class="keywordtype">int</span> a4l_ioctl_bufcfg(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00371"></a>00371 <span class="keywordtype">int</span> a4l_ioctl_bufinfo(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00372"></a>00372 <span class="keywordtype">int</span> a4l_ioctl_poll(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00373"></a>00373 ssize_t a4l_read(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">size_t</span> nbytes);
+<a name="l00374"></a>00374 ssize_t a4l_write(a4l_cxt_t * cxt, 
+<a name="l00375"></a>00375                   <span class="keyword">const</span> <span class="keywordtype">void</span> *bufdata, <span class="keywordtype">size_t</span> nbytes);
+<a name="l00376"></a>00376 <span class="keywordtype">int</span> a4l_select(a4l_cxt_t *cxt, 
+<a name="l00377"></a>00377                rtdm_selector_t *selector,
+<a name="l00378"></a>00378                <span class="keyword">enum</span> <a class="code" href="group__rtdmsync.html#ge18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, <span class="keywordtype">unsigned</span> fd_index);
+<a name="l00379"></a>00379 
+<a name="l00380"></a>00380 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00381"></a>00381 
+<a name="l00382"></a>00382 <span class="comment">/* MMAP ioctl argument structure */</span>
+<a name="l00383"></a>00383 <span class="keyword">struct </span>a4l_mmap_arg {
+<a name="l00384"></a>00384         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
+<a name="l00385"></a>00385         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size;
+<a name="l00386"></a>00386         <span class="keywordtype">void</span> *ptr;
+<a name="l00387"></a>00387 };
+<a name="l00388"></a>00388 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_mmap_arg a4l_mmap_t;
+<a name="l00389"></a>00389 
+<a name="l00390"></a>00390 <span class="comment">/* Constants related with buffer size</span>
+<a name="l00391"></a>00391 <span class="comment">   (might be used with BUFCFG ioctl) */</span>
+<a name="l00392"></a>00392 <span class="preprocessor">#define A4L_BUF_MAXSIZE 0x1000000</span>
+<a name="l00393"></a>00393 <span class="preprocessor"></span><span class="preprocessor">#define A4L_BUF_DEFSIZE 0x10000</span>
+<a name="l00394"></a>00394 <span class="preprocessor"></span>
+<a name="l00395"></a>00395 <span class="comment">/* BUFCFG ioctl argument structure */</span>
+<a name="l00396"></a>00396 <span class="keyword">struct </span>a4l_buffer_config {
+<a name="l00397"></a>00397         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
+<a name="l00398"></a>00398         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> buf_size;
+<a name="l00399"></a>00399 };
+<a name="l00400"></a>00400 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_buffer_config a4l_bufcfg_t;
+<a name="l00401"></a>00401 
+<a name="l00402"></a>00402 <span class="comment">/* BUFINFO ioctl argument structure */</span>
+<a name="l00403"></a>00403 <span class="keyword">struct </span>a4l_buffer_info {
+<a name="l00404"></a>00404         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
+<a name="l00405"></a>00405         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> buf_size;
+<a name="l00406"></a>00406         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> rw_count;
+<a name="l00407"></a>00407 };
+<a name="l00408"></a>00408 <span class="keyword">typedef</span> <span class="keyword">struct </span>a4l_buffer_info a4l_bufinfo_t;
+<a name="l00409"></a>00409 
+<a name="l00410"></a>00410 <span class="comment">/* POLL ioctl argument structure */</span>
+<a name="l00411"></a>00411 <span class="keyword">struct </span><a class="code" href="group__async1__lib.html#g43ab969b00aae973ef4b67c234b17720" title="Get the available data count.">a4l_poll</a> {
+<a name="l00412"></a>00412         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd;
+<a name="l00413"></a>00413         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> arg;
+<a name="l00414"></a>00414 };
+<a name="l00415"></a>00415 <span class="keyword">typedef</span> <span class="keyword">struct </span><a class="code" href="group__async1__lib.html#g43ab969b00aae973ef4b67c234b17720" title="Get the available data count.">a4l_poll</a> a4l_poll_t;
+<a name="l00416"></a>00416 
+<a name="l00417"></a>00417 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l00418"></a>00418 
+<a name="l00419"></a>00419 <span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_BUFFER_H__ */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:02:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

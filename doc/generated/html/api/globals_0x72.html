@@ -395,6 +395,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>rt_task_resume()
 : <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">task.h</a>
 , <a class="el" href="group__task.html#g1fab1aa24ef6f199546fd9669ae711be">task.c</a>
+<li>rt_task_same()
+: <a class="el" href="group__task.html#gf6e313941a3fea606be8d0f66380e922">task.h</a>
 <li>rt_task_self()
 : <a class="el" href="group__task.html#gaf5467af966c9980da9e489aeacf9aa3">task.h</a>
 , <a class="el" href="group__task.html#gaf5467af966c9980da9e489aeacf9aa3">task.c</a>
@@ -435,8 +437,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1">task.h</a>
 , <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1">task.c</a>
 <li>rt_task_wait_period()
-: <a class="el" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">task.h</a>
-, <a class="el" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">task.c</a>
+: <a class="el" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">task.c</a>
+, <a class="el" href="group__task.html#g1645d3a072ef3cefeed3bcbb27dcf108">task.h</a>
 <li>rt_task_yield()
 : <a class="el" href="group__task.html#g31e44b069b2486c2d2bdfb8a0a3557c8">task.h</a>
 , <a class="el" href="group__task.html#g31e44b069b2486c2d2bdfb8a0a3557c8">task.c</a>
@@ -491,8 +493,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>rtdm_connect()
 : <a class="el" href="group__interdrv.html#g0e2d190ab34169589e6e1ed00e34e212">core.c</a>
 <li>rtdm_context_get()
-: <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_driver.h</a>
-, <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">core.c</a>
+: <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">core.c</a>
+, <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_driver.h</a>
 <li>rtdm_context_lock()
 : <a class="el" href="group__interdrv.html#g2a37e9e938db6e8d2f50f66939de7016">core.c</a>
 <li>RTDM_CONTEXT_STRUCT_VER
@@ -508,8 +510,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>RTDM_CREATED_IN_NRT
 : <a class="el" href="group__devregister.html#ga6f17915089145982b04c51f202d950c">rtdm_driver.h</a>
 <li>rtdm_dev_register()
-: <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">device.c</a>
-, <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">rtdm_driver.h</a>
+: <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">rtdm_driver.h</a>
+, <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">device.c</a>
 <li>rtdm_dev_unregister()
 : <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_driver.h</a>
 , <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">device.c</a>
@@ -528,8 +530,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>RTDM_DRIVER_VER
 : <a class="el" href="group__devregister.html#geddd03e63cdce1692edcc497a44756c2">rtdm_driver.h</a>
 <li>rtdm_event_clear()
-: <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">rtdm_driver.h</a>
 <li>rtdm_event_destroy()
 : <a class="el" href="group__rtdmsync.html#g7b27d0206027a07958d4a09017e8a3fe">drvlib.c</a>
 <li>rtdm_event_init()
@@ -547,8 +549,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">rtdm_driver.h</a>
 , <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">drvlib.c</a>
 <li>rtdm_event_wait()
-: <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_driver.h</a>
 <li>RTDM_EXCLUSIVE
 : <a class="el" href="group__devregister.html#g7c66ec8f269c701237437177af0704e8">rtdm_driver.h</a>
 <li>RTDM_EXECUTE_ATOMICALLY
@@ -621,14 +623,14 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>rtdm_mutex_destroy()
 : <a class="el" href="group__rtdmsync.html#gd13170b569d0a4cdb46072e1e3a45527">drvlib.c</a>
 <li>rtdm_mutex_init()
-: <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_driver.h</a>
 <li>rtdm_mutex_lock()
-: <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_driver.h</a>
 <li>rtdm_mutex_timedlock()
-: <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">rtdm_driver.h</a>
 <li>rtdm_mutex_unlock()
 : <a class="el" href="group__rtdmsync.html#gb40ed579324d8cc76387a0e06dd0f82a">drvlib.c</a>
 <li>RTDM_NAMED_DEVICE
@@ -695,14 +697,14 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">rtdm_driver.h</a>
 <li>rtdm_sem_select_bind()
-: <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">rtdm_driver.h</a>
 <li>rtdm_sem_timeddown()
 : <a class="el" href="group__rtdmsync.html#g8aadb120a93df5dfd717c5bac6d4c1a9">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#g8aadb120a93df5dfd717c5bac6d4c1a9">rtdm_driver.h</a>
 <li>rtdm_sem_up()
-: <a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g829dbd8c5709d798ed06947b27001fed">rtdm_driver.h</a>
 <li>rtdm_send()
 : <a class="el" href="group__interdrv.html#g717b6bab952f590e1e276b50e7f1bad5">core.c</a>
 <li>rtdm_sendmsg()
@@ -729,8 +731,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>rtdm_task_destroy()
 : <a class="el" href="group__rtdmtask.html#g7b5581febb2732127736817ca44e86e3">drvlib.c</a>
 <li>rtdm_task_init()
-: <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">drvlib.c</a>
-, <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_driver.h</a>
+, <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">drvlib.c</a>
 <li>rtdm_task_join_nrt()
 : <a class="el" href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc">drvlib.c</a>
 <li>rtdm_task_proc_t
@@ -754,8 +756,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 <li>RTDM_TIMEOUT_NONE
 : <a class="el" href="group__rtdm.html#g9d1d1557083c4b10226f360bea137fde">rtdm.h</a>
 <li>rtdm_timer_destroy()
-: <a class="el" href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326">drvlib.c</a>
-, <a class="el" href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326">rtdm_driver.h</a>
+, <a class="el" href="group__rtdmtimer.html#gc75c6e2f7c838b11d8e261be3a7a0326">drvlib.c</a>
 <li>rtdm_timer_handler_t
 : <a class="el" href="group__rtdmtimer.html#g31b7b9a042260702a110bfe2c9bcac61">rtdm_driver.h</a>
 <li>rtdm_timer_init()
@@ -853,7 +855,7 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="group__rtserial.html#g040e8588d5d45e238040f47c594a5597">rtserial.h</a>
 </ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:03 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:54 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

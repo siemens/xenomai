@@ -45,77 +45,78 @@
 <a name="l00048"></a>00048 <span class="preprocessor">#if defined(__KERNEL__) || defined(__XENO_SIM__)</span>
 <a name="l00049"></a>00049 <span class="preprocessor"></span>
 <a name="l00050"></a>00050 <span class="preprocessor">#include &lt;<a class="code" href="include_2nucleus_2timer_8h.html">nucleus/timer.h</a>&gt;</span>
-<a name="l00051"></a>00051 
-<a name="l00052"></a>00052 <span class="keyword">extern</span> xntbase_t *__native_tbase;
-<a name="l00053"></a>00053 
-<a name="l00054"></a>00054 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-<a name="l00055"></a>00055 
-<a name="l00056"></a>00056 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00057"></a>00057 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
-<a name="l00058"></a>00058 <span class="preprocessor">#endif</span>
-<a name="l00059"></a>00059 <span class="preprocessor"></span>
-<a name="l00060"></a>00060 <span class="preprocessor">#if (defined(__KERNEL__)  || defined(__XENO_SIM__)) &amp;&amp; !defined(DOXYGEN_CPP)</span>
-<a name="l00061"></a>00061 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181" title="Convert nanoseconds to local CPU clock ticks.">rt_timer_ns2tsc</a>(SRTIME ns)
-<a name="l00062"></a>00062 {
-<a name="l00063"></a>00063         <span class="keywordflow">return</span> xnarch_ns_to_tsc(ns);
-<a name="l00064"></a>00064 }
-<a name="l00065"></a>00065 
-<a name="l00066"></a>00066 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541" title="Convert local CPU clock ticks to nanoseconds.">rt_timer_tsc2ns</a>(SRTIME ticks)
-<a name="l00067"></a>00067 {
-<a name="l00068"></a>00068         <span class="keywordflow">return</span> xnarch_tsc_to_ns(ticks);
-<a name="l00069"></a>00069 }
-<a name="l00070"></a>00070 
-<a name="l00071"></a>00071 <span class="keyword">static</span> <span class="keyword">inline</span> RTIME <a class="code" href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8" title="Return the current TSC value.">rt_timer_tsc</a>(<span class="keywordtype">void</span>)
-<a name="l00072"></a>00072 {
-<a name="l00073"></a>00073         <span class="keywordflow">return</span> xnarch_get_cpu_tsc();
-<a name="l00074"></a>00074 }
-<a name="l00075"></a>00075 
-<a name="l00076"></a>00076 <span class="keyword">static</span> <span class="keyword">inline</span> RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>)
-<a name="l00077"></a>00077 {
-<a name="l00078"></a>00078         <span class="keywordflow">return</span> <a class="code" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda" title="Get the clock time for a given time base.">xntbase_get_time</a>(__native_tbase);
-<a name="l00079"></a>00079 }
-<a name="l00080"></a>00080 
-<a name="l00081"></a>00081 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(SRTIME ns)
-<a name="l00082"></a>00082 {
-<a name="l00083"></a>00083         <span class="keywordflow">return</span> xntbase_ns2ticks(__native_tbase, ns);
-<a name="l00084"></a>00084 }
-<a name="l00085"></a>00085 
-<a name="l00086"></a>00086 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48" title="Convert internal clock ticks to nanoseconds.">rt_timer_ticks2ns</a>(SRTIME ticks)
-<a name="l00087"></a>00087 {
-<a name="l00088"></a>00088         <span class="keywordflow">return</span> xntbase_ticks2ns(__native_tbase, ticks);
-<a name="l00089"></a>00089 }
-<a name="l00090"></a>00090 
-<a name="l00091"></a>00091 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
-<a name="l00092"></a>00092 
-<a name="l00116"></a>00116 SRTIME <a class="code" href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181" title="Convert nanoseconds to local CPU clock ticks.">rt_timer_ns2tsc</a>(SRTIME ns);
-<a name="l00117"></a>00117 
-<a name="l00141"></a>00141 SRTIME <a class="code" href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541" title="Convert local CPU clock ticks to nanoseconds.">rt_timer_tsc2ns</a>(SRTIME ticks);
-<a name="l00142"></a>00142 
-<a name="l00164"></a>00164 RTIME <a class="code" href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8" title="Return the current TSC value.">rt_timer_tsc</a>(<span class="keywordtype">void</span>);
-<a name="l00165"></a>00165 
-<a name="l00190"></a>00190 RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>);
-<a name="l00191"></a>00191 
-<a name="l00215"></a>00215 SRTIME <a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(SRTIME ns);
-<a name="l00216"></a>00216 
-<a name="l00240"></a>00240 SRTIME <a class="code" href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48" title="Convert internal clock ticks to nanoseconds.">rt_timer_ticks2ns</a>(SRTIME ticks);
-<a name="l00241"></a>00241 
-<a name="l00242"></a>00242 <span class="preprocessor">#endif </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
-<a name="l00243"></a>00243 
-<a name="l00244"></a>00244 <span class="keywordtype">int</span> <a class="code" href="group__native__timer.html#g66f026b0ac68ef3acde0e6d1bdb6baaf" title="Inquire about the timer.">rt_timer_inquire</a>(<a class="code" href="structrt__timer__info.html" title="Structure containing timer-information useful to users.">RT_TIMER_INFO</a> *info);
-<a name="l00245"></a>00245 
-<a name="l00246"></a>00246 RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>);
-<a name="l00247"></a>00247 
-<a name="l00248"></a>00248 <span class="keywordtype">void</span> <a class="code" href="group__native__timer.html#g7d3f782ce7b642a2759c62649777d2c7" title="Busy wait burning CPU cycles.">rt_timer_spin</a>(RTIME ns);
-<a name="l00249"></a>00249 
-<a name="l00250"></a>00250 <span class="keywordtype">int</span> <a class="code" href="group__native__timer.html#gffcb5eaef6c3a64a05445f6dafdbb155" title="Set the system clock rate.">rt_timer_set_mode</a>(RTIME nstick);
-<a name="l00251"></a>00251 
-<a name="l00252"></a>00252 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00253"></a>00253 <span class="preprocessor"></span>}
-<a name="l00254"></a>00254 <span class="preprocessor">#endif</span>
-<a name="l00255"></a>00255 <span class="preprocessor"></span>
-<a name="l00258"></a>00258 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TIMER_H */</span>
+<a name="l00051"></a>00051 <span class="preprocessor">#include &lt;asm-generic/xenomai/timeconv.h&gt;</span>
+<a name="l00052"></a>00052 
+<a name="l00053"></a>00053 <span class="keyword">extern</span> xntbase_t *__native_tbase;
+<a name="l00054"></a>00054 
+<a name="l00055"></a>00055 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00056"></a>00056 
+<a name="l00057"></a>00057 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00058"></a>00058 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">"C"</span> {
+<a name="l00059"></a>00059 <span class="preprocessor">#endif</span>
+<a name="l00060"></a>00060 <span class="preprocessor"></span>
+<a name="l00061"></a>00061 <span class="preprocessor">#if (defined(__KERNEL__)  || defined(__XENO_SIM__)) &amp;&amp; !defined(DOXYGEN_CPP)</span>
+<a name="l00062"></a>00062 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181" title="Convert nanoseconds to local CPU clock ticks.">rt_timer_ns2tsc</a>(SRTIME ns)
+<a name="l00063"></a>00063 {
+<a name="l00064"></a>00064         <span class="keywordflow">return</span> xnarch_ns_to_tsc(ns);
+<a name="l00065"></a>00065 }
+<a name="l00066"></a>00066 
+<a name="l00067"></a>00067 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541" title="Convert local CPU clock ticks to nanoseconds.">rt_timer_tsc2ns</a>(SRTIME ticks)
+<a name="l00068"></a>00068 {
+<a name="l00069"></a>00069         <span class="keywordflow">return</span> xnarch_tsc_to_ns(ticks);
+<a name="l00070"></a>00070 }
+<a name="l00071"></a>00071 
+<a name="l00072"></a>00072 <span class="keyword">static</span> <span class="keyword">inline</span> RTIME <a class="code" href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8" title="Return the current TSC value.">rt_timer_tsc</a>(<span class="keywordtype">void</span>)
+<a name="l00073"></a>00073 {
+<a name="l00074"></a>00074         <span class="keywordflow">return</span> xnarch_get_cpu_tsc();
+<a name="l00075"></a>00075 }
+<a name="l00076"></a>00076 
+<a name="l00077"></a>00077 <span class="keyword">static</span> <span class="keyword">inline</span> RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>)
+<a name="l00078"></a>00078 {
+<a name="l00079"></a>00079         <span class="keywordflow">return</span> <a class="code" href="group__timebase.html#g5246b53b5b2d1b11d4fab4312fd16fda" title="Get the clock time for a given time base.">xntbase_get_time</a>(__native_tbase);
+<a name="l00080"></a>00080 }
+<a name="l00081"></a>00081 
+<a name="l00082"></a>00082 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(SRTIME ns)
+<a name="l00083"></a>00083 {
+<a name="l00084"></a>00084         <span class="keywordflow">return</span> xntbase_ns2ticks(__native_tbase, ns);
+<a name="l00085"></a>00085 }
+<a name="l00086"></a>00086 
+<a name="l00087"></a>00087 <span class="keyword">static</span> <span class="keyword">inline</span> SRTIME <a class="code" href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48" title="Convert internal clock ticks to nanoseconds.">rt_timer_ticks2ns</a>(SRTIME ticks)
+<a name="l00088"></a>00088 {
+<a name="l00089"></a>00089         <span class="keywordflow">return</span> xntbase_ticks2ns(__native_tbase, ticks);
+<a name="l00090"></a>00090 }
+<a name="l00091"></a>00091 
+<a name="l00092"></a>00092 <span class="preprocessor">#else </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
+<a name="l00093"></a>00093 
+<a name="l00117"></a>00117 SRTIME <a class="code" href="group__native__timer.html#g67fb7c8759946b77e0bee05dfe7b7181" title="Convert nanoseconds to local CPU clock ticks.">rt_timer_ns2tsc</a>(SRTIME ns);
+<a name="l00118"></a>00118 
+<a name="l00142"></a>00142 SRTIME <a class="code" href="group__native__timer.html#g493cc6fd8d90059a21f6f8249546b541" title="Convert local CPU clock ticks to nanoseconds.">rt_timer_tsc2ns</a>(SRTIME ticks);
+<a name="l00143"></a>00143 
+<a name="l00165"></a>00165 RTIME <a class="code" href="group__native__timer.html#ga589af3dafaeaa5dcbf2ef7b6dde6af8" title="Return the current TSC value.">rt_timer_tsc</a>(<span class="keywordtype">void</span>);
+<a name="l00166"></a>00166 
+<a name="l00191"></a>00191 RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>);
+<a name="l00192"></a>00192 
+<a name="l00216"></a>00216 SRTIME <a class="code" href="group__native__timer.html#gad812d18e51f398fbb0e5392b2acdf2f" title="Convert nanoseconds to internal clock ticks.">rt_timer_ns2ticks</a>(SRTIME ns);
+<a name="l00217"></a>00217 
+<a name="l00241"></a>00241 SRTIME <a class="code" href="group__native__timer.html#ga41e1976c4df9929c1a1238cc1195f48" title="Convert internal clock ticks to nanoseconds.">rt_timer_ticks2ns</a>(SRTIME ticks);
+<a name="l00242"></a>00242 
+<a name="l00243"></a>00243 <span class="preprocessor">#endif </span><span class="comment">/* !(__KERNEL__ || __XENO_SIM__) */</span>
+<a name="l00244"></a>00244 
+<a name="l00245"></a>00245 <span class="keywordtype">int</span> <a class="code" href="group__native__timer.html#g66f026b0ac68ef3acde0e6d1bdb6baaf" title="Inquire about the timer.">rt_timer_inquire</a>(<a class="code" href="structrt__timer__info.html" title="Structure containing timer-information useful to users.">RT_TIMER_INFO</a> *info);
+<a name="l00246"></a>00246 
+<a name="l00247"></a>00247 RTIME <a class="code" href="group__native__timer.html#g9665d6947e29d1a19dafb5401b0f6285" title="Return the current system time.">rt_timer_read</a>(<span class="keywordtype">void</span>);
+<a name="l00248"></a>00248 
+<a name="l00249"></a>00249 <span class="keywordtype">void</span> <a class="code" href="group__native__timer.html#g7d3f782ce7b642a2759c62649777d2c7" title="Busy wait burning CPU cycles.">rt_timer_spin</a>(RTIME ns);
+<a name="l00250"></a>00250 
+<a name="l00251"></a>00251 <span class="keywordtype">int</span> <a class="code" href="group__native__timer.html#gffcb5eaef6c3a64a05445f6dafdbb155" title="Set the system clock rate.">rt_timer_set_mode</a>(RTIME nstick);
+<a name="l00252"></a>00252 
+<a name="l00253"></a>00253 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00254"></a>00254 <span class="preprocessor"></span>}
+<a name="l00255"></a>00255 <span class="preprocessor">#endif</span>
+<a name="l00256"></a>00256 <span class="preprocessor"></span>
+<a name="l00259"></a>00259 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_TIMER_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:02:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

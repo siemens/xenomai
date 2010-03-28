@@ -122,54 +122,68 @@
 <a name="l00114"></a>00114 <span class="keywordtype">int</span> <a class="code" href="group__async1__lib.html#gd1ba6a0d5954e5e68365a206d55ee251" title="Map the asynchronous ring-buffer into a user-space.">a4l_mmap</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
 <a name="l00115"></a>00115              <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size, <span class="keywordtype">void</span> **ptr);
 <a name="l00116"></a>00116 
-<a name="l00117"></a>00117 <span class="keywordtype">int</span> <a class="code" href="group__sync1__lib.html#gd9aa211296737f779f74365cead03157" title="Perform a list of synchronous acquisition misc operations.">a4l_snd_insnlist</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc, <a class="code" href="structa4l__instruction__list.html" title="Structure describing the list of synchronous instructions.">a4l_insnlst_t</a> * arg);
-<a name="l00118"></a>00118 
-<a name="l00119"></a>00119 <span class="keywordtype">int</span> <a class="code" href="group__sync1__lib.html#gd38babdcec2d92ed4c5ddff74f39b8e5" title="Perform a synchronous acquisition misc operation.">a4l_snd_insn</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc, <a class="code" href="structa4l__instruction.html" title="Structure describing the synchronous instruction.">a4l_insn_t</a> *arg);
-<a name="l00120"></a>00120 
-<a name="l00121"></a>00121 <span class="comment">/* --- Level 2 API (supposed to be used) --- */</span>
+<a name="l00117"></a>00117 <span class="keywordtype">int</span> <a class="code" href="group__async2__lib.html#gfb12b8f4eed71008a8b4225e3d90dcea" title="Perform asynchronous read operation on the analog input subdevice.">a4l_async_read</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00118"></a>00118                    <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ms_timeout);
+<a name="l00119"></a>00119 
+<a name="l00120"></a>00120 <span class="keywordtype">int</span> <a class="code" href="group__async2__lib.html#gd2ba21d06b77b8b25a80029484731ee6" title="Perform asynchronous write operation on the analog input subdevice.">a4l_async_write</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00121"></a>00121                     <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ms_timeout);
 <a name="l00122"></a>00122 
-<a name="l00123"></a>00123 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#ge8323c4bc097ef7ce50e8ccafc599881" title="Perform a synchronous acquisition write operation.">a4l_sync_write</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
-<a name="l00124"></a>00124                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
-<a name="l00125"></a>00125                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
-<a name="l00126"></a>00126                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> delay, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00127"></a>00127         
-<a name="l00128"></a>00128 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#g0e21a27f85ceed1ec3186608f92d47f4" title="Perform a synchronous acquisition read operation.">a4l_sync_read</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
-<a name="l00129"></a>00129                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
-<a name="l00130"></a>00130                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
-<a name="l00131"></a>00131                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> delay, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
-<a name="l00132"></a>00132 
-<a name="l00133"></a>00133 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#ge9709df63a769dc56c1014a90c7a6c64" title="Get the size in memory of an acquired element.">a4l_sizeof_chan</a>(a4l_chinfo_t * chan);
-<a name="l00134"></a>00134 
-<a name="l00135"></a>00135 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gbcbfa9c2b9d5dc5c0e7f06faf1f8bc61" title="Find the must suitable range.">a4l_find_range</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
-<a name="l00136"></a>00136                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
-<a name="l00137"></a>00137                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_chan,
-<a name="l00138"></a>00138                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> unit,
-<a name="l00139"></a>00139                    <span class="keywordtype">double</span> min, <span class="keywordtype">double</span> max, a4l_rnginfo_t ** rng);
-<a name="l00140"></a>00140 
-<a name="l00141"></a>00141 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#ge6191220fcfda0105b48df7bd364b584" title="Unpack raw data (from the driver) into unsigned long values.">a4l_rawtoul</a>(a4l_chinfo_t * chan, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
-<a name="l00142"></a>00142 
-<a name="l00143"></a>00143 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gd9dd1255cb2a5f99b141bd9265b7ca95" title="Convert raw data (from the driver) to float-typed samples.">a4l_rawtof</a>(a4l_chinfo_t * chan,
-<a name="l00144"></a>00144                a4l_rnginfo_t * rng, <span class="keywordtype">float</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
-<a name="l00145"></a>00145 
-<a name="l00146"></a>00146 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gb8b5ff35fe75d3f32a828f4d64604e8b" title="Convert raw data (from the driver) to double-typed samples.">a4l_rawtod</a>(a4l_chinfo_t * chan,
-<a name="l00147"></a>00147                a4l_rnginfo_t * rng, <span class="keywordtype">double</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00123"></a>00123 <span class="keywordtype">int</span> <a class="code" href="group__sync1__lib.html#gd9aa211296737f779f74365cead03157" title="Perform a list of synchronous acquisition misc operations.">a4l_snd_insnlist</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc, <a class="code" href="structa4l__instruction__list.html" title="Structure describing the list of synchronous instructions.">a4l_insnlst_t</a> * arg);
+<a name="l00124"></a>00124 
+<a name="l00125"></a>00125 <span class="keywordtype">int</span> <a class="code" href="group__sync1__lib.html#gd38babdcec2d92ed4c5ddff74f39b8e5" title="Perform a synchronous acquisition misc operation.">a4l_snd_insn</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc, <a class="code" href="structa4l__instruction.html" title="Structure describing the synchronous instruction.">a4l_insn_t</a> *arg);
+<a name="l00126"></a>00126 
+<a name="l00127"></a>00127 <span class="comment">/* --- Level 2 API (supposed to be used) --- */</span>
+<a name="l00128"></a>00128 
+<a name="l00129"></a>00129 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#ge8323c4bc097ef7ce50e8ccafc599881" title="Perform a synchronous acquisition write operation.">a4l_sync_write</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00130"></a>00130                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
+<a name="l00131"></a>00131                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
+<a name="l00132"></a>00132                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> delay, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
+<a name="l00133"></a>00133         
+<a name="l00134"></a>00134 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#g0e21a27f85ceed1ec3186608f92d47f4" title="Perform a synchronous acquisition read operation.">a4l_sync_read</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00135"></a>00135                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
+<a name="l00136"></a>00136                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chan_desc,
+<a name="l00137"></a>00137                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> delay, <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> nbyte);
+<a name="l00138"></a>00138 
+<a name="l00139"></a>00139 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#ge8d9cab2fc7224b71e2c303fc536c8af" title="Configure a subdevice.">a4l_config_subd</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00140"></a>00140                     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> type, ...);
+<a name="l00141"></a>00141 
+<a name="l00142"></a>00142 <span class="keywordtype">int</span> <a class="code" href="group__sync2__lib.html#gda79039a312c5cab36653c9edda98a3c" title="Perform a synchronous acquisition digital acquisition.">a4l_sync_dio</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> *dsc,
+<a name="l00143"></a>00143                  <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd, <span class="keywordtype">void</span> *mask, <span class="keywordtype">void</span> *buf);
+<a name="l00144"></a>00144 
+<a name="l00145"></a>00145 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#ge9709df63a769dc56c1014a90c7a6c64" title="Get the size in memory of an acquired element.">a4l_sizeof_chan</a>(a4l_chinfo_t * chan);
+<a name="l00146"></a>00146 
+<a name="l00147"></a>00147 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gf293f2a9cf5da5b42121b23d85dcebed" title="Get the size in memory of a digital acquired element.">a4l_sizeof_subd</a>(a4l_sbinfo_t *subd);
 <a name="l00148"></a>00148 
-<a name="l00149"></a>00149 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#g8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw</a>(a4l_chinfo_t * chan, <span class="keywordtype">void</span> *dst, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *src, <span class="keywordtype">int</span> cnt);
-<a name="l00150"></a>00150 
-<a name="l00151"></a>00151 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#g67ad3bedbc8f87f2c7421a075a7c2b59" title="Convert float-typed samples to raw data (for the driver).">a4l_ftoraw</a>(a4l_chinfo_t * chan,
-<a name="l00152"></a>00152                a4l_rnginfo_t * rng, <span class="keywordtype">void</span> *dst, <span class="keywordtype">float</span> *src, <span class="keywordtype">int</span> cnt);
-<a name="l00153"></a>00153 
-<a name="l00154"></a>00154 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gf7be342501248ba2138d7dc3b2cfeeed" title="Convert double-typed samples to raw data (for the driver).">a4l_dtoraw</a>(a4l_chinfo_t * chan,
-<a name="l00155"></a>00155                a4l_rnginfo_t * rng, <span class="keywordtype">void</span> *dst, <span class="keywordtype">double</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00149"></a>00149 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gbcbfa9c2b9d5dc5c0e7f06faf1f8bc61" title="Find the must suitable range.">a4l_find_range</a>(<a class="code" href="structa4l__descriptor.html" title="Structure containing device-information useful to users.">a4l_desc_t</a> * dsc,
+<a name="l00150"></a>00150                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_subd,
+<a name="l00151"></a>00151                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> idx_chan,
+<a name="l00152"></a>00152                    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> unit,
+<a name="l00153"></a>00153                    <span class="keywordtype">double</span> min, <span class="keywordtype">double</span> max, a4l_rnginfo_t ** rng);
+<a name="l00154"></a>00154 
+<a name="l00155"></a>00155 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#ge6191220fcfda0105b48df7bd364b584" title="Unpack raw data (from the driver) into unsigned long values.">a4l_rawtoul</a>(a4l_chinfo_t * chan, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
 <a name="l00156"></a>00156 
-<a name="l00157"></a>00157 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00158"></a>00158 
-<a name="l00159"></a>00159 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00160"></a>00160 <span class="preprocessor"></span>}
-<a name="l00161"></a>00161 <span class="preprocessor">#endif</span>
-<a name="l00162"></a>00162 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_ANALOGY__ */</span>
+<a name="l00157"></a>00157 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gd9dd1255cb2a5f99b141bd9265b7ca95" title="Convert raw data (from the driver) to float-typed samples.">a4l_rawtof</a>(a4l_chinfo_t * chan,
+<a name="l00158"></a>00158                a4l_rnginfo_t * rng, <span class="keywordtype">float</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00159"></a>00159 
+<a name="l00160"></a>00160 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gb8b5ff35fe75d3f32a828f4d64604e8b" title="Convert raw data (from the driver) to double-typed samples.">a4l_rawtod</a>(a4l_chinfo_t * chan,
+<a name="l00161"></a>00161                a4l_rnginfo_t * rng, <span class="keywordtype">double</span> *dst, <span class="keywordtype">void</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00162"></a>00162 
+<a name="l00163"></a>00163 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#g8bdf03857c96f739e43a699c0ee8b777" title="Pack unsigned long values into raw data (for the driver).">a4l_ultoraw</a>(a4l_chinfo_t * chan, <span class="keywordtype">void</span> *dst, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00164"></a>00164 
+<a name="l00165"></a>00165 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#g67ad3bedbc8f87f2c7421a075a7c2b59" title="Convert float-typed samples to raw data (for the driver).">a4l_ftoraw</a>(a4l_chinfo_t * chan,
+<a name="l00166"></a>00166                a4l_rnginfo_t * rng, <span class="keywordtype">void</span> *dst, <span class="keywordtype">float</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00167"></a>00167 
+<a name="l00168"></a>00168 <span class="keywordtype">int</span> <a class="code" href="group__rng2__lib.html#gf7be342501248ba2138d7dc3b2cfeeed" title="Convert double-typed samples to raw data (for the driver).">a4l_dtoraw</a>(a4l_chinfo_t * chan,
+<a name="l00169"></a>00169                a4l_rnginfo_t * rng, <span class="keywordtype">void</span> *dst, <span class="keywordtype">double</span> *src, <span class="keywordtype">int</span> cnt);
+<a name="l00170"></a>00170 
+<a name="l00171"></a>00171 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l00172"></a>00172 
+<a name="l00173"></a>00173 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00174"></a>00174 <span class="preprocessor"></span>}
+<a name="l00175"></a>00175 <span class="preprocessor">#endif</span>
+<a name="l00176"></a>00176 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_ANALOGY__ */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:02:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

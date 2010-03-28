@@ -51,6 +51,9 @@ Collaboration diagram for Synchronous acquisition API:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sync2__lib.html#g0e21a27f85ceed1ec3186608f92d47f4">a4l_sync_read</a> (<a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *dsc, unsigned int idx_subd, unsigned int chan_desc, unsigned int ns_delay, void *buf, size_t nbyte)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Perform a synchronous acquisition read operation.  <a href="#g0e21a27f85ceed1ec3186608f92d47f4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sync2__lib.html#gda79039a312c5cab36653c9edda98a3c">a4l_sync_dio</a> (<a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *dsc, unsigned int idx_subd, void *mask, void *buf)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Perform a synchronous acquisition digital acquisition.  <a href="#gda79039a312c5cab36653c9edda98a3c"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sync2__lib.html#ge8d9cab2fc7224b71e2c303fc536c8af">a4l_config_subd</a> (<a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *dsc, unsigned int idx_subd, unsigned int type,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Configure a subdevice.  <a href="#ge8d9cab2fc7224b71e2c303fc536c8af"></a><br></td></tr>
@@ -111,6 +114,62 @@ Configure a subdevice.
 <li>-EINVAL is returned if some argument is missing or wrong (Please, type "dmesg" for more info)</li><li>-ENOSYS is returned if the configuration parameter is not supported </li></ul>
 
 <p>References <a class="el" href="instruction_8h-source.html#l00060">A4L_INSN_CONFIG</a>, <a class="el" href="sync_8c-source.html#l00087">a4l_snd_insn()</a>, <a class="el" href="command_8h-source.html#l00133">CHAN</a>, <a class="el" href="instruction_8h-source.html#l00175">a4l_instruction::chan_desc</a>, and <a class="el" href="instruction_8h-source.html#l00177">a4l_instruction::data_size</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="gda79039a312c5cab36653c9edda98a3c"></a><!-- doxytag: member="sync.c::a4l_sync_dio" ref="gda79039a312c5cab36653c9edda98a3c" args="(a4l_desc_t *dsc, unsigned int idx_subd, void *mask, void *buf)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_sync_dio           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structa4l__descriptor.html">a4l_desc_t</a> *&nbsp;</td>
+          <td class="paramname"> <em>dsc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&nbsp;</td>
+          <td class="paramname"> <em>idx_subd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>mask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&nbsp;</td>
+          <td class="paramname"> <em>buf</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Perform a synchronous acquisition digital acquisition. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>dsc</em>&nbsp;</td><td>Device descriptor filled by <a class="el" href="group__descriptor1__lib.html#g810401871fe8005ee0157c6910f94466" title="Open an Analogy device and basically fill the descriptor.">a4l_open()</a> (and optionally <a class="el" href="group__descriptor1__lib.html#g4899cdf9b31aa0cbe0d95bf3c2f2f981" title="Fill the descriptor with subdevices, channels and ranges data.">a4l_fill_desc()</a>) </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>idx_subd</em>&nbsp;</td><td>Index of the concerned subdevice </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>mask</em>&nbsp;</td><td>Write mask which indicates which bit(s) must be modified </td></tr>
+    <tr><td valign="top"><tt>[in,out]</tt>&nbsp;</td><td valign="top"><em>buf</em>&nbsp;</td><td>Input / output buffer</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>Number of bytes read, otherwise negative error code:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong (Please, type "dmesg" for more info)</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-ENOMEM is returned if the system is out of memory</li><li>-ENOSYS is returned if the driver does not provide any handler "instruction bits" </li></ul>
+
+<p>References <a class="el" href="descriptor_8c-source.html#l00379">a4l_get_subdinfo()</a>, <a class="el" href="instruction_8h-source.html#l00055">A4L_INSN_BITS</a>, <a class="el" href="range_8c-source.html#l00121">a4l_sizeof_subd()</a>, <a class="el" href="sync_8c-source.html#l00087">a4l_snd_insn()</a>, and <a class="el" href="instruction_8h-source.html#l00177">a4l_instruction::data_size</a>.</p>
 
 </div>
 </div><p>
@@ -255,7 +314,7 @@ Perform a synchronous acquisition write operation.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:03 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:54 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

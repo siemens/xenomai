@@ -332,7 +332,7 @@ This service can be called from:<p>
 Rescheduling: possible.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The interrupt source associated to the interrupt descriptor remains masked upon creation. <a class="el" href="group__interrupt.html#gc712ee67f90d053a21bdb0041a63e17c" title="Enable an interrupt object.">rt_intr_enable()</a> should be called for the new interrupt object to unmask it. </dd></dl>
 
-<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00038">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00719">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00630">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00038">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00705">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00614">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -364,7 +364,7 @@ Any user-space task which might be currently pending on the interrupt object thr
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>intr</em> is not a interrupt object descriptor.</li></ul>
+<li>-EINVAL is returned if <em>intr</em> is not a valid interrupt object descriptor.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>intr</em> is a deleted interrupt object descriptor.</li></ul>
@@ -378,7 +378,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00676">xnintr_destroy()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00778">xnintr_detach()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00818">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00660">xnintr_destroy()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00818">xnregistry_remove()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00250">rt_intr_create()</a>.</p>
 
@@ -422,7 +422,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00855">xnintr_disable()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00866">xnintr_disable()</a>.</p>
 
 </div>
 </div><p>
@@ -464,7 +464,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00823">xnintr_enable()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00834">xnintr_enable()</a>.</p>
 
 </div>
 </div><p>
@@ -612,7 +612,7 @@ Rescheduling: always, unless an interrupt is already pending on entry.<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:01 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:52 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

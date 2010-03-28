@@ -649,9 +649,6 @@ This functions binds the given selector to an event so that the former is notifi
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EIDRM is returned if <em>event</em> has been destroyed.</li></ul>
-<p>
-<ul>
 <li>-ENOMEM is returned if there is insufficient memory to establish the dynamic binding.</li></ul>
 <p>
 <ul>
@@ -922,7 +919,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>User-space task (RT)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="drvlib_8c-source.html#l01521">rtdm_mutex_timedlock()</a>.</p>
+<p>References <a class="el" href="drvlib_8c-source.html#l01522">rtdm_mutex_timedlock()</a>.</p>
 
 </div>
 </div><p>
@@ -989,7 +986,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00109">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00410">xnsynch_acquire()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
 
-<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01480">rtdm_mutex_lock()</a>.</p>
+<p>Referenced by <a class="el" href="drvlib_8c-source.html#l01481">rtdm_mutex_lock()</a>.</p>
 
 </div>
 </div><p>
@@ -1267,9 +1264,6 @@ This functions binds the given selector to the semaphore so that the former is n
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success, otherwise:</dd></dl>
 <ul>
-<li>-EIDRM is returned if <em>sem</em> has been destroyed.</li></ul>
-<p>
-<ul>
 <li>-ENOMEM is returned if there is insufficient memory to establish the dynamic binding.</li></ul>
 <p>
 <ul>
@@ -1452,7 +1446,7 @@ Rescheduling: never.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:02 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:53 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

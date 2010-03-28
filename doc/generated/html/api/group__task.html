@@ -137,6 +137,9 @@ The Xenomai scheduler ensures that concurrent tasks are run according to one of 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#g8c77d57638578a126812e29429f61fe7">rt_task_join</a> (RT_TASK *task)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wait on the termination of a real-time task.  <a href="#g8c77d57638578a126812e29429f61fe7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__task.html#gf6e313941a3fea606be8d0f66380e922">rt_task_same</a> (RT_TASK *task1, RT_TASK *task2)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compare two task descriptors.  <a href="#gf6e313941a3fea606be8d0f66380e922"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="g7452f367f9e17bf2fc0b70f717b96dd8"></a><!-- doxytag: member="task.c::rt_task_add_hook" ref="g7452f367f9e17bf2fc0b70f717b96dd8" args="(int type, void(*routine)(void *cookie))" -->
@@ -411,7 +414,7 @@ If, however, you install a signal handler for SIGWINCH after creating or shadowi
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. 
 <p>References <a class="el" href="thread__attr_8c-source.html#l00081">pthread_attr_init()</a>, <a class="el" href="thread__attr_8c-source.html#l00197">pthread_attr_setdetachstate()</a>, <a class="el" href="thread__attr_8c-source.html#l00373">pthread_attr_setinheritsched()</a>, <a class="el" href="thread__attr_8c-source.html#l00622">pthread_attr_setschedparam()</a>, <a class="el" href="thread__attr_8c-source.html#l00467">pthread_attr_setschedpolicy()</a>, <a class="el" href="thread__attr_8c-source.html#l00283">pthread_attr_setstacksize()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00430">pthread_join()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00062">XNFPU</a>, <a class="el" href="pod_8c-source.html#l01082">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l00636">xnpod_init_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00035">XNSUSP</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
 
-<p>Referenced by <a class="el" href="task_8h-source.html#l00304">rt_task_spawn()</a>.</p>
+<p>Referenced by <a class="el" href="task_8h-source.html#l00309">rt_task_spawn()</a>.</p>
 
 </div>
 </div><p>
@@ -464,7 +467,7 @@ This service can be called from:<p>
 <li>Kernel-based task</li><li>Any user-space context (conforming call)</li></ul>
 <p>
 Rescheduling: always if <em>task</em> is NULL, and possible if the deleted task is currently running into a safe section. 
-<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00372">pthread_exit()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00361">rt_task_self()</a>, and <a class="el" href="pod_8c-source.html#l01082">xnpod_delete_thread()</a>.</p>
+<p>References <a class="el" href="cancel_8c-source.html#l00089">pthread_cancel()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00372">pthread_exit()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00346">rt_task_self()</a>, and <a class="el" href="pod_8c-source.html#l01082">xnpod_delete_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -867,6 +870,49 @@ Rescheduling: possible if the suspension nesting level falls down to zero as a r
 
 </div>
 </div><p>
+<a class="anchor" name="gf6e313941a3fea606be8d0f66380e922"></a><!-- doxytag: member="task.h::rt_task_same" ref="gf6e313941a3fea606be8d0f66380e922" args="(RT_TASK *task1, RT_TASK *task2)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rt_task_same           </td>
+          <td>(</td>
+          <td class="paramtype">RT_TASK *&nbsp;</td>
+          <td class="paramname"> <em>task1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">RT_TASK *&nbsp;</td>
+          <td class="paramname"> <em>task2</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Compare two task descriptors. 
+<p>
+This service checks whether two task descriptors refer to the same task. This service is particularly useful in user-space, since <a class="el" href="group__task.html#gaf5467af966c9980da9e489aeacf9aa3" title="Retrieve the current task.">rt_task_self()</a> does return a task descriptor which is different from the original descriptor used by the application, but still refers to the same task internally.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>task1</em>&nbsp;</td><td>The address of the first task descriptor to compare. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>task2</em>&nbsp;</td><td>The address of the second task descriptor to compare.</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>non-zero whenever the two task descriptors refer to the same task, zero otherwise.</dd></dl>
+This service can be called from:<p>
+<ul>
+<li>Kernel-based task.</li><li>User-space task.</li></ul>
+<p>
+Rescheduling: never. 
+</div>
+</div><p>
 <a class="anchor" name="gaf5467af966c9980da9e489aeacf9aa3"></a><!-- doxytag: member="task.c::rt_task_self" ref="gaf5467af966c9980da9e489aeacf9aa3" args="(void)" -->
 <div class="memitem">
 <div class="memproto">
@@ -899,7 +945,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="tsd_8c-source.html#l00215">pthread_getspecific()</a>.</p>
 
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00263">rt_task_delete()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00256">rt_task_delete()</a>.</p>
 
 </div>
 </div><p>
@@ -1317,7 +1363,7 @@ If, however, you install a signal handler for SIGWINCH after creating or shadowi
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcanrecv_8c-example.html#a31">rtcanrecv.c</a>, and <a class="el" href="rtcansend_8c-example.html#a25">rtcansend.c</a>.</dl>
-<p>References <a class="el" href="tsd_8c-source.html#l00215">pthread_getspecific()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00539">pthread_self()</a>, <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, <a class="el" href="tsd_8c-source.html#l00174">pthread_setspecific()</a>, and <a class="el" href="task_8h-source.html#l00050">T_WARNSW</a>.</p>
+<p>References <a class="el" href="tsd_8c-source.html#l00215">pthread_getspecific()</a>, <a class="el" href="skins_2posix_2thread_8c-source.html#l00539">pthread_self()</a>, <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, and <a class="el" href="tsd_8c-source.html#l00174">pthread_setspecific()</a>.</p>
 
 </div>
 </div><p>
@@ -1581,7 +1627,7 @@ When creating or shadowing a Xenomai thread for the first time in user-space, Xe
 If, however, you install a signal handler for SIGWINCH after creating or shadowing the first Xenomai thread, you have to explicitly call the function xeno_sigwinch_handler at the beginning of your signal handler, using its return to know if the signal was in fact an internal signal of Xenomai (in which case it returns 1), or if you should handle the signal (in which case it returns 0). xeno_sigwinch_handler prototype is:<p>
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. 
-<p>References <a class="el" href="src_2skins_2native_2task_8c-source.html#l00122">rt_task_create()</a>, and <a class="el" href="src_2skins_2native_2task_8c-source.html#l00177">rt_task_start()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2task_8c-source.html#l00118">rt_task_create()</a>, and <a class="el" href="src_2skins_2native_2task_8c-source.html#l00173">rt_task_start()</a>.</p>
 
 </div>
 </div><p>
@@ -1649,7 +1695,7 @@ This service can be called from:<p>
 Rescheduling: possible. 
 <p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00039">XNDORMANT</a>, and <a class="el" href="pod_8c-source.html#l00740">xnpod_start_thread()</a>.</p>
 
-<p>Referenced by <a class="el" href="task_8h-source.html#l00304">rt_task_spawn()</a>.</p>
+<p>Referenced by <a class="el" href="task_8h-source.html#l00309">rt_task_spawn()</a>.</p>
 
 </div>
 </div><p>
@@ -1862,7 +1908,7 @@ Rescheduling: always if a next equal-priority task is ready to run, otherwise, t
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:02 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:53 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

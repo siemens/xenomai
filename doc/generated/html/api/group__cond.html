@@ -274,7 +274,7 @@ Destroy a condition variable and release all the tasks currently pending on it. 
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if <em>cond</em> is not a condition variable descriptor.</li></ul>
+<li>-EINVAL or -ESRCH is returned if <em>cond</em> is not a condition variable descriptor.</li></ul>
 <p>
 <ul>
 <li>-EIDRM is returned if <em>cond</em> is a deleted condition variable descriptor.</li></ul>
@@ -473,7 +473,7 @@ Tasks pend on condition variables by priority order.<p>
 <li>-ETIMEDOUT is returned if <em>timeout</em> expired before the condition variable has been signaled.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1" title="Unblock a real-time task.">rt_task_unblock()</a> has been called for the waiting task before the condition variable has been signaled.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1" title="Unblock a real-time task.">rt_task_unblock()</a> has been called for the waiting task, or a signal has been received before the condition variable has been signaled. Note that the condition variable may be signaled right after this interruption, so when using -EINTR, the code must not call <a class="el" href="group__cond.html#g3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition.">rt_cond_wait()</a> immediately again, or a condition signal may be missed. With respect to restartint <a class="el" href="group__cond.html#g3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition.">rt_cond_wait()</a>, -EINTR should be handled as if 0 had been returned.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> equals TM_NONBLOCK.</li></ul>
@@ -542,7 +542,7 @@ Tasks pend on condition variables by priority order.<p>
 <li>-ETIMEDOUT is returned if the absolute <em>timeout</em> date is reached before the condition variable is signaled.</li></ul>
 <p>
 <ul>
-<li>-EINTR is returned if <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1" title="Unblock a real-time task.">rt_task_unblock()</a> has been called for the waiting task before the condition variable has been signaled.</li></ul>
+<li>-EINTR is returned if <a class="el" href="group__task.html#g770281eeca009c0a08a7c4a9fd849ac1" title="Unblock a real-time task.">rt_task_unblock()</a> has been called for the waiting task before the condition variable has been signaled. Note that the condition variable may be signaled right after this interruption, so when using -EINTR, the code must not call <a class="el" href="group__cond.html#g3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition.">rt_cond_wait()</a> immediately again, or a condition signal may be missed. With respect to restartint <a class="el" href="group__cond.html#g3aa51073817be2ffb2a880a7393502e8" title="Wait on a condition.">rt_cond_wait()</a>, -EINTR should be handled as if 0 had been returned.</li></ul>
 <p>
 <ul>
 <li>-EWOULDBLOCK is returned if <em>timeout</em> equals TM_NONBLOCK.</li></ul>
@@ -558,7 +558,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:03:01 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:52 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

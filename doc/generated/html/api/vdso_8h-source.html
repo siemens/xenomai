@@ -53,8 +53,8 @@
 <a name="l00047"></a>00047 <span class="comment">#define XNVDSO_FEAT_C   0x0000000000000004ULL</span>
 <a name="l00048"></a>00048 <span class="comment">#define XNVDSO_FEATURES (XNVDSO_FEAT_A | XNVDSO_FEAT_B | XVDSO_FEAT_C)</span>
 <a name="l00049"></a>00049 <span class="comment">*/</span>
-<a name="l00050"></a>00050 
-<a name="l00051"></a>00051 <span class="preprocessor">#define XNVDSO_FEATURES 0x0000000000000000ULL</span>
+<a name="l00050"></a>00050 <span class="preprocessor">#define XNVDSO_FEAT_DROP_U_MODE 0x0000000000000001ULL</span>
+<a name="l00051"></a>00051 <span class="preprocessor"></span><span class="preprocessor">#define XNVDSO_FEATURES (XNVDSO_FEAT_DROP_U_MODE)</span>
 <a name="l00052"></a>00052 <span class="preprocessor"></span>
 <a name="l00053"></a>00053 <span class="keyword">extern</span> <span class="keyword">struct </span>xnvdso *nkvdso;
 <a name="l00054"></a>00054 
@@ -66,7 +66,7 @@
 <a name="l00060"></a>00060 <span class="keyword">extern</span> <span class="keywordtype">void</span> xnheap_init_vdso(<span class="keywordtype">void</span>);
 <a name="l00061"></a>00061 <span class="preprocessor">#endif </span><span class="comment">/* _XENO_NUCLEUS_VDSO_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:02:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

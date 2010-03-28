@@ -113,7 +113,7 @@
 <a name="l00105"></a>00105 <span class="preprocessor">                        if (unlikely(err)) {                            \</span>
 <a name="l00106"></a>00106 <span class="preprocessor">                                if ((__rq) != &amp;__native_global_rholder.__name##q) { \</span>
 <a name="l00107"></a>00107 <span class="preprocessor">                                        xnlock_get_irqsave(&amp;nklock, s); \</span>
-<a name="l00108"></a>00108 <span class="preprocessor">                                        nholder = popq((rq), holder);   \</span>
+<a name="l00108"></a>00108 <span class="preprocessor">                                        nholder = popq((__rq), holder); \</span>
 <a name="l00109"></a>00109 <span class="preprocessor">                                        appendq(&amp;__native_global_rholder.__name##q, holder); \</span>
 <a name="l00110"></a>00110 <span class="preprocessor">                                        obj-&gt;rqueue = &amp;__native_global_rholder.__name##q; \</span>
 <a name="l00111"></a>00111 <span class="preprocessor">                                }                                       \</span>
@@ -134,7 +134,7 @@
 <a name="l00126"></a>00126 <span class="preprocessor"></span>
 <a name="l00127"></a>00127 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_PPD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Tue Feb 2 11:02:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
