@@ -97,6 +97,11 @@ ssize_t xnbufd_copy_from_kmem(struct xnbufd *bufd,
 
 void xnbufd_invalidate(struct xnbufd *bufd);
 
+static inline void xnbufd_reset(struct xnbufd *bufd)
+{
+	bufd->b_off = 0;
+}
+
 /*@}*/
 
 #endif /* !_XENO_NUCLEUS_BUFD_H */

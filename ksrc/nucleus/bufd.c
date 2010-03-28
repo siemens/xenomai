@@ -627,6 +627,26 @@ done:
 EXPORT_SYMBOL_GPL(xnbufd_unmap_uwrite);
 
 /*!
+ * \fn void xnbufd_reset(struct xnbufd *bufd)
+ * \brief Reset a buffer descriptor.
+ *
+ * The buffer descriptor is reset, so that all data already copied is
+ * forgotten. Any carry over buffer allocated is kept, though.
+ *
+ * @param bufd The address of the buffer descriptor to reset.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel code (including from primary mode)
+ * - Kernel-based task
+ * - Interrupt service routine
+ *
+ * Rescheduling: never.
+ */
+
+/*!
  * \fn void xnbufd_invalidate(struct xnbufd *bufd)
  * \brief Invalidate a buffer descriptor.
  *
