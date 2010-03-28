@@ -26,8 +26,8 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"Speed Of Light"
+#define XENO_VERSION_NAME	"Souls Of Distortion"
 
-#define XENO_VERSION_STRING	"2.5.1"
+#define XENO_VERSION_STRING	"2.5.2"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
