@@ -6,6 +6,7 @@
 #include <asm/xenomai/syscall.h>
 #include <nucleus/types.h>
 #include <nucleus/thread.h>
+#include <nucleus/vdso.h>
 
 pthread_key_t xeno_current_mode_key;
 
@@ -66,24 +67,20 @@ static inline void free_current_mode(unsigned long *mode)
 
 #endif /* !HAVE___THREAD */
 
+void xeno_current_warn_old(void)
+{
+	fprintf(stderr, XENO_MODE_LEAK_WARNING);
+}
+
 static void cleanup_current_mode(void *key)
 {
 	unsigned long *mode = key;
-	int err;
 
 	*mode = -1;
 
-	err = XENOMAI_SYSCALL0(__xn_sys_drop_u_mode);
-
-	if (!err)
+	if (xnvdso_test_feature(XNVDSO_FEAT_DROP_U_MODE)) {
+		XENOMAI_SYSCALL0(__xn_sys_drop_u_mode);
 		free_current_mode(mode);
-	else {
-		static int warned;
-
-		if (!warned) {
-			warned = 1;
-			fprintf(stderr, XENO_MODE_LEAK_WARNING);
-		}
 	}
 }
 

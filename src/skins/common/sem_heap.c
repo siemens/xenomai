@@ -10,7 +10,9 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include <nucleus/vdso.h>
 #include <asm/xenomai/syscall.h>
+#include <asm-generic/bits/current.h>
 
 #include "sem_heap.h"
 
@@ -91,6 +93,8 @@ static void xeno_init_vdso(void)
 	}
 
 	nkvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.vdso);
+	if (!xnvdso_test_feature(XNVDSO_FEAT_DROP_U_MODE))
+		xeno_current_warn_old();
 }
 
 static void xeno_init_sem_heaps_inner(void)

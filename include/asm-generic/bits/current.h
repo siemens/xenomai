@@ -8,6 +8,7 @@ extern pthread_key_t xeno_current_mode_key;
 
 xnhandle_t xeno_slow_get_current(void);
 unsigned long xeno_slow_get_current_mode(void);
+void xeno_current_warn_old(void);
 
 #ifdef HAVE___THREAD
 extern __thread xnhandle_t xeno_current __attribute__ ((tls_model ("initial-exec")));
