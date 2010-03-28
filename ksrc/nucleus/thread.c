@@ -337,7 +337,7 @@ void xnthread_finish_wait(struct xnthread_wait_context *wc,
 
 	curr->wcontext = NULL;
 	if ((wc->oldstate & XNDEFCAN) == 0)
-		xnthread_clear_state(curr, wc->oldstate);
+		xnthread_clear_state(curr, XNDEFCAN);
 
 	if (xnthread_test_state(curr, XNCANPND)) {
 		if (cleanup)
