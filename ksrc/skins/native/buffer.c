@@ -400,8 +400,10 @@ redo:
 			 * the message, we have to resend the whole
 			 * thing.
 			 */
-			if (bf->wrtoken != wrtoken)
+			if (bf->wrtoken != wrtoken) {
+				xnbufd_reset(bufd);
 				goto redo;
+			}
 
 			wroff = (wroff + n) % bf->bufsz;
 			rbytes -= n;
@@ -557,8 +559,10 @@ redo:
 			 * the message, we have to re-read the whole
 			 * thing.
 			 */
-			if (bf->rdtoken != rdtoken)
+			if (bf->rdtoken != rdtoken) {
+				xnbufd_reset(bufd);
 				goto redo;
+			}
 
 			rdoff = (rdoff + n) % bf->bufsz;
 			rbytes -= n;
