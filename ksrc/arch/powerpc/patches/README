@@ -72,6 +72,6 @@ Patch release			Commit #
 		from Linux v2.6.33 onward
 		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From ftp://ftp.free.fr/mirrors/ftp.kernel.org/linux/kernel/v2.6/
+From ftp://ftp.kernel.org/pub/linux/kernel/v2.6/
 
 	All patches are based on mainline kernel releases.
