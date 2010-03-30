@@ -175,7 +175,7 @@ static int cleanup_instance(struct rtdm_device *device,
 
 	xnlock_get_irqsave(&rt_fildes_lock, s);
 
-	if (unlikely(atomic_read(&context->close_lock_count) > 1)) {
+	if (context && unlikely(atomic_read(&context->close_lock_count) > 1)) {
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 		return -EAGAIN;
 	}
