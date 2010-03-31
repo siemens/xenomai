@@ -219,6 +219,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 		XENO_ASSERT(RTDM, ANY_HANDLER(*device, open),
 			    xnlogerr("RTDM: missing open handler\n");
 			    return -EINVAL;);
+		if (device->open_rt &&
+		    device->socket_rt != (void *)rtdm_no_support)
+			xnlogerr("RTDM: RT open handler is deprecated, "
+				 "driver requires update.\n");
 		SET_DEFAULT_OP_IF_NULL(*device, open);
 		SET_DEFAULT_OP(*device, socket);
 		break;
@@ -228,6 +232,10 @@ int rtdm_dev_register(struct rtdm_device *device)
 		XENO_ASSERT(RTDM, ANY_HANDLER(*device, socket),
 			    xnlogerr("RTDM: missing socket handler\n");
 			    return -EINVAL;);
+		if (device->socket_rt &&
+		    device->socket_rt != (void *)rtdm_no_support)
+			xnlogerr("RTDM: RT socket creation handler is "
+				 "deprecated, driver requires update.\n");
 		SET_DEFAULT_OP_IF_NULL(*device, socket);
 		SET_DEFAULT_OP(*device, open);
 		break;
@@ -242,7 +250,11 @@ int rtdm_dev_register(struct rtdm_device *device)
 		xnlogerr("RTDM: missing non-RT close handler\n");
 		return -EINVAL;
 	}
-	if (!device->ops.close_rt)
+	if (device->ops.close_rt &&
+	    device->ops.close_rt != (void *)rtdm_no_support)
+		xnlogerr("RTDM: RT close handler is deprecated, driver "
+			 "requires update.\n");
+	else
 		device->ops.close_rt = (void *)rtdm_no_support;
 
 	SET_DEFAULT_OP_IF_NULL(device->ops, ioctl);

@@ -4,6 +4,8 @@ Scheduled modifications (unsorted):
  o Threaded IRQ handlers.
  o Support for deferring IRQ line re-enabling from handler to thread context.
  o Support for user-space drivers.
+ o Removal of open_rt, socket_rt, and close_rt, ie. support for device
+   creation and destruction in RT context.
 
 Revision 8:
  o Added rtdm_rt_capable.

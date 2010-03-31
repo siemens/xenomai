@@ -328,7 +328,8 @@ typedef int (*rtdm_rt_handler_t)(struct rtdm_dev_context *context,
 struct rtdm_operations {
 	/*! @name Common Operations
 	 * @{ */
-	/** Close handler for real-time contexts (optional) */
+	/** Close handler for real-time contexts (optional, deprecated)
+	 *  @deprecated Only use non-real-time close handler in new drivers. */
 	rtdm_close_handler_t close_rt;
 	/** Close handler for non-real-time contexts (required) */
 	rtdm_close_handler_t close_nrt;
@@ -468,14 +469,19 @@ struct rtdm_device {
 	int socket_type;
 
 	/** Named device instance creation for real-time contexts,
-	 *  optional if open_nrt is non-NULL, ignored for protocol devices */
+	 *  optional (but deprecated) if open_nrt is non-NULL, ignored for
+	 *  protocol devices
+	 *  @deprecated Only use non-real-time open handler in new drivers. */
 	rtdm_open_handler_t open_rt;
 	/** Named device instance creation for non-real-time contexts,
 	 *  optional if open_rt is non-NULL, ignored for protocol devices */
 	rtdm_open_handler_t open_nrt;
 
 	/** Protocol socket creation for real-time contexts,
-	 *  optional if socket_nrt is non-NULL, ignored for named devices */
+	 *  optional (but deprecated) if socket_nrt is non-NULL, ignored for
+	 *  named devices
+	 *  @deprecated Only use non-real-time socket creation handler in new
+	 *  drivers. */
 	rtdm_socket_handler_t socket_rt;
 	/** Protocol socket creation for non-real-time contexts,
 	 *  optional if socket_rt is non-NULL, ignored for named devices */
