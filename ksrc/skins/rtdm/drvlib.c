@@ -2341,6 +2341,31 @@ int rtdm_strncpy_from_user(rtdm_user_info_t *user_info, char *dst,
  */
 int rtdm_in_rt_context(void);
 
+/**
+ * Test if the caller is capable of running in real-time context
+ *
+ * @return Non-zero is returned if the caller is able to execute in real-time
+ * context (independent of its current execution mode), 0 otherwise.
+ *
+ * @note This function can be used by drivers that provide different
+ * implementations for the same service depending on the execution mode of
+ * the caller. If a caller requests such a service in non-real-time context
+ * but is capable of running in real-time as well, it might be appropriate
+ * for the driver to reject the request via -ENOSYS so that RTDM can switch
+ * the caller and restart the request in real-time context.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+int rtdm_rt_capable(void);
+
 #endif /* DOXYGEN_CPP */
 
 /** @} Utility Services */

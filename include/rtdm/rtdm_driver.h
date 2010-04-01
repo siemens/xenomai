@@ -1296,6 +1296,12 @@ static inline int rtdm_in_rt_context(void)
 {
 	return (rthal_current_domain != rthal_root_domain);
 }
+
+static inline int rtdm_rt_capable(void)
+{
+	return (!xnpod_root_p() || xnshadow_thread(current) != NULL);
+}
+
 #endif /* !DOXYGEN_CPP */
 
 int rtdm_exec_in_rt(struct rtdm_dev_context *context,
