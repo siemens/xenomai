@@ -31,7 +31,7 @@
  * RT/non-RT systems like Xenomai. RTDM conforms to POSIX
  * semantics (IEEE Std 1003.1) where available and applicable.
  *
- * @b API @b Revision: 7
+ * @b API @b Revision: 8
  */
 
 /*!
@@ -76,7 +76,7 @@ typedef struct task_struct rtdm_user_info_t;
  * @anchor api_versioning @name API Versioning
  * @{ */
 /** Common user and driver API version */
-#define RTDM_API_VER			7
+#define RTDM_API_VER			8
 
 /** Minimum API revision compatible with the current release */
 #define RTDM_API_MIN_COMPAT_VER		6

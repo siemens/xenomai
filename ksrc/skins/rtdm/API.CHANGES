@@ -5,6 +5,12 @@ Scheduled modifications (unsorted):
  o Support for deferring IRQ line re-enabling from handler to thread context.
  o Support for user-space drivers.
 
+Revision 8:
+ o Added rtdm_rt_capable.
+
+Revision 7:
+ o Added callbacks and services to enable select support.
+
 Revision 6:
  o Added profile_version field to rtdm_device.
  o Requested IRQ lines are now enabled on return of rtdm_irq_request.
