@@ -92,8 +92,6 @@ cond_torture_native_LDADD = \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
 
-if CONFIG_XENO_FASTSYNCH
-
 check_vdso_SOURCES = check-vdso.c
 
 check_vdso_CPPFLAGS = \
@@ -106,8 +104,6 @@ check_vdso_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
-
-endif
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(rundir)
