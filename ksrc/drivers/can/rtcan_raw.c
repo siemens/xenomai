@@ -999,11 +999,9 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     protocol_family:    PF_CAN,
     socket_type:        SOCK_RAW,
 
-    socket_rt:          rtcan_raw_socket,
     socket_nrt:         rtcan_raw_socket,
 
     ops: {
-        close_rt:       rtcan_raw_close,
         close_nrt:      rtcan_raw_close,
 
         ioctl_rt:       rtcan_raw_ioctl,
