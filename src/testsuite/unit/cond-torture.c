@@ -47,13 +47,13 @@ int mutex_init(mutex_t *mutex, int type, int pi)
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, type);
-	if (pi != 0)
 #ifdef HAVE_PTHREAD_MUTEXATTR_SETPROTOCOL
+	if (pi != 0)
 		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 
 	err = pthread_mutex_init(mutex, &mattr);
 #else
-	else {
+	if (pi != 0) {
 		err = ENOSYS;
 		goto out;
 	}
