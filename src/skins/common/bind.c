@@ -146,12 +146,11 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 
 void xeno_fault_stack(void)
 {
-	char stk[xeno_stacksize(1)];
+	if (pthread_self() == xeno_main_tid) {
+		char stk[xeno_stacksize(1)];
 
-	if (pthread_self() != xeno_main_tid)
-		return;
-
-	stk[0] = stk[sizeof(stk) - 1] = 0xA5;
+		stk[0] = stk[sizeof(stk) - 1] = 0xA5;
+	}
 }
 
 void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context)
