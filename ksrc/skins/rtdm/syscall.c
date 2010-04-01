@@ -154,14 +154,14 @@ static xnsysent_t __systab[] = {
 	[__rtdm_close] =
 	    {sys_rtdm_close, __xn_exec_current | __xn_exec_adaptive},
 	[__rtdm_ioctl] =
-	    {sys_rtdm_ioctl, __xn_exec_conforming | __xn_exec_adaptive},
-	[__rtdm_read] = {sys_rtdm_read, __xn_exec_conforming | __xn_exec_adaptive},
+	    {sys_rtdm_ioctl, __xn_exec_current | __xn_exec_adaptive},
+	[__rtdm_read] = {sys_rtdm_read, __xn_exec_current | __xn_exec_adaptive},
 	[__rtdm_write] =
-	    {sys_rtdm_write, __xn_exec_conforming | __xn_exec_adaptive},
+	    {sys_rtdm_write, __xn_exec_current | __xn_exec_adaptive},
 	[__rtdm_recvmsg] =
-	    {sys_rtdm_recvmsg, __xn_exec_conforming | __xn_exec_adaptive},
+	    {sys_rtdm_recvmsg, __xn_exec_current | __xn_exec_adaptive},
 	[__rtdm_sendmsg] =
-	    {sys_rtdm_sendmsg, __xn_exec_conforming | __xn_exec_adaptive},
+	    {sys_rtdm_sendmsg, __xn_exec_current | __xn_exec_adaptive},
 };
 
 static struct xnskin_props __props = {
