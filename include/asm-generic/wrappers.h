@@ -559,6 +559,11 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
 #endif /* CONFIG_PROC_FS */
 
+#ifndef list_first_entry
+#define list_first_entry(ptr, type, member) \
+	list_entry((ptr)->next, type, member)
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)
 #define rthal_irq_descp(irq)	(irq_desc + (irq))
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32) */
