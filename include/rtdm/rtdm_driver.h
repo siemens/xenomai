@@ -568,6 +568,11 @@ static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 	atomic_dec(&context->close_lock_count);
 }
 
+static inline void rtdm_context_put(struct rtdm_dev_context *context)
+{
+	rtdm_context_unlock(context);
+}
+
 /* --- clock services --- */
 struct xntbase;
 extern struct xntbase *rtdm_tbase;

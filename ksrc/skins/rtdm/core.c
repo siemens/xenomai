@@ -50,14 +50,14 @@ EXPORT_SYMBOL(rtdm_tbase);
 DEFINE_XNLOCK(rt_fildes_lock);
 
 /**
- * @brief Resolve file descriptor to device context
+ * @brief Retrieve and lock a device context
  *
  * @param[in] fd File descriptor
  *
  * @return Pointer to associated device context, or NULL on error
  *
- * @note The device context has to be unlocked using rtdm_context_unlock()
- * when it is no longer referenced.
+ * @note The device context has to be unlocked using rtdm_context_put() when
+ * it is no longer referenced.
  *
  * Environments:
  *
@@ -612,7 +612,7 @@ void rtdm_context_lock(struct rtdm_dev_context *context);
  *
  * @param[in] context Device context
  *
- * @note Every successful call to rtdm_context_get() must be matched by a
+ * @note Every call to rtdm_context_locked() must be matched by a
  * rtdm_context_unlock() invocation.
  *
  * Environments:
@@ -627,6 +627,27 @@ void rtdm_context_lock(struct rtdm_dev_context *context);
  * Rescheduling: never.
  */
 void rtdm_context_unlock(struct rtdm_dev_context *context);
+
+/**
+ * @brief Release a device context obtained via rtdm_context_get()
+ *
+ * @param[in] context Device context
+ *
+ * @note Every successful call to rtdm_context_get() must be matched by a
+ * rtdm_context_put() invocation.
+ *
+ * Environments:
+ *
+ * This service can be called from:
+ *
+ * - Kernel module initialization/cleanup code
+ * - Interrupt service routine
+ * - Kernel-based task
+ * - User-space task (RT, non-RT)
+ *
+ * Rescheduling: never.
+ */
+void rtdm_context_put(struct rtdm_dev_context *context);
 
 /**
  * @brief Open a device

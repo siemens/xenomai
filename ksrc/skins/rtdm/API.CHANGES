@@ -9,6 +9,7 @@ Scheduled modifications (unsorted):
 
 Revision 8:
  o Added rtdm_rt_capable.
+ o Added rtdm_context_put as logic match to rtdm_context_get
 
 Revision 7:
  o Added callbacks and services to enable select support.
