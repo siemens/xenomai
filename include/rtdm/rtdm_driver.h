@@ -555,11 +555,15 @@ struct rtdm_dev_context *rtdm_context_get(int fd);
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
 static inline void rtdm_context_lock(struct rtdm_dev_context *context)
 {
+	XENO_ASSERT(RTDM, atomic_read(&context->close_lock_count) > 0,
+		    /* just warn if context was a dangling pointer */);
 	atomic_inc(&context->close_lock_count);
 }
 
 static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
+	XENO_ASSERT(RTDM, atomic_read(&context->close_lock_count) > 0,
+		    /* just warn if context was a dangling pointer */);
 	smp_mb__before_atomic_dec();
 	atomic_dec(&context->close_lock_count);
 }

@@ -87,7 +87,7 @@ struct rtdm_dev_context *rtdm_context_get(int fd)
 		return NULL;
 	}
 
-	rtdm_context_lock(context);
+	atomic_inc(&context->close_lock_count);
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
@@ -328,7 +328,7 @@ again:
 	}
 
 	set_bit(RTDM_CLOSING, &context->context_flags);
-	rtdm_context_lock(context);
+	atomic_inc(&context->close_lock_count);
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
@@ -588,7 +588,11 @@ EXPORT_SYMBOL(rtdm_select_bind);
  * @param[in] context Device context
  *
  * @note rtdm_context_get() automatically increments the lock counter. You
- * only need to call this function in special scenrios.
+ * only need to call this function in special scenarios, e.g. when keeping
+ * additional references to the context structure that have different
+ * lifetimes. Only use rtdm_context_lock() on contexts that are currently
+ * locked via an earlier rtdm_context_get()/rtdm_contex_lock() or while
+ * running a device operation handler.
  *
  * Environments:
  *
