@@ -112,7 +112,7 @@ a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
 int a4l_get_chan(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-	int i, tmp_count, tmp_size = 0;	
+	int i, j, tmp_count, tmp_size = 0;	
 	a4l_cmd_t *cmd;
 
 	/* Check that subdevice supports commands */
@@ -132,9 +132,11 @@ int a4l_get_chan(a4l_subd_t *subd)
 	/* We assume channels can have different sizes;
 	   so, we have to compute the global size of the channels
 	   in this command... */
-	for (i = 0; i < cmd->nb_chan; i++)
-		tmp_size += dev->transfer.subds[subd->idx]->chan_desc->
-			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+	for (i = 0; i < cmd->nb_chan; i++) {
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+			CR_CHAN(cmd->chan_descs[i]) : 0;
+		tmp_size += subd->chan_desc->chans[j].nb_bits;
+	}
 
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
@@ -146,9 +148,11 @@ int a4l_get_chan(a4l_subd_t *subd)
 
 	/* ...and find the channel the last munged sample 
 	   was related with */
-	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++)
-		tmp_count -= dev->transfer.subds[subd->idx]->chan_desc->
-			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++) {
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+			CR_CHAN(cmd->chan_descs[i]) : 0;
+		tmp_count -= subd->chan_desc->chans[j].nb_bits;
+	}
 
 	if (tmp_count == 0)
 		return i;
