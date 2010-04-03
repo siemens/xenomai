@@ -154,8 +154,9 @@ int a4l_sizeof_subd(a4l_sbinfo_t *subd)
  * @param[in] max Maximal limit value
  * @param[out] rng Found range
  *
- * @return 0 on success. Otherwise:
+ * @return The index of the most suitable range on success. Otherwise:
  *
+ * - -ENOENT is returned if a suitable range is not found.
  * - -EINVAL is returned if some argument is missing or wrong;
  *    idx_subd, idx_chan and the dsc pointer should be checked; check
  *    also the kernel log ("dmesg"); WARNING: a4l_fill_desc() should
@@ -171,10 +172,14 @@ int a4l_find_range(a4l_desc_t * dsc,
 	int i, ret;
 	long lmin, lmax;
 	a4l_chinfo_t *chinfo;
-	a4l_rnginfo_t *rnginfo;
+	a4l_rnginfo_t *rnginfo, *tmp = NULL;
+	unsigned int idx_rng = -ENOENT;
+
+	if (rng != NULL)
+		*rng = NULL;
 
 	/* Basic checkings */
-	if (dsc == NULL || rng == NULL)
+	if (dsc == NULL)
 		return -EINVAL;
 
 	/* a4l_fill_desc() must have been called on this descriptor */
@@ -184,38 +189,39 @@ int a4l_find_range(a4l_desc_t * dsc,
 	/* Retrieves the ranges count */
 	ret = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chinfo);
 	if (ret < 0)
-		goto out_get_range;
+		return ret;
 
 	/* Initializes variables */
 	lmin = (long)(min * A4L_RNG_FACTOR);
 	lmax = (long)(max * A4L_RNG_FACTOR);
-	*rng = NULL;
 
 	/* Performs the research */
 	for (i = 0; i < chinfo->nb_rng; i++) {
 
 		ret = a4l_get_rnginfo(dsc, idx_subd, idx_chan, i, &rnginfo);
 		if (ret < 0)
-			goto out_get_range;
+			return ret;
 
 		if (A4L_RNG_UNIT(rnginfo->flags) == unit &&
 		    rnginfo->min <= lmin && rnginfo->max >= lmax) {
 
-			if (*rng != NULL) {
-				if (rnginfo->min >= (*rng)->min &&
-				    rnginfo->max <= (*rng)->max)
-					*rng = rnginfo;
-			} else
-				*rng = rnginfo;
+			if (tmp != NULL) {
+				if (rnginfo->min >= tmp->min &&
+				    rnginfo->max <= tmp->max) {
+					idx_rng = i;
+					tmp = rnginfo;
+				}
+			} else {
+				idx_rng = i;
+				tmp = rnginfo;
+			}
 		}
 	}
 
-out_get_range:
+	if (rng != NULL)
+		*rng = tmp;
 
-	if (ret < 0)
-		*rng = NULL;
-
-	return ret;
+	return idx_rng;
 }
 
 /**
