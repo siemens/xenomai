@@ -52,9 +52,12 @@ ENTRY(rthal_vfp_save)
     VFPFSTMIA	r0, r2			@ save the working registers
     VFPFMRX	r2, FPSCR		@ current status
     tst		r1, #FPEXC_EX		@ is there additional state to save?
-    VFPFMRX	r3, FPINST, NE		@ FPINST (only if FPEXC.EX is set)
-    tstne	r1, #FPEXC_FP2V		@ is there an FPINST2 to read?
-    VFPFMRX	r12, FPINST2, NE	@ FPINST2 if needed (and present)
+    beq 1f
+    VFPFMRX	r3, FPINST		@ FPINST (only if FPEXC.EX is set)
+    tst		r1, #FPEXC_FP2V		@ is there an FPINST2 to read?
+    beq 1f
+    VFPFMRX	r12, FPINST2	@ FPINST2 if needed (and present)
+1:
     stmia	r0, {r1, r2, r3, r12}	@ save FPEXC, FPSCR, FPINST, FPINST2
     mov		pc, lr
 
@@ -66,9 +69,12 @@ ENTRY(rthal_vfp_load)
 					@ FPEXC is in a safe state
     ldmia	r0, {r1, r2, r3, r12}	@ load FPEXC, FPSCR, FPINST, FPINST2
     tst		r1, #FPEXC_EX		@ is there additional state to restore?
-    VFPFMXR	FPINST, r3, NE		@ restore FPINST (only if FPEXC.EX is set)
-    tstne	r1, #FPEXC_FP2V		@ is there an FPINST2 to write?
-    VFPFMXR	FPINST2, r12, NE	@ FPINST2 if needed (and present)
+    beq		1f
+    VFPFMXR	FPINST, r3		@ restore FPINST (only if FPEXC.EX is set)
+    tst		r1, #FPEXC_FP2V		@ is there an FPINST2 to write?
+    beq		1f
+    VFPFMXR	FPINST2, r12	@ FPINST2 if needed (and present)
+1:
     VFPFMXR	FPSCR, r2		@ restore status
     mov		pc, lr
 #endif
