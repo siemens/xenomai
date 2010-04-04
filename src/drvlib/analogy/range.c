@@ -130,7 +130,7 @@ int a4l_sizeof_subd(a4l_sbinfo_t *subd)
 	   channels are acquired in one shot); for other kind of
 	   subdevice, the user must use a4l_sizeof_chan() so as to
 	   find out the size of the channel he wants to use */
-	if ((subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO && 
+	if ((subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
 	    (subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI &&
 	    (subd->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO)
 		return -EINVAL;
@@ -233,7 +233,7 @@ int a4l_find_range(a4l_desc_t * dsc,
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of transfer to copy
  *
@@ -257,7 +257,7 @@ int a4l_rawtoul(a4l_chinfo_t * chan, unsigned long *dst, void *src, int cnt)
 	if (chan == NULL)
 		return -EINVAL;
 
-	/* Find out the size in memory */ 
+	/* Find out the size in memory */
 	size = a4l_sizeof_chan(chan);
 
 	/* Get the suitable accessor */
@@ -285,7 +285,7 @@ int a4l_rawtoul(a4l_chinfo_t * chan, unsigned long *dst, void *src, int cnt)
 		j++;
 	}
 
-	return j;	
+	return j;
 }
 
 /**
@@ -293,7 +293,7 @@ int a4l_rawtoul(a4l_chinfo_t * chan, unsigned long *dst, void *src, int cnt)
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of conversion to perform
  *
@@ -322,7 +322,7 @@ int a4l_rawtof(a4l_chinfo_t * chan,
 	if (rng == NULL || chan == NULL)
 		return -EINVAL;
 
-	/* Find out the size in memory */ 
+	/* Find out the size in memory */
 	size = a4l_sizeof_chan(chan);
 
 	/* Get the suitable accessor */
@@ -366,7 +366,7 @@ int a4l_rawtof(a4l_chinfo_t * chan,
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of conversion to perform
  *
@@ -395,7 +395,7 @@ int a4l_rawtod(a4l_chinfo_t * chan,
 	if (rng == NULL || chan == NULL)
 		return -EINVAL;
 
-	/* Find out the size in memory */ 
+	/* Find out the size in memory */
 	size = a4l_sizeof_chan(chan);
 
 	/* Get the suitable accessor */
@@ -443,7 +443,7 @@ int a4l_rawtod(a4l_chinfo_t * chan,
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of transfer to copy
  *
@@ -495,7 +495,7 @@ int a4l_ultoraw(a4l_chinfo_t * chan, void *dst, unsigned long *src, int cnt)
 		j++;
 	}
 
-	return j;	
+	return j;
 }
 
 /**
@@ -503,7 +503,7 @@ int a4l_ultoraw(a4l_chinfo_t * chan, void *dst, unsigned long *src, int cnt)
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of conversion to perform
  *
@@ -573,7 +573,7 @@ int a4l_ftoraw(a4l_chinfo_t * chan,
  *
  * @param[in] chan Channel descriptor
  * @param[in] rng Range descriptor
- * @param[out] dst Ouput buffer 
+ * @param[out] dst Ouput buffer
  * @param[in] src Input buffer
  * @param[in] cnt Count of conversion to perform
  *
