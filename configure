@@ -1599,9 +1599,10 @@ Optional Features:
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
   --enable-arm-mach       Select for which machine we are compiling. Valid
-                          machines are at91rm9200, at91sam926x, generic, imx,
-                          imx21, integrator, ixp4xx, mx2, mx3, pxa, pxa3xx,
-                          s3c2410, sa1100.
+                          machines are at91rm9200, at91sam926x, at91sam9,
+                          generic, imx, imx21, imx51, integrator, ixp4xx, mx2,
+                          mx3, mx5, omap3, orion, pxa, pxa3xx, s3c2410,
+                          sa1100.
   --enable-arm-arch=<version>
                           Select ARM architecture version, if the machine
                           selected with --enable-arm-mach supports several
@@ -5944,13 +5945,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5947: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5948: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5950: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5951: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5953: output\"" >&5)
+  (eval echo "\"\$as_me:5954: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7048,7 +7049,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7051 "configure"' > conftest.$ac_ext
+  echo '#line 7052 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8411,11 +8412,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8414: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8415: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8418: \$? = $ac_status" >&5
+   echo "$as_me:8419: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8735,11 +8736,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8738: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8739: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8742: \$? = $ac_status" >&5
+   echo "$as_me:8743: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8840,11 +8841,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8843: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8844: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8847: \$? = $ac_status" >&5
+   echo "$as_me:8848: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8895,11 +8896,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8898: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8899: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8902: \$? = $ac_status" >&5
+   echo "$as_me:8903: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11267,7 +11268,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11270 "configure"
+#line 11271 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11367,7 +11368,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11370 "configure"
+#line 11371 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11692,23 +11693,24 @@ if test "${enable_arm_mach+set}" = set; then :
 			CONFIG_XENO_ARM_SA1100=y
 			unset tsc_type;;
 
-	imx)		arch=4
-			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
-
-	imx21)		arch=5
-			unset tsc_type;;
-
 	integrator) 	arch=choose
 			unset tsc_type;;
 
 	ixp4xx)		arch=5
 	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	mx2)		arch=5
+	mx1|imx)	arch=4
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx2|imx21)	arch=5
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	mx3)		arch=6
 			vfp=vfp
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+
+	mx5|imx51)	arch=7
+			vfp=vfp3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	omap3)		arch=7
