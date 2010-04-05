@@ -197,7 +197,7 @@ do {									\
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,28)
 #define msleep(x) do {				 \
 	set_current_state(TASK_UNINTERRUPTIBLE); \
-	schedule_timeout((x)*(HZ/1000));         \
+	schedule_timeout(((x)*HZ)/1000);         \
 } while(0)
 #endif
 
