@@ -26,7 +26,7 @@
  * @{
  */
 
-#include <linux/delay.h>
+#include <linux/workqueue.h>
 
 #include <nucleus/pod.h>
 #include <nucleus/ppd.h>
@@ -35,7 +35,7 @@
 
 #include "rtdm/internal.h"
 
-#define CLOSURE_RETRY_PERIOD	100	/* ms */
+#define CLOSURE_RETRY_PERIOD_MS	100
 
 #define FD_BITMAP_SIZE  ((RTDM_FD_MAX + BITS_PER_LONG-1) / BITS_PER_LONG)
 
@@ -43,6 +43,10 @@ struct rtdm_fildes fildes_table[RTDM_FD_MAX] =
 	{ [0 ... RTDM_FD_MAX-1] = { NULL } };
 static unsigned long used_fildes[FD_BITMAP_SIZE];
 int open_fildes;	/* number of used descriptors */
+
+static DECLARE_WORK_FUNC(close_callback);
+static DECLARE_DELAYED_WORK_NODATA(close_work, close_callback);
+static LIST_HEAD(cleanup_queue);
 
 xntbase_t *rtdm_tbase;
 EXPORT_SYMBOL(rtdm_tbase);
@@ -81,8 +85,7 @@ struct rtdm_dev_context *rtdm_context_get(int fd)
 	xnlock_get_irqsave(&rt_fildes_lock, s);
 
 	context = fildes_table[fd].context;
-	if (unlikely(!context ||
-		     test_bit(RTDM_CLOSING, &context->context_flags))) {
+	if (unlikely(!context)) {
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 		return NULL;
 	}
@@ -106,8 +109,10 @@ static int create_instance(struct rtdm_device *device,
 	int fd;
 	spl_t s;
 
-	/* Reset to NULL so that we can always use cleanup_instance to revert
-	   also partially successful allocations */
+	/*
+	 * Reset to NULL so that we can always use cleanup_files/instance to
+	 * revert also partially successful allocations.
+	 */
 	*context_ptr = NULL;
 	*fildes_ptr = NULL;
 
@@ -155,7 +160,7 @@ static int create_instance(struct rtdm_device *device,
 
 	context->fd = fd;
 	context->ops = &device->ops;
-	atomic_set(&context->close_lock_count, 0);
+	atomic_set(&context->close_lock_count, 1);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	ppd = xnshadow_ppd_get(__rtdm_muxid);
@@ -163,31 +168,34 @@ static int create_instance(struct rtdm_device *device,
 
 	context->reserved.owner =
 	    ppd ? container_of(ppd, struct rtdm_process, ppd) : NULL;
+	INIT_LIST_HEAD(&context->reserved.cleanup);
 
 	return 0;
 }
 
-static int cleanup_instance(struct rtdm_device *device,
-			    struct rtdm_dev_context *context,
-			    struct rtdm_fildes *fildes, int nrt_mem)
+static void __cleanup_fildes(struct rtdm_fildes *fildes)
+{
+	clear_bit((fildes - fildes_table), used_fildes);
+	fildes->context = NULL;
+	open_fildes--;
+}
+
+static void cleanup_fildes(struct rtdm_fildes *fildes)
 {
 	spl_t s;
 
+	if (!fildes)
+		return;
+
 	xnlock_get_irqsave(&rt_fildes_lock, s);
-
-	if (context && unlikely(atomic_read(&context->close_lock_count) > 1)) {
-		xnlock_put_irqrestore(&rt_fildes_lock, s);
-		return -EAGAIN;
-	}
-
-	if (fildes) {
-		clear_bit((fildes - fildes_table), used_fildes);
-		fildes->context = NULL;
-		open_fildes--;
-	}
-
+	__cleanup_fildes(fildes);
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
+}
 
+static void cleanup_instance(struct rtdm_device *device,
+			     struct rtdm_dev_context *context,
+			     int nrt_mem)
+{
 	if (context) {
 		if (device->reserved.exclusive_context)
 			context->device = NULL;
@@ -200,9 +208,61 @@ static int cleanup_instance(struct rtdm_device *device,
 	}
 
 	rtdm_dereference_device(device);
-
-	return 0;
 }
+
+static DECLARE_WORK_FUNC(close_callback)
+{
+	struct rtdm_dev_context *context;
+	LIST_HEAD(deferred_list);
+	int reschedule = 0;
+	int err;
+	spl_t s;
+
+	xnlock_get_irqsave(&rt_fildes_lock, s);
+
+	while (!list_empty(&cleanup_queue)) {
+		context = list_first_entry(&cleanup_queue,
+					   struct rtdm_dev_context,
+					   reserved.cleanup);
+		list_del(&context->reserved.cleanup);
+		atomic_inc(&context->close_lock_count);
+
+		xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+		err = context->ops->close_nrt(context, NULL);
+
+		if (err == -EAGAIN ||
+		    atomic_read(&context->close_lock_count) > 1) {
+			atomic_dec(&context->close_lock_count);
+			list_add_tail(&context->reserved.cleanup,
+				      &deferred_list);
+			if (err == -EAGAIN)
+				reschedule = 1;
+		} else {
+			trace_mark(xn_rtdm, fd_closed, "fd %d", context->fd);
+
+			cleanup_instance(context->device, context,
+					 test_bit(RTDM_CREATED_IN_NRT,
+						  &context->context_flags));
+		}
+
+		xnlock_get_irqsave(&rt_fildes_lock, s);
+	}
+
+	list_splice(&deferred_list, &cleanup_queue);
+
+	xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+	if (reschedule)
+		schedule_delayed_work(&close_work,
+				      (HZ * CLOSURE_RETRY_PERIOD_MS) / 1000);
+}
+
+void rtdm_apc_handler(void *cookie)
+{
+	schedule_delayed_work(&close_work, 0);
+}
+
 
 int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 {
@@ -245,7 +305,8 @@ int __rt_dev_open(rtdm_user_info_t *user_info, const char *path, int oflag)
 	return context->fd;
 
 cleanup_out:
-	cleanup_instance(device, context, fildes, nrt_mode);
+	cleanup_fildes(fildes);
+	cleanup_instance(device, context, nrt_mode);
 
 err_out:
 	return ret;
@@ -296,7 +357,8 @@ int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 	return context->fd;
 
 cleanup_out:
-	cleanup_instance(device, context, fildes, nrt_mode);
+	cleanup_fildes(fildes);
+	cleanup_instance(device, context, nrt_mode);
 
 err_out:
 	return ret;
@@ -317,7 +379,6 @@ int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 	if (unlikely((unsigned int)fd >= RTDM_FD_MAX))
 		goto err_out;
 
-again:
 	xnlock_get_irqsave(&rt_fildes_lock, s);
 
 	context = fildes_table[fd].context;
@@ -327,47 +388,52 @@ again:
 		goto err_out;	/* -EBADF */
 	}
 
+	/* Avoid asymmetric close context by switching to nrt. */
+	if (unlikely(test_bit(RTDM_CREATED_IN_NRT, &context->context_flags)) &&
+	    !nrt_mode) {
+		xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+		ret = -ENOSYS;
+		goto err_out;
+	}
+
 	set_bit(RTDM_CLOSING, &context->context_flags);
 	atomic_inc(&context->close_lock_count);
+
+	__cleanup_fildes(&fildes_table[fd]);
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
 	if (nrt_mode)
 		ret = context->ops->close_nrt(context, user_info);
-	else {
-		/* Avoid asymmetric close context by switching to nrt. */
-		if (unlikely(
-		    test_bit(RTDM_CREATED_IN_NRT, &context->context_flags))) {
-			ret = -ENOSYS;
-			goto unlock_out;
-		}
+	else
 		ret = context->ops->close_rt(context, user_info);
-	}
 
 	XENO_ASSERT(RTDM, !rthal_local_irq_disabled(),
 		    rthal_local_irq_enable(););
 
-	if (unlikely(ret == -EAGAIN) && nrt_mode) {
-		rtdm_context_unlock(context);
-		msleep(CLOSURE_RETRY_PERIOD);
-		goto again;
-	} else if (unlikely(ret < 0))
+	xnlock_get_irqsave(&rt_fildes_lock, s);
+
+	if (ret == -EAGAIN || atomic_read(&context->close_lock_count) > 2) {
+		atomic_dec(&context->close_lock_count);
+		list_add(&context->reserved.cleanup, &cleanup_queue);
+
+		xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+		if (ret == -EAGAIN) {
+			rthal_apc_schedule(rtdm_apc);
+			ret = 0;
+		}
 		goto unlock_out;
-
-	ret = cleanup_instance(context->device, context, &fildes_table[fd],
-			       test_bit(RTDM_CREATED_IN_NRT,
-			       &context->context_flags));
-	if (ret < 0) {
-		rtdm_context_unlock(context);
-
-		if (!nrt_mode)
-			goto err_out;
-
-		msleep(CLOSURE_RETRY_PERIOD);
-		goto again;
 	}
 
-	trace_mark(xn_rtdm, fd_closed, "fd %d", fd);
+	xnlock_put_irqrestore(&rt_fildes_lock, s);
+
+	trace_mark(xn_rtdm, fd_closed, "fd %d", context->fd);
+
+	cleanup_instance(context->device, context,
+			 test_bit(RTDM_CREATED_IN_NRT,
+				  &context->context_flags));
 
 	return ret;
 
@@ -402,7 +468,7 @@ void cleanup_owned_contexts(void *owner)
 					 fd);
 
 			ret = __rt_dev_close(NULL, fd);
-			XENO_ASSERT(RTDM, ret >= 0 || ret == -EBADF,
+			XENO_ASSERT(RTDM, ret == 0 || ret == -EBADF,
 				    /* only warn here */;);
 		}
 	}

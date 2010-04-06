@@ -379,6 +379,7 @@ struct rtdm_operations {
 
 struct rtdm_devctx_reserved {
 	void *owner;
+	struct list_head cleanup;
 };
 
 /**
@@ -560,19 +561,28 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay);
 struct rtdm_dev_context *rtdm_context_get(int fd);
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
+
+#define CONTEXT_IS_LOCKED(context) \
+	(atomic_read(&(context)->close_lock_count) > 1 || \
+	 (test_bit(RTDM_CLOSING, &(context)->context_flags) && \
+	  atomic_read(&(context)->close_lock_count) > 0))
+
 static inline void rtdm_context_lock(struct rtdm_dev_context *context)
 {
-	XENO_ASSERT(RTDM, atomic_read(&context->close_lock_count) > 0,
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
 		    /* just warn if context was a dangling pointer */);
 	atomic_inc(&context->close_lock_count);
 }
 
+extern int rtdm_apc;
+
 static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
-	XENO_ASSERT(RTDM, atomic_read(&context->close_lock_count) > 0,
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
 		    /* just warn if context was a dangling pointer */);
 	smp_mb__before_atomic_dec();
-	atomic_dec(&context->close_lock_count);
+	if (unlikely(atomic_dec_and_test(&context->close_lock_count)))
+		rthal_apc_schedule(rtdm_apc);
 }
 
 static inline void rtdm_context_put(struct rtdm_dev_context *context)
