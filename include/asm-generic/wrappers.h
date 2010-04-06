@@ -192,6 +192,7 @@ do {									\
 #define DECLARE_WORK(n,f,d)      	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
 #define DECLARE_WORK_NODATA(n, f)	DECLARE_WORK(n, f, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
+#define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_WORK(n, f, NULL)
 
 /* Msleep is unknown before 2.4.28 */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,28)
@@ -436,9 +437,11 @@ unsigned long find_next_bit(const unsigned long *addr,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)
 #define DECLARE_WORK_NODATA(f, n)	DECLARE_WORK(f, n, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
+#define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_DELAYED_WORK(n, f, NULL)
 #else /* >= 2.6.20 */
 #define DECLARE_WORK_NODATA(f, n)	DECLARE_WORK(f, n)
 #define DECLARE_WORK_FUNC(f)		void f(struct work_struct *work)
+#define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_DELAYED_WORK(n, f)
 #endif /* >= 2.6.20 */
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
