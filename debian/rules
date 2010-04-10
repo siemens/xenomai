@@ -129,6 +129,7 @@ binary-indep: build install
 binary-arch: build install
 	dh_testdir -s
 	dh_testroot -s
+	dh_installinit -s --name=xenomai
 	dh_installman -s
 	dh_installdocs -s -A CREDITS README.INSTALL TROUBLESHOOTING
 	dh_link -s
