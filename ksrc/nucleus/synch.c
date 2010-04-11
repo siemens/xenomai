@@ -996,9 +996,11 @@ void xnsynch_detect_relaxed_owner(struct xnsynch *synch, struct xnthread *sleepe
 
 /*
  * Detect when a thread is about to relax while holding a
- * synchronization object currently claimed by someone else. By
- * relying on the claim queue, we restrict the checks to PIP-enabled
- * objects, but that already covers most of the use cases anyway.
+ * synchronization object currently claimed by another thread, which
+ * bears the TWARNSW bit (thus advertising a concern about potential
+ * spurious relaxes and priority inversion). By relying on the claim
+ * queue, we restrict the checks to PIP-enabled objects, but that
+ * already covers most of the use cases anyway.
  */
 void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
@@ -1012,7 +1014,7 @@ void xnsynch_detect_claimed_relax(struct xnthread *owner)
 		for (ht = getheadpq(&synch->pendq); ht != NULL;
 		     ht = nextpq(&synch->pendq, ht)) {
 			sleeper = link2thread(ht, plink);
-			if (xnthread_test_state(sleeper, XNRELAX)) {
+			if (xnthread_test_state(sleeper, XNTRAPSW)) {
 				xnthread_set_state(sleeper, XNSWREP);
 				xnshadow_send_sig(sleeper, SIGDEBUG,
 						  SIGDEBUG_MIGRATE_PRIOINV, 1);
