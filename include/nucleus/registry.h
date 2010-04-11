@@ -110,6 +110,8 @@ typedef struct xnpnode { /* Placeholder. */
 
 #endif /* !CONFIG_PROC_FS */
 
+extern struct xnobject *registry_obj_slots;
+
 /* Public interface. */
 
 int xnregistry_enter(const char *key,
@@ -132,6 +134,28 @@ void *xnregistry_get(xnhandle_t handle);
 void *xnregistry_fetch(xnhandle_t handle);
 
 u_long xnregistry_put(xnhandle_t handle);
+
+static inline struct xnobject *xnregistry_validate(xnhandle_t handle)
+{
+	struct xnobject *object;
+	/*
+	 * Careful: a removed object which is still in flight to be
+	 * unexported carries a NULL objaddr, so we have to check this
+	 * as well.
+	 */
+	if (likely(handle && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS)) {
+		object = &registry_obj_slots[handle];
+		return object->objaddr ? object : NULL;
+	}
+
+	return NULL;
+}
+
+static inline void *xnregistry_lookup(xnhandle_t handle)
+{
+	struct xnobject *object = xnregistry_validate(handle);
+	return object ? object->objaddr : NULL;
+}
 
 #ifdef __cplusplus
 }

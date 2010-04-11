@@ -46,7 +46,7 @@
 #define CONFIG_XENO_OPT_DEBUG_REGISTRY  0
 #endif
 
-static xnobject_t *registry_obj_slots;
+struct xnobject *registry_obj_slots;
 
 static xnqueue_t registry_obj_freeq;	/* Free objects. */
 
@@ -230,16 +230,6 @@ void xnregistry_cleanup(void)
 
 	xnarch_free_host_mem(registry_obj_slots,
 			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
-}
-
-static inline xnobject_t *registry_validate(xnhandle_t handle)
-{
-	if (handle > 0 && handle < CONFIG_XENO_OPT_REGISTRY_NRSLOTS) {
-		xnobject_t *object = &registry_obj_slots[handle];
-		return object->objaddr ? object : NULL;
-	}
-
-	return NULL;
 }
 
 #ifdef CONFIG_PROC_FS
@@ -823,9 +813,8 @@ int xnregistry_remove(xnhandle_t handle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	object = registry_validate(handle);
-
-	if (!object) {
+	object = xnregistry_validate(handle);
+	if (object == NULL) {
 		err = -ESRCH;
 		goto unlock_and_exit;
 	}
@@ -932,9 +921,8 @@ int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	object = registry_validate(handle);
-
-	if (!object) {
+	object = xnregistry_validate(handle);
+	if (object == NULL) {
 		err = -ESRCH;
 		goto unlock_and_exit;
 	}
@@ -1047,9 +1035,8 @@ void *xnregistry_get(xnhandle_t handle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	object = registry_validate(handle);
-
-	if (object) {
+	object = xnregistry_validate(handle);
+	if (likely(object)) {
 		++object->safelock;
 		objaddr = object->objaddr;
 	} else
@@ -1107,9 +1094,8 @@ u_long xnregistry_put(xnhandle_t handle)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	object = registry_validate(handle);
-
-	if (!object) {
+	object = xnregistry_validate(handle);
+	if (object == NULL) {
 		newlock = 0;
 		goto unlock_and_exit;
 	}
@@ -1159,18 +1145,10 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
 
 void *xnregistry_fetch(xnhandle_t handle)
 {
-	xnobject_t *object;
-
 	if (handle == XNOBJECT_SELF)
 		return xnpod_primary_p()? xnpod_current_thread() : NULL;
 
-	object = registry_validate(handle);
-
-	if (!object)
-		return NULL;
-
-	return object->objaddr;
-
+	return xnregistry_lookup(handle);
 }
 EXPORT_SYMBOL_GPL(xnregistry_fetch);
 
