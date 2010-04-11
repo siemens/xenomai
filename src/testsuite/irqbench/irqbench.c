@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'a':
-			port_ioaddr = strtol(optarg, NULL, (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
+			port_ioaddr = strtol(optarg, NULL, 0);
 			ioaddr_set = 1;
 			break;
 

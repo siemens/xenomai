@@ -101,12 +101,12 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'a':
-			config.port_ioaddr = strtol(optarg, NULL, (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
+			config.port_ioaddr = strtol(optarg, NULL, 0);
 			ioaddr_set = 1;
 			break;
 
 		case 'i':
-			config.port_irq = atoi(optarg);
+			config.port_irq = strtol(optarg, NULL, 0);
 			irq_set = 1;
 			break;
 
