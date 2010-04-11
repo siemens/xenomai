@@ -51,268 +51,266 @@
 #define STAT(base) (base + 1) /* Status register */
 #define CTRL(base) (base + 2) /* Control register */
 
-double tsc2ns_scale;
-long long min_lat = LONG_MAX;
-long long max_lat = LONG_MIN;
-long long avg_lat = 0;
-long outer_loops = 0;
-int warmup = 1;
-int terminate = 0;
+static double tsc2ns_scale;
+static long long min_lat = LONG_MAX;
+static long long max_lat = LONG_MIN;
+static long long avg_lat;
+static long outer_loops;
+static int warmup = 1;
+static int terminate;
+static unsigned long port_ioaddr = 0x3F8;
+static int port_type = SERPORT;
+static unsigned int toggle;
+static long loop_avg;
+static long long period = 100000;
+static int trigger_trace;
 
 static inline long long rdtsc(void)
 {
-    unsigned long long tsc;
+	unsigned long long tsc;
 
-    __asm__ __volatile__("rdtsc" : "=A" (tsc));
-    return tsc;
+	__asm__ __volatile__("rdtsc" : "=A" (tsc));
+	return tsc;
 }
-
 
 static long tsc2ns(long long tsc)
 {
-    if ((tsc > LONG_MAX) || (tsc < LONG_MIN)) {
-        fprintf(stderr, "irqbench: overflow (%lld ns)!\n",
-                (long long)(tsc2ns_scale * (double)tsc));
-        exit(2);
-    }
-    return (long)(tsc2ns_scale * (double)tsc);
+	if (tsc > LONG_MAX || tsc < LONG_MIN) {
+		fprintf(stderr, "irqbench: overflow (%lld ns)!\n",
+			(long long)(tsc2ns_scale * (double)tsc));
+		exit(2);
+	}
+	return (long)(tsc2ns_scale * (double)tsc);
 }
-
 
 static inline long long ns2tsc(long long ns)
 {
-    return (long long)(((double)ns) / tsc2ns_scale);
+	return (long long)(((double)ns) / tsc2ns_scale);
 }
 
-
-void calibrate_tsc(void)
+static void calibrate_tsc(void)
 {
-    FILE *proc;
-    char *lineptr = NULL;
-    size_t len;
-    double cpu_mhz;
+	FILE *proc;
+	char *lineptr = NULL;
+	size_t len;
+	double cpu_mhz;
 
-    proc = fopen("/proc/cpuinfo", "r");
-    if (proc == NULL) {
-        perror("irqbench: Unable to open /proc/cpuinfo");
-        exit(1);
-    }
+	proc = fopen("/proc/cpuinfo", "r");
+	if (proc == NULL) {
+		perror("irqbench: Unable to open /proc/cpuinfo");
+		exit(1);
+	}
 
-    while (getline(&lineptr, &len, proc) != -1)
-        if (strncmp(lineptr, "cpu MHz", 7) == 0) {
-            sscanf(strchr(lineptr, ':') + 1, "%lf", &cpu_mhz);
-            break;
-        }
+	while (getline(&lineptr, &len, proc) != -1)
+		if (strncmp(lineptr, "cpu MHz", 7) == 0) {
+			sscanf(strchr(lineptr, ':') + 1, "%lf", &cpu_mhz);
+			break;
+		}
 
-    if (lineptr)
-        free(lineptr);
-    fclose(proc);
+	if (lineptr)
+		free(lineptr);
+	fclose(proc);
 
-    printf("CPU frequency: %.3lf MHz\n", cpu_mhz);
+	printf("CPU frequency: %.3lf MHz\n", cpu_mhz);
 
-    tsc2ns_scale = 1000.0 / cpu_mhz;
+	tsc2ns_scale = 1000.0 / cpu_mhz;
 }
 
-
-void sighand(int signal)
+static void sighand(int signal)
 {
-    if (warmup)
-        exit(0);
-    else
-        terminate = 1;
+	if (warmup)
+		exit(0);
+	else
+		terminate = 1;
 }
 
+static void do_inner_loop(void)
+{
+	long long start, delay, timeout;
+	long lat;
+
+	__asm__ __volatile__("cli");
+
+	if (port_type ==  SERPORT) {
+		start = rdtsc();
+
+		toggle ^= MCR_RTS;
+		outb(toggle, MCR(port_ioaddr));
+
+		timeout = start + period * 100;
+		while ((inb(MSR(port_ioaddr)) & MSR_DELTA) == 0 &&
+		       rdtsc() < timeout);
+
+		delay = rdtsc() - start;
+	} else {
+		int status = inb(STAT(port_ioaddr));
+
+		outb(0x08, DATA(port_ioaddr));
+
+		start = rdtsc();
+
+		outb(0x00, DATA(port_ioaddr));
+
+		timeout = start + period * 100;
+		while (inb(STAT(port_ioaddr)) == status &&
+		       rdtsc() < timeout);
+
+		delay = rdtsc() - start;
+	}
+
+	if (!warmup) {
+		lat = tsc2ns(delay);
+
+		loop_avg += lat;
+		if (lat < min_lat)
+			min_lat = lat;
+		if (lat > max_lat) {
+			max_lat = lat;
+			if (trigger_trace) {
+				if (port_type == SERPORT) {
+					toggle ^= MCR_DTR;
+					outb(toggle, MCR(port_ioaddr));
+				} else {
+					outb(0x18, DATA(port_ioaddr));
+					outb(0x10, DATA(port_ioaddr));
+				}
+			}
+		}
+	}
+
+	__asm__ __volatile__("sti");
+
+	while (rdtsc() < start + period);
+}
 
 int main(int argc, char *argv[])
 {
-    int                 port_type   = SERPORT;
-    unsigned long       port_ioaddr = 0x3F8;
-    int                 ioaddr_set = 0;
-    long long           period = 100000;
-    long long           timeout;
-    long long           start, delay;
-    unsigned long long  count = 1;
-    unsigned int        toggle = 0;
-    int                 trigger_trace = 0;
-    int                 c;
+	int ioaddr_set = 0;
+	unsigned long long count = 1;
+	int c;
 
+	signal(SIGINT, sighand);
+	signal(SIGTERM, sighand);
+	signal(SIGHUP, sighand);
+	signal(SIGALRM, sighand);
 
-    signal(SIGINT, sighand);
-    signal(SIGTERM, sighand);
-    signal(SIGHUP, sighand);
-    signal(SIGALRM, sighand);
+	calibrate_tsc();
 
-    calibrate_tsc();
+	while ((c = getopt(argc, argv, "p:T:o:a:f")) != EOF)
+		switch (c) {
+		case 'p':
+			period = atoi(optarg) * 1000;
+			break;
 
-    while ((c = getopt(argc,argv,"p:T:o:a:f")) != EOF)
-        switch (c) {
-            case 'p':
-                period = atoi(optarg) * 1000;
-                break;
+		case 'T':
+			alarm(atoi(optarg));
+			break;
 
-            case 'T':
-                alarm(atoi(optarg));
-                break;
+		case 'o':
+			port_type = atoi(optarg);
+			break;
 
-            case 'o':
-                port_type = atoi(optarg);
-                break;
+		case 'a':
+			port_ioaddr = strtol(optarg, NULL, (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
+			ioaddr_set = 1;
+			break;
 
-            case 'a':
-                port_ioaddr = strtol(optarg, NULL,
-                    (strncmp(optarg, "0x", 2) == 0) ? 16 : 10);
-                ioaddr_set = 1;
-                break;
+		case 'f':
+			trigger_trace = 1;
+			break;
 
-            case 'f':
-                trigger_trace = 1;
-                break;
+		default:
+			fprintf(stderr, "usage: irqbench [options]\n"
+				"  [-p <period_us>]             # signal period, default=100 us\n"
+				"  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
+				"  [-o <port_type>]             # 0=serial (default), 1=parallel\n"
+				"  [-a <port_io_address>]       # default=0x3f8/0x378\n"
+				"  [-f]                         # freeze trace for each new max latency\n");
+			exit(2);
+		}
 
-            default:
-                fprintf(stderr, "usage: irqbench [options]\n"
-                        "  [-p <period_us>]             # signal period, default=100 us\n"
-                        "  [-T <test_duration_seconds>] # default=0, so ^C to end\n"
-                        "  [-o <port_type>]             # 0=serial (default), 1=parallel\n"
-                        "  [-a <port_io_address>]       # default=0x3f8/0x378\n"
-                        "  [-f]                         # freeze trace for each new max latency\n");
-                exit(2);
-        }
+	/* set defaults for parallel port */
+	if (port_type == 1 && !ioaddr_set)
+		port_ioaddr = 0x378;
 
-    /* set defaults for parallel port */
-    if (port_type == 1 && !ioaddr_set)
-        port_ioaddr = 0x378;
+	if (iopl(3) < 0) {
+		fprintf(stderr, "irqbench: superuser permissions required\n");
+		exit(1);
+	}
+	mlockall(MCL_CURRENT | MCL_FUTURE);
 
-    if (iopl(3) < 0) {
-        fprintf(stderr, "irqbench: superuser permissions required\n");
-        exit(1);
-    }
-    mlockall(MCL_CURRENT | MCL_FUTURE);
+	switch (port_type) {
+	case SERPORT:
+		toggle = MCR_OUT2;
+		inb(MSR(port_ioaddr));
+		break;
 
-    switch (port_type) {
-        case SERPORT:
-            toggle = MCR_OUT2;
-            inb(MSR(port_ioaddr));
-            break;
+	case PARPORT:
+		outb(CTRL_INIT, CTRL(port_ioaddr));
+		break;
 
-        case PARPORT:
-            outb(CTRL_INIT, CTRL(port_ioaddr));
-            break;
+	default:
+		fprintf(stderr, "irqbench: invalid port type\n");
+		exit(1);
+	}
 
-        default:
-            fprintf(stderr, "irqbench: invalid port type\n");
-            exit(1);
-    }
+	period = ns2tsc(period);
 
-    period = ns2tsc(period);
+	printf("Port type:     %s\n"
+	       "Port address:  0x%lx\n\n",
+	       (port_type == SERPORT) ? "serial" : "parallel", port_ioaddr);
 
-    printf("Port type:     %s\n"
-           "Port address:  0x%lx\n\n",
-           (port_type == SERPORT) ? "serial" : "parallel", port_ioaddr);
+	printf("Waiting on target...\n");
 
-    printf("Waiting on target...\n");
+	while (1)
+		if (port_type ==  SERPORT) {
+			toggle ^= MCR_RTS;
+			outb(toggle, MCR(port_ioaddr));
+			usleep(100000);
+			if ((inb(MSR(port_ioaddr)) & MSR_DELTA) != 0)
+				break;
+		} else {
+			int status = inb(STAT(port_ioaddr));
 
-    while (1)
-        if (port_type ==  SERPORT) {
-            toggle ^= MCR_RTS;
-            outb(toggle, MCR(port_ioaddr));
-            usleep(100000);
-            if ((inb(MSR(port_ioaddr)) & MSR_DELTA) != 0)
-                break;
-        } else {
-            int status = inb(STAT(port_ioaddr));
+			outb(0x08, DATA(port_ioaddr));
+			outb(0x00, DATA(port_ioaddr));
+			usleep(100000);
+			if (inb(STAT(port_ioaddr)) != status)
+				break;
+		}
 
-            outb(0x08, DATA(port_ioaddr));
-            outb(0x00, DATA(port_ioaddr));
-            usleep(100000);
-            if (inb(STAT(port_ioaddr)) != status)
-                break;
-        }
+	printf("Warming up...\n");
 
-    printf("Warming up...\n");
+	while (!terminate) {
+		long long loop_timeout = rdtsc() + ns2tsc(1000000000LL);
+		int inner_loops = 0;
 
-    while (!terminate) {
-        long long loop_timeout = rdtsc() + ns2tsc(1000000000LL);
-        long loop_avg = 0;
-        int inner_loops = 0;
+		loop_avg = 0;
+		while (rdtsc() < loop_timeout) {
+			do_inner_loop();
+			inner_loops++;
+		}
 
-        while (rdtsc() < loop_timeout) {
-            long lat;
+		count += inner_loops;
 
-            __asm__ __volatile__("cli");
+		if (!warmup && !terminate) {
+			loop_avg /= inner_loops;
 
-            if (port_type ==  SERPORT) {
-                start = rdtsc();
+			printf("%llu: %.3f / %.3f / %.3f us\n", count,
+			       ((double)min_lat) / 1000.0,
+			       ((double)loop_avg) / 1000.0,
+			       ((double)max_lat) / 1000.0);
 
-                toggle ^= MCR_RTS;
-                outb(toggle, MCR(port_ioaddr));
+			avg_lat += loop_avg;
+			outer_loops++;
+		} else
+			warmup = 0;
+	}
 
-                timeout = start + period * 100;
-                while (((inb(MSR(port_ioaddr)) & MSR_DELTA) == 0) &&
-                       (rdtsc() < timeout));
+	avg_lat /= outer_loops;
+	printf("---\n%llu: %.3f / %.3f / %.3f us\n", count,
+	       ((double)min_lat) / 1000.0, ((double)avg_lat) / 1000.0,
+	       ((double)max_lat) / 1000.0);
 
-                delay = rdtsc() - start;
-            } else {
-                int status = inb(STAT(port_ioaddr));
-
-                outb(0x08, DATA(port_ioaddr));
-
-                start = rdtsc();
-
-                outb(0x00, DATA(port_ioaddr));
-
-                timeout = start + period * 100;
-                while ((inb(STAT(port_ioaddr)) == status) &&
-                       (rdtsc() < timeout));
-
-                delay = rdtsc() - start;
-            }
-
-            if (!warmup) {
-                lat = tsc2ns(delay);
-
-                loop_avg += lat;
-                if (lat < min_lat)
-                    min_lat = lat;
-                if (lat > max_lat) {
-                    max_lat = lat;
-                    if (trigger_trace) {
-                        if (port_type == SERPORT) {
-                            toggle ^= MCR_DTR;
-                            outb(toggle, MCR(port_ioaddr));
-                        } else {
-                            outb(0x18, DATA(port_ioaddr));
-                            outb(0x10, DATA(port_ioaddr));
-                        }
-                    }
-                }
-            }
-
-            __asm__ __volatile__("sti");
-
-            inner_loops++;
-
-            while (rdtsc() < start + period);
-        }
-
-        count += inner_loops;
-
-        if (!warmup && !terminate) {
-            loop_avg /= inner_loops;
-
-            printf("%llu: %.3f / %.3f / %.3f us\n", count,
-                ((double)min_lat) / 1000.0, ((double)loop_avg) / 1000.0,
-                ((double)max_lat) / 1000.0);
-
-            avg_lat += loop_avg;
-            outer_loops++;
-        } else
-            warmup = 0;
-    }
-
-    avg_lat /= outer_loops;
-    printf("---\n%llu: %.3f / %.3f / %.3f us\n", count,
-           ((double)min_lat) / 1000.0, ((double)avg_lat) / 1000.0,
-           ((double)max_lat) / 1000.0);
-
-    return 0;
+	return 0;
 }
