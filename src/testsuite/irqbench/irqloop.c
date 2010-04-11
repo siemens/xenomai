@@ -26,6 +26,11 @@
 #include <sys/mman.h>
 #include <rtdm/rttesting.h>
 
+static const char *devname_fmt[] = {
+	"/dev/rttest-irqbench%d",
+	"/dev/rttest%d",
+};
+
 static int benchdev;
 static int terminate;
 
@@ -81,6 +86,7 @@ int main(int argc, char *argv[])
 	int irq_set = 0;
 	int c;
 	int timeout = 10;
+	int fmt = 0;
 
 	while ((c = getopt(argc, argv, "D:t:P:o:a:i:")) != EOF)
 		switch (c) {
@@ -136,9 +142,12 @@ int main(int argc, char *argv[])
 
 	mlockall(MCL_CURRENT|MCL_FUTURE);
 
-	snprintf(devname, RTDM_MAX_DEVNAME_LEN, "/dev/rttest%d", benchdev_no);
+retry:
+	snprintf(devname, RTDM_MAX_DEVNAME_LEN, devname_fmt[fmt], benchdev_no);
 	benchdev = open(devname, O_RDWR);
 	if (benchdev < 0) {
+		if (fmt++ == 0)
+			goto retry;
 		perror("irqloop: failed to open benchmark device");
 		fprintf(stderr, "(modprobe xeno_irqbench?)\n");
 		return 1;

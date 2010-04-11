@@ -4,6 +4,15 @@ config XENO_TESTING_MODULE
         depends on MODULES
 	def_tristate m
 
+config XENO_DRIVERS_TESTING_LEGACY_NAMES
+	depends on XENO_SKIN_RTDM
+	bool "Use legacy names for testing drivers"
+	help
+	This lets the testing drivers register under legacy names
+	("rttest<N>") instead of the new scheme ("rttest-<subclass><N>").
+	Only enable this if you plan to use old userspace tools with the
+	drivers.
+
 config XENO_DRIVERS_TIMERBENCH
 	depends on XENO_SKIN_RTDM
 	tristate "Timer benchmark driver"
