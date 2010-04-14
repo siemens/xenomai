@@ -171,11 +171,8 @@
 
 	  /*! @} CHAN_RNG_AREF */
 
-#if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
-/* Channels macros only useful for the kernel side */
-#define CR_CHAN(a) CHAN(a)
-#define CR_RNG(a) (((a)>>16)&0xff)
-#define CR_AREF(a) (((a)>>24)&0xf)
+#if !defined(DOXYGEN_CPP)
+
 #define CR_FLAGS_MASK 0xfc000000
 #define CR_ALT_FILTER (1<<26)
 #define CR_DITHER CR_ALT_FILTER
@@ -183,7 +180,15 @@
 #define CR_ALT_SOURCE (1<<27)
 #define CR_EDGE	(1<<28)
 #define CR_INVERT (1<<29)
+
+#if defined(__KERNEL__) 
+/* Channels macros only useful for the kernel side */
+#define CR_CHAN(a) CHAN(a)
+#define CR_RNG(a) (((a)>>16)&0xff)
+#define CR_AREF(a) (((a)>>24)&0xf)
 #endif /* __KERNEL__ */
+
+#endif /* !DOXYGEN_CPP */
 
 /*! 
  * @brief Structure describing the asynchronous instruction
