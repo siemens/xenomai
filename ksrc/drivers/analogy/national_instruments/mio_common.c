@@ -3365,8 +3365,9 @@ int ni_cdio_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		return -EINVAL;
 	}
 
-	if (cmd->scan_begin_arg != 
-	    PACK_FLAGS(CDO_Sample_Source_Select_Mask, 0, 0, CR_INVERT))
+	if ((cmd->scan_begin_arg & 
+	     PACK_FLAGS(CDO_Sample_Source_Select_Mask, 0, 0, CR_INVERT)) !=
+	    cmd->scan_begin_arg)
 		return -EINVAL;
 
 	if (cmd->convert_arg != 0) {
@@ -3404,8 +3405,8 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	switch (cmd->scan_begin_src) {
 	case TRIG_EXT:
 		cdo_mode_bits |=
-			CR_CHAN(cmd->
-				scan_begin_arg) & CDO_Sample_Source_Select_Mask;
+			CR_CHAN(cmd->scan_begin_arg) & 
+			CDO_Sample_Source_Select_Mask;
 		break;
 	default:
 		BUG();
@@ -3429,8 +3430,6 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		return retval;
 	}
 	
-	/* TODO: manage the trigger function */
-
 	return 0;
 }
 
@@ -5036,19 +5035,22 @@ int ni_E_init(a4l_dev_t *dev)
 			subd->insn_bits = ni_m_series_dio_insn_bits_8;
 		else
 			subd->insn_bits = ni_m_series_dio_insn_bits_32;
+
 		subd->insn_config = ni_m_series_dio_insn_config;
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-	a4l_dbg(1, drv_dbg, dev, 
-		"mio_common: DIO: command feature available\n");
+		a4l_dbg(1, drv_dbg, dev, 
+			"mio_common: DIO: command feature available\n");
 
 		subd->flags |= A4L_SUBD_CMD;
 		subd->do_cmd = ni_cdio_cmd;
 		subd->do_cmdtest = ni_cdio_cmdtest;
 		subd->cmd_mask = &mio_dio_cmd_mask;
 		subd->cancel = ni_cdio_cancel;
+		subd->trigger = ni_cdo_inttrig;
+
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
 		ni_writel(CDO_Reset_Bit | CDI_Reset_Bit, M_Offset_CDIO_Command);
