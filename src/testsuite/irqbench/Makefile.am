@@ -5,7 +5,7 @@ CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 
 test_PROGRAMS = irqloop
 
-if XENO_LINUX_ARCH_I386
+if XENO_TARGET_ARCH_X86
 test_PROGRAMS += irqbench
 endif
 
