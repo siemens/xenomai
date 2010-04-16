@@ -141,6 +141,10 @@ struct rttst_swtest_error {
 	unsigned fp_val;
 };
 
+#define RTTST_RTDM_NORMAL_CLOSE		0
+#define RTTST_RTDM_DEFER_CLOSE_HANDLER	1
+#define RTTST_RTDM_DEFER_CLOSE_CONTEXT	2
+
 #define RTIOC_TYPE_TESTING		RTDM_CLASS_TESTING
 
 /*!
@@ -152,6 +156,8 @@ struct rttst_swtest_error {
 #define RTDM_SUBCLASS_IRQBENCH		1
 /** subclass name: "switchtest" */
 #define RTDM_SUBCLASS_SWITCHTEST	2
+/** subclase name: "rtdm" */
+#define RTDM_SUBCLASS_RTDMTEST		3
 /** @} */
 
 /*!
@@ -208,6 +214,9 @@ struct rttst_swtest_error {
 
 #define RTTST_RTIOC_SWTEST_SET_PAUSE \
 	_IOW(RTIOC_TYPE_TESTING, 0x38, unsigned long)
+
+#define RTTST_RTIOC_RTDM_DEFER_CLOSE \
+	_IOW(RTIOC_TYPE_TESTING, 0x40, unsigned long)
 /** @} */
 
 /** @} */

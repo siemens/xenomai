@@ -45,4 +45,10 @@ config XENO_DRIVERS_SIGTEST
 	help
 	Elementary skin for unit testing user-space real-time signals.
 
+config XENO_DRIVERS_RTDMTEST
+	depends on XENO_SKIN_RTDM && m
+	tristate "RTDM unit tests driver"
+	help
+	Kernel driver for performing RTDM unit tests.
+
 endmenu

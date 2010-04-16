@@ -17,4 +17,6 @@ dep_tristate 'Kernel-only latency measurement module' CONFIG_XENO_DRIVERS_KLATEN
 
 dep_tristate 'User-space real-time signals testing module' CONFIG_XENO_DRIVERS_SIGTEST m
 
+dep_tristate 'RTDM unit tests driver' CONFIG_XENO_DRIVERS_RTDMTEST $CONFIG_XENO_SKIN_RTDM m
+
 endmenu
