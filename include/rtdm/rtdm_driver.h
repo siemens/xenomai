@@ -193,11 +193,18 @@ typedef int (*rtdm_socket_handler_t)(struct rtdm_dev_context *context,
  *
  * @param[in] context Context structure associated with opened device instance
  * @param[in] user_info Opaque pointer to information about user mode caller,
- * NULL if kernel mode call
+ * NULL if kernel mode or deferred user mode call
  *
  * @return 0 on success. On failure return either -ENOSYS, to request that
  * this handler be called again from the opposite realtime/non-realtime
- * context, or another negative error code.
+ * context, -EAGAIN to request a recall after a grace period, or a valid
+ * negative error code according to IEEE Std 1003.1.
+ *
+ * @note Drivers must be prepared for that case that the close handler is
+ * invoked more than once per open context (even if the handler already
+ * completed an earlier run successfully). The driver has to avoid releasing
+ * resources twice as well as returning false errors on successive close
+ * invocations.
  *
  * @see @c close() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
