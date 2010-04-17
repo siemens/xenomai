@@ -127,9 +127,4 @@ extern struct xnptree rtipc_ptree;
 #define rtipc_enter_atomic(lockctx)	xnlock_get_irqsave(&nklock, (lockctx))
 #define rtipc_leave_atomic(lockctx)	xnlock_put_irqrestore(&nklock, (lockctx))
 
-static inline int rtipc_socket_locked(struct rtdm_dev_context *context)
-{
-	return atomic_read(&context->close_lock_count);
-}
-
 #endif /* !_RTIPC_INTERNAL_H */
