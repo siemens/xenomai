@@ -125,7 +125,7 @@ static int create_instance(struct rtdm_device *device,
 	}
 
 	fd = find_first_zero_bit(used_fildes, RTDM_FD_MAX);
-	set_bit(fd, used_fildes);
+	__set_bit(fd, used_fildes);
 	open_fildes++;
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
@@ -175,7 +175,7 @@ static int create_instance(struct rtdm_device *device,
 
 static void __cleanup_fildes(struct rtdm_fildes *fildes)
 {
-	clear_bit((fildes - fildes_table), used_fildes);
+	__clear_bit((fildes - fildes_table), used_fildes);
 	fildes->context = NULL;
 	open_fildes--;
 }
