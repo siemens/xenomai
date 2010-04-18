@@ -233,18 +233,18 @@ extern union vfp_state *last_VFP_context[NR_CPUS];
 	 : container_of(_vfp_owner, rthal_fpenv_t, vfpstate));		\
     })
 
-#define rthal_vfp_fmrx(_vfp_) ({		\
-    u32 __v;					\
-    asm("mrc p10, 7, %0, " __stringify(_vfp_)	\
-	", cr0, 0 @ fmrx %0, " #_vfp_:		\
-	"=r" (__v));				\
-    __v;					\
+#define rthal_vfp_fmrx(_vfp_) ({			\
+    u32 __v;						\
+    asm volatile("mrc p10, 7, %0, " __stringify(_vfp_)	\
+		 ", cr0, 0 @ fmrx %0, " #_vfp_:		\
+		 "=r" (__v));				\
+    __v;						\
  })
 
-#define rthal_vfp_fmxr(_vfp_,_var_)		\
-    asm("mcr p10, 7, %0, " __stringify(_vfp_)	\
-	", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
-	/* */ : "r" (_var_))
+#define rthal_vfp_fmxr(_vfp_,_var_)			\
+    asm volatile("mcr p10, 7, %0, " __stringify(_vfp_)	\
+		 ", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
+		 /* */ : "r" (_var_))
 
 #define rthal_disable_fpu() \
     rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
@@ -268,7 +268,7 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
 #define rthal_get_fpu_owner(cur) ({                                         \
     struct task_struct * _cur = (cur);                                      \
     ((task_thread_info(_cur)->used_cp[1] | task_thread_info(_cur)->used_cp[2])    \
-        ? _cur : NULL);                                                     \
+	? _cur : NULL);                                                     \
 })
 
 #define rthal_disable_fpu() \
