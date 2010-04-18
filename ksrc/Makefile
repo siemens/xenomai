@@ -1,2 +1,2 @@
 
-obj-$(CONFIG_XENOMAI) += arch/ nucleus/ skins/
+obj-$(CONFIG_XENOMAI) += arch/ nucleus/ native/ posix/ rtdm/

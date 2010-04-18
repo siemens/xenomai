@@ -1,9 +1,0 @@
-menu "Interfaces"
-
-depends on XENO_OPT_NUCLEUS
-
-source "kernel/xenomai/skins/native/Kconfig"
-source "kernel/xenomai/skins/posix/Kconfig"
-source "kernel/xenomai/skins/rtdm/Kconfig"
-
-endmenu

@@ -72,7 +72,7 @@ analogy_config_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
 am_cmd_bits_OBJECTS = cmd_bits.$(OBJEXT)
 cmd_bits_OBJECTS = $(am_cmd_bits_OBJECTS)
 cmd_bits_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_cmd_read_OBJECTS = cmd_read.$(OBJEXT)
 cmd_read_OBJECTS = $(am_cmd_read_OBJECTS)
 cmd_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
@@ -308,8 +308,8 @@ cmd_write_LDADD = \
 cmd_bits_SOURCES = cmd_bits.c
 cmd_bits_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 insn_read_SOURCES = insn_read.c
 insn_read_LDADD = \

@@ -13,14 +13,14 @@ PROJECT_NAME           = "Xenomai POSIX skin API"
 # with spaces.
 
 INPUT                  = \
-        @top_srcdir@/ksrc/skins/posix \
+        @top_srcdir@/ksrc/posix \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           = @top_srcdir@/ksrc/skins/posix/demos \
+EXAMPLE_PATH           = @top_srcdir@/ksrc/posix/demos \
 			 @top_srcdir@/examples/posix
 
 #---------------------------------------------------------------------------

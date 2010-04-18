@@ -50,5 +50,5 @@ config XENO_HW_UNLOCKED_SWITCH
 
 endmenu
 
-source "kernel/xenomai/skins/Kconfig"
+source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

@@ -20,7 +20,7 @@ fi
 
 AC_CONFIG_HEADERS(src/include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(src/skins/native/task.c)
+AC_CONFIG_SRCDIR(src/native/task.c)
 AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -608,11 +608,11 @@ AC_CACHE_VAL(ac_cv_ld_file_option,
   LDFLAGS="$save_LDFLAGS"
   AC_LANG_RESTORE)
 if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/skins/posix/posix.wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/posix/posix.wrappers"
 else
 	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
 			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/src/skins/posix/posix.wrappers`
+		done < $srcdir/src/posix/posix.wrappers`
 fi
 AC_MSG_RESULT(${ac_cv_ld_file_option:-no})
 LD_FILE_OPTION=$ac_cv_ld_file_option
@@ -705,7 +705,7 @@ AC_SUBST(XENO_USER_APP_LDFLAGS)
 AC_SUBST(XENO_DLOPEN_CONSTRAINT)
 AC_SUBST(XENO_TEST_DIR)
 AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-	['$(top_srcdir)/src/skins/posix/posix.wrappers'])
+	['$(top_srcdir)/src/posix/posix.wrappers'])
 AC_SUBST(XENO_POSIX_WRAPPERS)
 
 base=asm-$XENO_TARGET_ARCH
@@ -721,11 +721,10 @@ AC_CONFIG_FILES([ \
 	scripts/xeno \
 	src/Makefile \
 	src/rtdk/Makefile \
-	src/skins/Makefile \
-	src/skins/common/Makefile \
-	src/skins/posix/Makefile \
-	src/skins/native/Makefile \
-	src/skins/rtdm/Makefile \
+	src/common/Makefile \
+	src/posix/Makefile \
+	src/native/Makefile \
+	src/rtdm/Makefile \
 	src/drvlib/Makefile \
 	src/drvlib/analogy/Makefile \
 	src/include/Makefile \

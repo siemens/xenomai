@@ -22,8 +22,8 @@ irqloop_LDFLAGS = \
 	$(XENO_USER_LDFLAGS)
 
 irqloop_LDADD = \
-	../../skins/posix/libpthread_rt.la \
-	../../skins/common/libxenomai.la \
+	../../posix/libpthread_rt.la \
+	../../common/libxenomai.la \
 	-lpthread -lrt
 
 irqbench_SOURCES = irqbench.c

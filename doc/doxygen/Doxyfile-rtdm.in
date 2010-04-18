@@ -14,8 +14,8 @@ PROJECT_NAME           = "Xenomai RTDM skin API"
 
 INPUT                  = \
         @top_srcdir@/include/rtdm \
-        @top_srcdir@/src/skins/rtdm \
-        @top_srcdir@/ksrc/skins/rtdm \
+        @top_srcdir@/src/rtdm \
+        @top_srcdir@/ksrc/rtdm \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
@@ -231,8 +231,8 @@ LATEX_HIDE_INDICES     = NO
 # Added top_buildir/include here for the definition of XENO_PROTO in
 # xeno_config.h
 INCLUDE_PATH           = \
-@top_srcdir@/ksrc/skins/rtdm \
-@top_srcdir@/ksrc/skins \
+@top_srcdir@/ksrc/rtdm \
+@top_srcdir@/ksrc \
 @top_builddir@/include \
 @top_srcdir@/include
 

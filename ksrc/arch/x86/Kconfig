@@ -163,5 +163,5 @@ endmenu
 
 endmenu
 
-source "kernel/xenomai/skins/Kconfig"
+source "kernel/xenomai/Kconfig"
 source "drivers/xenomai/Kconfig"

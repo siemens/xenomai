@@ -14,20 +14,20 @@ LDFLAGS = \
 rtcanconfig_SOURCES = rtcanconfig.c
 
 rtcanconfig_LDADD = \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 rtcanrecv_SOURCES = rtcanrecv.c
 
 rtcanrecv_LDADD = \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 
 rtcansend_SOURCES = rtcansend.c
 
 rtcansend_LDADD = \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la

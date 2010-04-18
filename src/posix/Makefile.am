@@ -7,7 +7,7 @@ endif
 
 lib_LTLIBRARIES = libpthread_rt.la
 
-CPPFLAGS+=-I$(top_srcdir)/ksrc/skins
+CPPFLAGS += -I$(top_srcdir)/ksrc
 
 libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
 

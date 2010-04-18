@@ -12,7 +12,7 @@ latency_CPPFLAGS = \
 latency_LDFLAGS = @XENO_USER_LDFLAGS@
 
 latency_LDADD = \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la \
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la \
 	-lpthread -lm

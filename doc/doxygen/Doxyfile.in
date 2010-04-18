@@ -22,24 +22,24 @@ INPUT                  = \
         @top_srcdir@/ksrc/nucleus \
         @top_srcdir@/ksrc/arch \
         @top_srcdir@/include/native \
-        @top_srcdir@/src/skins/native \
-        @top_srcdir@/ksrc/skins/native \
+        @top_srcdir@/src/native \
+        @top_srcdir@/ksrc/native \
         @top_srcdir@/include/rtdm \
-        @top_srcdir@/src/skins/rtdm \
-        @top_srcdir@/ksrc/skins/rtdm \
+        @top_srcdir@/src/rtdm \
+        @top_srcdir@/ksrc/rtdm \
         @top_srcdir@/include/analogy \
         @top_srcdir@/src/drvlib/analogy \
         @top_srcdir@/ksrc/drivers/analogy \
-        @top_srcdir@/ksrc/skins/posix \
+        @top_srcdir@/ksrc/posix \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           = @top_srcdir@/ksrc/skins/native/snippets \
-		         @top_srcdir@/ksrc/skins/native/demos \
-		         @top_srcdir@/ksrc/skins/posix/demos \
+EXAMPLE_PATH           = @top_srcdir@/ksrc/native/snippets \
+		         @top_srcdir@/ksrc/native/demos \
+		         @top_srcdir@/ksrc/posix/demos \
 		         @top_srcdir@/src/utils \
 			 @top_srcdir@/examples
 
@@ -249,10 +249,10 @@ LATEX_HIDE_INDICES     = NO
 # Added top_buildir/include here for the definition of XENO_PROTO in
 # xeno_config.h
 INCLUDE_PATH           = \
-@top_srcdir@/ksrc/skins/native \
-@top_srcdir@/ksrc/skins/rtdm \
+@top_srcdir@/ksrc/native \
+@top_srcdir@/ksrc/rtdm \
 @top_srcdir@/ksrc/drivers/analogy \
-@top_srcdir@/ksrc/skins \
+@top_srcdir@/ksrc \
 @top_builddir@/include \
 @top_srcdir@/include \
 @top_srcdir@/include/posix \

@@ -109,9 +109,8 @@ mutex_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(mutex_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
 am_rtdm_OBJECTS = rtdm-rtdm.$(OBJEXT)
 rtdm_OBJECTS = $(am_rtdm_OBJECTS)
-rtdm_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
-	../../skins/native/libnative.la \
-	../../skins/common/libxenomai.la
+rtdm_DEPENDENCIES = ../../posix/libpthread_rt.la \
+	../../native/libnative.la ../../common/libxenomai.la
 rtdm_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rtdm_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -388,9 +387,9 @@ rtdm_CPPFLAGS = \
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 rtdm_LDADD = \
-	../../skins/posix/libpthread_rt.la \
-	../../skins/native/libnative.la \
-	../../skins/common/libxenomai.la \
+	../../posix/libpthread_rt.la \
+	../../native/libnative.la \
+	../../common/libxenomai.la \
 	-lpthread -lrt -lm
 
 all: all-am

@@ -132,7 +132,9 @@ patch_link n m ksrc/ kernel/xenomai
 patch_link n m ksrc/arch kernel/xenomai/arch
 patch_link r m ksrc/arch/generic kernel/xenomai/arch/generic
 patch_link n m ksrc/nucleus kernel/xenomai/nucleus
-patch_link r m ksrc/skins kernel/xenomai/skins
+patch_link n m ksrc/native kernel/xenomai/native
+patch_link n m ksrc/posix kernel/xenomai/posix
+patch_link n m ksrc/rtdm kernel/xenomai/rtdm
 patch_link r m ksrc/drivers drivers/xenomai
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
