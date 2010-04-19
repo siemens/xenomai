@@ -80,7 +80,7 @@ static inline void rtdm_dereference_device(struct rtdm_device *device)
 }
 
 int __init rtdm_dev_init(void);
-void __exit rtdm_dev_cleanup(void);
+void rtdm_dev_cleanup(void);
 
 int rtdm_proc_register_device(struct rtdm_device *device);
 int __init rtdm_proc_init(void);

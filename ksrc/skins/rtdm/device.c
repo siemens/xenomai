@@ -509,7 +509,7 @@ err_out1:
 	return err;
 }
 
-void __exit rtdm_dev_cleanup(void)
+void rtdm_dev_cleanup(void)
 {
 	/*
 	 * Note: no need to flush the cleanup_queue as no device is allowed
