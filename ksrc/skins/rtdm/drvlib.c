@@ -2344,6 +2344,9 @@ int rtdm_in_rt_context(void);
 /**
  * Test if the caller is capable of running in real-time context
  *
+ * @param[in] user_info User information pointer as passed to the invoked
+ * device operation handler
+ *
  * @return Non-zero is returned if the caller is able to execute in real-time
  * context (independent of its current execution mode), 0 otherwise.
  *
@@ -2358,13 +2361,12 @@ int rtdm_in_rt_context(void);
  *
  * This service can be called from:
  *
- * - Kernel module initialization/cleanup code
  * - Kernel-based task
  * - User-space task (RT, non-RT)
  *
  * Rescheduling: never.
  */
-int rtdm_rt_capable(void);
+int rtdm_rt_capable(rtdm_user_info_t *user_info);
 
 #endif /* DOXYGEN_CPP */
 

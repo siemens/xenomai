@@ -1329,9 +1329,12 @@ static inline int rtdm_in_rt_context(void)
 	return (rthal_current_domain != rthal_root_domain);
 }
 
-static inline int rtdm_rt_capable(void)
+static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 {
-	return (!xnpod_root_p() || xnshadow_thread(current) != NULL);
+	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return 0;);
+
+	return (user_info ? xnshadow_thread(user_info) != NULL
+			  : !xnpod_root_p());
 }
 
 #endif /* !DOXYGEN_CPP */
