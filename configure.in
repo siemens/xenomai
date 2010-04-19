@@ -208,6 +208,15 @@ if test $XENO_TARGET_ARCH = arm ; then
   unset vfp
   unset XNARCH_ARM_TSC_TYPE
 
+  AC_MSG_CHECKING(for ARM EABI interface)
+  AC_ARG_ENABLE(arm-eabi,
+	AS_HELP_STRING([--enable-arm-eabi], [Enable ARM EABI interface]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
+
   AC_MSG_CHECKING(for ARM machine)
   AC_ARG_ENABLE(arm-mach,
 	AS_HELP_STRING([--enable-arm-mach], [Select for which machine we are
@@ -260,13 +269,13 @@ omap3, orion, pxa, pxa3xx, s3c2410, sa1100.]),
 	pxa)		arch=5
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	pxa3xx)	        arch=xscale3
+	pxa3xx)		arch=xscale3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	s3c2410)	arch=4
 			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
 
-	sa1100)	arch=4
+	sa1100)		arch=4
 			CONFIG_XENO_ARM_SA1100=y
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
@@ -275,6 +284,15 @@ omap3, orion, pxa, pxa3xx, s3c2410, sa1100.]),
 	[AC_MSG_ERROR([Selecting a machine with --enable-arm-mach is mandatory])
 	])
   AC_MSG_RESULT(${enable_arm_mach:-no})
+
+  AC_MSG_CHECKING(for ARM EABI interface)
+  AC_ARG_ENABLE(arm-eabi,
+	AS_HELP_STRING([--enable-arm-eabi], [Enable ARM EABI interface]),
+	[case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
+	esac])
+  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
 
   AC_MSG_CHECKING(for ARM architecture version)
   if test $arch = choose; then
@@ -294,14 +312,34 @@ omap3, orion, pxa, pxa3xx, s3c2410, sa1100.]),
   else
 	CONFIG_XENO_ARM_ARCH="$arch"
   fi
-# Set the -march flag, FPU flags are set later.
   case "$arch" in
-  4)	XENO_ARM_ARCH_FLAGS="-march=armv4t";;
+  4)	XENO_ARM_ARCH_FLAGS="-march=armv4";;
   5)	XENO_ARM_ARCH_FLAGS="-march=armv5";;
   6)	XENO_ARM_ARCH_FLAGS="-march=armv6";;
   7)	XENO_ARM_ARCH_FLAGS="-march=armv7-a";;
   *)	AC_MSG_ERROR([Invalid architecture $arch, only 4, 5, xscale3, 6 and 7 are supported]);;
   esac
+
+  # Enable interworking
+  if test x$CONFIG_XENO_ARM_EABI = xy -a $CONFIG_XENO_ARM_ARCH -lt 6; then
+     XENO_ARM_ARCH_FLAGS="${XENO_ARM_ARCH_FLAGS}t"
+  fi
+
+  # Set FPU flags, if EABI is not enabled, all libraries in the system
+  # must be compiled with the same FPU flags, as we do not know how
+  # other components are compiled, we can not set the flags.
+  if test x$CONFIG_XENO_ARM_EABI = xy; then
+     if test x"$vfp" != x; then
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
+     else
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
+     fi
+  fi
+
+  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
+	CONFIG_XENO_FASTSYNCH=y
+  fi
+
   AC_MSG_RESULT($CONFIG_XENO_ARM_ARCH)
 
   AC_MSG_CHECKING(for ARM SA1100 architecture)
@@ -326,30 +364,6 @@ user-space]),
 	fi
   else
 	AC_MSG_RESULT(not supported by this board)
-  fi
-
-  AC_MSG_CHECKING(for ARM EABI interface)
-  AC_ARG_ENABLE(arm-eabi,
-	AS_HELP_STRING([--enable-arm-eabi], [Enable ARM EABI interface]),
-	[case "$enableval" in
-	y | yes) CONFIG_XENO_ARM_EABI=y ;;
-	*) unset CONFIG_XENO_ARM_EABI ;;
-	esac])
-  AC_MSG_RESULT(${CONFIG_XENO_ARM_EABI:-no})
-
-  # Set FPU flags, if EABI is not enabled, all libraries in the system
-  # must be compiled with the same FPU flags, as we do not know how
-  # other components are compiled, we can not set the flags.
-  if test x$CONFIG_XENO_ARM_EABI = xy; then
-     if test x"$vfp" != x; then
-	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
-     else
-	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
-     fi
-  fi
-
-  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
-	CONFIG_XENO_FASTSYNCH=y
   fi
 fi
 

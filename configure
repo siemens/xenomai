@@ -934,10 +934,10 @@ enable_debug
 enable_smp
 enable_x86_sep
 enable_x86_tsc
+enable_arm_eabi
 enable_arm_mach
 enable_arm_arch
 enable_arm_tsc
-enable_arm_eabi
 enable_linux_build
 with_adeos_patch
 enable_dox_doc
@@ -1598,6 +1598,7 @@ Optional Features:
   --enable-smp            Enable SMP support
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
+  --enable-arm-eabi       Enable ARM EABI interface
   --enable-arm-mach       Select for which machine we are compiling. Valid
                           machines are at91rm9200, at91sam926x, at91sam9,
                           generic, generic-vfp, imx, imx21, imx51, integrator,
@@ -1608,7 +1609,6 @@ Optional Features:
                           selected with --enable-arm-mach supports several
                           architecture versions
   --disable-arm-tsc       Disable TSC emulation in user-space
-  --enable-arm-eabi       Enable ARM EABI interface
   --enable-linux-build=<linux-src-dir>
                           Build Linux in Xenomai build tree, copying sources
                           from <linux-src-dir>. If no source directory is
@@ -11678,6 +11678,19 @@ if test $XENO_TARGET_ARCH = arm ; then
   unset vfp
   unset XNARCH_ARM_TSC_TYPE
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM EABI interface" >&5
+$as_echo_n "checking for ARM EABI interface... " >&6; }
+  # Check whether --enable-arm-eabi was given.
+if test "${enable_arm_eabi+set}" = set; then :
+  enableval=$enable_arm_eabi; case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
+	esac
+fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ARM_EABI:-no}" >&5
+$as_echo "${CONFIG_XENO_ARM_EABI:-no}" >&6; }
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM machine" >&5
 $as_echo_n "checking for ARM machine... " >&6; }
   # Check whether --enable-arm-mach was given.
@@ -11728,13 +11741,13 @@ if test "${enable_arm_mach+set}" = set; then :
 	pxa)		arch=5
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	pxa3xx)	        arch=xscale3
+	pxa3xx)		arch=xscale3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	s3c2410)	arch=4
 			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
 
-	sa1100)	arch=4
+	sa1100)		arch=4
 			CONFIG_XENO_ARM_SA1100=y
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
@@ -11747,6 +11760,19 @@ fi
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${enable_arm_mach:-no}" >&5
 $as_echo "${enable_arm_mach:-no}" >&6; }
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM EABI interface" >&5
+$as_echo_n "checking for ARM EABI interface... " >&6; }
+  # Check whether --enable-arm-eabi was given.
+if test "${enable_arm_eabi+set}" = set; then :
+  enableval=$enable_arm_eabi; case "$enableval" in
+	y | yes) CONFIG_XENO_ARM_EABI=y ;;
+	*) unset CONFIG_XENO_ARM_EABI ;;
+	esac
+fi
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ARM_EABI:-no}" >&5
+$as_echo "${CONFIG_XENO_ARM_EABI:-no}" >&6; }
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM architecture version" >&5
 $as_echo_n "checking for ARM architecture version... " >&6; }
@@ -11769,14 +11795,34 @@ fi
   else
 	CONFIG_XENO_ARM_ARCH="$arch"
   fi
-# Set the -march flag, FPU flags are set later.
   case "$arch" in
-  4)	XENO_ARM_ARCH_FLAGS="-march=armv4t";;
+  4)	XENO_ARM_ARCH_FLAGS="-march=armv4";;
   5)	XENO_ARM_ARCH_FLAGS="-march=armv5";;
   6)	XENO_ARM_ARCH_FLAGS="-march=armv6";;
   7)	XENO_ARM_ARCH_FLAGS="-march=armv7-a";;
   *)	as_fn_error "Invalid architecture $arch, only 4, 5, xscale3, 6 and 7 are supported" "$LINENO" 5;;
   esac
+
+  # Enable interworking
+  if test x$CONFIG_XENO_ARM_EABI = xy -a $CONFIG_XENO_ARM_ARCH -lt 6; then
+     XENO_ARM_ARCH_FLAGS="${XENO_ARM_ARCH_FLAGS}t"
+  fi
+
+  # Set FPU flags, if EABI is not enabled, all libraries in the system
+  # must be compiled with the same FPU flags, as we do not know how
+  # other components are compiled, we can not set the flags.
+  if test x$CONFIG_XENO_ARM_EABI = xy; then
+     if test x"$vfp" != x; then
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
+     else
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
+     fi
+  fi
+
+  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
+	CONFIG_XENO_FASTSYNCH=y
+  fi
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $CONFIG_XENO_ARM_ARCH" >&5
 $as_echo "$CONFIG_XENO_ARM_ARCH" >&6; }
 
@@ -11813,34 +11859,6 @@ $as_echo "no" >&6; }
   else
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not supported by this board" >&5
 $as_echo "not supported by this board" >&6; }
-  fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM EABI interface" >&5
-$as_echo_n "checking for ARM EABI interface... " >&6; }
-  # Check whether --enable-arm-eabi was given.
-if test "${enable_arm_eabi+set}" = set; then :
-  enableval=$enable_arm_eabi; case "$enableval" in
-	y | yes) CONFIG_XENO_ARM_EABI=y ;;
-	*) unset CONFIG_XENO_ARM_EABI ;;
-	esac
-fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_ARM_EABI:-no}" >&5
-$as_echo "${CONFIG_XENO_ARM_EABI:-no}" >&6; }
-
-  # Set FPU flags, if EABI is not enabled, all libraries in the system
-  # must be compiled with the same FPU flags, as we do not know how
-  # other components are compiled, we can not set the flags.
-  if test x$CONFIG_XENO_ARM_EABI = xy; then
-     if test x"$vfp" != x; then
-	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
-     else
-	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
-     fi
-  fi
-
-  if test $CONFIG_XENO_ARM_ARCH -ge 6 || test x$CONFIG_SMP != xy; then
-	CONFIG_XENO_FASTSYNCH=y
   fi
 fi
 
