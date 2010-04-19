@@ -20,3 +20,12 @@ config XENO_OPT_UITRON_PERIOD
 
 	The base period can be overriden at runtime using the
 	"tick_arg" module parameter when loading the uITRON skin.
+
+config XENO_OPT_DEBUG_UITRON
+	bool "Debugging support"
+	depends on XENO_SKIN_UITRON
+	default y
+	help
+
+	When enabled, this option makes the skin warn about
+	auto-clean operations executed upon process termination.

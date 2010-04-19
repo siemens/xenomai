@@ -70,9 +70,9 @@ static inline ui_rholder_t *ui_get_rholder(void)
 #define __ui_trace_release(__name, __obj, __err)			\
 	xnprintf("uITRON: cleaning up %s \"%s\" (ret=%d).\n",		\
 		 __name, (__obj)->name, __err)
-#else /* !XENO_DEBUG(NATIVE) */
+#else /* !XENO_DEBUG(UITRON) */
 #define __ui_trace_release(__name, __obj, __err)
-#endif /* !XENO_DEBUG(NATIVE) */
+#endif /* !XENO_DEBUG(UITRON) */
 
 #define ui_flush_rq(__type, __rq, __name)					\
 	do {								\
