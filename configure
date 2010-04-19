@@ -1600,9 +1600,9 @@ Optional Features:
   --enable-x86-tsc        Enable x86 TSC for timings
   --enable-arm-mach       Select for which machine we are compiling. Valid
                           machines are at91rm9200, at91sam926x, at91sam9,
-                          generic, imx, imx21, imx51, integrator, ixp4xx, mx2,
-                          mx3, mx5, omap3, orion, pxa, pxa3xx, s3c2410,
-                          sa1100.
+                          generic, generic-vfp, imx, imx21, imx51, integrator,
+                          ixp4xx, mx2, mx3, mx5, omap3, orion, pxa, pxa3xx,
+                          s3c2410, sa1100.
   --enable-arm-arch=<version>
                           Select ARM architecture version, if the machine
                           selected with --enable-arm-mach supports several
@@ -5204,35 +5204,35 @@ use__thread=yes
 case "$build_for" in
  i*86*-*)
 	XENO_TARGET_ARCH=x86
-        XENO_LINUX_ARCH=i386
+	XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
-        ;;
+	;;
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
-        XENO_LINUX_ARCH=ppc
+	XENO_LINUX_ARCH=ppc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
-        ;;
+	;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
-        XENO_LINUX_ARCH=powerpc
+	XENO_LINUX_ARCH=powerpc
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
-        ;;
+	;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
-        XENO_LINUX_ARCH=blackfin
+	XENO_LINUX_ARCH=blackfin
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=100000
-        ;;
+	;;
  arm*-*)
 	use__thread=no
- 	XENO_TARGET_ARCH=arm
- 	XENO_LINUX_ARCH=arm
+	XENO_TARGET_ARCH=arm
+	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
 	XENO_LINUX_IMAGE=arch/arm/boot/zImage
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
@@ -5241,17 +5241,17 @@ case "$build_for" in
 	;;
  x86_64-*|amd64-*)
 	XENO_TARGET_ARCH=x86
-        XENO_LINUX_ARCH=x86_64
+	XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
-        ;;
+	;;
  nios2-*)
 	XENO_TARGET_ARCH=nios2
-        XENO_LINUX_ARCH=nios2
+	XENO_LINUX_ARCH=nios2
 	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
-        ;;
+	;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $build_for -- Sorry."
@@ -11683,21 +11683,25 @@ $as_echo_n "checking for ARM machine... " >&6; }
   # Check whether --enable-arm-mach was given.
 if test "${enable_arm_mach+set}" = set; then :
   enableval=$enable_arm_mach; case "$enableval" in
-	at91rm9200)   	arch=4
-	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
+	at91rm9200)	arch=4
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
-	at91sam926x|at91sam9) 	arch=5
-	        	tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
+	at91sam926x|at91sam9)	arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING_FAST_WRAP;;
 
 	generic)	arch=4
 			CONFIG_XENO_ARM_SA1100=y
 			unset tsc_type;;
 
-	integrator) 	arch=choose
+	generic-vfp)	arch=5
+			vfp=vfp
+			unset tsc_type;;
+
+	integrator)	arch=choose
 			unset tsc_type;;
 
 	ixp4xx)		arch=5
-	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	mx1|imx)	arch=4
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
@@ -11721,16 +11725,16 @@ if test "${enable_arm_mach+set}" = set; then :
 			vfp=vfp
 			tsc_type=__XN_TSC_TYPE_FREERUNNING_COUNTDOWN;;
 
-	pxa) 		arch=5
-	      		tsc_type=__XN_TSC_TYPE_FREERUNNING;;
+	pxa)		arch=5
+			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
 	pxa3xx)	        arch=xscale3
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
-	s3c2410) 	arch=4
+	s3c2410)	arch=4
 			tsc_type=__XN_TSC_TYPE_DECREMENTER;;
 
-	sa1100) 	arch=4
+	sa1100)	arch=4
 			CONFIG_XENO_ARM_SA1100=y
 			tsc_type=__XN_TSC_TYPE_FREERUNNING;;
 
@@ -11747,13 +11751,13 @@ $as_echo "${enable_arm_mach:-no}" >&6; }
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ARM architecture version" >&5
 $as_echo_n "checking for ARM architecture version... " >&6; }
   if test $arch = choose; then
-  	# Check whether --enable-arm-arch was given.
+	# Check whether --enable-arm-arch was given.
 if test "${enable_arm_arch+set}" = set; then :
   enableval=$enable_arm_arch;
 		case "$enableval" in
 		"" | y | ye | yes | n | no)
-	    	as_fn_error "You must supply an argument to --enable-arm-arch." "$LINENO" 5
-	  	;;
+		as_fn_error "You must supply an argument to --enable-arm-arch." "$LINENO" 5
+		;;
 		esac
 		CONFIG_XENO_ARM_ARCH="$enableval"
 
@@ -11829,7 +11833,7 @@ $as_echo "${CONFIG_XENO_ARM_EABI:-no}" >&6; }
   # other components are compiled, we can not set the flags.
   if test x$CONFIG_XENO_ARM_EABI = xy; then
      if test x"$vfp" != x; then
-     	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
+	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -mfpu=$vfp -mfloat-abi=softfp"
      else
 	XENO_ARM_ARCH_FLAGS="$XENO_ARM_ARCH_FLAGS -msoft-float"
      fi
@@ -11847,7 +11851,7 @@ if test "${enable_linux_build+set}" = set; then :
   enableval=$enable_linux_build; case "$enableval" in
 	y | yes) XENO_LINUX_SRCDIR=y ;;
 	n | no) unset XENO_LINUX_SRCDIR ;;
-        *) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`" ;;
+	*) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`" ;;
 	esac
 fi
 
@@ -11863,13 +11867,13 @@ $as_echo_n "checking for Linux sources... " >&6; }
   if test x"$XENO_LINUX_SRCDIR" = xy; then
       candidates="linux-* $srcdir/linux-* $srcdir/linux linux"
       if test x"$cross_compiling" = xno ; then
-          candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
+	  candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
       fi
       for dir in $candidates ; do
-          if test -r $dir/Makefile ; then
-              XENO_LINUX_SRCDIR=$dir
-              break ;
-          fi
+	  if test -r $dir/Makefile ; then
+	      XENO_LINUX_SRCDIR=$dir
+	      break ;
+	  fi
       done
   fi
   if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile ; then
@@ -11890,16 +11894,16 @@ $as_echo_n "checking for Linux sources... " >&6; }
      linux_full_version="$linux_base_version$linux_EXTRAVERSION"
 
      if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x ||
-        test x"$linux_VERSION" = x ; then
-        as_fn_error "Unable to get version of $XENO_LINUX_SRCDIR, aborting." "$LINENO" 5
+	test x"$linux_VERSION" = x ; then
+	as_fn_error "Unable to get version of $XENO_LINUX_SRCDIR, aborting." "$LINENO" 5
      else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&5
 $as_echo "$XENO_LINUX_SRCDIR (kernel ${linux_full_version})" >&6; }
      fi
 
      case "$linux_base_version" in
 	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules" ;;
-        2.6.*) XENO_LINUX_ALL_TARGETS="all";;
+	2.6.*) XENO_LINUX_ALL_TARGETS="all";;
 	*) as_fn_error "Unknown Linux version $linux_full_version" "$LINENO" 5 ;;
      esac
 
@@ -11919,7 +11923,7 @@ fi
 
 
   if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
-        ADEOS_PATCH="`( ls $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-ipipe-$linux_base_version*-{$XENO_TARGET_ARCH,$XENO_LINUX_ARCH}-*|sort -r ) 2>/dev/null | head -n1`"
+	ADEOS_PATCH="`( ls $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-ipipe-$linux_base_version*-{$XENO_TARGET_ARCH,$XENO_LINUX_ARCH}-*|sort -r ) 2>/dev/null | head -n1`"
   fi
   if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
      as_fn_error "Unable to find Adeos patch, please use --with-adeos-patch" "$LINENO" 5
@@ -12004,7 +12008,7 @@ fi
 
 
 if test x"$docdir" = x; then
-        docdir=$datadir/doc/$PACKAGE-$VERSION
+	docdir=$datadir/doc/$PACKAGE-$VERSION
 fi
 
 
@@ -12029,7 +12033,7 @@ fi
 if test \! -d $srcdir/doc ; then
     if test x$CONFIG_XENO_DOC_DOX = xy ;
     then
-        as_fn_error "documentation tree is missing." "$LINENO" 5
+	as_fn_error "documentation tree is missing." "$LINENO" 5
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: not present" >&5
 $as_echo "not present" >&6; }
@@ -12421,9 +12425,9 @@ $as_echo_n "checking whether using LaTeX non-stop mode... " >&6; }
 # Check whether --enable-verbose-latex was given.
 if test "${enable_verbose_latex+set}" = set; then :
   enableval=$enable_verbose_latex; case "$enableval" in
-        y | yes) CONFIG_XENO_DOC_LATEX_NONSTOP=y ;;
-        *) unset CONFIG_XENO_DOC_LATEX_NONSTOP ;;
-        esac
+	y | yes) CONFIG_XENO_DOC_LATEX_NONSTOP=y ;;
+	*) unset CONFIG_XENO_DOC_LATEX_NONSTOP ;;
+	esac
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${CONFIG_XENO_DOC_LATEX_NONSTOP:-no}" >&5
@@ -12661,19 +12665,19 @@ XENO_USER_APP_LDFLAGS=$XENO_USER_LDFLAGS
 case $XENO_TARGET_ARCH in
  x86)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS -fstrict-aliasing $gcc_w_noalias"
-        ;;
+	;;
  powerpc)
-        ;;
+	;;
  blackfin)
 	# Produce libraries in FDPIC format.
-        ;;
+	;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS $XENO_ARM_ARCH_FLAGS"
-        ;;
+	;;
  nios2)
 	XENO_USER_LDFLAGS="$XENO_USER_LDFLAGS -Wl,-elf2flt"
 	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS -Wl,-elf2flt"
-        ;;
+	;;
 esac
 
 if test x$debug_symbols = xy; then
@@ -13972,10 +13976,10 @@ fi
 
 
 XENO_LINUX_SRCDIR=$XENO_LINUX_SRCDIR
-           XENO_TARGET_ARCH=$XENO_TARGET_ARCH
-           XENO_LINUX_ARCH=$XENO_LINUX_ARCH
-           XENO_LINUX_VERSION=$linux_full_version
-           ADEOS_PATCH=$ADEOS_PATCH
+	   XENO_TARGET_ARCH=$XENO_TARGET_ARCH
+	   XENO_LINUX_ARCH=$XENO_LINUX_ARCH
+	   XENO_LINUX_VERSION=$linux_full_version
+	   ADEOS_PATCH=$ADEOS_PATCH
 	   LNDIR="$LNDIR"
 
 _ACEOF
@@ -15424,76 +15428,76 @@ _LT_EOF
  ;;
     "linux":C)
      if test -e linux/.xenomai-prepared ; then
-        . linux/.xenomai-prepared
-        if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
-           test x`basename "$ADEOS_PATCH"` != x"$PREPARED_ADEOS_PATCH" ; then
-           echo "*** Warning: built version of linux and requested versions are "
-           echo "*** different. If you want to build the requested version of "
-           echo "*** linux, remove the file: linux/.xenomai-prepared."
-        else
-           touch linux/.xenomai-prepared
-        fi
+	. linux/.xenomai-prepared
+	if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
+	   test x`basename "$ADEOS_PATCH"` != x"$PREPARED_ADEOS_PATCH" ; then
+	   echo "*** Warning: built version of linux and requested versions are "
+	   echo "*** different. If you want to build the requested version of "
+	   echo "*** linux, remove the file: linux/.xenomai-prepared."
+	else
+	   touch linux/.xenomai-prepared
+	fi
      else
-           set -e
-           targetdir=$PWD/linux
-           if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux ; then
-               if test -e linux ; then
-                   test -e linux/.config && mv linux/.config .xenomai.config
-                   echo $ECHO_N "Removing existing linux directory... $ECHO_C"
-                   rm -Rf linux
-                   echo "${ECHO_T}done."
-               fi
-               mkdir linux
-               echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C"
+	   set -e
+	   targetdir=$PWD/linux
+	   if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux ; then
+	       if test -e linux ; then
+		   test -e linux/.config && mv linux/.config .xenomai.config
+		   echo $ECHO_N "Removing existing linux directory... $ECHO_C"
+		   rm -Rf linux
+		   echo "${ECHO_T}done."
+	       fi
+	       mkdir linux
+	       echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C"
 	       if test -z "$LNDIR"; then
-	           cd $XENO_LINUX_SRCDIR
-                   find . -! -type d | while read f ; do
-                       d=$targetdir/`dirname $f`
-                       mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
-                   done
-               else
+		   cd $XENO_LINUX_SRCDIR
+		   find . -! -type d | while read f ; do
+		       d=$targetdir/`dirname $f`
+		       mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
+		   done
+	       else
 		   cd $targetdir && $LNDIR $XENO_LINUX_SRCDIR
 	       fi
-               echo "${ECHO_T}done."
-           fi
-           cd $targetdir
+	       echo "${ECHO_T}done."
+	   fi
+	   cd $targetdir
 
-           if test -e $XENO_LINUX_SRCDIR/.config ; then
-              . $XENO_LINUX_SRCDIR/.config
+	   if test -e $XENO_LINUX_SRCDIR/.config ; then
+	      . $XENO_LINUX_SRCDIR/.config
 	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
-              test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
+	      test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
 	      if test x"$CONFIG_PPC" = xy; then
-	         cfg_arch=ppc
-	         test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
-	         test x"$CONFIG_WORD_SIZE" = x32 && cfg_arch=powerpc || :
-	         test x"$CONFIG_WORD_SIZE" = x64 && cfg_arch=powerpc || :
-              fi
-              test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
-              test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
-              test x"$CONFIG_NIOS2" = xy && cfg_arch=nios2 || :
+		 cfg_arch=ppc
+		 test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
+		 test x"$CONFIG_WORD_SIZE" = x32 && cfg_arch=powerpc || :
+		 test x"$CONFIG_WORD_SIZE" = x64 && cfg_arch=powerpc || :
+	      fi
+	      test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
+	      test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
+	      test x"$CONFIG_NIOS2" = xy && cfg_arch=nios2 || :
 	      if test -e $XENO_LINUX_SRCDIR/arch/x86; then
 		  case $cfg_arch in
 		  i386|x86_64) cfg_arch=x86;;
 		  esac
 	      fi
-              if test $cfg_arch = $XENO_LINUX_ARCH ; then
-                 cp $XENO_LINUX_SRCDIR/.config .xenomai.config
-              fi
-              echo "Cleaning linux directory..."
-              make ARCH=$cfg_arch distclean
-              test -e .xenomai.config && mv .xenomai.config .config
-           fi
-           cd ..
-           $srcdir/scripts/prepare-kernel.sh --verbose \
-             --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
-           test -e .xenomai.config && mv .xenomai.config linux/.config || :
-           cat > linux/.xenomai-prepared.tmp <<EOF
+	      if test $cfg_arch = $XENO_LINUX_ARCH ; then
+		 cp $XENO_LINUX_SRCDIR/.config .xenomai.config
+	      fi
+	      echo "Cleaning linux directory..."
+	      make ARCH=$cfg_arch distclean
+	      test -e .xenomai.config && mv .xenomai.config .config
+	   fi
+	   cd ..
+	   $srcdir/scripts/prepare-kernel.sh --verbose \
+	     --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
+	   test -e .xenomai.config && mv .xenomai.config linux/.config || :
+	   cat > linux/.xenomai-prepared.tmp <<EOF
 PREPARED_LINUX_VERSION=$XENO_LINUX_VERSION
 PREPARED_ADEOS_PATCH=`basename "$ADEOS_PATCH"`
 EOF
-           mv linux/.xenomai-prepared.tmp linux/.xenomai-prepared
+	   mv linux/.xenomai-prepared.tmp linux/.xenomai-prepared
      fi
-         ;;
+	 ;;
 
   esac
 done # for ac_tag
