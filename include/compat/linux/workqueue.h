@@ -28,17 +28,4 @@
 #define schedule_work(x)         schedule_task(x)
 #define flush_scheduled_work()   flush_scheduled_tasks()
 
-/*
- * WARNING: This is not identical to 2.6 schedule_delayed_work as it delayes
- * the caller to schedule the task after the specified delay. That's fine for
- * our current use cases, though.
- */
-#define schedule_delayed_work(work, delay) do {			\
-	if (delay) {						\
-		set_current_state(TASK_UNINTERRUPTIBLE);	\
-		schedule_timeout(delay);			\
-	}							\
-	schedule_task(work);					\
-} while (0)
-
 #endif /* _XENO_COMPAT_LINUX_WORKQUEUE_H */

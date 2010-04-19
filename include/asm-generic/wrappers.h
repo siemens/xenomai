@@ -194,6 +194,19 @@ do {									\
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_WORK(n, f, NULL)
 
+/*
+ * WARNING: This is not identical to 2.6 schedule_delayed_work as it delayes
+ * the caller to schedule the task after the specified delay. That's fine for
+ * our current use cases, though.
+ */
+#define schedule_delayed_work(work, delay) do {			\
+	if (delay) {						\
+		set_current_state(TASK_UNINTERRUPTIBLE);	\
+		schedule_timeout(delay);			\
+	}							\
+	schedule_task(work);					\
+} while (0)
+
 /* Msleep is unknown before 2.4.28 */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,28)
 #define msleep(x) do {				 \
