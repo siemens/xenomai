@@ -227,11 +227,9 @@ static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 		.context_size =		sizeof(struct a4l_dummy_context),
 		.device_name = 		"",
 
-		.open_rt =		a4l_rt_open,
 		.open_nrt =		a4l_rt_open,
 
 		.ops = {
-			.close_rt =	a4l_rt_close,
 			.ioctl_rt =	a4l_rt_ioctl,
 			.read_rt =	a4l_rt_read,
 			.write_rt =	a4l_rt_write,

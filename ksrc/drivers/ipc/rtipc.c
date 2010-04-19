@@ -143,6 +143,7 @@ static int rtipc_socket(struct rtdm_dev_context *context,
 {
 	struct rtipc_protocol *proto;
 	struct rtipc_private *p;
+	int ret;
 
 	if (protocol < 0 || protocol >= IPCPROTO_MAX)
 		return -EPROTONOSUPPORT;
@@ -157,11 +158,15 @@ static int rtipc_socket(struct rtdm_dev_context *context,
 
 	p = rtdm_context_to_private(context);
 	p->proto = proto;
-	p->state = xnmalloc(proto->proto_statesz);
+	p->state = kmalloc(proto->proto_statesz, GFP_KERNEL);
 	if (p->state == NULL)
 		return -ENOMEM;
 
-	return proto->proto_ops.socket(p, user_info);
+	ret = proto->proto_ops.socket(p, user_info);
+	if (ret)
+		kfree(p->state);
+
+	return ret;
 }
 
 static int rtipc_close(struct rtdm_dev_context *context,
@@ -175,7 +180,7 @@ static int rtipc_close(struct rtdm_dev_context *context,
 	if (ret)
 		return ret;
 
-	xnfree(p->state);
+	kfree(p->state);
 
 	return 0;
 }
@@ -227,10 +232,8 @@ static struct rtdm_device device = {
 	.device_name	=	"rtipc",
 	.protocol_family=	PF_RTIPC,
 	.socket_type	=	SOCK_DGRAM,
-	.socket_rt	=	rtipc_socket,
 	.socket_nrt	=	rtipc_socket,
 	.ops = {
-		.close_rt	=	NULL,
 		.close_nrt	=	rtipc_close,
 		.recvmsg_rt	=	rtipc_recvmsg,
 		.recvmsg_nrt	=	NULL,

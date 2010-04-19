@@ -297,7 +297,7 @@ static int rt_16550_interrupt(rtdm_irq_t * irq_context)
 
 static int rt_16550_set_config(struct rt_16550_context *ctx,
 			       const struct rtser_config *config,
-			       uint64_t ** in_history_ptr)
+			       uint64_t **in_history_ptr)
 {
 	rtdm_lockctx_t lock_ctx;
 	unsigned long base = ctx->base_addr;
@@ -537,12 +537,7 @@ int rt_16550_close(struct rtdm_dev_context *context,
 
 	rt_16550_cleanup_ctx(ctx);
 
-	if (in_history) {
-		if (test_bit(RTDM_CREATED_IN_NRT, &context->context_flags))
-			kfree(in_history);
-		else
-			rtdm_free(in_history);
-	}
+	kfree(in_history);
 
 	return 0;
 }
@@ -602,40 +597,24 @@ int rt_16550_ioctl(struct rtdm_dev_context *context,
 
 		if (testbits(config->config_mask,
 			     RTSER_SET_TIMESTAMP_HISTORY)) {
-			if (test_bit(RTDM_CREATED_IN_NRT,
-				     &context->context_flags)
-			    && rtdm_in_rt_context()) {
-				/* Already fail here if we MAY allocate or
-				   release a non-RT buffer in RT context. */
-				return -EPERM;
-			}
+			/*
+			 * Reflect the call to non-RT as we will likely
+			 * allocate or free the buffer.
+			 */
+			if (rtdm_in_rt_context())
+				return -ENOSYS;
 
 			if (testbits(config->timestamp_history,
-				     RTSER_RX_TIMESTAMP_HISTORY)) {
-				if (test_bit(RTDM_CREATED_IN_NRT,
-					     &context->context_flags))
-					hist_buf =
-					    kmalloc(IN_BUFFER_SIZE *
-						    sizeof(nanosecs_abs_t),
-						    GFP_KERNEL);
-				else
-					hist_buf =
-					    rtdm_malloc(IN_BUFFER_SIZE *
-						sizeof(nanosecs_abs_t));
-					if (!hist_buf)
-						return -ENOMEM;
-			}
+				     RTSER_RX_TIMESTAMP_HISTORY))
+				hist_buf = kmalloc(IN_BUFFER_SIZE *
+						   sizeof(nanosecs_abs_t),
+						   GFP_KERNEL);
 		}
 
 		rt_16550_set_config(ctx, config, &hist_buf);
 
-		if (hist_buf) {
-			if (test_bit(RTDM_CREATED_IN_NRT,
-				     &context->context_flags))
-				kfree(hist_buf);
-			else
-				rtdm_free(hist_buf);
-		}
+		if (hist_buf)
+			kfree(hist_buf);
 
 		break;
 	}
@@ -1107,11 +1086,9 @@ static const struct rtdm_device __initdata device_tmpl = {
 	.context_size		= sizeof(struct rt_16550_context),
 	.device_name		= "",
 
-	.open_rt		= rt_16550_open,
 	.open_nrt		= rt_16550_open,
 
 	.ops = {
-		.close_rt	= rt_16550_close,
 		.close_nrt	= rt_16550_close,
 
 		.ioctl_rt	= rt_16550_ioctl,

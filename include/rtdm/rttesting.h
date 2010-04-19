@@ -29,13 +29,14 @@
  * Feel free to comment on this profile via the Xenomai mailing list
  * (xenomai-core@gna.org) or directly to the author (jan.kiszka@web.de).
  *
- * @b Profile @b Revision: 1
+ * @b Profile @b Revision: 2
  * @n
  * @n
  * @par Device Characteristics
  * @ref rtdm_device.device_flags "Device Flags": @c RTDM_NAMED_DEVICE @n
  * @n
- * @ref rtdm_device.device_name "Device Name": @c "rttest<N>", N >= 0 @n
+ * @ref rtdm_device.device_name "Device Name": @c "rttest[-<subclass>]<N>",
+ * N >= 0, optional subclass name to simplify device discovery @n
  * @n
  * @ref rtdm_device.device_class "Device Class": @c RTDM_CLASS_TESTING @n
  * @n
@@ -61,7 +62,7 @@
 
 #include <rtdm/rtdm.h>
 
-#define RTTST_PROFILE_VER		1
+#define RTTST_PROFILE_VER		2
 
 typedef struct rttst_bench_res {
 	long long avg;
@@ -140,14 +141,23 @@ struct rttst_swtest_error {
 	unsigned fp_val;
 };
 
+#define RTTST_RTDM_NORMAL_CLOSE		0
+#define RTTST_RTDM_DEFER_CLOSE_HANDLER	1
+#define RTTST_RTDM_DEFER_CLOSE_CONTEXT	2
+
 #define RTIOC_TYPE_TESTING		RTDM_CLASS_TESTING
 
 /*!
  * @name Sub-Classes of RTDM_CLASS_TESTING
  * @{ */
+/** subclass name: "timerbench" */
 #define RTDM_SUBCLASS_TIMERBENCH	0
+/** subclass name: "irqbench" */
 #define RTDM_SUBCLASS_IRQBENCH		1
+/** subclass name: "switchtest" */
 #define RTDM_SUBCLASS_SWITCHTEST	2
+/** subclase name: "rtdm" */
+#define RTDM_SUBCLASS_RTDMTEST		3
 /** @} */
 
 /*!
@@ -204,6 +214,9 @@ struct rttst_swtest_error {
 
 #define RTTST_RTIOC_SWTEST_SET_PAUSE \
 	_IOW(RTIOC_TYPE_TESTING, 0x38, unsigned long)
+
+#define RTTST_RTIOC_RTDM_DEFER_CLOSE \
+	_IOW(RTIOC_TYPE_TESTING, 0x40, unsigned long)
 /** @} */
 
 /** @} */

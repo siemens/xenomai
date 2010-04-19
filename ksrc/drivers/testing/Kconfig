@@ -1,8 +1,13 @@
 menu "Testing drivers"
 
-config XENO_TESTING_MODULE
-        depends on MODULES
-	def_tristate m
+config XENO_DRIVERS_TESTING_LEGACY_NAMES
+	depends on XENO_SKIN_RTDM
+	bool "Use legacy names for testing drivers"
+	help
+	This lets the testing drivers register under legacy names
+	("rttest<N>") instead of the new scheme ("rttest-<subclass><N>").
+	Only enable this if you plan to use old userspace tools with the
+	drivers.
 
 config XENO_DRIVERS_TIMERBENCH
 	depends on XENO_SKIN_RTDM
@@ -13,7 +18,7 @@ config XENO_DRIVERS_TIMERBENCH
 	See testsuite/latency for a possible front-end.
 
 config XENO_DRIVERS_KLATENCY
-	depends on XENO_DRIVERS_TIMERBENCH && XENO_TESTING_MODULE
+	depends on XENO_DRIVERS_TIMERBENCH && m
 	tristate "Kernel-only latency measurement module"
 	help
 	Kernel module for kernel-only latency measurement.
@@ -35,9 +40,15 @@ config XENO_DRIVERS_SWITCHTEST
 	FPU switches.
 
 config XENO_DRIVERS_SIGTEST
-       depends on XENO_TESTING_MODULE
-       tristate "User-space real-time signals testing module"
-       help
-       Elementary skin for unit testing user-space real-time signals.
+	depends on m
+	tristate "User-space real-time signals testing module"
+	help
+	Elementary skin for unit testing user-space real-time signals.
+
+config XENO_DRIVERS_RTDMTEST
+	depends on XENO_SKIN_RTDM && m
+	tristate "RTDM unit tests driver"
+	help
+	Kernel driver for performing RTDM unit tests.
 
 endmenu

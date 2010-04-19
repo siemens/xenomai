@@ -5,6 +5,8 @@
 mainmenu_option next_comment
 comment 'Testing drivers'
 
+bool 'Use legacy names for testing drivers' CONFIG_XENO_DRIVERS_TESTING_LEGACY_NAMES $CONFIG_XENO_SKIN_RTDM
+
 dep_tristate 'Timer benchmark driver' CONFIG_XENO_DRIVERS_TIMERBENCH $CONFIG_XENO_SKIN_RTDM
 
 dep_tristate 'IRQ benchmark driver' CONFIG_XENO_DRIVERS_IRQBENCH $CONFIG_XENO_SKIN_RTDM
@@ -13,6 +15,8 @@ dep_tristate 'Context switches test driver' CONFIG_XENO_DRIVERS_SWITCHTEST $CONF
 
 dep_tristate 'Kernel-only latency measurement module' CONFIG_XENO_DRIVERS_KLATENCY $CONFIG_XENO_DRIVERS_TIMERBENCH m
 
-dep_tristate 'User-space real-time signals testing module' CONFIG_XENO_DRIVERS_SIGTEST $CONFIG_MODULES m
+dep_tristate 'User-space real-time signals testing module' CONFIG_XENO_DRIVERS_SIGTEST m
+
+dep_tristate 'RTDM unit tests driver' CONFIG_XENO_DRIVERS_RTDMTEST $CONFIG_XENO_SKIN_RTDM m
 
 endmenu

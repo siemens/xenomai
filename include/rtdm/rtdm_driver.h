@@ -193,11 +193,18 @@ typedef int (*rtdm_socket_handler_t)(struct rtdm_dev_context *context,
  *
  * @param[in] context Context structure associated with opened device instance
  * @param[in] user_info Opaque pointer to information about user mode caller,
- * NULL if kernel mode call
+ * NULL if kernel mode or deferred user mode call
  *
  * @return 0 on success. On failure return either -ENOSYS, to request that
  * this handler be called again from the opposite realtime/non-realtime
- * context, or another negative error code.
+ * context, -EAGAIN to request a recall after a grace period, or a valid
+ * negative error code according to IEEE Std 1003.1.
+ *
+ * @note Drivers must be prepared for that case that the close handler is
+ * invoked more than once per open context (even if the handler already
+ * completed an earlier run successfully). The driver has to avoid releasing
+ * resources twice as well as returning false errors on successive close
+ * invocations.
  *
  * @see @c close() in IEEE Std 1003.1,
  * http://www.opengroup.org/onlinepubs/009695399 */
@@ -328,7 +335,8 @@ typedef int (*rtdm_rt_handler_t)(struct rtdm_dev_context *context,
 struct rtdm_operations {
 	/*! @name Common Operations
 	 * @{ */
-	/** Close handler for real-time contexts (optional) */
+	/** Close handler for real-time contexts (optional, deprecated)
+	 *  @deprecated Only use non-real-time close handler in new drivers. */
 	rtdm_close_handler_t close_rt;
 	/** Close handler for non-real-time contexts (required) */
 	rtdm_close_handler_t close_nrt;
@@ -371,6 +379,7 @@ struct rtdm_operations {
 
 struct rtdm_devctx_reserved {
 	void *owner;
+	struct list_head cleanup;
 };
 
 /**
@@ -468,14 +477,19 @@ struct rtdm_device {
 	int socket_type;
 
 	/** Named device instance creation for real-time contexts,
-	 *  optional if open_nrt is non-NULL, ignored for protocol devices */
+	 *  optional (but deprecated) if open_nrt is non-NULL, ignored for
+	 *  protocol devices
+	 *  @deprecated Only use non-real-time open handler in new drivers. */
 	rtdm_open_handler_t open_rt;
 	/** Named device instance creation for non-real-time contexts,
 	 *  optional if open_rt is non-NULL, ignored for protocol devices */
 	rtdm_open_handler_t open_nrt;
 
 	/** Protocol socket creation for real-time contexts,
-	 *  optional if socket_nrt is non-NULL, ignored for named devices */
+	 *  optional (but deprecated) if socket_nrt is non-NULL, ignored for
+	 *  named devices
+	 *  @deprecated Only use non-real-time socket creation handler in new
+	 *  drivers. */
 	rtdm_socket_handler_t socket_rt;
 	/** Protocol socket creation for non-real-time contexts,
 	 *  optional if socket_rt is non-NULL, ignored for named devices */
@@ -547,15 +561,33 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay);
 struct rtdm_dev_context *rtdm_context_get(int fd);
 
 #ifndef DOXYGEN_CPP /* Avoid static inline tags for RTDM in doxygen */
+
+#define CONTEXT_IS_LOCKED(context) \
+	(atomic_read(&(context)->close_lock_count) > 1 || \
+	 (test_bit(RTDM_CLOSING, &(context)->context_flags) && \
+	  atomic_read(&(context)->close_lock_count) > 0))
+
 static inline void rtdm_context_lock(struct rtdm_dev_context *context)
 {
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
+		    /* just warn if context was a dangling pointer */);
 	atomic_inc(&context->close_lock_count);
 }
 
+extern int rtdm_apc;
+
 static inline void rtdm_context_unlock(struct rtdm_dev_context *context)
 {
+	XENO_ASSERT(RTDM, CONTEXT_IS_LOCKED(context),
+		    /* just warn if context was a dangling pointer */);
 	smp_mb__before_atomic_dec();
-	atomic_dec(&context->close_lock_count);
+	if (unlikely(atomic_dec_and_test(&context->close_lock_count)))
+		rthal_apc_schedule(rtdm_apc);
+}
+
+static inline void rtdm_context_put(struct rtdm_dev_context *context)
+{
+	rtdm_context_unlock(context);
 }
 
 /* --- clock services --- */
@@ -1296,6 +1328,12 @@ static inline int rtdm_in_rt_context(void)
 {
 	return (rthal_current_domain != rthal_root_domain);
 }
+
+static inline int rtdm_rt_capable(void)
+{
+	return (!xnpod_root_p() || xnshadow_thread(current) != NULL);
+}
+
 #endif /* !DOXYGEN_CPP */
 
 int rtdm_exec_in_rt(struct rtdm_dev_context *context,

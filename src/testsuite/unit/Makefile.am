@@ -10,7 +10,8 @@ test_PROGRAMS = \
 	mutex-torture-native \
 	cond-torture-posix \
 	cond-torture-native \
-	check-vdso
+	check-vdso \
+	rtdm
 
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
@@ -104,6 +105,20 @@ check_vdso_LDADD = \
 	../../skins/native/libnative.la \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
+
+rtdm_SOURCES = rtdm.c
+
+rtdm_CPPFLAGS = \
+	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX \
+	-I$(top_srcdir)/include
+
+rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+
+rtdm_LDADD = \
+	../../skins/posix/libpthread_rt.la \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt -lm
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(rundir)

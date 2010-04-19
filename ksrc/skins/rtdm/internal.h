@@ -80,15 +80,11 @@ static inline void rtdm_dereference_device(struct rtdm_device *device)
 }
 
 int __init rtdm_dev_init(void);
-
-static inline void rtdm_dev_cleanup(void)
-{
-	kfree(rtdm_named_devices);
-	kfree(rtdm_protocol_devices);
-}
+void __exit rtdm_dev_cleanup(void);
 
 int rtdm_proc_register_device(struct rtdm_device *device);
 int __init rtdm_proc_init(void);
 void rtdm_proc_cleanup(void);
+void rtdm_apc_handler(void *cookie);
 
 #endif /* _RTDM_INTERNAL_H */
