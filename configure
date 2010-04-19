@@ -808,8 +808,8 @@ EGREP
 GREP
 SED
 LIBTOOL
-XENO_LINUX_ARCH_I386_FALSE
-XENO_LINUX_ARCH_I386_TRUE
+XENO_TARGET_ARCH_X86_FALSE
+XENO_TARGET_ARCH_X86_TRUE
 LEXLIB
 LEX_OUTPUT_ROOT
 LEX
@@ -5262,12 +5262,12 @@ esac
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $XENO_TARGET_ARCH" >&5
 $as_echo "$XENO_TARGET_ARCH" >&6; }
- if test $XENO_LINUX_ARCH = i386; then
-  XENO_LINUX_ARCH_I386_TRUE=
-  XENO_LINUX_ARCH_I386_FALSE='#'
+ if test $XENO_TARGET_ARCH = x86; then
+  XENO_TARGET_ARCH_X86_TRUE=
+  XENO_TARGET_ARCH_X86_FALSE='#'
 else
-  XENO_LINUX_ARCH_I386_TRUE='#'
-  XENO_LINUX_ARCH_I386_FALSE=
+  XENO_TARGET_ARCH_X86_TRUE='#'
+  XENO_TARGET_ARCH_X86_FALSE=
 fi
 
 
@@ -13032,8 +13032,8 @@ if test -z "${am__fastdepCCAS_TRUE}" && test -z "${am__fastdepCCAS_FALSE}"; then
   as_fn_error "conditional \"am__fastdepCCAS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${XENO_LINUX_ARCH_I386_TRUE}" && test -z "${XENO_LINUX_ARCH_I386_FALSE}"; then
-  as_fn_error "conditional \"XENO_LINUX_ARCH_I386\" was never defined.
+if test -z "${XENO_TARGET_ARCH_X86_TRUE}" && test -z "${XENO_TARGET_ARCH_X86_FALSE}"; then
+  as_fn_error "conditional \"XENO_TARGET_ARCH_X86\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XENO_BUILD_LINUX_TRUE}" && test -z "${XENO_BUILD_LINUX_FALSE}"; then

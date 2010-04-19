@@ -36,7 +36,7 @@ target_triplet = @target@
 test_PROGRAMS = arith$(EXEEXT) wakeup-time$(EXEEXT) \
 	mutex-torture-posix$(EXEEXT) mutex-torture-native$(EXEEXT) \
 	cond-torture-posix$(EXEEXT) cond-torture-native$(EXEEXT) \
-	check-vdso$(EXEEXT)
+	check-vdso$(EXEEXT) rtdm$(EXEEXT)
 subdir = src/testsuite/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -105,6 +105,14 @@ mutex_torture_posix_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
 mutex_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(mutex_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
+am_rtdm_OBJECTS = rtdm-rtdm.$(OBJEXT)
+rtdm_OBJECTS = $(am_rtdm_OBJECTS)
+rtdm_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la
+rtdm_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rtdm_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_wakeup_time_OBJECTS = wakeup_time-wakeup-time.$(OBJEXT)
 wakeup_time_OBJECTS = $(am_wakeup_time_OBJECTS)
 wakeup_time_DEPENDENCIES = ../../skins/native/libnative.la \
@@ -126,11 +134,11 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
 	$(cond_torture_native_SOURCES) $(cond_torture_posix_SOURCES) \
 	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
-	$(wakeup_time_SOURCES)
+	$(rtdm_SOURCES) $(wakeup_time_SOURCES)
 DIST_SOURCES = $(arith_SOURCES) $(check_vdso_SOURCES) \
 	$(cond_torture_native_SOURCES) $(cond_torture_posix_SOURCES) \
 	$(mutex_torture_native_SOURCES) $(mutex_torture_posix_SOURCES) \
-	$(wakeup_time_SOURCES)
+	$(rtdm_SOURCES) $(wakeup_time_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -376,6 +384,18 @@ check_vdso_LDADD = \
 	../../skins/common/libxenomai.la \
 	-lpthread -lm
 
+rtdm_SOURCES = rtdm.c
+rtdm_CPPFLAGS = \
+	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX \
+	-I$(top_srcdir)/include
+
+rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
+rtdm_LDADD = \
+	../../skins/posix/libpthread_rt.la \
+	../../skins/native/libnative.la \
+	../../skins/common/libxenomai.la \
+	-lpthread -lrt -lm
+
 EXTRA_DIST = runinfo.in
 all: all-am
 
@@ -456,6 +476,9 @@ mutex-torture-native$(EXEEXT): $(mutex_torture_native_OBJECTS) $(mutex_torture_n
 mutex-torture-posix$(EXEEXT): $(mutex_torture_posix_OBJECTS) $(mutex_torture_posix_DEPENDENCIES) 
 	@rm -f mutex-torture-posix$(EXEEXT)
 	$(mutex_torture_posix_LINK) $(mutex_torture_posix_OBJECTS) $(mutex_torture_posix_LDADD) $(LIBS)
+rtdm$(EXEEXT): $(rtdm_OBJECTS) $(rtdm_DEPENDENCIES) 
+	@rm -f rtdm$(EXEEXT)
+	$(rtdm_LINK) $(rtdm_OBJECTS) $(rtdm_LDADD) $(LIBS)
 wakeup-time$(EXEEXT): $(wakeup_time_OBJECTS) $(wakeup_time_DEPENDENCIES) 
 	@rm -f wakeup-time$(EXEEXT)
 	$(wakeup_time_LINK) $(wakeup_time_OBJECTS) $(wakeup_time_LDADD) $(LIBS)
@@ -473,6 +496,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_torture_posix-cond-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_native-mutex-torture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mutex_torture_posix-mutex-torture.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtdm-rtdm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wakeup_time-wakeup-time.Po@am__quote@
 
 .c.o:
@@ -593,6 +617,20 @@ mutex_torture_posix-mutex-torture.obj: mutex-torture.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mutex-torture.c' object='mutex_torture_posix-mutex-torture.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mutex_torture_posix_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mutex_torture_posix-mutex-torture.obj `if test -f 'mutex-torture.c'; then $(CYGPATH_W) 'mutex-torture.c'; else $(CYGPATH_W) '$(srcdir)/mutex-torture.c'; fi`
+
+rtdm-rtdm.o: rtdm.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtdm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtdm-rtdm.o -MD -MP -MF $(DEPDIR)/rtdm-rtdm.Tpo -c -o rtdm-rtdm.o `test -f 'rtdm.c' || echo '$(srcdir)/'`rtdm.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/rtdm-rtdm.Tpo $(DEPDIR)/rtdm-rtdm.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtdm.c' object='rtdm-rtdm.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtdm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtdm-rtdm.o `test -f 'rtdm.c' || echo '$(srcdir)/'`rtdm.c
+
+rtdm-rtdm.obj: rtdm.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtdm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtdm-rtdm.obj -MD -MP -MF $(DEPDIR)/rtdm-rtdm.Tpo -c -o rtdm-rtdm.obj `if test -f 'rtdm.c'; then $(CYGPATH_W) 'rtdm.c'; else $(CYGPATH_W) '$(srcdir)/rtdm.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/rtdm-rtdm.Tpo $(DEPDIR)/rtdm-rtdm.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtdm.c' object='rtdm-rtdm.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(rtdm_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rtdm-rtdm.obj `if test -f 'rtdm.c'; then $(CYGPATH_W) 'rtdm.c'; else $(CYGPATH_W) '$(srcdir)/rtdm.c'; fi`
 
 wakeup_time-wakeup-time.o: wakeup-time.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(wakeup_time_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT wakeup_time-wakeup-time.o -MD -MP -MF $(DEPDIR)/wakeup_time-wakeup-time.Tpo -c -o wakeup_time-wakeup-time.o `test -f 'wakeup-time.c' || echo '$(srcdir)/'`wakeup-time.c
