@@ -427,7 +427,7 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_devcfg: minor=%d\n", a4l_get_minor(cxt));
 
-	if (a4l_test_rt() != 0)
+	if (rtdm_in_rt_context() != 0)
 		return -ENOSYS;
 
 	if (arg == NULL) {

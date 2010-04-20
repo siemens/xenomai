@@ -400,7 +400,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
-	if (a4l_test_rt() != 0) {
+	if (rtdm_in_rt_context() != 0) {
 		return -ENOSYS;
 	}
 
@@ -475,7 +475,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
-	if (a4l_test_rt() != 0) {
+	if (rtdm_in_rt_context() != 0) {
 		return -ENOSYS;
 	}
 
@@ -730,7 +730,7 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		/* If the acquisition is not over, we must not
 		   leave the function without having read a least byte */
 		else {
-			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
@@ -823,7 +823,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 				goto out_a4l_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
-			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
@@ -953,11 +953,12 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 		goto out_poll;
 
 	if (poll.arg == A4L_INFINITE)
-		ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+		ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 	else {
 		unsigned long long ns = ((unsigned long long)poll.arg) *
 			((unsigned long long)NSEC_PER_MSEC);
-		ret = a4l_timedwait_sync(&(buf->sync), a4l_test_rt(), ns);
+		ret = a4l_timedwait_sync(&(buf->sync), 
+					 rtdm_in_rt_context(), ns);
 	}
 
 	if (ret == 0) {
