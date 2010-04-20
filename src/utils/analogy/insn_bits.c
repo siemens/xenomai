@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, instruction write test program
+ * Analogy for Linux, instruction bits test program
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
