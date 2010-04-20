@@ -56,6 +56,12 @@ a4l_cmd_t cmd = {
 	.chan_descs = chans,
 };
 
+a4l_insn_t insn = {
+	.type = A4L_INSN_INTTRIG,
+	.idx_subd = -1,
+	.data_size = 0,
+};
+
 struct option cmd_bits_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
 	{"device", required_argument, NULL, 'd'},
@@ -82,6 +88,9 @@ int main(int argc, char *argv[])
 	a4l_sbinfo_t *sbinfo;
 	int scan_size, idx_subd = -1;
 	int value, mask = 0;
+
+	/* Trigger status, written data..., before triggering */
+	int triggered = 0, total = 0, trigger_threshold = 128;
 
 	/* Compute arguments */
 	while ((err = getopt_long(argc,
@@ -185,7 +194,7 @@ int main(int argc, char *argv[])
 		goto out_cmd_bits;
 	}
 
-	cmd.idx_subd = idx_subd;
+	cmd.idx_subd = insn.idx_subd = idx_subd;
 
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
 	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO) {
@@ -239,6 +248,18 @@ int main(int argc, char *argv[])
 			fprintf(stderr, 
 				"cmd_bits: a4l_write failed (err=%d)\n", err);
 			goto out_cmd_bits;
+		}
+		
+		total += err;
+
+		if (!triggered && total > trigger_threshold) {
+			err = a4l_snd_insn(&dsc, &insn);
+			if (err < 0) {
+				fprintf(stderr, 
+					"cmd_bits: triggering failed (err=%d)\n",
+					err);
+				goto out_cmd_bits;
+			}
 		}
 
 	} while (err > 0);       	
