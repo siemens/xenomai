@@ -36,10 +36,6 @@
 #include <nucleus/sched-tp.h>
 #include <nucleus/sched-sporadic.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
-
 /* Sched status flags */
 #define XNKCOUT		0x80000000	/* Sched callout context */
 #define XNHTICK		0x40000000	/* Host tick pending  */
@@ -57,7 +53,7 @@ struct xnsched_rt {
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 };
 
-/*! 
+/*!
  * \brief Scheduling information structure.
  */
 

@@ -58,7 +58,7 @@
  *
  *       ret = this_may_fail();
  *       if (ret)
- *  	       xnbufd_invalidate(bufd);
+ *	       xnbufd_invalidate(bufd);
  *
  *       return ret;
  *   }
@@ -145,10 +145,6 @@
 #include <nucleus/pod.h>
 #include <nucleus/bufd.h>
 #include <nucleus/assert.h>
-
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS  0
-#endif
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 

@@ -24,10 +24,6 @@
 #include <nucleus/types.h>
 #include <nucleus/assert.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_QUEUES
-#define CONFIG_XENO_OPT_DEBUG_QUEUES 0
-#endif
-
 /* Basic element holder */
 
 typedef struct xnholder {

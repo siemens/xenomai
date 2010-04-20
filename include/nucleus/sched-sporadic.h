@@ -29,10 +29,6 @@
 
 #ifdef CONFIG_XENO_OPT_SCHED_SPORADIC
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
-
 #include <nucleus/heap.h>
 
 extern struct xnsched_class xnsched_class_sporadic;

@@ -66,7 +66,7 @@ static u_long wd_timeout_arg = CONFIG_XENO_OPT_WATCHDOG_TIMEOUT;
 module_param_named(watchdog_timeout, wd_timeout_arg, ulong, 0644);
 MODULE_PARM_DESC(watchdog_timeout, "Watchdog timeout (s)");
 
-/*! 
+/*!
  * @internal
  * \fn void xnsched_watchdog_handler(struct xntimer *timer)
  * \brief Process watchdog ticks.
@@ -307,7 +307,7 @@ struct xnthread *xnsched_peek_rpi(struct xnsched *sched)
 #endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
 }
 
-/*! 
+/*!
  * @internal
  * \fn void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
  * \brief Change the root thread priority.
@@ -529,10 +529,6 @@ void xnsched_migrate_passive(struct xnthread *thread, struct xnsched *sched)
 
 #ifdef CONFIG_XENO_OPT_SCALABLE_SCHED
 
-#ifndef CONFIG_XENO_OPT_DEBUG_QUEUES
-#define CONFIG_XENO_OPT_DEBUG_QUEUES 0
-#endif
-
 void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
 {
 	int prio;
@@ -546,7 +542,7 @@ void initmlq(struct xnsched_mlq *q, int loprio, int hiprio)
 	for (prio = 0; prio < XNSCHED_MLQ_LEVELS; prio++)
 		initq(&q->queue[prio]);
 
-	XENO_ASSERT(QUEUES, 
+	XENO_ASSERT(QUEUES,
 		    hiprio - loprio + 1 < XNSCHED_MLQ_LEVELS,
 		    xnpod_fatal("priority range [%d..%d] is beyond multi-level "
 				"queue indexing capabilities",
@@ -706,7 +702,7 @@ struct sched_seq_iterator {
 		int cprio;
 		int dnprio;
 		int periodic;
-	  	xnticks_t timeout;
+		xnticks_t timeout;
 		xnflags_t state;
 	} sched_info[1];
 };

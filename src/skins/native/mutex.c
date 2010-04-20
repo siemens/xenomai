@@ -103,7 +103,7 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 		 * mutex state consistent.
 		 *
 		 * We make no efforts to migrate or warn here. There is
-		 * CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX to catch such bugs.
+		 * XENO_DEBUG(SYNCH_RELAX) to catch such bugs.
 		 */
 		if (mutex->lockcnt == UINT_MAX)
 			return -EAGAIN;

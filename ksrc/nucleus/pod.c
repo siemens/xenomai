@@ -46,10 +46,6 @@
 #include <nucleus/select.h>
 #include <asm/xenomai/bits/pod.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
-#define CONFIG_XENO_OPT_DEBUG_NUCLEUS 0
-#endif
-
 /*
  * NOTE: We need to initialize the globals; remember that this code
  * also runs over the simulator in user-space.
@@ -318,7 +314,7 @@ static void xnpod_flush_stackpool(xnheap_t *heap,
 }
 #endif
 
-/*! 
+/*!
  * \fn int xnpod_init(void)
  * \brief Initialize the core pod.
  *
@@ -438,7 +434,7 @@ int xnpod_init(void)
 }
 EXPORT_SYMBOL_GPL(xnpod_init);
 
-/*! 
+/*!
  * \fn void xnpod_shutdown(int xtype)
  * \brief Shutdown the current pod.
  *
@@ -543,7 +539,7 @@ void xnpod_fire_callouts(xnqueue_t *hookq, xnthread_t *thread)
 	__clrbits(sched->status, XNKCOUT);
 }
 
-/*! 
+/*!
  * \fn void xnpod_init_thread(struct xnthread *thread,const struct xnthread_init_attr *attr,struct xnsched_class *sched_class,const union xnsched_policy_param *sched_param)
  * \brief Initialize a new thread.
  *
@@ -665,7 +661,7 @@ int xnpod_init_thread(struct xnthread *thread,
 }
 EXPORT_SYMBOL_GPL(xnpod_init_thread);
 
-/*! 
+/*!
  * \fn int xnpod_start_thread(struct xnthread *thread,const struct xnthread_start_attr *attr)
  * \brief Initial start of a newly created thread.
  *
@@ -824,7 +820,7 @@ unlock_and_exit:
 }
 EXPORT_SYMBOL_GPL(xnpod_start_thread);
 
-/*! 
+/*!
  * @internal
  * \fn void __xnpod_reset_thread(struct xnthread *thread, int unlock)
  * \brief Reset the thread.
@@ -861,7 +857,7 @@ void __xnpod_reset_thread(struct xnthread *thread)
 	}
 }
 
-/*! 
+/*!
  * \fn void xnpod_stop_thread(xnthread_t *thread)
  *
  * \brief Stop a thread.
@@ -907,7 +903,7 @@ void xnpod_stop_thread(struct xnthread *thread)
 }
 EXPORT_SYMBOL_GPL(xnpod_stop_thread);
 
-/*! 
+/*!
  * \fn void xnpod_restart_thread(xnthread_t *thread)
  *
  * \brief Restart a thread.
@@ -968,7 +964,7 @@ void xnpod_restart_thread(xnthread_t *thread)
 }
 EXPORT_SYMBOL_GPL(xnpod_restart_thread);
 
-/*! 
+/*!
  * \fn void xnpod_set_thread_mode(xnthread_t *thread,xnflags_t clrmask,xnflags_t setmask)
  * \brief Change a thread's control mode.
  *
@@ -1043,7 +1039,7 @@ xnflags_t xnpod_set_thread_mode(xnthread_t *thread,
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_mode);
 
-/*! 
+/*!
  * \fn void xnpod_delete_thread(xnthread_t *thread)
  *
  * \brief Delete a thread.
@@ -1247,7 +1243,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 }
 EXPORT_SYMBOL_GPL(xnpod_delete_thread);
 
-/*! 
+/*!
  * \fn void xnpod_abort_thread(xnthread_t *thread)
  *
  * \brief Abort a thread.
@@ -1408,9 +1404,9 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * the wakeup call pending for that task in the root
 		 * context, to collect and act upon the pending Linux
 		 * signal.
- 		 */
-		if ((mask & XNRELAX) == 0 
-		    && (xnthread_sigpending(thread) 
+		 */
+		if ((mask & XNRELAX) == 0
+		    && (xnthread_sigpending(thread)
 			|| xnthread_test_info(thread, XNKICKED))) {
 			xnthread_clear_info(thread, XNRMID | XNTIMEO);
 			xnthread_set_info(thread, XNBREAK);
@@ -1495,7 +1491,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 	 * those. So there is no need to deal specifically with the
 	 * relax+suspend issue when the about to be suspended thread
 	 * is current, since it must not be relaxed anyway.
-	 * 
+	 *
 	 * - among all blocking bits (XNTHREAD_BLOCK_BITS), only
 	 * XNSUSP, XNDELAY, XNDORMANT and XNHELD may be applied by the
 	 * current thread to a non-current thread. XNPEND is always
@@ -1900,16 +1896,16 @@ unlock_and_exit:
 	return ret;
 }
 
-/** 
+/**
  * \fn int xnpod_migrate_thread(int cpu)
  *
  * \brief Migrate the current thread.
  *
  * This call makes the current thread migrate to another CPU if its
  * affinity allows it.
- * 
+ *
  * @param cpu The destination CPU.
- * 
+ *
  * @retval 0 if the thread could migrate ;
  * @retval -EPERM if the calling context is asynchronous, or the
  * current thread affinity forbids this migration ;
@@ -1971,7 +1967,7 @@ int xnpod_migrate_thread(int cpu)
 }
 EXPORT_SYMBOL_GPL(xnpod_migrate_thread);
 
-/*! 
+/*!
  * @internal
  * \fn void xnpod_dispatch_signals(void)
  * \brief Deliver pending asynchronous signals to the running thread.
@@ -2079,7 +2075,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 			 xnthread_archtcb(next));
 }
 
-/*! 
+/*!
  * \fn void xnpod_schedule(void)
  * \brief Rescheduling procedure entry point.
  *
@@ -2133,7 +2129,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
  * context switch has taken place. This behaviour can be disabled by
  * setting the XNASDI flag in the thread's status mask by calling
  * xnpod_set_thread_mode().
- * 
+ *
  * Environments:
  *
  * This service can be called from:
@@ -2149,7 +2145,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 static inline int __xnpod_test_resched(struct xnsched *sched)
 {
 	int cpu = xnsched_cpu(sched), resched;
-	
+
 	resched = xnarch_cpu_isset(cpu, sched->resched);
 	xnarch_cpu_clear(cpu, sched->resched);
 #ifdef CONFIG_SMP
@@ -2181,10 +2177,10 @@ void __xnpod_schedule(struct xnsched *sched)
 			 xnthread_current_priority(curr));
 
 	need_resched = __xnpod_test_resched(sched);
-#ifndef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#if !XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
 		goto signal_unlock_and_exit;
-#endif /* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */
+#endif /* !XENO_DEBUG(NUCLEUS) */
 	zombie = xnthread_test_state(curr, XNZOMBIE);
 
 	next = xnsched_pick_next(sched);
@@ -2293,7 +2289,7 @@ void __xnpod_schedule(struct xnsched *sched)
 	{
 		spl_t ignored;
 
-		/* Shadow on entry and root without shadow extension on exit? 
+		/* Shadow on entry and root without shadow extension on exit?
 		   Mmmm... This must be the user-space mate of a deleted real-time
 		   shadow we've just rescheduled in the Linux domain to have it
 		   exit properly.  Reap it now. */
@@ -2348,7 +2344,7 @@ void xnpod_unlock_sched(void)
 }
 EXPORT_SYMBOL_GPL(xnpod_unlock_sched);
 
-/*! 
+/*!
  * \fn int xnpod_add_hook(int type,void (*routine)(xnthread_t *))
  * \brief Install a nucleus hook.
  *
@@ -2441,7 +2437,7 @@ int xnpod_add_hook(int type, void (*routine) (xnthread_t *))
 }
 EXPORT_SYMBOL_GPL(xnpod_add_hook);
 
-/*! 
+/*!
  * \fn int xnpod_remove_hook(int type,void (*routine)(xnthread_t *))
  * \brief Remove a nucleus hook.
  *
@@ -2518,7 +2514,7 @@ int xnpod_remove_hook(int type, void (*routine) (xnthread_t *))
 }
 EXPORT_SYMBOL_GPL(xnpod_remove_hook);
 
-/*! 
+/*!
  * \fn void xnpod_trap_fault(xnarch_fltinfo_t *fltinfo);
  * \brief Default fault handler.
  *
@@ -2609,7 +2605,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 }
 EXPORT_SYMBOL_GPL(xnpod_trap_fault);
 
-/*! 
+/*!
  * \fn int xnpod_enable_timesource(void)
  * \brief Activate the core time source.
  *
@@ -2750,7 +2746,7 @@ int xnpod_enable_timesource(void)
 }
 EXPORT_SYMBOL_GPL(xnpod_enable_timesource);
 
-/*! 
+/*!
  * \fn void xnpod_disable_timesource(void)
  * \brief Stop the core time source.
  *
@@ -3055,7 +3051,7 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 	unsigned long oldmode;
 	int aperiodic;
 	spl_t s;
-	
+
 	if (thread->base_class->sched_tick == NULL)
 		return -EINVAL;
 

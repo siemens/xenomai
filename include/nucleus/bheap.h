@@ -25,10 +25,6 @@
 /* debug support */
 #include <nucleus/assert.h>
 
-#ifndef CONFIG_XENO_OPT_DEBUG_QUEUES
-#define CONFIG_XENO_OPT_DEBUG_QUEUES 0
-#endif
-
 /* Priority queue implementation, using a binary heap. */
 
 typedef unsigned long long bheap_key_t;
@@ -44,8 +40,8 @@ typedef struct bheaph {
 #define bheaph_prio(holder) ((holder)->prio)
 #define bheaph_pos(holder)  ((holder)->pos)
 #define bheaph_lt(h1, h2)   ((long long) ((h1)->key - (h2)->key) < 0 ||	\
-                             ((h1)->key == (h2)->key &&			\
-                              (h1)->prio > (h2)->prio))
+			     ((h1)->key == (h2)->key &&			\
+			      (h1)->prio > (h2)->prio))
 
 typedef struct bheap {
 	unsigned sz;

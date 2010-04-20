@@ -32,6 +32,10 @@
 #define XNSYNCH_DREORD  0x4
 #define XNSYNCH_OWNER   0x8
 
+#ifndef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+#define CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX 0
+#endif /* CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+
 #ifdef CONFIG_XENO_FASTSYNCH
 
 /* Fast lock API */
@@ -157,14 +161,14 @@ typedef struct xnsynch {
 extern "C" {
 #endif
 
-#ifdef CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX
+#if XENO_DEBUG(SYNCH_RELAX)
 
 void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper);
 
 void xnsynch_detect_claimed_relax(struct xnthread *owner);
 
-#else /* !CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+#else /* !XENO_DEBUG(SYNCH_RELAX) */
 
 static inline void xnsynch_detect_relaxed_owner(struct xnsynch *synch,
 				  struct xnthread *sleeper)
@@ -175,7 +179,7 @@ static inline void xnsynch_detect_claimed_relax(struct xnthread *owner)
 {
 }
 
-#endif /* !CONFIG_XENO_OPT_DEBUG_SYNCH_RELAX */
+#endif /* !XENO_DEBUG(SYNCH_RELAX) */
 
 void xnsynch_init(struct xnsynch *synch, xnflags_t flags,
 		  xnarch_atomic_t *fastlock);

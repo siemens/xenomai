@@ -58,7 +58,7 @@
 
 struct xnsynch;
 
-/*! 
+/*!
  * \brief Real-time pod descriptor.
  *
  * The source of all Xenomai magic.
@@ -276,14 +276,14 @@ static inline void xnpod_schedule(void)
 	 * context is active, or if we are caught in the middle of a
 	 * unlocked context switch.
 	 */
-#ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS
+#if XENO_DEBUG(NUCLEUS)
 	if (testbits(sched->status, XNKCOUT|XNINIRQ|XNSWLOCK))
 		return;
-#else /* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */
+#else /* !XENO_DEBUG(NUCLEUS) */
 	if (testbits(sched->status,
 		     XNKCOUT|XNINIRQ|XNSWLOCK|XNRESCHED) != XNRESCHED)
 		return;
-#endif /* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */
+#endif /* !XENO_DEBUG(NUCLEUS) */
 
 	__xnpod_schedule(sched);
 }
