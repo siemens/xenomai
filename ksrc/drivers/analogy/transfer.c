@@ -498,6 +498,9 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_subd_t *subd;
 
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_ioctl_cancel: minor=%d\n", a4l_get_minor(cxt));
+
 	/* Basically check the device */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_ioctl_cancel: operation not supported on "

@@ -389,6 +389,12 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_mmap: minor=%d\n", a4l_get_minor(cxt));
 
+	/* The mmap operation cannot be performed in a 
+	   real-time context */
+	if (rtdm_in_rt_context() != 0) {
+		return -ENOSYS;
+	}
+
 	dev = a4l_get_dev(cxt);
 
 	/* Basically check the device */
@@ -396,12 +402,6 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		__a4l_err("a4l_ioctl_mmap: cannot mmap on "
 			  "an unattached device\n");
 		return -EINVAL;
-	}
-
-	/* The mmap operation cannot be performed in a 
-	   real-time context */
-	if (rtdm_in_rt_context() != 0) {
-		return -ENOSYS;
 	}
 
 	/* Recover the argument structure */
@@ -467,16 +467,16 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
 
-	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
-		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
-		return -EINVAL;
-	}
-
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
 	if (rtdm_in_rt_context() != 0) {
 		return -ENOSYS;
+	}
+
+	/* Basic checking */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
+		return -EINVAL;
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
@@ -535,6 +535,9 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
+
+	if (rtdm_rt_capable(cxt->user_info) != 0)
+		return -ENOSYS;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
@@ -878,6 +881,9 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf;
 	a4l_poll_t poll;
+
+	if (rtdm_rt_capable(cxt->user_info) != 0)
+		return -ENOSYS;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
