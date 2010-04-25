@@ -597,6 +597,67 @@ void lock_stealing(void)
 			"NOTE: lock_stealing mutex_trylock: not supported\n");
 }
 
+void *victim(void *cookie)
+{
+	mutex_t *mutex = (mutex_t *) cookie;
+	unsigned long long start;
+
+	dispatch("victim pthread_detach", THREAD_DETACH, 1, 0);
+	dispatch("victim mutex_lock", MUTEX_LOCK, 1, 0, mutex);
+
+	start = rt_timer_tsc();
+	while (rt_timer_tsc2ns(rt_timer_tsc() - start) < 110000000);
+
+	dispatch("victim mutex_unlock", MUTEX_UNLOCK, 1, 0, mutex);
+
+	return cookie;
+}
+
+void deny_stealing(void)
+{
+	unsigned long long start, diff;
+	mutex_t mutex;
+	thread_t lowprio_tid;
+
+	fprintf(stderr, "deny_stealing\n");
+
+	dispatch("deny_stealing mutex_init", MUTEX_CREATE, 1, 0, &mutex, 1, 0);
+	dispatch("deny_stealing mutex_lock 1", MUTEX_LOCK, 1, 0, &mutex);
+
+	/* Main thread should have higher priority */
+	dispatch("deny_stealing thread_create", THREAD_CREATE, 1, 0,
+		 &lowprio_tid, 1, victim, &mutex);
+
+	/* Give lowprio thread 1 more ms to block on the mutex */
+	ms_sleep(6);
+
+	dispatch("deny_stealing mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
+
+	/* Steal the lock for a short while */
+	dispatch("deny_stealing mutex_lock 2", MUTEX_LOCK, 1, 0, &mutex);
+	dispatch("deny_stealing mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
+
+	/* Give lowprio thread a chance to run */
+	ms_sleep(6);
+
+	/* Try to reacquire the lock, but the lowprio thread should hold it */
+	start = rt_timer_tsc();
+	dispatch("deny_stealing mutex_lock 3", MUTEX_LOCK, 1, 0, &mutex);
+	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
+	if (diff < 10000000) {
+		fprintf(stderr, "FAILURE: main, waited %Ld.%03u us\n",
+			diff / 1000, (unsigned) (diff % 1000));
+		exit(EXIT_FAILURE);
+	}
+
+	dispatch("deny_stealing mutex_unlock 3", MUTEX_UNLOCK, 1, 0, &mutex);
+
+	/* Let waiter_lowprio a chance to run */
+	ms_sleep(20);
+
+	dispatch("deny_stealing mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
+}
+
 struct cond_mutex {
 	mutex_t *mutex;
 	cond_t *cond;
@@ -739,6 +800,7 @@ int main(void)
 	mode_switch();
 	pi_wait();
 	lock_stealing();
+	deny_stealing();
 	simple_condwait();
 	recursive_condwait();
 	fprintf(stderr, "Test OK\n");
