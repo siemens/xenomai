@@ -514,6 +514,9 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	xnpod_suspend_thread(thread, XNPEND, timeout, timeout_mode, synch);
 
+	thread->wwake = NULL;
+	xnthread_clear_info(thread, XNWAKEN);
+
 	if (xnthread_test_info(thread, XNRMID | XNTIMEO | XNBREAK))
 		goto unlock_and_exit;
 
@@ -547,9 +550,6 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 	}
 
       unlock_and_exit:
-
-	thread->wwake = NULL;
-	xnthread_clear_info(thread, XNWAKEN);
 
 	xnlock_put_irqrestore(&nklock, s);
 
