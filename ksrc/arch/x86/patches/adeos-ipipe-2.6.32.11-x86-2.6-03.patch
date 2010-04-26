@@ -168,10 +168,10 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..32b2ece
+index 0000000..7d29f03
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,158 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe.h
 + *
@@ -199,13 +199,15 @@ index 0000000..32b2ece
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.6-02"
++#define IPIPE_ARCH_STRING	"2.6-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
++
++DECLARE_PER_CPU(unsigned long, __ipipe_cr2);
 +
 +static inline unsigned __ipipe_get_irq_vector(int irq)
 +{
@@ -307,7 +309,14 @@ index 0000000..32b2ece
 +
 +#define __ipipe_root_tick_p(regs)	((regs)->flags & X86_EFLAGS_IF)
 +
-+#ifdef CONFIG_SMP
++#else /* !CONFIG_IPIPE */
++
++#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
++#define task_hijacked(p)			0
++
++#endif /* CONFIG_IPIPE */
++
++#if defined(CONFIG_SMP) && defined(CONFIG_IPIPE)
 +#define __ipipe_move_root_irq(irq)					\
 +	do {								\
 +		if (irq < NR_IRQS) {					\
@@ -316,24 +325,17 @@ index 0000000..32b2ece
 +				chip->move(irq);			\
 +		}							\
 +	} while (0)
-+#else /* !CONFIG_SMP */
++#else /* !(CONFIG_SMP && CONFIG_IPIPE) */
 +#define __ipipe_move_root_irq(irq)	do { } while (0)
-+#endif /* !CONFIG_SMP */
-+
-+#else /* !CONFIG_IPIPE */
-+
-+#define ipipe_update_tick_evtdev(evtdev)	do { } while (0)
-+#define task_hijacked(p)			0
-+
-+#endif /* CONFIG_IPIPE */
++#endif /* !(CONFIG_SMP && CONFIG_IPIPE) */
 +
 +#endif	/* !__X86_IPIPE_H */
 diff --git a/arch/x86/include/asm/ipipe_32.h b/arch/x86/include/asm/ipipe_32.h
 new file mode 100644
-index 0000000..4d86beb
+index 0000000..8d1f4b5
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_32.h
-@@ -0,0 +1,154 @@
+@@ -0,0 +1,156 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe_32.h
 + *
@@ -474,11 +476,13 @@ index 0000000..4d86beb
 +	if (!__ipipe_pipeline_head_p(ipd))				\
 +		local_irq_enable_hw();					\
 +	if (ipd == ipipe_root_domain) {					\
-+		if (likely(!ipipe_virtual_irq_p(irq)))	{		\
-+			__ipipe_move_root_irq(irq);			\
-+			__ipipe_call_root_xirq_handler(irq, ipd->irqs[irq].handler); \
-+		} else							\
-+			__ipipe_call_root_virq_handler(irq, ipd->irqs[irq].handler, ipd->irqs[irq].cookie); \
++		if (likely(!ipipe_virtual_irq_p(irq)))			\
++			__ipipe_call_root_xirq_handler(irq,		\
++						       ipd->irqs[irq].handler); \
++		else							\
++			__ipipe_call_root_virq_handler(irq,		\
++						       ipd->irqs[irq].handler, \
++						       ipd->irqs[irq].cookie); \
 +	} else {							\
 +		__clear_bit(IPIPE_SYNC_FLAG, &ipipe_cpudom_var(ipd, status)); \
 +		ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);	\
@@ -490,10 +494,10 @@ index 0000000..4d86beb
 +#endif	/* !__X86_IPIPE_32_H */
 diff --git a/arch/x86/include/asm/ipipe_64.h b/arch/x86/include/asm/ipipe_64.h
 new file mode 100644
-index 0000000..956c4de
+index 0000000..bc427b8
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_64.h
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,161 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe_64.h
 + *
@@ -639,11 +643,10 @@ index 0000000..956c4de
 +		if (!__ipipe_pipeline_head_p(ipd))			\
 +			local_irq_enable_hw();				\
 +		if (ipd == ipipe_root_domain) {				\
-+			if (likely(!ipipe_virtual_irq_p(irq))) {	\
-+				__ipipe_move_root_irq(irq);		\
++			if (likely(!ipipe_virtual_irq_p(irq))) 		\
 +				__ipipe_call_root_xirq_handler(		\
 +					irq, (ipd)->irqs[irq].handler);	\
-+			} else						\
++			else						\
 +				__ipipe_call_root_virq_handler(		\
 +					irq, (ipd)->irqs[irq].handler,	\
 +					(ipd)->irqs[irq].cookie);	\
@@ -1184,7 +1187,7 @@ index 13b1885..3e80c19 100644
  #ifdef CONFIG_X86_32
  	unsigned long		ip;
 diff --git a/arch/x86/include/asm/system.h b/arch/x86/include/asm/system.h
-index f08f973..2760033 100644
+index f08f973..093687e 100644
 --- a/arch/x86/include/asm/system.h
 +++ b/arch/x86/include/asm/system.h
 @@ -126,8 +126,10 @@ do {									\
@@ -1207,6 +1210,20 @@ index f08f973..2760033 100644
  	       [ti_flags] "i" (offsetof(struct thread_info, flags)),	  \
  	       [_tif_fork] "i" (_TIF_FORK),			  	  \
  	       [thread_info] "i" (offsetof(struct task_struct, stack)),   \
+@@ -305,8 +308,13 @@ static inline void native_wbinvd(void)
+ #else
+ #define read_cr0()	(native_read_cr0())
+ #define write_cr0(x)	(native_write_cr0(x))
++#ifdef CONFIG_IPIPE
++#define read_cr2()	__raw_get_cpu_var(__ipipe_cr2)
++#define write_cr2(x)	__raw_get_cpu_var(__ipipe_cr2) = (x)
++#else /* !CONFIG_IPIPE */
+ #define read_cr2()	(native_read_cr2())
+ #define write_cr2(x)	(native_write_cr2(x))
++#endif /* !CONFIG_IPIPE */
+ #define read_cr3()	(native_read_cr3())
+ #define write_cr3(x)	(native_write_cr3(x))
+ #define read_cr4()	(native_read_cr4())
 diff --git a/arch/x86/include/asm/traps.h b/arch/x86/include/asm/traps.h
 index 4da91ad..25e346e 100644
 --- a/arch/x86/include/asm/traps.h
@@ -3012,10 +3029,10 @@ index df89102..cfb29a2 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..36cd591
+index 0000000..116fee7
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
-@@ -0,0 +1,1048 @@
+@@ -0,0 +1,1060 @@
 +/*   -*- linux-c -*-
 + *   linux/arch/x86/kernel/ipipe.c
 + *
@@ -3070,6 +3087,9 @@ index 0000000..36cd591
 +int __ipipe_tick_irq = 0;	/* Legacy timer */
 +
 +DEFINE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
++
++DEFINE_PER_CPU(unsigned long, __ipipe_cr2);
++EXPORT_PER_CPU_SYMBOL_GPL(__ipipe_cr2);
 +
 +#ifdef CONFIG_SMP
 +
@@ -3513,8 +3533,6 @@ index 0000000..36cd591
 +	local_irq_restore_hw(flags);
 +}
 +
-+#ifdef CONFIG_X86_32
-+
 +static inline void __fixup_if(int s, struct pt_regs *regs)
 +{
 +	/*
@@ -3527,6 +3545,8 @@ index 0000000..36cd591
 +	else
 +		regs->flags |= X86_EFLAGS_IF;
 +}
++
++#ifdef CONFIG_X86_32
 +
 +/*
 + * Check the stall bit of the root domain to make sure the existing
@@ -3588,10 +3608,6 @@ index 0000000..36cd591
 +}
 +
 +#else /* !CONFIG_X86_32 */
-+
-+static inline void __fixup_if(int s, struct pt_regs *regs)
-+{
-+}
 +
 +#ifdef CONFIG_PREEMPT
 +
@@ -3734,6 +3750,7 @@ index 0000000..36cd591
 +{
 +	bool root_entry = false;
 +	unsigned long flags = 0;
++	unsigned long cr2 = 0;
 +
 +	if (ipipe_root_domain_p) {
 +		root_entry = true;
@@ -3756,6 +3773,9 @@ index 0000000..36cd591
 +		return 1;
 +#endif /* CONFIG_KGDB */
 +
++	if (vector == ex_do_page_fault)
++		cr2 = native_read_cr2();
++
 +	if (unlikely(ipipe_trap_notify(vector, regs))) {
 +		if (root_entry)
 +			local_irq_restore_nosync(flags);
@@ -3764,11 +3784,11 @@ index 0000000..36cd591
 +
 +	if (likely(ipipe_root_domain_p)) {
 +		/*
-+		 * 32-bit: In case we faulted in the iret path, regs.flags do
-+		 * not match the root domain state as the low-level return
-+		 * code will evaluate it. Fix this up, either by the root
-+		 * state sampled on entry or, if we migrated to root, with the
-+		 * current state.
++		 * In case we faulted in the iret path, regs.flags do not
++		 * match the root domain state. The fault handler or the
++		 * low-level return code may evaluate it. Fix this up, either
++		 * by the root state sampled on entry or, if we migrated to
++		 * root, with the current state.
 +		 */
 +		__fixup_if(root_entry ? raw_irqs_disabled_flags(flags) :
 +					raw_irqs_disabled(), regs);
@@ -3799,6 +3819,9 @@ index 0000000..36cd591
 +#endif /* CONFIG_IPIPE_DEBUG */
 +		}
 +	}
++
++	if (vector == ex_do_page_fault)
++		write_cr2(cr2);
 +
 +	__ipipe_std_extable[vector](regs, error_code);
 +
@@ -3894,7 +3917,13 @@ index 0000000..36cd591
 +
 +	local_irq_save_hw(flags);
 +	p = ipipe_root_cpudom_ptr();
++#ifdef CONFIG_X86_32
++	/*
++	 * Fix-up only required on 32-bit as only here the IRET return code
++	 * will evaluate the flags.
++	 */
 +	__fixup_if(test_bit(IPIPE_STALL_FLAG, &p->status), regs);
++#endif
 +	/*
 +	 * If allowed, sync pending VIRQs before _TIF_NEED_RESCHED is
 +	 * tested.
@@ -4065,7 +4094,7 @@ index 0000000..36cd591
 +
 +EXPORT_SYMBOL(__ipipe_halt_root);
 diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
-index 04bbd52..6311e31 100644
+index 04bbd52..76d2fa3 100644
 --- a/arch/x86/kernel/irq.c
 +++ b/arch/x86/kernel/irq.c
 @@ -38,7 +38,7 @@ void ack_bad_irq(unsigned int irq)
@@ -4077,6 +4106,21 @@ index 04bbd52..6311e31 100644
  }
  
  #define irq_stats(x)		(&per_cpu(irq_stat, x))
+@@ -231,11 +231,12 @@ unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
+ 	unsigned vector = ~regs->orig_ax;
+ 	unsigned irq;
+ 
++	irq = __get_cpu_var(vector_irq)[vector];
++	__ipipe_move_root_irq(irq);
++
+ 	exit_idle();
+ 	irq_enter();
+ 
+-	irq = __get_cpu_var(vector_irq)[vector];
+-
+ 	if (!handle_irq(irq, regs)) {
+ 		ack_APIC_irq();
+ 
 diff --git a/arch/x86/kernel/irqinit.c b/arch/x86/kernel/irqinit.c
 index 40f3077..e3604ee 100644
 --- a/arch/x86/kernel/irqinit.c
@@ -4893,10 +4937,10 @@ index 6d527ee..c997ef1 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..b7f81be
+index 0000000..1040a2b
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,688 @@
+@@ -0,0 +1,690 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5581,6 +5625,8 @@ index 0000000..b7f81be
 +#define local_irq_save_full(vflags, rflags)	do { (void)(vflags); local_irq_save(rflags); } while(0)
 +#define local_irq_restore_full(vflags, rflags)	do { (void)(vflags); local_irq_restore(rflags); } while(0)
 +#define local_irq_restore_nosync(vflags)	local_irq_restore(vflags)
++
++#define __ipipe_pipeline_head_p(ipd)	1
 +
 +#endif	/* CONFIG_IPIPE */
 +
