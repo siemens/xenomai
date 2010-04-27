@@ -152,6 +152,9 @@ ssize_t a4l_rt_read(struct rtdm_dev_context * context,
 {
 	a4l_cxt_t cxt;
 
+	if (rtdm_rt_capable(user_info) != 0)
+		return -ENOSYS;
+	
 	a4l_init_cxt(context, user_info, &cxt);
 	a4l_set_dev(&cxt);
 
@@ -169,6 +172,9 @@ ssize_t a4l_rt_write(struct rtdm_dev_context * context,
 		     size_t nbytes)
 {
 	a4l_cxt_t cxt;
+
+	if (rtdm_rt_capable(user_info) != 0)
+		return -ENOSYS;
 
 	a4l_init_cxt(context, user_info, &cxt);
 	a4l_set_dev(&cxt);
