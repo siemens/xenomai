@@ -50,81 +50,119 @@
 
 #ifdef CONFIG_PROC_FS
 
-static int __buffer_read_proc(char *page,
-			      char **start,
-			      off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int mode;
+	size_t bufsz;
+	size_t fillsz;
+	int input;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+	int input;
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_BUFFER *bf = (RT_BUFFER *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_BUFFER *bf = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	bf = xeno_h2obj_validate(bf, XENO_BUFFER_MAGIC, RT_BUFFER);
+	if (bf == NULL)
+		return -EIDRM;
 
-	p += sprintf(p, "type=%s:size=%zu:used=%zu\n",
-		     bf->mode & B_PRIO ? "PRIO" : "FIFO",
-		     bf->bufsz,
-		     bf->fillsz);
+	/* Start collecting records from the input wait side. */
+	priv->curr = getheadpq(xnsynch_wait_queue(&bf->isynch_base));
+	priv->mode = bf->mode;
+	priv->bufsz = bf->bufsz;
+	priv->fillsz = bf->fillsz;
+	priv->input = 1;
 
-	if (xnsynch_nsleepers(&bf->isynch_base) > 0) {
-		xnpholder_t *holder;
-
-		holder = getheadpq(xnsynch_wait_queue(&bf->osynch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s (input)\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&bf->isynch_base),
-				   holder);
-		}
-	}
-
-	if (xnsynch_nsleepers(&bf->osynch_base) > 0) {
-		xnpholder_t *holder;
-
-		holder = getheadpq(xnsynch_wait_queue(&bf->osynch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s (output)\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&bf->osynch_base),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&bf->isynch_base) +
+		xnsynch_nsleepers(&bf->osynch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_BUFFER *bf = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
+	struct xnpqueue *waitq;
 
-static xnpnode_t __buffer_pnode = {
+	if (priv->curr == NULL) { /* Attempt to switch queues. */
+		if (!priv->input)
+			/* Finished output side, we are done. */
+			return 0;
+		priv->input = 0;
+		waitq = xnsynch_wait_queue(&bf->osynch_base);
+		priv->curr = getheadpq(waitq);
+		if (priv->curr == NULL)
+			return 0;
+	} else
+		waitq = priv->input ? xnsynch_wait_queue(&bf->isynch_base) :
+			xnsynch_wait_queue(&bf->osynch_base);
 
-	.dir = NULL,
-	.type = "buffers",
-	.entries = 0,
-	.read_proc = &__buffer_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(waitq, priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+	p->input = priv->input;
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "%4s  %9s  %9s\n",
+			       "TYPE", "TOTALMEM", "USEDMEM");
+		xnvfile_printf(it, "%s  %9Zu  %9Zu\n",
+			       priv->mode & B_PRIO ? "PRIO" : "FIFO",
+			       priv->bufsz, priv->fillsz);
+		if (it->nrdata > 0)
+			/* Buffer is pended -- dump waiters */
+			xnvfile_printf(it, "\n%3s  %s\n", "WAY", "WAITER");
+	} else
+		xnvfile_printf(it, "%3s  %.*s\n",
+			       p->input ? "in" : "out",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __native_ptree;
+
+static struct xnpnode_snapshot __buffer_pnode = {
+	.node = {
+		.dirname = "buffers",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __buffer_pnode = {
-
-	.type = "buffers"
+static struct xnpnode_snapshot __buffer_pnode = {
+	.node = {
+		.dirname = "buffers",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -234,7 +272,7 @@ int rt_buffer_create(RT_BUFFER *bf, const char *name, size_t bufsz, int mode)
 	 */
 	if (name) {
 		ret = xnregistry_enter(bf->name, bf, &bf->handle,
-				       &__buffer_pnode);
+				       &__buffer_pnode.node);
 
 		if (ret)
 			rt_buffer_delete(bf);

@@ -50,64 +50,86 @@
 
 #ifdef CONFIG_PROC_FS
 
-static int __cond_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_COND *cond = (RT_COND *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_COND *cond = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	cond = xeno_h2obj_validate(cond, XENO_COND_MAGIC, RT_COND);
+	if (cond == NULL)
+		return -EIDRM;
 
-	if (xnsynch_nsleepers(&cond->synch_base) > 0) {
-		xnpholder_t *holder;
+	priv->curr = getheadpq(xnsynch_wait_queue(&cond->synch_base));
 
-		/* Pended condvar -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&cond->synch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&cond->synch_base),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&cond->synch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_COND *cond = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __cond_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "condvars",
-	.entries = 0,
-	.read_proc = &__cond_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&cond->synch_base),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_data *p = data;
+
+	if (p)	/* No header */
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __native_ptree;
+
+static struct xnpnode_snapshot __cond_pnode = {
+	.node = {
+		.dirname = "condvars",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __cond_pnode = {
-
-	.type = "condvars"
+static struct xnpnode_snapshot __cond_pnode = {
+	.node = {
+		.dirname = "condvars",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -181,7 +203,7 @@ int rt_cond_create(RT_COND *cond, const char *name)
 	 */
 	if (name) {
 		err = xnregistry_enter(cond->name, cond, &cond->handle,
-				       &__cond_pnode);
+				       &__cond_pnode.node);
 
 		if (err)
 			rt_cond_delete(cond);

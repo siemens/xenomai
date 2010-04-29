@@ -54,14 +54,7 @@ xntbase_t *__native_tbase;
 
 xeno_rholder_t __native_global_rholder;
 
-#ifdef CONFIG_PROC_FS
-xnptree_t __native_ptree = {
-
-	.dir = NULL,
-	.name = "native",
-	.entries = 0,
-};
-#endif /* CONFIG_PROC_FS */
+DEFINE_XNPTREE(__native_ptree, "native");
 
 int SKIN_INIT(native)
 {

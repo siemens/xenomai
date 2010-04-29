@@ -144,7 +144,7 @@ static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 			       p->usable_mem,
 			       p->used_mem,
 			       p->page_size,
-			       sizeof(p->label),
+			       (int)sizeof(p->label),
 			       p->label);
 	return 0;
 }

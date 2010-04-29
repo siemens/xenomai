@@ -49,68 +49,110 @@
 
 #ifdef CONFIG_PROC_FS
 
-static int __queue_read_proc(char *page,
-			     char **start,
-			     off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int mode;
+	size_t usable_mem;
+	size_t used_mem;
+	size_t limit;
+	size_t count;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_QUEUE *q = (RT_QUEUE *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_QUEUE *q = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "type=%s:poolsz=%lu:usedmem=%lu:limit=%d:mcount=%d\n",
-		     q->mode & Q_SHARED ? "shared" : "local",
-		     xnheap_usable_mem(&q->bufpool), xnheap_used_mem(&q->bufpool),
-		     q->qlimit, countq(&q->pendq));
+	q = xeno_h2obj_validate(q, XENO_QUEUE_MAGIC, RT_QUEUE);
+	if (q == NULL)
+		return -EIDRM;
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&q->synch_base));
+	priv->mode = q->mode;
+	priv->usable_mem = xnheap_usable_mem(&q->bufpool);
+	priv->used_mem = xnheap_used_mem(&q->bufpool);
+	priv->limit = q->qlimit;
+	priv->count = countq(&q->pendq);
 
-	if (xnsynch_nsleepers(&q->synch_base) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended queue -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&q->synch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&q->synch_base), holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&q->synch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_QUEUE *q = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __queue_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "queues",
-	.entries = 0,
-	.read_proc = &__queue_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&q->synch_base),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "%5s  %9s  %9s  %6s  %s\n",
+			       "TYPE", "TOTALMEM", "USEDMEM",
+			       "QLIMIT", "MCOUNT");
+		xnvfile_printf(it, "%4s  %9Zu  %9Zu  %6Zu  %Zu\n",
+			       priv->mode & Q_SHARED ? "shared" : "local",
+			       priv->usable_mem,
+			       priv->used_mem,
+			       priv->limit,
+			       priv->count);
+		if (it->nrdata > 0)
+			/* Queue is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __native_ptree;
+
+static struct xnpnode_snapshot __q_pnode = {
+	.node = {
+		.dirname = "queues",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __queue_pnode = {
-
-	.type = "queues"
+static struct xnpnode_snapshot __q_pnode = {
+	.node = {
+		.dirname = "queues",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -276,7 +318,8 @@ int rt_queue_create(RT_QUEUE *q,
 	 * handles to half-baked objects...
 	 */
 	if (name) {
-		err = xnregistry_enter(q->name, q, &q->handle, &__queue_pnode);
+		err = xnregistry_enter(q->name, q,
+				       &q->handle, &__q_pnode.node);
 		if (err)
 			rt_queue_delete(q);
 	}
