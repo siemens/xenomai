@@ -37,6 +37,7 @@
 #include <linux/sched.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
+#include <linux/slab.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 #include <asm/atomic.h>
 
@@ -335,6 +336,8 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #define mmiowb()	barrier()
 
+#define wrap_f_inode(file)	((file)->f_dentry->d_inode)
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
@@ -455,6 +458,8 @@ unsigned long find_next_bit(const unsigned long *addr,
 #define DECLARE_WORK_FUNC(f)		void f(struct work_struct *work)
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_DELAYED_WORK(n, f)
 #endif /* >= 2.6.20 */
+
+#define wrap_f_inode(file)	((file)->f_path.dentry->d_inode)
 
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
 
