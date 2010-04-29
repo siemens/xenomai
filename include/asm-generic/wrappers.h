@@ -338,6 +338,19 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #define wrap_f_inode(file)	((file)->f_dentry->d_inode)
 
+static inline void *kzalloc(size_t size, int flags)
+{
+	void *ptr;
+
+	ptr = kmalloc(size, flags);
+	if (ptr == NULL)
+		return NULL;
+
+	memset(ptr, 0, size);
+
+	return ptr;
+}
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
