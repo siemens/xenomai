@@ -676,48 +676,48 @@ uninstall-am:
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
-                -o -name '*~' -o -name autom4te.cache`
+		-o -name '*~' -o -name autom4te.cache`
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
 	@$(mkinstalldirs) $(DESTDIR)/dev; \
 	if test x`id -u` = x0; then \
-           sudo= ; \
-        else if test \! "x`type $(SUDO)`" = x ; then \
-           echo "sudo found (sudo is $(SUDO)), testing it..." ; \
-           $(SUDO) sh -c "( mknod $(DESTDIR)/dev/dummy c 150 0 && rm -f $(DESTDIR)/dev/dummy )" && \
-           sudo="$(SUDO)" || { \
+	   sudo= ; \
+	else if test \! "x`type $(SUDO)`" = x ; then \
+	   echo "sudo found (sudo is $(SUDO)), testing it..." ; \
+	   $(SUDO) sh -c "( mknod $(DESTDIR)/dev/dummy c 150 0 && rm -f $(DESTDIR)/dev/dummy )" && \
+	   sudo="$(SUDO)" || { \
 echo '*** Warning: you are not super-user and sudo does not work, real-time devices' ; \
 echo '*** nodes will not be created.' ; \
 echo '*** If you do not create these devices by hand, Xenomai test programs will not' ; \
 echo '*** work.' ; \
 echo '*** To create these devices please run "make devices" with super-user' ; \
 echo '*** privileges.' ; \
-             exit 0 ; } ; \
-           echo 'sudo is working.' ; \
-           fi ; \
-        fi ; \
-        if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
-           for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
-           b=`basename $$f` ; \
-           grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
-           $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
-           done ; \
-        else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
-              for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
-                 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
-              done ; \
-           fi ; \
-        fi ; \
+	     exit 0 ; } ; \
+	   echo 'sudo is working.' ; \
+	   fi ; \
+	fi ; \
+	if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
+	   for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
+	   b=`basename $$f` ; \
+	   grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
+	   $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
+	   done ; \
+	else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
+	      for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
+		 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
+	      done ; \
+	   fi ; \
+	fi ; \
 	for n in `seq 0 31` ; do \
-           f="$(DESTDIR)/dev/rtp$$n" ; \
-           if test \! -c $$f ; then \
-              $$sudo mknod -m 666 $$f c 150 $$n ; \
-           fi ; \
-        done ; \
-        if test \! -c $(DESTDIR)/dev/rtheap ; then \
-          $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
-        fi
+	   f="$(DESTDIR)/dev/rtp$$n" ; \
+	   if test \! -c $$f ; then \
+	      $$sudo mknod -m 666 $$f c 150 $$n ; \
+	   fi ; \
+	done ; \
+	if test \! -c $(DESTDIR)/dev/rtheap ; then \
+	  $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
+	fi
 
 install-exec-local: devices
 
@@ -726,7 +726,7 @@ install-user:
 
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared FORCE
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@             --adeos="$(ADEOS_PATCH)" --linux=linux \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --adeos="$(ADEOS_PATCH)" --linux=linux \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
@@ -734,7 +734,7 @@ install-user:
 
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/all: linux/.xenomai-prepared FORCE
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@             --adeos="$(ADEOS_PATCH)" --linux=linux \
+@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --adeos="$(ADEOS_PATCH)" --linux=linux \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
 @MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $(XENO_LINUX_ALL_TARGETS) \
@@ -764,9 +764,9 @@ install-user:
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
 @XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) $$targets \
-@XENO_BUILD_LINUX_TRUE@           ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
-@XENO_BUILD_LINUX_TRUE@           INSTALL_PATH=$(DESTDIR)/boot \
-@XENO_BUILD_LINUX_TRUE@           INSTALL_MOD_PATH=$(DESTDIR)
+@XENO_BUILD_LINUX_TRUE@	   ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
+@XENO_BUILD_LINUX_TRUE@	   INSTALL_PATH=$(DESTDIR)/boot \
+@XENO_BUILD_LINUX_TRUE@	   INSTALL_MOD_PATH=$(DESTDIR)
 
 # For architectures that do not support the install target, provide our own
 # installation target that simply copy the kernel image and System.map.
@@ -777,8 +777,8 @@ install-user:
 @XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
 @XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
 @XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) modules_install \
-@XENO_BUILD_LINUX_TRUE@           ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
-@XENO_BUILD_LINUX_TRUE@           INSTALL_MOD_PATH=$(DESTDIR) && \
+@XENO_BUILD_LINUX_TRUE@	   ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
+@XENO_BUILD_LINUX_TRUE@	   INSTALL_MOD_PATH=$(DESTDIR) && \
 @XENO_BUILD_LINUX_TRUE@	$$sudo cp $(XENO_LINUX_IMAGE) System.map $(DESTDIR)/boot
 
 @XENO_BUILD_LINUX_TRUE@distclean-linux:
@@ -788,7 +788,7 @@ install-user:
 @XENO_BUILD_LINUX_TRUE@	test -e linux/.config.saved.xenomai && \
 @XENO_BUILD_LINUX_TRUE@		mv linux/.config.saved.xenomai linux/.config
 
-@XENO_BUILD_LINUX_TRUE@config oldconfig mconfig menuconfig gconfig xconfig:
+@XENO_BUILD_LINUX_TRUE@config oldconfig mconfig menuconfig gconfig xconfig %defconfig:
 @XENO_BUILD_LINUX_TRUE@	$(MAKE) linux/$@
 
 @XENO_BUILD_LINUX_TRUE@all-recursive: linux/all
