@@ -1148,8 +1148,8 @@ void xnshadow_relax(int notify, int reason)
 	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
 		  thread, xnthread_name(thread));
 
-	rpi_push(thread->sched, thread);
 	splhigh(s);
+	rpi_push(thread->sched, thread);
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 	clear_task_nowakeup(current);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
