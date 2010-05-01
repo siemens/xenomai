@@ -170,40 +170,6 @@ static inline void set_switch_lock_owner(struct task_struct *p)
 
 #define rpi_p(t)	((t)->rpi != NULL)
 
-static struct xnthread *rpi_next(struct xnsched *sched, spl_t s)
-{
-	struct xnthread *thread;
-
-	thread = xnsched_peek_rpi(sched);
-	while (thread &&
-	       xnthread_user_task(thread)->state != TASK_RUNNING &&
-	       !xnthread_test_info(thread, XNATOMIC)) {
-		/*
-		 * A blocked Linux task must be removed from the RPI
-		 * list. Checking for XNATOMIC prevents from unlinking
-		 * a thread which is currently in flight to the
-		 * primary domain (see xnshadow_harden()); not doing
-		 * so would open a tiny window for priority inversion.
-		 *
-		 * BIG FAT WARNING: Do not consider a blocked thread
-		 * linked to another processor's RPI list for removal,
-		 * since this may happen if such thread immediately
-		 * resumes on the remote CPU.
-		 */
-		xnsched_pop_rpi(thread);
-		thread->rpi = NULL;
-		xnlock_put_irqrestore(&sched->rpilock, s);
-		/* Do NOT nest the rpilock and nklock locks. */
-		xnlock_get_irqsave(&nklock, s);
-		xnsched_suspend_rpi(thread);
-		xnlock_put_irqrestore(&nklock, s);
-		xnlock_get_irqsave(&sched->rpilock, s);
-		thread = xnsched_peek_rpi(sched);
-	}
-
-	return thread;
-}
-
 static void rpi_push(struct xnsched *sched, struct xnthread *thread)
 {
 	struct xnsched_class *sched_class;
@@ -266,7 +232,7 @@ static void rpi_pop(struct xnthread *thread)
 		return;
 	}
 
-	top = rpi_next(sched, s);
+	top = xnsched_peek_rpi(sched);
 	if (likely(top == NULL)) {
 		prio = XNSCHED_IDLE_PRIO;
 		sched_class = &xnsched_class_idle;
@@ -340,7 +306,7 @@ static void rpi_clear_remote(struct xnthread *thread)
 	xnsched_pop_rpi(thread);
 	thread->rpi = NULL;
 
-	if (rpi_next(rpi, s) == NULL)
+	if (xnsched_peek_rpi(rpi) == NULL)
 		rcpu = xnsched_cpu(rpi);
 
 	xnlock_put_irqrestore(&rpi->rpilock, s);
@@ -404,12 +370,40 @@ static inline void rpi_switch(struct task_struct *next_task)
 	oldprio = xnsched_root_priority(sched);
 	oldclass = xnsched_root_class(sched);
 
+	if (prev &&
+	    current->state != TASK_RUNNING &&
+	    !xnthread_test_info(prev, XNATOMIC)) {
+		/*
+		 * A blocked Linux task must be removed from the RPI
+		 * list. Checking for XNATOMIC prevents from unlinking
+		 * a thread which is currently in flight to the
+		 * primary domain (see xnshadow_harden()); not doing
+		 * so would open a tiny window for priority inversion.
+		 *
+		 * BIG FAT WARNING: Do not consider a blocked thread
+		 * linked to another processor's RPI list for removal,
+		 * since this may happen if such thread immediately
+		 * resumes on the remote CPU.
+		 */
+		xnlock_get_irqsave(&sched->rpilock, s);
+		if (prev->rpi == sched) {
+			xnsched_pop_rpi(prev);
+			prev->rpi = NULL;
+			xnlock_put_irqrestore(&sched->rpilock, s);
+			/* Do NOT nest the rpilock and nklock locks. */
+			xnlock_get_irqsave(&nklock, s);
+		  	xnsched_suspend_rpi(prev);
+			xnlock_put_irqrestore(&nklock, s);
+		} else
+		  	xnlock_put_irqrestore(&sched->rpilock, s);
+	}
+
 	if (next == NULL ||
 	    next_task->policy != SCHED_FIFO ||
 	    xnthread_test_state(next, XNRPIOFF)) {
 		xnlock_get_irqsave(&sched->rpilock, s);
 
-		top = rpi_next(sched, s);
+		top = xnsched_peek_rpi(sched);
 		if (top) {
 			newprio = top->cprio;
 			newclass = top->sched_class;
@@ -498,7 +492,7 @@ void xnshadow_rpi_check(void)
 	spl_t s;
 
 	xnlock_get_irqsave(&sched->rpilock, s);
-	top = rpi_next(sched, s);
+ 	top = xnsched_peek_rpi(sched);
 	xnlock_put_irqrestore(&sched->rpilock, s);
 
 	if (top == NULL && xnsched_root_class(sched) != &xnsched_class_idle)
