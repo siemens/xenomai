@@ -65,10 +65,6 @@ static int xnarch_next_htick_shot(unsigned long delay, struct clock_event_device
 	int ret;
 	spl_t s;
 
-#if !defined(__IPIPE_FEATURE_REQUEST_TICKDEV) && 0 /* Unused. */
-	struct ipipe_tick_device *tdev = (struct ipipe_tick_device *)cdev;
-	cdev = tdev->slave->evtdev;
-#endif
 	xnlock_get_irqsave(&nklock, s);
 	sched = xnpod_current_sched();
 	ret = xntimer_start(&sched->htimer, delay, XN_INFINITE, XN_RELATIVE);
