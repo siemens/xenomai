@@ -127,9 +127,6 @@ ENTRY(rthal_thread_switch)
     @ Always disable VFP so we can lazily save/restore the old
     @ state. This occurs in the context of the previous thread.
     VFPFMRX r4, FPEXC
-#if defined(CONFIG_SMP) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
-    #error "Need to save FPU here"
-#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
     bic     r4, r4, #FPEXC_ENABLE
 #else
