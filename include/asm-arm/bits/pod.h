@@ -3,7 +3,7 @@
  *
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -45,7 +45,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
-	rootcb->tip = task_thread_info(current);
+	rootcb->tip = current_thread_info();
 #ifdef CONFIG_XENO_HW_FPU
 #ifdef CONFIG_VFP
 	rootcb->fpup = rthal_get_fpu_owner();
@@ -140,7 +140,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 	   FPU context, we keep FPU disabled, so that a fault will occur if the
 	   newly switched thread uses the FPU, to allow the kernel handler to
 	   pick the correct FPU context.
-	*/ 
+	*/
 	if (likely(!tcb->is_root)
 	    || (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)))
 		rthal_enable_fpu();
@@ -201,7 +201,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   save, when the fault occur, the current FPU context, the one of an RT
 	   task, into the FPU area of the last non RT task which used the FPU
 	   before the preemption by Xenomai.
-	*/ 
+	*/
 		last_VFP_context[smp_processor_id()] = NULL;
 		rthal_disable_fpu();
 	}
