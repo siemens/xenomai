@@ -2184,9 +2184,16 @@ void __xnpod_schedule(struct xnsched *sched)
 	zombie = xnthread_test_state(curr, XNZOMBIE);
 
 	next = xnsched_pick_next(sched);
-	if (next == curr && !xnthread_test_state(curr, XNRESTART))
+	if (next == curr && !xnthread_test_state(curr, XNRESTART)) {
 		/* Note: the root thread never restarts. */
+		if (unlikely(xnthread_test_state(next, XNROOT))) {
+			if (testbits(sched->status, XNHTICK))
+				xnintr_host_tick(sched);
+			if (testbits(sched->status, XNHDEFER))
+				xntimer_next_local_shot(sched);
+		}
 		goto signal_unlock_and_exit;
+	}
 
 	XENO_BUGON(NUCLEUS, need_resched == 0);
 
