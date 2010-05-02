@@ -276,20 +276,24 @@ void *__real_mmap(void *addr,
 }
 
 /* 32 bits platform */
-#if LONG_MAX == 2147483647L
+#if __WORDSIZE == 32
+#ifdef HAVE_FTRUNCATE64
 __attribute__ ((weak))
 int __real_ftruncate64(int fildes, long long length)
 {
 	return ftruncate64(fildes, length);
 }
+#endif /* HAVE_FTRUNCATE64 */
 
+#ifdef HAVE_MMAP64
 __attribute__ ((weak))
 void *__real_mmap64(void *addr,
 		    size_t len, int prot, int flags, int fd, long long off)
 {
 	return mmap64(addr, len, prot, flags, fd, off);
 }
-#endif
+#endif /* HAVE_MMAP64 */
+#endif /* 32 bits */
 
 __attribute__ ((weak))
 int __real_munmap(void *addr, size_t len)
