@@ -18,8 +18,8 @@ depends on XENO_OPT_NUCLEUS
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	bool
-	default y if XENO_HW_UNLOCKED_SWITCH
-	default n if !XENO_HW_UNLOCKED_SWITCH
+	default y if (XENO_HW_UNLOCKED_SWITCH || SMP)
+	default n if !XENO_HW_UNLOCKED_SWITCH && !SMP
 
 config XENO_HW_FPU
 	bool "Enable FPU support"
