@@ -25,17 +25,32 @@ NOTE: not all these patches are guaranteed to work with the current
 Xenomai release.  However, there is a good chance most of them do,
 since we try hard to maintain backward compatibility.
 
+
 -- supported boards
 
 o ARM Integrator/CP ARM 1136
-o Atmel AT91 (AT91RM9200 and AT91SAM926x)
-o Freescale iMX21/csb535fs (apply the imx21-2.6.14-ipipe-1.5-06.patch patch only)
-o Freescale MXC family (apply ipipe-2.6.26-mxc.diff after the patch for Linux
-  2.6.26, or apply ipipe-2.6.27-mx31ads.diff for mx31ads support after the patch
-  for linux 2.6.27) 
+o Atmel AT91 (AT91RM9200, AT91SAM926x, AT91SAM9RL, AT91SAM9G20)
+o Freescale MXC family (IMX1, IMX21, IMX27, IMX31, IMX51 - see below -)
+  for IMX51:
 o Intel IXP4XX based
 o Intel PXA based
 o Intel SA1100-based
 o Samsung S3C2410
+o Texas Instrument OMAP3
+
+
+-- SOC specific instructions
+
+---- IMX51
+
+1- Checkout the "rel_imx_2.6.31_10.02.00" tag in the Freescale IMX git [2];
+2- apply the adeos-ipipe-2.6.31-arm-1.15-02.patch patch, you will get
+   a reject in arch/arm/mach-mx3/devices.c which you can ignore;
+3- apply the adeos-ipipe-2.6.31-arm-1.15-01-imx51.patch;
+4- you can resume to generic installation instructions.
+
+
+-- External links
 
 [1] http://www.gna.org/projects/adeos/
+[2] http://opensource.freescale.com/pub/scm/imx/linux-2.6-imx.git

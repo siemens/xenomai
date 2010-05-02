@@ -466,7 +466,7 @@ index 0000000..28dc372
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..24770d6
+index 0000000..7d9b735
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,274 @@
@@ -501,10 +501,10 @@ index 0000000..24770d6
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.15-01"
++#define IPIPE_ARCH_STRING	"1.15-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	15
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -556,7 +556,7 @@ index 0000000..24770d6
 +	})
 +
 +#define ipipe_mm_switch_protect(flags) \
-+        local_irq_save_hw_cond(flags)
++	local_irq_save_hw_cond(flags)
 +
 +#define ipipe_mm_switch_unprotect(flags) \
 +	local_irq_restore_hw_cond(flags)
@@ -3662,7 +3662,7 @@ index 211c5c1..9cdad31 100644
  
  void __init at91sam9rl_init_interrupts(unsigned int priority[NR_AIC_IRQS])
 diff --git a/arch/arm/mach-at91/gpio.c b/arch/arm/mach-at91/gpio.c
-index f2236f0..36f7dd0 100644
+index f2236f0..e653ab3 100644
 --- a/arch/arm/mach-at91/gpio.c
 +++ b/arch/arm/mach-at91/gpio.c
 @@ -25,6 +25,13 @@
@@ -3738,19 +3738,18 @@ index f2236f0..36f7dd0 100644
  /*--------------------------------------------------------------------------*/
  
  #ifdef CONFIG_DEBUG_FS
-@@ -511,6 +554,11 @@ void __init at91_gpio_irq_setup(void)
+@@ -511,6 +554,10 @@ void __init at91_gpio_irq_setup(void)
  	unsigned		pioc, pin;
  	struct at91_gpio_chip	*this, *prev;
  
 +#if defined(CONFIG_IPIPE) && defined(__IPIPE_FEATURE_PIC_MUTE)
-+	printk("Setting irqbits to all ones.\n");
 +	memset(__ipipe_irqbits, ~0, sizeof(__ipipe_irqbits));
 +#endif /* CONFIG_IPIPE && __IPIPE_FEATURE_PIC_MUTE */
 +
  	for (pioc = 0, pin = PIN_BASE, this = gpio_chip, prev = NULL;
  			pioc++ < gpio_banks;
  			prev = this, this++) {
-@@ -540,6 +588,9 @@ void __init at91_gpio_irq_setup(void)
+@@ -540,6 +587,9 @@ void __init at91_gpio_irq_setup(void)
  
  		set_irq_chip_data(id, this);
  		set_irq_chained_handler(id, gpio_irq_handler);
@@ -4815,6 +4814,34 @@ index 1e93dfe..8374fa2 100644
 +
 +EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
++#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mach-mx3/devices.c b/arch/arm/mach-mx3/devices.c
+index 380be0c..28a8c3c 100644
+--- a/arch/arm/mach-mx3/devices.c
++++ b/arch/arm/mach-mx3/devices.c
+@@ -21,6 +21,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/serial.h>
+ #include <linux/gpio.h>
++#include <mach/common.h>
+ #include <mach/hardware.h>
+ #include <mach/irqs.h>
+ #include <mach/imx-uart.h>
+@@ -369,3 +370,15 @@ static int mx3_devices_init(void)
+ }
+ 
+ subsys_initcall(mx3_devices_init);
++
++#ifdef CONFIG_IPIPE
++static int post_cpu_init(void)
++{
++	if (cpu_is_mx31())
++		ipipe_mach_allow_hwtimer_uaccess(AIPS1_BASE_ADDR_VIRT,
++						 AIPS2_BASE_ADDR_VIRT);
++	return 0;
++}
++
++postcore_initcall(post_cpu_init);
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/mach-mx3/mx31ads.c b/arch/arm/mach-mx3/mx31ads.c
 index a6d6efe..69ff543 100644
@@ -6392,6 +6419,47 @@ index 0cce37b..f167699 100644
  	mcr	p15, 0, r0, c2, c0, 0		@ load page table pointer
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  	cpwait_ret lr, ip
+diff --git a/arch/arm/plat-mxc/cpu.c b/arch/arm/plat-mxc/cpu.c
+index 386e0d5..0bb140e 100644
+--- a/arch/arm/plat-mxc/cpu.c
++++ b/arch/arm/plat-mxc/cpu.c
+@@ -1,5 +1,5 @@
+-
+ #include <linux/module.h>
++#include <linux/io.h>
+ 
+ unsigned int __mxc_cpu_type;
+ EXPORT_SYMBOL(__mxc_cpu_type);
+@@ -9,3 +9,29 @@ void mxc_set_cpu_type(unsigned int type)
+ 	__mxc_cpu_type = type;
+ }
+ 
++#ifdef CONFIG_IPIPE
++void ipipe_mach_allow_hwtimer_uaccess(unsigned long aips1, unsigned long aips2)
++{
++	volatile unsigned long aips_reg;
++
++	/*
++	 * S/W workaround: Clear the off platform peripheral modules
++	 * Supervisor Protect bit for SDMA to access them.
++	 */
++	__raw_writel(0x0, aips1 + 0x40);
++	__raw_writel(0x0, aips1 + 0x44);
++	__raw_writel(0x0, aips1 + 0x48);
++	__raw_writel(0x0, aips1 + 0x4C);
++	aips_reg = __raw_readl(aips1 + 0x50);
++	aips_reg &= 0x00FFFFFF;
++	__raw_writel(aips_reg, aips1 + 0x50);
++
++	__raw_writel(0x0, aips2 + 0x40);
++	__raw_writel(0x0, aips2 + 0x44);
++	__raw_writel(0x0, aips2 + 0x48);
++	__raw_writel(0x0, aips2 + 0x4C);
++	aips_reg = __raw_readl(aips2 + 0x50);
++	aips_reg &= 0x00FFFFFF;
++	__raw_writel(aips_reg, aips2 + 0x50);
++}
++#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
 index 89e9579..9190e1e 100644
 --- a/arch/arm/plat-mxc/gpio.c
@@ -6450,6 +6518,19 @@ index 89e9579..9190e1e 100644
  			set_irq_flags(j, IRQF_VALID);
  		}
  
+diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
+index b2f9b72..e598ec6 100644
+--- a/arch/arm/plat-mxc/include/mach/common.h
++++ b/arch/arm/plat-mxc/include/mach/common.h
+@@ -26,4 +26,8 @@ extern int mxc_register_gpios(void);
+ extern int mxc_register_device(struct platform_device *pdev, void *data);
+ extern void mxc_set_cpu_type(unsigned int type);
+ 
++#ifdef CONFIG_IPIPE
++void ipipe_mach_allow_hwtimer_uaccess(unsigned long aips1, unsigned long aips2);
++#endif
++
+ #endif
 diff --git a/arch/arm/plat-mxc/time.c b/arch/arm/plat-mxc/time.c
 index dab3357..6d855f8 100644
 --- a/arch/arm/plat-mxc/time.c
@@ -6739,7 +6820,7 @@ index abc79d4..caaf694 100644
  	}
  
 diff --git a/arch/arm/plat-s3c/time.c b/arch/arm/plat-s3c/time.c
-index 3b27b29..8e6e479 100644
+index 3b27b29..976fe03 100644
 --- a/arch/arm/plat-s3c/time.c
 +++ b/arch/arm/plat-s3c/time.c
 @@ -3,6 +3,8 @@
@@ -6925,18 +7006,7 @@ index 3b27b29..8e6e479 100644
  		__raw_writel(tcfg1, S3C2410_TCFG1);
  	} else {
  		unsigned long pclk;
-@@ -204,12 +254,25 @@ static void s3c2410_timer_setup (void)
- 		clk_set_parent(tin, tdiv);
- 
- 		tcnt = clk_get_rate(tin) / HZ;
-+
-+		tcfg1 = __raw_readl(S3C2410_TCFG1);
-+		tcfg1 &= ~(S3C2410_TCFG1_MUX4_MASK | S3C2410_TCFG1_MUX3_MASK);
-+		tcfg1 |= (S3C2410_TCFG1_MUX4_TCLK1 | S3C2410_TCFG1_MUX3_TCLK1);
-+		__raw_writel(tcfg1, S3C2410_TCFG1);
- 	}
- 
- 	tcon = __raw_readl(S3C2410_TCON);
+@@ -210,6 +260,14 @@ static void s3c2410_timer_setup (void)
  	tcfg0 = __raw_readl(S3C2410_TCFG0);
  	tcfg1 = __raw_readl(S3C2410_TCFG1);
  
@@ -6951,7 +7021,7 @@ index 3b27b29..8e6e479 100644
  	/* timers reload after counting zero, so reduce the count by 1 */
  
  	tcnt--;
-@@ -226,23 +289,37 @@ static void s3c2410_timer_setup (void)
+@@ -226,23 +284,37 @@ static void s3c2410_timer_setup (void)
  	__raw_writel(tcfg1, S3C2410_TCFG1);
  	__raw_writel(tcfg0, S3C2410_TCFG0);
  
@@ -6980,13 +7050,13 @@ index 3b27b29..8e6e479 100644
 +
 +	/* Set base tcon value for later programming of timer 4 by Xenomai. */
 +	free_running_tcon = tcon |  S3C2410_TCON_T3RELOAD | S3C2410_TCON_T3START;
++
++	/* Set auto reloads for both timers. */
++	tcon |= S3C2410_TCON_T3RELOAD | S3C2410_TCON_T4RELOAD;
  
 -	/* start the timer running */
 -	tcon |= S3C2410_TCON_T4START;
 -	tcon &= ~S3C2410_TCON_T4MANUALUPD;
-+	/* Set auto reloads for both timers. */
-+	tcon |= S3C2410_TCON_T3RELOAD | S3C2410_TCON_T4RELOAD;
-+
 +	/* Manual update */
 +	__raw_writel(tcon | S3C2410_TCON_T3MANUALUPD
 +			  | S3C2410_TCON_T4MANUALUPD, S3C2410_TCON);
@@ -7000,7 +7070,7 @@ index 3b27b29..8e6e479 100644
  }
  
  static void __init s3c2410_timer_resources(void)
-@@ -283,3 +360,58 @@ struct sys_timer s3c24xx_timer = {
+@@ -283,3 +355,58 @@ struct sys_timer s3c24xx_timer = {
  	.offset		= s3c2410_gettimeoffset,
  	.resume		= s3c2410_timer_setup
  };
