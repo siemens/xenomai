@@ -126,7 +126,22 @@ static inline __attribute_const__ unsigned long ffnz (unsigned long ul)
 #include <asm/mach/irq.h>
 #include <asm/cacheflush.h>
 
-#define RTHAL_TIMER_IRQ   __ipipe_mach_timerint
+#ifndef RTHAL_TIMER_IRQ
+/*
+ * Default setting, unless pre-set in the machine-dependent section.
+ */
+#ifdef __IPIPE_FEATURE_SYSINFO_V2
+#define RTHAL_TIMER_IRQ		__ipipe_mach_hrtimer_irq
+#else
+#define RTHAL_TIMER_IRQ		__ipipe_mach_timerint
+#endif /* __IPIPE_FEATURE_SYSINFO_V2 */
+#endif /* RTHAL_TIMER_IRQ */
+
+#ifdef __IPIPE_FEATURE_SYSINFO_V2
+#define RTHAL_TSC_INFO(p)	((p)->arch_tsc)
+#else
+#define RTHAL_TSC_INFO(p)	((p)->archdep.tsc)
+#endif /* __IPIPE_FEATURE_SYSINFO_V2 */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 #define RTHAL_SHARED_HEAP_FLAGS (cache_is_vivt() ? XNHEAP_GFP_NONCACHED : 0)

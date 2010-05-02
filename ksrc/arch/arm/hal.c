@@ -157,7 +157,7 @@ EXPORT_SYMBOL(rthal_timer_notify_switch);
 
 unsigned long rthal_timer_calibrate(void)
 {
-    return 1000000000 / RTHAL_CPU_FREQ;
+	return 1000000000 / RTHAL_CLOCK_FREQ;
 }
 
 int rthal_irq_host_request(unsigned irq,

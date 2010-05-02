@@ -138,26 +138,26 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 		if (error)
 			return error;
 
-		switch (ipipe_info.archdep.tsc.type) {
+		switch (RTHAL_TSC_INFO(&ipipe_info).type) {
 		case IPIPE_TSC_TYPE_FREERUNNING:
 			info.type = __XN_TSC_TYPE_FREERUNNING,
-			info.u.fr.counter = ipipe_info.archdep.tsc.u.fr.counter;
-			info.u.fr.mask = ipipe_info.archdep.tsc.u.fr.mask;
-			info.u.fr.tsc = ipipe_info.archdep.tsc.u.fr.tsc;
+			info.u.fr.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.u.fr.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.u.fr.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
 			break;
 		case IPIPE_TSC_TYPE_DECREMENTER:
 			info.type = __XN_TSC_TYPE_DECREMENTER,
-			info.u.dec.counter = ipipe_info.archdep.tsc.u.dec.counter;
-			info.u.dec.mask = ipipe_info.archdep.tsc.u.dec.mask;
-			info.u.dec.last_cnt = ipipe_info.archdep.tsc.u.dec.last_cnt;
-			info.u.dec.tsc = ipipe_info.archdep.tsc.u.dec.tsc;
+			info.u.dec.counter = RTHAL_TSC_INFO(&ipipe_info).u.dec.counter;
+			info.u.dec.mask = RTHAL_TSC_INFO(&ipipe_info).u.dec.mask;
+			info.u.dec.last_cnt = RTHAL_TSC_INFO(&ipipe_info).u.dec.last_cnt;
+			info.u.dec.tsc = RTHAL_TSC_INFO(&ipipe_info).u.dec.tsc;
 			break;
 #ifdef IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN
 		case IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN:
 			info.type = __XN_TSC_TYPE_FREERUNNING_COUNTDOWN,
-			info.u.fr.counter = ipipe_info.archdep.tsc.u.fr.counter;
-			info.u.fr.mask = ipipe_info.archdep.tsc.u.fr.mask;
-			info.u.fr.tsc = ipipe_info.archdep.tsc.u.fr.tsc;
+			info.u.fr.counter = RTHAL_TSC_INFO(&ipipe_info).u.fr.counter;
+			info.u.fr.mask = RTHAL_TSC_INFO(&ipipe_info).u.fr.mask;
+			info.u.fr.tsc = RTHAL_TSC_INFO(&ipipe_info).u.fr.tsc;
 			break;
 #endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
 		case IPIPE_TSC_TYPE_NONE:
