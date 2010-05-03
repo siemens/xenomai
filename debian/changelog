@@ -1,3 +1,20 @@
+xenomai (2.5.2-2) unstable; urgency=low
+
+  * Added patch from Stefan Kisdaroczi <kisda@hispeed.ch>:
+    - Create group xenomai on install
+    - Added a init-script which sets /sys/.../xenomai_gid if
+      /sys/.../xenomai_gid exists
+    - Added a modprobe-script that adds the xenomai_gid parameter if the user
+      did call modprobe without xenomai_gid=
+
+ -- Roland Stigge <stigge@antcom.de>  Sun, 02 May 2010 17:06:14 +0200
+
+xenomai (2.5.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Roland Stigge <stigge@antcom.de>  Mon, 29 Mar 2010 20:51:07 +0200
+
 xenomai (2.5.1-4) unstable; urgency=low
 
   * Added patches by Stefan Kisdaroczi <kisda@hispeed.ch>:

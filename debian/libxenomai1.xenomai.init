@@ -24,7 +24,6 @@ case "$1" in
         echo "-1" > $FILENAME
         ;;
   restart|force-reload)
-        $0 stop
         $0 start
         ;;
   *)
