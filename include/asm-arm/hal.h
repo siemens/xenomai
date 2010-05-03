@@ -249,10 +249,13 @@ extern union vfp_state *last_VFP_context[NR_CPUS];
 #define rthal_disable_fpu() \
     rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
 
+#define RTHAL_VFP_ANY_EXC \
+	(FPEXC_EX|FPEXC_DEX|FPEXC_FP2V|FPEXC_VV|FPEXC_TRAP_MASK)
+
 #define rthal_enable_fpu()					\
     ({								\
 	unsigned _fpexc = rthal_vfp_fmrx(FPEXC) | FPEXC_EN;	\
-	rthal_vfp_fmxr(FPEXC, _fpexc);				\
+	rthal_vfp_fmxr(FPEXC, _fpexc & ~RTHAL_VFP_ANY_EXC);	\
 	_fpexc;							\
     })
 

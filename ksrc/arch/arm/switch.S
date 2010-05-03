@@ -45,7 +45,7 @@
     .text
 
 #ifdef CONFIG_VFP
-/* Copied from vfp_save_state in arch/arm/vfp/vfphw.S 
+/* Copied from vfp_save_state in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state, r1 = fpexc
  */
 ENTRY(rthal_vfp_save)
@@ -63,7 +63,7 @@ ENTRY(rthal_vfp_save)
 
 /* Copied from no_old_VFP_process in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state
- */	
+ */
 ENTRY(rthal_vfp_load)
     VFPFLDMIA	r0, r2			@ reload the working registers while
 					@ FPEXC is in a safe state
@@ -78,7 +78,7 @@ ENTRY(rthal_vfp_load)
     VFPFMXR	FPSCR, r2		@ restore status
     mov		pc, lr
 #endif
-	
+
 /*
  * Copied from __switch_to, arch/arm/kernel/entry-armv.S.
  * Right now it is identical, but who knows what the
@@ -91,7 +91,7 @@ ENTRY(rthal_vfp_load)
  *      CONFIG_HAS_TLS_REG
  *      CONFIG_VFP
  *
- *  Calling args: 
+ *  Calling args:
  * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
  */
 ENTRY(rthal_thread_switch)
@@ -108,7 +108,7 @@ ENTRY(rthal_thread_switch)
     strex   r5, r4, [ip]                    @ Clear exclusive monitor
 #endif
 #endif
-#if 0	
+#if 0
 #if defined(CONFIG_CPU_XSCALE) && !defined(CONFIG_IWMMXT)
     mra     r4, r5, acc0
     stmia   ip, {r4, r5}
@@ -148,7 +148,7 @@ ENTRY(rthal_thread_switch)
 #endif
 #endif
     add	    r4, r2, #TI_CPU_SAVE
-#if 0	
+#if 0
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18) && defined(CONFIG_IWMMXT)
     mov	    r5, r0
     mov     r0, r2

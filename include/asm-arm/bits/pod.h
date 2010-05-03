@@ -142,8 +142,20 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 	   pick the correct FPU context.
 	*/
 	if (likely(!tcb->is_root)
-	    || (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)))
-		rthal_enable_fpu();
+	    || (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task))) {
+		unsigned fpexc = rthal_enable_fpu();
+		if (likely(!(fpexc & RTHAL_VFP_ANY_EXC)
+			   && !(rthal_vfp_fmrx(FPSCR) & FPSCR_IXE)))
+			return;
+
+		/* If current process has pending exceptions it is
+		   illegal to restore the FPEXC register with them, we must
+		   save the fpu state and disable them, to get linux
+		   fpu fault handler take care of them correctly. */
+		rthal_save_fpu(tcb->fpup, fpexc);
+		last_VFP_context[smp_processor_id()] = NULL;
+		rthal_disable_fpu();
+	}
 #else /* !CONFIG_VFP */
 	if (!tcb->user_task)
 		rthal_enable_fpu();
