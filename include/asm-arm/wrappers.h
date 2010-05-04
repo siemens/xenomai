@@ -24,11 +24,12 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
+#include <linux/ipipe.h>
 #include <linux/interrupt.h>
+#include <asm-generic/xenomai/wrappers.h> /* Read the generic portion. */
 
 #define wrap_phys_mem_prot(filp,pfn,size,prot)	(prot)
- 
+
 #define wrap_strncpy_from_user(dstP, srcP, n)	__strncpy_from_user(dstP, srcP, n)
 
 #define rthal_irq_desc_status(irq)	(rthal_irq_descp(irq)->status)
@@ -70,13 +71,13 @@ extern void (*fp_init)(union fp_state *);
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
 #define rthal_mark_irq_disabled(irq) do {              \
-            rthal_irq_desc_status(irq) |= IRQ_DISABLED; \
-            rthal_irq_descp(irq)->depth = 1;            \
-        } while(0);
+	    rthal_irq_desc_status(irq) |= IRQ_DISABLED; \
+	    rthal_irq_descp(irq)->depth = 1;            \
+	} while(0);
 #define rthal_mark_irq_enabled(irq) do {                 \
-            rthal_irq_desc_status(irq) &= ~IRQ_DISABLED; \
-            rthal_irq_descp(irq)->depth = 0;             \
-        } while(0);
+	    rthal_irq_desc_status(irq) &= ~IRQ_DISABLED; \
+	    rthal_irq_descp(irq)->depth = 0;             \
+	} while(0);
 static inline void fp_init(union fp_state *state)
 {
     /* FIXME: This is insufficient. */
