@@ -304,7 +304,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
 
-	if (rtdm_rt_capable(cxt->user_info) != 0)
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
 
 	/* Basically check the device */

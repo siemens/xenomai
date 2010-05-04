@@ -391,7 +391,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
-	if (rtdm_in_rt_context() != 0) {
+	if (rtdm_in_rt_context()) {
 		return -ENOSYS;
 	}
 
@@ -469,7 +469,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
-	if (rtdm_in_rt_context() != 0) {
+	if (rtdm_in_rt_context()) {
 		return -ENOSYS;
 	}
 
@@ -536,7 +536,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
 
-	if (rtdm_rt_capable(cxt->user_info) != 0)
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
 
 	/* Basic checking */
@@ -882,7 +882,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_buf_t *buf;
 	a4l_poll_t poll;
 
-	if (rtdm_rt_capable(cxt->user_info) != 0)
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
 
 	/* Basic checking */
