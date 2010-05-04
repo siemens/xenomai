@@ -292,6 +292,9 @@ int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
 	a4l_kinsn_t insn;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+		return -ENOSYS;
+
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_ioctl_insn: unattached device\n");
@@ -390,6 +393,9 @@ int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 	int i, ret = 0;
 	a4l_kilst_t ilst;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+		return -ENOSYS;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {

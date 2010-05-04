@@ -304,6 +304,12 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
 
+	/* The command launching cannot be done in real-time because
+	   of some possible buffer allocations in the drivers */
+	if (rtdm_in_rt_context()) {
+		return -ENOSYS;
+	}
+
 	/* Basically check the device */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_ioctl_cmd: cannot command "

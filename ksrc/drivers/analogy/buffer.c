@@ -112,7 +112,7 @@ a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
 int a4l_get_chan(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-	int i, tmp_count, tmp_size = 0;	
+	int i, j, tmp_count, tmp_size = 0;	
 	a4l_cmd_t *cmd;
 
 	/* Check that subdevice supports commands */
@@ -132,9 +132,11 @@ int a4l_get_chan(a4l_subd_t *subd)
 	/* We assume channels can have different sizes;
 	   so, we have to compute the global size of the channels
 	   in this command... */
-	for (i = 0; i < cmd->nb_chan; i++)
-		tmp_size += dev->transfer.subds[subd->idx]->chan_desc->
-			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+	for (i = 0; i < cmd->nb_chan; i++) {
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+			CR_CHAN(cmd->chan_descs[i]) : 0;
+		tmp_size += subd->chan_desc->chans[j].nb_bits;
+	}
 
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
@@ -146,9 +148,11 @@ int a4l_get_chan(a4l_subd_t *subd)
 
 	/* ...and find the channel the last munged sample 
 	   was related with */
-	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++)
-		tmp_count -= dev->transfer.subds[subd->idx]->chan_desc->
-			chans[CR_CHAN(cmd->chan_descs[i])].nb_bits;
+	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++) {
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+			CR_CHAN(cmd->chan_descs[i]) : 0;
+		tmp_count -= subd->chan_desc->chans[j].nb_bits;
+	}
 
 	if (tmp_count == 0)
 		return i;
@@ -385,6 +389,12 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_mmap: minor=%d\n", a4l_get_minor(cxt));
 
+	/* The mmap operation cannot be performed in a 
+	   real-time context */
+	if (rtdm_in_rt_context()) {
+		return -ENOSYS;
+	}
+
 	dev = a4l_get_dev(cxt);
 
 	/* Basically check the device */
@@ -392,12 +402,6 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		__a4l_err("a4l_ioctl_mmap: cannot mmap on "
 			  "an unattached device\n");
 		return -EINVAL;
-	}
-
-	/* The mmap operation cannot be performed in a 
-	   real-time context */
-	if (a4l_test_rt() != 0) {
-		return -ENOSYS;
 	}
 
 	/* Recover the argument structure */
@@ -463,16 +467,16 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
 
+	/* As Linux API is used to allocate a virtual buffer,
+	   the calling process must not be in primary mode */
+	if (rtdm_in_rt_context()) {
+		return -ENOSYS;
+	}
+
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
 		return -EINVAL;
-	}
-
-	/* As Linux API is used to allocate a virtual buffer,
-	   the calling process must not be in primary mode */
-	if (a4l_test_rt() != 0) {
-		return -ENOSYS;
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
@@ -531,6 +535,9 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
+
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+		return -ENOSYS;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
@@ -726,7 +733,7 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		/* If the acquisition is not over, we must not
 		   leave the function without having read a least byte */
 		else {
-			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
@@ -819,7 +826,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 				goto out_a4l_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
-			ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+			ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 			if (ret < 0) {
 				if (ret == -ERESTARTSYS)
 					ret = -EINTR;
@@ -874,6 +881,9 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf;
 	a4l_poll_t poll;
+
+	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
+		return -ENOSYS;
 
 	/* Basic checking */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
@@ -949,11 +959,12 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 		goto out_poll;
 
 	if (poll.arg == A4L_INFINITE)
-		ret = a4l_wait_sync(&(buf->sync), a4l_test_rt());
+		ret = a4l_wait_sync(&(buf->sync), rtdm_in_rt_context());
 	else {
 		unsigned long long ns = ((unsigned long long)poll.arg) *
 			((unsigned long long)NSEC_PER_MSEC);
-		ret = a4l_timedwait_sync(&(buf->sync), a4l_test_rt(), ns);
+		ret = a4l_timedwait_sync(&(buf->sync), 
+					 rtdm_in_rt_context(), ns);
 	}
 
 	if (ret == 0) {

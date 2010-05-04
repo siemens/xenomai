@@ -1,6 +1,6 @@
 sbin_PROGRAMS = analogy_config
 
-bin_PROGRAMS = cmd_read cmd_write insn_read insn_write insn_bits
+bin_PROGRAMS = cmd_read cmd_write cmd_bits insn_read insn_write insn_bits
 
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
@@ -29,17 +29,21 @@ cmd_write_LDADD = \
 	../../skins/rtdm/librtdm.la \
 	../../skins/common/libxenomai.la
 
+cmd_bits_SOURCES = cmd_bits.c
+cmd_bits_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
 insn_read_SOURCES = insn_read.c
 insn_read_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la \
 	../../skins/rtdm/librtdm.la \
 	../../skins/common/libxenomai.la
 
 insn_write_SOURCES = insn_write.c
 insn_write_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la \
 	../../skins/rtdm/librtdm.la \
 	../../skins/common/libxenomai.la
 

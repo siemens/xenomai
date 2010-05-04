@@ -67,19 +67,19 @@ a4l_rngdesc_t range_fake = RNG_GLOBAL(rng_fake);
 
 /* --- Basic channel / range management functions --- */
 
-a4l_chan_t *a4l_get_chfeat(a4l_subd_t * sb, int idx)
+a4l_chan_t *a4l_get_chfeat(a4l_subd_t *sb, int idx)
 {
 	int i = (sb->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? idx : 0;
 	return &(sb->chan_desc->chans[i]);
 }
 
-a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb, int chidx, int rngidx)
+a4l_rng_t *a4l_get_rngfeat(a4l_subd_t *sb, int chidx, int rngidx)
 {
 	int i = (sb->rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ? chidx : 0;
 	return &(sb->rng_desc->rngtabs[i]->rngs[rngidx]);
 }
 
-int a4l_check_chanlist(a4l_subd_t * subd,
+int a4l_check_chanlist(a4l_subd_t *subd,
 		       unsigned char nb_chan, unsigned int *chans)
 {
 	int i, j;

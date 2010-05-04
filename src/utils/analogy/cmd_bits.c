@@ -1,6 +1,7 @@
+
 /**
  * @file
- * Analogy for Linux, instruction bits test program
+ * Analogy for Linux, digital command test program
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -33,9 +34,35 @@
 
 static char *filename = FILENAME;
 static int verbose;
-static int idx_subd = -1;
 
-struct option insn_bits_opts[] = {
+/* TODO: to be removed */
+static unsigned int chans[4] = {0, 1, 2, 3};
+
+/* The command to send by default */
+a4l_cmd_t cmd = {
+	.idx_subd = -1,
+	.flags = 0,
+	.start_src = TRIG_INT,
+	.start_arg = 0,
+	.scan_begin_src = TRIG_EXT,
+	.scan_begin_arg = 0, /* in ns */
+	.convert_src = TRIG_NOW,
+	.convert_arg = 0, /* in ns */
+	.scan_end_src = TRIG_COUNT,
+	.scan_end_arg = 4,
+	.stop_src = TRIG_NONE,
+	.stop_arg = 0,
+	.nb_chan = 4,
+	.chan_descs = chans,
+};
+
+a4l_insn_t insn = {
+	.type = A4L_INSN_INTTRIG,
+	.idx_subd = -1,
+	.data_size = 0,
+};
+
+struct option cmd_bits_opts[] = {
 	{"verbose", no_argument, NULL, 'v'},
 	{"device", required_argument, NULL, 'd'},
 	{"subdevice", required_argument, NULL, 's'},
@@ -45,10 +72,11 @@ struct option insn_bits_opts[] = {
 
 void do_print_usage(void)
 {
-	fprintf(stdout, "usage:\tinsn_bits [OPTS] <bits_values> <mask>\n");
+	fprintf(stdout, "usage:\tcmd_bits [OPTS] <bits_values> <mask>\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
 	fprintf(stdout,
-		"\t\t -d, --device: device filename (analogy0, analogy1, ...)\n");
+		"\t\t -d, --device: "
+		"device filename (analogy0, analogy1, ...)\n");
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
@@ -58,13 +86,16 @@ int main(int argc, char *argv[])
 	int i = 0, err = 0;
 	a4l_desc_t dsc = { .sbdata = NULL };
 	a4l_sbinfo_t *sbinfo;
-	int scan_size, value, mask;
+	int scan_size, idx_subd = -1;
+	int value, mask = 0;
+
+	/* Trigger status, written data..., before triggering */
+	int triggered = 0, total = 0, trigger_threshold = 128;
 
 	/* Compute arguments */
 	while ((err = getopt_long(argc,
 				  argv,
-				  "vd:s:h", insn_bits_opts,
-				  NULL)) >= 0) {
+				  "vd:s:h", cmd_bits_opts, NULL)) >= 0) {
 		switch (err) {
 		case 'v':
 			verbose = 1;
@@ -88,16 +119,16 @@ int main(int argc, char *argv[])
 	/* Open the device */
 	err = a4l_open(&dsc, filename);
 	if (err < 0) {
-		fprintf(stderr, 
-			"insn_bits: a4l_open %s failed (err=%d)\n", 
-			filename, err);
+		fprintf(stderr,
+			"cmd_bits: a4l_open %s failed (err=%d)\n",
+			FILENAME, err);
 		return err;
-	}
+	}	
 
 	if (verbose != 0) {
-		printf("insn_bits: device %s opened (fd=%d)\n", filename,
-		       dsc.fd);
-		printf("insn_bits: basic descriptor retrieved\n");
+		printf("cmd_bits: device %s opened (fd=%d)\n",
+		       filename, dsc.fd);
+		printf("cmd_bits: basic descriptor retrieved\n");
 		printf("\t subdevices count = %d\n", dsc.nb_subd);
 		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
@@ -106,22 +137,21 @@ int main(int argc, char *argv[])
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
 	if (dsc.sbdata == NULL) {
-		err = -ENOMEM;
-		fprintf(stderr, "insn_bits: info buffer allocation failed\n");
-		goto out_insn_bits;
+		fprintf(stderr, "cmd_bits: malloc failed \n");
+		return -ENOMEM;
 	}
 
 	/* Get this data */
 	err = a4l_fill_desc(&dsc);
 	if (err < 0) {
-		fprintf(stderr, 
-			"insn_bits: a4l_fill_desc failed (err=%d)\n", err);
-		goto out_insn_bits;
+		fprintf(stderr,
+			"cmd_bits: a4l_get_desc failed (err=%d)\n", err);
+		goto out_cmd_bits;
 	}
 
 	if (verbose != 0)
-		printf("insn_bits: complex descriptor retrieved\n");
-
+		printf("cmd_bits: complex descriptor retrieved\n");
+	
 	/* If no subdevice index was set, choose for the first digital
 	   subdevice found */
 	while (idx_subd == -1 && i < dsc.nb_subd) {
@@ -129,13 +159,13 @@ int main(int argc, char *argv[])
 		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
 		if (err < 0) {
 			fprintf(stderr, 
-				"insn_bits: get_sbinfo(%d) failed (err = %d)\n",
+				"cmd_bits: "
+				"a4l_get_subdinfo(%d) failed (err = %d)\n",
 				i, err);
-			goto out_insn_bits;
+			goto out_cmd_bits;
 		}
 		
 		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DIO ||
-		    (sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DI ||
 		    (sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DO) {
 			idx_subd = i;
 		}
@@ -144,76 +174,99 @@ int main(int argc, char *argv[])
 	}
 
 	if (idx_subd == -1) {
-		fprintf(stderr, "insn_bits: no digital subdevice available\n");
+		fprintf(stderr, "cmd_bits: no digital subdevice available\n");
 		err = -EINVAL;
-		goto  out_insn_bits;
+		goto  out_cmd_bits;
 	}
 
 	if (verbose != 0)
-		printf("insn_bits: selected subdevice index = %d\n", idx_subd);
+		printf("cmd_bits: selected subdevice index = %d\n", 
+		       idx_subd);
 
 	/* We must check that the subdevice is really a digital one
 	   (in case, the subdevice index was set with the option -s) */
 	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
 	if (err < 0) {
 		fprintf(stderr, 
-			"insn_bits: get_sbinfo(%d) failed (err = %d)\n",
+			"cmd_bits: get_sbinfo(%d) failed (err = %d)\n",
 			idx_subd, err);
 		err = -EINVAL;
-		goto out_insn_bits;
+		goto out_cmd_bits;
 	}
 
+	cmd.idx_subd = insn.idx_subd = idx_subd;
+
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
-	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI &&
 	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO) {
 		fprintf(stderr, 
-			"insn_bits: selected subdevice is not digital\n");
+			"cmd_bits: selected subdevice is not digital\n");
 		err = -EINVAL;
-		goto out_insn_bits;		
+		goto out_cmd_bits;		
 	}
-	
+
 	/* Set the data size to read / write */
 	scan_size = a4l_sizeof_subd(sbinfo);
 
-	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI) {
-		printf("insn_bits: mask = 0x%x\n", mask);
-		printf("insn_bits: value = 0x%x\n", value);
-	}
-
 	/* Handle little endian case with scan size < 32 */
 	if (scan_size == sizeof(uint8_t)) {
-		mask *= 0x01010101;
 		value *= 0x01010101;
 	}
 	else if (scan_size == sizeof(uint16_t)) {
-		mask *= 0x00010001;
 		value *= 0x00010001;
 	}
 
-	/* Perform the synchronous operation */
-	err = a4l_sync_dio(&dsc, idx_subd, &mask, &value);
+	/* Configure the polarities */
+	for (i = 0; i < scan_size; i++) {
+		int mode = (mask & (1 << i)) ? 
+			A4L_INSN_CONFIG_DIO_OUTPUT : A4L_INSN_CONFIG_DIO_INPUT;
 
+		err = a4l_config_subd(&dsc, cmd.idx_subd, mode, i);
+		if (err < 0) {
+			fprintf(stderr, 
+				"cmd_bits: configuration of "
+				"line %d failed (err=%d)\n", 
+				i, err);
+			goto out_cmd_bits;
+		}
+	}
+
+	/* Send the command to the output device */
+	err = a4l_snd_command(&dsc, &cmd);
 	if (err < 0) {
-		fprintf(stderr, 
-			"insn_bits: a4l_sync_dio() failed (err=%d)\n", err);
-		goto out_insn_bits;
+		fprintf(stderr,
+			"cmd_bits: a4l_snd_command failed (err=%d)\n", err);
+		goto out_cmd_bits;
 	}
 
-	if (scan_size == sizeof(uint8_t)) {
-		value = *((uint8_t *)&value);
-	}
-	else if (scan_size == sizeof(uint16_t)) {
-		value = *((uint16_t *)&value);
-	}
+	if (verbose != 0)
+		printf("cmd_bits: command successfully sent\n");
 
-	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO)
-		printf("insn_bits: result = 0x%x\n", value);
-	else
-		printf("insn_bits: operation succeeded\n");
+	/* Perform the write operations */
+	do {
+		err = a4l_async_write(&dsc, &value, scan_size, A4L_INFINITE);
+		if (err < 0) {
+			fprintf(stderr, 
+				"cmd_bits: a4l_write failed (err=%d)\n", err);
+			goto out_cmd_bits;
+		}
+		
+		total += err;
 
-out_insn_bits:
+		if (!triggered && total > trigger_threshold) {
+			err = a4l_snd_insn(&dsc, &insn);
+			if (err < 0) {
+				fprintf(stderr, 
+					"cmd_bits: triggering failed (err=%d)\n",
+					err);
+				goto out_cmd_bits;
+			}
+		}
 
-	/* Free the information buffer */
+	} while (err > 0);       	
+
+out_cmd_bits:
+
+	/* Free the buffer used as device descriptor */
 	if (dsc.sbdata != NULL)
 		free(dsc.sbdata);
 
