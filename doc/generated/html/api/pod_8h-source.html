@@ -262,14 +262,14 @@
 <a name="l00276"></a>00276 <span class="comment">         * context is active, or if we are caught in the middle of a</span>
 <a name="l00277"></a>00277 <span class="comment">         * unlocked context switch.</span>
 <a name="l00278"></a>00278 <span class="comment">         */</span>
-<a name="l00279"></a>00279 <span class="preprocessor">#ifdef CONFIG_XENO_OPT_DEBUG_NUCLEUS</span>
+<a name="l00279"></a>00279 <span class="preprocessor">#if XENO_DEBUG(NUCLEUS)</span>
 <a name="l00280"></a>00280 <span class="preprocessor"></span>        <span class="keywordflow">if</span> (testbits(sched-&gt;<a class="code" href="structxnsched.html#d700d0003b158a60599221047b2fc52e">status</a>, XNKCOUT|XNINIRQ|XNSWLOCK))
 <a name="l00281"></a>00281                 <span class="keywordflow">return</span>;
-<a name="l00282"></a>00282 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */</span>
+<a name="l00282"></a>00282 <span class="preprocessor">#else </span><span class="comment">/* !XENO_DEBUG(NUCLEUS) */</span>
 <a name="l00283"></a>00283         <span class="keywordflow">if</span> (testbits(sched-&gt;<a class="code" href="structxnsched.html#d700d0003b158a60599221047b2fc52e">status</a>,
 <a name="l00284"></a>00284                      XNKCOUT|XNINIRQ|XNSWLOCK|XNRESCHED) != XNRESCHED)
 <a name="l00285"></a>00285                 <span class="keywordflow">return</span>;
-<a name="l00286"></a>00286 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_XENO_OPT_DEBUG_NUCLEUS */</span>
+<a name="l00286"></a>00286 <span class="preprocessor">#endif </span><span class="comment">/* !XENO_DEBUG(NUCLEUS) */</span>
 <a name="l00287"></a>00287 
 <a name="l00288"></a>00288         __xnpod_schedule(sched);
 <a name="l00289"></a>00289 }
@@ -337,7 +337,7 @@
 <a name="l00351"></a>00351 <span class="preprocessor"></span>
 <a name="l00354"></a>00354 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_POD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

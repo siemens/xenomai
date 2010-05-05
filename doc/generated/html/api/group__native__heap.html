@@ -156,7 +156,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation. Operations on single-block heaps never start the rescheduling procedure.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00109">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00175">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00109">XNRMID</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
@@ -327,7 +327,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2heap_8c-source.html#l00112">rt_heap_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00276">xnheap_set_label()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2heap_8c-source.html#l00112">rt_heap_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00276">xnheap_set_label()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -419,7 +419,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00842">xnheap_free()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00313">xnsynch_wakeup_this_sleeper()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00842">xnheap_free()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00309">xnsynch_wakeup_this_sleeper()</a>.</p>
 
 </div>
 </div><p>
@@ -511,7 +511,7 @@ Rescheduling: never. <dl compact><dt><b>Examples: </b></dt><dd>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:52 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

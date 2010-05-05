@@ -108,20 +108,16 @@
 <a name="l00080"></a>00080 }
 <a name="l00081"></a>00081 
 <a name="l00082"></a>00082 <span class="keywordtype">int</span> __init rtdm_dev_init(<span class="keywordtype">void</span>);
-<a name="l00083"></a>00083 
-<a name="l00084"></a>00084 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>)
-<a name="l00085"></a>00085 {
-<a name="l00086"></a>00086         kfree(rtdm_named_devices);
-<a name="l00087"></a>00087         kfree(rtdm_protocol_devices);
-<a name="l00088"></a>00088 }
+<a name="l00083"></a>00083 <span class="keywordtype">void</span> rtdm_dev_cleanup(<span class="keywordtype">void</span>);
+<a name="l00084"></a>00084 
+<a name="l00085"></a>00085 <span class="keywordtype">int</span> rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html" title="RTDM device.">rtdm_device</a> *device);
+<a name="l00086"></a>00086 <span class="keywordtype">int</span> __init rtdm_proc_init(<span class="keywordtype">void</span>);
+<a name="l00087"></a>00087 <span class="keywordtype">void</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>);
+<a name="l00088"></a>00088 <span class="keywordtype">void</span> rtdm_apc_handler(<span class="keywordtype">void</span> *cookie);
 <a name="l00089"></a>00089 
-<a name="l00090"></a>00090 <span class="keywordtype">int</span> rtdm_proc_register_device(<span class="keyword">struct</span> <a class="code" href="structrtdm__device.html" title="RTDM device.">rtdm_device</a> *device);
-<a name="l00091"></a>00091 <span class="keywordtype">int</span> __init rtdm_proc_init(<span class="keywordtype">void</span>);
-<a name="l00092"></a>00092 <span class="keywordtype">void</span> rtdm_proc_cleanup(<span class="keywordtype">void</span>);
-<a name="l00093"></a>00093 
-<a name="l00094"></a>00094 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_INTERNAL_H */</span>
+<a name="l00090"></a>00090 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_INTERNAL_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:49 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:57 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

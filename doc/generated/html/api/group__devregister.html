@@ -171,8 +171,6 @@ Collaboration diagram for Device Registration Services:</div>
 Set by RTDM when the device is being closed. 
 <p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2rtdm_2core_8c-source.html#l00073">rtdm_context_get()</a>.</p>
-
 </div>
 </div><p>
 <a class="anchor" name="ga6f17915089145982b04c51f202d950c"></a><!-- doxytag: member="rtdm_driver.h::RTDM_CREATED_IN_NRT" ref="ga6f17915089145982b04c51f202d950c" args="" -->
@@ -207,7 +205,7 @@ Set by RTDM if the device instance was created in non-real-time context.
 Mask selecting the device type. 
 <p>
 
-<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00192">rtdm_dev_register()</a>, and <a class="el" href="skins_2rtdm_2device_8c-source.html#l00384">rtdm_dev_unregister()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>, and <a class="el" href="skins_2rtdm_2device_8c-source.html#l00399">rtdm_dev_unregister()</a>.</p>
 
 </div>
 </div><p>
@@ -226,7 +224,7 @@ Mask selecting the device type.
 If set, only a single instance of the device can be requested by an application. 
 <p>
 
-<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00192">rtdm_dev_register()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>.</p>
 
 </div>
 </div><p>
@@ -245,7 +243,7 @@ If set, only a single instance of the device can be requested by an application.
 If set, the device is addressed via a clear-text name. 
 <p>
 
-<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00192">rtdm_dev_register()</a>, and <a class="el" href="skins_2rtdm_2device_8c-source.html#l00384">rtdm_dev_unregister()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>, and <a class="el" href="skins_2rtdm_2device_8c-source.html#l00399">rtdm_dev_unregister()</a>.</p>
 
 </div>
 </div><p>
@@ -264,7 +262,7 @@ If set, the device is addressed via a clear-text name.
 If set, the device is addressed via a combination of protocol ID and socket type. 
 <p>
 
-<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00192">rtdm_dev_register()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>.</p>
 
 </div>
 </div><p>
@@ -286,10 +284,11 @@ Close handler.
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>context</em>&nbsp;</td><td>Context structure associated with opened device instance </td></tr>
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode call</td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>Opaque pointer to information about user mode caller, NULL if kernel mode or deferred user mode call</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, or another negative error code.</dd></dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. On failure return either -ENOSYS, to request that this handler be called again from the opposite realtime/non-realtime context, -EAGAIN to request a recall after a grace period, or a valid negative error code according to IEEE Std 1003.1.</dd></dl>
+<dl class="note" compact><dt><b>Note:</b></dt><dd>Drivers must be prepared for that case that the close handler is invoked more than once per open context (even if the handler already completed an earlier run successfully). The driver has to avoid releasing resources twice as well as returning false errors on successive close invocations.</dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><code><a class="el" href="group__posix__shm.html#gafbcde67669a1b96577e735ddebd8634" title="Close a file descriptor.">close()</a></code> in IEEE Std 1003.1, <a href="http://www.opengroup.org/onlinepubs/009695399">http://www.opengroup.org/onlinepubs/009695399</a> </dd></dl>
 
 </div>
@@ -534,7 +533,7 @@ Locate the driver private area associated to a device context structure.
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>The address of the private driver area associated to <em>context</em>. </dd></dl>
 
-<p>References <a class="el" href="rtdm__driver_8h-source.html#l00408">rtdm_dev_context::dev_private</a>.</p>
+<p>References <a class="el" href="rtdm__driver_8h-source.html#l00417">rtdm_dev_context::dev_private</a>.</p>
 
 </div>
 </div><p>
@@ -581,7 +580,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="rtdm__driver_8h-source.html#l00334">rtdm_operations::close_nrt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00332">rtdm_operations::close_rt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00460">rtdm_device::context_size</a>, <a class="el" href="rtdm__driver_8h-source.html#l00488">rtdm_device::device_class</a>, <a class="el" href="rtdm__driver_8h-source.html#l00458">rtdm_device::device_flags</a>, <a class="el" href="rtdm__driver_8h-source.html#l00463">rtdm_device::device_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00491">rtdm_device::device_sub_class</a>, <a class="el" href="rtdm__driver_8h-source.html#l00497">rtdm_device::driver_version</a>, <a class="el" href="rtdm__driver_8h-source.html#l00485">rtdm_device::ops</a>, <a class="el" href="rtdm__driver_8h-source.html#l00505">rtdm_device::proc_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00493">rtdm_device::profile_version</a>, <a class="el" href="rtdm__driver_8h-source.html#l00466">rtdm_device::protocol_family</a>, <a class="el" href="rtdm__driver_8h-source.html#l00515">rtdm_device::reserved</a>, <a class="el" href="rtdm__driver_8h-source.html#l00106">RTDM_DEVICE_STRUCT_VER</a>, <a class="el" href="rtdm__driver_8h-source.html#l00080">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="rtdm__driver_8h-source.html#l00070">RTDM_EXCLUSIVE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00073">RTDM_NAMED_DEVICE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00077">RTDM_PROTOCOL_DEVICE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00342">rtdm_operations::select_bind</a>, <a class="el" href="rtdm__driver_8h-source.html#l00468">rtdm_device::socket_type</a>, and <a class="el" href="rtdm__driver_8h-source.html#l00455">rtdm_device::struct_version</a>.</p>
+<p>References <a class="el" href="rtdm__driver_8h-source.html#l00342">rtdm_operations::close_nrt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00340">rtdm_operations::close_rt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00469">rtdm_device::context_size</a>, <a class="el" href="rtdm__driver_8h-source.html#l00502">rtdm_device::device_class</a>, <a class="el" href="rtdm__driver_8h-source.html#l00467">rtdm_device::device_flags</a>, <a class="el" href="rtdm__driver_8h-source.html#l00472">rtdm_device::device_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00505">rtdm_device::device_sub_class</a>, <a class="el" href="rtdm__driver_8h-source.html#l00511">rtdm_device::driver_version</a>, <a class="el" href="rtdm__driver_8h-source.html#l00483">rtdm_device::open_rt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00499">rtdm_device::ops</a>, <a class="el" href="rtdm__driver_8h-source.html#l00519">rtdm_device::proc_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00507">rtdm_device::profile_version</a>, <a class="el" href="rtdm__driver_8h-source.html#l00475">rtdm_device::protocol_family</a>, <a class="el" href="rtdm__driver_8h-source.html#l00529">rtdm_device::reserved</a>, <a class="el" href="rtdm__driver_8h-source.html#l00106">RTDM_DEVICE_STRUCT_VER</a>, <a class="el" href="rtdm__driver_8h-source.html#l00080">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="rtdm__driver_8h-source.html#l00070">RTDM_EXCLUSIVE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00073">RTDM_NAMED_DEVICE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00077">RTDM_PROTOCOL_DEVICE</a>, <a class="el" href="rtdm__driver_8h-source.html#l00350">rtdm_operations::select_bind</a>, <a class="el" href="rtdm__driver_8h-source.html#l00493">rtdm_device::socket_rt</a>, <a class="el" href="rtdm__driver_8h-source.html#l00477">rtdm_device::socket_type</a>, and <a class="el" href="rtdm__driver_8h-source.html#l00464">rtdm_device::struct_version</a>.</p>
 
 </div>
 </div><p>
@@ -632,7 +631,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="rtdm__driver_8h-source.html#l00458">rtdm_device::device_flags</a>, <a class="el" href="rtdm__driver_8h-source.html#l00463">rtdm_device::device_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00507">rtdm_device::proc_entry</a>, <a class="el" href="rtdm__driver_8h-source.html#l00505">rtdm_device::proc_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00466">rtdm_device::protocol_family</a>, <a class="el" href="rtdm__driver_8h-source.html#l00515">rtdm_device::reserved</a>, <a class="el" href="rtdm__driver_8h-source.html#l00080">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="rtdm__driver_8h-source.html#l00073">RTDM_NAMED_DEVICE</a>, and <a class="el" href="rtdm__driver_8h-source.html#l00468">rtdm_device::socket_type</a>.</p>
+<p>References <a class="el" href="rtdm__driver_8h-source.html#l00467">rtdm_device::device_flags</a>, <a class="el" href="rtdm__driver_8h-source.html#l00472">rtdm_device::device_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00521">rtdm_device::proc_entry</a>, <a class="el" href="rtdm__driver_8h-source.html#l00519">rtdm_device::proc_name</a>, <a class="el" href="rtdm__driver_8h-source.html#l00475">rtdm_device::protocol_family</a>, <a class="el" href="rtdm__driver_8h-source.html#l00529">rtdm_device::reserved</a>, <a class="el" href="rtdm__driver_8h-source.html#l00080">RTDM_DEVICE_TYPE_MASK</a>, <a class="el" href="rtdm__driver_8h-source.html#l00073">RTDM_NAMED_DEVICE</a>, and <a class="el" href="rtdm__driver_8h-source.html#l00477">rtdm_device::socket_type</a>.</p>
 
 </div>
 </div><p>
@@ -665,7 +664,7 @@ Locate a device context structure from its driver private area.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:53 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -447,10 +447,12 @@
 <li>rtdm_connect()
 : <a class="el" href="group__interdrv.html#g0e2d190ab34169589e6e1ed00e34e212">core.c</a>
 <li>rtdm_context_get()
-: <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">core.c</a>
-, <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_driver.h</a>
+: <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_driver.h</a>
+, <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">core.c</a>
 <li>rtdm_context_lock()
 : <a class="el" href="group__interdrv.html#g2a37e9e938db6e8d2f50f66939de7016">core.c</a>
+<li>rtdm_context_put()
+: <a class="el" href="group__interdrv.html#g05772193e3398e0bc3c9a6e3ed8f90f9">core.c</a>
 <li>rtdm_context_to_private()
 : <a class="el" href="group__devregister.html#g765ab311ea9024a7ff210e963acd7a14">rtdm_driver.h</a>
 <li>rtdm_context_unlock()
@@ -460,11 +462,11 @@
 <li>rtdm_copy_to_user()
 : <a class="el" href="group__util.html#gb19ad9751ca1c56a53aafeb7ce8a6faf">drvlib.c</a>
 <li>rtdm_dev_register()
-: <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">device.c</a>
-, <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">rtdm_driver.h</a>
+: <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">rtdm_driver.h</a>
+, <a class="el" href="group__devregister.html#g6a191b3d206680c48cad2047adb9fc98">device.c</a>
 <li>rtdm_dev_unregister()
-: <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">device.c</a>
-, <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_driver.h</a>
+: <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">rtdm_driver.h</a>
+, <a class="el" href="group__devregister.html#g9cc04a9b6e1710d9ad3860de8d81bf14">device.c</a>
 <li>rtdm_event_clear()
 : <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#g732fe3cf3370df0f296f06fc4ac7f925">rtdm_driver.h</a>
@@ -479,14 +481,14 @@
 : <a class="el" href="group__rtdmsync.html#g839656c781d87069dd1bf1c84c38e9d9">rtdm_driver.h</a>
 , <a class="el" href="group__rtdmsync.html#g839656c781d87069dd1bf1c84c38e9d9">drvlib.c</a>
 <li>rtdm_event_signal()
-: <a class="el" href="group__rtdmsync.html#g1217402b82034b26fe25c26f1e5b32c9">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g1217402b82034b26fe25c26f1e5b32c9">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g1217402b82034b26fe25c26f1e5b32c9">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g1217402b82034b26fe25c26f1e5b32c9">rtdm_driver.h</a>
 <li>rtdm_event_timedwait()
-: <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#gf76f858a3951ca2e20d3b1e00afa17e0">rtdm_driver.h</a>
 <li>rtdm_event_wait()
-: <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g1c433b50c53d49d164b084751861e855">rtdm_driver.h</a>
 <li>rtdm_free()
 : <a class="el" href="group__util.html#g8d15b2cbb2fbf35b88362491af4e6a36">drvlib.c</a>
 <li>rtdm_getpeername()
@@ -508,8 +510,8 @@
 <li>rtdm_irq_free()
 : <a class="el" href="group__rtdmirq.html#gf246c0d9fa42a18afbeabd3e3c087c8e">drvlib.c</a>
 <li>rtdm_irq_request()
-: <a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">drvlib.c</a>
+: <a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">drvlib.c</a>
+, <a class="el" href="group__rtdmirq.html#g9bb3d95218ac5261e4033fb0bf695073">rtdm_driver.h</a>
 <li>rtdm_listen()
 : <a class="el" href="group__interdrv.html#ge03155360db13f81fb5932d7c6e860ae">core.c</a>
 <li>rtdm_malloc()
@@ -524,8 +526,8 @@
 : <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#g8d58a144bf71df7b38bb887d036cbbb5">rtdm_driver.h</a>
 <li>rtdm_mutex_lock()
-: <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">drvlib.c</a>
-, <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">rtdm_driver.h</a>
+, <a class="el" href="group__rtdmsync.html#g67c8f85c844df1aeed806e343a1b6437">drvlib.c</a>
 <li>rtdm_mutex_timedlock()
 : <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">rtdm_driver.h</a>
 , <a class="el" href="group__rtdmsync.html#g0789968300701ba2a940f5fe8b1fd4d8">drvlib.c</a>
@@ -553,6 +555,8 @@
 : <a class="el" href="group__interdrv.html#gb45f951c32bc1c2624497e7f9566df6a">core.c</a>
 <li>rtdm_recvmsg()
 : <a class="el" href="group__interdrv.html#gc99ba198f25e959eaf2e76684204520e">core.c</a>
+<li>rtdm_rt_capable()
+: <a class="el" href="group__util.html#g321a8c48467a6268fa201c16833524db">drvlib.c</a>
 <li>rtdm_rw_user_ok()
 : <a class="el" href="group__util.html#g6cecee5411773e81c83d04824864a62d">drvlib.c</a>
 <li>rtdm_safe_copy_from_user()
@@ -560,19 +564,19 @@
 <li>rtdm_safe_copy_to_user()
 : <a class="el" href="group__util.html#g53f7bacd08774bfd26e13798cbfb21b8">drvlib.c</a>
 <li>rtdm_select_bind()
-: <a class="el" href="group__interdrv.html#g0f7da4cec7713ed732ffd99040e219e2">core.c</a>
-, <a class="el" href="group__rtdmsync.html#g0f7da4cec7713ed732ffd99040e219e2">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmsync.html#g0f7da4cec7713ed732ffd99040e219e2">rtdm_driver.h</a>
+, <a class="el" href="group__interdrv.html#g0f7da4cec7713ed732ffd99040e219e2">core.c</a>
 <li>rtdm_sem_destroy()
 : <a class="el" href="group__rtdmsync.html#gf16f45217e54201ff3f24753982c41f8">drvlib.c</a>
 <li>rtdm_sem_down()
-: <a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">drvlib.c</a>
+: <a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">drvlib.c</a>
+, <a class="el" href="group__rtdmsync.html#g59da1b60b7279c1fc4355e2e0b2cc77c">rtdm_driver.h</a>
 <li>rtdm_sem_init()
 : <a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#ge1172824e463d7705ed3033e8aea133d">rtdm_driver.h</a>
 <li>rtdm_sem_select_bind()
-: <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">drvlib.c</a>
-, <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">rtdm_driver.h</a>
+, <a class="el" href="group__rtdmsync.html#gf61f576b0ff06f99399b27725aef0ae1">drvlib.c</a>
 <li>rtdm_sem_timeddown()
 : <a class="el" href="group__rtdmsync.html#g8aadb120a93df5dfd717c5bac6d4c1a9">drvlib.c</a>
 , <a class="el" href="group__rtdmsync.html#g8aadb120a93df5dfd717c5bac6d4c1a9">rtdm_driver.h</a>
@@ -601,8 +605,8 @@
 <li>rtdm_task_destroy()
 : <a class="el" href="group__rtdmtask.html#g7b5581febb2732127736817ca44e86e3">drvlib.c</a>
 <li>rtdm_task_init()
-: <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">drvlib.c</a>
-, <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_driver.h</a>
+: <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">rtdm_driver.h</a>
+, <a class="el" href="group__rtdmtask.html#g44b0701b6c28fa8035711f800fdcd371">drvlib.c</a>
 <li>rtdm_task_join_nrt()
 : <a class="el" href="group__rtdmtask.html#g8a60a2a7ba5fec7dac5336b3e8f256cc">drvlib.c</a>
 <li>rtdm_task_set_period()
@@ -630,8 +634,8 @@
 <li>rtdm_timer_start_in_handler()
 : <a class="el" href="group__rtdmtimer.html#gf585049063aa6ffb2f79511c0a091119">drvlib.c</a>
 <li>rtdm_timer_stop()
-: <a class="el" href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94">rtdm_driver.h</a>
-, <a class="el" href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94">drvlib.c</a>
+: <a class="el" href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94">drvlib.c</a>
+, <a class="el" href="group__rtdmtimer.html#g7f2accf693db9ed5a537b86a58bccd94">rtdm_driver.h</a>
 <li>rtdm_timer_stop_in_handler()
 : <a class="el" href="group__rtdmtimer.html#gf76e21cc3429370612b76493fdb6d23e">drvlib.c</a>
 <li>rtdm_toseq_init()
@@ -667,7 +671,7 @@
 : <a class="el" href="group__hal.html#g3f868180536815c231983781afef99c4">hal.c</a>
 </ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:54 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:02 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

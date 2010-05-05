@@ -197,7 +197,7 @@ This service can be called from:<p>
 Rescheduling: possible.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>It is possible to combine kernel-based alarm handling with waiter threads pending on the same alarm object from user-space through the <a class="el" href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76" title="Wait for the next alarm shot.">rt_alarm_wait()</a> service. For this purpose, the rt_alarm_handler() routine which is internally invoked to wake up alarm servers in user-space is accessible to user-provided alarm handlers in kernel space, and should be called from there in order to unblock any thread sleeping on the <a class="el" href="group__alarm.html#g6c0caadae03541db8a46751d290c0d76" title="Wait for the next alarm shot.">rt_alarm_wait()</a> service. </dd></dl>
 
-<p>References <a class="el" href="src_2skins_2native_2alarm_8c-source.html#l00030">rt_alarm_delete()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00582">xnregistry_enter()</a>, <a class="el" href="synch_8c-source.html#l00106">xnsynch_init()</a>, and <a class="el" href="group__timer.html#g834e46fb4c1ecaab949eea77b9dee284">xntimer_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2alarm_8c-source.html#l00030">rt_alarm_delete()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>, and <a class="el" href="group__timer.html#g834e46fb4c1ecaab949eea77b9dee284">xntimer_init()</a>.</p>
 
 </div>
 </div><p>
@@ -242,7 +242,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00818">xnregistry_remove()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00903">xntimer_destroy()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00903">xntimer_destroy()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>.</p>
 
@@ -451,7 +451,7 @@ Rescheduling: always. <dl compact><dt><b>Examples: </b></dt><dd>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:52 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

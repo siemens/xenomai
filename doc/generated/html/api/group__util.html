@@ -87,6 +87,9 @@ Collaboration diagram for Utility Services:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#g8f9fcd0e274324096628dfede6fb10f2">rtdm_in_rt_context</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if running in a real-time task.  <a href="#g8f9fcd0e274324096628dfede6fb10f2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__util.html#g321a8c48467a6268fa201c16833524db">rtdm_rt_capable</a> (rtdm_user_info_t *user_info)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Test if the caller is capable of running in real-time context.  <a href="#g321a8c48467a6268fa201c16833524db"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="g99abc944640745604b4a77204d2d0777"></a><!-- doxytag: member="drvlib.c::rtdm_copy_from_user" ref="g99abc944640745604b4a77204d2d0777" args="(rtdm_user_info_t *user_info, void *dst, const void __user *src, size_t size)" -->
@@ -636,6 +639,40 @@ This service can be called from:<p>
 Rescheduling: never. 
 </div>
 </div><p>
+<a class="anchor" name="g321a8c48467a6268fa201c16833524db"></a><!-- doxytag: member="drvlib.c::rtdm_rt_capable" ref="g321a8c48467a6268fa201c16833524db" args="(rtdm_user_info_t *user_info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int rtdm_rt_capable           </td>
+          <td>(</td>
+          <td class="paramtype">rtdm_user_info_t *&nbsp;</td>
+          <td class="paramname"> <em>user_info</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Test if the caller is capable of running in real-time context. 
+<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>user_info</em>&nbsp;</td><td>User information pointer as passed to the invoked device operation handler</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>Non-zero is returned if the caller is able to execute in real-time context (independent of its current execution mode), 0 otherwise.</dd></dl>
+<dl class="note" compact><dt><b>Note:</b></dt><dd>This function can be used by drivers that provide different implementations for the same service depending on the execution mode of the caller. If a caller requests such a service in non-real-time context but is capable of running in real-time as well, it might be appropriate for the driver to reject the request via -ENOSYS so that RTDM can switch the caller and restart the request in real-time context.</dd></dl>
+Environments:<p>
+This service can be called from:<p>
+<ul>
+<li>Kernel-based task</li><li>User-space task (RT, non-RT)</li></ul>
+<p>
+Rescheduling: never. 
+</div>
+</div><p>
 <a class="anchor" name="g6cecee5411773e81c83d04824864a62d"></a><!-- doxytag: member="drvlib.c::rtdm_rw_user_ok" ref="g6cecee5411773e81c83d04824864a62d" args="(rtdm_user_info_t *user_info, const void __user *ptr, size_t size)" -->
 <div class="memitem">
 <div class="memproto">
@@ -870,7 +907,7 @@ Rescheduling: never.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:53 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

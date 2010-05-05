@@ -74,18 +74,16 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#02552f2d91052bd801576b3a132ba3f9">socket_type</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol device identification: socket type (SOCK_xxx). <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f05d59487bedf7d79dc6b1858c0353c9"></a><!-- doxytag: member="rtdm_device::open_rt" ref="f05d59487bedf7d79dc6b1858c0353c9" args="" -->
-<a class="el" href="group__devregister.html#gf987b1139579bdb16b4541ea76121fa6">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#f05d59487bedf7d79dc6b1858c0353c9">open_rt</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__devregister.html#gf987b1139579bdb16b4541ea76121fa6">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#f05d59487bedf7d79dc6b1858c0353c9">open_rt</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device instance creation for real-time contexts, optional if open_nrt is non-NULL, ignored for protocol devices. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device instance creation for real-time contexts, optional (but deprecated) if open_nrt is non-NULL, ignored for protocol devices.  <a href="#f05d59487bedf7d79dc6b1858c0353c9"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="948b25a417f5ca6f3737402b60df05d2"></a><!-- doxytag: member="rtdm_device::open_nrt" ref="948b25a417f5ca6f3737402b60df05d2" args="" -->
 <a class="el" href="group__devregister.html#gf987b1139579bdb16b4541ea76121fa6">rtdm_open_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#948b25a417f5ca6f3737402b60df05d2">open_nrt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Named device instance creation for non-real-time contexts, optional if open_rt is non-NULL, ignored for protocol devices. <br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d83a8dff6e8705e442f9a7d352556267"></a><!-- doxytag: member="rtdm_device::socket_rt" ref="d83a8dff6e8705e442f9a7d352556267" args="" -->
-<a class="el" href="group__devregister.html#g07b8dc34cfc42f6203c510d1e982edc5">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#d83a8dff6e8705e442f9a7d352556267">socket_rt</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__devregister.html#g07b8dc34cfc42f6203c510d1e982edc5">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#d83a8dff6e8705e442f9a7d352556267">socket_rt</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol socket creation for real-time contexts, optional if socket_nrt is non-NULL, ignored for named devices. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Protocol socket creation for real-time contexts, optional (but deprecated) if socket_nrt is non-NULL, ignored for named devices.  <a href="#d83a8dff6e8705e442f9a7d352556267"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="dbba71fe2c5bbc2e3abb8cd505e088a0"></a><!-- doxytag: member="rtdm_device::socket_nrt" ref="dbba71fe2c5bbc2e3abb8cd505e088a0" args="" -->
 <a class="el" href="group__devregister.html#g07b8dc34cfc42f6203c510d1e982edc5">rtdm_socket_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__device.html#dbba71fe2c5bbc2e3abb8cd505e088a0">socket_nrt</a></td></tr>
 
@@ -143,10 +141,51 @@ struct rtdm_dev_reserved&nbsp;</td><td class="memItemRight" valign="bottom"><a c
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Data stored by RTDM inside a registered device (internal use only). <br></td></tr>
 </table>
+<hr><h2>Field Documentation</h2>
+<a class="anchor" name="f05d59487bedf7d79dc6b1858c0353c9"></a><!-- doxytag: member="rtdm_device::open_rt" ref="f05d59487bedf7d79dc6b1858c0353c9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__devregister.html#gf987b1139579bdb16b4541ea76121fa6">rtdm_open_handler_t</a> <a class="el" href="structrtdm__device.html#f05d59487bedf7d79dc6b1858c0353c9">rtdm_device::open_rt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Named device instance creation for real-time contexts, optional (but deprecated) if open_nrt is non-NULL, ignored for protocol devices. 
+<p>
+<dl compact><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>Only use non-real-time open handler in new drivers. </dd></dl>
+
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="d83a8dff6e8705e442f9a7d352556267"></a><!-- doxytag: member="rtdm_device::socket_rt" ref="d83a8dff6e8705e442f9a7d352556267" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__devregister.html#g07b8dc34cfc42f6203c510d1e982edc5">rtdm_socket_handler_t</a> <a class="el" href="structrtdm__device.html#d83a8dff6e8705e442f9a7d352556267">rtdm_device::socket_rt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Protocol socket creation for real-time contexts, optional (but deprecated) if socket_nrt is non-NULL, ignored for named devices. 
+<p>
+<dl compact><dt><b><a class="el" href="deprecated.html#_deprecated000003">Deprecated:</a></b></dt><dd>Only use non-real-time socket creation handler in new drivers. </dd></dl>
+
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>.</p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:54 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:02 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

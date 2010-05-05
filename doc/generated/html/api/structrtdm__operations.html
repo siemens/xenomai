@@ -42,10 +42,9 @@ Device operations. <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Common Operations</div></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="23a81aa4c48d55c937c2763c27c8372c"></a><!-- doxytag: member="rtdm_operations::close_rt" ref="23a81aa4c48d55c937c2763c27c8372c" args="" -->
-<a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__operations.html#23a81aa4c48d55c937c2763c27c8372c">close_rt</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__operations.html#23a81aa4c48d55c937c2763c27c8372c">close_rt</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler for real-time contexts (optional). <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close handler for real-time contexts (optional, deprecated).  <a href="#23a81aa4c48d55c937c2763c27c8372c"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="218dceb0ad1125f2c1c3e3e95a8d4894"></a><!-- doxytag: member="rtdm_operations::close_nrt" ref="218dceb0ad1125f2c1c3e3e95a8d4894" args="" -->
 <a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtdm__operations.html#218dceb0ad1125f2c1c3e3e95a8d4894">close_nrt</a></td></tr>
 
@@ -97,10 +96,31 @@ Device operations. <table border="0" cellpadding="0" cellspacing="0">
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Transmit message handler for non-real-time context (optional). <br></td></tr>
 </table>
+<hr><h2>Field Documentation</h2>
+<a class="anchor" name="23a81aa4c48d55c937c2763c27c8372c"></a><!-- doxytag: member="rtdm_operations::close_rt" ref="23a81aa4c48d55c937c2763c27c8372c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__devregister.html#g6bd6c0761590d59f67b2c1e87fdd8440">rtdm_close_handler_t</a> <a class="el" href="structrtdm__operations.html#23a81aa4c48d55c937c2763c27c8372c">rtdm_operations::close_rt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Close handler for real-time contexts (optional, deprecated). 
+<p>
+<dl compact><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>Only use non-real-time close handler in new drivers. </dd></dl>
+
+<p>Referenced by <a class="el" href="skins_2rtdm_2device_8c-source.html#l00195">rtdm_dev_register()</a>.</p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/rtdm/<a class="el" href="rtdm__driver_8h-source.html">rtdm_driver.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:54 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:02 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

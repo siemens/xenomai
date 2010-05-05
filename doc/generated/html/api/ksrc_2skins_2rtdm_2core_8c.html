@@ -51,7 +51,7 @@ Include dependency graph for core.c:</div>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb">rtdm_context_get</a> (int fd)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Resolve file descriptor to device context.  <a href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Retrieve and lock a device context.  <a href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#g0f7da4cec7713ed732ffd99040e219e2">rtdm_select_bind</a> (int fd, rtdm_selector_t *selector, enum <a class="el" href="group__rtdmsync.html#ge18228df8c70c9da1f90f61b01e92501">rtdm_selecttype</a> type, unsigned fd_index)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind a selector to specified event types of a given file descriptor.  <a href="group__interdrv.html#g0f7da4cec7713ed732ffd99040e219e2"></a><br></td></tr>
@@ -61,6 +61,9 @@ Include dependency graph for core.c:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#ga48a3e04fd74cec81691d5d2187d7ef2">rtdm_context_unlock</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Decrement context reference counter.  <a href="group__interdrv.html#ga48a3e04fd74cec81691d5d2187d7ef2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#g05772193e3398e0bc3c9a6e3ed8f90f9">rtdm_context_put</a> (struct <a class="el" href="structrtdm__dev__context.html">rtdm_dev_context</a> *context)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Release a device context obtained via <a class="el" href="group__interdrv.html#g99e8509f4c8b404f0d5795b575d4c9cb" title="Retrieve and lock a device context.">rtdm_context_get()</a>.  <a href="group__interdrv.html#g05772193e3398e0bc3c9a6e3ed8f90f9"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__interdrv.html#g282e3f294d612c3aa943bd58387fb1b2">rtdm_open</a> (const char *path, int oflag,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Open a device.  <a href="group__interdrv.html#g282e3f294d612c3aa943bd58387fb1b2"></a><br></td></tr>
@@ -189,7 +192,7 @@ Include dependency graph for core.c:</div>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket destination address.  <a href="group__userapi.html#gf8820904f66c985fff36ab16f2d88c0d"></a><br></td></tr>
 </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:51 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:58 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

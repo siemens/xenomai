@@ -116,38 +116,62 @@
 <a name="l00110"></a>00110 
 <a name="l00111"></a>00111 <span class="preprocessor">#endif </span><span class="comment">/* !CONFIG_PROC_FS */</span>
 <a name="l00112"></a>00112 
-<a name="l00113"></a>00113 <span class="comment">/* Public interface. */</span>
+<a name="l00113"></a>00113 <span class="keyword">extern</span> <span class="keyword">struct </span>xnobject *registry_obj_slots;
 <a name="l00114"></a>00114 
-<a name="l00115"></a>00115 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4" title="Register a real-time object.">xnregistry_enter</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
-<a name="l00116"></a>00116                      <span class="keywordtype">void</span> *objaddr,
-<a name="l00117"></a>00117                      xnhandle_t *phandle,
-<a name="l00118"></a>00118                      xnpnode_t *pnode);
-<a name="l00119"></a>00119 
-<a name="l00120"></a>00120 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5" title="Bind to a real-time object.">xnregistry_bind</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
-<a name="l00121"></a>00121                     xnticks_t timeout,
-<a name="l00122"></a>00122                     <span class="keywordtype">int</span> timeout_mode,
-<a name="l00123"></a>00123                     xnhandle_t *phandle);
-<a name="l00124"></a>00124 
-<a name="l00125"></a>00125 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g477bb20ccb4bcf87c343aca8e58f9ef9" title="Forcibly unregister a real-time object.">xnregistry_remove</a>(xnhandle_t handle);
+<a name="l00115"></a>00115 <span class="comment">/* Public interface. */</span>
+<a name="l00116"></a>00116 
+<a name="l00117"></a>00117 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4" title="Register a real-time object.">xnregistry_enter</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
+<a name="l00118"></a>00118                      <span class="keywordtype">void</span> *objaddr,
+<a name="l00119"></a>00119                      xnhandle_t *phandle,
+<a name="l00120"></a>00120                      xnpnode_t *pnode);
+<a name="l00121"></a>00121 
+<a name="l00122"></a>00122 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5" title="Bind to a real-time object.">xnregistry_bind</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *key,
+<a name="l00123"></a>00123                     xnticks_t timeout,
+<a name="l00124"></a>00124                     <span class="keywordtype">int</span> timeout_mode,
+<a name="l00125"></a>00125                     xnhandle_t *phandle);
 <a name="l00126"></a>00126 
-<a name="l00127"></a>00127 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g7e98a4706164f3ff2c82dc064cf3231e" title="Unregister an idle real-time object.">xnregistry_remove_safe</a>(xnhandle_t handle,
-<a name="l00128"></a>00128                            xnticks_t timeout);
-<a name="l00129"></a>00129 
-<a name="l00130"></a>00130 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#gef3e8b27ad29f355d9aedcfdf1f23ab1" title="Find and lock a real-time object into the registry.">xnregistry_get</a>(xnhandle_t handle);
+<a name="l00127"></a>00127 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g477bb20ccb4bcf87c343aca8e58f9ef9" title="Forcibly unregister a real-time object.">xnregistry_remove</a>(xnhandle_t handle);
+<a name="l00128"></a>00128 
+<a name="l00129"></a>00129 <span class="keywordtype">int</span> <a class="code" href="group__registry.html#g7e98a4706164f3ff2c82dc064cf3231e" title="Unregister an idle real-time object.">xnregistry_remove_safe</a>(xnhandle_t handle,
+<a name="l00130"></a>00130                            xnticks_t timeout);
 <a name="l00131"></a>00131 
-<a name="l00132"></a>00132 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#gf781f03f25b1667eb7f31cb6a246613a" title="Find a real-time object into the registry.">xnregistry_fetch</a>(xnhandle_t handle);
+<a name="l00132"></a>00132 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#gef3e8b27ad29f355d9aedcfdf1f23ab1" title="Find and lock a real-time object into the registry.">xnregistry_get</a>(xnhandle_t handle);
 <a name="l00133"></a>00133 
-<a name="l00134"></a>00134 u_long <a class="code" href="group__registry.html#g632c1545496b004eecb7ce8d41b3aabd" title="Unlock a real-time object from the registry.">xnregistry_put</a>(xnhandle_t handle);
+<a name="l00134"></a>00134 <span class="keywordtype">void</span> *<a class="code" href="group__registry.html#gf781f03f25b1667eb7f31cb6a246613a" title="Find a real-time object into the registry.">xnregistry_fetch</a>(xnhandle_t handle);
 <a name="l00135"></a>00135 
-<a name="l00136"></a>00136 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00137"></a>00137 <span class="preprocessor"></span>}
-<a name="l00138"></a>00138 <span class="preprocessor">#endif</span>
-<a name="l00139"></a>00139 <span class="preprocessor"></span>
-<a name="l00140"></a>00140 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
-<a name="l00141"></a>00141 
-<a name="l00142"></a>00142 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_REGISTRY_H */</span>
+<a name="l00136"></a>00136 u_long <a class="code" href="group__registry.html#g632c1545496b004eecb7ce8d41b3aabd" title="Unlock a real-time object from the registry.">xnregistry_put</a>(xnhandle_t handle);
+<a name="l00137"></a>00137 
+<a name="l00138"></a>00138 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">struct </span>xnobject *xnregistry_validate(xnhandle_t handle)
+<a name="l00139"></a>00139 {
+<a name="l00140"></a>00140         <span class="keyword">struct </span>xnobject *object;
+<a name="l00141"></a>00141         <span class="comment">/*</span>
+<a name="l00142"></a>00142 <span class="comment">         * Careful: a removed object which is still in flight to be</span>
+<a name="l00143"></a>00143 <span class="comment">         * unexported carries a NULL objaddr, so we have to check this</span>
+<a name="l00144"></a>00144 <span class="comment">         * as well.</span>
+<a name="l00145"></a>00145 <span class="comment">         */</span>
+<a name="l00146"></a>00146         <span class="keywordflow">if</span> (likely(handle &amp;&amp; handle &lt; CONFIG_XENO_OPT_REGISTRY_NRSLOTS)) {
+<a name="l00147"></a>00147                 <span class="keywordtype">object</span> = &amp;registry_obj_slots[handle];
+<a name="l00148"></a>00148                 <span class="keywordflow">return</span> <span class="keywordtype">object</span>-&gt;objaddr ? <span class="keywordtype">object</span> : NULL;
+<a name="l00149"></a>00149         }
+<a name="l00150"></a>00150 
+<a name="l00151"></a>00151         <span class="keywordflow">return</span> NULL;
+<a name="l00152"></a>00152 }
+<a name="l00153"></a>00153 
+<a name="l00154"></a>00154 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> *xnregistry_lookup(xnhandle_t handle)
+<a name="l00155"></a>00155 {
+<a name="l00156"></a>00156         <span class="keyword">struct </span>xnobject *<span class="keywordtype">object</span> = xnregistry_validate(handle);
+<a name="l00157"></a>00157         <span class="keywordflow">return</span> <span class="keywordtype">object</span> ? <span class="keywordtype">object</span>-&gt;objaddr : NULL;
+<a name="l00158"></a>00158 }
+<a name="l00159"></a>00159 
+<a name="l00160"></a>00160 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00161"></a>00161 <span class="preprocessor"></span>}
+<a name="l00162"></a>00162 <span class="preprocessor">#endif</span>
+<a name="l00163"></a>00163 <span class="preprocessor"></span>
+<a name="l00164"></a>00164 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ || __XENO_SIM__ */</span>
+<a name="l00165"></a>00165 
+<a name="l00166"></a>00166 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_REGISTRY_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

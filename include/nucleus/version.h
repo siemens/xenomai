@@ -26,7 +26,7 @@
 					    CONFIG_XENO_VERSION_MINOR, \
 					    CONFIG_XENO_REVISION_LEVEL)
 
-#define XENO_VERSION_NAME	"2.5.3 preview"
+#define XENO_VERSION_NAME	"Hordes Of Locusts"
 
 #define XENO_VERSION_STRING	"2.5.3"
 

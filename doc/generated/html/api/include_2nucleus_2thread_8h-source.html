@@ -427,7 +427,7 @@
 <a name="l00428"></a>00428 <span class="keyword">static</span> <span class="keyword">inline</span>
 <a name="l00429"></a>00429 <span class="keyword">struct </span>xnthread *xnthread_lookup(xnhandle_t threadh)
 <a name="l00430"></a>00430 {
-<a name="l00431"></a>00431         <span class="keyword">struct </span>xnthread *thread = <a class="code" href="group__registry.html#gf781f03f25b1667eb7f31cb6a246613a" title="Find a real-time object into the registry.">xnregistry_fetch</a>(threadh);
+<a name="l00431"></a>00431         <span class="keyword">struct </span>xnthread *thread = xnregistry_lookup(threadh);
 <a name="l00432"></a>00432         <span class="keywordflow">return</span> (thread &amp;&amp; xnthread_handle(thread) == threadh) ? thread : NULL;
 <a name="l00433"></a>00433 }
 <a name="l00434"></a>00434 
@@ -464,7 +464,7 @@
 <a name="l00465"></a>00465 
 <a name="l00466"></a>00466 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_THREAD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

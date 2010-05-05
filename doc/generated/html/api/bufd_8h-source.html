@@ -101,9 +101,14 @@
 <a name="l00097"></a>00097 
 <a name="l00098"></a>00098 <span class="keywordtype">void</span> <a class="code" href="group__bufd.html#gd2c63d67c47dd4f7f4d2eef19ba7ca5c" title="Invalidate a buffer descriptor.">xnbufd_invalidate</a>(<span class="keyword">struct</span> xnbufd *bufd);
 <a name="l00099"></a>00099 
-<a name="l00102"></a>00102 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_BUFD_H */</span>
+<a name="l00100"></a><a class="code" href="group__bufd.html#g27038f6845854a80c6cb8b922e9b2fca">00100</a> <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__bufd.html#g27038f6845854a80c6cb8b922e9b2fca" title="Reset a buffer descriptor.">xnbufd_reset</a>(<span class="keyword">struct</span> xnbufd *bufd)
+<a name="l00101"></a>00101 {
+<a name="l00102"></a>00102         bufd-&gt;b_off = 0;
+<a name="l00103"></a>00103 }
+<a name="l00104"></a>00104 
+<a name="l00107"></a>00107 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_BUFD_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Sun Mar 28 19:46:48 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
