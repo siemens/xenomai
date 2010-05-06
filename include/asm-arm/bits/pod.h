@@ -153,7 +153,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 		   save the fpu state and disable them, to get linux
 		   fpu fault handler take care of them correctly. */
 		rthal_save_fpu(tcb->fpup, fpexc);
-		last_VFP_context[smp_processor_id()] = NULL;
+		last_VFP_context[rthal_processor_id()] = NULL;
 		rthal_disable_fpu();
 	}
 #else /* !CONFIG_VFP */
@@ -214,7 +214,7 @@ static inline void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	   task, into the FPU area of the last non RT task which used the FPU
 	   before the preemption by Xenomai.
 	*/
-		last_VFP_context[smp_processor_id()] = NULL;
+		last_VFP_context[rthal_processor_id()] = NULL;
 		rthal_disable_fpu();
 	}
 #else /* !CONFIG_VFP */
