@@ -141,12 +141,28 @@
 
 	  /*! @} ANALOGY_SUBD_FT_xxx */
 
+/*!
+ * @anchor ANALOGY_SUBD_ST_xxx @name Subdevice status
+ * @brief Flags to define the subdevice's status
+ * @{
+ */
+
+/* Subdevice status flag(s) */
+/** 
+ * The subdevice is busy, a synchronous or an asynchronous acquisition
+ * is occuring
+ */
+#define A4L_SUBD_BUSY_NR 0
+#define A4L_SUBD_BUSY (1 << A4L_SUBD_BUSY_NR)
+
+	  /*! @} ANALOGY_SUBD_ST_xxx */
+
 #ifdef __KERNEL__
 
 /* --- Subdevice descriptor structure --- */
 
 struct a4l_device;
-struct a4l_driver;
+struct a4l_buffer;
 
 /*! 
  * @brief Structure describing the subdevice
@@ -160,8 +176,16 @@ struct a4l_subdevice {
 
 	struct a4l_device *dev;
 			       /**< Containing device */
+
 	unsigned int idx;
 		      /**< Subdevice index */
+
+	struct a4l_buffer *buf;
+			       /**< Linked buffer */
+
+	/* Subdevice's status (busy, linked?) */
+	unsigned long status;
+	                     /**< Subdevice's status */
 
 	/* Descriptors stuff */
 	unsigned long flags;
