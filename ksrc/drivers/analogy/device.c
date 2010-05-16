@@ -59,9 +59,15 @@ int a4l_check_cleanup_devs(void)
 	return ret;
 }
 
-void a4l_set_dev(a4l_cxt_t * cxt)
+void a4l_set_dev(struct rtdm_dev_context *context)
 {
-	cxt->dev = &(a4l_devs[a4l_get_minor(cxt)]);
+	/* Get the context's private structure */
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	/* Retrive the minor index */
+	static int minor = context->device->device_id;
+	
+	/* Fill the dev fields accordingly */
+	cxt->dev = &(a4l_devs[minor]);
 }
 
 /* --- Device tab proc section --- */
