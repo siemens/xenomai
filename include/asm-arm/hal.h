@@ -239,15 +239,6 @@ static inline void rthal_restore_fpu(rthal_fpenv_t *fpuenv)
     rthal_vfp_load(&fpuenv->vfpstate);
 }
 
-extern union vfp_state *last_VFP_context[NR_CPUS];
-#define rthal_get_fpu_owner()						\
-    ({									\
-	union vfp_state *_vfp_owner = last_VFP_context[smp_processor_id()]; \
-	(!_vfp_owner							\
-	 ? NULL								\
-	 : container_of(_vfp_owner, rthal_fpenv_t, vfpstate));		\
-    })
-
 #define rthal_vfp_fmrx(_vfp_) ({			\
     u32 __v;						\
     asm volatile("mrc p10, 7, %0, " __stringify(_vfp_)	\
@@ -260,6 +251,25 @@ extern union vfp_state *last_VFP_context[NR_CPUS];
     asm volatile("mcr p10, 7, %0, " __stringify(_vfp_)	\
 		 ", cr0, 0 @ fmxr " #_vfp_ ", %0":	\
 		 /* */ : "r" (_var_))
+
+extern union vfp_state *last_VFP_context[NR_CPUS];
+static inline rthal_fpenv_t *rthal_get_fpu_owner(void)
+{
+	union vfp_state *vfp_owner;
+#ifdef CONFIG_SMP
+	unsigned fpexc;
+
+	fpexc = rthal_vfp_fmrx(FPEXC);
+	if (!(fpexc & FPEXC_EN))
+		return NULL;
+#endif
+
+	vfp_owner = last_VFP_context[ipipe_processor_id()];
+	if (!vfp_owner)
+		return NULL;
+
+	return container_of(vfp_owner, rthal_fpenv_t, vfpstate);
+}
 
 #define rthal_disable_fpu() \
     rthal_vfp_fmxr(FPEXC, rthal_vfp_fmrx(FPEXC) & ~FPEXC_EN)
