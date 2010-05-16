@@ -121,125 +121,117 @@ void a4l_cleanup_proc(void)
 
 #endif /* CONFIG_PROC_FS */
 
-int a4l_rt_open(struct rtdm_dev_context *context,
-		rtdm_user_info_t * user_info, int flags)
+int a4l_open(struct rtdm_dev_context *context, 
+	     rtdm_user_info_t * user_info, int flags)
 {
-	a4l_cxt_t cxt;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
 
-	a4l_init_cxt(context, user_info, &cxt);
-	a4l_set_dev(&cxt);
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_open: minor=%d\n", a4l_get_minor(&cxt));
+	/* Get a pointer on the selected device 
+	   (thanks to minor index) */
+	a4l_set_dev(context);
+
+	/* Initialize the buffer structure */
+	a4l_init_buffer(&cxt->buffer);
+
+	/* Allocate the asynchronous buffer 
+	   NOTE: it should be interesting to allocate the buffer only
+	   on demand especially if the system is short of memory
+	   NOTE2: the default buffer size could be configured via
+	   kernel config*/
+	a4l_alloc_buffer(&cxt->buffer, A4L_DEFAULT_BFSIZE);
 
 	return 0;
 }
 
-int a4l_rt_close(struct rtdm_dev_context *context,
-		 rtdm_user_info_t * user_info)
+int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 {
-	a4l_cxt_t cxt;
+	int err;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
 
-	a4l_init_cxt(context, user_info, &cxt);
-	a4l_set_dev(&cxt);
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_close: minor=%d\n", a4l_get_minor(&cxt));	
+	/* Cancel the maybe occuring asynchronous transfer */
+	err = a4l_cancel_buffer(&cxt->buffer);
+	if (err < 0) {
+		__a4l_err("close: unable to stop the asynchronous transfer\n"); 
+		return err;
+	}
 
-	return a4l_cancel_transfers(&cxt);;
+	/* Free the buffer which was linked with this context */
+	err = a4l_free_buffer(&cxt->buffer);
+
+	return err;
 }
 
-ssize_t a4l_rt_read(struct rtdm_dev_context * context,
-		    rtdm_user_info_t * user_info, void *buf, size_t nbytes)
+ssize_t a4l_read(struct rtdm_dev_context * context,
+		 rtdm_user_info_t * user_info, void *buf, size_t nbytes)
 {
-	a4l_cxt_t cxt;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
 
+	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(user_info))
 		return -ENOSYS;
 	
-	a4l_init_cxt(context, user_info, &cxt);
-	a4l_set_dev(&cxt);
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_read: minor=%d\n", a4l_get_minor(&cxt));
-
 	if (nbytes == 0)
 		return 0;
 
-	return a4l_read(&cxt, buf, nbytes);
+	cxt->user_info = user_info;
+
+	return a4l_read(cxt, buf, nbytes);
 }
 
-ssize_t a4l_rt_write(struct rtdm_dev_context * context,
-		     rtdm_user_info_t * user_info, const void *buf,
-		     size_t nbytes)
+ssize_t a4l_write(struct rtdm_dev_context * context,
+		  rtdm_user_info_t *user_info, const void *buf, size_t nbytes)
 {
-	a4l_cxt_t cxt;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
 
+	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(user_info))
 		return -ENOSYS;
 
-	a4l_init_cxt(context, user_info, &cxt);
-	a4l_set_dev(&cxt);
-
-	__a4l_dbg(1, core_dbg, "a4l_rt_write: minor=%d\n", a4l_get_minor(&cxt));
-
 	if (nbytes == 0)
 		return 0;
 
-	return a4l_write(&cxt, buf, nbytes);
+	cxt->user_info = user_info;
+
+	return a4l_write(cxt, buf, nbytes);
 }
 
-int a4l_rt_ioctl(struct rtdm_dev_context *context,
-		 rtdm_user_info_t * user_info,
-		 unsigned int request, void *arg)
+int a4l_ioctl(struct rtdm_dev_context *context,
+	      rtdm_user_info_t *user_info, unsigned int request, void *arg)
 {
-	a4l_cxt_t cxt;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
 
-	a4l_init_cxt(context, user_info, &cxt);
-	a4l_set_dev(&cxt);
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_ioctl: minor=%d\n", a4l_get_minor(&cxt));
+	cxt->user_info = user_info;
 
-	return a4l_ioctl_functions[_IOC_NR(request)] (&cxt, arg);
+	return a4l_ioctl_functions[_IOC_NR(request)] (cxt, arg);
 }
 
 int a4l_rt_select(struct rtdm_dev_context *context,
-		  rtdm_selector_t *selector,
+		  rtdm_selector_t *selector, 
 		  enum rtdm_selecttype type, unsigned fd_index)
 {
-	a4l_cxt_t cxt;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;	
 
-	/* The user_info argument is not available, fortunately it is
-	   not critical as no copy_from_user / copy_to_user are to be
-	   called */
-	a4l_init_cxt(context, NULL, &cxt);
-	a4l_set_dev(&cxt);
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_rt_select: minor=%d\n", a4l_get_minor(&cxt));
-
-	return a4l_select(&cxt, selector, type, fd_index);
+	return a4l_select(cxt, selector, type, fd_index);
 }
-
-struct a4l_dummy_context {
-	int nouse;
-};
 
 static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 {[0 ... A4L_NB_DEVICES - 1] = {
 		.struct_version =	RTDM_DEVICE_STRUCT_VER,
 		.device_flags =		RTDM_NAMED_DEVICE,
-		.context_size =		sizeof(struct a4l_dummy_context),
+		.context_size =		sizeof(struct a4l_device_context),
 		.device_name = 		"",
 
-		.open_nrt =		a4l_rt_open,
+		.open_nrt =		a4l_open,
 
 		.ops = {
-			.ioctl_rt =	a4l_rt_ioctl,
-			.read_rt =	a4l_rt_read,
-			.write_rt =	a4l_rt_write,
+			.ioctl_rt =	a4l_ioctl,
+			.read_rt =	a4l_read,
+			.write_rt =	a4l_write,
 
-			.close_nrt =	a4l_rt_close,
-			.ioctl_nrt =	a4l_rt_ioctl,
-			.read_nrt =	a4l_rt_read,
-			.write_nrt =	a4l_rt_write,
+			.close_nrt =	a4l_close,
+			.ioctl_nrt =	a4l_ioctl,
+			.read_nrt =	a4l_read,
+			.write_nrt =	a4l_write,
 		      
 			.select_bind =	a4l_rt_select,
 		},
