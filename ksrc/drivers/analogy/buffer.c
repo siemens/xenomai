@@ -33,7 +33,7 @@
 #include <analogy/buffer.h>
 #include <analogy/transfer.h>
 
-/* --- Buffer allocation / free functions --- */
+/* --- Initialization functions (init, alloc, free) --- */
 
 void a4l_free_buffer(a4l_buf_t * buf_desc)
 {
@@ -52,18 +52,15 @@ void a4l_free_buffer(a4l_buf_t * buf_desc)
 	}
 }
 
-int a4l_alloc_buffer(a4l_buf_t * buf_desc)
+int a4l_alloc_buffer(a4l_buf_t * buf_desc, int buf_size)
 {
 	int ret = 0;
 	char *vaddr, *vabase;
 
-	if (buf_desc->size == 0)
-		buf_desc->size = A4L_BUF_DEFSIZE;
-
+	buf_desc->size = buf_size;
 	buf_desc->size = PAGE_ALIGN(buf_desc->size);
 
 	buf_desc->buf = vmalloc(buf_desc->size);
-
 	if (buf_desc->buf == NULL) {
 		ret = -ENOMEM;
 		goto out_virt_contig_alloc;
@@ -94,7 +91,65 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-/* --- Current Command management function --- */
+int a4l_init_buffer(a4l_buf_t * buf_desc)
+{
+	int err;
+	
+	/* No command to process yet */
+	buf_desc->cur_cmd = NULL;
+
+	/* No more (or not yet) linked with a subdevice */
+	buf_desc->subd = NULL;
+
+	/* Initializes counts and flags */
+	buf_desc->end_count = 0;
+	buf_desc->prd_count = 0;
+	buf_desc->cns_count = 0;
+	buf_desc->tmp_count = 0;
+	buf_desc->mng_count = 0;
+
+	/* Flush pending events */
+	buf_desc->flags = 0;
+	a4l_flush_sync(&buf_desc->sync);
+
+	return err;
+}
+
+int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
+{
+	a4l_buf_t * buf_desc = cxt->buffer;
+	int i;
+
+	/* Retrieve the related subdevice */
+	buf_desc->subd = a4l_get_subd(cxt->dev, cmd->idx_subd);
+	if (buf_desc->subd == NULL) {
+		__a4l_err("a4l_setup_buffer: subdevice index "
+			  "out of range (%d)\n", cmd->idx_subd);
+		goto -EINVAL;
+	}
+
+	/* Checks if the transfer system has to work in bulk mode */
+	if (cmd->flags & A4L_CMD_BULK)
+		set_bit(A4L_BUF_BULK_NR, &buf_desc->flags);
+	
+	/* Sets the working command */
+	buf_desc->cur_cmd = cmd;
+
+	/* Computes the count to reach, if need be */
+	if (cmd->stop_src == TRIG_COUNT) {
+		for (i = 0; i < cmd->nb_chan; i++) {
+			a4l_chan_t *chft;
+			chft = a4l_get_chfeat(buf_desc->subd, 
+					      CR_CHAN(cmd->chan_descs[i]));
+			buf_desc->end_count += chft->nb_bits / 8;
+		}
+		buf_desc->end_count *= cmd->stop_arg;
+	}
+	
+	return 0;
+}
+
+/* --- current Command management function --- */
 
 a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
 {
