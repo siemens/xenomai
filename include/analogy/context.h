@@ -29,15 +29,18 @@ struct a4l_device;
 struct a4l_buffer;
 
 struct a4l_device_context {
-	/* No need to hold user_info, thanks to container_of, we could
-	   get it back */
+
+	/* Needed to call rtdm_*_copy_from/to_user functions */
 	rtdm_user_info_t *user_info;
 
-	struct a4l_device *dev; /* Which is retrieved thanks to minor
-				   at open time */
+	/* The adequate device pointer 
+	   (retrieved thanks to minor at open time) */
+	struct a4l_device *dev; 
 
-	struct buffer buffer; /* The buffer field is extracted from
-				 the transfer structure */
+	/* The buffer structure contains everything to transfer data
+	   from asynchronous acquisition operations on a specific
+	   subdevice */
+	struct buffer buffer; 
 };
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */
