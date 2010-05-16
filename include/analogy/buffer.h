@@ -43,10 +43,20 @@
 #define A4L_BUF_ERROR (1 << A4L_BUF_ERROR_NR)
 #define A4L_BUF_EOA (1 << A4L_BUF_EOA_NR)
 
+/* Status bits */
+#define A4L_BUF_BULK_NR 8
+#define A4L_BUF_MAP_NR 8
+/* Status flags */
+#define A4L_BUF_BULK (1 << A4L_BUF_BULK_NR)
+#define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
+
 struct a4l_subdevice;
 
 /* Buffer descriptor structure */
 struct a4l_buffer {
+
+	/* Added by the structure update */
+	a4l_subd_t *subd;
 
 	/* Buffer's first virtual page pointer */
 	void *buf;
@@ -65,8 +75,8 @@ struct a4l_buffer {
 	unsigned long cns_count;
 	unsigned long tmp_count;
 
-	/* Events occuring during transfer */
-	unsigned long evt_flags;
+	/* Status + events occuring during transfer */
+	unsigned long flags;
 
 	/* Command on progress */
 	a4l_cmd_t *cur_cmd;
