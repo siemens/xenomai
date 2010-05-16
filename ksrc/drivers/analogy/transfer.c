@@ -53,31 +53,26 @@ int a4l_precleanup_transfer(a4l_cxt_t * cxt)
 	}
 
 	for (i = 0; i < tsf->nb_subd; i++) {
+		unsigned long *status = &tsf->subds[i]->status;
 
-		if (test_bit(A4L_TSF_MMAP, &(tsf->status[i]))) {
-			__a4l_err("a4l_precleanup_transfer: "
-				  "device busy, buffer must be unmapped\n");
-			err = -EPERM;
-			goto out_error;
-		}
-
-		if (test_and_set_bit(A4L_TSF_BUSY, &(tsf->status[i]))) {
+		if (test_and_set_bit(A4L_SUBD_BUSY, status)) {
 			__a4l_err("a4l_precleanup_transfer: "
 				  "device busy, acquisition occuring\n");
 			err = -EBUSY;
 			goto out_error;
 		} else
-			set_bit(A4L_TSF_CLEAN, &(tsf->status[i]));
+			set_bit(A4L_SUBD_CLEAN, status);
 	}
 
 	return 0;
 
 out_error:
 	for (i = 0; i < tsf->nb_subd; i++) {
+		unsigned long *status = &tsf->subds[i]->status;
 
-		if (test_bit(A4L_TSF_CLEAN, &(tsf->status[i]))){
-			clear_bit(A4L_TSF_BUSY, &(tsf->status[i]));
-			clear_bit(A4L_TSF_CLEAN, &(tsf->status[i]));
+		if (test_bit(A4L_TSF_CLEAN, status)){
+			clear_bit(A4L_SUBD_BUSY, status);
+			clear_bit(A4L_SUBD_CLEAN, status);
 		}
 	}
 
@@ -96,21 +91,6 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
-
-	/* Releases the various buffers */
-	if (tsf->status != NULL)
-		rtdm_free(tsf->status);
-
-	if (tsf->bufs != NULL) {
-		for (i = 0; i < tsf->nb_subd; i++) {
-			if (tsf->bufs[i] != NULL) {
-				a4l_free_buffer(tsf->bufs[i]);
-				a4l_cleanup_sync(&tsf->bufs[i]->sync);
-				rtdm_free(tsf->bufs[i]);
-			}
-		}
-		rtdm_free(tsf->bufs);
-	}
 
 	/* Releases the pointers tab, if need be */
 	if (tsf->subds != NULL) {
@@ -134,10 +114,6 @@ void a4l_presetup_transfer(a4l_cxt_t *cxt)
 
 	/* Clear the structure */
 	memset(tsf, 0, sizeof(a4l_trf_t));
-
-	/* We consider 0 can be valid index */
-	tsf->idx_read_subd = A4L_IDX_UNUSED;
-	tsf->idx_write_subd = A4L_IDX_UNUSED;
 
 	/* 0 is also considered as a valid IRQ, then 
 	   the IRQ number must be initialized with another value */
@@ -185,41 +161,6 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 
 		tsf->subds[i++] = subd;
 	}
-
-	/* Allocates various buffers */
-	tsf->bufs = rtdm_malloc(tsf->nb_subd * sizeof(a4l_buf_t *));
-	if (tsf->bufs == NULL) {
-		__a4l_err("a4l_setup_transfer: call2(alloc) failed \n");
-		ret = -ENOMEM;
-		goto out_setup_tsf;
-	}
-	memset(tsf->bufs, 0, tsf->nb_subd * sizeof(a4l_buf_t *));
-
-	for (i = 0; i < tsf->nb_subd; i++) {
-		if (tsf->subds[i]->flags & A4L_SUBD_CMD) {
-			tsf->bufs[i] = rtdm_malloc(sizeof(a4l_buf_t));
-			if (tsf->bufs[i] == NULL) {
-				__a4l_err("a4l_setup_transfer: "
-					  "call3(alloc) failed \n");
-				ret = -ENOMEM;
-				goto out_setup_tsf;
-			}
-
-			memset(tsf->bufs[i], 0, sizeof(a4l_buf_t));
-			a4l_init_sync(&(tsf->bufs[i]->sync));
-
-			if ((ret = a4l_alloc_buffer(tsf->bufs[i])) != 0)
-				goto out_setup_tsf;
-		}
-	}
-
-	tsf->status = rtdm_malloc(tsf->nb_subd * sizeof(unsigned long));
-	if (tsf->status == NULL) {
-		__a4l_err("a4l_setup_transfer: call4(alloc) failed \n");
-		ret = -ENOMEM;
-	}
-
-	memset(tsf->status, 0, tsf->nb_subd * sizeof(unsigned long));
 
 out_setup_tsf:
 

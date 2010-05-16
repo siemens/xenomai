@@ -155,6 +155,14 @@
 #define A4L_SUBD_BUSY_NR 0
 #define A4L_SUBD_BUSY (1 << A4L_SUBD_BUSY_NR)
 
+/** 
+ * The subdevice is about to be cleaned in the middle of the detach
+ * procedure
+ */
+#define A4L_SUBD_CLEAN_NR 1
+#define A4L_SUBD_CLEAN (1 << A4L_SUBD_CLEAN_NR)
+
+
 	  /*! @} ANALOGY_SUBD_ST_xxx */
 
 #ifdef __KERNEL__

@@ -201,7 +201,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 
 	for (i = 0; i < dev->transfer.nb_subd; i++) {
 		subd_info[i].flags = dev->transfer.subds[i]->flags;
-		subd_info[i].status = dev->transfer.status[i];
+		subd_info[i].status = dev->transfer.subds[i]->status;
 		subd_info[i].nb_chan = 
 			(dev->transfer.subds[i]->chan_desc != NULL) ?
 			dev->transfer.subds[i]->chan_desc->length : 0;
