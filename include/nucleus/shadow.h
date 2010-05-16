@@ -54,11 +54,6 @@ struct xnskin_props {
 	struct module *module;
 };
 
-struct xnskin_slot {
-	struct xnskin_props *props;
-	atomic_counter_t refcnt;
-};
-
 int xnshadow_mount(void);
 
 void xnshadow_cleanup(void);
@@ -103,8 +98,6 @@ void xnshadow_send_sig(struct xnthread *thread,
 
 void xnshadow_rpi_check(void);
 
-extern struct xnskin_slot muxtable[];
-
 int xnshadow_mark_sig(struct xnthread *thread, unsigned muxid);
 
 void xnshadow_clear_sig(struct xnthread *thread, unsigned muxid);
@@ -129,13 +122,9 @@ static inline void xnshadow_call_mayday(struct xnthread *thread,
 #if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_PROC_FS)
 void xnshadow_init_proc(void);
 void xnshadow_cleanup_proc(void);
-void xnshadow_declare_proc(struct xnskin_slot *iface);
-void xnshadow_remove_proc(const char *iface);
 #else
 static inline void xnshadow_init_proc(void) { }
 static inline void xnshadow_cleanup_proc(void) { }
-#define xnshadow_declare_proc(iface)	do { (void)iface; } while(0)
-#define xnshadow_remove_proc(iface)	do { (void)name; } while(0)
 #endif /* CONFIG_XENO_OPT_PERVASIVE && CONFIG_PROC_FS */
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */
