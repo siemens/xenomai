@@ -145,6 +145,9 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 		}
 		buf_desc->end_count *= cmd->stop_arg;
 	}
+
+	__a4l_dbg(1, core_dbg,
+		  "a4l_setup_buffer: end_count=%lu\n", buf_desc->end_count);
 	
 	return 0;
 }

@@ -299,7 +299,8 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0, simul_flag = 0;
 	a4l_cmd_t *cmd_desc = NULL;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_subd_t *subd;
+	a4l_dev_t *dev = a4l_get_dev(cxt);	
 
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
@@ -344,11 +345,11 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	__a4l_dbg(1, core_dbg, 
 		  "a4l_ioctl_cmd: 1st cmd checks passed\n");
 
+	subd = dev->transfer.subds[cmd_desc->idx_subd];
+
 	/* Tests the command with the cmdtest function */
-	if (dev->transfer.subds[cmd_desc->idx_subd]->do_cmdtest != NULL)
-		ret = dev->transfer.subds[cmd_desc->idx_subd]->
-			do_cmdtest(dev->transfer.subds[cmd_desc->idx_subd], 
-				   cmd_desc);
+	if (subd->do_cmdtest != NULL)
+		ret = subd->do_cmdtest(subd, cmd_desc);
 	if (ret != 0) {
 		__a4l_err("a4l_ioctl_cmd: driver's cmd_test failed\n");
 		goto out_ioctl_cmd;
@@ -363,17 +364,15 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	}
 
 	/* Sets the concerned subdevice as busy */
-	ret = a4l_reserve_transfer(cxt, cmd_desc->idx_subd);
+	ret = a4l_reserve_subd(subd);
 	if (ret < 0)
 		goto out_ioctl_cmd;
 
 	/* Gets the transfer system ready */
-	a4l_init_transfer(cxt, cmd_desc);
+	a4l_setup_buffer(cxt, cmd_desc);
 
 	/* Eventually launches the command */
-	ret = dev->transfer.subds[cmd_desc->idx_subd]->
-		do_cmd(dev->transfer.subds[cmd_desc->idx_subd], 
-		       cmd_desc);
+	ret = subd->do_cmd(subd, cmd_desc);
 
 	if (ret != 0) {
 		a4l_cancel_transfer(cxt, cmd_desc->idx_subd);

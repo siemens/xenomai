@@ -39,10 +39,6 @@ int a4l_precleanup_transfer(a4l_cxt_t * cxt)
 	a4l_trf_t *tsf;
 	int i, err = 0;
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_precleanup_transfer: minor=%d\n", 
-		  a4l_get_minor(cxt));
-
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
@@ -54,6 +50,10 @@ int a4l_precleanup_transfer(a4l_cxt_t * cxt)
 
 	for (i = 0; i < tsf->nb_subd; i++) {
 		unsigned long *status = &tsf->subds[i]->status;
+
+		__a4l_dbg(1, core_dbg, 
+			  "a4l_precleanup_transfer: "
+			  "subd[%d]->status=0x%08x\n", *status);
 
 		if (test_and_set_bit(A4L_SUBD_BUSY, status)) {
 			__a4l_err("a4l_precleanup_transfer: "
@@ -70,7 +70,7 @@ out_error:
 	for (i = 0; i < tsf->nb_subd; i++) {
 		unsigned long *status = &tsf->subds[i]->status;
 
-		if (test_bit(A4L_TSF_CLEAN, status)){
+		if (test_bit(A4L_SUBD_CLEAN, status)){
 			clear_bit(A4L_SUBD_BUSY, status);
 			clear_bit(A4L_SUBD_CLEAN, status);
 		}
@@ -84,10 +84,6 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 	a4l_dev_t *dev;
 	a4l_trf_t *tsf;
 	int i;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_cleanup_transfer: minor=%d\n", 
-		  a4l_get_minor(cxt));
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
@@ -105,10 +101,6 @@ void a4l_presetup_transfer(a4l_cxt_t *cxt)
 	a4l_dev_t *dev = NULL;
 	a4l_trf_t *tsf;
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_presetup_transfer: minor=%d\n",
-		  a4l_get_minor(cxt));
-
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
@@ -124,13 +116,8 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 {
 	a4l_dev_t *dev = NULL;
 	a4l_trf_t *tsf;
-	a4l_subd_t *subd;
 	struct list_head *this;
 	int i = 0, ret = 0;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_setup_transfer: minor=%d\n",
-		  a4l_get_minor(cxt));
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
@@ -140,6 +127,9 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 	list_for_each(this, &dev->subdvsq) {
 		tsf->nb_subd++;
 	}
+
+	__a4l_dbg(1, core_dbg, 
+		  "a4l_setup_transfer: nb_subd=%d\n", tsf->nb_subd);
 
 	/* Allocates a suitable tab for the subdevices */
 	tsf->subds = rtdm_malloc(tsf->nb_subd * sizeof(a4l_subd_t *));
@@ -151,15 +141,7 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 
 	/* Recovers the subdevices pointers */
 	list_for_each(this, &dev->subdvsq) {
-		subd = list_entry(this, a4l_subd_t, list);
-
-		if (subd->flags & A4L_SUBD_AI)
-			tsf->idx_read_subd = i;
-
-		if (subd->flags & A4L_SUBD_AO)
-			tsf->idx_write_subd = i;
-
-		tsf->subds[i++] = subd;
+		tsf->subds[i++] = list_entry(this, a4l_subd_t, list);
 	}
 
 out_setup_tsf:
@@ -168,68 +150,6 @@ out_setup_tsf:
 		a4l_cleanup_transfer(cxt);
 
 	return ret;
-}
-
-int a4l_reserve_transfer(a4l_cxt_t * cxt, int idx_subd)
-{
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-
-	__a4l_dbg(1, core_dbg,
-		  "a4l_reserve_transfer: minor=%d idx=%d\n",
-		  a4l_get_minor(cxt), idx_subd);
-
-	if (test_and_set_bit(A4L_TSF_BUSY,
-			     &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_reserve_transfer: device currently busy\n");
-		return -EBUSY;
-	}
-
-	return 0;
-}
-
-int a4l_init_transfer(a4l_cxt_t * cxt, a4l_cmd_t * cmd)
-{
-	int i;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-
-	__a4l_dbg(1, core_dbg,
-		  "a4l_init_transfer: minor=%d idx=%d\n",
-		  a4l_get_minor(cxt), cmd->idx_subd);
-
-	/* Checks if the transfer system has to work in bulk mode */
-	if (cmd->flags & A4L_CMD_BULK)
-		set_bit(A4L_TSF_BULK,
-			&(dev->transfer.status[cmd->idx_subd]));
-
-	/* Sets the working command */
-	dev->transfer.bufs[cmd->idx_subd]->cur_cmd = cmd;
-
-	/* Initializes the counts */
-	dev->transfer.bufs[cmd->idx_subd]->end_count = 0;
-	dev->transfer.bufs[cmd->idx_subd]->prd_count = 0;
-	dev->transfer.bufs[cmd->idx_subd]->cns_count = 0;
-	dev->transfer.bufs[cmd->idx_subd]->tmp_count = 0;
-	dev->transfer.bufs[cmd->idx_subd]->mng_count = 0;
-
-	/* Flush pending events */
-	dev->transfer.bufs[cmd->idx_subd]->evt_flags = 0;
-	a4l_flush_sync(&dev->transfer.bufs[cmd->idx_subd]->sync);
-
-	/* Computes the count to reach, if need be */
-	if (cmd->stop_src == TRIG_COUNT) {
-		for (i = 0; i < cmd->nb_chan; i++) {
-			a4l_chan_t *chft;
-			chft = a4l_get_chfeat(dev->transfer.
-					      subds[cmd->idx_subd],
-					      CR_CHAN(cmd->chan_descs[i]));
-			dev->transfer.bufs[cmd->idx_subd]->end_count +=
-				chft->nb_bits / 8;
-		}
-		dev->transfer.bufs[cmd->idx_subd]->end_count *= cmd->stop_arg;
-	}
-
-	/* Always returning 0 is here useless... for the moment */
-	return 0;
 }
 
 int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd)

@@ -266,7 +266,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 
 	/* Prevents the subdevice from being used during 
 	   the following operations */
-	ret = a4l_reserve_transfer(cxt, dsc->idx_subd);
+	ret = a4l_reserve_subd(subd);
 	if (ret < 0)
 		goto out_do_insn;
 
