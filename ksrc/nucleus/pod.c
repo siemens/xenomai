@@ -2175,7 +2175,7 @@ void __xnpod_schedule(struct xnsched *sched)
 	xnarch_trace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
-
+reschedule:
 	need_resched = __xnpod_test_resched(sched);
 #if !XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
@@ -2284,10 +2284,11 @@ void __xnpod_schedule(struct xnsched *sched)
 	if (xnthread_signaled_p(curr))
 		xnpod_dispatch_signals();
 
-	xnlock_put_irqrestore(&nklock, s);
+	if (switched &&
+	    xnsched_maybe_resched_after_unlocked_switch(sched))
+		goto reschedule;
 
-	if (switched)
-		xnsched_resched_after_unlocked_switch();
+	xnlock_put_irqrestore(&nklock, s);
 
 	return;
 

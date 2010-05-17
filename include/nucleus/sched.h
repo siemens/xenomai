@@ -203,6 +203,12 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 
 #define xnsched_resched_after_unlocked_switch() xnpod_schedule()
 
+static inline
+int xnsched_maybe_resched_after_unlocked_switch(struct xnsched *sched)
+{
+	return testbits(sched->status, XNRESCHED);
+}
+
 #else /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
 #ifdef CONFIG_SMP
@@ -216,6 +222,9 @@ struct xnsched *xnsched_finish_unlocked_switch(struct xnsched *sched);
 #endif /* !CONFIG_SMP */
 
 #define xnsched_resched_after_unlocked_switch()		do { } while(0)
+
+#define xnsched_maybe_resched_after_unlocked_switch(sched)	\
+	({ (void)(sched); 0; })
 
 #endif /* !CONFIG_XENO_HW_UNLOCKED_SWITCH */
 
