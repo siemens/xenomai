@@ -152,67 +152,6 @@ out_setup_tsf:
 	return ret;
 }
 
-int a4l_cancel_transfer(a4l_cxt_t * cxt, int idx_subd)
-{
-	int ret = 0;
-	a4l_subd_t *subd;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-
-	/* Basic checking */
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd])))
-		return 0;
-
-	/* Retrieves the proper subdevice pointer */
-	subd = dev->transfer.subds[idx_subd];
-
-	/* If a "cancel" function is registered, call it
-	   (Note: this function is called before having checked 
-	   if a command is under progress; we consider that 
-	   the "cancel" function can be used as as to (re)initialize 
-	   some component) */
-	if (subd->cancel != NULL && (ret = subd->cancel(subd)) < 0) {
-		__a4l_err("a4l_cancel: "
-			  "subdevice %d cancel handler failed (ret=%d)\n",
-			  idx_subd, ret);
-	}
-
-	/* Clears the "busy" flag */
-	clear_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]));
-
-	/* If the subdevice is command capable and 
-	   if a command is under progress, 
-	   disable it and free it... */
-	if (dev->transfer.bufs != NULL &&
-	    dev->transfer.bufs[idx_subd] != NULL &&
-	    dev->transfer.bufs[idx_subd]->cur_cmd != NULL) {
-
-		a4l_free_cmddesc(dev->transfer.bufs[idx_subd]->cur_cmd);
-		rtdm_free(dev->transfer.bufs[idx_subd]->cur_cmd);
-		dev->transfer.bufs[idx_subd]->cur_cmd = NULL;
-
-		/* ...we must also clean the events flags */
-		dev->transfer.bufs[idx_subd]->evt_flags = 0;
-	}
-
-	return ret;
-}
-
-int a4l_cancel_transfers(a4l_cxt_t * cxt)
-{
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int i, ret = 0;
-
-	/* The caller of a4l_cancel_transfers is bound not to have
-	   checked whether the subdevice was attached; so we do it here */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags))
-		return 0;
-
-	for (i = 0; i < dev->transfer.nb_subd && ret == 0; i++)
-		ret = a4l_cancel_transfer(cxt, i);
-
-	return ret;
-}
-
 /* --- IRQ handling section --- */
 
 int a4l_request_irq(a4l_dev_t * dev,

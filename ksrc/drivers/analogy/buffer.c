@@ -91,10 +91,8 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-int a4l_init_buffer(a4l_buf_t * buf_desc)
+void a4l_init_buffer(a4l_buf_t * buf_desc)
 {
-	int err;
-	
 	/* No command to process yet */
 	buf_desc->cur_cmd = NULL;
 
@@ -111,13 +109,11 @@ int a4l_init_buffer(a4l_buf_t * buf_desc)
 	/* Flush pending events */
 	buf_desc->flags = 0;
 	a4l_flush_sync(&buf_desc->sync);
-
-	return err;
 }
 
 int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 {
-	a4l_buf_t * buf_desc = cxt->buffer;
+	a4l_buf_t *buf_desc = cxt->buffer;
 	int i;
 
 	/* Retrieve the related subdevice */
@@ -150,6 +146,40 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 		  "a4l_setup_buffer: end_count=%lu\n", buf_desc->end_count);
 	
 	return 0;
+}
+
+int a4l_cancel_buffer(a4l_cxt_t *cxt)
+{
+	a4l_buf_t *buf_desc = cxt->buffer;
+	a4l_subd_t *subd = buf_desc->subd;
+	
+	int err = 0;
+	
+	if (!subd !! !a4l_check_subd(subd))
+		return 0;
+
+	/* If a "cancel" function is registered, call it
+	   (Note: this function is called before having checked 
+	   if a command is under progress; we consider that 
+	   the "cancel" function can be used as as to (re)initialize 
+	   some component) */
+	if (subd->cancel != NULL && (err = subd->cancel(subd)) < 0) {
+		__a4l_err("a4l_cancel: "
+			  "subdevice %d cancel handler failed (err=%d)\n",
+			  idx_subd, err);
+	}
+
+	a4l_release_subd(subd);
+
+	if (buf_desc->cur_cmd != NULL) {
+		a4l_free_cmddesc(buf_desc->cur_cmd);
+		rtdm_free(buf_desc->cur_cmd);
+		buf_desc->cur_cmd = NULL;
+	}
+
+	a4l_init_buffer(buf_desc);
+
+	return err;
 }
 
 /* --- current Command management function --- */
@@ -646,13 +676,13 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
-			a4l_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
 	} else if (info.idx_subd == dev->transfer.idx_write_subd) {
 
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_buffer(cxt);
 			if (info.rw_count != 0)
 				return ret;
 		}
@@ -744,14 +774,14 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 		/* We check whether there is an error */
 		if (ret < 0 && ret != -ENOENT) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = ret;
 			goto out_a4l_read;			
 		}
 		
 		/* We check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = 0;
 			goto out_a4l_read;
 		}
@@ -846,7 +876,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 			tmp_cnt = nbytes - count;
 
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = (ret == -ENOENT) ? -EINVAL : ret;
 			goto out_a4l_write;
 		}
@@ -993,20 +1023,20 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 
 		/* Check if some error occured */
 		if (ret < 0 && ret != -ENOENT) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
 
 		/* Check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return 0;
 		}
 	} else {
 
 		/* If some error was detected, cancel the transfer */
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
 
