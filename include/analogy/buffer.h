@@ -45,7 +45,7 @@
 
 /* Status bits */
 #define A4L_BUF_BULK_NR 8
-#define A4L_BUF_MAP_NR 8
+#define A4L_BUF_MAP_NR 9
 /* Status flags */
 #define A4L_BUF_BULK (1 << A4L_BUF_BULK_NR)
 #define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
@@ -89,8 +89,8 @@ typedef struct a4l_buffer a4l_buf_t;
 /* Static inline Buffer related functions */
 
 /* Produce memcpy function */
-static inline int __produce(a4l_cxt_t * cxt,
-			    a4l_buf_t * buf, void *pin, unsigned long count)
+static inline int __produce(a4l_cxt_t *cxt,
+			    a4l_buf_t *buf, void *pin, unsigned long count)
 {
 	unsigned long start_ptr = (buf->prd_count % buf->size);
 	unsigned long tmp_cnt = count;
@@ -119,8 +119,8 @@ static inline int __produce(a4l_cxt_t * cxt,
 }
 
 /* Consume memcpy function */
-static inline int __consume(a4l_cxt_t * cxt,
-			    a4l_buf_t * buf, void *pout, unsigned long count)
+static inline int __consume(a4l_cxt_t *cxt,
+			    a4l_buf_t *buf, void *pout, unsigned long count)
 {
 	unsigned long start_ptr = (buf->cns_count % buf->size);
 	unsigned long tmp_cnt = count;
