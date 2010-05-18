@@ -290,49 +290,4 @@ int a4l_rdproc_transfer(char *page,
 
 #endif /* CONFIG_PROC_FS */
 
-/* --- IOCTL / FOPS functions --- */
-
-int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
-{
-	unsigned int idx_subd = (unsigned long)arg;
-	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_subd_t *subd;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_cancel: minor=%d\n", a4l_get_minor(cxt));
-
-	/* Basically check the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
-		__a4l_err("a4l_ioctl_cancel: operation not supported on "
-			  "an unattached device\n");
-		return -EINVAL;
-	}
-
-	if (idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_TYPES) == 
-	    A4L_SUBD_UNUSED) {
-		__a4l_err("a4l_ioctl_cancel: non functional subdevice\n");
-		return -EIO;
-	}
-
-	if (!(dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD)) {
-		__a4l_err("a4l_ioctl_cancel: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EIO;
-	}
-
-	subd = dev->transfer.subds[idx_subd];
-
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_ioctl_cancel: subdevice currently idle\n");
-		return -EINVAL;
-	}
-
-	return a4l_cancel_transfer(cxt, idx_subd);
-}
-
 #endif /* !DOXYGEN_CPP */

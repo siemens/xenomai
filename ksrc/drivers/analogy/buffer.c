@@ -155,7 +155,7 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	
 	int err = 0;
 	
-	if (!subd !! !a4l_check_subd(subd))
+	if (!subd || !a4l_check_subd(subd))
 		return 0;
 
 	/* If a "cancel" function is registered, call it
@@ -546,6 +546,42 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 }
 
 /* --- IOCTL / FOPS functions --- */
+
+int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
+{
+	unsigned int idx_subd = (unsigned long)arg;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_subd_t *subd;
+
+	/* Basically check the device */
+	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+		__a4l_err("a4l_ioctl_cancel: operation not supported on "
+			  "an unattached device\n");
+		return -EINVAL;
+	}
+
+	if (cxt->buffer->subd == NULL) {
+		__a4l_err("a4l_ioctl_cancel: "
+			  "no acquisition to cancel on this context\n");
+		return -EINVAL;
+	}
+	
+	if (idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
+		return -EINVAL;
+	}
+
+	subd = dev->transfer.subds[idx_subd];
+	
+	if (subd != cxt->buffer.subd) {
+		__a4l_err("a4l_ioctl_cancel: "
+			  "current context works on another subdevice "
+			  "(%d!=%d)\n", cxt->buffer.subd->idx, subd->idx);
+		return -EINVAL;		
+	}
+
+	return a4l_cancel_buffer(cxt);
+}
 
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
