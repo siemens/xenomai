@@ -773,26 +773,19 @@ a4l_ioctl_bufinfo_out:
 ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int idx_subd = dev->transfer.idx_read_subd;
-	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = &cxt->buffer;
 	ssize_t count = 0;
 
 	/* Basic checkings */
+
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_read: unattached device\n");
 		return -EINVAL;
 	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_read: idle subdevice\n");
+	if (!buf->subd || !test_bit(A4L_SUBD_BUSY, &buf->subd->status)) {
+		__a4l_err("a4l_read: idle subdevice on this context\n");
 		return -ENOENT;
-	}
-
-	/* TODO: to be removed
-	   Check the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {	       
-		__a4l_err("a4l_read: incoherent state\n");
-		return -EINVAL;
 	}
 
 	while (count < nbytes) {
@@ -825,10 +818,9 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		if (tmp_cnt > 0) {
 
 			/* Performs the munge if need be */
-			if (dev->transfer.subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer.subds[idx_subd],
-					dev->transfer.subds[idx_subd]->munge,
-					buf, tmp_cnt);
+			if (buf->subd->munge != NULL) {
+				__munge(buf->subd, 
+					buf->subd->munge, buf, tmp_cnt);
 
 				/* Updates munge count */
 				buf->mng_count += tmp_cnt;
@@ -850,8 +842,7 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(A4L_TSF_BULK,
-				      &(dev->transfer.status[idx_subd])))
+			if (!test_bit(A4L_BUF_BULK, &buf->flags))
 				goto out_a4l_read;
 		}
 		/* If the acquisition is not over, we must not
@@ -876,26 +867,19 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 		  const void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int idx_subd = dev->transfer.idx_write_subd;
-	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = &cxt->buffer;
 	ssize_t count = 0;
 
 	/* Basic checkings */
+
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
 		__a4l_err("a4l_write: unattached device\n");
 		return -EINVAL;
 	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_write: idle subdevice\n");
+	if (!buf->subd || !test_bit(A4L_SUBD_BUSY, &buf->subd->status)) {
+		__a4l_err("a4l_read: idle subdevice on this context\n");
 		return -ENOENT;
-	}
-
-	/* TODO: to be removed
-	   Check the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {       
-		__a4l_err("a4l_write: incoherent state\n");
-		return -EINVAL;
 	}
 
 	while (count < nbytes) {
@@ -928,10 +912,9 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 			}
 
 			/* Performs the munge if need be */
-			if (dev->transfer.subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer.subds[idx_subd],
-					dev->transfer.subds[idx_subd]->munge,
-					buf, tmp_cnt);
+			if (buf->subd->munge != NULL) {
+				__munge(buf->subd, 
+					buf->subd->munge, buf, tmp_cnt);
 
 				/* Updates munge count */
 				buf->mng_count += tmp_cnt;
@@ -945,8 +928,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(A4L_TSF_BULK,
-				      &(dev->transfer.status[idx_subd])))
+			if (!test_bit(A4L_BUF_BULK, &buf->flags))
 				goto out_a4l_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
