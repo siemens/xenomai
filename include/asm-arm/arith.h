@@ -103,13 +103,13 @@ rthal_arm_nodiv_llimd(const long long op,
 	__asm__ ("movs %[s], %[oph], lsr #30\n\t"
 		 "beq 1f\n\t"
 		 "rsbs  %[opl], %[opl], #0\n\t"
-		 "rsc  %[oph], %[oph], #0\n"
+		 "sbc  %[oph], %[oph], %[oph], lsl #1\n"
 		 "1:\t"
 		 rthal_arm_nodiv_ullimd_str
 		 "teq %[s], #0\n\t"
 		 "beq 2f\n\t"
 		 "rsbs  %[rm], %[rm], #0\n\t"
-		 "rsc  %[rh], %[rh], #0\n"
+		 "sbc  %[rh], %[rh], %[rh], lsl #1\n"
 		 "2:\t"
 		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
 		   [tl]"=r"(tl), [th]"=r"(th), [s]"=r"(s)
