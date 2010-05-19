@@ -387,8 +387,8 @@ void a4l_unmap(struct vm_area_struct *area)
 }
 
 static struct vm_operations_struct a4l_vm_ops = {
-open:a4l_map,
-close:a4l_unmap,
+	.open = a4l_map,
+	.close = a4l_unmap,
 };
 
 int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
@@ -396,9 +396,6 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	a4l_mmap_t map_cfg;
 	a4l_dev_t *dev;
 	int ret;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_mmap: minor=%d\n", a4l_get_minor(cxt));
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
@@ -511,9 +508,6 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_bufcfg_t buf_cfg;
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
-
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
 	if (rtdm_in_rt_context()) {
@@ -579,9 +573,6 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 	a4l_buf_t *buf;
 	unsigned long tmp_cnt;
 	int ret;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
