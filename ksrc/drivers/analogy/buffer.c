@@ -182,37 +182,16 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	return err;
 }
 
-/* --- current Command management function --- */
-
-a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
-{
-	a4l_dev_t *dev = subd->dev;
-
-	/* Check that subdevice supports commands */
-	if (dev->transfer.bufs == NULL)
-		return NULL;
-
-	return dev->transfer.bufs[subd->idx]->cur_cmd;
-}
-
 /* --- Munge related function --- */
 
 int a4l_get_chan(a4l_subd_t *subd)
 {
-	a4l_dev_t *dev = subd->dev;
 	int i, j, tmp_count, tmp_size = 0;	
 	a4l_cmd_t *cmd;
 
-	/* Check that subdevice supports commands */
-	if (dev->transfer.bufs == NULL)
+	cmd = a4l_get_cmd(subd);
+	if (!cmd) 
 		return -EINVAL;
-
-	/* Check a command is executed */
-	if (dev->transfer.bufs[subd->idx]->cur_cmd == NULL)
-		return -EINVAL;
-
-	/* Retrieve the proper command descriptor */
-	cmd = dev->transfer.bufs[subd->idx]->cur_cmd;
 
 	/* There is no need to check the channel idx, 
 	   it has already been controlled in command_test */
@@ -252,185 +231,128 @@ int a4l_get_chan(a4l_subd_t *subd)
 
 int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __pre_abs_put(buf, count);
+	return __pre_abs_put(subd->buf, count);
 }
 
 
 int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __abs_put(buf, count);
+	return __abs_put(subd->buf, count);
 }
 
 int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __pre_put(buf, count);
+	return __pre_put(subd->buf, count);
 }
 
 int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __put(buf, count);	
+	return __put(subd->buf, count);	
 }
 
 int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
 	int err;
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+
+	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
 		return -EINVAL;
-
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	if (__count_to_put(buf) < count)
+	
+	if (__count_to_put(subd->buf) < count)
 		return -EAGAIN;
 
-	err = __produce(NULL, buf, bufdata, count);
+	err = __produce(NULL, subd->buf, bufdata, count);
 	if (err < 0)
 		return err;	
 
-	err = __put(buf, count);
+	err = __put(subd->buf, count);
 
 	return err;
 }
 
 int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __pre_abs_get(buf, count);
+	return __pre_abs_get(subd->buf, count);
 }
 
 int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __abs_get(buf, count);
+	return __abs_get(subd->buf, count);
 }
 
 int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __pre_get(buf, count);
+	return __pre_get(subd->buf, count);
 }
 
 int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	return __get(buf, count);
+	return __get(subd->buf, count);
 }
 
 int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
 	int err;
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
+
+	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
 		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
-	if (__count_to_get(buf) < count)
+	if (__count_to_get(subd->buf) < count)
 		return -EAGAIN;
 
-	err = __consume(NULL, buf, bufdata, count);
+	err = __consume(NULL, subd->buf, bufdata, count);
 	if (err < 0)
 		return err;
 
-	err = __get(buf, count);
+	err = __get(subd->buf, count);
 
 	return err;
 }
 
 int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 {
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
 	int tmp;
 
+	if (!subd->buf)
+		return -EINVAL;
+
 	/* Basic checking */
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[subd->idx])))
+	if (!test_bit(A4L_SUBD_BUSY, subd->status))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
 	   atomic operations are used so as 
 	   to prevent any kind of corner case */
 	while ((tmp = ffs(evts) - 1) != -1) {
-		set_bit(tmp, &buf->evt_flags);
+		set_bit(tmp, &buf->flags);
 		clear_bit(tmp, &evts);
 	}
 
 	/* Notify the user-space side */
-	a4l_signal_sync(&buf->sync);
+	a4l_signal_sync(&subd->buf->sync);
 
 	return 0;
 }
@@ -438,13 +360,14 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 unsigned long a4l_buf_count(a4l_subd_t *subd)
 {
 	unsigned long ret = 0;
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+
+	if (!subd->buf)
+		return -EINVAL;
 
 	if (subd->flags & A4L_SUBD_MASK_READ)
-		ret = __count_to_put(buf);
+		ret = __count_to_put(subd->buf);
 	else if (subd->flags & A4L_SUBD_MASK_WRITE)
-		ret = __count_to_get(buf);	
+		ret = __count_to_get(subd->buf);	
 
 	return ret;
 }

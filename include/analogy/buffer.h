@@ -329,9 +329,11 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 
 /* --- Buffer internal functions --- */
 
-int a4l_alloc_buffer(a4l_buf_t * buf_desc);
+void a4l_init_buffer(a4l_buf_t * buf_desc);
 
-void a4l_free_buffer(a4l_buf_t * buf_desc);
+int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd);
+
+int a4l_cancel_buffer(a4l_cxt_t *cxt);
 
 int a4l_buf_prepare_absput(struct a4l_subdevice *subd, 
 			   unsigned long count);
@@ -369,7 +371,10 @@ unsigned long a4l_buf_count(struct a4l_subdevice *subd);
 
 /* --- Current Command management function --- */
 
-a4l_cmd_t *a4l_get_cmd(struct a4l_subdevice *subd);
+static inline a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
+{
+	return (subd->buf) ? subd->buf->cur_cmd : NULL;
+}
 
 /* --- Munge related function --- */
 
