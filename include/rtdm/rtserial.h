@@ -42,11 +42,11 @@
  *
  * @par Supported Operations
  * @b Open @n
- * Environments: non-RT (RT optional)@n
+ * Environments: non-RT (RT optional, deprecated)@n
  * Specific return values: none @n
  * @n
  * @b Close @n
- * Environments: non-RT (RT optional)@n
+ * Environments: non-RT (RT optional, deprecated)@n
  * Specific return values: none @n
  * @n
  * @b IOCTL @n
