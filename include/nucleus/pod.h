@@ -298,7 +298,7 @@ void xnpod_fire_callouts(xnqueue_t *hookq,
 static inline void xnpod_run_hooks(struct xnqueue *q,
 				   struct xnthread *thread, const char *type)
 {
-	if (!emptyq_p(q) && !xnthread_test_state(thread, XNROOT)) {
+	if (!emptyq_p(q)) {
 		trace_mark(xn_nucleus, thread_callout,
 			   "thread %p thread_name %s hook %s",
 			   thread, xnthread_name(thread), type);
