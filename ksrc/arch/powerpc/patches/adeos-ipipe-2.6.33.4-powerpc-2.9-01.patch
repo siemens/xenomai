@@ -262,10 +262,10 @@ index 9f4c9d4..ce168bf 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..95e36f6
+index 0000000..83ee731
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
-@@ -0,0 +1,271 @@
+@@ -0,0 +1,270 @@
 +/*
 + *   include/asm-powerpc/ipipe.h
 + *
@@ -313,10 +313,10 @@ index 0000000..95e36f6
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.9-00"
++#define IPIPE_ARCH_STRING	"2.9-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -337,6 +337,22 @@ index 0000000..95e36f6
 +		!__x__;							\
 +	})
 +
++DECLARE_PER_CPU(struct mm_struct *, ipipe_active_mm);
++
++#define ipipe_mm_switch_protect(flags)					\
++	do {								\
++		preempt_disable();					\
++		per_cpu(ipipe_active_mm, smp_processor_id()) = NULL;	\
++		barrier();						\
++		(void)(flags);						\
++	} while(0)
++
++#define ipipe_mm_switch_unprotect(flags)				\
++	do {								\
++		preempt_enable();					\
++		(void)(flags);						\
++	} while(0)
++
 +#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
 +#define prepare_arch_switch(next)			\
@@ -352,6 +368,9 @@ index 0000000..95e36f6
 +		if (__x__) local_irq_enable_hw(); !__x__;		\
 +	})
 +
++#define ipipe_mm_switch_protect(flags)		local_irq_save_hw_cond(flags)
++#define ipipe_mm_switch_unprotect(flags)	local_irq_restore_hw_cond(flags)
++
 +#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
 +
 +struct ipipe_domain;
@@ -366,26 +385,6 @@ index 0000000..95e36f6
 +
 +#ifdef CONFIG_DEBUGGER
 +extern cpumask_t __ipipe_dbrk_pending;
-+#endif
-+
-+#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+struct mm;
-+DECLARE_PER_CPU(struct mm_struct *, ipipe_active_mm);
-+#define ipipe_mm_switch_protect(flags)					\
-+	do {								\
-+		preempt_disable();					\
-+		per_cpu(ipipe_active_mm, smp_processor_id()) = NULL;	\
-+		barrier();						\
-+		(void)(flags);						\
-+	} while(0)
-+#define ipipe_mm_switch_unprotect(flags)				\
-+	do {								\
-+		preempt_enable();					\
-+		(void)(flags);						\
-+	} while(0)
-+#else
-+#define ipipe_mm_switch_protect(flags)		local_irq_save_hw_cond(flags)
-+#define ipipe_mm_switch_unprotect(flags)	local_irq_restore_hw_cond(flags)
 +#endif
 +
 +#define __ipipe_hrtimer_irq	IPIPE_TIMER_VIRQ
@@ -539,10 +538,10 @@ index 0000000..95e36f6
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git a/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..3a9d8df
+index 0000000..b0ebc6f
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe_base.h
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,156 @@
 +/* -*- linux-c -*-
 + * include/asm-powerpc/ipipe_base.h
 + *
@@ -694,6 +693,7 @@ index 0000000..3a9d8df
 +
 +#define __IPIPE_FEATURE_PREEMPTIBLE_SWITCH	1
 +#define __IPIPE_FEATURE_SYSINFO_V2		1
++#define __IPIPE_FEATURE_HARDENED_SWITCHMM	1
 +
 +#endif /* CONFIG_IPIPE */
 +
@@ -947,19 +947,41 @@ index 5f68ecf..5059e59 100644
  /*
   * Most of the CPU's IRQ-state tracing is done from assembly code; we
 diff --git a/arch/powerpc/include/asm/mmu_context.h b/arch/powerpc/include/asm/mmu_context.h
-index 26383e0..72c0c02 100644
+index 26383e0..3faf951 100644
 --- a/arch/powerpc/include/asm/mmu_context.h
 +++ b/arch/powerpc/include/asm/mmu_context.h
-@@ -34,11 +34,17 @@ extern void mmu_context_init(void);
+@@ -30,15 +30,38 @@ static inline void mmu_context_init(void) { }
+ extern void mmu_context_init(void);
+ #endif
+ 
++static inline void __do_switch_mm(struct mm_struct *prev, struct mm_struct *next,
++				  struct task_struct *tsk)
++{
++#ifdef CONFIG_PPC_STD_MMU_64
++	if (cpu_has_feature(CPU_FTR_SLB))
++		switch_slb(tsk, next);
++	else
++		switch_stab(tsk, next);
++#else
++	/* Out of line for now */
++	switch_mmu_context(prev, next);
++#endif
++}
++
+ /*
   * switch_mm is the entry point called from the architecture independent
-  * code in kernel/sched.c
+- * code in kernel/sched.c
++ * code in kernel/sched.c.
++ *
++ * I-pipe: when the pipeline support is enabled, this code is ironed
++ * so that it may be called from non-root domains as well.
   */
 -static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
 -			     struct task_struct *tsk)
 +static inline void __switch_mm(struct mm_struct *prev, struct mm_struct *next,
 +			       struct task_struct *tsk)
  {
-+	int cpu = smp_processor_id();
++	int cpu = ipipe_processor_id();
 +
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && \
 +	!defined(CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH)
@@ -971,40 +993,33 @@ index 26383e0..72c0c02 100644
  
  	/* 32-bit keeps track of the current PGDIR in the thread struct */
  #ifdef CONFIG_PPC32
-@@ -64,6 +70,28 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
+@@ -64,16 +87,34 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
  	/* The actual HW switching method differs between the various
  	 * sub architectures.
  	 */
+-#ifdef CONFIG_PPC_STD_MMU_64
+-	if (cpu_has_feature(CPU_FTR_SLB))
+-		switch_slb(tsk, next);
+-	else
+-		switch_stab(tsk, next);
+-#else
+-	/* Out of line for now */
+-	switch_mmu_context(prev, next);
+-#endif
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
-+#ifdef CONFIG_PPC_STD_MMU_64
-+	do {
-+		per_cpu(ipipe_active_mm, cpu) = NULL; /* mm state is undefined. */
-+		barrier();
-+		if (cpu_has_feature(CPU_FTR_SLB))
-+			switch_slb(tsk, next);
-+		else
-+			switch_stab(tsk, next);
-+		barrier();
-+		per_cpu(ipipe_active_mm, cpu) = next;
-+	} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
-+#else
-+	do {
-+		per_cpu(ipipe_active_mm, cpu) = NULL; /* mm state is undefined. */
-+		barrier();
-+		switch_mmu_context(prev, next);
-+		barrier();
-+		per_cpu(ipipe_active_mm, cpu) = next;
-+	} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
-+#endif
-+#else /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
- #ifdef CONFIG_PPC_STD_MMU_64
- 	if (cpu_has_feature(CPU_FTR_SLB))
- 		switch_slb(tsk, next);
-@@ -73,7 +101,21 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
- 	/* Out of line for now */
- 	switch_mmu_context(prev, next);
- #endif
-+#endif /* !CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
++	if (ipipe_root_domain_p) {
++		do {
++			/* mm state is undefined. */
++			per_cpu(ipipe_active_mm, cpu) = NULL;
++			barrier();
++			__do_switch_mm(prev, next, tsk);
++			barrier();
++			per_cpu(ipipe_active_mm, cpu) = next;
++		} while (test_and_clear_thread_flag(TIF_MMSWITCH_INT));
++		return;
++	} /* Falldown wanted for non-root context. */
++#endif /* CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH */
++	__do_switch_mm(prev, next, tsk);
 +}
  
 +static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
@@ -1022,7 +1037,7 @@ index 26383e0..72c0c02 100644
  }
  
  #define deactivate_mm(tsk,mm)	do { } while (0)
-@@ -87,7 +129,7 @@ static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
+@@ -87,7 +128,7 @@ static inline void activate_mm(struct mm_struct *prev, struct mm_struct *next)
  	unsigned long flags;
  
  	local_irq_save(flags);
@@ -2042,7 +2057,7 @@ index 711368b..440838f 100644
  	/* Alignment Interrupt */
  	ALIGNMENT_EXCEPTION
 diff --git a/arch/powerpc/kernel/head_64.S b/arch/powerpc/kernel/head_64.S
-index 9258074..efbd287 100644
+index 567cd57..23b92d2 100644
 --- a/arch/powerpc/kernel/head_64.S
 +++ b/arch/powerpc/kernel/head_64.S
 @@ -590,14 +590,20 @@ __secondary_start:
@@ -2066,7 +2081,7 @@ index 9258074..efbd287 100644
  
  	mtspr	SPRN_SRR0,r3
  	mtspr	SPRN_SRR1,r4
-@@ -727,8 +733,10 @@ _INIT_GLOBAL(start_here_common)
+@@ -738,8 +744,10 @@ _INIT_GLOBAL(start_here_common)
  
  	/* Load up the kernel context */
  5:
@@ -2077,7 +2092,7 @@ index 9258074..efbd287 100644
  #ifdef CONFIG_PPC_ISERIES
  BEGIN_FW_FTR_SECTION
  	mfmsr	r5
-@@ -737,7 +745,9 @@ BEGIN_FW_FTR_SECTION
+@@ -748,7 +756,9 @@ BEGIN_FW_FTR_SECTION
  	li	r5,1
  END_FW_FTR_SECTION_IFSET(FW_FEATURE_ISERIES)
  #endif
@@ -4968,7 +4983,7 @@ index e9b15c3..f93771a 100644
  	.probe		= serial8250_probe,
  	.remove		= __devexit_p(serial8250_remove),
 diff --git a/fs/exec.c b/fs/exec.c
-index cce6bbd..1f2021d 100644
+index 9071360..5415760 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
 @@ -714,6 +714,7 @@ static int exec_mmap(struct mm_struct *mm)
@@ -7057,7 +7072,7 @@ index 0000000..627b354
 +
 +#endif	/* !__LINUX_IPIPE_TRACE_H */
 diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 451481c..3dbfa17 100644
+index 4d9b26e..6f9d099 100644
 --- a/include/linux/irq.h
 +++ b/include/linux/irq.h
 @@ -124,6 +124,9 @@ struct irq_chip {
@@ -7198,7 +7213,7 @@ index 9c9f049..62c8941 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 78efe7c..c2eb9a4 100644
+index 1f5fa53..8e3819d 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -61,6 +61,7 @@ struct sched_param {
@@ -7263,7 +7278,7 @@ index 78efe7c..c2eb9a4 100644
  
  #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
  
-@@ -1512,6 +1533,9 @@ struct task_struct {
+@@ -1515,6 +1536,9 @@ struct task_struct {
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
@@ -7273,7 +7288,7 @@ index 78efe7c..c2eb9a4 100644
  
  	/*
  	 * cache last used pipe for splice
-@@ -1759,6 +1783,11 @@ extern void thread_group_times(struct task_struct *p, cputime_t *ut, cputime_t *
+@@ -1762,6 +1786,11 @@ extern void thread_group_times(struct task_struct *p, cputime_t *ut, cputime_t *
  #define PF_EXITING	0x00000004	/* getting shut down */
  #define PF_EXITPIDONE	0x00000008	/* pi exit done on shut down */
  #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
@@ -7461,7 +7476,7 @@ index d95ca7c..1c6c3bf 100644
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
 diff --git a/init/main.c b/init/main.c
-index 4cb47a1..e714997 100644
+index 512ba15..7fa8c92 100644
 --- a/init/main.c
 +++ b/init/main.c
 @@ -530,7 +530,7 @@ asmlinkage void __init start_kernel(void)
@@ -11128,7 +11143,7 @@ index 0000000..001a83e
 +#endif /* CONFIG_IPIPE_TRACE_MCOUNT */
 +}
 diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index ecc3fa2..e3e4263 100644
+index 71eba24..7fb281f 100644
 --- a/kernel/irq/chip.c
 +++ b/kernel/irq/chip.c
 @@ -15,6 +15,7 @@
@@ -11139,7 +11154,7 @@ index ecc3fa2..e3e4263 100644
  
  #include "internals.h"
  
-@@ -425,7 +426,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
+@@ -476,7 +477,9 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
  	irqreturn_t action_ret;
  
  	raw_spin_lock(&desc->lock);
@@ -11149,7 +11164,7 @@ index ecc3fa2..e3e4263 100644
  
  	if (unlikely(desc->status & IRQ_INPROGRESS))
  		goto out_unlock;
-@@ -505,8 +508,13 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
+@@ -553,8 +556,13 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
  
  	raw_spin_lock(&desc->lock);
  	desc->status &= ~IRQ_INPROGRESS;
@@ -11163,7 +11178,7 @@ index ecc3fa2..e3e4263 100644
  
  	raw_spin_unlock(&desc->lock);
  }
-@@ -548,8 +556,10 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+@@ -596,8 +604,10 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
  	kstat_incr_irqs_this_cpu(irq, desc);
  
  	/* Start handling the irq */
@@ -11174,7 +11189,7 @@ index ecc3fa2..e3e4263 100644
  
  	/* Mark the IRQ currently in progress.*/
  	desc->status |= IRQ_INPROGRESS;
-@@ -603,8 +613,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -650,8 +660,10 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  
  	kstat_incr_irqs_this_cpu(irq, desc);
  
@@ -11185,7 +11200,7 @@ index ecc3fa2..e3e4263 100644
  
  	action_ret = handle_IRQ_event(irq, desc->action);
  	if (!noirqdebug)
-@@ -614,6 +626,134 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+@@ -661,6 +673,134 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  		desc->chip->eoi(irq);
  }
  
@@ -11320,7 +11335,7 @@ index ecc3fa2..e3e4263 100644
  void
  __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  		  const char *name)
-@@ -645,6 +785,8 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
+@@ -692,6 +832,8 @@ __set_irq_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
  	chip_bus_lock(irq, desc);
  	raw_spin_lock_irqsave(&desc->lock, flags);
  
@@ -11356,7 +11371,7 @@ index 814940e..4c2e41d 100644
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
 diff --git a/kernel/lockdep.c b/kernel/lockdep.c
-index c62ec14..6d41b73 100644
+index 493a0ef..7bfc5f0 100644
 --- a/kernel/lockdep.c
 +++ b/kernel/lockdep.c
 @@ -2327,7 +2327,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
@@ -11581,7 +11596,7 @@ index 1751c45..a1e027a 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index 3a8fb30..cdb5bfd 100644
+index da19c1e..6196a22 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
 @@ -2368,6 +2368,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
@@ -11644,7 +11659,7 @@ index 3a8fb30..cdb5bfd 100644
  }
  
  /*
-@@ -5332,6 +5348,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
+@@ -5353,6 +5369,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
  
  void __kprobes add_preempt_count(int val)
  {
@@ -11652,7 +11667,7 @@ index 3a8fb30..cdb5bfd 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -5354,6 +5371,7 @@ EXPORT_SYMBOL(add_preempt_count);
+@@ -5375,6 +5392,7 @@ EXPORT_SYMBOL(add_preempt_count);
  
  void __kprobes sub_preempt_count(int val)
  {
@@ -11660,7 +11675,7 @@ index 3a8fb30..cdb5bfd 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -5402,6 +5420,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
+@@ -5423,6 +5441,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
   */
  static inline void schedule_debug(struct task_struct *prev)
  {
@@ -11668,7 +11683,7 @@ index 3a8fb30..cdb5bfd 100644
  	/*
  	 * Test if we are atomic. Since do_exit() needs to call into
  	 * schedule() atomically, we ignore that path for now.
-@@ -5478,7 +5497,7 @@ pick_next_task(struct rq *rq)
+@@ -5499,7 +5518,7 @@ pick_next_task(struct rq *rq)
  /*
   * schedule() is the main scheduler function.
   */
@@ -11677,7 +11692,7 @@ index 3a8fb30..cdb5bfd 100644
  {
  	struct task_struct *prev, *next;
  	unsigned long *switch_count;
-@@ -5492,6 +5511,9 @@ need_resched:
+@@ -5513,6 +5532,9 @@ need_resched:
  	rcu_sched_qs(cpu);
  	prev = rq->curr;
  	switch_count = &prev->nivcsw;
@@ -11687,7 +11702,7 @@ index 3a8fb30..cdb5bfd 100644
  
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -5529,15 +5551,18 @@ need_resched_nonpreemptible:
+@@ -5550,15 +5572,18 @@ need_resched_nonpreemptible:
  		rq->curr = next;
  		++*switch_count;
  
@@ -11708,7 +11723,7 @@ index 3a8fb30..cdb5bfd 100644
  
  	post_schedule(rq);
  
-@@ -5550,6 +5575,8 @@ need_resched_nonpreemptible:
+@@ -5571,6 +5596,8 @@ need_resched_nonpreemptible:
  	preempt_enable_no_resched();
  	if (need_resched())
  		goto need_resched;
@@ -11717,7 +11732,7 @@ index 3a8fb30..cdb5bfd 100644
  }
  EXPORT_SYMBOL(schedule);
  
-@@ -5633,7 +5660,8 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -5654,7 +5681,8 @@ asmlinkage void __sched preempt_schedule(void)
  
  	do {
  		add_preempt_count(PREEMPT_ACTIVE);
@@ -11727,15 +11742,15 @@ index 3a8fb30..cdb5bfd 100644
  		sub_preempt_count(PREEMPT_ACTIVE);
  
  		/*
-@@ -6396,6 +6424,7 @@ recheck:
- 
+@@ -6419,6 +6447,7 @@ recheck:
  	oldprio = p->prio;
+ 	prev_class = p->sched_class;
  	__setscheduler(rq, p, policy, param->sched_priority);
 +  	ipipe_setsched_notify(p);
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -7048,6 +7077,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
+@@ -7075,6 +7104,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
  #else
  	task_thread_info(idle)->preempt_count = 0;
  #endif
@@ -11743,7 +11758,7 @@ index 3a8fb30..cdb5bfd 100644
  	/*
  	 * The idle tasks have their own, simple scheduling class:
  	 */
-@@ -11039,3 +11069,64 @@ void synchronize_sched_expedited(void)
+@@ -11066,3 +11096,64 @@ void synchronize_sched_expedited(void)
  EXPORT_SYMBOL_GPL(synchronize_sched_expedited);
  
  #endif /* #else #ifndef CONFIG_SMP */
@@ -11912,7 +11927,7 @@ index c61a794..fb57c0c 100644
   * This function runs timers and the timer-tq in bottom half context.
   */
 diff --git a/kernel/trace/ftrace.c b/kernel/trace/ftrace.c
-index 1e6640f..5a3aa6b 100644
+index 404c9ba..4f5d667 100644
 --- a/kernel/trace/ftrace.c
 +++ b/kernel/trace/ftrace.c
 @@ -28,6 +28,7 @@

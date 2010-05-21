@@ -38,7 +38,7 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	tcb->tsp = &task->thread;
 	tcb->mm = task->mm;
 	tcb->active_mm = NULL;
-#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	tcb->tip = task_thread_info(task);
 #endif
 #ifdef CONFIG_XENO_HW_FPU

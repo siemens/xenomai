@@ -78,7 +78,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 	rootcb->user_task = rootcb->active_task = p;
 	rootcb->tsp = &p->thread;
 	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
-#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	rootcb->tip = task_thread_info(p);
 #endif
 #ifdef CONFIG_XENO_HW_FPU
@@ -91,7 +91,7 @@ static inline void xnarch_leave_root(xnarchtcb_t * rootcb)
 
 static inline void xnarch_enter_root(xnarchtcb_t * rootcb)
 {
-#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 	if (!rootcb->mm)
 		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
 #endif
@@ -119,7 +119,11 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 
 	next_mm = in_tcb->active_mm;
 
-	if (prev_mm != next_mm) {
+#ifdef __IPIPE_FEATURE_HARDENED_SWITCHMM
+	if (next_mm && likely(prev_mm != next_mm))
+		__switch_mm(prev_mm, next_mm, next);
+#else /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
+	if (likely(prev_mm != next_mm)) {
 #ifdef CONFIG_ALTIVEC
 		asm volatile ("dssall;\n" :/*empty*/:);
 #endif
@@ -133,9 +137,8 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 				switch_stab(next, next_mm);
 		}
         }
-	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
 #else /* PPC32 */
-		if (likely(next_mm != NULL)) {
+		if (likely(next_mm)) {
 			next->thread.pgdir = next_mm->pgd;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 			get_mmu_context(next_mm);
@@ -150,9 +153,14 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 			current = prev;	/* Make sure r2 is valid. */
 		}
 	}
-	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
 #endif	/* PPC32 */
+#endif /* !__IPIPE_FEATURE_HARDENED_SWITCHMM */
 
+#ifdef CONFIG_PPC64
+	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
+#else
+	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp);
+#endif
 	barrier();
 }
 
