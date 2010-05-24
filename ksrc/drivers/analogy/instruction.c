@@ -281,7 +281,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 out_do_insn:
 
 	/* Releases the subdevice from its reserved state */
-	a4l_cancel_transfer(cxt, dsc->idx_subd);
+	a4l_release_subd(subd);
 
 	return ret;
 }

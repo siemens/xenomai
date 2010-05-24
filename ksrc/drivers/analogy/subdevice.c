@@ -180,6 +180,21 @@ a4l_subd_t *a4l_get_subd(a4l_dev_t *dev, int idx)
 	return subd;
 }
 
+int a4l_reserve_subd(a4l_subd_t *subd)
+{
+        if (test_and_set_bit(A4L_SUBD_BUSY, &subd->status)) {
+                __a4l_err("a4l_reserve_subd: subdevice currently busy\n");
+                return -EBUSY;
+        }
+
+        return 0;
+}
+
+void a4l_release_subd(a4l_subd_t *subd)
+{
+	clear_bit(A4L_SUBD_BUSY, &subd->status));
+}
+
 /* --- IOCTL / FOPS functions --- */
 
 int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)

@@ -90,11 +90,8 @@ void a4l_free_cmddesc(a4l_cmd_t * desc)
 
 int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 {
-	int ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-
-	__a4l_dbg(1, core_dbg, 
-		     "a4l_check_cmddesc: minor=%d\n", a4l_get_minor(cxt));
+	a4l_subd_t *subd;
 
 	if (desc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_check_cmddesc: "
@@ -103,25 +100,23 @@ int a4l_check_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc)
 		return -EINVAL;
 	}
 
-	if ((dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_TYPES) == 
-	    A4L_SUBD_UNUSED) {
+	subd = dev->transfer.subds[desc->idx_subd];
+
+	if ((subd->flags & A4L_SUBD_TYPES) == A4L_SUBD_UNUSED) {
 		__a4l_err("a4l_check_cmddesc: "
 			  "subdevice type incoherent\n");
 		return -EIO;
 	}
 
-	if (!(dev->transfer.subds[desc->idx_subd]->flags & A4L_SUBD_CMD)) {
+	if (!(subd->flags & A4L_SUBD_CMD)) {
 		__a4l_err("a4l_check_cmddesc: operation not supported, "
 			  "synchronous only subdevice\n");
 		return -EIO;
 	}
 
-	if (test_bit(A4L_TSF_BUSY, &(dev->transfer.status[desc->idx_subd])))
-		return -EBUSY;
-
-	if (ret != 0) {
+	if (test_bit(A4L_SUBD_BUSY, &subd->status)) {
 		__a4l_err("a4l_check_cmddesc: subdevice busy\n");
-		return ret;
+		return -EBUSY;
 	}
 
 	return a4l_check_chanlist(dev->transfer.subds[desc->idx_subd],
@@ -299,17 +294,13 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0, simul_flag = 0;
 	a4l_cmd_t *cmd_desc = NULL;
-	a4l_subd_t *subd;
 	a4l_dev_t *dev = a4l_get_dev(cxt);	
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_cmd: minor=%d\n", a4l_get_minor(cxt));
+	a4l_subd_t *subd;
 
 	/* The command launching cannot be done in real-time because
 	   of some possible buffer allocations in the drivers */
-	if (rtdm_in_rt_context()) {
+	if (rtdm_in_rt_context())
 		return -ENOSYS;
-	}
 
 	/* Basically check the device */
 	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
@@ -373,13 +364,13 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 
 	/* Eventually launches the command */
 	ret = subd->do_cmd(subd, cmd_desc);
-
+	
 	if (ret != 0) {
-		a4l_cancel_transfer(cxt, cmd_desc->idx_subd);
+		a4l_cancel_buffer(cxt);
 		goto out_ioctl_cmd;
 	}
 
-      out_ioctl_cmd:
+out_ioctl_cmd:
 	if (ret != 0 || simul_flag == 1) {
 		a4l_free_cmddesc(cmd_desc);
 		rtdm_free(cmd_desc);
