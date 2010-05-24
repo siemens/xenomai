@@ -91,7 +91,7 @@ int a4l_rdproc_devs(char *page,
 		    off_t off, int count, int *eof, void *data);
 
 /* --- Context related function / macro --- */
-void a4l_set_dev(struct rtdm_dev_context *context);
+void a4l_set_dev(a4l_cxt_t *cxt);
 #define a4l_get_dev(x) ((x)->dev)
 
 /* --- Upper layer functions --- */

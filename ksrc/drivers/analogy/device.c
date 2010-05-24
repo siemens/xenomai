@@ -43,8 +43,6 @@ void a4l_init_devs(void)
 	for (i = 0; i < A4L_NB_DEVICES; i++) {		
 		a4l_lock_init(&a4l_devs[i].lock);
 		a4l_devs[i].transfer.irq_desc.irq = A4L_IRQ_UNUSED;
-		a4l_devs[i].transfer.idx_read_subd = A4L_IDX_UNUSED;
-		a4l_devs[i].transfer.idx_write_subd = A4L_IDX_UNUSED;
 	}
 }
 
@@ -59,13 +57,10 @@ int a4l_check_cleanup_devs(void)
 	return ret;
 }
 
-void a4l_set_dev(struct rtdm_dev_context *context)
+void a4l_set_dev(a4l_cxt_t *cxt)
 {
-	/* Get the context's private structure */
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
-	/* Retrive the minor index */
-	static int minor = context->device->device_id;
-	
+	/* Retrieve the minor index */
+	static int minor = a4l_get_minor(cxt);	
 	/* Fill the dev fields accordingly */
 	cxt->dev = &(a4l_devs[minor]);
 }
@@ -208,9 +203,6 @@ int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
 	char *tmpname = NULL;
 	void *tmpopts = NULL;
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_fill_lnkdesc: minor=%d\n", a4l_get_minor(cxt));
-
 	ret = rtdm_safe_copy_from_user(cxt->user_info,
 				       link_arg, arg, sizeof(a4l_lnkdesc_t));
 	if (ret != 0) {
@@ -285,9 +277,6 @@ int a4l_fill_lnkdesc(a4l_cxt_t * cxt,
 
 void a4l_free_lnkdesc(a4l_cxt_t * cxt, a4l_lnkdesc_t * link_arg)
 {
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_free_lnkdesc: minor=%d\n", a4l_get_minor(cxt));
-
 	if (link_arg->bname != NULL)
 		rtdm_free(link_arg->bname);
 
@@ -300,9 +289,6 @@ int a4l_assign_driver(a4l_cxt_t * cxt,
 {
 	int ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_assign_driver: minor=%d\n", a4l_get_minor(cxt));
 
 	dev->driver = drv;
 
@@ -355,9 +341,6 @@ int a4l_release_driver(a4l_cxt_t * cxt)
 	int ret = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_release_driver: minor=%d\n", a4l_get_minor(cxt));
-
 	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
@@ -388,9 +371,6 @@ int a4l_device_attach(a4l_cxt_t * cxt, void *arg)
 	a4l_lnkdesc_t link_arg;
 	a4l_drv_t *drv = NULL;
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_device_attach: minor=%d\n", a4l_get_minor(cxt));
-
 	if ((ret = a4l_fill_lnkdesc(cxt, &link_arg, arg)) != 0)
 		goto out_attach;
 
@@ -412,9 +392,6 @@ int a4l_device_detach(a4l_cxt_t * cxt)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_device_detach: minor=%d\n", a4l_get_minor(cxt));
-
 	if (dev->driver == NULL) {
 		__a4l_err("a4l_device_detach: "
 			  "incoherent state, driver not reachable\n");
@@ -429,9 +406,6 @@ int a4l_device_detach(a4l_cxt_t * cxt)
 int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_devcfg: minor=%d\n", a4l_get_minor(cxt));
 
 	if (rtdm_in_rt_context())
 		return -ENOSYS;
@@ -487,9 +461,6 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 	a4l_dvinfo_t info;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_devinfo: minor=%d\n", a4l_get_minor(cxt));
-
 	memset(&info, 0, sizeof(a4l_dvinfo_t));
 
 	if (test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
@@ -498,8 +469,8 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 
 		memcpy(info.board_name, dev->driver->board_name, len);
 		info.nb_subd = dev->transfer.nb_subd;
-		info.idx_read_subd = dev->transfer.idx_read_subd;
-		info.idx_write_subd = dev->transfer.idx_write_subd;
+		/* TODO: for API compatibility issue, find the first
+		   read subdevice and write subdevice */
 	}
 
 	if (rtdm_safe_copy_to_user(cxt->user_info, 
