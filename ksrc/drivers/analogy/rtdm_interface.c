@@ -124,11 +124,11 @@ void a4l_cleanup_proc(void)
 int a4l_open(struct rtdm_dev_context *context, 
 	     rtdm_user_info_t * user_info, int flags)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Get a pointer on the selected device 
 	   (thanks to minor index) */
-	a4l_set_dev(context);
+	a4l_set_dev(cxt);
 
 	/* Initialize the buffer structure */
 	a4l_init_buffer(&cxt->buffer);
@@ -146,7 +146,7 @@ int a4l_open(struct rtdm_dev_context *context,
 int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 {
 	int err;
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Cancel the maybe occuring asynchronous transfer */
 	err = a4l_cancel_buffer(&cxt->buffer);
@@ -164,7 +164,7 @@ int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 ssize_t a4l_read(struct rtdm_dev_context * context,
 		 rtdm_user_info_t * user_info, void *buf, size_t nbytes)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(user_info))
@@ -181,7 +181,7 @@ ssize_t a4l_read(struct rtdm_dev_context * context,
 ssize_t a4l_write(struct rtdm_dev_context * context,
 		  rtdm_user_info_t *user_info, const void *buf, size_t nbytes)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(user_info))
@@ -198,7 +198,7 @@ ssize_t a4l_write(struct rtdm_dev_context * context,
 int a4l_ioctl(struct rtdm_dev_context *context,
 	      rtdm_user_info_t *user_info, unsigned int request, void *arg)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	cxt->user_info = user_info;
 
@@ -209,7 +209,7 @@ int a4l_rt_select(struct rtdm_dev_context *context,
 		  rtdm_selector_t *selector, 
 		  enum rtdm_selecttype type, unsigned fd_index)
 {
-	a4l_cxt_t *cxt = (a4l_cxt_t *)context->dev_private;	
+	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	return a4l_select(cxt, selector, type, fd_index);
 }
