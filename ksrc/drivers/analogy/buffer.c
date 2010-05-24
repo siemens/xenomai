@@ -35,7 +35,7 @@
 
 /* --- Initialization functions (init, alloc, free) --- */
 
-void a4l_free_buffer(a4l_buf_t * buf_desc)
+void a4l_free_buffer(a4l_buf_t *buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
@@ -52,7 +52,7 @@ void a4l_free_buffer(a4l_buf_t * buf_desc)
 	}
 }
 
-int a4l_alloc_buffer(a4l_buf_t * buf_desc, int buf_size)
+int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size)
 {
 	int ret = 0;
 	char *vaddr, *vabase;
@@ -91,7 +91,7 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-void a4l_init_buffer(a4l_buf_t * buf_desc)
+void a4l_init_buffer(a4l_buf_t *buf_desc)
 {
 	/* No command to process yet */
 	buf_desc->cur_cmd = NULL;
