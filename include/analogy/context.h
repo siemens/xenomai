@@ -25,6 +25,8 @@
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
+#include <rtdm/rtdm_driver.h>
+
 struct a4l_device;
 struct a4l_buffer;
 
@@ -42,6 +44,14 @@ struct a4l_device_context {
 	   subdevice */
 	struct buffer buffer; 
 };
+
+static inline int a4l_get_minor(a4l_cxt_t *cxt)
+{
+	/* Get a pointer on the container structure */
+	struct rtdm_dev_context * rtdm_cxt = rtdm_private_to_context(cxt);
+	/* Get the minor index */
+	return rtdm_cxt->device->device_id;
+}
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */
 
