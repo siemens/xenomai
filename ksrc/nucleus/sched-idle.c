@@ -48,7 +48,6 @@ void xnsched_idle_trackprio(struct xnthread *thread,
 }
 
 struct xnsched_class xnsched_class_idle = {
-
 	.sched_init		=	NULL,
 	.sched_enqueue		=	NULL,
 	.sched_dequeue		=	NULL,

@@ -652,7 +652,7 @@ int xnpod_init_thread(struct xnthread *thread,
 
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&nkpod->threadq, &thread->glink);
-	nkpod->threadq_rev++;
+	xnvfile_touch_tag(&nkpod->threadlist_tag);
 	xnpod_suspend_thread(thread, XNDORMANT | (attr->flags & XNSUSP), XN_INFINITE,
 			     XN_RELATIVE, NULL);
 	xnlock_put_irqrestore(&nklock, s);
@@ -1174,7 +1174,7 @@ void xnpod_delete_thread(xnthread_t *thread)
 		   thread, xnthread_name(thread));
 
 	removeq(&nkpod->threadq, &thread->glink);
-	nkpod->threadq_rev++;
+	xnvfile_touch_tag(&nkpod->threadlist_tag);
 
 	if (xnthread_test_state(thread, XNREADY)) {
 		XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNTHREAD_BLOCK_BITS));
@@ -3203,12 +3203,17 @@ static int version_read_proc(char *page,
 	return len;
 }
 
-void xnpod_init_proc(void)
+int xnpod_init_proc(void)
 {
-	if (rthal_proc_root == NULL)
-		return;
+	int ret;
 
-	xnsched_init_proc();
+	if (rthal_proc_root == NULL)
+		return -ENOMEM;
+
+	ret = xnsched_init_proc();
+	if (ret)
+		return ret;
+
 	xntbase_init_proc();
 	xntimer_init_proc();
 	xnheap_init_proc();
@@ -3226,6 +3231,7 @@ void xnpod_init_proc(void)
 	rthal_add_proc_leaf("lock", &lock_read_proc, NULL, NULL,
 			    rthal_proc_root);
 #endif /* XENO_DEBUG(XNLOCK) */
+	return 0;
 }
 
 void xnpod_cleanup_proc(void)
