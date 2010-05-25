@@ -49,23 +49,21 @@
 struct xnobject *registry_obj_slots;
 EXPORT_SYMBOL(registry_obj_slots);
 
-static xnqueue_t registry_obj_freeq;	/* Free objects. */
+static struct xnqueue registry_obj_freeq;	/* Free objects. */
 
-static xnqueue_t registry_obj_busyq;	/* Active and exported objects. */
+static struct xnqueue registry_obj_busyq;	/* Active and exported objects. */
 
 static u_long registry_obj_stamp;
 
-static xnobject_t **registry_hash_table;
+static struct xnobject **registry_hash_table;
 
 static int registry_hash_entries;
 
-static xnsynch_t registry_hash_synch;
+static struct xnsynch registry_hash_synch;
 
 #ifdef CONFIG_PROC_FS
 
 #include <linux/workqueue.h>
-
-extern struct proc_dir_entry *rthal_proc_root;
 
 static unsigned registry_exported_objects;
 
@@ -81,34 +79,28 @@ static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
 
 static int registry_proc_apc;
 
-static struct proc_dir_entry *registry_proc_root;
+static struct xnvfile_directory registry_vfroot;
 
-static int
-registry_usage_read_proc(char *page, char **start, off_t off,
-			 int count, int *eof, void *data)
+static int usage_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	int len;
-
 	if (!xnpod_active_p())
 		return -ESRCH;
 
-	len = sprintf(page, "slots=%u:used=%u:exported=%u\n",
-		      CONFIG_XENO_OPT_REGISTRY_NRSLOTS,
-		      CONFIG_XENO_OPT_REGISTRY_NRSLOTS -
-		      countq(&registry_obj_freeq),
-		      registry_exported_objects);
-
-	len -= off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	xnvfile_printf(it, "slots=%u:used=%u:exported=%u\n",
+		       CONFIG_XENO_OPT_REGISTRY_NRSLOTS,
+		       CONFIG_XENO_OPT_REGISTRY_NRSLOTS -
+		       countq(&registry_obj_freeq),
+		       registry_exported_objects);
+	return 0;
 }
+
+static struct xnvfile_regular_ops usage_vfile_ops = {
+	.show = usage_vfile_show,
+};
+
+static struct xnvfile_regular usage_vfile = {
+	.ops = &usage_vfile_ops,
+};
 
 #endif /* CONFIG_PROC_FS */
 
@@ -123,28 +115,30 @@ int xnregistry_init(void)
 ((n) < sizeof(primes) / sizeof(int) ? \
  (n) : sizeof(primes) / sizeof(int) - 1)
 
-	int n;
+	int n, ret;
 
 	registry_obj_slots =
-		xnarch_alloc_host_mem(CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
+		xnarch_alloc_host_mem(CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(struct xnobject));
 	if (registry_obj_slots == NULL)
 		return -ENOMEM;
 
-#ifdef CONFIG_PROC_FS
-	registry_proc_root = create_proc_entry("registry",
-					       S_IFDIR, rthal_proc_root);
-	if (!registry_proc_root)
-		return -ENOMEM;
+#ifdef CONFIG_XENO_OPT_VFILE
+	ret = xnvfile_init_dir("registry", &registry_vfroot, &nkvfroot);
+	if (ret)
+		return ret;
 
-	rthal_add_proc_leaf("usage", registry_usage_read_proc,
-			    NULL, NULL, registry_proc_root);
+	ret = xnvfile_init_regular("usage", &usage_vfile, &registry_vfroot);
+	if (ret) {
+		xnvfile_destroy_dir(&registry_vfroot);
+		return ret;
+	}
 
 	registry_proc_apc =
 	    rthal_apc_alloc("registry_export", &registry_proc_schedule, NULL);
 
 	if (registry_proc_apc < 0) {
-		remove_proc_entry("usage", registry_proc_root);
-		remove_proc_entry("registry", rthal_proc_root);
+		xnvfile_destroy_regular(&usage_vfile);
+		xnvfile_destroy_dir(&registry_vfroot);
 		return registry_proc_apc;
 	}
 
@@ -165,14 +159,13 @@ int xnregistry_init(void)
 
 	registry_hash_entries =
 	    primes[obj_hash_max(CONFIG_XENO_OPT_REGISTRY_NRSLOTS / 100)];
-	registry_hash_table =
-	    (xnobject_t **) xnarch_alloc_host_mem(sizeof(xnobject_t *) *
-						  registry_hash_entries);
+	registry_hash_table = xnarch_alloc_host_mem(sizeof(struct xnobject *) *
+						    registry_hash_entries);
 
-	if (!registry_hash_table) {
+	if (registry_hash_table == NULL) {
 #ifdef CONFIG_PROC_FS
-		remove_proc_entry("usage", registry_proc_root);
-		remove_proc_entry("registry", rthal_proc_root);
+		xnvfile_destroy_regular(&usage_vfile);
+		xnvfile_destroy_dir(&registry_vfroot);
 		rthal_apc_free(registry_proc_apc);
 #endif /* CONFIG_PROC_FS */
 		return -ENOMEM;
@@ -189,51 +182,51 @@ int xnregistry_init(void)
 void xnregistry_cleanup(void)
 {
 #ifdef CONFIG_PROC_FS
-	xnobject_t *ecurr, *enext;
+	struct xnobject *ecurr, *enext;
+	struct xnpnode *pnode;
 	int n;
+
+	flush_scheduled_work();
 
 	for (n = 0; n < registry_hash_entries; n++)
 		for (ecurr = registry_hash_table[n]; ecurr; ecurr = enext) {
 			enext = ecurr->hnext;
-
-			if (ecurr->pnode == NULL)
+			pnode = ecurr->pnode;
+			if (pnode == NULL)
 				continue;
 
-			remove_proc_entry(ecurr->key, ecurr->pnode->dir);
+			pnode->ops->unexport(ecurr, pnode);
 
-			if (--ecurr->pnode->entries > 0)
+			if (--pnode->entries > 0)
 				continue;
 
-			remove_proc_entry(ecurr->pnode->type,
-					  ecurr->pnode->root->dir);
+			xnvfile_destroy_dir(&pnode->vdir);
 
-			ecurr->pnode->dir = NULL;
-
-			if (--ecurr->pnode->root->entries <= 0) {
-				remove_proc_entry(ecurr->pnode->root->name,
-						  registry_proc_root);
-				ecurr->pnode->root->dir = NULL;
-			}
+			if (--pnode->root->entries == 0)
+				xnvfile_destroy_dir(&pnode->root->vdir);
 	}
 #endif /* CONFIG_PROC_FS */
 
 	xnarch_free_host_mem(registry_hash_table,
-		       sizeof(xnobject_t *) * registry_hash_entries);
+		       sizeof(struct xnobject *) * registry_hash_entries);
 
 	xnsynch_destroy(&registry_hash_synch);
 
 #ifdef CONFIG_PROC_FS
 	rthal_apc_free(registry_proc_apc);
 	flush_scheduled_work();
-	remove_proc_entry("usage", registry_proc_root);
-	remove_proc_entry("registry", rthal_proc_root);
+	xnvfile_destroy_regular(&usage_vfile);
+	xnvfile_destroy_dir(&registry_vfroot);
 #endif /* CONFIG_PROC_FS */
 
 	xnarch_free_host_mem(registry_obj_slots,
-			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(xnobject_t));
+			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(struct xnobject));
 }
 
 #ifdef CONFIG_PROC_FS
+
+static DECLARE_MUTEX(export_mutex);
+
 /*
  * The following stuff implements the mechanism for delegating
  * export/unexport requests to/from the /proc interface from the
@@ -246,143 +239,104 @@ void xnregistry_cleanup(void)
  * like are hopefully properly handled due to a careful
  * synchronization of operations across domains.
  */
-static struct proc_dir_entry *add_proc_link(const char *name,
-					    link_proc_t *link_proc,
-					    void *data,
-					    struct proc_dir_entry *parent)
-{
-	struct proc_dir_entry *entry;
-	char target[128];
-
-	if (link_proc(target, sizeof(target), data) <= 0)
-		return NULL;
-
-	entry = proc_symlink(name, parent, target);
-
-	if (!entry)
-		return NULL;
-
-	wrap_proc_dir_entry_owner(entry);
-
-	return entry;
-}
-
 static DECLARE_WORK_FUNC(registry_proc_callback)
 {
-	struct proc_dir_entry *rdir, *dir, *entry;
-	const char *root, *type;
-	xnholder_t *holder;
-	xnobject_t *object;
-	xnpnode_t *pnode;
-	int entries;
+	struct xnvfile_directory *rdir, *dir;
+	const char *rname, *type;
+	struct xnholder *holder;
+	struct xnobject *object;
+	struct xnpnode *pnode;
+	int ret;
 	spl_t s;
+
+	down(&export_mutex);
 
 	xnlock_get_irqsave(&nklock, s);
 
 	while ((holder = getq(&registry_obj_procq)) != NULL) {
 		object = link2xnobj(holder);
 		pnode = object->pnode;
-		type = pnode->type;
-		dir = pnode->dir;
-		rdir = pnode->root->dir;
-		root = pnode->root->name;
+		type = pnode->dirname;
+		dir = &pnode->vdir;
+		rdir = &pnode->root->vdir;
+		rname = pnode->root->dirname;
 
-		if (object->proc != XNOBJECT_PROC_RESERVED1)
+		if (object->vfilp != XNOBJECT_PNODE_RESERVED1)
 			goto unexport;
 
 		registry_exported_objects++;
-		++pnode->entries;
-		object->proc = XNOBJECT_PROC_RESERVED2;
+		object->vfilp = XNOBJECT_PNODE_RESERVED2;
 		appendq(&registry_obj_busyq, holder);
 
 		xnlock_put_irqrestore(&nklock, s);
 
-		if (!rdir) {
-			/* Create the root directory on the fly as needed. */
-			rdir =
-			    create_proc_entry(root, S_IFDIR,
-					      registry_proc_root);
-
-			if (!rdir) {
-				object->proc = NULL;
-				goto fail;
+		if (pnode->entries++ == 0) {
+			if (pnode->root->entries++ == 0) {
+				/* Create the root directory on the fly. */
+				ret = xnvfile_init_dir(rname, rdir, &registry_vfroot);
+				if (ret) {
+					xnlock_get_irqsave(&nklock, s);
+					object->pnode = NULL;
+					pnode->root->entries = 0;
+					pnode->entries = 0;
+					continue;
+				}
 			}
-
-			pnode->root->dir = rdir;
+			/* Create the class directory on the fly. */
+			ret = xnvfile_init_dir(type, dir, rdir);
+			if (ret) {
+				if (pnode->root->entries == 1) {
+					pnode->root->entries = 0;
+					xnvfile_destroy_dir(rdir);
+				}
+				xnlock_get_irqsave(&nklock, s);
+				object->pnode = NULL;
+				pnode->entries = 0;
+				continue;
+			}
 		}
 
-		if (!dir) {
-			/* Create the class directory on the fly as needed. */
-			dir = create_proc_entry(type, S_IFDIR, rdir);
-
-			if (!dir) {
-				object->proc = NULL;
-				goto fail;
-			}
-
-			pnode->dir = dir;
-			++pnode->root->entries;
-		}
-
-		if (pnode->link_proc)
-			/* Entry is a symlink to somewhere else. */
-			object->proc = add_proc_link(object->key,
-						     pnode->link_proc,
-						     object->objaddr, dir);
-		else
-			/* Entry allows to get/set object properties. */
-			object->proc = rthal_add_proc_leaf(object->key,
-							   pnode->read_proc,
-							   pnode->write_proc,
-							   object->objaddr, dir);
-	      fail:
-		xnlock_get_irqsave(&nklock, s);
-
-		if (!object->proc) {
-			/* On error, pretend that the object has never been
-			   exported. */
+		ret = pnode->ops->export(object, pnode);
+		if (ret && --pnode->entries == 0) {
+			xnvfile_destroy_dir(dir);
+			if (--pnode->root->entries == 0)
+				xnvfile_destroy_dir(rdir);
+			xnlock_get_irqsave(&nklock, s);
 			object->pnode = NULL;
-			--pnode->entries;
 		}
 
 		continue;
 
 	unexport:
 		registry_exported_objects--;
-		entries = --pnode->entries;
-		entry = object->proc;
-		object->proc = NULL;
+		object->vfilp = NULL;
 		object->pnode = NULL;
-
-		if (entries <= 0) {
-			pnode->dir = NULL;
-
-			if (--pnode->root->entries <= 0)
-				pnode->root->dir = NULL;
-		}
 
 		if (object->objaddr)
 			appendq(&registry_obj_busyq, holder);
 		else
-			/* Trap the case where we are unexporting an already
-			   unregistered object. */
+			/*
+			 * Trap the case where we are unexporting an
+			 * already unregistered object.
+			 */
 			appendq(&registry_obj_freeq, holder);
 
 		xnlock_put_irqrestore(&nklock, s);
 
-		remove_proc_entry(entry->name, dir);
+		pnode->ops->unexport(object, pnode);
 
-		if (entries <= 0) {
-			remove_proc_entry(type, rdir);
-
-			if (pnode->root->entries <= 0)
-				remove_proc_entry(root, registry_proc_root);
+		if (--pnode->entries == 0) {
+			xnvfile_destroy_dir(dir);
+			if (--pnode->root->entries == 0)
+				xnvfile_destroy_dir(rdir);
 		}
 
 		xnlock_get_irqsave(&nklock, s);
 	}
 
 	xnlock_put_irqrestore(&nklock, s);
+
+	up(&export_mutex);
 }
 
 static void registry_proc_schedule(void *cookie)
@@ -399,29 +353,165 @@ static void registry_proc_schedule(void *cookie)
 #endif /* CONFIG_PREEMPT_RT */
 }
 
-static inline void registry_proc_export(xnobject_t *object, xnpnode_t *pnode)
+static int registry_export_vfsnap(struct xnobject *object,
+				  struct xnpnode *pnode)
 {
-	object->proc = XNOBJECT_PROC_RESERVED1;
+	struct xnpnode_snapshot *p;
+	int ret;
+
+	/*
+	 * Make sure to initialize _all_ mandatory vfile fields; most
+	 * of the time we are using sane NULL defaults based on static
+	 * storage for the vfile struct, but here we are building up a
+	 * vfile object explicitly.
+	 */
+	p = container_of(pnode, struct xnpnode_snapshot, node);
+	object->vfile_u.vfsnap.file.datasz = p->vfile.datasz;
+	object->vfile_u.vfsnap.file.privsz = p->vfile.privsz;
+	/*
+	 * Make the vfile refer to the provided tag struct if any,
+	 * otherwise use our default tag space. In the latter case,
+	 * each object family has its own private revision tag.
+	 */
+	object->vfile_u.vfsnap.file.tag = p->vfile.tag ?:
+		&object->vfile_u.vfsnap.tag;
+	object->vfile_u.vfsnap.file.ops = p->vfile.ops;
+	object->vfile_u.vfsnap.file.entry.lockops = p->vfile.lockops;
+
+	ret = xnvfile_init_snapshot(object->key, &object->vfile_u.vfsnap.file,
+				    &pnode->vdir);
+	if (ret)
+		return ret;
+
+	object->vfilp = &object->vfile_u.vfsnap.file.entry;
+	object->vfilp->private = object->objaddr;
+
+	return 0;
+}
+
+static void registry_unexport_vfsnap(struct xnobject *object,
+				    struct xnpnode *pnode)
+{
+	xnvfile_destroy_snapshot(&object->vfile_u.vfsnap.file);
+}
+
+static void registry_touch_vfsnap(struct xnobject *object)
+{
+	xnvfile_touch(&object->vfile_u.vfsnap.file);
+}
+
+struct xnpnode_ops xnregistry_vfsnap_ops = {
+	.export = registry_export_vfsnap,
+	.unexport = registry_unexport_vfsnap,
+	.touch = registry_touch_vfsnap,
+};
+EXPORT_SYMBOL_GPL(xnregistry_vfsnap_ops);
+
+static int registry_export_vfreg(struct xnobject *object,
+				 struct xnpnode *pnode)
+{
+	struct xnpnode_regular *p;
+	int ret;
+
+	/* See registry_export_vfsnap() for hints. */
+	p = container_of(pnode, struct xnpnode_regular, node);
+	object->vfile_u.vfreg.privsz = p->vfile.privsz;
+	object->vfile_u.vfreg.ops = p->vfile.ops;
+	object->vfile_u.vfreg.entry.lockops = p->vfile.lockops;
+
+	ret = xnvfile_init_regular(object->key, &object->vfile_u.vfreg,
+				   &pnode->vdir);
+	if (ret)
+		return ret;
+
+	object->vfilp = &object->vfile_u.vfreg.entry;
+	object->vfilp->private = object->objaddr;
+
+	return 0;
+}
+
+static void registry_unexport_vfreg(struct xnobject *object,
+				    struct xnpnode *pnode)
+{
+	xnvfile_destroy_regular(&object->vfile_u.vfreg);
+}
+
+struct xnpnode_ops xnregistry_vfreg_ops = {
+	.export = registry_export_vfreg,
+	.unexport = registry_unexport_vfreg,
+};
+EXPORT_SYMBOL_GPL(xnregistry_vfreg_ops);
+
+static int registry_export_vlink(struct xnobject *object,
+				 struct xnpnode *pnode)
+{
+	struct xnpnode_link *link_desc;
+	char *link_target;
+	int ret;
+
+	link_desc = container_of(pnode, struct xnpnode_link, node);
+	link_target = link_desc->target(object->objaddr);
+	if (link_target == NULL)
+		return -ENOMEM;
+
+	ret = xnvfile_init_link(object->key, link_target,
+				&object->vfile_u.link, &pnode->vdir);
+	kfree(link_target);
+	if (ret)
+		return ret;
+
+	object->vfilp = &object->vfile_u.link.entry;
+	object->vfilp->private = object->objaddr;
+
+	return 0;
+}
+
+static void registry_unexport_vlink(struct xnobject *object,
+				    struct xnpnode *pnode)
+{
+	xnvfile_destroy_link(&object->vfile_u.link);
+}
+
+struct xnpnode_ops xnregistry_vlink_ops = {
+	.export = registry_export_vlink,
+	.unexport = registry_unexport_vlink,
+};
+EXPORT_SYMBOL_GPL(xnregistry_vlink_ops);
+
+static inline void registry_export_pnode(struct xnobject *object,
+					 struct xnpnode *pnode)
+{
+	object->vfilp = XNOBJECT_PNODE_RESERVED1;
 	object->pnode = pnode;
 	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_procq, &object->link);
 	rthal_apc_schedule(registry_proc_apc);
 }
 
-static inline void registry_proc_unexport(xnobject_t *object)
+static inline void registry_unexport_pnode(struct xnobject *object)
 {
-	if (object->proc != XNOBJECT_PROC_RESERVED1) {
+	if (object->vfilp != XNOBJECT_PNODE_RESERVED1) {
+		/*
+		 * We might have preempted a v-file read op, so bump
+		 * the object's revtag to make sure the data
+		 * collection is aborted next, if we end up deleting
+		 * the object being read.
+		 */
+		if (object->pnode->ops->touch)
+			object->pnode->ops->touch(object);
 		removeq(&registry_obj_busyq, &object->link);
 		appendq(&registry_obj_procq, &object->link);
 		rthal_apc_schedule(registry_proc_apc);
 	} else {
-		/* Unexporting before the lower stage has had a chance to
-		   export. Move back the object to the busyq just like if no
-		   export had been requested. */
+		/*
+		 * Unexporting before the lower stage has had a chance
+		 * to export. Move back the object to the busyq just
+		 * like if no export had been requested.
+		 */
 		removeq(&registry_obj_procq, &object->link);
 		appendq(&registry_obj_busyq, &object->link);
 		object->pnode = NULL;
-		object->proc = NULL;
+		object->vfilp = NULL;
 	}
 }
 
@@ -429,7 +519,7 @@ static inline void registry_proc_unexport(xnobject_t *object)
 
 static unsigned registry_hash_crunch(const char *key)
 {
-	unsigned h = 0, g;
+	unsigned int h = 0, g;
 
 #define HQON    24		/* Higher byte position */
 #define HBYTE   0xf0000000	/* Higher nibble on */
@@ -443,9 +533,9 @@ static unsigned registry_hash_crunch(const char *key)
 	return h % registry_hash_entries;
 }
 
-static inline int registry_hash_enter(const char *key, xnobject_t *object)
+static inline int registry_hash_enter(const char *key, struct xnobject *object)
 {
-	xnobject_t *ecurr;
+	struct xnobject *ecurr;
 	unsigned s;
 
 	object->key = key;
@@ -462,10 +552,10 @@ static inline int registry_hash_enter(const char *key, xnobject_t *object)
 	return 0;
 }
 
-static inline int registry_hash_remove(xnobject_t *object)
+static inline int registry_hash_remove(struct xnobject *object)
 {
 	unsigned s = registry_hash_crunch(object->key);
-	xnobject_t *ecurr, *eprev;
+	struct xnobject *ecurr, *eprev;
 
 	for (ecurr = registry_hash_table[s], eprev = NULL;
 	     ecurr != NULL; eprev = ecurr, ecurr = ecurr->hnext) {
@@ -482,9 +572,9 @@ static inline int registry_hash_remove(xnobject_t *object)
 	return -ESRCH;
 }
 
-static xnobject_t *registry_hash_find(const char *key)
+static struct xnobject *registry_hash_find(const char *key)
 {
-	xnobject_t *ecurr;
+	struct xnobject *ecurr;
 
 	for (ecurr = registry_hash_table[registry_hash_crunch(key)];
 	     ecurr != NULL; ecurr = ecurr->hnext) {
@@ -522,7 +612,7 @@ static inline unsigned registry_wakeup_sleepers(const char *key)
 }
 
 /**
- * @fn int xnregistry_enter(const char *key,void *objaddr,xnhandle_t *phandle,xnpnode_t *pnode)
+ * @fn int xnregistry_enter(const char *key,void *objaddr,xnhandle_t *phandle,struct xnpnode *pnode)
  * @brief Register a real-time object.
  *
  * This service allocates a new registry slot for an associated
@@ -570,28 +660,26 @@ static inline unsigned registry_wakeup_sleepers(const char *key)
  * Rescheduling: possible.
  */
 
-int xnregistry_enter(const char *key,
-		     void *objaddr, xnhandle_t *phandle, xnpnode_t *pnode)
+int xnregistry_enter(const char *key, void *objaddr,
+		     xnhandle_t *phandle, struct xnpnode *pnode)
 {
-	xnholder_t *holder;
-	xnobject_t *object;
+	struct xnholder *holder;
+	struct xnobject *object;
 	spl_t s;
-	int err;
+	int ret;
 
-	if (!key || !objaddr || strchr(key, '/'))
+	if (key == NULL || objaddr == NULL || strchr(key, '/'))
 		return -EINVAL;
 
 	xnlock_get_irqsave(&nklock, s);
 
 	holder = getq(&registry_obj_freeq);
-
-	if (!holder) {
-		err = -ENOMEM;
+	if (holder == NULL) {
+		ret = -ENOMEM;
 		goto unlock_and_exit;
 	}
 
 	object = link2xnobj(holder);
-
 	xnsynch_init(&object->safesynch, XNSYNCH_FIFO, NULL);
 	object->objaddr = objaddr;
 	object->cstamp = ++registry_obj_stamp;
@@ -599,51 +687,51 @@ int xnregistry_enter(const char *key,
 #ifdef CONFIG_PROC_FS
 	object->pnode = NULL;
 #endif
-
-	if (!*key) {
+	if (*key == '\0') {
 		object->key = NULL;
 		*phandle = object - registry_obj_slots;
-		err = 0;
+		ret = 0;
 		goto unlock_and_exit;
 	}
 
-	err = registry_hash_enter(key, object);
-
-	if (err) {
+	ret = registry_hash_enter(key, object);
+	if (ret) {
 		appendq(&registry_obj_freeq, holder);
 		goto unlock_and_exit;
 	}
 
 	appendq(&registry_obj_busyq, holder);
 
-	/* <!> Make sure the handle is written back before the
-	   rescheduling takes place. */
+	/*
+	 * <!> Make sure the handle is written back before the
+	 * rescheduling takes place.
+	 */
 	*phandle = object - registry_obj_slots;
 
 #ifdef CONFIG_PROC_FS
 	if (pnode)
-		registry_proc_export(object, pnode);
+		registry_export_pnode(object, pnode);
 #endif /* CONFIG_PROC_FS */
 
 	if (registry_wakeup_sleepers(key))
 		xnpod_schedule();
 
-      unlock_and_exit:
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
 #if XENO_DEBUG(REGISTRY)
-	if (err)
+	if (ret)
 		xnlogerr("FAILED to register object %s (%s), status %d\n",
 			 key,
-			 pnode ? pnode->type : "unknown type",
-			 err);
+			 pnode ? pnode->dirname : "unknown type",
+			 ret);
 	else if (pnode)
 		xnloginfo("registered exported object %s (%s)\n",
-			  key, pnode->type);
+			  key, pnode->dirname);
 #endif
 
-	return err;
+	return ret;
 }
 EXPORT_SYMBOL_GPL(xnregistry_enter);
 
@@ -715,7 +803,7 @@ EXPORT_SYMBOL_GPL(xnregistry_enter);
 int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 		    xnhandle_t *phandle)
 {
-	xnobject_t *object;
+	struct xnobject *object;
 	xnthread_t *thread;
 	xntbase_t *tbase;
 	int err = 0;
@@ -765,16 +853,6 @@ int xnregistry_bind(const char *key, xnticks_t timeout, int timeout_mode,
 
       unlock_and_exit:
 
-#if XENO_DEBUG(REGISTRY) && 0	/* XXX: GCC emits bad code. */
-	if (err)
-		xnlogerr("FAILED to bind to object %s (%s), status %d\n",
-			 key, object->pnode ? object->pnode->type : "unknown type",
-			 err);
-	else if (object->pnode)
-		xnloginfo("bound to exported object %s (%s)\n",
-			  key, object->pnode->type);
-#endif
-
 	xnlock_put_irqrestore(&nklock, s);
 
 	return err;
@@ -808,7 +886,7 @@ EXPORT_SYMBOL_GPL(xnregistry_bind);
 
 int xnregistry_remove(xnhandle_t handle)
 {
-	xnobject_t *object;
+	struct xnobject *object;
 	int err = 0;
 	spl_t s;
 
@@ -827,7 +905,7 @@ int xnregistry_remove(xnhandle_t handle)
 	if (object->pnode)
 		xnloginfo("unregistered exported object %s (%s)\n",
 			  object->key,
-			  object->pnode->type);
+			  object->pnode->dirname);
 #endif
 
 	object->objaddr = NULL;
@@ -838,7 +916,7 @@ int xnregistry_remove(xnhandle_t handle)
 
 #ifdef CONFIG_PROC_FS
 		if (object->pnode) {
-			registry_proc_unexport(object);
+			registry_unexport_pnode(object);
 
 			/* Leave the update of the object queues to the work
 			   callback if it has been kicked. */
@@ -915,7 +993,7 @@ EXPORT_SYMBOL_GPL(xnregistry_remove);
 
 int xnregistry_remove_safe(xnhandle_t handle, xnticks_t timeout)
 {
-	xnobject_t *object;
+	struct xnobject *object;
 	u_long cstamp;
 	int err = 0;
 	spl_t s;
@@ -1024,7 +1102,7 @@ EXPORT_SYMBOL_GPL(xnregistry_remove_safe);
 
 void *xnregistry_get(xnhandle_t handle)
 {
-	xnobject_t *object;
+	struct xnobject *object;
 	void *objaddr;
 	spl_t s;
 
@@ -1083,7 +1161,7 @@ EXPORT_SYMBOL_GPL(xnregistry_get);
 
 u_long xnregistry_put(xnhandle_t handle)
 {
-	xnobject_t *object;
+	struct xnobject *object;
 	u_long newlock;
 	spl_t s;
 
@@ -1146,8 +1224,8 @@ EXPORT_SYMBOL_GPL(xnregistry_put);
 
 void *xnregistry_fetch(xnhandle_t handle)
 {
-	if (handle == XNOBJECT_SELF)
-		return xnpod_primary_p()? xnpod_current_thread() : NULL;
+ 	if (handle == XNOBJECT_SELF)
+ 		return xnpod_primary_p()? xnpod_current_thread() : NULL;
 
 	return xnregistry_lookup(handle);
 }

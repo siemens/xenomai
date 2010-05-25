@@ -31,36 +31,33 @@
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 #include <nucleus/synch.h>
+#include <nucleus/vfile.h>
 
 struct xnpnode;
 
 typedef struct xnobject {
-
-    xnholder_t link;
-
-#define link2xnobj(ln)		container_of(ln, xnobject_t, link)
-
-    void *objaddr;
-
-    const char *key;	/* !< Hash key. */
-
-    xnsynch_t safesynch; /* !< Safe synchronization object. */
-
-    u_long safelock;	 /* !< Safe lock count. */
-
-    u_long cstamp;	/* !< Creation stamp. */
-
-    struct xnobject *hnext;	/* !< Next in h-table */
-
+	void *objaddr;
+	const char *key;	  /* !< Hash key. */
+	struct xnsynch safesynch; /* !< Safe synchronization object. */
+	u_long safelock;	  /* !< Safe lock count. */
+	u_long cstamp;		  /* !< Creation stamp. */
 #ifdef CONFIG_PROC_FS
-
-    struct xnpnode *pnode; /* !< /proc information class. */
-
-    struct proc_dir_entry *proc; /* !< /proc entry. */
-
+	struct xnpnode *pnode;	/* !< v-file information class. */
+	union {
+		struct {
+			struct xnvfile_rev_tag tag;
+			struct xnvfile_snapshot file;
+		} vfsnap; /* !< virtual snapshot file. */
+		struct xnvfile_regular vfreg; /* !< virtual regular file */
+		struct xnvfile_link link;     /* !< virtual link. */
+	} vfile_u;
+	struct xnvfile *vfilp;
 #endif /* CONFIG_PROC_FS */
-
+	struct xnobject *hnext;	/* !< Next in h-table */
+	struct xnholder link;
 } xnobject_t;
+
+#define link2xnobj(ln)		container_of(ln, struct xnobject, link)
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,41 +69,74 @@ void xnregistry_cleanup(void);
 
 #ifdef CONFIG_PROC_FS
 
-#include <linux/proc_fs.h>
+#define XNOBJECT_PNODE_RESERVED1 ((struct xnvfile *)1)
+#define XNOBJECT_PNODE_RESERVED2 ((struct xnvfile *)2)
 
-#define XNOBJECT_PROC_RESERVED1 ((struct proc_dir_entry *)1)
-#define XNOBJECT_PROC_RESERVED2 ((struct proc_dir_entry *)2)
+struct xnptree {
+	const char *dirname;
+	/* hidden */
+	int entries;
+	struct xnvfile_directory vdir;
+};
 
-typedef ssize_t link_proc_t(char *buf,
-			    int count,
-			    void *data);
-typedef struct xnptree {
+#define DEFINE_XNPTREE(__var, __name)		\
+	struct xnptree __var = {		\
+		.dirname = __name,		\
+		.entries = 0,			\
+		.vdir = xnvfile_nodir,		\
+	}
 
-    struct proc_dir_entry *dir;
-    const char *name;
-    int entries;
+struct xnpnode_ops {
+	int (*export)(struct xnobject *object, struct xnpnode *pnode);
+	void (*unexport)(struct xnobject *object, struct xnpnode *pnode);
+	void (*touch)(struct xnobject *object);
+};
 
-} xnptree_t;
+struct xnpnode {
+	const char *dirname;
+	struct xnptree *root;
+	struct xnpnode_ops *ops;
+	/* hidden */
+	int entries;
+	struct xnvfile_directory vdir;
+};
 
-typedef struct xnpnode {
+struct xnpnode_snapshot {
+	struct xnpnode node;
+	struct xnvfile_snapshot_template vfile;
+};
 
-    struct proc_dir_entry *dir;
-    const char *type;
-    int entries;
-    read_proc_t *read_proc;
-    write_proc_t *write_proc;
-    link_proc_t *link_proc;
-    xnptree_t *root;
+struct xnpnode_regular {
+	struct xnpnode node;
+	struct xnvfile_regular_template vfile;
+};
 
-} xnpnode_t;
+struct xnpnode_link {
+	struct xnpnode node;
+	char *(*target)(void *obj);
+};
 
 #else /* !CONFIG_PROC_FS */
 
-typedef struct xnpnode { /* Placeholder. */
+#define DEFINE_XNPTREE(__var, __name);
 
-    const char *type;
+/* Placeholders. */
 
-} xnpnode_t;
+struct xnpnode {
+	const char *dirname;
+};
+
+struct xnpnode_snapshot {
+	struct xnpnode node;
+};
+
+struct xnpnode_regular {
+	struct xnpnode node;
+};
+
+struct xnpnode_link {
+	struct xnpnode node;
+};
 
 #endif /* !CONFIG_PROC_FS */
 
@@ -114,26 +144,7 @@ extern struct xnobject *registry_obj_slots;
 
 /* Public interface. */
 
-int xnregistry_enter(const char *key,
-		     void *objaddr,
-		     xnhandle_t *phandle,
-		     xnpnode_t *pnode);
-
-int xnregistry_bind(const char *key,
-		    xnticks_t timeout,
-		    int timeout_mode,
-		    xnhandle_t *phandle);
-
-int xnregistry_remove(xnhandle_t handle);
-
-int xnregistry_remove_safe(xnhandle_t handle,
-			   xnticks_t timeout);
-
-void *xnregistry_get(xnhandle_t handle);
-
-void *xnregistry_fetch(xnhandle_t handle);
-
-u_long xnregistry_put(xnhandle_t handle);
+extern struct xnobject *registry_obj_slots;
 
 static inline struct xnobject *xnregistry_validate(xnhandle_t handle)
 {
@@ -157,9 +168,34 @@ static inline void *xnregistry_lookup(xnhandle_t handle)
 	return object ? object->objaddr : NULL;
 }
 
+int xnregistry_enter(const char *key,
+		     void *objaddr,
+		     xnhandle_t *phandle,
+		     struct xnpnode *pnode);
+
+int xnregistry_bind(const char *key,
+		    xnticks_t timeout,
+		    int timeout_mode,
+		    xnhandle_t *phandle);
+
+int xnregistry_remove(xnhandle_t handle);
+
+int xnregistry_remove_safe(xnhandle_t handle,
+			   xnticks_t timeout);
+
+void *xnregistry_get(xnhandle_t handle);
+
+void *xnregistry_fetch(xnhandle_t handle);
+
+u_long xnregistry_put(xnhandle_t handle);
+
 #ifdef __cplusplus
 }
 #endif
+
+extern struct xnpnode_ops xnregistry_vfsnap_ops;
+
+extern struct xnpnode_ops xnregistry_vlink_ops;
 
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
