@@ -1,5 +1,5 @@
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 4fdb669..89b72a9 100644
+index fbc161d..966de95 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -480,6 +480,7 @@ config SCHED_OMIT_FRAME_POINTER
@@ -168,7 +168,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..7d29f03
+index 0000000..8d31e67
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,158 @@
@@ -199,10 +199,10 @@ index 0000000..7d29f03
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.6-03"
++#define IPIPE_ARCH_STRING	"2.6-04"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	6
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -1251,7 +1251,7 @@ index d8e5d0c..847cc01 100644
  obj-$(CONFIG_HPET_TIMER) 	+= hpet.o
  
 diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
-index 0e69e17..47586ca 100644
+index 168e172..948c033 100644
 --- a/arch/x86/kernel/apic/apic.c
 +++ b/arch/x86/kernel/apic/apic.c
 @@ -446,7 +446,7 @@ static void lapic_timer_setup(enum clock_event_mode mode,
@@ -1310,7 +1310,7 @@ index 0e69e17..47586ca 100644
  		}
  	}
  
-@@ -1735,7 +1739,7 @@ void smp_spurious_interrupt(struct pt_regs *regs)
+@@ -1737,7 +1741,7 @@ void smp_spurious_interrupt(struct pt_regs *regs)
  	 */
  	v = apic_read(APIC_ISR + ((SPURIOUS_APIC_VECTOR & ~0x1f) >> 1));
  	if (v & (1 << (SPURIOUS_APIC_VECTOR & 0x1f)))
@@ -1319,7 +1319,7 @@ index 0e69e17..47586ca 100644
  
  	inc_irq_stat(irq_spurious_count);
  
-@@ -2004,13 +2008,13 @@ static int lapic_suspend(struct sys_device *dev, pm_message_t state)
+@@ -2006,13 +2010,13 @@ static int lapic_suspend(struct sys_device *dev, pm_message_t state)
  		apic_pm_state.apic_thmr = apic_read(APIC_LVTTHMR);
  #endif
  
@@ -1335,7 +1335,7 @@ index 0e69e17..47586ca 100644
  	return 0;
  }
  
-@@ -2025,7 +2029,7 @@ static int lapic_resume(struct sys_device *dev)
+@@ -2027,7 +2031,7 @@ static int lapic_resume(struct sys_device *dev)
  	if (!apic_pm_state.active)
  		return 0;
  
@@ -1344,7 +1344,7 @@ index 0e69e17..47586ca 100644
  	if (intr_remapping_enabled) {
  		ioapic_entries = alloc_ioapic_entries();
  		if (!ioapic_entries) {
-@@ -2091,7 +2095,7 @@ static int lapic_resume(struct sys_device *dev)
+@@ -2093,7 +2097,7 @@ static int lapic_resume(struct sys_device *dev)
  		free_ioapic_entries(ioapic_entries);
  	}
  restore:
@@ -4251,7 +4251,7 @@ index 4cf7956..fff349c 100644
  	bool preload_fpu;
  
 diff --git a/arch/x86/kernel/process_64.c b/arch/x86/kernel/process_64.c
-index 6eabe90..e96b01d 100644
+index 868fdb4..ddf025d 100644
 --- a/arch/x86/kernel/process_64.c
 +++ b/arch/x86/kernel/process_64.c
 @@ -58,6 +58,8 @@ asmlinkage extern void ret_from_fork(void);
@@ -4271,7 +4271,7 @@ index 6eabe90..e96b01d 100644
  
  	set_tsk_thread_flag(p, TIF_FORK);
  
-@@ -358,10 +361,12 @@ start_thread(struct pt_regs *regs, unsigned long new_ip, unsigned long new_sp)
+@@ -357,10 +360,12 @@ start_thread(struct pt_regs *regs, unsigned long new_ip, unsigned long new_sp)
  	regs->ss		= __USER_DS;
  	regs->flags		= 0x200;
  	set_fs(USER_DS);
@@ -4284,7 +4284,7 @@ index 6eabe90..e96b01d 100644
  }
  EXPORT_SYMBOL_GPL(start_thread);
  
-@@ -380,7 +385,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
+@@ -379,7 +384,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
  {
  	struct thread_struct *prev = &prev_p->thread;
  	struct thread_struct *next = &next_p->thread;
@@ -6275,6 +6275,19 @@ index f4e3184..3b80b7b 100644
  #endif
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
+diff --git a/include/linux/module.h b/include/linux/module.h
+index 460df15..482efc8 100644
+--- a/include/linux/module.h
++++ b/include/linux/module.h
+@@ -455,7 +455,7 @@ void symbol_put_addr(void *addr);
+ static inline local_t *__module_ref_addr(struct module *mod, int cpu)
+ {
+ #ifdef CONFIG_SMP
+-	return (local_t *) per_cpu_ptr(mod->refptr, cpu);
++	return (local_t *) (mod->refptr + per_cpu_offset(cpu));
+ #else
+ 	return &mod->ref;
+ #endif
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index 72b1a10..80553be 100644
 --- a/include/linux/preempt.h
@@ -6776,7 +6789,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..63deaf9
+index 0000000..c6f4507
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1954 @@
@@ -7957,13 +7970,13 @@ index 0000000..63deaf9
 +	p = ipipe_cpudom_ptr(ipd);
 +
 +	if (__test_and_set_bit(IPIPE_SYNC_FLAG, &p->status)) {
++#ifdef __IPIPE_FEATURE_NESTED_ROOTIRQS
 +		/*
-+		 * Some questionable code in the root domain may enter
-+		 * busy waits for IRQs over interrupt context, so we
-+		 * unfortunately have to allow piling up IRQs for
-+		 * them. Non-root domains are not allowed to do this.
++		 * Caution: some archs do not support this
++		 * (mis)feature (e.g. x86_32).
 +		 */
 +		if (ipd != ipipe_root_domain)
++#endif
 +			return;
 +	}
 +
@@ -10410,7 +10423,7 @@ index 17c71bb..406f375 100644
  	 * REPLAY is when Linux resends an IRQ that was dropped earlier
  	 * WAITING is used by probe to mark irqs that are being tested
 diff --git a/kernel/lockdep.c b/kernel/lockdep.c
-index 9af5672..fa84d6d 100644
+index f672d51..890455c 100644
 --- a/kernel/lockdep.c
 +++ b/kernel/lockdep.c
 @@ -2318,7 +2318,7 @@ void trace_hardirqs_on_caller(unsigned long ip)
@@ -10635,10 +10648,10 @@ index f38b07f..f3f0057 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index ed61192..83937d6 100644
+index 34d924e..ca4b359 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
-@@ -2344,6 +2344,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
+@@ -2342,6 +2342,7 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
  			  int wake_flags)
  {
  	int cpu, orig_cpu, this_cpu, success = 0;
@@ -10646,7 +10659,7 @@ index ed61192..83937d6 100644
  	unsigned long flags;
  	struct rq *rq, *orig_rq;
  
-@@ -2355,7 +2356,9 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
+@@ -2353,7 +2354,9 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
  	smp_wmb();
  	rq = orig_rq = task_rq_lock(p, &flags);
  	update_rq_clock(rq);
@@ -10657,7 +10670,7 @@ index ed61192..83937d6 100644
  		goto out;
  
  	if (p->se.on_rq)
-@@ -2840,13 +2843,15 @@ asmlinkage void schedule_tail(struct task_struct *prev)
+@@ -2838,13 +2841,15 @@ asmlinkage void schedule_tail(struct task_struct *prev)
  #endif
  	if (current->set_child_tid)
  		put_user(task_pid_vnr(current), current->set_child_tid);
@@ -10674,7 +10687,7 @@ index ed61192..83937d6 100644
  context_switch(struct rq *rq, struct task_struct *prev,
  	       struct task_struct *next)
  {
-@@ -2888,12 +2893,23 @@ context_switch(struct rq *rq, struct task_struct *prev,
+@@ -2886,12 +2891,23 @@ context_switch(struct rq *rq, struct task_struct *prev,
  	switch_to(prev, next, prev);
  
  	barrier();
@@ -10698,7 +10711,7 @@ index ed61192..83937d6 100644
  }
  
  /*
-@@ -5300,6 +5316,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
+@@ -5298,6 +5314,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
  
  void __kprobes add_preempt_count(int val)
  {
@@ -10706,7 +10719,7 @@ index ed61192..83937d6 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -5322,6 +5339,7 @@ EXPORT_SYMBOL(add_preempt_count);
+@@ -5320,6 +5337,7 @@ EXPORT_SYMBOL(add_preempt_count);
  
  void __kprobes sub_preempt_count(int val)
  {
@@ -10714,7 +10727,7 @@ index ed61192..83937d6 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -5370,6 +5388,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
+@@ -5368,6 +5386,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
   */
  static inline void schedule_debug(struct task_struct *prev)
  {
@@ -10722,7 +10735,7 @@ index ed61192..83937d6 100644
  	/*
  	 * Test if we are atomic. Since do_exit() needs to call into
  	 * schedule() atomically, we ignore that path for now.
-@@ -5448,7 +5467,7 @@ pick_next_task(struct rq *rq)
+@@ -5446,7 +5465,7 @@ pick_next_task(struct rq *rq)
  /*
   * schedule() is the main scheduler function.
   */
@@ -10731,7 +10744,7 @@ index ed61192..83937d6 100644
  {
  	struct task_struct *prev, *next;
  	unsigned long *switch_count;
-@@ -5462,6 +5481,9 @@ need_resched:
+@@ -5460,6 +5479,9 @@ need_resched:
  	rcu_sched_qs(cpu);
  	prev = rq->curr;
  	switch_count = &prev->nivcsw;
@@ -10741,7 +10754,7 @@ index ed61192..83937d6 100644
  
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -5499,15 +5521,18 @@ need_resched_nonpreemptible:
+@@ -5497,15 +5519,18 @@ need_resched_nonpreemptible:
  		rq->curr = next;
  		++*switch_count;
  
@@ -10762,7 +10775,7 @@ index ed61192..83937d6 100644
  
  	post_schedule(rq);
  
-@@ -5517,6 +5542,8 @@ need_resched_nonpreemptible:
+@@ -5515,6 +5540,8 @@ need_resched_nonpreemptible:
  	preempt_enable_no_resched();
  	if (need_resched())
  		goto need_resched;
@@ -10771,7 +10784,7 @@ index ed61192..83937d6 100644
  }
  EXPORT_SYMBOL(schedule);
  
-@@ -5600,7 +5627,8 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -5598,7 +5625,8 @@ asmlinkage void __sched preempt_schedule(void)
  
  	do {
  		add_preempt_count(PREEMPT_ACTIVE);
@@ -10781,7 +10794,7 @@ index ed61192..83937d6 100644
  		sub_preempt_count(PREEMPT_ACTIVE);
  
  		/*
-@@ -6371,6 +6399,7 @@ recheck:
+@@ -6369,6 +6397,7 @@ recheck:
  	oldprio = p->prio;
  	prev_class = p->sched_class;
  	__setscheduler(rq, p, policy, param->sched_priority);
@@ -10789,7 +10802,7 @@ index ed61192..83937d6 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -7018,6 +7047,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
+@@ -7020,6 +7049,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
  #else
  	task_thread_info(idle)->preempt_count = 0;
  #endif
@@ -10797,7 +10810,7 @@ index ed61192..83937d6 100644
  	/*
  	 * The idle tasks have their own, simple scheduling class:
  	 */
-@@ -10958,3 +10988,64 @@ void synchronize_sched_expedited(void)
+@@ -10963,3 +10993,64 @@ void synchronize_sched_expedited(void)
  EXPORT_SYMBOL_GPL(synchronize_sched_expedited);
  
  #endif /* #else #ifndef CONFIG_SMP */
