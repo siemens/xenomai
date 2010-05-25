@@ -1002,6 +1002,7 @@ EXPORT_SYMBOL_GPL(xnheap_check_block);
 #include <linux/device.h>
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
+#include <linux/fs.h>
 #include <linux/spinlock.h>
 
 static DEFINE_XNQUEUE(kheapq);	/* Shared heap queue. */
