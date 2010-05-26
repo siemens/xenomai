@@ -70,9 +70,12 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,25)
 typedef union i387_union x86_fpustate;
 #define x86_fpustate_ptr(t) (&(t)->i387)
-#else
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34)
 typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->xstate)
+#else /* 2.6.35 and above */
+typedef union thread_xstate x86_fpustate;
+#define x86_fpustate_ptr(t) ((t)->fpu.state)
 #endif
 
 #endif /* _XENO_ASM_X86_WRAPPERS_64_H */
