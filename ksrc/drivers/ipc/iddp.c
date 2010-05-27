@@ -81,26 +81,38 @@ static int poolwait;
 
 #ifdef CONFIG_PROC_FS
 
-static ssize_t __iddp_link_proc(char *buf, int count, void *data)
+static char *__iddp_link_target(void *obj)
 {
-	struct iddp_socket *sk = data;
-	return snprintf(buf, count, "%d", sk->name.sipc_port);
+	struct iddp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "%d", sk->name.sipc_port);
+
+	return buf;
 }
 
-static struct xnpnode __iddp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "iddp",
-	.entries = 0,
-	.link_proc = &__iddp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __iddp_pnode = {
+	.node = {
+		.dirname = "iddp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __iddp_link_target,
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static struct xnpnode __iddp_pnode = {
-
-	.type = "iddp"
+static struct xnpnode_link __iddp_pnode = {
+	.node = {
+		.dirname = "iddp",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -578,7 +590,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk,
-				       &sk->handle, &__iddp_pnode);
+				       &sk->handle, &__iddp_pnode.node);
 		if (ret) {
 			if (poolsz > 0)
 				xnheap_destroy(&sk->privpool,

@@ -73,26 +73,38 @@ static int portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
 
 #ifdef CONFIG_PROC_FS
 
-static ssize_t __xddp_link_proc(char *buf, int count, void *data)
+static char *__xddp_link_target(void *obj)
 {
-	struct xddp_socket *sk = data;
-	return snprintf(buf, count, "/dev/rtp%d", sk->minor);
+	struct xddp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "/dev/rtp%d", sk->minor);
+
+	return buf;
 }
 
-static struct xnpnode __xddp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "xddp",
-	.entries = 0,
-	.link_proc = &__xddp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __xddp_pnode = {
+	.node = {
+		.dirname = "xddp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __xddp_link_target,
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static struct xnpnode __xddp_pnode = {
-
-	.type = "xddp"
+static struct xnpnode_link __xddp_pnode = {
+	.node = {
+		.dirname = "xddp",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -755,7 +767,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk, &sk->handle,
-				       &__xddp_pnode);
+				       &__xddp_pnode.node);
 		if (ret) {
 			/* The release handler will cleanup the pool for us. */
 			xnpipe_disconnect(sk->minor);

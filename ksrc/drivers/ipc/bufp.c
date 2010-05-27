@@ -76,26 +76,38 @@ static struct xnmap *portmap;
 
 #ifdef CONFIG_PROC_FS
 
-static ssize_t __bufp_link_proc(char *buf, int count, void *data)
+static char *__bufp_link_target(void *obj)
 {
-	struct bufp_socket *sk = data;
-	return snprintf(buf, count, "%d", sk->name.sipc_port);
+	struct bufp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "%d", sk->name.sipc_port);
+
+	return buf;
 }
 
-static struct xnpnode __bufp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "bufp",
-	.entries = 0,
-	.link_proc = &__bufp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __bufp_pnode = {
+	.node = {
+		.dirname = "bufp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __bufp_link_target,
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static struct xnpnode __bufp_pnode = {
-
-	.type = "bufp"
+static struct xnpnode_link __bufp_pnode = {
+	.node = {
+		.dirname = "bufp",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -717,7 +729,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk,
-				       &sk->handle, &__bufp_pnode);
+				       &sk->handle, &__bufp_pnode.node);
 		if (ret) {
 			xnarch_free_host_mem(sk->bufmem, sk->bufsz);
 			goto fail;
