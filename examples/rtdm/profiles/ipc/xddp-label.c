@@ -57,6 +57,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -115,7 +116,7 @@ void *realtime_thread1(void *arg)
 	 * binding, in addition to the port number (if given).
 	 */
 	strcpy(label, XDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
+	ret = setsockopt(s, SOL_XDDP, XDDP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
@@ -185,7 +186,7 @@ void *realtime_thread2(void *arg)
 	 * when connecting, instead of the port number.
 	 */
 	strcpy(label, XDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
+	ret = setsockopt(s, SOL_XDDP, XDDP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
@@ -250,6 +251,7 @@ void *regular_thread(void *arg)
 		fail("asprintf");
 
 	fd = open(devname, O_RDWR);
+	free(devname);
 	if (fd < 0)
 		fail("open");
 

@@ -53,6 +53,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -118,7 +119,7 @@ void *realtime_thread(void *arg)
 	 * would disable streaming.
 	 */
 	streamsz = 1024; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETSTREAMBUF,
+	ret = setsockopt(s, SOL_XDDP, XDDP_BUFSZ,
 			 &streamsz, sizeof(streamsz));
 	if (ret)
 		fail("setsockopt");
@@ -182,6 +183,7 @@ void *regular_thread(void *arg)
 		fail("asprintf");
 
 	fd = open(devname, O_RDWR);
+	free(devname);
 	if (fd < 0)
 		fail("open");
 

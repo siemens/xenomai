@@ -636,7 +636,7 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via IDDP_SETLABEL,
+	 * - If sipc_port is -1 and a label was set via IDDP_LABEL,
 	 * connect() blocks for the requested amount of time until a
 	 * socket is bound to the same label, unless the internal
 	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
@@ -720,12 +720,12 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_IDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case IDDP_SETLOCALPOOL:
+	case IDDP_POOLSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -746,13 +746,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		);
 		break;
 
-	case IDDP_GETSTALLCOUNT:
-		if (rtipc_put_arg(user_info, arg,
-				  &sk->stalls, sizeof(sk->stalls)))
-			return -EFAULT;
-		break;
-
-	case IDDP_SETLABEL:
+	case IDDP_LABEL:
 		if (sopt.optlen < sizeof(label))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, label,
@@ -823,20 +817,12 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_IDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case IDDP_GETSTALLCOUNT:
-		if (len < sizeof(sk->stalls))
-			return -EINVAL;
-		if (rtipc_put_arg(user_info, sopt.optval,
-				  &sk->stalls, sizeof(sk->stalls)))
-			return -EFAULT;
-		break;
-
-	case IDDP_GETLABEL:
+	case IDDP_LABEL:
 		if (len < sizeof(label))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(

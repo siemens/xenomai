@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -111,7 +112,7 @@ void *realtime_thread(void *arg)
 	 * Xenomai's system pool.
 	 */
 	poolsz = 16384; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLOCALPOOL,
+	ret = setsockopt(s, SOL_XDDP, XDDP_POOLSZ,
 			 &poolsz, sizeof(poolsz));
 	if (ret)
 		fail("setsockopt");
@@ -176,6 +177,7 @@ void *regular_thread(void *arg)
 		fail("asprintf");
 
 	fd = open(devname, O_RDWR);
+	free(devname);
 	if (fd < 0)
 		fail("open");
 

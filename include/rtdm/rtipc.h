@@ -85,25 +85,22 @@ struct sockaddr_ipc {
 	rtipc_port_t sipc_port;
 };
 
-/* RTIPC socket level */
-#define SOL_RTIPC  311
-
-/* SOL_RTIPC level option names (via setsockopt) */
-#define XDDP_SETSTREAMBUF	1
-#define XDDP_SETMONITOR		2
-#define XDDP_SETLOCALPOOL	3
-#define XDDP_SETLABEL		4
-#define XDDP_GETLABEL		5
-#define IDDP_SETLOCALPOOL	6
-#define IDDP_GETSTALLCOUNT	7
-#define IDDP_SETLABEL		8
-#define IDDP_GETLABEL		9
-#define BUFP_SETBUFFER		10
-#define BUFP_SETLABEL		11
-#define BUFP_GETLABEL		12
-
+/* Socket level options (via set/getsockopt) */
+#define SOL_XDDP		311
+#define XDDP_LABEL		1
+#define XDDP_POOLSZ		2
+#define XDDP_BUFSZ		3
+#define XDDP_MONITOR		4
 #define XDDP_LABEL_LEN		XNOBJECT_NAME_LEN
+
+#define SOL_IDDP		312
+#define IDDP_LABEL		1
+#define IDDP_POOLSZ		2
 #define IDDP_LABEL_LEN		XNOBJECT_NAME_LEN
+
+#define SOL_BUFP		313
+#define BUFP_LABEL		1
+#define BUFP_BUFSZ		2
 #define BUFP_LABEL_LEN		XNOBJECT_NAME_LEN
 
 /* XDDP in-kernel monitored events */

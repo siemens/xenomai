@@ -66,7 +66,7 @@ void *server(void *arg)
 	 * port.
 	 */
 	bufsz = 16384; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETBUFFER,
+	ret = setsockopt(s, SOL_BUFP, BUFP_BUFSZ,
 			 &bufsz, sizeof(bufsz));
 	if (ret)
 		fail("setsockopt");
@@ -76,7 +76,7 @@ void *server(void *arg)
 	 * binding, in addition to the port number (if given).
 	 */
 	strcpy(label, BUFP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETLABEL,
+	ret = setsockopt(s, SOL_BUFP, BUFP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
@@ -130,7 +130,7 @@ void *client(void *arg)
 	 * port as well (like the server thread did).
 	 */
 	strcpy(label, BUFP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETLABEL,
+	ret = setsockopt(s, SOL_BUFP, BUFP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");

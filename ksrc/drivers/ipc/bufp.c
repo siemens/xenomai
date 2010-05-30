@@ -773,7 +773,7 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via BUFP_SETLABEL,
+	 * - If sipc_port is -1 and a label was set via BUFP_LABEL,
 	 * connect() blocks for the requested amount of time until a
 	 * socket is bound to the same label, unless the internal
 	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
@@ -857,12 +857,12 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_BUFP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case BUFP_SETBUFFER:
+	case BUFP_BUFSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -883,7 +883,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		);
 		break;
 
-	case BUFP_SETLABEL:
+	case BUFP_LABEL:
 		if (sopt.optlen < sizeof(label))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, label,
@@ -954,12 +954,12 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_BUFP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case BUFP_GETLABEL:
+	case BUFP_LABEL:
 		if (len < sizeof(label))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(

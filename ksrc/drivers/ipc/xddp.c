@@ -184,8 +184,8 @@ static void __xddp_free_handler(void *buf, void *xstate) /* nklock free */
 	__clear_bit(_XDDP_ATOMIC, &sk->status);
 
 	/*
-	 * If a XDDP_SETSTREAMBUF request is pending, resize the
-	 * streaming buffer on-the-fly.
+	 * If a XDDP_BUFSZ request is pending, resize the streaming
+	 * buffer on-the-fly.
 	 */
 	if (unlikely(sk->curbufsz != sk->reqbufsz))
 		__xddp_resize_streambuf(sk);
@@ -808,7 +808,7 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via XDDP_SETLABEL,
+	 * - If sipc_port is -1 and a label was set via XDDP_LABEL,
 	 * connect() blocks for the requested amount of time until a
 	 * socket is bound to the same label, unless the internal
 	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
@@ -885,12 +885,12 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_XDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case XDDP_SETSTREAMBUF:
+	case XDDP_BUFSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -912,7 +912,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		rtdm_lock_put_irqrestore(&sk->lock, lockctx);
 		break;
 
-	case XDDP_SETLOCALPOOL:
+	case XDDP_POOLSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -929,7 +929,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		);
 		break;
 
-	case XDDP_SETMONITOR:
+	case XDDP_MONITOR:
 		/* Monitoring is available from kernel-space only. */
 		if (user_info)
 			return -EPERM;
@@ -941,7 +941,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		sk->monitor = monitor;
 		break;
 
-	case XDDP_SETLABEL:
+	case XDDP_LABEL:
 		if (sopt.optlen < sizeof(label))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, label,
@@ -1000,12 +1000,12 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_XDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case XDDP_GETLABEL:
+	case XDDP_LABEL:
 		if (len < sizeof(label))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(

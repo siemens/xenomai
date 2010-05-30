@@ -71,7 +71,7 @@ void *server(void *arg)
 
 	/*
 	 * We will use Xenomai's system heap for datagram, so no
-	 * IDDP_SETLOCALPOOL required here.
+	 * IDDP_POOLSZ required here.
 	 */
 
 	/*
@@ -79,7 +79,7 @@ void *server(void *arg)
 	 * binding, in addition to the port number (if given).
 	 */
 	strcpy(label, IDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
+	ret = setsockopt(s, SOL_IDDP, IDDP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
@@ -146,7 +146,7 @@ void *client(void *arg)
 	 * port as well (like the server thread did).
 	 */
 	strcpy(label, IDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
+	ret = setsockopt(s, SOL_IDDP, IDDP_LABEL,
 			 label, sizeof(label));
 	if (ret)
 		fail("setsockopt");
