@@ -41,7 +41,7 @@ struct xddp_socket {
 	int minor;
 	size_t poolsz;
 	xnhandle_t handle;
-	char label[XDDP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	struct xddp_message *buffer;
 	int buffer_port;
@@ -857,7 +857,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 {
 	int (*monitor)(int s, int event, long arg);
 	struct _rtdm_setsockopt_args sopt;
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	rtdm_lockctx_t lockctx;
 	struct timeval tv;
 	int ret = 0;
@@ -942,18 +942,18 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		break;
 
 	case XDDP_LABEL:
-		if (sopt.optlen < sizeof(label))
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			if (test_bit(_XDDP_BOUND, &sk->status) ||
 			    test_bit(_XDDP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[XDDP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -970,7 +970,7 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -1006,13 +1006,13 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 	switch (sopt.optname) {
 
 	case XDDP_LABEL:
-		if (len < sizeof(label))
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

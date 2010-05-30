@@ -41,7 +41,7 @@ struct bufp_socket {
 	size_t bufsz;
 	u_long status;
 	xnhandle_t handle;
-	char label[BUFP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	off_t rdoff;
 	off_t wroff;
@@ -821,7 +821,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
-	char label[BUFP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
@@ -884,10 +884,10 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		break;
 
 	case BUFP_LABEL:
-		if (sopt.optlen < sizeof(label))
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			/*
@@ -897,8 +897,8 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 			if (test_bit(_BUFP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[BUFP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -915,7 +915,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[BUFP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -960,13 +960,13 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 	switch (sopt.optname) {
 
 	case BUFP_LABEL:
-		if (len < sizeof(label))
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

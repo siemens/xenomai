@@ -56,7 +56,7 @@ struct iddp_socket {
 	struct list_head inq;
 	u_long status;
 	xnhandle_t handle;
-	char label[IDDP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	nanosecs_rel_t rx_timeout;
 	nanosecs_rel_t tx_timeout;
@@ -684,7 +684,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
@@ -747,10 +747,10 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		break;
 
 	case IDDP_LABEL:
-		if (sopt.optlen < sizeof(label))
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			/*
@@ -760,8 +760,8 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			if (test_bit(_IDDP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[IDDP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -778,7 +778,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -823,13 +823,13 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 	switch (sopt.optname) {
 
 	case IDDP_LABEL:
-		if (len < sizeof(label))
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

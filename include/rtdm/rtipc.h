@@ -80,6 +80,10 @@ enum {
   */
 typedef int16_t rtipc_port_t;
 
+struct rtipc_port_label {
+	char label[XNOBJECT_NAME_LEN];
+};
+
 struct sockaddr_ipc {
 	sa_family_t sipc_family; /* AF_RTIPC */
 	rtipc_port_t sipc_port;
@@ -91,17 +95,14 @@ struct sockaddr_ipc {
 #define XDDP_POOLSZ		2
 #define XDDP_BUFSZ		3
 #define XDDP_MONITOR		4
-#define XDDP_LABEL_LEN		XNOBJECT_NAME_LEN
 
 #define SOL_IDDP		312
 #define IDDP_LABEL		1
 #define IDDP_POOLSZ		2
-#define IDDP_LABEL_LEN		XNOBJECT_NAME_LEN
 
 #define SOL_BUFP		313
 #define BUFP_LABEL		1
 #define BUFP_BUFSZ		2
-#define BUFP_LABEL_LEN		XNOBJECT_NAME_LEN
 
 /* XDDP in-kernel monitored events */
 #define XDDP_EVTIN	1
