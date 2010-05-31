@@ -316,6 +316,8 @@ static ER wai_flg_helper(UINT *p_flgptn,
 	task = ui_current_task();
 
 	xnthread_clear_info(&task->threadbase, uITRON_TASK_RLWAIT);
+	task->wargs.flag.wfmode = wfmode;
+	task->wargs.flag.waiptn = waiptn;
 
 	xnsynch_sleep_on(&flag->synchbase, timeout, XN_RELATIVE);
 
