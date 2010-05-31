@@ -637,10 +637,8 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	 * bound at the time of the call.
 	 *
 	 * - If sipc_port is -1 and a label was set via IDDP_LABEL,
-	 * connect() blocks for the requested amount of time until a
-	 * socket is bound to the same label, unless the internal
-	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
-	 * operation (RTDM_TIMEOUT_NONE).
+	 * connect() blocks for the requested amount of time (see
+	 * SO_RCVTIMEO) until a socket is bound to the same label.
 	 *
 	 * - If sipc_port is -1 and no label is given, the default
 	 * destination address is cleared, meaning that any subsequent
