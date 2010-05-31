@@ -622,7 +622,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
 
-	if (flags & ~(MSG_OOB | MSG_DONTWAIT))
+	if (flags & ~MSG_DONTWAIT)
 		return -EINVAL;
 
 	if (msg->msg_name) {

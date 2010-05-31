@@ -260,10 +260,11 @@ int getsockopt__AF_RTIPC(int sockfd, int level, int optname,
  *
  * @param [in] flags Operation flags:
  *
- * - MSG_OOB Send out-of-band message.  For all RTIPC protocols,
- *   sending out-of-band data actually means pushing them to the head
- *   of the receiving queue, so that the reader will always receive
- *   them before normal messages.
+ * - MSG_OOB Send out-of-band message.  For all RTIPC protocols except
+ *   @ref IPCPROTO_BUFP, sending out-of-band data actually means
+ *   pushing them to the head of the receiving queue, so that the
+ *   reader will always receive them before normal messages. @ref
+ *   IPCPROTO_BUFP does not support out-of-band sending.
  *
  * - MSG_DONTWAIT Non-blocking I/O operation. The caller will not be
  *   blocked whenever the message cannot be sent immediately at the
