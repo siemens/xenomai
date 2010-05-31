@@ -714,7 +714,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	 * buffer space via setsockopt(), before we got there.
 	 */
 	if (sk->bufsz == 0)
-		return -EINVAL;
+		return -ENOBUFS;
 
 	sk->bufmem = xnarch_alloc_host_mem(sk->bufsz);
 	if (sk->bufmem == NULL) {
