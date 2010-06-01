@@ -41,6 +41,21 @@ config XENO_DRIVERS_CAN_SJA1000_IXXAT_PCI
 	the second channel working, Xenomai's shared interrupt support
 	must be enabled.
 
+config XENO_DRIVERS_CAN_SJA1000_PLX_PCI
+	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
+	tristate "PLX90xx PCI-bridge based Cards"
+	help
+
+	This driver is for CAN interface cards based on
+	the PLX90xx PCI bridge.
+	Driver supports now:
+	 - Adlink PCI-7841/cPCI-7841 card (http://www.adlinktech.com/)
+	 - Adlink PCI-7841/cPCI-7841 SE card
+	 - esd CAN-PCI/CPCI/PCI104/200 (http://www.esd.eu/)
+	 - esd CAN-PCI/PMC/266
+	 - esd CAN-PCIe/2000
+	 - Marathon CAN-bus-PCI card (http://www.marathon.ru/)
+	 - TEWS TECHNOLOGIES TPMC810 card (http://www.tews.com/)
 
 config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
 	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
@@ -51,10 +66,9 @@ config XENO_DRIVERS_CAN_SJA1000_EMS_PCI
 	Wünsche (http://www.ems-wuensche.de). To get the second channel
 	working, Xenomai's shared interrupt support must be enabled.
 
-
 config XENO_DRIVERS_CAN_SJA1000_ESD_PCI
 	depends on XENO_DRIVERS_CAN_SJA1000 && PCI
-	tristate "ESD PCI Cards"
+	tristate "ESD PCI Cards (DEPRECATED)"
 	help
 
 	This driver supports the esd PCI CAN cards CAN-PCI/200,
@@ -62,6 +76,8 @@ config XENO_DRIVERS_CAN_SJA1000_ESD_PCI
 	CAN-PCIe2000 (PCI Express) and CAN-PCI104/200 (PCI104)
 	from the esd electronic system design gmbh (http://www.esd.eu).
 
+	This driver is deprecated. It's functionality is now provided by
+	"PLX90xx PCI-bridge based Cards" driver.
 
 config XENO_DRIVERS_CAN_SJA1000_PEAK_DNG
 	depends on XENO_DRIVERS_CAN_SJA1000 && !PARPORT
