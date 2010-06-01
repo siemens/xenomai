@@ -40,14 +40,7 @@ xntbase_t *ui_tbase;
 
 ui_rholder_t __ui_global_rholder;
 
-#ifdef CONFIG_PROC_FS
-xnptree_t __uitron_ptree = {
-
-	.dir = NULL,
-	.name = "uitron",
-	.entries = 0,
-};
-#endif /* CONFIG_PROC_FS */
+DEFINE_XNPTREE(__uitron_ptree, "uitron");
 
 int SKIN_INIT(uitron)
 {
