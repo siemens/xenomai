@@ -286,12 +286,24 @@ int a4l_check_chanlist(a4l_subd_t * subd,
 
 /* --- Upper layer functions --- */
 
+static inline int a4l_reserve_subd(a4l_subd_t *subd)
+{
+        return test_and_set_bit(A4L_SUBD_BUSY, &subd->status) ? -EBUSY : 0;
+}
+#define a4l_release_subd(x) clear_bit(A4L_SUBD_BUSY, &(x)->status))
+#define a4l_subd_is_busy(x) test_bit(A4L_SUBD_BUSY, &(x)->status))
+
+#define a4l_subd_is_input(x) ((A4L_SUBD_MASK_READ & (x)->flags) != 0)
+/* The following macro considers that a DIO subdevice is firstly an
+   output subdevice */
+#define a4l_subd_is_output(x) \
+	((A4L_SUBD_MASK_WRITE & (x)->flags) != 0 || \
+	 (A4L_SUBD_DIO & (x)->flags) != 0)
+
 a4l_subd_t * a4l_get_subd(struct a4l_device *dev, int idx);
 a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
 			    void (*setup)(a4l_subd_t *));
 int a4l_add_subd(struct a4l_device *dev, a4l_subd_t * subd);
-int a4l_reserve_subd(a4l_subd_t *subd);
-void a4l_release_subd(a4l_subd_t *subd);
 int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg);
