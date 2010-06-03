@@ -56,7 +56,7 @@ struct a4l_subdevice;
 struct a4l_buffer {
 
 	/* Added by the structure update */
-	a4l_subd_t *subd;
+	struct a4l_subdevice *subd;
 
 	/* Buffer's first virtual page pointer */
 	void *buf;
