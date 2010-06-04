@@ -150,6 +150,7 @@ static int print_to_buffer(FILE *stream, int priority, const char *format,
 		/* Text was truncated, remove closing \0 that entry_head
 		   already includes */
 		len--;
+		res = len;
 	}
 
 	/* If we were able to write some text, finalise the entry */
