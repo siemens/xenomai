@@ -318,14 +318,8 @@ static inline void clear_task_nowakeup(struct task_struct *p)
 #define rthal_disable_ondemand_mappings(tsk)   (0)
 #endif	/* !(VM_PINNED || MMF_VM_PINNED) */
 
-#ifdef CONFIG_KGDB
 #define rthal_set_foreign_stack(ipd)	ipipe_set_foreign_stack(ipd)
 #define rthal_clear_foreign_stack(ipd)	ipipe_clear_foreign_stack(ipd)
-#else /* !CONFIG_KGDB */
-/* No need to track foreign stacks unless KGDB is active. */
-#define rthal_set_foreign_stack(ipd)	do { } while(0)
-#define rthal_clear_foreign_stack(ipd)	do { } while(0)
-#endif /* CONFIG_KGDB */
 
 #define rthal_catch_cleanup(hdlr)         \
     ipipe_catch_event(ipipe_root_domain,IPIPE_EVENT_CLEANUP,hdlr)
