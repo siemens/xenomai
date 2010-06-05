@@ -138,7 +138,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 		}
         }
 #else /* PPC32 */
-		if (likely(next_mm)) {
+		if (likely(next_mm != NULL)) {
 			next->thread.pgdir = next_mm->pgd;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)
 			get_mmu_context(next_mm);

@@ -1037,7 +1037,7 @@ void *xnregistry_get(xnhandle_t handle)
 	xnlock_get_irqsave(&nklock, s);
 
 	object = xnregistry_validate(handle);
-	if (likely(object)) {
+	if (likely(object != NULL)) {
 		++object->safelock;
 		objaddr = object->objaddr;
 	} else
