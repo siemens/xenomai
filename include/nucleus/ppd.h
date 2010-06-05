@@ -2,6 +2,7 @@
 #define _XENO_NUCLEUS_PPD_H
 
 #include <nucleus/queue.h>
+#include <nucleus/shadow.h>
 
 struct mm_struct;
 
@@ -13,6 +14,9 @@ typedef struct xnshadow_ppd_key {
 typedef struct xnshadow_ppd_t {
     xnshadow_ppd_key_t key;
     xnholder_t link;
+#ifdef XNARCH_HAVE_MAYDAY
+    unsigned long mayday_addr;
+#endif
 #define link2ppd(ln)	container_of(ln, xnshadow_ppd_t, link)
 } xnshadow_ppd_t;
 

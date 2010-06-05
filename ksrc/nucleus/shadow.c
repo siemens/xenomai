@@ -39,6 +39,8 @@
 #include <linux/wait.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
+#include <linux/mman.h>
+#include <linux/mm.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
@@ -715,13 +717,14 @@ static inline void handle_rt_signals(xnthread_t *thread,
 	int (*sig_unqueue)(xnthread_t *thread, union xnsiginfo __user *si);
 	struct xnsig __user *u_sigs;
 	const unsigned max_sigs = ARRAY_SIZE(u_sigs->pending);
-	unsigned muxid, i, pending;
-	int rc, res;
+	unsigned int muxid, i, pending;
+	int rc, res = -ERESTART;
 
-	u_sigs = (struct xnsig __user *) __xn_reg_sigp(regs);
-	res = -ERESTART;
+	u_sigs = (struct xnsig __user *)__xn_reg_sigp(regs);
+	if (u_sigs == NULL)
+		goto out;
+
 	i = 0;
-
 	pending = xnthread_sigpending(thread);
 	do {
 		muxid = ffnz(pending);
@@ -740,6 +743,7 @@ static inline void handle_rt_signals(xnthread_t *thread,
 	__xn_put_user(i, &u_sigs->nsigs);
 	__xn_put_user(pending != 0, &u_sigs->remaining);
 
+out:
 /* In the case when we are going to handle linux signals, do not let
    the kernel handle the syscall restart to give a chance to the
    xenomai handlers to be executed. */
@@ -1332,12 +1336,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	/*
 	 * Switch on propagation of normal kernel events for the bound
 	 * task. This is basically a per-task event filter which
-	 * restricts event notifications (e.g. syscalls) to tasks
-	 * bearing the PF_EVNOTIFY flag, so that we don't uselessly
+	 * restricts event notifications (e.g. syscalls) to Linux
+	 * tasks bearing a specific flag, so that we don't uselessly
 	 * intercept those events when they happen to be caused by
 	 * plain (i.e. non-Xenomai) Linux tasks.
 	 */
-	current->flags |= PF_EVNOTIFY;
+	rthal_enable_notifier(current);
 
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
@@ -1565,6 +1569,137 @@ static void stringify_feature_set(u_long fset, char *buf, int size)
 	}
 }
 
+#ifdef XNARCH_HAVE_MAYDAY
+
+static void *mayday_page;
+
+static int mayday_map(struct file *filp, struct vm_area_struct *vma)
+{
+	vma->vm_pgoff = (unsigned long)mayday_page >> PAGE_SHIFT;
+	return wrap_remap_vm_page(vma, vma->vm_start, mayday_page);
+}
+
+#ifndef CONFIG_MMU
+static unsigned long mayday_unmapped_area(struct file *file,
+					  unsigned long addr,
+					  unsigned long len,
+					  unsigned long pgoff,
+					  unsigned long flags)
+{
+	return (unsigned long)mayday_page;
+}
+#else
+#define mayday_unmapped_area  NULL
+#endif
+
+static struct file_operations mayday_fops = {
+	.mmap = mayday_map,
+	.get_unmapped_area = mayday_unmapped_area
+};
+
+static unsigned long map_mayday_page(struct task_struct *p)
+{
+	const struct file_operations *old_fops;
+	unsigned long u_addr;
+	struct file *filp;
+
+	filp = filp_open(XNHEAP_DEV_NAME, O_RDONLY, 0);
+	if (IS_ERR(filp))
+		return 0;
+
+	old_fops = filp->f_op;
+	filp->f_op = &mayday_fops;
+	down_write(&p->mm->mmap_sem);
+	u_addr = do_mmap(filp, 0, PAGE_SIZE, PROT_EXEC|PROT_READ, MAP_SHARED, 0);
+	up_write(&p->mm->mmap_sem);
+	filp->f_op = (typeof(filp->f_op))old_fops;
+	filp_close(filp, p->files);
+
+	return IS_ERR_VALUE(u_addr) ? 0UL : u_addr;
+}
+
+void xnshadow_call_mayday(struct xnthread *thread)
+{
+	XENO_BUGON(NUCLEUS, !xnpod_current_p(thread));
+	xnarch_call_mayday();
+}
+
+static int xnshadow_sys_mayday(struct pt_regs *regs)
+{
+	struct xnthread *cur;
+
+	cur = xnshadow_thread(current);
+	if (likely(cur != NULL)) {
+		/*
+		 * If the thread is amok in primary mode, this syscall
+		 * we have just forced on it will cause it to
+		 * relax. See do_hisyscall_event().
+		 */
+		xnarch_fixup_mayday(xnthread_archtcb(cur), regs);
+		return 0;
+	}
+
+	printk(KERN_WARNING
+	       "Xenomai: MAYDAY received from invalid context %s[%d]\n",
+	       current->comm, current->pid);
+
+	return -EPERM;
+}
+
+static inline int mayday_init_page(void)
+{
+	mayday_page = vmalloc(PAGE_SIZE);
+	if (mayday_page == NULL) {
+		printk(KERN_ERR "Xenomai: can't alloc MAYDAY page\n");
+		return -ENOMEM;
+	}
+
+	xnarch_setup_mayday_page(mayday_page);
+
+	return 0;
+}
+
+static inline void mayday_cleanup_page(void)
+{
+	if (mayday_page)
+		vfree(mayday_page);
+}
+
+static inline void do_mayday_event(struct pt_regs *regs)
+{
+	struct xnthread *thread = xnshadow_thread(current);
+	struct xnarchtcb *tcb = xnthread_archtcb(thread);
+	struct xnshadow_ppd_t *sys_ppd;
+
+	/* We enter the event handler with hw IRQs off. */
+	xnlock_get(&nklock);
+	sys_ppd = xnshadow_ppd_get(0);
+	xnlock_put(&nklock);
+	XENO_BUGON(NUCLEUS, sys_ppd == NULL);
+
+	xnarch_handle_mayday(tcb, regs, sys_ppd->mayday_addr);
+}
+
+RTHAL_DECLARE_MAYDAY_EVENT(mayday_event);
+
+#else /* !XNARCH_HAVE_MAYDAY */
+
+static int xnshadow_sys_mayday(struct pt_regs *regs)
+{
+	return -ENOSYS;
+}
+
+static inline int mayday_init_page(void)
+{
+	return 0;
+}
+
+static inline void mayday_cleanup_page(void)
+{
+}
+
+#endif /* XNARCH_HAVE_MAYDAY */
+
 static int xnshadow_sys_bind(struct pt_regs *regs)
 {
 	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
@@ -1656,6 +1791,16 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 
 	sys_ppd->key.muxid = 0;
 	sys_ppd->key.mm = current->mm;
+#ifdef XNARCH_HAVE_MAYDAY
+	sys_ppd->mayday_addr = map_mayday_page(current);
+	if (sys_ppd->mayday_addr == 0) {
+		printk(KERN_WARNING
+		       "Xenomai: %s[%d] cannot map MAYDAY page\n",
+		       current->comm, current->pid);
+		err = -ENOMEM;
+		goto fail_destroy_sys_ppd;
+	}
+#endif /* XNARCH_HAVE_MAYDAY */
 
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
@@ -1985,6 +2130,7 @@ static xnsysent_t __systab[] = {
 		{&xnshadow_sys_get_next_sigs, __xn_exec_conforming},
 	[__xn_sys_drop_u_mode] =
 		{&xnshadow_sys_drop_u_mode, __xn_exec_shadow},
+	[__xn_sys_mayday] = {&xnshadow_sys_mayday, __xn_exec_any|__xn_exec_norestart},
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -2753,6 +2899,7 @@ void xnshadow_grab_events(void)
 	rthal_catch_schedule(&schedule_event);
 	rthal_catch_setsched(&setsched_event);
 	rthal_catch_cleanup(&cleanup_event);
+	rthal_catch_return(&mayday_event);
 }
 
 void xnshadow_release_events(void)
@@ -2762,13 +2909,14 @@ void xnshadow_release_events(void)
 	rthal_catch_schedule(NULL);
 	rthal_catch_setsched(NULL);
 	rthal_catch_cleanup(NULL);
+	rthal_catch_return(NULL);
 }
 
 int xnshadow_mount(void)
 {
 	struct xnsched *sched;
 	unsigned i, size;
-	int cpu;
+	int cpu, ret;
 
 	nucleus_muxid = -1;
 
@@ -2776,7 +2924,7 @@ int xnshadow_mount(void)
 	nkerrptd = rthal_alloc_ptdkey();
 
 	if (nkthrptd < 0 || nkerrptd < 0) {
-		printk(KERN_WARNING "Xenomai: cannot allocate PTD slots\n");
+		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
 		return -ENOMEM;
 	}
 
@@ -2795,6 +2943,16 @@ int xnshadow_mount(void)
 				   "gatekeeper/%d", cpu);
 		wake_up_process(sched->gatekeeper);
 		down(&sched->gksync);
+	}
+
+	/*
+	 * Setup the mayday page early, before userland can mess with
+	 * real-time ops.
+	 */
+	ret = mayday_init_page();
+	if (ret) {
+		xnshadow_cleanup();
+		return ret;
 	}
 
 	/* We need to grab these ones right now. */
@@ -2836,10 +2994,10 @@ void xnshadow_cleanup(void)
 	struct xnsched *sched;
 	int cpu;
 
-	if (nucleus_muxid >= 0)
+	if (nucleus_muxid >= 0) {
 		xnshadow_unregister_interface(nucleus_muxid);
-
-	nucleus_muxid = -1;
+		nucleus_muxid = -1;
+	}
 
 	if (ppd_hash)
 		xnarch_free_host_mem(ppd_hash,
@@ -2862,6 +3020,8 @@ void xnshadow_cleanup(void)
 	rthal_apc_free(lostage_apc);
 	rthal_free_ptdkey(nkerrptd);
 	rthal_free_ptdkey(nkthrptd);
+
+	mayday_cleanup_page();
 }
 
 #ifdef CONFIG_PROC_FS
