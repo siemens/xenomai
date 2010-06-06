@@ -48,6 +48,13 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
     unsigned long *stackbase;   /* Stack space */
     unsigned long esp;          /* Saved ESP for kernel-based threads */
     unsigned long eip;          /* Saved EIP for kernel-based threads */
+#ifdef XNARCH_HAVE_MAYDAY
+	struct {
+		unsigned long eip;
+		unsigned long eax;
+		unsigned long ebp;
+	} mayday;
+#endif
 
     /* User mode side */
     struct task_struct *user_task;      /* Shadowed user-space task */

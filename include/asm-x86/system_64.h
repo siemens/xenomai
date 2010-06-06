@@ -47,6 +47,13 @@ typedef struct xnarchtcb {      /* Per-thread arch-dependent block */
 	struct task_struct *user_task; /* Shadowed user-space task */
 	struct task_struct *active_task; /* Active user-space task */
 	x86_fpustate *fpup;	/* &i387 or &user->thread.i387 */
+#ifdef XNARCH_HAVE_MAYDAY
+	struct {
+		unsigned long eip;
+		unsigned long eax;
+		unsigned long r9;
+	} mayday;
+#endif
 
 	/* Private context for kernel threads. */
 	x86_fpustate i387;

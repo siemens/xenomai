@@ -52,4 +52,75 @@ static void xnarch_schedule_tail(struct task_struct *prev)
 {
 }
 
+#ifdef XNARCH_HAVE_MAYDAY
+
+static inline void xnarch_setup_mayday_page(void *page)
+{
+	/*
+	 * We want this code to appear at the top of the MAYDAY page:
+	 *
+	 * 	b8 2b 02 00 0c       	mov    $<mux_code>,%eax
+	 *      49 c7 c1 00 00 00 00 	mov    $0x0,%r9
+	 * 	0f 05                	syscall
+	 * 	0f 0b                	ud2a
+	 *
+	 * We intentionally don't mess with EFLAGS here, so that we
+	 * don't have to save/restore it in handle/fixup code.
+	 */
+	static const struct {
+		struct __attribute__ ((__packed__)) {
+			u8 op;
+			u32 imm;
+		} mov_eax;
+		struct __attribute__ ((__packed__)) {
+			u8 op[3];
+			u32 imm;
+		} mov_r9;
+		u16 syscall;
+		u16 bug;
+	} code = {
+		.mov_eax = {
+			.op = 0xb8,
+			.imm = __xn_mux_code(0, __xn_sys_mayday)
+		},
+		.mov_r9 = {
+			.op = {
+				0x49, 0xc7, 0xc1
+			},
+			.imm = 0
+		},
+		.syscall = 0x050f,
+		.bug = 0x0b0f,
+	};
+
+	memcpy(page, &code, sizeof(code));
+
+	/* no cache flush required. */
+}
+
+static inline void xnarch_call_mayday(void)
+{
+	rthal_return_intercept(current);
+}
+
+static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,
+					struct pt_regs *regs,
+					unsigned long tramp)
+{
+	tcb->mayday.eip = regs->x86reg_ip;
+	tcb->mayday.eax = regs->x86reg_ax;
+	tcb->mayday.r9 = regs->r9;
+	regs->x86reg_ip = tramp;
+}
+
+static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
+				       struct pt_regs *regs)
+{
+	regs->x86reg_ip = tcb->mayday.eip;
+	regs->x86reg_ax = tcb->mayday.eax;
+	regs->r9 = tcb->mayday.r9;
+}
+
+#endif /* XNARCH_HAVE_MAYDAY */
+
 #endif /* !_XENO_ASM_X86_BITS_SHADOW_64_H */
