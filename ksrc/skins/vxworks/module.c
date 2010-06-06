@@ -39,14 +39,7 @@ xntbase_t *wind_tbase;
 
 wind_rholder_t __wind_global_rholder;
 
-#ifdef CONFIG_PROC_FS
-xnptree_t __vxworks_ptree = {
-
-	.dir = NULL,
-	.name = "vxworks",
-	.entries = 0,
-};
-#endif /* CONFIG_PROC_FS */
+DEFINE_XNPTREE(__vxworks_ptree, "vxworks");
 
 int SKIN_INIT(vxworks)
 {

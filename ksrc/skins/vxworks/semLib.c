@@ -35,74 +35,117 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count);
 
 #ifdef CONFIG_PROC_FS
 
-static int sem_read_proc(char *page,
-			 char **start,
-			 off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	const char *type;
+	char owner[XNOBJECT_NAME_LEN];
+	unsigned int count;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	wind_sem_t *sem = (wind_sem_t *)data;
-	xnpholder_t *holder;
-	xnthread_t *sleeper;
-	char *p = page;
-	xnpqueue_t *q;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_sem_t *sem = xnvfile_priv(it->vfile);
+	struct xnthread *owner;
 
-	xnlock_get_irqsave(&nklock, s);
+	sem = wind_h2obj_active((SEM_ID)sem, WIND_SEM_MAGIC, wind_sem_t);
+	if (sem == NULL)
+		return -EIDRM;
 
-	p += sprintf(p, "type=%s:", sem->vtbl->type);
+	priv->curr = getheadpq(xnsynch_wait_queue(&sem->synchbase));
+	priv->type = sem->vtbl->type;
 
 	if (sem->vtbl == &semm_vtbl) {
-		p += sprintf(p, "state=%s", xnsynch_owner(&sem->synchbase) ? "locked" : "unlocked");
-		if (xnsynch_owner(&sem->synchbase) != NULL)
-			p += sprintf(p, " (%s)\n",
-				     xnthread_name(xnsynch_owner(&sem->synchbase)));
+		owner = xnsynch_owner(&sem->synchbase);
+		if (owner)
+			strncpy(priv->owner, xnthread_name(owner),
+				sizeof(priv->owner));
 		else
-			p += sprintf(p, "\n");
+			*priv->owner = 0;
+		priv->count = -1U;
 	} else
-		p += sprintf(p, "value=%u\n", sem->count);
+		priv->count = sem->count;
 
-	q = xnsynch_wait_queue(&sem->synchbase);
-	if (xnsynch_nsleepers(&sem->synchbase) > 0) {
-		/* Pended semaphore -- dump waiters. */
-		holder = getheadpq(q);
-		while (holder) {
-			sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder = nextpq(q, holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&sem->synchbase);
 }
 
-extern xnptree_t __vxworks_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_sem_t *sem = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t sem_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "semaphores",
-	.entries = 0,
-	.read_proc = &sem_read_proc,
-	.write_proc = NULL,
-	.root = &__vxworks_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&sem->synchbase),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		if (priv->count == -1U) {
+			xnvfile_printf(it,
+				       "state=%s", *priv->owner ?
+				       "locked" : "unlocked");
+			if (*priv->owner)
+				xnvfile_printf(it, " (%s)\n", priv->owner);
+			else
+				xnvfile_printf(it, "\n");
+		} else
+			xnvfile_printf(it, "value=%u\n", priv->count);
+		if (it->nrdata > 0)
+			/* Semaphore is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __vxworks_ptree;
+
+static struct xnpnode_snapshot __sem_pnode = {
+	.node = {
+		.dirname = "semaphores",
+		.root = &__vxworks_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t sem_pnode = {
-
-	.type = "semaphores"
+static struct xnpnode_snapshot __sem_pnode = {
+	.node = {
+		.dirname = "semaphores",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -446,7 +489,7 @@ static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count)
 
 	sprintf(sem->name, "sem%lu", sem_ids++);
 
-	if (xnregistry_enter(sem->name, sem, &sem->handle, &sem_pnode)) {
+	if (xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode.node)) {
 		wind_errnoset(S_objLib_OBJ_ID_ERROR);
 		semDelete((SEM_ID)sem);
 		return 0;
