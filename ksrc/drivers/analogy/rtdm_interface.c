@@ -131,14 +131,15 @@ int a4l_open(struct rtdm_dev_context *context,
 	a4l_set_dev(cxt);
 
 	/* Initialize the buffer structure */
-	a4l_init_buffer(&cxt->buffer);
+	cxt->buffer = rtdm_malloc(sizeof(a4l_buf_t));
+	a4l_init_buffer(cxt->buffer);
 
 	/* Allocate the asynchronous buffer 
 	   NOTE: it should be interesting to allocate the buffer only
 	   on demand especially if the system is short of memory
 	   NOTE2: the default buffer size could be configured via
 	   kernel config*/
-	a4l_alloc_buffer(&cxt->buffer, A4L_DEFAULT_BFSIZE);
+	a4l_alloc_buffer(cxt->buffer, A4L_DEFAULT_BFSIZE);
 
 	return 0;
 }
@@ -149,15 +150,20 @@ int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Cancel the maybe occuring asynchronous transfer */
-	err = a4l_cancel_buffer(&cxt->buffer);
+	err = a4l_cancel_buffer(cxt->buffer);
 	if (err < 0) {
 		__a4l_err("close: unable to stop the asynchronous transfer\n"); 
 		return err;
 	}
 
 	/* Free the buffer which was linked with this context */
-	err = a4l_free_buffer(&cxt->buffer);
+	err = a4l_free_buffer(cxt->buffer);
+	if (err < 0)
+		goto out;
 
+	rtdm_free(cxt->buffer);
+
+out:
 	return err;
 }
 

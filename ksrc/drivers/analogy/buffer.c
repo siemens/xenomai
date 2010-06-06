@@ -493,10 +493,10 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 
 	subd = dev->transfer.subds[idx_subd];
 	
-	if (subd != cxt->buffer.subd) {
+	if (subd != cxt->buffer->subd) {
 		__a4l_err("a4l_ioctl_cancel: "
 			  "current context works on another subdevice "
-			  "(%d!=%d)\n", cxt->buffer.subd->idx, subd->idx);
+			  "(%d!=%d)\n", cxt->buffer->subd->idx, subd->idx);
 		return -EINVAL;		
 	}
 
@@ -658,7 +658,7 @@ a4l_ioctl_bufinfo_out:
 ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = &cxt->buffer;
+	a4l_buf_t *buf = cxt->buffer;
 	a4l_buf_t *subd = buf->subd;
 	ssize_t count = 0;
 
@@ -758,7 +758,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 		  const void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = &cxt->buffer;
+	a4l_buf_t *buf = cxt->buffer;
 	a4l_subd_t *subd = buf->subd;
 	ssize_t count = 0;
 
@@ -849,7 +849,7 @@ int a4l_select(a4l_cxt_t *cxt,
 	       enum rtdm_selecttype type, unsigned fd_index)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = &cxt->buffer;
+	a4l_buf_t *buf = cxt->buffer;
 	a4l_subd_t *subd = buf->subd;
 
 	/* Basic checkings */
@@ -894,7 +894,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	int ret = 0;
 	unsigned long tmp_cnt = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = &cxt->buffer;
+	a4l_buf_t *buf = cxt->buffer;
 	a4l_buf_t *subd = buf->subd;	
 	a4l_poll_t poll;
 
