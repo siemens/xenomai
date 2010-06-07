@@ -55,47 +55,62 @@ xnqueue_t xnshm_allocq;
 
 #ifdef CONFIG_PROC_FS
 
-extern xnptree_t __rtai_ptree;
+struct vfile_priv {
+	int size;
+	char szName[6];
+	unsigned long name;
+	unsigned int refcnt;
+};
 
-static int __shm_read_proc(char *page,
-			   char **start,
-			   off_t off, int count, int *eof, void *data)
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	xnshm_a_t *p = data;
-	char *ptrW = page;
-	int len;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	xnshm_a_t *shm = xnvfile_priv(it->vfile);
 
-	ptrW += sprintf(ptrW, "Name   - Ptr      - Size     - Ref\n");
-	ptrW +=	sprintf(ptrW, "%s - %08lX - %08X - %i\n",
-			p->szName, p->name, p->size, p->ref);
+	priv->size = shm->size;
+	memcpy(priv->szName, shm->szName, sizeof(priv->szName));
+	priv->name = shm->name;
+	priv->refcnt = shm->ref;
 
-	len = ptrW - page - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
-static xnpnode_t __shm_pnode = {
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 
-	.dir = NULL,
-	.type = "shm",
-	.entries = 0,
-	.read_proc = &__shm_read_proc,
-	.write_proc = NULL,
-	.root = &__rtai_ptree,
+	xnvfile_printf(it, "Name   - Ptr      - Size     - Ref\n");
+	xnvfile_printf(it, "%s - %08lX - %08X - %i\n",
+		       priv->szName, priv->name, priv->size, priv->refcnt);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.show = vfile_show,
+};
+
+extern struct xnptree __rtai_ptree;
+
+static struct xnpnode_snapshot __shm_pnode = {
+	.node = {
+		.dirname = "shm",
+		.root = &__rtai_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __shm_pnode = {
-
-	.type = "fifo"
+static struct xnpnode_snapshot __shm_pnode = {
+	.node = {
+		.dirname = "shm",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -236,7 +251,7 @@ void *_shm_alloc(unsigned long name, int size, int suprt, int in_kheap,
 
 	p->handle = 0;
 	num2nam(p->name, p->szName);
-	xnregistry_enter(p->szName, p, &p->handle, &__shm_pnode);
+	xnregistry_enter(p->szName, p, &p->handle, &__shm_pnode.node);
 
 	ret = p->chunk;
 

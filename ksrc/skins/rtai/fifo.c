@@ -27,49 +27,63 @@ static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
 
 #ifdef CONFIG_PROC_FS
 
-extern xnptree_t __rtai_ptree;
+struct vfile_priv {
+	size_t bufsz;
+	size_t fillsz;
+	void *handler;
+	int refcnt;
+};
 
-static int __fifo_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_FIFO *p = data;
-	char *ptrW = page;
-	int len;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_FIFO *fifo = xnvfile_priv(it->vfile);
 
-	ptrW += sprintf(ptrW, "Size     - Written  - F - Handler  - Ref\n");
+	priv->bufsz = fifo->bufsz;
+	priv->fillsz = fifo->fillsz;
+	priv->handler = fifo->handler;
+	priv->refcnt = fifo->refcnt;
 
-	/* Output buffer:  xnpipe_mh_t *buffer; */
-	ptrW += sprintf(ptrW, "%08zX - %08zX - %p - %i\n",
-			p->bufsz, p->fillsz, p->handler, p->refcnt);
-
-	len = ptrW - page - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
-static xnpnode_t __fifo_pnode = {
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 
-	.dir = NULL,
-	.type = "fifo",
-	.entries = 0,
-	.read_proc = &__fifo_read_proc,
-	.write_proc = NULL,
-	.root = &__rtai_ptree,
+	xnvfile_printf(it, "Size     - Written  - F - Handler  - Ref\n");
+	/* Output buffer:  xnpipe_mh_t *buffer; */
+	xnvfile_printf(it, "%08zX - %08zX - %p - %i\n",
+		       priv->bufsz, priv->fillsz, priv->handler, priv->refcnt);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.show = vfile_show,
+};
+
+extern struct xnptree __rtai_ptree;
+
+static struct xnpnode_snapshot __fifo_pnode = {
+	.node = {
+		.dirname = "fifo",
+		.root = &__rtai_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __fifo_pnode = {
-
-	.type = "fifo"
+static struct xnpnode_snapshot __fifo_pnode = {
+	.node = {
+		.dirname = "fifo",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -240,7 +254,7 @@ int rtf_create(unsigned minor, int size)
 
 	fifo->handle = 0;
 	snprintf(fifo->name, sizeof(fifo->name), "rtf%u", minor);
-	xnregistry_enter(fifo->name, fifo, &fifo->handle, &__fifo_pnode);
+	xnregistry_enter(fifo->name, fifo, &fifo->handle, &__fifo_pnode.node);
 
 	return minor;
 
