@@ -1,9 +1,14 @@
 menuconfig XENO_SKIN_RTAI
 	depends on XENO_OPT_NUCLEUS
-	tristate "RTAI emulator"
+	tristate "RTAI emulator (DEPRECATED)"
 	help
 
 	An emulator of the RTAI system.
+
+	WARNING: This emulator is DEPRECATED. It is planned for
+	removal in v2.6.x. Legacy applications depending on it should
+	be converted to the native Xenomai API, which provides
+	equivalent features, and more.
 
 if XENO_SKIN_RTAI
 
