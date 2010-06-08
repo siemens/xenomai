@@ -27,65 +27,94 @@ static xnqueue_t vrtx_queue_q;
 
 #ifdef CONFIG_PROC_FS
 
-static int __queue_read_proc(char *page,
-			     char **start,
-			     off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int qused;
+	int qsize;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxqueue_t *queue = (vrtxqueue_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxqueue *queue = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "mcount=%d, qsize=%d\n", queue->qused, queue->qsize);
+	priv->curr = getheadpq(xnsynch_wait_queue(&queue->synchbase));
+	priv->qused = queue->qused;
+	priv->qsize = queue->qsize;
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (xnsynch_nsleepers(&queue->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended queue -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&queue->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&queue->synchbase), holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&queue->synchbase);
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxqueue *queue = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __queue_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "queues",
-	.entries = 0,
-	.read_proc = &__queue_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&queue->synchbase),
+			    priv->curr);
+
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "mcount=%d, qsize=%d\n",
+			       priv->qused, priv->qsize);
+		if (it->nrdata > 0)
+			/* Queue is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __vrtx_ptree;
+
+static struct xnpnode_snapshot __queue_pnode = {
+	.node = {
+		.dirname = "queues",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __queue_pnode = {
-
-	.type = "queues"
+static struct xnpnode_snapshot __queue_pnode = {
+	.node = {
+		.dirname = "queues",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -178,7 +207,7 @@ int sc_qecreate(int qid, int qsize, int opt, int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(queue->name, "q%d", qid);
-	xnregistry_enter(queue->name, queue, &queue->handle, &__queue_pnode);
+	xnregistry_enter(queue->name, queue, &queue->handle, &__queue_pnode.node);
 
 	return qid;
 }

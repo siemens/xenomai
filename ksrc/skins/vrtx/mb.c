@@ -30,64 +30,89 @@ static xnqueue_t vrtx_mbox_q;
 
 #ifdef CONFIG_PROC_FS
 
-static int __mb_read_proc(char *page,
-			  char **start,
-			  off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	char *msg;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxmb_t *mb = (vrtxmb_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxmb *mb = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&mb->synchbase));
+	priv->msg = mb->msg;
 
-	if (xnsynch_nsleepers(&mb->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		holder = getheadpq(xnsynch_wait_queue(&mb->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&mb->synchbase),
-				   holder);
-		}
-	} else
-		/* Mailbox not pended. */
-		p += sprintf(p, "=%p\n", mb->msg);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&mb->synchbase);
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxmb *mb = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __mb_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "mailboxes",
-	.entries = 0,
-	.read_proc = &__mb_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&mb->synchbase),
+			    priv->curr);
+
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		if (it->nrdata == 0)
+			xnvfile_printf(it, "=%p\n", priv->msg);
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __vrtx_ptree;
+
+static struct xnpnode_snapshot __mb_pnode = {
+	.node = {
+		.dirname = "mailboxes",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __mb_pnode = {
-
-	.type = "mailboxes"
+static struct xnpnode_snapshot __mb_pnode = {
+	.node = {
+		.dirname = "mailboxes",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -213,7 +238,7 @@ vrtxmb_t *mb_map(char **mboxp)
 	mb_hash(mboxp, mb);
 
 	sprintf(mb->name, "mb@%p", mboxp);
-	xnregistry_enter(mb->name, mb, &mb->handle, &__mb_pnode);
+	xnregistry_enter(mb->name, mb, &mb->handle, &__mb_pnode.node);
 
 	return mb;
 }

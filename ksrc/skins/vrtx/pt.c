@@ -26,46 +26,59 @@ static xnqueue_t vrtx_pt_q;
 
 #ifdef CONFIG_PROC_FS
 
-static int __pt_read_proc(char *page,
-			  char **start,
-			  off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	u_long bsize;
+	u_long fblks;
+	u_long ublks;
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxpt_t *pt = (vrtxpt_t *)data;
-	char *p = page;
-	int len;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxpt *pt = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "bsize=%lu:f_blocks=%lu:u_blocks=%lu\n",
-		     pt->bsize, pt->fblks, pt->ublks);
+	priv->bsize = pt->bsize;
+	priv->fblks = pt->fblks;
+	priv->ublks = pt->ublks;
 
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 
-static xnpnode_t __pt_pnode = {
+	xnvfile_printf(it, "bsize=%lu:f_blocks=%lu:u_blocks=%lu\n",
+		       priv->bsize, priv->fblks, priv->ublks);
 
-	.dir = NULL,
-	.type = "partitions",
-	.entries = 0,
-	.read_proc = &__pt_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.show = vfile_show,
+};
+
+extern struct xnptree __vrtx_ptree;
+
+static struct xnpnode_snapshot __pt_pnode = {
+	.node = {
+		.dirname = "partitions",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __pt_pnode = {
-
-	.type = "partitions"
+static struct xnpnode_snapshot __pt_pnode = {
+	.node = {
+		.dirname = "partitions",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -205,7 +218,7 @@ int sc_pcreate(int pid, char *paddr, long psize, long bsize, int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(pt->name, "pt%d", pid);
-	xnregistry_enter(pt->name, pt, &pt->handle, &__pt_pnode);
+	xnregistry_enter(pt->name, pt, &pt->handle, &__pt_pnode.node);
 
 	return pid;
 }

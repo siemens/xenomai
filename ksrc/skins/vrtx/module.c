@@ -50,14 +50,7 @@ MODULE_PARM_DESC(task_stacksize, "Default size of VRTX task stack (in bytes)");
 
 xntbase_t *vrtx_tbase;
 
-#ifdef CONFIG_PROC_FS
-xnptree_t __vrtx_ptree = {
-
-	.dir = NULL,
-	.name = "vrtx",
-	.entries = 0,
-};
-#endif /* CONFIG_PROC_FS */
+DEFINE_XNPTREE(__vrtx_ptree, "vrtx");
 
 int sc_gversion(void)
 {

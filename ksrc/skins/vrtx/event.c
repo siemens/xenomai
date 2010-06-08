@@ -27,72 +27,102 @@ static xnqueue_t vrtx_event_q;
 
 #ifdef CONFIG_PROC_FS
 
-static int __event_read_proc(char *page,
-			     char **start,
-			     off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int value;
+};
+
+struct vfile_data {
+	int opt;
+	int mask;
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxevent_t *evgroup = (vrtxevent_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxevent *evgroup = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&evgroup->synchbase));
+	priv->value = evgroup->events;
 
-	p += sprintf(p, "=0x%x\n", evgroup->events);
-
-	if (xnsynch_nsleepers(&evgroup->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended event -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&evgroup->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			vrtxtask_t *task = thread2vrtxtask(sleeper);
-			const char *mode =
-			    (task->waitargs.evgroup.
-			     opt & 1) ? "all" : "any";
-			int mask = task->waitargs.evgroup.mask;
-			p += sprintf(p, "+%s (mask=0x%x, %s)\n",
-				     xnthread_name(sleeper), mask, mode);
-			holder =
-			    nextpq(xnsynch_wait_queue(&evgroup->synchbase),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&evgroup->synchbase);
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxevent *evgroup = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
+	struct vrtxtask *task;
 
-static xnpnode_t __event_pnode = {
+	priv->value = evgroup->events; /* Refresh as we collect. */
 
-	.dir = NULL,
-	.type = "events",
-	.entries = 0,
-	.read_proc = &__event_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
+
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&evgroup->synchbase),
+			    priv->curr);
+
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+	task = thread2vrtxtask(thread);
+	p->opt = task->waitargs.evgroup.opt;
+	p->mask = task->waitargs.evgroup.mask;
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		/* Always dump current event mask value. */
+		xnvfile_printf(it, "=0x%x\n", priv->value);
+		if (it->nrdata > 0)
+			xnvfile_printf(it, "\n%10s  %4s  %s\n",
+				       "MASK", "MODE", "WAITER");
+	} else
+		xnvfile_printf(it, "0x%-8x  %4s  %.*s\n",
+			       p->mask,
+			       p->opt & 1 ? "all" : "any",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
+};
+
+extern struct xnptree __vrtx_ptree;
+
+static struct xnpnode_snapshot __event_pnode = {
+	.node = {
+		.dirname = "events",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
 #else /* !CONFIG_PROC_FS */
 
-static xnpnode_t __event_pnode = {
-
-	.type = "events"
+static struct xnpnode_snapshot __vrtx_pnode = {
+	.node = {
+		.dirname = "events",
+	},
 };
 
 #endif /* !CONFIG_PROC_FS */
@@ -160,7 +190,7 @@ int sc_fcreate(int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(evgroup->name, "ev%d", evid);
-	xnregistry_enter(evgroup->name, evgroup, &evgroup->handle, &__event_pnode);
+	xnregistry_enter(evgroup->name, evgroup, &evgroup->handle, &__event_pnode.node);
 
 	*errp = RET_OK;
 
