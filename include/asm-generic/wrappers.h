@@ -343,10 +343,9 @@ unsigned long find_next_bit(const unsigned long *addr,
 /* VM */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15) && defined(CONFIG_MMU)
-#define wrap_remap_vm_page(vma,from,to) ({ \
-    vma->vm_flags |= VM_RESERVED; \
-    vm_insert_page(vma,from,vmalloc_to_page((void *)to)); \
-})
+#define wrap_remap_vm_page(vma,from,to) \
+    vm_insert_page(vma,from,vmalloc_to_page((void *)to))
+
 #define wrap_remap_io_page_range(vma,from,to,size,prot)  ({		\
     (vma)->vm_page_prot = pgprot_noncached((vma)->vm_page_prot);	\
     /* Sets VM_RESERVED | VM_IO | VM_PFNMAP on the vma. */		\
