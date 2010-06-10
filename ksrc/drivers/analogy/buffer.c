@@ -121,7 +121,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	if (buf_desc->subd == NULL) {
 		__a4l_err("a4l_setup_buffer: subdevice index "
 			  "out of range (%d)\n", cmd->idx_subd);
-		goto -EINVAL;
+		return -EINVAL;
 	}
 
 	/* Checks if the transfer system has to work in bulk mode */
@@ -155,7 +155,7 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	
 	int err = 0;
 	
-	if (!subd || !a4l_check_subd(subd))
+	if (!subd || !a4l_subd_is_busy(subd))
 		return 0;
 
 	/* If a "cancel" function is registered, call it
@@ -164,12 +164,11 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	   the "cancel" function can be used as as to (re)initialize 
 	   some component) */
 	if (subd->cancel != NULL && (err = subd->cancel(subd)) < 0) {
-		__a4l_err("a4l_cancel: "
-			  "subdevice %d cancel handler failed (err=%d)\n",
-			  idx_subd, err);
+		__a4l_err("a4l_cancel: cancel handler failed (err=%d)\n", err);
 	}
 
 	a4l_release_subd(subd);
+	subd->buf = NULL;
 
 	if (buf_desc->cur_cmd != NULL) {
 		a4l_free_cmddesc(buf_desc->cur_cmd);
@@ -208,7 +207,7 @@ int a4l_get_chan(a4l_subd_t *subd)
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
 
-	tmp_count = dev->transfer.bufs[subd->idx]->mng_count % tmp_size;
+	tmp_count = subd->buf->mng_count % tmp_size;
 
 	/* Translation bytes -> bits */
 	tmp_count *= 8;
@@ -231,116 +230,174 @@ int a4l_get_chan(a4l_subd_t *subd)
 
 int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 
-	return __pre_abs_put(subd->buf, count);
+	return __pre_abs_put(buf, count);
 }
 
 
 int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 
-	return __abs_put(subd->buf, count);
+	return __abs_put(buf, count);
 }
 
 int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 
-	return __pre_put(subd->buf, count);
+	return __pre_put(buf, count);
 }
 
 int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 
-	return __put(subd->buf, count);	
+	return __put(buf, count);	
 }
 
 int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
+	a4l_buf_t *buf = subd->buf;
 	int err;
 
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0 || !subd->buf)
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 	
-	if (__count_to_put(subd->buf) < count)
+	if (__count_to_put(buf) < count)
 		return -EAGAIN;
 
-	err = __produce(NULL, subd->buf, bufdata, count);
+	err = __produce(NULL, buf, bufdata, count);
 	if (err < 0)
 		return err;	
 
-	err = __put(subd->buf, count);
+	err = __put(buf, count);
 
 	return err;
 }
 
 int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
 
-	return __pre_abs_get(subd->buf, count);
+	return __pre_abs_get(buf, count);
 }
 
 int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
 
-	return __abs_get(subd->buf, count);
+	return __abs_get(buf, count);
 }
 
 int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
 
-	return __pre_get(subd->buf, count);
+	return __pre_get(buf, count);
 }
 
 int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 {
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
+	a4l_buf_t *buf = subd->buf;
+
+	/* Basic checkings */
+
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
 
-	return __get(subd->buf, count);
+	return __get(buf, count);
 }
 
 int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
+	a4l_buf_t *buf = subd->buf;
 	int err;
 
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0 || !subd->buf)
+	/* Basic checkings */
+
+	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
 
-	if (__count_to_get(subd->buf) < count)
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
+
+	if (__count_to_get(buf) < count)
 		return -EAGAIN;
 
-	err = __consume(NULL, subd->buf, bufdata, count);
+	/* Update the counter */
+	err = __consume(NULL, buf, bufdata, count);
 	if (err < 0)
 		return err;
 
-	err = __get(subd->buf, count);
+	/* Perform the transfer */
+	err = __get(buf, count);
 
 	return err;
 }
 
 int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 {
+	a4l_buf_t *buf = subd->buf;
 	int tmp;
 
-	if (!subd->buf)
-		return -EINVAL;
+	/* Warning: here, there may be a condition race : the cancel
+	   function is called by the user side and a4l_buf_evt and all
+	   the a4l_buf_... functions are called by the kernel
+	   side. Nonetheless, the driver should be in charge of such
+	   race conditions, not the framework */
 
 	/* Basic checking */
-	if (!test_bit(A4L_SUBD_BUSY, subd->status))
+	if (!buf || !a4l_subd_is_busy(subd))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
@@ -352,22 +409,24 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 	}
 
 	/* Notify the user-space side */
-	a4l_signal_sync(&subd->buf->sync);
+	a4l_signal_sync(&buf->sync);
 
 	return 0;
 }
 
 unsigned long a4l_buf_count(a4l_subd_t *subd)
 {
+	a4l_buf_t *buf = subd->buf;
 	unsigned long ret = 0;
 
-	if (!subd->buf)
-		return -EINVAL;
+	/* Basic checking */
+	if (!buf || !a4l_subd_is_busy(subd))
+		return -ENOENT;
 
-	if (subd->flags & A4L_SUBD_MASK_READ)
-		ret = __count_to_put(subd->buf);
-	else if (subd->flags & A4L_SUBD_MASK_WRITE)
-		ret = __count_to_get(subd->buf);	
+	if (a4l_subd_is_input(subd))
+		ret = __count_to_put(buf);
+	else if (a4l_subd_is_output(subd))
+		ret = __count_to_get(buf);	
 
 	return ret;
 }
@@ -405,48 +464,28 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 	dev = a4l_get_dev(cxt);
 
-	/* Basically check the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	/* Basic checkings */
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_mmap: cannot mmap on "
 			  "an unattached device\n");
 		return -EINVAL;
 	}
 
-	/* Recover the argument structure */
-	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
-		return -EFAULT;
-
-	/* Check the subdevice */
-	if (map_cfg.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_mmap: subdevice index "
-			  "out of range (idx=%d)\n", map_cfg.idx_subd);
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_mmap: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_MMAP) == 0) {
-		__a4l_err("a4l_ioctl_mmap: mmap not allowed on this subdevice\n");
-		return -EINVAL;
-	}
-
-	/* Check the buffer is not already mapped */
-	if (test_bit(A4L_TSF_MMAP,
-		     &(dev->transfer.status[map_cfg.idx_subd]))) {
-		__a4l_err("a4l_ioctl_mmap: mmap is already done\n");
+	if (test_bit(A4L_BUF_MAP_NR, &buf->flags)) {
+		__a4l_err("a4l_ioctl_mmap: buffer already mapped\n");
 		return -EBUSY;
 	}
 
-	/* Basically check the size to be mapped */
-	if ((map_cfg.size & ~(PAGE_MASK)) != 0 ||
-	    map_cfg.size > dev->transfer.bufs[map_cfg.idx_subd]->size)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
+		return -EFAULT;	
+
+	/* Check the size to be mapped */
+	if ((map_cfg.size & ~(PAGE_MASK)) != 0 || map_cfg.size > buf->size)
 		return -EFAULT;
 
+	/* All the magic is here */
 	ret = rtdm_mmap_to_user(cxt->user_info,
 				dev->transfer.bufs[map_cfg.idx_subd]->buf,
 				map_cfg.size,
@@ -583,7 +622,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 	ret = __handle_event(buf);
 
-	if (a4l_subd_is_input(sudb)) {
+	if (a4l_subd_is_input(subd)) {
 
 		/* Updates consume count if rw_count is not null */
 		if (info.rw_count != 0)
@@ -600,7 +639,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 			a4l_cancel_buffer(cxt);
 			return ret;
 		}
-	} else if (a4l_subd_is_output(sudb)) {
+	} else if (a4l_subd_is_output(subd)) {
 
 		if (ret < 0) {
 			a4l_cancel_buffer(cxt);
@@ -674,8 +713,8 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		return -ENOENT;
 	}
 
-	if (!a4l_subd_is_input(sudb)) {
-		__a4l_err("a4l_select: current context "
+	if (!a4l_subd_is_input(subd)) {
+		__a4l_err("a4l_read: current context "
 			  "does not work with an input subdevice\n");
 		return -EINVAL;
 	}
@@ -774,8 +813,8 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 		return -ENOENT;
 	}
 
-	if (!a4l_subd_is_output(sudb)) {
-		__a4l_err("a4l_select: current context "
+	if (!a4l_subd_is_output(subd)) {
+		__a4l_err("a4l_write: current context "
 			  "does not work with an output subdevice\n");
 		return -EINVAL;
 	}
@@ -923,7 +962,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 
 	/* Retrieves the data amount to compute 
 	   according to the subdevice type */
-	if (a4l_subd_is_input(sudb)) {
+	if (a4l_subd_is_input(subd)) {
 
 		tmp_cnt = __count_to_get(buf);
 
@@ -963,8 +1002,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 
 	if (ret == 0) {
 		/* Retrieves the count once more */
-		if ((dev->transfer.subds[poll.idx_subd]->flags &
-		     A4L_SUBD_MASK_READ) != 0)
+		if (a4l_subd_is_input(dev->transfer.subds[poll.idx_subd]))
 			tmp_cnt = __count_to_get(buf);
 		else
 			tmp_cnt = __count_to_put(buf);
