@@ -53,7 +53,7 @@ int a4l_precleanup_transfer(a4l_cxt_t * cxt)
 
 		__a4l_dbg(1, core_dbg, 
 			  "a4l_precleanup_transfer: "
-			  "subd[%d]->status=0x%08x\n", *status);
+			  "subd[%d]->status=0x%08lx\n", i, *status);
 
 		if (test_and_set_bit(A4L_SUBD_BUSY, status)) {
 			__a4l_err("a4l_precleanup_transfer: "
@@ -83,7 +83,6 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 {
 	a4l_dev_t *dev;
 	a4l_trf_t *tsf;
-	int i;
 
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;

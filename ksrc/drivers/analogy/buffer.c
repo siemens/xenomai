@@ -436,13 +436,13 @@ unsigned long a4l_buf_count(a4l_subd_t *subd)
 void a4l_map(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	set_bit(A4L_TSF_MMAP, status);
+	set_bit(A4L_BUF_MAP_NR, status);
 }
 
 void a4l_unmap(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	clear_bit(A4L_TSF_MMAP, status);
+	clear_bit(A4L_BUF_MAP_NR, status);
 }
 
 static struct vm_operations_struct a4l_vm_ops = {
@@ -454,6 +454,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 {
 	a4l_mmap_t map_cfg;
 	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	int ret;
 
 	/* The mmap operation cannot be performed in a 
@@ -463,6 +464,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	}
 
 	dev = a4l_get_dev(cxt);
+	buf = cxt->buffer;
 
 	/* Basic checkings */
 
@@ -487,12 +489,10 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 	/* All the magic is here */
 	ret = rtdm_mmap_to_user(cxt->user_info,
-				dev->transfer.bufs[map_cfg.idx_subd]->buf,
+				buf->buf,
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
-				&map_cfg.ptr,
-				&a4l_vm_ops,
-				&(dev->transfer.status[map_cfg.idx_subd]));
+				&map_cfg.ptr, &a4l_vm_ops, &buf->flags);
 
 	if (ret < 0) {
 		__a4l_err("a4l_ioctl_mmap: internal error, "
@@ -545,7 +545,7 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf = cxt->buf;
+	a4l_buf_t *buf = cxt->buffer;
 	a4l_subd_t *subd = buf->subd;
 	a4l_bufcfg_t buf_cfg;
 
@@ -593,7 +593,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
-	a4l_buf_t *subd = buf->subd;
+	a4l_subd_t *subd = buf->subd;
 	a4l_bufinfo_t info;
 
 	unsigned long tmp_cnt;
@@ -694,11 +694,11 @@ a4l_ioctl_bufinfo_out:
 	return 0;
 }
 
-ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
+ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
-	a4l_buf_t *subd = buf->subd;
+	a4l_subd_t *subd = buf->subd;
 	ssize_t count = 0;
 
 	/* Basic checkings */
@@ -793,8 +793,7 @@ out_a4l_read:
 	return count;
 }
 
-ssize_t a4l_write(a4l_cxt_t *cxt, 
-		  const void *bufdata, size_t nbytes)
+ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
@@ -934,7 +933,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	unsigned long tmp_cnt = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
-	a4l_buf_t *subd = buf->subd;	
+	a4l_subd_t *subd = buf->subd;	
 	a4l_poll_t poll;
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))

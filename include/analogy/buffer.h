@@ -35,20 +35,23 @@
 #include <analogy/os_facilities.h>
 #include <analogy/context.h>
 
-/* Events bits */
+/* --- Events bits / flags --- */
+
 #define A4L_BUF_EOBUF_NR 0
-#define A4L_BUF_ERROR_NR 1
-#define A4L_BUF_EOA_NR 2
-/* Events flags */
 #define A4L_BUF_EOBUF (1 << A4L_BUF_EOBUF_NR)
+
+#define A4L_BUF_ERROR_NR 1
 #define A4L_BUF_ERROR (1 << A4L_BUF_ERROR_NR)
+
+#define A4L_BUF_EOA_NR 2
 #define A4L_BUF_EOA (1 << A4L_BUF_EOA_NR)
 
-/* Status bits */
+/* --- Status bits / flags --- */
+
 #define A4L_BUF_BULK_NR 8
-#define A4L_BUF_MAP_NR 9
-/* Status flags */
 #define A4L_BUF_BULK (1 << A4L_BUF_BULK_NR)
+
+#define A4L_BUF_MAP_NR 9
 #define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
 
 struct a4l_subdevice;
@@ -391,9 +394,8 @@ int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg);
-ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
-ssize_t a4l_write(a4l_cxt_t * cxt, 
-		  const void *bufdata, size_t nbytes);
+ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
+ssize_t a4l_write_buffer(a4l_cxt_t * cxt, const void *bufdata, size_t nbytes);
 int a4l_select(a4l_cxt_t *cxt, 
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index);

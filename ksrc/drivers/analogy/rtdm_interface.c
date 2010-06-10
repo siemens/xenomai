@@ -150,21 +150,18 @@ int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
 	/* Cancel the maybe occuring asynchronous transfer */
-	err = a4l_cancel_buffer(cxt->buffer);
+	err = a4l_cancel_buffer(cxt);
 	if (err < 0) {
 		__a4l_err("close: unable to stop the asynchronous transfer\n"); 
 		return err;
 	}
 
 	/* Free the buffer which was linked with this context */
-	err = a4l_free_buffer(cxt->buffer);
-	if (err < 0)
-		goto out;
+	a4l_free_buffer(cxt->buffer);
 
 	rtdm_free(cxt->buffer);
 
-out:
-	return err;
+	return 0;
 }
 
 ssize_t a4l_read(struct rtdm_dev_context * context,
@@ -181,7 +178,7 @@ ssize_t a4l_read(struct rtdm_dev_context * context,
 
 	cxt->user_info = user_info;
 
-	return a4l_read(cxt, buf, nbytes);
+	return a4l_read_buffer(cxt, buf, nbytes);
 }
 
 ssize_t a4l_write(struct rtdm_dev_context * context,
@@ -198,7 +195,7 @@ ssize_t a4l_write(struct rtdm_dev_context * context,
 
 	cxt->user_info = user_info;
 
-	return a4l_write(cxt, buf, nbytes);
+	return a4l_write_buffer(cxt, buf, nbytes);
 }
 
 int a4l_ioctl(struct rtdm_dev_context *context,
