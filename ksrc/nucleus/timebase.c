@@ -165,6 +165,7 @@ int xntbase_alloc(const char *name, u_long period, u_long flags,
 	xntbase_declare_proc(base);
 	xnlock_get_irqsave(&nklock, s);
 	appendq(&nktimebaseq, &base->link);
+	xnvfile_touch_tag(&tbaselist_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnarch_declare_tbase(base);
@@ -209,6 +210,7 @@ void xntbase_free(xntbase_t *base)
 
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&nktimebaseq, &base->link);
+	xnvfile_touch_tag(&tbaselist_tag);
 	xnlock_put_irqrestore(&nklock, s);
 
 	xnarch_free_host_mem(base, sizeof(*base));
@@ -620,256 +622,225 @@ EXPORT_SYMBOL_GPL(xntbase_adjust_time);
 
 #ifdef CONFIG_PROC_FS
 
-#include <linux/proc_fs.h>
+struct xnvfile_rev_tag tbaselist_tag;
+
+static struct xnvfile_snapshot_ops tbase_vfile_ops;
+
+struct tbase_vfile_priv {
+	struct xnholder *curr;
+};
+
+struct tbase_vfile_data {
+	unsigned int enabled : 1;
+	unsigned int set : 1;
+	unsigned int isolated : 1;
+	unsigned int periodic : 1;
+	xnticks_t jiffies;
+	unsigned long tickvalue;
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static struct xnvfile_snapshot tbase_vfile = {
+	.privsz = sizeof(struct tbase_vfile_priv),
+	.datasz = sizeof(struct tbase_vfile_data),
+	.tag = &tbaselist_tag,
+	.ops = &tbase_vfile_ops,
+};
+
+static int tbase_vfile_rewind(struct xnvfile_snapshot_iterator *it)
+{
+	struct tbase_vfile_priv *priv = xnvfile_iterator_priv(it);
+
+	priv->curr = getheadq(&nktimebaseq);
+
+	return countq(&nktimebaseq);
+}
+
+static int tbase_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct tbase_vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct tbase_vfile_data *p = data;
+	struct xntbase *base;
+
+	if (priv->curr == NULL)
+		return 0;
+
+	base = link2tbase(priv->curr);
+	priv->curr = nextq(&nktimebaseq, priv->curr);
+
+	xnobject_copy_name(p->name, base->name);
+	p->tickvalue = base->tickvalue;
+	p->jiffies = base->jiffies;
+	p->enabled = xntbase_enabled_p(base);
+	p->set = xntbase_timeset_p(base);
+	p->isolated = xntbase_isolated_p(base);
+	p->periodic = xntbase_periodic_p(base);
+
+	return 1;
+}
+
+static int tbase_vfile_show(struct xnvfile_snapshot_iterator *it,
+			    void *data)
+{
+	struct tbase_vfile_data *p = data;
+
+	if (p == NULL) {
+		xnvfile_printf(it, "%-10s %10s  %10s   %s\n",
+			       "NAME", "RESOLUTION", "JIFFIES", "STATUS");
+		return 0;
+	}
+
+	if (p->periodic)
+		xnvfile_printf(it, "%-10s %10lu  %10Lu   %s%s%s\n",
+			       p->name,
+			       p->tickvalue,
+			       p->jiffies,
+			       p->enabled ? "enabled" : "disabled",
+			       p->set ? ",set" : ",unset",
+			       p->isolated ? ",isolated" : "");
+	else
+		xnvfile_printf(it, "%-10s %10s  %10s   %s\n",
+			       p->name,
+			       "1",
+			       "n/a",
+			       "enabled,set");
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops tbase_vfile_ops = {
+	.rewind = tbase_vfile_rewind,
+	.next = tbase_vfile_next,
+	.show = tbase_vfile_show,
+};
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-#include <linux/seq_file.h>
+struct xnvfile_directory tmstat_vfroot;
 
-static struct proc_dir_entry *tmstat_proc_root;
+static struct xnvfile_snapshot_ops tmstat_vfile_ops;
 
-struct tmstat_seq_iterator {
-	int nentries;
-	struct tmstat_seq_info {
-		int cpu;
-		unsigned int scheduled;
-		unsigned int fired;
-		xnticks_t timeout;
-		xnticks_t interval;
-		xnflags_t status;
-		char handler[12];
-		char name[XNOBJECT_NAME_LEN];
-	} stat_info[1];
+struct tmstat_vfile_priv {
+	struct xnholder *curr;
 };
 
-static void *tmstat_seq_start(struct seq_file *seq, loff_t *pos)
+struct tmstat_vfile_data {
+	int cpu;
+	unsigned int scheduled;
+	unsigned int fired;
+	xnticks_t timeout;
+	xnticks_t interval;
+	xnflags_t status;
+	char handler[12];
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int tmstat_vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	struct tmstat_seq_iterator *iter = seq->private;
+	struct tmstat_vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct xntbase *base = xnvfile_priv(it->vfile);
 
-	if (*pos > iter->nentries)
-		return NULL;
+	priv->curr = getheadq(&base->timerq);
 
-	if (*pos == 0)
-		return SEQ_START_TOKEN;
-
-	return iter->stat_info + *pos - 1;
+	return countq(&base->timerq);
 }
 
-static void *tmstat_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+static int tmstat_vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
 {
-	struct tmstat_seq_iterator *iter = seq->private;
+	struct tmstat_vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct xntbase *base = xnvfile_priv(it->vfile);
+	struct tmstat_vfile_data *p = data;
+	struct xntimer *timer;
 
-	++*pos;
+	if (priv->curr == NULL)
+		return 0;
 
-	if (*pos > iter->nentries)
-		return NULL;
+	timer = tblink2timer(priv->curr);
+	priv->curr = nextq(&base->timerq, priv->curr);
 
-	return iter->stat_info + *pos - 1;
+	if (xnstat_counter_get(&timer->scheduled) == 0)
+		return VFILE_SEQ_SKIP;
+
+	p->cpu = xnsched_cpu(xntimer_sched(timer));
+	p->scheduled = xnstat_counter_get(&timer->scheduled);
+	p->fired = xnstat_counter_get(&timer->fired);
+	p->timeout = xntimer_get_timeout(timer);
+	p->interval = xntimer_get_interval(timer);
+	p->status = timer->status;
+	memcpy(p->handler, timer->handler_name,
+	       sizeof(p->handler)-1);
+	p->handler[sizeof(p->handler)-1] = 0;
+	xnobject_copy_name(p->name, timer->name);
+
+	return 1;
 }
 
-static int tmstat_seq_show(struct seq_file *seq, void *v)
+static int tmstat_vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 {
-	if (v == SEQ_START_TOKEN)
-		seq_printf(seq,
-			   "%-3s  %-10s  %-10s  %-10s  %-10s  %-11s  %-15s\n",
-			   "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
-			   "INTERVAL", "HANDLER", "NAME");
+	struct tmstat_vfile_data *p = data;
+	char timeout_buf[]  = "-         ";
+	char interval_buf[] = "-         ";
+
+	if (p == NULL)
+		xnvfile_printf(it,
+			       "%-3s  %-10s  %-10s  %-10s  %-10s  %-11s  %-15s\n",
+			       "CPU", "SCHEDULED", "FIRED", "TIMEOUT",
+			       "INTERVAL", "HANDLER", "NAME");
 	else {
-		struct tmstat_seq_info *p = v;
-		char timeout_buf[21]  = "-         ";
-		char interval_buf[21] = "-         ";
-
 		if (!testbits(p->status, XNTIMER_DEQUEUED))
 			snprintf(timeout_buf, sizeof(timeout_buf), "%-10llu",
 				 p->timeout);
 		if (testbits(p->status, XNTIMER_PERIODIC))
 			snprintf(interval_buf, sizeof(interval_buf), "%-10llu",
 				 p->interval);
-		seq_printf(seq,
-			   "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
-			   p->cpu, p->scheduled, p->fired, timeout_buf,
-			   interval_buf, p->handler, p->name);
+		xnvfile_printf(it,
+			       "%-3u  %-10u  %-10u  %s  %s  %-11s  %-15s\n",
+			       p->cpu, p->scheduled, p->fired, timeout_buf,
+			       interval_buf, p->handler, p->name);
 	}
 
 	return 0;
 }
 
-static void tmstat_seq_stop(struct seq_file *seq, void *v)
-{
-}
-
-static struct seq_operations tmstat_op = {
-	.start = &tmstat_seq_start,
-	.next = &tmstat_seq_next,
-	.stop = &tmstat_seq_stop,
-	.show = &tmstat_seq_show
+static struct xnvfile_snapshot_ops tmstat_vfile_ops = {
+	.rewind = tmstat_vfile_rewind,
+	.next = tmstat_vfile_next,
+	.show = tmstat_vfile_show,
 };
 
-static int tmstat_seq_open(struct inode *inode, struct file *file)
+void xntbase_declare_proc(struct xntbase *base)
 {
-	xntbase_t *base = PDE(inode)->data;
-	struct tmstat_seq_iterator *iter = NULL;
-	struct seq_file *seq;
-	xnholder_t *holder;
-	struct tmstat_seq_info *stat_info;
-	int err, count, tmq_rev;
-	spl_t s;
+	memset(&base->vfile, 0, sizeof(base->vfile));
+	base->vfile.privsz = sizeof(struct tmstat_vfile_priv);
+	base->vfile.datasz = sizeof(struct tmstat_vfile_data);
+	base->vfile.tag = &base->revtag;
+	base->vfile.ops = &tmstat_vfile_ops;
 
-	if (!xnpod_active_p())
-		return -ESRCH;
-
-	xnlock_get_irqsave(&nklock, s);
-
-      restart:
-	count = countq(&base->timerq);
-	holder = getheadq(&base->timerq);
-	tmq_rev = base->timerq_rev;
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (iter)
-		kfree(iter);
-	iter = kmalloc(sizeof(*iter)
-		       + (count - 1) * sizeof(struct tmstat_seq_info),
-		       GFP_KERNEL);
-	if (!iter)
-		return -ENOMEM;
-
-	err = seq_open(file, &tmstat_op);
-
-	if (err) {
-		kfree(iter);
-		return err;
-	}
-
-	iter->nentries = 0;
-
-	/* Take a snapshot element-wise, restart if something changes
-	   underneath us. */
-
-	while (holder) {
-		xntimer_t *timer;
-
-		xnlock_get_irqsave(&nklock, s);
-
-		if (base->timerq_rev != tmq_rev)
-			goto restart;
-
-		timer = tblink2timer(holder);
-		/* Skip inactive timers */
-		if (xnstat_counter_get(&timer->scheduled) == 0)
-			goto skip;
-
-		stat_info = &iter->stat_info[iter->nentries++];
-
-		stat_info->cpu = xnsched_cpu(xntimer_sched(timer));
-		stat_info->scheduled = xnstat_counter_get(&timer->scheduled);
-		stat_info->fired = xnstat_counter_get(&timer->fired);
-		stat_info->timeout = xntimer_get_timeout(timer);
-		stat_info->interval = xntimer_get_interval(timer);
-		stat_info->status = timer->status;
-		memcpy(stat_info->handler, timer->handler_name,
-		       sizeof(stat_info->handler)-1);
-		stat_info->handler[sizeof(stat_info->handler)-1] = 0;
-		xnobject_copy_name(stat_info->name, timer->name);
-
-	      skip:
-		holder = nextq(&base->timerq, holder);
-
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	seq = file->private_data;
-	seq->private = iter;
-
-	return 0;
+	xnvfile_init_snapshot(base->name, &base->vfile, &tmstat_vfroot);
+	xnvfile_priv(&base->vfile) = base;
 }
 
-static struct file_operations tmstat_seq_operations = {
-	.owner = THIS_MODULE,
-	.open = tmstat_seq_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release_private,
-};
-
-void xntbase_declare_proc(xntbase_t *base)
+void xntbase_remove_proc(struct xntbase *base)
 {
-	struct proc_dir_entry *entry;
-
-	entry = rthal_add_proc_seq(base->name, &tmstat_seq_operations, 0,
-				   tmstat_proc_root);
-	if (entry)
-		entry->data = base;
-}
-
-void xntbase_remove_proc(xntbase_t *base)
-{
-	remove_proc_entry(base->name, tmstat_proc_root);
+	xnvfile_destroy_snapshot(&base->vfile);
 }
 
 #endif /* CONFIG_XENO_OPT_STATS */
-
-static int timebase_read_proc(char *page,
-			      char **start,
-			      off_t off, int count, int *eof, void *data)
-{
-	xnholder_t *holder;
-	xntbase_t *tbase;
-	char *p = page;
-	int len = 0;
-
-	p += sprintf(p, "%-10s %10s  %10s   %s\n",
-		     "NAME", "RESOLUTION", "JIFFIES", "STATUS");
-
-	for (holder = getheadq(&nktimebaseq);
-	     holder != NULL; holder = nextq(&nktimebaseq, holder)) {
-		tbase = link2tbase(holder);
-		if (xntbase_periodic_p(tbase))
-			p += sprintf(p, "%-10s %10lu  %10Lu   %s%s%s\n",
-				     tbase->name,
-				     tbase->tickvalue,
-				     tbase->jiffies,
-				     xntbase_enabled_p(tbase) ? "enabled" : "disabled",
-				     xntbase_timeset_p(tbase) ? ",set" : ",unset",
-				     xntbase_isolated_p(tbase) ? ",isolated" : "");
-		else
-			p += sprintf(p, "%-10s %10s  %10s   %s\n",
-				     tbase->name,
-				     "1",
-				     "n/a",
-				     "enabled,set");
-	}
-
-	len = p - page - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
-}
 
 void xntbase_init_proc(void)
 {
 #ifdef CONFIG_XENO_OPT_STATS
-	tmstat_proc_root =
-		create_proc_entry("timerstat", S_IFDIR, rthal_proc_root);
+	xnvfile_init_dir("timerstat", &tmstat_vfroot, &nkvfroot);
 #endif /* CONFIG_XENO_OPT_STATS */
-	rthal_add_proc_leaf("timebases", &timebase_read_proc, NULL, NULL,
-			    rthal_proc_root);
+	xnvfile_init_snapshot("timebases", &tbase_vfile, &nkvfroot);
 }
 
 void xntbase_cleanup_proc(void)
 {
-	remove_proc_entry("timebases", rthal_proc_root);
+	xnvfile_destroy_snapshot(&tbase_vfile);
 #ifdef CONFIG_XENO_OPT_STATS
-	/* All timebases must have been deregistered now. */
+	/* All timebases must have been deregistered by now. */
 	XENO_ASSERT(NUCLEUS, !getheadq(&nktimebaseq), ;);
-	remove_proc_entry("timerstat", rthal_proc_root);
+	xnvfile_destroy_dir(&tmstat_vfroot);
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 

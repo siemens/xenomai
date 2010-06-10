@@ -30,6 +30,8 @@
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
+#include <nucleus/vfile.h>
+
 struct xntimer;
 
 typedef struct xntbops {
@@ -75,9 +77,9 @@ typedef struct xntbase {
 #define link2tbase(ln)		container_of(ln, xntbase_t, link)
 
 #ifdef CONFIG_XENO_OPT_STATS
-	xnqueue_t timerq;	/* !< Timer holder in timebase. */
-
-	int timerq_rev;		/* !< Revision (for non-atomic list walks). */
+	struct xnvfile_snapshot vfile;	/* !< Virtual file for access. */
+	struct xnvfile_rev_tag revtag; /* !< Revision (for non-atomic list walks). */
+	struct xnqueue timerq;	/* !< Timer holder in timebase. */
 #endif /* CONFIG_XENO_OPT_STATS */
 
 } xntbase_t;
@@ -322,8 +324,6 @@ do {						\
 	removeq(&nktimebaseq, &nktbase.link);	\
 } while (0)
 
-#endif /* __KERNEL__ || __XENO_SIM__ */
-
 void xntbase_init_proc(void);
 
 void xntbase_cleanup_proc(void);
@@ -335,6 +335,10 @@ void xntbase_remove_proc(xntbase_t *base);
 static inline void xntbase_declare_proc(xntbase_t *base) { }
 static inline void xntbase_remove_proc(xntbase_t *base) { }
 #endif /* !CONFIG_XENO_OPT_STATS */
+
+extern struct xnvfile_rev_tag tbaselist_tag;
+
+#endif /* __KERNEL__ || __XENO_SIM__ */
 
 /*@}*/
 
