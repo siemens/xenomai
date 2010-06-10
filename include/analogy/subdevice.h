@@ -277,21 +277,19 @@ typedef struct a4l_rng_info_arg a4l_rnginfo_arg_t;
 
 #ifdef __KERNEL__
 
-/* --- Subdevice related functions --- */
+/* --- Subdevice related functions and macros --- */
+
 a4l_chan_t *a4l_get_chfeat(a4l_subd_t * sb, int idx);
-a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb,
-				      int chidx, int rngidx);
+a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb, int chidx, int rngidx);
 int a4l_check_chanlist(a4l_subd_t * subd,
 		       unsigned char nb_chan, unsigned int *chans);
-
-/* --- Upper layer functions --- */
 
 static inline int a4l_reserve_subd(a4l_subd_t *subd)
 {
         return test_and_set_bit(A4L_SUBD_BUSY, &subd->status) ? -EBUSY : 0;
 }
-#define a4l_release_subd(x) clear_bit(A4L_SUBD_BUSY, &(x)->status))
-#define a4l_subd_is_busy(x) test_bit(A4L_SUBD_BUSY, &(x)->status))
+#define a4l_release_subd(x) clear_bit(A4L_SUBD_BUSY, &((x)->status))
+#define a4l_subd_is_busy(x) (test_bit(A4L_SUBD_BUSY, &((x)->status)))
 
 #define a4l_subd_is_input(x) ((A4L_SUBD_MASK_READ & (x)->flags) != 0)
 /* The following macro considers that a DIO subdevice is firstly an
@@ -299,6 +297,8 @@ static inline int a4l_reserve_subd(a4l_subd_t *subd)
 #define a4l_subd_is_output(x) \
 	((A4L_SUBD_MASK_WRITE & (x)->flags) != 0 || \
 	 (A4L_SUBD_DIO & (x)->flags) != 0)
+
+/* --- Upper layer functions --- */
 
 a4l_subd_t * a4l_get_subd(struct a4l_device *dev, int idx);
 a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
