@@ -66,7 +66,7 @@ static void loop_task_proc(void *arg)
 	a4l_subd_t *input_subd, *output_subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
     
-	while (!a4l_check_dev(dev))
+	while (!a4l_dev_is_attached(dev))
 		a4l_task_sleep(LOOP_TASK_PERIOD);
 
 	input_subd = a4l_get_subd(dev, LOOP_INPUT_SUBD);

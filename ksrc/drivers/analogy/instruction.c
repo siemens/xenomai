@@ -296,7 +296,7 @@ int a4l_ioctl_insn(a4l_cxt_t * cxt, void *arg)
 		return -ENOSYS;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_insn: unattached device\n");
 		return -EINVAL;
 	}
@@ -398,7 +398,7 @@ int a4l_ioctl_insnlist(a4l_cxt_t * cxt, void *arg)
 		return -ENOSYS;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_insnlist: unattached device\n");
 		return -EINVAL;
 	}

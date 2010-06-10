@@ -51,7 +51,7 @@ int a4l_check_cleanup_devs(void)
 	int i, ret = 0;
 
 	for (i = 0; i < A4L_NB_DEVICES && ret == 0; i++)
-		if (test_bit(A4L_DEV_ATTACHED, &a4l_devs[i].flags))
+		if (test_bit(A4L_DEV_ATTACHED_NR, &a4l_devs[i].flags))
 			ret = -EBUSY;
 
 	return ret;
@@ -60,7 +60,7 @@ int a4l_check_cleanup_devs(void)
 void a4l_set_dev(a4l_cxt_t *cxt)
 {
 	/* Retrieve the minor index */
-	static int minor = a4l_get_minor(cxt);	
+	const int minor = a4l_get_minor(cxt);	
 	/* Fill the dev fields accordingly */
 	cxt->dev = &(a4l_devs[minor]);
 }
@@ -85,7 +85,7 @@ int a4l_rdproc_devs(char *page,
 		if (a4l_devs[i].flags == 0) {
 			status = "Unused";
 			name = "No driver";
-		} else if (test_bit(A4L_DEV_ATTACHED, &a4l_devs[i].flags)) {
+		} else if (test_bit(A4L_DEV_ATTACHED_NR, &a4l_devs[i].flags)) {
 			status = "Linked";
 			name = a4l_devs[i].driver->board_name;
 		} else {
@@ -412,7 +412,7 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 
 	if (arg == NULL) {
 		/* Basic checking */
-		if (!test_bit(A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
+		if (!test_bit(A4L_DEV_ATTACHED_NR, &(a4l_get_dev(cxt)->flags))) {
 			__a4l_err("a4l_ioctl_devcfg: "
 				  "free device, no driver to detach\n");
 			return -EINVAL;
@@ -428,12 +428,12 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 			return ret;
 		/* Free the device and the driver from each other */
 		if ((ret = a4l_device_detach(cxt)) == 0)
-			clear_bit(A4L_DEV_ATTACHED,
+			clear_bit(A4L_DEV_ATTACHED_NR,
 				  &(a4l_get_dev(cxt)->flags));
 	} else {
 		/* Basic checking */
 		if (test_bit
-		    (A4L_DEV_ATTACHED, &(a4l_get_dev(cxt)->flags))) {
+		    (A4L_DEV_ATTACHED_NR, &(a4l_get_dev(cxt)->flags))) {
 			__a4l_err("a4l_ioctl_devcfg: "
 				  "linked device, cannot attach more driver\n");
 			return -EINVAL;
@@ -449,7 +449,7 @@ int a4l_ioctl_devcfg(a4l_cxt_t * cxt, void *arg)
 		    (ret = a4l_proc_attach(cxt)) != 0)
 			a4l_device_detach(cxt);
 		else
-			set_bit(A4L_DEV_ATTACHED,
+			set_bit(A4L_DEV_ATTACHED_NR,
 				&(a4l_get_dev(cxt)->flags));
 	}
 
@@ -463,7 +463,7 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 
 	memset(&info, 0, sizeof(a4l_dvinfo_t));
 
-	if (test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		int len = (strlen(dev->driver->board_name) > A4L_NAMELEN) ?
 		    A4L_NAMELEN : strlen(dev->driver->board_name);
 

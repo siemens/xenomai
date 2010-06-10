@@ -303,7 +303,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 		return -ENOSYS;
 
 	/* Basically check the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_cmd: cannot command "
 			  "an unattached device\n");
 		return -EINVAL;

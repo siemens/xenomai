@@ -513,7 +513,7 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	a4l_subd_t *subd;
 
 	/* Basically check the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_cancel: operation not supported on "
 			  "an unattached device\n");
 		return -EINVAL;
@@ -556,7 +556,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	}
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
 		return -EINVAL;
 	}
@@ -603,7 +603,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		return -ENOSYS;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_bufinfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -703,7 +703,7 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 	/* Basic checkings */
 
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_read: unattached device\n");
 		return -EINVAL;
 	}
@@ -803,7 +803,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 
 	/* Basic checkings */
 
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_write: unattached device\n");
 		return -EINVAL;
 	}
@@ -893,7 +893,7 @@ int a4l_select(a4l_cxt_t *cxt,
 
 	/* Basic checkings */
 
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_select: unattached device\n");
 		return -EINVAL;
 	}
@@ -942,7 +942,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 
 	/* Basic checking */
 
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_poll: unattached device\n");
 		return -EINVAL;
 	}

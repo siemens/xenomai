@@ -189,7 +189,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 	a4l_sbinfo_t *subd_info;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_subdinfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -225,7 +225,7 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 	a4l_chinfo_arg_t inarg;
 
 	/* Basic checking */
-	if (!dev->flags & A4L_DEV_ATTACHED) {
+	if (!dev->flags & A4L_DEV_ATTACHED_NR) {
 		__a4l_err("a4l_ioctl_nbchaninfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -265,7 +265,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rngdesc_t *rng_desc;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_chaninfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -331,7 +331,7 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rngdesc_t *rng_desc;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_nbrnginfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -386,7 +386,7 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 	a4l_rnginfo_arg_t inarg;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_rnginfo: unattached device\n");
 		return -EINVAL;
 	}
