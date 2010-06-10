@@ -511,7 +511,7 @@ static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 	static const int timeout = 10000;
 
 	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+	a4l_buf_t *buf = subd->buf;
 
 	int i;
 
@@ -522,7 +522,7 @@ static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 
 		b_status = devpriv->stc_readw(dev, AO_Status_1_Register);
 
-		buffer_filled = test_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		buffer_filled = test_bit(A4L_BUF_EOA_NR, &buf->flags);
 		buffer_filled |= (b_status & AO_FIFO_Half_Full_St);
 
 		if (buffer_filled)
@@ -727,10 +727,9 @@ static void ni_handle_eos(a4l_subd_t *subd)
 static void ni_event(a4l_subd_t * subd)
 {       	
 	/* Temporary hack */
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+	a4l_buf_t *buf = subd->buf;
 
-	if(test_bit(A4L_BUF_ERROR_NR, &buf->evt_flags)) {
+	if(test_bit(A4L_BUF_ERROR_NR, &buf->flags)) {
 		if (subd->cancel != NULL)
 			subd->cancel(subd);
 	}
@@ -1426,17 +1425,16 @@ static void ni_ai_munge32(a4l_subd_t *subd, void *buf, unsigned long size)
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-static int ni_ai_setup_MITE_dma(a4l_dev_t *dev)
+static int ni_ai_setup_MITE_dma(a4l_subd_t *subd)
 {
+	a4l_dev_t *dev = subd->dev;
 	int retval;
 
 	retval = ni_request_ai_mite_channel(dev);
 	if (retval)
 		return retval;
 
-	/* Huge hack */
-	mite_buf_change(devpriv->ai_mite_chan->ring, 
-			dev->transfer.bufs[NI_AI_SUBDEV]);
+	mite_buf_change(devpriv->ai_mite_chan->ring, subd);
 
 	switch (boardtype.reg_type) {
 	case ni_reg_611x:
@@ -1457,8 +1455,10 @@ static int ni_ai_setup_MITE_dma(a4l_dev_t *dev)
 	return 0;
 }
 
-static int ni_ao_setup_MITE_dma(a4l_dev_t *dev)
+static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 {
+	a4l_dev_t *dev = subd->dev;
+
 	int retval;
 	unsigned long flags;
 
@@ -1466,9 +1466,7 @@ static int ni_ao_setup_MITE_dma(a4l_dev_t *dev)
 	if (retval)
 		return retval;
 
-	/* Huge hack */
-	mite_buf_change(devpriv->ao_mite_chan->ring, 
-			dev->transfer.bufs[NI_AO_SUBDEV]);
+	mite_buf_change(devpriv->ao_mite_chan->ring, subd);
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan) {
@@ -2436,7 +2434,7 @@ static int ni_ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 	{
-		int retval = ni_ai_setup_MITE_dma(dev);
+		int retval = ni_ai_setup_MITE_dma(subd);
 		if (retval)
 			return retval;
 	}
@@ -2846,7 +2844,7 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	devpriv->stc_writew(dev, 1, DAC_FIFO_Clear);
 	if (boardtype.reg_type & ni_reg_6xxx_mask)
 		ni_ao_win_outl(dev, 0x6, AO_FIFO_Offset_Load_611x);
-	ret = ni_ao_setup_MITE_dma(dev);
+	ret = ni_ao_setup_MITE_dma(subd);
 	if (ret)
 		return ret;
 	ret = ni_ao_wait_for_dma_load(subd);

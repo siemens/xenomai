@@ -144,7 +144,7 @@ u32 mite_get_status(struct mite_channel *mite_chan);
 int mite_done(struct mite_channel *mite_chan);
 void mite_prep_dma(struct mite_channel *mite_chan,
 		   unsigned int num_device_bits, unsigned int num_memory_bits);
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_buf_t *buf);
+int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd);
 
 #ifdef CONFIG_DEBUG_MITE
 void mite_print_chsr(unsigned int chsr);
