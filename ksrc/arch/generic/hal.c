@@ -42,12 +42,7 @@
 #endif
 #include <asm/system.h>
 #include <asm/irq.h>
-#include <asm/uaccess.h>
-#include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
 MODULE_LICENSE("GPL");
@@ -69,20 +64,9 @@ cpumask_t rthal_supported_cpus;
 EXPORT_SYMBOL(rthal_supported_cpus);
 #endif /* CONFIG_SMP */
 
-static struct {
-
-    void (*handler) (void *cookie);
-    void *cookie;
-    const char *name;
-    unsigned long hits[RTHAL_NR_CPUS];
-
-} rthal_apc_table[RTHAL_NR_APCS];
-
 static int rthal_init_done;
 
 static unsigned rthal_apc_virq;
-
-static unsigned long rthal_apc_map;
 
 static unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
 
@@ -97,6 +81,10 @@ struct rthal_calibration_data rthal_tunables;
 rthal_trap_handler_t rthal_trap_handler;
 
 unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+
+unsigned long rthal_apc_map;
+
+struct rthal_apc_desc rthal_apc_table[RTHAL_NR_APCS];
 
 volatile int rthal_sync_op;
 
@@ -615,190 +603,6 @@ int rthal_apc_schedule(int apc)
     return 0;
 }
 
-#ifdef CONFIG_PROC_FS
-
-struct proc_dir_entry *rthal_proc_root;
-
-static int hal_read_proc(char *page,
-                         char **start,
-                         off_t off, int count, int *eof, void *data)
-{
-    int len, major, minor, patchlevel;
-
-    major = IPIPE_MAJOR_NUMBER;
-    minor = IPIPE_MINOR_NUMBER;
-    patchlevel = IPIPE_PATCH_NUMBER;
-
-    len = sprintf(page, "%d.%d-%.2d\n", major, minor, patchlevel);
-    len -= off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
-
-    return len;
-}
-
-static int faults_read_proc(char *page,
-                            char **start,
-                            off_t off, int count, int *eof, void *data)
-{
-    int len = 0, cpu, trap;
-    char *p = page;
-
-    p += sprintf(p, "TRAP ");
-
-    for_each_online_cpu(cpu) {
-        p += sprintf(p, "        CPU%d", cpu);
-    }
-
-    for (trap = 0; rthal_fault_labels[trap] != NULL; trap++) {
-
-        if (!*rthal_fault_labels[trap])
-            continue;
-
-        p += sprintf(p, "\n%3d: ", trap);
-
-        for_each_online_cpu(cpu) {
-            p += sprintf(p, "%12u", rthal_realtime_faults[cpu][trap]);
-        }
-
-        p += sprintf(p, "    (%s)", rthal_fault_labels[trap]);
-    }
-
-    p += sprintf(p, "\n");
-
-    len = p - page - off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
-
-    return len;
-}
-
-static int apc_read_proc(char *page,
-                         char **start,
-                         off_t off, int count, int *eof, void *data)
-{
-    int len = 0, cpu, apc;
-    char *p = page;
-
-    p += sprintf(p, "APC ");
-
-    for_each_online_cpu(cpu) {
-        p += sprintf(p, "         CPU%d", cpu);
-    }
-
-    for (apc = 0; apc < BITS_PER_LONG; apc++) {
-        if (!test_bit(apc, &rthal_apc_map))
-            continue;           /* Not hooked. */
-
-        p += sprintf(p, "\n%3d: ", apc);
-
-        for_each_online_cpu(cpu) {
-            p += sprintf(p, "%12lu", rthal_apc_table[apc].hits[cpu]);
-        }
-
-	if (rthal_apc_table[apc].name)
-	    p += sprintf(p, "    (%s)", rthal_apc_table[apc].name);
-    }
-
-    p += sprintf(p, "\n");
-
-    len = p - page - off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
-
-    return len;
-}
-
-struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
-                                           read_proc_t rdproc,
-                                           write_proc_t wrproc,
-                                           void *data,
-                                           struct proc_dir_entry *parent)
-{
-	int mode = wrproc ? 0644 : 0444;
-	struct proc_dir_entry *entry;
-
-	entry = create_proc_entry(name, mode, parent);
-	if (entry == NULL)
-		return NULL;
-
-	entry->nlink = 1;
-	entry->data = data;
-	entry->read_proc = rdproc;
-	entry->write_proc = wrproc;
-	wrap_proc_dir_entry_owner(entry);
-
-	return entry;
-}
-EXPORT_SYMBOL_GPL(rthal_add_proc_leaf);
-
-struct proc_dir_entry *rthal_add_proc_seq(const char *name,
-					  struct file_operations *fops,
-					  size_t size,
-					  struct proc_dir_entry *parent)
-{
-	struct proc_dir_entry *entry;
-
-	entry = create_proc_entry(name, 0, parent);
-	if (entry == NULL)
-		return NULL;
-
-	entry->proc_fops = fops;
-	wrap_proc_dir_entry_owner(entry);
-
-	if (size)
-		entry->size = size;
-
-	return entry;
-}
-EXPORT_SYMBOL_GPL(rthal_add_proc_seq);
-
-static int rthal_proc_register(void)
-{
-	rthal_proc_root = create_proc_entry("xenomai", S_IFDIR, 0);
-	if (rthal_proc_root == NULL) {
-		printk(KERN_ERR "Xenomai: Unable to initialize /proc/xenomai.\n");
-		return -1;
-	}
-
-	wrap_proc_dir_entry_owner(rthal_proc_root);
-
-	rthal_add_proc_leaf("hal", &hal_read_proc, NULL, NULL, rthal_proc_root);
-	rthal_add_proc_leaf("faults",
-			    &faults_read_proc, NULL, NULL, rthal_proc_root);
-	rthal_add_proc_leaf("apc", &apc_read_proc, NULL, NULL, rthal_proc_root);
-
-	rthal_nmi_proc_register();
-
-	return 0;
-}
-
-static void rthal_proc_unregister(void)
-{
-    rthal_nmi_proc_unregister();
-    remove_proc_entry("hal", rthal_proc_root);
-    remove_proc_entry("faults", rthal_proc_root);
-    remove_proc_entry("apc", rthal_proc_root);
-    remove_proc_entry("xenomai", NULL);
-}
-
-#endif /* CONFIG_PROC_FS */
-
 int rthal_init(void)
 {
     int err;
@@ -867,10 +671,6 @@ int rthal_init(void)
     }
 #endif /* CONFIG_PREEMPT_RT */
 
-#ifdef CONFIG_PROC_FS
-    rthal_proc_register();
-#endif /* CONFIG_PROC_FS */
-
     err = rthal_register_domain(&rthal_domain,
                                 "Xenomai",
                                 RTHAL_DOMAIN_ID,
@@ -889,15 +689,12 @@ int rthal_init(void)
 #endif
             printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", err);
 
-        goto out_proc_unregister;
+        goto fail;
     }
 
     return 0;
 
-  out_proc_unregister:
-#ifdef CONFIG_PROC_FS
-    rthal_proc_unregister();
-#endif
+  fail:
 #ifdef CONFIG_PREEMPT_RT
   out_kthread_stop:
     {
@@ -923,10 +720,6 @@ int rthal_init(void)
 
 void rthal_exit(void)
 {
-#ifdef CONFIG_PROC_FS
-    rthal_proc_unregister();
-#endif /* CONFIG_PROC_FS */
-
     if (rthal_apc_virq) {
         rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL,
                              NULL, 0);
@@ -1123,9 +916,6 @@ EXPORT_SYMBOL(rthal_critical_exit);
 
 EXPORT_SYMBOL(rthal_domain);
 EXPORT_SYMBOL(rthal_tunables);
-#ifdef CONFIG_PROC_FS
-EXPORT_SYMBOL(rthal_proc_root);
-#endif /* CONFIG_PROC_FS */
 
 EXPORT_SYMBOL(rthal_init);
 EXPORT_SYMBOL(rthal_exit);

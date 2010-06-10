@@ -420,6 +420,13 @@ struct rthal_calibration_data {
 	unsigned long clock_freq;
 };
 
+struct rthal_apc_desc {
+	void (*handler)(void *cookie);
+	void *cookie;
+	const char *name;
+	unsigned long hits[RTHAL_NR_CPUS];
+};
+
 typedef int (*rthal_trap_handler_t)(unsigned trapno,
 				    unsigned domid,
 				    void *data);
@@ -438,7 +445,11 @@ extern volatile int rthal_sync_op;
 
 extern rthal_trap_handler_t rthal_trap_handler;
 
-extern unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+extern unsigned int rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+
+extern unsigned long rthal_apc_map;
+
+extern struct rthal_apc_desc rthal_apc_table[RTHAL_NR_APCS];
 
 extern int rthal_arch_init(void);
 
@@ -452,7 +463,7 @@ void rthal_critical_exit(unsigned long flags);
 
 #ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
 
-extern unsigned rthal_maxlat_us;
+extern unsigned int rthal_maxlat_us;
 
 extern unsigned long rthal_maxlat_tsc;
 
@@ -466,15 +477,11 @@ void rthal_nmi_arm(unsigned long delay);
 
 void rthal_nmi_disarm(void);
 
-void rthal_nmi_proc_register(void);
-
-void rthal_nmi_proc_unregister(void);
+void rthal_nmi_set_maxlat(unsigned int maxlat_us);
 
 #else /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 #define rthal_nmi_init(efn)		do { } while(0)
 #define rthal_nmi_release()		do { } while(0)
-#define rthal_nmi_proc_register()	do { } while(0)
-#define rthal_nmi_proc_unregister()	do { } while(0)
 #endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
     /* Public interface */
@@ -561,25 +568,8 @@ static inline int rthal_cpu_supported(int cpu)
 }
 #endif /* !CONFIG_SMP */
 
-#ifdef CONFIG_PROC_FS
-
-#include <linux/proc_fs.h>
-
-extern struct proc_dir_entry *rthal_proc_root;
-
-struct proc_dir_entry *rthal_add_proc_leaf(const char *name,
-					   read_proc_t rdproc,
-					   write_proc_t wrproc,
-					   void *data,
-					   struct proc_dir_entry *parent);
-
-struct proc_dir_entry *rthal_add_proc_seq(const char *name,
-					  struct file_operations *fops,
-					  size_t size,
-					  struct proc_dir_entry *parent);
-#endif /* CONFIG_PROC_FS */
-
 #ifdef CONFIG_IPIPE_TRACE
+
 #include <linux/ipipe_trace.h>
 
 static inline int rthal_trace_max_begin(unsigned long v)
