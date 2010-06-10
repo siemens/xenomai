@@ -32,6 +32,7 @@
 
 #include <rtdm/rtdm_driver.h>
 
+#include <analogy/os_facilities.h>
 #include <analogy/context.h>
 
 /* Events bits */
@@ -179,11 +180,11 @@ static inline int __handle_event(a4l_buf_t * buf)
 
 	/* The event "End of acquisition" must not be cleaned
 	   before the complete flush of the buffer */
-	if (test_bit(A4L_BUF_EOA_NR, &buf->evt_flags)) {
+	if (test_bit(A4L_BUF_EOA_NR, &buf->flags)) {
 		ret = -ENOENT;
 	}
 
-	if (test_bit(A4L_BUF_ERROR_NR, &buf->evt_flags)) {
+	if (test_bit(A4L_BUF_ERROR_NR, &buf->flags)) {
 		ret = -EPIPE;
 	}
 
@@ -195,7 +196,7 @@ static inline int __handle_event(a4l_buf_t * buf)
 static inline int __pre_abs_put(a4l_buf_t * buf, unsigned long count)
 {
 	if (count - buf->tmp_count > buf->size) {
-		set_bit(A4L_BUF_ERROR_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_ERROR_NR, &buf->flags);
 		return -EPIPE;
 	}
 
@@ -235,7 +236,7 @@ static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 	was not greater a few cycles before; in such case, the DMA
 	channel would have retrieved the wrong data */
 	if ((long)(count - buf->tmp_count) > 0) {
-		set_bit(A4L_BUF_ERROR_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_ERROR_NR, &buf->flags);
 		return -EPIPE;
 	}
 
@@ -260,10 +261,10 @@ static inline int __abs_put(a4l_buf_t * buf, unsigned long count)
 	buf->prd_count = count;
 
 	if ((old / buf->size) != (count / buf->size))
-		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOBUF_NR, &buf->flags);
 
 	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
-		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOA_NR, &buf->flags);
 
 	return 0;
 }
@@ -283,10 +284,10 @@ static inline int __abs_get(a4l_buf_t * buf, unsigned long count)
 	buf->cns_count = count;
 
 	if ((old / buf->size) != count / buf->size)
-		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOBUF_NR, &buf->flags);
 
 	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
-		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOA_NR, &buf->flags);
 
 	return 0;
 }
@@ -328,6 +329,10 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 }
 
 /* --- Buffer internal functions --- */
+
+int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size);
+
+void a4l_free_buffer(a4l_buf_t *buf_desc);
 
 void a4l_init_buffer(a4l_buf_t * buf_desc);
 
