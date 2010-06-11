@@ -354,13 +354,10 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 		goto out_ioctl_cmd;
 	}
 
-	/* Sets the concerned subdevice as busy */
-	ret = a4l_reserve_subd(subd);
+	/* Gets the transfer system ready */
+	ret = a4l_setup_buffer(cxt, cmd_desc);
 	if (ret < 0)
 		goto out_ioctl_cmd;
-
-	/* Gets the transfer system ready */
-	a4l_setup_buffer(cxt, cmd_desc);
 
 	/* Eventually launches the command */
 	ret = subd->do_cmd(subd, cmd_desc);

@@ -124,12 +124,21 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 		return -EINVAL;
 	}
 
+	if (a4l_reserve_subd(buf_desc->subd) < 0) {
+		__a4l_err("a4l_setup_buffer: subdevice %d already busy\n",
+			  cmd->idx_subd);
+		return -EBUSY;
+	}
+
 	/* Checks if the transfer system has to work in bulk mode */
 	if (cmd->flags & A4L_CMD_BULK)
 		set_bit(A4L_BUF_BULK_NR, &buf_desc->flags);
 	
 	/* Sets the working command */
 	buf_desc->cur_cmd = cmd;
+
+	/* Link the subdevice with the context's buffer */
+	buf_desc->subd->buf = buf_desc;
 
 	/* Computes the count to reach, if need be */
 	if (cmd->stop_src == TRIG_COUNT) {
@@ -167,9 +176,6 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 		__a4l_err("a4l_cancel: cancel handler failed (err=%d)\n", err);
 	}
 
-	a4l_release_subd(subd);
-	subd->buf = NULL;
-
 	if (buf_desc->cur_cmd != NULL) {
 		a4l_free_cmddesc(buf_desc->cur_cmd);
 		rtdm_free(buf_desc->cur_cmd);
@@ -177,6 +183,9 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	}
 
 	a4l_init_buffer(buf_desc);
+
+	a4l_release_subd(subd);
+	subd->buf = NULL;
 
 	return err;
 }
