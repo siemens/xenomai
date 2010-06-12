@@ -339,6 +339,8 @@ void a4l_free_buffer(a4l_buf_t *buf_desc);
 
 void a4l_init_buffer(a4l_buf_t * buf_desc);
 
+void a4l_cleanup_buffer(a4l_buf_t * buf_desc);
+
 int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd);
 
 int a4l_cancel_buffer(a4l_cxt_t *cxt);

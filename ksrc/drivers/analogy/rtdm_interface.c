@@ -156,9 +156,13 @@ int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 		return err;
 	}
 
-	/* Free the buffer which was linked with this context */
+	/* Free the buffer which was linked with this context and... */
 	a4l_free_buffer(cxt->buffer);
 
+	/* ...free the other buffer resources (sync) and... */
+	a4l_cleanup_buffer(cxt->buffer);
+
+	/* ...free the structure */
 	rtdm_free(cxt->buffer);
 
 	return 0;

@@ -91,7 +91,7 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-void a4l_init_buffer(a4l_buf_t *buf_desc)
+static void a4l_reinit_buffer(a4l_buf_t *buf_desc)
 {
 	/* No command to process yet */
 	buf_desc->cur_cmd = NULL;
@@ -109,6 +109,18 @@ void a4l_init_buffer(a4l_buf_t *buf_desc)
 	/* Flush pending events */
 	buf_desc->flags = 0;
 	a4l_flush_sync(&buf_desc->sync);
+}
+
+void a4l_init_buffer(a4l_buf_t *buf_desc)
+{
+
+	a4l_init_sync(&buf_desc->sync);
+	a4l_reinit_buffer(buf_desc);
+}
+
+void a4l_cleanup_buffer(a4l_buf_t *buf_desc)
+{
+	a4l_cleanup_sync(&buf_desc->sync);
 }
 
 int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
@@ -182,7 +194,7 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 		buf_desc->cur_cmd = NULL;
 	}
 
-	a4l_init_buffer(buf_desc);
+	a4l_reinit_buffer(buf_desc);
 
 	a4l_release_subd(subd);
 	subd->buf = NULL;
