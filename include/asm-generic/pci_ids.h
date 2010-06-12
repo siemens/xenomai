@@ -21,5 +21,8 @@
 #ifndef PCI_DEVICE_ID_PLX_9030
 #define PCI_DEVICE_ID_PLX_9030 0x9030
 #endif
+#ifndef PCI_DEVICE_ID_PLX_9056
+#define PCI_DEVICE_ID_PLX_9056 0x9056
+#endif
 
 #endif /* _XENO_ASM_GENERIC_PCI_IDS_H */
