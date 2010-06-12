@@ -288,8 +288,8 @@ static inline int a4l_reserve_subd(a4l_subd_t *subd)
 {
         return test_and_set_bit(A4L_SUBD_BUSY_NR, &subd->status) ? -EBUSY : 0;
 }
-#define a4l_release_subd(x) clear_bit(A4L_SUBD_BUSY_NR, &((x)->flags))
-#define a4l_subd_is_busy(x) (test_bit(A4L_SUBD_BUSY_NR, &((x)->flags)))
+#define a4l_release_subd(x) clear_bit(A4L_SUBD_BUSY_NR, &((x)->status))
+#define a4l_subd_is_busy(x) (test_bit(A4L_SUBD_BUSY_NR, &((x)->status)))
 
 #define a4l_subd_is_input(x) ((A4L_SUBD_MASK_READ & (x)->flags) != 0)
 /* The following macro considers that a DIO subdevice is firstly an
