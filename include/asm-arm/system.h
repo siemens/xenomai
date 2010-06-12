@@ -69,6 +69,16 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
 	struct mm_struct *active_mm;
 	struct thread_info ti;		    /* Holds kernel-based thread info */
 	struct thread_info *tip;	    /* Pointer to the active thread info (ti or user->thread_info). */
+#ifdef XNARCH_HAVE_MAYDAY
+	struct {
+		unsigned long pc;
+		unsigned long r0;
+		unsigned long r6;
+#ifdef CONFIG_XENO_ARM_EABI
+		unsigned long r7;
+#endif
+	} mayday;
+#endif
 
 	/* Init block */
 	struct xnthread *self;

@@ -27,6 +27,8 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <asm/cacheflush.h>
+
 static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 					  struct xnthread *thread,
 					  const char *name)
@@ -181,5 +183,114 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 }
 
 #define xnarch_schedule_tail(prev) do { } while(0)
+
+#ifdef XNARCH_HAVE_MAYDAY
+
+static inline void xnarch_setup_mayday_page(void *page)
+{
+	/*
+	 * We want this code to appear at the top of the MAYDAY page:
+	 *
+	 * ifdef ARM_EABI
+	 *
+	 * e3a00f8a 	mov	r0, #552	; 0x228
+	 * e28003c3 	add	r0, r0, #201326595	; 0xc000003
+	 * e3a0780f 	mov	r7, #983040	; 0xf0000
+	 * e2877042 	add	r7, r7, #66	; 0x42
+	 * e3a06000 	mov	r6, #0
+	 * ef000000 	svc	0x00000000
+	 * e3a00000 	mov	r0, #0
+	 * e5800000 	str	r0, [r0]	; <bug>
+	 *
+	 * elif ARM_OABI
+	 *
+	 * e3a00f8a 	mov	r0, #552	; 0x228
+	 * e28003c3 	add	r0, r0, #201326595	; 0xc000003
+	 * e3a06000 	mov	r6, #0
+	 * ef9f0042 	swi	0x009f0042
+	 * e3a00000 	mov	r0, #0
+	 * e5800000 	str	r0, [r0]	; <bug>
+	 *
+	 * endif
+	 *
+	 * 32bit instruction words will be laid out by the compiler as
+	 * the target endianness requires.
+	 *
+	 * We don't mess with CPSR here, so no need to save/restore it
+	 * in handle/fixup code.
+	 */
+#ifdef CONFIG_XENO_ARM_EABI
+	static const struct {
+		u32 mov_muxl;
+		u32 add_muxh;
+		u32 mov_sysh;
+		u32 add_sysl;
+		u32 mov_sigp;
+		u32 swi_0;
+		u32 mov_r0;
+		u32 str_r0;
+	} code = {
+		.mov_muxl = 0xe3a00f8a,
+		.add_muxh = 0xe28003c3,
+		.mov_sysh = 0xe3a0780f,
+		.add_sysl = 0xe2877042,
+		.mov_sigp = 0xe3a06000,
+		.swi_0 = 0xef000000,
+		.mov_r0 = 0xe3a00000,
+		.str_r0 = 0xe5800000
+	};
+#else /* OABI */
+	static const struct {
+		u32 mov_muxl;
+		u32 add_muxh;
+		u32 mov_sigp;
+		u32 swi_syscall;
+		u32 mov_r0;
+		u32 str_r0;
+	} code = {
+		.mov_muxl = 0xe3a00f8a,
+		.add_muxh = 0xe28003c3,
+		.mov_sigp = 0xe3a06000,
+		.swi_syscall = 0x009f0042,
+		.mov_r0 = 0xe3a00000,
+		.str_r0 = 0xe5800000
+	};
+#endif /* OABI */
+
+	memcpy(page, &code, sizeof(code));
+
+	flush_dcache_page(vmalloc_to_page(page));
+}
+
+static inline void xnarch_call_mayday(void)
+{
+	rthal_return_intercept(current);
+}
+
+static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,
+					struct pt_regs *regs,
+					unsigned long tramp)
+{
+	tcb->mayday.pc = regs->ARM_pc;
+	tcb->mayday.r0 = regs->ARM_r0;
+	tcb->mayday.r6 = regs->ARM_r6;
+#ifdef CONFIG_XENO_ARM_EABI
+	tcb->mayday.r7 = regs->ARM_r7;
+#endif
+	regs->ARM_pc = tramp;
+}
+
+static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
+				       struct pt_regs *regs)
+{
+	regs->ARM_pc = tcb->mayday.pc;
+	regs->ARM_r0 = tcb->mayday.r0;
+	regs->ARM_r6 = tcb->mayday.r6;
+#ifdef CONFIG_XENO_ARM_EABI
+	regs->ARM_r7 = tcb->mayday.r7;
+#endif
+}
+
+#endif /* XNARCH_HAVE_MAYDAY */
 
 #endif /* !_XENO_ASM_ARM_BITS_SHADOW_H */
