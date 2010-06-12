@@ -630,7 +630,7 @@ index 0000000..cfdf14a
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..8ae0cb3
+index 0000000..ada91f3
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,274 @@
@@ -665,10 +665,10 @@ index 0000000..8ae0cb3
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.16-01"
++#define IPIPE_ARCH_STRING	"1.17-00"
 +#define IPIPE_MAJOR_NUMBER	1
-+#define IPIPE_MINOR_NUMBER	16
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_MINOR_NUMBER	17
++#define IPIPE_PATCH_NUMBER	0
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -880,7 +880,7 @@ index 0000000..8ae0cb3
 +} while(0)
 +
 +#define __ipipe_syscall_watched_p(p, sc)				\
-+	(((p)->flags & PF_EVNOTIFY) || (unsigned long)sc >= __ARM_NR_BASE + 64)
++	(ipipe_notifier_enabled_p(p) || (unsigned long)sc >= __ARM_NR_BASE + 64)
 +
 +#define __ipipe_root_tick_p(regs) (!raw_irqs_disabled_flags(regs->ARM_cpsr))
 +
@@ -910,10 +910,10 @@ index 0000000..8ae0cb3
 +#endif	/* !__ARM_IPIPE_H */
 diff --git a/arch/arm/include/asm/ipipe_base.h b/arch/arm/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..20e97a4
+index 0000000..f78523d
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe_base.h
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,109 @@
 +/* -*- linux-c -*-
 + * arch/arm/include/asm/ipipe_base.h
 + *
@@ -966,7 +966,8 @@ index 0000000..20e97a4
 +#define IPIPE_EVENT_INIT	(IPIPE_FIRST_EVENT + 4)
 +#define IPIPE_EVENT_EXIT	(IPIPE_FIRST_EVENT + 5)
 +#define IPIPE_EVENT_CLEANUP	(IPIPE_FIRST_EVENT + 6)
-+#define IPIPE_LAST_EVENT	IPIPE_EVENT_CLEANUP
++#define IPIPE_EVENT_RETURN	(IPIPE_FIRST_EVENT + 7)
++#define IPIPE_LAST_EVENT	IPIPE_EVENT_RETURN
 +#define IPIPE_NR_EVENTS		(IPIPE_LAST_EVENT + 1)
 +
 +#ifndef __ASSEMBLY__
@@ -2706,10 +2707,10 @@ index 0000000..1b9550c
 +#endif /* CONFIG_ARM_FCSE_MESSAGES */
 diff --git a/arch/arm/kernel/ipipe.c b/arch/arm/kernel/ipipe.c
 new file mode 100644
-index 0000000..41b1013
+index 0000000..0ee9ee1
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe.c
-@@ -0,0 +1,549 @@
+@@ -0,0 +1,571 @@
 +/* -*- linux-c -*-
 + * linux/arch/arm/kernel/ipipe.c
 + *
@@ -3062,11 +3063,17 @@ index 0000000..41b1013
 +asmlinkage int __ipipe_syscall_root(unsigned long scno, struct pt_regs *regs)
 +{
 +	struct ipipe_percpu_domain_data *p;
-+	unsigned long flags, origr7;
++	unsigned long orig_r7;
++        int ret = 0;
 +
-+	/* We use r7 to pass the syscall number to the other domains */
-+	origr7 = regs->ARM_r7;
++	WARN_ON_ONCE(irqs_disabled_hw());
++
++	/*
++	 * We use r7 to pass the syscall number to the other domains.
++	 */
++	orig_r7 = regs->ARM_r7;
 +	regs->ARM_r7 = __NR_SYSCALL_BASE + scno;
++
 +	/*
 +	 * This routine either returns:
 +	 * 0 -- if the syscall is to be passed to Linux;
@@ -3076,32 +3083,36 @@ index 0000000..41b1013
 +	 * tail work has to be performed (for handling signals etc).
 +	 */
 +
-+	WARN_ON_ONCE(irqs_disabled_hw());
-+
 +	if (!__ipipe_syscall_watched_p(current, regs->ARM_r7) ||
 +	    !__ipipe_event_monitored_p(IPIPE_EVENT_SYSCALL))
-+		goto done;
++		goto out;
 +
-+	if (__ipipe_dispatch_event(IPIPE_EVENT_SYSCALL,regs) > 0){
-+		if (ipipe_root_domain_p && !in_atomic()) {
-+			/*
-+			 * Sync pending VIRQs before _TIF_NEED_RESCHED
-+			 * is tested.
-+			 */
-+			local_irq_save_hw(flags);
-+			p = ipipe_root_cpudom_ptr();
-+			if (__ipipe_ipending_p(p))
-+				__ipipe_sync_pipeline(IPIPE_IRQ_DOVIRT);
-+			local_irq_restore_hw(flags);
-+			regs->ARM_r7 = origr7;
-+			return -1;
-+		}
-+		regs->ARM_r7 = origr7;
-+		return 1;
++        ret = __ipipe_dispatch_event(IPIPE_EVENT_SYSCALL, regs);
++
++	local_irq_disable_hw();
++
++	/*
++	 * This is the end of the syscall path, so we may
++	 * safely assume a valid Linux task stack here.
++	 */
++	if (current->ipipe_flags & PF_EVTRET) {
++		current->ipipe_flags &= ~PF_EVTRET;
++		__ipipe_dispatch_event(IPIPE_EVENT_RETURN, regs);
 +	}
-+done:
-+	regs->ARM_r7 = origr7;
-+	return 0;
++
++        if (!__ipipe_root_domain_p)
++		ret = -1;
++	else {
++		p = ipipe_root_cpudom_ptr();
++		if (__ipipe_ipending_p(p))
++			__ipipe_sync_pipeline(IPIPE_IRQ_DOVIRT);
++	}
++
++	local_irq_enable_hw();
++out:
++	regs->ARM_r7 = orig_r7;
++
++	return -ret;
 +}
 +
 +/*
@@ -3241,6 +3252,18 @@ index 0000000..41b1013
 +	ipipe_trace_irq_entry(irq);
 +	status = __ipipe_handle_irq(irq, regs);
 +	ipipe_trace_irq_exit(irq);
++
++	if (user_mode(regs) &&
++	    (current->ipipe_flags & PF_EVTRET) != 0) {
++		/*
++		 * Testing for user_regs() eliminates foreign stack
++		 * contexts, including from careless domains which did
++		 * not set the foreign stack bit (foreign stacks are
++		 * always kernel-based).
++		 */
++		current->ipipe_flags &= ~PF_EVTRET;
++		__ipipe_dispatch_event(IPIPE_EVENT_RETURN, regs);
++	}
 +
 +	return status;
 +}
@@ -8815,10 +8838,10 @@ index d5b3876..010aa8b 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..59da296
+index 0000000..cbc9fc0
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,684 @@
+@@ -0,0 +1,718 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -9136,6 +9159,9 @@ index 0000000..59da296
 +#define __ipipe_root_domain_p	(__ipipe_current_domain == ipipe_root_domain)
 +#define ipipe_root_domain_p	(ipipe_current_domain == ipipe_root_domain)
 +
++/* This has to be called with hw IRQs off. */
++#define __ipipe_head_domain_p   __ipipe_pipeline_head_p(__ipipe_current_domain)
++
 +static inline int __ipipe_event_monitored_p(int ev)
 +{
 +	if (__ipipe_event_monitors[ev] > 0)
@@ -9144,59 +9170,72 @@ index 0000000..59da296
 +	return (ipipe_current_domain->evself & (1LL << ev)) != 0;
 +}
 +
-+#define ipipe_sigwake_notify(p)	\
-+do {					\
-+	if (((p)->flags & PF_EVNOTIFY) && __ipipe_event_monitored_p(IPIPE_EVENT_SIGWAKE)) \
-+		__ipipe_dispatch_event(IPIPE_EVENT_SIGWAKE, p);		\
-+} while(0)
++/*
++ * <!>: Backward compat is kept for now, with client domains
++ * storing the notifier enabled bit in the main flags of a
++ * task struct. This is clearly deprecated: at some point,
++ * this kludge will vanish. Fix the relevant code using
++ * ipipe_enable/disable_notifier() instead. You have been
++ * warned.
++ */
++#define ipipe_notifier_enabled_p(p)		\
++	(((p)->flags|(p)->ipipe_flags) & PF_EVNOTIFY)
 +
-+#define ipipe_exit_notify(p)	\
-+do {				\
-+	if (((p)->flags & PF_EVNOTIFY) && __ipipe_event_monitored_p(IPIPE_EVENT_EXIT)) \
-+		__ipipe_dispatch_event(IPIPE_EVENT_EXIT, p);		\
-+} while(0)
++#define ipipe_sigwake_notify(p)						\
++	do {								\
++		if (ipipe_notifier_enabled_p(p) &&			\
++		    __ipipe_event_monitored_p(IPIPE_EVENT_SIGWAKE))	\
++			__ipipe_dispatch_event(IPIPE_EVENT_SIGWAKE, p);	\
++	} while (0)
 +
-+#define ipipe_setsched_notify(p)	\
-+do {					\
-+	if (((p)->flags & PF_EVNOTIFY) && __ipipe_event_monitored_p(IPIPE_EVENT_SETSCHED)) \
-+		__ipipe_dispatch_event(IPIPE_EVENT_SETSCHED, p);	\
-+} while(0)
++#define ipipe_exit_notify(p)						\
++	do {								\
++		if (ipipe_notifier_enabled_p(p) &&			\
++		    __ipipe_event_monitored_p(IPIPE_EVENT_EXIT))	\
++			__ipipe_dispatch_event(IPIPE_EVENT_EXIT, p);	\
++	} while (0)
++
++#define ipipe_setsched_notify(p)					\
++	do {								\
++		if (ipipe_notifier_enabled_p(p) &&			\
++		    __ipipe_event_monitored_p(IPIPE_EVENT_SETSCHED))	\
++			__ipipe_dispatch_event(IPIPE_EVENT_SETSCHED, p); \
++	} while (0)
 +
 +#define ipipe_schedule_notify(prev, next)				\
 +do {									\
-+	if ((((prev)->flags|(next)->flags) & PF_EVNOTIFY) &&		\
++	if ((ipipe_notifier_enabled_p(next) ||				\
++	     ipipe_notifier_enabled_p(prev)) &&				\
 +	    __ipipe_event_monitored_p(IPIPE_EVENT_SCHEDULE))		\
-+		__ipipe_dispatch_event(IPIPE_EVENT_SCHEDULE,next);	\
-+} while(0)
++		__ipipe_dispatch_event(IPIPE_EVENT_SCHEDULE, next);	\
++} while (0)
 +
 +#define ipipe_trap_notify(ex, regs)					\
-+({									\
-+	unsigned long __flags__;					\
-+	int __ret__ = 0;						\
-+	local_irq_save_hw_smp(__flags__);				\
-+	if ((test_bit(IPIPE_NOSTACK_FLAG, &ipipe_this_cpudom_var(status)) || \
-+	     ((current)->flags & PF_EVNOTIFY)) &&			\
-+	    __ipipe_event_monitored_p(ex)) {				\
-+		local_irq_restore_hw_smp(__flags__);			\
-+		__ret__ = __ipipe_dispatch_event(ex, regs);		\
-+	} else								\
-+		local_irq_restore_hw_smp(__flags__);			\
-+	__ret__;							\
-+})
++	({								\
++		unsigned long __flags__;				\
++		int __ret__ = 0;					\
++		local_irq_save_hw_smp(__flags__);			\
++		if ((test_bit(IPIPE_NOSTACK_FLAG, &ipipe_this_cpudom_var(status)) || \
++		     ipipe_notifier_enabled_p(current)) &&		\
++		    __ipipe_event_monitored_p(ex)) {			\
++			local_irq_restore_hw_smp(__flags__);		\
++			__ret__ = __ipipe_dispatch_event(ex, regs);	\
++		} else							\
++			local_irq_restore_hw_smp(__flags__);		\
++		__ret__;						\
++	})
 +
-+static inline void ipipe_init_notify(struct task_struct *p)
-+{
-+	if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))
-+		__ipipe_dispatch_event(IPIPE_EVENT_INIT, p);
-+}
++#define ipipe_init_notify(p)						\
++	do {								\
++		if (__ipipe_event_monitored_p(IPIPE_EVENT_INIT))	\
++			__ipipe_dispatch_event(IPIPE_EVENT_INIT, p);	\
++	} while (0)
 +
-+struct mm_struct;
-+
-+static inline void ipipe_cleanup_notify(struct mm_struct *mm)
-+{
-+	if (__ipipe_event_monitored_p(IPIPE_EVENT_CLEANUP))
-+		__ipipe_dispatch_event(IPIPE_EVENT_CLEANUP, mm);
-+}
++#define ipipe_cleanup_notify(mm)					\
++	do {								\
++		if (__ipipe_event_monitored_p(IPIPE_EVENT_CLEANUP))	\
++			__ipipe_dispatch_event(IPIPE_EVENT_CLEANUP, mm); \
++	} while (0)
 +
 +/* Public interface */
 +
@@ -9454,6 +9493,24 @@ index 0000000..59da296
 +		__clear_bit(IPIPE_STALL_FLAG, &ipipe_root_cpudom_var(status));
 +}
 +
++#define ipipe_enable_notifier(p)			\
++	do {						\
++		(p)->ipipe_flags |= PF_EVNOTIFY;	\
++	} while (0)
++
++#define ipipe_disable_notifier(p)				\
++	do {							\
++		(p)->ipipe_flags &= ~(PF_EVNOTIFY|PF_EVTRET);	\
++	} while (0)
++
++/* hw IRQs off. */
++#define ipipe_return_notify(p)						\
++	do {								\
++		if (ipipe_notifier_enabled_p(p) &&			\
++		    __ipipe_event_monitored_p(IPIPE_EVENT_RETURN))	\
++			(p)->ipipe_flags |= PF_EVTRET;			\
++	} while (0)
++
 +#else	/* !CONFIG_IPIPE */
 +
 +#define ipipe_init()			do { } while(0)
@@ -9505,10 +9562,10 @@ index 0000000..59da296
 +#endif	/* !__LINUX_IPIPE_H */
 diff --git a/include/linux/ipipe_base.h b/include/linux/ipipe_base.h
 new file mode 100644
-index 0000000..2b0705d
+index 0000000..565c31e
 --- /dev/null
 +++ b/include/linux/ipipe_base.h
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,134 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe_base.h
 + *
@@ -9620,6 +9677,7 @@ index 0000000..2b0705d
 +#define __IPIPE_FEATURE_DELAYED_ATOMICSW   1
 +#define __IPIPE_FEATURE_FASTPEND_IRQ       1
 +#define __IPIPE_FEATURE_TRACE_EVENT	   1
++#define __IPIPE_FEATURE_ENABLE_NOTIFIER	   1
 +
 +#else /* !CONFIG_IPIPE */
 +
@@ -10254,7 +10312,7 @@ index 9c9f049..62c8941 100644
  static inline void __raw_read_lock(rwlock_t *lock)
  {
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 78efe7c..c2eb9a4 100644
+index 78efe7c..d1dc59a 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -61,6 +61,7 @@ struct sched_param {
@@ -10319,17 +10377,18 @@ index 78efe7c..c2eb9a4 100644
  
  #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
  
-@@ -1512,6 +1533,9 @@ struct task_struct {
+@@ -1512,6 +1533,10 @@ struct task_struct {
  #endif
  	atomic_t fs_excl;	/* holding fs exclusive resources */
  	struct rcu_head rcu;
 +#ifdef CONFIG_IPIPE
++	unsigned int ipipe_flags;
 +	void *ptd[IPIPE_ROOT_NPTDKEYS];
 +#endif
  
  	/*
  	 * cache last used pipe for splice
-@@ -1759,6 +1783,11 @@ extern void thread_group_times(struct task_struct *p, cputime_t *ut, cputime_t *
+@@ -1759,6 +1784,11 @@ extern void thread_group_times(struct task_struct *p, cputime_t *ut, cputime_t *
  #define PF_EXITING	0x00000004	/* getting shut down */
  #define PF_EXITPIDONE	0x00000008	/* pi exit done on shut down */
  #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
@@ -10341,6 +10400,19 @@ index 78efe7c..c2eb9a4 100644
  #define PF_FORKNOEXEC	0x00000040	/* forked but didn't exec */
  #define PF_MCE_PROCESS  0x00000080      /* process policy on mce errors */
  #define PF_SUPERPRIV	0x00000100	/* used super-user privileges */
+@@ -1787,6 +1817,12 @@ extern void thread_group_times(struct task_struct *p, cputime_t *ut, cputime_t *
+ #define PF_FREEZER_NOSIG 0x80000000	/* Freezer won't send signals to it */
+ 
+ /*
++ * p->ipipe_flags -- care for conflict with legacy PF_EVNOTIFY in main
++ * flags, until it moves there.
++ */
++#define PF_EVTRET	0x1
++
++/*
+  * Only the _current_ task can read/write to tsk->flags, but other
+  * tasks can access tsk->flags in readonly mode for example
+  * with tsk_used_math (like during threaded core dumping).
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
 index 8608821..c93ec16 100644
 --- a/include/linux/spinlock.h
@@ -10574,7 +10646,7 @@ index 546774a..1c3531a 100644
  	exit_files(tsk);
  	exit_fs(tsk);
 diff --git a/kernel/fork.c b/kernel/fork.c
-index f88bd98..545fd6e 100644
+index f88bd98..e35b7f0 100644
 --- a/kernel/fork.c
 +++ b/kernel/fork.c
 @@ -513,6 +513,7 @@ void mmput(struct mm_struct *mm)
@@ -10594,17 +10666,18 @@ index f88bd98..545fd6e 100644
  	new_flags |= PF_FORKNOEXEC;
  	new_flags |= PF_STARTING;
  	p->flags = new_flags;
-@@ -1300,6 +1301,9 @@ static struct task_struct *copy_process(unsigned long clone_flags,
+@@ -1300,6 +1301,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
  	write_unlock_irq(&tasklist_lock);
  	proc_fork_connector(p);
  	cgroup_post_fork(p);
 +#ifdef CONFIG_IPIPE
++	p->ipipe_flags = 0;
 +	memset(p->ptd, 0, sizeof(p->ptd));
 +#endif /* CONFIG_IPIPE */
  	perf_event_fork(p);
  	return p;
  
-@@ -1698,11 +1702,14 @@ SYSCALL_DEFINE1(unshare, unsigned long, unshare_flags)
+@@ -1698,11 +1703,14 @@ SYSCALL_DEFINE1(unshare, unsigned long, unshare_flags)
  		}
  
  		if (new_mm) {
@@ -10762,7 +10835,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..af1f7e2
+index 0000000..fdb84db
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,1970 @@
@@ -11958,13 +12031,13 @@ index 0000000..af1f7e2
 +	p = ipipe_cpudom_ptr(ipd);
 +
 +	if (__test_and_set_bit(IPIPE_SYNC_FLAG, &p->status)) {
++#ifdef __IPIPE_FEATURE_NESTED_ROOTIRQS
 +		/*
-+		 * Some questionable code in the root domain may enter
-+		 * busy waits for IRQs over interrupt context, so we
-+		 * unfortunately have to allow piling up IRQs for
-+		 * them. Non-root domains are not allowed to do this.
++		 * Caution: some archs do not support this
++		 * (mis)feature (e.g. x86_32).
 +		 */
 +		if (ipd != ipipe_root_domain)
++#endif
 +			return;
 +	}
 +
@@ -15107,7 +15180,7 @@ index 4689cb0..3d12764 100644
  
  	/*
 diff --git a/mm/memory.c b/mm/memory.c
-index 09e4b1b..bef0089 100644
+index 09e4b1b..cc97e55 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -56,6 +56,7 @@
@@ -15201,8 +15274,8 @@ index 09e4b1b..bef0089 100644
 +	}
 +#else
  again:
- 	rss[1] = rss[0] = 0;
 +#endif
+ 	rss[1] = rss[0] = 0;
  	dst_pte = pte_alloc_map_lock(dst_mm, dst_pmd, addr, &dst_ptl);
 -	if (!dst_pte)
 +	if (!dst_pte) {
