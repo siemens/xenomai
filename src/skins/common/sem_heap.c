@@ -20,8 +20,9 @@ unsigned long xeno_sem_heap[2] = { 0, 0 };
 
 struct xnvdso *nkvdso;
 
-void *xeno_map_heap(unsigned long handle, unsigned int size)
+void *xeno_map_heap(struct xnheap_desc *hd)
 {
+	unsigned long area;
 	int fd, ret;
 	void *addr;
 
@@ -31,14 +32,20 @@ void *xeno_map_heap(unsigned long handle, unsigned int size)
 		return MAP_FAILED;
 	}
 
-	ret = ioctl(fd, 0, handle);
+	ret = ioctl(fd, 0, hd->handle);
 	if (ret) {
 		perror("Xenomai: ioctl");
 		return MAP_FAILED;
 	}
 
-	addr = mmap(NULL, size, PROT_READ|PROT_WRITE,
-		    MAP_SHARED, fd, 0L);
+#ifdef CONFIG_MMU
+	/* XXX: 2.5.x ABI preserved for MMU-enabled only. */
+	area = 0;
+#else
+	area = hd->area;
+#endif
+	addr = mmap(NULL, hd->size, PROT_READ|PROT_WRITE,
+		    MAP_SHARED, fd, area);
 
 	close(fd);
 
@@ -47,40 +54,40 @@ void *xeno_map_heap(unsigned long handle, unsigned int size)
 
 static void *map_sem_heap(unsigned int shared)
 {
-	struct xnheap_desc hinfo;
+	struct xnheap_desc hdesc;
 	int ret;
 
-	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hinfo, shared);
+	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hdesc, shared);
 	if (ret < 0) {
 		errno = -ret;
 		perror("Xenomai: sys_sem_heap");
 		return MAP_FAILED;
 	}
 
-	return xeno_map_heap(hinfo.handle, hinfo.size);
+	return xeno_map_heap(&hdesc);
 }
 
-static void unmap_sem_heap(unsigned long heap_addr, unsigned int shared)
+static void unmap_sem_heap(unsigned long addr, unsigned int shared)
 {
-	struct xnheap_desc hinfo;
+	struct xnheap_desc hdesc;
 	int ret;
 
-	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hinfo, shared);
+	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hdesc, shared);
 	if (ret < 0) {
 		errno = -ret;
 		perror("Xenomai: unmap sem_heap");
 		return;
 	}
 
-	munmap((void *)heap_addr, hinfo.size);
+	munmap((void *)addr, hdesc.size);
 }
 
 static void remap_on_fork(void)
 {
 	unmap_sem_heap(xeno_sem_heap[0], 0);
 
-	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
-	if (xeno_sem_heap[0] == (unsigned long) MAP_FAILED) {
+	xeno_sem_heap[0] = (unsigned long)map_sem_heap(0);
+	if (xeno_sem_heap[0] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap local sem heap");
 		exit(EXIT_FAILURE);
 	}
@@ -105,15 +112,15 @@ static void xeno_init_vdso(void)
 
 static void xeno_init_sem_heaps_inner(void)
 {
-	xeno_sem_heap[0] = (unsigned long) map_sem_heap(0);
-	if (xeno_sem_heap[0] == (unsigned long) MAP_FAILED) {
+	xeno_sem_heap[0] = (unsigned long)map_sem_heap(0);
+	if (xeno_sem_heap[0] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap local sem heap");
 		exit(EXIT_FAILURE);
 	}
 	pthread_atfork(NULL, NULL, remap_on_fork);
 
-	xeno_sem_heap[1] = (unsigned long) map_sem_heap(1);
-	if (xeno_sem_heap[1] == (unsigned long) MAP_FAILED) {
+	xeno_sem_heap[1] = (unsigned long)map_sem_heap(1);
+	if (xeno_sem_heap[1] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap global sem heap");
 		exit(EXIT_FAILURE);
 	}

@@ -1136,8 +1136,8 @@ static int xnheap_ioctl(struct inode *inode,
 static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	unsigned long offset, size, vaddr;
-	xnheap_t *heap;
-	int err;
+	struct xnheap *heap;
+	int ret;
 
 	if (vma->vm_ops != NULL || file->private_data == NULL)
 		/* Caller should mmap() once for a given file instance, after
@@ -1146,9 +1146,6 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	if ((vma->vm_flags & VM_WRITE) && !(vma->vm_flags & VM_SHARED))
 		return -EINVAL;	/* COW unsupported. */
-
-	offset = vma->vm_pgoff << PAGE_SHIFT;
-	size = vma->vm_end - vma->vm_start;
 
 	spin_lock(&kheapq_lock);
 
@@ -1163,22 +1160,28 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	spin_unlock(&kheapq_lock);
 
 	vma->vm_private_data = file->private_data;
-
-	err = -ENXIO;
-	if (offset + size > xnheap_extentsize(heap))
-		goto deref_out;
+	vma->vm_ops = &xnheap_vmops;
+	size = vma->vm_end - vma->vm_start;
+	ret = -ENXIO;
 
 	if (countq(&heap->extents) > 1)
 		/* Cannot map multi-extent heaps, we need the memory
 		   area we map from to be contiguous. */
 		goto deref_out;
 
-	vma->vm_ops = &xnheap_vmops;
+	offset = vma->vm_pgoff << PAGE_SHIFT;
+	vaddr = (unsigned long)xnheap_base_memory(heap);
 
 #ifdef CONFIG_MMU
-	vaddr = (unsigned long)heap->archdep.heapbase + offset;
+	/*
+	 * offset is actually an offset from the start of the heap
+	 * memory.
+	 */
+	if (offset + size > xnheap_extentsize(heap))
+		goto deref_out;
 
-	err = -EAGAIN;
+	vaddr += offset;
+	ret = -EAGAIN;
 	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		unsigned long maddr = vma->vm_start;
 
@@ -1201,7 +1204,18 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 	xnarch_fault_range(vma);
 #else /* !CONFIG_MMU */
-	(void)vaddr;
+	/*
+	 * Despite the kernel sees a single backing device with direct
+	 * mapping capabilities (/dev/rtheap), we do map different
+	 * heaps through it, so we want a brand new mapping region for
+	 * each of them. To this end, we must request mappings on
+	 * non-overlapping areas. To make sure of this in the nommu
+	 * case, we request mappings from offsets representing the
+	 * start RAM address of the heap memory.
+	 */
+	if (offset + size > vaddr + xnheap_extentsize(heap))
+		goto deref_out;
+
 	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) != 0 ||
 	    heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
@@ -1211,7 +1225,8 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 
 deref_out:
 	xnheap_vmclose(vma);
-	return err;
+
+	return ret;
 }
 
 #ifndef CONFIG_MMU
@@ -1221,7 +1236,7 @@ static unsigned long xnheap_get_unmapped_area(struct file *file,
 					      unsigned long pgoff,
 					      unsigned long flags)
 {
-	unsigned long uaddr, offset;
+	unsigned long area, offset;
 	struct xnheap *heap;
 	int ret;
 
@@ -1232,15 +1247,15 @@ static unsigned long xnheap_get_unmapped_area(struct file *file,
 	if (heap == NULL)
 		goto fail;
 
+	area = (unsigned long)xnheap_base_memory(heap);
 	offset = pgoff << PAGE_SHIFT;
-	if (offset + len > xnheap_extentsize(heap))
+	if (offset < area ||
+	    offset + len > area + xnheap_extentsize(heap))
 		goto fail;
-
-	uaddr = (unsigned long)heap->archdep.heapbase + offset;
 
 	spin_unlock(&kheapq_lock);
 
-	return uaddr;
+	return offset;
 fail:
 	spin_unlock(&kheapq_lock);
 

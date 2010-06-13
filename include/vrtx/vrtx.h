@@ -21,7 +21,7 @@
 #ifndef _XENO_VRTX_VRTX_H
 #define _XENO_VRTX_VRTX_H
 
-#include <nucleus/types.h>
+#include <nucleus/heap.h>
 
 #define VRTX_SKIN_MAGIC    0x56525458
 #define VRTX_SKIN_VERSION  6
@@ -67,19 +67,17 @@ typedef struct _TCB {
 } TCB;
 
 typedef struct _vrtx_hdesc {
-
 	int hid;
 	void *hcb;
 	size_t hsize;
-
+	xnheap_area_decl();
 } vrtx_hdesc_t;
 
 typedef struct _vrtx_pdesc {
-
 	int pid;
 	void *ptcb;
 	size_t ptsize;
-
+	xnheap_area_decl();
 } vrtx_pdesc_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

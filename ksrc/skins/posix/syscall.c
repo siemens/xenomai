@@ -2575,6 +2575,7 @@ static int __mmap_prologue(struct pt_regs *regs)
 {
 	pse51_mmap_param_t mmap_param;
 	pse51_assoc_t *assoc;
+	struct xnheap *heap;
 	pse51_ufd_t *ufd;
 	size_t len;
 	off_t off;
@@ -2608,10 +2609,13 @@ static int __mmap_prologue(struct pt_regs *regs)
 		return err;
 	}
 
+	heap = mmap_param.ioctl_cookie;
 	mmap_param.len = len;
-	mmap_param.heapsize = xnheap_extentsize(mmap_param.ioctl_cookie);
-	mmap_param.offset = xnheap_mapped_offset(mmap_param.ioctl_cookie,
-						 mmap_param.kaddr);
+	mmap_param.heapsize = xnheap_extentsize(heap);
+	mmap_param.offset = xnheap_mapped_offset(heap, mmap_param.kaddr);
+#ifndef CONFIG_MMU
+	mmap_param.offset += (unsigned long)xnheap_base_memory(heap);
+#endif
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs),
 				      &mmap_param, sizeof(mmap_param));

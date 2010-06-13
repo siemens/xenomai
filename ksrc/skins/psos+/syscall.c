@@ -1139,6 +1139,7 @@ static int __rn_create(struct pt_regs *regs)
 		u_long allocsz;
 		void *rncb;
 		u_long mapsize;
+		xnheap_area_decl();
 	} rninfo;
 	psosrn_t *rn;
 	u_long err;
@@ -1165,6 +1166,7 @@ static int __rn_create(struct pt_regs *regs)
 		rninfo.rnid = rn->handle;
 		rninfo.rncb = &rn->heapbase;
 		rninfo.mapsize = xnheap_extentsize(&rn->heapbase);
+		xnheap_area_set(&rninfo, xnheap_base_memory(&rn->heapbase));
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &rninfo,
 					   sizeof(rninfo)))
 			err = -EFAULT;

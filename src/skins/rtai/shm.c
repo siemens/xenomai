@@ -28,13 +28,17 @@
 
 extern int __rtai_muxid;
 
-void *xeno_map_heap(unsigned long handle, unsigned int size);
+void *xeno_map_heap(struct xnheap_desc *hd);
 
 static void *__map_shm_heap_memory(unsigned long opaque, int mapsize)
 {
+	struct xnheap_desc hd;
 	void *mapbase;
 
-	mapbase = xeno_map_heap(opaque, mapsize);
+	hd.handle = opaque;
+	hd.size = mapsize;
+	xnheap_area_set(&hd, 0);
+	mapbase = xeno_map_heap(&hd);
 	if (mapbase == MAP_FAILED)
 		return NULL;
 

@@ -28,11 +28,16 @@
 
 extern int __native_muxid;
 
-void *xeno_map_heap(unsigned long handle, unsigned int size);
+void *xeno_map_heap(struct xnheap_desc *hd);
 
 static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER *php)
 {
-	php->mapbase = xeno_map_heap((unsigned long)php->opaque2, php->mapsize);
+	struct xnheap_desc hd;
+
+	hd.handle = (unsigned long)php->opaque2;
+	hd.size = php->mapsize;
+	xnheap_area_set(&hd, php->area);
+	php->mapbase = xeno_map_heap(&hd);
 	if (php->mapbase == MAP_FAILED)
 		return -errno;
 

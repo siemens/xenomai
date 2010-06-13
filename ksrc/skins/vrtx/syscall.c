@@ -867,7 +867,7 @@ static int __sc_hcreate(struct pt_regs *regs)
 		hdesc.hid = hid;
 		hdesc.hcb = &heap->sysheap;
 		hdesc.hsize = xnheap_extentsize(&heap->sysheap);
-
+		xnheap_area_set(&hdesc, xnheap_base_memory(&heap->sysheap));
 		xnlock_put_irqrestore(&nklock, s);
 
 		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
@@ -1076,7 +1076,7 @@ static int __sc_pcreate(struct pt_regs *regs)
 		pdesc.pid = pid;
 		pdesc.ptcb = ptheap;
 		pdesc.ptsize = xnheap_extentsize(ptheap);
-
+		xnheap_area_set(&pdesc, xnheap_base_memory(ptheap));
 		xnlock_put_irqrestore(&nklock, s);
 
 		return __xn_safe_copy_to_user((void __user *)__xn_reg_arg4(regs),

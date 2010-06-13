@@ -1892,15 +1892,18 @@ static int xnshadow_sys_trace(struct pt_regs *regs)
 
 static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 {
-	struct xnheap_desc hinfo, __user *us_hinfo;
+	struct xnheap_desc hd, __user *u_hd;
+	struct xnheap *heap;
 	unsigned global;
 
 	global = __xn_reg_arg2(regs);
-	us_hinfo = (struct xnheap_desc __user *) __xn_reg_arg1(regs);
-	hinfo.handle = (unsigned long)&xnsys_ppd_get(global)->sem_heap;
-	hinfo.size = xnheap_extentsize(&xnsys_ppd_get(global)->sem_heap);
+	u_hd = (struct xnheap_desc __user *)__xn_reg_arg1(regs);
+	heap = &xnsys_ppd_get(global)->sem_heap;
+	hd.handle = (unsigned long)heap;
+	hd.size = xnheap_extentsize(heap);
+	xnheap_area_set(&hd, xnheap_base_memory(heap));
 
-	return __xn_safe_copy_to_user(us_hinfo, &hinfo, sizeof(*us_hinfo));
+	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
 
 static int xnshadow_sys_current(struct pt_regs *regs)

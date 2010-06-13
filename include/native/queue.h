@@ -58,15 +58,11 @@ typedef struct rt_queue_info {
 } RT_QUEUE_INFO;
 
 typedef struct rt_queue_placeholder {
-
-    xnhandle_t opaque;
-
-    void *opaque2;
-
-    caddr_t mapbase;
-
-    size_t mapsize;
-
+	xnhandle_t opaque;
+	void *opaque2;
+	caddr_t mapbase;
+	size_t mapsize;
+	xnheap_area_decl();
 } RT_QUEUE_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

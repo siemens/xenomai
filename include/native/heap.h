@@ -58,15 +58,11 @@ typedef struct rt_heap_info {
 } RT_HEAP_INFO;
 
 typedef struct rt_heap_placeholder {
-
-    xnhandle_t opaque;
-
-    void *opaque2;
-
-    caddr_t mapbase;
-
-    size_t mapsize;
-
+	xnhandle_t opaque;
+	void *opaque2;
+	caddr_t mapbase;
+	size_t mapsize;
+	xnheap_area_decl();
 } RT_HEAP_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

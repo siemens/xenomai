@@ -27,13 +27,17 @@
 
 extern int __vrtx_muxid;
 
-void *xeno_map_heap(unsigned long handle, unsigned int size);
+void *xeno_map_heap(struct xnheap_desc *hd);
 
 static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
 {
+	struct xnheap_desc hd;
 	caddr_t mapbase;
 
-	mapbase = xeno_map_heap((unsigned long)hdesc->hcb, hdesc->hsize);
+	hd.handle = (unsigned long)hdesc->hcb;
+	hd.size = hdesc->hsize;
+	xnheap_area_set(&hd, hdesc->area);
+	mapbase = xeno_map_heap(&hd);
 	if (mapbase == MAP_FAILED)
 		return -errno;
 

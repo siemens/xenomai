@@ -28,11 +28,16 @@
 
 extern int __native_muxid;
 
-void *xeno_map_heap(unsigned long handle, unsigned int size);
+void *xeno_map_heap(struct xnheap_desc *hd);
 
 static int __map_queue_memory(RT_QUEUE *q, RT_QUEUE_PLACEHOLDER *php)
 {
-  php->mapbase = xeno_map_heap((unsigned long)php->opaque2, php->mapsize);
+	struct xnheap_desc hd;
+
+	hd.handle = (unsigned long)php->opaque2;
+	hd.size = php->mapsize;
+	xnheap_area_set(&hd, php->area);
+	php->mapbase = xeno_map_heap(&hd);
 	if (php->mapbase == MAP_FAILED)
 		return -errno;
 
@@ -59,6 +64,7 @@ int rt_queue_create(RT_QUEUE *q,
 		/* If the mapping fails, make sure we don't leave a dandling
 		   queue in kernel space -- remove it. */
 		XENOMAI_SKINCALL1(__native_muxid, __native_queue_delete, &ph);
+
 	return err;
 }
 
