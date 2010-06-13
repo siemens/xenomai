@@ -702,8 +702,7 @@ void __init xnheap_init_vdso(void)
 {
 	nkvdso = (struct xnvdso *)
 		xnheap_alloc(&__xnsys_global_ppd.sem_heap, sizeof(*nkvdso));
-
-	if (!nkvdso)
+	if (nkvdso == NULL)
 		xnpod_fatal("Xenomai: cannot allocate memory for xnvdso!\n");
 
 	nkvdso->features = XNVDSO_FEATURES;
@@ -1891,20 +1890,15 @@ static int xnshadow_sys_trace(struct pt_regs *regs)
 	return err;
 }
 
-struct heap_info {
-	xnheap_t *addr;
-	unsigned size;
-};
-
 static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 {
-	struct heap_info hinfo, __user *us_hinfo;
+	struct xnheap_desc hinfo, __user *us_hinfo;
 	unsigned global;
 
 	global = __xn_reg_arg2(regs);
-	us_hinfo = (struct heap_info __user *) __xn_reg_arg1(regs);
-	hinfo.addr = &xnsys_ppd_get(global)->sem_heap;
-	hinfo.size = xnheap_extentsize(hinfo.addr);
+	us_hinfo = (struct xnheap_desc __user *) __xn_reg_arg1(regs);
+	hinfo.handle = (unsigned long)&xnsys_ppd_get(global)->sem_heap;
+	hinfo.size = xnheap_extentsize(&xnsys_ppd_get(global)->sem_heap);
 
 	return __xn_safe_copy_to_user(us_hinfo, &hinfo, sizeof(*us_hinfo));
 }

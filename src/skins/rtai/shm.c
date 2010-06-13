@@ -28,69 +28,18 @@
 
 extern int __rtai_muxid;
 
+void *xeno_map_heap(unsigned long handle, unsigned int size);
+
 static void *__map_shm_heap_memory(unsigned long opaque, int mapsize)
 {
-	int err, heapfd;
-	void *mapbase = 0;
+	void *mapbase;
 
-	/* Open the heap device to share the heap memory with the
-	   in-kernel skin and bound clients. */
-	heapfd = open(XNHEAP_DEV_NAME, O_RDWR);
-
-	if (heapfd < 0)
-		return 0;
-
-	/* Bind this file instance to the shared heap. */
-	err = ioctl(heapfd, 0, opaque);
-
-	if (err)
-		goto close_and_exit;
-
-	/* Map the heap memory into our address space. */
-	mapbase = (caddr_t) mmap(NULL,
-				 mapsize,
-				 PROT_READ | PROT_WRITE,
-				 MAP_SHARED, heapfd, 0L);
+	mapbase = xeno_map_heap(opaque, mapsize);
 	if (mapbase == MAP_FAILED)
-		mapbase = 0;
-
-      close_and_exit:
-
-	close(heapfd);
+		return NULL;
 
 	return mapbase;
 }
-
-#if 0
-
-static int __unmap_shm_heap_memory(unsigned long opaque, void *mapbase,
-				   int mapsize)
-{
-	int err, heapfd;
-
-	/* Open the heap device to share the heap memory with the
-	   in-kernel skin and bound clients. */
-	heapfd = open(XNHEAP_DEV_NAME, O_RDWR);
-
-	if (heapfd < 0)
-		return 0;
-
-	/* Bind this file instance to the shared heap. */
-	err = ioctl(heapfd, 0, opaque);
-
-	if (err)
-		goto close_and_exit;
-
-	err = munmap(mapbase, mapsize);
-
-      close_and_exit:
-
-	close(heapfd);
-
-	return err;
-}
-
-#endif
 
 static void *_compat_shm_alloc(unsigned long name, int size, int suprt,
 			       int isheap)

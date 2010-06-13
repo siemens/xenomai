@@ -279,4 +279,9 @@ int xnheap_check_block(xnheap_t *heap,
 
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 
+struct xnheap_desc {
+	unsigned long handle;
+	unsigned int size;
+};
+
 #endif /* !_XENO_NUCLEUS_HEAP_H */

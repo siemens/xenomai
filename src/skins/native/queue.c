@@ -28,39 +28,17 @@
 
 extern int __native_muxid;
 
-static int __map_queue_memory(RT_QUEUE *q, RT_QUEUE_PLACEHOLDER * php)
+void *xeno_map_heap(unsigned long handle, unsigned int size);
+
+static int __map_queue_memory(RT_QUEUE *q, RT_QUEUE_PLACEHOLDER *php)
 {
-	int err, heapfd;
+  php->mapbase = xeno_map_heap((unsigned long)php->opaque2, php->mapsize);
+	if (php->mapbase == MAP_FAILED)
+		return -errno;
 
-	/* Open the heap device to share the message pool memory with the
-	   in-kernel skin and bound clients. */
-	heapfd = __real_open(XNHEAP_DEV_NAME, O_RDWR);
+	*q = *php;
 
-	if (heapfd < 0)
-		return -ENOENT;
-
-	/* Bind this file instance to the shared heap. */
-	err = __real_ioctl(heapfd, 0, php->opaque2);
-
-	if (err)
-		goto close_and_exit;
-
-	/* Map the heap memory into our address space. */
-	php->mapbase = (caddr_t) __real_mmap(NULL,
-					     php->mapsize,
-					     PROT_READ | PROT_WRITE,
-					     MAP_SHARED, heapfd, 0L);
-	if (php->mapbase != MAP_FAILED)
-		/* Copy back a complete placeholder only if all is ok. */
-		*q = *php;
-	else
-		err = -errno;
-
-      close_and_exit:
-
-	__real_close(heapfd);
-
-	return err;
+	return 0;
 }
 
 int rt_queue_create(RT_QUEUE *q,
