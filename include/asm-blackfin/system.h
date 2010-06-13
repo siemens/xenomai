@@ -53,6 +53,13 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
     struct task_struct *active_task;    /* Active user-space task */
 #endif
     struct thread_struct *tsp;	/* Pointer to the active thread struct (&ts or &user->thread). */
+#ifdef XNARCH_HAVE_MAYDAY
+	struct {
+		unsigned long pc;
+		unsigned long p0;
+		unsigned long r5;
+	} mayday;
+#endif
 
     /* Init block */
     struct xnthread *self;
