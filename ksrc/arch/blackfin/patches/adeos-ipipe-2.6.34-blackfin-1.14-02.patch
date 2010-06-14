@@ -1,21 +1,36 @@
+diff --git a/arch/blackfin/Kconfig b/arch/blackfin/Kconfig
+index c078849..799b1c0 100644
+--- a/arch/blackfin/Kconfig
++++ b/arch/blackfin/Kconfig
+@@ -84,6 +84,8 @@ source "kernel/Kconfig.freezer"
+ 
+ menu "Blackfin Processor Options"
+ 
++source "kernel/ipipe/Kconfig"
++
+ comment "Processor and Board Settings"
+ 
+ choice
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index d3b4044..32b7bad 100644
+index d3b4044..4530dfa 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
-@@ -34,10 +34,11 @@
+@@ -34,11 +34,12 @@
  #include <asm/bitops.h>
  #include <asm/atomic.h>
  #include <asm/traps.h>
 +#include <asm/bitsperlong.h>
  
 -#define IPIPE_ARCH_STRING     "1.12-00"
-+#define IPIPE_ARCH_STRING     "1.14-00"
++#define IPIPE_ARCH_STRING     "1.14-02"
  #define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    12
+-#define IPIPE_PATCH_NUMBER    0
 +#define IPIPE_MINOR_NUMBER    14
- #define IPIPE_PATCH_NUMBER    0
++#define IPIPE_PATCH_NUMBER    2
  
  #ifdef CONFIG_SMP
+ #error "I-pipe/blackfin: SMP not implemented"
 @@ -129,11 +130,11 @@ void __ipipe_enable_pipeline(void);
  #define __ipipe_hook_critical_ipi(ipd) do { } while (0)
  
@@ -241,7 +256,7 @@ index 1a496cd..d953572 100644
  
  void __ipipe_disable_root_irqs_hw(void)
 diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
-index 7ad8878..33f1253 100644
+index 7ad8878..8400131 100644
 --- a/arch/blackfin/mach-common/ints-priority.c
 +++ b/arch/blackfin/mach-common/ints-priority.c
 @@ -15,6 +15,7 @@
@@ -279,17 +294,23 @@ index 7ad8878..33f1253 100644
  
  	if (likely(vec == EVT_IVTMR_P))
  		irq = IRQ_CORETMR;
-@@ -1436,6 +1436,18 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
+@@ -1436,6 +1436,24 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
  	__ipipe_handle_irq(irq, regs);
  	ipipe_trace_irq_exit(irq);
  
 +	if (user_mode(regs) &&
++	    !ipipe_test_foreign_stack() &&
 +	    (current->ipipe_flags & PF_EVTRET) != 0) {
 +		/*
-+		 * Testing for user_regs() eliminates foreign stack
-+		 * contexts, including from careless domains which did
-+		 * not set the foreign stack bit (foreign stacks are
-+		 * always kernel-based).
++		 * Testing for user_regs() does NOT fully eliminate
++		 * foreign stack contexts, because of the forged
++		 * interrupt returns we do through
++		 * __ipipe_call_irqtail. In that case, we might have
++		 * preempted a foreign stack context in a high
++		 * priority domain, with a single interrupt level now
++		 * pending after the irqtail unwinding is done. In
++		 * which case user_mode() is now true, and the event
++		 * gets dispatched spuriously.
 +		 */
 +		current->ipipe_flags &= ~PF_EVTRET;
 +		__ipipe_dispatch_event(IPIPE_EVENT_RETURN, regs);
@@ -2679,10 +2700,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..b7d863d
+index 0000000..e2503bd
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1976 @@
+@@ -0,0 +1,1977 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4647,6 +4668,7 @@ index 0000000..b7d863d
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_pend_irq);
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
++EXPORT_SYMBOL(__ipipe_event_monitors);
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +EXPORT_SYMBOL(__ipipe_check_percpu_access);
 +#endif
