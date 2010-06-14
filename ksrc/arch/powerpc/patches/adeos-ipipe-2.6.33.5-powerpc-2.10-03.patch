@@ -262,7 +262,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..b8befae
+index 0000000..4e90de7
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,276 @@
@@ -313,10 +313,10 @@ index 0000000..b8befae
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.10-01"
++#define IPIPE_ARCH_STRING	"2.10-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -7250,7 +7250,7 @@ index 328bca6..4ed869d 100644
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
 diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index 9ccf0e2..f500f1e 100644
+index 9ccf0e2..ec98e63 100644
 --- a/include/linux/lockdep.h
 +++ b/include/linux/lockdep.h
 @@ -395,7 +395,7 @@ do {								\
@@ -7262,6 +7262,15 @@ index 9ccf0e2..f500f1e 100644
  
  /*
   * On lockdep we dont want the hand-coded irq-enable of
+@@ -403,7 +403,7 @@ do {								\
+  * that interrupts are not re-enabled during lock-acquire:
+  */
+ #define LOCK_CONTENDED_FLAGS(_lock, try, lock, lockfl, flags) \
+-	LOCK_CONTENDED((_lock), (try), (lock))
++	LOCK_CONTENDED((_lock), (try), lock)
+ 
+ #else /* CONFIG_LOCKDEP */
+ 
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index 2e681d9..130b7d5 100644
 --- a/include/linux/preempt.h
@@ -7871,10 +7880,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..fdb84db
+index 0000000..75f5d42
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1970 @@
+@@ -0,0 +1,1971 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -9833,6 +9842,7 @@ index 0000000..fdb84db
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_pend_irq);
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
++EXPORT_SYMBOL(__ipipe_event_monitors);
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +EXPORT_SYMBOL(__ipipe_check_percpu_access);
 +#endif

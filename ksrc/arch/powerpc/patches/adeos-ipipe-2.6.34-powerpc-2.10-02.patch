@@ -262,7 +262,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..f345359
+index 0000000..8aa91f0
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,277 @@
@@ -313,10 +313,10 @@ index 0000000..f345359
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.10-00"
++#define IPIPE_ARCH_STRING	"2.10-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -6074,10 +6074,10 @@ index 0000000..fa1a951
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_lock.h b/include/linux/ipipe_lock.h
 new file mode 100644
-index 0000000..73ed46a
+index 0000000..032080f
 --- /dev/null
 +++ b/include/linux/ipipe_lock.h
-@@ -0,0 +1,215 @@
+@@ -0,0 +1,230 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_lock.h
 + *
@@ -6139,6 +6139,19 @@ index 0000000..73ed46a
 +			__ret__ = __real_raw_spin_trylock_irqsave(std_spinlock_raw(lock), flags); \
 +		else if (std_spinlock_p(lock))				\
 +			__ret__ = __real_raw_spin_trylock_irqsave(&std_spinlock(lock)->rlock, flags); \
++		else __bad_lock_type();					\
++		__ret__;						\
++	 })
++
++#define PICK_SPINTRYLOCK_IRQ(lock)					\
++	({								\
++		int __ret__;						\
++		if (ipipe_spinlock_p(lock))				\
++			__ret__ = __ipipe_spin_trylock_irq(ipipe_spinlock(lock)); \
++		else if (std_spinlock_raw_p(lock))				\
++			__ret__ = __real_raw_spin_trylock_irq(std_spinlock_raw(lock)); \
++		else if (std_spinlock_p(lock))				\
++			__ret__ = __real_raw_spin_trylock_irq(&std_spinlock(lock)->rlock); \
 +		else __bad_lock_type();					\
 +		__ret__;						\
 +	 })
@@ -6237,6 +6250,8 @@ index 0000000..73ed46a
 +	spin_unlock_irqrestore(lock, flags)
 +
 +void __ipipe_spin_lock_irq(ipipe_spinlock_t *lock);
++
++int __ipipe_spin_trylock_irq(ipipe_spinlock_t *lock);
 +
 +void __ipipe_spin_unlock_irq(ipipe_spinlock_t *lock);
 +
@@ -6774,7 +6789,7 @@ index 2b7b81d..05cbf77 100644
   * tasks can access tsk->flags in readonly mode for example
   * with tsk_used_math (like during threaded core dumping).
 diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
-index 89fac6a..771e701 100644
+index 89fac6a..6135280 100644
 --- a/include/linux/spinlock.h
 +++ b/include/linux/spinlock.h
 @@ -88,10 +88,12 @@
@@ -6875,7 +6890,7 @@ index 89fac6a..771e701 100644
 +	__real_raw_spin_trylock(lock) ? \
  	1 : ({ local_irq_enable(); 0;  }); \
  })
-+#define raw_spin_trylock_irq(lock)	PICK_SPINOP(_trylock_irq, lock)
++#define raw_spin_trylock_irq(lock)	PICK_SPINTRYLOCK_IRQ(lock)
  
 -#define raw_spin_trylock_irqsave(lock, flags) \
 +#define __real_raw_spin_trylock_irqsave(lock, flags) \
@@ -7295,10 +7310,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..b7d863d
+index 0000000..e2503bd
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1976 @@
+@@ -0,0 +1,1977 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -9263,6 +9278,7 @@ index 0000000..b7d863d
 +EXPORT_SYMBOL(ipipe_send_ipi);
 +EXPORT_SYMBOL(__ipipe_pend_irq);
 +EXPORT_SYMBOL(__ipipe_set_irq_pending);
++EXPORT_SYMBOL(__ipipe_event_monitors);
 +#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +EXPORT_SYMBOL(__ipipe_check_percpu_access);
 +#endif
