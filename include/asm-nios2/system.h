@@ -48,6 +48,14 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	struct thread_struct ts;	/* Holds kernel-based thread context. */
 	struct task_struct *user_task;	/* Shadowed user-space task */
 	struct thread_struct *tsp;	/* Active thread struct */
+#ifdef XNARCH_HAVE_MAYDAY
+	struct {
+		unsigned long ea;
+		unsigned long r2;
+		unsigned long r3;
+		unsigned long r9;
+	} mayday;
+#endif
 
 	/* Init block */
 	struct xnthread *self;
