@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
+#include <nucleus/heap.h>
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/current.h>
 #include <asm-generic/xenomai/timeconv.h>
@@ -86,6 +88,13 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 	xnfeatinfo_t finfo;
 	int muxid;
 
+	/* Some sanity checks first. */
+	if (access(XNHEAP_DEV_NAME, 0)) {
+		fprintf(stderr, "Xenomai: %s is missing\n(chardev, major=10 minor=%d)\n",
+			XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
+		exit(EXIT_FAILURE);
+	}
+	
 	old_sigill_handler = signal(SIGILL, xeno_sigill_handler);
 	if (old_sigill_handler == SIG_ERR) {
 		perror("signal(SIGILL)");

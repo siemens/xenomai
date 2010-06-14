@@ -190,8 +190,6 @@ extern "C" {
 
 #ifdef __KERNEL__
 
-#define XNHEAP_DEV_MINOR 254
-
 int xnheap_mount(void);
 
 void xnheap_umount(void);
@@ -281,6 +279,7 @@ int xnheap_check_block(xnheap_t *heap,
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
+#define XNHEAP_DEV_MINOR 254
 
 #ifdef CONFIG_MMU
 /* XXX: 2.5.x ABI preserved for MMU-enabled only. */
