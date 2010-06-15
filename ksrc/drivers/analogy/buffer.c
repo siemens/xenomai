@@ -828,7 +828,7 @@ ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 		return -EINVAL;
 	}
 
-	if (!subd || !test_bit(A4L_SUBD_BUSY, &subd->status)) {
+	if (!subd || !a4l_subd_is_busy(subd)) {
 		__a4l_err("a4l_write: idle subdevice on this context\n");
 		return -ENOENT;
 	}
