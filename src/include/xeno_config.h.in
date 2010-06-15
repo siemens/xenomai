@@ -1,6 +1,9 @@
 /* src/include/xeno_config.h.in.  Generated from configure.in by autoheader.  */
 
 /* config */
+#undef CONFIG_MMU
+
+/* config */
 #undef CONFIG_SMP
 
 /* config */
@@ -61,6 +64,9 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the `fork' function. */
+#undef HAVE_FORK
 
 /* Define to 1 if you have the `ftruncate64' function. */
 #undef HAVE_FTRUNCATE64
