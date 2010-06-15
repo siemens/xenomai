@@ -124,6 +124,9 @@ int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
+
+	a4l_info(subd->dev, "loop_trigger: (subd=%d)\n", subd->idx);  
+
 	priv->loop_running = 1;
 	return 0;
 }
