@@ -23,4 +23,6 @@
 
 #include <linux/fs.h>
 
+#define IS_ERR_VALUE(value) IS_ERR((void *)value)
+
 #endif /* _XENO_COMPAT_LINUX_ERR_H */

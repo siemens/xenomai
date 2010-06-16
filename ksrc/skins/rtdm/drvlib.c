@@ -37,6 +37,7 @@
 #include <asm/io.h>
 #include <asm/pgtable.h>
 #include <linux/highmem.h>
+#include <linux/err.h>
 
 #include <rtdm/rtdm_driver.h>
 
@@ -1808,9 +1809,8 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 
 	vaddr = (unsigned long)mmap_data->src_vaddr;
 	paddr = mmap_data->src_paddr;
-	if (!paddr)
-		/* kmalloc memory */
-		paddr = virt_to_phys((void *)vaddr);
+	if (paddr == 0)	/* kmalloc memory? */
+		paddr = __pa(vaddr);
 
 	maddr = vma->vm_start;
 	size = vma->vm_end - vma->vm_start;
@@ -1834,6 +1834,8 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 		xnarch_fault_range(vma);
 		ret = 0;
 	} else
+#else
+	vma->vm_pgoff = paddr >> PAGE_SHIFT;
 #endif /* CONFIG_MMU */
 	if (mmap_data->src_paddr)
 	  	ret = xnarch_remap_io_page_range(filp, vma, maddr, paddr,
@@ -1848,22 +1850,43 @@ static int rtdm_mmap_buffer(struct file *filp, struct vm_area_struct *vma)
 	return ret;
 }
 
+#ifndef CONFIG_MMU
+static unsigned long rtdm_unmapped_area(struct file *file,
+					unsigned long addr,
+					unsigned long len,
+					unsigned long pgoff,
+					unsigned long flags)
+{
+	struct rtdm_mmap_data *mmap_data = file->private_data;
+	unsigned long pa;
+
+	pa = mmap_data->src_paddr;
+	if (pa == 0)
+		pa = __pa(mmap_data->src_vaddr);
+
+	return pa;
+}
+#else
+#define rtdm_unmapped_area  NULL
+#endif
+
 static struct file_operations rtdm_mmap_fops = {
 	.mmap = rtdm_mmap_buffer,
+	.get_unmapped_area = rtdm_unmapped_area
 };
 
 static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 			struct rtdm_mmap_data *mmap_data,
 			size_t len, int prot, void **pptr)
 {
-	struct file *filp;
 	const struct file_operations *old_fops;
+	unsigned long u_addr;
 	void *old_priv_data;
-	void *user_ptr;
+	struct file *filp;
 
 	XENO_ASSERT(RTDM, xnpod_root_p(), return -EPERM;);
 
-	filp = filp_open("/dev/zero", O_RDWR, 0);
+	filp = filp_open(XNHEAP_DEV_NAME, O_RDWR, 0);
 	if (IS_ERR(filp))
 		return PTR_ERR(filp);
 
@@ -1874,8 +1897,8 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 	filp->private_data = mmap_data;
 
 	down_write(&user_info->mm->mmap_sem);
-	user_ptr = (void *)do_mmap(filp, (unsigned long)*pptr, len, prot,
-				   MAP_SHARED, 0);
+	u_addr = do_mmap(filp, (unsigned long)*pptr, len, prot,
+			 MAP_SHARED, 0);
 	up_write(&user_info->mm->mmap_sem);
 
 	filp->f_op = (typeof(filp->f_op))old_fops;
@@ -1883,10 +1906,11 @@ static int rtdm_do_mmap(rtdm_user_info_t *user_info,
 
 	filp_close(filp, user_info->files);
 
-	if (IS_ERR(user_ptr))
-		return PTR_ERR(user_ptr);
+	if (IS_ERR_VALUE(u_addr))
+		return (int)u_addr;
 
-	*pptr = user_ptr;
+	*pptr = (void *)u_addr;
+
 	return 0;
 }
 
@@ -1950,8 +1974,12 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
 		      struct vm_operations_struct *vm_ops,
 		      void *vm_private_data)
 {
-	struct rtdm_mmap_data mmap_data =
-		{ src_addr, 0, vm_ops, vm_private_data };
+	struct rtdm_mmap_data mmap_data = {
+		.src_vaddr = src_addr,
+		.src_paddr = 0,
+		.vm_ops = vm_ops,
+		.vm_private_data = vm_private_data
+	};
 
 	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
 }
@@ -2014,8 +2042,12 @@ int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
 		       struct vm_operations_struct *vm_ops,
 		       void *vm_private_data)
 {
-	struct rtdm_mmap_data mmap_data =
-		{ NULL, src_addr, vm_ops, vm_private_data };
+	struct rtdm_mmap_data mmap_data = {
+		.src_vaddr = NULL,
+		.src_paddr = src_addr,
+		.vm_ops = vm_ops,
+		.vm_private_data = vm_private_data
+	};
 
 	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
 }
