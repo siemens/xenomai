@@ -1,9 +1,13 @@
 menuconfig XENO_SKIN_RTAI
-	depends on XENO_OPT_NUCLEUS
-	tristate "RTAI emulator (DEPRECATED)"
+	depends on XENO_OPT_NUCLEUS && MMU && WORD_SIZE != 64
+	tristate "RTAI emulator (BROKEN, DEPRECATED)"
 	help
 
 	An emulator of the RTAI system.
+
+	This emulator is actually broken beyond all recognition:
+	- on MMU-less targets
+	- on 64bit targets
 
 	WARNING: This emulator is DEPRECATED. It is planned for
 	removal in v2.6.x. Legacy applications depending on it should
