@@ -48,11 +48,7 @@ MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
 static void __exit rtdm_skin_shutdown(int xtype)
 {
 	rtdm_dev_cleanup();
-
-#ifdef CONFIG_PROC_FS
 	rtdm_proc_cleanup();
-#endif /* CONFIG_PROC_FS */
-
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	rtdm_syscall_cleanup();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
@@ -79,11 +75,9 @@ static int __init SKIN_INIT(rtdm)
 	if (err)
 		goto cleanup_tbase;
 
-#ifdef CONFIG_PROC_FS
 	err = rtdm_proc_init();
 	if (err)
 		goto cleanup_dev;
-#endif /* CONFIG_PROC_FS */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	err = rtdm_syscall_init();
@@ -102,13 +96,9 @@ static int __init SKIN_INIT(rtdm)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 cleanup_proc:
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-#ifdef CONFIG_PROC_FS
 	rtdm_proc_cleanup();
 
 cleanup_dev:
-#endif /* CONFIG_PROC_FS */
-
 	rtdm_dev_cleanup();
 
 cleanup_tbase:
