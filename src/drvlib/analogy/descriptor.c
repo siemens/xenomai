@@ -315,6 +315,11 @@ int a4l_open(a4l_desc_t * dsc, const char *fname)
 /**
  * @brief Close the Analogy device related with the descriptor
  *
+ * The file descriptor is associated with a context. The context is
+ * one of the enabler of asynchronous transfers. So, by closing the
+ * file descriptor, the programer must keep in mind that the currently
+ * occuring asynchronous transfer will cancelled.
+ *
  * @param[in] dsc Device descriptor
  *
  * @return 0 on success. Otherwise:
