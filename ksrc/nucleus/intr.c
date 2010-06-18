@@ -981,7 +981,7 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 }
 #endif /* CONFIG_XENO_OPT_STATS */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 #include <nucleus/vfile.h>
 
@@ -1131,6 +1131,6 @@ void xnintr_cleanup_proc(void)
 	xnvfile_destroy_regular(&irq_vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/

@@ -48,7 +48,7 @@
 #include <native/task.h>
 #include <native/sem.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -139,7 +139,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __sem_pnode = {
 	.node = {
@@ -147,7 +147,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 /**
  * @fn int rt_sem_create(RT_SEM *sem,const char *name,unsigned long icount,int mode)

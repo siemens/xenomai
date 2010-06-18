@@ -141,7 +141,7 @@ struct xnsched_class {
 	void (*sched_suspend_rpi)(struct xnthread *thread);
 	void (*sched_resume_rpi)(struct xnthread *thread);
 #endif
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	int (*sched_init_vfile)(struct xnsched_class *schedclass,
 				struct xnvfile_directory *vfroot);
 	void (*sched_cleanup_vfile)(struct xnsched_class *schedclass);

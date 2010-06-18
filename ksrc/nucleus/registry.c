@@ -61,7 +61,7 @@ static int registry_hash_entries;
 
 static struct xnsynch registry_hash_synch;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 #include <linux/workqueue.h>
 
@@ -102,7 +102,7 @@ static struct xnvfile_regular usage_vfile = {
 	.ops = &usage_vfile_ops,
 };
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 int xnregistry_init(void)
 {
@@ -143,7 +143,7 @@ int xnregistry_init(void)
 	}
 
 	initq(&registry_obj_procq);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	initq(&registry_obj_freeq);
 	initq(&registry_obj_busyq);
@@ -163,11 +163,11 @@ int xnregistry_init(void)
 						    registry_hash_entries);
 
 	if (registry_hash_table == NULL) {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 		xnvfile_destroy_regular(&usage_vfile);
 		xnvfile_destroy_dir(&registry_vfroot);
 		rthal_apc_free(registry_proc_apc);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 		return -ENOMEM;
 	}
 
@@ -181,7 +181,7 @@ int xnregistry_init(void)
 
 void xnregistry_cleanup(void)
 {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	struct xnobject *ecurr, *enext;
 	struct xnpnode *pnode;
 	int n;
@@ -205,25 +205,25 @@ void xnregistry_cleanup(void)
 			if (--pnode->root->entries == 0)
 				xnvfile_destroy_dir(&pnode->root->vdir);
 	}
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	xnarch_free_host_mem(registry_hash_table,
 		       sizeof(struct xnobject *) * registry_hash_entries);
 
 	xnsynch_destroy(&registry_hash_synch);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	rthal_apc_free(registry_proc_apc);
 	flush_scheduled_work();
 	xnvfile_destroy_regular(&usage_vfile);
 	xnvfile_destroy_dir(&registry_vfroot);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	xnarch_free_host_mem(registry_obj_slots,
 			     CONFIG_XENO_OPT_REGISTRY_NRSLOTS * sizeof(struct xnobject));
 }
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static DECLARE_MUTEX(export_mutex);
 
@@ -515,7 +515,7 @@ static inline void registry_unexport_pnode(struct xnobject *object)
 	}
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 static unsigned registry_hash_crunch(const char *key)
 {
@@ -684,7 +684,7 @@ int xnregistry_enter(const char *key, void *objaddr,
 	object->objaddr = objaddr;
 	object->cstamp = ++registry_obj_stamp;
 	object->safelock = 0;
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	object->pnode = NULL;
 #endif
 	if (*key == '\0') {
@@ -708,10 +708,10 @@ int xnregistry_enter(const char *key, void *objaddr,
 	 */
 	*phandle = object - registry_obj_slots;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	if (pnode)
 		registry_export_pnode(object, pnode);
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	if (registry_wakeup_sleepers(key))
 		xnpod_schedule();
@@ -914,7 +914,7 @@ int xnregistry_remove(xnhandle_t handle)
 	if (object->key) {
 		registry_hash_remove(object);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 		if (object->pnode) {
 			registry_unexport_pnode(object);
 
@@ -924,7 +924,7 @@ int xnregistry_remove(xnhandle_t handle)
 			if (object->pnode)
 				goto unlock_and_exit;
 		}
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 		removeq(&registry_obj_busyq, &object->link);
 	}

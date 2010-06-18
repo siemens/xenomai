@@ -52,7 +52,7 @@
 #include <nucleus/registry.h>
 #include <native/pipe.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static char *__pipe_link_target(void *obj)
 {
@@ -80,7 +80,7 @@ static struct xnpnode_link __pipe_pnode = {
 	.target = __pipe_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_link __pipe_pnode = {
 	.node = {
@@ -88,7 +88,7 @@ static struct xnpnode_link __pipe_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __pipe_flush_pool(xnheap_t *heap,
 			      void *poolmem, u_long poolsize, void *cookie)

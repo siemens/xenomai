@@ -41,7 +41,7 @@ typedef struct xnobject {
 	struct xnsynch safesynch; /* !< Safe synchronization object. */
 	u_long safelock;	  /* !< Safe lock count. */
 	u_long cstamp;		  /* !< Creation stamp. */
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	struct xnpnode *pnode;	/* !< v-file information class. */
 	union {
 		struct {
@@ -52,7 +52,7 @@ typedef struct xnobject {
 		struct xnvfile_link link;     /* !< virtual link. */
 	} vfile_u;
 	struct xnvfile *vfilp;
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 	struct xnobject *hnext;	/* !< Next in h-table */
 	struct xnholder link;
 } xnobject_t;
@@ -67,7 +67,7 @@ int xnregistry_init(void);
 
 void xnregistry_cleanup(void);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 #define XNOBJECT_PNODE_RESERVED1 ((struct xnvfile *)1)
 #define XNOBJECT_PNODE_RESERVED2 ((struct xnvfile *)2)
@@ -116,7 +116,7 @@ struct xnpnode_link {
 	char *(*target)(void *obj);
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 #define DEFINE_XNPTREE(__var, __name);
 
@@ -138,7 +138,7 @@ struct xnpnode_link {
 	struct xnpnode node;
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 extern struct xnobject *registry_obj_slots;
 

@@ -81,10 +81,13 @@ struct rthal_calibration_data rthal_tunables;
 rthal_trap_handler_t rthal_trap_handler;
 
 unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
+EXPORT_SYMBOL_GPL(rthal_realtime_faults);
 
 unsigned long rthal_apc_map;
+EXPORT_SYMBOL_GPL(rthal_apc_map);
 
 struct rthal_apc_desc rthal_apc_table[RTHAL_NR_APCS];
+EXPORT_SYMBOL_GPL(rthal_apc_table);
 
 volatile int rthal_sync_op;
 

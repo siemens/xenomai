@@ -25,7 +25,7 @@
 
 static RT_FIFO __fifo_table[CONFIG_XENO_OPT_PIPE_NRDEV];
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	size_t bufsz;
@@ -78,7 +78,7 @@ static struct xnpnode_snapshot __fifo_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __fifo_pnode = {
 	.node = {
@@ -86,7 +86,7 @@ static struct xnpnode_snapshot __fifo_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 #define CALL_FIFO_HANDLER(fifo, type)	\
 	  ((int (*)(int, ...))((fifo)->handler))((fifo) - __fifo_table, (type))

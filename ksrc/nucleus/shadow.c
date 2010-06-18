@@ -69,7 +69,7 @@ EXPORT_SYMBOL_GPL(nkerrptd);
 struct xnskin_slot {
 	struct xnskin_props *props;
 	atomic_counter_t refcnt;
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	struct xnvfile_regular vfile;
 #endif
 } muxtable[XENOMAI_MUX_NR];
@@ -2791,7 +2791,7 @@ static inline void do_cleanup_event(struct mm_struct *mm)
 
 RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static struct xnvfile_directory iface_vfroot;
 
@@ -2827,7 +2827,7 @@ void xnshadow_cleanup_proc(void)
 	xnvfile_destroy_dir(&iface_vfroot);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*
  * xnshadow_register_interface() -- Register a new skin/interface.
@@ -2884,7 +2884,7 @@ int xnshadow_register_interface(struct xnskin_props *props)
 		return -ENOBUFS;
 	}
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	memset(&iface->vfile, 0, sizeof(iface->vfile));
 	iface->vfile.ops = &iface_vfile_ops;
 	xnvfile_init_regular(props->name, &iface->vfile,
@@ -2923,7 +2923,7 @@ int xnshadow_unregister_interface(int muxid)
 	iface->props = NULL;
 	xnlock_put_irqrestore(&nklock, s);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	xnvfile_destroy_regular(&iface->vfile);
 #endif
 

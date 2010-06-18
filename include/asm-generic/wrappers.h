@@ -579,7 +579,7 @@ static inline int wrap_raise_cap(int cap)
 }
 #endif /* LINUX_VERSION_CODE >= 2.6.29 */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <linux/module.h>
 #include <linux/proc_fs.h>
@@ -590,7 +590,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #else  /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
 #define wrap_proc_dir_entry_owner(entry) do { (void)entry; } while(0)
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 #ifndef list_first_entry
 #define list_first_entry(ptr, type, member) \

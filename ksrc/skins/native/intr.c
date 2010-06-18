@@ -56,7 +56,7 @@ static unsigned long __intr_get_hits(RT_INTR *intr)
 	return sum;
 }
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -147,7 +147,7 @@ static struct xnpnode_snapshot __intr_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __intr_pnode = {
 	.node = {
@@ -155,7 +155,7 @@ static struct xnpnode_snapshot __intr_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 /*! 
  * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,rt_isr_t isr,rt_iack_t iack,int mode)

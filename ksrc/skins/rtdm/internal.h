@@ -21,7 +21,6 @@
 #define _RTDM_INTERNAL_H
 
 #include <linux/list.h>
-#include <linux/proc_fs.h>
 #include <linux/sem.h>
 
 #include <nucleus/pod.h>
@@ -42,10 +41,10 @@ struct rtdm_fildes {
 };
 
 struct rtdm_process {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	char name[32];
 	pid_t pid;
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	xnshadow_ppd_t ppd;
 };
@@ -81,7 +80,7 @@ static inline void rtdm_dereference_device(struct rtdm_device *device)
 int __init rtdm_dev_init(void);
 void rtdm_dev_cleanup(void);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 int rtdm_proc_init(void);
 void rtdm_proc_cleanup(void);
 int rtdm_proc_register_device(struct rtdm_device *device);

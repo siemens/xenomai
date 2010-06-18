@@ -25,7 +25,6 @@
 #include <linux/fcntl.h>
 #include <linux/poll.h>
 #include <linux/termios.h>
-#include <linux/proc_fs.h>
 #include <linux/spinlock.h>
 #include <linux/device.h>
 #include <asm/io.h>

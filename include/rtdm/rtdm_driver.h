@@ -518,7 +518,7 @@ struct rtdm_device {
 
 	/** Name of /proc entry for the device, must not be NULL */
 	const char *proc_name;
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	/** Set to device's vfile data after registration, do not modify */
 	struct xnvfile_directory vfroot;
 	struct xnvfile_regular info_vfile;

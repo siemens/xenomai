@@ -33,7 +33,7 @@ static const sem_vtbl_t semm_vtbl;
 static void sem_destroy_internal(wind_sem_t *sem);
 static SEM_ID sem_create_internal(int flags, const sem_vtbl_t *vtbl, int count);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -140,7 +140,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __sem_pnode = {
 	.node = {
@@ -148,7 +148,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 void wind_sem_init(void)
 {

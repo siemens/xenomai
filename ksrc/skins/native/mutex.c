@@ -51,7 +51,7 @@
 #include <native/task.h>
 #include <native/mutex.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -161,7 +161,7 @@ static struct xnpnode_snapshot __mutex_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __mutex_pnode = {
 	.node = {
@@ -169,7 +169,7 @@ static struct xnpnode_snapshot __mutex_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 			  xnarch_atomic_t *fastlock)

@@ -74,7 +74,7 @@ static struct xnmap *portmap;
 #define _BUFP_BINDING  0
 #define _BUFP_BOUND    1
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static char *__bufp_link_target(void *obj)
 {
@@ -102,7 +102,7 @@ static struct xnpnode_link __bufp_pnode = {
 	.target = __bufp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_link __bufp_pnode = {
 	.node = {
@@ -110,7 +110,7 @@ static struct xnpnode_link __bufp_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __bufp_cleanup_handler(struct rtipc_wait_context *wc)
 {

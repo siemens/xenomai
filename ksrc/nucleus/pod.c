@@ -3087,10 +3087,7 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 }
 EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
 
-#ifdef CONFIG_PROC_FS
-
-#include <linux/proc_fs.h>
-#include <linux/ctype.h>
+#ifdef CONFIG_XENO_OPT_VFILE
 
 #if XENO_DEBUG(XNLOCK)
 
@@ -3348,6 +3345,6 @@ void xnpod_cleanup_proc(void)
 	xnvfile_destroy_root();
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/

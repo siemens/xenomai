@@ -119,12 +119,12 @@ static inline void xnshadow_call_mayday(struct xnthread *thread,
 
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
-#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_PROC_FS)
+#if defined(CONFIG_XENO_OPT_PERVASIVE) && defined(CONFIG_XENO_OPT_VFILE)
 void xnshadow_init_proc(void);
 void xnshadow_cleanup_proc(void);
 #else
 static inline void xnshadow_init_proc(void) { }
 static inline void xnshadow_cleanup_proc(void) { }
-#endif /* CONFIG_XENO_OPT_PERVASIVE && CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_PERVASIVE && CONFIG_XENO_OPT_VFILE */
 
 #endif /* !_XENO_NUCLEUS_SHADOW_H */

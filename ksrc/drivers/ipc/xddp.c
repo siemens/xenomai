@@ -71,7 +71,7 @@ static int portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
 #define _XDDP_BINDING   2
 #define _XDDP_BOUND     3
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static char *__xddp_link_target(void *obj)
 {
@@ -99,7 +99,7 @@ static struct xnpnode_link __xddp_pnode = {
 	.target = __xddp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_link __xddp_pnode = {
 	.node = {
@@ -107,7 +107,7 @@ static struct xnpnode_link __xddp_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __xddp_flush_pool(xnheap_t *heap,
 			      void *poolmem, u_long poolsz, void *cookie)

@@ -155,7 +155,7 @@ static struct xnthread *xnsched_rt_peek_rpi(struct xnsched *sched)
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct xnvfile_directory sched_rt_vfroot;
 
@@ -276,7 +276,7 @@ static void xnsched_rt_cleanup_vfile(struct xnsched_class *schedclass)
 	xnvfile_destroy_dir(&sched_rt_vfroot);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct xnsched_class xnsched_class_rt = {
 	.sched_init		=	xnsched_rt_init,
@@ -298,7 +298,7 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_suspend_rpi 	=	NULL,
 	.sched_resume_rpi 	=	NULL,
 #endif
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_rt_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
 #endif

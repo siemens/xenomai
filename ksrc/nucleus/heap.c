@@ -79,7 +79,7 @@ struct xnheap kstacks;		/* Private stack pool */
 
 static DEFINE_XNQUEUE(heapq);	/* Heap list for v-file dump */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static struct xnvfile_rev_tag vfile_tag;
 
@@ -165,7 +165,7 @@ void xnheap_cleanup_proc(void)
 	xnvfile_destroy_snapshot(&vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 static void init_extent(xnheap_t *heap, xnextent_t *extent)
 {

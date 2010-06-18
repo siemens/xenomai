@@ -47,7 +47,7 @@
 #include <native/task.h>
 #include <native/queue.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -147,7 +147,7 @@ static struct xnpnode_snapshot __q_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __q_pnode = {
 	.node = {
@@ -155,7 +155,7 @@ static struct xnpnode_snapshot __q_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __queue_flush_private(xnheap_t *heap,
 				  void *poolmem, u_long poolsize, void *cookie)

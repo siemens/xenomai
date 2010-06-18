@@ -43,9 +43,6 @@
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
 #include <stdarg.h>
 
 static struct {

@@ -53,7 +53,7 @@ static inline xnshm_a_t *link2shma(xnholder_t *ln)
 
 xnqueue_t xnshm_allocq;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	int size;
@@ -105,7 +105,7 @@ static struct xnpnode_snapshot __shm_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __shm_pnode = {
 	.node = {
@@ -113,7 +113,7 @@ static struct xnpnode_snapshot __shm_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static xnshm_a_t *kalloc_new_shm(unsigned long name, int size)
 {

@@ -25,7 +25,7 @@ xnmap_t *vrtx_heap_idmap;
 
 static xnqueue_t vrtx_heap_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	size_t heapsz;
@@ -72,7 +72,7 @@ static struct xnpnode_snapshot __heap_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __heap_pnode = {
 	.node = {
@@ -80,7 +80,7 @@ static struct xnpnode_snapshot __heap_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void heap_destroy_internal(vrtxheap_t *heap)
 {

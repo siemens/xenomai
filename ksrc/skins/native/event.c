@@ -45,7 +45,7 @@
 #include <native/task.h>
 #include <native/event.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -141,7 +141,7 @@ static struct xnpnode_snapshot __event_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __event_pnode = {
 	.node = {
@@ -149,7 +149,7 @@ static struct xnpnode_snapshot __event_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 /**
  * @fn int rt_event_create(RT_EVENT *event,const char *name,unsigned long ivalue,int mode)

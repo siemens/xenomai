@@ -277,7 +277,7 @@ int xnsched_tp_get_partition(struct xnsched *sched)
 }
 EXPORT_SYMBOL_GPL(xnsched_tp_get_partition);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct xnvfile_directory sched_tp_vfroot;
 
@@ -382,7 +382,7 @@ static void xnsched_tp_cleanup_vfile(struct xnsched_class *schedclass)
 	xnvfile_destroy_dir(&sched_tp_vfroot);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct xnsched_class xnsched_class_tp = {
 	.sched_init		=	xnsched_tp_init,
@@ -398,7 +398,7 @@ struct xnsched_class xnsched_class_tp = {
 	.sched_trackprio	=	xnsched_tp_trackprio,
 	.sched_declare		=	xnsched_tp_declare,
 	.sched_forget		=	xnsched_tp_forget,
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_tp_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_tp_cleanup_vfile,
 #endif

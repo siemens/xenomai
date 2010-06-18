@@ -29,7 +29,7 @@ static void *rn0addr;
 
 static int rn_destroy_internal(psosrn_t *rn);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -119,7 +119,7 @@ static struct xnpnode_snapshot __rn_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __rn_pnode = {
 	.node = {
@@ -127,7 +127,7 @@ static struct xnpnode_snapshot __rn_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int psosrn_init(u_long rn0size)
 {

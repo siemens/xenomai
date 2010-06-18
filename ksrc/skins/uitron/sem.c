@@ -23,7 +23,7 @@
 
 static xnmap_t *ui_sem_idmap;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -110,7 +110,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __sem_pnode = {
 	.node = {
@@ -118,7 +118,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int uisem_init(void)
 {

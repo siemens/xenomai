@@ -79,7 +79,7 @@ static int poolwait;
 #define _IDDP_BINDING  0
 #define _IDDP_BOUND    1
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static char *__iddp_link_target(void *obj)
 {
@@ -107,7 +107,7 @@ static struct xnpnode_link __iddp_pnode = {
 	.target = __iddp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_link __iddp_pnode = {
 	.node = {
@@ -115,7 +115,7 @@ static struct xnpnode_link __iddp_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static inline void __iddp_init_mbuf(struct iddp_message *mbuf, size_t len)
 {

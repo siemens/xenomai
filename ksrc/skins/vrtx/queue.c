@@ -25,7 +25,7 @@ static xnmap_t *vrtx_queue_idmap;
 
 static xnqueue_t vrtx_queue_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -109,7 +109,7 @@ static struct xnpnode_snapshot __queue_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __queue_pnode = {
 	.node = {
@@ -117,7 +117,7 @@ static struct xnpnode_snapshot __queue_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int queue_destroy_internal(vrtxqueue_t * queue)
 {

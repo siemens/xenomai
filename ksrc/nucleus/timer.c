@@ -1109,7 +1109,7 @@ xntbops_t nktimer_ops_aperiodic = {
 	.move_timer = &xntimer_move_aperiodic,
 };
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 #include <nucleus/vfile.h>
 
@@ -1151,6 +1151,6 @@ void xntimer_cleanup_proc(void)
 	xnvfile_destroy_regular(&timer_vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/

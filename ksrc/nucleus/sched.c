@@ -684,7 +684,7 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 
 #endif /* CONFIG_XENO_OPT_SCALABLE_SCHED */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 static struct xnvfile_directory schedclass_vfroot;
 
@@ -1051,4 +1051,4 @@ void xnsched_cleanup_proc(void)
 	xnvfile_destroy_snapshot(&sched_vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */

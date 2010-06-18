@@ -669,13 +669,13 @@ void xnvfile_destroy_link(struct xnvfile_link *vlink)
 		.sem = __SEMAPHORE_INITIALIZER(name.sem, 1),		\
 	}
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 #define xnvfile_touch_tag(tag)	do { } while (0)
 
 #define xnvfile_touch(vfile)	do { } while (0)
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 /*@}*/
 

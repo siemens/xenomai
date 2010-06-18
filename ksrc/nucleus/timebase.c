@@ -620,7 +620,7 @@ void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
 }
 EXPORT_SYMBOL_GPL(xntbase_adjust_time);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct xnvfile_rev_tag tbaselist_tag;
 
@@ -844,7 +844,7 @@ void xntbase_cleanup_proc(void)
 #endif /* CONFIG_XENO_OPT_STATS */
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /* The master time base - the most precise one, aperiodic, always valid. */
 

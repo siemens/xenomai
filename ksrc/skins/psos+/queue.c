@@ -29,7 +29,7 @@ static xnqueue_t psosmbufq;	/* Shared msg buffers (in chunks) */
 
 static u_long q_destroy_internal(psosqueue_t *queue);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -121,7 +121,7 @@ static struct xnpnode_snapshot __msgq_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __msgq_pnode = {
 	.node = {
@@ -129,7 +129,7 @@ static struct xnpnode_snapshot __msgq_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 void psosqueue_init(void)
 {

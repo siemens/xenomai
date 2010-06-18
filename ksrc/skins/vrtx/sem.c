@@ -25,7 +25,7 @@ static xnmap_t *vrtx_sem_idmap;
 
 static xnqueue_t vrtx_sem_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
 struct vfile_priv {
 	struct xnpholder *curr;
@@ -106,7 +106,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
 static struct xnpnode_snapshot __sem_pnode = {
 	.node = {
@@ -114,7 +114,7 @@ static struct xnpnode_snapshot __sem_pnode = {
 	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static int sem_destroy_internal(vrtxsem_t *sem)
 {
