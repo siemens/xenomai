@@ -3413,6 +3413,7 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	if (cmd->scan_begin_arg & CR_INVERT)
 		cdo_mode_bits |= CDO_Polarity_Bit;
 	ni_writel(cdo_mode_bits, M_Offset_CDO_Mode);
+
 	if (devpriv->io_bits) {
 		ni_writel(devpriv->dio_state, M_Offset_CDO_FIFO_Data);
 		ni_writel(CDO_SW_Update_Bit, M_Offset_CDIO_Command);
@@ -3423,10 +3424,10 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 			"output command with no lines configured as outputs");
 		return -EIO;
 	}
+
 	retval = ni_request_cdo_mite_channel(dev);
-	if (retval < 0) {
+	if (retval < 0)
 		return retval;
-	}
 	
 	return 0;
 }
