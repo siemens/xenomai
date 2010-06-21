@@ -3451,7 +3451,7 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	unsigned long flags;
 	int retval = 0;
 	unsigned i;
-	const unsigned timeout = 100;
+	const unsigned timeout = 1000;
 
 	/* TODO: disable trigger until a command is recorded.
 	   Null trig at beginning prevent ao start trigger from executing
@@ -3476,6 +3476,7 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 			break;
 		a4l_udelay(10);
 	}
+
 	if (i == timeout) {
 		a4l_err(dev, "ni_cdo_inttrig: dma failed to fill cdo fifo!");
 		ni_cdio_cancel(subd);
