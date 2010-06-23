@@ -266,9 +266,10 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 
 	/* Prevents the subdevice from being used during 
 	   the following operations */
-	ret = a4l_reserve_subd(subd);
-	if (ret < 0)
+	if (test_and_set_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		ret = -EBUSY;
 		goto out_do_insn;
+	}
 
 	/* Let's the driver-specific code perform the instruction */
 	ret = hdlr(subd, dsc);
@@ -281,7 +282,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 out_do_insn:
 
 	/* Releases the subdevice from its reserved state */
-	a4l_release_subd(subd);
+	clear_bit(A4L_SUBD_BUSY_NR, &subd->status);
 
 	return ret;
 }

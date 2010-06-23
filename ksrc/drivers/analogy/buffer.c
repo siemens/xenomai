@@ -136,7 +136,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 		return -EINVAL;
 	}
 
-	if (a4l_reserve_subd(buf_desc->subd) < 0) {
+	if (test_and_set_bit(A4L_SUBD_BUSY_NR, &buf_desc->subd->status)) {
 		__a4l_err("a4l_setup_buffer: subdevice %d already busy\n",
 			  cmd->idx_subd);
 		return -EBUSY;
@@ -196,7 +196,7 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 
 	a4l_reinit_buffer(buf_desc);
 
-	a4l_release_subd(subd);
+	clear_bit(A4L_SUBD_BUSY_NR, &subd->status);
 	subd->buf = NULL;
 
 	return err;
