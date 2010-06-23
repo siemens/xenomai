@@ -175,8 +175,8 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 	a4l_subd_t *subd = buf_desc->subd;
 	
 	int err = 0;
-	
-	if (!subd || !a4l_subd_is_busy(subd))
+
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return 0;
 
 	/* If a "cancel" function is registered, call it
@@ -253,7 +253,7 @@ int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_input(subd))
@@ -267,7 +267,7 @@ int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_input(subd))
@@ -280,7 +280,7 @@ int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_input(subd))
@@ -293,7 +293,7 @@ int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_input(subd))
@@ -307,7 +307,7 @@ int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 	a4l_buf_t *buf = subd->buf;
 	int err;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_input(subd))
@@ -329,7 +329,7 @@ int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_output(subd))
@@ -342,7 +342,7 @@ int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_output(subd))
@@ -355,7 +355,7 @@ int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 {
 	a4l_buf_t *buf = subd->buf;
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_output(subd))
@@ -370,7 +370,7 @@ int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 
 	/* Basic checkings */
 
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (!a4l_subd_is_output(subd))
@@ -386,11 +386,11 @@ int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 
 	/* Basic checkings */
 
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
 	if (!a4l_subd_is_output(subd))
 		return -EINVAL;
-
-	if (!buf || !a4l_subd_is_busy(subd))
-		return -ENOENT;
 
 	if (__count_to_get(buf) < count)
 		return -EAGAIN;
@@ -418,7 +418,7 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 	   race conditions, not the framework */
 
 	/* Basic checking */
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
@@ -441,7 +441,7 @@ unsigned long a4l_buf_count(a4l_subd_t *subd)
 	unsigned long ret = 0;
 
 	/* Basic checking */
-	if (!buf || !a4l_subd_is_busy(subd))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	if (a4l_subd_is_input(subd))
@@ -587,7 +587,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	if (subd && a4l_subd_is_busy(subd)) {
+	if (subd && test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
 		return -EBUSY;
 	}
@@ -636,7 +636,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 	/* If a transfer is not occuring, simply return buffer
 	   informations, otherwise make the transfer progress */
-	if (!subd || !a4l_subd_is_busy(subd)) {
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		info.rw_count = 0;
 		goto a4l_ioctl_bufinfo_out;
 	}
@@ -729,7 +729,7 @@ ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		return -EINVAL;
 	}
 
-	if (!subd || !a4l_subd_is_busy(subd)) {
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		__a4l_err("a4l_read: idle subdevice on this context\n");
 		return -ENOENT;
 	}
@@ -828,7 +828,7 @@ ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 		return -EINVAL;
 	}
 
-	if (!subd || !a4l_subd_is_busy(subd)) {
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		__a4l_err("a4l_write: idle subdevice on this context\n");
 		return -ENOENT;
 	}
@@ -967,7 +967,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	if (!subd || !a4l_subd_is_busy(subd)) {
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		__a4l_err("a4l_poll: idle subdevice on this context\n");
 		return -ENOENT;
 	}
