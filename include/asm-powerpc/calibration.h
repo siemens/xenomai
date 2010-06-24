@@ -77,7 +77,7 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #elif defined(CONFIG_TQM8555)
 #define __sched_latency 2000
 #elif defined(CONFIG_KUP4K)
-#define __sched_latency 10000
+#define __sched_latency 22000
 /*
  * Check for the most generic configs at the bottom of this list, so
  * that the most specific choices available are picked first.
@@ -89,7 +89,7 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #elif defined(CONFIG_PPC_MPC52xx)
 #define __sched_latency 4500
 #elif defined(CONFIG_PPC_8xx)
-#define __sched_latency 15000
+#define __sched_latency 25000
 #endif
 
 #ifndef __sched_latency
