@@ -1027,9 +1027,6 @@ int ni_E_interrupt(unsigned int irq, void *d)
 	unsigned long flags;
 	struct mite_struct *mite = devpriv->mite;
 
-	if(!a4l_dev_is_attached(dev))
-		return IRQ_NONE;
-
 	/* Make sure dev->attached is checked before handler does
 	   anything else. */
 	smp_mb();
