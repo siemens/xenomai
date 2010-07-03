@@ -7,11 +7,11 @@
 
 static inline int fp_kernel_supported(void)
 {
-#ifdef CONFIG_MATH_EMULATION
+#ifdef CONFIG_XENO_HW_MATH_EMU
 	static int once = 0;
 	if (!once) {
 		once = 1;
-		printk("Warning: CONFIG_MATH_EMULATION defined in kernel\n"
+		printk("Warning: math emulation code defined in kernel\n"
 		       "         no kernel-based FPU support for this platform\n");
 	}
 	return 0;

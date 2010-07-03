@@ -262,9 +262,9 @@ static inline void xnarch_setup_mayday_page(void *page)
 	flush_dcache_page(vmalloc_to_page(page));
 }
 
-static inline void xnarch_call_mayday(void)
+static inline void xnarch_call_mayday(struct task_struct *p)
 {
-	rthal_return_intercept(current);
+	rthal_return_intercept(p);
 }
 
 static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,

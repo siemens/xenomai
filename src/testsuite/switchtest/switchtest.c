@@ -273,6 +273,7 @@ static void *sleeper_switcher(void *cookie)
 	cpu_set_t cpu_set;
 	unsigned i = 1;		/* Start at 1 to avoid returning to a
 				   non-existing task. */
+	int ret;
 
 	CPU_ZERO(&cpu_set);
 	CPU_SET(param->cpu->index, &cpu_set);
@@ -287,7 +288,12 @@ static void *sleeper_switcher(void *cookie)
 	ts.tv_sec = 0;
 	ts.tv_nsec = 1000000;
 
-	__real_sem_wait(&sleeper_start);
+	ret = __real_sem_wait(&sleeper_start);
+	if (ret) {
+		fprintf(stderr, "sem_wait FAILED (%d)\n", errno);
+		fflush(stderr);
+		exit(77);
+	}
 
 	clock_gettime(CLOCK_REALTIME, &last);
 
