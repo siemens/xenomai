@@ -6,6 +6,10 @@ config XENO_FASTSYNCH
 	bool
 	default y
 
+config XENO_HW_MATH_EMU
+        bool
+	default y if MATH_EMU || 8XX_MINIMAL_FPEMU
+
 source "kernel/xenomai/nucleus/Kconfig"
 
 menu "Machine"

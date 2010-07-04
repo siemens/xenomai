@@ -1618,11 +1618,14 @@ static unsigned long map_mayday_page(struct task_struct *p)
 	return IS_ERR_VALUE(u_addr) ? 0UL : u_addr;
 }
 
-void xnshadow_call_mayday(struct xnthread *thread)
+void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
 {
-	XENO_BUGON(NUCLEUS, !xnpod_current_p(thread));
-	xnarch_call_mayday();
+	struct task_struct *p = xnthread_archtcb(thread)->user_task;
+	xnthread_set_info(thread, XNKICKED);
+	xnshadow_send_sig(thread, SIGDEBUG, sigtype, 1);
+	xnarch_call_mayday(p);
 }
+EXPORT_SYMBOL_GPL(xnshadow_call_mayday);
 
 static int xnshadow_sys_mayday(struct pt_regs *regs)
 {

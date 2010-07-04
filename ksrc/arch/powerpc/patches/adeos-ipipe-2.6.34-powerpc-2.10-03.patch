@@ -262,7 +262,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..8aa91f0
+index 0000000..31d54bb
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,277 @@
@@ -313,10 +313,10 @@ index 0000000..8aa91f0
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.10-02"
++#define IPIPE_ARCH_STRING	"2.10-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -2079,7 +2079,7 @@ index bed9a29..172418a 100644
  	bl	.start_kernel
  
 diff --git a/arch/powerpc/kernel/head_8xx.S b/arch/powerpc/kernel/head_8xx.S
-index 3ef743f..53a6c9e 100644
+index 3ef743f..f4a3d7b 100644
 --- a/arch/powerpc/kernel/head_8xx.S
 +++ b/arch/powerpc/kernel/head_8xx.S
 @@ -185,6 +185,12 @@ i##n:								\
@@ -2119,6 +2119,31 @@ index 3ef743f..53a6c9e 100644
  
  	EXCEPTION(0xa00, Trap_0a, unknown_exception, EXC_XFER_EE)
  	EXCEPTION(0xb00, Trap_0b, unknown_exception, EXC_XFER_EE)
+@@ -918,15 +932,24 @@ _GLOBAL(set_context)
+  * It is important we get called with interrupts disabled.  I used to
+  * do that, but it appears that all code that calls this already had
+  * interrupt disabled.
++ * I-pipe: we enforce this back, we need to bypass virtualization
++ * here.
+  */
+ 	.globl	set_dec_cpu6
+ set_dec_cpu6:
++#ifdef CONFIG_IPIPE
++	mfmsr	r6
++	rlwinm	r5,r6,0,17,15	/* clear MSR_EE */
++#endif
+ 	lis	r7, cpu6_errata_word@h
+ 	ori	r7, r7, cpu6_errata_word@l
+ 	li	r4, 0x2c00
+ 	stw	r4, 8(r7)
+ 	lwz	r4, 8(r7)
+         mtspr   22, r3		/* Update Decrementer */
++#ifdef CONFIG_IPIPE
++	MTMSRD(r6)
++#endif
+ 	SYNC
+ 	blr
+ #endif
 diff --git a/arch/powerpc/kernel/head_booke.h b/arch/powerpc/kernel/head_booke.h
 index 50504ae..01b3d31 100644
 --- a/arch/powerpc/kernel/head_booke.h
@@ -4311,6 +4336,64 @@ index 5b0ab99..6e057d7 100644
  }
  #endif /* CONFIG_CPM2 */
  
+diff --git a/arch/powerpc/platforms/8xx/m8xx_setup.c b/arch/powerpc/platforms/8xx/m8xx_setup.c
+index 60168c1..a39bcff 100644
+--- a/arch/powerpc/platforms/8xx/m8xx_setup.c
++++ b/arch/powerpc/platforms/8xx/m8xx_setup.c
+@@ -170,6 +170,7 @@ int mpc8xx_set_rtc_time(struct rtc_time *tm)
+ {
+ 	sitk8xx_t __iomem *sys_tmr1;
+ 	sit8xx_t __iomem *sys_tmr2;
++	unsigned long flags;
+ 	int time;
+ 
+ 	sys_tmr1 = immr_map(im_sitk);
+@@ -177,9 +178,11 @@ int mpc8xx_set_rtc_time(struct rtc_time *tm)
+ 	time = mktime(tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
+ 	              tm->tm_hour, tm->tm_min, tm->tm_sec);
+ 
++	local_irq_save_hw_cond(flags);
+ 	out_be32(&sys_tmr1->sitk_rtck, KAPWR_KEY);
+ 	out_be32(&sys_tmr2->sit_rtc, time);
+ 	out_be32(&sys_tmr1->sitk_rtck, ~KAPWR_KEY);
++	local_irq_restore_hw_cond(flags);
+ 
+ 	immr_unmap(sys_tmr2);
+ 	immr_unmap(sys_tmr1);
+@@ -205,7 +208,7 @@ void mpc8xx_restart(char *cmd)
+ 	car8xx_t __iomem *clk_r = immr_map(im_clkrst);
+ 
+ 
+-	local_irq_disable();
++	local_irq_disable_hw();
+ 
+ 	setbits32(&clk_r->car_plprcr, 0x00000080);
+ 	/* Clear the ME bit in MSR to cause checkstop on machine check
+@@ -220,6 +223,16 @@ static void cpm_cascade(unsigned int irq, struct irq_desc *desc)
+ {
+ 	int cascade_irq;
+ 
++#ifdef CONFIG_IPIPE
++	desc->chip->eoi(irq);
++	if ((cascade_irq = cpm_get_irq()) >= 0) {
++		struct irq_desc *cdesc = irq_to_desc(cascade_irq);
++
++		cdesc->chip->eoi(cascade_irq);
++		ipipe_handle_chained_irq(cascade_irq);
++	}
++	desc->chip->unmask(irq);
++#else
+ 	if ((cascade_irq = cpm_get_irq()) >= 0) {
+ 		struct irq_desc *cdesc = irq_to_desc(cascade_irq);
+ 
+@@ -227,6 +240,7 @@ static void cpm_cascade(unsigned int irq, struct irq_desc *desc)
+ 		cdesc->chip->eoi(cascade_irq);
+ 	}
+ 	desc->chip->eoi(irq);
++#endif
+ }
+ 
+ /* Initialize the internal interrupt controllers.  The number of
 diff --git a/arch/powerpc/platforms/cell/spu_base.c b/arch/powerpc/platforms/cell/spu_base.c
 index 8547e86..59c45d5 100644
 --- a/arch/powerpc/platforms/cell/spu_base.c
@@ -4389,6 +4472,45 @@ index 0707653..3be595e 100644
  
  static long pSeries_lpar_hpte_remove(unsigned long hpte_group)
  {
+diff --git a/arch/powerpc/sysdev/cpm1.c b/arch/powerpc/sysdev/cpm1.c
+index 8d103ca..6576ca0 100644
+--- a/arch/powerpc/sysdev/cpm1.c
++++ b/arch/powerpc/sysdev/cpm1.c
+@@ -59,22 +59,34 @@ static struct irq_host *cpm_pic_host;
+ static void cpm_mask_irq(unsigned int irq)
+ {
+ 	unsigned int cpm_vec = (unsigned int)irq_map[irq].hwirq;
++	unsigned long flags;
+ 
++	local_irq_save_hw_cond(flags);
++	ipipe_irq_lock(irq);
+ 	clrbits32(&cpic_reg->cpic_cimr, (1 << cpm_vec));
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static void cpm_unmask_irq(unsigned int irq)
+ {
+ 	unsigned int cpm_vec = (unsigned int)irq_map[irq].hwirq;
++	unsigned long flags;
+ 
++	local_irq_save_hw_cond(flags);
+ 	setbits32(&cpic_reg->cpic_cimr, (1 << cpm_vec));
++	ipipe_irq_unlock(irq);
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static void cpm_end_irq(unsigned int irq)
+ {
+ 	unsigned int cpm_vec = (unsigned int)irq_map[irq].hwirq;
++	unsigned long flags;
+ 
++	local_irq_save_hw_cond(flags);
+ 	out_be32(&cpic_reg->cpic_cisr, (1 << cpm_vec));
++	clrbits32(&cpic_reg->cpic_cimr, (1 << cpm_vec));
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static struct irq_chip cpm_pic = {
 diff --git a/arch/powerpc/sysdev/cpm2_pic.c b/arch/powerpc/sysdev/cpm2_pic.c
 index fcea4ff..38ac727 100644
 --- a/arch/powerpc/sysdev/cpm2_pic.c
@@ -4505,10 +4627,10 @@ index d7b9b9c..160e7a6 100644
  static struct ipic_info ipic_info[] = {
  	[1] = {
 diff --git a/arch/powerpc/sysdev/mpc8xx_pic.c b/arch/powerpc/sysdev/mpc8xx_pic.c
-index 8c27d26..f01d78b 100644
+index 8c27d26..8bb94f5 100644
 --- a/arch/powerpc/sysdev/mpc8xx_pic.c
 +++ b/arch/powerpc/sysdev/mpc8xx_pic.c
-@@ -29,24 +29,30 @@ static void mpc8xx_unmask_irq(unsigned int virq)
+@@ -29,24 +29,32 @@ static void mpc8xx_unmask_irq(unsigned int virq)
  {
  	int	bit, word;
  	unsigned int irq_nr = (unsigned int)irq_map[virq].hwirq;
@@ -4520,6 +4642,7 @@ index 8c27d26..f01d78b 100644
 +	local_irq_save_hw_cond(flags);
  	ppc_cached_irq_mask[word] |= (1 << (31-bit));
  	out_be32(&siu_reg->sc_simask, ppc_cached_irq_mask[word]);
++	ipipe_irq_unlock(virq);
 +	local_irq_restore_hw_cond(flags);
  }
  
@@ -4533,12 +4656,71 @@ index 8c27d26..f01d78b 100644
  	word = irq_nr >> 5;
  
 +	local_irq_save_hw_cond(flags);
++	ipipe_irq_lock(virq);
  	ppc_cached_irq_mask[word] &= ~(1 << (31-bit));
  	out_be32(&siu_reg->sc_simask, ppc_cached_irq_mask[word]);
-+	local_irq_save_hw_cond(flags);
++	local_irq_restore_hw_cond(flags);
  }
  
  static void mpc8xx_ack(unsigned int virq)
+@@ -58,16 +66,37 @@ static void mpc8xx_ack(unsigned int virq)
+ 	out_be32(&siu_reg->sc_sipend, 1 << (31-bit));
+ }
+ 
++#ifdef CONFIG_IPIPE
++static void mpc8xx_mask_ack_irq(unsigned int virq)
++{
++	int	bit, word;
++	unsigned int irq_nr = (unsigned int)irq_map[virq].hwirq;
++	unsigned long flags;
++
++	bit = irq_nr & 0x1f;
++	word = irq_nr >> 5;
++
++	local_irq_save_hw_cond(flags);
++	ppc_cached_irq_mask[word] &= ~(1 << (31-bit));
++	out_be32(&siu_reg->sc_simask, ppc_cached_irq_mask[word]);
++	out_be32(&siu_reg->sc_sipend, 1 << (31-bit));
++	local_irq_restore_hw_cond(flags);
++}
++#endif
++
+ static void mpc8xx_end_irq(unsigned int virq)
+ {
+ 	int bit, word;
+ 	unsigned int irq_nr = (unsigned int)irq_map[virq].hwirq;
++	unsigned long flags;
+ 
+ 	bit = irq_nr & 0x1f;
+ 	word = irq_nr >> 5;
+ 
++	local_irq_save_hw_cond(flags);
+ 	ppc_cached_irq_mask[word] |= (1 << (31-bit));
+ 	out_be32(&siu_reg->sc_simask, ppc_cached_irq_mask[word]);
++	local_irq_restore_hw_cond(flags);
+ }
+ 
+ static int mpc8xx_set_irq_type(unsigned int virq, unsigned int flow_type)
+@@ -87,7 +116,9 @@ static int mpc8xx_set_irq_type(unsigned int virq, unsigned int flow_type)
+ 		if ((hw & 1) == 0) {
+ 			siel |= (0x80000000 >> hw);
+ 			out_be32(&siu_reg->sc_siel, siel);
++#ifndef CONFIG_IPIPE
+ 			desc->handle_irq = handle_edge_irq;
++#endif
+ 		}
+ 	}
+ 	return 0;
+@@ -98,6 +129,9 @@ static struct irq_chip mpc8xx_pic = {
+ 	.unmask = mpc8xx_unmask_irq,
+ 	.mask = mpc8xx_mask_irq,
+ 	.ack = mpc8xx_ack,
++#ifdef CONFIG_IPIPE
++	.mask_ack = mpc8xx_mask_ack_irq,
++#endif
+ 	.eoi = mpc8xx_end_irq,
+ 	.set_type = mpc8xx_set_irq_type,
+ };
 diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
 index 260295b..dfb0d41 100644
 --- a/arch/powerpc/sysdev/mpic.c
