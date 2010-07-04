@@ -155,64 +155,83 @@ static struct xnthread *xnsched_rt_peek_rpi(struct xnsched *sched)
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-#include <linux/seq_file.h>
+struct xnvfile_directory sched_rt_vfroot;
 
-struct xnsched_rt_seq_iterator {
-	xnticks_t start_time;
-	int nentries;
-	struct xnsched_rt_info {
-		int cpu;
-		pid_t pid;
-		char name[XNOBJECT_NAME_LEN];
-		xnticks_t period;
-		int periodic;
-		int cprio;
-		int dnprio;
-	} sched_info[1];
+struct vfile_sched_rt_priv {
+	struct xnholder *curr;
 };
 
-static void *xnsched_rt_seq_start(struct seq_file *seq, loff_t *pos)
+struct vfile_sched_rt_data {
+	int cpu;
+	pid_t pid;
+	char name[XNOBJECT_NAME_LEN];
+	xnticks_t period;
+	int periodic;
+	int cprio;
+	int dnprio;
+};
+
+static struct xnvfile_snapshot_ops vfile_sched_rt_ops;
+
+static struct xnvfile_snapshot vfile_sched_rt = {
+	.privsz = sizeof(struct vfile_sched_rt_priv),
+	.datasz = sizeof(struct vfile_sched_rt_data),
+	.tag = &nkpod_struct.threadlist_tag,
+	.ops = &vfile_sched_rt_ops,
+};
+
+static int vfile_sched_rt_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	struct xnsched_rt_seq_iterator *iter = seq->private;
+	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
+	int nrthreads = xnsched_class_rt.nthreads;
 
-	if (*pos > iter->nentries)
-		return NULL;
+	if (nrthreads == 0)
+		return -ESRCH;
 
-	if (*pos == 0)
-		return SEQ_START_TOKEN;
+	priv->curr = getheadq(&nkpod->threadq);
 
-	return iter->sched_info + *pos - 1;
+	return nrthreads;
 }
 
-static void *xnsched_rt_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+static int vfile_sched_rt_next(struct xnvfile_snapshot_iterator *it,
+			       void *data)
 {
-	struct xnsched_rt_seq_iterator *iter = seq->private;
+	struct vfile_sched_rt_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_sched_rt_data *p = data;
+	struct xnthread *thread;
 
-	++*pos;
+	if (priv->curr == NULL)
+		return 0;	/* All done. */
 
-	if (*pos > iter->nentries)
-		return NULL;
+	thread = link2thread(priv->curr, glink);
+	priv->curr = nextq(&nkpod->threadq, priv->curr);
 
-	return iter->sched_info + *pos - 1;
+	if (thread->base_class != &xnsched_class_rt)
+		return VFILE_SEQ_SKIP;
+
+	p->cpu = xnsched_cpu(thread->sched);
+	p->pid = xnthread_user_pid(thread);
+	memcpy(p->name, thread->name, sizeof(p->name));
+	p->cprio = thread->cprio;
+	p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
+	p->period = xnthread_get_period(thread);
+	p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
+
+	return 1;
 }
 
-static void xnsched_rt_seq_stop(struct seq_file *seq, void *v)
+static int vfile_sched_rt_show(struct xnvfile_snapshot_iterator *it,
+			       void *data)
 {
-}
-
-static int xnsched_rt_seq_show(struct seq_file *seq, void *v)
-{
+	struct vfile_sched_rt_data *p = data;
 	char pribuf[16], ptbuf[16];
-	struct xnsched_rt_info *p;
 
-	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-8s %-10s %s\n",
-			   "CPU", "PID", "PRI", "PERIOD", "NAME");
+	if (p == NULL)
+		xnvfile_printf(it, "%-3s  %-6s %-8s %-10s %s\n",
+			       "CPU", "PID", "PRI", "PERIOD", "NAME");
 	else {
-		p = v;
-
 		if (p->cprio != p->dnprio)
 			snprintf(pribuf, sizeof(pribuf), "%3d(%d)",
 				 p->cprio, p->dnprio);
@@ -221,121 +240,45 @@ static int xnsched_rt_seq_show(struct seq_file *seq, void *v)
 
 		xntimer_format_time(p->period, p->periodic, ptbuf, sizeof(ptbuf));
 
-		seq_printf(seq, "%3u  %-6d %-8s %-10s %s\n",
-			   p->cpu,
-			   p->pid,
-			   pribuf,
-			   ptbuf,
-			   p->name);
+		xnvfile_printf(it, "%3u  %-6d %-8s %-10s %s\n",
+			       p->cpu,
+			       p->pid,
+			       pribuf,
+			       ptbuf,
+			       p->name);
 	}
 
 	return 0;
 }
 
-static struct seq_operations xnsched_rt_seq_op = {
-	.start = &xnsched_rt_seq_start,
-	.next = &xnsched_rt_seq_next,
-	.stop = &xnsched_rt_seq_stop,
-	.show = &xnsched_rt_seq_show
+static struct xnvfile_snapshot_ops vfile_sched_rt_ops = {
+	.rewind = vfile_sched_rt_rewind,
+	.next = vfile_sched_rt_next,
+	.show = vfile_sched_rt_show,
 };
 
-static int xnsched_rt_seq_open(struct inode *inode, struct file *file)
+static int xnsched_rt_init_vfile(struct xnsched_class *schedclass,
+				 struct xnvfile_directory *vfroot)
 {
-	struct xnsched_rt_seq_iterator *iter = NULL;
-	struct xnsched_rt_info *p;
-	struct xnholder *holder;
-	struct xnthread *thread;
-	int ret, count, rev, n;
-	struct seq_file *seq;
-	spl_t s;
+	int ret;
 
-	if (!xnpod_active_p())
-		return -ESRCH;
-
-	xnlock_get_irqsave(&nklock, s);
-
-      restart:
-	rev = nkpod->threadq_rev;
-	count = xnsched_class_rt.nthreads;
-	holder = getheadq(&nkpod->threadq);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (iter)
-		kfree(iter);
-
-	if (count == 0)
-		return -ESRCH;
-
-	iter = kmalloc(sizeof(*iter)
-		       + (count - 1) * sizeof(struct xnsched_rt_info),
-		       GFP_KERNEL);
-	if (iter == NULL)
-		return -ENOMEM;
-
-	ret = seq_open(file, &xnsched_rt_seq_op);
-	if (ret) {
-		kfree(iter);
+	ret = xnvfile_init_dir(schedclass->name, &sched_rt_vfroot, vfroot);
+	if (ret)
 		return ret;
-	}
 
-	iter->nentries = 0;
-	iter->start_time = xntbase_get_jiffies(&nktbase);
-
-	while (holder) {
-		xnlock_get_irqsave(&nklock, s);
-
-		if (nkpod->threadq_rev != rev)
-			goto restart;
-
-		rev = nkpod->threadq_rev;
-		thread = link2thread(holder, glink);
-
-		if (thread->base_class != &xnsched_class_rt)
-			goto skip;
-
-		n = iter->nentries++;
-		p = iter->sched_info + n;
-		p->cpu = xnsched_cpu(thread->sched);
-		p->pid = xnthread_user_pid(thread);
-		memcpy(p->name, thread->name, sizeof(p->name));
-		p->cprio = thread->cprio;
-		p->dnprio = xnthread_get_denormalized_prio(thread, thread->cprio);
-		p->period = xnthread_get_period(thread);
-		p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
-	skip:
-		holder = nextq(&nkpod->threadq, holder);
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	seq = file->private_data;
-	seq->private = iter;
-
-	return 0;
+	return xnvfile_init_snapshot("threads", &vfile_sched_rt,
+				     &sched_rt_vfroot);
 }
 
-static struct file_operations xnsched_rt_seq_operations = {
-	.owner = THIS_MODULE,
-	.open = xnsched_rt_seq_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release_private,
-};
-
-void xnsched_rt_init_proc(struct proc_dir_entry *root)
+static void xnsched_rt_cleanup_vfile(struct xnsched_class *schedclass)
 {
-	rthal_add_proc_seq("threads", &xnsched_rt_seq_operations, 0, root);
+	xnvfile_destroy_snapshot(&vfile_sched_rt);
+	xnvfile_destroy_dir(&sched_rt_vfroot);
 }
 
-void xnsched_rt_cleanup_proc(struct proc_dir_entry *root)
-{
-	remove_proc_entry("threads", root);
-}
-
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct xnsched_class xnsched_class_rt = {
-
 	.sched_init		=	xnsched_rt_init,
 	.sched_enqueue		=	xnsched_rt_enqueue,
 	.sched_dequeue		=	xnsched_rt_dequeue,
@@ -355,9 +298,9 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_suspend_rpi 	=	NULL,
 	.sched_resume_rpi 	=	NULL,
 #endif
-#ifdef CONFIG_PROC_FS
-	.sched_init_proc	=	xnsched_rt_init_proc,
-	.sched_cleanup_proc	=	xnsched_rt_cleanup_proc,
+#ifdef CONFIG_XENO_OPT_VFILE
+	.sched_init_vfile	=	xnsched_rt_init_vfile,
+	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"rt"

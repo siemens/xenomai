@@ -29,72 +29,107 @@ static xnqueue_t psosmbufq;	/* Shared msg buffers (in chunks) */
 
 static u_long q_destroy_internal(psosqueue_t *queue);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int msgq_read_proc(char *page,
-			  char **start,
-			  off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	unsigned long maxnum;
+	unsigned long maxlen;
+	int msgcount;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	psosqueue_t *queue = (psosqueue_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	psosqueue_t *queue = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "maxnum=%lu:maxlen=%lu:mcount=%d\n",
-		     queue->maxnum, queue->maxlen, countq(&queue->inq));
+	queue = psos_h2obj_active((u_long)queue, PSOS_QUEUE_MAGIC, psosqueue_t);
+	if (queue == NULL)
+		return -EIDRM;
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&queue->synchbase));
+	priv->maxnum = queue->maxnum;
+	priv->maxlen = queue->maxlen;
+	priv->msgcount = countq(&queue->inq);
 
-	if (xnsynch_nsleepers(&queue->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended queue -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&queue->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&queue->synchbase),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&queue->synchbase);
 }
 
-extern xnptree_t __psos_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	psosqueue_t *queue = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t msgq_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "queues",
-	.entries = 0,
-	.read_proc = &msgq_read_proc,
-	.write_proc = NULL,
-	.root = &__psos_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&queue->synchbase),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, 
+			       "maxnum=%lu:maxlen=%lu:mcount=%d\n",
+			       priv->maxnum,
+			       priv->maxlen,
+			       priv->msgcount);
+		if (it->nrdata > 0)
+			/* Queue is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __psos_ptree;
 
-static xnpnode_t msgq_pnode = {
-
-	.type = "queues"
+static struct xnpnode_snapshot __msgq_pnode = {
+	.node = {
+		.dirname = "queues",
+		.root = &__psos_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __msgq_pnode = {
+	.node = {
+		.dirname = "queues",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 void psosqueue_init(void)
 {
@@ -275,7 +310,7 @@ static u_long q_create_internal(const char *name,
 	if (!*name)
 		sprintf(queue->name, "anon_q%lu", msgq_ids++);
 
-	ret = xnregistry_enter(queue->name, queue, &queue->handle, &msgq_pnode);
+	ret = xnregistry_enter(queue->name, queue, &queue->handle, &__msgq_pnode.node);
 	if (ret) {
 		queue->handle = XN_NO_HANDLE;
 		q_delete((u_long)queue);

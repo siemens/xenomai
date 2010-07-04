@@ -71,8 +71,9 @@ struct xnpod {
 	xnsched_t sched[XNARCH_NR_CPUS];	/*!< Per-cpu scheduler slots. */
 
 	xnqueue_t threadq;	/*!< All existing threads. */
-	int threadq_rev;	/*!< Modification counter of threadq. */
-
+#ifdef CONFIG_XENO_OPT_VFILE
+	struct xnvfile_rev_tag threadlist_tag;
+#endif
 	xnqueue_t tstartq,	/*!< Thread start hook queue. */
 	 tswitchq,		/*!< Thread switch hook queue. */
 	 tdeleteq;		/*!< Thread delete hook queue. */
@@ -103,18 +104,18 @@ extern xnarch_cpumask_t nkaffinity;
 
 extern xnpod_t nkpod_struct;
 
-#ifdef CONFIG_PROC_FS
-void xnpod_init_proc(void);
+#ifdef CONFIG_XENO_OPT_VFILE
+int xnpod_init_proc(void);
 void xnpod_cleanup_proc(void);
-#else /* !CONFIG_PROC_FS */
-static inline void xnpod_init_proc(void) {}
+#else /* !CONFIG_XENO_OPT_VFILE */
+static inline int xnpod_init_proc(void) { return 0; }
 static inline void xnpod_cleanup_proc(void) {}
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
-static inline void xnpod_mount(void)
+static inline int xnpod_mount(void)
 {
 	xnsched_register_classes();
-	xnpod_init_proc();
+	return xnpod_init_proc();
 }
 
 static inline void xnpod_umount(void)

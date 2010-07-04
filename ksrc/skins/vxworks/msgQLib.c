@@ -22,74 +22,107 @@
 
 static int msgq_destroy_internal(wind_msgq_t *queue);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int msgq_read_proc(char *page,
-			  char **start,
-			  off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int flags;
+	unsigned int mlength;
+	int mcount;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	wind_msgq_t *queue = (wind_msgq_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_msgq_t *q = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "porder=%s:mlength=%u:mcount=%d\n",
-		     xnsynch_test_flags(&queue->synchbase,
-					XNSYNCH_PRIO) ? "prio" : "fifo",
-		     queue->msg_length, countq(&queue->msgq));
+	q = wind_h2obj_active((MSG_Q_ID)q, WIND_MSGQ_MAGIC, wind_msgq_t);
+	if (q == NULL)
+		return -EIDRM;
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&q->synchbase));
+	priv->flags = xnsynch_test_flags(&q->synchbase, XNSYNCH_PRIO);
+	priv->mlength = q->msg_length;
+	priv->mcount = countq(&q->msgq);
 
-	if (xnsynch_nsleepers(&queue->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended queue -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&queue->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&queue->synchbase),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&q->synchbase);
 }
 
-extern xnptree_t __vxworks_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_msgq_t *q = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t msgq_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "msgq",
-	.entries = 0,
-	.read_proc = &msgq_read_proc,
-	.write_proc = NULL,
-	.root = &__vxworks_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&q->synchbase),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, 
+			       "porder=%s:mlength=%u:mcount=%d\n",
+			       priv->flags ? "prio" : "fifo",
+			       priv->mlength,
+			       priv->mcount);
+		if (it->nrdata > 0)
+			/* Queue is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __vxworks_ptree;
 
-static xnpnode_t msgq_pnode = {
-
-	.type = "msgq"
+static struct xnpnode_snapshot __msgq_pnode = {
+	.node = {
+		.dirname = "msgq",
+		.root = &__vxworks_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __msgq_pnode = {
+	.node = {
+		.dirname = "msgq",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 void wind_msgq_init(void)
 {
@@ -189,7 +222,7 @@ MSG_Q_ID msgQCreate(int nb_msgs, int length, int flags)
 	sprintf(queue->name, "mq%lu", msgq_ids++);
 
 	if (xnregistry_enter(queue->name, queue,
-			     &queue->handle, &msgq_pnode)) {
+			     &queue->handle, &__msgq_pnode.node)) {
 		wind_errnoset(S_objLib_OBJ_ID_ERROR);
 		msgQDelete((MSG_Q_ID)queue);
 		return 0;

@@ -233,7 +233,6 @@ includesub_HEADERS = \
 	rtai_fifos.h \
 	rtai_hal.h \
 	rtai_nam2num.h \
-	rtai_proc_fs.h \
 	rtai_sched.h \
 	rtai_sem.h \
 	rtai_shm.h \

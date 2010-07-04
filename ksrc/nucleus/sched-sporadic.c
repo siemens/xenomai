@@ -413,67 +413,91 @@ static void xnsched_sporadic_resume_rpi(struct xnthread *thread)
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-#include <linux/seq_file.h>
+struct xnvfile_directory sched_sporadic_vfroot;
 
-struct xnsched_sporadic_seq_iterator {
-	xnticks_t start_time;
-	int nentries;
-	struct xnsched_sporadic_info {
-		int cpu;
-		pid_t pid;
-		char name[XNOBJECT_NAME_LEN];
-		int current_prio;
-		int low_prio;
-		int normal_prio;
-		int periodic;
-		xnticks_t period;
-		xnticks_t timeout;
-		xnticks_t budget;
-	} sched_info[1];
+struct vfile_sched_sporadic_priv {
+	int nrthreads;
+	struct xnholder *curr;
 };
 
-static void *xnsched_sporadic_seq_start(struct seq_file *seq, loff_t *pos)
+struct vfile_sched_sporadic_data {
+	int cpu;
+	pid_t pid;
+	char name[XNOBJECT_NAME_LEN];
+	int current_prio;
+	int low_prio;
+	int normal_prio;
+	int periodic;
+	xnticks_t period;
+	xnticks_t timeout;
+	xnticks_t budget;
+};
+
+static struct xnvfile_snapshot_ops vfile_sched_sporadic_ops;
+
+static struct xnvfile_snapshot vfile_sched_sporadic = {
+	.privsz = sizeof(struct vfile_sched_sporadic_priv),
+	.datasz = sizeof(struct vfile_sched_sporadic_data),
+	.tag = &nkpod_struct.threadlist_tag,
+	.ops = &vfile_sched_sporadic_ops,
+};
+
+static int vfile_sched_sporadic_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	struct xnsched_sporadic_seq_iterator *iter = seq->private;
+	struct vfile_sched_sporadic_priv *priv = xnvfile_iterator_priv(it);
+	int nrthreads = xnsched_class_sporadic.nthreads;
 
-	if (*pos > iter->nentries)
-		return NULL;
+	if (nrthreads == 0)
+		return -ESRCH;
 
-	if (*pos == 0)
-		return SEQ_START_TOKEN;
+	priv->curr = getheadq(&nkpod->threadq);
 
-	return iter->sched_info + *pos - 1;
+	return nrthreads;
 }
 
-static void *xnsched_sporadic_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+static int vfile_sched_sporadic_next(struct xnvfile_snapshot_iterator *it,
+				     void *data)
 {
-	struct xnsched_sporadic_seq_iterator *iter = seq->private;
+	struct vfile_sched_sporadic_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_sched_sporadic_data *p = data;
+	struct xnthread *thread;
 
-	++*pos;
+	if (priv->curr == NULL)
+		return 0;	/* All done. */
 
-	if (*pos > iter->nentries)
-		return NULL;
+	thread = link2thread(priv->curr, glink);
+	priv->curr = nextq(&nkpod->threadq, priv->curr);
 
-	return iter->sched_info + *pos - 1;
+	if (thread->base_class != &xnsched_class_sporadic)
+		return VFILE_SEQ_SKIP;
+
+	p->cpu = xnsched_cpu(thread->sched);
+	p->pid = xnthread_user_pid(thread);
+	memcpy(p->name, thread->name, sizeof(p->name));
+	p->current_prio = thread->cprio;
+	p->low_prio = thread->pss->param.low_prio;
+	p->normal_prio = thread->pss->param.normal_prio;
+	p->period = xnthread_get_period(thread);
+	p->budget = thread->pss->param.init_budget;
+	p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
+
+	return 1;
 }
 
-static void xnsched_sporadic_seq_stop(struct seq_file *seq, void *v)
-{
-}
-
-static int xnsched_sporadic_seq_show(struct seq_file *seq, void *v)
+static int vfile_sched_sporadic_show(struct xnvfile_snapshot_iterator *it,
+				     void *data)
 {
 	char lpbuf[16], npbuf[16], ptbuf[16], btbuf[16];
-	struct xnsched_sporadic_info *p;
+	struct vfile_sched_sporadic_data *p = data;
 
-	if (v == SEQ_START_TOKEN)
-		seq_printf(seq, "%-3s  %-6s %-4s %-4s  %-10s %-10s %s\n",
-			   "CPU", "PID", "LPRI", "NPRI", "BUDGET", "PERIOD", "NAME");
+	if (p == NULL)
+		xnvfile_printf(it,
+			       "%-3s  %-6s %-4s %-4s  %-10s %-10s %s\n",
+			       "CPU", "PID", "LPRI", "NPRI", "BUDGET",
+			       "PERIOD", "NAME");
 	else {
-		p = v;
-
 		snprintf(lpbuf, sizeof(lpbuf), "%3d%c",
 			 p->low_prio, p->current_prio == p->low_prio ? '*' : ' ');
 
@@ -483,125 +507,49 @@ static int xnsched_sporadic_seq_show(struct seq_file *seq, void *v)
 		xntimer_format_time(p->period, p->periodic, ptbuf, sizeof(ptbuf));
 		xntimer_format_time(p->budget, p->periodic, btbuf, sizeof(btbuf));
 
-		seq_printf(seq, "%3u  %-6d %-4s %-4s  %-10s %-10s %s\n",
-			   p->cpu,
-			   p->pid,
-			   lpbuf,
-			   npbuf,
-			   btbuf,
-			   ptbuf,
-			   p->name);
+		xnvfile_printf(it,
+			       "%3u  %-6d %-4s %-4s  %-10s %-10s %s\n",
+			       p->cpu,
+			       p->pid,
+			       lpbuf,
+			       npbuf,
+			       btbuf,
+			       ptbuf,
+			       p->name);
 	}
 
 	return 0;
 }
 
-static struct seq_operations xnsched_sporadic_seq_op = {
-	.start = &xnsched_sporadic_seq_start,
-	.next = &xnsched_sporadic_seq_next,
-	.stop = &xnsched_sporadic_seq_stop,
-	.show = &xnsched_sporadic_seq_show
+static struct xnvfile_snapshot_ops vfile_sched_sporadic_ops = {
+	.rewind = vfile_sched_sporadic_rewind,
+	.next = vfile_sched_sporadic_next,
+	.show = vfile_sched_sporadic_show,
 };
 
-static int xnsched_sporadic_seq_open(struct inode *inode, struct file *file)
+static int xnsched_sporadic_init_vfile(struct xnsched_class *schedclass,
+				       struct xnvfile_directory *vfroot)
 {
-	struct xnsched_sporadic_seq_iterator *iter = NULL;
-	struct xnsched_sporadic_info *p;
-	struct xnholder *holder;
-	struct xnthread *thread;
-	int ret, count, rev, n;
-	struct seq_file *seq;
-	spl_t s;
+	int ret;
 
-	if (!xnpod_active_p())
-		return -ESRCH;
-
-	xnlock_get_irqsave(&nklock, s);
-
-      restart:
-	rev = nkpod->threadq_rev;
-	count = xnsched_class_sporadic.nthreads;
-	holder = getheadq(&nkpod->threadq);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (iter)
-		kfree(iter);
-
-	if (count == 0)
-		return -ESRCH;
-
-	iter = kmalloc(sizeof(*iter)
-		       + (count - 1) * sizeof(struct xnsched_sporadic_info),
-		       GFP_KERNEL);
-	if (iter == NULL)
-		return -ENOMEM;
-
-	ret = seq_open(file, &xnsched_sporadic_seq_op);
-	if (ret) {
-		kfree(iter);
+	ret = xnvfile_init_dir(schedclass->name,
+			       &sched_sporadic_vfroot, vfroot);
+	if (ret)
 		return ret;
-	}
 
-	iter->nentries = 0;
-	iter->start_time = xntbase_get_jiffies(&nktbase);
-
-	while (holder) {
-		xnlock_get_irqsave(&nklock, s);
-
-		if (nkpod->threadq_rev != rev)
-			goto restart;
-
-		rev = nkpod->threadq_rev;
-		thread = link2thread(holder, glink);
-
-		if (thread->base_class != &xnsched_class_sporadic)
-			goto skip;
-
-		n = iter->nentries++;
-		p = iter->sched_info + n;
-		p->cpu = xnsched_cpu(thread->sched);
-		p->pid = xnthread_user_pid(thread);
-		memcpy(p->name, thread->name, sizeof(p->name));
-		p->current_prio = thread->cprio;
-		p->low_prio = thread->pss->param.low_prio;
-		p->normal_prio = thread->pss->param.normal_prio;
-		p->period = xnthread_get_period(thread);
-		p->budget = thread->pss->param.init_budget;
-		p->periodic = xntbase_periodic_p(xnthread_time_base(thread));
-	skip:
-		holder = nextq(&nkpod->threadq, holder);
-		xnlock_put_irqrestore(&nklock, s);
-	}
-
-	seq = file->private_data;
-	seq->private = iter;
-
-	return 0;
+	return xnvfile_init_snapshot("threads", &vfile_sched_sporadic,
+				     &sched_sporadic_vfroot);
 }
 
-static struct file_operations xnsched_sporadic_seq_operations = {
-	.owner = THIS_MODULE,
-	.open = xnsched_sporadic_seq_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = seq_release_private,
-};
-
-void xnsched_sporadic_init_proc(struct proc_dir_entry *root)
+static void xnsched_sporadic_cleanup_vfile(struct xnsched_class *schedclass)
 {
-	rthal_add_proc_seq("threads", &xnsched_sporadic_seq_operations, 0, root);
+	xnvfile_destroy_snapshot(&vfile_sched_sporadic);
+	xnvfile_destroy_dir(&sched_sporadic_vfroot);
 }
 
-void xnsched_sporadic_cleanup_proc(struct proc_dir_entry *root)
-{
-	remove_proc_entry("threads", root);
-}
-
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 struct xnsched_class xnsched_class_sporadic = {
-
 	.sched_init		=	xnsched_sporadic_init,
 	.sched_enqueue		=	xnsched_sporadic_enqueue,
 	.sched_dequeue		=	xnsched_sporadic_dequeue,
@@ -622,9 +570,9 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_suspend_rpi 	=	xnsched_sporadic_suspend_rpi,
 	.sched_resume_rpi 	=	xnsched_sporadic_resume_rpi,
 #endif
-#ifdef CONFIG_PROC_FS
-	.sched_init_proc	=	xnsched_sporadic_init_proc,
-	.sched_cleanup_proc	=	xnsched_sporadic_cleanup_proc,
+#ifdef CONFIG_XENO_OPT_VFILE
+	.sched_init_vfile	=	xnsched_sporadic_init_vfile,
+	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,
 #endif
 	.weight			=	XNSCHED_CLASS_WEIGHT(1),
 	.name			=	"pss"

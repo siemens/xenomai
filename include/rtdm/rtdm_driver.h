@@ -39,6 +39,7 @@
 #include <nucleus/pod.h>
 #include <nucleus/synch.h>
 #include <nucleus/select.h>
+#include <nucleus/vfile.h>
 #include <rtdm/rtdm.h>
 
 /* debug support */
@@ -517,8 +518,11 @@ struct rtdm_device {
 
 	/** Name of /proc entry for the device, must not be NULL */
 	const char *proc_name;
-	/** Set to device's /proc root entry after registration, do not modify */
-	struct proc_dir_entry *proc_entry;
+#ifdef CONFIG_XENO_OPT_VFILE
+	/** Set to device's vfile data after registration, do not modify */
+	struct xnvfile_directory vfroot;
+	struct xnvfile_regular info_vfile;
+#endif
 
 	/** Driver definable device ID */
 	int device_id;

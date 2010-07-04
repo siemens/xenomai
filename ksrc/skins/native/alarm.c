@@ -43,72 +43,103 @@
 #include <native/alarm.h>
 #include <native/timer.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __alarm_read_proc(char *page,
-			     char **start,
-			     off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	RTIME interval;
+	unsigned long expiries;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_ALARM *alarm = (RT_ALARM *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_ALARM *alarm = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	alarm = xeno_h2obj_validate(alarm, XENO_ALARM_MAGIC, RT_ALARM);
+	if (alarm == NULL)
+		return -EIDRM;
 
-	p += sprintf(p, "interval=%Lu:expiries=%lu\n",
-		     rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base)),
-		     alarm->expiries);
+	priv->curr = getheadpq(xnsynch_wait_queue(&alarm->synch_base));
+	priv->interval = rt_timer_tsc2ns(xntimer_interval(&alarm->timer_base));
+	priv->expiries = alarm->expiries;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	{
-		xnpholder_t *holder =
-		    getheadpq(xnsynch_wait_queue(&alarm->synch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&alarm->synch_base),
-				   holder);
-		}
-	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&alarm->synch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_ALARM *alarm = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __alarm_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "alarms",
-	.entries = 0,
-	.read_proc = &__alarm_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&alarm->synch_base),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "%8s  %s\n", "INTERVAL", "EXPIRIES");
+		xnvfile_printf(it, "%8Lu  %lu\n",
+			       priv->interval, priv->expiries);
+		if (it->nrdata > 0)
+			/* Alarm is pended -- dump waiters */
+			xnvfile_printf(it, "------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __native_ptree;
 
-static xnpnode_t __alarm_pnode = {
-
-	.type = "alarms"
+static struct xnpnode_snapshot __alarm_pnode = {
+	.node = {
+		.dirname = "alarms",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __alarm_pnode = {
+	.node = {
+		.dirname = "alarms",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int __native_alarm_pkg_init(void)
 {
@@ -226,7 +257,7 @@ int rt_alarm_create(RT_ALARM *alarm,
 		 * handles to half-baked objects...
 		 */
 		err = xnregistry_enter((*name) ? alarm->name : "", alarm,
-				       &alarm->handle, &__alarm_pnode);
+				       &alarm->handle, &__alarm_pnode.node);
 		if (err)
 			rt_alarm_delete(alarm);
 

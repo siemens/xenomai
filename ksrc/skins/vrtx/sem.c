@@ -25,70 +25,96 @@ static xnmap_t *vrtx_sem_idmap;
 
 static xnqueue_t vrtx_sem_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int sem_read_proc(char *page,
-			 char **start,
-			 off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	unsigned long count;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxsem_t *sem = (vrtxsem_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxsem *sem = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&sem->synchbase));
+	priv->count = sem->count;
 
-	p += sprintf(p, "value=%lu\n", sem->count);
-
-	if (xnsynch_nsleepers(&sem->synchbase) == 0) {
-		xnpholder_t *holder;
-
-		/* Pended semaphore -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&sem->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&sem->synchbase), holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&sem->synchbase);
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxsem *sem = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __sem_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "semaphores",
-	.entries = 0,
-	.read_proc = &sem_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&sem->synchbase),
+			    priv->curr);
+
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "value=%lu\n", priv->count);
+		if (it->nrdata > 0)
+			/* Semaphore is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __vrtx_ptree;
 
-static xnpnode_t __sem_pnode = {
-
-	.type = "semaphores"
+static struct xnpnode_snapshot __sem_pnode = {
+	.node = {
+		.dirname = "semaphores",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __sem_pnode = {
+	.node = {
+		.dirname = "semaphores",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static int sem_destroy_internal(vrtxsem_t *sem)
 {
@@ -164,7 +190,7 @@ int sc_screate(unsigned initval, int opt, int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(sem->name, "sem%d", semid);
-	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode);
+	xnregistry_enter(sem->name, sem, &sem->handle, &__sem_pnode.node);
 
 	*errp = RET_OK;
 

@@ -52,33 +52,43 @@
 #include <nucleus/registry.h>
 #include <native/pipe.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static ssize_t __pipe_link_proc(char *buf, int count, void *data)
+static char *__pipe_link_target(void *obj)
 {
-	RT_PIPE *pipe = (RT_PIPE *)data;
-	return snprintf(buf, count, "/dev/rtp%d", pipe->minor);
+	RT_PIPE *pipe = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "/dev/rtp%d", pipe->minor);
+
+	return buf;
 }
 
-extern xnptree_t __native_ptree;
+extern struct xnptree __native_ptree;
 
-static xnpnode_t __pipe_pnode = {
-
-	.dir = NULL,
-	.type = "pipes",
-	.entries = 0,
-	.link_proc = &__pipe_link_proc,
-	.root = &__native_ptree,
+static struct xnpnode_link __pipe_pnode = {
+	.node = {
+		.dirname = "pipes",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __pipe_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
-static xnpnode_t __pipe_pnode = {
-
-	.type = "pipes"
+static struct xnpnode_link __pipe_pnode = {
+	.node = {
+		.dirname = "pipes",
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __pipe_flush_pool(xnheap_t *heap,
 			      void *poolmem, u_long poolsize, void *cookie)
@@ -352,7 +362,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	 */
 	if (name) {
 		err = xnregistry_enter(pipe->name, pipe, &pipe->handle,
-				       &__pipe_pnode);
+				       &__pipe_pnode.node);
 		if (err)
 			rt_pipe_delete(pipe);
 	}

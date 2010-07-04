@@ -25,51 +25,62 @@ xnmap_t *vrtx_heap_idmap;
 
 static xnqueue_t vrtx_heap_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __heap_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	size_t heapsz;
+	size_t memused;
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxheap_t *heap = (vrtxheap_t *)data;
-	char *p = page;
-	int len;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxheap *heap = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "size=%lu:used=%lu\n",
-		     xnheap_usable_mem(&heap->sysheap), xnheap_used_mem(&heap->sysheap));
+	priv->heapsz = xnheap_usable_mem(&heap->sysheap);
+	priv->memused = xnheap_used_mem(&heap->sysheap);
 
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
 
-static xnpnode_t __heap_pnode = {
+	xnvfile_printf(it, "size=%zu:used=%zu\n",
+		       priv->heapsz, priv->memused);
 
-	.dir = NULL,
-	.type = "heaps",
-	.entries = 0,
-	.read_proc = &__heap_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __vrtx_ptree;
 
-static xnpnode_t __heap_pnode = {
-
-	.type = "heaps"
+static struct xnpnode_snapshot __heap_pnode = {
+	.node = {
+		.dirname = "heaps",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __heap_pnode = {
+	.node = {
+		.dirname = "heaps",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void heap_destroy_internal(vrtxheap_t *heap)
 {
@@ -221,7 +232,7 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(heap->name, "heap%d", hid);
-	xnregistry_enter(heap->name, heap, &heap->handle, &__heap_pnode);
+	xnregistry_enter(heap->name, heap, &heap->handle, &__heap_pnode.node);
 
 	*errp = RET_OK;
 

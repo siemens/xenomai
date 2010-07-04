@@ -37,6 +37,7 @@
 #include <linux/sched.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
+#include <linux/slab.h>
 #include <linux/moduleparam.h>	/* Use the backport. */
 #include <asm/atomic.h>
 
@@ -335,6 +336,21 @@ unsigned long find_next_bit(const unsigned long *addr,
 
 #define mmiowb()	barrier()
 
+#define wrap_f_inode(file)	((file)->f_dentry->d_inode)
+
+static inline void *kzalloc(size_t size, int flags)
+{
+	void *ptr;
+
+	ptr = kmalloc(size, flags);
+	if (ptr == NULL)
+		return NULL;
+
+	memset(ptr, 0, size);
+
+	return ptr;
+}
+
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 
 #define compat_module_param_array(name, type, count, perm) \
@@ -456,6 +472,8 @@ unsigned long find_next_bit(const unsigned long *addr,
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_DELAYED_WORK(n, f)
 #endif /* >= 2.6.20 */
 
+#define wrap_f_inode(file)	((file)->f_path.dentry->d_inode)
+
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
@@ -561,7 +579,7 @@ static inline int wrap_raise_cap(int cap)
 }
 #endif /* LINUX_VERSION_CODE >= 2.6.29 */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 #include <linux/module.h>
 #include <linux/proc_fs.h>
@@ -572,7 +590,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #else  /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
 #define wrap_proc_dir_entry_owner(entry) do { (void)entry; } while(0)
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 #ifndef list_first_entry
 #define list_first_entry(ptr, type, member) \

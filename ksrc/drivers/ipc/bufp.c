@@ -41,7 +41,7 @@ struct bufp_socket {
 	size_t bufsz;
 	u_long status;
 	xnhandle_t handle;
-	char label[BUFP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	off_t rdoff;
 	off_t wroff;
@@ -74,31 +74,43 @@ static struct xnmap *portmap;
 #define _BUFP_BINDING  0
 #define _BUFP_BOUND    1
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static ssize_t __bufp_link_proc(char *buf, int count, void *data)
+static char *__bufp_link_target(void *obj)
 {
-	struct bufp_socket *sk = data;
-	return snprintf(buf, count, "%d", sk->name.sipc_port);
+	struct bufp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "%d", sk->name.sipc_port);
+
+	return buf;
 }
 
-static struct xnpnode __bufp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "bufp",
-	.entries = 0,
-	.link_proc = &__bufp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __bufp_pnode = {
+	.node = {
+		.dirname = "bufp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __bufp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
-static struct xnpnode __bufp_pnode = {
-
-	.type = "bufp"
+static struct xnpnode_link __bufp_pnode = {
+	.node = {
+		.dirname = "bufp",
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __bufp_cleanup_handler(struct rtipc_wait_context *wc)
 {
@@ -610,7 +622,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 	struct sockaddr_ipc daddr;
 	ssize_t ret;
 
-	if (flags & ~(MSG_OOB | MSG_DONTWAIT))
+	if (flags & ~MSG_DONTWAIT)
 		return -EINVAL;
 
 	if (msg->msg_name) {
@@ -702,7 +714,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 	 * buffer space via setsockopt(), before we got there.
 	 */
 	if (sk->bufsz == 0)
-		return -EINVAL;
+		return -ENOBUFS;
 
 	sk->bufmem = xnarch_alloc_host_mem(sk->bufsz);
 	if (sk->bufmem == NULL) {
@@ -717,7 +729,7 @@ static int __bufp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk,
-				       &sk->handle, &__bufp_pnode);
+				       &sk->handle, &__bufp_pnode.node);
 		if (ret) {
 			xnarch_free_host_mem(sk->bufmem, sk->bufsz);
 			goto fail;
@@ -761,11 +773,9 @@ static int __bufp_connect_socket(struct bufp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via BUFP_SETLABEL,
-	 * connect() blocks for the requested amount of time until a
-	 * socket is bound to the same label, unless the internal
-	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
-	 * operation (RTDM_TIMEOUT_NONE).
+	 * - If sipc_port is -1 and a label was set via BUFP_LABEL,
+	 * connect() blocks for the requested amount of time (see
+	 * SO_RCVTIMEO) until a socket is bound to the same label.
 	 *
 	 * - If sipc_port is -1 and no label is given, the default
 	 * destination address is cleared, meaning that any subsequent
@@ -809,7 +819,7 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
-	char label[BUFP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
@@ -845,12 +855,12 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_BUFP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case BUFP_SETBUFFER:
+	case BUFP_BUFSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -871,11 +881,11 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 		);
 		break;
 
-	case BUFP_SETLABEL:
-		if (sopt.optlen < sizeof(label))
+	case BUFP_LABEL:
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			/*
@@ -885,8 +895,8 @@ static int __bufp_setsockopt(struct bufp_socket *sk,
 			if (test_bit(_BUFP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[BUFP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -903,7 +913,7 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[BUFP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -942,19 +952,19 @@ static int __bufp_getsockopt(struct bufp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_BUFP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case BUFP_GETLABEL:
-		if (len < sizeof(label))
+	case BUFP_LABEL:
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

@@ -57,6 +57,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -94,7 +95,7 @@ static void fail(const char *reason)
 
 void *realtime_thread1(void *arg)
 {
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
 	int ret, s, len;
 	char buf[128];
@@ -114,9 +115,9 @@ void *realtime_thread1(void *arg)
 	 * Set a port label. This name will be registered when
 	 * binding, in addition to the port number (if given).
 	 */
-	strcpy(label, XDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, XDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_XDDP, XDDP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 	/*
@@ -152,7 +153,7 @@ void *realtime_thread1(void *arg)
 
 void *realtime_thread2(void *arg)
 {
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
 	int ret, s, n = 0, len;
 	struct timespec ts;
@@ -184,9 +185,9 @@ void *realtime_thread2(void *arg)
 	 * Set a port label. This name will be used to find the peer
 	 * when connecting, instead of the port number.
 	 */
-	strcpy(label, XDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, XDDP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, XDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_XDDP, XDDP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 
@@ -250,6 +251,7 @@ void *regular_thread(void *arg)
 		fail("asprintf");
 
 	fd = open(devname, O_RDWR);
+	free(devname);
 	if (fd < 0)
 		fail("open");
 

@@ -69,7 +69,7 @@ void *server(void *arg)
 	 * of Xenomai's system pool.
 	 */
 	poolsz = 32768; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLOCALPOOL,
+	ret = setsockopt(s, SOL_IDDP, IDDP_POOLSZ,
 			 &poolsz, sizeof(poolsz));
 	if (ret)
 		fail("setsockopt");

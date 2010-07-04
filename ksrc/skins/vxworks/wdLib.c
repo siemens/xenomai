@@ -24,69 +24,102 @@
 
 static void wd_destroy_internal(wind_wd_t *wd);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int wd_read_proc(char *page,
-			char **start,
-			off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	xnticks_t timeout;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	wind_wd_t *wd = (wind_wd_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_wd_t *wd = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	wd = wind_h2obj_active((WDOG_ID)wd, WIND_WD_MAGIC, wind_wd_t);
+	if (wd == NULL)
+		return -EIDRM;
 
-	p += sprintf(p, "timeout=%lld\n", xntimer_get_timeout(&wd->timerbase));
+	priv->curr = getheadpq(xnsynch_wait_queue(&wd->rh->wdsynch));
+	priv->timeout = xntimer_get_timeout(&wd->timerbase);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	{
-		xnpholder_t *holder =
-		    getheadpq(xnsynch_wait_queue(&wd->rh->wdsynch));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&wd->rh->wdsynch), holder);
-		}
-	}
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&wd->rh->wdsynch);
 }
 
-extern xnptree_t __vxworks_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	wind_wd_t *wd = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t wd_pnode = {
+	/* Refresh as we collect. */
+	priv->timeout = xntimer_get_timeout(&wd->timerbase);
 
-	.dir = NULL,
-	.type = "watchdogs",
-	.entries = 0,
-	.read_proc = &wd_read_proc,
-	.write_proc = NULL,
-	.root = &__vxworks_ptree,
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
+
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&wd->rh->wdsynch),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "timeout=%Lu\n", priv->timeout);
+		if (it->nrdata > 0)
+			/* Watchdog is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------------------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __vxworks_ptree;
 
-static xnpnode_t wd_pnode = {
-
-	.type = "watchdogs"
+static struct xnpnode_snapshot __wd_pnode = {
+	.node = {
+		.dirname = "watchdogs",
+		.root = &__vxworks_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __wd_pnode = {
+	.node = {
+		.dirname = "watchdogs",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void wind_wd_trampoline(xntimer_t *timer)
 {
@@ -129,7 +162,7 @@ WDOG_ID wdCreate(void)
 
 	sprintf(wd->name, "wd%lu", wd_ids++);
 
-	if (xnregistry_enter(wd->name, wd, &wd->handle, &wd_pnode)) {
+	if (xnregistry_enter(wd->name, wd, &wd->handle, &__wd_pnode.node)) {
 		wind_errnoset(S_objLib_OBJ_ID_ERROR);
 		wdDelete((WDOG_ID)wd);
 		return 0;

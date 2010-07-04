@@ -25,76 +25,105 @@ static xnmap_t *vrtx_mx_idmap;
 
 static xnqueue_t vrtx_mx_q;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __mutex_read_proc(char *page,
-			     char **start,
-			     off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	char owner[XNOBJECT_NAME_LEN];
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	vrtxmx_t *mx = (vrtxmx_t *)data;
-	xnthread_t *owner;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxmx *mx = xnvfile_priv(it->vfile);
+	struct xnthread *owner;
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&mx->synchbase));
 
 	owner = xnsynch_owner(&mx->synchbase);
-	if (owner) {
-		xnpholder_t *holder;
+	if (owner)
+		strncpy(priv->owner, xnthread_name(owner),
+			sizeof(priv->owner));
+	else
+		*priv->owner = 0;
 
-		/* Locked mx -- dump owner and waiters, if any. */
-
-		p += sprintf(p, "=locked by %s\n",
-			     xnthread_name(owner));
-
-		holder = getheadpq(xnsynch_wait_queue(&mx->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&mx->synchbase),
-				   holder);
-		}
-	} else
-		/* Mutex unlocked. */
-		p += sprintf(p, "=unlocked\n");
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&mx->synchbase);
 }
 
-extern xnptree_t __vrtx_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vrtxmx *mx = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __mutex_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "mutexes",
-	.entries = 0,
-	.read_proc = &__mutex_read_proc,
-	.write_proc = NULL,
-	.root = &__vrtx_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&mx->synchbase),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		if (*priv->owner) {
+			xnvfile_printf(it, "locked by %s\n", priv->owner);
+			if (it->nrdata > 0)
+				/* Mutex is pended -- dump waiters */
+				xnvfile_printf(it, "-------------------------------------------\n");
+		} else
+			xnvfile_printf(it, "unlocked\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __vrtx_ptree;
 
-static xnpnode_t __mutex_pnode = {
-
-	.type = "mutexes"
+static struct xnpnode_snapshot __mutex_pnode = {
+	.node = {
+		.dirname = "mutexes",
+		.root = &__vrtx_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __mutex_pnode = {
+	.node = {
+		.dirname = "mutexes",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int mx_destroy_internal(vrtxmx_t *mx)
 {
@@ -166,7 +195,7 @@ int sc_mcreate(unsigned int opt, int *errp)
 	xnlock_put_irqrestore(&nklock, s);
 
 	sprintf(mx->name, "mx%d", mid);
-	xnregistry_enter(mx->name, mx, &mx->handle, &__mutex_pnode);
+	xnregistry_enter(mx->name, mx, &mx->handle, &__mutex_pnode.node);
 
 	*errp = RET_OK;
 

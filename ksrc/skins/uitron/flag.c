@@ -23,70 +23,107 @@
 
 static xnmap_t *ui_flag_idmap;
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __flag_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	unsigned long value;
+};
+
+struct vfile_data {
+	UINT wfmode;
+	UINT waiptn;
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	uiflag_t *flag = (uiflag_t *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct uiflag *flag = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&flag->synchbase));
+	priv->value = flag->flgvalue;
 
-	p += sprintf(p, "=0x%x, attr=%s\n", flag->flgvalue,
-		     flag->flgatr & TA_WMUL ? "TA_WMUL" : "TA_WSGL");
-
-	if (xnsynch_nsleepers(&flag->synchbase) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended flag -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&flag->synchbase));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder = nextpq(xnsynch_wait_queue(&flag->synchbase), holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&flag->synchbase);
 }
 
-extern xnptree_t __uitron_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct uiflag *flag = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
+	struct uitask *task;
 
-static xnpnode_t __flag_pnode = {
+	priv->value = flag->flgvalue; /* Refresh as we collect. */
 
-	.dir = NULL,
-	.type = "flags",
-	.entries = 0,
-	.read_proc = &__flag_read_proc,
-	.write_proc = NULL,
-	.root = &__uitron_ptree,
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
+
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&flag->synchbase),
+			    priv->curr);
+
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+	task = thread2uitask(thread);
+	p->wfmode = task->wargs.flag.wfmode;
+	p->waiptn = task->wargs.flag.waiptn;
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		/* Always dump current flag value. */
+		xnvfile_printf(it, "=0x%lx\n", priv->value);
+		if (it->nrdata > 0)
+			xnvfile_printf(it, "\n%10s  %4s  %s\n",
+				       "WAITPN", "WFMODE", "WAITER");
+	} else
+		xnvfile_printf(it, "0x%-8x  %4s  %.*s\n",
+			       p->waiptn,
+			       p->wfmode & TWF_ORW ? "OR" : "AND",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __uitron_ptree;
 
-static xnpnode_t __flag_pnode = {
-
-	.type = "flags"
+static struct xnpnode_snapshot __flag_pnode = {
+	.node = {
+		.dirname = "flags",
+		.root = &__uitron_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __flag_pnode = {
+	.node = {
+		.dirname = "flags",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 int uiflag_init(void)
 {
@@ -128,7 +165,7 @@ ER cre_flg(ID flgid, T_CFLG *pk_cflg)
 	flag->flgatr = pk_cflg->flgatr;
 	flag->flgvalue = pk_cflg->iflgptn;
 	sprintf(flag->name, "flg%d", flgid);
-	xnregistry_enter(flag->name, flag, &flag->handle, &__flag_pnode);
+	xnregistry_enter(flag->name, flag, &flag->handle, &__flag_pnode.node);
 	xnarch_memory_barrier();
 	flag->magic = uITRON_FLAG_MAGIC;
 

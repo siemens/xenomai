@@ -21,7 +21,6 @@
 #define _RTDM_INTERNAL_H
 
 #include <linux/list.h>
-#include <linux/proc_fs.h>
 #include <linux/sem.h>
 
 #include <nucleus/pod.h>
@@ -42,10 +41,10 @@ struct rtdm_fildes {
 };
 
 struct rtdm_process {
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 	char name[32];
 	pid_t pid;
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 	xnshadow_ppd_t ppd;
 };
@@ -61,7 +60,6 @@ extern unsigned int devname_hashtab_size;
 extern unsigned int protocol_hashtab_size;
 extern struct list_head *rtdm_named_devices;
 extern struct list_head *rtdm_protocol_devices;
-extern struct proc_dir_entry *rtdm_proc_root;
 
 #ifdef MODULE
 #define rtdm_initialised 1
@@ -82,9 +80,28 @@ static inline void rtdm_dereference_device(struct rtdm_device *device)
 int __init rtdm_dev_init(void);
 void rtdm_dev_cleanup(void);
 
-int rtdm_proc_register_device(struct rtdm_device *device);
-int __init rtdm_proc_init(void);
+#ifdef CONFIG_XENO_OPT_VFILE
+int rtdm_proc_init(void);
 void rtdm_proc_cleanup(void);
+int rtdm_proc_register_device(struct rtdm_device *device);
+void rtdm_proc_unregister_device(struct rtdm_device *device);
+#else
+static inline int rtdm_proc_init(void)
+{
+	return 0;
+}
+void rtdm_proc_cleanup(void)
+{
+}
+static int rtdm_proc_register_device(struct rtdm_device *device)
+{
+	return 0;
+}
+static void rtdm_proc_unregister_device(struct rtdm_device *device)
+{
+}
+#endif
+
 void rtdm_apc_handler(void *cookie);
 
 #endif /* _RTDM_INTERNAL_H */

@@ -50,7 +50,7 @@ static void fail(const char *reason)
 
 void *server(void *arg)
 {
-	char label[BUFP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct sockaddr_ipc saddr;
 	char buf[128];
 	size_t bufsz;
@@ -66,7 +66,7 @@ void *server(void *arg)
 	 * port.
 	 */
 	bufsz = 16384; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETBUFFER,
+	ret = setsockopt(s, SOL_BUFP, BUFP_BUFSZ,
 			 &bufsz, sizeof(bufsz));
 	if (ret)
 		fail("setsockopt");
@@ -75,9 +75,9 @@ void *server(void *arg)
 	 * Set a port label. This name will be registered when
 	 * binding, in addition to the port number (if given).
 	 */
-	strcpy(label, BUFP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, BUFP_PORT_LABEL);
+	ret = setsockopt(s, SOL_BUFP, BUFP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 
@@ -112,8 +112,8 @@ void *server(void *arg)
 
 void *client(void *arg)
 {
+	struct rtipc_port_label plabel;
 	struct sockaddr_ipc svsaddr;
-	char label[BUFP_LABEL_LEN];
 	int ret, s, n = 0, len;
 	struct timespec ts;
 	char buf[128];
@@ -129,9 +129,9 @@ void *client(void *arg)
 	 * BUFP does not try to register this label for the client
 	 * port as well (like the server thread did).
 	 */
-	strcpy(label, BUFP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, BUFP_PORT_LABEL);
+	ret = setsockopt(s, SOL_BUFP, BUFP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 

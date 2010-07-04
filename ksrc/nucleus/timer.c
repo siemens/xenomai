@@ -868,10 +868,10 @@ void __xntimer_init(xntimer_t *timer, xntbase_t *base,
 
 		xnlock_get_irqsave(&nklock, s);
 		appendq(&base->timerq, &timer->tblink);
-		base->timerq_rev++;
+		xnvfile_touch(&base->vfile);
 		xnlock_put_irqrestore(&nklock, s);
 	}
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
+#endif /* CONFIG_XENO_OPT_STATS */
 
 	xnarch_init_display_context(timer);
 }
@@ -910,7 +910,7 @@ void xntimer_destroy(xntimer_t *timer)
 	timer->sched = NULL;
 #ifdef CONFIG_XENO_OPT_STATS
 	removeq(&xntimer_base(timer)->timerq, &timer->tblink);
-	xntimer_base(timer)->timerq_rev++;
+	xnvfile_touch(&xntimer_base(timer)->vfile);
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 	xnlock_put_irqrestore(&nklock, s);
 }
@@ -1109,55 +1109,48 @@ xntbops_t nktimer_ops_aperiodic = {
 	.move_timer = &xntimer_move_aperiodic,
 };
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-#include <linux/proc_fs.h>
+#include <nucleus/vfile.h>
 
-static int timer_read_proc(char *page,
-			   char **start,
-			   off_t off, int count, int *eof, void *data)
+static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	const char *tm_status, *wd_status = "";
-	int len;
 
 	if (xnpod_active_p() && xntbase_enabled_p(&nktbase)) {
 		tm_status = "on";
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 		wd_status = "+watchdog";
 #endif /* CONFIG_XENO_OPT_WATCHDOG */
-	}
-	else
+	} else
 		tm_status = "off";
 
-	len = sprintf(page,
-		      "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
-		      tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
-		      xntbase_get_rawclock(&nktbase),
-		      XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
-
-	len -= off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	xnvfile_printf(it,
+		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
+		       tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
+		       xntbase_get_rawclock(&nktbase),
+		       XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
+	return 0;
 }
+
+static struct xnvfile_regular_ops timer_vfile_ops = {
+	.show = timer_vfile_show,
+};
+
+static struct xnvfile_regular timer_vfile = {
+	.ops = &timer_vfile_ops,
+};
 
 void xntimer_init_proc(void)
 {
-	rthal_add_proc_leaf("timer", &timer_read_proc, NULL, NULL,
-			    rthal_proc_root);
+	xnvfile_init_regular("timer", &timer_vfile, &nkvfroot);
 }
 
 void xntimer_cleanup_proc(void)
 {
-	remove_proc_entry("timer", rthal_proc_root);
+	xnvfile_destroy_regular(&timer_vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/

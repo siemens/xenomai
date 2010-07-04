@@ -981,30 +981,29 @@ int xnintr_query_next(int irq, xnintr_iterator_t *iterator, char *name_buf)
 }
 #endif /* CONFIG_XENO_OPT_STATS */
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-#include <linux/proc_fs.h>
-#include <linux/ctype.h>
+#include <nucleus/vfile.h>
 
-static int format_irq_proc(unsigned int irq, char *str)
+static inline int format_irq_proc(unsigned int irq,
+				  struct xnvfile_regular_iterator *it)
 {
-	xnintr_t *intr;
-	char *p = str;
+	struct xnintr *intr;
 	spl_t s;
 
 	if (rthal_virtual_irq_p(irq)) {
-		p += sprintf(p, "         [virtual]");
-		return p - str;
+		xnvfile_puts(it, "         [virtual]");
+		return 0;
 	} else if (irq == XNARCH_TIMER_IRQ) {
-		p += sprintf(p, "         [timer]");
-		return p - str;
+		xnvfile_puts(it, "         [timer]");
+		return 0;
 #ifdef CONFIG_SMP
 	} else if (irq == RTHAL_SERVICE_IPI0) {
-		p += sprintf(p, "         [IPI]");
-		return p - str;
+		xnvfile_puts(it, "         [IPI]");
+		return 0;
 	} else if (irq == RTHAL_CRITICAL_IPI) {
-		p += sprintf(p, "         [critical sync]");
-		return p - str;
+		xnvfile_puts(it, "         [critical sync]");
+		return 0;
 #endif /* CONFIG_SMP */
 	}
 
@@ -1012,136 +1011,126 @@ static int format_irq_proc(unsigned int irq, char *str)
 
 	intr = xnintr_shirq_first(irq);
 	if (intr) {
-		strcpy(p, "        "); p += 8;
+		xnvfile_puts(it, "        ");
 
 		do {
-			*p = ' '; p += 1;
-			strcpy(p, intr->name); p += strlen(intr->name);
-
+			xnvfile_putc(it, ' ');
+			xnvfile_puts(it, intr->name);
 			intr = xnintr_shirq_next(intr);
 		} while (intr);
 	}
 
 	xnlock_put_irqrestore(&intrlock, s);
 
-	return p - str;
+	return 0;
 }
 
-static int irq_read_proc(char *page,
-			 char **start,
-			 off_t off, int count, int *eof, void *data)
+static int irq_vfile_show(struct xnvfile_regular_iterator *it,
+			  void *data)
 {
-	int len = 0, cpu, irq;
-	char *p = page;
+	int cpu, irq;
 
-	p += sprintf(p, "IRQ ");
+	/* FIXME: We assume the entire output fits in a single page. */
 
-	for_each_online_cpu(cpu) {
-		p += sprintf(p, "        CPU%d", cpu);
-	}
+	xnvfile_puts(it, "IRQ ");
+
+	for_each_online_cpu(cpu)
+		xnvfile_printf(it, "        CPU%d", cpu);
 
 	for (irq = 0; irq < XNARCH_NR_IRQS; irq++) {
 		if (rthal_irq_handler(&rthal_domain, irq) == NULL)
 			continue;
 
-		p += sprintf(p, "\n%3d:", irq);
+		xnvfile_printf(it, "\n%3d:", irq);
 
 		for_each_online_cpu(cpu) {
-			p += sprintf(p, "%12lu",
-				     rthal_cpudata_irq_hits(&rthal_domain, cpu,
-							    irq));
+			xnvfile_printf(it, "%12lu",
+				       rthal_cpudata_irq_hits(&rthal_domain, cpu,
+							      irq));
 		}
 
-		p += format_irq_proc(irq, p);
+		format_irq_proc(irq, it);
 	}
 
-	p += sprintf(p, "\n");
+	xnvfile_putc(it, '\n');
 
-	len = p - page - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return 0;
 }
 
+static struct xnvfile_regular_ops irq_vfile_ops = {
+	.show = irq_vfile_show,
+};
+
+static struct xnvfile_regular irq_vfile = {
+	.ops = &irq_vfile_ops,
+};
+
 #ifdef CONFIG_SMP
-static int affinity_read_proc(char *page,
-			      char **start,
-			      off_t off, int count, int *eof, void *data)
+
+static int affinity_vfile_show(struct xnvfile_regular_iterator *it,
+			       void *data)
 {
 	unsigned long val = 0;
-	int len, cpu;
+	int cpu;
 
-	for (cpu = 0; cpu < sizeof(val) * 8; cpu++)
+	for (cpu = 0; cpu < BITS_PER_LONG; cpu++)
 		if (xnarch_cpu_isset(cpu, nkaffinity))
 			val |= (1 << cpu);
 
-	len = sprintf(page, "%08lx\n", val);
-	len -= off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
+	xnvfile_printf(it, "%08lx\n", val);
 
-	return len;
+	return 0;
 }
 
-static int affinity_write_proc(struct file *file,
-			       const char __user * buffer,
-			       unsigned long count, void *data)
+static ssize_t affinity_vfile_store(struct xnvfile_input *input)
 {
-	char *end, buf[16];
-	unsigned long val;
 	xnarch_cpumask_t new_affinity;
-	int n, cpu;
+	ssize_t ret;
+	long val;
+	int cpu;
 
-	n = count > sizeof(buf) - 1 ? sizeof(buf) - 1 : count;
-
-	if (copy_from_user(buf, buffer, n))
-		return -EFAULT;
-
-	buf[n] = '\0';
-	val = simple_strtol(buf, &end, 0);
-
-	if (*end != '\0' && !isspace(*end))
-		return -EINVAL;
+	ret = xnvfile_get_integer(input, &val);
+	if (ret < 0)
+		return ret;
 
 	xnarch_cpus_clear(new_affinity);
-	for (cpu = 0; cpu < sizeof(val) * 8; cpu++, val >>= 1)
+
+	for (cpu = 0; cpu < BITS_PER_LONG; cpu++, val >>= 1)
 		if (val & 1)
 			xnarch_cpu_set(cpu, new_affinity);
+
 	xnarch_cpus_and(nkaffinity, new_affinity, xnarch_supported_cpus);
 
-	return count;
+	return ret;
 }
+
+static struct xnvfile_regular_ops affinity_vfile_ops = {
+	.show = affinity_vfile_show,
+	.store = affinity_vfile_store,
+};
+
+static struct xnvfile_regular affinity_vfile = {
+	.ops = &affinity_vfile_ops,
+};
+
 #endif /* CONFIG_SMP */
 
 void xnintr_init_proc(void)
 {
-	rthal_add_proc_leaf("irq", &irq_read_proc, NULL, NULL,
-			    rthal_proc_root);
+	xnvfile_init_regular("irq", &irq_vfile, &nkvfroot);
 #ifdef CONFIG_SMP
-	rthal_add_proc_leaf("affinity", &affinity_read_proc,
-			    &affinity_write_proc, NULL, rthal_proc_root);
+	xnvfile_init_regular("affinity", &affinity_vfile, &nkvfroot);
 #endif /* CONFIG_SMP */
 }
 
 void xnintr_cleanup_proc(void)
 {
 #ifdef CONFIG_SMP
-	remove_proc_entry("affinity", rthal_proc_root);
+	xnvfile_destroy_regular(&affinity_vfile);
 #endif /* CONFIG_SMP */
-	remove_proc_entry("irq", rthal_proc_root);
+	xnvfile_destroy_regular(&irq_vfile);
 }
 
-#endif /* CONFIG_PROC_FS */
+#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/

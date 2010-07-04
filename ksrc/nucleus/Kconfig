@@ -139,6 +139,11 @@ config XENO_OPT_PIPE
 config XENO_OPT_MAP
 	bool
 
+config XENO_OPT_VFILE
+       bool
+       depends on PROC_FS
+       default y
+
 config XENO_OPT_PIPE_NRDEV
 	int "Number of pipe devices"
 	depends on XENO_OPT_PIPE

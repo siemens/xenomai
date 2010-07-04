@@ -65,7 +65,7 @@ void *server(void *arg)
 	 * port.
 	 */
 	bufsz = 16384; /* bytes */
-	ret = setsockopt(s, SOL_RTIPC, BUFP_SETBUFFER,
+	ret = setsockopt(s, SOL_BUFP, BUFP_BUFSZ,
 			 &bufsz, sizeof(bufsz));
 	if (ret)
 		fail("setsockopt");

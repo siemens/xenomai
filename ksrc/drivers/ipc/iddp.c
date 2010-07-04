@@ -56,7 +56,7 @@ struct iddp_socket {
 	struct list_head inq;
 	u_long status;
 	xnhandle_t handle;
-	char label[IDDP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	nanosecs_rel_t rx_timeout;
 	nanosecs_rel_t tx_timeout;
@@ -79,31 +79,43 @@ static int poolwait;
 #define _IDDP_BINDING  0
 #define _IDDP_BOUND    1
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static ssize_t __iddp_link_proc(char *buf, int count, void *data)
+static char *__iddp_link_target(void *obj)
 {
-	struct iddp_socket *sk = data;
-	return snprintf(buf, count, "%d", sk->name.sipc_port);
+	struct iddp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "%d", sk->name.sipc_port);
+
+	return buf;
 }
 
-static struct xnpnode __iddp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "iddp",
-	.entries = 0,
-	.link_proc = &__iddp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __iddp_pnode = {
+	.node = {
+		.dirname = "iddp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __iddp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
-static struct xnpnode __iddp_pnode = {
-
-	.type = "iddp"
+static struct xnpnode_link __iddp_pnode = {
+	.node = {
+		.dirname = "iddp",
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static inline void __iddp_init_mbuf(struct iddp_message *mbuf, size_t len)
 {
@@ -578,7 +590,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk,
-				       &sk->handle, &__iddp_pnode);
+				       &sk->handle, &__iddp_pnode.node);
 		if (ret) {
 			if (poolsz > 0)
 				xnheap_destroy(&sk->privpool,
@@ -624,11 +636,9 @@ static int __iddp_connect_socket(struct iddp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via IDDP_SETLABEL,
-	 * connect() blocks for the requested amount of time until a
-	 * socket is bound to the same label, unless the internal
-	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
-	 * operation (RTDM_TIMEOUT_NONE).
+	 * - If sipc_port is -1 and a label was set via IDDP_LABEL,
+	 * connect() blocks for the requested amount of time (see
+	 * SO_RCVTIMEO) until a socket is bound to the same label.
 	 *
 	 * - If sipc_port is -1 and no label is given, the default
 	 * destination address is cleared, meaning that any subsequent
@@ -672,7 +682,7 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_setsockopt_args sopt;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	int ret = 0;
 	size_t len;
@@ -708,12 +718,12 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_IDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case IDDP_SETLOCALPOOL:
+	case IDDP_POOLSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -734,17 +744,11 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 		);
 		break;
 
-	case IDDP_GETSTALLCOUNT:
-		if (rtipc_put_arg(user_info, arg,
-				  &sk->stalls, sizeof(sk->stalls)))
-			return -EFAULT;
-		break;
-
-	case IDDP_SETLABEL:
-		if (sopt.optlen < sizeof(label))
+	case IDDP_LABEL:
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			/*
@@ -754,8 +758,8 @@ static int __iddp_setsockopt(struct iddp_socket *sk,
 			if (test_bit(_IDDP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[IDDP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -772,7 +776,7 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -811,27 +815,19 @@ static int __iddp_getsockopt(struct iddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_IDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case IDDP_GETSTALLCOUNT:
-		if (len < sizeof(sk->stalls))
-			return -EINVAL;
-		if (rtipc_put_arg(user_info, sopt.optval,
-				  &sk->stalls, sizeof(sk->stalls)))
-			return -EFAULT;
-		break;
-
-	case IDDP_GETLABEL:
-		if (len < sizeof(label))
+	case IDDP_LABEL:
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

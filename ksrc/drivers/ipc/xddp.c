@@ -41,7 +41,7 @@ struct xddp_socket {
 	int minor;
 	size_t poolsz;
 	xnhandle_t handle;
-	char label[XDDP_LABEL_LEN];
+	char label[XNOBJECT_NAME_LEN];
 
 	struct xddp_message *buffer;
 	int buffer_port;
@@ -71,31 +71,43 @@ static int portmap[CONFIG_XENO_OPT_PIPE_NRDEV]; /* indexes RTDM fildes */
 #define _XDDP_BINDING   2
 #define _XDDP_BOUND     3
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static ssize_t __xddp_link_proc(char *buf, int count, void *data)
+static char *__xddp_link_target(void *obj)
 {
-	struct xddp_socket *sk = data;
-	return snprintf(buf, count, "/dev/rtp%d", sk->minor);
+	struct xddp_socket *sk = obj;
+	char *buf;
+
+	/* XXX: older kernels don't have kasprintf(). */
+	buf = kmalloc(32, GFP_KERNEL);
+	if (buf == NULL)
+		return buf;
+
+	snprintf(buf, 32, "/dev/rtp%d", sk->minor);
+
+	return buf;
 }
 
-static struct xnpnode __xddp_pnode = {
+extern struct xnptree rtipc_ptree;
 
-	.dir = NULL,
-	.type = "xddp",
-	.entries = 0,
-	.link_proc = &__xddp_link_proc,
-	.root = &rtipc_ptree,
+static struct xnpnode_link __xddp_pnode = {
+	.node = {
+		.dirname = "xddp",
+		.root = &rtipc_ptree,
+		.ops = &xnregistry_vlink_ops,
+	},
+	.target = __xddp_link_target,
 };
 
-#else /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
 
-static struct xnpnode __xddp_pnode = {
-
-	.type = "xddp"
+static struct xnpnode_link __xddp_pnode = {
+	.node = {
+		.dirname = "xddp",
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __xddp_flush_pool(xnheap_t *heap,
 			      void *poolmem, u_long poolsz, void *cookie)
@@ -172,8 +184,8 @@ static void __xddp_free_handler(void *buf, void *xstate) /* nklock free */
 	__clear_bit(_XDDP_ATOMIC, &sk->status);
 
 	/*
-	 * If a XDDP_SETSTREAMBUF request is pending, resize the
-	 * streaming buffer on-the-fly.
+	 * If a XDDP_BUFSZ request is pending, resize the streaming
+	 * buffer on-the-fly.
 	 */
 	if (unlikely(sk->curbufsz != sk->reqbufsz))
 		__xddp_resize_streambuf(sk);
@@ -755,7 +767,7 @@ static int __xddp_bind_socket(struct rtipc_private *priv,
 
 	if (*sk->label) {
 		ret = xnregistry_enter(sk->label, sk, &sk->handle,
-				       &__xddp_pnode);
+				       &__xddp_pnode.node);
 		if (ret) {
 			/* The release handler will cleanup the pool for us. */
 			xnpipe_disconnect(sk->minor);
@@ -796,11 +808,9 @@ static int __xddp_connect_socket(struct xddp_socket *sk,
 	 * immediately, regardless of whether the destination is
 	 * bound at the time of the call.
 	 *
-	 * - If sipc_port is -1 and a label was set via XDDP_SETLABEL,
-	 * connect() blocks for the requested amount of time until a
-	 * socket is bound to the same label, unless the internal
-	 * timeout (see SO_RCVTIMEO) specifies a non-blocking
-	 * operation (RTDM_TIMEOUT_NONE).
+	 * - If sipc_port is -1 and a label was set via XDDP_LABEL,
+	 * connect() blocks for the requested amount of time (see
+	 * SO_RCVTIMEO) until a socket is bound to the same label.
 	 *
 	 * - If sipc_port is -1 and no label is given, the default
 	 * destination address is cleared, meaning that any subsequent
@@ -845,7 +855,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 {
 	int (*monitor)(int s, int event, long arg);
 	struct _rtdm_setsockopt_args sopt;
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	rtdm_lockctx_t lockctx;
 	struct timeval tv;
 	int ret = 0;
@@ -873,12 +883,12 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_XDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case XDDP_SETSTREAMBUF:
+	case XDDP_BUFSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -900,7 +910,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		rtdm_lock_put_irqrestore(&sk->lock, lockctx);
 		break;
 
-	case XDDP_SETLOCALPOOL:
+	case XDDP_POOLSZ:
 		if (sopt.optlen != sizeof(len))
 			return -EINVAL;
 		if (rtipc_get_arg(user_info, &len,
@@ -917,7 +927,7 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		);
 		break;
 
-	case XDDP_SETMONITOR:
+	case XDDP_MONITOR:
 		/* Monitoring is available from kernel-space only. */
 		if (user_info)
 			return -EPERM;
@@ -929,19 +939,19 @@ static int __xddp_setsockopt(struct xddp_socket *sk,
 		sk->monitor = monitor;
 		break;
 
-	case XDDP_SETLABEL:
-		if (sopt.optlen < sizeof(label))
+	case XDDP_LABEL:
+		if (sopt.optlen < sizeof(plabel))
 			return -EINVAL;
-		if (rtipc_get_arg(user_info, label,
-				  sopt.optval, sizeof(label) - 1))
+		if (rtipc_get_arg(user_info, &plabel,
+				  sopt.optval, sizeof(plabel)))
 			return -EFAULT;
 		RTDM_EXECUTE_ATOMICALLY(
 			if (test_bit(_XDDP_BOUND, &sk->status) ||
 			    test_bit(_XDDP_BINDING, &sk->status))
 				ret = -EALREADY;
 			else {
-				strcpy(sk->label, label);
-				sk->label[XDDP_LABEL_LEN-1] = 0;
+				strcpy(sk->label, plabel.label);
+				sk->label[XNOBJECT_NAME_LEN-1] = 0;
 			}
 		);
 		break;
@@ -958,7 +968,7 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 			     void *arg)
 {
 	struct _rtdm_getsockopt_args sopt;
-	char label[XDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	struct timeval tv;
 	socklen_t len;
 	int ret = 0;
@@ -988,19 +998,19 @@ static int __xddp_getsockopt(struct xddp_socket *sk,
 		return ret;
 	}
 
-	if (sopt.level != SOL_RTIPC)
+	if (sopt.level != SOL_XDDP)
 		return -ENOPROTOOPT;
 
 	switch (sopt.optname) {
 
-	case XDDP_GETLABEL:
-		if (len < sizeof(label))
+	case XDDP_LABEL:
+		if (len < sizeof(plabel))
 			return -EINVAL;
 		RTDM_EXECUTE_ATOMICALLY(
-			strcpy(label, sk->label);
+			strcpy(plabel.label, sk->label);
 		);
 		if (rtipc_put_arg(user_info, sopt.optval,
-				  label, sizeof(label)))
+				  &plabel, sizeof(plabel)))
 			return -EFAULT;
 		break;
 

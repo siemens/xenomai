@@ -60,7 +60,7 @@ static void fail(const char *reason)
 void *server(void *arg)
 {
 	struct sockaddr_ipc saddr, claddr;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	socklen_t addrlen;
 	char buf[128];
 	int ret, s;
@@ -71,16 +71,16 @@ void *server(void *arg)
 
 	/*
 	 * We will use Xenomai's system heap for datagram, so no
-	 * IDDP_SETLOCALPOOL required here.
+	 * IDDP_POOLSZ required here.
 	 */
 
 	/*
 	 * Set a port label. This name will be registered when
 	 * binding, in addition to the port number (if given).
 	 */
-	strcpy(label, IDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, IDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_IDDP, IDDP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 
@@ -118,7 +118,7 @@ void *server(void *arg)
 void *client(void *arg)
 {
 	struct sockaddr_ipc svsaddr, clsaddr;
-	char label[IDDP_LABEL_LEN];
+	struct rtipc_port_label plabel;
 	int ret, s, n = 0, len;
 	struct timespec ts;
 	char buf[128];
@@ -145,9 +145,9 @@ void *client(void *arg)
 	 * IDDP does not try to register this label for the client
 	 * port as well (like the server thread did).
 	 */
-	strcpy(label, IDDP_PORT_LABEL);
-	ret = setsockopt(s, SOL_RTIPC, IDDP_SETLABEL,
-			 label, sizeof(label));
+	strcpy(plabel.label, IDDP_PORT_LABEL);
+	ret = setsockopt(s, SOL_IDDP, IDDP_LABEL,
+			 &plabel, sizeof(plabel));
 	if (ret)
 		fail("setsockopt");
 

@@ -49,78 +49,114 @@
 #include <native/task.h>
 #include <native/heap.h>
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __heap_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int mode;
+	size_t usable_mem;
+	size_t used_mem;
+	int nrmaps;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+	size_t size;
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_HEAP *heap = (RT_HEAP *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_HEAP *heap = xnvfile_priv(it->vfile);
 
-	p += sprintf(p, "type=%s:size=%lu:used=%lu:numaps=%lu\n",
-		     (heap->mode & H_SHARED) == H_SHARED ? "shared" :
-		     (heap->mode & H_MAPPABLE) ? "mappable" : "kernel",
-		     xnheap_usable_mem(&heap->heap_base),
-		     xnheap_used_mem(&heap->heap_base),
-		     heap->heap_base.archdep.numaps);
+	heap = xeno_h2obj_validate(heap, XENO_HEAP_MAGIC, RT_HEAP);
+	if (heap == NULL)
+		return -EIDRM;
 
-	xnlock_get_irqsave(&nklock, s);
+	priv->curr = getheadpq(xnsynch_wait_queue(&heap->synch_base));
+	priv->mode = heap->mode;
+	priv->usable_mem = xnheap_usable_mem(&heap->heap_base);
+	priv->used_mem = xnheap_used_mem(&heap->heap_base);
+	priv->nrmaps = heap->heap_base.archdep.numaps;
 
-	if (xnsynch_nsleepers(&heap->synch_base) > 0) {
-		xnpholder_t *holder;
-
-		/* Pended heap -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&heap->synch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			size_t size = sleeper->wait_u.buffer.size;
-			p += sprintf(p, "+%s (size=%zd)\n",
-				     xnthread_name(sleeper), size);
-			holder =
-			    nextpq(xnsynch_wait_queue(&heap->synch_base),
-				   holder);
-		}
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&heap->synch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_HEAP *heap = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __heap_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "heaps",
-	.entries = 0,
-	.read_proc = &__heap_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&heap->synch_base),
+			    priv->curr);
+	/* Collect thread info to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+	p->size = thread->wait_u.buffer.size;
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "%5s  %9s  %9s  %s\n",
+			       "TYPE", "TOTALMEM", "USEDMEM", "NRMAPS");
+		xnvfile_printf(it, "%5s  %9Zu  %9Zu  %d\n",
+			       priv->mode & H_SHARED ? "shared" :
+			       (priv->mode & H_MAPPABLE) ? "mappable" : "kernel",
+			       priv->usable_mem,
+			       priv->used_mem,
+			       priv->nrmaps);
+		if (it->nrdata > 0)
+			/* Heap is pended -- dump waiters */
+			xnvfile_printf(it, "\n%7s  %s\n", "REQSZ", "WAITER");
+	} else
+		xnvfile_printf(it, "%7Zu  %.*s\n",
+			       p->size, (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __native_ptree;
 
-static xnpnode_t __heap_pnode = {
-
-	.type = "heaps"
+static struct xnpnode_snapshot __heap_pnode = {
+	.node = {
+		.dirname = "heaps",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __heap_pnode = {
+	.node = {
+		.dirname = "heap",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 static void __heap_flush_private(xnheap_t *heap,
 				 void *heapmem, u_long heapsize, void *cookie)
@@ -313,7 +349,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 	 */
 	if (name) {
 		err = xnregistry_enter(heap->name, heap, &heap->handle,
-				       &__heap_pnode);
+				       &__heap_pnode.node);
 
 		if (err)
 			rt_heap_delete(heap);

@@ -56,77 +56,106 @@ static unsigned long __intr_get_hits(RT_INTR *intr)
 	return sum;
 }
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_XENO_OPT_VFILE
 
-static int __intr_read_proc(char *page,
-			    char **start,
-			    off_t off, int count, int *eof, void *data)
+struct vfile_priv {
+	struct xnpholder *curr;
+	int mode;
+	unsigned long hits;
+	unsigned int pending;
+};
+
+struct vfile_data {
+	char name[XNOBJECT_NAME_LEN];
+};
+
+static int vfile_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	RT_INTR *intr = (RT_INTR *)data;
-	char *p = page;
-	int len;
-	spl_t s;
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_INTR *intr = xnvfile_priv(it->vfile);
 
-	xnlock_get_irqsave(&nklock, s);
+	intr = xeno_h2obj_validate(intr, XENO_INTR_MAGIC, RT_INTR);
+	if (intr == NULL)
+		return -EIDRM;
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	{
-		xnpholder_t *holder;
+	priv->curr = getheadpq(xnsynch_wait_queue(&intr->synch_base));
+	priv->mode = intr->mode;
+	priv->hits = __intr_get_hits(intr);
+	priv->pending = intr->pending;
 
-		p += sprintf(p, "hits=%lu, pending=%u, mode=0x%x\n",
-			     __intr_get_hits(intr), intr->pending,
-			     intr->mode);
-
-		/* Pended interrupt -- dump waiters. */
-
-		holder = getheadpq(xnsynch_wait_queue(&intr->synch_base));
-
-		while (holder) {
-			xnthread_t *sleeper = link2thread(holder, plink);
-			p += sprintf(p, "+%s\n", xnthread_name(sleeper));
-			holder =
-			    nextpq(xnsynch_wait_queue(&intr->synch_base),
-				   holder);
-		}
-	}
-#else /* !CONFIG_XENO_OPT_PERVASIVE */
-	p += sprintf(p, "hits=%lu\n", __intr_get_hits(intr));
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	len = (p - page) - off;
-	if (len <= off + count)
-		*eof = 1;
-	*start = page + off;
-	if (len > count)
-		len = count;
-	if (len < 0)
-		len = 0;
-
-	return len;
+	return xnsynch_nsleepers(&intr->synch_base);
 }
 
-extern xnptree_t __native_ptree;
+static int vfile_next(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	RT_INTR *intr = xnvfile_priv(it->vfile);
+	struct vfile_data *p = data;
+	struct xnthread *thread;
 
-static xnpnode_t __intr_pnode = {
+	if (priv->curr == NULL)
+		return 0;	/* We are done. */
 
-	.dir = NULL,
-	.type = "interrupts",
-	.entries = 0,
-	.read_proc = &__intr_read_proc,
-	.write_proc = NULL,
-	.root = &__native_ptree,
+	/* Fetch current waiter, advance list cursor. */
+	thread = link2thread(priv->curr, plink);
+	priv->curr = nextpq(xnsynch_wait_queue(&intr->synch_base),
+			    priv->curr);
+	/* Collect thread name to be output in ->show(). */
+	strncpy(p->name, xnthread_name(thread), sizeof(p->name));
+
+	return 1;
+}
+
+static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
+{
+	struct vfile_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_data *p = data;
+
+	if (p == NULL) {	/* Dump header. */
+		xnvfile_printf(it, "%9s  %2s  %s\n",
+			       "HITS", "PENDING", "MODE");
+		xnvfile_printf(it, "%9lu  %u  0x%x\n",
+			       priv->hits, priv->pending, priv->mode);
+		if (it->nrdata > 0)
+			/* Interrupt is pended -- dump waiters */
+			xnvfile_printf(it, "-------------------\n");
+	} else
+		xnvfile_printf(it, "%.*s\n",
+			       (int)sizeof(p->name), p->name);
+
+	return 0;
+}
+
+static struct xnvfile_snapshot_ops vfile_ops = {
+	.rewind = vfile_rewind,
+	.next = vfile_next,
+	.show = vfile_show,
 };
 
-#else /* !CONFIG_PROC_FS */
+extern struct xnptree __native_ptree;
 
-static xnpnode_t __intr_pnode = {
-
-	.type = "interrupts"
+static struct xnpnode_snapshot __intr_pnode = {
+	.node = {
+		.dirname = "interrupts",
+		.root = &__native_ptree,
+		.ops = &xnregistry_vfsnap_ops,
+	},
+	.vfile = {
+		.privsz = sizeof(struct vfile_priv),
+		.datasz = sizeof(struct vfile_data),
+		.ops = &vfile_ops,
+	},
 };
 
-#endif /* !CONFIG_PROC_FS */
+#else /* !CONFIG_XENO_OPT_VFILE */
+
+static struct xnpnode_snapshot __intr_pnode = {
+	.node = {
+		.dirname = "interrupts",
+	},
+};
+
+#endif /* !CONFIG_XENO_OPT_VFILE */
 
 /*! 
  * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,rt_isr_t isr,rt_iack_t iack,int mode)
@@ -288,7 +317,7 @@ int rt_intr_create(RT_INTR *intr,
 	 */
 	if (!err && name)
 		err = xnregistry_enter(intr->name, intr, &intr->handle,
-				       &__intr_pnode);
+				       &__intr_pnode.node);
 	if (err)
 		rt_intr_delete(intr);
 

@@ -30,97 +30,32 @@
  *
  *@{*/
 
-#include <linux/version.h>
 #include <linux/module.h>
-#include <asm/system.h>
-#include <asm/unistd.h>
-#include <asm/uaccess.h>
 #include <asm/xenomai/hal.h>
-#ifdef CONFIG_PROC_FS
-#include <linux/proc_fs.h>
-#endif /* CONFIG_PROC_FS */
+
+unsigned int rthal_maxlat_us;
+EXPORT_SYMBOL(rthal_maxlat_tsc);
 
 unsigned long rthal_maxlat_tsc;
+EXPORT_SYMBOL(rthal_maxlat_us);
 
-unsigned rthal_maxlat_us = CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX;
-
-void rthal_nmi_init(void (*emergency) (struct pt_regs *))
+void rthal_nmi_set_maxlat(unsigned int maxlat_us)
 {
-    rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-                                   RTHAL_NMICLK_FREQ, 1000000000);
-    rthal_nmi_release();
-
-    if (rthal_nmi_request(emergency))
-        printk("Xenomai: NMI watchdog not available.\n");
-    else
-        printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
-               rthal_maxlat_us);
+	rthal_maxlat_us = maxlat_us;
+	rthal_maxlat_tsc = rthal_llimd(maxlat_us * 1000ULL,
+				       RTHAL_NMICLK_FREQ, 1000000000);
 }
 
-#ifdef CONFIG_PROC_FS
-
-#include <linux/ctype.h>
-
-static int maxlat_read_proc(char *page,
-                            char **start,
-                            off_t off, int count, int *eof, void *data)
+void __init rthal_nmi_init(void (*emergency) (struct pt_regs *))
 {
-    int len;
+	rthal_nmi_set_maxlat(CONFIG_XENO_HW_NMI_DEBUG_LATENCY_MAX);
+	rthal_nmi_release();
 
-    len = sprintf(page, "%u\n", rthal_maxlat_us);
-    len -= off;
-    if (len <= off + count)
-        *eof = 1;
-    *start = page + off;
-    if (len > count)
-        len = count;
-    if (len < 0)
-        len = 0;
-
-    return len;
+	if (rthal_nmi_request(emergency))
+		printk("Xenomai: NMI watchdog not available.\n");
+	else
+		printk("Xenomai: NMI watchdog started (threshold=%u us).\n",
+		       rthal_maxlat_us);
 }
-
-static int maxlat_write_proc(struct file *file,
-                             const char __user * buffer,
-                             unsigned long count, void *data)
-{
-    char *end, buf[16];
-    int val;
-    int n;
-
-    n = (count > sizeof(buf) - 1) ? sizeof(buf) - 1 : count;
-
-    if (copy_from_user(buf, buffer, n))
-        return -EFAULT;
-
-    buf[n] = '\0';
-    val = simple_strtol(buf, &end, 0);
-
-    if (((*end != '\0') && !isspace(*end)) || (val < 0))
-        return -EINVAL;
-
-    rthal_maxlat_us = val;
-    rthal_maxlat_tsc = rthal_llimd(rthal_maxlat_us * 1000ULL,
-                                   RTHAL_NMICLK_FREQ, 1000000000);
-
-    return count;
-}
-
-void rthal_nmi_proc_register(void)
-{
-    rthal_add_proc_leaf("nmi_maxlat",
-                        &maxlat_read_proc,
-                        &maxlat_write_proc, NULL, rthal_proc_root);
-}
-
-void rthal_nmi_proc_unregister(void)
-{
-    remove_proc_entry("nmi_maxlat", rthal_proc_root);
-}
-
-#endif /* CONFIG_PROC_FS */
 
 /*@}*/
-
-EXPORT_SYMBOL(rthal_maxlat_tsc);
-EXPORT_SYMBOL(rthal_maxlat_us);
