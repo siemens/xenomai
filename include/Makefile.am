@@ -16,7 +16,6 @@ SUBDIRS = \
 	nucleus \
 	posix \
 	psos+ \
-	rtai \
 	rtdm \
 	uitron \
 	vrtx \

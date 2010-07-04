@@ -947,7 +947,6 @@ AC_CONFIG_FILES([ \
 	src/skins/psos+/Makefile \
 	src/skins/vrtx/Makefile \
 	src/skins/rtdm/Makefile \
-	src/skins/rtai/Makefile \
 	src/skins/uitron/Makefile \
 	src/drvlib/Makefile \
 	src/drvlib/analogy/Makefile \
@@ -985,7 +984,6 @@ AC_CONFIG_FILES([ \
 	include/posix/Makefile \
 	include/posix/sys/Makefile \
 	include/psos+/Makefile \
-	include/rtai/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/uitron/Makefile \

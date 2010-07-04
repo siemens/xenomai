@@ -8,7 +8,6 @@ source "kernel/xenomai/skins/psos+/Kconfig"
 source "kernel/xenomai/skins/uitron/Kconfig"
 source "kernel/xenomai/skins/vrtx/Kconfig"
 source "kernel/xenomai/skins/vxworks/Kconfig"
-source "kernel/xenomai/skins/rtai/Kconfig"
 
 config XENO_OPT_NOWARN_DEPRECATED
 	bool "Do not warn about deprecated skin usage"
