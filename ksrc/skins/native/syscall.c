@@ -2060,7 +2060,7 @@ static int __rt_queue_create(struct pt_regs *regs)
 	ph.opaque = q->handle;
 	ph.opaque2 = &q->bufpool;
 	ph.mapsize = xnheap_extentsize(&q->bufpool);
-	xnheap_area_set(&ph, xnheap_base_memory(&q->bufpool));
+	ph.area = xnheap_base_memory(&q->bufpool);
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
@@ -2098,7 +2098,7 @@ static int __rt_queue_bind(struct pt_regs *regs)
 
 	ph.opaque2 = &q->bufpool;
 	ph.mapsize = xnheap_extentsize(&q->bufpool);
-	xnheap_area_set(&ph, xnheap_base_memory(&q->bufpool));
+	ph.area = xnheap_base_memory(&q->bufpool);
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
@@ -2584,7 +2584,7 @@ static int __rt_heap_create(struct pt_regs *regs)
 	ph.opaque = heap->handle;
 	ph.opaque2 = &heap->heap_base;
 	ph.mapsize = xnheap_extentsize(&heap->heap_base);
-	xnheap_area_set(&ph, xnheap_base_memory(&heap->heap_base));
+	ph.area = xnheap_base_memory(&heap->heap_base);
 	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph, sizeof(ph)))
 		return -EFAULT;
 
@@ -2622,7 +2622,7 @@ static int __rt_heap_bind(struct pt_regs *regs)
 
 	ph.opaque2 = &heap->heap_base;
 	ph.mapsize = xnheap_extentsize(&heap->heap_base);
-	xnheap_area_set(&ph, xnheap_base_memory(&heap->heap_base));
+	ph.area = xnheap_base_memory(&heap->heap_base);
 
 	xnlock_put_irqrestore(&nklock, s);
 

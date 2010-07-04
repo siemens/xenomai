@@ -62,7 +62,7 @@ typedef struct rt_heap_placeholder {
 	void *opaque2;
 	caddr_t mapbase;
 	size_t mapsize;
-	xnheap_area_decl();
+	unsigned long area;
 } RT_HEAP_PLACEHOLDER;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

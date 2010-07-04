@@ -36,7 +36,7 @@ static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER *php)
 
 	hd.handle = (unsigned long)php->opaque2;
 	hd.size = php->mapsize;
-	xnheap_area_set(&hd, php->area);
+	hd.area = php->area;
 	php->mapbase = xeno_map_heap(&hd);
 	if (php->mapbase == MAP_FAILED)
 		return -errno;

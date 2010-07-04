@@ -70,14 +70,14 @@ typedef struct _vrtx_hdesc {
 	int hid;
 	void *hcb;
 	size_t hsize;
-	xnheap_area_decl();
+	unsigned long area;
 } vrtx_hdesc_t;
 
 typedef struct _vrtx_pdesc {
 	int pid;
 	void *ptcb;
 	size_t ptsize;
-	xnheap_area_decl();
+	unsigned long area;
 } vrtx_pdesc_t;
 
 #if defined(__KERNEL__) || defined(__XENO_SIM__)

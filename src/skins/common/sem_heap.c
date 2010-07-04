@@ -22,7 +22,6 @@ struct xnvdso *nkvdso;
 
 void *xeno_map_heap(struct xnheap_desc *hd)
 {
-	unsigned long area;
 	int fd, ret;
 	void *addr;
 
@@ -38,14 +37,8 @@ void *xeno_map_heap(struct xnheap_desc *hd)
 		return MAP_FAILED;
 	}
 
-#ifdef CONFIG_MMU
-	/* XXX: 2.5.x ABI preserved for MMU-enabled only. */
-	area = 0;
-#else
-	area = hd->area;
-#endif
 	addr = mmap(NULL, hd->size, PROT_READ|PROT_WRITE,
-		    MAP_SHARED, fd, area);
+		    MAP_SHARED, fd, hd->area);
 
 	close(fd);
 

@@ -36,7 +36,7 @@ static int __map_heap_memory(const vrtx_hdesc_t *hdesc)
 
 	hd.handle = (unsigned long)hdesc->hcb;
 	hd.size = hdesc->hsize;
-	xnheap_area_set(&hd, hdesc->area);
+	hd.area = hdesc->area;
 	mapbase = xeno_map_heap(&hd);
 	if (mapbase == MAP_FAILED)
 		return -errno;

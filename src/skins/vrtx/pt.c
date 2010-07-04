@@ -36,7 +36,7 @@ static int __map_pt_memory(const vrtx_pdesc_t *pdesc)
 
 	hd.handle = (unsigned long)pdesc->ptcb;
 	hd.size = pdesc->ptsize;
-	xnheap_area_set(&hd, pdesc->area);
+	hd.area = pdesc->area;
 	mapbase = xeno_map_heap(&hd);
 	if (mapbase == MAP_FAILED)
 		return -errno;

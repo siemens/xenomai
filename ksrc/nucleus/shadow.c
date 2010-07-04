@@ -2057,7 +2057,7 @@ static int xnshadow_sys_sem_heap(struct pt_regs *regs)
 	heap = &xnsys_ppd_get(global)->sem_heap;
 	hd.handle = (unsigned long)heap;
 	hd.size = xnheap_extentsize(heap);
-	xnheap_area_set(&hd, xnheap_base_memory(heap));
+	hd.area = xnheap_base_memory(heap);
 
 	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }

@@ -36,7 +36,7 @@ static int __map_queue_memory(RT_QUEUE *q, RT_QUEUE_PLACEHOLDER *php)
 
 	hd.handle = (unsigned long)php->opaque2;
 	hd.size = php->mapsize;
-	xnheap_area_set(&hd, php->area);
+	hd.area = php->area;
 	php->mapbase = xeno_map_heap(&hd);
 	if (php->mapbase == MAP_FAILED)
 		return -errno;

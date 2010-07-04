@@ -1223,9 +1223,9 @@ static int xnheap_ioctl(struct inode *inode,
 
 static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 {
-	unsigned long offset, size, vaddr;
+	unsigned long size, vaddr;
 	struct xnheap *heap;
-	int ret;
+	int kmflags, ret;
 
 	if (vma->vm_ops != NULL || file->private_data == NULL)
 		/* Caller should mmap() once for a given file instance, after
@@ -1250,30 +1250,38 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 	vma->vm_private_data = file->private_data;
 	vma->vm_ops = &xnheap_vmops;
 	size = vma->vm_end - vma->vm_start;
+	kmflags = heap->archdep.kmflags;
 	ret = -ENXIO;
 
+	/*
+	 * Cannot map multi-extent heaps, we need the memory area we
+	 * map from to be contiguous.
+	 */
 	if (countq(&heap->extents) > 1)
-		/* Cannot map multi-extent heaps, we need the memory
-		   area we map from to be contiguous. */
 		goto deref_out;
 
-	offset = vma->vm_pgoff << PAGE_SHIFT;
-	vaddr = (unsigned long)xnheap_base_memory(heap);
+	vaddr = vma->vm_pgoff << PAGE_SHIFT;
+
+	/*
+	 * Despite the kernel sees a single backing device with direct
+	 * mapping capabilities (/dev/rtheap), we do map different
+	 * heaps through it, so we want a brand new mapping region for
+	 * each of them in the nommu case. To this end, userland
+	 * always requests mappings on non-overlapping areas for
+	 * different heaps, by passing offset values which are actual
+	 * RAM addresses. We do the same in the MMU case as well, to
+	 * keep a single implementation for both.
+	 */
+	if (vaddr + size >
+	    xnheap_base_memory(heap) + xnheap_extentsize(heap))
+		goto deref_out;
 
 #ifdef CONFIG_MMU
-	/*
-	 * offset is actually an offset from the start of the heap
-	 * memory.
-	 */
-	if (offset + size > xnheap_extentsize(heap))
-		goto deref_out;
-
-	vaddr += offset;
 	ret = -EAGAIN;
-	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
+	if ((kmflags & ~XNHEAP_GFP_NONCACHED) == 0) {
 		unsigned long maddr = vma->vm_start;
 
-		if (heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
+		if (kmflags == XNHEAP_GFP_NONCACHED)
 			vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
 		while (size > 0) {
@@ -1286,26 +1294,14 @@ static int xnheap_mmap(struct file *file, struct vm_area_struct *vma)
 		}
 	} else if (xnarch_remap_io_page_range(file,vma,
 					      vma->vm_start,
-					      virt_to_phys((void *)vaddr),
+					      __pa(vaddr),
 					      size, vma->vm_page_prot))
 		goto deref_out;
 
 	xnarch_fault_range(vma);
 #else /* !CONFIG_MMU */
-	/*
-	 * Despite the kernel sees a single backing device with direct
-	 * mapping capabilities (/dev/rtheap), we do map different
-	 * heaps through it, so we want a brand new mapping region for
-	 * each of them. To this end, we must request mappings on
-	 * non-overlapping areas. To make sure of this in the nommu
-	 * case, we request mappings from offsets representing the
-	 * start RAM address of the heap memory.
-	 */
-	if (offset + size > vaddr + xnheap_extentsize(heap))
-		goto deref_out;
-
-	if ((heap->archdep.kmflags & ~XNHEAP_GFP_NONCACHED) != 0 ||
-	    heap->archdep.kmflags == XNHEAP_GFP_NONCACHED)
+	if ((kmflags & ~XNHEAP_GFP_NONCACHED) != 0 ||
+	    kmflags == XNHEAP_GFP_NONCACHED)
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 #endif /* !CONFIG_MMU */
 
@@ -1335,7 +1331,7 @@ static unsigned long xnheap_get_unmapped_area(struct file *file,
 	if (heap == NULL)
 		goto fail;
 
-	area = (unsigned long)xnheap_base_memory(heap);
+	area = xnheap_base_memory(heap);
 	offset = pgoff << PAGE_SHIFT;
 	if (offset < area ||
 	    offset + len > area + xnheap_extentsize(heap))

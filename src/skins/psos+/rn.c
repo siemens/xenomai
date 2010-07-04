@@ -32,7 +32,7 @@ struct rninfo {
 	u_long allocsz;
 	void *rncb;
 	u_long mapsize;
-	xnheap_area_decl();
+	u_long area;
 };
 
 void *xeno_map_heap(struct xnheap_desc *hd);
@@ -44,7 +44,7 @@ static int __map_heap_memory(const struct rninfo *rnip)
 
 	hd.handle = (unsigned long)rnip->rncb;
 	hd.size = rnip->mapsize;
-	xnheap_area_set(&hd, rnip->area);
+	hd.area = rnip->area;
 	mapbase = xeno_map_heap(&hd);
 	if (mapbase == MAP_FAILED)
 		return -errno;
