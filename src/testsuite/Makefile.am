@@ -2,7 +2,6 @@
 SUBDIRS = \
 	clocktest \
 	cyclic \
-	irqbench \
 	latency \
 	regression \
 	switchtest \

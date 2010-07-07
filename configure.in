@@ -732,7 +732,6 @@ AC_CONFIG_FILES([ \
 	src/testsuite/latency/Makefile \
 	src/testsuite/cyclic/Makefile \
 	src/testsuite/switchtest/Makefile \
-	src/testsuite/irqbench/Makefile \
 	src/testsuite/clocktest/Makefile \
 	src/testsuite/klatency/Makefile \
 	src/testsuite/unit/Makefile \
@@ -777,8 +776,6 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/Makefile \
 	doc/man/clocktest.man \
 	doc/man/cyclictest.man \
-	doc/man/irqbench.man \
-	doc/man/irqloop.man \
 	doc/man/klatency.man \
 	doc/man/latency.man \
 	doc/man/rtcanconfig.man \
