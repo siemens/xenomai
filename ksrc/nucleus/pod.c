@@ -894,67 +894,6 @@ void xnpod_stop_thread(struct xnthread *thread)
 EXPORT_SYMBOL_GPL(xnpod_stop_thread);
 
 /*!
- * \fn void xnpod_restart_thread(xnthread_t *thread)
- *
- * \brief Restart a thread.
- *
- * Restarts a previously started thread.  The thread is first
- * terminated then respawned using the same information that prevailed
- * when it was first started, including the mode bits and interrupt
- * mask initially passed to the xnpod_start_thread() service. As a
- * consequence of this call, the thread entry point is rerun.
- *
- * @param thread The descriptor address of the affected thread which
- * must have been previously started by the xnpod_start_thread()
- * service.
- *
- * Self-restarting a thread is allowed. However, restarting the root
- * thread is not. Restarting a thread which was never started once
- * leads to a null-effect.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- *
- * Rescheduling: possible.
- */
-
-void xnpod_restart_thread(xnthread_t *thread)
-{
-	spl_t s;
-
-	XENO_ASSERT(NUCLEUS, !xnthread_test_state(thread, XNROOT|XNSHADOW),
-		    xnpod_fatal("attempt to restart a user-space thread");
-		);
-
-	trace_mark(xn_nucleus, thread_restart, "thread %p thread_name %s",
-		   thread, xnthread_name(thread));
-
-	if (!xnthread_test_state(thread, XNSTARTED))
-		return;		/* Not started yet. */
-
-	xnlock_get_irqsave(&nklock, s);
-
-	xnpod_reset_thread(thread);
-
-	if (thread == xnpod_current_sched()->curr)
-		xnthread_set_state(thread, XNRESTART);
-
-	/* Reset the stack of kernel threads. */
-	xnarch_init_thread(xnthread_archtcb(thread),
-			   thread->entry,
-			   thread->cookie, thread->imask, thread, thread->name);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnpod_schedule();
-}
-EXPORT_SYMBOL_GPL(xnpod_restart_thread);
-
-/*!
  * \fn void xnpod_set_thread_mode(xnthread_t *thread,xnflags_t clrmask,xnflags_t setmask)
  * \brief Change a thread's control mode.
  *
@@ -2067,8 +2006,6 @@ void xnpod_welcome_thread(xnthread_t *thread, int imask)
 
 	__xnpod_init_fpu(sched, thread);
 
-	xnthread_clear_state(thread, XNRESTART);
-
 	if (xnthread_signaled_p(thread))
 		xnpod_dispatch_signals();
 
@@ -2204,8 +2141,7 @@ reschedule:
 	zombie = xnthread_test_state(curr, XNZOMBIE);
 
 	next = xnsched_pick_next(sched);
-	if (next == curr && !xnthread_test_state(curr, XNRESTART)) {
-		/* Note: the root thread never restarts. */
+	if (next == curr) {
 		if (unlikely(xnthread_test_state(next, XNROOT))) {
 			if (testbits(sched->lflags, XNHTICK))
 				xnintr_host_tick(sched);

@@ -219,8 +219,6 @@ int xnpod_start_thread(xnthread_t *thread,
 
 void xnpod_stop_thread(xnthread_t *thread);
 
-void xnpod_restart_thread(xnthread_t *thread);
-
 void xnpod_delete_thread(xnthread_t *thread);
 
 void xnpod_abort_thread(xnthread_t *thread);
