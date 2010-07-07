@@ -1,4 +1,3 @@
-rundir = $(exec_prefix)/share/xenomai/testsuite/irqbench
 testdir = @XENO_TEST_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
@@ -8,7 +7,6 @@ test_PROGRAMS = irqloop
 if XENO_TARGET_ARCH_X86
 test_PROGRAMS += irqbench
 endif
-
 
 irqloop_SOURCES = irqloop.c
 

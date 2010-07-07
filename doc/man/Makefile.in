@@ -42,7 +42,11 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/rtcanconfig.man.in $(srcdir)/rtcanrecv.man.in \
 	$(srcdir)/rtcansend.man.in $(srcdir)/switchbench.man.in \
 	$(srcdir)/switchtest.man.in $(srcdir)/xeno-config.man.in \
+<<<<<<< HEAD
 	$(srcdir)/xeno.man.in
+=======
+	$(srcdir)/xeno-info.man.in $(srcdir)/xeno.man.in
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -59,8 +63,12 @@ CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES = clocktest.man cyclictest.man irqbench.man \
 	irqloop.man klatency.man latency.man rtcanconfig.man \
 	rtcanrecv.man rtcansend.man switchbench.man switchtest.man \
+<<<<<<< HEAD
 	xeno.man xeno-config.man
+=======
+	xeno.man xeno-config.man xeno-info.man
 CONFIG_CLEAN_VPATH_FILES =
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 SOURCES =
 DIST_SOURCES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -243,6 +251,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+<<<<<<< HEAD
 man1_MANS = \
 	clocktest.man \
 	cyclictest.man \
@@ -257,6 +266,17 @@ man1_MANS = \
 	switchtest.man \
 	xeno.man \
 	xeno-config.man
+=======
+<<<<<<< HEAD
+man1_MANS = clocktest.man cyclictest.man irqbench.man irqloop.man \
+=======
+man1_MANS = xeno-config.man xeno-info.man \
+	    clocktest.man cyclictest.man irqbench.man irqloop.man \
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
+	    klatency.man latency.man rtcanconfig.man \
+	    rtcanrecv.man rtcansend.man switchbench.man \
+	    switchtest.man xeno.man
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 
 all: all-am
 
@@ -317,6 +337,11 @@ xeno.man: $(top_builddir)/config.status $(srcdir)/xeno.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno-config.man: $(top_builddir)/config.status $(srcdir)/xeno-config.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+<<<<<<< HEAD
+=======
+xeno-info.man: $(top_builddir)/config.status $(srcdir)/xeno-info.man.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -350,6 +375,27 @@ install-man1: $(man1_MANS)
 
 uninstall-man1:
 	@$(NORMAL_UNINSTALL)
+<<<<<<< HEAD
+	@list='$(man1_MANS) $(dist_man1_MANS) $(nodist_man1_MANS)'; \
+	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
+	for i in $$l2; do \
+	  case "$$i" in \
+	    *.1*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  case "$$ext" in \
+	    1*) ;; \
+	    *) ext='1' ;; \
+	  esac; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f '$(DESTDIR)$(man1dir)/$$inst'"; \
+	  rm -f "$(DESTDIR)$(man1dir)/$$inst"; \
+	done
+=======
 	@list='$(man1_MANS)'; test -n "$(man1dir)" || exit 0; \
 	files=`{ for i in $$list; do echo "$$i"; done; \
 	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
@@ -357,6 +403,7 @@ uninstall-man1:
 	test -z "$$files" || { \
 	  echo " ( cd '$(DESTDIR)$(man1dir)' && rm -f" $$files ")"; \
 	  cd "$(DESTDIR)$(man1dir)" && rm -f $$files; }
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 tags: TAGS
 TAGS:
 
@@ -473,8 +520,11 @@ install-html-am:
 
 install-info: install-info-am
 
+<<<<<<< HEAD
+=======
 install-info-am:
 
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 install-man: install-man1
 
 install-pdf: install-pdf-am
@@ -520,7 +570,10 @@ uninstall-man: uninstall-man1
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	uninstall uninstall-am uninstall-man uninstall-man1
+<<<<<<< HEAD
+=======
 
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

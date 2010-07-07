@@ -57,8 +57,8 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_switchtest_OBJECTS = switchtest-switchtest.$(OBJEXT)
 switchtest_OBJECTS = $(am_switchtest_OBJECTS)
-switchtest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
-	../../skins/common/libxenomai.la
+switchtest_DEPENDENCIES = ../../posix/libpthread_rt.la \
+	../../common/libxenomai.la
 switchtest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(switchtest_LDFLAGS) $(LDFLAGS) -o $@
@@ -233,15 +233,14 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-rundir = $(exec_prefix)/share/xenomai/testsuite/switchtest
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 switchtest_SOURCES = switchtest.c
 switchtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include
 switchtest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 switchtest_LDADD = \
-	../../skins/posix/libpthread_rt.la \
-	../../skins/common/libxenomai.la \
+	../../posix/libpthread_rt.la \
+	../../common/libxenomai.la \
 	-lpthread -lrt
 
 all: all-am
@@ -575,7 +574,10 @@ uninstall-am: uninstall-testPROGRAMS
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-testPROGRAMS
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

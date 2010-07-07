@@ -68,7 +68,7 @@ PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_analogy_config_OBJECTS = analogy_config.$(OBJEXT)
 analogy_config_OBJECTS = $(am_analogy_config_OBJECTS)
 analogy_config_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_cmd_bits_OBJECTS = cmd_bits.$(OBJEXT)
 cmd_bits_OBJECTS = $(am_cmd_bits_OBJECTS)
 cmd_bits_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
@@ -76,25 +76,24 @@ cmd_bits_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
 am_cmd_read_OBJECTS = cmd_read.$(OBJEXT)
 cmd_read_OBJECTS = $(am_cmd_read_OBJECTS)
 cmd_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la ../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 am_cmd_write_OBJECTS = cmd_write.$(OBJEXT)
 cmd_write_OBJECTS = $(am_cmd_write_OBJECTS)
 cmd_write_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la ../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la ../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 am_insn_bits_OBJECTS = insn_bits.$(OBJEXT)
 insn_bits_OBJECTS = $(am_insn_bits_OBJECTS)
 insn_bits_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_insn_read_OBJECTS = insn_read.$(OBJEXT)
 insn_read_OBJECTS = $(am_insn_read_OBJECTS)
 insn_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_insn_write_OBJECTS = insn_write.$(OBJEXT)
 insn_write_OBJECTS = $(am_insn_write_OBJECTS)
 insn_write_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
 am_wf_generate_OBJECTS = wf_generate.$(OBJEXT)
 wf_generate_OBJECTS = $(am_wf_generate_OBJECTS)
 wf_generate_DEPENDENCIES = ./libwaveform.la
@@ -288,22 +287,22 @@ libwaveform_la_SOURCES = wf_facilities.c
 analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 cmd_read_SOURCES = cmd_read.c
 cmd_read_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 cmd_write_SOURCES = cmd_write.c
 cmd_write_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 cmd_bits_SOURCES = cmd_bits.c
 cmd_bits_LDADD = \
@@ -314,20 +313,20 @@ cmd_bits_LDADD = \
 insn_read_SOURCES = insn_read.c
 insn_read_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 insn_write_SOURCES = insn_write.c
 insn_write_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 insn_bits_SOURCES = insn_bits.c
 insn_bits_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 wf_generate_SOURCES = wf_generate.c
 wf_generate_LDADD = ./libwaveform.la -lm

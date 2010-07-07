@@ -57,8 +57,8 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_cyclictest_OBJECTS = cyclictest-cyclictest.$(OBJEXT)
 cyclictest_OBJECTS = $(am_cyclictest_OBJECTS)
-cyclictest_DEPENDENCIES = ../../skins/posix/libpthread_rt.la \
-	../../skins/common/libxenomai.la
+cyclictest_DEPENDENCIES = ../../posix/libpthread_rt.la \
+	../../common/libxenomai.la
 cyclictest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cyclictest_LDFLAGS) $(LDFLAGS) -o $@
@@ -80,6 +80,7 @@ ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
+ADEOS_PATCH = @ADEOS_PATCH@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
@@ -141,6 +142,7 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
+LNDIR = @LNDIR@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -168,6 +170,10 @@ VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_DLOPEN_CONSTRAINT = @XENO_DLOPEN_CONSTRAINT@
 XENO_HOST_STRING = @XENO_HOST_STRING@
+XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
+XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
+XENO_LINUX_IMAGE = @XENO_LINUX_IMAGE@
+XENO_LINUX_INSTALL_TARGET = @XENO_LINUX_INSTALL_TARGET@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
@@ -233,15 +239,14 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-rundir = $(exec_prefix)/share/xenomai/testsuite/cyclic
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 cyclictest_SOURCES = cyclictest.c
 cyclictest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -DIPIPE_TRACE=1 -I$(top_srcdir)/include
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 cyclictest_LDADD = \
-	../../skins/posix/libpthread_rt.la \
-	../../skins/common/libxenomai.la \
+	../../posix/libpthread_rt.la \
+	../../common/libxenomai.la \
 	-lpthread -lrt
 
 all: all-am

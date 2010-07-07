@@ -1,3 +1,4 @@
+
 man1_MANS = \
 	clocktest.man \
 	cyclictest.man \

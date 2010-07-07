@@ -1,4 +1,3 @@
-rundir = $(exec_prefix)/share/xenomai/testsuite/latency
 testdir = @XENO_TEST_DIR@
 
 test_PROGRAMS = latency

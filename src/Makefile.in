@@ -248,7 +248,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = include skins drvlib testsuite utils
+SUBDIRS = include rtdk common native posix rtdm drvlib testsuite utils
 all: all-recursive
 
 .SUFFIXES:

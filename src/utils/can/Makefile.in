@@ -58,16 +58,16 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_rtcanconfig_OBJECTS = rtcanconfig.$(OBJEXT)
 rtcanconfig_OBJECTS = $(am_rtcanconfig_OBJECTS)
-rtcanconfig_DEPENDENCIES = ../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+rtcanconfig_DEPENDENCIES = ../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 am_rtcanrecv_OBJECTS = rtcanrecv.$(OBJEXT)
 rtcanrecv_OBJECTS = $(am_rtcanrecv_OBJECTS)
-rtcanrecv_DEPENDENCIES = ../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+rtcanrecv_DEPENDENCIES = ../../native/libnative.la \
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_rtcansend_OBJECTS = rtcansend.$(OBJEXT)
 rtcansend_OBJECTS = $(am_rtcansend_OBJECTS)
-rtcansend_DEPENDENCIES = ../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la ../../skins/common/libxenomai.la
+rtcansend_DEPENDENCIES = ../../native/libnative.la \
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -249,20 +249,20 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 rtcanconfig_SOURCES = rtcanconfig.c
 rtcanconfig_LDADD = \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 rtcanrecv_SOURCES = rtcanrecv.c
 rtcanrecv_LDADD = \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 rtcansend_SOURCES = rtcansend.c
 rtcansend_LDADD = \
-	../../skins/native/libnative.la \
-	../../skins/rtdm/librtdm.la \
-	../../skins/common/libxenomai.la
+	../../native/libnative.la \
+	../../rtdm/librtdm.la \
+	../../common/libxenomai.la
 
 all: all-am
 

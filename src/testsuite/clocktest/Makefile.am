@@ -1,4 +1,3 @@
-rundir = $(exec_prefix)/share/xenomai/testsuite/clocktest
 testdir = @XENO_TEST_DIR@
 
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)

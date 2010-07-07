@@ -52,6 +52,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES = xeno-config xeno
+<<<<<<< HEAD
+=======
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -74,6 +76,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 am__installdirs = "$(DESTDIR)$(bindir)"
 SCRIPTS = $(bin_SCRIPTS)
 SOURCES =
@@ -233,11 +236,16 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+<<<<<<< HEAD
 bin_SCRIPTS = xeno-config xeno wrap-link.sh
+=======
+bin_SCRIPTS = xeno-config xeno-info xeno wrap-link.sh
+>>>>>>> scripts, testsuite, doc: discard obsolete scripts
 EXTRA_DIST = \
 	bootstrap \
 	prepare-kernel.sh \
 	prepare-patch.sh \
+	xeno-info \
 	wrap-link.sh \
 	Kconfig.frag \
 	$(wildcard postinstall.sh)
