@@ -71,6 +71,11 @@ typedef struct { unsigned long counter; } xnarch_atomic_t;
 
 #define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
+static inline void cpu_relax(void)
+{
+	asm volatile("rep; nop" ::: "memory");
+}
+
 #ifdef __i386__
 
 struct __xeno_xchg_dummy { unsigned long a[100]; };
