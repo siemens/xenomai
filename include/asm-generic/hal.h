@@ -295,6 +295,14 @@ static int hdlr(unsigned event, struct ipipe_domain *ipd, void *data) \
 	return RTHAL_EVENT_PROPAGATE;				      \
 }
 
+#define RTHAL_DECLARE_HOSTRT_EVENT(hdlr)			      \
+static int hdlr(unsigned event, struct ipipe_domain *ipd, void *data) \
+{								      \
+	struct rthal_hostrt_data *hostrt = data;		      \
+	do_##hdlr(hostrt);					      \
+	return RTHAL_EVENT_PROPAGATE;				      \
+}
+
 #ifndef TASK_ATOMICSWITCH
 #ifdef CONFIG_PREEMPT
 /* We want this feature for preemptible kernels, or the behaviour when
@@ -354,6 +362,8 @@ static inline void rthal_enable_notifier(struct task_struct *p)
     ipipe_catch_event(&rthal_domain,IPIPE_EVENT_SYSCALL,hdlr)
 #define rthal_catch_exception(ex,hdlr)	\
     ipipe_catch_event(&rthal_domain,ex|IPIPE_EVENT_SELF,hdlr)
+#define rthal_catch_hostrt(hdlr)	\
+    ipipe_catch_event(ipipe_root_domain, IPIPE_EVENT_HOSTRT, hdlr)
 
 #ifdef IPIPE_EVENT_RETURN
 #define RTHAL_HAVE_RETURN_EVENT
@@ -692,6 +702,7 @@ static inline int rthal_trace_panic_dump(void)
 
 #endif /* CONFIG_IPIPE_TRACE */
 
+#define rthal_hostrt_data	ipipe_hostrt_data
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

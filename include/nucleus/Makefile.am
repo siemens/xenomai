@@ -6,6 +6,7 @@ includesub_HEADERS = \
 	bufd.h \
 	compiler.h \
 	heap.h \
+	hostrt.h \
 	intr.h \
 	jhash.h \
 	map.h \
