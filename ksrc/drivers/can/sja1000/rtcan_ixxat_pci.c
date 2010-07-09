@@ -63,6 +63,7 @@ struct rtcan_ixxat_pci
 #define IXXAT_INTCSR_OFFSET  0x4c /* Offset in PLX9050 conf registers */
 #define IXXAT_INTCSR_SLAVE   0x41 /* LINT1 and PCI interrupt enabled */
 #define IXXAT_INTCSR_MASTER  0x08 /* LINT2 enabled */
+#define IXXAT_SJA_MOD_MASK   0xa1 /* Mask for reading dual/single channel */
 
 /* PCI vender, device and sub-device ID */
 #define IXXAT_PCI_VENDOR_ID  0x10b5
@@ -238,7 +239,7 @@ static int __devinit ixxat_pci_init_one (struct pci_dev *pdev,
     writeb(0x1, base_addr + CHANNEL_MASTER_RESET);
     writeb(0x1, base_addr + CHANNEL_SLAVE_RESET);
     udelay(100);
-    if (readb(base_addr + CHANNEL_OFFSET + SJA_MOD) != 0x21 ||
+    if ( (readb(base_addr + CHANNEL_OFFSET + SJA_MOD) & IXXAT_SJA_MOD_MASK ) != 0x21 ||
 	readb(base_addr + CHANNEL_OFFSET + SJA_SR ) != 0x0c ||
 	readb(base_addr + CHANNEL_OFFSET + SJA_IR ) != 0xe0)
 	channel = CHANNEL_SINGLE;
