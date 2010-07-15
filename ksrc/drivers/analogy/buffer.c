@@ -33,9 +33,9 @@
 #include <analogy/buffer.h>
 #include <analogy/transfer.h>
 
-/* --- Buffer allocation / free functions --- */
+/* --- Initialization functions (init, alloc, free) --- */
 
-void a4l_free_buffer(a4l_buf_t * buf_desc)
+void a4l_free_buffer(a4l_buf_t *buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
@@ -52,18 +52,15 @@ void a4l_free_buffer(a4l_buf_t * buf_desc)
 	}
 }
 
-int a4l_alloc_buffer(a4l_buf_t * buf_desc)
+int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size)
 {
 	int ret = 0;
 	char *vaddr, *vabase;
 
-	if (buf_desc->size == 0)
-		buf_desc->size = A4L_BUF_DEFSIZE;
-
+	buf_desc->size = buf_size;
 	buf_desc->size = PAGE_ALIGN(buf_desc->size);
 
 	buf_desc->buf = vmalloc(buf_desc->size);
-
 	if (buf_desc->buf == NULL) {
 		ret = -ENOMEM;
 		goto out_virt_contig_alloc;
@@ -94,37 +91,127 @@ out_virt_contig_alloc:
 	return ret;
 }
 
-/* --- Current Command management function --- */
-
-a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
+static void a4l_reinit_buffer(a4l_buf_t *buf_desc)
 {
-	a4l_dev_t *dev = subd->dev;
+	/* No command to process yet */
+	buf_desc->cur_cmd = NULL;
 
-	/* Check that subdevice supports commands */
-	if (dev->transfer.bufs == NULL)
-		return NULL;
+	/* No more (or not yet) linked with a subdevice */
+	buf_desc->subd = NULL;
 
-	return dev->transfer.bufs[subd->idx]->cur_cmd;
+	/* Initializes counts and flags */
+	buf_desc->end_count = 0;
+	buf_desc->prd_count = 0;
+	buf_desc->cns_count = 0;
+	buf_desc->tmp_count = 0;
+	buf_desc->mng_count = 0;
+
+	/* Flush pending events */
+	buf_desc->flags = 0;
+	a4l_flush_sync(&buf_desc->sync);
+}
+
+void a4l_init_buffer(a4l_buf_t *buf_desc)
+{
+
+	a4l_init_sync(&buf_desc->sync);
+	a4l_reinit_buffer(buf_desc);
+}
+
+void a4l_cleanup_buffer(a4l_buf_t *buf_desc)
+{
+	a4l_cleanup_sync(&buf_desc->sync);
+}
+
+int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
+{
+	a4l_buf_t *buf_desc = cxt->buffer;
+	int i;
+
+	/* Retrieve the related subdevice */
+	buf_desc->subd = a4l_get_subd(cxt->dev, cmd->idx_subd);
+	if (buf_desc->subd == NULL) {
+		__a4l_err("a4l_setup_buffer: subdevice index "
+			  "out of range (%d)\n", cmd->idx_subd);
+		return -EINVAL;
+	}
+
+	if (test_and_set_bit(A4L_SUBD_BUSY_NR, &buf_desc->subd->status)) {
+		__a4l_err("a4l_setup_buffer: subdevice %d already busy\n",
+			  cmd->idx_subd);
+		return -EBUSY;
+	}
+
+	/* Checks if the transfer system has to work in bulk mode */
+	if (cmd->flags & A4L_CMD_BULK)
+		set_bit(A4L_BUF_BULK_NR, &buf_desc->flags);
+	
+	/* Sets the working command */
+	buf_desc->cur_cmd = cmd;
+
+	/* Link the subdevice with the context's buffer */
+	buf_desc->subd->buf = buf_desc;
+
+	/* Computes the count to reach, if need be */
+	if (cmd->stop_src == TRIG_COUNT) {
+		for (i = 0; i < cmd->nb_chan; i++) {
+			a4l_chan_t *chft;
+			chft = a4l_get_chfeat(buf_desc->subd, 
+					      CR_CHAN(cmd->chan_descs[i]));
+			buf_desc->end_count += chft->nb_bits / 8;
+		}
+		buf_desc->end_count *= cmd->stop_arg;
+	}
+
+	__a4l_dbg(1, core_dbg,
+		  "a4l_setup_buffer: end_count=%lu\n", buf_desc->end_count);
+	
+	return 0;
+}
+
+int a4l_cancel_buffer(a4l_cxt_t *cxt)
+{
+	a4l_buf_t *buf_desc = cxt->buffer;
+	a4l_subd_t *subd = buf_desc->subd;
+	
+	int err = 0;
+
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return 0;
+
+	/* If a "cancel" function is registered, call it
+	   (Note: this function is called before having checked 
+	   if a command is under progress; we consider that 
+	   the "cancel" function can be used as as to (re)initialize 
+	   some component) */
+	if (subd->cancel != NULL && (err = subd->cancel(subd)) < 0) {
+		__a4l_err("a4l_cancel: cancel handler failed (err=%d)\n", err);
+	}
+
+	if (buf_desc->cur_cmd != NULL) {
+		a4l_free_cmddesc(buf_desc->cur_cmd);
+		rtdm_free(buf_desc->cur_cmd);
+		buf_desc->cur_cmd = NULL;
+	}
+
+	a4l_reinit_buffer(buf_desc);
+
+	clear_bit(A4L_SUBD_BUSY_NR, &subd->status);
+	subd->buf = NULL;
+
+	return err;
 }
 
 /* --- Munge related function --- */
 
 int a4l_get_chan(a4l_subd_t *subd)
 {
-	a4l_dev_t *dev = subd->dev;
 	int i, j, tmp_count, tmp_size = 0;	
 	a4l_cmd_t *cmd;
 
-	/* Check that subdevice supports commands */
-	if (dev->transfer.bufs == NULL)
+	cmd = a4l_get_cmd(subd);
+	if (!cmd) 
 		return -EINVAL;
-
-	/* Check a command is executed */
-	if (dev->transfer.bufs[subd->idx]->cur_cmd == NULL)
-		return -EINVAL;
-
-	/* Retrieve the proper command descriptor */
-	cmd = dev->transfer.bufs[subd->idx]->cur_cmd;
 
 	/* There is no need to check the channel idx, 
 	   it has already been controlled in command_test */
@@ -141,7 +228,7 @@ int a4l_get_chan(a4l_subd_t *subd)
 	/* Translation bits -> bytes */
 	tmp_size /= 8;
 
-	tmp_count = dev->transfer.bufs[subd->idx]->mng_count % tmp_size;
+	tmp_count = subd->buf->mng_count % tmp_size;
 
 	/* Translation bytes -> bits */
 	tmp_count *= 8;
@@ -164,14 +251,13 @@ int a4l_get_chan(a4l_subd_t *subd)
 
 int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
+		return -EINVAL;
 
 	return __pre_abs_put(buf, count);
 }
@@ -179,58 +265,54 @@ int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 
 int a4l_buf_commit_absput(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
+		return -EINVAL;
 
 	return __abs_put(buf, count);
 }
 
 int a4l_buf_prepare_put(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
+		return -EINVAL;
 
 	return __pre_put(buf, count);
 }
 
 int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
+		return -EINVAL;
 
 	return __put(buf, count);	
 }
 
 int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
+	a4l_buf_t *buf = subd->buf;
 	int err;
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_READ) == 0)
+
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
-
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
-
+	
 	if (__count_to_put(buf) < count)
 		return -EAGAIN;
 
@@ -245,79 +327,80 @@ int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 
 int a4l_buf_prepare_absget(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
+		return -EINVAL;
 
 	return __pre_abs_get(buf, count);
 }
 
 int a4l_buf_commit_absget(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
+		return -EINVAL;
 
 	return __abs_get(buf, count);
 }
 
 int a4l_buf_prepare_get(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
+		return -EINVAL;
 
 	return __pre_get(buf, count);
 }
 
 int a4l_buf_commit_get(a4l_subd_t *subd, unsigned long count)
 {
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
-		return -EINVAL;
+	a4l_buf_t *buf = subd->buf;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	/* Basic checkings */
+
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
+		return -EINVAL;
 
 	return __get(buf, count);
 }
 
 int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 {
+	a4l_buf_t *buf = subd->buf;
 	int err;
-	a4l_dev_t *dev;
-	a4l_buf_t *buf;
-	
-	if ((subd->flags & A4L_SUBD_MASK_WRITE) == 0)
-		return -EINVAL;
 
-	dev = subd->dev;
-	buf = dev->transfer.bufs[subd->idx];
+	/* Basic checkings */
+
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (!a4l_subd_is_output(subd))
+		return -EINVAL;
 
 	if (__count_to_get(buf) < count)
 		return -EAGAIN;
 
+	/* Update the counter */
 	err = __consume(NULL, buf, bufdata, count);
 	if (err < 0)
 		return err;
 
+	/* Perform the transfer */
 	err = __get(buf, count);
 
 	return err;
@@ -325,19 +408,24 @@ int a4l_buf_get(a4l_subd_t *subd, void *bufdata, unsigned long count)
 
 int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 {
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
+	a4l_buf_t *buf = subd->buf;
 	int tmp;
 
+	/* Warning: here, there may be a condition race : the cancel
+	   function is called by the user side and a4l_buf_evt and all
+	   the a4l_buf_... functions are called by the kernel
+	   side. Nonetheless, the driver should be in charge of such
+	   race conditions, not the framework */
+
 	/* Basic checking */
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[subd->idx])))
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
 	   atomic operations are used so as 
 	   to prevent any kind of corner case */
 	while ((tmp = ffs(evts) - 1) != -1) {
-		set_bit(tmp, &buf->evt_flags);
+		set_bit(tmp, &buf->flags);
 		clear_bit(tmp, &evts);
 	}
 
@@ -349,13 +437,16 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 
 unsigned long a4l_buf_count(a4l_subd_t *subd)
 {
+	a4l_buf_t *buf = subd->buf;
 	unsigned long ret = 0;
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
 
-	if (subd->flags & A4L_SUBD_MASK_READ)
+	/* Basic checking */
+	if (!buf || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
+		return -ENOENT;
+
+	if (a4l_subd_is_input(subd))
 		ret = __count_to_put(buf);
-	else if (subd->flags & A4L_SUBD_MASK_WRITE)
+	else if (a4l_subd_is_output(subd))
 		ret = __count_to_get(buf);	
 
 	return ret;
@@ -366,28 +457,26 @@ unsigned long a4l_buf_count(a4l_subd_t *subd)
 void a4l_map(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	set_bit(A4L_TSF_MMAP, status);
+	set_bit(A4L_BUF_MAP_NR, status);
 }
 
 void a4l_unmap(struct vm_area_struct *area)
 {
 	unsigned long *status = (unsigned long *)area->vm_private_data;
-	clear_bit(A4L_TSF_MMAP, status);
+	clear_bit(A4L_BUF_MAP_NR, status);
 }
 
 static struct vm_operations_struct a4l_vm_ops = {
-open:a4l_map,
-close:a4l_unmap,
+	.open = a4l_map,
+	.close = a4l_unmap,
 };
 
 int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 {
 	a4l_mmap_t map_cfg;
 	a4l_dev_t *dev;
+	a4l_buf_t *buf;
 	int ret;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_mmap: minor=%d\n", a4l_get_minor(cxt));
 
 	/* The mmap operation cannot be performed in a 
 	   real-time context */
@@ -396,56 +485,35 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	}
 
 	dev = a4l_get_dev(cxt);
+	buf = cxt->buffer;
 
-	/* Basically check the device */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	/* Basic checkings */
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_mmap: cannot mmap on "
 			  "an unattached device\n");
 		return -EINVAL;
 	}
 
-	/* Recover the argument structure */
-	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
-		return -EFAULT;
-
-	/* Check the subdevice */
-	if (map_cfg.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_mmap: subdevice index "
-			  "out of range (idx=%d)\n", map_cfg.idx_subd);
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_mmap: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[map_cfg.idx_subd]->flags & A4L_SUBD_MMAP) == 0) {
-		__a4l_err("a4l_ioctl_mmap: mmap not allowed on this subdevice\n");
-		return -EINVAL;
-	}
-
-	/* Check the buffer is not already mapped */
-	if (test_bit(A4L_TSF_MMAP,
-		     &(dev->transfer.status[map_cfg.idx_subd]))) {
-		__a4l_err("a4l_ioctl_mmap: mmap is already done\n");
+	if (test_bit(A4L_BUF_MAP_NR, &buf->flags)) {
+		__a4l_err("a4l_ioctl_mmap: buffer already mapped\n");
 		return -EBUSY;
 	}
 
-	/* Basically check the size to be mapped */
-	if ((map_cfg.size & ~(PAGE_MASK)) != 0 ||
-	    map_cfg.size > dev->transfer.bufs[map_cfg.idx_subd]->size)
+	if (rtdm_safe_copy_from_user(cxt->user_info,
+				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
+		return -EFAULT;	
+
+	/* Check the size to be mapped */
+	if ((map_cfg.size & ~(PAGE_MASK)) != 0 || map_cfg.size > buf->size)
 		return -EFAULT;
 
+	/* All the magic is here */
 	ret = rtdm_mmap_to_user(cxt->user_info,
-				dev->transfer.bufs[map_cfg.idx_subd]->buf,
+				buf->buf,
 				map_cfg.size,
 				PROT_READ | PROT_WRITE,
-				&map_cfg.ptr,
-				&a4l_vm_ops,
-				&(dev->transfer.status[map_cfg.idx_subd]));
+				&map_cfg.ptr, &a4l_vm_ops, &buf->flags);
 
 	if (ret < 0) {
 		__a4l_err("a4l_ioctl_mmap: internal error, "
@@ -459,13 +527,48 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 /* --- IOCTL / FOPS functions --- */
 
+int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
+{
+	unsigned int idx_subd = (unsigned long)arg;
+	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_subd_t *subd;
+
+	/* Basically check the device */
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
+		__a4l_err("a4l_ioctl_cancel: operation not supported on "
+			  "an unattached device\n");
+		return -EINVAL;
+	}
+
+	if (cxt->buffer->subd == NULL) {
+		__a4l_err("a4l_ioctl_cancel: "
+			  "no acquisition to cancel on this context\n");
+		return -EINVAL;
+	}
+	
+	if (idx_subd >= dev->transfer.nb_subd) {
+		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
+		return -EINVAL;
+	}
+
+	subd = dev->transfer.subds[idx_subd];
+	
+	if (subd != cxt->buffer->subd) {
+		__a4l_err("a4l_ioctl_cancel: "
+			  "current context works on another subdevice "
+			  "(%d!=%d)\n", cxt->buffer->subd->idx, subd->idx);
+		return -EINVAL;		
+	}
+
+	return a4l_cancel_buffer(cxt);
+}
+
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;
 	a4l_bufcfg_t buf_cfg;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_bufcfg: minor=%d\n", a4l_get_minor(cxt));
 
 	/* As Linux API is used to allocate a virtual buffer,
 	   the calling process must not be in primary mode */
@@ -474,7 +577,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	}
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_bufcfg: unattached device\n");
 		return -EINVAL;
 	}
@@ -484,17 +587,9 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	/* Check the subdevice */
-	if (buf_cfg.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_bufcfg: subdevice index "
-			  "out of range (idx=%d)\n", buf_cfg.idx_subd);
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[buf_cfg.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_bufcfg: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EINVAL;
+	if (subd && test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
+		return -EBUSY;
 	}
 
 	if (buf_cfg.buf_size > A4L_BUF_MAXSIZE) {
@@ -502,45 +597,34 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	/* If a transfer is occuring or if the buffer is mmapped,
-	   no buffer size change is allowed */
-	if (test_bit(A4L_TSF_BUSY,
-		     &(dev->transfer.status[buf_cfg.idx_subd]))) {
-		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
-		return -EBUSY;
-	}
-
-	if (test_bit(A4L_TSF_MMAP,
-		     &(dev->transfer.status[buf_cfg.idx_subd]))) {
+	if (test_bit(A4L_BUF_MAP, &buf->flags)) {
 		__a4l_err("a4l_ioctl_bufcfg: please unmap before "
 			  "configuring buffer\n");
 		return -EPERM;
 	}
 
-	/* Performs the re-allocation */
-	a4l_free_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
+	/* Free the buffer... */
+	a4l_free_buffer(buf);
 
-	dev->transfer.bufs[buf_cfg.idx_subd]->size = buf_cfg.buf_size;
-
-	return a4l_alloc_buffer(dev->transfer.bufs[buf_cfg.idx_subd]);
+	/* ...to reallocate it */
+	return a4l_alloc_buffer(buf, buf_cfg.buf_size);
 }
 
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;
 	a4l_bufinfo_t info;
-	a4l_buf_t *buf;
+
 	unsigned long tmp_cnt;
 	int ret;
-
-	__a4l_dbg(1, core_dbg, 
-		  "a4l_ioctl_bufinfo: minor=%d\n", a4l_get_minor(cxt));
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_ioctl_bufinfo: unattached device\n");
 		return -EINVAL;
 	}
@@ -549,32 +633,17 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 				     &info, arg, sizeof(a4l_bufinfo_t)) != 0)
 		return -EFAULT;
 
-	/* Check the subdevice */
-	if (info.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_ioctl_bufinfo: subdevice index "
-			  "out of range (idx=%d)\n", info.idx_subd);
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[info.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_ioctl_bufinfo: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EINVAL;
-	}
-
-	buf = dev->transfer.bufs[info.idx_subd];
 
 	/* If a transfer is not occuring, simply return buffer
 	   informations, otherwise make the transfer progress */
-	if (!test_bit(A4L_TSF_BUSY,
-		       &(dev->transfer.status[info.idx_subd]))) {
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		info.rw_count = 0;
 		goto a4l_ioctl_bufinfo_out;
 	}
 
 	ret = __handle_event(buf);
 
-	if (info.idx_subd == dev->transfer.idx_read_subd) {
+	if (a4l_subd_is_input(subd)) {
 
 		/* Updates consume count if rw_count is not null */
 		if (info.rw_count != 0)
@@ -588,13 +657,13 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 
 		if ((ret < 0 && ret != -ENOENT) ||
 		    (ret == -ENOENT && tmp_cnt == 0)) {
-			a4l_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
-	} else if (info.idx_subd == dev->transfer.idx_write_subd) {
+	} else if (a4l_subd_is_output(subd)) {
 
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, info.idx_subd);
+			a4l_cancel_buffer(cxt);
 			if (info.rw_count != 0)
 				return ret;
 		}
@@ -619,15 +688,15 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 			  info.rw_count);
 
 	} else {
-		__a4l_err("a4l_ioctl_bufinfo: wrong subdevice selected\n");
+		__a4l_err("a4l_ioctl_bufinfo: inappropriate subdevice\n");
 		return -EINVAL;
 	}
 
 	/* Performs the munge if need be */
-	if (dev->transfer.subds[info.idx_subd]->munge != NULL) {
-		__munge(dev->transfer.subds[info.idx_subd],
-			dev->transfer.subds[info.idx_subd]->munge,
-			buf, tmp_cnt);
+	if (subd->munge != NULL) {
+
+		/* Call the munge callback */
+		__munge(subd, subd->munge, buf, tmp_cnt);
 
 		/* Updates munge count */
 		buf->mng_count += tmp_cnt;
@@ -646,28 +715,28 @@ a4l_ioctl_bufinfo_out:
 	return 0;
 }
 
-ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
+ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int idx_subd = dev->transfer.idx_read_subd;
-	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_read: unattached device\n");
 		return -EINVAL;
 	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_read: idle subdevice\n");
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		__a4l_err("a4l_read: idle subdevice on this context\n");
 		return -ENOENT;
 	}
 
-	/* TODO: to be removed
-	   Check the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {	       
-		__a4l_err("a4l_read: incoherent state\n");
+	if (!a4l_subd_is_input(subd)) {
+		__a4l_err("a4l_read: current context "
+			  "does not work with an input subdevice\n");
 		return -EINVAL;
 	}
 
@@ -686,14 +755,14 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 		/* We check whether there is an error */
 		if (ret < 0 && ret != -ENOENT) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = ret;
 			goto out_a4l_read;			
 		}
 		
 		/* We check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = 0;
 			goto out_a4l_read;
 		}
@@ -701,10 +770,8 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		if (tmp_cnt > 0) {
 
 			/* Performs the munge if need be */
-			if (dev->transfer.subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer.subds[idx_subd],
-					dev->transfer.subds[idx_subd]->munge,
-					buf, tmp_cnt);
+			if (subd->munge != NULL) {
+				__munge(subd, subd->munge, buf, tmp_cnt);
 
 				/* Updates munge count */
 				buf->mng_count += tmp_cnt;
@@ -726,8 +793,7 @@ ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(A4L_TSF_BULK,
-				      &(dev->transfer.status[idx_subd])))
+			if (!test_bit(A4L_BUF_BULK, &buf->flags))
 				goto out_a4l_read;
 		}
 		/* If the acquisition is not over, we must not
@@ -748,29 +814,28 @@ out_a4l_read:
 	return count;
 }
 
-ssize_t a4l_write(a4l_cxt_t *cxt, 
-		  const void *bufdata, size_t nbytes)
+ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int idx_subd = dev->transfer.idx_write_subd;
-	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;
 	ssize_t count = 0;
 
 	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_write: unattached device\n");
 		return -EINVAL;
 	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_write: idle subdevice\n");
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		__a4l_err("a4l_write: idle subdevice on this context\n");
 		return -ENOENT;
 	}
 
-	/* TODO: to be removed
-	   Check the subdevice capabilities */
-	if ((dev->transfer.subds[idx_subd]->flags & A4L_SUBD_CMD) == 0) {       
-		__a4l_err("a4l_write: incoherent state\n");
+	if (!a4l_subd_is_output(subd)) {
+		__a4l_err("a4l_write: current context "
+			  "does not work with an output subdevice\n");
 		return -EINVAL;
 	}
 
@@ -788,7 +853,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 			tmp_cnt = nbytes - count;
 
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, idx_subd);
+			a4l_cancel_buffer(cxt);
 			count = (ret == -ENOENT) ? -EINVAL : ret;
 			goto out_a4l_write;
 		}
@@ -804,10 +869,8 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 			}
 
 			/* Performs the munge if need be */
-			if (dev->transfer.subds[idx_subd]->munge != NULL) {
-				__munge(dev->transfer.subds[idx_subd],
-					dev->transfer.subds[idx_subd]->munge,
-					buf, tmp_cnt);
+			if (subd->munge != NULL) {
+				__munge(subd, subd->munge, buf, tmp_cnt);
 
 				/* Updates munge count */
 				buf->mng_count += tmp_cnt;
@@ -821,8 +884,7 @@ ssize_t a4l_write(a4l_cxt_t *cxt,
 
 			/* If the driver does not work in bulk mode,
 			   we must leave this function */
-			if (!test_bit(A4L_TSF_BULK,
-				      &(dev->transfer.status[idx_subd])))
+			if (!test_bit(A4L_BUF_BULK, &buf->flags))
 				goto out_a4l_write;
 		} else {
 			/* The buffer is full, we have to wait for a slot to free */
@@ -846,28 +908,40 @@ int a4l_select(a4l_cxt_t *cxt,
 	       enum rtdm_selecttype type, unsigned fd_index)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	int idx_subd = (type == RTDM_SELECTTYPE_READ) ? 
-		dev->transfer.idx_read_subd :
-		dev->transfer.idx_write_subd;
-	a4l_buf_t *buf = dev->transfer.bufs[idx_subd];
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;
+
+	/* Basic checkings */
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
+		__a4l_err("a4l_select: unattached device\n");
+		return -EINVAL;
+	}
+
+	if (!subd || !test_bit(A4L_SUBD_BUSY, &subd->status)) {
+		__a4l_err("a4l_select: idle subdevice on this context\n");
+		return -ENOENT;
+	}
 
 	/* Check the RTDM select type 
 	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
+
 	if(type != RTDM_SELECTTYPE_READ && 
 	   type != RTDM_SELECTTYPE_WRITE) {
 		__a4l_err("a4l_select: wrong select argument\n");
 		return -EINVAL;
 	}
 
-	/* Basic checkings */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
-		__a4l_err("a4l_select: unattached device\n");
+	if (type == RTDM_SELECTTYPE_READ && !a4l_subd_is_input(subd)) {
+		__a4l_err("a4l_select: current context "
+			  "does not work with an input subdevice\n");
 		return -EINVAL;
 	}
 
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[idx_subd]))) {
-		__a4l_err("a4l_select: idle subdevice\n");
-		return -ENOENT;	
+	if (type == RTDM_SELECTTYPE_WRITE && !a4l_subd_is_output(subd)) {
+		__a4l_err("a4l_select: current context "
+			  "does not work with an input subdevice\n");
+		return -EINVAL;
 	}
 
 	/* Performs a bind on the Analogy synchronization element */
@@ -879,76 +953,55 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	int ret = 0;
 	unsigned long tmp_cnt = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
-	a4l_buf_t *buf;
+	a4l_buf_t *buf = cxt->buffer;
+	a4l_subd_t *subd = buf->subd;	
 	a4l_poll_t poll;
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
 		return -ENOSYS;
 
 	/* Basic checking */
-	if (!test_bit(A4L_DEV_ATTACHED, &dev->flags)) {
+
+	if (!test_bit(A4L_DEV_ATTACHED_NR, &dev->flags)) {
 		__a4l_err("a4l_poll: unattached device\n");
 		return -EINVAL;
+	}
+
+	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		__a4l_err("a4l_poll: idle subdevice on this context\n");
+		return -ENOENT;
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info, 
 				     &poll, arg, sizeof(a4l_poll_t)) != 0)
 		return -EFAULT;
 
-	/* Check the subdevice */
-	if (poll.idx_subd >= dev->transfer.nb_subd) {
-		__a4l_err("a4l_poll: subdevice index out of range (idx=%d)\n", 
-			  poll.idx_subd);
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[poll.idx_subd]->flags & A4L_SUBD_CMD) == 0) {
-		__a4l_err("a4l_poll: operation not supported, "
-			  "synchronous only subdevice\n");
-		return -EINVAL;
-	}
-
-	if ((dev->transfer.subds[poll.idx_subd]->flags & 
-	     A4L_SUBD_MASK_SPECIAL) != 0) {
-		__a4l_err("a4l_poll: wrong subdevice selected\n");
-		return -EINVAL;
-	}
-
-	/* Checks a transfer is occuring */
-	if (!test_bit(A4L_TSF_BUSY, &(dev->transfer.status[poll.idx_subd]))) {
-		__a4l_err("a4l_poll: idle subdevice\n");
-		return -EINVAL;
-	}
-
-	buf = dev->transfer.bufs[poll.idx_subd];
-	
 	/* Checks the buffer events */
 	a4l_flush_sync(&buf->sync);
 	ret = __handle_event(buf);
 
 	/* Retrieves the data amount to compute 
 	   according to the subdevice type */
-	if ((dev->transfer.subds[poll.idx_subd]->flags &
-	     A4L_SUBD_MASK_READ) != 0) {
+	if (a4l_subd_is_input(subd)) {
 
 		tmp_cnt = __count_to_get(buf);
 
 		/* Check if some error occured */
 		if (ret < 0 && ret != -ENOENT) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
 
 		/* Check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return 0;
 		}
 	} else {
 
 		/* If some error was detected, cancel the transfer */
 		if (ret < 0) {
-			a4l_cancel_transfer(cxt, poll.idx_subd);
+			a4l_cancel_buffer(cxt);
 			return ret;
 		}
 
@@ -969,8 +1022,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 
 	if (ret == 0) {
 		/* Retrieves the count once more */
-		if ((dev->transfer.subds[poll.idx_subd]->flags &
-		     A4L_SUBD_MASK_READ) != 0)
+		if (a4l_subd_is_input(dev->transfer.subds[poll.idx_subd]))
 			tmp_cnt = __count_to_get(buf);
 		else
 			tmp_cnt = __count_to_put(buf);
@@ -980,7 +1032,6 @@ out_poll:
 
 	poll.arg = tmp_cnt;
 
-	/* Sends the structure back to user space */
 	ret = rtdm_safe_copy_to_user(cxt->user_info, 
 				     arg, &poll, sizeof(a4l_poll_t));
 

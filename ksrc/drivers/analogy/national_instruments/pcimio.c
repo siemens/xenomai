@@ -1497,11 +1497,13 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	devpriv->ai_mite_ring = mite_alloc_ring(mite);
 	devpriv->ao_mite_ring = mite_alloc_ring(mite);
+	devpriv->cdo_mite_ring = mite_alloc_ring(mite);
 	devpriv->gpct_mite_ring[0] = mite_alloc_ring(mite);
 	devpriv->gpct_mite_ring[1] = mite_alloc_ring(mite);
 
 	if(devpriv->ai_mite_ring == NULL ||
 	   devpriv->ao_mite_ring == NULL ||
+	   devpriv->cdo_mite_ring == NULL ||
 	   devpriv->gpct_mite_ring[0] == NULL ||
 	   devpriv->gpct_mite_ring[1] == NULL)
 		return -ENOMEM;

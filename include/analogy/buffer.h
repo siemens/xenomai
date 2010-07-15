@@ -32,21 +32,35 @@
 
 #include <rtdm/rtdm_driver.h>
 
+#include <analogy/os_facilities.h>
 #include <analogy/context.h>
 
-/* Events bits */
+/* --- Events bits / flags --- */
+
 #define A4L_BUF_EOBUF_NR 0
-#define A4L_BUF_ERROR_NR 1
-#define A4L_BUF_EOA_NR 2
-/* Events flags */
 #define A4L_BUF_EOBUF (1 << A4L_BUF_EOBUF_NR)
+
+#define A4L_BUF_ERROR_NR 1
 #define A4L_BUF_ERROR (1 << A4L_BUF_ERROR_NR)
+
+#define A4L_BUF_EOA_NR 2
 #define A4L_BUF_EOA (1 << A4L_BUF_EOA_NR)
+
+/* --- Status bits / flags --- */
+
+#define A4L_BUF_BULK_NR 8
+#define A4L_BUF_BULK (1 << A4L_BUF_BULK_NR)
+
+#define A4L_BUF_MAP_NR 9
+#define A4L_BUF_MAP (1 << A4L_BUF_MAP_NR)
 
 struct a4l_subdevice;
 
 /* Buffer descriptor structure */
 struct a4l_buffer {
+
+	/* Added by the structure update */
+	struct a4l_subdevice *subd;
 
 	/* Buffer's first virtual page pointer */
 	void *buf;
@@ -65,8 +79,8 @@ struct a4l_buffer {
 	unsigned long cns_count;
 	unsigned long tmp_count;
 
-	/* Events occuring during transfer */
-	unsigned long evt_flags;
+	/* Status + events occuring during transfer */
+	unsigned long flags;
 
 	/* Command on progress */
 	a4l_cmd_t *cur_cmd;
@@ -79,8 +93,8 @@ typedef struct a4l_buffer a4l_buf_t;
 /* Static inline Buffer related functions */
 
 /* Produce memcpy function */
-static inline int __produce(a4l_cxt_t * cxt,
-			    a4l_buf_t * buf, void *pin, unsigned long count)
+static inline int __produce(a4l_cxt_t *cxt,
+			    a4l_buf_t *buf, void *pin, unsigned long count)
 {
 	unsigned long start_ptr = (buf->prd_count % buf->size);
 	unsigned long tmp_cnt = count;
@@ -109,8 +123,8 @@ static inline int __produce(a4l_cxt_t * cxt,
 }
 
 /* Consume memcpy function */
-static inline int __consume(a4l_cxt_t * cxt,
-			    a4l_buf_t * buf, void *pout, unsigned long count)
+static inline int __consume(a4l_cxt_t *cxt,
+			    a4l_buf_t *buf, void *pout, unsigned long count)
 {
 	unsigned long start_ptr = (buf->cns_count % buf->size);
 	unsigned long tmp_cnt = count;
@@ -169,11 +183,11 @@ static inline int __handle_event(a4l_buf_t * buf)
 
 	/* The event "End of acquisition" must not be cleaned
 	   before the complete flush of the buffer */
-	if (test_bit(A4L_BUF_EOA_NR, &buf->evt_flags)) {
+	if (test_bit(A4L_BUF_EOA_NR, &buf->flags)) {
 		ret = -ENOENT;
 	}
 
-	if (test_bit(A4L_BUF_ERROR_NR, &buf->evt_flags)) {
+	if (test_bit(A4L_BUF_ERROR_NR, &buf->flags)) {
 		ret = -EPIPE;
 	}
 
@@ -185,7 +199,7 @@ static inline int __handle_event(a4l_buf_t * buf)
 static inline int __pre_abs_put(a4l_buf_t * buf, unsigned long count)
 {
 	if (count - buf->tmp_count > buf->size) {
-		set_bit(A4L_BUF_ERROR_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_ERROR_NR, &buf->flags);
 		return -EPIPE;
 	}
 
@@ -225,7 +239,7 @@ static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 	was not greater a few cycles before; in such case, the DMA
 	channel would have retrieved the wrong data */
 	if ((long)(count - buf->tmp_count) > 0) {
-		set_bit(A4L_BUF_ERROR_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_ERROR_NR, &buf->flags);
 		return -EPIPE;
 	}
 
@@ -250,10 +264,10 @@ static inline int __abs_put(a4l_buf_t * buf, unsigned long count)
 	buf->prd_count = count;
 
 	if ((old / buf->size) != (count / buf->size))
-		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOBUF_NR, &buf->flags);
 
 	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
-		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOA_NR, &buf->flags);
 
 	return 0;
 }
@@ -273,10 +287,10 @@ static inline int __abs_get(a4l_buf_t * buf, unsigned long count)
 	buf->cns_count = count;
 
 	if ((old / buf->size) != count / buf->size)
-		set_bit(A4L_BUF_EOBUF_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOBUF_NR, &buf->flags);
 
 	if (buf->end_count != 0 && (long)(count - buf->end_count) >= 0)
-		set_bit(A4L_BUF_EOA_NR, &buf->evt_flags);
+		set_bit(A4L_BUF_EOA_NR, &buf->flags);
 
 	return 0;
 }
@@ -319,9 +333,17 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 
 /* --- Buffer internal functions --- */
 
-int a4l_alloc_buffer(a4l_buf_t * buf_desc);
+int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size);
 
-void a4l_free_buffer(a4l_buf_t * buf_desc);
+void a4l_free_buffer(a4l_buf_t *buf_desc);
+
+void a4l_init_buffer(a4l_buf_t * buf_desc);
+
+void a4l_cleanup_buffer(a4l_buf_t * buf_desc);
+
+int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd);
+
+int a4l_cancel_buffer(a4l_cxt_t *cxt);
 
 int a4l_buf_prepare_absput(struct a4l_subdevice *subd, 
 			   unsigned long count);
@@ -359,7 +381,10 @@ unsigned long a4l_buf_count(struct a4l_subdevice *subd);
 
 /* --- Current Command management function --- */
 
-a4l_cmd_t *a4l_get_cmd(struct a4l_subdevice *subd);
+static inline a4l_cmd_t *a4l_get_cmd(a4l_subd_t *subd)
+{
+	return (subd->buf) ? subd->buf->cur_cmd : NULL;
+}
 
 /* --- Munge related function --- */
 
@@ -371,9 +396,8 @@ int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg);
-ssize_t a4l_read(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
-ssize_t a4l_write(a4l_cxt_t * cxt, 
-		  const void *bufdata, size_t nbytes);
+ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
+ssize_t a4l_write_buffer(a4l_cxt_t * cxt, const void *bufdata, size_t nbytes);
 int a4l_select(a4l_cxt_t *cxt, 
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index);

@@ -30,14 +30,13 @@
 #include <analogy/buffer.h>
 
 /* Status flags / bits */
-#define A4L_TSF_BUSY 0
-#define A4L_TSF_BULK 1
-#define A4L_TSF_MMAP 2
-#define A4L_TSF_CLEAN 3
+#define A4L_TSF_CLEAN 0
 
 /* Fields init values */
 #define A4L_IRQ_UNUSED (unsigned int)((unsigned short)(~0))
 #define A4L_IDX_UNUSED (unsigned int)(~0)
+
+/* TODO: IRQ handling must leave transfer for os_facilities */
 
 /* IRQ types */
 #define A4L_IRQ_SHARED RTDM_IRQTYPE_SHARED
@@ -51,24 +50,16 @@
 #ifdef __KERNEL__
 
 struct a4l_device;
-
 /* Analogy transfer descriptor */
 struct a4l_transfer {
 
 	/* Subdevices desc */
 	unsigned int nb_subd;
 	a4l_subd_t **subds;
-	int idx_read_subd;
-	int idx_write_subd;
-
-	/* Buffer desc */
-	a4l_buf_t **bufs;
 
 	/* IRQ in use */
+	/* TODO: irq_desc should vanish */
 	a4l_irq_desc_t irq_desc;
-
-	/* Events/status desc */
-	unsigned long *status;
 };
 typedef struct a4l_transfer a4l_trf_t;
 
