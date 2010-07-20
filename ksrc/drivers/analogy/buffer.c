@@ -35,7 +35,11 @@
 
 /* --- Initialization functions (init, alloc, free) --- */
 
-void a4l_free_buffer(a4l_buf_t *buf_desc)
+/* The buffer charactistic is very close to the Comedi one: it is
+   allocated with vmalloc() and all physical addresses of the pages which
+   compose the virtual buffer are hold in a table */
+
+void a4l_free_buffer(a4l_buf_t * buf_desc)
 {
 	if (buf_desc->pg_list != NULL) {
 		rtdm_free(buf_desc->pg_list);
@@ -248,6 +252,9 @@ int a4l_get_chan(a4l_subd_t *subd)
 }
 
 /* --- Transfer / copy functions --- */
+
+/* The following functions are explained in the Doxygen section
+   "Buffer management services" in driver_facilities.c */
 
 int a4l_buf_prepare_absput(a4l_subd_t *subd, unsigned long count)
 {
@@ -563,6 +570,10 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 	return a4l_cancel_buffer(cxt);
 }
 
+/* The ioctl BUFCFG is only useful for changing the size of the
+   asynchronous buffer.
+   (BUFCFG = free of the current buffer + allocation of a new one) */
+
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
@@ -609,6 +620,10 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	/* ...to reallocate it */
 	return a4l_alloc_buffer(buf, buf_cfg.buf_size);
 }
+
+/* The BUFINFO ioctl provides two basic roles:
+   - tell the user app the size of the asynchronous buffer
+   - display the read/write counters (how many bytes to read/write) */
 
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 {
@@ -715,6 +730,9 @@ a4l_ioctl_bufinfo_out:
 	return 0;
 }
 
+/* The function a4l_read_buffer can be considered as the kernel entry
+   point of the RTDM syscall read. This syscall is supposed to be used
+   only during asynchronous acquisitions */
 ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);
@@ -814,6 +832,9 @@ out_a4l_read:
 	return count;
 }
 
+/* The function a4l_write_buffer can be considered as the kernel entry
+   point of the RTDM syscall write. This syscall is supposed to be
+   used only during asynchronous acquisitions */
 ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 {
 	a4l_dev_t *dev = a4l_get_dev(cxt);

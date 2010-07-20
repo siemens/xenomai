@@ -90,9 +90,12 @@ struct a4l_buffer {
 };
 typedef struct a4l_buffer a4l_buf_t;
 
-/* Static inline Buffer related functions */
+/* --- Static inline functions related with 
+   user<->kernel data transfers --- */
 
-/* Produce memcpy function */
+/* The function __produce is an inline function which copies data into
+   the asynchronous buffer and takes care of the non-contiguous issue
+   when looping. This function is used in read and write operations */
 static inline int __produce(a4l_cxt_t *cxt,
 			    a4l_buf_t *buf, void *pin, unsigned long count)
 {
@@ -122,7 +125,9 @@ static inline int __produce(a4l_cxt_t *cxt,
 	return ret;
 }
 
-/* Consume memcpy function */
+/* The function __consume is an inline function which copies data from
+   the asynchronous buffer and takes care of the non-contiguous issue
+   when looping. This function is used in read and write operations */
 static inline int __consume(a4l_cxt_t *cxt,
 			    a4l_buf_t *buf, void *pout, unsigned long count)
 {
@@ -153,7 +158,9 @@ static inline int __consume(a4l_cxt_t *cxt,
 	return ret;
 }
 
-/* Munge procedure */
+/* The function __munge is an inline function which calls the
+   subdevice specific munge callback on contiguous windows within the
+   whole buffer. This function is used in read and write operations */
 static inline void __munge(struct a4l_subdevice * subd,
 			   void (*munge) (struct a4l_subdevice *, 
 					  void *, unsigned long),
@@ -176,7 +183,9 @@ static inline void __munge(struct a4l_subdevice * subd,
 	}
 }
 
-/* Event consumption function */
+/* The function __handle_event can only be called from process context
+   (not interrupt service routine). It allows the client process to
+   retrieve the buffer status which has been updated by the driver */
 static inline int __handle_event(a4l_buf_t * buf)
 {
 	int ret = 0;
@@ -194,7 +203,38 @@ static inline int __handle_event(a4l_buf_t * buf)
 	return ret;
 }
 
-/* Counters management functions */
+/* --- Counters management functions --- */
+
+/* Here, we may wonder why we need more than two counters / pointers.
+
+   Theoretically, we only need two counters (or two pointers):
+   - one which tells where the reader should be within the buffer
+   - one which tells where the writer should be within the buffer
+
+   With these two counters (or pointers), we just have to check that
+   the writer does not overtake the reader inside the ring buffer
+   BEFORE any read / write operations.
+
+   However, if one element is a DMA controller, we have to be more
+   careful. Generally a DMA transfer occurs like this:
+   DMA shot 
+      |-> then DMA interrupt 
+         |-> then DMA soft handler which checks the counter
+
+   So, the checkings occur AFTER the write operations.
+
+   Let's take an example: the reader is a software task and the writer
+   is a DMA controller. At the end of the DMA shot, the write counter
+   is higher than the read counter. Unfortunately, a read operation
+   occurs between the DMA shot and the DMA interrupt, so the handler
+   will not notice that an overflow occured.
+
+   That is why tmp_count comes into play: tmp_count records the
+   read/consumer current counter before the next DMA shot and once the
+   next DMA shot is done, we check that the updated writer/producer
+   counter is not higher than tmp_count. Thus we are sure that the DMA
+   writer has not overtaken the reader because it was not able to
+   overtake the n-1 value. */
 
 static inline int __pre_abs_put(a4l_buf_t * buf, unsigned long count)
 {
