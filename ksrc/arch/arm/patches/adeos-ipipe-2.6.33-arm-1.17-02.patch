@@ -630,7 +630,7 @@ index 0000000..cfdf14a
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..f8880e0
+index 0000000..98d3f47
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,274 @@
@@ -665,10 +665,10 @@ index 0000000..f8880e0
 +#include <linux/ipipe_percpu.h>
 +#include <mach/irqs.h>		/* For __IPIPE_FEATURE_PIC_MUTE */
 +
-+#define IPIPE_ARCH_STRING	"1.17-01"
++#define IPIPE_ARCH_STRING	"1.17-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	17
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#error "I-pipe/arm: SMP not yet implemented"
@@ -5008,6 +5008,61 @@ index 3bbf40f..cfb1f44 100644
 +EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mach-ixp4xx/include/mach/platform.h b/arch/arm/mach-ixp4xx/include/mach/platform.h
+index e824c02..126b297 100644
+--- a/arch/arm/mach-ixp4xx/include/mach/platform.h
++++ b/arch/arm/mach-ixp4xx/include/mach/platform.h
+@@ -72,8 +72,8 @@ extern unsigned long ixp4xx_exp_bus_size;
+ /*
+  * Clock Speed Definitions.
+  */
+-#define IXP4XX_PERIPHERAL_BUS_CLOCK 	(66) /* 66Mhzi APB BUS   */ 
+-#define IXP4XX_UART_XTAL        	14745600
++#define IXP4XX_PERIPHERAL_BUS_CLOCK 	(66) /* 66Mhzi APB BUS   */
++#define IXP4XX_UART_XTAL		14745600
+ 
+ /*
+  * This structure provide a means for the board setup code
+@@ -138,7 +138,7 @@ extern struct pci_bus *ixp4xx_scan_bus(int nr, struct pci_sys_data *sys);
+  */
+ /* GPIO pin types */
+ #define IXP4XX_GPIO_OUT 		0x1
+-#define IXP4XX_GPIO_IN  		0x2
++#define IXP4XX_GPIO_IN			0x2
+ 
+ /* GPIO signal types */
+ #define IXP4XX_GPIO_LOW			0
+@@ -150,10 +150,14 @@ extern struct pci_bus *ixp4xx_scan_bus(int nr, struct pci_sys_data *sys);
+ 
+ static inline void gpio_line_config(u8 line, u32 direction)
+ {
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
+ 	if (direction == IXP4XX_GPIO_IN)
+ 		*IXP4XX_GPIO_GPOER |= (1 << line);
+ 	else
+ 		*IXP4XX_GPIO_GPOER &= ~(1 << line);
++	local_irq_restore_hw(flags);
+ }
+ 
+ static inline void gpio_line_get(u8 line, int *value)
+@@ -163,11 +167,14 @@ static inline void gpio_line_get(u8 line, int *value)
+ 
+ static inline void gpio_line_set(u8 line, int value)
+ {
++	unsigned long flags;
++
++	local_irq_save_hw(flags);
+ 	if (value == IXP4XX_GPIO_HIGH)
+ 	    *IXP4XX_GPIO_GPOUTR |= (1 << line);
+ 	else if (value == IXP4XX_GPIO_LOW)
+ 	    *IXP4XX_GPIO_GPOUTR &= ~(1 << line);
++	local_irq_restore_hw(flags);
+ }
+ 
+ #endif // __ASSEMBLY__
+-
 diff --git a/arch/arm/mach-mx25/devices.c b/arch/arm/mach-mx25/devices.c
 index 9fdeea1..89f74e8 100644
 --- a/arch/arm/mach-mx25/devices.c
@@ -5806,6 +5861,35 @@ index 0c049b9..23a5c90 100644
  		}
  	}
  }
+diff --git a/arch/arm/mach-sa1100/gpio.c b/arch/arm/mach-sa1100/gpio.c
+index 0d3829a..873f883 100644
+--- a/arch/arm/mach-sa1100/gpio.c
++++ b/arch/arm/mach-sa1100/gpio.c
+@@ -32,9 +32,9 @@ static int sa1100_direction_input(struct gpio_chip *chip, unsigned offset)
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	GPDR &= ~GPIO_GPIO(offset);
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return 0;
+ }
+ 
+@@ -42,10 +42,10 @@ static int sa1100_direction_output(struct gpio_chip *chip, unsigned offset, int
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 	sa1100_gpio_set(chip, offset, value);
+ 	GPDR |= GPIO_GPIO(offset);
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return 0;
+ }
+ 
 diff --git a/arch/arm/mach-sa1100/irq.c b/arch/arm/mach-sa1100/irq.c
 index 3093d46..04a56d2 100644
 --- a/arch/arm/mach-sa1100/irq.c
@@ -6837,7 +6921,7 @@ index 386e0d5..0bb140e 100644
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
-index d65ebe3..2eedd79 100644
+index d65ebe3..6c65f39 100644
 --- a/arch/arm/plat-mxc/gpio.c
 +++ b/arch/arm/plat-mxc/gpio.c
 @@ -23,6 +23,7 @@
@@ -6848,7 +6932,29 @@ index d65ebe3..2eedd79 100644
  #include <mach/hardware.h>
  #include <asm-generic/bug.h>
  
-@@ -174,8 +175,7 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
+@@ -87,6 +88,7 @@ static int gpio_set_irq_type(u32 irq, u32 type)
+ {
+ 	u32 gpio = irq_to_gpio(irq);
+ 	struct mxc_gpio_port *port = &mxc_gpio_ports[gpio / 32];
++	unsigned long flags;
+ 	u32 bit, val;
+ 	int edge;
+ 	void __iomem *reg = port->base;
+@@ -120,11 +122,13 @@ static int gpio_set_irq_type(u32 irq, u32 type)
+ 		return -EINVAL;
+ 	}
+ 
++	spin_lock_irqsave(&port->lock, flags);
+ 	reg += GPIO_ICR1 + ((gpio & 0x10) >> 2); /* lower or upper register */
+ 	bit = gpio & 0xf;
+ 	val = __raw_readl(reg) & ~(0x3 << (bit << 1));
+ 	__raw_writel(val | (edge << (bit << 1)), reg);
+ 	_clear_gpio_irqstatus(port, gpio & 0x1f);
++	spin_unlock_irqrestore(&port->lock, flags);
+ 
+ 	return 0;
+ }
+@@ -174,8 +178,7 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
  		if (port->both_edges & (1 << (gpio & 31)))
  			mxc_flip_edge(port, gpio);
  
@@ -6858,6 +6964,46 @@ index d65ebe3..2eedd79 100644
  	}
  }
  
+@@ -222,14 +225,17 @@ static void _set_gpio_direction(struct gpio_chip *chip, unsigned offset,
+ {
+ 	struct mxc_gpio_port *port =
+ 		container_of(chip, struct mxc_gpio_port, chip);
++	unsigned long flags;
+ 	u32 l;
+ 
++	spin_lock_irqsave(&port->lock, flags);
+ 	l = __raw_readl(port->base + GPIO_GDIR);
+ 	if (dir)
+ 		l |= 1 << offset;
+ 	else
+ 		l &= ~(1 << offset);
+ 	__raw_writel(l, port->base + GPIO_GDIR);
++	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+ static void mxc_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
+@@ -237,10 +243,13 @@ static void mxc_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
+ 	struct mxc_gpio_port *port =
+ 		container_of(chip, struct mxc_gpio_port, chip);
+ 	void __iomem *reg = port->base + GPIO_DR;
++	unsigned long flags;
+ 	u32 l;
+ 
++	spin_lock_irqsave(&port->lock, flags);
+ 	l = (__raw_readl(reg) & (~(1 << offset))) | (value << offset);
+ 	__raw_writel(l, reg);
++	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+ static int mxc_gpio_get(struct gpio_chip *chip, unsigned offset)
+@@ -293,6 +302,7 @@ int __init mxc_gpio_init(struct mxc_gpio_port *port, int cnt)
+ 		port[i].chip.set = mxc_gpio_set;
+ 		port[i].chip.base = i * 32;
+ 		port[i].chip.ngpio = 32;
++		spin_lock_init(&port[i].lock);
+ 
+ 		/* its a serious configuration bug when it fails */
+ 		BUG_ON( gpiochip_add(&port[i].chip) < 0 );
 diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
 index 4bf1068..1cf801f 100644
 --- a/arch/arm/plat-mxc/include/mach/common.h
@@ -6871,6 +7017,18 @@ index 4bf1068..1cf801f 100644
 +#endif
 +
  #endif
+diff --git a/arch/arm/plat-mxc/include/mach/gpio.h b/arch/arm/plat-mxc/include/mach/gpio.h
+index 894d2f8..8e7d72d 100644
+--- a/arch/arm/plat-mxc/include/mach/gpio.h
++++ b/arch/arm/plat-mxc/include/mach/gpio.h
+@@ -36,6 +36,7 @@ struct mxc_gpio_port {
+ 	int virtual_irq_start;
+ 	struct gpio_chip chip;
+ 	u32 both_edges;
++	ipipe_spinlock_t lock;
+ };
+ 
+ int mxc_gpio_init(struct mxc_gpio_port*, int);
 diff --git a/arch/arm/plat-mxc/time.c b/arch/arm/plat-mxc/time.c
 index 844567e..bc60cac 100644
 --- a/arch/arm/plat-mxc/time.c
@@ -7134,7 +7292,7 @@ index 08ccf89..4d1abd7 100644
  
  /**
 diff --git a/arch/arm/plat-omap/gpio.c b/arch/arm/plat-omap/gpio.c
-index d2422c7..589a4bb 100644
+index d2422c7..f1d85ff 100644
 --- a/arch/arm/plat-omap/gpio.c
 +++ b/arch/arm/plat-omap/gpio.c
 @@ -20,7 +20,9 @@
@@ -7147,6 +7305,15 @@ index d2422c7..589a4bb 100644
  
  #include <mach/hardware.h>
  #include <asm/irq.h>
+@@ -193,7 +195,7 @@ struct gpio_bank {
+ #endif
+ 	u32 level_mask;
+ 	u32 toggle_mask;
+-	spinlock_t lock;
++	ipipe_spinlock_t lock;
+ 	struct gpio_chip chip;
+ 	struct clk *dbck;
+ 	u32 mod_usage;
 @@ -1345,8 +1347,7 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
  			if (bank->toggle_mask & (1 << gpio_index))
  				_toggle_gpio_edge_triggering(bank, gpio_index);
@@ -7172,7 +7339,7 @@ index 20f1054..42a0b8d 100644
  u32 omap_dm_timer_modify_idlect_mask(u32 inputmask);
  struct clk *omap_dm_timer_get_fclk(struct omap_dm_timer *timer);
 diff --git a/arch/arm/plat-pxa/gpio.c b/arch/arm/plat-pxa/gpio.c
-index 98548c6..e732e45 100644
+index 98548c6..54f8f57 100644
 --- a/arch/arm/plat-pxa/gpio.c
 +++ b/arch/arm/plat-pxa/gpio.c
 @@ -17,6 +17,7 @@
@@ -7183,6 +7350,15 @@ index 98548c6..e732e45 100644
  
  #include <mach/gpio.h>
  
+@@ -39,7 +40,7 @@ struct pxa_gpio_chip {
+ #endif
+ };
+ 
+-static DEFINE_SPINLOCK(gpio_lock);
++static IPIPE_DEFINE_SPINLOCK(gpio_lock);
+ static struct pxa_gpio_chip *pxa_gpio_chips;
+ 
+ #define for_each_gpio_chip(i, c)			\
 @@ -220,7 +221,7 @@ static void pxa_gpio_demux_handler(unsigned int irq, struct irq_desc *desc)
  			while (n < BITS_PER_LONG) {
  				loop = 1;
@@ -7201,6 +7377,72 @@ index 98548c6..e732e45 100644
  		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
  	}
  
+diff --git a/arch/arm/plat-s3c/gpio.c b/arch/arm/plat-s3c/gpio.c
+index 5ff24e0..03e6c09 100644
+--- a/arch/arm/plat-s3c/gpio.c
++++ b/arch/arm/plat-s3c/gpio.c
+@@ -39,7 +39,7 @@ static __init void s3c_gpiolib_track(struct s3c_gpio_chip *chip)
+  * chip is as following:
+  *
+  * base + 0x00: Control register, 2 bits per gpio
+- *	        gpio n: 2 bits starting at (2*n)
++ *		gpio n: 2 bits starting at (2*n)
+  *		00 = input, 01 = output, others mean special-function
+  * base + 0x04: Data register, 1 bit per gpio
+  *		bit n: data bit n
+@@ -52,14 +52,14 @@ static int s3c_gpiolib_input(struct gpio_chip *chip, unsigned offset)
+ 	unsigned long flags;
+ 	unsigned long con;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	con = __raw_readl(base + 0x00);
+ 	con &= ~(3 << (offset * 2));
+ 
+ 	__raw_writel(con, base + 0x00);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return 0;
+ }
+ 
+@@ -72,7 +72,7 @@ static int s3c_gpiolib_output(struct gpio_chip *chip,
+ 	unsigned long dat;
+ 	unsigned long con;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	dat = __raw_readl(base + 0x04);
+ 	dat &= ~(1 << offset);
+@@ -87,7 +87,7 @@ static int s3c_gpiolib_output(struct gpio_chip *chip,
+ 	__raw_writel(con, base + 0x00);
+ 	__raw_writel(dat, base + 0x04);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ 	return 0;
+ }
+ 
+@@ -99,7 +99,7 @@ static void s3c_gpiolib_set(struct gpio_chip *chip,
+ 	unsigned long flags;
+ 	unsigned long dat;
+ 
+-	local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	dat = __raw_readl(base + 0x04);
+ 	dat &= ~(1 << offset);
+@@ -107,7 +107,7 @@ static void s3c_gpiolib_set(struct gpio_chip *chip,
+ 		dat |= 1 << offset;
+ 	__raw_writel(dat, base + 0x04);
+ 
+-	local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ 
+ static int s3c_gpiolib_get(struct gpio_chip *chip, unsigned offset)
 diff --git a/arch/arm/plat-s3c/time.c b/arch/arm/plat-s3c/time.c
 index 3b27b29..976fe03 100644
 --- a/arch/arm/plat-s3c/time.c
@@ -7879,41 +8121,19 @@ index a63c4be..1fdff52 100644
  	preempt_enable();
  }
  
-diff --git a/drivers/i2c/busses/i2c-omap.c b/drivers/i2c/busses/i2c-omap.c
-index 0037e31..8d608a1 100644
---- a/drivers/i2c/busses/i2c-omap.c
-+++ b/drivers/i2c/busses/i2c-omap.c
-@@ -478,6 +478,10 @@ static int omap_i2c_xfer_msg(struct i2c_adapter *adap,
- 	if (msg->len == 0)
- 		return -EINVAL;
- 
-+#ifdef CONFIG_IPIPE
-+	disable_irq(dev->irq);
-+#endif /* CONFIG_IPIPE */
-+
- 	omap_i2c_write_reg(dev, OMAP_I2C_SA_REG, msg->addr);
- 
- 	/* REVISIT: Could the STB bit of I2C_CON be used with probing? */
-@@ -521,6 +525,9 @@ static int omap_i2c_xfer_msg(struct i2c_adapter *adap,
- 
- 			/* Let the user know if i2c is in a bad state */
- 			if (time_after(jiffies, delay)) {
-+#ifdef CONFIG_IPIPE
-+				enable_irq(dev->irq);
-+#endif /* CONFIG_IPIPE */
- 				dev_err(dev->dev, "controller timed out "
- 				"waiting for start condition to finish\n");
- 				return -ETIMEDOUT;
-@@ -532,6 +539,9 @@ static int omap_i2c_xfer_msg(struct i2c_adapter *adap,
- 		w &= ~OMAP_I2C_CON_STT;
- 		omap_i2c_write_reg(dev, OMAP_I2C_CON_REG, w);
- 	}
-+#ifdef CONFIG_IPIPE
-+	enable_irq(dev->irq);
-+#endif /* CONFIG_IPIPE */
- 
- 	/*
- 	 * REVISIT: We should abort the transfer on signals, but the bus goes
+diff --git a/drivers/mfd/twl4030-irq.c b/drivers/mfd/twl4030-irq.c
+index 9df9a5a..8b91420 100644
+--- a/drivers/mfd/twl4030-irq.c
++++ b/drivers/mfd/twl4030-irq.c
+@@ -332,7 +332,7 @@ static int twl4030_irq_thread(void *data)
+ 					note_interrupt(module_irq, d,
+ 							IRQ_NONE);
+ 				else
+-					d->handle_irq(module_irq, d);
++					ipipe_handle_irq_cond(module_irq);
+ 			}
+ 		}
+ 		local_irq_enable();
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
 index e3551d2..d8f7317 100644
 --- a/drivers/misc/Kconfig
@@ -10214,7 +10434,7 @@ index 328bca6..4ed869d 100644
  
  #ifdef CONFIG_DEBUG_SPINLOCK_SLEEP
 diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index 9ccf0e2..f500f1e 100644
+index 9ccf0e2..ec98e63 100644
 --- a/include/linux/lockdep.h
 +++ b/include/linux/lockdep.h
 @@ -395,7 +395,7 @@ do {								\
@@ -10226,6 +10446,15 @@ index 9ccf0e2..f500f1e 100644
  
  /*
   * On lockdep we dont want the hand-coded irq-enable of
+@@ -403,7 +403,7 @@ do {								\
+  * that interrupts are not re-enabled during lock-acquire:
+  */
+ #define LOCK_CONTENDED_FLAGS(_lock, try, lock, lockfl, flags) \
+-	LOCK_CONTENDED((_lock), (try), (lock))
++	LOCK_CONTENDED((_lock), (try), lock)
+ 
+ #else /* CONFIG_LOCKDEP */
+ 
 diff --git a/include/linux/preempt.h b/include/linux/preempt.h
 index 2e681d9..130b7d5 100644
 --- a/include/linux/preempt.h
