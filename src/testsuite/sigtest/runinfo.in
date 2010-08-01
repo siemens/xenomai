@@ -1,1 +1,1 @@
-sigtest:posix+rtdm+sigtest:!@exec_prefix@/bin/sigtest;popall:control_c
+sigtest:posix+rtdm+sigtest:!@XENO_TEST_DIR@/sigtest;popall:control_c

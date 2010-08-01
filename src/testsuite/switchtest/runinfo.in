@@ -1,1 +1,1 @@
-switchtest:posix+rtdm+switchtest:!@exec_prefix@/bin/switchtest;popall:control_c
+switchtest:posix+rtdm+switchtest:!@XENO_TEST_DIR@/switchtest;popall:control_c

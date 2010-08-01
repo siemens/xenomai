@@ -37,7 +37,7 @@ irqbench_LDFLAGS = $(XENO_USER_LDFLAGS)
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(rundir)
-	@sed -e's,@exec_prefix\@,$(exec_prefix),g' $(srcdir)/runinfo.in > $(DESTDIR)$(rundir)/.runinfo
+	@sed -e's,@XENO_TEST_DIR\@,$(XENO_TEST_DIR),g' $(srcdir)/runinfo.in > $(DESTDIR)$(rundir)/.runinfo
 	@echo "#!/bin/sh" > $(DESTDIR)$(rundir)/run
 	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" >> $(DESTDIR)$(rundir)/run
 	@chmod +x $(DESTDIR)$(rundir)/run
