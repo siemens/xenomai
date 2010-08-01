@@ -1,0 +1,89 @@
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index d22dff6..31a4aea 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -50,7 +50,7 @@ comma = ,
+ # Note that GCC does not numerically define an architecture version
+ # macro, but instead defines a whole series of macros which makes
+ # testing for a specific architecture or later rather impossible.
+-arch-$(CONFIG_CPU_32v7)		:=-D__LINUX_ARM_ARCH__=7 $(call cc-option,-march=armv7a,-march=armv5t -Wa$(comma)-march=armv7a)
++arch-$(CONFIG_CPU_32v7)		:=-D__LINUX_ARM_ARCH__=7 $(call cc-option,-march=armv7-a,$(call cc-option,-march=armv7a,-march=armv5t -Wa$(comma)-march=armv7a))
+ arch-$(CONFIG_CPU_32v6)		:=-D__LINUX_ARM_ARCH__=6 $(call cc-option,-march=armv6,-march=armv5t -Wa$(comma)-march=armv6)
+ # Only override the compiler option if ARMv6. The ARMv6K extensions are
+ # always available in ARMv7
+diff --git a/arch/arm/mach-mx51/mx51_3stack.c b/arch/arm/mach-mx51/mx51_3stack.c
+index 8496569..97a5ae9 100644
+--- a/arch/arm/mach-mx51/mx51_3stack.c
++++ b/arch/arm/mach-mx51/mx51_3stack.c
+@@ -798,7 +798,7 @@ static void mxc_expio_irq_handler(u32 irq, struct irq_desc *desc)
+ 			       expio_irq);
+ 			BUG();	/* oops */
+ 		}
+-		d->handle_irq(expio_irq, d);
++		ipipe_handle_irq_cond(expio_irq);
+ 	}
+ 
+       out:
+diff --git a/arch/arm/plat-mxc/include/mach/gpio.h b/arch/arm/plat-mxc/include/mach/gpio.h
+index 9f382e6..3d03152 100644
+--- a/arch/arm/plat-mxc/include/mach/gpio.h
++++ b/arch/arm/plat-mxc/include/mach/gpio.h
+@@ -39,6 +39,7 @@ struct mxc_gpio_port {
+ 	u32 both_edges;
+ 	u32 suspend_wakeup;
+ 	u32 saved_wakeup;
++	ipipe_spinlock_t lock;
+ };
+ 
+ int mxc_gpio_init(struct mxc_gpio_port*, int);
+diff --git a/arch/arm/plat-mxc/time.c b/arch/arm/plat-mxc/time.c
+index 867005d..b8aa3e9 100644
+--- a/arch/arm/plat-mxc/time.c
++++ b/arch/arm/plat-mxc/time.c
+@@ -113,8 +113,8 @@ void __ipipe_mach_get_tscinfo(struct __ipipe_tscinfo *info)
+ #ifdef CONFIG_ARCH_MX2
+ 		info->u.fr.counter = (unsigned *) (GPT1_BASE_ADDR + MX1_2_TCN);
+ #endif
+-	} else if (cpu_is_mx3()) {
+-#ifdef CONFIG_ARCH_MX3
++	} else if (timer_is_v2()) {
++#if defined(CONFIG_ARCH_MX3) || defined(CONFIG_ARCH_MX35) || defined(CONFIG_ARCH_MX37) || defined(CONFIG_ARCH_MX51)
+ 		info->u.fr.counter = (unsigned *) (GPT1_BASE_ADDR + MX3_TCN);
+ #endif
+ 	}
+@@ -434,7 +434,7 @@ static void ipipe_mach_update_tsc(void)
+ 
+ 	local_irq_save_hw(flags);
+ 	local_tsc = &tsc[ipipe_processor_id()];
+-	if (!cpu_is_mx3())
++	if (!timer_is_v2())
+ 		stamp = __raw_readl(timer_base + MX1_2_TCN);
+ 	else
+ 		stamp = __raw_readl(timer_base + MX3_TCN);
+@@ -453,7 +453,7 @@ notrace unsigned long long __ipipe_mach_get_tsc(void)
+ 
+ 		local_tsc = &tsc[ipipe_processor_id()];
+ 
+-		if (!cpu_is_mx3())  {
++		if (!timer_is_v2())  {
+ 			__asm__ ("ldmia %1, %M0\n"
+ 				 : "=r"(result.full), "+&r"(local_tsc)
+ 				 : "m"(*local_tsc));
+@@ -488,7 +488,7 @@ void __ipipe_mach_set_dec(unsigned long delay)
+ 		unsigned long flags;
+ 
+ 		local_irq_save_hw(flags);
+-		if (!cpu_is_mx3())
++		if (!timer_is_v2())
+ 			mx1_2_set_next_event(delay, NULL);
+ 		else
+ 			mx3_set_next_event(delay, NULL);
+@@ -508,7 +508,7 @@ EXPORT_SYMBOL(__ipipe_mach_release_timer);
+ 
+ unsigned long __ipipe_mach_get_dec(void)
+ {
+-	if (!cpu_is_mx3())
++	if (!timer_is_v2())
+ 		return __raw_readl(timer_base + MX1_2_TCMP)
+ 			- __raw_readl(timer_base + MX1_2_TCN);
+ 	else
