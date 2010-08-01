@@ -18,6 +18,7 @@
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <native/syscall.h>
 #include <native/intr.h>
 
@@ -42,8 +43,16 @@ int rt_intr_delete(RT_INTR *intr)
 
 int rt_intr_wait(RT_INTR *intr, RTIME timeout)
 {
-	return XENOMAI_SKINCALL2(__native_muxid,
+	int err, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL2(__native_muxid,
 				 __native_intr_wait, intr, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_intr_enable(RT_INTR *intr)

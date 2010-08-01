@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <pthread.h>
+
 #include <native/syscall.h>
 #include <native/mutex.h>
 #include <native/cond.h>
@@ -39,12 +41,40 @@ int rt_cond_delete(RT_COND *cond)
 	return XENOMAI_SKINCALL1(__native_muxid, __native_cond_delete, cond);
 }
 
-int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+struct rt_cond_cleanup_t {
+	RT_MUTEX *mutex;
+	unsigned saved_lockcnt;
+};
+
+static void __rt_cond_cleanup(void *data)
 {
-	int saved_lockcnt, err;
+	struct rt_cond_cleanup_t *c = (struct rt_cond_cleanup_t *)data;
+	int err;
+
+	do {
+		err = XENOMAI_SKINCALL2(__native_muxid,
+					__native_cond_wait_epilogue, c->mutex,
+					c->saved_lockcnt);
+	} while (err == EINTR);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	saved_lockcnt = mutex->lockcnt;
+	c->mutex->lockcnt = c->saved_lockcnt;
+#endif /* CONFIG_XENO_FASTSYNCH */
+}
+
+int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
+{
+	struct rt_cond_cleanup_t c = {
+		.mutex = mutex,
+	};
+	int err, oldtype;
+
+	pthread_cleanup_push(&__rt_cond_cleanup, &c);
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	c.saved_lockcnt = mutex->lockcnt;
 
 	err = XENOMAI_SKINCALL5(__native_muxid,
 				__native_cond_wait_prologue, cond, mutex,
@@ -53,53 +83,80 @@ int rt_cond_wait(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__native_muxid,
 					__native_cond_wait_epilogue, mutex,
-					saved_lockcnt);
+					c.saved_lockcnt);
 
-	mutex->lockcnt = saved_lockcnt;
+	pthread_setcanceltype(oldtype, NULL);
+
+	pthread_cleanup_pop(0);
+
+	mutex->lockcnt = c.saved_lockcnt;
 
 #else /* !CONFIG_XENO_FASTSYNCH */
 	err = XENOMAI_SKINCALL5(__native_muxid,
 				 __native_cond_wait_prologue, cond, mutex,
-				 &saved_lockcnt, XN_RELATIVE, &timeout);
+				 &c.saved_lockcnt, XN_RELATIVE, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	pthread_cleanup_pop(0);
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__native_muxid,
 					__native_cond_wait_epilogue, mutex,
-					saved_lockcnt);
+					c.saved_lockcnt);
 
 #endif /* !CONFIG_XENO_FASTSYNCH */
+
+	pthread_testcancel();
 
 	return err;
 }
 
 int rt_cond_wait_until(RT_COND *cond, RT_MUTEX *mutex, RTIME timeout)
 {
-	int saved_lockcnt, err;
+	struct rt_cond_cleanup_t c = {
+		.mutex = mutex,
+	};
+	int err, oldtype;
+
+	pthread_cleanup_push(&__rt_cond_cleanup, &c);
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	saved_lockcnt = mutex->lockcnt;
+	c.saved_lockcnt = mutex->lockcnt;
 
 	err = XENOMAI_SKINCALL5(__native_muxid,
 				__native_cond_wait_prologue, cond, mutex,
 				NULL, XN_REALTIME, &timeout);
 
+	pthread_setcanceltype(oldtype, NULL);
+
+	pthread_cleanup_pop(0);
+
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__native_muxid,
 					__native_cond_wait_epilogue, mutex,
-					saved_lockcnt);
+					c.saved_lockcnt);
 
-	mutex->lockcnt = saved_lockcnt;
+	mutex->lockcnt = c.saved_lockcnt;
 
 #else /* !CONFIG_XENO_FASTSYNCH */
 	err = XENOMAI_SKINCALL5(__native_muxid,
 				__native_cond_wait_prologue, cond, mutex,
-				&saved_lockcnt, XN_REALTIME, &timeout);
+				&c.saved_lockcnt, XN_REALTIME, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	pthread_cleanup_pop(0);
 
 	while (err == -EINTR)
 		err = XENOMAI_SKINCALL2(__native_muxid,
 					__native_cond_wait_epilogue, mutex,
-					saved_lockcnt);
+					c.saved_lockcnt);
 #endif /* !CONFIG_XENO_FASTSYNCH */
+
+	pthread_testcancel();
 
 	return err;
 }

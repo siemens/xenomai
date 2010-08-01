@@ -16,6 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include <pthread.h>
+
 #include <native/syscall.h>
 #include <native/sem.h>
 
@@ -40,14 +42,30 @@ int rt_sem_delete(RT_SEM *sem)
 
 int rt_sem_p(RT_SEM *sem, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
+	int err, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL3(__native_muxid,
 				 __native_sem_p, sem, XN_RELATIVE, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_sem_p_until(RT_SEM *sem, RTIME timeout)
 {
-	return XENOMAI_SKINCALL3(__native_muxid,
+	int err, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL3(__native_muxid,
 				 __native_sem_p, sem, XN_REALTIME, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_sem_v(RT_SEM *sem)

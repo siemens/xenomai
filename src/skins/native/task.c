@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <limits.h>
+#include <pthread.h>
 #include <native/syscall.h>
 #include <native/task.h>
 #include <asm-generic/bits/sigshadow.h>
@@ -191,7 +192,7 @@ int rt_task_shadow(RT_TASK *task, const char *name, int prio, int mode)
 	if (pthread_getspecific(__native_tskey))
 		/* Current task is already a native taks. */
 		return -EBUSY;
-  
+
 	self = malloc(sizeof(*self));
 	if (!self)
 		return -ENOMEM;
@@ -292,8 +293,16 @@ int rt_task_set_periodic(RT_TASK *task, RTIME idate, RTIME period)
 
 int rt_task_wait_period(unsigned long *overruns_r)
 {
-	return XENOMAI_SKINCALL1(__native_muxid,
+	int err, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL1(__native_muxid,
 				 __native_task_wait_period, overruns_r);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_task_set_priority(RT_TASK *task, int prio)
@@ -304,15 +313,29 @@ int rt_task_set_priority(RT_TASK *task, int prio)
 
 int rt_task_sleep(RTIME delay)
 {
-	return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep, &delay);
+	int err, oldtype;
 
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep, &delay);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_task_sleep_until(RTIME date)
 {
-	return XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep_until,
+	int err, oldtype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	err = XENOMAI_SKINCALL1(__native_muxid, __native_task_sleep_until,
 				 &date);
 
+	pthread_setcanceltype(oldtype, NULL);
+
+	return err;
 }
 
 int rt_task_unblock(RT_TASK *task)
@@ -376,9 +399,18 @@ int rt_task_join(RT_TASK *task)
 ssize_t rt_task_send(RT_TASK *task,
 		     RT_TASK_MCB *mcb_s, RT_TASK_MCB *mcb_r, RTIME timeout)
 {
-	return (ssize_t) XENOMAI_SKINCALL4(__native_muxid,
-					   __native_task_send,
-					   task, mcb_s, mcb_r, &timeout);
+	int oldtype;
+	ssize_t ret;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldtype);
+
+	ret = (ssize_t)XENOMAI_SKINCALL4(__native_muxid,
+					 __native_task_send,
+					 task, mcb_s, mcb_r, &timeout);
+
+	pthread_setcanceltype(oldtype, NULL);
+
+	return ret;
 }
 
 int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
