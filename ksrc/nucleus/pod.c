@@ -2162,7 +2162,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 void __xnpod_schedule(struct xnsched *sched)
 {
 	struct xnthread *prev, *next, *curr = sched->curr;
-	int zombie, switched = 0, need_resched, shadow;
+	int zombie, switched, need_resched, shadow;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -2176,6 +2176,7 @@ void __xnpod_schedule(struct xnsched *sched)
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
 			 xnthread_current_priority(curr));
 reschedule:
+	switched = 0;
 	need_resched = __xnpod_test_resched(sched);
 #if !XENO_DEBUG(NUCLEUS)
 	if (!need_resched)
