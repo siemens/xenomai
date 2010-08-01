@@ -1,1 +1,1 @@
-latency:native+rtdm+timerbench:!@exec_prefix@/bin/latency;popall:control_c
+latency:native+rtdm+timerbench:!@XENO_TEST_DIR@/latency;popall:control_c

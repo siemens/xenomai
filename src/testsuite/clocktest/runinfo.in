@@ -1,1 +1,1 @@
-clocktest:posix:!@exec_prefix@/bin/clocktest;popall:control_c
+clocktest:posix:!@XENO_TEST_DIR@/clocktest;popall:control_c

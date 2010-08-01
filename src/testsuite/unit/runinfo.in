@@ -1,5 +1,5 @@
-arith:native:!@exec_prefix@/bin/arith;popall:control_c
-wakeup-time:native:!@exec_prefix@/bin/wakeup-time;popall:control_c
-mutex-torture-posix:posix:!@exec_prefix@/bin/mutex-torture-posix;popall:control_c
-mutex-torture-native:native:!@exec_prefix@/bin/mutex-torture-native;popall:control_c
-xnvdso:native:!@exec_prefix@/bin/xnvdso;popall:control_c
+arith:native:!@XENO_TEST_DIR@/arith;popall:control_c
+wakeup-time:native:!@XENO_TEST_DIR@/wakeup-time;popall:control_c
+mutex-torture-posix:posix:!@XENO_TEST_DIR@/mutex-torture-posix;popall:control_c
+mutex-torture-native:native:!@XENO_TEST_DIR@/mutex-torture-native;popall:control_c
+xnvdso:native:!@XENO_TEST_DIR@/xnvdso;popall:control_c
