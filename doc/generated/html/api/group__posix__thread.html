@@ -164,7 +164,7 @@ If, however, you install a signal handler for SIGWINCH after creating or shadowi
 <b>int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);</b><p>
 Which means that you should register your handler with sigaction, using the SA_SIGINFO flag, and pass all the arguments you received to xeno_sigwinch_handler. <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcan__rtt_8c-example.html#a21">rtcan_rtt.c</a>.</dl>
-<p>References <a class="el" href="skins_2posix_2sched_8c-source.html#l00238">pthread_getschedparam_ex()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00062">XNFPU</a>, <a class="el" href="pod_8c-source.html#l00632">xnpod_init_thread()</a>, <a class="el" href="pod_8c-source.html#l03056">xnpod_set_thread_tslice()</a>, <a class="el" href="pod_8c-source.html#l00736">xnpod_start_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="skins_2posix_2sched_8c-source.html#l00238">pthread_getschedparam_ex()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00062">XNFPU</a>, <a class="el" href="pod_8c-source.html#l00632">xnpod_init_thread()</a>, <a class="el" href="pod_8c-source.html#l03058">xnpod_set_thread_tslice()</a>, <a class="el" href="pod_8c-source.html#l00736">xnpod_start_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -273,7 +273,7 @@ When a thread terminates, cancellation cleanup handlers are executed in the reve
 </dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html">Specification.</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00256">rt_task_delete()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00257">rt_task_delete()</a>.</p>
 
 </div>
 </div><p>
@@ -327,7 +327,7 @@ an error number if:<ul>
 <a class="el" href="rtcan__rtt_8c-example.html#a24">rtcan_rtt.c</a>.</dl>
 <p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, and <a class="el" href="synch_8c-source.html#l00237">xnsynch_wakeup_one_sleeper()</a>.</p>
 
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00118">rt_task_create()</a>, and <a class="el" href="src_2skins_2native_2task_8c-source.html#l00368">rt_task_join()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00119">rt_task_create()</a>, and <a class="el" href="src_2skins_2native_2task_8c-source.html#l00391">rt_task_join()</a>.</p>
 
 </div>
 </div><p>
@@ -379,7 +379,7 @@ an error number if:<ul>
 <li>ESRCH, <em>thread</em> is invalid;</li><li>ETIMEDOUT, the start time has already passed.</li></ul>
 </dd></dl>
 Rescheduling: always, until the <em>starttp</em> start time has been reached. 
-<p>References <a class="el" href="pod_8c-source.html#l02858">xnpod_set_thread_periodic()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02860">xnpod_set_thread_periodic()</a>.</p>
 
 </div>
 </div><p>
@@ -446,7 +446,7 @@ NULL if the calling thread is not a POSIX skin thread.</dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcan__rtt_8c-example.html#a3">rtcan_rtt.c</a>.</dl>
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00179">rt_task_shadow()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00180">rt_task_shadow()</a>.</p>
 
 </div>
 </div><p>
@@ -494,7 +494,7 @@ an error number if:<ul>
 <li>EINVAL, some bit in <em>clrmask</em> or <em>setmask</em> is invalid. </li></ul>
 </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00050">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01010">xnpod_set_thread_mode()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00061">XNRPIOFF</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, <a class="el" href="shadow_8c-source.html#l01134">xnshadow_relax()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNTRAPSW</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00050">XNLOCK</a>, <a class="el" href="pod_8c-source.html#l01010">xnpod_set_thread_mode()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00061">XNRPIOFF</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, <a class="el" href="shadow_8c-source.html#l01137">xnshadow_relax()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNTRAPSW</a>.</p>
 
 </div>
 </div><p>
@@ -577,12 +577,12 @@ an error number if:<ul>
 <li>Xenomai kernel-space thread;</li><li>Xenomai user-space thread (switches to primary mode). </li></ul>
 </dd></dl>
 
-<p>References <a class="el" href="pod_8c-source.html#l02959">xnpod_wait_thread_period()</a>.</p>
+<p>References <a class="el" href="pod_8c-source.html#l02961">xnpod_wait_thread_period()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:01 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:40 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

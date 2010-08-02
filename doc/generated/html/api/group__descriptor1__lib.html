@@ -85,6 +85,7 @@ This is the API interface used to fill and use Analogy device descriptor structu
 <p>
 Close the Analogy device related with the descriptor. 
 <p>
+The file descriptor is associated with a context. The context is one of the enabler of asynchronous transfers. So, by closing the file descriptor, the programer must keep in mind that the currently occuring asynchronous transfer will cancelled.<p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>dsc</em>&nbsp;</td><td>Device descriptor</td></tr>
@@ -124,9 +125,9 @@ Fill the descriptor with subdevices, channels and ranges data.
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; the the dsc pointer should be checked; check also the kernel log ("dmesg")</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong </li></ul>
+<li>-EINVAL is returned if some argument is missing or wrong; the the dsc pointer should be checked; check also the kernel log ("dmesg")</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-ENODEV is returned if the descriptor is incoherent (the device may be unattached) </li></ul>
 
-<p>References <a class="el" href="descriptor_8h-source.html#l00055">A4L_CPLX_DESC</a>, <a class="el" href="descriptor_8c-source.html#l00235">a4l_sys_desc()</a>, <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>, and <a class="el" href="descriptor_8h-source.html#l00078">a4l_descriptor::magic</a>.</p>
+<p>References <a class="el" href="descriptor_8h-source.html#l00055">A4L_CPLX_DESC</a>, <a class="el" href="descriptor_8c-source.html#l00237">a4l_sys_desc()</a>, <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>, and <a class="el" href="descriptor_8h-source.html#l00078">a4l_descriptor::magic</a>.</p>
 
 </div>
 </div><p>
@@ -342,12 +343,12 @@ Open an Analogy device and basically fill the descriptor.
 <ul>
 <li>-EINVAL is returned if some argument is missing or wrong; the fname and the dsc pointer should be checked; check also the kernel log ("dmesg")</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong </li></ul>
 
-<p>References <a class="el" href="descriptor_8h-source.html#l00049">A4L_BSC_DESC</a>, <a class="el" href="sys_8c-source.html#l00073">a4l_sys_close()</a>, <a class="el" href="descriptor_8c-source.html#l00235">a4l_sys_desc()</a>, <a class="el" href="sys_8c-source.html#l00060">a4l_sys_open()</a>, and <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>.</p>
+<p>References <a class="el" href="descriptor_8h-source.html#l00049">A4L_BSC_DESC</a>, <a class="el" href="sys_8c-source.html#l00073">a4l_sys_close()</a>, <a class="el" href="descriptor_8c-source.html#l00237">a4l_sys_desc()</a>, <a class="el" href="sys_8c-source.html#l00060">a4l_sys_open()</a>, and <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:39 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

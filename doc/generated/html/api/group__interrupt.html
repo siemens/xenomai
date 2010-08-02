@@ -332,7 +332,7 @@ This service can be called from:<p>
 Rescheduling: possible.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The interrupt source associated to the interrupt descriptor remains masked upon creation. <a class="el" href="group__interrupt.html#gc712ee67f90d053a21bdb0041a63e17c" title="Enable an interrupt object.">rt_intr_enable()</a> should be called for the new interrupt object to unmask it. </dd></dl>
 
-<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00038">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00705">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00614">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00039">rt_intr_delete()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00705">xnintr_attach()</a>, <a class="el" href="ksrc_2nucleus_2intr_8c-source.html#l00614">xnintr_init()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -609,10 +609,12 @@ Rescheduling: always, unless an interrupt is already pending on entry.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="user__irq_8c-example.html#a0">user_irq.c</a>.</dl>
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>.</p>
+
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:38 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

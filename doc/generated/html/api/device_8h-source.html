@@ -40,7 +40,7 @@
 <a name="l00033"></a>00033 <span class="preprocessor"></span>
 <a name="l00034"></a>00034 <span class="preprocessor">#define A4L_NB_DEVICES 10</span>
 <a name="l00035"></a>00035 <span class="preprocessor"></span>
-<a name="l00036"></a>00036 <span class="preprocessor">#define A4L_DEV_ATTACHED 0</span>
+<a name="l00036"></a>00036 <span class="preprocessor">#define A4L_DEV_ATTACHED_NR 0</span>
 <a name="l00037"></a>00037 <span class="preprocessor"></span>
 <a name="l00038"></a>00038 <span class="keyword">struct </span>a4l_device {
 <a name="l00039"></a>00039 
@@ -87,31 +87,28 @@
 <a name="l00080"></a>00080 
 <a name="l00081"></a>00081 <span class="preprocessor">#ifdef __KERNEL__</span>
 <a name="l00082"></a>00082 <span class="preprocessor"></span>
-<a name="l00083"></a>00083 <span class="comment">/* --- Device related macro --- */</span>
-<a name="l00084"></a>00084 <span class="preprocessor">#define a4l_check_dev(x) test_bit(A4L_DEV_ATTACHED, &amp;(x-&gt;flags))</span>
-<a name="l00085"></a>00085 <span class="preprocessor"></span>
-<a name="l00086"></a>00086 <span class="comment">/* --- Devices tab related functions --- */</span>
-<a name="l00087"></a>00087 <span class="keywordtype">void</span> a4l_init_devs(<span class="keywordtype">void</span>);
-<a name="l00088"></a>00088 <span class="keywordtype">int</span> a4l_check_cleanup_devs(<span class="keywordtype">void</span>);
-<a name="l00089"></a>00089 <span class="keywordtype">int</span> a4l_rdproc_devs(<span class="keywordtype">char</span> *page,
-<a name="l00090"></a>00090                     <span class="keywordtype">char</span> **start,
-<a name="l00091"></a>00091                     off_t off, <span class="keywordtype">int</span> count, <span class="keywordtype">int</span> *eof, <span class="keywordtype">void</span> *data);
-<a name="l00092"></a>00092 
-<a name="l00093"></a>00093 <span class="comment">/* --- Context related function / macro --- */</span>
-<a name="l00094"></a>00094 <span class="keywordtype">void</span> a4l_set_dev(a4l_cxt_t * cxt);
-<a name="l00095"></a>00095 <span class="preprocessor">#define a4l_get_dev(x) ((x)-&gt;dev)</span>
-<a name="l00096"></a>00096 <span class="preprocessor"></span>
-<a name="l00097"></a>00097 <span class="comment">/* --- Upper layer functions --- */</span>
-<a name="l00098"></a>00098 <span class="keywordtype">int</span> a4l_ioctl_devcfg(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00099"></a>00099 <span class="keywordtype">int</span> a4l_ioctl_devinfo(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
-<a name="l00100"></a>00100 
-<a name="l00101"></a>00101 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
-<a name="l00102"></a>00102 
-<a name="l00103"></a>00103 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
-<a name="l00104"></a>00104 
-<a name="l00105"></a>00105 <span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_DEVICE__ */</span>
+<a name="l00083"></a>00083 <span class="comment">/* --- Devices tab related functions --- */</span>
+<a name="l00084"></a>00084 <span class="keywordtype">void</span> a4l_init_devs(<span class="keywordtype">void</span>);
+<a name="l00085"></a>00085 <span class="keywordtype">int</span> a4l_check_cleanup_devs(<span class="keywordtype">void</span>);
+<a name="l00086"></a>00086 <span class="keywordtype">int</span> a4l_rdproc_devs(<span class="keywordtype">char</span> *page,
+<a name="l00087"></a>00087                     <span class="keywordtype">char</span> **start,
+<a name="l00088"></a>00088                     off_t off, <span class="keywordtype">int</span> count, <span class="keywordtype">int</span> *eof, <span class="keywordtype">void</span> *data);
+<a name="l00089"></a>00089 
+<a name="l00090"></a>00090 <span class="comment">/* --- Context related function / macro --- */</span>
+<a name="l00091"></a>00091 <span class="keywordtype">void</span> a4l_set_dev(a4l_cxt_t *cxt);
+<a name="l00092"></a>00092 <span class="preprocessor">#define a4l_get_dev(x) ((x)-&gt;dev)</span>
+<a name="l00093"></a>00093 <span class="preprocessor"></span>
+<a name="l00094"></a>00094 <span class="comment">/* --- Upper layer functions --- */</span>
+<a name="l00095"></a>00095 <span class="keywordtype">int</span> a4l_ioctl_devcfg(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00096"></a>00096 <span class="keywordtype">int</span> a4l_ioctl_devinfo(a4l_cxt_t * cxt, <span class="keywordtype">void</span> *arg);
+<a name="l00097"></a>00097 
+<a name="l00098"></a>00098 <span class="preprocessor">#endif </span><span class="comment">/* __KERNEL__ */</span>
+<a name="l00099"></a>00099 
+<a name="l00100"></a>00100 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l00101"></a>00101 
+<a name="l00102"></a>00102 <span class="preprocessor">#endif </span><span class="comment">/* __ANALOGY_DEVICE__ */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:36 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -153,7 +153,7 @@
 <a name="l00144"></a>00144 <span class="keywordtype">int</span> mite_done(<span class="keyword">struct</span> mite_channel *mite_chan);
 <a name="l00145"></a>00145 <span class="keywordtype">void</span> mite_prep_dma(<span class="keyword">struct</span> mite_channel *mite_chan,
 <a name="l00146"></a>00146                    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> num_device_bits, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> num_memory_bits);
-<a name="l00147"></a>00147 <span class="keywordtype">int</span> mite_buf_change(<span class="keyword">struct</span> mite_dma_descriptor_ring *ring, a4l_buf_t *buf);
+<a name="l00147"></a>00147 <span class="keywordtype">int</span> mite_buf_change(<span class="keyword">struct</span> mite_dma_descriptor_ring *ring, <a class="code" href="structa4l__subdevice.html" title="Structure describing the subdevice.">a4l_subd_t</a> *subd);
 <a name="l00148"></a>00148 
 <a name="l00149"></a>00149 <span class="preprocessor">#ifdef CONFIG_DEBUG_MITE</span>
 <a name="l00150"></a>00150 <span class="preprocessor"></span><span class="keywordtype">void</span> mite_print_chsr(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> chsr);
@@ -444,7 +444,7 @@
 <a name="l00435"></a>00435 
 <a name="l00436"></a>00436 <span class="preprocessor">#endif </span><span class="comment">/* !__ANALOGY_NI_MITE_H__ */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:57 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:36 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -137,27 +137,38 @@
 <a name="l00109"></a>00109 
 <a name="l00110"></a>00110 <span class="keywordtype">void</span> <a class="code" href="group__shadow.html#g36220a39184a95755f212ee41b108654" title="Clear the per-thrad per-skin signal condition.">xnshadow_clear_sig</a>(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">unsigned</span> muxid);
 <a name="l00111"></a>00111 
-<a name="l00112"></a>00112 <span class="preprocessor">#ifdef __cplusplus</span>
-<a name="l00113"></a>00113 <span class="preprocessor"></span>}
-<a name="l00114"></a>00114 <span class="preprocessor">#endif</span>
-<a name="l00115"></a>00115 <span class="preprocessor"></span>
-<a name="l00116"></a>00116 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l00117"></a>00117 
-<a name="l00118"></a>00118 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_PERVASIVE) &amp;&amp; defined(CONFIG_PROC_FS)</span>
-<a name="l00119"></a>00119 <span class="preprocessor"></span><span class="keywordtype">void</span> xnshadow_init_proc(<span class="keywordtype">void</span>);
-<a name="l00120"></a>00120 <span class="keywordtype">void</span> xnshadow_cleanup_proc(<span class="keywordtype">void</span>);
-<a name="l00121"></a>00121 <span class="keywordtype">void</span> xnshadow_declare_proc(<span class="keyword">struct</span> xnskin_slot *iface);
-<a name="l00122"></a>00122 <span class="keywordtype">void</span> xnshadow_remove_proc(<span class="keyword">const</span> <span class="keywordtype">char</span> *iface);
-<a name="l00123"></a>00123 <span class="preprocessor">#else</span>
-<a name="l00124"></a>00124 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnshadow_init_proc(<span class="keywordtype">void</span>) { }
-<a name="l00125"></a>00125 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnshadow_cleanup_proc(<span class="keywordtype">void</span>) { }
-<a name="l00126"></a>00126 <span class="preprocessor">#define xnshadow_declare_proc(iface)    do { (void)iface; } while(0)</span>
-<a name="l00127"></a>00127 <span class="preprocessor"></span><span class="preprocessor">#define xnshadow_remove_proc(iface)     do { (void)name; } while(0)</span>
-<a name="l00128"></a>00128 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE &amp;&amp; CONFIG_PROC_FS */</span>
-<a name="l00129"></a>00129 
-<a name="l00130"></a>00130 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
+<a name="l00112"></a>00112 <span class="preprocessor">#ifdef RTHAL_HAVE_RETURN_EVENT</span>
+<a name="l00113"></a>00113 <span class="preprocessor"></span><span class="preprocessor">#define XNARCH_HAVE_MAYDAY  1</span>
+<a name="l00114"></a>00114 <span class="preprocessor"></span><span class="keywordtype">void</span> xnshadow_call_mayday(<span class="keyword">struct</span> xnthread *thread, <span class="keywordtype">int</span> sigtype);
+<a name="l00115"></a>00115 <span class="preprocessor">#else</span>
+<a name="l00116"></a>00116 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnshadow_call_mayday(<span class="keyword">struct</span> xnthread *thread,
+<a name="l00117"></a>00117                                         <span class="keywordtype">int</span> sigtype)
+<a name="l00118"></a>00118 {
+<a name="l00119"></a>00119         <span class="comment">/* no luck, I-pipe too old. Nobody hears you screaming... */</span>
+<a name="l00120"></a>00120 }
+<a name="l00121"></a>00121 <span class="preprocessor">#endif</span>
+<a name="l00122"></a>00122 <span class="preprocessor"></span>
+<a name="l00123"></a>00123 <span class="preprocessor">#ifdef __cplusplus</span>
+<a name="l00124"></a>00124 <span class="preprocessor"></span>}
+<a name="l00125"></a>00125 <span class="preprocessor">#endif</span>
+<a name="l00126"></a>00126 <span class="preprocessor"></span>
+<a name="l00127"></a>00127 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l00128"></a>00128 
+<a name="l00129"></a>00129 <span class="preprocessor">#if defined(CONFIG_XENO_OPT_PERVASIVE) &amp;&amp; defined(CONFIG_PROC_FS)</span>
+<a name="l00130"></a>00130 <span class="preprocessor"></span><span class="keywordtype">void</span> xnshadow_init_proc(<span class="keywordtype">void</span>);
+<a name="l00131"></a>00131 <span class="keywordtype">void</span> xnshadow_cleanup_proc(<span class="keywordtype">void</span>);
+<a name="l00132"></a>00132 <span class="keywordtype">void</span> xnshadow_declare_proc(<span class="keyword">struct</span> xnskin_slot *iface);
+<a name="l00133"></a>00133 <span class="keywordtype">void</span> xnshadow_remove_proc(<span class="keyword">const</span> <span class="keywordtype">char</span> *iface);
+<a name="l00134"></a>00134 <span class="preprocessor">#else</span>
+<a name="l00135"></a>00135 <span class="preprocessor"></span><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnshadow_init_proc(<span class="keywordtype">void</span>) { }
+<a name="l00136"></a>00136 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> xnshadow_cleanup_proc(<span class="keywordtype">void</span>) { }
+<a name="l00137"></a>00137 <span class="preprocessor">#define xnshadow_declare_proc(iface)    do { (void)iface; } while(0)</span>
+<a name="l00138"></a>00138 <span class="preprocessor"></span><span class="preprocessor">#define xnshadow_remove_proc(iface)     do { (void)name; } while(0)</span>
+<a name="l00139"></a>00139 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE &amp;&amp; CONFIG_PROC_FS */</span>
+<a name="l00140"></a>00140 
+<a name="l00141"></a>00141 <span class="preprocessor">#endif </span><span class="comment">/* !_XENO_NUCLEUS_SHADOW_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:56 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:36 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

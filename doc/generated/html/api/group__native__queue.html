@@ -312,7 +312,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>User-space task (switches to secondary mode)</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00112">rt_queue_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00276">xnheap_set_label()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00096">rt_queue_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00276">xnheap_set_label()</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
 
 </div>
 </div><p>
@@ -399,7 +399,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00136">rt_queue_free()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00120">rt_queue_free()</a>.</p>
 
 </div>
 </div><p>
@@ -580,6 +580,8 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>.</p>
+
 </div>
 </div><p>
 <a class="anchor" name="g91dca49cc0fd0b30b8fe66eb6bc7ea8a"></a><!-- doxytag: member="queue.c::rt_queue_read_until" ref="g91dca49cc0fd0b30b8fe66eb6bc7ea8a" args="(RT_QUEUE *q, void *buf, size_t size, RTIME timeout)" -->
@@ -661,6 +663,8 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>.</p>
+
 </div>
 </div><p>
 <a class="anchor" name="g44759168a589ddbb2b60c1c1b183f448"></a><!-- doxytag: member="queue.c::rt_queue_receive" ref="g44759168a589ddbb2b60c1c1b183f448" args="(RT_QUEUE *q, void **bufp, RTIME timeout)" -->
@@ -735,6 +739,8 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>.</p>
+
 </div>
 </div><p>
 <a class="anchor" name="gde7b66ff83b602b6265cb1cb768c18db"></a><!-- doxytag: member="queue.c::rt_queue_receive_until" ref="gde7b66ff83b602b6265cb1cb768c18db" args="(RT_QUEUE *q, void **bufp, RTIME timeout)" -->
@@ -808,6 +814,8 @@ This service can be called from:<p>
 <p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
+
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>.</p>
 
 </div>
 </div><p>
@@ -885,7 +893,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00237">xnsynch_wakeup_one_sleeper()</a>.</p>
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00237">xnsynch_wakeup_one_sleeper()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00727">rt_queue_write()</a>.</p>
 
@@ -1006,12 +1014,12 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00127">rt_queue_alloc()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00141">rt_queue_send()</a>.</p>
+<p>References <a class="el" href="cancel_8c-source.html#l00279">pthread_setcanceltype()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00111">rt_queue_alloc()</a>, and <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00125">rt_queue_send()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:38 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
