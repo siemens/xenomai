@@ -25,29 +25,34 @@
 
 #if defined(__KERNEL__) && !defined(DOXYGEN_CPP)
 
-#include <analogy/os_facilities.h>
+#include <rtdm/rtdm_driver.h>
 
 struct a4l_device;
+struct a4l_buffer;
 
-struct a4l_context {
+struct a4l_device_context {
 
-	/* This field is redundant with the following parameters;
-	   setting it at the head of the structure may save 
-	   useless operations */
-	struct a4l_device *dev;
+	/* Needed to call rtdm_*_copy_from/to_user functions */
 	rtdm_user_info_t *user_info;
-	struct rtdm_dev_context *rtdm_cxt;
+
+	/* The adequate device pointer 
+	   (retrieved thanks to minor at open time) */
+	struct a4l_device *dev; 
+
+	/* The buffer structure contains everything to transfer data
+	   from asynchronous acquisition operations on a specific
+	   subdevice */
+	struct a4l_buffer *buffer; 
 };
-typedef struct a4l_context a4l_cxt_t;
+typedef struct a4l_device_context a4l_cxt_t;
 
-#define a4l_get_minor(x) ((x)->rtdm_cxt->device->device_id)
-
-#define a4l_init_cxt(c, u, x)			\
-    {							\
-	(x)->rtdm_cxt = c;				\
-	(x)->user_info = u;				\
-	(x)->dev = NULL;				\
-    }
+static inline int a4l_get_minor(a4l_cxt_t *cxt)
+{
+	/* Get a pointer on the container structure */
+	struct rtdm_dev_context * rtdm_cxt = rtdm_private_to_context(cxt);
+	/* Get the minor index */
+	return rtdm_cxt->device->device_id;
+}
 
 #endif /* __KERNEL__ && !DOXYGEN_CPP */
 

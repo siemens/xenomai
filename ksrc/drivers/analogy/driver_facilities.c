@@ -509,6 +509,8 @@ EXPORT_SYMBOL_GPL(a4l_buf_evt);
 unsigned long a4l_buf_count(a4l_subd_t *subd);
 EXPORT_SYMBOL_GPL(a4l_buf_count);
 
+#ifdef DOXYGEN_CPP		/* Only used for doxygen doc generation */
+
 /**
  * @brief Get the current Analogy command descriptor
  *
@@ -518,8 +520,8 @@ EXPORT_SYMBOL_GPL(a4l_buf_count);
  *
  */
 a4l_cmd_t *a4l_get_cmd(a4l_subd_t * subd);
-EXPORT_SYMBOL_GPL(a4l_get_cmd);
 
+#endif /* DOXYGEN_CPP */
 
 /**
  * @brief Get the channel index according to its type

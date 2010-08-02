@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
@@ -396,6 +397,8 @@ out_main:
 	/* Free the buffer used as device descriptor */
 	if (dsc.sbdata != NULL)
 		free(dsc.sbdata);
+
+	sleep(1);
 
 	/* Release the file descriptor */
 	a4l_close(&dsc);

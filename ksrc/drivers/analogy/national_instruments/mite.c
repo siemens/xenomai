@@ -379,8 +379,9 @@ void mite_dma_disarm(struct mite_channel *mite_chan)
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 }
 
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_buf_t *buf)
+int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd)
 {
+	a4l_buf_t *buf = subd->buf;
 	unsigned int n_links;
 	int i;
 
@@ -587,10 +588,9 @@ int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 
 int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
-	a4l_dev_t *dev = subd->dev;
-	a4l_buf_t *buf = dev->transfer.bufs[subd->idx];
-	int err;
+	a4l_buf_t *buf = subd->buf;
 	unsigned int nbytes_ub, nbytes_lb;
+	int err;
 
 	nbytes_lb = mite_bytes_read_from_memory_lb(mite_chan);
 	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
@@ -605,7 +605,7 @@ int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 
 	/* If the MITE has already transfered more than required, we
 	   can disable it */
-	if (test_bit(A4L_BUF_EOA_NR, &buf->evt_flags))
+	if (test_bit(A4L_BUF_EOA_NR, &buf->flags))
 		writel(CHOR_STOP, 
 		       mite_chan->mite->mite_io_addr + 
 		       MITE_CHOR(mite_chan->channel));

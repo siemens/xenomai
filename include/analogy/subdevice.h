@@ -141,12 +141,36 @@
 
 	  /*! @} ANALOGY_SUBD_FT_xxx */
 
+/*!
+ * @anchor ANALOGY_SUBD_ST_xxx @name Subdevice status
+ * @brief Flags to define the subdevice's status
+ * @{
+ */
+
+/* Subdevice status flag(s) */
+/** 
+ * The subdevice is busy, a synchronous or an asynchronous acquisition
+ * is occuring
+ */
+#define A4L_SUBD_BUSY_NR 0
+#define A4L_SUBD_BUSY (1 << A4L_SUBD_BUSY_NR)
+
+/** 
+ * The subdevice is about to be cleaned in the middle of the detach
+ * procedure
+ */
+#define A4L_SUBD_CLEAN_NR 1
+#define A4L_SUBD_CLEAN (1 << A4L_SUBD_CLEAN_NR)
+
+
+	  /*! @} ANALOGY_SUBD_ST_xxx */
+
 #ifdef __KERNEL__
 
 /* --- Subdevice descriptor structure --- */
 
 struct a4l_device;
-struct a4l_driver;
+struct a4l_buffer;
 
 /*! 
  * @brief Structure describing the subdevice
@@ -160,8 +184,16 @@ struct a4l_subdevice {
 
 	struct a4l_device *dev;
 			       /**< Containing device */
+
 	unsigned int idx;
 		      /**< Subdevice index */
+
+	struct a4l_buffer *buf;
+			       /**< Linked buffer */
+
+	/* Subdevice's status (busy, linked?) */
+	unsigned long status;
+	                     /**< Subdevice's status */
 
 	/* Descriptors stuff */
 	unsigned long flags;
@@ -245,12 +277,19 @@ typedef struct a4l_rng_info_arg a4l_rnginfo_arg_t;
 
 #ifdef __KERNEL__
 
-/* --- Subdevice related functions --- */
+/* --- Subdevice related functions and macros --- */
+
 a4l_chan_t *a4l_get_chfeat(a4l_subd_t * sb, int idx);
-a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb,
-				      int chidx, int rngidx);
+a4l_rng_t *a4l_get_rngfeat(a4l_subd_t * sb, int chidx, int rngidx);
 int a4l_check_chanlist(a4l_subd_t * subd,
 		       unsigned char nb_chan, unsigned int *chans);
+
+#define a4l_subd_is_input(x) ((A4L_SUBD_MASK_READ & (x)->flags) != 0)
+/* The following macro considers that a DIO subdevice is firstly an
+   output subdevice */
+#define a4l_subd_is_output(x) \
+	((A4L_SUBD_MASK_WRITE & (x)->flags) != 0 || \
+	 (A4L_SUBD_DIO & (x)->flags) != 0)
 
 /* --- Upper layer functions --- */
 

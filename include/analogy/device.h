@@ -33,7 +33,7 @@
 
 #define A4L_NB_DEVICES 10
 
-#define A4L_DEV_ATTACHED 0
+#define A4L_DEV_ATTACHED_NR 0
 
 struct a4l_device {
 
@@ -80,9 +80,6 @@ typedef struct a4l_dev_info a4l_dvinfo_t;
 
 #ifdef __KERNEL__
 
-/* --- Device related macro --- */
-#define a4l_check_dev(x) test_bit(A4L_DEV_ATTACHED, &(x->flags))
-
 /* --- Devices tab related functions --- */
 void a4l_init_devs(void);
 int a4l_check_cleanup_devs(void);
@@ -91,7 +88,7 @@ int a4l_rdproc_devs(char *page,
 		    off_t off, int count, int *eof, void *data);
 
 /* --- Context related function / macro --- */
-void a4l_set_dev(a4l_cxt_t * cxt);
+void a4l_set_dev(a4l_cxt_t *cxt);
 #define a4l_get_dev(x) ((x)->dev)
 
 /* --- Upper layer functions --- */

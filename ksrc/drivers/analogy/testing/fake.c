@@ -29,7 +29,7 @@ struct ai_priv {
 	/* Misc fields */
 	unsigned long amplitude_div;
 	unsigned long quanta_cnt;
-	volatile int timer_running;
+	int timer_running;
 
 };
 
@@ -115,7 +115,11 @@ static void ai_task_proc(void *arg)
 	uint64_t now_ns, elapsed_ns=0;
 
 	while(1) {
-		if(priv->timer_running != 0)
+		int running;
+
+		RTDM_EXECUTE_ATOMICALLY(running = priv->timer_running);
+
+		if(running)
 		{
 			int i = 0;
 
@@ -168,7 +172,7 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	priv->current_ns = ((unsigned long)priv->last_ns);
 	priv->reminder_ns = 0;
   
-	priv->timer_running = 1;
+	RTDM_EXECUTE_ATOMICALLY(priv->timer_running = 1);
   
 	return 0;
   
@@ -193,7 +197,7 @@ static int ai_cancel(a4l_subd_t *subd)
 {
 	struct ai_priv *priv = (struct ai_priv *)subd->priv;
 
-	priv->timer_running = 0;
+	RTDM_EXECUTE_ATOMICALLY(priv->timer_running = 0);
 
 	return 0;
 }

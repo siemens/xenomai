@@ -44,7 +44,7 @@ struct loop_priv {
 	a4l_task_t loop_task;
 
 	/* Misc fields */
-	volatile int loop_running:1;
+	int loop_running;
 	uint16_t loop_insn_value;
 };
 typedef struct loop_priv lpprv_t;
@@ -65,9 +65,6 @@ static void loop_task_proc(void *arg)
 	a4l_dev_t *dev = (a4l_dev_t*)arg;
 	a4l_subd_t *input_subd, *output_subd;
 	lpprv_t *priv = (lpprv_t *)dev->priv;
-    
-	while (!a4l_check_dev(dev))
-		a4l_task_sleep(LOOP_TASK_PERIOD);
 
 	input_subd = a4l_get_subd(dev, LOOP_INPUT_SUBD);
 	output_subd = a4l_get_subd(dev, LOOP_OUTPUT_SUBD);
@@ -78,8 +75,12 @@ static void loop_task_proc(void *arg)
 	}
 
 	while (1) {
+
+		int running;
+
+		RTDM_EXECUTE_ATOMICALLY(running = priv->loop_running);
 	
-		if (priv->loop_running) {
+		if (running) {
 			uint16_t value;
 			int ret=0;
 	    
@@ -87,7 +88,6 @@ static void loop_task_proc(void *arg)
 		
 				ret = a4l_buf_get(output_subd, 
 						  &value, sizeof(uint16_t));
-
 				if (ret == 0) {
 
 					a4l_info(dev, 
@@ -116,6 +116,7 @@ static void loop_task_proc(void *arg)
 int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);  
+
 	return 0;
   
 }
@@ -124,7 +125,11 @@ int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
-	priv->loop_running = 1;
+
+	a4l_info(subd->dev, "loop_trigger: (subd=%d)\n", subd->idx);  
+
+	RTDM_EXECUTE_ATOMICALLY(priv->loop_running = 1);
+
 	return 0;
 }
 
@@ -135,7 +140,7 @@ int loop_cancel(a4l_subd_t *subd)
 
 	a4l_info(subd->dev, "loop_cancel: (subd=%d)\n", subd->idx);
 
-	priv->loop_running = 0;
+	RTDM_EXECUTE_ATOMICALLY(priv->loop_running = 0);
 
 	return 0;
 }
@@ -198,6 +203,7 @@ void setup_output_subd(a4l_subd_t *subd)
 	subd->rng_desc = &loop_rngdesc;
 	subd->chan_desc = &loop_chandesc;
 	subd->do_cmd = loop_cmd;
+	subd->cancel = loop_cancel;
 	subd->trigger = loop_trigger;
 	subd->cmd_mask = &loop_cmd_mask;
 	subd->insn_read = loop_insn_read;
