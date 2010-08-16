@@ -2641,7 +2641,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 	struct xnthread *thread = xnshadow_thread(p);
 	spl_t s;
 
-	if (!thread)
+	if (thread == NULL)
 		return;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2660,8 +2660,25 @@ static inline void do_sigwake_event(struct task_struct *p)
 		}
 	}
 
-	if (xnthread_test_state(thread, XNRELAX))
-		goto unlock_and_exit;
+	/*
+	 * If a relaxed thread is getting a signal while running, we
+	 * force it out of RPI, so that it won't keep a boosted
+	 * priority to process asynchronous linux-originated events,
+	 * such as termination signals. RPI is mainly for preventing
+	 * priority inversion during normal operations in secondary
+	 * mode, handling signals should not apply there, since this
+	 * would also boost low-priority cleanup work, which is
+	 * unwanted. The thread may get RPI-boosted again the next
+	 * time it resumes for suspension, linux-wise (if ever it
+	 * does).
+	 */
+	if (xnthread_test_state(thread, XNRELAX)) {
+		xnlock_put_irqrestore(&nklock, s);
+		rpi_pop(thread);
+		xnpod_schedule();
+		return;
+	}
+
 	/*
 	 * If we are kicking a shadow thread in primary mode, make
 	 * sure Linux won't schedule in its mate under our feet as a
