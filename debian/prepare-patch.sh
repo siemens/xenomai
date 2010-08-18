@@ -112,7 +112,7 @@ for linux_arch in $supported_arch ; do
     esac
 
     patch_link r m ksrc/arch/$base_arch arch/$linux_arch/xenomai
-    patch_link r n include/asm-$base_arch include/asm-$linux_arch/xenomai
+    patch_link r n include/asm-$base_arch arch/$linux_arch/include/asm/xenomai
 
     p="+drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
     echo $p | patch_append arch/$linux_arch/Makefile
