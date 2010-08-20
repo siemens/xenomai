@@ -227,7 +227,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	spl_t s;
 
 	if (data == NULL) {
-		xnvfile_puts(it, "Index\tLocked\tDevice\t\tOwner [PID]\n");
+		xnvfile_puts(it, "Index\tLocked\tDevice\t\t\t\tOwner [PID]\n");
 		return 0;
 	}
 
@@ -252,7 +252,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
-	xnvfile_printf(it, "%d\t%d\t%-15s %s [%d]\n", fd,
+	xnvfile_printf(it, "%d\t%d\t%-31s %s [%d]\n", fd,
 		       close_lock_count,
 		       (device->device_flags & RTDM_NAMED_DEVICE) ?
 		       device->device_name : device->proc_name,
