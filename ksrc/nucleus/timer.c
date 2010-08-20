@@ -342,10 +342,10 @@ void xntimer_tick_aperiodic(void)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xntimerq_t *timerq = &sched->timerqueue;
+	xnticks_t now, interval;
 	xntimerh_t *holder;
 	xntimer_t *timer;
 	xnsticks_t delta;
-	xnticks_t now;
 
 	/*
 	 * Optimisation: any local timer reprogramming triggered by
@@ -389,13 +389,18 @@ void xntimer_tick_aperiodic(void)
 				__setbits(timer->status, XNTIMER_FIRED);
 			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
 				/*
-				 * Postpone the next tick to a
-				 * reasonable date in the future,
-				 * waiting for the timebase to be
-				 * unlocked at some point.
+				 * Make the blocked timer elapse again
+				 * at a reasonably close date in the
+				 * future, waiting for the timebase to
+				 * be unlocked at some point. Timers
+				 * are blocked when single-stepping
+				 * into an application using a
+				 * debugger, so it is fine to wait for
+				 * 250 ms for the user to continue
+				 * program execution.
 				 */
-				xntimerh_date(&timer->aplink) = xntimerh_date(&sched->htimer.aplink);
-				continue;
+				interval = xnarch_ns_to_tsc(250000000ULL);
+				goto requeue;
 			}
 		} else {
 			/*
@@ -411,8 +416,10 @@ void xntimer_tick_aperiodic(void)
 				continue;
 		}
 
+		interval = timer->interval;
+	requeue:
 		do {
-			xntimerh_date(&timer->aplink) += timer->interval;
+			xntimerh_date(&timer->aplink) += interval;
 		} while (xntimerh_date(&timer->aplink) < now + nklatency);
 		xntimer_enqueue_aperiodic(timer);
 	}
