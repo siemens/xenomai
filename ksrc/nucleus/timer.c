@@ -283,9 +283,9 @@ void xntimer_tick_aperiodic(void)
 {
 	xnsched_t *sched = xnpod_current_sched();
 	xntimerq_t *timerq = &sched->timerqueue;
+	xnticks_t now, interval;
 	xntimerh_t *holder;
 	xntimer_t *timer;
-	xnticks_t now;
 
 	/* Optimisation: any local timer reprogramming triggered by invoked
 	   timer handlers can wait until we leave the tick handler. Use this
@@ -324,8 +324,8 @@ void xntimer_tick_aperiodic(void)
 				/* Postpone the next tick to a reasonable date in
 				   the future, waiting for the timebase to be unlocked
 				   at some point. */
-				xntimerh_date(&timer->aplink) = xntimerh_date(&sched->htimer.aplink);
-				continue;
+				interval = xnarch_ns_to_tsc(250000000ULL);
+				goto requeue;
 			}
 		} else {
 			/* By postponing the propagation of the low-priority host
@@ -337,8 +337,10 @@ void xntimer_tick_aperiodic(void)
 				continue;
 		}
 
+		interval = timer->interval;
+	requeue:
 		do {
-			xntimerh_date(&timer->aplink) += timer->interval;
+			xntimerh_date(&timer->aplink) += interval;
 		} while (xntimerh_date(&timer->aplink) < now + nklatency);
 		xntimer_enqueue_aperiodic(timer);
 	}
