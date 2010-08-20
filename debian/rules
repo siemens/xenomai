@@ -63,7 +63,7 @@ patch-stamp:
 	dh_testdir
 	cp debian/linux-patch-xenomai.kpatches.in debian/linux-patch-xenomai.kpatches
 	for i in arm i386 powerpc x86_64 x86 ; do \
-		bash $(CURDIR)/debian/prepare-patch.sh $$i ; \
+		bash $(CURDIR)/scripts/prepare-patch.sh $$i ; \
 	done
 	touch patch-stamp
 
