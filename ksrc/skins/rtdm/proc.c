@@ -403,25 +403,29 @@ int __init rtdm_proc_init(void)
 	/* Initialise vfiles */
 	ret = xnvfile_init_dir("rtdm", &rtdm_vfroot, &nkvfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("named_devices", &named_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("protocol_devices", &proto_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("open_fildes", &openfd_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("fildes", &allfd_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	return 0;
+
+error:
+	rtdm_proc_cleanup();
+	return ret;
 }
 
 void rtdm_proc_cleanup(void)
