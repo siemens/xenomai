@@ -305,12 +305,32 @@ static struct xnvfile_regular allfd_vfile = {
 
 static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	struct rtdm_device *device = xnvfile_priv(it->vfile);
+	struct rtdm_device *device;
+	int i;
+
+	if (down_interruptible(&nrt_dev_lock))
+		return -ERESTARTSYS;
 
 	/*
-	 * Accessing the device during unregister (remove_proc_entry) might be
-	 * racy, but no official workaround is known yet.
+	 * As the device may have disappeared while the handler was called,
+	 * first match the pointer against registered devices.
 	 */
+	for (i = 0; i < devname_hashtab_size; i++)
+		list_for_each_entry(device, &rtdm_named_devices[i],
+				    reserved.entry)
+			if (device == xnvfile_priv(it->vfile))
+				goto found;
+
+	for (i = 0; i < protocol_hashtab_size; i++)
+		list_for_each_entry(device, &rtdm_protocol_devices[i],
+				    reserved.entry)
+			if (device == xnvfile_priv(it->vfile))
+				goto found;
+
+	up(&nrt_dev_lock);
+	return -ENODEV;
+
+found:
 	xnvfile_printf(it, "driver:\t\t%s\nversion:\t%d.%d.%d\n",
 		       device->driver_name,
 		       RTDM_DRIVER_MAJOR_VER(device->driver_version),
@@ -334,6 +354,7 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	xnvfile_printf(it, "lock count:\t%d\n",
 		       atomic_read(&device->reserved.refcount));
 
+	up(&nrt_dev_lock);
 	return 0;
 }
 
