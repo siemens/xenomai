@@ -588,6 +588,10 @@ int rt_task_resume(RT_TASK *task)
  *
  * Rescheduling: always if @a task is NULL, and possible if the
  * deleted task is currently running into a safe section.
+ *
+ * @note A task that was successfully joined via rt_task_join() must not be
+ * explicitly deleted afterwards. However, invoking rt_task_join() remains
+ * mandatory for every joinable task even after calling rt_task_delete().
  */
 
 int rt_task_delete(RT_TASK *task)
@@ -2407,8 +2411,10 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  * @brief Wait on the termination of a real-time task.
  *
  * This user-space only service blocks the caller in non-real-time context
- * until @a task has terminated. Note that the specified task must have
- * been created with the T_JOINABLE mode flag set.
+ * until @a task has terminated. All real-time kernel resources are released
+ * after successful completion of this service. Note that the specified task
+ * must have been created by the same process that wants to join it, and the
+ * T_JOINABLE mode flag must have been set on creation.
  *
  * @param task The address of a task descriptor to join.
  *
@@ -2419,11 +2425,17 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
  *
  * - -EDEADLK is returned if @a task refers to the caller.
  *
+ * - -ESRCH is returned if @a task no longer exists or refers to task created
+ * by a different process.
+ *
  * This service can be called from:
  *
  * - User-space task.
  *
  * Rescheduling: always unless the task was already terminated.
+ *
+ * @note After successful completion of this service it is neither required
+ * nor valid to additionally invoke rt_task_delete() on the same task.
  */
 
 /**
