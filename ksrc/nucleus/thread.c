@@ -219,6 +219,10 @@ char *xnthread_format_status(xnflags_t status, char *buf, int size)
 		case XNROOT:
 			c = 'R'; /* Always mark root as runnable. */
 			break;
+		case XNREADY:
+			if (status & XNROOT)
+				continue; /* Already reported on XNROOT. */
+			break;
 		case XNDELAY:
 			/*
 			 * Only report genuine delays here, not timed
