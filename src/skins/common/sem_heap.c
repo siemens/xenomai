@@ -75,19 +75,15 @@ static void unmap_on_fork(void)
 	   Otherwise the global heap would be used instead, which
 	   leads to unwanted effects.
 
-	   We set xeno_sem_heap[PRIVATE] to NULL on machines with an
-	   MMU, so that any reference to the private heap prior to
+	   We set xeno_sem_heap[PRIVATE] to NULL. On machines with an
+	   MMU, any reference to the private heap prior to
 	   re-binding will cause a segmentation fault.
 
-	   On machines without an MMU, we keep the address unchanged,
-	   it will cause unwanted mutual exclusion with the father,
-	   but at least, we will not get any memory corruption.
+	   On machines without an MMU, there is no such thing as fork.
 	*/
 
 	munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
-#ifdef CONFIG_MMU
 	xeno_sem_heap[PRIVATE] = NULL;
-#endif
 	init_private_heap = PTHREAD_ONCE_INIT;
 }
 
