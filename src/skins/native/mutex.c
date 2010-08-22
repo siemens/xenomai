@@ -76,7 +76,7 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return -EPERM;
 
 	if (likely(!(xeno_get_current_mode() & XNRELAX))) {
@@ -140,7 +140,7 @@ int rt_mutex_release(RT_MUTEX *mutex)
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
-	if (!cur)
+	if (cur == XN_NO_HANDLE)
 		return -EPERM;
 
 	if (unlikely(xnsynch_fast_owner_check(mutex->fastlock, cur) != 0))
