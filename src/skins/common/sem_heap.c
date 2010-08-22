@@ -16,9 +16,15 @@
 #include <asm-generic/bits/current.h>
 #include "sem_heap.h"
 
-unsigned long xeno_sem_heap[2] = { 0, 0 };
+#define PRIVATE 0
+#define SHARED 1
 
 struct xnvdso *nkvdso;
+
+unsigned long xeno_sem_heap[2] = { 0, 0 };
+
+static pthread_once_t init_private_heap = PTHREAD_ONCE_INIT;
+static struct xnheap_desc private_hdesc;
 
 void *xeno_map_heap(struct xnheap_desc *hd)
 {
@@ -54,43 +60,42 @@ void *xeno_map_heap(struct xnheap_desc *hd)
 
 static void *map_sem_heap(unsigned int shared)
 {
-	struct xnheap_desc hdesc;
+	struct xnheap_desc global_hdesc, *hdesc;
 	int ret;
 
-	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hdesc, shared);
+	hdesc = shared ? &global_hdesc : &private_hdesc;
+	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, hdesc, shared);
 	if (ret < 0) {
 		errno = -ret;
 		perror("Xenomai: sys_sem_heap");
 		return MAP_FAILED;
 	}
 
-	return xeno_map_heap(&hdesc);
+	return xeno_map_heap(hdesc);
 }
 
-static void unmap_sem_heap(unsigned long addr, unsigned int shared)
+static void unmap_on_fork(void)
 {
-	struct xnheap_desc hdesc;
-	int ret;
+	/*
+	   Remapping the private heap must be done after the process has been
+	   bound again, in order for it to have a new private heap,
+	   Otherwise the global heap would be used instead, which
+	   leads to unwanted effects.
 
-	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, &hdesc, shared);
-	if (ret < 0) {
-		errno = -ret;
-		perror("Xenomai: unmap sem_heap");
-		return;
-	}
+	   We set xeno_sem_heap[PRIVATE] to NULL on machines with an
+	   MMU, so that any reference to the private heap prior to
+	   re-binding will cause a segmentation fault.
 
-	munmap((void *)addr, hdesc.size);
-}
+	   On machines without an MMU, we keep the address unchanged,
+	   it will cause unwanted mutual exclusion with the father,
+	   but at least, we will not get any memory corruption.
+	*/
 
-static void remap_on_fork(void)
-{
-	unmap_sem_heap(xeno_sem_heap[0], 0);
-
-	xeno_sem_heap[0] = (unsigned long)map_sem_heap(0);
-	if (xeno_sem_heap[0] == (unsigned long)MAP_FAILED) {
-		perror("Xenomai: mmap local sem heap");
-		exit(EXIT_FAILURE);
-	}
+	munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
+#ifdef CONFIG_MMU
+	xeno_sem_heap[PRIVATE] = NULL;
+#endif
+	init_private_heap = PTHREAD_ONCE_INIT;
 }
 
 static void xeno_init_vdso(void)
@@ -105,22 +110,29 @@ static void xeno_init_vdso(void)
 		exit(EXIT_FAILURE);
 	}
 
-	nkvdso = (struct xnvdso *)(xeno_sem_heap[1] + sysinfo.vdso);
+	nkvdso = (struct xnvdso *)(xeno_sem_heap[SHARED] + sysinfo.vdso);
 	if (!xnvdso_test_feature(XNVDSO_FEAT_DROP_U_MODE))
 		xeno_current_warn_old();
 }
 
-static void xeno_init_sem_heaps_inner(void)
+/* Will be called once at library loading time, and when re-binding
+   after a fork */
+static void xeno_init_private_heap(void)
 {
-	xeno_sem_heap[0] = (unsigned long)map_sem_heap(0);
-	if (xeno_sem_heap[0] == (unsigned long)MAP_FAILED) {
+	xeno_sem_heap[PRIVATE] = (unsigned long)map_sem_heap(PRIVATE);
+	if (xeno_sem_heap[PRIVATE] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap local sem heap");
 		exit(EXIT_FAILURE);
 	}
-	pthread_atfork(NULL, NULL, remap_on_fork);
+}
 
-	xeno_sem_heap[1] = (unsigned long)map_sem_heap(1);
-	if (xeno_sem_heap[1] == (unsigned long)MAP_FAILED) {
+/* Will be called only once, at library loading time. */
+static void xeno_init_rest_once(void)
+{
+	pthread_atfork(NULL, NULL, unmap_on_fork);
+
+	xeno_sem_heap[SHARED] = (unsigned long)map_sem_heap(SHARED);
+	if (xeno_sem_heap[SHARED] == (unsigned long)MAP_FAILED) {
 		perror("Xenomai: mmap global sem heap");
 		exit(EXIT_FAILURE);
 	}
@@ -130,6 +142,8 @@ static void xeno_init_sem_heaps_inner(void)
 
 void xeno_init_sem_heaps(void)
 {
-	static pthread_once_t init_sem_heaps_once = PTHREAD_ONCE_INIT;
-	pthread_once(&init_sem_heaps_once, &xeno_init_sem_heaps_inner);
+	static pthread_once_t init_rest_once = PTHREAD_ONCE_INIT;
+
+	pthread_once(&init_private_heap, &xeno_init_private_heap);
+	pthread_once(&init_rest_once, &xeno_init_rest_once);
 }
