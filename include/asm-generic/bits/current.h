@@ -32,6 +32,10 @@ static inline unsigned long xeno_get_current_mode(void)
 #else /* ! HAVE___THREAD */
 extern pthread_key_t xeno_current_key;
 
+xnhandle_t xeno_slow_get_current(void);
+
+unsigned long xeno_slow_get_current_mode(void);
+
 static inline xnhandle_t xeno_get_current(void)
 {
 	void *val = pthread_getspecific(xeno_current_key);
@@ -59,6 +63,7 @@ static inline unsigned long xeno_get_current_mode(void)
 void xeno_set_current(void);
 
 unsigned long *xeno_init_current_mode(void);
+
 void xeno_init_current_keys(void);
 
 #endif /* _XENO_ASM_GENERIC_CURRENT_H */
