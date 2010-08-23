@@ -1463,10 +1463,10 @@ static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 	if (retval)
 		return retval;
 
-	mite_buf_change(devpriv->ao_mite_chan->ring, subd);
-
-	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan) {
+
+		mite_buf_change(devpriv->ao_mite_chan->ring, subd);
+
 		if (boardtype.reg_type & (ni_reg_611x | ni_reg_6713)) {
 			mite_prep_dma(devpriv->ao_mite_chan, 32, 32);
 		} else {
@@ -1477,7 +1477,6 @@ static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 		mite_dma_arm(devpriv->ao_mite_chan);
 	} else
 		retval = -EIO;
-	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
 	return retval;
 }
@@ -3455,15 +3454,14 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	   more than once per command (and doing things like trying to
 	   allocate the ao dma channel multiple times) */
 
-	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->cdo_mite_chan) {
+		mite_buf_change(devpriv->cdo_mite_chan->ring, subd);
 		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
 		mite_dma_arm(devpriv->cdo_mite_chan);
 	} else {
 		a4l_err(dev, "ni_cdo_inttrig: BUG: no cdo mite channel?");
 		retval = -EIO;
 	}
-	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 	if (retval < 0)
 		return retval;
 
@@ -3479,8 +3477,12 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 		ni_cdio_cancel(subd);
 		return -EIO;
 	}
-	ni_writel(CDO_Arm_Bit | CDO_Error_Interrupt_Enable_Set_Bit |
-		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit, M_Offset_CDIO_Command);
+
+	ni_writel(CDO_Arm_Bit | 
+		  CDO_Error_Interrupt_Enable_Set_Bit |
+		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit, 
+		  M_Offset_CDIO_Command);
+
 	return 0;
 }
 
@@ -4862,20 +4864,20 @@ static void ni_rtsi_init(a4l_dev_t * dev)
 	if (ni_set_master_clock(dev, NI_MIO_INTERNAL_CLOCK, 0) < 0) {
 		a4l_err(dev, "ni_set_master_clock failed, bug?");
 	}
+
 	/* Default internal lines routing to RTSI bus lines */
 	devpriv->rtsi_trig_a_output_reg =
-		RTSI_Trig_Output_Bits(0,
-				      NI_RTSI_OUTPUT_ADR_START1) | RTSI_Trig_Output_Bits(1,
-											 NI_RTSI_OUTPUT_ADR_START2) | RTSI_Trig_Output_Bits(2,
-																	    NI_RTSI_OUTPUT_SCLKG) | RTSI_Trig_Output_Bits(3,
-																							  NI_RTSI_OUTPUT_DACUPDN);
+		RTSI_Trig_Output_Bits(0, NI_RTSI_OUTPUT_ADR_START1) | 
+		RTSI_Trig_Output_Bits(1, NI_RTSI_OUTPUT_ADR_START2) | 
+		RTSI_Trig_Output_Bits(2, NI_RTSI_OUTPUT_SCLKG) | 
+		RTSI_Trig_Output_Bits(3, NI_RTSI_OUTPUT_DACUPDN);
 	devpriv->stc_writew(dev, devpriv->rtsi_trig_a_output_reg,
 			    RTSI_Trig_A_Output_Register);
 	devpriv->rtsi_trig_b_output_reg =
-		RTSI_Trig_Output_Bits(4,
-				      NI_RTSI_OUTPUT_DA_START1) | RTSI_Trig_Output_Bits(5,
-											NI_RTSI_OUTPUT_G_SRC0) | RTSI_Trig_Output_Bits(6,
-																       NI_RTSI_OUTPUT_G_GATE0);
+		RTSI_Trig_Output_Bits(4, NI_RTSI_OUTPUT_DA_START1) | 
+		RTSI_Trig_Output_Bits(5, NI_RTSI_OUTPUT_G_SRC0) | 
+		RTSI_Trig_Output_Bits(6, NI_RTSI_OUTPUT_G_GATE0);
+
 	if (boardtype.reg_type & ni_reg_m_series_mask)
 		devpriv->rtsi_trig_b_output_reg |=
 			RTSI_Trig_Output_Bits(7, NI_RTSI_OUTPUT_RTSI_OSC);
