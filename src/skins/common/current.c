@@ -47,7 +47,7 @@ static inline int create_current_key(void)
 
 static inline void __xeno_set_current(xnhandle_t current)
 {
-	current = (current == XN_NO_HANDLE ? current : (xnhandle_t)(0));
+	current = (current != XN_NO_HANDLE ? current : (xnhandle_t)(0));
 	pthread_setspecific(xeno_current_key, (void *)current);
 }
 
