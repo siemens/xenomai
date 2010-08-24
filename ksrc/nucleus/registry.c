@@ -303,7 +303,8 @@ static DECLARE_WORK_FUNC(registry_proc_callback)
 				xnvfile_destroy_dir(rdir);
 			xnlock_get_irqsave(&nklock, s);
 			object->pnode = NULL;
-		}
+		} else
+			xnlock_get_irqsave(&nklock, s);
 
 		continue;
 
