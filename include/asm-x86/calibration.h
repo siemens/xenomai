@@ -33,14 +33,17 @@ static inline unsigned long xnarch_get_sched_latency (void)
 #if CONFIG_XENO_OPT_TIMING_SCHEDLAT != 0
 	sched_latency = CONFIG_XENO_OPT_TIMING_SCHEDLAT;
 #else
-#ifdef CONFIG_X86_LOCAL_APIC
+#ifdef CONFIG_SMP
+	sched_latency = 3350;
+#elif defined(CONFIG_X86_LOCAL_APIC)
 	sched_latency = 1000;
 #else /* !CONFIG_X86_LOCAL_APIC */
 	/*
-	 * Use the bogomips formula to identify low-end x86 boards when using
-	 * the 8254 PIT. The following is still grossly experimental and needs
-	 * work (i.e. more specific cases), but the approach is definitely
-	 * saner than previous attempts to guess such value dynamically.
+	 * Use the bogomips formula to identify low-end x86 boards
+	 * when using the 8254 PIT. The following is still grossly
+	 * experimental and needs work (i.e. more specific cases), but
+	 * the approach is definitely saner than previous attempts to
+	 * guess such value dynamically.
 	 */
 #define __bogomips (current_cpu_data.loops_per_jiffy/(500000/HZ))
 	sched_latency = (__bogomips < 250 ? 17000 :
