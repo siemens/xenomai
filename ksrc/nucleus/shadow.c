@@ -339,18 +339,16 @@ static void rpi_clear_remote(struct xnthread *thread)
 
 static void rpi_migrate(struct xnsched *sched, struct xnthread *thread)
 {
-	spl_t s;
-
 	rpi_clear_remote(thread);
 	rpi_push(sched, thread);
 	/*
 	 * The remote CPU already ran rpi_switch() for the leaving
 	 * thread, so there is no point in calling
-	 * xnsched_suspend_rpi() for the latter anew.
+	 * xnsched_suspend_rpi() for the latter anew.  Proper locking
+	 * is left to the resume_rpi() callback, so that we don't grab
+	 * the nklock uselessly for nop calls.
 	 */
-	xnlock_get_irqsave(&nklock, s);
 	xnsched_resume_rpi(thread);
-	xnlock_put_irqrestore(&nklock, s);
 }
 
 #else  /* !CONFIG_SMP */
@@ -392,10 +390,13 @@ static inline void rpi_switch(struct task_struct *next_task)
 			xnsched_pop_rpi(prev);
 			prev->rpi = NULL;
 			xnlock_put_irqrestore(&sched->rpilock, s);
-			/* Do NOT nest the rpilock and nklock locks. */
-			xnlock_get_irqsave(&nklock, s);
+			/*
+			 * Do NOT nest the rpilock and nklock locks.
+			 * Proper locking is left to the suspend_rpi()
+			 * callback, so that we don't grab the nklock
+			 * uselessly for nop calls.
+			 */
 		  	xnsched_suspend_rpi(prev);
-			xnlock_put_irqrestore(&nklock, s);
 		} else
 		  	xnlock_put_irqrestore(&sched->rpilock, s);
 	}
@@ -449,9 +450,7 @@ static inline void rpi_switch(struct task_struct *next_task)
 			xnsched_push_rpi(sched, next);
 			next->rpi = sched;
 			xnlock_put_irqrestore(&sched->rpilock, s);
-			xnlock_get_irqsave(&nklock, s);
 			xnsched_resume_rpi(next);
-			xnlock_put_irqrestore(&nklock, s);
 		}
 	} else if (unlikely(next->rpi != sched))
 		/* We hold no lock here. */

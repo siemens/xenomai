@@ -401,14 +401,26 @@ static struct xnthread *xnsched_sporadic_peek_rpi(struct xnsched *sched)
 
 static void xnsched_sporadic_suspend_rpi(struct xnthread *thread)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
 	if (thread->pss)
 		sporadic_suspend_activity(thread);
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 static void xnsched_sporadic_resume_rpi(struct xnthread *thread)
 {
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
 	if (thread->pss)
 		sporadic_resume_activity(thread);
+
+	xnlock_put_irqrestore(&nklock, s);
 }
 
 #endif /* CONFIG_XENO_OPT_PRIOCPL */
