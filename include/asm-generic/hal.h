@@ -451,6 +451,10 @@ extern unsigned long rthal_apc_map;
 
 extern struct rthal_apc_desc rthal_apc_table[RTHAL_NR_APCS];
 
+extern unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
+
+extern unsigned int rthal_apc_virq;
+
 extern int rthal_arch_init(void);
 
 extern void rthal_arch_cleanup(void);
@@ -524,9 +528,23 @@ int rthal_apc_alloc(const char *name,
 		    void (*handler)(void *cookie),
 		    void *cookie);
 
-int rthal_apc_free(int apc);
+void rthal_apc_free(int apc);
 
-int rthal_apc_schedule(int apc);
+static inline void __rthal_apc_schedule(int apc)
+{
+	int cpu = rthal_processor_id();
+	if (!__test_and_set_bit(apc, &rthal_apc_pending[cpu]))
+		rthal_schedule_irq_root(rthal_apc_virq);
+}
+
+static inline void rthal_apc_schedule(int apc)
+{
+	unsigned long flags;
+
+	rthal_local_irq_save(flags);
+	__rthal_apc_schedule(apc);
+	rthal_local_irq_restore(flags);
+}
 
 int rthal_irq_affinity(unsigned irq,
 		       cpumask_t cpumask,
