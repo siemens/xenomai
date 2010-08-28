@@ -1456,12 +1456,27 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		nkpod->schedhook(thread, mask);
 #endif /* __XENO_SIM__ */
 
-	if (thread == sched->curr)
+	if (thread == sched->curr) {
+		/*
+		 * If the current thread is being relaxed, we must
+		 * have been called from xnshadow_relax(), in which
+		 * case we introduce an opportunity for interrupt
+		 * delivery right before switching context, which
+		 * shortens the uninterruptible code path.  This
+		 * particular caller expects us to always return with
+		 * interrupts enabled.
+		 */
+		if (mask & XNRELAX) {
+			xnlock_clear_irqon(&nklock);
+			__xnpod_schedule(sched);
+			return;
+		}
 		/*
 		 * If the thread is runnning on another CPU,
-		 * xnpod_schedule will just trigger the IPI.
+		 * xnpod_schedule will trigger the IPI as needed.
 		 */
 		xnpod_schedule();
+	}
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	/*
 	 * Ok, this one is an interesting corner case, which requires
