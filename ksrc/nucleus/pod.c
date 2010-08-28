@@ -285,7 +285,6 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 		xnshadow_rpi_check();
 	}
 #endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
-	xnsched_set_self_resched(sched);
 	xnpod_schedule();
 }
 
@@ -2159,10 +2158,7 @@ static inline void xnpod_switch_to(xnsched_t *sched,
 
 static inline int __xnpod_test_resched(struct xnsched *sched)
 {
-	int cpu = xnsched_cpu(sched), resched;
-
-	resched = xnarch_cpu_isset(cpu, sched->resched);
-	xnarch_cpu_clear(cpu, sched->resched);
+	int resched = testbits(sched->status, XNRESCHED);
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
 	if (unlikely(xnsched_resched_p(sched))) {
