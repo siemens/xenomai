@@ -903,9 +903,9 @@ static void schedule_linux_call(int type, struct task_struct *p, int arg)
 	rq->req[reqnum].task = p;
 	rq->req[reqnum].arg = arg;
 
-	splexit(s);
+	__rthal_apc_schedule(lostage_apc);
 
-	rthal_apc_schedule(lostage_apc);
+	splexit(s);
 }
 
 static inline int normalize_priority(int prio)

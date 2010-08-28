@@ -485,7 +485,7 @@ static inline void registry_export_pnode(struct xnobject *object,
 	object->pnode = pnode;
 	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_procq, &object->link);
-	rthal_apc_schedule(registry_proc_apc);
+	__rthal_apc_schedule(registry_proc_apc);
 }
 
 static inline void registry_unexport_pnode(struct xnobject *object)
@@ -501,7 +501,7 @@ static inline void registry_unexport_pnode(struct xnobject *object)
 			object->pnode->ops->touch(object);
 		removeq(&registry_obj_busyq, &object->link);
 		appendq(&registry_obj_procq, &object->link);
-		rthal_apc_schedule(registry_proc_apc);
+		__rthal_apc_schedule(registry_proc_apc);
 	} else {
 		/*
 		 * Unexporting before the lower stage has had a chance

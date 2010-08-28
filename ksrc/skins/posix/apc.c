@@ -47,9 +47,8 @@ void pse51_schedule_lostage(int request, void *arg, size_t size)
 	rq->req[reqnum].arg = arg;
 	rq->req[reqnum].size = size;
 	rq->in = (reqnum + 1) & (PSE51_LO_MAX_REQUESTS - 1);
+	__rthal_apc_schedule(pse51_lostage_apc);
 	splexit(s);
-
-	rthal_apc_schedule(pse51_lostage_apc);
 }
 
 static void pse51_lostage_handle_request(void *cookie)
