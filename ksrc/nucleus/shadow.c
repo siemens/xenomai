@@ -1138,7 +1138,6 @@ void xnshadow_relax(int notify, int reason)
 	xnthread_t *thread = xnpod_current_thread();
 	siginfo_t si;
 	int prio;
-	spl_t s;
 
 	XENO_BUGON(NUCLEUS, xnthread_test_state(thread, XNROOT));
 
@@ -1150,13 +1149,30 @@ void xnshadow_relax(int notify, int reason)
 	trace_mark(xn_nucleus, shadow_gorelax, "thread %p thread_name %s",
 		  thread, xnthread_name(thread));
 
-	splhigh(s);
+	/*
+	 * If you intend to change the following interrupt-free
+	 * sequence, /first/ make sure to:
+	 *
+	 * - read commit #d3242401b8
+	 *
+	 * - check the special handling of XNRELAX in
+	 * xnpod_suspend_thread() when switching out the current
+	 * thread, not to break basic assumptions we do there.
+	 *
+	 * We disable interrupts here to initiate the migration
+	 * sequence, and let xnpod_suspend_thread() enable them back
+	 * before returning to us.
+	 */
+	splmax();
 	rpi_push(thread->sched, thread);
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 	clear_task_nowakeup(current);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-	splexit(s);
-
+	/*
+	 * As a special case when switching out a relaxed thread,
+	 * interrupts have been re-enabled before returning to us. See
+	 * xnpod_suspend_thread().
+	 */
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));

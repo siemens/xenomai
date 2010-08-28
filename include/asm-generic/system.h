@@ -83,6 +83,7 @@ typedef unsigned long spl_t;
 #else /* !CONFIG_SMP */
 #define splexit(x)  rthal_local_irq_restore(x)
 #endif /* !CONFIG_SMP */
+#define splmax()    rthal_local_irq_disable()
 #define splnone()   rthal_local_irq_enable()
 #define spltest()   rthal_local_irq_test()
 #define splget(x)   rthal_local_irq_flags(x)
