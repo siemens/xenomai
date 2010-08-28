@@ -405,7 +405,7 @@ static inline void registry_proc_export(xnobject_t *object, xnpnode_t *pnode)
 	object->pnode = pnode;
 	removeq(&registry_obj_busyq, &object->link);
 	appendq(&registry_obj_procq, &object->link);
-	rthal_apc_schedule(registry_proc_apc);
+	__rthal_apc_schedule(registry_proc_apc);
 }
 
 static inline void registry_proc_unexport(xnobject_t *object)
@@ -413,7 +413,7 @@ static inline void registry_proc_unexport(xnobject_t *object)
 	if (object->proc != XNOBJECT_PROC_RESERVED1) {
 		removeq(&registry_obj_busyq, &object->link);
 		appendq(&registry_obj_procq, &object->link);
-		rthal_apc_schedule(registry_proc_apc);
+		__rthal_apc_schedule(registry_proc_apc);
 	} else {
 		/* Unexporting before the lower stage has had a chance to
 		   export. Move back the object to the busyq just like if no
