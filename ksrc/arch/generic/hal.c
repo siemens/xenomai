@@ -80,11 +80,7 @@ static struct {
 
 static int rthal_init_done;
 
-static unsigned rthal_apc_virq;
-
 static unsigned long rthal_apc_map;
-
-static unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
 
 static rthal_spinlock_t rthal_apc_lock = RTHAL_SPIN_LOCK_UNLOCKED;
 
@@ -99,6 +95,10 @@ rthal_trap_handler_t rthal_trap_handler;
 unsigned rthal_realtime_faults[RTHAL_NR_CPUS][RTHAL_NR_FAULTS];
 
 volatile int rthal_sync_op;
+
+unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
+
+unsigned int rthal_apc_virq;
 
 unsigned long rthal_critical_enter(void (*synch) (void))
 {
@@ -517,26 +517,28 @@ void rthal_apc_kicker(unsigned virq, void *cookie)
 int rthal_apc_alloc(const char *name,
                     void (*handler) (void *cookie), void *cookie)
 {
-    unsigned long flags;
-    int apc;
+	unsigned long flags;
+	int apc;
 
-    if (handler == NULL)
-        return -EINVAL;
+	if (handler == NULL)
+		return -EINVAL;
 
-    rthal_spin_lock_irqsave(&rthal_apc_lock, flags);
+	rthal_spin_lock_irqsave(&rthal_apc_lock, flags);
 
-    if (rthal_apc_map != ~0) {
-        apc = ffz(rthal_apc_map);
-        __set_bit(apc, &rthal_apc_map);
-        rthal_apc_table[apc].handler = handler;
-        rthal_apc_table[apc].cookie = cookie;
-        rthal_apc_table[apc].name = name;
-    } else
-        apc = -EBUSY;
+	if (rthal_apc_map == ~0) {
+		apc = -EBUSY;
+		goto out;
+	}
 
-    rthal_spin_unlock_irqrestore(&rthal_apc_lock, flags);
+	apc = ffz(rthal_apc_map);
+	__set_bit(apc, &rthal_apc_map);
+	rthal_apc_table[apc].handler = handler;
+	rthal_apc_table[apc].cookie = cookie;
+	rthal_apc_table[apc].name = name;
+out:
+	rthal_spin_unlock_irqrestore(&rthal_apc_lock, flags);
 
-    return apc;
+	return apc;
 }
 
 /**
@@ -549,10 +551,6 @@ int rthal_apc_alloc(const char *name,
  * @param apc The APC id. to release, as returned by a successful call
  * to the rthal_apc_alloc() service.
  *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a apc is invalid.
- *
  * Environments:
  *
  * This service can be called from:
@@ -560,59 +558,10 @@ int rthal_apc_alloc(const char *name,
  * - Any domain context.
  */
 
-int rthal_apc_free(int apc)
+void rthal_apc_free(int apc)
 {
-    if (apc < 0 || apc >= RTHAL_NR_APCS ||
-        !test_and_clear_bit(apc, &rthal_apc_map))
-        return -EINVAL;
-
-    return 0;
-}
-
-/**
- * @fn int rthal_apc_schedule (int apc)
- *
- * @brief Schedule an APC invocation.
- *
- * This service marks the APC as pending for the Linux domain, so that
- * its handler will be called as soon as possible, when the Linux
- * domain gets back in control.
- *
- * When posted from the Linux domain, the APC handler is fired as soon
- * as the interrupt mask is explicitly cleared by some kernel
- * code. When posted from the Xenomai domain, the APC handler is
- * fired as soon as the Linux domain is resumed, i.e. after Xenomai has
- * completed all its pending duties.
- *
- * @param apc The APC id. to schedule.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a apc is invalid.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Any domain context, albeit the usual calling place is from the
- * Xenomai domain.
- */
-
-int rthal_apc_schedule(int apc)
-{
-    unsigned long flags;
-
-    if (apc < 0 || apc >= RTHAL_NR_APCS)
-        return -EINVAL;
-
-    rthal_local_irq_save(flags);
-
-    if (!__test_and_set_bit(apc, &rthal_apc_pending[rthal_processor_id()]))
-	    rthal_schedule_irq_root(rthal_apc_virq);
-
-    rthal_local_irq_restore(flags);
-
-    return 0;
+	BUG_ON(apc < 0 || apc >= RTHAL_NR_APCS);
+        clear_bit(apc, &rthal_apc_map);
 }
 
 #ifdef CONFIG_PROC_FS
@@ -1100,6 +1049,29 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * - Linux domain context.
  */
 
+/**
+ * @fn int rthal_apc_schedule (int apc)
+ *
+ * @brief Schedule an APC invocation.
+ *
+ * This service marks the APC as pending for the Linux domain, so that
+ * its handler will be called as soon as possible, when the Linux
+ * domain gets back in control.
+ *
+ * When posted from the Linux domain, the APC handler is fired as soon
+ * as the interrupt mask is explicitly cleared by some kernel
+ * code. When posted from the Xenomai domain, the APC handler is
+ * fired as soon as the Linux domain is resumed, i.e. after Xenomai has
+ * completed all its pending duties.
+ *
+ * @param apc The APC id. to schedule.
+ *
+ * This service can be called from:
+ *
+ * - Any domain context, albeit the usual calling place is from the
+ * Xenomai domain.
+ */
+
 /*@}*/
 
 EXPORT_SYMBOL(rthal_irq_request);
@@ -1116,7 +1088,6 @@ EXPORT_SYMBOL(rthal_timer_release);
 EXPORT_SYMBOL(rthal_timer_calibrate);
 EXPORT_SYMBOL(rthal_apc_alloc);
 EXPORT_SYMBOL(rthal_apc_free);
-EXPORT_SYMBOL(rthal_apc_schedule);
 
 EXPORT_SYMBOL(rthal_critical_enter);
 EXPORT_SYMBOL(rthal_critical_exit);
