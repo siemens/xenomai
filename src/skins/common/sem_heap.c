@@ -75,15 +75,21 @@ static void unmap_on_fork(void)
 	   Otherwise the global heap would be used instead, which
 	   leads to unwanted effects.
 
-	   We set xeno_sem_heap[PRIVATE] to NULL. On machines with an
-	   MMU, any reference to the private heap prior to
-	   re-binding will cause a segmentation fault.
-
 	   On machines without an MMU, there is no such thing as fork.
-	*/
 
-	munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
-	xeno_sem_heap[PRIVATE] = NULL;
+	   As a protection against access to the heaps by the fastsync
+	   code, we set up an inaccessible mapping where the heap was, so
+	   that access to these addresses will cause a segmentation
+	   fault.
+	*/
+#if defined(CONFIG_XENO_FASTSYNCH)
+	void *addr = mmap((void *)xeno_sem_heap[PRIVATE],
+			  private_hdesc.size, PROT_NONE,
+			  MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+	if (addr != (void *)xeno_sem_heap[PRIVATE])
+#endif /* CONFIG_XENO_FASTSYNCH */
+		munmap((void *)xeno_sem_heap[PRIVATE], private_hdesc.size);
+	xeno_sem_heap[PRIVATE] = 0UL;
 	init_private_heap = PTHREAD_ONCE_INIT;
 }
 
