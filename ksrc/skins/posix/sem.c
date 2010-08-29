@@ -39,6 +39,7 @@
 #include <posix/sem.h>
 
 typedef struct pse51_sem {
+	unsigned magic;
 	xnsynch_t synchbase;
 	xnholder_t link;	/* Link in semq */
 
@@ -84,7 +85,7 @@ static void sem_destroy_inner(pse51_sem_t * sem, pse51_kqueues_t *q)
 	if (xnsynch_destroy(&sem->synchbase) == XNSYNCH_RESCHED)
 		xnpod_schedule();
 	xnlock_put_irqrestore(&nklock, s);
-	
+
 	if (sem->is_named)
 		xnfree(sem2named_sem(sem));
 	else
@@ -97,6 +98,7 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
 	if (value > (unsigned)SEM_VALUE_MAX)
 		return EINVAL;
 
+	sem->magic = PSE51_SEM_MAGIC;
 	inith(&sem->link);
 	appendq(&pse51_kqueues(pshared)->semq, &sem->link);
 	xnsynch_init(&sem->synchbase, XNSYNCH_PRIO, NULL);
@@ -134,7 +136,7 @@ static int pse51_sem_init_inner(pse51_sem_t * sem, int pshared, unsigned value)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_init.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_init(sem_t * sm, int pshared, unsigned value)
 {
@@ -153,7 +155,7 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
 	xnlock_get_irqsave(&nklock, s);
 
 	semq = &pse51_kqueues(pshared)->semq;
-	
+
 	if (shadow->magic == PSE51_SEM_MAGIC
 	    || shadow->magic == PSE51_NAMED_SEM_MAGIC
 	    || shadow->magic == ~PSE51_NAMED_SEM_MAGIC) {
@@ -207,7 +209,7 @@ int sem_init(sem_t * sm, int pshared, unsigned value)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_destroy(sem_t * sm)
 {
@@ -215,7 +217,8 @@ int sem_destroy(sem_t * sm)
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	if (shadow->magic != PSE51_SEM_MAGIC) {
+	if (shadow->magic != PSE51_SEM_MAGIC
+	    || shadow->sem->magic != PSE51_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
 		goto error;
 	}
@@ -226,10 +229,11 @@ int sem_destroy(sem_t * sm)
 	}
 
 	pse51_mark_deleted(shadow);
+	pse51_mark_deleted(shadow->sem);
 	xnlock_put_irqrestore(&nklock, s);
 
 	sem_destroy_inner(shadow->sem, pse51_kqueues(shadow->sem->pshared));
-	
+
 	return 0;
 
       error:
@@ -280,7 +284,7 @@ int sem_destroy(sem_t * sm)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_open.html">
  * Specification.</a>
- * 
+ *
  */
 sem_t *sem_open(const char *name, int oflags, ...)
 {
@@ -303,7 +307,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 		named_sem = node2sem(node);
 		goto got_sem;
 	}
-	
+
 	named_sem = (nsem_t *) xnmalloc(sizeof(*named_sem));
 	if (!named_sem) {
 		err = ENOSPC;
@@ -328,7 +332,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
 	err = pse51_node_add(&named_sem->nodebase, name, PSE51_NAMED_SEM_MAGIC);
 	if (err && err != EEXIST)
 		goto err_put_lock;
-	
+
 	if (err == EEXIST) {
 		err = pse51_node_get(&node, name, PSE51_NAMED_SEM_MAGIC, oflags);
 		if (err)
@@ -380,7 +384,7 @@ sem_t *sem_open(const char *name, int oflags, ...)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_close.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_close(sem_t * sm)
 {
@@ -391,7 +395,8 @@ int sem_close(sem_t * sm)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+	if (shadow->magic != PSE51_NAMED_SEM_MAGIC
+	    || shadow->sem->magic != PSE51_SEM_MAGIC) {
 		err = EINVAL;
 		goto error;
 	}
@@ -406,6 +411,7 @@ int sem_close(sem_t * sm)
 	if (pse51_node_removed_p(&named_sem->nodebase)) {
 		/* unlink was called, and this semaphore is no longer referenced. */
 		pse51_mark_deleted(shadow);
+		pse51_mark_deleted(&named_sem->sembase);
 		xnlock_put_irqrestore(&nklock, s);
 
 		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
@@ -448,7 +454,7 @@ int sem_close(sem_t * sm)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_unlink.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_unlink(const char *name)
 {
@@ -468,7 +474,7 @@ int sem_unlink(const char *name)
 
 	if (pse51_node_removed_p(&named_sem->nodebase)) {
 		xnlock_put_irqrestore(&nklock, s);
-		
+
 		sem_destroy_inner(&named_sem->sembase, pse51_kqueues(1));
 	} else
 		xnlock_put_irqrestore(&nklock, s);
@@ -487,8 +493,9 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
 {
 	pse51_sem_t *sem;
 
-	if (shadow->magic != PSE51_SEM_MAGIC
-	    && shadow->magic != PSE51_NAMED_SEM_MAGIC)
+	if ((shadow->magic != PSE51_SEM_MAGIC
+	     && shadow->magic != PSE51_NAMED_SEM_MAGIC)
+	    || shadow->sem->magic != PSE51_SEM_MAGIC)
 		return EINVAL;
 
 	sem = shadow->sem;
@@ -525,7 +532,7 @@ static inline int sem_trywait_internal(struct __shadow_sem *shadow)
  * * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_trywait.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_trywait(sem_t * sm)
 {
@@ -615,7 +622,7 @@ static inline int sem_timedwait_internal(struct __shadow_sem *shadow,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_wait.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_wait(sem_t * sm)
 {
@@ -665,7 +672,7 @@ int sem_wait(sem_t * sm)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_timedwait.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 {
@@ -711,7 +718,7 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_post.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_post(sem_t * sm)
 {
@@ -721,8 +728,9 @@ int sem_post(sem_t * sm)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (shadow->magic != PSE51_SEM_MAGIC
-	    && shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+	if ((shadow->magic != PSE51_SEM_MAGIC
+	     && shadow->magic != PSE51_NAMED_SEM_MAGIC)
+	    || shadow->sem->magic != PSE51_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
 		goto error;
 	}
@@ -778,7 +786,7 @@ int sem_post(sem_t * sm)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sem_getvalue.html">
  * Specification.</a>
- * 
+ *
  */
 int sem_getvalue(sem_t * sm, int *value)
 {
@@ -788,8 +796,9 @@ int sem_getvalue(sem_t * sm, int *value)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (shadow->magic != PSE51_SEM_MAGIC
-	    && shadow->magic != PSE51_NAMED_SEM_MAGIC) {
+	if ((shadow->magic != PSE51_SEM_MAGIC
+	     && shadow->magic != PSE51_NAMED_SEM_MAGIC)
+	    || shadow->sem->magic != PSE51_SEM_MAGIC) {
 		xnlock_put_irqrestore(&nklock, s);
 		thread_set_errno(EINVAL);
 		return -1;
