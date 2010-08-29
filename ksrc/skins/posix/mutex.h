@@ -48,6 +48,7 @@ union __xeno_mutex {
 #include <posix/cb_lock.h>
 
 typedef struct pse51_mutex {
+	unsigned magic;
 	xnsynch_t synchbase;
 	xnholder_t link;            /* Link in pse51_mutexq */
 
@@ -94,7 +95,8 @@ static inline int pse51_mutex_timedlock_internal(xnthread_t *cur,
 	if (xnpod_unblockable_p())
 		return -EPERM;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
+	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex))
 		return -EINVAL;
 
 #if XENO_DEBUG(POSIX)

@@ -51,6 +51,7 @@
 #include <posix/cond.h>
 
 typedef struct pse51_cond {
+	unsigned magic;
 	xnsynch_t synchbase;
 	xnholder_t link;	/* Link in pse51_condq */
 
@@ -101,7 +102,7 @@ static void cond_destroy_internal(pse51_cond_t * cond, pse51_kqueues_t *q)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_init.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 {
@@ -142,6 +143,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
 	shadow->magic = PSE51_COND_MAGIC;
 	shadow->cond = cond;
 
+	cond->magic = PSE51_COND_MAGIC;
 	xnsynch_init(&cond->synchbase, synch_flags, NULL);
 	inith(&cond->link);
 	cond->attr = *attr;
@@ -179,7 +181,7 @@ int pthread_cond_init(pthread_cond_t * cnd, const pthread_condattr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_destroy(pthread_cond_t * cnd)
 {
@@ -189,12 +191,13 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)) {
+	cond = shadow->cond;
+	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
+	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	cond = shadow->cond;
 	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;
@@ -206,6 +209,7 @@ int pthread_cond_destroy(pthread_cond_t * cnd)
 	}
 
 	pse51_mark_deleted(shadow);
+	pse51_mark_deleted(cond);
 
 	xnlock_put_irqrestore(&nklock, s);
 
@@ -224,10 +228,10 @@ static inline int mutex_save_count(xnthread_t *cur,
 {
 	pse51_mutex_t *mutex;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex))
-		 return EINVAL;
-
 	mutex = shadow->mutex;
+	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex))
+		 return EINVAL;
 
 	if (xnsynch_owner_check(&mutex->synchbase, cur) != 0)
 		return EPERM;
@@ -267,6 +271,7 @@ int pse51_cond_timedwait_prologue(xnthread_t *cur,
 
 	/* If another thread waiting for cond does not use the same mutex */
 	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
+	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)
 	    || (cond->mutex && cond->mutex != mutex->mutex)) {
 		err = EINVAL;
 		goto unlock_and_return;
@@ -403,7 +408,7 @@ int pse51_cond_timedwait_epilogue(xnthread_t *cur,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_wait.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
 {
@@ -470,7 +475,7 @@ int pthread_cond_wait(pthread_cond_t * cnd, pthread_mutex_t * mx)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_timedwait.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_timedwait(pthread_cond_t * cnd,
 			   pthread_mutex_t * mx, const struct timespec *abstime)
@@ -521,7 +526,7 @@ int pthread_cond_timedwait(pthread_cond_t * cnd,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_signal.html.">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_signal(pthread_cond_t * cnd)
 {
@@ -531,12 +536,13 @@ int pthread_cond_signal(pthread_cond_t * cnd)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)) {
+	cond = shadow->cond;
+	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
+	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	cond = shadow->cond;
 #if XENO_DEBUG(POSIX)
 	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -571,7 +577,7 @@ int pthread_cond_signal(pthread_cond_t * cnd)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cond_broadcast.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_cond_broadcast(pthread_cond_t * cnd)
 {
@@ -581,12 +587,13 @@ int pthread_cond_broadcast(pthread_cond_t * cnd)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)) {
+	cond = shadow->cond;
+	if (!pse51_obj_active(shadow, PSE51_COND_MAGIC, struct __shadow_cond)
+	    || !pse51_obj_active(cond, PSE51_COND_MAGIC, struct pse51_cond)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EINVAL;
 	}
 
-	cond = shadow->cond;
 	if (cond->owningq != pse51_kqueues(cond->attr.pshared)) {
 		xnlock_put_irqrestore(&nklock, s);
 		return EPERM;

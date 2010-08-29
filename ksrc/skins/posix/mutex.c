@@ -112,6 +112,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
 	if (attr->protocol == PTHREAD_PRIO_INHERIT)
 		synch_flags |= XNSYNCH_PIP;
 
+	mutex->magic = PSE51_MUTEX_MAGIC;
 	xnsynch_init(&mutex->synchbase, synch_flags, ownerp);
 	inith(&mutex->link);
 	mutex->attr = *attr;
@@ -148,7 +149,7 @@ int pse51_mutex_init_internal(struct __shadow_mutex *shadow,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_init.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutex_init(pthread_mutex_t *mx, const pthread_mutexattr_t *attr)
 {
@@ -246,7 +247,7 @@ void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutex_destroy(pthread_mutex_t * mx)
 {
@@ -258,12 +259,13 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	if (unlikely(cb_try_write_lock(&shadow->lock, s)))
 		return EBUSY;
 
-	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)) {
+	mutex = shadow->mutex;
+	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex)) {
 		cb_write_unlock(&shadow->lock, s);
 		return EINVAL;
 	}
 
-	mutex = shadow->mutex;
 	if (pse51_kqueues(mutex->attr.pshared) != mutex->owningq) {
 		cb_write_unlock(&shadow->lock, s);
 		return EPERM;
@@ -280,10 +282,11 @@ int pthread_mutex_destroy(pthread_mutex_t * mx)
 	}
 
 	pse51_mark_deleted(shadow);
+	pse51_mark_deleted(mutex);
 	cb_write_unlock(&shadow->lock, s);
 
 	pse51_mutex_destroy_internal(mutex, pse51_kqueues(mutex->attr.pshared));
-	
+
 	return 0;
 }
 
@@ -352,7 +355,7 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 
   unlock_and_return:
 	return err;
-		
+
 }
 
 /**
@@ -381,7 +384,7 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_trylock.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutex_trylock(pthread_mutex_t *mx)
 {
@@ -399,7 +402,9 @@ int pthread_mutex_trylock(pthread_mutex_t *mx)
 		return EINVAL;
 
 	if (!pse51_obj_active(shadow, PSE51_MUTEX_MAGIC,
-			      struct __shadow_mutex)) {
+			      struct __shadow_mutex)
+	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC,
+				 struct pse51_mutex)) {
 		err = EINVAL;
 		goto unlock_and_return;
 	}
@@ -585,7 +590,7 @@ int pthread_mutex_timedlock(pthread_mutex_t * mx, const struct timespec *to)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutex_unlock.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutex_unlock(pthread_mutex_t * mx)
 {
@@ -602,13 +607,14 @@ int pthread_mutex_unlock(pthread_mutex_t * mx)
 	if (unlikely(cb_try_read_lock(&shadow->lock, s)))
 		return EINVAL;
 
+	mutex = shadow->mutex;
+
 	if (!pse51_obj_active(shadow,
-			      PSE51_MUTEX_MAGIC, struct __shadow_mutex)) {
+			      PSE51_MUTEX_MAGIC, struct __shadow_mutex)
+	    || !pse51_obj_active(mutex, PSE51_MUTEX_MAGIC, struct pse51_mutex)) {
 		err = EINVAL;
 		goto out;
 	}
-
-	mutex = shadow->mutex;
 
 	err = -xnsynch_owner_check(&mutex->synchbase, cur);
 	if (err)
