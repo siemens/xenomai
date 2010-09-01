@@ -276,14 +276,17 @@ EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
 
 void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
-	xnsched_t *sched = xnpod_current_sched();
+	xnsched_t *sched;
 
 	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
 #if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
+	sched = xnpod_current_sched();
 	if (testbits(sched->status, XNRPICK)) {
 		clrbits(sched->status, XNRPICK);
 		xnshadow_rpi_check();
 	}
+#else
+	(void)sched;
 #endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
 	xnpod_schedule();
 }
@@ -1467,7 +1470,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 */
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
-			__xnpod_schedule(sched);
+			xnpod_schedule();
 			return;
 		}
 		/*
@@ -2172,8 +2175,8 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 
 void __xnpod_schedule(struct xnsched *sched)
 {
-	struct xnthread *prev, *next, *curr = sched->curr;
 	int zombie, switched, need_resched, shadow;
+	struct xnthread *prev, *next, *curr;
 	spl_t s;
 
 	if (xnarch_escalate())
@@ -2182,6 +2185,8 @@ void __xnpod_schedule(struct xnsched *sched)
 	trace_mark(xn_nucleus, sched, MARK_NOARGS);
 
 	xnlock_get_irqsave(&nklock, s);
+
+	curr = sched->curr;
 
 	xnarch_trace_pid(xnthread_user_task(curr) ?
 			 xnarch_user_pid(xnthread_archtcb(curr)) : -1,
