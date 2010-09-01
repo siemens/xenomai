@@ -2361,7 +2361,7 @@ void xnpod_unlock_sched(void)
 
 	if (--xnthread_lock_count(curr) == 0) {
 		xnthread_clear_state(curr, XNLOCK);
-		xnsched_set_resched(curr->sched);
+		xnsched_set_self_resched(curr->sched);
 		xnpod_schedule();
 	}
 
