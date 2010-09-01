@@ -459,7 +459,8 @@ int xnselect_mount(void)
 
 int xnselect_umount(void)
 {
-	return rthal_apc_free(xnselect_apc);
+	rthal_apc_free(xnselect_apc);
+	return 0;
 }
 
 /*@}*/
