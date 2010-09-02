@@ -190,6 +190,11 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_setsched_root(t,pol,prio)	ipipe_setscheduler_root(t,pol,prio)
 #define rthal_reenter_root(t,pol,prio)	ipipe_reenter_root(t,pol,prio)
 #define rthal_read_tsc(v)		ipipe_read_tsc(v)
+#ifdef __IPIPE_FEATURE_ROOTPREEMPT_NOTIFIER
+#define rthal_root_preempt_notify()	ipipe_root_preempt_notify()
+#else /* !__IPIPE_FEATURE_ROOTPREEMPT_NOTIFIER */
+#define rthal_root_preempt_notify()	do { } while (0)
+#endif /* !__IPIPE_FEATURE_ROOTPREEMPT_NOTIFIER */
 
 #define rthal_emergency_console()				\
 	do {							\
