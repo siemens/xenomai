@@ -41,6 +41,8 @@ void xnpod_delete_thread(struct xnthread *);
 
 static inline void xnarch_leave_root(xnarchtcb_t *rootcb)
 {
+	rthal_root_preempt_notify();
+
 	/* Remember the preempted Linux task pointer. */
 	rootcb->user_task = rootcb->active_task = current;
 	rootcb->rspp = &current->thread.x86reg_sp;
