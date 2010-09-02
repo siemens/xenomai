@@ -141,17 +141,31 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 	   newly switched thread uses the FPU, to allow the kernel handler to
 	   pick the correct FPU context.
 	*/
-	if (likely(!tcb->is_root)
-	    || (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task))) {
+	if (likely(!tcb->is_root)) {
+		rthal_enable_fpu();
+		/* No exception should be pending, since it should have caused
+		   a trap earlier.
+		*/
+	} else if (tcb->fpup && tcb->fpup == rthal_task_fpenv(tcb->user_task)) {
 		unsigned fpexc = rthal_enable_fpu();
+#ifndef CONFIG_SMP
 		if (likely(!(fpexc & RTHAL_VFP_ANY_EXC)
 			   && !(rthal_vfp_fmrx(FPSCR) & FPSCR_IXE)))
 			return;
-
-		/* If current process has pending exceptions it is
+		/*
+		   If current process has pending exceptions it is
 		   illegal to restore the FPEXC register with them, we must
 		   save the fpu state and disable them, to get linux
-		   fpu fault handler take care of them correctly. */
+		   fpu fault handler take care of them correctly.
+		*/
+#endif
+		/*
+		   On SMP systems, if we are restoring the root
+		   thread, running the task holding the FPU context at
+		   the time when we switched to real-time domain,
+		   forcibly save the FPU context. It seems to fix SMP
+		   systems for still unknown reasons.
+		*/
 		rthal_save_fpu(tcb->fpup, fpexc);
 		last_VFP_context[rthal_processor_id()] = NULL;
 		rthal_disable_fpu();
