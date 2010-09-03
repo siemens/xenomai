@@ -3441,7 +3441,6 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	a4l_dev_t *dev = subd->dev;
 	unsigned cdo_mode_bits = CDO_FIFO_Mode_Bit | CDO_Halt_On_Error_Bit;
-	int retval;
 
 	ni_writel(CDO_Reset_Bit, M_Offset_CDIO_Command);
 	switch (cmd->scan_begin_src) {
