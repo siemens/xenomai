@@ -4486,6 +4486,7 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	int retval;
 	a4l_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
+	struct mite_dma_descriptor_ring *ring;
 
 	retval = ni_request_gpct_mite_channel(dev, 
 					      counter->counter_index,
@@ -4493,9 +4494,20 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	if (retval) {
 		a4l_err(dev,
 			"ni_gpct_cmd: "
-			"no dma channel available for use by counter");
+			"no dma channel available for use by counter\n");
 		return retval;
 	}
+
+	ring = devpriv->gpct_mite_ring[counter->counter_index];
+	retval = mite_buf_change(ring, subd);
+	if (retval) {
+		a4l_err(dev,
+			"ni_gpct_cmd: "
+			"dma ring configuration failed\n");
+		return retval;
+
+	}
+
 	ni_tio_acknowledge_and_confirm(counter, NULL, NULL, NULL, NULL);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 1);
 	retval = ni_tio_cmd(counter, cmd);
