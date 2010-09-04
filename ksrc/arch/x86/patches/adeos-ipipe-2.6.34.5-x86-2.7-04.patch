@@ -168,7 +168,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..583cd4e
+index 0000000..c2b4165
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,183 @@
@@ -199,10 +199,10 @@ index 0000000..583cd4e
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.7-03"
++#define IPIPE_ARCH_STRING	"2.7-04"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -1215,6 +1215,28 @@ index e7f4d33..e197763 100644
  #define read_cr3()	(native_read_cr3())
  #define write_cr3(x)	(native_write_cr3(x))
  #define read_cr4()	(native_read_cr4())
+diff --git a/arch/x86/include/asm/tlbflush.h b/arch/x86/include/asm/tlbflush.h
+index 7f3eba0..b0a4112 100644
+--- a/arch/x86/include/asm/tlbflush.h
++++ b/arch/x86/include/asm/tlbflush.h
+@@ -30,7 +30,7 @@ static inline void __native_flush_tlb_global(void)
+ 	 * from interrupts. (Use the raw variant because this code can
+ 	 * be called from deep inside debugging code.)
+ 	 */
+-	raw_local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	cr4 = native_read_cr4();
+ 	/* clear PGE */
+@@ -38,7 +38,7 @@ static inline void __native_flush_tlb_global(void)
+ 	/* write old PGE again and flush TLBs */
+ 	native_write_cr4(cr4);
+ 
+-	raw_local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ 
+ static inline void __native_flush_tlb_single(unsigned long addr)
 diff --git a/arch/x86/include/asm/traps.h b/arch/x86/include/asm/traps.h
 index 4da91ad..25e346e 100644
 --- a/arch/x86/include/asm/traps.h
@@ -4890,10 +4912,10 @@ index d5b3876..010aa8b 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..a26052d
+index 0000000..a636389
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,718 @@
+@@ -0,0 +1,727 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -4925,6 +4947,7 @@ index 0000000..a26052d
 +#include <linux/linkage.h>
 +#include <linux/ipipe_base.h>
 +#include <asm/ipipe.h>
++#include <asm/bug.h>
 +
 +#ifdef CONFIG_IPIPE_DEBUG_CONTEXT
 +
@@ -4960,6 +4983,14 @@ index 0000000..a26052d
 +static inline void ipipe_context_check_off(void) { }
 +
 +#endif	/* !CONFIG_IPIPE_DEBUG_CONTEXT */
++
++#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
++#define IPIPE_WARN(c)		WARN_ON(c)
++#define IPIPE_WARN_ONCE(c)	WARN_ON_ONCE(c)
++#else
++#define IPIPE_WARN(c)		do { (void)(c); } while (0)
++#define IPIPE_WARN_ONCE(c)	do { (void)(c); } while (0)
++#endif
 +
 +#ifdef CONFIG_IPIPE
 +
@@ -5986,7 +6017,7 @@ index 0000000..032080f
 +#endif /* !__LINUX_IPIPE_LOCK_H */
 diff --git a/include/linux/ipipe_percpu.h b/include/linux/ipipe_percpu.h
 new file mode 100644
-index 0000000..f6727e3
+index 0000000..0b42e8c
 --- /dev/null
 +++ b/include/linux/ipipe_percpu.h
 @@ -0,0 +1,89 @@
@@ -6065,7 +6096,7 @@ index 0000000..f6727e3
 +DECLARE_PER_CPU(int, ipipe_saved_context_check_state);
 +#endif
 +
-+#define ipipe_root_cpudom_ptr(var)	\
++#define ipipe_root_cpudom_ptr()		\
 +	(&__ipipe_get_cpu_var(ipipe_percpu_darray)[IPIPE_ROOT_SLOT])
 +
 +#define ipipe_root_cpudom_var(var)	ipipe_root_cpudom_ptr()->var
@@ -6994,10 +7025,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..24b3717
+index 0000000..8396025
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1959 @@
+@@ -0,0 +1,1963 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -7031,7 +7062,6 @@ index 0000000..24b3717
 +#include <linux/interrupt.h>
 +#include <linux/bitops.h>
 +#include <linux/tick.h>
-+#include <linux/prefetch.h>
 +#ifdef CONFIG_PROC_FS
 +#include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
@@ -7551,9 +7581,10 @@ index 0000000..24b3717
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(ipd);
 +	int l0b, l1b;
 +
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
++
 +	l0b = irq / (BITS_PER_LONG * BITS_PER_LONG);
 +	l1b = irq / BITS_PER_LONG;
-+	prefetchw(p);
 +
 +	if (likely(!test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
 +		__set_bit(irq, p->irqpend_lomap);
@@ -7570,6 +7601,8 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p;
 +	int l0b, l1b;
++
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
 +
 +	/* Wired interrupts cannot be locked (it is useless). */
 +	if (test_bit(IPIPE_WIRED_FLAG, &ipd->irqs[irq].control) ||
@@ -7595,6 +7628,8 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p;
 +	int l0b, l1b, cpu;
++
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
 +
 +	if (unlikely(!test_and_clear_bit(IPIPE_LOCK_FLAG,
 +					 &ipd->irqs[irq].control)))
@@ -7663,7 +7698,7 @@ index 0000000..24b3717
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(ipd);
 +	int l0b = irq / BITS_PER_LONG;
 +
-+	prefetchw(p);
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
 +	
 +	if (likely(!test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
 +		__set_bit(irq, p->irqpend_lomap);
@@ -7679,6 +7714,8 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p;
 +	int l0b = irq / BITS_PER_LONG;
++
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
 +
 +	/* Wired interrupts cannot be locked (it is useless). */
 +	if (test_bit(IPIPE_WIRED_FLAG, &ipd->irqs[irq].control) ||
@@ -7698,6 +7735,8 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p;
 +	int l0b = irq / BITS_PER_LONG, cpu;
++
++	IPIPE_WARN_ONCE(!irqs_disabled_hw());
 +
 +	if (unlikely(!test_and_clear_bit(IPIPE_LOCK_FLAG,
 +					 &ipd->irqs[irq].control)))
@@ -7924,7 +7963,7 @@ index 0000000..24b3717
 +		    ~(IPIPE_HANDLE_MASK | IPIPE_STICKY_MASK |
 +		      IPIPE_EXCLUSIVE_MASK | IPIPE_WIRED_MASK);
 +
-+	if (acknowledge == NULL && !ipipe_virtual_irq_p(irq))
++	if (acknowledge == NULL)
 +		/*
 +		 * Acknowledge handler unspecified for a hw interrupt:
 +		 * use the Linux-defined handler instead.
@@ -8118,8 +8157,6 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
 +
-+	prefetchw(p);
-+
 +	if (test_bit(IPIPE_STALL_FLAG, &p->status)) {
 +		__ipipe_set_irq_pending(head, irq);
 +		return;
@@ -8132,8 +8169,6 @@ index 0000000..24b3717
 +{
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
 +	struct ipipe_domain *old;
-+
-+	prefetchw(p);
 +
 +	old = __ipipe_current_domain;
 +	__ipipe_current_domain = head; /* Switch to the head domain. */
