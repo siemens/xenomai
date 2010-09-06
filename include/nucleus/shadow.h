@@ -21,9 +21,10 @@
 #define _XENO_NUCLEUS_SHADOW_H
 
 #include <asm/xenomai/atomic.h>
-#include <asm/xenomai/syscall.h>
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+
+#include <asm/xenomai/syscall.h>
 
 #define XENOMAI_MUX_NR 16
 
