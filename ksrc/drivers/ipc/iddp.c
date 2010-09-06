@@ -301,11 +301,14 @@ static ssize_t __iddp_recvmsg(struct rtipc_private *priv,
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = wrlen >= iov[nvec].iov_len ? iov[nvec].iov_len : wrlen;
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 		if (user_info) {
 			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
 			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
 			xnbufd_unmap_uread(&bufd);
-		} else {
+		} else
+#endif
+		{
 			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
 			ret = xnbufd_copy_from_kmem(&bufd, mbuf->data + rdoff, vlen);
 			xnbufd_unmap_kread(&bufd);
@@ -421,11 +424,14 @@ static ssize_t __iddp_sendmsg(struct rtipc_private *priv,
 		if (iov[nvec].iov_len == 0)
 			continue;
 		vlen = rdlen >= iov[nvec].iov_len ? iov[nvec].iov_len : rdlen;
+#ifdef CONFIG_XENO_OPT_PERVASIVE
 		if (user_info) {
 			xnbufd_map_uread(&bufd, iov[nvec].iov_base, vlen);
 			ret = xnbufd_copy_to_kmem(mbuf->data + wroff, &bufd, vlen);
 			xnbufd_unmap_uread(&bufd);
-		} else {
+		} else
+#endif
+		{
 			xnbufd_map_kread(&bufd, iov[nvec].iov_base, vlen);
 			ret = xnbufd_copy_to_kmem(mbuf->data + wroff, &bufd, vlen);
 			xnbufd_unmap_kread(&bufd);
