@@ -63,6 +63,7 @@ HEAP {
  *
  *@{*/
 
+#include <stdarg.h>
 #include <nucleus/pod.h>
 #include <nucleus/thread.h>
 #include <nucleus/heap.h>
