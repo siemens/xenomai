@@ -49,9 +49,116 @@ Include dependency graph for rtipc.h:</div>
 <p>
 <a href="rtipc_8h-source.html">Go to the source code of this file.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Data Structures</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrtipc__port__label.html">rtipc_port_label</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Port label information structure.  <a href="structrtipc__port__label.html#_details">More...</a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsockaddr__ipc.html">sockaddr_ipc</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Socket address structure for the RTIPC address family.  <a href="structsockaddr__ipc.html#_details">More...</a><br></td></tr>
+<tr><td colspan="2"><br><h2>Defines</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">XDDP socket options</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="sockopts_xddp"></a> Setting and getting XDDP socket options. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gf8b123d7b54c95dd655b8a3b02d2759f">XDDP_LABEL</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">XDDP label assignment.  <a href="group__rtipc.html#gf8b123d7b54c95dd655b8a3b02d2759f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g40cc2513c4beb830fe3af2c205292d27">XDDP_POOLSZ</a>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">XDDP local pool size configuration.  <a href="group__rtipc.html#g40cc2513c4beb830fe3af2c205292d27"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g61a2c99e1588e761aff890c27df6e5bd">XDDP_BUFSZ</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">XDDP streaming buffer size configuration.  <a href="group__rtipc.html#g61a2c99e1588e761aff890c27df6e5bd"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">XDDP_MONITOR</a>&nbsp;&nbsp;&nbsp;4</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">XDDP monitoring callback.  <a href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e"></a><br></td></tr>
+<tr><td colspan="2"><div class="groupHeader">XDDP events</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="XDDP_EVENTS"></a> Specific events occurring on XDDP channels, which can be monitored via the <a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">XDDP_MONITOR</a> socket option. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gbfefbb6b077a725dab659af9efcf3967">XDDP_EVTIN</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">Monitor</a> writes to the non real-time endpoint.  <a href="group__rtipc.html#gbfefbb6b077a725dab659af9efcf3967"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g3526c0440d308aee62e603b819ecd8f7">XDDP_EVTOUT</a>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">Monitor</a> reads from the non real-time endpoint.  <a href="group__rtipc.html#g3526c0440d308aee62e603b819ecd8f7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g6a7b8aa43efe65c79ec692b716202666">XDDP_EVTDOWN</a>&nbsp;&nbsp;&nbsp;3</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">Monitor</a> close from the non real-time endpoint.  <a href="group__rtipc.html#g6a7b8aa43efe65c79ec692b716202666"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g218c2d5522d38235e44094ac229a6f09">XDDP_EVTNOBUF</a>&nbsp;&nbsp;&nbsp;4</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#g6330fd82333ff062b27fb7ab7bce499e">Monitor</a> memory shortage for non real-time datagrams.  <a href="group__rtipc.html#g218c2d5522d38235e44094ac229a6f09"></a><br></td></tr>
+<tr><td colspan="2"><div class="groupHeader">IDDP socket options</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="sockopts_iddp"></a> Setting and getting IDDP socket options. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gc62cba4b02621f8536f5d4d3f9d993bd">IDDP_LABEL</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IDDP label assignment.  <a href="group__rtipc.html#gc62cba4b02621f8536f5d4d3f9d993bd"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g458014cc6cab9854202a0852a9f00c39">IDDP_POOLSZ</a>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">IDDP local pool size configuration.  <a href="group__rtipc.html#g458014cc6cab9854202a0852a9f00c39"></a><br></td></tr>
+<tr><td colspan="2"><div class="groupHeader">BUFP socket options</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="sockopts_bufp"></a> Setting and getting BUFP socket options. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g0ff681be80a29ba24d5d591ca5dd6fca">BUFP_LABEL</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">BUFP label assignment.  <a href="group__rtipc.html#g0ff681be80a29ba24d5d591ca5dd6fca"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g5bbbae934f8a7f982e94ed310ed9a364">BUFP_BUFSZ</a>&nbsp;&nbsp;&nbsp;2</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">BUFP buffer size configuration.  <a href="group__rtipc.html#g5bbbae934f8a7f982e94ed310ed9a364"></a><br></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Socket level options</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="sockopts_socket"></a> Setting and getting supported standard socket level options. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gb9d2f7ca5c94bd51cdab3e1913b66e2d">SO_SNDTIMEO</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight"><a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a257f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> and <a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a25fb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> protocols support the standard SO_SNDTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtipc.html#gb9d2f7ca5c94bd51cdab3e1913b66e2d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gf2d1ed6a34336a6f3df80fb518325846">SO_RCVTIMEO</a>&nbsp;&nbsp;&nbsp;defined_by_kernel_header_file</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">All RTIPC protocols support the standard SO_RCVTIMEO socket option, from the <code>SOL_SOCKET</code> level.  <a href="group__rtipc.html#gf2d1ed6a34336a6f3df80fb518325846"></a><br></td></tr>
+<tr><td colspan="2"><br><h2>Typedefs</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gca557a3fe7881593a440c797c94cd19a"></a><!-- doxytag: member="rtipc.h::rtipc_port_t" ref="gca557a3fe7881593a440c797c94cd19a" args="" -->
+typedef int16_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gca557a3fe7881593a440c797c94cd19a">rtipc_port_t</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Port number type for the RTIPC address family. <br></td></tr>
+<tr><td colspan="2"><br><h2>Enumerations</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">RTIPC protocol list</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="RTIPC_PROTO"></a> protocols for the PF_RTIPC protocol family <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a259a5b551f46faa3b63b002fdde789e2ba">IPCPROTO_IPC</a> =  0, 
+<a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a2528a488c3e7fc47dee4d5757f215f62e9">IPCPROTO_XDDP</a> =  1, 
+<a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a257f1e80711306177a6f5d48031efe0080">IPCPROTO_IDDP</a> =  2, 
+<a class="el" href="group__rtipc.html#ggba01db17f4a2bfbc3db60dc172972a25fb2400ca0886ef0a4eff1328afd92c18">IPCPROTO_BUFP</a> =  3
+ }</td></tr>
+
+<tr><td colspan="2"><br><h2>Functions</h2></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Supported operations</div></td></tr>
+<tr><td colspan="2"><div class="groupText"><a class="anchor" name="rtipc_operations"></a> Standard socket operations supported by the RTIPC protocols. <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g77d456500c719b5ac81b051cb957f581">socket__AF_RTIPC</a> (int domain=AF_RTIPC, int type=SOCK_DGRAM, int protocol)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create an endpoint for communication in the AF_RTIPC domain.  <a href="group__rtipc.html#g77d456500c719b5ac81b051cb957f581"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g446307f82b9d1e3464a852984bc875bc">close__AF_RTIPC</a> (int sockfd)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close a RTIPC socket descriptor.  <a href="group__rtipc.html#g446307f82b9d1e3464a852984bc875bc"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g6f0c6f408fc0dee63c39393c42572d11">bind__AF_RTIPC</a> (int sockfd, const struct <a class="el" href="structsockaddr__ipc.html">sockaddr_ipc</a> *addr, socklen_t addrlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind a RTIPC socket to a port.  <a href="group__rtipc.html#g6f0c6f408fc0dee63c39393c42572d11"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g61bb0c8ac9896f5b8d56b18163fa5bf0">connect__AF_RTIPC</a> (int sockfd, const struct <a class="el" href="structsockaddr__ipc.html">sockaddr_ipc</a> *addr, socklen_t addrlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Initiate a connection on a RTIPC socket.  <a href="group__rtipc.html#g61bb0c8ac9896f5b8d56b18163fa5bf0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gd529c20d5d8d9660703759f0eb109a67">setsockopt__AF_RTIPC</a> (int sockfd, int level, int optname, const void *optval, socklen_t optlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Set options on RTIPC sockets.  <a href="group__rtipc.html#gd529c20d5d8d9660703759f0eb109a67"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g26876fedfc5b831c9d49c630650f5bc6">getsockopt__AF_RTIPC</a> (int sockfd, int level, int optname, void *optval, socklen_t *optlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get options on RTIPC sockets.  <a href="group__rtipc.html#g26876fedfc5b831c9d49c630650f5bc6"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gb77f8a835dd741535882e2e50126b0af">sendmsg__AF_RTIPC</a> (int sockfd, const struct msghdr *msg, int flags)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Send a message on a RTIPC socket.  <a href="group__rtipc.html#gb77f8a835dd741535882e2e50126b0af"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">ssize_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g69ad5e9d75282d13e69ba2c472ea4ed0">recvmsg__AF_RTIPC</a> (int sockfd, struct msghdr *msg, int flags)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Receive a message from a RTIPC socket.  <a href="group__rtipc.html#g69ad5e9d75282d13e69ba2c472ea4ed0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#gd24c6013d32d57b90c392993a1118385">getsockname__AF_RTIPC</a> (int sockfd, struct <a class="el" href="structsockaddr__ipc.html">sockaddr_ipc</a> *addr, socklen_t *addrlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket name.  <a href="group__rtipc.html#gd24c6013d32d57b90c392993a1118385"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__rtipc.html#g620af595b33bbc2284f86ee25b8759dd">getpeername__AF_RTIPC</a> (int sockfd, struct <a class="el" href="structsockaddr__ipc.html">sockaddr_ipc</a> *addr, socklen_t *addrlen)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Get socket peer.  <a href="group__rtipc.html#g620af595b33bbc2284f86ee25b8759dd"></a><br></td></tr>
 </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:41 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

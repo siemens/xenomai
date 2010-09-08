@@ -1,49 +1,49 @@
-<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="4536,84,4709,111">
-<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="2436,161,2596,188">
-<area shape="rect" href="$sched-idle_8c.html" title="Idle scheduling class implementation (i.e. Linux placeholder)." alt="" coords="4723,161,4901,188">
-<area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="4547,161,4699,188">
-<area shape="rect" href="$xenomai_8h-source.html" title="include/nucleus/xenomai.h" alt="" coords="1583,239,1772,265">
-<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="1319,316,1508,343">
-<area shape="rect" href="$rtdm_2internal_8h-source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="1129,393,1311,420">
-<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="1008,471,1168,497">
-<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="1389,471,1571,497">
-<area shape="rect" href="$bufd_8c.html" title="ksrc/nucleus/bufd.c" alt="" coords="223,239,367,265">
-<area shape="rect" href="$ksrc_2nucleus_2heap_8c.html" title="Dynamic memory allocation services." alt="" coords="391,239,537,265">
-<area shape="rect" href="$ksrc_2nucleus_2intr_8c.html" title="Interrupt management." alt="" coords="561,239,697,265">
-<area shape="rect" href="$map_8c.html" title="ksrc/nucleus/map.c" alt="" coords="721,239,865,265">
-<area shape="rect" href="$pod_8c.html" title="Real&#45;time pod services." alt="" coords="889,239,1028,265">
-<area shape="rect" href="$nucleus_2registry_8c.html" title="This file is part of the Xenomai project." alt="" coords="1052,239,1215,265">
-<area shape="rect" href="$sched-rt_8c.html" title="Common real&#45;time scheduling class implementation (FIFO + RR)." alt="" coords="1239,239,1407,265">
-<area shape="rect" href="$sched-sporadic_8c.html" title="POSIX SCHED_SPORADIC scheduling class." alt="" coords="2807,239,3017,265">
-<area shape="rect" href="$sched-tp_8c.html" title="Temporal partitioning (typical of IMA systems)." alt="" coords="3092,239,3263,265">
-<area shape="rect" href="$select_8c.html" title="file descriptors events multiplexing." alt="" coords="1796,239,1948,265">
-<area shape="rect" href="$shadow_8c.html" title="Real&#45;time shadow services." alt="" coords="1972,239,2135,265">
-<area shape="rect" href="$synch_8c.html" title="Thread synchronization services." alt="" coords="2159,239,2311,265">
-<area shape="rect" href="$timebase_8c.html" title="ksrc/nucleus/timebase.c" alt="" coords="2335,239,2511,265">
-<area shape="rect" href="$ksrc_2nucleus_2timer_8c.html" title="ksrc/nucleus/timer.c" alt="" coords="2535,239,2681,265">
-<area shape="rect" href="$native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="3337,239,3487,265">
-<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="5056,393,5235,420">
-<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="4440,393,4624,420">
-<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="4071,393,4244,420">
-<area shape="rect" href="$ksrc_2skins_2native_2pipe_8c.html" title="This file is part of the Xenomai project." alt="" coords="3117,393,3285,420">
-<area shape="rect" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="3865,393,4047,420">
-<area shape="rect" href="$ksrc_2skins_2native_2buffer_8c.html" title="This file is part of the Xenomai project." alt="" coords="4535,239,4711,265">
-<area shape="rect" href="$ksrc_2skins_2native_2cond_8c.html" title="This file is part of the Xenomai project." alt="" coords="4735,239,4905,265">
-<area shape="rect" href="$ksrc_2skins_2native_2event_8c.html" title="This file is part of the Xenomai project." alt="" coords="3561,239,3737,265">
-<area shape="rect" href="$ksrc_2skins_2native_2intr_8c.html" title="This file is part of the Xenomai project." alt="" coords="3761,239,3921,265">
-<area shape="rect" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="3945,239,4127,265">
-<area shape="rect" href="$ksrc_2skins_2native_2sem_8c.html" title="This file is part of the Xenomai project." alt="" coords="4151,239,4319,265">
-<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="4343,239,4511,265">
-<area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="25,239,199,265">
-<area shape="rect" href="$posix_2internal_8h-source.html" title="ksrc/skins/posix/internal.h" alt="" coords="1587,316,1771,343">
-<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="1335,393,1503,420">
-<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="1192,471,1365,497">
-<area shape="rect" href="$ksrc_2skins_2posix_2thread_8h-source.html" title="ksrc/skins/posix/thread.h" alt="" coords="1716,393,1895,420">
-<area shape="rect" href="$ksrc_2skins_2posix_2mutex_8h-source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="1595,471,1771,497">
-<area shape="rect" href="$sig_8h-source.html" title="ksrc/skins/posix/sig.h" alt="" coords="1795,471,1949,497">
-<area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="4895,316,5057,343">
-<area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="4484,316,4641,343">
-<area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="4665,316,4820,343">
-<area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="4119,316,4271,343">
-<area shape="rect" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="4295,316,4460,343">
-<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="4648,393,4837,420">
+<area shape="rect" href="$sched_8h.html" title="Scheduler interface header." alt="" coords="4375,84,4548,111">
+<area shape="rect" href="$pod_8h.html" title="Real&#45;time pod interface header." alt="" coords="2755,161,2915,188">
+<area shape="rect" href="$sched-idle_8c.html" title="Idle scheduling class implementation (i.e. Linux placeholder)." alt="" coords="4561,161,4740,188">
+<area shape="rect" href="$task_8h.html" title="This file is part of the Xenomai project." alt="" coords="4385,161,4537,188">
+<area shape="rect" href="$xenomai_8h-source.html" title="include/nucleus/xenomai.h" alt="" coords="307,239,496,265">
+<area shape="rect" href="$rtdm__driver_8h.html" title="Real&#45;Time Driver Model for Xenomai, driver API header." alt="" coords="281,316,471,343">
+<area shape="rect" href="$rtdm_2internal_8h-source.html" title="ksrc/skins/rtdm/internal.h" alt="" coords="123,393,304,420">
+<area shape="rect" href="$ksrc_2skins_2rtdm_2core_8c.html" title="Real&#45;Time Driver Model for Xenomai, device operation multiplexing." alt="" coords="5,471,165,497">
+<area shape="rect" href="$skins_2rtdm_2module_8c.html" title="Real&#45;Time Driver Model for Xenomai." alt="" coords="413,471,595,497">
+<area shape="rect" href="$bufd_8c.html" title="ksrc/nucleus/bufd.c" alt="" coords="571,239,715,265">
+<area shape="rect" href="$ksrc_2nucleus_2heap_8c.html" title="Dynamic memory allocation services." alt="" coords="739,239,885,265">
+<area shape="rect" href="$ksrc_2nucleus_2intr_8c.html" title="Interrupt management." alt="" coords="909,239,1045,265">
+<area shape="rect" href="$map_8c.html" title="ksrc/nucleus/map.c" alt="" coords="1069,239,1213,265">
+<area shape="rect" href="$pod_8c.html" title="Real&#45;time pod services." alt="" coords="1237,239,1376,265">
+<area shape="rect" href="$nucleus_2registry_8c.html" title="This file is part of the Xenomai project." alt="" coords="1400,239,1563,265">
+<area shape="rect" href="$sched-rt_8c.html" title="Common real&#45;time scheduling class implementation (FIFO + RR)." alt="" coords="1587,239,1755,265">
+<area shape="rect" href="$sched-sporadic_8c.html" title="POSIX SCHED_SPORADIC scheduling class." alt="" coords="1779,239,1989,265">
+<area shape="rect" href="$sched-tp_8c.html" title="Temporal partitioning (typical of IMA systems)." alt="" coords="2013,239,2184,265">
+<area shape="rect" href="$select_8c.html" title="file descriptors events multiplexing." alt="" coords="2208,239,2360,265">
+<area shape="rect" href="$shadow_8c.html" title="Real&#45;time shadow services." alt="" coords="2384,239,2547,265">
+<area shape="rect" href="$synch_8c.html" title="Thread synchronization services." alt="" coords="2571,239,2723,265">
+<area shape="rect" href="$timebase_8c.html" title="ksrc/nucleus/timebase.c" alt="" coords="2747,239,2923,265">
+<area shape="rect" href="$ksrc_2nucleus_2timer_8c.html" title="ksrc/nucleus/timer.c" alt="" coords="2947,239,3093,265">
+<area shape="rect" href="$vfile_8c.html" title="This file is part of the Xenomai project." alt="" coords="3117,239,3256,265">
+<area shape="rect" href="$native_2ppd_8h.html" title="This file is part of the Xenomai project." alt="" coords="3381,239,3531,265">
+<area shape="rect" href="$ksrc_2skins_2native_2alarm_8c.html" title="This file is part of the Xenomai project." alt="" coords="2585,393,2764,420">
+<area shape="rect" href="$native_2syscall_8c.html" title="This file is part of the Xenomai project." alt="" coords="3295,393,3479,420">
+<area shape="rect" href="$ksrc_2skins_2native_2heap_8c.html" title="This file is part of the Xenomai project." alt="" coords="3940,393,4113,420">
+<area shape="rect" href="$ksrc_2skins_2native_2pipe_8c.html" title="This file is part of the Xenomai project." alt="" coords="3529,393,3697,420">
+<area shape="rect" href="$ksrc_2skins_2native_2queue_8c.html" title="This file is part of the Xenomai project." alt="" coords="3735,393,3916,420">
+<area shape="rect" href="$ksrc_2skins_2native_2buffer_8c.html" title="This file is part of the Xenomai project." alt="" coords="4176,239,4352,265">
+<area shape="rect" href="$ksrc_2skins_2native_2cond_8c.html" title="This file is part of the Xenomai project." alt="" coords="4376,239,4547,265">
+<area shape="rect" href="$ksrc_2skins_2native_2event_8c.html" title="This file is part of the Xenomai project." alt="" coords="4571,239,4747,265">
+<area shape="rect" href="$ksrc_2skins_2native_2intr_8c.html" title="This file is part of the Xenomai project." alt="" coords="4771,239,4931,265">
+<area shape="rect" href="$ksrc_2skins_2native_2mutex_8c.html" title="This file is part of the Xenomai project." alt="" coords="4955,239,5136,265">
+<area shape="rect" href="$ksrc_2skins_2native_2sem_8c.html" title="This file is part of the Xenomai project." alt="" coords="5160,239,5328,265">
+<area shape="rect" href="$ksrc_2skins_2native_2task_8c.html" title="This file is part of the Xenomai project." alt="" coords="5352,239,5520,265">
+<area shape="rect" href="$ksrc_2skins_2native_2timer_8c.html" title="This file is part of the Xenomai project." alt="" coords="3979,239,4152,265">
+<area shape="rect" href="$posix_2internal_8h-source.html" title="ksrc/skins/posix/internal.h" alt="" coords="571,316,755,343">
+<area shape="rect" href="$drvlib_8c.html" title="Real&#45;Time Driver Model for Xenomai, driver library." alt="" coords="328,393,496,420">
+<area shape="rect" href="$skins_2rtdm_2device_8c.html" title="Real&#45;Time Driver Model for Xenomai, device management." alt="" coords="189,471,363,497">
+<area shape="rect" href="$ksrc_2skins_2posix_2thread_8h-source.html" title="ksrc/skins/posix/thread.h" alt="" coords="687,393,865,420">
+<area shape="rect" href="$ksrc_2skins_2posix_2mutex_8h-source.html" title="ksrc/skins/posix/mutex.h" alt="" coords="673,471,849,497">
+<area shape="rect" href="$alarm_8h.html" title="This file is part of the Xenomai project." alt="" coords="2712,316,2875,343">
+<area shape="rect" href="$native_2heap_8h.html" title="This file is part of the Xenomai project." alt="" coords="3493,316,3651,343">
+<area shape="rect" href="$misc_8h.html" title="This file is part of the Xenomai project." alt="" coords="2899,316,3053,343">
+<area shape="rect" href="$native_2pipe_8h.html" title="This file is part of the Xenomai project." alt="" coords="3128,316,3280,343">
+<area shape="rect" href="$native_2queue_8h.html" title="This file is part of the Xenomai project." alt="" coords="3304,316,3469,343">
+<area shape="rect" href="$skins_2native_2module_8c.html" title="This file is part of the Xenomai project." alt="" coords="3039,393,3228,420">

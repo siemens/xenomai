@@ -134,7 +134,7 @@ an error number if:<ul>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">Specification.</a> </dd></dl>
 <dl compact><dt><b>Examples: </b></dt><dd>
 <a class="el" href="rtcan__rtt_8c-example.html#a25">rtcan_rtt.c</a>.</dl>
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -193,8 +193,9 @@ an error number if:<ul>
 <li>Xenomai POSIX skin kernel-space thread.</li></ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html">Specification.</a> </dd></dl>
-
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>.</p>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="bufp-label_8c-example.html#a11">bufp-label.c</a>, <a class="el" href="bufp-readwrite_8c-example.html#a9">bufp-readwrite.c</a>, <a class="el" href="iddp-label_8c-example.html#a10">iddp-label.c</a>, <a class="el" href="iddp-sendrecv_8c-example.html#a9">iddp-sendrecv.c</a>, <a class="el" href="xddp-echo_8c-example.html#a8">xddp-echo.c</a>, <a class="el" href="xddp-label_8c-example.html#a10">xddp-label.c</a>, and <a class="el" href="xddp-stream_8c-example.html#a8">xddp-stream.c</a>.</dl>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -247,7 +248,7 @@ an error number if:<ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigqueue.html">sigqueue() specification.</a> </dd></dl>
 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>.</p>
 
 </div>
 </div><p>
@@ -364,7 +365,8 @@ This service adds the signal number <em>sig</em> to the signal set pointed to by
   </table>
 </dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html">Specification.</a> </dd></dl>
-
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="bufp-label_8c-example.html#a10">bufp-label.c</a>, <a class="el" href="bufp-readwrite_8c-example.html#a8">bufp-readwrite.c</a>, <a class="el" href="iddp-label_8c-example.html#a9">iddp-label.c</a>, <a class="el" href="iddp-sendrecv_8c-example.html#a8">iddp-sendrecv.c</a>, <a class="el" href="xddp-echo_8c-example.html#a7">xddp-echo.c</a>, <a class="el" href="xddp-label_8c-example.html#a9">xddp-label.c</a>, and <a class="el" href="xddp-stream_8c-example.html#a7">xddp-stream.c</a>.</dl>
 </div>
 </div><p>
 <a class="anchor" name="g16efce9e80266d0db1ed9a3ef281ad2b"></a><!-- doxytag: member="signal.c::sigdelset" ref="g16efce9e80266d0db1ed9a3ef281ad2b" args="(sigset_t *set, int sig)" -->
@@ -445,7 +447,8 @@ This service initializes ane empties the signal set pointed to by <em>set</em>.<
   </table>
 </dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html">Specification.</a> </dd></dl>
-
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="bufp-label_8c-example.html#a9">bufp-label.c</a>, <a class="el" href="bufp-readwrite_8c-example.html#a7">bufp-readwrite.c</a>, <a class="el" href="iddp-label_8c-example.html#a8">iddp-label.c</a>, <a class="el" href="iddp-sendrecv_8c-example.html#a7">iddp-sendrecv.c</a>, <a class="el" href="xddp-echo_8c-example.html#a6">xddp-echo.c</a>, <a class="el" href="xddp-label_8c-example.html#a8">xddp-label.c</a>, and <a class="el" href="xddp-stream_8c-example.html#a6">xddp-stream.c</a>.</dl>
 </div>
 </div><p>
 <a class="anchor" name="g88d7bbc77ea1569ee21c90db549ea023"></a><!-- doxytag: member="signal.c::sigfillset" ref="g88d7bbc77ea1569ee21c90db549ea023" args="(sigset_t *set)" -->
@@ -725,7 +728,7 @@ This service is equivalent to the <a class="el" href="group__posix__signal.html#
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:01 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -139,9 +139,9 @@ This service can be called from:<p>
 <p>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="sched_8h-source.html#l00106">xnsched::gksync</a>, <a class="el" href="sched_8h-source.html#l00107">xnsched::gktarget</a>, <a class="el" href="sched_8h-source.html#l00105">xnsched::gkwaitq</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNATOMIC</a>, and <a class="el" href="pod_8c-source.html#l01981">xnpod_dispatch_signals()</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00107">xnsched::gksync</a>, <a class="el" href="sched_8h-source.html#l00108">xnsched::gktarget</a>, <a class="el" href="sched_8h-source.html#l00106">xnsched::gkwaitq</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00114">XNATOMIC</a>, and <a class="el" href="pod_8c-source.html#l01998">xnpod_dispatch_signals()</a>.</p>
 
-<p>Referenced by <a class="el" href="shadow_8c-source.html#l01279">xnshadow_map()</a>.</p>
+<p>Referenced by <a class="el" href="shadow_8c-source.html#l01305">xnshadow_map()</a>.</p>
 
 </div>
 </div><p>
@@ -209,7 +209,7 @@ This service can be called from:<p>
 <p>
 Rescheduling: always. </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMAPPED</a>, <a class="el" href="pod_8c-source.html#l00736">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01361">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, and <a class="el" href="shadow_8c-source.html#l00992">xnshadow_harden()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMAPPED</a>, <a class="el" href="pod_8c-source.html#l00738">xnpod_start_thread()</a>, <a class="el" href="pod_8c-source.html#l01363">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00063">XNSHADOW</a>, and <a class="el" href="shadow_8c-source.html#l01002">xnshadow_harden()</a>.</p>
 
 </div>
 </div><p>
@@ -249,7 +249,7 @@ Mark the per-thread per-skin signal condition for the skin whose muxid is <em>mu
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>whether rescheduling is needed. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMAPPED</a>, and <a class="el" href="pod_8c-source.html#l01713">xnpod_unblock_thread()</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00043">XNMAPPED</a>, and <a class="el" href="pod_8c-source.html#l01730">xnpod_unblock_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -330,14 +330,14 @@ Rescheduling: always.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>"current" is valid here since the shadow runs with the properties of the Linux task. </dd></dl>
 </p>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00115">XNAFFSET</a>, <a class="el" href="pod_8c-source.html#l01361">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00064">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNTRAPSW</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00115">XNAFFSET</a>, <a class="el" href="pod_8c-source.html#l01363">xnpod_suspend_thread()</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00116">XNPRIOSET</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00044">XNRELAX</a>, <a class="el" href="include_2nucleus_2thread_8h-source.html#l00064">XNROOT</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00060">XNTRAPSW</a>.</p>
 
-<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00666">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c-source.html#l02539">xnpod_trap_fault()</a>.</p>
+<p>Referenced by <a class="el" href="skins_2posix_2thread_8c-source.html#l00666">pthread_set_mode_np()</a>, and <a class="el" href="pod_8c-source.html#l02557">xnpod_trap_fault()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:45 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

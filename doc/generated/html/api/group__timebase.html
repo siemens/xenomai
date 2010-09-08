@@ -203,7 +203,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Any periodic time base allocated by a real-time skin must be released by a call to <a class="el" href="group__timebase.html#gf94b8dda1e4cc484c13cb004689a795e" title="Free a time base.">xntbase_free()</a> before the kernel module implementing the skin may be unloaded. </dd></dl>
 
-<p>Referenced by <a class="el" href="timebase_8c-source.html#l00316">xntbase_switch()</a>.</p>
+<p>Referenced by <a class="el" href="timebase_8c-source.html#l00318">xntbase_switch()</a>.</p>
 
 </div>
 </div><p>
@@ -290,7 +290,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Requests to free the master time base are silently caught and discarded; in such a case, outstanding aperiodic timers are left untouched. </dd></dl>
 
-<p>Referenced by <a class="el" href="timebase_8c-source.html#l00316">xntbase_switch()</a>.</p>
+<p>Referenced by <a class="el" href="timebase_8c-source.html#l00318">xntbase_switch()</a>.</p>
 
 </div>
 </div><p>
@@ -326,7 +326,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="clock_8c-source.html#l00114">clock_gettime()</a>, <a class="el" href="clock_8c-source.html#l00157">clock_settime()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00992">rt_task_sleep_until()</a>, <a class="el" href="ksrc_2skins_2native_2timer_8c-source.html#l00073">rt_timer_inquire()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00715">xnregistry_bind()</a>.</p>
+<p>Referenced by <a class="el" href="clock_8c-source.html#l00114">clock_gettime()</a>, <a class="el" href="clock_8c-source.html#l00157">clock_settime()</a>, <a class="el" href="ksrc_2skins_2native_2task_8c-source.html#l00992">rt_task_sleep_until()</a>, <a class="el" href="ksrc_2skins_2native_2timer_8c-source.html#l00073">rt_timer_inquire()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00803">xnregistry_bind()</a>.</p>
 
 </div>
 </div><p>
@@ -363,7 +363,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Requests to enable the master time base are silently caught and discarded; only the internal service <a class="el" href="group__pod.html#g10d3c13efa3ab06ac23017710b13314e" title="Activate the core time source.">xnpod_enable_timesource()</a> is allowed to start the latter. The master time base remains enabled until no real-time skin remains attached to the nucleus. </dd></dl>
 
-<p>Referenced by <a class="el" href="timebase_8c-source.html#l00316">xntbase_switch()</a>.</p>
+<p>Referenced by <a class="el" href="timebase_8c-source.html#l00318">xntbase_switch()</a>.</p>
 
 </div>
 </div><p>
@@ -455,7 +455,7 @@ This service can be called from:<p>
 <li>Kernel module initialization code</li><li>User-space task in secondary mode</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="timebase_8c-source.html#l00125">xntbase_alloc()</a>, <a class="el" href="timebase_8c-source.html#l00200">xntbase_free()</a>, <a class="el" href="timebase_8c-source.html#l00379">xntbase_start()</a>, and <a class="el" href="timebase_8c-source.html#l00249">xntbase_update()</a>.</p>
+<p>References <a class="el" href="timebase_8c-source.html#l00125">xntbase_alloc()</a>, <a class="el" href="timebase_8c-source.html#l00201">xntbase_free()</a>, <a class="el" href="timebase_8c-source.html#l00381">xntbase_start()</a>, and <a class="el" href="timebase_8c-source.html#l00251">xntbase_update()</a>.</p>
 
 <p>Referenced by <a class="el" href="ksrc_2skins_2native_2timer_8c-source.html#l00173">rt_timer_set_mode()</a>.</p>
 
@@ -543,12 +543,12 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Requests to update the master time base are silently caught and discarded. The master time base has a fixed aperiodic policy which may not be changed. </dd></dl>
 
-<p>Referenced by <a class="el" href="timebase_8c-source.html#l00316">xntbase_switch()</a>.</p>
+<p>Referenced by <a class="el" href="timebase_8c-source.html#l00318">xntbase_switch()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:45 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -129,9 +129,28 @@ This graph shows which files directly or indirectly include this file:</div>
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subdevice.html#g4ec26f0982c64fe7aab38678af7a20a4">A4L_SUBD_MMAP</a>&nbsp;&nbsp;&nbsp;0x8000</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The subdevice support mmap operations (technically, any driver can do it; however, the developer might want that his driver must be accessed through read / write. <br></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Subdevice status</div></td></tr>
+<tr><td colspan="2"><div class="groupText">Flags to define the subdevice's status<p>
+<a class="anchor" name="ANALOGY_SUBD_ST_xxx"></a> <br><br></div></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g943b015c909276644de277f4135e7579"></a><!-- doxytag: member="subdevice.h::A4L_SUBD_BUSY_NR" ref="g943b015c909276644de277f4135e7579" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subdevice.html#g943b015c909276644de277f4135e7579">A4L_SUBD_BUSY_NR</a>&nbsp;&nbsp;&nbsp;0</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The subdevice is busy, a synchronous or an asynchronous acquisition is occuring. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="gf6114bf76458b8c6fd84813fa30f9338"></a><!-- doxytag: member="subdevice.h::A4L_SUBD_BUSY" ref="gf6114bf76458b8c6fd84813fa30f9338" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subdevice.html#gf6114bf76458b8c6fd84813fa30f9338">A4L_SUBD_BUSY</a>&nbsp;&nbsp;&nbsp;(1 &lt;&lt; A4L_SUBD_BUSY_NR)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The subdevice is busy, a synchronous or an asynchronous acquisition is occuring. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g6992c2972bde497a4039a21c5436dc75"></a><!-- doxytag: member="subdevice.h::A4L_SUBD_CLEAN_NR" ref="g6992c2972bde497a4039a21c5436dc75" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subdevice.html#g6992c2972bde497a4039a21c5436dc75">A4L_SUBD_CLEAN_NR</a>&nbsp;&nbsp;&nbsp;1</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The subdevice is about to be cleaned in the middle of the detach procedure. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="g9cb84629a30d54bf81ea9daacc077238"></a><!-- doxytag: member="subdevice.h::A4L_SUBD_CLEAN" ref="g9cb84629a30d54bf81ea9daacc077238" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subdevice.html#g9cb84629a30d54bf81ea9daacc077238">A4L_SUBD_CLEAN</a>&nbsp;&nbsp;&nbsp;(1 &lt;&lt; A4L_SUBD_CLEAN_NR)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The subdevice is busy, a synchronous or an asynchronous acquisition is occuring. <br></td></tr>
 </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:58 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:37 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

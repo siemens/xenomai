@@ -131,9 +131,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00569">xnheap_alloc()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00815">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -214,7 +214,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="src_2skins_2native_2pipe_8c-source.html#l00037">rt_pipe_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00481">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00317">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00167">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00276">xnheap_set_label()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00573">xnregistry_enter()</a>.</p>
+<p>References <a class="el" href="src_2skins_2native_2pipe_8c-source.html#l00037">rt_pipe_delete()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00569">xnheap_alloc()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00405">xnheap_destroy()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00255">xnheap_init()</a>, <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00364">xnheap_set_label()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00663">xnregistry_enter()</a>.</p>
 
 </div>
 </div><p>
@@ -262,9 +262,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>.</p>
+<p>References <a class="el" href="nucleus_2registry_8c-source.html#l00887">xnregistry_remove()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00252">rt_pipe_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00262">rt_pipe_create()</a>.</p>
 
 </div>
 </div><p>
@@ -369,9 +369,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: never. 
-<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00842">xnheap_free()</a>.</p>
+<p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00930">xnheap_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00624">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00634">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00815">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -530,7 +530,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00508">rt_pipe_receive()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01024">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00518">rt_pipe_receive()</a>.</p>
 
 </div>
 </div><p>
@@ -610,7 +610,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00624">rt_pipe_read()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00634">rt_pipe_read()</a>.</p>
 
 </div>
 </div><p>
@@ -688,7 +688,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00815">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -836,12 +836,12 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00974">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00720">rt_pipe_send()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00984">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01024">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00730">rt_pipe_send()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:46 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

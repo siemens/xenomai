@@ -98,10 +98,11 @@ an error number if:<ul>
 <li>ESRCH, the thread <em>thread</em> was not found.</li></ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cancel.html">Specification.</a> </dd></dl>
+<dl compact><dt><b>Examples: </b></dt><dd>
+<a class="el" href="bufp-label_8c-example.html#a7">bufp-label.c</a>, <a class="el" href="bufp-readwrite_8c-example.html#a5">bufp-readwrite.c</a>, <a class="el" href="iddp-label_8c-example.html#a6">iddp-label.c</a>, <a class="el" href="iddp-sendrecv_8c-example.html#a5">iddp-sendrecv.c</a>, <a class="el" href="xddp-echo_8c-example.html#a4">xddp-echo.c</a>, <a class="el" href="xddp-label_8c-example.html#a6">xddp-label.c</a>, and <a class="el" href="xddp-stream_8c-example.html#a4">xddp-stream.c</a>.</dl>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01730">xnpod_unblock_thread()</a>.</p>
 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="pod_8c-source.html#l01713">xnpod_unblock_thread()</a>.</p>
-
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00256">rt_task_delete()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00257">rt_task_delete()</a>.</p>
 
 </div>
 </div><p>
@@ -136,6 +137,8 @@ This service may be called at any place, but for maximal portability, should onl
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00065">rt_cond_wait()</a>, and <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00115">rt_cond_wait_until()</a>.</p>
 
 </div>
 </div><p>
@@ -180,6 +183,8 @@ The routines registered with this service get called in LIFO order when the call
 <li>Xenomai POSIX skin kernel-space thread,</li><li>Xenomai POSIX skin user-space thread (switches to primary mode).</li></ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">Specification.</a> </dd></dl>
+
+<p>Referenced by <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00065">rt_cond_wait()</a>, and <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00115">rt_cond_wait_until()</a>.</p>
 
 </div>
 </div><p>
@@ -279,7 +284,7 @@ an error number if:<ul>
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">Specification.</a> </dd></dl>
 
-<p>Referenced by <a class="el" href="src_2skins_2native_2task_8c-source.html#l00179">rt_task_shadow()</a>.</p>
+<p>Referenced by <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00065">rt_cond_wait()</a>, <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00115">rt_cond_wait_until()</a>, <a class="el" href="src_2skins_2native_2intr_8c-source.html#l00044">rt_intr_wait()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00183">rt_queue_read()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00198">rt_queue_read_until()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00153">rt_queue_receive()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00168">rt_queue_receive_until()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00125">rt_queue_send()</a>, <a class="el" href="src_2skins_2native_2queue_8c-source.html#l00139">rt_queue_write()</a>, <a class="el" href="src_2skins_2native_2sem_8c-source.html#l00043">rt_sem_p()</a>, <a class="el" href="src_2skins_2native_2sem_8c-source.html#l00057">rt_sem_p_until()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00399">rt_task_send()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00180">rt_task_shadow()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00314">rt_task_sleep()</a>, <a class="el" href="src_2skins_2native_2task_8c-source.html#l00327">rt_task_sleep_until()</a>, and <a class="el" href="src_2skins_2native_2task_8c-source.html#l00294">rt_task_wait_period()</a>.</p>
 
 </div>
 </div><p>
@@ -309,10 +314,12 @@ This function is a cancellation point. It has no effect if cancellation is disab
 </dd></dl>
 <dl class="see" compact><dt><b>See also:</b></dt><dd><a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">Specification.</a> </dd></dl>
 
+<p>Referenced by <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00065">rt_cond_wait()</a>, and <a class="el" href="src_2skins_2native_2cond_8c-source.html#l00115">rt_cond_wait_until()</a>.</p>
+
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:01 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:47 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -57,9 +57,9 @@ The registry provides a mean to index real-time object descriptors created by Xe
 
 <p>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4">xnregistry_enter</a> (const char *key, void *objaddr, xnhandle_t *phandle, xnpnode_t *pnode)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#g28aefd9be7367aa495753142005e1d5a">xnregistry_enter</a> (const char *key, void *objaddr, xnhandle_t *phandle, struct xnpnode *pnode)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a real-time object.  <a href="#gd44413c8fc23a46ce7c63e6889b669f4"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Register a real-time object.  <a href="#g28aefd9be7367aa495753142005e1d5a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5">xnregistry_bind</a> (const char *key, xnticks_t timeout, int timeout_mode, xnhandle_t *phandle)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Bind to a real-time object.  <a href="#g03ceaaa3cb5799a6b706dc9a65f493e5"></a><br></td></tr>
@@ -153,11 +153,11 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if <em>thread</em> is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h-source.html#l00299">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, <a class="el" href="timebase_8h-source.html#l00301">xntbase_get_time()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
-<a class="anchor" name="gd44413c8fc23a46ce7c63e6889b669f4"></a><!-- doxytag: member="registry.c::xnregistry_enter" ref="gd44413c8fc23a46ce7c63e6889b669f4" args="(const char *key, void *objaddr, xnhandle_t *phandle, xnpnode_t *pnode)" -->
+<a class="anchor" name="g28aefd9be7367aa495753142005e1d5a"></a><!-- doxytag: member="registry.c::xnregistry_enter" ref="g28aefd9be7367aa495753142005e1d5a" args="(const char *key, void *objaddr, xnhandle_t *phandle, struct xnpnode *pnode)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -182,7 +182,7 @@ Rescheduling: always unless the request is immediately satisfied or <em>timeout<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">xnpnode_t *&nbsp;</td>
+          <td class="paramtype">struct xnpnode *&nbsp;</td>
           <td class="paramname"> <em>pnode</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -222,9 +222,9 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: possible. 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00102">xnsynch_init()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00191">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00155">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00177">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00241">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00250">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00252">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00209">rt_queue_create()</a>, and <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00173">rt_sem_create()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00218">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00229">rt_buffer_create()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00177">rt_cond_create()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00211">rt_event_create()</a>, <a class="el" href="ksrc_2skins_2native_2heap_8c-source.html#l00277">rt_heap_create()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00279">rt_intr_create()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00262">rt_pipe_create()</a>, <a class="el" href="ksrc_2skins_2native_2queue_8c-source.html#l00251">rt_queue_create()</a>, and <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00207">rt_sem_create()</a>.</p>
 
 </div>
 </div><p>
@@ -337,7 +337,7 @@ This service can be called from:<p>
 <li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: possible if the lock count falls down to zero and some thread is currently waiting for the object to be unlocked. 
-<p>References <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00848">xnsynch_flush()</a>.</p>
+<p>References <a class="el" href="pod_8h-source.html#l00252">xnpod_schedule()</a>, and <a class="el" href="synch_8c-source.html#l00848">xnsynch_flush()</a>.</p>
 
 </div>
 </div><p>
@@ -376,7 +376,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Kernel-based thread</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00276">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00227">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00248">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00334">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00395">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00246">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00916">xnregistry_remove_safe()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00300">rt_alarm_delete()</a>, <a class="el" href="ksrc_2skins_2native_2buffer_8c-source.html#l00314">rt_buffer_delete()</a>, <a class="el" href="ksrc_2skins_2native_2cond_8c-source.html#l00249">rt_cond_delete()</a>, <a class="el" href="ksrc_2skins_2native_2event_8c-source.html#l00282">rt_event_delete()</a>, <a class="el" href="ksrc_2skins_2native_2intr_8c-source.html#l00363">rt_intr_delete()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00405">rt_pipe_delete()</a>, <a class="el" href="ksrc_2skins_2native_2sem_8c-source.html#l00280">rt_sem_delete()</a>, and <a class="el" href="nucleus_2registry_8c-source.html#l00994">xnregistry_remove_safe()</a>.</p>
 
 </div>
 </div><p>
@@ -442,12 +442,12 @@ This service can be called from:<p>
 Rescheduling: possible if the object to remove is currently locked and the calling context can sleep.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the current thread is bound to a periodic time base (see xnpod_init_thread), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00809">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
+<p>References <a class="el" href="include_2nucleus_2thread_8h-source.html#l00110">XNBREAK</a>, <a class="el" href="nucleus_2registry_8c-source.html#l00887">xnregistry_remove()</a>, <a class="el" href="synch_8c-source.html#l00171">xnsynch_sleep_on()</a>, and <a class="el" href="include_2nucleus_2thread_8h-source.html#l00108">XNTIMEO</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:19:59 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:45 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

@@ -116,16 +116,16 @@ Between the two calls, an allocation must be performed in order to recover a buf
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong; the pass argument should be checked; check also the kernel log ("dmesg")</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong </li></ul>
+<li>-EINVAL is returned if some argument is missing or wrong; the pass argument should be checked; check also the kernel log ("dmesg")</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-ENODEV is returned if the descriptor is incoherent (the device may be unattached) </li></ul>
 
-<p>References <a class="el" href="descriptor_8h-source.html#l00049">A4L_BSC_DESC</a>, and <a class="el" href="descriptor_8h-source.html#l00078">a4l_descriptor::magic</a>.</p>
+<p>References <a class="el" href="descriptor_8h-source.html#l00049">A4L_BSC_DESC</a>, <a class="el" href="descriptor_8h-source.html#l00078">a4l_descriptor::magic</a>, and <a class="el" href="descriptor_8h-source.html#l00080">a4l_descriptor::sbsize</a>.</p>
 
-<p>Referenced by <a class="el" href="descriptor_8c-source.html#l00350">a4l_fill_desc()</a>, and <a class="el" href="descriptor_8c-source.html#l00290">a4l_open()</a>.</p>
+<p>Referenced by <a class="el" href="descriptor_8c-source.html#l00364">a4l_fill_desc()</a>, and <a class="el" href="descriptor_8c-source.html#l00297">a4l_open()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:00 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:47 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

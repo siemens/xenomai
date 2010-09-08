@@ -36,6 +36,7 @@
     <ul>
       <li><a href="globals.html"><span>All</span></a></li>
       <li class="current"><a href="globals_func.html"><span>Functions</span></a></li>
+      <li><a href="globals_vars.html"><span>Variables</span></a></li>
       <li><a href="globals_type.html"><span>Typedefs</span></a></li>
       <li><a href="globals_enum.html"><span>Enumerations</span></a></li>
       <li><a href="globals_eval.html"><span>Enumerator</span></a></li>
@@ -45,7 +46,11 @@
   <div class="tabs">
     <ul>
       <li><a href="globals_func.html#index_a"><span>a</span></a></li>
+      <li><a href="globals_func_0x62.html#index_b"><span>b</span></a></li>
+      <li><a href="globals_func_0x63.html#index_c"><span>c</span></a></li>
+      <li><a href="globals_func_0x67.html#index_g"><span>g</span></a></li>
       <li><a href="globals_func_0x72.html#index_r"><span>r</span></a></li>
+      <li><a href="globals_func_0x73.html#index_s"><span>s</span></a></li>
       <li class="current"><a href="globals_func_0x78.html#index_x"><span>x</span></a></li>
     </ul>
   </div>
@@ -174,8 +179,8 @@
 : <a class="el" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5">registry.h</a>
 , <a class="el" href="group__registry.html#g03ceaaa3cb5799a6b706dc9a65f493e5">registry.c</a>
 <li>xnregistry_enter()
-: <a class="el" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4">registry.h</a>
-, <a class="el" href="group__registry.html#gd44413c8fc23a46ce7c63e6889b669f4">registry.c</a>
+: <a class="el" href="group__registry.html#g28aefd9be7367aa495753142005e1d5a">registry.h</a>
+, <a class="el" href="group__registry.html#g28aefd9be7367aa495753142005e1d5a">registry.c</a>
 <li>xnregistry_fetch()
 : <a class="el" href="group__registry.html#gf781f03f25b1667eb7f31cb6a246613a">registry.c</a>
 , <a class="el" href="group__registry.html#gf781f03f25b1667eb7f31cb6a246613a">registry.h</a>
@@ -265,8 +270,8 @@
 : <a class="el" href="group__timer.html#g782e10b2cd24a5c303b316375940ca15">timer.c</a>
 , <a class="el" href="group__timer.html#g782e10b2cd24a5c303b316375940ca15">timer.h</a>
 <li>xntimer_freeze()
-: <a class="el" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71">timer.c</a>
-, <a class="el" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71">timer.h</a>
+: <a class="el" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71">timer.h</a>
+, <a class="el" href="group__timer.html#g5cad677279089ef19d3710b1b6452a71">timer.c</a>
 <li>xntimer_get_date()
 : <a class="el" href="group__timer.html#ge87b875cf9f6831afffcfee8dabd67a8">timer.h</a>
 <li>xntimer_get_interval()
@@ -283,14 +288,30 @@
 <li>xntimer_stop()
 : <a class="el" href="group__timer.html#g1244411df9784d63d3e2f99016d62643">timer.h</a>
 <li>xntimer_tick_aperiodic()
-: <a class="el" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa">timer.h</a>
-, <a class="el" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa">timer.c</a>
+: <a class="el" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa">timer.c</a>
+, <a class="el" href="group__timer.html#g26727f15ac845719913dcb703bf0c3fa">timer.h</a>
 <li>xntimer_tick_periodic()
-: <a class="el" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1">timer.c</a>
-, <a class="el" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
+: <a class="el" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1">timer.h</a>
+, <a class="el" href="group__timer.html#g9b5391e752a8e16d89fb6a99c76bb7b1">timer.c</a>
+<li>xnvfile_destroy()
+: <a class="el" href="group__vfile.html#g5429178db74b9dd23378cb8f0942629e">vfile.h</a>
+<li>xnvfile_get_blob()
+: <a class="el" href="group__vfile.html#g6a9005ee997d929f7c8940cfcfcab171">vfile.h</a>
+<li>xnvfile_get_integer()
+: <a class="el" href="group__vfile.html#g18746b2aae928c0281ae57ef47086600">vfile.h</a>
+<li>xnvfile_get_string()
+: <a class="el" href="group__vfile.html#ge45ea5410707367c9e032dc36fc30916">vfile.h</a>
+<li>xnvfile_init_dir()
+: <a class="el" href="group__vfile.html#gdafe22257ce52d6e35698f4f66bb93c7">vfile.h</a>
+<li>xnvfile_init_link()
+: <a class="el" href="group__vfile.html#g3f28290884ca3c4458ac67e2b1845502">vfile.h</a>
+<li>xnvfile_init_regular()
+: <a class="el" href="group__vfile.html#g82b37f521d867ab9a94b15570210f83f">vfile.h</a>
+<li>xnvfile_init_snapshot()
+: <a class="el" href="group__vfile.html#gad513ffc19d0ab33ff1722899841a442">vfile.h</a>
 </ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed May 5 10:20:02 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Thu Sep 2 20:38:48 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
