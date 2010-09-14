@@ -428,7 +428,7 @@ int xnthread_register(struct xnthread *thread, const char *name)
 static inline
 struct xnthread *xnthread_lookup(xnhandle_t threadh)
 {
-	struct xnthread *thread = xnregistry_lookup(threadh);
+	struct xnthread *thread = (struct xnthread *)xnregistry_lookup(threadh);
 	return (thread && xnthread_handle(thread) == threadh) ? thread : NULL;
 }
 

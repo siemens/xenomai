@@ -168,7 +168,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..521885c
+index 0000000..99026e4
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,158 @@
@@ -199,10 +199,10 @@ index 0000000..521885c
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.7-02"
++#define IPIPE_ARCH_STRING	"2.7-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	7
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -1236,6 +1236,28 @@ index e0fbf29..ad884ed 100644
  #define read_cr3()	(native_read_cr3())
  #define write_cr3(x)	(native_write_cr3(x))
  #define read_cr4()	(native_read_cr4())
+diff --git a/arch/x86/include/asm/tlbflush.h b/arch/x86/include/asm/tlbflush.h
+index 7f3eba0..b0a4112 100644
+--- a/arch/x86/include/asm/tlbflush.h
++++ b/arch/x86/include/asm/tlbflush.h
+@@ -30,7 +30,7 @@ static inline void __native_flush_tlb_global(void)
+ 	 * from interrupts. (Use the raw variant because this code can
+ 	 * be called from deep inside debugging code.)
+ 	 */
+-	raw_local_irq_save(flags);
++	local_irq_save_hw(flags);
+ 
+ 	cr4 = native_read_cr4();
+ 	/* clear PGE */
+@@ -38,7 +38,7 @@ static inline void __native_flush_tlb_global(void)
+ 	/* write old PGE again and flush TLBs */
+ 	native_write_cr4(cr4);
+ 
+-	raw_local_irq_restore(flags);
++	local_irq_restore_hw(flags);
+ }
+ 
+ static inline void __native_flush_tlb_single(unsigned long addr)
 diff --git a/arch/x86/include/asm/traps.h b/arch/x86/include/asm/traps.h
 index 4da91ad..25e346e 100644
 --- a/arch/x86/include/asm/traps.h

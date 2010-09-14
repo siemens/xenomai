@@ -1311,6 +1311,15 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 		return -EFAULT;
 	return __xn_strncpy_from_user(dst, src, count);
 }
+
+static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
+{
+	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return 0;);
+
+	return (user_info ? xnshadow_thread(user_info) != NULL
+			  : !xnpod_root_p());
+}
+
 #else /* !CONFIG_XENO_OPT_PERVASIVE */
 /* Define void user<->kernel services that simply fail */
 #define rtdm_mmap_to_user(...)		({ -ENOSYS; })
@@ -1322,19 +1331,19 @@ static inline int rtdm_strncpy_from_user(rtdm_user_info_t *user_info,
 #define rtdm_copy_to_user(...)		({ -ENOSYS; })
 #define rtdm_safe_copy_to_user(...)	({ -ENOSYS; })
 #define rtdm_strncpy_from_user(...)	({ -ENOSYS; })
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
-static inline int rtdm_in_rt_context(void)
-{
-	return (rthal_current_domain != rthal_root_domain);
-}
 
 static inline int rtdm_rt_capable(rtdm_user_info_t *user_info)
 {
 	XENO_ASSERT(RTDM, !xnpod_asynch_p(), return 0;);
 
-	return (user_info ? xnshadow_thread(user_info) != NULL
-			  : !xnpod_root_p());
+	return !xnpod_root_p();
+}
+
+#endif /* CONFIG_XENO_OPT_PERVASIVE */
+
+static inline int rtdm_in_rt_context(void)
+{
+	return (rthal_current_domain != rthal_root_domain);
 }
 
 #endif /* !DOXYGEN_CPP */
