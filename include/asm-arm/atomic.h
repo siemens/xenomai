@@ -59,7 +59,7 @@ static inline unsigned long
 __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 {
 	unsigned long ret;
-	unsigned unsigned long tmp;
+	unsigned long tmp;
 
 	xnarch_memory_barrier();
 
