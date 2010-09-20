@@ -110,7 +110,8 @@ static int __t_create(struct pt_regs *regs)
 		 * TCB pointer freely. */
 		tid = xnthread_handle(&task->threadbase);
 		task->pthread = bulk.a5; /* hidden pthread_t identifier. */
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &tid,
+		if (__xn_reg_arg2(regs) &&
+		    __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &tid,
 					   sizeof(tid)))
 			return -EFAULT;
 

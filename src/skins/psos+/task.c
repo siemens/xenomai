@@ -180,10 +180,10 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 	bulk.a1 = (u_long)name;
 	bulk.a2 = (u_long)prio;
 	bulk.a3 = (u_long)flags;
-	bulk.a4 = (u_long)tid_r;
+	bulk.a4 = (u_long)xeno_init_current_mode();
 	bulk.a5 = (u_long)pthread_self();
 
-	ret = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_create, &bulk, NULL);
+	ret = XENOMAI_SKINCALL3(__psos_muxid, __psos_t_create, &bulk, tid_r, NULL);
 	if (!ret)
 		xeno_set_current();
 
