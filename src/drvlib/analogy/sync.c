@@ -296,21 +296,27 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 	size = a4l_sizeof_subd(subd);
 
 	switch(size) {
-	case 4:
-		((uint32_t *)values)[0] = *((uint32_t *)mask);
-		((uint32_t *)values)[1] = *((uint32_t *)buf);
+	case sizeof(uint32_t): {
+		uint32_t *tmp = (uint32_t *)values;
+		tmp[0] = *((uint32_t *)mask);
+		tmp[1] = *((uint32_t *)buf);
 		insn.data_size = 2 * sizeof(uint32_t);
 		break;
-	case 2: 
-		((uint16_t *)values)[0] = *((uint16_t *)mask);
-		((uint16_t *)values)[1] = *((uint16_t *)buf);
+	}
+	case sizeof(uint16_t): {
+		uint16_t *tmp = (uint16_t *)values;
+		tmp[0] = *((uint16_t *)mask);
+		tmp[1] = *((uint16_t *)buf);
 		insn.data_size = 2 * sizeof(uint16_t);
 		break;
-	case 1: 
-		((uint8_t *)values)[0] = *((uint8_t *)mask);
-		((uint8_t *)values)[1] = *((uint8_t *)buf);
+	}
+	case sizeof(uint8_t): {
+		uint8_t *tmp = (uint8_t *)values;
+		tmp[0] = *((uint8_t *)mask);
+		tmp[1] = *((uint8_t *)buf);
 		insn.data_size = 2 * sizeof(uint8_t);
 		break;
+	}
 	default:
 		return -EINVAL;
 	}
@@ -320,16 +326,22 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 
 	/* Update the buffer if need be */
 	switch(size) {
-	case 4:
-		*((uint32_t *)buf) = ((uint32_t *)values)[1];
+	case sizeof(uint32_t): {
+		uint32_t *tmp = (uint32_t *)buf;
+		*tmp = ((uint32_t *)values)[1];
 		break;
-	case 2: 
-		*((uint16_t *)buf) = ((uint16_t *)values)[1];
+	}
+	case sizeof(uint16_t): {
+		uint16_t *tmp = (uint16_t *)buf;
+		*tmp = ((uint16_t *)values)[1];
 		break;
-	case 1: 
-		*((uint8_t *)buf) = ((uint8_t *)values)[1];
+	}
+	case sizeof(uint8_t): {
+		uint8_t *tmp = (uint8_t *)buf;
+		*tmp = ((uint8_t *)values)[1];
 		break;
-	}	
+	}
+	}
 	
 	return ret;
 }

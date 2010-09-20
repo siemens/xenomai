@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <getopt.h>
+#include <string.h>
 
 #include <analogy/analogy.h>
 
@@ -200,10 +201,14 @@ int main(int argc, char *argv[])
 	}
 
 	if (scan_size == sizeof(uint8_t)) {
-		value = *((uint8_t *)&value);
+		uint8_t tmp;
+		memcpy(&tmp, &value, sizeof(uint8_t));
+		value = (int)tmp;
 	}
 	else if (scan_size == sizeof(uint16_t)) {
-		value = *((uint16_t *)&value);
+		uint16_t tmp;
+		memcpy(&tmp, &value, sizeof(uint16_t));		
+		value = (int)tmp;
 	}
 
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO)
