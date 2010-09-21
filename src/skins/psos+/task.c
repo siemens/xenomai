@@ -246,6 +246,18 @@ u_long t_resume(u_long tid)
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_resume, tid);
 }
 
+u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_setreg,
+				 tid, regnum, regvalue);
+}
+
+u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_getreg,
+				 tid, regnum, regvalue_r);
+}
+
 u_long t_ident(const char *name, u_long nodeno, u_long *tid_r)
 {
 	return XENOMAI_SKINCALL2(__psos_muxid, __psos_t_ident, name, tid_r);

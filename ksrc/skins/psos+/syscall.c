@@ -320,6 +320,59 @@ static int __t_setpri(struct pt_regs *regs)
 }
 
 /*
+ * int __t_setreg(u_long tid, u_long regnum, u_long regval)
+ */
+
+static int __t_setreg(struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long regnum, regval;
+	psostask_t *task;
+
+	if (handle)
+		task = __psos_task_lookup(handle);
+	else
+		task = __psos_task_current(current);
+
+	if (task == NULL)
+		return ERR_OBJID;
+
+	regnum = __xn_reg_arg2(regs);
+	regval = __xn_reg_arg3(regs);
+
+	return t_setreg((u_long)task, regnum, regval);
+}
+
+/*
+ * int __t_getreg(u_long tid, u_long regnum, u_long *regvalp)
+ */
+
+static int __t_getreg(struct pt_regs *regs)
+{
+	xnhandle_t handle = __xn_reg_arg1(regs);
+	u_long err, regnum, regval;
+	psostask_t *task;
+
+	if (handle)
+		task = __psos_task_lookup(handle);
+	else
+		task = __psos_task_current(current);
+
+	if (task == NULL)
+		return ERR_OBJID;
+
+	regnum = __xn_reg_arg2(regs);
+
+	err = t_getreg((u_long)task, regnum, &regval);
+	if (err == SUCCESS &&
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs), &regval,
+				   sizeof(regval)))
+		return -EFAULT;
+
+	return err;
+}
+
+/*
  * int __ev_send(u_long tid, u_long events)
  */
 
@@ -1425,6 +1478,8 @@ static xnsysent_t __systab[] = {
 	[__psos_t_ident] = {&__t_ident, __xn_exec_primary},
 	[__psos_t_mode] = {&__t_mode, __xn_exec_primary},
 	[__psos_t_setpri] = {&__t_setpri, __xn_exec_conforming},
+	[__psos_t_setreg] = {&__t_setreg, __xn_exec_any},
+	[__psos_t_getreg] = {&__t_getreg, __xn_exec_any},
 	[__psos_ev_send] = {&__ev_send, __xn_exec_any},
 	[__psos_ev_receive] = {&__ev_receive, __xn_exec_primary},
 	[__psos_q_create] = {&__q_create, __xn_exec_any},
