@@ -1127,8 +1127,7 @@ static inline struct xnheap *__validate_heap_addr(void *addr)
 	return NULL;
 }
 
-static int xnheap_ioctl(struct inode *inode,
-			struct file *file, unsigned int cmd, unsigned long arg)
+static long xnheap_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	file->private_data = (void *)arg;
 	return 0;
@@ -1369,7 +1368,7 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 static struct file_operations xnheap_fops = {
 	.owner = THIS_MODULE,
 	.open = xnheap_open,
-	.ioctl = xnheap_ioctl,
+	.unlocked_ioctl = xnheap_ioctl,
 	.mmap = xnheap_mmap,
 	.get_unmapped_area = xnheap_get_unmapped_area
 };
