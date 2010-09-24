@@ -205,14 +205,14 @@ static struct xnvfile_regular proto_vfile = {
 static void *openfd_begin(struct xnvfile_regular_iterator *it)
 {
 	if (it->pos == 0)
-		xnvfile_puts(it, "Index\tLocked\tDevice\t\tOwner [PID]\n");
+		return VFILE_SEQ_START;
 
-	return it;	/* Whatever non-NULL pointer will do. */
+	return it->pos <= RTDM_FD_MAX ? it : NULL;
 }
 
 static void *openfd_next(struct xnvfile_regular_iterator *it)
 {
-	if (it->pos >= RTDM_FD_MAX)
+	if (it->pos > RTDM_FD_MAX)
 		return NULL;
 
 	return it;
@@ -223,12 +223,19 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	struct rtdm_dev_context *context;
 	struct rtdm_device *device;
 	struct rtdm_process owner;
-	int close_lock_count;
+	int close_lock_count, fd;
 	spl_t s;
+
+	if (data == NULL) {
+		xnvfile_puts(it, "Index\tLocked\tDevice\t\tOwner [PID]\n");
+		return 0;
+	}
+
+	fd = (int)it->pos - 1;
 
 	xnlock_get_irqsave(&rt_fildes_lock, s);
 
-	context = fildes_table[it->pos].context;
+	context = fildes_table[fd].context;
 	if (context == NULL) {
 		xnlock_put_irqrestore(&rt_fildes_lock, s);
 		return VFILE_SEQ_SKIP;
@@ -245,7 +252,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
-	xnvfile_printf(it, "%d\t%d\t%-15s %s [%d]\n", (int)it->pos,
+	xnvfile_printf(it, "%d\t%d\t%-15s %s [%d]\n", fd,
 		       close_lock_count,
 		       (device->device_flags & RTDM_NAMED_DEVICE) ?
 		       device->device_name : device->proc_name,
