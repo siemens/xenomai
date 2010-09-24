@@ -107,12 +107,14 @@ static void *vfile_snapshot_start(struct seq_file *seq, loff_t *offp)
 static void *vfile_snapshot_next(struct seq_file *seq, void *v, loff_t *offp)
 {
 	struct xnvfile_snapshot_iterator *it = seq->private;
-	loff_t pos = ++*offp;
+	loff_t pos = *offp;
 
-	if (pos > it->nrdata)
+	if (pos >= it->nrdata)
 		return NULL;
 
-	return it->databuf + (pos - 1) * it->vfile->datasz;
+	++*offp;
+
+	return it->databuf + pos * it->vfile->datasz;
 }
 
 static void vfile_snapshot_stop(struct seq_file *seq, void *v)
@@ -419,9 +421,6 @@ static void *vfile_regular_start(struct seq_file *seq, loff_t *offp)
 	struct xnvfile_regular *vfile = it->vfile;
 	int ret;
 
-	if (it->pos >= it->maxpos)
-		return NULL;
-
 	it->pos = *offp;
 
 	if (vfile->entry.lockops) {
@@ -445,15 +444,20 @@ static void *vfile_regular_next(struct seq_file *seq, void *v, loff_t *offp)
 {
 	struct xnvfile_regular_iterator *it = seq->private;
 	struct xnvfile_regular *vfile = it->vfile;
-	loff_t pos = ++*offp;
+	void *data;
 
 	if (vfile->ops->next == NULL)
 		return NULL;
 
-	it->pos = pos;
-	it->maxpos = pos;
+	it->pos = *offp + 1;
 
-	return vfile->ops->next(it);
+	data = vfile->ops->next(it);
+	if (data == NULL)
+		return NULL;
+
+	*offp = it->pos;
+
+	return data;
 }
 
 static void vfile_regular_stop(struct seq_file *seq, void *v)

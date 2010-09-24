@@ -157,10 +157,6 @@ struct xnvfile_regular_ops {
 	 * - NULL in case no record is available, in which case the
 	 * read operation will terminate immediately with no output.
 	 *
-	 * - VFILE_SEQ_START, a special value indicating that @ref
-	 * regular_show "the show() handler" should receive a NULL
-	 * data pointer first, in order to output a header.
-	 *
 	 * - ERR_PTR(errno), where errno is a negative error code;
 	 * upon error, the current operation will be aborted
 	 * immediately.
@@ -261,8 +257,6 @@ struct xnvfile_regular_template {
 struct xnvfile_regular_iterator {
 	/** Current record position while iterating. */
 	loff_t pos;
-	/** Highest record position found. */
-	loff_t maxpos;
 	/** Backlink to the host sequential file supporting the vfile. */
 	struct seq_file *seq;
 	/** Backlink to the vfile being read. */
