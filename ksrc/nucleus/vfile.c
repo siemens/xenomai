@@ -174,11 +174,15 @@ static int vfile_snapshot_open(struct inode *inode, struct file *file)
 		return 0;
 	}
 
+	if ((file->f_flags & O_EXCL) != 0 && xnvfile_nref(vfile) > 0)
+		return -EBUSY;
+
 	it = kzalloc(sizeof(*it) + vfile->privsz, GFP_KERNEL);
 	if (it == NULL)
 		return -ENOMEM;
 
 	it->vfile = vfile;
+	xnvfile_file(vfile) = file;
 
 	ret = vfile->entry.lockops->get(&vfile->entry);
 	if (ret)
@@ -290,6 +294,7 @@ finish:
 	seq = file->private_data;
 	it->seq = seq;
 	seq->private = it;
+	xnvfile_nref(vfile)++;
 
 	return 0;
 }
@@ -302,6 +307,8 @@ static int vfile_snapshot_release(struct inode *inode, struct file *file)
 	if (seq) {
 		it = seq->private;
 		if (it) {
+			--xnvfile_nref(it->vfile);
+			XENO_BUGON(NUCLEUS, it->vfile->entry.refcnt < 0);
 			if (it->databuf)
 				it->endfn(it, it->databuf);
 			kfree(it);
@@ -500,8 +507,10 @@ static int vfile_regular_open(struct inode *inode, struct file *file)
 	struct seq_file *seq;
 	int ret;
 
-	if ((file->f_mode & FMODE_WRITE) != 0 &&
-	    ops->store == NULL)
+	if ((file->f_flags & O_EXCL) != 0 && xnvfile_nref(vfile) > 0)
+		return -EBUSY;
+
+	if ((file->f_mode & FMODE_WRITE) != 0 && ops->store == NULL)
 		return -EACCES;
 
 	if ((file->f_mode & FMODE_READ) == 0) {
@@ -515,16 +524,25 @@ static int vfile_regular_open(struct inode *inode, struct file *file)
 
 	it->vfile = vfile;
 	it->pos = -1;
+	xnvfile_file(vfile) = file;
+
+	if (ops->rewind) {
+		ret = ops->rewind(it);
+		if (ret) {
+		fail:
+			kfree(it);
+			return ret;
+		}
+	}
 
 	ret = seq_open(file, &vfile_regular_ops);
-	if (ret) {
-		kfree(it);
-		return ret;
-	}
+	if (ret)
+		goto fail;
 
 	seq = file->private_data;
 	it->seq = seq;
 	seq->private = it;
+	xnvfile_nref(vfile)++;
 
 	return 0;
 }
@@ -536,8 +554,11 @@ static int vfile_regular_release(struct inode *inode, struct file *file)
 
 	if (seq) {
 		it = seq->private;
-		if (it)
+		if (it) {
+			--xnvfile_nref(it->vfile);
+			XENO_BUGON(NUCLEUS, xnvfile_nref(it->vfile) < 0);
 			kfree(it);
+		}
 
 		return seq_release(inode, file);
 	}

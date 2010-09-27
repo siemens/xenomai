@@ -40,8 +40,10 @@ struct xnvfile_lock_ops;
 
 struct xnvfile {
 	struct proc_dir_entry *pde;
+	struct file *file;
 	struct xnvfile_directory *parent;
 	struct xnvfile_lock_ops *lockops;
+	int refcnt;
 	void *private;
 };
 
@@ -109,13 +111,32 @@ struct xnvfile_input {
  */
 struct xnvfile_regular_ops {
 	/**
+	 * @anchor regular_rewind This handler is called only once,
+	 * when the virtual file is opened, before the @ref
+	 * regular_show "begin() handler" is invoked.
+	 *
+	 * @param it A pointer to the vfile iterator which will be
+	 * used to read the file contents.
+	 *
+	 * @return Zero should be returned upon success. Otherwise, a
+	 * negative error code aborts the operation, and is passed
+	 * back to the reader.
+	 *
+	 * @note This handler is optional. It should not be used to
+	 * allocate resources but rather to perform consistency
+	 * checks, since no closure call is issued in case the open
+	 * sequence eventually fails.
+	 */
+	int (*rewind)(struct xnvfile_regular_iterator *it);
+	/**
 	 * @anchor regular_begin
 	 * This handler should prepare for iterating over the records
-	 * upon a read request, according to the iterator data.
+	 * upon a read request, starting from the specified position.
 	 *
 	 * @param it A pointer to the current vfile iterator. On
 	 * entry, it->pos is set to the (0-based) position of the
-	 * first record to output.
+	 * first record to output. This handler may be called multiple
+	 * times with different position requests.
 	 *
 	 * @return A pointer to the first record to format and output,
 	 * to be passed to the @ref regular_show "show() handler" as
@@ -148,7 +169,7 @@ struct xnvfile_regular_ops {
 	 *
 	 * @param it A pointer to the current vfile iterator. On
 	 * entry, it->pos is set to the (0-based) position of the
-	 * first record to output.
+	 * next record to output.
 	 *
 	 * @return A pointer to the next record to format and output,
 	 * to be passed to the @ref regular_show "show() handler" as
@@ -573,6 +594,8 @@ static inline int xnvfile_link_p(struct xnvfile *entry)
 		.pde = NULL,		\
 		.parent = NULL,		\
 		.private = NULL,	\
+		.file = NULL,		\
+		.refcnt = 0,		\
 	}
 
 #define xnvfile_nodir	{ .entry = xnvfile_noentry }
@@ -581,6 +604,8 @@ static inline int xnvfile_link_p(struct xnvfile *entry)
 
 #define xnvfile_parent(e)		((e)->entry.parent)
 #define xnvfile_priv(e)			((e)->entry.private)
+#define xnvfile_nref(e)			((e)->entry.refcnt)
+#define xnvfile_file(e)			((e)->entry.file)
 #define xnvfile_iterator_priv(it)	((void *)(&(it)->private))
 
 extern struct xnvfile_nklock_class xnvfile_nucleus_lock;
