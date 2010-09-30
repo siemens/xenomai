@@ -54,6 +54,9 @@ static struct {
     int count;
 } rthal_linux_irq[IPIPE_NR_XIRQS];
 
+rthal_u32frac_t rthal_tsc_to_timer;
+EXPORT_SYMBOL(rthal_tsc_to_timer);
+
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 int rthal_timer_request(void (*handler)(void),
@@ -70,14 +73,14 @@ int rthal_timer_request(void (*handler)(void),
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
     unsigned long dummy, *tmfreq = &dummy;
-    int res;    
+    int res;
 
     if (rthal_timerfreq_arg == 0)
-        tmfreq = &rthal_tunables.timer_freq;
+	tmfreq = &rthal_tunables.timer_freq;
 
     res = ipipe_request_tickdev(RTHAL_TIMER_DEVICE, mode_emul,
 				tick_emul, cpu, tmfreq);
-    
+
     switch (res) {
     case CLOCK_EVT_MODE_PERIODIC:
 		/* oneshot tick emulation callback won't be used, ask
@@ -85,20 +88,20 @@ int rthal_timer_request(void (*handler)(void),
 		 * a periodic tick. */
 	    tickval = 1000000000UL / HZ;
 	    break;
-	    
+
     case CLOCK_EVT_MODE_ONESHOT:
 	    /* oneshot tick emulation */
 	    tickval = 1;
 	    break;
-	    
+
     case CLOCK_EVT_MODE_UNUSED:
 	    /* we don't need to emulate the tick at all. */
 	    tickval = 0;
 	    break;
-	    
+
     case CLOCK_EVT_MODE_SHUTDOWN:
 		return -ENOSYS;
-		
+
     default:
 	    return res;
     }
@@ -120,7 +123,7 @@ int rthal_timer_request(void (*handler)(void),
     rthal_irq_release(RTHAL_TIMER_IRQ);
 
     err = rthal_irq_request(RTHAL_TIMER_IRQ,
-                            (rthal_irq_handler_t) handler, NULL, NULL);
+			    (rthal_irq_handler_t) handler, NULL, NULL);
 
     rthal_critical_exit(flags);
 
@@ -133,7 +136,7 @@ void rthal_timer_release(int cpu)
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
     ipipe_release_tickdev(cpu);
-#endif    
+#endif
 
     flags = rthal_critical_enter(NULL);
 
@@ -231,8 +234,8 @@ int rthal_irq_host_request(unsigned irq,
     rthal_irqdesc_lock(irq, flags);
 
     if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
-        rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
-        rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
+	rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
+	rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
     }
 
     rthal_irqdesc_unlock(irq, flags);
@@ -254,7 +257,7 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
     rthal_irqdesc_lock(irq, flags);
 
     if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-        rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
+	rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
 
     rthal_irqdesc_unlock(irq, flags);
 
@@ -264,7 +267,7 @@ int rthal_irq_host_release(unsigned irq, void *dev_id)
 int rthal_irq_enable(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-        return -EINVAL;
+	return -EINVAL;
 
     /* We don't care of disable nesting level: real-time IRQ channels
        are not meant to be shared with the regular kernel. */
@@ -275,7 +278,7 @@ int rthal_irq_enable(unsigned irq)
 int rthal_irq_disable(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-        return -EINVAL;
+	return -EINVAL;
 
     rthal_mark_irq_disabled(irq);
     return rthal_irq_chip_disable(irq);
@@ -284,7 +287,7 @@ int rthal_irq_disable(unsigned irq)
 int rthal_irq_end(unsigned irq)
 {
     if (irq >= IPIPE_NR_XIRQS || rthal_irq_descp(irq) == NULL)
-        return -EINVAL;
+	return -EINVAL;
 
     return rthal_irq_chip_end(irq);
 }
@@ -317,7 +320,7 @@ static inline void do_rthal_domain_entry(void)
 
     /* Trap all faults. */
     for (trapnr = 0; trapnr < RTHAL_NR_FAULTS; trapnr++)
-        rthal_catch_exception(trapnr, &exception_event);
+	rthal_catch_exception(trapnr, &exception_event);
 
     printk(KERN_INFO "Xenomai: hal/arm started.\n");
 }
@@ -334,6 +337,9 @@ int rthal_arch_init(void)
 
 	if (rthal_clockfreq_arg == 0)
 		rthal_clockfreq_arg = rthal_get_clockfreq();
+
+	xnarch_init_u32frac(&rthal_tsc_to_timer,
+			    rthal_timerfreq_arg, rthal_clockfreq_arg);
 
 	return 0;
 }
