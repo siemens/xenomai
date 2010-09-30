@@ -166,12 +166,12 @@ struct xnsched_class {
 /* Test all resched flags from the given scheduler mask. */
 static inline int xnsched_resched_p(struct xnsched *sched)
 {
-	return !xnarch_cpus_empty(sched->resched);
+	return testbits(sched->status, XNRESCHED);
 }
 
 static inline int xnsched_self_resched_p(struct xnsched *sched)
 {
-	return xnarch_cpu_isset(xnsched_cpu(sched), sched->resched);
+	return testbits(sched->status, XNRESCHED);
 }
 
 /* Set self resched flag for the given scheduler. */
