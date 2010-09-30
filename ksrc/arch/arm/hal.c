@@ -43,6 +43,7 @@
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
+#include <asm/cacheflush.h>
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
 #endif /* CONFIG_PROC_FS */
@@ -155,14 +156,70 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 EXPORT_SYMBOL(rthal_timer_notify_switch);
 #endif
 
+#define RTHAL_CALIBRATE_LOOPS 10
+
 unsigned long rthal_timer_calibrate(void)
 {
-	return 1000000000 / RTHAL_CLOCK_FREQ;
+	unsigned long long next_shot = 0, start, end, sum = 0, sum_sq = 0;
+	volatile unsigned const_delay = 0xffffffff;
+	unsigned long result, flags, tsc_lat;
+	unsigned delay = const_delay;
+	unsigned diff;
+	int i, j;
+
+	flags = rthal_critical_enter(NULL);
+
+	rthal_read_tsc(start);
+	barrier();
+	rthal_read_tsc(end);
+	tsc_lat = end - start;
+	barrier();
+
+	if (__ipipe_mach_timerstolen) {
+		rthal_read_tsc(next_shot);
+		next_shot += rthal_imuldiv(__ipipe_mach_get_dec(),
+					   RTHAL_CLOCK_FREQ, RTHAL_TIMER_FREQ);
+		next_shot -= tsc_lat;
+	}
+
+	for (i = 0; i < RTHAL_CALIBRATE_LOOPS; i++) {
+		flush_cache_all();
+		for (j = 0; j < RTHAL_CALIBRATE_LOOPS; j++) {
+			rthal_read_tsc(start);
+			barrier();
+			rthal_timer_program_shot(
+				rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
+			barrier();
+			rthal_read_tsc(end);
+			diff = end - start - tsc_lat;
+
+			sum += diff;
+			sum_sq += diff * diff;
+		}
+	}
+
+	if (__ipipe_mach_timerstolen) {
+		delay = (next_shot > end
+			 ? rthal_nodiv_imuldiv_ceil(next_shot - end,
+						    rthal_tsc_to_timer)
+			 : 0);
+		rthal_timer_program_shot(delay);
+	} else
+		__ipipe_mach_release_timer();
+
+	rthal_critical_exit(flags);
+
+	/* Use average + standard deviation as timer programming latency. */
+	do_div(sum, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
+	do_div(sum_sq, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
+	result = sum + int_sqrt(sum_sq - sum * sum) + 1;
+	printk("calibrate result: %lu\n", result);
+	return result;
 }
 
 int rthal_irq_host_request(unsigned irq,
-                           rthal_irq_host_handler_t handler,
-                           char *name, void *dev_id)
+			   rthal_irq_host_handler_t handler,
+			   char *name, void *dev_id)
 {
     unsigned long flags;
 

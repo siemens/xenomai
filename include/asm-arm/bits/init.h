@@ -3,7 +3,7 @@
  *
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -51,7 +51,7 @@ unsigned long xnarch_calibrate_timer(void)
 {
 	/* Compute the time needed to program the decrementer in aperiodic
 	   mode. The return value is expressed in timebase ticks. */
-	return xnarch_ns_to_tsc(rthal_timer_calibrate())? : 1;
+	return rthal_timer_calibrate() ? : 1;
 }
 
 int xnarch_calibrate_sched(void)
