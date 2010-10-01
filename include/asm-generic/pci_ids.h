@@ -4,6 +4,9 @@
 #include <linux/pci_ids.h>
 
 /* SMI */
+#ifndef PCI_DEVICE_ID_INTEL_82801EB_0
+#define PCI_DEVICE_ID_INTEL_82801EB_0 0x24d0
+#endif
 #ifndef PCI_DEVICE_ID_INTEL_ICH7_0
 #define PCI_DEVICE_ID_INTEL_ICH7_0 0x27b8
 #endif
