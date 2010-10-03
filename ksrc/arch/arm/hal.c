@@ -216,7 +216,6 @@ unsigned long rthal_timer_calibrate(void)
 	do_div(sum, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
 	do_div(sum_sq, RTHAL_CALIBRATE_LOOPS * RTHAL_CALIBRATE_LOOPS);
 	result = sum + int_sqrt(sum_sq - sum * sum) + 1;
-	printk("calibrate result: %lu\n", result);
 	return result;
 }
 
