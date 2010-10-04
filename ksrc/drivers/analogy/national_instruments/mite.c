@@ -332,10 +332,10 @@ void mite_release_channel(struct mite_channel *mite_chan)
 	struct mite_struct *mite = mite_chan->mite;
 	unsigned long flags;
 
-	// spin lock to prevent races with mite_request_channel
+	/* Spin lock to prevent races with mite_request_channel */
 	a4l_lock_irqsave(&mite->lock, flags);
 	if (mite->channel_allocated[mite_chan->channel]) {
-		// disable all channel's interrupts
+		/* disable all channel's interrupts */
 		writel(CHCR_CLR_DMA_IE | CHCR_CLR_LINKP_IE |
 		       CHCR_CLR_SAR_IE | CHCR_CLR_DONE_IE |
 		       CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |

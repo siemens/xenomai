@@ -3152,7 +3152,7 @@ static struct xnvfile_regular lock_vfile = {
 
 static int latency_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	xnvfile_printf(it, "%Lu\n", xnarch_tsc_to_ns(nklatency));
+	xnvfile_printf(it, "%Lu\n", xnarch_tsc_to_ns(nklatency - nktimerlat));
 
 	return 0;
 }
@@ -3166,7 +3166,7 @@ static ssize_t latency_vfile_store(struct xnvfile_input *input)
 	if (ret < 0)
 		return ret;
 
-	nklatency = xnarch_ns_to_tsc(val);
+	nklatency = xnarch_ns_to_tsc(val) + nktimerlat;
 
 	return ret;
 }

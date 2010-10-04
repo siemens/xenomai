@@ -365,7 +365,7 @@ void xntimer_tick_aperiodic(void)
 		 * by increasing values.
 		 */
 		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
-		if (delta > (xnsticks_t)nklatency)
+		if (delta > (xnsticks_t)(nklatency + nktimerlat))
 			break;
 
 		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
@@ -802,7 +802,7 @@ xntbops_t nktimer_ops_periodic = {
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-/*! 
+/*!
  * \fn void xntimer_init(xntimer_t *timer,xntbase_t *base,void (*handler)(xntimer_t *timer))
  * \brief Initialize a timer object.
  *
@@ -884,7 +884,7 @@ void __xntimer_init(xntimer_t *timer, xntbase_t *base,
 }
 EXPORT_SYMBOL_GPL(__xntimer_init);
 
-/*! 
+/*!
  * \fn void xntimer_destroy(xntimer_t *timer)
  *
  * \brief Release a timer object.
@@ -910,7 +910,7 @@ EXPORT_SYMBOL_GPL(__xntimer_init);
 void xntimer_destroy(xntimer_t *timer)
 {
 	spl_t s;
-	
+
 	xnlock_get_irqsave(&nklock, s);
 	xntimer_stop(timer);
 	__setbits(timer->status, XNTIMER_KILLED);

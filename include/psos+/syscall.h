@@ -75,6 +75,8 @@
 #define __psos_tm_getc      46
 /* Xenomai internal: get hidden pthread_t identifier. */
 #define __psos_t_getpth     47
+#define __psos_t_setreg     48
+#define __psos_t_getreg     49
 
 struct psos_arg_bulk {
     u_long a1;

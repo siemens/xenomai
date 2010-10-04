@@ -402,25 +402,30 @@ static int ni_request_gpct_mite_channel(a4l_dev_t * dev,
 static int ni_request_cdo_mite_channel(a4l_dev_t *dev)
 {
 	unsigned long flags;
+	int err = 0;
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
+
+	/* No channel should be allocated... */
 	BUG_ON(devpriv->cdo_mite_chan);
+	/* ...until now */
 	devpriv->cdo_mite_chan =
 		mite_request_channel(devpriv->mite, devpriv->cdo_mite_ring);
-	if (devpriv->cdo_mite_chan == NULL) {
-		a4l_unlock_irqrestore(&devpriv->mite_channel_lock,
-				      flags);
+
+	if (devpriv->cdo_mite_chan) {
+		devpriv->cdo_mite_chan->dir = A4L_OUTPUT;
+		ni_set_cdo_dma_channel(dev, devpriv->cdo_mite_chan->channel);
+	} else {
+		err = -EBUSY;
 		a4l_err(dev,
 			"ni_request_cdo_mite_channel: "
 			"failed to reserve mite dma channel "
 			"for correlated digital outut.");
-		return -EBUSY;
 	}
-	devpriv->cdo_mite_chan->dir = A4L_OUTPUT;
-	ni_set_cdo_dma_channel(dev, devpriv->cdo_mite_chan->channel);
+
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
-	return 0;
+	return err;
 }
 
 void ni_release_ai_mite_channel(a4l_dev_t *dev)
@@ -1425,13 +1430,18 @@ static void ni_ai_munge32(a4l_subd_t *subd, void *buf, unsigned long size)
 static int ni_ai_setup_MITE_dma(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-	int retval;
+	unsigned long flags;
+	int err;
 
-	retval = ni_request_ai_mite_channel(dev);
-	if (retval)
-		return retval;
+	err = ni_request_ai_mite_channel(dev);
+	if (err < 0)
+		return err;
 
-	mite_buf_change(devpriv->ai_mite_chan->ring, subd);
+	err = mite_buf_change(devpriv->ai_mite_chan->ring, subd);
+	if (err < 0)
+		return err;
+
+	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 
 	switch (boardtype.reg_type) {
 	case ni_reg_611x:
@@ -1449,37 +1459,74 @@ static int ni_ai_setup_MITE_dma(a4l_subd_t *subd)
 	/* start the MITE */
 	mite_dma_arm(devpriv->ai_mite_chan);
 
+	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
+
 	return 0;
 }
 
 static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-
-	int retval;
 	unsigned long flags;
+	int err;
 
-	retval = ni_request_ao_mite_channel(dev);
-	if (retval)
-		return retval;
+	err = ni_request_ao_mite_channel(dev);
+	if (err < 0)
+		return err;
 
-	mite_buf_change(devpriv->ao_mite_chan->ring, subd);
+	err = mite_buf_change(devpriv->ao_mite_chan->ring, subd);
+	if (err < 0)
+		return err;
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
+
 	if (devpriv->ao_mite_chan) {
+
 		if (boardtype.reg_type & (ni_reg_611x | ni_reg_6713)) {
 			mite_prep_dma(devpriv->ao_mite_chan, 32, 32);
 		} else {
-			/* doing 32 instead of 16 bit wide transfers from memory
-			   makes the mite do 32 bit pci transfers, doubling pci bandwidth. */
+			/* Doing 32 instead of 16 bit wide transfers
+			   from memory makes the mite do 32 bit pci
+			   transfers, doubling pci bandwidth. */
 			mite_prep_dma(devpriv->ao_mite_chan, 16, 32);
 		}
 		mite_dma_arm(devpriv->ao_mite_chan);
 	} else
-		retval = -EIO;
+		err = -EIO;
+
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
-	return retval;
+	return err;
+}
+
+static int ni_cdo_setup_MITE_dma(a4l_subd_t *subd)
+{
+	a4l_dev_t *dev = subd->dev;
+	unsigned long flags;
+	int err;
+
+	err = ni_request_cdo_mite_channel(dev);
+	if (err < 0)
+		return err;
+
+	/* No need to get a lock to setup the ring buffer */
+	err = mite_buf_change(devpriv->cdo_mite_chan->ring, subd);
+	if (err < 0)
+		return err;
+	
+	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
+
+	/* This test should be useless but one never knows */
+	if (devpriv->cdo_mite_chan) {
+		/* Configure the DMA transfer */
+		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
+		mite_dma_arm(devpriv->cdo_mite_chan);	
+	} else 
+		err = -EIO;
+
+	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
+	
+	return err;
 }
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
@@ -3394,7 +3441,6 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	a4l_dev_t *dev = subd->dev;
 	unsigned cdo_mode_bits = CDO_FIFO_Mode_Bit | CDO_Halt_On_Error_Bit;
-	int retval;
 
 	ni_writel(CDO_Reset_Bit, M_Offset_CDIO_Command);
 	switch (cmd->scan_begin_src) {
@@ -3421,10 +3467,6 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 			"output command with no lines configured as outputs");
 		return -EIO;
 	}
-
-	retval = ni_request_cdo_mite_channel(dev);
-	if (retval < 0)
-		return retval;
 	
 	return 0;
 }
@@ -3445,8 +3487,7 @@ int ni_cdio_cancel(a4l_subd_t *subd)
 int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 {
 	a4l_dev_t *dev = subd->dev;
-	unsigned long flags;
-	int retval = 0;
+	int err;
 	unsigned i;
 	const unsigned timeout = 1000;
 
@@ -3455,18 +3496,10 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	   more than once per command (and doing things like trying to
 	   allocate the ao dma channel multiple times) */
 
-	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
-	if (devpriv->cdo_mite_chan) {
-		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
-		mite_dma_arm(devpriv->cdo_mite_chan);
-	} else {
-		a4l_err(dev, "ni_cdo_inttrig: BUG: no cdo mite channel?");
-		retval = -EIO;
-	}
-	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
-	if (retval < 0)
-		return retval;
-
+	err = ni_cdo_setup_MITE_dma(subd);
+	if (err < 0)
+		return err;
+ 
 	/* wait for dma to fill output fifo */
 	for (i = 0; i < timeout; ++i) {
 		if (ni_readl(M_Offset_CDIO_Status) & CDO_FIFO_Full_Bit)
@@ -3479,8 +3512,12 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 		ni_cdio_cancel(subd);
 		return -EIO;
 	}
-	ni_writel(CDO_Arm_Bit | CDO_Error_Interrupt_Enable_Set_Bit |
-		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit, M_Offset_CDIO_Command);
+
+	ni_writel(CDO_Arm_Bit | 
+		  CDO_Error_Interrupt_Enable_Set_Bit |
+		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit, 
+		  M_Offset_CDIO_Command);
+
 	return 0;
 }
 
@@ -4449,6 +4486,7 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	int retval;
 	a4l_dev_t *dev = subd->dev;
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
+	struct mite_dma_descriptor_ring *ring;
 
 	retval = ni_request_gpct_mite_channel(dev, 
 					      counter->counter_index,
@@ -4456,9 +4494,20 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	if (retval) {
 		a4l_err(dev,
 			"ni_gpct_cmd: "
-			"no dma channel available for use by counter");
+			"no dma channel available for use by counter\n");
 		return retval;
 	}
+
+	ring = devpriv->gpct_mite_ring[counter->counter_index];
+	retval = mite_buf_change(ring, subd);
+	if (retval) {
+		a4l_err(dev,
+			"ni_gpct_cmd: "
+			"dma ring configuration failed\n");
+		return retval;
+
+	}
+
 	ni_tio_acknowledge_and_confirm(counter, NULL, NULL, NULL, NULL);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 1);
 	retval = ni_tio_cmd(counter, cmd);
@@ -4862,20 +4911,20 @@ static void ni_rtsi_init(a4l_dev_t * dev)
 	if (ni_set_master_clock(dev, NI_MIO_INTERNAL_CLOCK, 0) < 0) {
 		a4l_err(dev, "ni_set_master_clock failed, bug?");
 	}
+
 	/* Default internal lines routing to RTSI bus lines */
 	devpriv->rtsi_trig_a_output_reg =
-		RTSI_Trig_Output_Bits(0,
-				      NI_RTSI_OUTPUT_ADR_START1) | RTSI_Trig_Output_Bits(1,
-											 NI_RTSI_OUTPUT_ADR_START2) | RTSI_Trig_Output_Bits(2,
-																	    NI_RTSI_OUTPUT_SCLKG) | RTSI_Trig_Output_Bits(3,
-																							  NI_RTSI_OUTPUT_DACUPDN);
+		RTSI_Trig_Output_Bits(0, NI_RTSI_OUTPUT_ADR_START1) | 
+		RTSI_Trig_Output_Bits(1, NI_RTSI_OUTPUT_ADR_START2) | 
+		RTSI_Trig_Output_Bits(2, NI_RTSI_OUTPUT_SCLKG) | 
+		RTSI_Trig_Output_Bits(3, NI_RTSI_OUTPUT_DACUPDN);
 	devpriv->stc_writew(dev, devpriv->rtsi_trig_a_output_reg,
 			    RTSI_Trig_A_Output_Register);
 	devpriv->rtsi_trig_b_output_reg =
-		RTSI_Trig_Output_Bits(4,
-				      NI_RTSI_OUTPUT_DA_START1) | RTSI_Trig_Output_Bits(5,
-											NI_RTSI_OUTPUT_G_SRC0) | RTSI_Trig_Output_Bits(6,
-																       NI_RTSI_OUTPUT_G_GATE0);
+		RTSI_Trig_Output_Bits(4, NI_RTSI_OUTPUT_DA_START1) | 
+		RTSI_Trig_Output_Bits(5, NI_RTSI_OUTPUT_G_SRC0) | 
+		RTSI_Trig_Output_Bits(6, NI_RTSI_OUTPUT_G_GATE0);
+
 	if (boardtype.reg_type & ni_reg_m_series_mask)
 		devpriv->rtsi_trig_b_output_reg |=
 			RTSI_Trig_Output_Bits(7, NI_RTSI_OUTPUT_RTSI_OSC);

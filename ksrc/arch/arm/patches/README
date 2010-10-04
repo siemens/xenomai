@@ -23,8 +23,11 @@ http://download.gna.org/adeos/patches/v2.6/arm/
 
 NOTE: not all these patches are guaranteed to work with the current
 Xenomai release.  However, there is a good chance most of them do,
-since we try hard to maintain backward compatibility.
-
+since we try hard to maintain backward compatibility. Also note that
+by default, all patches apply to the mainline kernel, we do not try
+and be compatible with all the ARM vendor-specific kernel branches
+around. If a patch applies to a vendor-specific branch, it will be
+stated clearly in this file.
 
 -- supported boards
 

@@ -615,4 +615,8 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 	raw_spin_unlock_irqrestore(&rthal_irq_descp(irq)->lock, flags)
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33) */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)
+#define unlocked_ioctl ioctl
+#endif
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

@@ -45,7 +45,7 @@ a4l_cmd_t cmd = {
 	.start_src = TRIG_INT,
 	.start_arg = 0,
 	.scan_begin_src = TRIG_EXT,
-	.scan_begin_arg = 0, /* in ns */
+	.scan_begin_arg = 28, /* in ns */
 	.convert_src = TRIG_NOW,
 	.convert_arg = 0, /* in ns */
 	.scan_end_src = TRIG_COUNT,
@@ -269,6 +269,10 @@ out_cmd_bits:
 	/* Free the buffer used as device descriptor */
 	if (dsc.sbdata != NULL)
 		free(dsc.sbdata);
+
+	/* The fd closure will automatically trigger a cancel; so,
+	   wait a little bit for the end of the transfer */
+	sleep(1);
 
 	/* Release the file descriptor */
 	a4l_close(&dsc);

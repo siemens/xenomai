@@ -455,6 +455,10 @@ extern unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
 
 extern unsigned int rthal_apc_virq;
 
+extern unsigned long rthal_apc_pending[RTHAL_NR_CPUS];
+
+extern unsigned int rthal_apc_virq;
+
 extern int rthal_arch_init(void);
 
 extern void rthal_arch_cleanup(void);

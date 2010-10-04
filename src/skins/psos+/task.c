@@ -180,10 +180,10 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 	bulk.a1 = (u_long)name;
 	bulk.a2 = (u_long)prio;
 	bulk.a3 = (u_long)flags;
-	bulk.a4 = (u_long)tid_r;
+	bulk.a4 = (u_long)xeno_init_current_mode();
 	bulk.a5 = (u_long)pthread_self();
 
-	ret = XENOMAI_SKINCALL2(__psos_muxid, __psos_t_create, &bulk, NULL);
+	ret = XENOMAI_SKINCALL3(__psos_muxid, __psos_t_create, &bulk, tid_r, NULL);
 	if (!ret)
 		xeno_set_current();
 
@@ -244,6 +244,18 @@ u_long t_suspend(u_long tid)
 u_long t_resume(u_long tid)
 {
 	return XENOMAI_SKINCALL1(__psos_muxid, __psos_t_resume, tid);
+}
+
+u_long t_setreg(u_long tid, u_long regnum, u_long regvalue)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_setreg,
+				 tid, regnum, regvalue);
+}
+
+u_long t_getreg(u_long tid, u_long regnum, u_long *regvalue_r)
+{
+	return XENOMAI_SKINCALL3(__psos_muxid, __psos_t_getreg,
+				 tid, regnum, regvalue_r);
 }
 
 u_long t_ident(const char *name, u_long nodeno, u_long *tid_r)

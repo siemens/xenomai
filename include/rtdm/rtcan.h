@@ -59,7 +59,7 @@
  * @par Supported Operations
  * @n
  * @b Socket @n
- * Environments: non-RT (RT optional)@n
+ * Environments: non-RT (RT optional, deprecated)@n
  * @n
  * Specific return values:
  * - -EPROTONOSUPPORT (Protocol is not supported by the driver.
@@ -72,7 +72,7 @@
  * Blocking calls to any of the @ref Send or @ref Recv "Receive" functions
  * will be unblocked when the socket is closed and return with an error. @n
  * @n
- * Environments: non-RT (RT optional)@n
+ * Environments: non-RT (RT optional, deprecated)@n
  * @n
  * Specific return values: none @n
  * @n

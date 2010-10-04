@@ -3,7 +3,7 @@
  *
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -27,10 +27,14 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
+#include <asm/xenomai/arith.h>
+
+extern rthal_u32frac_t rthal_tsc_to_timer;
+
 static inline void xnarch_program_timer_shot(unsigned long delay)
 {
-	rthal_timer_program_shot(rthal_imuldiv_ceil
-				 (delay, RTHAL_TIMER_FREQ, RTHAL_CLOCK_FREQ));
+	rthal_timer_program_shot(rthal_nodiv_imuldiv_ceil(delay,
+							  rthal_tsc_to_timer));
 }
 
 static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)

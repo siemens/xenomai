@@ -175,7 +175,8 @@ void xnsched_init(struct xnsched *sched, int cpu)
 			     xnthread_name(&sched->rootcb));
 
 #ifdef CONFIG_XENO_OPT_WATCHDOG
-	xntimer_init(&sched->wdtimer, &nktbase, xnsched_watchdog_handler);
+	xntimer_init_noblock(&sched->wdtimer, &nktbase,
+			     xnsched_watchdog_handler);
 	xntimer_set_name(&sched->wdtimer, "[watchdog]");
 	xntimer_set_priority(&sched->wdtimer, XNTIMER_LOPRIO);
 	xntimer_set_sched(&sched->wdtimer, sched);

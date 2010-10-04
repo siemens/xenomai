@@ -922,8 +922,7 @@ static ssize_t xnpipe_write(struct file *file,
 	return (ssize_t)count;
 }
 
-static int xnpipe_ioctl(struct inode *inode,
-			struct file *file, unsigned int cmd, unsigned long arg)
+static long xnpipe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct xnpipe_state *state = file->private_data;
 	int ret = 0;
@@ -1067,7 +1066,7 @@ static struct file_operations xnpipe_fops = {
 	.read = xnpipe_read,
 	.write = xnpipe_write,
 	.poll = xnpipe_poll,
-	.ioctl = xnpipe_ioctl,
+	.unlocked_ioctl = xnpipe_ioctl,
 	.open = xnpipe_open,
 	.release = xnpipe_release,
 	.fasync = xnpipe_fasync
