@@ -720,7 +720,6 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config \
 	scripts/xeno \
 	src/Makefile \
-	src/rtdk/Makefile \
 	src/common/Makefile \
 	src/posix/Makefile \
 	src/native/Makefile \

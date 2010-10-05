@@ -41,7 +41,7 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/rtcanconfig.man.in $(srcdir)/rtcanrecv.man.in \
 	$(srcdir)/rtcansend.man.in $(srcdir)/switchbench.man.in \
 	$(srcdir)/switchtest.man.in $(srcdir)/xeno-config.man.in \
-	$(srcdir)/xeno-info.man.in $(srcdir)/xeno.man.in
+	$(srcdir)/xeno.man.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -57,8 +57,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES = clocktest.man cyclictest.man klatency.man \
 	latency.man rtcanconfig.man rtcanrecv.man rtcansend.man \
-	switchbench.man switchtest.man xeno.man xeno-config.man \
-	xeno-info.man
+	switchbench.man switchtest.man xeno.man xeno-config.man
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -89,7 +88,6 @@ NROFF = nroff
 MANS = $(man1_MANS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-ADEOS_PATCH = @ADEOS_PATCH@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
@@ -151,7 +149,6 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
-LNDIR = @LNDIR@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -179,10 +176,6 @@ VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_DLOPEN_CONSTRAINT = @XENO_DLOPEN_CONSTRAINT@
 XENO_HOST_STRING = @XENO_HOST_STRING@
-XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
-XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
-XENO_LINUX_IMAGE = @XENO_LINUX_IMAGE@
-XENO_LINUX_INSTALL_TARGET = @XENO_LINUX_INSTALL_TARGET@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
@@ -248,13 +241,9 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-<<<<<<< HEAD
-<<<<<<< HEAD
 man1_MANS = \
 	clocktest.man \
 	cyclictest.man \
-	irqbench.man \
-	irqloop.man \
 	klatency.man \
 	latency.man \
 	rtcanconfig.man	\
@@ -264,18 +253,6 @@ man1_MANS = \
 	switchtest.man \
 	xeno.man \
 	xeno-config.man
-=======
-<<<<<<< HEAD
-man1_MANS = clocktest.man cyclictest.man irqbench.man irqloop.man \
-=======
-=======
->>>>>>> testsuite: remove irqbench
-man1_MANS = xeno-config.man xeno-info.man \
-	    clocktest.man cyclictest.man irqbench.man irqloop.man \
-	    klatency.man latency.man rtcanconfig.man \
-	    rtcanrecv.man rtcansend.man switchbench.man \
-	    switchtest.man xeno.man
->>>>>>> scripts, testsuite, doc: discard obsolete scripts
 
 all: all-am
 
@@ -331,8 +308,6 @@ switchtest.man: $(top_builddir)/config.status $(srcdir)/switchtest.man.in
 xeno.man: $(top_builddir)/config.status $(srcdir)/xeno.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno-config.man: $(top_builddir)/config.status $(srcdir)/xeno-config.man.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-xeno-info.man: $(top_builddir)/config.status $(srcdir)/xeno-info.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:

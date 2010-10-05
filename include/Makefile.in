@@ -290,17 +290,9 @@ SUBDIRS = \
 	native \
 	nucleus \
 	posix \
-<<<<<<< HEAD:include/Makefile.in
-	psos+ \
-	rtdm \
-	uitron \
-	vrtx \
-	vxworks
-=======
 	rtdm
->>>>>>> skins: retain support for core APIs only:include/Makefile.in
 
-EXTRA_DIST = compat testing
+EXTRA_DIST = testing
 all: all-recursive
 
 .SUFFIXES:
@@ -574,9 +566,6 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
 check: check-recursive
 all-am: Makefile $(HEADERS)
@@ -683,7 +672,7 @@ uninstall-am: uninstall-includeHEADERS uninstall-local \
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-generic clean-libtool \
-	ctags ctags-recursive dist-hook distclean distclean-generic \
+	ctags ctags-recursive distclean distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-data-local install-dvi install-dvi-am \
@@ -714,9 +703,6 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-
-dist-hook:
-	find $(distdir)/compat -name .svn -depth -exec rm -fr \{\} \;
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

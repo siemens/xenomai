@@ -94,6 +94,7 @@ insn_read_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
 am_insn_write_OBJECTS = insn_write.$(OBJEXT)
 insn_write_OBJECTS = $(am_insn_write_OBJECTS)
 insn_write_DEPENDENCIES = ../../drvlib/analogy/libanalogy.la \
+	../../rtdm/librtdm.la ../../common/libxenomai.la
 am_wf_generate_OBJECTS = wf_generate.$(OBJEXT)
 wf_generate_OBJECTS = $(am_wf_generate_OBJECTS)
 wf_generate_DEPENDENCIES = ./libwaveform.la

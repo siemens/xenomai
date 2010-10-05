@@ -574,10 +574,7 @@ uninstall-am: uninstall-testPROGRAMS
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-testPROGRAMS
 
-<<<<<<< HEAD
-=======
 
->>>>>>> scripts, testsuite, doc: discard obsolete scripts
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
