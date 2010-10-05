@@ -2214,10 +2214,12 @@ static void handle_shadow_exit(void)
 	 */
 	if (thread->u_mode && !warned) {
 		warned = 1;
+#ifndef CONFIG_MMU
 		printk(KERN_WARNING
 		       "Xenomai: User-space support anterior to 2.5.2"
 		       " detected, may corrupt memory upon\n"
 		       "thread termination. Upgrade is recommended\n");
+#endif
 	}
 	thread->u_mode = NULL;
 }
