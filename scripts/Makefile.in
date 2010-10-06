@@ -218,9 +218,17 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 bin_SCRIPTS = xeno-config xeno-load xeno-test xeno-info xeno wrap-link.sh
-EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info wrap-link.sh \
-	Kconfig.frag Modules.frag defconfig.frag \
-	help_from_kconfig.pl $(wildcard postinstall.sh)
+EXTRA_DIST = \
+	bootstrap \
+	prepare-kernel.sh \
+	prepare-patch.sh \
+	xeno-info \
+	wrap-link.sh \
+	Kconfig.frag \
+	Modules.frag \
+	defconfig.frag \
+	help_from_kconfig.pl \
+	$(wildcard postinstall.sh)
 
 all: all-am
 

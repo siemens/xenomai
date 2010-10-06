@@ -6,6 +6,15 @@ install-exec-local:
 	   $(srcdir)/postinstall.sh ; \
 	fi
 
-EXTRA_DIST = bootstrap prepare-kernel.sh xeno-info wrap-link.sh \
-	Kconfig.frag Modules.frag defconfig.frag \
-	help_from_kconfig.pl $(wildcard postinstall.sh)
+EXTRA_DIST = \
+	bootstrap \
+	prepare-kernel.sh \
+	prepare-patch.sh \
+	xeno-info \
+	wrap-link.sh \
+	Kconfig.frag \
+	Modules.frag \
+	defconfig.frag \
+	help_from_kconfig.pl \
+	$(wildcard postinstall.sh)
+

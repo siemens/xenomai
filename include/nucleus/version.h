@@ -28,6 +28,6 @@
 
 #define XENO_VERSION_NAME	"Ghosts"
 
-#define XENO_VERSION_STRING	"2.5.5"
+#define XENO_VERSION_STRING	"2.5.5.1"
 
 #endif /* _XENO_NUCLEUS_VERSION_H */
