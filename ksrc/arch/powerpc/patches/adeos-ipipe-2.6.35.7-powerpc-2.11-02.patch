@@ -265,7 +265,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..776b916
+index 0000000..2e7f178
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,277 @@
@@ -316,10 +316,10 @@ index 0000000..776b916
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.11-01"
++#define IPIPE_ARCH_STRING	"2.11-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	11
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -548,10 +548,10 @@ index 0000000..776b916
 +#endif /* !__ASM_POWERPC_IPIPE_H */
 diff --git a/arch/powerpc/include/asm/ipipe_base.h b/arch/powerpc/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..eb3867a
+index 0000000..145d2cd
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe_base.h
-@@ -0,0 +1,157 @@
+@@ -0,0 +1,161 @@
 +/* -*- linux-c -*-
 + * include/asm-powerpc/ipipe_base.h
 + *
@@ -623,6 +623,10 @@ index 0000000..eb3867a
 +#define IPIPE_MSG_IPI_OFFSET	(IPIPE_CRITICAL_IPI)
 +
 +#define ipipe_processor_id()	raw_smp_processor_id()
++
++#define ipipe_ipi_p(ipi)	\
++	((ipi) >= IPIPE_SERVICE_IPI0 && (ipi) <= IPIPE_SERVICE_IPI4)
++
 +#else  /* !CONFIG_SMP */
 +#define ipipe_processor_id()	0
 +#endif /* CONFIG_SMP */
@@ -2284,10 +2288,10 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..89c9726
+index 0000000..825dc26
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,794 @@
+@@ -0,0 +1,760 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -2350,16 +2354,6 @@ index 0000000..89c9726
 +
 +#ifdef CONFIG_SMP
 +
-+static cpumask_t __ipipe_cpu_sync_map;
-+
-+static cpumask_t __ipipe_cpu_lock_map;
-+
-+static IPIPE_DEFINE_SPINLOCK(__ipipe_cpu_barrier);
-+
-+static atomic_t __ipipe_critical_count = ATOMIC_INIT(0);
-+
-+static void (*__ipipe_cpu_sync) (void);
-+
 +static DEFINE_PER_CPU(struct ipipe_ipi_struct, ipipe_ipi_message);
 +
 +unsigned int __ipipe_ipi_irq = NR_IRQS + 1; /* dummy value */
@@ -2367,30 +2361,6 @@ index 0000000..89c9726
 +#ifdef CONFIG_DEBUGGER
 +cpumask_t __ipipe_dbrk_pending;	/* pending debugger break IPIs */
 +#endif
-+
-+/* Always called with hw interrupts off. */
-+
-+void __ipipe_do_critical_sync(unsigned irq, void *cookie)
-+{
-+	cpu_set(ipipe_processor_id(), __ipipe_cpu_sync_map);
-+
-+	/*
-+	 * Now we are in sync with the lock requestor running on another
-+	 * CPU. Enter a spinning wait until he releases the global
-+	 * lock.
-+	 */
-+	spin_lock(&__ipipe_cpu_barrier);
-+
-+	/* Got it. Now get out. */
-+
-+	if (__ipipe_cpu_sync)
-+		/* Call the sync routine if any. */
-+		__ipipe_cpu_sync();
-+
-+	spin_unlock(&__ipipe_cpu_barrier);
-+
-+	cpu_clear(ipipe_processor_id(), __ipipe_cpu_sync_map);
-+}
 +
 +void __ipipe_hook_critical_ipi(struct ipipe_domain *ipd)
 +{
