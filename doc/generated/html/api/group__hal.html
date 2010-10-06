@@ -136,12 +136,9 @@ ARM-specific HAL services.
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gfb91722da28118853a09b1a0d98dd169">rthal_apc_alloc</a> (const char *name, void(*handler)(void *cookie), void *cookie)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Allocate an APC slot.  <a href="#gfb91722da28118853a09b1a0d98dd169"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gf11636f94b0a6913241679d84265eba6">rthal_apc_free</a> (int apc)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#gf11636f94b0a6913241679d84265eba6">rthal_apc_free</a> (int apc)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Releases an APC slot.  <a href="#gf11636f94b0a6913241679d84265eba6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__hal.html#ga0e99241b9b16e6a43a4eb0ec144448e">rthal_apc_schedule</a> (int apc)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Schedule an APC invocation.  <a href="#ga0e99241b9b16e6a43a4eb0ec144448e"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="gfb91722da28118853a09b1a0d98dd169"></a><!-- doxytag: member="hal.c::rthal_apc_alloc" ref="gfb91722da28118853a09b1a0d98dd169" args="(const char *name, void(*handler)(void *cookie), void *cookie)" -->
@@ -226,53 +223,10 @@ This service deallocates an APC slot obtained by <a class="el" href="group__hal.
     <tr><td valign="top"></td><td valign="top"><em>apc</em>&nbsp;</td><td>The APC id. to release, as returned by a successful call to the <a class="el" href="group__hal.html#gfb91722da28118853a09b1a0d98dd169" title="Allocate an APC slot.">rthal_apc_alloc()</a> service.</td></tr>
   </table>
 </dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
-<ul>
-<li>-EINVAL is returned if <em>apc</em> is invalid.</li></ul>
-<p>
 Environments:<p>
 This service can be called from:<p>
 <ul>
 <li>Any domain context. </li></ul>
-
-</div>
-</div><p>
-<a class="anchor" name="ga0e99241b9b16e6a43a4eb0ec144448e"></a><!-- doxytag: member="hal.c::rthal_apc_schedule" ref="ga0e99241b9b16e6a43a4eb0ec144448e" args="(int apc)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int rthal_apc_schedule           </td>
-          <td>(</td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>apc</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Schedule an APC invocation. 
-<p>
-This service marks the APC as pending for the Linux domain, so that its handler will be called as soon as possible, when the Linux domain gets back in control.<p>
-When posted from the Linux domain, the APC handler is fired as soon as the interrupt mask is explicitly cleared by some kernel code. When posted from the Xenomai domain, the APC handler is fired as soon as the Linux domain is resumed, i.e. after Xenomai has completed all its pending duties.<p>
-<dl compact><dt><b>Parameters:</b></dt><dd>
-  <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"></td><td valign="top"><em>apc</em>&nbsp;</td><td>The APC id. to schedule.</td></tr>
-  </table>
-</dl>
-<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 is returned upon success. Otherwise:</dd></dl>
-<ul>
-<li>-EINVAL is returned if <em>apc</em> is invalid.</li></ul>
-<p>
-Environments:<p>
-This service can be called from:<p>
-<ul>
-<li>Any domain context, albeit the usual calling place is from the Xenomai domain. </li></ul>
-
-<p>Referenced by <a class="el" href="select_8c-source.html#l00401">xnselector_destroy()</a>.</p>
 
 </div>
 </div><p>
@@ -550,7 +504,7 @@ This service can be called from:<p>
 <ul>
 <li>Any domain context. </li></ul>
 
-<p>Referenced by <a class="el" href="arm_2hal_8c-source.html#l00129">rthal_timer_release()</a>, and <a class="el" href="arm_2hal_8c-source.html#l00058">rthal_timer_request()</a>.</p>
+<p>Referenced by <a class="el" href="arm_2hal_8c-source.html#l00133">rthal_timer_release()</a>, and <a class="el" href="arm_2hal_8c-source.html#l00062">rthal_timer_request()</a>.</p>
 
 </div>
 </div><p>
@@ -618,7 +572,7 @@ This service can be called from:<p>
 <ul>
 <li>Any domain context. </li></ul>
 
-<p>Referenced by <a class="el" href="arm_2hal_8c-source.html#l00058">rthal_timer_request()</a>.</p>
+<p>Referenced by <a class="el" href="arm_2hal_8c-source.html#l00062">rthal_timer_request()</a>.</p>
 
 </div>
 </div><p>
@@ -757,7 +711,7 @@ This service can be called from:<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:38 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 6 12:56:10 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

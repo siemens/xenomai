@@ -276,7 +276,7 @@
 <a name="l00582"></a>00582                     <span class="comment">/* just warn if context was a dangling pointer */</span>);
 <a name="l00583"></a>00583         smp_mb__before_atomic_dec();
 <a name="l00584"></a>00584         <span class="keywordflow">if</span> (unlikely(atomic_dec_and_test(&amp;context-&gt;<a class="code" href="structrtdm__dev__context.html#dca0cb98487cc1a5947e5ff76f62109a" title="Lock counter of context, held while structure is referenced by an operation handler...">close_lock_count</a>)))
-<a name="l00585"></a>00585                 <a class="code" href="group__hal.html#ga0e99241b9b16e6a43a4eb0ec144448e" title="Schedule an APC invocation.">rthal_apc_schedule</a>(rtdm_apc);
+<a name="l00585"></a>00585                 rthal_apc_schedule(rtdm_apc);
 <a name="l00586"></a>00586 }
 <a name="l00587"></a>00587 
 <a name="l00588"></a>00588 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="group__interdrv.html#g05772193e3398e0bc3c9a6e3ed8f90f9" title="Release a device context obtained via rtdm_context_get().">rtdm_context_put</a>(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html" title="Device context.">rtdm_dev_context</a> *context)
@@ -730,41 +730,50 @@
 <a name="l01311"></a>01311                 <span class="keywordflow">return</span> -EFAULT;
 <a name="l01312"></a>01312         <span class="keywordflow">return</span> __xn_strncpy_from_user(dst, src, count);
 <a name="l01313"></a>01313 }
-<a name="l01314"></a>01314 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01315"></a>01315 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
-<a name="l01316"></a>01316 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01317"></a>01317 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
-<a name="l01318"></a>01318 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
-<a name="l01319"></a>01319 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
-<a name="l01320"></a>01320 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
-<a name="l01321"></a>01321 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
-<a name="l01322"></a>01322 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
-<a name="l01323"></a>01323 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
-<a name="l01324"></a>01324 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
-<a name="l01325"></a>01325 <span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
-<a name="l01326"></a>01326 
-<a name="l01327"></a>01327 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g8f9fcd0e274324096628dfede6fb10f2" title="Test if running in a real-time task.">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
-<a name="l01328"></a>01328 {
-<a name="l01329"></a>01329         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
-<a name="l01330"></a>01330 }
-<a name="l01331"></a>01331 
-<a name="l01332"></a>01332 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
-<a name="l01333"></a>01333 {
-<a name="l01334"></a>01334         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
-<a name="l01335"></a>01335 
-<a name="l01336"></a>01336         <span class="keywordflow">return</span> (user_info ? xnshadow_thread(user_info) != NULL
-<a name="l01337"></a>01337                           : !xnpod_root_p());
-<a name="l01338"></a>01338 }
-<a name="l01339"></a>01339 
-<a name="l01340"></a>01340 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l01314"></a>01314 
+<a name="l01315"></a>01315 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
+<a name="l01316"></a>01316 {
+<a name="l01317"></a>01317         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
+<a name="l01318"></a>01318 
+<a name="l01319"></a>01319         <span class="keywordflow">return</span> (user_info ? xnshadow_thread(user_info) != NULL
+<a name="l01320"></a>01320                           : !xnpod_root_p());
+<a name="l01321"></a>01321 }
+<a name="l01322"></a>01322 
+<a name="l01323"></a>01323 <span class="preprocessor">#else </span><span class="comment">/* !CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01324"></a>01324 <span class="comment">/* Define void user&lt;-&gt;kernel services that simply fail */</span>
+<a name="l01325"></a>01325 <span class="preprocessor">#define rtdm_mmap_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01326"></a>01326 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_munmap(...)                ({ -ENOSYS; })</span>
+<a name="l01327"></a>01327 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_read_user_ok(...)          ({ 0; })</span>
+<a name="l01328"></a>01328 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_rw_user_ok(...)            ({ 0; })</span>
+<a name="l01329"></a>01329 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_from_user(...)        ({ -ENOSYS; })</span>
+<a name="l01330"></a>01330 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_from_user(...)   ({ -ENOSYS; })</span>
+<a name="l01331"></a>01331 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_copy_to_user(...)          ({ -ENOSYS; })</span>
+<a name="l01332"></a>01332 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_safe_copy_to_user(...)     ({ -ENOSYS; })</span>
+<a name="l01333"></a>01333 <span class="preprocessor"></span><span class="preprocessor">#define rtdm_strncpy_from_user(...)     ({ -ENOSYS; })</span>
+<a name="l01334"></a>01334 <span class="preprocessor"></span>
+<a name="l01335"></a>01335 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g321a8c48467a6268fa201c16833524db" title="Test if the caller is capable of running in real-time context.">rtdm_rt_capable</a>(rtdm_user_info_t *user_info)
+<a name="l01336"></a>01336 {
+<a name="l01337"></a>01337         XENO_ASSERT(RTDM, !xnpod_asynch_p(), <span class="keywordflow">return</span> 0;);
+<a name="l01338"></a>01338 
+<a name="l01339"></a>01339         <span class="keywordflow">return</span> !xnpod_root_p();
+<a name="l01340"></a>01340 }
 <a name="l01341"></a>01341 
-<a name="l01342"></a>01342 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html" title="Device context.">rtdm_dev_context</a> *context,
-<a name="l01343"></a>01343                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
-<a name="l01344"></a>01344                     rtdm_rt_handler_t handler);
-<a name="l01345"></a>01345 
-<a name="l01346"></a>01346 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
+<a name="l01342"></a>01342 <span class="preprocessor">#endif </span><span class="comment">/* CONFIG_XENO_OPT_PERVASIVE */</span>
+<a name="l01343"></a>01343 
+<a name="l01344"></a>01344 <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="group__util.html#g8f9fcd0e274324096628dfede6fb10f2" title="Test if running in a real-time task.">rtdm_in_rt_context</a>(<span class="keywordtype">void</span>)
+<a name="l01345"></a>01345 {
+<a name="l01346"></a>01346         <span class="keywordflow">return</span> (rthal_current_domain != rthal_root_domain);
+<a name="l01347"></a>01347 }
+<a name="l01348"></a>01348 
+<a name="l01349"></a>01349 <span class="preprocessor">#endif </span><span class="comment">/* !DOXYGEN_CPP */</span>
+<a name="l01350"></a>01350 
+<a name="l01351"></a>01351 <span class="keywordtype">int</span> rtdm_exec_in_rt(<span class="keyword">struct</span> <a class="code" href="structrtdm__dev__context.html" title="Device context.">rtdm_dev_context</a> *context,
+<a name="l01352"></a>01352                     rtdm_user_info_t *user_info, <span class="keywordtype">void</span> *arg,
+<a name="l01353"></a>01353                     rtdm_rt_handler_t handler);
+<a name="l01354"></a>01354 
+<a name="l01355"></a>01355 <span class="preprocessor">#endif </span><span class="comment">/* _RTDM_DRIVER_H */</span>
 </pre></div></div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:36 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 6 12:56:09 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

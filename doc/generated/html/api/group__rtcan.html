@@ -56,7 +56,7 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
 </dd></dl>
 <dl class="user" compact><dt><b>Supported Operations</b></dt><dd><br>
  <b>Socket</b> <br>
- Environments: non-RT (RT optional)<br>
+ Environments: non-RT (RT optional, deprecated)<br>
  <br>
  Specific return values:<ul>
 <li>-EPROTONOSUPPORT (Protocol is not supported by the driver. See <a class="el" href="group__rtcan.html#CAN_PROTO">CAN protocols</a> for possible protocols.)</li></ul>
@@ -65,7 +65,7 @@ This is the common interface a RTDM-compliant CAN device has to provide. Feel fr
  <b>Close</b> <br>
  Blocking calls to any of the <a class="el" href="group__rtcan.html#Send">Send</a> or <a class="el" href="group__rtcan.html#Recv">Receive</a> functions will be unblocked when the socket is closed and return with an error. <br>
  <br>
- Environments: non-RT (RT optional)<br>
+ Environments: non-RT (RT optional, deprecated)<br>
  <br>
  Specific return values: none <br>
  <br>
@@ -1291,7 +1291,7 @@ CAN controller is in Sleep mode. </td></tr>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Mon Aug 2 12:48:38 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 6 12:56:11 2010 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
