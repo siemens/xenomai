@@ -88,24 +88,25 @@ out:
 static void *named_begin(struct xnvfile_regular_iterator *it)
 {
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
+	struct list_head *devlist;
 	loff_t pos = 0;
 
 	priv->devmap = rtdm_named_devices;
 	priv->hmax = devname_hashtab_size;
 	priv->h = 0;
 
-	priv->curr = next_devlist(priv);
-	if (priv->curr == NULL)
+	devlist = next_devlist(priv);
+	if (devlist == NULL)
 		return NULL;	/* All devlists empty. */
 
+	priv->curr = devlist->next;	/* Skip head. */
+
 	/*
-	 * priv->curr now points to the first populated device list
-	 * attached to a hash slot; advance to the requested position
-	 * from there.
+	 * priv->curr now points to the first device; advance to the requested
+	 * position from there.
 	 */
-	do
+	while (priv->curr && pos++ < it->pos)
 		priv->curr = next_dev(it);
-	while (priv->curr && ++pos < it->pos);
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
@@ -145,24 +146,25 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 {
 
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
+	struct list_head *devlist;
 	loff_t pos = 0;
 
 	priv->devmap = rtdm_protocol_devices;
 	priv->hmax = protocol_hashtab_size;
 	priv->h = 0;
 
-	priv->curr = next_devlist(priv);
-	if (priv->curr == NULL)
+	devlist = next_devlist(priv);
+	if (devlist == NULL)
 		return NULL;	/* All devlists empty. */
 
+	priv->curr = devlist->next;	/* Skip head. */
+
 	/*
-	 * priv->curr now points to the first populated device list
-	 * attached to a hash slot; advance to the requested position
-	 * from there.
+	 * priv->curr now points to the first device; advance to the requested
+	 * position from there.
 	 */
-	do
+	while (priv->curr && pos++ < it->pos)
 		priv->curr = next_dev(it);
-	while (priv->curr && ++pos < it->pos);
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
