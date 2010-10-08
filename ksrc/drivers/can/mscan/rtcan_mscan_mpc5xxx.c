@@ -76,7 +76,7 @@ static u32 __devinit mpc52xx_can_get_clock(struct of_device *ofdev,
 	else
 		*mscan_clksrc = MSCAN_CLKSRC_XTAL;
 
-	freq = mpc5xxx_get_bus_frequency(ofdev->node);
+	freq = mpc5xxx_get_bus_frequency(mpc5xxx_get_of_node(ofdev));
 	if (!freq)
 		return 0;
 
@@ -254,7 +254,7 @@ static int __devinit mpc5xxx_can_probe(struct of_device *ofdev,
 				       const struct of_device_id *id)
 {
 	struct mpc5xxx_can_data *data = (struct mpc5xxx_can_data *)id->data;
-	struct device_node *np = ofdev->node;
+	struct device_node *np = mpc5xxx_get_of_node(ofdev);
 	struct rtcan_device *dev;
 	void __iomem *base;
 	const char *clock_name = NULL;
@@ -349,6 +349,17 @@ static struct of_device_id __devinitdata mpc5xxx_can_table[] = {
 	{},
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
+static struct of_platform_driver mpc5xxx_can_driver = {
+	.driver = {
+		.owner = THIS_MODULE,
+		.name = RTCAN_DRV_NAME,
+		.of_match_table = mpc5xxx_can_table,
+	},
+	.probe = mpc5xxx_can_probe,
+	.remove = __devexit_p(mpc5xxx_can_remove),
+};
+#else
 static struct of_platform_driver mpc5xxx_can_driver = {
 	.owner = THIS_MODULE,
 	.name = RTCAN_DRV_NAME,
@@ -356,6 +367,7 @@ static struct of_platform_driver mpc5xxx_can_driver = {
 	.remove = __devexit_p(mpc5xxx_can_remove),
 	.match_table = mpc5xxx_can_table,
 };
+#endif
 
 static int __init mpc5xxx_can_init(void)
 {

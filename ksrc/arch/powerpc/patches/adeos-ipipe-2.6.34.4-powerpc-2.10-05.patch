@@ -262,7 +262,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..32e2f6d
+index 0000000..69a3df3
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,277 @@
@@ -313,10 +313,10 @@ index 0000000..32e2f6d
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.10-04"
++#define IPIPE_ARCH_STRING	"2.10-05"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	10
-+#define IPIPE_PATCH_NUMBER	4
++#define IPIPE_PATCH_NUMBER	5
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -3212,31 +3212,10 @@ index ab3e392..00c0066 100644
  #endif
  
 diff --git a/arch/powerpc/kernel/process.c b/arch/powerpc/kernel/process.c
-index e4d71ce..711449f 100644
+index e4d71ce..a6886d3 100644
 --- a/arch/powerpc/kernel/process.c
 +++ b/arch/powerpc/kernel/process.c
-@@ -98,8 +98,12 @@ void flush_fp_to_thread(struct task_struct *tsk)
- 
- void enable_kernel_fp(void)
- {
-+	unsigned long flags;
-+
- 	WARN_ON(preemptible());
- 
-+	local_irq_save_hw_cond(flags);
-+
- #ifdef CONFIG_SMP
- 	if (current->thread.regs && (current->thread.regs->msr & MSR_FP))
- 		giveup_fpu(current);
-@@ -108,6 +112,7 @@ void enable_kernel_fp(void)
- #else
- 	giveup_fpu(last_task_used_math);
- #endif /* CONFIG_SMP */
-+	local_irq_restore_hw_cond(flags);
- }
- EXPORT_SYMBOL(enable_kernel_fp);
- 
-@@ -481,7 +486,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
+@@ -481,7 +481,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
  	}
  #endif
  
@@ -3245,7 +3224,7 @@ index e4d71ce..711449f 100644
  
  	account_system_vtime(current);
  	account_process_vtime(current);
-@@ -495,7 +500,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
+@@ -495,7 +495,7 @@ struct task_struct *__switch_to(struct task_struct *prev,
  	hard_irq_disable();
  	last = _switch(old_thread, new_thread);
  
@@ -3254,7 +3233,7 @@ index e4d71ce..711449f 100644
  
  	return last;
  }
-@@ -1148,7 +1153,7 @@ void dump_stack(void)
+@@ -1148,7 +1148,7 @@ void dump_stack(void)
  }
  EXPORT_SYMBOL(dump_stack);
  
@@ -7498,10 +7477,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..cd4952c
+index 0000000..539ec20
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,1968 @@
+@@ -0,0 +1,1960 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -7535,7 +7514,6 @@ index 0000000..cd4952c
 +#include <linux/interrupt.h>
 +#include <linux/bitops.h>
 +#include <linux/tick.h>
-+#include <linux/prefetch.h>
 +#ifdef CONFIG_PROC_FS
 +#include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
@@ -8056,7 +8034,6 @@ index 0000000..cd4952c
 +
 +	l0b = irq / (BITS_PER_LONG * BITS_PER_LONG);
 +	l1b = irq / BITS_PER_LONG;
-+	prefetchw(p);
 +
 +	if (likely(!test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
 +		__set_bit(irq, p->irqpend_lomap);
@@ -8171,8 +8148,6 @@ index 0000000..cd4952c
 +	int l0b = irq / BITS_PER_LONG;
 +
 +	IPIPE_WARN_ONCE(!irqs_disabled_hw());
-+
-+	prefetchw(p);
 +	
 +	if (likely(!test_bit(IPIPE_LOCK_FLAG, &ipd->irqs[irq].control))) {
 +		__set_bit(irq, p->irqpend_lomap);
@@ -8437,7 +8412,7 @@ index 0000000..cd4952c
 +		    ~(IPIPE_HANDLE_MASK | IPIPE_STICKY_MASK |
 +		      IPIPE_EXCLUSIVE_MASK | IPIPE_WIRED_MASK);
 +
-+	if (acknowledge == NULL && !ipipe_virtual_irq_p(irq))
++	if (acknowledge == NULL)
 +		/*
 +		 * Acknowledge handler unspecified for a hw interrupt:
 +		 * use the Linux-defined handler instead.
@@ -8631,8 +8606,6 @@ index 0000000..cd4952c
 +{
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
 +
-+	prefetchw(p);
-+
 +	if (test_bit(IPIPE_STALL_FLAG, &p->status)) {
 +		__ipipe_set_irq_pending(head, irq);
 +		return;
@@ -8645,8 +8618,6 @@ index 0000000..cd4952c
 +{
 +	struct ipipe_percpu_domain_data *p = ipipe_cpudom_ptr(head);
 +	struct ipipe_domain *old;
-+
-+	prefetchw(p);
 +
 +	old = __ipipe_current_domain;
 +	__ipipe_current_domain = head; /* Switch to the head domain. */
