@@ -24,6 +24,7 @@
  */
 
 #include <nucleus/types.h>
+#include <nucleus/hostrt.h>
 
 /*
  * Data shared between Xenomai kernel/userland and the Linux kernel/userland
@@ -33,8 +34,11 @@
 struct xnvdso {
 	unsigned long long features;
 
-	/* Embed domain specific structures that describe the
-	 * shared data here */
+	struct xnarch_hostrt_data hostrt_data;
+	/*
+	 * Embed further domain specific structures that
+	 * describe the shared data here
+	 */
 };
 
 /*
@@ -48,9 +52,19 @@ struct xnvdso {
 #define XNVDSO_FEATURES	(XNVDSO_FEAT_A | XNVDSO_FEAT_B | XVDSO_FEAT_C)
 */
 #define XNVDSO_FEAT_DROP_U_MODE 0x0000000000000001ULL
-#define XNVDSO_FEATURES (XNVDSO_FEAT_DROP_U_MODE)
+#define XNVDSO_FEAT_HOST_REALTIME	0x0000000000000002ULL
+#ifdef CONFIG_XENO_OPT_HOSTRT
+#define XNVDSO_FEATURES (XNVDSO_FEAT_DROP_U_MODE | XNVDSO_FEAT_HOST_REALTIME)
+#else
+#define XNVDSO_FEATURES XNVDSO_FEAT_DROP_U_MODE
+#endif /* CONFIG_XENO_OPT_HOSTRT */
 
 extern struct xnvdso *nkvdso;
+
+static inline struct xnarch_hostrt_data *get_hostrt_data(void)
+{
+	return &nkvdso->hostrt_data;
+}
 
 static inline int xnvdso_test_feature(unsigned long long feature)
 {

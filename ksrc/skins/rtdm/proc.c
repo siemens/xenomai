@@ -88,24 +88,25 @@ out:
 static void *named_begin(struct xnvfile_regular_iterator *it)
 {
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
+	struct list_head *devlist;
 	loff_t pos = 0;
 
 	priv->devmap = rtdm_named_devices;
 	priv->hmax = devname_hashtab_size;
 	priv->h = 0;
 
-	priv->curr = next_devlist(priv);
-	if (priv->curr == NULL)
+	devlist = next_devlist(priv);
+	if (devlist == NULL)
 		return NULL;	/* All devlists empty. */
 
+	priv->curr = devlist->next;	/* Skip head. */
+
 	/*
-	 * priv->curr now points to the first populated device list
-	 * attached to a hash slot; advance to the requested position
-	 * from there.
+	 * priv->curr now points to the first device; advance to the requested
+	 * position from there.
 	 */
-	do
+	while (priv->curr && pos++ < it->pos)
 		priv->curr = next_dev(it);
-	while (priv->curr && ++pos < it->pos);
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
@@ -145,24 +146,25 @@ static void *proto_begin(struct xnvfile_regular_iterator *it)
 {
 
 	struct vfile_device_data *priv = xnvfile_iterator_priv(it);
+	struct list_head *devlist;
 	loff_t pos = 0;
 
 	priv->devmap = rtdm_protocol_devices;
 	priv->hmax = protocol_hashtab_size;
 	priv->h = 0;
 
-	priv->curr = next_devlist(priv);
-	if (priv->curr == NULL)
+	devlist = next_devlist(priv);
+	if (devlist == NULL)
 		return NULL;	/* All devlists empty. */
 
+	priv->curr = devlist->next;	/* Skip head. */
+
 	/*
-	 * priv->curr now points to the first populated device list
-	 * attached to a hash slot; advance to the requested position
-	 * from there.
+	 * priv->curr now points to the first device; advance to the requested
+	 * position from there.
 	 */
-	do
+	while (priv->curr && pos++ < it->pos)
 		priv->curr = next_dev(it);
-	while (priv->curr && ++pos < it->pos);
 
 	if (pos == 1)
 		/* Output the header once, only if some device follows. */
@@ -227,7 +229,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 	spl_t s;
 
 	if (data == NULL) {
-		xnvfile_puts(it, "Index\tLocked\tDevice\t\tOwner [PID]\n");
+		xnvfile_puts(it, "Index\tLocked\tDevice\t\t\t\tOwner [PID]\n");
 		return 0;
 	}
 
@@ -252,7 +254,7 @@ static int openfd_show(struct xnvfile_regular_iterator *it, void *data)
 
 	xnlock_put_irqrestore(&rt_fildes_lock, s);
 
-	xnvfile_printf(it, "%d\t%d\t%-15s %s [%d]\n", fd,
+	xnvfile_printf(it, "%d\t%d\t%-31s %s [%d]\n", fd,
 		       close_lock_count,
 		       (device->device_flags & RTDM_NAMED_DEVICE) ?
 		       device->device_name : device->proc_name,
@@ -305,12 +307,32 @@ static struct xnvfile_regular allfd_vfile = {
 
 static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	struct rtdm_device *device = xnvfile_priv(it->vfile);
+	struct rtdm_device *device;
+	int i;
+
+	if (down_interruptible(&nrt_dev_lock))
+		return -ERESTARTSYS;
 
 	/*
-	 * Accessing the device during unregister (remove_proc_entry) might be
-	 * racy, but no official workaround is known yet.
+	 * As the device may have disappeared while the handler was called,
+	 * first match the pointer against registered devices.
 	 */
+	for (i = 0; i < devname_hashtab_size; i++)
+		list_for_each_entry(device, &rtdm_named_devices[i],
+				    reserved.entry)
+			if (device == xnvfile_priv(it->vfile))
+				goto found;
+
+	for (i = 0; i < protocol_hashtab_size; i++)
+		list_for_each_entry(device, &rtdm_protocol_devices[i],
+				    reserved.entry)
+			if (device == xnvfile_priv(it->vfile))
+				goto found;
+
+	up(&nrt_dev_lock);
+	return -ENODEV;
+
+found:
 	xnvfile_printf(it, "driver:\t\t%s\nversion:\t%d.%d.%d\n",
 		       device->driver_name,
 		       RTDM_DRIVER_MAJOR_VER(device->driver_version),
@@ -334,6 +356,7 @@ static int devinfo_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	xnvfile_printf(it, "lock count:\t%d\n",
 		       atomic_read(&device->reserved.refcount));
 
+	up(&nrt_dev_lock);
 	return 0;
 }
 
@@ -382,25 +405,29 @@ int __init rtdm_proc_init(void)
 	/* Initialise vfiles */
 	ret = xnvfile_init_dir("rtdm", &rtdm_vfroot, &nkvfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("named_devices", &named_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("protocol_devices", &proto_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("open_fildes", &openfd_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	ret = xnvfile_init_regular("fildes", &allfd_vfile, &rtdm_vfroot);
 	if (ret)
-		return ret;
+		goto error;
 
 	return 0;
+
+error:
+	rtdm_proc_cleanup();
+	return ret;
 }
 
 void rtdm_proc_cleanup(void)

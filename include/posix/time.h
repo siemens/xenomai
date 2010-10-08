@@ -50,6 +50,13 @@
 #define CLOCK_MONOTONIC 1
 #endif /* CLOCK_MONOTONIC */
 
+/*
+ * This number is supposed to not collide with any of the POSIX and
+ * Linux kernel definitions so that no ambiguities arise when porting
+ * applications in both directions.
+ */
+#define CLOCK_HOST_REALTIME 42
+
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 
 struct sigevent;

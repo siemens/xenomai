@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	unsigned long long test_features;
 
 	if (argc != 2) {
-		printf("No specific feature(s) given, using XNVDSO_FEATURE\n");
+		printf("No specific feature(s) given, using XNVDSO_FEATURES\n");
 		test_features = XNVDSO_FEATURES;
 	} else {
 		test_features = strtoull(argv[1], NULL, 0);

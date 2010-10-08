@@ -491,4 +491,7 @@ static inline void xnarch_hisyscall_entry(void)	{ }
 #define xnarch_post_graph(obj,state)
 #define xnarch_post_graph_if(obj,state,cond)
 
+/* Synchronised realtime clock*/
+#define xnarch_hostrt_data	rthal_hostrt_data
+
 #endif /* !_XENO_ASM_GENERIC_SYSTEM_H */

@@ -598,4 +598,7 @@ static inline long IS_ERR(const void *ptr)
 	return IS_ERR_VALUE((unsigned long)ptr);
 }
 
+/* Host realtime support is not supported in the simulator */
+struct xnarch_hostrt_data { };
+
 #endif /* !_XENO_ASM_SIM_SYSTEM_H */

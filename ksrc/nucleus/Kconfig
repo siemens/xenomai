@@ -360,6 +360,10 @@ config XENO_OPT_SHIRQ
 config XENO_OPT_SELECT
 	bool
 
+config XENO_OPT_HOSTRT
+       depends on HAVE_IPIPE_HOSTRT
+       def_bool y
+
 menu "Timing"
 
 config XENO_OPT_TIMING_PERIODIC
