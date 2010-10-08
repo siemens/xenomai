@@ -61,7 +61,6 @@ int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 
 int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 {
-	int err;
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	unsigned int seq;
 	cycle_t now, base, mask, cycle_delta;
@@ -104,10 +103,9 @@ retry:
 
 	return 0;
 #else /* XNARCH_HAVE_NONPRIV_TSC */
-	err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				 __pse51_clock_gettime,
-				 CLOCK_HOST_REALTIME, ts);
-
+	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
+				     __pse51_clock_gettime,
+				     CLOCK_HOST_REALTIME, ts);
 	if (!err)
 		return 0;
 
@@ -122,6 +120,9 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 
 	switch (clock_id) {
 #ifdef XNARCH_HAVE_NONPRIV_TSC
+	case CLOCK_HOST_REALTIME:
+		err = __do_clock_host_realtime(tp, NULL);
+		break;
 	case CLOCK_MONOTONIC:
 		if (__pse51_sysinfo.tickval == 1) {
 			unsigned long long ns;
@@ -132,10 +133,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 			tp->tv_nsec = rem;
 			return 0;
 		}
-		break;
-	case CLOCK_HOST_REALTIME:
-		err = __do_clock_host_realtime(tp, NULL);
-		break;
+		/* Falldown wanted */
 #endif /* XNARCH_HAVE_NONPRIV_TSC */
 	default:
 		err = -XENOMAI_SKINCALL2(__pse51_muxid,
