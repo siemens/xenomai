@@ -58,9 +58,9 @@ int __wrap_clock_getres(clockid_t clock_id, struct timespec *tp)
 	return -1;
 }
 
-int __do_clock_host_realtime(struct timespec *ts, void *tzp)
-{
 #ifdef XNARCH_HAVE_NONPRIV_TSC
+static int __do_clock_host_realtime(struct timespec *ts, void *tzp)
+{
 	unsigned int seq;
 	unsigned long long now, base, mask, cycle_delta;
 	unsigned long mult, shift, nsec, rem;
@@ -101,17 +101,8 @@ retry:
 	ts->tv_nsec = rem;
 
 	return 0;
-#else /* XNARCH_HAVE_NONPRIV_TSC */
-	int err = -XENOMAI_SKINCALL2(__pse51_muxid,
-				     __pse51_clock_gettime,
-				     CLOCK_HOST_REALTIME, ts);
-	if (!err)
-		return 0;
-
-	errno = err;
-	return -1;
-#endif /* XNARCH_HAVE_NONPRIV_TSC */
 }
+#endif /* XNARCH_HAVE_NONPRIV_TSC */
 
 int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
