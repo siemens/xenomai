@@ -462,7 +462,8 @@ unsigned long find_next_bit(const unsigned long *addr,
 #define IRQF_SHARED			SA_SHIRQ
 #endif /* < 2.6.18 */
 
-#ifdef CONFIG_LTT
+#if defined(CONFIG_LTT) || \
+    (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31) && defined(CONFIG_MARKERS))
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)
 #define trace_mark(channel, ev, fmt, args...)	\
@@ -476,10 +477,12 @@ unsigned long find_next_bit(const unsigned long *addr,
 #endif /* < 2.6.27 */
 #endif /* >= 2.6.24 */
 
-#else /* !CONFIG_LTT */
+#else /* !LTTng markers */
+
 #undef trace_mark
 #define trace_mark(channel, ev, fmt, args...)	do { } while (0)
-#endif /* !CONFIG_LTT */
+
+#endif /* !LTTng markers */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define KMALLOC_MAX_SIZE 131072
