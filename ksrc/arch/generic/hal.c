@@ -414,55 +414,6 @@ static void rthal_apc_handler(unsigned virq, void *arg)
     rthal_spin_unlock(&rthal_apc_lock);
 }
 
-#ifdef CONFIG_PREEMPT_RT
-
-/* On PREEMPT_RT, we need to invoke the apc handlers over a process
-   context, so that the latter can access non-atomic kernel services
-   properly. So the Adeos virq is only used to kick a per-CPU apc
-   server process which in turns runs the apc dispatcher. A bit
-   twisted, but indeed consistent with the threaded IRQ model of
-   PREEMPT_RT. */
-
-#include <linux/kthread.h>
-
-static struct task_struct *rthal_apc_servers[RTHAL_NR_CPUS];
-
-static int rthal_apc_thread(void *data)
-{
-    unsigned cpu = (unsigned)(unsigned long)data;
-
-    set_cpus_allowed(current, cpumask_of_cpu(cpu));
-    sigfillset(&current->blocked);
-    current->flags |= PF_NOFREEZE;
-    /* Use highest priority here, since some apc handlers might
-       require to run as soon as possible after the request has been
-       pended. */
-    rthal_setsched_root(current, SCHED_FIFO, MAX_RT_PRIO - 1);
-
-    while (!kthread_should_stop()) {
-	set_current_state(TASK_INTERRUPTIBLE);
-	schedule();
-	rthal_apc_handler(0);
-    }
-
-    __set_current_state(TASK_RUNNING);
-
-    return 0;
-}
-
-void rthal_apc_kicker(unsigned virq, void *cookie)
-{
-    wake_up_process(rthal_apc_servers[smp_processor_id()]);
-}
-
-#define rthal_apc_trampoline rthal_apc_kicker
-
-#else /* !CONFIG_PREEMPT_RT */
-
-#define rthal_apc_trampoline rthal_apc_handler
-
-#endif /* CONFIG_PREEMPT_RT */
-
 /**
  * @fn int rthal_apc_alloc (const char *name,void (*handler)(void *cookie),void *cookie)
  *
@@ -477,8 +428,7 @@ void rthal_apc_kicker(unsigned virq, void *cookie)
  *
  * The HAL guarantees that any Linux kernel service which would be
  * callable from a regular Linux interrupt handler is also available
- * to APC handlers, including over PREEMPT_RT kernels exhibiting a
- * threaded IRQ model.
+ * to APC handlers.
  *
  * @param name is a symbolic name identifying the APC which will get
  * reported through the /proc/xenomai/apc interface. Passing NULL to
@@ -603,25 +553,12 @@ int rthal_init(void)
 
     err = rthal_virtualize_irq(rthal_current_domain,
 			       rthal_apc_virq,
-			       &rthal_apc_trampoline,
+			       &rthal_apc_handler,
 			       NULL, NULL, IPIPE_HANDLE_MASK);
     if (err) {
 	printk(KERN_ERR "Xenomai: Failed to virtualize IRQ.\n");
 	goto out_free_irq;
     }
-#ifdef CONFIG_PREEMPT_RT
-    {
-	int cpu;
-	for_each_online_cpu(cpu) {
-	    rthal_apc_servers[cpu] =
-		kthread_create(&rthal_apc_thread, (void *)(unsigned long)cpu,
-			       "apc/%d", cpu);
-	    if (!rthal_apc_servers[cpu])
-		goto out_kthread_stop;
-	    wake_up_process(rthal_apc_servers[cpu]);
-	}
-    }
-#endif /* CONFIG_PREEMPT_RT */
 
     err = rthal_register_domain(&rthal_domain,
 				"Xenomai",
@@ -647,16 +584,6 @@ int rthal_init(void)
     return 0;
 
   fail:
-#ifdef CONFIG_PREEMPT_RT
-  out_kthread_stop:
-    {
-	int cpu;
-	for_each_online_cpu(cpu) {
-	    if (rthal_apc_servers[cpu])
-		kthread_stop(rthal_apc_servers[cpu]);
-	}
-    }
-#endif /* CONFIG_PREEMPT_RT */
     rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL, NULL,
 			 0);
 
@@ -676,14 +603,6 @@ void rthal_exit(void)
 	rthal_virtualize_irq(rthal_current_domain, rthal_apc_virq, NULL, NULL,
 			     NULL, 0);
 	rthal_free_virq(rthal_apc_virq);
-#ifdef CONFIG_PREEMPT_RT
-	{
-	    int cpu;
-	    for_each_online_cpu(cpu) {
-		kthread_stop(rthal_apc_servers[cpu]);
-	    }
-	}
-#endif /* CONFIG_PREEMPT_RT */
     }
 
     if (rthal_init_done)

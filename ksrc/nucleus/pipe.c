@@ -148,7 +148,6 @@ static void xnpipe_wakeup_proc(void *cookie)
 	xnlock_get_irqsave(&nklock, s);
 
 	nh = getheadq(&xnpipe_sleepq);
-
 	while ((h = nh) != NULL) {
 		nh = nextq(&xnpipe_sleepq, h);
 		state = link2xnpipe(h, slink);
@@ -156,10 +155,10 @@ static void xnpipe_wakeup_proc(void *cookie)
 		if (rbits) {
 			__clrbits(state->status, rbits);
 			/*
-			 * PREEMPT_RT kernels could schedule us out as
-			 * a result of waking up a waiter, so we need
-			 * the housekeeping and release the nklock
-			 * before calling wake_up_interruptible().
+			 * We could be switched out as a result of
+			 * waking up a waiter, so we need the
+			 * housekeeping and release the nklock before
+			 * calling wake_up_interruptible().
 			 */
 			if ((rbits & XNPIPE_USER_WREAD_READY) != 0) {
 				if (waitqueue_active(&state->readq)) {
@@ -175,18 +174,14 @@ static void xnpipe_wakeup_proc(void *cookie)
 					xnlock_get_irqsave(&nklock, s);
 				}
 			}
+#ifdef CONFIG_SMP
 			/*
-			 * On PREEMPT_RT kernels, __wake_up() might
-			 * sleep, so we need to refetch the sleep
-			 * queue head just to be safe; for the very
-			 * same reason, livelocking inside this loop
-			 * cannot happen. On regular kernel variants,
-			 * we just keep processing the entire loop in
-			 * a row.
+			 * A waiter may have entered/left the queue
+			 * from another CPU, so we need to refetch the
+			 * sleep queue head to be safe.
 			 */
-#if defined(CONFIG_PREEMPT_RT) || defined (CONFIG_SMP)
 			nh = getheadq(&xnpipe_sleepq);
-#endif /* CONFIG_PREEMPT_RT || CONFIG_SMP */
+#endif /* CONFIG_SMP */
 		}
 	}
 
@@ -205,9 +200,9 @@ static void xnpipe_wakeup_proc(void *cookie)
 			xnlock_put_irqrestore(&nklock, s);
 			kill_fasync(&state->asyncq, xnpipe_asyncsig, POLL_IN);
 			xnlock_get_irqsave(&nklock, s);
-#if defined(CONFIG_PREEMPT_RT) || defined (CONFIG_SMP)
+#ifdef CONFIG_SMP
 			nh = getheadq(&xnpipe_asyncq);
-#endif /* CONFIG_PREEMPT_RT || CONFIG_SMP */
+#endif
 		}
 	}
 

@@ -73,9 +73,7 @@ static void registry_proc_schedule(void *cookie);
 
 static xnqueue_t registry_obj_procq;	/* Objects waiting for /proc handling. */
 
-#ifndef CONFIG_PREEMPT_RT
 static DECLARE_WORK_NODATA(registry_proc_work, &registry_proc_callback);
-#endif /* !CONFIG_PREEMPT_RT */
 
 static int registry_proc_apc;
 
@@ -342,16 +340,11 @@ static DECLARE_WORK_FUNC(registry_proc_callback)
 
 static void registry_proc_schedule(void *cookie)
 {
-#ifdef CONFIG_PREEMPT_RT
-	/* On PREEMPT_RT, we are already running over a thread context, so
-	   we don't need the workqueue indirection: let's invoke the
-	   export handler directly. */
-	registry_proc_callback(cookie);
-#else /* CONFIG_PREEMPT_RT */
-	/* schedule_work() will check for us if the work has already been
-	   scheduled, so just be lazy and submit blindly. */
+	/*
+	 * schedule_work() will check for us if the work has already
+	 * been scheduled, so just be lazy and submit blindly.
+	 */
 	schedule_work(&registry_proc_work);
-#endif /* CONFIG_PREEMPT_RT */
 }
 
 static int registry_export_vfsnap(struct xnobject *object,
