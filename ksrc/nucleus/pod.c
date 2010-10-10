@@ -1898,6 +1898,16 @@ int __xnpod_set_thread_schedparam(struct xnthread *thread,
 		xnsched_putback(thread);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
+	/*
+	 * A non-real-time shadow may upgrade to real-time FIFO
+	 * scheduling, but the latter may never downgrade to
+	 * SCHED_NORMAL Xenomai-wise. In the valid case, we clear
+	 * XNOTHER to reflect the change. Note that we keep handling
+	 * non real-time shadow specifics in higher code layers, not
+	 * to pollute the core scheduler with peculiarities.
+	 */
+	if (sched_class == &xnsched_class_rt && sched_param->rt.prio > 0)
+		xnthread_clear_state(thread, XNOTHER);
 	if (propagate) {
 		if (xnthread_test_state(thread, XNRELAX))
 			xnshadow_renice(thread);

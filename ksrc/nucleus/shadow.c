@@ -1374,6 +1374,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	thread->u_mode = u_mode;
 
+	if (xnthread_base_priority(thread) == 0 &&
+	    current->policy == SCHED_NORMAL)
+		/* Non real-time shadow. */
+		xnthread_set_state(thread, XNOTHER);
+
 	if (u_completion) {
 		/*
 		 * Send the renice signal if we are not migrating so that user
