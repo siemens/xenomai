@@ -1019,7 +1019,7 @@ redo:
 		return -ERESTARTSYS;
 
 	if (thread->u_mode)
-		__xn_put_user(0, thread->u_mode);
+		__xn_put_user(thread->state & ~XNRELAX, thread->u_mode);
 
 	preempt_disable();
 
@@ -1226,7 +1226,7 @@ void xnshadow_relax(int notify, int reason)
 	   root thread. */
 
 	if (thread->u_mode)
-		__xn_put_user(XNRELAX, thread->u_mode);
+		__xn_put_user(thread->state, thread->u_mode);
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -1401,7 +1401,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		return ret;
 
 	if (thread->u_mode)
-		__xn_put_user(XNRELAX, u_mode);
+		__xn_put_user(thread->state, u_mode);
 
 	ret = xnshadow_harden();
 
