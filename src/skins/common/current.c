@@ -156,5 +156,5 @@ unsigned long xeno_slow_get_current_mode(void)
 	if (err < 0)
 		return XNRELAX;
 
-	return info.state & XNRELAX;
+	return info.state & (XNRELAX|XNOTHER);
 }

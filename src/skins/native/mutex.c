@@ -73,13 +73,23 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 {
 	int err;
 #ifdef CONFIG_XENO_FASTSYNCH
+	unsigned long status;
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
 		return -EPERM;
 
-	if (likely(!(xeno_get_current_mode() & XNRELAX))) {
+	/*
+	 * We track resource ownership for non real-time shadows in
+	 * order to handle the auto-relax feature, so we must always
+	 * obtain them via a syscall.
+	 */
+	status = xeno_get_current_mode();
+	if (unlikely(status & XNOTHER))
+		goto do_syscall;
+
+	if (likely(!(status & XNRELAX))) {
 		err = xnsynch_fast_acquire(mutex->fastlock, cur);
 		if (likely(!err)) {
 			mutex->lockcnt = 1;
@@ -113,6 +123,7 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 
+do_syscall:
 	err = XENOMAI_SKINCALL3(__native_muxid,
 				__native_mutex_acquire, mutex, mode, &timeout);
 
@@ -137,11 +148,17 @@ int rt_mutex_acquire_until(RT_MUTEX *mutex, RTIME timeout)
 int rt_mutex_release(RT_MUTEX *mutex)
 {
 #ifdef CONFIG_XENO_FASTSYNCH
+	unsigned long status;
 	xnhandle_t cur;
 
 	cur = xeno_get_current();
 	if (cur == XN_NO_HANDLE)
 		return -EPERM;
+
+	status = xeno_get_current_mode();
+	if (unlikely(status & XNOTHER))
+		/* See rt_mutex_acquire_inner() */
+		goto do_syscall;
 
 	if (unlikely(xnsynch_fast_owner_check(mutex->fastlock, cur) != 0))
 		return -EPERM;
@@ -153,6 +170,8 @@ int rt_mutex_release(RT_MUTEX *mutex)
 
 	if (likely(xnsynch_fast_release(mutex->fastlock, cur)))
 		return 0;
+
+do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return XENOMAI_SKINCALL1(__native_muxid, __native_mutex_release, mutex);

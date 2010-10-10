@@ -255,6 +255,8 @@ typedef struct xnthread {
 	struct xnsynch *wchan;		/* Resource the thread pends on */
 
 	struct xnsynch *wwake;		/* Wait channel the thread was resumed from */
+
+	int hrescnt;			/* Held resources count */
 	
 	xntimer_t rtimer;		/* Resource timer */
 
@@ -393,7 +395,13 @@ typedef struct xnhook {
 #define xnthread_sigpending(thread) ((thread)->u_sigpending)
 #define xnthread_set_sigpending(thread, pending) \
 	((thread)->u_sigpending = (pending))
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
+#define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
+#define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
+#define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
+#else /* !CONFIG_XENO_OPT_PERVASIVE */
+#define xnthread_inc_rescnt(thread)        do { } while (0)
+#define xnthread_dec_rescnt(thread)        do { } while (0)
+#endif /* !CONFIG_XENO_OPT_PERVASIVE */
 #ifdef CONFIG_XENO_OPT_WATCHDOG
 #define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
 #define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)

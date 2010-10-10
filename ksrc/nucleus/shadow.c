@@ -2380,11 +2380,19 @@ static inline int do_hisyscall_event(unsigned event, unsigned domid, void *data)
 	__xn_status_return(regs, err);
 
 	sigs = 0;
-	if (xnpod_shadow_p() &&
-	    (signal_pending(p) || xnthread_amok_p(thread))) {
-		sigs = 1;
-		xnthread_clear_amok(thread);
-		request_syscall_restart(thread, regs, sysflags);
+	if (xnpod_shadow_p()) {
+		if (signal_pending(p) || xnthread_amok_p(thread)) {
+			sigs = 1;
+			xnthread_clear_amok(thread);
+			request_syscall_restart(thread, regs, sysflags);
+		} else if (!xnthread_sigpending(thread) &&
+			   xnthread_test_state(thread, XNOTHER) &&
+			   xnthread_get_rescnt(thread) == 0) {
+			if (switched)
+				switched = 0;
+			else
+				xnshadow_relax(0, 0);
+		}
 	}
 	if (thread && xnthread_sigpending(thread)) {
 		sigs = 1;
@@ -2540,9 +2548,19 @@ static inline int do_losyscall_event(unsigned event, unsigned domid, void *data)
 	__xn_status_return(regs, err);
 
 	sigs = 0;
-	if (xnpod_active_p() && xnpod_shadow_p() && signal_pending(current)) {
-		sigs = 1;
-		request_syscall_restart(xnshadow_thread(current), regs, sysflags);
+	if (xnpod_active_p() && xnpod_shadow_p()) {
+		/*
+		 * We may have gained a shadow TCB from the syscall we
+		 * just invoked, so make sure to fetch it.
+		 */
+		thread = xnshadow_thread(current);
+		if (signal_pending(current)) {
+			sigs = 1;
+			request_syscall_restart(thread, regs, sysflags);
+		} else if (!xnthread_sigpending(thread) &&
+			   xnthread_test_state(thread, XNOTHER) &&
+			   xnthread_get_rescnt(thread) == 0)
+			sysflags |= __xn_exec_switchback;
 	}
 	if (thread && xnthread_sigpending(thread)) {
 		sigs = 1;

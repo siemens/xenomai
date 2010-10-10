@@ -122,6 +122,7 @@ int xnthread_init(struct xnthread *thread,
 	thread->wchan = NULL;
 	thread->wwake = NULL;
 	thread->wcontext = NULL;
+	thread->hrescnt = 0;
 	thread->errcode = 0;
 	thread->registry.handle = XN_NO_HANDLE;
 	thread->registry.waitkey = NULL;
