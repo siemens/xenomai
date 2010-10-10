@@ -589,19 +589,22 @@ static int __rt_task_set_mode(struct pt_regs *regs)
 	int err, setmask, clrmask, mode_r;
 
 	clrmask = __xn_reg_arg1(regs);
-	setmask = __xn_reg_arg2(regs);
+	if (clrmask & T_CONFORMING)
+		return -EINVAL;
 
-	err =
-	    rt_task_set_mode(clrmask & ~T_PRIMARY, setmask & ~T_PRIMARY,
-			     &mode_r);
-
+	/*
+	 * This call already required a primary mode switch, so if
+	 * T_CONFORMING was specified for a real-time shadow, we are
+	 * fine. If it was given from a non real-time shadow, well
+	 * this is silly, and we'll be relaxed soon due to the
+	 * auto-relax feature, leading to a nop.
+	 */
+	setmask = __xn_reg_arg2(regs) & ~T_CONFORMING;
+	err = rt_task_set_mode(clrmask, setmask, &mode_r);
 	if (err)
 		return err;
 
-	if ((clrmask & T_PRIMARY) != 0)
-		xnshadow_relax(0, 0);
-	else
-		mode_r |= T_PRIMARY;
+	mode_r |= T_CONFORMING;
 
 	if (__xn_reg_arg3(regs) &&
 	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),

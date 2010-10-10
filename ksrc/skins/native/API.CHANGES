@@ -288,3 +288,26 @@ ___________________________________________________________________
 
        * New rt_task_same() call. Returns true whenever two task
          descriptors refer to the same task, false otherwise.
+
+___________________________________________________________________
+
+
+2.5.5 -> 2.6.0
+
+       * rt_task_set_mode() does not support the T_PRIMARY bit
+         anymore; the latter has been replaced by T_CONFORMING, which
+         is allowed in the setmask only, and only effective for
+         real-time shadows.
+
+	 In other words,
+
+	 - rt_task_set_mode(clrmask, setmask=T_PRIMARY, &oldmode)
+	   becomes:
+	   rt_task_set_mode(clrmask, setmask=T_CONFORMING, &oldmode),
+	   forcing primary mode only for SCHED_FIFO Xenomai threads
+	   only. Nop otherwise (i.e. a non real-time shadow remains
+	   in relaxed mode after the syscall has returned, since this
+	   is its conforming runtime mode).
+
+	 - rt_task_set_mode(clrmask=T_CONFORMING, setmask, &oldmode)
+	 always begets -EINVAL.

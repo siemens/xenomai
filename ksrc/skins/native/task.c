@@ -1433,10 +1433,10 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
  * inheriting the priority of the running shadow Xenomai thread. Use
  * CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.
  *
- * - T_PRIMARY can be passed to switch the current user-space task to
- * primary mode (setmask |= T_PRIMARY), or secondary mode (clrmask |=
- * T_PRIMARY). Upon return from rt_task_set_mode(), the user-space
- * task will run into the specified domain.
+ * - T_CONFORMING can be passed in @a setmask to switch the current
+ * user-space task to its preferred runtime mode. The only meaningful
+ * use of this switch is to force a real-time shadow back to primary
+ * mode. Any other use either cause to a nop, or an error.
  *
  * Normally, this service can only be called on behalf of a regular
  * real-time task, either running in kernel or user-space. However, as
@@ -1461,7 +1461,8 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
  * @return 0 is returned upon success, or:
  *
  * - -EINVAL if either @a setmask or @a clrmask specifies invalid
- * bits. T_PRIMARY is invalid for kernel-based tasks.
+ * bits. T_CONFORMING is always invalid in @a clrmask, or when applied
+ * in @a setmask to kernel-based tasks.
  *
  * - -EPERM is returned if this service was not called from a
  * real-time task context.
