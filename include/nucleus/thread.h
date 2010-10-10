@@ -62,7 +62,6 @@
 #define XNFPU     0x00100000 /**< Thread uses FPU */
 #define XNSHADOW  0x00200000 /**< Shadow thread */
 #define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
-#define XNSWREP   0x00800000 /**< Mode switch already reported */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -117,6 +116,7 @@
 #define XNABORT   0x00000200 /**< Thread is being aborted */
 #define XNCANPND  0x00000400 /**< Cancellation request is pending */
 #define XNAMOK    0x00000800 /**< Runaway, watchdog signal pending (shadow only) */
+#define XNSWREP   0x00001000 /**< Mode switch already reported */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
