@@ -66,7 +66,7 @@ __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 	switch (size) {
 	case 1:
 		asm volatile("@	__xchg1\n"
-		"1:	ldrexb	%0, [%3]\n"
+		"1:	ldrexb	%0, [%4]\n"
 		"	strexb	%1, %3, [%4]\n"
 		"	teq	%1, #0\n"
 		"	bne	1b"
@@ -77,7 +77,7 @@ __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 		break;
 	case 4:
 		asm volatile("@	__xchg4\n"
-		"1:	ldrex	%0, [%3]\n"
+		"1:	ldrex	%0, [%4]\n"
 		"	strex	%1, %3, [%4]\n"
 		"	teq	%1, #0\n"
 		"	bne	1b"
