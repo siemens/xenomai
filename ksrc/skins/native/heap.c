@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -164,7 +164,7 @@ static void __heap_flush_private(xnheap_t *heap,
 	xnarch_free_host_mem(heapmem, heapsize);
 }
 
-/*! 
+/*!
  * \fn int rt_heap_create(RT_HEAP *heap,const char *name,size_t heapsize,int mode);
  * \brief Create a memory heap or a shared memory segment.
  *
@@ -241,6 +241,11 @@ static void __heap_flush_private(xnheap_t *heap,
  * operations with I/O devices. The physical address of the
  * heap can be obtained by a call to rt_heap_inquire().
  *
+ * - H_DMA32 causes the block pool associated to the heap to be
+ * allocated in physically contiguous memory, suitable for DMA32
+ * operations with I/O devices. The physical address of the
+ * heap can be obtained by a call to rt_heap_inquire().
+ *
  * - H_NONCACHED causes the heap not to be cached. This is necessary on
  * platforms such as ARM to share a heap between kernel and user-space.
  * Note that this flag is not compatible with the H_DMA flag.
@@ -301,6 +306,7 @@ int rt_heap_create(RT_HEAP *heap, const char *name, size_t heapsize, int mode)
 		err = xnheap_init_mapped(&heap->heap_base,
 					 heapsize,
 					 ((mode & H_DMA) ? GFP_DMA : 0)
+					 | ((mode & H_DMA32) ? GFP_DMA32 : 0)
 					 | ((mode & H_NONCACHED) ?
 					    XNHEAP_GFP_NONCACHED : 0));
 		if (err)

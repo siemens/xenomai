@@ -34,6 +34,7 @@
 #define H_SINGLE   0x400	/* Manage as single-block area. */
 #define H_SHARED   (H_MAPPABLE|H_SINGLE) /* I.e. shared memory segment. */
 #define H_NONCACHED 0x800
+#define H_DMA32     0x1000      /* Use memory suitable for DMA32. */
 
 /** Structure containing heap-information useful to users.
  *
