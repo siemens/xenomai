@@ -9,6 +9,12 @@ CPPFLAGS = \
 LDFLAGS = \
 	@XENO_USER_LDFLAGS@
 
+lib_LIBRARIES = libwaveform.a
+
+libwaveform_a_SOURCES = signal_generation.c
+
+noinst_HEADERS = signal_generation.h
+
 analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
