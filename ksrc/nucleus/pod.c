@@ -3077,10 +3077,12 @@ int xnpod_set_thread_tslice(struct xnthread *thread, xnticks_t quantum)
 	int aperiodic;
 	spl_t s;
 
-	if (thread->base_class->sched_tick == NULL)
-		return -EINVAL;
-
 	xnlock_get_irqsave(&nklock, s);
+
+	if (thread->base_class->sched_tick == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return -EINVAL;
+	}
 
 	aperiodic = !xntbase_periodic_p(xnthread_time_base(thread));
 	thread->rrperiod = quantum;
