@@ -66,11 +66,13 @@ int __real_sched_yield(void);
 
 #ifndef SCHED_SPORADIC
 #define SCHED_SPORADIC		10
-#define sched_ss_low_priority	ss.__sched_low_priority
-#define sched_ss_repl_period	ss.__sched_repl_period
-#define sched_ss_init_budget	ss.__sched_init_budget
-#define sched_ss_max_repl	ss.__sched_max_repl
+#define sched_ss_low_priority	u.ss.__sched_low_priority
+#define sched_ss_repl_period	u.ss.__sched_repl_period
+#define sched_ss_init_budget	u.ss.__sched_init_budget
+#define sched_ss_max_repl	u.ss.__sched_max_repl
 #endif	/* !SCHED_SPORADIC */
+
+#define sched_rr_quantum	u.rr.__sched_rr_quantum
 
 struct __sched_ss_param {
 	int __sched_low_priority;
@@ -79,9 +81,16 @@ struct __sched_ss_param {
 	int __sched_max_repl;
 };
 
+struct __sched_rr_param {
+	struct timespec __sched_rr_quantum;
+};
+
 struct sched_param_ex {
 	int sched_priority;
-	struct __sched_ss_param ss;
+	union {
+		struct __sched_ss_param ss;
+		struct __sched_rr_param rr;
+	} u;
 };
 
 #endif /* __sched_extensions_defined */

@@ -255,9 +255,11 @@ int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par
 	par->sched_priority = prio;
 
 	if (base_class == &xnsched_class_rt) {
-		*pol = (prio
-			? (!xnthread_test_state(thread, XNRRB)
-			   ? SCHED_FIFO : SCHED_RR) : SCHED_OTHER);
+		if (xnthread_test_state(thread, XNRRB)) {
+			*pol = SCHED_RR;
+			ticks2ts(&par->sched_rr_quantum, xnthread_time_slice(thread));
+		} else
+			*pol = prio ? SCHED_FIFO : SCHED_OTHER;
 		goto unlock_and_exit;
 	}
 
@@ -416,13 +418,13 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 {
 	union xnsched_policy_param param;
 	struct sched_param short_param;
+	xnticks_t tslice;
 	int ret = 0;
 	spl_t s;
 
 	switch (pol) {
 	case SCHED_OTHER:
 	case SCHED_FIFO:
-	case SCHED_RR:
 		short_param.sched_priority = par->sched_priority;
 		return pthread_setschedparam(tid, pol, &short_param);
 	default:
@@ -440,6 +442,10 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 	}
 
 	switch (pol) {
+	case SCHED_RR:
+		tslice = ts2ticks_ceil(&par->sched_rr_quantum);
+		ret = xnpod_set_thread_tslice(&tid->threadbase, tslice);
+		break;
 	default:
 
 		xnlock_put_irqrestore(&nklock, s);
@@ -454,8 +460,8 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 		param.pss.init_budget = ts2ticks_ceil(&par->sched_ss_init_budget);
 		param.pss.repl_period = ts2ticks_ceil(&par->sched_ss_repl_period);
 		param.pss.max_repl = par->sched_ss_max_repl;
-		ret = -xnpod_set_thread_schedparam(&tid->threadbase,
-						   &xnsched_class_sporadic, &param);
+		ret = xnpod_set_thread_schedparam(&tid->threadbase,
+						  &xnsched_class_sporadic, &param);
 		break;
 #else
 		(void)param;
@@ -466,7 +472,7 @@ int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return ret;
+	return -ret;
 }
 
 /**
