@@ -340,6 +340,8 @@ unlock_and_exit:
 int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 {
 	union xnsched_policy_param param;
+	struct xnthread *thread;
+	xnticks_t tslice;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
@@ -348,6 +350,8 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 		xnlock_put_irqrestore(&nklock, s);
 		return ESRCH;
 	}
+
+	thread = &tid->threadbase;
 
 	switch (pol) {
 	default:
@@ -358,12 +362,15 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	case SCHED_OTHER:
 	case SCHED_FIFO:
 	case SCHED_SPORADIC:
-		xnpod_set_thread_tslice(&tid->threadbase, XN_INFINITE);
+		xnpod_set_thread_tslice(thread, XN_INFINITE);
 		break;
 
 
 	case SCHED_RR:
-		xnpod_set_thread_tslice(&tid->threadbase, pse51_time_slice);
+		tslice = xnthread_time_slice(thread);
+		if (tslice == XN_INFINITE)
+			tslice = pse51_time_slice;
+		xnpod_set_thread_tslice(thread, tslice);
 	}
 
 	if ((pol != SCHED_OTHER && (par->sched_priority < PSE51_MIN_PRIORITY
@@ -375,7 +382,7 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 	}
 
 	param.rt.prio = par->sched_priority;
-	xnpod_set_thread_schedparam(&tid->threadbase, &xnsched_class_rt, &param);
+	xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
 
 	xnpod_schedule();
 
