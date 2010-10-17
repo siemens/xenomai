@@ -27,7 +27,7 @@
 
 /* --- Misc precompilation constants --- */
 
-#define A4L_DEFAULT_BFSIZE 0x1000
+#define A4L_DEFAULT_BFSIZE 0x10000
 #define A4L_NAMELEN 20
 
 /* --- Common Analogy types --- */
