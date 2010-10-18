@@ -15,7 +15,6 @@
 
 int xeno_sigxcpu_no_mlock = 1;
 static pthread_t xeno_main_tid;
-static xnsighandler *xnsig_handlers[32];
 
 static void xeno_sigill_handler(int sig)
 {
@@ -26,77 +25,8 @@ static void xeno_sigill_handler(int sig)
 
 struct xnfeatinfo xeno_featinfo;
 
-int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error)
-{
-	unsigned i;
-
-  dispatch:
-	for (i = 0; i < sigs->nsigs; i++) {
-		xnsighandler *handler;
-
-		handler = xnsig_handlers[sigs->pending[i].muxid];
-		if (handler)
-			handler(&sigs->pending[i].si);
-	}
-
-	if (cumulated_error == -ERESTART)
-		cumulated_error = last_error;
-
-	if (sigs->remaining) {
-		sigs->nsigs = 0;
-		last_error = XENOMAI_SYSSIGS(sigs);
-		if (sigs->nsigs)
-			goto dispatch;
-	}
-
-	return cumulated_error;
-}
-
-#ifdef XENOMAI_SYSSIGS_SAFE
-int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_error)
-{
-	unsigned i;
-
-  dispatch:
-	for (i = 0; i < sigs->nsigs; i++) {
-		xnsighandler *handler;
-
-		handler = xnsig_handlers[sigs->pending[i].muxid];
-		if (handler)
-			handler(&sigs->pending[i].si);
-	}
-
-	if (cumulated_error == -ERESTART)
-		cumulated_error = last_error;
-
-	if (sigs->remaining) {
-		sigs->nsigs = 0;
-		last_error = XENOMAI_SYSSIGS_SAFE(sigs);
-		if (sigs->nsigs)
-			goto dispatch;
-	}
-
-	return cumulated_error;
-}
-#endif /* XENOMAI_SYSSIGS_SAFE */
-
-#ifdef xeno_arch_features_check
-static void do_init_arch_features(void)
-{
-	xeno_arch_features_check(&xeno_featinfo);
-}
-static void xeno_init_arch_features(void)
-{
-	static pthread_once_t init_archfeat_once = PTHREAD_ONCE_INIT;
-	pthread_once(&init_archfeat_once, do_init_arch_features);
-}
-#else  /* !xeno_init_arch_features */
-#define xeno_init_arch_features()	do { } while (0)
-#endif /* !xeno_arch_features_check */
-
-int
-xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
-		   const char *module, xnsighandler *handler)
+int 
+xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 {
 	sighandler_t old_sigill_handler;
 	xnfeatinfo_t finfo;
@@ -148,11 +78,9 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 		exit(EXIT_FAILURE);
 	}
 
-	xnsig_handlers[muxid] = handler;
-
-	xeno_featinfo = finfo;
-
-	xeno_init_arch_features();
+#ifdef xeno_arch_features_check
+	xeno_arch_features_check();
+#endif /* xeno_arch_features_check */
 
 	xeno_init_sem_heaps();
 

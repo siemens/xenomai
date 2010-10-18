@@ -52,6 +52,6 @@ static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
 	__vxworks_muxid = xeno_bind_skin(VXWORKS_SKIN_MAGIC,
-					 "vxworks", "xeno_vxworks", NULL);
+					 "vxworks", "xeno_vxworks");
 	__vxworks_muxid = __xn_mux_shifted_id(__vxworks_muxid);
 }

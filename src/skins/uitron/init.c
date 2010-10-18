@@ -30,9 +30,7 @@ void __init_xeno_interface(void)
 	T_CTSK pk_ctsk;
 	ER err;
 
-	__uitron_muxid = xeno_bind_skin(uITRON_SKIN_MAGIC,
-					"uitron", "xeno_uitron", NULL);
-
+	__uitron_muxid = xeno_bind_skin(uITRON_SKIN_MAGIC, "uitron", "xeno_uitron");
 	__uitron_muxid = __xn_mux_shifted_id(__uitron_muxid);
 
 	/* Shadow the main thread. mlock the whole memory for the time

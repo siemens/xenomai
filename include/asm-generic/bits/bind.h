@@ -5,21 +5,15 @@
 #include <stdlib.h>
 #include <signal.h>
 
-union xnsiginfo;
-
-typedef void xnsighandler(union xnsiginfo *si);
-
 void xeno_handle_mlock_alert(int sig, siginfo_t *si, void *context);
 
-int
-xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
-		   const char *module, xnsighandler *sighandler);
+int 
+xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module);
 
-static inline int
-xeno_bind_skin(unsigned skin_magic, const char *skin,
-	       const char *module, xnsighandler *sighandler)
+static inline int 
+xeno_bind_skin(unsigned skin_magic, const char *skin, const char *module)
 {
-	int muxid = xeno_bind_skin_opt(skin_magic, skin, module, sighandler);
+	int muxid = xeno_bind_skin_opt(skin_magic, skin, module);
 	struct sigaction sa;
 
 	if (muxid == -1) {
