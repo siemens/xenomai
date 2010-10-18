@@ -42,7 +42,6 @@
 #define __xn_reg_arg3(regs)   ((regs)->r6)
 #define __xn_reg_arg4(regs)   ((regs)->r7)
 #define __xn_reg_arg5(regs)   ((regs)->r8)
-#define __xn_reg_sigp(regs)   ((regs)->r9)
 
 #define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 24) & 0xff)
@@ -86,43 +85,39 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 
 #include <asm/traps.h>
 
-#define __emit_syscall0(muxcode, sigp)				\
+#define __emit_syscall0(muxcode)				\
 	({							\
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
 			"mov r2, %1\n\t"			\
-			"mov r9, %2\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
-			: "r"(muxcode),				\
-			  "r"((long)sigp)			\
-			: "r2", "r9", "memory"			\
+			: "r"(muxcode)				\
+			: "r2", "memory"			\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall1(muxcode, sigp, a1)			\
+#define __emit_syscall1(muxcode, a1)				\
 	({							\
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
 			"mov r2, %1\n\t"			\
 			"mov r4, %2\n\t"			\
-			"mov r9, %3\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "r" ((long)a1),			\
-			  "r" ((long)sigp)			\
-			: "r2", "r4", "r9", "memory"		\
+			  "r" ((long)a1)			\
+			: "r2", "r4", "memory"			\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall2(muxcode, sigp, a1, a2)			\
+#define __emit_syscall2(muxcode, a1, a2)			\
 	({							\
 		long __ret;					\
 								\
@@ -130,20 +125,18 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			"mov r2, %1\n\t"			\
 			"mov r4, %2\n\t"			\
 			"mov r5, %3\n\t"			\
-			"mov r9, %4\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
 			  "r" ((long)a1),			\
-			  "r" ((long)a2),			\
-			  "r" ((long)sigp)			\
-			: "r2", "r4", "r5", "r9", "memory"	\
+			  "r" ((long)a2)			\
+			: "r2", "r4", "r5", "memory"		\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall3(muxcode, sigp, a1, a2, a3)		\
+#define __emit_syscall3(muxcode, a1, a2, a3)			\
 	({							\
 		long __ret;					\
 								\
@@ -152,21 +145,19 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			"mov r4, %2\n\t"			\
 			"mov r5, %3\n\t"			\
 			"mov r6, %4\n\t"			\
-			"mov r9, %5\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
-			  "r" ((long)a3),			\
-			  "r" ((long)sigp)			\
-			: "r2", "r4", "r5", "r6", "r9", "memory"	\
+			  "r" ((long)a3)			\
+			: "r2", "r4", "r5", "r6", "memory"	\
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall4(muxcode, sigp, a1, a2, a3, a4)		\
+#define __emit_syscall4(muxcode, a1, a2, a3, a4)		\
 	({							\
 		long __ret;					\
 								\
@@ -176,7 +167,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			"mov r5, %3\n\t"			\
 			"mov r6, %4\n\t"			\
 			"mov r7, %5\n\t"			\
-			"mov r9, %6\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
@@ -184,14 +174,13 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
-			  "r" ((long)a4),			\
-			  "r" ((long)sigp)			\
-			: "r2", "r4", "r5", "r6", "r7", "r9", "memory" \
+			  "r" ((long)a4)			\
+			: "r2", "r4", "r5", "r6", "r7", "memory" \
 		);						\
 		__ret;						\
 	})
 
-#define __emit_syscall5(muxcode, sigp, a1, a2, a3, a4, a5)	\
+#define __emit_syscall5(muxcode, a1, a2, a3, a4, a5)		\
 	({							\
 		long __ret;					\
 								\
@@ -202,7 +191,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			"mov r6, %4\n\t"			\
 			"mov r7, %5\n\t"			\
 			"mov r8, %6\n\t"			\
-			"mov r9, %7\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
@@ -211,29 +199,14 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
 			  "r" ((long)a4),			\
-			  "r" ((long)a5),			\
-			  "r" ((long)sigp)			\
-			: "r2", "r4", "r5", "r6", "r7", "r8", "r9", "memory" \
+			  "r" ((long)a5)			\
+			: "r2", "r4", "r5", "r6", "r7", "r8", "memory" \
 		);						\
 		__ret;						\
 	})
 
-#define XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, op, args...) \
+#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)		\
     __emit_syscall##nr(__xn_mux_code(shifted_id,op), ##args)
-
-#define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
-	({								\
-		int __err__, __res__ = -ERESTART;			\
-		struct xnsig __sigs__;					\
-									\
-		do {							\
-			__sigs__.nsigs = 0;				\
-			__err__ = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id,	\
-						       op, &__sigs__, ##args);	\
-			__res__ = xnsig_dispatch(&__sigs__, __res__, __err__);	\
-		} while (__res__ == -ERESTART);				\
-		__res__;						\
-	})
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
 #define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
@@ -242,8 +215,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
 #define XENOMAI_SYSBIND(a1,a2,a3,a4)        XENOMAI_DO_SYSCALL(4,0,__xn_sys_bind,a1,a2,a3,a4)
-#define XENOMAI_SYSSIGS(sigs)						\
-	XENOMAI_DO_SYSCALL_INNER(0, 0, __xn_sys_get_next_sigs, sigs)
 
 #define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
 #define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
