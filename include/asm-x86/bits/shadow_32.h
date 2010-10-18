@@ -57,7 +57,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 * We want this code to appear at the top of the MAYDAY page:
 	 *
 	 * 	b8 2b 02 00 0c	     	mov    $<mux_code>,%eax
-	 * 	bd 00 00 00 00	     	mov    $0x0,%ebp
 	 * if HAVE_SEP
 	 *      65 ff 15 10 00 00 00 	call   *%gs:0x10
 	 * else
@@ -77,10 +76,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 			u32 imm;
 		} mov_eax;
 		struct __attribute__ ((__packed__)) {
-			u8 op;
-			u32 imm;
-		} mov_ebp;
-		struct __attribute__ ((__packed__)) {
 			u8 op[3];
 			u32 moffs;
 		} syscall;
@@ -89,10 +84,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 		.mov_eax = {
 			.op = 0xb8,
 			.imm = __xn_mux_code(0, __xn_sys_mayday)
-		},
-		.mov_ebp = {
-			.op = 0xbd,
-			.imm = 0
 		},
 		.syscall = {
 			.op = {
@@ -108,20 +99,12 @@ static inline void xnarch_setup_mayday_page(void *page)
 			u8 op;
 			u32 imm;
 		} mov_eax;
-		struct __attribute__ ((__packed__)) {
-			u8 op;
-			u32 imm;
-		} mov_ebp;
 		u16 syscall;
 		u16 bug;
 	} code_nosep = {
 		.mov_eax = {
 			.op = 0xb8,
 			.imm = __xn_mux_code(0, __xn_sys_mayday)
-		},
-		.mov_ebp = {
-			.op = 0xbd,
-			.imm = 0
 		},
 		.syscall = 0x80cd,
 		.bug = 0x0b0f,
@@ -146,7 +129,6 @@ static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,
 {
 	tcb->mayday.eip = regs->x86reg_ip;
 	tcb->mayday.eax = regs->x86reg_ax;
-	tcb->mayday.ebp = regs->x86reg_bp;
 	regs->x86reg_ip = tramp;
 }
 
@@ -155,7 +137,6 @@ static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
 {
 	regs->x86reg_ip = tcb->mayday.eip;
 	regs->x86reg_ax = tcb->mayday.eax;
-	regs->x86reg_bp = tcb->mayday.ebp;
 }
 
 #endif /* XNARCH_HAVE_MAYDAY */
