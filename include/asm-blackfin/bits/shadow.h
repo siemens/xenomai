@@ -78,7 +78,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 	 * 45 e1 0c 00 	  R5.H = 0xc
 	 * 05 e1 2b 02 	  R5.L = 0x22b
 	 * 05 32       	  P0 = R5
-	 * 05 60       	  R5 = 0x0 (X)
 	 * a0 00       	  EXCPT 0x0
 	 * cd ef          <bug opcode>
 	 *
@@ -95,7 +94,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 			u16 imm;
 		} load_r5l;
 		u16 mov_p0;
-		u16 clear_r5;
 		u16 syscall;
 		u16 bug;
 	} code = {
@@ -108,7 +106,6 @@ static inline void xnarch_setup_mayday_page(void *page)
 			.imm = __xn_mux_code(0, __xn_sys_mayday) & 0xffff
 		},
 		.mov_p0 = 0x3205,
-		.clear_r5 = 0x6005,
 		.syscall = 0x00a0,
 		.bug = BFIN_BUG_OPCODE,
 	};
