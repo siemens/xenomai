@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2008 Philippe Gerum <rpm@xenomai.org>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+ */
+
+#ifndef _COPPERPLATE_TRACEOBJ_H
+#define _COPPERPLATE_TRACEOBJ_H
+
+#include <pthread.h>
+#include <copperplate/panic.h>
+
+struct threadobj;
+
+struct traceobj {
+	pthread_mutex_t lock;
+	pthread_cond_t join;
+	const char *label;
+	int nr_marks;
+	int cur_mark;
+	struct tracemark *marks;
+	int nr_threads;
+};
+
+#define traceobj_assert(trobj, cond)					\
+do {									\
+	int __ret = (cond);						\
+	if (!__ret)							\
+		__traceobj_assert_failed(trobj, __FILE__, __LINE__, __STRING(cond)); \
+} while(0)
+
+#define traceobj_mark(trobj, mark)	\
+	__traceobj_mark(trobj, __FILE__, __LINE__, mark)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void traceobj_init(struct traceobj *trobj,
+		   const char *label, int nr_marks);
+
+void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq);
+
+void traceobj_destroy(struct traceobj *trobj);
+
+void traceobj_enter(struct traceobj *trobj);
+
+void traceobj_exit(struct traceobj *trobj);
+
+void traceobj_unwind(struct traceobj *trobj);
+
+void traceobj_join(struct traceobj *trobj);
+
+void __traceobj_assert_failed(struct traceobj *trobj,
+			      const char *file, int line, const char *cond);
+
+void __traceobj_mark(struct traceobj *trobj,
+		     const char *file, int line, int mark);
+
+#ifdef CONFIG_XENO_COBALT
+
+static inline void __traceobj_core_init(void)
+{
+}
+
+static inline void __traceobj_core_enter(struct threadobj *current)
+{
+#if 0
+	pthread_set_mode_np(0, PTHREAD_WARNSW);
+#endif
+}
+
+static inline void __traceobj_core_exit(struct threadobj *current)
+{
+#if 0
+	pthread_set_mode_np(PTHREAD_WARNSW, 0);
+#endif
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+#include <sched.h>
+
+static inline void __traceobj_core_init(void)
+{
+	cpu_set_t set;
+	int ret;
+
+	CPU_ZERO(&set);
+	CPU_SET(0, &set);
+
+	ret = sched_setaffinity(0, sizeof(set), &set);
+	if (ret)
+		panic("cannot force CPU affinity for process");
+}
+
+static inline void __traceobj_core_enter(struct threadobj *current)
+{
+}
+
+static inline void __traceobj_core_exit(struct threadobj *current)
+{
+}
+
+#endif /* CONFIG_XENO_MERCURY */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _COPPERPLATE_TRACEOBJ_H */

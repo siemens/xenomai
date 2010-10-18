@@ -21,6 +21,9 @@
 /* Build system alias */
 #undef CONFIG_XENO_BUILD_STRING
 
+/* config */
+#undef CONFIG_XENO_COBALT
+
 /* Compiler */
 #undef CONFIG_XENO_COMPILER
 
@@ -40,7 +43,16 @@
 #undef CONFIG_XENO_LIBS_DLOPEN
 
 /* config */
+#undef CONFIG_XENO_MERCURY
+
+/* config */
 #undef CONFIG_XENO_POSIX_AUTO_MLOCKALL
+
+/* config */
+#undef CONFIG_XENO_PSHARED
+
+/* config */
+#undef CONFIG_XENO_REGISTRY
 
 /* config */
 #undef CONFIG_XENO_REVISION_LEVEL
@@ -56,6 +68,9 @@
 
 #ifdef __IN_XENO__
 
+/* config */
+#undef FUSE_USE_VERSION
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -67,6 +82,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `fuse' library (-lfuse). */
+#undef HAVE_LIBFUSE
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -159,5 +177,8 @@
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #undef YYTEXT_POINTER
+
+/* config */
+#undef _FILE_OFFSET_BITS
 
 #endif /* __IN_XENO__ */

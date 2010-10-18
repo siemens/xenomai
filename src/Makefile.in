@@ -111,6 +111,7 @@ CCDEPMODE = @CCDEPMODE@
 CC_FOR_BUILD = @CC_FOR_BUILD@
 CFLAGS = @CFLAGS@
 CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@
+CHECKFLAGS = @CHECKFLAGS@
 CONFIG_STATUS_DEPENDENCIES = @CONFIG_STATUS_DEPENDENCIES@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
@@ -248,7 +249,17 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = include skins drvlib testsuite utils
+SUBDIRS = \
+	include	\
+	common	\
+	native	\
+	posix	\
+	rtdm	\
+	drvlib	\
+	copperplate	\
+	testsuite \
+	utils
+
 all: all-recursive
 
 .SUFFIXES:

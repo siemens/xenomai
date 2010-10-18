@@ -763,6 +763,8 @@ LATEX_MODE
 LATEX_BATCHMODE
 DOXYGEN_SHOW_INCLUDE_FILES
 LD_FILE_OPTION
+XENO_TLSF_FALSE
+XENO_TLSF_TRUE
 CONFIG_XENO_DOC_DOX_FALSE
 CONFIG_XENO_DOC_DOX_TRUE
 CONFIG_XENO_SHARED_FALSE
@@ -784,6 +786,13 @@ DBX_DOC_ROOT
 DOXYGEN_HAVE_DOT
 DOXYGEN
 XENO_MAYBE_DOCDIR
+XENO_REGISTRY_FALSE
+XENO_REGISTRY_TRUE
+XENO_PSHARED_FALSE
+XENO_PSHARED_TRUE
+CHECKFLAGS
+XENO_DEBUG_FALSE
+XENO_DEBUG_TRUE
 OTOOL64
 OTOOL
 LIPO
@@ -874,6 +883,8 @@ build_os
 build_vendor
 build_cpu
 build
+XENO_COBALT_FALSE
+XENO_COBALT_TRUE
 target_alias
 host_alias
 build_alias
@@ -925,6 +936,9 @@ enable_fast_install
 with_gnu_ld
 enable_libtool_lock
 enable_debug
+enable_assert
+enable_pshared
+enable_registry
 enable_smp
 enable_x86_sep
 enable_x86_tsc
@@ -1585,7 +1599,10 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-debug          Enable debug symbols in programs
+  --enable-debug          Enable debug mode in programs
+  --enable-assert         Enable runtime assertions
+  --enable-pshared        Enable shared multi-processing for capable skins
+  --enable-registry       Export real-time objects to a registry
   --enable-smp            Enable SMP support
   --enable-x86-sep        Enable x86 SEP instructions for issuing syscalls
   --enable-x86-tsc        Enable x86 TSC for timings
@@ -2444,6 +2461,23 @@ CONFIG_XENO_VERSION_MAJOR=`expr $PACKAGE_VERSION : '\([0-9]*\)'`
 CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[0-9]*\.\([0-9]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[0-9]*\.[0-9]*\.\([0-9]*\)'`
 test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
+
+rtcore_type=cobalt
+
+ if test x$rtcore_type = xcobalt; then
+  XENO_COBALT_TRUE=
+  XENO_COBALT_FALSE='#'
+else
+  XENO_COBALT_TRUE='#'
+  XENO_COBALT_FALSE=
+fi
+
+
+$as_echo "#define CONFIG_XENO_COBALT test x\$rtcore_type = xcobalt" >>confdefs.h
+
+
+$as_echo "#define CONFIG_XENO_MERCURY test x\$rtcore_type = xmercury" >>confdefs.h
+
 
 if test "x$CFLAGS" = "x"; then
 	XENO_EMPTY_CFLAGS=true
@@ -5982,13 +6016,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5985: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6019: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5988: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6022: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5991: output\"" >&5)
+  (eval echo "\"\$as_me:6025: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7086,7 +7120,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7089 "configure"' > conftest.$ac_ext
+  echo '#line 7123 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8448,11 +8482,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8451: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8485: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8455: \$? = $ac_status" >&5
+   echo "$as_me:8489: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8772,11 +8806,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8775: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8809: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8779: \$? = $ac_status" >&5
+   echo "$as_me:8813: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8877,11 +8911,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8880: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8914: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8884: \$? = $ac_status" >&5
+   echo "$as_me:8918: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8932,11 +8966,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8935: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8969: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8939: \$? = $ac_status" >&5
+   echo "$as_me:8973: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11304,7 +11338,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11307 "configure"
+#line 11341 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11404,7 +11438,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11407 "configure"
+#line 11441 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11638,19 +11672,186 @@ CC="$lt_save_CC"
 
 
 
-debug_symbols=
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for debug symbols" >&5
-$as_echo_n "checking for debug symbols... " >&6; }
+debug_mode=
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable debug mode" >&5
+$as_echo_n "checking whether to enable debug mode... " >&6; }
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :
   enableval=$enable_debug; case "$enableval" in
-	y | yes) debug_symbols=y ;;
-	*) unset debug_symbols ;;
+	y | yes) debug_mode=y ;;
+	*) unset debug_mode ;;
 	esac
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${debug_symbols:-no}" >&5
-$as_echo "${debug_symbols:-no}" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${debug_mode:-no}" >&5
+$as_echo "${debug_mode:-no}" >&6; }
+ if test x$debug_mode = xy; then
+  XENO_DEBUG_TRUE=
+  XENO_DEBUG_FALSE='#'
+else
+  XENO_DEBUG_TRUE='#'
+  XENO_DEBUG_FALSE=
+fi
+
+
+checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparent-union -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_REENTRANT \$(DEFS) \$(DEFAULT_INCLUDES) \$(INCLUDES) \$(AM_CPPFLAGS) \$(CPPFLAGS) -I\$(top_srcdir)/include -isystem \$(shell \$(CC) -print-file-name=include) -include \$(top_builddir)/include/xeno_config.h \$(shell \$(CC) -dM -E -xc /dev/null|sed -e 's/^\\#define /-D/' -e \"s/ /=\'/\" -e \"s/\$\$/\'/\")"
+
+CHECKFLAGS=$checkflags
+
+
+
+use_assert=y
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether assertions should be enabled" >&5
+$as_echo_n "checking whether assertions should be enabled... " >&6; }
+# Check whether --enable-assert was given.
+if test "${enable_assert+set}" = set; then :
+  enableval=$enable_assert; case "$enableval" in
+	y | yes) use_assert=y ;;
+	n | no) unset use_assert ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${use_assert:-no}" >&5
+$as_echo "${use_assert:-no}" >&6; }
+
+
+use_pshared=
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether shared multi-processing should be supported" >&5
+$as_echo_n "checking whether shared multi-processing should be supported... " >&6; }
+# Check whether --enable-pshared was given.
+if test "${enable_pshared+set}" = set; then :
+  enableval=$enable_pshared; case "$enableval" in
+	y | yes) use_pshared=y ;;
+	*) unset use_pshared ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${use_pshared:-no}" >&5
+$as_echo "${use_pshared:-no}" >&6; }
+
+if test x$use_pshared = xy; then
+
+$as_echo "#define CONFIG_XENO_PSHARED 1" >>confdefs.h
+
+fi
+ if test x$use_pshared = xy; then
+  XENO_PSHARED_TRUE=
+  XENO_PSHARED_FALSE='#'
+else
+  XENO_PSHARED_TRUE='#'
+  XENO_PSHARED_FALSE=
+fi
+
+
+
+use_registry=
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the registry should be enabled" >&5
+$as_echo_n "checking whether the registry should be enabled... " >&6; }
+# Check whether --enable-registry was given.
+if test "${enable_registry+set}" = set; then :
+  enableval=$enable_registry; case "$enableval" in
+	y | yes) use_registry=y ;;
+	*) unset use_registry ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${use_registry:-no}" >&5
+$as_echo "${use_registry:-no}" >&6; }
+
+if test x$use_registry = xy; then
+        fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_ldflags="-lfuse"
+
+	ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+	save_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS=$fuse_cflags
+	ac_fn_c_check_header_mongrel "$LINENO" "fuse.h" "ac_cv_header_fuse_h" "$ac_includes_default"
+if test "x$ac_cv_header_fuse_h" = x""yes; then :
+
+else
+  as_fn_error $? "Cannot find fuse.h (part of libfuse development package) on this system" "$LINENO" 5
+
+fi
+
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for fuse_new in -lfuse" >&5
+$as_echo_n "checking for fuse_new in -lfuse... " >&6; }
+if test "${ac_cv_lib_fuse_fuse_new+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lfuse  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char fuse_new ();
+int
+main ()
+{
+return fuse_new ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_fuse_fuse_new=yes
+else
+  ac_cv_lib_fuse_fuse_new=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_fuse_fuse_new" >&5
+$as_echo "$ac_cv_lib_fuse_fuse_new" >&6; }
+if test "x$ac_cv_lib_fuse_fuse_new" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBFUSE 1
+_ACEOF
+
+  LIBS="-lfuse $LIBS"
+
+else
+  as_fn_error $? "Cannot find libfuse (FUSE development package) on this system" "$LINENO" 5
+
+fi
+
+	CPPFLAGS="$save_CPPFLAGS"
+	ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+$as_echo "#define CONFIG_XENO_REGISTRY 1" >>confdefs.h
+
+
+$as_echo "#define _FILE_OFFSET_BITS 64" >>confdefs.h
+
+
+$as_echo "#define FUSE_USE_VERSION 26" >>confdefs.h
+
+fi
+ if test x$use_registry = xy; then
+  XENO_REGISTRY_TRUE=
+  XENO_REGISTRY_FALSE='#'
+else
+  XENO_REGISTRY_TRUE='#'
+  XENO_REGISTRY_FALSE=
+fi
+
 
 
 CONFIG_SMP=
@@ -12467,6 +12668,15 @@ else
 fi
 
 
+ if test x$rtcore_type = xcobalt -o x$debug_mode = x; then
+  XENO_TLSF_TRUE=
+  XENO_TLSF_FALSE='#'
+else
+  XENO_TLSF_TRUE='#'
+  XENO_TLSF_FALSE=
+fi
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sched_setaffinity" >&5
 $as_echo_n "checking for sched_setaffinity... " >&6; }
 if test "${ac_cv_sched_setaffinity+set}" = set; then :
@@ -12600,10 +12810,14 @@ case $XENO_TARGET_ARCH in
 	;;
 esac
 
-if test x$debug_symbols = xy; then
-   XENO_USER_CFLAGS="-g $XENO_USER_CFLAGS"
+if test x$debug_mode = xy; then
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
+fi
+
+if test x$use_assert = x; then
+   XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
@@ -12777,7 +12991,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:$srcdir/include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/common/Makefile src/posix/Makefile src/native/Makefile src/rtdm/Makefile src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/common/Makefile src/posix/Makefile src/native/Makefile src/rtdm/Makefile src/copperplate/Makefile src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/include/copperplate/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -12883,6 +13097,10 @@ LIBOBJS=$ac_libobjs
 LTLIBOBJS=$ac_ltlibobjs
 
 
+if test -z "${XENO_COBALT_TRUE}" && test -z "${XENO_COBALT_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_COBALT\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
   as_fn_error $? "conditional \"AMDEP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -12911,6 +13129,18 @@ if test -z "${XENO_TARGET_ARCH_X86_TRUE}" && test -z "${XENO_TARGET_ARCH_X86_FAL
   as_fn_error $? "conditional \"XENO_TARGET_ARCH_X86\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${XENO_DEBUG_TRUE}" && test -z "${XENO_DEBUG_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_PSHARED_TRUE}" && test -z "${XENO_PSHARED_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_PSHARED\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_REGISTRY_TRUE}" && test -z "${XENO_REGISTRY_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_REGISTRY\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${DBX_DOC_TRUE}" && test -z "${DBX_DOC_FALSE}"; then
   as_fn_error $? "conditional \"DBX_DOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -12929,6 +13159,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_DOC_DOX_TRUE}" && test -z "${CONFIG_XENO_DOC_DOX_FALSE}"; then
   as_fn_error $? "conditional \"CONFIG_XENO_DOC_DOX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XENO_TLSF_TRUE}" && test -z "${XENO_TLSF_FALSE}"; then
+  as_fn_error $? "conditional \"XENO_TLSF\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13876,9 +14110,11 @@ do
     "src/posix/Makefile") CONFIG_FILES="$CONFIG_FILES src/posix/Makefile" ;;
     "src/native/Makefile") CONFIG_FILES="$CONFIG_FILES src/native/Makefile" ;;
     "src/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES src/rtdm/Makefile" ;;
+    "src/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES src/copperplate/Makefile" ;;
     "src/drvlib/Makefile") CONFIG_FILES="$CONFIG_FILES src/drvlib/Makefile" ;;
     "src/drvlib/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES src/drvlib/analogy/Makefile" ;;
     "src/include/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
+    "src/include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/copperplate/Makefile" ;;
     "src/testsuite/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/Makefile" ;;
     "src/testsuite/latency/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/latency/Makefile" ;;
     "src/testsuite/cyclic/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/cyclic/Makefile" ;;

@@ -8,6 +8,13 @@ CONFIG_XENO_VERSION_MINOR=`expr $PACKAGE_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
 CONFIG_XENO_REVISION_LEVEL=`expr $PACKAGE_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
 test "x$CONFIG_XENO_REVISION_LEVEL" = "x" && CONFIG_XENO_REVISION_LEVEL=0
 
+dnl We force enable Cobalt core, i.e. dual kernel mode for now
+rtcore_type=cobalt
+
+AM_CONDITIONAL(XENO_COBALT,[test x$rtcore_type = xcobalt])
+AC_DEFINE(CONFIG_XENO_COBALT,[test x$rtcore_type = xcobalt],[config])
+AC_DEFINE(CONFIG_XENO_MERCURY,[test x$rtcore_type = xmercury],[config])
+
 if test "x$CFLAGS" = "x"; then
 	XENO_EMPTY_CFLAGS=true
 else
@@ -135,15 +142,83 @@ dnl
 
 dnl Debug build (default: off)
 
-debug_symbols=
-AC_MSG_CHECKING(for debug symbols)
+debug_mode=
+AC_MSG_CHECKING(whether to enable debug mode)
 AC_ARG_ENABLE(debug,
-	AS_HELP_STRING([--enable-debug], [Enable debug symbols in programs]),
+	AS_HELP_STRING([--enable-debug], [Enable debug mode in programs]),
 	[case "$enableval" in
-	y | yes) debug_symbols=y ;;
-	*) unset debug_symbols ;;
+	y | yes) debug_mode=y ;;
+	*) unset debug_mode ;;
 	esac])
-AC_MSG_RESULT(${debug_symbols:-no})
+AC_MSG_RESULT(${debug_mode:-no})
+AM_CONDITIONAL(XENO_DEBUG,[test x$debug_mode = xy])
+
+checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparent-union -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_REENTRANT \$(DEFS) \$(DEFAULT_INCLUDES) \$(INCLUDES) \$(AM_CPPFLAGS) \$(CPPFLAGS) -I\$(top_srcdir)/include -isystem \$(shell \$(CC) -print-file-name=include) -include \$(top_builddir)/include/xeno_config.h \$(shell \$(CC) -dM -E -xc /dev/null|sed -e 's/^\\#define /-D/' -e \"s/ /=\'/\" -e \"s/\$\$/\'/\")"
+
+dnl Used with sparse
+AC_SUBST(CHECKFLAGS, $checkflags)
+
+dnl Enable assertions (default: on)
+
+use_assert=y
+AC_MSG_CHECKING(whether assertions should be enabled)
+AC_ARG_ENABLE(assert,
+	AS_HELP_STRING([--enable-assert], [Enable runtime assertions]),
+	[case "$enableval" in
+	y | yes) use_assert=y ;;
+	n | no) unset use_assert ;;
+	esac])
+AC_MSG_RESULT(${use_assert:-no})
+
+dnl Enable shared multi-processing (default: off)
+
+use_pshared=
+AC_MSG_CHECKING(whether shared multi-processing should be supported)
+AC_ARG_ENABLE(pshared,
+	AS_HELP_STRING([--enable-pshared], [Enable shared multi-processing for capable skins]),
+	[case "$enableval" in
+	y | yes) use_pshared=y ;;
+	*) unset use_pshared ;;
+	esac])
+AC_MSG_RESULT(${use_pshared:-no})
+
+if test x$use_pshared = xy; then
+	AC_DEFINE(CONFIG_XENO_PSHARED,1,[config])
+fi
+AM_CONDITIONAL(XENO_PSHARED,[test x$use_pshared = xy])
+
+dnl Registry support in user-space (FUSE-based, default: off)
+
+use_registry=
+AC_MSG_CHECKING(whether the registry should be enabled)
+AC_ARG_ENABLE(registry,
+	AS_HELP_STRING([--enable-registry], [Export real-time objects to a registry]),
+	[case "$enableval" in
+	y | yes) use_registry=y ;;
+	*) unset use_registry ;;
+	esac])
+AC_MSG_RESULT(${use_registry:-no})
+
+if test x$use_registry = xy; then
+        fuse_cflags="-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26"
+	fuse_ldflags="-lfuse"
+	AC_LANG_SAVE
+	AC_LANG_C
+	save_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS=$fuse_cflags
+	AC_CHECK_HEADER(fuse.h,,
+		AC_MSG_ERROR([Cannot find fuse.h (part of libfuse development package) on this system])
+	)
+	AC_CHECK_LIB(fuse, fuse_new,,
+		AC_MSG_ERROR([Cannot find libfuse (FUSE development package) on this system])
+	)
+	CPPFLAGS="$save_CPPFLAGS"
+	AC_LANG_RESTORE
+	AC_DEFINE(CONFIG_XENO_REGISTRY,1,[config])
+	AC_DEFINE(_FILE_OFFSET_BITS,64,[config])
+	AC_DEFINE(FUSE_USE_VERSION,26,[config])
+fi
+AM_CONDITIONAL(XENO_REGISTRY,[test x$use_registry = xy])
 
 dnl SMP support (default: off)
 
@@ -522,6 +597,12 @@ dnl
 dnl Documentation.
 AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
 
+dnl Allocator for SOLO
+dnl Note: in dual kernel mode, we don't want malloc, no matter what.
+dnl We switch to malloc only over the blue core in debug mode, to ease
+dnl debugging with valgrind, instrumented glibc etc.
+AM_CONDITIONAL(XENO_TLSF,[test x$rtcore_type = xcobalt -o x$debug_mode = x])
+
 AC_MSG_CHECKING([for sched_setaffinity])
 AC_CACHE_VAL(ac_cv_sched_setaffinity,
  save_CFLAGS="$CFLAGS"
@@ -588,10 +669,14 @@ case $XENO_TARGET_ARCH in
 	;;
 esac
 
-if test x$debug_symbols = xy; then
-   XENO_USER_CFLAGS="-g $XENO_USER_CFLAGS"
+if test x$debug_mode = xy; then
+   XENO_USER_CFLAGS="-g -D__XENO_DEBUG__ $XENO_USER_CFLAGS"
 else
    XENO_USER_CFLAGS="-O2 $XENO_USER_CFLAGS"
+fi
+
+if test x$use_assert = x; then
+   XENO_USER_CFLAGS="-DNDEBUG $XENO_USER_CFLAGS"
 fi
 
 XENO_USER_CFLAGS="$XENO_USER_CFLAGS -D__XENO__ -D__IN_XENO__ -Wstrict-prototypes"
@@ -724,9 +809,11 @@ AC_CONFIG_FILES([ \
 	src/posix/Makefile \
 	src/native/Makefile \
 	src/rtdm/Makefile \
+	src/copperplate/Makefile \
 	src/drvlib/Makefile \
 	src/drvlib/analogy/Makefile \
 	src/include/Makefile \
+	src/include/copperplate/Makefile \
 	src/testsuite/Makefile \
 	src/testsuite/latency/Makefile \
 	src/testsuite/cyclic/Makefile \

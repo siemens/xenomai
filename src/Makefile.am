@@ -1,1 +1,10 @@
-SUBDIRS = include skins drvlib testsuite utils
+SUBDIRS =	\
+	include	\
+	common	\
+	native	\
+	posix	\
+	rtdm	\
+	drvlib	\
+	copperplate	\
+	testsuite \
+	utils
