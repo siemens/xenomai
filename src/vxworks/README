@@ -1,0 +1,67 @@
+Overview
+========
+
+This directory contains a VxWorks(*) emulation interface on top of the
+Xenomai framework.
+
+Known variations from VxWorks/WIND
+==================================
+
+You may observe some variations from VxWorks. If you find such a
+variation and you think it would be easy to correct, please send a
+mail to the Xenomai development mailing list at
+http://mail.gna.org/listinfo/xenomai-core/.
+Here are the known variations:
+
+- VxWorks task priorities are restricted to [97..0] in the current
+  implementation of the emulator.
+
+- taskInit() does not allow to create unnamed tasks, but assigns an
+  auto-generated name like taskSpawn() whenever a NULL or empty name
+  string is given.
+
+- taskUnlock() may induce a round-robin effect within the priority
+  level of the task releasing the scheduler lock.
+
+- semDelete() does not flush a mutex semaphore. May return
+  S_semLib_INVALID_OPERATION if busy upon deletion.
+
+- semMCreate() does not support FIFO queuing mode, but only PRIO.
+
+- semTake() will complain about the owner of a mutex-type semaphore
+  exiting without releasing the lock while the current task pends on
+  it. S_objLib_OBJ_UNAVAILABLE is then returned to the caller, and the
+  semaphore is left in an inconsistent state.
+
+- kernelInit() has a different signature than the original WIND kernel
+  call, i.e.:
+  STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[]).
+
+  The first argument is a pointer to an optional root task entry
+  point, which the emulator will name "rootTask", and start with
+  priority 50. Since kernelInit() is usually called on behalf of a non
+  real-time thread within the application's main() routine, the root
+  task will preempt the caller immediately. If NULL is passed, no root
+  task will be started by kernelInit().
+
+  The second and third arguments should be the argument count and
+  vector, as passed to the application's main() routine on the
+  command line. Passing 0/NULL is valid, meaning that no command line
+  argument may be used to override the default emulator settings.
+
+- memPartCreate() may return S_memLib_NOT_ENOUGH_MEMORY in case a
+  memory shortage happens while allocating the internal partition
+  descriptor. I.e. this descriptor is not laid into the user-provided
+  memory.
+
+- memPartAddToPool() may return S_objLib_OBJ_ID_ERROR when called with
+  an invalid partition identifier.
+
+- The following calls may return S_objLib_OBJ_NO_METHOD when called
+  from a non-VxWorks task context:
+
+  taskDelay, taskLock, taskUnlock, taskSafe, taskUnsafe, and taskIdSelf.
+
+
+(*) VxWorks is a registered trademark of Wind River Systems, Inc
+(http://www.windriver.com).
