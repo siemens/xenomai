@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include <analogy/analogy.h>
-
 #define MAX_SAMPLE_COUNT 8096
 #define MIN_SAMPLE_COUNT 2
 
