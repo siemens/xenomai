@@ -529,6 +529,27 @@ int pthread_kill(pthread_t thread, int sig)
 	pse51_siginfo_t *si = NULL;
 	spl_t s;
 
+	/*
+	 * Undocumented pseudo-signals to suspend and resume threads
+	 * via the low-level nucleus services. Process them early,
+	 * before anyone can notice...
+	 */
+	if (sig == SIGSUSP) {
+		/*
+		 * The self-suspension case for shadows was handled at
+		 * call site: we must be in primary mode already.
+		 */
+		xnpod_suspend_thread(&thread->threadbase, XNSUSP,
+				     XN_INFINITE, XN_RELATIVE, NULL);
+		if (&thread->threadbase == xnpod_current_thread() &&
+		    xnthread_test_info(&thread->threadbase, XNBREAK))
+			return -EINTR;
+		return 0;
+	} else if (sig == SIGRESM) {
+		xnpod_resume_thread(&thread->threadbase, XNSUSP);
+		return 0;
+	}
+
 	if ((unsigned)sig > SIGRTMAX)
 		return EINVAL;
 

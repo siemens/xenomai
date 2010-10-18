@@ -441,7 +441,8 @@ static int __pthread_set_name_np(struct pt_regs *regs)
 static int __pthread_kill(struct pt_regs *regs)
 {
 	struct pse51_hkey hkey;
-	pthread_t k_tid;
+	pthread_t k_tid, curr;
+	int sig, ret;
 
 	hkey.u_tid = __xn_reg_arg1(regs);
 	hkey.mm = current->mm;
@@ -449,8 +450,25 @@ static int __pthread_kill(struct pt_regs *regs)
 
 	if (!k_tid)
 		return -ESRCH;
+	/*
+	 * We have to take care of self-suspension, when the
+	 * underlying shadow thread is currently relaxed. In that
+	 * case, we must switch back to primary before issuing the
+	 * suspend call to the nucleus in pthread_kill(). Marking the
+	 * __pthread_kill syscall as __xn_exec_primary would be
+	 * overkill, since no other signal would require this, so we
+	 * handle that case locally here.
+	 */
+	sig = __xn_reg_arg2(regs);
+	if (sig == SIGSUSP && xnpod_current_p(&k_tid->threadbase)) {
+		if (!xnpod_shadow_p()) {
+			ret = xnshadow_harden();
+			if (ret)
+				return ret;
+		}
+	}
 
-	return -pthread_kill(k_tid, __xn_reg_arg2(regs));
+	return -pthread_kill(k_tid, sig);
 }
 
 static int __sem_init(struct pt_regs *regs)
