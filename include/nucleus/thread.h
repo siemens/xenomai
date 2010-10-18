@@ -330,8 +330,6 @@ typedef struct xnthread {
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	unsigned long __user *u_mode;	/* Thread mode variable in userland. */
-
-	unsigned u_sigpending;		/* One bit per skin */
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
     XNARCH_DECL_DISPLAY_CONTEXT();
@@ -392,9 +390,6 @@ typedef struct xnhook {
 #define xnthread_get_exectime(thread)      xnstat_exectime_get_total(&(thread)->stat.account)
 #define xnthread_get_lastswitch(thread)    xnstat_exectime_get_last_switch((thread)->sched)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
-#define xnthread_sigpending(thread) ((thread)->u_sigpending)
-#define xnthread_set_sigpending(thread, pending) \
-	((thread)->u_sigpending = (pending))
 #define xnthread_inc_rescnt(thread)        ({ (thread)->hrescnt++; })
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)

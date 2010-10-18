@@ -150,10 +150,6 @@ int xnthread_init(struct xnthread *thread,
 #endif /* CONFIG_XENO_OPT_SELECT */
 	initpq(&thread->claimq);
 
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-	xnthread_set_sigpending(thread, 0);
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-
 	thread->sched = sched;
 	thread->init_class = sched_class;
 	thread->base_class = NULL; /* xnsched_set_policy() will set it. */
