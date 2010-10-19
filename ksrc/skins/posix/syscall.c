@@ -441,7 +441,7 @@ static int __pthread_set_name_np(struct pt_regs *regs)
 static int __pthread_kill(struct pt_regs *regs)
 {
 	struct pse51_hkey hkey;
-	pthread_t k_tid, curr;
+	pthread_t k_tid;
 	int sig, ret;
 
 	hkey.u_tid = __xn_reg_arg1(regs);
