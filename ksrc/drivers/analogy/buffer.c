@@ -117,7 +117,7 @@ static void a4l_reinit_buffer(a4l_buf_t *buf_desc)
 
 void a4l_init_buffer(a4l_buf_t *buf_desc)
 {
-
+	memset(buf_desc, 0, sizeof(a4l_buf_t));
 	a4l_init_sync(&buf_desc->sync);
 	a4l_reinit_buffer(buf_desc);
 }
@@ -598,14 +598,19 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
-	if (subd && test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
-		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
-		return -EBUSY;
-	}
-
 	if (buf_cfg.buf_size > A4L_BUF_MAXSIZE) {
 		__a4l_err("a4l_ioctl_bufcfg: buffer size too big (<=16MB)\n");
 		return -EINVAL;
+	}
+
+	if (buf_cfg.idx_subd == A4L_BUF_DEFMAGIC) {
+		cxt->dev->transfer.default_bufsize = buf_cfg.buf_size;
+		return 0;
+	}
+
+	if (subd && test_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
+		__a4l_err("a4l_ioctl_bufcfg: acquisition in progress\n");
+		return -EBUSY;
 	}
 
 	if (test_bit(A4L_BUF_MAP, &buf->flags)) {

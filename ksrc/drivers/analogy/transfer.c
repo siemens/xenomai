@@ -92,6 +92,8 @@ int a4l_cleanup_transfer(a4l_cxt_t * cxt)
 		rtdm_free(tsf->subds);
 	}
 
+	memset(tsf, 0, sizeof(a4l_trf_t));
+
 	return 0;
 }
 
@@ -106,6 +108,8 @@ void a4l_presetup_transfer(a4l_cxt_t *cxt)
 	/* Clear the structure */
 	memset(tsf, 0, sizeof(a4l_trf_t));
 
+	tsf->default_bufsize = A4L_BUF_DEFSIZE;
+	
 	/* 0 is also considered as a valid IRQ, then 
 	   the IRQ number must be initialized with another value */
 	tsf->irq_desc.irq = A4L_IRQ_UNUSED;
