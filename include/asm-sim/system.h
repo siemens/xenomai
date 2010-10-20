@@ -128,10 +128,10 @@ typedef unsigned long xnarch_cpumask_t;
 #define xnarch_uldivrem(ull,uld,rem) ((u_long)xnarch_ulldiv((ull),(uld),(rem)))
 #define xnarch_uldiv(ull, d)         xnarch_uldivrem(ull, d, NULL)
 #define xnarch_ulmod(ull, d)         ({ u_long _rem;                    \
-                                        xnarch_uldivrem(ull,d,&_rem); _rem; })
+					xnarch_uldivrem(ull,d,&_rem); _rem; })
 #define xnarch_divmod64(a,b,r)       ({ if (r) \
-				                *r = (a) % (b);		\
-			                (a) / (b); })
+						*r = (a) % (b);		\
+					(a) / (b); })
 #define xnarch_div64(a,b)            ((a) / (b))
 #define xnarch_mod64(a,b)            ((a) % (b))
 
@@ -142,8 +142,8 @@ static inline int xnarch_imuldiv(int i, int mult, int div)
 }
 
 static inline unsigned long long __xnarch_ullimd(unsigned long long ull,
-                                                 u_long m,
-                                                 u_long d)
+						 u_long m,
+						 u_long d)
 {
     unsigned long long mh, ml;
     u_long h, l, mlh, mll, qh, r, ql;
@@ -164,13 +164,13 @@ static inline unsigned long long __xnarch_ullimd(unsigned long long ull,
 static inline long long xnarch_llimd(long long ll, u_long m, u_long d)
 {
     if (ll < 0)
-        return -__xnarch_ullimd(-ll, m, d);
+	return -__xnarch_ullimd(-ll, m, d);
 
     return __xnarch_ullimd(ll, m, d);
 }
 
 static inline unsigned long long xnarch_ullmul(unsigned long m1,
-                                               unsigned long m2)
+					       unsigned long m2)
 {
     return (unsigned long long) m1 * m2;
 }
@@ -280,8 +280,8 @@ xnarch_read_environ (const char *name, const char **ptype, void *pvar)
 #define trace_mark(tag, args...) do { } while(0)
 
 #define container_of(ptr, type, member) ({                      \
-        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-        (type *)( (char *)__mptr - offsetof(type,member) );})
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+	(type *)( (char *)__mptr - offsetof(type,member) );})
 
 #ifdef __cplusplus
 extern "C" {
@@ -573,10 +573,10 @@ struct semaphore {
 };
 #define sema_init(s, v)       ((s)->count = (v))
 #define down(s) ({                              \
-        while (!(s)->count) /* deadlock */      \
-                ;                               \
-        --(s)->count;                           \
-        })
+	while (!(s)->count) /* deadlock */      \
+		;                               \
+	--(s)->count;                           \
+	})
 #define down_interruptible(s) (down(s),0)
 #define up(s)                 (++(s)->count)
 
@@ -597,8 +597,5 @@ static inline long IS_ERR(const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);
 }
-
-/* Host realtime support is not supported in the simulator */
-struct xnarch_hostrt_data { };
 
 #endif /* !_XENO_ASM_SIM_SYSTEM_H */

@@ -52,6 +52,8 @@ typedef atomic_long_t xnarch_atomic_t;
 #define xnarch_atomic_xchg(ptr,x)	xchg(ptr,x)
 
 #define xnarch_memory_barrier()		smp_mb()
+#define xnarch_read_memory_barrier()    rmb()
+#define xnarch_write_memory_barrier()   wmb()
 
 #else /* !__KERNEL__ */
 
@@ -68,8 +70,6 @@ typedef struct { unsigned long counter; } xnarch_atomic_t;
 #define xnarch_atomic_get(v)		((v)->counter)
 
 #define xnarch_atomic_set(v,i)		(((v)->counter) = (i))
-
-#define xnarch_write_memory_barrier()	xnarch_memory_barrier()
 
 static inline void cpu_relax(void)
 {
@@ -107,6 +107,8 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newva
 #define xnarch_memory_barrier()		__asm__ __volatile__("": : :"memory")
 #define xnarch_read_memory_barrier() \
 	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
+#define xnarch_write_memory_barrier() \
+	__asm__ __volatile__ (LOCK_PREFIX "addl $0,0(%%esp)": : :"memory")
 
 #else /* x86_64 */
 
@@ -137,6 +139,7 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *v, unsigned long old, unsigned long newva
 
 #define xnarch_memory_barrier()		asm volatile("mfence":::"memory")
 #define xnarch_read_memory_barrier()	asm volatile("lfence":::"memory")
+#define xnarch_write_memory_barrier()	asm volatile("sfence":::"memory")
 
 #endif /* x86_64 */
 

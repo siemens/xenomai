@@ -25,7 +25,6 @@
 #include <time.h>
 #include <asm/xenomai/arith.h>
 #include <asm-generic/xenomai/timeconv.h>
-#include <nucleus/seqlock_user.h>
 #include <sys/types.h>
 #include <nucleus/vdso.h>
 
@@ -63,9 +62,9 @@ int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 {
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	unsigned int seq;
-	cycle_t now, base, mask, cycle_delta;
+	unsigned long long now, base, mask, cycle_delta;
 	unsigned long mult, shift, nsec, rem;
-	struct xnarch_hostrt_data *hostrt_data;
+	struct xnvdso_hostrt_data *hostrt_data;
 
 	if (!xnvdso_test_feature(XNVDSO_FEAT_HOST_REALTIME))
 		return -1;
@@ -80,7 +79,7 @@ int __do_clock_host_realtime(struct timespec *ts, void *tzp)
 	 * mechanism in the kernel.
 	 */
 retry:
-	seq = read_seqcount_begin(&hostrt_data->seqcount);
+	seq = xnread_seqcount_begin(&hostrt_data->seqcount);
 
 	now = __xn_rdtsc();
 	base = hostrt_data->cycle_last;
@@ -92,7 +91,7 @@ retry:
 
 	/* If the data changed during the read, try the
 	   alternative data element */
-	if (read_seqcount_retry(&hostrt_data->seqcount, seq))
+	if (xnread_seqcount_retry(&hostrt_data->seqcount, seq))
 		goto retry;
 
 	cycle_delta = (now - base) & mask;

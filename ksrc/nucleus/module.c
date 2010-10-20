@@ -69,7 +69,7 @@ static inline void do_hostrt_event(struct xnarch_hostrt_data *hostrt)
 	 */
 
 	spin_lock_irqsave(&__hostrtlock, flags);
-	write_seqcount_begin(&nkvdso->hostrt_data.seqcount);
+	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
 
 	nkvdso->hostrt_data.live = 1;
 	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
@@ -80,7 +80,7 @@ static inline void do_hostrt_event(struct xnarch_hostrt_data *hostrt)
 	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
 	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
 
-	write_seqcount_end(&nkvdso->hostrt_data.seqcount);
+	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
 	spin_unlock_irqrestore(&__hostrtlock, flags);
 }
 
@@ -88,7 +88,7 @@ RTHAL_DECLARE_HOSTRT_EVENT(hostrt_event);
 
 static inline void init_hostrt(void)
 {
-	seqcount_init(&nkvdso->hostrt_data.seqcount);
+	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
 	nkvdso->hostrt_data.live = 0;
 	rthal_catch_hostrt(&hostrt_event);
 }
@@ -170,7 +170,7 @@ int __init __xeno_sys_init(void)
 	xnheap_init_vdso();
 	init_hostrt();
 #endif /* !__XENO_SIM__ */
-	
+
 #ifdef __KERNEL__
 	xnpod_mount();
 	xnintr_mount();
@@ -228,7 +228,7 @@ int __init __xeno_sys_init(void)
 
 #ifdef CONFIG_XENO_OPT_SELECT
 	xnselect_umount();
-	
+
       cleanup_pipe:
 #endif /* CONFIG_XENO_OPT_SELECT */
 

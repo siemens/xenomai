@@ -23,32 +23,24 @@
  * 02111-1307, USA.
  */
 
-#include <nucleus/types.h>
-#ifdef __KERNEL__
-#include <asm-generic/xenomai/system.h>
-#else /* !__KERNEL__ */
+#ifndef __KERNEL__
 #include <time.h>
 #include <sys/types.h>
-#include <nucleus/seqlock_user.h>
-typedef u_int32_t u32;
-typedef u_int64_t cycle_t;
+#else /* __KERNEL__ */
+#include <asm-generic/xenomai/system.h>
+#endif /* __KERNEL__ */
+#include <nucleus/seqlock.h>
 
-/*
- * xnarch_hostrt_data must be kept in sync with the corresponding ipipe
- * definitions in ipipe_tickdev.h We cannot directly include the file
- * here because the definitions are also required in Xenomai userland.
- */
-struct xnarch_hostrt_data {
+struct xnvdso_hostrt_data {
 	short live;
-	seqcount_t seqcount;
+	xnseqcount_t seqcount;
 	time_t wall_time_sec;
-	u32 wall_time_nsec;
+	unsigned wall_time_nsec;
 	struct timespec wall_to_monotonic;
-	cycle_t cycle_last;
-	cycle_t mask;
-	u32 mult;
-	u32 shift;
+	unsigned long long cycle_last;
+	unsigned long long mask;
+	unsigned mult;
+	unsigned shift;
 };
-#endif /* !__KERNEL__ */
 
 #endif

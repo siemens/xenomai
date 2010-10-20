@@ -35,6 +35,6 @@ includesub_HEADERS = \
 	trace.h \
 	types.h \
 	vdso.h \
-	seqlock_user.h \
+	seqlock.h \
 	version.h \
 	xenomai.h

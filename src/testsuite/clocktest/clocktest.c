@@ -99,8 +99,8 @@ static void show_hostrt_diagnostics(void)
 	       (intmax_t)nkvdso->hostrt_data.wall_to_monotonic.tv_sec);
 	printf("         tv_nsec : %ld\n",
 	       nkvdso->hostrt_data.wall_to_monotonic.tv_nsec);
-	printf("cycle_last       : %lu\n", nkvdso->hostrt_data.cycle_last);
-	printf("mask             : 0x%lx\n", nkvdso->hostrt_data.mask);
+	printf("cycle_last       : %Lu\n", nkvdso->hostrt_data.cycle_last);
+	printf("mask             : 0x%Lx\n", nkvdso->hostrt_data.mask);
 	printf("mult             : %u\n", nkvdso->hostrt_data.mult);
 	printf("shift            : %u\n\n", nkvdso->hostrt_data.shift);
 }
@@ -276,11 +276,11 @@ int main(int argc, char *argv[])
 
 	printf("== Tested clock: %d (", clock_id);
 	switch (clock_id) {
-        case CLOCK_REALTIME:
+	case CLOCK_REALTIME:
 		printf("CLOCK_REALTIME");
 		break;
 
-        case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC:
 		printf("CLOCK_MONOTONIC");
 		break;
 
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
 		printf("CLOCK_HOST_REALTIME");
 		break;
 
-        default:
+	default:
 		printf("<unknown>");
 		break;
 	}

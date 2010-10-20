@@ -1,19 +1,19 @@
-#ifndef __SEQLOCK_USER_H
-#define __SEQLOCK_USER_H
+#ifndef __SEQLOCK_H
+#define __SEQLOCK_H
 
 /* Originally from the linux kernel, adapted for userland and Xenomai */
 
 #include <asm/xenomai/atomic.h>
 
-typedef struct seqcount {
+typedef struct xnseqcount {
 	unsigned sequence;
-} seqcount_t;
+} xnseqcount_t;
 
-#define SEQCNT_ZERO { 0 }
-#define seqcount_init(x) do { *(x) = (seqcount_t) SEQCNT_ZERO; } while (0)
+#define XNSEQCNT_ZERO { 0 }
+#define xnseqcount_init(x) do { *(x) = (xnseqcount_t) SEQCNT_ZERO; } while (0)
 
 /* Start of read using pointer to a sequence counter only.  */
-static inline unsigned read_seqcount_begin(const seqcount_t *s)
+static inline unsigned xnread_seqcount_begin(const xnseqcount_t *s)
 {
 	unsigned ret;
 
@@ -30,7 +30,7 @@ repeat:
 /*
  * Test if reader processed invalid data because sequence number has changed.
  */
-static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
+static inline int xnread_seqcount_retry(const xnseqcount_t *s, unsigned start)
 {
 	xnarch_read_memory_barrier();
 
@@ -42,16 +42,16 @@ static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
  * The sequence counter only protects readers from concurrent writers.
  * Writers must use their own locking.
  */
-static inline void write_seqcount_begin(seqcount_t *s)
+static inline void xnwrite_seqcount_begin(xnseqcount_t *s)
 {
 	s->sequence++;
 	xnarch_write_memory_barrier();
 }
 
-static inline void write_seqcount_end(seqcount_t *s)
+static inline void xnwrite_seqcount_end(xnseqcount_t *s)
 {
 	xnarch_write_memory_barrier();
 	s->sequence++;
 }
 
-#endif
+#endif /* __SEQLOCK_H */

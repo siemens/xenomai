@@ -34,7 +34,7 @@
 struct xnvdso {
 	unsigned long long features;
 
-	struct xnarch_hostrt_data hostrt_data;
+	struct xnvdso_hostrt_data hostrt_data;
 	/*
 	 * Embed further domain specific structures that
 	 * describe the shared data here
@@ -61,7 +61,7 @@ struct xnvdso {
 
 extern struct xnvdso *nkvdso;
 
-static inline struct xnarch_hostrt_data *get_hostrt_data(void)
+static inline struct xnvdso_hostrt_data *get_hostrt_data(void)
 {
 	return &nkvdso->hostrt_data;
 }
