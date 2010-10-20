@@ -78,4 +78,8 @@ typedef union thread_xstate x86_fpustate;
 #define x86_fpustate_ptr(t) ((t)->fpu.state)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
+#define per_cpu_var(var) (var)
+#endif /* Linux >= 2.6.34 */
+
 #endif /* _XENO_ASM_X86_WRAPPERS_64_H */
