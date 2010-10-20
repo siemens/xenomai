@@ -55,6 +55,10 @@ extern void __xnarch_xchg_called_with_bad_pointer(void);
 #endif /* __LINUX_ARM_ARCH == 6 */
 #endif /* CONFIG_SMP */
 
+#ifndef __KERNEL__
+#define cpu_relax()				xnarch_memory_barrier()
+#endif /* __KERNEL__ */
+
 static inline unsigned long
 __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 {
