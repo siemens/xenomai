@@ -66,9 +66,10 @@ else
   build_for=$host_alias
 fi
 
-use__thread=yes
+use__thread=no
 case "$build_for" in
  i*86*-*)
+	use__thread=yes
 	XENO_TARGET_ARCH=x86
 	XENO_LINUX_ARCH=i386
 	XENO_LINUX_INSTALL_TARGET=install
@@ -96,7 +97,6 @@ case "$build_for" in
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  arm*-*)
-	use__thread=no
 	XENO_TARGET_ARCH=arm
 	XENO_LINUX_ARCH=arm
 	XENO_LINUX_INSTALL_TARGET=install_image
@@ -106,6 +106,7 @@ case "$build_for" in
 	# are running
 	;;
  x86_64-*|amd64-*)
+	use__thread=yes
 	XENO_TARGET_ARCH=x86
 	XENO_LINUX_ARCH=x86_64
 	XENO_LINUX_INSTALL_TARGET=install
