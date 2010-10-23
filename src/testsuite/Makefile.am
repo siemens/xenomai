@@ -1,10 +1,1 @@
-SUBDIRS = \
-	latency \
-	cyclic \
-	switchtest \
-	irqbench \
-	clocktest \
-	klatency \
-	unit \
-	sigtest \
-	xeno-test
+SUBDIRS = latency cyclic switchtest irqbench clocktest klatency unit
