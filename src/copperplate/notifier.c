@@ -260,6 +260,6 @@ void notifier_pkg_init(void)
 	 */
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_sigaction = &notifier_sighandler;
-	sa.sa_flags = SA_SIGINFO;
+	sa.sa_flags = SA_SIGINFO|SA_RESTART;
 	sigaction(NOTIFYSIG, &sa, &notifier_old_sa);
 }
