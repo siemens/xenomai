@@ -51,6 +51,17 @@ static int global_rr;
 
 static struct timespec global_quantum;
 
+/* Private signal used for unblocking from syscalls. */
+#define UNBLOCKSIG	(SIGRTMIN + 9)
+
+static void unblock_sighandler(int sig)
+{
+	/*
+	 * nop -- we just want the receiving thread to unblock with
+	 * EINTR if applicable.
+	 */
+}
+
 static void notifier_callback(const struct notifier *nf)
 {
 	struct threadobj *current;
@@ -141,10 +152,11 @@ void threadobj_destroy(struct threadobj *thobj)
 
 int threadobj_suspend(struct threadobj *thobj)
 {
+	struct notifier *nf = &thobj->core.notifier;
 	int ret;
 
 	threadobj_unlock(thobj); /* FIXME: racy */
-	ret = notifier_signal(&thobj->core.notifier);
+	ret = notifier_signal(nf);
 	threadobj_lock(thobj);
 
 	return ret;
@@ -152,11 +164,22 @@ int threadobj_suspend(struct threadobj *thobj)
 
 int threadobj_resume(struct threadobj *thobj)
 {
-	int ret;
+	if (thobj == threadobj_current())
+		return 0;
 
-	threadobj_unlock(thobj); /* FIXME: racy */
-	ret = notifier_release(&thobj->core.notifier);
-	threadobj_lock(thobj);
+	return notifier_release(&thobj->core.notifier);
+}
+
+int threadobj_unblock(struct threadobj *thobj)
+{
+	pthread_t tid = thobj->tid;
+	int ret = 0;
+
+	if (thobj->wait_sobj)	/* Remove PEND (+DELAY timeout) */
+		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
+	else
+		/* Remove standalone DELAY */
+		ret = -pthread_kill(tid, UNBLOCKSIG);
 
 	return ret;
 }
@@ -351,6 +374,8 @@ void threadobj_stop_rr(void)
 
 void threadobj_pkg_init(void)
 {
+	struct sigaction sa;
+
 	threadobj_max_prio = sched_get_priority_max(SCHED_FIFO);
 	threadobj_min_prio = sched_get_priority_min(SCHED_FIFO);
 	threadobj_async = 0;
@@ -361,6 +386,10 @@ void threadobj_pkg_init(void)
 
 	if (pthread_key_create(&threadobj_tskey, threadobj_finalize) != 0)
 		panic("failed to allocate TSD key");
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = unblock_sighandler;
+	sigaction(UNBLOCKSIG, &sa, NULL);
 
 	notifier_pkg_init();
 }

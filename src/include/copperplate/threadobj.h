@@ -119,6 +119,8 @@ int threadobj_suspend(struct threadobj *thobj);
 
 int threadobj_resume(struct threadobj *thobj);
 
+int threadobj_unblock(struct threadobj *thobj);
+
 int threadobj_lock_sched(struct threadobj *thobj);
 
 int threadobj_unlock_sched(struct threadobj *thobj);

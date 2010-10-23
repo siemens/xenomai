@@ -32,6 +32,7 @@
 #include "copperplate/panic.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
+#include "copperplate/syncobj.h"
 
 static DEFINE_PRIVATE_LIST(thread_list);
 
@@ -140,6 +141,20 @@ int threadobj_resume(struct threadobj *thobj) /* thobj->lock held */
 	threadobj_lock(thobj);
 
 	return -ret;
+}
+
+int threadobj_unblock(struct threadobj *thobj) /* thobj->lock held */
+{
+	pthread_t tid = thobj->tid;
+	int ret = 0;
+
+	if (thobj->wait_sobj)	/* Remove PEND (+DELAY timeout) */
+		syncobj_flush(thobj->wait_sobj, SYNCOBJ_FLUSHED);
+	else
+		/* Remove standalone DELAY */
+		ret = -pthread_kill(tid, SIGRELS);
+
+	return ret;
 }
 
 int threadobj_lock_sched(struct threadobj *thobj) /* thobj->lock held */

@@ -213,7 +213,7 @@ int notifier_release(struct notifier *nf)
 	return 0;
 }
 
-int notifier_wait(const struct notifier *nf)
+int notifier_wait(const struct notifier *nf) /* sighandler context */
 {
 	int ret;
 	char c;
