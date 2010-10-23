@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_THREADOBJ_H
 #define _COPPERPLATE_THREADOBJ_H
 
+#include <time.h>
 #include <pthread.h>
 #include <copperplate/list.h>
 
@@ -164,6 +165,16 @@ static inline int threadobj_lock_sched_once(struct threadobj *thobj)
 		return threadobj_lock_sched(thobj);
 
 	return 0;
+}
+
+static inline int threadobj_sleep(struct timespec *ts,
+				  struct timespec *ts_r)
+{
+	/*
+	 * XXX: guaranteed to return -EINTR upon threadobj_unblock()
+	 * with both Cobalt and Mercury cores.
+	 */
+	return -clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, ts, ts_r);
 }
 
 static inline void threadobj_ienter(void)

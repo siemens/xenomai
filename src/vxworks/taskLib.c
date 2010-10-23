@@ -758,11 +758,11 @@ STATUS taskDelay(int ticks)
 
 	clockobj_ticks_to_timeout(&wind_clock, ticks, &rqt);
 	current->tcb->status |= WIND_DELAY;
-	ret = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &rqt, NULL);
+	ret = threadobj_sleep(&rqt, NULL);
 	current->tcb->status &= ~WIND_DELAY;
 
 	if (ret) {
-		errno = ret;
+		errno = -ret;
 		return ERROR;
 	}
 
