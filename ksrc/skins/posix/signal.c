@@ -527,12 +527,24 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 int pthread_kill(pthread_t thread, int sig)
 {
 	pse51_siginfo_t *si = NULL;
+	int ret = 0;
 	spl_t s;
 
+	xnlock_get_irqsave(&nklock, s);
+
+	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
+		ret = ESRCH;
+		goto unlock_and_exit;
+	}
+
+	if (sig == 0)
+		/* Test for existence -- take fast path. */
+		goto unlock_and_exit;
+
 	/*
-	 * Undocumented pseudo-signals to suspend and resume threads
-	 * via the low-level nucleus services. Process them early,
-	 * before anyone can notice...
+	 * Undocumented pseudo-signals to suspend/resume/unblock
+	 * threads via the low-level nucleus services. Process them
+	 * early, before anyone can notice...
 	 */
 	if (sig == SIGSUSP) {
 		/*
@@ -543,36 +555,39 @@ int pthread_kill(pthread_t thread, int sig)
 				     XN_INFINITE, XN_RELATIVE, NULL);
 		if (&thread->threadbase == xnpod_current_thread() &&
 		    xnthread_test_info(&thread->threadbase, XNBREAK))
-			return -EINTR;
-		return 0;
-	} else if (sig == SIGRESM) {
+			ret = EINTR;
+		goto unlock_and_exit;
+	}
+
+	if (sig == SIGRESM) {
 		xnpod_resume_thread(&thread->threadbase, XNSUSP);
-		return 0;
+		goto unlock_and_exit;
 	}
 
-	if ((unsigned)sig > SIGRTMAX)
-		return EINVAL;
-
-	if (sig) {
-		si = pse51_new_siginfo(sig, SI_USER, (union sigval)0);
-
-		if (!si)
-			return EAGAIN;
+	if (sig == SIGRELS) {
+		xnpod_unblock_thread(&thread->threadbase);
+		goto unlock_and_exit;
 	}
 
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!pse51_obj_active(thread, PSE51_THREAD_MAGIC, struct pse51_thread)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return ESRCH;
+	if ((unsigned)sig > SIGRTMAX) {
+		ret = EINVAL;
+		goto unlock_and_exit;
 	}
 
-	if (sig && pse51_sigqueue_inner(thread, si))
+	si = pse51_new_siginfo(sig, SI_USER, (union sigval)0);
+	if (si == NULL) {
+		ret = EAGAIN;
+		goto unlock_and_exit;
+	}
+
+	if (pse51_sigqueue_inner(thread, si))
 		xnpod_schedule();
+
+ unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
+	return ret;
 }
 
 /**
