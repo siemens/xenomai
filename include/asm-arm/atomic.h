@@ -55,6 +55,10 @@ extern void __xnarch_xchg_called_with_bad_pointer(void);
 #endif /* __LINUX_ARM_ARCH == 6 */
 #endif /* CONFIG_SMP */
 
+#ifndef __KERNEL__
+#define cpu_relax()				xnarch_memory_barrier()
+#endif /* __KERNEL__ */
+
 static inline unsigned long
 __xnarch_xchg(volatile void *ptr, unsigned long x, int size)
 {
@@ -168,9 +172,9 @@ xnarch_atomic_clear_mask(unsigned long *addr, unsigned long mask)
 
 static inline unsigned long
 xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
-		      unsigned long old, unsigned long new)
+		      unsigned long oldval, unsigned long newval)
 {
-	unsigned long oldval, res;
+	unsigned long curval, res;
 
 	xnarch_memory_barrier();
 
@@ -180,14 +184,14 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
 		"mov	%0, #0\n"
 		"teq	%1, %4\n"
 		"strexeq %0, %5, [%3]\n"
-		    : "=&r" (res), "=&r" (oldval), "+Qo" (ptr->counter)
-		    : "r" (&ptr->counter), "Ir" (old), "r" (new)
+		    : "=&r" (res), "=&r" (curval), "+Qo" (ptr->counter)
+		    : "r" (&ptr->counter), "Ir" (oldval), "r" (newval)
 		    : "cc");
 	} while (res);
 
 	xnarch_memory_barrier();
 
-	return oldval;
+	return curval;
 }
 
 static inline int xnarch_atomic_inc_and_test(xnarch_atomic_t *v)
@@ -259,8 +263,8 @@ xnarch_atomic_set_mask(unsigned long *addr, unsigned long mask)
 	atomic_dec((atomic_t *)pcounter)
 #define xnarch_atomic_clear_mask(addr, mask) \
 	atomic_clear_mask((mask), (addr))
-#define xnarch_atomic_cmpxchg(pcounter, old, new) \
-	atomic_cmpxchg((atomic_t *)(pcounter), (old), (new))
+#define xnarch_atomic_cmpxchg(pcounter, oldval, newval) \
+	atomic_cmpxchg((atomic_t *)(pcounter), (oldval), (newval))
 #define xnarch_atomic_inc_and_test(pcounter) \
 	atomic_inc_and_test((atomic_t *)pcounter)
 #define xnarch_atomic_dec_and_test(pcounter) \
@@ -343,9 +347,9 @@ xnarch_atomic_clear_mask(unsigned long *addr, unsigned long mask)
 
 static __inline__ unsigned long
 xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
-		      unsigned long old, unsigned long newval)
+		      unsigned long oldval, unsigned long newval)
 {
-	register unsigned long asm_old asm("r0") = old;
+	register unsigned long asm_old asm("r0") = oldval;
 	register unsigned long asm_new asm("r1") = newval;
 	register unsigned long *asm_ptr asm("r2") =
 		(unsigned long *)&ptr->counter;
@@ -361,8 +365,8 @@ xnarch_atomic_cmpxchg(xnarch_atomic_t *ptr,
 			: "r"(asm_new), "r"(asm_ptr)
 			: "ip", "cc", "memory");
 		if (likely(!asm_old))
-			return old;
-	} while ((asm_old = *asm_ptr) == old);
+			return oldval;
+	} while ((asm_old = *asm_ptr) == oldval);
 	return asm_old;
 }
 
