@@ -13,7 +13,7 @@ XENO_VERSION="@PACKAGE_VERSION@"
 XENO_PREFIX="${staging}${prefix}"
 XENO_CC="@CC@"
 XENO_TARGET_ARCH="@XENO_TARGET_ARCH@"
-XENO_BASE_CFLAGS="-I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO__"
+XENO_BASE_CFLAGS="-I${staging}${includedir} @XENO_USER_APP_CFLAGS@ -D__COBALT__"
 XENO_BASE_LDFLAGS="-L${staging}${libdir} -lxenomai -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_LDFLAGS="-L${staging}${libdir} -lpthread_rt -lxenomai -lpthread -lrt @XENO_USER_APP_LDFLAGS@"
 XENO_POSIX_WRAPPERS="${staging}${libdir}/posix.wrappers"
@@ -44,22 +44,18 @@ usage ()
 cat <<EOF
 Usage xeno-config --skin=skinname OPTIONS
 Options :
-	--help
-	--v,--verbose
-	--version
-	--cc
-	--arch
-	--prefix
-	--skin native|posix|psos|rtdm|uitron|vrtx|vxworks
-	--cflags
-	--ldflags
-	--lib*-dir,--libdir,--user-libdir
-
-Deprecated options:
-	--xeno-cflags
-	--xeno-ldflags
-	--posix-cflags
-	--posix-ldflags
+        --help
+        --v,--verbose
+        --version
+        --cc
+        --ccld
+        --arch
+        --prefix
+        --skin native|posix|vxworks
+        --cflags
+        --ldflags
+        --lib*-dir,--libdir,--user-libdir
+        --core
 EOF
     exit $1
 }
@@ -69,12 +65,9 @@ verbose ()
     echo xeno-config --verbose
     echo "        --version=\"${XENO_VERSION}\""
     echo "        --cc=\"$XENO_CC\""
+    echo "        --ccld=\"$XENO_PREFIX/bin/wrap-link.sh $XENO_CC\""
     echo "        --arch=\"$XENO_TARGET_ARCH\""
     echo "        --prefix=\"$XENO_PREFIX\""
-    echo "        --xeno-cflags=\"$XENO_BASE_CFLAGS\""
-    echo "        --xeno-ldflags=\"$XENO_BASE_LDFLAGS\""
-    echo "        --posix-cflags=\"$XENO_POSIX_CFLAGS\""
-    echo "        --posix-ldflags=\"`posix_ldflags`\""
     echo "        --library-dir=\"$XENO_LIBRARY_DIR\""
 }
 
@@ -85,25 +78,28 @@ fi
 
 while test $# -gt 0; do
     case "$1" in
-	--v|--verbose)
-	    verbose $*
-	    exit 0
-	    ;;
-	--version)
-	    echo ${XENO_VERSION}
-	    ;;
-	--cc)
-	    echo $XENO_CC
-	    ;;
-	--arch)
-	    echo $XENO_TARGET_ARCH
-	    ;;
-	--prefix)
-	    echo $XENO_PREFIX
-	    ;;
-	--lib*-dir|--libdir|--user-libdir)
-	    echo $XENO_LIBRARY_DIR
-	    ;;
+        --v|--verbose)
+            verbose $*
+            exit 0
+            ;;
+        --version)
+            echo ${XENO_VERSION}
+            ;;
+        --cc)
+            echo $XENO_CC
+            ;;
+        --ccld)
+            echo $XENO_PREFIX/bin/wrap-link.sh $XENO_CC
+            ;;
+        --arch)
+            echo $XENO_TARGET_ARCH
+            ;;
+        --prefix)
+            echo $XENO_PREFIX
+            ;;
+        --lib*-dir|--libdir|--user-libdir)
+            echo $XENO_LIBRARY_DIR
+            ;;
 	--skin)
 	    skin="$2"
 	    shift
@@ -116,11 +112,11 @@ while test $# -gt 0; do
 		native|rtdm)
 		    echo $XENO_BASE_CFLAGS
 		    ;;
-		psos|psos+|posix|uitron|vrtx|vxworks)
-		    if [ "x$skin" = "xpsos" ]; then
-			skin="psos+"
-		    fi
+		posix)
 		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/$skin
+		    ;;
+		vxworks)
+		    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/posix -I$XENO_INCLUDE_DIR/$skin
 		    ;;
 		"")
 		    echo skin not set, please pass --skin before --cflags 1>&2
@@ -139,10 +135,11 @@ while test $# -gt 0; do
 		    posix_ldflags
 		    echo
 		    ;;
-		native|psos|psos+|rtdm|uitron|vrtx|vxworks)
-		    if [ "x$skin" = "xpsos+" ]; then
-			skin="psos"
-		    fi
+		vxworks)
+		    posix_ldflags -l$skin -lcopperplate
+		    echo
+		    ;;
+		native)
 		    echo -l$skin $XENO_BASE_LDFLAGS
 		    ;;
 		"")
@@ -155,30 +152,15 @@ while test $# -gt 0; do
 		    ;;
 	    esac
 	    ;;
-
-	--xeno-cflags)
-	    echo "$1" is deprecated, use --skin=name --cflags instead 1>&2
-	    echo $XENO_BASE_CFLAGS
+	--core)
+	    echo cobalt
 	    ;;
-	--xeno-ldflags)
-	    echo "$1" is deprecated, use --skin=name --ldflags instead 1>&2
-	    echo $XENO_BASE_LDFLAGS
-	    ;;
-	--posix-cflags)
-	    echo "$1" is deprecated, use --skin=posix --cflags instead 1>&2
-	    echo $XENO_BASE_CFLAGS -I$XENO_INCLUDE_DIR/posix
-	    ;;
-	--posix-ldflags)
-	    echo "$1" is deprecated, use --skin=posix --ldflags instead 1>&2
-	    posix_ldflags
-	    echo
-	    ;;
-	--help)
-	    usage 0 1>&2
-	    ;;
-	*)
-	 usage 1 1>&2
-	 ;;
+        --help)
+            usage 0 1>&2
+            ;;
+        *)
+         usage 1 1>&2
+         ;;
     esac
     shift
 done

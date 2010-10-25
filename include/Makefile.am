@@ -1,7 +1,9 @@
+nodist_include_HEADERS=$(CONFIG_HEADER)
+
+if XENO_COBALT
+
 include_HEADERS = \
 	rtdk.h
-
-nodist_include_HEADERS=$(CONFIG_HEADER)
 
 SUBDIRS = \
 	asm-generic \
@@ -33,5 +35,7 @@ uninstall-local:
 	rm -f $(DESTDIR)$(includedir)/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
 	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
+
+endif
 
 EXTRA_DIST = testing

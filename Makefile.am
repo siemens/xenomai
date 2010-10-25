@@ -2,9 +2,9 @@ ACLOCAL_AMFLAGS=-I config
 
 SUDO=sudo
 
-SUBDIRS = src include config @XENO_MAYBE_DOCDIR@ scripts
+SUBDIRS = src config include @XENO_MAYBE_DOCDIR@ scripts
 
-EXTRA_DIST = CREDITS README.INSTALL TROUBLESHOOTING ksrc examples debian
+EXTRA_DIST = ksrc examples debian
 
 dist-hook:
 	rm -fr `find $(distdir) -name '.svn' -o -name CVS  -o -name '.#*' \
@@ -12,6 +12,7 @@ dist-hook:
 	test -e $(srcdir)/doc || rm -rf $(distdir)/doc
 
 dev devices:
+if XENO_COBALT
 	@$(mkinstalldirs) $(DESTDIR)/dev; \
 	if test x`id -u` = x0; then \
 	   sudo= ; \
@@ -50,6 +51,7 @@ echo '*** privileges.' ; \
 	if test \! -c $(DESTDIR)/dev/rtheap ; then \
 	  $$sudo mknod -m 666 $(DESTDIR)/dev/rtheap c 10 254 ; \
 	fi
+endif
 
 install-exec-local: devices
 

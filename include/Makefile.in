@@ -36,7 +36,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = include
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__include_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
@@ -62,6 +62,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
+am__include_HEADERS_DIST = rtdk.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -92,7 +93,8 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = asm-generic asm-blackfin asm-x86 asm-powerpc asm-arm \
+	asm-nios2 asm-sh asm-sim analogy native nucleus posix rtdm
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -274,24 +276,24 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-include_HEADERS = \
-	rtdk.h
-
 nodist_include_HEADERS = $(CONFIG_HEADER)
-SUBDIRS = \
-	asm-generic \
-	asm-blackfin \
-	asm-x86 \
-	asm-powerpc \
-	asm-arm \
-	asm-nios2 \
-	asm-sh \
-	asm-sim \
-	analogy \
-	native \
-	nucleus \
-	posix \
-	rtdm
+@XENO_COBALT_TRUE@include_HEADERS = \
+@XENO_COBALT_TRUE@	rtdk.h
+
+@XENO_COBALT_TRUE@SUBDIRS = \
+@XENO_COBALT_TRUE@	asm-generic \
+@XENO_COBALT_TRUE@	asm-blackfin \
+@XENO_COBALT_TRUE@	asm-x86 \
+@XENO_COBALT_TRUE@	asm-powerpc \
+@XENO_COBALT_TRUE@	asm-arm \
+@XENO_COBALT_TRUE@	asm-nios2 \
+@XENO_COBALT_TRUE@	asm-sh \
+@XENO_COBALT_TRUE@	asm-sim \
+@XENO_COBALT_TRUE@	analogy \
+@XENO_COBALT_TRUE@	native \
+@XENO_COBALT_TRUE@	nucleus \
+@XENO_COBALT_TRUE@	posix \
+@XENO_COBALT_TRUE@	rtdm
 
 EXTRA_DIST = testing
 all: all-recursive
@@ -600,6 +602,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@XENO_COBALT_FALSE@uninstall-local:
+@XENO_COBALT_FALSE@install-data-local:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -689,21 +693,21 @@ uninstall-am: uninstall-includeHEADERS uninstall-local \
 	uninstall-nodist_includeHEADERS
 
 
-install-data-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	$(LN_S) asm-@XENO_TARGET_ARCH@ $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
-	$(LN_S) . $(DESTDIR)$(includedir)/asm-generic/xenomai
+@XENO_COBALT_TRUE@install-data-local:
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm
+@XENO_COBALT_TRUE@	$(LN_S) asm-@XENO_TARGET_ARCH@ $(DESTDIR)$(includedir)/asm
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/xenomai
+@XENO_COBALT_TRUE@	$(LN_S) . $(DESTDIR)$(includedir)/xenomai
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
+@XENO_COBALT_TRUE@	$(LN_S) . $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
+@XENO_COBALT_TRUE@	$(LN_S) . $(DESTDIR)$(includedir)/asm-generic/xenomai
 
-uninstall-local:
-	rm -f $(DESTDIR)$(includedir)/asm
-	rm -f $(DESTDIR)$(includedir)/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
-	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
+@XENO_COBALT_TRUE@uninstall-local:
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/xenomai
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm-@XENO_TARGET_ARCH@/xenomai
+@XENO_COBALT_TRUE@	rm -f $(DESTDIR)$(includedir)/asm-generic/xenomai
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

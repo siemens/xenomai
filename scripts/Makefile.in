@@ -37,7 +37,7 @@ host_triplet = @host@
 target_triplet = @target@
 subdir = scripts
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/xeno-config.in $(srcdir)/xeno.in
+	$(srcdir)/xeno.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -276,7 +276,7 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-xeno-config: $(top_builddir)/config.status $(srcdir)/xeno-config.in
+xeno-config: $(top_builddir)/config.status 
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno: $(top_builddir)/config.status $(srcdir)/xeno.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

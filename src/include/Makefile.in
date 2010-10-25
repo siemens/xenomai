@@ -532,6 +532,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@XENO_COBALT_FALSE@distclean-local:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -617,8 +618,8 @@ uninstall-am:
 	ps ps-am tags tags-recursive uninstall uninstall-am
 
 
-distclean-local:
-	rm -fr xenomai asm asm-generic
+@XENO_COBALT_TRUE@distclean-local:
+@XENO_COBALT_TRUE@	rm -fr xenomai asm asm-generic
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

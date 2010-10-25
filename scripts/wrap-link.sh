@@ -1,6 +1,7 @@
 #! /bin/sh
-# Split link-edit into two stage for linking static applications with
-# Xenomai user-space posix skin.
+# To build static applications for the Cobalt core, we need to split
+# link-edit into two stages, to avoid wrapping symbols from system
+# libs.
 
 set -e
 
