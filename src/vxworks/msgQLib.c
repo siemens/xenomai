@@ -113,7 +113,6 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 
 STATUS msgQDelete(MSG_Q_ID msgQId)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	struct wind_mq *mq;
 
 	if (threadobj_async_p()) {
@@ -128,18 +127,17 @@ STATUS msgQDelete(MSG_Q_ID msgQId)
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj, &syns))
+	if (syncobj_lock(&mq->sobj))
 		goto objid_error;
 
 	mq->magic = ~mq_magic; /* Prevent further reference. */
-	syncobj_destroy(&mq->sobj, &syns);
+	syncobj_destroy(&mq->sobj);
 
 	return OK;
 }
 
 int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	struct timespec ts, *timespec;
 	struct msgholder *msg = NULL;
 	struct threadobj *current;
@@ -159,7 +157,7 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj, &syns))
+	if (syncobj_lock(&mq->sobj))
 		goto objid_error;
 
 	if (!list_empty(&mq->msg_list)) {
@@ -191,7 +189,7 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	current->wait_u.buffer.ptr = buffer;
 	current->wait_u.buffer.size = maxNBytes;
 
-	ret = syncobj_pend(&mq->sobj, timespec, &syns);
+	ret = syncobj_pend(&mq->sobj, timespec);
 	if (ret == -EIDRM) {
 		errno = S_objLib_OBJ_DELETED;
 		return ERROR;
@@ -204,7 +202,7 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	syncobj_signal_drain(&mq->sobj);
 
 done:
-	syncobj_unlock(&mq->sobj, &syns);
+	syncobj_unlock(&mq->sobj);
 
 	return nbytes;
 }
@@ -212,7 +210,6 @@ done:
 STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		int timeout, int prio)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	struct timespec ts, *timespec;
 	struct threadobj *thobj;
 	struct msgholder *msg;
@@ -227,7 +224,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj, &syns))
+	if (syncobj_lock(&mq->sobj))
 		goto objid_error;
 
 	if (bytes > mq->msgsize) {
@@ -270,7 +267,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		timespec = NULL;
 
 	do {
-		ret = syncobj_wait_drain(&mq->sobj, timespec, &syns);
+		ret = syncobj_wait_drain(&mq->sobj, timespec);
 		if (ret == -EIDRM) {
 			errno = S_objLib_OBJ_DELETED;
 			return ERROR;
@@ -305,14 +302,13 @@ enqueue:
 done:
 	ret = OK;
 fail:
-	syncobj_unlock(&mq->sobj, &syns);
+	syncobj_unlock(&mq->sobj);
 
 	return ret;
 }
 
 int msgQNumMsgs(MSG_Q_ID msgQId)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	struct wind_mq *mq;
 	int msgcount;
 
@@ -323,11 +319,11 @@ int msgQNumMsgs(MSG_Q_ID msgQId)
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj, &syns))
+	if (syncobj_lock(&mq->sobj))
 		goto objid_error;
 
 	msgcount = mq->msgcount;
-	syncobj_unlock(&mq->sobj, &syns);
+	syncobj_unlock(&mq->sobj);
 
 	return msgcount;
 }

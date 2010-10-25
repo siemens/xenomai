@@ -73,18 +73,25 @@ void syncobj_init(struct syncobj *sobj, int flags,
 	pthread_condattr_destroy(&cattr);
 }
 
-int syncobj_lock(struct syncobj *sobj, struct syncstate *syns)
+int syncobj_lock(struct syncobj *sobj)
 {
-	if (syns->cleanup == NULL)
-		syns->cleanup = syncobj_cleanup_wait;
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &syns->cancel_type);
-	return -pthread_mutex_lock(&sobj->lock);
+	int ret, otype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
+	ret = -pthread_mutex_lock(&sobj->lock);
+	if (ret)
+		pthread_setcanceltype(otype, NULL);
+	else
+		sobj->cancel_type = otype;
+
+	return ret;
 }
 
-void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns)
+void syncobj_unlock(struct syncobj *sobj)
 {
+	int otype = sobj->cancel_type;
 	pthread_mutex_unlock(&sobj->lock);
-	pthread_setcanceltype(syns->cancel_type, NULL);
+	pthread_setcanceltype(otype, NULL);
 }
 
 static void syncobj_test_finalize(struct syncobj *sobj)
@@ -105,9 +112,11 @@ static void syncobj_test_finalize(struct syncobj *sobj)
 		assert(relcount > 0);
 }
 
-void syncobj_cleanup_wait(struct syncobj *sobj)
+static void syncobj_cleanup_wait(void *arg)
 {
 	struct threadobj *current = threadobj_current();
+	struct syncobj *sobj = arg;
+
 	list_remove_init(&current->wait_link);
 	syncobj_test_finalize(sobj);
 }
@@ -136,15 +145,14 @@ int __syncobj_signal_drain(struct syncobj *sobj)
 	return 1;
 }
 
-int syncobj_pend(struct syncobj *sobj,
-		 struct timespec *timeout, struct syncstate *syns)
+int syncobj_pend(struct syncobj *sobj, struct timespec *timeout)
 {
 	struct threadobj *current = threadobj_current();
-	int ret;
+	int ret, otype;
 
 	assert(current != NULL);
 
-	pthread_cleanup_push((void (*)(void *))syns->cleanup, sobj);
+	pthread_cleanup_push(syncobj_cleanup_wait, sobj);
 
 	syncobj_enqueue_waiter(sobj, current);
 	current->wait_sobj = sobj;
@@ -175,8 +183,9 @@ int syncobj_pend(struct syncobj *sobj,
 		assert(sobj->release_count >= 0);
 		ret = EINTR;
 	} else if (current->wait_status & SYNCOBJ_DELETED) {
+		otype = sobj->cancel_type;
 		syncobj_test_finalize(sobj);
-		pthread_setcanceltype(syns->cancel_type, NULL);
+		pthread_setcanceltype(otype, NULL);
 		ret = EIDRM;
 	}
 
@@ -210,17 +219,16 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 	return thobj;
 }
 
-int syncobj_wait_drain(struct syncobj *sobj,
-		       struct timespec *timeout, struct syncstate *syns)
+int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout)
 {
 	struct threadobj *current = threadobj_current();
-	int ret;
+	int ret, otype;
 
 	/*
 	 * XXX: The caller must check for spurious wakeups, in case
 	 * the drain condition became false again before it resumes.
 	 */
-	pthread_cleanup_push((void (*)(void *))syns->cleanup, sobj);
+	pthread_cleanup_push(syncobj_cleanup_wait, sobj);
 
 	list_append(&current->wait_link, &sobj->drain_list);
 	sobj->drain_count++;
@@ -251,8 +259,9 @@ int syncobj_wait_drain(struct syncobj *sobj,
 		assert(sobj->release_count >= 0);
 		ret = EINTR;
 	} else if (current->wait_status & SYNCOBJ_DELETED) {
+		otype = sobj->cancel_type;
 		syncobj_test_finalize(sobj);
-		pthread_setcanceltype(syns->cancel_type, NULL);
+		pthread_setcanceltype(otype, NULL);
 		ret = EIDRM;
 	}
 
@@ -285,17 +294,18 @@ int syncobj_flush(struct syncobj *sobj, int reason)
 	return sobj->release_count;
 }
 
-int syncobj_destroy(struct syncobj *sobj, struct syncstate *syns)
+int syncobj_destroy(struct syncobj *sobj)
 {
-	int ret;
+	int ret, otype;
 
 	ret = syncobj_flush(sobj, SYNCOBJ_DELETED);
 	if (ret == 0) {
 		sobj->release_count = 1;
+		otype = sobj->cancel_type;
 		syncobj_test_finalize(sobj);
-		pthread_setcanceltype(syns->cancel_type, NULL);
+		pthread_setcanceltype(otype, NULL);
 	} else
-		syncobj_unlock(sobj, syns);
+		syncobj_unlock(sobj);
 
 	return ret;
 }

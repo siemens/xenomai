@@ -56,14 +56,13 @@ static struct wind_sem *alloc_sem(int options, const struct wind_sem_ops *ops)
 
 static STATUS xsem_take(struct wind_sem *sem, int timeout)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	struct timespec ts, *timespec;
 	STATUS ret = OK;
 
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
-	if (syncobj_lock(&sem->u.xsem.sobj, &syns))
+	if (syncobj_lock(&sem->u.xsem.sobj))
 		return S_objLib_OBJ_ID_ERROR;
 
 	if (--sem->u.xsem.value >= 0)
@@ -81,7 +80,7 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 	} else
 		timespec = NULL;
 
-	ret = syncobj_pend(&sem->u.xsem.sobj, timespec, &syns);
+	ret = syncobj_pend(&sem->u.xsem.sobj, timespec);
 	if (ret == -EIDRM)
 		return S_objLib_OBJ_DELETED;
 	if (ret) {
@@ -92,17 +91,16 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 			ret = OK;	/* Flushed. */
 	}
 done:
-	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+	syncobj_unlock(&sem->u.xsem.sobj);
 
 	return ret;
 }
 
 static STATUS xsem_give(struct wind_sem *sem)
 {
-	struct syncstate syns = { .cleanup = NULL };
 	STATUS ret = OK;
 
-	if (syncobj_lock(&sem->u.xsem.sobj, &syns))
+	if (syncobj_lock(&sem->u.xsem.sobj))
 		return S_objLib_OBJ_ID_ERROR;
 
 	if (sem->u.xsem.value >= sem->u.xsem.maxvalue) {
@@ -112,21 +110,19 @@ static STATUS xsem_give(struct wind_sem *sem)
 	} else if (++sem->u.xsem.value <= 0)
 		syncobj_post(&sem->u.xsem.sobj);
 
-	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+	syncobj_unlock(&sem->u.xsem.sobj);
 
 	return ret;
 }
 
 static STATUS xsem_flush(struct wind_sem *sem)
 {
-	struct syncstate syns = { .cleanup = NULL };
-
-	if (syncobj_lock(&sem->u.xsem.sobj, &syns))
+	if (syncobj_lock(&sem->u.xsem.sobj))
 		return S_objLib_OBJ_ID_ERROR;
 
 	syncobj_flush(&sem->u.xsem.sobj, SYNCOBJ_FLUSHED);
 
-	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+	syncobj_unlock(&sem->u.xsem.sobj);
 
 	return OK;
 }
@@ -140,16 +136,14 @@ fnref_register(libvxworks, sem_finalize);
 
 static STATUS xsem_delete(struct wind_sem *sem)
 {
-	struct syncstate syns = { .cleanup = NULL };
-
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
-	if (syncobj_lock(&sem->u.xsem.sobj, &syns))
+	if (syncobj_lock(&sem->u.xsem.sobj))
 		return S_objLib_OBJ_ID_ERROR;
 
 	sem->magic = ~sem_magic; /* Prevent further reference. */
-	syncobj_destroy(&sem->u.xsem.sobj, &syns);
+	syncobj_destroy(&sem->u.xsem.sobj);
 
 	return OK;
 }
