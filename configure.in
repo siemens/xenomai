@@ -93,8 +93,8 @@ case "$build_for" in
  arm*-*)
 	XENO_TARGET_ARCH=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
-	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
-	# are running
+	# We set CONFIG_XENO_FASTSYNCH later, when we know what
+	# architecture we are running
 	;;
  x86_64-*|amd64-*)
 	use__thread=yes
@@ -592,9 +592,9 @@ dnl
 dnl Documentation.
 AM_CONDITIONAL(CONFIG_XENO_DOC_DOX,[test "$CONFIG_XENO_DOC_DOX" = y])
 
-dnl Allocator for SOLO
+dnl Allocator for Copperplate
 dnl Note: in dual kernel mode, we don't want malloc, no matter what.
-dnl We switch to malloc only over the blue core in debug mode, to ease
+dnl We switch to malloc only over the Mercury core in debug mode, to ease
 dnl debugging with valgrind, instrumented glibc etc.
 AM_CONDITIONAL(XENO_TLSF,[test x$rtcore_type = xcobalt -o x$debug_mode = x])
 
