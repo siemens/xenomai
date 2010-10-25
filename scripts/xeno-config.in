@@ -50,7 +50,7 @@ Options :
         --cc
         --arch
         --prefix
-        --skin native|posix|psos|rtai|rtdm|uitron|vrtx|vxworks
+        --skin native|posix|psos|rtdm|uitron|vrtx|vxworks
         --cflags
         --ldflags
         --lib*-dir,--libdir,--user-libdir
@@ -116,7 +116,7 @@ while test $# -gt 0; do
 		native|rtdm)
 		    echo $XENO_BASE_CFLAGS
 		    ;;
-		psos|psos+|posix|rtai|uitron|vrtx|vxworks)
+		psos|psos+|posix|uitron|vrtx|vxworks)
 		    if [ "x$skin" = "xpsos" ]; then
 			skin="psos+"
 		    fi
@@ -139,7 +139,7 @@ while test $# -gt 0; do
 		    posix_ldflags
 		    echo
 		    ;;
-		native|psos|psos+|rtai|uitron|vrtx|vxworks)
+		native|psos|psos+|uitron|vrtx|vxworks)
 		    if [ "x$skin" = "xpsos+" ]; then
 			skin="psos"
 		    fi
