@@ -123,6 +123,44 @@ int threadobj_prologue(struct threadobj *thobj)
 	return 0;
 }
 
+int threadobj_lock(struct threadobj *thobj)
+{
+	int ret, otype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
+	ret = -pthread_mutex_lock(&thobj->lock);
+	if (ret)
+		pthread_setcanceltype(otype, NULL);
+	else
+		thobj->cancel_type = otype;
+
+	return ret;
+}
+
+int threadobj_trylock(struct threadobj *thobj)
+{
+	int ret, otype;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
+	ret = -pthread_mutex_trylock(&thobj->lock);
+	if (ret)
+		pthread_setcanceltype(otype, NULL);
+	else
+		thobj->cancel_type = otype;
+
+	return ret;
+}
+
+int threadobj_unlock(struct threadobj *thobj)
+{
+	int ret, otype = thobj->cancel_type;
+
+	ret = -pthread_mutex_unlock(&thobj->lock);
+	pthread_setcanceltype(otype, NULL);
+
+	return ret;
+}
+
 int threadobj_cancel(struct threadobj *thobj)
 {
 	return -pthread_cancel(thobj->tid);

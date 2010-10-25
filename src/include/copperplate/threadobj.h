@@ -62,6 +62,7 @@ struct threadobj {
 	void (*suspend_hook)(struct threadobj *thobj, int status);
 	int *errno_pointer;
 	int schedlock_depth;
+	int cancel_type;
 	int status;
 
 	/* Those members belong exclusively to the syncobj code. */
@@ -109,6 +110,12 @@ void threadobj_init(struct threadobj *thobj,
 
 int threadobj_prologue(struct threadobj *thobj);
 
+int threadobj_lock(struct threadobj *thobj);
+
+int threadobj_trylock(struct threadobj *thobj);
+
+int threadobj_unlock(struct threadobj *thobj);
+
 int threadobj_cancel(struct threadobj *thobj);
 
 void threadobj_destroy(struct threadobj *thobj);
@@ -144,21 +151,6 @@ void threadobj_pkg_init(void);
 static inline struct threadobj *threadobj_current(void)
 {
 	return pthread_getspecific(threadobj_tskey);
-}
-
-static inline int threadobj_lock(struct threadobj *thobj)
-{
-	return -pthread_mutex_lock(&thobj->lock);
-}
-
-static inline int threadobj_trylock(struct threadobj *thobj)
-{
-	return -pthread_mutex_trylock(&thobj->lock);
-}
-
-static inline int threadobj_unlock(struct threadobj *thobj)
-{
-	return -pthread_mutex_unlock(&thobj->lock);
 }
 
 static inline int threadobj_lock_sched_once(struct threadobj *thobj)
