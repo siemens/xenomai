@@ -178,32 +178,34 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      struct xnthread *thread, char *name)
 {
 	struct pt_regs *childregs;
-	unsigned long flags;
+	unsigned long sp;
 
-	rthal_local_irq_flags_hw(flags);
-	childregs = (struct pt_regs *)((unsigned long)tcb->stackbase +
-				       tcb->stacksize - RTHAL_SWITCH_FRAME_SIZE);
+	sp = (unsigned long)tcb->stackbase + tcb->stacksize;
+	sp -= sizeof(struct pt_regs);
+	childregs = (struct pt_regs *)sp;
 	memset(childregs, 0, sizeof(*childregs));
-	childregs->gpr[14] = flags & ~(MSR_EE | MSR_FP);
-	tcb->ts.ksp = (unsigned long)childregs - STACK_FRAME_OVERHEAD;
+	sp -= STACK_FRAME_OVERHEAD;
+
+	tcb->ts.ksp = sp;
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;
 	tcb->imask = imask;
 	tcb->name = name;
+
 #ifdef CONFIG_PPC64
-	childregs->nip = ((unsigned long *)&rthal_thread_trampoline)[0];
-	childregs->gpr[2] = ((unsigned long *)&rthal_thread_trampoline)[1];
-	childregs->gpr[15] = ((unsigned long *)&xnarch_thread_trampoline)[0];	/* lr = entry addr. */
-	childregs->gpr[16] = ((unsigned long *)&xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
-	childregs->gpr[17] = (unsigned long)tcb;
+	childregs->nip = ((unsigned long *)rthal_thread_trampoline)[0];
+	childregs->gpr[2] = ((unsigned long *)rthal_thread_trampoline)[1];
+	childregs->gpr[22] = (unsigned long)tcb;
+	childregs->gpr[23] = ((unsigned long *)xnarch_thread_trampoline)[0];	/* lr = entry addr. */
+	childregs->gpr[24] = ((unsigned long *)xnarch_thread_trampoline)[1];	/* r2 = TOC base. */
 	if (cpu_has_feature(CPU_FTR_SLB))
 		tcb->ts.ksp_vsid = get_stack_vsid(tcb->ts.ksp);
 #else /* !CONFIG_PPC64 */
-	childregs->nip = (unsigned long)&rthal_thread_trampoline;
-	childregs->gpr[15] = (unsigned long)&xnarch_thread_trampoline;
-	childregs->gpr[16] = (unsigned long)tcb;
-#endif
+	childregs->nip = (unsigned long)rthal_thread_trampoline;
+	childregs->gpr[22] = (unsigned long)tcb;
+	childregs->gpr[23] = (unsigned long)xnarch_thread_trampoline;
+#endif	/* !CONFIG_PPC64 */
 }
 
 /* No lazy FPU init on PPC. */
