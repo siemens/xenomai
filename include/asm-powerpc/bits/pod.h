@@ -180,10 +180,14 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 	struct pt_regs *childregs;
 	unsigned long sp;
 
+	/*
+	 * Stack space is guaranteed to have been fully zeroed. We do
+	 * this earlier in xnthread_init() which runs with interrupts
+	 * on, to reduce latency.
+	 */
 	sp = (unsigned long)tcb->stackbase + tcb->stacksize;
 	sp -= sizeof(struct pt_regs);
 	childregs = (struct pt_regs *)sp;
-	memset(childregs, 0, sizeof(*childregs));
 	sp -= STACK_FRAME_OVERHEAD;
 
 	tcb->ts.ksp = sp;
