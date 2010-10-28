@@ -691,14 +691,14 @@ struct xnpholder *nextmlq(struct xnsched_mlq *q, struct xnpholder *h)
 
 #ifdef CONFIG_XENO_OPT_VFILE
 
-static struct xnvfile_directory schedclass_vfroot;
+static struct xnvfile_directory sched_vfroot;
 
-struct vfile_sched_priv {
+struct vfile_schedlist_priv {
 	struct xnholder *curr;
 	xnticks_t start_time;
 };
 
-struct vfile_sched_data {
+struct vfile_schedlist_data {
 	int cpu;
 	pid_t pid;
 	char name[XNOBJECT_NAME_LEN];
@@ -711,18 +711,18 @@ struct vfile_sched_data {
 	xnflags_t state;
 };
 
-static struct xnvfile_snapshot_ops vfile_sched_ops;
+static struct xnvfile_snapshot_ops vfile_schedlist_ops;
 
-static struct xnvfile_snapshot sched_vfile = {
-	.privsz = sizeof(struct vfile_sched_priv),
-	.datasz = sizeof(struct vfile_sched_data),
+static struct xnvfile_snapshot schedlist_vfile = {
+	.privsz = sizeof(struct vfile_schedlist_priv),
+	.datasz = sizeof(struct vfile_schedlist_data),
 	.tag = &nkpod_struct.threadlist_tag,
-	.ops = &vfile_sched_ops,
+	.ops = &vfile_schedlist_ops,
 };
 
-static int vfile_sched_rewind(struct xnvfile_snapshot_iterator *it)
+static int vfile_schedlist_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	struct vfile_sched_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_schedlist_priv *priv = xnvfile_iterator_priv(it);
 
 	priv->curr = getheadq(&nkpod->threadq);
 	priv->start_time = xntbase_get_jiffies(&nktbase);
@@ -730,10 +730,11 @@ static int vfile_sched_rewind(struct xnvfile_snapshot_iterator *it)
 	return countq(&nkpod->threadq);
 }
 
-static int vfile_sched_next(struct xnvfile_snapshot_iterator *it, void *data)
+static int vfile_schedlist_next(struct xnvfile_snapshot_iterator *it,
+				void *data)
 {
-	struct vfile_sched_priv *priv = xnvfile_iterator_priv(it);
-	struct vfile_sched_data *p = data;
+	struct vfile_schedlist_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_schedlist_data *p = data;
 	xnticks_t timeout, period;
 	struct xnthread *thread;
 
@@ -774,9 +775,10 @@ static int vfile_sched_next(struct xnvfile_snapshot_iterator *it, void *data)
 	return 1;
 }
 
-static int vfile_sched_show(struct xnvfile_snapshot_iterator *it, void *data)
+static int vfile_schedlist_show(struct xnvfile_snapshot_iterator *it,
+				void *data)
 {
-	struct vfile_sched_data *p = data;
+	struct vfile_schedlist_data *p = data;
 	char sbuf[64], pbuf[16], tbuf[16];
 
 	if (p == NULL)
@@ -809,21 +811,21 @@ static int vfile_sched_show(struct xnvfile_snapshot_iterator *it, void *data)
 	return 0;
 }
 
-static struct xnvfile_snapshot_ops vfile_sched_ops = {
-	.rewind = vfile_sched_rewind,
-	.next = vfile_sched_next,
-	.show = vfile_sched_show,
+static struct xnvfile_snapshot_ops vfile_schedlist_ops = {
+	.rewind = vfile_schedlist_rewind,
+	.next = vfile_schedlist_next,
+	.show = vfile_schedlist_show,
 };
 
 #ifdef CONFIG_XENO_OPT_STATS
 
-struct vfile_stat_priv {
+struct vfile_schedstat_priv {
 	int irq;
 	struct xnholder *curr;
 	struct xnintr_iterator intr_it;
 };
 
-struct vfile_stat_data {
+struct vfile_schedstat_data {
 	int cpu;
 	pid_t pid;
 	xnflags_t state;
@@ -836,18 +838,18 @@ struct vfile_stat_data {
 	xnticks_t exectime_total;
 };
 
-static struct xnvfile_snapshot_ops vfile_stat_ops;
+static struct xnvfile_snapshot_ops vfile_schedstat_ops;
 
-static struct xnvfile_snapshot stat_vfile = {
-	.privsz = sizeof(struct vfile_stat_priv),
-	.datasz = sizeof(struct vfile_stat_data),
+static struct xnvfile_snapshot schedstat_vfile = {
+	.privsz = sizeof(struct vfile_schedstat_priv),
+	.datasz = sizeof(struct vfile_schedstat_data),
 	.tag = &nkpod_struct.threadlist_tag,
-	.ops = &vfile_stat_ops,
+	.ops = &vfile_schedstat_ops,
 };
 
-static int vfile_stat_rewind(struct xnvfile_snapshot_iterator *it)
+static int vfile_schedstat_rewind(struct xnvfile_snapshot_iterator *it)
 {
-	struct vfile_stat_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_schedstat_priv *priv = xnvfile_iterator_priv(it);
 	int irqnr;
 
 	/*
@@ -861,10 +863,11 @@ static int vfile_stat_rewind(struct xnvfile_snapshot_iterator *it)
 	return irqnr + countq(&nkpod->threadq);
 }
 
-static int vfile_stat_next(struct xnvfile_snapshot_iterator *it, void *data)
+static int vfile_schedstat_next(struct xnvfile_snapshot_iterator *it,
+				void *data)
 {
-	struct vfile_stat_priv *priv = xnvfile_iterator_priv(it);
-	struct vfile_stat_data *p = data;
+	struct vfile_schedstat_priv *priv = xnvfile_iterator_priv(it);
+	struct vfile_schedstat_data *p = data;
 	struct xnthread *thread;
 	struct xnsched *sched;
 	xnticks_t period;
@@ -931,9 +934,10 @@ scan_irqs:
 	return 1;
 }
 
-static int vfile_stat_show(struct xnvfile_snapshot_iterator *it, void *data)
+static int vfile_schedstat_show(struct xnvfile_snapshot_iterator *it,
+				void *data)
 {
-	struct vfile_stat_data *p = data;
+	struct vfile_schedstat_data *p = data;
 	int usage = 0;
 
 	if (p == NULL)
@@ -962,9 +966,10 @@ static int vfile_stat_show(struct xnvfile_snapshot_iterator *it, void *data)
 	return 0;
 }
 
-static int vfile_acct_show(struct xnvfile_snapshot_iterator *it, void *data)
+static int vfile_schedacct_show(struct xnvfile_snapshot_iterator *it,
+				void *data)
 {
-	struct vfile_stat_data *p = data;
+	struct vfile_schedstat_data *p = data;
 
 	if (p == NULL)
 		return 0;
@@ -979,29 +984,29 @@ static int vfile_acct_show(struct xnvfile_snapshot_iterator *it, void *data)
 	return 0;
 }
 
-static struct xnvfile_snapshot_ops vfile_stat_ops = {
-	.rewind = vfile_stat_rewind,
-	.next = vfile_stat_next,
-	.show = vfile_stat_show,
+static struct xnvfile_snapshot_ops vfile_schedstat_ops = {
+	.rewind = vfile_schedstat_rewind,
+	.next = vfile_schedstat_next,
+	.show = vfile_schedstat_show,
 };
 
 /*
  * An accounting vfile is a thread statistics vfile in disguise with a
  * different output format, which is parser-friendly.
  */
-static struct xnvfile_snapshot_ops vfile_acct_ops;
+static struct xnvfile_snapshot_ops vfile_schedacct_ops;
 
-static struct xnvfile_snapshot acct_vfile = {
-	.privsz = sizeof(struct vfile_stat_priv),
-	.datasz = sizeof(struct vfile_stat_data),
+static struct xnvfile_snapshot schedacct_vfile = {
+	.privsz = sizeof(struct vfile_schedstat_priv),
+	.datasz = sizeof(struct vfile_schedstat_data),
 	.tag = &nkpod_struct.threadlist_tag,
-	.ops = &vfile_acct_ops,
+	.ops = &vfile_schedacct_ops,
 };
 
-static struct xnvfile_snapshot_ops vfile_acct_ops = {
-	.rewind = vfile_stat_rewind,
-	.next = vfile_stat_next,
-	.show = vfile_acct_show,
+static struct xnvfile_snapshot_ops vfile_schedacct_ops = {
+	.rewind = vfile_schedstat_rewind,
+	.next = vfile_schedstat_next,
+	.show = vfile_schedacct_show,
 };
 
 #endif /* CONFIG_XENO_OPT_STATS */
@@ -1011,27 +1016,27 @@ int xnsched_init_proc(void)
 	struct xnsched_class *p;
 	int ret;
 
-	ret = xnvfile_init_snapshot("sched", &sched_vfile, &nkvfroot);
+	ret = xnvfile_init_dir("sched", &sched_vfroot, &nkvfroot);
 	if (ret)
 		return ret;
 
-	ret = xnvfile_init_dir("schedclasses", &schedclass_vfroot, &nkvfroot);
+	ret = xnvfile_init_snapshot("threads", &schedlist_vfile, &sched_vfroot);
 	if (ret)
 		return ret;
 
 	for_each_xnsched_class(p) {
 		if (p->sched_init_vfile) {
-			ret = p->sched_init_vfile(p, &schedclass_vfroot);
+			ret = p->sched_init_vfile(p, &sched_vfroot);
 			if (ret)
 				return ret;
 		}
 	}
 
 #ifdef CONFIG_XENO_OPT_STATS
-	ret = xnvfile_init_snapshot("stat", &stat_vfile, &nkvfroot);
+	ret = xnvfile_init_snapshot("stat", &schedstat_vfile, &sched_vfroot);
 	if (ret)
 		return ret;
-	ret = xnvfile_init_snapshot("acct", &acct_vfile, &nkvfroot);
+	ret = xnvfile_init_snapshot("acct", &schedacct_vfile, &sched_vfroot);
 	if (ret)
 		return ret;
 #endif /* CONFIG_XENO_OPT_STATS */
@@ -1049,11 +1054,11 @@ void xnsched_cleanup_proc(void)
 	}
 
 #ifdef CONFIG_XENO_OPT_STATS
-	xnvfile_destroy_snapshot(&acct_vfile);
-	xnvfile_destroy_snapshot(&stat_vfile);
+	xnvfile_destroy_snapshot(&schedacct_vfile);
+	xnvfile_destroy_snapshot(&schedstat_vfile);
 #endif /* CONFIG_XENO_OPT_STATS */
-	xnvfile_destroy_dir(&schedclass_vfroot);
-	xnvfile_destroy_snapshot(&sched_vfile);
+	xnvfile_destroy_snapshot(&schedlist_vfile);
+	xnvfile_destroy_dir(&sched_vfroot);
 }
 
 #endif /* CONFIG_XENO_OPT_VFILE */
