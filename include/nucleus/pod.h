@@ -105,6 +105,7 @@ extern xnpod_t nkpod_struct;
 #ifdef CONFIG_XENO_OPT_VFILE
 int xnpod_init_proc(void);
 void xnpod_cleanup_proc(void);
+extern struct xnvfile_directory debug_vfroot;
 #else /* !CONFIG_XENO_OPT_VFILE */
 static inline int xnpod_init_proc(void) { return 0; }
 static inline void xnpod_cleanup_proc(void) {}

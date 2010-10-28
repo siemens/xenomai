@@ -68,6 +68,11 @@ xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
 xnticks_t nkvtick = CONFIG_XENO_OPT_TIMING_VIRTICK * 1000;
 
+#if XENO_DEBUG(NUCLEUS)
+struct xnvfile_directory debug_vfroot;
+EXPORT_SYMBOL_GPL(debug_vfroot);
+#endif
+
 #ifdef CONFIG_XENO_HW_FPU
 
 static inline void __xnpod_init_fpu(struct xnsched *sched,
@@ -3229,18 +3234,24 @@ int __init xnpod_init_proc(void)
 	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
 	xnvfile_init_regular("faults", &faults_vfile, &nkvfroot);
 	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
+#if XENO_DEBUG(NUCLEUS)
+	xnvfile_init_dir("debug", &debug_vfroot, &nkvfroot);
 #if XENO_DEBUG(XNLOCK)
-	xnvfile_init_regular("lock", &lock_vfile, &nkvfroot);
-#endif /* XENO_DEBUG(XNLOCK) */
+	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);
+#endif
+#endif /* XENO_DEBUG(NUCLEUS) */
 
 	return 0;
 }
 
 void xnpod_cleanup_proc(void)
 {
+#if XENO_DEBUG(NUCLEUS)
 #if XENO_DEBUG(XNLOCK)
 	xnvfile_destroy_regular(&lock_vfile);
-#endif /* XENO_DEBUG(XNLOCK) */
+#endif
+	xnvfile_destroy_dir(&debug_vfroot);
+#endif /* XENO_DEBUG(NUCLEUS) */
 	xnvfile_destroy_regular(&apc_vfile);
 	xnvfile_destroy_regular(&faults_vfile);
 	xnvfile_destroy_regular(&version_vfile);
