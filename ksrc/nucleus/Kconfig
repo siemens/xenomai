@@ -233,7 +233,7 @@ config XENO_OPT_STATS
 
 	This option causes the real-time nucleus to collect various
 	per-thread runtime statistics, which are accessible through
-	the /proc/xenomai/stats interface.
+	the /proc/xenomai/stat interface.
 
 config XENO_OPT_DEBUG
 	bool "Debug support"
