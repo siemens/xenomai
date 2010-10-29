@@ -1,6 +1,3 @@
-ifeq ($(PATCHLEVEL),6)
-
-# Makefile frag for Linux v2.6
 
 obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
@@ -22,43 +19,3 @@ xeno_nucleus-$(CONFIG_PROC_FS) += vfile.o
 xeno_nucleus-y += module.o
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
-
-else
-
-# Makefile frag for Linux v2.4
-
-O_TARGET := built-in.o
-
-obj-$(CONFIG_XENO_OPT_NUCLEUS) := xeno_nucleus.o
-
-list-multi := xeno_nucleus.o
-
-xeno_nucleus-objs := \
-	bufd.o heap.o intr.o pod.o registry.o \
-	synch.o thread.o timebase.o timer.o shadow.o \
-	sched.o sched-idle.o sched-rt.o
-
-opt_objs-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
-opt_objs-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
-
-opt_objs-$(CONFIG_XENO_OPT_PIPE) += pipe.o
-opt_objs-$(CONFIG_XENO_OPT_MAP) += map.o
-opt_objs-$(CONFIG_XENO_OPT_SELECT) += select.o
-opt_objs-$(CONFIG_PROC_FS) += vfile.o
-
-xeno_nucleus-objs += $(opt_objs-y)
-
-# CAUTION: this module shall appear last, so that dependencies may
-# exist on initcalls defined by other object files.
-xeno_nucleus-objs += module.o
-
-export-objs := $(xeno_nucleus-objs)
-
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(TOPDIR)/include/xenomai -I$(TOPDIR)/include/xenomai/compat
-
-include $(TOPDIR)/Rules.make
-
-xeno_nucleus.o: $(xeno_nucleus-objs)
-	$(LD) -r -o $@ $(xeno_nucleus-objs)
-
-endif
