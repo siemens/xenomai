@@ -85,8 +85,10 @@ static inline void xnarch_init_thread(struct xnarchtcb *tcb,
 	childregs = (struct tramp_stack *)
 		((unsigned long)tcb->stackbase +
 		 tcb->stacksize - sizeof(*childregs));
-
-	memset(childregs, 0, sizeof(*childregs));
+	/*
+	 * Stack space is guaranteed to be clean, so no need to zero
+	 * it again.
+	 */
 	childregs->sw.gp = gp;	/* Inherit GP */
 	childregs->sw.ra = (unsigned long)&rthal_thread_trampoline;
 	childregs->ra = (unsigned long)&xnarch_thread_trampoline;
