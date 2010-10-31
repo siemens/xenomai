@@ -143,7 +143,6 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 
 	tcb->eip = (unsigned long)&xnarch_thread_redirect;
 	tcb->esp = (unsigned long)tcb->stackbase;
-	**psp = 0;		/* Commit bottom stack memory */
 	*psp =
 		(unsigned long *)(((unsigned long)*psp + tcb->stacksize - 0x10) &
 				  ~0xf);
