@@ -10,7 +10,7 @@
 #define PI 3.14159265358979323846
 #endif
 
-void a4l_sg_init_sine(struct waveform_config *config, double *values)
+void a4l_wf_init_sine(struct waveform_config *config, double *values)
 {
 	int i;
 
@@ -24,7 +24,7 @@ void a4l_sg_init_sine(struct waveform_config *config, double *values)
 	}
 }
 
-void a4l_sg_init_sawtooth(struct waveform_config *config, double *values)
+void a4l_wf_init_sawtooth(struct waveform_config *config, double *values)
 {
 	int i;
 
@@ -41,7 +41,7 @@ void a4l_sg_init_sawtooth(struct waveform_config *config, double *values)
 	}
 }
 
-void a4l_sg_init_triangular(struct waveform_config *config, double *values)
+void a4l_wf_init_triangular(struct waveform_config *config, double *values)
 {
 	int i;
 
@@ -67,7 +67,7 @@ void a4l_sg_init_triangular(struct waveform_config *config, double *values)
 	}
 }
 
-void a4l_sg_init_steps(struct waveform_config *config, double *values)
+void a4l_wf_init_steps(struct waveform_config *config, double *values)
 {
 	int i;
 	
@@ -82,7 +82,7 @@ void a4l_sg_init_steps(struct waveform_config *config, double *values)
 	}
 }
 
-void a4l_sg_set_sample_count(struct waveform_config *config)
+void a4l_wf_set_sample_count(struct waveform_config *config)
 {
 	int sample_count = MIN_SAMPLE_COUNT;
 	int best_count = MIN_SAMPLE_COUNT;
@@ -116,7 +116,7 @@ void a4l_sg_set_sample_count(struct waveform_config *config)
 	config->spl_count = best_count;
 }
 
-int a4l_sg_check_config(struct waveform_config *config)
+int a4l_wf_check_config(struct waveform_config *config)
 {
 
 	if (config->wf_amplitude == 0)
@@ -134,18 +134,18 @@ int a4l_sg_check_config(struct waveform_config *config)
 }
 
 static void (* init_values[])(struct waveform_config *, double *) = {
-	a4l_sg_init_sine,
-	a4l_sg_init_sawtooth,
-	a4l_sg_init_triangular,
-	a4l_sg_init_steps,
+	a4l_wf_init_sine,
+	a4l_wf_init_sawtooth,
+	a4l_wf_init_triangular,
+	a4l_wf_init_steps,
 };
 
-void a4l_sg_init_values(struct waveform_config *config, double *values)
+void a4l_wf_init_values(struct waveform_config *config, double *values)
 {
 	init_values[config->wf_kind](config, values);
 }
 
-void a4l_sg_dump_values(struct waveform_config *config, double *values)
+void a4l_wf_dump_values(struct waveform_config *config, double *values)
 {
 	int i;
 	
