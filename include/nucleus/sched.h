@@ -170,13 +170,8 @@ struct xnsched_class {
 #define xnsched_cpu(__sched__)	({ (void)__sched__; 0; })
 #endif /* CONFIG_SMP */
 
-/* Test all resched flags from the given scheduler mask. */
+/* Test resched flag of given sched. */
 static inline int xnsched_resched_p(struct xnsched *sched)
-{
-	return testbits(sched->status, XNRESCHED);
-}
-
-static inline int xnsched_self_resched_p(struct xnsched *sched)
 {
 	return testbits(sched->status, XNRESCHED);
 }
@@ -190,8 +185,7 @@ static inline int xnsched_self_resched_p(struct xnsched *sched)
 #define xnsched_set_resched(__sched__) do {				\
   xnsched_t *current_sched = xnpod_current_sched();			\
   __setbits(current_sched->status, XNRESCHED);				\
-  if (current_sched != (__sched__)					\
-      && !testbits((__sched__)->status, XNRESCHED)) {			\
+  if (current_sched != (__sched__) && !xnsched_resched_p(__sched__)) {	\
       xnarch_cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
       __setbits((__sched__)->status, XNRESCHED);			\
   }									\
