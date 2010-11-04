@@ -2178,6 +2178,8 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 		xnarch_send_ipi(sched->resched);
 		xnarch_cpus_clear(sched->resched);
 	}
+#else
+	resched = xnsched_resched_p(sched);
 #endif
 	clrbits(sched->status, XNRESCHED);
 	return resched;
