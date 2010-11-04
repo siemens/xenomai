@@ -154,7 +154,9 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	xntimer_set_name(&sched->htimer, htimer_name);
 	xntimer_set_sched(&sched->htimer, sched);
 	sched->zombie = NULL;
+#ifdef CONFIG_SMP
 	xnarch_cpus_clear(sched->resched);
+#endif
 
 	attr.flags = XNROOT | XNSTARTED | XNFPU;
 	attr.name = root_name;
