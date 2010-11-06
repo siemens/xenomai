@@ -319,8 +319,6 @@ static void rpi_clear_remote(struct xnthread *thread)
 	if (xnsched_peek_rpi(rpi) == NULL)
 		rcpu = xnsched_cpu(rpi);
 
-	xnlock_put_irqrestore(&rpi->rpilock, s);
-
 	/*
 	 * Ok, this one is not trivial. Unless a relaxed shadow has
 	 * forced its CPU affinity, it may migrate to another CPU as a
@@ -337,12 +335,20 @@ static void rpi_clear_remote(struct xnthread *thread)
 	 */
 	if (rcpu != -1 && rcpu != rthal_processor_id()) {
 		if (!testbits(rpi->status, XNRPICK)) {
-			setbits(rpi->status, XNRPICK);
-			xnarch_cpus_clear(cpumask);
-			xnarch_cpu_set(rcpu, cpumask);
-			xnarch_send_ipi(cpumask);
+			__setbits(rpi->rpistatus, XNRPICK);
+			xnlock_put_irqrestore(&rpi->rpilock, s);
+			goto exit_send_ipi;
 		}
 	}
+
+	xnlock_put_irqrestore(&rpi->rpilock, s);
+
+	return;
+
+  exit_send_ipi:
+	xnarch_cpus_clear(cpumask);
+	xnarch_cpu_set(rcpu, cpumask);
+	xnarch_send_ipi(cpumask);
 }
 
 static void rpi_migrate(struct xnsched *sched, struct xnthread *thread)
@@ -501,6 +507,7 @@ void xnshadow_rpi_check(void)
 	spl_t s;
 
 	xnlock_get_irqsave(&sched->rpilock, s);
+	__clrbits(sched->rpistatus, XNRPICK);
  	top = xnsched_peek_rpi(sched);
 	xnlock_put_irqrestore(&sched->rpilock, s);
 

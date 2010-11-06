@@ -94,14 +94,14 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	 * __xnpod_schedule()), or a timer with an earlier timeout
 	 * date is scheduled, whichever comes first.
 	 */
-	__clrbits(sched->status, XNHDEFER);
+	__clrbits(sched->lflags, XNHDEFER);
 	timer = aplink2timer(h);
 	if (unlikely(timer == &sched->htimer)) {
 		if (xnsched_self_resched_p(sched) ||
 		    !xnthread_test_state(sched->curr, XNROOT)) {
 			h = xntimerq_it_next(&sched->timerqueue, &it, h);
 			if (h) {
-				__setbits(sched->status, XNHDEFER);
+				__setbits(sched->lflags, XNHDEFER);
 				timer = aplink2timer(h);
 			}
 		}
@@ -130,7 +130,7 @@ static inline int xntimer_heading_p(struct xntimer *timer)
 	if (h == &timer->aplink)
 		return 1;
 
-	if (testbits(sched->status, XNHDEFER)) {
+	if (testbits(sched->lflags, XNHDEFER)) {
 		h = xntimerq_it_next(&sched->timerqueue, &it, h);
 		if (h == &timer->aplink)
 			return 1;
@@ -410,8 +410,8 @@ void xntimer_tick_aperiodic(void)
 			 * save some I-cache, which translates into
 			 * precious microsecs on low-end hw.
 			 */
-			__setbits(sched->status, XNHTICK);
-			__clrbits(sched->status, XNHDEFER);
+			__setbits(sched->lflags, XNHTICK);
+			__clrbits(sched->lflags, XNHDEFER);
 			if (!testbits(timer->status, XNTIMER_PERIODIC))
 				continue;
 		}
