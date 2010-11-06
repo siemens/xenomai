@@ -279,12 +279,11 @@ void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 	xnsched_t *sched;
 
 	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
+	xnarch_memory_barrier();
 #if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
 	sched = xnpod_current_sched();
-	if (testbits(sched->status, XNRPICK)) {
-		clrbits(sched->status, XNRPICK);
+	if (testbits(sched->rpistatus, XNRPICK))
 		xnshadow_rpi_check();
-	}
 #else
 	(void)sched;
 #endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
@@ -2165,6 +2164,7 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
 	if (unlikely(xnsched_resched_p(sched))) {
+		xnarch_memory_barrier();
 		xnarch_send_ipi(sched->resched);
 		xnarch_cpus_clear(sched->resched);
 	}
@@ -2204,9 +2204,9 @@ reschedule:
 	if (next == curr && !xnthread_test_state(curr, XNRESTART)) {
 		/* Note: the root thread never restarts. */
 		if (unlikely(xnthread_test_state(next, XNROOT))) {
-			if (testbits(sched->status, XNHTICK))
+			if (testbits(sched->lflags, XNHTICK))
 				xnintr_host_tick(sched);
-			if (testbits(sched->status, XNHDEFER))
+			if (testbits(sched->lflags, XNHDEFER))
 				xntimer_next_local_shot(sched);
 		}
 		goto signal_unlock_and_exit;
@@ -2241,9 +2241,9 @@ reschedule:
 	if (xnthread_test_state(prev, XNROOT))
 		xnarch_leave_root(xnthread_archtcb(prev));
 	else if (xnthread_test_state(next, XNROOT)) {
-		if (testbits(sched->status, XNHTICK))
+		if (testbits(sched->lflags, XNHTICK))
 			xnintr_host_tick(sched);
-		if (testbits(sched->status, XNHDEFER))
+		if (testbits(sched->lflags, XNHDEFER))
 			xntimer_next_local_shot(sched);
 		xnarch_enter_root(xnthread_archtcb(next));
 	}
