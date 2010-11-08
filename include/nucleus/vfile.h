@@ -113,7 +113,7 @@ struct xnvfile_regular_ops {
 	/**
 	 * @anchor regular_rewind This handler is called only once,
 	 * when the virtual file is opened, before the @ref
-	 * regular_show "begin() handler" is invoked.
+	 * regular_begin "begin() handler" is invoked.
 	 *
 	 * @param it A pointer to the vfile iterator which will be
 	 * used to read the file contents.
