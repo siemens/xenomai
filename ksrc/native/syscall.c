@@ -1086,6 +1086,8 @@ static int __rt_event_wait(RT_EVENT_PLACEHOLDER __user *u_ph,
 		return -EFAULT;
 
 	ret = rt_event_wait_inner(event, mask, &mask_r, mode, timeout_mode, timeout);
+	if (ret)
+		return ret;
 
 	return __xn_safe_copy_to_user(u_mask, &mask_r, sizeof(mask_r));
 }
