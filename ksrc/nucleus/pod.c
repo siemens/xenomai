@@ -68,7 +68,7 @@ xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
 xnticks_t nkvtick = CONFIG_XENO_OPT_TIMING_VIRTICK * 1000;
 
-#if XENO_DEBUG(NUCLEUS)
+#ifdef CONFIG_XENO_OPT_DEBUG
 struct xnvfile_directory debug_vfroot;
 EXPORT_SYMBOL_GPL(debug_vfroot);
 #endif
@@ -2537,6 +2537,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	 * debug stepping properly.
 	 */
 	if (xnpod_shadow_p()) {
+		thread->regs = xnarch_fault_regs(fltinfo);
 #if XENO_DEBUG(NUCLEUS)
 		if (!xnarch_fault_um(fltinfo)) {
 			xnarch_trace_panic_freeze();
@@ -3234,7 +3235,7 @@ int __init xnpod_init_proc(void)
 	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
 	xnvfile_init_regular("faults", &faults_vfile, &nkvfroot);
 	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
-#if XENO_DEBUG(NUCLEUS)
+#ifdef CONFIG_XENO_OPT_DEBUG
 	xnvfile_init_dir("debug", &debug_vfroot, &nkvfroot);
 #if XENO_DEBUG(XNLOCK)
 	xnvfile_init_regular("lock", &lock_vfile, &debug_vfroot);

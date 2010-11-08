@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <signal.h>
+#include <execinfo.h>
 
 #include <asm/xenomai/syscall.h>
 #include <asm-generic/xenomai/bits/sigshadow.h>
@@ -8,7 +9,8 @@ static struct sigaction xeno_saved_sigshadow_action;
 
 int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 {
-	int action;
+	void *frames[SIGSHADOW_BACKTRACE_DEPTH];
+	int action, nr, skip;
 
 	if (si->si_code != SI_QUEUE)
 		return 0;
@@ -29,6 +31,13 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		pthread_setschedparam(pthread_self(), policy, &param);
 		break;
 	}
+
+	case SIGSHADOW_ACTION_BACKTRACE:
+		nr = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
+		/* Skip the sighandler context. */
+		skip = nr > 3 ? 3 : 0;
+		XENOMAI_SYSCALL2(__xn_sys_backtrace, nr - skip, frames + skip);
+		break;
 
 	default:
 		return 0;

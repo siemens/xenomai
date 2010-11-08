@@ -99,6 +99,7 @@ typedef struct xnarch_fltinfo {
 
 } xnarch_fltinfo_t;
 
+#define xnarch_fault_regs(fi)	((fi)->regs)
 #define xnarch_fault_trap(fi)   ((unsigned int)(fi)->regs->trap)
 #define xnarch_fault_code(fi)   ((fi)->regs->dar)
 #define xnarch_fault_pc(fi)     ((fi)->regs->nip)

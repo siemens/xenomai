@@ -43,6 +43,8 @@
 #define __xn_reg_arg3(regs)   ((regs)->gpr[5])
 #define __xn_reg_arg4(regs)   ((regs)->gpr[6])
 #define __xn_reg_arg5(regs)   ((regs)->gpr[7])
+#define __xn_reg_pc(regs)     ((regs)->nip)
+#define __xn_reg_sp(regs)     ((regs)->gpr[1])
 
 #define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 16) & 0xff)

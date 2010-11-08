@@ -1,1 +1,1 @@
-SUBDIRS = can analogy ps
+SUBDIRS = can analogy ps slackspot

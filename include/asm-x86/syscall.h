@@ -49,6 +49,8 @@
 #define __xn_reg_arg4(regs)   ((regs)->r10) /* entry.S convention here. */
 #define __xn_reg_arg5(regs)   ((regs)->r8)
 #endif /* x86_64 */
+#define __xn_reg_pc(regs)     ((regs)->ip)
+#define __xn_reg_sp(regs)     ((regs)->sp)
 
 #define __xn_reg_mux_p(regs)  ((__xn_reg_mux(regs) & 0x7fff) == __xn_sys_mux)
 #define __xn_mux_id(regs)     ((__xn_reg_mux(regs) >> 16) & 0xff)

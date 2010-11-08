@@ -49,6 +49,8 @@
 #define __xn_reg_arg3(regs)     ((regs)->ARM_r3)
 #define __xn_reg_arg4(regs)     ((regs)->ARM_r4)
 #define __xn_reg_arg5(regs)     ((regs)->ARM_r5)
+#define __xn_reg_pc(regs)       ((regs)->ARM_ip)
+#define __xn_reg_sp(regs)       ((regs)->ARM_sp)
 
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT

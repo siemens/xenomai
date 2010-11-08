@@ -43,6 +43,7 @@
 #include <linux/mm.h>
 #include <linux/cred.h>
 #include <linux/jhash.h>
+#include <linux/file.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
@@ -54,6 +55,7 @@
 #include <nucleus/stat.h>
 #include <nucleus/sys_ppd.h>
 #include <nucleus/vdso.h>
+#include <nucleus/debug.h>
 #include <asm/xenomai/features.h>
 #include <asm/xenomai/syscall.h>
 #include <asm/xenomai/bits/shadow.h>
@@ -545,13 +547,15 @@ union xnshadow_ppd_hkey {
 	uint32_t val;
 };
 
-/* ppd holder with the same mm collide and are stored contiguously in the same
-   bucket, so that they can all be destroyed with only one hash lookup by
-   ppd_remove_mm. */
-static unsigned ppd_lookup_inner(xnqueue_t **pq,
-				 xnshadow_ppd_t ** pholder, xnshadow_ppd_key_t * pkey)
+/*
+ * ppd holder with the same mm collide and are stored contiguously in
+ * the same bucket, so that they can all be destroyed with only one
+ * hash lookup by ppd_remove_mm.
+ */
+static unsigned int ppd_lookup_inner(xnqueue_t **pq, xnshadow_ppd_t ** pholder,
+				     xnshadow_ppd_key_t * pkey)
 {
-	union xnshadow_ppd_hkey key = {.mm = pkey->mm };
+	union xnshadow_ppd_hkey key = { .mm = pkey->mm };
 	unsigned bucket = jhash2(&key.val, sizeof(key) / sizeof(uint32_t), 0);
 	xnshadow_ppd_t *ppd;
 	xnholder_t *holder;
@@ -567,10 +571,9 @@ static unsigned ppd_lookup_inner(xnqueue_t **pq,
 	do {
 		ppd = link2ppd(holder);
 		holder = nextq(*pq, holder);
-	}
-	while (holder &&
-	       (ppd->key.mm < pkey->mm ||
-		(ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid)));
+	} while (holder &&
+		 (ppd->key.mm < pkey->mm ||
+		  (ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid)));
 
 	if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
 		/* found it, return it. */
@@ -588,14 +591,15 @@ static unsigned ppd_lookup_inner(xnqueue_t **pq,
 	return 0;
 }
 
-static int ppd_insert(xnshadow_ppd_t * holder)
+static int ppd_insert(xnshadow_ppd_t *holder)
 {
 	xnshadow_ppd_t *next;
+	unsigned int found;
 	xnqueue_t *q;
-	unsigned found;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
+
 	found = ppd_lookup_inner(&q, &next, &holder->key);
 	if (found) {
 		xnlock_put_irqrestore(&nklock, s);
@@ -608,6 +612,7 @@ static int ppd_insert(xnshadow_ppd_t * holder)
 	} else {
 		appendq(q, &holder->link);
 	}
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -618,13 +623,13 @@ static xnshadow_ppd_t *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 {
 	xnshadow_ppd_t *holder;
 	xnshadow_ppd_key_t key;
-	unsigned found;
+	unsigned int found;
 	xnqueue_t *q;
 
 	key.muxid = muxid;
 	key.mm = mm;
-	found = ppd_lookup_inner(&q, &holder, &key);
 
+	found = ppd_lookup_inner(&q, &holder, &key);
 	if (!found)
 		return NULL;
 
@@ -633,13 +638,13 @@ static xnshadow_ppd_t *ppd_lookup(unsigned muxid, struct mm_struct *mm)
 
 static void ppd_remove(xnshadow_ppd_t * holder)
 {
-	unsigned found;
+	unsigned int found;
 	xnqueue_t *q;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
-	found = ppd_lookup_inner(&q, &holder, &holder->key);
 
+	found = ppd_lookup_inner(&q, &holder, &holder->key);
 	if (found)
 		removeq(q, &holder->link);
 
@@ -664,10 +669,12 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 		holder = nextq(q, &ppd->link);
 		removeq(q, &ppd->link);
 		xnlock_put_irqrestore(&nklock, s);
-		/* releasing nklock is safe here, if we assume that no insertion for the
-		   same mm will take place while we are running xnpod_remove_mm. */
+		/*
+		 * Releasing the nklock is safe here, if we assume
+		 * that no insertion for the same mm will take place
+		 * while we are running xnpod_remove_mm.
+		 */
 		destructor(ppd);
-
 		ppd = holder ? link2ppd(holder) : NULL;
 		xnlock_get_irqsave(&nklock, s);
 	}
@@ -1162,6 +1169,7 @@ void xnshadow_relax(int notify, int reason)
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
 	if (notify) {
+		xndebug_notify_relax(thread);
 		if (xnthread_test_state(thread, XNTRAPSW)) {
 			/* Help debugging spurious relaxes. */
 			memset(&si, 0, sizeof(si));
@@ -1351,6 +1359,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+	xndebug_shadow_init(thread);
 
 	/*
 	 * Switch on propagation of normal kernel events for the bound
@@ -1502,11 +1511,10 @@ EXPORT_SYMBOL_GPL(xnshadow_suspend);
 
 static int xnshadow_sys_migrate(int domain)
 {
-	struct xnthread *thread;
+	struct xnthread *thread = xnshadow_thread(current);
 
-	if (rthal_current_domain == rthal_root_domain)
+	if (rthal_current_domain == rthal_root_domain) {
 		if (domain == XENOMAI_XENO_DOMAIN) {
-			thread = xnshadow_thread(current);
 			if (thread == NULL)
 				return -EPERM;
 			/*
@@ -1519,15 +1527,18 @@ static int xnshadow_sys_migrate(int domain)
 			if (xnthread_test_state(thread, XNDORMANT))
 				return 0;
 
-			return xnshadow_harden()? : 1;
-		} else
-			return 0;
-	else /* rthal_current_domain != rthal_root_domain */
-    if (domain == XENOMAI_LINUX_DOMAIN) {
+			return xnshadow_harden() ? : 1;
+		}
+		return 0;
+	}
+
+	/* rthal_current_domain != rthal_root_domain */
+	if (domain == XENOMAI_LINUX_DOMAIN) {
 		xnshadow_relax(0, 0);
 		return 1;
-	} else
-		return 0;
+	}
+
+	return 0;
 }
 
 static void stringify_feature_set(u_long fset, char *buf, int size)
@@ -1819,7 +1830,7 @@ muxid_eventcb:
 		goto fail;
 	}
 
-      eventcb_done:
+eventcb_done:
 
 	if (!xnpod_active_p()) {
 		/* Ok mate, but you really ought to call xnpod_init()
@@ -1834,7 +1845,7 @@ muxid_eventcb:
 
 		err = -ENOSYS;
 
-	  fail_destroy_sys_ppd:
+	fail_destroy_sys_ppd:
 		if (sys_ppd) {
 			ppd_remove(sys_ppd);
 			skins[0].props->eventcb(XNSHADOW_CLIENT_DETACH, sys_ppd);
@@ -2112,6 +2123,12 @@ static int xnshadow_sys_current_info(xnthread_info_t __user *u_info)
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(*u_info));
 }
 
+static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace)
+{
+	xndebug_trace_relax(nr, u_backtrace);
+	return 0;
+}
+
 static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__xn_sys_migrate, xnshadow_sys_migrate, current),
 	SKINCALL_DEF(__xn_sys_arch, xnarch_local_syscall, any),
@@ -2124,6 +2141,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__xn_sys_current, xnshadow_sys_current, any),
 	SKINCALL_DEF(__xn_sys_current_info, xnshadow_sys_current_info, shadow),
 	SKINCALL_DEF(__xn_sys_mayday, xnshadow_sys_mayday, oneway),
+	SKINCALL_DEF(__xn_sys_backtrace, xnshadow_sys_backtrace, current),
 };
 
 static void post_ppd_release(struct xnheap *h)
@@ -2132,9 +2150,56 @@ static void post_ppd_release(struct xnheap *h)
 	xnarch_free_host_mem(p, sizeof(*p));
 }
 
+static inline char *get_exe_path(struct task_struct *p)
+{
+	struct file *exe_file;
+	char *pathname, *buf;
+	struct mm_struct *mm;
+	struct path path;
+
+	/*
+	 * PATH_MAX is fairly large, and in any case won't fit on the
+	 * caller's stack happily; since we are mapping a shadow,
+	 * which is a heavyweight operation anyway, let's pick the
+	 * memory from the page allocator.
+	 */
+	buf = (char *)__get_free_page(GFP_TEMPORARY);
+	if (buf == NULL)
+		return ERR_PTR(-ENOMEM);
+
+	mm = get_task_mm(p);
+	if (mm == NULL) {
+		pathname = "vmlinux";
+		goto copy;	/* kernel thread */
+	}
+
+	exe_file = get_mm_exe_file(mm);
+	mmput(mm);
+	if (exe_file == NULL) {
+		pathname = ERR_PTR(-ENOENT);
+		goto out;	/* no luck. */
+	}
+
+	path = exe_file->f_path;
+	path_get(&exe_file->f_path);
+	fput(exe_file);
+	pathname = d_path(&path, buf, PATH_MAX);
+	path_put(&path);
+	if (IS_ERR(pathname))
+		goto out;	/* mmmh... */
+copy:
+	/* caution: d_path() may start writing anywhere in the buffer. */
+	pathname = kstrdup(pathname, GFP_KERNEL);
+out:
+	free_page((unsigned long)buf);
+
+	return pathname;
+}
+
 static void *xnshadow_sys_event(int event, void *data)
 {
 	struct xnsys_ppd *p;
+	char *exe_path;
 	int err;
 
 	switch(event) {
@@ -2165,13 +2230,24 @@ static void *xnshadow_sys_event(int event, void *data)
 		}
 #endif /* XNARCH_HAVE_MAYDAY */
 		xnarch_atomic_set(&p->refcnt, 1);
+		exe_path = get_exe_path(current);
+		if (IS_ERR(exe_path)) {
+			printk(KERN_WARNING
+			       "Xenomai: %s[%d] can't find exe path\n",
+			       current->comm, current->pid);
+			exe_path = NULL; /* Not lethal, but weird. */
+		}
+		p->exe_path = exe_path;
 		xnarch_atomic_inc(&skins[0].refcnt);
+
 		return &p->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
 		p = ppd2sys(data);
 		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 		xnarch_atomic_dec(&skins[0].refcnt);
+		if (p->exe_path)
+			kfree(p->exe_path);
 
 		return NULL;
 	}
@@ -2222,6 +2298,8 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	p = current;
 	thread = xnshadow_thread(p);
+	if (thread)
+		thread->regs = regs;
 
 	if (!__xn_reg_mux_p(regs))
 		goto linux_syscall;
@@ -2454,6 +2532,9 @@ int do_losyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	/* muxid and muxop have already been checked in the Xenomai domain
 	   handler. */
+
+	if (thread)
+		thread->regs = regs;
 
 	muxid = __xn_mux_id(regs);
 	muxop = __xn_mux_op(regs);
@@ -2989,7 +3070,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
  * @return NULL otherwise.
  *
  */
-xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid)
+xnshadow_ppd_t *xnshadow_ppd_get(unsigned int muxid)
 {
 	if (xnpod_userspace_p())
 		return ppd_lookup(muxid, xnshadow_mm(current) ?: current->mm);
@@ -3033,6 +3114,10 @@ int xnshadow_mount(void)
 		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
 		return -ENOMEM;
 	}
+
+	ret = xndebug_init();
+	if (ret)
+		return ret;
 
 	lostage_apc =
 	    rthal_apc_alloc("lostage_handler", &lostage_handler, NULL);
@@ -3128,6 +3213,8 @@ void xnshadow_cleanup(void)
 	rthal_free_ptdkey(nkthrptd);
 
 	mayday_cleanup_page();
+
+	xndebug_cleanup();
 }
 
 /*@}*/

@@ -42,6 +42,8 @@
 #define __xn_reg_arg3(regs)   ((regs)->r6)
 #define __xn_reg_arg4(regs)   ((regs)->r7)
 #define __xn_reg_arg5(regs)   ((regs)->r8)
+#define __xn_reg_pc(regs)     ((regs)->ea)
+#define __xn_reg_sp(regs)     ((regs)->sp)
 
 #define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 24) & 0xff)

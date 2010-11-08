@@ -38,16 +38,16 @@ static const char *reason_str[] = {
 
 void warn_upon_switch(int sig, siginfo_t *si, void *context)
 {
-    unsigned int reason = si->si_value.sival_int;
-    void *bt[32];
-    int nentries;
+	unsigned int reason = sigdebug_reason(si);
+	void *bt[32];
+	int nentries;
 
-    printf("\nSIGDEBUG received, reason %d: %s\n", reason,
-	   reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
-    /* Dump a backtrace of the frame which caused the switch to
-       secondary mode: */
-    nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
-    backtrace_symbols_fd(bt,nentries,fileno(stdout));
+	printf("\nSIGDEBUG received, reason %d: %s\n", reason,
+	       reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+	/* Dump a backtrace of the frame which caused the switch to
+	   secondary mode: */
+	nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));
+	backtrace_symbols_fd(bt,nentries,fileno(stdout));
 }
 
 int main (int argc, char **argv)

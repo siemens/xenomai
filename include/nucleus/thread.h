@@ -328,7 +328,12 @@ typedef struct xnthread {
 	void *cookie;		/* Cookie to pass to the entry routine */
 
 #ifndef __XENO_SIM__
-	unsigned long __user *u_mode;	/* Thread mode variable shared with userland. */
+	struct pt_regs *regs;		/* Current register frame */
+	unsigned long __user *u_mode;	/* Thread mode variable in userland. */
+#ifdef CONFIG_XENO_OPT_DEBUG
+	const char *exe_path;	/* Executable path */
+	u32 proghash;		/* Hash value for exe_path */
+#endif
 #endif /* !__XENO_SIM__ */
 
     XNARCH_DECL_DISPLAY_CONTEXT();

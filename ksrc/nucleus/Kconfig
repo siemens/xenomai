@@ -296,6 +296,17 @@ config XENO_OPT_DEBUG_SYNCH_RELAX
 	actually "owned" by a single thread at a time, can be
 	monitored this way (typically, mutexes).
 
+config XENO_OPT_DEBUG_TRACE_RELAX
+	bool "Trace relax requests"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option enables recording of unwanted relax requests from
+	user-space applications leaving the real-time domain, logging
+	the thread information and code location involved. All records
+	are readable from /proc/xenomai/debug/relaxes, and can be
+	decoded using the "slackspot" utility.
+
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	depends on XENO_OPT_DEBUG

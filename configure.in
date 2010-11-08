@@ -849,6 +849,7 @@ AC_CONFIG_FILES([ \
 	src/utils/can/Makefile \
 	src/utils/analogy/Makefile \
 	src/utils/ps/Makefile \
+	src/utils/slackspot/Makefile \
 	include/Makefile \
 	include/asm-generic/Makefile \
 	include/asm-generic/bits/Makefile \

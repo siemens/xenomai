@@ -93,6 +93,7 @@ typedef struct xnarch_fltinfo {
 
 } xnarch_fltinfo_t;
 
+#define xnarch_fault_regs(fi)	((fi)->regs)
 #define xnarch_fault_trap(fi)	((fi)->exception)
 #define xnarch_fault_code(fi)	(0)
 #define xnarch_fault_pc(fi)	((fi)->regs->ARM_pc - (thumb_mode((fi)->regs) ? 2 : 4)) /* XXX ? */
