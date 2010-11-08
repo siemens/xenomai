@@ -20,9 +20,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <linux/types.h>
 #include <linux/err.h>
+#include <linux/jhash.h>
 #include <asm/xenomai/wrappers.h>
-#include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <nucleus/sys_ppd.h>
 #include <posix/syscall.h>

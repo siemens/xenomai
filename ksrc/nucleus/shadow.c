@@ -42,13 +42,13 @@
 #include <linux/mman.h>
 #include <linux/mm.h>
 #include <linux/cred.h>
+#include <linux/jhash.h>
 #include <asm/signal.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
 #include <nucleus/synch.h>
 #include <nucleus/module.h>
 #include <nucleus/shadow.h>
-#include <nucleus/jhash.h>
 #include <nucleus/ppd.h>
 #include <nucleus/trace.h>
 #include <nucleus/stat.h>
