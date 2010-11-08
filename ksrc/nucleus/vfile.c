@@ -326,12 +326,24 @@ ssize_t vfile_snapshot_write(struct file *file, const char __user *buf,
 	struct proc_dir_entry *pde = PDE(wrap_f_inode(file));
 	struct xnvfile_snapshot *vfile = pde->data;
 	struct xnvfile_input input;
+	ssize_t ret;
+
+	if (vfile->entry.lockops) {
+		ret = vfile->entry.lockops->get(&vfile->entry);
+		if (ret)
+			return ret;
+	}
 
 	input.u_buf = buf;
 	input.size = size;
 	input.vfile = &vfile->entry;
 
-	return vfile->ops->store(&input);
+	ret = vfile->ops->store(&input);
+
+	if (vfile->entry.lockops)
+		vfile->entry.lockops->put(&vfile->entry);
+
+	return ret;
 }
 
 static struct file_operations vfile_snapshot_fops = {
@@ -572,12 +584,24 @@ ssize_t vfile_regular_write(struct file *file, const char __user *buf,
 	struct proc_dir_entry *pde = PDE(wrap_f_inode(file));
 	struct xnvfile_regular *vfile = pde->data;
 	struct xnvfile_input input;
+	ssize_t ret;
+
+	if (vfile->entry.lockops) {
+		ret = vfile->entry.lockops->get(&vfile->entry);
+		if (ret)
+			return ret;
+	}
 
 	input.u_buf = buf;
 	input.size = size;
 	input.vfile = &vfile->entry;
 
-	return vfile->ops->store(&input);
+	ret = vfile->ops->store(&input);
+
+	if (vfile->entry.lockops)
+		vfile->entry.lockops->put(&vfile->entry);
+
+	return ret;
 }
 
 static struct file_operations vfile_regular_fops = {
