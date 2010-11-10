@@ -95,29 +95,25 @@ static inline unsigned xnarch_current_cpu(void)
 
 #if XENO_DEBUG(XNLOCK)
 
-typedef struct {
+struct xnlock {
+	atomic_t owner;
+	const char *file;
+	const char *function;
+	unsigned int line;
+	int cpu;
+	unsigned long long spin_time;
+	unsigned long long lock_date;
+};
 
+struct xnlockinfo {
 	unsigned long long spin_time;
 	unsigned long long lock_time;
 	const char *file;
 	const char *function;
-	unsigned line;
+	unsigned int line;
+};
 
-} xnlockinfo_t;
-
-typedef struct {
-
-	atomic_t owner;
-	const char *file;
-	const char *function;
-	unsigned line;
-	int cpu;
-	unsigned long long spin_time;
-	unsigned long long lock_date;
-
-} xnlock_t;
-
-#define XNARCH_LOCK_UNLOCKED (xnlock_t) {	\
+#define XNARCH_LOCK_UNLOCKED (struct xnlock) {	\
 	{ ~0 },					\
 	NULL,					\
 	NULL,					\
@@ -128,101 +124,56 @@ typedef struct {
 }
 
 #define XNLOCK_DBG_CONTEXT		, __FILE__, __LINE__, __FUNCTION__
-#define XNLOCK_DBG_CONTEXT_ARGS \
+#define XNLOCK_DBG_CONTEXT_ARGS					\
 	, const char *file, int line, const char *function
 #define XNLOCK_DBG_PASS_CONTEXT		, file, line, function
-#define XNLOCK_DBG_MAX_SPINS		10000000
 
-static inline void xnlock_dbg_prepare_acquire(unsigned long long *start)
-{
-	*start = rthal_rdtsc();
-}
-
-static inline void xnlock_dbg_prepare_spin(unsigned *spin_limit)
-{
-	*spin_limit = XNLOCK_DBG_MAX_SPINS;
-}
-
-static inline void
-xnlock_dbg_spinning(xnlock_t *lock, int cpu, unsigned int *spin_limit,
-		    const char *file, int line, const char *function)
-{
-	if (--*spin_limit == 0) {
-		rthal_emergency_console();
-		printk(KERN_ERR "Xenomai: stuck on nucleus lock %p\n"
-				"	  waiter = %s:%u (%s(), CPU #%d)\n"
-				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
-		       lock, file, line, function, cpu,
-		       lock->file, lock->line, lock->function, lock->cpu);
-		show_stack(NULL, NULL);
-#ifndef CONFIG_SMP
-		BUG();
-#endif
-	}
-}
-
-static inline void
-xnlock_dbg_acquired(xnlock_t *lock, int cpu, unsigned long long *start,
-		    const char *file, int line, const char *function)
-{
-	lock->lock_date = *start;
-	lock->spin_time = rthal_rdtsc() - *start;
-	lock->file = file;
-	lock->function = function;
-	lock->line = line;
-	lock->cpu = cpu;
-}
-
-static inline int xnlock_dbg_release(xnlock_t *lock)
-{
-	extern xnlockinfo_t xnlock_stats[];
-	unsigned long long lock_time = rthal_rdtsc() - lock->lock_date;
-	int cpu = xnarch_current_cpu();
-	xnlockinfo_t *stats = &xnlock_stats[cpu];
-
-	if (unlikely(atomic_read(&lock->owner) != cpu)) {
-		rthal_emergency_console();
-		printk(KERN_ERR "Xenomai: unlocking unlocked nucleus lock %p"
-				" on CPU #%d\n"
-				"         owner  = %s:%u (%s(), CPU #%d)\n",
-		       lock, cpu, lock->file, lock->line, lock->function,
-		       lock->cpu);
-		show_stack(NULL,NULL);
-		return 1;
-	}
-
-	lock->cpu = -lock->cpu;	/* File that we released it. */
-
-	if (lock_time > stats->lock_time) {
-		stats->lock_time = lock_time;
-		stats->spin_time = lock->spin_time;
-		stats->file = lock->file;
-		stats->function = lock->function;
-		stats->line = lock->line;
-	}
-	return 0;
-}
-
+void xnlock_dbg_prepare_acquire(unsigned long long *start);
+void xnlock_dbg_prepare_spin(unsigned int *spin_limit);
+void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
+			 unsigned int *spin_limit,
+			 const char *file, int line,
+			 const char *function);
+void xnlock_dbg_acquired(struct xnlock *lock, int cpu,
+			 unsigned long long *start,
+			 const char *file, int line,
+			 const char *function);
+int xnlock_dbg_release(struct xnlock *lock);
+	
 #else /* !XENO_DEBUG(XNLOCK) */
 
-typedef struct { atomic_t owner; } xnlock_t;
+struct xnlock {
+	atomic_t owner;
+};
 
-#define XNARCH_LOCK_UNLOCKED		(xnlock_t) { { ~0 } }
+#define XNARCH_LOCK_UNLOCKED		(struct xnlock) { { ~0 } }
 
 #define XNLOCK_DBG_CONTEXT
 #define XNLOCK_DBG_CONTEXT_ARGS
 #define XNLOCK_DBG_PASS_CONTEXT
 
-static inline void xnlock_dbg_prepare_acquire(unsigned long long *start) { }
-static inline void xnlock_dbg_prepare_spin(unsigned *spin_limit)	 { }
+static inline
+void xnlock_dbg_prepare_acquire(unsigned long long *start)
+{
+}
+
+static inline
+void xnlock_dbg_prepare_spin(unsigned int *spin_limit)
+{
+}
 
 static inline void
-xnlock_dbg_spinning(xnlock_t *lock, int cpu, unsigned int *spin_limit)	 { }
+xnlock_dbg_spinning(struct xnlock *lock, int cpu, unsigned int *spin_limit)
+{
+}
 
 static inline void
-xnlock_dbg_acquired(xnlock_t *lock, int cpu, unsigned long long *start)	 { }
+xnlock_dbg_acquired(struct xnlock *lock, int cpu,
+		    unsigned long long *start)
+{
+}
 
-static inline int xnlock_dbg_release(xnlock_t *lock)
+static inline int xnlock_dbg_release(struct xnlock *lock)
 {
 	return 0;
 }
@@ -335,19 +286,19 @@ static inline int xnarch_root_domain_p(void)
 #define xnlock_clear_irqoff(lock)	xnlock_put_irqrestore(lock, 1)
 #define xnlock_clear_irqon(lock)	xnlock_put_irqrestore(lock, 0)
 
-static inline void xnlock_init (xnlock_t *lock)
+static inline void xnlock_init (struct xnlock *lock)
 {
 	*lock = XNARCH_LOCK_UNLOCKED;
 }
 
-#define DECLARE_XNLOCK(lock)		xnlock_t lock
-#define DECLARE_EXTERN_XNLOCK(lock)	extern xnlock_t lock
-#define DEFINE_XNLOCK(lock)		xnlock_t lock = XNARCH_LOCK_UNLOCKED
+#define DECLARE_XNLOCK(lock)		struct xnlock lock
+#define DECLARE_EXTERN_XNLOCK(lock)	extern struct xnlock lock
+#define DEFINE_XNLOCK(lock)		struct xnlock lock = XNARCH_LOCK_UNLOCKED
 #define DEFINE_PRIVATE_XNLOCK(lock)	static DEFINE_XNLOCK(lock)
 
-void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
+void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS);
 
-static inline int __xnlock_get(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+static inline int __xnlock_get(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	unsigned long long start;
 	int cpu = xnarch_current_cpu();
@@ -365,7 +316,7 @@ static inline int __xnlock_get(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 	return 0;
 }
 
-static inline void xnlock_put(xnlock_t *lock)
+static inline void xnlock_put(struct xnlock *lock)
 {
 	if (xnlock_dbg_release(lock))
 		return;
@@ -380,7 +331,7 @@ static inline void xnlock_put(xnlock_t *lock)
 }
 
 static inline spl_t
-__xnlock_get_irqsave(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+__xnlock_get_irqsave(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	unsigned long flags;
 
@@ -392,7 +343,7 @@ __xnlock_get_irqsave(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 	return flags;
 }
 
-static inline void xnlock_put_irqrestore(xnlock_t *lock, spl_t flags)
+static inline void xnlock_put_irqrestore(struct xnlock *lock, spl_t flags)
 {
 	/* Only release the lock if we didn't take it recursively. */
 	if (!(flags & 2))
@@ -408,7 +359,7 @@ static inline void xnarch_send_ipi(xnarch_cpumask_t cpumask)
 #endif /* !CONFIG_SMP */
 }
 
-static inline int xnlock_is_owner(xnlock_t *lock)
+static inline int xnlock_is_owner(struct xnlock *lock)
 {
 	return atomic_read(&lock->owner) == xnarch_current_cpu();
 }

@@ -511,6 +511,91 @@ static inline void init_thread_relax_trace(struct xnthread *thread)
 
 #endif /* !XENO_OPT_DEBUG_TRACE_RELAX */
 
+#if XENO_DEBUG(XNLOCK)
+
+extern struct xnlockinfo xnlock_stats[];
+
+#define XNLOCK_DBG_MAX_SPINS		10000000
+
+void xnlock_dbg_prepare_acquire(unsigned long long *start)
+{
+	*start = rthal_rdtsc();
+}
+
+void xnlock_dbg_prepare_spin(unsigned *spin_limit)
+{
+	*spin_limit = XNLOCK_DBG_MAX_SPINS;
+}
+EXPORT_SYMBOL_GPL(xnlock_dbg_prepare_spin);
+
+void xnlock_dbg_spinning(struct xnlock *lock, int cpu,
+			 unsigned int *spin_limit,
+			 const char *file, int line, const char *function)
+{
+	if (--*spin_limit == 0) {
+		rthal_emergency_console();
+		printk(KERN_ERR "Xenomai: stuck on nucleus lock %p\n"
+				"	  waiter = %s:%u (%s(), CPU #%d)\n"
+				"	  owner	 = %s:%u (%s(), CPU #%d)\n",
+		       lock, file, line, function, cpu,
+		       lock->file, lock->line, lock->function, lock->cpu);
+		show_stack(NULL, NULL);
+#ifndef CONFIG_SMP
+		BUG();
+#endif
+	}
+}
+EXPORT_SYMBOL_GPL(xnlock_dbg_spinning);
+
+void xnlock_dbg_acquired(struct xnlock *lock, int cpu, unsigned long long *start,
+			 const char *file, int line, const char *function)
+{
+	lock->lock_date = *start;
+	lock->spin_time = rthal_rdtsc() - *start;
+	lock->file = file;
+	lock->function = function;
+	lock->line = line;
+	lock->cpu = cpu;
+}
+EXPORT_SYMBOL_GPL(xnlock_dbg_acquired);
+
+int xnlock_dbg_release(struct xnlock *lock)
+{
+	unsigned long long lock_time;
+	struct xnlockinfo *stats;
+	int cpu;
+
+	lock_time = rthal_rdtsc() - lock->lock_date;
+	cpu = xnarch_current_cpu();
+	stats = &xnlock_stats[cpu];
+
+	if (unlikely(atomic_read(&lock->owner) != cpu)) {
+		rthal_emergency_console();
+		printk(KERN_ERR "Xenomai: unlocking unlocked nucleus lock %p"
+				" on CPU #%d\n"
+				"         owner  = %s:%u (%s(), CPU #%d)\n",
+		       lock, cpu, lock->file, lock->line, lock->function,
+		       lock->cpu);
+		show_stack(NULL,NULL);
+		return 1;
+	}
+
+	lock->cpu = -lock->cpu;	/* File that we released it. */
+
+	if (lock_time > stats->lock_time) {
+		stats->lock_time = lock_time;
+		stats->spin_time = lock->spin_time;
+		stats->file = lock->file;
+		stats->function = lock->function;
+		stats->line = lock->line;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(xnlock_dbg_release);
+
+#endif /* !XENO_DEBUG(XNLOCK) */
+
 void xndebug_shadow_init(struct xnthread *thread)
 {
 	struct xnsys_ppd *sys_ppd;

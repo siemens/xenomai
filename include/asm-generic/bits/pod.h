@@ -232,7 +232,7 @@ unsigned long long xnarch_get_cpu_time(void)
 EXPORT_SYMBOL_GPL(xnarch_get_cpu_time);
 
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
-void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
+void __xnlock_spin(struct xnlock *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 {
 	unsigned int spin_limit;
 	int cpu = xnarch_current_cpu();

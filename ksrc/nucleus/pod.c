@@ -3051,12 +3051,12 @@ EXPORT_SYMBOL_GPL(xnpod_set_thread_tslice);
 
 #if XENO_DEBUG(XNLOCK)
 
-xnlockinfo_t xnlock_stats[XNARCH_NR_CPUS];
+struct xnlockinfo xnlock_stats[XNARCH_NR_CPUS];
 EXPORT_SYMBOL_GPL(xnlock_stats);
 
 static int lock_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
-	xnlockinfo_t lockinfo;
+	struct xnlockinfo lockinfo;
 	spl_t s;
 	int cpu;
 

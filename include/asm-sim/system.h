@@ -70,7 +70,8 @@ typedef int spl_t;
 #define splget(x)   ((x) = mvm_get_irqmask())
 #define irqs_disabled_hw() spltest()
 
-typedef unsigned long xnlock_t;
+struct xnlock {
+};
 
 #define XNARCH_LOCK_UNLOCKED 0
 
