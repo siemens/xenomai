@@ -94,16 +94,16 @@ static inline void xnarch_handle_mayday(struct xnarchtcb *tcb,
 					struct pt_regs *regs,
 					unsigned long tramp)
 {
-	tcb->mayday.eip = regs->x86reg_ip;
-	tcb->mayday.eax = regs->x86reg_ax;
-	regs->x86reg_ip = tramp;
+	tcb->mayday.eip = regs->ip;
+	tcb->mayday.eax = regs->ax;
+	regs->ip = tramp;
 }
 
 static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
 				       struct pt_regs *regs)
 {
-	regs->x86reg_ip = tcb->mayday.eip;
-	regs->x86reg_ax = tcb->mayday.eax;
+	regs->ip = tcb->mayday.eip;
+	regs->ax = tcb->mayday.eax;
 }
 
 #endif /* !_XENO_ASM_X86_BITS_SHADOW_64_H */
