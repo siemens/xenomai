@@ -273,6 +273,7 @@ static char *resolve_path(char *mapname)
 			free(mapname);
 			return path;
 		}
+		free(path);
 	}
 
 	/*
