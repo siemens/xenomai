@@ -87,7 +87,8 @@ static inline void fp_init(union fp_state *state)
 #endif
 
 #if IPIPE_MAJOR_NUMBER == 1 && /* There is no version 0. */ 	\
-	(IPIPE_MINOR_NUMBER < 5 || IPIPE_PATCH_NUMBER < 3)
+	(IPIPE_MINOR_NUMBER < 5 || \
+	 (IPIPE_MINOR_NUMBER == 5 && IPIPE_PATCH_NUMBER < 3))
 #define __ipipe_mach_release_timer()  \
 	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy)
 #endif /* IPIPE < 1.5-03 */
