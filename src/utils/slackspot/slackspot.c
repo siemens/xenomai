@@ -355,17 +355,16 @@ static inline void put_location(struct relax_spot *p, int depth)
 	if (b->function)
 		printf("%s() ", b->function);
 	if (b->file) {
-		printf("in %s:", b->file);
+		printf("in %s", b->file);
 		if (b->lineno)
-			printf("%d\n", b->lineno);
-		else
-			printf("?\n");
+			printf(":%d", b->lineno);
 	} else {
-		if (*b->mapname == '?')
-			printf("???\n");
-		else
-			printf("??? [%s]\n", b->mapname);
+		if (b->function == NULL)
+			printf("??? ");
+		if (*b->mapname != '?')
+			printf("in [%s]", b->mapname);
 	}
+	putchar('\n');
 }
 
 static void display_spots(void)
@@ -436,8 +435,10 @@ static void resolve_spots(void)
 			if (s == NULL)
 				goto next;
 			*s++ = '\0';
-			p->backtrace[depth].lineno = atoi(s);
-			p->backtrace[depth].file = strdup(buf);
+			if (strcmp(buf, "??")) {
+				p->backtrace[depth].lineno = atoi(s);
+				p->backtrace[depth].file = strdup(buf);
+			}
 		next:
 			free(a2lcmd);
 			pclose(fp);
