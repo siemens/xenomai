@@ -14,6 +14,7 @@ struct xnsys_ppd {
 #endif
 	xnarch_atomic_t refcnt;
 	char *exe_path;
+	unsigned long mayday_addr;
 #define ppd2sys(addr) container_of(addr, struct xnsys_ppd, ppd)
 };
 

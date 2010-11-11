@@ -1781,7 +1781,6 @@ static int xnshadow_sys_bind(unsigned int magic,
 
 	sys_ppd->key.muxid = 0;
 	sys_ppd->key.mm = current->mm;
-
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
 		   Xenomai libraries), detach right away the second ppd. */
@@ -2200,7 +2199,7 @@ static void *xnshadow_sys_event(int event, void *data)
 {
 	struct xnsys_ppd *p;
 	char *exe_path;
-	int err;
+	int ret;
 
 	switch(event) {
 	case XNSHADOW_CLIENT_ATTACH:
@@ -2208,7 +2207,7 @@ static void *xnshadow_sys_event(int event, void *data)
 		if (p == NULL)
 			return ERR_PTR(-ENOMEM);
 
-		err = xnheap_init_mapped(&p->sem_heap,
+		ret = xnheap_init_mapped(&p->sem_heap,
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
 					 XNARCH_SHARED_HEAP_FLAGS);
 		if (err) {
@@ -2238,6 +2237,7 @@ static void *xnshadow_sys_event(int event, void *data)
 			exe_path = NULL; /* Not lethal, but weird. */
 		}
 		p->exe_path = exe_path;
+
 		xnarch_atomic_inc(&skins[0].refcnt);
 
 		return &p->ppd;
