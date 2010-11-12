@@ -79,14 +79,9 @@ struct xnvfile_lock_ops {
 	void (*put)(struct xnvfile *vfile);
 };
 
-/*
- * XXX: struct semaphore is legacy for mutual exclusion, but supported
- * on both 2.4 and 2.6 kernels. Will be changed to mutex when 2.4
- * support is dropped from Xenomai.
- */
 struct xnvfile_hostlock_class {
 	struct xnvfile_lock_ops ops;
-	struct semaphore sem;
+	struct mutex mutex;
 };
 
 struct xnvfile_nklock_class {
@@ -685,7 +680,7 @@ void xnvfile_destroy_link(struct xnvfile_link *vlink)
 			.get = __vfile_hostlock_get,			\
 			.put = __vfile_hostlock_put,			\
 		},							\
-		.sem = __SEMAPHORE_INITIALIZER(name.sem, 1),		\
+		.mutex = __MUTEX_INITIALIZER(name.mutex),		\
 	}
 
 #else /* !CONFIG_XENO_OPT_VFILE */

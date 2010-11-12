@@ -922,7 +922,9 @@ int __vfile_hostlock_get(struct xnvfile *vfile)
 	struct xnvfile_hostlock_class *lc;
 
 	lc = container_of(vfile->lockops, struct xnvfile_hostlock_class, ops);
-	return down_interruptible(&lc->sem) ? -ERESTARTSYS : 0;
+	mutex_lock(&lc->mutex);
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(__vfile_hostlock_get);
 
@@ -931,7 +933,7 @@ void __vfile_hostlock_put(struct xnvfile *vfile)
 	struct xnvfile_hostlock_class *lc;
 
 	lc = container_of(vfile->lockops, struct xnvfile_hostlock_class, ops);
-	up(&lc->sem);
+	mutex_unlock(&lc->mutex);
 }
 EXPORT_SYMBOL_GPL(__vfile_hostlock_put);
 
