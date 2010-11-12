@@ -183,10 +183,12 @@ static inline int xnsched_resched_p(struct xnsched *sched)
 /* Set specific resched flag into the local scheduler mask. */
 #define xnsched_set_resched(__sched__) do {				\
   xnsched_t *current_sched = xnpod_current_sched();			\
-  __setbits(current_sched->status, XNRESCHED);				\
-  if (current_sched != (__sched__) && !xnsched_resched_p(__sched__)) {	\
+  if (current_sched == (__sched__))					\
+      __setbits(current_sched->status, XNRESCHED);			\
+  else if (!xnsched_resched_p(__sched__)) {				\
       xnarch_cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
       __setbits((__sched__)->status, XNRESCHED);			\
+      __setbits(current_sched->status, XNRESCHED);			\
   }									\
 } while (0)
 
