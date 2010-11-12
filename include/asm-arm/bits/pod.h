@@ -113,8 +113,6 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 
 	rthal_local_irq_flags_hw(flags);
 
-	memset(tcb->stackbase, 0, tcb->stacksize);
-
 	regs = &tcb->ti.cpu_context;
 	memset(regs, 0, sizeof(*regs));
 	regs->pc = (unsigned long)&rthal_thread_trampoline;

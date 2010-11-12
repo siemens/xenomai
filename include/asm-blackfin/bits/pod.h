@@ -138,17 +138,18 @@ static inline void xnarch_init_thread(xnarchtcb_t * tcb,
 				      int imask,
 				      struct xnthread *thread, char *name)
 {
-	unsigned long *ksp;
+	unsigned long ksp, *switchregs;
 
-	ksp =
-	    (unsigned long
-	     *)(((unsigned long)tcb->stackbase + tcb->stacksize - 40) & ~0xf);
-	ksp[0] = (unsigned long)tcb;	/* r0 */
-	memset(&ksp[1], 0, sizeof(long) * 7);	/* ( R7:4, P5:3 ) */
-	ksp[8] = 0;		/* fp */
-	ksp[9] = (unsigned long)&xnarch_thread_trampoline;	/* rets */
+	ksp = (((unsigned long)tcb->stackbase + tcb->stacksize - 40) & ~0xf);
+	switchregs = (unsigned long *)ksp;
+	/*
+	 * Stack space is guaranteed to be clear, so R7:4, P5:3, fp
+	 * are already zero. We only need to set r0 and rets.
+	 */
+	switchregs[0] = (unsigned long)tcb;	/* r0 */
+	switchregs[9] = (unsigned long)&xnarch_thread_trampoline; /* rets */
 
-	tcb->ts.ksp = (unsigned long)ksp;
+	tcb->ts.ksp = ksp;
 	tcb->ts.pc = (unsigned long)&rthal_thread_trampoline;
 	tcb->ts.usp = 0;
 

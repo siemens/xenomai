@@ -52,10 +52,12 @@ int xnthread_init(struct xnthread *thread,
 {
 	unsigned int stacksize = attr->stacksize;
 	xnflags_t flags = attr->flags;
+	struct xnarchtcb *tcb;
 	int ret;
 
 	/* Setup the TCB. */
-	xnarch_init_tcb(xnthread_archtcb(thread));
+	tcb = xnthread_archtcb(thread);
+	xnarch_init_tcb(tcb);
 
 	flags &= ~XNSUSP;
 #ifndef CONFIG_XENO_HW_FPU
@@ -87,13 +89,15 @@ int xnthread_init(struct xnthread *thread,
 	}
 #endif
 #else
-	ret = xnarch_alloc_stack(xnthread_archtcb(thread), stacksize);
+	ret = xnarch_alloc_stack(tcb, stacksize);
 	if (ret) {
 		xnlogerr("%s: no stack for kernel thread '%s' (raise CONFIG_XENO_OPT_SYS_STACKPOOLSZ)\n",
 			 __FUNCTION__, attr->name);
 		return ret;
 	}
 #endif
+	if (stacksize)
+		memset(xnarch_stack_base(tcb), 0, stacksize);
 
 	if (attr->name)
 		xnobject_copy_name(thread->name, attr->name);
@@ -173,7 +177,7 @@ int xnthread_init(struct xnthread *thread,
 
 fail:
 #if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
-	xnarch_free_stack(xnthread_archtcb(thread));
+	xnarch_free_stack(tcb);
 #endif
 	return ret;
 }

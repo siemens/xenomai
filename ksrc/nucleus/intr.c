@@ -599,7 +599,8 @@ int __init xnintr_mount(void)
  * - XN_ISR_EDGE is an additional flag need to be set together with XN_ISR_SHARED
  * to enable IRQ-sharing of edge-triggered interrupts.
  *
- * @return No error condition being defined, 0 is always returned.
+ * @return 0 is returned on success. Otherwise, -EINVAL is returned if
+ * @a irq is not a valid interrupt number.
  *
  * Environments:
  *
@@ -615,6 +616,9 @@ int xnintr_init(xnintr_t *intr,
 		const char *name,
 		unsigned irq, xnisr_t isr, xniack_t iack, xnflags_t flags)
 {
+	if (irq >= XNARCH_NR_IRQS)
+		return -EINVAL;
+
 	intr->irq = irq;
 	intr->isr = isr;
 	intr->iack = iack;
@@ -719,11 +723,6 @@ int xnintr_attach(xnintr_t *intr, void *cookie)
 
 	xnlock_get_irqsave(&intrlock, s);
 
-	if (intr->irq >= XNARCH_NR_IRQS) {
-		ret = -EINVAL;
-		goto out;
-	}
-
 	if (__testbits(intr->flags, XN_ISR_ATTACHED)) {
 		ret = -EBUSY;
 		goto out;
@@ -781,11 +780,6 @@ int xnintr_detach(xnintr_t *intr)
 	trace_mark(xn_nucleus, irq_detach, "irq %u", intr->irq);
 
 	xnlock_get_irqsave(&intrlock, s);
-
-	if (intr->irq >= XNARCH_NR_IRQS) {
-		ret = -EINVAL;
-		goto out;
-	}
 
 	if (!__testbits(intr->flags, XN_ISR_ATTACHED)) {
 		ret = -EINVAL;

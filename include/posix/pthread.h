@@ -464,6 +464,14 @@ int pthread_intr_wait_np(pthread_intr_t intr,
 int pthread_intr_control_np(pthread_intr_t intr,
 			    int cmd);
 
+int pthread_getschedparam_ex(pthread_t tid,
+			     int *pol,
+			     struct sched_param_ex *par);
+
+int pthread_setschedparam_ex(pthread_t tid,
+			     int pol,
+			     const struct sched_param_ex *par);
+
 int __real_pthread_create(pthread_t *tid,
 			  const pthread_attr_t *attr,
 			  void *(*start) (void *),
