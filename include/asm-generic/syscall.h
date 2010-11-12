@@ -25,7 +25,7 @@
 /* Xenomai multiplexer syscall. */
 #define __xn_sys_mux		555	/* Must fit within 15bit */
 /* Xenomai nucleus syscalls. */
-#define __xn_sys_bind		0	/* muxid = bind_to_interface(magic,featdep,abirev) */
+#define __xn_sys_bind		0	/* muxid = bind_to_interface(magic, &breq) */
 #define __xn_sys_completion	1	/* xnshadow_completion(&completion) */
 #define __xn_sys_migrate	2	/* switched = xnshadow_relax/harden() */
 #define __xn_sys_barrier	3	/* started = xnshadow_wait_barrier(&entry,&cookie) */
@@ -37,6 +37,12 @@
 #define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
 #define __xn_sys_mayday        10	/* request mayday fixup */
 #define __xn_sys_backtrace     11	/* collect backtrace (relax tracing) */
+
+struct xnbindreq {
+	int feat_req;		/* Features userland requires. */
+	int abi_rev;		/* ABI revision userland uses. */
+	struct xnfeatinfo feat_ret; /* Features kernel space provides. */
+};
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1

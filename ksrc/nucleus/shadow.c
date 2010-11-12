@@ -1688,46 +1688,51 @@ static inline int raise_cap(int cap)
 }
 
 static int xnshadow_sys_bind(unsigned int magic,
-			     unsigned long featdep,
-			     unsigned long abirev,
-			     xnsysinfo_t __user *u_info)
+			     xnsysinfo_t __user *u_breq)
 {
 	xnshadow_ppd_t *ppd = NULL, *sys_ppd = NULL;
+	unsigned long featreq, featmis;
 	struct xnskin_slot *sslt;
-	xnfeatinfo_t finfo;
-	u_long featmis;
-	int muxid, err;
+	int muxid, abirev, err;
+	struct xnbindreq breq;
+	struct xnfeatinfo *f;
 	spl_t s;
 
-	featmis = (~XENOMAI_FEAT_DEP & (featdep & XENOMAI_FEAT_MAN));
+	if (__xn_safe_copy_from_user(&breq, u_breq, sizeof(breq)))
+		return -EFAULT;
 
-	if (u_info) {
-		/*
-		 * Pass back the supported feature set and the ABI revision
-		 * level to user-space.
-		 */
-		finfo.feat_all = XENOMAI_FEAT_DEP;
-		stringify_feature_set(XENOMAI_FEAT_DEP, finfo.feat_all_s,
-				      sizeof(finfo.feat_all_s));
-		finfo.feat_man = featdep & XENOMAI_FEAT_MAN;
-		stringify_feature_set(finfo.feat_man, finfo.feat_man_s,
-				      sizeof(finfo.feat_man_s));
-		finfo.feat_mis = featmis;
-		stringify_feature_set(featmis, finfo.feat_mis_s,
-				      sizeof(finfo.feat_mis_s));
-		finfo.feat_req = featdep;
-		stringify_feature_set(featdep, finfo.feat_req_s,
-				      sizeof(finfo.feat_req_s));
-		finfo.feat_abirev = XENOMAI_ABI_REV;
-		collect_arch_features(&finfo);
+	f = &breq.feat_ret;
+	featreq = breq.feat_req;
+	featmis = (~XENOMAI_FEAT_DEP & (featreq & XENOMAI_FEAT_MAN));
+	abirev = breq.abi_rev;
 
-		if (__xn_safe_copy_to_user(u_info, &finfo, sizeof(finfo)))
-			return -EFAULT;
-	}
+	/*
+	 * Pass back the supported feature set and the ABI revision
+	 * level to user-space.
+	 */
+	f->feat_all = XENOMAI_FEAT_DEP;
+	stringify_feature_set(XENOMAI_FEAT_DEP, f->feat_all_s,
+			      sizeof(f->feat_all_s));
+	f->feat_man = featreq & XENOMAI_FEAT_MAN;
+	stringify_feature_set(f->feat_man, f->feat_man_s,
+			      sizeof(f->feat_man_s));
+	f->feat_mis = featmis;
+	stringify_feature_set(featmis, f->feat_mis_s,
+			      sizeof(f->feat_mis_s));
+	f->feat_req = featreq;
+	stringify_feature_set(featreq, f->feat_req_s,
+			      sizeof(f->feat_req_s));
+	f->feat_abirev = XENOMAI_ABI_REV;
+	collect_arch_features(f);
 
+	if (__xn_safe_copy_to_user(u_breq, &breq, sizeof(breq)))
+		return -EFAULT;
+
+	/*
+	 * If some mandatory features the user-space code relies on
+	 * are missing at kernel level, we cannot go further.
+	 */
 	if (featmis)
-		/* Some mandatory features the user-space interface relies on
-		   are missing at kernel level; cannot go further. */
 		return -EINVAL;
 
 	if (!check_abi_revision(abirev))

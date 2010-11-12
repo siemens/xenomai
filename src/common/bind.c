@@ -38,11 +38,12 @@ static void xeno_init_arch_features(void)
 #define xeno_init_arch_features()	do { } while (0)
 #endif /* !xeno_arch_features_check */
 
-int 
-xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
+int xeno_bind_skin_opt(unsigned int skin_magic, const char *skin,
+		       const char *module)
 {
 	sighandler_t old_sigill_handler;
-	xnfeatinfo_t finfo;
+	struct xnbindreq breq;
+	struct xnfeatinfo *f;
 	int muxid;
 
 	/* Some sanity checks first. */
@@ -58,30 +59,29 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 		exit(EXIT_FAILURE);
 	}
 
-	muxid = XENOMAI_SYSBIND(skin_magic,
-				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, &finfo);
+	f = &breq.feat_ret;
+	breq.feat_req = XENOMAI_FEAT_DEP;
+	breq.abi_rev = XENOMAI_ABI_REV;
+	muxid = XENOMAI_SYSBIND(skin_magic, &breq);
 
 	signal(SIGILL, old_sigill_handler);
 
 	switch (muxid) {
 	case -EINVAL:
-
 		fprintf(stderr, "Xenomai: incompatible feature set\n");
 		fprintf(stderr,
 			"(userland requires \"%s\", kernel provides \"%s\", missing=\"%s\").\n",
-			finfo.feat_man_s, finfo.feat_all_s, finfo.feat_mis_s);
+			f->feat_man_s, f->feat_all_s, f->feat_mis_s);
 		exit(EXIT_FAILURE);
 
 	case -ENOEXEC:
-
 		fprintf(stderr, "Xenomai: incompatible ABI revision level\n");
 		fprintf(stderr, "(user-space requires '%lu', kernel provides '%lu').\n",
-			XENOMAI_ABI_REV, finfo.feat_abirev);
+			XENOMAI_ABI_REV, f->feat_abirev);
 		exit(EXIT_FAILURE);
 
 	case -ENOSYS:
 	case -ESRCH:
-
 		return -1;
 	}
 

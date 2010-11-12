@@ -30,7 +30,7 @@
 
 #define XNFEAT_STRING_LEN 64
 
-typedef struct xnfeatinfo {
+struct xnfeatinfo {
 	unsigned long feat_all;	/* Available feature set. */
 	char feat_all_s[XNFEAT_STRING_LEN];
 	unsigned long feat_man;	/* Mandatory features (when requested). */
@@ -43,7 +43,7 @@ typedef struct xnfeatinfo {
 	struct xnfeatinfo_archdep feat_arch; /* Arch-dep extension. */
 #endif
 	unsigned long feat_abirev; /* ABI revision level. */
-} xnfeatinfo_t;
+};
 
 #define __xn_feat_smp         0x80000000
 #define __xn_feat_nosmp       0x40000000

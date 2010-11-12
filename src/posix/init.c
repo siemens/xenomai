@@ -43,6 +43,8 @@ void pse51_clock_init(int);
 static __attribute__ ((constructor))
 void __init_posix_interface(void)
 {
+	struct xnbindreq breq;
+	
 #ifndef CONFIG_XENO_LIBS_DLOPEN
 	struct sched_param parm;
 	int policy;
@@ -60,8 +62,9 @@ void __init_posix_interface(void)
 
 	__pse51_muxid = __xn_mux_shifted_id(muxid);
 
-	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC,
-				XENOMAI_FEAT_DEP, XENOMAI_ABI_REV, NULL);
+	breq.feat_req = XENOMAI_FEAT_DEP;
+	breq.abi_rev = XENOMAI_ABI_REV;
+	muxid = XENOMAI_SYSBIND(RTDM_SKIN_MAGIC, &breq);
 	if (muxid > 0) {
 		__rtdm_muxid = __xn_mux_shifted_id(muxid);
 		__rtdm_fd_start = FD_SETSIZE - XENOMAI_SKINCALL0(__rtdm_muxid,

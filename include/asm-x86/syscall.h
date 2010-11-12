@@ -223,8 +223,8 @@ static inline void __xn_get_ebp(void **dest)
 #define ASMFMT_5(arg1, arg2, arg3, arg4, arg5) \
 	, "a" (arg1), "c" (arg2), "d" (arg3), "S" (arg4), "D" (arg5)
 
-#define XENOMAI_SYSBIND(a1,a2,a3,a4) \
-	XENOMAI_SYS_MUX_SAFE(4,__xn_sys_bind,a1,a2,a3,a4)
+#define XENOMAI_SYSBIND(a1,a2) \
+	XENOMAI_SYS_MUX_SAFE(2,__xn_sys_bind,a1,a2)
 
 #else /* x86_64 */
 
@@ -295,8 +295,8 @@ static inline void __xn_get_ebp(void **dest)
 #define XENOMAI_SKIN_MUX(nr, shifted_id, op, args...) \
 	DO_SYSCALL(__xn_mux_code(shifted_id,op), nr, args)
 
-#define XENOMAI_SYSBIND(a1,a2,a3,a4) \
-	XENOMAI_SYS_MUX(4,__xn_sys_bind,a1,a2,a3,a4)
+#define XENOMAI_SYSBIND(a1,a2) \
+	XENOMAI_SYS_MUX(2,__xn_sys_bind,a1,a2)
 
 #endif /* x86_64 */
 
