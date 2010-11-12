@@ -26,8 +26,10 @@
 #include <asm/atomic.h>
 #include <asm/system.h>
 
-#define xnarch_atomic_xchg(ptr,v)   xchg(ptr,v)
-#define xnarch_memory_barrier()     smp_mb()
+#define xnarch_atomic_xchg(ptr,v)	xchg(ptr,v)
+#define xnarch_memory_barrier()		smp_mb()
+#define xnarch_read_memory_barrier()	rmb()
+#define xnarch_write_memory_barrier()	wmb()
 
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
