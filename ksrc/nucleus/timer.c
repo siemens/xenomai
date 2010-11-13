@@ -97,7 +97,7 @@ void xntimer_next_local_shot(xnsched_t *sched)
 	__clrbits(sched->lflags, XNHDEFER);
 	timer = aplink2timer(h);
 	if (unlikely(timer == &sched->htimer)) {
-		if (xnsched_self_resched_p(sched) ||
+		if (xnsched_resched_p(sched) ||
 		    !xnthread_test_state(sched->curr, XNROOT)) {
 			h = xntimerq_it_next(&sched->timerqueue, &it, h);
 			if (h) {

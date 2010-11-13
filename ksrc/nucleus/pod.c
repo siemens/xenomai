@@ -2173,11 +2173,13 @@ static inline int __xnpod_test_resched(struct xnsched *sched)
 	int resched = testbits(sched->status, XNRESCHED);
 #ifdef CONFIG_SMP
 	/* Send resched IPI to remote CPU(s). */
-	if (unlikely(xnsched_resched_p(sched))) {
+	if (unlikely(!xnarch_cpus_empty(sched->resched))) {
 		xnarch_memory_barrier();
 		xnarch_send_ipi(sched->resched);
 		xnarch_cpus_clear(sched->resched);
 	}
+#else
+	resched = xnsched_resched_p(sched);
 #endif
 	clrbits(sched->status, XNRESCHED);
 	return resched;

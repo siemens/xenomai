@@ -1651,6 +1651,11 @@ EXPORT_SYMBOL(rtdm_irq_request);
  *
  * @return 0 on success, otherwise negative error code
  *
+ * @note The caller is responsible for shutting down the IRQ source at device
+ * level before invoking this service. In turn, rtdm_irq_free ensures that any
+ * pending event on the given IRQ line is fully processed on return from this
+ * service.
+ *
  * Environments:
  *
  * This service can be called from:
@@ -1669,6 +1674,12 @@ int rtdm_irq_free(rtdm_irq_t *irq_handle);
  * @param[in,out] irq_handle IRQ handle as returned by rtdm_irq_request()
  *
  * @return 0 on success, otherwise negative error code
+ *
+ * @note This service is for exceptional use only. Drivers should always prefer
+ * interrupt masking at device level (via corresponding control registers etc.)
+ * over masking at line level. Keep in mind that the latter is incompatible
+ * with IRQ line sharing and can also be more costly as interrupt controller
+ * access requires broader synchronization.
  *
  * Environments:
  *
@@ -1689,6 +1700,12 @@ int rtdm_irq_enable(rtdm_irq_t *irq_handle);
  * @param[in,out] irq_handle IRQ handle as returned by rtdm_irq_request()
  *
  * @return 0 on success, otherwise negative error code
+ *
+ * @note This service is for exceptional use only. Drivers should always prefer
+ * interrupt masking at device level (via corresponding control registers etc.)
+ * over masking at line level. Keep in mind that the latter is incompatible
+ * with IRQ line sharing and can also be more costly as interrupt controller
+ * access requires broader synchronization.
  *
  * Environments:
  *

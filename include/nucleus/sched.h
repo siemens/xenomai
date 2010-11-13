@@ -68,7 +68,9 @@ typedef struct xnsched {
 	xnflags_t lflags;		/*!< Scheduler specific local flags bitmask. */
 	int cpu;
 	struct xnthread *curr;		/*!< Current thread. */
+#ifdef CONFIG_SMP
 	xnarch_cpumask_t resched;	/*!< Mask of CPUs needing rescheduling. */
+#endif
 
 	struct xnsched_rt rt;		/*!< Context of built-in real-time class. */
 #ifdef CONFIG_XENO_OPT_SCHED_TP
@@ -170,32 +172,33 @@ struct xnsched_class {
 #define xnsched_cpu(__sched__)	({ (void)__sched__; 0; })
 #endif /* CONFIG_SMP */
 
-/* Test all resched flags from the given scheduler mask. */
+/* Test resched flag of given sched. */
 static inline int xnsched_resched_p(struct xnsched *sched)
-{
-	return testbits(sched->status, XNRESCHED);
-}
-
-static inline int xnsched_self_resched_p(struct xnsched *sched)
 {
 	return testbits(sched->status, XNRESCHED);
 }
 
 /* Set self resched flag for the given scheduler. */
 #define xnsched_set_self_resched(__sched__) do {		\
+  XENO_BUGON(NUCLEUS, __sched__ != xnpod_current_sched());	\
   __setbits((__sched__)->status, XNRESCHED);			\
 } while (0)
 
-/* Set specific resched flag into the local scheduler mask. */
+/* Set resched flag for the given scheduler. */
+#ifdef CONFIG_SMP
 #define xnsched_set_resched(__sched__) do {				\
   xnsched_t *current_sched = xnpod_current_sched();			\
-  __setbits(current_sched->status, XNRESCHED);				\
-  if (current_sched != (__sched__)					\
-      && !testbits((__sched__)->status, XNRESCHED)) {			\
+  if (current_sched == (__sched__))					\
+      __setbits(current_sched->status, XNRESCHED);			\
+  else if (!xnsched_resched_p(__sched__)) {				\
       xnarch_cpu_set(xnsched_cpu(__sched__), current_sched->resched);	\
       __setbits((__sched__)->status, XNRESCHED);			\
+      __setbits(current_sched->status, XNRESCHED);			\
   }									\
 } while (0)
+#else /* !CONFIG_SMP */
+#define xnsched_set_resched	xnsched_set_self_resched
+#endif /* !CONFIG_SMP */
 
 void xnsched_zombie_hooks(struct xnthread *thread);
 
