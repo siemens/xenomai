@@ -192,7 +192,6 @@ u_long t_start(u_long tid,
 	xnflags_t xnmode;
 	psostask_t *task;
 	spl_t s;
-	int n;
 
 	/* We have no error case here: just clear out any unwanted bit. */
 	mode &= ~T_START_MASK;
@@ -222,29 +221,24 @@ u_long t_start(u_long tid,
 	attr.mode = xnmode;
 	attr.imask = (int)((mode >> 8) & 0x7);
 	attr.affinity = XNPOD_ALL_CPUS;
+
+	if (targs)
+		memcpy(task->args, targs, sizeof(task->args));
+	else
+		memset(task->args, 0, sizeof(task->args));
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(&task->threadbase, XNSHADOW)) {
-		memset(task->args, 0, sizeof(task->args));
 		attr.entry = (void (*)(void *))startaddr;
-		attr.cookie = targs;
-		/*
-		 * The shadow will be returned the exact values passed
-		 * to t_start(), since the trampoline is performed at
-		 * user-space level. We just relay the information
-		 * from t_create() to t_start() here.
-		 */
-		xnpod_start_thread(&task->threadbase, &attr);
+		attr.cookie = (void *)xnthread_handle(&task->threadbase);
 	}
-	else
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
-	{
-		for (n = 0; n < 4; n++)
-			task->args[n] = targs ? targs[n] : 0;
-
+	else {
 		attr.entry = psostask_trampoline;
 		attr.cookie = task;
-		xnpod_start_thread(&task->threadbase, &attr);
 	}
+
+	xnpod_start_thread(&task->threadbase, &attr);
 
 unlock_and_exit:
 

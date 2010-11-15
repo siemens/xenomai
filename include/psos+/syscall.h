@@ -77,6 +77,7 @@
 #define __psos_t_getpth     47
 #define __psos_t_setreg     48
 #define __psos_t_getreg     49
+#define __psos_t_getargs    50
 
 struct psos_arg_bulk {
     u_long a1;

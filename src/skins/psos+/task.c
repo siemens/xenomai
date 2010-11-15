@@ -62,8 +62,8 @@ static void *psos_task_trampoline(void *cookie)
 {
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
-	u_long dummy_args[4] = { 0, 0, 0, 0 }, *targs;
 	struct psos_arg_bulk bulk;
+	u_long handle, targs[4];
 	long err;
 
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -93,14 +93,17 @@ static void *psos_task_trampoline(void *cookie)
 	   Xenomai shadow is still dormant; in such a case, resume wait. */
 
 	do
-		err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &targs);
+		err = XENOMAI_SYSCALL2(__xn_sys_barrier, &entry, &handle);
 	while (err == -EINTR);
+	if (err)
+		goto fail;
 
-	if (!err) {
-		if (targs == NULL)
-			targs = dummy_args;
-		entry(targs[0], targs[1], targs[2], targs[3]);
-	}
+	err = XENOMAI_SKINCALL2(__psos_muxid,
+				__psos_t_getargs, handle, targs);
+	if (err)
+		goto fail;
+
+	entry(targs[0], targs[1], targs[2], targs[3]);
 
       fail:
 
