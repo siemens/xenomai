@@ -967,6 +967,38 @@ static int __sm_v(struct pt_regs *regs)
 }
 
 /*
+ * int __sm_ident(const char *name, u_long *smid_r)
+ */
+
+static int __sm_ident(struct pt_regs *regs)
+{
+	char name[XNOBJECT_NAME_LEN];
+	u_long err, smid;
+	spl_t s;
+
+	/* Get sema4 name. */
+	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
+					sizeof(name)) < 0)
+		return -EFAULT;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = sm_ident(name, 0, &smid);
+	if (err == SUCCESS) {
+		psossem_t *sem = (psossem_t *)smid;
+		smid = sem->handle;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (err == SUCCESS &&
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &smid,
+				   sizeof(smid)))
+		return -EFAULT;
+
+	return err;
+}
+/*
  * u_long tm_wkafter(u_long ticks)
  */
 
@@ -1538,6 +1570,7 @@ static xnsysent_t __systab[] = {
 	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
 	[__psos_sm_p] = {&__sm_p, __xn_exec_primary},
 	[__psos_sm_v] = {&__sm_v, __xn_exec_any},
+	[__psos_sm_ident] = {&__sm_ident, __xn_exec_any},
 	[__psos_rn_create] = {&__rn_create, __xn_exec_lostage},
 	[__psos_rn_delete] = {&__rn_delete, __xn_exec_lostage},
 	[__psos_rn_ident] = {&__rn_ident, __xn_exec_any},
