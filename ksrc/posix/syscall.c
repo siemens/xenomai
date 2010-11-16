@@ -1923,14 +1923,26 @@ static int __timer_create(clockid_t clock,
 			  const struct sigevent __user *u_sev,
 			  timer_t __user *u_tm)
 {
-	struct sigevent sev;
+	union __xeno_sem sm, __user *u_sem;
+	struct sigevent sev, *evp = &sev;
 	timer_t tm;
 	int ret;
 
-	if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
-		return -EFAULT;
+	if (u_sev) {
+		if (__xn_safe_copy_from_user(&sev, u_sev, sizeof(sev)))
+			return -EFAULT;
+		if (sev.sigev_notify == SIGEV_THREAD_ID) {
+			u_sem = sev.sigev_value.sival_ptr;
+			if (__xn_safe_copy_from_user(&sm.shadow_sem,
+						     &u_sem->shadow_sem,
+						     sizeof(sm.shadow_sem)))
+				return -EFAULT;
+			sev.sigev_value.sival_ptr = &sm.native_sem;
+		}
+	} else
+		evp = NULL;
 
-	ret = timer_create(clock, &sev, &tm);
+	ret = timer_create(clock, evp, &tm);
 	if (ret)
 		return -thread_get_errno();
 

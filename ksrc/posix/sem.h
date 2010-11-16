@@ -44,4 +44,6 @@ void pse51_sem_pkg_init(void);
 
 void pse51_sem_pkg_cleanup(void);
 
+int sem_post_inner(struct pse51_sem *sem, pse51_kqueues_t *ownq);
+
 #endif /* !_POSIX_SEM_H */

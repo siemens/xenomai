@@ -24,6 +24,8 @@
 #include <nucleus/timer.h>
 #include <posix/thread.h>
 #include <posix/timer.h>
+#include <posix/semaphore.h>
+#include "sem.h"
 
 #define PSE51_TIMER_MAX  128
 
@@ -54,13 +56,26 @@ static struct pse51_timer timer_pool[PSE51_TIMER_MAX];
 
 static void pse51_base_timer_handler(xntimer_t *xntimer)
 {
-	struct pse51_timer *timer =
-		container_of(xntimer, struct pse51_timer, timerbase);
+	struct pse51_timer *timer;
+	struct pse51_sem *sem;
 
-	if (!timer->queued) {
-		timer->queued = 1;
-		pse51_sigqueue_inner(timer->owner, &timer->si);
+	timer = container_of(xntimer, struct pse51_timer, timerbase);
+	if (timer->si.info.si_signo) {
+		if (!timer->queued) {
+			timer->queued = 1;
+			pse51_sigqueue_inner(timer->owner, &timer->si);
+		}
+		return;
 	}
+
+	/* Null signo means to post a semaphore instead. */
+	sem = timer->si.info.si_value.sival_ptr;
+	if (sem && sem_post_inner(sem, NULL))
+		/*
+		 * On error, forget sema4 for next shots. In essence,
+		 * the timer stops notifying anyone at expiry.
+		 */
+		timer->si.info.si_value.sival_ptr = NULL;
 }
 
 /* Must be called with nklock locked, irq off. */
@@ -134,43 +149,67 @@ int timer_create(clockid_t clockid,
 		 const struct sigevent *__restrict__ evp,
 		 timer_t * __restrict__ timerid)
 {
+	struct __shadow_sem *shadow_sem = NULL;
+	int err = EINVAL, semval, signo;
 	struct pse51_timer *timer;
 	xnholder_t *holder;
+	sem_t *sem;
 	spl_t s;
-	int err;
 
-	if (clockid != CLOCK_MONOTONIC && clockid != CLOCK_REALTIME) {
-		err = EINVAL;
+	if (clockid != CLOCK_MONOTONIC && clockid != CLOCK_REALTIME)
 		goto error;
-	}
 
-	/* We only support notification via signals. */
-	if (evp && (evp->sigev_notify != SIGEV_SIGNAL ||
-		    (unsigned)(evp->sigev_signo - 1) > SIGRTMAX - 1)) {
-		err = EINVAL;
-		goto error;
+	/*
+	 * XXX: We implement a tweaked form of SIGEV_THREAD_ID, purely
+	 * for internal purpose, which does not match the Linux
+	 * behavior at all. Instead of sending a signal to a specific
+	 * thread upon expiry, it posts a semaphore whose address is
+	 * fetched from sigev_value.sival_ptr. SIGEV_THREAD_ID is not
+	 * officially supported by the POSIX skin.
+	 */
+	signo = SIGALRM;
+	if (evp) {
+		switch (evp->sigev_notify) {
+		case SIGEV_THREAD_ID:
+			/* Quick check to detect trivial mistakes early. */
+			sem = evp->sigev_value.sival_ptr;
+			if (sem == NULL)
+				goto error;
+			err = sem_getvalue(sem, &semval);
+			if (err)
+				return -1; /* errno already set */
+			shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
+			signo = 0;
+			break;
+
+		case SIGEV_SIGNAL:
+			signo = evp->sigev_signo;
+			if ((unsigned)(signo - 1) <= SIGRTMAX - 1)
+				break;
+		default:
+			goto error;
+		}
 	}
 
 	xnlock_get_irqsave(&nklock, s);
 
 	holder = getq(&timer_freeq);
-
-	if (!holder) {
+	if (holder == NULL) {
 		err = EAGAIN;
 		goto unlock_and_error;
 	}
 
 	timer = link2tm(holder, link);
+	timer->si.info.si_code = SI_TIMER;
+	timer->si.info.si_signo = signo;
 
 	if (evp) {
-		timer->si.info.si_signo = evp->sigev_signo;
-		timer->si.info.si_code = SI_TIMER;
-		timer->si.info.si_value = evp->sigev_value;
-	} else {
-		timer->si.info.si_signo = SIGALRM;
-		timer->si.info.si_code = SI_TIMER;
+		if (shadow_sem)
+			timer->si.info.si_value.sival_ptr = shadow_sem->sem;
+		else
+			timer->si.info.si_value = evp->sigev_value;
+	} else
 		timer->si.info.si_value.sival_int = (timer - timer_pool);
-	}
 
 	xntimer_init(&timer->timerbase, pse51_tbase,
 		     pse51_base_timer_handler);

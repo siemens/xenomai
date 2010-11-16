@@ -300,7 +300,7 @@ int sigismember(const sigset_t * set, int sig)
 }
 
 /* Must be called with nklock lock, irqs off. */
-int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t * si)
+int pse51_sigqueue_inner(pthread_t thread, pse51_siginfo_t *si)
 {
 	unsigned prio;
 	int signum;

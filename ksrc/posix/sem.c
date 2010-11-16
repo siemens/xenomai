@@ -698,6 +698,33 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 	return 0;
 }
 
+int sem_post_inner(struct pse51_sem *sem, pse51_kqueues_t *ownq)
+{
+	if (sem->magic != PSE51_SEM_MAGIC) {
+		thread_set_errno(EINVAL);
+		return -1;
+	}
+
+#if XENO_DEBUG(POSIX)
+	if (ownq && ownq != pse51_kqueues(sem->pshared)) {
+		thread_set_errno(EPERM);
+		return -1;
+	}
+#endif /* XENO_DEBUG(POSIX) */
+
+	if (sem->value == SEM_VALUE_MAX) {
+		thread_set_errno(EAGAIN);
+		return -1;
+	}
+
+	if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
+		xnpod_schedule();
+	else
+		++sem->value;
+
+	return 0;
+}
+
 /**
  * Unlock a semaphore.
  *
@@ -723,46 +750,23 @@ int sem_timedwait(sem_t * sm, const struct timespec *abs_timeout)
 int sem_post(sem_t * sm)
 {
 	struct __shadow_sem *shadow = &((union __xeno_sem *)sm)->shadow_sem;
-	pse51_sem_t *sem;
+	int ret;
 	spl_t s;
 
 	xnlock_get_irqsave(&nklock, s);
 
-	if ((shadow->magic != PSE51_SEM_MAGIC
-	     && shadow->magic != PSE51_NAMED_SEM_MAGIC)
-	    || shadow->sem->magic != PSE51_SEM_MAGIC) {
+	if (shadow->magic != PSE51_SEM_MAGIC
+	    && shadow->magic != PSE51_NAMED_SEM_MAGIC) {
 		thread_set_errno(EINVAL);
-		goto error;
+		ret = -1;
+		goto out;
 	}
 
-	sem = shadow->sem;
-
-#if XENO_DEBUG(POSIX)
-	if (sem->owningq != pse51_kqueues(sem->pshared)) {
-		thread_set_errno(EPERM);
-		goto error;
-	}
-#endif /* XENO_DEBUG(POSIX) */
-
-	if (sem->value == SEM_VALUE_MAX) {
-		thread_set_errno(EAGAIN);
-		goto error;
-	}
-
-	if (xnsynch_wakeup_one_sleeper(&sem->synchbase) != NULL)
-		xnpod_schedule();
-	else
-		++sem->value;
-
+	ret = sem_post_inner(shadow->sem, shadow->sem->owningq);
+out:
 	xnlock_put_irqrestore(&nklock, s);
 
-	return 0;
-
-      error:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return -1;
+	return ret;
 }
 
 /**
