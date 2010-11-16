@@ -59,7 +59,6 @@
 #include <posix/thread.h>
 #include <posix/tsd.h>
 #include <posix/mq.h>
-#include <posix/intr.h>
 #include <posix/timer.h>
 #include <posix/registry.h>
 #include <posix/shm.h>

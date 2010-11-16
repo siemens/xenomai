@@ -184,10 +184,6 @@ union __xeno_cond {
 	} shadow_cond;
 };
 
-struct pse51_interrupt;
-
-typedef struct pse51_interrupt *pthread_intr_t;
-
 #if defined(__KERNEL__) || defined(__XENO_SIM__)
 typedef struct pse51_mutexattr pthread_mutexattr_t;
 
@@ -404,16 +400,6 @@ int pthread_set_mode_np(int clrmask,
 int pthread_set_name_np(pthread_t thread,
 			const char *name);
 
-int pthread_intr_attach_np(pthread_intr_t *intr,
-			   unsigned irq,
-			   xnisr_t isr,
-			   xniack_t iack);
-
-int pthread_intr_detach_np(pthread_intr_t intr);
-
-int pthread_intr_control_np(pthread_intr_t intr,
-			    int cmd);
-
 #ifdef __cplusplus
 }
 #endif
@@ -453,18 +439,6 @@ int pthread_set_mode_np(int clrmask,
 
 int pthread_set_name_np(pthread_t thread,
 			const char *name);
-
-int pthread_intr_attach_np(pthread_intr_t *intr,
-			   unsigned irq,
-			   int mode);
-
-int pthread_intr_detach_np(pthread_intr_t intr);
-
-int pthread_intr_wait_np(pthread_intr_t intr,
-			 const struct timespec *to);
-
-int pthread_intr_control_np(pthread_intr_t intr,
-			    int cmd);
 
 int pthread_getschedparam_ex(pthread_t tid,
 			     int *pol,

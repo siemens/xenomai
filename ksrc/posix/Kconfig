@@ -37,16 +37,6 @@ config XENO_OPT_POSIX_SHM
 	using the RTDM skin is the preferred way of implementing drivers), leave
 	this option unselected.
 
-config XENO_OPT_POSIX_INTR
-	bool "Interrupts"
-	help
-
-	This option provides an ad-hoc API to deal with interrupts in programs
-	using Xenomai POSIX skin, both in kernel and user-space contexts. If you
-	do not intend to handle interrupts in POSIX skin programs (and using the
-	RTDM skin is the preferred way of implementing drivers), leave this
-	option unselected.
-
 if XENO_SKIN_POSIX = y && XENO_SKIN_RTDM = m
 	comment "Note: Support for select is not available if the POSIX skin"
 	comment "is built-in and the RTDM skin is compiled as a module."

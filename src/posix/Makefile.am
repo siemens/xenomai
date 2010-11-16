@@ -17,7 +17,6 @@ libpthread_rt_la_SOURCES = \
 	mq.c \
 	mutex.c \
 	shm.c \
-	interrupt.c \
 	select.c \
 	rtdm.c \
 	printf.c \

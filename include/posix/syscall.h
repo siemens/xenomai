@@ -63,10 +63,10 @@
 #define __pse51_mq_timedsend          36
 #define __pse51_mq_receive            37
 #define __pse51_mq_timedreceive       38
-#define __pse51_intr_attach           39
-#define __pse51_intr_detach           40
-#define __pse51_intr_wait             41
-#define __pse51_intr_control          42
+#define __pse51_unimp_39              39
+#define __pse51_unimp_40              40
+#define __pse51_unimp_41              41
+#define __pse51_unimp_42              42
 #define __pse51_timer_create          43
 #define __pse51_timer_delete          44
 #define __pse51_timer_settime         45

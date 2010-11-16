@@ -7,6 +7,4 @@ xeno_posix-y := sched.o thread_attr.o thread.o mutex_attr.o mutex.o \
 
 xeno_posix-$(CONFIG_XENO_OPT_POSIX_SHM) += shm.o
 
-xeno_posix-$(CONFIG_XENO_OPT_POSIX_INTR) += intr.o
-
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -I$(srctree)/include/xenomai/posix -I$(src)/.. -Iinclude/xenomai

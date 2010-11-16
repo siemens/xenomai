@@ -32,7 +32,6 @@
 #include <posix/mutex.h>
 #include <posix/cond.h>
 #include <posix/mq.h>
-#include <posix/intr.h>
 #include <posix/registry.h>	/* For PSE51_MAXNAME. */
 #include <posix/sem.h>
 #include <posix/shm.h>
@@ -1920,130 +1919,6 @@ static int __mq_notify(mqd_t uqd,
 	return 0;
 }
 
-#ifdef CONFIG_XENO_OPT_POSIX_INTR
-
-static int __pse51_intr_handler(xnintr_t *cookie)
-{
-	pthread_intr_t intr = PTHREAD_IDESC(cookie);
-
-	++intr->pending;
-
-	if (xnsynch_nsleepers(&intr->synch_base) > 0)
-		xnsynch_flush(&intr->synch_base, 0);
-
-	if (intr->mode & XN_ISR_PROPAGATE)
-		return XN_ISR_PROPAGATE | (intr->mode & XN_ISR_NOENABLE);
-
-	return XN_ISR_HANDLED | (intr->mode & XN_ISR_NOENABLE);
-}
-
-static int __intr_attach(pthread_intr_t __user *u_intr,
-			 unsigned int irq,
-			 int mode)
-{
-	pthread_intr_t intr;
-	int err;
-
-	if (mode & ~(XN_ISR_NOENABLE | XN_ISR_PROPAGATE))
-		return -EINVAL;
-
-	err = pthread_intr_attach_np(&intr, irq, &__pse51_intr_handler, NULL);
-
-	if (err == 0) {
-		intr->mode = mode;
-		if (__xn_safe_copy_to_user(u_intr, &intr, sizeof(intr)))
-			return -EFAULT;
-	}
-
-	return err == 0 ? 0 : -thread_get_errno();
-}
-
-static int __intr_detach(const pthread_intr_t intr)
-{
-	int err = pthread_intr_detach_np(intr);
-	return err == 0 ? 0 : -thread_get_errno();
-}
-
-static int __intr_wait(const pthread_intr_t intr,
-		       const struct timespec __user *u_ts)
-{
-	union xnsched_policy_param param;
-	struct timespec ts;
-	xnthread_t *thread;
-	xnticks_t timeout;
-	int err = 0;
-	spl_t s;
-
-	if (u_ts) {
-		if (__xn_safe_copy_from_user(&ts, u_ts, sizeof(ts)))
-			return -EFAULT;
-
-		if (ts.tv_sec == 0 && ts.tv_nsec == 0)
-			return -EINVAL;
-
-		timeout = ts2ticks_ceil(&ts) + 1;
-	} else
-		timeout = XN_INFINITE;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (!pse51_obj_active(intr, PSE51_INTR_MAGIC, struct pse51_interrupt)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EINVAL;
-	}
-
-	if (intr->owningq != pse51_kqueues(0)) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -EPERM;
-	}
-
-	if (!intr->pending) {
-		thread = xnpod_current_thread();
-
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
-			/* Boost the waiter above all regular threads if needed. */
-			param.rt.prio = XNSCHED_IRQ_PRIO;
-			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
-		}
-
-		xnsynch_sleep_on(&intr->synch_base, timeout, XN_RELATIVE);
-
-		if (xnthread_test_info(thread, XNRMID))
-			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (xnthread_test_info(thread, XNTIMEO))
-			err = -ETIMEDOUT;	/* Timeout. */
-		else if (xnthread_test_info(thread, XNBREAK))
-			err = -EINTR;	/* Unblocked. */
-		else {
-			err = intr->pending;
-			intr->pending = 0;
-		}
-	} else {
-		err = intr->pending;
-		intr->pending = 0;
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-
-static int __intr_control(const pthread_intr_t intr,
-			  int cmd)
-{
-	int err = pthread_intr_control_np(intr, cmd);
-	return err == 0 ? 0 : -thread_get_errno();
-}
-
-#else /* !CONFIG_XENO_OPT_POSIX_INTR */
-
-#define __intr_attach  __pse51_call_not_available
-#define __intr_detach  __pse51_call_not_available
-#define __intr_wait    __pse51_call_not_available
-#define __intr_control __pse51_call_not_available
-
-#endif /* !CONFIG_XENO_OPT_POSIX_INTR */
-
 static int __timer_create(clockid_t clock,
 			  const struct sigevent __user *u_sev,
 			  timer_t __user *u_tm)
@@ -2642,10 +2517,6 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__pse51_mq_receive, __mq_receive, primary),
 	SKINCALL_DEF(__pse51_mq_timedreceive, __mq_timedreceive, primary),
 	SKINCALL_DEF(__pse51_mq_notify, __mq_notify, primary),
-	SKINCALL_DEF(__pse51_intr_attach, __intr_attach, any),
-	SKINCALL_DEF(__pse51_intr_detach, __intr_detach, any),
-	SKINCALL_DEF(__pse51_intr_wait, __intr_wait, primary),
-	SKINCALL_DEF(__pse51_intr_control, __intr_control, any),
 	SKINCALL_DEF(__pse51_timer_create, __timer_create, any),
 	SKINCALL_DEF(__pse51_timer_delete, __timer_delete, any),
 	SKINCALL_DEF(__pse51_timer_settime, __timer_settime, primary),
