@@ -24,7 +24,10 @@
 #include "copperplate/heapobj.h"
 #include "tlsf/tlsf.h"
 
-static int tlsf_overhead_bytes;
+/* XXX: depends on the implementation included from tlsf/, YMMV. */
+#define TLSF_BLOCK_OVERHEAD  8
+
+static int tlsf_pool_overhead;
 
 void mem_destroy(struct heapobj *hobj)
 {
@@ -81,7 +84,7 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 		 * When the memory area is unspecified, obtain it from
 		 * the main pool, accounting for the TLSF overhead.
 		 */
-		size += tlsf_overhead_bytes;
+		size += tlsf_pool_overhead;
 		mem = tlsf_malloc(size);
 		if (mem == NULL)
 			return -ENOMEM;
@@ -105,7 +108,8 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems)
 {
-	if (size < 16)	/* Minimum block size for TLSF. */
+	size += TLSF_BLOCK_OVERHEAD;
+	if (size < 16)
 		size = 16;
 
 	return heapobj_init_private(hobj, name, size * elems, NULL);
@@ -154,8 +158,8 @@ int heapobj_pkg_init_private(void)
 		panic("cannot initialize TLSF memory manager");
 
 	destroy_memory_pool(mem);
-	tlsf_overhead_bytes = __mem_pool_arg - size;
-	tlsf_overhead_bytes = (tlsf_overhead_bytes + 15) & ~15;
+	tlsf_pool_overhead = __mem_pool_arg - size;
+	tlsf_pool_overhead = (tlsf_pool_overhead + 15) & ~15;
 	tlsf_free(mem);
 
 	return 0;

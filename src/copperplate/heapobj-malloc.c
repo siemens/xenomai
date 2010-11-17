@@ -24,6 +24,8 @@
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 
+#define MALLOC_BLOCK_OVERHEAD  8
+
 void mem_destroy(struct heapobj *hobj)
 {
 }
@@ -116,5 +118,6 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 			       size_t size, int elems)
 {
+	size += MALLOC_BLOCK_OVERHEAD;
 	return heapobj_init_private(hobj, name, size * elems, NULL);
 }
