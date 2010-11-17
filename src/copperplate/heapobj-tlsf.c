@@ -87,7 +87,10 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 			return -ENOMEM;
 	}
 
-	snprintf(hobj->name, sizeof(hobj->name), "%s", name);
+	if (name)
+		snprintf(hobj->name, sizeof(hobj->name), "%s", name);
+	else
+		snprintf(hobj->name, sizeof(hobj->name), "%p", hobj);
 #ifdef CONFIG_XENO_PSHARED
 	hobj->ops = &tlsf_ops;
 #endif

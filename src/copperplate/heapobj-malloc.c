@@ -105,7 +105,10 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 #endif
 	hobj->pool = mem;	/* Never used. */
 	hobj->size = size;
-	snprintf(hobj->name, sizeof(hobj->name), "%s", name);
+	if (name)
+		snprintf(hobj->name, sizeof(hobj->name), "%s", name);
+	else
+		snprintf(hobj->name, sizeof(hobj->name), "%p", hobj);
 
 	return 0;
 }

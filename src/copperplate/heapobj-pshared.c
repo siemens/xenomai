@@ -606,7 +606,11 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	if (size - sizeof(struct heap_extent) < HOBJ_PAGE_SIZE * 2)
 		size += HOBJ_PAGE_SIZE * 2;
 
-	snprintf(hobj->name, sizeof(hobj->name), "%s:%s", session, name);
+	if (name)
+		snprintf(hobj->name, sizeof(hobj->name), "%s:%s", session, name);
+	else
+		snprintf(hobj->name, sizeof(hobj->name), "%s:%p", session, hobj);
+
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
 	len = size + sizeof(*heap);
 
