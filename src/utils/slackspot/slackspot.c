@@ -140,6 +140,46 @@ static int filter_exe(struct filter *f, struct relax_spot *p)
 	return fnmatch(f->exp, p->exe_path, FNM_PATHNAME);
 }
 
+static int filter_function(struct filter *f, struct relax_spot *p)
+{
+	struct backtrace *b;
+	int depth;
+
+	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
+		if (b->function && !fnmatch(f->exp, b->function, 0))
+			return 0;
+	}
+
+	return FNM_NOMATCH;
+}
+
+static int filter_file(struct filter *f, struct relax_spot *p)
+{
+	struct backtrace *b;
+	int depth;
+
+	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
+		if (b->file && !fnmatch(f->exp, b->file, FNM_PATHNAME))
+			return 0;
+	}
+
+	return FNM_NOMATCH;
+}
+
+static int filter_map(struct filter *f, struct relax_spot *p)
+{
+	struct backtrace *b;
+	int depth;
+
+	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
+		if (*b->mapname != '?' &&
+		    !fnmatch(f->exp, b->mapname, FNM_PATHNAME))
+			return 0;
+	}
+
+	return FNM_NOMATCH;
+}
+
 static int build_filter_list(const char *filters)
 {
 	char *filter, *name;
@@ -161,6 +201,12 @@ static int build_filter_list(const char *filters)
 			f->op = filter_pid;
 		else if (strcmp(name, "exe") == 0)
 			f->op = filter_exe;
+		else if (strcmp(name, "function") == 0)
+			f->op = filter_function;
+		else if (strcmp(name, "file") == 0)
+			f->op = filter_file;
+		else if (strcmp(name, "map") == 0)
+			f->op = filter_map;
 		else
 			return EINVAL;
 		f->next = filter_list;
