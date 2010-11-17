@@ -100,6 +100,10 @@ static inline int __holder_linked(void *heap, struct holder *holder)
 		 holder->prev == __hoff(heap, holder));
 }
 
+/*
+ * XXX: holder_init() is mandatory if you later want to use this
+ * predicate.
+ */
 static inline int holder_linked(struct holder *holder)
 {
 	return __holder_linked(__pshared_heap, holder);
