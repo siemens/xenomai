@@ -123,6 +123,8 @@ struct relax_record {
 		u32 proghash;
 		/* Pid of the caller. */
 		pid_t pid;
+		/* Reason for relaxing. */
+		int reason;
 	} spot;
 	struct relax_record *r_next;
 	struct relax_record *h_next;
@@ -187,14 +189,15 @@ DEFINE_PRIVATE_XNLOCK(relax_lock);
  * executable mappings that could be involved).
  */
 
-void xndebug_notify_relax(struct xnthread *thread)
+void xndebug_notify_relax(struct xnthread *thread, int reason)
 {
 	xnshadow_send_sig(thread, SIGSHADOW,
-			  SIGSHADOW_ACTION_BACKTRACE,
+			  sigshadow_int(SIGSHADOW_ACTION_BACKTRACE, reason),
 			  1);
 }
 
-void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace)
+void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace,
+			 int reason)
 {
 	unsigned long backtrace[RELAX_CALLDEPTH];
 	struct relax_record *p, **h;
@@ -297,6 +300,7 @@ void xndebug_trace_relax(int nr, unsigned long __user *u_backtrace)
 	spot.depth = depth;
 	spot.proghash = thread->proghash;
 	spot.pid = xnthread_user_pid(thread);
+	spot.reason = reason;
 	strcpy(spot.thread, thread->name);
 	hash = jhash2((u32 *)&spot, sizeof(spot) / sizeof(u32), 0);
 
@@ -416,6 +420,16 @@ static void *relax_vfile_next(struct xnvfile_regular_iterator *it)
 	return p;
 }
 
+static const char *reason_str[] = {
+    [SIGDEBUG_UNDEFINED] = "undefined",
+    [SIGDEBUG_MIGRATE_SIGNAL] = "signal",
+    [SIGDEBUG_MIGRATE_SYSCALL] = "syscall",
+    [SIGDEBUG_MIGRATE_FAULT] = "fault",
+    [SIGDEBUG_MIGRATE_PRIOINV] = "pi-error",
+    [SIGDEBUG_NOMLOCK] = "mlock-check",
+    [SIGDEBUG_WATCHDOG] = "runaway-break",
+};
+
 static int relax_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 {
 	struct relax_vfile_priv *priv = xnvfile_iterator_priv(it);
@@ -433,8 +447,8 @@ static int relax_vfile_show(struct xnvfile_regular_iterator *it, void *data)
 	}
 
 	xnvfile_printf(it, "%s\n", p->exe_path ?: "?");
-	xnvfile_printf(it, "%d %d %s\n", p->spot.pid, p->hits,
-		       p->spot.thread);
+	xnvfile_printf(it, "%d %d %s %s\n", p->spot.pid, p->hits,
+		       reason_str[p->spot.reason], p->spot.thread);
 
 	for (n = 0; n < p->spot.depth; n++)
 		xnvfile_printf(it, "0x%lx %s\n",

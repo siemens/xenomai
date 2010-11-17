@@ -103,6 +103,7 @@ struct ldpath_dir {
 struct relax_spot {
 	char *exe_path;
 	char *thread_name;
+	char *reason;
 	pid_t pid;
 	int hits;
 	int depth;
@@ -310,9 +311,9 @@ static void read_spots(FILE *fp)
 			goto bad_input;
 		}
 
-		ret = fscanf(fp, "%d %d %a[^\n]\n",
-			     &p->pid, &p->hits, &p->thread_name);
-		if (ret != 3)
+		ret = fscanf(fp, "%d %d %a[^ ] %a[^\n]\n",
+			     &p->pid, &p->hits, &p->reason, &p->thread_name);
+		if (ret != 4)
 			goto bad_input;
 
 		p->depth = 0;
@@ -381,6 +382,7 @@ static void display_spots(void)
 		if (p->hits > 1)
 			printf(" (%d times)", p->hits);
 		printf(":\n");
+		printf("Caused by: %s\n", p->reason);
 		for (depth = 0; depth < p->depth; depth++)
 			put_location(p, depth);
 	}

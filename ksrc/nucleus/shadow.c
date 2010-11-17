@@ -1169,7 +1169,7 @@ void xnshadow_relax(int notify, int reason)
 	xnstat_counter_inc(&thread->stat.ssw);	/* Account for secondary mode switch. */
 
 	if (notify) {
-		xndebug_notify_relax(thread);
+		xndebug_notify_relax(thread, reason);
 		if (xnthread_test_state(thread, XNTRAPSW)) {
 			/* Help debugging spurious relaxes. */
 			memset(&si, 0, sizeof(si));
@@ -2127,9 +2127,10 @@ static int xnshadow_sys_current_info(xnthread_info_t __user *u_info)
 	return __xn_safe_copy_to_user(u_info, &info, sizeof(*u_info));
 }
 
-static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace)
+static int xnshadow_sys_backtrace(int nr, unsigned long *u_backtrace,
+				  int reason)
 {
-	xndebug_trace_relax(nr, u_backtrace);
+	xndebug_trace_relax(nr, u_backtrace, reason);
 	return 0;
 }
 

@@ -10,13 +10,12 @@ static struct sigaction xeno_saved_sigshadow_action;
 int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 {
 	void *frames[SIGSHADOW_BACKTRACE_DEPTH];
-	int action, nr, skip;
+	int action, arg, nr, skip;
 
 	if (si->si_code != SI_QUEUE)
 		return 0;
 
 	action = sigshadow_action(si->si_int);
-
 	switch(action) {
 	case SIGSHADOW_ACTION_HARDEN:
 		XENOMAI_SYSCALL1(__xn_sys_migrate, XENOMAI_XENO_DOMAIN);
@@ -26,17 +25,19 @@ int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 		struct sched_param param;
 		int policy;
 
-		param.sched_priority = sigshadow_arg(si->si_int);
+		arg = sigshadow_arg(si->si_int);
+		param.sched_priority = arg;
 		policy = param.sched_priority > 0 ? SCHED_FIFO: SCHED_OTHER;
 		pthread_setschedparam(pthread_self(), policy, &param);
 		break;
 	}
 
 	case SIGSHADOW_ACTION_BACKTRACE:
+		arg = sigshadow_arg(si->si_int);
 		nr = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
 		/* Skip the sighandler context. */
 		skip = nr > 3 ? 3 : 0;
-		XENOMAI_SYSCALL2(__xn_sys_backtrace, nr - skip, frames + skip);
+		XENOMAI_SYSCALL3(__xn_sys_backtrace, nr - skip, frames + skip, arg);
 		break;
 
 	default:
