@@ -296,8 +296,11 @@ static void read_spots(FILE *fp)
 	int ret;
 
 	ret = fscanf(fp, "%d\n", &spot_count);
-	if (ret != 1)
+	if (ret != 1) {
+		if (feof(fp))
+			return;
 		goto bad_input;
+	}
 
 	for (;;) {
 		p = malloc(sizeof(*p));
