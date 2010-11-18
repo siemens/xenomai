@@ -31,6 +31,7 @@
 #include "copperplate/heapobj.h"
 #include "copperplate/clockobj.h"
 #include "copperplate/registry.h"
+#include "copperplate/timerobj.h"
 
 unsigned int __tick_period_arg = 1000; /* Default, in microseconds. */
 
@@ -203,6 +204,11 @@ int copperplate_init(int argc, char *const argv[])
 
 	atexit(do_cleanup);
 	threadobj_pkg_init();
+	ret = timerobj_pkg_init();
+	if (ret) {
+		warning("failed to initialize timer support");
+		return ret;
+	}
 
 	if (!__no_mlock_arg) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);

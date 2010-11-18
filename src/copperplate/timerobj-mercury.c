@@ -105,3 +105,8 @@ int timerobj_stop(struct timerobj *tmobj)
 
 	return 0;
 }
+
+int timerobj_pkg_init(void)
+{
+	return 0;
+}

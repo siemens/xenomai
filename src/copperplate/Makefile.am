@@ -9,7 +9,6 @@ libcopperplate_la_SOURCES =	\
 	init.c		\
 	panic.c		\
 	syncobj.c	\
-	timerobj.c	\
 	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
@@ -23,10 +22,12 @@ libcopperplate_la_CPPFLAGS +=	\
 	-I$(top_srcdir)/include/posix	\
 	-I$(top_srcdir)/include
 libcopperplate_la_SOURCES +=	\
-	threadobj-cobalt.c
+	threadobj-cobalt.c	\
+	timerobj-cobalt.c
 else
 libcopperplate_la_SOURCES +=	\
-	threadobj-mercury.c \
+	threadobj-mercury.c	\
+	timerobj-mercury.c	\
 	notifier.c
 endif
 

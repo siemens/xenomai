@@ -24,6 +24,8 @@
 struct timerobj {
 	void (*handler)(struct timerobj *tmobj);
 	timer_t timer;
+	struct itimerspec spec;
+	struct pvholder link;
 };
 
 #ifdef __cplusplus
@@ -39,6 +41,8 @@ int timerobj_start(struct timerobj *tmobj,
 		   struct itimerspec *it);
 
 int timerobj_stop(struct timerobj *tmobj);
+
+int timerobj_pkg_init(void);
 
 #ifdef __cplusplus
 }
