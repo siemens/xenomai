@@ -561,12 +561,12 @@ int pthread_kill(pthread_t thread, int sig)
 
 	if (sig == SIGRESM) {
 		xnpod_resume_thread(&thread->threadbase, XNSUSP);
-		goto unlock_and_exit;
+		goto resched;
 	}
 
 	if (sig == SIGRELS) {
 		xnpod_unblock_thread(&thread->threadbase);
-		goto unlock_and_exit;
+		goto resched;
 	}
 
 	if ((unsigned)sig > SIGRTMAX) {
@@ -580,10 +580,13 @@ int pthread_kill(pthread_t thread, int sig)
 		goto unlock_and_exit;
 	}
 
-	if (pse51_sigqueue_inner(thread, si))
-		xnpod_schedule();
+	if (!pse51_sigqueue_inner(thread, si))
+		goto unlock_and_exit;
 
- unlock_and_exit:
+resched:
+	xnpod_schedule();
+
+unlock_and_exit:
 
 	xnlock_put_irqrestore(&nklock, s);
 
