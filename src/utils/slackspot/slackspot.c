@@ -559,7 +559,7 @@ static inline void put_location(struct relax_spot *p, int depth)
 	struct backtrace *b = p->backtrace + depth;
 	const struct location *where = b->where;
 
-	printf("   #%-2d 0x%.*lx ", depth, __WORDSIZE / 8, where->pc);
+	printf("   #%-2d 0x%.*lx ", depth, __WORDSIZE / 4, where->pc);
 	if (where->function)
 		printf("%s() ", where->function);
 	if (where->file) {
