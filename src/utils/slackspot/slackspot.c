@@ -100,6 +100,22 @@ struct ldpath_dir {
 	struct ldpath_dir *next;
 } *ldpath_list = NULL;
 
+struct location {
+	unsigned long pc;
+	char *function;
+	char *file;
+	int lineno;
+	struct location *next;	/* next in mapping. */
+};
+
+struct mapping {
+	char *name;
+	struct location *locs;
+	struct mapping *next;
+} *mapping_list = NULL;
+
+static const struct location undefined_location; /* All zero. */
+
 struct relax_spot {
 	char *exe_path;
 	char *thread_name;
@@ -109,10 +125,8 @@ struct relax_spot {
 	int depth;
 	struct backtrace {
 		unsigned long pc;
-		char *mapname;
-		char *function;
-		char *file;
-		int lineno;
+		struct mapping *mapping;
+		const struct location *where;
 	} backtrace[SIGSHADOW_BACKTRACE_DEPTH];
 	struct relax_spot *next;
 } *spot_list = NULL;
@@ -146,7 +160,8 @@ static int filter_function(struct filter *f, struct relax_spot *p)
 	int depth;
 
 	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
-		if (b->function && !fnmatch(f->exp, b->function, 0))
+		if (b->where->function &&
+		    !fnmatch(f->exp, b->where->function, 0))
 			return 0;
 	}
 
@@ -159,7 +174,8 @@ static int filter_file(struct filter *f, struct relax_spot *p)
 	int depth;
 
 	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
-		if (b->file && !fnmatch(f->exp, b->file, FNM_PATHNAME))
+		if (b->where->file &&
+		    !fnmatch(f->exp, b->where->file, FNM_PATHNAME))
 			return 0;
 	}
 
@@ -172,8 +188,8 @@ static int filter_map(struct filter *f, struct relax_spot *p)
 	int depth;
 
 	for (depth = 0, b = p->backtrace; depth < p->depth; b++, depth++) {
-		if (*b->mapname != '?' &&
-		    !fnmatch(f->exp, b->mapname, FNM_PATHNAME))
+		if (*b->mapping->name != '?' &&
+		    !fnmatch(f->exp, b->mapping->name, FNM_PATHNAME))
 			return 0;
 	}
 
@@ -292,24 +308,24 @@ bad_output:
 	error(1, 0, "garbled gcc output for -print-search-dirs");
 }
 
-static char *resolve_path(char *mapname)
+static char *resolve_path(char *mapping)
 {
 	struct ldpath_dir *dpath;
 	char *path, *basename;
 	int ret;
 
 	/*
-	 * Don't use the original map name verbatim if CROSS_COMPILE
-	 * was specified, it is unlikely that the right target file
-	 * could be found at the same place on the host.
+	 * Don't use the original mapping name verbatim if
+	 * CROSS_COMPILE was specified, it is unlikely that the right
+	 * target file could be found at the same place on the host.
 	 */
-	if (*mapname == '?' ||
-	    (toolchain_prefix == NULL && access(mapname, F_OK) == 0))
-		return mapname;
+	if (*mapping == '?' ||
+	    (toolchain_prefix == NULL && access(mapping, F_OK) == 0))
+		return mapping;
 
-	basename = strrchr(mapname, '/');
+	basename = strrchr(mapping, '/');
 	if (basename++ == NULL)
-		basename = mapname;
+		basename = mapping;
 
 	for (dpath = ldpath_list; dpath; dpath = dpath->next) {
 		ret = asprintf(&path, "%s/%s", dpath->path, basename);
@@ -317,17 +333,14 @@ static char *resolve_path(char *mapname)
 			goto no_mem;
 		/* Pick first match. */
 		if (access(path, F_OK) == 0) {
-			free(mapname);
+			free(mapping);
 			return path;
 		}
 		free(path);
 	}
 
-	/*
-	 * No match. Leave the mapname unchanged, addr2line will
-	 * complain rightfully.
-	 */
-	return mapname;
+	/* No match. Leave the mapping name unchanged */
+	return mapping;
 
 no_mem:
 	error(1, ENOMEM, "resolve_path failed");
@@ -337,8 +350,10 @@ no_mem:
 static void read_spots(FILE *fp)
 {
 	struct relax_spot *p;
+	struct mapping *m;
 	unsigned long pc;
-	char *mapname, c;
+	char *mapping, c;
+	ENTRY e, *ep;
 	int ret;
 
 	ret = fscanf(fp, "%d\n", &spot_count);
@@ -347,6 +362,8 @@ static void read_spots(FILE *fp)
 			return;
 		goto bad_input;
 	}
+
+	hcreate(spot_count * SIGSHADOW_BACKTRACE_DEPTH);
 
 	for (;;) {
 		p = malloc(sizeof(*p));
@@ -373,16 +390,38 @@ static void read_spots(FILE *fp)
 			if (c == '.' && getc(fp) == '\n')
 				break;
 			ungetc(c, fp);
-			ret = fscanf(fp, "%lx %a[^\n]\n", &pc, &mapname);
+			ret = fscanf(fp, "%lx %a[^\n]\n", &pc, &mapping);
 			if (ret != 2)
 				goto bad_input;
+
+			mapping = resolve_path(mapping);
+			e.key = mapping;
+			ep = hsearch(e, FIND);
+			if (ep == NULL) {
+				m = malloc(sizeof(*m));
+				if (m == NULL)
+					goto no_mem;
+				m->name = mapping;
+				m->locs = NULL;
+				m->next = mapping_list;
+				mapping_list = m;
+				e.data = m;
+				ep = hsearch(e, ENTER);
+				if (ep == NULL)
+					goto no_mem;
+			} else {
+				free(mapping);
+				m = ep->data;
+			}
+
 			/*
 			 * Move one byte backward to point to the call
 			 * site, not to the next instruction. This
 			 * usually works fine...
 			 */
 			p->backtrace[p->depth].pc = pc - 1;
-			p->backtrace[p->depth].mapname = resolve_path(mapname);
+			p->backtrace[p->depth].mapping = m;
+			p->backtrace[p->depth].where = &undefined_location;
 			p->depth++;
 		}
 
@@ -395,24 +434,143 @@ static void read_spots(FILE *fp)
 
 bad_input:
 	error(1, 0, "garbled trace input");
+no_mem:
+	error(1, ENOMEM, "read_spots failed");
+}
+
+static inline
+struct location *find_location(struct location *head, unsigned long pc)
+{
+	struct location *l = head;
+
+	while (l) {
+		if (l->pc == pc)
+			return l;
+		l = l->next;
+	}
+
+	return NULL;
+}
+
+static void resolve_spots(void)
+{
+	char *a2l, *a2lcmd, *s, buf[BUFSIZ];
+	struct relax_spot *p;
+	struct backtrace *b;
+	struct location *l;
+	struct mapping *m;
+	int ret, depth;
+	FILE *fp;
+
+	/*
+	 * Fill the mapping cache with one location record per
+	 * distinct PC value mentioned for each mapping.  The basic
+	 * idea is to exec a single addr2line instance for all PCs
+	 * belonging to any given mapping, instead of one instance per
+	 * call site in each and every frame. This way, we may run
+	 * slackspot on low-end targets with limited CPU horsepower,
+	 * without going for unreasonably long coffee breaks.
+	 */
+	for (p = spot_list; p; p = p->next) {
+		for (depth = 0; depth < p->depth; depth++) {
+			b = p->backtrace + depth;
+			l = find_location(b->mapping->locs, b->pc);
+			if (l) {
+				/* PC found in mapping cache. */
+				b->where = l;
+				continue;
+			}
+
+			l = malloc(sizeof(*l));
+			if (l == NULL)
+				goto no_mem;
+
+			l->pc = b->pc;
+			l->function = NULL;
+			l->file = NULL;
+			l->lineno = 0;
+			b->where = l;
+			l->next = b->mapping->locs;
+			b->mapping->locs = l;
+		}
+	}
+
+	/*
+	 * For each mapping, try resolving PC values as source
+	 * locations.
+	 */
+	for (m = mapping_list; m; m = m->next) {
+		if (*m->name == '?' || access(m->name, F_OK))
+			continue;
+
+		ret = asprintf(&a2l,
+			       "%saddr2line --demangle --inlines --functions --exe=%s",
+			       toolchain_prefix, m->name);
+		if (ret < 0)
+			goto no_mem;
+
+		for (l = m->locs, s = a2l, a2lcmd = NULL; l; l = l->next) {
+			ret = asprintf(&a2lcmd, "%s 0x%lx", s, l->pc);
+			if (ret < 0)
+				goto no_mem;
+			free(s);
+			s = a2lcmd;
+		}
+
+		fp = popen(a2lcmd, "r");
+		if (fp == NULL)
+			error(1, errno, "cannot run %s", a2lcmd);
+
+		for (l = m->locs; l; l = l->next) {
+			ret = fscanf(fp, "%as\n", &l->function);
+			if (ret != 1)
+				goto bad_output;
+			/*
+			 * Don't trust fscanf range specifier, we may
+			 * have colons in the pathname.
+			 */
+			s = fgets(buf, sizeof(buf), fp);
+			if (s == NULL)
+				goto bad_output;
+			s = strrchr(s, ':');
+			if (s == NULL)
+				continue;
+			*s++ = '\0';
+			if (strcmp(buf, "??")) {
+				l->lineno = atoi(s);
+				l->file = strdup(buf);
+			}
+		}
+
+		pclose(fp);
+		free(a2lcmd);
+	}
+
+	return;
+
+bad_output:
+	error(1, 0, "garbled addr2line output");
+no_mem:
+	error(1, ENOMEM, "resolve_locations failed");
 }
 
 static inline void put_location(struct relax_spot *p, int depth)
 {
 	struct backtrace *b = p->backtrace + depth;
+	const struct location *where = b->where;
 
-	printf("   #%-2d 0x%.*lx ", depth, __WORDSIZE / 8, b->pc);
-	if (b->function)
-		printf("%s() ", b->function);
-	if (b->file) {
-		printf("in %s", b->file);
-		if (b->lineno)
-			printf(":%d", b->lineno);
+	printf("   #%-2d 0x%.*lx ", depth, __WORDSIZE / 8, where->pc);
+	if (where->function)
+		printf("%s() ", where->function);
+	if (where->file) {
+		printf("in %s", where->file);
+		if (where->lineno)
+			printf(":%d", where->lineno);
 	} else {
-		if (b->function == NULL)
+		if (where->function == NULL)
 			printf("??? ");
-		if (*b->mapname != '?')
-			printf("in [%s]", b->mapname);
+		if (*b->mapping->name != '?')
+			printf("in [%s]", b->mapping->name);
 	}
 	putchar('\n');
 }
@@ -439,69 +597,6 @@ static void display_spots(void)
 	if (hits < spot_count)
 		printf("\nWARNING: only %d/%d hits reported (some were lost)\n",
 		       hits, spot_count);
-}
-
-static void resolve_spots(void)
-{
-	char *a2l, *a2lcmd, *s, buf[BUFSIZ];
-	struct relax_spot *p;
-	int ret, depth;
-	FILE *fp;
-
-	ret = asprintf(&a2l, "%saddr2line", toolchain_prefix);
-	if (ret < 0)
-		goto no_mem;
-
-	for (p = spot_list; p; p = p->next) {
-		for (depth = 0; depth < p->depth; depth++) {
-			p->backtrace[depth].function = NULL;
-			p->backtrace[depth].file = NULL;
-			p->backtrace[depth].lineno = 0;
-
-			if (*p->backtrace[depth].mapname == '?' ||
-			    access(p->backtrace[depth].mapname, F_OK))
-				continue;
-
-			ret = asprintf(&a2lcmd,
-				       "%s --demangle --inlines --functions --exe=%s 0x%lx",
-				       a2l, p->backtrace[depth].mapname,
-				       p->backtrace[depth].pc);
-			if (ret < 0)
-				goto no_mem;
-			fp = popen(a2lcmd, "r");
-			if (fp == NULL)
-				error(1, errno, "cannot run %s", a2lcmd);
-
-			ret = fscanf(fp, "%as\n", &p->backtrace[depth].function);
-			if (ret != 1)
-				goto next;
-			/*
-			 * Don't trust fscanf range specifier, we may
-			 * have colons in the pathname.
-			 */
-			s = fgets(buf, sizeof(buf), fp);
-			if (s == NULL)
-				goto next;
-			s = strrchr(s, ':');
-			if (s == NULL)
-				goto next;
-			*s++ = '\0';
-			if (strcmp(buf, "??")) {
-				p->backtrace[depth].lineno = atoi(s);
-				p->backtrace[depth].file = strdup(buf);
-			}
-		next:
-			free(a2lcmd);
-			pclose(fp);
-		}
-	}
-
-	free(a2l);
-
-	return;
-
-no_mem:
-	error(1, ENOMEM, "collect_ldd failed");
 }
 
 static void usage(void)
