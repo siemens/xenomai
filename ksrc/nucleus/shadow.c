@@ -1616,7 +1616,7 @@ void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
 }
 EXPORT_SYMBOL_GPL(xnshadow_call_mayday);
 
-static int xnshadow_sys_mayday(struct pt_regs *regs)
+static int xnshadow_sys_mayday(void)
 {
 	struct xnthread *cur;
 
@@ -1627,7 +1627,7 @@ static int xnshadow_sys_mayday(struct pt_regs *regs)
 		 * we have just forced on it will cause it to
 		 * relax. See do_hisyscall_event().
 		 */
-		xnarch_fixup_mayday(xnthread_archtcb(cur), regs);
+		xnarch_fixup_mayday(xnthread_archtcb(cur), cur->regs);
 		return 0;
 	}
 
