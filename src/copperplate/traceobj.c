@@ -130,8 +130,11 @@ void __traceobj_mark(struct traceobj *trobj,
 	pthread_mutex_lock(&trobj->lock);
 
 	cur_mark = trobj->cur_mark++;
-	if (cur_mark >= trobj->nr_marks)
+	if (cur_mark >= trobj->nr_marks) {
+		trobj->cur_mark = cur_mark;
+		dump_marks(trobj);
 		panic("too many marks");
+	}
 
 	tmk = trobj->marks + cur_mark;
 	tmk->file = file;
