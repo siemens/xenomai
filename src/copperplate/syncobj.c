@@ -118,7 +118,7 @@ static void syncobj_cleanup_wait(void *arg)
 	struct syncobj *sobj = arg;
 
 	list_remove_init(&current->wait_link);
-	syncobj_test_finalize(sobj);
+	pthread_mutex_unlock(&sobj->lock);
 }
 
 static void syncobj_enqueue_waiter(struct syncobj *sobj, struct threadobj *thobj)
@@ -300,6 +300,7 @@ int syncobj_destroy(struct syncobj *sobj)
 
 	ret = syncobj_flush(sobj, SYNCOBJ_DELETED);
 	if (ret == 0) {
+		/* No thread awaken - we may dispose immediately. */
 		sobj->release_count = 1;
 		otype = sobj->cancel_type;
 		syncobj_test_finalize(sobj);
