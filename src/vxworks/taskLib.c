@@ -219,7 +219,7 @@ static void *task_trampoline(void *arg)
 	struct wind_task_args *args = &task->args;
 	int ret;
 
-	ret = threadobj_prologue(&task->thobj);
+	ret = threadobj_prologue(&task->thobj, task->name);
 	if (ret) {
 		warning("task %s prologue failed (errno=%d)",
 			task->name, -ret);
@@ -298,6 +298,12 @@ static STATUS __taskInit(struct wind_task *task,
 	task->tcb = tcb;
 	tcb->magic = task_magic;
 	tcb->opaque = task;
+	/*
+	 * CAUTION: tcb->status in only modified by the owner task
+	 * (see suspend/resume hooks), or when such task is guaranteed
+	 * to be not running, e.g. in taskActivate(). So we do _not_
+	 * take any lock specifically for updating it.
+	 */
 	tcb->status = WIND_SUSPEND;
 	tcb->safeCnt = 0;
 	tcb->flags = flags;
@@ -745,7 +751,6 @@ STATUS taskDelay(int ticks)
 	}
 
 	current = wind_task_current();
-
 	if (current == NULL) {
 		errno = S_objLib_OBJ_NO_METHOD;
 		return ERROR;

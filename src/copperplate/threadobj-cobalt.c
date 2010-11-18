@@ -79,8 +79,11 @@ void threadobj_init(struct threadobj *thobj,
 	pthread_mutexattr_destroy(&mattr);
 }
 
-int threadobj_prologue(struct threadobj *thobj) /* thobj->lock free */
+/* thobj->lock free */
+int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
+	pthread_set_name_np(pthread_self(), name);
+
 	pthread_mutex_lock(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
 	pthread_mutex_unlock(&list_lock);

@@ -108,7 +108,8 @@ extern "C" {
 void threadobj_init(struct threadobj *thobj,
 		    struct threadobj_init_data *idata);
 
-int threadobj_prologue(struct threadobj *thobj);
+int threadobj_prologue(struct threadobj *thobj,
+		       const char *name);
 
 int threadobj_lock(struct threadobj *thobj);
 
