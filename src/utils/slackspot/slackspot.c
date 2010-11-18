@@ -131,7 +131,7 @@ struct relax_spot {
 	struct relax_spot *next;
 } *spot_list = NULL;
 
-int spot_count;
+int spot_count, filtered_count = 0;
 
 const char *toolchain_prefix;
 
@@ -582,8 +582,10 @@ static void display_spots(void)
 
 	for (p = spot_list, hits = 0; p; p = p->next) {
 		hits += p->hits;
-		if (match_filter_list(p))
+		if (match_filter_list(p)) {
+			filtered_count++;
 			continue;
+		}
 		printf("\nThread[%d] \"%s\" started by %s",
 		       p->pid, p->thread_name, p->exe_path);
 		if (p->hits > 1)
@@ -594,8 +596,11 @@ static void display_spots(void)
 			put_location(p, depth);
 	}
 
+	if (filtered_count)
+		printf("\n(%d spots filtered out)\n",
+		       filtered_count);
 	if (hits < spot_count)
-		printf("\nWARNING: only %d/%d hits reported (some were lost)\n",
+		printf("\nWARNING: only %d/%d spots retrieved (some were lost)\n",
 		       hits, spot_count);
 }
 
