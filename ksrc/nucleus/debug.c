@@ -474,6 +474,7 @@ static ssize_t relax_vfile_store(struct xnvfile_input *input)
 	relax_record_list = NULL;
 	relax_overall = 0;
 	relax_queued = 0;
+	memset(relax_jhash, 0, sizeof(relax_jhash));
 	xnlock_put(&relax_lock);
 
 	while (p) {
