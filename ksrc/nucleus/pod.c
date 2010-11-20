@@ -1329,15 +1329,15 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 #ifndef __XENO_SIM__
 		/*
 		 * If attempting to suspend a runnable (shadow) thread
-		 * which has received a Linux signal, just raise the
-		 * break condition and return immediately.  We may end
-		 * up suspending a kicked thread that has been
-		 * preempted on its relaxing path, which is a
-		 * perfectly valid situation: we just ignore the
-		 * signal notification in primary mode, and rely on
-		 * the wakeup call pending for that task in the root
-		 * context, to collect and act upon the pending Linux
-		 * signal.
+		 * which is pending a forced switch to secondary mode,
+		 * just raise the break condition and return
+		 * immediately.  We may end up suspending a kicked
+		 * thread that has been preempted on its relaxing
+		 * path, which is a perfectly valid situation: we just
+		 * ignore the signal notification in primary mode, and
+		 * rely on the wakeup call pending for that task in
+		 * the root context, to collect and act upon the
+		 * pending Linux signal.
 		 */
 		if ((mask & XNRELAX) == 0 &&
 		    xnthread_test_info(thread, XNKICKED)) {

@@ -91,14 +91,12 @@ static void xnsched_watchdog_handler(struct xntimer *timer)
 		return;
 
 #ifndef __XENO_SIM__
-	if (xnthread_test_state(thread, XNSHADOW) &&
-	    !xnthread_amok_p(thread)) {
+	if (xnthread_test_state(thread, XNSHADOW)) {
 		trace_mark(xn_nucleus, watchdog_signal,
 			   "thread %p thread_name %s",
 			   thread, xnthread_name(thread));
 		xnprintf("watchdog triggered -- signaling runaway thread "
 			 "'%s'\n", xnthread_name(thread));
-		xnthread_set_info(thread, XNAMOK);
 		xnshadow_call_mayday(thread, SIGDEBUG_WATCHDOG);
 	} else
 #endif /* !__XENO_SIM__ */

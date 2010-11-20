@@ -1621,11 +1621,12 @@ static int xnshadow_sys_mayday(void)
 	struct xnthread *cur;
 
 	cur = xnshadow_thread(current);
-	if (likely(cur != NULL)) {
+	if (likely(cur)) {
 		/*
-		 * If the thread is amok in primary mode, this syscall
-		 * we have just forced on it will cause it to
-		 * relax. See do_hisyscall_event().
+		 * If the thread was kicked by the watchdog, this
+		 * syscall we have just forced on it via the mayday
+		 * escape will cause it to relax. See
+		 * do_hisyscall_event().
 		 */
 		xnarch_fixup_mayday(xnthread_archtcb(cur), cur->regs);
 		return 0;
@@ -2418,9 +2419,9 @@ int do_hisyscall_event(unsigned event, rthal_pipeline_stage_t *stage,
 
 	sigs = 0;
 	if (xnpod_shadow_p()) {
-		if (signal_pending(p) || xnthread_amok_p(thread)) {
+		if (signal_pending(p) ||
+		    xnthread_test_info(thread, XNKICKED)) {
 			sigs = 1;
-			xnthread_clear_amok(thread);
 			request_syscall_restart(thread, regs, sysflags);
 		} else if (xnthread_test_state(thread, XNOTHER) &&
 			   xnthread_get_rescnt(thread) == 0) {

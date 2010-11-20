@@ -107,7 +107,7 @@
 #define XNTIMEO   0x00000001 /**< Woken up due to a timeout condition */
 #define XNRMID    0x00000002 /**< Pending on a removed resource */
 #define XNBREAK   0x00000004 /**< Forcibly awaken from a wait state */
-#define XNKICKED  0x00000008 /**< Kicked upon Linux signal (shadow only) */
+#define XNKICKED  0x00000008 /**< Forced out of primary mode (shadow only) */
 #define XNWAKEN   0x00000010 /**< Thread waken up upon resource availability */
 #define XNROBBED  0x00000020 /**< Robbed from resource ownership */
 #define XNATOMIC  0x00000040 /**< In atomic switch from secondary to primary mode */
@@ -115,8 +115,7 @@
 #define XNPRIOSET 0x00000100 /**< Priority changed from primary mode */
 #define XNABORT   0x00000200 /**< Thread is being aborted */
 #define XNCANPND  0x00000400 /**< Cancellation request is pending */
-#define XNAMOK    0x00000800 /**< Runaway, watchdog signal pending (shadow only) */
-#define XNSWREP   0x00001000 /**< Mode switch already reported */
+#define XNSWREP   0x00000800 /**< Mode switch already reported */
 
 /* These information flags are available to the real-time interfaces */
 #define XNTHREAD_INFO_SPARE0  0x10000000
@@ -398,13 +397,6 @@ typedef struct xnhook {
 #define xnthread_dec_rescnt(thread)        ({ --(thread)->hrescnt; })
 #define xnthread_get_rescnt(thread)        ((thread)->hrescnt)
 #endif /* !__XENO_SIM__ */
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-#define xnthread_amok_p(thread)            xnthread_test_info(thread, XNAMOK)
-#define xnthread_clear_amok(thread)        xnthread_clear_info(thread, XNAMOK)
-#else /* !CONFIG_XENO_OPT_WATCHDOG */
-#define xnthread_amok_p(thread)            (0)
-#define xnthread_clear_amok(thread)        do { } while (0)
-#endif /* !CONFIG_XENO_OPT_WATCHDOG */
 
 /* Class-level operations for threads. */
 static inline int xnthread_get_denormalized_prio(struct xnthread *t, int coreprio)
