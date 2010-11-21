@@ -6,6 +6,7 @@ includesub_HEADERS =	\
 	heapobj.h	\
 	init.h		\
 	list.h		\
+	lock.h		\
 	shared-list.h	\
 	private-list.h	\
 	notifier.h	\

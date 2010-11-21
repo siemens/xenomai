@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <errno.h>
+#include "copperplate/lock.h"
 #include "copperplate/hash.h"
 
 /*
@@ -113,64 +114,65 @@ int hash_enter(struct hash_table *t,
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj;
+	int ret = 0;
 
 	holder_init(&newobj->link);
 	newobj->key = key;
 	bucket = do_hash(t, key);
-	pthread_mutex_lock(&bucket->lock);
+	write_lock_nocancel(&bucket->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
-			pthread_mutex_unlock(&bucket->lock);
-			return -EBUSY;
+			ret = -EBUSY;
+			goto out;
 		}
 	}
 
 	list_prepend(&newobj->link, &bucket->obj_list);
-	pthread_mutex_unlock(&bucket->lock);
+out:
+	write_unlock(&bucket->lock);
 
-	return 0;
+	return ret;
 }
 
 int hash_remove(struct hash_table *t, struct hashobj *delobj)
 {
 	struct hash_bucket *bucket;
 	struct hashobj *obj;
+	int ret = -ESRCH;
 
 	bucket = do_hash(t, delobj->key);
-	pthread_mutex_lock(&bucket->lock);
+	write_lock_nocancel(&bucket->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (obj == delobj) {
 			list_remove_init(&obj->link);
-			pthread_mutex_unlock(&bucket->lock);
-			return 0;
+			ret = 0;
+			goto out;
 		}
 	}
+out:
+	write_unlock(&bucket->lock);
 
-	pthread_mutex_unlock(&bucket->lock);
-
-	return -ESRCH;
+	return ret;
 }
 
 struct hashobj *hash_search(struct hash_table *t, const char *key)
 {
 	struct hash_bucket *bucket;
-	struct hashobj *obj;
+	struct hashobj *obj = NULL;
 
 	bucket = do_hash(t, key);
-	pthread_mutex_lock(&bucket->lock);
+	read_lock_nocancel(&bucket->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			pthread_mutex_unlock(&bucket->lock);
-			return obj;
-		}
+		if (strcmp(obj->key, key) == 0)
+			goto out;
 	}
+out:
+	read_unlock(&bucket->lock);
 
-	pthread_mutex_unlock(&bucket->lock);
-
-	return NULL;
+	return obj;
 }
 
 #ifdef CONFIG_XENO_PSHARED
@@ -201,64 +203,65 @@ int pvhash_enter(struct pvhash_table *t,
 {
 	struct pvhash_bucket *bucket;
 	struct pvhashobj *obj;
+	int ret = 0;
 
 	pvholder_init(&newobj->link);
 	newobj->key = key;
 	bucket = do_pvhash(t, key);
-	pthread_mutex_lock(&bucket->lock);
+	write_lock_nocancel(&bucket->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
-			pthread_mutex_unlock(&bucket->lock);
-			return -EBUSY;
+			ret = -EBUSY;
+			goto out;
 		}
 	}
 
 	pvlist_prepend(&newobj->link, &bucket->obj_list);
-	pthread_mutex_unlock(&bucket->lock);
+out:
+	write_unlock(&bucket->lock);
 
-	return 0;
+	return ret;
 }
 
 int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 {
 	struct pvhash_bucket *bucket;
 	struct pvhashobj *obj;
+	int ret = -ESRCH;
 
 	bucket = do_pvhash(t, delobj->key);
-	pthread_mutex_lock(&bucket->lock);
+	write_lock_nocancel(&bucket->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 		if (obj == delobj) {
 			pvlist_remove_init(&obj->link);
-			pthread_mutex_unlock(&bucket->lock);
-			return 0;
+			ret = 0;
+			goto out;
 		}
 	}
+out:
+	write_unlock(&bucket->lock);
 
-	pthread_mutex_unlock(&bucket->lock);
-
-	return -ESRCH;
+	return ret;
 }
 
 struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 {
 	struct pvhash_bucket *bucket;
-	struct pvhashobj *obj;
+	struct pvhashobj *obj = NULL;
 
 	bucket = do_pvhash(t, key);
-	pthread_mutex_lock(&bucket->lock);
+	read_lock_nocancel(&bucket->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			pthread_mutex_unlock(&bucket->lock);
-			return obj;
-		}
+		if (strcmp(obj->key, key) == 0)
+			goto out;
 	}
+out:
+	read_unlock(&bucket->lock);
 
-	pthread_mutex_unlock(&bucket->lock);
-
-	return NULL;
+	return obj;
 }
 
 #endif /* CONFIG_XENO_PSHARED */

@@ -79,14 +79,14 @@ void threadobj_init(struct threadobj *thobj,
 	pthread_mutexattr_destroy(&mattr);
 }
 
-/* thobj->lock free */
+/* thobj->lock free, asynchronous cancellation disabled. */
 int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
 	pthread_set_name_np(pthread_self(), name);
 
-	pthread_mutex_lock(&list_lock);
+	write_lock_nocancel(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
-	pthread_mutex_unlock(&list_lock);
+	write_unlock(&list_lock);
 
 	thobj->errno_pointer = &errno;
 	pthread_setspecific(threadobj_tskey, thobj);
@@ -94,59 +94,63 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	if (global_rr)
 		threadobj_set_rr(thobj, &global_quantum);
 
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+#ifdef CONFIG_XENO_ASYNC_CANCEL
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+#endif
+
 	return 0;
-}
-
-int threadobj_lock(struct threadobj *thobj)
-{
-	int ret, otype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
-	ret = -pthread_mutex_lock(&thobj->lock);
-	if (ret)
-		pthread_setcanceltype(otype, NULL);
-	else
-		thobj->cancel_type = otype;
-
-	return ret;
-}
-
-int threadobj_trylock(struct threadobj *thobj)
-{
-	int ret, otype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
-	ret = -pthread_mutex_trylock(&thobj->lock);
-	if (ret)
-		pthread_setcanceltype(otype, NULL);
-	else
-		thobj->cancel_type = otype;
-
-	return ret;
-}
-
-int threadobj_unlock(struct threadobj *thobj)
-{
-	int ret, otype = thobj->cancel_type;
-
-	ret = -pthread_mutex_unlock(&thobj->lock);
-	pthread_setcanceltype(otype, NULL);
-
-	return ret;
 }
 
 int threadobj_cancel(struct threadobj *thobj) /* thobj->lock free */
 {
-	return -pthread_cancel(thobj->tid);
+	pthread_t tid;
+	int ret;
+
+	if (thobj == threadobj_current())
+		pthread_exit(NULL);
+
+	tid = thobj->tid;
+
+	/*
+	 * Send a SIGDEMT signal to demote the target thread, to make
+	 * sure pthread_cancel() will be effective asap.
+	 *
+	 * In effect, the thread is kicked out of any blocking
+	 * syscall, a relax is forced on it (via a mayday trap if
+	 * required), and it is then required to leave the real-time
+	 * scheduling class.
+	 *
+	 * - this makes sure the thread returns with EINTR from the
+	 * syscall then hits a cancellation point asap.
+	 *
+	 * - this ensures that the thread can receive the cancellation
+	 * signal in case asynchronous cancellation is enabled and get
+	 * kicked out from syscall-less code in primary mode
+	 * (e.g. busy loops).
+	 *
+	 * - this makes sure the thread won't preempt the caller
+	 * indefinitely when resuming due to priority enforcement
+	 * (i.e. when the target thread has higher Xenomai priority
+	 * than the caller of threadobj_cancel()), but will receive
+	 * the following cancellation request asap.
+	 */
+	ret = pthread_kill(tid, SIGDEMT);
+	if (ret)
+		return -ret;
+
+	pthread_cancel(tid);
+
+	return 0;
 }
 
 void threadobj_finalize(void *p) /* thobj->lock free */
 {
 	struct threadobj *thobj = p;
 
-	pthread_mutex_lock(&list_lock);
+	write_lock_nocancel(&list_lock);
 	pvlist_remove(&thobj->thread_link);
-	pthread_mutex_unlock(&list_lock);
+	write_unlock(&list_lock);
 
 	if (thobj->tracer)
 		traceobj_unwind(thobj->tracer);
@@ -334,7 +338,8 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 	 * running within a single process.
 	 */
 	ret = 0;
-	pthread_mutex_lock(&list_lock);
+	push_cleanup_lock(&list_lock);
+	read_lock(&list_lock);
 
 	pvlist_for_each_entry(thobj, &thread_list, thread_link) {
 		threadobj_lock(thobj);
@@ -344,7 +349,8 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 			break;
 	}
 
-	pthread_mutex_unlock(&list_lock);
+	read_unlock(&list_lock);
+	pop_cleanup_lock(&list_lock);
 
 	return ret;
 }

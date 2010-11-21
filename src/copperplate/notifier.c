@@ -24,6 +24,7 @@
 #include <errno.h>
 #include "copperplate/panic.h"
 #include "copperplate/notifier.h"
+#include "internal.h"
 
 #include <linux/unistd.h>
 #define do_gettid()	syscall(__NR_gettid)
@@ -88,7 +89,7 @@ static void lock_notifier_list(sigset_t *oset)
 {
 	sigset_t set;
 
-	pthread_mutex_lock(&notifier_lock);
+	read_lock(&notifier_lock);
 	pthread_sigmask(SIG_BLOCK, NULL, &set);
 	sigaddset(&set, NOTIFYSIG);
 	pthread_sigmask(SIG_BLOCK, &set, oset);
@@ -97,7 +98,7 @@ static void lock_notifier_list(sigset_t *oset)
 static void unlock_notifier_list(sigset_t *oset)
 {
 	pthread_sigmask(SIG_SETMASK, oset, NULL);
-	pthread_mutex_unlock(&notifier_lock);
+	read_unlock(&notifier_lock);
 }
 
 int notifier_init(struct notifier *nf,
@@ -127,9 +128,11 @@ int notifier_init(struct notifier *nf,
 	pthread_mutex_init(&nf->lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
 
+	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_append(&nf->link, &notifier_list);
 	unlock_notifier_list(&oset);
+	pop_cleanup_lock(&notifier_lock);
 
 	fd = nf->psfd[0];
 	fcntl(fd, F_SETSIG, NOTIFYSIG);
@@ -152,9 +155,11 @@ void notifier_destroy(struct notifier *nf)
 {
 	sigset_t oset;
 
+	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_remove_init(&nf->link);
 	unlock_notifier_list(&oset);
+	pop_cleanup_lock(&notifier_lock);
 	close(nf->psfd[0]);
 	close(nf->psfd[1]);
 	pthread_mutex_destroy(&nf->lock);
@@ -165,7 +170,7 @@ int notifier_signal(struct notifier *nf)
 	int fd, ret, kick = 1;
 	char c = 0;
 
-	ret = pthread_mutex_lock(&nf->lock);
+	ret = read_lock_nocancel(&nf->lock);
 	if (ret)
 		return ret;
 
@@ -176,7 +181,7 @@ int notifier_signal(struct notifier *nf)
 	else
 		kick = 0;
 
-	pthread_mutex_unlock(&nf->lock);
+	read_unlock(&nf->lock);
 
 	/*
 	 * XXX: we must release the lock before we write to the pipe,
@@ -194,7 +199,12 @@ int notifier_release(struct notifier *nf)
 	int fd, ret, kick = 1;
 	char c = 1;
 
-	ret = pthread_mutex_lock(&nf->lock);
+	/*
+	 * The notifier struct is associated to the caller thread, so
+	 * if the caller is cancelled, the notification struct becomes
+	 * useless. We may only take a read lock here.
+	 */
+	ret = read_lock_nocancel(&nf->lock);
 	if (ret)
 		return ret;
 
@@ -205,7 +215,7 @@ int notifier_release(struct notifier *nf)
 	else
 		kick = 0;
 
-	pthread_mutex_unlock(&nf->lock);
+	read_unlock(&nf->lock);
 
 	if (kick)
 		ret = write(fd, &c, 1);

@@ -112,9 +112,9 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 {
 	prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
 
-	pthread_mutex_lock(&list_lock);
+	write_lock_nocancel(&list_lock);
 	pvlist_append(&thobj->thread_link, &thread_list);
-	pthread_mutex_unlock(&list_lock);
+	write_unlock(&list_lock);
 
 	thobj->errno_pointer = &errno;
 	pthread_setspecific(threadobj_tskey, thobj);
@@ -123,49 +123,17 @@ int threadobj_prologue(struct threadobj *thobj, const char *name)
 	if (global_rr)
 		threadobj_set_rr(thobj, &global_quantum);
 
+#ifdef CONFIG_XENO_ASYNC_CANCEL
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+#endif
 	return 0;
-}
-
-int threadobj_lock(struct threadobj *thobj)
-{
-	int ret, otype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
-	ret = -pthread_mutex_lock(&thobj->lock);
-	if (ret)
-		pthread_setcanceltype(otype, NULL);
-	else
-		thobj->cancel_type = otype;
-
-	return ret;
-}
-
-int threadobj_trylock(struct threadobj *thobj)
-{
-	int ret, otype;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &otype);
-	ret = -pthread_mutex_trylock(&thobj->lock);
-	if (ret)
-		pthread_setcanceltype(otype, NULL);
-	else
-		thobj->cancel_type = otype;
-
-	return ret;
-}
-
-int threadobj_unlock(struct threadobj *thobj)
-{
-	int ret, otype = thobj->cancel_type;
-
-	ret = -pthread_mutex_unlock(&thobj->lock);
-	pthread_setcanceltype(otype, NULL);
-
-	return ret;
 }
 
 int threadobj_cancel(struct threadobj *thobj)
 {
+	if (thobj == threadobj_current())
+		pthread_exit(NULL);
+
 	return -pthread_cancel(thobj->tid);
 }
 
@@ -173,9 +141,9 @@ void threadobj_finalize(void *p)
 {
 	struct threadobj *thobj = p;
 
-	pthread_mutex_lock(&list_lock);
+	write_lock_nocancel(&list_lock);
 	pvlist_remove(&thobj->thread_link);
-	pthread_mutex_unlock(&list_lock);
+	write_unlock(&list_lock);
 
 	notifier_destroy(&thobj->core.notifier);
 
@@ -351,7 +319,8 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 	 * much sense. I.e. one is better off having all those threads
 	 * running within a single process.
 	 */
-	pthread_mutex_lock(&list_lock);
+	push_cleanup_lock(&list_lock);
+	read_lock(&list_lock);
 
 	pvlist_for_each_entry(thobj, &thread_list, thread_link) {
 		threadobj_lock(thobj);
@@ -359,7 +328,8 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 		threadobj_unlock(thobj);
 	}
 
-	pthread_mutex_unlock(&list_lock);
+	read_unlock(&list_lock);
+	pop_cleanup_lock(&list_lock);
 
 	return 0;
 }

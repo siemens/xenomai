@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  *
- * Thread object abstraction - Cobalt core version.
+ * Timer object abstraction - Cobalt core version.
  */
 
 #include <signal.h>
@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include "copperplate/list.h"
+#include "copperplate/lock.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/timerobj.h"
 #include "copperplate/timerobj.h"
@@ -90,8 +91,12 @@ static void *timerobj_server(void *arg)
 		if (ret && ret != EINTR)
 			break;
 
-		/* Caller may assume that handlers are serialized. */
-		pthread_mutex_lock(&svlock);
+		/*
+		 * We have a single server thread for now, so handlers
+		 * are fully serialized.
+		 */
+		push_cleanup_lock(&svlock);
+		write_lock(&svlock);
 
 		clock_gettime(CLOCK_REALTIME, &now);
 
@@ -99,7 +104,7 @@ static void *timerobj_server(void *arg)
 			value = tmobj->spec.it_value;
 			if (timeobj_compare(&value, &now) > 0)
 				break;
-			pvlist_remove(&tmobj->link);
+			pvlist_remove_init(&tmobj->link);
 			interval = tmobj->spec.it_interval;
 			if (interval.tv_sec > 0 || interval.tv_nsec > 0) {
 				timespec_add(&tmobj->spec.it_value,
@@ -111,7 +116,8 @@ static void *timerobj_server(void *arg)
 			threadobj_iexit();
 		}
 
-		pthread_mutex_unlock(&svlock);
+		write_unlock(&svlock);
+		pop_cleanup_lock(&svlock);
 	}
 
 	return NULL;
@@ -123,7 +129,8 @@ static int timerobj_spawn_server(void)
 	pthread_attr_t thattr;
 	int ret = 0;
 
-	pthread_mutex_lock(&svlock);
+	push_cleanup_lock(&svlock);
+	read_lock(&svlock);
 
 	if (svthread)
 		goto out;
@@ -135,7 +142,8 @@ static int timerobj_spawn_server(void)
 	pthread_attr_setschedparam(&thattr, &param);
 	ret = pthread_create(&svthread, &thattr, timerobj_server, NULL);
 out:
-	pthread_mutex_unlock(&svlock);
+	read_unlock(&svlock);
+	pop_cleanup_lock(&svlock);
 
 	return ret;
 }
@@ -169,12 +177,12 @@ int timerobj_init(struct timerobj *tmobj)
 
 int timerobj_destroy(struct timerobj *tmobj)
 {
-	pthread_mutex_lock(&svlock);
+	write_lock_nocancel(&svlock);
 
 	if (pvholder_linked(&tmobj->link))
-		pvlist_remove(&tmobj->link);
+		pvlist_remove_init(&tmobj->link);
 
-	pthread_mutex_unlock(&svlock);
+	write_unlock(&svlock);
 
 	if (timer_delete(tmobj->timer))
 		return -errno;
@@ -188,9 +196,9 @@ int timerobj_start(struct timerobj *tmobj,
 {
 	tmobj->handler = handler;
 	tmobj->spec = *it;
-	pthread_mutex_lock(&svlock);
+	write_lock_nocancel(&svlock);
 	timerobj_enqueue(tmobj);
-	pthread_mutex_unlock(&svlock);
+	write_unlock(&svlock);
 
 	if (timer_settime(tmobj->timer, TIMER_ABSTIME, it, NULL))
 		return -errno;
@@ -198,30 +206,21 @@ int timerobj_start(struct timerobj *tmobj,
 	return 0;
 }
 
-static const struct itimerspec itimer_stop = {
-	.it_value = {
-		.tv_sec = 0,
-		.tv_nsec = 0,
-	},
-	.it_interval =  {
-		.tv_sec = 0,
-		.tv_nsec = 0,
-	},
-};
+static const struct itimerspec itimer_stop;
 
 int timerobj_stop(struct timerobj *tmobj)
 {
-	pthread_mutex_lock(&svlock);
+	write_lock_nocancel(&svlock);
 
 	if (pvholder_linked(&tmobj->link))
-		pvlist_remove(&tmobj->link);
+		pvlist_remove_init(&tmobj->link);
 
-	pthread_mutex_unlock(&svlock);
+	write_unlock(&svlock);
+
+	tmobj->handler = NULL;
 
 	if (timer_settime(tmobj->timer, 0, &itimer_stop, NULL))
 		return -errno;
-
-	tmobj->handler = NULL;
 
 	return 0;
 }

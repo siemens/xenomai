@@ -21,6 +21,20 @@
  * multiple processes in user-space.
  */
 
+/*
+ * XXX: the policy for handling caller cancellation is to disable
+ * asynchronous cancellation in critical sections altering the heap
+ * state. The rationale is twofold:
+ *
+ * - undoing the state changes involved in allocating/freeing blocks
+ * from cleanup handlers would be extremely complex.
+ *
+ * - the critical sections traverse no cancellation point.
+ *
+ * Therefore we simply set the cancellation type to deferred mode for
+ * the caller in routines which alter the heap state.
+ */
+
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/file.h>
@@ -38,6 +52,7 @@
 #include "copperplate/list.h"
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
+#include "internal.h"
 
 #include <linux/unistd.h>
 #define do_gettid()	syscall(__NR_gettid)
@@ -304,8 +319,8 @@ align_up_size(size_t size)
 static void *alloc_block(struct heap *heap, size_t size)
 {
 	struct heap_extent *extent;
-	size_t pnum, bsize;
 	int log2size, ilog;
+	size_t pnum, bsize;
 	caddr_t block;
 
 	if (size == 0)
@@ -330,7 +345,7 @@ static void *alloc_block(struct heap *heap, size_t size)
 
 		ilog = log2size - HOBJ_MINLOG2;
 
-		pthread_mutex_lock(&heap->lock);
+		write_lock_nocancel(&heap->lock);
 
 		block = __mref_check(heap, heap->buckets[ilog].freelist);
 		if (block == NULL) {
@@ -361,16 +376,15 @@ static void *alloc_block(struct heap *heap, size_t size)
 		if (size > heap->maxcont)
 			return NULL;
 
-		pthread_mutex_lock(&heap->lock);
+		write_lock_nocancel(&heap->lock);
 
 		/* Directly request a free page range. */
 		block = get_free_range(heap, size, 0);
 		if (block)
 			heap->ubytes += size;
 	}
-
 done:
-	pthread_mutex_unlock(&heap->lock);
+	write_unlock(&heap->lock);
 
 	return block;
 }
@@ -378,12 +392,12 @@ done:
 static int free_block(struct heap *heap, void *block)
 {
 	caddr_t freepage, lastpage, nextpage, tailpage, freeptr;
+	int log2size, ret = 0, nblocks, xpage, ilog;
 	size_t pnum, pcont, boffset, bsize, npages;
-	int log2size, ret, nblocks, xpage, ilog;
 	struct heap_extent *extent = NULL;
 	off_t *tailptr;
 
-	pthread_mutex_lock(&heap->lock);
+	write_lock_nocancel(&heap->lock);
 
 	/*
 	 * Find the extent from which the returned block is
@@ -397,7 +411,7 @@ static int free_block(struct heap *heap, void *block)
 
 	if (extent == NULL) {
 		ret = -EFAULT;
-		goto fail;
+		goto out;
 	}
 
 	/* Compute the heading page number in the page map. */
@@ -408,13 +422,8 @@ static int free_block(struct heap *heap, void *block)
 	switch (extent->pagemap[pnum].type) {
 	case page_free:	/* Unallocated page? */
 	case page_cont:	/* Not a range heading page? */
-
-	bad_block:
 		ret = -EINVAL;
-		/* Falldown wanted. */
-	fail:
-		pthread_mutex_unlock(&heap->lock);
-		return ret;
+		goto out;
 
 	case page_list:
 		npages = 1;
@@ -454,8 +463,10 @@ static int free_block(struct heap *heap, void *block)
 
 		log2size = extent->pagemap[pnum].type;
 		bsize = (1 << log2size);
-		if ((boffset & (bsize - 1)) != 0)	/* Not a block start? */
-			goto bad_block;
+		if ((boffset & (bsize - 1)) != 0) {	/* Not a block start? */
+			ret = -EINVAL;
+			goto out;
+		}
 		/*
 		 * Return the page to the free list if we've just
 		 * freed its last busy block. Pages from multi-page
@@ -527,10 +538,10 @@ static int free_block(struct heap *heap, void *block)
 	}
 
 	heap->ubytes -= bsize;
+out:
+	write_unlock(&heap->lock);
 
-	pthread_mutex_unlock(&heap->lock);
-
-	return 0;
+	return ret;
 }
 
 static size_t check_block(struct heap *heap, void *block)
@@ -539,7 +550,7 @@ static size_t check_block(struct heap *heap, void *block)
 	struct heap_extent *extent = NULL;
 	int ptype;
 
-	pthread_mutex_lock(&heap->lock);
+	read_lock_nocancel(&heap->lock);
 
 	/*
 	 * Find the extent the checked block is originating from.
@@ -568,7 +579,7 @@ static size_t check_block(struct heap *heap, void *block)
 
 	ret = bsize;
 out:
-	pthread_mutex_unlock(&heap->lock);
+	read_unlock(&heap->lock);
 
 	return ret;
 }
@@ -685,8 +696,8 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 	struct heap *heap = hobj->pool;
 	struct heap_extent *extent;
 	size_t newsize;
+	int ret, state;
 	caddr_t p;
-	int ret;
 
 	if (hobj == &main_pool)	/* Cannot extend the main pool. */
 		return -EINVAL;
@@ -703,20 +714,21 @@ static int pshared_extend(struct heapobj *hobj, size_t size, void *mem)
 	 * it is safe referring to the heap contents while extending
 	 * it.
 	 */
-	pthread_mutex_lock(&heap->lock);
+	write_lock_safe(&heap->lock, state);
 	p = mremap(heap, hobj->size + sizeof(*heap), newsize, 0);
 	if (p == MAP_FAILED) {
-		pthread_mutex_unlock(&heap->lock);
-		return -errno;
+		ret = -errno;
+		goto out;
 	}
 
 	extent = (struct heap_extent *)(p + hobj->size + sizeof(*heap));
 	init_extent(heap, extent);
 	__list_append(heap, &extent->link, &heap->extents);
 	hobj->size = newsize - sizeof(*heap);
-	pthread_mutex_unlock(&heap->lock);
+out:
+	write_unlock_safe(&heap->lock, state);
 
-	return 0;
+	return ret;
 }
 
 static void *pshared_alloc(struct heapobj *hobj, size_t size)

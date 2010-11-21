@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <time.h>
 #include <string.h>
+#include "copperplate/lock.h"
 #include "copperplate/clockobj.h"
 
 void ticks_to_timespec(struct clockobj *clkobj,
@@ -34,8 +35,8 @@ void ticks_to_timespec(struct clockobj *clkobj,
 	ts->tv_nsec = (ticks - (ts->tv_sec * clkobj->tick_freq)) * clkobj->ns_per_tick;
 }
 
-static void timespec_sub(struct timespec *r,
-			 const struct timespec *t1, const struct timespec *t2)
+void timespec_sub(struct timespec *r,
+		  const struct timespec *t1, const struct timespec *t2)
 {
 	r->tv_sec = t1->tv_sec - t2->tv_sec;
 	r->tv_nsec = t1->tv_nsec - t2->tv_nsec;
@@ -45,8 +46,8 @@ static void timespec_sub(struct timespec *r,
 	}
 }
 
-static void timespec_add(struct timespec *r,
-			 const struct timespec *t1, const struct timespec *t2)
+void timespec_add(struct timespec *r,
+		  const struct timespec *t1, const struct timespec *t2)
 {
 	r->tv_sec = t1->tv_sec + t2->tv_sec;
 	r->tv_nsec = t1->tv_nsec + t2->tv_nsec;
@@ -59,9 +60,9 @@ static void timespec_add(struct timespec *r,
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
 				ticks_t ticks, struct timespec *ts)
 {
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 	ticks_to_timespec(clkobj, ticks, ts);
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 }
 
 void clockobj_ticks_to_timeout(struct clockobj *clkobj,
@@ -70,9 +71,9 @@ void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 	struct timespec delta;
 
 	clock_gettime(CLOCK_REALTIME, ts);
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 	ticks_to_timespec(clkobj, ticks, &delta);
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
 }
 
@@ -127,10 +128,10 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 	unsigned long year, month, day, hour, min, sec;
 	time_t nsecs;
 
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 	nsecs = ticks / clkobj->tick_freq;
 	*rticks = ticks % clkobj->tick_freq;
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 
 	for (year = 1970;; year++) { /* Years since 1970. */
 		int ysecs = ((year % 4) ? 365 : 366) * SECBYDAY;
@@ -171,11 +172,11 @@ void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 {
 	ticks_t ticks;
 
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 	clockobj_caltime_to_ticks(clkobj, tm, rticks, &ticks);
 	ticks_to_timespec(clkobj, ticks, ts);
 	timespec_sub(ts, ts, &clkobj->offset);
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 }
 
 int clockobj_set_date(struct clockobj *clkobj,
@@ -185,7 +186,7 @@ int clockobj_set_date(struct clockobj *clkobj,
 
 	clock_gettime(CLOCK_REALTIME, &now);
 
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 
 	/* Change the period on-the-fly if given. */
 	if (period_ns) {
@@ -197,7 +198,7 @@ int clockobj_set_date(struct clockobj *clkobj,
 	clkobj->start = now;
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &now);
 
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 
 	return 0;
 }
@@ -208,19 +209,19 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	clock_gettime(CLOCK_REALTIME, &now);
 
-	pthread_mutex_lock(&clkobj->lock);
+	read_lock_nocancel(&clkobj->lock);
 
 	/* Wall clock time elapsed since we set the date: */
 	timespec_sub(&delta, &now, &clkobj->start);
 	sum = clkobj->epoch;
-	/* Simulator time = epoch + delta. */
+	/* Emulation time = epoch + delta. */
 	timespec_add(&sum, &sum, &delta);
 
 	/* Convert the time value to ticks. */
 	*pticks = sum.tv_sec * clkobj->tick_freq
 		+ sum.tv_nsec / clkobj->ns_per_tick;
 
-	pthread_mutex_unlock(&clkobj->lock);
+	read_unlock(&clkobj->lock);
 
 	return 0;
 }

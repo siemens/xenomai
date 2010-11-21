@@ -22,6 +22,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <copperplate/list.h>
+#include <copperplate/lock.h>
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -62,7 +63,7 @@ struct threadobj {
 	void (*suspend_hook)(struct threadobj *thobj, int status);
 	int *errno_pointer;
 	int schedlock_depth;
-	int cancel_type;
+	int lock_state;
 	int status;
 
 	/* Those members belong exclusively to the syncobj code. */
@@ -111,12 +112,6 @@ void threadobj_init(struct threadobj *thobj,
 int threadobj_prologue(struct threadobj *thobj,
 		       const char *name);
 
-int threadobj_lock(struct threadobj *thobj);
-
-int threadobj_trylock(struct threadobj *thobj);
-
-int threadobj_unlock(struct threadobj *thobj);
-
 int threadobj_cancel(struct threadobj *thobj);
 
 void threadobj_destroy(struct threadobj *thobj);
@@ -148,6 +143,21 @@ void threadobj_pkg_init(void);
 #ifdef __cplusplus
 }
 #endif
+
+static inline int threadobj_lock(struct threadobj *thobj)
+{
+	return write_lock_safe(&thobj->lock, thobj->lock_state);
+}
+
+static inline int threadobj_trylock(struct threadobj *thobj)
+{
+	return write_trylock_safe(&thobj->lock, thobj->lock_state);
+}
+
+static inline int threadobj_unlock(struct threadobj *thobj)
+{
+	return write_unlock_safe(&thobj->lock, thobj->lock_state);
+}
 
 static inline struct threadobj *threadobj_current(void)
 {

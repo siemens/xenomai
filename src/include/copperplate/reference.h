@@ -23,8 +23,8 @@
 #include <stddef.h>
 #include <xeno_config.h>
 
-#define libxenomai_tag  0	/* Library tag - unique and constant. */
-#define libxenomai_cbi  1	/* Callback binary interface level. */
+#define libcopperplate_tag  0	/* Library tag - unique and constant. */
+#define libcopperplate_cbi  1	/* Callback binary interface level. */
 
 #define container_of(ptr, type, member)					\
 	({								\

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "copperplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
@@ -70,11 +71,13 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 	if (nr_seq > trobj->nr_marks)
 		goto fail;
 
-	pthread_mutex_lock(&trobj->lock);
+	read_lock_nocancel(&trobj->lock);
 
 	end_mark = trobj->cur_mark;
-	if (end_mark == 0)
+	if (end_mark == 0) {
+		read_unlock(&trobj->lock);
 		panic("no mark defined");
+	}
 
 	if (end_mark != nr_seq)
 		goto fail;
@@ -84,12 +87,17 @@ void traceobj_verify(struct traceobj *trobj, int tseq[], int nr_seq)
 			goto fail;
 	}
 
-	pthread_mutex_unlock(&trobj->lock);
+	read_unlock(&trobj->lock);
 	return;
 
 fail:
+	read_unlock(&trobj->lock);
+	push_cleanup_lock(&trobj->lock);
+	read_lock(&trobj->lock);
 	warning("mismatching execution sequence detected");
 	compare_marks(trobj, tseq, nr_seq);
+	read_unlock(&trobj->lock);
+	pop_cleanup_lock(&trobj->lock);
 	exit(5);
 }
 
@@ -115,9 +123,12 @@ static void dump_marks(struct traceobj *trobj) /* lock held */
 void __traceobj_assert_failed(struct traceobj *trobj,
 			      const char *file, int line, const char *cond)
 {
-	pthread_mutex_lock(&trobj->lock);
+	push_cleanup_lock(&trobj->lock);
+	read_lock(&trobj->lock);
 	dump_marks(trobj);
-	pthread_mutex_unlock(&trobj->lock);
+	read_unlock(&trobj->lock);
+	pop_cleanup_lock(&trobj->lock);
+
 	panic("trace assertion failed:\n%s:%d => \"%s\"", file, line, cond);
 }
 
@@ -127,21 +138,23 @@ void __traceobj_mark(struct traceobj *trobj,
 	struct tracemark *tmk;
 	int cur_mark;
 
-	pthread_mutex_lock(&trobj->lock);
+	push_cleanup_lock(&trobj->lock);
+	write_lock(&trobj->lock);
 
-	cur_mark = trobj->cur_mark++;
+	cur_mark = trobj->cur_mark;
 	if (cur_mark >= trobj->nr_marks) {
-		trobj->cur_mark = cur_mark;
 		dump_marks(trobj);
-		panic("too many marks");
+		panic("too many marks: [%d] at %s:%d", mark, file, line);
 	}
 
 	tmk = trobj->marks + cur_mark;
 	tmk->file = file;
 	tmk->line = line;
 	tmk->mark = mark;
+	trobj->cur_mark++;
 
-	pthread_mutex_unlock(&trobj->lock);
+	write_unlock(&trobj->lock);
+	pop_cleanup_lock(&trobj->lock);
 }
 
 void traceobj_enter(struct traceobj *trobj)
@@ -155,22 +168,22 @@ void traceobj_enter(struct traceobj *trobj)
 		threadobj_unlock(current);
 	}
 
-	pthread_mutex_lock(&trobj->lock);
+	write_lock_nocancel(&trobj->lock);
 	++trobj->nr_threads;
-	pthread_mutex_unlock(&trobj->lock);
+	write_unlock(&trobj->lock);
 }
 
 /* May be directly called from finalizer. */
 void traceobj_unwind(struct traceobj *trobj)
 {
-	pthread_mutex_lock(&trobj->lock);
-	pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock,
-			     &trobj->lock);
+	int state;
+
+	write_lock_safe(&trobj->lock, state);
 
 	if (--trobj->nr_threads <= 0)
 		pthread_cond_signal(&trobj->join);
 
-	pthread_cleanup_pop(1);
+	write_unlock_safe(&trobj->lock, state);
 }
 
 void traceobj_exit(struct traceobj *trobj)
@@ -189,12 +202,12 @@ void traceobj_exit(struct traceobj *trobj)
 
 void traceobj_join(struct traceobj *trobj)
 {
-	pthread_mutex_lock(&trobj->lock);
-	pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock,
-			     &trobj->lock);
+	push_cleanup_lock(&trobj->lock);
+	read_lock(&trobj->lock);
 
 	while (trobj->nr_threads > 0)
 		pthread_cond_wait(&trobj->join, &trobj->lock);
 
-	pthread_cleanup_pop(1);
+	read_unlock(&trobj->lock);
+	pop_cleanup_lock(&trobj->lock);
 }

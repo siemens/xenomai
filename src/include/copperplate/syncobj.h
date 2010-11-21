@@ -21,6 +21,7 @@
 
 #include <pthread.h>
 #include <copperplate/list.h>
+#include <copperplate/lock.h>
 
 /* syncobj->flags */
 #define SYNCOBJ_FIFO	0x0
@@ -34,10 +35,13 @@
 #define SYNCOBJ_BLOCK	0x1
 #define SYNCOBJ_RESUME	0x2
 
+struct syncstate {
+	int state;
+};
+
 struct syncobj {
 	int flags;
 	int release_count;
-	int cancel_type;
 	pthread_mutex_t lock;
 	pthread_cond_t post_sync;
 	struct list pend_list;
@@ -59,11 +63,13 @@ extern "C" {
 void syncobj_init(struct syncobj *sobj, int flags,
 		  fnref_type(void (*)(struct syncobj *sobj)) finalizer);
 
-int syncobj_pend(struct syncobj *sobj, struct timespec *timeout);
+int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
+		 struct syncstate *syns);
 
 struct threadobj *syncobj_post(struct syncobj *sobj);
 
-int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout);
+int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
+		       struct syncstate *syns);
 
 int __syncobj_signal_drain(struct syncobj *sobj);
 
@@ -71,13 +77,14 @@ void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);
 
 void syncobj_wakeup_waiter(struct syncobj *sobj, struct threadobj *thobj);
 
-int syncobj_lock(struct syncobj *sobj);
+int syncobj_lock(struct syncobj *sobj, struct syncstate *syns);
 
-void syncobj_unlock(struct syncobj *sobj);
+void syncobj_unlock(struct syncobj *sobj, struct syncstate *syns);
 
 int syncobj_flush(struct syncobj *sobj, int reason);
 
-int syncobj_destroy(struct syncobj *sobj);
+int syncobj_destroy(struct syncobj *sobj,
+		    struct syncstate *syns);
 
 #ifdef __cplusplus
 }

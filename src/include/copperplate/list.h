@@ -24,4 +24,13 @@
 #include <copperplate/shared-list.h>
 #include <copperplate/private-list.h>
 
+/*
+ * WARNING: ALL list services are assumed to be free from any POSIX
+ * cancellation points by callers, allowing the *_nocancel() locking
+ * forms to be used (see copperplate/lock.h).
+ *
+ * Please think of this when adding any debug instrumentation invoking
+ * printf() and the like.
+ */
+
 #endif /* !_COPPERPLATE_LIST_H */

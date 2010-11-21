@@ -33,6 +33,7 @@
 #include <fuse.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/registry.h"
+#include "internal.h"
 
 #define REGISTRY_ROOT "/mnt/xenomai"
 
@@ -60,8 +61,9 @@ int registry_add_dir(const char *fmt, ...)
 	char path[PATH_MAX], *basename;
 	struct regfs_dir *parent, *d;
 	struct pvhashobj *hobj;
+	struct timespec now;
+	int ret, state;
 	va_list ap;
-	int ret;
 
 	if (__no_registry_arg)
 		return 0;
@@ -74,6 +76,10 @@ int registry_add_dir(const char *fmt, ...)
 	if (basename == NULL)
 		return -EINVAL;
 
+	clock_gettime(CLOCK_REALTIME, &now);
+
+	write_lock_safe(&regfs_lock, state);
+
 	d = xnmalloc(sizeof(*d));
 	if (d == NULL) {
 		ret = -ENOMEM;
@@ -81,8 +87,6 @@ int registry_add_dir(const char *fmt, ...)
 	}
 	pvholder_init(&d->link);
 	d->path = xnstrdup(path);
-
-	pthread_mutex_lock(&regfs_lock);
 
 	if (strcmp(path, "/")) {
 		d->basename = d->path + (basename - path) + 1;
@@ -103,7 +107,7 @@ int registry_add_dir(const char *fmt, ...)
 	pvlist_init(&d->file_list);
 	pvlist_init(&d->dir_list);
 	d->ndirs = d->nfiles = 0;
-	clock_gettime(CLOCK_REALTIME, &d->ctime);
+	d->ctime = now;
 	ret = pvhash_enter(&regfs_dirtable, d->path, &d->hobj);
 	if (ret) {
 	fail:
@@ -111,7 +115,7 @@ int registry_add_dir(const char *fmt, ...)
 		xnfree(d);
 	}
 done:
-	pthread_mutex_unlock(&regfs_lock);
+	write_unlock_safe(&regfs_lock, state);
 
 	return ret;
 }
@@ -141,8 +145,8 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	char path[PATH_MAX], *basename, *dir;
 	struct pvhashobj *hobj;
 	struct regfs_dir *d;
+	int ret, state;
 	va_list ap;
-	int ret;
 
 	if (__no_registry_arg)
 		return 0;
@@ -161,7 +165,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	clock_gettime(CLOCK_REALTIME, &fsobj->ctime);
 	fsobj->mtime = fsobj->ctime;
 
-	pthread_mutex_lock(&regfs_lock);
+	write_lock_safe(&regfs_lock, state);
 
 	ret = pvhash_enter(&regfs_objtable, fsobj->path, &fsobj->hobj);
 	if (ret)
@@ -184,7 +188,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	d->nfiles++;
 	fsobj->dir = d;
 done:
-	pthread_mutex_unlock(&regfs_lock);
+	write_unlock_safe(&regfs_lock, state);
 
 	return ret;
 }
@@ -192,17 +196,21 @@ done:
 void registry_remove_file(struct fsobj *fsobj)
 {
 	struct regfs_dir *d;
+	int state;
 
 	if (__no_registry_arg)
 		return;
 
-	pthread_mutex_lock(&regfs_lock);
+	write_lock_safe(&regfs_lock, state);
 
 	if (fsobj->path == NULL)
 		goto out;	/* Not registered. */
 
 	pvhash_remove(&regfs_objtable, &fsobj->hobj);
-
+	/*
+	 * We are covered by a previous call to write_lock_safe(), so
+	 * we may nest pthread_mutex_lock() directly.
+	 */
 	pthread_mutex_lock(&fsobj->lock);
 	d = fsobj->dir;
 	pvlist_remove(&fsobj->link);
@@ -212,7 +220,7 @@ void registry_remove_file(struct fsobj *fsobj)
 	pthread_mutex_unlock(&fsobj->lock);
 	pthread_mutex_destroy(&fsobj->lock);
 out:
-	pthread_mutex_unlock(&regfs_lock);
+	write_unlock_safe(&regfs_lock, state);
 }
 
 void registry_touch_file(struct fsobj *fsobj)
@@ -232,7 +240,7 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 
 	memset(sbuf, 0, sizeof(*sbuf));
 
-	pthread_mutex_lock(&regfs_lock);
+	read_lock_nocancel(&regfs_lock);
 
 	hobj = pvhash_search(&regfs_dirtable, path);
 	if (hobj) {
@@ -265,12 +273,10 @@ static int regfs_getattr(const char *path, struct stat *sbuf)
 		sbuf->st_atim = fsobj->mtime;
 		sbuf->st_ctim = fsobj->ctime;
 		sbuf->st_mtim = fsobj->mtime;
-		goto done;
 	} else
 		ret = -ENOENT;
-
 done:
-	pthread_mutex_unlock(&regfs_lock);
+	read_unlock(&regfs_lock);
 
 	return ret;
 }
@@ -282,11 +288,11 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	struct pvhashobj *hobj;
 	struct fsobj *fsobj;
 
-	pthread_mutex_lock(&regfs_lock);
+	read_lock_nocancel(&regfs_lock);
 
 	hobj = pvhash_search(&regfs_dirtable, path);
 	if (hobj == NULL) {
-		pthread_mutex_unlock(&regfs_lock);
+		read_unlock(&regfs_lock);
 		return -ENOENT;
 	}
 
@@ -303,7 +309,7 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		if (filler(buf, fsobj->basename, NULL, 0))
 			break;
 
-	pthread_mutex_unlock(&regfs_lock);
+	read_unlock(&regfs_lock);
 
 	return 0;
 }
@@ -314,7 +320,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	struct fsobj *fsobj;
 	int ret = 0;
 
-	pthread_mutex_lock(&regfs_lock);
+	read_lock_nocancel(&regfs_lock);
 
 	hobj = pvhash_search(&regfs_objtable, path);
 	if (hobj == NULL) {
@@ -326,7 +332,7 @@ static int regfs_open(const char *path, struct fuse_file_info *fi)
 	if (((fi->flags + 1) & (fsobj->mode + 1)) == 0)
 		ret = -EACCES;
 done:
-	pthread_mutex_unlock(&regfs_lock);
+	read_unlock(&regfs_lock);
 
 	return ret;
 }
@@ -338,24 +344,24 @@ static int regfs_read(const char *path, char *buf, size_t size, off_t offset,
 	struct fsobj *fsobj;
 	int ret;
 
-	pthread_mutex_lock(&regfs_lock);
+	read_lock_nocancel(&regfs_lock);
 
 	hobj = pvhash_search(&regfs_objtable, path);
 	if (hobj == NULL) {
-		pthread_mutex_unlock(&regfs_lock);
+		read_unlock(&regfs_lock);
 		return -EIO;
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	if (fsobj->ops->read == NULL) {
-		pthread_mutex_unlock(&regfs_lock);
+		read_unlock(&regfs_lock);
 		return -ENOSYS;
 	}
 
-	pthread_mutex_lock(&fsobj->lock);
-	pthread_mutex_unlock(&regfs_lock);
+	read_lock_nocancel(&fsobj->lock);
+	read_unlock(&regfs_lock);
 	ret = fsobj->ops->read(fsobj, buf, size, offset);
-	pthread_mutex_unlock(&fsobj->lock);
+	read_unlock(&fsobj->lock);
 
 	return ret;
 }
@@ -367,24 +373,24 @@ static int regfs_write(const char *path, const char *buf, size_t size, off_t off
 	struct fsobj *fsobj;
 	int ret;
 
-	pthread_mutex_lock(&regfs_lock);
+	read_lock_nocancel(&regfs_lock);
 
 	hobj = pvhash_search(&regfs_objtable, path);
 	if (hobj == NULL) {
-		pthread_mutex_unlock(&regfs_lock);
+		read_unlock(&regfs_lock);
 		return -EIO;
 	}
 
 	fsobj = container_of(hobj, struct fsobj, hobj);
 	if (fsobj->ops->write == NULL) {
-		pthread_mutex_unlock(&regfs_lock);
+		read_unlock(&regfs_lock);
 		return -ENOSYS;
 	}
 
-	pthread_mutex_lock(&fsobj->lock);
-	pthread_mutex_unlock(&regfs_lock);
+	read_lock_nocancel(&fsobj->lock);
+	read_unlock(&regfs_lock);
 	ret = fsobj->ops->write(fsobj, buf, size, offset);
-	pthread_mutex_unlock(&fsobj->lock);
+	read_unlock(&regfs_lock);
 
 	return ret;
 }
