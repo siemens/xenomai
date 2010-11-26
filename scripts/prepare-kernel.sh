@@ -103,7 +103,7 @@ patch_link() {
 	    find . $recursive_opt \( $directorytype_opt \
                 $link_makefiles_opt -name $config_file -o -name '*.[chS]' \) |
             while read f; do
-                if test ! -e $xenomai_root/$target_dir/$f; then rm -Rf $f; fi
+                if test -L $f -a ! -e $xenomai_root/$target_dir/$f; then rm -Rf $f; fi
             done
         fi
 
