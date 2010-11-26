@@ -53,11 +53,11 @@ void foregroundTask(long a1, long a2, long a3, long a4, long a5,
 
 	traceobj_mark(&trobj, 5);
 
-	taskDelay(2);
+	taskDelay(3);
 
 	traceobj_mark(&trobj, 6);
 
-	ret = taskDelete(btid);
+	ret = taskSuspend(btid);
 	traceobj_assert(&trobj, ret == OK);
 
 	traceobj_mark(&trobj, 7);
@@ -92,14 +92,19 @@ int main(int argc, char *argv[])
 	traceobj_mark(&trobj, 10);
 
 	ret = semGive(sem_id);
+
 	traceobj_assert(&trobj, ret == OK);
 
 	traceobj_mark(&trobj, 11);
 
 	ret = semGive(sem_id);
+
 	traceobj_assert(&trobj, ret == OK);
 
 	traceobj_mark(&trobj, 12);
+
+	ret = taskDelete(btid);
+	traceobj_assert(&trobj, ret == OK);
 
 	traceobj_join(&trobj);
 
