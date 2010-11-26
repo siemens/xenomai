@@ -543,8 +543,9 @@ int pthread_kill(pthread_t thread, int sig)
 
 	/*
 	 * Undocumented pseudo-signals to suspend/resume/unblock
-	 * threads via the low-level nucleus services. Process them
-	 * early, before anyone can notice...
+	 * threads, force them out of primary mode or even demote them
+	 * to the SCHED_OTHER class. Process them early, before anyone
+	 * can notice...
 	 */
 	if (sig == SIGSUSP) {
 		/*
@@ -566,6 +567,16 @@ int pthread_kill(pthread_t thread, int sig)
 
 	if (sig == SIGRELS) {
 		xnpod_unblock_thread(&thread->threadbase);
+		goto resched;
+	}
+
+	if (sig == SIGKICK) {
+		xnshadow_kick(&thread->threadbase);
+		goto resched;
+	}
+
+	if (sig == SIGDEMT) {
+		xnshadow_demote(&thread->threadbase);
 		goto resched;
 	}
 

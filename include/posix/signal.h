@@ -116,16 +116,19 @@ int pthread_sigqueue_np (struct pse51_thread *thread, int sig, union sigval valu
 
 /*
  * Those are pseudo-signals only available with pthread_kill() to
- * suspend/resume/unblock threads synchronously via the low-level
- * nucleus interface. Can't block them, queue them, or even set them
- * in a sigset. Those are nasty, strictly anti-POSIX things; we do
- * provide them nevertheless only because we are mean people doing
- * harmful code for no valid reason. Can't go against your nature,
- * right?  Nah... (this said, don't blame us for POSIX, we are not
- * _that_ mean).
+ * suspend/resume/unblock threads synchronously, force them out of
+ * primary mode or even demote them to the SCHED_OTHER class via the
+ * low-level nucleus interface. Can't block those signals, queue them,
+ * or even set them in a sigset. Those are nasty, strictly anti-POSIX
+ * things; we do provide them nevertheless only because we are mean
+ * people doing harmful code for no valid reason. Can't go against
+ * your nature, right?  Nah... (this said, don't blame us for POSIX,
+ * we are not _that_ mean).
  */
 #define SIGSUSP (SIGRTMAX + 1)
 #define SIGRESM (SIGRTMAX + 2)
 #define SIGRELS (SIGRTMAX + 3)
+#define SIGKICK (SIGRTMAX + 4)
+#define SIGDEMT (SIGRTMAX + 5)
 
 #endif /* _XENO_POSIX_SIGNAL_H */

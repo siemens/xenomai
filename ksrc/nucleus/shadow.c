@@ -1212,6 +1212,112 @@ void xnshadow_relax(int notify, int reason)
 }
 EXPORT_SYMBOL_GPL(xnshadow_relax);
 
+int xnshadow_force_wakeup(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	int ret = 0;
+
+	if (xnthread_test_info(thread, XNKICKED))
+		return 1;
+
+	/*
+	 * Tricky case: a ready thread does not actually run, but
+	 * nevertheless waits for the CPU in primary mode, so we have
+	 * to make sure that it will be notified of the pending break
+	 * condition as soon as it enters xnpod_suspend_thread() from
+	 * a blocking Xenomai syscall.
+	 */
+	if (xnthread_test_state(thread, XNREADY)) {
+		xnthread_set_info(thread, XNKICKED);
+		xnsched_set_resched(thread->sched);
+		return 0;
+	}
+
+	if (xnpod_unblock_thread(thread)) {
+		xnthread_set_info(thread, XNKICKED);
+		ret = 1;
+	}
+
+	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
+		xnpod_resume_thread(thread, XNSUSP|XNHELD);
+		xnthread_set_info(thread, XNKICKED|XNBREAK);
+	}
+
+	/*
+	 * Check whether a thread was started and later stopped, in
+	 * which case it is blocked by the nucleus, and we have to
+	 * wake it up. The kernel will wake up unstarted threads
+	 * blocked in xnshadow_sys_barrier() as needed.
+	 */
+	if (xnthread_test_state(thread, XNDORMANT|XNSTARTED) == (XNDORMANT|XNSTARTED)) {
+		xnpod_resume_thread(thread, XNDORMANT);
+		xnthread_set_info(thread, XNKICKED|XNBREAK);
+	}
+
+	return ret;
+}
+
+void xnshadow_kick(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	struct task_struct *p = xnthread_archtcb(thread)->user_task;
+
+	/* Thread is already relaxed -- nop. */
+	if (xnthread_test_state(thread, XNRELAX))
+		return;
+
+	/*
+	 * First, try to kick the thread out of any blocking syscall
+	 * Xenomai-wise. If that succeeded, then the thread will relax
+	 * on its return path to user-space.
+	 */
+	if (xnshadow_force_wakeup(thread))
+		return;
+
+	/*
+	 * If that did not work out because the thread was not blocked
+	 * (i.e. XNPEND/XNDELAY) in a syscall, then force a mayday
+	 * trap. Note that we don't want to send that thread any linux
+	 * signal, we only want to force it to switch to secondary
+	 * mode.
+	 *
+	 * It could happen that a thread is relaxed on a syscall
+	 * return path after it was resumed from self-suspension
+	 * (e.g. XNSUSP) then also forced to run a mayday trap right
+	 * after: this is still correct, at worst we would get a
+	 * useless mayday syscall leading to a no-op, no big deal.
+	 */
+	xnthread_set_info(thread, XNKICKED);
+
+	/*
+	 * No need to run a mayday trap if the current thread kicks
+	 * itself out of primary mode: it will relax on its way back
+	 * to userland via the current syscall epilogue. Otherwise, we
+	 * want that thread to enter the mayday trap, to call us back
+	 * immediately for relaxing.
+	 */
+	if (thread != xnpod_current_thread())
+		xnarch_call_mayday(p);
+}
+
+void xnshadow_demote(struct xnthread *thread) /* nklock locked, irqs off */
+{
+	/*
+	 * First we kick the thread out of primary mode, and have it
+	 * resume execution immediately over the regular linux
+	 * context.
+	 */
+	xnshadow_kick(thread);
+	/*
+	 * Then we send it a renice action signal to demote it from
+	 * SCHED_FIFO to SCHED_OTHER. In effect, we turned that thread
+	 * into a non real-time Xenomai shadow, which still has access
+	 * to Xenomai resources, but won't compete anymore for
+	 * real-time scheduling.
+	 */
+	xnshadow_send_sig(thread, SIGSHADOW,
+			  sigshadow_int(SIGSHADOW_ACTION_RENICE, 0),
+			  1);
+}
+
 void xnshadow_exit(void)
 {
 	rthal_reenter_root(get_switch_lock_owner(),
@@ -1607,6 +1713,7 @@ static unsigned long map_mayday_page(struct task_struct *p)
 	return IS_ERR_VALUE(u_addr) ? 0UL : u_addr;
 }
 
+/* nklock locked, irqs off */
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype)
 {
 	struct task_struct *p = xnthread_archtcb(thread)->user_task;
@@ -2771,7 +2878,7 @@ static inline void do_sigwake_event(struct task_struct *p)
 	 * mode, handling signals should not apply there, since this
 	 * would also boost low-priority cleanup work, which is
 	 * unwanted. The thread may get RPI-boosted again the next
-	 * time it resumes for suspension, linux-wise (if ever it
+	 * time it resumes from suspension, linux-wise (if ever it
 	 * does).
 	 */
 	if (xnthread_test_state(thread, XNRELAX)) {
@@ -2782,54 +2889,20 @@ static inline void do_sigwake_event(struct task_struct *p)
 	}
 
 	/*
-	 * If we are kicking a shadow thread in primary mode, make
-	 * sure Linux won't schedule in its mate under our feet as a
-	 * result of running signal_wake_up(). The Xenomai scheduler
-	 * must remain in control for now, until we explicitly relax
-	 * the shadow thread to allow for processing the pending
-	 * signals. Make sure we keep the additional state flags
-	 * unmodified so that we don't break any undergoing ptrace.
+	 * If kicking a shadow thread in primary mode, make sure Linux
+	 * won't schedule in its mate under our feet as a result of
+	 * running signal_wake_up(). The Xenomai scheduler must remain
+	 * in control for now, until we explicitly relax the shadow
+	 * thread to allow for processing the pending signals. Make
+	 * sure we keep the additional state flags unmodified so that
+	 * we don't break any undergoing ptrace.
 	 */
 	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
 		set_task_nowakeup(p);
 
-	/*
-	 * Tricky case: a ready thread does not actually run, but
-	 * nevertheless waits for the CPU in primary mode, so we have
-	 * to make sure that it will be notified of the pending break
-	 * condition as soon as it enters xnpod_suspend_thread() from
-	 * a blocking Xenomai syscall.
-	 */
-	if (xnthread_test_state(thread, XNREADY)) {
-		xnthread_set_info(thread, XNKICKED);
-		goto unlock_and_exit;
-	}
+	xnshadow_force_wakeup(thread);
 
-	if (xnpod_unblock_thread(thread))
-		xnthread_set_info(thread, XNKICKED);
-
-	if (xnthread_test_state(thread, XNSUSP|XNHELD)) {
-		xnpod_resume_thread(thread, XNSUSP|XNHELD);
-		xnthread_set_info(thread, XNKICKED|XNBREAK);
-	}
-	/*
-	 * Check whether a thread was started and later stopped, in
-	 * which case it is blocked by the nucleus, and we have to
-	 * wake it up upon signal receipt. The kernel will wake up
-	 * unstarted threads blocked in xnshadow_sys_barrier() as
-	 * needed.
-	 */
-	if (xnthread_test_state(thread, XNDORMANT|XNSTARTED) == (XNDORMANT|XNSTARTED)) {
-		xnpod_resume_thread(thread, XNDORMANT);
-		xnthread_set_info(thread, XNKICKED|XNBREAK);
-	}
-
-	if (xnthread_test_info(thread, XNKICKED)) {
-		xnsched_set_resched(thread->sched);
-		xnpod_schedule();
-	}
-
-unlock_and_exit:
+	xnpod_schedule();
 
 	xnlock_put_irqrestore(&nklock, s);
 }

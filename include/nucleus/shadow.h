@@ -94,6 +94,10 @@ void xnshadow_rpi_check(void);
 
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 
+void xnshadow_kick(struct xnthread *thread);
+
+void xnshadow_demote(struct xnthread *thread);
+
 #ifdef __cplusplus
 }
 #endif
