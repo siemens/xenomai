@@ -308,6 +308,10 @@ int pse51_mutex_timedlock_break(struct __shadow_mutex *shadow,
 	switch(mutex->attr.type) {
 	case PTHREAD_MUTEX_NORMAL:
 		/* Attempting to relock a normal mutex, deadlock. */
+#if XENO_DEBUG(POSIX)
+		printk(KERN_WARNING
+		       "POSIX: thread %s deadlocks on non-recursive mutex\n", cur->name);
+#endif /* XENO_DEBUG(POSIX) */
 		xnlock_get_irqsave(&nklock, s);
 		for (;;) {
 			if (timed)
