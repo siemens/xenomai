@@ -17,17 +17,25 @@
  */
 
 #include "tickLib.h"
+#include <copperplate/lock.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/sysLib.h>
 
 int sysClkRateGet(void)
 {
-	unsigned int ns_per_tick = clockobj_get_period(&wind_clock);
+	unsigned int ns_per_tick;
+	struct service svc;
+
+	COPPERPLATE_PROTECT(svc);
+	ns_per_tick = clockobj_get_period(&wind_clock);
+	COPPERPLATE_UNPROTECT(svc);
+
 	return 1000000000 / ns_per_tick;
 }
 
 STATUS sysClkRateSet(int hz)
 {
+	struct service svc;
 	int ret;
 
 	/*
@@ -37,9 +45,9 @@ STATUS sysClkRateSet(int hz)
 	if (hz <= 0)
 		return ERROR;
 
+	COPPERPLATE_PROTECT(svc);
 	ret = clockobj_set_period(&wind_clock, 1000000000 / hz);
-	if (ret)
-		return ERROR;
+	COPPERPLATE_UNPROTECT(svc);
 
-	return OK;
+	return ret ? ERROR : OK;
 }

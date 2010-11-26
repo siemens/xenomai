@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <copperplate/lock.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/panic.h>
 #include <vxworks/errnoLib.h>
@@ -27,7 +28,7 @@
 
 #define mempart_magic	0x5a6b7c8d
 
-static struct wind_mempart *get_mempart_from_id(PART_ID partId)
+static struct wind_mempart *find_mempart_from_id(PART_ID partId)
 {
 	struct wind_mempart *mp = mainheap_deref(partId, struct wind_mempart);
 
@@ -44,6 +45,9 @@ static struct wind_mempart *get_mempart_from_id(PART_ID partId)
 PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 {
 	struct wind_mempart *mp;
+	struct service svc;
+
+	COPPERPLATE_PROTECT(svc);
 
 	mp = xnmalloc(sizeof(*mp));
 	if (mp == NULL)
@@ -53,10 +57,13 @@ PART_ID memPartCreate(char *pPool, unsigned int poolSize)
 		xnfree(mp);
 	fail:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		COPPERPLATE_UNPROTECT(svc);
 		return (PART_ID)0;
 	}
 
 	mp->magic = mempart_magic;
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return mainheap_ref(mp, PART_ID);
 }
@@ -65,22 +72,30 @@ STATUS memPartAddToPool(PART_ID partId,
 			char *pPool, unsigned int poolSize)
 {
 	struct wind_mempart *mp;
+	struct service svc;
+	STATUS ret;
 
-	if (poolSize == 0)
-		return S_memLib_INVALID_NBYTES;
+	if (poolSize == 0) {
+		errno = S_memLib_INVALID_NBYTES;
+		return ERROR;
+	}
 
-	mp = get_mempart_from_id(partId);
+	mp = find_mempart_from_id(partId);
 	if (mp == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
+	COPPERPLATE_PROTECT(svc);
+
 	if (heapobj_extend(&mp->hobj, poolSize, pPool)) {
 		errno = S_memLib_INVALID_NBYTES;
-		return ERROR;
+		ret = ERROR;
 	}
 
-	return OK;
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
 }
 
 void *memPartAlignedAlloc(PART_ID partId,
@@ -90,9 +105,9 @@ void *memPartAlignedAlloc(PART_ID partId,
 	void *ptr;
 
 	/*
-	 * XXX: We assume that our underlying allocator (TLSF or
-	 * Glibc's malloc()) aligns at worst on a 8-bytes boundary, so
-	 * we only have to care for larger constraints.
+	 * XXX: We assume that our underlying allocator (TLSF, pshared
+	 * or Glibc's malloc()) aligns at worst on a 8-bytes boundary,
+	 * so we only have to care for larger constraints.
 	 */
 	if ((alignment & (alignment - 1)) != 0) {
 		warning("%s: alignment value '%u' is not a power of two",
@@ -116,7 +131,7 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 	if (nBytes == 0)
 		return NULL;
 
-	mp = get_mempart_from_id(partId);
+	mp = find_mempart_from_id(partId);
 	if (mp == NULL)
 		return NULL;
 
@@ -126,15 +141,20 @@ void *memPartAlloc(PART_ID partId, unsigned int nBytes)
 STATUS memPartFree(PART_ID partId, char *pBlock)
 {
 	struct wind_mempart *mp;
+	struct service svc;
 
 	if (pBlock == NULL)
 		return ERROR;
 
-	mp = get_mempart_from_id(partId);
+	mp = find_mempart_from_id(partId);
 	if (mp == NULL)
 		return ERROR;
 
+	COPPERPLATE_PROTECT(svc);
+
 	heapobj_free(&mp->hobj, pBlock);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return OK;
 }

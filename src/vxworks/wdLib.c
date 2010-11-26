@@ -33,7 +33,7 @@
 
 #define wd_magic	0x3a4b5c6d
 
-static struct wind_wd *get_wd_from_id(WDOG_ID wdog_id)
+static struct wind_wd *find_wd_from_id(WDOG_ID wdog_id)
 {
 	struct wind_wd *wd = (struct wind_wd *)wdog_id;
 
@@ -53,7 +53,10 @@ static void watchdog_handler(struct timerobj *tmobj)
 WDOG_ID wdCreate(void)
 {
 	struct wind_wd *wd;
+	struct service svc;
 	int ret;
+
+	COPPERPLATE_PROTECT(svc);
 
 	wd = pvmalloc(sizeof(*wd));
 	if (wd == NULL)
@@ -64,46 +67,62 @@ WDOG_ID wdCreate(void)
 		pvfree(wd);
 	fail:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		return (WDOG_ID)0;
+		wd = NULL;
+		goto out;
 	}
 
 	wd->magic = wd_magic;
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
 	return (WDOG_ID)wd;
 }
 
 STATUS wdDelete(WDOG_ID wdog_id)
 {
-	struct wind_wd *wd = get_wd_from_id(wdog_id);
-	int ret;
+	struct wind_wd *wd;
+	struct service svc;
+	int ret = OK;
 
-	if (wd == NULL) {
-	objid_error:
-		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
-	}
+	COPPERPLATE_PROTECT(svc);
+
+	/*
+	 * XXX: we don't actually have to protect find_wd_from_id()
+	 * since it can't be cancelled while holding a lock and does
+	 * not change the system state, but the code looks better when
+	 * we do so; besides, this small overhead only hits the error
+	 * path.
+	 */
+	wd = find_wd_from_id(wdog_id);
+	if (wd == NULL)
+		goto objid_error;
 
 	ret = timerobj_destroy(&wd->tmobj);
-	if (ret)
-		goto objid_error;
+	if (ret) {
+	objid_error:
+		errno = S_objLib_OBJ_ID_ERROR;
+		ret = ERROR;
+		goto out;
+	}
 
 	wd->magic = ~wd_magic;
 	pvfree(wd);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return OK;
+	return ret;
 }
 
 STATUS wdStart(WDOG_ID wdog_id, int delay, void (*handler)(long), long arg)
 {
-	struct wind_wd *wd = get_wd_from_id(wdog_id);
 	struct itimerspec it;
+	struct service svc;
+	struct wind_wd *wd;
 	int ret;
 
-	if (wd == NULL) {
-	objid_error:
-		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
-	}
+	wd = find_wd_from_id(wdog_id);
+	if (wd == NULL)
+		goto objid_error;
 
 	/*
 	 * FIXME: we have a small race window here in case the
@@ -113,31 +132,43 @@ STATUS wdStart(WDOG_ID wdog_id, int delay, void (*handler)(long), long arg)
 	wd->handler = handler;
 	wd->arg = arg;
 
+	COPPERPLATE_PROTECT(svc);
+
 	clockobj_ticks_to_timeout(&wind_clock, delay, &it.it_value);
 	it.it_interval.tv_sec = 0;
 	it.it_interval.tv_nsec = 0;
-
 	ret = timerobj_start(&wd->tmobj, watchdog_handler, &it);
-	if (ret)
-		goto objid_error;
+
+	COPPERPLATE_UNPROTECT(svc);
+
+	if (ret) {
+	objid_error:
+		errno = S_objLib_OBJ_ID_ERROR;
+		return ERROR;
+	}
 
 	return OK;
 }
 
 STATUS wdCancel(WDOG_ID wdog_id)
 {
-	struct wind_wd *wd = get_wd_from_id(wdog_id);
+	struct wind_wd *wd;
+	struct service svc;
 	int ret;
 
-	if (wd == NULL) {
+	wd = find_wd_from_id(wdog_id);
+	if (wd == NULL)
+		goto objid_error;
+
+	COPPERPLATE_PROTECT(svc);
+	ret = timerobj_stop(&wd->tmobj);
+	COPPERPLATE_UNPROTECT(svc);
+
+	if (ret) {
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
-
-	ret = timerobj_stop(&wd->tmobj);
-	if (ret)
-		goto objid_error;
 
 	return OK;
 }

@@ -33,6 +33,12 @@ STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 	TASK_ID tid;
 	int ret;
 
+	/*
+	 * XXX: we don't set any protected section here, since we must
+	 * be running over the main thread, so if we get cancelled,
+	 * everything goes away anyway.
+	 */
+
 	ret = copperplate_init(argc, argv);
 	if (ret)
 		return ret;
@@ -67,8 +73,11 @@ STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 
 STATUS kernelTimeSlice(int ticks)
 {
+	struct service svc;
 	struct timespec ts;
 	int ret;
+
+	COPPERPLATE_PROTECT(svc);
 
 	if (ticks) {
 		clockobj_ticks_to_timeout(&wind_clock, ticks, &ts);
@@ -77,10 +86,12 @@ STATUS kernelTimeSlice(int ticks)
 	} else
 		threadobj_stop_rr();
 
+	COPPERPLATE_UNPROTECT(svc);
+
 	return OK;
 }
       
 const char *kernelVersion(void)
 {
-	return "Xenomai WIND emulator version 1.0";
+	return "Xenomai WIND emulator version 2.0";
 }

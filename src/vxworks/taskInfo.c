@@ -25,14 +25,14 @@
 
 const char *taskName(TASK_ID task_id)
 {
-	struct wind_task *task = get_wind_task_or_self(task_id);
+	struct wind_task *task;
 	const char *name;
 
+	task = get_wind_task_or_self(task_id);
 	if (task == NULL)
 		return NULL;
 
 	name = task->name;
-
 	put_wind_task(task);
 
 	/*
@@ -68,14 +68,14 @@ TASK_ID taskNameToId(const char *name)
 
 BOOL taskIsReady(TASK_ID task_id)
 {
-	struct wind_task *task = get_wind_task(task_id);
+	struct wind_task *task;
 	int status;
 
+	task = get_wind_task(task_id);
 	if (task == NULL)
 		return 0;
 
 	status = task->tcb->status;
-
 	put_wind_task(task);
 
 	return (status & (WIND_SUSPEND|WIND_DELAY)) == 0;
@@ -83,9 +83,10 @@ BOOL taskIsReady(TASK_ID task_id)
 
 BOOL taskIsSuspended(TASK_ID task_id)
 {
-	struct wind_task *task = get_wind_task(task_id);
+	struct wind_task *task;
 	int status;
 
+	task = get_wind_task(task_id);
 	if (task == NULL)
 		return 0;
 
@@ -98,13 +99,14 @@ BOOL taskIsSuspended(TASK_ID task_id)
 
 STATUS taskGetInfo(TASK_ID task_id, TASK_DESC *desc)
 {
-	struct wind_task *task = get_wind_task(task_id);
+	struct wind_task *task;
 	struct WIND_TCB *tcb;
 	pthread_attr_t attr;
 	int vfirst, vlast;
 	size_t stacksize;
 	void *stackbase;
 
+	task = get_wind_task(task_id);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;

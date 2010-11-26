@@ -44,7 +44,7 @@ struct msgholder {
 	/* Payload data follows. */
 };
 
-static struct wind_mq *get_mq_from_id(MSG_Q_ID qid)
+static struct wind_mq *find_mq_from_id(MSG_Q_ID qid)
 {
 	struct wind_mq *mq = mainheap_deref(qid, struct wind_mq);
 
@@ -67,6 +67,7 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 {
 	struct wind_mq *mq;
 	int sobj_flags = 0;
+	struct service svc;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
@@ -83,15 +84,18 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		return (MSG_Q_ID)0;
 	}
 		
+	COPPERPLATE_PROTECT(svc);
+
 	mq = xnmalloc(sizeof(*mq));
 	if (mq == NULL)
-		goto fail;
+		goto no_mem;
 
 	if (heapobj_init_array(&mq->pool, NULL, maxMsgLength +
 			       sizeof(struct msgholder), maxMsgs)) {
 		xnfree(mq);
-	fail:
+	no_mem:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		COPPERPLATE_UNPROTECT(svc);
 		return (MSG_Q_ID)0;
 	}
 
@@ -108,30 +112,39 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 
 	mq->magic = mq_magic;
 
+	COPPERPLATE_UNPROTECT(svc);
+
 	return mainheap_ref(mq, MSG_Q_ID);
 }
 
 STATUS msgQDelete(MSG_Q_ID msgQId)
 {
+	struct syncstate syns;
 	struct wind_mq *mq;
+	struct service svc;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
 
-	mq = get_mq_from_id(msgQId);
-	if (mq == NULL) {
+	mq = find_mq_from_id(msgQId);
+	if (mq == NULL)
+		goto objid_error;
+
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&mq->sobj, &syns)) {
+		COPPERPLATE_UNPROTECT(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj))
-		goto objid_error;
-
 	mq->magic = ~mq_magic; /* Prevent further reference. */
-	syncobj_destroy(&mq->sobj);
+	syncobj_destroy(&mq->sobj, &syns);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return OK;
 }
@@ -142,7 +155,9 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	struct msgholder *msg = NULL;
 	struct threadobj *current;
 	UINT nbytes = (UINT)ERROR;
+	struct syncstate syns;
 	struct wind_mq *mq;
+	struct service svc;
 	int ret;
 
 	if (threadobj_async_p()) {
@@ -150,15 +165,18 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 		return ERROR;
 	}
 
-	mq = get_mq_from_id(msgQId);
-	if (mq == NULL) {
+	mq = find_mq_from_id(msgQId);
+	if (mq == NULL)
+		goto objid_error;
+
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&mq->sobj, &syns)) {
+		COPPERPLATE_UNPROTECT(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
-
-	if (syncobj_lock(&mq->sobj))
-		goto objid_error;
 
 	if (!list_empty(&mq->msg_list)) {
 		mq->msgcount--;
@@ -189,10 +207,10 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	current->wait_u.buffer.ptr = buffer;
 	current->wait_u.buffer.size = maxNBytes;
 
-	ret = syncobj_pend(&mq->sobj, timespec);
+	ret = syncobj_pend(&mq->sobj, timespec, &syns);
 	if (ret == -EIDRM) {
 		errno = S_objLib_OBJ_DELETED;
-		return ERROR;
+		goto done;
 	}
 	if (ret == -ETIMEDOUT) {
 		errno = S_objLib_OBJ_TIMEOUT;
@@ -200,9 +218,10 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 	}
 	nbytes = current->wait_u.buffer.size;
 	syncobj_signal_drain(&mq->sobj);
-
 done:
-	syncobj_unlock(&mq->sobj);
+	syncobj_unlock(&mq->sobj, &syns);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return nbytes;
 }
@@ -213,23 +232,27 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 	struct timespec ts, *timespec;
 	struct threadobj *thobj;
 	struct msgholder *msg;
+	struct syncstate syns;
 	struct wind_mq *mq;
+	struct service svc;
+	int ret = ERROR;
 	UINT maxbytes;
-	int ret;
 	
-	mq = get_mq_from_id(msgQId);
-	if (mq == NULL) {
+	COPPERPLATE_PROTECT(svc);
+
+	mq = find_mq_from_id(msgQId);
+	if (mq == NULL)
+		goto objid_error;
+
+	if (syncobj_lock(&mq->sobj, &syns)) {
+		COPPERPLATE_UNPROTECT(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj))
-		goto objid_error;
-
 	if (bytes > mq->msgsize) {
 		errno = S_msgQLib_INVALID_MSG_LENGTH;
-		ret = ERROR;
 		goto fail;
 	}
 
@@ -250,13 +273,11 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 
 	if (timeout == NO_WAIT) {
 		errno = S_objLib_OBJ_UNAVAILABLE;
-		ret = ERROR;
 		goto fail;
 	}
 
 	if (threadobj_async_p()) {
 		errno = S_msgQLib_NON_ZERO_TIMEOUT_AT_INT_LEVEL;
-		ret = ERROR;
 		goto fail;
 	}
 	  
@@ -267,10 +288,11 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		timespec = NULL;
 
 	do {
-		ret = syncobj_wait_drain(&mq->sobj, timespec);
+		ret = syncobj_wait_drain(&mq->sobj, timespec, &syns);
 		if (ret == -EIDRM) {
 			errno = S_objLib_OBJ_DELETED;
-			return ERROR;
+			ret = ERROR;
+			goto out;
 		}
 		if (ret == -ETIMEDOUT) {
 			errno = S_objLib_OBJ_TIMEOUT;
@@ -302,28 +324,37 @@ enqueue:
 done:
 	ret = OK;
 fail:
-	syncobj_unlock(&mq->sobj);
+	syncobj_unlock(&mq->sobj, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
 }
 
 int msgQNumMsgs(MSG_Q_ID msgQId)
 {
+	struct syncstate syns;
 	struct wind_mq *mq;
+	struct service svc;
 	int msgcount;
 
-	mq = get_mq_from_id(msgQId);
-	if (mq == NULL) {
+	mq = find_mq_from_id(msgQId);
+	if (mq == NULL)
+		goto objid_error;
+
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&mq->sobj, &syns)) {
+		COPPERPLATE_UNPROTECT(svc);
 	objid_error:
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
-	if (syncobj_lock(&mq->sobj))
-		goto objid_error;
-
 	msgcount = mq->msgcount;
-	syncobj_unlock(&mq->sobj);
+	syncobj_unlock(&mq->sobj, &syns);
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	return msgcount;
 }

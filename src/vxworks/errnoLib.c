@@ -90,13 +90,13 @@ void printErrno(int status)
 
 STATUS errnoOfTaskSet(TASK_ID task_id, int status)
 {
-	struct wind_task *task = get_wind_task_or_self(task_id);
+	struct wind_task *task;
 
+	task = get_wind_task_or_self(task_id);
 	if (task == NULL)
 		return ERROR;
 
 	*task->thobj.errno_pointer = status;
-
 	put_wind_task(task);
 
 	return OK;
@@ -104,14 +104,14 @@ STATUS errnoOfTaskSet(TASK_ID task_id, int status)
 
 STATUS errnoOfTaskGet(TASK_ID task_id)
 {
-	struct wind_task *task = get_wind_task_or_self(task_id);
+	struct wind_task *task;
 	STATUS status;
 
+	task = get_wind_task_or_self(task_id);
 	if (task == NULL)
 		return ERROR;
 
 	status = *task->thobj.errno_pointer;
-
 	put_wind_task(task);
 
 	return status;

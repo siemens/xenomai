@@ -71,8 +71,14 @@ struct wind_task *get_wind_task(TASK_ID tid)
 	 * deleted, and/or maybe we have been lucky, and some random
 	 * opaque pointer might lead us to something which is laid in
 	 * valid memory but certainly not to a task object. Last
-	 * chance is pthread_mutex_lock() detecting a wrong mutex kind
-	 * and bailing out.
+	 * chance is pthread_mutex_lock() in threadobj_lock()
+	 * detecting a wrong mutex kind and bailing out.
+	 *
+	 * XXX: threadobj_lock() disables cancellability for the
+	 * caller upon success, until the lock is dropped in
+	 * threadobj_unlock(), so there is no way it may vanish while
+	 * holding the lock. Therefore we need no cleanup handler
+	 * here.
 	 */
 	if (task == NULL || threadobj_lock(&task->thobj) == -EINVAL)
 		return NULL;
@@ -217,6 +223,7 @@ static void *task_trampoline(void *arg)
 {
 	struct wind_task *task = arg;
 	struct wind_task_args *args = &task->args;
+	struct service svc;
 	int ret;
 
 	ret = threadobj_prologue(&task->thobj, task->name);
@@ -225,7 +232,9 @@ static void *task_trampoline(void *arg)
 			task->name, -ret);
 		goto done;
 	}
-	
+
+	COPPERPLATE_PROTECT(svc);
+
 	ret = registry_init_file(&task->fsobj, &registry_ops);
 
 	if (pvhash_enter(&wind_task_table, task->name, &task->obj)) {
@@ -239,8 +248,7 @@ static void *task_trampoline(void *arg)
 		warning("failed to export task %s to registry",
 			task->name);
 
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+	COPPERPLATE_UNPROTECT(svc);
 
 	/* Wait for someone to run taskActivate() upon us. */
 	sem_wait(&task->barrier);
@@ -301,8 +309,11 @@ static STATUS __taskInit(struct wind_task *task,
 	/*
 	 * CAUTION: tcb->status in only modified by the owner task
 	 * (see suspend/resume hooks), or when such task is guaranteed
-	 * to be not running, e.g. in taskActivate(). So we do _not_
-	 * take any lock specifically for updating it.
+	 * not to be running, e.g. in taskActivate(). So we do NOT
+	 * take any lock specifically for updating it. However, we
+	 * know that a memory barrier will be issued shortly after
+	 * such updates because of other locking being in effect, so
+	 * we don't explicitely have to provide for it.
 	 */
 	tcb->status = WIND_SUSPEND;
 	tcb->safeCnt = 0;
@@ -357,16 +368,20 @@ STATUS taskInit(WIND_TCB *pTcb,
 {
 	struct wind_task_args *args;
 	struct wind_task *task;
+	struct service svc;
+	STATUS ret = ERROR;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
 	  
+	COPPERPLATE_PROTECT(svc);
+
 	task = alloc_task();
 	if (task == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
-		return ERROR;
+		goto out;
 	}
 
 	args = &task->args;
@@ -381,23 +396,28 @@ STATUS taskInit(WIND_TCB *pTcb,
 	args->arg7 = arg7;
 	args->arg8 = arg8;
 	args->arg9 = arg9;
+	ret = __taskInit(task, pTcb, name, prio, flags, entry, stacksize);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return __taskInit(task, pTcb, name, prio, flags, entry, stacksize);
+	return ret;
 }
 
 STATUS taskActivate(TASK_ID tid)
 {
-	struct wind_task *task = get_wind_task(tid);
+	struct wind_task *task;
 
-	if (task == NULL) {
-		errno = S_objLib_OBJ_ID_ERROR;
+	task = get_wind_task(tid);
+	if (task == NULL)
 		return ERROR;
-	}
 
 	task->tcb->status &= ~WIND_SUSPEND;
 	put_wind_task(task);
-	/* Assume sem_post() will check for validity. */
-	sem_post(&task->barrier);
+	/* sem_post() will check for validity as well. */
+	if (sem_post(&task->barrier)) {
+		errno = S_objLib_OBJ_ID_ERROR;
+		return ERROR;
+	}
 
 	return OK;
 }
@@ -412,6 +432,7 @@ TASK_ID taskSpawn(const char *name,
 {
 	struct wind_task_args *args;
 	struct wind_task *task;
+	struct service svc;
 	TASK_ID tid;
 
 	if (threadobj_async_p()) {
@@ -419,9 +440,12 @@ TASK_ID taskSpawn(const char *name,
 		return ERROR;
 	}
 	  
+	COPPERPLATE_PROTECT(svc);
+
 	task = alloc_task();
 	if (task == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		COPPERPLATE_UNPROTECT(svc);
 		return ERROR;
 	}
 
@@ -439,8 +463,12 @@ TASK_ID taskSpawn(const char *name,
 	args->arg9 = arg9;
 
 	if (__taskInit(task, &task->priv_tcb, name,
-		       prio, flags, entry, stacksize) == ERROR)
+		       prio, flags, entry, stacksize) == ERROR) {
+		COPPERPLATE_UNPROTECT(svc);
 		return ERROR;
+	}
+
+	COPPERPLATE_UNPROTECT(svc);
 
 	tid = mainheap_ref(&task->priv_tcb, TASK_ID);
 
@@ -449,19 +477,27 @@ TASK_ID taskSpawn(const char *name,
 
 static STATUS __taskDelete(TASK_ID tid, int force)
 {
-	struct wind_task *task = find_wind_task_or_self(tid);
+	struct wind_task *task;
+	struct service svc;
 	int ret;
 
 	if (threadobj_async_p()) {
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
-	  
-	if (task == NULL)
-		goto objid_error;
 
-	if (task == wind_task_current()) /* Self-deletion. */
+	task = find_wind_task_or_self(tid);
+	if (task == NULL) {
+	objid_error:
+		errno = S_objLib_OBJ_ID_ERROR;
+		return ERROR;
+	}
+
+	/* Self-deletion. We don't have to run COPPERPLATE_UNPROTECT(). */
+	if (task == wind_task_current())
 		pthread_exit(NULL);
+
+	COPPERPLATE_PROTECT(svc);
 
 	/*
 	 * We always attempt to grab the thread safe lock first, then
@@ -494,11 +530,11 @@ static STATUS __taskDelete(TASK_ID tid, int force)
 		pthread_mutex_unlock(&task->safelock);
 
 	ret = threadobj_cancel(&task->thobj);
-	if (ret) {
-	objid_error:
-		errno = S_objLib_OBJ_ID_ERROR;
-		return ERROR;
-	}
+
+	COPPERPLATE_UNPROTECT(svc);
+
+	if (ret)
+		goto objid_error;
 
 	return OK;
 }
@@ -523,7 +559,6 @@ TASK_ID taskIdSelf(void)
 	}
 	  
 	current = wind_task_current();
-
 	if (current == NULL) {
 		errno = S_objLib_OBJ_NO_METHOD;
 		return ERROR;
@@ -534,8 +569,9 @@ TASK_ID taskIdSelf(void)
 
 struct WIND_TCB *taskTcb(TASK_ID tid)
 {
-	struct wind_task *task = find_wind_task(tid);
+	struct wind_task *task;
 
+	task = find_wind_task(tid);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return NULL;
@@ -546,9 +582,10 @@ struct WIND_TCB *taskTcb(TASK_ID tid)
 
 STATUS taskSuspend(TASK_ID tid)
 {
-	struct wind_task *task = get_wind_task(tid);
+	struct wind_task *task;
 	int ret;
 
+	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
@@ -566,9 +603,10 @@ STATUS taskSuspend(TASK_ID tid)
 
 STATUS taskResume(TASK_ID tid)
 {
-	struct wind_task *task = get_wind_task(tid);
+	struct wind_task *task;
 	int ret;
 
+	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
@@ -599,6 +637,10 @@ STATUS taskSafe(void)
 		return ERROR;
 	}
 
+	/*
+	 * Grabbing the safelock will lock out cancellation requests,
+	 * so we don't have to issue COPPERPLATE_PROTECT().
+	 */
 	pthread_mutex_lock(&current->safelock);
 	current->tcb->safeCnt++;
 
@@ -630,8 +672,9 @@ STATUS taskUnsafe(void)
 
 STATUS taskIdVerify(TASK_ID tid)
 {
-	struct wind_task *task = find_wind_task(tid);
+	struct wind_task *task;
 
+	task = find_wind_task(tid);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
@@ -647,14 +690,14 @@ void taskExit(int code)
 
 STATUS taskPrioritySet(TASK_ID tid, int prio)
 {
-	struct wind_task *task = get_wind_task(tid);
+	struct wind_task *task;
 	int ret, pprio;
 
+	task = get_wind_task(tid);
 	if (task == NULL)
 		goto objid_error;
 
 	ret = check_task_priority(prio);
-
 	if (ret) {
 		put_wind_task(task);
 		errno = ret;
@@ -683,15 +726,15 @@ int wind_task_get_priority(struct wind_task *task)
 
 STATUS taskPriorityGet(TASK_ID tid, int *priop)
 {
-	struct wind_task *task = get_wind_task(tid);
+	struct wind_task *task;
 
+	task = get_wind_task(tid);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
 		return ERROR;
 	}
 
 	*priop = wind_task_get_priority(task);
-
 	put_wind_task(task);
 
 	return OK;
@@ -726,7 +769,7 @@ STATUS taskUnlock(void)
 		errno = S_intLib_NOT_ISR_CALLABLE;
 		return ERROR;
 	}
-	  
+
 	task = get_wind_task_or_self(0);
 	if (task == NULL) {
 		errno = S_objLib_OBJ_ID_ERROR;
@@ -743,6 +786,7 @@ STATUS taskDelay(int ticks)
 {
 	struct wind_task *current;
 	struct timespec rqt;
+	struct service svc;
 	int ret;
 
 	if (threadobj_async_p()) {
@@ -761,15 +805,18 @@ STATUS taskDelay(int ticks)
 		return OK;
 	}
 
+	COPPERPLATE_PROTECT(svc);
+
 	clockobj_ticks_to_timeout(&wind_clock, ticks, &rqt);
 	current->tcb->status |= WIND_DELAY;
 	ret = threadobj_sleep(&rqt, NULL);
 	current->tcb->status &= ~WIND_DELAY;
-
 	if (ret) {
 		errno = -ret;
-		return ERROR;
+		ret = ERROR;
 	}
 
-	return OK;
+	COPPERPLATE_UNPROTECT(svc);
+
+	return ret;
 }

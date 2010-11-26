@@ -23,7 +23,7 @@
 
 #define ring_magic 0x5432affe
 
-static struct wind_ring *get_ring_from_id(RING_ID rid)
+static struct wind_ring *find_ring_from_id(RING_ID rid)
 {
 	struct wind_ring *ring = mainheap_deref(rid, struct wind_ring);
 
@@ -61,7 +61,7 @@ RING_ID rngCreate(int nbytes)
 
 void rngDelete(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring) {
 		ring->magic = 0;
@@ -71,7 +71,7 @@ void rngDelete(RING_ID rid)
 
 void rngFlush(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring) {
 		ring->readPos = 0;
@@ -81,7 +81,7 @@ void rngFlush(RING_ID rid)
 
 int rngBufGet(RING_ID rid, char *buffer, int maxbytes)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 	unsigned int savedWritePos;
 	int j, bytesRead = 0;
 
@@ -103,7 +103,7 @@ int rngBufGet(RING_ID rid, char *buffer, int maxbytes)
 
 int rngBufPut(RING_ID rid, char *buffer, int nbytes)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 	unsigned int savedReadPos;
 	int j, bytesWritten = 0;
 
@@ -125,7 +125,7 @@ int rngBufPut(RING_ID rid, char *buffer, int nbytes)
 
 BOOL rngIsEmpty(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring == NULL)
 		return ERROR;
@@ -135,7 +135,7 @@ BOOL rngIsEmpty(RING_ID rid)
 
 BOOL rngIsFull(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring == NULL)
 		return ERROR;
@@ -145,7 +145,7 @@ BOOL rngIsFull(RING_ID rid)
 
 int rngFreeBytes(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring == NULL)
 		return ERROR;
@@ -156,7 +156,7 @@ int rngFreeBytes(RING_ID rid)
 
 int rngNBytes(RING_ID rid)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring == NULL)
 		return ERROR;
@@ -166,7 +166,7 @@ int rngNBytes(RING_ID rid)
 
 void rngPutAhead(RING_ID rid, char byte, int offset)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 	int where;
 
 	if (ring) {
@@ -177,7 +177,7 @@ void rngPutAhead(RING_ID rid, char byte, int offset)
 
 void rngMoveAhead(RING_ID rid, int n)
 {
-	struct wind_ring *ring = get_ring_from_id(rid);
+	struct wind_ring *ring = find_ring_from_id(rid);
 
 	if (ring) {
 		ring->writePos += n;

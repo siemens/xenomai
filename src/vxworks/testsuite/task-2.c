@@ -9,7 +9,10 @@
 static struct traceobj trobj;
 
 static int tseq[] = {
-	8, 1, 9, 4, 10, 5, 11, 2, 6, 7, 12
+	8, 1, 9, 4, 10, 5, 11, 2, 6, 7, 12,
+#ifndef CONFIG_XENO_ASYNC_CANCEL
+	3
+#endif
 };
 
 TASK_ID btid, ftid;

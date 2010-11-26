@@ -57,13 +57,19 @@ static struct wind_sem *alloc_sem(int options, const struct wind_sem_ops *ops)
 static STATUS xsem_take(struct wind_sem *sem, int timeout)
 {
 	struct timespec ts, *timespec;
+	struct syncstate syns;
+	struct service svc;
 	STATUS ret = OK;
 
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
-	if (syncobj_lock(&sem->u.xsem.sobj))
-		return S_objLib_OBJ_ID_ERROR;
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
+		ret = S_objLib_OBJ_ID_ERROR;
+		goto out;
+	}
 
 	if (--sem->u.xsem.value >= 0)
 		goto done;
@@ -80,9 +86,11 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 	} else
 		timespec = NULL;
 
-	ret = syncobj_pend(&sem->u.xsem.sobj, timespec);
-	if (ret == -EIDRM)
-		return S_objLib_OBJ_DELETED;
+	ret = syncobj_pend(&sem->u.xsem.sobj, timespec, &syns);
+	if (ret == -EIDRM) {
+		ret = S_objLib_OBJ_DELETED;
+		goto out;
+	}
 	if (ret) {
 		sem->u.xsem.value++;
 		if (ret == -ETIMEDOUT)
@@ -91,17 +99,25 @@ static STATUS xsem_take(struct wind_sem *sem, int timeout)
 			ret = OK;	/* Flushed. */
 	}
 done:
-	syncobj_unlock(&sem->u.xsem.sobj);
+	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
 }
 
 static STATUS xsem_give(struct wind_sem *sem)
 {
+	struct syncstate syns;
+	struct service svc;
 	STATUS ret = OK;
 
-	if (syncobj_lock(&sem->u.xsem.sobj))
-		return S_objLib_OBJ_ID_ERROR;
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
+		ret = S_objLib_OBJ_ID_ERROR;
+		goto out;
+	}
 
 	if (sem->u.xsem.value >= sem->u.xsem.maxvalue) {
 		if (sem->u.xsem.maxvalue == INT_MAX)
@@ -110,21 +126,33 @@ static STATUS xsem_give(struct wind_sem *sem)
 	} else if (++sem->u.xsem.value <= 0)
 		syncobj_post(&sem->u.xsem.sobj);
 
-	syncobj_unlock(&sem->u.xsem.sobj);
+	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
 	return ret;
 }
 
 static STATUS xsem_flush(struct wind_sem *sem)
 {
-	if (syncobj_lock(&sem->u.xsem.sobj))
-		return S_objLib_OBJ_ID_ERROR;
+	struct syncstate syns;
+	struct service svc;
+	STATUS ret = OK;
+
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
+		ret = S_objLib_OBJ_ID_ERROR;
+		goto out;
+	}
 
 	syncobj_flush(&sem->u.xsem.sobj, SYNCOBJ_FLUSHED);
 
-	syncobj_unlock(&sem->u.xsem.sobj);
+	syncobj_unlock(&sem->u.xsem.sobj, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return OK;
+	return ret;
 }
 
 static void sem_finalize(struct syncobj *sobj)
@@ -136,16 +164,26 @@ fnref_register(libvxworks, sem_finalize);
 
 static STATUS xsem_delete(struct wind_sem *sem)
 {
+	struct syncstate syns;
+	struct service svc;
+	int ret = OK;
+
 	if (threadobj_async_p())
 		return S_intLib_NOT_ISR_CALLABLE;
 	  
-	if (syncobj_lock(&sem->u.xsem.sobj))
-		return S_objLib_OBJ_ID_ERROR;
+	COPPERPLATE_PROTECT(svc);
+
+	if (syncobj_lock(&sem->u.xsem.sobj, &syns)) {
+		ret = S_objLib_OBJ_ID_ERROR;
+		goto out;
+	}
 
 	sem->magic = ~sem_magic; /* Prevent further reference. */
-	syncobj_destroy(&sem->u.xsem.sobj);
+	syncobj_destroy(&sem->u.xsem.sobj, &syns);
+out:
+	COPPERPLATE_UNPROTECT(svc);
 
-	return OK;
+	return ret;
 }
 
 static const struct wind_sem_ops xsem_ops = {
@@ -294,18 +332,33 @@ static const struct wind_sem_ops msem_ops = {
 
 SEM_ID semBCreate(int options, SEM_B_STATE state)
 {
-	return alloc_xsem(options, state, 1);
+	struct service svc;
+	SEM_ID sem_id;
+
+	COPPERPLATE_PROTECT(svc);
+	sem_id = alloc_xsem(options, state, 1);
+	COPPERPLATE_UNPROTECT(svc);
+
+	return sem_id;
 }
 
 SEM_ID semCCreate(int options, int count)
 {
-	return alloc_xsem(options, count, INT_MAX);
+	struct service svc;
+	SEM_ID sem_id;
+
+	COPPERPLATE_PROTECT(svc);
+	sem_id = alloc_xsem(options, count, INT_MAX);
+	COPPERPLATE_UNPROTECT(svc);
+
+	return sem_id;
 }
 
 SEM_ID semMCreate(int options)
 {
 	pthread_mutexattr_t mattr;
 	struct wind_sem *sem;
+	struct service svc;
 
 	if (options & ~(SEM_Q_PRIORITY|SEM_DELETE_SAFE|SEM_INVERSION_SAFE)) {
 		errno = S_semLib_INVALID_OPTION;
@@ -319,9 +372,12 @@ SEM_ID semMCreate(int options)
 		}
 	}
 
+	COPPERPLATE_PROTECT(svc);
+
 	sem = alloc_sem(options, &msem_ops);
 	if (sem == NULL) {
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
+		COPPERPLATE_UNPROTECT(svc);
 		return (SEM_ID)0;
 	}
 
@@ -348,7 +404,9 @@ SEM_ID semMCreate(int options)
 	 */
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+#if 0				/* FIXME */
 	pthread_mutexattr_setrobust_np(&mattr, PTHREAD_MUTEX_ROBUST_NP);
+#endif
 	if (options & SEM_INVERSION_SAFE)
 		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
@@ -356,10 +414,12 @@ SEM_ID semMCreate(int options)
 	pthread_mutex_init(&sem->u.msem.lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
 
+	COPPERPLATE_UNPROTECT(svc);
+
 	return mainheap_ref(sem, SEM_ID);
 }
 
-static struct wind_sem *get_sem_from_id(SEM_ID sem_id)
+static struct wind_sem *find_sem_from_id(SEM_ID sem_id)
 {
 	struct wind_sem *sem = mainheap_deref(sem_id, struct wind_sem);
 
@@ -373,15 +433,18 @@ static struct wind_sem *get_sem_from_id(SEM_ID sem_id)
 #define do_sem_op(sem_id, op, args...)			\
 do {							\
 	struct wind_sem *sem;				\
+	struct service svc;				\
 	STATUS ret;					\
 							\
-	sem = get_sem_from_id(sem_id);			\
+	sem = find_sem_from_id(sem_id);			\
 	if (sem == NULL) {				\
 		errno = S_objLib_OBJ_ID_ERROR;		\
 		return ERROR;				\
 	}						\
 							\
+	COPPERPLATE_PROTECT(svc);			\
 	ret = sem->semops->op(sem , ##args);		\
+	COPPERPLATE_UNPROTECT(svc);			\
 	if (ret) {					\
 		errno = ret;				\
 		ret = ERROR;				\
