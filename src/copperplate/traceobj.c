@@ -16,8 +16,6 @@ void traceobj_init(struct traceobj *trobj, const char *label, int nr_marks)
 	pthread_mutexattr_t mattr;
 	pthread_condattr_t cattr;
 
-	__traceobj_core_init();
-
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
@@ -162,7 +160,6 @@ void traceobj_enter(struct traceobj *trobj)
 	struct threadobj *current = threadobj_current();
 
 	if (current) {
-		__traceobj_core_enter(current);
 		threadobj_lock(current);
 		current->tracer = trobj;
 		threadobj_unlock(current);
@@ -191,7 +188,6 @@ void traceobj_exit(struct traceobj *trobj)
 	struct threadobj *current = threadobj_current();
 
 	if (current) {
-		__traceobj_core_exit(current);
 		threadobj_lock(current);
 		current->tracer = NULL;
 		threadobj_unlock(current);

@@ -69,53 +69,6 @@ void __traceobj_assert_failed(struct traceobj *trobj,
 void __traceobj_mark(struct traceobj *trobj,
 		     const char *file, int line, int mark);
 
-#ifdef CONFIG_XENO_COBALT
-
-static inline void __traceobj_core_init(void)
-{
-}
-
-static inline void __traceobj_core_enter(struct threadobj *current)
-{
-#if 0
-	pthread_set_mode_np(0, PTHREAD_WARNSW);
-#endif
-}
-
-static inline void __traceobj_core_exit(struct threadobj *current)
-{
-#if 0
-	pthread_set_mode_np(PTHREAD_WARNSW, 0);
-#endif
-}
-
-#else /* CONFIG_XENO_MERCURY */
-
-#include <sched.h>
-
-static inline void __traceobj_core_init(void)
-{
-	cpu_set_t set;
-	int ret;
-
-	CPU_ZERO(&set);
-	CPU_SET(0, &set);
-
-	ret = sched_setaffinity(0, sizeof(set), &set);
-	if (ret)
-		panic("cannot force CPU affinity for process");
-}
-
-static inline void __traceobj_core_enter(struct threadobj *current)
-{
-}
-
-static inline void __traceobj_core_exit(struct threadobj *current)
-{
-}
-
-#endif /* CONFIG_XENO_MERCURY */
-
 #ifdef __cplusplus
 }
 #endif
