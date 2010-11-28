@@ -24,7 +24,7 @@
 #include <errno.h>
 #include "copperplate/panic.h"
 #include "copperplate/notifier.h"
-#include "internal.h"
+#include "copperplate/lock.h"
 
 #include <linux/unistd.h>
 #define do_gettid()	syscall(__NR_gettid)
@@ -38,15 +38,36 @@ static pthread_mutex_t notifier_lock;
 
 static struct sigaction notifier_old_sa;
 
+static fd_set notifier_rset;
+
+static int max_rfildes;		/* Increases, never decreases. */
+
 static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 {
+	static struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
 	pid_t tid = do_gettid();
+	int ret, matched = 0;
 	struct notifier *nf;
+	fd_set rfds;
 	char c;
+
+	if (siginfo->si_code == SI_SIGIO) {
+		FD_ZERO(&rfds);
+		FD_SET(siginfo->si_fd, &rfds);
+	} else {
+		/*
+		 * We will have to find out by ourselves which fd was
+		 * notified.
+		 */
+		rfds = notifier_rset;
+		ret = select(max_rfildes + 1, &rfds, NULL, NULL, &tv);
+		if (ret <= 0)
+			goto hand_over;
+	}
 
 	/* We may NOT alter the notifier list, but only scan it. */
 	pvlist_for_each_entry(nf, &notifier_list, link) {
-		if (siginfo->si_fd != nf->psfd[0])
+		if (!FD_ISSET(nf->psfd[0], &rfds))
 			continue;
 		/*
 		 * Ignore misdirected notifications. We want those to
@@ -58,8 +79,9 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		 * actual owner to detect the pending notification
 		 * once the callback returns to the read() loop.
 		 */
+		matched = 1;
 		if (nf->owner && nf->owner != tid)
-			return;
+			continue;
 
 		while (read(nf->psfd[0], &c, 1) > 0)
 			/* Callee must run async-safe code only. */
@@ -67,6 +89,15 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		return;
 	}
 
+	/*
+	 * We may have received a valid notification on the wrong
+	 * thread: bail out silently, assuming the recipient will find
+	 * out eventually.
+	 */
+	if (matched)
+		return;
+
+hand_over:
 	if (notifier_old_sa.sa_sigaction) {
 		/*
 		 * This is our best effort to relay any unprocessed
@@ -81,8 +112,8 @@ static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 		return;
 	}
 
-	panic("received spurious notification [code=%d, fd=%d]",
-	      siginfo->si_code, siginfo->si_fd);
+	panic("received spurious notification on thread[%d] [sig=%d, code=%d, fd=%d]",
+	      tid, sig, siginfo->si_code, siginfo->si_fd);
 }
 
 static void lock_notifier_list(sigset_t *oset)
@@ -131,6 +162,9 @@ int notifier_init(struct notifier *nf,
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_append(&nf->link, &notifier_list);
+	if (nf->psfd[0] > max_rfildes)
+		max_rfildes = nf->psfd[0];
+	FD_SET(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
 
@@ -143,10 +177,11 @@ int notifier_init(struct notifier *nf,
 	 * Somewhat paranoid, but makes sure no flow control will ever
 	 * block us when signaling a notifier object.
 	 */
-	fcntl(nf->psfd[1], F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-	fcntl(nf->psfd[1], F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
-	fcntl(nf->pwfd[1], F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
-	fcntl(nf->pwfd[1], F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+	fd = nf->psfd[1];
+	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+	fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+	fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 
 	return 0;
 }
@@ -158,6 +193,7 @@ void notifier_destroy(struct notifier *nf)
 	push_cleanup_lock(&notifier_lock);
 	lock_notifier_list(&oset);
 	pvlist_remove_init(&nf->link);
+	FD_CLR(nf->psfd[0], &notifier_rset);
 	unlock_notifier_list(&oset);
 	pop_cleanup_lock(&notifier_lock);
 	close(nf->psfd[0]);
