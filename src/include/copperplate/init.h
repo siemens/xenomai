@@ -19,6 +19,8 @@
 #ifndef _COPPERPLATE_INIT_H
 #define _COPPERPLATE_INIT_H
 
+#include <sched.h>
+
 extern unsigned int __tick_period_arg;
 
 extern unsigned int __mem_pool_arg;
@@ -32,6 +34,8 @@ extern int __no_registry_arg;
 extern const char *__session_label_arg;
 
 extern int __reset_session_arg;
+
+extern cpu_set_t __cpu_affinity;
 
 #ifdef __cplusplus
 extern "C" {

@@ -20,6 +20,7 @@
 #define _COPPERPLATE_THREADOBJ_H
 
 #include <time.h>
+#include <sched.h>
 #include <pthread.h>
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
@@ -87,6 +88,7 @@ struct threadobj {
 
 struct threadobj_init_data {
 	unsigned int magic;
+	cpu_set_t affinity;
 	void (*finalizer)(struct threadobj *thobj);
 	void (*wait_hook)(struct threadobj *thobj, int status);
 	void (*suspend_hook)(struct threadobj *thobj, int status);

@@ -18,6 +18,7 @@
 
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <sched.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <getopt.h>
+#include <sched.h>
 #include "copperplate/init.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
@@ -46,6 +48,8 @@ int __no_registry_arg = 0; /* Default, registry on when compiled in. */
 const char *__session_label_arg = "anon";
 
 int __reset_session_arg = 0;
+
+cpu_set_t __cpu_affinity;
 
 static int mkdir_mountpt = 1;
 
@@ -107,6 +111,13 @@ static const struct option base_options[] = {
 		.val = 1
 	},
 	{
+#define affinity_opt	8
+		.name = "cpu-affinity",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
+	},
+	{
 		.name = NULL,
 		.has_arg = 0,
 		.flag = NULL,
@@ -124,6 +135,7 @@ static void usage(void)
 	fprintf(stderr, "--no-registry			suppress object registration\n");
 	fprintf(stderr, "--session=<label>		label of shared multi-processing session\n");
 	fprintf(stderr, "--reset			remove any older session\n");
+	fprintf(stderr, "--cpu-affinity=<cpu[,cpu]...>	set CPU affinity of threads\n");
 }
 
 static void do_cleanup(void)
@@ -132,12 +144,52 @@ static void do_cleanup(void)
 		registry_pkg_destroy();
 }
 
+static int collect_cpu_affinity(const char *cpu_list)
+{
+	char *s = strdup(cpu_list), *p, *n;
+	int ret, cpu;
+
+	n = s;
+	while ((p = strtok(n, ",")) != NULL) {
+		cpu = atoi(p);
+		if (cpu >= CPU_SETSIZE) {
+			free(s);
+			warning("invalid CPU number '%d'", cpu);
+			return -EINVAL;
+		}
+		CPU_SET(cpu, &__cpu_affinity);
+		n = NULL;
+	}
+
+	free(s);
+
+	/*
+	 * Check we may use this affinity, at least one CPU from the
+	 * given set should be available for running threads. Since
+	 * CPU affinity will be inherited by children threads, we only
+	 * have to set it here.
+	 *
+	 * NOTE: we don't clear __cpu_affinity on entry to this routine
+	 * to allow cumulative --cpu-affinity options to appear in the
+	 * command line arguments.
+	 */
+	ret = sched_setaffinity(0, sizeof(__cpu_affinity), &__cpu_affinity);
+	if (ret) {
+		warning("no valid CPU in affinity list '%s'", cpu_list);
+		return -ret;
+	}
+
+	return 0;
+}
+
 int copperplate_init(int argc, char *const argv[])
 {
 	int c, lindex, ret;
 
 	/* Set a reasonable default value for the registry mount point. */
 	sprintf(__registry_mountpt_arg, "/mnt/xenomai/%d", getpid());
+	/* Define default CPU affinity, i.e. no particular affinity. */
+	CPU_ZERO(&__cpu_affinity);
 
 	for (;;) {
 		c = getopt_long_only(argc, argv, "", base_options, &lindex);
@@ -170,6 +222,11 @@ int copperplate_init(int argc, char *const argv[])
 #ifndef CONFIG_XENO_PSHARED
 			warning("Xenomai compiled without shared multi-processing support");
 #endif
+			break;
+		case affinity_opt:
+			ret = collect_cpu_affinity(optarg);
+			if (ret)
+				return ret;
 			break;
 		case no_mlock_opt:
 		case no_registry_opt:

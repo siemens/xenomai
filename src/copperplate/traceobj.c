@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "copperplate/init.h"
 #include "copperplate/lock.h"
 #include "copperplate/traceobj.h"
 #include "copperplate/threadobj.h"
@@ -96,6 +97,17 @@ fail:
 	compare_marks(trobj, tseq, nr_seq);
 	read_unlock(&trobj->lock);
 	pop_cleanup_lock(&trobj->lock);
+#ifdef CONFIG_XENO_MERCURY
+	/*
+	 * The Mercury core does not force any affinity, which may
+	 * lead to wrong results with some unit tests checking strict
+	 * ordering of operations. Tell the user about this. Normally,
+	 * such unit tests on Mercury should be pinned on a single CPU
+	 * using --cpu-affinity.
+	 */
+	if (CPU_COUNT(&__cpu_affinity) == 0)
+		warning("NOTE: --cpu-affinity option was not given - this might explain?");
+#endif
 	exit(5);
 }
 
