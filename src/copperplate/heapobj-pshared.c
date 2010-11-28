@@ -49,10 +49,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "copperplate/init.h"
+#include "copperplate/lock.h"
 #include "copperplate/list.h"
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
-#include "internal.h"
 
 #include <linux/unistd.h>
 #define do_gettid()	syscall(__NR_gettid)
@@ -64,7 +64,6 @@
 
 #define HOBJ_MINLOG2    3
 #define HOBJ_MAXLOG2    22	/* Must hold pagemap::bcount objects */
-#define HOBJ_MINALLOCSZ (1U << HOBJ_MINLOG2)
 #define HOBJ_MINALIGNSZ (1U << 4) /* i.e. 16 bytes */
 #define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
 #define HOBJ_MAXEXTSZ   (1U << 31) /* i.e. 2Gb */
@@ -292,28 +291,16 @@ splitpage:
 }
 
 static inline size_t  __attribute__ ((always_inline))
-align_up_size(size_t size)
+align_alloc_size(size_t size)
 {
 	/*
 	 * Sizes greater than the page size are rounded to a multiple
 	 * of the page size.
 	 */
 	if (size > HOBJ_PAGE_SIZE)
-		return (size + HOBJ_PAGE_SIZE - 1) & ~(HOBJ_PAGE_SIZE - 1);
+		return __align_to(size, HOBJ_PAGE_SIZE);
 
-	/*
-	 * Sizes lower or equal to the page size are rounded
-	 * either to the minimum allocation size if lower than
-	 * this value, or to the minimum alignment size if
-	 * greater or equal to this value. In other words,
-	 * with MINALLOC = 8 and MINALIGN = 16, a 7 bytes
-	 * request will be rounded to 8 bytes, and a 17 bytes
-	 * request will be rounded to 32.
-	 */
-	if (size <= HOBJ_MINALIGNSZ)
-		return (size + HOBJ_MINALLOCSZ - 1) & ~(HOBJ_MINALLOCSZ - 1);
-
-	return (size + HOBJ_MINALIGNSZ - 1) & ~(HOBJ_MINALIGNSZ - 1);
+	return __align_to(size, HOBJ_MINALIGNSZ);
 }
 
 static void *alloc_block(struct heap *heap, size_t size)
@@ -326,7 +313,7 @@ static void *alloc_block(struct heap *heap, size_t size)
 	if (size == 0)
 		return NULL;
 
-	size = align_up(size);
+	size = align_alloc_size(size);
 	/*
 	 * It becomes more space efficient to directly allocate pages from
 	 * the free page list whenever the requested size is greater than
@@ -771,7 +758,7 @@ int heapobj_init(struct heapobj *hobj, const char *name,
 int heapobj_init_array(struct heapobj *hobj, const char *name,
 		       size_t size, int elems)
 {
-	size = align_up(size);
+	size = align_alloc_size(size);
 	return heapobj_init(hobj, name, size * elems, NULL);
 }
 
