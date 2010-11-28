@@ -71,6 +71,7 @@ struct heapobj {
 	struct heapobj_ops *ops;
 	char fsname[64];
 	int fd;
+	int flags;
 #endif
 };
 
@@ -175,6 +176,12 @@ static inline size_t heapobj_inquire(struct heapobj *hobj, void *ptr)
 	return hobj->ops->inquire(hobj, ptr);
 }
 
+int heapobj_init_depend(struct heapobj *hobj, const char *name,
+			size_t size);
+
+int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
+			      size_t size, int elems);
+
 void *xnmalloc(size_t size);
 
 void *xnrealloc(void *ptr, size_t size);
@@ -212,6 +219,19 @@ static inline int heapobj_init_array(struct heapobj *hobj, const char *name,
 				     size_t size, int elems)
 {
 	return heapobj_init_array_private(hobj, name, size, elems);
+}
+
+static inline int heapobj_init_depend(struct heapobj *hobj,
+				      const char *name, size_t size)
+{
+	return heapobj_init(hobj, name, size, NULL);
+}
+
+static inline int heapobj_init_array_depend(struct heapobj *hobj,
+					    const char *name,
+					    size_t size, int elems)
+{
+	return heapobj_init_array(hobj, name, size, elems);
 }
 
 static inline void heapobj_destroy(struct heapobj *hobj)

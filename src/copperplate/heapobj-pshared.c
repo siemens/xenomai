@@ -68,6 +68,9 @@
 #define HOBJ_NBUCKETS   (HOBJ_MAXLOG2 - HOBJ_MINLOG2 + 2)
 #define HOBJ_MAXEXTSZ   (1U << 31) /* i.e. 2Gb */
 
+#define HOBJ_FORCE   0x1	/* Force cleanup */
+#define HOBJ_DEPEND  0x2	/* Allocate from main heap */
+
 /*
  * The base address of the shared memory segment, as seen by each
  * individual process.
@@ -589,7 +592,7 @@ static void *realloc_block(struct heap *heap, void *block, size_t newsize)
 }
 
 static int create_heap(struct heapobj *hobj, const char *session,
-		       const char *name, size_t size, int force)
+		       const char *name, size_t size, int flags)
 {
 	struct heap *heap;
 	struct stat sbuf;
@@ -607,15 +610,26 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	if (size - sizeof(struct heap_extent) < HOBJ_PAGE_SIZE * 2)
 		size += HOBJ_PAGE_SIZE * 2;
 
+	len = size + sizeof(*heap);
+
+	if (flags & HOBJ_DEPEND) {
+		heap = alloc_block(&main_heap, len);
+		if (heap == NULL)
+			return -ENOMEM;
+		fd = -1;
+		heap->maplen = len;
+		init_heap(heap, (caddr_t)heap + sizeof(*heap), size);
+		goto finish;
+	}
+
 	if (name)
 		snprintf(hobj->name, sizeof(hobj->name), "%s:%s", session, name);
 	else
 		snprintf(hobj->name, sizeof(hobj->name), "%s:%p", session, hobj);
 
 	snprintf(hobj->fsname, sizeof(hobj->fsname), "/xeno:%s", hobj->name);
-	len = size + sizeof(*heap);
 
-	if (force)
+	if (flags & HOBJ_FORCE)
 		shm_unlink(hobj->fsname);
 
 	fd = shm_open(hobj->fsname, O_RDWR|O_CREAT, 0600);
@@ -658,10 +672,11 @@ static int create_heap(struct heapobj *hobj, const char *session,
 	}
 
 	flock(fd, LOCK_UN);
-
+finish:
 	hobj->pool = heap;
 	hobj->size = size;
 	hobj->fd = fd;
+	hobj->flags = flags;
 
 	return 0;
 }
@@ -669,8 +684,14 @@ static int create_heap(struct heapobj *hobj, const char *session,
 static void pshared_destroy(struct heapobj *hobj)
 {
 	struct heap *heap = hobj->pool;
-	int cpid = heap->cpid;
+	int cpid;
 
+	if (hobj->flags & HOBJ_DEPEND) {
+		free_block(&main_heap, heap);
+		return;
+	}
+
+	cpid = heap->cpid;
 	munmap(heap, hobj->size + sizeof(*heap));
 	close(hobj->fd);
 
@@ -750,9 +771,23 @@ static struct heapobj_ops pshared_ops = {
 int heapobj_init(struct heapobj *hobj, const char *name,
 		 size_t size, void *mem)
 {
+	int flags = __reset_session_arg ? HOBJ_FORCE : 0;
+
 	hobj->ops = &pshared_ops;
+
 	return create_heap(hobj, __session_label_arg, name,
-			   size, __reset_session_arg);
+			   size, flags);
+}
+
+int heapobj_init_depend(struct heapobj *hobj, const char *name,
+			size_t size)
+{
+	int flags = __reset_session_arg ? HOBJ_FORCE : 0;
+
+	hobj->ops = &pshared_ops;
+
+	return create_heap(hobj, __session_label_arg, name,
+			   size, flags | HOBJ_DEPEND);
 }
 
 int heapobj_init_array(struct heapobj *hobj, const char *name,
@@ -760,6 +795,13 @@ int heapobj_init_array(struct heapobj *hobj, const char *name,
 {
 	size = align_alloc_size(size);
 	return heapobj_init(hobj, name, size * elems, NULL);
+}
+
+int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
+			      size_t size, int elems)
+{
+	size = align_alloc_size(size);
+	return heapobj_init_depend(hobj, name, size * elems);
 }
 
 void *xnmalloc(size_t size)
