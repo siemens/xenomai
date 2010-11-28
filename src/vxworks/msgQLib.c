@@ -83,15 +83,21 @@ MSG_Q_ID msgQCreate(int maxMsgs, int maxMsgLength, int options)
 		errno = S_msgQLib_INVALID_MSG_LENGTH;
 		return (MSG_Q_ID)0;
 	}
-		
+
 	COPPERPLATE_PROTECT(svc);
 
 	mq = xnmalloc(sizeof(*mq));
 	if (mq == NULL)
 		goto no_mem;
 
-	if (heapobj_init_array(&mq->pool, NULL, maxMsgLength +
-			       sizeof(struct msgholder), maxMsgs)) {
+	/*
+	 * The message pool will depend on the main heap because of
+	 * mq->msg_list (this queue head and messages from the pool
+	 * must share the same allocation base). Create the heap
+	 * object accordingly.
+	 */
+	if (heapobj_init_array_depend(&mq->pool, NULL, maxMsgLength +
+				      sizeof(struct msgholder), maxMsgs)) {
 		xnfree(mq);
 	no_mem:
 		errno = S_memLib_NOT_ENOUGH_MEMORY;
