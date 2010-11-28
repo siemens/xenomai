@@ -330,8 +330,8 @@ static STATUS __taskInit(struct wind_task *task,
 	memset(&param, 0, sizeof(param));
 	param.sched_priority = wind_task_normalize_priority(prio);
 	pthread_attr_setinheritsched(&thattr, PTHREAD_EXPLICIT_SCHED);
-	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setschedpolicy(&thattr, SCHED_FIFO);
+	pthread_attr_setschedparam(&thattr, &param);
 	pthread_attr_setstacksize(&thattr, stacksize);
 	pthread_attr_setscope(&thattr, thread_scope_attribute);
 
