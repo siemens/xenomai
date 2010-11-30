@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  *
  * This file satisfies the references within the emulator code
- * mimicking a VxWorks-like API built upon the Xenomai.
+ * mimicking a VxWorks-like API built upon the copperplate library.
  *
  * VxWorks is a registered trademark of Wind River Systems, Inc.
  */
