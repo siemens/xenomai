@@ -844,11 +844,13 @@ AC_CONFIG_FILES([ \
 	src/rtdm/Makefile \
 	src/copperplate/Makefile \
 	src/vxworks/Makefile \
+	src/psos/Makefile \
 	src/drvlib/Makefile \
 	src/drvlib/analogy/Makefile \
 	src/include/Makefile \
 	src/include/copperplate/Makefile \
 	src/include/vxworks/Makefile \
+	src/include/psos/Makefile \
 	src/testsuite/Makefile \
 	src/testsuite/latency/Makefile \
 	src/testsuite/cyclic/Makefile \

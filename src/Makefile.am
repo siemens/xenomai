@@ -1,7 +1,8 @@
 SUBDIRS =	\
 	include	\
 	copperplate \
-	vxworks
+	vxworks \
+	psos
 
 if XENO_COBALT
 SUBDIRS +=	\

@@ -1,0 +1,52 @@
+Overview
+========
+
+This directory contains a pSOS(*) emulation interface on top of the
+Xenomai framework.
+
+
+Known variations from pSOS
+==========================
+
+You may observe some variations from pSOS. If you find such a
+variation and you think it would be easy to correct, please send a
+mail to the Xenomai development mailing list at
+http://mail.gna.org/listinfo/xenomai-core/.  Here are the known
+variations:
+
+- pSOS task priorities are restricted to [1..97] in the current
+  implementation of the emulator.
+
+- Clearing the T_SLICE bit using t_mode() may induce a round-robin
+  effect within the priority level of the current task.
+
+- T_LEVELMASKx bits are ignored by the emulator
+  (e.g. t_mode()). Interrupts are always enabled for the running task.
+
+- The following calls may return ERR_SSFN when called from a
+  non-pSOS task context:
+
+  ev_receive, tm_evafter, tm_evevery, tm_evwhen
+
+- ERR_NOTIME is never returned, since the emulator sets the pSOS time
+  at startup.
+
+- q_create() always uses system buffers (Q_SYSBUF), regardless of the
+  creation flags (i.e. Q_PRIBUF is ignored). System buffer memory is
+  only limited by the addressable process memory; it is obtained from
+  the main memory pool (see --mem-pool-size init option).
+
+- Fixed and variable size message queues share a common namespace with
+  respect to q_[v]ident() calls.
+
+- tm_set() will not elapse any outstanding timer based on calendar
+  time which timeout date moves to the past as a consequence of this
+  call.
+
+- rn_retseg() does not fully check the validity of the pointer
+  argument. Therefore ERR_SEGADDR and ERR_SEGFREE error codes will
+  never be returned, and passing a non-NULL invalid pointer within the
+  bounds of the region may lead to unpredictable results.
+
+(*) pSOS is a registered trademark of Wind River Systems, Inc
+(http://www.windriver.com).
