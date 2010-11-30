@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <sched.h>
+#include "copperplate/init.h"
 #include "copperplate/panic.h"
 #include "copperplate/notifier.h"
 #include "copperplate/traceobj.h"
@@ -94,6 +95,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->status = 0;
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
+	thobj->cpid = __main_pid;
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);

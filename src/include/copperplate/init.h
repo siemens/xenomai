@@ -37,6 +37,8 @@ extern int __reset_session_arg;
 
 extern cpu_set_t __cpu_affinity;
 
+extern int __main_pid;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

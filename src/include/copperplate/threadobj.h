@@ -22,6 +22,7 @@
 #include <time.h>
 #include <sched.h>
 #include <pthread.h>
+#include <copperplate/init.h>
 #include <copperplate/list.h>
 #include <copperplate/lock.h>
 
@@ -66,6 +67,7 @@ struct threadobj {
 	int schedlock_depth;
 	int lock_state;
 	int status;
+	pid_t cpid;
 
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
@@ -234,5 +236,17 @@ static inline int threadobj_irq_priority(void)
 {
 	return threadobj_max_prio;
 }
+
+#ifdef CONFIG_XENO_PSHARED
+static inline int threadobj_local_p(struct threadobj *thobj)
+{
+	return thobj->cpid == __main_pid;
+}
+#else
+static inline int threadobj_local_p(struct threadobj *thobj)
+{
+	return 1;
+}
+#endif
 
 #endif /* _COPPERPLATE_THREADOBJ_H */

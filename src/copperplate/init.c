@@ -51,6 +51,8 @@ int __reset_session_arg = 0;
 
 cpu_set_t __cpu_affinity;
 
+pid_t __main_pid;
+
 static int mkdir_mountpt = 1;
 
 static const struct option base_options[] = {
@@ -185,6 +187,9 @@ static int collect_cpu_affinity(const char *cpu_list)
 int copperplate_init(int argc, char *const argv[])
 {
 	int c, lindex, ret;
+
+	/* linuxthreads has non-standard getpid(), help out a bit. */
+	__main_pid = getpid();
 
 	/* Set a reasonable default value for the registry mount point. */
 	sprintf(__registry_mountpt_arg, "/mnt/xenomai/%d", getpid());
