@@ -148,6 +148,7 @@ void __traceobj_mark(struct traceobj *trobj,
 	struct tracemark *tmk;
 	int cur_mark;
 
+	pthread_testcancel();
 	push_cleanup_lock(&trobj->lock);
 	write_lock(&trobj->lock);
 
