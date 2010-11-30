@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
@@ -9,10 +10,7 @@
 static struct traceobj trobj;
 
 static int tseq[] = {
-	8, 1, 9, 4, 10, 5, 11, 2, 6, 7, 12,
-#ifndef CONFIG_XENO_ASYNC_CANCEL
-	3
-#endif
+	8, 1, 9, 4, 10, 5, 11, 2, 6, 7,	12
 };
 
 TASK_ID btid, ftid;
@@ -36,6 +34,12 @@ void backgroundTask(long a1, long a2, long a3, long a4, long a5,
 
 	while (--safety > 0)
 		count++;
+
+	/*
+	 * Force a pause so that any pending cancellation is taken
+	 * regardless of whether async-cancel is enabled or not.
+	 */
+	pause();
 
 	traceobj_mark(&trobj, 3);
 
