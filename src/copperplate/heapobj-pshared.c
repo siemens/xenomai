@@ -21,20 +21,6 @@
  * multiple processes in user-space.
  */
 
-/*
- * XXX: the policy for handling caller cancellation is to disable
- * asynchronous cancellation in critical sections altering the heap
- * state. The rationale is twofold:
- *
- * - undoing the state changes involved in allocating/freeing blocks
- * from cleanup handlers would be extremely complex.
- *
- * - the critical sections traverse no cancellation point.
- *
- * Therefore we simply set the cancellation type to deferred mode for
- * the caller in routines which alter the heap state.
- */
-
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/file.h>
@@ -53,9 +39,6 @@
 #include "copperplate/list.h"
 #include "copperplate/hash.h"
 #include "copperplate/heapobj.h"
-
-#include <linux/unistd.h>
-#define do_gettid()	syscall(__NR_gettid)
 
 #define HOBJ_PAGE_SHIFT	9	/* 2^9 => 512 bytes */
 #define HOBJ_PAGE_SIZE		(1U << HOBJ_PAGE_SHIFT)
@@ -188,7 +171,7 @@ static void init_heap(struct heap *heap, void *mem, size_t size)
 	 */
 	assert(heap->npages >= 2);
 
-	heap->cpid = do_gettid();
+	heap->cpid = copperplate_get_tid();
 	heap->ubytes = 0;
 	heap->maxcont = heap->npages * HOBJ_PAGE_SIZE;
 	__list_init(heap, &heap->extents);
@@ -697,7 +680,7 @@ static void pshared_destroy(struct heapobj *hobj)
 	munmap(heap, hobj->size + sizeof(*heap));
 	close(hobj->fd);
 
-	if (cpid == do_gettid() || (cpid && kill(cpid, 0)))
+	if (cpid == copperplate_get_tid() || (cpid && kill(cpid, 0)))
 		shm_unlink(hobj->fsname);
 }
 

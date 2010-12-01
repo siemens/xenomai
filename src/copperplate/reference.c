@@ -20,10 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "copperplate/reference.h"
+#include "copperplate/hash.h"
 #include "copperplate/panic.h"
-
-unsigned int __hash_key(const void *key,
-			int length, unsigned int c);
 
 static int nrefs[MAX_FNLIBS];
 

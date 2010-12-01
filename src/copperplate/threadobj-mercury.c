@@ -95,7 +95,7 @@ void threadobj_init(struct threadobj *thobj,
 	thobj->status = 0;
 	holder_init(&thobj->wait_link);
 	thobj->suspend_hook = idata->suspend_hook;
-	thobj->cpid = __main_pid;
+	thobj->cnode = __this_node.id;
 
 	pthread_condattr_init(&cattr);
 	pthread_condattr_setpshared(&cattr, mutex_scope_attribute);

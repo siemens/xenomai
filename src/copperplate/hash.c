@@ -160,7 +160,7 @@ out:
 struct hashobj *hash_search(struct hash_table *t, const char *key)
 {
 	struct hash_bucket *bucket;
-	struct hashobj *obj = NULL;
+	struct hashobj *obj;
 
 	bucket = do_hash(t, key);
 	read_lock_nocancel(&bucket->lock);
@@ -169,6 +169,7 @@ struct hashobj *hash_search(struct hash_table *t, const char *key)
 		if (strcmp(obj->key, key) == 0)
 			goto out;
 	}
+	obj = NULL;
 out:
 	read_unlock(&bucket->lock);
 
@@ -176,6 +177,67 @@ out:
 }
 
 #ifdef CONFIG_XENO_PSHARED
+
+int hash_enter_probe(struct hash_table *t,
+		     const char *key, struct hashobj *newobj,
+		     int (*probefn)(struct hashobj *oldobj))
+{
+	struct hash_bucket *bucket;
+	struct hashobj *obj;
+	int ret = 0;
+
+	holder_init(&newobj->link);
+	newobj->key = key;
+	bucket = do_hash(t, key);
+	push_cleanup_lock(&bucket->lock);
+	write_lock(&bucket->lock);
+
+	list_for_each_entry(obj, &bucket->obj_list, link) {
+		if (strcmp(obj->key, key) == 0) {
+			if (probefn(obj)) {
+				ret = -EBUSY;
+				goto out;
+			}
+			list_remove_init(&obj->link);
+			break;
+		}
+	}
+
+	list_prepend(&newobj->link, &bucket->obj_list);
+out:
+	write_unlock(&bucket->lock);
+	pop_cleanup_lock(&bucket->lock);
+
+	return ret;
+}
+
+struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
+				  int (*probefn)(struct hashobj *obj))
+{
+	struct hash_bucket *bucket;
+	struct hashobj *obj;
+
+	bucket = do_hash(t, key);
+	push_cleanup_lock(&bucket->lock);
+	write_lock(&bucket->lock);
+
+	list_for_each_entry(obj, &bucket->obj_list, link) {
+		if (strcmp(obj->key, key) == 0) {
+			if (!probefn(obj)) {
+				list_remove_init(&obj->link);
+				goto fail;
+			}
+			goto out;
+		}
+	}
+fail:
+	obj = NULL;
+out:
+	write_unlock(&bucket->lock);
+	pop_cleanup_lock(&bucket->lock);
+
+	return obj;
+}
 
 void pvhash_init(struct pvhash_table *t)
 {
@@ -249,7 +311,7 @@ out:
 struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 {
 	struct pvhash_bucket *bucket;
-	struct pvhashobj *obj = NULL;
+	struct pvhashobj *obj;
 
 	bucket = do_pvhash(t, key);
 	read_lock_nocancel(&bucket->lock);
@@ -258,6 +320,7 @@ struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 		if (strcmp(obj->key, key) == 0)
 			goto out;
 	}
+	obj = NULL;
 out:
 	read_unlock(&bucket->lock);
 

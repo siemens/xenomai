@@ -67,7 +67,7 @@ struct threadobj {
 	int schedlock_depth;
 	int lock_state;
 	int status;
-	pid_t cpid;
+	pid_t cnode;
 
 	/* Those members belong exclusively to the syncobj code. */
 	struct syncobj *wait_sobj;
@@ -240,7 +240,7 @@ static inline int threadobj_irq_priority(void)
 #ifdef CONFIG_XENO_PSHARED
 static inline int threadobj_local_p(struct threadobj *thobj)
 {
-	return thobj->cpid == __main_pid;
+	return thobj->cnode == __this_node.id;
 }
 #else
 static inline int threadobj_local_p(struct threadobj *thobj)

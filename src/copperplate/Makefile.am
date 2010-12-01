@@ -5,6 +5,7 @@ libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthre
 
 libcopperplate_la_SOURCES =	\
 	clockobj.c	\
+	cluster.c	\
 	hash.c 		\
 	init.c		\
 	panic.c		\

@@ -24,10 +24,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <assert.h>
+#include <signal.h>
 #include <errno.h>
 #include <limits.h>
 #include <getopt.h>
 #include <sched.h>
+#include <linux/unistd.h>
 #include "copperplate/init.h"
 #include "copperplate/threadobj.h"
 #include "copperplate/heapobj.h"
@@ -51,7 +54,7 @@ int __reset_session_arg = 0;
 
 cpu_set_t __cpu_affinity;
 
-pid_t __main_pid;
+struct coppernode __this_node;
 
 static int mkdir_mountpt = 1;
 
@@ -184,12 +187,58 @@ static int collect_cpu_affinity(const char *cpu_list)
 	return 0;
 }
 
+pid_t copperplate_get_tid(void)
+{
+	return syscall(__NR_gettid);
+}
+
+#ifdef CONFIG_XENO_COBALT
+
+static inline unsigned long get_node_id(void)
+{
+	/*
+	 * XXX: The nucleus maintains a hash table indexed on
+	 * task_pid_vnr() values for mapped shadows. This is what
+	 * __NR_gettid retrieves as well.
+	 */
+	return copperplate_get_tid();
+}
+
+int copperplate_probe_node(unsigned int id)
+{
+	/*
+	 * XXX: this call does NOT migrate to secondary mode therefore
+	 * may be used in time-critical contexts. However, since the
+	 * nucleus has to know about a probed thread to find out
+	 * whether it exists, copperplate_init() must always be
+	 * invoked from a real-time shadow, so that __this_node.id can
+	 * be matched.
+	 */
+	return pthread_probe_np((pid_t)id) == 0;
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+static inline unsigned long get_node_id(void)
+{
+	return getpid();
+}
+
+int copperplate_probe_node(unsigned int id)
+{
+	return kill((pid_t)id, 0) == 0;
+}
+
+#endif  /* CONFIG_XENO_MERCURY */
+
 int copperplate_init(int argc, char *const argv[])
 {
 	int c, lindex, ret;
 
-	/* linuxthreads has non-standard getpid(), help out a bit. */
-	__main_pid = getpid();
+	/* No ifs, no buts: we must be called over the main thread. */
+	assert(getpid() == copperplate_get_tid());
+
+	__this_node.id = get_node_id();
 
 	/* Set a reasonable default value for the registry mount point. */
 	sprintf(__registry_mountpt_arg, "/mnt/xenomai/%d", getpid());

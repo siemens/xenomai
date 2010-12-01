@@ -63,6 +63,9 @@ struct pvhash_table {
 extern "C" {
 #endif
 
+unsigned int __hash_key(const void *key,
+			int length, unsigned int c);
+
 void __hash_init(void *heap, struct hash_table *t);
 
 static inline void hash_init(struct hash_table *t)
@@ -78,6 +81,14 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj);
 struct hashobj *hash_search(struct hash_table *t, const char *key);
 
 #ifdef CONFIG_XENO_PSHARED
+
+int hash_enter_probe(struct hash_table *t,
+		     const char *key, struct hashobj *newobj,
+		     int (*probefn)(struct hashobj *oldobj));
+
+struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
+				  int (*probefn)(struct hashobj *obj));
+
 void pvhash_init(struct pvhash_table *t);
 
 int pvhash_enter(struct pvhash_table *t,

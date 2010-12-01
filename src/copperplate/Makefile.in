@@ -99,10 +99,11 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libcopperplate_la_DEPENDENCIES = $(am__append_4) $(am__append_6)
-am__libcopperplate_la_SOURCES_DIST = clockobj.c hash.c init.c panic.c \
-	syncobj.c traceobj.c threadobj-cobalt.c timerobj-cobalt.c \
-	threadobj-mercury.c timerobj-mercury.c notifier.c \
-	heapobj-pshared.c reference.c heapobj-tlsf.c heapobj-malloc.c
+am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
+	init.c panic.c syncobj.c traceobj.c threadobj-cobalt.c \
+	timerobj-cobalt.c threadobj-mercury.c timerobj-mercury.c \
+	notifier.c heapobj-pshared.c reference.c heapobj-tlsf.c \
+	heapobj-malloc.c
 @XENO_COBALT_TRUE@am__objects_1 =  \
 @XENO_COBALT_TRUE@	libcopperplate_la-threadobj-cobalt.lo \
 @XENO_COBALT_TRUE@	libcopperplate_la-timerobj-cobalt.lo
@@ -116,11 +117,11 @@ am__libcopperplate_la_SOURCES_DIST = clockobj.c hash.c init.c panic.c \
 @XENO_TLSF_TRUE@am__objects_4 = libcopperplate_la-heapobj-tlsf.lo
 @XENO_TLSF_FALSE@am__objects_5 = libcopperplate_la-heapobj-malloc.lo
 am_libcopperplate_la_OBJECTS = libcopperplate_la-clockobj.lo \
-	libcopperplate_la-hash.lo libcopperplate_la-init.lo \
-	libcopperplate_la-panic.lo libcopperplate_la-syncobj.lo \
-	libcopperplate_la-traceobj.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5)
+	libcopperplate_la-cluster.lo libcopperplate_la-hash.lo \
+	libcopperplate_la-init.lo libcopperplate_la-panic.lo \
+	libcopperplate_la-syncobj.lo libcopperplate_la-traceobj.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
 libcopperplate_la_OBJECTS = $(am_libcopperplate_la_OBJECTS)
 libcopperplate_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -312,9 +313,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
-libcopperplate_la_SOURCES = clockobj.c hash.c init.c panic.c syncobj.c \
-	traceobj.c $(am__append_2) $(am__append_3) $(am__append_5) \
-	$(am__append_7) $(am__append_8)
+libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c panic.c \
+	syncobj.c traceobj.c $(am__append_2) $(am__append_3) \
+	$(am__append_5) $(am__append_7) $(am__append_8)
 libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/src/include $(am__append_1)
 libcopperplate_la_LIBADD = $(am__append_4) $(am__append_6)
@@ -424,6 +425,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-clockobj.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-cluster.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-hash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-malloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libcopperplate_la-heapobj-pshared.Plo@am__quote@
@@ -468,6 +470,13 @@ libcopperplate_la-clockobj.lo: clockobj.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='clockobj.c' object='libcopperplate_la-clockobj.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-clockobj.lo `test -f 'clockobj.c' || echo '$(srcdir)/'`clockobj.c
+
+libcopperplate_la-cluster.lo: cluster.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-cluster.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-cluster.Tpo -c -o libcopperplate_la-cluster.lo `test -f 'cluster.c' || echo '$(srcdir)/'`cluster.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libcopperplate_la-cluster.Tpo $(DEPDIR)/libcopperplate_la-cluster.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cluster.c' object='libcopperplate_la-cluster.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libcopperplate_la-cluster.lo `test -f 'cluster.c' || echo '$(srcdir)/'`cluster.c
 
 libcopperplate_la-hash.lo: hash.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcopperplate_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libcopperplate_la-hash.lo -MD -MP -MF $(DEPDIR)/libcopperplate_la-hash.Tpo -c -o libcopperplate_la-hash.lo `test -f 'hash.c' || echo '$(srcdir)/'`hash.c

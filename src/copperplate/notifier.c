@@ -22,12 +22,10 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <errno.h>
+#include "copperplate/init.h"
 #include "copperplate/panic.h"
 #include "copperplate/notifier.h"
 #include "copperplate/lock.h"
-
-#include <linux/unistd.h>
-#define do_gettid()	syscall(__NR_gettid)
 
 /* Private signal used for notification. */
 #define NOTIFYSIG	(SIGRTMIN + 8)
@@ -45,11 +43,13 @@ static int max_rfildes;		/* Increases, never decreases. */
 static void notifier_sighandler(int sig, siginfo_t *siginfo, void *uc)
 {
 	static struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
-	pid_t tid = do_gettid();
 	int ret, matched = 0;
 	struct notifier *nf;
 	fd_set rfds;
+	pid_t tid;
 	char c;
+
+	tid = copperplate_get_tid();
 
 	if (siginfo->si_code == SI_SIGIO) {
 		FD_ZERO(&rfds);
@@ -152,7 +152,7 @@ int notifier_init(struct notifier *nf,
 	nf->callback = callback;
 	pvholder_init(&nf->link);
 	nf->notified = 0;
-	nf->owner = owned ? do_gettid() : 0;
+	nf->owner = owned ? copperplate_get_tid() : 0;
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);

@@ -19,6 +19,7 @@
 #ifndef _COPPERPLATE_INIT_H
 #define _COPPERPLATE_INIT_H
 
+#include <xeno_config.h>
 #include <sched.h>
 
 extern unsigned int __tick_period_arg;
@@ -37,13 +38,21 @@ extern int __reset_session_arg;
 
 extern cpu_set_t __cpu_affinity;
 
-extern int __main_pid;
+struct coppernode {
+	pid_t id;
+};
+
+extern struct coppernode __this_node;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int copperplate_init(int argc, char *const argv[]);
+
+pid_t copperplate_get_tid(void);
+
+int copperplate_probe_node(unsigned int id);
 
 void panic(const char *fmt, ...);
 
