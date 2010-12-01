@@ -54,14 +54,14 @@ TASK_ID taskIdDefault(TASK_ID task_id)
 
 TASK_ID taskNameToId(const char *name)
 {
+	struct clusterobj *cobj;
 	struct wind_task *task;
-	struct pvhashobj *obj;
 
-	obj = pvhash_search(&wind_task_table, name);
-	if (obj == NULL)
+	cobj = cluster_findobj(&wind_task_table, name);
+	if (cobj == NULL)
 		return ERROR;
 
-	task = container_of(obj, struct wind_task, obj);
+	task = container_of(cobj, struct wind_task, cobj);
 
 	return (TASK_ID)task->tcb;
 }

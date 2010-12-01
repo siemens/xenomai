@@ -49,7 +49,7 @@ STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 	registry_add_dir("/vxworks/queues");
 	registry_add_dir("/vxworks/watchdogs");
 
-	pvhash_init(&wind_task_table);
+	cluster_init(&wind_task_table, "vxworks.task");
 
 	ret = clockobj_init(&wind_clock,
 			    "vxworks", __tick_period_arg * 1000);

@@ -33,9 +33,10 @@
 #include <copperplate/heapobj.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/syncobj.h>
+#include <copperplate/cluster.h>
 #include <vxworks/errnoLib.h>
 
-struct pvhash_table wind_task_table;
+struct cluster wind_task_table;
 
 static unsigned long anon_tids;
 
@@ -128,7 +129,7 @@ static void task_finalizer(struct threadobj *thobj)
 	threadobj_set_magic(&task->thobj, ~task_magic);
 	task->tcb->magic = ~task_magic; /* In case of normal exit. */
 	task->tcb->status |= WIND_DEAD;
-	pvhash_remove(&wind_task_table, &task->obj);
+	cluster_delobj(&wind_task_table, &task->cobj);
 	threadobj_unlock(&task->thobj);
 
 	registry_remove_file(&task->fsobj);
@@ -237,7 +238,7 @@ static void *task_trampoline(void *arg)
 
 	ret = registry_init_file(&task->fsobj, &registry_ops);
 
-	if (pvhash_enter(&wind_task_table, task->name, &task->obj)) {
+	if (cluster_addobj(&wind_task_table, task->name, &task->cobj)) {
 		warning("duplicate task name: %s", task->name);
 		/* Make sure we won't un-hash the previous one. */
 		strcpy(task->name, "(dup)");

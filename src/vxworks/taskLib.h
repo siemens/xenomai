@@ -22,6 +22,7 @@
 #include <semaphore.h>
 #include <copperplate/threadobj.h>
 #include <copperplate/registry.h>
+#include <copperplate/cluster.h>
 #include <vxworks/taskLib.h>
 
 struct wind_task_args {
@@ -52,7 +53,7 @@ struct wind_task {
 
 	struct threadobj thobj;
 	struct fsobj fsobj;
-	struct pvhashobj obj;
+	struct clusterobj cobj;
 };
 
 int wind_task_get_priority(struct wind_task *task);
@@ -97,6 +98,6 @@ struct wind_task *get_wind_task_or_self(TASK_ID tid);
 
 void put_wind_task(struct wind_task *task);
 
-extern struct pvhash_table wind_task_table;
+extern struct cluster wind_task_table;
 
 #endif /* _VXWORKS_TASKLIB_H */
