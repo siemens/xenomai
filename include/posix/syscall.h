@@ -63,7 +63,7 @@
 #define __pse51_mq_timedsend          36
 #define __pse51_mq_receive            37
 #define __pse51_mq_timedreceive       38
-#define __pse51_unimp_39              39
+#define __pse51_thread_probe          39
 #define __pse51_unimp_40              40
 #define __pse51_unimp_41              41
 #define __pse51_unimp_42              42

@@ -26,6 +26,7 @@
 #include <asm/xenomai/wrappers.h>
 #include <nucleus/ppd.h>
 #include <nucleus/sys_ppd.h>
+#include <nucleus/assert.h>
 #include <posix/syscall.h>
 #include <posix/posix.h>
 #include <posix/thread.h>
@@ -43,91 +44,128 @@
 
 int pse51_muxid;
 
-struct pthread_jhash {
+#define PTHREAD_HSLOTS (1 << 8)	/* Must be a power of 2 */
 
-#define PTHREAD_HASHBITS 8
-
-	pthread_t k_tid;
+struct pthread_hash {
+	pthread_t k_tid;	/* Xenomai in-kernel (nucleus) tid */
+	pid_t h_tid;		/* Host (linux) tid */
 	struct pse51_hkey hkey;
-	struct pthread_jhash *next;
+	struct pthread_hash *next;
 };
 
-static struct pthread_jhash *__jhash_buckets[1 << PTHREAD_HASHBITS];	/* Guaranteed zero */
+struct tid_hash {
+	pid_t tid;
+	struct tid_hash *next;
+};
 
-/* We want to keep the native pthread_t token unmodified for
-   Xenomai mapped threads, and keep it pointing at a genuine
-   NPTL/LinuxThreads descriptor, so that portions of the POSIX
-   interface which are not overriden by Xenomai fall back to the
-   original Linux services. If the latter invoke Linux system calls,
-   the associated shadow thread will simply switch to secondary exec
-   mode to perform them. For this reason, we need an external index to
-   map regular pthread_t values to Xenomai's internal thread ids used
-   in syscalling the POSIX skin, so that the outer interface can keep
-   on using the former transparently. Semaphores and mutexes do not
-   have this constraint, since we fully override their respective
-   interfaces with Xenomai-based replacements. */
+static struct pthread_hash *pthread_table[PTHREAD_HSLOTS];
 
-static inline struct pthread_jhash *__pthread_hash(const struct pse51_hkey
-						   *hkey, pthread_t k_tid)
+static struct tid_hash *tid_table[PTHREAD_HSLOTS];
+
+/*
+ * We want to keep the native pthread_t token unmodified for Xenomai
+ * mapped threads, and keep it pointing at a genuine NPTL/LinuxThreads
+ * descriptor, so that portions of the POSIX interface which are not
+ * overriden by Xenomai fall back to the original Linux services.
+ *
+ * If the latter invoke Linux system calls, the associated shadow
+ * thread will simply switch to secondary exec mode to perform
+ * them. For this reason, we need an external index to map regular
+ * pthread_t values to Xenomai's internal thread ids used in
+ * syscalling the POSIX skin, so that the outer interface can keep on
+ * using the former transparently.
+ *
+ * Semaphores and mutexes do not have this constraint, since we fully
+ * override their respective interfaces with Xenomai-based
+ * replacements.
+ */
+
+static inline
+struct pthread_hash *__pthread_hash(const struct pse51_hkey *hkey,
+				    pthread_t k_tid,
+				    pid_t h_tid)
 {
-	struct pthread_jhash **bucketp;
-	struct pthread_jhash *slot;
+	struct pthread_hash **pthead, *ptslot;
+	struct tid_hash **tidhead, *tidslot;
 	u32 hash;
+	void *p;
 	spl_t s;
 
-	slot = (struct pthread_jhash *)xnmalloc(sizeof(*slot));
-
-	if (!slot)
+	p = xnmalloc(sizeof(*ptslot) + sizeof(*tidslot));
+	if (p == NULL)
 		return NULL;
 
-	slot->hkey = *hkey;
-	slot->k_tid = k_tid;
+	ptslot = p;
+	ptslot->hkey = *hkey;
+	ptslot->k_tid = k_tid;
+	ptslot->h_tid = h_tid;
+	hash = jhash2((u32 *)&ptslot->hkey,
+		      sizeof(ptslot->hkey) / sizeof(u32), 0);
+	pthead = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
 
-	hash = jhash2((u32 *) & slot->hkey,
-		      sizeof(slot->hkey) / sizeof(u32), 0);
-
-	bucketp = &__jhash_buckets[hash & ((1 << PTHREAD_HASHBITS) - 1)];
+	tidslot = p + sizeof(*ptslot);
+	tidslot->tid = h_tid;
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+	tidhead = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
 
 	xnlock_get_irqsave(&nklock, s);
-	slot->next = *bucketp;
-	*bucketp = slot;
+	ptslot->next = *pthead;
+	*pthead = ptslot;
+	tidslot->next = *tidhead;
+	*tidhead = tidslot;
 	xnlock_put_irqrestore(&nklock, s);
 
-	return slot;
+	return ptslot;
 }
 
 static inline void __pthread_unhash(const struct pse51_hkey *hkey)
 {
-	struct pthread_jhash **tail, *slot;
+	struct pthread_hash **pttail, *ptslot;
+	struct tid_hash **tidtail, *tidslot;
+	pid_t h_tid;
 	u32 hash;
 	spl_t s;
 
 	hash = jhash2((u32 *) hkey, sizeof(*hkey) / sizeof(u32), 0);
-
-	tail = &__jhash_buckets[hash & ((1 << PTHREAD_HASHBITS) - 1)];
+	pttail = &pthread_table[hash & (PTHREAD_HSLOTS - 1)];
 
 	xnlock_get_irqsave(&nklock, s);
 
-	slot = *tail;
-
-	while (slot != NULL &&
-	       (slot->hkey.u_tid != hkey->u_tid || slot->hkey.mm != hkey->mm)) {
-		tail = &slot->next;
-		slot = *tail;
+	ptslot = *pttail;
+	while (ptslot &&
+	       (ptslot->hkey.u_tid != hkey->u_tid ||
+		ptslot->hkey.mm != hkey->mm)) {
+		pttail = &ptslot->next;
+		ptslot = *pttail;
 	}
 
-	if (slot)
-		*tail = slot->next;
+	if (ptslot == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return;
+	}
+
+	*pttail = ptslot->next;
+	h_tid = ptslot->h_tid;
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+	tidtail = &tid_table[hash & (PTHREAD_HSLOTS - 1)];
+	tidslot = *tidtail;
+	while (tidslot && tidslot->tid != h_tid) {
+		tidtail = &tidslot->next;
+		tidslot = *tidtail;
+	}
+	/* tidslot must be found here. */
+	XENO_BUGON(POSIX, !(tidslot && tidtail));
+	*tidtail = tidslot->next;
 
 	xnlock_put_irqrestore(&nklock, s);
 
-	if (slot)
-		xnfree(slot);
+	xnfree(ptslot);
+	xnfree(tidslot);
 }
 
 static pthread_t __pthread_find(const struct pse51_hkey *hkey)
 {
-	struct pthread_jhash *slot;
+	struct pthread_hash *ptslot;
 	pthread_t k_tid;
 	u32 hash;
 	spl_t s;
@@ -136,17 +174,39 @@ static pthread_t __pthread_find(const struct pse51_hkey *hkey)
 
 	xnlock_get_irqsave(&nklock, s);
 
-	slot = __jhash_buckets[hash & ((1 << PTHREAD_HASHBITS) - 1)];
+	ptslot = pthread_table[hash & (PTHREAD_HSLOTS - 1)];
 
-	while (slot != NULL &&
-	       (slot->hkey.u_tid != hkey->u_tid || slot->hkey.mm != hkey->mm))
-		slot = slot->next;
+	while (ptslot != NULL &&
+	       (ptslot->hkey.u_tid != hkey->u_tid || ptslot->hkey.mm != hkey->mm))
+		ptslot = ptslot->next;
 
-	k_tid = slot ? slot->k_tid : NULL;
+	k_tid = ptslot ? ptslot->k_tid : NULL;
 
 	xnlock_put_irqrestore(&nklock, s);
 
 	return k_tid;
+}
+
+static int __tid_probe(pid_t h_tid)
+{
+	struct tid_hash *tidslot;
+	u32 hash;
+	int ret;
+	spl_t s;
+
+	hash = jhash2((u32 *)&h_tid, sizeof(h_tid) / sizeof(u32), 0);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	tidslot = tid_table[hash & (PTHREAD_HSLOTS - 1)];
+	while (tidslot && tidslot->tid != h_tid)
+		tidslot = tidslot->next;
+
+	ret = tidslot ? 0 : -ESRCH;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return ret;
 }
 
 static int __pthread_create(unsigned long tid,
@@ -159,16 +219,19 @@ static int __pthread_create(unsigned long tid,
 	pthread_t k_tid;
 	int err;
 
-	/* We have been passed the pthread_t identifier the user-space
-	   POSIX library has assigned to our caller; we'll index our
-	   internal pthread_t descriptor in kernel space on it. */
+	/*
+	 * We have been passed the pthread_t identifier the user-space
+	 * POSIX library has assigned to our caller; we'll index our
+	 * internal pthread_t descriptor in kernel space on it.
+	 */
 	hkey.u_tid = tid;
 	hkey.mm = p->mm;
 
-	/* Build a default thread attribute, then make sure that a few
-	   critical fields are set in a compatible fashion wrt to the
-	   calling context. */
-
+	/*
+	 * Build a default thread attribute, then make sure that a few
+	 * critical fields are set in a compatible fashion wrt to the
+	 * calling context.
+	 */
 	pthread_attr_init(&attr);
 	attr.policy = policy;
 	attr.detachstate = PTHREAD_CREATE_DETACHED;
@@ -182,7 +245,7 @@ static int __pthread_create(unsigned long tid,
 		return -err;	/* Conventionally, our error codes are negative. */
 
 	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
-	if (err == 0 && !__pthread_hash(&hkey, k_tid))
+	if (err == 0 && !__pthread_hash(&hkey, k_tid, task_pid_vnr(p)))
 		err = -ENOMEM;
 
 	if (err)
@@ -213,8 +276,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 		return ERR_PTR(-err);
 
 	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
-
-	if (err == 0 && !__pthread_hash(hkey, k_tid))
+	if (err == 0 && !__pthread_hash(hkey, k_tid, task_pid_vnr(p)))
 		err = -EAGAIN;
 
 	if (err)
@@ -430,6 +492,11 @@ static int __pthread_set_name_np(unsigned long tid,
 	k_tid = __pthread_find(&hkey);
 
 	return -pthread_set_name_np(k_tid, name);
+}
+
+static int __pthread_probe_np(pid_t h_tid)
+{
+	return __tid_probe(h_tid);
 }
 
 static int __pthread_kill(unsigned long tid, int sig)
@@ -2488,6 +2555,7 @@ static struct xnsysent __systab[] = {
 	SKINCALL_DEF(__pse51_thread_wait, __pthread_wait_np, primary),
 	SKINCALL_DEF(__pse51_thread_set_mode, __pthread_set_mode_np, primary),
 	SKINCALL_DEF(__pse51_thread_set_name, __pthread_set_name_np, any),
+	SKINCALL_DEF(__pse51_thread_probe, __pthread_probe_np, any),
 	SKINCALL_DEF(__pse51_thread_kill, __pthread_kill, any),
 	SKINCALL_DEF(__pse51_sem_init, __sem_init, any),
 	SKINCALL_DEF(__pse51_sem_destroy, __sem_destroy, any),

@@ -440,6 +440,8 @@ int pthread_set_mode_np(int clrmask,
 int pthread_set_name_np(pthread_t thread,
 			const char *name);
 
+int pthread_probe_np(pid_t tid);
+
 int pthread_getschedparam_ex(pthread_t tid,
 			     int *pol,
 			     struct sched_param_ex *par);

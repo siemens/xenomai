@@ -316,6 +316,12 @@ int pthread_set_name_np(pthread_t thread, const char *name)
 				  __pse51_thread_set_name, thread, name);
 }
 
+int pthread_probe_np(pid_t tid)
+{
+	return XENOMAI_SKINCALL1(__pse51_muxid,
+				 __pse51_thread_probe, tid);
+}
+
 int __wrap_pthread_kill(pthread_t thread, int sig)
 {
 	int err;
