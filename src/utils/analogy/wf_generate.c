@@ -208,6 +208,18 @@ int main(int argc, char *argv[])
 		goto out;
 
 	a4l_wf_set_sample_count(&cfg.wf);
+
+	if (cfg.verbose) {
+		char *types[] = {"sine", "sawtooth", "triangular", "steps"};
+		fprintf(stderr, "Waveform type: %s\n", types[cfg.wf.wf_kind]);
+		fprintf(stderr, "Amplitude: %F\n", cfg.wf.wf_amplitude);
+		fprintf(stderr, "Frequency: %F\n", cfg.wf.wf_frequency);
+		fprintf(stderr, "Offset: %F\n", cfg.wf.wf_offset);
+		fprintf(stderr, 
+			"Sampling frequency: %F\n", cfg.wf.spl_frequency);
+		fprintf(stderr, "Samples count: %d\n", cfg.wf.spl_count);
+		fprintf(stderr, "Output file: %s\n", cfg.filename);
+	}
 	
 	values = malloc(cfg.wf.spl_count * sizeof(double));
 	if (!values) {
@@ -224,6 +236,14 @@ int main(int argc, char *argv[])
 		perror("Error: output file write: )");
 		goto out;
 	}	
+
+	if (cfg.verbose) {
+		int i;
+
+		fprintf(stderr, "Dumping values:\n");
+		for (i = 0; i < cfg.wf.spl_count; i++)
+			fprintf(stderr, "[%d]: %F\n", i, values[i]);
+	}
 
 out:
 	cleanup_config(&cfg);
