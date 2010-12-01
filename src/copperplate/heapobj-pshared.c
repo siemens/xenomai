@@ -686,6 +686,8 @@ static void pshared_destroy(struct heapobj *hobj)
 	struct heap *heap = hobj->pool;
 	int cpid;
 
+	pthread_mutex_destroy(&heap->lock);
+
 	if (hobj->flags & HOBJ_DEPEND) {
 		free_block(&main_heap, heap);
 		return;
@@ -767,6 +769,12 @@ static struct heapobj_ops pshared_ops = {
 	.free = pshared_free,
 	.inquire = pshared_inquire,
 };
+
+int pshared_check(void *__heap, void *__addr)
+{
+	struct heap *heap = __heap;
+	return __addr >= __heap && __addr < __heap + heap->maplen;
+}
 
 int heapobj_init(struct heapobj *hobj, const char *name,
 		 size_t size, void *mem)
@@ -854,10 +862,4 @@ int heapobj_pkg_init_shared(void)
 	__pshared_catalog = &main_heap.catalog;
 
 	return 0;
-}
-
-int pshared_check(void *__heap, void *__addr)
-{
-	struct heap *heap = __heap;
-	return __addr >= __heap && __addr < __heap + heap->maplen;
 }
