@@ -184,6 +184,7 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 		return ERROR;
 	}
 
+retry:
 	if (!list_empty(&mq->msg_list)) {
 		mq->msgcount--;
 		msg = list_pop_entry(&mq->msg_list, struct msgholder, link);
@@ -223,6 +224,8 @@ int msgQReceive(MSG_Q_ID msgQId, char *buffer, UINT maxNBytes, int timeout)
 		goto done;
 	}
 	nbytes = current->wait_u.buffer.size;
+	if (nbytes < 0)	/* No direct copy? */
+		goto retry;
 	syncobj_signal_drain(&mq->sobj);
 done:
 	syncobj_unlock(&mq->sobj, &syns);
@@ -262,7 +265,7 @@ STATUS msgQSend(MSG_Q_ID msgQId, const char *buffer, UINT bytes,
 		goto fail;
 	}
 
-	thobj = syncobj_post(&mq->sobj);
+	thobj = syncobj_peek(&mq->sobj);
 	if (thobj && threadobj_local_p(thobj)) {
 		/* Fast path: direct copy to the receiver's buffer. */
 		maxbytes = thobj->wait_u.buffer.size;
@@ -327,7 +330,18 @@ enqueue:
 		list_append(&msg->link, &mq->msg_list);
 	else
 		list_prepend(&msg->link, &mq->msg_list);
+
+	if (thobj)
+		/*
+		 * We could not copy the message directly to the
+		 * remote buffer, tell the thread to pull it from the
+		 * pool.
+		 */
+		thobj->wait_u.buffer.size = -1;
 done:
+	if (thobj)	/* Wakeup waiter. */
+		syncobj_wakeup_waiter(&mq->sobj, thobj);
+
 	ret = OK;
 fail:
 	syncobj_unlock(&mq->sobj, &syns);
