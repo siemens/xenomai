@@ -48,7 +48,7 @@ static struct wind_task *find_wind_task(TASK_ID tid)
 	 * Best-effort to validate a TCB pointer the cheap way,
 	 * without relying on any syscall.
 	 */
-	if (tcb == NULL || ((intptr_t)tcb & (sizeof(intptr_t)-1)) != 0 ||
+	if (tcb == NULL || ((uintptr_t)tcb & (sizeof(uintptr_t)-1)) != 0 ||
 	    tcb->magic != task_magic)
 		return NULL;
 

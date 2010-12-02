@@ -27,7 +27,7 @@ static struct wind_ring *find_ring_from_id(RING_ID rid)
 {
 	struct wind_ring *ring = mainheap_deref(rid, struct wind_ring);
 
-	if (ring == NULL || ((intptr_t)ring & (sizeof(intptr_t)-1)) != 0 ||
+	if (ring == NULL || ((uintptr_t)ring & (sizeof(uintptr_t)-1)) != 0 ||
 	    ring->magic != ring_magic)
 		return NULL;
 

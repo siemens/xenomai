@@ -31,7 +31,7 @@
 #define SEM_DELETE_SAFE      0x4
 #define SEM_INVERSION_SAFE   0x8
 
-typedef intptr_t SEM_ID;
+typedef uintptr_t SEM_ID;
 
 typedef enum {
     SEM_EMPTY =0,

@@ -26,7 +26,7 @@
 
 #include <vxworks/types.h>
 
-typedef intptr_t PART_ID;
+typedef uintptr_t PART_ID;
 
 #ifdef __cplusplus
 extern "C" {

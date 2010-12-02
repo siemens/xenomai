@@ -26,7 +26,7 @@
 
 #include <vxworks/types.h>
 
-typedef intptr_t RING_ID;
+typedef uintptr_t RING_ID;
 
 #ifdef __cplusplus
 extern "C" {

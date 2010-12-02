@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <memory.h>
-#include <signal.h>
 #include <copperplate/heapobj.h>
 #include <copperplate/threadobj.h>
 #include <vxworks/errnoLib.h>
@@ -37,7 +36,7 @@ static struct wind_wd *find_wd_from_id(WDOG_ID wdog_id)
 {
 	struct wind_wd *wd = (struct wind_wd *)wdog_id;
 
-	if (wd == NULL || ((intptr_t)wd & (sizeof(intptr_t)-1)) != 0 ||
+	if (wd == NULL || ((uintptr_t)wd & (sizeof(uintptr_t)-1)) != 0 ||
 	    wd->magic != wd_magic)
 		return NULL;
 

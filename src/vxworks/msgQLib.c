@@ -48,7 +48,7 @@ static struct wind_mq *find_mq_from_id(MSG_Q_ID qid)
 {
 	struct wind_mq *mq = mainheap_deref(qid, struct wind_mq);
 
-	if (mq == NULL || ((intptr_t)mq & (sizeof(intptr_t)-1)) != 0 ||
+	if (mq == NULL || ((uintptr_t)mq & (sizeof(uintptr_t)-1)) != 0 ||
 	    mq->magic != mq_magic)
 		return NULL;
 

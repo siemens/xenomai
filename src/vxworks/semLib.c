@@ -423,7 +423,7 @@ static struct wind_sem *find_sem_from_id(SEM_ID sem_id)
 {
 	struct wind_sem *sem = mainheap_deref(sem_id, struct wind_sem);
 
-	if (sem == NULL || ((intptr_t)sem & (sizeof(intptr_t)-1)) != 0 ||
+	if (sem == NULL || ((uintptr_t)sem & (sizeof(uintptr_t)-1)) != 0 ||
 	    sem->magic != sem_magic)
 		return NULL;
 

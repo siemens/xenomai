@@ -40,7 +40,7 @@
 #define WIND_DEAD	0x8
 #define WIND_STOP	0x10	/* Never reported. */
 
-typedef intptr_t TASK_ID;
+typedef uintptr_t TASK_ID;
 
 typedef void (*FUNCPTR)(long, long, long, long, long,
 			long, long, long, long, long);

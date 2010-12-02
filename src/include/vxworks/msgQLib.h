@@ -26,7 +26,7 @@
 
 #include <vxworks/types.h>
 
-typedef intptr_t MSG_Q_ID;
+typedef uintptr_t MSG_Q_ID;
 
 #define MSG_PRI_NORMAL   0
 #define MSG_PRI_URGENT   1

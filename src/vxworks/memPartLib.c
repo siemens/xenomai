@@ -32,7 +32,7 @@ static struct wind_mempart *find_mempart_from_id(PART_ID partId)
 {
 	struct wind_mempart *mp = mainheap_deref(partId, struct wind_mempart);
 
-	if (mp == NULL || ((intptr_t)mp & (sizeof(intptr_t)-1)) != 0 ||
+	if (mp == NULL || ((uintptr_t)mp & (sizeof(uintptr_t)-1)) != 0 ||
 	    mp->magic != mempart_magic)
 		return NULL;
 	/*
@@ -121,7 +121,7 @@ void *memPartAlignedAlloc(PART_ID partId,
 	if (ptr == NULL)
 		return NULL;
 
-	return (void *)(((intptr_t)ptr + xtra) & ~(alignment - 1));
+	return (void *)(((uintptr_t)ptr + xtra) & ~(alignment - 1));
 }
 
 void *memPartAlloc(PART_ID partId, unsigned int nBytes)

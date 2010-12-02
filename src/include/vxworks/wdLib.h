@@ -26,7 +26,7 @@
 
 #include <vxworks/types.h>
 
-typedef intptr_t WDOG_ID;
+typedef uintptr_t WDOG_ID;
 
 #ifdef __cplusplus
 extern "C" {
