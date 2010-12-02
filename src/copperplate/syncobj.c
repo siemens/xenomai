@@ -233,6 +233,18 @@ struct threadobj *syncobj_post(struct syncobj *sobj)
 	return thobj;
 }
 
+struct threadobj *syncobj_peek(struct syncobj *sobj)
+{
+	struct threadobj *thobj;
+
+	if (list_empty(&sobj->pend_list))
+		return NULL;
+
+	thobj = list_first_entry(&sobj->pend_list, struct threadobj,
+				 wait_link);
+	return thobj;
+}
+
 static void syncobj_cleanup_drain(void *arg)
 {
 	struct threadobj *current = threadobj_current();

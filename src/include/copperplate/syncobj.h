@@ -68,10 +68,17 @@ int syncobj_pend(struct syncobj *sobj, struct timespec *timeout,
 
 struct threadobj *syncobj_post(struct syncobj *sobj);
 
+struct threadobj *syncobj_peek(struct syncobj *sobj);
+
 int syncobj_wait_drain(struct syncobj *sobj, struct timespec *timeout,
 		       struct syncstate *syns);
 
 int __syncobj_signal_drain(struct syncobj *sobj);
+
+static inline int syncobj_pended_p(struct syncobj *sobj)
+{
+	return !list_empty(&sobj->pend_list);
+}
 
 void syncobj_requeue_waiter(struct syncobj *sobj, struct threadobj *thobj);
 
