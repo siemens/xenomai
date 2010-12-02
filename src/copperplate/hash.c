@@ -93,14 +93,14 @@ void __hash_init(void *heap, struct hash_table *t)
 	pthread_mutexattr_t mattr;
 	int n;
 
-	for (n = 0; n < HASHSLOTS; n++) {
-		pthread_mutexattr_init(&mattr);
-		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-		pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
-		pthread_mutex_init(&t->table[n].lock, &mattr);
-		pthread_mutexattr_destroy(&mattr);
+	for (n = 0; n < HASHSLOTS; n++)
 		__list_init(heap, &t->table[n].obj_list);
-	}
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, mutex_scope_attribute);
+	pthread_mutex_init(&t->lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
 }
 
 static struct hash_bucket *do_hash(struct hash_table *t, const char *key)
@@ -119,7 +119,8 @@ int hash_enter(struct hash_table *t,
 	holder_init(&newobj->link);
 	newobj->key = key;
 	bucket = do_hash(t, key);
-	write_lock_nocancel(&bucket->lock);
+
+	write_lock_nocancel(&t->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
@@ -130,7 +131,7 @@ int hash_enter(struct hash_table *t,
 
 	list_prepend(&newobj->link, &bucket->obj_list);
 out:
-	write_unlock(&bucket->lock);
+	write_unlock(&t->lock);
 
 	return ret;
 }
@@ -142,7 +143,8 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj)
 	int ret = -ESRCH;
 
 	bucket = do_hash(t, delobj->key);
-	write_lock_nocancel(&bucket->lock);
+
+	write_lock_nocancel(&t->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (obj == delobj) {
@@ -152,7 +154,7 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj)
 		}
 	}
 out:
-	write_unlock(&bucket->lock);
+	write_unlock(&t->lock);
 
 	return ret;
 }
@@ -163,7 +165,8 @@ struct hashobj *hash_search(struct hash_table *t, const char *key)
 	struct hashobj *obj;
 
 	bucket = do_hash(t, key);
-	read_lock_nocancel(&bucket->lock);
+
+	read_lock_nocancel(&t->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0)
@@ -171,7 +174,7 @@ struct hashobj *hash_search(struct hash_table *t, const char *key)
 	}
 	obj = NULL;
 out:
-	read_unlock(&bucket->lock);
+	read_unlock(&t->lock);
 
 	return obj;
 }
@@ -189,8 +192,9 @@ int hash_enter_probe(struct hash_table *t,
 	holder_init(&newobj->link);
 	newobj->key = key;
 	bucket = do_hash(t, key);
-	push_cleanup_lock(&bucket->lock);
-	write_lock(&bucket->lock);
+
+	push_cleanup_lock(&t->lock);
+	write_lock(&t->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
@@ -205,8 +209,8 @@ int hash_enter_probe(struct hash_table *t,
 
 	list_prepend(&newobj->link, &bucket->obj_list);
 out:
-	write_unlock(&bucket->lock);
-	pop_cleanup_lock(&bucket->lock);
+	write_unlock(&t->lock);
+	pop_cleanup_lock(&t->lock);
 
 	return ret;
 }
@@ -218,8 +222,9 @@ struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
 	struct hashobj *obj;
 
 	bucket = do_hash(t, key);
-	push_cleanup_lock(&bucket->lock);
-	write_lock(&bucket->lock);
+
+	push_cleanup_lock(&t->lock);
+	write_lock(&t->lock);
 
 	list_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
@@ -233,8 +238,8 @@ struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
 fail:
 	obj = NULL;
 out:
-	write_unlock(&bucket->lock);
-	pop_cleanup_lock(&bucket->lock);
+	write_unlock(&t->lock);
+	pop_cleanup_lock(&t->lock);
 
 	return obj;
 }
@@ -244,14 +249,14 @@ void pvhash_init(struct pvhash_table *t)
 	pthread_mutexattr_t mattr;
 	int n;
 
-	for (n = 0; n < HASHSLOTS; n++) {
-		pthread_mutexattr_init(&mattr);
-		pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
-		pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-		pthread_mutex_init(&t->table[n].lock, &mattr);
-		pthread_mutexattr_destroy(&mattr);
+	for (n = 0; n < HASHSLOTS; n++)
 		pvlist_init(&t->table[n].obj_list);
-	}
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
+	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+	pthread_mutex_init(&t->lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
 }
 
 static struct pvhash_bucket *do_pvhash(struct pvhash_table *t, const char *key)
@@ -270,7 +275,8 @@ int pvhash_enter(struct pvhash_table *t,
 	pvholder_init(&newobj->link);
 	newobj->key = key;
 	bucket = do_pvhash(t, key);
-	write_lock_nocancel(&bucket->lock);
+
+	write_lock_nocancel(&t->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0) {
@@ -281,7 +287,7 @@ int pvhash_enter(struct pvhash_table *t,
 
 	pvlist_prepend(&newobj->link, &bucket->obj_list);
 out:
-	write_unlock(&bucket->lock);
+	write_unlock(&t->lock);
 
 	return ret;
 }
@@ -293,7 +299,8 @@ int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 	int ret = -ESRCH;
 
 	bucket = do_pvhash(t, delobj->key);
-	write_lock_nocancel(&bucket->lock);
+
+	write_lock_nocancel(&t->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 		if (obj == delobj) {
@@ -303,7 +310,7 @@ int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 		}
 	}
 out:
-	write_unlock(&bucket->lock);
+	write_unlock(&t->lock);
 
 	return ret;
 }
@@ -314,7 +321,8 @@ struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 	struct pvhashobj *obj;
 
 	bucket = do_pvhash(t, key);
-	read_lock_nocancel(&bucket->lock);
+
+	read_lock_nocancel(&t->lock);
 
 	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
 		if (strcmp(obj->key, key) == 0)
@@ -322,7 +330,7 @@ struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 	}
 	obj = NULL;
 out:
-	read_unlock(&bucket->lock);
+	read_unlock(&t->lock);
 
 	return obj;
 }

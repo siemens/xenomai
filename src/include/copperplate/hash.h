@@ -30,12 +30,12 @@ struct hashobj {
 };
 
 struct hash_bucket {
-	pthread_mutex_t lock;
 	struct list obj_list;
 };
 
 struct hash_table {
 	struct hash_bucket table[HASHSLOTS];
+	pthread_mutex_t lock;
 };
 
 #ifdef CONFIG_XENO_PSHARED
@@ -46,12 +46,12 @@ struct pvhashobj {
 };
 
 struct pvhash_bucket {
-	pthread_mutex_t lock;
 	struct pvlist obj_list;
 };
 
 struct pvhash_table {
 	struct pvhash_bucket table[HASHSLOTS];
+	pthread_mutex_t lock;
 };
 #else /* !CONFIG_XENO_PSHARED */
 #define pvhashobj	hashobj
