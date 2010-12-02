@@ -22,24 +22,17 @@
 #include <xeno_config.h>
 #include <sched.h>
 
-extern unsigned int __tick_period_arg;
-
-extern unsigned int __mem_pool_arg;
-
-extern int __no_mlock_arg;
-
-extern char __registry_mountpt_arg[];
-
-extern int __no_registry_arg;
-
-extern const char *__session_label_arg;
-
-extern int __reset_session_arg;
-
-extern cpu_set_t __cpu_affinity;
-
 struct coppernode {
 	pid_t id;
+	unsigned int tick_period;
+	unsigned int mem_pool;
+	char *registry_mountpt;
+	const char *session_label;
+	cpu_set_t cpu_affinity;
+	/* No bitfield below, we have to take address of thoses. */
+	int no_mlock;
+	int no_registry;
+	int reset_session;
 };
 
 extern struct coppernode __this_node;

@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <signal.h>
 #include <errno.h>
-#include <limits.h>
 #include <getopt.h>
 #include <sched.h>
 #include <linux/unistd.h>
@@ -38,23 +37,14 @@
 #include "copperplate/registry.h"
 #include "copperplate/timerobj.h"
 
-unsigned int __tick_period_arg = 1000; /* Default, in microseconds. */
-
-unsigned int __mem_pool_arg = 128 * 1024; /* Default, in bytes. */
-
-int __no_mlock_arg = 0; /* Default, do mlockall. */
-
-char __registry_mountpt_arg[PATH_MAX];
-
-int __no_registry_arg = 0; /* Default, registry on when compiled in. */
-
-const char *__session_label_arg = "anon";
-
-int __reset_session_arg = 0;
-
-cpu_set_t __cpu_affinity;
-
-struct coppernode __this_node;
+struct coppernode __this_node = {
+	.tick_period = 1000, /* Default, 1 ms */
+	.mem_pool = 128 * 1024, /* Default, 128 Kb. */
+	.session_label = "anon",
+	.no_mlock = 0,
+	.no_registry = 0,
+	.reset_session = 0,
+};
 
 static int mkdir_mountpt = 1;
 
@@ -84,7 +74,7 @@ static const struct option base_options[] = {
 #define no_mlock_opt	3
 		.name = "no-mlock",
 		.has_arg = 0,
-		.flag = &__no_mlock_arg,
+		.flag = &__this_node.no_mlock,
 		.val = 1
 	},
 	{
@@ -98,7 +88,7 @@ static const struct option base_options[] = {
 #define no_registry_opt	5
 		.name = "no-registry",
 		.has_arg = 0,
-		.flag = &__no_registry_arg,
+		.flag = &__this_node.no_registry,
 		.val = 1
 	},
 	{
@@ -112,7 +102,7 @@ static const struct option base_options[] = {
 #define reset_session_opt	7
 		.name = "reset-session",
 		.has_arg = 0,
-		.flag = &__reset_session_arg,
+		.flag = &__this_node.reset_session,
 		.val = 1
 	},
 	{
@@ -145,7 +135,7 @@ static void usage(void)
 
 static void do_cleanup(void)
 {
-	if (!__no_registry_arg)
+	if (!__this_node.no_registry)
 		registry_pkg_destroy();
 }
 
@@ -162,7 +152,7 @@ static int collect_cpu_affinity(const char *cpu_list)
 			warning("invalid CPU number '%d'", cpu);
 			return -EINVAL;
 		}
-		CPU_SET(cpu, &__cpu_affinity);
+		CPU_SET(cpu, &__this_node.cpu_affinity);
 		n = NULL;
 	}
 
@@ -174,11 +164,11 @@ static int collect_cpu_affinity(const char *cpu_list)
 	 * CPU affinity will be inherited by children threads, we only
 	 * have to set it here.
 	 *
-	 * NOTE: we don't clear __cpu_affinity on entry to this routine
+	 * NOTE: we don't clear __this_node.cpu_affinity on entry to this routine
 	 * to allow cumulative --cpu-affinity options to appear in the
 	 * command line arguments.
 	 */
-	ret = sched_setaffinity(0, sizeof(__cpu_affinity), &__cpu_affinity);
+	ret = sched_setaffinity(0, sizeof(__this_node.cpu_affinity), &__this_node.cpu_affinity);
 	if (ret) {
 		warning("no valid CPU in affinity list '%s'", cpu_list);
 		return -ret;
@@ -241,9 +231,9 @@ int copperplate_init(int argc, char *const argv[])
 	__this_node.id = get_node_id();
 
 	/* Set a reasonable default value for the registry mount point. */
-	sprintf(__registry_mountpt_arg, "/mnt/xenomai/%d", getpid());
+	asprintf(&__this_node.registry_mountpt, "/mnt/xenomai/%d", getpid());
 	/* Define default CPU affinity, i.e. no particular affinity. */
-	CPU_ZERO(&__cpu_affinity);
+	CPU_ZERO(&__this_node.cpu_affinity);
 
 	for (;;) {
 		c = getopt_long_only(argc, argv, "", base_options, &lindex);
@@ -258,21 +248,20 @@ int copperplate_init(int argc, char *const argv[])
 
 		switch (lindex) {
 		case tickarg_opt:
-			__tick_period_arg = atoi(optarg);
+			__this_node.tick_period = atoi(optarg);
 			break;
 		case mempool_opt:
-			__mem_pool_arg = atoi(optarg) * 1024;
+			__this_node.mem_pool = atoi(optarg) * 1024;
 			break;
 		case mountpt_opt:
-			strncpy(__registry_mountpt_arg, optarg, PATH_MAX - 1);
-			__registry_mountpt_arg[PATH_MAX - 1] = '\0';
+			__this_node.registry_mountpt = strdup(optarg);
 			mkdir_mountpt = 0;
 #ifndef CONFIG_XENO_REGISTRY
 			warning("Xenomai compiled without registry support");
 #endif
 			break;
 		case session_opt:
-			__session_label_arg = optarg;
+			__this_node.session_label = optarg;
 #ifndef CONFIG_XENO_PSHARED
 			warning("Xenomai compiled without shared multi-processing support");
 #endif
@@ -306,8 +295,8 @@ int copperplate_init(int argc, char *const argv[])
 		return ret;
 	}
 
-	if (!__no_registry_arg) {
-		ret = registry_pkg_init(argv[0], __registry_mountpt_arg,
+	if (!__this_node.no_registry) {
+		ret = registry_pkg_init(argv[0], __this_node.registry_mountpt,
 					mkdir_mountpt);
 		if (ret)
 			return ret;
@@ -321,7 +310,7 @@ int copperplate_init(int argc, char *const argv[])
 		return ret;
 	}
 
-	if (!__no_mlock_arg) {
+	if (!__this_node.no_mlock) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
 			warning("failed to lock memory");

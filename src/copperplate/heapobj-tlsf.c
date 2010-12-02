@@ -152,13 +152,13 @@ int heapobj_pkg_init_private(void)
 	 * tlsf_malloc(), so that the main pool will be set up in the
 	 * same move.
 	 */
-	mem = tlsf_malloc(__mem_pool_arg);
-	size = init_memory_pool(__mem_pool_arg, mem);
+	mem = tlsf_malloc(__this_node.mem_pool);
+	size = init_memory_pool(__this_node.mem_pool, mem);
 	if (size == (size_t)-1)
 		panic("cannot initialize TLSF memory manager");
 
 	destroy_memory_pool(mem);
-	tlsf_pool_overhead = __mem_pool_arg - size;
+	tlsf_pool_overhead = __this_node.mem_pool - size;
 	tlsf_pool_overhead = (tlsf_pool_overhead + 15) & ~15;
 	tlsf_free(mem);
 

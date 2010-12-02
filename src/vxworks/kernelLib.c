@@ -52,11 +52,11 @@ STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 	cluster_init(&wind_task_table, "vxworks.task");
 
 	ret = clockobj_init(&wind_clock,
-			    "vxworks", __tick_period_arg * 1000);
+			    "vxworks", __this_node.tick_period * 1000);
 
 	if (ret) {
 		warning("%s: failed to initialize VxWorks clock (period=%uus)",
-			__FUNCTION__, __tick_period_arg);
+			__FUNCTION__, __this_node.tick_period);
 		errno = -ret;
 		return ERROR;
 	}

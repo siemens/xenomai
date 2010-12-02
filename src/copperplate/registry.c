@@ -65,7 +65,7 @@ int registry_add_dir(const char *fmt, ...)
 	int ret, state;
 	va_list ap;
 
-	if (__no_registry_arg)
+	if (__this_node.no_registry)
 		return 0;
 
 	va_start(ap, fmt);
@@ -124,7 +124,7 @@ int registry_init_file(struct fsobj *fsobj,  struct registry_operations *ops)
 {
 	pthread_mutexattr_t mattr;
 
-	if (__no_registry_arg)
+	if (__this_node.no_registry)
 		return 0;
 
 	fsobj->path = NULL;
@@ -148,7 +148,7 @@ int registry_add_file(struct fsobj *fsobj, int mode, const char *fmt, ...)
 	int ret, state;
 	va_list ap;
 
-	if (__no_registry_arg)
+	if (__this_node.no_registry)
 		return 0;
 
 	va_start(ap, fmt);
@@ -198,7 +198,7 @@ void registry_remove_file(struct fsobj *fsobj)
 	struct regfs_dir *d;
 	int state;
 
-	if (__no_registry_arg)
+	if (__this_node.no_registry)
 		return;
 
 	write_lock_safe(&regfs_lock, state);
@@ -225,7 +225,7 @@ out:
 
 void registry_touch_file(struct fsobj *fsobj)
 {
-	if (__no_registry_arg)
+	if (__this_node.no_registry)
 		return;
 
 	clock_gettime(CLOCK_REALTIME, &fsobj->mtime);
