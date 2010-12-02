@@ -20,6 +20,7 @@
 #define _COPPERPLATE_HEAPOBJ_H
 
 #include <sys/types.h>
+#include <stdint.h>
 #include <assert.h>
 #include <xeno_config.h>
 #include <copperplate/reference.h>
@@ -93,7 +94,7 @@ static inline off_t mainheap_off(void *addr)
 #define mainheap_deref(handle, type)					\
 	({								\
 		type *ptr;						\
-		assert(__builtin_types_compatible_p(typeof(handle), intptr_t)); \
+		assert(__builtin_types_compatible_p(typeof(handle), uintptr_t)); \
 		ptr = (handle & 1) ? (type *)mainheap_ptr(handle & ~1UL) : (type *)handle; \
 		ptr;							\
 	})
@@ -108,7 +109,7 @@ static inline off_t mainheap_off(void *addr)
 #define mainheap_ref(ptr, type)						\
 	({								\
 		type handle;						\
-		assert(__builtin_types_compatible_p(typeof(type), intptr_t)); \
+		assert(__builtin_types_compatible_p(typeof(type), uintptr_t)); \
 		assert(ptr == NULL || __memchk(__pshared_heap, ptr));	\
 		handle = (type)mainheap_off(ptr);			\
 		handle|1;						\
