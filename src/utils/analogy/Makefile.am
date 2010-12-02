@@ -3,6 +3,7 @@ sbin_PROGRAMS = analogy_config
 bin_PROGRAMS = \
 	cmd_read \
 	cmd_write \
+	wf_cmd_write \
 	cmd_bits \
 	insn_read \
 	insn_write \
@@ -39,6 +40,12 @@ cmd_write_SOURCES = cmd_write.c
 cmd_write_LDADD = \
 	../../drvlib/analogy/libanalogy.la \
 	../../skins/native/libnative.la \
+	../../skins/rtdm/librtdm.la \
+	../../skins/common/libxenomai.la
+
+wf_cmd_write_SOURCES = wf_cmd_write.c
+wf_cmd_write_LDADD = \
+	../../drvlib/analogy/libanalogy.la \
 	../../skins/rtdm/librtdm.la \
 	../../skins/common/libxenomai.la
 
