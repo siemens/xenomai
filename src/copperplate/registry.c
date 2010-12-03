@@ -33,7 +33,7 @@
 #include <fuse.h>
 #include "copperplate/heapobj.h"
 #include "copperplate/registry.h"
-#include "internal.h"
+#include "copperplate/lock.h"
 
 #define REGISTRY_ROOT "/mnt/xenomai"
 
