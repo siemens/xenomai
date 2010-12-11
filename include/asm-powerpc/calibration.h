@@ -46,6 +46,8 @@ static inline unsigned long xnarch_get_sched_latency(void)
 #define __sched_latency 8000
 #elif defined(CONFIG_SEQUOIA)
 #define __sched_latency 3000
+#elif defined(CONFIG_LWMON5)
+#define __sched_latency 2800
 #elif defined(CONFIG_OCOTEA)
 #define __sched_latency 2700
 #elif defined(CONFIG_BAMBOO)
