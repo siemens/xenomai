@@ -585,9 +585,8 @@ int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
  * This user-space only call allows the current task to suspend
  * execution until the specified alarm triggers. The priority of the
  * current task is raised above all other Xenomai tasks - except those
- * also undergoing an alarm or interrupt wait (see rt_intr_wait()) -
- * so that it would preempt any of them under normal circumstances
- * (i.e. no scheduler lock).
+ * also undergoing an alarm wait - so that it would preempt any of
+ * them under normal circumstances (i.e. no scheduler lock).
  *
  * @param alarm The descriptor address of the awaited alarm.
  *

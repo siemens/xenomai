@@ -6,8 +6,6 @@ includesub_HEADERS = \
 	cond.h \
 	event.h \
 	heap.h \
-	intr.h \
-	misc.h \
 	mutex.h \
 	ppd.h \
 	queue.h \

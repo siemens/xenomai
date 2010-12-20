@@ -17,8 +17,6 @@ xeno_native-$(CONFIG_XENO_OPT_NATIVE_HEAP) += heap.o
 
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_ALARM) += alarm.o
 
-xeno_native-$(CONFIG_XENO_OPT_NATIVE_INTR) += intr.o
-
 xeno_native-$(CONFIG_XENO_OPT_NATIVE_BUFFER) += buffer.o
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai

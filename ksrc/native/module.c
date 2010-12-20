@@ -37,8 +37,6 @@
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/alarm.h>
-#include <native/intr.h>
-#include <native/misc.h>
 #include <native/syscall.h>
 
 MODULE_DESCRIPTION("Native skin");
@@ -63,11 +61,9 @@ int SKIN_INIT(native)
 	initq(&__native_global_rholder.condq);
 	initq(&__native_global_rholder.eventq);
 	initq(&__native_global_rholder.heapq);
-	initq(&__native_global_rholder.intrq);
 	initq(&__native_global_rholder.mutexq);
 	initq(&__native_global_rholder.queueq);
 	initq(&__native_global_rholder.semq);
-	initq(&__native_global_rholder.ioregionq);
 	initq(&__native_global_rholder.bufferq);
 
 	err = xnpod_init();
@@ -82,15 +78,10 @@ int SKIN_INIT(native)
 
 	xntbase_start(__native_tbase);
 
-	err = __native_misc_pkg_init();
-
-	if (err)
-		goto cleanup_pod;
-
 	err = __native_task_pkg_init();
 
 	if (err)
-		goto cleanup_misc;
+		goto cleanup_pod;
 
 	err = __native_sem_pkg_init();
 
@@ -127,23 +118,14 @@ int SKIN_INIT(native)
 	if (err)
 		goto cleanup_heap;
 
-	err = __native_intr_pkg_init();
+	err = __native_syscall_init();
 
 	if (err)
 		goto cleanup_alarm;
 
-	err = __native_syscall_init();
-
-	if (err)
-		goto cleanup_intr;
-
 	xnprintf("starting native API services.\n");
 
 	return 0;		/* SUCCESS. */
-
-      cleanup_intr:
-
-	__native_intr_pkg_cleanup();
 
       cleanup_alarm:
 
@@ -177,10 +159,6 @@ int SKIN_INIT(native)
 
 	__native_task_pkg_cleanup();
 
-      cleanup_misc:
-
-	__native_misc_pkg_cleanup();
-
       cleanup_pod:
 
 	xntbase_free(__native_tbase);
@@ -198,7 +176,6 @@ void SKIN_EXIT(native)
 {
 	xnprintf("stopping native API services.\n");
 
-	__native_intr_pkg_cleanup();
 	__native_alarm_pkg_cleanup();
 	__native_heap_pkg_cleanup();
 	__native_queue_pkg_cleanup();
@@ -207,7 +184,6 @@ void SKIN_EXIT(native)
 	__native_event_pkg_cleanup();
 	__native_sem_pkg_cleanup();
 	__native_task_pkg_cleanup();
-	__native_misc_pkg_cleanup();
 	__native_syscall_cleanup();
 
 	xntbase_free(__native_tbase);

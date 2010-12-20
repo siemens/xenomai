@@ -36,9 +36,7 @@
 #include <native/queue.h>
 #include <native/heap.h>
 #include <native/alarm.h>
-#include <native/intr.h>
 #include <native/buffer.h>
-#include <native/misc.h>
 
 #define rt_task_errno (*xnthread_get_errno_location(xnpod_current_thread()))
 
@@ -2355,229 +2353,6 @@ static int __rt_alarm_inquire(RT_ALARM_PLACEHOLDER __user *u_ph,
 
 #endif /* CONFIG_XENO_OPT_NATIVE_ALARM */
 
-#ifdef CONFIG_XENO_OPT_NATIVE_INTR
-
-int rt_intr_handler(xnintr_t *cookie)
-{
-	RT_INTR *intr = I_DESC(cookie);
-
-	++intr->pending;
-
-	if (xnsynch_nsleepers(&intr->synch_base) > 0)
-		xnsynch_flush(&intr->synch_base, 0);
-
-	if (intr->mode & XN_ISR_PROPAGATE)
-		return XN_ISR_PROPAGATE | (intr->mode & XN_ISR_NOENABLE);
-
-	return XN_ISR_HANDLED | (intr->mode & XN_ISR_NOENABLE);
-}
-
-EXPORT_SYMBOL_GPL(rt_intr_handler);
-
-/*
- * int __rt_intr_create()
- */
-
-static int __rt_intr_create(RT_INTR_PLACEHOLDER __user *u_ph,
-			    const char __user *u_name,
-			    unsigned irq,
-			    int mode)
-{
-	char name[XNOBJECT_NAME_LEN];
-	RT_INTR_PLACEHOLDER ph;
-	RT_INTR *intr;
-	int err;
-
-	if (u_name) {
-		if (__xn_safe_strncpy_from_user(name, u_name,
-						sizeof(name) - 1) < 0)
-			return -EFAULT;
-
-		name[sizeof(name) - 1] = '\0';
-	} else
-		*name = '\0';
-
-	if (mode & ~(I_NOAUTOENA | I_PROPAGATE))
-		return -EINVAL;
-
-	intr = xnmalloc(sizeof(*intr));
-	if (intr == NULL)
-		return -ENOMEM;
-
-	err = rt_intr_create(intr, name, irq, &rt_intr_handler, NULL, 0);
-	if (likely(err == 0)) {
-		intr->mode = mode;
-		intr->cpid = current->pid;
-		/* Copy back the registry handle to the ph struct. */
-		ph.opaque = intr->handle;
-		if (__xn_safe_copy_to_user(u_ph, &ph, sizeof(ph)))
-			err = -EFAULT;
-	} else
-		xnfree(intr);
-
-	return err;
-}
-
-static int __rt_intr_bind(RT_INTR_PLACEHOLDER __user *u_ph,
-			  const char __user *u_name,
-			  RTIME __user *u_timeout)
-{
-	RT_INTR_PLACEHOLDER ph;
-	int ret;
-
-	ret = __rt_bind_helper(u_name, u_timeout,
-			       &ph.opaque, XENO_INTR_MAGIC, NULL, 0);
-	if (ret)
-		return ret;
-
-	return __xn_safe_copy_to_user(u_ph, &ph, sizeof(ph));
-}
-
-static int __rt_intr_delete(RT_INTR_PLACEHOLDER __user *u_ph)
-{
-	RT_INTR_PLACEHOLDER ph;
-	RT_INTR *intr;
-	int err;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	intr = xnregistry_fetch(ph.opaque);
-	if (intr == NULL)
-		return -ESRCH;
-
-	err = rt_intr_delete(intr);
-	if (!err && intr->cpid)
-		xnfree(intr);
-
-	return err;
-}
-
-static int __rt_intr_wait(RT_INTR_PLACEHOLDER __user *u_ph,
-			  RTIME __user *u_timeout)
-{
-	union xnsched_policy_param param;
-	RT_INTR_PLACEHOLDER ph;
-	xnthread_t *thread;
-	xnflags_t info;
-	RTIME timeout;
-	RT_INTR *intr;
-	int err = 0;
-	spl_t s;
-
-	if (__xn_safe_copy_from_user(&timeout, u_timeout, sizeof(timeout)))
-		return -EFAULT;
-
-	if (timeout == TM_NONBLOCK)
-		return -EINVAL;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	intr = xeno_h2obj_validate(xnregistry_fetch(ph.opaque),
-				   XENO_INTR_MAGIC, RT_INTR);
-	if (intr == NULL) {
-		err = xeno_handle_error(intr, XENO_INTR_MAGIC, RT_INTR);
-		goto unlock_and_exit;
-	}
-
-	if (intr->pending == 0) {
-		thread = xnpod_current_thread();
-
-		if (xnthread_base_priority(thread) != XNSCHED_IRQ_PRIO) {
-			/* Boost the waiter above all regular tasks if needed. */
-			param.rt.prio = XNSCHED_IRQ_PRIO;
-			xnpod_set_thread_schedparam(thread, &xnsched_class_rt, &param);
-		}
-
-		info = xnsynch_sleep_on(&intr->synch_base,
-					timeout, XN_RELATIVE);
-		if (info & XNRMID)
-			err = -EIDRM;	/* Interrupt object deleted while pending. */
-		else if (info & XNTIMEO)
-			err = -ETIMEDOUT;	/* Timeout. */
-		else if (info & XNBREAK)
-			err = -EINTR;	/* Unblocked. */
-		else
-			err = intr->pending;
-	} else
-		err = intr->pending;
-
-	intr->pending = 0;
-
-unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-
-static int __rt_intr_enable(RT_INTR_PLACEHOLDER __user *u_ph)
-{
-	RT_INTR_PLACEHOLDER ph;
-	RT_INTR *intr;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	intr = xnregistry_fetch(ph.opaque);
-	if (intr == NULL)
-		return -ESRCH;
-
-	return rt_intr_enable(intr);
-}
-
-static int __rt_intr_disable(RT_INTR_PLACEHOLDER __user *u_ph)
-{
-	RT_INTR_PLACEHOLDER ph;
-	RT_INTR *intr;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	intr = xnregistry_fetch(ph.opaque);
-	if (intr == NULL)
-		return -ESRCH;
-
-	return rt_intr_disable(intr);
-}
-
-static int __rt_intr_inquire(RT_INTR_PLACEHOLDER __user *u_ph,
-			     RT_INTR_INFO __user *u_info)
-{
-	RT_INTR_PLACEHOLDER ph;
-	RT_INTR_INFO info;
-	RT_INTR *intr;
-	int ret;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	intr = xnregistry_fetch(ph.opaque);
-	if (intr == NULL)
-		return -ESRCH;
-
-	ret = rt_intr_inquire(intr, &info);
-	if (ret)
-		return ret;
-
-	return __xn_safe_copy_to_user(u_info, &info, sizeof(info));
-}
-
-#else /* !CONFIG_XENO_OPT_NATIVE_INTR */
-
-#define __rt_intr_create     __rt_call_not_available
-#define __rt_intr_bind       __rt_call_not_available
-#define __rt_intr_delete     __rt_call_not_available
-#define __rt_intr_wait       __rt_call_not_available
-#define __rt_intr_enable     __rt_call_not_available
-#define __rt_intr_disable    __rt_call_not_available
-#define __rt_intr_inquire    __rt_call_not_available
-
-#endif /* CONFIG_XENO_OPT_NATIVE_INTR */
-
 #ifdef CONFIG_XENO_OPT_NATIVE_BUFFER
 
 static int __rt_buffer_create(RT_BUFFER_PLACEHOLDER __user *u_ph,
@@ -2758,135 +2533,6 @@ static int __rt_buffer_inquire(RT_BUFFER_PLACEHOLDER __user *u_ph,
 
 #endif /* !CONFIG_XENO_OPT_NATIVE_BUFFER */
 
-static int __rt_io_get_region(RT_IOREGION_PLACEHOLDER __user *u_ph,
-			      const char __user *u_name,
-			      uint64_t __user *u_start,
-			      uint64_t __user *u_len,
-			      int flags)
-{
-	RT_IOREGION_PLACEHOLDER ph;
-	uint64_t start, len;
-	RT_IOREGION *iorn;
-	int err;
-	spl_t s;
-
-	iorn = xnmalloc(sizeof(*iorn));
-	if (iorn == NULL)
-		return -ENOMEM;
-
-	if (__xn_safe_strncpy_from_user(iorn->name, u_name,
-					sizeof(iorn->name) - 1) < 0)
-		return -EFAULT;
-
-	iorn->name[sizeof(iorn->name) - 1] = '\0';
-
-	err = xnregistry_enter(iorn->name, iorn, &iorn->handle, NULL);
-	if (err)
-		goto fail;
-
-	if (__xn_safe_copy_from_user(&start, u_start, sizeof(start))) {
-		err = -EFAULT;
-		goto fail;
-	}
-
-	if (__xn_safe_copy_from_user(&len, u_len, sizeof(len))) {
-		err = -EFAULT;
-		goto fail;
-	}
-
-	if (flags & IORN_IOPORT)
-		err = request_region(start, len, iorn->name) ? 0 : -EBUSY;
-	else if (flags & IORN_IOMEM)
-		err = request_mem_region(start, len, iorn->name) ? 0 : -EBUSY;
-	else
-		err = -EINVAL;
-
-	if (unlikely(err != 0))
-		goto fail;
-
-	iorn->magic = XENO_IOREGION_MAGIC;
-	iorn->start = start;
-	iorn->len = len;
-	iorn->flags = flags;
-	inith(&iorn->rlink);
-	iorn->rqueue = &xeno_get_rholder()->ioregionq;
-	xnlock_get_irqsave(&nklock, s);
-	appendq(iorn->rqueue, &iorn->rlink);
-	xnlock_put_irqrestore(&nklock, s);
-	iorn->cpid = current->pid;
-	/* Copy back the registry handle to the ph struct. */
-	ph.opaque = iorn->handle;
-
-	return __xn_safe_copy_to_user(u_ph, &ph, sizeof(ph));
-
-fail:
-	xnfree(iorn);
-
-	return err;
-}
-
-/* Not a syscall - provided for auto-cleanup support. */
-int rt_ioregion_delete(RT_IOREGION *iorn)
-{
-	uint64_t start, len;
-	int flags;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	flags = iorn->flags;
-	start = iorn->start;
-	len = iorn->len;
-	removeq(iorn->rqueue, &iorn->rlink);
-	xnregistry_remove(iorn->handle);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	if (flags & IORN_IOPORT)
-		release_region(start, len);
-	else if (flags & IORN_IOMEM)
-		release_mem_region(start, len);
-
-	return 0;
-}
-
-static int __rt_io_put_region(RT_IOREGION_PLACEHOLDER __user *u_ph)
-{
-	RT_IOREGION_PLACEHOLDER ph;
-	uint64_t start, len;
-	RT_IOREGION *iorn;
-	int flags;
-	spl_t s;
-
-	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
-		return -EFAULT;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	iorn = xnregistry_fetch(ph.opaque);
-	if (iorn == NULL) {
-		xnlock_put_irqrestore(&nklock, s);
-		return -ESRCH;
-	}
-
-	flags = iorn->flags;
-	start = iorn->start;
-	len = iorn->len;
-	removeq(iorn->rqueue, &iorn->rlink);
-	xnregistry_remove(iorn->handle);
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	xnfree(iorn);
-
-	if (flags & IORN_IOPORT)
-		release_region(start, len);
-	else if (flags & IORN_IOMEM)
-		release_mem_region(start, len);
-
-	return 0;
-}
-
 static __attribute__ ((unused))
 int __rt_call_not_available(void)
 {
@@ -2916,11 +2562,9 @@ static void *__shadow_eventcb(int event, void *data)
 		initq(&rh->condq);
 		initq(&rh->eventq);
 		initq(&rh->heapq);
-		initq(&rh->intrq);
 		initq(&rh->mutexq);
 		initq(&rh->queueq);
 		initq(&rh->semq);
-		initq(&rh->ioregionq);
 		initq(&rh->bufferq);
 
 		return &rh->ppd;
@@ -2932,11 +2576,9 @@ static void *__shadow_eventcb(int event, void *data)
 		__native_cond_flush_rq(&rh->condq);
 		__native_event_flush_rq(&rh->eventq);
 		__native_heap_flush_rq(&rh->heapq);
-		__native_intr_flush_rq(&rh->intrq);
 		__native_mutex_flush_rq(&rh->mutexq);
 		__native_queue_flush_rq(&rh->queueq);
 		__native_sem_flush_rq(&rh->semq);
-		__native_ioregion_flush_rq(&rh->ioregionq);
 		__native_buffer_flush_rq(&rh->bufferq);
 
 		xnarch_free_host_mem(rh, sizeof(*rh));
@@ -3028,16 +2670,7 @@ static struct xnsysent __systab[] = {
  	SKINCALL_DEF(__native_alarm_stop, __rt_alarm_stop, any),
  	SKINCALL_DEF(__native_alarm_wait, __rt_alarm_wait, primary),
  	SKINCALL_DEF(__native_alarm_inquire, __rt_alarm_inquire, any),
- 	SKINCALL_DEF(__native_intr_create, __rt_intr_create, any),
- 	SKINCALL_DEF(__native_intr_bind, __rt_intr_bind, conforming),
- 	SKINCALL_DEF(__native_intr_delete, __rt_intr_delete, any),
- 	SKINCALL_DEF(__native_intr_wait, __rt_intr_wait, primary),
- 	SKINCALL_DEF(__native_intr_enable, __rt_intr_enable, any),
- 	SKINCALL_DEF(__native_intr_disable, __rt_intr_disable, any),
- 	SKINCALL_DEF(__native_intr_inquire, __rt_intr_inquire, any),
  	SKINCALL_DEF(__native_unimp_89, __rt_call_not_available, any),
- 	SKINCALL_DEF(__native_io_get_region, __rt_io_get_region, lostage),
- 	SKINCALL_DEF(__native_io_put_region, __rt_io_put_region, lostage),
  	SKINCALL_DEF(__native_unimp_92, __rt_call_not_available, any),
  	SKINCALL_DEF(__native_unimp_93, __rt_call_not_available, any),
  	SKINCALL_DEF(__native_buffer_create, __rt_buffer_create, lostage),

@@ -11,8 +11,6 @@ libnative_la_SOURCES = \
 	event.c \
 	heap.c \
 	init.c \
-	intr.c \
-	misc.c \
 	mutex.c \
 	queue.c \
 	sem.c \

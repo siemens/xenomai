@@ -107,15 +107,6 @@ config XENO_OPT_NATIVE_MPS
 	variable-sized messages in a synchronous fashion between Xenomai
 	tasks.
 
-config XENO_OPT_NATIVE_INTR
-	bool "Interrupts"
-	help
-	
-	This option provides a simple API to deal with interrupts,
-	both in kernel and user-space contexts. Note that the preferred
-	way of implementing generic drivers usable across all Xenomai
-	interfaces is defined by the Real-Time Driver Model (RTDM).
-
 config XENO_OPT_DEBUG_NATIVE
 	bool "Debugging support"
 	depends on XENO_OPT_DEBUG
