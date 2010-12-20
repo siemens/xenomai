@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <memory.h>
 #include "copperplate/init.h"
 #include "copperplate/heapobj.h"
 #include "tlsf/tlsf.h"
@@ -98,6 +99,8 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 	hobj->ops = &tlsf_ops;
 #endif
 	hobj->pool = mem;
+	/* Make sure to wipe out tlsf's signature. */
+	memset(mem, 0, size);
 	hobj->size = init_memory_pool(size, mem);
 	if (hobj->size == (size_t)-1)
 		return -EINVAL;
