@@ -33,7 +33,10 @@ struct pvlist {
 };
 
 #define DEFINE_PRIVATE_LIST(name) \
-	struct pvlist name = { .head = { &(name.head), &(name.head) } }
+	struct pvlist name = { .head = { .next = &(name.head), .prev = &(name.head) } }
+
+#define INIT_PRIVATE_HOLDER(name) \
+	{ .next = &(name), .prev = &(name) }
 
 static inline void initpvh(struct pvholder *holder)
 {
