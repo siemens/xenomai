@@ -53,6 +53,8 @@ struct threadobj_corespec {
 #define THREADOBJ_SCHEDLOCK	0x1	/* Holds the scheduler lock. */
 #define THREADOBJ_ROUNDROBIN	0x2	/* Undergoes round-robin. */
 
+#define THREADOBJ_IRQCONTEXT    ((struct threadobj *)-2UL)
+
 struct syncobj;
 struct traceobj;
 
@@ -168,6 +170,12 @@ static inline struct threadobj *threadobj_current(void)
 	return pthread_getspecific(threadobj_tskey);
 }
 
+static inline int threadobj_async_p(void)
+{
+	struct threadobj *thobj = threadobj_current();
+	return thobj == THREADOBJ_IRQCONTEXT;
+}
+
 static inline int threadobj_lock_sched_once(struct threadobj *thobj)
 {
 	if (thobj->schedlock_depth == 0)
@@ -184,21 +192,6 @@ static inline int threadobj_sleep(struct timespec *ts,
 	 * with both Cobalt and Mercury cores.
 	 */
 	return -clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, ts, ts_r);
-}
-
-static inline void threadobj_ienter(void)
-{
-	++threadobj_async;
-}
-
-static inline void threadobj_iexit(void)
-{
-	threadobj_async--;
-}
-
-static inline int threadobj_async_p(void)
-{
-	return threadobj_async;
 }
 
 static inline int threadobj_context_p(void)

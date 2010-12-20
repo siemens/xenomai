@@ -85,6 +85,7 @@ static void *timerobj_server(void *arg)
 	int ret;
 
 	pthread_set_name_np(pthread_self(), "timer-internal");
+	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
 
 	for (;;) {
 		ret = sem_wait(&svsem);
@@ -111,9 +112,7 @@ static void *timerobj_server(void *arg)
 					     &value, &interval);
 				timerobj_enqueue(tmobj);
 			}
-			threadobj_ienter();
 			tmobj->handler(tmobj);
-			threadobj_iexit();
 		}
 
 		write_unlock(&svlock);

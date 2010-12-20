@@ -143,6 +143,9 @@ void threadobj_finalize(void *p)
 {
 	struct threadobj *thobj = p;
 
+	if (thobj == THREADOBJ_IRQCONTEXT)
+		return;
+
 	write_lock_nocancel(&list_lock);
 	pvlist_remove(&thobj->thread_link);
 	write_unlock(&list_lock);

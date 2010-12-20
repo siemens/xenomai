@@ -29,9 +29,8 @@
 static void timerobj_handler(union sigval sigval)
 {
 	struct timerobj *tmobj = sigval.sival_ptr;
-	threadobj_ienter();
+	pthread_setspecific(threadobj_tskey, THREADOBJ_IRQCONTEXT);
 	tmobj->handler(tmobj);
-	threadobj_iexit();
 }
 
 int timerobj_init(struct timerobj *tmobj)
