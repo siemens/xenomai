@@ -452,6 +452,13 @@ u_long t_ident(const char *name, u_long node, u_long *tid_r)
 		return ERR_OBJNF;
 
 	task = container_of(cobj, struct psos_task, cobj);
+	/*
+	 * Last attempt to check whether the task is valid, in case it
+	 * is pending deletion.
+	 */
+	if (threadobj_get_magic(&task->thobj) != task_magic)
+		return ERR_OBJNF;
+
 	*tid_r = mainheap_ref(task, u_long);
 
 	return SUCCESS;
