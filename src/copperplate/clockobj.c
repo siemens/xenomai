@@ -70,8 +70,8 @@ void clockobj_ticks_to_timeout(struct clockobj *clkobj,
 {
 	struct timespec delta;
 
-	clock_gettime(CLOCK_REALTIME, ts);
 	read_lock_nocancel(&clkobj->lock);
+	clock_gettime(CLOCK_REALTIME, ts);
 	ticks_to_timespec(clkobj, ticks, &delta);
 	read_unlock(&clkobj->lock);
 	timespec_add(ts, ts, &delta);
@@ -184,9 +184,9 @@ int clockobj_set_date(struct clockobj *clkobj,
 {
 	struct timespec now;
 
-	clock_gettime(CLOCK_REALTIME, &now);
-
 	read_lock_nocancel(&clkobj->lock);
+
+	clock_gettime(CLOCK_REALTIME, &now);
 
 	/* Change the period on-the-fly if given. */
 	if (period_ns) {
@@ -207,19 +207,19 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 {
 	struct timespec now, delta, sum;
 
-	clock_gettime(CLOCK_REALTIME, &now);
-
 	read_lock_nocancel(&clkobj->lock);
+
+	clock_gettime(CLOCK_REALTIME, &now);
 
 	/* Wall clock time elapsed since we set the date: */
 	timespec_sub(&delta, &now, &clkobj->start);
-	sum = clkobj->epoch;
+
 	/* Emulation time = epoch + delta. */
-	timespec_add(&sum, &sum, &delta);
+	timespec_add(&sum, &clkobj->epoch, &delta);
 
 	/* Convert the time value to ticks. */
-	*pticks = sum.tv_sec * clkobj->tick_freq
-		+ sum.tv_nsec / clkobj->ns_per_tick;
+	*pticks = (ticks_t)sum.tv_sec * clkobj->tick_freq
+	  + (ticks_t)sum.tv_nsec / clkobj->ns_per_tick;
 
 	read_unlock(&clkobj->lock);
 
