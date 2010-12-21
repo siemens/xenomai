@@ -55,7 +55,7 @@ index 631e5a0..5fa10e6 100644
  	bool "High memory support"
  	depends on PPC32
 diff --git a/arch/powerpc/boot/Makefile b/arch/powerpc/boot/Makefile
-index fae8192..054a43a 100644
+index fae8192..f11ef26 100644
 --- a/arch/powerpc/boot/Makefile
 +++ b/arch/powerpc/boot/Makefile
 @@ -29,6 +29,14 @@ ifdef CONFIG_DEBUG_INFO
@@ -73,22 +73,6 @@ index fae8192..054a43a 100644
  ifeq ($(call cc-option-yn, -fstack-protector),y)
  BOOTCFLAGS	+= -fno-stack-protector
  endif
-@@ -78,6 +86,7 @@ src-plat := of.c cuboot-52xx.c cuboot-824x.c cuboot-83xx.c cuboot-85xx.c holly.c
- 		cuboot-warp.c cuboot-85xx-cpm2.c cuboot-yosemite.c simpleboot.c \
- 		virtex405-head.S virtex.c redboot-83xx.c cuboot-sam440ep.c \
- 		cuboot-acadia.c cuboot-amigaone.c cuboot-kilauea.c \
-+		lwmon5-head.S cuboot-lwmon5.c \
- 		gamecube-head.S gamecube.c wii-head.S wii.c treeboot-iss4xx.c
- src-boot := $(src-wlib) $(src-plat) empty.c
- 
-@@ -209,6 +218,7 @@ image-$(CONFIG_WARP)			+= cuImage.warp
- image-$(CONFIG_YOSEMITE)		+= cuImage.yosemite
- image-$(CONFIG_ISS4xx)			+= treeImage.iss4xx \
- 					   treeImage.iss4xx-mpic
-+image-$(CONFIG_LWMON5)			+= cuImage.lwmon5
- 
- # Board ports in arch/powerpc/platform/8xx/Kconfig
- image-$(CONFIG_MPC86XADS)		+= cuImage.mpc866ads
 diff --git a/arch/powerpc/include/asm/exception-64s.h b/arch/powerpc/include/asm/exception-64s.h
 index 57c4000..9c09355 100644
 --- a/arch/powerpc/include/asm/exception-64s.h
@@ -281,7 +265,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..9a63df2
+index 0000000..b6eff61
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,245 @@
@@ -332,10 +316,10 @@ index 0000000..9a63df2
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.12-01"
++#define IPIPE_ARCH_STRING	"2.12-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	12
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -922,20 +906,6 @@ index 0000000..c3162c6
 +#endif /* !CONFIG_IPIPE */
 +
 +#endif /* !_ASM_POWERPC_IPIPE_HWIRQ_H */
-diff --git a/arch/powerpc/include/asm/irq.h b/arch/powerpc/include/asm/irq.h
-index 67ab5fb..5833e4f 100644
---- a/arch/powerpc/include/asm/irq.h
-+++ b/arch/powerpc/include/asm/irq.h
-@@ -342,5 +342,9 @@ extern int call_handle_irq(int irq, void *p1,
- 			   struct thread_info *tp, void *func);
- extern void do_IRQ(struct pt_regs *regs);
- 
-+#ifdef CONFIG_NMI_WATCHDOG
-+#define ARCH_HAS_NMI_WATCHDOG
-+#endif
-+
- #endif /* _ASM_IRQ_H */
- #endif /* __KERNEL__ */
 diff --git a/arch/powerpc/include/asm/irqflags.h b/arch/powerpc/include/asm/irqflags.h
 index 5f68ecf..5059e59 100644
 --- a/arch/powerpc/include/asm/irqflags.h
@@ -4319,55 +4289,6 @@ index 690566b..7172001 100644
  static void flush_range(struct mm_struct *mm, unsigned long start,
  			unsigned long end)
  {
-diff --git a/arch/powerpc/platforms/44x/Kconfig b/arch/powerpc/platforms/44x/Kconfig
-index 69d668c..fc56a3b 100644
---- a/arch/powerpc/platforms/44x/Kconfig
-+++ b/arch/powerpc/platforms/44x/Kconfig
-@@ -182,6 +182,16 @@ config ICON
- 	help
- 	  This option enables support for the AMCC PPC440SPe evaluation board.
- 
-+config LWMON5
-+	bool "lwmon5"
-+	depends on 44x
-+	default n
-+	select PPC44x_SIMPLE
-+	select 440EPX
-+	select NMI_WATCHDOG
-+	help
-+	  This option enables support for the Liebherr lwmon5 board.
-+
- #config LUAN
- #	bool "Luan"
- #	depends on 44x
-@@ -240,6 +250,15 @@ config PPC4xx_GPIO
- 	help
- 	  Enable gpiolib support for ppc440 based boards
- 
-+config NMI_WATCHDOG
-+        bool "Enable NMI watchdog"
-+	depends on LWMON5
-+        default n
-+        help
-+	  Add touch_nmi_watchdog() calls. This is needed for boards with a
-+	  very short watchdog timeout that need to get "kicked" during upon
-+	  Linux bootup, before the real watchdog driver is running.
-+
- # 44x specific CPU modules, selected based on the board above.
- config 440EP
- 	bool
-diff --git a/arch/powerpc/platforms/44x/ppc44x_simple.c b/arch/powerpc/platforms/44x/ppc44x_simple.c
-index 5f7a29d..d29b1f6 100644
---- a/arch/powerpc/platforms/44x/ppc44x_simple.c
-+++ b/arch/powerpc/platforms/44x/ppc44x_simple.c
-@@ -62,6 +62,7 @@ static char *board[] __initdata = {
- 	"amcc,sequoia",
- 	"amcc,taishan",
- 	"amcc,yosemite",
-+	"liebherr,lwmon5",
- 	"mosaixtech,icon"
- };
- 
 diff --git a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
 index 5a55d87..8a6b407 100644
 --- a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
