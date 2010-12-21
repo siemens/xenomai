@@ -94,7 +94,8 @@ static inline off_t mainheap_off(void *addr)
 #define mainheap_deref(handle, type)					\
 	({								\
 		type *ptr;						\
-		assert(__builtin_types_compatible_p(typeof(handle), uintptr_t)); \
+		assert(__builtin_types_compatible_p(typeof(handle), unsigned long) || \
+		       __builtin_types_compatible_p(typeof(handle), uintptr_t)); \
 		ptr = (handle & 1) ? (type *)mainheap_ptr(handle & ~1UL) : (type *)handle; \
 		ptr;							\
 	})
@@ -109,7 +110,8 @@ static inline off_t mainheap_off(void *addr)
 #define mainheap_ref(ptr, type)						\
 	({								\
 		type handle;						\
-		assert(__builtin_types_compatible_p(typeof(type), uintptr_t)); \
+		assert(__builtin_types_compatible_p(typeof(type), unsigned long) || \
+		       __builtin_types_compatible_p(typeof(type), uintptr_t)); \
 		assert(ptr == NULL || __memchk(__pshared_heap, ptr));	\
 		handle = (type)mainheap_off(ptr);			\
 		handle|1;						\
