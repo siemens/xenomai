@@ -184,7 +184,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..8af0104
+index 0000000..01bf54d
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,157 @@
@@ -215,10 +215,10 @@ index 0000000..8af0104
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.8-00"
++#define IPIPE_ARCH_STRING	"2.8-01"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -4866,7 +4866,7 @@ index d5b3876..92b7abe 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..4e04013
+index 0000000..854f132
 --- /dev/null
 +++ b/include/linux/ipipe.h
 @@ -0,0 +1,780 @@
@@ -5148,7 +5148,7 @@ index 0000000..4e04013
 +#endif
 +
 +#ifndef __ipipe_run_irqtail
-+#define __ipipe_run_irqtail() do { } while(0)
++#define __ipipe_run_irqtail(irq) do { } while(0)
 +#endif
 +
 +#define __ipipe_pipeline_head_p(ipd) (&(ipd)->p_link == __ipipe_pipeline.next)
@@ -5792,7 +5792,7 @@ index 0000000..3f43ba5
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_lock.h b/include/linux/ipipe_lock.h
 new file mode 100644
-index 0000000..cf33925
+index 0000000..75bf0e8
 --- /dev/null
 +++ b/include/linux/ipipe_lock.h
 @@ -0,0 +1,240 @@
@@ -5988,7 +5988,7 @@ index 0000000..cf33925
 +
 +void __ipipe_spin_unlock_irqcomplete(unsigned long x);
 +
-+#ifdef CONFIG_IPIPE_DEBUG_INTERNAL
++#if defined(CONFIG_IPIPE_DEBUG_INTERNAL) && defined(CONFIG_SMP)
 +void __ipipe_spin_unlock_debug(unsigned long flags);
 +#else
 +#define __ipipe_spin_unlock_debug(flags)  do { } while (0)
@@ -7072,7 +7072,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..7f1df1f
+index 0000000..9d025b2
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,2149 @@
@@ -8250,7 +8250,7 @@ index 0000000..7f1df1f
 +	__set_bit(IPIPE_STALL_FLAG, &p->status);
 +	barrier();
 +	head->irqs[irq].handler(irq, head->irqs[irq].cookie); /* Call the ISR. */
-+	__ipipe_run_irqtail();
++	__ipipe_run_irqtail(irq);
 +	barrier();
 +	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +
@@ -8311,7 +8311,7 @@ index 0000000..7f1df1f
 +
 +		if (likely(ipd != ipipe_root_domain)) {
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
-+			__ipipe_run_irqtail();
++			__ipipe_run_irqtail(irq);
 +		} else if (ipipe_virtual_irq_p(irq)) {
 +			irq_enter();
 +			__ipipe_do_root_virq(ipd, irq);
