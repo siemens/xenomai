@@ -1055,9 +1055,11 @@ static void pse51_dispatch_signals(xnsigmask_t sigs)
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 static void pse51_dispatch_shadow_signals(xnsigmask_t sigs)
 {
+	spl_t dummy;
 	/* Migrate to secondary mode in order to get the signals delivered by
 	   Linux. */
 	xnshadow_relax(1, SIGDEBUG_MIGRATE_SIGNAL);
+	xnlock_get_irqsave(&nklock, dummy);
 }
 
 void pse51_signal_handle_request(pthread_t thread)
