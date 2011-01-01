@@ -37,51 +37,51 @@
 static const struct option base_options[] = {
 	{
 #define help_opt	0
-	name: "help",
-	has_arg: 0,
-	flag: NULL,
-	val: 0
+		.name = "help",
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 0
 	},
 #define file_opt	1
 	{
-	name: "file",
-	has_arg: 1,
-	flag: NULL,
-	val: 0
+		.name = "file",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
 	},
 #define path_opt	2
 	{
-	name: "path",
-	has_arg: 1,
-	flag: NULL,
-	val: 0
+		.name = "path",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
 	},
 #define filter_opt	3	/* Alias for filter-in */
 	{
-	name: "filter",
-	has_arg: 1,
-	flag: NULL,
-	val: 0
+		.name = "filter",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
 	},
 #define filter_in_opt	4
 	{
-	name: "filter-in",
-	has_arg: 1,
-	flag: NULL,
-	val: 0
+		.name = "filter-in",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
 	},
 #define filter_out_opt	5	/* Alias for !filter-in */
 	{
-	name: "filter-out",
-	has_arg: 1,
-	flag: NULL,
-	val: 0
+		.name = "filter-out",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
 	},
 	{
-	name: NULL,
-	has_arg: 0,
-	flag: NULL,
-	val: 0
+		.name = NULL,
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 0
 	}
 };
 
