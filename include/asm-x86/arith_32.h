@@ -65,14 +65,14 @@ __rthal_uldivrem(const unsigned long long ull, const unsigned long d)
 
 /* Fast long long division: when the quotient and remainder fit on 32 bits. */
 static inline unsigned long __rthal_i386_uldivrem(unsigned long long ull,
-                                                  const unsigned d,
-                                                  unsigned long *const rp)
+						  const unsigned d,
+						  unsigned long *const rp)
 {
     unsigned long q, r;
     ull = __rthal_uldivrem(ull, d);
     __asm__ ( "": "=d"(r), "=a"(q) : "A"(ull));
     if(rp)
-        *rp = r;
+	*rp = r;
     return q;
 }
 #define rthal_uldivrem(ull, d, rp) __rthal_i386_uldivrem((ull),(d),(rp))
@@ -80,9 +80,9 @@ static inline unsigned long __rthal_i386_uldivrem(unsigned long long ull,
 /* Division of an unsigned 96 bits ((h << 32) + l) by an unsigned 32 bits.
    Building block for ulldiv. */
 static inline unsigned long long __rthal_div96by32 (const unsigned long long h,
-                                                    const unsigned long l,
-                                                    const unsigned long d,
-                                                    unsigned long *const rp)
+						    const unsigned long l,
+						    const unsigned long d,
+						    unsigned long *const rp)
 {
     u_long rh;
     const u_long qh = rthal_uldivrem(h, d, &rh);
@@ -96,8 +96,8 @@ static inline unsigned long long __rthal_div96by32 (const unsigned long long h,
    the compiler removes redundant calls. */
 static inline unsigned long long
 __rthal_i386_ulldiv (const unsigned long long ull,
-                     const unsigned d,
-                     unsigned long *const rp)
+		     const unsigned d,
+		     unsigned long *const rp)
 {
     unsigned long h, l;
     __rthal_u64tou32(ull, h, l);
@@ -140,12 +140,13 @@ __rthal_i386_ulldiv (const unsigned long long ull,
 static inline __attribute__((const)) unsigned long long
 __rthal_x86_nodiv_ullimd(const unsigned long long op,
 			 const unsigned long long frac,
-			 unsigned integ)
+			 unsigned rhs_integ)
 {
 	register unsigned rl __asm__("ecx");
 	register unsigned rm __asm__("esi");
 	register unsigned rh __asm__("edi");
 	unsigned fracl, frach, opl, oph;
+	volatile unsigned integ = rhs_integ;
 	register unsigned long long t;
 
 	__rthal_u64tou32(op, oph, opl);
@@ -179,7 +180,7 @@ __rthal_x86_nodiv_ullimd(const unsigned long long op,
 		 "mov %[oph], %%edx\n\t"
 		 "imul %[integ], %%edx\n\t"
 		 "add %[rh], %%edx\n\t"
-		 : [rl]"=c"(rl), [rm]"=S"(rm), [rh]"=D"(rh), "=A"(t)
+		 : [rl]"=&c"(rl), [rm]"=&S"(rm), [rh]"=&D"(rh), "=&A"(t)
 		 : [opl]"m"(opl), [oph]"m"(oph),
 		   [fracl]"m"(fracl), [frach]"m"(frach), [integ]"m"(integ)
 		 : "cc");
