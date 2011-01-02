@@ -1,0 +1,17 @@
+#! @XENO_TEST_DIR@/xeno-test-run
+
+set -e
+
+arith
+check-vdso
+clocktest -T 10
+cond-torture-native
+cond-torture-posix
+mutex-torture-native
+mutex-torture-posix
+
+start_load
+
+check_alive latency ${1+"$@"}
+
+wait_load
