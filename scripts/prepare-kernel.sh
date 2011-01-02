@@ -256,7 +256,10 @@ fi
 if test "x$output_patch" != "x"; then
 
     temp_tree=$TMPDIR/prepare-kernel-$$
-    mkdir $temp_tree
+    if ! mkdir $temp_tree; then
+	echo Temporary directory $temp_tree already exists, aborting.
+	exit 1
+    fi
 
     patchdir=`dirname $output_patch`
     patchdir=`cd $patchdir && pwd`
