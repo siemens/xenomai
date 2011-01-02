@@ -51,6 +51,9 @@ Collaboration diagram for Attach / detach Syscall API:</div>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__attach__sys.html#gc4a293d8e2ed56d3f6661a375ca94511">a4l_sys_detach</a> (int fd)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Detach an Analogy device from a driver.  <a href="#gc4a293d8e2ed56d3f6661a375ca94511"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__attach__sys.html#g8a09c9aad6ecfd08340c323f427c1555">a4l_sys_bufcfg</a> (int fd, unsigned int idx_subd, unsigned long size)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Configure the buffer size.  <a href="#g8a09c9aad6ecfd08340c323f427c1555"></a><br></td></tr>
 </table>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="g29c9cb07069b7e574f76c7c8c9cb082d"></a><!-- doxytag: member="sys.c::a4l_sys_attach" ref="g29c9cb07069b7e574f76c7c8c9cb082d" args="(int fd, a4l_lnkdesc_t *arg)" -->
@@ -93,6 +96,56 @@ Attach an Analogy device to a driver.
 
 </div>
 </div><p>
+<a class="anchor" name="g8a09c9aad6ecfd08340c323f427c1555"></a><!-- doxytag: member="sys.c::a4l_sys_bufcfg" ref="g8a09c9aad6ecfd08340c323f427c1555" args="(int fd, unsigned int idx_subd, unsigned long size)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int a4l_sys_bufcfg           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>fd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&nbsp;</td>
+          <td class="paramname"> <em>idx_subd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long&nbsp;</td>
+          <td class="paramname"> <em>size</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Configure the buffer size. 
+<p>
+This function can configure the buffer size of the file descriptor currently in use. If the subdevice index is set to A4L_BUF_DEFMAGIC, it can also define the default buffser size at open time.<p>
+<dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fd</em>&nbsp;</td><td>File descriptor as returned by <a class="el" href="group__basic__sys.html#g91598f2303b3d33a0cec672d098312e3" title="Open an Analogy device.">a4l_sys_open()</a> </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>idx_subd</em>&nbsp;</td><td>Index of the concerned subdevice </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>int]</em>&nbsp;</td><td>size Buffer size to be set</td></tr>
+  </table>
+</dl>
+<dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. Otherwise:</dd></dl>
+<ul>
+<li>-EINVAL is returned if some argument is missing or wrong (Please, type "dmesg" for more info)</li><li>-EPERM is returned if the function is called in an RT context or if the buffer to resize is mapped in user-space (Please, type "dmesg" for more info)</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-EBUSY is returned if the selected subdevice is already processing an asynchronous operation</li><li>-ENOMEM is returned if the system is out of memory </li></ul>
+
+<p>Referenced by <a class="el" href="async_8c-source.html#l00124">a4l_set_bufsize()</a>.</p>
+
+</div>
+</div><p>
 <a class="anchor" name="gc4a293d8e2ed56d3f6661a375ca94511"></a><!-- doxytag: member="sys.c::a4l_sys_detach" ref="gc4a293d8e2ed56d3f6661a375ca94511" args="(int fd)" -->
 <div class="memitem">
 <div class="memproto">
@@ -124,7 +177,7 @@ Detach an Analogy device from a driver.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 20 05:01:35 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:08 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

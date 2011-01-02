@@ -133,7 +133,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00482">xnheap_alloc()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00809">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -371,7 +371,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="ksrc_2nucleus_2heap_8c-source.html#l00843">xnheap_free()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00624">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00624">rt_pipe_read()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00809">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -530,7 +530,7 @@ This service can be called from:<p>
 Rescheduling: always unless the request is immediately satisfied or <em>timeout</em> specifies a non-blocking operation.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>The <em>timeout</em> value will be interpreted as jiffies if the native skin is bound to a periodic time base (see CONFIG_XENO_OPT_NATIVE_PERIOD), or nanoseconds otherwise. </dd></dl>
 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00508">rt_pipe_receive()</a>.</p>
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01020">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00508">rt_pipe_receive()</a>.</p>
 
 </div>
 </div><p>
@@ -674,9 +674,6 @@ This service writes a complete message to be received from the associated specia
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
-<li>-EPIPE is returned if the associated special device is not yet open.</li></ul>
-<p>
-<ul>
 <li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
 <p>
 <ul>
@@ -687,8 +684,10 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li></ul>
 <p>
-Rescheduling: possible. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00805">rt_pipe_write()</a>.</p>
+Rescheduling: possible.<p>
+<dl class="note" compact><dt><b>Note:</b></dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the relevant buffer pool (see <a class="el" href="group__pipe.html#g29521cc898afa0069963964955167aa5" title="Create a message pipe.">rt_pipe_create()</a>). </dd></dl>
+
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00809">rt_pipe_write()</a>.</p>
 
 </div>
 </div><p>
@@ -740,9 +739,6 @@ Data buffers sent by the <a class="el" href="group__pipe.html#gd8edc920499d2c5c5
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
-<li>-EPIPE is returned if the associated special device is not yet open.</li></ul>
-<p>
-<ul>
 <li>-EIDRM is returned if <em>pipe</em> is a closed pipe descriptor.</li></ul>
 <p>
 <ul>
@@ -756,7 +752,9 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: possible. 
+Rescheduling: possible.<p>
+<dl class="note" compact><dt><b>Note:</b></dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the relevant buffer pool (see <a class="el" href="group__pipe.html#g29521cc898afa0069963964955167aa5" title="Create a message pipe.">rt_pipe_create()</a>). </dd></dl>
+
 </div>
 </div><p>
 <a class="anchor" name="g12f801963d0db6aa60bc6cf92f65697a"></a><!-- doxytag: member="pipe.c::rt_pipe_write" ref="g12f801963d0db6aa60bc6cf92f65697a" args="(RT_PIPE *pipe, const void *buf, size_t size, int mode)" -->
@@ -819,9 +817,6 @@ This service writes a complete message to be received from the associated specia
 <li>-EINVAL is returned if <em>pipe</em> is not a pipe descriptor.</li></ul>
 <p>
 <ul>
-<li>-EPIPE is returned if the associated special device is not yet open.</li></ul>
-<p>
-<ul>
 <li>-ENOMEM is returned if not enough buffer space is available to complete the operation.</li></ul>
 <p>
 <ul>
@@ -835,13 +830,15 @@ This service can be called from:<p>
 <ul>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
-Rescheduling: possible. 
-<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00974">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01014">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00720">rt_pipe_send()</a>.</p>
+Rescheduling: possible.<p>
+<dl class="note" compact><dt><b>Note:</b></dt><dd>Writing data to a pipe before any peer has opened the associated special device is allowed. The output will be buffered until then, only restricted by the available memory in the relevant buffer pool (see <a class="el" href="group__pipe.html#g29521cc898afa0069963964955167aa5" title="Create a message pipe.">rt_pipe_create()</a>). </dd></dl>
+
+<p>References <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00980">rt_pipe_alloc()</a>, <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l01020">rt_pipe_free()</a>, and <a class="el" href="ksrc_2skins_2native_2pipe_8c-source.html#l00722">rt_pipe_send()</a>.</p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 20 05:01:34 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:07 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

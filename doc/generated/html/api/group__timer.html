@@ -120,7 +120,7 @@ This service can be called from:<p>
 Rescheduling: never. 
 <p>References <a class="el" href="include_2nucleus_2timer_8h-source.html#l00505">xntimer_stop()</a>.</p>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="drvlib_8c-source.html#l00527">rtdm_timer_destroy()</a>, <a class="el" href="pod_8c-source.html#l01080">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l00463">xnpod_shutdown()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00269">rt_alarm_delete()</a>, <a class="el" href="drvlib_8c-source.html#l00527">rtdm_timer_destroy()</a>, <a class="el" href="pod_8c-source.html#l01079">xnpod_delete_thread()</a>, and <a class="el" href="pod_8c-source.html#l00462">xnpod_shutdown()</a>.</p>
 
 </div>
 </div><p>
@@ -153,7 +153,7 @@ This service can be called from:<p>
 <p>
 Rescheduling: never. </p>
 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l02790">xnpod_disable_timesource()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l02801">xnpod_disable_timesource()</a>.</p>
 
 </div>
 </div><p>
@@ -268,7 +268,7 @@ This service returns the count of pending overruns for the last tick of a given 
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>the number of overruns of <em>timer</em> at date <em>now</em> </dd></dl>
 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l02977">xnpod_wait_thread_period()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l02988">xnpod_wait_thread_period()</a>.</p>
 
 </div>
 </div><p>
@@ -359,7 +359,7 @@ This service can be called from:<p>
 <li>Kernel module initialization/cleanup code</li><li>Interrupt service routine</li><li>Kernel-based task</li><li>User-space task</li></ul>
 <p>
 Rescheduling: never. 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00133">timer_create()</a>, and <a class="el" href="pod_8c-source.html#l00341">xnpod_init()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00187">rt_alarm_create()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00133">timer_create()</a>, and <a class="el" href="pod_8c-source.html#l00340">xnpod_init()</a>.</p>
 
 </div>
 </div><p>
@@ -422,7 +422,7 @@ Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>This service is sensitive to the current operation mode of the associated time base, as defined by the xnpod_init_timebase() service. In periodic mode, clock ticks are interpreted as periodic jiffies. In oneshot mode, clock ticks are interpreted as nanoseconds.<p>
 Must be called with nklock held, IRQs off. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00358">rt_alarm_start()</a>, <a class="el" href="drvlib_8c-source.html#l00565">rtdm_timer_start()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c-source.html#l02685">xnpod_enable_timesource()</a>, <a class="el" href="pod_8c-source.html#l02876">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l03074">xnpod_set_thread_tslice()</a>, and <a class="el" href="pod_8c-source.html#l01363">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00358">rt_alarm_start()</a>, <a class="el" href="drvlib_8c-source.html#l00565">rtdm_timer_start()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c-source.html#l02696">xnpod_enable_timesource()</a>, <a class="el" href="pod_8c-source.html#l02887">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l03085">xnpod_set_thread_tslice()</a>, and <a class="el" href="pod_8c-source.html#l01362">xnpod_suspend_thread()</a>.</p>
 
 </div>
 </div><p>
@@ -459,7 +459,7 @@ This service can be called from:<p>
 Rescheduling: never.<p>
 <dl class="note" compact><dt><b>Note:</b></dt><dd>Must be called with nklock held, IRQs off. </dd></dl>
 
-<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00408">rt_alarm_stop()</a>, <a class="el" href="drvlib_8c-source.html#l00598">rtdm_timer_stop()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c-source.html#l01592">xnpod_resume_thread()</a>, <a class="el" href="pod_8c-source.html#l02876">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l03074">xnpod_set_thread_tslice()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00910">xntimer_destroy()</a>.</p>
+<p>Referenced by <a class="el" href="ksrc_2skins_2native_2alarm_8c-source.html#l00408">rt_alarm_stop()</a>, <a class="el" href="drvlib_8c-source.html#l00598">rtdm_timer_stop()</a>, <a class="el" href="ksrc_2skins_2posix_2timer_8c-source.html#l00335">timer_settime()</a>, <a class="el" href="pod_8c-source.html#l01604">xnpod_resume_thread()</a>, <a class="el" href="pod_8c-source.html#l02887">xnpod_set_thread_periodic()</a>, <a class="el" href="pod_8c-source.html#l03085">xnpod_set_thread_tslice()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00910">xntimer_destroy()</a>.</p>
 
 </div>
 </div><p>
@@ -492,7 +492,7 @@ This service can be called from:<p>
 <p>
 Rescheduling: never. </p>
 
-<p>References <a class="el" href="sched_8h-source.html#l00077">xnsched::htimer</a>, <a class="el" href="sched_8h-source.html#l00062">xnsched::status</a>, and <a class="el" href="sched_8h-source.html#l00075">xnsched::timerqueue</a>.</p>
+<p>References <a class="el" href="sched_8h-source.html#l00084">xnsched::htimer</a>, <a class="el" href="sched_8h-source.html#l00067">xnsched::lflags</a>, <a class="el" href="sched_8h-source.html#l00066">xnsched::status</a>, and <a class="el" href="sched_8h-source.html#l00082">xnsched::timerqueue</a>.</p>
 
 <p>Referenced by <a class="el" href="timebase_8c-source.html#l00476">xntbase_tick()</a>.</p>
 
@@ -538,7 +538,7 @@ Rescheduling: never.<p>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 20 05:01:34 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:07 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

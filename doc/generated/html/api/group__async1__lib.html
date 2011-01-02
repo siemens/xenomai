@@ -408,7 +408,7 @@ Get the available data count.
 
 <p>References <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>.</p>
 
-<p>Referenced by <a class="el" href="async_8c-source.html#l00357">a4l_async_read()</a>, and <a class="el" href="async_8c-source.html#l00414">a4l_async_write()</a>.</p>
+<p>Referenced by <a class="el" href="async_8c-source.html#l00356">a4l_async_read()</a>, and <a class="el" href="async_8c-source.html#l00413">a4l_async_write()</a>.</p>
 
 </div>
 </div><p>
@@ -456,9 +456,9 @@ During asynchronous acquisition, a ring-buffer enables the transfers from / to u
 </dl>
 <dl class="return" compact><dt><b>Returns:</b></dt><dd>0 on success. Otherwise:</dd></dl>
 <ul>
-<li>-EINVAL is returned if some argument is missing or wrong (Please, type "dmesg" for more info)</li><li>-EPERM is returned if the function is called in an RT context or if the buffer to resize is mapped in user-space (Please, type "dmesg" for more info)</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-EBUSY is returned if the selected subdevice is already processing an asynchronous operation</li><li>-ENOMEM is returned if the system is out of memory </li></ul>
+<li>-EINVAL is returned if the analogy descriptor is not correct or if some argument is missing or wrong (Please, type "dmesg" for more info)</li><li>-EPERM is returned if the function is called in an RT context or if the buffer to resize is mapped in user-space (Please, type "dmesg" for more info)</li><li>-EFAULT is returned if a user &lt;-&gt; kernel transfer went wrong</li><li>-EBUSY is returned if the selected subdevice is already processing an asynchronous operation</li><li>-ENOMEM is returned if the system is out of memory </li></ul>
 
-<p>References <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>.</p>
+<p>References <a class="el" href="sys_8c-source.html#l00208">a4l_sys_bufcfg()</a>, and <a class="el" href="descriptor_8h-source.html#l00076">a4l_descriptor::fd</a>.</p>
 
 </div>
 </div><p>
@@ -549,7 +549,7 @@ The function <a class="el" href="group__async1__lib.html#ge802726a40cc65522546fb
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 20 05:01:35 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:08 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>

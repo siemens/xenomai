@@ -43,9 +43,9 @@ Scheduling information structure. <table border="0" cellpadding="0" cellspacing=
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#d700d0003b158a60599221047b2fc52e">status</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">struct xnthread *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#fd2e6c15e470a38b385930c613856e7b">curr</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">xnflags_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#4e9ca82832cb0709308e7d78e7f9d694">lflags</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">xnarch_cpumask_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#6bc9e4bc8d3deace95765f8a5f6e93f9">resched</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">struct xnthread *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#fd2e6c15e470a38b385930c613856e7b">curr</a></td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct xnsched_rt&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structxnsched.html#0890af51db917d0e6c02d1ff487daad5">rt</a></td></tr>
 
@@ -70,7 +70,24 @@ Scheduling information structure. <table border="0" cellpadding="0" cellspacing=
 
 <p>
 Scheduler specific status bitmask. 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l01080">xnpod_delete_thread()</a>, <a class="el" href="pod_8h-source.html#l00251">xnpod_schedule()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00341">xntimer_tick_aperiodic()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8h-source.html#l00254">xnpod_schedule()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00341">xntimer_tick_aperiodic()</a>.</p>
+
+</div>
+</div><p>
+<a class="anchor" name="4e9ca82832cb0709308e7d78e7f9d694"></a><!-- doxytag: member="xnsched::lflags" ref="4e9ca82832cb0709308e7d78e7f9d694" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">xnflags_t <a class="el" href="structxnsched.html#4e9ca82832cb0709308e7d78e7f9d694">xnsched::lflags</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Scheduler specific local flags bitmask. 
+<p>Referenced by <a class="el" href="pod_8h-source.html#l00254">xnpod_schedule()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00341">xntimer_tick_aperiodic()</a>.</p>
 
 </div>
 </div><p>
@@ -87,23 +104,8 @@ Scheduler specific status bitmask.
 
 <p>
 Current thread. 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l01080">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01592">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l01363">xnpod_suspend_thread()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l01079">xnpod_delete_thread()</a>, <a class="el" href="pod_8c-source.html#l01604">xnpod_resume_thread()</a>, and <a class="el" href="pod_8c-source.html#l01362">xnpod_suspend_thread()</a>.</p>
 
-</div>
-</div><p>
-<a class="anchor" name="6bc9e4bc8d3deace95765f8a5f6e93f9"></a><!-- doxytag: member="xnsched::resched" ref="6bc9e4bc8d3deace95765f8a5f6e93f9" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">xnarch_cpumask_t <a class="el" href="structxnsched.html#6bc9e4bc8d3deace95765f8a5f6e93f9">xnsched::resched</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Mask of CPUs needing rescheduling. 
 </div>
 </div><p>
 <a class="anchor" name="0890af51db917d0e6c02d1ff487daad5"></a><!-- doxytag: member="xnsched::rt" ref="0890af51db917d0e6c02d1ff487daad5" args="" -->
@@ -149,7 +151,7 @@ Interrupt nesting level.
 
 <p>
 Host timer. 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l02685">xnpod_enable_timesource()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00341">xntimer_tick_aperiodic()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l02696">xnpod_enable_timesource()</a>, and <a class="el" href="ksrc_2nucleus_2timer_8c-source.html#l00341">xntimer_tick_aperiodic()</a>.</p>
 
 </div>
 </div><p>
@@ -166,14 +168,14 @@ Host timer.
 
 <p>
 Root thread control block. 
-<p>Referenced by <a class="el" href="pod_8c-source.html#l00341">xnpod_init()</a>.</p>
+<p>Referenced by <a class="el" href="pod_8c-source.html#l00340">xnpod_init()</a>.</p>
 
 </div>
 </div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>include/nucleus/<a class="el" href="sched_8h-source.html">sched.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 20 05:01:36 2010 for Xenomai API by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Tue Mar 8 13:02:09 2011 for Xenomai API by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
