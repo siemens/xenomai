@@ -326,7 +326,7 @@ static void rpi_clear_remote(struct xnthread *thread)
 	 * priority.
 	 */
 	if (rcpu != -1 && rcpu != rthal_processor_id()) {
-		if (!testbits(rpi->status, XNRPICK)) {
+		if (!testbits(rpi->rpistatus, XNRPICK)) {
 			__setbits(rpi->rpistatus, XNRPICK);
 			xnlock_put_irqrestore(&rpi->rpilock, s);
 			goto exit_send_ipi;
