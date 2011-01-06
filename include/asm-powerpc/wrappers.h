@@ -191,4 +191,8 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 #define mpc5xxx_get_bus_frequency(node)	mpc52xx_find_ipb_freq(node)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+#define of_device platform_device
+#endif
+
 #endif /* _XENO_ASM_POWERPC_WRAPPERS_H */

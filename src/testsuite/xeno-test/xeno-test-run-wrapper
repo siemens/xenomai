@@ -1,0 +1,20 @@
+#! /bin/sh
+
+check_alive()
+{
+    echo check_alive ${1+"$@"} >&1023
+}
+
+start_load()
+{
+    echo start_load >&1023
+}
+
+wait_load()
+{
+    read rc <&1022
+}
+
+script="$1"; shift
+set -- ${1+"$@"}
+source $script

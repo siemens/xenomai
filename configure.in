@@ -936,7 +936,6 @@ AC_CONFIG_FILES([ \
 	scripts/Makefile \
 	scripts/xeno-config \
 	scripts/xeno-load \
-	scripts/xeno-test \
 	scripts/xeno \
 	src/Makefile \
 	src/rtdk/Makefile \
@@ -961,6 +960,8 @@ AC_CONFIG_FILES([ \
 	src/testsuite/klatency/Makefile \
 	src/testsuite/unit/Makefile \
 	src/testsuite/sigtest/Makefile \
+	src/testsuite/xeno-test/Makefile \
+	src/testsuite/xeno-test/xeno-test \
 	src/utils/Makefile \
 	src/utils/can/Makefile \
 	src/utils/analogy/Makefile \
@@ -1011,9 +1012,7 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/runinfo.man \
 	doc/man/xeno.man \
 	doc/man/xeno-config.man \
-	doc/man/xeno-info.man \
 	doc/man/xeno-load.man \
-	doc/man/xeno-test.man \
 	doc/doxygen/Makefile \
 	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \

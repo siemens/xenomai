@@ -3,13 +3,13 @@ Section: devel
 Priority: extra
 Maintainer: Roland Stigge <stigge@antcom.de>
 Build-Depends: debhelper (>= 7), dh-kpatches, findutils (>= 4.2.28)
-Standards-Version: 3.8.0
+Standards-Version: 3.9.1
 Homepage: http://www.xenomai.org/
 
 Package: xenomai-runtime
 Section: devel
 Architecture: amd64 arm armeb armel i386 powerpc
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai
 Conflicts: xenomai
@@ -25,9 +25,9 @@ Description: Xenomai runtime utilities
  realtime system.
 
 Package: linux-patch-xenomai
-Section: devel
+Section: kernel
 Architecture: all
-Depends: ${kpatch:Depends}
+Depends: ${kpatch:Depends}, ${misc:Depends}
 Suggests: xenomai, linux-source-2.6, kernel-package
 Description: Linux kernel patches for Xenomai
  Xenomai is a real-time development framework cooperating with the Linux
@@ -48,7 +48,7 @@ Description: Linux kernel patches for Xenomai
 Package: libxenomai1
 Section: libs
 Architecture: amd64 arm armeb armel i386 powerpc
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai
 Conflicts: xenomai
@@ -65,7 +65,7 @@ Description: Shared libraries for Xenomai
 Package: libxenomai-dev
 Section: libdevel
 Architecture: amd64 arm armeb armel i386 powerpc
-Depends: libxenomai1 (= ${binary:Version})
+Depends: libxenomai1 (= ${binary:Version}), ${misc:Depends}
 Suggests: linux-patch-xenomai, xenomai-doc
 Replaces: xenomai
 Conflicts: xenomai
@@ -83,7 +83,7 @@ Description: Headers and static libs for Xenomai
 Package: xenomai-doc
 Section: doc
 Architecture: all
-Depends:
+Depends: ${misc:Depends}
 Suggests: xenomai
 Conflicts: xenomai-docs
 Replaces: xenomai-docs

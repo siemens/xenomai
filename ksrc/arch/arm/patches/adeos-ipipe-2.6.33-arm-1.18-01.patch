@@ -644,7 +644,7 @@ index 0000000..cfdf14a
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..bf6c4e5
+index 0000000..e802d72
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,370 @@
@@ -680,10 +680,10 @@ index 0000000..bf6c4e5
 +#include <linux/ipipe_percpu.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_ARCH_STRING	"1.18-00"
++#define IPIPE_ARCH_STRING	"1.18-01"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	18
-+#define IPIPE_PATCH_NUMBER	0
++#define IPIPE_PATCH_NUMBER	1
 +
 +#ifdef CONFIG_SMP
 +#define ipipe_processor_id()	hard_smp_processor_id()
@@ -3840,10 +3840,10 @@ index 0000000..a9de4f9
 +EXPORT_SYMBOL(__ipipe_tsc_get);
 diff --git a/arch/arm/kernel/ipipe_tsc_asm.S b/arch/arm/kernel/ipipe_tsc_asm.S
 new file mode 100644
-index 0000000..81e1590
+index 0000000..7dfec60
 --- /dev/null
 +++ b/arch/arm/kernel/ipipe_tsc_asm.S
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,165 @@
 +#include <asm/assembler.h>
 +#include <asm/asm-offsets.h>
 +#include <asm/glue.h>
@@ -3903,7 +3903,7 @@ index 0000000..81e1590
 +
 +	.align 5
 +.LCfrcd32_last_tsc:
-+	.rep	3
++	.rep	7
 +	.word	0
 +	.endr
 +.LCfrcd32_cntr_addr:
@@ -3942,16 +3942,15 @@ index 0000000..81e1590
 +__ipipe_freerunning_16:
 +	ldr	r0, .LCfr16_cntr_addr
 +/* User-space entry-point: r0 is the hardware counter virtual address */
-+	mov	ip, r0
 +1:	myldrd	r2, r3, r1, .LCfr16_last_tsc
-+	ldr	r0, [ip]
++	ldr	ip, [r0]
 +#ifndef CONFIG_CPU_ENDIAN_BE8
 +/* Little endian */
 +	ldr	r1, .LCfr16_last_tsc
 +	cmp	r1, r2
 +	bne	1b
 +	mov	r1, r2, lsr #16
-+	orr	r0, r0, r1, lsl #16
++	orr	r0, ip, r1, lsl #16
 +	cmp	r2, r0
 +	addhis	r0, r0, #0x10000
 +	adc	r1, r3, #0
@@ -3960,7 +3959,7 @@ index 0000000..81e1590
 +	cmp	r1, r3
 +	bne	1b
 +	mov	r1, r3, lsr #16
-+	orr	r1, r0, r1, lsl #16
++	orr	r1, ip, r1, lsl #16
 +	cmp	r3, r0
 +	addhis	r1, r1, #0x10000
 +	adc	r0, r2, #0
@@ -3984,30 +3983,29 @@ index 0000000..81e1590
 +__ipipe_decrementer_16:
 +	ldr	r0, .LCdec16_cntr_addr
 +/* User-space entry-point: r0 is the hardware counter virtual address */
-+	mov	ip, r0
 +#ifndef CONFIG_CPU_ENDIAN_BE8
 +/* Little endian */
 +1:	ldr	r1, .LCdec16_last_tsc
-+	ldr	r0, [ip]
++	ldr	ip, [r0]
 +	ldr	r2, .LCdec16_last_cnt
-+	subs 	r0, r2, r0
-+	addcs	r0, r0, #0x10000
++	subs 	ip, r2, ip
++	addcs	ip, ip, #0x10000
 +	myldrd	r2, r3, r3, .LCdec16_last_tsc
 +	cmp	r1, r2
 +	bne	1b
-+	adds	r0, r0, r2
++	adds	r0, ip, r2
 +	adc	r1, r3, #0
 +#else /* Big endian */
 +/* Little endian */
 +1:	ldr	r1, .LCdec16_last_tsc + 4
-+	ldr	r0, [ip]
++	ldr	ip, [r0]
 +	ldr	r2, .Ldec16_Clast_cnt
-+	subs 	r0, r2, r0
-+	addcs	r0, r0, #0x10000
++	subs 	ip, r2, ip
++	addcs	ip, ip, #0x10000
 +	myldrd	r2, r3, r3, .LCdec16_last_tsc
 +	cmp	r1, r3
 +	bne	1b
-+	adds	r1, r0, r3
++	adds	r1, ip, r3
 +	adc	r0, r2, #0
 +#endif /* Big endian */
 +	usr_ret	lr
@@ -4090,7 +4088,7 @@ index a2ea385..487ab4c 100644
  	return 0;
  }
 diff --git a/arch/arm/kernel/smp.c b/arch/arm/kernel/smp.c
-index 57162af..952fd85 100644
+index 57162af..1bb4658 100644
 --- a/arch/arm/kernel/smp.c
 +++ b/arch/arm/kernel/smp.c
 @@ -34,6 +34,7 @@
@@ -4341,12 +4339,10 @@ index 57162af..952fd85 100644
  	} else
  		local_flush_tlb_range(vma, start, end);
  }
-@@ -687,3 +797,14 @@ void flush_tlb_kernel_range(unsigned long start, unsigned long end)
+@@ -687,3 +797,10 @@ void flush_tlb_kernel_range(unsigned long start, unsigned long end)
  	} else
  		local_flush_tlb_kernel_range(start, end);
  }
-+
-+#ifdef CONFIG_SMP
 +
 +void arch_trigger_all_cpu_backtrace(void)
 +{
@@ -4354,8 +4350,6 @@ index 57162af..952fd85 100644
 +	cpu_clear(ipipe_processor_id(), mask);
 +	send_ipi_message(&mask, IPI_CPU_DUMP);
 +}
-+
-+#endif
 diff --git a/arch/arm/kernel/traps.c b/arch/arm/kernel/traps.c
 index 3f361a7..5e3a4a0 100644
 --- a/arch/arm/kernel/traps.c
@@ -4432,10 +4426,10 @@ index 709fbad..09cfdd0 100644
 +endif
 diff --git a/arch/arm/mach-at91/at91_ipipe_time.c b/arch/arm/mach-at91/at91_ipipe_time.c
 new file mode 100644
-index 0000000..b0327eb
+index 0000000..6c6f0d7
 --- /dev/null
 +++ b/arch/arm/mach-at91/at91_ipipe_time.c
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,327 @@
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
@@ -4514,9 +4508,7 @@ index 0000000..b0327eb
 +#define TCNXCNS(timer,v) ((v) << ((timer)<<1))
 +#define AT91_TC_REG_MASK (0xffff)
 +
-+static unsigned long next_match;
-+
-+static unsigned max_delta_ticks, min_delta_ticks;
++static unsigned max_delta_ticks, min_delta_ticks, tick_pending;
 +static struct clock_event_device clkevt;
 +static int tc_timer_clock;
 +
@@ -4554,7 +4546,11 @@ index 0000000..b0327eb
 + */
 +static irqreturn_t at91_timer_interrupt(int irq, void *dev_id)
 +{
-+	clkevt.event_handler(&clkevt);
++	if (__ipipe_mach_timerstolen || tick_pending) {
++		tick_pending = 0;
++		clkevt.event_handler(&clkevt);
++	}
++
 +	return IRQ_HANDLED;
 +}
 +
@@ -4568,12 +4564,8 @@ index 0000000..b0327eb
 +{
 +	at91_tc_read(AT91_TC_SR);
 +
-+	if (unlikely(!__ipipe_mach_timerstolen)) {
-+		__ipipe_tsc_update();
-+		next_match = (next_match + __ipipe_mach_ticks_per_jiffy)
-+			& AT91_TC_REG_MASK;
-+		write_RC(next_match);
-+	}
++	if (unlikely(!__ipipe_mach_timerstolen))
++		__ipipe_mach_set_dec(max_delta_ticks);
 +}
 +
 +static void
@@ -4585,7 +4577,7 @@ index 0000000..b0327eb
 +	/* Disable all interrupts. */
 +	at91_tc_write(AT91_TC_IDR, ~0ul);
 +
-+	if (mode == CLOCK_EVT_MODE_PERIODIC) {
++	if (mode == CLOCK_EVT_MODE_ONESHOT) {
 +		unsigned long v;
 +
 +#ifndef CONFIG_ARCH_AT91SAM9263
@@ -4607,9 +4599,7 @@ index 0000000..b0327eb
 +		/* Use the clock selected by at91_timer_init as input clock. */
 +		at91_tc_write(AT91_TC_CMR, tc_timer_clock);
 +
-+		/* Load the TC register C. */
-+		next_match = __ipipe_mach_ticks_per_jiffy;
-+		write_RC(next_match);
++		__ipipe_mach_set_dec(max_delta_ticks);
 +
 +		/* Enable CPCS interrupt. */
 +		at91_tc_write(AT91_TC_IER, AT91_TC_CPCS);
@@ -4617,6 +4607,14 @@ index 0000000..b0327eb
 +		/* Enable the channel. */
 +		at91_tc_write(AT91_TC_CCR, AT91_TC_CLKEN | AT91_TC_SWTRG);
 +	}
++}
++
++static int
++at91_tc_set_next_event(unsigned long delta, struct clock_event_device *dev)
++{
++	tick_pending = 1;
++	__ipipe_mach_set_dec(delta);
++	return 0;
 +}
 +
 +/*
@@ -4646,10 +4644,11 @@ index 0000000..b0327eb
 +
 +static struct clock_event_device clkevt = {
 +	.name		= "at91_tc" __stringify(CONFIG_IPIPE_AT91_TC),
-+	.features	= CLOCK_EVT_FEAT_PERIODIC,
++	.features	= CLOCK_EVT_FEAT_ONESHOT,
 +	.shift		= 20,
 +	.rating		= 250,
 +	.set_mode	= at91_tc_set_mode,
++	.set_next_event = at91_tc_set_next_event,
 +};
 +
 +static struct __ipipe_tscinfo tsc_info = {
@@ -4668,7 +4667,7 @@ index 0000000..b0327eb
 +
 +void __ipipe_mach_release_timer(void)
 +{
-+	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy);
++	clkevt.set_next_event(__ipipe_mach_ticks_per_jiffy, &clkevt);
 +}
 +EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
@@ -4731,15 +4730,16 @@ index 0000000..b0327eb
 +	clkevt.max_delta_ns = wrap_ns;
 +	clkevt.min_delta_ns = 2000;
 +	clkevt.cpumask = cpumask_of(0);
-+	clockevents_register_device(&clkevt);
-+
-+	tsc_info.freq = divided_freq;
-+	__ipipe_tsc_register(&tsc_info);
 +
 +	__ipipe_mach_ticks_per_jiffy = (divided_freq + HZ/2) / HZ;
 +	max_delta_ticks = (wrap_ns * clkevt.mult) >> clkevt.shift;
 +	min_delta_ticks = ((unsigned long long) clkevt.min_delta_ns
 +			   * clkevt.mult) >> clkevt.shift;
++
++	clockevents_register_device(&clkevt);
++
++	tsc_info.freq = divided_freq;
++	__ipipe_tsc_register(&tsc_info);
 +}
 +
 +#ifdef CONFIG_ARCH_AT91RM9200
