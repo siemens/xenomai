@@ -231,7 +231,11 @@ int copperplate_init(int argc, char *const argv[])
 	__this_node.id = get_node_id();
 
 	/* Set a reasonable default value for the registry mount point. */
-	asprintf(&__this_node.registry_mountpt, "/mnt/xenomai/%d", getpid());
+	ret = asprintf(&__this_node.registry_mountpt,
+		       "/mnt/xenomai/%d", getpid());
+	if (ret < 0)
+		return -ENOMEM;
+
 	/* Define default CPU affinity, i.e. no particular affinity. */
 	CPU_ZERO(&__this_node.cpu_affinity);
 
