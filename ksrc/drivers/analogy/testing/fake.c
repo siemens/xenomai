@@ -444,10 +444,11 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	a4l_dbg(1, drv_dbg, dev, "starting attach procedure...\n");
 
-	if (arg->opts_size < sizeof(unsigned long)) {
-		priv->amplitude_div = 1;
-		priv->quanta_cnt = 1;
-	} else {
+	/* Set default values for attach parameters */
+	priv->amplitude_div = 1;
+	priv->quanta_cnt = 1;
+
+	if (arg->opts_size >= sizeof(unsigned long)) {
 		unsigned long *args = (unsigned long *)arg->opts;
 		priv->amplitude_div = args[0];
 
