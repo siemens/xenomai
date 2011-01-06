@@ -33,11 +33,14 @@ static int tlsf_pool_overhead;
 void mem_destroy(struct heapobj *hobj)
 {
 	destroy_memory_pool(hobj->pool);
+	pthread_mutex_destroy(&hobj->lock);
 }
 
 int mem_extend(struct heapobj *hobj, size_t size, void *mem)
 {
+	pthread_mutex_lock(&hobj->lock);
 	hobj->size = add_new_area(hobj->pool, size, mem);
+	pthread_mutex_unlock(&hobj->lock);
 	if (hobj->size == (size_t)-1)
 		return -EINVAL;
 
@@ -46,22 +49,42 @@ int mem_extend(struct heapobj *hobj, size_t size, void *mem)
 
 void *mem_alloc(struct heapobj *hobj, size_t size)
 {
-	return malloc_ex(size, hobj->pool);
+	void *p;
+
+	pthread_mutex_lock(&hobj->lock);
+	p = malloc_ex(size, hobj->pool);
+	pthread_mutex_unlock(&hobj->lock);
+
+	return p;
 }
 
 void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size)
 {
-	return realloc_ex(ptr, size, hobj->pool);
+	void *p;
+
+	pthread_mutex_lock(&hobj->lock);
+	p = realloc_ex(ptr, size, hobj->pool);
+	pthread_mutex_unlock(&hobj->lock);
+
+	return p;
 }
 
 void mem_free(struct heapobj *hobj, void *ptr)
 {
+	pthread_mutex_lock(&hobj->lock);
 	free_ex(ptr, hobj->pool);
+	pthread_mutex_unlock(&hobj->lock);
 }
 
 size_t mem_inquire(struct heapobj *hobj, void *ptr)
 {
-	return malloc_usable_size_ex(ptr, hobj->pool);
+	size_t size;
+
+	pthread_mutex_lock(&hobj->lock);
+	size = malloc_usable_size_ex(ptr, hobj->pool);
+	pthread_mutex_unlock(&hobj->lock);
+
+	return size;
 }
 
 #ifdef CONFIG_XENO_PSHARED
@@ -104,6 +127,12 @@ int heapobj_init_private(struct heapobj *hobj, const char *name,
 	hobj->size = init_memory_pool(size, mem);
 	if (hobj->size == (size_t)-1)
 		return -EINVAL;
+
+	/*
+	 * TLSF does not lock around so-called extended calls aimed at
+	 * specific pools, which is definitely braindamage. So DIY.
+	 */
+	pthread_mutex_init(&hobj->lock, NULL);
 
 	return 0;
 }

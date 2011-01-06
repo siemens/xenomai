@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 #include <assert.h>
+#include <pthread.h>
 #include <xeno_config.h>
 #include <copperplate/reference.h>
 
@@ -68,6 +69,7 @@ struct heapobj {
 	void *pool;
 	size_t size;
 	char name[64];
+	pthread_mutex_t lock;
 #ifdef CONFIG_XENO_PSHARED
 	struct heapobj_ops *ops;
 	char fsname[64];
