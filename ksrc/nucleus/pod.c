@@ -2327,8 +2327,6 @@ reschedule:
 #ifdef CONFIG_XENO_OPT_PERVASIVE
       shadow_epilogue:
 	{
-		spl_t ignored;
-
 		/* Shadow on entry and root without shadow extension on exit?
 		   Mmmm... This must be the user-space mate of a deleted real-time
 		   shadow we've just rescheduled in the Linux domain to have it
@@ -2338,11 +2336,9 @@ reschedule:
 			xnshadow_exit();
 		}
 
-		/* We need to relock nklock here, since it is not locked and
-		   the caller may expect it to be locked. */
-		xnlock_get_irqsave(&nklock, ignored);
-		xnlock_put_irqrestore(&nklock, s);
-
+		/* We are returning to xnshadow_relax via
+		   xnpod_suspend_thread, do nothing,
+		   xnpod_suspend_thread will re-enable interrupts. */
 		return;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
