@@ -47,4 +47,20 @@ config XENO_DRIVERS_16550A_PCI
 
 	This option activates support for PCI serial boards.
 
+config XENO_DRIVERS_16550A_PCI_MOXA
+	depends on XENO_DRIVERS_16550A_PCI
+	bool "Moxa PCI boards"
+	default n
+	help
+
+	This option activates support for the following Moxa boards:
+	PCI Serial Boards:
+	  C104H/PCI, C168H/PCI
+	  CP-114, CP-132
+	Universal PCI Serial Boards:
+	  CP-102U, CP-102UL, CP-104U
+	  CP-112UL, CP-114UL, CP-118U
+	  CP-132U, CP-134U, CP-138U
+	  CP-168U
+
 endmenu

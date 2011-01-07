@@ -32,7 +32,184 @@ struct rt_16550_pci_board {
 	int tx_fifo;
 };
 
+#if defined(CONFIG_XENO_DRIVERS_16550A_PCI_MOXA)
+
+#define PCI_DEVICE_ID_CP112UL	0x1120
+#define PCI_DEVICE_ID_CP114UL	0x1143
+#define PCI_DEVICE_ID_CP138U	0x1380
+
+static const struct rt_16550_pci_board rt_16550_moxa_c104 = {
+	.name = "Moxa C104H/PCI",
+	.resource_base_addr = 2,
+	.nports = 4,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_c168 = {
+	.name = "Moxa C168H/PCI",
+	.resource_base_addr = 2,
+	.nports = 8,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp114 = {
+	.name = "Moxa CP-114",
+	.resource_base_addr = 2,
+	.nports = 4,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp132 = {
+	.name = "Moxa CP-132",
+	.resource_base_addr = 2,
+	.nports = 2,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp102u = {
+	.name = "Moxa CP-102U",
+	.resource_base_addr = 2,
+	.nports = 2,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp102ul = {
+	.name = "Moxa CP-102UL",
+	.resource_base_addr = 2,
+	.nports = 2,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp104u = {
+	.name = "Moxa CP-104U",
+	.resource_base_addr = 2,
+	.nports = 4,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp112ul = {
+	.name = "Moxa CP-112UL",
+	.resource_base_addr = 2,
+	.nports = 2,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp114ul = {
+	.name = "Moxa CP-114UL",
+	.resource_base_addr = 2,
+	.nports = 4,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp118u = {
+	.name = "Moxa CP-118U",
+	.resource_base_addr = 2,
+	.nports = 8,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp132u = {
+	.name = "Moxa CP-132U",
+	.resource_base_addr = 2,
+	.nports = 2,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp134u = {
+	.name = "Moxa CP-134U",
+	.resource_base_addr = 2,
+	.nports = 4,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp138u = {
+	.name = "Moxa CP-138U",
+	.resource_base_addr = 2,
+	.nports = 8,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+
+static const struct rt_16550_pci_board rt_16550_moxa_cp168u = {
+	.name = "Moxa CP-168U",
+	.resource_base_addr = 2,
+	.nports = 8,
+	.port_ofs = 8,
+	.baud_base = 921600,
+	.tx_fifo = 16,
+	.irqtype = RTDM_IRQTYPE_SHARED,
+};
+#endif
+
 DEFINE_PCI_DEVICE_TABLE( rt_16550_pci_table ) = {
+#if defined(CONFIG_XENO_DRIVERS_16550A_PCI_MOXA)
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_C104),
+	 .driver_data = (unsigned long)&rt_16550_moxa_c104},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_C168),
+	 .driver_data = (unsigned long)&rt_16550_moxa_c168},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP114),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp114},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP132),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp132},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP102U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp102u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP102UL),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp102ul},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP104U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp104u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_CP112UL),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp112ul},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_CP114UL),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp114ul},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP118U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp118u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP132U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp132u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP134U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp134u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_CP138U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp138u},
+	{PCI_VDEVICE(MOXA, PCI_DEVICE_ID_MOXA_CP168U),
+	 .driver_data = (unsigned long)&rt_16550_moxa_cp168u},
+#endif
 	{ }
 };
 
