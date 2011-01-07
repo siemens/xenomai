@@ -143,6 +143,7 @@ MODULE_AUTHOR("jan.kiszka@web.de");
 
 #include "16550A_io.h"
 #include "16550A_pnp.h"
+#include "16550A_pci.h"
 
 static inline int rt_16550_rx_interrupt(struct rt_16550_context *ctx,
 					uint64_t * timestamp)
@@ -1121,6 +1122,7 @@ int __init rt_16550_init(void)
 	int i;
 
 	rt_16550_pnp_init();
+	rt_16550_pci_init();
 
 	for (i = 0; i < MAX_DEVICES; i++) {
 		if (!rt_16550_addr_param(i))
@@ -1194,6 +1196,7 @@ void rt_16550_exit(void)
 			kfree(device[i]);
 		}
 
+	rt_16550_pci_cleanup();
 	rt_16550_pnp_cleanup();
 }
 
