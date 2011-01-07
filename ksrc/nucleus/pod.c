@@ -1466,10 +1466,23 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * shortens the uninterruptible code path.  This
 		 * particular caller expects us to always return with
 		 * interrupts enabled.
+		 *
+		 * We have to shut irqs off around xnpod_schedule()
+		 * though: if an interrupt could preempt us in
+		 * __xnpod_schedule right after the call to
+		 * xnarch_escalate but before we lock the nklock, we
+		 * would enter the critical section in xnpod_schedule
+		 * while the current Adeos domain is Linux, which
+		 * would defeat the purpose of having called
+		 * xnarch_escalate(). xnpod_schedule() is expected to
+		 * return with interrupts on.
 		 */
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
+
+			splhigh(s);
 			xnpod_schedule();
+			splexit(s);
 			return;
 		}
 		/*
