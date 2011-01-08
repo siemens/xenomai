@@ -17,8 +17,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) && defined(CONFIG_PCI) && \
-	defined(CONFIG_XENO_DRIVERS_16550A_PCI)
+#if defined(CONFIG_XENO_DRIVERS_16550A_PCI)
 
 #include <linux/pci.h>
 

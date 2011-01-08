@@ -40,7 +40,7 @@ config XENO_DRIVERS_16550A_ANY
 endchoice
 
 config XENO_DRIVERS_16550A_PCI
-	depends on XENO_DRIVERS_16550A_PIO || XENO_DRIVERS_16550A_ANY
+	depends on PCI && (XENO_DRIVERS_16550A_PIO || XENO_DRIVERS_16550A_ANY)
 	bool "PCI board support"
 	default n
 	help
