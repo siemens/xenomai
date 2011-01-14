@@ -1,10 +1,11 @@
 
 menu "Real-time sub-system"
 
-comment "WARNING! You enabled APM, CPU Frequency scaling or ACPI 'processor'"
-	depends on APM || CPU_FREQ || ACPI_PROCESSOR
-comment "option. These options are known to cause troubles with Xenomai."
-	depends on APM || CPU_FREQ || ACPI_PROCESSOR
+if APM || CPU_FREQ || ACPI_PROCESSOR || INTEL_IDLE
+comment "WARNING! You enabled APM, CPU Frequency scaling, ACPI 'processor'"
+comment "or Intel cpuidle option. These options are known to cause troubles"
+comment "with Xenomai, disable them."
+endif
 
 comment "NOTE: Xenomai conflicts with PC speaker support."
 	depends on !X86_TSC && X86 && INPUT_PCSPKR
