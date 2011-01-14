@@ -175,6 +175,9 @@ int ao_pull_values(a4l_subd_t *subd)
 	/* Let's have a look at how many samples are available */
 	priv->count = a4l_buf_count(subd) < TRANSFER_SIZE ? 
 		a4l_buf_count(subd) : TRANSFER_SIZE;
+	
+	if (!priv->count)
+		return 0;
 
 	err = a4l_buf_get(subd, priv->buffer, priv->count);
 	if (err < 0) {
@@ -182,6 +185,9 @@ int ao_pull_values(a4l_subd_t *subd)
 		a4l_err(subd->dev, 
 			"ao_get_values: a4l_buf_get failed (err=%d)\n", err);
 	}
+
+	if (priv->count)
+		a4l_buf_evt(subd, 0);
 
 	return err;
 }
@@ -195,10 +201,14 @@ int ai2_push_values(a4l_subd_t *subd)
 
 	if (priv->count) {
 		err = a4l_buf_put(subd, priv->buffer, priv->count);
-		a4l_err(subd->dev, 
-			"ao_redirect_values: "
-			"a4l_buf_get failed (err=%d)\n", err);
+		if (err < 0)
+			a4l_err(subd->dev, 
+				"ai2_push_values: "
+				"a4l_buf_put failed (err=%d)\n", err);
 	}
+
+	if (priv->count)
+		a4l_buf_evt(subd, 0);
 
 	return err;
 }
@@ -329,7 +339,7 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ao_cmd: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "ai2_cmd: (subd=%d)\n", subd->idx);  
 	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 1);
 	return 0;
 }
@@ -338,11 +348,10 @@ int ai2_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
 
-	a4l_info(subd->dev, "ao_cancel: (subd=%d)\n", subd->idx);
+	a4l_info(subd->dev, "ai2_cancel: (subd=%d)\n", subd->idx);
 	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 0);
 	return 0;
 }
-
 
 
 /* --- Synchronous AI functions --- */
@@ -416,6 +425,7 @@ void setup_ao_subd(a4l_subd_t *subd)
 	subd->chan_desc = &analog_chandesc;
 	subd->do_cmd = ao_cmd;
 	subd->cancel = ao_cancel;
+	subd->trigger = ao_trigger;
 	subd->cmd_mask = &ao_cmd_mask;
 }
 
