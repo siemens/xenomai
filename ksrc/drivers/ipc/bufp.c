@@ -641,7 +641,7 @@ static ssize_t bufp_sendmsg(struct rtipc_private *priv,
 			return -EFAULT;
 
 		if (daddr.sipc_port < 0 ||
-		    daddr.sipc_port >= CONFIG_XENO_OPT_IDDP_NRPORT)
+		    daddr.sipc_port >= CONFIG_XENO_OPT_BUFP_NRPORT)
 			return -EINVAL;
 	} else {
 		if (msg->msg_namelen != 0)
