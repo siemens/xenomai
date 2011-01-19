@@ -1466,10 +1466,23 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * shortens the uninterruptible code path.  This
 		 * particular caller expects us to always return with
 		 * interrupts enabled.
+		 *
+		 * We have to shut irqs off around xnpod_schedule()
+		 * though: if an interrupt could preempt us in
+		 * __xnpod_schedule right after the call to
+		 * xnarch_escalate but before we lock the nklock, we
+		 * would enter the critical section in xnpod_schedule
+		 * while the current Adeos domain is Linux, which
+		 * would defeat the purpose of having called
+		 * xnarch_escalate(). xnpod_schedule() is expected to
+		 * return with interrupts on.
 		 */
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
+
+			splhigh(s);
 			xnpod_schedule();
+			splexit(s);
 			return;
 		}
 		/*
@@ -2324,8 +2337,6 @@ reschedule:
 #ifdef CONFIG_XENO_OPT_PERVASIVE
       shadow_epilogue:
 	{
-		spl_t ignored;
-
 		/* Shadow on entry and root without shadow extension on exit?
 		   Mmmm... This must be the user-space mate of a deleted real-time
 		   shadow we've just rescheduled in the Linux domain to have it
@@ -2335,11 +2346,9 @@ reschedule:
 			xnshadow_exit();
 		}
 
-		/* We need to relock nklock here, since it is not locked and
-		   the caller may expect it to be locked. */
-		xnlock_get_irqsave(&nklock, ignored);
-		xnlock_put_irqrestore(&nklock, s);
-
+		/* We are returning to xnshadow_relax via
+		   xnpod_suspend_thread, do nothing,
+		   xnpod_suspend_thread will re-enable interrupts. */
 		return;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

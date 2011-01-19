@@ -119,6 +119,9 @@ static const struct rtser_config default_config = {
 static struct rtdm_device *device[MAX_DEVICES];
 
 static unsigned int irq[MAX_DEVICES];
+static unsigned long irqtype[MAX_DEVICES] = {
+	[0 ... MAX_DEVICES-1] = RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE
+};
 static unsigned int baud_base[MAX_DEVICES];
 static int tx_fifo[MAX_DEVICES];
 static unsigned int start_index;
@@ -140,6 +143,7 @@ MODULE_AUTHOR("jan.kiszka@web.de");
 
 #include "16550A_io.h"
 #include "16550A_pnp.h"
+#include "16550A_pci.h"
 
 static inline int rt_16550_rx_interrupt(struct rt_16550_context *ctx,
 					uint64_t * timestamp)
@@ -478,8 +482,7 @@ int rt_16550_open(struct rtdm_dev_context *context,
 	rt_16550_set_config(ctx, &default_config, &dummy);
 
 	err = rtdm_irq_request(&ctx->irq_handle, irq[dev_id],
-			       rt_16550_interrupt,
-			       RTDM_IRQTYPE_SHARED | RTDM_IRQTYPE_EDGE,
+			       rt_16550_interrupt, irqtype[dev_id],
 			       context->device->proc_name, ctx);
 	if (err) {
 		/* reset DTR and RTS */
@@ -1119,6 +1122,7 @@ int __init rt_16550_init(void)
 	int i;
 
 	rt_16550_pnp_init();
+	rt_16550_pci_init();
 
 	for (i = 0; i < MAX_DEVICES; i++) {
 		if (!rt_16550_addr_param(i))
@@ -1192,6 +1196,7 @@ void rt_16550_exit(void)
 			kfree(device[i]);
 		}
 
+	rt_16550_pci_cleanup();
 	rt_16550_pnp_cleanup();
 }
 
