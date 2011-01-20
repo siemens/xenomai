@@ -770,7 +770,7 @@ static inline void request_syscall_restart(xnthread_t *thread,
 		if (__xn_interrupted_p(regs)) {
 			__xn_error_return(regs,
 					  (sysflags & __xn_exec_norestart) ?
-					  -ERESTARTNOHAND : -ERESTARTSYS);
+					  -EINTR : -ERESTARTSYS);
 			notify = !xnthread_test_state(thread, XNDEBUG);
 		}
 
