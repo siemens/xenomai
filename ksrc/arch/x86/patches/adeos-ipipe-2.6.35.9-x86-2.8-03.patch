@@ -184,7 +184,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..41beafd
+index 0000000..2d508ff
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,157 @@
@@ -215,10 +215,10 @@ index 0000000..41beafd
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.8-02"
++#define IPIPE_ARCH_STRING	"2.8-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -347,10 +347,10 @@ index 0000000..41beafd
 +#endif	/* !__X86_IPIPE_H */
 diff --git a/arch/x86/include/asm/ipipe_32.h b/arch/x86/include/asm/ipipe_32.h
 new file mode 100644
-index 0000000..6f1875d
+index 0000000..08bc268
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_32.h
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,100 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe_32.h
 + *
@@ -423,6 +423,7 @@ index 0000000..6f1875d
 +	regs->orig_ax = ~__ipipe_get_irq_vector(irq);
 +
 +	__asm__ __volatile__("pushfl\n\t"
++			     "orl %[x86if],(%%esp)\n\t"
 +			     "pushl %%cs\n\t"
 +			     "pushl $__xirq_end\n\t"
 +			     "pushl %%eax\n\t"
@@ -442,7 +443,8 @@ index 0000000..6f1875d
 +			     "jmp ret_from_intr\n\t"
 +			     "__xirq_end: cli\n"
 +			     : /* no output */
-+			     : "a" (~irq), "r" (handler), "rm" (regs));
++			     : "a" (~irq), "r" (handler), "rm" (regs),
++			       [x86if] "i" (X86_EFLAGS_IF));
 +}
 +
 +#define __ipipe_do_root_xirq(ipd, irq)			\
@@ -451,10 +453,10 @@ index 0000000..6f1875d
 +#endif	/* !__X86_IPIPE_32_H */
 diff --git a/arch/x86/include/asm/ipipe_64.h b/arch/x86/include/asm/ipipe_64.h
 new file mode 100644
-index 0000000..44b99fa
+index 0000000..a69fbb4
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_64.h
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,103 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe_64.h
 + *
@@ -528,6 +530,7 @@ index 0000000..44b99fa
 +			     "pushq $0\n\t"
 +			     "pushq %%rax\n\t"
 +			     "pushfq\n\t"
++			     "orq %[x86if],(%%rsp)\n\t"
 +			     "pushq %[kernel_cs]\n\t"
 +			     "pushq $__xirq_end\n\t"
 +			     "pushq %[vector]\n\t"
@@ -548,7 +551,8 @@ index 0000000..44b99fa
 +			     : /* no output */
 +			     : [kernel_cs] "i" (__KERNEL_CS),
 +			       [vector] "rm" (regs->orig_ax),
-+			       [handler] "r" (handler), "D" (regs)
++			       [handler] "r" (handler), "D" (regs),
++			       [x86if] "i" (X86_EFLAGS_IF)
 +			     : "rax");
 +}
 +
@@ -5674,10 +5678,10 @@ index 0000000..3f43ba5
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_lock.h b/include/linux/ipipe_lock.h
 new file mode 100644
-index 0000000..75bf0e8
+index 0000000..5382208
 --- /dev/null
 +++ b/include/linux/ipipe_lock.h
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,241 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_lock.h
 + *
@@ -5904,6 +5908,7 @@ index 0000000..75bf0e8
 +#define __ipipe_spin_lock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_unlock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
++#define __ipipe_spin_trylock_irq(lock)		1
 +#define __ipipe_spin_trylock_irqsave(lock, x)	({ (void)(x); 1; })
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while (0)
 +#define __ipipe_spin_unlock_irqbegin(lock)	do { } while (0)
@@ -6954,10 +6959,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..d8bce51
+index 0000000..0350ebb
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,2191 @@
+@@ -0,0 +1,2200 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8186,6 +8191,12 @@ index 0000000..d8bce51
 +
 +#endif	/* !CONFIG_PREEMPT */
 +
++#ifdef CONFIG_TRACE_IRQFLAGS
++#define root_stall_after_handler()	local_irq_disable()
++#else
++#define root_stall_after_handler()	do { } while (0)
++#endif
++
 +/*
 + * __ipipe_sync_stage() -- Flush the pending IRQs for the current
 + * domain (and processor). This routine flushes the interrupt log
@@ -8236,12 +8247,15 @@ index 0000000..d8bce51
 +			irq_enter();
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			irq_exit();
++			root_stall_after_handler();
 +			if (unlikely(preempt_count() == 0 && need_resched())) {
 +				local_irq_disable_hw();
 +				__ipipe_preempt_schedule_irq();
 +			}
-+		} else
++		} else {
 +			__ipipe_do_root_xirq(ipd, irq);
++			root_stall_after_handler();
++		}
 +
 +		local_irq_disable_hw();
 +		p = ipipe_cpudom_ptr(__ipipe_current_domain);
