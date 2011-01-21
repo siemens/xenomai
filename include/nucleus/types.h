@@ -29,6 +29,7 @@
 #endif /* !CONFIG_PREEMPT_RT */
 #else /* !__KERNEL__ */
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <errno.h>
 #ifndef BITS_PER_LONG
@@ -107,16 +108,14 @@ typedef atomic_flags_t xnflags_t;
 
 #define XNOBJECT_NAME_LEN 32
 
-static inline void xnobject_copy_name(char *dst, const char *src)
-{
-    if (src)
-	snprintf(dst, XNOBJECT_NAME_LEN, "%s", src);
-    else
-        *dst = '\0';
-}
+#define xnobject_copy_name(dst, src)					\
+	do {								\
+		strncpy((dst), (src) ?: "", XNOBJECT_NAME_LEN-1)	\
+			[XNOBJECT_NAME_LEN-1] = '\0';			\
+	} while (0)
 
-#define xnobject_create_name(dst, n, obj) \
-    snprintf(dst, n, "%p", obj)
+#define xnobject_create_name(dst, n, obj)	\
+	snprintf(dst, n, "%p", obj)
 
 #define minval(a,b) ((a) < (b) ? (a) : (b))
 #define maxval(a,b) ((a) > (b) ? (a) : (b))
