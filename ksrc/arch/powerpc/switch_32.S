@@ -193,6 +193,7 @@ same_current:
 #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) */
 
 _GLOBAL(rthal_thread_trampoline)
+	stwu	r1,-STACK_FRAME_OVERHEAD(r1)
 	mr	r3,r22
 	mtlr	r23
 	blr
