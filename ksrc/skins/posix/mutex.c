@@ -219,12 +219,13 @@ void pse51_mutex_destroy_internal(pse51_mutex_t *mutex,
 	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_FASTSYNCH
+	/* We call xnheap_free even if the mutex is not pshared; when
+	   this function is called from pse51_mutexq_cleanup, the
+	   sem_heap is destroyed, or not the one to which the fastlock
+	   belongs, xnheap will simply return an error. */
 	xnheap_free(&xnsys_ppd_get(mutex->attr.pshared)->sem_heap,
 		    mutex->synchbase.fastlock);
 #endif /* CONFIG_XENO_FASTSYNCH */
-	/* We do not free the owner if the mutex is not pshared, because when
-	   this function is called from pse51_mutexq_cleanup, the sem_heap has
-	   been destroyed, and we have no way to find it back. */
 	xnfree(mutex);
 }
 

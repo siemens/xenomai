@@ -285,13 +285,6 @@ int rt_mutex_delete(RT_MUTEX *mutex)
 
 	global = xnsynch_test_flags(&mutex->synch_base, RT_MUTEX_EXPORTED);
 
-#if defined(CONFIG_XENO_FASTSYNCH) && defined(CONFIG_XENO_OPT_PERVASIVE)
-	if (!global && mutex->cpid != current->pid) {
-		err = -EINVAL;
-		goto unlock_and_exit;
-	}
-#endif /* CONFIG_XENO_FASTSYNCH */
-
 	removeq(mutex->rqueue, &mutex->rlink);
 
 	rc = xnsynch_destroy(&mutex->synch_base);
