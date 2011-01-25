@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -372,8 +372,8 @@ static int __rt_task_yield(struct pt_regs *regs)
 
 /*
  * int __rt_task_set_periodic(RT_TASK_PLACEHOLDER *ph,
- *			         RTIME idate,
- *			         RTIME period)
+ *				 RTIME idate,
+ *				 RTIME period)
  */
 
 static int __rt_task_set_periodic(struct pt_regs *regs)
@@ -1508,7 +1508,6 @@ static int __rt_event_inquire(struct pt_regs *regs)
 static int __rt_mutex_create(struct pt_regs *regs)
 {
 	char name[XNOBJECT_NAME_LEN];
-	xnarch_atomic_t *fastlock = NULL;
 	xnheap_t *sem_heap;
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
@@ -1531,39 +1530,31 @@ static int __rt_mutex_create(struct pt_regs *regs)
 	if (!mutex)
 		return -ENOMEM;
 
-#ifdef CONFIG_XENO_FASTSYNCH
-	fastlock = xnheap_alloc(sem_heap, sizeof(xnarch_atomic_t));
+	err = rt_mutex_create_inner(mutex, name, *name != '\0');
+	if (err < 0)
+		goto err_free_mutex;
 
-	if (!fastlock) {
-		xnfree(mutex);
-		return -ENOMEM;
-	}
-#endif /* CONFIG_XENO_FASTSYNCH */
-
-	err = rt_mutex_create_inner(mutex, name, fastlock);
-
-	if (err == 0) {
-		mutex->cpid = current->pid;
-		/* Copy back the registry handle to the ph struct. */
-		ph.opaque = mutex->handle;
+	mutex->cpid = current->pid;
+	/* Copy back the registry handle to the ph struct. */
+	ph.opaque = mutex->handle;
 #ifdef CONFIG_XENO_FASTSYNCH
 		/* The lock address will be finished in user space. */
-		ph.fastlock =
-			(void *)xnheap_mapped_offset(sem_heap, fastlock);
-		if (*name != '\0')
-			xnsynch_set_flags(&mutex->synch_base,
-					  RT_MUTEX_EXPORTED);
+	ph.fastlock =
+		(void *)xnheap_mapped_offset(sem_heap,
+					     mutex->synch_base.fastlock);
 #endif /* CONFIG_XENO_FASTSYNCH */
-		if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
-					   sizeof(ph)))
-			err = -EFAULT;
-	} else {
-#ifdef CONFIG_XENO_FASTSYNCH
-		xnheap_free(&xnsys_ppd_get(*name != '\0')->sem_heap, fastlock);
-#endif /* CONFIG_XENO_FASTSYNCH */
-		xnfree(mutex);
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg1(regs), &ph,
+				   sizeof(ph))) {
+		err = -EFAULT;
+		goto err_delete_mutex;
 	}
 
+	return 0;
+
+  err_delete_mutex:
+	rt_mutex_delete(mutex);
+  err_free_mutex:
+	xnfree(mutex);
 	return err;
 }
 
@@ -1618,17 +1609,10 @@ static int __rt_mutex_delete(struct pt_regs *regs)
 	if (!mutex)
 		return -ESRCH;
 
-	err = rt_mutex_delete_inner(mutex);
+	err = rt_mutex_delete(mutex);
 
-	if (!err && mutex->cpid) {
-#ifdef CONFIG_XENO_FASTSYNCH
-		int global = xnsynch_test_flags(&mutex->synch_base,
-						RT_MUTEX_EXPORTED);
-		xnheap_free(&xnsys_ppd_get(global)->sem_heap,
-			    mutex->synch_base.fastlock);
-#endif /* CONFIG_XENO_FASTSYNCH */
+	if (!err && mutex->cpid)
 		xnfree(mutex);
-	}
 
 	return err;
 }
@@ -1829,10 +1813,10 @@ static int __rt_cond_delete(struct pt_regs *regs)
 
 /*
  * int __rt_cond_wait_prologue(RT_COND_PLACEHOLDER *cph,
- *                    	       RT_MUTEX_PLACEHOLDER *mph,
+ *		      	       RT_MUTEX_PLACEHOLDER *mph,
  *		      	       unsigned *plockcnt,
- *                    	       xntmode_t timeout_mode,
- *                    	       RTIME *timeoutp)
+ *		      	       xntmode_t timeout_mode,
+ *		      	       RTIME *timeoutp)
  */
 
 static int __rt_cond_wait_prologue(struct pt_regs *regs)
@@ -1999,7 +1983,7 @@ static int __rt_cond_inquire(struct pt_regs *regs)
 #else /* !CONFIG_XENO_OPT_NATIVE_COND */
 
 #define __rt_cond_create    	__rt_call_not_available
-#define __rt_cond_bind      	__rt_call_not_available
+#define __rt_cond_bind	    	__rt_call_not_available
 #define __rt_cond_delete    	__rt_call_not_available
 #define __rt_cond_wait_prologue __rt_call_not_available
 #define __rt_cond_wait_epilogue __rt_call_not_available
@@ -2374,9 +2358,9 @@ static int __rt_queue_receive(struct pt_regs *regs)
 	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg4(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
-	
+
 	timeout_mode = __xn_reg_arg3(regs);
-	
+
 	xnlock_get_irqsave(&nklock, s);
 
 	q = (RT_QUEUE *)xnregistry_fetch(ph.opaque);
@@ -2447,7 +2431,7 @@ static int __rt_queue_read(struct pt_regs *regs)
 
 	/* Relative/absolute timeout spec. */
 	timeout_mode = __xn_reg_arg4(regs);
-	
+
 	if (__xn_safe_copy_from_user(&timeout, (void __user *)__xn_reg_arg5(regs),
 				     sizeof(timeout)))
 		return -EFAULT;
@@ -4107,10 +4091,10 @@ static xnsysent_t __systab[] = {
 	[__native_cond_create] = {&__rt_cond_create, __xn_exec_any},
 	[__native_cond_bind] = {&__rt_cond_bind, __xn_exec_conforming},
 	[__native_cond_delete] = {&__rt_cond_delete, __xn_exec_any},
-	[__native_cond_wait_prologue] = 
-		{&__rt_cond_wait_prologue, 
+	[__native_cond_wait_prologue] =
+		{&__rt_cond_wait_prologue,
 		 __xn_exec_primary | __xn_exec_norestart},
-	[__native_cond_wait_epilogue] = 
+	[__native_cond_wait_epilogue] =
 		{&__rt_cond_wait_epilogue, __xn_exec_primary},
 	[__native_cond_signal] = {&__rt_cond_signal, __xn_exec_any},
 	[__native_cond_broadcast] = {&__rt_cond_broadcast, __xn_exec_any},
