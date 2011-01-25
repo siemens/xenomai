@@ -110,7 +110,8 @@ typedef atomic_flags_t xnflags_t;
 
 #define xnobject_copy_name(dst, src)					\
 	do {								\
-		strncpy((dst), (src) ?: "", XNOBJECT_NAME_LEN-1)	\
+		strncpy((dst),						\
+			((const char *)(src)) ?: "", XNOBJECT_NAME_LEN-1) \
 			[XNOBJECT_NAME_LEN-1] = '\0';			\
 	} while (0)
 
