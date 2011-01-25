@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -171,17 +171,29 @@ static struct xnpnode_snapshot __mutex_pnode = {
 
 #endif /* !CONFIG_XENO_OPT_VFILE */
 
-int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
-			  xnarch_atomic_t *fastlock)
+int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name, int global)
 {
+	xnflags_t flags = XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER;
+	xnarch_atomic_t *fastlock = NULL;
 	int err = 0;
 	spl_t s;
 
 	if (xnpod_asynch_p())
 		return -EPERM;
 
-	xnsynch_init(&mutex->synch_base,
-		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER, fastlock);
+#ifdef CONFIG_XENO_FASTSYNCH
+	/* Allocate lock memory for in-kernel use */
+	fastlock = xnheap_alloc(&xnsys_ppd_get(global)->sem_heap,
+				sizeof(*fastlock));
+
+	if (!fastlock)
+		return -ENOMEM;
+
+	if (global)
+		flags |= RT_MUTEX_EXPORTED;
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	xnsynch_init(&mutex->synch_base, flags, fastlock);
 	mutex->handle = 0;	/* i.e. (still) unregistered mutex. */
 	mutex->magic = XENO_MUTEX_MAGIC;
 	mutex->lockcnt = 0;
@@ -206,7 +218,7 @@ int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 				       &__mutex_pnode.node);
 
 		if (err)
-			rt_mutex_delete_inner(mutex);
+			rt_mutex_delete(mutex);
 	}
 
 	return err;
@@ -256,63 +268,7 @@ int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
 
 int rt_mutex_create(RT_MUTEX *mutex, const char *name)
 {
-	xnarch_atomic_t *fastlock = NULL;
-	int err;
-
-#ifdef CONFIG_XENO_FASTSYNCH
-	/* Allocate lock memory for in-kernel use */
-	fastlock = xnmalloc(sizeof(xnarch_atomic_t));
-
-	if (!fastlock)
-		return -ENOMEM;
-#endif /* CONFIG_XENO_FASTSYNCH */
-
-	err = rt_mutex_create_inner(mutex, name, fastlock);
-
-#ifdef CONFIG_XENO_FASTSYNCH
-	if (err)
-		xnfree(fastlock);
-#endif /* CONFIG_XENO_FASTSYNCH */
-
-	return err;
-}
-
-int rt_mutex_delete_inner(RT_MUTEX *mutex)
-{
-	int err = 0, rc;
-	spl_t s;
-
-	if (xnpod_asynch_p())
-		return -EPERM;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-
-	if (!mutex) {
-		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
-		goto unlock_and_exit;
-	}
-
-	removeq(mutex->rqueue, &mutex->rlink);
-
-	rc = xnsynch_destroy(&mutex->synch_base);
-
-	if (mutex->handle)
-		xnregistry_remove(mutex->handle);
-
-	xeno_mark_deleted(mutex);
-
-	if (rc == XNSYNCH_RESCHED)
-		/* Some task has been woken up as a result of the deletion:
-		   reschedule now. */
-		xnpod_schedule();
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
+	return rt_mutex_create_inner(mutex, name, 1);
 }
 
 /**
@@ -349,22 +305,45 @@ int rt_mutex_delete_inner(RT_MUTEX *mutex)
 
 int rt_mutex_delete(RT_MUTEX *mutex)
 {
-	int err;
+	int err = 0, global = 0, rc;
+	spl_t s;
 
-	err = rt_mutex_delete_inner(mutex);
+	if (xnpod_asynch_p())
+		return -EPERM;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	mutex = xeno_h2obj_validate(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+
+	if (!mutex) {
+		err = xeno_handle_error(mutex, XENO_MUTEX_MAGIC, RT_MUTEX);
+		goto unlock_and_exit;
+	}
+
+	global = xnsynch_test_flags(&mutex->synch_base, RT_MUTEX_EXPORTED);
+
+	removeq(mutex->rqueue, &mutex->rlink);
+
+	rc = xnsynch_destroy(&mutex->synch_base);
+
+	if (mutex->handle)
+		xnregistry_remove(mutex->handle);
+
+	xeno_mark_deleted(mutex);
+
+	if (rc == XNSYNCH_RESCHED)
+		/* Some task has been woken up as a result of the deletion:
+		   reschedule now. */
+		xnpod_schedule();
+
+      unlock_and_exit:
+
+	xnlock_put_irqrestore(&nklock, s);
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	if (!err) {
-#ifdef CONFIG_XENO_OPT_PERVASIVE
-		if (mutex->cpid) {
-			int global = xnsynch_test_flags(&mutex->synch_base,
-							RT_MUTEX_EXPORTED);
-			xnheap_free(&xnsys_ppd_get(global)->sem_heap,
-				    mutex->synch_base.fastlock);
-		} else
-#endif /* CONFIG_XENO_OPT_PERVASIVE */
-			xnfree(mutex->synch_base.fastlock);
-	}
+	if (!err)
+		xnheap_free(&xnsys_ppd_get(global)->sem_heap,
+			    mutex->synch_base.fastlock);
 #endif /* CONFIG_XENO_FASTSYNCH */
 
 	return err;

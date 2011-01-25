@@ -85,7 +85,7 @@ static int vfile_show(struct xnvfile_snapshot_iterator *it, void *data)
 	struct vfile_data *p = data;
 
 	if (p == NULL) {	/* Dump header. */
-		xnvfile_printf(it, 
+		xnvfile_printf(it,
 			       "maxnum=%lu:maxlen=%lu:mcount=%d\n",
 			       priv->maxnum,
 			       priv->maxlen,
@@ -199,15 +199,20 @@ static psosmbuf_t *get_mbuf(psosqueue_t *queue, u_long msglen)
 		if (mbuf)
 			inith(&mbuf->link);
 	} else {
-		xnholder_t *holder = getq(&queue->freeq);
-
-		if (!holder &&
-		    testbits(queue->synchbase.status, Q_INFINITE) &&
-		    feed_pool(&queue->chunkq,
-			      &queue->freeq, PSOS_QUEUE_MIN_ALLOC,
-			      queue->maxlen) != 0)
+		xnholder_t *holder = NULL;
+		if (testbits(queue->synchbase.status, Q_SHAREDINIT)) {
+			holder = getq(&psosmbufq);
+			if (!holder) {
+				feed_pool(&psoschunkq, &psosmbufq,PSOS_QUEUE_MIN_ALLOC,queue->maxlen);
+				holder = getq(&psosmbufq);
+			}
+		} else {
 			holder = getq(&queue->freeq);
-
+			if (!holder && testbits(queue->synchbase.status, Q_INFINITE)) {
+				feed_pool(&queue->chunkq,&queue->freeq, PSOS_QUEUE_MIN_ALLOC,queue->maxlen);
+				holder = getq(&queue->freeq);
+			}
+		}
 		if (holder)
 			mbuf = link2psosmbuf(holder);
 	}
@@ -222,7 +227,6 @@ static u_long q_create_internal(const char *name,
 	static unsigned long msgq_ids;
 	psosqueue_t *queue;
 	int bflags, ret;
-	u_long rc;
 	spl_t s;
 
 	bflags = (flags & Q_VARIABLE);
@@ -271,27 +275,13 @@ static u_long q_create_internal(const char *name,
 	initq(&queue->chunkq);
 
 	if (bflags & Q_PRIVCACHE) {
-		if (bflags & Q_SHAREDINIT) {
-			xnlock_get_irqsave(&nklock, s);
-			rc = feed_pool(&psoschunkq, &psosmbufq, maxnum, maxlen);
-			xnlock_put_irqrestore(&nklock, s);
-		} else
-			rc = feed_pool(&queue->chunkq, &queue->freeq, maxnum,
-				       maxlen);
-
-		if (!rc) {
-			/* Can't preallocate msg buffers. */
-			xnfree(queue);
-			return ERR_NOMGB;
-		}
-
-		if (bflags & Q_SHAREDINIT) {
-			xnlock_get_irqsave(&nklock, s);
-
-			while (countq(&queue->freeq) < maxnum)
-				appendq(&queue->freeq, getq(&psosmbufq));
-
-			xnlock_put_irqrestore(&nklock, s);
+		if ((bflags & Q_SHAREDINIT) == 0) {
+			u_long rc = feed_pool(&queue->chunkq, &queue->freeq, maxnum, maxlen);
+			if (!rc) {
+				/* Can't preallocate msg buffers. */
+				xnfree(queue);
+				return ERR_NOMGB;
+			}
 		}
 	}
 
@@ -512,7 +502,10 @@ static u_long q_receive_internal(u_long qid,
 
 	if (testbits(queue->synchbase.status, Q_NOCACHE))
 		xnfree(mbuf);
-	else
+	else if (testbits(queue->synchbase.status, Q_SHAREDINIT)) {
+		/* Message buffer should go to the psosmbufq */
+		appendq(&psosmbufq, &mbuf->link);
+	} else
 		appendq(&queue->freeq, &mbuf->link);
 
       unlock_and_exit:

@@ -136,11 +136,11 @@ int a4l_open(struct rtdm_dev_context *context,
 
 	/* Allocate the asynchronous buffer 
 	   NOTE: it should be interesting to allocate the buffer only
-	   on demand especially if the system is short of memory
-	   NOTE2: the default buffer size could be configured via
-	   kernel config*/
-	a4l_alloc_buffer(cxt->buffer, A4L_DEFAULT_BFSIZE);
-
+	   on demand especially if the system is short of memory */
+	if (cxt->dev->transfer.default_bufsize)
+		a4l_alloc_buffer(cxt->buffer, 
+				 cxt->dev->transfer.default_bufsize);
+	
 	return 0;
 }
 

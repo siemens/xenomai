@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -73,7 +73,7 @@ typedef struct __rt_mutex {
 	xnhandle_t handle;	/* !< Handle in registry -- zero if unregistered. */
 
 	int lockcnt;		/* !< Lock nesting level (> 0 means "locked"). */
-	
+
 	char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -147,9 +147,7 @@ static inline int rt_mutex_unbind (RT_MUTEX *mutex)
 extern "C" {
 #endif
 
-int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name,
-			  xnarch_atomic_t *fastlock);
-int rt_mutex_delete_inner(RT_MUTEX *mutex);
+int rt_mutex_create_inner(RT_MUTEX *mutex, const char *name, int global);
 
 /* Public interface. */
 

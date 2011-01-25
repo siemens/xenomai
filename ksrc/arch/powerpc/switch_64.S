@@ -396,6 +396,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ALTIVEC)
 #endif /* Linux >= 2.6.32 */
 
 _GLOBAL(rthal_thread_trampoline)
+	stdu	r1,-STACK_FRAME_OVERHEAD(r1)
 	mr	r3,r22
 	mr	r2,r24
 	mtlr	r23

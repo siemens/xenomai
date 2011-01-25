@@ -579,7 +579,7 @@ int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 	nbytes_ub = mite_bytes_written_to_memory_ub(mite_chan);
 
 	if(a4l_buf_prepare_absput(subd, nbytes_ub) != 0) {
-		__a4l_info("MITE: DMA overwrite of free area\n");
+		__a4l_err("MITE: DMA overwrite of free area\n");
 		return -EPIPE;
 	}
 	

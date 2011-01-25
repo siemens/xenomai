@@ -57,6 +57,9 @@ struct a4l_transfer {
 	unsigned int nb_subd;
 	a4l_subd_t **subds;
 
+	/* Buffer stuff: the default size */
+	unsigned int default_bufsize;
+
 	/* IRQ in use */
 	/* TODO: irq_desc should vanish */
 	a4l_irq_desc_t irq_desc;

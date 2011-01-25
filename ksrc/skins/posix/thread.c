@@ -682,6 +682,10 @@ int pthread_set_mode_np(int clrmask, int setmask)
 			      clrmask & ~XNTHREAD_STATE_SPARE1,
 			      setmask & ~XNTHREAD_STATE_SPARE1);
 
+	if ((clrmask & ~setmask) & XNLOCK)
+		/* Reschedule if the scheduler has been unlocked. */
+		xnpod_schedule();
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (xnthread_test_state(cur, XNSHADOW) && (clrmask & XNTHREAD_STATE_SPARE1) != 0)
 		xnshadow_relax(0, 0);

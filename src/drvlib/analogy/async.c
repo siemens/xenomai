@@ -109,8 +109,9 @@ int a4l_snd_cancel(a4l_desc_t * dsc, unsigned int idx_subd)
  *
  * @return 0 on success. Otherwise:
  *
- * - -EINVAL is returned if some argument is missing or wrong (Please,
- *    type "dmesg" for more info)
+ * - -EINVAL is returned if the analogy descriptor is not correct or
+      if some argument is missing or wrong (Please, type "dmesg" for
+      more info)
  * - -EPERM is returned if the function is called in an RT context or
  *    if the buffer to resize is mapped in user-space (Please, type
  *    "dmesg" for more info)
@@ -123,13 +124,11 @@ int a4l_snd_cancel(a4l_desc_t * dsc, unsigned int idx_subd)
 int a4l_set_bufsize(a4l_desc_t * dsc,
 		    unsigned int idx_subd, unsigned long size)
 {
-	a4l_bufcfg_t cfg = { idx_subd, size };
-
 	/* Basic checking */
 	if (dsc == NULL || dsc->fd < 0)
 		return -EINVAL;
 
-	return __sys_ioctl(dsc->fd, A4L_BUFCFG, &cfg);
+	return a4l_sys_bufcfg(dsc->fd, idx_subd, size);
 }
 
 /**

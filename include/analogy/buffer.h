@@ -456,9 +456,17 @@ typedef struct a4l_mmap_arg a4l_mmap_t;
    (might be used with BUFCFG ioctl) */
 #define A4L_BUF_MAXSIZE 0x1000000
 #define A4L_BUF_DEFSIZE 0x10000
+#define A4L_BUF_DEFMAGIC 0xffaaff55
 
 /* BUFCFG ioctl argument structure */
 struct a4l_buffer_config {
+	/* NOTE: with the last buffer implementation, the field
+	   idx_subd became useless; the buffer are now
+	   per-context. So, the buffer size configuration is specific
+	   to an opened device. There is a little exception: we can
+	   define a default buffer size for a device. 
+	   So far, a hack is used to implement the configuration of
+	   the default buffer size */
 	unsigned int idx_subd;
 	unsigned long buf_size;
 };

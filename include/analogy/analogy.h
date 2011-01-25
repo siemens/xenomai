@@ -47,6 +47,8 @@ int a4l_sys_attach(int fd, a4l_lnkdesc_t * arg);
 
 int a4l_sys_detach(int fd);
 
+int a4l_sys_bufcfg(int fd, unsigned int idx_subd, unsigned long size);
+
 int a4l_sys_desc(int fd, a4l_desc_t * dsc, int pass);
 
 int a4l_sys_devinfo(int fd, a4l_dvinfo_t * info);

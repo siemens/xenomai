@@ -62,15 +62,22 @@ static void xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 void xeno_sigshadow_install(void)
 {
 	struct sigaction new_sigshadow_action;
+	sigset_t saved_sigset;
+	sigset_t mask_sigset;
+
+	sigemptyset(&mask_sigset);
+	sigaddset(&mask_sigset, SIGSHADOW);
 
 	new_sigshadow_action.sa_flags = SA_SIGINFO | SA_RESTART;
 	new_sigshadow_action.sa_sigaction = xeno_sigshadow_handler;
 	sigemptyset(&new_sigshadow_action.sa_mask);
 
+	pthread_sigmask(SIG_BLOCK, &mask_sigset, &saved_sigset);
 	sigaction(SIGSHADOW,
 		  &new_sigshadow_action, &xeno_saved_sigshadow_action);
 	if (!(xeno_saved_sigshadow_action.sa_flags & SA_NODEFER))
 		sigaddset(&xeno_saved_sigshadow_action.sa_mask, SIGSHADOW);
+	pthread_sigmask(SIG_SETMASK, &saved_sigset, NULL);
 }
 
 void xeno_sigshadow_install_once(void)

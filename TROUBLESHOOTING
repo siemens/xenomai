@@ -57,6 +57,10 @@ sleep states, increasing latency in ways dependent upon both the
 BIOS's ACPI tables and code.  You may be able to suppress the sleeping
 with 'idle=poll' boot-arg, test to find out
 
+INTEL_IDLE: Just like ACPI_PROCESSOR, this idle driver sends the CPU
+into deep C states, also causing huge latencies because the APIC timer
+that Xenomai uses may not fire anymore.
+
 Summarizing, the latencies incurred here are dependent upon CPU, BIOS,
 and motherboard; ie they're hard to predict, so we are conservative.
 Feel free to test on your platform, (xeno-test runs testsuite/latency

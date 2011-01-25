@@ -25,9 +25,7 @@
 
 #ifndef DOXYGEN_CPP
 
-/* --- Misc precompilation constants --- */
-
-#define A4L_DEFAULT_BFSIZE 0x1000
+/* --- Misc precompilation constant --- */
 #define A4L_NAMELEN 20
 
 /* --- Common Analogy types --- */

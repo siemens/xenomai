@@ -179,4 +179,37 @@ int a4l_sys_detach(int fd)
 	return __sys_ioctl(fd, A4L_DEVCFG, NULL);
 }
 
+/**
+ * @brief Configure the buffer size
+ *
+ *
+ * This function can configure the buffer size of the file descriptor
+ * currently in use. If the subdevice index is set to
+ * A4L_BUF_DEFMAGIC, it can also define the default buffser size at
+ * open time.
+ *
+ * @param[in] fd File descriptor as returned by a4l_sys_open()
+ * @param[in] idx_subd Index of the concerned subdevice
+ * @param[int] size Buffer size to be set
+ *
+ * @return 0 on success. Otherwise:
+ *
+ * - -EINVAL is returned if some argument is missing or wrong (Please,
+ *    type "dmesg" for more info)
+ * - -EPERM is returned if the function is called in an RT context or
+ *    if the buffer to resize is mapped in user-space (Please, type
+ *    "dmesg" for more info)
+ * - -EFAULT is returned if a user <-> kernel transfer went wrong
+ * - -EBUSY is returned if the selected subdevice is already
+ *    processing an asynchronous operation
+ * - -ENOMEM is returned if the system is out of memory
+ *
+ */
+int a4l_sys_bufcfg(int fd, unsigned int idx_subd, unsigned long size)
+{
+	a4l_bufcfg_t cfg = { idx_subd, size };
+
+	return __sys_ioctl(fd, A4L_BUFCFG, &cfg);
+}
+
 /** @} */

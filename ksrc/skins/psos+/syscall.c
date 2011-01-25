@@ -142,7 +142,7 @@ out:
 static int __t_start(struct pt_regs *regs)
 {
 	void (*startaddr) (u_long, u_long, u_long, u_long);
-	u_long mode, *argp;
+	u_long mode, targs[4] = { 0, 0, 0, 0 };
 	xnhandle_t handle;
 	psostask_t *task;
 
@@ -162,9 +162,13 @@ static int __t_start(struct pt_regs *regs)
 
 	mode = __xn_reg_arg2(regs);
 	startaddr = (typeof(startaddr)) __xn_reg_arg3(regs);
-	argp = (u_long *)__xn_reg_arg4(regs);	/* May be NULL. */
 
-	return t_start((u_long)task, mode, startaddr, argp);
+	if (__xn_reg_arg4(regs) &&
+	    __xn_safe_copy_from_user(targs, (u_long __user *)__xn_reg_arg4(regs),
+				     sizeof(targs)))
+		return -EFAULT;
+
+	return t_start((u_long)task, mode, startaddr, targs);
 }
 
 /*
@@ -963,6 +967,38 @@ static int __sm_v(struct pt_regs *regs)
 }
 
 /*
+ * int __sm_ident(const char *name, u_long *smid_r)
+ */
+
+static int __sm_ident(struct pt_regs *regs)
+{
+	char name[XNOBJECT_NAME_LEN];
+	u_long err, smid;
+	spl_t s;
+
+	/* Get sema4 name. */
+	if (__xn_safe_strncpy_from_user(name, (const char __user *)__xn_reg_arg1(regs),
+					sizeof(name)) < 0)
+		return -EFAULT;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	err = sm_ident(name, 0, &smid);
+	if (err == SUCCESS) {
+		psossem_t *sem = (psossem_t *)smid;
+		smid = sem->handle;
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (err == SUCCESS &&
+	    __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs), &smid,
+				   sizeof(smid)))
+		return -EFAULT;
+
+	return err;
+}
+/*
  * u_long tm_wkafter(u_long ticks)
  */
 
@@ -1433,6 +1469,40 @@ static int __t_getpth(struct pt_regs *regs)
 
 	return SUCCESS;
 }
+/*
+ * int __t_getargs(u_long tid, u_long targs[4])
+ */
+static int __t_getargs(struct pt_regs *regs)
+{
+	xnhandle_t handle;
+	psostask_t *task;
+	u_long targs[4];
+	spl_t s;
+
+	handle = __xn_reg_arg1(regs);
+
+	xnlock_get_irqsave(&nklock, s);
+
+	if (handle)
+		task = __psos_task_lookup(handle);
+	else
+		task = __psos_task_current(current);
+
+	if (task == NULL) {
+		xnlock_put_irqrestore(&nklock, s);
+		return ERR_OBJID;
+	}
+
+	memcpy(targs, task->args, sizeof(targs));
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
+				   targs, sizeof(targs)))
+		return -EFAULT;
+
+	return SUCCESS;
+}
 
 static void *psos_shadow_eventcb(int event, void *data)
 {
@@ -1500,6 +1570,7 @@ static xnsysent_t __systab[] = {
 	[__psos_sm_delete] = {&__sm_delete, __xn_exec_any},
 	[__psos_sm_p] = {&__sm_p, __xn_exec_primary},
 	[__psos_sm_v] = {&__sm_v, __xn_exec_any},
+	[__psos_sm_ident] = {&__sm_ident, __xn_exec_any},
 	[__psos_rn_create] = {&__rn_create, __xn_exec_lostage},
 	[__psos_rn_delete] = {&__rn_delete, __xn_exec_lostage},
 	[__psos_rn_ident] = {&__rn_ident, __xn_exec_any},
@@ -1519,6 +1590,7 @@ static xnsysent_t __systab[] = {
 	[__psos_as_send] = {&__as_send, __xn_exec_conforming},
 	[__psos_tm_getc] = {&__tm_getc, __xn_exec_any},
 	[__psos_t_getpth] = {&__t_getpth, __xn_exec_any},
+	[__psos_t_getargs] = {&__t_getargs, __xn_exec_any},
 };
 
 extern xntbase_t *psos_tbase;
