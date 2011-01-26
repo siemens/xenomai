@@ -77,7 +77,6 @@ GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
-ADEOS_PATCH = @ADEOS_PATCH@
 AMTAR = @AMTAR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
@@ -139,7 +138,6 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
-LNDIR = @LNDIR@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -167,10 +165,6 @@ VERSION = @VERSION@
 XENO_BUILD_STRING = @XENO_BUILD_STRING@
 XENO_DLOPEN_CONSTRAINT = @XENO_DLOPEN_CONSTRAINT@
 XENO_HOST_STRING = @XENO_HOST_STRING@
-XENO_LINUX_ALL_TARGETS = @XENO_LINUX_ALL_TARGETS@
-XENO_LINUX_ARCH = @XENO_LINUX_ARCH@
-XENO_LINUX_IMAGE = @XENO_LINUX_IMAGE@
-XENO_LINUX_INSTALL_TARGET = @XENO_LINUX_INSTALL_TARGET@
 XENO_MAYBE_DOCDIR = @XENO_MAYBE_DOCDIR@
 XENO_POSIX_WRAPPERS = @XENO_POSIX_WRAPPERS@
 XENO_TARGET_ARCH = @XENO_TARGET_ARCH@
@@ -723,81 +717,6 @@ install-exec-local: devices
 
 install-user:
 	$(MAKE) SUDO=false install
-
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared FORCE
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --adeos="$(ADEOS_PATCH)" --linux=linux \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross
-
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@linux/all: linux/.xenomai-prepared FORCE
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	$(top_srcdir)/scripts/prepare-kernel.sh \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --adeos="$(ADEOS_PATCH)" --linux=linux \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	     --arch=$(XENO_LINUX_ARCH) && \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $(XENO_LINUX_ALL_TARGETS) \
-@MAINTAINER_MODE_TRUE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross
-
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@linux/%: linux/.xenomai-prepared FORCE
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $* \
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross
-
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@linux/all: linux/.xenomai-prepared FORCE
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@	cd linux && $(MAKE) $(XENO_LINUX_ALL_TARGETS) \
-@MAINTAINER_MODE_FALSE@@XENO_BUILD_LINUX_TRUE@		ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross
-
-@XENO_BUILD_LINUX_TRUE@linux/.xenomai-prepared: config.status
-@XENO_BUILD_LINUX_TRUE@	./config.status linux
-
-@XENO_BUILD_LINUX_TRUE@.PHONY: FORCE
-
-@XENO_BUILD_LINUX_TRUE@linux/install: linux/all
-@XENO_BUILD_LINUX_TRUE@	@targets=modules_install ; \
-@XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` = x0; then targets="$$targets install"; else \
-@XENO_BUILD_LINUX_TRUE@	if test \! "x`type $(SUDO)`" = x && $(SUDO) true; then sudo=$(SUDO); \
-@XENO_BUILD_LINUX_TRUE@	targets="$$targets install"; fi; fi && \
-@XENO_BUILD_LINUX_TRUE@	$(mkinstalldirs) $(DESTDIR) && \
-@XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
-@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) $$targets \
-@XENO_BUILD_LINUX_TRUE@	   ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
-@XENO_BUILD_LINUX_TRUE@	   INSTALL_PATH=$(DESTDIR)/boot \
-@XENO_BUILD_LINUX_TRUE@	   INSTALL_MOD_PATH=$(DESTDIR)
-
-# For architectures that do not support the install target, provide our own
-# installation target that simply copy the kernel image and System.map.
-@XENO_BUILD_LINUX_TRUE@linux/install_image: linux/all
-@XENO_BUILD_LINUX_TRUE@	sudo=; if test x`id -u` != x0 && test \! "x`type $(SUDO)`" = x && \
-@XENO_BUILD_LINUX_TRUE@	$(SUDO) true ; then sudo=$(SUDO) ; fi && \
-@XENO_BUILD_LINUX_TRUE@	$(mkinstalldirs) $(DESTDIR) && \
-@XENO_BUILD_LINUX_TRUE@	$$sudo $(mkinstalldirs) $(DESTDIR)/boot && \
-@XENO_BUILD_LINUX_TRUE@	cross=`expr "$(CC)" : '\(.*\)gcc' || :` && \
-@XENO_BUILD_LINUX_TRUE@	cd linux && $$sudo $(MAKE) modules_install \
-@XENO_BUILD_LINUX_TRUE@	   ARCH=$(XENO_LINUX_ARCH) CC="$(CC)" CROSS_COMPILE=$$cross \
-@XENO_BUILD_LINUX_TRUE@	   INSTALL_MOD_PATH=$(DESTDIR) && \
-@XENO_BUILD_LINUX_TRUE@	$$sudo cp $(XENO_LINUX_IMAGE) System.map $(DESTDIR)/boot
-
-@XENO_BUILD_LINUX_TRUE@distclean-linux:
-@XENO_BUILD_LINUX_TRUE@	@test -e linux/.config && \
-@XENO_BUILD_LINUX_TRUE@		mv linux/.config linux/.config.saved.xenomai ; \
-@XENO_BUILD_LINUX_TRUE@	$(MAKE) linux/distclean ; \
-@XENO_BUILD_LINUX_TRUE@	test -e linux/.config.saved.xenomai && \
-@XENO_BUILD_LINUX_TRUE@		mv linux/.config.saved.xenomai linux/.config
-
-@XENO_BUILD_LINUX_TRUE@config oldconfig mconfig menuconfig gconfig xconfig %defconfig:
-@XENO_BUILD_LINUX_TRUE@	$(MAKE) linux/$@
-
-@XENO_BUILD_LINUX_TRUE@all-recursive: linux/all
-
-@XENO_BUILD_LINUX_TRUE@clean-recursive: linux/clean
-
-@XENO_BUILD_LINUX_TRUE@distclean-recursive: distclean-linux
-
-@XENO_BUILD_LINUX_TRUE@install-recursive: linux/$(XENO_LINUX_INSTALL_TARGET)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

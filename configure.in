@@ -71,36 +71,25 @@ case "$build_for" in
  i*86*-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	XENO_LINUX_ARCH=i386
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  ppc-*)
 	XENO_TARGET_ARCH=powerpc
-	XENO_LINUX_ARCH=ppc
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  powerpc-*|powerpc64-*|ppc64-*)
 	XENO_TARGET_ARCH=powerpc
-	XENO_LINUX_ARCH=powerpc
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  bfin-*|bfinnommu-*|blackfin-*)
 	XENO_TARGET_ARCH=blackfin
-	XENO_LINUX_ARCH=blackfin
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  arm*-*)
 	XENO_TARGET_ARCH=arm
-	XENO_LINUX_ARCH=arm
-	XENO_LINUX_INSTALL_TARGET=install_image
-	XENO_LINUX_IMAGE=arch/arm/boot/zImage
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
 	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
 	# are running
@@ -108,15 +97,11 @@ case "$build_for" in
  x86_64-*|amd64-*)
 	use__thread=yes
 	XENO_TARGET_ARCH=x86
-	XENO_LINUX_ARCH=x86_64
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_FASTSYNCH=y
 	CONFIG_XENO_DEFAULT_PERIOD=100000
 	;;
  nios2-*)
 	XENO_TARGET_ARCH=nios2
-	XENO_LINUX_ARCH=nios2
-	XENO_LINUX_INSTALL_TARGET=install
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	;;
  *) echo ""
@@ -367,191 +352,6 @@ user-space]),
 	AC_MSG_RESULT(not supported by this board)
   fi
 fi
-
-dnl Flags for building Linux in Xenomai build tree.
-AC_MSG_CHECKING(whether building Linux in Xenomai build tree)
-AC_ARG_ENABLE(linux-build,
-	AS_HELP_STRING([--enable-linux-build=<linux-src-dir>], [Build Linux in
-Xenomai build tree, copying sources from <linux-src-dir>. If no source directory
-is passed, look for a valid kernel source tree with a name starting with linux
-under the build tree, then under the source tree, then if not cross-compiling,
-try the sources of the running kernel and finally /usr/src/linux.]),
-	[case "$enableval" in
-	y | yes) XENO_LINUX_SRCDIR=y ;;
-	n | no) unset XENO_LINUX_SRCDIR ;;
-	*) XENO_LINUX_SRCDIR="`/bin/bash -c \"echo $enableval\"`" ;;
-	esac])
-
-if test x"$XENO_LINUX_SRCDIR" = x ; then
-  AC_MSG_RESULT(no)
-else
-  AC_MSG_RESULT(yes)
-  AC_MSG_CHECKING(for Linux sources)
-  if test x"$XENO_LINUX_SRCDIR" = xy; then
-      candidates="linux-* $srcdir/linux-* $srcdir/linux linux"
-      if test x"$cross_compiling" = xno ; then
-	  candidates="$candidates /lib/modules/`uname -r`/source /usr/src/linux"
-      fi
-      for dir in $candidates ; do
-	  if test -r $dir/Makefile ; then
-	      XENO_LINUX_SRCDIR=$dir
-	      break ;
-	  fi
-      done
-  fi
-  if test x"$XENO_LINUX_SRCDIR" = xy || test ! -r $XENO_LINUX_SRCDIR/Makefile ; then
-     AC_MSG_ERROR([Unable to find Linux kernel sources tree, please pass a valid Linux sources directory to --enable-linux-build])
-  else
-     XENO_LINUX_SRCDIR=`cd $XENO_LINUX_SRCDIR && pwd`
-     unset linux_EXTRAVERSION
-     unset linux_PATCHLEVEL
-     unset linux_SUBLEVEL
-     unset linux_VERSION
-
-     linux_EXTRAVERSION=`sed 's/^EXTRAVERSION = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
-     linux_PATCHLEVEL=`sed 's/^PATCHLEVEL = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
-     linux_SUBLEVEL=`sed 's/^SUBLEVEL = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
-     linux_VERSION=`sed 's/^VERSION = *\(.*\)/\1/;t;d' $XENO_LINUX_SRCDIR/Makefile`
-
-     linux_base_version="$linux_VERSION.$linux_PATCHLEVEL.$linux_SUBLEVEL"
-     linux_full_version="$linux_base_version$linux_EXTRAVERSION"
-
-     if test x"$linux_PATCHLEVEL" = x -o x"$linux_SUBLEVEL" = x ||
-	test x"$linux_VERSION" = x ; then
-	AC_MSG_ERROR([Unable to get version of $XENO_LINUX_SRCDIR, aborting.])
-     else
-	AC_MSG_RESULT([$XENO_LINUX_SRCDIR (kernel ${linux_full_version})])
-     fi
-
-     case "$linux_base_version" in
-	2.4.*) XENO_LINUX_ALL_TARGETS="bzImage modules" ;;
-	2.6.*) XENO_LINUX_ALL_TARGETS="all";;
-	*) AC_MSG_ERROR([Unknown Linux version $linux_full_version]) ;;
-     esac
-     AC_SUBST(XENO_LINUX_ALL_TARGETS)
-     AC_SUBST(XENO_LINUX_INSTALL_TARGET)
-     AC_SUBST(XENO_LINUX_IMAGE)
-  fi
-
-  unset ADEOS_PATCH
-  if test \! -e $XENO_LINUX_SRCDIR/kernel/ipipe; then
-  AC_MSG_CHECKING(for Adeos patch)
-  AC_ARG_WITH(adeos-patch,
-	AS_HELP_STRING([--with-adeos-patch],[specify the path to the Adeos
-patch. Default is to infer the patch name from Linux kernel version.]),
-	[ADEOS_PATCH="`/bin/bash -c \"echo $withval\"`"])
-
-  if test x"$ADEOS_PATCH" = x && test x"$linux_base_version" != x ; then
-	ADEOS_PATCH="`( ls $srcdir/ksrc/arch/$XENO_TARGET_ARCH/patches/adeos-ipipe-$linux_base_version*-{$XENO_TARGET_ARCH,$XENO_LINUX_ARCH}-*|sort -r ) 2>/dev/null | head -n1`"
-  fi
-  if test x"$ADEOS_PATCH" = x || test ! -e $ADEOS_PATCH ; then
-     AC_MSG_ERROR([Unable to find Adeos patch, please use --with-adeos-patch])
-  else
-     AC_MSG_RESULT([$ADEOS_PATCH])
-  fi
-  case "$ADEOS_PATCH" in
-	*-powerpc-*) XENO_LINUX_ARCH=powerpc;;
-	*-x86-*) XENO_LINUX_ARCH=x86;;
-  esac
-  fi
-  AC_SUBST(ADEOS_PATCH)
-
-  unset LNDIR
-  AC_CHECK_PROG(LNDIR, lndir, lndir)
-  if test "x$LNDIR" != "x"; then
-    AC_MSG_CHECKING(if lndir supports the -silent -ignorelinks options)
-    if mkdir conftest1.dir && : > conftest1.dir/foo && mkdir conftest2.dir; then
-	  cd conftest2.dir && $LNDIR -silent -ignorelinks ../conftest1.dir \
-		&& cd ..
-	  test -e conftest2.dir/foo && LNDIR="$LNDIR -silent -ignorelinks"
-    fi
-    rm -Rf conftest1.dir conftest2.dir
-    if test "x$LNDIR" = "xlndir"; then
-	AC_MSG_RESULT(no)
-    else
-	AC_MSG_RESULT(yes)
-    fi
-  fi
-
-  AC_CONFIG_COMMANDS(linux, [
-     if test -e linux/.xenomai-prepared ; then
-	. linux/.xenomai-prepared
-	if test x"$XENO_LINUX_VERSION" != x"$PREPARED_LINUX_VERSION" ||
-	   test x`basename "$ADEOS_PATCH"` != x"$PREPARED_ADEOS_PATCH" ; then
-	   echo "*** Warning: built version of linux and requested versions are "
-	   echo "*** different. If you want to build the requested version of "
-	   echo "*** linux, remove the file: linux/.xenomai-prepared."
-	else
-	   touch linux/.xenomai-prepared
-	fi
-     else
-	   set -e
-	   targetdir=$PWD/linux
-	   if test \! -e linux || test \! $XENO_LINUX_SRCDIR -ef linux ; then
-	       if test -e linux ; then
-		   test -e linux/.config && mv linux/.config .xenomai.config
-		   echo $ECHO_N "Removing existing linux directory... $ECHO_C"
-		   rm -Rf linux
-		   echo "${ECHO_T}done."
-	       fi
-	       mkdir linux
-	       echo $ECHO_N "Making linux a shadow copy of $XENO_LINUX_SRCDIR... $ECHO_C"
-	       if test -z "$LNDIR"; then
-		   cd $XENO_LINUX_SRCDIR
-		   find . -! -type d | while read f ; do
-		       d=$targetdir/`dirname $f`
-		       mkdir -p $d && ln -sf $XENO_LINUX_SRCDIR/$f $d/`basename $f`
-		   done
-	       else
-		   cd $targetdir && $LNDIR $XENO_LINUX_SRCDIR
-	       fi
-	       echo "${ECHO_T}done."
-	   fi
-	   cd $targetdir
-
-	   if test -e $XENO_LINUX_SRCDIR/.config ; then
-	      . $XENO_LINUX_SRCDIR/.config
-	      test x"$CONFIG_ARM" = xy && cfg_arch=arm || :
-	      test x"$CONFIG_BLACKFIN" = xy && cfg_arch=blackfin || :
-	      if test x"$CONFIG_PPC" = xy; then
-		 cfg_arch=ppc
-		 test x"$CONFIG_PPC_MERGE" = xy && cfg_arch=powerpc || :
-		 test x"$CONFIG_WORD_SIZE" = x32 && cfg_arch=powerpc || :
-		 test x"$CONFIG_WORD_SIZE" = x64 && cfg_arch=powerpc || :
-	      fi
-	      test x"$CONFIG_X86" = xy && cfg_arch=i386 || :
-	      test x"$CONFIG_X86_64" = xy && cfg_arch=x86_64 || :
-	      test x"$CONFIG_NIOS2" = xy && cfg_arch=nios2 || :
-	      if test -e $XENO_LINUX_SRCDIR/arch/x86; then
-		  case $cfg_arch in
-		  i386|x86_64) cfg_arch=x86;;
-		  esac
-	      fi
-	      if test $cfg_arch = $XENO_LINUX_ARCH ; then
-		 cp $XENO_LINUX_SRCDIR/.config .xenomai.config
-	      fi
-	      echo "Cleaning linux directory..."
-	      make ARCH=$cfg_arch distclean
-	      test -e .xenomai.config && mv .xenomai.config .config
-	   fi
-	   cd ..
-	   $srcdir/scripts/prepare-kernel.sh --verbose \
-	     --adeos="$ADEOS_PATCH" --linux=linux --arch=$XENO_LINUX_ARCH
-	   test -e .xenomai.config && mv .xenomai.config linux/.config || :
-	   cat > linux/.xenomai-prepared.tmp <<EOF
-PREPARED_LINUX_VERSION=$XENO_LINUX_VERSION
-PREPARED_ADEOS_PATCH=`basename "$ADEOS_PATCH"`
-EOF
-	   mv linux/.xenomai-prepared.tmp linux/.xenomai-prepared
-     fi
-	],[XENO_LINUX_SRCDIR=$XENO_LINUX_SRCDIR
-	   XENO_TARGET_ARCH=$XENO_TARGET_ARCH
-	   XENO_LINUX_ARCH=$XENO_LINUX_ARCH
-	   XENO_LINUX_VERSION=$linux_full_version
-	   ADEOS_PATCH=$ADEOS_PATCH
-	   LNDIR="$LNDIR"])
-fi
-AM_CONDITIONAL(XENO_BUILD_LINUX, [test \! x"$XENO_LINUX_SRCDIR" = x])
 
 dnl Documentation package.
 
@@ -912,7 +712,6 @@ AC_SUBST(LATEX_BATCHMODE)
 AC_SUBST(LATEX_MODE)
 
 AC_SUBST(XENO_TARGET_ARCH)
-AC_SUBST(XENO_LINUX_ARCH)
 AC_SUBST(XENO_BUILD_STRING)
 AC_SUBST(XENO_HOST_STRING)
 AC_SUBST(XENO_USER_CFLAGS)
