@@ -1,1 +1,0 @@
-cyclictest:posix:!@XENO_TEST_DIR@/cyclictest -p 99 -n;popall:control_c

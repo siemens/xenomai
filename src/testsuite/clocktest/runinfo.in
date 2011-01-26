@@ -1,1 +1,0 @@
-clocktest:posix:!@XENO_TEST_DIR@/clocktest;popall:control_c

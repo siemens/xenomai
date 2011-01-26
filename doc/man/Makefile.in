@@ -38,9 +38,8 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/irqbench.man.in $(srcdir)/irqloop.man.in \
 	$(srcdir)/klatency.man.in $(srcdir)/latency.man.in \
 	$(srcdir)/rtcanconfig.man.in $(srcdir)/rtcanrecv.man.in \
-	$(srcdir)/rtcansend.man.in $(srcdir)/runinfo.man.in \
-	$(srcdir)/switchbench.man.in $(srcdir)/switchtest.man.in \
-	$(srcdir)/xeno-config.man.in $(srcdir)/xeno-load.man.in \
+	$(srcdir)/rtcansend.man.in $(srcdir)/switchbench.man.in \
+	$(srcdir)/switchtest.man.in $(srcdir)/xeno-config.man.in \
 	$(srcdir)/xeno.man.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
@@ -58,14 +57,13 @@ CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
 CONFIG_CLEAN_FILES = clocktest.man cyclictest.man irqbench.man \
 	irqloop.man klatency.man latency.man rtcanconfig.man \
 	rtcanrecv.man rtcansend.man switchbench.man switchtest.man \
-	runinfo.man xeno.man xeno-config.man xeno-load.man
+	xeno.man xeno-config.man
 SOURCES =
 DIST_SOURCES =
 man1dir = $(mandir)/man1
-am__installdirs = "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)"
-man5dir = $(mandir)/man5
+am__installdirs = "$(DESTDIR)$(man1dir)"
 NROFF = nroff
-MANS = $(man1_MANS) $(man5_MANS)
+MANS = $(man1_MANS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADEOS_PATCH = @ADEOS_PATCH@
@@ -227,13 +225,11 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-man1_MANS = xeno-config.man \
-	    clocktest.man cyclictest.man irqbench.man irqloop.man \
+man1_MANS = clocktest.man cyclictest.man irqbench.man irqloop.man \
 	    klatency.man latency.man rtcanconfig.man \
 	    rtcanrecv.man rtcansend.man switchbench.man \
 	    switchtest.man xeno.man
 
-man5_MANS = runinfo.man
 all: all-am
 
 .SUFFIXES:
@@ -288,13 +284,9 @@ switchbench.man: $(top_builddir)/config.status $(srcdir)/switchbench.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 switchtest.man: $(top_builddir)/config.status $(srcdir)/switchtest.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-runinfo.man: $(top_builddir)/config.status $(srcdir)/runinfo.man.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno.man: $(top_builddir)/config.status $(srcdir)/xeno.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xeno-config.man: $(top_builddir)/config.status $(srcdir)/xeno-config.man.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-xeno-load.man: $(top_builddir)/config.status $(srcdir)/xeno-load.man.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mostlyclean-libtool:
@@ -347,51 +339,6 @@ uninstall-man1:
 	  echo " rm -f '$(DESTDIR)$(man1dir)/$$inst'"; \
 	  rm -f "$(DESTDIR)$(man1dir)/$$inst"; \
 	done
-install-man5: $(man5_MANS) $(man_MANS)
-	@$(NORMAL_INSTALL)
-	test -z "$(man5dir)" || $(MKDIR_P) "$(DESTDIR)$(man5dir)"
-	@list='$(man5_MANS) $(dist_man5_MANS) $(nodist_man5_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.5*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    5*) ;; \
-	    *) ext='5' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man5dir)/$$inst'"; \
-	  $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man5dir)/$$inst"; \
-	done
-uninstall-man5:
-	@$(NORMAL_UNINSTALL)
-	@list='$(man5_MANS) $(dist_man5_MANS) $(nodist_man5_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.5*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    5*) ;; \
-	    *) ext='5' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f '$(DESTDIR)$(man5dir)/$$inst'"; \
-	  rm -f "$(DESTDIR)$(man5dir)/$$inst"; \
-	done
 tags: TAGS
 TAGS:
 
@@ -429,7 +376,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(MANS)
 installdirs:
-	for dir in "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man5dir)"; do \
+	for dir in "$(DESTDIR)$(man1dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -484,7 +431,7 @@ install-html: install-html-am
 
 install-info: install-info-am
 
-install-man: install-man1 install-man5
+install-man: install-man1
 
 install-pdf: install-pdf-am
 
@@ -510,7 +457,7 @@ ps-am:
 
 uninstall-am: uninstall-man
 
-uninstall-man: uninstall-man1 uninstall-man5
+uninstall-man: uninstall-man1
 
 .MAKE: install-am install-strip
 
@@ -520,12 +467,11 @@ uninstall-man: uninstall-man1 uninstall-man5
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-man install-man1 \
-	install-man5 install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am uninstall uninstall-am uninstall-man uninstall-man1 \
-	uninstall-man5
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-man uninstall-man1
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

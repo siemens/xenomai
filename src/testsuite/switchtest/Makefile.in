@@ -247,7 +247,6 @@ switchtest_LDADD = \
 	../../skins/common/libxenomai.la \
 	-lpthread -lrt
 
-EXTRA_DIST = runinfo.in
 all: all-am
 
 .SUFFIXES:
@@ -487,7 +486,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-data-local install-testPROGRAMS
+install-data-am: install-testPROGRAMS
 
 install-dvi: install-dvi-am
 
@@ -523,7 +522,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-local uninstall-testPROGRAMS
+uninstall-am: uninstall-testPROGRAMS
 
 .MAKE: install-am install-strip
 
@@ -531,30 +530,16 @@ uninstall-am: uninstall-local uninstall-testPROGRAMS
 	clean-libtool clean-testPROGRAMS ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
-	install-data-local install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip install-testPROGRAMS \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip install-testPROGRAMS installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-local \
-	uninstall-testPROGRAMS
+	tags uninstall uninstall-am uninstall-testPROGRAMS
 
-
-install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(rundir)
-	@sed -e's,@XENO_TEST_DIR\@,$(XENO_TEST_DIR),g' $(srcdir)/runinfo.in > $(DESTDIR)$(rundir)/.runinfo
-	@echo "#!/bin/sh" > $(DESTDIR)$(rundir)/run
-	@echo "\$${DESTDIR}$(exec_prefix)/bin/xeno-load \`dirname \$$0\` \$$*" >> $(DESTDIR)$(rundir)/run
-	@chmod +x $(DESTDIR)$(rundir)/run
-
-uninstall-local:
-	$(RM) $(DESTDIR)$(rundir)/.runinfo $(DESTDIR)$(rundir)/run
-
-run: all
-	@$(top_srcdir)/scripts/xeno-load --verbose
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

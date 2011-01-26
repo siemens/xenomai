@@ -1,1 +1,0 @@
-irqloop:posix+rtdm+irqbench:!@XENO_TEST_DIR@/irqloop;popall:control_c

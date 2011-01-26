@@ -935,7 +935,6 @@ AC_CONFIG_FILES([ \
 	config/Makefile \
 	scripts/Makefile \
 	scripts/xeno-config \
-	scripts/xeno-load \
 	scripts/xeno \
 	src/Makefile \
 	src/rtdk/Makefile \
@@ -1009,10 +1008,8 @@ if test \! x$XENO_MAYBE_DOCDIR = x ; then
 	doc/man/rtcansend.man \
 	doc/man/switchbench.man \
 	doc/man/switchtest.man \
-	doc/man/runinfo.man \
 	doc/man/xeno.man \
 	doc/man/xeno-config.man \
-	doc/man/xeno-load.man \
 	doc/doxygen/Makefile \
 	doc/doxygen/Doxyfile-common \
 	doc/doxygen/Doxyfile \
