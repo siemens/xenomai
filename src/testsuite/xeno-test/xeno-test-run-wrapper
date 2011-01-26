@@ -16,5 +16,4 @@ wait_load()
 }
 
 script="$1"; shift
-set -- ${1+"$@"}
 source $script

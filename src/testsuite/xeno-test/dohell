@@ -4,14 +4,14 @@ usage() {
     cat <<EOF
 $0 [ -b path ] [ -s server ] [ -p port ] [ -m mntpoint ] [ -l path | seconds ]
 
-Generate load, using:
+Generate load, using an assorted set of commands and optionnaly:
 - hackbench if the path to the hackbench binary is specified with -b;
 - nc to send TCP data to "server" port "port" if -s is specified (if -p
 is not specified, the port 9, aka discard is used);
 - dd to write data under "mntpoint" if -m is specified.
-- during the runtime of the LTP test if the path to the LTP installation
-directory is specifed with -l
-- or during "seconds" seconds
+
+during the runtime of the LTP test if the path to the LTP installation
+directory is specifed with -l or during "seconds" seconds.
 EOF
 }
 

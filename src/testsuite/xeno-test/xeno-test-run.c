@@ -36,7 +36,7 @@ static const char *scriptname;
 static volatile int sigexit;
 static sigset_t sigchld_mask;
 static struct child *first_child;
-static char *loadcmd = "exec dd if=/dev/zero of=/dev/null";
+static char *loadcmd = "exec dohell 900";
 static fd_set inputs;
 static struct child script, load;
 
@@ -474,8 +474,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (!strcmp(argv[argc - 1], "-h")
-	    || !strcmp(argv[argc - 1], "--help")) {
+	if (!strcmp(argv[1], "-h")
+	    || !strcmp(argv[1], "--help")) {
 		usage(argv[0]);
 		exit(EXIT_SUCCESS);
 	}
