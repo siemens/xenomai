@@ -67,11 +67,6 @@ long *histogram_avg = NULL, *histogram_max = NULL, *histogram_min = NULL;
 int do_histogram = 0, do_stats = 0, finished = 0;
 int bucketsize = 1000;		/* default = 1000ns, -B <size> to override */
 
-static const char *devname_fmt[] = {
-	"rttest-timerbench%d",
-	"rttest%d",
-};
-
 static inline void add_histogram(long *histogram, long addval)
 {
 	/* bucketsize steps */
@@ -478,7 +473,6 @@ int main(int argc, char **argv)
 	int cpu = 0, c, err, sig;
 	char task_name[16];
 	sigset_t mask;
-	int fmt = 0;
 
 	while ((c = getopt(argc, argv, "hp:l:T:qH:B:sD:t:fc:P:b")) != EOF)
 		switch (c) {
@@ -628,15 +622,11 @@ int main(int argc, char **argv)
 	if (test_mode != USER_TASK) {
 		char devname[RTDM_MAX_DEVNAME_LEN];
 
-retry:
-		snprintf(devname, RTDM_MAX_DEVNAME_LEN, devname_fmt[fmt],
+		snprintf(devname, RTDM_MAX_DEVNAME_LEN, "rttest-timerbench%d",
 			 benchdev_no);
 		benchdev = rt_dev_open(devname, O_RDWR);
 
 		if (benchdev < 0) {
-			if (fmt++ == 0)
-				goto retry;
-
 			fprintf(stderr,
 				"latency: failed to open benchmark device, code %d\n"
 				"(modprobe xeno_timerbench?)\n", benchdev);

@@ -100,11 +100,7 @@ static int __init klat_mod_init(void)
 
 	for (dev_nr = 0; dev_nr < DEV_NR_MAX; dev_nr++) {
 		snprintf(devname, sizeof(devname),
-#ifdef CONFIG_XENO_DRIVERS_TESTING_LEGACY_NAMES
-			 "rttest%d",
-#else
 			 "rttest-timerbench%d",
-#endif
 			 dev_nr);
 		fd = rt_dev_open(devname, O_RDONLY);
 		if (fd < 0)

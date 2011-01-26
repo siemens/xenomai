@@ -5,8 +5,6 @@
 mainmenu_option next_comment
 comment 'Testing drivers'
 
-bool 'Use legacy names for testing drivers' CONFIG_XENO_DRIVERS_TESTING_LEGACY_NAMES $CONFIG_XENO_SKIN_RTDM
-
 dep_tristate 'Timer benchmark driver' CONFIG_XENO_DRIVERS_TIMERBENCH $CONFIG_XENO_SKIN_RTDM
 
 dep_tristate 'IRQ benchmark driver' CONFIG_XENO_DRIVERS_IRQBENCH $CONFIG_XENO_SKIN_RTDM

@@ -894,19 +894,13 @@ static int task_create(struct cpu_tasks *cpu,
 
 #define DEV_NR_MAX 256
 
-static const char *devname_fmt[] = {
-	"/dev/rttest-switchtest%d",
-	"/dev/rttest%d",
-};
-
 static int open_rttest(char *buf, size_t size, unsigned count)
 {
 	static unsigned dev_nr = 0;
 	int fd, status;
-	int fmt = 0;
 
 	do {
-		snprintf(buf, size, devname_fmt[fmt], dev_nr);
+		snprintf(buf, size, "/dev/rttest-switchtest%d", dev_nr);
 
 		status = fd = open(buf, O_RDWR);
 
@@ -924,11 +918,6 @@ static int open_rttest(char *buf, size_t size, unsigned count)
 
 		if (++dev_nr != DEV_NR_MAX)
 			continue;
-
-		if (fmt++ == 0) {
-			dev_nr = 0;
-			continue;
-		}
 
 		fprintf(stderr, "switchtest: Unable to open switchtest device.\n"
 			"(modprobe xeno_switchtest ?)\n");

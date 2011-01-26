@@ -509,11 +509,7 @@ static int __init __timerbench_init(void)
 
 	do {
 		snprintf(device.device_name, RTDM_MAX_DEVNAME_LEN,
-#ifdef CONFIG_XENO_DRIVERS_TESTING_LEGACY_NAMES
-			 "rttest%d",
-#else
 			 "rttest-timerbench%d",
-#endif
 			 start_index);
 		err = rtdm_dev_register(&device);
 
