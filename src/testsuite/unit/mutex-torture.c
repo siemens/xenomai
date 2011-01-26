@@ -25,7 +25,7 @@
 #include <native/cond.h>
 #endif /* __NATIVE_SKIN */
 #include <asm-generic/xenomai/bits/current.h> /* For internal use, do not use
-				         in your code. */
+					 in your code. */
 #include <asm-generic/xenomai/stack.h>
 
 #define MUTEX_CREATE		1
@@ -84,7 +84,7 @@ void check_current_prio(int expected_prio)
 # ifdef __pse51_get_current_prio
 	extern unsigned __pse51_muxid;
 
-        XENOMAI_SKINCALL1(__pse51_muxid, __pse51_get_current_prio, &current_prio);
+	XENOMAI_SKINCALL1(__pse51_muxid, __pse51_get_current_prio, &current_prio);
 # else /* !__pse51_get_current_prio */
 	current_prio = expected_prio;
 # endif /* !__pse51_get_current_prio */
@@ -113,11 +113,11 @@ void check_current_mode(int expected_primary_mode)
 {
 	int current_in_primary;
 
-        /* This is a unit test, and in this circonstance, we are allowed to
+	/* This is a unit test, and in this circonstance, we are allowed to
 	   call xeno_get_current_mode. But please do not do that in your
 	   own code. */
 	current_in_primary = !(xeno_get_current_mode() & XNRELAX);
-	
+
 	if (current_in_primary != expected_primary_mode) {
 		fprintf(stderr,
 			"FAILURE: current mode (%d) != expected mode (%d)\n",
@@ -135,7 +135,7 @@ void yield(void)
 #endif /* __NATIVE_SKIN__ */
 }
 
-int dispatch(const char *service_name, 
+int dispatch(const char *service_name,
 	     int service_type, int check, int expected, ...)
 {
 	unsigned long long timeout;
@@ -235,7 +235,7 @@ int dispatch(const char *service_name,
 		status = -rt_cond_signal(va_arg(ap, RT_COND *));
 #endif /* __NATIVE_SKIN__ */
 		break;
-	
+
 	case COND_WAIT:
 #ifdef XENO_POSIX
 		cond = va_arg(ap, pthread_cond_t *);
@@ -294,7 +294,7 @@ int dispatch(const char *service_name,
 	va_end(ap);
 
 	if (check && status != expected) {
-		fprintf(stderr, "FAILURE: %s: %i (%s) instead of %i\n", 
+		fprintf(stderr, "FAILURE: %s: %i (%s) instead of %i\n",
 			service_name, status, strerror(status), expected);
 		exit(EXIT_FAILURE);
 	}
@@ -366,7 +366,7 @@ void recursive_wait(void)
 	dispatch("rec thread_create", THREAD_CREATE, 1, 0, &waiter_tid, 2,
 		 waiter, &mutex);
 
-	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex); 
+	dispatch("rec mutex_unlock 2", MUTEX_UNLOCK, 1, 0, &mutex);
 	ms_sleep(11);
 	dispatch("rec mutex_unlock 1", MUTEX_UNLOCK, 1, 0, &mutex);
 	yield();
@@ -806,4 +806,3 @@ int main(void)
 	fprintf(stderr, "Test OK\n");
 	return 0;
 }
-

@@ -33,7 +33,7 @@ int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error)
   dispatch:
 	for (i = 0; i < sigs->nsigs; i++) {
 		xnsighandler *handler;
-		
+
 		handler = xnsig_handlers[sigs->pending[i].muxid];
 		if (handler)
 			handler(&sigs->pending[i].si);
@@ -60,7 +60,7 @@ int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_erro
   dispatch:
 	for (i = 0; i < sigs->nsigs; i++) {
 		xnsighandler *handler;
-		
+
 		handler = xnsig_handlers[sigs->pending[i].muxid];
 		if (handler)
 			handler(&sigs->pending[i].si);
@@ -80,8 +80,8 @@ int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_erro
 }
 #endif /* XENOMAI_SYSSIGS_SAFE */
 
-int 
-xeno_bind_skin_opt(unsigned skin_magic, const char *skin, 
+int
+xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 		   const char *module, xnsighandler *handler)
 {
 	sighandler_t old_sigill_handler;
@@ -94,7 +94,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 			XNHEAP_DEV_NAME, XNHEAP_DEV_MINOR);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	old_sigill_handler = signal(SIGILL, xeno_sigill_handler);
 	if (old_sigill_handler == SIG_ERR) {
 		perror("signal(SIGILL)");
@@ -149,7 +149,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 	xeno_main_tid = pthread_self();
 
 	xeno_init_timeconv(muxid);
-	
+
 	return muxid;
 }
 

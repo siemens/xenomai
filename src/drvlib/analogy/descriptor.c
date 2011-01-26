@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, descriptor related features  
+ * Analogy for Linux, descriptor related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -52,7 +52,7 @@ static int a4l_leaf_add(a4l_root_t * rt,
 			a4l_leaf_t ** lfchild, unsigned long lfsize)
 {
 	/* Basic checking */
-	if (rt->offset + 
+	if (rt->offset +
 	    sizeof(a4l_leaf_t) + lfsize > ((void *)rt) + rt->gsize)
 		return -ENOMEM;
 
@@ -115,7 +115,7 @@ static int __a4l_get_sbsize(int fd, a4l_desc_t * dsc)
 		for (j = 0; j < nb_chan; j++) {
 			if ((ret = a4l_sys_nbrnginfo(fd, i, j, &nb_rng)) < 0)
 				return ret;
-			res += nb_rng * (sizeof(a4l_rnginfo_t) + 
+			res += nb_rng * (sizeof(a4l_rnginfo_t) +
 					 sizeof(a4l_leaf_t));
 		}
 	}
@@ -204,7 +204,7 @@ static int __a4l_fill_desc(int fd, a4l_desc_t * dsc)
  *   a buffer, which size is defined by the field sbsize.
  * - The second time, the buffer pointed by sbdata is filled with data
  *   about the subdevices, the channels and the ranges.
- * 
+ *
  * Between the two calls, an allocation must be performed in order to
  * recover a buffer large enough to contain all the data. These data
  * are set up according a root-leaf organization (device -> subdevice

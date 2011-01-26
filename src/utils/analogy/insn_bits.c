@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
 	/* Open the device */
 	err = a4l_open(&dsc, filename);
 	if (err < 0) {
-		fprintf(stderr, 
-			"insn_bits: a4l_open %s failed (err=%d)\n", 
+		fprintf(stderr,
+			"insn_bits: a4l_open %s failed (err=%d)\n",
 			filename, err);
 		return err;
 	}
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 		printf("\t subdevices count = %d\n", dsc.nb_subd);
 		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
-	}	
+	}
 
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	/* Get this data */
 	err = a4l_fill_desc(&dsc);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_bits: a4l_fill_desc failed (err=%d)\n", err);
 		goto out_insn_bits;
 	}
@@ -126,15 +126,15 @@ int main(int argc, char *argv[])
 	/* If no subdevice index was set, choose for the first digital
 	   subdevice found */
 	while (idx_subd == -1 && i < dsc.nb_subd) {
-		
+
 		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"insn_bits: get_sbinfo(%d) failed (err = %d)\n",
 				i, err);
 			goto out_insn_bits;
 		}
-		
+
 		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DIO ||
 		    (sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DI ||
 		    (sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DO) {
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	   (in case, the subdevice index was set with the option -s) */
 	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_bits: get_sbinfo(%d) failed (err = %d)\n",
 			idx_subd, err);
 		err = -EINVAL;
@@ -167,12 +167,12 @@ int main(int argc, char *argv[])
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
 	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DI &&
 	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_bits: selected subdevice is not digital\n");
 		err = -EINVAL;
-		goto out_insn_bits;		
+		goto out_insn_bits;
 	}
-	
+
 	/* Set the data size to read / write */
 	scan_size = a4l_sizeof_subd(sbinfo);
 
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 	err = a4l_sync_dio(&dsc, idx_subd, &mask, &value);
 
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_bits: a4l_sync_dio() failed (err=%d)\n", err);
 		goto out_insn_bits;
 	}
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
 	}
 	else if (scan_size == sizeof(uint16_t)) {
 		uint16_t tmp;
-		memcpy(&tmp, &value, sizeof(uint16_t));		
+		memcpy(&tmp, &value, sizeof(uint16_t));
 		value = (int)tmp;
 	}
 

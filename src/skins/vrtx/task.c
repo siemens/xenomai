@@ -112,7 +112,7 @@ static void *vrtx_task_trampoline(void *cookie)
  	entry = iargs->entry;
  	arg = iargs->param;
  	__real_sem_post(&iargs->sync);
- 
+
   	if (err == 0) {
 	  xeno_set_current();
 	  entry(arg);

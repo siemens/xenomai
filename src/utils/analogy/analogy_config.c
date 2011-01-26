@@ -70,7 +70,7 @@ void do_print_usage(void)
 	fprintf(stdout, "\t\t -q, --quiet: quiet output\n");
 	fprintf(stdout, "\t\t -V, --version: print program version\n");
 	fprintf(stdout, "\t\t -r, --remove: detach a device\n");
-	fprintf(stdout, 
+	fprintf(stdout,
 		"\t\t -S, --buffer-size: set default buffer size in kB\n");
 	fprintf(stdout, "\tDeprecated options:\n");
 	fprintf(stdout,
@@ -89,7 +89,7 @@ int parse_extra_arg(char *opts, unsigned int *nb, unsigned long *res)
 		return -EINVAL;
 	*nb = 0;
 
-	/* We set errno to 0 so as to be sure that 
+	/* We set errno to 0 so as to be sure that
 	   strtoul did not fail */
 	errno = 0;
 
@@ -102,7 +102,7 @@ int parse_extra_arg(char *opts, unsigned int *nb, unsigned long *res)
 			if (errno != 0) {
 				err = -errno;
 				goto out_compute_opts;
-			}				
+			}
 		}
 		opts += ofs + 1;
 	} while (len != ofs);
@@ -115,7 +115,7 @@ out_compute_opts:
 int process_extra_arg(a4l_lnkdesc_t *lnkdsc, char *arg)
 {
 	int err = 0;
-	
+
 	if ((err = parse_extra_arg(arg, &lnkdsc->opts_size, NULL)) < 0) {
 		goto err_opts;
 	}
@@ -128,10 +128,10 @@ int process_extra_arg(a4l_lnkdesc_t *lnkdsc, char *arg)
 		goto out;
 	}
 
-	if ((err = parse_extra_arg(arg, 
+	if ((err = parse_extra_arg(arg,
 				   &lnkdsc->opts_size, lnkdsc->opts)) < 0) {
 		goto err_opts;
-	}	
+	}
 
 out:
 	return err;
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'R':
 		case 'W':
-			fprintf(stdout, 
+			fprintf(stdout,
 				"analogy_config: the option --read-buffer-size "
 				"and --write-buffer-size will be deprecated; "
 				"please use --buffer-size instead (-S)\n");
@@ -190,9 +190,9 @@ int main(int argc, char *argv[])
 
 	/* Here we have choice:
 	   - if the option -r is set, only one additional option is
-             useful
+	     useful
 	   - if the option -S is set without no attach options
-	   - if the option -S is set with attach options */ 
+	   - if the option -S is set with attach options */
 
 	if ((actions & DO_DETACH) && argc - optind < 1 ) {
 		fprintf(stderr, "analogy_config: specify a device to detach\n");
@@ -200,12 +200,12 @@ int main(int argc, char *argv[])
 	}
 
 	if ((actions & DO_DETACH) && (actions & DO_BUFCONFIG)) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"analogy_config: skipping buffer size configuration"
 			"because of detach action\n");
 	}
 
-	if (!(actions & DO_DETACH) && 
+	if (!(actions & DO_DETACH) &&
 	    !(actions & DO_BUFCONFIG) && argc - optind < 2) {
 		do_print_usage();
 		goto out_a4l_config;
@@ -220,20 +220,20 @@ int main(int argc, char *argv[])
 	fd = a4l_sys_open(devfile);
 	if (fd < 0) {
 		err = fd;
-		fprintf(stderr, 
+		fprintf(stderr,
 			"analogy_config: a4l_open failed err=%d\n", err);
 		goto out_a4l_config;
 	}
 
 	if (actions & DO_DETACH) {
-		
+
 		err = a4l_sys_detach(fd);
 		if (err < 0)
-			fprintf(stderr, 
+			fprintf(stderr,
 				"analogy_config: detach failed err=%d\n", err);
 		goto out_a4l_config;
 	}
-	
+
 	if (actions & DO_ATTACH) {
 
 		a4l_lnkdesc_t lnkdsc;
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
 		/* Process driver-specific options */
  		if (argc - optind == 3) {
-			
+
 			err = process_extra_arg(&lnkdsc, argv[optind + 2]);
 			if (err < 0)
 				goto out_a4l_config;
@@ -255,11 +255,11 @@ int main(int argc, char *argv[])
 		/* Go... */
 		err = a4l_sys_attach(fd, &lnkdsc);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"analogy_config: attach failed err=%d\n", err);
 			goto out_a4l_config;
 		}
-		
+
 		if (lnkdsc.opts != NULL)
 			free(lnkdsc.opts);
 	}
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 
 		err = a4l_sys_bufcfg(fd, A4L_BUF_DEFMAGIC, bufsize);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"analogy_config: bufffer configuraiton failed "
 				"(err=%d)\n", err);
 			goto out_a4l_config;

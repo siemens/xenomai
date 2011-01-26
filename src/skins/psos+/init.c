@@ -31,7 +31,7 @@ void __init_xeno_interface(void)
 {
 	u_long err, tid;
 
-	__psos_muxid = xeno_bind_skin(PSOS_SKIN_MAGIC, 
+	__psos_muxid = xeno_bind_skin(PSOS_SKIN_MAGIC,
 				      "psos", "xeno_psos", NULL);
 
 	err = XENOMAI_SYSCALL2(__xn_sys_info, __psos_muxid, &__psos_sysinfo);

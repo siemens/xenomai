@@ -127,9 +127,9 @@ void latency(void *cookie)
 			dt = (long)(rt_timer_tsc() - expected_tsc);
 			new_relaxed = sampling_relaxed;
 			if (dt > maxj) {
-				if (new_relaxed != old_relaxed 
+				if (new_relaxed != old_relaxed
 				    && dt > fault_threshold)
-					max_relaxed += 
+					max_relaxed +=
 						new_relaxed - old_relaxed;
 				maxj = dt;
 			}
@@ -552,7 +552,7 @@ int main(int argc, char **argv)
 
 		default:
 
-			fprintf(stderr, 
+			fprintf(stderr,
 "usage: latency [options]\n"
 "  [-h]                         # print histograms of min, avg, max latencies\n"
 "  [-s]                         # print statistics of min, avg, max latencies\n"

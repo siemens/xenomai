@@ -34,10 +34,10 @@
 
 /* Default command's parameters */
 
-/* For write operation, we consider 
+/* For write operation, we consider
    the default subdevice index is 1 */
 #define ID_SUBD 1
-/* For simplicity sake, a maximum channel 
+/* For simplicity sake, a maximum channel
    count is defined */
 #define MAX_NB_CHAN 10
 /* Four channels used by default */
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 			printf("\t range's size = %d (bits)\n", info->nb_bits);
 		}
 
-		scan_size += (info->nb_bits % 8 == 0) ? 
+		scan_size += (info->nb_bits % 8 == 0) ?
 			info->nb_bits / 8 : (info->nb_bits / 8) + 1;
 	}
 
@@ -305,8 +305,8 @@ int main(int argc, char *argv[])
 
 		/* Send data */
 		while (cnt < scan_size * cmd.stop_arg) {
-			unsigned int tmp = 
-				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ? 
+			unsigned int tmp =
+				(scan_size * cmd.stop_arg - cnt) > BUF_SIZE ?
 				BUF_SIZE : (scan_size * cmd.stop_arg - cnt);
 
 			ret = a4l_async_write(&dsc, buf, tmp, A4L_INFINITE);
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
 					fprintf(stderr,
 						"cmd_write: triggering failed (ret=%d)\n",
 						ret);
-					goto out_main;					
+					goto out_main;
 				}
 			}
 		}
@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
 			if (front > (scan_size * cmd.stop_arg - cnt))
 				front = scan_size * cmd.stop_arg - cnt;
 
-			/* Perform the copy 
+			/* Perform the copy
 			   (Usually, such an operation should be avoided: the shared
 			   buffer should be used without any intermediate buffer,
 			   the "mmaped" buffer is interesting for saving data copy) */
@@ -374,15 +374,15 @@ int main(int argc, char *argv[])
 					ret);
 				goto out_main;
 			}
-			
+
 			if (cnt == front && cnt != 0) {
 				ret = a4l_snd_insn(&dsc, &insn);
 				if (ret < 0) {
 					fprintf(stderr,
 						"cmd_write: triggering failed (ret=%d)\n",
 						ret);
-					goto out_main;					
-				}				
+					goto out_main;
+				}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, instruction related features  
+ * Analogy for Linux, instruction related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -165,14 +165,14 @@ int a4l_sync_write(a4l_desc_t * dsc,
 		/* Sets the delay to wait */
 		insn_tab[1].data = &_delay;
 
-		/* Sends the two instructions (false read + wait) 
+		/* Sends the two instructions (false read + wait)
 		   to the Analogy layer */
 		ret = a4l_snd_insnlist(dsc, &insnlst);
 		if (ret < 0)
 			return ret;
 	}
 
-	/* The first instruction structure must be updated so as 
+	/* The first instruction structure must be updated so as
 	   to write the proper data amount */
 	insn_tab[0].data_size = nbyte;
 
@@ -237,14 +237,14 @@ int a4l_sync_read(a4l_desc_t * dsc,
 		/* Sets the delay to wait */
 		insn_tab[1].data = &_delay;
 
-		/* Sends the two instructions (false read + wait) 
+		/* Sends the two instructions (false read + wait)
 		   to the Analogy layer */
 		ret = a4l_snd_insnlist(dsc, &insnlst);
 		if (ret < 0)
 			return ret;
 	}
 
-	/* The first instruction structure must be updated so as 
+	/* The first instruction structure must be updated so as
 	   to retrieve the proper data amount */
 	insn_tab[0].data_size = nbyte;
 
@@ -277,7 +277,7 @@ int a4l_sync_read(a4l_desc_t * dsc,
 int a4l_sync_dio(a4l_desc_t *dsc,
 		 unsigned int idx_subd, void *mask, void *buf)
 {
-	unsigned char values[16];	
+	unsigned char values[16];
 	a4l_insn_t insn = {
 		.type = A4L_INSN_BITS,
 		.idx_subd = idx_subd,
@@ -342,7 +342,7 @@ int a4l_sync_dio(a4l_desc_t *dsc,
 		break;
 	}
 	}
-	
+
 	return ret;
 }
 
@@ -359,7 +359,7 @@ int a4l_sync_dio(a4l_desc_t *dsc,
  * @param[in] dsc Device descriptor filled by a4l_open() (and
  * optionally a4l_fill_desc())
  * @param[in] idx_subd Index of the concerned subdevice
- * @param[in] type Configuration parameter 
+ * @param[in] type Configuration parameter
  *
  * @return 0 on success. Otherwise:
  *
@@ -405,7 +405,7 @@ int a4l_config_subd(a4l_desc_t * dsc,
 	ret = a4l_snd_insn(dsc, &insn);
 	if (ret < 0)
 		goto out;
-	
+
 	/* Retrieve the result(s), if need be */
 	switch (type) {
 	case A4L_INSN_CONFIG_DIO_QUERY:
@@ -419,8 +419,8 @@ int a4l_config_subd(a4l_desc_t * dsc,
 	}
 
 out:
-	va_end(args);	
-	
+	va_end(args);
+
 	return ret;
 }
 

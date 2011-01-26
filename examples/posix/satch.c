@@ -30,16 +30,16 @@
 void normalize(struct timespec *ts)
 {
     if (ts->tv_nsec > 1000000000)
-        {
-        ts->tv_sec += ts->tv_nsec / 1000000000;
-        ts->tv_nsec %= 1000000000;
-        }
+	{
+	ts->tv_sec += ts->tv_nsec / 1000000000;
+	ts->tv_nsec %= 1000000000;
+	}
 
     if (ts->tv_nsec < 0)
-        {
-        ts->tv_sec -= (-ts->tv_nsec) / 1000000000 + 1;
-        ts->tv_nsec = 1000000000 - (-ts->tv_nsec % 1000000000);
-        }
+	{
+	ts->tv_sec -= (-ts->tv_nsec) / 1000000000 + 1;
+	ts->tv_nsec = 1000000000 - (-ts->tv_nsec % 1000000000);
+	}
 }
 
 void abort_perror(const char *pref)
@@ -86,15 +86,15 @@ void *producer (void *cookie)
     /* Copy the strings to shared memory. */
     pos = 0;
     for (next_msg = 0;
-         next_msg < sizeof(private_satch_s_tunes)/sizeof(char *);
-         next_msg++)
-        {
-        const char *msg = private_satch_s_tunes[next_msg];
-        size_t len = strlen(msg) + 1;
-        memcpy(producer_shm + pos, msg, len);
-        satch_s_tunes[next_msg] = pos;
-        pos += len;
-        }
+	 next_msg < sizeof(private_satch_s_tunes)/sizeof(char *);
+	 next_msg++)
+	{
+	const char *msg = private_satch_s_tunes[next_msg];
+	size_t len = strlen(msg) + 1;
+	memcpy(producer_shm + pos, msg, len);
+	satch_s_tunes[next_msg] = pos;
+	pos += len;
+	}
     next_msg = 0;
 
     sigemptyset(&blocked);
@@ -110,26 +110,26 @@ void *producer (void *cookie)
 
     for (;;)
 	{
-        unsigned msg_off;
-        siginfo_t si;
-        int nchar;
+	unsigned msg_off;
+	siginfo_t si;
+	int nchar;
 
-        if (timer_settime(producer_tm, 0, &its, NULL))
-            abort_perror("timer_settime");
-        while (sigwaitinfo(&blocked, &si) == -1 && errno == EINTR)
-            ;
+	if (timer_settime(producer_tm, 0, &its, NULL))
+	    abort_perror("timer_settime");
+	while (sigwaitinfo(&blocked, &si) == -1 && errno == EINTR)
+	    ;
 
 	msg_off = satch_s_tunes[next_msg++];
 	next_msg %= (sizeof(satch_s_tunes) / sizeof(satch_s_tunes[0]));
 
-        do 
-            {
-            nchar = mq_send(producer_mq, (char *)&msg_off, sizeof(msg_off), 0);
-            }
-        while (nchar == -1 && errno == EINTR);
+	do
+	    {
+	    nchar = mq_send(producer_mq, (char *)&msg_off, sizeof(msg_off), 0);
+	    }
+	while (nchar == -1 && errno == EINTR);
 
-        if (nchar == -1)
-            abort_perror("mq_send");
+	if (nchar == -1)
+	    abort_perror("mq_send");
 	}
 
     return NULL;
@@ -149,7 +149,7 @@ void *consumer (void *cookie)
 {
     struct itimerspec its;
     sigset_t blocked;
-    
+
     sigemptyset(&blocked);
     sigaddset(&blocked, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &blocked, NULL);
@@ -162,31 +162,31 @@ void *consumer (void *cookie)
     normalize(&its.it_interval);
 
     if(timer_settime(consumer_tm, 0, &its, NULL))
-        abort_perror("timer_settime");
+	abort_perror("timer_settime");
 
     for (;;)
 	{
-        siginfo_t si;
-        while (sigwaitinfo(&blocked, &si) == -1 && errno == EINTR)
-            ;
+	siginfo_t si;
+	while (sigwaitinfo(&blocked, &si) == -1 && errno == EINTR)
+	    ;
 
-        for (;;)
+	for (;;)
 	    {
-            unsigned prio;
-            unsigned msg;
-            int nchar;
+	    unsigned prio;
+	    unsigned msg;
+	    int nchar;
 
-            do 
-                {
-                nchar = mq_receive(consumer_mq,(char *)&msg, sizeof(msg), &prio);
-                }
-            while (nchar == -1 && errno == EINTR);
-            
-            if (nchar == -1 && errno == EAGAIN)
-                break;
+	    do
+		{
+		nchar = mq_receive(consumer_mq,(char *)&msg, sizeof(msg), &prio);
+		}
+	    while (nchar == -1 && errno == EINTR);
 
-            if (nchar == -1)
-                abort_perror("mq_receive");
+	    if (nchar == -1 && errno == EAGAIN)
+		break;
+
+	    if (nchar == -1)
+		abort_perror("mq_receive");
 
 	    printf("Now playing %s...\n",(char *) consumer_shm + msg);
 	    }
@@ -202,32 +202,32 @@ void __xeno_user_exit (void)
 {
 #ifdef PRODUCER
     if (producer_task)
-        {
-        pthread_cancel(producer_task);
-        pthread_join(producer_task, NULL);
-        }
+	{
+	pthread_cancel(producer_task);
+	pthread_join(producer_task, NULL);
+	}
     if (producer_tm != (timer_t) -1)
-        timer_delete(producer_tm);
+	timer_delete(producer_tm);
     if (producer_mq != (mqd_t) -1)
-        mq_close(producer_mq);
+	mq_close(producer_mq);
     mq_unlink(MQ_NAME);
     if (producer_shm != MAP_FAILED)
-        munmap(producer_shm, 65536);
+	munmap(producer_shm, 65536);
     shm_unlink(SHM_NAME);
 #endif /* PRODUCER */
 
 #ifdef CONSUMER
     if (consumer_task)
-        {
-        pthread_cancel(consumer_task);
-        pthread_join(consumer_task, NULL);
-        }
+	{
+	pthread_cancel(consumer_task);
+	pthread_join(consumer_task, NULL);
+	}
     if (consumer_tm != (timer_t) -1)
-        timer_delete(consumer_tm);
+	timer_delete(consumer_tm);
     if (consumer_mq != (mqd_t) -1)
-        mq_close(consumer_mq);
+	mq_close(consumer_mq);
     if (consumer_shm != MAP_FAILED)
-        munmap(consumer_shm, 65536);
+	munmap(consumer_shm, 65536);
 #endif /* CONSUMER */
 }
 
@@ -242,16 +242,16 @@ int __xeno_user_init (void)
 
     fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0777);
     if (fd == -1)
-        {
-        xnprintf("shm_open: %d\n", errno);
-        return -errno;
-        }
+	{
+	xnprintf("shm_open: %d\n", errno);
+	return -errno;
+	}
 
     if (ftruncate(fd, 65536))
-        {
-        xnprintf("ftruncate: %d\n", errno);
-        goto out;
-        }
+	{
+	xnprintf("ftruncate: %d\n", errno);
+	goto out;
+	}
 
     pthread_attr_init(&attr);
     pthread_attr_setinheritsched(&attr, 1);
@@ -262,7 +262,7 @@ int __xeno_user_init (void)
     mattr.mq_msgsize = sizeof(unsigned);
     producer_mq = mq_open(MQ_NAME, O_CREAT| O_EXCL| O_WRONLY, 0, &mattr);
     if (producer_mq == (mqd_t) -1)
-        {
+	{
 	if (errno == EEXIST)
 	    {
 	    xnprintf("Satch: producer module is already running, please "
@@ -270,25 +270,25 @@ int __xeno_user_init (void)
 	    goto out;
 	    }
 
-        xnprintf("mq_open(producer_mq): %d\n", errno);
-        goto out;
-        }
-    
+	xnprintf("mq_open(producer_mq): %d\n", errno);
+	goto out;
+	}
+
     producer_shm = mmap(NULL, 65536, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (producer_shm == MAP_FAILED)
-        {
-        xnprintf("mmap(producer_shm): %d\n", errno);
-        return -errno;
-        }
+	{
+	xnprintf("mmap(producer_shm): %d\n", errno);
+	return -errno;
+	}
 
     evt.sigev_notify = SIGEV_SIGNAL;
     evt.sigev_signo = SIGRTMIN+1;
     evt.sigev_value.sival_ptr = &producer_tm;
     if (timer_create(CLOCK_REALTIME, &evt, &producer_tm))
-        {
-        xnprintf("timer_create(producer_tm): %d\n", errno);
-        goto out;
-        }
+	{
+	xnprintf("timer_create(producer_tm): %d\n", errno);
+	goto out;
+	}
 
     pthread_attr_setstacksize(&attr, PRODUCER_STACK_SIZE);
     parm.sched_priority = PRODUCER_TASK_PRI;
@@ -296,10 +296,10 @@ int __xeno_user_init (void)
     rc = pthread_create(&producer_task, &attr, &producer, NULL);
 
     if (rc)
-        {
-        xnprintf("pthread_create(producer_task): %d\n", rc);
-        goto out;
-        }
+	{
+	xnprintf("pthread_create(producer_task): %d\n", rc);
+	goto out;
+	}
 #endif /* PRODUCER */
 
 #ifdef CONSUMER
@@ -307,7 +307,7 @@ int __xeno_user_init (void)
     mattr.mq_msgsize = sizeof(unsigned);
     consumer_mq = mq_open(MQ_NAME, O_NONBLOCK| O_RDONLY, 0, &mattr);
     if (consumer_mq == (mqd_t) -1)
-        {
+	{
 	if (errno == ENOENT)
 	    {
 	    xnprintf("Satch: producer module not running, please launch producer"
@@ -315,51 +315,51 @@ int __xeno_user_init (void)
 	    goto out;
 	    }
 
-        xnprintf("mq_open(consumer_mq): %d\n", errno);
-        goto out;
-        }
+	xnprintf("mq_open(consumer_mq): %d\n", errno);
+	goto out;
+	}
 
     consumer_shm = mmap(NULL, 65536, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (consumer_shm == MAP_FAILED)
-        {
-        xnprintf("mmap(consumer_shm): %d\n", errno);
-        goto out;
-        }
+	{
+	xnprintf("mmap(consumer_shm): %d\n", errno);
+	goto out;
+	}
 
     evt.sigev_notify = SIGEV_SIGNAL;
     evt.sigev_signo = SIGALRM;
     evt.sigev_value.sival_ptr = &consumer_tm;
     if(timer_create(CLOCK_REALTIME, &evt, &consumer_tm))
-        {
-        xnprintf("timer_create(consumer_tm): %d\n", errno);
-        goto out;
-        }
+	{
+	xnprintf("timer_create(consumer_tm): %d\n", errno);
+	goto out;
+	}
 
     pthread_attr_setstacksize(&attr, CONSUMER_STACK_SIZE);
     parm.sched_priority = CONSUMER_TASK_PRI;
     pthread_attr_setschedparam(&attr, &parm);
     rc = pthread_create(&consumer_task, &attr, &consumer, NULL);
     if (rc)
-        {
-        xnprintf("pthread_create(consumer_task): %d\n", rc);
-        goto out;
-        }
+	{
+	xnprintf("pthread_create(consumer_task): %d\n", rc);
+	goto out;
+	}
 #endif /* CONSUMER */
 
     if (close(fd))
-        {
-        xnprintf("close: %d\n", errno);
-        rc = -errno;
+	{
+	xnprintf("close: %d\n", errno);
+	rc = -errno;
 	goto err;
-        }
+	}
 
     return 0;
 
   out:
     rc = -rc ?: -errno;
     if (close(fd))
-	    
-        xnprintf("close: %d\n", errno);
+
+	xnprintf("close: %d\n", errno);
   err:
     __xeno_user_exit();
     return rc;
@@ -391,10 +391,10 @@ int main (int ac, char *av[])
     rc = __xeno_user_init();
 
     if (rc)
-        {
-        xnprintf("__xeno_user_init: %d\n", -rc);
-        return -rc;
-        }
+	{
+	xnprintf("__xeno_user_init: %d\n", -rc);
+	return -rc;
+	}
 
     sigwait(&mask, &sig);
     __xeno_user_exit();

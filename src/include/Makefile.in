@@ -397,7 +397,6 @@ uninstall-am:
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	uninstall uninstall-am
 
-
 distclean-local:
 	rm -fr xenomai asm asm-generic
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -19,7 +19,7 @@ static int shifted_muxid;
 
 int sigtest_queue(int *retvals, size_t nr)
 {
-	return XENOMAI_SKINCALL2(shifted_muxid, 
+	return XENOMAI_SKINCALL2(shifted_muxid,
 				 __NR_sigtest_queue, retvals, nr);
 }
 
@@ -166,7 +166,7 @@ int main(void)
 	check(sigtest_queue(one_restart, ARRAY_SIZE(one_restart)), 0);
 	check(sigtest_wait_sec(), 0);
 	test_assert(seen == 1);
-	
+
 	int one_intr[] = { -EINTR, };
 	seen = 0;
 	check(sigtest_queue(one_intr, ARRAY_SIZE(one_intr)), 0);
@@ -190,13 +190,13 @@ int main(void)
 	check(sigtest_wait_sec(), 0);
 	test_assert(seen == ((1 << 16) - 1));
 
-	int middle_intr[] = { [0 ... 7] = -ERESTART, [8] = -EINTR, [9 ... 15] = -ERESTART, 
+	int middle_intr[] = { [0 ... 7] = -ERESTART, [8] = -EINTR, [9 ... 15] = -ERESTART,
 	};
 	seen = 0;
 	check(sigtest_queue(middle_intr, ARRAY_SIZE(middle_intr)), 0);
 	check(sigtest_wait_pri(), -EINTR);
 	test_assert(seen == ((1 << 16) - 1));
-	
+
 	seen = 0;
 	check(sigtest_queue(middle_intr, ARRAY_SIZE(middle_intr)), 0);
 	check(sigtest_wait_sec(), 0); /* Signal does not interrupt
@@ -209,7 +209,7 @@ int main(void)
 	check(sigtest_queue(seventeen_restart, ARRAY_SIZE(seventeen_restart)), 0);
 	check(sigtest_wait_pri(), 0);
 	test_assert(cascade_res == ~0);
-	
+
 	cascade_res = ~0;
 	check(sigtest_queue(seventeen_restart, ARRAY_SIZE(seventeen_restart)), 0);
 	check(sigtest_wait_sec(), 0);
@@ -232,7 +232,7 @@ int main(void)
 	check(sigtest_queue(seventeen_restart, ARRAY_SIZE(seventeen_restart)), 0);
 	check(sigtest_wait_pri(), 0);
 	test_assert(cascade_res == ~0);
-	
+
 	cascade_res = ~0;
 	check(sigtest_queue(seventeen_restart, ARRAY_SIZE(seventeen_restart)), 0);
 	check(sigtest_wait_sec(), 0);

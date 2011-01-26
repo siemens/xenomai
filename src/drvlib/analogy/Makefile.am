@@ -15,4 +15,3 @@ libanalogy_la_SOURCES = \
 libanalogy_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
-
