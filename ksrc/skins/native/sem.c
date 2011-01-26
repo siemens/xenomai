@@ -738,10 +738,10 @@ void __native_sem_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_sem_create);
-EXPORT_SYMBOL(rt_sem_delete);
-EXPORT_SYMBOL(rt_sem_p);
-EXPORT_SYMBOL(rt_sem_p_until);
-EXPORT_SYMBOL(rt_sem_v);
-EXPORT_SYMBOL(rt_sem_inquire);
-EXPORT_SYMBOL(rt_sem_broadcast);
+EXPORT_SYMBOL_GPL(rt_sem_create);
+EXPORT_SYMBOL_GPL(rt_sem_delete);
+EXPORT_SYMBOL_GPL(rt_sem_p);
+EXPORT_SYMBOL_GPL(rt_sem_p_until);
+EXPORT_SYMBOL_GPL(rt_sem_v);
+EXPORT_SYMBOL_GPL(rt_sem_inquire);
+EXPORT_SYMBOL_GPL(rt_sem_broadcast);

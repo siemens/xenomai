@@ -610,8 +610,8 @@ int rt_alarm_inquire(RT_ALARM *alarm, RT_ALARM_INFO *info)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_alarm_create);
-EXPORT_SYMBOL(rt_alarm_delete);
-EXPORT_SYMBOL(rt_alarm_start);
-EXPORT_SYMBOL(rt_alarm_stop);
-EXPORT_SYMBOL(rt_alarm_inquire);
+EXPORT_SYMBOL_GPL(rt_alarm_create);
+EXPORT_SYMBOL_GPL(rt_alarm_delete);
+EXPORT_SYMBOL_GPL(rt_alarm_start);
+EXPORT_SYMBOL_GPL(rt_alarm_stop);
+EXPORT_SYMBOL_GPL(rt_alarm_inquire);

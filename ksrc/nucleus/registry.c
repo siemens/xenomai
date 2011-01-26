@@ -47,7 +47,7 @@
 #endif
 
 struct xnobject *registry_obj_slots;
-EXPORT_SYMBOL(registry_obj_slots);
+EXPORT_SYMBOL_GPL(registry_obj_slots);
 
 static struct xnqueue registry_obj_freeq;	/* Free objects. */
 

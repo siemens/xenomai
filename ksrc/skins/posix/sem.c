@@ -882,13 +882,13 @@ void pse51_sem_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(pse51_sem_init);
-EXPORT_SYMBOL(sem_destroy);
-EXPORT_SYMBOL(sem_post);
-EXPORT_SYMBOL(sem_trywait);
-EXPORT_SYMBOL(sem_wait);
-EXPORT_SYMBOL(sem_timedwait);
-EXPORT_SYMBOL(sem_getvalue);
-EXPORT_SYMBOL(sem_open);
-EXPORT_SYMBOL(sem_close);
-EXPORT_SYMBOL(sem_unlink);
+EXPORT_SYMBOL_GPL(pse51_sem_init);
+EXPORT_SYMBOL_GPL(sem_destroy);
+EXPORT_SYMBOL_GPL(sem_post);
+EXPORT_SYMBOL_GPL(sem_trywait);
+EXPORT_SYMBOL_GPL(sem_wait);
+EXPORT_SYMBOL_GPL(sem_timedwait);
+EXPORT_SYMBOL_GPL(sem_getvalue);
+EXPORT_SYMBOL_GPL(sem_open);
+EXPORT_SYMBOL_GPL(sem_close);
+EXPORT_SYMBOL_GPL(sem_unlink);

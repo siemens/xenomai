@@ -177,7 +177,7 @@ int rt_timer_set_mode(RTIME nstick)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_timer_inquire);
-EXPORT_SYMBOL(rt_timer_spin);
-EXPORT_SYMBOL(rt_timer_set_mode);
-EXPORT_SYMBOL(__native_tbase);
+EXPORT_SYMBOL_GPL(rt_timer_inquire);
+EXPORT_SYMBOL_GPL(rt_timer_spin);
+EXPORT_SYMBOL_GPL(rt_timer_set_mode);
+EXPORT_SYMBOL_GPL(__native_tbase);

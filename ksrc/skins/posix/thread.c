@@ -786,13 +786,13 @@ void pse51_thread_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_create);
-EXPORT_SYMBOL(pthread_detach);
-EXPORT_SYMBOL(pthread_equal);
-EXPORT_SYMBOL(pthread_exit);
-EXPORT_SYMBOL(pthread_join);
-EXPORT_SYMBOL(pthread_self);
-EXPORT_SYMBOL(pthread_make_periodic_np);
-EXPORT_SYMBOL(pthread_wait_np);
-EXPORT_SYMBOL(pthread_set_name_np);
-EXPORT_SYMBOL(pthread_set_mode_np);
+EXPORT_SYMBOL_GPL(pthread_create);
+EXPORT_SYMBOL_GPL(pthread_detach);
+EXPORT_SYMBOL_GPL(pthread_equal);
+EXPORT_SYMBOL_GPL(pthread_exit);
+EXPORT_SYMBOL_GPL(pthread_join);
+EXPORT_SYMBOL_GPL(pthread_self);
+EXPORT_SYMBOL_GPL(pthread_make_periodic_np);
+EXPORT_SYMBOL_GPL(pthread_wait_np);
+EXPORT_SYMBOL_GPL(pthread_set_name_np);
+EXPORT_SYMBOL_GPL(pthread_set_mode_np);

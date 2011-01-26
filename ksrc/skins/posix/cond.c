@@ -640,9 +640,9 @@ void pse51_cond_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_cond_init);
-EXPORT_SYMBOL(pthread_cond_destroy);
-EXPORT_SYMBOL(pthread_cond_wait);
-EXPORT_SYMBOL(pthread_cond_timedwait);
-EXPORT_SYMBOL(pthread_cond_signal);
-EXPORT_SYMBOL(pthread_cond_broadcast);
+EXPORT_SYMBOL_GPL(pthread_cond_init);
+EXPORT_SYMBOL_GPL(pthread_cond_destroy);
+EXPORT_SYMBOL_GPL(pthread_cond_wait);
+EXPORT_SYMBOL_GPL(pthread_cond_timedwait);
+EXPORT_SYMBOL_GPL(pthread_cond_signal);
+EXPORT_SYMBOL_GPL(pthread_cond_broadcast);

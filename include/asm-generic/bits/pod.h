@@ -265,14 +265,14 @@ unsigned long long xnarch_get_host_time(void)
     return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;
 }
 
-EXPORT_SYMBOL(xnarch_get_host_time);
+EXPORT_SYMBOL_GPL(xnarch_get_host_time);
 
 unsigned long long xnarch_get_cpu_time(void)
 {
     return xnarch_tsc_to_ns(xnarch_get_cpu_tsc());
 }
 
-EXPORT_SYMBOL(xnarch_get_cpu_time);
+EXPORT_SYMBOL_GPL(xnarch_get_cpu_time);
 
 #if defined(CONFIG_SMP) || XENO_DEBUG(XNLOCK)
 void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
@@ -289,7 +289,7 @@ void __xnlock_spin(xnlock_t *lock /*, */ XNLOCK_DBG_CONTEXT_ARGS)
 					    XNLOCK_DBG_PASS_CONTEXT);
 		} while(atomic_read(&lock->owner) != ~0);
 }
-EXPORT_SYMBOL(__xnlock_spin);
+EXPORT_SYMBOL_GPL(__xnlock_spin);
 #endif /* CONFIG_SMP */
 
 #endif /* !_XENO_ASM_GENERIC_BITS_POD_H */

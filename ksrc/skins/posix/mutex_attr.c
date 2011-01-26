@@ -422,11 +422,11 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_mutexattr_init);
-EXPORT_SYMBOL(pthread_mutexattr_destroy);
-EXPORT_SYMBOL(pthread_mutexattr_gettype);
-EXPORT_SYMBOL(pthread_mutexattr_settype);
-EXPORT_SYMBOL(pthread_mutexattr_getprotocol);
-EXPORT_SYMBOL(pthread_mutexattr_setprotocol);
-EXPORT_SYMBOL(pthread_mutexattr_getpshared);
-EXPORT_SYMBOL(pthread_mutexattr_setpshared);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_init);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_destroy);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_gettype);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_settype);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_getprotocol);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_setprotocol);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_getpshared);
+EXPORT_SYMBOL_GPL(pthread_mutexattr_setpshared);

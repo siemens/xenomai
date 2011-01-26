@@ -49,7 +49,7 @@ static DECLARE_DELAYED_WORK_NODATA(close_work, close_callback);
 static LIST_HEAD(cleanup_queue);
 
 xntbase_t *rtdm_tbase;
-EXPORT_SYMBOL(rtdm_tbase);
+EXPORT_SYMBOL_GPL(rtdm_tbase);
 
 DEFINE_XNLOCK(rt_fildes_lock);
 
@@ -97,7 +97,7 @@ struct rtdm_dev_context *rtdm_context_get(int fd)
 	return context;
 }
 
-EXPORT_SYMBOL(rtdm_context_get);
+EXPORT_SYMBOL_GPL(rtdm_context_get);
 
 static int create_instance(struct rtdm_device *device,
 			   struct rtdm_dev_context **context_ptr,
@@ -314,7 +314,7 @@ err_out:
 	return ret;
 }
 
-EXPORT_SYMBOL(__rt_dev_open);
+EXPORT_SYMBOL_GPL(__rt_dev_open);
 
 int __rt_dev_socket(rtdm_user_info_t *user_info, int protocol_family,
 		    int socket_type, int protocol)
@@ -366,7 +366,7 @@ err_out:
 	return ret;
 }
 
-EXPORT_SYMBOL(__rt_dev_socket);
+EXPORT_SYMBOL_GPL(__rt_dev_socket);
 
 int __rt_dev_close(rtdm_user_info_t *user_info, int fd)
 {
@@ -446,7 +446,7 @@ err_out:
 	return ret;
 }
 
-EXPORT_SYMBOL(__rt_dev_close);
+EXPORT_SYMBOL_GPL(__rt_dev_close);
 
 void cleanup_owned_contexts(void *owner)
 {
@@ -541,7 +541,7 @@ int __rt_dev_ioctl(rtdm_user_info_t *user_info, int fd, int request, ...)
 	MAJOR_FUNCTION_WRAPPER_BH();
 }
 
-EXPORT_SYMBOL(__rt_dev_ioctl);
+EXPORT_SYMBOL_GPL(__rt_dev_ioctl);
 
 ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
 		      size_t nbyte)
@@ -551,7 +551,7 @@ ssize_t __rt_dev_read(rtdm_user_info_t *user_info, int fd, void *buf,
 	MAJOR_FUNCTION_WRAPPER(read, buf, nbyte);
 }
 
-EXPORT_SYMBOL(__rt_dev_read);
+EXPORT_SYMBOL_GPL(__rt_dev_read);
 
 ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 		       size_t nbyte)
@@ -561,7 +561,7 @@ ssize_t __rt_dev_write(rtdm_user_info_t *user_info, int fd, const void *buf,
 	MAJOR_FUNCTION_WRAPPER(write, buf, nbyte);
 }
 
-EXPORT_SYMBOL(__rt_dev_write);
+EXPORT_SYMBOL_GPL(__rt_dev_write);
 
 ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 			 struct msghdr *msg, int flags)
@@ -575,7 +575,7 @@ ssize_t __rt_dev_recvmsg(rtdm_user_info_t *user_info, int fd,
 	MAJOR_FUNCTION_WRAPPER(recvmsg, msg, flags);
 }
 
-EXPORT_SYMBOL(__rt_dev_recvmsg);
+EXPORT_SYMBOL_GPL(__rt_dev_recvmsg);
 
 ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 			 const struct msghdr *msg, int flags)
@@ -589,7 +589,7 @@ ssize_t __rt_dev_sendmsg(rtdm_user_info_t *user_info, int fd,
 	MAJOR_FUNCTION_WRAPPER(sendmsg, msg, flags);
 }
 
-EXPORT_SYMBOL(__rt_dev_sendmsg);
+EXPORT_SYMBOL_GPL(__rt_dev_sendmsg);
 
 /**
  * @brief Bind a selector to specified event types of a given file descriptor
@@ -646,7 +646,7 @@ int rtdm_select_bind(int fd, rtdm_selector_t *selector,
 	return ret;
 }
 
-EXPORT_SYMBOL(rtdm_select_bind);
+EXPORT_SYMBOL_GPL(rtdm_select_bind);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 

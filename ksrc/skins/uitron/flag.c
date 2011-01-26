@@ -429,11 +429,11 @@ unlock_and_exit:
 	return err;
 }
 
-EXPORT_SYMBOL(cre_flg);
-EXPORT_SYMBOL(del_flg);
-EXPORT_SYMBOL(set_flg);
-EXPORT_SYMBOL(clr_flg);
-EXPORT_SYMBOL(wai_flg);
-EXPORT_SYMBOL(pol_flg);
-EXPORT_SYMBOL(twai_flg);
-EXPORT_SYMBOL(ref_flg);
+EXPORT_SYMBOL_GPL(cre_flg);
+EXPORT_SYMBOL_GPL(del_flg);
+EXPORT_SYMBOL_GPL(set_flg);
+EXPORT_SYMBOL_GPL(clr_flg);
+EXPORT_SYMBOL_GPL(wai_flg);
+EXPORT_SYMBOL_GPL(pol_flg);
+EXPORT_SYMBOL_GPL(twai_flg);
+EXPORT_SYMBOL_GPL(ref_flg);

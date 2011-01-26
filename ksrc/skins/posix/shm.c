@@ -942,9 +942,9 @@ void pse51_shm_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(shm_open);
-EXPORT_SYMBOL(shm_unlink);
-EXPORT_SYMBOL(pse51_shm_close);
-EXPORT_SYMBOL(ftruncate);
-EXPORT_SYMBOL(mmap);
-EXPORT_SYMBOL(munmap);
+EXPORT_SYMBOL_GPL(shm_open);
+EXPORT_SYMBOL_GPL(shm_unlink);
+EXPORT_SYMBOL_GPL(pse51_shm_close);
+EXPORT_SYMBOL_GPL(ftruncate);
+EXPORT_SYMBOL_GPL(mmap);
+EXPORT_SYMBOL_GPL(munmap);

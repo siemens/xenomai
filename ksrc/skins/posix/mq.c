@@ -1338,12 +1338,12 @@ void pse51_mq_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(mq_open);
-EXPORT_SYMBOL(mq_getattr);
-EXPORT_SYMBOL(mq_setattr);
-EXPORT_SYMBOL(mq_send);
-EXPORT_SYMBOL(mq_timedsend);
-EXPORT_SYMBOL(mq_receive);
-EXPORT_SYMBOL(mq_timedreceive);
-EXPORT_SYMBOL(mq_close);
-EXPORT_SYMBOL(mq_unlink);
+EXPORT_SYMBOL_GPL(mq_open);
+EXPORT_SYMBOL_GPL(mq_getattr);
+EXPORT_SYMBOL_GPL(mq_setattr);
+EXPORT_SYMBOL_GPL(mq_send);
+EXPORT_SYMBOL_GPL(mq_timedsend);
+EXPORT_SYMBOL_GPL(mq_receive);
+EXPORT_SYMBOL_GPL(mq_timedreceive);
+EXPORT_SYMBOL_GPL(mq_close);
+EXPORT_SYMBOL_GPL(mq_unlink);

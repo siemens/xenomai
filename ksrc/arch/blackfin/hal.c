@@ -253,7 +253,7 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 	rthal_ktimer_saved_mode = mode;
 }
 
-EXPORT_SYMBOL(rthal_timer_notify_switch);
+EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 /*
@@ -436,12 +436,12 @@ void rthal_arch_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_arch_init);
-EXPORT_SYMBOL(rthal_arch_cleanup);
-EXPORT_SYMBOL(rthal_thread_switch);
-EXPORT_SYMBOL(rthal_thread_trampoline);
-EXPORT_SYMBOL(rthal_defer_switch_p);
+EXPORT_SYMBOL_GPL(rthal_arch_init);
+EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
+EXPORT_SYMBOL_GPL(rthal_thread_switch);
+EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
+EXPORT_SYMBOL_GPL(rthal_defer_switch_p);
 #ifndef CONFIG_SMP
-EXPORT_SYMBOL(rthal_atomic_set_mask);
-EXPORT_SYMBOL(rthal_atomic_clear_mask);
+EXPORT_SYMBOL_GPL(rthal_atomic_set_mask);
+EXPORT_SYMBOL_GPL(rthal_atomic_clear_mask);
 #endif

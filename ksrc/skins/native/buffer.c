@@ -1251,10 +1251,10 @@ void __native_buffer_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_buffer_create);
-EXPORT_SYMBOL(rt_buffer_delete);
-EXPORT_SYMBOL(rt_buffer_write);
-EXPORT_SYMBOL(rt_buffer_write_until);
-EXPORT_SYMBOL(rt_buffer_read);
-EXPORT_SYMBOL(rt_buffer_read_until);
-EXPORT_SYMBOL(rt_buffer_inquire);
+EXPORT_SYMBOL_GPL(rt_buffer_create);
+EXPORT_SYMBOL_GPL(rt_buffer_delete);
+EXPORT_SYMBOL_GPL(rt_buffer_write);
+EXPORT_SYMBOL_GPL(rt_buffer_write_until);
+EXPORT_SYMBOL_GPL(rt_buffer_read);
+EXPORT_SYMBOL_GPL(rt_buffer_read_until);
+EXPORT_SYMBOL_GPL(rt_buffer_inquire);

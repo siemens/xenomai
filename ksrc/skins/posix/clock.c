@@ -402,8 +402,8 @@ int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 
 /*@}*/
 
-EXPORT_SYMBOL(clock_getres);
-EXPORT_SYMBOL(clock_gettime);
-EXPORT_SYMBOL(clock_settime);
-EXPORT_SYMBOL(clock_nanosleep);
-EXPORT_SYMBOL(nanosleep);
+EXPORT_SYMBOL_GPL(clock_getres);
+EXPORT_SYMBOL_GPL(clock_gettime);
+EXPORT_SYMBOL_GPL(clock_settime);
+EXPORT_SYMBOL_GPL(clock_nanosleep);
+EXPORT_SYMBOL_GPL(nanosleep);

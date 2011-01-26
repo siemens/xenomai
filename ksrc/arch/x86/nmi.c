@@ -325,7 +325,7 @@ void rthal_nmi_disarm(void)
 	rthal_nmi_wds[rthal_processor_id()].flags &= ~NMI_WD_ARMED;
 }
 
-EXPORT_SYMBOL(rthal_nmi_request);
-EXPORT_SYMBOL(rthal_nmi_release);
-EXPORT_SYMBOL(rthal_nmi_arm);
-EXPORT_SYMBOL(rthal_nmi_disarm);
+EXPORT_SYMBOL_GPL(rthal_nmi_request);
+EXPORT_SYMBOL_GPL(rthal_nmi_release);
+EXPORT_SYMBOL_GPL(rthal_nmi_arm);
+EXPORT_SYMBOL_GPL(rthal_nmi_disarm);

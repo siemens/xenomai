@@ -763,9 +763,9 @@ void __native_mutex_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_mutex_create);
-EXPORT_SYMBOL(rt_mutex_delete);
-EXPORT_SYMBOL(rt_mutex_acquire);
-EXPORT_SYMBOL(rt_mutex_acquire_until);
-EXPORT_SYMBOL(rt_mutex_release);
-EXPORT_SYMBOL(rt_mutex_inquire);
+EXPORT_SYMBOL_GPL(rt_mutex_create);
+EXPORT_SYMBOL_GPL(rt_mutex_delete);
+EXPORT_SYMBOL_GPL(rt_mutex_acquire);
+EXPORT_SYMBOL_GPL(rt_mutex_acquire_until);
+EXPORT_SYMBOL_GPL(rt_mutex_release);
+EXPORT_SYMBOL_GPL(rt_mutex_inquire);

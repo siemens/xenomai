@@ -346,7 +346,7 @@ void pse51_tsd_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_key_create);
-EXPORT_SYMBOL(pthread_key_delete);
-EXPORT_SYMBOL(pthread_getspecific);
-EXPORT_SYMBOL(pthread_setspecific);
+EXPORT_SYMBOL_GPL(pthread_key_create);
+EXPORT_SYMBOL_GPL(pthread_key_delete);
+EXPORT_SYMBOL_GPL(pthread_getspecific);
+EXPORT_SYMBOL_GPL(pthread_setspecific);

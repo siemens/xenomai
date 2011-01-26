@@ -489,11 +489,11 @@ int sched_yield(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(sched_get_priority_min);
-EXPORT_SYMBOL(sched_get_priority_max);
-EXPORT_SYMBOL(sched_rr_get_interval);
-EXPORT_SYMBOL(pthread_getschedparam);
-EXPORT_SYMBOL(pthread_getschedparam_ex);
-EXPORT_SYMBOL(pthread_setschedparam);
-EXPORT_SYMBOL(pthread_setschedparam_ex);
-EXPORT_SYMBOL(sched_yield);
+EXPORT_SYMBOL_GPL(sched_get_priority_min);
+EXPORT_SYMBOL_GPL(sched_get_priority_max);
+EXPORT_SYMBOL_GPL(sched_rr_get_interval);
+EXPORT_SYMBOL_GPL(pthread_getschedparam);
+EXPORT_SYMBOL_GPL(pthread_getschedparam_ex);
+EXPORT_SYMBOL_GPL(pthread_setschedparam);
+EXPORT_SYMBOL_GPL(pthread_setschedparam_ex);
+EXPORT_SYMBOL_GPL(sched_yield);

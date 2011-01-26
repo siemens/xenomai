@@ -61,7 +61,7 @@ static unsigned long supported_cpus_arg = -1;
 module_param_named(supported_cpus, supported_cpus_arg, ulong, 0444);
 
 cpumask_t rthal_supported_cpus;
-EXPORT_SYMBOL(rthal_supported_cpus);
+EXPORT_SYMBOL_GPL(rthal_supported_cpus);
 #endif /* CONFIG_SMP */
 
 static int rthal_init_done;
@@ -789,32 +789,32 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_irq_request);
-EXPORT_SYMBOL(rthal_irq_release);
-EXPORT_SYMBOL(rthal_irq_enable);
-EXPORT_SYMBOL(rthal_irq_disable);
-EXPORT_SYMBOL(rthal_irq_end);
-EXPORT_SYMBOL(rthal_irq_host_request);
-EXPORT_SYMBOL(rthal_irq_host_release);
-EXPORT_SYMBOL(rthal_irq_affinity);
-EXPORT_SYMBOL(rthal_trap_catch);
-EXPORT_SYMBOL(rthal_timer_request);
-EXPORT_SYMBOL(rthal_timer_release);
-EXPORT_SYMBOL(rthal_timer_calibrate);
-EXPORT_SYMBOL(rthal_apc_alloc);
-EXPORT_SYMBOL(rthal_apc_free);
+EXPORT_SYMBOL_GPL(rthal_irq_request);
+EXPORT_SYMBOL_GPL(rthal_irq_release);
+EXPORT_SYMBOL_GPL(rthal_irq_enable);
+EXPORT_SYMBOL_GPL(rthal_irq_disable);
+EXPORT_SYMBOL_GPL(rthal_irq_end);
+EXPORT_SYMBOL_GPL(rthal_irq_host_request);
+EXPORT_SYMBOL_GPL(rthal_irq_host_release);
+EXPORT_SYMBOL_GPL(rthal_irq_affinity);
+EXPORT_SYMBOL_GPL(rthal_trap_catch);
+EXPORT_SYMBOL_GPL(rthal_timer_request);
+EXPORT_SYMBOL_GPL(rthal_timer_release);
+EXPORT_SYMBOL_GPL(rthal_timer_calibrate);
+EXPORT_SYMBOL_GPL(rthal_apc_alloc);
+EXPORT_SYMBOL_GPL(rthal_apc_free);
 
-EXPORT_SYMBOL(rthal_critical_enter);
-EXPORT_SYMBOL(rthal_critical_exit);
+EXPORT_SYMBOL_GPL(rthal_critical_enter);
+EXPORT_SYMBOL_GPL(rthal_critical_exit);
 
-EXPORT_SYMBOL(rthal_domain);
-EXPORT_SYMBOL(rthal_tunables);
+EXPORT_SYMBOL_GPL(rthal_domain);
+EXPORT_SYMBOL_GPL(rthal_tunables);
 
-EXPORT_SYMBOL(rthal_init);
-EXPORT_SYMBOL(rthal_exit);
-EXPORT_SYMBOL(__rthal_generic_full_divmod64);
-EXPORT_SYMBOL(rthal_apc_virq);
-EXPORT_SYMBOL(rthal_apc_pending);
+EXPORT_SYMBOL_GPL(rthal_init);
+EXPORT_SYMBOL_GPL(rthal_exit);
+EXPORT_SYMBOL_GPL(__rthal_generic_full_divmod64);
+EXPORT_SYMBOL_GPL(rthal_apc_virq);
+EXPORT_SYMBOL_GPL(rthal_apc_pending);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
 EXPORT_SYMBOL_GPL(kill_proc_info);

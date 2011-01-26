@@ -2807,7 +2807,7 @@ void rt_alarm_handler(RT_ALARM *alarm, void *cookie)
 	xnsynch_flush(&alarm->synch_base, 0);
 }
 
-EXPORT_SYMBOL(rt_alarm_handler);
+EXPORT_SYMBOL_GPL(rt_alarm_handler);
 
 /*
  * int __rt_alarm_create(RT_ALARM_PLACEHOLDER *ph,
@@ -3041,7 +3041,7 @@ int rt_intr_handler(xnintr_t *cookie)
 	return XN_ISR_HANDLED | (intr->mode & XN_ISR_NOENABLE);
 }
 
-EXPORT_SYMBOL(rt_intr_handler);
+EXPORT_SYMBOL_GPL(rt_intr_handler);
 
 /*
  * int __rt_intr_create(RT_INTR_PLACEHOLDER *ph,

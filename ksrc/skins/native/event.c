@@ -845,10 +845,10 @@ void __native_event_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_event_create);
-EXPORT_SYMBOL(rt_event_delete);
-EXPORT_SYMBOL(rt_event_signal);
-EXPORT_SYMBOL(rt_event_wait);
-EXPORT_SYMBOL(rt_event_wait_until);
-EXPORT_SYMBOL(rt_event_clear);
-EXPORT_SYMBOL(rt_event_inquire);
+EXPORT_SYMBOL_GPL(rt_event_create);
+EXPORT_SYMBOL_GPL(rt_event_delete);
+EXPORT_SYMBOL_GPL(rt_event_signal);
+EXPORT_SYMBOL_GPL(rt_event_wait);
+EXPORT_SYMBOL_GPL(rt_event_wait_until);
+EXPORT_SYMBOL_GPL(rt_event_clear);
+EXPORT_SYMBOL_GPL(rt_event_inquire);

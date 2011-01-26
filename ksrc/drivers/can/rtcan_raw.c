@@ -1047,4 +1047,4 @@ void __exit rtcan_raw_proto_unregister(void)
 }
 
 
-EXPORT_SYMBOL(rtcan_rcv);
+EXPORT_SYMBOL_GPL(rtcan_rcv);

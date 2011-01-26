@@ -105,9 +105,9 @@ int kthread_stop(struct task_struct *p)
     return ret;
 }
 
-EXPORT_SYMBOL(kthread_create);
-EXPORT_SYMBOL(kthread_should_stop);
-EXPORT_SYMBOL(kthread_stop);
+EXPORT_SYMBOL_GPL(kthread_create);
+EXPORT_SYMBOL_GPL(kthread_should_stop);
+EXPORT_SYMBOL_GPL(kthread_stop);
 
 static inline unsigned long __ffs_compat(unsigned long word)
 {

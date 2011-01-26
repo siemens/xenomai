@@ -328,6 +328,6 @@ int pthread_intr_wait_np(pthread_intr_t intr, const struct timespec *to);
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_intr_attach_np);
-EXPORT_SYMBOL(pthread_intr_detach_np);
-EXPORT_SYMBOL(pthread_intr_control_np);
+EXPORT_SYMBOL_GPL(pthread_intr_attach_np);
+EXPORT_SYMBOL_GPL(pthread_intr_detach_np);
+EXPORT_SYMBOL_GPL(pthread_intr_control_np);

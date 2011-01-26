@@ -34,10 +34,10 @@
 #include <asm/xenomai/hal.h>
 
 unsigned int rthal_maxlat_us;
-EXPORT_SYMBOL(rthal_maxlat_tsc);
+EXPORT_SYMBOL_GPL(rthal_maxlat_tsc);
 
 unsigned long rthal_maxlat_tsc;
-EXPORT_SYMBOL(rthal_maxlat_us);
+EXPORT_SYMBOL_GPL(rthal_maxlat_us);
 
 void rthal_nmi_set_maxlat(unsigned int maxlat_us)
 {

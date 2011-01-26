@@ -1179,14 +1179,14 @@ int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event, long arg)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_pipe_create);
-EXPORT_SYMBOL(rt_pipe_delete);
-EXPORT_SYMBOL(rt_pipe_receive);
-EXPORT_SYMBOL(rt_pipe_send);
-EXPORT_SYMBOL(rt_pipe_read);
-EXPORT_SYMBOL(rt_pipe_write);
-EXPORT_SYMBOL(rt_pipe_stream);
-EXPORT_SYMBOL(rt_pipe_alloc);
-EXPORT_SYMBOL(rt_pipe_free);
-EXPORT_SYMBOL(rt_pipe_flush);
-EXPORT_SYMBOL(rt_pipe_monitor);
+EXPORT_SYMBOL_GPL(rt_pipe_create);
+EXPORT_SYMBOL_GPL(rt_pipe_delete);
+EXPORT_SYMBOL_GPL(rt_pipe_receive);
+EXPORT_SYMBOL_GPL(rt_pipe_send);
+EXPORT_SYMBOL_GPL(rt_pipe_read);
+EXPORT_SYMBOL_GPL(rt_pipe_write);
+EXPORT_SYMBOL_GPL(rt_pipe_stream);
+EXPORT_SYMBOL_GPL(rt_pipe_alloc);
+EXPORT_SYMBOL_GPL(rt_pipe_free);
+EXPORT_SYMBOL_GPL(rt_pipe_flush);
+EXPORT_SYMBOL_GPL(rt_pipe_monitor);

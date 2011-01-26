@@ -217,12 +217,12 @@ void rthal_smi_init(void)
 }
 
 #ifdef CONFIG_XENO_HW_SMI_DETECT
-EXPORT_SYMBOL(rthal_smi_init);
+EXPORT_SYMBOL_GPL(rthal_smi_init);
 #endif /* CONFIG_XENO_HW_SMI_DETECT */
 
 #if defined(CONFIG_XENO_HW_SMI_DETECT) && defined(CONFIG_XENO_HW_SMI_WORKAROUND)
-EXPORT_SYMBOL(rthal_smi_disable);
-EXPORT_SYMBOL(rthal_smi_restore);
+EXPORT_SYMBOL_GPL(rthal_smi_disable);
+EXPORT_SYMBOL_GPL(rthal_smi_restore);
 #endif /* !CONFIG_XENO_HW_SMI_DETECT || !CONFIG_XENO_HW_SMI_WORKAROUND */
 
 /*

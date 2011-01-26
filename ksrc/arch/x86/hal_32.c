@@ -382,8 +382,8 @@ void rthal_arch_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_arch_init);
-EXPORT_SYMBOL(rthal_arch_cleanup);
+EXPORT_SYMBOL_GPL(rthal_arch_init);
+EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
 #ifndef CONFIG_X86_TSC
-EXPORT_SYMBOL(rthal_get_8254_tsc);
+EXPORT_SYMBOL_GPL(rthal_get_8254_tsc);
 #endif /* !CONFIG_X86_TSC */

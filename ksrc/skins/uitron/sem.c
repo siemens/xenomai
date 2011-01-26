@@ -361,10 +361,10 @@ ER ref_sem(T_RSEM *pk_rsem, ID semid)
 	return E_OK;
 }
 
-EXPORT_SYMBOL(cre_sem);
-EXPORT_SYMBOL(del_sem);
-EXPORT_SYMBOL(sig_sem);
-EXPORT_SYMBOL(wai_sem);
-EXPORT_SYMBOL(preq_sem);
-EXPORT_SYMBOL(twai_sem);
-EXPORT_SYMBOL(ref_sem);
+EXPORT_SYMBOL_GPL(cre_sem);
+EXPORT_SYMBOL_GPL(del_sem);
+EXPORT_SYMBOL_GPL(sig_sem);
+EXPORT_SYMBOL_GPL(wai_sem);
+EXPORT_SYMBOL_GPL(preq_sem);
+EXPORT_SYMBOL_GPL(twai_sem);
+EXPORT_SYMBOL_GPL(ref_sem);

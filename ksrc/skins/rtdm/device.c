@@ -59,7 +59,7 @@ static int name_hashkey_mask;
 static int proto_hashkey_mask;
 
 int rtdm_apc;
-EXPORT_SYMBOL(rtdm_apc);
+EXPORT_SYMBOL_GPL(rtdm_apc);
 
 DECLARE_MUTEX(nrt_dev_lock);
 DEFINE_XNLOCK(rt_dev_lock);
@@ -369,7 +369,7 @@ err:
 	return ret;
 }
 
-EXPORT_SYMBOL(rtdm_dev_register);
+EXPORT_SYMBOL_GPL(rtdm_dev_register);
 
 /**
  * @brief Unregisters a RTDM device
@@ -451,7 +451,7 @@ int rtdm_dev_unregister(struct rtdm_device *device, unsigned int poll_delay)
 	return 0;
 }
 
-EXPORT_SYMBOL(rtdm_dev_unregister);
+EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 /** @} */
 
 int __init rtdm_dev_init(void)

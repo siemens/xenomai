@@ -111,9 +111,9 @@ static void xnarch_init_timeconv(unsigned long long freq)
 }
 
 #ifdef __KERNEL__
-EXPORT_SYMBOL(xnarch_tsc_to_ns);
-EXPORT_SYMBOL(xnarch_ns_to_tsc);
-EXPORT_SYMBOL(xnarch_divrem_billion);
+EXPORT_SYMBOL_GPL(xnarch_tsc_to_ns);
+EXPORT_SYMBOL_GPL(xnarch_ns_to_tsc);
+EXPORT_SYMBOL_GPL(xnarch_divrem_billion);
 #endif /* __KERNEL__ */
 
 #endif /* !_XENO_ASM_GENERIC_BITS_TIMECONV_H */

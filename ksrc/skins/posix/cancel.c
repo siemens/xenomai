@@ -436,9 +436,9 @@ void pse51_cancel_cleanup_thread(pthread_t thread)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_cancel);
-EXPORT_SYMBOL(pthread_cleanup_push);
-EXPORT_SYMBOL(pthread_cleanup_pop);
-EXPORT_SYMBOL(pthread_setcancelstate);
-EXPORT_SYMBOL(pthread_setcanceltype);
-EXPORT_SYMBOL(pthread_testcancel);
+EXPORT_SYMBOL_GPL(pthread_cancel);
+EXPORT_SYMBOL_GPL(pthread_cleanup_push);
+EXPORT_SYMBOL_GPL(pthread_cleanup_pop);
+EXPORT_SYMBOL_GPL(pthread_setcancelstate);
+EXPORT_SYMBOL_GPL(pthread_setcanceltype);
+EXPORT_SYMBOL_GPL(pthread_testcancel);

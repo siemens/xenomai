@@ -297,9 +297,9 @@ int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 }
 /*@}*/
 
-EXPORT_SYMBOL(pthread_condattr_init);
-EXPORT_SYMBOL(pthread_condattr_destroy);
-EXPORT_SYMBOL(pthread_condattr_getclock);
-EXPORT_SYMBOL(pthread_condattr_setclock);
-EXPORT_SYMBOL(pthread_condattr_getpshared);
-EXPORT_SYMBOL(pthread_condattr_setpshared);
+EXPORT_SYMBOL_GPL(pthread_condattr_init);
+EXPORT_SYMBOL_GPL(pthread_condattr_destroy);
+EXPORT_SYMBOL_GPL(pthread_condattr_getclock);
+EXPORT_SYMBOL_GPL(pthread_condattr_setclock);
+EXPORT_SYMBOL_GPL(pthread_condattr_getpshared);
+EXPORT_SYMBOL_GPL(pthread_condattr_setpshared);

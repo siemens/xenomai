@@ -2466,28 +2466,28 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_task_create);
-EXPORT_SYMBOL(rt_task_start);
-EXPORT_SYMBOL(rt_task_suspend);
-EXPORT_SYMBOL(rt_task_resume);
-EXPORT_SYMBOL(rt_task_delete);
-EXPORT_SYMBOL(rt_task_yield);
-EXPORT_SYMBOL(rt_task_set_periodic);
-EXPORT_SYMBOL(rt_task_wait_period);
-EXPORT_SYMBOL(rt_task_set_priority);
-EXPORT_SYMBOL(rt_task_sleep);
-EXPORT_SYMBOL(rt_task_sleep_until);
-EXPORT_SYMBOL(rt_task_unblock);
-EXPORT_SYMBOL(rt_task_inquire);
-EXPORT_SYMBOL(rt_task_add_hook);
-EXPORT_SYMBOL(rt_task_remove_hook);
-EXPORT_SYMBOL(rt_task_catch);
-EXPORT_SYMBOL(rt_task_notify);
-EXPORT_SYMBOL(rt_task_set_mode);
-EXPORT_SYMBOL(rt_task_self);
-EXPORT_SYMBOL(rt_task_slice);
+EXPORT_SYMBOL_GPL(rt_task_create);
+EXPORT_SYMBOL_GPL(rt_task_start);
+EXPORT_SYMBOL_GPL(rt_task_suspend);
+EXPORT_SYMBOL_GPL(rt_task_resume);
+EXPORT_SYMBOL_GPL(rt_task_delete);
+EXPORT_SYMBOL_GPL(rt_task_yield);
+EXPORT_SYMBOL_GPL(rt_task_set_periodic);
+EXPORT_SYMBOL_GPL(rt_task_wait_period);
+EXPORT_SYMBOL_GPL(rt_task_set_priority);
+EXPORT_SYMBOL_GPL(rt_task_sleep);
+EXPORT_SYMBOL_GPL(rt_task_sleep_until);
+EXPORT_SYMBOL_GPL(rt_task_unblock);
+EXPORT_SYMBOL_GPL(rt_task_inquire);
+EXPORT_SYMBOL_GPL(rt_task_add_hook);
+EXPORT_SYMBOL_GPL(rt_task_remove_hook);
+EXPORT_SYMBOL_GPL(rt_task_catch);
+EXPORT_SYMBOL_GPL(rt_task_notify);
+EXPORT_SYMBOL_GPL(rt_task_set_mode);
+EXPORT_SYMBOL_GPL(rt_task_self);
+EXPORT_SYMBOL_GPL(rt_task_slice);
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
-EXPORT_SYMBOL(rt_task_send);
-EXPORT_SYMBOL(rt_task_receive);
-EXPORT_SYMBOL(rt_task_reply);
+EXPORT_SYMBOL_GPL(rt_task_send);
+EXPORT_SYMBOL_GPL(rt_task_receive);
+EXPORT_SYMBOL_GPL(rt_task_reply);
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */

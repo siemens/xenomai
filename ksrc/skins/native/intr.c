@@ -768,8 +768,8 @@ int rt_intr_inquire(RT_INTR *intr, RT_INTR_INFO *info)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_intr_create);
-EXPORT_SYMBOL(rt_intr_delete);
-EXPORT_SYMBOL(rt_intr_enable);
-EXPORT_SYMBOL(rt_intr_disable);
-EXPORT_SYMBOL(rt_intr_inquire);
+EXPORT_SYMBOL_GPL(rt_intr_create);
+EXPORT_SYMBOL_GPL(rt_intr_delete);
+EXPORT_SYMBOL_GPL(rt_intr_enable);
+EXPORT_SYMBOL_GPL(rt_intr_disable);
+EXPORT_SYMBOL_GPL(rt_intr_inquire);

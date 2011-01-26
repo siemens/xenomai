@@ -186,7 +186,7 @@ int rtdm_task_init(rtdm_task_t *task, const char *name,
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_task_init);
+EXPORT_SYMBOL_GPL(rtdm_task_init);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -398,7 +398,7 @@ int __rtdm_task_sleep(xnticks_t timeout, xntmode_t mode)
 	return xnthread_test_info(thread, XNBREAK) ? -EINTR : 0;
 }
 
-EXPORT_SYMBOL(__rtdm_task_sleep);
+EXPORT_SYMBOL_GPL(__rtdm_task_sleep);
 
 /**
  * @brief Wait on a real-time task to terminate
@@ -446,7 +446,7 @@ void rtdm_task_join_nrt(rtdm_task_t *task, unsigned int poll_delay)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_task_join_nrt);
+EXPORT_SYMBOL_GPL(rtdm_task_join_nrt);
 
 /**
  * @brief Busy-wait a specified amount of time
@@ -476,7 +476,7 @@ void rtdm_task_busy_sleep(nanosecs_rel_t delay)
 		cpu_relax();
 }
 
-EXPORT_SYMBOL(rtdm_task_busy_sleep);
+EXPORT_SYMBOL_GPL(rtdm_task_busy_sleep);
 /** @} */
 
 /*!
@@ -533,7 +533,7 @@ void rtdm_timer_destroy(rtdm_timer_t *timer)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_timer_destroy);
+EXPORT_SYMBOL_GPL(rtdm_timer_destroy);
 
 /**
  * @brief Start a timer
@@ -577,7 +577,7 @@ int rtdm_timer_start(rtdm_timer_t *timer, nanosecs_abs_t expiry,
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_timer_start);
+EXPORT_SYMBOL_GPL(rtdm_timer_start);
 
 /**
  * @brief Stop a timer
@@ -604,7 +604,7 @@ void rtdm_timer_stop(rtdm_timer_t *timer)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_timer_stop);
+EXPORT_SYMBOL_GPL(rtdm_timer_stop);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -671,7 +671,7 @@ void __rtdm_synch_flush(xnsynch_t *synch, unsigned long reason)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(__rtdm_synch_flush);
+EXPORT_SYMBOL_GPL(__rtdm_synch_flush);
 
 /*!
  * @ingroup driverapi
@@ -742,7 +742,7 @@ void rtdm_toseq_init(rtdm_toseq_t *timeout_seq, nanosecs_rel_t timeout)
 	    xntbase_get_jiffies(base) + xntbase_ns2ticks_ceil(base, timeout);
 }
 
-EXPORT_SYMBOL(rtdm_toseq_init);
+EXPORT_SYMBOL_GPL(rtdm_toseq_init);
 /** @} */
 
 /*!
@@ -784,7 +784,7 @@ void rtdm_event_init(rtdm_event_t *event, unsigned long pending)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_event_init);
+EXPORT_SYMBOL_GPL(rtdm_event_init);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -867,7 +867,7 @@ void rtdm_event_signal(rtdm_event_t *event)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_event_signal);
+EXPORT_SYMBOL_GPL(rtdm_event_signal);
 
 /**
  * @brief Wait on event occurrence
@@ -901,7 +901,7 @@ int rtdm_event_wait(rtdm_event_t *event)
 	return rtdm_event_timedwait(event, 0, NULL);
 }
 
-EXPORT_SYMBOL(rtdm_event_wait);
+EXPORT_SYMBOL_GPL(rtdm_event_wait);
 
 /**
  * @brief Wait on event occurrence with timeout
@@ -1003,7 +1003,7 @@ unlock_out:
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_event_timedwait);
+EXPORT_SYMBOL_GPL(rtdm_event_timedwait);
 
 /**
  * @brief Clear event state
@@ -1035,7 +1035,7 @@ void rtdm_event_clear(rtdm_event_t *event)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_event_clear);
+EXPORT_SYMBOL_GPL(rtdm_event_clear);
 
 #ifdef CONFIG_XENO_OPT_RTDM_SELECT
 /**
@@ -1092,7 +1092,7 @@ int rtdm_event_select_bind(rtdm_event_t *event, rtdm_selector_t *selector,
 
 	return err;
 }
-EXPORT_SYMBOL(rtdm_event_select_bind);
+EXPORT_SYMBOL_GPL(rtdm_event_select_bind);
 #endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 /** @} */
 
@@ -1133,7 +1133,7 @@ void rtdm_sem_init(rtdm_sem_t *sem, unsigned long value)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_sem_init);
+EXPORT_SYMBOL_GPL(rtdm_sem_init);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -1186,7 +1186,7 @@ int rtdm_sem_down(rtdm_sem_t *sem)
 	return rtdm_sem_timeddown(sem, 0, NULL);
 }
 
-EXPORT_SYMBOL(rtdm_sem_down);
+EXPORT_SYMBOL_GPL(rtdm_sem_down);
 
 /**
  * @brief Decrement a semaphore with timeout
@@ -1278,7 +1278,7 @@ int rtdm_sem_timeddown(rtdm_sem_t *sem, nanosecs_rel_t timeout,
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_sem_timeddown);
+EXPORT_SYMBOL_GPL(rtdm_sem_timeddown);
 
 /**
  * @brief Increment a semaphore
@@ -1317,7 +1317,7 @@ void rtdm_sem_up(rtdm_sem_t *sem)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_sem_up);
+EXPORT_SYMBOL_GPL(rtdm_sem_up);
 
 #ifdef CONFIG_XENO_OPT_RTDM_SELECT
 /**
@@ -1374,7 +1374,7 @@ int rtdm_sem_select_bind(rtdm_sem_t *sem, rtdm_selector_t *selector,
 
 	return err;
 }
-EXPORT_SYMBOL(rtdm_sem_select_bind);
+EXPORT_SYMBOL_GPL(rtdm_sem_select_bind);
 #endif /* CONFIG_XENO_OPT_RTDM_SELECT */
 /** @} */
 
@@ -1415,7 +1415,7 @@ void rtdm_mutex_init(rtdm_mutex_t *mutex)
 	xnlock_put_irqrestore(&nklock, s);
 }
 
-EXPORT_SYMBOL(rtdm_mutex_init);
+EXPORT_SYMBOL_GPL(rtdm_mutex_init);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -1484,7 +1484,7 @@ int rtdm_mutex_lock(rtdm_mutex_t *mutex)
 	return rtdm_mutex_timedlock(mutex, 0, NULL);
 }
 
-EXPORT_SYMBOL(rtdm_mutex_lock);
+EXPORT_SYMBOL_GPL(rtdm_mutex_lock);
 
 /**
  * @brief Request a mutex with timeout
@@ -1582,7 +1582,7 @@ unlock_out:
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_mutex_timedlock);
+EXPORT_SYMBOL_GPL(rtdm_mutex_timedlock);
 /** @} */
 
 /** @} Synchronisation services */
@@ -1641,7 +1641,7 @@ int rtdm_irq_request(rtdm_irq_t *irq_handle, unsigned int irq_no,
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_irq_request);
+EXPORT_SYMBOL_GPL(rtdm_irq_request);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 /**
@@ -2001,7 +2001,7 @@ int rtdm_mmap_to_user(rtdm_user_info_t *user_info,
 	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
 }
 
-EXPORT_SYMBOL(rtdm_mmap_to_user);
+EXPORT_SYMBOL_GPL(rtdm_mmap_to_user);
 
 /**
  * Map an I/O memory range into the address space of the user.
@@ -2069,7 +2069,7 @@ int rtdm_iomap_to_user(rtdm_user_info_t *user_info,
 	return rtdm_do_mmap(user_info, &mmap_data, len, prot, pptr);
 }
 
-EXPORT_SYMBOL(rtdm_iomap_to_user);
+EXPORT_SYMBOL_GPL(rtdm_iomap_to_user);
 
 /**
  * Unmap a user memory range.
@@ -2108,7 +2108,7 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 	return err;
 }
 
-EXPORT_SYMBOL(rtdm_munmap);
+EXPORT_SYMBOL_GPL(rtdm_munmap);
 #endif /* CONFIG_XENO_OPT_PERVASIVE || DOXYGEN_CPP */
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */

@@ -776,10 +776,10 @@ void __native_cond_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_cond_create);
-EXPORT_SYMBOL(rt_cond_delete);
-EXPORT_SYMBOL(rt_cond_signal);
-EXPORT_SYMBOL(rt_cond_broadcast);
-EXPORT_SYMBOL(rt_cond_wait);
-EXPORT_SYMBOL(rt_cond_wait_until);
-EXPORT_SYMBOL(rt_cond_inquire);
+EXPORT_SYMBOL_GPL(rt_cond_create);
+EXPORT_SYMBOL_GPL(rt_cond_delete);
+EXPORT_SYMBOL_GPL(rt_cond_signal);
+EXPORT_SYMBOL_GPL(rt_cond_broadcast);
+EXPORT_SYMBOL_GPL(rt_cond_wait);
+EXPORT_SYMBOL_GPL(rt_cond_wait_until);
+EXPORT_SYMBOL_GPL(rt_cond_inquire);

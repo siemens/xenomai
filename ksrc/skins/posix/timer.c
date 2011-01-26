@@ -612,8 +612,8 @@ void pse51_timer_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(timer_create);
-EXPORT_SYMBOL(timer_delete);
-EXPORT_SYMBOL(timer_settime);
-EXPORT_SYMBOL(timer_gettime);
-EXPORT_SYMBOL(timer_getoverrun);
+EXPORT_SYMBOL_GPL(timer_create);
+EXPORT_SYMBOL_GPL(timer_delete);
+EXPORT_SYMBOL_GPL(timer_settime);
+EXPORT_SYMBOL_GPL(timer_gettime);
+EXPORT_SYMBOL_GPL(timer_getoverrun);

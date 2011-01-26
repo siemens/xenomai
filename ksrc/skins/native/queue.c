@@ -1389,15 +1389,15 @@ void __native_queue_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_queue_create);
-EXPORT_SYMBOL(rt_queue_delete);
-EXPORT_SYMBOL(rt_queue_alloc);
-EXPORT_SYMBOL(rt_queue_free);
-EXPORT_SYMBOL(rt_queue_send);
-EXPORT_SYMBOL(rt_queue_write);
-EXPORT_SYMBOL(rt_queue_receive);
-EXPORT_SYMBOL(rt_queue_receive_until);
-EXPORT_SYMBOL(rt_queue_read);
-EXPORT_SYMBOL(rt_queue_read_until);
-EXPORT_SYMBOL(rt_queue_flush);
-EXPORT_SYMBOL(rt_queue_inquire);
+EXPORT_SYMBOL_GPL(rt_queue_create);
+EXPORT_SYMBOL_GPL(rt_queue_delete);
+EXPORT_SYMBOL_GPL(rt_queue_alloc);
+EXPORT_SYMBOL_GPL(rt_queue_free);
+EXPORT_SYMBOL_GPL(rt_queue_send);
+EXPORT_SYMBOL_GPL(rt_queue_write);
+EXPORT_SYMBOL_GPL(rt_queue_receive);
+EXPORT_SYMBOL_GPL(rt_queue_receive_until);
+EXPORT_SYMBOL_GPL(rt_queue_read);
+EXPORT_SYMBOL_GPL(rt_queue_read_until);
+EXPORT_SYMBOL_GPL(rt_queue_flush);
+EXPORT_SYMBOL_GPL(rt_queue_inquire);

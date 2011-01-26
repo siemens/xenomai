@@ -93,7 +93,7 @@ void rthal_nmi_disarm(void)
 	CSYNC();
 }
 
-EXPORT_SYMBOL(rthal_nmi_request);
-EXPORT_SYMBOL(rthal_nmi_release);
-EXPORT_SYMBOL(rthal_nmi_arm);
-EXPORT_SYMBOL(rthal_nmi_disarm);
+EXPORT_SYMBOL_GPL(rthal_nmi_request);
+EXPORT_SYMBOL_GPL(rthal_nmi_release);
+EXPORT_SYMBOL_GPL(rthal_nmi_arm);
+EXPORT_SYMBOL_GPL(rthal_nmi_disarm);

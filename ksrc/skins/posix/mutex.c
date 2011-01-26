@@ -669,9 +669,9 @@ void pse51_mutex_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_mutex_init);
-EXPORT_SYMBOL(pthread_mutex_destroy);
-EXPORT_SYMBOL(pthread_mutex_trylock);
-EXPORT_SYMBOL(pthread_mutex_lock);
-EXPORT_SYMBOL(pthread_mutex_timedlock);
-EXPORT_SYMBOL(pthread_mutex_unlock);
+EXPORT_SYMBOL_GPL(pthread_mutex_init);
+EXPORT_SYMBOL_GPL(pthread_mutex_destroy);
+EXPORT_SYMBOL_GPL(pthread_mutex_trylock);
+EXPORT_SYMBOL_GPL(pthread_mutex_lock);
+EXPORT_SYMBOL_GPL(pthread_mutex_timedlock);
+EXPORT_SYMBOL_GPL(pthread_mutex_unlock);

@@ -67,4 +67,4 @@ int pthread_once(pthread_once_t * once, void (*init_routine) (void))
 
 /*@}*/
 
-EXPORT_SYMBOL(pthread_once);
+EXPORT_SYMBOL_GPL(pthread_once);

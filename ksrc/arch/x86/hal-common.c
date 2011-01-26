@@ -353,7 +353,7 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 	rthal_ktimer_saved_mode = mode;
 }
 
-EXPORT_SYMBOL(rthal_timer_notify_switch);
+EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 #endif /* CONFIG_GENERIC_CLOCKEVENTS */
 

@@ -888,8 +888,8 @@ void __native_heap_pkg_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rt_heap_create);
-EXPORT_SYMBOL(rt_heap_delete);
-EXPORT_SYMBOL(rt_heap_alloc);
-EXPORT_SYMBOL(rt_heap_free);
-EXPORT_SYMBOL(rt_heap_inquire);
+EXPORT_SYMBOL_GPL(rt_heap_create);
+EXPORT_SYMBOL_GPL(rt_heap_delete);
+EXPORT_SYMBOL_GPL(rt_heap_alloc);
+EXPORT_SYMBOL_GPL(rt_heap_free);
+EXPORT_SYMBOL_GPL(rt_heap_inquire);

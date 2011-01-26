@@ -50,7 +50,7 @@
 #include <stdarg.h>
 
 rthal_u32frac_t rthal_tsc_to_timer;
-EXPORT_SYMBOL(rthal_tsc_to_timer);
+EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
 #define RTHAL_CALIBRATE_LOOPS 10
 
@@ -294,7 +294,7 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-EXPORT_SYMBOL(rthal_timer_notify_switch);
+EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
 
 #else /* !CONFIG_GENERIC_CLOCKEVENTS */
 
@@ -473,13 +473,13 @@ void rthal_arch_cleanup(void)
 
 /*@}*/
 
-EXPORT_SYMBOL(rthal_arch_init);
-EXPORT_SYMBOL(rthal_arch_cleanup);
-EXPORT_SYMBOL(rthal_thread_switch);
-EXPORT_SYMBOL(rthal_thread_trampoline);
-EXPORT_SYMBOL(__rthal_arm_fault_range);
+EXPORT_SYMBOL_GPL(rthal_arch_init);
+EXPORT_SYMBOL_GPL(rthal_arch_cleanup);
+EXPORT_SYMBOL_GPL(rthal_thread_switch);
+EXPORT_SYMBOL_GPL(rthal_thread_trampoline);
+EXPORT_SYMBOL_GPL(__rthal_arm_fault_range);
 #if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
-EXPORT_SYMBOL(last_VFP_context);
-EXPORT_SYMBOL(rthal_vfp_save);
-EXPORT_SYMBOL(rthal_vfp_load);
+EXPORT_SYMBOL_GPL(last_VFP_context);
+EXPORT_SYMBOL_GPL(rthal_vfp_save);
+EXPORT_SYMBOL_GPL(rthal_vfp_load);
 #endif /* CONFIG_VFP && CONFIG_XENO_HW_FPU */

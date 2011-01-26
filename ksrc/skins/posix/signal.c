@@ -1226,17 +1226,17 @@ static void pse51_default_handler(int sig)
 
 /*@}*/
 
-EXPORT_SYMBOL(sigemptyset);
-EXPORT_SYMBOL(sigfillset);
-EXPORT_SYMBOL(sigaddset);
-EXPORT_SYMBOL(sigdelset);
-EXPORT_SYMBOL(sigismember);
-EXPORT_SYMBOL(pthread_kill);
-EXPORT_SYMBOL(pthread_sigmask);
-EXPORT_SYMBOL(pthread_sigqueue_np);
-EXPORT_SYMBOL(pse51_sigaction);
+EXPORT_SYMBOL_GPL(sigemptyset);
+EXPORT_SYMBOL_GPL(sigfillset);
+EXPORT_SYMBOL_GPL(sigaddset);
+EXPORT_SYMBOL_GPL(sigdelset);
+EXPORT_SYMBOL_GPL(sigismember);
+EXPORT_SYMBOL_GPL(pthread_kill);
+EXPORT_SYMBOL_GPL(pthread_sigmask);
+EXPORT_SYMBOL_GPL(pthread_sigqueue_np);
+EXPORT_SYMBOL_GPL(pse51_sigaction);
 
-EXPORT_SYMBOL(sigpending);
-EXPORT_SYMBOL(sigwait);
-EXPORT_SYMBOL(sigwaitinfo);
-EXPORT_SYMBOL(sigtimedwait);
+EXPORT_SYMBOL_GPL(sigpending);
+EXPORT_SYMBOL_GPL(sigwait);
+EXPORT_SYMBOL_GPL(sigwaitinfo);
+EXPORT_SYMBOL_GPL(sigtimedwait);
