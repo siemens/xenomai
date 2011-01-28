@@ -199,9 +199,10 @@ int main(int argc, char *argv[])
 	int err = 0;
 	struct config cfg;
 	double *values = NULL;
-
 	
 	err = init_config(&cfg, argc, argv);
+	if (err < 0)
+		goto out;
 
 	err = a4l_wf_check_config(&cfg.wf);
 	if (err < 0)
