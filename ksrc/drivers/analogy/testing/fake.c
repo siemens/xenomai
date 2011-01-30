@@ -42,8 +42,11 @@ struct ai_priv {
 };
 
 struct ao_ai2_priv {
+	/* Asynchronous loop stuff */
 	uint8_t buffer[TRANSFER_SIZE];
 	int count;
+	/* Synchronous loop stuff */
+	uint16_t insn_value;
 };
 
 struct dio_priv {
@@ -388,6 +391,38 @@ static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	return 0;
 }
 
+/* --- Synchronous AO + AI2 functions --- */
+
+int ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
+{
+	struct ao_ai2_priv *priv = (struct ao_ai2_priv *)subd->priv;
+	uint16_t *data = (uint16_t *)insn->data;	
+
+	/* Checks the buffer size */
+	if (insn->data_size != sizeof(uint16_t))
+		return -EINVAL;
+
+	/* Retrieves the value to memorize */
+	priv->insn_value = data[0];
+	
+	return 0;
+}
+
+int ai2_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
+{
+	struct ao_ai2_priv *priv = *((struct ao_ai2_priv **)subd->priv);
+	uint16_t *data = (uint16_t *)insn->data;
+
+	/* Checks the buffer size */
+	if (insn->data_size != sizeof(uint16_t))
+		return -EINVAL;
+	
+	/* Sets the memorized value */
+	data[0] = priv->insn_value;
+	
+	return 0;
+}
+
 /* --- Initialization functions --- */
 
 void setup_ai_subd(a4l_subd_t *subd)
@@ -427,6 +462,7 @@ void setup_ao_subd(a4l_subd_t *subd)
 	subd->cancel = ao_cancel;
 	subd->trigger = ao_trigger;
 	subd->cmd_mask = &ao_cmd_mask;
+	subd->insn_write = ao_insn_write;
 }
 
 void setup_ai2_subd(a4l_subd_t *subd)
@@ -440,6 +476,7 @@ void setup_ai2_subd(a4l_subd_t *subd)
 	subd->do_cmd = ai2_cmd;
 	subd->cancel = ai2_cancel;
 	subd->cmd_mask = &ai_cmd_mask;
+	subd->insn_read = ai2_insn_read;
 }
 
 /* --- Attach / detach functions ---  */
