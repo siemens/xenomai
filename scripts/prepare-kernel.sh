@@ -369,6 +369,9 @@ else
       default_adeos_patch="`( ls $xenomai_root/ksrc/arch/$xenomai_arch/patches/adeos-ipipe-$linux_version*-{$linux_arch,$xenomai_arch}-*|sort -r ) 2>/dev/null | head -n1`"
    fi
    if test x$default_adeos_patch = x; then
+      if test x$verbose = x1; then
+         echo "$me: no default Adeos patch found." >&2
+      fi
       default_adeos_patch=/dev/null
    fi
    while test x$adeos_patch = x; do
@@ -379,7 +382,7 @@ else
       if test x$adeos_patch = x; then
          adeos_patch=$default_adeos_patch
       fi
-      if test \! -r "$adeos_patch"; then
+      if test \! -r "$adeos_patch" -o x$adeos_patch = x/dev/null; then
          echo "$me: cannot read Adeos patch from $adeos_patch" >&2
          usedefault=
          adeos_patch=
@@ -408,6 +411,10 @@ else
    asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -n1`
 fi
 
+if test -z "$asm_ipipe_h"; then
+   echo "$me: $linux_tree has no Adeos support for $linux_arch" >&2
+   exit 2
+fi
 adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $asm_ipipe_h 2>/dev/null|head -n1|sed -e 's,.*"\(.*\)"$,\1,'`
 
 if test \! "x$adeos_version" = x; then
