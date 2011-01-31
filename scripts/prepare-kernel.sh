@@ -411,6 +411,10 @@ else
    asm_ipipe_h=`ls $linux_tree/include/asm-{$linux_arch,$xenomai_arch}/ipipe.h 2>/dev/null|head -n1`
 fi
 
+if test -z "$asm_ipipe_h"; then
+   echo "$me: $linux_tree has no Adeos support for $linux_arch" >&2
+   exit 2
+fi
 adeos_version=`grep '^#define.*IPIPE_ARCH_STRING.*"' $asm_ipipe_h 2>/dev/null|head -n1|sed -e 's,.*"\(.*\)"$,\1,'`
 
 if test \! "x$adeos_version" = x; then
