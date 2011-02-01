@@ -184,7 +184,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..2d508ff
+index 0000000..6e22ee5
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,157 @@
@@ -215,10 +215,10 @@ index 0000000..2d508ff
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.8-03"
++#define IPIPE_ARCH_STRING	"2.8-04"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	8
-+#define IPIPE_PATCH_NUMBER	3
++#define IPIPE_PATCH_NUMBER	4
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -453,10 +453,10 @@ index 0000000..08bc268
 +#endif	/* !__X86_IPIPE_32_H */
 diff --git a/arch/x86/include/asm/ipipe_64.h b/arch/x86/include/asm/ipipe_64.h
 new file mode 100644
-index 0000000..a69fbb4
+index 0000000..dbf01aa
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_64.h
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,108 @@
 +/*   -*- linux-c -*-
 + *   arch/x86/include/asm/ipipe_64.h
 + *
@@ -483,6 +483,7 @@ index 0000000..a69fbb4
 +
 +#include <asm/ptrace.h>
 +#include <asm/irq.h>
++#include <asm/processor.h>
 +#include <linux/cpumask.h>
 +#include <linux/list.h>
 +#include <linux/ipipe_percpu.h>
@@ -558,6 +559,10 @@ index 0000000..a69fbb4
 +
 +#define __ipipe_do_root_xirq(ipd, irq)			\
 +	__do_root_xirq((ipd)->irqs[irq].handler, irq)
++
++#define __ipipe_check_root_resched()			\
++	(preempt_count() == 0 && need_resched() &&	\
++	 per_cpu(irq_count, ipipe_processor_id()) < 0)
 +
 +#endif	/* !__X86_IPIPE_64_H */
 diff --git a/arch/x86/include/asm/ipipe_base.h b/arch/x86/include/asm/ipipe_base.h
@@ -4752,7 +4757,7 @@ index d5b3876..92b7abe 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..854f132
+index 0000000..edb061e
 --- /dev/null
 +++ b/include/linux/ipipe.h
 @@ -0,0 +1,780 @@
@@ -5028,9 +5033,9 @@ index 0000000..854f132
 +	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
 +#endif
 +
-+#ifndef __ipipe_do_root_virq
-+#define __ipipe_do_root_virq(ipd, irq)			\
-+	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
++#ifndef __ipipe_check_root_resched
++#define __ipipe_check_root_resched()			\
++	(preempt_count() == 0 && need_resched())
 +#endif
 +
 +#ifndef __ipipe_run_irqtail
@@ -6959,7 +6964,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..0350ebb
+index 0000000..1748255
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,2200 @@
@@ -8153,6 +8158,12 @@ index 0000000..0350ebb
 +	__ipipe_walk_pipeline(&head->p_link);
 +}
 +
++#ifdef CONFIG_TRACE_IRQFLAGS
++#define root_stall_after_handler()	local_irq_disable()
++#else
++#define root_stall_after_handler()	do { } while (0)
++#endif
++
 +#ifdef CONFIG_PREEMPT
 +
 +asmlinkage void preempt_schedule_irq(void);
@@ -8190,12 +8201,6 @@ index 0000000..0350ebb
 +#define __ipipe_preempt_schedule_irq()	do { } while (0)
 +
 +#endif	/* !CONFIG_PREEMPT */
-+
-+#ifdef CONFIG_TRACE_IRQFLAGS
-+#define root_stall_after_handler()	local_irq_disable()
-+#else
-+#define root_stall_after_handler()	do { } while (0)
-+#endif
 +
 +/*
 + * __ipipe_sync_stage() -- Flush the pending IRQs for the current
@@ -8243,21 +8248,21 @@ index 0000000..0350ebb
 +		if (likely(ipd != ipipe_root_domain)) {
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			__ipipe_run_irqtail(irq);
++			local_irq_disable_hw();
 +		} else if (ipipe_virtual_irq_p(irq)) {
 +			irq_enter();
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			irq_exit();
++			local_irq_disable_hw();
 +			root_stall_after_handler();
-+			if (unlikely(preempt_count() == 0 && need_resched())) {
-+				local_irq_disable_hw();
++			while (__ipipe_check_root_resched())
 +				__ipipe_preempt_schedule_irq();
-+			}
 +		} else {
 +			__ipipe_do_root_xirq(ipd, irq);
++			local_irq_disable_hw();
 +			root_stall_after_handler();
 +		}
 +
-+		local_irq_disable_hw();
 +		p = ipipe_cpudom_ptr(__ipipe_current_domain);
 +	}
 +
