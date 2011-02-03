@@ -610,4 +610,34 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define init_MUTEX(sem)	   sema_init((sem), 1)
 #endif
 
+#ifdef CONFIG_GENERIC_HARDIRQS
+/*
+ * The irq chip descriptor has been heavily revamped in
+ * 2.6.37. Provide generic accessors to the chip handlers we need for
+ * kernels implementing those changes.
+ */
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		struct irq_desc *desc = rthal_irq_descp(irq);		\
+		struct irq_chip *chip = desc->chip;			\
+		int __ret__ = 0;					\
+		if (unlikely(chip->irq_unmask == NULL))			\
+			__ret__ = -ENODEV;				\
+		else							\
+			chip->irq_unmask(&desc->irq_data);		\
+		__ret__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		struct irq_desc *desc = rthal_irq_descp(irq);		\
+		struct irq_chip *chip = desc->chip;			\
+		int __ret__ = 0;					\
+		if (unlikely(chip->irq_mask == NULL))			\
+			__ret__ = -ENODEV;				\
+		else							\
+			chip->irq_mask(&desc->irq_data);		\
+		__ret__;						\
+	})
+#endif
+
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */
