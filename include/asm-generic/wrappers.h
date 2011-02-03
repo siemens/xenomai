@@ -607,6 +607,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #ifndef DECLARE_MUTEX
 /* Legacy DECLARE_MUTEX vanished in 2.6.37 */
 #define DECLARE_MUTEX(sem) DEFINE_SEMAPHORE(sem)
+#define init_MUTEX(sem)	   sema_init((sem), 1)
 #endif
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

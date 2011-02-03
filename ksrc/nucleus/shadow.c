@@ -100,7 +100,7 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
 
-static DECLARE_MUTEX(completion_mutex);
+static DEFINE_SEMAPHORE(completion_mutex);
 
 static inline struct task_struct *get_switch_lock_owner(void)
 {
