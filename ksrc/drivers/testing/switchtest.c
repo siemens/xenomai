@@ -513,7 +513,7 @@ static int rtswitch_open(struct rtdm_dev_context *context,
 
 	ctx->tasks = NULL;
 	ctx->tasks_count = ctx->next_index = ctx->cpu = ctx->switches_count = 0;
-	init_MUTEX(&ctx->lock);
+	sema_init(&ctx->lock, 1);
 	ctx->failed = 0;
 	ctx->error.last_switch.from = ctx->error.last_switch.to = -1;
 	ctx->pause_us = 0;

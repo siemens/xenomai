@@ -171,7 +171,7 @@ struct rtcan_device *rtcan_dev_alloc(int sizeof_priv, int sizeof_board_priv)
 
     memset(dev, 0, alloc_size);
 
-    init_MUTEX(&dev->nrt_lock);
+    sema_init(&dev->nrt_lock, 1);
 
     rtdm_lock_init(&dev->device_lock);
 
