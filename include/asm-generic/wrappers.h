@@ -609,7 +609,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
 #endif
 
-#ifdef CONFIG_GENERIC_HARDIRQS
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
 /*
  * The irq chip descriptor has been heavily revamped in
  * 2.6.37. Provide generic accessors to the chip handlers we need for

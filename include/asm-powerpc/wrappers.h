@@ -166,7 +166,8 @@ typedef irq_handler_t rthal_irq_host_handler_t;
 		__err__;							\
 	})
 #else /* > 2.6.19 */
-#ifndef CONFIG_GENERIC_HARDIRQS
+#if !defined(CONFIG_GENERIC_HARDIRQS) \
+	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)					\
 	({								\
 		int __err__ = 0;					\

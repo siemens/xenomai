@@ -90,7 +90,7 @@ typedef phys_addr_t resource_size_t;
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
+		:"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define wrap_test_fpu_used(task)  \
@@ -182,7 +182,8 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 
 #define rthal_irq_chip_end(irq)	rthal_irq_chip_enable(irq)
 #else /* >= 2.6.19 */
-#ifndef CONFIG_GENERIC_HARDIRQS
+#if !defined(CONFIG_GENERIC_HARDIRQS) \
+	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
 #endif
