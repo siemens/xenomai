@@ -604,10 +604,9 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define unlocked_ioctl ioctl
 #endif
 
-#ifndef DECLARE_MUTEX
+#ifndef DEFINE_SEMAPHORE
 /* Legacy DECLARE_MUTEX vanished in 2.6.37 */
-#define DECLARE_MUTEX(sem) DEFINE_SEMAPHORE(sem)
-#define init_MUTEX(sem)	   sema_init((sem), 1)
+#define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
 #endif
 
 #ifdef CONFIG_GENERIC_HARDIRQS

@@ -36,9 +36,9 @@
 static struct rtcan_device *rtcan_devices[RTCAN_MAX_DEVICES];
 static rtdm_lock_t rtcan_devices_rt_lock = RTDM_LOCK_UNLOCKED;
 
-static int rtcan_global_init_done; 
+static int rtcan_global_init_done;
 
-DECLARE_MUTEX(rtcan_devices_nrt_lock);
+DEFINE_SEMAPHORE(rtcan_devices_nrt_lock);
 
 /* Spinlock for all reception lists and also for some members in
  * struct rtcan_socket */
@@ -67,9 +67,9 @@ static inline struct rtcan_device *__rtcan_dev_get_by_name(const char *name)
 
 
     for (i = 0; i < RTCAN_MAX_DEVICES; i++) {
-        dev = rtcan_devices[i];
-        if ((dev != NULL) && (strncmp(dev->name, name, IFNAMSIZ) == 0))
-            return dev;
+	dev = rtcan_devices[i];
+	if ((dev != NULL) && (strncmp(dev->name, name, IFNAMSIZ) == 0))
+	    return dev;
     }
     return NULL;
 }
@@ -91,7 +91,7 @@ struct rtcan_device *rtcan_dev_get_by_name(const char *name)
 
 #ifdef RTCAN_USE_REFCOUNT
     if (dev != NULL)
-        atomic_inc(&dev->refcount);
+	atomic_inc(&dev->refcount);
     rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
 #endif
 
@@ -114,7 +114,7 @@ struct rtcan_device *rtcan_dev_get_by_index(int ifindex)
 
 
     if ((ifindex <= 0) || (ifindex > RTCAN_MAX_DEVICES))
-        return NULL;
+	return NULL;
 
 #ifdef RTCAN_USE_REFCOUNT
     rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
@@ -124,7 +124,7 @@ struct rtcan_device *rtcan_dev_get_by_index(int ifindex)
 
 #ifdef RTCAN_USE_REFCOUNT
     if (dev != NULL)
-        atomic_inc(&dev->refcount);
+	atomic_inc(&dev->refcount);
     rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
 #endif
 
@@ -140,14 +140,14 @@ void rtcan_dev_alloc_name(struct rtcan_device *dev, const char *mask)
 
 
     for (i = 0; i < RTCAN_MAX_DEVICES; i++) {
-        snprintf(buf, IFNAMSIZ, mask, i);
-        if ((tmp = rtcan_dev_get_by_name(buf)) == NULL) {
-            strncpy(dev->name, buf, IFNAMSIZ);
-            break;
-        }
+	snprintf(buf, IFNAMSIZ, mask, i);
+	if ((tmp = rtcan_dev_get_by_name(buf)) == NULL) {
+	    strncpy(dev->name, buf, IFNAMSIZ);
+	    break;
+	}
 #ifdef RTCAN_USE_REFCOUNT
-        else
-            rtcan_dev_dereference(tmp);
+	else
+	    rtcan_dev_dereference(tmp);
 #endif
     }
 }
@@ -165,8 +165,8 @@ struct rtcan_device *rtcan_dev_alloc(int sizeof_priv, int sizeof_board_priv)
 
     dev = (struct rtcan_device *)kmalloc(alloc_size, GFP_KERNEL);
     if (dev == NULL) {
-        printk(KERN_ERR "rtcan: cannot allocate rtcan device\n");
-        return NULL;
+	printk(KERN_ERR "rtcan: cannot allocate rtcan device\n");
+	return NULL;
     }
 
     memset(dev, 0, alloc_size);
@@ -200,8 +200,8 @@ struct rtcan_device *rtcan_dev_alloc(int sizeof_priv, int sizeof_board_priv)
 void rtcan_dev_free (struct rtcan_device *dev)
 {
     if (dev != NULL) {
-        rtdm_sem_destroy(&dev->tx_sem);
-        kfree(dev);
+	rtdm_sem_destroy(&dev->tx_sem);
+	kfree(dev);
     }
 }
 
@@ -212,8 +212,8 @@ static inline int __rtcan_dev_new_index(void)
 
 
     for (i = 0; i < RTCAN_MAX_DEVICES; i++)
-        if (rtcan_devices[i] == NULL)
-             return i+1;
+	if (rtcan_devices[i] == NULL)
+	     return i+1;
 
     return -ENOMEM;
 }
@@ -229,17 +229,17 @@ int rtcan_dev_register(struct rtcan_device *dev)
     rtcan_global_init();
 
     if ((ret = __rtcan_dev_new_index()) < 0) {
-        up(&rtcan_devices_nrt_lock);
-        return ret;	
+	up(&rtcan_devices_nrt_lock);
+	return ret;
     }
     dev->ifindex = ret;
 
     if (strchr(dev->name,'%') != NULL)
-        rtcan_dev_alloc_name(dev, dev->name);
+	rtcan_dev_alloc_name(dev, dev->name);
 
     if (__rtcan_dev_get_by_name(dev->name) != NULL) {
-        up(&rtcan_devices_nrt_lock);
-        return -EEXIST;
+	up(&rtcan_devices_nrt_lock);
+	return -EEXIST;
     }
 
     rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
@@ -263,12 +263,12 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
 
 
     RTCAN_ASSERT(dev->ifindex != 0,
-		 printk("RTCAN: device %s/%p was not registered\n", 
+		 printk("RTCAN: device %s/%p was not registered\n",
 			dev->name, dev); return -ENODEV;);
 
     /* If device is running, close it first. */
     if (CAN_STATE_OPERATING(dev->state))
-        return -EBUSY;
+	return -EBUSY;
 
     down(&rtcan_devices_nrt_lock);
 
@@ -278,16 +278,16 @@ int rtcan_dev_unregister(struct rtcan_device *dev)
 
 #ifdef RTCAN_USE_REFCOUNT
     while (atomic_read(&dev->refcount) > 0) {
-        rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
-        up(&rtcan_devices_nrt_lock);
+	rtdm_lock_put_irqrestore(&rtcan_devices_rt_lock, context);
+	up(&rtcan_devices_nrt_lock);
 
-        RTCAN_DBG("RTCAN: unregistering %s deferred (refcount = %d)\n",
+	RTCAN_DBG("RTCAN: unregistering %s deferred (refcount = %d)\n",
 		  dev->name, atomic_read(&dev->refcount));
-        set_current_state(TASK_UNINTERRUPTIBLE);
-        schedule_timeout(1*HZ); /* wait a second */
+	set_current_state(TASK_UNINTERRUPTIBLE);
+	schedule_timeout(1*HZ); /* wait a second */
 
-        down(&rtcan_devices_nrt_lock);
-        rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
+	down(&rtcan_devices_nrt_lock);
+	rtdm_lock_get_irqsave(&rtcan_devices_rt_lock, context);
     }
 #endif
     rtcan_devices[dev->ifindex - 1] = NULL;

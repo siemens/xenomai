@@ -61,7 +61,7 @@ static int proto_hashkey_mask;
 int rtdm_apc;
 EXPORT_SYMBOL(rtdm_apc);
 
-DECLARE_MUTEX(nrt_dev_lock);
+DEFINE_SEMAPHORE(nrt_dev_lock);
 DEFINE_XNLOCK(rt_dev_lock);
 
 #ifndef MODULE

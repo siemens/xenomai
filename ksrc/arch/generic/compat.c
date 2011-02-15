@@ -20,7 +20,7 @@ struct kthread_stop_block {
     int ret;
 };
 
-static DECLARE_MUTEX(kthread_stop_sem);
+static DEFINE_SEMAPHORE(kthread_stop_sem);
 
 static struct kthread_stop_block kthread_stop_info;
 
