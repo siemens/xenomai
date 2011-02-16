@@ -76,7 +76,7 @@ int dump_text(a4l_desc_t *dsc, unsigned char *buf, int size)
 {
 	int err = 0, width, tmp_size = 0;
 	char *fmt;
-	a4l_chinfo_t *chan;	
+	a4l_chinfo_t *chan;
 
 	/* Retrieve the subdevice data size */
 	err = a4l_get_chinfo(dsc, idx_subd, idx_chan, &chan);
@@ -112,7 +112,7 @@ int dump_text(a4l_desc_t *dsc, unsigned char *buf, int size)
 
 	while (size - tmp_size > 0) {
 		unsigned long values[64];
-		int i, tmp_cnt = ((size - tmp_size) / width > 64) ? 
+		int i, tmp_cnt = ((size - tmp_size) / width > 64) ?
 			64 : ((size - tmp_size) / width);
 
 		err = a4l_rawtoul(chan, values, buf + tmp_size, tmp_cnt);
@@ -122,7 +122,7 @@ int dump_text(a4l_desc_t *dsc, unsigned char *buf, int size)
 		for (i = 0; i < tmp_cnt; i++) {
 			fprintf(stdout, fmt, values[i]);
 		}
-		
+
 		tmp_size += tmp_cnt * width;
 	}
 
@@ -165,7 +165,7 @@ int dump_converted(a4l_desc_t *dsc, unsigned char *buf, int size)
 
 	while (size - tmp_size > 0) {
 		double values[64];
-		int i, tmp_cnt = ((size - tmp_size) / width > 64) ? 
+		int i, tmp_cnt = ((size - tmp_size) / width > 64) ?
 			64 : ((size - tmp_size) / width);
 
 		err = a4l_rawtod(chan, rng, values, buf + tmp_size, tmp_cnt);
@@ -175,7 +175,7 @@ int dump_converted(a4l_desc_t *dsc, unsigned char *buf, int size)
 		for (i = 0; i < tmp_cnt; i++) {
 			fprintf(stdout, "%F\n", values[i]);
 		}
-		
+
 		tmp_size += tmp_cnt * width;
 	}
 
@@ -230,15 +230,15 @@ int main(int argc, char *argv[])
 	}
 
 	if (isatty(STDOUT_FILENO) && dump_function == dump_raw) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_read: cannot dump raw data on a terminal\n\n");
 		return -EINVAL;
 	}
-	
+
 	/* Open the device */
 	err = a4l_open(&dsc, filename);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_read: a4l_open %s failed (err=%d)\n",
 			filename, err);
 		return err;
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 		idx_subd = dsc.idx_read_subd;
 
 	if (idx_subd == -1) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_read: no analog input subdevice available\n");
 		err = -EINVAL;
 		goto  out_insn_read;
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 	   (in case, the subdevice index was set with the option -s) */
 	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_read: get_sbinfo(%d) failed (err = %d)\n",
 			idx_subd, err);
 		err = -EINVAL;
@@ -299,16 +299,16 @@ int main(int argc, char *argv[])
 	}
 
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_AI) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_read: wrong subdevice selected "
 			"(not an analog input)\n");
 		err = -EINVAL;
-		goto out_insn_read;		
+		goto out_insn_read;
 	}
 
 	if (idx_rng >= 0) {
 
-		err = a4l_get_rnginfo(&dsc, 
+		err = a4l_get_rnginfo(&dsc,
 				      idx_subd, idx_chan, idx_rng, &rnginfo);
 		if (err < 0) {
 			fprintf(stderr,
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
 				    idx_subd, CHAN(idx_chan), 0, buf, tmp);
 
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"insn_read: a4l_sync_read failed (err=%d)\n",
 				err);
 			goto out_insn_read;

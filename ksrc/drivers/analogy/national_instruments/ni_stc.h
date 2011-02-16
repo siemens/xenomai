@@ -329,7 +329,7 @@ static inline unsigned int RTSI_Output_Bit(unsigned channel, int is_mseries)
 	}
 	if(channel > max_channel)
 	{
-		rtdm_printk("%s: bug, invalid RTSI_channel=%i\n", 
+		rtdm_printk("%s: bug, invalid RTSI_channel=%i\n",
 			    __FUNCTION__, channel);
 		return 0;
 	}
@@ -500,7 +500,7 @@ static inline unsigned int RTSI_Output_Bit(unsigned channel, int is_mseries)
 #define AO_FIFO_Flags_Polarity			_bit11 /* M Series: reserved */
 #define AO_TMRDACWR_Pulse_Width			_bit12
 #define AO_Fast_CPU				_bit13 /* M Series: reserved */
-#define AO_Number_Of_DAC_Packages		_bit14 /* 1 for "single" mode, 
+#define AO_Number_Of_DAC_Packages		_bit14 /* 1 for "single" mode,
 							  0 for "dual" */
 #define AO_Multiple_DACS_Per_Package		_bit15 /* M Series only */
 
@@ -839,28 +839,28 @@ static inline unsigned int DACx_Direct_Data_671x(int channel)
 */
 
 enum
-{ 
-	ai_gain_16 = 0, 
-	ai_gain_8, 
-	ai_gain_14, 
-	ai_gain_4, 
-	ai_gain_611x, 
-	ai_gain_622x, 
-	ai_gain_628x,  
+{
+	ai_gain_16 = 0,
+	ai_gain_8,
+	ai_gain_14,
+	ai_gain_4,
+	ai_gain_611x,
+	ai_gain_622x,
+	ai_gain_628x,
 	ai_gain_6143
 };
-enum caldac_enum 
-{ 
-	caldac_none=0, 
-	mb88341, 
-	dac8800, 
-	dac8043, 
+enum caldac_enum
+{
+	caldac_none=0,
+	mb88341,
+	dac8800,
+	dac8043,
 	ad8522,
-	ad8804, 
-	ad8842, 
-	ad8804_debug 
+	ad8804,
+	ad8842,
+	ad8804_debug
 };
-enum ni_reg_type 
+enum ni_reg_type
 {
 	ni_reg_normal = 0x0,
 	ni_reg_611x = 0x1,
@@ -1075,8 +1075,8 @@ static inline unsigned M_Offset_PFI_Output_Select(unsigned n)
 #define MSeries_AI_Config_Channel_Bits(x) 			(x & 0xf)
 #define MSeries_AI_Config_Gain_Bits(x)				((x & 0x7) << 9)
 
-static inline 
-unsigned int MSeries_AI_Config_Bank_Bits(unsigned int reg_type, 
+static inline
+unsigned int MSeries_AI_Config_Bank_Bits(unsigned int reg_type,
 					 unsigned int channel)
 {
 	unsigned int bits = channel & 0x30;
@@ -1099,7 +1099,7 @@ unsigned int MSeries_AI_Config_Bank_Bits(unsigned int reg_type,
    20MHz rtsi clock frequency */
 #define MSeries_RTSI_10MHz_Bit					0x80
 
-static inline 
+static inline
 unsigned int MSeries_PLL_In_Source_Select_RTSI_Bits(unsigned int RTSI_channel)
 {
 	if(RTSI_channel > 7)
@@ -1117,7 +1117,7 @@ unsigned int MSeries_PLL_In_Source_Select_RTSI_Bits(unsigned int RTSI_channel)
 #define MSeries_PLL_VCO_Mode_100_225MHz_Bits			0x4000
 #define MSeries_PLL_VCO_Mode_75_150MHz_Bits			0x6000
 
-static inline 
+static inline
 unsigned int MSeries_PLL_Divisor_Bits(unsigned int divisor)
 {
 	static const unsigned int max_divisor = 0x10;
@@ -1128,7 +1128,7 @@ unsigned int MSeries_PLL_Divisor_Bits(unsigned int divisor)
 	}
 	return (divisor & 0xf) << 8;
 }
-static inline 
+static inline
 unsigned int MSeries_PLL_Multiplier_Bits(unsigned int multiplier)
 {
 	static const unsigned int max_multiplier = 0x100;
@@ -1234,10 +1234,10 @@ unsigned int MSeries_PLL_Multiplier_Bits(unsigned int multiplier)
 /* sample clock on falling edge */
 #define CDI_Polarity_Bit		0x400
 /* set for half full mode, clear for not empty mode */
-#define CDI_FIFO_Mode_Bit		0x800 
+#define CDI_FIFO_Mode_Bit		0x800
 /* data lanes specify which dio channels map to byte or word accesses
    to the dio fifos */
-#define CDI_Data_Lane_Mask		0x3000 
+#define CDI_Data_Lane_Mask		0x3000
 #define CDI_Data_Lane_0_15_Bits		0x0
 #define CDI_Data_Lane_16_31_Bits	0x1000
 #define CDI_Data_Lane_0_7_Bits		0x0
@@ -1417,4 +1417,3 @@ typedef struct {
 #define NI_FREQ_OUT_TIMEBASE_2_CLOCK_SRC	1 /* 100 KHz */
 
 #endif /* _ANALOGY_NI_STC_H */
-

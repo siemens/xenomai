@@ -136,7 +136,7 @@ static int __init klat_mod_init(void)
 		printk("rt_task_start: %d\n", err);
 		goto err_close_dev;
 	}
-	
+
 	return 0;
 
   err_close_dev:

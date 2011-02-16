@@ -1,6 +1,6 @@
 /**
  * @file
- * Hardware driver for NI general purpose counter 
+ * Hardware driver for NI general purpose counter
  * @note Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
  *
  * This code is free software; you can redistribute it and/or modify
@@ -522,7 +522,7 @@ struct ni_gpct {
 
 struct ni_gpct_device {
 	a4l_dev_t *dev;
-	void (*write_register)(struct ni_gpct * counter, 
+	void (*write_register)(struct ni_gpct * counter,
 				unsigned int bits, enum ni_gpct_register reg);
 	unsigned (*read_register)(struct ni_gpct * counter,
 				   enum ni_gpct_register reg);
@@ -572,22 +572,22 @@ struct ni_gpct_device {
 #define Gi_Index_Phase_HighA_LowB	(0x2 << Gi_Index_Phase_Bitshift)
 #define Gi_Index_Phase_HighA_HighB	(0x3 << Gi_Index_Phase_Bitshift)
 
-/* From m-series example code, 
+/* From m-series example code,
    not documented in 660x register level manual */
-#define Gi_HW_Arm_Enable_Bit		0x80 
-/* From m-series example code, 
+#define Gi_HW_Arm_Enable_Bit		0x80
+/* From m-series example code,
    not documented in 660x register level manual */
 #define Gi_660x_HW_Arm_Select_Mask	(0x7 << Gi_HW_Arm_Select_Shift)
 #define Gi_660x_Prescale_X8_Bit		0x1000
 #define Gi_M_Series_Prescale_X8_Bit	0x2000
 #define Gi_M_Series_HW_Arm_Select_Mask	(0x1f << Gi_HW_Arm_Select_Shift)
-/* Must be set for clocks over 40MHz, 
+/* Must be set for clocks over 40MHz,
    which includes synchronous counting and quadrature modes */
 #define Gi_660x_Alternate_Sync_Bit	0x2000
 #define Gi_M_Series_Alternate_Sync_Bit	0x4000
-/* From m-series example code, 
+/* From m-series example code,
    not documented in 660x register level manual */
-#define Gi_660x_Prescale_X2_Bit		0x4000 
+#define Gi_660x_Prescale_X2_Bit		0x4000
 #define Gi_M_Series_Prescale_X2_Bit	0x8000
 
 static inline unsigned int Gi_Alternate_Sync_Bit(enum ni_gpct_variant variant)
@@ -689,7 +689,7 @@ static inline unsigned int NI_660x_Source_Pin_Clock(unsigned int n)
 	return (0x2 + n);
 }
 
-/* Clock sources for ni e and m series boards, 
+/* Clock sources for ni e and m series boards,
    get bits with Gi_Source_Select_Bits() */
 #define NI_M_Series_Timebase_1_Clock	0x0 /* 20MHz */
 #define NI_M_Series_Timebase_2_Clock	0x12 /* 100KHz */
@@ -790,7 +790,7 @@ static inline unsigned int NI_M_Series_PFI_Gate_Select(unsigned int n)
 #define Gi_Level_Gating_Bits		0x1
 #define Gi_Rising_Edge_Gating_Bits	0x2
 #define Gi_Falling_Edge_Gating_Bits	0x3
-#define Gi_Gate_On_Both_Edges_Bit	0x4 /* used in conjunction with 
+#define Gi_Gate_On_Both_Edges_Bit	0x4 /* used in conjunction with
 					       rising edge gating mode */
 #define Gi_Trigger_Mode_for_Edge_Gate_Mask 0x18
 #define Gi_Edge_Gate_Starts_Stops_Bits	0x0
@@ -825,13 +825,13 @@ static inline unsigned int NI_M_Series_PFI_Gate_Select(unsigned int n)
 
 #define ni_660x_max_up_down_pin		7
 
-static inline 
+static inline
 unsigned int NI_660x_Up_Down_Pin_Second_Gate_Select(unsigned int n)
 {
 	BUG_ON(n > ni_660x_max_up_down_pin);
 	return 0x2 + n;
 }
-static inline 
+static inline
 unsigned int NI_660x_RTSI_Second_Gate_Select(unsigned int n)
 {
 	BUG_ON(n > ni_660x_max_rtsi_channel);
@@ -848,7 +848,7 @@ unsigned int NI_660x_RTSI_Second_Gate_Select(unsigned int n)
 #define Gi_Second_Gate_Subselect_Bit	0x4000 /* m-series only */
 #define Gi_Source_Subselect_Bit		0x8000 /* m-series only */
 
-static inline 
+static inline
 unsigned int Gi_Second_Gate_Select_Bits(unsigned int second_gate_select)
 {
 	return (second_gate_select << Gi_Second_Gate_Select_Shift) &
@@ -1070,7 +1070,7 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_GPCT_PFI_CLOCK_SRC_BITS(x)		(0x20 + x)
 
 /* Possibilities for setting a gate source with
-   INSN_CONFIG_SET_GATE_SRC when using NI general-purpose counters. 
+   INSN_CONFIG_SET_GATE_SRC when using NI general-purpose counters.
    May be bitwise-or'd with CR_EDGE or CR_INVERT. */
 /* M-series gates */
 #define NI_GPCT_TIMESTAMP_MUX_GATE_SELECT	0x0
@@ -1110,7 +1110,7 @@ static inline unsigned int Gi_Gate_Interrupt_Enable_Bit(unsigned int counter_ind
 #define NI_GPCT_ARM_IMMEDIATE		0x0
 /* Start both the counter and the adjacent paired counter
    simultaneously */
-#define NI_GPCT_ARM_PAIRED_IMMEDIATE	0x1	
+#define NI_GPCT_ARM_PAIRED_IMMEDIATE	0x1
 /* NI doesn't document bits for selecting hardware arm triggers.  If
    the NI_GPCT_ARM_UNKNOWN bit is set, we will pass the least significant
    bits (3 bits for 660x or 5 bits for m-series) through to the
@@ -1182,11 +1182,11 @@ int ni_tio_cmdtest(struct ni_gpct *counter, a4l_cmd_t *cmd);
 int ni_tio_cancel(struct ni_gpct *counter);
 
 void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev);
-void ni_tio_set_mite_channel(struct ni_gpct *counter, 
+void ni_tio_set_mite_channel(struct ni_gpct *counter,
 			     struct mite_channel *mite_chan);
-void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter, 
+void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 				    int *gate_error,
-				    int *tc_error, 
+				    int *tc_error,
 				    int *perm_stale_data, int *stale_data);
 
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */

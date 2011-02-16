@@ -63,8 +63,8 @@ struct pse51_sem;
 union __xeno_sem {
     sem_t native_sem;
     struct __shadow_sem {
-        unsigned magic;
-        struct pse51_sem *sem;
+	unsigned magic;
+	struct pse51_sem *sem;
     } shadow_sem;
 };
 
@@ -78,8 +78,8 @@ extern "C" {
 #define sem_init pse51_sem_init
 
 int pse51_sem_init(sem_t *sem,
-                   int pshared,
-                   unsigned int value);
+		   int pshared,
+		   unsigned int value);
 
 int sem_destroy(sem_t *sem);
 

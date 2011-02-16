@@ -65,11 +65,11 @@
 
 /* Value for the interrupt enable register */
 #define SJA1000_IER                 SJA_IER_RIE | SJA_IER_TIE | \
-                                    SJA_IER_EIE | SJA_IER_WUIE | \
-                                    SJA_IER_EPIE | SJA_IER_BEIE | \
-                                    SJA_IER_ALIE | SJA_IER_DOIE
+				    SJA_IER_EIE | SJA_IER_WUIE | \
+				    SJA_IER_EPIE | SJA_IER_BEIE | \
+				    SJA_IER_ALIE | SJA_IER_DOIE
 
-static char *sja_ctrl_name = "SJA1000"; 
+static char *sja_ctrl_name = "SJA1000";
 
 #define STATE_OPERATING(state) \
     ((state) != CAN_STATE_STOPPED && (state) != CAN_STATE_BUS_OFF)
@@ -107,34 +107,34 @@ static inline void rtcan_sja_rx_interrupt(struct rtcan_device *dev,
 
 
     if (fir & SJA_FIR_EFF) {
-        /* Extended frame */
-        frame->can_id = CAN_EFF_FLAG;
+	/* Extended frame */
+	frame->can_id = CAN_EFF_FLAG;
 
-        /* Read ID */
-        frame->can_id |= chip->read_reg(dev, SJA_ID1) << 21;
-        frame->can_id |= chip->read_reg(dev, SJA_ID2) << 13;
-        frame->can_id |= chip->read_reg(dev, SJA_ID3) << 5;
-        frame->can_id |= chip->read_reg(dev, SJA_ID4) >> 3;
+	/* Read ID */
+	frame->can_id |= chip->read_reg(dev, SJA_ID1) << 21;
+	frame->can_id |= chip->read_reg(dev, SJA_ID2) << 13;
+	frame->can_id |= chip->read_reg(dev, SJA_ID3) << 5;
+	frame->can_id |= chip->read_reg(dev, SJA_ID4) >> 3;
 
-        if (!(fir & SJA_FIR_RTR)) {
-            /* No RTR, read data bytes */
-            for (i = 0; i < size; i++)
-                frame->data[i] = chip->read_reg(dev,
+	if (!(fir & SJA_FIR_RTR)) {
+	    /* No RTR, read data bytes */
+	    for (i = 0; i < size; i++)
+		frame->data[i] = chip->read_reg(dev,
 						SJA_DATA_EFF(i));
-        }
+	}
 
     } else {
-        /* Standard frame */
+	/* Standard frame */
 
-        /* Read ID */
-        frame->can_id  = chip->read_reg(dev, SJA_ID1) << 3;
-        frame->can_id |= chip->read_reg(dev, SJA_ID2) >> 5;
+	/* Read ID */
+	frame->can_id  = chip->read_reg(dev, SJA_ID1) << 3;
+	frame->can_id |= chip->read_reg(dev, SJA_ID2) >> 5;
 
-        if (!(fir & SJA_FIR_RTR)) {
-            /* No RTR, read data bytes */
-            for (i = 0; i < size; i++)
-                frame->data[i] = chip->read_reg(dev, SJA_DATA_SFF(i));
-        }
+	if (!(fir & SJA_FIR_RTR)) {
+	    /* No RTR, read data bytes */
+	    for (i = 0; i < size; i++)
+		frame->data[i] = chip->read_reg(dev, SJA_DATA_SFF(i));
+	}
     }
 
     /* Release Receive Buffer */
@@ -143,10 +143,10 @@ static inline void rtcan_sja_rx_interrupt(struct rtcan_device *dev,
 
     /* RTR? */
     if (fir & SJA_FIR_RTR) {
-        frame->can_id |= CAN_RTR_FLAG;
-        skb->rb_frame_size = EMPTY_RB_FRAME_SIZE;
+	frame->can_id |= CAN_RTR_FLAG;
+	skb->rb_frame_size = EMPTY_RB_FRAME_SIZE;
     } else
-        skb->rb_frame_size = EMPTY_RB_FRAME_SIZE + size;
+	skb->rb_frame_size = EMPTY_RB_FRAME_SIZE + size;
 
     /* Store the interface index */
     frame->can_ifindex = dev->ifindex;
@@ -155,13 +155,13 @@ static inline void rtcan_sja_rx_interrupt(struct rtcan_device *dev,
 
 static inline void rtcan_sja_err_interrupt(struct rtcan_device *dev,
 					   struct rtcan_sja1000 *chip,
-					   struct rtcan_skb *skb, 
+					   struct rtcan_skb *skb,
 					   u8 irq_source)
 {
     struct rtcan_rb_frame *frame = &skb->rb_frame;
     can_state_t state = dev->state;
     u8 status, txerr, rxerr;
-    
+
     status = chip->read_reg(dev, SJA_SR);
     txerr = chip->read_reg(dev, SJA_TXERR);
     rxerr = chip->read_reg(dev, SJA_RXERR);
@@ -188,9 +188,9 @@ static inline void rtcan_sja_err_interrupt(struct rtcan_device *dev,
     /* Bus error interrupt? */
     if (irq_source & SJA_IR_BEI) {
 	u8 ecc = chip->read_reg(dev, SJA_ECC);
-	
+
 	frame->can_id |= CAN_ERR_PROT | CAN_ERR_BUSERROR;
-	
+
 	switch (ecc & SJA_ECC_ERR_MASK) {
 	case SJA_ECC_ERR_BIT:
 	    frame->data[2] |= CAN_ERR_PROT_BIT;
@@ -222,7 +222,7 @@ static inline void rtcan_sja_err_interrupt(struct rtcan_device *dev,
 
     /* Error warning interrupt? */
     if (irq_source & SJA_IR_EI) {
-	    
+
 	/* Test bus status (bus-off condition) */
 	if (status & SJA_SR_BS) {
 	    /* Bus-off */
@@ -237,7 +237,7 @@ static inline void rtcan_sja_err_interrupt(struct rtcan_device *dev,
 	}
 
 	/* Test error status (error warning limit) */
-	else if (status & SJA_SR_ES) 
+	else if (status & SJA_SR_ES)
 	    /* error warning limit reached */
 	    state = CAN_STATE_BUS_WARNING;
 
@@ -250,7 +250,7 @@ static inline void rtcan_sja_err_interrupt(struct rtcan_device *dev,
 	    chip->write_reg(dev, SJA_IER, SJA1000_IER);
     }
 
-    if (state != dev->state && 
+    if (state != dev->state &&
 	(state == CAN_STATE_BUS_WARNING || state == CAN_STATE_BUS_PASSIVE)) {
 	frame->can_id |= CAN_ERR_PROT;
 	if (txerr > rxerr)
@@ -283,17 +283,17 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 
     /* Loop as long as the device reports an event */
     while ((irq_source = chip->read_reg(dev, SJA_IR))) {
-        ret = RTDM_IRQ_HANDLED;
+	ret = RTDM_IRQ_HANDLED;
 	irq_count++;
 
-        /* Now look up which interrupts appeared */
+	/* Now look up which interrupts appeared */
 
-        /* Wake-up interrupt? */
-        if (irq_source & SJA_IR_WUI)
-            dev->state = dev->state_before_sleep;
+	/* Wake-up interrupt? */
+	if (irq_source & SJA_IR_WUI)
+	    dev->state = dev->state_before_sleep;
 
 	/* Error Interrupt? */
-        if (irq_source & (SJA_IR_EI | SJA_IR_DOI | SJA_IR_EPI |
+	if (irq_source & (SJA_IR_EI | SJA_IR_DOI | SJA_IR_EPI |
 			  SJA_IR_ALI | SJA_IR_BEI)) {
 
 	    /* Check error condition and fill error frame */
@@ -310,10 +310,10 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 	    }
 	}
 
-        /* Transmit Interrupt? */
-        if (irq_source & SJA_IR_TI) {
-            /* Wake up a sender */
-            rtdm_sem_up(&dev->tx_sem);
+	/* Transmit Interrupt? */
+	if (irq_source & SJA_IR_TI) {
+	    /* Wake up a sender */
+	    rtdm_sem_up(&dev->tx_sem);
 
 	    if (rtcan_loopback_pending(dev)) {
 
@@ -327,26 +327,26 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 	    }
 	}
 
-        /* Receive Interrupt? */
-        if (irq_source & SJA_IR_RI) {
+	/* Receive Interrupt? */
+	if (irq_source & SJA_IR_RI) {
 
-            /* Read out HW registers */
-            rtcan_sja_rx_interrupt(dev, &skb);
+	    /* Read out HW registers */
+	    rtcan_sja_rx_interrupt(dev, &skb);
 
-            /* Take more locks. Ensure that they are taken and
-             * released only once in the IRQ handler. */
-            /* WARNING: Nested locks are dangerous! But they are
-             * nested only in this routine so a deadlock should
-             * not be possible. */
-            if (recv_lock_free) {
-                recv_lock_free = 0;
-                rtdm_lock_get(&rtcan_recv_list_lock);
-                rtdm_lock_get(&rtcan_socket_lock);
-            }
+	    /* Take more locks. Ensure that they are taken and
+	     * released only once in the IRQ handler. */
+	    /* WARNING: Nested locks are dangerous! But they are
+	     * nested only in this routine so a deadlock should
+	     * not be possible. */
+	    if (recv_lock_free) {
+		recv_lock_free = 0;
+		rtdm_lock_get(&rtcan_recv_list_lock);
+		rtdm_lock_get(&rtcan_socket_lock);
+	    }
 
-            /* Pass received frame out to the sockets */
+	    /* Pass received frame out to the sockets */
 	    rtcan_rcv(dev, &skb);
-        }
+	}
     }
 
     if (chip->irq_ack)
@@ -354,8 +354,8 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
 
     /* Release spinlocks */
     if (!recv_lock_free) {
-        rtdm_lock_put(&rtcan_socket_lock);
-        rtdm_lock_put(&rtcan_recv_list_lock);
+	rtdm_lock_put(&rtcan_socket_lock);
+	rtdm_lock_put(&rtcan_recv_list_lock);
     }
     rtdm_lock_put(&dev->device_lock);
 
@@ -371,19 +371,19 @@ static int rtcan_sja_interrupt(rtdm_irq_t *irq_handle)
  * returned without success before this call but in the
  * meantime the controller went into reset mode.
  */
-static inline int rtcan_sja_is_operating(struct rtcan_device *dev, 
+static inline int rtcan_sja_is_operating(struct rtcan_device *dev,
 					 can_state_t *state)
 {
     int is_operating = STATE_OPERATING(*state);
     struct rtcan_sja1000 *chip = (struct rtcan_sja1000 *)dev->priv;
-    
+
     if (unlikely(is_operating && chip->read_reg(dev, SJA_MOD) & SJA_MOD_RM)) {
-        *state = CAN_STATE_STOPPED;
-        is_operating = 0;
-        /* Disable the controller's interrupts */
-        chip->write_reg(dev, SJA_IER, 0x00);
-        /* Wake up waiting senders */
-        rtdm_sem_destroy(&dev->tx_sem);
+	*state = CAN_STATE_STOPPED;
+	is_operating = 0;
+	/* Disable the controller's interrupts */
+	chip->write_reg(dev, SJA_IER, 0x00);
+	/* Wake up waiting senders */
+	rtdm_sem_destroy(&dev->tx_sem);
     }
 
     return is_operating;
@@ -393,7 +393,7 @@ static inline int rtcan_sja_is_operating(struct rtcan_device *dev,
 /*
  * Set controller into reset mode.
  *
- * According to the SJA1000 specification, it is necessary to check the 
+ * According to the SJA1000 specification, it is necessary to check the
  * reset mode bit in PeliCAN mode after having set it. So we do. But if
  * using a ISA card like the PHYTEC eNET card this should not be necessary
  * because the CAN controller clock of this card (16 MHz) is twice as high
@@ -412,7 +412,7 @@ static int rtcan_sja_mode_stop(struct rtcan_device *dev,
     state = dev->state;
     /* If controller is not operating anyway, go out */
     if (STATE_RESET(state))
-        goto out;
+	goto out;
 
     /* Disable the controller's interrupts */
     chip->write_reg(dev, SJA_IER, 0x00);
@@ -422,27 +422,27 @@ static int rtcan_sja_mode_stop(struct rtcan_device *dev,
 
     /* Read reset mode bit, multiple tests */
     do {
-        if (chip->read_reg(dev, SJA_MOD) & SJA_MOD_RM)
-            break;
+	if (chip->read_reg(dev, SJA_MOD) & SJA_MOD_RM)
+	    break;
 
-        if (lock_ctx)
-            rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
-        /* Busy sleep 1 microsecond */
-        rtdm_task_busy_sleep(1000);
-        if (lock_ctx)
-            rtdm_lock_get_irqsave(&dev->device_lock, *lock_ctx);
+	if (lock_ctx)
+	    rtdm_lock_put_irqrestore(&dev->device_lock, *lock_ctx);
+	/* Busy sleep 1 microsecond */
+	rtdm_task_busy_sleep(1000);
+	if (lock_ctx)
+	    rtdm_lock_get_irqsave(&dev->device_lock, *lock_ctx);
     } while(--wait_loop);
 
 
     if (wait_loop) {
-        /* Volatile state could have changed while we slept busy. */
-        dev->state = CAN_STATE_STOPPED;
-        /* Wake up waiting senders */
-        rtdm_sem_destroy(&dev->tx_sem);
+	/* Volatile state could have changed while we slept busy. */
+	dev->state = CAN_STATE_STOPPED;
+	/* Wake up waiting senders */
+	rtdm_sem_destroy(&dev->tx_sem);
     } else {
-        ret = -EAGAIN;
-        /* Enable interrupts again as we did not succeed */
-        chip->write_reg(dev, SJA_IER, SJA1000_IER);
+	ret = -EAGAIN;
+	/* Enable interrupts again as we did not succeed */
+	chip->write_reg(dev, SJA_IER, SJA1000_IER);
     }
 
  out:
@@ -473,7 +473,7 @@ static int rtcan_sja_mode_start(struct rtcan_device *dev,
 	mod_reg |= SJA_MOD_LOM;
     if (dev->ctrl_mode & CAN_CTRLMODE_LOOPBACK)
 	mod_reg |= SJA_MOD_STM;
-     
+
     switch (dev->state) {
 
     case CAN_STATE_ACTIVE:
@@ -541,48 +541,48 @@ can_state_t rtcan_sja_get_state(struct rtcan_device *dev)
     return state;
 }
 
-int rtcan_sja_set_mode(struct rtcan_device *dev, 
+int rtcan_sja_set_mode(struct rtcan_device *dev,
 		       can_mode_t mode,
 		       rtdm_lockctx_t *lock_ctx)
 {
     int ret = 0;
     can_state_t state;
-    struct rtcan_sja1000 *chip = (struct rtcan_sja1000*)dev->priv; 
+    struct rtcan_sja1000 *chip = (struct rtcan_sja1000*)dev->priv;
 
     switch (mode) {
-	
+
     case CAN_MODE_STOP:
 	ret = rtcan_sja_mode_stop(dev, lock_ctx);
 	break;
-	    
+
     case CAN_MODE_START:
 	ret = rtcan_sja_mode_start(dev, lock_ctx);
 	break;
 
     case CAN_MODE_SLEEP:
-	
+
 	state = dev->state;
-	
+
 	/* Controller must operate, otherwise go out */
 	if (!rtcan_sja_is_operating(dev, &state)) {
 	    ret = -ENETDOWN;
 	    goto mode_sleep_out;
 	}
-	    
+
 	/* Is controller sleeping yet? If yes, go out */
 	if (state == CAN_STATE_SLEEPING)
 	    goto mode_sleep_out;
-	
+
 	/* Remember into which state to return when we
 	 * wake up */
-	dev->state_before_sleep = state;	
+	dev->state_before_sleep = state;
 
 	/* Let's take a nap. (Now I REALLY understand
 	 * the meaning of interrupts ...) */
 	state = CAN_STATE_SLEEPING;
 	chip->write_reg(dev, SJA_MOD,
 			chip->read_reg(dev, SJA_MOD) | SJA_MOD_SM);
-	    
+
     mode_sleep_out:
 	dev->state = state;
 	break;
@@ -595,13 +595,13 @@ int rtcan_sja_set_mode(struct rtcan_device *dev,
     return ret;
 }
 
-int rtcan_sja_set_bit_time(struct rtcan_device *dev, 
+int rtcan_sja_set_bit_time(struct rtcan_device *dev,
 			   struct can_bittime *bit_time,
 			   rtdm_lockctx_t *lock_ctx)
 {
     struct rtcan_sja1000 *chip = (struct rtcan_sja1000 *)dev->priv;
     u8 btr0, btr1;
-	
+
     switch (bit_time->type) {
     case CAN_BITTIME_BTR:
 	btr0 = bit_time->btr.btr0;
@@ -609,22 +609,22 @@ int rtcan_sja_set_bit_time(struct rtcan_device *dev,
 	break;
 
     case CAN_BITTIME_STD:
-	btr0 = (BTR0_SET_BRP(bit_time->std.brp) | 
+	btr0 = (BTR0_SET_BRP(bit_time->std.brp) |
 		BTR0_SET_SJW(bit_time->std.sjw));
-	btr1 = (BTR1_SET_TSEG1(bit_time->std.prop_seg + 
+	btr1 = (BTR1_SET_TSEG1(bit_time->std.prop_seg +
 			       bit_time->std.phase_seg1) |
-		BTR1_SET_TSEG2(bit_time->std.phase_seg2) | 
+		BTR1_SET_TSEG2(bit_time->std.phase_seg2) |
 		BTR1_SET_SAM(bit_time->std.sam));
-	
+
 	break;
-	
+
     default:
 	return -EINVAL;
     }
 
     chip->write_reg(dev, SJA_BTR0, btr0);
     chip->write_reg(dev, SJA_BTR1, btr1);
-    
+
     return 0;
 }
 
@@ -660,43 +660,43 @@ static int rtcan_sja_start_xmit(struct rtcan_device *dev,
 
 
     if (frame->can_id & CAN_EFF_FLAG) {
-        /* Send extended frame */
-        fir |= SJA_FIR_EFF;
+	/* Send extended frame */
+	fir |= SJA_FIR_EFF;
 
-        /* Write ID */
-        chip->write_reg(dev, SJA_ID1, frame->can_id >> 21);
-        chip->write_reg(dev, SJA_ID2, frame->can_id >> 13);
-        chip->write_reg(dev, SJA_ID3, frame->can_id >> 5);
-        chip->write_reg(dev, SJA_ID4, frame->can_id << 3);
+	/* Write ID */
+	chip->write_reg(dev, SJA_ID1, frame->can_id >> 21);
+	chip->write_reg(dev, SJA_ID2, frame->can_id >> 13);
+	chip->write_reg(dev, SJA_ID3, frame->can_id >> 5);
+	chip->write_reg(dev, SJA_ID4, frame->can_id << 3);
 
-        /* RTR? */
-        if (frame->can_id & CAN_RTR_FLAG)
-            fir |= SJA_FIR_RTR;
+	/* RTR? */
+	if (frame->can_id & CAN_RTR_FLAG)
+	    fir |= SJA_FIR_RTR;
 
-        else {
-            /* No RTR, write data bytes */
-            for (i = 0; i < size; i++)
-                chip->write_reg(dev, SJA_DATA_EFF(i),
+	else {
+	    /* No RTR, write data bytes */
+	    for (i = 0; i < size; i++)
+		chip->write_reg(dev, SJA_DATA_EFF(i),
 				frame->data[i]);
-        }
+	}
 
     } else {
-        /* Send standard frame */
+	/* Send standard frame */
 
-        /* Write ID */
-        chip->write_reg(dev, SJA_ID1, frame->can_id >> 3);
-        chip->write_reg(dev, SJA_ID2, frame->can_id << 5);
+	/* Write ID */
+	chip->write_reg(dev, SJA_ID1, frame->can_id >> 3);
+	chip->write_reg(dev, SJA_ID2, frame->can_id << 5);
 
-        /* RTR? */
-        if (frame->can_id & CAN_RTR_FLAG)
-            fir |= SJA_FIR_RTR;
+	/* RTR? */
+	if (frame->can_id & CAN_RTR_FLAG)
+	    fir |= SJA_FIR_RTR;
 
-        else {
-            /* No RTR, write data bytes */
-            for (i = 0; i < size; i++)
-                chip->write_reg(dev, SJA_DATA_SFF(i),
+	else {
+	    /* No RTR, write data bytes */
+	    for (i = 0; i < size; i++)
+		chip->write_reg(dev, SJA_DATA_SFF(i),
 				frame->data[i]);
-        }
+	}
     }
 
 
@@ -776,7 +776,7 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
     if (ret) {
 	    printk(KERN_ERR
 		   "ERROR %d while trying to register RTCAN device!\n", ret);
-        goto out_irq_free;
+	goto out_irq_free;
     }
 
     rtcan_sja_create_proc(dev);
@@ -785,7 +785,7 @@ int rtcan_sja1000_register(struct rtcan_device *dev)
 
  out_irq_free:
     rtdm_irq_free(&dev->irq_handle);
-    
+
     return ret;
 }
 

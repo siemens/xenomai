@@ -174,7 +174,7 @@ static psosmbuf_t *get_mbuf(psosqueue_t *queue, u_long msglen)
 			}
 		} else {
 			holder = getq(&queue->freeq);
-			if (!holder && testbits(queue->synchbase.status, Q_INFINITE)) { 
+			if (!holder && testbits(queue->synchbase.status, Q_INFINITE)) {
 				feed_pool(&queue->chunkq,&queue->freeq, PSOS_QUEUE_MIN_ALLOC,queue->maxlen);
 				holder = getq(&queue->freeq);
 			}
@@ -471,7 +471,7 @@ static u_long q_receive_internal(u_long qid,
 	else if (testbits(queue->synchbase.status, Q_SHAREDINIT)) {
 		/* Message buffer should go to the psosmbufq */
 		appendq(&psosmbufq, &mbuf->link);
-	} else    
+	} else
 		appendq(&queue->freeq, &mbuf->link);
 
       unlock_and_exit:

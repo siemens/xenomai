@@ -55,11 +55,11 @@ struct pse51_key {
 	xnholder_t link;	/* link in the list of free keys or
 				   valid keys. */
 #define link2key(laddr) ({                                              \
-        void *_laddr = laddr;                                           \
-        (!_laddr                                                        \
-         ? NULL :                                                       \
-         ((pthread_key_t) (((void *)_laddr) - offsetof(struct pse51_key, \
-                                                       link))));        \
+	void *_laddr = laddr;                                           \
+	(!_laddr                                                        \
+	 ? NULL :                                                       \
+	 ((pthread_key_t) (((void *)_laddr) - offsetof(struct pse51_key, \
+						       link))));        \
 })
 
 };
@@ -91,7 +91,7 @@ static unsigned allocated_keys;
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_create.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
 {
@@ -162,14 +162,14 @@ int pthread_key_create(pthread_key_t *key, void (*destructor) (void *))
  * @return an error number if:
  * - EPERM, the caller context is invalid;
  * - EINVAL, @a key is invalid.
- * 
+ *
  * @par Valid contexts:
  * - Xenomai POSIX skin kernel-space thread.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setspecific.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_setspecific(pthread_key_t key, const void *value)
 {
@@ -210,7 +210,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getspecific.html">
  * Specification.</a>
- * 
+ *
  */
 void *pthread_getspecific(pthread_key_t key)
 {
@@ -252,7 +252,7 @@ void *pthread_getspecific(pthread_key_t key)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_key_delete.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_key_delete(pthread_key_t key)
 {

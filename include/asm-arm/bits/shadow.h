@@ -3,7 +3,7 @@
  *
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -164,11 +164,11 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 #endif /* IPIPE_TSC_TYPE_FREERUNNING_COUNTDOWN */
 		case IPIPE_TSC_TYPE_NONE:
 			return -ENOSYS;
-			
+
 		default:
 			return -EINVAL;
 		}
-		
+
 		if (__xn_copy_to_user((void *)__xn_reg_arg2(regs),
 				      &info, sizeof(info)))
 			return -EFAULT;

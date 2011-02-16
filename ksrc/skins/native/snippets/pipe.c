@@ -78,7 +78,7 @@ void task_body(void)
 			printf("receive error> errno=%d\n", n);
 			continue;
 		}
-	
+
 		if (n == 0) {
 			if (msg == NULL) {
 				printf("pipe closed by peer while reading\n");

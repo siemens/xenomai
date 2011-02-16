@@ -67,7 +67,7 @@
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_get_priority_min.html">
  * Specification.</a>
- * 
+ *
  */
 int sched_get_priority_min(int policy)
 {
@@ -143,7 +143,7 @@ int sched_get_priority_max(int policy)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sched_rr_get_interval.html">
  * Specification.</a>
- * 
+ *
  */
 int sched_rr_get_interval(int pid, struct timespec *interval)
 {
@@ -182,7 +182,7 @@ int sched_rr_get_interval(int pid, struct timespec *interval)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
 {
@@ -233,7 +233,7 @@ int pthread_getschedparam(pthread_t tid, int *pol, struct sched_param *par)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_getschedparam_ex(pthread_t tid, int *pol, struct sched_param_ex *par)
 {
@@ -333,7 +333,7 @@ unlock_and_exit:
  * Which means that you should register your handler with sigaction, using the
  * SA_SIGINFO flag, and pass all the arguments you received to
  * xeno_sigwinch_handler.
- * 
+ *
  */
 int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
 {
@@ -410,7 +410,7 @@ int pthread_setschedparam(pthread_t tid, int pol, const struct sched_param *par)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_getschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_setschedparam_ex(pthread_t tid, int pol, const struct sched_param_ex *par)
 {

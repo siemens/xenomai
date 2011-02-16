@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -128,7 +128,7 @@ static void __heap_flush_private(xnheap_t *heap,
 	xnarch_free_host_mem(heapmem, heapsize);
 }
 
-/*! 
+/*!
  * \fn int rt_heap_create(RT_HEAP *heap,const char *name,size_t heapsize,int mode);
  * \brief Create a memory heap or a shared memory segment.
  *

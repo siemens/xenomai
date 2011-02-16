@@ -3,7 +3,7 @@
  *
  * 64-bit PowerPC adoption
  *   copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -136,7 +136,7 @@ static inline void xnarch_switch_to(xnarchtcb_t *out_tcb,
 			else
 				switch_stab(next, next_mm);
 		}
-        }
+	}
 #else /* PPC32 */
 		if (likely(next_mm != NULL)) {
 			next->thread.pgdir = next_mm->pgd;
@@ -232,7 +232,7 @@ static inline void xnarch_enable_fpu(xnarchtcb_t *tcb)
 {
 	struct task_struct *task = tcb->user_task;
 
-        if (task && task != tcb->user_fpu_owner)
+	if (task && task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 	else
 		rthal_enable_fpu();
@@ -273,7 +273,7 @@ static void xnarch_restore_fpu(xnarchtcb_t * tcb)
 	 * FIXME: We restore FPU "as it was" when Xenomai preempted Linux,
 	 * whereas we could be much lazier.
 	 */
-        if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
+	if (tcb->user_task && tcb->user_task != tcb->user_fpu_owner)
 		rthal_disable_fpu();
 }
 

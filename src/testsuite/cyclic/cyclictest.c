@@ -109,19 +109,19 @@ static inline long calcdiff(struct timespec t1, struct timespec t2)
 	return diff;
 }
 
-/* 
+/*
  * timer thread
- * 
+ *
  * Modes:
  * - clock_nanosleep based
  * - cyclic timer based
- * 
+ *
  * Clock:
  * - CLOCK_MONOTONIC
  * - CLOCK_REALTIME
  * - CLOCK_MONOTONIC_HR
  * - CLOCK_REALTIME_HR
- * 
+ *
  */
 void *timerthread(void *param)
 {
@@ -163,7 +163,7 @@ void *timerthread(void *param)
 	sigemptyset(&sigset);
 	sigaddset(&sigset, par->signal);
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
-	
+
 #ifdef __UNSUPPORTED
 	if (par->mode == MODE_CYCLIC) {
 		sigev.sigev_notify = SIGEV_THREAD_ID | SIGEV_SIGNAL;
@@ -178,18 +178,18 @@ void *timerthread(void *param)
 	schedp.sched_priority = par->prio;
 	err = pthread_setschedparam(pthread_self(), policy, &schedp);
 #ifdef __XENO__
-        if (err) {
-            fprintf(stderr, "pthread_setschedparam: %s\n"
-                    "(modprobe xeno_posix?)\n", strerror(err));
-            test_shutdown = 1;
-            return (void *) 1;
-        }
+	if (err) {
+	    fprintf(stderr, "pthread_setschedparam: %s\n"
+		    "(modprobe xeno_posix?)\n", strerror(err));
+	    test_shutdown = 1;
+	    return (void *) 1;
+	}
 #endif
 
 	/* Get current time */
 	next = start;
 	next.tv_sec++;
-	
+
 #ifdef __UNSUPPORTED
 	if (par->mode == MODE_CYCLIC) {
 		if (par->timermode == TIMER_ABSTIME)
@@ -200,7 +200,7 @@ void *timerthread(void *param)
 		}
 		timer_settime(timer, par->timermode, &tspec, NULL);
 	}
-	
+
 	if (par->mode == MODE_SYS_ITIMER) {
 		itimer.it_value.tv_sec = 1;
 		itimer.it_value.tv_usec = 0;
@@ -232,7 +232,7 @@ void *timerthread(void *param)
 				goto out;
 			break;
 #endif
-			
+
 		case MODE_CLOCK_NANOSLEEP:
 			if (par->timermode == TIMER_ABSTIME)
 				clock_nanosleep(par->clock, TIMER_ABSTIME, &next, NULL);
@@ -244,7 +244,7 @@ void *timerthread(void *param)
 				tsnorm(&next);
 			}
 			break;
-			
+
 #ifdef __UNSUPPORTED
 		case MODE_SYS_NANOSLEEP:
 			clock_gettime(par->clock, &now);
@@ -278,20 +278,20 @@ void *timerthread(void *param)
 #endif
 		stat->act = diff;
 		stat->cycles++;
-		
+
 		if (par->bufmsk)
 			stat->values[stat->cycles & par->bufmsk] = diff;
 
 		next.tv_sec += interval.tv_sec;
 		next.tv_nsec += interval.tv_nsec;
 		tsnorm(&next);
-		
+
 		if (par->max_cycles && par->max_cycles == stat->cycles)
 			break;
 	}
 
 #ifdef __UNSUPPORTED
-out:		
+out:
 	if (par->mode == MODE_CYCLIC)
 		timer_delete(timer);
 
@@ -389,20 +389,20 @@ static void process_options (int argc, char *argv[])
 		switch (c) {
 		case 'b': tracelimit = atoi(optarg); break;
 		case 'c': clocksel = atoi(optarg); break;
-		case 'd': distance = atoi(optarg); break;	
-		case 'i': interval = atoi(optarg); break;	
+		case 'd': distance = atoi(optarg); break;
+		case 'i': interval = atoi(optarg); break;
 		case 'l': max_cycles = atoi(optarg); break;
 		case 'n': use_nanosleep = MODE_CLOCK_NANOSLEEP; break;
 		case 'p': priority = atoi(optarg); break;
 		case 'q': quiet = 1; break;
-		case 'r': timermode = TIMER_RELTIME; break;	
+		case 'r': timermode = TIMER_RELTIME; break;
 #ifdef __UNSUPPORTED
 		case 's': use_system = MODE_SYS_OFFSET; break;
 #endif
 		case 't': num_threads = atoi(optarg); break;
 		case 'v': verbose = 1; break;
 		case '?': error = 1; break;
-		}				
+		}
 	}
 
 	if (clocksel < 0 || clocksel > ARRAY_SIZE(clocksources))
@@ -426,7 +426,7 @@ static void sighand(int sig)
 static void print_stat(struct thread_param *par, int index, int verbose)
 {
 	struct thread_stat *stat = par->stats;
-	
+
 	if (!verbose) {
 		if (!quiet)
 			printf("T:%2d (%5d) P:%2d I:%8ld C:%8lu "
@@ -472,14 +472,14 @@ int main(int argc, char **argv)
 	process_options(argc, argv);
 
 	mode = use_nanosleep + use_system;
-	
+
        	sigemptyset(&sigset);
        	sigaddset(&sigset, signum);
    	sigprocmask (SIG_BLOCK, &sigset, NULL);
-	
+
 	signal(SIGINT, sighand);
 	signal(SIGTERM, sighand);
-	
+
 	par = calloc(num_threads, sizeof(struct thread_param));
 	if (!par)
 		goto out;
@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 				goto outall;
 			par[i].bufmsk = VALBUF_SIZE - 1;
 		}
-		
+
 		par[i].prio = priority;
 		if (priority)
 			priority--;
@@ -517,7 +517,7 @@ int main(int argc, char **argv)
 		stat[i].threadstarted = 1;
 		stat[i].traced = (i == 0 && IPIPE_TRACE > 0);
 	}
-	
+
 	while (!test_shutdown) {
 		char lavg[256];
 		int fd, len, allstopped;

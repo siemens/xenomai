@@ -72,7 +72,7 @@ struct mite_struct {
 	void *daq_io_addr;
 };
 
-static inline 
+static inline
 struct mite_dma_descriptor_ring *mite_alloc_ring(struct	mite_struct *mite)
 {
 	struct mite_dma_descriptor_ring *ring =
@@ -118,7 +118,7 @@ static inline unsigned int mite_device_id(struct mite_struct *mite)
 int mite_setup(struct mite_struct *mite, int use_iodwbsr_1);
 void mite_unsetup(struct mite_struct *mite);
 void mite_list_devices(void);
-struct mite_struct * mite_find_device(int bus, 
+struct mite_struct * mite_find_device(int bus,
 				      int slot, unsigned short device_id);
 struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 	struct mite_dma_descriptor_ring *ring, unsigned min_channel,

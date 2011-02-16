@@ -40,11 +40,11 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
     int __err; \
     (tcb)->stacksize = stacksize; \
     if (stacksize == 0) { \
-        (tcb)->stackbase = NULL; \
+	(tcb)->stackbase = NULL; \
 	__err = 0; \
     } else { \
-        (tcb)->stackbase = xnmalloc(stacksize); \
-        __err = (tcb)->stackbase ? 0 : -ENOMEM; \
+	(tcb)->stackbase = xnmalloc(stacksize); \
+	__err = (tcb)->stackbase ? 0 : -ENOMEM; \
     } \
     __err; \
 })

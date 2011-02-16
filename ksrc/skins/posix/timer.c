@@ -18,7 +18,7 @@
 
 /**
  * @addtogroup posix_time
- * 
+ *
  *@{*/
 
 #include <nucleus/timer.h>
@@ -259,7 +259,7 @@ int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
  * Specification.</a>
- * 
+ *
  */
 int timer_delete(timer_t timerid)
 {
@@ -330,7 +330,7 @@ static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
  * Specification.</a>
- * 
+ *
  */
 int timer_settime(timer_t timerid,
 		  int flags,
@@ -452,7 +452,7 @@ int timer_settime(timer_t timerid,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
  * Specification.</a>
- * 
+ *
  */
 int timer_gettime(timer_t timerid, struct itimerspec *value)
 {
@@ -512,7 +512,7 @@ int timer_gettime(timer_t timerid, struct itimerspec *value)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
  * Specification.</a>
- * 
+ *
  */
 int timer_getoverrun(timer_t timerid)
 {
@@ -523,7 +523,7 @@ int timer_getoverrun(timer_t timerid)
 	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
 		err = EINVAL;
 		goto error;
-	}  
+	}
 
 	xnlock_get_irqsave(&nklock, s);
 

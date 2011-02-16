@@ -109,30 +109,30 @@ void *transmitter(void *arg)
     clock_gettime(CLOCK_MONOTONIC, &next_period);
 
     while(1) {
-        next_period.tv_nsec += cycle * 1000;
-        while (next_period.tv_nsec >= NSEC_PER_SEC) {
-                next_period.tv_nsec -= NSEC_PER_SEC;
-                next_period.tv_sec++;
-        }
+	next_period.tv_nsec += cycle * 1000;
+	while (next_period.tv_nsec >= NSEC_PER_SEC) {
+		next_period.tv_nsec -= NSEC_PER_SEC;
+		next_period.tv_sec++;
+	}
 
-        clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_period, NULL);
+	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next_period, NULL);
 
 	if (rxcount != txcount) {
 	    overruns++;
 	    continue;
 	}
 
-        clock_gettime(CLOCK_MONOTONIC, &time);
+	clock_gettime(CLOCK_MONOTONIC, &time);
 	*rtt_time = (long long)time.tv_sec * NSEC_PER_SEC + time.tv_nsec;
 
-        /* Transmit the message containing the local time */
+	/* Transmit the message containing the local time */
 	if (send(txsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
-            if (errno == EBADF)
-                printf("terminating transmitter thread\n");
-            else
-                perror("send failed");
-            return NULL;
-        }
+	    if (errno == EBADF)
+		printf("terminating transmitter thread\n");
+	    else
+		perror("send failed");
+	    return NULL;
+	}
 	txcount++;
     }
 }
@@ -157,11 +157,11 @@ void *receiver(void *arg)
     while (1) {
 	if (recv(rxsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
 	    if (errno == EBADF)
-                printf("terminating receiver thread\n");
-            else
-                perror("recv failed");
-            return NULL;
-        }
+		printf("terminating receiver thread\n");
+	    else
+		perror("recv failed");
+	    return NULL;
+	}
 	if (repeater) {
 	    /* Transmit the message back as is */
 	    if (send(txsock, (void *)&frame, sizeof(struct can_frame), 0) < 0) {
@@ -333,8 +333,8 @@ int main(int argc, char *argv[])
     mqattr.mq_msgsize = sizeof(struct rtt_stat);
     mq = mq_open(mqname, O_RDWR | O_CREAT | O_EXCL, 0600, &mqattr);
     if (mq == (mqd_t)-1) {
-        perror("opening mqueue failed");
-        goto failure2;
+	perror("opening mqueue failed");
+	goto failure2;
     }
 
     /* Create receiver RT-thread */
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
     if (ret) {
 	fprintf(stderr, "%s: pthread_create(receiver) failed\n",
 		strerror(-ret));
-        goto failure3;
+	goto failure3;
     }
 
     if (!repeater) {
@@ -368,8 +368,8 @@ int main(int argc, char *argv[])
     while (1) {
 	long long rtt_avg;
 
-        ret = mq_receive(mq, (char *)&rtt_stat, sizeof(rtt_stat), NULL);
-        if (ret != sizeof(rtt_stat)) {
+	ret = mq_receive(mq, (char *)&rtt_stat, sizeof(rtt_stat), NULL);
+	if (ret != sizeof(rtt_stat)) {
 	    if (ret < 0) {
 		if (errno == EBADF)
 		    printf("terminating mq_receive\n");
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
 	    } else
 		fprintf(stderr,
 			"mq_receive returned invalid length %d\n", ret);
-            break;
+	    break;
 	}
 
 	if (repeater) {
@@ -399,12 +399,12 @@ int main(int argc, char *argv[])
 
     /* Important: First close the sockets! */
     while ((close(rxsock) < 0) && (errno == EAGAIN)) {
-        printf("RX socket busy - waiting...\n");
-        sleep(1);
+	printf("RX socket busy - waiting...\n");
+	sleep(1);
     }
     while ((close(txsock) < 0) && (errno == EAGAIN)) {
-        printf("TX socket busy - waiting...\n");
-        sleep(1);
+	printf("TX socket busy - waiting...\n");
+	sleep(1);
     }
 
     pthread_join(txthread, NULL);

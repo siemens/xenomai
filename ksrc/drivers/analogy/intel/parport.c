@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* 
+/*
    A cheap and easy way to get a few more digital I/O lines.  Steal
    additional parallel ports from old computers or your neighbors'
    computers.
@@ -127,7 +127,7 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	case A4L_INSN_CONFIG_DIO_OUTPUT:
 		spriv->io_bits = 0xff;
-		devpriv->c_data &= ~(1 << 5);		
+		devpriv->c_data &= ~(1 << 5);
 		break;
 
 	case A4L_INSN_CONFIG_DIO_INPUT:
@@ -136,7 +136,7 @@ static int parport_insn_config_a(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		break;
 
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (spriv->io_bits == 0xff) ? 
+		data[1] = (spriv->io_bits == 0xff) ?
 			A4L_OUTPUT: A4L_INPUT;
 		break;
 
@@ -261,7 +261,7 @@ static int parport_interrupt(unsigned int irq, void *d)
 
 	a4l_buf_put(subd, 0, sizeof(unsigned int));
 	a4l_buf_evt(subd, 0);
-	
+
 	return 0;
 }
 
@@ -271,7 +271,7 @@ static int parport_interrupt(unsigned int irq, void *d)
 static a4l_chdesc_t parport_chan_desc_a = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
@@ -279,7 +279,7 @@ static a4l_chdesc_t parport_chan_desc_a = {
 static a4l_chdesc_t parport_chan_desc_b = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 5,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
@@ -287,7 +287,7 @@ static a4l_chdesc_t parport_chan_desc_b = {
 static a4l_chdesc_t parport_chan_desc_c = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 4,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
@@ -295,7 +295,7 @@ static a4l_chdesc_t parport_chan_desc_c = {
 static a4l_chdesc_t parport_chan_desc_intr = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 1,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
@@ -352,7 +352,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 	if(arg->opts == NULL || arg->opts_size < sizeof(unsigned long)) {
 
-		a4l_warn(dev, 
+		a4l_warn(dev,
 			 "dev_parport_attach: no attach options specified, "
 			 "taking default options (addr=0x%x, irq=%d)\n",
 			 DEFAULT_ADDRESS, DEFAULT_IRQ);
@@ -366,7 +366,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		if (arg->opts_size >= 2 * sizeof(unsigned long))
 			irq = (int) ((unsigned long *)arg->opts)[1];
 	}
-	
+
 	if (!request_region(io_base, PARPORT_SIZE, "analogy_parport")) {
 		a4l_err(dev, "dev_parport_attach: I/O port conflict");
 		return -EIO;
@@ -375,15 +375,15 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	a4l_info(dev, "dev_parport_attach: address = 0x%lx\n", io_base);
 
 	for (i = 0; i < 3; i++) {
-		
-		a4l_subd_t *subd = a4l_alloc_subd(sizeof(parport_spriv_t), 
+
+		a4l_subd_t *subd = a4l_alloc_subd(sizeof(parport_spriv_t),
 						  setup_subds[i]);
 		if (subd == NULL)
 			return -ENOMEM;
-		
+
 		err = a4l_add_subd(dev, subd);
 		if (err != i)
-			return err;		
+			return err;
 	}
 
 	if (irq != A4L_IRQ_UNUSED) {
@@ -401,7 +401,7 @@ static int dev_parport_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		subd = a4l_alloc_subd(0, setup_subd_intr);
 		if (subd == NULL)
 			return -ENOMEM;
-		
+
 		err = a4l_add_subd(dev, subd);
 		if (err < 0)
 			return err;
@@ -424,12 +424,12 @@ static int dev_parport_detach(a4l_dev_t *dev)
 
 	if (devpriv->io_base != 0)
 		release_region(devpriv->io_base, PARPORT_SIZE);
-	
+
 	if (a4l_get_irq(dev) != A4L_IRQ_UNUSED) {
 		a4l_free_irq(dev, a4l_get_irq(dev));
 	}
 
-	
+
 	return err;
 }
 
@@ -437,7 +437,7 @@ static a4l_drv_t drv_parport = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_parport",
 	.attach = dev_parport_attach,
-	.detach = dev_parport_detach,	
+	.detach = dev_parport_detach,
 	.privdata_size = sizeof(parport_priv_t),
 };
 

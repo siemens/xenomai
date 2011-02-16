@@ -43,7 +43,7 @@ extern inline void out_32(volatile unsigned long *addr, unsigned val)
 }
 #else
 extern inline void out_32(volatile unsigned long *addr, unsigned val)
-{ 
+{
 	/* Depending on your architectue you may need to add memory barriers */
 	*addr = val;
 }
@@ -54,23 +54,23 @@ void *mapDirectIoRegister(unsigned long addr, size_t length)
 	void *map_base, * virtAddr;
 	off_t target = ((unsigned int)addr) & ~MAP_MASK;
 	int fd;
-	
+
 	if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
 		printf("/dev/mem could not be opened.\n");
 		exit(1);
 	}
-	
+
 	/* Map one page */
-	map_base = mmap((void *)target, length, PROT_READ | PROT_WRITE, 
+	map_base = mmap((void *)target, length, PROT_READ | PROT_WRITE,
 			MAP_SHARED, fd, target);
 	if (map_base == (void *) -1) {
 		printf("Memory map failed for address 0x%lx\n", addr);
 		exit(1);
 	}
-	
-	virtAddr = (void *)((unsigned long)map_base + 
+
+	virtAddr = (void *)((unsigned long)map_base +
 			    ((unsigned long)addr & MAP_MASK));
-	printf("Memory map 0x%lx -> %p offset 0x%lx virtual %p\n", 
+	printf("Memory map 0x%lx -> %p offset 0x%lx virtual %p\n",
 		addr, map_base, addr & MAP_MASK, virtAddr);
 	return virtAddr;
 }
@@ -79,7 +79,7 @@ int iounmap(volatile void *start, size_t length)
 {
 	unsigned long ofs_addr;
 	ofs_addr = (unsigned long)start & (getpagesize()-1);
-	
+
 	/* do some cleanup when you're done with it */
 	return munmap((void*)start-ofs_addr, length+ofs_addr);
 }
@@ -88,7 +88,7 @@ void sysLedSet(unsigned char value)
 {
 	/* board specific, please put in correct values for your HW */
 	/* Here: inverse and shift the value 23 bits to the left */
-        out_32(ledRegister, ( unsigned long ) ~value << 23);
+	out_32(ledRegister, ( unsigned long ) ~value << 23);
 }
 
 int main(int argc, char *argv[])
@@ -119,6 +119,6 @@ int main(int argc, char *argv[])
 		sysLedSet(1 << j);
 	}
 	iounmap((volatile void *)HCU3_LED_REGISTER, MAP_SIZE);
-	printf("\n%s:done\n", __FUNCTION__); 
+	printf("\n%s:done\n", __FUNCTION__);
 	return 0;
 }

@@ -76,7 +76,7 @@ struct wind_sem {
      * count.
      */
     unsigned count;
-    
+
     xnholder_t rlink;		/* !< Link in resource queue. */
 #define rlink2sem(ln)	container_of(ln, wind_sem_t, rlink)
     xnqueue_t *rqueue;		/* !< Backpointer to resource queue. */
@@ -96,7 +96,7 @@ typedef struct wind_msg {
 #define link2wind_msg(ln) container_of(ln, wind_msg_t, link)
 
     unsigned int length;
-    
+
     char buffer[0];
 
 } wind_msg_t;
@@ -104,7 +104,7 @@ typedef struct wind_msg {
 typedef struct wind_msgq {
 
     unsigned int magic;
-    
+
     UINT msg_length;
 
     xnholder_t * free_list;     /* simply linked list of free messages */
@@ -164,7 +164,7 @@ static inline void wind_wd_flush_rq(xnqueue_t *rq)
 #define VX_SHADOW 0x8000
 
 #define WIND_TASK_OPTIONS_MASK \
-(VX_FP_TASK|VX_PRIVATE_ENV|VX_NO_STACK_FILL|VX_UNBREAKABLE|VX_SHADOW) 
+(VX_FP_TASK|VX_PRIVATE_ENV|VX_NO_STACK_FILL|VX_UNBREAKABLE|VX_SHADOW)
 
 #define wind_current_task() (thread2wind_task(xnpod_current_thread()))
 
@@ -181,20 +181,20 @@ static inline int wind_errnoget(void)
 #define error_check(cond, status, action) do    \
 {                                               \
     if ((cond))                                 \
-        {                                       \
-        wind_errnoset(status);                  \
-        action;                                 \
-        }                                       \
+	{                                       \
+	wind_errnoset(status);                  \
+	action;                                 \
+	}                                       \
 } while (0)
 
 
 #define check_NOT_ISR_CALLABLE(action) do               \
 {                                                       \
     if(xnpod_asynch_p())                                \
-        {                                               \
-        wind_errnoset(S_intLib_NOT_ISR_CALLABLE);       \
-        action;                                         \
-        }                                               \
+	{                                               \
+	wind_errnoset(S_intLib_NOT_ISR_CALLABLE);       \
+	action;                                         \
+	}                                               \
 } while(0)
 
 
@@ -202,10 +202,10 @@ static inline int wind_errnoget(void)
 {                                                       \
     ptr = (type *) xnmalloc (sizeof(type));             \
     if(!ptr)                                            \
-        {                                               \
-        wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);      \
-        action;                                         \
-        }                                               \
+	{                                               \
+	wind_errnoset(S_memLib_NOT_ENOUGH_MEMORY);      \
+	action;                                         \
+	}                                               \
 } while(0)
 
 
@@ -213,10 +213,10 @@ static inline int wind_errnoget(void)
 {                                                       \
     ptr = wind_h2obj_active(id, magic, type);           \
     if(!ptr)                                            \
-        {                                               \
-        wind_errnoset(S_objLib_OBJ_ID_ERROR);           \
-        action;                                         \
-        }                                               \
+	{                                               \
+	wind_errnoset(S_objLib_OBJ_ID_ERROR);           \
+	action;                                         \
+	}                                               \
 } while(0)
 
 
@@ -265,7 +265,7 @@ extern "C" {
     int wind_sysclk_init(u_long period);
 
     void wind_sysclk_cleanup(void);
-    
+
 
     void wind_task_init(void);
 
@@ -273,7 +273,7 @@ extern "C" {
 
 
     void wind_task_hooks_init(void);
-    
+
     void wind_task_hooks_cleanup(void);
 
 

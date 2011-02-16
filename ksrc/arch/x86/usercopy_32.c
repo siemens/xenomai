@@ -1,4 +1,4 @@
-/* 
+/*
  * Lifted from linux/arch/i386/lib/usercopy.c, only to get rid of the
  * damned might_sleep() check, so that we can call this routine in
  * atomic context, provided the source memory is always committed and

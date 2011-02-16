@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003,2004 Philippe Gerum <rpm@xenomai.org>.
- * 
+ *
  * 64-bit PowerPC adoption
  *   copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
  *
@@ -133,11 +133,11 @@ typedef struct { unsigned long counter; } xnarch_atomic_t;
  * (lifted from linux/include/asm-powerpc/system.h)
  */
 
-static __inline__ unsigned long 
+static __inline__ unsigned long
     __xchg_u32(volatile void *p, unsigned long val)
 {
     unsigned long prev;
-    
+
     __asm__ __volatile__(
     EIEIO_ON_SMP
 "1: lwarx	%0,0,%2 \n"
@@ -148,7 +148,7 @@ static __inline__ unsigned long
     : "=&r" (prev), "=m" (*(volatile unsigned int *)p)
     : "r" (p), "r" (val), "m" (*(volatile unsigned int *)p)
     : "cc", "memory");
-    
+
     return prev;
 }
 
@@ -157,7 +157,7 @@ static __inline__ unsigned long
     __xchg_u64(volatile void *p, unsigned long val)
 {
     unsigned long prev;
-    
+
     __asm__ __volatile__(
     EIEIO_ON_SMP
 "1: ldarx	%0,0,%2 \n"

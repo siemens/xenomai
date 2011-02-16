@@ -87,24 +87,24 @@ int rtcan_raw_check_filter(struct rtcan_socket *sock, int ifindex,
 
     /* Check current bind status */
     if (rtcan_sock_has_filter(sock)) {
-        /* Socket is bound */
-        i = atomic_read(&sock->ifindex);
+	/* Socket is bound */
+	i = atomic_read(&sock->ifindex);
 
-        if (i == 0)
-            /* Socket was bound to ALL interfaces */
-            old_flistlen_all = sock->flistlen;
-        else    /* Socket was bound to only one interface */
-            old_ifindex = i;
+	if (i == 0)
+	    /* Socket was bound to ALL interfaces */
+	    old_flistlen_all = sock->flistlen;
+	else    /* Socket was bound to only one interface */
+	    old_ifindex = i;
     }
 
     if (ifindex) {
-        /* We bind the socket to only one interface. */
-        begin = ifindex;
-        end   = ifindex;
+	/* We bind the socket to only one interface. */
+	begin = ifindex;
+	end   = ifindex;
     } else {
-        /* Socket must be bound to all interfaces. */
-        begin = 1;
-        end = RTCAN_MAX_DEVICES;
+	/* Socket must be bound to all interfaces. */
+	begin = 1;
+	end = RTCAN_MAX_DEVICES;
     }
 
     /* Check if there is space for the new binding */
@@ -139,57 +139,57 @@ int rtcan_raw_add_filter(struct rtcan_socket *sock, int ifindex)
     flistlen = (sock->flist) ? sock->flist->flistlen : 0;
 
     if (ifindex) {
-        /* We bind the socket to only one interface. */
-        begin = ifindex;
-        end   = ifindex;
+	/* We bind the socket to only one interface. */
+	begin = ifindex;
+	end   = ifindex;
     } else {
-        /* Socket must be bound to all interfaces. */
-        begin = 1;
-        end = RTCAN_MAX_DEVICES;
+	/* Socket must be bound to all interfaces. */
+	begin = 1;
+	end = RTCAN_MAX_DEVICES;
     }
 
     for (i = begin; i <= end; i++) {
 	if ((dev = rtcan_dev_get_by_index(i)) == NULL)
 	    continue;
 
-        /* Take first entry of empty list */
-        first = last = dev->empty_list;
-        /* Check if filter list is empty */
-        if (flistlen) {
-            /* Filter list is not empty */
-            /* Register first filter */
-            rtcan_raw_mount_filter(&last->can_filter,
+	/* Take first entry of empty list */
+	first = last = dev->empty_list;
+	/* Check if filter list is empty */
+	if (flistlen) {
+	    /* Filter list is not empty */
+	    /* Register first filter */
+	    rtcan_raw_mount_filter(&last->can_filter,
 				   &sock->flist->flist[0]);
 	    last->match_count = 0;
-            last->sock = sock;
-            for (j = 1; j < flistlen; j++) {
-                /* Register remaining filters */
-                last = last->next;
-                rtcan_raw_mount_filter(&last->can_filter,
+	    last->sock = sock;
+	    for (j = 1; j < flistlen; j++) {
+		/* Register remaining filters */
+		last = last->next;
+		rtcan_raw_mount_filter(&last->can_filter,
 				       &sock->flist->flist[j]);
-                last->sock = sock;
+		last->sock = sock;
 		last->match_count = 0;
-            }
-            /* Decrease free entries counter by length of filter list */
-            dev->free_entries -= flistlen;
+	    }
+	    /* Decrease free entries counter by length of filter list */
+	    dev->free_entries -= flistlen;
 
-        } else {
-            /* Filter list is empty. Socket must be bound to all CAN IDs. */
-            /* Fill list entry members */
-            last->can_filter.can_id = last->can_filter.can_mask = 0;
-            last->sock = sock;
+	} else {
+	    /* Filter list is empty. Socket must be bound to all CAN IDs. */
+	    /* Fill list entry members */
+	    last->can_filter.can_id = last->can_filter.can_mask = 0;
+	    last->sock = sock;
 	    last->match_count = 0;
-            /* Decrease free entries counter by 1
-             * (one filter for all CAN frames) */
-            dev->free_entries--;
-        }
+	    /* Decrease free entries counter by 1
+	     * (one filter for all CAN frames) */
+	    dev->free_entries--;
+	}
 
-        /* Set new empty list header */
-        dev->empty_list = last->next;
-        /* Add new partial recv list to the head of reception list */
-        last->next = dev->recv_list;
-        /* Adjust rececption list pointer */
-        dev->recv_list = first;
+	/* Set new empty list header */
+	dev->empty_list = last->next;
+	/* Add new partial recv list to the head of reception list */
+	last->next = dev->recv_list;
+	/* Adjust rececption list pointer */
+	dev->recv_list = first;
 
 	rtcan_raw_print_filter(dev);
 	rtcan_dev_dereference(dev);
@@ -210,13 +210,13 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock)
 	return;
 
     if (ifindex) {
-        /* Socket was bound to one interface only. */
-        begin = ifindex;
-        end   = ifindex;
+	/* Socket was bound to one interface only. */
+	begin = ifindex;
+	end   = ifindex;
     } else {
-        /* Socket was bound to all interfaces */
-        begin = 1;
-        end = RTCAN_MAX_DEVICES;
+	/* Socket was bound to all interfaces */
+	begin = 1;
+	end = RTCAN_MAX_DEVICES;
     }
 
     for (i = begin; i <= end; i++) {
@@ -224,35 +224,33 @@ void rtcan_raw_remove_filter(struct rtcan_socket *sock)
 	if ((dev = rtcan_dev_get_by_index(i)) == NULL)
 	    continue;
 
-        /* Search for first list entry pointing to this socket */
-        first = NULL;
-        next = dev->recv_list;
-        while (next->sock != sock) {
-            first = next;
-            next = first->next;
-        }
+	/* Search for first list entry pointing to this socket */
+	first = NULL;
+	next = dev->recv_list;
+	while (next->sock != sock) {
+	    first = next;
+	    next = first->next;
+	}
 
-        /* Now go to the end of the old filter list */
-        last = next;
-        for (j = 1; j < sock->flistlen; j++)
-            last = last->next;
+	/* Now go to the end of the old filter list */
+	last = next;
+	for (j = 1; j < sock->flistlen; j++)
+	    last = last->next;
 
-        /* Detach found first list entry from reception list */
-        if (first)
-            first->next = last->next;
-        else
-            dev->recv_list = last->next;
-        /* Add partial list to the head of empty list */
-        last->next = dev->empty_list;
-        /* Adjust empty list pointer */
-        dev->empty_list = next;
+	/* Detach found first list entry from reception list */
+	if (first)
+	    first->next = last->next;
+	else
+	    dev->recv_list = last->next;
+	/* Add partial list to the head of empty list */
+	last->next = dev->empty_list;
+	/* Adjust empty list pointer */
+	dev->empty_list = next;
 
-        /* Increase free entries counter by length of old filter list */
-        dev->free_entries += sock->flistlen;
+	/* Increase free entries counter by length of old filter list */
+	dev->free_entries += sock->flistlen;
 
 	rtcan_raw_print_filter(dev);
 	rtcan_dev_dereference(dev);
     }
 }
-
-

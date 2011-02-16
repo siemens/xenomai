@@ -75,7 +75,7 @@ static inline int emptymlq_p(struct xnsched_mlq *q)
 
 static inline int indexmlq(struct xnsched_mlq *q, int prio)
 {
-	XENO_ASSERT(QUEUES, 
+	XENO_ASSERT(QUEUES,
 		    prio >= q->loprio && prio <= q->hiprio,
 		    xnpod_fatal("priority level %d is out of range ", prio));
 	/*

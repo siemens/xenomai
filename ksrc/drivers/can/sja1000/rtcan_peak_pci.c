@@ -48,10 +48,10 @@ MODULE_LICENSE("GPL");
 
 struct rtcan_peak_pci
 {
-    struct pci_dev *pci_dev; 
+    struct pci_dev *pci_dev;
     struct rtcan_device *slave_dev;
     int channel;
-    volatile void __iomem *base_addr;  
+    volatile void __iomem *base_addr;
     volatile void __iomem *conf_addr;
 };
 
@@ -105,14 +105,14 @@ static void rtcan_peak_pci_irq_ack(struct rtcan_device *dev)
     if (board->channel == CHANNEL_SLAVE) {
 	if (pita_icr_low & 0x0001)
 	    writew(0x0001, board->conf_addr + PITA_ICR);
-    } 
+    }
     else {
 	if (pita_icr_low & 0x0002)
 	    writew(0x0002, board->conf_addr + PITA_ICR);
     }
 }
 
-static void rtcan_peak_pci_del_chan(struct rtcan_device *dev, 
+static void rtcan_peak_pci_del_chan(struct rtcan_device *dev,
 				    int init_step)
 {
     struct rtcan_peak_pci *board;
@@ -125,31 +125,31 @@ static void rtcan_peak_pci_del_chan(struct rtcan_device *dev,
 
     switch (init_step) {
     case 0:			/* Full cleanup */
-	printk("Removing %s %s device %s\n", 
+	printk("Removing %s %s device %s\n",
 	       peak_pci_board_name, dev->ctrl_name, dev->name);
 	rtcan_sja1000_unregister(dev);
-    case 5: 
+    case 5:
 	pita_icr_high = readw(board->conf_addr + PITA_ICR + 2);
 	if (board->channel == CHANNEL_SLAVE) {
 	    pita_icr_high &= ~0x0001;
 	} else {
 	    pita_icr_high &= ~0x0002;
 	}
-	writew(pita_icr_high, board->conf_addr + PITA_ICR + 2); 
+	writew(pita_icr_high, board->conf_addr + PITA_ICR + 2);
     case 4:
 	iounmap((void *)board->base_addr);
     case 3:
 	if (board->channel != CHANNEL_SLAVE)
 	    iounmap((void *)board->conf_addr);
     case 2:
-        rtcan_dev_free(dev);	
+	rtcan_dev_free(dev);
     case 1:
 	break;
     }
 
 }
 
-static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel, 
+static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
 				   struct rtcan_device **master_dev)
 {
     struct rtcan_device *dev;
@@ -162,9 +162,9 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
     dev = rtcan_dev_alloc(sizeof(struct rtcan_sja1000),
 			  sizeof(struct rtcan_peak_pci));
     if (dev == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
     init_step = 2;
-    
+
     chip = (struct rtcan_sja1000 *)dev->priv;
     board = (struct rtcan_peak_pci *)dev->board_priv;
 
@@ -173,37 +173,37 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
 
     if (channel != CHANNEL_SLAVE) {
 
-	addr = pci_resource_start(pdev, 0);    
-	board->conf_addr = ioremap(addr, PCI_CONFIG_PORT_SIZE); 
+	addr = pci_resource_start(pdev, 0);
+	board->conf_addr = ioremap(addr, PCI_CONFIG_PORT_SIZE);
 	if (board->conf_addr == 0) {
 	    ret = -ENODEV;
 	    goto failure;
 	}
 	init_step = 3;
-    
+
 	/* Set GPIO control register */
-	writew(0x0005, board->conf_addr + PITA_GPIOICR + 2);  
-    
+	writew(0x0005, board->conf_addr + PITA_GPIOICR + 2);
+
 	if (channel == CHANNEL_MASTER)
 	    writeb(0x00, board->conf_addr + PITA_GPIOICR); /* enable both */
 	else
 	    writeb(0x04, board->conf_addr + PITA_GPIOICR); /* enable single */
-	
+
 	writeb(0x05, board->conf_addr + PITA_MISC + 3);  /* toggle reset */
 	mdelay(5);
-	writeb(0x04, board->conf_addr + PITA_MISC + 3);  /* leave parport mux mode */		
+	writeb(0x04, board->conf_addr + PITA_MISC + 3);  /* leave parport mux mode */
     } else {
-	struct rtcan_peak_pci *master_board = 
+	struct rtcan_peak_pci *master_board =
 	    (struct rtcan_peak_pci *)(*master_dev)->board_priv;
 	master_board->slave_dev = dev;
 	board->conf_addr = master_board->conf_addr;
     }
 
-    addr = pci_resource_start(pdev, 1);    
+    addr = pci_resource_start(pdev, 1);
     if (channel == CHANNEL_SLAVE)
 	addr += 0x400;
-    
-    board->base_addr = ioremap(addr, PCI_PORT_SIZE); 
+
+    board->base_addr = ioremap(addr, PCI_PORT_SIZE);
     if (board->base_addr == 0) {
 	ret = -ENODEV;
 	goto failure;
@@ -239,10 +239,10 @@ static int rtcan_peak_pci_add_chan(struct pci_dev *pdev, int channel,
     } else {
 	pita_icr_high |= 0x0002;
     }
-    writew(pita_icr_high, board->conf_addr + PITA_ICR + 2); 
+    writew(pita_icr_high, board->conf_addr + PITA_ICR + 2);
     init_step = 5;
-	
-    printk("%s: base_addr=%p conf_addr=%p irq=%d\n", RTCAN_DRV_NAME, 
+
+    printk("%s: base_addr=%p conf_addr=%p irq=%d\n", RTCAN_DRV_NAME,
 	   board->base_addr, board->conf_addr, chip->irq_num);
 
     /* Register SJA1000 device */
@@ -281,19 +281,19 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
 
     if ((ret = pci_read_config_word(pdev, 0x2e, &sub_sys_id)))
 	goto failure_cleanup;
-    
+
     /* Enable memory space */
     if ((ret = pci_write_config_word(pdev, 0x04, 2)))
 	goto failure_cleanup;
-    
+
     if ((ret = pci_write_config_word(pdev, 0x44, 0)))
 	goto failure_cleanup;
-    
+
     if (sub_sys_id > 3) {
-	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_MASTER, 
+	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_MASTER,
 					   &master_dev)))
 	    goto failure_cleanup;
-	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SLAVE, 
+	if ((ret = rtcan_peak_pci_add_chan(pdev, CHANNEL_SLAVE,
 					   &master_dev)))
 	    goto failure_cleanup;
     } else {
@@ -310,10 +310,10 @@ static int __devinit peak_pci_init_one (struct pci_dev *pdev,
 	rtcan_peak_pci_del_chan(master_dev, 0);
 
     pci_release_regions(pdev);
-    
+
  failure:
     return ret;
-	
+
 }
 
 static void __devexit peak_pci_remove_one (struct pci_dev *pdev)

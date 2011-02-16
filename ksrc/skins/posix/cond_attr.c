@@ -50,7 +50,7 @@ static pthread_condattr_t default_cond_attr = {
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_init.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_init(pthread_condattr_t * attr)
 {
@@ -78,7 +78,7 @@ int pthread_condattr_init(pthread_condattr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_destroy(pthread_condattr_t * attr)
 {
@@ -120,7 +120,7 @@ int pthread_condattr_destroy(pthread_condattr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getclock.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_getclock(const pthread_condattr_t * attr,
 			      clockid_t * clk_id)
@@ -162,7 +162,7 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setclock.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
 {
@@ -216,7 +216,7 @@ int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_getpshared.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
 {
@@ -263,7 +263,7 @@ int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_condattr_setpshared.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared)
 {

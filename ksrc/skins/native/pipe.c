@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -107,7 +107,7 @@ static void __pipe_free_handler(void *buf, void *xstate) /* nklock free */
 {
 	RT_PIPE *pipe = xstate;
 	spl_t s;
-	
+
 	if (buf == pipe->buffer) {
 		/* Reset the streaming buffer. */
 		xnlock_get_irqsave(&nklock, s);
@@ -131,7 +131,7 @@ static void __pipe_output_handler(xnpipe_mh_t *mh, void *xstate) /* nklock held 
 static int __pipe_input_handler(xnpipe_mh_t *mh, int retval, void *xstate) /* nklock held */
 {
 	RT_PIPE *pipe = xstate;
-	
+
 	if (pipe->monitor == NULL)
 		return retval;
 
@@ -318,7 +318,7 @@ int rt_pipe_create(RT_PIPE *pipe, const char *name, int minor, size_t poolsize)
 	xnpipe_m_size(pipe->buffer) = streamsz - sizeof(RT_PIPE_MSG);
 #endif /* CONFIG_XENO_OPT_NATIVE_PIPE_BUFSZ > 0 */
 
-			       
+
 	ops.output = &__pipe_output_handler;
 	ops.input = &__pipe_input_handler;
 	ops.alloc_ibuf = &__pipe_alloc_handler;
@@ -1164,7 +1164,7 @@ int rt_pipe_monitor(RT_PIPE *pipe, int (*fn)(RT_PIPE *pipe, int event, long arg)
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
-	
+
 }
 
 /*@}*/

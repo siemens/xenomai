@@ -43,7 +43,7 @@
  * The action to be taken upon reception of a signal depends on the thread
  * signal mask, (see pthread_sigmask()), and on the settings described by a
  * @b sigaction structure (see sigaction()).
- * 
+ *
  *@{*/
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
@@ -168,7 +168,7 @@ static inline void andnotset(pse51_sigset_t *set,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigemptyset.html">
  * Specification.</a>
- * 
+ *
  */
 int sigemptyset(sigset_t * set)
 {
@@ -191,7 +191,7 @@ int sigemptyset(sigset_t * set)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigfillset.html">
  * Specification.</a>
- * 
+ *
  */
 int sigfillset(sigset_t * set)
 {
@@ -219,7 +219,7 @@ int sigfillset(sigset_t * set)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaddset.html">
  * Specification.</a>
- * 
+ *
  */
 int sigaddset(sigset_t * set, int sig)
 {
@@ -252,7 +252,7 @@ int sigaddset(sigset_t * set, int sig)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigdelset.html">
  * Specification.</a>
- * 
+ *
  */
 int sigdelset(sigset_t * set, int sig)
 {
@@ -285,7 +285,7 @@ int sigdelset(sigset_t * set, int sig)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigismember.html">
  * Specification.</a>
- * 
+ *
  */
 int sigismember(const sigset_t * set, int sig)
 {
@@ -467,7 +467,7 @@ static pse51_siginfo_t *pse51_getsigq(pse51_sigqueue_t * queue,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigaction.html">
  * Specification.</a>
- * 
+ *
  */
 int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {
@@ -522,7 +522,7 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_kill.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_kill(pthread_t thread, int sig)
 {
@@ -580,7 +580,7 @@ int pthread_kill(pthread_t thread, int sig)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigqueue.html">
  * sigqueue() specification.</a>
- * 
+ *
  */
 int pthread_sigqueue_np(pthread_t thread, int sig, union sigval value)
 {
@@ -631,7 +631,7 @@ int pthread_sigqueue_np(pthread_t thread, int sig, union sigval value)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigpending.html">
  * Specification.</a>
- * 
+ *
  */
 int sigpending(sigset_t * set)
 {
@@ -694,7 +694,7 @@ int sigpending(sigset_t * set)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_sigmask.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_sigmask(int how, const sigset_t * set, sigset_t * oset)
 {
@@ -867,7 +867,7 @@ static int pse51_sigtimedwait_inner(const sigset_t * set,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwait.html">
  * Specification.</a>
- * 
+ *
  */
 int sigwait(const sigset_t * set, int *sig)
 {
@@ -908,7 +908,7 @@ int sigwait(const sigset_t * set, int *sig)
 * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigwaitinfo.html">
  * Specification.</a>
- * 
+ *
  */
 int sigwaitinfo(const sigset_t * __restrict__ set,
 		siginfo_t * __restrict__ info)
@@ -961,7 +961,7 @@ int sigwaitinfo(const sigset_t * __restrict__ set,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/sigtimedwait.html">
  * Specification.</a>
- * 
+ *
  */
 int sigtimedwait(const sigset_t * __restrict__ set,
 		 siginfo_t * __restrict__ info,

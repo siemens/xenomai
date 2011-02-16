@@ -71,11 +71,11 @@ int clock_settime(clockid_t clock_id,
 
 int clock_nanosleep(clockid_t clock_id,
 		    int flags,
-                    const struct timespec *rqtp,
+		    const struct timespec *rqtp,
 		    struct timespec *rmtp);
 
 int nanosleep(const struct timespec *rqtp,
-              struct timespec *rmtp);
+	      struct timespec *rmtp);
 
 int timer_create(clockid_t clockid,
 		 const struct sigevent *__restrict__ evp,

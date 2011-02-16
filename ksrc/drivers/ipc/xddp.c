@@ -1,7 +1,7 @@
 /**
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -202,7 +202,7 @@ static int __xddp_input_handler(xnpipe_mh_t *mh, int retval, void *xstate) /* nk
 
 	priv = rtdm_context_to_private(context);
 	sk = priv->state;
-	
+
 	if (sk->monitor == NULL)
 		return retval;
 
@@ -424,7 +424,7 @@ static ssize_t __xddp_stream(struct xddp_socket *sk,
 		outbytes = 0;
 		goto out;
 	}
-			
+
 	mbuf = sk->buffer;
 	rembytes = sk->curbufsz - sizeof(*mbuf) - sk->fillsz;
 	outbytes = bufd->b_len > rembytes ? rembytes : bufd->b_len;
@@ -583,7 +583,7 @@ nostream:
 
 	ret = xnpipe_send(rsk->minor, &mbuf->mh,
 			  sublen + sizeof(*mbuf),
-			  (flags & MSG_OOB) ? 
+			  (flags & MSG_OOB) ?
 			  XNPIPE_URGENT : XNPIPE_NORMAL);
 
 	if (unlikely(ret < 0)) {
@@ -1029,7 +1029,7 @@ static int __xddp_ioctl(struct rtipc_private *priv,
 	int ret = 0;
 
 	switch (request) {
-	
+
 	case _RTIOC_CONNECT:
 		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 		if (ret == 0)

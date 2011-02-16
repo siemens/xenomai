@@ -80,7 +80,7 @@ int rtdm_select_bind_no_support(struct rtdm_dev_context *context,
 {
 	return -EBADF;
 }
-  
+
 static inline int get_name_hash(const char *str, int limit, int hashkey_mask)
 {
 	int hash = 0;

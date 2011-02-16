@@ -128,8 +128,8 @@ int main(int argc, char *argv[])
 	/* Open the device */
 	err = a4l_open(&dsc, filename);
 	if (err < 0) {
-		fprintf(stderr, 
-			"insn_write: a4l_open %s failed (err=%d)\n", 
+		fprintf(stderr,
+			"insn_write: a4l_open %s failed (err=%d)\n",
 			filename, err);
 		return err;
 	}
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 		idx_subd = dsc.idx_write_subd;
 
 	if (idx_subd == -1) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_write: no analog output subdevice available\n");
 		err = -EINVAL;
 		goto  out_insn_write;
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 	   (in case, the subdevice index was set with the option -s) */
 	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_write: get_sbinfo(%d) failed (err = %d)\n",
 			idx_subd, err);
 		err = -EINVAL;
@@ -189,16 +189,16 @@ int main(int argc, char *argv[])
 	}
 
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_AO) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_write: wrong subdevice selected "
 			"(not an analog output)\n");
 		err = -EINVAL;
-		goto out_insn_write;		
+		goto out_insn_write;
 	}
 
 	if (idx_rng >= 0) {
 
-		err = a4l_get_rnginfo(&dsc, 
+		err = a4l_get_rnginfo(&dsc,
 				      idx_subd, idx_chan, idx_rng, &rnginfo);
 		if (err < 0) {
 			fprintf(stderr,
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set the data size to write */
-	scan_size = (chinfo->nb_bits % 8 == 0) ? 
+	scan_size = (chinfo->nb_bits % 8 == 0) ?
 		chinfo->nb_bits / 8 : (chinfo->nb_bits / 8) + 1;
 
 	if (verbose != 0) {
@@ -256,11 +256,11 @@ int main(int argc, char *argv[])
 		value *= 0x00010001;
 
 	/* Perform the write operation */
-	err = a4l_sync_write(&dsc, 
+	err = a4l_sync_write(&dsc,
 			     idx_subd, CHAN(idx_chan), 0, &value, scan_size);
 
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"insn_write: a4l_sync_write failed (err=%d)\n", err);
 		goto out_insn_write;
 	}

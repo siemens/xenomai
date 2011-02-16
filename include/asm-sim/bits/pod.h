@@ -113,8 +113,8 @@ static inline unsigned long long xnarch_get_host_time(void)
     struct timeval tv;
 
     if (gettimeofday(&tv, NULL)) {
-        printf("Warning, gettimeofday failed, error %d\n", errno);
-        return 0;
+	printf("Warning, gettimeofday failed, error %d\n", errno);
+	return 0;
     }
 
     return tv.tv_sec * 1000000000ULL + tv.tv_usec * 1000;

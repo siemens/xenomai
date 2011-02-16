@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, command, transfer, etc. related features  
+ * Analogy for Linux, command, transfer, etc. related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>
@@ -175,11 +175,11 @@ int a4l_get_bufsize(a4l_desc_t * dsc,
 }
 
 /**
- * @brief Update the asynchronous buffer state 
+ * @brief Update the asynchronous buffer state
  *
  * When the mapping of the asynchronous ring-buffer (thanks to
  * a4l_mmap() is disabled, common read / write syscalls have to be
- * used. 
+ * used.
  * In input case, a4l_read() must be used for:
  * - the retrieval of the acquired data.
  * - the notification to the Analogy layer that the acquired data have
@@ -360,7 +360,7 @@ int a4l_async_read(a4l_desc_t * dsc,
 	if (dsc == NULL)
 		return -EINVAL;
 
-	/* The function a4l_poll() is useful only if 
+	/* The function a4l_poll() is useful only if
 	   the timeout is not A4L_INFINITE (== 0) */
 	if (ms_timeout != A4L_INFINITE) {
 		int ret;
@@ -417,7 +417,7 @@ int a4l_async_write(a4l_desc_t * dsc,
 	if (dsc == NULL)
 		return -EINVAL;
 
-	/* The function a4l_poll() is useful only if 
+	/* The function a4l_poll() is useful only if
 	   the timeout is not A4L_INFINITE (== 0) */
 	if (ms_timeout != A4L_INFINITE) {
 		int ret;

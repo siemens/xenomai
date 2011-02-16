@@ -184,11 +184,11 @@ int sc_qecreate(int qid,
 		int qsize,
 		int opt,
 		int *errp);
-  
+
 void sc_qdelete(int qid,
 		int opt,
 		int *errp);
-  
+
 void sc_qjam(int qid,
 	     char *msg,
 	     int *errp);

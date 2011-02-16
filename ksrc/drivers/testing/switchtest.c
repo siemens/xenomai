@@ -442,7 +442,7 @@ static int rtswitch_create_ktask(rtswitch_context_t *ctx,
 	 */
 	if (!fp_kernel_supported())
 		ptask->flags &= ~RTTST_SWTEST_USE_FPU;
-		
+
 	ptask->flags |= RTSWITCH_KERNEL;
 	err = rtswitch_register_task(ctx, ptask);
 

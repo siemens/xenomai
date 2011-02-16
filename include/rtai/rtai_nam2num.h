@@ -23,7 +23,7 @@
 
 static inline unsigned long nam2num (const char *name)
 {
-        unsigned long retval = 0;
+	unsigned long retval = 0;
 	int c, i;
 
 	for (i = 0; i < 6; i++) {
@@ -48,12 +48,12 @@ static inline unsigned long nam2num (const char *name)
 
 static inline void num2nam (unsigned long num, char *name)
 {
-        int c, i, k, q; 
+	int c, i, k, q;
 	if (num == 0xFFFFFFFF) {
 		name[0] = 0;
 		return;
 	}
-        i = 5; 
+	i = 5;
 	while (num && i >= 0) {
 		q = num/39;
 		c = num - q*39;

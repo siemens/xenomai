@@ -93,11 +93,11 @@ int sigwait(const sigset_t *set,
 
 /* Real-time signals. */
 int sigwaitinfo(const sigset_t *__restrict__ set,
-                siginfo_t *__restrict__ info);
+		siginfo_t *__restrict__ info);
 
 int sigtimedwait(const sigset_t *__restrict__ user_set,
-                 siginfo_t *__restrict__ info,
-                 const struct timespec *__restrict__ timeout);
+		 siginfo_t *__restrict__ info,
+		 const struct timespec *__restrict__ timeout);
 
 int pthread_sigqueue_np (struct pse51_thread *thread, int sig, union sigval value);
 

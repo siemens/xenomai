@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 	    ptr = optarg;
 	    while (1) {
 		bittime_data[bittime_count++] = strtoul(ptr, NULL, 0);
-	        if (!(ptr = strchr(ptr, ':')))
+		if (!(ptr = strchr(ptr, ':')))
 		    break;
 		ptr++;
 	    }
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 
     if (new_mode != -1) {
 	mode = (can_mode_t *)&ifr.ifr_ifru;
-        *mode = new_mode;
+	*mode = new_mode;
 	ret = rt_dev_ioctl(can_fd, SIOCSCANMODE, &ifr);
 	if (ret) {
 	    goto abort;

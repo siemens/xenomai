@@ -254,7 +254,7 @@ int msgQReceive(MSG_Q_ID qid, char *buf, UINT bytes, int to)
 	error_check(buf == NULL, 0, return ERROR);
 
 	check_NOT_ISR_CALLABLE(return ERROR);
-	
+
 	xnlock_get_irqsave(&nklock, s);
 
 	check_OBJ_ID_ERROR(qid, wind_msgq_t, queue, WIND_MSGQ_MAGIC,

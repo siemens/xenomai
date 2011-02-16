@@ -19,9 +19,9 @@ void task_body (void *cookie)
 
     for (;;) {
 	rt_task_sleep(1000000000);
-        /* Running in primary mode... */
+	/* Running in primary mode... */
 	printf("Switched to secondary mode\n");
-        /* ...printf() => write(2): we have just switched to secondary
+	/* ...printf() => write(2): we have just switched to secondary
 	   mode: SIGDEBUG should have been sent to us by now. */
     }
 }
@@ -43,7 +43,7 @@ void warn_upon_switch(int sig, siginfo_t *si, void *context)
     int nentries;
 
     printf("\nSIGDEBUG received, reason %d: %s\n", reason,
-           reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
+	   reason <= SIGDEBUG_WATCHDOG ? reason_str[reason] : "<unknown>");
     /* Dump a backtrace of the frame which caused the switch to
        secondary mode: */
     nentries = backtrace(bt,sizeof(bt) / sizeof(bt[0]));

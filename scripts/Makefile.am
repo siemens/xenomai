@@ -17,4 +17,3 @@ EXTRA_DIST = \
 	defconfig.frag \
 	help_from_kconfig.pl \
 	$(wildcard postinstall.sh)
-

@@ -1,6 +1,6 @@
 /**
  * @file
- * Analogy for Linux, descriptor related features  
+ * Analogy for Linux, descriptor related features
  *
  * @note Copyright (C) 1997-2000 David A. Schleef <ds@schleef.org>
  * @note Copyright (C) 2008 Alexis Berlemont <alexis.berlemont@free.fr>

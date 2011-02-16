@@ -85,9 +85,9 @@ void wind_task_hooks_cleanup(void)
     spl_t s; \
     int err = OK; \
     if(!hook) { 					\
-        wind_errnoset(S_taskLib_TASK_HOOK_TABLE_FULL); \
-        err = ERROR; \
-        goto hook_done; \
+	wind_errnoset(S_taskLib_TASK_HOOK_TABLE_FULL); \
+	err = ERROR; \
+	goto hook_done; \
     } \
     hook->function = wind_hook; \
     inith(&hook->link); \

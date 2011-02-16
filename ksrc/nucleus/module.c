@@ -114,7 +114,7 @@ int __init __xeno_sys_init(void)
 
 	xnheap_init_vdso();
 #endif
-	
+
 #ifdef __KERNEL__
 	xnpod_mount();
 	xnintr_mount();
@@ -172,7 +172,7 @@ int __init __xeno_sys_init(void)
 
 #ifdef CONFIG_XENO_OPT_SELECT
 	xnselect_umount();
-	
+
       cleanup_pipe:
 #endif /* CONFIG_XENO_OPT_SELECT */
 

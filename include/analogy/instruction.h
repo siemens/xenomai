@@ -41,35 +41,35 @@
  * @{
  */
 
-/** 
+/**
  * Read instruction
  */
 #define A4L_INSN_READ (0 | A4L_INSN_MASK_READ)
-/** 
+/**
  * Write instruction
  */
 #define A4L_INSN_WRITE (1 | A4L_INSN_MASK_WRITE)
-/** 
+/**
  * "Bits" instruction
  */
 #define A4L_INSN_BITS (2 | A4L_INSN_MASK_READ | \
 		       A4L_INSN_MASK_WRITE)
-/** 
+/**
  * Configuration instruction
  */
 #define A4L_INSN_CONFIG (3 | A4L_INSN_MASK_READ | \
 			 A4L_INSN_MASK_WRITE)
-/** 
+/**
  * Get time instruction
  */
 #define A4L_INSN_GTOD (4 | A4L_INSN_MASK_READ | \
 		       A4L_INSN_MASK_SPECIAL)
-/** 
+/**
  * Wait instruction
  */
 #define A4L_INSN_WAIT (5 | A4L_INSN_MASK_WRITE | \
 		       A4L_INSN_MASK_SPECIAL)
-/** 
+/**
  * Trigger instruction (to start asynchronous acquisition)
  */
 #define A4L_INSN_INTTRIG (6 | A4L_INSN_MASK_WRITE | \
@@ -77,7 +77,7 @@
 
 	  /*! @} ANALOGY_INSN_xxx */
 
-/** 
+/**
  * Maximal wait duration
  */
 #define A4L_INSN_WAIT_MAX 100000
@@ -161,7 +161,7 @@
 
 	  /*! @} ANALOGY_EV_xxx */
 
-/*! 
+/*!
  * @brief Structure describing the synchronous instruction
  * @see a4l_snd_insn()
  */
@@ -180,7 +180,7 @@ struct a4l_instruction {
 };
 typedef struct a4l_instruction a4l_insn_t;
 
-/*! 
+/*!
  * @brief Structure describing the list of synchronous instructions
  * @see a4l_snd_insnlist()
  */

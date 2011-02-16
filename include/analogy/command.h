@@ -36,15 +36,15 @@
  * @{
  */
 
-/** 
+/**
  * Do not execute the command, just check it
  */
 #define A4L_CMD_SIMUL 0x1
-/** 
+/**
  * Perform data recovery / transmission in bulk mode
  */
 #define A4L_CMD_BULK 0x2
-/** 
+/**
  * Perform a command which will write data to the device
  */
 #define A4L_CMD_WRITE 0x4
@@ -57,63 +57,63 @@
  * @{
  */
 
-/** 
+/**
  * Never trigger
  */
 #define TRIG_NONE	0x00000001
-/** 
+/**
  * Trigger now + N ns
  */
 #define TRIG_NOW	0x00000002
-/** 
+/**
  * Trigger on next lower level trig
  */
 #define TRIG_FOLLOW	0x00000004
-/** 
+/**
  * Trigger at time N ns
  */
 #define TRIG_TIME	0x00000008
-/** 
+/**
  * Trigger at rate N ns
  */
 #define TRIG_TIMER	0x00000010
-/** 
+/**
  * Trigger when count reaches N
  */
 #define TRIG_COUNT	0x00000020
-/** 
+/**
  * Trigger on external signal N
  */
 #define TRIG_EXT	0x00000040
-/** 
+/**
  * Trigger on analogy-internal signal N
  */
 #define TRIG_INT	0x00000080
-/** 
+/**
  * Driver defined trigger
  */
 #define TRIG_OTHER	0x00000100
-/** 
+/**
  * Wake up on end-of-scan
  */
 #define TRIG_WAKE_EOS	0x0020
-/** 
+/**
  * Trigger not implemented yet
  */
 #define TRIG_ROUND_MASK 0x00030000
-/** 
+/**
  * Trigger not implemented yet
  */
 #define TRIG_ROUND_NEAREST 0x00000000
-/** 
+/**
  * Trigger not implemented yet
  */
 #define TRIG_ROUND_DOWN 0x00010000
-/** 
+/**
  * Trigger not implemented yet
  */
 #define TRIG_ROUND_UP 0x00020000
-/** 
+/**
  * Trigger not implemented yet
  */
 #define TRIG_ROUND_UP_NEXT 0x00030000
@@ -127,44 +127,44 @@
  * @{
  */
 
-/** 
+/**
  * Channel indication macro
  */
 #define CHAN(a) ((a) & 0xffff)
-/** 
+/**
  * Range definition macro
  */
 #define RNG(a) (((a) & 0xff) << 16)
-/** 
+/**
  * Reference definition macro
  */
 #define AREF(a) (((a) & 0xf) << 24)
-/** 
+/**
  * Flags definition macro
  */
 #define FLAGS(a) ((a) & CR_FLAGS_MASK)
-/** 
+/**
  * Channel + range + reference definition macro
  */
 #define PACK(a, b, c) (CHAN(a) | RNG(b) | AREF(c))
-/** 
+/**
  * Channel + range + reference + flags definition macro
  */
 #define PACK_FLAGS(a, b, c, d) (CHAN(a) | RNG(b) | AREF(c) | FLAGS(d))
 
-/** 
+/**
  * Analog reference is analog ground
  */
 #define AREF_GROUND 0x00
-/** 
+/**
  * Analog reference is analog common
  */
 #define AREF_COMMON 0x01
-/** 
+/**
  * Analog reference is differential
  */
 #define AREF_DIFF 0x02
-/** 
+/**
  * Analog reference is undefined
  */
 #define AREF_OTHER 0x03
@@ -181,7 +181,7 @@
 #define CR_EDGE	(1<<28)
 #define CR_INVERT (1<<29)
 
-#if defined(__KERNEL__) 
+#if defined(__KERNEL__)
 /* Channels macros only useful for the kernel side */
 #define CR_CHAN(a) CHAN(a)
 #define CR_RNG(a) (((a)>>16)&0xff)
@@ -190,7 +190,7 @@
 
 #endif /* !DOXYGEN_CPP */
 
-/*! 
+/*!
  * @brief Structure describing the asynchronous instruction
  * @see a4l_snd_command()
  */

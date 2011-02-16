@@ -27,7 +27,7 @@
 #define rt_free(ptr)	xnheap_free(&kheap,ptr)
 
 /*
- * TODO: 
+ * TODO:
 extern void display_chunk(void *addr);
 extern int rt_mem_init(void);
 extern void rt_mem_end(void);

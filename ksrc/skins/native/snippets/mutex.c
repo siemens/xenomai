@@ -20,7 +20,7 @@ int main (int argc, char *argv[])
     rt_mutex_acquire(&mutex_desc,TM_INFINITE);
 
     /* ... Critical section ... */
-    
+
     rt_mutex_release(&mutex_desc);
 
     /* ... */

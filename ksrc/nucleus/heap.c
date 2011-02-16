@@ -45,20 +45,20 @@ HEAP {
      block_buckets[]
      extent_queue -------+
 }                        |
-                         V
-                      EXTENT #1 {
-                             {static header}
-                             page_map[npages]
-                             page_array[npages][pagesize]
-                      } -+
-                         |
-                         |
-                         V
-                      EXTENT #n {
-                             {static header}
-                             page_map[npages]
-                             page_array[npages][pagesize]
-                      }
+			 V
+		      EXTENT #1 {
+			     {static header}
+			     page_map[npages]
+			     page_array[npages][pagesize]
+		      } -+
+			 |
+			 |
+			 V
+		      EXTENT #n {
+			     {static header}
+			     page_map[npages]
+			     page_array[npages][pagesize]
+		      }
 @endverbatim </tt>
  *
  *@{*/
@@ -289,7 +289,7 @@ void xnheap_set_label(xnheap_t *heap, const char *label, ...)
 }
 EXPORT_SYMBOL_GPL(xnheap_set_label);
 
-/*! 
+/*!
  * \fn void xnheap_destroy(xnheap_t *heap, void (*flushfn)(xnheap_t *heap, void *extaddr, u_long extsize, void *cookie), void *cookie)
  * \brief Destroys a memory heap.
  *
@@ -447,7 +447,7 @@ static caddr_t get_free_range(xnheap_t *heap, u_long bsize, int log2size)
 	return headpage;
 }
 
-/*! 
+/*!
  * \fn void *xnheap_alloc(xnheap_t *heap, u_long size)
  * \brief Allocate a memory block from a memory heap.
  *
@@ -580,7 +580,7 @@ void *xnheap_alloc(xnheap_t *heap, u_long size)
 }
 EXPORT_SYMBOL_GPL(xnheap_alloc);
 
-/*! 
+/*!
  * \fn int xnheap_test_and_free(xnheap_t *heap,void *block,int (*ckfn)(void *block))
  * \brief Test and release a memory block to a memory heap.
  *
@@ -807,7 +807,7 @@ int xnheap_test_and_free(xnheap_t *heap, void *block, int (*ckfn) (void *block))
 }
 EXPORT_SYMBOL_GPL(xnheap_test_and_free);
 
-/*! 
+/*!
  * \fn int xnheap_free(xnheap_t *heap, void *block)
  * \brief Release a memory block to a memory heap.
  *
@@ -846,7 +846,7 @@ int xnheap_free(xnheap_t *heap, void *block)
 }
 EXPORT_SYMBOL_GPL(xnheap_free);
 
-/*! 
+/*!
  * \fn int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
  * \brief Extend a memory heap.
  *
@@ -892,7 +892,7 @@ int xnheap_extend(xnheap_t *heap, void *extaddr, u_long extsize)
 }
 EXPORT_SYMBOL_GPL(xnheap_extend);
 
-/*! 
+/*!
  * \fn int xnheap_schedule_free(xnheap_t *heap, void *block, xnholder_t *link)
  * \brief Schedule a memory block for release.
  *
@@ -987,7 +987,7 @@ int xnheap_check_block(xnheap_t *heap, void *block)
 
 	if (ptype == XNHEAP_PFREE ||	/* Unallocated page? */
 	    ptype == XNHEAP_PCONT)	/* Not a range heading page? */
-  bad_block: 
+  bad_block:
 		err = -EINVAL;
 
 	xnlock_put_irqrestore(&heap->lock, s);

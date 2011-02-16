@@ -1,7 +1,7 @@
 /**
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -602,7 +602,7 @@ static int __iddp_bind_socket(struct rtipc_private *priv,
 fail:
 	xnmap_remove(portmap, port);
 	clear_bit(_IDDP_BINDING, &sk->status);
-	
+
 	return ret;
 }
 
@@ -857,7 +857,7 @@ static int __iddp_ioctl(struct rtipc_private *priv,
 	int ret = 0;
 
 	switch (request) {
-	
+
 	case _RTIOC_CONNECT:
 		ret = rtipc_get_sockaddr(user_info, arg, &saddrp);
 		if (ret)

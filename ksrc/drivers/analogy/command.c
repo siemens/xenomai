@@ -38,7 +38,7 @@ int a4l_fill_cmddesc(a4l_cxt_t * cxt, a4l_cmd_t * desc, void *arg)
 	int ret = 0;
 	unsigned int *tmpchans = NULL;
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+	ret = rtdm_safe_copy_from_user(cxt->user_info,
 				       desc, arg, sizeof(a4l_cmd_t));
 	if (ret != 0)
 		goto out_cmddesc;
@@ -294,7 +294,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 {
 	int ret = 0, simul_flag = 0;
 	a4l_cmd_t *cmd_desc = NULL;
-	a4l_dev_t *dev = a4l_get_dev(cxt);	
+	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_subd_t *subd;
 
 	/* The command launching cannot be done in real-time because
@@ -333,7 +333,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 	if (ret != 0)
 		goto out_ioctl_cmd;
 
-	__a4l_dbg(1, core_dbg, 
+	__a4l_dbg(1, core_dbg,
 		  "a4l_ioctl_cmd: 1st cmd checks passed\n");
 
 	subd = dev->transfer.subds[cmd_desc->idx_subd];
@@ -346,7 +346,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 		goto out_ioctl_cmd;
 	}
 
-	__a4l_dbg(1, core_dbg, 
+	__a4l_dbg(1, core_dbg,
 		  "a4l_ioctl_cmd: driver's cmd checks passed\n");
 
 	if (cmd_desc->flags & A4L_CMD_SIMUL) {
@@ -361,7 +361,7 @@ int a4l_ioctl_cmd(a4l_cxt_t * cxt, void *arg)
 
 	/* Eventually launches the command */
 	ret = subd->do_cmd(subd, cmd_desc);
-	
+
 	if (ret != 0) {
 		a4l_cancel_buffer(cxt);
 		goto out_ioctl_cmd;

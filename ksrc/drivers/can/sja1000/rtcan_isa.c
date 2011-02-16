@@ -183,7 +183,7 @@ static void rtcan_isa_exit(void)
 {
 	int i;
 	struct rtcan_device *dev;
-	
+
 	for (i = 0; i < RTCAN_ISA_MAX_DEV; i++) {
 		dev = rtcan_isa_devs[i];
 		if (!dev)

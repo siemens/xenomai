@@ -51,7 +51,7 @@ static const pthread_mutexattr_t default_mutex_attr = {
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_init.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_init(pthread_mutexattr_t * attr)
 {
@@ -79,7 +79,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
 {
@@ -121,7 +121,7 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_gettype.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
 {
@@ -161,7 +161,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
  *
  * @param attr an initialized mutex attributes object,
  *
- * @param type value of the @a type attribute. 
+ * @param type value of the @a type attribute.
  *
  * @return 0 on success,
  * @return an error number if:
@@ -171,7 +171,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t * attr, int *type)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_settype.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
 {
@@ -229,7 +229,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int type)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_getprotocol.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
 {
@@ -277,7 +277,7 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t * attr, int *proto)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setprotocol.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t * attr, int proto)
 {
@@ -386,7 +386,7 @@ int pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_mutexattr_setpshared.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared)
 {

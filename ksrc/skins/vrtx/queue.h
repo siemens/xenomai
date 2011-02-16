@@ -38,7 +38,7 @@ typedef struct vrtxqueue {
     xnsynch_t synchbase;
 
     char **messages;
-    
+
     int rdptr;
 
     int wrptr;

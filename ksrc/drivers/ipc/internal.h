@@ -1,7 +1,7 @@
 /**
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2009 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -91,7 +91,7 @@ static inline nanosecs_rel_t rtipc_timeval_to_ns(const struct timeval *tv)
 static inline void rtipc_ns_to_timeval(struct timeval *tv, nanosecs_rel_t ns)
 {
 	unsigned long nsecs;
-	
+
 	tv->tv_sec = xnarch_divrem_billion(ns, &nsecs);
 	tv->tv_usec = nsecs / 1000;
 }

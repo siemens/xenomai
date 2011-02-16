@@ -3,7 +3,7 @@
 #define EVENT_INIT        0x0           /* No flags present at init */
 #define EVENT_MODE        EV_PRIO       /* Tasks will wait by priority order */
 #define EVENT_WAIT_MASK   (0x1|0x2|0x4) /* List of monitored events */
-#define EVENT_SIGNAL_MASK (0x2)	        /* List of events to send */
+#define EVENT_SIGNAL_MASK (0x2)		/* List of events to send */
 
 RT_EVENT ev_desc;
 

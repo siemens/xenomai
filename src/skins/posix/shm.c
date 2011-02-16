@@ -65,7 +65,7 @@ int __wrap_shm_unlink(const char *name)
 	if (err == ENOSYS)
 		return __real_shm_unlink(name);
 #endif
-	
+
 	errno = err;
 	return -1;
 }

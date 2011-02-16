@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -195,7 +195,7 @@ static void __queue_flush_private(xnheap_t *heap,
  * real-time support in user-space is unavailable.
  *
  * - -ENOENT is returned if /dev/rtheap can't be opened.
- *   
+ *
  * Environments:
  *
  * This service can be called from:
@@ -228,7 +228,7 @@ int rt_queue_create(RT_QUEUE *q,
 
 		err = xnheap_init_mapped(&q->bufpool,
 					 poolsize,
-					 ((mode & Q_DMA) ? GFP_DMA 
+					 ((mode & Q_DMA) ? GFP_DMA
 					  : XNARCH_SHARED_HEAP_FLAGS));
 		if (err)
 			return err;
@@ -1160,7 +1160,7 @@ int rt_queue_flush(RT_QUEUE *q)
 	 * Transfer the contents to a private queue by moving queue
 	 * heads, so that we may free any number of messages without
 	 * holding the nklock.
-	 */ 
+	 */
 	initq(&tmpq);
 	moveq(&tmpq, &q->pendq);
 

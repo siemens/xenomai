@@ -219,7 +219,7 @@ static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_open.html">
  * Specification.</a>
- * 
+ *
  */
 int shm_open(const char *name, int oflags, mode_t mode)
 {
@@ -322,7 +322,7 @@ int shm_open(const char *name, int oflags, mode_t mode)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/close.html">
  * Specification.</a>
- * 
+ *
  */
 int close(int fd)
 {
@@ -368,7 +368,7 @@ int close(int fd)
  * memory object is not destroyed until every file descriptor obtained with the
  * shm_open() service is closed with the close() service and all mappings done
  * with mmap() are unmapped with munmap(). However, after a call to this
- * service, the unlinked shared memory object may no longer be reached 
+ * service, the unlinked shared memory object may no longer be reached
  * with the shm_open() service.
  *
  * @param name name of the shared memory obect to be unlinked.
@@ -378,7 +378,7 @@ int close(int fd)
  * - EPERM, the caller context is invalid;
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - ENOENT, the shared memory object does not exist.
- * 
+ *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - kernel-space cancellation cleanup routine;
@@ -388,7 +388,7 @@ int close(int fd)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/shm_unlink.html">
  * Specification.</a>
- * 
+ *
  */
 int shm_unlink(const char *name)
 {
@@ -457,7 +457,7 @@ int shm_unlink(const char *name)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/ftruncate.html">
  * Specification.</a>
- * 
+ *
  */
 int ftruncate(int fd, off_t len)
 {
@@ -636,7 +636,7 @@ int ftruncate(int fd, off_t len)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mmap.html">
  * Specification.</a>
- * 
+ *
  */
 void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
@@ -778,7 +778,7 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
  * - ENXIO, @a addr is not the address of a shared memory area;
  * - EPERM, the caller context is invalid;
  * - EINTR, this service was interrupted by a signal.
- * 
+ *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - kernel-space cancellation cleanup routine;
@@ -788,7 +788,7 @@ static pse51_shm_t *pse51_shm_lookup(void *addr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/munmap.html">
  * Specification.</a>
- * 
+ *
  */
 int munmap(void *addr, size_t len)
 {

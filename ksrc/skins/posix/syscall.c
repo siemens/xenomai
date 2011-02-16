@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org> 
+ * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>
  * Copyright (C) 2005 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -1581,7 +1581,7 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 		break;
 	}
 
-	if (err == EINTR 
+	if (err == EINTR
 	    &&__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
 				     &count, sizeof(count)))
 			return -EFAULT;
@@ -2266,7 +2266,7 @@ static int fd_valid_p(int fd)
 	pse51_assoc_t *assoc;
 #if defined(CONFIG_XENO_SKIN_RTDM) || defined (CONFIG_XENO_SKIN_RTDM_MODULE)
 	const int rtdm_fd_start = FD_SETSIZE - RTDM_FD_MAX;
-	
+
 	if (fd >= rtdm_fd_start) {
 		struct rtdm_dev_context *ctx;
 		ctx = rtdm_context_get(fd - rtdm_fd_start);
@@ -2783,7 +2783,7 @@ static xnsysent_t __systab[] = {
 	[__pse51_clock_getres] = {&__clock_getres, __xn_exec_any},
 	[__pse51_clock_gettime] = {&__clock_gettime, __xn_exec_any},
 	[__pse51_clock_settime] = {&__clock_settime, __xn_exec_any},
-	[__pse51_clock_nanosleep] = {&__clock_nanosleep, 
+	[__pse51_clock_nanosleep] = {&__clock_nanosleep,
 				     __xn_exec_primary | __xn_exec_norestart},
 	[__pse51_mutex_init] = {&__pthread_mutex_init, __xn_exec_any},
 	[__pse51_mutex_destroy] = {&__pthread_mutex_destroy, __xn_exec_any},
@@ -2793,7 +2793,7 @@ static xnsysent_t __systab[] = {
 #ifndef CONFIG_XENO_FASTSYNCH
 	[__pse51_mutex_trylock] = {&__pthread_mutex_trylock, __xn_exec_primary},
 #else
-        [__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},
+	[__pse51_check_init] = {&__pthread_mutex_check_init, __xn_exec_any},
 #endif
 	[__pse51_mutex_unlock] = {&__pthread_mutex_unlock, __xn_exec_primary|__xn_exec_norestart},
 	[__pse51_cond_init] = {&__pthread_cond_init, __xn_exec_any},

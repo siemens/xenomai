@@ -39,7 +39,7 @@
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
+		:"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define wrap_test_fpu_used(task)  \
@@ -122,14 +122,14 @@ static inline void wrap_switch_iobitmap(struct task_struct *p, int cpu)
     	struct tss_struct *tss = &per_cpu(init_tss, cpu);
 
 	if (wrap_iobitmap_base(tss) == INVALID_IO_BITMAP_OFFSET_LAZY) {
-                
+
 		memcpy(tss->io_bitmap, thread->io_bitmap_ptr, thread->io_bitmap_max);
 
 		if (thread->io_bitmap_max < tss->io_bitmap_max)
 		    memset((char *) tss->io_bitmap +
 			   thread->io_bitmap_max, 0xff,
 			   tss->io_bitmap_max - thread->io_bitmap_max);
-	
+
 		tss->io_bitmap_max = thread->io_bitmap_max;
 		wrap_iobitmap_base(tss) = IO_BITMAP_OFFSET;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)

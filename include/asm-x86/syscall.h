@@ -171,7 +171,7 @@ asm (".L__X'%ebx = 1\n\t"
 
 static inline void __xn_get_ebp(void **dest)
 {
-        asm volatile("movl %%ebp, %0": "=m"(*dest));
+	asm volatile("movl %%ebp, %0": "=m"(*dest));
 }
 
 #define XENOMAI_SYS_MUX_INNER(nr, op, args...)			\

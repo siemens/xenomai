@@ -42,7 +42,7 @@ void sc_gclock(struct timespec *timep, unsigned long *nsp, int *errp)
 void sc_sclock(struct timespec time, unsigned long ns, int *errp)
 {
  	spl_t s;
- 
+
 	if (ns > 1000000000 ||
 	    time.nanoseconds < 0 || time.nanoseconds > 999999999) {
 		*errp = ER_IIP;

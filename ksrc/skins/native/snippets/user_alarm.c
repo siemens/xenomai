@@ -22,7 +22,7 @@ void alarm_server (void *cookie)
        err = rt_alarm_wait(&alarm_desc);
 
        if (!err) {
-           /* Process the alarm shot. */
+	   /* Process the alarm shot. */
        }
     }
 }

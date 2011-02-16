@@ -149,7 +149,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	/* Checks if the transfer system has to work in bulk mode */
 	if (cmd->flags & A4L_CMD_BULK)
 		set_bit(A4L_BUF_BULK_NR, &buf_desc->flags);
-	
+
 	/* Sets the working command */
 	buf_desc->cur_cmd = cmd;
 
@@ -160,7 +160,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 	if (cmd->stop_src == TRIG_COUNT) {
 		for (i = 0; i < cmd->nb_chan; i++) {
 			a4l_chan_t *chft;
-			chft = a4l_get_chfeat(buf_desc->subd, 
+			chft = a4l_get_chfeat(buf_desc->subd,
 					      CR_CHAN(cmd->chan_descs[i]));
 			buf_desc->end_count += chft->nb_bits / 8;
 		}
@@ -169,7 +169,7 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd)
 
 	__a4l_dbg(1, core_dbg,
 		  "a4l_setup_buffer: end_count=%lu\n", buf_desc->end_count);
-	
+
 	return 0;
 }
 
@@ -177,16 +177,16 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 {
 	a4l_buf_t *buf_desc = cxt->buffer;
 	a4l_subd_t *subd = buf_desc->subd;
-	
+
 	int err = 0;
 
 	if (!subd || !test_bit(A4L_SUBD_BUSY_NR, &subd->status))
 		return 0;
 
 	/* If a "cancel" function is registered, call it
-	   (Note: this function is called before having checked 
-	   if a command is under progress; we consider that 
-	   the "cancel" function can be used as as to (re)initialize 
+	   (Note: this function is called before having checked
+	   if a command is under progress; we consider that
+	   the "cancel" function can be used as as to (re)initialize
 	   some component) */
 	if (subd->cancel != NULL && (err = subd->cancel(subd)) < 0) {
 		__a4l_err("a4l_cancel: cancel handler failed (err=%d)\n", err);
@@ -210,21 +210,21 @@ int a4l_cancel_buffer(a4l_cxt_t *cxt)
 
 int a4l_get_chan(a4l_subd_t *subd)
 {
-	int i, j, tmp_count, tmp_size = 0;	
+	int i, j, tmp_count, tmp_size = 0;
 	a4l_cmd_t *cmd;
 
 	cmd = a4l_get_cmd(subd);
-	if (!cmd) 
+	if (!cmd)
 		return -EINVAL;
 
-	/* There is no need to check the channel idx, 
+	/* There is no need to check the channel idx,
 	   it has already been controlled in command_test */
 
 	/* We assume channels can have different sizes;
 	   so, we have to compute the global size of the channels
 	   in this command... */
 	for (i = 0; i < cmd->nb_chan; i++) {
-		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ?
 			CR_CHAN(cmd->chan_descs[i]) : 0;
 		tmp_size += subd->chan_desc->chans[j].nb_bits;
 	}
@@ -237,10 +237,10 @@ int a4l_get_chan(a4l_subd_t *subd)
 	/* Translation bytes -> bits */
 	tmp_count *= 8;
 
-	/* ...and find the channel the last munged sample 
+	/* ...and find the channel the last munged sample
 	   was related with */
 	for (i = 0; tmp_count > 0 && i < cmd->nb_chan; i++) {
-		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ? 
+		j = (subd->chan_desc->mode != A4L_CHAN_GLOBAL_CHANDESC) ?
 			CR_CHAN(cmd->chan_descs[i]) : 0;
 		tmp_count -= subd->chan_desc->chans[j].nb_bits;
 	}
@@ -306,7 +306,7 @@ int a4l_buf_commit_put(a4l_subd_t *subd, unsigned long count)
 	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
 
-	return __put(buf, count);	
+	return __put(buf, count);
 }
 
 int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
@@ -319,13 +319,13 @@ int a4l_buf_put(a4l_subd_t *subd, void *bufdata, unsigned long count)
 
 	if (!a4l_subd_is_input(subd))
 		return -EINVAL;
-	
+
 	if (__count_to_put(buf) < count)
 		return -EAGAIN;
 
 	err = __produce(NULL, buf, bufdata, count);
 	if (err < 0)
-		return err;	
+		return err;
 
 	err = __put(buf, count);
 
@@ -429,7 +429,7 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts)
 		return -ENOENT;
 
 	/* Even if it is a little more complex,
-	   atomic operations are used so as 
+	   atomic operations are used so as
 	   to prevent any kind of corner case */
 	while ((tmp = ffs(evts) - 1) != -1) {
 		set_bit(tmp, &buf->flags);
@@ -454,7 +454,7 @@ unsigned long a4l_buf_count(a4l_subd_t *subd)
 	if (a4l_subd_is_input(subd))
 		ret = __count_to_put(buf);
 	else if (a4l_subd_is_output(subd))
-		ret = __count_to_get(buf);	
+		ret = __count_to_get(buf);
 
 	return ret;
 }
@@ -485,7 +485,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 	a4l_buf_t *buf;
 	int ret;
 
-	/* The mmap operation cannot be performed in a 
+	/* The mmap operation cannot be performed in a
 	   real-time context */
 	if (rtdm_in_rt_context()) {
 		return -ENOSYS;
@@ -509,7 +509,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &map_cfg, arg, sizeof(a4l_mmap_t)) != 0)
-		return -EFAULT;	
+		return -EFAULT;
 
 	/* Check the size to be mapped */
 	if ((map_cfg.size & ~(PAGE_MASK)) != 0 || map_cfg.size > buf->size)
@@ -528,7 +528,7 @@ int a4l_ioctl_mmap(a4l_cxt_t *cxt, void *arg)
 		return ret;
 	}
 
-	return rtdm_safe_copy_to_user(cxt->user_info, 
+	return rtdm_safe_copy_to_user(cxt->user_info,
 				      arg, &map_cfg, sizeof(a4l_mmap_t));
 }
 
@@ -552,19 +552,19 @@ int a4l_ioctl_cancel(a4l_cxt_t * cxt, void *arg)
 			  "no acquisition to cancel on this context\n");
 		return -EINVAL;
 	}
-	
+
 	if (idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_ioctl_cancel: bad subdevice index\n");
 		return -EINVAL;
 	}
 
 	subd = dev->transfer.subds[idx_subd];
-	
+
 	if (subd != cxt->buffer->subd) {
 		__a4l_err("a4l_ioctl_cancel: "
 			  "current context works on another subdevice "
 			  "(%d!=%d)\n", cxt->buffer->subd->idx, subd->idx);
-		return -EINVAL;		
+		return -EINVAL;
 	}
 
 	return a4l_cancel_buffer(cxt);
@@ -594,7 +594,7 @@ int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg)
 	}
 
 	if (rtdm_safe_copy_from_user(cxt->user_info,
-				     &buf_cfg, 
+				     &buf_cfg,
 				     arg, sizeof(a4l_bufcfg_t)) != 0)
 		return -EFAULT;
 
@@ -672,7 +672,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount to read */
 		tmp_cnt = info.rw_count = __count_to_get(buf);
 
-		__a4l_dbg(1, core_dbg, 
+		__a4l_dbg(1, core_dbg,
 			  "a4l_ioctl_bufinfo: count to read=%lu\n", tmp_cnt);
 
 		if ((ret < 0 && ret != -ENOENT) ||
@@ -688,7 +688,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 				return ret;
 		}
 
-		/* If rw_count is not null, 
+		/* If rw_count is not null,
 		   there is something to write / munge  */
 		if (info.rw_count != 0 && info.rw_count <= __count_to_put(buf)) {
 
@@ -703,8 +703,8 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		/* Retrieves the data amount which is writable */
 		info.rw_count = __count_to_put(buf);
 
-		__a4l_dbg(1, core_dbg, 
-			  "a4l_ioctl_bufinfo: count to write=%lu\n", 
+		__a4l_dbg(1, core_dbg,
+			  "a4l_ioctl_bufinfo: count to write=%lu\n",
 			  info.rw_count);
 
 	} else {
@@ -722,7 +722,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg)
 		buf->mng_count += tmp_cnt;
 	}
 
-a4l_ioctl_bufinfo_out:	
+a4l_ioctl_bufinfo_out:
 
 	/* Sets the buffer size */
 	info.buf_size = buf->size;
@@ -780,9 +780,9 @@ ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes)
 		if (ret < 0 && ret != -ENOENT) {
 			a4l_cancel_buffer(cxt);
 			count = ret;
-			goto out_a4l_read;			
+			goto out_a4l_read;
 		}
-		
+
 		/* We check whether the acquisition is over */
 		if (ret == -ENOENT && tmp_cnt == 0) {
 			a4l_cancel_buffer(cxt);
@@ -887,7 +887,7 @@ ssize_t a4l_write_buffer(a4l_cxt_t *cxt, const void *bufdata, size_t nbytes)
 		if (tmp_cnt > 0) {
 
 			/* Performs the copy */
-			ret = __produce(cxt, 
+			ret = __produce(cxt,
 					buf, (void *)bufdata + count, tmp_cnt);
 			if (ret < 0) {
 				count = ret;
@@ -929,7 +929,7 @@ out_a4l_write:
 	return count;
 }
 
-int a4l_select(a4l_cxt_t *cxt, 
+int a4l_select(a4l_cxt_t *cxt,
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index)
 {
@@ -949,10 +949,10 @@ int a4l_select(a4l_cxt_t *cxt,
 		return -ENOENT;
 	}
 
-	/* Check the RTDM select type 
+	/* Check the RTDM select type
 	   (RTDM_SELECTTYPE_EXCEPT is not supported) */
 
-	if(type != RTDM_SELECTTYPE_READ && 
+	if(type != RTDM_SELECTTYPE_READ &&
 	   type != RTDM_SELECTTYPE_WRITE) {
 		__a4l_err("a4l_select: wrong select argument\n");
 		return -EINVAL;
@@ -971,7 +971,7 @@ int a4l_select(a4l_cxt_t *cxt,
 	}
 
 	/* Performs a bind on the Analogy synchronization element */
-	return a4l_select_sync(&(buf->sync), selector, type, fd_index);	
+	return a4l_select_sync(&(buf->sync), selector, type, fd_index);
 }
 
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
@@ -980,7 +980,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	unsigned long tmp_cnt = 0;
 	a4l_dev_t *dev = a4l_get_dev(cxt);
 	a4l_buf_t *buf = cxt->buffer;
-	a4l_subd_t *subd = buf->subd;	
+	a4l_subd_t *subd = buf->subd;
 	a4l_poll_t poll;
 
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(cxt->user_info))
@@ -998,7 +998,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 		return -ENOENT;
 	}
 
-	if (rtdm_safe_copy_from_user(cxt->user_info, 
+	if (rtdm_safe_copy_from_user(cxt->user_info,
 				     &poll, arg, sizeof(a4l_poll_t)) != 0)
 		return -EFAULT;
 
@@ -1006,7 +1006,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	a4l_flush_sync(&buf->sync);
 	ret = __handle_event(buf);
 
-	/* Retrieves the data amount to compute 
+	/* Retrieves the data amount to compute
 	   according to the subdevice type */
 	if (a4l_subd_is_input(subd)) {
 
@@ -1042,7 +1042,7 @@ int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg)
 	else {
 		unsigned long long ns = ((unsigned long long)poll.arg) *
 			((unsigned long long)NSEC_PER_MSEC);
-		ret = a4l_timedwait_sync(&(buf->sync), 
+		ret = a4l_timedwait_sync(&(buf->sync),
 					 rtdm_in_rt_context(), ns);
 	}
 
@@ -1058,7 +1058,7 @@ out_poll:
 
 	poll.arg = tmp_cnt;
 
-	ret = rtdm_safe_copy_to_user(cxt->user_info, 
+	ret = rtdm_safe_copy_to_user(cxt->user_info,
 				     arg, &poll, sizeof(a4l_poll_t));
 
 	return ret;

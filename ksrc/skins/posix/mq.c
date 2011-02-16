@@ -236,7 +236,7 @@ static void pse51_mq_destroy(pse51_mq_t *mq)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_open.html">
  * Specification.</a>
- * 
+ *
  */
 mqd_t mq_open(const char *name, int oflags, ...)
 {
@@ -353,7 +353,7 @@ mqd_t mq_open(const char *name, int oflags, ...)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_close.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_close(mqd_t fd)
 {
@@ -421,7 +421,7 @@ int mq_close(mqd_t fd)
  * - EPERM, the caller context is invalid;
  * - ENAMETOOLONG, the length of the @a name argument exceeds 64 characters;
  * - ENOENT, the message queue does not exist.
- * 
+ *
  * @par Valid contexts:
  * - kernel module initialization or cleanup routine;
  * - kernel-space cancellation cleanup routine;
@@ -431,7 +431,7 @@ int mq_close(mqd_t fd)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_unlink.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_unlink(const char *name)
 {
@@ -793,7 +793,7 @@ int pse51_mq_finish_rcv(mqd_t fd, pse51_mq_t *mq, pse51_msg_t *msg)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_send.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 {
@@ -810,7 +810,7 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
 	memcpy(msg->data, buffer, len);
 	msg->len = len;
 	pse51_msg_set_prio(msg, prio);
-	
+
 	err = pse51_mq_finish_send(fd, mq, msg);
 	if (!err)
 		return 0;
@@ -856,7 +856,7 @@ int mq_send(mqd_t fd, const char *buffer, size_t len, unsigned prio)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedsend.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_timedsend(mqd_t fd,
 		 const char *buffer,
@@ -875,7 +875,7 @@ int mq_timedsend(mqd_t fd,
 	memcpy(msg->data, buffer, len);
 	msg->len = len;
 	pse51_msg_set_prio(msg, prio);
-	
+
 	err = pse51_mq_finish_send(fd, mq, msg);
 	if (!err)
 		return 0;
@@ -925,7 +925,7 @@ int mq_timedsend(mqd_t fd,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_receive.html">
  * Specification.</a>
- * 
+ *
  */
 ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
 {
@@ -992,7 +992,7 @@ ssize_t mq_receive(mqd_t fd, char *buffer, size_t len, unsigned *priop)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_timedreceive.html">
  * Specification.</a>
- * 
+ *
  */
 ssize_t mq_timedreceive(mqd_t fd,
 			char *__restrict__ buffer,
@@ -1047,7 +1047,7 @@ ssize_t mq_timedreceive(mqd_t fd,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_getattr.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_getattr(mqd_t fd, struct mq_attr *attr)
 {
@@ -1100,7 +1100,7 @@ int mq_getattr(mqd_t fd, struct mq_attr *attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_setattr.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_setattr(mqd_t fd,
 	       const struct mq_attr *__restrict__ attr,
@@ -1175,7 +1175,7 @@ int mq_setattr(mqd_t fd,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/mq_notify.html">
  * Specification.</a>
- * 
+ *
  */
 int mq_notify(mqd_t fd, const struct sigevent *evp)
 {
@@ -1241,7 +1241,7 @@ int pse51_mq_select_bind(mqd_t fd, struct xnselector *selector,
 	pse51_mq_t *mq;
 	int err;
 	spl_t s;
-	
+
 	if (type == XNSELECT_READ || type == XNSELECT_WRITE) {
 		binding = xnmalloc(sizeof(*binding));
 		if (!binding)

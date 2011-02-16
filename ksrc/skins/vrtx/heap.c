@@ -164,7 +164,7 @@ int sc_hcreate(char *heapaddr, u_long heapsize, unsigned log2psize, int *errp)
 	if (heapaddr == NULL) {
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 		heapsize = xnheap_rounded_size(heapsize, PAGE_SIZE);
-		err = xnheap_init_mapped(&heap->sysheap, heapsize, 
+		err = xnheap_init_mapped(&heap->sysheap, heapsize,
 					 XNARCH_SHARED_HEAP_FLAGS);
 
 		if (err) {

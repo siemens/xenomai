@@ -1,6 +1,6 @@
 /**
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  * @note Copyright (C) 2005 Nextream France S.A.
  *
  * This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
  *   - rt_kmalloc()/rt_kfree(): kernel and user, but bug in user
  *   - rt_heap_open()/rt_heap_close(): kernel and user
  *
- * rt_heal_alloc* should be straightforward after rewrite of ioctl 
+ * rt_heal_alloc* should be straightforward after rewrite of ioctl
  * to xenomai.
  */
 
@@ -340,7 +340,7 @@ void __rtai_shm_pkg_cleanup(void)
 	xnshm_a_t *p;
 	char szName[6];
 
-	// Garbage collector : to be added : lock problem 
+	// Garbage collector : to be added : lock problem
 	holder = getheadq(&xnshm_allocq);
 
 	while (holder != NULL) {

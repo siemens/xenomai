@@ -129,7 +129,7 @@ int a4l_wait_sync(a4l_sync_t *snc, int rt)
 		set_bit(__RT_WAITER, &snc->status);
 		ret = rtdm_event_wait(&snc->rtdm_evt);
 	} else {
-		/* ... else if the process is NRT, 
+		/* ... else if the process is NRT,
 		   the Linux wait queue system is used */
 		set_bit(__NRT_WAITER, &snc->status);
 		ret = wait_event_interruptible(snc->wq,
@@ -159,13 +159,13 @@ int a4l_timedwait_sync(a4l_sync_t * snc,
 		set_bit(__RT_WAITER, &snc->status);
 		ret = rtdm_event_timedwait(&snc->rtdm_evt, ns_timeout, NULL);
 	} else {
-		/* ... else if the process is NRT, 
+		/* ... else if the process is NRT,
 		   the Linux wait queue system is used */
 
 		timeout = do_div(ns_timeout, 1000);
 
 		/* We consider the Linux kernel cannot tick at a frequency
-		   higher than 1 MHz 
+		   higher than 1 MHz
 		   If the timeout value is lower than 1us, we round up to 1us */
 		timeout = (timeout == 0) ? 1 : usecs_to_jiffies(timeout);
 

@@ -48,8 +48,8 @@ int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
 	a4l_ioctl_bufcfg,
 	a4l_ioctl_bufinfo,
 	a4l_ioctl_poll,
-	a4l_ioctl_mmap, 
-	a4l_ioctl_nbchaninfo, 
+	a4l_ioctl_mmap,
+	a4l_ioctl_nbchaninfo,
 	a4l_ioctl_nbrnginfo
 };
 
@@ -121,12 +121,12 @@ void a4l_cleanup_proc(void)
 
 #endif /* CONFIG_PROC_FS */
 
-int a4l_open(struct rtdm_dev_context *context, 
+int a4l_open(struct rtdm_dev_context *context,
 	     rtdm_user_info_t * user_info, int flags)
 {
 	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
 
-	/* Get a pointer on the selected device 
+	/* Get a pointer on the selected device
 	   (thanks to minor index) */
 	a4l_set_dev(cxt);
 
@@ -134,13 +134,13 @@ int a4l_open(struct rtdm_dev_context *context,
 	cxt->buffer = rtdm_malloc(sizeof(a4l_buf_t));
 	a4l_init_buffer(cxt->buffer);
 
-	/* Allocate the asynchronous buffer 
+	/* Allocate the asynchronous buffer
 	   NOTE: it should be interesting to allocate the buffer only
 	   on demand especially if the system is short of memory */
 	if (cxt->dev->transfer.default_bufsize)
-		a4l_alloc_buffer(cxt->buffer, 
+		a4l_alloc_buffer(cxt->buffer,
 				 cxt->dev->transfer.default_bufsize);
-	
+
 	return 0;
 }
 
@@ -152,7 +152,7 @@ int a4l_close(struct rtdm_dev_context *context, rtdm_user_info_t * user_info)
 	/* Cancel the maybe occuring asynchronous transfer */
 	err = a4l_cancel_buffer(cxt);
 	if (err < 0) {
-		__a4l_err("close: unable to stop the asynchronous transfer\n"); 
+		__a4l_err("close: unable to stop the asynchronous transfer\n");
 		return err;
 	}
 
@@ -176,7 +176,7 @@ ssize_t a4l_read(struct rtdm_dev_context * context,
 	/* Jump into the RT domain if possible */
 	if (!rtdm_in_rt_context() && rtdm_rt_capable(user_info))
 		return -ENOSYS;
-	
+
 	if (nbytes == 0)
 		return 0;
 
@@ -213,7 +213,7 @@ int a4l_ioctl(struct rtdm_dev_context *context,
 }
 
 int a4l_rt_select(struct rtdm_dev_context *context,
-		  rtdm_selector_t *selector, 
+		  rtdm_selector_t *selector,
 		  enum rtdm_selecttype type, unsigned fd_index)
 {
 	a4l_cxt_t *cxt = (a4l_cxt_t *)rtdm_context_to_private(context);
@@ -239,7 +239,7 @@ static struct rtdm_device rtdm_devs[A4L_NB_DEVICES] =
 			.ioctl_nrt =	a4l_ioctl,
 			.read_nrt =	a4l_read,
 			.write_nrt =	a4l_write,
-		      
+
 			.select_bind =	a4l_rt_select,
 		},
 
@@ -258,13 +258,13 @@ int a4l_register(void)
 
 	for (i = 0; i < A4L_NB_DEVICES && ret == 0; i++) {
 
-		/* Sets the device name through which 
+		/* Sets the device name through which
 		   user process can access the Analogy layer */
 		snprintf(rtdm_devs[i].device_name,
 			 RTDM_MAX_DEVNAME_LEN, "analogy%d", i);
 		rtdm_devs[i].proc_name = rtdm_devs[i].device_name;
 
-		/* To keep things simple, the RTDM device ID 
+		/* To keep things simple, the RTDM device ID
 		   is the Analogy device index */
 		rtdm_devs[i].device_id = i;
 

@@ -1,4 +1,3 @@
-
 /**
  * @file
  * Analogy for Linux, digital command test program
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 			"cmd_bits: a4l_open %s failed (err=%d)\n",
 			FILENAME, err);
 		return err;
-	}	
+	}
 
 	if (verbose != 0) {
 		printf("cmd_bits: device %s opened (fd=%d)\n",
@@ -132,7 +131,7 @@ int main(int argc, char *argv[])
 		printf("\t subdevices count = %d\n", dsc.nb_subd);
 		printf("\t read subdevice index = %d\n", dsc.idx_read_subd);
 		printf("\t write subdevice index = %d\n", dsc.idx_write_subd);
-	}	
+	}
 
 	/* Allocate a buffer so as to get more info (subd, chan, rng) */
 	dsc.sbdata = malloc(dsc.sbsize);
@@ -151,20 +150,20 @@ int main(int argc, char *argv[])
 
 	if (verbose != 0)
 		printf("cmd_bits: complex descriptor retrieved\n");
-	
+
 	/* If no subdevice index was set, choose for the first digital
 	   subdevice found */
 	while (idx_subd == -1 && i < dsc.nb_subd) {
-		
+
 		err = a4l_get_subdinfo(&dsc, i, &sbinfo);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"cmd_bits: "
 				"a4l_get_subdinfo(%d) failed (err = %d)\n",
 				i, err);
 			goto out_cmd_bits;
 		}
-		
+
 		if ((sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DIO ||
 		    (sbinfo->flags & A4L_SUBD_TYPES) == A4L_SUBD_DO) {
 			idx_subd = i;
@@ -180,14 +179,14 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose != 0)
-		printf("cmd_bits: selected subdevice index = %d\n", 
+		printf("cmd_bits: selected subdevice index = %d\n",
 		       idx_subd);
 
 	/* We must check that the subdevice is really a digital one
 	   (in case, the subdevice index was set with the option -s) */
 	err = a4l_get_subdinfo(&dsc, idx_subd, &sbinfo);
 	if (err < 0) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_bits: get_sbinfo(%d) failed (err = %d)\n",
 			idx_subd, err);
 		err = -EINVAL;
@@ -198,10 +197,10 @@ int main(int argc, char *argv[])
 
 	if ((sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DIO &&
 	    (sbinfo->flags & A4L_SUBD_TYPES) != A4L_SUBD_DO) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_bits: selected subdevice is not digital\n");
 		err = -EINVAL;
-		goto out_cmd_bits;		
+		goto out_cmd_bits;
 	}
 
 	/* Set the data size to read / write */
@@ -217,14 +216,14 @@ int main(int argc, char *argv[])
 
 	/* Configure the polarities */
 	for (i = 0; i < scan_size; i++) {
-		int mode = (mask & (1 << i)) ? 
+		int mode = (mask & (1 << i)) ?
 			A4L_INSN_CONFIG_DIO_OUTPUT : A4L_INSN_CONFIG_DIO_INPUT;
 
 		err = a4l_config_subd(&dsc, cmd.idx_subd, mode, i);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"cmd_bits: configuration of "
-				"line %d failed (err=%d)\n", 
+				"line %d failed (err=%d)\n",
 				i, err);
 			goto out_cmd_bits;
 		}
@@ -245,24 +244,24 @@ int main(int argc, char *argv[])
 	do {
 		err = a4l_async_write(&dsc, &value, scan_size, A4L_INFINITE);
 		if (err < 0) {
-			fprintf(stderr, 
+			fprintf(stderr,
 				"cmd_bits: a4l_write failed (err=%d)\n", err);
 			goto out_cmd_bits;
 		}
-		
+
 		total += err;
 
 		if (!triggered && total > trigger_threshold) {
 			err = a4l_snd_insn(&dsc, &insn);
 			if (err < 0) {
-				fprintf(stderr, 
+				fprintf(stderr,
 					"cmd_bits: triggering failed (err=%d)\n",
 					err);
 				goto out_cmd_bits;
 			}
 		}
 
-	} while (err > 0);       	
+	} while (err > 0);
 
 out_cmd_bits:
 

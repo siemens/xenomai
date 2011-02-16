@@ -90,7 +90,7 @@ struct a4l_buffer {
 };
 typedef struct a4l_buffer a4l_buf_t;
 
-/* --- Static inline functions related with 
+/* --- Static inline functions related with
    user<->kernel data transfers --- */
 
 /* The function __produce is an inline function which copies data into
@@ -162,7 +162,7 @@ static inline int __consume(a4l_cxt_t *cxt,
    subdevice specific munge callback on contiguous windows within the
    whole buffer. This function is used in read and write operations */
 static inline void __munge(struct a4l_subdevice * subd,
-			   void (*munge) (struct a4l_subdevice *, 
+			   void (*munge) (struct a4l_subdevice *,
 					  void *, unsigned long),
 			   a4l_buf_t * buf, unsigned long count)
 {
@@ -217,9 +217,9 @@ static inline int __handle_event(a4l_buf_t * buf)
 
    However, if one element is a DMA controller, we have to be more
    careful. Generally a DMA transfer occurs like this:
-   DMA shot 
-      |-> then DMA interrupt 
-         |-> then DMA soft handler which checks the counter
+   DMA shot
+      |-> then DMA interrupt
+	 |-> then DMA soft handler which checks the counter
 
    So, the checkings occur AFTER the write operations.
 
@@ -258,7 +258,7 @@ static inline int __pre_abs_get(a4l_buf_t * buf, unsigned long count)
 	/* The first time, we expect the buffer to be properly filled
 	before the trigger occurence; by the way, we need tmp_count to
 	have been initialized and tmp_count is updated right here */
-	if (buf->tmp_count == 0 || buf->cns_count == 0) 
+	if (buf->tmp_count == 0 || buf->cns_count == 0)
 		goto out;
 
 	/* At the end of the acquisition, the user application has
@@ -385,31 +385,31 @@ int a4l_setup_buffer(a4l_cxt_t *cxt, a4l_cmd_t *cmd);
 
 int a4l_cancel_buffer(a4l_cxt_t *cxt);
 
-int a4l_buf_prepare_absput(struct a4l_subdevice *subd, 
+int a4l_buf_prepare_absput(struct a4l_subdevice *subd,
 			   unsigned long count);
 
-int a4l_buf_commit_absput(struct a4l_subdevice *subd, 
+int a4l_buf_commit_absput(struct a4l_subdevice *subd,
 			  unsigned long count);
 
-int a4l_buf_prepare_put(struct a4l_subdevice *subd, 
+int a4l_buf_prepare_put(struct a4l_subdevice *subd,
 			unsigned long count);
 
-int a4l_buf_commit_put(struct a4l_subdevice *subd, 
+int a4l_buf_commit_put(struct a4l_subdevice *subd,
 		       unsigned long count);
 
 int a4l_buf_put(struct a4l_subdevice *subd,
 		void *bufdata, unsigned long count);
 
-int a4l_buf_prepare_absget(struct a4l_subdevice *subd, 
+int a4l_buf_prepare_absget(struct a4l_subdevice *subd,
 			   unsigned long count);
 
-int a4l_buf_commit_absget(struct a4l_subdevice *subd, 
+int a4l_buf_commit_absget(struct a4l_subdevice *subd,
 			  unsigned long count);
 
-int a4l_buf_prepare_get(struct a4l_subdevice *subd, 
+int a4l_buf_prepare_get(struct a4l_subdevice *subd,
 			unsigned long count);
 
-int a4l_buf_commit_get(struct a4l_subdevice *subd, 
+int a4l_buf_commit_get(struct a4l_subdevice *subd,
 		       unsigned long count);
 
 int a4l_buf_get(struct a4l_subdevice *subd,
@@ -438,7 +438,7 @@ int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg);
 ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
 ssize_t a4l_write_buffer(a4l_cxt_t * cxt, const void *bufdata, size_t nbytes);
-int a4l_select(a4l_cxt_t *cxt, 
+int a4l_select(a4l_cxt_t *cxt,
 	       rtdm_selector_t *selector,
 	       enum rtdm_selecttype type, unsigned fd_index);
 
@@ -464,7 +464,7 @@ struct a4l_buffer_config {
 	   idx_subd became useless; the buffer are now
 	   per-context. So, the buffer size configuration is specific
 	   to an opened device. There is a little exception: we can
-	   define a default buffer size for a device. 
+	   define a default buffer size for a device.
 	   So far, a hack is used to implement the configuration of
 	   the default buffer size */
 	unsigned int idx_subd;

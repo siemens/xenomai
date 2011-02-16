@@ -58,7 +58,7 @@ static void pse51_lostage_handle_request(void *cookie)
 
 	while ((reqnum = rq->out) != rq->in) {
 		struct pse51_lostage_req_t *req = &rq->req[reqnum];
-		
+
 		rq->out = (reqnum + 1) & (PSE51_LO_MAX_REQUESTS - 1);
 
 		switch (req->type){

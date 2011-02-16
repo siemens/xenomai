@@ -86,7 +86,7 @@ unsigned long rthal_timer_calibrate(void)
 
 	for (n = 1; n < 100; n++)
 		rthal_read_tsc(v);
-	
+
 	rthal_local_irq_restore_hw(flags);
 
 	d = (u32)(v - t);

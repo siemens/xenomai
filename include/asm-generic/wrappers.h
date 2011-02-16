@@ -184,12 +184,12 @@ do {									\
    compat/linux/workqueue.h. */
 
 #define __WORK_INITIALIZER(n,f,d) {				\
-        .list	= { &(n).list, &(n).list },			\
+	.list	= { &(n).list, &(n).list },			\
 	.sync = 0,						\
 	.routine = (f),						\
 	.data = (d),						\
 }
-#define DECLARE_WORK(n,f,d)      	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
+#define DECLARE_WORK(n,f,d)	 	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
 #define DECLARE_WORK_NODATA(n, f)	DECLARE_WORK(n, f, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_WORK(n, f, NULL)
@@ -331,7 +331,7 @@ static inline unsigned long hweight_long(unsigned long w)
 
 #define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
 unsigned long find_next_bit(const unsigned long *addr,
-                            unsigned long size, unsigned long offset);
+			    unsigned long size, unsigned long offset);
 
 #define mmiowb()	barrier()
 

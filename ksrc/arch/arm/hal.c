@@ -337,8 +337,8 @@ void rthal_timer_release(int cpu)
 #endif /* !CONFIG_GENERIC_CLOCKEVENTS */
 
 int rthal_irq_host_request(unsigned irq,
-                           rthal_irq_host_handler_t handler,
-                           char *name, void *dev_id)
+			   rthal_irq_host_handler_t handler,
+			   char *name, void *dev_id)
 {
 	unsigned long flags;
 

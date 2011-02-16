@@ -1,6 +1,6 @@
 /**
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  * @note Copyright (C) 2005 Nextream France S.A.
  *
  * This program is free software; you can redistribute it and/or
@@ -150,7 +150,7 @@ int rt_task_init(RT_TASK *task,
 
 	if (xnarch_cpus_empty(task->affinity))
 		task->affinity = XNPOD_ALL_CPUS;
-	
+
 	xnlock_get_irqsave(&nklock, s);
 
 	sattr.mode = XNSUSP;	/* Suspend on startup. */

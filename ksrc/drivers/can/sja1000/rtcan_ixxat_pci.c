@@ -138,7 +138,7 @@ static int rtcan_ixxat_pci_add_chan(struct pci_dev *pdev,
     dev = rtcan_dev_alloc(sizeof(struct rtcan_sja1000),
 			  sizeof(struct rtcan_ixxat_pci));
     if (dev == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
 
     chip = (struct rtcan_sja1000 *)dev->priv;
     board = (struct rtcan_ixxat_pci *)dev->board_priv;

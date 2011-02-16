@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -32,10 +32,10 @@
 #define T_CPU(cpu) (1 << (24 + (cpu & 7))) /* Up to 8 cpus [0-7] */
 #define T_CPUMASK  0xff000000
 
-/*! 
+/*!
   \ingroup native
-  @defgroup native_task_status Task Status 
-  @brief Defines used to specify task state and/or mode 
+  @defgroup native_task_status Task Status
+  @brief Defines used to specify task state and/or mode
   @{
  */
 
@@ -46,9 +46,9 @@
 #define T_STARTED  XNSTARTED  /**< See #XNSTARTED */
 #define T_BOOST    XNBOOST    /**< See #XNBOOST   */
 #define T_LOCK     XNLOCK     /**< See #XNLOCK    */
-#define T_NOSIG    XNASDI     /**< See #XNASDI    */ 
-#define T_WARNSW   XNTRAPSW   /**< See #XNTRAPSW  */ 
-#define T_RPIOFF   XNRPIOFF   /**< See #XNRPIOFF  */ 
+#define T_NOSIG    XNASDI     /**< See #XNASDI    */
+#define T_WARNSW   XNTRAPSW   /**< See #XNTRAPSW  */
+#define T_RPIOFF   XNRPIOFF   /**< See #XNRPIOFF  */
 #define T_PRIMARY  0x00000200	/* Recycle internal bits status which */
 #define T_JOINABLE 0x00000400	/* won't be passed to the nucleus.  */
 /*! @} */ /* Ends doxygen-group native_task_status */
@@ -76,15 +76,15 @@ struct rt_task;
  *  @see rt_task_inquire()
  */
 typedef struct rt_task_info {
-    
+
     int bprio;  /**< Base priority. */
 
     int cprio; /**< Current priority. May change through Priority Inheritance.*/
-    
-    unsigned status; /**< Task's status. @see native_task_status */ 
-    
-    RTIME relpoint; /**< Time of next release.*/ 
-    
+
+    unsigned status; /**< Task's status. @see native_task_status */
+
+    RTIME relpoint; /**< Time of next release.*/
+
     char name[XNOBJECT_NAME_LEN];  /**< Symbolic name assigned at creation. */
 
     RTIME exectime; /**< Execution time in primary mode in nanoseconds. */
@@ -131,7 +131,7 @@ typedef struct rt_task {
     xnthread_t thread_base;
 
     char rname[XNOBJECT_NAME_LEN]; /* !< Name in registry. Not the same as
-                                      thread name for anonymous threads. */
+				      thread name for anonymous threads. */
     int suspend_depth;
 
     int overrun;

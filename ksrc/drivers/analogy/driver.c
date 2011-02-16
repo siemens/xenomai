@@ -42,13 +42,13 @@ int a4l_lct_drv(char *pin, a4l_drv_t ** pio)
 
 	__a4l_dbg(1, core_dbg, "a4l_lct_drv: name=%s\n", pin);
 
-	/* Goes through the linked list so as to find 
+	/* Goes through the linked list so as to find
 	   a driver instance with the same name */
 	list_for_each(this, &a4l_drvs) {
 		a4l_drv_t *drv = list_entry(this, a4l_drv_t, list);
 
 		if (strcmp(drv->board_name, pin) == 0) {
-			/* The argument pio can be NULL 
+			/* The argument pio can be NULL
 			   if there is no need to retrieve the pointer */
 			if (pio != NULL)
 				*pio = drv;

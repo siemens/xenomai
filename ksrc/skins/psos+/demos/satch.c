@@ -55,8 +55,8 @@ static const char *satch_s_tunes[] = {
 };
 
 static u_long producer_tid,
-              consumer_tid,
-              message_qid;
+	      consumer_tid,
+	      message_qid;
 
 void consumer_task (u_long a0, u_long a1, u_long a2, u_long a3)
 

@@ -379,15 +379,15 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			}
 		else {
 			ctx->mode = config->mode;
-	
+
 			memset(&ctx->stats, 0, sizeof(ctx->stats));
-	
+
 			/* Arm IRQ */
 			switch (ctx->port_type) {
 			case RTTST_IRQBENCH_SERPORT:
 				outb(IER_MODEM, IER(ctx));
 				break;
-	
+
 			case RTTST_IRQBENCH_PARPORT:
 				outb(CTRL_STROBE, CTRL(ctx));
 				break;

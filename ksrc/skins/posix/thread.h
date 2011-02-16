@@ -46,7 +46,7 @@ struct pse51_thread {
     (_taddr                                                             \
     ? ((xnthread_get_magic(_taddr) == PSE51_SKIN_MAGIC)                 \
        ? ((pthread_t)(((char *)_taddr)- offsetof(struct pse51_thread,   \
-                                                 threadbase)))          \
+						 threadbase)))          \
        : NULL)                                                          \
     : NULL);                                                            \
 })
@@ -54,10 +54,10 @@ struct pse51_thread {
 
    xnholder_t link;	/* Link in pse51_threadq */
    xnqueue_t *container;
-    
+
 #define link2pthread(laddr) \
     ((pthread_t)(((char *)laddr) - offsetof(struct pse51_thread, link)))
-    
+
 
     pthread_attr_t attr;        /* creation attributes */
 
@@ -67,7 +67,7 @@ struct pse51_thread {
     /* For pthread_join */
     void *exit_status;
     xnsynch_t join_synch;       /* synchronization object, used by other threads
-                                   waiting for this one to finish. */
+				   waiting for this one to finish. */
     int nrt_joiners;
 
     /* For pthread_cancel */
@@ -89,7 +89,7 @@ struct pse51_thread {
 
     /* For timers. */
     xnqueue_t timersq;
-    
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
     struct pse51_hkey hkey;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
@@ -140,10 +140,10 @@ void pse51_thread_abort(pthread_t thread, void *status);
 static inline void thread_cancellation_point (xnthread_t *thread)
 {
     pthread_t cur = thread2pthread(thread);
-    
+
     if(cur && cur->cancel_request
-        && thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
-        pse51_thread_abort(cur, PTHREAD_CANCELED);
+	&& thread_getcancelstate(cur) == PTHREAD_CANCEL_ENABLE )
+	pse51_thread_abort(cur, PTHREAD_CANCELED);
 }
 
 void pse51_threadq_cleanup(pse51_kqueues_t *q);

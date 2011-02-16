@@ -36,13 +36,13 @@
  */
 struct rtcan_recv {
     can_filter_t            can_filter;     /* filter used for deciding if
-                                             *   a socket wants to get a CAN
-                                             *   message */
+					     *   a socket wants to get a CAN
+					     *   message */
     unsigned int            match_count;    /* count accepted messages */
     struct rtcan_socket     *sock;          /* pointer to registered socket
-                                             */
+					     */
     struct rtcan_recv       *next;          /* pointer to next list element
-                                             */
+					     */
 };
 
 

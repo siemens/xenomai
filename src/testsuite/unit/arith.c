@@ -39,7 +39,7 @@ static volatile long long arg = 0x3ffffffffffffffULL;
 				rejected);				\
 		} else							\
 			fprintf(stderr, "%s: rejected 10000/10000\n", display); \
-	} while (0)	
+	} while (0)
 
 int main(void)
 {

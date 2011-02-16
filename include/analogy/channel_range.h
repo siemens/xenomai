@@ -33,13 +33,13 @@
  * @ingroup driverfacilities
  * @defgroup channelrange Channels and ranges
  *
- * Channels 
+ * Channels
  *
  * According to the Analogy nomenclature, the channel is the elementary
  * acquisition entity. One channel is supposed to acquire one data at
- * a time. A channel can be: 
- * - an analog input or an analog ouput; 
- * - a digital input or a digital ouput; 
+ * a time. A channel can be:
+ * - an analog input or an analog ouput;
+ * - a digital input or a digital ouput;
  *
  * Channels are defined by their type and by some other
  * characteristics like:
@@ -60,27 +60,27 @@
      subdevice are identical, there is no need to declare the
      parameters for each channel; the global declaration mode eases
      the structure composition.
- * 
+ *
  * Usually the channels descriptor looks like this:
  * <tt> @verbatim
 a4l_chdesc_t example_chan = {
-        mode: A4L_CHAN_GLOBAL_CHANDESC, -> Global declaration
-	                                      mode is set
-        length: 8, -> 8 channels
-	chans: { 
-	        {A4L_CHAN_AREF_GROUND, 16}, -> Each channel is 16 bits
-		                                  wide with the ground as
-                                                  reference
+	mode: A4L_CHAN_GLOBAL_CHANDESC, -> Global declaration
+					      mode is set
+	length: 8, -> 8 channels
+	chans: {
+		{A4L_CHAN_AREF_GROUND, 16}, -> Each channel is 16 bits
+						  wide with the ground as
+						  reference
 	},
 };
 @endverbatim </tt>
  *
- * Ranges 
- * 
+ * Ranges
+ *
  * So as to perform conversion from logical values acquired by the
  * device to physical units, some range structure(s) must be declared
  * on the driver side.
- * 
+ *
  * Such structures contain:
  * - the physical unit type (Volt, Ampere, none);
  * - the minimal and maximal values;
@@ -102,7 +102,7 @@ a4l_rngtab_t example_tab = {
     },
 };
 @endverbatim </tt>
- * 
+ *
  * For each subdevice, a specific structure is designed to gather all
  * the ranges tabs of all the channels. In this structure, called
  * a4l_rngdesc_t, three fields must be filled:
@@ -110,7 +110,7 @@ a4l_rngtab_t example_tab = {
  *   A4L_RNG_PERCHAN_RNGDESC);
  * - the number of ranges tab;
  * - the tab of ranges tabs pointers;
- * 
+ *
  * Most of the time, the channels which belong to the same subdevice
  * use the same set of ranges. So, there is no need to declare the
  * same ranges for each channel. A macro is defined to prevent
@@ -133,37 +133,37 @@ a4l_rngdesc_t example_rng = RNG_GLOBAL(example_tab);
  * @{
  */
 
-/** 
+/**
  * Ground reference
  */
 #define A4L_CHAN_AREF_GROUND 0x1
-/** 
+/**
  * Common reference
  */
 #define A4L_CHAN_AREF_COMMON 0x2
-/** 
+/**
  * Differential reference
  */
 #define A4L_CHAN_AREF_DIFF 0x4
-/** 
+/**
  * Misc reference
  */
 #define A4L_CHAN_AREF_OTHER 0x8
 
 	  /*! @} A4L_CHAN_AREF_xxx */
 
-/** 
+/**
  * Internal use flag (must not be used by driver developer)
  */
 #define A4L_CHAN_GLOBAL 0x10
 
-/*! 
+/*!
  * @brief Structure describing some channel's characteristics
  */
 
 struct a4l_channel {
 	unsigned long flags; /*!< Channel flags to define the reference. */
-	unsigned long nb_bits; /*!< Channel resolution. */	                
+	unsigned long nb_bits; /*!< Channel resolution. */
 };
 typedef struct a4l_channel a4l_chan_t;
 
@@ -174,19 +174,19 @@ typedef struct a4l_channel a4l_chan_t;
  * @{
  */
 
-/** 
+/**
  * Global declaration, the set contains channels with similar
  * characteristics
  */
 #define A4L_CHAN_GLOBAL_CHANDESC 0
-/** 
+/**
  * Per channel declaration, the decriptor gathers differents channels
  */
 #define A4L_CHAN_PERCHAN_CHANDESC 1
 
 	  /*! @} A4L_CHAN_xxx */
 
-/*! 
+/*!
  * @brief Structure describing a channels set
  */
 
@@ -203,23 +203,23 @@ typedef struct a4l_channels_desc a4l_chdesc_t;
     developer).  */
 #define A4L_RNG_FACTOR 1000000
 
-/** 
+/**
  * Volt unit range flag
  */
 #define A4L_RNG_VOLT_UNIT 0x0
-/** 
+/**
  * MilliAmpere unit range flag
  */
 #define A4L_RNG_MAMP_UNIT 0x1
-/** 
+/**
  * No unit range flag
  */
 #define A4L_RNG_NO_UNIT 0x2
-/** 
+/**
  * External unit range flag
  */
 #define A4L_RNG_EXT_UNIT 0x4
-/** 
+/**
  * Macro to retrieve the range unit from the range flags
  */
 #define A4L_RNG_UNIT(x) (x & (A4L_RNG_VOLT_UNIT |	\
@@ -227,12 +227,12 @@ typedef struct a4l_channels_desc a4l_chdesc_t;
 			      A4L_RNG_NO_UNIT |		\
 			      A4L_RNG_EXT_UNIT))
 
-/** 
+/**
  * Internal use flag (must not be used by driver developer)
  */
 #define A4L_RNG_GLOBAL 0x8
 
-/*! 
+/*!
  * @brief Structure describing a (unique) range
  */
 
@@ -243,22 +243,22 @@ struct a4l_range {
 };
 typedef struct a4l_range a4l_rng_t;
 
-/** 
+/**
  * Macro to declare a (unique) range with no unit defined
  */
 #define RANGE(x,y) {(x * A4L_RNG_FACTOR), (y * A4L_RNG_FACTOR),	\
 			A4L_RNG_NO_UNIT}
-/** 
+/**
  * Macro to declare a (unique) range in Volt
  */
 #define RANGE_V(x,y) {(x * A4L_RNG_FACTOR),(y * A4L_RNG_FACTOR), \
 			A4L_RNG_VOLT_UNIT}
-/** 
+/**
  * Macro to declare a (unique) range in milliAmpere
  */
 #define RANGE_mA(x,y) {(x * A4L_RNG_FACTOR),(y * A4L_RNG_FACTOR), \
 			A4L_RNG_MAMP_UNIT}
-/** 
+/**
  * Macro to declare a (unique) range in some external reference
  */
 #define RANGE_ext(x,y) {(x * A4L_RNG_FACTOR),(y * A4L_RNG_FACTOR), \
@@ -273,11 +273,11 @@ typedef struct a4l_range a4l_rng_t;
 	}
 typedef A4L_RNGTAB(GCC_ZERO_LENGTH_ARRAY) a4l_rngtab_t;
 
-/** 
+/**
  * Constant to define a ranges descriptor as global (inter-channel)
  */
 #define A4L_RNG_GLOBAL_RNGDESC 0
-/** 
+/**
  * Constant to define a ranges descriptor as specific for a channel
  */
 #define A4L_RNG_PERCHAN_RNGDESC 1
@@ -291,7 +291,7 @@ typedef A4L_RNGTAB(GCC_ZERO_LENGTH_ARRAY) a4l_rngtab_t;
 	}
 typedef A4L_RNGDESC(GCC_ZERO_LENGTH_ARRAY) a4l_rngdesc_t;
 
-/** 
+/**
  * Macro to declare a ranges global descriptor in one line
  */
 #define RNG_GLOBAL(x) {				\

@@ -148,7 +148,7 @@ int pthread_cancel(pthread_t thread)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_push.html">
  * Specification.</a>
- * 
+ *
  */
 void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
 {
@@ -206,7 +206,7 @@ void pthread_cleanup_push(cleanup_routine_t * routine, void *arg)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_cleanup_pop.html">
  * Specification.</a>
- * 
+ *
  */
 void pthread_cleanup_pop(int execute)
 {
@@ -274,7 +274,7 @@ void pthread_cleanup_pop(int execute)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcanceltype.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_setcanceltype(int type, int *oldtype_ptr)
 {
@@ -347,7 +347,7 @@ int pthread_setcanceltype(int type, int *oldtype_ptr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_setcancelstate.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_setcancelstate(int state, int *oldstate_ptr)
 {
@@ -404,7 +404,7 @@ int pthread_setcancelstate(int state, int *oldstate_ptr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_testcancel.html">
  * Specification.</a>
- * 
+ *
  */
 void pthread_testcancel(void)
 {

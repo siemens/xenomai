@@ -57,19 +57,19 @@ int a4l_sys_subdinfo(int fd, a4l_sbinfo_t * info);
 
 int a4l_sys_nbchaninfo(int fd, unsigned int idx_subd, unsigned int *nb);
 
-int a4l_sys_chaninfo(int fd, 
+int a4l_sys_chaninfo(int fd,
 		     unsigned int idx_subd, a4l_chinfo_t * info);
 
 int a4l_sys_nbrnginfo(int fd,
 		      unsigned int idx_subd,
 		      unsigned int idx_chan, unsigned int *nb);
-	
+
 int a4l_sys_rnginfo(int fd,
 		    unsigned int idx_subd,
 		    unsigned int idx_chan, a4l_rnginfo_t * info);
 
 /* --- Level 1 API (supposed to be used) --- */
-    
+
 int a4l_get_desc(int fd, a4l_desc_t *dsc, int pass);
 
 int a4l_open(a4l_desc_t *dsc, const char *fname);
@@ -97,7 +97,7 @@ int a4l_get_rnginfo(a4l_desc_t *dsc,
 #define a4l_is_rng_global(x) ((x)->flags & A4L_RNG_GLOBAL)
 
 int a4l_snd_command(a4l_desc_t * dsc, a4l_cmd_t *cmd);
-    
+
 int a4l_snd_cancel(a4l_desc_t * dsc, unsigned int idx_subd);
 
 int a4l_set_bufsize(a4l_desc_t * dsc,
@@ -112,7 +112,7 @@ int a4l_mark_bufrw(a4l_desc_t * dsc,
 
 int a4l_poll(a4l_desc_t * dsc,
 	     unsigned int idx_subd, unsigned long ms_timeout);
-    
+
 int a4l_mmap(a4l_desc_t * dsc,
 	     unsigned int idx_subd, unsigned long size, void **ptr);
 
@@ -132,7 +132,7 @@ int a4l_sync_write(a4l_desc_t * dsc,
 		   unsigned int idx_subd,
 		   unsigned int chan_desc,
 		   unsigned int delay, void *buf, size_t nbyte);
-	
+
 int a4l_sync_read(a4l_desc_t * dsc,
 		  unsigned int idx_subd,
 		  unsigned int chan_desc,

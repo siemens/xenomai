@@ -126,11 +126,11 @@ struct rtcan_socket {
 
     struct list_head    socket_list;
 
-    /* Transmission timeout in ns. Protected by rtcan_socket_lock 
+    /* Transmission timeout in ns. Protected by rtcan_socket_lock
      * in all socket structures. */
     nanosecs_rel_t      tx_timeout;
 
-    /* Reception timeout in ns. Protected by rtcan_socket_lock 
+    /* Reception timeout in ns. Protected by rtcan_socket_lock
      * in all socket structures. */
     nanosecs_rel_t      rx_timeout;
 
@@ -192,7 +192,7 @@ static inline struct rtdm_dev_context *rtcan_socket_context(
     struct rtcan_socket *sock)
 {
     return (struct rtdm_dev_context *)((void *)sock -
-        (void *)(&((struct rtdm_dev_context *)NULL)->dev_private));
+	(void *)(&((struct rtdm_dev_context *)NULL)->dev_private));
 }
 
 /* Spinlock protecting the ring buffers and the timeouts of all

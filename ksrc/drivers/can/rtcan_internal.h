@@ -37,9 +37,9 @@
 #ifdef CONFIG_XENO_DRIVERS_CAN_DEBUG
 #define RTCAN_ASSERT(expr, func) \
     if (!(expr)) { \
-        rtdm_printk("Assertion failed! %s:%s:%d %s\n", \
-        __FILE__, __FUNCTION__, __LINE__, (#expr)); \
-        func \
+	rtdm_printk("Assertion failed! %s:%s:%d %s\n", \
+	__FILE__, __FUNCTION__, __LINE__, (#expr)); \
+	func \
     }
 #else
 #define RTCAN_ASSERT(expr, func)
@@ -56,15 +56,15 @@
     const int max_block_len = MAX_BLOCK_LEN;                            \
     off_t __limit           = count - MAX_BLOCK_LEN;                    \
     int   __len             = 0;                                        \
-                                                                        \
+									\
     *eof = 1;                                                           \
     if (count < MAX_BLOCK_LEN)                                          \
-        return 0
+	return 0
 
 #define RTCAN_PROC_PRINT(fmt, args...)                                  \
     ({                                                                  \
-        __len += snprintf(buf + __len, max_block_len, fmt, ##args);     \
-        (__len <= __limit);                                             \
+	__len += snprintf(buf + __len, max_block_len, fmt, ##args);     \
+	(__len <= __limit);                                             \
     })
 
 #define RTCAN_PROC_PRINT_DONE                                           \
@@ -77,32 +77,32 @@
     off_t __pos             = 0;                                        \
     off_t __begin           = 0;                                        \
     int   __len             = 0;                                        \
-                                                                        \
+									\
     *eof = 1;                                                           \
     if (count < MAX_BLOCK_LEN)                                          \
-        return 0
+	return 0
 
 #define RTCAN_PROC_PRINT_EX(fmt, args...)                               \
     ({                                                                  \
-        int len = snprintf(buf + __len, max_block_len, fmt, ##args);    \
-        __len += len;                                                   \
-        __pos += len;                                                   \
-        if (__pos < offset) {                                           \
-            __len = 0;                                                  \
-            __begin = __pos;                                            \
-        }                                                               \
-        if (__pos > __limit)                                            \
-            *eof = 0;                                                   \
-        (__pos <= __limit);                                             \
+	int len = snprintf(buf + __len, max_block_len, fmt, ##args);    \
+	__len += len;                                                   \
+	__pos += len;                                                   \
+	if (__pos < offset) {                                           \
+	    __len = 0;                                                  \
+	    __begin = __pos;                                            \
+	}                                                               \
+	if (__pos > __limit)                                            \
+	    *eof = 0;                                                   \
+	(__pos <= __limit);                                             \
     })
 
 #define RTCAN_PROC_PRINT_DONE_EX                                        \
     *start = buf + (offset - __begin);                                  \
     __len -= (offset - __begin);                                        \
     if (__len > count)                                                  \
-        __len = count;                                                  \
+	__len = count;                                                  \
     if (__len < 0)                                                      \
-        __len = 0;                                                      \
+	__len = 0;                                                      \
     return __len;
 
 #endif /* CONFIG_PROC_FS */
@@ -116,4 +116,3 @@
 #endif
 
 #endif /* __RTCAN_INTERNAL_H_ */
-

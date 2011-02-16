@@ -28,7 +28,7 @@ int init_module (void)
 
     /* Free the block: */
     rt_heap_free(&heap_desc,block);
-   
+
     /* ... */
 }
 

@@ -246,15 +246,15 @@ EXPORT_SYMBOL(rthal_smi_restore);
        SMI, depending on registers configuration :
        register DEVTRAP_EN, DEVTRAP_STS
        BIG FAT WARNING : globally disabling SMI on a box with SATA disks and
-           SATA controller in "legacy" mode, probably prevents disks from
-           working.
+	   SATA controller in "legacy" mode, probably prevents disks from
+	   working.
 
    pages 382, 383, 400; Monitors ?
        seem to be a generic legacy device emulation (like previous), registers
        MON[4-7]_FWD_EN, enables forwarding of I/O to LPC
        MON[4-7]_TRP_RNG, address of the emulated devices
        MON[4-7]_TRP_MSK and MON_SMI (registers MON[4-7]_TRAP_EN and
-                                     MON[4-7]_TRAP_STS)
+				     MON[4-7]_TRAP_STS)
 
    page 407: TCO
        register TCO1_CNT, bit NMI2SMI_EN, enables TCO to use SMI instead of NMI,
@@ -264,7 +264,7 @@ EXPORT_SYMBOL(rthal_smi_restore);
 
    page 492, 493: USB EHCI legacy support and SPECIAL SMI, i.e Intel Specific
        USB 2.0 SMI register.
-       
+
    page 520, SMBus
        may be disabled by clearing register HOSTC, bit SMB_SMI_EN
        register used by Linux driver drivers/i2c/busses/i2c-i801.c

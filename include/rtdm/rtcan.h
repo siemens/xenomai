@@ -85,9 +85,9 @@
  * @anchor Bind
  * @b Bind @n
  * Binds a socket to one or all CAN devices (see struct sockaddr_can). If
- * a filter list has been defined with setsockopt (see @ref Sockopts), 
- * it will be used upon reception of CAN frames to decide whether the 
- * bound socket will receive a frame. If no filter has been defined, the 
+ * a filter list has been defined with setsockopt (see @ref Sockopts),
+ * it will be used upon reception of CAN frames to decide whether the
+ * bound socket will receive a frame. If no filter has been defined, the
  * socket will receive @b all CAN frames on the specified interface(s). @n
  * @n
  * Binding to special interface index @c 0 will make the socket receive
@@ -316,12 +316,12 @@ typedef can_id_t can_err_mask_t;
 #define CAN_BAUDRATE_UNKNOWN       ((uint32_t)-1)
 #define CAN_BAUDRATE_UNCONFIGURED  0
 
-/** 
- * Baudrate definition in bits per second 
+/**
+ * Baudrate definition in bits per second
  */
 typedef uint32_t can_baudrate_t;
 
-/** 
+/**
  * Supported CAN bit-time types
  */
 enum CAN_BITTIME_TYPE {
@@ -349,7 +349,7 @@ struct can_bittime_std {
 };
 
 /**
- * Hardware-specific BTR bit-times 
+ * Hardware-specific BTR bit-times
  */
 struct can_bittime_btr {
 
@@ -543,18 +543,18 @@ typedef struct can_frame {
 /**
  * CAN filter definition
  *
- * A CAN raw filter list with elements of struct can_filter can be installed 
+ * A CAN raw filter list with elements of struct can_filter can be installed
  * with @c setsockopt. This list is used upon reception of CAN frames to
  * decide whether the bound socket will receive a frame. An empty filter list
  * can also be defined using optlen = 0, which is recommanded for write-only
  * sockets.
  * @n
  * If the socket was already bound with @ref Bind, the old filter list
- * gets replaced with the new one. Be aware that already received, but 
+ * gets replaced with the new one. Be aware that already received, but
  * not read out CAN frames may stay in the socket buffer.
  * @n
  * @n
- * @param [in] level @b SOL_CAN_RAW 
+ * @param [in] level @b SOL_CAN_RAW
  *
  * @param [in] optname @b CAN_RAW_FILTER
  *
@@ -682,7 +682,7 @@ typedef struct can_frame {
  *
  * The baudrate must be specified in bits per second. The driver will
  * try to calculate resonable CAN bit-timing parameters. You can use
- * @ref SIOCSCANCUSTOMBITTIME to set custom bit-timing. 
+ * @ref SIOCSCANCUSTOMBITTIME to set custom bit-timing.
  *
  * @param [in] arg Pointer to interface request structure buffer
  *                 (<TT>struct ifreq</TT> from linux/if.h).
@@ -743,7 +743,7 @@ typedef struct can_frame {
 /**
  * Set custom bit time parameter
  *
- * Custem-bit time could be defined in various formats (see 
+ * Custem-bit time could be defined in various formats (see
  * struct can_bittime).
  *
  * @param [in] arg Pointer to interface request structure buffer
@@ -821,7 +821,7 @@ typedef struct can_frame {
  * - -EINVAL: (@ref CAN_MODE_START) Cannot start controller,
  *            set baud rate first.
  * - -ENETDOWN: (@ref CAN_MODE_SLEEP) Cannot go into sleep mode because
-                controller is stopped or bus off.
+		controller is stopped or bus off.
  * - -EOPNOTSUPP: unknown mode
  *
  * Environments:
@@ -881,8 +881,8 @@ typedef struct can_frame {
 /**
  * Set special controller modes
  *
- * Various special controller modes could be or'ed together (see 
- * @ref CAN_CTRLMODE for further information). 
+ * Various special controller modes could be or'ed together (see
+ * @ref CAN_CTRLMODE for further information).
  *
  * @param [in] arg Pointer to interface request structure buffer
  *                 (<TT>struct ifreq</TT> from linux/if.h).
@@ -1065,7 +1065,7 @@ typedef struct can_frame {
 #define CAN_ERR_CRTL		0x00000004U
 
 /** Protocol violations (see @ref Error2 "data[2]",
-                             @ref Error3 "data[3]") */
+			     @ref Error3 "data[3]") */
 #define CAN_ERR_PROT		0x00000008U
 
 /** Transceiver status (see @ref Error4 "data[4]")    */

@@ -79,7 +79,7 @@ void rt_task(void)
     int i, j, ret;
 
     for (i = 0; i < loops; i++) {
-        rt_task_sleep(rt_timer_ns2ticks(delay));
+	rt_task_sleep(rt_timer_ns2ticks(delay));
 	if (count)
 	    memcpy(&frame.data[0], &i, sizeof(i));
 	/* Note: sendto avoids the definiton of a receive filter list */

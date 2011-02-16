@@ -201,11 +201,11 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 		return -EBUSY;
 
 	switch (boot_cpu_data.x86_vendor) {
-        case X86_VENDOR_AMD:
+	case X86_VENDOR_AMD:
 		perfctr_msr = MSR_K7_PERFCTR0;
 		perfctr_checkmask = 1ULL << 47;
 		break;
-        case X86_VENDOR_INTEL:
+	case X86_VENDOR_INTEL:
 		if (cpu_has(&boot_cpu_data, X86_FEATURE_ARCH_PERFMON)) {
 			union cpuid10_eax eax;
 
@@ -219,12 +219,12 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 			wd_flags = NMI_WD_P6_OR_LATER | NMI_WD_31BITS;
 		} else
 			switch (boot_cpu_data.x86) {
-	                case 6:
+			case 6:
 				perfctr_msr = MSR_P6_PERFCTR0;
 				perfctr_checkmask = 1ULL << 39;
 				wd_flags = NMI_WD_P6_OR_LATER | NMI_WD_31BITS;
 				break;
-	                case 15:
+			case 15:
 				perfctr_msr = MSR_P4_IQ_COUNTER0;
 				perfctr_checkmask = 1ULL << 39;
 				p4_cccr_val = P4_NMI_IQ_CCCR0;
@@ -233,11 +233,11 @@ int rthal_nmi_request(void (*emergency) (struct pt_regs *))
 					p4_cccr_val |= P4_CCCR_OVF_PMI1;
 #endif
 				break;
-	                default:
+			default:
 				return -ENODEV;
 			}
 		break;
-        default:
+	default:
 		return -ENODEV;
 	}
 

@@ -206,8 +206,8 @@ static inline void xnarch_notify_halt(void)
     rthal_local_irq_restore_hw(flags);
 
     for(cpu=0; cpu < nr_cpus-1; ++cpu)
-        down(&xnarch_finalize_sync);
-    
+	down(&xnarch_finalize_sync);
+
     rthal_virtualize_irq(rthal_current_domain,
 			 RTHAL_SERVICE_IPI2,
 			 NULL,
@@ -253,7 +253,7 @@ static inline void xnarch_notify_shutdown(void)
 static void xnarch_notify_ready (void)
 {
     rthal_grab_control();
-#ifdef CONFIG_XENO_OPT_PERVASIVE    
+#ifdef CONFIG_XENO_OPT_PERVASIVE
     xnshadow_grab_events();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }

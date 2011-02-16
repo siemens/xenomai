@@ -86,8 +86,8 @@ ssize_t rt_dev_sendmsg(int fd, const struct msghdr *msg, int flags)
 }
 
 ssize_t rt_dev_recvfrom(int fd, void *buf, size_t len, int flags,
-                        struct sockaddr *from,
-                        socklen_t *fromlen)
+			struct sockaddr *from,
+			socklen_t *fromlen)
 {
 	struct iovec iov = { buf, len };
 	struct msghdr msg = {

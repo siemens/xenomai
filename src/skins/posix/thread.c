@@ -255,7 +255,7 @@ int __wrap_pthread_create(pthread_t *tid,
 
 	if (!attr)
 		attr = &default_attr;
-		
+
 	pthread_attr_getinheritsched(attr, &inherit);
 	__wrap_pthread_getschedparam(pthread_self(), &iargs.policy, &param);
 	iargs.parent_prio = param.sched_priority;

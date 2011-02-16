@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -128,7 +128,7 @@ static xnpnode_t __intr_pnode = {
 
 #endif /* !CONFIG_PROC_FS */
 
-/*! 
+/*!
  * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,rt_isr_t isr,rt_iack_t iack,int mode)
  * \brief Create an interrupt object from kernel space.
  *
@@ -372,7 +372,7 @@ int rt_intr_delete(RT_INTR *intr)
 	return err;
 }
 
-/*! 
+/*!
  * \fn int rt_intr_enable (RT_INTR *intr)
  * \brief Enable an interrupt object.
  *
@@ -427,7 +427,7 @@ int rt_intr_enable(RT_INTR *intr)
 	return err;
 }
 
-/*! 
+/*!
  * \fn int rt_intr_disable (RT_INTR *intr)
  * \brief Disable an interrupt object.
  *
@@ -540,7 +540,7 @@ int rt_intr_inquire(RT_INTR *intr, RT_INTR_INFO *info)
 	return err;
 }
 
-/*! 
+/*!
  * \fn int rt_intr_create (RT_INTR *intr,const char *name,unsigned irq,int mode)
  * \brief Create an interrupt object from user-space.
  *
@@ -563,7 +563,7 @@ int rt_intr_inquire(RT_INTR *intr, RT_INTR_INFO *info)
  * interrupt object. When non-NULL and non-empty, this string is copied
  * to a safe place into the descriptor, and passed to the registry package
  * if enabled for indexing the created interrupt objects.
- * 
+ *
  * @param irq The hardware interrupt channel associated with the
  * interrupt object. This value is architecture-dependent.
  *

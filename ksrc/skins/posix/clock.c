@@ -72,7 +72,7 @@
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html">
  * Specification.</a>
- * 
+ *
  */
 int clock_getres(clockid_t clock_id, struct timespec *res)
 {
@@ -88,7 +88,7 @@ int clock_getres(clockid_t clock_id, struct timespec *res)
 }
 
 /**
- * Read the specified clock. 
+ * Read the specified clock.
  *
  * This service returns, at the address @a tp the current value of the clock @a
  * clock_id. If @a clock_id is:
@@ -105,11 +105,11 @@ int clock_getres(clockid_t clock_id, struct timespec *res)
  * @retval 0 on success;
  * @retval -1 with @a errno set if:
  * - EINVAL, @a clock_id is invalid.
- * 
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_gettime.html">
  * Specification.</a>
- * 
+ *
  */
 int clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
@@ -152,7 +152,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_settime.html">
  * Specification.</a>
- * 
+ *
  */
 int clock_settime(clockid_t clock_id, const struct timespec *tp)
 {
@@ -216,7 +216,7 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/clock_nanosleep.html">
  * Specification.</a>
- * 
+ *
  */
 int clock_nanosleep(clockid_t clock_id,
 		    int flags,
@@ -303,7 +303,7 @@ int clock_nanosleep(clockid_t clock_id,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/nanosleep.html">
  * Specification.</a>
- * 
+ *
  */
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {

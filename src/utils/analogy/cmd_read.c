@@ -34,10 +34,10 @@
 
 /* Default command's parameters */
 
-/* For read operation, we consider 
+/* For read operation, we consider
    the default subdevice index is 0 */
 #define ID_SUBD 0
-/* For simplicity sake, a maximum channel 
+/* For simplicity sake, a maximum channel
    count is defined */
 #define MAX_NB_CHAN 32
 /* One hundred triggered scans by default */
@@ -121,7 +121,7 @@ int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 		int width;
 
 		err = a4l_get_chinfo(dsc,
-				     cmd->idx_subd, 
+				     cmd->idx_subd,
 				     cmd->chan_descs[i], &chans[i]);
 		if (err < 0) {
 			fprintf(stderr,
@@ -166,7 +166,7 @@ int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 		   we already called it on the very same channel
 		   descriptor */
 		tmp_size += a4l_sizeof_chan(chans[cur_chan]);
-		
+
 		if(++cur_chan == cmd->nb_chan) {
 			fprintf(stdout, "\n");
 			cur_chan = 0;
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 	void *map = NULL;
 	a4l_desc_t dsc = { .sbdata = NULL };
 
-	int (*dump_function) (a4l_desc_t *, a4l_cmd_t*, unsigned char *, int) = 
+	int (*dump_function) (a4l_desc_t *, a4l_cmd_t*, unsigned char *, int) =
 		dump_text;
 
 	/* Compute arguments */
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (isatty(STDOUT_FILENO) && dump_function == dump_raw) {
-		fprintf(stderr, 
+		fprintf(stderr,
 			"cmd_read: cannot dump raw data on a terminal\n\n");
 		return -EINVAL;
 	}
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose != 0) {
-		printf("cmd_read: device %s opened (fd=%d)\n", 
+		printf("cmd_read: device %s opened (fd=%d)\n",
 		       filename, dsc.fd);
 		printf("cmd_read: basic descriptor retrieved\n");
 		printf("\t subdevices count = %d\n", dsc.nb_subd);
@@ -437,8 +437,8 @@ int main(int argc, char *argv[])
 			}
 
 			/* Display the results */
-			if (dump_function(&dsc, 
-					  &cmd, 
+			if (dump_function(&dsc,
+					  &cmd,
 					  &((unsigned char *)map)[cnt % buf_size],
 					  front) < 0) {
 				ret = -EIO;

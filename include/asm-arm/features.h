@@ -61,7 +61,7 @@
 #endif
 #define __xn_feat_arm_atomic_atomic_mask	0
 #endif
-#define __xn_feat_arm_eabi_mask	                __xn_feat_arm_eabi
+#define __xn_feat_arm_eabi_mask			__xn_feat_arm_eabi
 
 #ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
 #define __xn_feat_arm_tsc_mask                  __xn_feat_arm_tsc
@@ -70,9 +70,9 @@
 #endif /* !CONFIG_XENO_ARM_HW_DIRECT_TSC */
 
 #define XENOMAI_FEAT_DEP  ( __xn_feat_generic_mask              | \
-                            __xn_feat_arm_atomic_xchg_mask      | \
-                            __xn_feat_arm_atomic_atomic_mask    | \
-                            __xn_feat_arm_eabi_mask             | \
+			    __xn_feat_arm_atomic_xchg_mask      | \
+			    __xn_feat_arm_atomic_atomic_mask    | \
+			    __xn_feat_arm_eabi_mask             | \
 			    __xn_feat_arm_tsc_mask)
 
 #define XENOMAI_FEAT_MAN  __xn_feat_generic_man_mask
