@@ -327,10 +327,12 @@ int threadobj_set_rr(struct threadobj *thobj, struct timespec *quantum)
 	push_cleanup_lock(&list_lock);
 	read_lock(&list_lock);
 
-	pvlist_for_each_entry(thobj, &thread_list, thread_link) {
-		threadobj_lock(thobj);
-		set_rr(thobj, quantum);
-		threadobj_unlock(thobj);
+	if (!pvlist_empty(&thread_list)) {
+		pvlist_for_each_entry(thobj, &thread_list, thread_link) {
+			threadobj_lock(thobj);
+			set_rr(thobj, quantum);
+			threadobj_unlock(thobj);
+		}
 	}
 
 	read_unlock(&list_lock);

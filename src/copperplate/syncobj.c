@@ -116,15 +116,17 @@ static void syncobj_enqueue_waiter(struct syncobj *sobj,
 {
 	struct threadobj *__thobj;
 
-	if (sobj->flags & SYNCOBJ_PRIO) {
-		thobj->wait_prio = threadobj_get_priority(thobj);
-		list_for_each_entry_reverse(__thobj, &sobj->pend_list, wait_link) {
-			if (thobj->wait_prio <= __thobj->wait_prio)
-				break;
-		}
-		ath(&__thobj->wait_link, &thobj->wait_link);
-	} else
+	thobj->wait_prio = threadobj_get_priority(thobj);
+	if ((sobj->flags & SYNCOBJ_PRIO) == 0 || list_empty(&sobj->pend_list)) {
 		list_append(&thobj->wait_link, &sobj->pend_list);
+		return;
+	}
+
+	list_for_each_entry_reverse(__thobj, &sobj->pend_list, wait_link) {
+		if (thobj->wait_prio <= __thobj->wait_prio)
+			break;
+	}
+	ath(&__thobj->wait_link, &thobj->wait_link);
 }
 
 int __syncobj_signal_drain(struct syncobj *sobj)

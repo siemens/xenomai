@@ -301,13 +301,17 @@ static int regfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	d = container_of(hobj, struct regfs_dir, hobj);
 
-	pvlist_for_each_entry(subd, &d->dir_list, link)
-		if (filler(buf, subd->basename, NULL, 0))
-			break;
+	if (!pvlist_empty(&d->dir_list)) {
+		pvlist_for_each_entry(subd, &d->dir_list, link)
+			if (filler(buf, subd->basename, NULL, 0))
+				break;
+	}
 
-	pvlist_for_each_entry(fsobj, &d->file_list, link)
-		if (filler(buf, fsobj->basename, NULL, 0))
-			break;
+	if (!pvlist_empty(&d->file_list)) {
+		pvlist_for_each_entry(fsobj, &d->file_list, link)
+			if (filler(buf, fsobj->basename, NULL, 0))
+				break;
+	}
 
 	read_unlock(&regfs_lock);
 

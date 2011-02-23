@@ -122,10 +122,12 @@ int hash_enter(struct hash_table *t,
 
 	write_lock_nocancel(&t->lock);
 
-	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			ret = -EBUSY;
-			goto out;
+	if (!list_empty(&bucket->obj_list)) {
+		list_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0) {
+				ret = -EBUSY;
+				goto out;
+			}
 		}
 	}
 
@@ -146,11 +148,13 @@ int hash_remove(struct hash_table *t, struct hashobj *delobj)
 
 	write_lock_nocancel(&t->lock);
 
-	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (obj == delobj) {
-			list_remove_init(&obj->link);
-			ret = 0;
-			goto out;
+	if (!list_empty(&bucket->obj_list)) {
+		list_for_each_entry(obj, &bucket->obj_list, link) {
+			if (obj == delobj) {
+				list_remove_init(&obj->link);
+				ret = 0;
+				goto out;
+			}
 		}
 	}
 out:
@@ -168,9 +172,11 @@ struct hashobj *hash_search(struct hash_table *t, const char *key)
 
 	read_lock_nocancel(&t->lock);
 
-	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0)
-			goto out;
+	if (!list_empty(&bucket->obj_list)) {
+		list_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0)
+				goto out;
+		}
 	}
 	obj = NULL;
 out:
@@ -196,14 +202,16 @@ int hash_enter_probe(struct hash_table *t,
 	push_cleanup_lock(&t->lock);
 	write_lock(&t->lock);
 
-	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			if (probefn(obj)) {
-				ret = -EBUSY;
-				goto out;
+	if (!list_empty(&bucket->obj_list)) {
+		list_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0) {
+				if (probefn(obj)) {
+					ret = -EBUSY;
+					goto out;
+				}
+				list_remove_init(&obj->link);
+				break;
 			}
-			list_remove_init(&obj->link);
-			break;
 		}
 	}
 
@@ -226,13 +234,15 @@ struct hashobj *hash_search_probe(struct hash_table *t, const char *key,
 	push_cleanup_lock(&t->lock);
 	write_lock(&t->lock);
 
-	list_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			if (!probefn(obj)) {
-				list_remove_init(&obj->link);
-				goto fail;
+	if (!list_empty(&bucket->obj_list)) {
+		list_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0) {
+				if (!probefn(obj)) {
+					list_remove_init(&obj->link);
+					goto fail;
+				}
+				goto out;
 			}
-			goto out;
 		}
 	}
 fail:
@@ -278,10 +288,12 @@ int pvhash_enter(struct pvhash_table *t,
 
 	write_lock_nocancel(&t->lock);
 
-	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0) {
-			ret = -EBUSY;
-			goto out;
+	if (!pvlist_empty(&bucket->obj_list)) {
+		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0) {
+				ret = -EBUSY;
+				goto out;
+			}
 		}
 	}
 
@@ -302,11 +314,13 @@ int pvhash_remove(struct pvhash_table *t, struct pvhashobj *delobj)
 
 	write_lock_nocancel(&t->lock);
 
-	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-		if (obj == delobj) {
-			pvlist_remove_init(&obj->link);
-			ret = 0;
-			goto out;
+	if (!pvlist_empty(&bucket->obj_list)) {
+		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
+			if (obj == delobj) {
+				pvlist_remove_init(&obj->link);
+				ret = 0;
+				goto out;
+			}
 		}
 	}
 out:
@@ -324,9 +338,11 @@ struct pvhashobj *pvhash_search(struct pvhash_table *t, const char *key)
 
 	read_lock_nocancel(&t->lock);
 
-	pvlist_for_each_entry(obj, &bucket->obj_list, link) {
-		if (strcmp(obj->key, key) == 0)
-			goto out;
+	if (!pvlist_empty(&bucket->obj_list)) {
+		pvlist_for_each_entry(obj, &bucket->obj_list, link) {
+			if (strcmp(obj->key, key) == 0)
+				goto out;
+		}
 	}
 	obj = NULL;
 out:
