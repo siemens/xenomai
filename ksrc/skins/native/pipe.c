@@ -699,9 +699,6 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
- * - -EPIPE is returned if the associated special device is not yet
- * open.
- *
  * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
  *
  * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
@@ -715,6 +712,11 @@ ssize_t rt_pipe_read(RT_PIPE *pipe, void *buf, size_t size, RTIME timeout)
  * - Kernel-based task
  *
  * Rescheduling: possible.
+ *
+ * @note Writing data to a pipe before any peer has opened the
+ * associated special device is allowed. The output will be buffered
+ * until then, only restricted by the available memory in the relevant
+ * buffer pool (see rt_pipe_create()).
  */
 
 ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
@@ -780,9 +782,6 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
- * - -EPIPE is returned if the associated special device is not yet
- * open.
- *
  * - -ENOMEM is returned if not enough buffer space is available to
  * complete the operation.
  *
@@ -800,6 +799,11 @@ ssize_t rt_pipe_send(RT_PIPE *pipe, RT_PIPE_MSG *msg, size_t size, int mode)
  * - User-space task
  *
  * Rescheduling: possible.
+ *
+ * @note Writing data to a pipe before any peer has opened the
+ * associated special device is allowed. The output will be buffered
+ * until then, only restricted by the available memory in the relevant
+ * buffer pool (see rt_pipe_create()).
  */
 
 ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
@@ -856,9 +860,6 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
  *
  * - -EINVAL is returned if @a pipe is not a pipe descriptor.
  *
- * - -EPIPE is returned if the associated special device is not yet
- * open.
- *
  * - -EIDRM is returned if @a pipe is a closed pipe descriptor.
  *
  * - -ENODEV or -EBADF are returned if @a pipe is scrambled.
@@ -877,6 +878,11 @@ ssize_t rt_pipe_write(RT_PIPE *pipe, const void *buf, size_t size, int mode)
  * - User-space task
  *
  * Rescheduling: possible.
+ *
+ * @note Writing data to a pipe before any peer has opened the
+ * associated special device is allowed. The output will be buffered
+ * until then, only restricted by the available memory in the relevant
+ * buffer pool (see rt_pipe_create()).
  */
 
 ssize_t rt_pipe_stream(RT_PIPE *pipe, const void *buf, size_t size)
