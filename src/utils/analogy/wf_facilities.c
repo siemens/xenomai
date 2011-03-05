@@ -109,8 +109,9 @@ void a4l_wf_set_sample_count(struct waveform_config *config)
 	}
 
 	if (lowest_diff != 0) {
-		printf("Warning: unable to create a contiguous signal\n");
-		printf("Warning: an approximation is performed\n");
+		fprintf(stderr, 
+			"Warning: unable to create a contiguous signal\n");
+		fprintf(stderr, "Warning: an approximation is performed\n");
 	}
 
 	config->spl_count = best_count;
@@ -120,11 +121,13 @@ int a4l_wf_check_config(struct waveform_config *config)
 {
 
 	if (config->wf_amplitude == 0)
-		printf("Warning: the signal will be constant\n");
+		fprintf(stderr, "Warning: the signal will be constant\n");
 
 	if (config->wf_frequency * 2 > config->spl_frequency) {
-		printf("Error: the sampling frequency is not correct\n");
-		printf("Error: sampling frequency >= 2 * signal frequency\n");
+		fprintf(stderr, 
+			"Error: the sampling frequency is not correct\n");
+		fprintf(stderr, 
+			"Error: sampling frequency >= 2 * signal frequency\n");
 		return -EINVAL;
 	}
 
@@ -150,6 +153,6 @@ void a4l_wf_dump_values(struct waveform_config *config, double *values)
 	int i;
 	
 	for (i = 0; i < config->spl_count; i++)
-		printf("%f\n", values[i]);
+		fprintf(stderr, "%f\n", values[i]);
 }
 
