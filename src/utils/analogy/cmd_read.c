@@ -173,6 +173,8 @@ int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 		}
 	}
 
+	fflush(stdout);
+
 out:
 	return err;
 }
