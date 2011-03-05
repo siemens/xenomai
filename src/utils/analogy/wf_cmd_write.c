@@ -263,7 +263,7 @@ int init_config(struct config *cfg, int argc, char *argv[])
 
 	memset(cfg, 0, sizeof(struct config));
 	cfg->str_chans = "0,1";
-	cfg->str_chans = "0,5,V";
+	cfg->str_ranges = "0,5,V";
 	cfg->filename = "analogy0";	
 	cfg->input = stdin;
 	cfg->dsc.fd = -1;
@@ -364,8 +364,9 @@ int process_stdin(struct config *cfg)
 
 		/* Data from stdin are supposed to be double values
 		   coming from wf_generate... */
+
 		err = fread(&value, sizeof(double), 1, cfg->input);
-		if (err != 0 && !feof(cfg->input)) {
+		if (err != 1 && !feof(cfg->input)) {
 			err = -errno;
 			fprintf(stderr, 
 				"cmd_write: stdin IO error (err=%d)\n", err);
@@ -392,7 +393,10 @@ int process_stdin(struct config *cfg)
 		filled ++;
 	}
 
-	if (filled) {
+out:
+
+	if (err >= 0 && filled) {
+
 		err = a4l_async_write(&cfg->dsc, 
 				      cfg->buffer, 
 				      filled * scan_size, A4L_INFINITE);
@@ -400,10 +404,10 @@ int process_stdin(struct config *cfg)
 			fprintf(stderr, 
 				"cmd_write: a4l_async_write failed (err=%d)\n",
 				err);
-	}
+	} else if (err >= 0 && !filled)
+		err = -ENOENT;
 	
-out:
-	return err;
+	return err < 0 ? err : 0;
 }
 
 int init_acquisition(struct config *cfg)
@@ -476,8 +480,12 @@ int main(int argc, char *argv[])
 
 	while ((err = process_stdin(&cfg)) == 0);
 
+	err = (err == -ENOENT) ? 0 : err;
+
+	sleep(1);
+
 out:
 	cleanup_config(&cfg);
 	
-	return err;
+	return err < 0 ? 1 : 0;
 }
