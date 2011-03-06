@@ -11,34 +11,26 @@ index f66294b..5bad536 100644
  comment "Processor and Board Settings"
  
  choice
-diff --git a/arch/blackfin/Makefile b/arch/blackfin/Makefile
-index 5a97a31..8cc081e 100644
---- a/arch/blackfin/Makefile
-+++ b/arch/blackfin/Makefile
-@@ -164,3 +164,5 @@ define archhelp
-   echo  '                     (distribution) PATH: $(INSTALLKERNEL) or'
-   echo  '                     install to $$(INSTALL_PATH)'
- endef
-+
-+drivers-$(CONFIG_XENOMAI) += arch/blackfin/xenomai/
 diff --git a/arch/blackfin/include/asm/ipipe.h b/arch/blackfin/include/asm/ipipe.h
-index d3b4044..2ea907c 100644
+index d3b4044..2ec21a4 100644
 --- a/arch/blackfin/include/asm/ipipe.h
 +++ b/arch/blackfin/include/asm/ipipe.h
-@@ -34,10 +34,11 @@
+@@ -34,11 +34,12 @@
  #include <asm/bitops.h>
  #include <asm/atomic.h>
  #include <asm/traps.h>
 +#include <asm/bitsperlong.h>
  
 -#define IPIPE_ARCH_STRING     "1.12-00"
-+#define IPIPE_ARCH_STRING     "1.16-00"
++#define IPIPE_ARCH_STRING     "1.16-01"
  #define IPIPE_MAJOR_NUMBER    1
 -#define IPIPE_MINOR_NUMBER    12
+-#define IPIPE_PATCH_NUMBER    0
 +#define IPIPE_MINOR_NUMBER    16
- #define IPIPE_PATCH_NUMBER    0
++#define IPIPE_PATCH_NUMBER    1
  
  #ifdef CONFIG_SMP
+ #error "I-pipe/blackfin: SMP not implemented"
 @@ -55,7 +56,6 @@ do {						\
  #define task_hijacked(p)						\
  	({								\
@@ -84,16 +76,18 @@ index d3b4044..2ea907c 100644
  
  void __ipipe_serial_debug(const char *fmt, ...);
  
-@@ -152,6 +146,9 @@ static inline unsigned long __ipipe_ffnz(unsigned long ul)
+@@ -152,7 +146,10 @@ static inline unsigned long __ipipe_ffnz(unsigned long ul)
  	return ffs(ul) - 1;
  }
  
+-#define __ipipe_run_irqtail()  /* Must be a macro */			\
 +#define __ipipe_do_root_xirq(ipd, irq)					\
 +	(ipd)->irqs[irq].handler(irq, &__raw_get_cpu_var(__ipipe_tick_regs))
 +
- #define __ipipe_run_irqtail()  /* Must be a macro */			\
++#define __ipipe_run_irqtail(irq)  /* Must be a macro */			\
  	do {								\
  		unsigned long __pending;				\
+ 		CSYNC();						\
 @@ -164,30 +161,8 @@ static inline unsigned long __ipipe_ffnz(unsigned long ul)
  		}							\
  	} while (0)
@@ -371,8 +365,63 @@ index 1a496cd..dbbe1d4 100644
  }
  
  void __ipipe_disable_root_irqs_hw(void)
+diff --git a/arch/blackfin/mach-common/entry.S b/arch/blackfin/mach-common/entry.S
+index a5847f5..a7650ce 100644
+--- a/arch/blackfin/mach-common/entry.S
++++ b/arch/blackfin/mach-common/entry.S
+@@ -892,8 +892,17 @@ ENDPROC(_ret_from_exception)
+ #ifdef CONFIG_IPIPE
+ 
+ _resume_kernel_from_int:
++	r1 = LO(~0x8000) (Z);
++	r1 = r0 & r1;
++	r0 = 1;
++	r0 = r1 - r0;
++	r2 = r1 & r0;
++	cc = r2 == 0;
++	/* Sync the root stage only from the outer interrupt level. */
++	if !cc jump .Lnosync;
+ 	r0.l = ___ipipe_sync_root;
+ 	r0.h = ___ipipe_sync_root;
++	[--sp] = reti;
+ 	[--sp] = rets;
+ 	[--sp] = ( r7:4, p5:3 );
+ 	SP += -12;
+@@ -901,6 +910,8 @@ _resume_kernel_from_int:
+ 	SP += 12;
+ 	( r7:4, p5:3 ) = [sp++];
+ 	rets = [sp++];
++	reti = [sp++];
++.Lnosync:
+ 	rts
+ #else
+ #define _resume_kernel_from_int	 2f
+diff --git a/arch/blackfin/mach-common/interrupt.S b/arch/blackfin/mach-common/interrupt.S
+index cee62cf..b4901c1 100644
+--- a/arch/blackfin/mach-common/interrupt.S
++++ b/arch/blackfin/mach-common/interrupt.S
+@@ -257,16 +257,16 @@ ENDPROC(_evt_system_call)
+  * level to EVT14 to prepare the caller for a normal interrupt
+  * return through RTI.
+  *
+- * We currently use this facility in two occasions:
++ * We currently use this feature in two occasions:
+  *
+- * - to branch to __ipipe_irq_tail_hook as requested by a high
++ * - before branching to __ipipe_irq_tail_hook as requested by a high
+  *   priority domain after the pipeline delivered an interrupt,
+  *   e.g. such as Xenomai, in order to start its rescheduling
+  *   procedure, since we may not switch tasks when IRQ levels are
+  *   nested on the Blackfin, so we have to fake an interrupt return
+  *   so that we may reschedule immediately.
+  *
+- * - to branch to sync_root_irqs, in order to play any interrupt
++ * - before branching to __ipipe_sync_root(), in order to play any interrupt
+  *   pending for the root domain (i.e. the Linux kernel). This lowers
+  *   the core priority level enough so that Linux IRQ handlers may
+  *   never delay interrupts handled by high priority domains; we defer
 diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
-index 1c8c4c7..27ed79d 100644
+index 1c8c4c7..a62816e 100644
 --- a/arch/blackfin/mach-common/ints-priority.c
 +++ b/arch/blackfin/mach-common/ints-priority.c
 @@ -15,6 +15,7 @@
@@ -410,7 +459,29 @@ index 1c8c4c7..27ed79d 100644
  
  	if (likely(vec == EVT_IVTMR_P))
  		irq = IRQ_CORETMR;
-@@ -1432,6 +1432,24 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
+@@ -1423,6 +1423,21 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
+ 			__raw_get_cpu_var(__ipipe_tick_regs).ipend |= 0x10;
+ 	}
+ 
++	/*
++	 * We don't want Linux interrupt handlers to run at the
++	 * current core priority level (i.e. < EVT15), since this
++	 * might delay other interrupts handled by a high priority
++	 * domain. Here is what we do instead:
++	 *
++	 * - we raise the SYNCDEFER bit to prevent
++	 * __ipipe_handle_irq() to sync the pipeline for the root
++	 * stage for the incoming interrupt. Upon return, that IRQ is
++	 * pending in the interrupt log.
++	 *
++	 * - we raise the TIF_IRQ_SYNC bit for the current thread, so
++	 * that _schedule_and_signal_from_int will eventually sync the
++	 * pipeline from EVT15.
++	 */
+ 	if (this_domain == ipipe_root_domain) {
+ 		s = __test_and_set_bit(IPIPE_SYNCDEFER_FLAG, &p->status);
+ 		barrier();
+@@ -1432,6 +1447,24 @@ asmlinkage int __ipipe_grab_irq(int vec, struct pt_regs *regs)
  	__ipipe_handle_irq(irq, regs);
  	ipipe_trace_irq_exit(irq);
  
@@ -435,16 +506,6 @@ index 1c8c4c7..27ed79d 100644
  	if (this_domain == ipipe_root_domain) {
  		set_thread_flag(TIF_IRQ_SYNC);
  		if (!s) {
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 91874e0..c146a59 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -113,3 +113,5 @@ obj-$(CONFIG_VLYNQ)		+= vlynq/
- obj-$(CONFIG_STAGING)		+= staging/
- obj-y				+= platform/
- obj-y				+= ieee802154/
-+
-+obj-$(CONFIG_XENOMAI) += xenomai/
 diff --git a/drivers/pci/htirq.c b/drivers/pci/htirq.c
 index 98abf8b..7cb0a86 100644
 --- a/drivers/pci/htirq.c
@@ -517,10 +578,10 @@ index 891e1dd..95f42db 100644
  	.probe		= serial8250_probe,
  	.remove		= __devexit_p(serial8250_remove),
 diff --git a/fs/exec.c b/fs/exec.c
-index e19de6a..b04d039 100644
+index 956bd37..001b420 100644
 --- a/fs/exec.c
 +++ b/fs/exec.c
-@@ -719,6 +719,7 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -733,6 +733,7 @@ static int exec_mmap(struct mm_struct *mm)
  {
  	struct task_struct *tsk;
  	struct mm_struct * old_mm, *active_mm;
@@ -528,7 +589,7 @@ index e19de6a..b04d039 100644
  
  	/* Notify parent that we're no longer interested in the old VM */
  	tsk = current;
-@@ -742,8 +743,10 @@ static int exec_mmap(struct mm_struct *mm)
+@@ -756,8 +757,10 @@ static int exec_mmap(struct mm_struct *mm)
  	task_lock(tsk);
  	active_mm = tsk->active_mm;
  	tsk->mm = mm;
@@ -718,10 +779,10 @@ index d5b3876..92b7abe 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..4e04013
+index 0000000..b959b40
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,780 @@
+@@ -0,0 +1,784 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -994,13 +1055,17 @@ index 0000000..4e04013
 +	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
 +#endif
 +
-+#ifndef __ipipe_do_root_virq
-+#define __ipipe_do_root_virq(ipd, irq)			\
-+	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
++#ifndef __ipipe_check_root_resched
++#ifdef CONFIG_PREEMPT
++#define __ipipe_check_root_resched()			\
++	(preempt_count() == 0 && need_resched())
++#else
++#define __ipipe_check_root_resched()  0
++#endif
 +#endif
 +
 +#ifndef __ipipe_run_irqtail
-+#define __ipipe_run_irqtail() do { } while(0)
++#define __ipipe_run_irqtail(irq) do { } while(0)
 +#endif
 +
 +#define __ipipe_pipeline_head_p(ipd) (&(ipd)->p_link == __ipipe_pipeline.next)
@@ -1644,10 +1709,10 @@ index 0000000..3f43ba5
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_lock.h b/include/linux/ipipe_lock.h
 new file mode 100644
-index 0000000..75bf0e8
+index 0000000..5382208
 --- /dev/null
 +++ b/include/linux/ipipe_lock.h
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,241 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_lock.h
 + *
@@ -1874,6 +1939,7 @@ index 0000000..75bf0e8
 +#define __ipipe_spin_lock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_unlock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
++#define __ipipe_spin_trylock_irq(lock)		1
 +#define __ipipe_spin_trylock_irqsave(lock, x)	({ (void)(x); 1; })
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while (0)
 +#define __ipipe_spin_unlock_irqbegin(lock)	do { } while (0)
@@ -2657,7 +2723,7 @@ index b14f6a9..e400972 100644
  
  #define arch_read_can_lock(lock)	(((void)(lock), 1))
 diff --git a/init/Kconfig b/init/Kconfig
-index 5cff9a9..6b1bd2c 100644
+index 5cff9a9..6ce2285 100644
 --- a/init/Kconfig
 +++ b/init/Kconfig
 @@ -86,6 +86,7 @@ config CROSS_COMPILE
@@ -2668,43 +2734,6 @@ index 5cff9a9..6b1bd2c 100644
  	help
  	  Append an extra string to the end of your kernel version.
  	  This will show up when you type uname, for example.
-@@ -1284,3 +1285,36 @@ config PADATA
- 	bool
- 
- source "kernel/Kconfig.locks"
-+
-+menu "Real-time sub-system"
-+
-+comment "WARNING! You enabled APM, CPU Frequency scaling or ACPI 'processor'"
-+	depends on APM || CPU_FREQ || ACPI_PROCESSOR
-+comment "option. These options are known to cause troubles with Xenomai."
-+	depends on APM || CPU_FREQ || ACPI_PROCESSOR
-+
-+comment "NOTE: Xenomai conflicts with PC speaker support."
-+	depends on !X86_TSC && X86 && INPUT_PCSPKR
-+comment "(menu Device Drivers/Input device support/Miscellaneous devices)"
-+	depends on !X86_TSC && X86 && INPUT_PCSPKR
-+
-+comment "NOTE: Xenomai needs either X86_LOCAL_APIC enabled or HPET_TIMER disabled."
-+	depends on (!X86_LOCAL_APIC || !X86_TSC) && X86 && HPET_TIMER
-+comment "(menu Processor type and features)"
-+	depends on (!X86_LOCAL_APIC || !X86_TSC) && X86 && HPET_TIMER
-+
-+config XENOMAI
-+	depends on ((X86_TSC || !X86 || !INPUT_PCSPKR) && (!HPET_TIMER || !X86 || (X86_LOCAL_APIC && X86_TSC)))
-+	bool "Xenomai"
-+	default y
-+        select IPIPE
-+
-+        help
-+          Xenomai is a real-time extension to the Linux kernel. Note
-+          that Xenomai relies on Adeos interrupt pipeline (CONFIG_IPIPE
-+          option) to be enabled, so enabling this option selects the
-+          CONFIG_IPIPE option.
-+
-+source "arch/blackfin/xenomai/Kconfig"
-+
-+endmenu
 diff --git a/init/main.c b/init/main.c
 index a42fdf4..149d8ea 100644
 --- a/init/main.c
@@ -2747,7 +2776,7 @@ index a42fdf4..149d8ea 100644
  	do_initcalls();
  }
 diff --git a/kernel/Makefile b/kernel/Makefile
-index 057472f..b9b0b74 100644
+index 057472f..c456c33 100644
 --- a/kernel/Makefile
 +++ b/kernel/Makefile
 @@ -86,6 +86,7 @@ obj-$(CONFIG_TREE_PREEMPT_RCU) += rcutree.o
@@ -2758,12 +2787,6 @@ index 057472f..b9b0b74 100644
  obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
-@@ -136,3 +137,5 @@ quiet_cmd_timeconst  = TIMEC   $@
- targets += timeconst.h
- $(obj)/timeconst.h: $(src)/timeconst.pl FORCE
- 	$(call if_changed,timeconst)
-+
-+obj-$(CONFIG_XENOMAI) += xenomai/
 diff --git a/kernel/exit.c b/kernel/exit.c
 index ac90425..a491bc3 100644
 --- a/kernel/exit.c
@@ -2967,10 +2990,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..7f1df1f
+index 0000000..1748255
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,2149 @@
+@@ -0,0 +1,2200 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -4145,7 +4168,7 @@ index 0000000..7f1df1f
 +	__set_bit(IPIPE_STALL_FLAG, &p->status);
 +	barrier();
 +	head->irqs[irq].handler(irq, head->irqs[irq].cookie); /* Call the ISR. */
-+	__ipipe_run_irqtail();
++	__ipipe_run_irqtail(irq);
 +	barrier();
 +	__clear_bit(IPIPE_STALL_FLAG, &p->status);
 +
@@ -4160,6 +4183,50 @@ index 0000000..7f1df1f
 +
 +	__ipipe_walk_pipeline(&head->p_link);
 +}
++
++#ifdef CONFIG_TRACE_IRQFLAGS
++#define root_stall_after_handler()	local_irq_disable()
++#else
++#define root_stall_after_handler()	do { } while (0)
++#endif
++
++#ifdef CONFIG_PREEMPT
++
++asmlinkage void preempt_schedule_irq(void);
++
++void __ipipe_preempt_schedule_irq(void)
++{
++	struct ipipe_percpu_domain_data *p; 
++	unsigned long flags;  
++
++	BUG_ON(!irqs_disabled_hw());
++	local_irq_save(flags);
++	local_irq_enable_hw();
++	preempt_schedule_irq(); /* Ok, may reschedule now. */  
++	local_irq_disable_hw();
++
++	/*
++	 * Flush any pending interrupt that may have been logged after
++	 * preempt_schedule_irq() stalled the root stage before
++	 * returning to us, and now.
++	 */
++	p = ipipe_root_cpudom_ptr();
++	if (unlikely(__ipipe_ipending_p(p))) {
++		add_preempt_count(PREEMPT_ACTIVE);
++		trace_hardirqs_on();
++		clear_bit(IPIPE_STALL_FLAG, &p->status);
++		__ipipe_sync_pipeline();
++		sub_preempt_count(PREEMPT_ACTIVE);
++	}
++
++	__local_irq_restore_nosync(flags);
++}
++
++#else /* !CONFIG_PREEMPT */
++
++#define __ipipe_preempt_schedule_irq()	do { } while (0)
++
++#endif	/* !CONFIG_PREEMPT */
 +
 +/*
 + * __ipipe_sync_stage() -- Flush the pending IRQs for the current
@@ -4206,15 +4273,22 @@ index 0000000..7f1df1f
 +
 +		if (likely(ipd != ipipe_root_domain)) {
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
-+			__ipipe_run_irqtail();
++			__ipipe_run_irqtail(irq);
++			local_irq_disable_hw();
 +		} else if (ipipe_virtual_irq_p(irq)) {
 +			irq_enter();
-+			__ipipe_do_root_virq(ipd, irq);
++			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			irq_exit();
-+		} else
++			local_irq_disable_hw();
++			root_stall_after_handler();
++			while (__ipipe_check_root_resched())
++				__ipipe_preempt_schedule_irq();
++		} else {
 +			__ipipe_do_root_xirq(ipd, irq);
++			local_irq_disable_hw();
++			root_stall_after_handler();
++		}
 +
-+		local_irq_disable_hw();
 +		p = ipipe_cpudom_ptr(__ipipe_current_domain);
 +	}
 +
@@ -7022,10 +7096,10 @@ index 444b770..60e2a08 100644
  /* cpu currently holding logbuf_lock */
  static volatile unsigned int printk_cpu = UINT_MAX;
 diff --git a/kernel/sched.c b/kernel/sched.c
-index 4fa520b..c5cabba 100644
+index 05b40f8..2d1e23a 100644
 --- a/kernel/sched.c
 +++ b/kernel/sched.c
-@@ -2283,7 +2283,8 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
+@@ -2276,7 +2276,8 @@ static int try_to_wake_up(struct task_struct *p, unsigned int state,
  
  	smp_wmb();
  	rq = task_rq_lock(p, &flags);
@@ -7035,7 +7109,7 @@ index 4fa520b..c5cabba 100644
  		goto out;
  
  	if (p->se.on_rq)
-@@ -2752,13 +2753,15 @@ asmlinkage void schedule_tail(struct task_struct *prev)
+@@ -2745,13 +2746,15 @@ asmlinkage void schedule_tail(struct task_struct *prev)
  #endif
  	if (current->set_child_tid)
  		put_user(task_pid_vnr(current), current->set_child_tid);
@@ -7052,7 +7126,7 @@ index 4fa520b..c5cabba 100644
  context_switch(struct rq *rq, struct task_struct *prev,
  	       struct task_struct *next)
  {
-@@ -2800,12 +2803,23 @@ context_switch(struct rq *rq, struct task_struct *prev,
+@@ -2793,12 +2796,23 @@ context_switch(struct rq *rq, struct task_struct *prev,
  	switch_to(prev, next, prev);
  
  	barrier();
@@ -7076,7 +7150,7 @@ index 4fa520b..c5cabba 100644
  }
  
  /*
-@@ -3443,6 +3457,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
+@@ -3436,6 +3450,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
  
  void __kprobes add_preempt_count(int val)
  {
@@ -7084,7 +7158,7 @@ index 4fa520b..c5cabba 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -3465,6 +3480,7 @@ EXPORT_SYMBOL(add_preempt_count);
+@@ -3458,6 +3473,7 @@ EXPORT_SYMBOL(add_preempt_count);
  
  void __kprobes sub_preempt_count(int val)
  {
@@ -7092,7 +7166,7 @@ index 4fa520b..c5cabba 100644
  #ifdef CONFIG_DEBUG_PREEMPT
  	/*
  	 * Underflow?
-@@ -3513,6 +3529,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
+@@ -3506,6 +3522,7 @@ static noinline void __schedule_bug(struct task_struct *prev)
   */
  static inline void schedule_debug(struct task_struct *prev)
  {
@@ -7100,7 +7174,7 @@ index 4fa520b..c5cabba 100644
  	/*
  	 * Test if we are atomic. Since do_exit() needs to call into
  	 * schedule() atomically, we ignore that path for now.
-@@ -3575,7 +3592,7 @@ pick_next_task(struct rq *rq)
+@@ -3568,7 +3585,7 @@ pick_next_task(struct rq *rq)
  /*
   * schedule() is the main scheduler function.
   */
@@ -7109,7 +7183,7 @@ index 4fa520b..c5cabba 100644
  {
  	struct task_struct *prev, *next;
  	unsigned long *switch_count;
-@@ -3589,6 +3606,9 @@ need_resched:
+@@ -3582,6 +3599,9 @@ need_resched:
  	rcu_note_context_switch(cpu);
  	prev = rq->curr;
  	switch_count = &prev->nivcsw;
@@ -7119,7 +7193,7 @@ index 4fa520b..c5cabba 100644
  
  	release_kernel_lock(prev);
  need_resched_nonpreemptible:
-@@ -3625,15 +3645,18 @@ need_resched_nonpreemptible:
+@@ -3618,15 +3638,18 @@ need_resched_nonpreemptible:
  		rq->curr = next;
  		++*switch_count;
  
@@ -7140,7 +7214,7 @@ index 4fa520b..c5cabba 100644
  
  	post_schedule(rq);
  
-@@ -3646,6 +3669,8 @@ need_resched_nonpreemptible:
+@@ -3639,6 +3662,8 @@ need_resched_nonpreemptible:
  	preempt_enable_no_resched();
  	if (need_resched())
  		goto need_resched;
@@ -7149,7 +7223,7 @@ index 4fa520b..c5cabba 100644
  }
  EXPORT_SYMBOL(schedule);
  
-@@ -3737,7 +3762,8 @@ asmlinkage void __sched preempt_schedule(void)
+@@ -3730,7 +3755,8 @@ asmlinkage void __sched preempt_schedule(void)
  
  	do {
  		add_preempt_count(PREEMPT_ACTIVE);
@@ -7159,7 +7233,7 @@ index 4fa520b..c5cabba 100644
  		sub_preempt_count(PREEMPT_ACTIVE);
  
  		/*
-@@ -4522,6 +4548,7 @@ recheck:
+@@ -4515,6 +4541,7 @@ recheck:
  	oldprio = p->prio;
  	prev_class = p->sched_class;
  	__setscheduler(rq, p, policy, param->sched_priority);
@@ -7167,7 +7241,7 @@ index 4fa520b..c5cabba 100644
  
  	if (running)
  		p->sched_class->set_curr_task(rq);
-@@ -5178,6 +5205,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
+@@ -5171,6 +5198,7 @@ void __cpuinit init_idle(struct task_struct *idle, int cpu)
  #else
  	task_thread_info(idle)->preempt_count = 0;
  #endif
@@ -7175,7 +7249,7 @@ index 4fa520b..c5cabba 100644
  	/*
  	 * The idle tasks have their own, simple scheduling class:
  	 */
-@@ -8977,3 +9005,65 @@ void synchronize_sched_expedited(void)
+@@ -8970,3 +8998,65 @@ void synchronize_sched_expedited(void)
  EXPORT_SYMBOL_GPL(synchronize_sched_expedited);
  
  #endif /* #else #ifndef CONFIG_SMP */
@@ -7768,7 +7842,7 @@ index 9e82e93..a4bd34d 100644
  
  	if (active_mm != mm)
 diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-index ae00746..ca1597c 100644
+index 20a402c..78a8096 100644
 --- a/mm/vmalloc.c
 +++ b/mm/vmalloc.c
 @@ -172,6 +172,8 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
