@@ -12842,7 +12842,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: done" >&5
 $as_echo "done" >&6; }
 
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
 
 if test x$use_registry = xy; then

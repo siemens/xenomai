@@ -677,7 +677,7 @@ fi
 AC_MSG_RESULT([done])
 
 dnl Common CFLAGS and LDFLAGS
-XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe"
+XENO_USER_CFLAGS="-D_GNU_SOURCE -D_REENTRANT -Wall -pipe -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wno-unused-parameter -Werror"
 XENO_USER_LDFLAGS=
 
 if test x$use_registry = xy; then
