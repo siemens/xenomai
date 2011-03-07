@@ -618,7 +618,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define rthal_irq_chip_enable(irq)					\
 	({								\
 		struct irq_desc *desc = rthal_irq_descp(irq);		\
-		struct irq_chip *chip = desc->chip;			\
+		struct irq_chip *chip = get_irq_desc_chip(desc);	\
 		int __ret__ = 0;					\
 		if (unlikely(chip->irq_unmask == NULL))			\
 			__ret__ = -ENODEV;				\
@@ -629,7 +629,7 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 #define rthal_irq_chip_disable(irq)					\
 	({								\
 		struct irq_desc *desc = rthal_irq_descp(irq);		\
-		struct irq_chip *chip = desc->chip;			\
+		struct irq_chip *chip = get_irq_desc_chip(desc);	\
 		int __ret__ = 0;					\
 		if (unlikely(chip->irq_mask == NULL))			\
 			__ret__ = -ENODEV;				\
