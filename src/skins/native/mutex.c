@@ -121,9 +121,9 @@ static int rt_mutex_acquire_inner(RT_MUTEX *mutex, RTIME timeout, xntmode_t mode
 		mutex->lockcnt++;
 		return 0;
 	}
+do_syscall:
 #endif /* CONFIG_XENO_FASTSYNCH */
 
-do_syscall:
 	err = XENOMAI_SKINCALL3(__native_muxid,
 				__native_mutex_acquire, mutex, mode, &timeout);
 
