@@ -36,7 +36,7 @@ static inline void collect_arch_features(struct xnfeatinfo *finfo)
 #endif
 
 /* The ABI revision level we use on this arch. */
-#define XENOMAI_ABI_REV   2UL
+#define XENOMAI_ABI_REV   3UL
 
 #define XENOMAI_FEAT_DEP  __xn_feat_generic_mask
 

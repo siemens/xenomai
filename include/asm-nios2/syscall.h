@@ -35,7 +35,7 @@
 
 /* Register mapping for accessing syscall args. */
 
-#define __xn_reg_mux(regs)    ((regs)->r3)
+#define __xn_reg_mux(regs)    ((regs)->r2)
 #define __xn_reg_rval(regs)   ((regs)->r2)
 #define __xn_reg_arg1(regs)   ((regs)->r4)
 #define __xn_reg_arg2(regs)   ((regs)->r5)
@@ -91,16 +91,14 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r9, %3\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r9, %2\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r"((long)sigp)			\
-			: "r2", "r3", "r9", "memory"		\
+			: "r2", "r9", "memory"			\
 		);						\
 		__ret;						\
 	})
@@ -110,18 +108,16 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r4, %3\n\t"			\
-			"mov r9, %4\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r4, %2\n\t"			\
+			"mov r9, %3\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r9", "memory"	\
+			: "r2", "r4", "r9", "memory"		\
 		);						\
 		__ret;						\
 	})
@@ -131,20 +127,18 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r4, %3\n\t"			\
-			"mov r5, %4\n\t"			\
-			"mov r9, %5\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r4, %2\n\t"			\
+			"mov r5, %3\n\t"			\
+			"mov r9, %4\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r9", "memory"	\
+			: "r2", "r4", "r5", "r9", "memory"	\
 		);						\
 		__ret;						\
 	})
@@ -154,22 +148,20 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r4, %3\n\t"			\
-			"mov r5, %4\n\t"			\
-			"mov r6, %5\n\t"			\
-			"mov r9, %6\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r4, %2\n\t"			\
+			"mov r5, %3\n\t"			\
+			"mov r6, %4\n\t"			\
+			"mov r9, %5\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r9", "memory"	\
+			: "r2", "r4", "r5", "r6", "r9", "memory"	\
 		);						\
 		__ret;						\
 	})
@@ -179,24 +171,22 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r4, %3\n\t"			\
-			"mov r5, %4\n\t"			\
-			"mov r6, %5\n\t"			\
-			"mov r7, %6\n\t"			\
-			"mov r9, %7\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r4, %2\n\t"			\
+			"mov r5, %3\n\t"			\
+			"mov r6, %4\n\t"			\
+			"mov r7, %5\n\t"			\
+			"mov r9, %6\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
 			  "r" ((long)a4),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r7", "r9", "memory" \
+			: "r2", "r4", "r5", "r6", "r7", "r9", "memory" \
 		);						\
 		__ret;						\
 	})
@@ -206,26 +196,24 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 		long __ret;					\
 								\
 		__asm__ __volatile__ (				\
-			"movi r2, %2\n\t"			\
-			"mov r3, %1\n\t"			\
-			"mov r4, %3\n\t"			\
-			"mov r5, %4\n\t"			\
-			"mov r6, %5\n\t"			\
-			"mov r7, %6\n\t"			\
-			"mov r8, %7\n\t"			\
-			"mov r9, %8\n\t"			\
+			"mov r2, %1\n\t"			\
+			"mov r4, %2\n\t"			\
+			"mov r5, %3\n\t"			\
+			"mov r6, %4\n\t"			\
+			"mov r7, %5\n\t"			\
+			"mov r8, %6\n\t"			\
+			"mov r9, %7\n\t"			\
 			"trap\n\t"				\
 			"mov %0, r2\n\t"			\
 			: "=r"(__ret)				\
 			: "r"(muxcode),				\
-			  "i"(TRAP_ID_SYSCALL),			\
 			  "r" ((long)a1),			\
 			  "r" ((long)a2),			\
 			  "r" ((long)a3),			\
 			  "r" ((long)a4),			\
 			  "r" ((long)a5),			\
 			  "r" ((long)sigp)			\
-			: "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "memory" \
+			: "r2", "r4", "r5", "r6", "r7", "r8", "r9", "memory" \
 		);						\
 		__ret;						\
 	})
@@ -264,15 +252,14 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL4(id,op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,id,op,a1,a2,a3,a4)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-extern struct xnfeatinfo xeno_featinfo;
+extern volatile void *xeno_nios2_hrclock;
 
 static inline unsigned long long __xn_rdtsc(void)
 {
 	volatile unsigned short *hrclock;
 	int64_t t0, t1;
 
-	hrclock = (volatile unsigned short *)
-		xeno_featinfo.feat_arch.hrclock_membase;
+	hrclock = xeno_nios2_hrclock;
 
 #define hrclock_wrsnap(reg, val)		\
 	(*(hrclock + (12 + ((reg) * 2)))) = (val)

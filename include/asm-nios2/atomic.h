@@ -31,15 +31,24 @@
 #define xnarch_read_memory_barrier()	rmb()
 #define xnarch_write_memory_barrier()	wmb()
 
+static inline void atomic_set_mask(unsigned long mask, unsigned long *addr)
+{
+	unsigned long flags;
+
+	local_irq_save_hw(flags);
+	*addr |= mask;
+	local_irq_restore_hw(flags);
+}
+
 #define xnarch_atomic_set(pcounter,i)          atomic_set(pcounter,i)
 #define xnarch_atomic_get(pcounter)            atomic_read(pcounter)
 #define xnarch_atomic_inc(pcounter)            atomic_inc(pcounter)
 #define xnarch_atomic_dec(pcounter)            atomic_dec(pcounter)
 #define xnarch_atomic_inc_and_test(pcounter)   atomic_inc_and_test(pcounter)
 #define xnarch_atomic_dec_and_test(pcounter)   atomic_dec_and_test(pcounter)
-#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask,(atomic_t*)pflags)
-#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask,(atomic_t*)pflags)
-#define xnarch_atomic_cmpxchg(pcounter,old,new) atomic_cmpxchg((pcounter),(old),(new))
+#define xnarch_atomic_set_mask(pflags,mask)    atomic_set_mask(mask, pflags)
+#define xnarch_atomic_clear_mask(pflags,mask)  atomic_clear_mask(mask, pflags)
+#define xnarch_atomic_cmpxchg(pcounter,old,new) atomic_cmpxchg((pcounter), (old), (new))
 
 typedef atomic_t atomic_counter_t;
 typedef atomic_t xnarch_atomic_t;

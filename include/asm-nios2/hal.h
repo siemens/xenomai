@@ -65,6 +65,15 @@ static inline void rthal_timer_program_shot(unsigned long delay)
 
     /* Private interface -- Internal use only */
 
+static inline struct mm_struct *rthal_get_active_mm(void)
+{
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	return per_cpu(ipipe_active_mm, ipipe_processor_id());
+#else
+	return current->active_mm;
+#endif
+}
+
 #ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
 extern int rthal_periodic_p;
 #else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
@@ -79,7 +88,12 @@ asmlinkage void rthal_thread_trampoline(void);
 
 static const char *const rthal_fault_labels[] = {
 	[0] = "Breakpoint",
-	[1] = NULL
+	[1] = "Data or instruction access",
+	[2] = "Unaligned access",
+	[3] = "Illegal instruction",
+	[4] = "Supervisor instruction",
+	[5] = "Division error",
+	[6] = NULL
 };
 
 #endif /* !_XENO_ASM_NIOS2_HAL_H */

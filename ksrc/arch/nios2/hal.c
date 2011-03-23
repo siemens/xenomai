@@ -73,7 +73,7 @@ void rthal_timer_release(int cpu)
 
 unsigned long rthal_timer_calibrate(void)
 {
-	unsigned long flags;
+	unsigned long flags, freq;
 	u64 t, v;
 	u32 d;
 	int n;
@@ -90,8 +90,9 @@ unsigned long rthal_timer_calibrate(void)
 	rthal_local_irq_restore_hw(flags);
 
 	d = (u32)(v - t);
+	freq = rthal_get_clockfreq();
 
-	return ((1000000000 / na_cpu_clock_freq) * (d / n));
+	return ((1000000000 / freq) * (d / n));
 }
 
 int rthal_irq_enable(unsigned irq)

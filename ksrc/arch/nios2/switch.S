@@ -26,6 +26,15 @@
 .set noat
 .set nobreak
 
+.macro GET_THREAD_INFO reg 
+.if THREAD_SIZE & 0xffff0000
+	andhi	\reg, sp, %hi(~(THREAD_SIZE-1))
+.else
+	addi	\reg, r0, %lo(~(THREAD_SIZE-1))
+	and	\reg, \reg, sp
+.endif
+.endm
+
 /*
  * Switch context routine for Xenomai threads.
  * Kernel-based threads are basically seen as co-routines.
@@ -40,9 +49,6 @@
 ENTRY(rthal_thread_switch)
 	rdctl	r7,status			/* save thread status reg */
 	stw	r7,THREAD_KPSR(r4)	
-	movia	r8,status_extension		/* save status extension */
-	ldw	r7,0(r8)
-	stw	r7,THREAD_KESR(r4)
 	SAVE_SWITCH_STACK
 	stw	sp,THREAD_KSP(r4)		/* save kernel stack pointer */
 	ldw	sp,THREAD_KSP(r5)		/* restore new thread stack */
@@ -52,8 +58,6 @@ ENTRY(rthal_thread_switch)
 	stw	r1,0(r24)
 no_curr_update:
 	RESTORE_SWITCH_STACK
-	ldw	r7,THREAD_KESR(r5)		/* restore extended status reg */
-	stw	r7,0(r8)
 	ldw	r7,THREAD_KPSR(r5)		/* restore thread status reg */
 	wrctl	status,r7
 	ret

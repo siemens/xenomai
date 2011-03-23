@@ -27,6 +27,10 @@
 #include <asm/system.h>
 #include <asm/processor.h>
 
+#ifndef CONFIG_MMU
+#error "Please use Xenomai 2.5.x for MMU-less support"
+#endif
+
 #define XNARCH_THREAD_STACKSZ   4096
 
 #define xnarch_stack_size(tcb)  ((tcb)->stacksize)
@@ -42,12 +46,19 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 
 #define xnarch_fpu_ptr(tcb)     NULL /* No FPU handling at all. */
 
-	unsigned stacksize;		/* Aligned size of stack */
+	unsigned int stacksize;		/* Aligned size of stack */
 	unsigned long *stackbase;	/* Stack space */
 
-	struct thread_struct ts;	/* Holds kernel-based thread context. */
 	struct task_struct *user_task;	/* Shadowed user-space task */
+	struct task_struct *active_task;	/* Active user-space task */
 	struct thread_struct *tsp;	/* Active thread struct */
+	struct mm_struct *mm;
+	struct mm_struct *active_mm;
+	struct thread_struct ts;	/* Holds kernel-based thread context. */
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	struct thread_info *tip; /* Pointer to the active thread info (ti or user->thread_info). */
+	struct thread_info ti;	/* Holds kernel-based thread info */
+#endif
 #ifdef XNARCH_HAVE_MAYDAY
 	struct {
 		unsigned long ea;

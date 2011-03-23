@@ -39,26 +39,50 @@ static inline int xnarch_start_timer(void (*tick_handler)(void), int cpu)
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 
-static inline void xnarch_leave_root(struct xnarchtcb * rootcb)
+static inline void xnarch_leave_root(struct xnarchtcb *rootcb)
 {
+	struct task_struct *p = current;
+
 	/* Remember the preempted Linux task pointer. */
-	rootcb->user_task = current;
-	rootcb->tsp = &current->thread;
+	rootcb->user_task = rootcb->active_task = p;
+	rootcb->tsp = &p->thread;
+	rootcb->mm = rootcb->active_mm = rthal_get_active_mm();
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	rootcb->tip = task_thread_info(p);
+#endif
 }
 
 static inline void xnarch_enter_root(struct xnarchtcb * rootcb)
 {
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	if (!rootcb->mm)
+		set_ti_thread_flag(rootcb->tip, TIF_MMSWITCH_INT);
+#endif
 }
 
-static inline void xnarch_switch_to(struct xnarchtcb * out_tcb, struct xnarchtcb * in_tcb)
+static inline void xnarch_switch_to(struct xnarchtcb *out_tcb, struct xnarchtcb *in_tcb)
 {
-	if (likely(in_tcb->user_task)) {
+	struct mm_struct *prev_mm = out_tcb->active_mm, *next_mm;
+	struct task_struct *prev = out_tcb->active_task;
+	struct task_struct *next = in_tcb->user_task;
+
+	if (likely(next != NULL)) {
+		in_tcb->active_task = next;
+		in_tcb->active_mm = in_tcb->mm;
 		rthal_clear_foreign_stack(&rthal_domain);
-		rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, 0);
 	} else {
+		in_tcb->active_task = prev;
+		in_tcb->active_mm = prev_mm;
 		rthal_set_foreign_stack(&rthal_domain);
-		rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, 1);
 	}
+
+	next_mm = in_tcb->active_mm;
+
+	if (next_mm && likely(prev_mm != next_mm))
+		__switch_mm(prev_mm, next_mm, next);
+
+	rthal_thread_switch(out_tcb->tsp, in_tcb->tsp, next == NULL);
+	barrier();
 }
 
 asmlinkage static void xnarch_thread_trampoline(struct xnarchtcb *tcb)
@@ -96,7 +120,6 @@ static inline void xnarch_init_thread(struct xnarchtcb *tcb,
 
 	tcb->ts.ksp = (unsigned long)childregs;
 	tcb->ts.kpsr = 0;	/* PIE=0, U=0, EH=0 */
-	tcb->ts.kesr = PS_S;	/* Start in supervisor mode */
 	tcb->entry = entry;
 	tcb->cookie = cookie;
 	tcb->self = thread;

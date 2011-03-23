@@ -26,9 +26,15 @@
 
 static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 {
-
 	tcb->user_task = NULL;
+	tcb->active_task = NULL;
 	tcb->tsp = &tcb->ts;
+	tcb->mm = NULL;
+	tcb->active_mm = NULL;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	tcb->tip = &tcb->ti;
+#endif
+	memset(&tcb->ts, 0, sizeof(tcb->ts));
 	/* Must be followed by xnarch_init_thread(). */
 }
 

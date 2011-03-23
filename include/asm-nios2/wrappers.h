@@ -41,4 +41,6 @@
 
 typedef irq_handler_t rthal_irq_host_handler_t;
 
+#define PAGE_SHARED  __pgprot(0)
+
 #endif /* _XENO_ASM_NIOS2_WRAPPERS_H */

@@ -33,7 +33,13 @@ static inline void xnarch_init_shadow_tcb(xnarchtcb_t * tcb,
 	struct task_struct *task = current;
 
 	tcb->user_task = task;
+	tcb->active_task = NULL;
 	tcb->tsp = &task->thread;
+	tcb->mm = task->mm;
+	tcb->active_mm = NULL;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	tcb->tip = task_thread_info(task);
+#endif
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
 	tcb->self = thread;

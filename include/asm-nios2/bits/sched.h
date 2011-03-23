@@ -25,7 +25,13 @@ static inline void xnarch_init_root_tcb(xnarchtcb_t * tcb,
 					const char *name)
 {
 	tcb->user_task = current;
+	tcb->active_task = current;
 	tcb->tsp = &tcb->ts;
+	tcb->mm = current->mm;
+	tcb->active_mm = NULL;
+#ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
+	tcb->tip = &tcb->ti;
+#endif
 	tcb->entry = NULL;
 	tcb->cookie = NULL;
 	tcb->self = thread;
