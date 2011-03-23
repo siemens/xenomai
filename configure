@@ -12593,15 +12593,11 @@ case $XENO_TARGET_ARCH in
 	;;
  powerpc)
 	;;
- blackfin)
+ blackfin|nios2)
 	# Produce libraries in FDPIC format.
 	;;
  arm)
 	XENO_USER_CFLAGS="$XENO_USER_CFLAGS $XENO_ARM_ARCH_FLAGS"
-	;;
- nios2)
-	XENO_USER_LDFLAGS="$XENO_USER_LDFLAGS -Wl,-elf2flt"
-	XENO_USER_APP_LDFLAGS="$XENO_USER_APP_LDFLAGS -Wl,-elf2flt"
 	;;
 esac
 
