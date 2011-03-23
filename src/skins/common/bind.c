@@ -137,7 +137,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 	xnsig_handlers[muxid] = handler;
 
 #ifdef xeno_arch_features_check
-	xeno_arch_features_check();
+	xeno_arch_features_check(&finfo);
 #endif /* xeno_arch_features_check */
 
 	xeno_init_sem_heaps();

@@ -10,7 +10,7 @@
 #include <asm/xenomai/features.h>
 
 #ifdef __i386__
-static inline void xeno_x86_features_check(void)
+static inline void xeno_x86_features_check(struct xnfeatinfo *finfo)
 {
 #ifdef CONFIG_XENO_X86_SEP
 	size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
@@ -30,7 +30,7 @@ static inline void xeno_x86_features_check(void)
 	exit(1);
 #endif /* CONFIG_XENO_X86_SEP */
 }
-#define xeno_arch_features_check() xeno_x86_features_check()
+#define xeno_arch_features_check(finfo) xeno_x86_features_check(finfo)
 
 #endif /* __i386__ */
 

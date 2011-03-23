@@ -17,7 +17,7 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
   type: -1
 };
 
-static inline void xeno_arm_features_check(void)
+static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 {
 #ifdef XNARCH_ARM_TSC_TYPE
 	unsigned page_size;
@@ -106,6 +106,6 @@ static inline void xeno_arm_features_check(void)
 	}
 #endif /* XNARCH_ARM_TSC_TYPE */
 }
-#define xeno_arch_features_check() xeno_arm_features_check()
+#define xeno_arch_features_check(finfo) xeno_arm_features_check(finfo)
 
 #endif /* _XENO_ASM_ARM_BIND_H */
