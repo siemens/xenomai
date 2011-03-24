@@ -223,7 +223,7 @@ void xnregistry_cleanup(void)
 
 #ifdef CONFIG_XENO_OPT_VFILE
 
-static DECLARE_MUTEX(export_mutex);
+static DEFINE_SEMAPHORE(export_mutex);
 
 /*
  * The following stuff implements the mechanism for delegating
