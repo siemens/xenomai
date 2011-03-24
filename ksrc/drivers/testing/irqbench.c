@@ -216,7 +216,7 @@ static int rt_irqbench_open(struct rtdm_dev_context *context,
 	ctx = (struct rt_irqbench_context *)context->dev_private;
 	ctx->mode = -1;
 	rtdm_event_init(&ctx->irq_event, 0);
-	init_MUTEX(&ctx->nrt_mutex);
+	sema_init(&ctx->nrt_mutex, 1);
 
 	return 0;
 }
@@ -379,15 +379,15 @@ static int rt_irqbench_ioctl_nrt(struct rtdm_dev_context *context,
 			}
 		else {
 			ctx->mode = config->mode;
-	
+
 			memset(&ctx->stats, 0, sizeof(ctx->stats));
-	
+
 			/* Arm IRQ */
 			switch (ctx->port_type) {
 			case RTTST_IRQBENCH_SERPORT:
 				outb(IER_MODEM, IER(ctx));
 				break;
-	
+
 			case RTTST_IRQBENCH_PARPORT:
 				outb(CTRL_STROBE, CTRL(ctx));
 				break;

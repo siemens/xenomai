@@ -1,4 +1,4 @@
-/* 
+/*
  * @note Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
  *
  * Xenomai is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 
 #include <nucleus/types.h>
 
-/*! @ingroup nucleus 
+/*! @ingroup nucleus
   @defgroup nucleus_state_flags Thread state flags.
   @brief Bits reporting permanent or transient states of thread.
   @{
@@ -97,7 +97,7 @@
 #define XNTHREAD_STATE_SPARE3  0x80000000
 #define XNTHREAD_STATE_SPARES  0xf0000000
 
-/*! @ingroup nucleus 
+/*! @ingroup nucleus
   @defgroup nucleus_info_flags Thread information flags.
   @brief Bits reporting events notified to the thread.
   @{
@@ -235,7 +235,7 @@ typedef struct xnthread {
 	int cprio;			/* Current priority */
 
 	u_long schedlck;		/*!< Scheduler lock count. */
-	
+
 	xnpholder_t rlink;		/* Thread holder in ready queue */
 
 	xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
@@ -257,11 +257,11 @@ typedef struct xnthread {
 	struct xnsynch *wwake;		/* Wait channel the thread was resumed from */
 
 	int hrescnt;			/* Held resources count */
-	
+
 	xntimer_t rtimer;		/* Resource timer */
 
 	xntimer_t ptimer;		/* Periodic timer */
-	
+
 	xnsigmask_t signals;		/* Pending core signals */
 
 	xnticks_t rrperiod;		/* Allotted round-robin period (ticks) */

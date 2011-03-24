@@ -196,7 +196,7 @@ typedef spinlock_t rthal_spinlock_t;
 #define rthal_read_tsc(v)		ipipe_read_tsc(v)
 
 #ifdef __IPIPE_FEATURE_SYSINFO_V2
-	
+
 static inline unsigned long rthal_get_cpufreq(void)
 {
 	struct ipipe_sysinfo sysinfo;
@@ -319,7 +319,7 @@ static int hdlr(unsigned event, struct ipipe_domain *ipd, void *data) \
 static inline void set_task_nowakeup(struct task_struct *p)
 {
 	if (p->state & (TASK_INTERRUPTIBLE|TASK_UNINTERRUPTIBLE))
-                set_task_state(p, p->state | TASK_NOWAKEUP);
+		set_task_state(p, p->state | TASK_NOWAKEUP);
 
 }
 static inline void clear_task_nowakeup(struct task_struct *p)
@@ -526,7 +526,7 @@ int rthal_irq_disable(unsigned irq);
 int rthal_irq_end(unsigned irq);
 
 int rthal_irq_host_request(unsigned irq,
-                           rthal_irq_host_handler_t handler,
+			   rthal_irq_host_handler_t handler,
 			   char *name,
 			   void *dev_id);
 

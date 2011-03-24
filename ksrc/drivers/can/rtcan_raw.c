@@ -50,7 +50,7 @@
 
 /*
  * Set if socket wants to receive a high precision timestamp together with
- * CAN frames 
+ * CAN frames
  */
 #define RTCAN_GET_TIMESTAMP         RTDM_USER_CONTEXT_FLAG
 
@@ -118,7 +118,7 @@ static void rtcan_rcv_deliver(struct rtcan_recv *recv_listener,
 
 	/*Notify the delivery of the message */
 	rtdm_sem_up(&sock->recv_sem);
-	
+
     } else {
 	/* Overflow of socket's ring buffer! */
 	sock->rx_buf_full++;
@@ -151,7 +151,7 @@ void rtcan_rcv(struct rtcan_device *dev, struct rtcan_skb *skb)
     } else {
 	dev->rx_count++;
 	while (recv_listener != NULL) {
-	    if (rtcan_accept_msg(frame->can_id, &recv_listener->can_filter)) { 
+	    if (rtcan_accept_msg(frame->can_id, &recv_listener->can_filter)) {
 		recv_listener->match_count++;
 		rtcan_rcv_deliver(recv_listener, skb);
 	    }
@@ -213,7 +213,7 @@ int rtcan_raw_socket(struct rtdm_dev_context *context,
 {
     /* Only protocol CAN_RAW is supported */
     if (protocol != CAN_RAW && protocol != 0)
-        return -EPROTONOSUPPORT;
+	return -EPROTONOSUPPORT;
 
     rtcan_socket_init(context);
 
@@ -244,7 +244,7 @@ static int rtcan_raw_close(struct rtdm_dev_context *context,
 
     /* Check if socket is bound */
     if (rtcan_sock_is_bound(sock))
-        rtcan_raw_unbind(sock);
+	rtcan_raw_unbind(sock);
 
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 
@@ -266,10 +266,10 @@ int rtcan_raw_bind(struct rtdm_dev_context *context,
     /* Check address family and
        check if given length of filter list is plausible */
     if (scan->can_family != AF_CAN)
-        return -EINVAL;
+	return -EINVAL;
     /* Check range of ifindex, must be between 0 and RTCAN_MAX_DEVICES */
     if (scan->can_ifindex < 0 || scan->can_ifindex > RTCAN_MAX_DEVICES)
-        return -ENODEV;
+	return -ENODEV;
 
     /* Get lock for reception lists */
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
@@ -309,7 +309,7 @@ static int rtcan_raw_setsockopt(struct rtdm_dev_context *context,
     int val, ret = 0;
 
     if (so->level != SOL_CAN_RAW)
-        return -ENOPROTOOPT;
+	return -ENOPROTOOPT;
 
     switch (so->optname) {
 
@@ -427,7 +427,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	    if (!rtdm_read_user_ok(user_info, arg,
 				   sizeof(struct _rtdm_setsockaddr_args)) ||
 		rtdm_copy_from_user(user_info, &setaddr_buf, arg,
-                                    sizeof(struct _rtdm_setsockaddr_args)))
+				    sizeof(struct _rtdm_setsockaddr_args)))
 		return -EFAULT;
 
 	    setaddr = &setaddr_buf;
@@ -437,17 +437,17 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 		return -EINVAL;
 
 	    /* Copy argument structure from userspace */
-	    if (!rtdm_read_user_ok(user_info, arg, 
+	    if (!rtdm_read_user_ok(user_info, arg,
 				   sizeof(struct sockaddr_can)) ||
 		rtdm_copy_from_user(user_info, &sockaddr_buf, setaddr->addr,
-                                    sizeof(struct sockaddr_can)))
+				    sizeof(struct sockaddr_can)))
 		return -EFAULT;
 	    sockaddr = &sockaddr_buf;
 	} else {
 	    setaddr = (struct _rtdm_setsockaddr_args *)arg;
 	    sockaddr = (struct sockaddr_can *)setaddr->addr;
 	}
-	
+
 	/* Now, all required data are in kernel space */
 	ret = rtcan_raw_bind(context, sockaddr);
 
@@ -462,7 +462,7 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 	    if (!rtdm_read_user_ok(user_info, arg,
 				   sizeof(struct _rtdm_setsockopt_args)) ||
 		rtdm_copy_from_user(user_info, &setopt_buf, arg,
-                                    sizeof(struct _rtdm_setsockopt_args)))
+				    sizeof(struct _rtdm_setsockopt_args)))
 		return -EFAULT;
 
 	    setopt = &setopt_buf;
@@ -474,14 +474,14 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 
     case RTCAN_RTIOC_TAKE_TIMESTAMP: {
 	long timestamp_switch = (long)arg;
-	
+
 	if (timestamp_switch == RTCAN_TAKE_TIMESTAMPS)
 	    set_bit(RTCAN_GET_TIMESTAMP, &context->context_flags);
 	else
 	    clear_bit(RTCAN_GET_TIMESTAMP, &context->context_flags);
 	break;
     }
-	
+
     case RTCAN_RTIOC_RCV_TIMEOUT:
     case RTCAN_RTIOC_SND_TIMEOUT: {
 	/* Do some work these requests have in common. */
@@ -521,21 +521,21 @@ int rtcan_raw_ioctl(struct rtdm_dev_context *context,
 
 
 #define MEMCPY_FROM_RING_BUF(to, len)                                       \
-                                                                            \
+									    \
     if (unlikely((recv_buf_index + len) > RTCAN_RXBUF_SIZE)) {              \
-        /* Wrap around end of buffer */                                     \
-                                                                            \
-        first_part_size = RTCAN_RXBUF_SIZE - recv_buf_index;                \
-                                                                            \
-        memcpy(to, &recv_buf[recv_buf_index], first_part_size);             \
-        memcpy((void *)to + first_part_size, recv_buf,                      \
-                                             len - first_part_size);        \
-                                                                            \
+	/* Wrap around end of buffer */                                     \
+									    \
+	first_part_size = RTCAN_RXBUF_SIZE - recv_buf_index;                \
+									    \
+	memcpy(to, &recv_buf[recv_buf_index], first_part_size);             \
+	memcpy((void *)to + first_part_size, recv_buf,                      \
+					     len - first_part_size);        \
+									    \
     } else                                                                  \
-                                                                            \
-        memcpy(to, &recv_buf[recv_buf_index], len);                         \
-                                                                            \
-                                                                            \
+									    \
+	memcpy(to, &recv_buf[recv_buf_index], len);                         \
+									    \
+									    \
     recv_buf_index = (recv_buf_index + len) & (RTCAN_RXBUF_SIZE - 1);
 
 
@@ -565,63 +565,63 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
     /* Check flags */
     if (flags & ~(MSG_DONTWAIT | MSG_PEEK))
-        return -EINVAL;
+	return -EINVAL;
 
 
     /* Check if msghdr entries are sane */
 
     if (msg->msg_name != NULL) {
-        if (msg->msg_namelen < sizeof(struct sockaddr_can))
-            return -EINVAL;
+	if (msg->msg_namelen < sizeof(struct sockaddr_can))
+	    return -EINVAL;
 
-        if (user_info) {
-            if (!rtdm_rw_user_ok(user_info, msg->msg_name, msg->msg_namelen))
-                return -EFAULT;
-        }
+	if (user_info) {
+	    if (!rtdm_rw_user_ok(user_info, msg->msg_name, msg->msg_namelen))
+		return -EFAULT;
+	}
 
     } else {
-        if (msg->msg_namelen != 0)
-            return -EINVAL;
+	if (msg->msg_namelen != 0)
+	    return -EINVAL;
     }
 
     /* Check msg_iovlen, only one buffer allowed */
     if (msg->msg_iovlen != 1)
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     if (user_info) {
-        /* Copy IO vector from userspace */
-        if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
+	/* Copy IO vector from userspace */
+	if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
 			     sizeof(struct iovec)) ||
 	    rtdm_copy_from_user(user_info, &iov_buf, msg->msg_iov,
 				sizeof(struct iovec)))
 	    return -EFAULT;
 
-        iov = &iov_buf;
+	iov = &iov_buf;
     }
 
     /* Check size of buffer */
     if (iov->iov_len < sizeof(can_frame_t))
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     /* Check buffer if in user space */
     if (user_info) {
-        if (!rtdm_rw_user_ok(user_info, iov->iov_base, iov->iov_len))
-            return -EFAULT;
+	if (!rtdm_rw_user_ok(user_info, iov->iov_base, iov->iov_len))
+	    return -EFAULT;
     }
 
     if (msg->msg_control != NULL) {
-        if (msg->msg_controllen < sizeof(nanosecs_abs_t))
-            return -EINVAL;
+	if (msg->msg_controllen < sizeof(nanosecs_abs_t))
+	    return -EINVAL;
 
-        if (user_info) {
-            if (!rtdm_rw_user_ok(user_info, msg->msg_control,
+	if (user_info) {
+	    if (!rtdm_rw_user_ok(user_info, msg->msg_control,
 				 msg->msg_controllen))
-                return -EFAULT;
-        }
+		return -EFAULT;
+	}
 
     } else {
-        if (msg->msg_controllen != 0)
-            return -EINVAL;
+	if (msg->msg_controllen != 0)
+	    return -EINVAL;
     }
 
     rtcan_raw_enable_bus_err(sock);
@@ -634,19 +634,19 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
     /* Error code returned? */
     if (unlikely(ret)) {
-        /* Which error code? */
+	/* Which error code? */
 
-        if (ret == -EIDRM)
-            /* Socket was closed */
-            return -EBADF;
+	if (ret == -EIDRM)
+	    /* Socket was closed */
+	    return -EBADF;
 
-        else if (ret == -EWOULDBLOCK)
-            /* We would block but don't want to */
-            return -EAGAIN;
+	else if (ret == -EWOULDBLOCK)
+	    /* We would block but don't want to */
+	    return -EAGAIN;
 
-        else
-            /* Return all other error codes unmodified. */
-            return ret;
+	else
+	    /* Return all other error codes unmodified. */
+	    return ret;
     }
 
 
@@ -680,15 +680,15 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
     /* If frame is an RTR or one with no payload it's not necessary
      * to copy the data bytes. */
     if (!(frame.can_id & CAN_RTR_FLAG) && payload_size) {
-        /* Copy data bytes */
-        MEMCPY_FROM_RING_BUF(frame.data, payload_size);
+	/* Copy data bytes */
+	MEMCPY_FROM_RING_BUF(frame.data, payload_size);
     }
 
 
     /* Is a timestamp available and is the caller actually interested? */
     if (msg->msg_controllen && (can_dlc & RTCAN_HAS_TIMESTAMP)) {
-        /* Copy timestamp */
-        MEMCPY_FROM_RING_BUF(&timestamp, RTCAN_TIMESTAMP_SIZE);
+	/* Copy timestamp */
+	MEMCPY_FROM_RING_BUF(&timestamp, RTCAN_TIMESTAMP_SIZE);
     }
 
 
@@ -696,11 +696,11 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
     /* Message completely read from the socket's ring buffer. Now check if
      * caller is just peeking. */
     if (flags & MSG_PEEK)
-        /* Next one, please! */
-        rtdm_sem_up(&sock->recv_sem);
+	/* Next one, please! */
+	rtdm_sem_up(&sock->recv_sem);
     else
-        /* Adjust begin of first message in the ring buffer. */
-        sock->recv_head = recv_buf_index;
+	/* Adjust begin of first message in the ring buffer. */
+	sock->recv_head = recv_buf_index;
 
 
     /* Release lock */
@@ -709,72 +709,72 @@ ssize_t rtcan_raw_recvmsg(struct rtdm_dev_context *context,
 
     /* Create CAN socket address to give back */
     if (msg->msg_namelen) {
-        scan.can_family = AF_CAN;
-        scan.can_ifindex = ifindex;
+	scan.can_family = AF_CAN;
+	scan.can_ifindex = ifindex;
     }
 
 
     /* Last duty: Copy all back to the caller's buffers. */
 
     if (user_info) {
-        /* Copy to user space */
+	/* Copy to user space */
 
-        /* Copy socket address */
-        if (msg->msg_namelen) {
-            if (rtdm_copy_to_user(user_info, msg->msg_name, &scan,
+	/* Copy socket address */
+	if (msg->msg_namelen) {
+	    if (rtdm_copy_to_user(user_info, msg->msg_name, &scan,
 				  sizeof(struct sockaddr_can)))
-                return -EFAULT;
+		return -EFAULT;
 
-            msg->msg_namelen = sizeof(struct sockaddr_can);
-        }
+	    msg->msg_namelen = sizeof(struct sockaddr_can);
+	}
 
-        /* Copy CAN frame */
-        if (rtdm_copy_to_user(user_info, iov->iov_base, &frame,
+	/* Copy CAN frame */
+	if (rtdm_copy_to_user(user_info, iov->iov_base, &frame,
 			      sizeof(can_frame_t)))
-            return -EFAULT;
-        /* Adjust iovec in the common way */
-        iov->iov_base += sizeof(can_frame_t);
-        iov->iov_len -= sizeof(can_frame_t);
-        /* ... and copy it, too. */
-        if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
+	    return -EFAULT;
+	/* Adjust iovec in the common way */
+	iov->iov_base += sizeof(can_frame_t);
+	iov->iov_len -= sizeof(can_frame_t);
+	/* ... and copy it, too. */
+	if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
 			      sizeof(struct iovec)))
-            return -EFAULT;
+	    return -EFAULT;
 
-        /* Copy timestamp if existent and wanted */
-        if (msg->msg_controllen) {
-            if (can_dlc & RTCAN_HAS_TIMESTAMP) {
-                if (rtdm_copy_to_user(user_info, msg->msg_control,
-                                      &timestamp, RTCAN_TIMESTAMP_SIZE))
-                    return -EFAULT;
+	/* Copy timestamp if existent and wanted */
+	if (msg->msg_controllen) {
+	    if (can_dlc & RTCAN_HAS_TIMESTAMP) {
+		if (rtdm_copy_to_user(user_info, msg->msg_control,
+				      &timestamp, RTCAN_TIMESTAMP_SIZE))
+		    return -EFAULT;
 
-                msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
-            } else
-                msg->msg_controllen = 0;
-        }
+		msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
+	    } else
+		msg->msg_controllen = 0;
+	}
 
     } else {
-        /* Kernel space */
+	/* Kernel space */
 
-        /* Copy socket address */
-        if (msg->msg_namelen) {
-            memcpy(msg->msg_name, &scan, sizeof(struct sockaddr_can));
-            msg->msg_namelen = sizeof(struct sockaddr_can);
-        }
+	/* Copy socket address */
+	if (msg->msg_namelen) {
+	    memcpy(msg->msg_name, &scan, sizeof(struct sockaddr_can));
+	    msg->msg_namelen = sizeof(struct sockaddr_can);
+	}
 
-        /* Copy CAN frame */
-        memcpy(iov->iov_base, &frame, sizeof(can_frame_t));
-        /* Adjust iovec in the common way */
-        iov->iov_base += sizeof(can_frame_t);
-        iov->iov_len -= sizeof(can_frame_t);
+	/* Copy CAN frame */
+	memcpy(iov->iov_base, &frame, sizeof(can_frame_t));
+	/* Adjust iovec in the common way */
+	iov->iov_base += sizeof(can_frame_t);
+	iov->iov_len -= sizeof(can_frame_t);
 
-        /* Copy timestamp if existent and wanted */
-        if (msg->msg_controllen) {
-            if (can_dlc & RTCAN_HAS_TIMESTAMP) {
-                memcpy(msg->msg_control, &timestamp, RTCAN_TIMESTAMP_SIZE);
-                msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
-            } else
-                msg->msg_controllen = 0;
-        }
+	/* Copy timestamp if existent and wanted */
+	if (msg->msg_controllen) {
+	    if (can_dlc & RTCAN_HAS_TIMESTAMP) {
+		memcpy(msg->msg_control, &timestamp, RTCAN_TIMESTAMP_SIZE);
+		msg->msg_controllen = RTCAN_TIMESTAMP_SIZE;
+	    } else
+		msg->msg_controllen = 0;
+	}
     }
 
 
@@ -803,80 +803,80 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 
 
     if (flags & MSG_OOB)   /* Mirror BSD error message compatibility */
-        return -EOPNOTSUPP;
+	return -EOPNOTSUPP;
 
     /* Only MSG_DONTWAIT is a valid flag. */
     if (flags & ~MSG_DONTWAIT)
-        return -EINVAL;
+	return -EINVAL;
 
     /* Check msg_iovlen, only one buffer allowed */
     if (msg->msg_iovlen != 1)
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     if (scan == NULL) {
-        /* No socket address. Will use bound interface for sending */
+	/* No socket address. Will use bound interface for sending */
 
-        if (msg->msg_namelen != 0)
-            return -EINVAL;
+	if (msg->msg_namelen != 0)
+	    return -EINVAL;
 
 
-        /* We only want a consistent value here, a spin lock would be
-         * overkill. Nevertheless, the binding could change till we have
-         * the chance to send. Blame the user, though. */
-        ifindex = atomic_read(&sock->ifindex);
+	/* We only want a consistent value here, a spin lock would be
+	 * overkill. Nevertheless, the binding could change till we have
+	 * the chance to send. Blame the user, though. */
+	ifindex = atomic_read(&sock->ifindex);
 
-        if (!ifindex)
-            /* Socket isn't bound or bound to all interfaces. Go out. */
-            return -ENXIO;
+	if (!ifindex)
+	    /* Socket isn't bound or bound to all interfaces. Go out. */
+	    return -ENXIO;
     } else {
-        /* Socket address given */
-        if (msg->msg_namelen < sizeof(struct sockaddr_can))
-            return -EINVAL;
+	/* Socket address given */
+	if (msg->msg_namelen < sizeof(struct sockaddr_can))
+	    return -EINVAL;
 
-        if (user_info) {
-            /* Copy socket address from userspace */
-            if (!rtdm_read_user_ok(user_info, msg->msg_name,
+	if (user_info) {
+	    /* Copy socket address from userspace */
+	    if (!rtdm_read_user_ok(user_info, msg->msg_name,
 				   sizeof(struct sockaddr_can)) ||
 		rtdm_copy_from_user(user_info, &scan_buf, msg->msg_name,
-                                    sizeof(struct sockaddr_can)))
+				    sizeof(struct sockaddr_can)))
 		return -EFAULT;
 
-            scan = &scan_buf;
-        }
+	    scan = &scan_buf;
+	}
 
-        /* Check address family */
-        if (scan->can_family != AF_CAN)
-            return -EINVAL;
+	/* Check address family */
+	if (scan->can_family != AF_CAN)
+	    return -EINVAL;
 
-        ifindex = scan->can_ifindex;
+	ifindex = scan->can_ifindex;
     }
 
     if (user_info) {
-        /* Copy IO vector from userspace */
-        if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
+	/* Copy IO vector from userspace */
+	if (!rtdm_rw_user_ok(user_info, msg->msg_iov,
 			     sizeof(struct iovec)) ||
 	    rtdm_copy_from_user(user_info, &iov_buf, msg->msg_iov,
 				sizeof(struct iovec)))
 	    return -EFAULT;
 
-        iov = &iov_buf;
+	iov = &iov_buf;
     }
 
     /* Check size of buffer */
     if (iov->iov_len != sizeof(can_frame_t))
-        return -EMSGSIZE;
+	return -EMSGSIZE;
 
     frame = (can_frame_t *)iov->iov_base;
 
     if (user_info) {
-        /* Copy CAN frame from userspace */
-        if (!rtdm_read_user_ok(user_info, iov->iov_base,
+	/* Copy CAN frame from userspace */
+	if (!rtdm_read_user_ok(user_info, iov->iov_base,
 			       sizeof(can_frame_t)) ||
 	    rtdm_copy_from_user(user_info, &frame_buf, iov->iov_base,
 				sizeof(can_frame_t)))
 	    return -EFAULT;
 
-        frame = &frame_buf;
+	frame = &frame_buf;
     }
 
     /* Adjust iovec in the common way */
@@ -884,26 +884,26 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
     iov->iov_len -= sizeof(can_frame_t);
     /* ... and copy it back to userspace if necessary */
     if (user_info) {
-        if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
+	if (rtdm_copy_to_user(user_info, msg->msg_iov, iov,
 			      sizeof(struct iovec)))
-            return -EFAULT;
+	    return -EFAULT;
     }
 
     /* At last, we've got the frame ... */
 
     /* Check if DLC between 0 and 15 */
     if (frame->can_dlc > 15)
-        return -EINVAL;
+	return -EINVAL;
 
     /* Check if it is a standard frame and the ID between 0 and 2031 */
     if (!(frame->can_id & CAN_EFF_FLAG)) {
-        u32 id = frame->can_id & CAN_EFF_MASK;
-        if (id > (CAN_SFF_MASK - 16))
-            return -EINVAL;
+	u32 id = frame->can_id & CAN_EFF_MASK;
+	if (id > (CAN_SFF_MASK - 16))
+	    return -EINVAL;
     }
 
     if ((dev = rtcan_dev_get_by_index(ifindex)) == NULL)
-        return -ENXIO;
+	return -ENXIO;
 
     timeout = (flags & MSG_DONTWAIT) ? RTDM_TIMEOUT_NONE : sock->tx_timeout;
 
@@ -913,31 +913,31 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
      * socket's TX wait queue and decrement the TX semaphore. This must be
      * atomic. Finally, the task must be deregistered again (also atomic). */
     RTDM_EXECUTE_ATOMICALLY(
-        if (likely(!test_bit(RTDM_CLOSING, &context->context_flags))) {
+	if (likely(!test_bit(RTDM_CLOSING, &context->context_flags))) {
 
-            list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
+	    list_add(&tx_wait.tx_wait_list, &sock->tx_wait_head);
 
-            /* Try to pass the guard in order to access the controller */
-            ret = rtdm_sem_timeddown(&dev->tx_sem, timeout, NULL);
+	    /* Try to pass the guard in order to access the controller */
+	    ret = rtdm_sem_timeddown(&dev->tx_sem, timeout, NULL);
 
-            /* Only dequeue task again if socket isn't being closed i.e. if
-             * this task was not unblocked within the close() function. */
-            if (likely(tx_wait.tx_wait_list.next != LIST_POISON1))
-                /* Dequeue this task from the TX wait queue */
-                list_del(&tx_wait.tx_wait_list);
-            else
-                /* The socket was closed. */
-                ret = -EBADF;
+	    /* Only dequeue task again if socket isn't being closed i.e. if
+	     * this task was not unblocked within the close() function. */
+	    if (likely(tx_wait.tx_wait_list.next != LIST_POISON1))
+		/* Dequeue this task from the TX wait queue */
+		list_del(&tx_wait.tx_wait_list);
+	    else
+		/* The socket was closed. */
+		ret = -EBADF;
 
-        } else
+	} else
 	/* The socket was closed. */
 	ret = -EBADF;
 	);
 
     /* Error code returned? */
     if (ret != 0) {
-        /* Which error code? */
-        switch (ret) {
+	/* Which error code? */
+	switch (ret) {
 	case -EIDRM:
 	    /* Controller is stopped or bus-off */
 	    ret = -ENETDOWN;
@@ -951,7 +951,7 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 	default:
 	    /* Return all other error codes unmodified. */
 	    goto send_out1;
-        }
+	}
     }
 
     /* We got access */
@@ -971,8 +971,8 @@ ssize_t rtcan_raw_sendmsg(struct rtdm_dev_context *context,
 	    rtdm_sem_up(&dev->tx_sem);
 	    goto send_out1;
 	}
-        ret = -ENETDOWN;
-        goto send_out2;
+	ret = -ENETDOWN;
+	goto send_out2;
     }
 
     dev->tx_count++;
@@ -1002,22 +1002,22 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     socket_nrt:         rtcan_raw_socket,
 
     ops: {
-        close_nrt:      rtcan_raw_close,
+	close_nrt:      rtcan_raw_close,
 
-        ioctl_rt:       rtcan_raw_ioctl,
-        ioctl_nrt:      rtcan_raw_ioctl,
+	ioctl_rt:       rtcan_raw_ioctl,
+	ioctl_nrt:      rtcan_raw_ioctl,
 
-        read_rt:        NULL,
-        read_nrt:       NULL,
+	read_rt:        NULL,
+	read_nrt:       NULL,
 
-        write_rt:       NULL,
-        write_nrt:      NULL,
+	write_rt:       NULL,
+	write_nrt:      NULL,
 
-        recvmsg_rt:     rtcan_raw_recvmsg,
-        recvmsg_nrt:    NULL,
+	recvmsg_rt:     rtcan_raw_recvmsg,
+	recvmsg_nrt:    NULL,
 
-        sendmsg_rt:     rtcan_raw_sendmsg,
-        sendmsg_nrt:    NULL,
+	sendmsg_rt:     rtcan_raw_sendmsg,
+	sendmsg_nrt:    NULL,
     },
 
     device_class:       RTDM_CLASS_CAN,
@@ -1025,8 +1025,8 @@ static struct rtdm_device rtcan_proto_raw_dev = {
     profile_version:    RTCAN_PROFILE_VER,
 
     driver_name:        "xeno_can",
-    driver_version:     RTDM_DRIVER_VER(RTCAN_MAJOR_VER, 
-					RTCAN_MINOR_VER, 
+    driver_version:     RTDM_DRIVER_VER(RTCAN_MAJOR_VER,
+					RTCAN_MINOR_VER,
 					RTCAN_BUGFIX_VER),
     peripheral_name:    "Real-Time CAN Raw Socket Interface",
     provider_name:      "RT-Socket-CAN development team",

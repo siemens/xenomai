@@ -103,7 +103,7 @@ static inline pse51_queues_t *pse51_queues(void)
 	xnlock_get_irqsave(&nklock, s);
 
 	ppd = xnshadow_ppd_get(pse51_muxid);
-	
+
 	xnlock_put_irqrestore(&nklock, s);
 
 	if (!ppd)

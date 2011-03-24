@@ -262,10 +262,10 @@ int pthread_attr_setfp_np(pthread_attr_t *attr,
 			  int use_fp);
 
 int pthread_attr_getaffinity_np (const pthread_attr_t *attr,
-                                 xnarch_cpumask_t *mask);
+				 xnarch_cpumask_t *mask);
 
 int pthread_attr_setaffinity_np (pthread_attr_t *attr,
-                                 xnarch_cpumask_t mask);
+				 xnarch_cpumask_t mask);
 
 int pthread_create(pthread_t *tid,
 		   const pthread_attr_t *attr,
@@ -357,8 +357,8 @@ int pthread_cond_wait(pthread_cond_t *cond,
 		      pthread_mutex_t *mutex);
 
 int pthread_cond_timedwait(pthread_cond_t *cond,
-			   pthread_mutex_t *mutex, 
-                           const struct timespec *abstime);
+			   pthread_mutex_t *mutex,
+			   const struct timespec *abstime);
 
 int pthread_cond_signal(pthread_cond_t *cond);
 
@@ -407,7 +407,7 @@ int pthread_set_name_np(pthread_t thread,
 int pthread_intr_attach_np(pthread_intr_t *intr,
 			   unsigned irq,
 			   xnisr_t isr,
-                           xniack_t iack);
+			   xniack_t iack);
 
 int pthread_intr_detach_np(pthread_intr_t intr);
 

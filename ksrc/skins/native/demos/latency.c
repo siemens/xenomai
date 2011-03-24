@@ -39,8 +39,8 @@ int test_loops = 0;		/* outer loop count */
 #define HISTOGRAM_CELLS 100
 int histogram_size = HISTOGRAM_CELLS;
 unsigned long *histogram_avg = NULL,
-              *histogram_max = NULL,
-              *histogram_min = NULL;
+	      *histogram_max = NULL,
+	      *histogram_min = NULL;
 
 int do_histogram = 0, do_stats = 0, finished = 0;
 int bucketsize = 1000;	/* default = 1000ns, -B <size> to override */
@@ -88,30 +88,30 @@ void latency (void *cookie)
 
 	    expected += period;
 	    err = rt_task_wait_period(&ov);
-	    
+
 	    if (err)
 	      {
 		if (err != -ETIMEDOUT)
 		  rt_task_delete(NULL); /* Timer stopped. */
-		
+
 		overrun += ov;
 	      }
-	    
+
 	    dt = (long)(rt_timer_tsc() - expected);
 	    if (dt > maxj) maxj = dt;
 	    if (dt < minj) minj = dt;
 	    sumj += dt;
 
 	    if (!finished && (do_histogram || do_stats))
-	        add_histogram(histogram_avg, dt);
+		add_histogram(histogram_avg, dt);
 	  }
-	
+
 	if (!finished && (do_histogram || do_stats))
 	  {
 	    add_histogram(histogram_max, maxj);
 	    add_histogram(histogram_min, minj);
 	  }
-    
+
 	minjitter = rt_timer_ticks2ns(minj);
 	maxjitter = rt_timer_ticks2ns(maxj);
 	avgjitter = rt_timer_ticks2ns(sumj / nsamples);
@@ -128,7 +128,7 @@ void display (void *cookie)
 
     if (err)
 	{
-        fprintf(stderr,"latency: cannot create semaphore: %s\n",strerror(-err));
+	fprintf(stderr,"latency: cannot create semaphore: %s\n",strerror(-err));
 	return;
 	}
 
@@ -158,7 +158,7 @@ void display (void *cookie)
 	if (!quiet)
 	    {
 	    if (data_lines && (n++ % data_lines)==0)
-	        {
+		{
 		time_t now, dt;
 		time(&now);
 		dt = now - start;
@@ -167,8 +167,8 @@ void display (void *cookie)
 		printf("RTH|%12s|%12s|%12s|%8s|%12s|%12s\n",
 		       "-----lat min","-----lat avg","-----lat max","-overrun",
 		       "----lat best","---lat worst");
-	        }
-	    
+		}
+
 	    printf("RTD|%12ld|%12ld|%12ld|%8ld|%12ld|%12ld\n",
 		   minjitter,
 		   avgjitter,
@@ -187,7 +187,7 @@ double dump_histogram (long *histogram, char* kind)
     double avg = 0;		/* used to sum hits 1st */
 
     if (do_histogram)
-        fprintf(stderr,"---|--param|----range-|--samples\n");
+	fprintf(stderr,"---|--param|----range-|--samples\n");
 
     for (n = 0; n < histogram_size; n++)
       {
@@ -196,7 +196,7 @@ double dump_histogram (long *histogram, char* kind)
 	    total_hits += hits;
 	    avg += n * hits;
 	    if (do_histogram)
-	        fprintf(stderr,"HSD|    %s| %3d -%3d | %8ld\n",kind, n, n+1, hits);
+		fprintf(stderr,"HSD|    %s| %3d -%3d | %8ld\n",kind, n, n+1, hits);
 	}
       }
 
@@ -314,7 +314,7 @@ int xxx (int argc, char **argv)
 
 		data_lines = atoi(optarg);
 		break;
-		
+
 	    case 'T':
 
 		test_duration = atoi(optarg);
@@ -323,11 +323,11 @@ int xxx (int argc, char **argv)
 
 	    case 'q':
 
-	        quiet = 1;
+		quiet = 1;
 		break;
-		
+
 	    default:
-		
+
 		fprintf(stderr, "usage: latency [options]\n"
 			"  [-h]				# print histograms of min, avg, max latencies\n"
 			"  [-s]				# print statistics of min, avg, max latencies\n"
@@ -352,8 +352,8 @@ int xxx (int argc, char **argv)
     histogram_max = calloc(histogram_size, sizeof(long));
     histogram_min = calloc(histogram_size, sizeof(long));
 
-    if (!(histogram_avg && histogram_max && histogram_min)) 
-        cleanup_upon_sig(0);
+    if (!(histogram_avg && histogram_max && histogram_min))
+	cleanup_upon_sig(0);
 
     if (sampling_period == 0)
 	sampling_period = 100000; /* ns */

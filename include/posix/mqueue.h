@@ -65,8 +65,8 @@ int mq_getattr(mqd_t qd,
 	       struct mq_attr *attr);
 
 int mq_setattr(mqd_t qd,
-               const struct mq_attr *__restrict__ attr,
-               struct mq_attr *__restrict__ oattr);
+	       const struct mq_attr *__restrict__ attr,
+	       struct mq_attr *__restrict__ oattr);
 
 int mq_send(mqd_t qd,
 	    const char *buffer,
@@ -81,16 +81,16 @@ ssize_t  mq_receive(mqd_t q,
 		    unsigned *prio);
 
 ssize_t  mq_timedreceive(mqd_t q,
-                         char *__restrict__ buffer,
-                         size_t len,
-                         unsigned *__restrict__ prio,
-                         const struct timespec *__restrict__ timeout);
+			 char *__restrict__ buffer,
+			 size_t len,
+			 unsigned *__restrict__ prio,
+			 const struct timespec *__restrict__ timeout);
 
 int mq_timedsend(mqd_t q,
-                 const char *buffer,
-                 size_t len,
-                 unsigned prio,
-                 const struct timespec *timeout);
+		 const char *buffer,
+		 size_t len,
+		 unsigned prio,
+		 const struct timespec *timeout);
 
 int mq_notify(mqd_t mqdes, const struct sigevent *notification);
 

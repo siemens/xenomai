@@ -65,9 +65,12 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 
 extern void (*fp_init)(union fp_state *);
 #else /* >= 2.6.19 */
-#define rthal_irq_desc_lock(irq) (&rthal_irq_descp(irq)->lock)
+#if !defined(CONFIG_GENERIC_HARDIRQS) \
+	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
+#endif
+#define rthal_irq_desc_lock(irq) (&rthal_irq_descp(irq)->lock)
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
 #define rthal_mark_irq_disabled(irq) do {              \

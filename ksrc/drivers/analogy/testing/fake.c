@@ -18,7 +18,7 @@ struct ai_priv {
 
 	/* Task descriptor */
 	a4l_task_t timer_task;
-  
+
 	/* Specific timing fields */
 	unsigned long scan_period_ns;
 	unsigned long convert_period_ns;
@@ -44,7 +44,7 @@ struct dio_priv {
 static a4l_chdesc_t ai_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 16},
 	},
 };
@@ -52,7 +52,7 @@ static a4l_chdesc_t ai_chandesc = {
 static a4l_chdesc_t dio_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 16,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, 1},
 	},
 };
@@ -82,25 +82,25 @@ static a4l_cmd_t test_cmd_mask = {
 
 static uint16_t ai_value_output(struct ai_priv *priv)
 {
-	static uint16_t output_tab[8] = { 
-		0x0001, 0x2000, 0x4000, 0x6000, 
-		0x8000, 0xa000, 0xc000, 0xffff 
+	static uint16_t output_tab[8] = {
+		0x0001, 0x2000, 0x4000, 0x6000,
+		0x8000, 0xa000, 0xc000, 0xffff
 	};
 	static unsigned int output_idx;
 	static a4l_lock_t output_lock = A4L_LOCK_UNLOCKED;
 
 	unsigned long flags;
 	unsigned int idx;
-	
+
 	a4l_lock_irqsave(&output_lock, flags);
 
 	output_idx += priv->quanta_cnt;
 	if(output_idx == 8)
-		output_idx = 0; 
+		output_idx = 0;
 	idx = output_idx;
 
 	a4l_unlock_irqrestore(&output_lock, flags);
-    
+
 	return output_tab[idx] / priv->amplitude_div;
 }
 
@@ -123,7 +123,7 @@ static void ai_task_proc(void *arg)
 		{
 			int i = 0;
 
-			cmd = a4l_get_cmd(subd);    
+			cmd = a4l_get_cmd(subd);
 
 			now_ns = a4l_get_time();
 			elapsed_ns += now_ns - priv->last_ns + priv->reminder_ns;
@@ -131,16 +131,16 @@ static void ai_task_proc(void *arg)
 
 			while(elapsed_ns >= priv->scan_period_ns) {
 				int j;
-				
+
 				for(j = 0; j < cmd->nb_chan; j++) {
 					uint16_t value = ai_value_output(priv);
 					a4l_buf_put(subd, &value, sizeof(uint16_t));
 				}
-				
+
 				elapsed_ns -= priv->scan_period_ns;
 				i++;
 
-			}		       
+			}
 
 			priv->current_ns += i * priv->scan_period_ns;
 			priv->reminder_ns = elapsed_ns;
@@ -158,12 +158,12 @@ static void ai_task_proc(void *arg)
 static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	struct ai_priv *priv = (struct ai_priv *)subd->priv;
-  
+
 	priv->scan_period_ns = cmd->scan_begin_arg;
 	priv->convert_period_ns = (cmd->convert_src==TRIG_TIMER)?
 		cmd->convert_arg:0;
-  
-	a4l_dbg(1, drv_dbg, subd->dev, 
+
+	a4l_dbg(1, drv_dbg, subd->dev,
 		"ai_cmd: scan_period=%luns convert_period=%luns\n",
 		priv->scan_period_ns, priv->convert_period_ns);
 
@@ -171,11 +171,11 @@ static int ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 
 	priv->current_ns = ((unsigned long)priv->last_ns);
 	priv->reminder_ns = 0;
-  
+
 	RTDM_EXECUTE_ATOMICALLY(priv->timer_running = 1);
-  
+
 	return 0;
-  
+
 }
 
 static int ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
@@ -230,10 +230,10 @@ static int dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct dio_priv *priv = (struct dio_priv *)subd->priv;
 	uint16_t *data = (uint16_t *)insn->data;
-	
+
 	if (insn->data_size != 2 * sizeof(uint16_t))
 		return -EINVAL;
-	
+
 	if (data[0] != 0) {
 		priv->bits_values &= ~(data[0]);
 		priv->bits_values |= (data[0] & data[1]);
@@ -275,7 +275,7 @@ void setup_dio_subd(a4l_subd_t *subd)
 
 int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
-	int ret = 0;  
+	int ret = 0;
 	a4l_subd_t *subd;
 	struct fake_priv *priv = (struct fake_priv *)dev->priv;
 	struct ai_priv * ai_priv;
@@ -290,13 +290,13 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 		priv->amplitude_div = args[0];
 
 		if (arg->opts_size == 2 * sizeof(unsigned long))
-			priv->quanta_cnt = (args[1] > 7 || args[1] == 0) ? 
+			priv->quanta_cnt = (args[1] > 7 || args[1] == 0) ?
 				1 : args[1];
 	}
-	
-	a4l_dbg(1, drv_dbg, dev, 
+
+	a4l_dbg(1, drv_dbg, dev,
 		"amplitude divisor = %lu\n", priv->amplitude_div);
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"quanta count = %lu\n", priv->quanta_cnt);
 
 	/* Add the AI subdevice to the device */
@@ -309,9 +309,9 @@ int test_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	ai_priv->amplitude_div = priv->amplitude_div;
 	ai_priv->quanta_cnt = priv->quanta_cnt;
 
-	ret = a4l_task_init(&ai_priv->timer_task, 
-			    "Fake AI task", 
-			    ai_task_proc, 
+	ret = a4l_task_init(&ai_priv->timer_task,
+			    "Fake AI task",
+			    ai_task_proc,
 			    subd, A4L_TASK_HIGHEST_PRIORITY);
 
 	ret = a4l_add_subd(dev, subd);

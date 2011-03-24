@@ -31,11 +31,11 @@
 #define RTCAN_MAX_TSEG1  15
 #define RTCAN_MAX_TSEG2  7
 
-/* 
+/*
  * Calculate standard bit-time values for odd bitrates.
  * Most parts of this code is from Arnaud Westenberg <arnaud@wanadoo.nl>
  */
-static int rtcan_calc_bit_time(struct rtcan_device *dev, 
+static int rtcan_calc_bit_time(struct rtcan_device *dev,
 			       can_baudrate_t rate,
 			       struct can_bittime_std *bit_time)
 {
@@ -46,29 +46,29 @@ static int rtcan_calc_bit_time(struct rtcan_device *dev,
     int clock = dev->can_sys_clock;
     int sjw = 0;
     int sampl_pt = 90;
-	
+
     /* some heuristic specials */
     if (rate > ((1000000 + 500000) / 2))
 	sampl_pt = 75;
-    
+
     if (rate < ((12500 + 10000) / 2))
 	sampl_pt = 75;
-    
+
     if (rate < ((100000 + 125000) / 2))
 	sjw = 1;
 
     /* tseg even = round down, odd = round up */
-    for (tseg = (0 + 0 + 2) * 2; 
-	 tseg <= (RTCAN_MAX_TSEG2 + RTCAN_MAX_TSEG1 + 2) * 2 + 1; 
+    for (tseg = (0 + 0 + 2) * 2;
+	 tseg <= (RTCAN_MAX_TSEG2 + RTCAN_MAX_TSEG1 + 2) * 2 + 1;
 	 tseg++) {
 	brp = clock / ((1 + tseg / 2) * rate) + tseg % 2;
 	if ((brp == 0) || (brp > 64))
 	    continue;
-		
+
 	error = rate - clock / (brp * (1 + tseg / 2));
 	if (error < 0)
 	    error = -error;
-			
+
 	if (error <= best_error) {
 	    best_error = error;
 	    best_tseg = tseg/2;
@@ -76,23 +76,23 @@ static int rtcan_calc_bit_time(struct rtcan_device *dev,
 	    best_rate = clock / (brp * (1 + tseg / 2));
 	}
     }
-	
+
     if (best_error && (rate / best_error < 10)) {
-	RTCAN_RTDM_DBG("%s: bitrate %d is not possible with %d Hz clock\n", 
-		       dev->name, rate, clock);	
+	RTCAN_RTDM_DBG("%s: bitrate %d is not possible with %d Hz clock\n",
+		       dev->name, rate, clock);
 	return -EDOM;
     }
-	
+
     tseg2 = best_tseg - (sampl_pt * (best_tseg + 1)) / 100;
-	
+
     if (tseg2 < 0)
 	tseg2 = 0;
-		
+
     if (tseg2 > RTCAN_MAX_TSEG2)
 	tseg2 = RTCAN_MAX_TSEG2;
-		
+
     tseg1 = best_tseg - tseg2 - 2;
-	
+
     if (tseg1 > RTCAN_MAX_TSEG1)  {
 	tseg1 = RTCAN_MAX_TSEG1;
 	tseg2 = best_tseg-tseg1-2;
@@ -108,7 +108,7 @@ static int rtcan_calc_bit_time(struct rtcan_device *dev,
     return 0;
 }
 
-static inline int rtcan_raw_ioctl_dev_get(struct rtcan_device *dev, 
+static inline int rtcan_raw_ioctl_dev_get(struct rtcan_device *dev,
 					  int request, struct ifreq *ifr)
 {
     struct can_bittime *bittime;
@@ -153,7 +153,7 @@ static inline int rtcan_raw_ioctl_dev_get(struct rtcan_device *dev,
     return ret;
 }
 
-static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev, 
+static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
 					  int request, struct ifreq *ifr)
 {
     rtdm_lockctx_t lock_ctx;
@@ -178,7 +178,7 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
 
     if (dev->do_get_state)
 	dev->state = dev->do_get_state(dev);
-    
+
     switch (request) {
     case SIOCSCANCTRLMODE:
     case SIOCSCANBAUDRATE:
@@ -217,9 +217,9 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
 	if (!ret) {
 	    dev->bit_time = *bt;
 	    if (bt->type == CAN_BITTIME_STD && bt->std.brp)
-		dev->baudrate = (dev->can_sys_clock / 
-				 (bt->std.brp * (1 + bt->std.prop_seg + 
-						 bt->std.phase_seg1 + 
+		dev->baudrate = (dev->can_sys_clock /
+				 (bt->std.brp * (1 + bt->std.prop_seg +
+						 bt->std.phase_seg1 +
 						 bt->std.phase_seg2)));
 	    else
 		dev->baudrate = CAN_BAUDRATE_UNKNOWN;
@@ -229,14 +229,14 @@ static inline int rtcan_raw_ioctl_dev_set(struct rtcan_device *dev,
     default:
 	ret = -EOPNOTSUPP;
 	break;
-	
+
     }
-    
+
  out:
     if (started)
 	dev->do_set_mode(dev, CAN_MODE_START, &lock_ctx);
-	
-    rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);	    
+
+    rtdm_lock_put_irqrestore(&dev->device_lock, lock_ctx);
 
     return ret;
 }
@@ -261,25 +261,25 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
 		rtdm_copy_from_user(user_info, &ifr_buf, arg,
 				    sizeof(struct ifreq)))
 		return -EFAULT;
-	    
+
 	    ifr = &ifr_buf;
 	} else
 	    ifr = (struct ifreq *)arg;
-	
+
 	if ((dev = rtcan_dev_get_by_name(ifr->ifr_name)) == NULL)
 	    return -ENODEV;
 	ret = rtcan_raw_ioctl_dev_get(dev, request, ifr);
 	rtcan_dev_dereference(dev);
-	
+
 	if (user_info && !ret) {
 	    /* Since we yet tested if user memory is rw safe,
 	       we can copy to user space directly */
-	    if (rtdm_copy_to_user(user_info, arg, ifr, 
+	    if (rtdm_copy_to_user(user_info, arg, ifr,
 				  sizeof(struct ifreq)))
 		return -EFAULT;
 	}
 	break;
-	
+
     case SIOCSCANMODE:
     case SIOCSCANCTRLMODE:
     case SIOCSCANBAUDRATE:
@@ -302,7 +302,7 @@ int rtcan_raw_ioctl_dev(struct rtdm_dev_context *context,
 	    return -ENODEV;
 	ret = rtcan_raw_ioctl_dev_set(dev, request, ifr);
 	rtcan_dev_dereference(dev);
-	break; 
+	break;
 
     default:
 	ret = -EOPNOTSUPP;

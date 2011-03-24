@@ -41,7 +41,7 @@ typedef struct xnfeatinfo {
 	char feat_mis_s[XNFEAT_STRING_LEN];
 #ifdef xnfeatinfo_archdep
 	struct xnfeatinfo_archdep feat_arch; /* Arch-dep extension. */
-#endif	
+#endif
 	unsigned long feat_abirev; /* ABI revision level. */
 } xnfeatinfo_t;
 

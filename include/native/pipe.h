@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -138,10 +138,10 @@ ssize_t rt_pipe_send(RT_PIPE *pipe,
 		     int mode);
 
 RT_PIPE_MSG *rt_pipe_alloc(RT_PIPE *pipe,
-                           size_t size);
+			   size_t size);
 
 int rt_pipe_free(RT_PIPE *pipe,
-                 RT_PIPE_MSG *msg);
+		 RT_PIPE_MSG *msg);
 
 int rt_pipe_flush(RT_PIPE *pipe,
 		  int mode);

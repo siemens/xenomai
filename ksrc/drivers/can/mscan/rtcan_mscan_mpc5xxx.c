@@ -327,7 +327,7 @@ static int __devexit mpc5xxx_can_remove(struct of_device *ofdev)
 
 	rtcan_mscan_unregister(dev);
 	iounmap((void *)dev->base_addr);
-        rtcan_dev_free(dev);
+	rtcan_dev_free(dev);
 
 	return 0;
 }

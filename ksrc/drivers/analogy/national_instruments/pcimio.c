@@ -168,7 +168,7 @@ static a4l_rngtab_t rng_ni_M_628x_ao = { 8, {
 	RANGE(4, 6),
 	RANGE_ext(-1, 1)
 }};
-static a4l_rngdesc_t range_ni_M_628x_ao = 
+static a4l_rngdesc_t range_ni_M_628x_ao =
 	RNG_GLOBAL(rng_ni_M_628x_ao);
 #endif
 
@@ -177,13 +177,13 @@ static a4l_rngtab_t rng_ni_M_625x_ao = { 3, {
 	RANGE(-5, 5),
 	RANGE_ext(-1, 1)
 }};
-static a4l_rngdesc_t range_ni_M_625x_ao = 
+static a4l_rngdesc_t range_ni_M_625x_ao =
 	RNG_GLOBAL(rng_ni_M_625x_ao);
 
 static a4l_rngtab_t rng_ni_M_622x_ao = { 1, {
 	RANGE(-10, 10),
 }};
-static a4l_rngdesc_t range_ni_M_622x_ao = 
+static a4l_rngdesc_t range_ni_M_622x_ao =
 	RNG_GLOBAL(rng_ni_M_622x_ao);
 
 static ni_board ni_boards[]={
@@ -1286,7 +1286,7 @@ static void m_series_stc_writew(a4l_dev_t *dev, uint16_t data, int reg)
 		by M_Offset_Static_Digital_Output (32 bit) and
 		M_Offset_SCXI_Serial_Data_Out (8 bit) */
 	default:
-		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n", 
+		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n",
 			    __FUNCTION__, reg);
 		BUG();
 		return;
@@ -1322,7 +1322,7 @@ static uint16_t m_series_stc_readw(a4l_dev_t *dev, int reg)
 		break;
 	default:
 		rtdm_printk("%s: bug! "
-			    "unhandled register=0x%x in switch.\n", 
+			    "unhandled register=0x%x in switch.\n",
 			    __FUNCTION__, reg);
 		BUG();
 		return 0;
@@ -1365,7 +1365,7 @@ static void m_series_stc_writel(a4l_dev_t *dev, uint32_t data, int reg)
 		offset = M_Offset_G1_Load_B;
 		break;
 	default:
-		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n", 
+		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n",
 			    __FUNCTION__, reg);
 		BUG();
 		return;
@@ -1391,7 +1391,7 @@ static uint32_t m_series_stc_readl(a4l_dev_t *dev, int reg)
 		offset = M_Offset_G1_Save;
 		break;
 	default:
-		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n", 
+		rtdm_printk("%s: bug! unhandled register=0x%x in switch.\n",
 			    __FUNCTION__, reg);
 		BUG();
 		return 0;
@@ -1426,7 +1426,7 @@ static void m_series_init_eeprom_buffer(a4l_dev_t *dev)
 	old_iodwbsr1_bits = readl(devpriv->mite->mite_io_addr + MITE_IODWBSR_1);
 	old_iodwcr1_bits = readl(devpriv->mite->mite_io_addr + MITE_IODWCR_1);
 	writel(0x0, devpriv->mite->mite_io_addr + MITE_IODWBSR);
-	writel(((0x80 | window_size) | devpriv->mite->daq_phys_addr), 
+	writel(((0x80 | window_size) | devpriv->mite->daq_phys_addr),
 	       devpriv->mite->mite_io_addr + MITE_IODWBSR_1);
 	writel(0x0, devpriv->mite->mite_io_addr + MITE_IODWCR_1);
 	writel(0xf, devpriv->mite->mite_io_addr + 0x30);
@@ -1454,14 +1454,14 @@ static void init_6143(a4l_dev_t *dev)
 	/* Set EOCMode, ADCMode and pipelinedelay */
 	ni_writeb(0x80, PipelineDelay_6143);
 	/* Set EOC Delay */
-	ni_writeb(0x00, EOC_Set_6143);		
+	ni_writeb(0x00, EOC_Set_6143);
 
 	/* Set the FIFO half full level */
-	ni_writel(boardtype.ai_fifo_depth / 2, AIFIFO_Flag_6143);	
+	ni_writel(boardtype.ai_fifo_depth / 2, AIFIFO_Flag_6143);
 
 	/* Strobe Relay disable bit */
 	devpriv->ai_calib_source_enabled = 0;
-	ni_writew(devpriv->ai_calib_source | Calibration_Channel_6143_RelayOff, 
+	ni_writew(devpriv->ai_calib_source | Calibration_Channel_6143_RelayOff,
 		  Calibration_Channel_6143);
 	ni_writew(devpriv->ai_calib_source, Calibration_Channel_6143);
 }

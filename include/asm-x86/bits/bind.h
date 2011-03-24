@@ -16,7 +16,7 @@ static inline void xeno_x86_features_check(void)
 	size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, 0);
 	if (n > 0) {
 		char buf[n];
-      
+
 		confstr (_CS_GNU_LIBPTHREAD_VERSION, buf, n);
 
 		if (strstr (buf, "NPTL"))

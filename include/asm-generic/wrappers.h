@@ -185,12 +185,12 @@ do {									\
    compat/linux/workqueue.h. */
 
 #define __WORK_INITIALIZER(n,f,d) {				\
-        .list	= { &(n).list, &(n).list },			\
+	.list	= { &(n).list, &(n).list },			\
 	.sync = 0,						\
 	.routine = (f),						\
 	.data = (d),						\
 }
-#define DECLARE_WORK(n,f,d)      	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
+#define DECLARE_WORK(n,f,d)	 	struct tq_struct n = __WORK_INITIALIZER(n, f, d)
 #define DECLARE_WORK_NODATA(n, f)	DECLARE_WORK(n, f, NULL)
 #define DECLARE_WORK_FUNC(f)		void f(void *cookie)
 #define DECLARE_DELAYED_WORK_NODATA(n, f) DECLARE_WORK(n, f, NULL)
@@ -332,7 +332,7 @@ static inline unsigned long hweight_long(unsigned long w)
 
 #define find_first_bit(addr, size) find_next_bit((addr), (size), 0)
 unsigned long find_next_bit(const unsigned long *addr,
-                            unsigned long size, unsigned long offset);
+			    unsigned long size, unsigned long offset);
 
 #define mmiowb()	barrier()
 
@@ -620,6 +620,41 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)
 #define unlocked_ioctl ioctl
+#endif
+
+#ifndef DEFINE_SEMAPHORE
+/* Legacy DECLARE_MUTEX vanished in 2.6.37 */
+#define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
+/*
+ * The irq chip descriptor has been heavily revamped in
+ * 2.6.37. Provide generic accessors to the chip handlers we need for
+ * kernels implementing those changes.
+ */
+#define rthal_irq_chip_enable(irq)					\
+	({								\
+		struct irq_desc *desc = rthal_irq_descp(irq);		\
+		struct irq_chip *chip = get_irq_desc_chip(desc);	\
+		int __ret__ = 0;					\
+		if (unlikely(chip->irq_unmask == NULL))			\
+			__ret__ = -ENODEV;				\
+		else							\
+			chip->irq_unmask(&desc->irq_data);		\
+		__ret__;						\
+	})
+#define rthal_irq_chip_disable(irq)					\
+	({								\
+		struct irq_desc *desc = rthal_irq_descp(irq);		\
+		struct irq_chip *chip = get_irq_desc_chip(desc);	\
+		int __ret__ = 0;					\
+		if (unlikely(chip->irq_mask == NULL))			\
+			__ret__ = -ENODEV;				\
+		else							\
+			chip->irq_mask(&desc->irq_data);		\
+		__ret__;						\
+	})
 #endif
 
 #endif /* _XENO_ASM_GENERIC_WRAPPERS_H */

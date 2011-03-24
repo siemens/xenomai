@@ -20,7 +20,7 @@ void irq_server (void *cookie)
        err = rt_intr_wait(&intr_desc,TM_INFINITE);
 
        if (!err) {
-           /* Process interrupt. */
+	   /* Process interrupt. */
        }
     }
 }

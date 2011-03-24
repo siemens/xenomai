@@ -1,6 +1,6 @@
 /**
  * @file
- * Hardware driver for NI general purpose counter 
+ * Hardware driver for NI general purpose counter
  * @note Copyright (C) 2006 Frank Mori Hess <fmhess@users.sourceforge.net>
  *
  * This code is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
  * support for NI's general purpose counters.  It was originally based
  * on the counter code from ni_660x.c and ni_mio_common.c.
  *
- * Author: 
+ * Author:
  * J.P. Mellor <jpmellor@rose-hulman.edu>
  * Herman.Bruyninckx@mech.kuleuven.ac.be
  * Wim.Meeussen@mech.kuleuven.ac.be,
@@ -35,7 +35,7 @@
  * DAQ 6601/6602 User Manual (NI 322137B-01)
  * 340934b.pdf  DAQ-STC reference manual
  *
- * TODO: 
+ * TODO:
  * - Support use of both banks X and Y
  *
  */
@@ -45,14 +45,14 @@
 #include "ni_tio.h"
 #include "ni_mio.h"
 
-static inline void write_register(struct ni_gpct *counter, 
+static inline void write_register(struct ni_gpct *counter,
 				  unsigned int bits, enum ni_gpct_register reg)
 {
 	BUG_ON(reg >= NITIO_Num_Registers);
 	counter->counter_dev->write_register(counter, bits, reg);
 }
 
-static inline unsigned int read_register(struct ni_gpct *counter, 
+static inline unsigned int read_register(struct ni_gpct *counter,
 				     enum ni_gpct_register reg)
 {
 	BUG_ON(reg >= NITIO_Num_Registers);
@@ -70,8 +70,8 @@ struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 		kmalloc(sizeof(struct ni_gpct_device), GFP_KERNEL);
 	if (counter_dev == NULL)
 		return NULL;
-	
-	memset(counter_dev, 0, sizeof(struct ni_gpct_device));	
+
+	memset(counter_dev, 0, sizeof(struct ni_gpct_device));
 
 	counter_dev->dev = dev;
 	counter_dev->write_register = write_register;
@@ -80,7 +80,7 @@ struct ni_gpct_device *ni_gpct_device_construct(a4l_dev_t * dev,
 	a4l_lock_init(&counter_dev->regs_lock);
 	BUG_ON(num_counters == 0);
 
-	counter_dev->counters = 
+	counter_dev->counters =
 		kmalloc(sizeof(struct ni_gpct *) * num_counters, GFP_KERNEL);
 
 	if (counter_dev->counters == NULL) {
@@ -102,7 +102,7 @@ void ni_gpct_device_destroy(struct ni_gpct_device *counter_dev)
 	kfree(counter_dev);
 }
 
-static 
+static
 int ni_tio_counting_mode_registers_present(const struct ni_gpct_device *counter_dev)
 {
 	switch (counter_dev->variant) {
@@ -120,7 +120,7 @@ int ni_tio_counting_mode_registers_present(const struct ni_gpct_device *counter_
 	return 0;
 }
 
-static 
+static
 int ni_tio_second_gate_registers_present(const struct ni_gpct_device *counter_dev)
 {
 	switch (counter_dev->variant) {
@@ -138,16 +138,16 @@ int ni_tio_second_gate_registers_present(const struct ni_gpct_device *counter_de
 	return 0;
 }
 
-static inline 
+static inline
 void ni_tio_set_bits_transient(struct ni_gpct *counter,
-			       enum ni_gpct_register register_index, 
+			       enum ni_gpct_register register_index,
 			       unsigned int bit_mask,
-			       unsigned int bit_values, 
+			       unsigned int bit_values,
 			       unsigned transient_bit_values)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	unsigned long flags;
-	
+
 	BUG_ON(register_index >= NITIO_Num_Registers);
 	a4l_lock_irqsave(&counter_dev->regs_lock, flags);
 	counter_dev->regs[register_index] &= ~bit_mask;
@@ -163,19 +163,19 @@ void ni_tio_set_bits_transient(struct ni_gpct *counter,
    may be twiddled in interrupt context, or whose software copy may be
    read in interrupt context. */
 static inline void ni_tio_set_bits(struct ni_gpct *counter,
-				   enum ni_gpct_register register_index, 
+				   enum ni_gpct_register register_index,
 				   unsigned int bit_mask,
 				   unsigned int bit_values)
 {
-	ni_tio_set_bits_transient(counter, 
-				  register_index, 
+	ni_tio_set_bits_transient(counter,
+				  register_index,
 				  bit_mask, bit_values, 0x0);
 }
 
 /* ni_tio_get_soft_copy( ) is for safely reading the software copy of
    a register whose bits might be modified in interrupt context, or whose
    software copy might need to be read in interrupt context. */
-static inline 
+static inline
 unsigned int ni_tio_get_soft_copy(const struct ni_gpct *counter,
 				  enum ni_gpct_register register_index)
 {
@@ -255,10 +255,10 @@ static lsampl_t ni_tio_counter_status(struct ni_gpct *counter)
 	return status;
 }
 
-static 
+static
 uint64_t ni_tio_clock_period_ps(const struct ni_gpct *counter,
 				unsigned int generic_clock_source);
-static 
+static
 unsigned int ni_tio_generic_clock_src_select(const struct ni_gpct *counter);
 
 static void ni_tio_set_sync_mode(struct ni_gpct *counter, int force_alt_sync)
@@ -831,7 +831,7 @@ static uint64_t ni_tio_clock_period_ps(const struct ni_gpct *counter,
 }
 
 static void ni_tio_get_clock_src(struct ni_gpct *counter,
-				 unsigned int * clock_source, 
+				 unsigned int * clock_source,
 				 unsigned int * period_ns)
 {
 	static const unsigned int pico_per_nano = 1000;
@@ -864,7 +864,7 @@ static void ni_tio_set_first_gate_modifiers(struct ni_gpct *counter,
 static int ni_660x_set_first_gate(struct ni_gpct *counter, lsampl_t gate_source)
 {
 	const unsigned int selected_gate = CR_CHAN(gate_source);
-	/* Bits of selected_gate that may be meaningful to 
+	/* Bits of selected_gate that may be meaningful to
 	   input select register */
 	const unsigned int selected_gate_mask = 0x1f;
 	unsigned ni_660x_gate_select;
@@ -1042,7 +1042,7 @@ static int ni_m_series_set_second_gate(struct ni_gpct *counter,
 	return 0;
 }
 
-static int ni_tio_set_gate_src(struct ni_gpct *counter, 
+static int ni_tio_set_gate_src(struct ni_gpct *counter,
 			       unsigned int gate_index, lsampl_t gate_source)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
@@ -1109,7 +1109,7 @@ static int ni_tio_set_gate_src(struct ni_gpct *counter,
 	return 0;
 }
 
-static int ni_tio_set_other_src(struct ni_gpct *counter, 
+static int ni_tio_set_other_src(struct ni_gpct *counter,
 				unsigned int index, unsigned int source)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
@@ -1306,8 +1306,8 @@ static unsigned int ni_m_series_second_gate_to_generic_gate_source(unsigned int
 	return 0;
 };
 
-static int ni_tio_get_gate_src(struct ni_gpct *counter, 
-			       unsigned int gate_index, 
+static int ni_tio_get_gate_src(struct ni_gpct *counter,
+			       unsigned int gate_index,
 			       unsigned int * gate_source)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
@@ -1556,14 +1556,14 @@ int ni_tio_winsn(struct ni_gpct *counter, a4l_kinsn_t *insn)
 		return -EINVAL;
 		break;
 	}
-	
+
 	return 0;
 }
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-static void ni_tio_configure_dma(struct ni_gpct *counter, 
+static void ni_tio_configure_dma(struct ni_gpct *counter,
 				 short enable, short read_not_write)
 {
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
@@ -1633,8 +1633,8 @@ int ni_tio_input_inttrig(struct ni_gpct *counter, lsampl_t trignum)
 	return retval;
 }
 
-static int ni_tio_input_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd) 
-{	
+static int ni_tio_input_cmd(struct ni_gpct *counter, a4l_cmd_t *cmd)
+{
 	struct ni_gpct_device *counter_dev = counter->counter_dev;
 	int retval = 0;
 
@@ -1812,7 +1812,7 @@ static int should_ack_gate(struct ni_gpct *counter)
 
 	switch (counter->counter_dev->variant) {
 	case ni_gpct_variant_m_series:
-	case ni_gpct_variant_660x:	
+	case ni_gpct_variant_660x:
 		/* Not sure if 660x really supports gate interrupts
 		   (the bits are not listed in register-level manual) */
 		return 1;
@@ -1832,9 +1832,9 @@ static int should_ack_gate(struct ni_gpct *counter)
 	return retval;
 }
 
-void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter, 
+void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 				    int *gate_error,
-				    int *tc_error, 
+				    int *tc_error,
 				    int *perm_stale_data, int *stale_data)
 {
 	const unsigned short gxx_status = read_register(counter,
@@ -1899,7 +1899,7 @@ void ni_tio_acknowledge_and_confirm(struct ni_gpct *counter,
 	}
 }
 
-/* TODO: to be adapted after a4l_buf_evt review */ 
+/* TODO: to be adapted after a4l_buf_evt review */
 void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 {
 	unsigned gpct_mite_status;
@@ -1907,7 +1907,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 	int gate_error;
 	int tc_error;
 	int perm_stale_data;
-	a4l_subd_t *subd = 
+	a4l_subd_t *subd =
 		a4l_get_subd(dev, NI_GPCT_SUBDEV(counter->counter_index));
 
 	ni_tio_acknowledge_and_confirm(counter, &gate_error, &tc_error,
@@ -1923,7 +1923,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 	case ni_gpct_variant_m_series:
 	case ni_gpct_variant_660x:
 		if (read_register(counter,
-				  NITIO_Gi_DMA_Status_Reg(counter->counter_index)) 
+				  NITIO_Gi_DMA_Status_Reg(counter->counter_index))
 		    & Gi_DRQ_Error_Bit) {
 			__a4l_err("%s: Gi_DRQ_Error detected.\n", __FUNCTION__);
 			a4l_buf_evt(subd, A4L_BUF_ERROR);
@@ -1947,7 +1947,7 @@ void ni_tio_handle_interrupt(struct ni_gpct *counter, a4l_dev_t *dev)
 	a4l_unlock_irqrestore(&counter->lock, flags);
 }
 
-void ni_tio_set_mite_channel(struct ni_gpct *counter, 
+void ni_tio_set_mite_channel(struct ni_gpct *counter,
 			     struct mite_channel *mite_chan)
 {
 	unsigned long flags;

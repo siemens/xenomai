@@ -152,7 +152,7 @@ int pse51_node_get(pse51_node_t ** nodep,
 	err = pse51_node_lookup(&node_link, name, magic);
 	if (err)
 		return err;
-	
+
 	node = *node_link;
 	if (node && (oflags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
 		return EEXIST;

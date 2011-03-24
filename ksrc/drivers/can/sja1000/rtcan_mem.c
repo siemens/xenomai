@@ -5,8 +5,8 @@
  * RTCAN driver for memory mapped SJA1000 CAN controller
  * This code has been tested on esd's CPCI405/EPPC405 PPC405 systems.
  *
- * This driver is derived from the rtcan-isa driver by 
- * Wolfgang Grandegger and Sebastian Smolorz. 
+ * This driver is derived from the rtcan-isa driver by
+ * Wolfgang Grandegger and Sebastian Smolorz.
  *
  * Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
  * Copyright (C) 2005, 2006 Sebastian Smolorz

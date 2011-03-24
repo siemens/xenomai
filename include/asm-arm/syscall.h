@@ -54,7 +54,7 @@
 /* In OABI_COMPAT mode, handle both OABI and EABI userspace syscalls */
 #ifdef CONFIG_OABI_COMPAT
 #define __xn_reg_mux_p(regs)    ( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + XENO_ARM_SYSCALL) || \
-                                  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL) )
+				  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + XENO_ARM_SYSCALL) )
 #define __xn_linux_mux_p(regs, nr) \
 				( ((regs)->ARM_r7 == __NR_OABI_SYSCALL_BASE + (nr)) || \
 				  ((regs)->ARM_r7 == __NR_SYSCALL_BASE + (nr)) )
@@ -252,20 +252,20 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSARCH_TSCINFO                 4
 
 struct __xn_tscinfo {
-        int type;		/* Must remain first member */
-        union {
-                struct {
-                        volatile unsigned *counter;
-                        unsigned mask;
-                        volatile unsigned long long *tsc;
-                } fr;
-                struct {
+	int type;		/* Must remain first member */
+	union {
+		struct {
+			volatile unsigned *counter;
+			unsigned mask;
+			volatile unsigned long long *tsc;
+		} fr;
+		struct {
 			volatile unsigned *counter;
 			unsigned mask;
 			volatile unsigned *last_cnt;
 			volatile unsigned long long *tsc;
-                } dec;
-        } u;
+		} dec;
+	} u;
 };
 #define __XN_TSC_TYPE_NONE                  0
 #define __XN_TSC_TYPE_FREERUNNING           1
@@ -282,31 +282,31 @@ static inline unsigned long long __xn_rdtsc(void)
 #if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
-        const unsigned mask = __xn_tscinfo.u.fr.mask;
+	const unsigned mask = __xn_tscinfo.u.fr.mask;
 	register unsigned long long result;
-        unsigned counter;
+	unsigned counter;
 
-        __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
-        __asm__ __volatile__ ("" : /* */ : /* */ : "memory");
-        counter = *counterp;
+	__asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+	__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+	counter = *counterp;
 
-        if ((counter & mask) < ((unsigned) result & mask))
-                result += mask + 1ULL;
-        return (result & ~((unsigned long long) mask)) | (counter & mask);
+	if ((counter & mask) < ((unsigned) result & mask))
+		result += mask + 1ULL;
+	return (result & ~((unsigned long long) mask)) | (counter & mask);
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
-        const unsigned mask = __xn_tscinfo.u.fr.mask;
+	const unsigned mask = __xn_tscinfo.u.fr.mask;
 	register unsigned long long result;
-        unsigned counter;
+	unsigned counter;
 
-        __asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
-        __asm__ __volatile__ ("" : /* */ : /* */ : "memory");
-        counter = mask - *counterp;
+	__asm__ ("ldmia %1, %M0\n": "=r"(result): "r"(tscp), "m"(*tscp));
+	__asm__ __volatile__ ("" : /* */ : /* */ : "memory");
+	counter = mask - *counterp;
 
-        if ((counter & mask) > ((unsigned) result & mask))
-                result += mask + 1ULL;
-        return (result & ~((unsigned long long) mask)) | (counter & mask);
+	if ((counter & mask) > ((unsigned) result & mask))
+		result += mask + 1ULL;
+	return (result & ~((unsigned long long) mask)) | (counter & mask);
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;

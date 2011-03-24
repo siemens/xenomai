@@ -51,7 +51,7 @@ int a4l_precleanup_transfer(a4l_cxt_t * cxt)
 	for (i = 0; i < tsf->nb_subd; i++) {
 		unsigned long *status = &tsf->subds[i]->status;
 
-		__a4l_dbg(1, core_dbg, 
+		__a4l_dbg(1, core_dbg,
 			  "a4l_precleanup_transfer: "
 			  "subd[%d]->status=0x%08lx\n", i, *status);
 
@@ -109,8 +109,8 @@ void a4l_presetup_transfer(a4l_cxt_t *cxt)
 	memset(tsf, 0, sizeof(a4l_trf_t));
 
 	tsf->default_bufsize = A4L_BUF_DEFSIZE;
-	
-	/* 0 is also considered as a valid IRQ, then 
+
+	/* 0 is also considered as a valid IRQ, then
 	   the IRQ number must be initialized with another value */
 	tsf->irq_desc.irq = A4L_IRQ_UNUSED;
 }
@@ -125,13 +125,13 @@ int a4l_setup_transfer(a4l_cxt_t * cxt)
 	dev = a4l_get_dev(cxt);
 	tsf = &dev->transfer;
 
-	/* Recovers the subdevices count 
+	/* Recovers the subdevices count
 	   (as they are registered in a linked list */
 	list_for_each(this, &dev->subdvsq) {
 		tsf->nb_subd++;
 	}
 
-	__a4l_dbg(1, core_dbg, 
+	__a4l_dbg(1, core_dbg,
 		  "a4l_setup_transfer: nb_subd=%d\n", tsf->nb_subd);
 
 	/* Allocates a suitable tab for the subdevices */
@@ -168,8 +168,8 @@ int a4l_request_irq(a4l_dev_t * dev,
 	if (dev->transfer.irq_desc.irq != A4L_IRQ_UNUSED)
 		return -EBUSY;
 
-	/* A spinlock is used so as to prevent race conditions 
-	   on the field "irq" of the IRQ descriptor 
+	/* A spinlock is used so as to prevent race conditions
+	   on the field "irq" of the IRQ descriptor
 	   (even if such a case is bound not to happen) */
 	a4l_lock_irqsave(&dev->lock, __flags);
 
@@ -194,7 +194,7 @@ int a4l_free_irq(a4l_dev_t * dev, unsigned int irq)
 	if (dev->transfer.irq_desc.irq != irq)
 		return -EINVAL;
 
-	/* There is less need to use a spinlock 
+	/* There is less need to use a spinlock
 	   than for a4l_request_irq() */
 	ret = __a4l_free_irq(&dev->transfer.irq_desc);
 

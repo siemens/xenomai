@@ -68,7 +68,7 @@ rthal_arm_nodiv_ullimd(const unsigned long long op,
 
 	__rthal_u64tou32(op, oph, opl);
 	__rthal_u64tou32(frac, frach, fracl);
-	
+
 	__asm__ (rthal_arm_nodiv_ullimd_str
 		 : [rl]"=r"(rl), [rm]"=r"(rm), [rh]"=r"(rh),
 		   [tl]"=r"(tl), [th]"=r"(th)
@@ -99,7 +99,7 @@ rthal_arm_nodiv_llimd(const long long op,
 
 	__rthal_u64tou32(op, oph, opl);
 	__rthal_u64tou32(frac, frach, fracl);
-	
+
 	__asm__ ("movs %[s], %[oph], lsr #30\n\t"
 		 "beq 1f\n\t"
 		 "rsbs  %[opl], %[opl], #0\n\t"

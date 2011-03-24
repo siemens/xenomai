@@ -50,7 +50,7 @@ static inline int xnarch_end_irq (unsigned irq)
 {
 	return mvm_enable_irq(irq);
 }
-                                                                                
+
 static inline void xnarch_chain_irq (unsigned irq)
 {
 	/* empty */

@@ -4,14 +4,14 @@
 #define LOOP_TASK_PERIOD 1000000
 #define LOOP_NB_BITS 16
 
-#define LOOP_INPUT_SUBD 0 
+#define LOOP_INPUT_SUBD 0
 #define LOOP_OUTPUT_SUBD 1
 
 /* Channels descriptor */
 static a4l_chdesc_t loop_chandesc = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 8,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, LOOP_NB_BITS},
 	},
 };
@@ -79,25 +79,25 @@ static void loop_task_proc(void *arg)
 		int running;
 
 		RTDM_EXECUTE_ATOMICALLY(running = priv->loop_running);
-	
+
 		if (running) {
 			uint16_t value;
 			int ret=0;
-	    
+
 			while (ret==0) {
-		
-				ret = a4l_buf_get(output_subd, 
+
+				ret = a4l_buf_get(output_subd,
 						  &value, sizeof(uint16_t));
 				if (ret == 0) {
 
-					a4l_info(dev, 
+					a4l_info(dev,
 						 "loop_task_proc: "
 						 "data available\n");
 
 					a4l_buf_evt(output_subd, 0);
-		    
-					ret = a4l_buf_put(input_subd, 
-							  &value, 
+
+					ret = a4l_buf_put(input_subd,
+							  &value,
 							  sizeof(uint16_t));
 
 					if (ret==0)
@@ -115,10 +115,10 @@ static void loop_task_proc(void *arg)
 /* Command callback */
 int loop_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "loop_cmd: (subd=%d)\n", subd->idx);
 
 	return 0;
-  
+
 }
 
 /* Trigger callback */
@@ -126,7 +126,7 @@ int loop_trigger(a4l_subd_t *subd, lsampl_t trignum)
 {
 	lpprv_t *priv = (lpprv_t *)subd->dev->priv;
 
-	a4l_info(subd->dev, "loop_trigger: (subd=%d)\n", subd->idx);  
+	a4l_info(subd->dev, "loop_trigger: (subd=%d)\n", subd->idx);
 
 	RTDM_EXECUTE_ATOMICALLY(priv->loop_running = 1);
 
@@ -157,7 +157,7 @@ int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	/* Sets the memorized value */
 	data[0] = priv->loop_insn_value;
-    
+
 	return 0;
 }
 
@@ -165,7 +165,7 @@ int loop_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	lpprv_t *priv = (lpprv_t*)subd->dev->priv;
-	uint16_t *data = (uint16_t *)insn->data;	
+	uint16_t *data = (uint16_t *)insn->data;
 
 	/* Checks the buffer size */
 	if (insn->data_size != sizeof(uint16_t))
@@ -173,7 +173,7 @@ int loop_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 
 	/* Retrieves the value to memorize */
 	priv->loop_insn_value = data[0];
-    
+
 	return 0;
 }
 
@@ -219,9 +219,9 @@ int loop_attach(a4l_dev_t *dev,
 	lpprv_t *priv = (lpprv_t *)dev->priv;
 
 	/* Add the fake input subdevice */
-	subd = a4l_alloc_subd(0, setup_input_subd); 
+	subd = a4l_alloc_subd(0, setup_input_subd);
 	if (subd == NULL)
-		return -ENOMEM;  
+		return -ENOMEM;
 
 	ret = a4l_add_subd(dev, subd);
 	if (ret != LOOP_INPUT_SUBD)
@@ -229,10 +229,10 @@ int loop_attach(a4l_dev_t *dev,
 		return (ret < 0) ? ret : -EINVAL;
 
 	/* Add the fake output subdevice */
-	subd = a4l_alloc_subd(0, setup_output_subd); 
+	subd = a4l_alloc_subd(0, setup_output_subd);
 	if (subd == NULL)
 		/* Let Analogy free the lately allocated subdevice */
-		return -ENOMEM;  
+		return -ENOMEM;
 
 	ret = a4l_add_subd(dev, subd);
 	if (ret != LOOP_OUTPUT_SUBD)
@@ -242,8 +242,8 @@ int loop_attach(a4l_dev_t *dev,
 	priv->loop_running = 0;
 	priv->loop_insn_value = 0;
 
-	ret = a4l_task_init(&priv->loop_task, 
-			    "a4l_loop task", 
+	ret = a4l_task_init(&priv->loop_task,
+			    "a4l_loop task",
 			    loop_task_proc,
 			    dev, A4L_TASK_HIGHEST_PRIORITY);
 

@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2006 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2006 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -134,9 +134,9 @@ out:
 
 /*
  * int __t_start(u_long tid,
- *	         u_long mode,
- *	         void (*startaddr) (u_long, u_long, u_long, u_long),
- *  	         u_long targs[])
+ *		 u_long mode,
+ *		 void (*startaddr) (u_long, u_long, u_long, u_long),
+ *  		 u_long targs[])
  */
 
 static int __t_start(struct pt_regs *regs)

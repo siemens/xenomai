@@ -71,7 +71,7 @@ MODULE_PARM_DESC(irq,  "The interrupt number");
 
 struct rtcan_peak_dng
 {
-    u16  ioport; 
+    u16  ioport;
     u16  ecr;      /* ECR register in case of EPP */
     u8   old_data; /* the overwritten contents of the port registers */
     u8   old_ctrl;
@@ -191,7 +191,7 @@ static inline void rtcan_peak_dng_enable(struct rtcan_device *dev)
 
     /* switch to epp mode if possible */
     if (dng->type == DONGLE_TYPE_EPP)
-	dongle_set_ecr(port, dng); 
+	dongle_set_ecr(port, dng);
 
     rtcan_parport_enable_irq(port);
 }
@@ -231,7 +231,7 @@ int __init rtcan_peak_dng_init_one(int idx)
 
     if ((dev = rtcan_dev_alloc(sizeof(struct rtcan_sja1000),
 			       sizeof(struct rtcan_peak_dng))) == NULL)
-        return -ENOMEM;
+	return -ENOMEM;
 
     sja = (struct rtcan_sja1000 *)dev->priv;
     dng = (struct rtcan_peak_dng *)dev->board_priv;

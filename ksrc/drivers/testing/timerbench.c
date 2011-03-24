@@ -198,7 +198,7 @@ static int rt_tmbench_open(struct rtdm_dev_context *context,
 	ctx = (struct rt_tmbench_context *)context->dev_private;
 
 	ctx->mode = RTTST_TMBENCH_INVALID;
-	init_MUTEX(&ctx->nrt_mutex);
+	sema_init(&ctx->nrt_mutex, 1);
 
 	return 0;
 }

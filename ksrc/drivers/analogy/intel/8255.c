@@ -31,7 +31,7 @@
 static a4l_chdesc_t chandesc_8255 = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
 	.length = 24,
-	.chans = { 
+	.chans = {
 		{A4L_CHAN_AREF_GROUND, sizeof(sampl_t)},
 	},
 };
@@ -93,7 +93,7 @@ static void do_config(a4l_subd_t *subd)
 
 int subd_8255_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
-	/* FIXME */  
+	/* FIXME */
 	return 0;
 }
 
@@ -124,7 +124,7 @@ int subd_8255_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 }
 
 int subd_8255_cancel(a4l_subd_t *subd)
-{	
+{
 	/* FIXME */
 	return 0;
 }
@@ -140,15 +140,15 @@ int subd_8255_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		subd_8255->status |= (data[0] & data[1]);
 
 		if (data[0] & 0xff)
-			CALLBACK_FUNC(1, _8255_DATA, 
+			CALLBACK_FUNC(1, _8255_DATA,
 				      subd_8255->status & 0xff, CALLBACK_ARG);
 		if (data[0] & 0xff00)
-			CALLBACK_FUNC(1, _8255_DATA + 1, 
-				      (subd_8255->status >> 8) & 0xff, 
+			CALLBACK_FUNC(1, _8255_DATA + 1,
+				      (subd_8255->status >> 8) & 0xff,
 				      CALLBACK_ARG);
 		if (data[0] & 0xff0000)
 			CALLBACK_FUNC(1, _8255_DATA + 2,
-				      (subd_8255->status >> 16) & 0xff, 
+				      (subd_8255->status >> 16) & 0xff,
 				      CALLBACK_ARG);
 	}
 
@@ -186,7 +186,7 @@ int subd_8255_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		subd_8255->io_bits |= bits;
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (subd_8255->io_bits & bits) ? 
+		data[1] = (subd_8255->io_bits & bits) ?
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
@@ -212,7 +212,7 @@ void subdev_8255_init(a4l_subd_t *subd)
 	subd->chan_desc = &chandesc_8255;
 	subd->insn_bits = subd_8255_insn_bits;
 	subd->insn_config = subd_8255_insn_config;
-      
+
 	if(subd_8255->have_irq) {
 		subd->cmd_mask = &cmd_mask_8255;
 		subd->do_cmdtest = subd_8255_cmdtest;
@@ -237,11 +237,11 @@ EXPORT_SYMBOL_GPL(subdev_8255_init);
 
 static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 {
-	unsigned long *addrs; 	
+	unsigned long *addrs;
 	int i, err = 0;
 
 	if(arg->opts == NULL || arg->opts_size == 0) {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"dev_8255_attach: unable to detect any 8255 chip, "
 			"chips addresses must be passed as attach arguments\n");
 		return -EINVAL;
@@ -255,7 +255,7 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 		subd = a4l_alloc_subd(sizeof(subd_8255_t), NULL);
 		if(subd == NULL) {
-			a4l_err(dev, 
+			a4l_err(dev,
 				"dev_8255_attach: "
 				"unable to allocate subdevice\n");
 			/* There is no need to free previously
@@ -263,16 +263,16 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			   do it for us */
 			err = -ENOMEM;
 			goto out_attach;
-		}		
+		}
 
 		memset(&subd, 0, sizeof(a4l_subd_t));
 		memset(subd->priv, 0, sizeof(subd_8255_t));
 
-		subd_8255 = (subd_8255_t *)subd->priv;		
-		
-		if(request_region(addrs[i], _8255_SIZE, "Analogy 8255") == 0) {	       
+		subd_8255 = (subd_8255_t *)subd->priv;
+
+		if(request_region(addrs[i], _8255_SIZE, "Analogy 8255") == 0) {
 			subd->flags = A4L_SUBD_UNUSED;
-			a4l_warn(dev, 
+			a4l_warn(dev,
 				 "dev_8255_attach: "
 				 "I/O port conflict at 0x%lx\n", addrs[i]);
 		}
@@ -283,7 +283,7 @@ static int dev_8255_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 
 		err = a4l_add_subd(dev, subd);
 		if(err < 0) {
-			a4l_err(dev, 
+			a4l_err(dev,
 				"dev_8255_attach: "
 				"a4l_add_subd() failed (err=%d)\n", err);
 			goto out_attach;
@@ -312,7 +312,7 @@ static a4l_drv_t drv_8255 = {
 	.owner = THIS_MODULE,
 	.board_name = "analogy_8255",
 	.attach = dev_8255_attach,
-	.detach = dev_8255_detach,	
+	.detach = dev_8255_detach,
 	.privdata_size = 0,
 };
 

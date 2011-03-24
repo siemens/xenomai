@@ -189,7 +189,7 @@ static void sporadic_post_recharge(struct xnthread *thread, xnticks_t budget)
 	pss->repl_data[r].date = pss->resume_date + pss->param.repl_period;
 	pss->repl_data[r].amount = budget;
 	pss->repl_in = (r + 1) % MAX_REPLENISH;
-	
+
 	if (pss->repl_pending++ == 0) {
 		ret = xntimer_start(&pss->repl_timer, pss->repl_data[r].date,
 				    XN_INFINITE, XN_ABSOLUTE);

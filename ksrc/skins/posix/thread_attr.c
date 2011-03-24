@@ -40,7 +40,7 @@
  *
  * In user-space, the attributes and their defaults values are those documented
  * by the underlying threading library (LinuxThreads or NPTL).
- * 
+ *
  *@{*/
 
 #include <posix/internal.h>
@@ -76,7 +76,7 @@ static const pthread_attr_t default_thread_attr = {
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_init.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_init(pthread_attr_t * attr)
 {
@@ -95,7 +95,7 @@ int pthread_attr_init(pthread_attr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_destroy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_destroy(pthread_attr_t * attr)
 {
@@ -146,7 +146,7 @@ int pthread_attr_destroy(pthread_attr_t * attr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getdetachstate.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getdetachstate(const pthread_attr_t * attr, int *detachstate)
 {
@@ -170,7 +170,7 @@ int pthread_attr_getdetachstate(const pthread_attr_t * attr, int *detachstate)
  * Set detachstate attribute.
  *
  * This service sets to @a detachstate the value of the @a detachstate attribute
- * in the attribute object @a attr. 
+ * in the attribute object @a attr.
  *
  * Valid values of this attribute are PTHREAD_CREATE_JOINABLE and
  * PTHREAD_CREATE_DETACHED. A detached thread is a thread which control block is
@@ -192,7 +192,7 @@ int pthread_attr_getdetachstate(const pthread_attr_t * attr, int *detachstate)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setdetachstate.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setdetachstate(pthread_attr_t * attr, int detachstate)
 {
@@ -274,11 +274,11 @@ int pthread_attr_getstacksize(const pthread_attr_t * attr, size_t * stacksize)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, @a attr or @a stacksize is invalid.
- * 
+ *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setstacksize.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stacksize)
 {
@@ -325,7 +325,7 @@ int pthread_attr_setstacksize(pthread_attr_t * attr, size_t stacksize)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getinheritsched.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getinheritsched(const pthread_attr_t * attr, int *inheritsched)
 {
@@ -368,7 +368,7 @@ int pthread_attr_getinheritsched(const pthread_attr_t * attr, int *inheritsched)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setinheritsched.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
 {
@@ -420,7 +420,7 @@ int pthread_attr_setinheritsched(pthread_attr_t * attr, int inheritsched)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedpolicy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
 {
@@ -462,7 +462,7 @@ int pthread_attr_getschedpolicy(const pthread_attr_t * attr, int *policy)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedpolicy.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
 {
@@ -528,7 +528,7 @@ int pthread_attr_setschedpolicy(pthread_attr_t * attr, int policy)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getschedparam(const pthread_attr_t * attr,
 			       struct sched_param *par)
@@ -572,7 +572,7 @@ int pthread_attr_getschedparam(const pthread_attr_t * attr,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getschedparam_ex(const pthread_attr_t * attr,
 				  struct sched_param_ex *par)
@@ -617,7 +617,7 @@ int pthread_attr_getschedparam_ex(const pthread_attr_t * attr,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setschedparam(pthread_attr_t * attr,
 			       const struct sched_param *par)
@@ -667,7 +667,7 @@ int pthread_attr_setschedparam(pthread_attr_t * attr,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setschedparam.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setschedparam_ex(pthread_attr_t * attr,
 				  const struct sched_param_ex *par)
@@ -718,7 +718,7 @@ int pthread_attr_setschedparam_ex(pthread_attr_t * attr,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_getscope.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_getscope(const pthread_attr_t * attr, int *scope)
 {
@@ -760,7 +760,7 @@ int pthread_attr_getscope(const pthread_attr_t * attr, int *scope)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_attr_setscope.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_attr_setscope(pthread_attr_t * attr, int scope)
 {
@@ -788,7 +788,7 @@ int pthread_attr_setscope(pthread_attr_t * attr, int scope)
  * attribute in the attribute object @a attr.
  *
  * The @a name attribute is the name under which a thread created with the
- * attribute object @a attr will appear under /proc/xenomai/sched. 
+ * attribute object @a attr will appear under /proc/xenomai/sched.
  *
  * The name returned by this function is only valid until the name is changed
  * with pthread_attr_setname_np() or the @a attr object is destroyed with

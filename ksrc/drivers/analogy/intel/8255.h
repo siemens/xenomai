@@ -30,7 +30,7 @@ typedef struct subd_8255_struct {
 	a4l_8255_cb_t cb_func;
 	unsigned int status;
 	int have_irq;
-	int io_bits; 
+	int io_bits;
 } subd_8255_t;
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_8255) || \

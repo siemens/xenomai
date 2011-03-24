@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2004 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -475,7 +475,7 @@ int rt_cond_wait_epilogue(RT_MUTEX *mutex, unsigned lockcnt)
 
 	err = rt_mutex_acquire(mutex, TM_INFINITE);
 
-	if(!err) 
+	if(!err)
 		mutex->lockcnt = lockcnt; /* Adjust lockcnt */
 
       unlock_and_exit:
@@ -491,7 +491,7 @@ static int rt_cond_wait_inner(RT_COND *cond, RT_MUTEX *mutex,
 	unsigned lockcnt;
 	int err, epilogue_err = 0;
 
-	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, 
+	err = rt_cond_wait_prologue(cond, mutex, &lockcnt,
 				    timeout_mode, timeout);
 
 	if(!err || err == -ETIMEDOUT || err == -EINTR)

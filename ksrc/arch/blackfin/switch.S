@@ -69,9 +69,17 @@ ENTRY(_rthal_thread_trampoline)
 	jump switch_point
 	
 /*
- * Check for a pending syscall event. On this arch, syscalls start as
- * exceptions, which are deferred to low priority interrupts for
- * processing them. Returns true if the syscall has been deferred.
+ * Check for a reason to block context switching for Xenomai. This may
+ * be the case, if:
+ *
+ * - an event is pending on EVT15 (Blackfin syscalls start as
+ * exceptions, which are offloaded to EVT15, and we don't want to
+ * change the underlying task context while any syscall is in
+ * flight).
+ *
+ * - more than a single interrupt is pending in IPEND. In such a case,
+ * switching context would cause the core to branch back to kernel
+ * code without supervisor privileges (due to nested RTIs).
  * 
  * int rthal_defer_switch_p(void)
  */

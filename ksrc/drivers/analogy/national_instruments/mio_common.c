@@ -91,7 +91,7 @@ a4l_rngtab_t rng_ni_E_ai = {16, {
 	RANGE_V(0, 0.2),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai = 
+a4l_rngdesc_t range_ni_E_ai =
 	RNG_GLOBAL(rng_ni_E_ai);
 
 a4l_rngtab_t rng_ni_E_ai_limited = {8, {
@@ -104,7 +104,7 @@ a4l_rngtab_t rng_ni_E_ai_limited = {8, {
 	RANGE_V(0, 1),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai_limited = 
+a4l_rngdesc_t range_ni_E_ai_limited =
 	RNG_GLOBAL(rng_ni_E_ai_limited);
 
 a4l_rngtab_t rng_ni_E_ai_limited14 = {14, {
@@ -123,7 +123,7 @@ a4l_rngtab_t rng_ni_E_ai_limited14 = {14, {
 	RANGE_V(0, 0.2),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai_limited14 = 
+a4l_rngdesc_t range_ni_E_ai_limited14 =
 	RNG_GLOBAL(rng_ni_E_ai_limited14);
 
 a4l_rngtab_t rng_ni_E_ai_bipolar4 = {4, {
@@ -132,7 +132,7 @@ a4l_rngtab_t rng_ni_E_ai_bipolar4 = {4, {
 	RANGE_V(-0.5, 0.5),
 	RANGE_V(-0.05, 0.05),
 }};
-a4l_rngdesc_t range_ni_E_ai_bipolar4 = 
+a4l_rngdesc_t range_ni_E_ai_bipolar4 =
 	RNG_GLOBAL(rng_ni_E_ai_bipolar4);
 
 a4l_rngtab_t rng_ni_E_ai_611x = {8, {
@@ -145,7 +145,7 @@ a4l_rngtab_t rng_ni_E_ai_611x = {8, {
 	RANGE_V(-0.5, 0.5),
 	RANGE_V(-0.2, 0.2),
 }};
-a4l_rngdesc_t range_ni_E_ai_611x = 
+a4l_rngdesc_t range_ni_E_ai_611x =
 	RNG_GLOBAL(rng_ni_E_ai_611x);
 
 a4l_rngtab_t rng_ni_M_ai_622x = {4, {
@@ -154,7 +154,7 @@ a4l_rngtab_t rng_ni_M_ai_622x = {4, {
 	RANGE_V(-1, 1),
 	RANGE_V(-0.2, 0.2),
 }};
-a4l_rngdesc_t range_ni_M_ai_622x = 
+a4l_rngdesc_t range_ni_M_ai_622x =
 	RNG_GLOBAL(rng_ni_M_ai_622x);
 
 a4l_rngtab_t rng_ni_M_ai_628x = {7, {
@@ -166,13 +166,13 @@ a4l_rngtab_t rng_ni_M_ai_628x = {7, {
 	RANGE_V(-0.2, 0.2),
 	RANGE_V(-0.1, 0.1),
 }};
-a4l_rngdesc_t range_ni_M_ai_628x = 
+a4l_rngdesc_t range_ni_M_ai_628x =
 	RNG_GLOBAL(rng_ni_M_ai_628x);
 
 a4l_rngtab_t rng_ni_S_ai_6143 = {1, {
 	RANGE_V(-5, 5),
 }};
-a4l_rngdesc_t range_ni_S_ai_6143 = 
+a4l_rngdesc_t range_ni_S_ai_6143 =
 	RNG_GLOBAL(rng_ni_S_ai_6143);
 
 
@@ -182,7 +182,7 @@ a4l_rngtab_t rng_ni_E_ao_ext = {4, {
 	RANGE_ext(-1, 1),
 	RANGE_ext(0, 1),
 }};
-a4l_rngdesc_t range_ni_E_ao_ext = 
+a4l_rngdesc_t range_ni_E_ao_ext =
 	RNG_GLOBAL(rng_ni_E_ao_ext);
 
 a4l_rngdesc_t *ni_range_lkup[] = {
@@ -202,7 +202,7 @@ static void ni_handle_fifo_dregs(a4l_subd_t *subd);
 static void get_last_sample_611x(a4l_subd_t *subd);
 static void get_last_sample_6143(a4l_subd_t *subd);
 static void handle_cdio_interrupt(a4l_dev_t *dev);
-static void ni_load_channelgain_list(a4l_dev_t *dev, 
+static void ni_load_channelgain_list(a4l_dev_t *dev,
 				     unsigned int n_chan, unsigned int *list);
 
 #if (!defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) && \
@@ -211,9 +211,9 @@ static void ni_handle_fifo_half_full(a4l_subd_t *subd);
 static int ni_ao_fifo_half_empty(a4l_subd_t *subd);
 #endif /* !CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 
-static inline void ni_set_bitfield(a4l_dev_t *dev, 
+static inline void ni_set_bitfield(a4l_dev_t *dev,
 				   int reg,
-				   unsigned int bit_mask, 
+				   unsigned int bit_mask,
 				   unsigned int bit_values)
 {
 	unsigned long flags;
@@ -249,7 +249,7 @@ static inline void ni_set_bitfield(a4l_dev_t *dev,
 		ni_writeb(devpriv->g0_g1_select_reg, G0_G1_Select);
 		break;
 	default:
-		a4l_err(dev, 
+		a4l_err(dev,
 			"Warning %s() called with invalid register\n",
 			__FUNCTION__);
 		a4l_err(dev,"reg is %d\n", reg);
@@ -339,7 +339,7 @@ static int ni_request_ai_mite_channel(a4l_dev_t * dev)
 	if (devpriv->ai_mite_chan == NULL) {
 		a4l_unlock_irqrestore(&devpriv->mite_channel_lock,
 				      flags);
-		a4l_err(dev, 
+		a4l_err(dev,
 			"ni_request_ai_mite_channel: "
 			"failed to reserve mite dma channel for analog input.");
 		return -EBUSY;
@@ -386,7 +386,7 @@ static int ni_request_gpct_mite_channel(a4l_dev_t * dev,
 	if (mite_chan == NULL) {
 		a4l_unlock_irqrestore(&devpriv->mite_channel_lock,
 				      flags);
-		a4l_err(dev, 
+		a4l_err(dev,
 			"ni_request_gpct_mite_channel: "
 			"failed to reserve mite dma channel for counter.");
 		return -EBUSY;
@@ -492,7 +492,7 @@ void ni_release_cdo_mite_channel(a4l_dev_t *dev)
 void ni_sync_ai_dma(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-	unsigned long flags;	
+	unsigned long flags;
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ai_mite_chan)
@@ -521,7 +521,7 @@ static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 	int i;
 
 	for (i = 0; i < timeout; i++) {
-		
+
 		int buffer_filled;
 		unsigned short b_status;
 
@@ -539,7 +539,7 @@ static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 	}
 
 	if (i == timeout) {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"ni_ao_wait_for_dma_load: "
 			"timed out waiting for dma load");
 		return -EPIPE;
@@ -553,20 +553,20 @@ static int ni_ao_wait_for_dma_load(a4l_subd_t *subd)
 
 static inline int ni_ai_drain_dma(a4l_subd_t *subd)
 {
-	return -ENOTSUPP;	
+	return -ENOTSUPP;
 }
 
 static inline int ni_request_ai_mite_channel(a4l_dev_t * dev)
 {
-	return -ENOTSUPP;	
+	return -ENOTSUPP;
 }
 
 static inline int ni_request_ao_mite_channel(a4l_dev_t * dev)
 {
-	return -ENOTSUPP;	
+	return -ENOTSUPP;
 }
 
-static inline 
+static inline
 int ni_request_gpct_mite_channel(a4l_dev_t * dev,
 				 unsigned gpct_index, int direction)
 {
@@ -673,7 +673,7 @@ static inline unsigned short ni_ao_win_inw(a4l_dev_t *dev, int addr)
 	return data;
 }
 
-/* 
+/*
  * ni_set_bits( ) allows different parts of the ni_mio_common driver
  * to share registers (such as Interrupt_A_Register) without interfering
  * with each other.
@@ -685,7 +685,7 @@ static inline unsigned short ni_ao_win_inw(a4l_dev_t *dev, int addr)
  * value should only be 1 or 0.
  */
 
-static inline void ni_set_bits(a4l_dev_t *dev, 
+static inline void ni_set_bits(a4l_dev_t *dev,
 			       int reg, unsigned bits, unsigned value)
 {
 	unsigned bit_values;
@@ -730,7 +730,7 @@ static void ni_handle_eos(a4l_subd_t *subd)
 }
 
 static void ni_event(a4l_subd_t * subd)
-{       	
+{
 	/* Temporary hack */
 	a4l_buf_t *buf = subd->buf;
 
@@ -823,7 +823,7 @@ static void ack_a_interrupt(a4l_dev_t *dev, unsigned short a_status)
 		devpriv->stc_writew(dev, ack, Interrupt_A_Ack_Register);
 }
 
-static void handle_a_interrupt(a4l_dev_t *dev, 
+static void handle_a_interrupt(a4l_dev_t *dev,
 			       unsigned short status,unsigned int ai_mite_status)
 {
 
@@ -861,7 +861,7 @@ static void handle_a_interrupt(a4l_dev_t *dev,
 			a4l_info(dev, "ni_mio_common: interrupt: "
 				 "a_status=0xffff.  Card removed?\n");
 			/* TODO: we probably aren't even running a command now,
-			   so it's a good idea to be careful. 
+			   so it's a good idea to be careful.
 			   we should check the transfer status */
 			a4l_buf_evt(subd, A4L_BUF_ERROR);
 			ni_event(subd);
@@ -946,13 +946,13 @@ static void ack_b_interrupt(a4l_dev_t *dev, unsigned short b_status)
 		devpriv->stc_writew(dev, ack, Interrupt_B_Ack_Register);
 }
 
-static void handle_b_interrupt(a4l_dev_t * dev, 
+static void handle_b_interrupt(a4l_dev_t * dev,
 			       unsigned short b_status, unsigned int ao_mite_status)
 {
 
 	a4l_subd_t *subd = a4l_get_subd(dev, NI_AO_SUBDEV);
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"ni_mio_common: interrupt: b_status=%04x m1_status=%08x\n",
 		b_status, ao_mite_status);
 
@@ -965,7 +965,7 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 		a4l_err(dev,
 			"ni_mio_common: interrupt: "
 			"AO FIFO underrun status=0x%04x status2=0x%04x\n",
-			b_status, 
+			b_status,
 			devpriv->stc_readw(dev, AO_Status_2_Register));
 		a4l_buf_evt(subd, A4L_BUF_ERROR);
 	}
@@ -973,7 +973,7 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 	if (b_status & AO_BC_TC_St) {
 		a4l_dbg(1, drv_dbg, dev,
 			"ni_mio_common: interrupt: "
-			"AO BC_TC status=0x%04x status2=0x%04x\n", 
+			"AO BC_TC status=0x%04x status2=0x%04x\n",
 			b_status, devpriv->stc_readw(dev, AO_Status_2_Register));
 		a4l_buf_evt(subd, A4L_BUF_EOA);
 	}
@@ -989,11 +989,11 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 		mite_handle_b_linkc(subd);
 	}
 
-	if (ao_mite_status & 
+	if (ao_mite_status &
 	    ~(CHSR_INT | CHSR_LINKC | CHSR_DONE | CHSR_MRDY |
 	      CHSR_DRDY | CHSR_DRQ1 | CHSR_DRQ0 | CHSR_ERROR |
 	      CHSR_SABORT | CHSR_STOPS | CHSR_XFERR | CHSR_LxERR_mask)) {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"unknown mite interrupt, ack! (ao_mite_status=%08x)\n",
 			 ao_mite_status);
 		a4l_buf_evt(subd, A4L_BUF_ERROR);
@@ -1226,8 +1226,8 @@ static void ni_ai_fifo_read(a4l_subd_t *subd, int n)
 			devpriv->ai_fifo_buffer[i] =
 				ni_readw(ADC_FIFO_Data_Register);
 		}
-		a4l_buf_put(subd, 
-			    devpriv->ai_fifo_buffer, 
+		a4l_buf_put(subd,
+			    devpriv->ai_fifo_buffer,
 			    n * sizeof(devpriv->ai_fifo_buffer[0]));
 	}
 }
@@ -1263,11 +1263,11 @@ static int ni_ai_drain_dma(a4l_subd_t *subd)
 			a4l_udelay(5);
 		}
 		if (i == timeout) {
-			a4l_info(dev, 
+			a4l_info(dev,
 				 "ni_mio_common: "
 				 "wait for dma drain timed out\n");
 
-			a4l_info(dev, 
+			a4l_info(dev,
 				 "mite_bytes_in_transit=%i, "
 				 "AI_Status1_Register=0x%x\n",
 				 mite_bytes_in_transit(devpriv->ai_mite_chan),
@@ -1341,8 +1341,8 @@ static void ni_handle_fifo_dregs(a4l_subd_t *subd)
 				devpriv->ai_fifo_buffer[i] =
 					ni_readw(ADC_FIFO_Data_Register);
 			}
-			a4l_buf_put(subd, 
-				    devpriv->ai_fifo_buffer, 
+			a4l_buf_put(subd,
+				    devpriv->ai_fifo_buffer,
 				    i * sizeof(devpriv->ai_fifo_buffer[0]));
 		}
 	}
@@ -1513,19 +1513,19 @@ static int ni_cdo_setup_MITE_dma(a4l_subd_t *subd)
 	err = mite_buf_change(devpriv->cdo_mite_chan->ring, subd);
 	if (err < 0)
 		return err;
-	
+
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 
 	/* This test should be useless but one never knows */
 	if (devpriv->cdo_mite_chan) {
 		/* Configure the DMA transfer */
 		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
-		mite_dma_arm(devpriv->cdo_mite_chan);	
-	} else 
+		mite_dma_arm(devpriv->cdo_mite_chan);
+	} else
 		err = -EIO;
 
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
-	
+
 	return err;
 }
 
@@ -1611,9 +1611,9 @@ static int ni_ai_reset(a4l_subd_t *subd)
 	 */
 
 	/* clear interrupts */
-	devpriv->stc_writew(dev, AI_SC_TC_Error_Confirm | AI_START_Interrupt_Ack | 
-			    AI_START2_Interrupt_Ack | AI_START1_Interrupt_Ack | 
-			    AI_SC_TC_Interrupt_Ack | AI_Error_Interrupt_Ack | 
+	devpriv->stc_writew(dev, AI_SC_TC_Error_Confirm | AI_START_Interrupt_Ack |
+			    AI_START2_Interrupt_Ack | AI_START1_Interrupt_Ack |
+			    AI_SC_TC_Interrupt_Ack | AI_Error_Interrupt_Ack |
 			    AI_STOP_Interrupt_Ack, Interrupt_A_Ack_Register);
 
 	devpriv->stc_writew(dev, AI_Configuration_End, Joint_Reset_Register);
@@ -1625,7 +1625,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	a4l_dev_t *dev = subd->dev;
 	const unsigned int mask = (1 << boardtype.adbits) - 1;
-	int i, n;	
+	int i, n;
 	unsigned int signbits;
 	unsigned short d;
 	unsigned long dl;
@@ -1662,7 +1662,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 				}
 			}
 			if (i == NI_TIMEOUT) {
-				a4l_warn(dev, 
+				a4l_warn(dev,
 					 "ni_mio_common: "
 					 "timeout in 611x ni_ai_insn_read\n");
 				return -ETIME;
@@ -1675,8 +1675,8 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			devpriv->stc_writew(dev, AI_CONVERT_Pulse,
 					    AI_Command_1_Register);
 
-			/* The 6143 has 32-bit FIFOs. 
-			   You need to strobe a bit to move a single 
+			/* The 6143 has 32-bit FIFOs.
+			   You need to strobe a bit to move a single
 			   16bit stranded sample into the FIFO */
 			dl = 0;
 			for (i = 0; i < NI_TIMEOUT; i++) {
@@ -1705,7 +1705,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 					break;
 			}
 			if (i == NI_TIMEOUT) {
-				a4l_warn(dev, 
+				a4l_warn(dev,
 					 "ni_mio_common: "
 					 "timeout in ni_ai_insn_read\n");
 				return -ETIME;
@@ -1715,7 +1715,7 @@ static int ni_ai_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			} else {
 				d = ni_readw(ADC_FIFO_Data_Register);
 				/* subtle: needs to be short addition */
-				d += signbits;	
+				d += signbits;
 				data[n] = d;
 			}
 		}
@@ -1740,7 +1740,7 @@ void ni_prime_channelgain_list(a4l_dev_t *dev)
 }
 
 static void ni_m_series_load_channelgain_list(a4l_dev_t *dev,
-					      unsigned int n_chan, 
+					      unsigned int n_chan,
 					      unsigned int *list)
 {
 	unsigned int chan, range, aref;
@@ -1844,7 +1844,7 @@ static void ni_m_series_load_channelgain_list(a4l_dev_t *dev,
  *   bits 0-2: channel
  *       valid channels are 0-3
  */
-static void ni_load_channelgain_list(a4l_dev_t *dev, 
+static void ni_load_channelgain_list(a4l_dev_t *dev,
 				     unsigned int n_chan, unsigned int *list)
 {
 	unsigned int chan, range, aref;
@@ -1972,7 +1972,7 @@ static void ni_load_channelgain_list(a4l_dev_t *dev,
 	}
 }
 
-static int ni_ns_to_timer(const a4l_dev_t *dev, 
+static int ni_ns_to_timer(const a4l_dev_t *dev,
 			  unsigned int nanosec, int round_mode)
 {
 	int divider;
@@ -1996,7 +1996,7 @@ static unsigned int ni_timer_to_ns(const a4l_dev_t *dev, int timer)
 	return devpriv->clock_ns * (timer + 1);
 }
 
-static unsigned int ni_min_ai_scan_period_ns(a4l_dev_t *dev, 
+static unsigned int ni_min_ai_scan_period_ns(a4l_dev_t *dev,
 					     unsigned int num_channels)
 {
 	switch (boardtype.reg_type) {
@@ -2036,17 +2036,17 @@ int ni_ai_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 
 static int ni_ai_cmdtest(a4l_subd_t *subd, a4l_cmd_t * cmd)
 {
-	a4l_dev_t *dev = subd->dev;	
+	a4l_dev_t *dev = subd->dev;
 	int tmp;
 
 	/* Make sure trigger sources are trivially valid */
 
 	if ((boardtype.reg_type != ni_reg_611x) &&
-	    (boardtype.reg_type != ni_reg_6143) && 
-	    (boardtype.reg_type != ni_reg_622x) && 
+	    (boardtype.reg_type != ni_reg_6143) &&
+	    (boardtype.reg_type != ni_reg_622x) &&
 	    (cmd->scan_begin_src == TRIG_NOW))
 		return -EINVAL;
-	
+
 	/* Make sure arguments are trivially compatible */
 
 	if (cmd->start_src == TRIG_EXT) {
@@ -2278,7 +2278,7 @@ static int ni_ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		if (stop_count == 0) {
 			devpriv->ai_cmd2 |= AI_End_On_End_Of_Scan;
 			interrupt_a_enable |= AI_STOP_Interrupt_Enable;
-			/* this is required to get the last sample 
+			/* this is required to get the last sample
 			   for nb_chan > 1, not sure why */
 			if (cmd->nb_chan > 1)
 				start_stop_select |=
@@ -2438,10 +2438,10 @@ static int ni_ai_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		}
 
 		/* Clear interrupts */
-		devpriv->stc_writew(dev, 
-				    AI_Error_Interrupt_Ack | AI_STOP_Interrupt_Ack | 
-				    AI_START_Interrupt_Ack | AI_START2_Interrupt_Ack | 
-				    AI_START1_Interrupt_Ack | AI_SC_TC_Interrupt_Ack | 
+		devpriv->stc_writew(dev,
+				    AI_Error_Interrupt_Ack | AI_STOP_Interrupt_Ack |
+				    AI_START_Interrupt_Ack | AI_START2_Interrupt_Ack |
+				    AI_START1_Interrupt_Ack | AI_SC_TC_Interrupt_Ack |
 				    AI_SC_TC_Error_Confirm, Interrupt_A_Ack_Register);	/* clear interrupts */
 
 		ni_set_bits(dev, Interrupt_A_Enable_Register,
@@ -2558,7 +2558,7 @@ int ni_ai_config_analog_trig(a4l_subd_t *subd, a4l_kinsn_t *insn)
 			/* swap order */
 			a = data[4];
 			b = data[3];
-			modebits = ((data[1] & 0xf) << 4) | 
+			modebits = ((data[1] & 0xf) << 4) |
 				((data[1] & 0xf0) >> 4);
 		}
 		devpriv->atrig_low = a;
@@ -2684,7 +2684,7 @@ static void ni_ao_munge(a4l_subd_t *subd, void *buf, unsigned long size)
 }
 
 static int ni_m_series_ao_config_chan_descs(a4l_subd_t *subd,
-					    unsigned int chanspec[], 
+					    unsigned int chanspec[],
 					    unsigned int n_chans, int timed)
 {
 	unsigned int range;
@@ -2701,14 +2701,14 @@ static int ni_m_series_ao_config_chan_descs(a4l_subd_t *subd,
 		int idx;
 		chan = CR_CHAN(chanspec[i]);
 		range = CR_RNG(chanspec[i]);
-		
+
 		/* TODO: this a huge hack!
 		   Something is missing in the kernel API. We must
 		   allow access on the proper range descriptor */
-		idx =  (subd->rng_desc->mode != 
+		idx =  (subd->rng_desc->mode !=
 			A4L_RNG_GLOBAL_RNGDESC) ? chan : 0;
 		rng = &(subd->rng_desc->rngtabs[idx]->rngs[range]);
-		
+
 		invert = 0;
 		conf = 0;
 		switch (rng->max - rng->min) {
@@ -2758,8 +2758,8 @@ static int ni_m_series_ao_config_chan_descs(a4l_subd_t *subd,
 	return invert;
 }
 
-static int ni_old_ao_config_chan_descs(a4l_subd_t *subd, 
-				       unsigned int chanspec[], 
+static int ni_old_ao_config_chan_descs(a4l_subd_t *subd,
+				       unsigned int chanspec[],
 				       unsigned int n_chans)
 {
 	a4l_dev_t *dev = subd->dev;
@@ -2803,14 +2803,14 @@ static int ni_old_ao_config_chan_descs(a4l_subd_t *subd,
 }
 
 static int ni_ao_config_chan_descs(a4l_subd_t *subd,
-				   unsigned int chanspec[], 
+				   unsigned int chanspec[],
 				   unsigned int n_chans, int timed)
 {
 	a4l_dev_t *dev = subd->dev;
 
 	if (boardtype.reg_type & ni_reg_m_series_mask)
-		return ni_m_series_ao_config_chan_descs(subd, 
-							chanspec, 
+		return ni_m_series_ao_config_chan_descs(subd,
+							chanspec,
 							n_chans, timed);
 	else
 		return ni_old_ao_config_chan_descs(subd, chanspec, n_chans);
@@ -2833,7 +2833,7 @@ int ni_ao_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	uint16_t *data = (uint16_t *)insn->data;
 	unsigned int invert;
 
-	invert = ni_ao_config_chan_descs(subd, 
+	invert = ni_ao_config_chan_descs(subd,
 					 &insn->chan_desc, 1, 0);
 
 	devpriv->ao[chan] = data[0];
@@ -2913,7 +2913,7 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 			break;
 	}
 	if (i == timeout) {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"ni_ao_inttrig: timed out "
 			"waiting for AO_TMRDACWRs_In_Progress_St to clear");
 		return -EIO;
@@ -2926,13 +2926,13 @@ int ni_ao_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	ni_set_bits(dev, Interrupt_B_Enable_Register, interrupt_b_bits, 1);
 
 	devpriv->stc_writew(dev,
-			    devpriv->ao_cmd1 | 
-			    AO_UI_Arm | AO_UC_Arm | 
-			    AO_BC_Arm | AO_DAC1_Update_Mode | 
+			    devpriv->ao_cmd1 |
+			    AO_UI_Arm | AO_UC_Arm |
+			    AO_BC_Arm | AO_DAC1_Update_Mode |
 			    AO_DAC0_Update_Mode,
 			    AO_Command_1_Register);
 
-	devpriv->stc_writew(dev, 
+	devpriv->stc_writew(dev,
 			    devpriv->ao_cmd2 | AO_START1_Pulse,
 			    AO_Command_2_Register);
 
@@ -3146,7 +3146,7 @@ int ni_ao_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 			cmd->scan_begin_arg = boardtype.ao_speed;
 			return -EINVAL;
 		}
-		if (cmd->scan_begin_arg > devpriv->clock_ns * 0xffffff) {	
+		if (cmd->scan_begin_arg > devpriv->clock_ns * 0xffffff) {
 			/* XXX check */
 			cmd->scan_begin_arg = devpriv->clock_ns * 0xffffff;
 			return -EINVAL;
@@ -3177,9 +3177,9 @@ int ni_ao_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 
 	/* step 4: fix up any arguments */
 	if (cmd->scan_begin_src == TRIG_TIMER) {
-		
-		if(cmd->scan_begin_arg != 
-		   ni_timer_to_ns(dev, 
+
+		if(cmd->scan_begin_arg !=
+		   ni_timer_to_ns(dev,
 				  ni_ns_to_timer(dev,
 						 cmd->scan_begin_arg,
 						 cmd->flags & TRIG_ROUND_MASK)))
@@ -3192,7 +3192,7 @@ int ni_ao_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 int ni_ao_reset(a4l_subd_t *subd)
 {
 	a4l_dev_t *dev = subd->dev;
-	
+
 	ni_release_ao_mite_channel(dev);
 
 	devpriv->stc_writew(dev, AO_Configuration_Start, Joint_Reset_Register);
@@ -3250,8 +3250,8 @@ int ni_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->io_bits &= ~(1 << CR_CHAN(insn->chan_desc));
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (devpriv->io_bits & 
-			   (1 << CR_CHAN(insn->chan_desc))) ? 
+		data[1] = (devpriv->io_bits &
+			   (1 << CR_CHAN(insn->chan_desc))) ?
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
@@ -3272,8 +3272,8 @@ int ni_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
-		 "ni_dio_insn_bits_8() mask=0x%x bits=0x%x\n", 
+	a4l_info(dev,
+		 "ni_dio_insn_bits_8() mask=0x%x bits=0x%x\n",
 		 data[0], data[1]);
 #endif
 
@@ -3290,15 +3290,15 @@ int ni_dio_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->dio_state &= ~data[0];
 		devpriv->dio_state |= (data[0] & data[1]);
 		devpriv->dio_output &= ~DIO_Parallel_Data_Mask;
-		devpriv->dio_output |= 
+		devpriv->dio_output |=
 			DIO_Parallel_Data_Out(devpriv->dio_state);
 		devpriv->stc_writew(dev, devpriv->dio_output,
 				    DIO_Output_Register);
 	}
 
-	data[1] = (uint8_t) 
+	data[1] = (uint8_t)
 		devpriv->stc_readw(dev, DIO_Parallel_Input_Register);
-	
+
 	return 0;
 }
 
@@ -3308,7 +3308,7 @@ int ni_m_series_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	unsigned int *data = (unsigned int *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
+	a4l_info(dev,
 		 "ni_m_series_dio_insn_config() chan=%d io=%d\n",
 		 CR_CHAN(insn->chan_desc), data[0]);
 #endif
@@ -3320,8 +3320,8 @@ int ni_m_series_dio_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		devpriv->io_bits &= ~(1 << CR_CHAN(insn->chan_desc));
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (devpriv->io_bits & 
-			   (1 << CR_CHAN(insn->chan_desc))) ? 
+		data[1] = (devpriv->io_bits &
+			   (1 << CR_CHAN(insn->chan_desc))) ?
 			A4L_OUTPUT : A4L_INPUT;
 		return 0;
 		break;
@@ -3340,8 +3340,8 @@ int ni_m_series_dio_insn_bits_8(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	uint8_t *data = (uint8_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
-		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
+	a4l_info(dev,
+		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n",
 		 data[0], data[1]);
 #endif
 
@@ -3365,8 +3365,8 @@ int ni_m_series_dio_insn_bits_32(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	uint32_t *data = (uint32_t *)insn->data;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
-		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n", 
+	a4l_info(dev,
+		 "ni_m_series_dio_insn_bits() mask=0x%x bits=0x%x\n",
 		 data[0], data[1]);
 #endif
 
@@ -3407,7 +3407,7 @@ int ni_cdio_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		return -EINVAL;
 	}
 
-	if ((cmd->scan_begin_arg & 
+	if ((cmd->scan_begin_arg &
 	     PACK_FLAGS(CDO_Sample_Source_Select_Mask, 0, 0, CR_INVERT)) !=
 	    cmd->scan_begin_arg)
 		return -EINVAL;
@@ -3446,7 +3446,7 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	switch (cmd->scan_begin_src) {
 	case TRIG_EXT:
 		cdo_mode_bits |=
-			CR_CHAN(cmd->scan_begin_arg) & 
+			CR_CHAN(cmd->scan_begin_arg) &
 			CDO_Sample_Source_Select_Mask;
 		break;
 	default:
@@ -3462,12 +3462,12 @@ int ni_cdio_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 		ni_writel(CDO_SW_Update_Bit, M_Offset_CDIO_Command);
 		ni_writel(devpriv->io_bits, M_Offset_CDO_Mask_Enable);
 	} else {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"ni_cdio_cmd: attempted to run digital "
 			"output command with no lines configured as outputs");
 		return -EIO;
 	}
-	
+
 	return 0;
 }
 
@@ -3499,7 +3499,7 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 	err = ni_cdo_setup_MITE_dma(subd);
 	if (err < 0)
 		return err;
- 
+
 	/* wait for dma to fill output fifo */
 	for (i = 0; i < timeout; ++i) {
 		if (ni_readl(M_Offset_CDIO_Status) & CDO_FIFO_Full_Bit)
@@ -3513,9 +3513,9 @@ int ni_cdo_inttrig(a4l_subd_t *subd, lsampl_t trignum)
 		return -EIO;
 	}
 
-	ni_writel(CDO_Arm_Bit | 
+	ni_writel(CDO_Arm_Bit |
 		  CDO_Error_Interrupt_Enable_Set_Bit |
-		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit, 
+		  CDO_Empty_FIFO_Interrupt_Enable_Set_Bit,
 		  M_Offset_CDIO_Command);
 
 	return 0;
@@ -3568,7 +3568,7 @@ static int ni_serial_hw_readwrite8(a4l_dev_t * dev,
 	int err = 0, count = 20;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
+	a4l_info(dev,
 		 "ni_serial_hw_readwrite8: outputting 0x%x\n", data_out);
 #endif
 
@@ -3594,7 +3594,7 @@ static int ni_serial_hw_readwrite8(a4l_dev_t * dev,
 		/* Delay one bit per loop */
 		a4l_udelay((devpriv->serial_interval_ns + 999) / 1000);
 		if (--count < 0) {
-			a4l_err(dev, 
+			a4l_err(dev,
 				"ni_serial_hw_readwrite8: "
 				"SPI serial I/O didn't finish in time!\n");
 			err = -ETIME;
@@ -3609,8 +3609,8 @@ static int ni_serial_hw_readwrite8(a4l_dev_t * dev,
 	if (data_in != NULL) {
 		*data_in = devpriv->stc_readw(dev, DIO_Serial_Input_Register);
 #ifdef CONFIG_DEBUG_DIO
-		a4l_info(dev, 
-			 "ni_serial_hw_readwrite8: inputted 0x%x\n", 
+		a4l_info(dev,
+			 "ni_serial_hw_readwrite8: inputted 0x%x\n",
 			 *data_in);
 #endif
 	}
@@ -3627,7 +3627,7 @@ static int ni_serial_sw_readwrite8(a4l_dev_t * dev,
 	unsigned char mask, input = 0;
 
 #ifdef CONFIG_DEBUG_DIO
-	a4l_info(dev, 
+	a4l_info(dev,
 		 "ni_serial_sw_readwrite8: outputting 0x%x\n", data_out);
 #endif
 
@@ -3753,7 +3753,7 @@ int ni_serial_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		} else if (devpriv->serial_interval_ns > 0) {
 			err = ni_serial_sw_readwrite8(dev, byte_out, &byte_in);
 		} else {
-			a4l_err(dev, 
+			a4l_err(dev,
 				"ni_serial_insn_config: serial disabled!\n");
 			return -EINVAL;
 		}
@@ -3886,7 +3886,7 @@ static unsigned int ni_gpct_to_stc_register(enum ni_gpct_register reg)
 	return stc_register;
 }
 
-static void ni_gpct_write_register(struct ni_gpct *counter, 
+static void ni_gpct_write_register(struct ni_gpct *counter,
 				   unsigned int bits, enum ni_gpct_register reg)
 {
 	a4l_dev_t *dev = counter->counter_dev->dev;
@@ -3988,7 +3988,7 @@ static unsigned int ni_gpct_read_register(struct ni_gpct *counter,
 
 int ni_freq_out_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
-	a4l_dev_t *dev = subd->dev;	
+	a4l_dev_t *dev = subd->dev;
 	uint8_t *data = (uint8_t *)insn->data;
 
 	data[0] = FOUT_Divider(devpriv->clock_and_fout);
@@ -4031,8 +4031,8 @@ static int ni_set_freq_out_clock(a4l_dev_t * dev, lsampl_t clock_source)
 	return 0;
 }
 
-static void ni_get_freq_out_clock(a4l_dev_t * dev, 
-				  unsigned int * clock_source, 
+static void ni_get_freq_out_clock(a4l_dev_t * dev,
+				  unsigned int * clock_source,
 				  unsigned int * clock_period_ns)
 {
 	if (devpriv->clock_and_fout & FOUT_Timebase_Select) {
@@ -4393,11 +4393,11 @@ static void caldac_setup(a4l_dev_t *dev, a4l_subd_t *subd)
 			a4l_err(dev, "BUG! MAX_N_CALDACS too small\n");
 		}
 
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
 					  n_chans * sizeof(a4l_chan_t), GFP_KERNEL);
 
-		memset(subd->chan_desc, 
-		       0, 
+		memset(subd->chan_desc,
+		       0,
 		       sizeof(a4l_chdesc_t) + n_chans * sizeof(a4l_chan_t));
 
 		subd->chan_desc->length = n_chans;
@@ -4407,8 +4407,8 @@ static void caldac_setup(a4l_dev_t *dev, a4l_subd_t *subd)
 		for (i = 0; i < n_dacs; i++) {
 			type = boardtype.caldac[i];
 			for (j = 0; j < caldacs[type].n_chans; j++) {
-				
-				subd->chan_desc->chans[chan].nb_bits = 
+
+				subd->chan_desc->chans[chan].nb_bits =
 					caldacs[type].n_bits;
 
 				chan++;
@@ -4416,17 +4416,17 @@ static void caldac_setup(a4l_dev_t *dev, a4l_subd_t *subd)
 		}
 
 		for (chan = 0; chan < n_chans; chan++) {
-			unsigned long tmp = 
+			unsigned long tmp =
 				(1 << subd->chan_desc->chans[chan].nb_bits) / 2;
 			ni_write_caldac(dev, chan, tmp);
 		}
 	} else {
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
 					  sizeof(a4l_chan_t), GFP_KERNEL);
-		
-		memset(subd->chan_desc, 
+
+		memset(subd->chan_desc,
 		       0, sizeof(a4l_chdesc_t) + sizeof(a4l_chan_t));
-		
+
 		subd->chan_desc->length = n_chans;
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 
@@ -4435,8 +4435,8 @@ static void caldac_setup(a4l_dev_t *dev, a4l_subd_t *subd)
 		subd->chan_desc->chans[0].nb_bits = caldacs[type].n_bits;
 
 		for (chan = 0; chan < n_chans; chan++)
-			ni_write_caldac(dev, 
-					chan, 
+			ni_write_caldac(dev,
+					chan,
 					(1 << subd->chan_desc->chans[0].nb_bits) / 2);
 	}
 }
@@ -4488,7 +4488,7 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 	struct mite_dma_descriptor_ring *ring;
 
-	retval = ni_request_gpct_mite_channel(dev, 
+	retval = ni_request_gpct_mite_channel(dev,
 					      counter->counter_index,
 					      A4L_INPUT);
 	if (retval) {
@@ -4542,7 +4542,7 @@ static int ni_gpct_cancel(a4l_subd_t *subd)
  *
  */
 
-static int ni_m_series_set_pfi_routing(a4l_dev_t *dev, 
+static int ni_m_series_set_pfi_routing(a4l_dev_t *dev,
 				       unsigned int chan, unsigned int source)
 {
 	unsigned int pfi_reg_index;
@@ -4561,7 +4561,7 @@ static int ni_m_series_set_pfi_routing(a4l_dev_t *dev,
 	return 2;
 }
 
-static unsigned int ni_old_get_pfi_routing(a4l_dev_t *dev, 
+static unsigned int ni_old_get_pfi_routing(a4l_dev_t *dev,
 					   unsigned int chan)
 {
 	/* pre-m-series boards have fixed signals on pfi pins */
@@ -4598,14 +4598,14 @@ static unsigned int ni_old_get_pfi_routing(a4l_dev_t *dev,
 		return NI_PFI_OUTPUT_G_GATE0;
 		break;
 	default:
-		__a4l_err("%s: bug, unhandled case in switch.\n", 
+		__a4l_err("%s: bug, unhandled case in switch.\n",
 			  __FUNCTION__);
 		break;
 	}
 	return 0;
 }
 
-static int ni_old_set_pfi_routing(a4l_dev_t *dev, 
+static int ni_old_set_pfi_routing(a4l_dev_t *dev,
 				  unsigned int chan, unsigned int source)
 {
 	/* pre-m-series boards have fixed signals on pfi pins */
@@ -4615,7 +4615,7 @@ static int ni_old_set_pfi_routing(a4l_dev_t *dev,
 	return 2;
 }
 
-static int ni_set_pfi_routing(a4l_dev_t *dev, 
+static int ni_set_pfi_routing(a4l_dev_t *dev,
 			      unsigned int chan, unsigned int source)
 {
 	if (boardtype.reg_type & ni_reg_m_series_mask)
@@ -4624,7 +4624,7 @@ static int ni_set_pfi_routing(a4l_dev_t *dev,
 		return ni_old_set_pfi_routing(dev, chan, source);
 }
 
-static unsigned int ni_m_series_get_pfi_routing(a4l_dev_t *dev, 
+static unsigned int ni_m_series_get_pfi_routing(a4l_dev_t *dev,
 						unsigned int chan)
 {
 	const unsigned int array_offset = chan / 3;
@@ -4640,7 +4640,7 @@ static unsigned int ni_get_pfi_routing(a4l_dev_t *dev, unsigned int chan)
 		return ni_old_get_pfi_routing(dev, chan);
 }
 
-static int ni_config_filter(a4l_dev_t *dev, 
+static int ni_config_filter(a4l_dev_t *dev,
 			    unsigned int pfi_channel, int filter)
 {
 	unsigned int bits;
@@ -4671,7 +4671,7 @@ static int ni_pfi_insn_bits(a4l_subd_t *subd, a4l_kinsn_t *insn)
 }
 
 static int ni_pfi_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
-{	
+{
 	a4l_dev_t *dev = subd->dev;
 	unsigned int chan, *data = (unsigned int *)insn->data;
 
@@ -4688,7 +4688,7 @@ static int ni_pfi_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 		ni_set_bits(dev, IO_Bidirection_Pin_Register, 1 << chan, 0);
 		break;
 	case A4L_INSN_CONFIG_DIO_QUERY:
-		data[1] = (devpriv->io_bidirection_pin_reg & (1 << chan)) ? 
+		data[1] = (devpriv->io_bidirection_pin_reg & (1 << chan)) ?
 			A4L_OUTPUT :	A4L_INPUT;
 		return 0;
 		break;
@@ -4716,7 +4716,7 @@ static int ni_pfi_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 /* Find best multiplier/divider to try and get the PLL running at 80 MHz
  * given an arbitrary frequency input clock */
 static int ni_mseries_get_pll_parameters(unsigned int reference_period_ns,
-					 unsigned int *freq_divider, 
+					 unsigned int *freq_divider,
 					 unsigned int *freq_multiplier,
 					 unsigned int *actual_period_ns)
 {
@@ -4759,8 +4759,8 @@ static int ni_mseries_get_pll_parameters(unsigned int reference_period_ns,
 	return 0;
 }
 
-static int ni_mseries_set_pll_master_clock(a4l_dev_t * dev, 
-					   unsigned int source, 
+static int ni_mseries_set_pll_master_clock(a4l_dev_t * dev,
+					   unsigned int source,
 					   unsigned int period_ns)
 {
 	static const unsigned min_period_ns = 50;
@@ -4779,7 +4779,7 @@ static int ni_mseries_set_pll_master_clock(a4l_dev_t * dev,
 		a4l_err(dev,
 			"%s: you must specify an input clock frequency "
 			"between %i and %i nanosec "
-			"for the phased-lock loop.\n", 
+			"for the phased-lock loop.\n",
 			__FUNCTION__, min_period_ns, max_period_ns);
 		return -EINVAL;
 	}
@@ -4847,7 +4847,7 @@ static int ni_mseries_set_pll_master_clock(a4l_dev_t * dev,
 		udelay(1);
 	}
 	if (i == timeout) {
-		a4l_err(dev, 
+		a4l_err(dev,
 			"%s: timed out waiting for PLL to lock "
 			"to reference clock source %i with period %i ns.\n",
 			__FUNCTION__, source, period_ns);
@@ -4856,7 +4856,7 @@ static int ni_mseries_set_pll_master_clock(a4l_dev_t * dev,
 	return 3;
 }
 
-static int ni_set_master_clock(a4l_dev_t *dev, 
+static int ni_set_master_clock(a4l_dev_t *dev,
 			       unsigned int source, unsigned int period_ns)
 {
 	if (source == NI_MIO_INTERNAL_CLOCK) {
@@ -4914,15 +4914,15 @@ static void ni_rtsi_init(a4l_dev_t * dev)
 
 	/* Default internal lines routing to RTSI bus lines */
 	devpriv->rtsi_trig_a_output_reg =
-		RTSI_Trig_Output_Bits(0, NI_RTSI_OUTPUT_ADR_START1) | 
-		RTSI_Trig_Output_Bits(1, NI_RTSI_OUTPUT_ADR_START2) | 
-		RTSI_Trig_Output_Bits(2, NI_RTSI_OUTPUT_SCLKG) | 
+		RTSI_Trig_Output_Bits(0, NI_RTSI_OUTPUT_ADR_START1) |
+		RTSI_Trig_Output_Bits(1, NI_RTSI_OUTPUT_ADR_START2) |
+		RTSI_Trig_Output_Bits(2, NI_RTSI_OUTPUT_SCLKG) |
 		RTSI_Trig_Output_Bits(3, NI_RTSI_OUTPUT_DACUPDN);
 	devpriv->stc_writew(dev, devpriv->rtsi_trig_a_output_reg,
 			    RTSI_Trig_A_Output_Register);
 	devpriv->rtsi_trig_b_output_reg =
-		RTSI_Trig_Output_Bits(4, NI_RTSI_OUTPUT_DA_START1) | 
-		RTSI_Trig_Output_Bits(5, NI_RTSI_OUTPUT_G_SRC0) | 
+		RTSI_Trig_Output_Bits(4, NI_RTSI_OUTPUT_DA_START1) |
+		RTSI_Trig_Output_Bits(5, NI_RTSI_OUTPUT_G_SRC0) |
 		RTSI_Trig_Output_Bits(6, NI_RTSI_OUTPUT_G_GATE0);
 
 	if (boardtype.reg_type & ni_reg_m_series_mask)
@@ -4942,7 +4942,7 @@ int ni_E_init(a4l_dev_t *dev)
 		a4l_err(dev, "bug! boardtype.n_aochan > MAX_N_AO_CHAN\n");
 		return -EINVAL;
 	}
-	
+
 	/* analog input subdevice */
 
 	a4l_dbg(1, drv_dbg, dev, "mio_common: starting attach procedure...\n");
@@ -4955,13 +4955,13 @@ int ni_E_init(a4l_dev_t *dev)
 
 	if (boardtype.n_adchan) {
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: AI: %d channels\n", boardtype.n_adchan);
 
 		subd->flags = A4L_SUBD_AI | A4L_SUBD_CMD | A4L_SUBD_MMAP;
 		subd->rng_desc = ni_range_lkup[boardtype.gainlkup];
 
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
 					  sizeof(a4l_chan_t), GFP_KERNEL);
 
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
@@ -4979,12 +4979,12 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->cancel = ni_ai_reset;
 		subd->trigger = ni_ai_inttrig;
 
-		subd->munge = (boardtype.adbits > 16) ? 
+		subd->munge = (boardtype.adbits > 16) ?
 			ni_ai_munge32 : ni_ai_munge16;
 
 		subd->cmd_mask = &mio_ai_cmd_mask;
 	} else {
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: AI subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
 	}
@@ -5004,11 +5004,11 @@ int ni_E_init(a4l_dev_t *dev)
 	/* analog output subdevice */
 	if (boardtype.n_aochan) {
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: AO: %d channels\n", boardtype.n_aochan);
 
 		subd->flags = A4L_SUBD_AO;
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
 					  sizeof(a4l_chan_t), GFP_KERNEL);
 
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
@@ -5023,7 +5023,7 @@ int ni_E_init(a4l_dev_t *dev)
 			subd->insn_write = &ni_ao_insn_write_671x;
 		else
 			subd->insn_write = &ni_ao_insn_write;
-		
+
 
 		if (boardtype.ao_fifo_depth) {
 			subd->flags |= A4L_SUBD_CMD | A4L_SUBD_MMAP;
@@ -5038,7 +5038,7 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->cancel = &ni_ao_reset;
 
 	} else {
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: AO subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
 	}
@@ -5048,7 +5048,7 @@ int ni_E_init(a4l_dev_t *dev)
 		return ret;
 
 	a4l_dbg(1, drv_dbg, dev, "mio_common: AO subdevice registered\n");
-	
+
 	if ((boardtype.reg_type & ni_reg_67xx_mask))
 		init_ao_67xx(dev);
 
@@ -5059,13 +5059,13 @@ int ni_E_init(a4l_dev_t *dev)
 		return -ENOMEM;
 
 	a4l_dbg(1, drv_dbg, dev, "mio_common: registering DIO subdevice...\n");
-	a4l_dbg(1, drv_dbg, dev, 
-		"mio_common: DIO: %d channels\n", 
+	a4l_dbg(1, drv_dbg, dev,
+		"mio_common: DIO: %d channels\n",
 		boardtype.num_p0_dio_channels);
 
 	subd->flags = A4L_SUBD_DIO;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
 				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = boardtype.num_p0_dio_channels;
@@ -5087,7 +5087,7 @@ int ni_E_init(a4l_dev_t *dev)
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: DIO: command feature available\n");
 
 		subd->flags |= A4L_SUBD_CMD;
@@ -5127,7 +5127,7 @@ int ni_E_init(a4l_dev_t *dev)
 		devpriv->subd_8255.cb_func = ni_8255_callback;
 		subdev_8255_init(subd);
 	} else {
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: 8255 subdevice not present\n");
 		subd->flags = A4L_SUBD_UNUSED;
 	}
@@ -5159,18 +5159,18 @@ int ni_E_init(a4l_dev_t *dev)
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
 		/* internal PWM analog output
 		   used for AI nonlinearity calibration */
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: calib: M series calibration");
 		subd->insn_config = ni_m_series_pwm_config;
 		ni_writel(0x0, M_Offset_Cal_PWM);
 	} else if (boardtype.reg_type == ni_reg_6143) {
-		/* internal PWM analog output 
+		/* internal PWM analog output
 		   used for AI nonlinearity calibration */
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: calib: 6143 calibration");
 		subd->insn_config = ni_6143_pwm_config;
 	} else {
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: calib: common calibration");
 		subd->insn_read = ni_calib_insn_read;
 		subd->insn_write = ni_calib_insn_write;
@@ -5188,13 +5188,13 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: registering EEPROM subdevice...\n");
 
 	subd->flags = A4L_SUBD_MEMORY;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-				  sizeof(a4l_chan_t), GFP_KERNEL);	
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->chans[0].flags = 0;
 	subd->chan_desc->chans[0].nb_bits = 8;
@@ -5207,7 +5207,7 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->insn_read = ni_eeprom_insn_read;
 	}
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: EEPROM: size = %lu\n", subd->chan_desc->length);
 
 	ret = a4l_add_subd(dev, subd);
@@ -5221,13 +5221,13 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: registering PFI(DIO) subdevice...\n");
 
 	subd->flags = A4L_SUBD_DIO;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-				  sizeof(a4l_chan_t), GFP_KERNEL);	
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->chans[0].flags = 0;
 	subd->chan_desc->chans[0].nb_bits = 1;
@@ -5243,7 +5243,7 @@ int ni_E_init(a4l_dev_t *dev)
 	} else
 		subd->chan_desc->length = 10;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: PFI: %lu bits...\n", subd->chan_desc->length);
 
 	if (boardtype.reg_type & ni_reg_m_series_mask) {
@@ -5269,8 +5269,8 @@ int ni_E_init(a4l_dev_t *dev)
 
 	if (boardtype.reg_type & ni_reg_67xx_mask) {
 
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-					  sizeof(a4l_chan_t), GFP_KERNEL);	
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+					  sizeof(a4l_chan_t), GFP_KERNEL);
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = boardtype.n_aochan;
 		subd->chan_desc->chans[0].flags = 0;
@@ -5293,13 +5293,13 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: registering serial subdevice...\n");
 
 	subd->flags = A4L_SUBD_SERIAL;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-				  sizeof(a4l_chan_t), GFP_KERNEL);	
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 1;
 	subd->chan_desc->chans[0].flags = 0;
@@ -5328,8 +5328,8 @@ int ni_E_init(a4l_dev_t *dev)
 #else /* TODO: add RTSI subdevice */
 	subd->flags = A4L_SUBD_DIO;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-				  sizeof(a4l_chan_t), GFP_KERNEL);	
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 8;
 	subd->chan_desc->chans[0].flags = 0;
@@ -5362,13 +5362,13 @@ int ni_E_init(a4l_dev_t *dev)
 		if(subd == NULL)
 			return -ENOMEM;
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: registering GPCT[%d] subdevice...\n", j);
 
 		subd->flags = A4L_SUBD_COUNTER;
 
-		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-					  sizeof(a4l_chan_t), GFP_KERNEL);	
+		subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+					  sizeof(a4l_chan_t), GFP_KERNEL);
 		subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 		subd->chan_desc->length = 3;
 		subd->chan_desc->chans[0].flags = 0;
@@ -5378,8 +5378,8 @@ int ni_E_init(a4l_dev_t *dev)
 		else
 			subd->chan_desc->chans[0].nb_bits = 24;
 
-		a4l_dbg(1, drv_dbg, dev, 
-			"mio_common: GPCT[%d]: %lu bits\n", 
+		a4l_dbg(1, drv_dbg, dev,
+			"mio_common: GPCT[%d]: %lu bits\n",
 			j, subd->chan_desc->chans[0].nb_bits);
 
 		subd->insn_read = ni_gpct_insn_read;
@@ -5389,9 +5389,9 @@ int ni_E_init(a4l_dev_t *dev)
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: GPCT[%d]: command feature available\n", j);
-		subd->flags |= A4L_SUBD_CMD;		
+		subd->flags |= A4L_SUBD_CMD;
 		subd->cmd_mask = &ni_tio_cmd_mask;
 		subd->do_cmd = ni_gpct_cmd;
 		subd->do_cmdtest = ni_gpct_cmdtest;
@@ -5406,12 +5406,12 @@ int ni_E_init(a4l_dev_t *dev)
 		devpriv->counter_dev->counters[j] = counter;
 
 		ni_tio_init_counter(counter);
-		
+
 		ret = a4l_add_subd(dev, subd);
 		if(ret != NI_GPCT_SUBDEV(j))
 			return ret;
 
-		a4l_dbg(1, drv_dbg, dev, 
+		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: GCPT[%d] subdevice registered\n", j);
 	}
 
@@ -5420,13 +5420,13 @@ int ni_E_init(a4l_dev_t *dev)
 	if(subd == NULL)
 		return -ENOMEM;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: registering counter subdevice...\n");
 
 	subd->flags = A4L_SUBD_COUNTER;
 
-	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) + 
-				  sizeof(a4l_chan_t), GFP_KERNEL);	
+	subd->chan_desc = kmalloc(sizeof(a4l_chdesc_t) +
+				  sizeof(a4l_chan_t), GFP_KERNEL);
 	subd->chan_desc->mode = A4L_CHAN_GLOBAL_CHANDESC;
 	subd->chan_desc->length = 1;
 	subd->chan_desc->chans[0].flags = 0;
@@ -5440,7 +5440,7 @@ int ni_E_init(a4l_dev_t *dev)
 	if(ret != NI_FREQ_OUT_SUBDEV)
 		return ret;
 
-	a4l_dbg(1, drv_dbg, dev, 
+	a4l_dbg(1, drv_dbg, dev,
 		"mio_common: counter subdevice registered\n");
 
 	a4l_dbg(1, drv_dbg, dev, "mio_common: initializing AI...\n");

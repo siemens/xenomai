@@ -47,7 +47,7 @@ static inline unsigned long xnarch_get_sched_latency (void)
 	 */
 #define __bogomips (current_cpu_data.loops_per_jiffy/(500000/HZ))
 	sched_latency = (__bogomips < 250 ? 17000 :
-                         __bogomips < 2500 ? 4200 :
+			 __bogomips < 2500 ? 4200 :
 			 3500);
 #undef __bogomips
 #endif /* CONFIG_X86_LOCAL_APIC */

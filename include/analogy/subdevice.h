@@ -54,55 +54,55 @@
  * @{
  */
 
-/** 
+/**
  * Unused subdevice
  */
 #define A4L_SUBD_UNUSED (A4L_SUBD_MASK_SPECIAL|0x1)
-/** 
+/**
  * Analog input subdevice
  */
 #define A4L_SUBD_AI (A4L_SUBD_MASK_READ|0x2)
-/** 
+/**
  * Analog output subdevice
  */
 #define A4L_SUBD_AO (A4L_SUBD_MASK_WRITE|0x4)
-/** 
+/**
  * Digital input subdevice
  */
 #define A4L_SUBD_DI (A4L_SUBD_MASK_READ|0x8)
-/** 
+/**
  * Digital output subdevice
  */
 #define A4L_SUBD_DO (A4L_SUBD_MASK_WRITE|0x10)
-/** 
+/**
  * Digital input/output subdevice
  */
 #define A4L_SUBD_DIO (A4L_SUBD_MASK_SPECIAL|0x20)
-/** 
+/**
  * Counter subdevice
  */
 #define A4L_SUBD_COUNTER (A4L_SUBD_MASK_SPECIAL|0x40)
-/** 
+/**
  * Timer subdevice
  */
 #define A4L_SUBD_TIMER (A4L_SUBD_MASK_SPECIAL|0x80)
-/** 
+/**
  * Memory, EEPROM, DPRAM
  */
 #define A4L_SUBD_MEMORY (A4L_SUBD_MASK_SPECIAL|0x100)
-/** 
+/**
  * Calibration subdevice  DACs
  */
 #define A4L_SUBD_CALIB (A4L_SUBD_MASK_SPECIAL|0x200)
-/** 
+/**
  * Processor, DSP
  */
 #define A4L_SUBD_PROC (A4L_SUBD_MASK_SPECIAL|0x400)
-/** 
+/**
  * Serial IO subdevice
  */
 #define A4L_SUBD_SERIAL (A4L_SUBD_MASK_SPECIAL|0x800)
-/** 
+/**
  * Mask which gathers all the types
  */
 #define A4L_SUBD_TYPES (A4L_SUBD_UNUSED |	 \
@@ -127,12 +127,12 @@
  */
 
 /* Subdevice capabilities */
-/** 
+/**
  * The subdevice can handle command (i.e it can perform asynchronous
  * acquisition)
  */
 #define A4L_SUBD_CMD 0x1000
-/** 
+/**
  * The subdevice support mmap operations (technically, any driver can
  * do it; however, the developer might want that his driver must be
  * accessed through read / write
@@ -148,14 +148,14 @@
  */
 
 /* Subdevice status flag(s) */
-/** 
+/**
  * The subdevice is busy, a synchronous or an asynchronous acquisition
  * is occuring
  */
 #define A4L_SUBD_BUSY_NR 0
 #define A4L_SUBD_BUSY (1 << A4L_SUBD_BUSY_NR)
 
-/** 
+/**
  * The subdevice is about to be cleaned in the middle of the detach
  * procedure
  */
@@ -172,7 +172,7 @@
 struct a4l_device;
 struct a4l_buffer;
 
-/*! 
+/*!
  * @brief Structure describing the subdevice
  * @see a4l_add_subd()
  */
@@ -193,7 +193,7 @@ struct a4l_subdevice {
 
 	/* Subdevice's status (busy, linked?) */
 	unsigned long status;
-	                     /**< Subdevice's status */
+			     /**< Subdevice's status */
 
 	/* Descriptors stuff */
 	unsigned long flags;

@@ -129,12 +129,12 @@ a4l_subd_t * a4l_alloc_subd(int sizeof_priv,
 			    void (*setup)(a4l_subd_t *))
 {
 	a4l_subd_t *subd;
-	
+
 	subd = rtdm_malloc(sizeof(a4l_subd_t) + sizeof_priv);
 
 	if(subd != NULL) {
 		memset(subd, 0 , sizeof(a4l_subd_t) + sizeof_priv);
-		if(setup != NULL) 
+		if(setup != NULL)
 			setup(subd);
 	}
 
@@ -194,7 +194,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	subd_info = rtdm_malloc(dev->transfer.nb_subd * 
+	subd_info = rtdm_malloc(dev->transfer.nb_subd *
 				sizeof(a4l_sbinfo_t));
 	if (subd_info == NULL)
 		return -ENOMEM;
@@ -202,7 +202,7 @@ int a4l_ioctl_subdinfo(a4l_cxt_t * cxt, void *arg)
 	for (i = 0; i < dev->transfer.nb_subd; i++) {
 		subd_info[i].flags = dev->transfer.subds[i]->flags;
 		subd_info[i].status = dev->transfer.subds[i]->status;
-		subd_info[i].nb_chan = 
+		subd_info[i].nb_chan =
 			(dev->transfer.subds[i]->chan_desc != NULL) ?
 			dev->transfer.subds[i]->chan_desc->length : 0;
 	}
@@ -248,7 +248,7 @@ int a4l_ioctl_nbchaninfo(a4l_cxt_t * cxt, void *arg)
 			dev->transfer.subds[inarg.idx_subd]->chan_desc->length;
 
 	if (rtdm_safe_copy_to_user(cxt->user_info,
-				   arg, 
+				   arg,
 				   &inarg, sizeof(a4l_chinfo_arg_t)) != 0)
 		return -EFAULT;
 
@@ -282,7 +282,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 
 	chan_desc = dev->transfer.subds[inarg.idx_subd]->chan_desc;
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
-	
+
 	if (chan_desc == NULL) {
 		__a4l_err("a4l_ioctl_chaninfo: no channel descriptor "
 			  "for subdevice %d\n", inarg.idx_subd);
@@ -296,7 +296,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	if (chan_info == NULL)
 		return -ENOMEM;
 
-	/* If the channel descriptor is global, the fields are filled 
+	/* If the channel descriptor is global, the fields are filled
 	   with the same instance of channel descriptor */
 	for (i = 0; i < chan_desc->length; i++) {
 		int j =
@@ -314,7 +314,7 @@ int a4l_ioctl_chaninfo(a4l_cxt_t * cxt, void *arg)
 	if (rtdm_safe_copy_to_user(cxt->user_info,
 				   inarg.info,
 				   chan_info,
-				   chan_desc->length * 
+				   chan_desc->length *
 				   sizeof(a4l_chinfo_t)) != 0)
 		return -EFAULT;
 
@@ -351,7 +351,7 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 			  "for subdevice %d\n", inarg.idx_subd);
 		return -EINVAL;
 	}
-	
+
 	if (inarg.idx_chan >=
 	    dev->transfer.subds[inarg.idx_subd]->chan_desc->length) {
 		__a4l_err("a4l_ioctl_nbrnginfo: bad channel index\n");
@@ -360,16 +360,16 @@ int a4l_ioctl_nbrnginfo(a4l_cxt_t * cxt, void *arg)
 
 	rng_desc = dev->transfer.subds[inarg.idx_subd]->rng_desc;
 	if (rng_desc != NULL) {
-		i = (rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ? 
+		i = (rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ?
 			inarg.idx_chan : 0;
 		inarg.info = (void *)(unsigned long)
 			rng_desc->rngtabs[i]->length;
 	} else
 		inarg.info = (void *)0;
-	
+
 
 	if (rtdm_safe_copy_to_user(cxt->user_info,
-				   arg, 
+				   arg,
 				   &inarg, sizeof(a4l_rnginfo_arg_t)) != 0)
 		return -EFAULT;
 
@@ -420,7 +420,7 @@ int a4l_ioctl_rnginfo(a4l_cxt_t * cxt, void *arg)
 		return -EINVAL;
 	}
 
-	/* If the range descriptor is global, 
+	/* If the range descriptor is global,
 	   we take the first instance */
 	tmp = (rng_desc->mode != A4L_RNG_GLOBAL_RNGDESC) ?
 		inarg.idx_chan : 0;

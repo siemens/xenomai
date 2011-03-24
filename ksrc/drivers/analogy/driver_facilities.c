@@ -143,7 +143,7 @@ EXPORT_SYMBOL_GPL(range_fake);
 
 /**
  * @brief Allocate a subdevice descriptor
- * 
+ *
  * This is a helper function so as to get a suitable subdevice
  * descriptor
  *
@@ -160,7 +160,7 @@ EXPORT_SYMBOL_GPL(a4l_alloc_subd);
 
 /**
  * @brief Add a subdevice to the driver descriptor
- * 
+ *
  * Once the driver descriptor structure is initialized, the function
  * a4l_add_subd() must be used so to add some subdevices to the
  * driver.
@@ -180,7 +180,7 @@ EXPORT_SYMBOL_GPL(a4l_add_subd);
  * registration index
  *
  * This function is scarcely useful as all the drivers callbacks get
- * the related subdevice descriptor as first argument. 
+ * the related subdevice descriptor as first argument.
  * This function is not optimized, it goes through a linked list to
  * get the proper pointer. So it must not be used in real-time context
  * but at initialization / cleanup time (attach / detach).
@@ -499,7 +499,7 @@ int a4l_buf_evt(a4l_subd_t *subd, unsigned long evts);
 EXPORT_SYMBOL_GPL(a4l_buf_evt);
 
 /**
- * @brief Get the data amount available in the Analogy buffer 
+ * @brief Get the data amount available in the Analogy buffer
  *
  * @param[in] subd Subdevice descriptor structure
  *

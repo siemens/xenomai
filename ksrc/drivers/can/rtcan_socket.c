@@ -74,33 +74,33 @@ void rtcan_socket_cleanup(struct rtdm_dev_context *context)
 
     /* Wake up sleeping senders. This is re-entrant-safe. */
     do {
-        RTDM_EXECUTE_ATOMICALLY(
-            /* Is someone there? */
-            if (list_empty(&sock->tx_wait_head))
-                tx_list_empty = 1;
+	RTDM_EXECUTE_ATOMICALLY(
+	    /* Is someone there? */
+	    if (list_empty(&sock->tx_wait_head))
+		tx_list_empty = 1;
 
-            else {
-                tx_list_empty = 0;
+	    else {
+		tx_list_empty = 0;
 
-                /* Get next entry pointing to a waiting task */
-                tx_waiting = list_entry(sock->tx_wait_head.next,
-                                        struct tx_wait_queue, tx_wait_list);
+		/* Get next entry pointing to a waiting task */
+		tx_waiting = list_entry(sock->tx_wait_head.next,
+					struct tx_wait_queue, tx_wait_list);
 
-                /* Remove it from list */
-                list_del(&tx_waiting->tx_wait_list);
+		/* Remove it from list */
+		list_del(&tx_waiting->tx_wait_list);
 
-                /* Wake task up (atomic section is left implicitly) */
-                rtdm_task_unblock(tx_waiting->rt_task);
-            }
-        );
+		/* Wake task up (atomic section is left implicitly) */
+		rtdm_task_unblock(tx_waiting->rt_task);
+	    }
+	);
     } while (!tx_list_empty);
 
     rtdm_sem_destroy(&sock->recv_sem);
 
     rtdm_lock_get_irqsave(&rtcan_recv_list_lock, lock_ctx);
     if (sock->socket_list.next) {
-        list_del(&sock->socket_list);
-        sock->socket_list.next = NULL;
+	list_del(&sock->socket_list);
+	sock->socket_list.next = NULL;
     }
     rtdm_lock_put_irqrestore(&rtcan_recv_list_lock, lock_ctx);
 }

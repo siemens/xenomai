@@ -35,14 +35,14 @@ struct a4l_device_context {
 	/* Needed to call rtdm_*_copy_from/to_user functions */
 	rtdm_user_info_t *user_info;
 
-	/* The adequate device pointer 
+	/* The adequate device pointer
 	   (retrieved thanks to minor at open time) */
-	struct a4l_device *dev; 
+	struct a4l_device *dev;
 
 	/* The buffer structure contains everything to transfer data
 	   from asynchronous acquisition operations on a specific
 	   subdevice */
-	struct a4l_buffer *buffer; 
+	struct a4l_buffer *buffer;
 };
 typedef struct a4l_device_context a4l_cxt_t;
 

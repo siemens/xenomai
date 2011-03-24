@@ -61,7 +61,7 @@ static int proto_hashkey_mask;
 int rtdm_apc;
 EXPORT_SYMBOL_GPL(rtdm_apc);
 
-DECLARE_MUTEX(nrt_dev_lock);
+DEFINE_SEMAPHORE(nrt_dev_lock);
 DEFINE_XNLOCK(rt_dev_lock);
 
 #ifndef MODULE
@@ -80,7 +80,7 @@ int rtdm_select_bind_no_support(struct rtdm_dev_context *context,
 {
 	return -EBADF;
 }
-  
+
 static inline int get_name_hash(const char *str, int limit, int hashkey_mask)
 {
 	int hash = 0;

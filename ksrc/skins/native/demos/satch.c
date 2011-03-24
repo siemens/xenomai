@@ -36,7 +36,7 @@ static const char *satch_s_tunes[] = {
 };
 
 static RT_TASK producer_task,
-               consumer_task;
+	       consumer_task;
 
 void consumer (void *cookie)
 

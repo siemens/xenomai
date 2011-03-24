@@ -26,6 +26,6 @@ void pse51_tsd_cleanup_thread(pthread_t thread);
 
 void pse51_tsd_pkg_init(void);
 
-void pse51_tsd_pkg_cleanup(void);    
+void pse51_tsd_pkg_cleanup(void);
 
 #endif /* !_POSIX_TSD_H */

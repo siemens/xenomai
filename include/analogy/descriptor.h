@@ -31,7 +31,7 @@
 #define MAGIC_BSC_DESC 0x1234abcd
 #define MAGIC_CPLX_DESC 0xabcd1234
 
-/*! 
+/*!
   @addtogroup descriptor_sys
   @{
  */
@@ -43,12 +43,12 @@
  * @{
  */
 
-/** 
+/**
  * BSC stands for basic descriptor (device data)
  */
 #define A4L_BSC_DESC 0x0
 
-/** 
+/**
  * CPLX stands for complex descriptor (subdevice + channel + range
  * data)
  */
@@ -58,7 +58,7 @@
 
 /* --- Descriptor structure --- */
 
-/*! 
+/*!
  * @brief Structure containing device-information useful to users
  * @see a4l_get_desc()
  */

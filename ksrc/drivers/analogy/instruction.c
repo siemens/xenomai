@@ -99,9 +99,9 @@ int a4l_do_insn_trig(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 		__a4l_err("a4l_do_insn_trig: data size should not be > 1\n");
 		return -EINVAL;
 	}
-	
+
 	trignum = (dsc->data_size == sizeof(unsigned int)) ? data[0] : 0;
-	
+
 	if (dsc->idx_subd >= dev->transfer.nb_subd) {
 		__a4l_err("a4l_do_insn_trig: "
 			  "subdevice index is out of range\n");
@@ -126,7 +126,7 @@ int a4l_fill_insndsc(a4l_cxt_t * cxt, a4l_kinsn_t * dsc, void *arg)
 	int ret = 0;
 	void *tmp_data = NULL;
 
-	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+	ret = rtdm_safe_copy_from_user(cxt->user_info,
 				       dsc, arg, sizeof(a4l_insn_t));
 	if (ret != 0)
 		goto out_insndsc;
@@ -199,7 +199,7 @@ int a4l_do_special_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 		return -EINVAL;
 	}
 
-	if (ret < 0) 
+	if (ret < 0)
 		__a4l_err("a4l_do_special_insn: "
 			  "execution of the instruction failed (err=%d)\n",
 			  ret);
@@ -264,7 +264,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	if (hdlr == NULL)
 		return -ENOSYS;
 
-	/* Prevents the subdevice from being used during 
+	/* Prevents the subdevice from being used during
 	   the following operations */
 	if (test_and_set_bit(A4L_SUBD_BUSY_NR, &subd->status)) {
 		ret = -EBUSY;
@@ -274,7 +274,7 @@ int a4l_do_insn(a4l_cxt_t * cxt, a4l_kinsn_t * dsc)
 	/* Let's the driver-specific code perform the instruction */
 	ret = hdlr(subd, dsc);
 
-	if (ret < 0) 
+	if (ret < 0)
 		__a4l_err("a4l_do_insn: "
 			  "execution of the instruction failed (err=%d)\n",
 			  ret);
@@ -334,7 +334,7 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 	dsc->insns = NULL;
 
 	/* Recovers the structure from user space */
-	ret = rtdm_safe_copy_from_user(cxt->user_info, 
+	ret = rtdm_safe_copy_from_user(cxt->user_info,
 				       dsc, arg, sizeof(a4l_insnlst_t));
 	if (ret < 0)
 		return ret;
@@ -352,7 +352,7 @@ int a4l_fill_ilstdsc(a4l_cxt_t * cxt, a4l_kilst_t * dsc, void *arg)
 	if (dsc->insns == NULL)
 		return -ENOMEM;
 
-	/* Recovers the instructions, one by one. This part is not 
+	/* Recovers the instructions, one by one. This part is not
 	   optimized */
 	for (i = 0; i < dsc->count && ret == 0; i++)
 		ret = a4l_fill_insndsc(cxt,

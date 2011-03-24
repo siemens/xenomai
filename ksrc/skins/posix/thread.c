@@ -25,7 +25,7 @@
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/xsh_chap02_09.html#tag_02_09">
  * Specification.</a>
- * 
+ *
  *@{*/
 
 #include <posix/thread.h>
@@ -297,7 +297,7 @@ int pthread_create(pthread_t *tid,
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_detach.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_detach(pthread_t thread)
 {
@@ -339,12 +339,12 @@ int pthread_detach(pthread_t thread)
  * @param t2 other thread identifier.
  *
  * @return a non zero value if the thread identifiers are equal;
- * @return 0 otherwise. 
+ * @return 0 otherwise.
  *
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_equal.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_equal(pthread_t t1, pthread_t t2)
 {
@@ -367,7 +367,7 @@ int pthread_equal(pthread_t t1, pthread_t t2)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_exit.html">
  * Specification.</a>
- * 
+ *
  */
 void pthread_exit(void *value_ptr)
 {
@@ -425,7 +425,7 @@ void pthread_exit(void *value_ptr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_join.html">
  * Specification.</a>
- * 
+ *
  */
 int pthread_join(pthread_t thread, void **value_ptr)
 {
@@ -500,7 +500,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
 				xnlock_put_irqrestore(&nklock, s);
 				return EINVAL;
 			}
-			
+
 			is_last_joiner = (--thread->nrt_joiners == 0);
 		}
 #endif /* __KERNEL__ */
@@ -534,7 +534,7 @@ int pthread_join(pthread_t thread, void **value_ptr)
  * @see
  * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/pthread_self.html">
  * Specification.</a>
- * 
+ *
  */
 pthread_t pthread_self(void)
 {
@@ -661,7 +661,7 @@ int pthread_wait_np(unsigned long *overruns_r)
  * @return 0 on success;
  * @return an error number if:
  * - EINVAL, some bit in @a clrmask or @a setmask is invalid.
- * 
+ *
  */
 int pthread_set_mode_np(int clrmask, int setmask)
 {
@@ -709,7 +709,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
  * @return 0 on success;
  * @return an error number if:
  * - ESRCH, @a thread is invalid.
- * 
+ *
  */
 int pthread_set_name_np(pthread_t thread, const char *name)
 {

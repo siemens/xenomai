@@ -34,25 +34,25 @@ ssize_t __real_recvmsg(int fd, struct msghdr *msg, int flags);
 ssize_t __real_sendmsg(int fd, const struct msghdr *msg, int flags);
 
 ssize_t __real_recvfrom(int fd, void *buf, size_t len, int flags,
-                        struct sockaddr *from, socklen_t *fromlen);
+			struct sockaddr *from, socklen_t *fromlen);
 
 ssize_t __real_sendto(int fd, const void *buf, size_t len, int flags,
-                      const struct sockaddr *to, socklen_t tolen);
+		      const struct sockaddr *to, socklen_t tolen);
 
 ssize_t __real_recv(int fd, void *buf, size_t len, int flags);
 
 ssize_t __real_send(int fd, const void *buf, size_t len, int flags);
 
 int __real_getsockopt(int fd, int level, int optname, void *optval,
-                      socklen_t *optlen);
+		      socklen_t *optlen);
 
 int __real_setsockopt(int fd, int level, int optname, const void *optval,
-                      socklen_t optlen);
+		      socklen_t optlen);
 
 int __real_bind(int fd, const struct sockaddr *my_addr, socklen_t addrlen);
 
 int __real_connect(int fd, const struct sockaddr *serv_addr,
-                   socklen_t addrlen);
+		   socklen_t addrlen);
 
 int __real_listen(int fd, int backlog);
 

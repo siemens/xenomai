@@ -2,7 +2,7 @@
  * Copyright (C) 2005,2006 Sebastian Smolorz
  *                        <Sebastian.Smolorz@stud.uni-hannover.de>
  *
- * Based on drivers/can/sja1000.h in linux-can.patch, a CAN socket 
+ * Based on drivers/can/sja1000.h in linux-can.patch, a CAN socket
  * framework for Linux:
  *
  * Copyright (C) 2005, Sascha Hauer, Pengutronix
@@ -62,9 +62,9 @@
 #define SJA_ID4         20       /* Identifier 4 (EFF only)         */
 
 #define SJA_DATA_SFF(x) (19 + (x)) /* Data registers in case of standard
-                                    * frame format; 0 <= x <= 7 */
+				    * frame format; 0 <= x <= 7 */
 #define SJA_DATA_EFF(x) (21 + (x)) /* Data registers in case of extended
-                                    * frame format; 0 <= x <= 7 */
+				    * frame format; 0 <= x <= 7 */
 
 /* Mode register */
 enum SJA1000_PELI_MOD {

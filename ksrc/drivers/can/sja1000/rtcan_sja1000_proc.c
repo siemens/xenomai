@@ -36,20 +36,20 @@ static int rtcan_sja_proc_regs(char *buf, char **start, off_t offset,
     struct rtcan_sja1000 *chip = (struct rtcan_sja1000 *)dev->priv;
     int i;
     RTCAN_PROC_PRINT_VARS(80);
-    
+
     if (!RTCAN_PROC_PRINT("SJA1000 registers"))
 	goto done;
     for (i = 0; i < 0x20; i++) {
 	if ((i % 0x10) == 0) {
 	    if (!RTCAN_PROC_PRINT("\n%02x:", i))
-		goto done; 
+		goto done;
 	}
 	if (!RTCAN_PROC_PRINT(" %02x", chip->read_reg(dev, i)))
-	    goto done; 
+	    goto done;
     }
     if (!RTCAN_PROC_PRINT("\n"))
 	goto done;
-    
+
  done:
     RTCAN_PROC_PRINT_DONE;
 }
@@ -62,9 +62,9 @@ int rtcan_sja_create_proc(struct rtcan_device* dev)
 	return -EINVAL;
 
     proc_entry = create_proc_entry("registers", S_IFREG | S_IRUGO | S_IWUSR,
-                                   dev->proc_root);
+				   dev->proc_root);
     if (!proc_entry)
-        goto error;
+	goto error;
     proc_entry->read_proc = rtcan_sja_proc_regs;
     proc_entry->data = dev;
 

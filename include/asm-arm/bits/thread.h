@@ -3,7 +3,7 @@
  *
  * ARM port
  *   Copyright (C) 2005 Stelian Pop
- *   
+ *
  * Xenomai is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -57,11 +57,11 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
     int __err; \
     (tcb)->stacksize = stacksize; \
     if (stacksize == 0) { \
-        (tcb)->stackbase = NULL; \
+	(tcb)->stackbase = NULL; \
     __err = 0; \
     } else { \
-        (tcb)->stackbase = xnheap_alloc(&kstacks, stacksize); \
-        __err = (tcb)->stackbase ? 0 : -ENOMEM; \
+	(tcb)->stackbase = xnheap_alloc(&kstacks, stacksize); \
+	__err = (tcb)->stackbase ? 0 : -ENOMEM; \
     } \
     __err; \
 })

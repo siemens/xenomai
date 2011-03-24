@@ -106,7 +106,7 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
 
-static DECLARE_MUTEX(completion_mutex);
+static DEFINE_SEMAPHORE(completion_mutex);
 
 static DECLARE_MUTEX(registration_mutex);
 
@@ -1314,7 +1314,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 {
 	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
-	unsigned muxid, magic;
+	unsigned int muxid, magic;
 	int ret;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
@@ -1363,6 +1363,12 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		   thread, xnthread_name(thread), current->pid,
 		   xnthread_base_priority(thread));
 
+	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
+			       xnthread_name(thread));
+	thread->u_mode = u_mode;
+	xnthread_set_state(thread, XNMAPPED);
+	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+
 	/*
 	 * Switch on propagation of normal kernel events for the bound
 	 * task. This is basically a per-task event filter which
@@ -1370,16 +1376,14 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 * tasks bearing a specific flag, so that we don't uselessly
 	 * intercept those events when they happen to be caused by
 	 * plain (i.e. non-Xenomai) Linux tasks.
+	 *
+	 * CAUTION: we arm the notification callback only when the
+	 * shadow TCB is consistent, so that we won't trigger false
+	 * positive in debug code from do_schedule_event() and
+	 * friends.
 	 */
-	rthal_enable_notifier(current);
-
-	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
-			       xnthread_name(thread));
 	xnshadow_thrptd(current) = thread;
-	xnthread_set_state(thread, XNMAPPED);
-	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-
-	thread->u_mode = u_mode;
+	rthal_enable_notifier(current);
 
 	if (xnthread_base_priority(thread) == 0 &&
 	    current->policy == SCHED_NORMAL)

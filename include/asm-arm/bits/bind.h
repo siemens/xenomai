@@ -60,7 +60,7 @@ static inline void xeno_arm_features_check(void)
 			exit(EXIT_FAILURE);
 		}
 
-		__xn_tscinfo.u.fr.counter = 
+		__xn_tscinfo.u.fr.counter =
 			((volatile unsigned *)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
 #if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
@@ -85,7 +85,7 @@ static inline void xeno_arm_features_check(void)
 			exit(EXIT_FAILURE);
 		}
 
-		__xn_tscinfo.u.dec.counter = 
+		__xn_tscinfo.u.dec.counter =
 			((volatile unsigned *)
 			 ((char *) addr + (phys_addr & (page_size - 1))));
 		break;
@@ -93,7 +93,7 @@ static inline void xeno_arm_features_check(void)
 #endif /* XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 		goto error;
-		
+
 	default:
 		fprintf(stderr,
 			"Xenomai: kernel/user tsc emulation mismatch.\n");

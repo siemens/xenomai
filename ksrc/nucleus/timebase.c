@@ -549,7 +549,7 @@ EXPORT_SYMBOL_GPL(xntbase_convert);
 
 #endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-/*! 
+/*!
  * \fn void xntbase_adjust_time(xntbase_t *base, xnsticks_t delta)
  * \brief Adjust the clock time for the system.
  *

@@ -25,7 +25,7 @@ void foo (void)
 
     while (!shared_event && !err)
 	err = rt_cond_wait(&cond_desc,&mutex_desc,TM_INFINITE);
-    
+
     rt_mutex_release(&mutex_desc);
 
     /* ... */

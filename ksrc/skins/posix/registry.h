@@ -29,9 +29,9 @@ void pse51_reg_pkg_cleanup(void);
    If 0 is returned and (*nodep) is NULL, then a new node should be added
    with node_add. */
 int pse51_node_get(pse51_node_t **nodep,
-                   const char *name,
-                   unsigned long magic,
-                   long oflags);
+		   const char *name,
+		   unsigned long magic,
+		   long oflags);
 
 /* bind a node. */
 int pse51_node_add(pse51_node_t *node, const char *name, unsigned magic);
@@ -96,7 +96,7 @@ typedef struct {
 typedef struct {
     unsigned long kfd;
     pse51_assoc_t assoc;
-    
+
 #define assoc2ufd(laddr) \
     ((pse51_ufd_t *)((unsigned long) (laddr) - offsetof(pse51_ufd_t, assoc)))
 } pse51_ufd_t;
@@ -108,14 +108,14 @@ typedef struct {
 void pse51_assocq_destroy(pse51_assocq_t *q, void (*destroy)(pse51_assoc_t *));
 
 int pse51_assoc_insert(pse51_assocq_t *q,
-                       pse51_assoc_t *assoc,
-                       u_long key);
+		       pse51_assoc_t *assoc,
+		       u_long key);
 
 pse51_assoc_t *pse51_assoc_lookup(pse51_assocq_t *q,
-                                  u_long key);
+				  u_long key);
 
 pse51_assoc_t *pse51_assoc_remove(pse51_assocq_t *q,
-                                  u_long key);
+				  u_long key);
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 
 #endif /* PSE51_REGISTRY_H */

@@ -265,7 +265,7 @@ index bd100fc..8fa1901 100644
   * or should we not care like we do now ? --BenH.
 diff --git a/arch/powerpc/include/asm/ipipe.h b/arch/powerpc/include/asm/ipipe.h
 new file mode 100644
-index 0000000..b6eff61
+index 0000000..3ff4004
 --- /dev/null
 +++ b/arch/powerpc/include/asm/ipipe.h
 @@ -0,0 +1,245 @@
@@ -316,10 +316,10 @@ index 0000000..b6eff61
 +#include <asm/paca.h>
 +#endif
 +
-+#define IPIPE_ARCH_STRING	"2.12-02"
++#define IPIPE_ARCH_STRING	"2.12-03"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	12
-+#define IPIPE_PATCH_NUMBER	2
++#define IPIPE_PATCH_NUMBER	3
 +
 +#ifdef CONFIG_IPIPE_WANT_PREEMPTIBLE_SWITCH
 +
@@ -2340,10 +2340,10 @@ index 5328709..8c3a2b7 100644
  	sync
 diff --git a/arch/powerpc/kernel/ipipe.c b/arch/powerpc/kernel/ipipe.c
 new file mode 100644
-index 0000000..825dc26
+index 0000000..9ee61df
 --- /dev/null
 +++ b/arch/powerpc/kernel/ipipe.c
-@@ -0,0 +1,760 @@
+@@ -0,0 +1,723 @@
 +/* -*- linux-c -*-
 + * linux/arch/powerpc/kernel/ipipe.c
 + *
@@ -2940,43 +2940,6 @@ index 0000000..825dc26
 +}
 +
 +#endif /* CONFIG_PPC64 */
-+
-+#ifdef CONFIG_PREEMPT
-+
-+asmlinkage void __sched preempt_schedule_irq(void);
-+
-+void __sched  __ipipe_preempt_schedule_irq(void)
-+{
-+	struct ipipe_percpu_domain_data *p;
-+	unsigned long flags;
-+	/*
-+	 * We have no IRQ state fixup on entry to exceptions, so we
-+	 * have to stall the root stage before rescheduling.
-+	 */
-+#ifdef CONFIG_IPIPE_DEBUG
-+	BUG_ON(!irqs_disabled_hw());
-+#endif
-+	local_irq_save(flags);
-+	local_irq_enable_hw();
-+	preempt_schedule_irq(); /* Ok, may reschedule now. */
-+	local_irq_disable_hw();
-+	/*
-+	 * Flush any pending interrupt that may have been logged after
-+	 * preempt_schedule_irq() stalled the root stage before
-+	 * returning to us, and now.
-+	 */
-+	p = ipipe_root_cpudom_ptr();
-+	if (unlikely(__ipipe_ipending_p(p))) {
-+		add_preempt_count(PREEMPT_ACTIVE);
-+		clear_bit(IPIPE_STALL_FLAG, &p->status);
-+		__ipipe_sync_pipeline();
-+		sub_preempt_count(PREEMPT_ACTIVE);
-+	}
-+
-+	__local_irq_restore_nosync(flags);
-+}
-+
-+#endif /* CONFIG_PREEMPT */
 +
 +#ifdef CONFIG_IPIPE_TRACE_IRQSOFF
 +
@@ -4644,49 +4607,82 @@ index fcea4ff..38ac727 100644
  	.set_type = cpm2_set_irq_type,
  };
 diff --git a/arch/powerpc/sysdev/fsl_msi.c b/arch/powerpc/sysdev/fsl_msi.c
-index 87991d3..35d8e03 100644
+index 87991d3..af106ee 100644
 --- a/arch/powerpc/sysdev/fsl_msi.c
 +++ b/arch/powerpc/sysdev/fsl_msi.c
-@@ -195,7 +195,9 @@ static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
- 	cascade_data = (struct fsl_msi_cascade_data *)get_irq_data(irq);
- 	msi_data = cascade_data->msi_data;
- 
-+#ifndef CONFIG_IPIPE
- 	raw_spin_lock(&desc->lock);
-+#endif
- 	if ((msi_data->feature &  FSL_PIC_IP_MASK) == FSL_PIC_IP_IPIC) {
- 		if (desc->chip->mask_ack)
- 			desc->chip->mask_ack(irq);
-@@ -205,8 +207,10 @@ static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
- 		}
- 	}
- 
-+#ifndef CONFIG_IPIPE
- 	if (unlikely(desc->status & IRQ_INPROGRESS))
- 		goto unlock;
-+#endif
- 
- 	msir_index = cascade_data->index;
- 
-@@ -237,6 +241,7 @@ static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
- 	}
- 	desc->status &= ~IRQ_INPROGRESS;
- 
-+#ifndef CONFIG_IPIPE
- 	switch (msi_data->feature & FSL_PIC_IP_MASK) {
- 	case FSL_PIC_IP_MPIC:
- 		desc->chip->eoi(irq);
-@@ -248,6 +253,10 @@ static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
- 	}
- unlock:
- 	raw_spin_unlock(&desc->lock);
-+#else
-+	if (desc->chip->unmask)
-+		desc->chip->unmask(irq);
-+#endif
+@@ -182,6 +182,63 @@ out_free:
+ 	return rc;
  }
  
++#ifdef CONFIG_IPIPE
++
++static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
++{
++	unsigned int cascade_irq;
++	struct fsl_msi *msi_data;
++	int msir_index = -1;
++	u32 msir_value = 0;
++	u32 intr_index;
++	u32 have_shift = 0;
++	struct fsl_msi_cascade_data *cascade_data;
++
++	cascade_data = (struct fsl_msi_cascade_data *)get_irq_data(irq);
++	msi_data = cascade_data->msi_data;
++
++	if ((msi_data->feature &  FSL_PIC_IP_MASK) == FSL_PIC_IP_IPIC) {
++		if (desc->chip->mask_ack)
++			desc->chip->mask_ack(irq);
++		else {
++			desc->chip->mask(irq);
++			desc->chip->ack(irq);
++		}
++	} else
++		desc->chip->eoi(irq);
++
++	msir_index = cascade_data->index;
++
++	if (msir_index >= NR_MSI_REG)
++		cascade_irq = NO_IRQ;
++
++	switch (msi_data->feature & FSL_PIC_IP_MASK) {
++	case FSL_PIC_IP_MPIC:
++		msir_value = fsl_msi_read(msi_data->msi_regs,
++			msir_index * 0x10);
++		break;
++	case FSL_PIC_IP_IPIC:
++		msir_value = fsl_msi_read(msi_data->msi_regs, msir_index * 0x4);
++		break;
++	}
++
++	while (msir_value) {
++		intr_index = ffs(msir_value) - 1;
++
++		cascade_irq = irq_linear_revmap(msi_data->irqhost,
++				msir_index * IRQS_PER_MSI_REG +
++					intr_index + have_shift);
++		if (cascade_irq != NO_IRQ)
++			ipipe_handle_chained_irq(cascade_irq);
++		have_shift += intr_index + 1;
++		msir_value = msir_value >> (intr_index + 1);
++	}
++
++	desc->chip->unmask(irq);
++}
++
++#else /* !CONFIG_IPIPE */
++
+ static void fsl_msi_cascade(unsigned int irq, struct irq_desc *desc)
+ {
+ 	unsigned int cascade_irq;
+@@ -250,6 +307,8 @@ unlock:
+ 	raw_spin_unlock(&desc->lock);
+ }
+ 
++#endif /* !CONFIG_IPIPE */
++
  static int fsl_of_msi_remove(struct platform_device *ofdev)
+ {
+ 	struct fsl_msi *msi = ofdev->dev.platform_data;
 diff --git a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
 index 6323e70..229b6ef 100644
 --- a/arch/powerpc/sysdev/i8259.c
@@ -5093,7 +5089,7 @@ index 0ab9281..9017264 100644
  }
  
 diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
-index 0038fb7..e63e062 100644
+index 0038fb7..63bf135 100644
 --- a/arch/powerpc/sysdev/uic.c
 +++ b/arch/powerpc/sysdev/uic.c
 @@ -49,7 +49,7 @@ struct uic {
@@ -5121,7 +5117,7 @@ index 0038fb7..e63e062 100644
  	er = mfdcr(uic->dcrbase + UIC_ER);
  	er &= ~(1 << (31 - src));
  	mtdcr(uic->dcrbase + UIC_ER, er);
-@@ -225,29 +227,48 @@ void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
+@@ -225,12 +227,16 @@ void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
  	int src;
  	int subvirq;
  
@@ -5132,28 +5128,18 @@ index 0038fb7..e63e062 100644
  	else
  		desc->chip->mask_ack(virq);
  	raw_spin_unlock(&desc->lock);
++#else
++	desc->chip->mask_ack(virq);
 +#endif
  
  	msr = mfdcr(uic->dcrbase + UIC_MSR);
-+#ifdef CONFIG_IPIPE
-+	desc->chip->mask_ack(virq);
-+#endif
  	if (!msr) /* spurious interrupt */
- 		goto uic_irq_ret;
- 
+@@ -239,15 +245,20 @@ void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
  	src = 32 - ffs(msr);
  
  	subvirq = irq_linear_revmap(uic->irqhost, src);
-+#ifdef CONFIG_IPIPE
-+	{
-+		struct pt_regs regs;    /* Contents not used. */
-+		ipipe_trace_irq_entry(subvirq);
-+		__ipipe_handle_irq(subvirq, &regs);
-+		ipipe_trace_irq_exit(subvirq);
-+	}
-+#else
- 	generic_handle_irq(subvirq);
-+#endif
+-	generic_handle_irq(subvirq);
++	ipipe_handle_chained_irq(subvirq);
  
  uic_irq_ret:
 +#ifndef CONFIG_IPIPE
@@ -5515,10 +5501,10 @@ index d5b3876..010aa8b 100644
  #endif /* LINUX_HARDIRQ_H */
 diff --git a/include/linux/ipipe.h b/include/linux/ipipe.h
 new file mode 100644
-index 0000000..7552e42
+index 0000000..5055f73
 --- /dev/null
 +++ b/include/linux/ipipe.h
-@@ -0,0 +1,740 @@
+@@ -0,0 +1,744 @@
 +/* -*- linux-c -*-
 + * include/linux/ipipe.h
 + *
@@ -5786,9 +5772,13 @@ index 0000000..7552e42
 +	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
 +#endif
 +
-+#ifndef __ipipe_do_root_virq
-+#define __ipipe_do_root_virq(ipd, irq)			\
-+	(ipd)->irqs[irq].handler(irq, (ipd)->irqs[irq].cookie)
++#ifndef __ipipe_check_root_resched
++#ifdef CONFIG_PREEMPT
++#define __ipipe_check_root_resched()			\
++	(preempt_count() == 0 && need_resched())
++#else
++#define __ipipe_check_root_resched()  0
++#endif
 +#endif
 +
 +#ifndef __ipipe_run_irqtail
@@ -6401,10 +6391,10 @@ index 0000000..3f43ba5
 +#endif	/* !__LINUX_IPIPE_BASE_H */
 diff --git a/include/linux/ipipe_lock.h b/include/linux/ipipe_lock.h
 new file mode 100644
-index 0000000..75bf0e8
+index 0000000..5382208
 --- /dev/null
 +++ b/include/linux/ipipe_lock.h
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,241 @@
 +/*   -*- linux-c -*-
 + *   include/linux/ipipe_lock.h
 + *
@@ -6631,6 +6621,7 @@ index 0000000..75bf0e8
 +#define __ipipe_spin_lock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_unlock_irq(lock)		do { } while (0)
 +#define __ipipe_spin_lock_irqsave(lock)		0
++#define __ipipe_spin_trylock_irq(lock)		1
 +#define __ipipe_spin_trylock_irqsave(lock, x)	({ (void)(x); 1; })
 +#define __ipipe_spin_unlock_irqrestore(lock, x)	do { (void)(x); } while (0)
 +#define __ipipe_spin_unlock_irqbegin(lock)	do { } while (0)
@@ -7639,10 +7630,10 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..b86f044
+index 0000000..5a06d52
 --- /dev/null
 +++ b/kernel/ipipe/core.c
-@@ -0,0 +1,2143 @@
+@@ -0,0 +1,2194 @@
 +/* -*- linux-c -*-
 + * linux/kernel/ipipe/core.c
 + *
@@ -8827,6 +8818,50 @@ index 0000000..b86f044
 +	__ipipe_walk_pipeline(&head->p_link);
 +}
 +
++#ifdef CONFIG_TRACE_IRQFLAGS
++#define root_stall_after_handler()	local_irq_disable()
++#else
++#define root_stall_after_handler()	do { } while (0)
++#endif
++
++#ifdef CONFIG_PREEMPT
++
++asmlinkage void preempt_schedule_irq(void);
++
++void __ipipe_preempt_schedule_irq(void)
++{
++	struct ipipe_percpu_domain_data *p; 
++	unsigned long flags;  
++
++	BUG_ON(!irqs_disabled_hw());
++	local_irq_save(flags);
++	local_irq_enable_hw();
++	preempt_schedule_irq(); /* Ok, may reschedule now. */  
++	local_irq_disable_hw();
++
++	/*
++	 * Flush any pending interrupt that may have been logged after
++	 * preempt_schedule_irq() stalled the root stage before
++	 * returning to us, and now.
++	 */
++	p = ipipe_root_cpudom_ptr();
++	if (unlikely(__ipipe_ipending_p(p))) {
++		add_preempt_count(PREEMPT_ACTIVE);
++		trace_hardirqs_on();
++		clear_bit(IPIPE_STALL_FLAG, &p->status);
++		__ipipe_sync_pipeline();
++		sub_preempt_count(PREEMPT_ACTIVE);
++	}
++
++	__local_irq_restore_nosync(flags);
++}
++
++#else /* !CONFIG_PREEMPT */
++
++#define __ipipe_preempt_schedule_irq()	do { } while (0)
++
++#endif	/* !CONFIG_PREEMPT */
++
 +/*
 + * __ipipe_sync_stage() -- Flush the pending IRQs for the current
 + * domain (and processor). This routine flushes the interrupt log
@@ -8873,14 +8908,21 @@ index 0000000..b86f044
 +		if (likely(ipd != ipipe_root_domain)) {
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			__ipipe_run_irqtail(irq);
++			local_irq_disable_hw();
 +		} else if (ipipe_virtual_irq_p(irq)) {
 +			irq_enter();
-+			__ipipe_do_root_virq(ipd, irq);
++			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			irq_exit();
-+		} else
++			local_irq_disable_hw();
++			root_stall_after_handler();
++			while (__ipipe_check_root_resched())
++				__ipipe_preempt_schedule_irq();
++		} else {
 +			__ipipe_do_root_xirq(ipd, irq);
++			local_irq_disable_hw();
++			root_stall_after_handler();
++		}
 +
-+		local_irq_disable_hw();
 +		p = ipipe_cpudom_ptr(__ipipe_current_domain);
 +	}
 +

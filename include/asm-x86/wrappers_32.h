@@ -39,7 +39,7 @@
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
+		:"1" (addr),"g" ((int)(size)),"g" ((task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define wrap_test_fpu_used(task)  \
@@ -90,7 +90,7 @@ typedef phys_addr_t resource_size_t;
 	unsigned long flag,sum; \
 	asm("addl %3,%1 ; sbbl %0,%0; cmpl %1,%4; sbbl $0,%0" \
 		:"=&r" (flag), "=r" (sum) \
-	        :"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
+		:"1" (addr),"g" ((int)(size)),"g" (task_thread_info(task)->addr_limit.seg)); \
 	flag == 0; })
 
 #define wrap_test_fpu_used(task)  \
@@ -122,14 +122,14 @@ static inline void wrap_switch_iobitmap(struct task_struct *p, int cpu)
     	struct tss_struct *tss = &per_cpu(init_tss, cpu);
 
 	if (wrap_iobitmap_base(tss) == INVALID_IO_BITMAP_OFFSET_LAZY) {
-                
+
 		memcpy(tss->io_bitmap, thread->io_bitmap_ptr, thread->io_bitmap_max);
 
 		if (thread->io_bitmap_max < tss->io_bitmap_max)
 		    memset((char *) tss->io_bitmap +
 			   thread->io_bitmap_max, 0xff,
 			   tss->io_bitmap_max - thread->io_bitmap_max);
-	
+
 		tss->io_bitmap_max = thread->io_bitmap_max;
 		wrap_iobitmap_base(tss) = IO_BITMAP_OFFSET;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
@@ -182,8 +182,11 @@ typedef irqreturn_t (*rthal_irq_host_handler_t)(int irq,
 
 #define rthal_irq_chip_end(irq)	rthal_irq_chip_enable(irq)
 #else /* >= 2.6.19 */
+#if !defined(CONFIG_GENERIC_HARDIRQS) \
+	|| LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
 #define rthal_irq_chip_enable(irq)   ({ rthal_irq_descp(irq)->chip->unmask(irq); 0; })
 #define rthal_irq_chip_disable(irq)  ({ rthal_irq_descp(irq)->chip->mask(irq); 0; })
+#endif
 #define rthal_irq_chip_end(irq)      ({ rthal_irq_descp(irq)->ipipe_end(irq, rthal_irq_descp(irq)); 0; })
 typedef irq_handler_t rthal_irq_host_handler_t;
 

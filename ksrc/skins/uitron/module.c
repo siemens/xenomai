@@ -72,17 +72,17 @@ int SKIN_INIT(uitron)
 
 	if (err)
 		goto cleanup_task;
-		
+
 	err = uiflag_init();
 
 	if (err)
 		goto cleanup_sem;
-		
+
 	err = uimbx_init();
 
 	if (err)
 		goto cleanup_flag;
-		
+
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	ui_syscall_init();
 #endif /* CONFIG_XENO_OPT_PERVASIVE */

@@ -2,7 +2,7 @@
  * Copyright (C) 2001,2002,2003,2004 Philippe Gerum <rpm@xenomai.org>.
  *
  * 64-bit PowerPC adoption
- *   copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm  
+ *   copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
  *
  * Xenomai is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published

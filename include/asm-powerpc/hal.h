@@ -8,7 +8,7 @@
  *
  *   64-bit PowerPC adoption
  *     copyright (C) 2005 Taneli Vähäkangas and Heikki Lindholm
- *  
+ *
  *   Xenomai is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License as
  *   published by the Free Software Foundation, Inc., 675 Mass Ave,
@@ -139,36 +139,36 @@ void rthal_restore_fpu(struct thread_struct *ts);
     register unsigned long _msr;                        \
     __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
     __asm__ __volatile__ ( "mtmsrd %0"                  \
-                           : /* no output */            \
-                           : "r"(_msr & ~(MSR_FP))      \
-                           : "memory" );                \
+			   : /* no output */            \
+			   : "r"(_msr & ~(MSR_FP))      \
+			   : "memory" );                \
 })
 
 #define rthal_enable_fpu() ({                           \
     register unsigned long _msr;                        \
     __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
     __asm__ __volatile__ ( "mtmsrd %0"                  \
-                           : /* no output */            \
-                           : "r"(_msr | MSR_FP)         \
-                           : "memory" );                \
+			   : /* no output */            \
+			   : "r"(_msr | MSR_FP)         \
+			   : "memory" );                \
 })
 #else /* !CONFIG_PPC64 */
 #define rthal_disable_fpu() ({                          \
     register unsigned long _msr;                        \
     __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
     __asm__ __volatile__ ( "mtmsr %0"                   \
-                           : /* no output */            \
-                           : "r"(_msr & ~(MSR_FP))      \
-                           : "memory" );                \
+			   : /* no output */            \
+			   : "r"(_msr & ~(MSR_FP))      \
+			   : "memory" );                \
 })
 
 #define rthal_enable_fpu() ({                           \
     register unsigned long _msr;                        \
     __asm__ __volatile__ ( "mfmsr %0" : "=r"(_msr) );   \
     __asm__ __volatile__ ( "mtmsr %0"                   \
-                           : /* no output */            \
-                           : "r"(_msr | MSR_FP)         \
-                           : "memory" );                \
+			   : /* no output */            \
+			   : "r"(_msr | MSR_FP)         \
+			   : "memory" );                \
 })
 #endif /* CONFIG_PPC64 */
 

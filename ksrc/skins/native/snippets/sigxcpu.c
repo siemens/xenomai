@@ -19,9 +19,9 @@ void task_body (void *cookie)
 
     for (;;) {
 	rt_task_sleep(1000000000);
-        /* Running in primary mode... */
+	/* Running in primary mode... */
 	printf("Switched to secondary mode\n");
-        /* ...printf() => write(2): we have just switched to secondary
+	/* ...printf() => write(2): we have just switched to secondary
 	   mode: SIGXCPU should have been sent to us by now. */
     }
 }

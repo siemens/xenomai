@@ -35,7 +35,7 @@ static int __sigtest_queue(struct pt_regs *regs)
 	sigs = xnmalloc(sizeof(*sigs) * nr_sigs);
 	next_sig = 0;
 
-	if (__xn_copy_from_user(sigs, (void __user *)__xn_reg_arg1(regs), 
+	if (__xn_copy_from_user(sigs, (void __user *)__xn_reg_arg1(regs),
 				sizeof(*sigs) * nr_sigs)) {
 		xnfree(sigs);
 		return -EFAULT;

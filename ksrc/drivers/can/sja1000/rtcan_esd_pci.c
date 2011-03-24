@@ -43,7 +43,7 @@ static char *esd_pci_board_name = "ESD-PCI";
 
 MODULE_AUTHOR("Sebastian Smolorz <sesmo@gmx.net");
 MODULE_DESCRIPTION("RTCAN board driver for esd PCI/PMC/CPCI/PCIe/PCI104 " \
-                   "CAN cards");
+		   "CAN cards");
 MODULE_SUPPORTED_DEVICE("esd CAN-PCI/200, CAN-PCI/266, CAN-PMC266, " \
 			"CAN-PCIe/2000, CAN-CPCI/200, CAN-PCI104");
 MODULE_LICENSE("GPL v2");

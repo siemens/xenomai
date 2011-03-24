@@ -329,8 +329,8 @@ unsigned long rthal_timer_calibrate(void)
 }
 
 int rthal_irq_host_request(unsigned irq,
-                           rthal_irq_host_handler_t handler,
-                           char *name, void *dev_id)
+			   rthal_irq_host_handler_t handler,
+			   char *name, void *dev_id)
 {
 	unsigned long flags;
 

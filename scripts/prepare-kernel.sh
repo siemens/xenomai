@@ -25,6 +25,8 @@ patch_kernelversion_filter="b"
 # "b": don't filter according to the architecture.
 patch_architecture_filter="b"
 
+# Default path to kernel tree
+linux_tree=.
 
 patch_copytempfile() {
     file="$1"

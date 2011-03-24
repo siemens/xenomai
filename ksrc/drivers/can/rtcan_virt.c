@@ -46,7 +46,7 @@ static struct rtcan_device *rtcan_virt_devs[RTCAN_MAX_VIRT_DEVS];
 
 
 static int rtcan_virt_start_xmit(struct rtcan_device *tx_dev,
-                                 can_frame_t *tx_frame)
+				 can_frame_t *tx_frame)
 {
 	int i;
 	struct rtcan_device *rx_dev;
@@ -90,7 +90,7 @@ static int rtcan_virt_start_xmit(struct rtcan_device *tx_dev,
 
 
 static int rtcan_virt_set_mode(struct rtcan_device *dev, can_mode_t mode,
-                               rtdm_lockctx_t *lock_ctx)
+			       rtdm_lockctx_t *lock_ctx)
 {
 	int err = 0;
 

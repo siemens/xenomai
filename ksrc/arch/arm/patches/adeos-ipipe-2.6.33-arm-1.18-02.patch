@@ -644,7 +644,7 @@ index 0000000..cfdf14a
 +#endif /* __ASM_ARM_FCSE_H */
 diff --git a/arch/arm/include/asm/ipipe.h b/arch/arm/include/asm/ipipe.h
 new file mode 100644
-index 0000000..e802d72
+index 0000000..8942ed8
 --- /dev/null
 +++ b/arch/arm/include/asm/ipipe.h
 @@ -0,0 +1,370 @@
@@ -680,10 +680,10 @@ index 0000000..e802d72
 +#include <linux/ipipe_percpu.h>
 +#include <linux/ipipe_trace.h>
 +
-+#define IPIPE_ARCH_STRING	"1.18-01"
++#define IPIPE_ARCH_STRING	"1.18-02"
 +#define IPIPE_MAJOR_NUMBER	1
 +#define IPIPE_MINOR_NUMBER	18
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +
 +#ifdef CONFIG_SMP
 +#define ipipe_processor_id()	hard_smp_processor_id()
@@ -4426,10 +4426,10 @@ index 709fbad..09cfdd0 100644
 +endif
 diff --git a/arch/arm/mach-at91/at91_ipipe_time.c b/arch/arm/mach-at91/at91_ipipe_time.c
 new file mode 100644
-index 0000000..6c6f0d7
+index 0000000..de429d1
 --- /dev/null
 +++ b/arch/arm/mach-at91/at91_ipipe_time.c
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,320 @@
 +/*
 + * linux/arch/arm/mach-at91/at91_ipipe_time.c
 + *
@@ -4508,7 +4508,9 @@ index 0000000..6c6f0d7
 +#define TCNXCNS(timer,v) ((v) << ((timer)<<1))
 +#define AT91_TC_REG_MASK (0xffff)
 +
-+static unsigned max_delta_ticks, min_delta_ticks, tick_pending;
++static unsigned long next_match;
++
++static unsigned max_delta_ticks, min_delta_ticks;
 +static struct clock_event_device clkevt;
 +static int tc_timer_clock;
 +
@@ -4546,11 +4548,7 @@ index 0000000..6c6f0d7
 + */
 +static irqreturn_t at91_timer_interrupt(int irq, void *dev_id)
 +{
-+	if (__ipipe_mach_timerstolen || tick_pending) {
-+		tick_pending = 0;
-+		clkevt.event_handler(&clkevt);
-+	}
-+
++	clkevt.event_handler(&clkevt);
 +	return IRQ_HANDLED;
 +}
 +
@@ -4564,8 +4562,12 @@ index 0000000..6c6f0d7
 +{
 +	at91_tc_read(AT91_TC_SR);
 +
-+	if (unlikely(!__ipipe_mach_timerstolen))
-+		__ipipe_mach_set_dec(max_delta_ticks);
++	if (unlikely(!__ipipe_mach_timerstolen)) {
++		__ipipe_tsc_update();
++		next_match = (next_match + __ipipe_mach_ticks_per_jiffy)
++			& AT91_TC_REG_MASK;
++		write_RC(next_match);
++	}
 +}
 +
 +static void
@@ -4577,7 +4579,7 @@ index 0000000..6c6f0d7
 +	/* Disable all interrupts. */
 +	at91_tc_write(AT91_TC_IDR, ~0ul);
 +
-+	if (mode == CLOCK_EVT_MODE_ONESHOT) {
++	if (mode == CLOCK_EVT_MODE_PERIODIC) {
 +		unsigned long v;
 +
 +#ifndef CONFIG_ARCH_AT91SAM9263
@@ -4599,7 +4601,9 @@ index 0000000..6c6f0d7
 +		/* Use the clock selected by at91_timer_init as input clock. */
 +		at91_tc_write(AT91_TC_CMR, tc_timer_clock);
 +
-+		__ipipe_mach_set_dec(max_delta_ticks);
++		/* Load the TC register C. */
++		next_match = __ipipe_mach_ticks_per_jiffy;
++		write_RC(next_match);
 +
 +		/* Enable CPCS interrupt. */
 +		at91_tc_write(AT91_TC_IER, AT91_TC_CPCS);
@@ -4609,29 +4613,17 @@ index 0000000..6c6f0d7
 +	}
 +}
 +
-+static int
-+at91_tc_set_next_event(unsigned long delta, struct clock_event_device *dev)
-+{
-+	tick_pending = 1;
-+	__ipipe_mach_set_dec(delta);
-+	return 0;
-+}
-+
 +/*
 + * Reprogram the timer
 + */
 +void __ipipe_mach_set_dec(unsigned long delay)
 +{
-+	unsigned long flags;
-+
 +	if (delay > max_delta_ticks)
 +		delay = max_delta_ticks;
 +
 +	if (likely(delay > min_delta_ticks)) {
-+		local_irq_save_hw(flags);
 +		write_RC((read_CV() + delay) & AT91_TC_REG_MASK);
 +		__ipipe_tsc_update();
-+		local_irq_restore_hw(flags);
 +	} else
 +		ipipe_trigger_irq(KERNEL_TIMER_IRQ_NUM);
 +}
@@ -4644,11 +4636,10 @@ index 0000000..6c6f0d7
 +
 +static struct clock_event_device clkevt = {
 +	.name		= "at91_tc" __stringify(CONFIG_IPIPE_AT91_TC),
-+	.features	= CLOCK_EVT_FEAT_ONESHOT,
++	.features	= CLOCK_EVT_FEAT_PERIODIC,
 +	.shift		= 20,
 +	.rating		= 250,
 +	.set_mode	= at91_tc_set_mode,
-+	.set_next_event = at91_tc_set_next_event,
 +};
 +
 +static struct __ipipe_tscinfo tsc_info = {
@@ -4667,7 +4658,10 @@ index 0000000..6c6f0d7
 +
 +void __ipipe_mach_release_timer(void)
 +{
-+	clkevt.set_next_event(__ipipe_mach_ticks_per_jiffy, &clkevt);
++	unsigned long flags;
++	local_irq_save_hw(flags);
++	__ipipe_mach_set_dec(__ipipe_mach_ticks_per_jiffy);
++	local_irq_restore_hw(flags);
 +}
 +EXPORT_SYMBOL(__ipipe_mach_release_timer);
 +
@@ -4730,16 +4724,15 @@ index 0000000..6c6f0d7
 +	clkevt.max_delta_ns = wrap_ns;
 +	clkevt.min_delta_ns = 2000;
 +	clkevt.cpumask = cpumask_of(0);
++	clockevents_register_device(&clkevt);
++
++	tsc_info.freq = divided_freq;
++	__ipipe_tsc_register(&tsc_info);
 +
 +	__ipipe_mach_ticks_per_jiffy = (divided_freq + HZ/2) / HZ;
 +	max_delta_ticks = (wrap_ns * clkevt.mult) >> clkevt.shift;
 +	min_delta_ticks = ((unsigned long long) clkevt.min_delta_ns
 +			   * clkevt.mult) >> clkevt.shift;
-+
-+	clockevents_register_device(&clkevt);
-+
-+	tsc_info.freq = divided_freq;
-+	__ipipe_tsc_register(&tsc_info);
 +}
 +
 +#ifdef CONFIG_ARCH_AT91RM9200
@@ -5730,7 +5723,7 @@ index 3f35293..dfd6b63 100644
  
  static struct sys_timer cp_timer = {
 diff --git a/arch/arm/mach-ixp4xx/common.c b/arch/arm/mach-ixp4xx/common.c
-index 3bbf40f..cece6ee 100644
+index 3bbf40f..8331f97 100644
 --- a/arch/arm/mach-ixp4xx/common.c
 +++ b/arch/arm/mach-ixp4xx/common.c
 @@ -6,10 +6,10 @@
@@ -5812,7 +5805,7 @@ index 3bbf40f..cece6ee 100644
  
  	evt->event_handler(evt);
  
-@@ -470,6 +491,73 @@ static void ixp4xx_set_mode(enum clock_event_mode mode,
+@@ -470,6 +491,70 @@ static void ixp4xx_set_mode(enum clock_event_mode mode,
  	*IXP4XX_OSRT1 = osrt | opts;
  }
  
@@ -5850,11 +5843,8 @@ index 3bbf40f..cece6ee 100644
 +
 +void __ipipe_mach_set_dec(unsigned long delay)
 +{
-+	unsigned long flags;
 +	if (delay > MIN_DELAY) {
-+		local_irq_save_hw(flags);
 +		*IXP4XX_OSRT1 = delay | ONE_SHOT_ENABLE;
-+		local_irq_restore_hw(flags);
 +	} else {
 +		ipipe_trigger_irq(IRQ_IXP4XX_TIMER1);
 +	}
@@ -5886,7 +5876,7 @@ index 3bbf40f..cece6ee 100644
  static struct clock_event_device clockevent_ixp4xx = {
  	.name		= "ixp4xx timer1",
  	.features       = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT,
-@@ -490,4 +578,10 @@ static void __init ixp4xx_clockevent_init(void)
+@@ -490,4 +575,10 @@ static void __init ixp4xx_clockevent_init(void)
  	clockevent_ixp4xx.cpumask = cpumask_of(0);
  
  	clockevents_register_device(&clockevent_ixp4xx);
@@ -5952,8 +5942,83 @@ index e824c02..126b297 100644
  
  #endif // __ASSEMBLY__
 -
+diff --git a/arch/arm/mach-mx1/clock.c b/arch/arm/mach-mx1/clock.c
+index d1b5885..bdfc18a 100644
+--- a/arch/arm/mach-mx1/clock.c
++++ b/arch/arm/mach-mx1/clock.c
+@@ -598,7 +598,8 @@ int __init mx1_clocks_init(unsigned long fref)
+ 	clk_enable(&hclk);
+ 	clk_enable(&fclk);
+ 
+-	mxc_timer_init(&gpt_clk, IO_ADDRESS(TIM1_BASE_ADDR), TIM1_INT);
++	mxc_timer_init(&gpt_clk, IO_ADDRESS(TIM1_BASE_ADDR),
++		       TIM1_BASE_ADDR, TIM1_INT);
+ 
+ 	return 0;
+ }
+diff --git a/arch/arm/mach-mx2/clock_imx21.c b/arch/arm/mach-mx2/clock_imx21.c
+index 91901b5..2cb98bf 100644
+--- a/arch/arm/mach-mx2/clock_imx21.c
++++ b/arch/arm/mach-mx2/clock_imx21.c
+@@ -1004,6 +1004,7 @@ int __init mx21_clocks_init(unsigned long lref, unsigned long href)
+ 	clk_enable(&uart_clk[0]);
+ #endif
+ 
+-	mxc_timer_init(&gpt_clk[0], IO_ADDRESS(GPT1_BASE_ADDR), MXC_INT_GPT1);
++	mxc_timer_init(&gpt_clk[0], IO_ADDRESS(GPT1_BASE_ADDR),
++		       GPT1_BASE_ADDR, MXC_INT_GPT1);
+ 	return 0;
+ }
+diff --git a/arch/arm/mach-mx2/clock_imx27.c b/arch/arm/mach-mx2/clock_imx27.c
+index b010bf9..735fae4 100644
+--- a/arch/arm/mach-mx2/clock_imx27.c
++++ b/arch/arm/mach-mx2/clock_imx27.c
+@@ -755,8 +755,8 @@ int __init mx27_clocks_init(unsigned long fref)
+ 	clk_enable(&uart1_clk);
+ #endif
+ 
+-	mxc_timer_init(&gpt1_clk, IO_ADDRESS(GPT1_BASE_ADDR), MXC_INT_GPT1);
++	mxc_timer_init(&gpt1_clk, IO_ADDRESS(GPT1_BASE_ADDR),
++		       GPT1_BASE_ADDR, MXC_INT_GPT1);
+ 
+ 	return 0;
+ }
+-
+diff --git a/arch/arm/mach-mx2/devices.c b/arch/arm/mach-mx2/devices.c
+index 3d398ce..877a6c0 100644
+--- a/arch/arm/mach-mx2/devices.c
++++ b/arch/arm/mach-mx2/devices.c
+@@ -642,3 +642,14 @@ int __init mxc_register_gpios(void)
+ {
+ 	return mxc_gpio_init(imx_gpio_ports, ARRAY_SIZE(imx_gpio_ports));
+ }
++
++#ifdef CONFIG_IPIPE
++static int post_cpu_init(void)
++{
++	if (cpu_is_mx27())
++		ipipe_mach_allow_hwtimer_uaccess(AIPI_BASE_ADDR_VIRT, 3);
++	return 0;
++}
++
++postcore_initcall(post_cpu_init);
++#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mach-mx25/clock.c b/arch/arm/mach-mx25/clock.c
+index 6acc88b..f96eba3 100644
+--- a/arch/arm/mach-mx25/clock.c
++++ b/arch/arm/mach-mx25/clock.c
+@@ -231,7 +231,8 @@ int __init mx25_clocks_init(void)
+ 	__raw_writel((0xf << 16) | (3 << 26), CRM_BASE + CCM_CGCR1);
+ 	__raw_writel((1 << 5), CRM_BASE + CCM_CGCR2);
+ 
+-	mxc_timer_init(&gpt_clk, MX25_IO_ADDRESS(MX25_GPT1_BASE_ADDR), 54);
++	mxc_timer_init(&gpt_clk, MX25_IO_ADDRESS(MX25_GPT1_BASE_ADDR),
++		       MX25_GPT1_BASE_ADDR, 54);
+ 
+ 	return 0;
+ }
 diff --git a/arch/arm/mach-mx25/devices.c b/arch/arm/mach-mx25/devices.c
-index 9fdeea1..89f74e8 100644
+index 9fdeea1..42e5f65 100644
 --- a/arch/arm/mach-mx25/devices.c
 +++ b/arch/arm/mach-mx25/devices.c
 @@ -19,6 +19,7 @@
@@ -5964,7 +6029,7 @@ index 9fdeea1..89f74e8 100644
  #include <mach/mx25.h>
  #include <mach/irqs.h>
  
-@@ -438,3 +439,14 @@ struct platform_device mx25_fec_device = {
+@@ -438,3 +439,15 @@ struct platform_device mx25_fec_device = {
  	.num_resources	= ARRAY_SIZE(mx25_fec_resources),
  	.resource	= mx25_fec_resources,
  };
@@ -5972,13 +6037,44 @@ index 9fdeea1..89f74e8 100644
 +#ifdef CONFIG_IPIPE
 +static int post_cpu_init(void)
 +{
-+	ipipe_mach_allow_hwtimer_uaccess(MX25_AIPS1_BASE_ADDR_VIRT,
-+					 MX25_AIPS2_BASE_ADDR_VIRT);
++	if (cpu_is_mx25())
++		ipipe_mach_allow_hwtimer_uaccess(MX25_AIPS1_BASE_ADDR_VIRT,
++						 MX25_AIPS2_BASE_ADDR_VIRT);
 +	return 0;
 +}
 +
 +postcore_initcall(post_cpu_init);
 +#endif /* CONFIG_IPIPE */
+diff --git a/arch/arm/mach-mx3/clock-imx35.c b/arch/arm/mach-mx3/clock-imx35.c
+index 7584b4c..81f6bd0 100644
+--- a/arch/arm/mach-mx3/clock-imx35.c
++++ b/arch/arm/mach-mx3/clock-imx35.c
+@@ -504,8 +504,8 @@ int __init mx35_clocks_init()
+ 	__raw_writel((3 << 26) | ll, CCM_BASE + CCM_CGR2);
+ 	__raw_writel(0, CCM_BASE + CCM_CGR3);
+ 
+-	mxc_timer_init(&gpt_clk, IO_ADDRESS(GPT1_BASE_ADDR), MXC_INT_GPT);
++	mxc_timer_init(&gpt_clk, IO_ADDRESS(GPT1_BASE_ADDR),
++		       GPT1_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	return 0;
+ }
+-
+diff --git a/arch/arm/mach-mx3/clock.c b/arch/arm/mach-mx3/clock.c
+index 27a318a..dffa4fc 100644
+--- a/arch/arm/mach-mx3/clock.c
++++ b/arch/arm/mach-mx3/clock.c
+@@ -625,8 +625,8 @@ int __init mx31_clocks_init(unsigned long fref)
+ 		__raw_writel(reg, MXC_CCM_PMCR1);
+ 	}
+ 
+-	mxc_timer_init(&ipg_clk, IO_ADDRESS(GPT1_BASE_ADDR), MXC_INT_GPT);
++	mxc_timer_init(&ipg_clk,
++		       IO_ADDRESS(GPT1_BASE_ADDR), GPT1_BASE_ADDR, MXC_INT_GPT);
+ 
+ 	return 0;
+ }
+-
 diff --git a/arch/arm/mach-mx3/devices.c b/arch/arm/mach-mx3/devices.c
 index 6adb586..9040c13 100644
 --- a/arch/arm/mach-mx3/devices.c
@@ -6049,6 +6145,20 @@ index 18715f1..99fb27f 100644
  	}
  }
  
+diff --git a/arch/arm/mach-mxc91231/clock.c b/arch/arm/mach-mxc91231/clock.c
+index ecfa37f..7e88387 100644
+--- a/arch/arm/mach-mxc91231/clock.c
++++ b/arch/arm/mach-mxc91231/clock.c
+@@ -636,7 +636,8 @@ int __init mxc91231_clocks_init(unsigned long fref)
+ 		clkdev_add(&lookups[i]);
+ 
+ 	gpt_base = MXC91231_IO_ADDRESS(MXC91231_GPT1_BASE_ADDR);
+-	mxc_timer_init(&gpt_clk, gpt_base, MXC91231_INT_GPT);
++	mxc_timer_init(&gpt_clk, gpt_base,
++		       MXC91231_GPT1_BASE_ADDR, MXC91231_INT_GPT);
+ 
+ 	return 0;
+ }
 diff --git a/arch/arm/mach-omap2/board-igep0020.c b/arch/arm/mach-omap2/board-igep0020.c
 index 117b8fd..a13dd43 100644
 --- a/arch/arm/mach-omap2/board-igep0020.c
@@ -6576,7 +6686,7 @@ index d5255ae..c18c1f4 100644
  		pending = (~PCM990_INTSETCLR) & pcm990_irq_enabled;
  	} while (pending);
 diff --git a/arch/arm/mach-pxa/time.c b/arch/arm/mach-pxa/time.c
-index 750c448..48269f2 100644
+index 750c448..cb12e15 100644
 --- a/arch/arm/mach-pxa/time.c
 +++ b/arch/arm/mach-pxa/time.c
 @@ -24,6 +24,31 @@
@@ -6634,7 +6744,7 @@ index 750c448..48269f2 100644
  	OSMR0 = next;
  	oscr = OSCR;
  	raw_local_irq_restore(flags);
-@@ -125,6 +154,50 @@ static struct clock_event_device ckevt_pxa_osmr0 = {
+@@ -125,6 +154,46 @@ static struct clock_event_device ckevt_pxa_osmr0 = {
  	.set_mode	= pxa_osmr0_set_mode,
  };
  
@@ -6657,12 +6767,8 @@ index 750c448..48269f2 100644
 +void __ipipe_mach_set_dec(unsigned long delay)
 +{
 +	if (delay > MIN_OSCR_DELTA) {
-+		unsigned long flags;
-+
-+		local_irq_save_hw(flags);
 +		OSMR0 = delay + OSCR;
 +		OIER |= OIER_E0;
-+		local_irq_restore_hw(flags);
 +	} else
 +		ipipe_trigger_irq(IRQ_OST0);
 +}
@@ -6685,7 +6791,7 @@ index 750c448..48269f2 100644
  static cycle_t pxa_read_oscr(struct clocksource *cs)
  {
  	return OSCR;
-@@ -168,6 +241,11 @@ static void __init pxa_timer_init(void)
+@@ -168,6 +237,11 @@ static void __init pxa_timer_init(void)
  
  	setup_irq(IRQ_OST0, &pxa_ost0_irq);
  
@@ -6898,7 +7004,7 @@ index d50f4ee..2c154e3 100644
  #include <mach/hardware.h>
  #include <asm/leds.h>
 diff --git a/arch/arm/mach-sa1100/time.c b/arch/arm/mach-sa1100/time.c
-index b9cbb56..0849b3b 100644
+index b9cbb56..0e89412 100644
 --- a/arch/arm/mach-sa1100/time.c
 +++ b/arch/arm/mach-sa1100/time.c
 @@ -14,19 +14,50 @@
@@ -6979,7 +7085,7 @@ index b9cbb56..0849b3b 100644
  	clocksource_register(&cksrc_sa1100_oscr);
  	clockevents_register_device(&ckevt_sa1100_osmr0);
  }
-@@ -156,3 +198,42 @@ struct sys_timer sa1100_timer = {
+@@ -156,3 +198,38 @@ struct sys_timer sa1100_timer = {
  	.suspend	= sa1100_timer_suspend,
  	.resume		= sa1100_timer_resume,
  };
@@ -6998,12 +7104,8 @@ index b9cbb56..0849b3b 100644
 +void __ipipe_mach_set_dec(unsigned long delay)
 +{
 +	if (delay > MIN_OSCR_DELTA) {
-+		unsigned long flags;
-+
-+		local_irq_save_hw(flags);
 +		OSMR0 = delay + OSCR;
 +		OIER |= OIER_E0;
-+		local_irq_restore_hw(flags);
 +	} else
 +		ipipe_trigger_irq(IRQ_OST0);
 +}
@@ -7880,17 +7982,18 @@ index 93df472..f794a86 100644
  	mcr	p15, 0, ip, c8, c7, 0		@ invalidate I & D TLBs
  	cpwait_ret lr, ip
 diff --git a/arch/arm/plat-mxc/cpu.c b/arch/arm/plat-mxc/cpu.c
-index 386e0d5..0bb140e 100644
+index 386e0d5..5cafd19 100644
 --- a/arch/arm/plat-mxc/cpu.c
 +++ b/arch/arm/plat-mxc/cpu.c
-@@ -1,5 +1,5 @@
+@@ -1,5 +1,6 @@
 -
  #include <linux/module.h>
 +#include <linux/io.h>
++#include <mach/hardware.h>
  
  unsigned int __mxc_cpu_type;
  EXPORT_SYMBOL(__mxc_cpu_type);
-@@ -9,3 +9,29 @@ void mxc_set_cpu_type(unsigned int type)
+@@ -9,3 +10,35 @@ void mxc_set_cpu_type(unsigned int type)
  	__mxc_cpu_type = type;
  }
  
@@ -7899,25 +8002,31 @@ index 386e0d5..0bb140e 100644
 +{
 +	volatile unsigned long aips_reg;
 +
-+	/*
-+	 * S/W workaround: Clear the off platform peripheral modules
-+	 * Supervisor Protect bit for SDMA to access them.
-+	 */
-+	__raw_writel(0x0, aips1 + 0x40);
-+	__raw_writel(0x0, aips1 + 0x44);
-+	__raw_writel(0x0, aips1 + 0x48);
-+	__raw_writel(0x0, aips1 + 0x4C);
-+	aips_reg = __raw_readl(aips1 + 0x50);
-+	aips_reg &= 0x00FFFFFF;
-+	__raw_writel(aips_reg, aips1 + 0x50);
++	if (!cpu_is_mx27()) {
++		/*
++		 * S/W workaround: Clear the off platform peripheral modules
++		 * Supervisor Protect bit for SDMA to access them.
++		 */
++		__raw_writel(0x0, aips1 + 0x40);
++		__raw_writel(0x0, aips1 + 0x44);
++		__raw_writel(0x0, aips1 + 0x48);
++		__raw_writel(0x0, aips1 + 0x4C);
++		aips_reg = __raw_readl(aips1 + 0x50);
++		aips_reg &= 0x00FFFFFF;
++		__raw_writel(aips_reg, aips1 + 0x50);
 +
-+	__raw_writel(0x0, aips2 + 0x40);
-+	__raw_writel(0x0, aips2 + 0x44);
-+	__raw_writel(0x0, aips2 + 0x48);
-+	__raw_writel(0x0, aips2 + 0x4C);
-+	aips_reg = __raw_readl(aips2 + 0x50);
-+	aips_reg &= 0x00FFFFFF;
-+	__raw_writel(aips_reg, aips2 + 0x50);
++		__raw_writel(0x0, aips2 + 0x40);
++		__raw_writel(0x0, aips2 + 0x44);
++		__raw_writel(0x0, aips2 + 0x48);
++		__raw_writel(0x0, aips2 + 0x4C);
++		aips_reg = __raw_readl(aips2 + 0x50);
++		aips_reg &= 0x00FFFFFF;
++		__raw_writel(aips_reg, aips2 + 0x50);
++	} else {
++		aips_reg = __raw_readl(aips1 + 8);
++		aips_reg &= ~(1 << aips2);
++		__raw_writel(aips_reg, aips1 + 8);
++	}
 +}
 +#endif /* CONFIG_IPIPE */
 diff --git a/arch/arm/plat-mxc/gpio.c b/arch/arm/plat-mxc/gpio.c
@@ -8005,10 +8114,20 @@ index d65ebe3..89a2bf7 100644
  		/* its a serious configuration bug when it fails */
  		BUG_ON( gpiochip_add(&port[i].chip) < 0 );
 diff --git a/arch/arm/plat-mxc/include/mach/common.h b/arch/arm/plat-mxc/include/mach/common.h
-index 4bf1068..1cf801f 100644
+index 4bf1068..e704d28 100644
 --- a/arch/arm/plat-mxc/include/mach/common.h
 +++ b/arch/arm/plat-mxc/include/mach/common.h
-@@ -45,4 +45,8 @@ extern void mxc91231_power_off(void);
+@@ -29,7 +29,8 @@ extern void mx27_init_irq(void);
+ extern void mx31_init_irq(void);
+ extern void mx35_init_irq(void);
+ extern void mxc91231_init_irq(void);
+-extern void mxc_timer_init(struct clk *timer_clk, void __iomem *, int);
++extern void mxc_timer_init(struct clk *timer_clk,
++			   void __iomem *, unsigned long, int);
+ extern int mx1_clocks_init(unsigned long fref);
+ extern int mx21_clocks_init(unsigned long lref, unsigned long fref);
+ extern int mx25_clocks_init(void);
+@@ -45,4 +46,8 @@ extern void mxc91231_power_off(void);
  extern void mxc91231_arch_reset(int, const char *);
  extern void mxc91231_prepare_idle(void);
  
@@ -8018,10 +8137,18 @@ index 4bf1068..1cf801f 100644
 +
  #endif
 diff --git a/arch/arm/plat-mxc/include/mach/gpio.h b/arch/arm/plat-mxc/include/mach/gpio.h
-index 894d2f8..8e7d72d 100644
+index 894d2f8..8c835af 100644
 --- a/arch/arm/plat-mxc/include/mach/gpio.h
 +++ b/arch/arm/plat-mxc/include/mach/gpio.h
-@@ -36,6 +36,7 @@ struct mxc_gpio_port {
+@@ -19,6 +19,7 @@
+ #ifndef __ASM_ARCH_MXC_GPIO_H__
+ #define __ASM_ARCH_MXC_GPIO_H__
+ 
++#include <linux/spinlock.h>
+ #include <mach/hardware.h>
+ #include <asm-generic/gpio.h>
+ 
+@@ -36,6 +37,7 @@ struct mxc_gpio_port {
  	int virtual_irq_start;
  	struct gpio_chip chip;
  	u32 both_edges;
@@ -8030,7 +8157,7 @@ index 894d2f8..8e7d72d 100644
  
  int mxc_gpio_init(struct mxc_gpio_port*, int);
 diff --git a/arch/arm/plat-mxc/time.c b/arch/arm/plat-mxc/time.c
-index 844567e..b91b48f 100644
+index 844567e..7e1f364 100644
 --- a/arch/arm/plat-mxc/time.c
 +++ b/arch/arm/plat-mxc/time.c
 @@ -25,6 +25,7 @@
@@ -8076,10 +8203,11 @@ index 844567e..b91b48f 100644
  
  	evt->event_handler(evt);
  
-@@ -281,6 +302,64 @@ static int __init mxc_clockevent_init(struct clk *timer_clk)
+@@ -281,7 +302,67 @@ static int __init mxc_clockevent_init(struct clk *timer_clk)
  	return 0;
  }
  
+-void __init mxc_timer_init(struct clk *timer_clk, void __iomem *base, int irq)
 +#ifdef CONFIG_IPIPE
 +static struct __ipipe_tscinfo tsc_info = {
 +	.type = IPIPE_TSC_TYPE_FREERUNNING,
@@ -8106,14 +8234,15 @@ index 844567e..b91b48f 100644
 +void __ipipe_mach_set_dec(unsigned long delay)
 +{
 +	if (delay > mxc_min_delay) {
-+		unsigned long flags;
++		unsigned long tcmp;
 +
-+		local_irq_save_hw(flags);
-+		if (!cpu_is_mx3())
-+			mx1_2_set_next_event(delay, NULL);
-+		else
-+			mx3_set_next_event(delay, NULL);
-+		local_irq_restore_hw(flags);
++		if (cpu_is_mx3() || cpu_is_mx25()) {
++			tcmp = __raw_readl(timer_base + MX3_TCN) + delay;
++			__raw_writel(tcmp, timer_base + MX3_TCMP);
++		} else {
++			tcmp = __raw_readl(timer_base + MX1_2_TCN) + delay;
++			__raw_writel(tcmp, timer_base + MX1_2_TCMP);
++		}
 +	} else
 +		ipipe_trigger_irq(__ipipe_mach_timerint);
 +}
@@ -8129,19 +8258,21 @@ index 844567e..b91b48f 100644
 +
 +unsigned long __ipipe_mach_get_dec(void)
 +{
-+	if (!cpu_is_mx3())
-+		return __raw_readl(timer_base + MX1_2_TCMP)
-+			- __raw_readl(timer_base + MX1_2_TCN);
-+	else
++	if (cpu_is_mx3() || cpu_is_mx25())
 +		return __raw_readl(timer_base + MX3_TCMP)
 +			- __raw_readl(timer_base + MX3_TCN);
++	else
++		return __raw_readl(timer_base + MX1_2_TCMP)
++			- __raw_readl(timer_base + MX1_2_TCN);
 +}
 +#endif /* CONFIG_IPIPE */
 +
- void __init mxc_timer_init(struct clk *timer_clk, void __iomem *base, int irq)
++void __init mxc_timer_init(struct clk *timer_clk,
++			   void __iomem *base, unsigned long phys, int irq)
  {
  	uint32_t tctl_val;
-@@ -309,4 +388,25 @@ void __init mxc_timer_init(struct clk *timer_clk, void __iomem *base, int irq)
+ 
+@@ -309,4 +390,21 @@ void __init mxc_timer_init(struct clk *timer_clk, void __iomem *base, int irq)
  
  	/* Make irqs happen */
  	setup_irq(irq, &mxc_timer_irq);
@@ -8152,17 +8283,13 @@ index 844567e..b91b48f 100644
 +	tsc_info.freq = clk_get_rate(timer_clk);
 +	mxc_min_delay = ((__ipipe_cpu_freq + 500000) / 1000000) ?: 1;
 +
-+	if (cpu_is_mx1() || cpu_is_mx2()) {
-+#if defined(CONFIG_ARCH_MX1) || defined(CONFIG_ARCH_MX2)
-+		tsc_info.u.counter_paddr = (TIM1_BASE_ADDR + MX1_2_TCN);
++	if (cpu_is_mx3() || cpu_is_mx25()) {
++		tsc_info.u.counter_paddr = (phys + MX3_TCN);
++		tsc_info.counter_vaddr = (unsigned long)(timer_base + MX3_TCN);
++	} else {
++		tsc_info.u.counter_paddr = (phys + MX1_2_TCN);
 +		tsc_info.counter_vaddr =
 +			(unsigned long)(timer_base + MX1_2_TCN);
-+#endif
-+	} else if (cpu_is_mx3()) {
-+#ifdef CONFIG_ARCH_MX3
-+		tsc_info.u.counter_paddr = (GPT1_BASE_ADDR + MX3_TCN);
-+		tsc_info.counter_vaddr = (unsigned long)(timer_base + MX3_TCN);
-+#endif
 +	}
 +	__ipipe_tsc_register(&tsc_info);
 +#endif /* CONFIG_IPIPE */
@@ -8623,7 +8750,7 @@ index c0ab7c8..f5166fc 100644
  extern void omap_init_irq(void);
  extern int omap_irq_pending(void);
 diff --git a/arch/arm/plat-pxa/gpio.c b/arch/arm/plat-pxa/gpio.c
-index 98548c6..4769217 100644
+index 98548c6..975dfe0 100644
 --- a/arch/arm/plat-pxa/gpio.c
 +++ b/arch/arm/plat-pxa/gpio.c
 @@ -17,6 +17,7 @@
@@ -8652,15 +8779,6 @@ index 98548c6..4769217 100644
  				n = find_next_bit(&gedr, BITS_PER_LONG, n + 1);
  			}
  		}
-@@ -285,7 +286,7 @@ void __init pxa_init_gpio(int mux_irq, int start, int end, set_wake_t fn)
- 
- 	for (irq  = gpio_to_irq(start); irq <= gpio_to_irq(end); irq++) {
- 		set_irq_chip(irq, &pxa_muxed_gpio_chip);
--		set_irq_handler(irq, handle_edge_irq);
-+		set_irq_handler(irq, handle_level_irq);
- 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
- 	}
- 
 diff --git a/arch/arm/plat-s3c/gpio.c b/arch/arm/plat-s3c/gpio.c
 index 5ff24e0..03e6c09 100644
 --- a/arch/arm/plat-s3c/gpio.c

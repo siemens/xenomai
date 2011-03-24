@@ -96,7 +96,7 @@ typedef struct xnarch_fltinfo {
    context. */
 #define xnarch_fault_pf_p(fi)   ((fi)->vector == 14)
 #define xnarch_fault_bp_p(fi)   ((current->ptrace & PT_PTRACED) && \
-                                 ((fi)->vector == 1 || (fi)->vector == 3))
+				 ((fi)->vector == 1 || (fi)->vector == 3))
 #define xnarch_fault_notify(fi) (!xnarch_fault_bp_p(fi))
 
 #ifdef __cplusplus

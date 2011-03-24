@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2006,2007 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2006,2007 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -679,7 +679,7 @@ static int __wind_errno_taskset(struct pt_regs *regs)
  		wind_errnoset(errcode);
  		return 0;
  	}
- 
+
  	pTcb = __wind_lookup_task(handle);
 	if (!pTcb)
 		return S_objLib_OBJ_ID_ERROR;
@@ -706,7 +706,7 @@ static int __wind_errno_taskget(struct pt_regs *regs)
  		pTcb = __wind_lookup_task(handle);
  		if (!pTcb)
  			return S_objLib_OBJ_ID_ERROR;
- 
+
  		errcode = errnoOfTaskGet((TASK_ID) pTcb);
  		if (errcode == ERROR)
  			return wind_errnoget();

@@ -2,7 +2,7 @@
  * @file
  * This file is part of the Xenomai project.
  *
- * @note Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org> 
+ * @note Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -27,7 +27,7 @@
 
 /* Creation flag. */
 #define I_NOAUTOENA  XN_ISR_NOENABLE  /* Do not auto-enable interrupt channel
-				        after each IRQ. */
+					after each IRQ. */
 #define I_PROPAGATE  XN_ISR_PROPAGATE /* Propagate IRQs down the
 				       pipeline after processing; IOW,
 				       pass them to Linux. */
@@ -36,7 +36,7 @@ typedef struct rt_intr_info {
     unsigned irq;	/* !< Interrupt request number. */
 
     unsigned long hits;	/* !< Number of receipts (since attachment), 0 if
-                              statistics support is disable in the nucleus. */
+			      statistics support is disable in the nucleus. */
 
     char name[XNOBJECT_NAME_LEN]; /* !< Symbolic name. */
 

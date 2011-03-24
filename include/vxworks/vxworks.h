@@ -90,7 +90,7 @@ typedef int BOOL;
 #define SEM_DELETE_SAFE      0x4
 #define SEM_INVERSION_SAFE   0x8
 #define SEM_OPTION_MASK     (SEM_Q_FIFO|SEM_Q_PRIORITY| \
-                             SEM_DELETE_SAFE|SEM_INVERSION_SAFE)
+			     SEM_DELETE_SAFE|SEM_INVERSION_SAFE)
 
 /* timeouts when waiting for semaphores */
 #define NO_WAIT (0)
@@ -154,7 +154,7 @@ typedef struct _TASK_DESC {
 } TASK_DESC;
 
 typedef void (*wind_timer_t)(long);
-    
+
 typedef struct wind_wd_utarget {
 
     wind_timer_t handler;
@@ -214,9 +214,9 @@ typedef struct wind_tcb {
 
     /* Xenomai specific: used by message queues */
     char * rcv_buf;             /* A place to save the receive buffer when this
-                                   task is pending on a msgQReceive */
+				   task is pending on a msgQReceive */
     unsigned int rcv_bytes;     /* this is the size passed to msgQReceive */
-    
+
 }  WIND_TCB;
 
 static inline WIND_TCB *thread2wind_task(xnthread_t *t)
@@ -231,7 +231,7 @@ typedef void (*wind_switch_hook)(WIND_TCB *, WIND_TCB *);
 typedef void (*wind_delete_hook)(WIND_TCB *);
 
 typedef void (*wind_tick_handler_t)(long);
-    
+
 xnhandle_t taskNameToHandle(const char *name);
 
 #ifdef errno
@@ -250,7 +250,7 @@ STATUS taskRestart(TASK_ID task_id);
 static inline void taskHookInit(void)
 {
 }
-    
+
 STATUS taskCreateHookAdd(wind_create_hook hook);
 
 STATUS taskCreateHookDelete(wind_create_hook hook);
@@ -264,7 +264,7 @@ STATUS taskDeleteHookAdd(wind_delete_hook hook);
 STATUS taskDeleteHookDelete(wind_delete_hook hook);
 
 int intCount(void);
-    
+
 int intLevelSet(int level);
 
 int intLock(void);
@@ -307,7 +307,7 @@ extern "C" {
 #endif
 
 void printErrno(int status);
-    
+
 STATUS errnoSet(int status);
 
 int errnoGet(void);
@@ -351,17 +351,17 @@ STATUS taskPriorityGet(TASK_ID task_id,
 		       int *pprio);
 
 void taskExit(int code);
-    
+
 STATUS taskLock(void);
 
 STATUS taskUnlock(void);
 
 TASK_ID taskIdSelf(void);
-    
+
 STATUS taskSafe(void);
 
 STATUS taskUnsafe(void);
-    
+
 STATUS taskDelay(int ticks);
 
 STATUS taskIdVerify(TASK_ID task_id);
@@ -371,11 +371,11 @@ const char *taskName(TASK_ID task_id);
 TASK_ID taskNameToId(const char *name);
 
 TASK_ID taskIdDefault(TASK_ID task_id);
-    
+
 BOOL taskIsReady(TASK_ID task_id);
 
 BOOL taskIsSuspended (TASK_ID task_id);
-         
+
 STATUS taskInfoGet(TASK_ID task_id,
 		   TASK_DESC *desc);
 
@@ -427,23 +427,23 @@ STATUS msgQSend(MSG_Q_ID msg,
 		int prio);
 
 BOOL intContext(void);
-    
+
 void sysClkDisable(void);
 
 void sysClkEnable(void);
 
 int sysClkRateGet(void);
-    
+
 STATUS sysClkRateSet(int ticksPerSecond);
-    
+
 ULONG tickGet(void);
 
 void tickSet(ULONG ticks);
 
 STATUS kernelTimeSlice(int ticks);
-      
+
 const char *kernelVersion(void);
-    
+
 #ifdef __cplusplus
 }
 #endif

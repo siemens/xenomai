@@ -39,8 +39,8 @@ static a4l_dev_t a4l_devs[A4L_NB_DEVICES];
 void a4l_init_devs(void)
 {
 	int i;
-	memset(a4l_devs, 0, A4L_NB_DEVICES * sizeof(a4l_dev_t));	
-	for (i = 0; i < A4L_NB_DEVICES; i++) {		
+	memset(a4l_devs, 0, A4L_NB_DEVICES * sizeof(a4l_dev_t));
+	for (i = 0; i < A4L_NB_DEVICES; i++) {
 		a4l_lock_init(&a4l_devs[i].lock);
 		a4l_devs[i].transfer.irq_desc.irq = A4L_IRQ_UNUSED;
 	}
@@ -60,7 +60,7 @@ int a4l_check_cleanup_devs(void)
 void a4l_set_dev(a4l_cxt_t *cxt)
 {
 	/* Retrieve the minor index */
-	const int minor = a4l_get_minor(cxt);	
+	const int minor = a4l_get_minor(cxt);
 	/* Fill the dev fields accordingly */
 	cxt->dev = &(a4l_devs[minor]);
 }
@@ -293,13 +293,13 @@ int a4l_assign_driver(a4l_cxt_t * cxt,
 	dev->driver = drv;
 
 	if (drv->privdata_size == 0)
-		__a4l_dbg(1, core_dbg, 
+		__a4l_dbg(1, core_dbg,
 			  "a4l_assign_driver: warning! "
 			  "the field priv will not be usable\n");
 	else {
 
 		INIT_LIST_HEAD(&dev->subdvsq);
-	
+
 		dev->priv = rtdm_malloc(drv->privdata_size);
 		if (dev->priv == NULL && drv->privdata_size != 0) {
 			__a4l_err("a4l_assign_driver: "
@@ -344,7 +344,7 @@ int a4l_release_driver(a4l_cxt_t * cxt)
 	if ((ret = dev->driver->detach(dev)) != 0)
 		goto out_release_driver;
 
-	/* Decrease module's count 
+	/* Decrease module's count
 	   so as to allow module unloading */
 	module_put(dev->driver->owner);
 
@@ -357,7 +357,7 @@ int a4l_release_driver(a4l_cxt_t * cxt)
 		rtdm_free(tmp);
 	}
 
-	/* Free the private field */ 
+	/* Free the private field */
 	rtdm_free(dev->priv);
 	dev->driver = NULL;
 
@@ -473,7 +473,7 @@ int a4l_ioctl_devinfo(a4l_cxt_t * cxt, void *arg)
 		   read subdevice and write subdevice */
 	}
 
-	if (rtdm_safe_copy_to_user(cxt->user_info, 
+	if (rtdm_safe_copy_to_user(cxt->user_info,
 				   arg, &info, sizeof(a4l_dvinfo_t)) != 0)
 		return -EFAULT;
 

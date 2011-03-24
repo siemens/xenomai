@@ -271,7 +271,7 @@ static inline void xntbase_tick(xntbase_t *base)
 
 #endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
 
-/*! 
+/*!
  * @fn xnticks_t xntbase_get_time(xntbase_t *base)
  * @brief Get the clock time for a given time base.
  *

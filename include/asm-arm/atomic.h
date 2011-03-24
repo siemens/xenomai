@@ -25,10 +25,10 @@
 
 #include <asm/xenomai/features.h>
 
-typedef struct { volatile unsigned long counter; } xnarch_atomic_t;
+typedef struct { unsigned long counter; } xnarch_atomic_t;
 typedef xnarch_atomic_t atomic_counter_t;
 
-#define xnarch_atomic_get(v)	((v)->counter)
+#define xnarch_atomic_get(v)	(*(volatile unsigned long *)(&(v)->counter))
 static __inline__ void
 xnarch_atomic_set(xnarch_atomic_t *ptr, unsigned long val)
 {
