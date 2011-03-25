@@ -2164,7 +2164,7 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_completion] = {&xnshadow_sys_completion, __xn_exec_lostage},
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
-	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_any},
+	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_lostage},
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
 	[__xn_sys_current_info] =
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
