@@ -80,6 +80,20 @@ int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_erro
 }
 #endif /* XENOMAI_SYSSIGS_SAFE */
 
+#ifdef xeno_arch_features_check
+static void do_init_arch_features(void)
+{
+	xeno_arch_features_check(&xeno_featinfo);
+}
+static void xeno_init_arch_features(void)
+{
+	static pthread_once_t init_archfeat_once = PTHREAD_ONCE_INIT;
+	pthread_once(&init_archfeat_once, do_init_arch_features);
+}
+#else  /* !xeno_init_arch_features */
+#define xeno_init_arch_features()	do { } while (0)
+#endif /* !xeno_arch_features_check */
+
 int
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 		   const char *module, xnsighandler *handler)
@@ -136,15 +150,13 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin,
 
 	xnsig_handlers[muxid] = handler;
 
-#ifdef xeno_arch_features_check
-	xeno_arch_features_check(&finfo);
-#endif /* xeno_arch_features_check */
+	xeno_featinfo = finfo;
+
+	xeno_init_arch_features();
 
 	xeno_init_sem_heaps();
 
 	xeno_init_current_keys();
-
-	xeno_featinfo = finfo;
 
 	xeno_main_tid = pthread_self();
 
