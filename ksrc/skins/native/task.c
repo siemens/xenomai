@@ -44,8 +44,10 @@
 /** @example sigxcpu.c */
 /** @example trivial-periodic.c */
 
+#include <nucleus/sys_ppd.h>
 #include <nucleus/pod.h>
 #include <nucleus/heap.h>
+#include <nucleus/assert.h>
 #include <native/task.h>
 #include <native/timer.h>
 
@@ -249,6 +251,7 @@ void __native_task_pkg_cleanup(void)
 int rt_task_create(RT_TASK *task,
 		   const char *name, int stksize, int prio, int mode)
 {
+	xnarch_atomic_t *fastlock = NULL;
 	union xnsched_policy_param param;
 	struct xnthread_init_attr attr;
 	int err = 0, cpumask, cpu;
@@ -296,9 +299,20 @@ int rt_task_create(RT_TASK *task,
 		task->affinity = XNPOD_ALL_CPUS;
 
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
+#ifdef CONFIG_XENO_FASTSYNCH
+	/* Allocate lock memory for in-kernel use */
+	fastlock = xnheap_alloc(&xnsys_ppd_get(0)->sem_heap,
+				sizeof(*fastlock));
+	if (fastlock == NULL)
+		return -ENOMEM;
+#endif /* CONFIG_XENO_FASTSYNCH */
 	xnsynch_init(&task->mrecv, XNSYNCH_FIFO, NULL);
-	xnsynch_init(&task->msendq,
-		     XNSYNCH_PRIO | XNSYNCH_PIP | XNSYNCH_OWNER, NULL);
+	/*
+	 * Make the task acquire the synchronization object
+	 * indefinitely, without raising the resource count though.
+	 */
+	xnsynch_init(&task->msendq, XNSYNCH_PIP, fastlock);
+	xnsynch_fast_acquire(fastlock, xnthread_handle(&task->thread_base));
 	xnsynch_set_owner(&task->msendq, &task->thread_base);
 	task->flowgen = 0;
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
@@ -621,6 +635,11 @@ int rt_task_delete(RT_TASK *task)
 
 	if (err)
 		goto unlock_and_exit;
+
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+	xnheap_free(&xnsys_ppd_get(0)->sem_heap,
+		    task->msendq.fastlock);
+#endif
 
 	/* Does not return if task is current. */
 	xnpod_delete_thread(&task->thread_base);
@@ -1776,6 +1795,16 @@ ssize_t rt_task_send(RT_TASK *task,
 		client->wait_args.mps.mcb_r.size = 0;
 
 	/*
+	 * We distinguish rt_task_unblock() from rt_task_reply() calls
+	 * on the sender, checking the value of the flowid token on
+	 * return from suspension. If zero, rt_task_unblock() was
+	 * called to release the client prior to receiving any reply,
+	 * otherwise rt_task_reply() was invoked for the current
+	 * transaction.
+	 */
+	client->wait_args.mps.mcb_r.flowid = 0;
+
+	/*
 	 * Wake up the server if it is currently waiting for a
 	 * message, then sleep on the send queue, waiting for the
 	 * remote reply. xnsynch_sleep_on() will reschedule as
@@ -1800,11 +1829,16 @@ ssize_t rt_task_send(RT_TASK *task,
 		err = -EIDRM;	/* Receiver deleted while pending. */
 	else if (info & XNTIMEO)
 		err = -ETIMEDOUT;	/* Timeout. */
-	else if (info & XNBREAK)
-		err = -EINTR;	/* Unblocked. */
 	else {
-		rsize = client->wait_args.mps.mcb_r.size;
+		XENO_BUGON(NATIVE, (info & XNBREAK) == 0);
 
+		if (client->wait_args.mps.mcb_r.flowid == 0) {
+			/* Task unblocked prior to being replied to. */
+			err = -EINTR;
+			goto unlock_and_exit;
+		}
+
+		rsize = client->wait_args.mps.mcb_r.size;
 		if (rsize > 0) {
 			/* Ok, the message has been processed and answered by the
 			   remote, and a memory address is available to pass the
@@ -2035,7 +2069,9 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
  * field by the rt_task_send() service. If @a mcb_s is NULL, 0 will be
  * returned to the client into the status code field.
  *
- * @return O is returned upon success. Otherwise:
+ * @return Zero is returned upon success. Otherwise:
+ *
+ * - -EINVAL is returned if @a flowid is invalid.
  *
  * - -ENXIO is returned if @a flowid does not match the expected
  * identifier returned from the latest call of the current task to
@@ -2072,6 +2108,9 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 	if (!xnpod_primary_p())
 		return -EPERM;
 
+	if (flowid <= 0)
+		return -EINVAL;
+
 	server = xeno_current_task();
 
 	xnlock_get_irqsave(&nklock, s);
@@ -2092,7 +2131,7 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 			   client to be unblocked without transferring
 			   the ownership of the msendq object which
 			   must always belong to the server. */
-			xnpod_resume_thread(&client->thread_base, XNPEND);
+			xnpod_unblock_thread(&client->thread_base);
 			break;
 		}
 	}
@@ -2121,9 +2160,9 @@ int rt_task_reply(int flowid, RT_TASK_MCB *mcb_s)
 		   through the rescheduling is wanted. */
 		err = -ENOBUFS;
 
-	/* Copy back the actual size of the reply data, */
+	/* Fill in the reply block. */
+	client->wait_args.mps.mcb_r.flowid = flowid;
 	client->wait_args.mps.mcb_r.size = rsize;
-	/* And the status code. */
 	client->wait_args.mps.mcb_r.opcode = mcb_s ? mcb_s->opcode : 0;
 
 	/* That's it, we just need to start the rescheduling procedure
