@@ -100,7 +100,7 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
 
-static DEFINE_SEMAPHORE(completion_mutex);
+static struct semaphore completion_mutex;
 
 static inline struct task_struct *get_switch_lock_owner(void)
 {
@@ -2966,8 +2966,7 @@ int xnshadow_mount(void)
 	unsigned i, size;
 	int cpu, ret;
 
-	nucleus_muxid = -1;
-
+	sema_init(&completion_mutex, 1);
 	nkthrptd = rthal_alloc_ptdkey();
 	nkerrptd = rthal_alloc_ptdkey();
 
