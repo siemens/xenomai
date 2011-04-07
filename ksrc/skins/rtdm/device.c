@@ -61,7 +61,7 @@ static int proto_hashkey_mask;
 int rtdm_apc;
 EXPORT_SYMBOL_GPL(rtdm_apc);
 
-DEFINE_SEMAPHORE(nrt_dev_lock);
+struct semaphore nrt_dev_lock;
 DEFINE_XNLOCK(rt_dev_lock);
 
 #ifndef MODULE
@@ -457,6 +457,8 @@ EXPORT_SYMBOL_GPL(rtdm_dev_unregister);
 int __init rtdm_dev_init(void)
 {
 	int err, i;
+
+	sema_init(&nrt_dev_lock, 1);
 
 	rtdm_apc = rthal_apc_alloc("deferred RTDM close", rtdm_apc_handler,
 				   NULL);
