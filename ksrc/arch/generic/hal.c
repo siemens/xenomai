@@ -451,7 +451,7 @@ static int rthal_apc_thread(void *data)
     while (!kthread_should_stop()) {
 	set_current_state(TASK_INTERRUPTIBLE);
 	schedule();
-	rthal_apc_handler(0);
+	rthal_apc_handler(0, NULL);
     }
 
     __set_current_state(TASK_RUNNING);
