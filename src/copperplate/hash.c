@@ -103,6 +103,11 @@ void __hash_init(void *heap, struct hash_table *t)
 	pthread_mutexattr_destroy(&mattr);
 }
 
+void hash_destroy(struct hash_table *t)
+{
+	pthread_mutex_destroy(&t->lock);
+}
+
 static struct hash_bucket *do_hash(struct hash_table *t, const char *key)
 {
 	unsigned int hash = __hash_key(key, strlen(key), 0);

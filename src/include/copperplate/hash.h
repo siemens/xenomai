@@ -73,6 +73,8 @@ static inline void hash_init(struct hash_table *t)
 	__hash_init(__pshared_heap, t);
 }
 
+void hash_destroy(struct hash_table *t);
+
 int hash_enter(struct hash_table *t,
 	       const char *key, struct hashobj *newobj);
 
