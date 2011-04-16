@@ -24,27 +24,46 @@
 #ifdef CONFIG_VFP
 #include <asm/vfpmacros.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#include <asm/tls.h>
+#else
+	.macro set_tls tp, tmp1, tmp2
+#if defined(CONFIG_HAS_TLS_REG)
+	mcr     p15, 0, \tp, c13, c0, 3          @ set TLS register
+#elif !defined(CONFIG_TLS_REG_EMUL)
+	mov     \tmp1, #0xffff0fff
+	str 	\tp, [\tmp1, #-15]  		 @ TLS val at 0xffff0ff0
+#endif
+	.endm
+#endif
 
-/*
- * Switch context routine.
- *
- * Registers according to the ARM procedure call standard:
- *   Reg    Description
- *   r0-r3  argument/scratch registers
- *   r4-r9  variable register
- *   r10=sl stack limit/variable register
- *   r11=fp frame pointer/variable register
- *   r12=ip intra-procedure-call scratch register
- *   r13=sp stack pointer (auto preserved)
- *   r14=lr link register
- *   r15=pc program counter (auto preserved)
- *
- * rthal_thread_switch(struct thread_info *out, struct thread_info *in)
- */
-
-    .text
-
+	.macro fpu_switch tmp
 #ifdef CONFIG_VFP
+	@ Always disable VFP so we can lazily save/restore the old
+	@ state. This occurs in the context of the previous thread.
+	VFPFMRX \tmp, FPEXC
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
+	bic     \tmp, \tmp, #FPEXC_ENABLE
+#else
+	bic     \tmp, \tmp, #FPEXC_EN
+#endif
+	VFPFMXR FPEXC, \tmp
+#endif
+	.endm
+
+	.macro clear_exclusive_monitor
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 32) && __LINUX_ARM_ARCH__ >= 6
+#ifdef CONFIG_CPU_MPCORE
+	clrex
+#else
+	strex   r5, r4, [ip]                    @ Clear exclusive monitor
+#endif
+#endif
+	.endm
+
+	.text
+
+#if defined(CONFIG_VFP) && defined(CONFIG_XENO_HW_FPU)
 /* Copied from vfp_save_state in arch/arm/vfp/vfphw.S
  * r0 = pointer to union vfp_state, r1 = fpexc
  */
@@ -80,16 +99,26 @@ ENTRY(rthal_vfp_load)
 #endif
 
 /*
+/*
+ * Switch context routine.
+ *
+ * Registers according to the ARM procedure call standard:
+ *   Reg    Description
+ *   r0-r3  argument/scratch registers
+ *   r4-r9  variable register
+ *   r10=sl stack limit/variable register
+ *   r11=fp frame pointer/variable register
+ *   r12=ip intra-procedure-call scratch register
+ *   r13=sp stack pointer (auto preserved)
+ *   r14=lr link register
+ *   r15=pc program counter (auto preserved)
+ *
  * Copied from __switch_to, arch/arm/kernel/entry-armv.S.
  * Right now it is identical, but who knows what the
  * future reserves us...
  *
  * XXX: All the following config options are NOT tested:
- *      CONFIG_CPU_MPCORE
- *      CONFIG_CPU_XSCALE
  *      CONFIG_IWMMXT
- *      CONFIG_HAS_TLS_REG
- *      CONFIG_VFP
  *
  *  Calling args:
  * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
@@ -101,58 +130,14 @@ ENTRY(rthal_thread_switch)
 #ifdef CONFIG_MMU
     ldr     r6, [r2, #TI_CPU_DOMAIN]
 #endif
-#if __LINUX_ARM_ARCH__ >= 6
-#ifdef CONFIG_CPU_MPCORE
-    clrex
-#else
-    strex   r5, r4, [ip]                    @ Clear exclusive monitor
-#endif
-#endif
-#if 0
-#if defined(CONFIG_CPU_XSCALE) && !defined(CONFIG_IWMMXT)
-    mra     r4, r5, acc0
-    stmia   ip, {r4, r5}
-#endif
-#endif
-#if defined(CONFIG_HAS_TLS_REG)
-    mcr     p15, 0, r3, c13, c0, 3          @ set TLS register
-#elif !defined(CONFIG_TLS_REG_EMUL)
-    mov     r4, #0xffff0fff
-    str     r3, [r4, #-15]                  @ TLS val at 0xffff0ff0
-#endif
+
+    clear_exclusive_monitor
+    set_tls r3, r4, r5
 #ifdef CONFIG_MMU
     mcr     p15, 0, r6, c3, c0, 0           @ Set domain register
 #endif
-#ifdef CONFIG_VFP
-    @ Always disable VFP so we can lazily save/restore the old
-    @ state. This occurs in the context of the previous thread.
-    VFPFMRX r4, FPEXC
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-    bic     r4, r4, #FPEXC_ENABLE
-#else
-    bic     r4, r4, #FPEXC_EN
-#endif
-    VFPFMXR FPEXC, r4
-#endif
-#if 0
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18) &&  defined(CONFIG_IWMMXT)
-    bl      iwmmxt_task_switch
-#endif
-#if defined(CONFIG_CPU_XSCALE) && !defined(CONFIG_IWMMXT)
-    add     r4, r2, #40                     @ cpu_context_save->extra
-    ldmib   r4, {r4, r5}
-    mar     acc0, r4, r5
-#endif
-#endif
+    fpu_switch r4
     add	    r4, r2, #TI_CPU_SAVE
-#if 0
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18) && defined(CONFIG_IWMMXT)
-    mov	    r5, r0
-    mov     r0, r2
-    bl	    iwmmxt_task_switch
-    mov	    r0, r5
-#endif
-#endif
     ldmia   r4, {r4 - sl, fp, sp, pc}       @ Load all regs saved previously
 
 /*
