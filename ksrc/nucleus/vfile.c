@@ -205,7 +205,6 @@ redo:
 	 * a NULL return from ->rewind() tells us that the vfile won't
 	 * output any snapshot data via ->show().
 	 */
-	it->endfn = ops->end;
 	nrdata = 0;
 	if (ops->rewind) {
 		nrdata = ops->rewind(it);
@@ -239,8 +238,10 @@ redo:
 			kfree(it);
 			return -ENOMEM;
 		}
-		if (data != VFILE_SEQ_EMPTY)
+		if (data != VFILE_SEQ_EMPTY) {
 			it->databuf = data;
+			it->endfn = ops->end;
+		}
 	} else if (nrdata > 0 && vfile->datasz > 0) {
 		/* We have a hint for auto-allocation. */
 		data = kmalloc(vfile->datasz * nrdata, GFP_KERNEL);
