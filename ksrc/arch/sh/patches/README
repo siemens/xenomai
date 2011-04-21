@@ -1,0 +1,30 @@
+-- arch/sh/patches
+
+Xenomai needs special kernel support to deliver fast and deterministic
+response time to external interrupts, and also to provide real-time
+services highly integrated with the standard Linux kernel.
+
+This support is provided by the Adeos real-time enabler [1], in the
+form of a kernel patch you have to apply against a vanilla kernel
+tree, before you attempt to compile the Xenomai codebase against the
+latter kernel.
+
+For the SH4 (SuperH 32bit) architecture, I-pipe patches are currently
+based on STMicroelectronics 'STLinux' kernel releases [2].
+
+Tested boards:
+
+- STMicro MB442
+
+This directory only contains the most recent patches used to validate
+this Xenomai release on SH4 platforms; you may find the complete
+collection of Adeos/I-pipe patches at the following location (see
+note): http://download.gna.org/adeos/patches/v2.6/sh
+
+Patch			        Based on
+------------------------------------------------------------------------
+
+2.6.32.10			STLinux-2.4
+
+[1] http://www.gna.org/projects/adeos/
+[2] ftp://ftp.stlinux.com/pub/stlinux/

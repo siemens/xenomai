@@ -662,7 +662,7 @@ uninstall-am: uninstall-binSCRIPTS uninstall-testPROGRAMS \
 	uninstall-testSCRIPTS
 
 
-xeno-test: xeno-test.in Makefile.in
+xeno-test: $(srcdir)/xeno-test.in Makefile
 	sed "s,@testdir@,$(testdir)," $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

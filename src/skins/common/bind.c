@@ -25,7 +25,21 @@ static void xeno_sigill_handler(int sig)
 
 struct xnfeatinfo xeno_featinfo;
 
-int
+#ifdef xeno_arch_features_check
+static void do_init_arch_features(void)
+{
+	xeno_arch_features_check(&xeno_featinfo);
+}
+static void xeno_init_arch_features(void)
+{
+	static pthread_once_t init_archfeat_once = PTHREAD_ONCE_INIT;
+	pthread_once(&init_archfeat_once, do_init_arch_features);
+}
+#else  /* !xeno_init_arch_features */
+#define xeno_init_arch_features()	do { } while (0)
+#endif /* !xeno_arch_features_check */
+
+int 
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 {
 	sighandler_t old_sigill_handler;
@@ -78,9 +92,8 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 		exit(EXIT_FAILURE);
 	}
 
-#ifdef xeno_arch_features_check
-	xeno_arch_features_check(&xeno_featinfo);
-#endif /* xeno_arch_features_check */
+	xeno_featinfo = finfo;
+	xeno_init_arch_features();
 
 	xeno_init_sem_heaps();
 

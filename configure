@@ -5290,6 +5290,10 @@ case "$build_for" in
 	XENO_TARGET_ARCH=nios2
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	;;
+ sh-*|sh4-*)
+	XENO_TARGET_ARCH=sh
+	CONFIG_XENO_DEFAULT_PERIOD=100000
+	;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $build_for -- Sorry."
@@ -5983,13 +5987,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5986: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5990: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5989: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5993: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5992: output\"" >&5)
+  (eval echo "\"\$as_me:5996: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7087,7 +7091,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7090 "configure"' > conftest.$ac_ext
+  echo '#line 7094 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8449,11 +8453,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8452: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8456: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8456: \$? = $ac_status" >&5
+   echo "$as_me:8460: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8773,11 +8777,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8776: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8780: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8780: \$? = $ac_status" >&5
+   echo "$as_me:8784: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8878,11 +8882,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8881: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8885: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8885: \$? = $ac_status" >&5
+   echo "$as_me:8889: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8933,11 +8937,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8936: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8940: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8940: \$? = $ac_status" >&5
+   echo "$as_me:8944: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11305,7 +11309,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11308 "configure"
+#line 11312 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11405,7 +11409,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11408 "configure"
+#line 11412 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12814,7 +12818,7 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:$srcdir/include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/uitron/Makefile src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/rtdk/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/uitron/Makefile src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -13948,6 +13952,8 @@ do
     "include/asm-arm/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-arm/bits/Makefile" ;;
     "include/asm-nios2/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-nios2/Makefile" ;;
     "include/asm-nios2/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-nios2/bits/Makefile" ;;
+    "include/asm-sh/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sh/Makefile" ;;
+    "include/asm-sh/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sh/bits/Makefile" ;;
     "include/asm-sim/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
     "include/asm-sim/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/bits/Makefile" ;;
     "include/native/Makefile") CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;

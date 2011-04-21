@@ -2585,7 +2585,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 	thread = xnpod_current_thread();
 
 	trace_mark(xn_nucleus, thread_fault,
-		   "thread %p thread_name %s ip %p type %d",
+		   "thread %p thread_name %s ip %p type 0x%x",
 		   thread, xnthread_name(thread),
 		   (void *)xnarch_fault_pc(fltinfo),
 		   xnarch_fault_trap(fltinfo));
@@ -2600,7 +2600,7 @@ int xnpod_trap_fault(xnarch_fltinfo_t *fltinfo)
 
 	if (!xnpod_userspace_p()) {
 		xnprintf
-		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #%u\n",
+		    ("suspending kernel thread %p ('%s') at 0x%lx after exception #0x%x\n",
 		     thread, thread->name, xnarch_fault_pc(fltinfo),
 		     xnarch_fault_trap(fltinfo));
 

@@ -104,6 +104,10 @@ case "$build_for" in
 	XENO_TARGET_ARCH=nios2
 	CONFIG_XENO_DEFAULT_PERIOD=10000000
 	;;
+ sh-*|sh4-*)
+	XENO_TARGET_ARCH=sh
+	CONFIG_XENO_DEFAULT_PERIOD=100000
+	;;
  *) echo ""
    echo "*******************************************"
    echo "Still unsupported target: $build_for -- Sorry."
@@ -779,6 +783,8 @@ AC_CONFIG_FILES([ \
 	include/asm-arm/bits/Makefile \
 	include/asm-nios2/Makefile \
 	include/asm-nios2/bits/Makefile \
+	include/asm-sh/Makefile \
+	include/asm-sh/bits/Makefile \
 	include/asm-sim/Makefile \
 	include/asm-sim/bits/Makefile \
 	include/native/Makefile \
