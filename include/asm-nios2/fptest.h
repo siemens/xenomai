@@ -1,5 +1,5 @@
-#ifndef _XENO_ASM_BLACKFIN_FPTEST_H
-#define _XENO_ASM_BLACKFIN_FPTEST_H
+#ifndef _XENO_ASM_NIOS2_FPTEST_H
+#define _XENO_ASM_NIOS2_FPTEST_H
 
 #ifdef __KERNEL__
 #include <linux/module.h>
@@ -32,4 +32,4 @@ static inline unsigned fp_regs_check(unsigned val)
     return val;
 }
 
-#endif /* _XENO_ASM_BLACKFIN_FPTEST_H */
+#endif /* _XENO_ASM_NIOS2_FPTEST_H */

@@ -2,7 +2,7 @@
  *   @ingroup hal
  *   @file
  *
- *   Real-Time Hardware Abstraction Layer for the Blackfin.
+ *   Real-Time Hardware Abstraction Layer for the NIOS2 architecture.
  *
  *   Copyright &copy; 2009 Philippe Gerum.
  *
