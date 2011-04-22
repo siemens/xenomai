@@ -296,13 +296,6 @@ int init_config(struct config *cfg, int argc, char *argv[])
 		};
 	}
 
-	/* If stdin is a terminal, we will not be able to read binary
-	   data from it */
-	if (isatty(fileno(cfg->input))) {
-		fprintf(stderr, "cmd_write: stdin cannot be a terminal\n");
-		return -EINVAL;
-	}
-
 	/* Open the analogy device and retrieve pointers on the info
 	   structures */
 	err = init_dsc_config(cfg);
@@ -336,6 +329,14 @@ int init_config(struct config *cfg, int argc, char *argv[])
 		fprintf(stderr, "cmd_write: malloc failed\n");
 		goto out;
 	}
+
+	/* If stdin is a terminal, we will not be able to read binary
+	   data from it */
+	if (isatty(fileno(cfg->input))) {
+		memset(cfg->buffer, 0, BUFFER_DEPTH * scan_size);
+		cfg->input = NULL;
+	} else
+		cfg->input = stdin;
 	
 out:
 
@@ -345,9 +346,9 @@ out:
 	return err;
 }
 
-/* --- Processing functions --- */
+/* --- Input management part --- */
 
-int process_stdin(struct config *cfg)
+int process_input(struct config *cfg)
 {
 	int err = 0, filled = 0;
 
@@ -357,7 +358,6 @@ int process_stdin(struct config *cfg)
 	int scan_size = cfg->chans_count * chan_size;
 
 	while (filled < BUFFER_DEPTH) {
-
 		int i;
 		double value;
 		char tmp[128];
@@ -395,18 +395,29 @@ int process_stdin(struct config *cfg)
 
 out:
 
-	if (err >= 0 && filled) {
+	return err < 0 ? err : filled;
+}
 
+/* --- Acquisition related stuff --- */
+
+int run_acquisition(struct config *cfg)
+{
+	int err = 0;
+
+	/* The return value of a4l_sizeof_chan() was already
+	controlled in init_config so no need to do it twice */
+	int chan_size = a4l_sizeof_chan(cfg->cinfo);
+	int scan_size = cfg->chans_count * chan_size;
+
+
+	err = cfg->input ? process_input(cfg) : BUFFER_DEPTH;
+	if (err > 0)
 		err = a4l_async_write(&cfg->dsc, 
 				      cfg->buffer, 
-				      filled * scan_size, A4L_INFINITE);
-		if (err < 0)
-			fprintf(stderr, 
-				"cmd_write: a4l_async_write failed (err=%d)\n",
-				err);
-	} else if (err >= 0 && !filled)
+				      err * scan_size, A4L_INFINITE);
+	else if (err == 0)
 		err = -ENOENT;
-	
+
 	return err < 0 ? err : 0;
 }
 
@@ -425,7 +436,7 @@ int init_acquisition(struct config *cfg)
 		.convert_arg = 0,
 		.scan_end_src = TRIG_COUNT,
 		.scan_end_arg = cfg->chans_count,
-		.stop_src = TRIG_COUNT,
+		.stop_src = cfg->scans_count ? TRIG_COUNT : TRIG_NONE,
 		.stop_arg = cfg->scans_count,
 		.nb_chan = cfg->chans_count,
 		.chan_descs = cfg->chans
@@ -449,13 +460,12 @@ int init_acquisition(struct config *cfg)
 		goto out;
 	}
 
-	/* Fill the asynchronous buffer with data
-	   TODO: the amount of data to be prefilled should be configured */
-	err = process_stdin(cfg);
+	/* Fill the asynchronous buffer with data... */
+	err = run_acquisition(cfg);
 	if (err < 0)
 		goto out;
 
-	/* Trigger the start of the output device feeding  */
+	/* ...before triggering the start of the output device feeding	*/
 	err = a4l_snd_insn(&cfg->dsc, &insn);
 
 out:
@@ -478,7 +488,7 @@ int main(int argc, char *argv[])
 	if (err < 0)
 		goto out;
 
-	while ((err = process_stdin(&cfg)) == 0);
+	while ((err = run_acquisition(&cfg)) == 0);
 
 	err = (err == -ENOENT) ? 0 : err;
 
