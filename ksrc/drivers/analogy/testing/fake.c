@@ -91,9 +91,9 @@ static a4l_cmd_t ai_cmd_mask = {
 	.idx_subd = 0,
 	.start_src = TRIG_NOW,
 	.scan_begin_src = TRIG_TIMER,
-	.convert_src = TRIG_NOW|TRIG_TIMER,
+	.convert_src = TRIG_NOW | TRIG_TIMER,
 	.scan_end_src = TRIG_COUNT,
-	.stop_src = TRIG_COUNT|TRIG_NONE,
+	.stop_src = TRIG_COUNT | TRIG_NONE,
 };
 
 static a4l_cmd_t ao_cmd_mask = {
@@ -102,7 +102,7 @@ static a4l_cmd_t ao_cmd_mask = {
 	.scan_begin_src = TRIG_TIMER,
 	.convert_src = TRIG_NOW | TRIG_TIMER,
 	.scan_end_src = TRIG_COUNT,
-	.stop_src = TRIG_COUNT| TRIG_NONE,
+	.stop_src = TRIG_COUNT | TRIG_NONE,
 };
 
 /* --- Analog input simulation --- */
@@ -203,16 +203,21 @@ int ai2_push_values(a4l_subd_t *subd)
 	int err = 0;
 
 	if (priv->count) {
+
 		err = a4l_buf_put(subd, priv->buffer, priv->count);
+
+		/* If there is no more place in the asynchronous
+		buffer, data are likely to be dropped; it is just a
+		test driver so no need to implement trickier mechanism */
+		err = (err == -EAGAIN) ? 0 : err;
+		priv->count = 0;
+
 		if (err < 0)
 			a4l_err(subd->dev, 
 				"ai2_push_values: "
 				"a4l_buf_put failed (err=%d)\n", err);
-		else {
-			priv->count = 0;
+		else
 			a4l_buf_evt(subd, 0);
-		}
-
 	}
 
 	return err;
@@ -244,7 +249,6 @@ static void task_proc(void *arg)
 		if (running && ao_pull_values(ao_subd) < 0)
 			break;
 
-
 		RTDM_EXECUTE_ATOMICALLY(running = priv->ai2_running);
 		if (running && ai2_push_values(ai2_subd) < 0)
 			break;
@@ -252,7 +256,6 @@ static void task_proc(void *arg)
 		a4l_task_sleep(TASK_PERIOD);
 	}
 }
-
 
 /* --- Asynchronous AI functions --- */
 
@@ -332,6 +335,7 @@ int ao_trigger(a4l_subd_t *subd, lsampl_t trignum)
 int ao_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
+	struct ao_ai2_priv *ao_priv = (struct ao_ai2_priv *)subd->priv;
 	int running;
 
 	a4l_info(subd->dev, "ao_cancel: (subd=%d)\n", subd->idx);
@@ -344,6 +348,8 @@ int ao_cancel(a4l_subd_t *subd)
 		/* Here, we have not saved the required amount of
 		   data; so, we cannot know whether or not, it is the
 		   end of the acquisition; that is why we force it */
+		RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 0);
+		RTDM_EXECUTE_ATOMICALLY(ao_priv->count = 0);
 		a4l_buf_evt(ai2_subd, A4L_BUF_EOA);
 	}
 
@@ -364,9 +370,25 @@ int ai2_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 int ai2_cancel(a4l_subd_t *subd)
 {
 	struct fake_priv *priv = (struct fake_priv *)subd->dev->priv;
+	struct ao_ai2_priv *ai2_priv = *((struct ao_ai2_priv **)subd->priv);
+
+	int running;
 
 	a4l_info(subd->dev, "ai2_cancel: (subd=%d)\n", subd->idx);
 	RTDM_EXECUTE_ATOMICALLY(priv->ai2_running = 0);
+
+	RTDM_EXECUTE_ATOMICALLY(running = priv->ao_running);
+	if (running) {
+		a4l_subd_t *ao_subd = 
+			(a4l_subd_t *)a4l_get_subd(subd->dev, AO_SUBD);
+		/* Here, we have not saved the required amount of
+		   data; so, we cannot know whether or not, it is the
+		   end of the acquisition; that is why we force it */
+		RTDM_EXECUTE_ATOMICALLY(priv->ao_running = 0);
+		RTDM_EXECUTE_ATOMICALLY(ai2_priv->count = 0);
+		a4l_buf_evt(ao_subd, A4L_BUF_EOA);
+	}
+
 	return 0;
 }
 
