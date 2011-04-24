@@ -88,7 +88,6 @@ void cleanup_config(struct config *cfg)
 	if (cfg->output && strcmp(cfg->filename, "stdout")) {
 		fclose(cfg->output);
 	}
-
 }
 
 int init_config(struct config *cfg, int argc, char *argv[])
@@ -236,7 +235,7 @@ int main(int argc, char *argv[])
 		err = -errno;
 		perror("Error: output file write: )");
 		goto out;
-	}	
+	}
 
 	if (cfg.verbose) {
 		int i;
