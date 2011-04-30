@@ -189,7 +189,7 @@ index 0b72282..6574056 100644
  /*
 diff --git a/arch/x86/include/asm/ipipe.h b/arch/x86/include/asm/ipipe.h
 new file mode 100644
-index 0000000..eff9345
+index 0000000..722122c
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe.h
 @@ -0,0 +1,158 @@
@@ -220,10 +220,10 @@ index 0000000..eff9345
 +#ifdef CONFIG_IPIPE
 +
 +#ifndef IPIPE_ARCH_STRING
-+#define IPIPE_ARCH_STRING	"2.9-01"
++#define IPIPE_ARCH_STRING	"2.9-02"
 +#define IPIPE_MAJOR_NUMBER	2
 +#define IPIPE_MINOR_NUMBER	9
-+#define IPIPE_PATCH_NUMBER	1
++#define IPIPE_PATCH_NUMBER	2
 +#endif
 +
 +DECLARE_PER_CPU(struct pt_regs, __ipipe_tick_regs);
@@ -577,7 +577,7 @@ index 0000000..7dce1e1
 +#endif	/* !__X86_IPIPE_64_H */
 diff --git a/arch/x86/include/asm/ipipe_base.h b/arch/x86/include/asm/ipipe_base.h
 new file mode 100644
-index 0000000..f28ca74
+index 0000000..c17a24e
 --- /dev/null
 +++ b/arch/x86/include/asm/ipipe_base.h
 @@ -0,0 +1,222 @@
@@ -794,7 +794,7 @@ index 0000000..f28ca74
 +
 +void __ipipe_serial_debug(const char *fmt, ...);
 +
-+#ifdef CONFIG_IPIPE
++#if defined(CONFIG_IPIPE) && defined(CONFIG_X86_LOCAL_APIC)
 +void ipipe_init_vector_irq(int cpu);
 +#else
 +static inline void ipipe_init_vector_irq(int cpu) { }
@@ -3098,7 +3098,7 @@ index 20757cb..269c884 100644
  handle_real_irq:
 diff --git a/arch/x86/kernel/ipipe.c b/arch/x86/kernel/ipipe.c
 new file mode 100644
-index 0000000..03da27a
+index 0000000..cd63d02
 --- /dev/null
 +++ b/arch/x86/kernel/ipipe.c
 @@ -0,0 +1,857 @@
@@ -3242,11 +3242,6 @@ index 0000000..03da27a
 +{
 +}
 +
-+#endif	/* CONFIG_X86_LOCAL_APIC */
-+
-+/* __ipipe_enable_pipeline() -- We are running on the boot CPU, hw
-+   interrupts are off, and secondary CPUs are still lost in space. */
-+
 +void ipipe_init_vector_irq(int cpu)
 +{
 +	unsigned int vector;
@@ -3259,6 +3254,11 @@ index 0000000..03da27a
 +			per_cpu(vector_irq, cpu)[vector] =
 +				ipipe_apic_vector_irq(vector);
 +}
++
++#endif	/* CONFIG_X86_LOCAL_APIC */
++
++/* __ipipe_enable_pipeline() -- We are running on the boot CPU, hw
++   interrupts are off, and secondary CPUs are still lost in space. */
 +
 +void __init __ipipe_enable_pipeline(void)
 +{
@@ -6939,7 +6939,7 @@ index 0000000..6257dfa
 +obj-$(CONFIG_IPIPE_TRACE) += tracer.o
 diff --git a/kernel/ipipe/core.c b/kernel/ipipe/core.c
 new file mode 100644
-index 0000000..9ad7757
+index 0000000..9aa4800
 --- /dev/null
 +++ b/kernel/ipipe/core.c
 @@ -0,0 +1,2194 @@
@@ -8222,14 +8222,14 @@ index 0000000..9ad7757
 +			irq_enter();
 +			ipd->irqs[irq].handler(irq, ipd->irqs[irq].cookie);
 +			irq_exit();
-+			local_irq_disable_hw();
 +			root_stall_after_handler();
++			local_irq_disable_hw();
 +			while (__ipipe_check_root_resched())
 +				__ipipe_preempt_schedule_irq();
 +		} else {
 +			__ipipe_do_root_xirq(ipd, irq);
-+			local_irq_disable_hw();
 +			root_stall_after_handler();
++			local_irq_disable_hw();
 +		}
 +
 +		p = ipipe_cpudom_ptr(__ipipe_current_domain);
