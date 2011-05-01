@@ -136,7 +136,7 @@ static void *wind_task_trampoline(void *cookie)
 
       fail:
 
-	pthread_exit((void *)err);
+	return (void *)err;
 }
 
 STATUS taskInit(WIND_TCB *pTcb,

@@ -239,7 +239,7 @@ static void *__pthread_trampoline(void *arg)
 		status = (void *)-err;
 
 out:
-	pthread_exit(status);
+	return status;
 }
 
 int __wrap_pthread_create(pthread_t *tid,

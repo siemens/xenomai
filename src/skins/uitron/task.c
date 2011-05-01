@@ -105,7 +105,7 @@ static void *uitron_task_trampoline(void *cookie)
 
       fail:
 
-	pthread_exit((void *)err);
+	return (void *)err;
 }
 
 ER cre_tsk(ID tskid, T_CTSK *pk_ctsk)

@@ -113,7 +113,7 @@ static void *rt_task_trampoline(void *cookie)
 
       fail:
 
-	pthread_exit((void *)err);
+	return (void *)err;
 }
 
 int rt_task_create(RT_TASK *task,

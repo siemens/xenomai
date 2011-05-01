@@ -118,7 +118,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	  entry(arg);
 	}
 fail:
-	pthread_exit((void *)err);
+	return (void *)err;
 }
 
 int sc_tecreate(void (*entry) (void *),
