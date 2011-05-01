@@ -22,11 +22,6 @@
 
 #ifdef __KERNEL__
 #include <linux/errno.h>
-#ifdef CONFIG_PREEMPT_RT
-#define linux_semaphore compat_semaphore
-#else /* CONFIG_PREEMPT_RT */
-#define linux_semaphore semaphore
-#endif /* !CONFIG_PREEMPT_RT */
 #else /* !__KERNEL__ */
 #include <stdio.h>
 #include <string.h>

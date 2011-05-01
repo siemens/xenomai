@@ -80,6 +80,7 @@ static struct __lostagerq {
 #define LO_SIGGRP_REQ 2
 #define LO_SIGTHR_REQ 3
 #define LO_UNMAP_REQ  4
+#define LO_GKWAKE_REQ 5
 		int type;
 		struct task_struct *task;
 		int arg;
@@ -100,7 +101,7 @@ static struct task_struct *switch_lock_owner[XNARCH_NR_CPUS];
 
 static int nucleus_muxid = -1;
 
-static DEFINE_SEMAPHORE(completion_mutex);
+static struct semaphore completion_mutex;
 
 static inline struct task_struct *get_switch_lock_owner(void)
 {
@@ -817,9 +818,13 @@ static void xnshadow_dereference_skin(unsigned magic)
 
 static void lostage_handler(void *cookie)
 {
-	struct __lostagerq *rq = &lostagerq[smp_processor_id()];
-	int reqnum, type, arg, sig, sigarg;
+	int cpu, reqnum, type, arg, sig, sigarg;
+	struct __lostagerq *rq;
 	struct task_struct *p;
+	struct xnsched *sched;
+
+	cpu = smp_processor_id();
+	rq = &lostagerq[cpu];
 
 	while ((reqnum = rq->out) != rq->in) {
 		type = rq->req[reqnum].type;
@@ -873,6 +878,11 @@ static void lostage_handler(void *cookie)
 
 		case LO_SIGGRP_REQ:
 			kill_proc(p->pid, arg, 1);
+			break;
+
+		case LO_GKWAKE_REQ:
+			sched = xnpod_sched_slot(cpu);
+			wake_up_interruptible_sync(&sched->gkwaitq);
 			break;
 		}
 	}
@@ -952,8 +962,7 @@ static int gatekeeper_thread(void *data)
 		 * process the pending request, just ignore the
 		 * latter.
 		 */
-		if ((xnthread_user_task(target)->state & ~TASK_ATOMICSWITCH)
-		    == TASK_INTERRUPTIBLE) {
+		if ((xnthread_user_task(target)->state & ~TASK_ATOMICSWITCH) == TASK_INTERRUPTIBLE) {
 			rpi_pop(target);
 			xnlock_get_irqsave(&nklock, s);
 #ifdef CONFIG_SMP
@@ -1041,10 +1050,7 @@ redo:
 	 * task. For this to happen, we set up the migration data,
 	 * prepare to suspend the current task, wake up the gatekeeper
 	 * which will perform the actual transition, then schedule
-	 * out. Most of this sequence must be atomic, and we get this
-	 * guarantee by disabling preemption and using the
-	 * TASK_ATOMICSWITCH cumulative state provided by Adeos to
-	 * Linux tasks.
+	 * out.
 	 */
 
 	trace_mark(xn_nucleus, shadow_gohard,
@@ -1054,8 +1060,7 @@ redo:
 	sched->gktarget = thread;
 	xnthread_set_info(thread, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-	wake_up_interruptible_sync(&sched->gkwaitq);
-	schedule();	/* Will preempt_enable() thanks to TASK_ATOMICSWITCH */
+	schedule();
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/*
@@ -1414,7 +1419,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 */
 	xnthread_set_info(thread, XNPRIOSET);
 
-	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(thread)),
+	xnarch_trace_pid(xnthread_user_pid(thread),
 			 xnthread_current_priority(thread));
 
 	return ret;
@@ -2593,12 +2598,16 @@ RTHAL_DECLARE_EXIT_EVENT(taskexit_event);
 static inline void do_schedule_event(struct task_struct *next_task)
 {
 	struct task_struct *prev_task;
-	struct xnthread *next;
+	struct xnthread *prev, *next;
 
 	if (!xnpod_active_p())
 		return;
 
 	prev_task = current;
+	prev = xnshadow_thread(prev_task);
+	if (prev && xnthread_test_info(prev, XNATOMIC))
+		schedule_linux_call(LO_GKWAKE_REQ, prev_task, 0);
+
 	next = xnshadow_thread(next_task);
 	set_switch_lock_owner(prev_task);
 
@@ -2966,8 +2975,7 @@ int xnshadow_mount(void)
 	unsigned i, size;
 	int cpu, ret;
 
-	nucleus_muxid = -1;
-
+	sema_init(&completion_mutex, 1);
 	nkthrptd = rthal_alloc_ptdkey();
 	nkerrptd = rthal_alloc_ptdkey();
 
