@@ -312,7 +312,6 @@ int rt_task_create(RT_TASK *task,
 	 * indefinitely, without raising the resource count though.
 	 */
 	xnsynch_init(&task->msendq, XNSYNCH_PIP, fastlock);
-	xnsynch_fast_acquire(fastlock, xnthread_handle(&task->thread_base));
 	xnsynch_set_owner(&task->msendq, &task->thread_base);
 	task->flowgen = 0;
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
@@ -327,8 +326,13 @@ int rt_task_create(RT_TASK *task,
 	   half-baked objects... */
 
 	err = xnthread_register(&task->thread_base, name ? task->rname : "");
-	if (err)
+	if (err) {
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+		xnheap_free(&xnsys_ppd_get(0)->sem_heap, fastlock);
+#endif
 		xnpod_delete_thread(&task->thread_base);
+	} else
+		xnsynch_fast_acquire(fastlock, xnthread_handle(&task->thread_base));
 
 	return err;
 }
