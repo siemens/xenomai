@@ -386,7 +386,7 @@ static inline void __xn_get_ebp(void **dest)
 		: "=a" (__resultvar)		\
 		: "0" (name) ASM_ARGS_##nr	\
 		: "memory", "cc", "r11", "cx");	\
-	(long) __resultvar;			\
+	(int) __resultvar;			\
 })
 
 #define DO_SYSCALL(name, nr, args...)					\

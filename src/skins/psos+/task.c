@@ -107,7 +107,7 @@ static void *psos_task_trampoline(void *cookie)
 
       fail:
 
-	pthread_exit((void *)err);
+	return (void *)err;
 }
 
 u_long t_create(const char *name,

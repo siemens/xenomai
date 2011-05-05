@@ -7,6 +7,9 @@
 
 static inline int fp_kernel_supported(void)
 {
+#ifdef CONFIG_PPC_FPU
+	return 1;
+#else  /* !CONFIG_PPC_FPU */
 #ifdef CONFIG_XENO_HW_MATH_EMU
 	static int once = 0;
 	if (!once) {
@@ -14,10 +17,9 @@ static inline int fp_kernel_supported(void)
 		printk("Warning: math emulation code defined in kernel\n"
 		       "         no kernel-based FPU support for this platform\n");
 	}
+#endif	/* !CONFIG_XENO_HW_MATH_EMU */
 	return 0;
-#else
-	return 1;
-#endif
+#endif	/* !CONFIG_PPC_FPU */
 }
 
 static inline int fp_linux_begin(void)

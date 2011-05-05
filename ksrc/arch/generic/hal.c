@@ -414,6 +414,55 @@ static void rthal_apc_handler(unsigned virq, void *arg)
     rthal_spin_unlock(&rthal_apc_lock);
 }
 
+#ifdef CONFIG_PREEMPT_RT
+
+/* On PREEMPT_RT, we need to invoke the apc handlers over a process
+   context, so that the latter can access non-atomic kernel services
+   properly. So the Adeos virq is only used to kick a per-CPU apc
+   server process which in turns runs the apc dispatcher. A bit
+   twisted, but indeed consistent with the threaded IRQ model of
+   PREEMPT_RT. */
+
+#include <linux/kthread.h>
+
+static struct task_struct *rthal_apc_servers[RTHAL_NR_CPUS];
+
+static int rthal_apc_thread(void *data)
+{
+    unsigned cpu = (unsigned)(unsigned long)data;
+
+    set_cpus_allowed(current, cpumask_of_cpu(cpu));
+    sigfillset(&current->blocked);
+    current->flags |= PF_NOFREEZE;
+    /* Use highest priority here, since some apc handlers might
+       require to run as soon as possible after the request has been
+       pended. */
+    rthal_setsched_root(current, SCHED_FIFO, MAX_RT_PRIO - 1);
+
+    while (!kthread_should_stop()) {
+	set_current_state(TASK_INTERRUPTIBLE);
+	schedule();
+	rthal_apc_handler(0, NULL);
+    }
+
+    __set_current_state(TASK_RUNNING);
+
+    return 0;
+}
+
+void rthal_apc_kicker(unsigned virq, void *cookie)
+{
+    wake_up_process(rthal_apc_servers[smp_processor_id()]);
+}
+
+#define rthal_apc_trampoline rthal_apc_kicker
+
+#else /* !CONFIG_PREEMPT_RT */
+
+#define rthal_apc_trampoline rthal_apc_handler
+
+#endif /* CONFIG_PREEMPT_RT */
+
 /**
  * @fn int rthal_apc_alloc (const char *name,void (*handler)(void *cookie),void *cookie)
  *
@@ -502,7 +551,7 @@ out:
 void rthal_apc_free(int apc)
 {
 	BUG_ON(apc < 0 || apc >= RTHAL_NR_APCS);
-        clear_bit(apc, &rthal_apc_map);
+	clear_bit(apc, &rthal_apc_map);
 }
 
 int rthal_init(void)
@@ -578,7 +627,7 @@ int rthal_init(void)
 #endif
 	    printk(KERN_ERR "Xenomai: Domain registration failed (%d).\n", err);
 
-        goto fail;
+	goto fail;
     }
 
     return 0;
