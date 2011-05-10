@@ -131,6 +131,37 @@ int a4l_set_bufsize(a4l_desc_t * dsc,
 	return a4l_sys_bufcfg(dsc->fd, idx_subd, size);
 }
 
+int a4l_set_wakesize(a4l_desc_t * dsc, unsigned long size)
+{
+	int err;
+	a4l_bufcfg2_t cfg = { .wake_count = size };
+
+	/* Basic checking */
+	if (dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
+
+	return  __sys_ioctl(dsc->fd, A4L_BUFCFG2, &cfg);
+	
+	return err;
+}
+
+int a4l_get_wakesize(a4l_desc_t * dsc, unsigned long *size)
+{
+	int err;
+	a4l_bufcfg2_t cfg;
+
+	/* Basic checking */
+	if (size == NULL || dsc == NULL || dsc->fd < 0)
+		return -EINVAL;
+
+	err = __sys_ioctl(dsc->fd, A4L_BUFINFO2, &cfg);
+
+	if (err == 0)
+		*size = cfg.wake_count;
+
+	return err;
+}
+
 /**
  * @brief Get the size of the asynchronous buffer
  *

@@ -87,6 +87,10 @@ struct a4l_buffer {
 
 	/* Munge counter */
 	unsigned long mng_count;
+
+	/* Theshold below which the user process should not be
+	   awakened */
+	unsigned long wake_count;
 };
 typedef struct a4l_buffer a4l_buf_t;
 
@@ -371,6 +375,16 @@ static inline unsigned long __count_to_get(a4l_buf_t * buf)
 	return ret;
 }
 
+static inline unsigned long __count_to_end(a4l_buf_t * buf)
+{
+	unsigned long ret = buf->end_count - buf->cns_count;
+
+	if (buf->end_count == 0)
+		return ULONG_MAX;
+
+	return ((long)ret) < 0 ? 0 : ret;
+}
+
 /* --- Buffer internal functions --- */
 
 int a4l_alloc_buffer(a4l_buf_t *buf_desc, int buf_size);
@@ -434,7 +448,9 @@ int a4l_get_chan(struct a4l_subdevice *subd);
 
 int a4l_ioctl_mmap(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufcfg(a4l_cxt_t * cxt, void *arg);
+int a4l_ioctl_bufcfg2(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_bufinfo(a4l_cxt_t * cxt, void *arg);
+int a4l_ioctl_bufinfo2(a4l_cxt_t * cxt, void *arg);
 int a4l_ioctl_poll(a4l_cxt_t * cxt, void *arg);
 ssize_t a4l_read_buffer(a4l_cxt_t * cxt, void *bufdata, size_t nbytes);
 ssize_t a4l_write_buffer(a4l_cxt_t * cxt, const void *bufdata, size_t nbytes);
@@ -479,6 +495,13 @@ struct a4l_buffer_info {
 	unsigned long rw_count;
 };
 typedef struct a4l_buffer_info a4l_bufinfo_t;
+
+/* BUFCFG2 / BUFINFO2 ioctl argument structure */
+struct a4l_buffer_config2 {
+	unsigned long wake_count;
+	unsigned long reserved[3];
+};
+typedef struct a4l_buffer_config2 a4l_bufcfg2_t;
 
 /* POLL ioctl argument structure */
 struct a4l_poll {

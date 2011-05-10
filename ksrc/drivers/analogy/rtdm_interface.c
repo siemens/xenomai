@@ -48,9 +48,11 @@ int (*a4l_ioctl_functions[NB_IOCTL_FUNCTIONS]) (a4l_cxt_t *, void *) = {
 	a4l_ioctl_bufcfg,
 	a4l_ioctl_bufinfo,
 	a4l_ioctl_poll,
-	a4l_ioctl_mmap,
-	a4l_ioctl_nbchaninfo,
-	a4l_ioctl_nbrnginfo
+	a4l_ioctl_mmap, 
+	a4l_ioctl_nbchaninfo, 
+	a4l_ioctl_nbrnginfo,
+	a4l_ioctl_bufcfg2,
+	a4l_ioctl_bufinfo2
 };
 
 #ifdef CONFIG_PROC_FS
