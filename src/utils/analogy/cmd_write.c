@@ -44,7 +44,8 @@ struct config {
 	unsigned int *chans;
 	int chans_count;
 	char *str_ranges;
-	int scans_count;
+	unsigned long scans_count;
+	unsigned long wake_count;
 
 	char *filename;
 	FILE *input;
@@ -70,6 +71,7 @@ struct option options[] = {
 	{"scans-count", required_argument, NULL, 'S'},
 	{"channels", required_argument, NULL, 'c'},
 	{"range", required_argument, NULL, 'c'},
+	{"wake-count", required_argument, NULL, 'k'},
 	{"help", no_argument, NULL, 'h'},
 	{0},
 };
@@ -84,11 +86,15 @@ void print_usage(void)
 	fprintf(stdout, "\t\t -s, --subdevice: subdevice index\n");
 	fprintf(stdout, "\t\t -S, --scans-count: count of scan to perform\n");
 	fprintf(stdout, 
-		"\t\t -c, --channels: channels to use "
-		"<i,j,...> (ex.: -c 0,1)\n");
+		"\t\t -c, --channels: "
+		"channels to use <i,j,...> (ex.: -c 0,1)\n");
 	fprintf(stdout, 
-		"\t\t -R, --range: range to use "
-		"<min,max,unit> (ex.: -R 0,1,V)\n");
+		"\t\t -R, --range: "
+		"range to use <min,max,unit> (ex.: -R 0,1,V)\n");
+	fprintf(stdout, 
+		"\t\t -k, --wake-count: "
+		"space available before waking up the process\n");
+
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
 
@@ -242,7 +248,8 @@ void print_config(struct config *cfg)
 	printf("\tSubdevice index: %d\n", cfg->subd);
 	printf("\tSelected channels: %s\n", cfg->str_chans);
 	printf("\tSelected range: %s\n", cfg->str_ranges);
-	printf("\tScans count: %d\n", cfg->scans_count);
+	printf("\tScans count: %lu\n", cfg->scans_count);
+	printf("\tWake count: %lu\n", cfg->wake_count);
 }
 
 void cleanup_config(struct config *cfg)
@@ -269,7 +276,8 @@ int init_config(struct config *cfg, int argc, char *argv[])
 	cfg->dsc.fd = -1;
 
 	while ((err = getopt_long(argc, 
-				  argv, "vd:s:S:c:R:h", options, NULL)) >= 0) {
+				  argv, 
+				  "vd:s:S:c:R:k:h", options, NULL)) >= 0) {
 		switch (err) {
 		case 'v':
 			cfg->verbose = 1;
@@ -288,6 +296,9 @@ int init_config(struct config *cfg, int argc, char *argv[])
 			break;
 		case 'R':
 			cfg->str_ranges = optarg;
+			break;
+		case 'k':
+			cfg->wake_count = strtoul(optarg, NULL, 0);
 			break;
 		case 'h':
 		default:
@@ -449,6 +460,13 @@ int init_acquisition(struct config *cfg)
 
 	/* Cancel any former command which might be in progress */
 	a4l_snd_cancel(&cfg->dsc, cfg->subd);
+
+	err = a4l_set_wakesize(&cfg->dsc, cfg->wake_count);
+	if (err < 0) {
+		fprintf(stderr,
+			"cmd_read: a4l_set_wakesize failed (ret=%d)\n", err);
+		goto out;
+	}
 
 	/* Send the command so as to initialize the asynchronous
 	   acquisition */
