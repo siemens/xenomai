@@ -322,7 +322,7 @@ int rthal_timer_request(void (*handler)(void), int cpu)
 
 	rthal_timer_set_oneshot(1);
 
-	return 0;
+	return 1000000000UL / HZ;
 }
 
 void rthal_timer_release(int cpu)
