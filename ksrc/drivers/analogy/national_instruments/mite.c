@@ -101,13 +101,13 @@ static void mite_remove(struct pci_dev *dev)
 }
 
 static struct pci_driver mite_driver = {
-	.name = "mite",
+	.name = "analogy_mite",
 	.id_table = mite_id,
 	.probe = mite_probe,
 	.remove = mite_remove,
 };
 
-int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
+int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 {
 	unsigned long length;
 	resource_size_t addr;
@@ -232,7 +232,7 @@ int mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 	return 0;
 }
 
-void mite_unsetup(struct mite_struct *mite)
+void a4l_mite_unsetup(struct mite_struct *mite)
 {
 	if (!mite)
 		return;
@@ -253,7 +253,7 @@ void mite_unsetup(struct mite_struct *mite)
 	mite->used = 0;
 }
 
-void mite_list_devices(void)
+void a4l_mite_list_devices(void)
 {
 	struct list_head *this;
 
@@ -272,7 +272,8 @@ void mite_list_devices(void)
 
 
 
-struct mite_struct * mite_find_device(int bus, int slot, unsigned short device_id)
+struct mite_struct * a4l_mite_find_device(int bus, 
+					  int slot, unsigned short device_id)
 {
 	struct list_head *this;
 
@@ -291,28 +292,29 @@ struct mite_struct * mite_find_device(int bus, int slot, unsigned short device_i
 
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(mite_find_device);
+EXPORT_SYMBOL_GPL(a4l_mite_find_device);
 
-struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
-						   struct mite_dma_descriptor_ring *ring,
-						   unsigned min_channel,
-						   unsigned max_channel)
+struct mite_channel *
+a4l_mite_request_channel_in_range(struct mite_struct *mite,
+				  struct mite_dma_descriptor_ring *ring,
+				  unsigned min_channel, unsigned max_channel)
 {
 	int i;
 	unsigned long flags;
 	struct mite_channel *channel = NULL;
 
 	__a4l_dbg(1, drv_dbg,
-		  "mite: mite_request_channel_in_range: "
+		  "mite: a4l_mite_request_channel_in_range: "
 		  "min_channel = %u, max_channel = %u\n",
 		  min_channel, max_channel);
 
-	/* spin lock so mite_release_channel can be called safely from interrupts */
+	/* spin lock so a4l_mite_release_channel can be called safely
+	   from interrupts */
 	a4l_lock_irqsave(&mite->lock, flags);
 	for (i = min_channel; i <= max_channel; ++i) {
 
 	__a4l_dbg(1, drv_dbg,
-		  "mite: mite_request_channel_in_range: "
+		  "mite: a4l_mite_request_channel_in_range: "
 		  "channel[%d] allocated = %d\n",
 		  i, mite->channel_allocated[i]);
 
@@ -327,7 +329,7 @@ struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
 	return channel;
 }
 
-void mite_release_channel(struct mite_channel *mite_chan)
+void a4l_mite_release_channel(struct mite_channel *mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	unsigned long flags;
@@ -341,7 +343,7 @@ void mite_release_channel(struct mite_channel *mite_chan)
 		       CHCR_CLR_MRDY_IE | CHCR_CLR_DRDY_IE |
 		       CHCR_CLR_LC_IE | CHCR_CLR_CONT_RB_IE,
 		       mite->mite_io_addr + MITE_CHCR(mite_chan->channel));
-		mite_dma_disarm(mite_chan);
+		a4l_mite_dma_disarm(mite_chan);
 		mite_dma_reset(mite_chan);
 		mite->channel_allocated[mite_chan->channel] = 0;
 		mite_chan->ring = NULL;
@@ -350,13 +352,13 @@ void mite_release_channel(struct mite_channel *mite_chan)
 	a4l_unlock_irqrestore(&mite->lock, flags);
 }
 
-void mite_dma_arm(struct mite_channel *mite_chan)
+void a4l_mite_dma_arm(struct mite_channel *mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	int chor;
 	unsigned long flags;
 
-	MDPRINTK("mite_dma_arm ch%i\n", mite_chan->channel);
+	MDPRINTK("a4l_mite_dma_arm ch%i\n", mite_chan->channel);
 	/* Memory barrier is intended to insure any twiddling with the buffer
 	   is done before writing to the mite to arm dma transfer */
 	smp_mb();
@@ -369,7 +371,7 @@ void mite_dma_arm(struct mite_channel *mite_chan)
 	a4l_unlock_irqrestore(&mite->lock, flags);
 }
 
-void mite_dma_disarm(struct mite_channel *mite_chan)
+void a4l_mite_dma_disarm(struct mite_channel *mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	unsigned chor;
@@ -379,7 +381,7 @@ void mite_dma_disarm(struct mite_channel *mite_chan)
 	writel(chor, mite->mite_io_addr + MITE_CHOR(mite_chan->channel));
 }
 
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd)
+int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd)
 {
 	a4l_buf_t *buf = subd->buf;
 	unsigned int n_links;
@@ -429,13 +431,13 @@ int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd)
 	return 0;
 }
 
-void mite_prep_dma(struct mite_channel *mite_chan,
+void a4l_mite_prep_dma(struct mite_channel *mite_chan,
 		   unsigned int num_device_bits, unsigned int num_memory_bits)
 {
 	unsigned int chor, chcr, mcr, dcr, lkcr;
 	struct mite_struct *mite = mite_chan->mite;
 
-	MDPRINTK("mite_prep_dma ch%i\n", mite_chan->channel);
+	MDPRINTK("a4l_mite_prep_dma ch%i\n", mite_chan->channel);
 
 	/* reset DMA and FIFO */
 	chor = CHOR_DMARESET | CHOR_FRESET;
@@ -519,7 +521,7 @@ void mite_prep_dma(struct mite_channel *mite_chan,
 	writel(mite_chan->ring->descriptors_dma_addr,
 	       mite->mite_io_addr + MITE_LKAR(mite_chan->channel));
 
-	MDPRINTK("exit mite_prep_dma\n");
+	MDPRINTK("exit a4l_mite_prep_dma\n");
 }
 
 u32 mite_device_bytes_transferred(struct mite_channel *mite_chan)
@@ -528,7 +530,7 @@ u32 mite_device_bytes_transferred(struct mite_channel *mite_chan)
 	return readl(mite->mite_io_addr + MITE_DAR(mite_chan->channel));
 }
 
-u32 mite_bytes_in_transit(struct mite_channel * mite_chan)
+u32 a4l_mite_bytes_in_transit(struct mite_channel * mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	return readl(mite->mite_io_addr +
@@ -536,47 +538,47 @@ u32 mite_bytes_in_transit(struct mite_channel * mite_chan)
 }
 
 /* Returns lower bound for number of bytes transferred from device to memory */
-u32 mite_bytes_written_to_memory_lb(struct mite_channel * mite_chan)
+u32 a4l_mite_bytes_written_to_memory_lb(struct mite_channel * mite_chan)
 {
 	u32 device_byte_count;
 
 	device_byte_count = mite_device_bytes_transferred(mite_chan);
-	return device_byte_count - mite_bytes_in_transit(mite_chan);
+	return device_byte_count - a4l_mite_bytes_in_transit(mite_chan);
 }
 
 /* Returns upper bound for number of bytes transferred from device to memory */
-u32 mite_bytes_written_to_memory_ub(struct mite_channel * mite_chan)
+u32 a4l_mite_bytes_written_to_memory_ub(struct mite_channel * mite_chan)
 {
 	u32 in_transit_count;
 
-	in_transit_count = mite_bytes_in_transit(mite_chan);
+	in_transit_count = a4l_mite_bytes_in_transit(mite_chan);
 	return mite_device_bytes_transferred(mite_chan) - in_transit_count;
 }
 
 /* Returns lower bound for number of bytes read from memory for transfer to device */
-u32 mite_bytes_read_from_memory_lb(struct mite_channel * mite_chan)
+u32 a4l_mite_bytes_read_from_memory_lb(struct mite_channel * mite_chan)
 {
 	u32 device_byte_count;
 
 	device_byte_count = mite_device_bytes_transferred(mite_chan);
-	return device_byte_count + mite_bytes_in_transit(mite_chan);
+	return device_byte_count + a4l_mite_bytes_in_transit(mite_chan);
 }
 
 /* Returns upper bound for number of bytes read from memory for transfer to device */
-u32 mite_bytes_read_from_memory_ub(struct mite_channel * mite_chan)
+u32 a4l_mite_bytes_read_from_memory_ub(struct mite_channel * mite_chan)
 {
 	u32 in_transit_count;
 
-	in_transit_count = mite_bytes_in_transit(mite_chan);
+	in_transit_count = a4l_mite_bytes_in_transit(mite_chan);
 	return mite_device_bytes_transferred(mite_chan) + in_transit_count;
 }
 
-int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
+int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
 	unsigned int nbytes_lb, nbytes_ub;
 
-	nbytes_lb = mite_bytes_written_to_memory_lb(mite_chan);
-	nbytes_ub = mite_bytes_written_to_memory_ub(mite_chan);
+	nbytes_lb = a4l_mite_bytes_written_to_memory_lb(mite_chan);
+	nbytes_ub = a4l_mite_bytes_written_to_memory_ub(mite_chan);
 
 	if(a4l_buf_prepare_absput(subd, nbytes_ub) != 0) {
 		__a4l_err("MITE: DMA overwrite of free area\n");
@@ -586,14 +588,14 @@ int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 	return a4l_buf_commit_absput(subd, nbytes_lb);
 }
 
-int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
+int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 {
 	a4l_buf_t *buf = subd->buf;
 	unsigned int nbytes_ub, nbytes_lb;
 	int err;
 
-	nbytes_lb = mite_bytes_read_from_memory_lb(mite_chan);
-	nbytes_ub = mite_bytes_read_from_memory_ub(mite_chan);
+	nbytes_lb = a4l_mite_bytes_read_from_memory_lb(mite_chan);
+	nbytes_ub = a4l_mite_bytes_read_from_memory_ub(mite_chan);
 
 	err = a4l_buf_prepare_absget(subd, nbytes_ub);
 	if(err < 0) {
@@ -613,7 +615,7 @@ int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd)
 	return err;
 }
 
-u32 mite_get_status(struct mite_channel *mite_chan)
+u32 a4l_mite_get_status(struct mite_channel *mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	u32 status;
@@ -631,13 +633,13 @@ u32 mite_get_status(struct mite_channel *mite_chan)
 	return status;
 }
 
-int mite_done(struct mite_channel *mite_chan)
+int a4l_mite_done(struct mite_channel *mite_chan)
 {
 	struct mite_struct *mite = mite_chan->mite;
 	unsigned long flags;
 	int done;
 
-	mite_get_status(mite_chan);
+	a4l_mite_get_status(mite_chan);
 	a4l_lock_irqsave(&mite->lock, flags);
 	done = mite_chan->done;
 	a4l_unlock_irqrestore(&mite->lock, flags);
@@ -646,7 +648,7 @@ int mite_done(struct mite_channel *mite_chan)
 
 #ifdef CONFIG_DEBUG_MITE
 
-static void mite_decode(const char *const bit_str[], unsigned int bits);
+static void a4l_mite_decode(const char *const bit_str[], unsigned int bits);
 
 /* names of bits in mite registers */
 
@@ -717,31 +719,31 @@ static const char *const mite_CHSR_strings[] = {
 	"28", "lpauses", "30", "int",
 };
 
-void mite_dump_regs(struct mite_channel *mite_chan)
+void a4l_mite_dump_regs(struct mite_channel *mite_chan)
 {
 	unsigned long mite_io_addr =
 		(unsigned long)mite_chan->mite->mite_io_addr;
 	unsigned long addr = 0;
 	unsigned long temp = 0;
 
-	printk("mite_dump_regs ch%i\n", mite_chan->channel);
+	printk("a4l_mite_dump_regs ch%i\n", mite_chan->channel);
 	printk("mite address is  =0x%08lx\n", mite_io_addr);
 
 	addr = mite_io_addr + MITE_CHOR(mite_chan->channel);
 	printk("mite status[CHOR]at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_CHOR_strings, temp);
+	a4l_mite_decode(mite_CHOR_strings, temp);
 	addr = mite_io_addr + MITE_CHCR(mite_chan->channel);
 	printk("mite status[CHCR]at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_CHCR_strings, temp);
+	a4l_mite_decode(mite_CHCR_strings, temp);
 	addr = mite_io_addr + MITE_TCR(mite_chan->channel);
 	printk("mite status[TCR] at 0x%08lx =0x%08x\n", addr,
 	       readl((void *)addr));
 	addr = mite_io_addr + MITE_MCR(mite_chan->channel);
 	printk("mite status[MCR] at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_MCR_strings, temp);
+	a4l_mite_decode(mite_MCR_strings, temp);
 
 	addr = mite_io_addr + MITE_MAR(mite_chan->channel);
 	printk("mite status[MAR] at 0x%08lx =0x%08x\n", addr,
@@ -749,14 +751,14 @@ void mite_dump_regs(struct mite_channel *mite_chan)
 	addr = mite_io_addr + MITE_DCR(mite_chan->channel);
 	printk("mite status[DCR] at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_DCR_strings, temp);
+	a4l_mite_decode(mite_DCR_strings, temp);
 	addr = mite_io_addr + MITE_DAR(mite_chan->channel);
 	printk("mite status[DAR] at 0x%08lx =0x%08x\n", addr,
 	       readl((void *)addr));
 	addr = mite_io_addr + MITE_LKCR(mite_chan->channel);
 	printk("mite status[LKCR]at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_LKCR_strings, temp);
+	a4l_mite_decode(mite_LKCR_strings, temp);
 	addr = mite_io_addr + MITE_LKAR(mite_chan->channel);
 	printk("mite status[LKAR]at 0x%08lx =0x%08x\n", addr,
 	       readl((void *)addr));
@@ -764,14 +766,14 @@ void mite_dump_regs(struct mite_channel *mite_chan)
 	addr = mite_io_addr + MITE_CHSR(mite_chan->channel);
 	printk("mite status[CHSR]at 0x%08lx =0x%08lx\n", addr, temp =
 	       readl((void *)addr));
-	mite_decode(mite_CHSR_strings, temp);
+	a4l_mite_decode(mite_CHSR_strings, temp);
 	addr = mite_io_addr + MITE_FCR(mite_chan->channel);
 	printk("mite status[FCR] at 0x%08lx =0x%08x\n\n", addr,
 	       readl((void *)addr));
 }
 
 
-static void mite_decode(const char *const bit_str[], unsigned int bits)
+static void a4l_mite_decode(const char *const bit_str[], unsigned int bits)
 {
 	int i;
 
@@ -794,7 +796,7 @@ static int __init mite_init(void)
 	err = pci_register_driver(&mite_driver);
 
 	if(err == 0)
-		mite_list_devices();
+		a4l_mite_list_devices();
 
 	return err;
 }
@@ -820,25 +822,25 @@ MODULE_LICENSE("GPL");
 module_init(mite_init);
 module_exit(mite_cleanup);
 
-EXPORT_SYMBOL_GPL(mite_dma_arm);
-EXPORT_SYMBOL_GPL(mite_dma_disarm);
-EXPORT_SYMBOL_GPL(mite_sync_input_dma);
-EXPORT_SYMBOL_GPL(mite_sync_output_dma);
-EXPORT_SYMBOL_GPL(mite_setup);
-EXPORT_SYMBOL_GPL(mite_unsetup);
-EXPORT_SYMBOL_GPL(mite_list_devices);
-EXPORT_SYMBOL_GPL(mite_request_channel_in_range);
-EXPORT_SYMBOL_GPL(mite_release_channel);
-EXPORT_SYMBOL_GPL(mite_prep_dma);
-EXPORT_SYMBOL_GPL(mite_buf_change);
-EXPORT_SYMBOL_GPL(mite_bytes_written_to_memory_lb);
-EXPORT_SYMBOL_GPL(mite_bytes_written_to_memory_ub);
-EXPORT_SYMBOL_GPL(mite_bytes_read_from_memory_lb);
-EXPORT_SYMBOL_GPL(mite_bytes_read_from_memory_ub);
-EXPORT_SYMBOL_GPL(mite_bytes_in_transit);
-EXPORT_SYMBOL_GPL(mite_get_status);
-EXPORT_SYMBOL_GPL(mite_done);
+EXPORT_SYMBOL_GPL(a4l_mite_dma_arm);
+EXPORT_SYMBOL_GPL(a4l_mite_dma_disarm);
+EXPORT_SYMBOL_GPL(a4l_mite_sync_input_dma);
+EXPORT_SYMBOL_GPL(a4l_mite_sync_output_dma);
+EXPORT_SYMBOL_GPL(a4l_mite_setup);
+EXPORT_SYMBOL_GPL(a4l_mite_unsetup);
+EXPORT_SYMBOL_GPL(a4l_mite_list_devices);
+EXPORT_SYMBOL_GPL(a4l_mite_request_channel_in_range);
+EXPORT_SYMBOL_GPL(a4l_mite_release_channel);
+EXPORT_SYMBOL_GPL(a4l_mite_prep_dma);
+EXPORT_SYMBOL_GPL(a4l_mite_buf_change);
+EXPORT_SYMBOL_GPL(a4l_mite_bytes_written_to_memory_lb);
+EXPORT_SYMBOL_GPL(a4l_mite_bytes_written_to_memory_ub);
+EXPORT_SYMBOL_GPL(a4l_mite_bytes_read_from_memory_lb);
+EXPORT_SYMBOL_GPL(a4l_mite_bytes_read_from_memory_ub);
+EXPORT_SYMBOL_GPL(a4l_mite_bytes_in_transit);
+EXPORT_SYMBOL_GPL(a4l_mite_get_status);
+EXPORT_SYMBOL_GPL(a4l_mite_done);
 #ifdef CONFIG_DEBUG_MITE
-EXPORT_SYMBOL_GPL(mite_decode);
-EXPORT_SYMBOL_GPL(mite_dump_regs);
+EXPORT_SYMBOL_GPL(a4l_mite_decode);
+EXPORT_SYMBOL_GPL(a4l_mite_dump_regs);
 #endif /* CONFIG_DEBUG_MITE */

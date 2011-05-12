@@ -115,40 +115,41 @@ static inline unsigned int mite_device_id(struct mite_struct *mite)
 	return mite->pcidev->device;
 };
 
-int mite_setup(struct mite_struct *mite, int use_iodwbsr_1);
-void mite_unsetup(struct mite_struct *mite);
-void mite_list_devices(void);
-struct mite_struct * mite_find_device(int bus,
-				      int slot, unsigned short device_id);
-struct mite_channel *mite_request_channel_in_range(struct mite_struct *mite,
-	struct mite_dma_descriptor_ring *ring, unsigned min_channel,
-	unsigned max_channel);
+int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1);
+void a4l_mite_unsetup(struct mite_struct *mite);
+void a4l_mite_list_devices(void);
+struct mite_struct * a4l_mite_find_device(int bus,
+					  int slot, unsigned short device_id);
+struct mite_channel *
+a4l_mite_request_channel_in_range(struct mite_struct *mite,
+				  struct mite_dma_descriptor_ring *ring, 
+				  unsigned min_channel, unsigned max_channel);
 static inline struct mite_channel *mite_request_channel(struct mite_struct
 	*mite, struct mite_dma_descriptor_ring *ring)
 {
-	return mite_request_channel_in_range(mite, ring, 0,
+	return a4l_mite_request_channel_in_range(mite, ring, 0,
 		mite->num_channels - 1);
 }
-void mite_release_channel(struct mite_channel *mite_chan);
+void a4l_mite_release_channel(struct mite_channel *mite_chan);
 
-void mite_dma_arm(struct mite_channel *mite_chan);
-void mite_dma_disarm(struct mite_channel *mite_chan);
-int mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
-int mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
-u32 mite_bytes_written_to_memory_lb(struct mite_channel *mite_chan);
-u32 mite_bytes_written_to_memory_ub(struct mite_channel *mite_chan);
-u32 mite_bytes_read_from_memory_lb(struct mite_channel *mite_chan);
-u32 mite_bytes_read_from_memory_ub(struct mite_channel *mite_chan);
-u32 mite_bytes_in_transit(struct mite_channel *mite_chan);
-u32 mite_get_status(struct mite_channel *mite_chan);
-int mite_done(struct mite_channel *mite_chan);
-void mite_prep_dma(struct mite_channel *mite_chan,
+void a4l_mite_dma_arm(struct mite_channel *mite_chan);
+void a4l_mite_dma_disarm(struct mite_channel *mite_chan);
+int a4l_mite_sync_input_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
+int a4l_mite_sync_output_dma(struct mite_channel *mite_chan, a4l_subd_t *subd);
+u32 a4l_mite_bytes_written_to_memory_lb(struct mite_channel *mite_chan);
+u32 a4l_mite_bytes_written_to_memory_ub(struct mite_channel *mite_chan);
+u32 a4l_mite_bytes_read_from_memory_lb(struct mite_channel *mite_chan);
+u32 a4l_mite_bytes_read_from_memory_ub(struct mite_channel *mite_chan);
+u32 a4l_mite_bytes_in_transit(struct mite_channel *mite_chan);
+u32 a4l_mite_get_status(struct mite_channel *mite_chan);
+int a4l_mite_done(struct mite_channel *mite_chan);
+void a4l_mite_prep_dma(struct mite_channel *mite_chan,
 		   unsigned int num_device_bits, unsigned int num_memory_bits);
-int mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd);
+int a4l_mite_buf_change(struct mite_dma_descriptor_ring *ring, a4l_subd_t *subd);
 
 #ifdef CONFIG_DEBUG_MITE
 void mite_print_chsr(unsigned int chsr);
-void mite_dump_regs(struct mite_channel *mite_chan);
+void a4l_mite_dump_regs(struct mite_channel *mite_chan);
 #endif
 
 static inline int CHAN_OFFSET(int channel)

@@ -91,7 +91,7 @@ a4l_rngtab_t rng_ni_E_ai = {16, {
 	RANGE_V(0, 0.2),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai =
+a4l_rngdesc_t a4l_range_ni_E_ai =
 	RNG_GLOBAL(rng_ni_E_ai);
 
 a4l_rngtab_t rng_ni_E_ai_limited = {8, {
@@ -104,7 +104,7 @@ a4l_rngtab_t rng_ni_E_ai_limited = {8, {
 	RANGE_V(0, 1),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai_limited =
+a4l_rngdesc_t a4l_range_ni_E_ai_limited =
 	RNG_GLOBAL(rng_ni_E_ai_limited);
 
 a4l_rngtab_t rng_ni_E_ai_limited14 = {14, {
@@ -123,7 +123,7 @@ a4l_rngtab_t rng_ni_E_ai_limited14 = {14, {
 	RANGE_V(0, 0.2),
 	RANGE_V(0, 0.1),
 }};
-a4l_rngdesc_t range_ni_E_ai_limited14 =
+a4l_rngdesc_t a4l_range_ni_E_ai_limited14 =
 	RNG_GLOBAL(rng_ni_E_ai_limited14);
 
 a4l_rngtab_t rng_ni_E_ai_bipolar4 = {4, {
@@ -132,7 +132,7 @@ a4l_rngtab_t rng_ni_E_ai_bipolar4 = {4, {
 	RANGE_V(-0.5, 0.5),
 	RANGE_V(-0.05, 0.05),
 }};
-a4l_rngdesc_t range_ni_E_ai_bipolar4 =
+a4l_rngdesc_t a4l_range_ni_E_ai_bipolar4 =
 	RNG_GLOBAL(rng_ni_E_ai_bipolar4);
 
 a4l_rngtab_t rng_ni_E_ai_611x = {8, {
@@ -145,7 +145,7 @@ a4l_rngtab_t rng_ni_E_ai_611x = {8, {
 	RANGE_V(-0.5, 0.5),
 	RANGE_V(-0.2, 0.2),
 }};
-a4l_rngdesc_t range_ni_E_ai_611x =
+a4l_rngdesc_t a4l_range_ni_E_ai_611x =
 	RNG_GLOBAL(rng_ni_E_ai_611x);
 
 a4l_rngtab_t rng_ni_M_ai_622x = {4, {
@@ -154,7 +154,7 @@ a4l_rngtab_t rng_ni_M_ai_622x = {4, {
 	RANGE_V(-1, 1),
 	RANGE_V(-0.2, 0.2),
 }};
-a4l_rngdesc_t range_ni_M_ai_622x =
+a4l_rngdesc_t a4l_range_ni_M_ai_622x =
 	RNG_GLOBAL(rng_ni_M_ai_622x);
 
 a4l_rngtab_t rng_ni_M_ai_628x = {7, {
@@ -166,13 +166,13 @@ a4l_rngtab_t rng_ni_M_ai_628x = {7, {
 	RANGE_V(-0.2, 0.2),
 	RANGE_V(-0.1, 0.1),
 }};
-a4l_rngdesc_t range_ni_M_ai_628x =
+a4l_rngdesc_t a4l_range_ni_M_ai_628x =
 	RNG_GLOBAL(rng_ni_M_ai_628x);
 
 a4l_rngtab_t rng_ni_S_ai_6143 = {1, {
 	RANGE_V(-5, 5),
 }};
-a4l_rngdesc_t range_ni_S_ai_6143 =
+a4l_rngdesc_t a4l_range_ni_S_ai_6143 =
 	RNG_GLOBAL(rng_ni_S_ai_6143);
 
 
@@ -182,18 +182,18 @@ a4l_rngtab_t rng_ni_E_ao_ext = {4, {
 	RANGE_ext(-1, 1),
 	RANGE_ext(0, 1),
 }};
-a4l_rngdesc_t range_ni_E_ao_ext =
+a4l_rngdesc_t a4l_range_ni_E_ao_ext =
 	RNG_GLOBAL(rng_ni_E_ao_ext);
 
 a4l_rngdesc_t *ni_range_lkup[] = {
-	&range_ni_E_ai,
-	&range_ni_E_ai_limited,
-	&range_ni_E_ai_limited14,
-	&range_ni_E_ai_bipolar4,
-	&range_ni_E_ai_611x,
-	&range_ni_M_ai_622x,
-	&range_ni_M_ai_628x,
-	&range_ni_S_ai_6143
+	&a4l_range_ni_E_ai,
+	&a4l_range_ni_E_ai_limited,
+	&a4l_range_ni_E_ai_limited14,
+	&a4l_range_ni_E_ai_bipolar4,
+	&a4l_range_ni_E_ai_611x,
+	&a4l_range_ni_M_ai_622x,
+	&a4l_range_ni_M_ai_628x,
+	&a4l_range_ni_S_ai_6143
 };
 
 static const int num_adc_stages_611x = 3;
@@ -392,7 +392,7 @@ static int ni_request_gpct_mite_channel(a4l_dev_t * dev,
 		return -EBUSY;
 	}
 	mite_chan->dir = direction;
-	ni_tio_set_mite_channel(devpriv->counter_dev->counters[gpct_index],
+	a4l_ni_tio_set_mite_channel(devpriv->counter_dev->counters[gpct_index],
 				mite_chan);
 	ni_set_gpct_dma_channel(dev, gpct_index, mite_chan->channel);
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -435,7 +435,7 @@ void ni_release_ai_mite_channel(a4l_dev_t *dev)
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ai_mite_chan) {
 		ni_set_ai_dma_channel(dev, -1);
-		mite_release_channel(devpriv->ai_mite_chan);
+		a4l_mite_release_channel(devpriv->ai_mite_chan);
 		devpriv->ai_mite_chan = NULL;
 	}
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -449,7 +449,7 @@ void ni_release_ao_mite_channel(a4l_dev_t *dev)
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan) {
 		ni_set_ao_dma_channel(dev, -1);
-		mite_release_channel(devpriv->ao_mite_chan);
+		a4l_mite_release_channel(devpriv->ao_mite_chan);
 		devpriv->ao_mite_chan = NULL;
 	}
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -467,9 +467,9 @@ void ni_release_gpct_mite_channel(a4l_dev_t *dev, unsigned gpct_index)
 			devpriv->counter_dev->counters[gpct_index]->mite_chan;
 
 		ni_set_gpct_dma_channel(dev, gpct_index, -1);
-		ni_tio_set_mite_channel(devpriv->counter_dev->
+		a4l_ni_tio_set_mite_channel(devpriv->counter_dev->
 					counters[gpct_index], NULL);
-		mite_release_channel(mite_chan);
+		a4l_mite_release_channel(mite_chan);
 	}
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
@@ -482,7 +482,7 @@ void ni_release_cdo_mite_channel(a4l_dev_t *dev)
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->cdo_mite_chan) {
 		ni_set_cdo_dma_channel(dev, -1);
-		mite_release_channel(devpriv->cdo_mite_chan);
+		a4l_mite_release_channel(devpriv->cdo_mite_chan);
 		devpriv->cdo_mite_chan = NULL;
 	}
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
@@ -496,7 +496,7 @@ void ni_sync_ai_dma(a4l_subd_t *subd)
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ai_mite_chan)
-		mite_sync_input_dma(devpriv->ai_mite_chan, subd);
+		a4l_mite_sync_input_dma(devpriv->ai_mite_chan, subd);
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 }
 
@@ -507,7 +507,7 @@ void mite_handle_b_linkc(a4l_subd_t *subd)
 
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->ao_mite_chan)
-		mite_sync_output_dma(devpriv->ao_mite_chan, subd);
+		a4l_mite_sync_output_dma(devpriv->ao_mite_chan, subd);
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 }
 
@@ -747,8 +747,8 @@ static void handle_gpct_interrupt(a4l_dev_t *dev, unsigned short counter_index)
 {
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
-	ni_tio_handle_interrupt(devpriv->counter_dev->counters[counter_index],
-				dev);
+	struct ni_gpct *counter = devpriv->counter_dev->counters[counter_index];
+	a4l_ni_tio_handle_interrupt(counter, dev);
 #endif /* CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE */
 }
 
@@ -1022,7 +1022,7 @@ static void handle_b_interrupt(a4l_dev_t * dev,
 	ni_event(subd);
 }
 
-int ni_E_interrupt(unsigned int irq, void *d)
+int a4l_ni_E_interrupt(unsigned int irq, void *d)
 {
 	a4l_dev_t *dev = d;
 	unsigned short a_status;
@@ -1045,14 +1045,14 @@ int ni_E_interrupt(unsigned int irq, void *d)
      defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE_MODULE))
  		a4l_lock(&devpriv->mite_channel_lock);
 		if (devpriv->ai_mite_chan) {
-			ai_mite_status = mite_get_status(devpriv->ai_mite_chan);
+			ai_mite_status = a4l_mite_get_status(devpriv->ai_mite_chan);
 			if (ai_mite_status & CHSR_LINKC)
 				writel(CHOR_CLRLC,
 				       devpriv->mite->mite_io_addr +
 				       MITE_CHOR(devpriv->ai_mite_chan->channel));
 		}
 		if (devpriv->ao_mite_chan) {
-			ao_mite_status = mite_get_status(devpriv->ao_mite_chan);
+			ao_mite_status = a4l_mite_get_status(devpriv->ao_mite_chan);
 			if (ao_mite_status & CHSR_LINKC)
 				writel(CHOR_CLRLC,
 				       mite->mite_io_addr +
@@ -1257,7 +1257,7 @@ static int ni_ai_drain_dma(a4l_subd_t *subd)
 			if ((devpriv->stc_readw(dev,
 						AI_Status_1_Register) &
 			     AI_FIFO_Empty_St)
-			    && mite_bytes_in_transit(devpriv->
+			    && a4l_mite_bytes_in_transit(devpriv->
 						     ai_mite_chan) == 0)
 				break;
 			a4l_udelay(5);
@@ -1268,9 +1268,9 @@ static int ni_ai_drain_dma(a4l_subd_t *subd)
 				 "wait for dma drain timed out\n");
 
 			a4l_info(dev,
-				 "mite_bytes_in_transit=%i, "
+				 "a4l_mite_bytes_in_transit=%i, "
 				 "AI_Status1_Register=0x%x\n",
-				 mite_bytes_in_transit(devpriv->ai_mite_chan),
+				 a4l_mite_bytes_in_transit(devpriv->ai_mite_chan),
 				 devpriv->stc_readw(dev, AI_Status_1_Register));
 			retval = -1;
 		}
@@ -1437,7 +1437,7 @@ static int ni_ai_setup_MITE_dma(a4l_subd_t *subd)
 	if (err < 0)
 		return err;
 
-	err = mite_buf_change(devpriv->ai_mite_chan->ring, subd);
+	err = a4l_mite_buf_change(devpriv->ai_mite_chan->ring, subd);
 	if (err < 0)
 		return err;
 
@@ -1446,18 +1446,18 @@ static int ni_ai_setup_MITE_dma(a4l_subd_t *subd)
 	switch (boardtype.reg_type) {
 	case ni_reg_611x:
 	case ni_reg_6143:
-		mite_prep_dma(devpriv->ai_mite_chan, 32, 16);
+		a4l_mite_prep_dma(devpriv->ai_mite_chan, 32, 16);
 		break;
 	case ni_reg_628x:
-		mite_prep_dma(devpriv->ai_mite_chan, 32, 32);
+		a4l_mite_prep_dma(devpriv->ai_mite_chan, 32, 32);
 		break;
 	default:
-		mite_prep_dma(devpriv->ai_mite_chan, 16, 16);
+		a4l_mite_prep_dma(devpriv->ai_mite_chan, 16, 16);
 		break;
 	};
 
 	/* start the MITE */
-	mite_dma_arm(devpriv->ai_mite_chan);
+	a4l_mite_dma_arm(devpriv->ai_mite_chan);
 
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
@@ -1474,7 +1474,7 @@ static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 	if (err < 0)
 		return err;
 
-	err = mite_buf_change(devpriv->ao_mite_chan->ring, subd);
+	err = a4l_mite_buf_change(devpriv->ao_mite_chan->ring, subd);
 	if (err < 0)
 		return err;
 
@@ -1483,14 +1483,14 @@ static int ni_ao_setup_MITE_dma(a4l_subd_t *subd)
 	if (devpriv->ao_mite_chan) {
 
 		if (boardtype.reg_type & (ni_reg_611x | ni_reg_6713)) {
-			mite_prep_dma(devpriv->ao_mite_chan, 32, 32);
+			a4l_mite_prep_dma(devpriv->ao_mite_chan, 32, 32);
 		} else {
 			/* Doing 32 instead of 16 bit wide transfers
 			   from memory makes the mite do 32 bit pci
 			   transfers, doubling pci bandwidth. */
-			mite_prep_dma(devpriv->ao_mite_chan, 16, 32);
+			a4l_mite_prep_dma(devpriv->ao_mite_chan, 16, 32);
 		}
-		mite_dma_arm(devpriv->ao_mite_chan);
+		a4l_mite_dma_arm(devpriv->ao_mite_chan);
 	} else
 		err = -EIO;
 
@@ -1510,7 +1510,7 @@ static int ni_cdo_setup_MITE_dma(a4l_subd_t *subd)
 		return err;
 
 	/* No need to get a lock to setup the ring buffer */
-	err = mite_buf_change(devpriv->cdo_mite_chan->ring, subd);
+	err = a4l_mite_buf_change(devpriv->cdo_mite_chan->ring, subd);
 	if (err < 0)
 		return err;
 
@@ -1519,8 +1519,8 @@ static int ni_cdo_setup_MITE_dma(a4l_subd_t *subd)
 	/* This test should be useless but one never knows */
 	if (devpriv->cdo_mite_chan) {
 		/* Configure the DMA transfer */
-		mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
-		mite_dma_arm(devpriv->cdo_mite_chan);
+		a4l_mite_prep_dma(devpriv->cdo_mite_chan, 32, 32);
+		a4l_mite_dma_arm(devpriv->cdo_mite_chan);
 	} else
 		err = -EIO;
 
@@ -3537,13 +3537,13 @@ static void handle_cdio_interrupt(a4l_dev_t *dev)
 	a4l_lock_irqsave(&devpriv->mite_channel_lock, flags);
 	if (devpriv->cdo_mite_chan) {
 		unsigned cdo_mite_status =
-			mite_get_status(devpriv->cdo_mite_chan);
+			a4l_mite_get_status(devpriv->cdo_mite_chan);
 		if (cdo_mite_status & CHSR_LINKC) {
 			writel(CHOR_CLRLC,
 			       devpriv->mite->mite_io_addr +
 			       MITE_CHOR(devpriv->cdo_mite_chan->channel));
 		}
-		mite_sync_output_dma(devpriv->cdo_mite_chan, subd);
+		a4l_mite_sync_output_dma(devpriv->cdo_mite_chan, subd);
 	}
 	a4l_unlock_irqrestore(&devpriv->mite_channel_lock, flags);
 
@@ -3774,7 +3774,7 @@ void mio_common_detach(a4l_dev_t * dev)
 {
 	if (dev->priv) {
 		if (devpriv->counter_dev) {
-			ni_gpct_device_destroy(devpriv->counter_dev);
+			a4l_ni_gpct_device_destroy(devpriv->counter_dev);
 		}
 	}
 }
@@ -4463,19 +4463,19 @@ static int ni_calib_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 static int ni_gpct_insn_config(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
-	return ni_tio_insn_config(counter, insn);
+	return a4l_ni_tio_insn_config(counter, insn);
 }
 
 static int ni_gpct_insn_read(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
-	return ni_tio_rinsn(counter, insn);
+	return a4l_ni_tio_rinsn(counter, insn);
 }
 
 static int ni_gpct_insn_write(a4l_subd_t *subd, a4l_kinsn_t *insn)
 {
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
-	return ni_tio_winsn(counter, insn);
+	return a4l_ni_tio_winsn(counter, insn);
 }
 
 #if (defined(CONFIG_XENO_DRIVERS_ANALOGY_NI_MITE) || \
@@ -4499,7 +4499,7 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 	}
 
 	ring = devpriv->gpct_mite_ring[counter->counter_index];
-	retval = mite_buf_change(ring, subd);
+	retval = a4l_mite_buf_change(ring, subd);
 	if (retval) {
 		a4l_err(dev,
 			"ni_gpct_cmd: "
@@ -4508,9 +4508,9 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 
 	}
 
-	ni_tio_acknowledge_and_confirm(counter, NULL, NULL, NULL, NULL);
+	a4l_ni_tio_acknowledge_and_confirm(counter, NULL, NULL, NULL, NULL);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 1);
-	retval = ni_tio_cmd(counter, cmd);
+	retval = a4l_ni_tio_cmd(counter, cmd);
 
 	return retval;
 }
@@ -4518,7 +4518,7 @@ static int ni_gpct_cmd(a4l_subd_t *subd, a4l_cmd_t *cmd)
 static int ni_gpct_cmdtest(a4l_subd_t *subd, a4l_cmd_t *cmd)
 {
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
-	return ni_tio_cmdtest(counter, cmd);
+	return a4l_ni_tio_cmdtest(counter, cmd);
 }
 
 static int ni_gpct_cancel(a4l_subd_t *subd)
@@ -4527,7 +4527,7 @@ static int ni_gpct_cancel(a4l_subd_t *subd)
 	struct ni_gpct *counter = (struct ni_gpct *)subd->priv;
 	int retval;
 
-	retval = ni_tio_cancel(counter);
+	retval = a4l_ni_tio_cancel(counter);
 	ni_e_series_enable_second_irq(dev, counter->counter_index, 0);
 	ni_release_gpct_mite_channel(dev, counter->counter_index);
 	return retval;
@@ -4932,7 +4932,7 @@ static void ni_rtsi_init(a4l_dev_t * dev)
 			    RTSI_Trig_B_Output_Register);
 }
 
-int ni_E_init(a4l_dev_t *dev)
+int a4l_ni_E_init(a4l_dev_t *dev)
 {
 	int ret;
 	unsigned int j, counter_variant;
@@ -5125,7 +5125,7 @@ int ni_E_init(a4l_dev_t *dev)
 	if (boardtype.has_8255) {
 		devpriv->subd_8255.cb_arg = (unsigned long)dev;
 		devpriv->subd_8255.cb_func = ni_8255_callback;
-		subdev_8255_init(subd);
+		a4l_subdev_8255_init(subd);
 	} else {
 		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: 8255 subdevice not present\n");
@@ -5277,7 +5277,7 @@ int ni_E_init(a4l_dev_t *dev)
 		subd->chan_desc->chans[0].nb_bits = 16;
 
 		/* one channel for each analog output channel */
-		subd->rng_desc = &range_unknown;	/* XXX */
+		subd->rng_desc = &a4l_range_unknown;	/* XXX */
 		s->insn_read = cs5529_ai_insn_read;
 		init_cs5529(dev);
 	} else
@@ -5350,9 +5350,11 @@ int ni_E_init(a4l_dev_t *dev)
 	} else {
 		counter_variant = ni_gpct_variant_e_series;
 	}
-	devpriv->counter_dev = ni_gpct_device_construct(dev,
-							&ni_gpct_write_register, &ni_gpct_read_register,
-							counter_variant, NUM_GPCT);
+	devpriv->counter_dev = 
+		a4l_ni_gpct_device_construct(dev,
+					     &ni_gpct_write_register, 
+					     &ni_gpct_read_register,
+					     counter_variant, NUM_GPCT);
 
 	/* General purpose counters */
 	for (j = 0; j < NUM_GPCT; ++j) {
@@ -5392,7 +5394,7 @@ int ni_E_init(a4l_dev_t *dev)
 		a4l_dbg(1, drv_dbg, dev,
 			"mio_common: GPCT[%d]: command feature available\n", j);
 		subd->flags |= A4L_SUBD_CMD;
-		subd->cmd_mask = &ni_tio_cmd_mask;
+		subd->cmd_mask = &a4l_ni_tio_cmd_mask;
 		subd->do_cmd = ni_gpct_cmd;
 		subd->do_cmdtest = ni_gpct_cmdtest;
 		subd->cancel = ni_gpct_cancel;
@@ -5405,7 +5407,7 @@ int ni_E_init(a4l_dev_t *dev)
 		counter->counter_dev = devpriv->counter_dev;
 		devpriv->counter_dev->counters[j] = counter;
 
-		ni_tio_init_counter(counter);
+		a4l_ni_tio_init_counter(counter);
 
 		ret = a4l_add_subd(dev, subd);
 		if(ret != NI_GPCT_SUBDEV(j))
@@ -5510,14 +5512,14 @@ int ni_E_init(a4l_dev_t *dev)
 MODULE_DESCRIPTION("Analogy support for NI DAQ-STC based boards");
 MODULE_LICENSE("GPL");
 
-EXPORT_SYMBOL_GPL(range_ni_E_ai);
-EXPORT_SYMBOL_GPL(range_ni_E_ai_limited);
-EXPORT_SYMBOL_GPL(range_ni_E_ai_limited14);
-EXPORT_SYMBOL_GPL(range_ni_E_ai_bipolar4);
-EXPORT_SYMBOL_GPL(range_ni_E_ai_611x);
-EXPORT_SYMBOL_GPL(range_ni_M_ai_622x);
-EXPORT_SYMBOL_GPL(range_ni_M_ai_628x);
-EXPORT_SYMBOL_GPL(range_ni_S_ai_6143);
-EXPORT_SYMBOL_GPL(range_ni_E_ao_ext);
-EXPORT_SYMBOL_GPL(ni_E_interrupt);
-EXPORT_SYMBOL_GPL(ni_E_init);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ai);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ai_limited);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ai_limited14);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ai_bipolar4);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ai_611x);
+EXPORT_SYMBOL_GPL(a4l_range_ni_M_ai_622x);
+EXPORT_SYMBOL_GPL(a4l_range_ni_M_ai_628x);
+EXPORT_SYMBOL_GPL(a4l_range_ni_S_ai_6143);
+EXPORT_SYMBOL_GPL(a4l_range_ni_E_ao_ext);
+EXPORT_SYMBOL_GPL(a4l_ni_E_interrupt);
+EXPORT_SYMBOL_GPL(a4l_ni_E_init);

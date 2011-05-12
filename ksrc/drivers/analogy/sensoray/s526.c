@@ -630,7 +630,7 @@ static void setup_subd_ai(a4l_subd_t *subd)
 {
 	subd->flags = A4L_SUBD_AI;
 	subd->chan_desc = &s526_chan_desc_ai;
-	subd->rng_desc = &range_bipolar10;
+	subd->rng_desc = &a4l_range_bipolar10;
 	subd->insn_read = s526_ai_rinsn;
 	subd->insn_config = s526_ai_insn_config;
 }
@@ -640,7 +640,7 @@ static void setup_subd_ao(a4l_subd_t *subd)
 {
 	subd->flags = A4L_SUBD_AO;
 	subd->chan_desc = &s526_chan_desc_ao;
-	subd->rng_desc = &range_bipolar10;
+	subd->rng_desc = &a4l_range_bipolar10;
 	subd->insn_write = s526_ao_winsn;
 	subd->insn_read = s526_ao_rinsn;
 }
