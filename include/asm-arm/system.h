@@ -73,7 +73,6 @@ typedef struct xnarchtcb {  /* Per-thread arch-dependent block */
 	struct {
 		unsigned long pc;
 		unsigned long r0;
-		unsigned long r6;
 #ifdef CONFIG_XENO_ARM_EABI
 		unsigned long r7;
 #endif

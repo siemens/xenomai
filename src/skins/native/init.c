@@ -53,7 +53,7 @@ static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
 	__native_muxid =
-		xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native", NULL);
+	    xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native");
 
 	__native_muxid = __xn_mux_shifted_id(__native_muxid);
 }

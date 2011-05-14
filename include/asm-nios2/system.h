@@ -64,7 +64,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 		unsigned long ea;
 		unsigned long r2;
 		unsigned long r3;
-		unsigned long r9;
 	} mayday;
 #endif
 

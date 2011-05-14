@@ -21,16 +21,6 @@
 #define _XENO_ASM_GENERIC_SYSCALL_H
 
 #include <asm/xenomai/features.h>
-#ifdef __KERNEL__
-#include <linux/types.h>
-#include <linux/signal.h>
-#include <asm/uaccess.h>
-#include <asm/xenomai/wrappers.h>
-#include <asm/xenomai/hal.h>
-#else /* !__KERNEL__ */
-#include <sys/types.h>
-#include <signal.h>
-#endif /* !__KERNEL__ */
 
 /* Xenomai multiplexer syscall. */
 #define __xn_sys_mux		555	/* Must fit within 15bit */
@@ -45,9 +35,8 @@
 #define __xn_sys_sem_heap	7
 #define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
 #define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
-#define __xn_sys_get_next_sigs 10	/* only unqueue pending signals. */
-#define __xn_sys_drop_u_mode   11	/* stop updating thread->u_mode */
-#define __xn_sys_mayday        12	/* request mayday fixup */
+#define __xn_sys_drop_u_mode   10	/* stop updating thread->u_mode */
+#define __xn_sys_mayday        11	/* request mayday fixup */
 
 #define XENOMAI_LINUX_DOMAIN  0
 #define XENOMAI_XENO_DOMAIN   1
@@ -74,20 +63,12 @@ typedef struct xnsysinfo {
 #define SIGDEBUG_NOMLOCK		5
 #define SIGDEBUG_WATCHDOG		6
 
-union xnsiginfo {
-	struct siginfo pse51_si;
-};
-
-struct xnsig {
-	unsigned nsigs;
-	unsigned remaining;
-	struct {
-		unsigned muxid;
-		union xnsiginfo si;
-	} pending[16];
-};
-
 #ifdef __KERNEL__
+
+#include <linux/types.h>
+#include <asm/uaccess.h>
+#include <asm/xenomai/wrappers.h>
+#include <asm/xenomai/hal.h>
 
 struct task_struct;
 struct pt_regs;
@@ -169,32 +150,9 @@ static inline int __xn_safe_strncpy_from_user(char *dst,
 
 #else /* !__KERNEL__ */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-int __xnsig_dispatch(struct xnsig *sigs, int cumulated_error, int last_error);
+#include <sys/types.h>
 
-int __xnsig_dispatch_safe(struct xnsig *sigs, int cumulated_error, int last_error);
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/* Called to dispatch signals which interrupted a system call. */
-static inline int xnsig_dispatch(struct xnsig *sigs, int cumul, int last)
-{
-	if (sigs->nsigs)
-		return __xnsig_dispatch(sigs, cumul, last);
-	return last;
-}
-
-static inline int xnsig_dispatch_safe(struct xnsig *sigs, int cumul, int last)
-{
-	if (sigs->nsigs)
-		return __xnsig_dispatch_safe(sigs, cumul, last);
-	return last;
-}
-
-#endif /* !__KERNEL__ */
+#endif /* __KERNEL__ */
 
 typedef struct xncompletion {
 	long syncflag;		/* Semaphore variable. */

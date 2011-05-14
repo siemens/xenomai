@@ -55,7 +55,6 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	struct {
 		unsigned long nip;
 		unsigned long r0;
-		unsigned long r8;
 	} mayday;
 #endif
 	/* Kernel mode side */

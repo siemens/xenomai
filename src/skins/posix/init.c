@@ -52,7 +52,8 @@ void __init_posix_interface(void)
 #endif /* !CONFIG_XENO_LIBS_DLOPEN */
 	int muxid, err;
 
-	muxid = xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix", NULL);
+	muxid =
+	    xeno_bind_skin(PSE51_SKIN_MAGIC, "POSIX", "xeno_posix");
 
 #ifdef XNARCH_HAVE_NONPRIV_TSC
 	pse51_clock_init(muxid);

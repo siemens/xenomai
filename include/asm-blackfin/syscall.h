@@ -49,7 +49,6 @@
 #define __xn_reg_arg3(regs)   ((regs)->r2)
 #define __xn_reg_arg4(regs)   ((regs)->r3)
 #define __xn_reg_arg5(regs)   ((regs)->r4)
-#define __xn_reg_sigp(regs)   ((regs)->r5)
 
 #define __xn_reg_mux_p(regs)        ((__xn_reg_mux(regs) & 0xffff) == __xn_sys_mux)
 #define __xn_mux_id(regs)           ((__xn_reg_mux(regs) >> 24) & 0xff)
@@ -90,45 +89,30 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
  * services in kernel space.
  */
 
-#define __emit_syscall0(muxcode, sigp, ...)				\
+#define __emit_syscall0(muxcode, ...)					\
 ({									\
 	long __res;							\
 	__asm__ __volatile__ (						\
 		"excpt 0;\n\t"						\
 		: "=q0" (__res)						\
 		: "qA"  (muxcode),					\
-		  "q5"  ((long)(sigp)),					\
 		  ##__VA_ARGS__						\
 		: "CC", "memory");					\
 	__res;								\
 })
-#define __emit_syscall1(muxcode, sigp, a1, ...)				\
-	__emit_syscall0(muxcode, sigp, "q0"(a1), ##__VA_ARGS__)
-#define __emit_syscall2(muxcode, sigp, a1, a2, ...)			\
-	__emit_syscall1(muxcode, sigp, a1, "q1"(a2), ##__VA_ARGS__)
-#define __emit_syscall3(muxcode, sigp, a1, a2, a3, ...)			\
-	__emit_syscall2(muxcode, sigp, a1, a2, "q2"(a3), ##__VA_ARGS__)
-#define __emit_syscall4(muxcode, sigp, a1, a2, a3, a4, ...)		\
-	__emit_syscall3(muxcode, sigp, a1, a2, a3, "q3"(a4), ##__VA_ARGS__)
-#define __emit_syscall5(muxcode, sigp, a1, a2, a3, a4, a5, ...)		\
-	__emit_syscall4(muxcode, sigp, a1, a2, a3, a4, "q4"(a5), ##__VA_ARGS__)
-
-#define XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, op, args...)		\
-    __emit_syscall##nr(__xn_mux_code(shifted_id,op), ##args)
+#define __emit_syscall1(muxcode, a1, ...)				\
+	__emit_syscall0(muxcode, "q0"(a1), ##__VA_ARGS__)
+#define __emit_syscall2(muxcode, a1, a2, ...)				\
+	__emit_syscall1(muxcode, a1, "q1"(a2), ##__VA_ARGS__)
+#define __emit_syscall3(muxcode, a1, a2, a3, ...)			\
+	__emit_syscall2(muxcode, a1, a2, "q2"(a3), ##__VA_ARGS__)
+#define __emit_syscall4(muxcode, a1, a2, a3, a4, ...)			\
+	__emit_syscall3(muxcode, a1, a2, a3, "q3"(a4), ##__VA_ARGS__)
+#define __emit_syscall5(muxcode, a1, a2, a3, a4, a5, ...)		\
+	__emit_syscall4(muxcode, a1, a2, a3, a4, "q4"(a5), ##__VA_ARGS__)
 
 #define XENOMAI_DO_SYSCALL(nr, shifted_id, op, args...)			\
-	({								\
-		int __err__, __res__ = -ERESTART;			\
-		struct xnsig __sigs__;					\
-									\
-		do {							\
-			__sigs__.nsigs = 0;				\
-			__err__ = XENOMAI_DO_SYSCALL_INNER(nr, shifted_id, \
-							   op, &__sigs__, ##args); \
-			__res__ = xnsig_dispatch(&__sigs__, __res__, __err__); \
-		} while (__res__ == -ERESTART);				\
-		__res__;						\
-	})
+    __emit_syscall##nr(__xn_mux_code(shifted_id,op), ##args)
 
 #define XENOMAI_SYSCALL0(op)                XENOMAI_DO_SYSCALL(0,0,op)
 #define XENOMAI_SYSCALL1(op,a1)             XENOMAI_DO_SYSCALL(1,0,op,a1)
@@ -137,8 +121,6 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SYSCALL4(op,a1,a2,a3,a4)    XENOMAI_DO_SYSCALL(4,0,op,a1,a2,a3,a4)
 #define XENOMAI_SYSCALL5(op,a1,a2,a3,a4,a5) XENOMAI_DO_SYSCALL(5,0,op,a1,a2,a3,a4,a5)
 #define XENOMAI_SYSBIND(a1,a2,a3,a4)        XENOMAI_DO_SYSCALL(4,0,__xn_sys_bind,a1,a2,a3,a4)
-#define XENOMAI_SYSSIGS(sigs)						\
-	XENOMAI_DO_SYSCALL_INNER(0, 0, __xn_sys_get_next_sigs, sigs)
 
 #define XENOMAI_SKINCALL0(id,op)                XENOMAI_DO_SYSCALL(0,id,op)
 #define XENOMAI_SKINCALL1(id,op,a1)             XENOMAI_DO_SYSCALL(1,id,op,a1)
