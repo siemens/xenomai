@@ -752,7 +752,7 @@ int xnvfile_init_link(const char *from,
 
 	ppde = parent->entry.pde;
 	pde = proc_symlink(from, ppde, to);
-	if (vlink->entry.pde == NULL)
+	if (pde == NULL)
 		return -ENOMEM;
 
 	vlink->entry.parent = parent;
