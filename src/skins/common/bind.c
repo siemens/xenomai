@@ -25,7 +25,7 @@ static void xeno_sigill_handler(int sig)
 
 struct xnfeatinfo xeno_featinfo;
 
-int 
+int
 xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 {
 	sighandler_t old_sigill_handler;
@@ -79,7 +79,7 @@ xeno_bind_skin_opt(unsigned skin_magic, const char *skin, const char *module)
 	}
 
 #ifdef xeno_arch_features_check
-	xeno_arch_features_check();
+	xeno_arch_features_check(&xeno_featinfo);
 #endif /* xeno_arch_features_check */
 
 	xeno_init_sem_heaps();
