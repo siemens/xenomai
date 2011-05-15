@@ -30,12 +30,6 @@ config XENO_DRIVERS_SWITCHTEST
 	Kernel-based driver for unit testing context switches and
 	FPU switches.
 
-config XENO_DRIVERS_SIGTEST
-	depends on m
-	tristate "User-space real-time signals testing module"
-	help
-	Elementary skin for unit testing user-space real-time signals.
-
 config XENO_DRIVERS_RTDMTEST
 	depends on XENO_SKIN_RTDM && m
 	tristate "RTDM unit tests driver"
