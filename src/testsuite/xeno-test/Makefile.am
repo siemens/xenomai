@@ -6,4 +6,7 @@ bin_SCRIPTS = xeno-test
 
 xeno_test_run_CPPFLAGS = -DTESTDIR=\"$(testdir)\"
 
+xeno-test: $(srcdir)/xeno-test.in Makefile
+	sed "s,@testdir@,$(testdir)," $< > $@
+
 EXTRA_DIST = $(test_SCRIPTS)

@@ -38,8 +38,7 @@ host_triplet = @host@
 target_triplet = @target@
 test_PROGRAMS = xeno-test-run$(EXEEXT)
 subdir = src/testsuite/xeno-test
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/xeno-test.in
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -53,7 +52,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
-CONFIG_CLEAN_FILES = xeno-test
+CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(testdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(testdir)"
@@ -294,8 +293,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-xeno-test: $(top_builddir)/config.status $(srcdir)/xeno-test.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-testPROGRAMS: $(test_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(testdir)" || $(MKDIR_P) "$(DESTDIR)$(testdir)"
@@ -664,6 +661,9 @@ uninstall-am: uninstall-binSCRIPTS uninstall-testPROGRAMS \
 	uninstall-binSCRIPTS uninstall-testPROGRAMS \
 	uninstall-testSCRIPTS
 
+
+xeno-test: xeno-test.in Makefile.in
+	sed "s,@testdir@,$(testdir)," $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
