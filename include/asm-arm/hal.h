@@ -58,9 +58,14 @@
 #elif defined(CONFIG_ARCH_MXC)
 #define RTHAL_TIMER_DEVICE	"mxc_timer1"
 #define RTHAL_CLOCK_DEVICE	"mxc_timer1"
-#elif defined(CONFIG_ARCH_OMAP2) || defined(CONFIG_ARCH_OMAP3) || defined(CONFIG_ARCH_OMAP4)
+#elif defined(CONFIG_ARCH_OMAP2) || defined(CONFIG_ARCH_OMAP3) \
+	|| (defined(CONFIG_ARCH_OMAP4) && !defined(CONFIG_SMP))
 #define RTHAL_TIMER_DEVICE	"gp timer"
 #define RTHAL_CLOCK_DEVICE	"gp timer"
+/* omap4 SMP uses TWD */
+#elif defined(CONFIG_PLAT_ORION)
+#define RTHAL_TIMER_DEVICE	"orion_tick"
+#define RTHAL_CLOCK_DEVICE	"orion_clocksource"
 #elif defined(CONFIG_ARCH_PXA)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
@@ -70,9 +75,9 @@
 #elif defined(CONFIG_ARCH_SA1100)
 #define RTHAL_TIMER_DEVICE	"osmr0"
 #define RTHAL_CLOCK_DEVICE	"oscr0"
-#elif defined(CONFIG_PLAT_ORION)
-#define RTHAL_TIMER_DEVICE	"orion_tick"
-#define RTHAL_CLOCK_DEVICE	"orion_clocksource"
+#elif defined(CONFIG_SMP) && defined(CONFIG_HAVE_ARM_TWD)
+#define RTHAL_TIMER_DEVICE	"local_timer"
+#define RTHAL_CLOCK_DEVICE	"global_timer"
 #else
 #error "Unsupported ARM machine"
 #endif /* CONFIG_ARCH_SA1100 */
