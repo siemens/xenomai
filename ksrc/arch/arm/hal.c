@@ -100,8 +100,9 @@ unsigned long rthal_timer_calibrate(void)
 {
 	unsigned long long start, end, sum = 0, sum_sq = 0;
 	volatile unsigned const_delay = 0xffffffff;
-	unsigned int delay = const_delay, diff;
 	unsigned long result, flags, tsc_lat;
+	unsigned int delay = const_delay;
+	long long diff;
 	int i, j;
 
 	flags = rthal_critical_enter(NULL);
@@ -131,8 +132,10 @@ unsigned long rthal_timer_calibrate(void)
 			barrier();
 			rthal_read_tsc(end);
 			diff = end - start - tsc_lat;
-			sum += diff;
-			sum_sq += diff * diff;
+			if (diff > 0) {
+				sum += diff;
+				sum_sq += diff * diff;
+			}
 		}
 	}
 
