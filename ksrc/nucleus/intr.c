@@ -985,20 +985,20 @@ static inline int format_irq_proc(unsigned int irq,
 	struct xnintr *intr;
 	spl_t s;
 
-	if (rthal_virtual_irq_p(irq)) {
-		xnvfile_puts(it, "         [virtual]");
-		return 0;
-	} else if (irq == XNARCH_TIMER_IRQ) {
+	if (irq == XNARCH_TIMER_IRQ) {
 		xnvfile_puts(it, "         [timer]");
 		return 0;
 #ifdef CONFIG_SMP
-	} else if (irq == RTHAL_SERVICE_IPI0) {
-		xnvfile_puts(it, "         [IPI]");
+	} else if (irq >= RTHAL_SERVICE_IPI0 && irq <= RTHAL_SERVICE_IPI3) {
+		xnvfile_printf(it, "         [IPI%d]", irq - RTHAL_SERVICE_IPI0);
 		return 0;
 	} else if (irq == RTHAL_CRITICAL_IPI) {
 		xnvfile_puts(it, "         [critical sync]");
 		return 0;
 #endif /* CONFIG_SMP */
+	} else 	if (rthal_virtual_irq_p(irq)) {
+		xnvfile_puts(it, "         [virtual]");
+		return 0;
 	}
 
 	xnlock_get_irqsave(&intrlock, s);
