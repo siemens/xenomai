@@ -33,13 +33,17 @@ extern rthal_u32frac_t rthal_tsc_to_timer;
 
 static inline void xnarch_program_timer_shot(unsigned long delay)
 {
-	rthal_timer_program_shot(rthal_nodiv_imuldiv_ceil(delay,
-							rthal_tsc_to_timer));
+	rthal_timer_program_shot(
+		rthal_nodiv_imuldiv_ceil(delay, rthal_tsc_to_timer));
 }
 
 static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)
 {
+#ifdef CONFIG_SMP
+	return rthal_send_ipi(RTHAL_TIMER_IPI, mask);
+#else /* !CONFIG_SMP */
 	return 0;
+#endif /* !CONFIG_SMP */
 }
 
 #endif /* !_XENO_ASM_ARM_BITS_TIMER_H */
