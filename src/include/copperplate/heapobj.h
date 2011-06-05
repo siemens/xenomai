@@ -139,6 +139,18 @@ void pvfree(void *ptr);
 
 char *pvstrdup(const char *ptr);
 
+void mem_destroy(struct heapobj *hobj);
+
+int mem_extend(struct heapobj *hobj, size_t size, void *mem);
+
+void *mem_alloc(struct heapobj *hobj, size_t size);
+
+void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size);
+
+void mem_free(struct heapobj *hobj, void *ptr);
+
+size_t mem_inquire(struct heapobj *hobj, void *ptr);
+
 #ifdef CONFIG_XENO_PSHARED
 
 int heapobj_pkg_init_shared(void);
@@ -196,18 +208,6 @@ void xnfree(void *ptr);
 char *xnstrdup(const char *ptr);
 
 #else /* !CONFIG_XENO_PSHARED */
-
-void mem_destroy(struct heapobj *hobj);
-
-int mem_extend(struct heapobj *hobj, size_t size, void *mem);
-
-void *mem_alloc(struct heapobj *hobj, size_t size);
-
-void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size);
-
-void mem_free(struct heapobj *hobj, void *ptr);
-
-size_t mem_inquire(struct heapobj *hobj, void *ptr);
 
 static inline int heapobj_pkg_init_shared(void)
 {

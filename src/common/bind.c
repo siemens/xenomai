@@ -10,8 +10,8 @@
 #include <asm-generic/xenomai/bits/current.h>
 #include <asm-generic/xenomai/timeconv.h>
 #include <asm-generic/xenomai/stack.h>
+#include <asm-generic/xenomai/sem_heap.h>
 #include <asm/xenomai/bits/bind.h>
-#include "sem_heap.h"
 
 int xeno_sigxcpu_no_mlock = 1;
 static pthread_t xeno_main_tid;
@@ -91,7 +91,7 @@ int xeno_bind_skin_opt(unsigned int skin_magic, const char *skin,
 		exit(EXIT_FAILURE);
 	}
 
-	xeno_featinfo = finfo;
+	xeno_featinfo = *f;
 	xeno_init_arch_features();
 
 	xeno_init_sem_heaps();

@@ -6,7 +6,7 @@ test_PROGRAMS = clocktest
 
 clocktest_SOURCES = clocktest.c
 
-clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include
+clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include -Wno-missing-prototypes 
 
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 

@@ -54,7 +54,7 @@ struct option insn_write_opts[] = {
 	{0},
 };
 
-void do_print_usage(void)
+static void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\tinsn_write [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");

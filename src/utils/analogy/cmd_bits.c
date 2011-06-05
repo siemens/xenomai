@@ -69,7 +69,7 @@ struct option cmd_bits_opts[] = {
 	{0},
 };
 
-void do_print_usage(void)
+static void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\tcmd_bits [OPTS] <bits_values> <mask>\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");

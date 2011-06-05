@@ -7,6 +7,10 @@
 
 static struct sigaction xeno_saved_sigshadow_action;
 
+/*
+ * The following handler is part of the inner user-interface: should
+ * remain extern.
+ */
 int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt)
 {
 	void *frames[SIGSHADOW_BACKTRACE_DEPTH];
@@ -69,7 +73,7 @@ static void xeno_sigshadow_handler(int sig, siginfo_t *si, void *ctxt)
 	return;
 }
 
-void xeno_sigshadow_install(void)
+static void xeno_sigshadow_install(void)
 {
 	struct sigaction new_sigshadow_action;
 	sigset_t saved_sigset;

@@ -48,7 +48,7 @@ static void print_usage(char *prg)
 	    prg);
 }
 
-can_baudrate_t string_to_baudrate(char *str)
+static can_baudrate_t string_to_baudrate(char *str)
 {
     can_baudrate_t baudrate;
     if (sscanf(str, "%i", &baudrate) != 1)
@@ -56,7 +56,7 @@ can_baudrate_t string_to_baudrate(char *str)
     return baudrate;
 }
 
-int string_to_mode(char *str)
+static int string_to_mode(char *str)
 {
     if ( !strcmp(str, "up") || !strcmp(str, "start") )
 	return CAN_MODE_START;
@@ -67,7 +67,7 @@ int string_to_mode(char *str)
     return -EINVAL;
 }
 
-int string_to_ctrlmode(char *str)
+static int string_to_ctrlmode(char *str)
 {
     if ( !strcmp(str, "listenonly") )
 	return CAN_CTRLMODE_LISTENONLY;

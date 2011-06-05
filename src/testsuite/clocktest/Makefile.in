@@ -238,7 +238,7 @@ top_srcdir = @top_srcdir@
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 clocktest_SOURCES = clocktest.c
-clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include
+clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include -Wno-missing-prototypes 
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 clocktest_LDADD = \
 	../../posix/libpthread_rt.la \

@@ -19,6 +19,7 @@
 #ifndef _XENO_ASM_GENERIC_BITS_TIMECONV_H
 #define _XENO_ASM_GENERIC_BITS_TIMECONV_H
 
+#include <asm-generic/xenomai/timeconv.h>
 #include <asm/xenomai/arith.h>
 
 static unsigned long long clockfreq;

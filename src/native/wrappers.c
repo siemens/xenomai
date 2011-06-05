@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "wrappers.h"
 
 /*
  * This file maintains a list of placeholders for routines that we do

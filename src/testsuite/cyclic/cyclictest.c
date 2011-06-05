@@ -123,7 +123,7 @@ static inline long calcdiff(struct timespec t1, struct timespec t2)
  * - CLOCK_REALTIME_HR
  *
  */
-void *timerthread(void *param)
+static void *timerthread(void *param)
 {
 	struct thread_param *par = param;
 	struct sched_param schedp;

@@ -24,11 +24,10 @@
 #include <native/syscall.h>
 #include <native/task.h>
 #include <native/heap.h>
+#include <asm-generic/xenomai/sem_heap.h>
 #include "wrappers.h"
 
 extern int __native_muxid;
-
-void *xeno_map_heap(struct xnheap_desc *hd);
 
 static int __map_heap_memory(RT_HEAP *heap, RT_HEAP_PLACEHOLDER *php)
 {

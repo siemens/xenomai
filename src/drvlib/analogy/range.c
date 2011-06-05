@@ -27,32 +27,32 @@
 
 #ifndef DOXYGEN_CPP
 
-lsampl_t data32_get(void *src)
+static lsampl_t data32_get(void *src)
 {
 	return (lsampl_t) * ((lsampl_t *) (src));
 }
 
-lsampl_t data16_get(void *src)
+static lsampl_t data16_get(void *src)
 {
 	return (lsampl_t) * ((sampl_t *) (src));
 }
 
-lsampl_t data8_get(void *src)
+static lsampl_t data8_get(void *src)
 {
 	return (lsampl_t) * ((unsigned char *)(src));
 }
 
-void data32_set(void *dst, lsampl_t val)
+static void data32_set(void *dst, lsampl_t val)
 {
 	*((lsampl_t *) (dst)) = val;
 }
 
-void data16_set(void *dst, lsampl_t val)
+static void data16_set(void *dst, lsampl_t val)
 {
 	*((sampl_t *) (dst)) = (sampl_t) (0xffff & val);
 }
 
-void data8_set(void *dst, lsampl_t val)
+static void data8_set(void *dst, lsampl_t val)
 {
 	*((unsigned char *)(dst)) = (unsigned char)(0xff & val);
 }

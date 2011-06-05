@@ -23,7 +23,7 @@ libpthread_rt_la_SOURCES = \
 	wrappers.c
 
 libpthread_rt_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+	@XENO_USER_CFLAGS@ -Wno-missing-prototypes \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/posix
 

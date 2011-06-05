@@ -42,7 +42,7 @@ struct sockaddr_can recv_addr;
 struct can_filter recv_filter[MAX_FILTER];
 static int filter_count = 0;
 
-int add_filter(u_int32_t id, u_int32_t mask)
+static int add_filter(u_int32_t id, u_int32_t mask)
 {
     if (filter_count >= MAX_FILTER)
 	return -1;
@@ -53,7 +53,7 @@ int add_filter(u_int32_t id, u_int32_t mask)
     return 0;
 }
 
-void cleanup(void)
+static void cleanup(void)
 {
     int ret;
 
@@ -70,7 +70,7 @@ void cleanup(void)
     }
 }
 
-void cleanup_and_exit(int sig)
+static void cleanup_and_exit(int sig)
 {
     if (verbose)
 	printf("Signal %d received\n", sig);
@@ -78,7 +78,7 @@ void cleanup_and_exit(int sig)
     exit(0);
 }
 
-void rt_task(void)
+static void rt_task(void)
 {
     int i, ret, count = 0;
     struct can_frame frame;

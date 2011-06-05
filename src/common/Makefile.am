@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libxenomai.la
+
 noinst_HEADERS = \
-	sem_heap.h \
-	internal.h
+	sem_heap.h
 
 libxenomai_la_SOURCES = \
 	assert_context.c \

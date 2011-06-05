@@ -3,4 +3,6 @@
 
 void xeno_sigshadow_install_once(void);
 
+int xeno_sigwinch_handler(int sig, siginfo_t *si, void *ctxt);
+
 #endif /* _XENO_ASM_GENERIC_BITS_SIGSHADOW_H */

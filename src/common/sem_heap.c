@@ -11,10 +11,9 @@
 #include <sys/mman.h>
 
 #include <nucleus/vdso.h>
-#include <nucleus/heap.h>
 #include <asm/xenomai/syscall.h>
+#include <asm-generic/sem_heap.h>
 #include <asm-generic/bits/current.h>
-#include "sem_heap.h"
 
 #define PRIVATE 0
 #define SHARED 1

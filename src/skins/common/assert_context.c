@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include <rtdk.h>
 #include "internal.h"
 
 #include <nucleus/thread.h>

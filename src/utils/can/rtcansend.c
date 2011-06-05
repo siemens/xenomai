@@ -46,7 +46,7 @@ static struct can_frame frame;
 static struct sockaddr_can to_addr;
 
 
-void cleanup(void)
+static void cleanup(void)
 {
     int ret;
 
@@ -65,7 +65,7 @@ void cleanup(void)
     }
 }
 
-void cleanup_and_exit(int sig)
+static void cleanup_and_exit(int sig)
 {
     if (verbose)
 	printf("Signal %d received\n", sig);
@@ -73,7 +73,7 @@ void cleanup_and_exit(int sig)
     exit(0);
 }
 
-void rt_task(void)
+static void rt_task(void)
 {
     int i, j, ret;
 

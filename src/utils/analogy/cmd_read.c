@@ -90,7 +90,7 @@ struct option cmd_read_opts[] = {
 	{0},
 };
 
-void do_print_usage(void)
+static void do_print_usage(void)
 {
 	fprintf(stdout, "usage:\tcmd_read [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");
@@ -109,12 +109,12 @@ void do_print_usage(void)
 	fprintf(stdout, "\t\t -h, --help: print this help\n");
 }
 
-int dump_raw(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
+static int dump_raw(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 {
 	return fwrite(buf, size, 1, stdout);
 }
 
-int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
+static int dump_text(a4l_desc_t *dsc, a4l_cmd_t *cmd, unsigned char *buf, int size)
 {
 	static int cur_chan;
 

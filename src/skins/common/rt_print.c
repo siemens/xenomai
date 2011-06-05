@@ -32,6 +32,7 @@
 #include <asm/xenomai/system.h>
 #include <asm/xenomai/atomic.h>	/* For atomic_cmpxchg */
 #include <asm-generic/stack.h>
+#include "internal.h"
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
 #define RT_PRINT_DEFAULT_BUFFER		16*1024

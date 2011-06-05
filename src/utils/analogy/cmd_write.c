@@ -76,7 +76,7 @@ struct option options[] = {
 	{0},
 };
 
-void print_usage(void)
+static void print_usage(void)
 {
 	fprintf(stdout, "usage:\tcmd_write [OPTS]\n");
 	fprintf(stdout, "\tOPTS:\t -v, --verbose: verbose output\n");

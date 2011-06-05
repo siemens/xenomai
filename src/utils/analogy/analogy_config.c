@@ -56,12 +56,12 @@ struct option a4l_conf_opts[] = {
 };
 
 /* Misc functions */
-void do_print_version(void)
+static void do_print_version(void)
 {
 	fprintf(stdout, "analogy_config: version %s\n", PACKAGE_VERSION);
 }
 
-void do_print_usage(void)
+static void do_print_usage(void)
 {
 	fprintf(stdout,
 		"usage:\tanalogy_config [OPTS] devfile driver "
@@ -79,7 +79,7 @@ void do_print_usage(void)
 		"\t\t -W, --write-buffer-size: write buffer size in kB\n");
 }
 
-int parse_extra_arg(char *opts, unsigned int *nb, unsigned long *res)
+static int parse_extra_arg(char *opts, unsigned int *nb, unsigned long *res)
 {
 
 	int err = 0, len, ofs;
@@ -112,7 +112,7 @@ out_compute_opts:
 	return err;
 }
 
-int process_extra_arg(a4l_lnkdesc_t *lnkdsc, char *arg)
+static int process_extra_arg(a4l_lnkdesc_t *lnkdsc, char *arg)
 {
 	int err = 0;
 

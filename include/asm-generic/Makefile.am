@@ -1,4 +1,5 @@
 includesubdir = $(includedir)/asm-generic
+noinst_HEADERS = sem_heap.h
 
 includesub_HEADERS = \
 	arith.h \

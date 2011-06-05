@@ -34,6 +34,16 @@ struct clockobj {
 	const char *name;	/* __ref FIXME */
 };
 
+void ticks_to_timespec(struct clockobj *clkobj,
+		       ticks_t ticks,
+		       struct timespec *ts);
+
+void timespec_sub(struct timespec *r,
+		  const struct timespec *t1, const struct timespec *t2);
+
+void timespec_add(struct timespec *r,
+		  const struct timespec *t1, const struct timespec *t2);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
