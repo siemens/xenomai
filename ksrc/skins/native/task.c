@@ -1989,21 +1989,28 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 	}
 
 	/*
-	 * Wait on our receive slot for some client to enqueue itself
-	 * in our send queue.
+	 * We loop to care for spurious wakeups, in case the
+	 * client times out before we unblock.
 	 */
-	info = xnsynch_sleep_on(&server->mrecv, timeout, XN_RELATIVE);
-	/*
-	 * XNRMID cannot happen, since well, the current task would be the
-	 * deleted object, so...
-	 */
-	if (info & XNTIMEO) {
-		err = -ETIMEDOUT;	/* Timeout. */
-		goto unlock_and_exit;
-	} else if (info & XNBREAK) {
-		err = -EINTR;	/* Unblocked. */
-		goto unlock_and_exit;
-	}
+	do {
+		/*
+		 * Wait on our receive slot for some client to enqueue
+		 * itself in our send queue.
+		 */
+		info = xnsynch_sleep_on(&server->mrecv, timeout, XN_RELATIVE);
+		/*
+		 * XNRMID cannot happen, since well, the current task
+		 * would be the deleted object, so...
+		 */
+		if (info & XNTIMEO) {
+			err = -ETIMEDOUT;	/* Timeout. */
+			goto unlock_and_exit;
+		}
+		if (info & XNBREAK) {
+			err = -EINTR;	/* Unblocked. */
+			goto unlock_and_exit;
+		}
+	} while (!xnsynch_pended_p(&server->mrecv));
 
 	holder = getheadpq(xnsynch_wait_queue(&server->msendq));
 	/* There must be a valid holder since we waited for it. */
