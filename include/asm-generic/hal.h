@@ -39,9 +39,7 @@
 #include <asm/byteorder.h>
 #include <asm/xenomai/wrappers.h>
 #include <asm/xenomai/arith.h>
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 #include <linux/ipipe_tickdev.h>
-#endif
 
 #define RTHAL_DOMAIN_ID		0x58454e4f
 

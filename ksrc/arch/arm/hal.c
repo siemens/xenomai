@@ -100,8 +100,9 @@ unsigned long rthal_timer_calibrate(void)
 {
 	unsigned long long start, end, sum = 0, sum_sq = 0;
 	volatile unsigned const_delay = 0xffffffff;
-	unsigned int delay = const_delay, diff;
 	unsigned long result, flags, tsc_lat;
+	unsigned int delay = const_delay;
+	long long diff;
 	int i, j;
 
 	flags = rthal_critical_enter(NULL);
@@ -131,8 +132,10 @@ unsigned long rthal_timer_calibrate(void)
 			barrier();
 			rthal_read_tsc(end);
 			diff = end - start - tsc_lat;
-			sum += diff;
-			sum_sq += diff * diff;
+			if (diff > 0) {
+				sum += diff;
+				sum_sq += diff * diff;
+			}
 		}
 	}
 
@@ -262,6 +265,14 @@ int rthal_timer_request(
 	if (ret)
 		return ret;
 
+#ifdef CONFIG_SMP
+	ret = rthal_irq_request(RTHAL_TIMER_IPI,
+				(rthal_irq_handler_t)tick_handler,
+				NULL, NULL);
+	if (ret)
+		return ret;
+#endif /* CONFIG_SMP */
+
 	rthal_timer_set_oneshot(1);
 out:
 	return tickval;
@@ -275,6 +286,9 @@ void rthal_timer_release(int cpu)
 		return;
 
 	rthal_irq_release(RTHAL_TIMER_IRQ);
+#ifdef CONFIG_SMP
+	rthal_irq_release(RTHAL_TIMER_IPI);
+#endif /* CONFIG_SMP */
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
