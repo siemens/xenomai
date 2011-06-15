@@ -1822,13 +1822,19 @@ static int __rt_cond_delete(struct pt_regs *regs)
  *		      	       RTIME *timeoutp)
  */
 
+struct us_cond_data {
+	unsigned lockcnt;
+	int err;
+};
+
 static int __rt_cond_wait_prologue(struct pt_regs *regs)
 {
 	RT_COND_PLACEHOLDER cph, mph;
 	xntmode_t timeout_mode;
+	struct us_cond_data d;
 	int err, perr = 0;
-	unsigned lockcnt;
 	RT_MUTEX *mutex;
+	unsigned dummy;
 	RT_COND *cond;
 	RTIME timeout;
 
@@ -1856,26 +1862,31 @@ static int __rt_cond_wait_prologue(struct pt_regs *regs)
 				     sizeof(timeout)))
 		return -EFAULT;
 
-	err = rt_cond_wait_prologue(cond, mutex, &lockcnt, timeout_mode, timeout);
+#ifdef CONFIG_XENO_FASTSYNCH
+	if (__xn_safe_copy_from_user(&d, (void __user *)__xn_reg_arg3(regs),
+				     sizeof(d)))
+		return -EFAULT;
 
+	err = rt_cond_wait_prologue(cond, mutex, &dummy, timeout_mode, timeout);
+#else /* !CONFIG_XENO_FASTSYNCH */
+	err = rt_cond_wait_prologue(cond, mutex, &d.lockcnt, timeout_mode, timeout);
+#endif /* !CONFIG_XENO_FASTSYNCH */
 	switch(err) {
 	case 0:
 	case -ETIMEDOUT:
 	case -EIDRM:
-		perr = rt_task_errno = err;
-		err = rt_cond_wait_epilogue(mutex, lockcnt);
+		perr = d.err = err;
+		err = rt_cond_wait_epilogue(mutex, d.lockcnt);
 		break;
 
 	case -EINTR:
 		perr = err;
-		rt_task_errno = 0; /* epilogue should return 0. */
+		d.err = 0; /* epilogue should return 0. */
 		break;
 	}
 
-	if (err == -EINTR
-	    && __xn_reg_arg3(regs)
-	    && __xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				      &lockcnt, sizeof(lockcnt)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				   &d, sizeof(d)))
 		return -EFAULT;
 
 	return err == 0 ? perr : err;
@@ -1905,7 +1916,7 @@ static int __rt_cond_wait_epilogue(struct pt_regs *regs)
 
 	err = rt_cond_wait_epilogue(mutex, lockcnt);
 
-	return err == 0 ? rt_task_errno : err;
+	return err;
 }
 
 /*
