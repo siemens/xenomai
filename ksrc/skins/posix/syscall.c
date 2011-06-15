@@ -1531,15 +1531,21 @@ static int __pthread_cond_destroy(struct pt_regs *regs)
 				      &cnd.shadow_cond, sizeof(ucnd->shadow_cond));
 }
 
+struct us_cond_data {
+	unsigned count;
+	int err;
+};
+
 /* pthread_cond_wait_prologue(cond, mutex, count_ptr, timed, timeout) */
 static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 {
 	xnthread_t *cur = xnshadow_thread(current);
 	union __xeno_cond cnd, *ucnd;
 	union __xeno_mutex mx, *umx;
-	unsigned timed, count;
+	struct us_cond_data d;
 	struct timespec ts;
 	int err, perr = 0;
+	unsigned timed;
 
 	ucnd = (union __xeno_cond *)__xn_reg_arg1(regs);
 	umx = (union __xeno_mutex *)__xn_reg_arg2(regs);
@@ -1570,21 +1576,22 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 		err = pse51_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
-						    &count,
+						    &d.count,
 						    timed,
 						    ts2ticks_ceil(&ts) + 1);
 	} else
 		err = pse51_cond_timedwait_prologue(cur,
 						    &cnd.shadow_cond,
 						    &mx.shadow_mutex,
-						    &count, timed, XN_INFINITE);
+						    &d.count,
+						    timed, XN_INFINITE);
 
 	switch(err) {
 	case 0:
 	case ETIMEDOUT:
-		perr = errno = err;
+		perr = d.err = err;
 		err = -pse51_cond_timedwait_epilogue(cur, &cnd.shadow_cond,
-					    	    &mx.shadow_mutex, count);
+					    	    &mx.shadow_mutex, d.count);
 		if (err == 0 &&
 		    __xn_safe_copy_to_user((void __user *)
 					   &umx->shadow_mutex.lockcnt,
@@ -1595,13 +1602,12 @@ static int __pthread_cond_wait_prologue(struct pt_regs *regs)
 
 	case EINTR:
 		perr = err;
-		errno = 0;	/* epilogue should return 0. */
+		d.err = 0;	/* epilogue should return 0. */
 		break;
 	}
 
-	if (err == EINTR
-	    &&__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				     &count, sizeof(count)))
+	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
+				   &d, sizeof(d)))
 			return -EFAULT;
 
 	return err == 0 ? -perr : -err;
@@ -1646,7 +1652,7 @@ static int __pthread_cond_wait_epilogue(struct pt_regs *regs)
 				      sizeof(umx->shadow_mutex.lockcnt)))
 		return -EFAULT;
 
-	return err == 0 ? -errno : err;
+	return err;
 }
 
 static int __pthread_cond_signal(struct pt_regs *regs)

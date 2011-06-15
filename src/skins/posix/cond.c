@@ -84,6 +84,7 @@ struct pse51_cond_cleanup_t {
 	union __xeno_cond *cond;
 	union __xeno_mutex *mutex;
 	unsigned count;
+	int err;
 };
 
 static void __pthread_cond_cleanup(void *data)
@@ -135,7 +136,7 @@ int __wrap_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 	pthread_testcancel();
 
-	return err;
+	return err ?: c.err;
 }
 
 int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
@@ -174,7 +175,7 @@ int __wrap_pthread_cond_timedwait(pthread_cond_t * cond,
 
 	pthread_testcancel();
 
-	return err;
+	return err ?: c.err;
 }
 
 int __wrap_pthread_cond_signal(pthread_cond_t * cond)
