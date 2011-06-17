@@ -481,6 +481,8 @@ void xntbase_tick(xntbase_t *base)
 
 	xnlock_get_irqsave(&nklock, s);
 
+	XENO_BUGON(NUCLEUS, !xnpod_interrupt_p());
+
 	trace_mark(xn_nucleus, tbase_tick, "base %s", base->name);
 
 	if (base == &nktbase)
