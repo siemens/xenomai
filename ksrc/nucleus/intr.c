@@ -116,9 +116,12 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_lazy_switch(sched,
 		&nkclock.stat[xnsched_cpu(sched)].account, start);
 
+	xnstat_exectime_switch(sched, prev);
+
 	if (--sched->inesting == 0) {
 		__clrbits(sched->lflags, XNINIRQ);
 		xnpod_schedule();
+		sched = xnpod_current_sched();
 	}
 	/*
 	 * If the clock interrupt preempted a real-time thread, any
@@ -132,7 +135,6 @@ void xnintr_clock_handler(void)
 		xnintr_host_tick(sched);
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", XNARCH_TIMER_IRQ);
-	xnstat_exectime_switch(sched, prev);
 }
 
 /* Optional support for shared interrupts. */
@@ -219,13 +221,14 @@ static void xnintr_shirq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
+	xnstat_exectime_switch(sched, prev);
+
 	if (--sched->inesting == 0) {
 		__clrbits(sched->lflags, XNINIRQ);
 		xnpod_schedule();
 	}
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
-	xnstat_exectime_switch(sched, prev);
 }
 
 /*
@@ -302,12 +305,14 @@ static void xnintr_edge_shirq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
+	xnstat_exectime_switch(sched, prev);
+
 	if (--sched->inesting == 0) {
 		__clrbits(sched->lflags, XNINIRQ);
 		xnpod_schedule();
 	}
+
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
-	xnstat_exectime_switch(sched, prev);
 }
 
 static inline int xnintr_irq_attach(xnintr_t *intr)
@@ -492,13 +497,14 @@ static void xnintr_irq_handler(unsigned irq, void *cookie)
 	else if (!(s & XN_ISR_NOENABLE))
 		xnarch_end_irq(irq);
 
+	xnstat_exectime_switch(sched, prev);
+
 	if (--sched->inesting == 0) {
 		__clrbits(sched->lflags, XNINIRQ);
 		xnpod_schedule();
 	}
 
 	trace_mark(xn_nucleus, irq_exit, "irq %u", irq);
-	xnstat_exectime_switch(sched, prev);
 }
 
 int __init xnintr_mount(void)
