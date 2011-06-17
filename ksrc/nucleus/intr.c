@@ -97,8 +97,9 @@ void xnintr_clock_handler(void)
 	xnstat_exectime_t *prev;
 	xnticks_t start;
 
-	prev  = xnstat_exectime_get_current(sched);
-	start = xnstat_exectime_now();
+	prev = xnstat_exectime_switch(sched,
+		&nkclock.stat[xnsched_cpu(sched)].account);
+	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
 
 	xnarch_announce_tick();
 
@@ -111,10 +112,6 @@ void xnintr_clock_handler(void)
 	xnlock_get(&nklock);
 	xntimer_tick_aperiodic();
 	xnlock_put(&nklock);
-
-	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
-	xnstat_exectime_lazy_switch(sched,
-		&nkclock.stat[xnsched_cpu(sched)].account, start);
 
 	xnstat_exectime_switch(sched, prev);
 
