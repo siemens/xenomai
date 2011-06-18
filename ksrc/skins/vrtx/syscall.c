@@ -47,7 +47,7 @@ static int __muxid;
  * a1: int tid;
  * a2: int prio;
  * a3: int mode;
- * a4: unsigned long *shadow_mode;
+ * a4: unsigned long *shadow_mode_offset;
  * }
  */
 

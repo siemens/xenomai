@@ -67,7 +67,7 @@ static psostask_t *__psos_task_current(struct task_struct *p)
  * a1: const char *name;
  * a2: u_long prio;
  * a3: u_long flags;
- * a4: unsigned long *mode;
+ * a4: unsigned long *mode_offset;
  * a5: unsigned long ptid;
  */
 

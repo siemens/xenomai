@@ -63,6 +63,7 @@ static void *psos_task_trampoline(void *cookie)
 	struct psos_task_iargs *iargs = (struct psos_task_iargs *)cookie;
 	void (*entry)(u_long, u_long, u_long, u_long);
 	struct psos_arg_bulk bulk;
+	unsigned long mode_offset;
 	u_long handle, targs[4];
 	long err;
 
@@ -72,7 +73,7 @@ static void *psos_task_trampoline(void *cookie)
 	bulk.a1 = (u_long)iargs->name;
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
-	bulk.a4 = (u_long)xeno_init_current_mode();
+	bulk.a4 = (u_long)&mode_offset;
 	bulk.a5 = (u_long)pthread_self();
 
 	if (!bulk.a4) {
@@ -87,6 +88,7 @@ static void *psos_task_trampoline(void *cookie)
 		goto fail;
 
 	xeno_set_current();
+	xeno_set_current_mode(mode_offset);
 
 	/* Wait on the barrier for the task to be started. The barrier
 	   could be released in order to process Linux signals while the
@@ -173,6 +175,7 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 		u_long *tid_r)
 {
 	struct psos_arg_bulk bulk;
+	unsigned long mode_offset;
 	int ret;
 
 	xeno_fault_stack();
@@ -183,12 +186,14 @@ u_long t_shadow(const char *name, /* Xenomai extension. */
 	bulk.a1 = (u_long)name;
 	bulk.a2 = (u_long)prio;
 	bulk.a3 = (u_long)flags;
-	bulk.a4 = (u_long)xeno_init_current_mode();
+	bulk.a4 = (u_long)&mode_offset;
 	bulk.a5 = (u_long)pthread_self();
 
 	ret = XENOMAI_SKINCALL3(__psos_muxid, __psos_t_create, &bulk, tid_r, NULL);
-	if (!ret)
+	if (!ret) {
 		xeno_set_current();
+		xeno_set_current_mode(mode_offset);
+	}
 
 	return ret;
 }

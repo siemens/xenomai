@@ -106,8 +106,6 @@ static void xeno_init_vdso(void)
 	}
 
 	nkvdso = (struct xnvdso *)(xeno_sem_heap[SHARED] + sysinfo.vdso);
-	if (!xnvdso_test_feature(XNVDSO_FEAT_DROP_U_MODE))
-		xeno_current_warn_old();
 }
 
 /* Will be called once at library loading time, and when re-binding

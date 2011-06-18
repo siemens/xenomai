@@ -197,7 +197,7 @@ static int __pthread_create(struct pt_regs *regs)
 
 static pthread_t __pthread_shadow(struct task_struct *p,
 				  struct pse51_hkey *hkey,
-				  unsigned long __user *u_mode)
+				  unsigned long __user *u_mode_offset)
 {
 	pthread_attr_t attr;
 	pthread_t k_tid;
@@ -212,7 +212,7 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 	if (err)
 		return ERR_PTR(-err);
 
-	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode);
+	err = xnshadow_map(&k_tid->threadbase, NULL, u_mode_offset);
 
 	if (!err && !__pthread_hash(hkey, k_tid))
 		err = -EAGAIN;
@@ -228,13 +228,13 @@ static pthread_t __pthread_shadow(struct task_struct *p,
 static int __pthread_setschedparam(struct pt_regs *regs)
 {
 	int policy, err, promoted = 0;
-	unsigned long __user *u_mode;
+	unsigned long __user *u_mode_offset;
 	struct sched_param param;
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	policy = __xn_reg_arg2(regs);
-	u_mode = (unsigned long __user *)__xn_reg_arg4(regs);
+	u_mode_offset = (unsigned long __user *)__xn_reg_arg4(regs);
 
 	if (__xn_safe_copy_from_user(&param,
 				     (void __user *)__xn_reg_arg3(regs), sizeof(param)))
@@ -244,10 +244,10 @@ static int __pthread_setschedparam(struct pt_regs *regs)
 	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
 
-	if (!k_tid && u_mode) {
+	if (!k_tid && u_mode_offset) {
 		/* If the syscall applies to "current", and the latter is not
 		   a Xenomai thread already, then shadow it. */
-		k_tid = __pthread_shadow(current, &hkey, u_mode);
+		k_tid = __pthread_shadow(current, &hkey, u_mode_offset);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 
@@ -271,13 +271,13 @@ static int __pthread_setschedparam(struct pt_regs *regs)
 static int __pthread_setschedparam_ex(struct pt_regs *regs)
 {
 	int policy, err, promoted = 0;
-	unsigned long __user *u_mode;
+	unsigned long __user *u_mode_offset;
 	struct sched_param_ex param;
 	struct pse51_hkey hkey;
 	pthread_t k_tid;
 
 	policy = __xn_reg_arg2(regs);
-	u_mode = (unsigned long __user *)__xn_reg_arg4(regs);
+	u_mode_offset = (unsigned long __user *)__xn_reg_arg4(regs);
 
 	if (__xn_safe_copy_from_user(&param,
 				     (void __user *)__xn_reg_arg3(regs), sizeof(param)))
@@ -287,8 +287,8 @@ static int __pthread_setschedparam_ex(struct pt_regs *regs)
 	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
 
-	if (!k_tid && u_mode) {
-		k_tid = __pthread_shadow(current, &hkey, u_mode);
+	if (!k_tid && u_mode_offset) {
+		k_tid = __pthread_shadow(current, &hkey, u_mode_offset);
 		if (IS_ERR(k_tid))
 			return PTR_ERR(k_tid);
 

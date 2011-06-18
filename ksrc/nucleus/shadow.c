@@ -956,7 +956,7 @@ redo:
 		return -ERESTARTSYS;
 
 	if (thread->u_mode)
-		__xn_put_user(thread->state & ~XNRELAX, thread->u_mode);
+		*(thread->u_mode) = thread->state & ~XNRELAX;
 
 	preempt_disable();
 
@@ -1154,7 +1154,7 @@ void xnshadow_relax(int notify, int reason)
 	   root thread. */
 
 	if (thread->u_mode)
-		__xn_put_user(thread->state, thread->u_mode);
+		*(thread->u_mode) = thread->state;
 
 	trace_mark(xn_nucleus, shadow_relaxed,
 		  "thread %p thread_name %s comm %s",
@@ -1173,7 +1173,7 @@ void xnshadow_exit(void)
 /*!
  * \fn int xnshadow_map(xnthread_t *thread,
  *                      xncompletion_t __user *u_completion,
- *                      unsigned long __user *u_mode)
+ *                      unsigned long __user *u_mode_offset)
  * @internal
  * \brief Create a shadow thread context.
  *
@@ -1197,10 +1197,12 @@ void xnshadow_exit(void)
  * immediately started and "current" immediately resumes in the Xenomai
  * domain from this service.
  *
- * @param: u_mode is the address of a mode variable in user space that
- * will reflect the current thread mode (primary or secondary). The
- * nucleus will try to update the variable before switching to secondary
- * or after switching from primary mode.
+ * @param: u_mode_offset is the address of a user space address where
+ * we will store the offset of the "u_mode" thread variable in the
+ * process shared heap. This thread variable reflects the current
+ * thread mode (primary or secondary). The nucleus will try to update
+ * the variable before switching to secondary  or after switching from
+ * primary mode.
  *
  * @return 0 is returned on success. Otherwise:
  *
@@ -1231,11 +1233,13 @@ void xnshadow_exit(void)
  */
 
 int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
-		 unsigned long __user *u_mode)
+		 unsigned long __user *u_mode_offset)
 {
 	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
 	unsigned int muxid, magic;
+	unsigned long *u_mode;
+	xnheap_t *sem_heap;
 	int ret;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
@@ -1244,7 +1248,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	if (xnshadow_thread(current) || xnthread_test_state(thread, XNMAPPED))
 		return -EBUSY;
 
-	if (!access_wok(u_mode, sizeof(*u_mode)))
+	if (!access_wok(u_mode_offset, sizeof(*u_mode_offset)))
 		return -EFAULT;
 
 #ifdef CONFIG_MMU
@@ -1274,6 +1278,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		}
 	}
 
+	sem_heap = &xnsys_ppd_get(0)->sem_heap;
+	u_mode = xnheap_alloc(sem_heap, sizeof(*u_mode));
+	if (!u_mode)
+		return -ENOMEM;
+
 	/* Restrict affinity to a single CPU of nkaffinity & current set. */
 	xnarch_cpus_and(affinity, current->cpus_allowed, nkaffinity);
 	affinity = xnarch_cpumask_of_cpu(xnarch_first_cpu(affinity));
@@ -1286,7 +1295,10 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 
 	xnarch_init_shadow_tcb(xnthread_archtcb(thread), thread,
 			       xnthread_name(thread));
+
 	thread->u_mode = u_mode;
+	__xn_put_user(xnheap_mapped_offset(sem_heap, u_mode), u_mode_offset);
+
 	xnthread_set_state(thread, XNMAPPED);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
 
@@ -1340,7 +1352,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		return ret;
 
 	if (thread->u_mode)
-		__xn_put_user(thread->state, u_mode);
+		*(thread->u_mode) = thread->state;
 
 	ret = xnshadow_harden();
 
@@ -1383,6 +1395,9 @@ void xnshadow_unmap(xnthread_t *thread)
 		);
 
 	xnshadow_thrptd(p) = NULL;
+
+	xnheap_free(&xnsys_ppd_get(0)->sem_heap, thread->u_mode);
+	thread->u_mode = NULL;
 
 	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
@@ -2050,18 +2065,6 @@ static int xnshadow_sys_current_info(struct pt_regs *regs)
 	return __xn_safe_copy_to_user(us_info, &info, sizeof(*us_info));
 }
 
-static int xnshadow_sys_drop_u_mode(struct pt_regs *regs)
-{
-	xnthread_t *cur = xnshadow_thread(current);
-
-	if (!cur)
-		return -EPERM;
-
-	cur->u_mode = NULL;
-
-	return 0;
-}
-
 static xnsysent_t __systab[] = {
 	[__xn_sys_migrate] = {&xnshadow_sys_migrate, __xn_exec_current},
 	[__xn_sys_arch] = {&xnshadow_sys_arch, __xn_exec_any},
@@ -2074,8 +2077,6 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
 	[__xn_sys_current_info] =
 		{&xnshadow_sys_current_info, __xn_exec_shadow},
-	[__xn_sys_drop_u_mode] =
-		{&xnshadow_sys_drop_u_mode, __xn_exec_shadow},
 	[__xn_sys_mayday] = {&xnshadow_sys_mayday, __xn_exec_any|__xn_exec_norestart},
 };
 
@@ -2143,34 +2144,9 @@ static struct xnskin_props __props = {
 	.module = NULL
 };
 
-static void handle_shadow_exit(void)
-{
-	xnthread_t *thread = xnshadow_thread(current);
-	static int warned;
-
-	/*
-	 * If user space did not deregister u_mode at this point, we
-	 * are confronted with old libraries and should warn about
-	 * potential instabilities.
-	 */
-	if (thread->u_mode && !warned) {
-		warned = 1;
-#ifdef CONFIG_MMU
-		printk(KERN_WARNING
-		       "Xenomai: User-space support anterior to 2.5.2"
-		       " detected, may corrupt memory upon\n"
-		       "thread termination. Upgrade is recommended\n");
-#endif
-	}
-	thread->u_mode = NULL;
-}
-
 static inline int
 substitute_linux_syscall(struct pt_regs *regs)
 {
-	if (unlikely(__xn_linux_mux_p(regs, __NR_exit)))
-		handle_shadow_exit();
-
 	/* No real-time replacement for now -- let Linux handle this call. */
 	return 0;
 }

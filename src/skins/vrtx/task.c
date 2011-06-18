@@ -75,6 +75,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	struct vrtx_task_iargs *iargs = cookie;
  	void (*entry)(void *arg), *arg;
 	struct vrtx_arg_bulk bulk;
+	unsigned long mode_offset;
 	long err;
 #ifndef HAVE___THREAD
 	TCB *tcb;
@@ -99,7 +100,7 @@ static void *vrtx_task_trampoline(void *cookie)
 	bulk.a1 = (u_long)iargs->tid;
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->mode;
-	bulk.a4 = (u_long)xeno_init_current_mode();
+	bulk.a4 = (u_long)&mode_offset;
 	if (bulk.a4 == 0) {
 		err = -ENOMEM;
 		goto fail;
@@ -115,6 +116,7 @@ static void *vrtx_task_trampoline(void *cookie)
 
   	if (err == 0) {
 	  xeno_set_current();
+	  xeno_set_current_mode(mode_offset);
 	  entry(arg);
 	}
 fail:

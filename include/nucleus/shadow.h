@@ -63,7 +63,7 @@ void xnshadow_release_events(void);
 
 int xnshadow_map(struct xnthread *thread,
 		 xncompletion_t __user *u_completion,
-		 unsigned long __user *u_mode);
+		 unsigned long __user *u_mode_offset);
 
 void xnshadow_unmap(struct xnthread *thread);
 

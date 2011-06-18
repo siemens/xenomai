@@ -61,7 +61,7 @@ static void *uitron_task_trampoline(void *cookie)
 {
 	struct uitron_task_iargs *iargs = (struct uitron_task_iargs *)cookie;
 	struct sched_param param;
-	unsigned long *mode;
+	unsigned long mode_offset;
 	void (*entry)(INT);
 	int policy;
 	long err;
@@ -77,20 +77,15 @@ static void *uitron_task_trampoline(void *cookie)
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	xeno_sigshadow_install_once();
 
-	mode = xeno_init_current_mode();
-	if (!mode) {
-		err = -ENOMEM;
-		goto fail;
-	}
-
 	err = XENOMAI_SKINCALL4(__uitron_muxid,
 				__uitron_cre_tsk,
 				iargs->tskid, iargs->pk_ctsk,
-				iargs->completionp, mode);
+				iargs->completionp, &mode_offset);
 	if (err)
 		goto fail;
 
 	xeno_set_current();
+	xeno_set_current_mode(mode_offset);
 
 	/* iargs->pk_ctsk might not be valid anymore, after our parent
 	   was released from the completion sync, so do not

@@ -87,6 +87,7 @@ static void *wind_task_trampoline(void *cookie)
 	struct wind_task_iargs *iargs =
 	    (struct wind_task_iargs *)cookie, _iargs;
 	struct wind_arg_bulk bulk;
+	unsigned long mode_offset;
 	WIND_TCB *pTcb;
 	long err;
 
@@ -101,7 +102,7 @@ static void *wind_task_trampoline(void *cookie)
 	bulk.a2 = (u_long)iargs->prio;
 	bulk.a3 = (u_long)iargs->flags;
 	bulk.a4 = (u_long)pthread_self();
-	bulk.a5 = (u_long)xeno_init_current_mode();
+	bulk.a5 = (u_long)&mode_offset;
 	pTcb = iargs->pTcb;
 
 	if (!bulk.a5) {
@@ -116,6 +117,7 @@ static void *wind_task_trampoline(void *cookie)
 		goto fail;
 
 	xeno_set_current();
+	xeno_set_current_mode(mode_offset);
 
 #ifdef HAVE___THREAD
 	__vxworks_self = *pTcb;

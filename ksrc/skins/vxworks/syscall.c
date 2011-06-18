@@ -66,7 +66,7 @@ static WIND_TCB *__wind_task_current(struct task_struct *p)
  * a2: int prio;
  * a3: int flags;
  * a4: pthread_self();
- * a5: unsigned long *mode;
+ * a5: unsigned long *mode_offset;
  * }
  */
 
