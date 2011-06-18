@@ -602,6 +602,12 @@ static inline void wrap_proc_dir_entry_owner(struct proc_dir_entry *entry)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)
 #define unlocked_ioctl ioctl
+#define DECLARE_IOCTL_HANDLER(name, filp, cmd, arg)		\
+	name(struct inode *__inode__, struct file *filp,	\
+	     unsigned int cmd, unsigned long arg)
+#else
+#define DECLARE_IOCTL_HANDLER(name, filp, cmd, arg)		\
+	name(struct file *filp,	unsigned int cmd, unsigned long arg)
 #endif
 
 #ifndef DEFINE_SEMAPHORE
