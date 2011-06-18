@@ -2230,7 +2230,7 @@ static void handle_shadow_exit(void)
 	 */
 	if (thread->u_mode && !warned) {
 		warned = 1;
-#ifdef CONFIG_MMU
+#if defined(CONFIG_MMU) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 		printk(KERN_WARNING
 		       "Xenomai: User-space support anterior to 2.5.2"
 		       " detected, may corrupt memory upon\n"
