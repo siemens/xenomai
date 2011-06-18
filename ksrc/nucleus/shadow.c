@@ -1094,20 +1094,15 @@ void xnshadow_relax(int notify, int reason)
 	 * xnpod_suspend_thread() when switching out the current
 	 * thread, not to break basic assumptions we do there.
 	 *
-	 * We disable interrupts here to initiate the migration
-	 * sequence, and let xnpod_suspend_thread() enable them back
-	 * before returning to us.
+	 * We disable interrupts during the migration sequence, but
+	 * xnpod_suspend_thread() has an interrupts-on section built in.
 	 */
 	splmax();
 	rpi_push(thread->sched, thread);
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
 	clear_task_nowakeup(current);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
-	/*
-	 * As a special case when switching out a relaxed thread,
-	 * interrupts have been re-enabled before returning to us. See
-	 * xnpod_suspend_thread().
-	 */
+	splnone();
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
 			    thread->name, xnthread_user_pid(thread));

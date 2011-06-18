@@ -1462,11 +1462,9 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * have been called from xnshadow_relax(), in which
 		 * case we introduce an opportunity for interrupt
 		 * delivery right before switching context, which
-		 * shortens the uninterruptible code path.  This
-		 * particular caller expects us to always return with
-		 * interrupts enabled.
+		 * shortens the uninterruptible code path.
 		 *
-		 * We have to shut irqs off around xnpod_schedule()
+		 * We have to shut irqs off before xnpod_schedule()
 		 * though: if an interrupt could preempt us in
 		 * __xnpod_schedule right after the call to
 		 * xnarch_escalate but before we lock the nklock, we
@@ -1478,9 +1476,8 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
 
-			splhigh(s);
+			splmax();
 			xnpod_schedule();
-			splexit(s);
 			return;
 		}
 		/*
