@@ -1473,8 +1473,7 @@ void xnpod_suspend_thread(xnthread_t *thread, xnflags_t mask,
 		 * would enter the critical section in xnpod_schedule
 		 * while the current Adeos domain is Linux, which
 		 * would defeat the purpose of having called
-		 * xnarch_escalate(). xnpod_schedule() is expected to
-		 * return with interrupts on.
+		 * xnarch_escalate().
 		 */
 		if (mask & XNRELAX) {
 			xnlock_clear_irqon(&nklock);
@@ -2345,9 +2344,10 @@ reschedule:
 			xnshadow_exit();
 		}
 
-		/* We are returning to xnshadow_relax via
-		   xnpod_suspend_thread, do nothing,
-		   xnpod_suspend_thread will re-enable interrupts. */
+		/* Interrupts are disabled here, but it is what
+		   callers expect, specifically the reschedule of an
+		   IRQ handler that hit before we call xnpod_schedule in
+		   xnpod_suspend_thread when relaxing a thread. */
 		return;
 	}
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
