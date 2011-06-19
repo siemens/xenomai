@@ -1632,11 +1632,11 @@ static inline void do_mayday_event(struct pt_regs *regs)
 {
 	struct xnthread *thread = xnshadow_thread(current);
 	struct xnarchtcb *tcb = xnthread_archtcb(thread);
-	struct xnshadow_ppd_t *sys_ppd;
+	struct xnsys_ppd *sys_ppd;
 
 	/* We enter the event handler with hw IRQs off. */
 	xnlock_get(&nklock);
-	sys_ppd = xnshadow_ppd_get(0);
+	sys_ppd = xnsys_ppd_get(0);
 	xnlock_put(&nklock);
 	XENO_BUGON(NUCLEUS, sys_ppd == NULL);
 
@@ -1754,16 +1754,6 @@ static int xnshadow_sys_bind(struct pt_regs *regs)
 
 	sys_ppd->key.muxid = 0;
 	sys_ppd->key.mm = current->mm;
-#ifdef XNARCH_HAVE_MAYDAY
-	sys_ppd->mayday_addr = map_mayday_page(current);
-	if (sys_ppd->mayday_addr == 0) {
-		printk(KERN_WARNING
-		       "Xenomai: %s[%d] cannot map MAYDAY page\n",
-		       current->comm, current->pid);
-		err = -ENOMEM;
-		goto fail_destroy_sys_ppd;
-	}
-#endif /* XNARCH_HAVE_MAYDAY */
 
 	if (ppd_insert(sys_ppd) == -EBUSY) {
 		/* In case of concurrent binding (which can not happen with
@@ -2109,12 +2099,26 @@ static void *xnshadow_sys_event(int event, void *data)
 		err = xnheap_init_mapped(&p->sem_heap,
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
 					 XNARCH_SHARED_HEAP_FLAGS);
-		if (err) {
+		if (err)
+			goto err_free_host_mem;
+
+		xnheap_set_label(&p->sem_heap,
+				 "private sem heap [%d]", current->pid);
+
+#ifdef XNARCH_HAVE_MAYDAY
+		p->mayday_addr = map_mayday_page(current);
+		if (p->mayday_addr == 0) {
+			printk(KERN_WARNING
+			       "Xenomai: %s[%d] cannot map MAYDAY page\n",
+			       current->comm, current->pid);
+			err = -ENOMEM;
+
+		  err_free_host_mem:
 			xnarch_free_host_mem(p, sizeof(*p));
 			return ERR_PTR(err);
 		}
-		xnheap_set_label(&p->sem_heap,
-				 "private sem heap [%d]", current->pid);
+#endif /* XNARCH_HAVE_MAYDAY */
+
 		xnarch_atomic_inc(&muxtable[0].refcnt);
 		return &p->ppd;
 
