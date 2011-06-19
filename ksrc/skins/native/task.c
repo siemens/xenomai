@@ -74,6 +74,11 @@ static void __task_delete_hook(xnthread_t *thread)
 
 	task = thread2rtask(thread);
 
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+	xnheap_free(&xnsys_ppd_get(0)->sem_heap,
+		    task->msendq.fastlock);
+#endif
+
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	/* The nucleus will reschedule as needed when all the deletion
 	   hooks are done. */
@@ -639,11 +644,6 @@ int rt_task_delete(RT_TASK *task)
 
 	if (err)
 		goto unlock_and_exit;
-
-#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
-	xnheap_free(&xnsys_ppd_get(0)->sem_heap,
-		    task->msendq.fastlock);
-#endif
 
 	/* Does not return if task is current. */
 	xnpod_delete_thread(&task->thread_base);
