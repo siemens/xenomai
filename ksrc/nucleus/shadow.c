@@ -563,7 +563,7 @@ static unsigned ppd_lookup_inner(xnqueue_t **pq,
 	}
 	while (holder &&
 	       (ppd->key.mm < pkey->mm ||
-		(ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid)));
+		(ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid)));
 
 	if (ppd->key.mm == pkey->mm && ppd->key.muxid == pkey->muxid) {
 		/* found it, return it. */
@@ -573,7 +573,7 @@ static unsigned ppd_lookup_inner(xnqueue_t **pq,
 
 	/* not found, return successor for insertion. */
 	if (ppd->key.mm < pkey->mm ||
-	    (ppd->key.mm == pkey->mm && ppd->key.muxid < pkey->muxid))
+	    (ppd->key.mm == pkey->mm && ppd->key.muxid > pkey->muxid))
 		*pholder = holder ? link2ppd(holder) : NULL;
 	else
 		*pholder = ppd;
@@ -596,10 +596,11 @@ static int ppd_insert(xnshadow_ppd_t * holder)
 	}
 
 	inith(&holder->link);
-	if (next)
+	if (next) {
 		insertq(q, &next->link, &holder->link);
-	else
+	} else {
 		appendq(q, &holder->link);
+	}
 	xnlock_put_irqrestore(&nklock, s);
 
 	return 0;
@@ -647,7 +648,7 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 	xnqueue_t *q;
 	spl_t s;
 
-	key.muxid = 0;
+	key.muxid = ~0UL;
 	key.mm = mm;
 	xnlock_get_irqsave(&nklock, s);
 	ppd_lookup_inner(&q, &ppd, &key);
