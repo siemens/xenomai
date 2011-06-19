@@ -1395,6 +1395,11 @@ void xnheap_destroy_mapped(xnheap_t *heap,
 	 */
 	XENO_ASSERT(NUCLEUS, mapaddr == NULL || release, /* nop */);
 
+	if (XENO_DEBUG(NUCLEUS) && heap->ubytes != 0)
+		printk(KERN_ERR "xnheap: destroying shared heap '%s' "
+		       "with %lu bytes still in use.\n",
+		       heap->label, heap->ubytes);
+
 	xnlock_get_irqsave(&nklock, s);
 	removeq(&heapq, &heap->stat_link);
 	xnvfile_touch_tag(&vfile_tag);
