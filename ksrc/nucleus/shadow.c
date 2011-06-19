@@ -65,6 +65,11 @@ int nkthrptd;
 EXPORT_SYMBOL_GPL(nkthrptd);
 int nkerrptd;
 EXPORT_SYMBOL_GPL(nkerrptd);
+int nkmmptd;
+EXPORT_SYMBOL_GPL(nkmmptd);
+
+#define xnshadow_mmptd(t) ((t)->ptd[nkmmptd])
+#define xnshadow_mm(t) ((struct mm_struct *)xnshadow_mmptd(t))
 
 struct xnskin_slot {
 	struct xnskin_props *props;
@@ -1299,6 +1304,8 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 * friends.
 	 */
 	xnshadow_thrptd(current) = thread;
+	xnshadow_mmptd(current) = current->mm;
+
 	rthal_enable_notifier(current);
 
 	if (xnthread_base_priority(thread) == 0 &&
@@ -2754,7 +2761,15 @@ static void detach_ppd(xnshadow_ppd_t * ppd)
 
 static inline void do_cleanup_event(struct mm_struct *mm)
 {
+	struct task_struct *p = current;
+	struct mm_struct *old;
+
+	old = xnshadow_mm(p);
+	xnshadow_mmptd(p) = mm;
+
 	ppd_remove_mm(mm, &detach_ppd);
+
+	xnshadow_mmptd(p) = old;
 }
 
 RTHAL_DECLARE_CLEANUP_EVENT(cleanup_event);
@@ -2920,7 +2935,7 @@ EXPORT_SYMBOL_GPL(xnshadow_unregister_interface);
 xnshadow_ppd_t *xnshadow_ppd_get(unsigned muxid)
 {
 	if (xnpod_userspace_p())
-		return ppd_lookup(muxid, current->mm);
+		return ppd_lookup(muxid, xnshadow_mm(current) ?: current->mm);
 
 	return NULL;
 }
@@ -2955,8 +2970,9 @@ int xnshadow_mount(void)
 	sema_init(&completion_mutex, 1);
 	nkthrptd = rthal_alloc_ptdkey();
 	nkerrptd = rthal_alloc_ptdkey();
+	nkmmptd = rthal_alloc_ptdkey();
 
-	if (nkthrptd < 0 || nkerrptd < 0) {
+	if (nkthrptd < 0 || nkerrptd < 0 || nkmmptd < 0) {
 		printk(KERN_ERR "Xenomai: cannot allocate PTD slots\n");
 		return -ENOMEM;
 	}
