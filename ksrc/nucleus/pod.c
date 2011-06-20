@@ -2331,22 +2331,22 @@ reschedule:
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
       shadow_epilogue:
-	{
-		/* Shadow on entry and root without shadow extension on exit?
-		   Mmmm... This must be the user-space mate of a deleted real-time
-		   shadow we've just rescheduled in the Linux domain to have it
-		   exit properly.  Reap it now. */
-		if (xnshadow_thrptd(current) == NULL) {
-			splnone();
-			xnshadow_exit();
-		}
-
-		/* Interrupts are disabled here, but it is what
-		   callers expect, specifically the reschedule of an
-		   IRQ handler that hit before we call xnpod_schedule in
-		   xnpod_suspend_thread when relaxing a thread. */
-		return;
+	/* Shadow on entry and root without shadow extension on exit?
+	   Mmmm... This must be the user-space mate of a deleted real-time
+	   shadow we've just rescheduled in the Linux domain to have it
+	   exit properly.  Reap it now. */
+	if (xnshadow_thrptd(current) == NULL) {
+		splnone();
+		xnshadow_exit();
 	}
+
+	/* Interrupts must be disabled here (has to be done on entry of the
+	   Linux [__]switch_to function), but it is what callers expect,
+	   specifically the reschedule of an IRQ handler that hit before we
+	   call xnpod_schedule in xnpod_suspend_thread when relaxing a
+	   thread. */
+	XENO_BUGON(NUCLEUS, !irqs_disabled_hw());
+	return;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 }
 EXPORT_SYMBOL_GPL(__xnpod_schedule);
