@@ -27,6 +27,9 @@
 /* config */
 #undef CONFIG_XENO_DEFAULT_PERIOD
 
+/* config */
+#undef CONFIG_XENO_FASTSYNCH
+
 /* Host system alias */
 #undef CONFIG_XENO_HOST_STRING
 

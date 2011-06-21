@@ -91,8 +91,8 @@ case "$build_for" in
  arm*-*)
 	XENO_TARGET_ARCH=arm
 	CONFIG_XENO_DEFAULT_PERIOD=1000000
-	# We set CONFIG_XENO_FASTSYNCH later, when we know what architecture we
-	# are running
+	# We set CONFIG_XENO_FASTSYNCH in asm/features.h, when we know
+	# what architecture we are running
 	;;
  x86_64-*|amd64-*)
 	use__thread=yes
@@ -351,7 +351,8 @@ dnl
 
 test x$CONFIG_XENO_X86_SEP = xy && AC_DEFINE(CONFIG_XENO_X86_SEP,1,[config])
 test x$CONFIG_SMP = xy && AC_DEFINE(CONFIG_SMP,1,[config])
-
+test x$CONFIG_XENO_FASTSYNCH = xy && AC_DEFINE(CONFIG_XENO_FASTSYNCH,1,[config])
+AM_CONDITIONAL(CONFIG_XENO_FASTSYNCH,[test "$CONFIG_XENO_FASTSYNCH" = y])
 dnl
 dnl Userland may want to know about MMU availability on the target.
 dnl For now, we assume that having fork() means having an MMU.
