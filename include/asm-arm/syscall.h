@@ -234,25 +234,15 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 
 struct __xn_tscinfo {
 	int type;		/* Must remain first member */
-	union {
-		struct {
-			volatile unsigned *counter;
-			unsigned mask;
-			volatile unsigned long long *tsc;
-		} fr;
-		struct {
-			volatile unsigned *counter;
-			unsigned mask;
-			volatile unsigned *last_cnt;
-			volatile unsigned long long *tsc;
-		} dec;
-	} u;
+	unsigned mask;
+	volatile unsigned *counter;
+	volatile unsigned *last_cnt; /* Only used by decrementers */
+	volatile unsigned long long *tsc;
 };
-#define __XN_TSC_TYPE_NONE                  0
-#define __XN_TSC_TYPE_FREERUNNING           1
-#define __XN_TSC_TYPE_DECREMENTER           2
-#define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 3
-#define __XN_TSC_TYPE_FREERUNNING_COUNTDOWN 4
+
+#define _stringify(x) #x
+#define stringify(x) _stringify(x)
+
 
 #ifndef __KERNEL__
 extern struct __xn_tscinfo __xn_tscinfo;
@@ -260,10 +250,16 @@ extern struct __xn_tscinfo __xn_tscinfo;
 #ifdef XNARCH_ARM_TSC_TYPE
 static inline unsigned long long __xn_rdtsc(void)
 {
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
-	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
-	const unsigned mask = __xn_tscinfo.u.fr.mask;
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
+	typedef unsigned long long rdtsc_t(volatile unsigned *vaddr);
+	rdtsc_t *const kuser_tsc_get =
+		(void *)(0xffff1004 - ((*(unsigned *)(0xffff0ffc) + 3) << 5));
+	return kuser_tsc_get(__xn_tscinfo.counter);
+
+#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
+	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.counter;
+	const unsigned mask = __xn_tscinfo.mask;
 	register unsigned long long result;
 	unsigned counter;
 
@@ -274,10 +270,11 @@ static inline unsigned long long __xn_rdtsc(void)
 	if ((counter & mask) < ((unsigned) result & mask))
 		result += mask + 1ULL;
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
+
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
-	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
-	const unsigned mask = __xn_tscinfo.u.fr.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.counter;
+	const unsigned mask = __xn_tscinfo.mask;
 	register unsigned long long result;
 	unsigned counter;
 
@@ -288,10 +285,11 @@ static inline unsigned long long __xn_rdtsc(void)
 	if ((counter & mask) > ((unsigned) result & mask))
 		result += mask + 1ULL;
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
+
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
-	volatile unsigned long long *const tscp = __xn_tscinfo.u.fr.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.u.fr.counter;
-	const unsigned mask = __xn_tscinfo.u.fr.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.counter;
+	const unsigned mask = __xn_tscinfo.mask;
 	register unsigned long long after, before;
 	unsigned counter;
 
@@ -307,10 +305,10 @@ static inline unsigned long long __xn_rdtsc(void)
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
 #elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
-	volatile unsigned long long *const tscp = __xn_tscinfo.u.dec.tsc;
-	volatile unsigned *const counterp = __xn_tscinfo.u.dec.counter;
-	volatile unsigned *const last_cntp = __xn_tscinfo.u.dec.last_cnt;
-	const unsigned mask = __xn_tscinfo.u.dec.mask;
+	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
+	volatile unsigned *const counterp = __xn_tscinfo.counter;
+	volatile unsigned *const last_cntp = __xn_tscinfo.last_cnt;
+	const unsigned mask = __xn_tscinfo.mask;
 	register unsigned long long after, before;
 	unsigned counter, last_cnt;
 

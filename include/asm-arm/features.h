@@ -22,7 +22,12 @@
 #ifndef _XENO_ASM_ARM_FEATURES_H
 #define _XENO_ASM_ARM_FEATURES_H
 
-#include <asm-generic/xenomai/features.h>
+#define __XN_TSC_TYPE_NONE                  0
+#define __XN_TSC_TYPE_KUSER                 1
+#define __XN_TSC_TYPE_FREERUNNING           2
+#define __XN_TSC_TYPE_DECREMENTER           3
+#define __XN_TSC_TYPE_FREERUNNING_FAST_WRAP 4
+#define __XN_TSC_TYPE_FREERUNNING_COUNTDOWN 5
 
 #ifdef __KERNEL__
 
@@ -31,14 +36,54 @@
 #endif
 
 #ifdef CONFIG_AEABI
-#define CONFIG_XENO_ARM_EABI    1
+#define CONFIG_XENO_ARM_EABI 1
 #endif
 
-#define CONFIG_XENO_ARM_HW_DIRECT_TSC 1
+#ifdef CONFIG_IPIPE_ARM_KUSER_TSC
+#define CONFIG_XENO_ARM_KUSER_TSC 1
+#endif
+#define XNARCH_HAVE_NONPRIV_TSC  1
 
 #else /* !__KERNEL__ */
-#define __LINUX_ARM_ARCH__  CONFIG_XENO_ARM_ARCH
-#endif /* __KERNEL__ */
+
+#include <xeno_config.h>
+
+#ifdef __ARM_EABI__
+#define CONFIG_XENO_ARM_EABI 1
+#endif
+
+#if defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_4T__)
+#define __LINUX_ARM_ARCH__ 4
+#endif /* armv4 */
+
+#if defined(__ARM_ARCH_5__) || defined(__ARM_ARCH_5T__) \
+	|| defined(__ARM_ARCH_5E__) || defined(__ARM_ARCH_5TE__)
+#define __LINUX_ARM_ARCH__ 5
+#endif /* armv5 */
+
+#if defined(__ARM_ARCH_6__) || defined(__ARM_ARCH_6K__)
+#define __LINUX_ARM_ARCH__ 6
+#endif /* armv6 */
+
+#if defined(__ARM_ARCH_7A__)
+#define __LINUX_ARM_ARCH__ 7
+#endif /* armv7 */
+
+#ifndef __LINUX_ARM_ARCH__
+#error "Could not find current ARM architecture"
+#endif
+
+#if __LINUX_ARM_ARCH__ >= 6 || !defined(CONFIG_SMP)
+#define CONFIG_XENO_FASTSYNCH 1
+#endif
+
+#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
+#define CONFIG_XENO_ARM_KUSER_TSC 1
+#endif
+
+#endif /* !__KERNEL__ */
+
+#include <asm-generic/xenomai/features.h>
 
 #define __xn_feat_arm_atomic_xchg	0x00000001
 #define __xn_feat_arm_atomic_atomic	0x00000002
@@ -63,11 +108,11 @@
 #endif
 #define __xn_feat_arm_eabi_mask			__xn_feat_arm_eabi
 
-#ifdef CONFIG_XENO_ARM_HW_DIRECT_TSC
+#ifdef CONFIG_XENO_ARM_KUSER_TSC
 #define __xn_feat_arm_tsc_mask                  __xn_feat_arm_tsc
-#else /* !CONFIG_XENO_ARM_HW_DIRECT_TSC */
+#else /* !CONFIG_XENO_ARM_KUSER_TSC */
 #define __xn_feat_arm_tsc_mask                  0
-#endif /* !CONFIG_XENO_ARM_HW_DIRECT_TSC */
+#endif /* !CONFIG_XENO_ARM_KUSER_TSC */
 
 #define XENOMAI_FEAT_DEP  ( __xn_feat_generic_mask              | \
 			    __xn_feat_arm_atomic_xchg_mask      | \
@@ -92,7 +137,7 @@ static inline const char *get_feature_label (unsigned feature)
     case __xn_feat_arm_eabi:
 	    return "eabi";
     case __xn_feat_arm_tsc:
-	    return "tsc";
+	    return "kuser_tsc";
     default:
 	    return get_generic_feature_label(feature);
     }
