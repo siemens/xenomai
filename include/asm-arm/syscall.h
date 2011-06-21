@@ -220,9 +220,9 @@ static inline int __xn_interrupted_p(struct pt_regs *regs)
 #define XENOMAI_SKINCALL5(id,op,a1,a2,a3,a4,a5)		\
 	XENOMAI_DO_SYSCALL(5,id,op,a1,a2,a3,a4,a5)
 
-#ifdef XNARCH_ARM_TSC_TYPE
+#ifdef CONFIG_XENO_ARM_TSC_TYPE
 #define XNARCH_HAVE_NONPRIV_TSC  1
-#endif /* XNARCH_ARM_TSC_TYPE */
+#endif /* CONFIG_XENO_ARM_TSC_TYPE */
 
 #endif /* __KERNEL__ */
 
@@ -240,23 +240,21 @@ struct __xn_tscinfo {
 	volatile unsigned long long *tsc;
 };
 
-#define _stringify(x) #x
-#define stringify(x) _stringify(x)
-
-
 #ifndef __KERNEL__
 extern struct __xn_tscinfo __xn_tscinfo;
 
-#ifdef XNARCH_ARM_TSC_TYPE
+#ifdef CONFIG_XENO_ARM_TSC_TYPE
 static inline unsigned long long __xn_rdtsc(void)
 {
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
+#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 	typedef unsigned long long rdtsc_t(volatile unsigned *vaddr);
 	rdtsc_t *const kuser_tsc_get =
-		(void *)(0xffff1004 - ((*(unsigned *)(0xffff0ffc) + 3) << 5));
+		(rdtsc_t *)(0xffff1004 -
+			    ((*(unsigned *)(0xffff0ffc) + 3) << 5));
+
 	return kuser_tsc_get(__xn_tscinfo.counter);
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING
 	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.counter;
 	const unsigned mask = __xn_tscinfo.mask;
@@ -271,7 +269,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		result += mask + 1ULL;
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN
 	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.counter;
 	const unsigned mask = __xn_tscinfo.mask;
@@ -286,7 +284,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		result += mask + 1ULL;
 	return (result & ~((unsigned long long) mask)) | (counter & mask);
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.counter;
 	const unsigned mask = __xn_tscinfo.mask;
@@ -304,7 +302,7 @@ static inline unsigned long long __xn_rdtsc(void)
 		before += mask + 1;
 	return (before & ~((unsigned long long) mask)) | (counter & mask);
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
 	volatile unsigned long long *const tscp = __xn_tscinfo.tsc;
 	volatile unsigned *const counterp = __xn_tscinfo.counter;
 	volatile unsigned *const last_cntp = __xn_tscinfo.last_cnt;
@@ -328,9 +326,9 @@ static inline unsigned long long __xn_rdtsc(void)
 		before += mask + 1ULL;
 	return (before + last_cnt - counter);
 
-#endif /* XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
+#endif /* CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 }
-#endif /* XNARCH_ARM_TSC_TYPE */
+#endif /* CONFIG_XENO_ARM_TSC_TYPE */
 
 #endif /* !__KERNEL__ */
 

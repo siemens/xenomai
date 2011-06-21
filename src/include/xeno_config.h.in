@@ -12,6 +12,9 @@
 /* config */
 #undef CONFIG_XENO_ARM_SA1100
 
+/* config */
+#undef CONFIG_XENO_ARM_TSC_TYPE
+
 /* Build system alias */
 #undef CONFIG_XENO_BUILD_STRING
 
@@ -149,9 +152,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* config */
-#undef XNARCH_ARM_TSC_TYPE
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */

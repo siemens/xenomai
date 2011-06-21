@@ -19,7 +19,7 @@ __attribute__((weak)) struct __xn_tscinfo __xn_tscinfo = {
 
 static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 {
-#ifdef XNARCH_ARM_TSC_TYPE
+#ifdef CONFIG_XENO_ARM_TSC_TYPE
 	unsigned long phys_addr;
 	unsigned page_size;
 	int err, fd;
@@ -42,19 +42,19 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 	page_size = sysconf(_SC_PAGESIZE);
 
 	switch(__xn_tscinfo.type) {
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
+#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_KUSER
 	case __XN_TSC_TYPE_FREERUNNING:
 	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
 	case __XN_TSC_TYPE_FREERUNNING_FAST_WRAP:
 	case __XN_TSC_TYPE_DECREMENTER:
 		goto domap;
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING			\
-	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN	\
-	|| XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING		\
+	|| CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_COUNTDOWN \
+	|| CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 	case __XN_TSC_TYPE_FREERUNNING:
 	case __XN_TSC_TYPE_FREERUNNING_COUNTDOWN:
-#if XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
+#if CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_FREERUNNING_FAST_WRAP
 		if (__xn_tscinfo.mask >= ((1 << 28) - 1)) {
 			fprintf(stderr, "Hardware tsc is not a fast wrapping"
 				" one, select the correct platform, or fix\n"
@@ -64,11 +64,11 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 #endif /* __XN_TSC_TYPE_FREERUNNING_FAST_WRAP */
 		goto domap;
 
-#elif XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
+#elif CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER
 	case __XN_TSC_TYPE_DECREMENTER:
 		goto domap;
 
-#endif /* XNARCH_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
+#endif /* CONFIG_XENO_ARM_TSC_TYPE == __XN_TSC_TYPE_DECREMENTER */
 	case __XN_TSC_TYPE_NONE:
 	  error:
 		fprintf(stderr, "Xenomai: Your board/configuration does not"
@@ -100,7 +100,7 @@ static inline void xeno_arm_features_check(struct xnfeatinfo *finfo)
 		perror("Xenomai init: close(/dev/mem)");
 		exit(EXIT_FAILURE);
 	}
-#endif /* XNARCH_ARM_TSC_TYPE */
+#endif /* CONFIG_XENO_ARM_TSC_TYPE */
 }
 #define xeno_arch_features_check(finfo) xeno_arm_features_check(finfo)
 
