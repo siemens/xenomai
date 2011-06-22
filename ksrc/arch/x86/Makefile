@@ -12,8 +12,6 @@ obj-$(CONFIG_XENOMAI) += xeno_hal.o
 
 xeno_hal-y := hal_$(X86_MODE).o hal-common.o usercopy_$(X86_MODE).o
 
-xeno_hal-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
-
 xeno_hal-$(CONFIG_XENO_HW_SMI_DETECT) += smi.o
 
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
@@ -27,8 +25,6 @@ USE_STANDARD_AS_RULE := true
 O_TARGET := built-in.o
 
 obj-y := hal_32.o hal-common.o
-
-obj-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
 
 obj-$(CONFIG_XENO_HW_SMI_DETECT) += smi.o
 

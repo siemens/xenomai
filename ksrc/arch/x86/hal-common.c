@@ -169,11 +169,8 @@ int rthal_timer_request(
 	 * The rest of the initialization should only be performed
 	 * once by a single CPU.
 	 */
-	if (cpu_timers_requested++ == 0) {
+	if (cpu_timers_requested++ == 0)
 		rthal_timer_set_oneshot(1);
-
-		rthal_nmi_init(&rthal_latency_above_max);
-	}
 
 	return tickval;
 }
@@ -251,8 +248,6 @@ int rthal_timer_request(void (*tick_handler)(void), int cpu)
 	 * RTHAL_TIMER_IRQ, but that's not the case for legacy x86_64.
 	 */
 	__ipipe_tick_irq = RTHAL_BCAST_TICK_IRQ;
-
-	rthal_nmi_init(&rthal_latency_above_max);
 out:
 	return 0;
 }
@@ -277,8 +272,6 @@ void rthal_timer_release(int cpu)
 			       &rthal_broadcast_to_local_timers);
 #endif
 
-	rthal_nmi_release();
-
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
 	else if (rthal_ktimer_saved_mode == KTIMER_MODE_ONESHOT)
@@ -286,55 +279,6 @@ void rthal_timer_release(int cpu)
 
 	rthal_irq_release(RTHAL_APIC_TIMER_IPI);
 }
-
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-
-#include <linux/vt_kern.h>
-
-extern void show_registers(struct pt_regs *regs);
-
-extern spinlock_t nmi_print_lock;
-
-void die_nmi(const char *msg, struct pt_regs *regs, int do_panic)
-{
-	spin_lock(&nmi_print_lock);
-	/*
-	 * We are in trouble anyway, lets at least try
-	 * to get a message out.
-	 */
-	bust_spinlocks(1);
-	printk(msg);
-	show_registers(regs);
-	printk("console shuts up ...\n");
-	console_silent();
-	spin_unlock(&nmi_print_lock);
-	bust_spinlocks(0);
-	do_exit(SIGSEGV);
-}
-
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) && defined(CONFIG_X86_32)
-#define die_nmi(msg, regs, do_panic)	die_nmi(regs, msg)
-#else /* Linux >= 2.6.27 || CONFIG_X86_64 */
-#include <asm/nmi.h>
-#endif /* Linux >= 2.6.27 || CONFIG_X86_64*/
-
-void rthal_latency_above_max(struct pt_regs *regs)
-{
-	/* Try to report via latency tracer first, then fall back to panic. */
-	if (rthal_trace_user_freeze(rthal_maxlat_us, 1) < 0) {
-		char buf[128];
-
-		snprintf(buf,
-			 sizeof(buf),
-			 "NMI watchdog detected timer latency above %u us\n",
-			 rthal_maxlat_us);
-		die_nmi(buf, regs, 1);
-	}
-}
-
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 
 #endif /* CONFIG_X86_LOCAL_APIC */
 

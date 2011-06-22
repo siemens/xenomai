@@ -6,8 +6,6 @@ obj-$(CONFIG_XENOMAI) += xeno_hal.o
 
 xeno_hal-y := hal.o
 
-xeno_hal-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
-
 EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
 
 else
@@ -17,8 +15,6 @@ else
 O_TARGET := built-in.o
 
 obj-y := hal.o compat.o
-
-obj-$(CONFIG_XENO_HW_NMI_DEBUG_LATENCY) += nmi.o
 
 export-objs := $(obj-y)
 

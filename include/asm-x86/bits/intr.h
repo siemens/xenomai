@@ -27,11 +27,4 @@ static inline void xnarch_relay_tick(void)
 	rthal_irq_host_pend(RTHAL_HOST_TICK_IRQ);
 }
 
-static inline void xnarch_announce_tick(void)
-{
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	rthal_nmi_disarm();
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-}
-
 #endif /* !_XENO_ASM_X86_BITS_INTR_H */

@@ -29,11 +29,4 @@ static inline void xnarch_relay_tick(void)
 #endif
 }
 
-static inline void xnarch_announce_tick(void)
-{
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	rthal_nmi_disarm();
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-}
-
 #endif /* !_XENO_ASM_BLACKFIN_BITS_INTR_H */

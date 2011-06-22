@@ -67,11 +67,6 @@ static inline void xnarch_relay_tick(void)
 	/* empty */
 }
 
-static inline void xnarch_announce_tick(void)
-{
-	/* empty */
-}
-
 static inline void *xnarch_get_irq_cookie(unsigned irq)
 {
 	return NULL;		/* Unsupported. */

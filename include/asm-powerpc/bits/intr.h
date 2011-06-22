@@ -35,9 +35,4 @@ static inline void xnarch_relay_tick(void)
 	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
 
-static inline void xnarch_announce_tick(void)
-{
-	/* empty */
-}
-
 #endif /* !_XENO_ASM_POWERPC_BITS_INTR_H */

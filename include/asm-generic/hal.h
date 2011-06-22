@@ -477,29 +477,6 @@ unsigned long rthal_critical_enter(void (*synch)(void));
 
 void rthal_critical_exit(unsigned long flags);
 
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-
-extern unsigned int rthal_maxlat_us;
-
-extern unsigned long rthal_maxlat_tsc;
-
-void rthal_nmi_init(void (*emergency)(struct pt_regs *));
-
-int rthal_nmi_request(void (*emergency)(struct pt_regs *));
-
-void rthal_nmi_release(void);
-
-void rthal_nmi_arm(unsigned long delay);
-
-void rthal_nmi_disarm(void);
-
-void rthal_nmi_set_maxlat(unsigned int maxlat_us);
-
-#else /* !CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-#define rthal_nmi_init(efn)		do { } while(0)
-#define rthal_nmi_release()		do { } while(0)
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-
     /* Public interface */
 
 #ifdef __cplusplus

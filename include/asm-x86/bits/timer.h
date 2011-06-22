@@ -34,13 +34,6 @@ static inline void xnarch_program_timer_shot(unsigned long delay)
 	 */
 	rthal_timer_program_shot(rthal_imuldiv_ceil
 				 (delay, RTHAL_TIMER_FREQ, RTHAL_CPU_FREQ));
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	{
-		extern unsigned long rthal_maxlat_tsc;
-		if (delay <= (LONG_MAX - rthal_maxlat_tsc))
-			rthal_nmi_arm(delay + rthal_maxlat_tsc);
-	}
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
 }
 
 static inline int xnarch_send_timer_ipi(xnarch_cpumask_t mask)

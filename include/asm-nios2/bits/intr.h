@@ -30,8 +30,4 @@ static inline void xnarch_relay_tick(void)
 	 */
 }
 
-static inline void xnarch_announce_tick(void)
-{
-}
-
 #endif /* !_XENO_ASM_NIOS2_BITS_INTR_H */

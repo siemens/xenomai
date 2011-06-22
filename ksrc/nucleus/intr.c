@@ -101,8 +101,6 @@ void xnintr_clock_handler(void)
 		&nkclock.stat[xnsched_cpu(sched)].account);
 	xnstat_counter_inc(&nkclock.stat[xnsched_cpu(sched)].hits);
 
-	xnarch_announce_tick();
-
 	trace_mark(xn_nucleus, irq_enter, "irq %u", XNARCH_TIMER_IRQ);
 	trace_mark(xn_nucleus, tbase_tick, "base %s", nktbase.name);
 

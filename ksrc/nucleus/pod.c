@@ -3289,43 +3289,6 @@ static struct xnvfile_regular apc_vfile = {
 	.ops = &apc_vfile_ops,
 };
 
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-
-static int nmi_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	xnvfile_printf(it, "%u\n", rthal_maxlat_us);
-
-	return 0;
-}
-
-static ssize_t nmi_vfile_store(struct xnvfile_input *input)
-{
-	ssize_t ret;
-	long val;
-
-	ret = xnvfile_get_integer(input, &val);
-	if (ret < 0)
-		return ret;
-
-	if ((int)val < 0)
-		return -EINVAL;
-
-	rthal_nmi_set_maxlat((unsigned int)val);
-
-	return ret;
-}
-
-static struct xnvfile_regular_ops nmi_vfile_ops = {
-	.show = nmi_vfile_show,
-	.store = nmi_vfile_store,
-};
-
-static struct xnvfile_regular nmi_vfile = {
-	.ops = &nmi_vfile_ops,
-};
-
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
-
 int __init xnpod_init_proc(void)
 {
 	int ret;
@@ -3348,9 +3311,6 @@ int __init xnpod_init_proc(void)
 	xnvfile_init_regular("version", &version_vfile, &nkvfroot);
 	xnvfile_init_regular("faults", &faults_vfile, &nkvfroot);
 	xnvfile_init_regular("apc", &apc_vfile, &nkvfroot);
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	xnvfile_init_regular("nmi_maxlat", &nmi_vfile, &nkvfroot);
-#endif
 #if XENO_DEBUG(XNLOCK)
 	xnvfile_init_regular("lock", &lock_vfile, &nkvfroot);
 #endif /* XENO_DEBUG(XNLOCK) */
@@ -3363,9 +3323,6 @@ void xnpod_cleanup_proc(void)
 #if XENO_DEBUG(XNLOCK)
 	xnvfile_destroy_regular(&lock_vfile);
 #endif /* XENO_DEBUG(XNLOCK) */
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-	xnvfile_destroy_regular(&nmi_vfile);
-#endif
 	xnvfile_destroy_regular(&apc_vfile);
 	xnvfile_destroy_regular(&faults_vfile);
 	xnvfile_destroy_regular(&version_vfile);

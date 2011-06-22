@@ -30,7 +30,7 @@
  * threads is possible.
  *
  * We protect all caller-saved registers across switches.
- * 
+ *
  * void rthal_thread_switch(struct thread_struct *prev, struct thread_struct *next)
  */
 ENTRY(_rthal_thread_switch)
@@ -65,9 +65,9 @@ switch_point:
 	rts;
 
 ENTRY(_rthal_thread_trampoline)
-	r0 = [sp++]; 
+	r0 = [sp++];
 	jump switch_point
-	
+
 /*
  * Check for a reason to block context switching for Xenomai. This may
  * be the case, if:
@@ -80,7 +80,7 @@ ENTRY(_rthal_thread_trampoline)
  * - more than a single interrupt is pending in IPEND. In such a case,
  * switching context would cause the core to branch back to kernel
  * code without supervisor privileges (due to nested RTIs).
- * 
+ *
  * int rthal_defer_switch_p(void)
  */
 
@@ -88,38 +88,23 @@ ENTRY(_rthal_defer_switch_p)
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	p2.l = lo(ILAT);
-        p2.h = hi(ILAT);
-        r0 = [p2];
+	p2.h = hi(ILAT);
+	r0 = [p2];
 	r1 = EVT_IVG15 (z);
-        r0 = r0 & r1;
+	r0 = r0 & r1;
 	cc = r0 == 0;
 	if !cc jump 1f;
 #endif /* CONFIG_XENO_OPT_PERVASIVE */
 	p2.l = lo(IPEND);
-        p2.h = hi(IPEND);
+	p2.h = hi(IPEND);
 	csync;
-        r2 = [p2];
-        r1 = LO(~0x13) (Z);
-        r0 = r2 & r1;
-        cc = r0 == 0;
-        if cc jump 1f;
-        r1 = 1;
-        r1 = r0 - r1;
-        r0 = r0 & r1;
+	r2 = [p2];
+	r1 = LO(~0x13) (Z);
+	r0 = r2 & r1;
+	cc = r0 == 0;
+	if cc jump 1f;
+	r1 = 1;
+	r1 = r0 - r1;
+	r0 = r0 & r1;
 1:
 	rts
-
-#ifdef CONFIG_XENO_HW_NMI_DEBUG_LATENCY
-
-#include <asm/context.S>
-
-ENTRY(_rthal_nmi_handler)
-	SAVE_ALL_SYS
-	r0 = sp;
-	SP += -12;	
-	call _rthal_nmi_tick
-	SP += 12;	
-	RESTORE_ALL_SYS
-	rtn; 
-		
-#endif /* CONFIG_XENO_HW_NMI_DEBUG_LATENCY */
