@@ -28,7 +28,9 @@
 #include <syslog.h>
 
 #include <rtdk.h>
+#include <nucleus/types.h>	/* For BITS_PER_LONG */
 #include <asm/xenomai/system.h>
+#include <asm/xenomai/atomic.h>	/* For atomic_cmpxchg */
 #include <asm-generic/stack.h>
 
 #define RT_PRINT_BUFFER_ENV		"RT_PRINT_BUFFER"
@@ -36,6 +38,9 @@
 
 #define RT_PRINT_PERIOD_ENV		"RT_PRINT_PERIOD"
 #define RT_PRINT_DEFAULT_PERIOD		100 /* ms */
+
+#define RT_PRINT_BUFFERS_COUNT_ENV      "RT_PRINT_BUFFERS_COUNT"
+#define RT_PRINT_DEFAULT_BUFFERS_COUNT  4
 
 #define RT_PRINT_LINE_BREAK		256
 
@@ -75,6 +80,12 @@ static pthread_mutex_t buffer_lock;
 static pthread_cond_t printer_wakeup;
 static pthread_key_t buffer_key;
 static pthread_t printer_thread;
+#ifdef CONFIG_XENO_FASTSYNCH
+static xnarch_atomic_t *pool_bitmap;
+static unsigned pool_bitmap_len;
+static unsigned pool_buf_size;
+static unsigned long pool_start, pool_len;
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 static void cleanup_buffer(struct print_buffer *buffer);
 static void print_buffers(void);
@@ -243,42 +254,14 @@ static void set_buffer_name(struct print_buffer *buffer, const char *name)
 	}
 }
 
-int rt_print_init(size_t buffer_size, const char *buffer_name)
+void rt_print_init_inner(struct print_buffer *buffer, size_t size)
 {
-	struct print_buffer *buffer = pthread_getspecific(buffer_key);
-	size_t size = buffer_size;
+	buffer->size = size;
 
-	if (!size)
-		size = default_buffer_size;
-	else if (size < RT_PRINT_LINE_BREAK)
-		return EINVAL;
-
-	if (buffer) {
-		/* Only set name if buffer size is unchanged or default */
-		if (size == buffer->size || !buffer_size) {
-			set_buffer_name(buffer, buffer_name);
-			return 0;
-		}
-		cleanup_buffer(buffer);
-	}
-
-	buffer = malloc(sizeof(*buffer));
-	if (!buffer)
-		return ENOMEM;
-
-	buffer->ring = malloc(size);
-	if (!buffer->ring) {
-		free(buffer);
-		return ENOMEM;
-	}
 	memset(buffer->ring, 0, size);
 
 	buffer->read_pos  = 0;
 	buffer->write_pos = 0;
-
-	buffer->size = size;
-
-	set_buffer_name(buffer, buffer_name);
 
 	buffer->prev = NULL;
 
@@ -293,6 +276,77 @@ int rt_print_init(size_t buffer_size, const char *buffer_name)
 	pthread_cond_signal(&printer_wakeup);
 
 	pthread_mutex_unlock(&buffer_lock);
+}
+
+int rt_print_init(size_t buffer_size, const char *buffer_name)
+{
+	struct print_buffer *buffer = pthread_getspecific(buffer_key);
+	size_t size = buffer_size;
+	unsigned long old_bitmap;
+	unsigned j;
+
+	if (!size)
+		size = default_buffer_size;
+	else if (size < RT_PRINT_LINE_BREAK)
+		return EINVAL;
+
+	if (buffer) {
+		/* Only set name if buffer size is unchanged or default */
+		if (size == buffer->size || !buffer_size) {
+			set_buffer_name(buffer, buffer_name);
+			return 0;
+		}
+		cleanup_buffer(buffer);
+		buffer = NULL;
+	}
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	/* Find a free buffer in the pool */
+	do {
+		unsigned long bitmap;
+		unsigned i;
+
+		for (i = 0; i < pool_bitmap_len; i++) {
+			old_bitmap = xnarch_atomic_get(&pool_bitmap[i]);
+			if (old_bitmap)
+				goto acquire;
+		}
+
+		goto not_found;
+
+	  acquire:
+		do {
+			bitmap = old_bitmap;
+			j = __builtin_ffsl(bitmap) - 1;
+			old_bitmap = xnarch_atomic_cmpxchg(&pool_bitmap[i],
+							   bitmap,
+							   bitmap & ~(1UL << j));
+		} while (old_bitmap != bitmap && old_bitmap);
+		j += i * BITS_PER_LONG;
+	} while (!old_bitmap);
+
+	buffer = (struct print_buffer *)(pool_start + j * pool_buf_size);
+
+  not_found:
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	if (!buffer) {
+		assert_nrt();
+
+		buffer = malloc(sizeof(*buffer));
+		if (!buffer)
+			return ENOMEM;
+
+		buffer->ring = malloc(size);
+		if (!buffer->ring) {
+			free(buffer);
+			return ENOMEM;
+		}
+
+		rt_print_init_inner(buffer, size);
+	}
+
+	set_buffer_name(buffer, buffer_name);
 
 	pthread_setspecific(buffer_key, buffer);
 
@@ -346,11 +400,43 @@ static void cleanup_buffer(struct print_buffer *buffer)
 {
 	struct print_buffer *prev, *next;
 
+	assert_nrt();
+
 	pthread_setspecific(buffer_key, NULL);
 
 	pthread_mutex_lock(&buffer_lock);
 
 	print_buffers();
+
+	pthread_mutex_unlock(&buffer_lock);
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	/* Return the buffer to the pool */
+	{
+		unsigned long old_bitmap, bitmap;
+		unsigned i, j;
+
+		if ((unsigned long)buffer - pool_start >= pool_len)
+			goto dofree;
+
+		j = ((unsigned long)buffer - pool_start) / pool_buf_size;
+		i = j / BITS_PER_LONG;
+		j = j % BITS_PER_LONG;
+
+		old_bitmap = xnarch_atomic_get(&pool_bitmap[i]);
+		do {
+			bitmap = old_bitmap;
+			old_bitmap = xnarch_atomic_cmpxchg(&pool_bitmap[i],
+							   bitmap,
+							   bitmap | (1UL << j));
+		} while (old_bitmap != bitmap);
+
+		return;
+	}
+  dofree:
+#endif /* CONFIG_XENO_FASTSYNCH */
+
+	pthread_mutex_lock(&buffer_lock);
 
 	prev = buffer->prev;
 	next = buffer->next;
@@ -522,6 +608,64 @@ void __rt_print_init(void)
 	}
 	print_period.tv_sec  = period / 1000;
 	print_period.tv_nsec = (period % 1000) * 1000000;
+
+#ifdef CONFIG_XENO_FASTSYNCH
+	/* Fill the buffer pool */
+	{
+		unsigned buffers_count, i;
+
+		buffers_count = RT_PRINT_DEFAULT_BUFFERS_COUNT;
+
+		value_str = getenv(RT_PRINT_BUFFERS_COUNT_ENV);
+		if (value_str) {
+			errno = 0;
+			buffers_count = strtoul(value_str, NULL, 0);
+			if (errno) {
+				fprintf(stderr, "Invalid %s\n",
+					RT_PRINT_BUFFERS_COUNT_ENV);
+				exit(1);
+			}
+		}
+
+		pool_bitmap_len = (buffers_count + BITS_PER_LONG - 1)
+			/ BITS_PER_LONG;
+		if (!pool_bitmap_len)
+			goto done;
+
+		pool_bitmap = malloc(pool_bitmap_len * sizeof(*pool_bitmap));
+		if (!pool_bitmap) {
+			fprintf(stderr, "Error allocating rt_printf "
+				"buffers\n");
+			exit(1);
+		}
+
+		pool_buf_size = sizeof(struct print_buffer) + default_buffer_size;
+		pool_len = buffers_count * pool_buf_size;
+		pool_start = (unsigned long)malloc(pool_len);
+		if (!pool_start) {
+			fprintf(stderr, "Error allocating rt_printf "
+				"buffers\n");
+			exit(1);
+		}
+
+		for (i = 0; i < buffers_count / BITS_PER_LONG; i++)
+			xnarch_atomic_set(&pool_bitmap[i], ~0UL);
+		if (buffers_count % BITS_PER_LONG)
+			xnarch_atomic_set(&pool_bitmap[i],
+					  (1UL << (buffers_count % BITS_PER_LONG))					  - 1);
+
+		for (i = 0; i < buffers_count; i++) {
+			struct print_buffer *buffer =
+				(struct print_buffer *)
+				(pool_start + i * pool_buf_size);
+
+			buffer->ring = (char *)(buffer + 1);
+
+			rt_print_init_inner(buffer, default_buffer_size);
+		}
+	}
+  done:
+#endif /* CONFIG_XENO_FASTSYNCH */
 
 	pthread_mutex_init(&buffer_lock, NULL);
 	pthread_key_create(&buffer_key, (void (*)(void*))cleanup_buffer);
