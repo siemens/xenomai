@@ -10,6 +10,7 @@ struct xnsys_ppd {
 #ifdef XNARCH_HAVE_MAYDAY
 	unsigned long mayday_addr;
 #endif
+	xnarch_atomic_t refcnt;
 #define ppd2sys(addr) container_of(addr, struct xnsys_ppd, ppd)
 };
 

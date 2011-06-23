@@ -673,6 +673,14 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 	xnlock_put_irqrestore(&nklock, s);
 }
 
+static void detach_ppd(xnshadow_ppd_t * ppd)
+{
+	unsigned muxid = xnshadow_ppd_muxid(ppd);
+	muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+	if (muxtable[muxid].props->module)
+		module_put(muxtable[muxid].props->module);
+}
+
 struct xnvdso *nkvdso;
 EXPORT_SYMBOL_GPL(nkvdso);
 
@@ -1237,9 +1245,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 {
 	struct xnthread_start_attr attr;
 	xnarch_cpumask_t affinity;
+	struct xnsys_ppd *sys_ppd;
 	unsigned int muxid, magic;
 	unsigned long *u_mode;
 	xnheap_t *sem_heap;
+	spl_t s;
 	int ret;
 
 	if (!xnthread_test_state(thread, XNSHADOW))
@@ -1278,7 +1288,11 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 		}
 	}
 
-	sem_heap = &xnsys_ppd_get(0)->sem_heap;
+	xnlock_get_irqsave(&nklock, s);
+	sys_ppd = xnsys_ppd_get(0);
+	xnlock_put_irqrestore(&nklock, s);
+
+	sem_heap = &sys_ppd->sem_heap;
 	u_mode = xnheap_alloc(sem_heap, sizeof(*u_mode));
 	if (!u_mode)
 		return -ENOMEM;
@@ -1317,6 +1331,7 @@ int xnshadow_map(xnthread_t *thread, xncompletion_t __user *u_completion,
 	 */
 	xnshadow_thrptd(current) = thread;
 	xnshadow_mmptd(current) = current->mm;
+	xnarch_atomic_inc(&sys_ppd->refcnt);
 
 	rthal_enable_notifier(current);
 
@@ -1371,6 +1386,7 @@ EXPORT_SYMBOL_GPL(xnshadow_map);
 
 void xnshadow_unmap(xnthread_t *thread)
 {
+	struct xnsys_ppd *sys_ppd;
 	struct task_struct *p;
 
 	if (XENO_DEBUG(NUCLEUS) &&
@@ -1381,6 +1397,12 @@ void xnshadow_unmap(xnthread_t *thread)
 
 	xnthread_clear_state(thread, XNMAPPED);
 	rpi_pop(thread);
+
+	sys_ppd = xnsys_ppd_get(0);
+	xnheap_free(&sys_ppd->sem_heap, thread->u_mode);
+	thread->u_mode = NULL;
+
+	xnarch_atomic_dec(&sys_ppd->refcnt);
 
 	trace_mark(xn_nucleus, shadow_unmap,
 		   "thread %p thread_name %s pid %d",
@@ -1395,9 +1417,6 @@ void xnshadow_unmap(xnthread_t *thread)
 		);
 
 	xnshadow_thrptd(p) = NULL;
-
-	xnheap_free(&xnsys_ppd_get(0)->sem_heap, thread->u_mode);
-	thread->u_mode = NULL;
 
 	schedule_linux_call(LO_UNMAP_REQ, p, xnthread_get_magic(thread));
 }
@@ -2119,14 +2138,14 @@ static void *xnshadow_sys_event(int event, void *data)
 			return ERR_PTR(err);
 		}
 #endif /* XNARCH_HAVE_MAYDAY */
-
+		xnarch_atomic_set(&p->refcnt, 1);
 		xnarch_atomic_inc(&muxtable[0].refcnt);
 		return &p->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
+		printk("sys detach !\n");
 		p = ppd2sys(data);
 		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
-		xnarch_atomic_dec(&muxtable[0].refcnt);
 
 		return NULL;
 	}
@@ -2474,6 +2493,7 @@ RTHAL_DECLARE_EVENT(losyscall_event);
 static inline void do_taskexit_event(struct task_struct *p)
 {
 	xnthread_t *thread = xnshadow_thread(p); /* p == current */
+	struct xnsys_ppd *sys_ppd;
 	unsigned magic;
 	spl_t s;
 
@@ -2494,8 +2514,12 @@ static inline void do_taskexit_event(struct task_struct *p)
 	/* xnpod_delete_thread() -> hook -> xnshadow_unmap(). */
 	xnsched_set_resched(thread->sched);
 	xnpod_delete_thread(thread);
+	sys_ppd = xnsys_ppd_get(0);
 	xnlock_put_irqrestore(&nklock, s);
 	xnpod_schedule();
+
+	if (!xnarch_atomic_get(&sys_ppd->refcnt))
+		ppd_remove_mm(xnshadow_mm(p), &detach_ppd);
 
 	xnshadow_dereference_skin(magic);
 	trace_mark(xn_nucleus, shadow_exit, "thread %p thread_name %s",
@@ -2731,24 +2755,23 @@ static inline void do_setsched_event(struct task_struct *p, int priority)
 
 RTHAL_DECLARE_SETSCHED_EVENT(setsched_event);
 
-static void detach_ppd(xnshadow_ppd_t * ppd)
-{
-	unsigned muxid = xnshadow_ppd_muxid(ppd);
-	muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-	if (muxtable[muxid].props->module)
-		module_put(muxtable[muxid].props->module);
-}
-
 static inline void do_cleanup_event(struct mm_struct *mm)
 {
 	struct task_struct *p = current;
+	struct xnsys_ppd *sys_ppd;
 	struct mm_struct *old;
 
 	old = xnshadow_mm(p);
 	xnshadow_mmptd(p) = mm;
 
-	ppd_remove_mm(mm, &detach_ppd);
+	sys_ppd = xnsys_ppd_get(0);
+	if (sys_ppd == &__xnsys_global_ppd)
+		goto done;
 
+	if (xnarch_atomic_dec_and_test(&sys_ppd->refcnt))
+		ppd_remove_mm(mm, &detach_ppd);
+
+  done:
 	xnshadow_mmptd(p) = old;
 }
 
