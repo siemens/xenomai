@@ -2933,7 +2933,6 @@ static void *pse51_eventcb(int event, void *data)
 		pse51_sem_usems_cleanup(q);
 		pse51_mq_uqds_cleanup(q);
 		pse51_timerq_cleanup(&q->kqueues);
-		pse51_threadq_cleanup(&q->kqueues);
 		pse51_semq_cleanup(&q->kqueues);
 		pse51_mutexq_cleanup(&q->kqueues);
 #ifdef CONFIG_XENO_OPT_POSIX_INTR
