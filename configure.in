@@ -628,7 +628,6 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config \
 	scripts/xeno \
 	src/Makefile \
-	src/rtdk/Makefile \
 	src/skins/Makefile \
 	src/skins/common/Makefile \
 	src/skins/posix/Makefile \

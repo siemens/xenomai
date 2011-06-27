@@ -30,8 +30,6 @@ static void assert_nrt_inner(void)
 	xnthread_info_t info;
 	int err;
 
-	fprintf(stderr, "assert_nrt_inner !\n");
-
 	err = XENOMAI_SYSCALL1(__xn_sys_current_info, &info);
 
 	if (err) {
@@ -46,8 +44,6 @@ static void assert_nrt_inner(void)
 
 void assert_nrt(void)
 {
-	fprintf(stderr, "current: %lu, relax: %d\n",
-		xeno_get_current(), xeno_get_current_mode() & XNRELAX);
 	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
 		     !(xeno_get_current_mode() & XNRELAX)))
 		assert_nrt_inner();
@@ -68,21 +64,17 @@ void assert_nrt_fast(void)
 /* Memory allocation services */
 void *__wrap_malloc(size_t size)
 {
-	void *block;
 	assert_nrt();
-	fprintf(stderr, "malloc(%lu)\n", (unsigned long)size);
 	return __real_malloc(size);
 }
 
 void __wrap_free(void *ptr)
 {
 	assert_nrt();
-	fprintf(stderr, "free\n");
 	__real_free(ptr);
 }
 
 /* vsyscall-based services */
-__attribute__ ((weak))
 int __wrap_gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 	assert_nrt();
