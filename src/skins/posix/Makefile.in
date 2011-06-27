@@ -82,7 +82,8 @@ am_libpthread_rt_la_OBJECTS = libpthread_rt_la-init.lo \
 	libpthread_rt_la-cond.lo libpthread_rt_la-mq.lo \
 	libpthread_rt_la-mutex.lo libpthread_rt_la-shm.lo \
 	libpthread_rt_la-interrupt.lo libpthread_rt_la-select.lo \
-	libpthread_rt_la-rtdm.lo libpthread_rt_la-wrappers.lo
+	libpthread_rt_la-rtdm.lo libpthread_rt_la-printf.lo \
+	libpthread_rt_la-wrappers.lo
 libpthread_rt_la_OBJECTS = $(am_libpthread_rt_la_OBJECTS)
 libpthread_rt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -274,6 +275,7 @@ libpthread_rt_la_SOURCES = \
 	interrupt.c \
 	select.c \
 	rtdm.c \
+	printf.c \
 	wrappers.c
 
 libpthread_rt_la_CPPFLAGS = \
@@ -362,6 +364,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-interrupt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-mq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-mutex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-printf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-rtdm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-select.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-semaphore.Plo@am__quote@
@@ -474,6 +477,13 @@ libpthread_rt_la-rtdm.lo: rtdm.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rtdm.c' object='libpthread_rt_la-rtdm.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-rtdm.lo `test -f 'rtdm.c' || echo '$(srcdir)/'`rtdm.c
+
+libpthread_rt_la-printf.lo: printf.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-printf.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-printf.Tpo -c -o libpthread_rt_la-printf.lo `test -f 'printf.c' || echo '$(srcdir)/'`printf.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-printf.Tpo $(DEPDIR)/libpthread_rt_la-printf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printf.c' object='libpthread_rt_la-printf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-printf.lo `test -f 'printf.c' || echo '$(srcdir)/'`printf.c
 
 libpthread_rt_la-wrappers.lo: wrappers.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-wrappers.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-wrappers.Tpo -c -o libpthread_rt_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c

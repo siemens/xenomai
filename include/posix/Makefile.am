@@ -9,7 +9,9 @@ includesub_HEADERS = \
 	sched.h \
 	semaphore.h \
 	signal.h \
+	stdio.h \
 	syscall.h \
+	syslog.h \
 	time.h \
 	unistd.h
 

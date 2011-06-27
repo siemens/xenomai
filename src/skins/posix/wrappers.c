@@ -20,7 +20,10 @@
  * are fallback functions for __real* functions used by the library itself
  */
 
+#include <stdio.h>
 #include <stdarg.h>
+
+#include <syslog.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <limits.h>
@@ -308,4 +311,58 @@ int __real_select (int __nfds, fd_set *__restrict __readfds,
 		   struct timeval *__restrict __timeout)
 {
 	return select(__nfds, __readfds, __writefds, __exceptfds, __timeout);
+}
+
+__attribute__ ((weak))
+int __real_vfprintf(FILE *stream, const char *fmt, va_list args)
+{
+	return vfprintf(stream, fmt, args);
+}
+
+__attribute__ ((weak))
+int __real_vprintf(const char *fmt, va_list args)
+{
+	return vprintf(fmt, args);
+}
+
+__attribute__ ((weak))
+int __real_fprintf(FILE *stream, const char *fmt, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, fmt);
+	rc = vfprintf(stream, fmt, args);
+	va_end(args);
+
+	return rc;
+}
+
+__attribute__ ((weak))
+int __real_printf(const char *fmt, ...)
+{
+	va_list args;
+	int rc;
+
+	va_start(args, fmt);
+	rc = vprintf(fmt, args);
+	va_end(args);
+
+	return rc;
+}
+
+__attribute__ ((weak))
+void __real_syslog(int priority, const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vsyslog(priority, fmt, args);
+	va_end(args);
+}
+
+__attribute__ ((weak))
+void __real_vsyslog(int priority, const char *fmt, va_list ap)
+{
+	vsyslog(priority, fmt, ap);
 }

@@ -19,6 +19,7 @@ libpthread_rt_la_SOURCES = \
 	interrupt.c \
 	select.c \
 	rtdm.c \
+	printf.c \
 	wrappers.c
 
 libpthread_rt_la_CPPFLAGS = \
