@@ -95,7 +95,6 @@ void xnintr_clock_handler(void)
 {
 	struct xnsched *sched = xnpod_current_sched();
 	xnstat_exectime_t *prev;
-	xnticks_t start;
 
 	prev = xnstat_exectime_switch(sched,
 		&nkclock.stat[xnsched_cpu(sched)].account);
