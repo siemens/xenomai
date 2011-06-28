@@ -61,7 +61,7 @@ static struct pci_device_id mite_id[] = {
 
 static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 {
-	int i;
+	int i, err = 0;
 	struct mite_struct *mite;
 
 	mite = kmalloc(sizeof(struct mite_struct), GFP_KERNEL);
@@ -71,7 +71,13 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	memset(mite, 0, sizeof(struct mite_struct));
 
 	a4l_lock_init(&mite->lock);
+
 	mite->pcidev = dev;
+	if (pci_enable_device(dev) < 0) {
+		__a4l_err("error enabling mite\n");
+		err = -EIO;
+		goto out;
+	}
 
 	for(i = 0; i < MAX_MITE_DMA_CHANNELS; i++) {
 		mite->channels[i].mite = mite;
@@ -81,7 +87,11 @@ static int mite_probe(struct pci_dev *dev, const struct pci_device_id *id)
 
 	list_add(&mite->list, &mite_devices);
 
-	return 0;
+out:
+	if (err < 0)
+		kfree(mite);
+
+	return err;
 }
 
 static void mite_remove(struct pci_dev *dev)
@@ -117,18 +127,12 @@ int a4l_mite_setup(struct mite_struct *mite, int use_iodwbsr_1)
 
 	__a4l_dbg(1, drv_dbg, "mite: starting setup...\n");
 
-	if(pci_enable_device(mite->pcidev)){
-		__a4l_err("error enabling mite\n");
-		return -EIO;
-	}
-
 	pci_set_master(mite->pcidev);
 
 	if (pci_request_regions( mite->pcidev, "mite")) {
 		__a4l_err("failed to request mite io regions\n");
 		return -EIO;
 	};
-
 
 	/* The PCI BAR0 is the Mite */
 	addr = pci_resource_start(mite->pcidev, 0);
