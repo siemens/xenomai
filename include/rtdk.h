@@ -59,6 +59,7 @@ int rt_print_init(size_t buffer_size, const char *name);
 void rt_print_cleanup(void);
 void rt_print_auto_init(int enable);
 const char *rt_print_buffer_name(void);
+void rt_print_flush_buffers(void);
 
 void assert_nrt(void);
 
