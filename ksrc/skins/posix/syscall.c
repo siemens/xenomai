@@ -718,16 +718,19 @@ static int __sem_close(struct pt_regs *regs)
 
 	usm = assoc2usem(assoc);
 
-	if ((closed = (--usm->refcnt == 0)))
+	err = sem_close(&sm.native_sem);
+
+	if (!err && (closed = (--usm->refcnt == 0)))
 		pse51_assoc_remove(&pse51_queues()->usems,
 				   (u_long)sm.shadow_sem.sem);
-
-	err = sem_close(&sm.native_sem);
 
 	xnlock_put_irqrestore(&pse51_assoc_lock, s);
 
 	if (err)
 		return -thread_get_errno();
+
+	if (usm->refcnt == 0)
+		xnfree(usm);
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
 				      &closed, sizeof(int));
