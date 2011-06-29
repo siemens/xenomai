@@ -184,8 +184,10 @@ static int __rt_task_create(struct pt_regs *regs)
 	   the platform does not support it. */
 
 	err = rt_task_create(task, name, 0, prio, XNFPU | XNSHADOW | mode);
-	if (err)
+	if (err) {
+		task = NULL;
 		goto fail;
+	}
 
 	/* Apply CPU affinity */
 	set_cpus_allowed(p, task->affinity);
