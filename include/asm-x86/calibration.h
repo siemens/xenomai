@@ -45,7 +45,11 @@ static inline unsigned long xnarch_get_sched_latency (void)
 	 * the approach is definitely saner than previous attempts to
 	 * guess such value dynamically.
 	 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)
 #define __bogomips (current_cpu_data.loops_per_jiffy/(500000/HZ))
+#else
+#define __bogomips (cpu_info.loops_per_jiffy/(500000/HZ))
+#endif
 	sched_latency = (__bogomips < 250 ? 17000 :
 			 __bogomips < 2500 ? 4200 :
 			 3500);
