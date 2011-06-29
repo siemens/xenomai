@@ -256,7 +256,9 @@ void __native_task_pkg_cleanup(void)
 int rt_task_create(RT_TASK *task,
 		   const char *name, int stksize, int prio, int mode)
 {
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
 	xnarch_atomic_t *fastlock = NULL;
+#endif
 	union xnsched_policy_param param;
 	struct xnthread_init_attr attr;
 	int err = 0, cpumask, cpu;
@@ -336,8 +338,11 @@ int rt_task_create(RT_TASK *task,
 		xnheap_free(&xnsys_ppd_get(0)->sem_heap, fastlock);
 #endif
 		xnpod_delete_thread(&task->thread_base);
-	} else
+	}
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+	else
 		xnsynch_fast_acquire(fastlock, xnthread_handle(&task->thread_base));
+#endif
 
 	return err;
 }
