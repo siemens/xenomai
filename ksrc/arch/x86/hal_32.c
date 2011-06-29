@@ -337,7 +337,7 @@ int rthal_arch_init(void)
 		rthal_smi_restore();
 		return -ENODEV;
 	}
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2.6.38) \
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) \
 	&& defined(CONFIG_GENERIC_CLOCKEVENTS)
 	if (nmi_watchdog == NMI_IO_APIC) {
 		printk("Xenomai: NMI kernel watchdog set to NMI_IO_APIC (nmi_watchdog=1).\n"
