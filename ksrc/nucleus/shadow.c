@@ -2162,7 +2162,6 @@ static void *xnshadow_sys_event(int event, void *data)
 		return &p->ppd;
 
 	case XNSHADOW_CLIENT_DETACH:
-		printk("sys detach !\n");
 		p = ppd2sys(data);
 		xnheap_destroy_mapped(&p->sem_heap, post_ppd_release, NULL);
 
