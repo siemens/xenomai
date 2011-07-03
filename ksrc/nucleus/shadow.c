@@ -880,10 +880,12 @@ static void lostage_handler(void *cookie)
 			kill_proc(p->pid, arg, 1);
 			break;
 
+#ifdef CONFIG_PREEMPT_RT
 		case LO_GKWAKE_REQ:
 			sched = xnpod_sched_slot(cpu);
 			wake_up_interruptible_sync(&sched->gkwaitq);
 			break;
+#endif
 		}
 	}
 }
@@ -1060,6 +1062,23 @@ redo:
 	sched->gktarget = thread;
 	xnthread_set_info(thread, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
+#ifndef CONFIG_PREEMPT_RT
+	/*
+	 * We may not hold the preemption lock across calls to
+	 * wake_up_*() services over fully preemptible kernels, since
+	 * tasks might sleep when contending for spinlocks. The wake
+	 * up call for the gatekeeper will happen later, over an APC
+	 * we kick in do_schedule_event() on the way out for the
+	 * hardening task.
+	 *
+	 * We could delay the wake up call over non-RT 2.6 kernels as
+	 * well, but not when running over 2.4 (scheduler innards
+	 * would not allow this, causing weirdnesses when hardening
+	 * tasks). So we always do the early wake up when running
+	 * non-RT, which includes 2.4.
+	 */
+	wake_up_interruptible_sync(&sched->gkwaitq);
+#endif
 	schedule();
 	xnthread_clear_info(thread, XNATOMIC);
 
@@ -2605,8 +2624,10 @@ static inline void do_schedule_event(struct task_struct *next_task)
 
 	prev_task = current;
 	prev = xnshadow_thread(prev_task);
+#ifdef CONFIG_PREEMPT_RT
 	if (prev && xnthread_test_info(prev, XNATOMIC))
 		schedule_linux_call(LO_GKWAKE_REQ, prev_task, 0);
+#endif
 
 	next = xnshadow_thread(next_task);
 	set_switch_lock_owner(prev_task);
