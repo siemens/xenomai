@@ -2009,7 +2009,7 @@ int rt_task_receive(RT_TASK_MCB *mcb_r, RTIME timeout)
 			err = -EINTR;	/* Unblocked. */
 			goto unlock_and_exit;
 		}
-	} while (!xnsynch_pended_p(&server->mrecv));
+	} while (!xnsynch_pended_p(&server->msendq));
 
 	holder = getheadpq(xnsynch_wait_queue(&server->msendq));
 	/* There must be a valid holder since we waited for it. */
