@@ -995,12 +995,11 @@ redo:
 	xnthread_clear_info(thread, XNATOMIC);
 
 	/*
-	 * Rare case: we might have been awaken by a signal before the
-	 * gatekeeper sent us to primary mode. Since
-	 * TASK_UNINTERRUPTIBLE is unavailable to us without wrecking
-	 * the runqueue's count of uniniterruptible tasks, we just
-	 * notice the issue and gracefully fail; the caller will have
-	 * to process this signal anyway.
+	 * Rare case: we might have received a signal before entering
+	 * schedule() and returned early from it. Since TASK_UNINTERRUPTIBLE
+	 * is unavailable to us without wrecking the runqueue's count of
+	 * uniniterruptible tasks, we just notice the issue and gracefully
+	 * fail; the caller will have to process this signal anyway.
 	 */
 	if (rthal_current_domain == rthal_root_domain) {
 		if (XENO_DEBUG(NUCLEUS) && (!signal_pending(this_task)
@@ -1008,6 +1007,16 @@ redo:
 			xnpod_fatal
 			    ("xnshadow_harden() failed for thread %s[%d]",
 			     thread->name, xnthread_user_pid(thread));
+
+		/*
+		 * Synchronize with the chosen gatekeeper so that it no longer
+		 * holds any reference to this thread and does not develop the
+		 * idea to resume it for the Xenomai domain if, later on, we
+		 * may happen to reenter TASK_INTERRUPTIBLE state.
+		 */
+		down(&sched->gksync);
+		up(&sched->gksync);
+
 		return -ERESTARTSYS;
 	}
 
