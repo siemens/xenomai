@@ -758,7 +758,9 @@ static void lostage_handler(void *cookie)
 	int cpu, reqnum, type, arg, sig, sigarg;
 	struct __lostagerq *rq;
 	struct task_struct *p;
+#ifdef CONFIG_PREEMPT_RT
 	struct xnsched *sched;
+#endif
 
 	cpu = smp_processor_id();
 	rq = &lostagerq[cpu];

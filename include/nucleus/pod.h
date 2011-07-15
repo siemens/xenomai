@@ -98,8 +98,6 @@ extern u_long nklatency;
 
 extern u_long nktimerlat;
 
-extern char *nkmsgbuf;
-
 extern xnarch_cpumask_t nkaffinity;
 
 extern xnpod_t nkpod_struct;

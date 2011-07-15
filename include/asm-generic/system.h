@@ -240,6 +240,7 @@ static inline int xnlock_dbg_release(xnlock_t *lock)
 #define xnarch_loginfo(fmt, args...)	printk(KERN_INFO XNARCH_PROMPT fmt, ##args)
 #define xnarch_logwarn(fmt, args...)	printk(KERN_WARNING XNARCH_PROMPT fmt, ##args)
 #define xnarch_logerr(fmt, args...)	printk(KERN_ERR XNARCH_PROMPT fmt, ##args)
+#define xnarch_logerr_noprompt(fmt, args...)	printk(KERN_ERR fmt, ##args)
 #define xnarch_printf(fmt, args...)	printk(KERN_INFO XNARCH_PROMPT fmt, ##args)
 
 #ifndef RTHAL_SHARED_HEAP_FLAGS
@@ -298,10 +299,14 @@ static inline unsigned long long xnarch_get_clock_freq(void)
 
 #define xnarch_get_cpu_tsc			rthal_rdtsc
 
-#define xnarch_halt(emsg)				\
+static inline void xnarch_begin_panic(void)
+{
+	xnarch_trace_panic_freeze();
+	rthal_emergency_console();
+}
+
+#define xnarch_halt()					\
 	do {						\
-		rthal_emergency_console();		\
-		xnarch_logerr("fatal: %s\n", emsg);	\
 		show_stack(NULL,NULL);			\
 		xnarch_trace_panic_dump();		\
 		for (;;)				\

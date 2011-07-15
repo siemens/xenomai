@@ -104,6 +104,7 @@ typedef unsigned long xnlock_t;
 #define xnarch_loginfo(fmt,args...)  fprintf(stdout, XNARCH_PROMPT fmt , ##args)
 #define xnarch_logwarn(fmt,args...)  fprintf(stderr, XNARCH_PROMPT fmt , ##args)
 #define xnarch_logerr(fmt,args...)   fprintf(stderr, XNARCH_PROMPT fmt , ##args)
+#define xnarch_logerr_noprompt(fmt,args...) fprintf(stderr, fmt , ##args)
 #define xnarch_printf(fmt,args...)   fprintf(stdout, fmt , ##args)
 #define printk(fmt,args...)          xnarch_loginfo(fmt , ##args)
 
@@ -443,9 +444,13 @@ static inline unsigned long xnarch_get_cpu_freq (void)
     return mvm_get_cpu_freq();
 }
 
-static inline void xnarch_halt (const char *emsg)
+static inline void xnarch_begin_panic (void)
 {
-    __mvm_breakable(mvm_fatal)("%s",emsg);
+}
+
+static inline void xnarch_halt (void)
+{
+    __mvm_breakable(mvm_fatal)("");
 }
 
 static inline void *xnarch_alloc_host_mem (u_long bytes)

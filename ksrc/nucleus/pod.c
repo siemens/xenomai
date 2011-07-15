@@ -64,8 +64,6 @@ EXPORT_SYMBOL_GPL(nklatency);
 /* Already accounted for in nklatency, kept separately for user information. */
 u_long nktimerlat = 0;
 
-char *nkmsgbuf = NULL;
-
 xnarch_cpumask_t nkaffinity = XNPOD_ALL_CPUS;
 
 xnticks_t nkvtick = CONFIG_XENO_OPT_TIMING_VIRTICK * 1000;
@@ -193,11 +191,11 @@ static inline int __xnpod_fault_init_fpu(struct xnthread *thread)
 
 #endif /* !CONFIG_XENO_HW_FPU */
 
-const char *xnpod_fatal_helper(const char *format, ...)
+void xnpod_fatal_helper(const char *format, ...)
 {
+	static char msg_buf[1024];
 	const unsigned nr_cpus = xnarch_num_online_cpus();
 	xnholder_t *holder;
-	char *p = nkmsgbuf;
 	xnticks_t now;
 	unsigned cpu;
 	va_list ap;
@@ -206,7 +204,8 @@ const char *xnpod_fatal_helper(const char *format, ...)
 	xnlock_get_irqsave(&nklock, s);
 
 	va_start(ap, format);
-	p += vsnprintf(p, XNPOD_FATAL_BUFSZ, format, ap);
+	vsnprintf(msg_buf, sizeof(msg_buf), format, ap);
+	xnlogerr("%s", msg_buf);
 	va_end(ap);
 
 	if (!xnpod_active_p() || xnpod_fatal_p())
@@ -215,9 +214,8 @@ const char *xnpod_fatal_helper(const char *format, ...)
 	__setbits(nkpod->status, XNFATAL);
 	now = xntbase_get_jiffies(&nktbase);
 
-	p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-		      "\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
-		      "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
+	xnlogerr_noprompt("\n %-3s  %-6s %-8s %-8s %-8s  %s\n",
+			  "CPU", "PID", "PRI", "TIMEOUT", "STAT", "NAME");
 
 	for (cpu = 0; cpu < nr_cpus; ++cpu) {
 		xnsched_t *sched = xnpod_sched_slot(cpu);
@@ -243,34 +241,27 @@ const char *xnpod_fatal_helper(const char *format, ...)
 			else
 				snprintf(pbuf, sizeof(pbuf), "%3d", dnprio);
 
-			p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-				      "%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
-				      thread == sched->curr ? '>' : ' ',
-				      cpu,
-				      xnthread_user_pid(thread),
-				      pbuf,
-				      xnthread_get_timeout(thread, now),
-				      xnthread_state_flags(thread),
-				      xnthread_name(thread));
+			xnlogerr_noprompt("%c%3u  %-6d %-8s %-8Lu %.8lx  %s\n",
+					  thread == sched->curr ? '>' : ' ',
+					  cpu,
+					  xnthread_user_pid(thread),
+					  pbuf,
+					  xnthread_get_timeout(thread, now),
+					  xnthread_state_flags(thread),
+					  xnthread_name(thread));
 		}
 	}
 
 	if (xntbase_enabled_p(&nktbase))
-		p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-			      "Master time base: clock=%Lu\n",
-			      xntbase_get_rawclock(&nktbase));
+		xnlogerr_noprompt("Master time base: clock=%Lu\n",
+				  xntbase_get_rawclock(&nktbase));
 	else
-		p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-			      "Master time base: disabled\n");
+		xnlogerr_noprompt("Master time base: disabled\n");
 #ifdef CONFIG_SMP
-		p += snprintf(p, XNPOD_FATAL_BUFSZ - (p - nkmsgbuf),
-			      "Current CPU: #%d\n", xnarch_current_cpu());
+	xnlogerr_noprompt("Current CPU: #%d\n", xnarch_current_cpu());
 #endif
       out:
-
 	xnlock_put_irqrestore(&nklock, s);
-
-	return nkmsgbuf;
 }
 EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
 

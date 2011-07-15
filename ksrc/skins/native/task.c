@@ -74,16 +74,14 @@ static void __task_delete_hook(xnthread_t *thread)
 
 	task = thread2rtask(thread);
 
-#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
-	xnheap_free(&xnsys_ppd_get(0)->sem_heap,
-		    task->msendq.fastlock);
-#endif
-
 #ifdef CONFIG_XENO_OPT_NATIVE_MPS
 	/* The nucleus will reschedule as needed when all the deletion
 	   hooks are done. */
 	xnsynch_destroy(&task->mrecv);
 	xnsynch_destroy(&task->msendq);
+#ifdef CONFIG_XENO_FASTSYNCH
+	xnheap_free(&xnsys_ppd_get(0)->sem_heap, task->msendq.fastlock);
+#endif
 #endif /* CONFIG_XENO_OPT_NATIVE_MPS */
 
 	xnsynch_destroy(&task->safesynch);
@@ -256,18 +254,24 @@ void __native_task_pkg_cleanup(void)
 int rt_task_create(RT_TASK *task,
 		   const char *name, int stksize, int prio, int mode)
 {
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
 	xnarch_atomic_t *fastlock = NULL;
+#endif
 	union xnsched_policy_param param;
 	struct xnthread_init_attr attr;
 	int err = 0, cpumask, cpu;
 	xnflags_t bflags;
 	spl_t s;
 
-	if (prio < T_LOPRIO || prio > T_HIPRIO)
-		return -EINVAL;
+	if (prio < T_LOPRIO || prio > T_HIPRIO) {
+		err = -EINVAL;
+		goto fail;
+	}
 
-	if (xnpod_asynch_p())
-		return -EPERM;
+	if (xnpod_asynch_p()) {
+		err = -EPERM;
+		goto fail;
+	}
 
 	bflags = mode & (XNFPU | XNSHADOW | XNSUSP);
 
@@ -281,10 +285,10 @@ int rt_task_create(RT_TASK *task,
 	attr.stacksize = stksize;
 	param.rt.prio = prio;
 
-	if (xnpod_init_thread(&task->thread_base,
-			      &attr, &xnsched_class_rt, &param) != 0)
-		/* Assume this is the only possible failure. */
-		return -ENOMEM;
+	err = xnpod_init_thread(&task->thread_base, &attr, &xnsched_class_rt,
+				&param);
+	if (err)
+		goto fail;
 
 	inith(&task->link);
 	task->suspend_depth = (bflags & XNSUSP) ? 1 : 0;
@@ -308,8 +312,10 @@ int rt_task_create(RT_TASK *task,
 	/* Allocate lock memory for in-kernel use */
 	fastlock = xnheap_alloc(&xnsys_ppd_get(0)->sem_heap,
 				sizeof(*fastlock));
-	if (fastlock == NULL)
+	if (fastlock == NULL) {
+		xnpod_delete_thread(&task->thread_base);
 		return -ENOMEM;
+	}
 #endif /* CONFIG_XENO_FASTSYNCH */
 	xnsynch_init(&task->mrecv, XNSYNCH_FIFO, NULL);
 	/*
@@ -331,13 +337,18 @@ int rt_task_create(RT_TASK *task,
 	   half-baked objects... */
 
 	err = xnthread_register(&task->thread_base, name ? task->rname : "");
-	if (err) {
-#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
-		xnheap_free(&xnsys_ppd_get(0)->sem_heap, fastlock);
-#endif
+	if (err)
 		xnpod_delete_thread(&task->thread_base);
-	} else
+#if defined(CONFIG_XENO_OPT_NATIVE_MPS) && defined(CONFIG_XENO_FASTSYNCH)
+	else
 		xnsynch_fast_acquire(fastlock, xnthread_handle(&task->thread_base));
+#endif
+
+	return err;
+
+      fail:
+	if (xnthread_test_state(&task->thread_base, XNSHADOW))
+		xnfree(task);
 
 	return err;
 }
