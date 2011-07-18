@@ -91,7 +91,6 @@ static struct __lostagerq {
 #define LO_SIGGRP_REQ 2
 #define LO_SIGTHR_REQ 3
 #define LO_UNMAP_REQ  4
-#define LO_GKWAKE_REQ 5
 		int type;
 		struct task_struct *task;
 		int arg;
@@ -758,9 +757,6 @@ static void lostage_handler(void *cookie)
 	int cpu, reqnum, type, arg, sig, sigarg;
 	struct __lostagerq *rq;
 	struct task_struct *p;
-#ifdef CONFIG_PREEMPT_RT
-	struct xnsched *sched;
-#endif
 
 	cpu = smp_processor_id();
 	rq = &lostagerq[cpu];
@@ -818,13 +814,6 @@ static void lostage_handler(void *cookie)
 		case LO_SIGGRP_REQ:
 			kill_proc(p->pid, arg, 1);
 			break;
-
-#ifdef CONFIG_PREEMPT_RT
-		case LO_GKWAKE_REQ:
-			sched = xnpod_sched_slot(cpu);
-			wake_up_interruptible_sync(&sched->gkwaitq);
-			break;
-#endif
 		}
 	}
 }
@@ -866,7 +855,6 @@ static inline int normalize_priority(int prio)
 static int gatekeeper_thread(void *data)
 {
 	struct task_struct *this_task = current;
-	DECLARE_WAITQUEUE(wait, this_task);
 	int cpu = (long)data;
 	struct xnsched *sched = xnpod_sched_slot(cpu);
 	struct xnthread *target;
@@ -879,12 +867,10 @@ static int gatekeeper_thread(void *data)
 	set_cpus_allowed(this_task, cpumask);
 	set_linux_task_priority(this_task, MAX_RT_PRIO - 1);
 
-	init_waitqueue_head(&sched->gkwaitq);
-	add_wait_queue_exclusive(&sched->gkwaitq, &wait);
+	set_current_state(TASK_INTERRUPTIBLE);
 	up(&sched->gksync);	/* Sync with xnshadow_mount(). */
 
 	for (;;) {
-		set_current_state(TASK_INTERRUPTIBLE);
 		up(&sched->gksync); /* Make the request token available. */
 		schedule();
 
@@ -923,6 +909,7 @@ static int gatekeeper_thread(void *data)
 			xnlock_put_irqrestore(&nklock, s);
 			xnpod_schedule();
 		}
+		set_current_state(TASK_INTERRUPTIBLE);
 	}
 
 	return 0;
@@ -1001,23 +988,9 @@ redo:
 	sched->gktarget = thread;
 	xnthread_set_info(thread, XNATOMIC);
 	set_current_state(TASK_INTERRUPTIBLE | TASK_ATOMICSWITCH);
-#ifndef CONFIG_PREEMPT_RT
-	/*
-	 * We may not hold the preemption lock across calls to
-	 * wake_up_*() services over fully preemptible kernels, since
-	 * tasks might sleep when contending for spinlocks. The wake
-	 * up call for the gatekeeper will happen later, over an APC
-	 * we kick in do_schedule_event() on the way out for the
-	 * hardening task.
-	 *
-	 * We could delay the wake up call over non-RT 2.6 kernels as
-	 * well, but not when running over 2.4 (scheduler innards
-	 * would not allow this, causing weirdnesses when hardening
-	 * tasks). So we always do the early wake up when running
-	 * non-RT, which includes 2.4.
-	 */
-	wake_up_interruptible_sync(&sched->gkwaitq);
-#endif
+
+	wake_up_process(sched->gatekeeper);
+
 	schedule();
 	xnthread_clear_info(thread, XNATOMIC);
 
@@ -2559,11 +2532,6 @@ static inline void do_schedule_event(struct task_struct *next_task)
 
 	prev_task = current;
 	prev = xnshadow_thread(prev_task);
-#ifdef CONFIG_PREEMPT_RT
-	if (prev && xnthread_test_info(prev, XNATOMIC))
-		schedule_linux_call(LO_GKWAKE_REQ, prev_task, 0);
-#endif
-
 	next = xnshadow_thread(next_task);
 	set_switch_lock_owner(prev_task);
 

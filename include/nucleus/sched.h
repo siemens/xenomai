@@ -111,7 +111,6 @@ typedef struct xnsched {
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	struct task_struct *gatekeeper;
-	wait_queue_head_t gkwaitq;
 	struct semaphore gksync;
 	struct xnthread *gktarget;
 #endif
