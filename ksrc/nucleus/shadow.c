@@ -1049,6 +1049,19 @@ redo:
 	trace_mark(xn_nucleus, shadow_hardened, "thread %p thread_name %s",
 		   thread, xnthread_name(thread));
 
+	/*
+	 * Recheck pending signals once again. As we block task wakeups during
+	 * the migration and do_sigwake_event ignores signals until XNRELAX is
+	 * left, any signal between entering TASK_ATOMICSWITCH and starting
+	 * the migration in the gatekeeker thread is just silently queued up
+	 * to here.
+	 */
+	if (signal_pending(this_task)) {
+		xnshadow_relax(!xnthread_test_state(thread, XNDEBUG),
+			       SIGDEBUG_MIGRATE_SIGNAL);
+		return -ERESTARTSYS;
+	}
+
 	xnsched_resched_after_unlocked_switch();
 
 	return 0;
