@@ -940,7 +940,7 @@ int xnshadow_harden(void)
 	struct task_struct *this_task = current;
 	struct xnthread *thread;
 	struct xnsched *sched;
-	int cpu;
+	int cpu, err;
 
 redo:
 	thread = xnshadow_thread(this_task);
@@ -951,8 +951,10 @@ redo:
 	sched = xnpod_sched_slot(cpu);
 
 	/* Grab the request token. */
-	if (down_interruptible(&sched->gksync))
-		return -ERESTARTSYS;
+	if (down_interruptible(&sched->gksync)) {
+		err = -ERESTARTSYS;
+		goto failed;
+	}
 
 	if (thread->u_mode)
 		*(thread->u_mode) = thread->state & ~XNRELAX;
@@ -1065,6 +1067,11 @@ redo:
 	xnsched_resched_after_unlocked_switch();
 
 	return 0;
+
+      failed:
+	if (thread->u_mode)
+		*(thread->u_mode) = thread->state;
+	return err;
 }
 EXPORT_SYMBOL_GPL(xnshadow_harden);
 
