@@ -1137,8 +1137,15 @@ void xnshadow_relax(int notify, int reason)
 	splmax();
 	rpi_push(thread->sched, thread);
 	schedule_linux_call(LO_WAKEUP_REQ, current, 0);
+
+	/*
+	 * Task nklock to synchronize the Linux task state manipulation with
+	 * do_sigwake_event. nklock will be released by xnpod_suspend_thread.
+	 */
+	xnlock_get(&nklock);
 	clear_task_nowakeup(current);
 	xnpod_suspend_thread(thread, XNRELAX, XN_INFINITE, XN_RELATIVE, NULL);
+
 	splnone();
 	if (XENO_DEBUG(NUCLEUS) && rthal_current_domain != rthal_root_domain)
 		xnpod_fatal("xnshadow_relax() failed for thread %s[%d]",
