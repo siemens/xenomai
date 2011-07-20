@@ -586,7 +586,7 @@ static void forked_child_init(void)
 	spawn_printer_thread();
 }
 
-static void __rt_print_init(void)
+static __attribute__ ((constructor)) void __rt_print_init(void)
 {
 	const char *value_str;
 	unsigned long long period;
@@ -686,7 +686,7 @@ static void __rt_print_init(void)
 	pthread_atfork(NULL, NULL, forked_child_init);
 }
 
-static void __rt_print_exit(void)
+static __attribute__ ((destructor)) void __rt_print_exit(void)
 {
 	if (buffers) {
 		/* Flush the buffers. Do not call print_buffers here
@@ -694,14 +694,4 @@ static void __rt_print_exit(void)
 		nanosleep(&print_period, NULL);
 		nanosleep(&print_period, NULL);
 	}
-}
-
-static __attribute__ ((constructor)) void __init_rtdk(void)
-{
-	__rt_print_init();
-}
-
-static __attribute__ ((destructor)) void __exit_rtdk(void)
-{
-	__rt_print_exit();
 }
