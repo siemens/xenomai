@@ -1,11 +1,11 @@
+#ifndef __KERNEL__
+
+#include_next <stdio.h>
+
 #ifndef STDIO_H
 #define STDIO_H
 
-#ifndef __KERNEL__
-
 #include <stdarg.h>
-
-#include_next <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +23,6 @@ int __real_printf(const char *fmt, ...);
 }
 #endif /* __cplusplus */
 
-#endif /* !__KERNEL__ */
-
 #endif /* STDIO_H */
+
+#endif /* !__KERNEL__ */
