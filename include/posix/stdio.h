@@ -3,6 +3,8 @@
 
 #ifndef __KERNEL__
 
+#include <stdarg.h>
+
 #include_next <stdio.h>
 
 #ifdef __cplusplus
