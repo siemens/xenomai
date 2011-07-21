@@ -46,6 +46,9 @@
 
 #define RT_PRINT_SYSLOG_STREAM		NULL
 
+#define RT_PRINT_MODE_FORMAT		0
+#define RT_PRINT_MODE_PUTS		1
+
 struct entry_head {
 	FILE *dest;
 	uint32_t seq_no;
@@ -92,14 +95,14 @@ static void print_buffers(void);
 
 /* *** rt_print API *** */
 
-static int print_to_buffer(FILE *stream, int priority, const char *format,
-			   va_list args)
+static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
+			   const char *format, va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
 	struct entry_head *head;
-	int len;
-	int res;
+	int len, str_len;
+	int res = 0;
 
 	if (!buffer) {
 		res = 0;
@@ -122,7 +125,7 @@ static int print_to_buffer(FILE *stream, int priority, const char *format,
 
 	/* Is our write limit the end of the ring buffer? */
 	if (write_pos >= read_pos) {
-		/* Keep a savety margin to the end for at least an empty entry */
+		/* Keep a safety margin to the end for at least an empty entry */
 		len = buffer->size - write_pos - sizeof(struct entry_head);
 
 		/* Special case: We were stuck at the end of the ring buffer
@@ -152,17 +155,27 @@ static int print_to_buffer(FILE *stream, int priority, const char *format,
 
 	head = buffer->ring + write_pos;
 
-	res = vsnprintf(head->text, len, format, args);
+	if (mode == RT_PRINT_MODE_FORMAT) {
+		res = vsnprintf(head->text, len, format, args);
 
-	if (res < len) {
-		/* Text was written completely, res contains its length */
-		len = res;
-	} else {
-		/* Text was truncated, remove closing \0 that entry_head
-		   already includes */
-		len--;
-		res = len;
-	}
+		if (res < len) {
+			/* Text was written completely, res contains its
+			   length */
+			len = res;
+		} else {
+			/* Text was truncated, remove closing \0 that
+			   entry_head already includes */
+			len--;
+			res = len;
+		}
+	} else if (len >= 2) {
+		str_len = strlen(format);
+		len = (str_len < len - 2) ? str_len : len - 2;
+		strncpy(head->text, format, len);
+		head->text[len++] = '\n';
+		head->text[len] = 0;
+	} else
+		len = 0;
 
 	/* If we were able to write some text, finalise the entry */
 	if (len > 0) {
@@ -196,7 +209,7 @@ static int print_to_buffer(FILE *stream, int priority, const char *format,
 
 int rt_vfprintf(FILE *stream, const char *format, va_list args)
 {
-	return print_to_buffer(stream, 0, format, args);
+	return print_to_buffer(stream, 0, RT_PRINT_MODE_FORMAT, format, args);
 }
 
 int rt_vprintf(const char *format, va_list args)
@@ -228,18 +241,25 @@ int rt_printf(const char *format, ...)
 	return n;
 }
 
+int rt_puts(const char *s)
+{
+	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s, NULL);
+}
+
 void rt_syslog(int priority, const char *format, ...)
 {
 	va_list args;
 
 	va_start(args, format);
-	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, format, args);
+	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, RT_PRINT_MODE_FORMAT,
+			format, args);
 	va_end(args);
 }
 
 void rt_vsyslog(int priority, const char *format, va_list args)
 {
-	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, format, args);
+	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, RT_PRINT_MODE_FORMAT,
+			format, args);
 }
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)

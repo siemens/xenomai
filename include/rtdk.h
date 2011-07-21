@@ -52,6 +52,7 @@ int rt_vfprintf(FILE *stream, const char *format, va_list args);
 int rt_vprintf(const char *format, va_list args);
 int rt_fprintf(FILE *stream, const char *format, ...);
 int rt_printf(const char *format, ...);
+int rt_puts(const char *s);
 void rt_syslog(int priority, const char *format, ...);
 void rt_vsyslog(int priority, const char *format, va_list args);
 
