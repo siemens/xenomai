@@ -44,6 +44,17 @@ int __wrap_printf(const char *fmt, ...)
 	return rc;
 }
 
+int __wrap_puts(const char *s)
+{
+	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&
+		     !(xeno_get_current_mode() & XNRELAX)))
+		return rt_puts(s);
+	else {
+		rt_print_flush_buffers();
+		return puts(s);
+	}
+}
+
 void __wrap_vsyslog(int priority, const char *fmt, va_list ap)
 {
 	if (unlikely(xeno_get_current() != XN_NO_HANDLE &&

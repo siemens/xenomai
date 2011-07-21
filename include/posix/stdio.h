@@ -19,6 +19,8 @@ int __real_fprintf(FILE *stream, const char *fmt, ...);
 
 int __real_printf(const char *fmt, ...);
 
+int __real_puts(const char *s);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

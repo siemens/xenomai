@@ -352,6 +352,12 @@ int __real_printf(const char *fmt, ...)
 }
 
 __attribute__ ((weak))
+int __real_puts(const char *s)
+{
+	return puts(s);
+}
+
+__attribute__ ((weak))
 void __real_syslog(int priority, const char *fmt, ...)
 {
 	va_list args;

@@ -93,6 +93,7 @@
 --wrap vprintf
 --wrap fprintf
 --wrap printf
+--wrap puts
 --wrap syslog
 --wrap vsyslog
 --wrap malloc
