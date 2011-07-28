@@ -950,8 +950,8 @@ redo:
 	cpu = task_cpu(this_task);
 	sched = xnpod_sched_slot(cpu);
 
-	if (signal_pending(this_task) || down_interruptible(&sched->gksync))
-		/* Grab the request token. */
+	/* Grab the request token. */
+	if (down_interruptible(&sched->gksync))
 		return -ERESTARTSYS;
 
 	if (thread->u_mode)
