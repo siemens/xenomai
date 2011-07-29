@@ -81,9 +81,9 @@ int __wrap_gettimeofday(struct timeval *tv, struct timezone *tz)
 	return __real_gettimeofday(tv, tz);
 }
 
-__attribute__ ((weak))
-int __wrap_clock_gettime(clockid_t clk_id, struct timespec *tp)
-{
-	assert_nrt();
-	return __real_clock_gettime(clk_id, tp);
-}
+/*
+ * clock_gettime is vsyscall-based as well, but we already provide a wrapper
+ * via the posix skin. A second version here, even if tagged weak, easily
+ * causes troubles if a certain linking order is not strictly applied.
+ * Therefore, no debug helper is provided via the libxenomai.
+ */
