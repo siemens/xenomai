@@ -243,7 +243,9 @@ int rt_printf(const char *format, ...)
 
 int rt_puts(const char *s)
 {
-	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s, NULL);
+	va_list dummy;
+
+	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s, dummy);
 }
 
 void rt_syslog(int priority, const char *format, ...)
