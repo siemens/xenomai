@@ -95,8 +95,8 @@ static void print_buffers(void);
 
 /* *** rt_print API *** */
 
-static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
-			   const char *format, va_list args)
+static int vprint_to_buffer(FILE *stream, int priority, unsigned int mode,
+			    const char *format, va_list args)
 {
 	struct print_buffer *buffer = pthread_getspecific(buffer_key);
 	off_t write_pos, read_pos;
@@ -207,9 +207,22 @@ static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
 	return res;
 }
 
+static int print_to_buffer(FILE *stream, int priority, unsigned int mode,
+			   const char *format, ...)
+{
+	va_list args;
+	int ret;
+
+	va_start(args, format);
+	ret = vprint_to_buffer(stream, priority, mode, format, args);
+	va_end(args);
+
+	return ret;
+}
+
 int rt_vfprintf(FILE *stream, const char *format, va_list args)
 {
-	return print_to_buffer(stream, 0, RT_PRINT_MODE_FORMAT, format, args);
+	return vprint_to_buffer(stream, 0, RT_PRINT_MODE_FORMAT, format, args);
 }
 
 int rt_vprintf(const char *format, va_list args)
@@ -243,9 +256,7 @@ int rt_printf(const char *format, ...)
 
 int rt_puts(const char *s)
 {
-	va_list dummy;
-
-	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s, dummy);
+	return print_to_buffer(stdout, 0, RT_PRINT_MODE_PUTS, s);
 }
 
 void rt_syslog(int priority, const char *format, ...)
@@ -253,15 +264,15 @@ void rt_syslog(int priority, const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, RT_PRINT_MODE_FORMAT,
-			format, args);
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+			 RT_PRINT_MODE_FORMAT, format, args);
 	va_end(args);
 }
 
 void rt_vsyslog(int priority, const char *format, va_list args)
 {
-	print_to_buffer(RT_PRINT_SYSLOG_STREAM, priority, RT_PRINT_MODE_FORMAT,
-			format, args);
+	vprint_to_buffer(RT_PRINT_SYSLOG_STREAM, priority,
+			 RT_PRINT_MODE_FORMAT, format, args);
 }
 
 static void set_buffer_name(struct print_buffer *buffer, const char *name)
