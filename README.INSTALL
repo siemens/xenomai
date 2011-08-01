@@ -157,23 +157,19 @@ NAME                DESCRIPTION                      [BINDING,]DEFAULT(*)
 --enable-x86-tsc    Enable x86 TSC for timings       strong,enabled
 		    You must have TSC for this.
 
---enable-arm-mach   Select ARM machine for the	     none
-		    current build tree, check
-		    configure --help for a list
-		    of valid values.
-		    Passing this option is
-		    mandatory when compiling
-		    Xenomai for ARM
+--enable-arm-tsc    Enable ARM TSC emulation	     weak,kuser
+		    In the unusual situation where
+		    Xenomai kernel support for the
+		    target SOC does not support
+		    the kuser generic emulation,
+		    pass this option to use another
+		    tsc emulation.
+		    See --help for a list of valid
+		    values.
 
---enable-arm-arch   Define version of the target     strong,"4"
-		    ARM core architecture. Using
-		    this option is only necessary
-		    if enable-arm-mach is
-		    integrator.
-
---enable-arm-eabi   Enable ARM EABI interface        weak,disabled
-
---enable-arm-tsc    Enable ARM TSC emulation	     strong,enabled
+--enable-arm-quirks Enable quirks for specific ARM   weak,disabled
+		    SOCs Currently sa1100 and
+		    xscale3 are supported.
 
 (*) Each option enabled by default can be forcibly disabled by passing
 --disable-<option> to the configure script.
@@ -375,19 +371,29 @@ the last two build steps, passing the --disable-shared option to the
 2.4 Building for ARM
 --------------------
 
-If the ARM cross-compiler is called arm-linux-gcc and compiling for a
-CSB637 board (AT91RM9200 based), a typical compilation will look like:
+Using codesourcery toolchain named arm-none-linux-gnueabi-gcc and
+compiling for a CSB637 board (AT91RM9200 based), a typical compilation
+will look like:
 
 $ $xenomai_root/scripts/prepare-kernel.sh --arch=arm \
   --adeos=$xenomai_root/ksrc/arch/arm/patches/adeos-ipipe-2.6.20-arm-* \
   --linux=$linux_tree
 $ cd $linux_tree
-$ make ARCH=arm CROSS_COMPILE=arm-linux- O=$build_root csb637_defconfig
-$ make ARCH=arm CROSS_COMPILE=arm-linux- O=$build_root bzImage modules
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- O=$build_root \
+  csb637_defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-- O=$build_root \
+  bzImage modules
 # [manually install the kernel image, system map and modules to the proper location]
 $ cd $build_root
-$ $xenomai_root/configure --build=i686-pc-linux-gnu --host=arm-linux --enable-arm-mach=at91rm9200 --enable-arm-tsc
+$ $xenomai_root/configure CFLAGS="-march=armv4t" LDFLAGS="-march=armv4t" \
+  --build=i686-pc-linux-gnu --host=arm-none-linux-gnueabi-
 $ make DESTDIR=$staging_dir install
+
+NOTE: Contrarily to previous releases, Xenomai no longer passes any
+arm architecture specific flags, or FPU flags to gcc, so, users
+are expected to pass them using the CFLAGS and LDFLAGS variables as
+demonstrated above, where the AT91RM9200 is based on the ARM920T core,
+and so is an armv4t architecture.
 
 2.5 Building for NIOS II
 --------------------
