@@ -762,6 +762,8 @@ XENO_TARGET_ARCH
 LATEX_MODE
 LATEX_BATCHMODE
 DOXYGEN_SHOW_INCLUDE_FILES
+CONFIG_XENO_FAST_WRAP_FALSE
+CONFIG_XENO_FAST_WRAP_TRUE
 LD_FILE_OPTION
 CONFIG_XENO_DOC_DOX_FALSE
 CONFIG_XENO_DOC_DOX_TRUE
@@ -5979,13 +5981,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5982: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5984: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5985: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5987: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5988: output\"" >&5)
+  (eval echo "\"\$as_me:5990: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7083,7 +7085,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7086 "configure"' > conftest.$ac_ext
+  echo '#line 7088 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8445,11 +8447,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8448: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8450: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8452: \$? = $ac_status" >&5
+   echo "$as_me:8454: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8769,11 +8771,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8772: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8774: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8776: \$? = $ac_status" >&5
+   echo "$as_me:8778: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8874,11 +8876,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8877: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8879: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8881: \$? = $ac_status" >&5
+   echo "$as_me:8883: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8929,11 +8931,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8932: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8934: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8936: \$? = $ac_status" >&5
+   echo "$as_me:8938: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11301,7 +11303,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11304 "configure"
+#line 11306 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11401,7 +11403,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11404 "configure"
+#line 11406 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12509,6 +12511,14 @@ fi
 $as_echo "${ac_cv_ld_file_option:-no}" >&6; }
 LD_FILE_OPTION=$ac_cv_ld_file_option
 
+ if test "$LD_FILE_OPTION" = "yes"; then
+  CONFIG_XENO_FAST_WRAP_TRUE=
+  CONFIG_XENO_FAST_WRAP_FALSE='#'
+else
+  CONFIG_XENO_FAST_WRAP_TRUE='#'
+  CONFIG_XENO_FAST_WRAP_FALSE=
+fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the POSIX skin library automatically calls mlockall" >&5
 $as_echo_n "checking whether the POSIX skin library automatically calls mlockall... " >&6; }
@@ -12669,8 +12679,13 @@ base=asm-generic
 ac_config_links="$ac_config_links src/include/$base/xenomai:$srcdir/include/$base"
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/vxworks/Makefile src/skins/psos+/Makefile src/skins/vrtx/Makefile src/skins/rtdm/Makefile src/skins/uitron/Makefile src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config scripts/xeno src/Makefile src/skins/Makefile src/skins/common/Makefile src/skins/posix/Makefile src/skins/native/Makefile src/skins/native/libxenomai_native.pc src/skins/vxworks/Makefile src/skins/vxworks/libxenomai_vxworks.pc src/skins/psos+/Makefile src/skins/psos+/libxenomai_psos+.pc src/skins/vrtx/Makefile src/skins/vrtx/libxenomai_vrtx.pc src/skins/rtdm/Makefile src/skins/rtdm/libxenomai_rtdm.pc src/skins/uitron/Makefile src/skins/uitron/libxenomai_uitron.pc src/drvlib/Makefile src/drvlib/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/irqbench/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/psos+/Makefile include/rtdm/Makefile include/analogy/Makefile include/uitron/Makefile include/vrtx/Makefile include/vxworks/Makefile"
 
+
+if test x"$LD_FILE_OPTION" = x"yes" ; then
+      ac_config_files="$ac_config_files src/skins/posix/libxenomai_posix.pc"
+
+fi
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
       ac_config_files="$ac_config_files doc/Makefile doc/txt/Makefile doc/man/Makefile doc/man/clocktest.man doc/man/cyclictest.man doc/man/irqbench.man doc/man/irqloop.man doc/man/klatency.man doc/man/latency.man doc/man/rtcanconfig.man doc/man/rtcanrecv.man doc/man/rtcansend.man doc/man/switchbench.man doc/man/switchtest.man doc/man/xeno.man doc/man/xeno-config.man doc/doxygen/Makefile doc/doxygen/Doxyfile-common doc/doxygen/Doxyfile doc/doxygen/Doxyfile-native doc/doxygen/Doxyfile-nucleus doc/doxygen/Doxyfile-posix doc/doxygen/Doxyfile-rtdm doc/docbook/Makefile doc/docbook/catalog doc/docbook/custom-stylesheets/Makefile doc/docbook/custom-stylesheets/xsl/Makefile doc/docbook/custom-stylesheets/xsl/common/Makefile doc/docbook/custom-stylesheets/xsl/fo/Makefile doc/docbook/custom-stylesheets/xsl/html/Makefile doc/docbook/custom-stylesheets/xsl/html/chunk.xsl doc/docbook/custom-stylesheets/xsl/html/onechunk.xsl doc/docbook/xenomai/Makefile"
@@ -12821,6 +12836,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CONFIG_XENO_DOC_DOX_TRUE}" && test -z "${CONFIG_XENO_DOC_DOX_FALSE}"; then
   as_fn_error $? "conditional \"CONFIG_XENO_DOC_DOX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${CONFIG_XENO_FAST_WRAP_TRUE}" && test -z "${CONFIG_XENO_FAST_WRAP_FALSE}"; then
+  as_fn_error $? "conditional \"CONFIG_XENO_FAST_WRAP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -13768,11 +13787,17 @@ do
     "src/skins/common/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/common/Makefile" ;;
     "src/skins/posix/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/posix/Makefile" ;;
     "src/skins/native/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/native/Makefile" ;;
+    "src/skins/native/libxenomai_native.pc") CONFIG_FILES="$CONFIG_FILES src/skins/native/libxenomai_native.pc" ;;
     "src/skins/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/vxworks/Makefile" ;;
+    "src/skins/vxworks/libxenomai_vxworks.pc") CONFIG_FILES="$CONFIG_FILES src/skins/vxworks/libxenomai_vxworks.pc" ;;
     "src/skins/psos+/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/psos+/Makefile" ;;
+    "src/skins/psos+/libxenomai_psos+.pc") CONFIG_FILES="$CONFIG_FILES src/skins/psos+/libxenomai_psos+.pc" ;;
     "src/skins/vrtx/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/vrtx/Makefile" ;;
+    "src/skins/vrtx/libxenomai_vrtx.pc") CONFIG_FILES="$CONFIG_FILES src/skins/vrtx/libxenomai_vrtx.pc" ;;
     "src/skins/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/rtdm/Makefile" ;;
+    "src/skins/rtdm/libxenomai_rtdm.pc") CONFIG_FILES="$CONFIG_FILES src/skins/rtdm/libxenomai_rtdm.pc" ;;
     "src/skins/uitron/Makefile") CONFIG_FILES="$CONFIG_FILES src/skins/uitron/Makefile" ;;
+    "src/skins/uitron/libxenomai_uitron.pc") CONFIG_FILES="$CONFIG_FILES src/skins/uitron/libxenomai_uitron.pc" ;;
     "src/drvlib/Makefile") CONFIG_FILES="$CONFIG_FILES src/drvlib/Makefile" ;;
     "src/drvlib/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES src/drvlib/analogy/Makefile" ;;
     "src/include/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
@@ -13816,6 +13841,7 @@ do
     "include/uitron/Makefile") CONFIG_FILES="$CONFIG_FILES include/uitron/Makefile" ;;
     "include/vrtx/Makefile") CONFIG_FILES="$CONFIG_FILES include/vrtx/Makefile" ;;
     "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;
+    "src/skins/posix/libxenomai_posix.pc") CONFIG_FILES="$CONFIG_FILES src/skins/posix/libxenomai_posix.pc" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/txt/Makefile") CONFIG_FILES="$CONFIG_FILES doc/txt/Makefile" ;;
     "doc/man/Makefile") CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;

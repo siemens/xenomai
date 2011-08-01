@@ -1,4 +1,6 @@
 lib_LTLIBRARIES = libuitron.la
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libxenomai_uitron.pc
 
 libuitron_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 

@@ -1,4 +1,6 @@
 lib_LTLIBRARIES = libvxworks.la
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libxenomai_vxworks.pc
 
 libvxworks_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
 

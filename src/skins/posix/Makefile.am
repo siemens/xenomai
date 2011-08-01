@@ -1,4 +1,9 @@
 includedir = $(prefix)/include/posix
+pkgconfigdir = $(libdir)/pkgconfig
+
+if CONFIG_XENO_FAST_WRAP
+pkgconfig_DATA = libxenomai_posix.pc
+endif
 
 lib_LTLIBRARIES = libpthread_rt.la
 

@@ -1,4 +1,6 @@
 lib_LTLIBRARIES = libpsos.la
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libxenomai_psos+.pc
 
 libpsos_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 

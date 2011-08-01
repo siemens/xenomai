@@ -1,4 +1,6 @@
 lib_LTLIBRARIES = libvrtx.la
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libxenomai_vrtx.pc
 
 libvrtx_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 

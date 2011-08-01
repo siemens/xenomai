@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+skin=uitron
+XENO_BASE_CFLAGS=-I${includedir} @XENO_USER_APP_CFLAGS@ -D__XENO__
+XENO_BASE_LDFLAGS=-L${libdir} -lxenomai -lpthread -lrt @XENO_USER_APP_LDFLAGS@
+
+Name: @PACKAGE@
+Description: Xenomai uitron skin library
+Version: @VERSION@
+Libs:  -l${skin} ${XENO_BASE_LDFLAGS}
+Cflags: ${XENO_BASE_CFLAGS} -I${includedir}/${skin}
