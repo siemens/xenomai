@@ -2052,18 +2052,39 @@ static int xnshadow_sys_trace(struct pt_regs *regs)
 	return err;
 }
 
-static int xnshadow_sys_sem_heap(struct pt_regs *regs)
+static int xnshadow_sys_heap_info(struct pt_regs *regs)
 {
 	struct xnheap_desc hd, __user *u_hd;
 	struct xnheap *heap;
-	unsigned global;
+	unsigned heap_nr;
 
-	global = __xn_reg_arg2(regs);
+	heap_nr = __xn_reg_arg2(regs);
 	u_hd = (struct xnheap_desc __user *)__xn_reg_arg1(regs);
-	heap = &xnsys_ppd_get(global)->sem_heap;
+
+	switch(heap_nr) {
+	case XNHEAP_PROC_PRIVATE_HEAP:
+	case XNHEAP_PROC_SHARED_HEAP:
+		heap = &xnsys_ppd_get(heap_nr)->sem_heap;
+		break;
+
+	case XNHEAP_SYS_HEAP:
+		heap = &kheap;
+		break;
+
+#if CONFIG_XENO_OPT_SYS_STACKPOOLSZ > 0
+	case XNHEAP_SYS_STACKPOOL:
+		heap = &kstacks;
+		break;
+#endif
+
+	default:
+		return -EINVAL;
+	}
+
 	hd.handle = (unsigned long)heap;
 	hd.size = xnheap_extentsize(heap);
 	hd.area = xnheap_base_memory(heap);
+	hd.used = xnheap_used_mem(heap);
 
 	return __xn_safe_copy_to_user(u_hd, &hd, sizeof(*u_hd));
 }
@@ -2122,7 +2143,7 @@ static xnsysent_t __systab[] = {
 	[__xn_sys_completion] = {&xnshadow_sys_completion, __xn_exec_lostage},
 	[__xn_sys_barrier] = {&xnshadow_sys_barrier, __xn_exec_lostage},
 	[__xn_sys_trace] = {&xnshadow_sys_trace, __xn_exec_any},
-	[__xn_sys_sem_heap] = {&xnshadow_sys_sem_heap, __xn_exec_lostage},
+	[__xn_sys_heap_info] = {&xnshadow_sys_heap_info, __xn_exec_lostage},
 	[__xn_sys_current] = {&xnshadow_sys_current, __xn_exec_any},
 	[__xn_sys_current_info] =
 		{&xnshadow_sys_current_info, __xn_exec_shadow},

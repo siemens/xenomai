@@ -32,7 +32,7 @@
 #define __xn_sys_info		4	/* xnshadow_get_info(muxid,&info) */
 #define __xn_sys_arch		5	/* r = xnarch_local_syscall(args) */
 #define __xn_sys_trace		6	/* r = xntrace_xxx(...) */
-#define __xn_sys_sem_heap	7
+#define __xn_sys_heap_info	7
 #define __xn_sys_current	8	/* threadh = xnthread_handle(cur) */
 #define __xn_sys_current_info	9	/* r = xnshadow_current_info(&info) */
 #define __xn_sys_mayday        10	/* request mayday fixup */

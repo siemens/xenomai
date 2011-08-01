@@ -281,10 +281,17 @@ int xnheap_check_block(xnheap_t *heap,
 #define XNHEAP_DEV_NAME  "/dev/rtheap"
 #define XNHEAP_DEV_MINOR 254
 
+/* Possible arguments to the sys_heap_info syscall */
+#define XNHEAP_PROC_PRIVATE_HEAP 0
+#define XNHEAP_PROC_SHARED_HEAP  1
+#define XNHEAP_SYS_HEAP          2
+#define XNHEAP_SYS_STACKPOOL     3
+
 struct xnheap_desc {
 	unsigned long handle;
 	unsigned int size;
 	unsigned long area;
+	unsigned long used;
 };
 
 #endif /* !_XENO_NUCLEUS_HEAP_H */

@@ -57,10 +57,10 @@ static void *map_sem_heap(unsigned int shared)
 	int ret;
 
 	hdesc = shared ? &global_hdesc : &private_hdesc;
-	ret = XENOMAI_SYSCALL2(__xn_sys_sem_heap, hdesc, shared);
+	ret = XENOMAI_SYSCALL2(__xn_sys_heap_info, hdesc, shared);
 	if (ret < 0) {
 		errno = -ret;
-		perror("Xenomai: sys_sem_heap");
+		perror("Xenomai: sys_heap_info");
 		return MAP_FAILED;
 	}
 
