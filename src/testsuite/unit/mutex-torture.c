@@ -40,6 +40,7 @@
 #define COND_DESTROY		10
 #define THREAD_DETACH		11
 #define THREAD_CREATE		12
+#define THREAD_JOIN		13
 
 #define NS_PER_MS	1000000
 
@@ -282,8 +283,18 @@ int dispatch(const char *service_name,
 		thread = va_arg(ap, RT_TASK *);
 		prio = va_arg(ap, int);
 		handler = va_arg(ap, void *);
-		status = -rt_task_spawn(thread, NULL, 0, prio, 0, handler,
+		status = -rt_task_spawn(thread, NULL, 0, prio, T_JOINABLE, handler,
 					va_arg(ap, void *));
+#endif /* __NATIVE_SKIN__ */
+		break;
+
+	case THREAD_JOIN:
+#ifdef XENO_POSIX
+		thread = va_arg(ap, pthread_t *);
+		status = pthread_join(*thread, NULL);
+#else /* __NATIVE_SKIN__ */
+		thread = va_arg(ap, RT_TASK *);
+		status = rt_task_join(thread);
 #endif /* __NATIVE_SKIN__ */
 		break;
 
@@ -668,8 +679,6 @@ void *cond_signaler(void *cookie)
 	struct cond_mutex *cm = (struct cond_mutex *) cookie;
 	unsigned long long start, diff;
 
-	dispatch("cond_signaler pthread_detach", THREAD_DETACH, 1, 0);
-
 	start = rt_timer_tsc();
 	dispatch("cond_signaler mutex_lock 1", MUTEX_LOCK, 1, 0, cm->mutex);
 	diff = rt_timer_tsc2ns(rt_timer_tsc() - start);
@@ -733,6 +742,8 @@ void simple_condwait(void)
 
 	dispatch("simple_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 	dispatch("simple_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
+
+	dispatch("simple_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
 void recursive_condwait(void)
@@ -772,6 +783,8 @@ void recursive_condwait(void)
 
 	dispatch("rec_condwait mutex_destroy", MUTEX_DESTROY, 1, 0, &mutex);
 	dispatch("rec_condwait cond_destroy", COND_DESTROY, 1, 0, &cond);
+
+	dispatch("rec_condwait join", THREAD_JOIN, 1, 0, &cond_signaler_tid);
 }
 
 int main(void)
