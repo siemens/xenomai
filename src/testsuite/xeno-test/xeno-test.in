@@ -33,16 +33,16 @@ set -ex
 
 echo 0 > /proc/xenomai/latency || :
 
-arith
-clocktest -T 30
-switchtest -T 30
-cond-torture-native
-cond-torture-posix
-mutex-torture-native
-mutex-torture-posix
+@testdir@/arith
+@testdir@/clocktest -T 30
+@testdir@/switchtest -T 30
+@testdir@/cond-torture-native
+@testdir@/cond-torture-posix
+@testdir@/mutex-torture-native
+@testdir@/mutex-torture-posix
 
 start_load
 
-check_alive latency ${1+"$@"}
+check_alive @testdir@/latency ${1+"$@"}
 
 wait_load
