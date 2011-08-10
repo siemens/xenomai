@@ -1832,11 +1832,11 @@ struct us_cond_data {
 static int __rt_cond_wait_prologue(struct pt_regs *regs)
 {
 	RT_COND_PLACEHOLDER cph, mph;
+	unsigned dummy, *plockcnt;
 	xntmode_t timeout_mode;
 	struct us_cond_data d;
 	int err, perr = 0;
 	RT_MUTEX *mutex;
-	unsigned dummy;
 	RT_COND *cond;
 	RTIME timeout;
 
@@ -1869,16 +1869,19 @@ static int __rt_cond_wait_prologue(struct pt_regs *regs)
 				     sizeof(d)))
 		return -EFAULT;
 
-	err = rt_cond_wait_prologue(cond, mutex, &dummy, timeout_mode, timeout);
+	plockcnt = &dummy;
 #else /* !CONFIG_XENO_FASTSYNCH */
-	err = rt_cond_wait_prologue(cond, mutex, &d.lockcnt, timeout_mode, timeout);
+	plockcnt = &d.lockcnt;
 #endif /* !CONFIG_XENO_FASTSYNCH */
+
+	err = rt_cond_wait_prologue(cond, mutex, plockcnt, timeout_mode, timeout);
+
 	switch(err) {
 	case 0:
 	case -ETIMEDOUT:
 	case -EIDRM:
 		perr = d.err = err;
-		err = rt_cond_wait_epilogue(mutex, d.lockcnt);
+		err = rt_cond_wait_epilogue(mutex, *plockcnt);
 		break;
 
 	case -EINTR:
