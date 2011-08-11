@@ -37,4 +37,5 @@ includesub_HEADERS = \
 	vdso.h \
 	seqlock.h \
 	version.h \
-	xenomai.h
+	xenomai.h \
+	vfile.h

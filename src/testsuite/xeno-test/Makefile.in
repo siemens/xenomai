@@ -258,7 +258,7 @@ testdir = @XENO_TEST_DIR@
 test_SCRIPTS = xeno-test-run-wrapper dohell
 bin_SCRIPTS = xeno-test
 xeno_test_run_CPPFLAGS = -DTESTDIR=\"$(testdir)\"
-EXTRA_DIST = $(test_SCRIPTS)
+EXTRA_DIST = $(test_SCRIPTS) xeno-test.in
 all: all-am
 
 .SUFFIXES:
