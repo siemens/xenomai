@@ -1,6 +1,5 @@
 lib_LTLIBRARIES = libnative.la
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libxenomai_native.pc
 
 libnative_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 3:0:0 -lpthread
 

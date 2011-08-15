@@ -15,6 +15,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -36,7 +37,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = src/common
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -76,9 +78,11 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libxenomai_la_LIBADD =
-am_libxenomai_la_OBJECTS = libxenomai_la-bind.lo \
-	libxenomai_la-current.lo libxenomai_la-sigshadow.lo \
-	libxenomai_la-timeconv.lo libxenomai_la-sem_heap.lo
+am_libxenomai_la_OBJECTS = libxenomai_la-assert_context.lo \
+	libxenomai_la-bind.lo libxenomai_la-current.lo \
+	libxenomai_la-rt_print.lo libxenomai_la-sem_heap.lo \
+	libxenomai_la-sigshadow.lo libxenomai_la-timeconv.lo \
+	libxenomai_la-wrappers.lo
 libxenomai_la_OBJECTS = $(am_libxenomai_la_OBJECTS)
 libxenomai_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -98,6 +102,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libxenomai_la_SOURCES)
 DIST_SOURCES = $(libxenomai_la_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -258,8 +263,22 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libxenomai.la
-libxenomai_la_SOURCES = bind.c current.c sigshadow.c timeconv.c sem_heap.c
-libxenomai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
+noinst_HEADERS = \
+	sem_heap.h
+
+libxenomai_la_SOURCES = \
+	assert_context.c \
+	bind.c \
+	current.c \
+	rt_print.c \
+	sem_heap.c \
+	sigshadow.c \
+	timeconv.c \
+	wrappers.c
+
+libxenomai_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 \
+	-lpthread -lrt
+
 libxenomai_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
 	-I$(top_srcdir)/include
@@ -338,11 +357,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-assert_context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-bind.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-current.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-rt_print.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-sem_heap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-sigshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-timeconv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxenomai_la-wrappers.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -365,6 +387,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
+libxenomai_la-assert_context.lo: assert_context.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-assert_context.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-assert_context.Tpo -c -o libxenomai_la-assert_context.lo `test -f 'assert_context.c' || echo '$(srcdir)/'`assert_context.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-assert_context.Tpo $(DEPDIR)/libxenomai_la-assert_context.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assert_context.c' object='libxenomai_la-assert_context.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-assert_context.lo `test -f 'assert_context.c' || echo '$(srcdir)/'`assert_context.c
+
 libxenomai_la-bind.lo: bind.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-bind.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-bind.Tpo -c -o libxenomai_la-bind.lo `test -f 'bind.c' || echo '$(srcdir)/'`bind.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-bind.Tpo $(DEPDIR)/libxenomai_la-bind.Plo
@@ -378,6 +407,20 @@ libxenomai_la-current.lo: current.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='current.c' object='libxenomai_la-current.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-current.lo `test -f 'current.c' || echo '$(srcdir)/'`current.c
+
+libxenomai_la-rt_print.lo: rt_print.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-rt_print.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-rt_print.Tpo -c -o libxenomai_la-rt_print.lo `test -f 'rt_print.c' || echo '$(srcdir)/'`rt_print.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-rt_print.Tpo $(DEPDIR)/libxenomai_la-rt_print.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='rt_print.c' object='libxenomai_la-rt_print.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-rt_print.lo `test -f 'rt_print.c' || echo '$(srcdir)/'`rt_print.c
+
+libxenomai_la-sem_heap.lo: sem_heap.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-sem_heap.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-sem_heap.Tpo -c -o libxenomai_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-sem_heap.Tpo $(DEPDIR)/libxenomai_la-sem_heap.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sem_heap.c' object='libxenomai_la-sem_heap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
 
 libxenomai_la-sigshadow.lo: sigshadow.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-sigshadow.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-sigshadow.Tpo -c -o libxenomai_la-sigshadow.lo `test -f 'sigshadow.c' || echo '$(srcdir)/'`sigshadow.c
@@ -393,12 +436,12 @@ libxenomai_la-timeconv.lo: timeconv.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-timeconv.lo `test -f 'timeconv.c' || echo '$(srcdir)/'`timeconv.c
 
-libxenomai_la-sem_heap.lo: sem_heap.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-sem_heap.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-sem_heap.Tpo -c -o libxenomai_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-sem_heap.Tpo $(DEPDIR)/libxenomai_la-sem_heap.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sem_heap.c' object='libxenomai_la-sem_heap.lo' libtool=yes @AMDEPBACKSLASH@
+libxenomai_la-wrappers.lo: wrappers.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libxenomai_la-wrappers.lo -MD -MP -MF $(DEPDIR)/libxenomai_la-wrappers.Tpo -c -o libxenomai_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libxenomai_la-wrappers.Tpo $(DEPDIR)/libxenomai_la-wrappers.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wrappers.c' object='libxenomai_la-wrappers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libxenomai_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libxenomai_la-wrappers.lo `test -f 'wrappers.c' || echo '$(srcdir)/'`wrappers.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -490,7 +533,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \

@@ -1806,6 +1806,8 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @{
  */
 
+#ifdef DOXYGEN_CPP
+
 struct rtdm_mmap_data {
 	void *src_vaddr;
 	phys_addr_t src_paddr;

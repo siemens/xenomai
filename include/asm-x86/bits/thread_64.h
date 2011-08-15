@@ -33,9 +33,7 @@ static inline void xnarch_init_tcb(xnarchtcb_t * tcb)
 	tcb->ripp = &tcb->rip;
 	tcb->fpup = &tcb->i387;
 	tcb->is_root = 0;
-#ifdef XNARCH_HAVE_MAYDAY
 	tcb->mayday.eip = 0;
-#endif
 	/* Must be followed by xnarch_init_thread(). */
 }
 

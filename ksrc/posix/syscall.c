@@ -305,7 +305,7 @@ static int __pthread_setschedparam(unsigned long tid,
 	hkey.mm = current->mm;
 	k_tid = __pthread_find(&hkey);
 
-	if (!k_tid && u_mode) {
+	if (!k_tid && u_mode_offset) {
 		/*
 		 * If the syscall applies to "current", and the latter
 		 * is not a Xenomai thread already, then shadow it.

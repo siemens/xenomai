@@ -684,10 +684,10 @@ static inline void ppd_remove_mm(struct mm_struct *mm,
 
 static void detach_ppd(xnshadow_ppd_t * ppd)
 {
-	unsigned muxid = xnshadow_ppd_muxid(ppd);
-	muxtable[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
-	if (muxtable[muxid].props->module)
-		module_put(muxtable[muxid].props->module);
+	unsigned int muxid = xnshadow_ppd_muxid(ppd);
+	skins[muxid].props->eventcb(XNSHADOW_CLIENT_DETACH, ppd);
+	if (skins[muxid].props->module)
+		module_put(skins[muxid].props->module);
 }
 
 struct xnvdso *nkvdso;
@@ -2324,15 +2324,14 @@ static void *xnshadow_sys_event(int event, void *data)
 		ret = xnheap_init_mapped(&p->sem_heap,
 					 CONFIG_XENO_OPT_SEM_HEAPSZ * 1024,
 					 XNARCH_SHARED_HEAP_FLAGS);
-		if (err) {
+		if (ret) {
 			xnarch_free_host_mem(p, sizeof(*p));
-			return ERR_PTR(err);
+			return ERR_PTR(ret);
 		}
 
 		xnheap_set_label(&p->sem_heap,
 				 "private sem heap [%d]", current->pid);
 
-#ifdef XNARCH_HAVE_MAYDAY
 		p->mayday_addr = map_mayday_page(current);
 		if (p->mayday_addr == 0) {
 			printk(KERN_WARNING
@@ -2341,7 +2340,7 @@ static void *xnshadow_sys_event(int event, void *data)
 			xnarch_free_host_mem(p, sizeof(*p));
 			return ERR_PTR(-ENOMEM);
 		}
-#endif /* XNARCH_HAVE_MAYDAY */
+
 		xnarch_atomic_set(&p->refcnt, 1);
 		exe_path = get_exe_path(current);
 		if (IS_ERR(exe_path)) {

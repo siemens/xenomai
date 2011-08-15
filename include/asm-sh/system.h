@@ -48,12 +48,10 @@ typedef struct xnarchtcb {	/* Per-thread arch-dependent block */
 	struct thread_struct *tsp;
 	struct mm_struct *mm;
 	struct mm_struct *active_mm;
-#ifdef XNARCH_HAVE_MAYDAY
 	struct {
 		unsigned long pc;
 		unsigned long r3;
 	} mayday;
-#endif
 	/* Thread context placeholder for kernel threads. */
 	struct thread_struct ts;
 #ifdef CONFIG_XENO_HW_FPU

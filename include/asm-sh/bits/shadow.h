@@ -55,8 +55,6 @@ static inline int xnarch_local_syscall(struct pt_regs *regs)
 
 #define xnarch_schedule_tail(prev) do { } while(0)
 
-#ifdef XNARCH_HAVE_MAYDAY
-
 static inline void xnarch_setup_mayday_page(void *page)
 {
 	u16 insn[11];
@@ -112,7 +110,5 @@ static inline void xnarch_fixup_mayday(struct xnarchtcb *tcb,
 	regs->pc = tcb->mayday.pc;
 	regs->regs[3] = tcb->mayday.r3;
 }
-
-#endif /* XNARCH_HAVE_MAYDAY */
 
 #endif /* !_XENO_ASM_SH_BITS_SHADOW_H */

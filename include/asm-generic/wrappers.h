@@ -79,11 +79,6 @@ static inline struct task_struct *wrap_find_task_by_pid(pid_t nr)
 #define pgprot_noncached(p) (p)
 #endif /* !pgprot_noncached */
 
-#ifndef DEFINE_SEMAPHORE
-/* Legacy DECLARE_MUTEX vanished in 2.6.37 */
-#define DEFINE_SEMAPHORE(sem) DECLARE_MUTEX(sem)
-#endif
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37) && defined(CONFIG_GENERIC_HARDIRQS)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39)

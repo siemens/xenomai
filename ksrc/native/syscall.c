@@ -1244,7 +1244,7 @@ static int __rt_mutex_delete(RT_MUTEX_PLACEHOLDER __user *u_ph)
 {
 	RT_MUTEX_PLACEHOLDER ph;
 	RT_MUTEX *mutex;
-	int err, global;
+	int err;
 
 	if (__xn_safe_copy_from_user(&ph, u_ph, sizeof(ph)))
 		return -EFAULT;
@@ -1407,12 +1407,13 @@ struct us_cond_data {
 
 static int __rt_cond_wait_prologue(RT_COND_PLACEHOLDER __user *u_cph,
 				   RT_MUTEX_PLACEHOLDER __user *u_mph,
-				   unsigned int __user *u_lockcnt,
+				   struct us_cond_data __user *u_cond,
 				   xntmode_t timeout_mode,
 				   RTIME  __user *u_timeout)
 {
 	RT_COND_PLACEHOLDER cph, mph;
 	unsigned dummy, *plockcnt;
+	struct us_cond_data d;
 	int ret, pret = 0;
 	RT_MUTEX *mutex;
 	RT_COND *cond;
@@ -1436,8 +1437,7 @@ static int __rt_cond_wait_prologue(RT_COND_PLACEHOLDER __user *u_cph,
 		return -EFAULT;
 
 #ifdef CONFIG_XENO_FASTSYNCH
-	if (__xn_safe_copy_from_user(&d, (void __user *)__xn_reg_arg3(regs),
-				     sizeof(d)))
+	if (__xn_safe_copy_from_user(&d, u_cond, sizeof(d)))
 		return -EFAULT;
 
 	plockcnt = &dummy;
@@ -1462,8 +1462,7 @@ static int __rt_cond_wait_prologue(RT_COND_PLACEHOLDER __user *u_cph,
 		break;
 	}
 
-	if (__xn_safe_copy_to_user((void __user *)__xn_reg_arg3(regs),
-				   &d, sizeof(d)))
+	if (__xn_safe_copy_to_user(u_cond, &d, sizeof(d)))
 		return -EFAULT;
 
 	return ret == 0 ? pret : ret;
