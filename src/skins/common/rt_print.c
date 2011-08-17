@@ -610,7 +610,8 @@ static void forked_child_init(void)
 	pthread_mutex_init(&buffer_lock, NULL);
 
 	while (*pbuffer) {
-		if (*pbuffer == my_buffer)
+		if (*pbuffer == my_buffer ||
+		    (unsigned long)*pbuffer - pool_start < pool_len)
 			pbuffer = &(*pbuffer)->next;
 		else
 			cleanup_buffer(*pbuffer);
