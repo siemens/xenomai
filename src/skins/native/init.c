@@ -27,6 +27,7 @@
 #include <asm/xenomai/bits/bind.h>
 
 int __native_muxid = -1;
+static int fork_handler_registered;
 
 #ifndef HAVE___THREAD
 pthread_key_t __native_tskey;
@@ -52,8 +53,21 @@ void __init_native_tskey(void)
 static __attribute__ ((constructor))
 void __init_xeno_interface(void)
 {
+	int err;
+
 	__native_muxid =
 	    xeno_bind_skin(XENO_SKIN_MAGIC, "native", "xeno_native");
 
 	__native_muxid = __xn_mux_shifted_id(__native_muxid);
+
+	if (fork_handler_registered)
+		return;
+
+	err = pthread_atfork(NULL, NULL, &__init_xeno_interface);
+	if (err) {
+		fprintf(stderr, "Xenomai native skin init: "
+			"pthread_atfork: %s\n", strerror(err));
+		exit(EXIT_FAILURE);
+	}
+	fork_handler_registered = 1;
 }
