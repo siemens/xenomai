@@ -610,8 +610,11 @@ static void forked_child_init(void)
 	pthread_mutex_init(&buffer_lock, NULL);
 
 	while (*pbuffer) {
-		if (*pbuffer == my_buffer ||
-		    (unsigned long)*pbuffer - pool_start < pool_len)
+		if (*pbuffer == my_buffer
+#ifdef CONFIG_XENO_FASTSYNCH
+		    || (unsigned long)*pbuffer - pool_start < pool_len
+#endif /* CONFIG_XENO_FASTSYNCH */
+		    )
 			pbuffer = &(*pbuffer)->next;
 		else
 			cleanup_buffer(*pbuffer);
