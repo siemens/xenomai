@@ -35,7 +35,6 @@ struct heapobj_ops {
 	void (*destroy)(struct heapobj *hobj);
 	int (*extend)(struct heapobj *hobj, size_t size, void *mem);
 	void *(*alloc)(struct heapobj *hobj, size_t size);
-	void *(*realloc)(struct heapobj *hobj, void *ptr, size_t size);
 	void (*free)(struct heapobj *hobj, void *ptr);
 	size_t (*inquire)(struct heapobj *hobj, void *ptr);
 };
@@ -133,8 +132,6 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 
 void *pvmalloc(size_t size);
 
-void *pvrealloc(void *ptr, size_t size);
-
 void pvfree(void *ptr);
 
 char *pvstrdup(const char *ptr);
@@ -144,8 +141,6 @@ void mem_destroy(struct heapobj *hobj);
 int mem_extend(struct heapobj *hobj, size_t size, void *mem);
 
 void *mem_alloc(struct heapobj *hobj, size_t size);
-
-void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size);
 
 void mem_free(struct heapobj *hobj, void *ptr);
 
@@ -177,12 +172,6 @@ static inline void *heapobj_alloc(struct heapobj *hobj, size_t size)
 	return hobj->ops->alloc(hobj, size);
 }
 
-static inline void *heapobj_realloc(struct heapobj *hobj,
-				    void *ptr, size_t size)
-{
-	return hobj->ops->realloc(hobj, ptr, size);
-}
-
 static inline void heapobj_free(struct heapobj *hobj, void *ptr)
 {
 	hobj->ops->free(hobj, ptr);
@@ -200,8 +189,6 @@ int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
 			      size_t size, int elems);
 
 void *xnmalloc(size_t size);
-
-void *xnrealloc(void *ptr, size_t size);
 
 void xnfree(void *ptr);
 
@@ -255,12 +242,6 @@ static inline void *heapobj_alloc(struct heapobj *hobj, size_t size)
 	return mem_alloc(hobj, size);
 }
 
-static inline void *heapobj_realloc(struct heapobj *hobj,
-				    void *ptr, size_t size)
-{
-	return mem_realloc(hobj, ptr, size);
-}
-
 static inline void heapobj_free(struct heapobj *hobj, void *ptr)
 {
 	mem_free(hobj, ptr);
@@ -274,11 +255,6 @@ static inline size_t heapobj_inquire(struct heapobj *hobj, void *ptr)
 static inline void *xnmalloc(size_t size)
 {
 	return pvmalloc(size);
-}
-
-static inline void *xnrealloc(void *ptr, size_t size)
-{
-	return pvrealloc(ptr, size);
 }
 
 static inline void xnfree(void *ptr)

@@ -557,23 +557,6 @@ out:
 	return ret;
 }
 
-static void *realloc_block(struct heap *heap, void *block, size_t newsize)
-{
-	void *newblock;
-
-	if (newsize == 0)
-		return NULL;
-
-	newblock = alloc_block(heap, newsize);
-	if (newblock == NULL)
-		return NULL;
-
-	memcpy(newblock, block, newsize);
-	free_block(heap, block);
-
-	return newblock;
-}
-
 static int create_heap(struct heapobj *hobj, const char *session,
 		       const char *name, size_t size, int flags)
 {
@@ -729,11 +712,6 @@ static void *pshared_alloc(struct heapobj *hobj, size_t size)
 	return alloc_block(hobj->pool, size);
 }
 
-static void *pshared_realloc(struct heapobj *hobj, void *ptr, size_t size)
-{
-	return realloc_block(hobj->pool, ptr, size);
-}
-
 static void pshared_free(struct heapobj *hobj, void *ptr)
 {
 	free_block(hobj->pool, ptr);
@@ -748,7 +726,6 @@ static struct heapobj_ops pshared_ops = {
 	.destroy = pshared_destroy,
 	.extend = pshared_extend,
 	.alloc = pshared_alloc,
-	.realloc = pshared_realloc,
 	.free = pshared_free,
 	.inquire = pshared_inquire,
 };
@@ -798,11 +775,6 @@ int heapobj_init_array_depend(struct heapobj *hobj, const char *name,
 void *xnmalloc(size_t size)
 {
 	return alloc_block(&main_heap, size);
-}
-
-void *xnrealloc(void *ptr, size_t size)
-{
-	return realloc_block(&main_heap, ptr, size);
 }
 
 void xnfree(void *ptr)

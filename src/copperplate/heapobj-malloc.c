@@ -40,11 +40,6 @@ void *mem_alloc(struct heapobj *hobj, size_t size)
 	return malloc(size);
 }
 
-void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size)
-{
-	return realloc(ptr, size);
-}
-
 void mem_free(struct heapobj *hobj, void *ptr)
 {
 	free(ptr);
@@ -61,7 +56,6 @@ static struct heapobj_ops malloc_ops = {
 	.destroy = mem_destroy,
 	.extend = mem_extend,
 	.alloc = mem_alloc,
-	.realloc = mem_realloc,
 	.free = mem_free,
 	.inquire = mem_inquire,
 };
@@ -71,11 +65,6 @@ static struct heapobj_ops malloc_ops = {
 void *pvmalloc(size_t size)
 {
 	return malloc(size);
-}
-
-void *pvrealloc(void *ptr, size_t size)
-{
-	return realloc(ptr, size);
 }
 
 void pvfree(void *ptr)

@@ -58,17 +58,6 @@ void *mem_alloc(struct heapobj *hobj, size_t size)
 	return p;
 }
 
-void *mem_realloc(struct heapobj *hobj, void *ptr, size_t size)
-{
-	void *p;
-
-	pthread_mutex_lock(&hobj->lock);
-	p = realloc_ex(ptr, size, hobj->pool);
-	pthread_mutex_unlock(&hobj->lock);
-
-	return p;
-}
-
 void mem_free(struct heapobj *hobj, void *ptr)
 {
 	pthread_mutex_lock(&hobj->lock);
@@ -93,7 +82,6 @@ static struct heapobj_ops tlsf_ops = {
 	.destroy = mem_destroy,
 	.extend = mem_extend,
 	.alloc = mem_alloc,
-	.realloc = mem_realloc,
 	.free = mem_free,
 	.inquire = mem_inquire,
 };
@@ -150,11 +138,6 @@ int heapobj_init_array_private(struct heapobj *hobj, const char *name,
 void *pvmalloc(size_t size)
 {
 	return tlsf_malloc(size);
-}
-
-void *pvrealloc(void *ptr, size_t size)
-{
-	return tlsf_realloc(ptr, size);
 }
 
 void pvfree(void *ptr)
