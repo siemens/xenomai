@@ -39,7 +39,7 @@ target_triplet = @target@
 @XENO_COBALT_TRUE@	native	\
 @XENO_COBALT_TRUE@	posix	\
 @XENO_COBALT_TRUE@	rtdm	\
-@XENO_COBALT_TRUE@	drvlib	\
+@XENO_COBALT_TRUE@	analogy	\
 @XENO_COBALT_TRUE@	testsuite \
 @XENO_COBALT_TRUE@	utils
 
@@ -77,7 +77,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = include copperplate vxworks psos common native posix \
-	rtdm drvlib testsuite utils
+	rtdm analogy testsuite utils
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \

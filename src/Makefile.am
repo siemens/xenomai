@@ -10,7 +10,7 @@ SUBDIRS +=	\
 	native	\
 	posix	\
 	rtdm	\
-	drvlib	\
+	analogy	\
 	testsuite \
 	utils
 endif

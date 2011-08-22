@@ -851,8 +851,7 @@ AC_CONFIG_FILES([ \
 	src/copperplate/Makefile \
 	src/vxworks/Makefile \
 	src/psos/Makefile \
-	src/drvlib/Makefile \
-	src/drvlib/analogy/Makefile \
+	src/analogy/Makefile \
 	src/include/Makefile \
 	src/include/copperplate/Makefile \
 	src/include/vxworks/Makefile \
