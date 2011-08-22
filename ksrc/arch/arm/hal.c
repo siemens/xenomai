@@ -54,11 +54,6 @@ EXPORT_SYMBOL_GPL(rthal_tsc_to_timer);
 
 #define RTHAL_CALIBRATE_LOOPS 10
 
-static struct {
-	unsigned long flags;
-	int count;
-} rthal_linux_irq[IPIPE_NR_XIRQS];
-
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
@@ -207,8 +202,6 @@ static void rthal_timer_set_periodic(void)
 
 static int cpu_timers_requested;
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
 int rthal_timer_request(
 	void (*tick_handler)(void),
 	void (*mode_emul)(enum clock_event_mode mode,
@@ -309,90 +302,6 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 	rthal_ktimer_saved_mode = mode;
 }
 EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
-
-#else /* !CONFIG_GENERIC_CLOCKEVENTS */
-
-int rthal_timer_request(void (*handler)(void), int cpu)
-{
-	int ret;
-
-	/*
-	 * The rest of the initialization should only be performed
-	 * once by a single CPU.
-	 */
-	if (cpu_timers_requested++ > 0)
-		return 0;
-
-	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = rthal_cpufreq_arg;
-
-	ret = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t) handler,
-				NULL, NULL);
-	if (ret)
-		return ret;
-
-	rthal_timer_set_oneshot(1);
-
-	return 1000000000UL / HZ;
-}
-
-void rthal_timer_release(int cpu)
-{
-	if (--cpu_timers_requested > 0)
-		return;
-
-	rthal_irq_release(RTHAL_TIMER_IRQ);
-	rthal_timer_set_periodic();
-}
-
-#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
-
-int rthal_irq_host_request(unsigned irq,
-			   rthal_irq_host_handler_t handler,
-			   char *name, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    handler == NULL ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
-		rthal_linux_irq[irq].flags = rthal_irq_descp(irq)->action->flags;
-		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
-	}
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
-}
-
-int rthal_irq_host_release(unsigned irq, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    rthal_linux_irq[irq].count == 0 ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	free_irq(irq, dev_id);
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-		rthal_irq_descp(irq)->action->flags = rthal_linux_irq[irq].flags;
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return 0;
-}
 
 int rthal_irq_enable(unsigned int irq)
 {

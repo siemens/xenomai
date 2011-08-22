@@ -27,11 +27,6 @@
 
 static inline void xnarch_relay_tick(void)
 {
-#if defined(CONFIG_SMP) && !defined(CONFIG_GENERIC_CLOCKEVENTS)
-	cpumask_t mask = cpu_online_map;
-	cpu_clear(rthal_processor_id(), mask);
-	rthal_send_ipi(RTHAL_HOST_TIMER_IPI, mask);
-#endif /* CONFIG_SMP */
 	rthal_irq_host_pend(RTHAL_TIMER_IRQ);
 }
 

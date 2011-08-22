@@ -26,25 +26,12 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 static inline int xnarch_start_timer(void (*tick_handler)(void), int cpu)
 {
 	return rthal_timer_request(tick_handler,
 				   xnarch_switch_htick_mode, xnarch_next_htick_shot,
 				   cpu);
 }
-#else
-/*
- * When GENERIC_CLOCKEVENTS are not available, the I-pipe frees the
- * Blackfin core timer for us, therefore we don't need any host tick
- * relay service since the regular Linux time source is still ticking
- * in parallel at the normal pace through TIMER0.
- */
-static inline int xnarch_start_timer(void (*tick_handler)(void), int cpu)
-{
-	return rthal_timer_request(tick_handler, cpu);
-}
-#endif
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 

@@ -40,11 +40,6 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 
-static struct {
-	unsigned long flags;
-	int count;
-} rthal_linux_irq[IPIPE_NR_XIRQS];
-
 /*
  * We have a dedicated high resolution timer defined by our design
  * (na_hrtimer), which the interrupt pipeline core initialized at boot
@@ -120,55 +115,7 @@ int rthal_irq_end(unsigned irq)
 	return rthal_irq_chip_end(irq);
 }
 
-int rthal_irq_host_request(unsigned irq,
-			   rthal_irq_host_handler_t handler,
-			   char *name, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    handler == NULL ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
-		rthal_linux_irq[irq].flags =
-		    rthal_irq_descp(irq)->action->flags;
-		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
-	}
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
-}
-
-int rthal_irq_host_release(unsigned irq, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    rthal_linux_irq[irq].count == 0 ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	free_irq(irq, dev_id);
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-		rthal_irq_descp(irq)->action->flags =
-		    rthal_linux_irq[irq].flags;
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return 0;
-}
-
-static inline
-int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
-		       void *data)
+static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
 	if (stage == &rthal_domain) {
 		rthal_realtime_faults[rthal_processor_id()][event]++;

@@ -691,8 +691,7 @@ PREDEFINED             = DOXYGEN_CPP \
         CONFIG_XENO_OPT_RTAI_FIFO \
         CONFIG_XENO_OPT_RTAI_SEM \
         CONFIG_XENO_OPT_RTAI_SHM \
-        CONFIG_XENO_OPT_RTDM_SELECT \
-        CONFIG_GENERIC_CLOCKEVENTS
+        CONFIG_XENO_OPT_RTDM_SELECT
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 

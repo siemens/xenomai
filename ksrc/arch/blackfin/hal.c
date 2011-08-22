@@ -43,11 +43,6 @@
 #include <asm/unistd.h>
 #include <asm/xenomai/hal.h>
 
-static struct {
-	unsigned long flags;
-	int count;
-} rthal_linux_irq[IPIPE_NR_XIRQS];
-
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
@@ -118,15 +113,12 @@ static void rthal_timer_set_periodic(void)
 
 static int cpu_timers_requested;
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
-int rthal_timer_request(
-	void (*tick_handler)(void),
-	void (*mode_emul)(enum clock_event_mode mode,
-			  struct clock_event_device *cdev),
-	int (*tick_emul)(unsigned long delay,
-			 struct clock_event_device *cdev),
-	int cpu)
+int rthal_timer_request(void (*tick_handler)(void),
+			void (*mode_emul)(enum clock_event_mode mode,
+					  struct clock_event_device *cdev),
+			int (*tick_emul)(unsigned long delay,
+					 struct clock_event_device *cdev),
+			int cpu)
 {
 	unsigned long dummy, *tmfreq = &dummy;
 	int tickval, err, res;
@@ -217,51 +209,7 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-
 EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
-
-#else /* !CONFIG_GENERIC_CLOCKEVENTS */
-/*
- * We never override the system tick when the generic clock event
- * framework is not available, since the I-Pipe always makes the core
- * timer exclusively available to us in such case, unconditionally
- * moving the kernel tick source to GPTMR0.
- */
-int rthal_timer_request(void (*tick_handler) (void), int cpu)
-{
-	int err;
-
-	if (cpu_timers_requested++ > 0)
-		return 0;
-
-	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = get_cclk();
-
-	err = rthal_irq_request(RTHAL_TIMER_IRQ,
-				(rthal_irq_handler_t)tick_handler,
-				rthal_timer_ack, NULL);
-	if (err)
-		return err;
-
-	rthal_timer_set_oneshot(1);
-	rthal_irq_enable(RTHAL_TIMER_IRQ);
-
-	return 0;
-}
-
-void rthal_timer_release(int cpu)
-{
-	if (--cpu_timers_requested > 0)
-		return;
-
-	rthal_irq_disable(RTHAL_TIMER_IRQ);
-	rthal_irq_release(RTHAL_TIMER_IRQ);
-	rthal_timer_set_periodic();
-}
-
-#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
 
 unsigned long rthal_timer_calibrate(void)
 {
@@ -293,55 +241,7 @@ int rthal_irq_end(unsigned irq)
 	return rthal_irq_chip_end(irq);
 }
 
-int rthal_irq_host_request(unsigned irq,
-			   rthal_irq_host_handler_t handler,
-			   char *name, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    handler == NULL ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
-		rthal_linux_irq[irq].flags =
-		    rthal_irq_descp(irq)->action->flags;
-		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
-	}
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
-}
-
-int rthal_irq_host_release(unsigned irq, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    rthal_linux_irq[irq].count == 0 ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	free_irq(irq, dev_id);
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-		rthal_irq_descp(irq)->action->flags =
-		    rthal_linux_irq[irq].flags;
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return 0;
-}
-
-static inline
-int do_exception_event(unsigned event, rthal_pipeline_stage_t *stage,
-		       void *data)
+static inline int do_exception_event(unsigned event, unsigned domid, void *data)
 {
 	if (stage == &rthal_domain) {
 		rthal_realtime_faults[rthal_processor_id()][event]++;

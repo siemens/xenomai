@@ -204,72 +204,6 @@ int rthal_irq_release(unsigned irq)
 }
 
 /**
- * @fn int rthal_irq_host_request(unsigned irq,rthal_irq_host_handler_t handler,char *name,void *dev_id)
- *
- * @brief Install a shared Linux interrupt handler.
- *
- * Installs a shared interrupt handler in the Linux domain for the
- * given interrupt source.  The handler is appended to the existing
- * list of Linux handlers for this interrupt source.
- *
- * @param irq The interrupt source to attach the shared handler to.
- * This value is architecture-dependent.
- *
- * @param handler The address of a valid interrupt service routine.
- * This handler will be called each time the corresponding IRQ is
- * delivered, as part of the chain of existing regular Linux handlers
- * for this interrupt source. The handler prototype is the same as the
- * one required by the request_irq() service provided by the Linux
- * kernel.
- *
- * @param name is a symbolic name identifying the handler which will
- * get reported through the /proc/interrupts interface.
- *
- * @param dev_id is a unique device id, identical in essence to the
- * one requested by the request_irq() service.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid or @a handler is NULL.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
- */
-
-/**
- * @fn int rthal_irq_host_release (unsigned irq,void *dev_id)
- *
- * @brief Uninstall a shared Linux interrupt handler.
- *
- * Uninstalls a shared interrupt handler from the Linux domain for the
- * given interrupt source.  The handler is removed from the existing
- * list of Linux handlers for this interrupt source.
- *
- * @param irq The interrupt source to detach the shared handler from.
- * This value is architecture-dependent.
- *
- * @param dev_id is a valid device id, identical in essence to the one
- * requested by the free_irq() service provided by the Linux
- * kernel. This value will be used to locate the handler to remove
- * from the chain of existing Linux handlers for the given interrupt
- * source. This parameter must match the device id. passed to
- * rthal_irq_host_request() for the same handler instance.
- *
- * @return 0 is returned upon success. Otherwise:
- *
- * - -EINVAL is returned if @a irq is invalid.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Linux domain context.
- */
-
-/**
  * @fn void rthal_irq_host_pend (unsigned irq)
  *
  * @brief Propagate an IRQ event to Linux.
@@ -680,31 +614,28 @@ unsigned long long __rthal_generic_full_divmod64(unsigned long long a,
  * \brief Grab the hardware timer.
  *
  * rthal_timer_request() grabs and tunes the hardware timer in oneshot
- * mode in order to clock the master time base.
+ * mode in order to clock the master time base. GENERIC_CLOCKEVENTS is
+ * required from the host kernel.
  *
  * A user-defined routine is registered as the clock tick handler.
  * This handler will always be invoked on behalf of the Xenomai domain
  * for each incoming tick.
  *
- * Hooks for emulating oneshot mode for the tick device are accepted
- * when CONFIG_GENERIC_CLOCKEVENTS is defined for the host
- * kernel. Host tick emulation is a way to share the clockchip
- * hardware between Linux and Xenomai, when the former provides
- * support for oneshot timing (i.e. high resolution timers and no-HZ
- * scheduler ticking).
+ * Host tick emulation is a way to share the clockchip hardware
+ * between Linux and Xenomai, when the former provides support for
+ * oneshot timing (i.e. high resolution timers and no-HZ scheduler
+ * ticking).
  *
  * @param tick_handler The address of the Xenomai tick handler which will
  * process each incoming tick.
  *
  * @param mode_emul The optional address of a callback to be invoked
  * upon mode switch of the host tick device, notified by the Linux
- * kernel. This parameter is only considered whenever
- * CONFIG_GENERIC_CLOCKEVENTS is defined.
+ * kernel.
  *
  * @param tick_emul The optional address of a callback to be invoked
  * upon setup of the next shot date for the host tick device, notified
- * by the Linux kernel. This parameter is only considered whenever
- * CONFIG_GENERIC_CLOCKEVENTS is defined.
+ * by the Linux kernel.
  *
  * @param cpu The CPU number to grab the timer from.
  *
@@ -778,8 +709,6 @@ EXPORT_SYMBOL_GPL(rthal_irq_release);
 EXPORT_SYMBOL_GPL(rthal_irq_enable);
 EXPORT_SYMBOL_GPL(rthal_irq_disable);
 EXPORT_SYMBOL_GPL(rthal_irq_end);
-EXPORT_SYMBOL_GPL(rthal_irq_host_request);
-EXPORT_SYMBOL_GPL(rthal_irq_host_release);
 EXPORT_SYMBOL_GPL(rthal_trap_catch);
 EXPORT_SYMBOL_GPL(rthal_timer_request);
 EXPORT_SYMBOL_GPL(rthal_timer_release);

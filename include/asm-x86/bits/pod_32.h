@@ -30,13 +30,8 @@ void xnpod_welcome_thread(struct xnthread *, int);
 
 void xnpod_delete_thread(struct xnthread *);
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 #define xnarch_start_timer(tick_handler, cpu)	\
 	rthal_timer_request(tick_handler, xnarch_switch_htick_mode, xnarch_next_htick_shot, cpu)
-#else
-#define xnarch_start_timer(tick_handler, cpu)	\
-	rthal_timer_request(tick_handler, cpu)
-#endif
 
 #define xnarch_stop_timer(cpu)	rthal_timer_release(cpu)
 

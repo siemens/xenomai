@@ -25,8 +25,6 @@
 #error "Pure kernel header included from user-space!"
 #endif
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
 #include <linux/tick.h>
 #include <linux/ipipe_tickdev.h>
 
@@ -50,11 +48,7 @@
  * This routine is a callback invoked from the kernel's clock event
  * handlers.
  *
- * @note Only Linux kernel releases which support clock event devices
- * (CONFIG_GENERIC_CLOCKEVENTS) would call this routine when the
- * latter are programmed in oneshot mode. Otherwise, periodic host
- * tick emulation is directly handled by the nucleus, and does not
- * involve any callback mechanism from the Linux kernel.
+ * @note GENERIC_CLOCKEVENTS is required from the host kernel.
  *
  * Rescheduling: never.
  */
@@ -103,10 +97,7 @@ static int xnarch_next_htick_shot(unsigned long delay, struct clock_event_device
  * This routine is a callback invoked from the kernel's clock event
  * handlers.
  *
- * @note Only Linux kernel releases which support clock event devices
- * (CONFIG_GENERIC_CLOCKEVENTS) would call this routine. Otherwise,
- * host tick mode is always periodic, and does not involve any
- * callback mechanism from the Linux kernel.
+ * @note GENERIC_CLOCKEVENTS is required from the host kernel.
  *
  * Rescheduling: never.
  */
@@ -117,10 +108,6 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 	xnticks_t tickval;
 	spl_t s;
 
-#ifndef __IPIPE_FEATURE_REQUEST_TICKDEV
-	struct ipipe_tick_device *tdev = (struct ipipe_tick_device *)cdev;
-	cdev = tdev->slave->evtdev;
-#endif
 	rthal_timer_notify_switch(mode, cdev);
 
 	if (mode == CLOCK_EVT_MODE_ONESHOT)
@@ -149,8 +136,6 @@ static void xnarch_switch_htick_mode(enum clock_event_mode mode, struct clock_ev
 
 	xnlock_put_irqrestore(&nklock, s);
 }
-
-#endif /* CONFIG_GENERIC_CLOCKEVENTS */
 
 #ifdef CONFIG_SMP
 

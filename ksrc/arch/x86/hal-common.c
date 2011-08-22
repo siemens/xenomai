@@ -34,11 +34,6 @@
 
 enum rthal_ktimer_mode rthal_ktimer_saved_mode;
 
-static struct {
-	unsigned long flags;
-	int count;
-} rthal_linux_irq[IPIPE_NR_XIRQS];
-
 #ifdef CONFIG_X86_LOCAL_APIC
 
 #define RTHAL_SET_ONESHOT_XENOMAI	1
@@ -101,8 +96,6 @@ static void rthal_timer_set_periodic(void)
 }
 
 static int cpu_timers_requested;
-
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 int rthal_timer_request(
 	void (*tick_handler)(void),
@@ -169,73 +162,9 @@ int rthal_timer_request(
 	return tickval;
 }
 
-#else /* !CONFIG_GENERIC_CLOCKEVENTS */
-
-#define send_IPI_allbutself(vector)	apic->send_IPI_allbutself(vector)
-
-irqreturn_t rthal_broadcast_to_local_timers(int irq, void *dev_id)
-{
-#ifdef CONFIG_SMP
-	send_IPI_allbutself(LOCAL_TIMER_VECTOR);
-#endif
-	rthal_trigger_irq(RTHAL_HOST_TICK_IRQ);
-	return IRQ_HANDLED;
-}
-
-int rthal_timer_request(void (*tick_handler)(void), int cpu)
-{
-	int err;
-
-	/*
-	 * When the local APIC is enabled for kernels lacking generic
-	 * support for clock events, we do not need to relay the host tick
-	 * since 8254 interrupts are already flowing normally to Linux
-	 * (i.e. the nucleus does not intercept them, but uses a dedicated
-	 * APIC-based timer interrupt instead, i.e. RTHAL_APIC_TIMER_IPI).
-	 *
-	 * This code works both for UP+LAPIC and SMP configurations.
-	 */
-	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = RTHAL_COMPAT_TIMERFREQ;
-
-	/*
-	 * The rest of the initialization should only be performed
-	 * once by a single CPU.
-	 */
-	if (cpu_timers_requested++ > 0)
-		goto out;
-
-	err = rthal_irq_request(RTHAL_APIC_TIMER_IPI,
-			  (rthal_irq_handler_t) tick_handler, NULL, NULL);
-
-	if (err)
-		return err;
-
-	rthal_irq_host_request(RTHAL_BCAST_TICK_IRQ,
-			       &rthal_broadcast_to_local_timers,
-			       "rthal_broadcast_timer",
-			       &rthal_broadcast_to_local_timers);
-
-	rthal_timer_set_oneshot(1);
-
-	/*
-	 * rthal_timer_set_oneshot assumes the host tick flows via
-	 * RTHAL_TIMER_IRQ, but that's not the case for legacy x86_64.
-	 */
-	__ipipe_tick_irq = RTHAL_BCAST_TICK_IRQ;
-out:
-	return 0;
-}
-
-#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
-
 void rthal_timer_release(int cpu)
 {
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 	ipipe_release_tickdev(cpu);
-#endif
 
 	/*
 	 * The rest of the cleanup work should only be performed once
@@ -243,11 +172,6 @@ void rthal_timer_release(int cpu)
 	 */
 	if (--cpu_timers_requested > 0)
 		return;
-
-#ifndef CONFIG_GENERIC_CLOCKEVENTS
-	rthal_irq_host_release(RTHAL_BCAST_TICK_IRQ,
-			       &rthal_broadcast_to_local_timers);
-#endif
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)
 		rthal_timer_set_periodic();
@@ -258,8 +182,6 @@ void rthal_timer_release(int cpu)
 }
 
 #endif /* CONFIG_X86_LOCAL_APIC */
-
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,
 			       struct clock_event_device *cdev)
@@ -273,56 +195,7 @@ void rthal_timer_notify_switch(enum clock_event_mode mode,
 
 	rthal_ktimer_saved_mode = mode;
 }
-
 EXPORT_SYMBOL_GPL(rthal_timer_notify_switch);
-
-#endif /* CONFIG_GENERIC_CLOCKEVENTS */
-
-int rthal_irq_host_request(unsigned irq,
-			   rthal_irq_host_handler_t handler,
-			   char *name, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    handler == NULL ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (rthal_linux_irq[irq].count++ == 0 && rthal_irq_descp(irq)->action) {
-		rthal_linux_irq[irq].flags =
-		    rthal_irq_descp(irq)->action->flags;
-		rthal_irq_descp(irq)->action->flags |= IRQF_SHARED;
-	}
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return request_irq(irq, handler, IRQF_SHARED, name, dev_id);
-}
-
-int rthal_irq_host_release(unsigned irq, void *dev_id)
-{
-	unsigned long flags;
-
-	if (irq >= IPIPE_NR_XIRQS ||
-	    rthal_linux_irq[irq].count == 0 ||
-	    rthal_irq_descp(irq) == NULL)
-		return -EINVAL;
-
-	free_irq(irq, dev_id);
-
-	rthal_irqdesc_lock(irq, flags);
-
-	if (--rthal_linux_irq[irq].count == 0 && rthal_irq_descp(irq)->action)
-		rthal_irq_descp(irq)->action->flags =
-		    rthal_linux_irq[irq].flags;
-
-	rthal_irqdesc_unlock(irq, flags);
-
-	return 0;
-}
 
 int rthal_irq_enable(unsigned irq)
 {

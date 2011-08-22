@@ -169,19 +169,15 @@ static void rthal_timer_set_periodic(void)
 	rthal_local_irq_restore_hw(flags);
 }
 
-int rthal_timer_request(
-	void (*tick_handler)(void),
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-	void (*mode_emul)(enum clock_event_mode mode,
-			  struct clock_event_device *cdev),
-	int (*tick_emul)(unsigned long delay,
-			 struct clock_event_device *cdev),
-#endif
-	int cpu)
+int rthal_timer_request(void (*tick_handler)(void),
+			void (*mode_emul)(enum clock_event_mode mode,
+					  struct clock_event_device *cdev),
+			int (*tick_emul)(unsigned long delay,
+					 struct clock_event_device *cdev),
+			int cpu)
 {
 	int tickval, err;
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 	unsigned long tmfreq;
 
 	int res = ipipe_request_tickdev("pit", mode_emul, tick_emul, cpu,
@@ -214,18 +210,6 @@ int rthal_timer_request(
 
 	if (rthal_timerfreq_arg == 0)
 		rthal_tunables.timer_freq = tmfreq;
-#else /* !CONFIG_GENERIC_CLOCKEVENTS */
-	/*
-	 * Out caller has to to emulate the periodic host tick by its
-	 * own means once we will have grabbed the PIT.
-	 */
-	tickval = 1000000000UL / HZ;
-	rthal_ktimer_saved_mode = KTIMER_MODE_PERIODIC;
-
-	if (rthal_timerfreq_arg == 0)
-		rthal_tunables.timer_freq = CLOCK_TICK_RATE;
-#endif /* !CONFIG_GENERIC_CLOCKEVENTS */
-
 	/*
 	 * No APIC means that we can't be running in SMP mode, so this
 	 * routine will be called only once, for CPU #0.
@@ -241,9 +225,8 @@ int rthal_timer_request(
 
 void rthal_timer_release(int cpu)
 {
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
 	ipipe_release_tickdev(cpu);
-#endif
+
 	rthal_irq_release(RTHAL_TIMER_IRQ);
 
 	if (rthal_ktimer_saved_mode == KTIMER_MODE_PERIODIC)

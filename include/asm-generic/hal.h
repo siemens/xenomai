@@ -425,14 +425,6 @@ int rthal_irq_disable(unsigned irq);
 
 int rthal_irq_end(unsigned irq);
 
-int rthal_irq_host_request(unsigned irq,
-			   rthal_irq_host_handler_t handler,
-			   char *name,
-			   void *dev_id);
-
-int rthal_irq_host_release(unsigned irq,
-			   void *dev_id);
-
 static inline void rthal_irq_host_pend(unsigned irq)
 {
 	rthal_propagate_irq(irq);
@@ -464,8 +456,6 @@ rthal_trap_handler_t rthal_trap_catch(rthal_trap_handler_t handler);
 
 unsigned long rthal_timer_calibrate(void);
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
-
 enum clock_event_mode;
 struct clock_event_device;
 
@@ -478,11 +468,6 @@ int rthal_timer_request(void (*tick_handler)(void),
 
 void rthal_timer_notify_switch(enum clock_event_mode mode,
 			       struct clock_event_device *cdev);
-
-#else
-int rthal_timer_request(void (*tick_handler)(void),
-			int cpu);
-#endif
 
 void rthal_timer_release(int cpu);
 
