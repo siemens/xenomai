@@ -1,0 +1,17 @@
+testdir = @XENO_TEST_DIR@
+
+test_PROGRAMS = latency
+
+latency_SOURCES = latency.c
+
+latency_CPPFLAGS = \
+	@XENO_USER_CFLAGS@ -Wno-missing-prototypes \
+	-I$(top_srcdir)/include
+
+latency_LDFLAGS = @XENO_USER_LDFLAGS@
+
+latency_LDADD = \
+	../../lib/native/libnative.la \
+	../../lib/rtdm/librtdm.la \
+	../../lib/posix/libpthread_rt.la \
+	-lpthread -lrt -lm

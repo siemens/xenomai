@@ -706,7 +706,7 @@ PACKAGE_STRING='Xenomai 2.5.94'
 PACKAGE_BUGREPORT='xenomai-help@gna.org'
 PACKAGE_URL=''
 
-ac_unique_file="src/posix/thread.c"
+ac_unique_file="lib/posix/thread.c"
 ac_default_prefix=/usr/xenomai
 # Factoring default headers for most tests.
 ac_includes_default="\
@@ -2525,7 +2525,7 @@ if eval test $includedir = /usr/include; then
   as_fn_error $? "Using /usr/include as includedir is not supported. Please change your --prefix or specify another --includedir" "$LINENO" 5
 fi
 
-ac_config_headers="$ac_config_headers src/include/xeno_config.h"
+ac_config_headers="$ac_config_headers lib/include/xeno_config.h"
 
 ac_aux_dir=
 for ac_dir in config "$srcdir"/config; do
@@ -12920,13 +12920,13 @@ LD_FILE_OPTION=$ac_cv_ld_file_option
 
 if test x$rtcore_type = xcobalt; then
    if [ $ac_cv_ld_file_option = yes ]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/posix/posix.wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/posix/posix.wrappers"
    else
 	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
 			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/src/posix/posix.wrappers`
+		done < $srcdir/lib/posix/posix.wrappers`
    fi
-   CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/src/posix/posix.wrappers'
+   CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/lib/posix/posix.wrappers'
 
 
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the POSIX skin library automatically calls mlockall" >&5
@@ -13046,14 +13046,14 @@ $as_echo "$XENO_TEST_DIR" >&6; }
 
 if test x$rtcore_type = xcobalt; then
    base=asm-$XENO_TARGET_ARCH
-   ac_config_links="$ac_config_links src/include/asm/xenomai:$srcdir/include/$base"
+   ac_config_links="$ac_config_links lib/include/asm/xenomai:$srcdir/include/$base"
 
    base=asm-generic
-   ac_config_links="$ac_config_links src/include/$base/xenomai:$srcdir/include/$base"
+   ac_config_links="$ac_config_links lib/include/$base/xenomai:$srcdir/include/$base"
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno src/Makefile src/posix/Makefile src/native/Makefile src/rtdm/Makefile src/copperplate/Makefile src/vxworks/Makefile src/psos/Makefile src/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile src/utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/posix/Makefile lib/native/Makefile lib/rtdm/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -14161,42 +14161,42 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "src/include/xeno_config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/include/xeno_config.h" ;;
+    "lib/include/xeno_config.h") CONFIG_HEADERS="$CONFIG_HEADERS lib/include/xeno_config.h" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
-    "src/include/asm/xenomai") CONFIG_LINKS="$CONFIG_LINKS src/include/asm/xenomai:$srcdir/include/$base" ;;
-    "src/include/$base/xenomai") CONFIG_LINKS="$CONFIG_LINKS src/include/$base/xenomai:$srcdir/include/$base" ;;
+    "lib/include/asm/xenomai") CONFIG_LINKS="$CONFIG_LINKS lib/include/asm/xenomai:$srcdir/include/$base" ;;
+    "lib/include/$base/xenomai") CONFIG_LINKS="$CONFIG_LINKS lib/include/$base/xenomai:$srcdir/include/$base" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "config/Makefile") CONFIG_FILES="$CONFIG_FILES config/Makefile" ;;
     "scripts/Makefile") CONFIG_FILES="$CONFIG_FILES scripts/Makefile" ;;
     "scripts/xeno-config") CONFIG_FILES="$CONFIG_FILES scripts/xeno-config:scripts/xeno-config-$rtcore_type.in" ;;
     "scripts/xeno") CONFIG_FILES="$CONFIG_FILES scripts/xeno" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "src/posix/Makefile") CONFIG_FILES="$CONFIG_FILES src/posix/Makefile" ;;
-    "src/native/Makefile") CONFIG_FILES="$CONFIG_FILES src/native/Makefile" ;;
-    "src/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES src/rtdm/Makefile" ;;
-    "src/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES src/copperplate/Makefile" ;;
-    "src/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES src/vxworks/Makefile" ;;
-    "src/psos/Makefile") CONFIG_FILES="$CONFIG_FILES src/psos/Makefile" ;;
-    "src/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES src/analogy/Makefile" ;;
-    "src/include/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
-    "src/testsuite/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/Makefile" ;;
-    "src/testsuite/latency/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/latency/Makefile" ;;
-    "src/testsuite/cyclic/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/cyclic/Makefile" ;;
-    "src/testsuite/switchtest/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/switchtest/Makefile" ;;
-    "src/testsuite/clocktest/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/clocktest/Makefile" ;;
-    "src/testsuite/klatency/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/klatency/Makefile" ;;
-    "src/testsuite/unit/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/unit/Makefile" ;;
-    "src/testsuite/xeno-test/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/xeno-test/Makefile" ;;
+    "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
+    "lib/posix/Makefile") CONFIG_FILES="$CONFIG_FILES lib/posix/Makefile" ;;
+    "lib/native/Makefile") CONFIG_FILES="$CONFIG_FILES lib/native/Makefile" ;;
+    "lib/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES lib/rtdm/Makefile" ;;
+    "lib/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES lib/copperplate/Makefile" ;;
+    "lib/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES lib/vxworks/Makefile" ;;
+    "lib/psos/Makefile") CONFIG_FILES="$CONFIG_FILES lib/psos/Makefile" ;;
+    "lib/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES lib/analogy/Makefile" ;;
+    "lib/include/Makefile") CONFIG_FILES="$CONFIG_FILES lib/include/Makefile" ;;
+    "testsuite/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/Makefile" ;;
+    "testsuite/latency/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/latency/Makefile" ;;
+    "testsuite/cyclic/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/cyclic/Makefile" ;;
+    "testsuite/switchtest/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/switchtest/Makefile" ;;
+    "testsuite/clocktest/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/clocktest/Makefile" ;;
+    "testsuite/klatency/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/klatency/Makefile" ;;
+    "testsuite/unit/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/unit/Makefile" ;;
+    "testsuite/xeno-test/Makefile") CONFIG_FILES="$CONFIG_FILES testsuite/xeno-test/Makefile" ;;
     "src/testsuite/regression/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/regression/Makefile" ;;
     "src/testsuite/regression/native/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/regression/native/Makefile" ;;
     "src/testsuite/regression/posix/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/regression/posix/Makefile" ;;
     "src/testsuite/regression/native+posix/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/regression/native+posix/Makefile" ;;
-    "src/utils/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/Makefile" ;;
-    "src/utils/can/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/can/Makefile" ;;
-    "src/utils/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/analogy/Makefile" ;;
-    "src/utils/ps/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/ps/Makefile" ;;
-    "src/utils/slackspot/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/slackspot/Makefile" ;;
+    "utils/Makefile") CONFIG_FILES="$CONFIG_FILES utils/Makefile" ;;
+    "utils/can/Makefile") CONFIG_FILES="$CONFIG_FILES utils/can/Makefile" ;;
+    "utils/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES utils/analogy/Makefile" ;;
+    "utils/ps/Makefile") CONFIG_FILES="$CONFIG_FILES utils/ps/Makefile" ;;
+    "utils/slackspot/Makefile") CONFIG_FILES="$CONFIG_FILES utils/slackspot/Makefile" ;;
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "include/asm-generic/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-generic/Makefile" ;;
     "include/asm-generic/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-generic/bits/Makefile" ;;

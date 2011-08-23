@@ -43,9 +43,9 @@ if eval test $includedir = /usr/include; then
   AC_MSG_ERROR([Using /usr/include as includedir is not supported. Please change your --prefix or specify another --includedir])
 fi
 
-AC_CONFIG_HEADERS(src/include/xeno_config.h)
+AC_CONFIG_HEADERS(lib/include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(src/posix/thread.c)
+AC_CONFIG_SRCDIR(lib/posix/thread.c)
 AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -732,14 +732,14 @@ AC_SUBST(LD_FILE_OPTION)
 
 if test x$rtcore_type = xcobalt; then
    if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/src/posix/posix.wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/posix/posix.wrappers"
    else
 	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
 			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/src/posix/posix.wrappers`
+		done < $srcdir/lib/posix/posix.wrappers`
    fi
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-   	['$(top_srcdir)/src/posix/posix.wrappers'])
+   	['$(top_srcdir)/lib/posix/posix.wrappers'])
    AC_SUBST(XENO_POSIX_WRAPPERS)
    AC_MSG_CHECKING(whether the POSIX skin library automatically calls mlockall)
    AC_ARG_ENABLE(posix-auto-mlockall,
@@ -832,9 +832,9 @@ AC_SUBST(XENO_TEST_DIR)
 
 if test x$rtcore_type = xcobalt; then
    base=asm-$XENO_TARGET_ARCH
-   AC_CONFIG_LINKS([src/include/asm/xenomai:$srcdir/include/$base])
+   AC_CONFIG_LINKS([lib/include/asm/xenomai:$srcdir/include/$base])
    base=asm-generic
-   AC_CONFIG_LINKS([src/include/$base/xenomai:$srcdir/include/$base])
+   AC_CONFIG_LINKS([lib/include/$base/xenomai:$srcdir/include/$base])
 fi
 
 AC_CONFIG_FILES([ \
@@ -843,32 +843,32 @@ AC_CONFIG_FILES([ \
 	scripts/Makefile \
 	scripts/xeno-config:scripts/xeno-config-$rtcore_type.in \
 	scripts/xeno \
-	src/Makefile \
-	src/posix/Makefile \
-	src/native/Makefile \
-	src/rtdm/Makefile \
-	src/copperplate/Makefile \
-	src/vxworks/Makefile \
-	src/psos/Makefile \
-	src/analogy/Makefile \
-	src/include/Makefile \
-	src/testsuite/Makefile \
-	src/testsuite/latency/Makefile \
-	src/testsuite/cyclic/Makefile \
-	src/testsuite/switchtest/Makefile \
-	src/testsuite/clocktest/Makefile \
-	src/testsuite/klatency/Makefile \
-	src/testsuite/unit/Makefile \
-	src/testsuite/xeno-test/Makefile \
+	lib/Makefile \
+	lib/posix/Makefile \
+	lib/native/Makefile \
+	lib/rtdm/Makefile \
+	lib/copperplate/Makefile \
+	lib/vxworks/Makefile \
+	lib/psos/Makefile \
+	lib/analogy/Makefile \
+	lib/include/Makefile \
+	testsuite/Makefile \
+	testsuite/latency/Makefile \
+	testsuite/cyclic/Makefile \
+	testsuite/switchtest/Makefile \
+	testsuite/clocktest/Makefile \
+	testsuite/klatency/Makefile \
+	testsuite/unit/Makefile \
+	testsuite/xeno-test/Makefile \
 	src/testsuite/regression/Makefile \
 	src/testsuite/regression/native/Makefile \
 	src/testsuite/regression/posix/Makefile \
 	src/testsuite/regression/native+posix/Makefile \
-	src/utils/Makefile \
-	src/utils/can/Makefile \
-	src/utils/analogy/Makefile \
-	src/utils/ps/Makefile \
-	src/utils/slackspot/Makefile \
+	utils/Makefile \
+	utils/can/Makefile \
+	utils/analogy/Makefile \
+	utils/ps/Makefile \
+	utils/slackspot/Makefile \
 	include/Makefile \
 	include/asm-generic/Makefile \
 	include/asm-generic/bits/Makefile \

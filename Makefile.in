@@ -51,8 +51,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/src/include/xeno_config.h
-CONFIG_CLEAN_FILES = src/include/asm/xenomai
+CONFIG_HEADER = $(top_builddir)/lib/include/xeno_config.h
+CONFIG_CLEAN_FILES = lib/include/asm/xenomai
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -265,7 +265,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
-SUBDIRS = src config include @XENO_MAYBE_DOCDIR@ scripts
+SUBDIRS = lib config include @XENO_MAYBE_DOCDIR@ scripts testsuite utils
 EXTRA_DIST = ksrc examples debian
 all: all-recursive
 
