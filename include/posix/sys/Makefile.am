@@ -4,4 +4,5 @@ includesub_HEADERS = \
 	ioctl.h \
 	mman.h \
 	select.h \
-	socket.h
+	socket.h \
+	time.h

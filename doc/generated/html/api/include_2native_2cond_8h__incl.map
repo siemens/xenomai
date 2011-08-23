@@ -1,7 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node3" href="$include_2native_2mutex_8h.html" title="This file is part of the Xenomai project." alt="" coords="337,83,455,112"/>
-<area shape="rect" id="node5" href="$native_2types_8h.html" title="This file is part of the Xenomai project." alt="" coords="340,160,452,189"/>
-<area shape="rect" id="node7" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="335,237,457,267"/>
-<area shape="rect" id="node13" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="325,315,467,344"/>
-<area shape="rect" id="node15" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="491,315,616,344"/>
-</map>

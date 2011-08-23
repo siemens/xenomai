@@ -6,7 +6,6 @@ SUBDIRS =	\
 
 if XENO_COBALT
 SUBDIRS +=	\
-	common	\
 	native	\
 	posix	\
 	rtdm	\

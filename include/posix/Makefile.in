@@ -286,6 +286,7 @@ includesub_HEADERS = \
 	semaphore.h \
 	signal.h \
 	stdio.h \
+	stdlib.h \
 	syscall.h \
 	syslog.h \
 	time.h \

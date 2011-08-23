@@ -13,5 +13,5 @@ latency_LDFLAGS = @XENO_USER_LDFLAGS@
 latency_LDADD = \
 	../../native/libnative.la \
 	../../rtdm/librtdm.la \
-	../../common/libxenomai.la \
-	-lpthread -lm
+	../../posix/libpthread_rt.la \
+	-lpthread -lrt -lm

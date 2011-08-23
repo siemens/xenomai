@@ -16,27 +16,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-/* NOTE: functions in dynamically linked libraries aren't wrapped. These
- * are fallback functions for __real* functions used by the library itself
+/*
+ * NOTE: functions in dynamically linked libraries aren't
+ * wrapped. These are fallback functions for __real* functions used by
+ * the library itself
  */
-
+#include <xeno_config.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdarg.h>
-
 #include <signal.h>
 #include <syslog.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/socket.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/select.h>
-#include <xeno_config.h>
+#include <malloc.h>
 
 #undef __real_ftruncate
 #undef __real_mmap
@@ -384,4 +386,28 @@ __attribute__ ((weak))
 void __real_vsyslog(int priority, const char *fmt, va_list ap)
 {
 	vsyslog(priority, fmt, ap);
+}
+
+__attribute__ ((weak))
+void *__real_malloc(size_t size)
+{
+	return malloc(size);
+}
+
+__attribute__ ((weak))
+void __real_free(void *ptr)
+{
+	free(ptr);
+}
+
+__attribute__ ((weak))
+int __real_gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+	return gettimeofday(tv, tz);
+}
+
+__attribute__ ((weak))
+int __real_clock_gettime(clockid_t clk_id, struct timespec *tp)
+{
+	return clock_gettime(clk_id, tp);
 }

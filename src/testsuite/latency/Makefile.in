@@ -58,7 +58,7 @@ PROGRAMS = $(test_PROGRAMS)
 am_latency_OBJECTS = latency-latency.$(OBJEXT)
 latency_OBJECTS = $(am_latency_OBJECTS)
 latency_DEPENDENCIES = ../../native/libnative.la ../../rtdm/librtdm.la \
-	../../common/libxenomai.la
+	../../posix/libpthread_rt.la
 latency_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(latency_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -246,8 +246,8 @@ latency_LDFLAGS = @XENO_USER_LDFLAGS@
 latency_LDADD = \
 	../../native/libnative.la \
 	../../rtdm/librtdm.la \
-	../../common/libxenomai.la \
-	-lpthread -lm
+	../../posix/libpthread_rt.la \
+	-lpthread -lrt -lm
 
 all: all-am
 

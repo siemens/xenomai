@@ -57,8 +57,7 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_clocktest_OBJECTS = clocktest-clocktest.$(OBJEXT)
 clocktest_OBJECTS = $(am_clocktest_OBJECTS)
-clocktest_DEPENDENCIES = ../../posix/libpthread_rt.la \
-	../../common/libxenomai.la
+clocktest_DEPENDENCIES = ../../posix/libpthread_rt.la
 clocktest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(clocktest_LDFLAGS) $(LDFLAGS) -o $@
@@ -242,7 +241,6 @@ clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_s
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 clocktest_LDADD = \
 	../../posix/libpthread_rt.la \
-	../../common/libxenomai.la \
 	-lpthread -lrt
 
 all: all-am

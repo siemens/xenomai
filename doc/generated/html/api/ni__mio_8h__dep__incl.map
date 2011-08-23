@@ -1,5 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node3" href="$mio__common_8c.html" title="Hardware driver for DAQ&#45;STC based boards." alt="" coords="5,83,395,112"/>
-<area shape="rect" id="node5" href="$pcimio_8c.html" title="Hardware driver for NI PCI&#45;MIO E series cards." alt="" coords="419,83,763,112"/>
-<area shape="rect" id="node7" href="$tio__common_8c.html" title="Hardware driver for NI general purpose counter." alt="" coords="787,83,1168,112"/>
-</map>

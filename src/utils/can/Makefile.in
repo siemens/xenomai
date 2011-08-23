@@ -59,15 +59,15 @@ PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_rtcanconfig_OBJECTS = rtcanconfig.$(OBJEXT)
 rtcanconfig_OBJECTS = $(am_rtcanconfig_OBJECTS)
 rtcanconfig_DEPENDENCIES = ../../rtdm/librtdm.la \
-	../../common/libxenomai.la
+	../../posix/libpthread_rt.la
 am_rtcanrecv_OBJECTS = rtcanrecv.$(OBJEXT)
 rtcanrecv_OBJECTS = $(am_rtcanrecv_OBJECTS)
 rtcanrecv_DEPENDENCIES = ../../native/libnative.la \
-	../../rtdm/librtdm.la ../../common/libxenomai.la
+	../../posix/libpthread_rt.la ../../rtdm/librtdm.la
 am_rtcansend_OBJECTS = rtcansend.$(OBJEXT)
 rtcansend_OBJECTS = $(am_rtcansend_OBJECTS)
 rtcansend_DEPENDENCIES = ../../native/libnative.la \
-	../../rtdm/librtdm.la ../../common/libxenomai.la
+	../../posix/libpthread_rt.la ../../rtdm/librtdm.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -252,19 +252,19 @@ top_srcdir = @top_srcdir@
 rtcanconfig_SOURCES = rtcanconfig.c
 rtcanconfig_LDADD = \
 	../../rtdm/librtdm.la \
-	../../common/libxenomai.la
+	../../posix/libpthread_rt.la
 
 rtcanrecv_SOURCES = rtcanrecv.c
 rtcanrecv_LDADD = \
 	../../native/libnative.la \
-	../../rtdm/librtdm.la \
-	../../common/libxenomai.la
+	../../posix/libpthread_rt.la \
+	../../rtdm/librtdm.la
 
 rtcansend_SOURCES = rtcansend.c
 rtcansend_LDADD = \
 	../../native/libnative.la \
-	../../rtdm/librtdm.la \
-	../../common/libxenomai.la
+	../../posix/libpthread_rt.la \
+	../../rtdm/librtdm.la
 
 all: all-am
 

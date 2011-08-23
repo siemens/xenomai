@@ -844,7 +844,6 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config:scripts/xeno-config-$rtcore_type.in \
 	scripts/xeno \
 	src/Makefile \
-	src/common/Makefile \
 	src/posix/Makefile \
 	src/native/Makefile \
 	src/rtdm/Makefile \

@@ -12,5 +12,4 @@ switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 switchtest_LDADD = \
 	../../posix/libpthread_rt.la \
-	../../common/libxenomai.la \
 	-lpthread -lrt

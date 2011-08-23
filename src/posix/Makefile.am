@@ -1,13 +1,22 @@
 includedir = $(prefix)/include/posix
 pkgconfigdir = $(libdir)/pkgconfig
 
+noinst_HEADERS = \
+	sem_heap.h
+
 lib_LTLIBRARIES = libpthread_rt.la
 
 CPPFLAGS += -I$(top_srcdir)/ksrc
 
-libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
+libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -lrt
 
 libpthread_rt_la_SOURCES = \
+	assert_context.c \
+	bind.c \
+	current.c \
+	sem_heap.c \
+	sigshadow.c \
+	timeconv.c \
 	init.c \
 	thread.c \
 	timer.c \

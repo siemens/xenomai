@@ -15,6 +15,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -36,7 +37,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = src/posix
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/ac_prog_cc_for_build.m4 \
 	$(top_srcdir)/config/docbook.m4 \
@@ -76,7 +78,10 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpthread_rt_la_LIBADD =
-am_libpthread_rt_la_OBJECTS = libpthread_rt_la-init.lo \
+am_libpthread_rt_la_OBJECTS = libpthread_rt_la-assert_context.lo \
+	libpthread_rt_la-bind.lo libpthread_rt_la-current.lo \
+	libpthread_rt_la-sem_heap.lo libpthread_rt_la-sigshadow.lo \
+	libpthread_rt_la-timeconv.lo libpthread_rt_la-init.lo \
 	libpthread_rt_la-thread.lo libpthread_rt_la-timer.lo \
 	libpthread_rt_la-semaphore.lo libpthread_rt_la-clock.lo \
 	libpthread_rt_la-cond.lo libpthread_rt_la-mq.lo \
@@ -102,6 +107,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libpthread_rt_la_SOURCES)
 DIST_SOURCES = $(libpthread_rt_la_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -262,9 +268,18 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 pkgconfigdir = $(libdir)/pkgconfig
+noinst_HEADERS = \
+	sem_heap.h
+
 lib_LTLIBRARIES = libpthread_rt.la
-libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 1:0:0 -lpthread
+libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -lrt
 libpthread_rt_la_SOURCES = \
+	assert_context.c \
+	bind.c \
+	current.c \
+	sem_heap.c \
+	sigshadow.c \
+	timeconv.c \
 	init.c \
 	thread.c \
 	timer.c \
@@ -359,17 +374,23 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-assert_context.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-bind.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-clock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-cond.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-current.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-mq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-mutex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-printf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-rtdm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-select.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-sem_heap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-semaphore.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-shm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-sigshadow.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-thread.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-timeconv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpthread_rt_la-wrappers.Plo@am__quote@
 
@@ -393,6 +414,48 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+libpthread_rt_la-assert_context.lo: assert_context.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-assert_context.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-assert_context.Tpo -c -o libpthread_rt_la-assert_context.lo `test -f 'assert_context.c' || echo '$(srcdir)/'`assert_context.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-assert_context.Tpo $(DEPDIR)/libpthread_rt_la-assert_context.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='assert_context.c' object='libpthread_rt_la-assert_context.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-assert_context.lo `test -f 'assert_context.c' || echo '$(srcdir)/'`assert_context.c
+
+libpthread_rt_la-bind.lo: bind.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-bind.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-bind.Tpo -c -o libpthread_rt_la-bind.lo `test -f 'bind.c' || echo '$(srcdir)/'`bind.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-bind.Tpo $(DEPDIR)/libpthread_rt_la-bind.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bind.c' object='libpthread_rt_la-bind.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-bind.lo `test -f 'bind.c' || echo '$(srcdir)/'`bind.c
+
+libpthread_rt_la-current.lo: current.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-current.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-current.Tpo -c -o libpthread_rt_la-current.lo `test -f 'current.c' || echo '$(srcdir)/'`current.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-current.Tpo $(DEPDIR)/libpthread_rt_la-current.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='current.c' object='libpthread_rt_la-current.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-current.lo `test -f 'current.c' || echo '$(srcdir)/'`current.c
+
+libpthread_rt_la-sem_heap.lo: sem_heap.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-sem_heap.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-sem_heap.Tpo -c -o libpthread_rt_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-sem_heap.Tpo $(DEPDIR)/libpthread_rt_la-sem_heap.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sem_heap.c' object='libpthread_rt_la-sem_heap.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-sem_heap.lo `test -f 'sem_heap.c' || echo '$(srcdir)/'`sem_heap.c
+
+libpthread_rt_la-sigshadow.lo: sigshadow.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-sigshadow.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-sigshadow.Tpo -c -o libpthread_rt_la-sigshadow.lo `test -f 'sigshadow.c' || echo '$(srcdir)/'`sigshadow.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-sigshadow.Tpo $(DEPDIR)/libpthread_rt_la-sigshadow.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='sigshadow.c' object='libpthread_rt_la-sigshadow.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-sigshadow.lo `test -f 'sigshadow.c' || echo '$(srcdir)/'`sigshadow.c
+
+libpthread_rt_la-timeconv.lo: timeconv.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-timeconv.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-timeconv.Tpo -c -o libpthread_rt_la-timeconv.lo `test -f 'timeconv.c' || echo '$(srcdir)/'`timeconv.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libpthread_rt_la-timeconv.Tpo $(DEPDIR)/libpthread_rt_la-timeconv.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='timeconv.c' object='libpthread_rt_la-timeconv.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libpthread_rt_la-timeconv.lo `test -f 'timeconv.c' || echo '$(srcdir)/'`timeconv.c
 
 libpthread_rt_la-init.lo: init.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpthread_rt_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libpthread_rt_la-init.lo -MD -MP -MF $(DEPDIR)/libpthread_rt_la-init.Tpo -c -o libpthread_rt_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
@@ -575,7 +638,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \

@@ -57,8 +57,7 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_cyclictest_OBJECTS = cyclictest-cyclictest.$(OBJEXT)
 cyclictest_OBJECTS = $(am_cyclictest_OBJECTS)
-cyclictest_DEPENDENCIES = ../../posix/libpthread_rt.la \
-	../../common/libxenomai.la
+cyclictest_DEPENDENCIES = ../../posix/libpthread_rt.la
 cyclictest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cyclictest_LDFLAGS) $(LDFLAGS) -o $@
@@ -242,7 +241,6 @@ cyclictest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -DIPIPE_
 cyclictest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 cyclictest_LDADD = \
 	../../posix/libpthread_rt.la \
-	../../common/libxenomai.la \
 	-lpthread -lrt
 
 all: all-am

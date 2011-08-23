@@ -1,9 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node3" href="$timebase_8h.html" title="nucleus/timebase.h" alt="" coords="175,83,321,112"/>
-<area shape="rect" id="node26" href="$stat_8h_source.html" title="nucleus/stat.h" alt="" coords="39,83,151,112"/>
-<area shape="rect" id="node5" href="$nucleus_2queue_8h_source.html" title="nucleus/queue.h" alt="" coords="132,160,257,189"/>
-<area shape="rect" id="node19" href="$vfile_8h.html" title="This file is part of the Xenomai project." alt="" coords="281,160,393,189"/>
-<area shape="rect" id="node7" href="$nucleus_2types_8h_source.html" title="nucleus/types.h" alt="" coords="133,237,256,267"/>
-<area shape="rect" id="node15" href="$assert_8h_source.html" title="nucleus/assert.h" alt="" coords="5,315,131,344"/>
-<area shape="rect" id="node13" href="$compiler_8h_source.html" title="nucleus/compiler.h" alt="" coords="475,315,616,344"/>
-</map>
