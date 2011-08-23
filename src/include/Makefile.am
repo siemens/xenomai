@@ -1,4 +1,3 @@
-SUBDIRS = copperplate vxworks psos
 
 if XENO_COBALT
 distclean-local:

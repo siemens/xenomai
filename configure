@@ -13053,7 +13053,7 @@ if test x$rtcore_type = xcobalt; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno src/Makefile src/posix/Makefile src/native/Makefile src/rtdm/Makefile src/copperplate/Makefile src/vxworks/Makefile src/psos/Makefile src/analogy/Makefile src/include/Makefile src/include/copperplate/Makefile src/include/vxworks/Makefile src/include/psos/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile src/utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno src/Makefile src/posix/Makefile src/native/Makefile src/rtdm/Makefile src/copperplate/Makefile src/vxworks/Makefile src/psos/Makefile src/analogy/Makefile src/include/Makefile src/testsuite/Makefile src/testsuite/latency/Makefile src/testsuite/cyclic/Makefile src/testsuite/switchtest/Makefile src/testsuite/clocktest/Makefile src/testsuite/klatency/Makefile src/testsuite/unit/Makefile src/testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile src/utils/Makefile src/utils/can/Makefile src/utils/analogy/Makefile src/utils/ps/Makefile src/utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -14180,9 +14180,6 @@ do
     "src/psos/Makefile") CONFIG_FILES="$CONFIG_FILES src/psos/Makefile" ;;
     "src/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES src/analogy/Makefile" ;;
     "src/include/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/Makefile" ;;
-    "src/include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/copperplate/Makefile" ;;
-    "src/include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/vxworks/Makefile" ;;
-    "src/include/psos/Makefile") CONFIG_FILES="$CONFIG_FILES src/include/psos/Makefile" ;;
     "src/testsuite/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/Makefile" ;;
     "src/testsuite/latency/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/latency/Makefile" ;;
     "src/testsuite/cyclic/Makefile") CONFIG_FILES="$CONFIG_FILES src/testsuite/cyclic/Makefile" ;;
@@ -14223,6 +14220,9 @@ do
     "include/posix/sys/Makefile") CONFIG_FILES="$CONFIG_FILES include/posix/sys/Makefile" ;;
     "include/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtdm/Makefile" ;;
     "include/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES include/analogy/Makefile" ;;
+    "include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/copperplate/Makefile" ;;
+    "include/vxworks/Makefile") CONFIG_FILES="$CONFIG_FILES include/vxworks/Makefile" ;;
+    "include/psos/Makefile") CONFIG_FILES="$CONFIG_FILES include/psos/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "doc/txt/Makefile") CONFIG_FILES="$CONFIG_FILES doc/txt/Makefile" ;;
     "doc/man/Makefile") CONFIG_FILES="$CONFIG_FILES doc/man/Makefile" ;;

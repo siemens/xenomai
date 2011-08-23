@@ -35,7 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = src/include/vxworks
+subdir = include/copperplate
 DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -237,22 +237,24 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-includesubdir = $(includedir)/vxworks
+includesubdir = $(includedir)/copperplate
 includesub_HEADERS = \
-	errnoLib.h	\
-	intLib.h	\
-	kernelLib.h	\
-	lstLib.h	\
-	memPartLib.h	\
-	msgQLib.h	\
-	rngLib.h	\
-	semLib.h	\
-	sysLib.h	\
-	taskInfo.h	\
-	taskLib.h	\
-	tickLib.h	\
-	types.h		\
-	wdLib.h
+	clockobj.h	\
+	cluster.h	\
+	hash.h		\
+	heapobj.h	\
+	init.h		\
+	list.h		\
+	lock.h		\
+	shared-list.h	\
+	private-list.h	\
+	notifier.h	\
+	panic.h		\
+	reference.h	\
+	registry.h	\
+	syncobj.h	\
+	threadobj.h	\
+	traceobj.h
 
 all: all-am
 
@@ -266,9 +268,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/include/vxworks/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/copperplate/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign src/include/vxworks/Makefile
+	  $(AUTOMAKE) --foreign include/copperplate/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

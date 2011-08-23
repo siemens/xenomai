@@ -20,7 +20,7 @@ libpsos_la_SOURCES =	\
 
 libpsos_la_CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/src/include
+	-I$(top_srcdir)/include
 
 EXTRA_DIST = testsuite
 

@@ -35,7 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = src/include/copperplate
+subdir = include/psos
 DIST_COMMON = $(includesub_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -237,25 +237,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-includesubdir = $(includedir)/copperplate
-includesub_HEADERS = \
-	clockobj.h	\
-	cluster.h	\
-	hash.h		\
-	heapobj.h	\
-	init.h		\
-	list.h		\
-	lock.h		\
-	shared-list.h	\
-	private-list.h	\
-	notifier.h	\
-	panic.h		\
-	reference.h	\
-	registry.h	\
-	syncobj.h	\
-	threadobj.h	\
-	traceobj.h
-
+includesubdir = $(includedir)/psos
+includesub_HEADERS = psos.h
 all: all-am
 
 .SUFFIXES:
@@ -268,9 +251,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/include/copperplate/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/psos/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign src/include/copperplate/Makefile
+	  $(AUTOMAKE) --foreign include/psos/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

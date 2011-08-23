@@ -852,9 +852,6 @@ AC_CONFIG_FILES([ \
 	src/psos/Makefile \
 	src/analogy/Makefile \
 	src/include/Makefile \
-	src/include/copperplate/Makefile \
-	src/include/vxworks/Makefile \
-	src/include/psos/Makefile \
 	src/testsuite/Makefile \
 	src/testsuite/latency/Makefile \
 	src/testsuite/cyclic/Makefile \
@@ -895,6 +892,9 @@ AC_CONFIG_FILES([ \
 	include/posix/sys/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
+	include/copperplate/Makefile \
+	include/vxworks/Makefile \
+	include/psos/Makefile \
 	])
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
