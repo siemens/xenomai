@@ -10,7 +10,7 @@ config XENO_HW_MATH_EMU
         bool
 	default y if MATH_EMU || 8XX_MINIMAL_FPEMU
 
-source "kernel/xenomai/nucleus/Kconfig"
+source "kernel/xenomai/Kconfig"
 
 menu "Machine"
 
@@ -50,5 +50,7 @@ config XENO_HW_UNLOCKED_SWITCH
 
 endmenu
 
-source "kernel/xenomai/Kconfig"
+source "kernel/xenomai/posix/Kconfig"
+source "kernel/xenomai/rtdm/Kconfig"
+source "kernel/xenomai/native/Kconfig"
 source "drivers/xenomai/Kconfig"

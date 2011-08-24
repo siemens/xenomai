@@ -6,7 +6,7 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libpthread_rt.la
 
-CPPFLAGS += -I$(top_srcdir)/ksrc
+CPPFLAGS += -I$(top_srcdir)/kernel/cobalt
 
 libpthread_rt_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 2:0:0 -lpthread -lrt
 

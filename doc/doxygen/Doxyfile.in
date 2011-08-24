@@ -19,28 +19,21 @@ PROJECT_NAME           = "Xenomai API"
 
 INPUT                  = \
         @top_srcdir@/include/nucleus \
-        @top_srcdir@/ksrc/nucleus \
-        @top_srcdir@/ksrc/arch \
+        @top_srcdir@/kernel/cobalt \
         @top_srcdir@/include/native \
-        @top_srcdir@/src/native \
-        @top_srcdir@/ksrc/native \
+        @top_srcdir@/lib/native \
         @top_srcdir@/include/rtdm \
-        @top_srcdir@/src/rtdm \
-        @top_srcdir@/ksrc/rtdm \
+        @top_srcdir@/lib/rtdm \
         @top_srcdir@/include/analogy \
-        @top_srcdir@/src/drvlib/analogy \
-        @top_srcdir@/ksrc/drivers/analogy \
-        @top_srcdir@/ksrc/posix \
+        @top_srcdir@/lib/analogy \
+        @top_srcdir@/kernel/drivers/analogy \
         @top_srcdir@/doc/doxygen
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
 # the \include command).
 
-EXAMPLE_PATH           = @top_srcdir@/ksrc/native/snippets \
-		         @top_srcdir@/ksrc/native/demos \
-		         @top_srcdir@/ksrc/posix/demos \
-		         @top_srcdir@/src/utils \
+EXAMPLE_PATH           = @top_srcdir@/utils \
 			 @top_srcdir@/examples
 
 #---------------------------------------------------------------------------
@@ -249,10 +242,8 @@ LATEX_HIDE_INDICES     = NO
 # Added top_buildir/include here for the definition of XENO_PROTO in
 # xeno_config.h
 INCLUDE_PATH           = \
-@top_srcdir@/ksrc/native \
-@top_srcdir@/ksrc/rtdm \
-@top_srcdir@/ksrc/drivers/analogy \
-@top_srcdir@/ksrc \
+@top_srcdir@/kernel/cobalt \
+@top_srcdir@/kernel/drivers \
 @top_builddir@/include \
 @top_srcdir@/include \
 @top_srcdir@/include/posix \

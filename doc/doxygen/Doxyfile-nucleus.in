@@ -14,8 +14,7 @@ PROJECT_NAME           = "Xenomai nanokernel API"
 
 INPUT                  = \
         @top_srcdir@/include/nucleus \
-        @top_srcdir@/ksrc/nucleus \
-        @top_srcdir@/ksrc/arch \
+        @top_srcdir@/kernel/cobalt \
         @top_srcdir@/doc/doxygen
 
 #---------------------------------------------------------------------------

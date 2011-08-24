@@ -2,7 +2,7 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-source "kernel/xenomai/nucleus/Kconfig"
+source "kernel/xenomai/Kconfig"
 
 menu "Machine"
 
@@ -28,5 +28,7 @@ config XENO_HW_FPU
 
 endmenu
 
-source "kernel/xenomai/skins/Kconfig"
+source "kernel/xenomai/posix/Kconfig"
+source "kernel/xenomai/rtdm/Kconfig"
+source "kernel/xenomai/native/Kconfig"
 source "drivers/xenomai/Kconfig"

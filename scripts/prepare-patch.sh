@@ -111,10 +111,10 @@ for linux_arch in $supported_arch ; do
             ;;
     esac
 
-    patch_link r m ksrc/arch/$base_arch arch/$linux_arch/xenomai
+    patch_link r m kernel/cobalt/arch/$base_arch arch/$linux_arch/xenomai
     patch_link r n include/asm-$base_arch arch/$linux_arch/include/asm/xenomai
 
-    p="+drivers-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
+    p="+core-\$(CONFIG_XENOMAI)		+= arch/$linux_arch/xenomai/"
     echo $p | patch_append arch/$linux_arch/Makefile
     diff_addons
 done
@@ -128,14 +128,11 @@ echo $p | patch_append kernel/Makefile
 # Create local directories then symlink to the source files from
 # there, so that we don't pollute the Xenomai source tree with
 # compilation files.
-patch_link n m ksrc/ kernel/xenomai
-patch_link n m ksrc/arch kernel/xenomai/arch
-patch_link r m ksrc/arch/generic kernel/xenomai/arch/generic
-patch_link n m ksrc/nucleus kernel/xenomai/nucleus
-patch_link n m ksrc/native kernel/xenomai/native
-patch_link n m ksrc/posix kernel/xenomai/posix
-patch_link n m ksrc/rtdm kernel/xenomai/rtdm
-patch_link r m ksrc/drivers drivers/xenomai
+patch_link n m kernel/cobalt kernel/xenomai
+patch_link n m kernel/cobalt/native kernel/xenomai/native
+patch_link n m kernel/cobalt/posix kernel/xenomai/posix
+patch_link n m kernel/cobalt/rtdm kernel/xenomai/rtdm
+patch_link r m kernel/drivers drivers/xenomai
 patch_link r n include/asm-generic include/asm-generic/xenomai
 patch_link n n include include/xenomai
 cd $xenomai_root
@@ -154,7 +151,7 @@ cd $xenomai_root
 #echo "Patch-id: xenomai" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 #echo "Architecture: all" >> $xenomai_root/debian/linux-patch-xenomai.kpatches
 
-find $xenomai_root/ksrc/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
+find $xenomai_root/kernel/cobalt/arch/ -name "adeos-ipipe-2.6.*-$supported_arch-*.patch" |
 while read f ; do
 
     file=`basename $f`

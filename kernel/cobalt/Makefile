@@ -1,4 +1,6 @@
 
+obj-$(CONFIG_XENOMAI) += posix/ rtdm/ native/
+
 obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
 xeno_nucleus-y := \

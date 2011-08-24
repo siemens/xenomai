@@ -266,7 +266,7 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config
 SUDO = sudo
 SUBDIRS = lib config include @XENO_MAYBE_DOCDIR@ scripts testsuite utils
-EXTRA_DIST = ksrc examples debian
+EXTRA_DIST = kernel examples debian
 all: all-recursive
 
 .SUFFIXES:
@@ -772,13 +772,13 @@ dev devices:
 @XENO_COBALT_TRUE@	   fi ; \
 @XENO_COBALT_TRUE@	fi ; \
 @XENO_COBALT_TRUE@	if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
-@XENO_COBALT_TRUE@	   for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
+@XENO_COBALT_TRUE@	   for f in $(srcdir)/kernel/cobalt/udev/*.rules ; do \
 @XENO_COBALT_TRUE@	   b=`basename $$f` ; \
 @XENO_COBALT_TRUE@	   grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
 @XENO_COBALT_TRUE@	   $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
 @XENO_COBALT_TRUE@	   done ; \
 @XENO_COBALT_TRUE@	else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
-@XENO_COBALT_TRUE@	      for f in $(srcdir)/ksrc/nucleus/udev/*.rules ; do \
+@XENO_COBALT_TRUE@	      for f in $(srcdir)/kernel/cobalt/udev/*.rules ; do \
 @XENO_COBALT_TRUE@		 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
 @XENO_COBALT_TRUE@	      done ; \
 @XENO_COBALT_TRUE@	   fi ; \

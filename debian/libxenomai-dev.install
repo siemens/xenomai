@@ -6,6 +6,3 @@ usr/lib/*.so
 usr/lib/posix.wrappers
 usr/share/man/man1/xeno-config.1
 ../../examples usr/share/libxenomai-dev
-../../ksrc/native/demos usr/share/libxenomai-dev/examples/kernel/native
-../../ksrc/native/snippets usr/share/libxenomai-dev/examples/kernel/native
-../../ksrc/posix/demos usr/share/libxenomai-dev/examples/kernel/posix

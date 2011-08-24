@@ -2,7 +2,7 @@ Utilities for RT-Socket-CAN
 ===========================
 
 For further information on RT-Socket-CAN, especially the kernel space
-part, please have a look to "ksrc/drivers/can/README".
+part, please have a look to "kernel/drivers/can/README".
 
 Installation:
 ------------
