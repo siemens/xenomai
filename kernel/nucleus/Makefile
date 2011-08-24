@@ -2,7 +2,7 @@
 obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
 
 xeno_nucleus-y := \
-	bufd.o heap.o intr.o pod.o registry.o \
+	hal.o bufd.o heap.o intr.o pod.o registry.o \
 	synch.o thread.o timebase.o timer.o shadow.o \
 	sched.o sched-idle.o sched-rt.o
 
