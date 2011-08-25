@@ -1,24 +1,10 @@
 
-obj-$(CONFIG_XENOMAI) += posix/ rtdm/ native/
+obj-$(CONFIG_XENOMAI) += nucleus/ rtdm/ native/ xeno_posix.o
 
-obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
+xeno_posix-y := sched.o thread_attr.o thread.o mutex_attr.o mutex.o \
+		cond_attr.o cond.o sem.o cancel.o once.o signal.o tsd.o \
+		clock.o timer.o registry.o mq.o module.o apc.o syscall.o
 
-xeno_nucleus-y := \
-	hal.o bufd.o heap.o intr.o pod.o registry.o \
-	synch.o thread.o timebase.o timer.o shadow.o \
-	sched.o sched-idle.o sched-rt.o
+xeno_posix-$(CONFIG_XENO_OPT_POSIX_SHM) += shm.o
 
-xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_SPORADIC) += sched-sporadic.o
-xeno_nucleus-$(CONFIG_XENO_OPT_SCHED_TP) += sched-tp.o
-
-xeno_nucleus-$(CONFIG_XENO_OPT_PIPE) += pipe.o
-xeno_nucleus-$(CONFIG_XENO_OPT_MAP) += map.o
-xeno_nucleus-$(CONFIG_XENO_OPT_SELECT) += select.o
-xeno_nucleus-$(CONFIG_XENO_OPT_DEBUG) += debug.o
-xeno_nucleus-$(CONFIG_PROC_FS) += vfile.o
-
-# CAUTION: this module shall appear last, so that dependencies may
-# exist on initcalls defined by other object files.
-xeno_nucleus-y += module.o
-
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai

@@ -62,14 +62,14 @@ am_arith_OBJECTS = arith-arith.$(OBJEXT) \
 	arith-arith-noinline.$(OBJEXT)
 arith_OBJECTS = $(am_arith_OBJECTS)
 arith_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 arith_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(arith_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_check_vdso_OBJECTS = check_vdso-check-vdso.$(OBJEXT)
 check_vdso_OBJECTS = $(am_check_vdso_OBJECTS)
 check_vdso_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 check_vdso_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(check_vdso_LDFLAGS) $(LDFLAGS) -o $@
@@ -77,7 +77,7 @@ am_cond_torture_native_OBJECTS =  \
 	cond_torture_native-cond-torture.$(OBJEXT)
 cond_torture_native_OBJECTS = $(am_cond_torture_native_OBJECTS)
 cond_torture_native_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 cond_torture_native_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cond_torture_native_LDFLAGS) $(LDFLAGS) -o $@
@@ -85,7 +85,7 @@ am_cond_torture_posix_OBJECTS =  \
 	cond_torture_posix-cond-torture.$(OBJEXT)
 cond_torture_posix_OBJECTS = $(am_cond_torture_posix_OBJECTS)
 cond_torture_posix_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 cond_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cond_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
@@ -93,7 +93,7 @@ am_mutex_torture_native_OBJECTS =  \
 	mutex_torture_native-mutex-torture.$(OBJEXT)
 mutex_torture_native_OBJECTS = $(am_mutex_torture_native_OBJECTS)
 mutex_torture_native_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 mutex_torture_native_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(mutex_torture_native_LDFLAGS) $(LDFLAGS) -o $@
@@ -101,21 +101,21 @@ am_mutex_torture_posix_OBJECTS =  \
 	mutex_torture_posix-mutex-torture.$(OBJEXT)
 mutex_torture_posix_OBJECTS = $(am_mutex_torture_posix_OBJECTS)
 mutex_torture_posix_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 mutex_torture_posix_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(mutex_torture_posix_LDFLAGS) $(LDFLAGS) -o $@
 am_rtdm_OBJECTS = rtdm-rtdm.$(OBJEXT)
 rtdm_OBJECTS = $(am_rtdm_OBJECTS)
 rtdm_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 rtdm_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(rtdm_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_wakeup_time_OBJECTS = wakeup_time-wakeup-time.$(OBJEXT)
 wakeup_time_OBJECTS = $(am_wakeup_time_OBJECTS)
 wakeup_time_DEPENDENCIES = ../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 wakeup_time_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(wakeup_time_LDFLAGS) $(LDFLAGS) -o $@
@@ -302,90 +302,112 @@ testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 arith_CPPFLAGS = \
-	@XENO_USER_CFLAGS@  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 arith_LDFLAGS = @XENO_USER_LDFLAGS@
 arith_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 wakeup_time_SOURCES = wakeup-time.c
 wakeup_time_CPPFLAGS = \
-	@XENO_USER_CFLAGS@  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 wakeup_time_LDFLAGS = @XENO_USER_LDFLAGS@
 wakeup_time_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 mutex_torture_posix_SOURCES = mutex-torture.c
 mutex_torture_posix_CPPFLAGS = \
-	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-DXENO_POSIX			\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 mutex_torture_posix_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 mutex_torture_posix_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 mutex_torture_native_SOURCES = mutex-torture.c
 mutex_torture_native_CPPFLAGS = \
-	@XENO_USER_CFLAGS@  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 mutex_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
 mutex_torture_native_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 cond_torture_posix_SOURCES = cond-torture.c
 cond_torture_posix_CPPFLAGS = \
-	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-DXENO_POSIX			\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 cond_torture_posix_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 cond_torture_posix_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 cond_torture_native_SOURCES = cond-torture.c
 cond_torture_native_CPPFLAGS = \
-	@XENO_USER_CFLAGS@  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 cond_torture_native_LDFLAGS = @XENO_USER_LDFLAGS@
 cond_torture_native_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 check_vdso_SOURCES = check-vdso.c
 check_vdso_CPPFLAGS = \
-	@XENO_USER_CFLAGS@  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 check_vdso_LDFLAGS = @XENO_USER_LDFLAGS@
 check_vdso_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS = \
-	-I$(top_srcdir)/include/posix @XENO_USER_CFLAGS@ -g -DXENO_POSIX  -Wno-missing-prototypes \
-	-I$(top_srcdir)/include
+	@XENO_USER_CFLAGS@		\
+	-DXENO_POSIX			\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 rtdm_LDFLAGS = $(XENO_POSIX_WRAPPERS) @XENO_USER_LDFLAGS@
 rtdm_LDADD = \
 	../../lib/native/libnative.la \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt -lm
 
 all: all-am

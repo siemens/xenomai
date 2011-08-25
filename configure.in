@@ -45,7 +45,7 @@ fi
 
 AC_CONFIG_HEADERS(lib/include/xeno_config.h)
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(lib/posix/thread.c)
+AC_CONFIG_SRCDIR(lib/cobalt/thread.c)
 AC_PREFIX_DEFAULT(/usr/xenomai)
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -732,14 +732,14 @@ AC_SUBST(LD_FILE_OPTION)
 
 if test x$rtcore_type = xcobalt; then
    if [[ $ac_cv_ld_file_option = yes ]]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/posix/posix.wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/cobalt/posix.wrappers"
    else
 	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
 			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/lib/posix/posix.wrappers`
+		done < $srcdir/lib/cobalt/posix.wrappers`
    fi
    AC_SUBST([CONFIG_STATUS_DEPENDENCIES],
-   	['$(top_srcdir)/lib/posix/posix.wrappers'])
+   	['$(top_srcdir)/lib/cobalt/posix.wrappers'])
    AC_SUBST(XENO_POSIX_WRAPPERS)
    AC_MSG_CHECKING(whether the POSIX skin library automatically calls mlockall)
    AC_ARG_ENABLE(posix-auto-mlockall,
@@ -844,7 +844,7 @@ AC_CONFIG_FILES([ \
 	scripts/xeno-config:scripts/xeno-config-$rtcore_type.in \
 	scripts/xeno \
 	lib/Makefile \
-	lib/posix/Makefile \
+	lib/cobalt/Makefile \
 	lib/native/Makefile \
 	lib/rtdm/Makefile \
 	lib/copperplate/Makefile \
@@ -887,9 +887,9 @@ AC_CONFIG_FILES([ \
 	include/asm-sim/Makefile \
 	include/asm-sim/bits/Makefile \
 	include/native/Makefile \
-	include/nucleus/Makefile \
-	include/posix/Makefile \
-	include/posix/sys/Makefile \
+	include/cobalt/Makefile \
+	include/cobalt/sys/Makefile \
+	include/cobalt/nucleus/Makefile \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/copperplate/Makefile \

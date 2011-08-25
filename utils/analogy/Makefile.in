@@ -60,33 +60,33 @@ PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
 am_analogy_config_OBJECTS = analogy_config.$(OBJEXT)
 analogy_config_OBJECTS = $(am_analogy_config_OBJECTS)
 analogy_config_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
-	../../lib/rtdm/librtdm.la ../../lib/posix/libpthread_rt.la
+	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
 am_cmd_bits_OBJECTS = cmd_bits.$(OBJEXT)
 cmd_bits_OBJECTS = $(am_cmd_bits_OBJECTS)
 cmd_bits_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
-	../../lib/rtdm/librtdm.la ../../lib/posix/libpthread_rt.la
+	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
 am_cmd_read_OBJECTS = cmd_read.$(OBJEXT)
 cmd_read_OBJECTS = $(am_cmd_read_OBJECTS)
 cmd_read_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
 	../../lib/native/libnative.la ../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 am_cmd_write_OBJECTS = cmd_write.$(OBJEXT)
 cmd_write_OBJECTS = $(am_cmd_write_OBJECTS)
 cmd_write_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
 	../../lib/native/libnative.la ../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 am_insn_bits_OBJECTS = insn_bits.$(OBJEXT)
 insn_bits_OBJECTS = $(am_insn_bits_OBJECTS)
 insn_bits_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
-	../../lib/rtdm/librtdm.la ../../lib/posix/libpthread_rt.la
+	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
 am_insn_read_OBJECTS = insn_read.$(OBJEXT)
 insn_read_OBJECTS = $(am_insn_read_OBJECTS)
 insn_read_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
-	../../lib/rtdm/librtdm.la ../../lib/posix/libpthread_rt.la
+	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
 am_insn_write_OBJECTS = insn_write.$(OBJEXT)
 insn_write_OBJECTS = $(am_insn_write_OBJECTS)
 insn_write_DEPENDENCIES = ../../lib/analogy/libanalogy.la \
-	../../lib/rtdm/librtdm.la ../../lib/posix/libpthread_rt.la
+	../../lib/rtdm/librtdm.la ../../lib/cobalt/libcobalt.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib/include
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -131,6 +131,7 @@ CONFIG_STATUS_DEPENDENCIES = @CONFIG_STATUS_DEPENDENCIES@
 CPP = @CPP@
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
+	-I$(top_srcdir)/include/cobalt \
 	-I$(top_srcdir)/include
 
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
@@ -274,45 +275,45 @@ analogy_config_SOURCES = analogy_config.c
 analogy_config_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 cmd_read_SOURCES = cmd_read.c
 cmd_read_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/native/libnative.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 cmd_write_SOURCES = cmd_write.c
 cmd_write_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/native/libnative.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 cmd_bits_SOURCES = cmd_bits.c
 cmd_bits_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 insn_read_SOURCES = insn_read.c
 insn_read_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 insn_write_SOURCES = insn_write.c
 insn_write_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 insn_bits_SOURCES = insn_bits.c
 insn_bits_LDADD = \
 	../../lib/analogy/libanalogy.la \
 	../../lib/rtdm/librtdm.la \
-	../../lib/posix/libpthread_rt.la
+	../../lib/cobalt/libcobalt.la
 
 all: all-am
 

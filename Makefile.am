@@ -3,7 +3,6 @@ ACLOCAL_AMFLAGS=-I config
 SUDO=sudo
 
 SUBDIRS = lib config include @XENO_MAYBE_DOCDIR@ scripts testsuite utils
- 
 
 EXTRA_DIST = kernel examples debian
 

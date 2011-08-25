@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <mqueue.h>
 #else /* __XENO_SIM */
-#include <posix/posix.h>
+#include <cobalt/posix.h>
 #endif /* __XENO_SIM */
 
 #define CONSUMER_TASK_PRI    1

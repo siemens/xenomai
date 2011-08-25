@@ -706,7 +706,7 @@ PACKAGE_STRING='Xenomai 2.5.94'
 PACKAGE_BUGREPORT='xenomai-help@gna.org'
 PACKAGE_URL=''
 
-ac_unique_file="lib/posix/thread.c"
+ac_unique_file="lib/cobalt/thread.c"
 ac_default_prefix=/usr/xenomai
 # Factoring default headers for most tests.
 ac_includes_default="\
@@ -12920,13 +12920,13 @@ LD_FILE_OPTION=$ac_cv_ld_file_option
 
 if test x$rtcore_type = xcobalt; then
    if [ $ac_cv_ld_file_option = yes ]; then
-	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/posix/posix.wrappers"
+	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/cobalt/posix.wrappers"
    else
 	XENO_POSIX_WRAPPERS=`while read wrap_option symbol ; do \
 			echo -n "-Wl,$wrap_option,$symbol " ; \
-		done < $srcdir/lib/posix/posix.wrappers`
+		done < $srcdir/lib/cobalt/posix.wrappers`
    fi
-   CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/lib/posix/posix.wrappers'
+   CONFIG_STATUS_DEPENDENCIES='$(top_srcdir)/lib/cobalt/posix.wrappers'
 
 
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the POSIX skin library automatically calls mlockall" >&5
@@ -13053,7 +13053,7 @@ if test x$rtcore_type = xcobalt; then
 
 fi
 
-ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/posix/Makefile lib/native/Makefile lib/rtdm/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/nucleus/Makefile include/posix/Makefile include/posix/sys/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile scripts/Makefile scripts/xeno-config:scripts/xeno-config-$rtcore_type.in scripts/xeno lib/Makefile lib/cobalt/Makefile lib/native/Makefile lib/rtdm/Makefile lib/copperplate/Makefile lib/vxworks/Makefile lib/psos/Makefile lib/analogy/Makefile lib/include/Makefile testsuite/Makefile testsuite/latency/Makefile testsuite/cyclic/Makefile testsuite/switchtest/Makefile testsuite/clocktest/Makefile testsuite/klatency/Makefile testsuite/unit/Makefile testsuite/xeno-test/Makefile src/testsuite/regression/Makefile src/testsuite/regression/native/Makefile src/testsuite/regression/posix/Makefile src/testsuite/regression/native+posix/Makefile utils/Makefile utils/can/Makefile utils/analogy/Makefile utils/ps/Makefile utils/slackspot/Makefile include/Makefile include/asm-generic/Makefile include/asm-generic/bits/Makefile include/asm-blackfin/Makefile include/asm-blackfin/bits/Makefile include/asm-x86/Makefile include/asm-x86/bits/Makefile include/asm-powerpc/Makefile include/asm-powerpc/bits/Makefile include/asm-arm/Makefile include/asm-arm/bits/Makefile include/asm-nios2/Makefile include/asm-nios2/bits/Makefile include/asm-sh/Makefile include/asm-sh/bits/Makefile include/asm-sim/Makefile include/asm-sim/bits/Makefile include/native/Makefile include/cobalt/Makefile include/cobalt/sys/Makefile include/cobalt/nucleus/Makefile include/rtdm/Makefile include/analogy/Makefile include/copperplate/Makefile include/vxworks/Makefile include/psos/Makefile"
 
 
 if test \! x$XENO_MAYBE_DOCDIR = x ; then
@@ -14172,7 +14172,7 @@ do
     "scripts/xeno-config") CONFIG_FILES="$CONFIG_FILES scripts/xeno-config:scripts/xeno-config-$rtcore_type.in" ;;
     "scripts/xeno") CONFIG_FILES="$CONFIG_FILES scripts/xeno" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
-    "lib/posix/Makefile") CONFIG_FILES="$CONFIG_FILES lib/posix/Makefile" ;;
+    "lib/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES lib/cobalt/Makefile" ;;
     "lib/native/Makefile") CONFIG_FILES="$CONFIG_FILES lib/native/Makefile" ;;
     "lib/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES lib/rtdm/Makefile" ;;
     "lib/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES lib/copperplate/Makefile" ;;
@@ -14215,9 +14215,9 @@ do
     "include/asm-sim/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/Makefile" ;;
     "include/asm-sim/bits/Makefile") CONFIG_FILES="$CONFIG_FILES include/asm-sim/bits/Makefile" ;;
     "include/native/Makefile") CONFIG_FILES="$CONFIG_FILES include/native/Makefile" ;;
-    "include/nucleus/Makefile") CONFIG_FILES="$CONFIG_FILES include/nucleus/Makefile" ;;
-    "include/posix/Makefile") CONFIG_FILES="$CONFIG_FILES include/posix/Makefile" ;;
-    "include/posix/sys/Makefile") CONFIG_FILES="$CONFIG_FILES include/posix/sys/Makefile" ;;
+    "include/cobalt/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/Makefile" ;;
+    "include/cobalt/sys/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/sys/Makefile" ;;
+    "include/cobalt/nucleus/Makefile") CONFIG_FILES="$CONFIG_FILES include/cobalt/nucleus/Makefile" ;;
     "include/rtdm/Makefile") CONFIG_FILES="$CONFIG_FILES include/rtdm/Makefile" ;;
     "include/analogy/Makefile") CONFIG_FILES="$CONFIG_FILES include/analogy/Makefile" ;;
     "include/copperplate/Makefile") CONFIG_FILES="$CONFIG_FILES include/copperplate/Makefile" ;;

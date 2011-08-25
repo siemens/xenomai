@@ -1,1163 +1,658 @@
-/**
- * @file
- * @note Copyright (C) 2001,2002,2003,2007 Philippe Gerum <rpm@xenomai.org>.
- *       Copyright (C) 2004 Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>
+/*
+ * Copyright (C) 2005 Philippe Gerum <rpm@xenomai.org>.
  *
- * Xenomai is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
- * Xenomai is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Xenomai; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
- *
- * \ingroup timer
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * \ingroup nucleus
- * \defgroup timer Timer services.
- *
- * The Xenomai timer facility always operate the timer hardware in
- * oneshot mode, regardless of the time base in effect. Periodic
- * timing is obtained through a software emulation, using cascading
- * timers.
- *
- * Depending on the time base used, the timer object stores time
- * values either as count of jiffies (periodic), or as count of CPU
- * ticks (aperiodic).
+/**
+ * @addtogroup posix_time
  *
  *@{*/
 
-#include <nucleus/pod.h>
-#include <nucleus/thread.h>
-#include <nucleus/timer.h>
-#include <asm/xenomai/bits/timer.h>
+#include <cobalt/semaphore.h>
+#include "timer.h"
+#include "thread.h"
+#include "timer.h"
+#include "sem.h"
 
-static inline void xntimer_enqueue_aperiodic(xntimer_t *timer)
+#define PSE51_TIMER_MAX  128
+
+struct pse51_timer {
+
+	xntimer_t timerbase;
+
+	unsigned queued;
+	unsigned overruns;
+
+	xnholder_t link; /* link in process or global timers queue. */
+
+#define link2tm(laddr, member)							\
+    ((struct pse51_timer *)(((char *)laddr) - offsetof(struct pse51_timer, member)))
+
+	xnholder_t tlink; /* link in thread timers queue. */
+
+	pse51_siginfo_t si;
+
+	clockid_t clockid;
+	pthread_t owner;
+	pse51_kqueues_t *owningq;
+};
+
+static xnqueue_t timer_freeq;
+
+static struct pse51_timer timer_pool[PSE51_TIMER_MAX];
+
+static void pse51_base_timer_handler(xntimer_t *xntimer)
 {
-	xntimerq_t *q = &timer->sched->timerqueue;
-	xntimerq_insert(q, &timer->aplink);
-	__clrbits(timer->status, XNTIMER_DEQUEUED);
-	xnstat_counter_inc(&timer->scheduled);
-}
+	struct pse51_timer *timer;
+	struct pse51_sem *sem;
 
-static inline void xntimer_dequeue_aperiodic(xntimer_t *timer)
-{
-	xntimerq_remove(&timer->sched->timerqueue, &timer->aplink);
-	__setbits(timer->status, XNTIMER_DEQUEUED);
-}
-
-void xntimer_next_local_shot(xnsched_t *sched)
-{
-	struct xntimer *timer;
-	xnsticks_t delay;
-	xntimerq_it_t it;
-	xntimerh_t *h;
-
-	/*
-	 * Do not reprogram locally when inside the tick handler -
-	 * will be done on exit anyway. Also exit if there is no
-	 * pending timer.
-	 */
-	if (testbits(sched->status, XNINTCK))
+	timer = container_of(xntimer, struct pse51_timer, timerbase);
+	if (timer->si.info.si_signo) {
+		if (!timer->queued) {
+			timer->queued = 1;
+			pse51_sigqueue_inner(timer->owner, &timer->si);
+		}
 		return;
-
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
-	if (h == NULL)
-		return;
-
-	/*
-	 * Here we try to defer the host tick heading the timer queue,
-	 * so that it does not preempt a real-time activity uselessly,
-	 * in two cases:
-	 *
-	 * 1) a rescheduling is pending for the current CPU. We may
-	 * assume that a real-time thread is about to resume, so we
-	 * want to move the host tick out of the way until the host
-	 * kernel resumes, unless there is no other outstanding
-	 * timers.
-	 *
-	 * 2) the current thread is running in primary mode, in which
-	 * case we may also defer the host tick until the host kernel
-	 * resumes.
-	 *
-	 * The host tick deferral is cleared whenever Xenomai is about
-	 * to yield control to the host kernel (see
-	 * __xnpod_schedule()), or a timer with an earlier timeout
-	 * date is scheduled, whichever comes first.
-	 */
-	__clrbits(sched->lflags, XNHDEFER);
-	timer = aplink2timer(h);
-	if (unlikely(timer == &sched->htimer)) {
-		if (xnsched_resched_p(sched) ||
-		    !xnthread_test_state(sched->curr, XNROOT)) {
-			h = xntimerq_it_next(&sched->timerqueue, &it, h);
-			if (h) {
-				__setbits(sched->lflags, XNHDEFER);
-				timer = aplink2timer(h);
-			}
-		}
 	}
 
-	delay = xntimerh_date(&timer->aplink) -
-		(xnarch_get_cpu_tsc() + nklatency);
-
-	if (delay < 0)
-		delay = 0;
-	else if (delay > ULONG_MAX)
-		delay = ULONG_MAX;
-
-	xnarch_trace_tick((unsigned)delay);
-
-	xnarch_program_timer_shot(delay);
-}
-
-static inline int xntimer_heading_p(struct xntimer *timer)
-{
-	struct xnsched *sched = timer->sched;
-	xntimerq_it_t it;
-	xntimerh_t *h;
-
-	h = xntimerq_it_begin(&sched->timerqueue, &it);
-	if (h == &timer->aplink)
-		return 1;
-
-	if (testbits(sched->lflags, XNHDEFER)) {
-		h = xntimerq_it_next(&sched->timerqueue, &it, h);
-		if (h == &timer->aplink)
-			return 1;
-	}
-
-	return 0;
-}
-
-static inline void xntimer_next_remote_shot(xnsched_t *sched)
-{
-	xnarch_send_timer_ipi(xnarch_cpumask_of_cpu(xnsched_cpu(sched)));
-}
-
-static void
-xntimer_adjust_aperiodic(xntimer_t *timer, xnsticks_t delta)
-{
-
-	xntimerh_date(&timer->aplink) -= delta;
-
-	if (testbits(timer->status, XNTIMER_PERIODIC)) {
-		xnticks_t period = xntimer_interval(timer);
-		xnsticks_t diff;
-		xnticks_t mod;
-
-		timer->pexpect -= delta;
-		diff = xnarch_get_cpu_tsc() - xntimerh_date(&timer->aplink);
-
-		if ((xnsticks_t) (diff - period) >= 0) {
-			/* timer should tick several times before now, instead
-			 of calling timer->handler several times, we change
-			 the timer date without changing its pexpect, so that
-			 timer will tick only once and the lost ticks will be
-			 counted as overruns. */
-			mod = xnarch_mod64(diff, period);
-			xntimerh_date(&timer->aplink) += diff - mod;
-		} else if (delta < 0
-			   && testbits(timer->status, XNTIMER_FIRED)
-			   && (xnsticks_t) (diff + period) <= 0) {
-			/* timer is periodic and NOT waiting for its first shot,
-			   so we make it tick sooner than its original date in
-			   order to avoid the case where by adjusting time to a
-			   sooner date, real-time periodic timers do not tick
-			   until the original date has passed. */
-			mod = xnarch_mod64(-diff, period);
-			xntimerh_date(&timer->aplink) += diff + mod;
-			timer->pexpect += diff + mod;
-		}
-	}
-
-	xntimer_enqueue_aperiodic(timer);
-}
-
-void xntimer_adjust_all_aperiodic(xnsticks_t delta)
-{
-	unsigned cpu, nr_cpus;
-	xnqueue_t adjq;
-
-	initq(&adjq);
-	delta = xnarch_ns_to_tsc(delta);
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-		xnsched_t *sched = xnpod_sched_slot(cpu);
-		xntimerq_t *q = &sched->timerqueue;
-		xnholder_t *adjholder;
-		xntimerh_t *holder;
-		xntimerq_it_t it;
-
-		for (holder = xntimerq_it_begin(q, &it); holder;
-		     holder = xntimerq_it_next(q, &it, holder)) {
-			xntimer_t *timer = aplink2timer(holder);
-			if (testbits(timer->status, XNTIMER_REALTIME)) {
-				inith(&timer->adjlink);
-				appendq(&adjq, &timer->adjlink);
-			}
-		}
-
-		while ((adjholder = getq(&adjq))) {
-			xntimer_t *timer = adjlink2timer(adjholder);
-			xntimer_dequeue_aperiodic(timer);
-			xntimer_adjust_aperiodic(timer, delta);
-		}
-
-		if (sched != xnpod_current_sched())
-			xntimer_next_remote_shot(sched);
-		else
-			xntimer_next_local_shot(sched);
-	}
-}
-
-int xntimer_start_aperiodic(xntimer_t *timer,
-			    xnticks_t value, xnticks_t interval,
-			    xntmode_t mode)
-{
-	xnticks_t date, now;
-
-	trace_mark(xn_nucleus, timer_start,
-		   "timer %p base %s value %Lu interval %Lu mode %u",
-		   timer, xntimer_base(timer)->name, value, interval, mode);
-
-	if (!testbits(timer->status, XNTIMER_DEQUEUED))
-		xntimer_dequeue_aperiodic(timer);
-
-	now = xnarch_get_cpu_tsc();
-
-	__clrbits(timer->status,
-		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
-	switch (mode) {
-	case XN_RELATIVE:
-		if ((xnsticks_t)value < 0)
-			return -ETIMEDOUT;
-		date = xnarch_ns_to_tsc(value) + now;
-		break;
-	case XN_REALTIME:
-		__setbits(timer->status, XNTIMER_REALTIME);
-		value -= nktbase.wallclock_offset;
-		/* fall through */
-	default: /* XN_ABSOLUTE || XN_REALTIME */
-		date = xnarch_ns_to_tsc(value);
-		if ((xnsticks_t)(date - now) <= 0)
-			return -ETIMEDOUT;
-		break;
-	}
-
-	xntimerh_date(&timer->aplink) = date;
-
-	timer->interval = XN_INFINITE;
-	if (interval != XN_INFINITE) {
-		timer->interval = xnarch_ns_to_tsc(interval);
-		timer->pexpect = date;
-		__setbits(timer->status, XNTIMER_PERIODIC);
-	}
-
-	xntimer_enqueue_aperiodic(timer);
-	if (xntimer_heading_p(timer)) {
-		if (xntimer_sched(timer) != xnpod_current_sched())
-			xntimer_next_remote_shot(xntimer_sched(timer));
-		else
-			xntimer_next_local_shot(xntimer_sched(timer));
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(xntimer_start_aperiodic);
-
-void xntimer_stop_aperiodic(xntimer_t *timer)
-{
-	int heading;
-
-	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
-
-	heading = xntimer_heading_p(timer);
-	xntimer_dequeue_aperiodic(timer);
-
-	/* If we removed the heading timer, reprogram the next shot if
-	   any. If the timer was running on another CPU, let it tick. */
-	if (heading && xntimer_sched(timer) == xnpod_current_sched())
-		xntimer_next_local_shot(xntimer_sched(timer));
-}
-EXPORT_SYMBOL_GPL(xntimer_stop_aperiodic);
-
-xnticks_t xntimer_get_date_aperiodic(xntimer_t *timer)
-{
-	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink));
-}
-EXPORT_SYMBOL_GPL(xntimer_get_date_aperiodic);
-
-xnticks_t xntimer_get_timeout_aperiodic(xntimer_t *timer)
-{
-	xnticks_t tsc = xnarch_get_cpu_tsc();
-
-	if (xntimerh_date(&timer->aplink) < tsc)
-		return 1;	/* Will elapse shortly. */
-
-	return xnarch_tsc_to_ns(xntimerh_date(&timer->aplink) - tsc);
-}
-EXPORT_SYMBOL_GPL(xntimer_get_timeout_aperiodic);
-
-xnticks_t xntimer_get_interval_aperiodic(xntimer_t *timer)
-{
-	return xnarch_tsc_to_ns_rounded(timer->interval);
-}
-EXPORT_SYMBOL_GPL(xntimer_get_interval_aperiodic);
-
-xnticks_t xntimer_get_raw_expiry_aperiodic(xntimer_t *timer)
-{
-	return xntimerh_date(&timer->aplink);
-}
-EXPORT_SYMBOL_GPL(xntimer_get_raw_expiry_aperiodic);
-
-/*!
- * @internal
- * \fn void xntimer_tick_aperiodic(void)
- *
- * \brief Process a timer tick for the aperiodic master time base.
- *
- * This routine informs all active timers that the clock has been
- * updated by processing the outstanding timer list. Elapsed timer
- * actions will be fired.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Interrupt service routine, nklock locked, interrupts off
- *
- * Rescheduling: never.
- */
-
-void xntimer_tick_aperiodic(void)
-{
-	xnsched_t *sched = xnpod_current_sched();
-	xntimerq_t *timerq = &sched->timerqueue;
-	xnticks_t now, interval;
-	xntimerh_t *holder;
-	xntimer_t *timer;
-	xnsticks_t delta;
-
-	/*
-	 * Optimisation: any local timer reprogramming triggered by
-	 * invoked timer handlers can wait until we leave the tick
-	 * handler. Use this status flag as hint to
-	 * xntimer_start_aperiodic.
-	 */
-	__setbits(sched->status, XNINTCK);
-
-	now = xnarch_get_cpu_tsc();
-	while ((holder = xntimerq_head(timerq)) != NULL) {
-		timer = aplink2timer(holder);
+	/* Null signo means to post a semaphore instead. */
+	sem = timer->si.info.si_value.sival_ptr;
+	if (sem && sem_post_inner(sem, NULL))
 		/*
-		 * If the delay to the next shot is greater than the
-		 * intrinsic latency value, we may stop scanning the
-		 * timer queue there, since timeout dates are ordered
-		 * by increasing values.
+		 * On error, forget sema4 for next shots. In essence,
+		 * the timer stops notifying anyone at expiry.
 		 */
-		delta = (xnsticks_t)(xntimerh_date(&timer->aplink) - now);
-		if (delta > (xnsticks_t)(nklatency + nktimerlat))
-			break;
+		timer->si.info.si_value.sival_ptr = NULL;
+}
 
-		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
+/* Must be called with nklock locked, irq off. */
+void pse51_timer_notified(pse51_siginfo_t * si)
+{
+	struct pse51_timer *timer = link2tm(si, si);
+	xnticks_t now;
 
-		xntimer_dequeue_aperiodic(timer);
-		xnstat_counter_inc(&timer->fired);
+	timer->queued = 0;
+	/* We need this two staged overruns count. The overruns count returned by
+	   timer_getoverrun is the count of overruns which occured between the time
+	   the signal was queued and the time this signal was accepted by the
+	   application.
+	   In other words, if the timer elapses again after pse51_timer_notified get
+	   called (i.e. the signal is accepted by the application), the signal shall
+	   be queued again, and later overruns should count for that new
+	   notification, not the one the application is currently handling. */
 
-		if (likely(timer != &sched->htimer)) {
-			if (likely(!testbits(nktbase.status, XNTBLCK)
-				   || testbits(timer->status, XNTIMER_NOBLCK))) {
-				timer->handler(timer);
-				now = xnarch_get_cpu_tsc();
-				/*
-				 * If the elapsed timer has no reload
-				 * value, or was re-enqueued or killed
-				 * by the timeout handler: don't not
-				 * re-enqueue it for the next shot.
-				 */
-				if (!xntimer_reload_p(timer))
-					continue;
-				__setbits(timer->status, XNTIMER_FIRED);
-			} else if (likely(!testbits(timer->status, XNTIMER_PERIODIC))) {
-				/*
-				 * Make the blocked timer elapse again
-				 * at a reasonably close date in the
-				 * future, waiting for the timebase to
-				 * be unlocked at some point. Timers
-				 * are blocked when single-stepping
-				 * into an application using a
-				 * debugger, so it is fine to wait for
-				 * 250 ms for the user to continue
-				 * program execution.
-				 */
-				interval = xnarch_ns_to_tsc(250000000ULL);
-				goto requeue;
-			}
-		} else {
-			/*
-			 * By postponing the propagation of the
-			 * low-priority host tick to the interrupt
-			 * epilogue (see xnintr_irq_handler()), we
-			 * save some I-cache, which translates into
-			 * precious microsecs on low-end hw.
-			 */
-			__setbits(sched->lflags, XNHTICK);
-			__clrbits(sched->lflags, XNHDEFER);
-			if (!testbits(timer->status, XNTIMER_PERIODIC))
-				continue;
-		}
-
-		interval = timer->interval;
-	requeue:
-		do {
-			xntimerh_date(&timer->aplink) += interval;
-		} while (xntimerh_date(&timer->aplink) < now + nklatency);
-		xntimer_enqueue_aperiodic(timer);
+	if (!xntimer_interval(&timer->timerbase)) {
+		timer->overruns = 0;
+		return;
 	}
 
-	__clrbits(sched->status, XNINTCK);
+	now = xntbase_get_rawclock(pse51_tbase);
 
-	xntimer_next_local_shot(sched);
+	timer->overruns = xntimer_get_overruns(&timer->timerbase, now);
 }
 
-static void xntimer_move_aperiodic(xntimer_t *timer)
-{
-	xntimer_enqueue_aperiodic(timer);
-
-	if (xntimer_heading_p(timer))
-		xntimer_next_remote_shot(timer->sched);
-}
-
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-
-static inline void xntimer_enqueue_periodic(xntimer_t *timer)
-{
-	unsigned slot = (xntlholder_date(&timer->plink) & XNTIMER_WHEELMASK);
-	unsigned cpu = xnsched_cpu(timer->sched);
-	struct percpu_cascade *pc = &base2slave(timer->base)->cascade[cpu];
-	/* Just prepend the new timer to the proper slot. */
-	xntlist_insert(&pc->wheel[slot], &timer->plink);
-	__clrbits(timer->status, XNTIMER_DEQUEUED);
-	xnstat_counter_inc(&timer->scheduled);
-}
-
-static inline void xntimer_dequeue_periodic(xntimer_t *timer)
-{
-	unsigned slot = (xntlholder_date(&timer->plink) & XNTIMER_WHEELMASK);
-	unsigned cpu = xnsched_cpu(timer->sched);
-	struct percpu_cascade *pc = &base2slave(timer->base)->cascade[cpu];
-	xntlist_remove(&pc->wheel[slot], &timer->plink);
-	__setbits(timer->status, XNTIMER_DEQUEUED);
-}
-
-static int xntimer_start_periodic(xntimer_t *timer,
-				  xnticks_t value, xnticks_t interval,
-				  xntmode_t mode)
-{
-	trace_mark(xn_nucleus, timer_start,
-		   "timer %p base %s value %Lu interval %Lu mode %u", timer,
-		   xntimer_base(timer)->name, value, interval, mode);
-
-	if (!testbits(timer->status, XNTIMER_DEQUEUED))
-		xntimer_dequeue_periodic(timer);
-
-	__clrbits(timer->status,
-		  XNTIMER_REALTIME | XNTIMER_FIRED | XNTIMER_PERIODIC);
-	switch (mode) {
-	case XN_RELATIVE:
-		if ((xnsticks_t)value < 0)
-			return -ETIMEDOUT;
-		value += timer->base->jiffies;
-		break;
-	case XN_REALTIME:
-		__setbits(timer->status, XNTIMER_REALTIME);
-		value -= timer->base->wallclock_offset;
-		/* fall through */
-	default: /* XN_ABSOLUTE || XN_REALTIME */
-		if ((xnsticks_t)(value - timer->base->jiffies) <= 0)
-			return -ETIMEDOUT;
-		break;
-	}
-
-	xntlholder_date(&timer->plink) = value;
-	timer->interval = interval;
-	if (interval != XN_INFINITE) {
-		__setbits(timer->status, XNTIMER_PERIODIC);
-		timer->pexpect = value;
-	}
-
-	xntimer_enqueue_periodic(timer);
-
-	return 0;
-}
-
-static void xntimer_stop_periodic(xntimer_t *timer)
-{
-	trace_mark(xn_nucleus, timer_stop, "timer %p", timer);
-
-	xntimer_dequeue_periodic(timer);
-}
-
-static xnticks_t xntimer_get_date_periodic(xntimer_t *timer)
-{
-	return xntlholder_date(&timer->plink);
-}
-
-static xnticks_t xntimer_get_timeout_periodic(xntimer_t *timer)
-{
-	return xntlholder_date(&timer->plink) - timer->base->jiffies;
-}
-
-static xnticks_t xntimer_get_interval_periodic(xntimer_t *timer)
-{
-	return timer->interval;
-}
-
-static xnticks_t xntimer_get_raw_expiry_periodic(xntimer_t *timer)
-{
-	return xntlholder_date(&timer->plink);
-}
-
-static void xntimer_move_periodic(xntimer_t *timer)
-{
-	xntimer_enqueue_periodic(timer);
-}
-
-/*!
- * @internal
- * \fn void xntimer_tick_periodic(xntimer_t *mtimer)
+/**
+ * Create a timer object.
  *
- * \brief Process a timer tick for a slave periodic time base.
+ * This service creates a time object using the clock @a clockid.
  *
- * The periodic timer tick is cascaded from a software timer managed
- * from the master aperiodic time base; in other words, periodic
- * timing is emulated by software timers running in aperiodic timing
- * mode. There may be several concurrent periodic time bases (albeit a
- * single aperiodic time base - i.e. the master one called "nktbase" -
- * may exist at any point in time).
+ * If @a evp is not @a NULL, it describes the notification mechanism used on
+ * timer expiration. Only notification via signal delivery is supported (member
+ * @a sigev_notify of @a evp set to @a SIGEV_SIGNAL).  The signal will be sent to
+ * the thread starting the timer with the timer_settime() service. If @a evp is
+ * @a NULL, the SIGALRM signal will be used.
  *
- * This routine informs all active timers that the clock has been
- * updated by processing the timer wheel. Elapsed timer actions will
- * be fired.
+ * Note that signals sent to user-space threads will cause them to switch to
+ * secondary mode.
  *
- * @param mtimer The address of the cascading timer running in the
- * master time base which announced the tick.
+ * If this service succeeds, an identifier for the created timer is returned at
+ * the address @a timerid. The timer is unarmed until started with the
+ * timer_settime() service.
  *
- * Environments:
+ * @param clockid clock used as a timing base;
  *
- * This service can be called from:
+ * @param evp description of the asynchronous notification to occur when the
+ * timer expires;
  *
- * - Interrupt service routine, nklock locked, interrupts off
+ * @param timerid address where the identifier of the created timer will be
+ * stored on success.
  *
- * Rescheduling: never.
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, the clock @a clockid is invalid;
+ * - EINVAL, the member @a sigev_notify of the @b sigevent structure at the
+ *   address @a evp is not SIGEV_SIGNAL;
+ * - EINVAL, the  member @a sigev_signo of the @b sigevent structure is an
+ *   invalid signal number;
+ * - EAGAIN, the maximum number of timers was exceeded, recompile with a larger
+ *   value.
  *
- * @note Only active timers are inserted into the timer wheel.
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_create.html">
+ * Specification.</a>
+ *
  */
-
-void xntimer_tick_periodic_inner(xntslave_t *slave)
+int timer_create(clockid_t clockid,
+		 const struct sigevent *__restrict__ evp,
+		 timer_t * __restrict__ timerid)
 {
-	xnsched_t *sched = xnpod_current_sched();
-	xntbase_t *base = &slave->base;
-	xntlholder_t *holder;
-	xnqueue_t *timerq;
-	xntimer_t *timer;
+	struct __shadow_sem *shadow_sem = NULL;
+	int err = EINVAL, semval, signo;
+	struct pse51_timer *timer;
+	xnholder_t *holder;
+	sem_t *sem;
+	spl_t s;
+
+	if (clockid != CLOCK_MONOTONIC && clockid != CLOCK_REALTIME)
+		goto error;
 
 	/*
-	 * Update the periodic clocks keeping the things strictly
-	 * monotonous (this routine is run on every cpu, but only CPU
-	 * XNTIMER_KEEPER_ID should do this).
+	 * XXX: We implement a tweaked form of SIGEV_THREAD_ID, purely
+	 * for internal purpose, which does not match the Linux
+	 * behavior at all. Instead of sending a signal to a specific
+	 * thread upon expiry, it posts a semaphore whose address is
+	 * fetched from sigev_value.sival_ptr. SIGEV_THREAD_ID is not
+	 * officially supported by the POSIX skin.
 	 */
-	if (sched == xnpod_sched_slot(XNTIMER_KEEPER_ID))
-		++base->jiffies;
-
-	timerq = &slave->cascade[xnsched_cpu(sched)].wheel[base->jiffies & XNTIMER_WHEELMASK];
-
-	while ((holder = xntlist_head(timerq)) != NULL) {
-		timer = plink2timer(holder);
-
-		if ((xnsticks_t) (xntlholder_date(&timer->plink)
-				  - base->jiffies) > 0)
+	signo = SIGALRM;
+	if (evp) {
+		switch (evp->sigev_notify) {
+		case SIGEV_THREAD_ID:
+			/* Quick check to detect trivial mistakes early. */
+			sem = evp->sigev_value.sival_ptr;
+			if (sem == NULL)
+				goto error;
+			err = sem_getvalue(sem, &semval);
+			if (err)
+				return -1; /* errno already set */
+			shadow_sem = &((union __xeno_sem *)sem)->shadow_sem;
+			signo = 0;
 			break;
 
-		trace_mark(xn_nucleus, timer_expire, "timer %p", timer);
-
-		xntimer_dequeue_periodic(timer);
-		xnstat_counter_inc(&timer->fired);
-		timer->handler(timer);
-
-		if (!xntimer_reload_p(timer))
-			continue;
-
-		__setbits(timer->status, XNTIMER_FIRED);
-		xntlholder_date(&timer->plink) = base->jiffies + timer->interval;
-		xntimer_enqueue_periodic(timer);
-	}
-
-	xnsched_tick(sched->curr, base); /* Do time-slicing if required. */
-}
-
-void xntimer_tick_periodic(xntimer_t *mtimer)
-{
-	xntslave_t *slave = timer2slave(mtimer);
-	xntbase_t *base = &slave->base;
-
-	if (unlikely(base->hook != NULL))
-		base->hook();
-	else
-		xntimer_tick_periodic_inner(slave);
-}
-
-static void
-xntimer_adjust_periodic(xntimer_t *timer, xnsticks_t delta)
-{
-	xnticks_t now = timer->base->jiffies;
-	xnsticks_t diff;
-	xntlholder_date(&timer->plink) -= delta;
-	diff = now - xntlholder_date(&timer->plink);
-
-	if (testbits(timer->status, XNTIMER_PERIODIC)) {
-		xnticks_t period = xntimer_interval(timer);
-		xnticks_t mod;
-
-		timer->pexpect -= delta;
-
-		if ((xnsticks_t) (diff - period) >= 0) {
-			/* timer should tick several times before now, instead
-			 of calling timer->handler several times, we change
-			 the timer date without changing its pexpect, so that
-			 timer we can call timer->handler only once and the lost
-			 ticks will be counted as overruns. */
-			mod = xnarch_mod64(diff, period);
-			xntimerh_date(&timer->aplink) += diff - mod;
-		} else if (delta < 0
-			   && testbits(timer->status, XNTIMER_FIRED)
-			   && (xnsticks_t) (diff + period) <= 0) {
-			/* timer is periodic and NOT waiting for its first shot,
-			   so we make it tick sooner than its original date in
-			   order to avoid the case where by adjusting time to a
-			   sooner date, real-time periodic timers do not tick
-			   until the original date has passed. */
-			mod = xnarch_mod64(-diff, period);
-			xntimerh_date(&timer->aplink) += diff + mod;
-			timer->pexpect += diff + mod;
+		case SIGEV_SIGNAL:
+			signo = evp->sigev_signo;
+			if ((unsigned)(signo - 1) <= SIGRTMAX - 1)
+				break;
+		default:
+			goto error;
 		}
 	}
 
-	if (diff >= 0) {
-		xnstat_counter_inc(&timer->fired);
-		timer->handler(timer);
+	xnlock_get_irqsave(&nklock, s);
 
-		if (!xntimer_reload_p(timer))
-			return;
-
-		xntlholder_date(&timer->plink) += timer->interval;
+	holder = getq(&timer_freeq);
+	if (holder == NULL) {
+		err = EAGAIN;
+		goto unlock_and_error;
 	}
 
-	xntimer_enqueue_periodic(timer);
-}
+	timer = link2tm(holder, link);
+	timer->si.info.si_code = SI_TIMER;
+	timer->si.info.si_signo = signo;
 
-void xntslave_init(xntslave_t *slave)
-{
-	int nr_cpus, cpu, n;
-
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-
-		for (n = 0; n < XNTIMER_WHEELSIZE; n++)
-			xntlist_init(&pc->wheel[n]);
-
-		/* Slave periodic time bases are cascaded from the
-		 * master aperiodic time base. */
-		xntimer_init(&pc->timer, &nktbase, xntimer_tick_periodic);
-		xntimer_set_name(&pc->timer, slave->base.name);
-		xntimer_set_priority(&pc->timer, XNTIMER_HIPRIO);
-		xntimer_set_sched(&pc->timer, xnpod_sched_slot(cpu));
-	}
-}
-
-void xntslave_destroy(xntslave_t *slave)
-{
-	int nr_cpus, cpu, n;
-	spl_t s;
-
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-
-		xnlock_get_irqsave(&nklock, s);
-		xntimer_destroy(&pc->timer);
-		xnlock_put_irqrestore(&nklock, s);
-
-		for (n = 0; n < XNTIMER_WHEELSIZE; n++) {
-
-			xnqueue_t *timerq = &pc->wheel[n];
-			xntlholder_t *holder;
-
-			while ((holder = xntlist_head(timerq)) != NULL) {
-				__setbits(plink2timer(holder)->status, XNTIMER_DEQUEUED);
-				xntlist_remove(timerq, holder);
-			}
-		}
-	}
-}
-
-void xntslave_update(xntslave_t *slave, xnticks_t interval)
-{
-	int nr_cpus, cpu;
-
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-		xntimer_interval(&pc->timer) = interval;
-	}
-}
-
-void xntslave_start(xntslave_t *slave, xnticks_t start, xnticks_t interval)
-{
-	int nr_cpus, cpu;
-	spl_t s;
-
-	trace_mark(xn_nucleus, tbase_start, "base %s", slave->base.name);
-
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-		xnlock_get_irqsave(&nklock, s);
-		/* Spread ticks by timer latency to avoid too much nklock
-		   contention and impose some servicing order. */
-		xntimer_start(&pc->timer, start + cpu * nklatency,
-			      interval, XN_ABSOLUTE);
-		xnlock_put_irqrestore(&nklock, s);
-	}
-}
-
-void xntslave_stop(xntslave_t *slave)
-{
-	int nr_cpus, cpu;
-	spl_t s;
-
-	trace_mark(xn_nucleus, tbase_stop, "base %s", slave->base.name);
-
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-		xnlock_get_irqsave(&nklock, s);
-		xntimer_stop(&pc->timer);
-		xnlock_put_irqrestore(&nklock, s);
-	}
-}
-
-void xntslave_adjust(xntslave_t *slave, xnsticks_t delta)
-{
-	int nr_cpus, cpu, n;
-	xnqueue_t adjq;
-
-	initq(&adjq);
-	for (cpu = 0, nr_cpus = xnarch_num_online_cpus(); cpu < nr_cpus; cpu++) {
-		struct percpu_cascade *pc = &slave->cascade[cpu];
-		xnholder_t *adjholder;
-
-		for (n = 0; n < XNTIMER_WHEELSIZE; n++) {
-			xnqueue_t *q = &pc->wheel[n];
-			xntlholder_t *holder;
-
-			for (holder = xntlist_head(q); holder;
-			     holder = xntlist_next(q, holder)) {
-				xntimer_t *timer = plink2timer(holder);
-				if (testbits(timer->status, XNTIMER_REALTIME)) {
-					inith(&timer->adjlink);
-					appendq(&adjq, &timer->adjlink);
-				}
-			}
-		}
-
-		while ((adjholder = getq(&adjq))) {
-			xntimer_t *timer = adjlink2timer(adjholder);
-			xntimer_dequeue_periodic(timer);
-			xntimer_adjust_periodic(timer, delta);
-		}
-	}
-}
-
-xntbops_t nktimer_ops_periodic = {
-
-	.start_timer = &xntimer_start_periodic,
-	.stop_timer = &xntimer_stop_periodic,
-	.get_timer_date = &xntimer_get_date_periodic,
-	.get_timer_timeout = &xntimer_get_timeout_periodic,
-	.get_timer_interval = &xntimer_get_interval_periodic,
-	.get_timer_raw_expiry = &xntimer_get_raw_expiry_periodic,
-	.move_timer = &xntimer_move_periodic,
-};
-
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-
-/*!
- * \fn void xntimer_init(xntimer_t *timer,xntbase_t *base,void (*handler)(xntimer_t *timer))
- * \brief Initialize a timer object.
- *
- * Creates a timer. When created, a timer is left disarmed; it must be
- * started using xntimer_start() in order to be activated.
- *
- * @param timer The address of a timer descriptor the nucleus will use
- * to store the object-specific data.  This descriptor must always be
- * valid while the object is active therefore it must be allocated in
- * permanent memory.
- *
- * @param base The descriptor address of the time base the new timer
- * depends on. See xntbase_alloc() for detailed explanations about
- * time bases.
- *
- * @param handler The routine to call upon expiration of the timer.
- *
- * There is no limitation on the number of timers which can be
- * created/active concurrently.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-#ifdef DOXYGEN_CPP
-void xntimer_init(xntimer_t *timer, xntbase_t *base,
-		  void (*handler)(xntimer_t *timer));
-#endif
-
-void __xntimer_init(xntimer_t *timer, xntbase_t *base,
-		    void (*handler) (xntimer_t *timer))
-{
-	/* CAUTION: Setup from xntimer_init() must not depend on the
-	   periodic/aperiodic timing mode. */
-
-	xntimerh_init(&timer->aplink);
-	xntimerh_date(&timer->aplink) = XN_INFINITE;
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-	timer->base = base;
-	xntlholder_init(&timer->plink);
-	xntlholder_date(&timer->plink) = XN_INFINITE;
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-	xntimer_set_priority(timer, XNTIMER_STDPRIO);
-	timer->status = XNTIMER_DEQUEUED;
-	timer->handler = handler;
-	timer->interval = 0;
-	timer->sched = xnpod_current_sched();
-
-#ifdef CONFIG_XENO_OPT_STATS
-	{
-		spl_t s;
-
-		if (!xnpod_current_thread() || xnpod_shadow_p())
-			snprintf(timer->name, XNOBJECT_NAME_LEN, "%d/%s",
-				 current->pid, current->comm);
+	if (evp) {
+		if (shadow_sem)
+			timer->si.info.si_value.sival_ptr = shadow_sem->sem;
 		else
-			xnobject_copy_name(timer->name,
-					   xnpod_current_thread()->name);
-
-		inith(&timer->tblink);
-		xnstat_counter_set(&timer->scheduled, 0);
-		xnstat_counter_set(&timer->fired, 0);
-
-		xnlock_get_irqsave(&nklock, s);
-		appendq(&base->timerq, &timer->tblink);
-		xnvfile_touch(&base->vfile);
-		xnlock_put_irqrestore(&nklock, s);
-	}
-#endif /* CONFIG_XENO_OPT_STATS */
-
-	xnarch_init_display_context(timer);
-}
-EXPORT_SYMBOL_GPL(__xntimer_init);
-
-/*!
- * \fn void xntimer_destroy(xntimer_t *timer)
- *
- * \brief Release a timer object.
- *
- * Destroys a timer. After it has been destroyed, all resources
- * associated with the timer have been released. The timer is
- * automatically deactivated before deletion if active on entry.
- *
- * @param timer The address of a valid timer descriptor.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Interrupt service routine
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xntimer_destroy(xntimer_t *timer)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-	xntimer_stop(timer);
-	__setbits(timer->status, XNTIMER_KILLED);
-	timer->sched = NULL;
-#ifdef CONFIG_XENO_OPT_STATS
-	removeq(&xntimer_base(timer)->timerq, &timer->tblink);
-	xnvfile_touch(&xntimer_base(timer)->vfile);
-#endif /* CONFIG_XENO_OPT_TIMING_PERIODIC */
-	xnlock_put_irqrestore(&nklock, s);
-}
-EXPORT_SYMBOL_GPL(xntimer_destroy);
-
-#ifdef CONFIG_SMP
-/**
- * Migrate a timer.
- *
- * This call migrates a timer to another cpu. In order to avoid pathological
- * cases, it must be called from the CPU to which @a timer is currently
- * attached.
- *
- * @param timer The address of the timer object to be migrated.
- *
- * @param sched The address of the destination CPU xnsched_t structure.
- *
- * @retval -EINVAL if @a timer is queued on another CPU than current ;
- * @retval 0 otherwise.
- *
- */
-int xntimer_migrate(xntimer_t *timer, xnsched_t *sched)
-{
-	int err = 0;
-	int queued;
-	spl_t s;
-
-	trace_mark(xn_nucleus, timer_migrate, "timer %p cpu %d",
-		   timer, (int)xnsched_cpu(sched));
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (sched == timer->sched)
-		goto unlock_and_exit;
-
-	queued = !testbits(timer->status, XNTIMER_DEQUEUED);
-
-	/* Avoid the pathological case where the timer interrupt did not occur yet
-	   for the current date on the timer source CPU, whereas we are trying to
-	   migrate it to a CPU where the timer interrupt already occured. This would
-	   not be a problem in aperiodic mode. */
-
-	if (queued) {
-
-		if (timer->sched != xnpod_current_sched()) {
-			err = -EINVAL;
-			goto unlock_and_exit;
-		}
-
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-		timer->base->ops->stop_timer(timer);
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-		xntimer_stop_aperiodic(timer);
-#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-	}
-
-	timer->sched = sched;
-
-	if (queued)
-#ifdef CONFIG_XENO_OPT_TIMING_PERIODIC
-		timer->base->ops->move_timer(timer);
-#else /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-		xntimer_move_aperiodic(timer);
-#endif /* !CONFIG_XENO_OPT_TIMING_PERIODIC */
-
-      unlock_and_exit:
-
-	xnlock_put_irqrestore(&nklock, s);
-
-	return err;
-}
-EXPORT_SYMBOL_GPL(xntimer_migrate);
-
-#endif /* CONFIG_SMP */
-
-/**
- * Get the count of overruns for the last tick.
- *
- * This service returns the count of pending overruns for the last tick of a
- * given timer, as measured by the difference between the expected expiry date
- * of the timer and the date @a now passed as argument.
- *
- * @param timer The address of a valid timer descriptor.
- *
- * @param now current date (in the monotonic time base)
- *
- * @return the number of overruns of @a timer at date @a now
- */
-unsigned long xntimer_get_overruns(xntimer_t *timer, xnticks_t now)
-{
-	xnticks_t period = xntimer_interval(timer);
-	xnsticks_t delta = now - timer->pexpect;
-	unsigned long overruns = 0;
-
-	if (unlikely(delta >= (xnsticks_t) period)) {
-		overruns = xnarch_div64(delta, period);
-		timer->pexpect += period * overruns;
-	}
-
-	timer->pexpect += period;
-	return overruns;
-}
-EXPORT_SYMBOL_GPL(xntimer_get_overruns);
-
-/*!
- * @internal
- * \fn void xntimer_freeze(void)
- *
- * \brief Freeze all timers (from every time bases).
- *
- * This routine deactivates all active timers atomically.
- *
- * Environments:
- *
- * This service can be called from:
- *
- * - Kernel module initialization/cleanup code
- * - Kernel-based task
- * - User-space task
- *
- * Rescheduling: never.
- */
-
-void xntimer_freeze(void)
-{
-	int nr_cpus, cpu;
-	spl_t s;
-
-	trace_mark(xn_nucleus, timer_freeze, MARK_NOARGS);
-
-	xnlock_get_irqsave(&nklock, s);
-
-	nr_cpus = xnarch_num_online_cpus();
-
-	for (cpu = 0; cpu < nr_cpus; cpu++) {
-
-		xntimerq_t *timerq = &xnpod_sched_slot(cpu)->timerqueue;
-		xntimerh_t *holder;
-
-		while ((holder = xntimerq_head(timerq)) != NULL) {
-			__setbits(aplink2timer(holder)->status, XNTIMER_DEQUEUED);
-			xntimerq_remove(timerq, holder);
-		}
-
-		/* Dequeuing all timers from the master time base
-		 * freezes all slave time bases the same way, so there
-		 * is no need to handle anything more here. */
-	}
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-EXPORT_SYMBOL_GPL(xntimer_freeze);
-
-char *xntimer_format_time(xnticks_t value, int periodic, char *buf, size_t bufsz)
-{
-	unsigned long ms, us, ns;
-	char *p = buf;
-	xnticks_t s;
-
-	if (periodic) {
-		snprintf(buf, bufsz, "%Lut", value);
-		return buf;
-	}
-
-	if (value == 0 && bufsz > 1) {
-		strcpy(buf, "-");
-		return buf;
-	}
-
-	s = xnarch_divrem_billion(value, &ns);
-	us = ns / 1000;
-	ms = us / 1000;
-	us %= 1000;
-
-	if (s)
-		p += snprintf(p, bufsz, "%Lus", s);
-
-	if (ms || (s && us))
-		p += snprintf(p, bufsz - (p - buf), "%lums", ms);
-
-	if (us)
-		p += snprintf(p, bufsz - (p - buf), "%luus", us);
-
-	return buf;
-}
-EXPORT_SYMBOL_GPL(xntimer_format_time);
-
-xntbops_t nktimer_ops_aperiodic = {
-
-	.start_timer = &xntimer_start_aperiodic,
-	.stop_timer = &xntimer_stop_aperiodic,
-	.get_timer_date = &xntimer_get_date_aperiodic,
-	.get_timer_timeout = &xntimer_get_timeout_aperiodic,
-	.get_timer_interval = &xntimer_get_interval_aperiodic,
-	.get_timer_raw_expiry = &xntimer_get_raw_expiry_aperiodic,
-	.move_timer = &xntimer_move_aperiodic,
-};
-
-#ifdef CONFIG_XENO_OPT_VFILE
-
-#include <nucleus/vfile.h>
-
-static int timer_vfile_show(struct xnvfile_regular_iterator *it, void *data)
-{
-	const char *tm_status, *wd_status = "";
-
-	if (xnpod_active_p() && xntbase_enabled_p(&nktbase)) {
-		tm_status = "on";
-#ifdef CONFIG_XENO_OPT_WATCHDOG
-		wd_status = "+watchdog";
-#endif /* CONFIG_XENO_OPT_WATCHDOG */
+			timer->si.info.si_value = evp->sigev_value;
 	} else
-		tm_status = "off";
+		timer->si.info.si_value.sival_int = (timer - timer_pool);
 
-	xnvfile_printf(it,
-		       "status=%s%s:setup=%Lu:clock=%Lu:timerdev=%s:clockdev=%s\n",
-		       tm_status, wd_status, xnarch_tsc_to_ns(nktimerlat),
-		       xntbase_get_rawclock(&nktbase),
-		       XNARCH_TIMER_DEVICE, XNARCH_CLOCK_DEVICE);
+	xntimer_init(&timer->timerbase, pse51_tbase,
+		     pse51_base_timer_handler);
+
+	timer->overruns = 0;
+	timer->owner = NULL;
+	timer->clockid = clockid;
+	timer->owningq = pse51_kqueues(0);
+	inith(&timer->link);
+	appendq(&pse51_kqueues(0)->timerq, &timer->link);
+	xnlock_put_irqrestore(&nklock, s);
+
+	*timerid = (timer_t) (timer - timer_pool);
+
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+      error:
+	thread_set_errno(err);
+	return -1;
+}
+
+int pse51_timer_delete_inner(timer_t timerid, pse51_kqueues_t *q, int force)
+{
+	struct pse51_timer *timer;
+	spl_t s;
+	int err;
+
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	timer = &timer_pool[(unsigned long)timerid];
+
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+	if (!force && timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
+
+	removeq(&q->timerq, &timer->link);
+
+	if (timer->queued) {
+		/* timer signal is queued, unqueue it. */
+		pse51_sigunqueue(timer->owner, &timer->si);
+		timer->queued = 0;
+	}
+
+	xntimer_destroy(&timer->timerbase);
+	if (timer->owner)
+		removeq(&timer->owner->timersq, &timer->tlink);
+	timer->owner = NULL;	/* Used for debugging. */
+	prependq(&timer_freeq, &timer->link);	/* Favour earliest reuse. */
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+      error:
+	thread_set_errno(err);
+	return -1;
+}
+
+/**
+ * Delete a timer object.
+ *
+ * This service deletes the timer @a timerid.
+ *
+ * @param timerid identifier of the timer to be removed;
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_delete.html">
+ * Specification.</a>
+ *
+ */
+int timer_delete(timer_t timerid)
+{
+	return pse51_timer_delete_inner(timerid, pse51_kqueues(0), 0);
+}
+
+static void pse51_timer_gettime_inner(struct pse51_timer *__restrict__ timer,
+				      struct itimerspec *__restrict__ value)
+{
+	if (xntimer_running_p(&timer->timerbase)) {
+		ticks2ts(&value->it_value,
+			 xntimer_get_timeout(&timer->timerbase));
+		ticks2ts(&value->it_interval,
+			 xntimer_interval(&timer->timerbase));
+	} else {
+		value->it_value.tv_sec = 0;
+		value->it_value.tv_nsec = 0;
+		value->it_interval.tv_sec = 0;
+		value->it_interval.tv_nsec = 0;
+	}
+}
+
+/**
+ * Start or stop a timer.
+ *
+ * This service sets a timer expiration date and reload value of the timer @a
+ * timerid. If @a ovalue is not @a NULL, the current expiration date and reload
+ * value are stored at the address @a ovalue as with timer_gettime().
+ *
+ * If the member @a it_value of the @b itimerspec structure at @a value is zero,
+ * the timer is stopped, otherwise the timer is started. If the member @a
+ * it_interval is not zero, the timer is periodic. The current thread must be a
+ * POSIX skin thread (created with pthread_create()) and will be notified via
+ * signal of timer expirations. Note that these notifications will cause
+ * user-space threads to switch to secondary mode.
+ *
+ * When starting the timer, if @a flags is TIMER_ABSTIME, the expiration value
+ * is interpreted as an absolute date of the clock passed to the timer_create()
+ * service. Otherwise, the expiration value is interpreted as a time interval.
+ *
+ * Expiration date and reload value are rounded to an integer count of system
+ * clock ticks (see note in section @ref posix_time "Clocks and timers services"
+ * for details on the duration of the system tick).
+ *
+ * @param timerid identifier of the timer to be started or stopped;
+ *
+ * @param flags one of 0 or TIMER_ABSTIME;
+ *
+ * @param value address where the specified timer expiration date and reload
+ * value are read;
+ *
+ * @param ovalue address where the specified timer previous expiration date and
+ * reload value are stored if not @a NULL.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EPERM, the caller context is invalid;
+ * - EINVAL, the specified timer identifier, expiration date or reload value is
+ *   invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @par Valid contexts:
+ * - Xenomai kernel-space POSIX skin thread,
+ * - kernel-space thread cancellation cleanup routine,
+ * - Xenomai POSIX skin user-space thread (switches to primary mode),
+ * - user-space thread cancellation cleanup routine.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_settime.html">
+ * Specification.</a>
+ *
+ */
+int timer_settime(timer_t timerid,
+		  int flags,
+		  const struct itimerspec *__restrict__ value,
+		  struct itimerspec *__restrict__ ovalue)
+{
+	pthread_t cur = pse51_current_thread();
+	struct pse51_timer *timer;
+	spl_t s;
+	int err;
+
+	if (!cur || xnpod_interrupt_p()) {
+		err = EPERM;
+		goto error;
+	}
+
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
+
+	if ((unsigned long)value->it_value.tv_nsec >= ONE_BILLION ||
+	    ((unsigned long)value->it_interval.tv_nsec >= ONE_BILLION &&
+	     (value->it_value.tv_sec != 0 || value->it_value.tv_nsec != 0))) {
+		err = EINVAL;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	timer = &timer_pool[(unsigned long)timerid];
+
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+#if XENO_DEBUG(POSIX)
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
+#endif /* XENO_DEBUG(POSIX) */
+
+	if (ovalue)
+		pse51_timer_gettime_inner(timer, ovalue);
+
+	if (timer->queued) {
+		/* timer signal is queued, unqueue it. */
+		pse51_sigunqueue(timer->owner, &timer->si);
+		timer->queued = 0;
+	}
+
+	if (timer->owner)
+		removeq(&timer->owner->timersq, &timer->tlink);
+
+	if (value->it_value.tv_nsec == 0 && value->it_value.tv_sec == 0) {
+		xntimer_stop(&timer->timerbase);
+		timer->owner = NULL;
+	} else {
+		xnticks_t start = ts2ticks_ceil(&value->it_value) + 1;
+		xnticks_t period = ts2ticks_ceil(&value->it_interval);
+
+		xntimer_set_sched(&timer->timerbase, xnpod_current_sched());
+		if (xntimer_start(&timer->timerbase, start, period,
+				  clock_flag(flags, timer->clockid))) {
+			/* If the initial delay has already passed, the call
+			   shall suceed, so, let us tweak the start time. */
+			xnticks_t now = clock_get_ticks(timer->clockid);
+			if (period) {
+				do {
+					start += period;
+				} while ((xnsticks_t) (start - now) <= 0);
+			} else
+				start = now + xntbase_ns2ticks
+					(pse51_tbase,
+					 xnarch_tsc_to_ns(nklatency));
+			xntimer_start(&timer->timerbase, start, period,
+				      clock_flag(flags, timer->clockid));
+		}
+
+		timer->owner = cur;
+		inith(&timer->tlink);
+		appendq(&timer->owner->timersq, &timer->tlink);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+      error:
+	thread_set_errno(err);
+	return -1;
+}
+
+/**
+ * Get timer next expiration date and reload value.
+ *
+ * This service stores, at the address @a value, the expiration date (member @a
+ * it_value) and reload value (member @a it_interval) of the timer @a
+ * timerid. The values are returned as time intervals, and as multiples of the
+ * system clock tick duration (see note in section
+ * @ref posix_time "Clocks and timers services" for details on the
+ * duration of the system clock tick). If the timer was not started, the
+ * returned members @a it_value and @a it_interval of @a value are zero.
+ *
+ * @param timerid timer identifier;
+ *
+ * @param value address where the timer expiration date and reload value are
+ * stored on success.
+ *
+ * @retval 0 on success;
+ * @retval -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_gettime.html">
+ * Specification.</a>
+ *
+ */
+int timer_gettime(timer_t timerid, struct itimerspec *value)
+{
+	struct pse51_timer *timer;
+	spl_t s;
+	int err;
+
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	timer = &timer_pool[(unsigned long)timerid];
+
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+#if XENO_DEBUG(POSIX)
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
+#endif /* XENO_DEBUG(POSIX) */
+
+	pse51_timer_gettime_inner(timer, value);
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return 0;
+
+      unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+      error:
+	thread_set_errno(err);
+	return -1;
+}
+
+/**
+ * Get expiration overruns count since the most recent timer expiration
+ * signal delivery.
+ *
+ * This service returns @a timerid expiration overruns count since the most
+ * recent timer expiration signal delivery. If this count is more than @a
+ * DELAYTIMER_MAX expirations, @a DELAYTIMER_MAX is returned.
+ *
+ * @param timerid Timer identifier.
+ *
+ * @return the overruns count on success;
+ * @return -1 with @a errno set if:
+ * - EINVAL, @a timerid is invalid;
+ * - EPERM, the timer @a timerid does not belong to the current process.
+ *
+ * @see
+ * <a href="http://www.opengroup.org/onlinepubs/000095399/functions/timer_getoverrun.html">
+ * Specification.</a>
+ *
+ */
+int timer_getoverrun(timer_t timerid)
+{
+	struct pse51_timer *timer;
+	int overruns, err;
+	spl_t s;
+
+	if ((unsigned)timerid >= PSE51_TIMER_MAX) {
+		err = EINVAL;
+		goto error;
+	}
+
+	xnlock_get_irqsave(&nklock, s);
+
+	timer = &timer_pool[(unsigned long)timerid];
+
+	if (!xntimer_active_p(&timer->timerbase)) {
+		err = EINVAL;
+		goto unlock_and_error;
+	}
+
+#if XENO_DEBUG(POSIX)
+	if (timer->owningq != pse51_kqueues(0)) {
+		err = EPERM;
+		goto unlock_and_error;
+	}
+#endif /* XENO_DEBUG(POSIX) */
+
+	overruns = timer->overruns;
+
+	xnlock_put_irqrestore(&nklock, s);
+
+	return overruns;
+
+  unlock_and_error:
+	xnlock_put_irqrestore(&nklock, s);
+  error:
+	thread_set_errno(err);
+	return -1;
+}
+
+void pse51_timer_init_thread(pthread_t new_thread)
+{
+	initq(&new_thread->timersq);
+}
+
+/* Called with nklock locked irq off. */
+void pse51_timer_cleanup_thread(pthread_t zombie)
+{
+	xnholder_t *holder;
+	while ((holder = getq(&zombie->timersq)) != NULL) {
+		struct pse51_timer *timer = link2tm(holder, tlink);
+		xntimer_stop(&timer->timerbase);
+		timer->owner = NULL;
+	}
+}
+
+void pse51_timerq_cleanup(pse51_kqueues_t *q)
+{
+	xnholder_t *holder;
+	spl_t s;
+
+	xnlock_get_irqsave(&nklock, s);
+
+	while ((holder = getheadq(&q->timerq))) {
+		timer_t tm = (timer_t) (link2tm(holder, link) - timer_pool);
+		pse51_timer_delete_inner(tm, q, 1);
+		xnlock_put_irqrestore(&nklock, s);
+#if XENO_DEBUG(POSIX)
+		xnprintf("Posix timer %u deleted\n", (unsigned) tm);
+#endif /* XENO_DEBUG(POSIX) */
+		xnlock_get_irqsave(&nklock, s);
+	}
+
+	xnlock_put_irqrestore(&nklock, s);
+}
+
+int pse51_timer_pkg_init(void)
+{
+	int n;
+
+	initq(&timer_freeq);
+	initq(&pse51_global_kqueues.timerq);
+
+	for (n = 0; n < PSE51_TIMER_MAX; n++) {
+		inith(&timer_pool[n].link);
+		appendq(&timer_freeq, &timer_pool[n].link);
+	}
+
 	return 0;
 }
 
-static struct xnvfile_regular_ops timer_vfile_ops = {
-	.show = timer_vfile_show,
-};
-
-static struct xnvfile_regular timer_vfile = {
-	.ops = &timer_vfile_ops,
-};
-
-void xntimer_init_proc(void)
+void pse51_timer_pkg_cleanup(void)
 {
-	xnvfile_init_regular("timer", &timer_vfile, &nkvfroot);
+	pse51_timerq_cleanup(&pse51_global_kqueues);
 }
-
-void xntimer_cleanup_proc(void)
-{
-	xnvfile_destroy_regular(&timer_vfile);
-}
-
-#endif /* CONFIG_XENO_OPT_VFILE */
 
 /*@}*/
+
+EXPORT_SYMBOL_GPL(timer_create);
+EXPORT_SYMBOL_GPL(timer_delete);
+EXPORT_SYMBOL_GPL(timer_settime);
+EXPORT_SYMBOL_GPL(timer_gettime);
+EXPORT_SYMBOL_GPL(timer_getoverrun);

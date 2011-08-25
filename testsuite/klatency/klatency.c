@@ -38,7 +38,7 @@ int test_loops = 0;		/* outer loop count */
 
 int finished = 0;
 
-void display(void)
+static void display(void)
 {
 	int err, n = 0, got_results = 0;
 	time_t start, actual_duration;
@@ -123,7 +123,7 @@ void display(void)
 		close(benchdev);
 }
 
-void sighand(int sig __attribute__ ((unused)))
+static void sighand(int sig __attribute__ ((unused)))
 {
 	finished = 1;
 }

@@ -1,0 +1,476 @@
+config XENO_OPT_NUCLEUS
+	depends on XENOMAI
+	tristate "Nucleus"
+	default y
+
+if XENO_OPT_NUCLEUS != n
+
+config XENO_OPT_PRIOCPL
+	bool "Priority coupling support"
+	default y
+	help
+
+	This option builds in the priority coupling support between
+	Xenomai and Linux schedulers. Coupling priority makes the
+	Linux kernel - as a whole - inherit the Xenomai-defined
+	priority for a real-time thread running in user-space, when it
+	enters the secondary execution mode, e.g. to perform regular
+	Linux system calls.
+
+	The net effect is that a user-space Xenomai thread which
+	executes under the control of the Linux scheduler would still
+	keep its priority in the Xenomai scheduler, and as such, would
+	still run before any real-time thread having a lower priority,
+	regardless of the execution mode of the latter (i.e. primary
+	or secondary).
+
+	Conversely, decoupling priority causes any user-space Xenomai
+	thread which executes under the control of the Linux scheduler
+	to always have a lower priority than any runnable real-time
+	thread left under the control of the Xenomai scheduler
+	(i.e. in primary mode), and as such, it will be scheduled
+	after.
+
+	Priority coupling can also be switched on/off dynamically on a
+	thread-by-thread basis, provided this option enables the
+	support globally. Otherwise, no priority coupling will ever
+	occur.
+
+	If in doubt, say Y.
+
+config XENO_OPT_SCHED_CLASSES
+	bool "Extra scheduling classes"
+	default n
+	help
+
+	Xenomai implements a set of scheduling classes.  Each
+	scheduling class defines its own set of rules for determining
+	when and how to select a new thread to run.
+
+	The Xenomai core has a built-in real-time class, which
+	supports both preemptive fixed- priority FIFO scheduling, and
+	round-robin scheduling.
+
+	Enabling this option will allow you to select additional
+	scheduling classes to compile in.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_TP
+	bool "Temporal partitioning"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables support for temporal partitioning.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_TP_NRPART
+	int "Number of partitions"
+	default 4
+	range 1 1024
+	depends on XENO_OPT_SCHED_TP
+	help
+
+	Define here the maximum number of temporal partitions the TP
+	scheduler may have to handle.
+
+config XENO_OPT_SCHED_SPORADIC
+	bool "Sporadic scheduling"
+	default n
+	depends on XENO_OPT_SCHED_CLASSES
+	help
+
+	This option enables support for the sporadic scheduling.  It
+	can be used to enforce a capped limit on the execution time of
+	a thread within a given period of time.
+
+	If in doubt, say N.
+
+config XENO_OPT_SCHED_SPORADIC_MAXREPL
+	int "Maximum number of pending replenishments"
+	default 8
+	range 4 16
+	depends on XENO_OPT_SCHED_SPORADIC
+	help
+
+	For performance reason, the budget replenishment information
+	is statically stored on a per-thread basis. This parameter
+	defines the maximum number of replenishment requests that can
+	be pending concurrently for any given thread that undergoes
+	sporadic scheduling (system minimum is 4).
+
+config XENO_OPT_PIPE
+	bool
+
+config XENO_OPT_MAP
+	bool
+
+config XENO_OPT_VFILE
+       bool
+       depends on PROC_FS
+       default y
+
+config XENO_OPT_PIPE_NRDEV
+	int "Number of pipe devices"
+	depends on XENO_OPT_PIPE
+	default 32
+	help
+
+	Message pipes are bi-directional FIFO communication
+	channels allowing data exchange between real-time kernel
+	threads and regular user-space processes. Pipes natively
+	preserve message boundaries, but can also be used in byte
+	streaming mode from kernel to user-space.
+
+	This option sets the maximum number of pipe devices supported
+	in the system. Pipe devices are named /dev/rtpN where N is a
+	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
+
+config XENO_OPT_REGISTRY_NRSLOTS
+	int "Number of registry slots"
+	default 512
+	help
+
+	The registry is used by Xenomai skins to bind real-time
+	objects they create to symbolic names, so that these objects
+	can be further retrieved and shared by real-time applications
+	regardless of their runtime space (i.e. kernel or user). Each
+	named object occupies a registry slot.
+
+	This option sets the maximum number of real-time objects the
+	registry can handle. All skins using the registry share this
+	storage.
+
+config XENO_OPT_SYS_HEAPSZ
+	int "Size of the system heap (Kb)"
+	default 256
+	help
+
+	The system heap is used for various internal allocations by
+	the nucleus and the real-time skins. The size is expressed in
+	Kilobytes.
+
+config XENO_OPT_SYS_STACKPOOLSZ
+        depends on XENO_GENERIC_STACKPOOL
+	int "Size of the private stack pool (Kb)"
+	default 128
+	help
+
+	On this architecture, kernel-based Xenomai threads get the
+	stack space they need from a private memory pool.  If you
+	don't start any kernel-based thread (i.e. no RTDM driver
+	thread, no real-time task created from an application embodied
+	into a kernel module, no switchtest driver), you may leave a
+	zero value for this option. The size is expressed in Kilobytes.
+
+if !XENO_GENERIC_STACKPOOL
+config XENO_OPT_SYS_STACKPOOLSZ
+        int
+	default 0
+endif	
+
+config XENO_OPT_SEM_HEAPSZ
+	int "Size of private semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for private semaphores.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
+config XENO_OPT_GLOBAL_SEM_HEAPSZ
+	int "Size of global semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for semaphores shared 
+	between several processes.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
+config XENO_OPT_STATS
+	bool "Statistics collection"
+	depends on XENO_OPT_VFILE
+	default y
+	help
+
+	This option causes the real-time nucleus to collect various
+	per-thread runtime statistics, which are accessible through
+	the /proc/xenomai/sched/stat interface.
+
+config XENO_OPT_DEBUG
+        depends on XENO_OPT_VFILE
+	bool "Debug support"
+	help
+
+	When enabled, various debugging features can be switched on. They
+	can help to find problems in applications, drivers, and the Xenomai
+	core. XENO_OPT_DEBUG itself does not have any impact on generated
+	code.
+
+config XENO_OPT_DEBUG_NUCLEUS
+	bool "Nucleus Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates various debugging checks inside the core
+	system. Doing so adds a significant runtime overhead,
+	worsening the latency figures especially on SMP kernels.
+	Do not switch this option on unless you really know what you
+	are doing.
+
+config XENO_OPT_DEBUG_XNLOCK
+	bool "Spinlocks Debugging support"
+	depends on XENO_OPT_DEBUG
+	default y if SMP
+	help
+
+	This option activates measurements of Xenomai spinlocks
+	spinning time and duration. It should have a low overhad, and
+	helps finding latency spots due to masking
+	sections. Statistics about the longest masking section may be
+	found in /proc/xenomai/lock.
+
+config XENO_OPT_DEBUG_QUEUES
+	bool "Queue Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates debugging checks for all queueing
+	operations of the Xenomai core. It adds heavy runtime overhead,
+	use with care.
+
+config XENO_OPT_DEBUG_REGISTRY
+	bool "Registry Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates debugging output for key registry
+	operations performed by the Xenomai core. This option is
+	useful to detect the source of object naming conflicts.
+
+config XENO_OPT_DEBUG_TIMERS
+	bool "Timer Debugging support"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option activates debugging output for critical
+	timer-related operations performed by the Xenomai core.
+
+config XENO_OPT_DEBUG_SYNCH_RELAX
+	bool "Detect mutexes held in relaxed sections"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option detects situations where a real-time thread
+	attempts to sleep on a Xenomai mutex object, that is owned by
+	another thread currently running in secondary mode (i.e. plain
+	Linux execution mode). The SIGDEBUG signal may be sent in such
+	a case to the sleeper, provided the WARNSW flag is enabled for
+	it, as set by e.g. rt_task_set_mode() or pthread_set_mode_np().
+
+	This particular situation is a possible source of unwanted
+	latency, since the current mutex owner may be unexpectedly
+	delayed as a result of using non-deterministic Linux services,
+	thus deferring the release of the mutex object for too long.
+
+	This option may introduce some overhead in case mutexes are
+	highly contended. Use this feature for debugging purposes
+	only.
+
+	NOTE: only Xenomai synchronization objects that may be
+	actually "owned" by a single thread at a time, can be
+	monitored this way (typically, mutexes).
+
+config XENO_OPT_DEBUG_TRACE_RELAX
+	bool "Trace relax requests"
+	depends on XENO_OPT_DEBUG
+	help
+
+	This option enables recording of unwanted relax requests from
+	user-space applications leaving the real-time domain, logging
+	the thread information and code location involved. All records
+	are readable from /proc/xenomai/debug/relaxes, and can be
+	decoded using the "slackspot" utility.
+
+config XENO_OPT_WATCHDOG
+	bool "Watchdog support"
+	depends on XENO_OPT_DEBUG
+	default y
+	help
+
+	This option activates a watchdog aimed at detecting runaway
+	real-time threads. If enabled, the watchdog triggers after
+	a given period of uninterrupted real-time activity has elapsed
+	without Linux interaction in the meantime; in such event, the
+	current real-time thread is killed. The built-in watchdog
+	support operates on behalf of the timer tick handler,
+	thus is only active after the timer has been started. The
+	timeout value of the watchdog can be set using the
+	XENO_OPT_WATCHDOG_TIMEOUT parameter.
+
+config XENO_OPT_WATCHDOG_TIMEOUT
+	depends on XENO_OPT_WATCHDOG
+	int "Watchdog timeout"
+	default 4
+	range 1 60
+	help
+
+	Watchdog timeout value (in seconds).
+
+config XENO_OPT_SHIRQ
+	bool "Shared interrupts"
+	help
+
+	Enables support for both level- and edge-triggered shared
+	interrupts, so that multiple real-time interrupt handlers
+	are allowed to control dedicated hardware devices which are
+	configured to share the same interrupt line.
+
+config XENO_OPT_SELECT
+	bool
+
+config XENO_OPT_HOSTRT
+       depends on HAVE_IPIPE_HOSTRT
+       def_bool y
+
+menu "Timing"
+
+config XENO_OPT_TIMING_PERIODIC
+	bool "Enable periodic timing"
+	help
+
+	Xenomai allows different skins to be clocked separately,
+	according to distinct frequencies, or aperiodically. In the
+	periodic case, delays and timeouts are given in counts of
+	ticks, which duration can be fixed by configuration or set
+	at runtime. In the aperiodic case, timings are directly
+	specified in nanoseconds. Selecting this option allows you to
+	run skins depending on a periodic time base.
+
+	You can leave this option disabled in order to save a few
+	hundreds bytes and some cycles on the fast path if you plan to
+	use the system timer in tick-less (i.e. aperiodic) mode only.
+
+	This option must not be confused with the ability to run
+	periodic threads, which is possible is both timing
+	modes. Periodic threads needing high timing accuracy will even
+	likely prefer using aperiodic timing.
+
+config XENO_OPT_TIMING_VIRTICK
+	int "Virtual tick duration in aperiodic mode (us)"
+	default 1000
+	help
+
+	Time-slicing (aka round-robin scheduling) defines a base
+	period that represents the duration of one tick; threads can
+	then be given a time credit to consume as a count of
+	ticks. For that reason, time-slicing is usually based on a
+	periodic timing mode.
+
+	This parameter defines the duration of a virtual tick
+	expressed as a count of micro-seconds, so that time-slicing is
+	also available to threads that undergo aperiodic timing. In
+	such a case, the time credit assigned to a thread will be
+	equal to XENO_OPT_TIMING_VIRTICK * quantum, where quantum is
+	the count of ticks representing a full time-slice.
+
+config XENO_OPT_TIMING_SCHEDLAT
+	int "Scheduling latency (ns)"
+	default 0
+	help
+	Scheduling latency is the time between the termination of an
+	interrupt handler and the execution of the first instruction
+	of the real-time thread this handler resumes. A default value
+	of 0 (recommended) will cause a pre-calibrated value to be
+	used.
+
+endmenu
+
+menu "Scalability"
+
+config XENO_OPT_SCALABLE_SCHED
+	bool "O(1) scheduler"
+	help
+
+	This option causes a multi-level priority queue to be
+	used in the real-time thread scheduler, so that it operates
+	in constant-time regardless of the number of _concurrently
+	runnable_ threads (which might be much lower than the total
+	number of active threads).
+
+	Its use is recommended for large multi-threaded systems
+	involving more than 10 of such threads; otherwise, the default
+	linear method usually performs better with lower memory
+	footprints.
+
+choice
+	prompt "Timer indexing method"
+	default XENO_OPT_TIMER_LIST
+	help
+
+	This option allows to select the underlying data structure
+	which is going to be used for ordering the outstanding
+	software timers managed by the nucleus when operating in
+	aperiodic timing mode. In periodic mode, a fast timer wheel
+	data structure is always used, regardless of this option.
+
+config XENO_OPT_TIMER_LIST
+	bool "Linear"
+	help
+
+	Use a linked list. Albeit O(N), this simple data structure is
+	particularly efficient when only a few timers (< 10) may be
+	concurrently outstanding at any point in time.
+
+config XENO_OPT_TIMER_HEAP
+	bool "Tree"
+	help
+
+	Use a binary heap. This data structure is efficient when a
+	high number of software timers may be concurrently
+	outstanding at any point in time.
+
+config XENO_OPT_TIMER_WHEEL
+	bool "Hash"
+	help
+
+	Use a hash table. Timers operations using this data structure
+	should have an O(1) complexity if the timers follow two 
+	conditions:
+	- timers expiration dates do not collide too much;
+	- there is at least one periodic timer using a period near
+	the wheel step (around 100000 ns by default).
+
+endchoice
+
+config XENO_OPT_TIMER_HEAP_CAPACITY
+	int "Binary heap capacity"
+	depends on XENO_OPT_TIMER_HEAP
+	default 256
+	help
+
+	Set the maximum number of timers in the nucleus timers list.
+
+config XENO_OPT_TIMER_WHEEL_STEP
+	int "Timer wheel step"
+	depends on XENO_OPT_TIMER_WHEEL
+	default 100000
+	help
+
+	Set the duration in ns of a timer wheel step. At each step, 
+	the timer wheel use the next hash bucket.
+
+endmenu
+
+endif

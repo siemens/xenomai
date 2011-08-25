@@ -1,257 +1,168 @@
 /*
- * Copyright (C) 2001,2002,2003 Philippe Gerum <rpm@xenomai.org>.
+ * Written by Gilles Chanteperdrix <gilles.chanteperdrix@xenomai.org>.
  *
- * Xenomai is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 2 of the License,
- * or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
- * Xenomai is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Xenomai; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*!
- * \defgroup nucleus Xenomai nucleus.
+/**
+ * @defgroup posix POSIX skin.
  *
- * An abstract RTOS core.
+ * Xenomai POSIX skin is an implementation of a small subset of the Single
+ * Unix specification over Xenomai generic RTOS core.
+ *
+ * The following table gives equivalence between native API services and POSIX
+ * services.
+ *
+ * <CENTER>
+ * <TABLE>
+ * <TR><TH>Native API services</TH> <TH>POSIX API services</TH></TR>
+ * <TR><TD>@ref alarm</TD>          <TD>@ref posix_time</TD></TR>
+ * <TR><TD>@ref cond</TD>           <TD>@ref posix_cond</TD></TR>
+ * <TR><TD>@ref event</TD>          <TD>no direct equivalence, <BR>
+ *                                      see @ref posix_cond</TD></TR>
+ * <TR><TD>@ref native_heap</TD>    <TD>@ref posix_shm</TD></TR>
+ * <TR><TD>@ref interrupt</TD>      <TD>@ref posix_intr</TD></TR>
+ * <TR><TD>@ref mutex</TD>          <TD>@ref posix_mutex</TD></TR>
+ * <TR><TD>@ref pipe</TD>           <TD>no direct equivalence, <BR>
+ *                                      see @ref posix_mq</TD></TR>
+ * <TR><TD>@ref native_queue</TD>   <TD>@ref posix_mq</TD></TR>
+ * <TR><TD>@ref semaphore</TD>      <TD>@ref posix_sem</TD></TR>
+ * <TR><TD>@ref task</TD>           <TD>@ref posix_thread</TD></TR>
+ * <TR><TD>@ref native_timer</TD>   <TD>@ref posix_time</TD></TR>
+ * </TABLE>
+ * </CENTER>
+ *
  */
 
-#include <nucleus/module.h>
-#include <nucleus/pod.h>
-#include <nucleus/timer.h>
-#include <nucleus/heap.h>
-#include <nucleus/intr.h>
-#include <nucleus/version.h>
-#include <nucleus/sys_ppd.h>
-#ifdef CONFIG_XENO_OPT_PIPE
-#include <nucleus/pipe.h>
-#endif /* CONFIG_XENO_OPT_PIPE */
-#include <nucleus/select.h>
-#include <asm/xenomai/bits/init.h>
-#include <nucleus/vdso.h>
+#ifdef __KERNEL__
+#include <cobalt/syscall.h>
+#include "apc.h"
+#endif /* __KERNEL__ */
+#include <cobalt/posix.h>
+#include "internal.h"
+#include "cond.h"
+#include "mutex.h"
+#include "sem.h"
+#include "sig.h"
+#include "thread.h"
+#include "tsd.h"
+#include "mq.h"
+#include "timer.h"
+#include "registry.h"
+#include "shm.h"
 
-#ifdef CONFIG_XENO_OPT_HOSTRT
-static IPIPE_DEFINE_SPINLOCK(__hostrtlock);
-
-static inline void do_hostrt_event(struct xnarch_hostrt_data *hostrt)
-{
-	unsigned long flags;
-
-	/*
-	 * The locking strategy is twofold:
-	 * - The spinlock protects against concurrent updates from within the
-	 *   Linux kernel and against preemption by Xenomai
-	 * - The sequence counter is for lockless read-only access.
-	 */
-
-	spin_lock_irqsave(&__hostrtlock, flags);
-	xnwrite_seqcount_begin(&nkvdso->hostrt_data.seqcount);
-
-	nkvdso->hostrt_data.live = 1;
-	nkvdso->hostrt_data.cycle_last = hostrt->cycle_last;
-	nkvdso->hostrt_data.mask = hostrt->mask;
-	nkvdso->hostrt_data.mult = hostrt->mult;
-	nkvdso->hostrt_data.shift = hostrt->shift;
-	nkvdso->hostrt_data.wall_time_sec = hostrt->wall_time_sec;
-	nkvdso->hostrt_data.wall_time_nsec = hostrt->wall_time_nsec;
-	nkvdso->hostrt_data.wall_to_monotonic = hostrt->wall_to_monotonic;
-
-	xnwrite_seqcount_end(&nkvdso->hostrt_data.seqcount);
-	spin_unlock_irqrestore(&__hostrtlock, flags);
-}
-
-RTHAL_DECLARE_HOSTRT_EVENT(hostrt_event);
-
-static inline void init_hostrt(void)
-{
-	xnseqcount_init(&nkvdso->hostrt_data.seqcount);
-	nkvdso->hostrt_data.live = 0;
-	rthal_catch_hostrt(&hostrt_event);
-}
-#else
-static inline void init_hostrt(void) { }
-#endif /* CONFIG_XENO_OPT_HOSTRT */
-
-MODULE_DESCRIPTION("Xenomai nucleus");
-MODULE_AUTHOR("rpm@xenomai.org");
+MODULE_DESCRIPTION("POSIX/PSE51 interface");
+MODULE_AUTHOR("gilles.chanteperdrix@xenomai.org");
 MODULE_LICENSE("GPL");
 
-u_long sysheap_size_arg = CONFIG_XENO_OPT_SYS_HEAPSZ;
-module_param_named(sysheap_size, sysheap_size_arg, ulong, 0444);
-MODULE_PARM_DESC(sysheap_size, "System heap size (Kb)");
+static u_long tick_arg = CONFIG_XENO_OPT_POSIX_PERIOD;
+module_param_named(tick_arg, tick_arg, ulong, 0444);
+MODULE_PARM_DESC(tick_arg, "Fixed clock tick value (us), 0 for tick-less mode");
 
-xnqueue_t xnmod_glink_queue;
-EXPORT_SYMBOL_GPL(xnmod_glink_queue);
+static u_long time_slice_arg = 1;	/* Default (round-robin) time slice */
+module_param_named(time_slice, time_slice_arg, ulong, 0444);
+MODULE_PARM_DESC(time_slice, "Default time slice (in ticks)");
 
-u_long xnmod_sysheap_size;
+xntbase_t *pse51_tbase;
 
-int xeno_nucleus_status = -EINVAL;
-
-struct xnsys_ppd __xnsys_global_ppd;
-EXPORT_SYMBOL_GPL(__xnsys_global_ppd);
-
-void xnmod_alloc_glinks(xnqueue_t *freehq)
+static void pse51_shutdown(int xtype)
 {
-	xngholder_t *sholder, *eholder;
-
-	sholder = xnheap_alloc(&kheap,
-			       sizeof(xngholder_t) * XNMOD_GHOLDER_REALLOC);
-
-	if (!sholder) {
-		/* If we are running out of memory but still have some free
-		   holders, just return silently, hoping that the contention
-		   will disappear before we have no other choice than
-		   allocating memory eventually. Otherwise, we have to raise a
-		   fatal error right now. */
-
-		if (emptyq_p(freehq))
-			xnpod_fatal("cannot allocate generic holders");
-
-		return;
-	}
-
-	for (eholder = sholder + XNMOD_GHOLDER_REALLOC;
-	     sholder < eholder; sholder++) {
-		inith(&sholder->glink.plink);
-		appendq(freehq, &sholder->glink.plink);
-	}
+	pse51_thread_pkg_cleanup();
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
+	pse51_shm_pkg_cleanup();
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
+	pse51_timer_pkg_cleanup();
+	pse51_mq_pkg_cleanup();
+	pse51_cond_pkg_cleanup();
+	pse51_tsd_pkg_cleanup();
+	pse51_sem_pkg_cleanup();
+	pse51_mutex_pkg_cleanup();
+	pse51_signal_pkg_cleanup();
+	pse51_reg_pkg_cleanup();
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
+	pse51_intr_pkg_cleanup();
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
+#ifdef __KERNEL__
+	pse51_syscall_cleanup();
+	pse51_apc_pkg_cleanup();
+#endif /* __KERNEL__ */
+	xntbase_free(pse51_tbase);
+	xnpod_shutdown(xtype);
 }
-EXPORT_SYMBOL_GPL(xnmod_alloc_glinks);
 
-int __init __xeno_sys_init(void)
+int SKIN_INIT(posix)
 {
-	int ret;
+	int err;
 
-	xnmod_sysheap_size = module_param_value(sysheap_size_arg) * 1024;
+	xnprintf("starting POSIX services.\n");
 
-	ret = xnarch_init();
-	if (ret)
+	err = xnpod_init();
+	if (err != 0)
 		goto fail;
 
-#ifndef __XENO_SIM__
-	ret = xnheap_init_mapped(&__xnsys_global_ppd.sem_heap,
-				 CONFIG_XENO_OPT_GLOBAL_SEM_HEAPSZ * 1024,
-				 XNARCH_SHARED_HEAP_FLAGS);
-	if (ret)
-		goto cleanup_arch;
+	err = xntbase_alloc("posix", tick_arg * 1000, 0, &pse51_tbase);
+	if (err)
+	    goto fail_shutdown_pod;
 
-	xnheap_set_label(&__xnsys_global_ppd.sem_heap, "global sem heap");
-
-	xnheap_init_vdso();
-	init_hostrt();
-#endif /* !__XENO_SIM__ */
+	xntbase_start(pse51_tbase);
 
 #ifdef __KERNEL__
-	xnpod_mount();
-	xnintr_mount();
-
-#ifdef CONFIG_XENO_OPT_PIPE
-	ret = xnpipe_mount();
-	if (ret)
-		goto cleanup_proc;
-#endif /* CONFIG_XENO_OPT_PIPE */
-
-#ifdef CONFIG_XENO_OPT_SELECT
-	ret = xnselect_mount();
-	if (ret)
-		goto cleanup_pipe;
-#endif /* CONFIG_XENO_OPT_SELECT */
-
-	ret = xnshadow_mount();
-	if (ret)
-		goto cleanup_select;
-
-	ret = xnheap_mount();
-	if (ret)
-		goto cleanup_shadow;
+	err = pse51_apc_pkg_init();
+	if (err)
+		goto fail_free_tbase;
+	err = pse51_syscall_init();
 #endif /* __KERNEL__ */
 
-	xntbase_mount();
+	if (err != 0) {
+#ifdef __KERNEL__
+		pse51_apc_pkg_cleanup();
+	  fail_free_tbase:
+#endif /* __KERNEL__ */
+		xntbase_free(pse51_tbase);
+	fail_shutdown_pod:
+		xnpod_shutdown(err);
+	  fail:
+		xnlogerr("POSIX skin init failed, code %d.\n", err);
+		return err;
+	}
 
-	xnloginfo("real-time nucleus v%s (%s) loaded.\n",
-		  XENO_VERSION_STRING, XENO_VERSION_NAME);
+	pse51_reg_pkg_init(64, 128);	/* FIXME: replace with compilation constants. */
+	pse51_signal_pkg_init();
+	pse51_mutex_pkg_init();
+	pse51_sem_pkg_init();
+	pse51_tsd_pkg_init();
+	pse51_cond_pkg_init();
+	pse51_mq_pkg_init();
+#ifdef CONFIG_XENO_OPT_POSIX_INTR
+	pse51_intr_pkg_init();
+#endif /* CONFIG_XENO_OPT_POSIX_INTR */
+	pse51_timer_pkg_init();
+#ifdef CONFIG_XENO_OPT_POSIX_SHM
+	pse51_shm_pkg_init();
+#endif /* CONFIG_XENO_OPT_POSIX_SHM */
 
-#ifdef CONFIG_XENO_OPT_DEBUG
-	xnloginfo("debug mode enabled.\n");
-#endif
-
-	initq(&xnmod_glink_queue);
-
-	xeno_nucleus_status = 0;
-
-	xnarch_cpus_and(nkaffinity, nkaffinity, xnarch_supported_cpus);
+	pse51_thread_pkg_init(module_param_value(time_slice_arg));
 
 	return 0;
-
-#ifdef __KERNEL__
-
-      cleanup_shadow:
-
-	xnshadow_cleanup();
-
-      cleanup_select:
-
-#ifdef CONFIG_XENO_OPT_SELECT
-	xnselect_umount();
-
-      cleanup_pipe:
-#endif /* CONFIG_XENO_OPT_SELECT */
-
-#ifdef CONFIG_XENO_OPT_PIPE
-	xnpipe_umount();
-
-      cleanup_proc:
-
-#endif /* CONFIG_XENO_OPT_PIPE */
-
-	xnpod_umount();
-
-      cleanup_arch:
-
-	xnarch_exit();
-
-#endif /* __KERNEL__ */
-
-      fail:
-
-	xnlogerr("system init failed, code %d.\n", ret);
-
-	xeno_nucleus_status = ret;
-
-	return ret;
 }
 
-void __exit __xeno_sys_exit(void)
+void SKIN_EXIT(posix)
 {
-	xnpod_shutdown(XNPOD_NORMAL_EXIT);
-
-#ifndef __XENO_SIM__
-	/* Must take place before xnpod_umount(). */
-	xnshadow_cleanup();
-#endif
-
-	xntbase_umount();
-	xnpod_umount();
-
-	xnarch_exit();
-
-#ifndef __XENO_SIM__
-	xnheap_umount();
-#ifdef CONFIG_XENO_OPT_PIPE
-	xnpipe_umount();
-#endif
-	xnheap_destroy_mapped(&__xnsys_global_ppd.sem_heap, NULL, NULL);
-#endif /* !__XENO_SIM__ */
-
-	xnloginfo("real-time nucleus unloaded.\n");
+	xnprintf("stopping POSIX services.\n");
+	pse51_shutdown(XNPOD_NORMAL_EXIT);
 }
 
-module_init(__xeno_sys_init);
-module_exit(__xeno_sys_exit);
+module_init(__posix_skin_init);
+module_exit(__posix_skin_exit);

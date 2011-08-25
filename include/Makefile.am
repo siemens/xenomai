@@ -16,8 +16,9 @@ SUBDIRS = \
 	asm-sim \
 	analogy \
 	native \
-	nucleus \
-	posix \
+	psos \
+	vxworks \
+	cobalt \
 	rtdm
 
 install-data-local:

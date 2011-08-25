@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 config XENO_OPT_NUCLEUS
 	depends on XENOMAI
 	tristate "Nucleus"
@@ -225,7 +226,10 @@ config XENO_OPT_DEBUG_NUCLEUS
 	bool "Nucleus Debugging support"
 	depends on XENO_OPT_DEBUG
 	help
+=======
+>>>>>>> posix: rename as the cobalt interface
 
+<<<<<<< HEAD
 	This option activates various debugging checks inside the core
 	system. Doing so adds a significant runtime overhead,
 	worsening the latency figures especially on SMP kernels.
@@ -310,137 +314,48 @@ config XENO_OPT_DEBUG_TRACE_RELAX
 config XENO_OPT_WATCHDOG
 	bool "Watchdog support"
 	depends on XENO_OPT_DEBUG
+=======
+menuconfig XENO_SKIN_POSIX
+	depends on XENOMAI
+	bool "POSIX API"
+>>>>>>> posix: rename as the cobalt interface
 	default y
 	help
 
-	This option activates a watchdog aimed at detecting runaway
-	real-time threads. If enabled, the watchdog triggers after
-	a given period of uninterrupted real-time activity has elapsed
-	without Linux interaction in the meantime; in such event, the
-	current real-time thread is killed. The built-in watchdog
-	support operates on behalf of the timer tick handler,
-	thus is only active after the timer has been started. The
-	timeout value of the watchdog can be set using the
-	XENO_OPT_WATCHDOG_TIMEOUT parameter.
+	A POSIX-compliant skin.
 
-config XENO_OPT_WATCHDOG_TIMEOUT
-	depends on XENO_OPT_WATCHDOG
-	int "Watchdog timeout"
-	default 4
-	range 1 60
-	help
+if XENO_SKIN_POSIX
 
-	Watchdog timeout value (in seconds).
-
-config XENO_OPT_SHIRQ
-	bool "Shared interrupts"
-	help
-
-	Enables support for both level- and edge-triggered shared
-	interrupts, so that multiple real-time interrupt handlers
-	are allowed to control dedicated hardware devices which are
-	configured to share the same interrupt line.
-
-config XENO_OPT_SELECT
-	bool
-
-config XENO_OPT_HOSTRT
-       depends on HAVE_IPIPE_HOSTRT
-       def_bool y
-
-menu "Timing"
-
-config XENO_OPT_TIMING_PERIODIC
-	bool "Enable periodic timing"
-	help
-
-	Xenomai allows different skins to be clocked separately,
-	according to distinct frequencies, or aperiodically. In the
-	periodic case, delays and timeouts are given in counts of
-	ticks, which duration can be fixed by configuration or set
-	at runtime. In the aperiodic case, timings are directly
-	specified in nanoseconds. Selecting this option allows you to
-	run skins depending on a periodic time base.
-
-	You can leave this option disabled in order to save a few
-	hundreds bytes and some cycles on the fast path if you plan to
-	use the system timer in tick-less (i.e. aperiodic) mode only.
-
-	This option must not be confused with the ability to run
-	periodic threads, which is possible is both timing
-	modes. Periodic threads needing high timing accuracy will even
-	likely prefer using aperiodic timing.
-
-config XENO_OPT_TIMING_VIRTICK
-	int "Virtual tick duration in aperiodic mode (us)"
-	default 1000
-	help
-
-	Time-slicing (aka round-robin scheduling) defines a base
-	period that represents the duration of one tick; threads can
-	then be given a time credit to consume as a count of
-	ticks. For that reason, time-slicing is usually based on a
-	periodic timing mode.
-
-	This parameter defines the duration of a virtual tick
-	expressed as a count of micro-seconds, so that time-slicing is
-	also available to threads that undergo aperiodic timing. In
-	such a case, the time credit assigned to a thread will be
-	equal to XENO_OPT_TIMING_VIRTICK * quantum, where quantum is
-	the count of ticks representing a full time-slice.
-
-config XENO_OPT_TIMING_SCHEDLAT
-	int "Scheduling latency (ns)"
+config XENO_OPT_POSIX_PERIOD
+	int "Base period (us)" if XENO_OPT_TIMING_PERIODIC
 	default 0
 	help
-	Scheduling latency is the time between the termination of an
-	interrupt handler and the execution of the first instruction
-	of the real-time thread this handler resumes. A default value
-	of 0 (recommended) will cause a pre-calibrated value to be
-	used.
+	Duration of the base periodic tick (in microseconds).
 
-endmenu
+	The POSIX skin can express all delays and timeouts either as
+	counts of ticks (i.e. jiffy-based), or directly in
+	nanoseconds in a tick-less fashion. This paramater defines the
+	duration of the base period in microseconds; a null value
+	selects the tick-less mode.
 
-menu "Scalability"
+	The base period can be overriden at runtime using the
+	"tick_arg" module parameter when loading the POSIX skin.
 
-config XENO_OPT_SCALABLE_SCHED
-	bool "O(1) scheduler"
+	If in doubt, leave zero in this field.
+
+config XENO_OPT_POSIX_SHM
+	bool "Shared memory"
 	help
 
-	This option causes a multi-level priority queue to be
-	used in the real-time thread scheduler, so that it operates
-	in constant-time regardless of the number of _concurrently
-	runnable_ threads (which might be much lower than the total
-	number of active threads).
+	POSIX skin shared memory areas are regions of memory which can be shared
+	between kernel-space and user-space, or used to share synchronization
+	objects between kernel-space and user-space.
 
-	Its use is recommended for large multi-threaded systems
-	involving more than 10 of such threads; otherwise, the default
-	linear method usually performs better with lower memory
-	footprints.
+	If you do not intend to use Xenomai POSIX skin in kernel-space (and
+	using the RTDM skin is the preferred way of implementing drivers), leave
+	this option unselected.
 
-choice
-	prompt "Timer indexing method"
-	default XENO_OPT_TIMER_LIST
-	help
-
-	This option allows to select the underlying data structure
-	which is going to be used for ordering the outstanding
-	software timers managed by the nucleus when operating in
-	aperiodic timing mode. In periodic mode, a fast timer wheel
-	data structure is always used, regardless of this option.
-
-config XENO_OPT_TIMER_LIST
-	bool "Linear"
-	help
-
-	Use a linked list. Albeit O(N), this simple data structure is
-	particularly efficient when only a few timers (< 10) may be
-	concurrently outstanding at any point in time.
-
-config XENO_OPT_TIMER_HEAP
-	bool "Tree"
-	help
-
+<<<<<<< HEAD
 	Use a binary heap. This data structure is efficient when a
 	high number of software timers may be concurrently
 	outstanding at any point in time.
@@ -457,24 +372,36 @@ config XENO_OPT_TIMER_WHEEL
 	the wheel step (around 100000 ns by default).
 
 endchoice
+=======
+if XENO_SKIN_RTDM = m
+	comment "Note: Support for select is not available"
+	comment "if the RTDM skin is compiled as a module."
+endif
+>>>>>>> posix: rename as the cobalt interface
 
-config XENO_OPT_TIMER_HEAP_CAPACITY
-	int "Binary heap capacity"
-	depends on XENO_OPT_TIMER_HEAP
-	default 256
+config XENO_OPT_POSIX_SELECT
+	bool "Select syscall"
+	select XENO_OPT_SELECT
+	depends on XENO_SKIN_RTDM != m
 	help
 
-	Set the maximum number of timers in the nucleus timers list.
+	This option allows applications using the Xenomai POSIX skin
+	in user-space to use the "select" syscall with Xenomai POSIX
+	skin file descriptors.
 
-config XENO_OPT_TIMER_WHEEL_STEP
-	int "Timer wheel step"
-	depends on XENO_OPT_TIMER_WHEEL
-	default 100000
+config XENO_OPT_DEBUG_POSIX
+	bool "Debugging support"
+	default n
 	help
 
+<<<<<<< HEAD
 	Set the duration in ns of a timer wheel step. At each step,
 	the timer wheel use the next hash bucket.
 
 endmenu
+=======
+	When enabled, this option makes the skin warn about not properly
+	cleaned up POSIX objects it detects on process termination.
+>>>>>>> posix: rename as the cobalt interface
 
 endif

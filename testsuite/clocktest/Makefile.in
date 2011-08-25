@@ -57,7 +57,7 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_clocktest_OBJECTS = clocktest-clocktest.$(OBJEXT)
 clocktest_OBJECTS = $(am_clocktest_OBJECTS)
-clocktest_DEPENDENCIES = ../../lib/posix/libpthread_rt.la
+clocktest_DEPENDENCIES = ../../lib/cobalt/libcobalt.la
 clocktest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(clocktest_LDFLAGS) $(LDFLAGS) -o $@
@@ -237,10 +237,16 @@ top_srcdir = @top_srcdir@
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 clocktest_SOURCES = clocktest.c
-clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include -Wno-missing-prototypes 
+clocktest_CPPFLAGS = \
+	$(XENO_USER_CFLAGS)		\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
+
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 clocktest_LDADD = \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt
 
 all: all-am

@@ -6,10 +6,15 @@ test_PROGRAMS = switchtest
 
 switchtest_SOURCES = switchtest.c
 
-switchtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include -Wno-missing-prototypes 
+switchtest_CPPFLAGS =			\
+	$(XENO_USER_CFLAGS)		\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 switchtest_LDFLAGS =  $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 switchtest_LDADD = \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt

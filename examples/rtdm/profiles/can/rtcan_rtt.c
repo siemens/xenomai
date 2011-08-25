@@ -4,7 +4,7 @@
  *
  * Copyright (C) 2006 Wolfgang Grandegger <wg@grandegger.com>
  *
- * Based on RTnet's examples/xenomai/posix/rtt-sender.c.
+ * Based on RTnet's examples/xenomai/cobalt/rtt-sender.c.
  *
  * Copyright (C) 2002 Ulrich Marx <marx@kammer.uni-hannover.de>
  *               2002 Marc Kleine-Budde <kleine-budde@gmx.de>

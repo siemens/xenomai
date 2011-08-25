@@ -13,15 +13,14 @@ libcopperplate_la_SOURCES =	\
 	traceobj.c
 
 libcopperplate_la_CPPFLAGS =		\
-	@XENO_USER_CFLAGS@	\
-	-I$(top_srcdir)/src/include
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include
 
 libcopperplate_la_LIBADD =
 
 if XENO_COBALT
-libcopperplate_la_CPPFLAGS +=	\
-	-I$(top_srcdir)/include/posix	\
-	-I$(top_srcdir)/include
+libcopperplate_la_CPPFLAGS +=		\
+	-I$(top_srcdir)/include/cobalt
 libcopperplate_la_SOURCES +=	\
 	threadobj-cobalt.c	\
 	timerobj-cobalt.c

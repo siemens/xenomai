@@ -6,10 +6,15 @@ test_PROGRAMS = clocktest
 
 clocktest_SOURCES = clocktest.c
 
-clocktest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -I$(top_srcdir)/include -Wno-missing-prototypes 
+clocktest_CPPFLAGS =			\
+	$(XENO_USER_CFLAGS)		\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
 
 clocktest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 
 clocktest_LDADD = \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt

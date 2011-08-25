@@ -18,6 +18,7 @@ libnative_la_SOURCES = \
 	wrappers.c \
 	wrappers.h
 
-libnative_la_CPPFLAGS = \
-	@XENO_USER_CFLAGS@ \
+libnative_la_CPPFLAGS =			\
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include

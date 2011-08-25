@@ -1,6 +1,4 @@
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
-
 obj-$(CONFIG_XENO_DRIVERS_TIMERBENCH) += xeno_timerbench.o
 obj-$(CONFIG_XENO_DRIVERS_IRQBENCH)   += xeno_irqbench.o
 obj-$(CONFIG_XENO_DRIVERS_SWITCHTEST) += xeno_switchtest.o
@@ -20,4 +18,4 @@ xeno_sigtest-y := sigtest_module.o
 
 xeno_rtdmtest-y := rtdmtest.o
 
-EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai
+EXTRA_CFLAGS += -D__IN_XENOMAI__ -Iinclude/xenomai/cobalt -Iinclude/xenomai

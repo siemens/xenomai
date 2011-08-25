@@ -7,4 +7,4 @@ SUBDIRS = \
 	switchtest \
 	unit \
 	xeno-test
-#	klatency
+	klatency

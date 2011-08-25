@@ -57,7 +57,7 @@ am__installdirs = "$(DESTDIR)$(testdir)"
 PROGRAMS = $(test_PROGRAMS)
 am_switchtest_OBJECTS = switchtest-switchtest.$(OBJEXT)
 switchtest_OBJECTS = $(am_switchtest_OBJECTS)
-switchtest_DEPENDENCIES = ../../lib/posix/libpthread_rt.la
+switchtest_DEPENDENCIES = ../../lib/cobalt/libcobalt.la
 switchtest_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(switchtest_LDFLAGS) $(LDFLAGS) -o $@
@@ -237,10 +237,16 @@ top_srcdir = @top_srcdir@
 testdir = @XENO_TEST_DIR@
 CCLD = $(top_srcdir)/scripts/wrap-link.sh $(CC)
 switchtest_SOURCES = switchtest.c
-switchtest_CPPFLAGS = -I$(top_srcdir)/include/posix $(XENO_USER_CFLAGS) -g -I$(top_srcdir)/include -Wno-missing-prototypes 
+switchtest_CPPFLAGS = \
+	$(XENO_USER_CFLAGS)		\
+	-I$(top_srcdir)/include/posix	\
+	-I$(top_srcdir)/include/cobalt	\
+	-I$(top_srcdir)/include		\
+	-Wno-missing-prototypes 
+
 switchtest_LDFLAGS = $(XENO_POSIX_WRAPPERS) $(XENO_USER_LDFLAGS)
 switchtest_LDADD = \
-	../../lib/posix/libpthread_rt.la \
+	../../lib/cobalt/libcobalt.la \
 	-lpthread -lrt
 
 all: all-am

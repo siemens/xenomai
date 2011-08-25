@@ -1806,8 +1806,6 @@ void rtdm_nrtsig_pend(rtdm_nrtsig_t *nrt_sig);
  * @{
  */
 
-#ifdef DOXYGEN_CPP
-
 struct rtdm_mmap_data {
 	void *src_vaddr;
 	phys_addr_t src_paddr;
@@ -2110,8 +2108,6 @@ int rtdm_munmap(rtdm_user_info_t *user_info, void *ptr, size_t len)
 }
 EXPORT_SYMBOL_GPL(rtdm_munmap);
 
-#endif /* DOXYGEN_CPP */
-
 /**
  * @brief Enforces a rate limit
  *
@@ -2164,7 +2160,7 @@ int rtdm_ratelimit(struct rtdm_ratelimit_state *rs, const char *func)
 
 	return ret;
 }
-EXPORT_SYMBOL(rtdm_ratelimit);
+EXPORT_SYMBOL_GPL(rtdm_ratelimit);
 
 #ifdef DOXYGEN_CPP /* Only used for doxygen doc generation */
 
