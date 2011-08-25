@@ -468,7 +468,7 @@ static void cleanup_buffer(struct print_buffer *buffer)
 
 		old_bitmap = xnarch_atomic_get(&pool_bitmap[i]);
 
-		if ((old_bitmap & (1UL << j)) == 0)
+		if ((old_bitmap & (1UL << j)))
 			return;
 
 		do {
@@ -614,15 +614,14 @@ static void forked_child_init(void)
 	pthread_mutex_init(&buffer_lock, NULL);
 
 	while (*pbuffer) {
-#ifdef CONFIG_XENO_FASTSYNCH
-		if ((unsigned long)*pbuffer - pool_start < pool_len) {
-			cleanup_buffer(*pbuffer);
-			pbuffer = &(*pbuffer)->next;
-			continue;
-		}
-#endif /* CONFIG_XENO_FASTSYNCH */
 		if (*pbuffer == my_buffer)
 			pbuffer = &(*pbuffer)->next;
+#ifdef CONFIG_XENO_FASTSYNCH
+		else if ((unsigned long)*pbuffer - pool_start < pool_len) {
+			cleanup_buffer(*pbuffer);
+			pbuffer = &(*pbuffer)->next;
+		}
+#endif /* CONFIG_XENO_FASTSYNCH */
 		else
 			cleanup_buffer(*pbuffer);
 	}
