@@ -2624,7 +2624,7 @@ static int __mmap_prologue(struct pt_regs *regs)
 	   placeholder. */
 	mmap_param.kaddr = mmap(NULL,
 				len,
-				PROT_READ | PROT_WRITE,
+				PROT_READ,
 				MAP_SHARED, ufd->kfd, off);
 
 	if (mmap_param.kaddr == MAP_FAILED)
