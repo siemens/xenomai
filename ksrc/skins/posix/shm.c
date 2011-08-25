@@ -154,8 +154,8 @@ static void pse51_shm_put(pse51_shm_t * shm, unsigned dec)
 		pse51_node_put(&shm->nodebase);
 
 	if (pse51_node_removed_p(&shm->nodebase)) {
-		xnlock_put_irqrestore(&nklock, s);
 		pse51_shm_destroy(shm, 0);
+		xnlock_put_irqrestore(&nklock, s);
 		xnfree(shm);
 	} else
 		xnlock_put_irqrestore(&nklock, s);
