@@ -430,8 +430,12 @@ int rthal_irq_end(unsigned int irq)
 void __rthal_arm_fault_range(struct vm_area_struct *vma)
 {
 	unsigned long addr;
-	for (addr = vma->vm_start; addr != vma->vm_end; addr += PAGE_SIZE)
-		handle_mm_fault(vma->vm_mm, vma, addr, 1);
+
+	if ((vma->vm_flags & VM_MAYREAD))
+		for (addr = vma->vm_start;
+		     addr != vma->vm_end; addr += PAGE_SIZE)
+			handle_mm_fault(vma->vm_mm, vma, addr,
+					vma->vm_flags & VM_MAYWRITE);
 }
 
 static inline int do_exception_event(unsigned event, unsigned domid, void *data)
