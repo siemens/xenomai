@@ -48,14 +48,8 @@
 #define XNINIRQ		0x00004000	/* In IRQ handling context */
 #define XNHDEFER	0x00002000	/* Host tick deferred */
 
-/* Sched RPI status flags */
-#define XNRPICK		0x80000000	/* Check RPI state */
-
 struct xnsched_rt {
 	xnsched_queue_t runnable;	/*!< Runnable thread queue. */
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	xnsched_queue_t relaxed;	/*!< Relaxed thread queue. */
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
 };
 
 /*!
@@ -104,11 +98,6 @@ typedef struct xnsched {
 	xnstat_exectime_t *current_account;	/*!< Currently active account */
 #endif
 
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	DECLARE_XNLOCK(rpilock);	/*!< RPI lock */
-	xnflags_t rpistatus;
-#endif
-
 #ifndef __XENO_SIM__
 	struct task_struct *gatekeeper;
 	struct semaphore gksync;
@@ -140,14 +129,6 @@ struct xnsched_class {
 	int (*sched_declare)(struct xnthread *thread,
 			     const union xnsched_policy_param *p);
 	void (*sched_forget)(struct xnthread *thread);
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	struct xnthread *(*sched_push_rpi)(struct xnsched *sched,
-					   struct xnthread *thread);
-	void (*sched_pop_rpi)(struct xnthread *thread);
-	struct xnthread *(*sched_peek_rpi)(struct xnsched *sched);
-	void (*sched_suspend_rpi)(struct xnthread *thread);
-	void (*sched_resume_rpi)(struct xnthread *thread);
-#endif
 #ifdef CONFIG_XENO_OPT_VFILE
 	int (*sched_init_vfile)(struct xnsched_class *schedclass,
 				struct xnvfile_directory *vfroot);
@@ -427,37 +408,6 @@ static inline void xnsched_forget(struct xnthread *thread)
 		sched_class->sched_forget(thread);
 }
 
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-static inline struct xnthread *xnsched_push_rpi(struct xnsched *sched,
-						struct xnthread *thread)
-{
-	return thread->sched_class->sched_push_rpi(sched, thread);
-}
-
-static inline void xnsched_pop_rpi(struct xnthread *thread)
-{
-	thread->sched_class->sched_pop_rpi(thread);
-}
-
-static inline void xnsched_suspend_rpi(struct xnthread *thread)
-{
-	struct xnsched_class *sched_class = thread->sched_class;
-
-	if (sched_class->sched_suspend_rpi)
-		sched_class->sched_suspend_rpi(thread);
-}
-
-static inline void xnsched_resume_rpi(struct xnthread *thread)
-{
-	struct xnsched_class *sched_class = thread->sched_class;
-
-	if (sched_class->sched_resume_rpi)
-		sched_class->sched_resume_rpi(thread);
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
-
 #else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
 
 /*
@@ -538,37 +488,7 @@ static inline void xnsched_forget(struct xnthread *thread)
 	__xnsched_rt_forget(thread);
 }
 
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-static inline struct xnthread *xnsched_push_rpi(struct xnsched *sched,
-						struct xnthread *thread)
-{
-	return __xnsched_rt_push_rpi(sched, thread);
-}
-
-static inline void xnsched_pop_rpi(struct xnthread *thread)
-{
-	__xnsched_rt_pop_rpi(thread);
-}
-
-static inline void xnsched_suspend_rpi(struct xnthread *thread)
-{
-	__xnsched_rt_suspend_rpi(thread);
-}
-
-static inline void xnsched_resume_rpi(struct xnthread *thread)
-{
-	__xnsched_rt_resume_rpi(thread);
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
-
 #endif /* !CONFIG_XENO_OPT_SCHED_CLASSES */
-
-void xnsched_renice_root(struct xnsched *sched,
-			 struct xnthread *target);
-
-struct xnthread *xnsched_peek_rpi(struct xnsched *sched);
 
 #else /* !(__KERNEL__ || __XENO_SIM__) */
 

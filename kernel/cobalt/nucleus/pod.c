@@ -270,17 +270,8 @@ EXPORT_SYMBOL_GPL(xnpod_fatal_helper);
 
 void xnpod_schedule_handler(void) /* Called with hw interrupts off. */
 {
-	xnsched_t *sched;
-
 	trace_mark(xn_nucleus, sched_remote, MARK_NOARGS);
 	xnarch_memory_barrier();
-#if defined(CONFIG_SMP) && defined(CONFIG_XENO_OPT_PRIOCPL)
-	sched = xnpod_current_sched();
-	if (testbits(sched->rpistatus, XNRPICK))
-		xnshadow_rpi_check();
-#else
-	(void)sched;
-#endif /* CONFIG_SMP && CONFIG_XENO_OPT_PRIOCPL */
 	xnpod_schedule();
 }
 
@@ -924,11 +915,6 @@ EXPORT_SYMBOL_GPL(xnpod_stop_thread);
  *
  * - XNASDI disables the asynchronous signal handling for this thread.
  * See xnpod_schedule() for more on this.
- *
- * - XNRPIOFF disables thread priority coupling between Xenomai and
- * Linux schedulers. This bit prevents the root Linux thread from
- * inheriting the priority of the running shadow Xenomai thread. Use
- * CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.
  *
  * Environments:
  *

@@ -141,10 +141,6 @@ int xnthread_init(struct xnthread *thread,
 	inith(&thread->glink);
 	initph(&thread->rlink);
 	initph(&thread->plink);
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	initph(&thread->xlink);
-	thread->rpi = NULL;
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
 #ifdef CONFIG_XENO_OPT_SELECT
 	thread->selector = NULL;
 #endif /* CONFIG_XENO_OPT_SELECT */

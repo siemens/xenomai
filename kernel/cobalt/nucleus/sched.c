@@ -138,10 +138,6 @@ void xnsched_init(struct xnsched *sched, int cpu)
 	sched->lflags = 0;
 	sched->inesting = 0;
 	sched->curr = &sched->rootcb;
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	xnlock_init(&sched->rpilock);
-	sched->rpistatus = 0;
-#endif
 	/*
 	 * No direct handler here since the host timer processing is
 	 * postponed to xnintr_irq_handler(), as part of the interrupt
@@ -281,63 +277,6 @@ void __xnsched_finalize_zombie(struct xnsched *sched)
 
 	sched->zombie = NULL;
 }
-
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-/* Must be called with nklock locked, interrupts off. */
-struct xnthread *xnsched_peek_rpi(struct xnsched *sched)
-{
-	struct xnsched_class *p;
-	struct xnthread *thread;
-
-	/*
-	 * Find the relaxed thread having the highest priority among
-	 * all scheduling classes, scanned by decreasing priority.
-	 */
-#ifdef CONFIG_XENO_OPT_SCHED_CLASSES
-	for_each_xnsched_class(p) {
-		if (p->sched_peek_rpi) {
-			thread = p->sched_peek_rpi(sched);
-			if (thread)
-				return thread;
-		}
-	}
-
-	return NULL;
-#else /* !CONFIG_XENO_OPT_SCHED_CLASSES */
-	thread = __xnsched_rt_peek_rpi(sched); (void)p;
-	return thread;
-#endif /* CONFIG_XENO_OPT_SCHED_CLASSES */
-}
-
-/*!
- * @internal
- * \fn void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
- * \brief Change the root thread priority.
- *
- * xnsched_renice_root() updates the current priority of the root
- * thread for the given scheduler slot. This may lead to changing the
- * scheduling class of the root thread.
- */
-void xnsched_renice_root(struct xnsched *sched, struct xnthread *target)
-{
-	struct xnthread *root = &sched->rootcb;
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (target == NULL)
-		target = root;
-
-	xnsched_track_policy(root, target);
-
-	trace_mark(xn_nucleus, sched_reniceroot, MARK_NOARGS);
-	xnarch_trace_pid(xnarch_user_pid(xnthread_archtcb(root)), root->cprio);
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
 
 #ifdef CONFIG_XENO_HW_UNLOCKED_SWITCH
 

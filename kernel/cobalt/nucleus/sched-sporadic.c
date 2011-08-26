@@ -225,10 +225,10 @@ static void xnsched_sporadic_init(struct xnsched *sched)
 {
 	/*
 	 * We litterally stack the sporadic scheduler on top of the RT
-	 * one, reusing its runnable and RPI queues directly. This
-	 * way, RT and sporadic threads are merged into the same
-	 * runqueue and thus share the same priority scale, with the
-	 * addition of budget management for the sporadic ones.
+	 * one, reusing its runnable queue directly. This way, RT and
+	 * sporadic threads are merged into the same runqueue and thus
+	 * share the same priority scale, with the addition of budget
+	 * management for the sporadic ones.
 	 */
 #if XENO_DEBUG(NUCLEUS)
 	sched->pss.drop_retries = 0;
@@ -383,50 +383,6 @@ static struct xnthread *xnsched_sporadic_pick(struct xnsched *sched)
 	return next;
 }
 
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-static struct xnthread *xnsched_sporadic_push_rpi(struct xnsched *sched,
-						  struct xnthread *thread)
-{
-	return __xnsched_rt_push_rpi(sched, thread);
-}
-
-static void xnsched_sporadic_pop_rpi(struct xnthread *thread)
-{
-	__xnsched_rt_pop_rpi(thread);
-}
-
-static struct xnthread *xnsched_sporadic_peek_rpi(struct xnsched *sched)
-{
-	return __xnsched_rt_peek_rpi(sched);
-}
-
-static void xnsched_sporadic_suspend_rpi(struct xnthread *thread)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (thread->pss)
-		sporadic_suspend_activity(thread);
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-static void xnsched_sporadic_resume_rpi(struct xnthread *thread)
-{
-	spl_t s;
-
-	xnlock_get_irqsave(&nklock, s);
-
-	if (thread->pss)
-		sporadic_resume_activity(thread);
-
-	xnlock_put_irqrestore(&nklock, s);
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
-
 #ifdef CONFIG_XENO_OPT_VFILE
 
 struct xnvfile_directory sched_sporadic_vfroot;
@@ -577,13 +533,6 @@ struct xnsched_class xnsched_class_sporadic = {
 	.sched_trackprio	=	xnsched_sporadic_trackprio,
 	.sched_declare		=	xnsched_sporadic_declare,
 	.sched_forget		=	xnsched_sporadic_forget,
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	.sched_push_rpi 	=	xnsched_sporadic_push_rpi,
-	.sched_pop_rpi		=	xnsched_sporadic_pop_rpi,
-	.sched_peek_rpi 	=	xnsched_sporadic_peek_rpi,
-	.sched_suspend_rpi 	=	xnsched_sporadic_suspend_rpi,
-	.sched_resume_rpi 	=	xnsched_sporadic_resume_rpi,
-#endif
 #ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_sporadic_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_sporadic_cleanup_vfile,

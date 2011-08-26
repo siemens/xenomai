@@ -48,7 +48,6 @@
 #define T_LOCK     XNLOCK     /**< See #XNLOCK    */
 #define T_NOSIG    XNASDI     /**< See #XNASDI    */ 
 #define T_WARNSW   XNTRAPSW   /**< See #XNTRAPSW  */ 
-#define T_RPIOFF   XNRPIOFF   /**< See #XNRPIOFF  */ 
 
 /* Pseudo-status bits (no conflict with other T_* bits) */
 #define T_CONFORMING  0x00000200

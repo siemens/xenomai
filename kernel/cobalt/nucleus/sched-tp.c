@@ -154,15 +154,6 @@ static int xnsched_tp_declare(struct xnthread *thread,
 		return -EINVAL;
 
 	appendq(&sched->tp.threads, &thread->tp_link);
-	/*
-	 * RPI makes no sense with temporal partitioning, since
-	 * resources obtained from Linux should have been
-	 * pre-allocated by the application before entering real-time
-	 * duties, so that timings remain accurate. As a consequence
-	 * of this, the reason to have priority inheritance for the
-	 * root thread disappears.
-	 */
-	xnthread_set_state(thread, XNRPIOFF);
 
 	return 0;
 }

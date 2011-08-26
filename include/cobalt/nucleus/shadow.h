@@ -90,8 +90,6 @@ void xnshadow_send_sig(struct xnthread *thread,
 		       int arg,
 		       int specific);
 
-void xnshadow_rpi_check(void);
-
 void xnshadow_call_mayday(struct xnthread *thread, int sigtype);
 
 void xnshadow_kick(struct xnthread *thread);

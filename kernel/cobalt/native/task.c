@@ -1462,11 +1462,6 @@ int rt_task_notify(RT_TASK *task, rt_sigset_t signals)
  * mode. This feature is useful to detect unwanted migrations to the
  * Linux domain.
  *
- * - T_RPIOFF disables thread priority coupling between Xenomai and
- * Linux schedulers. This bit prevents the root Linux thread from
- * inheriting the priority of the running shadow Xenomai thread. Use
- * CONFIG_XENO_OPT_RPIOFF to globally disable priority coupling.
- *
  * - T_CONFORMING can be passed in @a setmask to switch the current
  * user-space task to its preferred runtime mode. The only meaningful
  * use of this switch is to force a real-time shadow back to primary
@@ -1525,7 +1520,7 @@ int rt_task_set_mode(int clrmask, int setmask, int *mode_r)
 	}
 
 	if (((clrmask | setmask) &
-	     ~(T_LOCK | T_NOSIG | T_WARNSW | T_RPIOFF)) != 0)
+	     ~(T_LOCK | T_NOSIG | T_WARNSW)) != 0)
 		return -EINVAL;
 
 	if (!xnpod_primary_p())

@@ -57,11 +57,10 @@
  * which use the low one, so don't change them carelessly.
  */
 #define XNTRAPSW  0x00040000 /**< Trap execution mode switches */
-#define XNRPIOFF  0x00080000 /**< Stop priority coupling (shadow only) */
-#define XNFPU     0x00100000 /**< Thread uses FPU */
-#define XNSHADOW  0x00200000 /**< Shadow thread */
-#define XNROOT    0x00400000 /**< Root thread (that is, Linux/IDLE) */
-#define XNOTHER   0x00800000 /**< Non real-time shadow (prio=0) */
+#define XNFPU     0x00080000 /**< Thread uses FPU */
+#define XNSHADOW  0x00100000 /**< Shadow thread */
+#define XNROOT    0x00200000 /**< Root thread (that is, Linux/IDLE) */
+#define XNOTHER   0x00400000 /**< Non real-time shadow (prio=0) */
 
 /*! @} */ /* Ends doxygen comment group: nucleus_state_flags */
 
@@ -79,15 +78,13 @@
   'T' -> Ptraced and stopped.
   'l' -> Locks scheduler.
   'r' -> Undergoes round-robin.
-  's' -> Interrupt shield enabled.
   't' -> Mode switches trapped.
-  'o' -> Priority coupling off.
   'f' -> FPU enabled (for kernel threads).
 */
 #define XNTHREAD_STATE_LABELS  "SWDRU....X.HbTlr..tof.."
 
 #define XNTHREAD_BLOCK_BITS   (XNSUSP|XNPEND|XNDELAY|XNDORMANT|XNRELAX|XNMIGRATE|XNHELD)
-#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW|XNRPIOFF)
+#define XNTHREAD_MODE_BITS    (XNLOCK|XNRRB|XNASDI|XNTRAPSW)
 
 /* These state flags are available to the real-time interfaces */
 #define XNTHREAD_STATE_SPARE0  0x10000000
@@ -237,12 +234,6 @@ typedef struct xnthread {
 	xnpholder_t rlink;		/* Thread holder in ready queue */
 
 	xnpholder_t plink;		/* Thread holder in synchronization queue(s) */
-
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	xnpholder_t xlink;		/* Thread holder in the RPI queue (shadow only) */
-
-	struct xnsched *rpi;		/* Backlink pointer to the RPI slot (shadow only) */
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
 
 	xnholder_t glink;		/* Thread holder in global queue */
 

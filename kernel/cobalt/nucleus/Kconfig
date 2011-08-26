@@ -1,38 +1,5 @@
 menu "Core features"
 
-config XENO_OPT_PRIOCPL
-	bool "Priority coupling support"
-	default y
-	help
-
-	This option builds in the priority coupling support between
-	Xenomai and Linux schedulers. Coupling priority makes the
-	Linux kernel - as a whole - inherit the Xenomai-defined
-	priority for a real-time thread running in user-space, when it
-	enters the secondary execution mode, e.g. to perform regular
-	Linux system calls.
-
-	The net effect is that a user-space Xenomai thread which
-	executes under the control of the Linux scheduler would still
-	keep its priority in the Xenomai scheduler, and as such, would
-	still run before any real-time thread having a lower priority,
-	regardless of the execution mode of the latter (i.e. primary
-	or secondary).
-
-	Conversely, decoupling priority causes any user-space Xenomai
-	thread which executes under the control of the Linux scheduler
-	to always have a lower priority than any runnable real-time
-	thread left under the control of the Xenomai scheduler
-	(i.e. in primary mode), and as such, it will be scheduled
-	after.
-
-	Priority coupling can also be switched on/off dynamically on a
-	thread-by-thread basis, provided this option enables the
-	support globally. Otherwise, no priority coupling will ever
-	occur.
-
-	If in doubt, say Y.
-
 config XENO_OPT_SCHED_CLASSES
 	bool "Extra scheduling classes"
 	default n

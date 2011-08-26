@@ -117,37 +117,6 @@ static inline int xnsched_rt_init_tcb(struct xnthread *thread)
 
 void xnsched_rt_tick(struct xnthread *curr);
 
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-static inline struct xnthread *__xnsched_rt_push_rpi(struct xnsched *sched,
-						     struct xnthread *thread)
-{
-	sched_insertpqf(&sched->rt.relaxed, &thread->xlink, thread->cprio);
-	return link2thread(sched_getheadpq(&sched->rt.relaxed), xlink);
-}
-
-static inline void __xnsched_rt_pop_rpi(struct xnthread *thread)
-{
-	struct xnsched *sched = thread->rpi;
-	sched_removepq(&sched->rt.relaxed, &thread->xlink);
-}
-
-static inline struct xnthread *__xnsched_rt_peek_rpi(struct xnsched *sched)
-{
-	struct xnpholder *h = sched_getheadpq(&sched->rt.relaxed);
-	return h ? link2thread(h, xlink) : NULL;
-}
-
-static inline void __xnsched_rt_suspend_rpi(struct xnthread *thread)
-{
-}
-
-static inline void __xnsched_rt_resume_rpi(struct xnthread *thread)
-{
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
-
 #endif /* __KERNEL__ || __XENO_SIM__ */
 
 #endif /* !_XENO_NUCLEUS_SCHED_RT_H */

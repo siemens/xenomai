@@ -641,9 +641,6 @@ int pthread_wait_np(unsigned long *overruns_r)
  * - PTHREAD_LOCK_SCHED, when set, locks the scheduler, which prevents the
  *   current thread from being switched out by the scheduler until the scheduler
  *   is unlocked;
- * - PTHREAD_RPIOFF, when set, prevents the root Linux thread from inheriting
- *   the priority of the calling thread, when this thread is running in
- *   secondary mode;
  * - PTHREAD_WARNSW, when set, cause the signal SIGXCPU to be sent to the
  *   current thread, whenever it involontary switches to secondary mode;
  * - PTHREAD_PRIMARY, cause the migration of the current thread to primary
@@ -670,7 +667,7 @@ int pthread_set_mode_np(int clrmask, int setmask)
 
 #ifndef __XENO_SIM__
 	if (xnthread_test_state(cur, XNSHADOW))
-		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW | XNRPIOFF;
+		valid_flags |= XNTHREAD_STATE_SPARE1 | XNTRAPSW;
 #endif
 
 	/* XNTHREAD_STATE_SPARE1 is used for primary mode switch. */

@@ -27,9 +27,6 @@
 static void xnsched_rt_init(struct xnsched *sched)
 {
 	sched_initpq(&sched->rt.runnable, XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	sched_initpq(&sched->rt.relaxed, XNSCHED_RT_MIN_PRIO, XNSCHED_RT_MAX_PRIO);
-#endif
 }
 
 static void xnsched_rt_requeue(struct xnthread *thread)
@@ -134,26 +131,6 @@ void xnsched_rt_trackprio(struct xnthread *thread,
 {
 	__xnsched_rt_trackprio(thread, p);
 }
-
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-
-static struct xnthread *xnsched_rt_push_rpi(struct xnsched *sched,
-					    struct xnthread *thread)
-{
-	return __xnsched_rt_push_rpi(sched, thread);
-}
-
-static void xnsched_rt_pop_rpi(struct xnthread *thread)
-{
-	__xnsched_rt_pop_rpi(thread);
-}
-
-static struct xnthread *xnsched_rt_peek_rpi(struct xnsched *sched)
-{
-	return __xnsched_rt_peek_rpi(sched);
-}
-
-#endif /* CONFIG_XENO_OPT_PRIOCPL */
 
 #ifdef CONFIG_XENO_OPT_VFILE
 
@@ -291,13 +268,6 @@ struct xnsched_class xnsched_class_rt = {
 	.sched_setparam		=	xnsched_rt_setparam,
 	.sched_trackprio	=	xnsched_rt_trackprio,
 	.sched_getparam		=	xnsched_rt_getparam,
-#ifdef CONFIG_XENO_OPT_PRIOCPL
-	.sched_push_rpi 	=	xnsched_rt_push_rpi,
-	.sched_pop_rpi		=	xnsched_rt_pop_rpi,
-	.sched_peek_rpi 	=	xnsched_rt_peek_rpi,
-	.sched_suspend_rpi 	=	NULL,
-	.sched_resume_rpi 	=	NULL,
-#endif
 #ifdef CONFIG_XENO_OPT_VFILE
 	.sched_init_vfile	=	xnsched_rt_init_vfile,
 	.sched_cleanup_vfile	=	xnsched_rt_cleanup_vfile,
