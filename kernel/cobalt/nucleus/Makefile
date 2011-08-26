@@ -1,5 +1,5 @@
 
-obj-$(CONFIG_XENO_OPT_NUCLEUS) += xeno_nucleus.o
+obj-$(CONFIG_XENOMAI) += xeno_nucleus.o
 
 xeno_nucleus-y := \
 	hal.o bufd.o heap.o intr.o pod.o registry.o \

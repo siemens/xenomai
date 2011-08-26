@@ -1,7 +1,6 @@
 menu "CAN drivers"
 
 config XENO_DRIVERS_CAN
-	depends on XENO_SKIN_RTDM
 	tristate "RT-Socket-CAN, CAN raw socket interface"
 	help
 	RT-Socket-CAN is a real-time socket interface for CAN controllers.

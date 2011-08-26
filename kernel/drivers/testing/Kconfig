@@ -1,7 +1,6 @@
 menu "Testing drivers"
 
 config XENO_DRIVERS_TIMERBENCH
-	depends on XENO_SKIN_RTDM
 	tristate "Timer benchmark driver"
 	default y
 	help
@@ -15,7 +14,6 @@ config XENO_DRIVERS_KLATENCY
 	Kernel module for kernel-only latency measurement.
 
 config XENO_DRIVERS_IRQBENCH
-	depends on XENO_SKIN_RTDM
 	tristate "IRQ benchmark driver"
 	help
 	Loopback driver for IRQ latency evaluation over serial or parallel
@@ -23,7 +21,6 @@ config XENO_DRIVERS_IRQBENCH
 	(see testsuite/irqbench).
 
 config XENO_DRIVERS_SWITCHTEST
-	depends on XENO_SKIN_RTDM
 	tristate "Context switch unit testing driver"
 	default y
 	help
@@ -31,7 +28,7 @@ config XENO_DRIVERS_SWITCHTEST
 	FPU switches.
 
 config XENO_DRIVERS_RTDMTEST
-	depends on XENO_SKIN_RTDM && m
+	depends on m
 	tristate "RTDM unit tests driver"
 	help
 	Kernel driver for performing RTDM unit tests.

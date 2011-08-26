@@ -10,11 +10,7 @@ config XENO_HW_MATH_EMU
         bool
 	default y if MATH_EMU || 8XX_MINIMAL_FPEMU
 
-source "kernel/xenomai/nucleus/Kconfig"
-
-menu "Machine"
-
-depends on XENO_OPT_NUCLEUS
+menu "Hardware options"
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
         bool
@@ -22,7 +18,7 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default n if !XENO_HW_UNLOCKED_SWITCH
 
 config XENO_HW_FPU
-	bool "Enable FPU support"
+	bool "FPU support"
 	depends on PPC_FPU
 	default y
 	help
@@ -35,7 +31,7 @@ config XENO_HW_FPU
 	greatly improve	performance.
 
 config XENO_HW_UNLOCKED_SWITCH
-	bool "Enable unlocked context switch"
+	bool "Unlocked context switch"
 	depends on IPIPE_HAVE_PREEMPTIBLE_SWITCH
 	default y
 	help
@@ -50,6 +46,7 @@ config XENO_HW_UNLOCKED_SWITCH
 
 endmenu
 
+source "kernel/xenomai/nucleus/Kconfig"
 source "kernel/xenomai/Kconfig"
 source "kernel/xenomai/rtdm/Kconfig"
 source "kernel/xenomai/native/Kconfig"

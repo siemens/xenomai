@@ -10,11 +10,7 @@ config XENO_FASTSYNCH
 	bool
 	default y if XENO_FASTSYNCH_DEP
 
-source "kernel/xenomai/nucleus/Kconfig"
-
-menu "Machine"
-
-depends on XENO_OPT_NUCLEUS
+menu "Hardware options"
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	bool
@@ -22,7 +18,7 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default n if !XENO_HW_UNLOCKED_SWITCH && !SMP
 
 config XENO_HW_FPU
-	bool "Enable FPU support"
+	bool "FPU support"
 	default y
 	help
 	The FPU executes instructions from the processor's normal
@@ -34,7 +30,7 @@ config XENO_HW_FPU
 	greatly improve	performance.
 
 config XENO_HW_UNLOCKED_SWITCH
-	bool "Enable unlocked context switch"
+	bool "Unlocked context switch"
 	default y
 	help
 	The nucleus may allow non-atomic execution of the
@@ -50,6 +46,7 @@ config XENO_HW_UNLOCKED_SWITCH
 
 endmenu
 
+source "kernel/xenomai/nucleus/Kconfig"
 source "kernel/xenomai/Kconfig"
 source "kernel/xenomai/rtdm/Kconfig"
 source "kernel/xenomai/native/Kconfig"

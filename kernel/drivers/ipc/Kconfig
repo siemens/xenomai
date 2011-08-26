@@ -1,7 +1,6 @@
 menu "Real-time IPC drivers"
 
 config XENO_DRIVERS_RTIPC
-	depends on XENO_SKIN_RTDM
 	tristate "RTIPC protocol family"
 	help
 

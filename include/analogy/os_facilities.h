@@ -32,14 +32,6 @@
 #include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <asm/uaccess.h>
-
-#if !(defined(CONFIG_XENO_SKIN_RTDM) || \
-      defined(CONFIG_XENO_SKIN_RTDM_MODULE))
-#error Analogy needs RTDM enabled \
-    (statically or as amodule) to compile properly
-#endif /* !(CONFIG_XENO_SKIN_RTDM ||
-	  CONFIG_XENO_SKIN_RTDM_MODULE */
-
 #include <rtdm/rtdm_driver.h>
 
 /* --- Kernel traces functions --- */

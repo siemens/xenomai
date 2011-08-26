@@ -1,7 +1,6 @@
 menu "ANALOGY drivers"
 
 config XENO_DRIVERS_ANALOGY
-	depends on XENO_SKIN_RTDM
 	tristate "ANALOGY interface"
 	help
 

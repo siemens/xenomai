@@ -1,9 +1,4 @@
-config XENO_OPT_NUCLEUS
-	depends on XENOMAI
-	tristate "Nucleus"
-	default y
-
-if XENO_OPT_NUCLEUS != n
+menu "Core features"
 
 config XENO_OPT_PRIOCPL
 	bool "Priority coupling support"
@@ -101,103 +96,6 @@ config XENO_OPT_SCHED_SPORADIC_MAXREPL
 	be pending concurrently for any given thread that undergoes
 	sporadic scheduling (system minimum is 4).
 
-config XENO_OPT_PIPE
-	bool
-
-config XENO_OPT_MAP
-	bool
-
-config XENO_OPT_VFILE
-       bool
-       depends on PROC_FS
-       default y
-
-config XENO_OPT_PIPE_NRDEV
-	int "Number of pipe devices"
-	depends on XENO_OPT_PIPE
-	default 32
-	help
-
-	Message pipes are bi-directional FIFO communication
-	channels allowing data exchange between real-time kernel
-	threads and regular user-space processes. Pipes natively
-	preserve message boundaries, but can also be used in byte
-	streaming mode from kernel to user-space.
-
-	This option sets the maximum number of pipe devices supported
-	in the system. Pipe devices are named /dev/rtpN where N is a
-	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
-
-config XENO_OPT_REGISTRY_NRSLOTS
-	int "Number of registry slots"
-	default 512
-	help
-
-	The registry is used by Xenomai skins to bind real-time
-	objects they create to symbolic names, so that these objects
-	can be further retrieved and shared by real-time applications
-	regardless of their runtime space (i.e. kernel or user). Each
-	named object occupies a registry slot.
-
-	This option sets the maximum number of real-time objects the
-	registry can handle. All skins using the registry share this
-	storage.
-
-config XENO_OPT_SYS_HEAPSZ
-	int "Size of the system heap (Kb)"
-	default 256
-	help
-
-	The system heap is used for various internal allocations by
-	the nucleus and the real-time skins. The size is expressed in
-	Kilobytes.
-
-config XENO_OPT_SYS_STACKPOOLSZ
-        depends on XENO_GENERIC_STACKPOOL
-	int "Size of the private stack pool (Kb)"
-	default 128
-	help
-
-	On this architecture, kernel-based Xenomai threads get the
-	stack space they need from a private memory pool.  If you
-	don't start any kernel-based thread (i.e. no RTDM driver
-	thread, no real-time task created from an application embodied
-	into a kernel module, no switchtest driver), you may leave a
-	zero value for this option. The size is expressed in Kilobytes.
-
-if !XENO_GENERIC_STACKPOOL
-config XENO_OPT_SYS_STACKPOOLSZ
-        int
-	default 0
-endif	
-
-config XENO_OPT_SEM_HEAPSZ
-	int "Size of private semaphores heap (Kb)"
-	default 12
-	help
-
-	Xenomai implementation of user-space semaphores relies on heaps 
-	shared between kernel and user-space. This configuration entry
-	allow to set the size of the heap used for private semaphores.
-
-	Note that each semaphore will allocate 4 bytes on 32 bits 
-	architectures or 8 bytes on 64 bits architectures of memory, so,
-	the default of 12 Kb allows creating many semaphores.
-
-config XENO_OPT_GLOBAL_SEM_HEAPSZ
-	int "Size of global semaphores heap (Kb)"
-	default 12
-	help
-
-	Xenomai implementation of user-space semaphores relies on heaps 
-	shared between kernel and user-space. This configuration entry
-	allow to set the size of the heap used for semaphores shared 
-	between several processes.
-
-	Note that each semaphore will allocate 4 bytes on 32 bits 
-	architectures or 8 bytes on 64 bits architectures of memory, so,
-	the default of 12 Kb allows creating many semaphores.
-
 config XENO_OPT_STATS
 	bool "Statistics collection"
 	depends on XENO_OPT_VFILE
@@ -208,126 +106,6 @@ config XENO_OPT_STATS
 	per-thread runtime statistics, which are accessible through
 	the /proc/xenomai/sched/stat interface.
 
-config XENO_OPT_DEBUG
-        depends on XENO_OPT_VFILE
-	bool "Debug support"
-	help
-
-	When enabled, various debugging features can be switched on. They
-	can help to find problems in applications, drivers, and the Xenomai
-	core. XENO_OPT_DEBUG itself does not have any impact on generated
-	code.
-
-config XENO_OPT_DEBUG_NUCLEUS
-	bool "Nucleus Debugging support"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option activates various debugging checks inside the core
-	system. Doing so adds a significant runtime overhead,
-	worsening the latency figures especially on SMP kernels.
-	Do not switch this option on unless you really know what you
-	are doing.
-
-config XENO_OPT_DEBUG_XNLOCK
-	bool "Spinlocks Debugging support"
-	depends on XENO_OPT_DEBUG
-	default y if SMP
-	help
-
-	This option activates measurements of Xenomai spinlocks
-	spinning time and duration. It should have a low overhad, and
-	helps finding latency spots due to masking
-	sections. Statistics about the longest masking section may be
-	found in /proc/xenomai/lock.
-
-config XENO_OPT_DEBUG_QUEUES
-	bool "Queue Debugging support"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option activates debugging checks for all queueing
-	operations of the Xenomai core. It adds heavy runtime overhead,
-	use with care.
-
-config XENO_OPT_DEBUG_REGISTRY
-	bool "Registry Debugging support"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option activates debugging output for key registry
-	operations performed by the Xenomai core. This option is
-	useful to detect the source of object naming conflicts.
-
-config XENO_OPT_DEBUG_TIMERS
-	bool "Timer Debugging support"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option activates debugging output for critical
-	timer-related operations performed by the Xenomai core.
-
-config XENO_OPT_DEBUG_SYNCH_RELAX
-	bool "Detect mutexes held in relaxed sections"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option detects situations where a real-time thread
-	attempts to sleep on a Xenomai mutex object, that is owned by
-	another thread currently running in secondary mode (i.e. plain
-	Linux execution mode). The SIGDEBUG signal may be sent in such
-	a case to the sleeper, provided the WARNSW flag is enabled for
-	it, as set by e.g. rt_task_set_mode() or pthread_set_mode_np().
-
-	This particular situation is a possible source of unwanted
-	latency, since the current mutex owner may be unexpectedly
-	delayed as a result of using non-deterministic Linux services,
-	thus deferring the release of the mutex object for too long.
-
-	This option may introduce some overhead in case mutexes are
-	highly contended. Use this feature for debugging purposes
-	only.
-
-	NOTE: only Xenomai synchronization objects that may be
-	actually "owned" by a single thread at a time, can be
-	monitored this way (typically, mutexes).
-
-config XENO_OPT_DEBUG_TRACE_RELAX
-	bool "Trace relax requests"
-	depends on XENO_OPT_DEBUG
-	help
-
-	This option enables recording of unwanted relax requests from
-	user-space applications leaving the real-time domain, logging
-	the thread information and code location involved. All records
-	are readable from /proc/xenomai/debug/relaxes, and can be
-	decoded using the "slackspot" utility.
-
-config XENO_OPT_WATCHDOG
-	bool "Watchdog support"
-	depends on XENO_OPT_DEBUG
-	default y
-	help
-
-	This option activates a watchdog aimed at detecting runaway
-	real-time threads. If enabled, the watchdog triggers after
-	a given period of uninterrupted real-time activity has elapsed
-	without Linux interaction in the meantime; in such event, the
-	current real-time thread is killed. The built-in watchdog
-	support operates on behalf of the timer tick handler,
-	thus is only active after the timer has been started. The
-	timeout value of the watchdog can be set using the
-	XENO_OPT_WATCHDOG_TIMEOUT parameter.
-
-config XENO_OPT_WATCHDOG_TIMEOUT
-	depends on XENO_OPT_WATCHDOG
-	int "Watchdog timeout"
-	default 4
-	range 1 60
-	help
-
-	Watchdog timeout value (in seconds).
-
 config XENO_OPT_SHIRQ
 	bool "Shared interrupts"
 	help
@@ -337,17 +115,8 @@ config XENO_OPT_SHIRQ
 	are allowed to control dedicated hardware devices which are
 	configured to share the same interrupt line.
 
-config XENO_OPT_SELECT
-	bool
-
-config XENO_OPT_HOSTRT
-       depends on HAVE_IPIPE_HOSTRT
-       def_bool y
-
-menu "Timing"
-
 config XENO_OPT_TIMING_PERIODIC
-	bool "Enable periodic timing"
+	bool "Tick-based timing"
 	help
 
 	Xenomai allows different skins to be clocked separately,
@@ -394,10 +163,6 @@ config XENO_OPT_TIMING_SCHEDLAT
 	of the real-time thread this handler resumes. A default value
 	of 0 (recommended) will cause a pre-calibrated value to be
 	used.
-
-endmenu
-
-menu "Scalability"
 
 config XENO_OPT_SCALABLE_SCHED
 	bool "O(1) scheduler"
@@ -471,6 +236,254 @@ config XENO_OPT_TIMER_WHEEL_STEP
 	Set the duration in ns of a timer wheel step. At each step, 
 	the timer wheel use the next hash bucket.
 
+config XENO_OPT_SELECT
+	bool
+
+config XENO_OPT_HOSTRT
+       depends on HAVE_IPIPE_HOSTRT
+       def_bool y
+
+config XENO_OPT_PIPE
+	bool
+
+config XENO_OPT_MAP
+	bool
+
+config XENO_OPT_VFILE
+       bool
+       depends on PROC_FS
+       default y
+
 endmenu
 
-endif
+menu "Sizes and static limits"
+
+config XENO_OPT_PIPE_NRDEV
+	int "Number of pipe devices"
+	depends on XENO_OPT_PIPE
+	default 32
+	help
+
+	Message pipes are bi-directional FIFO communication
+	channels allowing data exchange between real-time kernel
+	threads and regular user-space processes. Pipes natively
+	preserve message boundaries, but can also be used in byte
+	streaming mode from kernel to user-space.
+
+	This option sets the maximum number of pipe devices supported
+	in the system. Pipe devices are named /dev/rtpN where N is a
+	device minor number ranging from 0 to XENO_OPT_PIPE_NRDEV - 1.
+
+config XENO_OPT_REGISTRY_NRSLOTS
+	int "Number of registry slots"
+	default 512
+	help
+
+	The registry is used by Xenomai-based APIs to bind real-time
+	objects they create to symbolic names, so that these objects
+	can be further retrieved and shared by real-time applications
+	regardless of their runtime space (i.e. kernel or user). Each
+	named object occupies a registry slot.
+
+	This option sets the maximum number of real-time objects the
+	registry can handle. All APIs using the registry share this
+	storage.
+
+config XENO_OPT_SYS_HEAPSZ
+	int "Size of the system heap (Kb)"
+	default 256
+	help
+
+	The system heap is used for various internal allocations by
+	the nucleus and the real-time APIs. The size is expressed in
+	Kilobytes.
+
+config XENO_OPT_SYS_STACKPOOLSZ
+        depends on XENO_GENERIC_STACKPOOL
+	int "Size of the private stack pool (Kb)"
+	default 128
+	help
+
+	On this architecture, kernel-based Xenomai threads get the
+	stack space they need from a private memory pool.  If you
+	don't start any kernel-based thread (i.e. no RTDM driver
+	thread, no real-time task created from an application embodied
+	into a kernel module, no switchtest driver), you may leave a
+	zero value for this option. The size is expressed in Kilobytes.
+
+if !XENO_GENERIC_STACKPOOL
+config XENO_OPT_SYS_STACKPOOLSZ
+        int
+	default 0
+endif	
+
+config XENO_OPT_SEM_HEAPSZ
+	int "Size of private semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for private semaphores.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
+config XENO_OPT_GLOBAL_SEM_HEAPSZ
+	int "Size of global semaphores heap (Kb)"
+	default 12
+	help
+
+	Xenomai implementation of user-space semaphores relies on heaps 
+	shared between kernel and user-space. This configuration entry
+	allow to set the size of the heap used for semaphores shared 
+	between several processes.
+
+	Note that each semaphore will allocate 4 bytes on 32 bits 
+	architectures or 8 bytes on 64 bits architectures of memory, so,
+	the default of 12 Kb allows creating many semaphores.
+
+endmenu
+
+menuconfig XENO_OPT_DEBUG
+        depends on XENO_OPT_VFILE
+	bool "Debug support"
+	help
+
+	When enabled, various debugging features can be switched
+	on. They can help to find problems in applications, drivers,
+	and the Xenomai core. XENO_OPT_DEBUG by itself does not have
+	any impact on generated code.
+
+if XENO_OPT_DEBUG
+
+config XENO_OPT_DEBUG_NUCLEUS
+	bool "Nucleus runtime checks"
+	help
+
+	This option activates various debugging checks inside the core
+	system. Doing so adds a significant runtime overhead,
+	worsening the latency figures especially on SMP kernels.  Do
+	not switch this option on unless you really know what you are
+	doing.
+
+config XENO_OPT_DEBUG_XNLOCK
+	bool "Spinlocks monitoring"
+	default y if SMP
+	help
+
+	This option activates measurements of Xenomai spinlocks
+	spinning time and duration. It should have a low overhad, and
+	helps finding latency spots due to masking
+	sections. Statistics about the longest masking section may be
+	found in /proc/xenomai/lock.
+
+config XENO_OPT_DEBUG_QUEUES
+	bool "Queue sanity checks"
+	help
+
+	This option turns on debugging checks in all linked-list
+	manipulation routines inside the Xenomai core. This adds HUGE
+	runtime OVERHEAD, use with CARE.
+
+config XENO_OPT_DEBUG_REGISTRY
+	bool "Registry monitoring"
+	help
+
+	This option activates debugging output for key registry
+	operations performed by the Xenomai core. This option is
+	useful to detect the source of object naming conflicts.
+
+config XENO_OPT_DEBUG_TIMERS
+	bool "Timer monitoring"
+	help
+
+	This option activates debugging output for critical
+	timer-related operations performed by the Xenomai core.
+
+config XENO_OPT_DEBUG_SYNCH_RELAX
+	bool "Detect mutexes held in relaxed sections"
+	help
+
+	This option detects situations where a real-time thread
+	attempts to sleep on a Xenomai mutex object, that is owned by
+	another thread currently running in secondary mode (i.e. plain
+	Linux execution mode). The SIGDEBUG signal may be sent in such
+	a case to the sleeper, provided the WARNSW flag is enabled for
+	it, as set by e.g. rt_task_set_mode() or pthread_set_mode_np().
+
+	This particular situation is a possible source of unwanted
+	latency, since the current mutex owner may be unexpectedly
+	delayed as a result of using non-deterministic Linux services,
+	thus deferring the release of the mutex object for too long.
+
+	This option may introduce some overhead in case mutexes are
+	highly contended. Use this feature for debugging purposes
+	only.
+
+	NOTE: only Xenomai synchronization objects that may be
+	actually "owned" by a single thread at a time, can be
+	monitored this way (typically, mutexes).
+
+config XENO_OPT_DEBUG_TRACE_RELAX
+	bool "Trace relax requests"
+	help
+
+	This option enables recording of unwanted relax requests from
+	user-space applications leaving the real-time domain, logging
+	the thread information and code location involved. All records
+	are readable from /proc/xenomai/debug/relaxes, and can be
+	decoded using the "slackspot" utility.
+
+config XENO_OPT_WATCHDOG
+	bool "Watchdog support"
+	default y
+	help
+
+	This option activates a watchdog aimed at detecting runaway
+	real-time threads. If enabled, the watchdog triggers after
+	a given period of uninterrupted real-time activity has elapsed
+	without Linux interaction in the meantime; in such event, the
+	current real-time thread is killed. The built-in watchdog
+	support operates on behalf of the timer tick handler,
+	thus is only active after the timer has been started. The
+	timeout value of the watchdog can be set using the
+	XENO_OPT_WATCHDOG_TIMEOUT parameter.
+
+config XENO_OPT_WATCHDOG_TIMEOUT
+	depends on XENO_OPT_WATCHDOG
+	int "Watchdog timeout"
+	default 4
+	range 1 60
+	help
+
+	Watchdog timeout value (in seconds).
+
+config XENO_OPT_DEBUG_POSIX
+	bool "POSIX cleanup checks"
+	default n
+	help
+
+	When enabled, this option makes the skin warn about not
+	properly cleaned up POSIX objects it detects on process
+	termination.
+
+config XENO_OPT_DEBUG_RTDM
+	bool "RTDM debugging checks"
+	default y
+	help
+
+	This option activates debugging checks for the RTDM subsystem.
+	It is a recommended option for analysing potential issues in
+	RTDM drivers. A minor runtime overhead is added.
+
+config XENO_OPT_DEBUG_RTDM_APPL
+	bool "RTDM application cleanup checks"
+	default y
+	help
+
+	When enabled, this option makes RTDM warn about auto-clean
+	operations executed upon application termination.
+
+endif # XENO_OPT_DEBUG

@@ -1,5 +1,5 @@
 
-obj-$(CONFIG_XENO_SKIN_RTDM) += xeno_rtdm.o
+obj-$(CONFIG_XENOMAI) += xeno_rtdm.o
 
 xeno_rtdm-y := core.o device.o drvlib.o module.o syscall.o
 

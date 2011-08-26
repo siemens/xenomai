@@ -2,11 +2,7 @@ config XENO_GENERIC_STACKPOOL
 	bool
 	default y
 
-source "kernel/xenomai/nucleus/Kconfig"
-
-menu "Machine"
-
-depends on XENO_OPT_NUCLEUS
+menu "Hardware options"
 
 config IPIPE_WANT_PREEMPTIBLE_SWITCH
         bool
@@ -14,7 +10,7 @@ config IPIPE_WANT_PREEMPTIBLE_SWITCH
 	default n if !XENO_HW_UNLOCKED_SWITCH
 
 config XENO_HW_FPU
-	bool "Enable FPU support"
+	bool "FPU support"
 	depends on SH_FPU
 	default y
 	help
@@ -28,6 +24,7 @@ config XENO_HW_FPU
 
 endmenu
 
+source "kernel/xenomai/nucleus/Kconfig"
 source "kernel/xenomai/Kconfig"
 source "kernel/xenomai/rtdm/Kconfig"
 source "kernel/xenomai/native/Kconfig"

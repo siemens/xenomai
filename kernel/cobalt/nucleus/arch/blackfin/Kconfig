@@ -3,13 +3,6 @@ config XENO_GENERIC_STACKPOOL
 	default y
 
 source "kernel/xenomai/nucleus/Kconfig"
-
-menu "Machine"
-
-depends on XENO_OPT_NUCLEUS
-
-endmenu
-
 source "kernel/xenomai/Kconfig"
 source "kernel/xenomai/rtdm/Kconfig"
 source "kernel/xenomai/native/Kconfig"

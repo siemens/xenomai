@@ -1,5 +1,4 @@
 menuconfig XENO_SKIN_NATIVE
-	depends on XENO_OPT_NUCLEUS
 	tristate "Native API"
 	default y
 	help
