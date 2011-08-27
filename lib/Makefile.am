@@ -1,6 +1,7 @@
 SUBDIRS =	\
 	include	\
 	copperplate \
+	alchemy \
 	vxworks \
 	psos
 

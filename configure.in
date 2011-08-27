@@ -728,6 +728,7 @@ AC_CONFIG_FILES([ \
 	lib/cobalt/Makefile \
 	lib/native/Makefile \
 	lib/copperplate/Makefile \
+	lib/alchemy/Makefile \
 	lib/vxworks/Makefile \
 	lib/psos/Makefile \
 	lib/analogy/Makefile \
@@ -773,6 +774,7 @@ AC_CONFIG_FILES([ \
 	include/rtdm/Makefile \
 	include/analogy/Makefile \
 	include/copperplate/Makefile \
+	include/alchemy/Makefile \
 	include/vxworks/Makefile \
 	include/psos/Makefile \
 	])
