@@ -41,7 +41,7 @@ static struct psos_tm *get_tm_from_id(u_long tmid, int *err_r)
 	 * don't have to apply mainheap_deref() to convert timer
 	 * handles to pointers, but we do a plain cast instead.  (This
 	 * said, mainheap_deref() is smart enough to deal with private
-	 * pointers, but we just avoid usless overhead).
+	 * pointers, but we just avoid useless overhead).
 	 */
 	if (tm == NULL || ((uintptr_t)tm & (sizeof(uintptr_t)-1)) != 0)
 		goto objid_error;

@@ -28,6 +28,8 @@
 #include "tickLib.h"
 #include "taskLib.h"
 
+static unsigned int tick_period = 1000000; /* 1ms */
+
 STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 {
 	TASK_ID tid;
@@ -51,12 +53,10 @@ STATUS kernelInit(FUNCPTR rootRtn, int argc, char *const argv[])
 
 	cluster_init(&wind_task_table, "vxworks.task");
 
-	ret = clockobj_init(&wind_clock,
-			    "vxworks", __this_node.tick_period * 1000);
-
+	ret = clockobj_init(&wind_clock, "vxworks", tick_period);
 	if (ret) {
-		warning("%s: failed to initialize VxWorks clock (period=%uus)",
-			__FUNCTION__, __this_node.tick_period);
+		warning("%s: failed to initialize VxWorks clock (period=%u ns)",
+			__FUNCTION__, tick_period);
 		errno = -ret;
 		return ERROR;
 	}

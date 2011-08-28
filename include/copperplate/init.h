@@ -24,7 +24,6 @@
 
 struct coppernode {
 	pid_t id;
-	unsigned int tick_period;
 	unsigned int mem_pool;
 	char *registry_mountpt;
 	const char *session_label;

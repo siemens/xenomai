@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <getopt.h>
 #include <copperplate/init.h>
 #include <copperplate/hash.h>
 #include <copperplate/registry.h>
@@ -32,6 +33,8 @@
 #include "queue.h"
 #include "pt.h"
 #include "rn.h"
+
+static unsigned int tick_period = 1000000; /* 1ms */
 
 u_long PSOS_INIT(int argc, char *const argv[])
 {
@@ -55,11 +58,10 @@ u_long PSOS_INIT(int argc, char *const argv[])
 	pvcluster_init(&psos_pt_table, "psos.pt");
 	pvcluster_init(&psos_rn_table, "psos.rn");
 
-	ret = clockobj_init(&psos_clock,
-			    "psos", __this_node.tick_period * 1000);
+	ret = clockobj_init(&psos_clock, "psos", tick_period);
 	if (ret) {
-		warning("%s: failed to initialize pSOS clock (period=%uus)",
-			__FUNCTION__, __this_node.tick_period);
+		warning("%s: failed to initialize pSOS clock (period=%u ns)",
+			__FUNCTION__, tick_period);
 		return ret;
 	}
 

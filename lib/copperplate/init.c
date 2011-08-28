@@ -38,7 +38,6 @@
 #include "copperplate/timerobj.h"
 
 struct coppernode __this_node = {
-	.tick_period = 1000, /* Default, 1 ms */
 	.mem_pool = 128 * 1024, /* Default, 128 Kb. */
 	.session_label = "anon",
 	.no_mlock = 0,
@@ -57,56 +56,49 @@ static const struct option base_options[] = {
 		.val = 0
 	},
 	{
-#define tickarg_opt	1
-		.name = "tick-period",
-		.has_arg = 1,
-		.flag = NULL,
-		.val = 0
-	},
-	{
-#define mempool_opt	2
+#define mempool_opt	1
 		.name = "mem-pool-size",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define no_mlock_opt	3
+#define no_mlock_opt	2
 		.name = "no-mlock",
 		.has_arg = 0,
 		.flag = &__this_node.no_mlock,
 		.val = 1
 	},
 	{
-#define mountpt_opt	4
+#define mountpt_opt	3
 		.name = "registry-mountpt",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define no_registry_opt	5
+#define no_registry_opt	4
 		.name = "no-registry",
 		.has_arg = 0,
 		.flag = &__this_node.no_registry,
 		.val = 1
 	},
 	{
-#define session_opt	6
+#define session_opt	5
 		.name = "session",
 		.has_arg = 1,
 		.flag = NULL,
 		.val = 0
 	},
 	{
-#define reset_session_opt	7
+#define reset_session_opt	6
 		.name = "reset-session",
 		.has_arg = 0,
 		.flag = &__this_node.reset_session,
 		.val = 1
 	},
 	{
-#define affinity_opt	8
+#define affinity_opt	7
 		.name = "cpu-affinity",
 		.has_arg = 1,
 		.flag = NULL,
@@ -123,7 +115,6 @@ static const struct option base_options[] = {
 static void usage(void)
 {
 	fprintf(stderr, "usage: program <options>, where options may be:\n");
-	fprintf(stderr, "--tick-period=<period>		base period of the RTOS clock (us)\n");
 	fprintf(stderr, "--mem-pool-size=<sizeK>	size of the main heap (kbytes)\n");
 	fprintf(stderr, "--no-mlock			do not lock memory at init\n");
 	fprintf(stderr, "--registry-mountpt=<path>	mount point of registry\n");
@@ -238,6 +229,7 @@ int copperplate_init(int argc, char *const argv[])
 
 	/* Define default CPU affinity, i.e. no particular affinity. */
 	CPU_ZERO(&__this_node.cpu_affinity);
+	opterr = 0;
 
 	for (;;) {
 		c = getopt_long_only(argc, argv, "", base_options, &lindex);
@@ -251,9 +243,6 @@ int copperplate_init(int argc, char *const argv[])
 			continue;
 
 		switch (lindex) {
-		case tickarg_opt:
-			__this_node.tick_period = atoi(optarg);
-			break;
 		case mempool_opt:
 			__this_node.mem_pool = atoi(optarg) * 1024;
 			break;
@@ -321,6 +310,9 @@ int copperplate_init(int argc, char *const argv[])
 			return -errno;
 		}
 	}
+
+	/* The caller may parse its own arguments, reset the index. */
+	optind = 0;
 
 	return 0;
 }
