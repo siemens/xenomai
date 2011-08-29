@@ -30,7 +30,7 @@ struct clockobj {
 	struct timespec offset;
 	struct timespec start;
 	unsigned int tick_freq;
-	unsigned int ns_per_tick;
+	unsigned int resolution;
 	const char *name;	/* __ref FIXME */
 };
 
@@ -49,7 +49,7 @@ extern "C" {
 #endif
 
 int clockobj_set_date(struct clockobj *clkobj,
-		      ticks_t ticks, unsigned int period_ns);
+		      ticks_t ticks, unsigned int resolution_ns);
 
 int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks);
 
@@ -70,12 +70,12 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 			       struct tm *tm,
 			       unsigned long *rticks);
 
-unsigned int clockobj_get_period(struct clockobj *clkobj);
+unsigned int clockobj_get_resolution(struct clockobj *clkobj);
 
-int clockobj_set_period(struct clockobj *clkobj, unsigned int period_ns);
+int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns);
 
 int clockobj_init(struct clockobj *clkobj,
-		  const char *name, unsigned int period_ns);
+		  const char *name, unsigned int resolution_ns);
 
 int clockobj_destroy(struct clockobj *clkobj);
 

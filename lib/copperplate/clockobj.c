@@ -32,7 +32,7 @@ void ticks_to_timespec(struct clockobj *clkobj,
 		       struct timespec *ts)
 {
 	ts->tv_sec = ticks / clkobj->tick_freq;
-	ts->tv_nsec = (ticks - (ts->tv_sec * clkobj->tick_freq)) * clkobj->ns_per_tick;
+	ts->tv_nsec = (ticks - (ts->tv_sec * clkobj->tick_freq)) * clkobj->resolution;
 }
 
 void timespec_sub(struct timespec *r,
@@ -180,7 +180,7 @@ void clockobj_caltime_to_timeout(struct clockobj *clkobj, const struct tm *tm,
 }
 
 int clockobj_set_date(struct clockobj *clkobj,
-		      ticks_t ticks, unsigned int period_ns)
+		      ticks_t ticks, unsigned int resolution_ns)
 {
 	struct timespec now;
 
@@ -188,10 +188,10 @@ int clockobj_set_date(struct clockobj *clkobj,
 
 	clock_gettime(CLOCK_REALTIME, &now);
 
-	/* Change the period on-the-fly if given. */
-	if (period_ns) {
-		clkobj->ns_per_tick = period_ns;
-		clkobj->tick_freq = 1000000000 / period_ns;
+	/* Change the resolution on-the-fly if given. */
+	if (resolution_ns) {
+		clkobj->resolution = resolution_ns;
+		clkobj->tick_freq = 1000000000 / resolution_ns;
 	}
 
 	ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
@@ -219,30 +219,30 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 
 	/* Convert the time value to ticks. */
 	*pticks = (ticks_t)sum.tv_sec * clkobj->tick_freq
-	  + (ticks_t)sum.tv_nsec / clkobj->ns_per_tick;
+	  + (ticks_t)sum.tv_nsec / clkobj->resolution;
 
 	read_unlock(&clkobj->lock);
 
 	return 0;
 }
 
-unsigned int clockobj_get_period(struct clockobj *clkobj)
+unsigned int clockobj_get_resolution(struct clockobj *clkobj)
 {
-	return clkobj->ns_per_tick;
+	return clkobj->resolution;
 }
 
-int clockobj_set_period(struct clockobj *clkobj, unsigned int period_ns)
+int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
-	/* Changing the period implies resetting the epoch. */
-	return clockobj_set_date(clkobj, 0, period_ns);
+	/* Changing the resolution implies resetting the epoch. */
+	return clockobj_set_date(clkobj, 0, resolution_ns);
 }
 
 int clockobj_init(struct clockobj *clkobj,
-		  const char *name, unsigned int period_ns)
+		  const char *name, unsigned int resolution_ns)
 {
 	pthread_mutexattr_t mattr;
 
-	if (period_ns == 0)
+	if (resolution_ns == 0)
 		return -EINVAL;
 
 	memset(clkobj, 0, sizeof(*clkobj));
@@ -251,8 +251,8 @@ int clockobj_init(struct clockobj *clkobj,
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	pthread_mutex_init(&clkobj->lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
-	clkobj->ns_per_tick = period_ns;
-	clkobj->tick_freq = 1000000000 / period_ns;
+	clkobj->resolution = resolution_ns;
+	clkobj->tick_freq = 1000000000 / resolution_ns;
 	clock_gettime(CLOCK_REALTIME, &clkobj->start);
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &clkobj->start);
 	clkobj->name = name;

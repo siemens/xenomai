@@ -23,14 +23,14 @@
 
 int sysClkRateGet(void)
 {
-	unsigned int ns_per_tick;
+	unsigned int resolution;
 	struct service svc;
 
 	COPPERPLATE_PROTECT(svc);
-	ns_per_tick = clockobj_get_period(&wind_clock);
+	resolution = clockobj_get_resolution(&wind_clock);
 	COPPERPLATE_UNPROTECT(svc);
 
-	return 1000000000 / ns_per_tick;
+	return 1000000000 / resolution;
 }
 
 STATUS sysClkRateSet(int hz)
@@ -46,7 +46,7 @@ STATUS sysClkRateSet(int hz)
 		return ERROR;
 
 	COPPERPLATE_PROTECT(svc);
-	ret = clockobj_set_period(&wind_clock, 1000000000 / hz);
+	ret = clockobj_set_resolution(&wind_clock, 1000000000 / hz);
 	COPPERPLATE_UNPROTECT(svc);
 
 	return ret ? ERROR : OK;
