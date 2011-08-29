@@ -1543,8 +1543,8 @@ static int pcimio_attach(a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	}else{
 		a4l_info(dev, "pcimio_attach: found irq %u\n", irq);
 		ret = a4l_request_irq(dev,
-					 irq,
-					 a4l_ni_E_interrupt, A4L_IRQ_SHARED, dev);
+				      irq,
+				      a4l_ni_E_interrupt, A4L_IRQ_SHARED, dev);
 		if(ret < 0)
 			a4l_err(dev, "pcimio_attach: irq not available\n");
 	}
