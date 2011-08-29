@@ -77,6 +77,8 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns);
 
+ticks_t clockobj_get_tsc(void);
+
 int clockobj_destroy(struct clockobj *clkobj);
 
 #ifdef __cplusplus
