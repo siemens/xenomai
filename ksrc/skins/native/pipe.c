@@ -160,6 +160,8 @@ static void __pipe_release_handler(void *xstate) /* nklock free */
 
 	if (pipe->bufpool == &pipe->privpool)
 		xnheap_destroy(&pipe->privpool, __pipe_flush_pool, NULL);
+	else if (pipe->buffer)
+		xnheap_free(pipe->bufpool, pipe->buffer);
 
 #ifdef CONFIG_XENO_OPT_PERVASIVE
 	if (pipe->cpid)
