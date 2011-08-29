@@ -31,13 +31,13 @@ echo '*** privileges.' ; \
 	   fi ; \
 	fi ; \
 	if test -r $(DESTDIR)/etc/udev/udev.rules ; then \
-	   for f in $(srcdir)/kernel/cobalt/udev/*.rules ; do \
+	   for f in $(srcdir)/kernel/cobalt/nucleus/udev/*.rules ; do \
 	   b=`basename $$f` ; \
 	   grep -q Xenomai:`basename $$b .rules` $(DESTDIR)/etc/udev/udev.rules || \
 	   $$sudo sh -c "( echo ; cat $$f ) >> $(DESTDIR)/etc/udev/udev.rules" ; \
 	   done ; \
 	else if test -d $(DESTDIR)/etc/udev/rules.d ; then \
-	      for f in $(srcdir)/kernel/cobalt/udev/*.rules ; do \
+	      for f in $(srcdir)/kernel/cobalt/nucleus/udev/*.rules ; do \
 		 sudo cp $$f $(DESTDIR)/etc/udev/rules.d/ ; \
 	      done ; \
 	   fi ; \

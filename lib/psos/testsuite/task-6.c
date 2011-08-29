@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -9,11 +10,11 @@ static int tseq[] = {
 	9, 1, 10, 3, 11, 4, 5, 6, 7, 2, 8, 12
 };
 
-u_long btid, ftid;
+static u_long btid, ftid;
 
-u_long sem_id;
+static u_long sem_id;
 
-void backgroundTask(u_long a1, u_long a2, u_long a3, u_long a4)
+static void backgroundTask(u_long a1, u_long a2, u_long a3, u_long a4)
 {
 	int ret;
 
@@ -29,7 +30,7 @@ void backgroundTask(u_long a1, u_long a2, u_long a3, u_long a4)
 	traceobj_exit(&trobj);
 }
 
-void foregroundTask(u_long a1, u_long a2, u_long a3, u_long a4)
+static void foregroundTask(u_long a1, u_long a2, u_long a3, u_long a4)
 {
 	u_long myprio, oldprio;
 	int ret;
@@ -71,10 +72,9 @@ int main(int argc, char *argv[])
 	u_long args[] = { 1, 2, 3, 4 };
 	int ret;
 
-	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = sm_create("SEMA", 0, SM_PRIOR, &sem_id);
 	traceobj_assert(&trobj, ret == SUCCESS);

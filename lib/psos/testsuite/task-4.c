@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -9,9 +10,9 @@ static int tseq[] = {
 	1, 2, 3
 };
 
-u_long tid;
+static u_long tid;
 
-void task(u_long a1, u_long a2, u_long a3, u_long a4)
+static void task(u_long a1, u_long a2, u_long a3, u_long a4)
 {
 	u_long regval;
 	int ret;
@@ -51,10 +52,9 @@ int main(int argc, char *argv[])
 	u_long args[] = { 1, 2, 3, 4 };
 	int ret;
 
-	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = t_create("TASK", 20, 0, 0, 0, &tid);
 	traceobj_assert(&trobj, ret == SUCCESS);

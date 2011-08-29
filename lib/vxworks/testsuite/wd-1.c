@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
 #include <vxworks/wdLib.h>
 #include <vxworks/intLib.h>
-#include <vxworks/kernelLib.h>
 
 static struct traceobj trobj;
 
@@ -15,11 +15,11 @@ static int tseq[] = {
 	2, 3, 7
 };
 
-TASK_ID tid;
+static TASK_ID tid;
 
-WDOG_ID wdog_id;
+static WDOG_ID wdog_id;
 
-void watchdogHandler(long arg)
+static void watchdogHandler(long arg)
 {
 	static int hits;
 	int ret;
@@ -46,8 +46,8 @@ void watchdogHandler(long arg)
 	traceobj_assert(&trobj, ret == OK);
 }
 
-void rootTask(long a0, long a1, long a2, long a3, long a4,
-	      long a5, long a6, long a7, long a8, long a9)
+static void rootTask(long a0, long a1, long a2, long a3, long a4,
+		     long a5, long a6, long a7, long a8, long a9)
 {
 	int ret;
 
@@ -78,13 +78,15 @@ void rootTask(long a0, long a1, long a2, long a3, long a4,
 
 int main(int argc, char *argv[])
 {
-	int ret;
+	TASK_ID tid;
+
+	copperplate_init(argc, argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
-	ret = kernelInit(rootTask, argc, argv);
-
-	traceobj_assert(&trobj, ret == OK);
+	tid = taskSpawn("rootTask", 50, 0, 0, rootTask,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	traceobj_assert(&trobj, tid != ERROR);
 
 	traceobj_mark(&trobj, 8);
 

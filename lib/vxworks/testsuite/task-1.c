@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
-#include <vxworks/kernelLib.h>
 
 static struct traceobj trobj;
 
 static int tseq[] = { 1, 2 };
 
-void windTask(long a1, long a2, long a3, long a4, long a5,
-	      long a6, long a7, long a8, long a9, long a10)
+static void windTask(long a1, long a2, long a3, long a4, long a5,
+		     long a6, long a7, long a8, long a9, long a10)
 {
 	traceobj_mark(&trobj, 1);
 
@@ -33,12 +33,10 @@ void windTask(long a1, long a2, long a3, long a4, long a5,
 int main(int argc, char *argv[])
 {
 	TASK_ID tid;
-	int ret;
 
+	copperplate_init(argc, argv);
+	
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
-
-	ret = kernelInit(NULL, argc, argv);
-	traceobj_assert(&trobj, ret == OK);
 
 	tid = taskSpawn("windTask", 70, 0, 0, windTask,
 			1, 2, 4, 8, 16, 32, 64, 128, 256, 512);

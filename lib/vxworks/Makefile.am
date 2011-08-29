@@ -3,9 +3,9 @@ lib_LTLIBRARIES = libvxworks.la
 libvxworks_la_LDFLAGS = -version-info 0:0:0 -lpthread
 
 libvxworks_la_SOURCES = \
+	init.c		\
 	errnoLib.c	\
 	intLib.c	\
-	kernelLib.c	\
 	lstLib.c	\
 	memPartLib.c	\
 	memPartLib.h	\

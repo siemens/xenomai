@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
 #include <vxworks/rngLib.h>
-#include <vxworks/kernelLib.h>
 
 static struct traceobj trobj;
 
@@ -29,8 +29,8 @@ static struct traceobj trobj;
 		}							\
 	}
 
-void rootTask(long a0, long a1, long a2, long a3, long a4,
-	      long a5, long a6, long a7, long a8, long a9)
+static void rootTask(long a0, long a1, long a2, long a3, long a4,
+		     long a5, long a6, long a7, long a8, long a9)
 {
 	int j, res, k, chunks;
 	const int putBytes = 10;
@@ -201,13 +201,17 @@ void rootTask(long a0, long a1, long a2, long a3, long a4,
 
 int main(int argc, char *argv[])
 {
-	int ret;
+	TASK_ID tid;
+
+	copperplate_init(argc, argv);
 
 	traceobj_init(&trobj, argv[0], 0);
 
-	ret = kernelInit(rootTask, argc, argv);
-	traceobj_assert(&trobj, ret == OK);
+	tid = taskSpawn("rootTask", 50, 0, 0, rootTask,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	traceobj_assert(&trobj, tid != ERROR);
 
 	traceobj_join(&trobj);
+
 	exit(0);
 }

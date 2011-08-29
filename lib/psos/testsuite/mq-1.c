@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
 static struct traceobj trobj;
 
-u_long tid, qid;
+static u_long tid, qid;
 
-void root_task(u_long a0, u_long a1, u_long a2, u_long a3)
+static void root_task(u_long a0, u_long a1, u_long a2, u_long a3)
 {
 	u_long msgbuf[] = { 1, 2, 3, 4 };
 	int ret;
@@ -38,10 +39,9 @@ int main(int argc, char *argv[])
 	u_long args[] = { 1, 2, 3, 4 }, _qid;
 	int ret;
 
-	traceobj_init(&trobj, argv[0], 0);
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], 0);
 
 	ret = q_create("QUEUE",	3, Q_LIMIT, &qid);
 	traceobj_assert(&trobj, ret == SUCCESS);

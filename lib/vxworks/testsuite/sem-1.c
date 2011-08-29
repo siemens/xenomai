@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
 #include <vxworks/taskInfo.h>
 #include <vxworks/semLib.h>
-#include <vxworks/kernelLib.h>
 
 static struct traceobj trobj;
 
@@ -16,10 +16,10 @@ static int tseq[] = {
 	9, 21, 19
 };
 
-SEM_ID sem_id;
+static SEM_ID sem_id;
 
-void peerTask(long a0, long a1, long a2, long a3, long a4,
-	      long a5, long a6, long a7, long a8, long a9)
+static void peerTask(long a0, long a1, long a2, long a3, long a4,
+		     long a5, long a6, long a7, long a8, long a9)
 {
 	TASK_ID rtid;
 	int ret;
@@ -74,8 +74,8 @@ void peerTask(long a0, long a1, long a2, long a3, long a4,
 	traceobj_exit(&trobj);
 }
 
-void rootTask(long a0, long a1, long a2, long a3, long a4,
-	      long a5, long a6, long a7, long a8, long a9)
+static void rootTask(long a0, long a1, long a2, long a3, long a4,
+		     long a5, long a6, long a7, long a8, long a9)
 {
 	TASK_ID ptid;
 	int ret;
@@ -140,19 +140,21 @@ void rootTask(long a0, long a1, long a2, long a3, long a4,
 
 int main(int argc, char *argv[])
 {
-	TASK_ID tid;
-	int ret;
+	TASK_ID rtid, ptid;
+
+	copperplate_init(argc, argv);
 
 	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
-	ret = kernelInit(rootTask, argc, argv);
-	traceobj_assert(&trobj, ret == OK);
+	rtid = taskSpawn("rootTask", 50, 0, 0, rootTask,
+			 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	traceobj_assert(&trobj, rtid != ERROR);
 
 	traceobj_mark(&trobj, 20);
 
-	tid = taskSpawn("peerTask", 11, 0, 0, peerTask,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	traceobj_assert(&trobj, tid != ERROR);
+	ptid = taskSpawn("peerTask", 11, 0, 0, peerTask,
+			 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	traceobj_assert(&trobj, ptid != ERROR);
 
 	traceobj_mark(&trobj, 21);
 

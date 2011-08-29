@@ -1,31 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
 static struct traceobj trobj;
 
-u_long tidA, tidB;
-
-void task_A(u_long a1, u_long a2, u_long a3, u_long a4)
-{
-	/* NOT STARTED */
-}
-
-void task_B(u_long a1, u_long a2, u_long a3, u_long a4)
-{
-	/* NOT STARTED */
-}
+static u_long tidA, tidB;
 
 int main(int argc, char *argv[])
 {
 	u_long tid;
 	int ret;
 
-	traceobj_init(&trobj, argv[0], 0);
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], 0);
 
 	ret = t_create("TSKA", 20, 0, 0, 0, &tidA);
 	traceobj_assert(&trobj, ret == SUCCESS);

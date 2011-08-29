@@ -19,6 +19,7 @@ SUBDIRS = \
 	psos \
 	vxworks \
 	cobalt \
+	copperplate \
 	rtdm
 
 install-data-local:

@@ -23,7 +23,6 @@
 #include <assert.h>
 #include <getopt.h>
 #include <copperplate/init.h>
-#include <copperplate/hash.h>
 #include <copperplate/registry.h>
 #include <copperplate/clockobj.h>
 #include <psos/psos.h>
@@ -34,16 +33,41 @@
 #include "pt.h"
 #include "rn.h"
 
-static unsigned int tick_period = 1000000; /* 1ms */
+static unsigned int clock_resolution = 1000000; /* 1ms */
 
-u_long PSOS_INIT(int argc, char *const argv[])
+static const struct option psos_options[] = {
+	{
+#define clock_resolution_opt	0
+		.name = "psos-clock-resolution",
+		.has_arg = 1,
+		.flag = NULL,
+		.val = 0
+	},
+	{
+		.name = NULL,
+		.has_arg = 0,
+		.flag = NULL,
+		.val = 0
+	}
+};
+
+static int psos_init(int argc, char *const argv[])
 {
-	int ret;
+	int ret, lindex, c;
 
-	ret = copperplate_init(argc, argv);
-	if (ret)
-		return ret;
-	
+	for (;;) {
+		c = getopt_long_only(argc, argv, "", psos_options, &lindex);
+		if (c == EOF)
+			break;
+		if (c > 0)
+			continue;
+		switch (lindex) {
+		case clock_resolution_opt:
+			clock_resolution = atoi(optarg);
+			break;
+		}
+	}
+
 	registry_add_dir("/psos");
 	registry_add_dir("/psos/tasks");
 	registry_add_dir("/psos/semaphores");
@@ -58,15 +82,25 @@ u_long PSOS_INIT(int argc, char *const argv[])
 	pvcluster_init(&psos_pt_table, "psos.pt");
 	pvcluster_init(&psos_rn_table, "psos.rn");
 
-	ret = clockobj_init(&psos_clock, "psos", tick_period);
+	ret = clockobj_init(&psos_clock, "psos", clock_resolution);
 	if (ret) {
-		warning("%s: failed to initialize pSOS clock (period=%u ns)",
-			__FUNCTION__, tick_period);
+		warning("%s: failed to initialize pSOS clock (res=%u ns)",
+			__FUNCTION__, clock_resolution);
 		return ret;
 	}
 
 	/* FIXME: this default 10-ticks value should be user-settable */
 	clockobj_ticks_to_timeout(&psos_clock, 10, &psos_rrperiod);
 
-	return SUCCESS;
+	return 0;
+}
+
+static struct copperskin psos_skin = {
+	.name = "psos",
+	.init = psos_init,
+};
+
+static __attribute__ ((constructor)) void register_psos(void)
+{
+	copperplate_register_skin(&psos_skin);
 }

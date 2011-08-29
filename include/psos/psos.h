@@ -368,8 +368,6 @@ u_long tm_wkwhen(u_long date,
 		 u_long time,
 		 u_long ticks);
 
-u_long PSOS_INIT(int argc, char *const argv[]);
-
 #ifdef __cplusplus
 };
 #endif /* __cplusplus */

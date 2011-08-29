@@ -21,6 +21,7 @@
 
 #include <xeno_config.h>
 #include <sched.h>
+#include <copperplate/list.h>
 
 struct coppernode {
 	pid_t id;
@@ -36,15 +37,23 @@ struct coppernode {
 
 extern struct coppernode __this_node;
 
+struct copperskin {
+	const char *name;
+	int (*init)(int argc, char *const argv[]);
+	struct pvholder next;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int copperplate_init(int argc, char *const argv[]);
+void copperplate_init(int argc, char *const argv[]);
 
 pid_t copperplate_get_tid(void);
 
 int copperplate_probe_node(unsigned int id);
+
+void copperplate_register_skin(struct copperskin *p);
 
 void panic(const char *fmt, ...);
 

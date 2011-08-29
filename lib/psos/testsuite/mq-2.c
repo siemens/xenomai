@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -9,9 +10,9 @@ static int tseq[] = {
 	1, 2, 7, 8, 9, 10, 11, 3, 4, 5, 6
 };
 
-u_long tidA, tidB, qid;
+static u_long tidA, tidB, qid;
 
-void task_A(u_long a0, u_long a1, u_long a2, u_long a3)
+static void task_A(u_long a0, u_long a1, u_long a2, u_long a3)
 {
 	u_long msgbuf[] = { 1, 2, 3, 4 };
 	int ret;
@@ -46,7 +47,7 @@ void task_A(u_long a0, u_long a1, u_long a2, u_long a3)
 	traceobj_exit(&trobj);
 }
 
-void task_B(u_long a0, u_long a1, u_long a2, u_long a3)
+static void task_B(u_long a0, u_long a1, u_long a2, u_long a3)
 {
 	u_long _msgbuf[8], msglen;
 	int ret;
@@ -92,10 +93,9 @@ int main(int argc, char *argv[])
 	u_long args[] = { 1, 2, 3, 4 };
 	int ret;
 
-	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	ret = q_vcreate("VQUEUE", Q_LIMIT, 3, sizeof(u_long[4]), &qid);
 	traceobj_assert(&trobj, ret == SUCCESS);

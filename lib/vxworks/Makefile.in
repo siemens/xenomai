@@ -77,8 +77,8 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libvxworks_la_LIBADD =
-am_libvxworks_la_OBJECTS = libvxworks_la-errnoLib.lo \
-	libvxworks_la-intLib.lo libvxworks_la-kernelLib.lo \
+am_libvxworks_la_OBJECTS = libvxworks_la-init.lo \
+	libvxworks_la-errnoLib.lo libvxworks_la-intLib.lo \
 	libvxworks_la-lstLib.lo libvxworks_la-memPartLib.lo \
 	libvxworks_la-msgQLib.lo libvxworks_la-rngLib.lo \
 	libvxworks_la-semLib.lo libvxworks_la-taskLib.lo \
@@ -265,9 +265,9 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libvxworks.la
 libvxworks_la_LDFLAGS = -version-info 0:0:0 -lpthread
 libvxworks_la_SOURCES = \
+	init.c		\
 	errnoLib.c	\
 	intLib.c	\
-	kernelLib.c	\
 	lstLib.c	\
 	memPartLib.c	\
 	memPartLib.h	\
@@ -368,8 +368,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-errnoLib.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-intLib.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-kernelLib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-lstLib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-memPartLib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libvxworks_la-msgQLib.Plo@am__quote@
@@ -402,6 +402,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
+libvxworks_la-init.lo: init.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvxworks_la-init.lo -MD -MP -MF $(DEPDIR)/libvxworks_la-init.Tpo -c -o libvxworks_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libvxworks_la-init.Tpo $(DEPDIR)/libvxworks_la-init.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='init.c' object='libvxworks_la-init.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvxworks_la-init.lo `test -f 'init.c' || echo '$(srcdir)/'`init.c
+
 libvxworks_la-errnoLib.lo: errnoLib.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvxworks_la-errnoLib.lo -MD -MP -MF $(DEPDIR)/libvxworks_la-errnoLib.Tpo -c -o libvxworks_la-errnoLib.lo `test -f 'errnoLib.c' || echo '$(srcdir)/'`errnoLib.c
 @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libvxworks_la-errnoLib.Tpo $(DEPDIR)/libvxworks_la-errnoLib.Plo
@@ -415,13 +422,6 @@ libvxworks_la-intLib.lo: intLib.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intLib.c' object='libvxworks_la-intLib.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvxworks_la-intLib.lo `test -f 'intLib.c' || echo '$(srcdir)/'`intLib.c
-
-libvxworks_la-kernelLib.lo: kernelLib.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvxworks_la-kernelLib.lo -MD -MP -MF $(DEPDIR)/libvxworks_la-kernelLib.Tpo -c -o libvxworks_la-kernelLib.lo `test -f 'kernelLib.c' || echo '$(srcdir)/'`kernelLib.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libvxworks_la-kernelLib.Tpo $(DEPDIR)/libvxworks_la-kernelLib.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='kernelLib.c' object='libvxworks_la-kernelLib.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libvxworks_la-kernelLib.lo `test -f 'kernelLib.c' || echo '$(srcdir)/'`kernelLib.c
 
 libvxworks_la-lstLib.lo: lstLib.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libvxworks_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libvxworks_la-lstLib.lo -MD -MP -MF $(DEPDIR)/libvxworks_la-lstLib.Tpo -c -o libvxworks_la-lstLib.lo `test -f 'lstLib.c' || echo '$(srcdir)/'`lstLib.c

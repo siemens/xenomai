@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -10,7 +11,7 @@ static char rn_mem[65536];
 
 static u_long tid, rnid;
 
-void alloc_task(u_long a1, u_long a2, u_long a3, u_long a4)
+static void alloc_task(u_long a1, u_long a2, u_long a3, u_long a4)
 {
 	u_long size, alloc_size = 0;
 	int ret, n;
@@ -35,10 +36,9 @@ int main(int argc, char *argv[])
 	u_long args[] = { 1, 2, 3, 4 }, asize, _rnid;
 	int ret;
 
-	traceobj_init(&trobj, argv[0], 0);
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], 0);
 
 	ret = rn_create("REGION", rn_mem, sizeof(rn_mem),
 			32, RN_FIFO|RN_NODEL, &rnid, &asize);

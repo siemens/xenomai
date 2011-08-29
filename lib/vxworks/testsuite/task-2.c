@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <vxworks/errnoLib.h>
 #include <vxworks/taskLib.h>
 #include <vxworks/semLib.h>
-#include <vxworks/kernelLib.h>
 
 static struct traceobj trobj;
 
@@ -13,12 +13,12 @@ static int tseq[] = {
 	8, 1, 9, 4, 10, 5, 11, 2, 6, 7,	12
 };
 
-TASK_ID btid, ftid;
+static TASK_ID btid, ftid;
 
-SEM_ID sem_id;
+static SEM_ID sem_id;
 
-void backgroundTask(long a1, long a2, long a3, long a4, long a5,
-		    long a6, long a7, long a8, long a9, long a10)
+static void backgroundTask(long a1, long a2, long a3, long a4, long a5,
+			   long a6, long a7, long a8, long a9, long a10)
 {
 	unsigned int safety = 100000000, count = 0;
 	int ret;
@@ -46,8 +46,8 @@ void backgroundTask(long a1, long a2, long a3, long a4, long a5,
 	traceobj_exit(&trobj);
 }
 
-void foregroundTask(long a1, long a2, long a3, long a4, long a5,
-		    long a6, long a7, long a8, long a9, long a10)
+static void foregroundTask(long a1, long a2, long a3, long a4, long a5,
+			   long a6, long a7, long a8, long a9, long a10)
 {
 	int ret;
 
@@ -76,10 +76,9 @@ int main(int argc, char *argv[])
 {
 	int ret;
 
-	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
+	copperplate_init(argc, argv);
 
-	ret = kernelInit(NULL, argc, argv);
-	traceobj_assert(&trobj, ret == OK);
+	traceobj_init(&trobj, argv[0], sizeof(tseq) / sizeof(int));
 
 	sem_id = semCCreate(SEM_Q_PRIORITY, 0);
 	traceobj_assert(&trobj, sem_id != 0);

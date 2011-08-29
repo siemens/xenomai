@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <copperplate/init.h>
 #include <copperplate/traceobj.h>
 #include <psos/psos.h>
 
@@ -14,10 +15,9 @@ int main(int argc, char *argv[])
 	void *buf, *lbuf;
 	int ret;
 
-	traceobj_init(&trobj, argv[0], 0);
+	copperplate_init(argc, argv);
 
-	ret = PSOS_INIT(argc, argv);
-	traceobj_assert(&trobj, ret == SUCCESS);
+	traceobj_init(&trobj, argv[0], 0);
 
 	ret = pt_create("PART", pt_mem, NULL, sizeof(pt_mem), 16, PT_NODEL, &ptid, &nbufs);
 	traceobj_assert(&trobj, ret == SUCCESS);

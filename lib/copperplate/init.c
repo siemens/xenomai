@@ -45,6 +45,8 @@ struct coppernode __this_node = {
 	.reset_session = 0,
 };
 
+static DEFINE_PRIVATE_LIST(skins);
+
 static int mkdir_mountpt = 1;
 
 static const struct option base_options[] = {
@@ -212,8 +214,9 @@ int copperplate_probe_node(unsigned int id)
 
 #endif  /* CONFIG_XENO_MERCURY */
 
-int copperplate_init(int argc, char *const argv[])
+void copperplate_init(int argc, char *const argv[])
 {
+	struct copperskin *skin;
 	int c, lindex, ret;
 
 	/* No ifs, no buts: we must be called over the main thread. */
@@ -224,8 +227,10 @@ int copperplate_init(int argc, char *const argv[])
 	/* Set a reasonable default value for the registry mount point. */
 	ret = asprintf(&__this_node.registry_mountpt,
 		       "/mnt/xenomai/%d", getpid());
-	if (ret < 0)
-		return -ENOMEM;
+	if (ret < 0) {
+		ret = -ENOMEM;
+		goto fail;
+	}
 
 	/* Define default CPU affinity, i.e. no particular affinity. */
 	CPU_ZERO(&__this_node.cpu_affinity);
@@ -235,13 +240,8 @@ int copperplate_init(int argc, char *const argv[])
 		c = getopt_long_only(argc, argv, "", base_options, &lindex);
 		if (c == EOF)
 			break;
-		if (c == '?') {
-			usage();
-			return -EINVAL;
-		}
 		if (c > 0)
 			continue;
-
 		switch (lindex) {
 		case mempool_opt:
 			__this_node.mem_pool = atoi(optarg) * 1024;
@@ -262,7 +262,7 @@ int copperplate_init(int argc, char *const argv[])
 		case affinity_opt:
 			ret = collect_cpu_affinity(optarg);
 			if (ret)
-				return ret;
+				goto fail;
 			break;
 		case no_mlock_opt:
 		case no_registry_opt:
@@ -271,28 +271,26 @@ int copperplate_init(int argc, char *const argv[])
 		case help_opt:
 			usage();
 			exit(0);
-		default:
-			return -EINVAL;
 		}
 	}
 
 	ret = heapobj_pkg_init_private();
 	if (ret) {
 		warning("failed to initialize main private heap");
-		return ret;
+		goto fail;
 	}
 
 	ret = heapobj_pkg_init_shared();
 	if (ret) {
 		warning("failed to initialize main shared heap");
-		return ret;
+		goto fail;
 	}
 
 	if (!__this_node.no_registry) {
 		ret = registry_pkg_init(argv[0], __this_node.registry_mountpt,
 					mkdir_mountpt);
 		if (ret)
-			return ret;
+			goto fail;
 	}
 
 	atexit(do_cleanup);
@@ -300,19 +298,33 @@ int copperplate_init(int argc, char *const argv[])
 	ret = timerobj_pkg_init();
 	if (ret) {
 		warning("failed to initialize timer support");
-		return ret;
+		goto fail;
 	}
 
 	if (!__this_node.no_mlock) {
 		ret = mlockall(MCL_CURRENT | MCL_FUTURE);
 		if (ret) {
+			ret = -errno;
 			warning("failed to lock memory");
-			return -errno;
+			goto fail;
 		}
 	}
 
-	/* The caller may parse its own arguments, reset the index. */
-	optind = 0;
+	pvlist_for_each_entry(skin, &skins, next) {
+		optind = 0;
+		ret = skin->init(argc, argv);
+		if (ret) {
+			warning("skin %s won't initialize", skin->name);
+			goto fail;
+		}
+	}
 
-	return 0;
+	return;
+fail:
+	panic("initialization failed, errno=%d", -ret);
+}
+
+void copperplate_register_skin(struct copperskin *p)
+{
+	pvlist_append(&p->next, &skins);
 }
