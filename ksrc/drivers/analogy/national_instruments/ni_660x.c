@@ -80,21 +80,10 @@ struct ni_660x_subd_priv {
    struct ni_gpct*         counter;
 };
 
-#if 0 /* TODO: to be removed */
-static a4l_chdesc_t ni_660x_default_chan_desc = {
-   .mode = A4L_CHAN_GLOBAL_CHANDESC,
-   .length = 8,
-   .chans = {
-      {A4L_CHAN_AREF_GROUND, 1},
-   },
-};
-#endif /* TODO: to be removed */
-
-
 #define NUM_PFI_CHANNELS 40
-/* really there are only up to 3 dma channels, but the register layout allows for 4 */
+/* Really there are only up to 3 dma channels, but the register layout
+   allows for 4 */
 #define MAX_DMA_CHANNEL 4
-
 
 static a4l_chdesc_t chandesc_ni660x = {
 	.mode = A4L_CHAN_GLOBAL_CHANDESC,
@@ -246,10 +235,10 @@ static inline unsigned NI_660X_GPCT_SUBDEV(unsigned index)
 
 struct NI_660xRegisterData {
 
-	const char *name;	/*  Register Name */
-	int offset;		/*  Offset from base address from GPCT chip */
+	const char *name; /*  Register Name */
+	int offset; /*  Offset from base address from GPCT chip */
 	enum ni_660x_register_direction direction;
-	enum ni_660x_register_width size;	/*  1 byte, 2 bytes, or 4 bytes */
+	enum ni_660x_register_width size; /*  1 byte, 2 bytes, or 4 bytes */
 };
 
 static const struct NI_660xRegisterData registerData[NumRegisters] = {
@@ -357,22 +346,6 @@ static const struct NI_660xRegisterData registerData[NumRegisters] = {
 enum clock_config_register_bits {
 	CounterSwap = 0x1 << 21
 };
-
-static inline void set_hw_dev(a4l_dev_t *dev,
-                              struct device *hw_dev)
-{
-   /*
-    * Is it REALLY needed ?
-        if (dev->hw_dev)
-                put_device(dev->hw_dev);
-
-        dev->hw_dev = hw_dev;
-        if (dev->hw_dev) {
-                dev->hw_dev = get_device(dev->hw_dev);
-                BUG_ON(dev->hw_dev == NULL);
-        }
-        */
-}
 
 /* ioconfigreg */
 static inline unsigned ioconfig_bitshift(unsigned pfi_channel)
@@ -496,19 +469,17 @@ static DEFINE_PCI_DEVICE_TABLE(ni_660x_pci_table) = {
 
 MODULE_DEVICE_TABLE(pci, ni_660x_pci_table);
 
-/* TODO: replace spinlock_t by a4l_lock_t */
-
 struct ni_660x_private {
 	struct mite_struct         *mite;
 	struct ni_gpct_device      *counter_dev;
 	uint64_t                   pfi_direction_bits;
 	struct mite_dma_descriptor_ring
 	                           *mite_rings[NI_660X_MAX_NUM_CHIPS][counters_per_chip];
-	spinlock_t                 mite_channel_lock;
+	a4l_lock_t                 mite_channel_lock;
 	/* interrupt_lock prevents races between interrupt and comedi_poll */
-	spinlock_t                 interrupt_lock;
+	a4l_lock_t                 interrupt_lock;
 	unsigned                   dma_configuration_soft_copies[NI_660X_MAX_NUM_CHIPS];
-	spinlock_t                 soft_reg_copy_lock;
+	a4l_lock_t                 soft_reg_copy_lock;
 	unsigned short             pfi_output_selects[NUM_PFI_CHANNELS];
 
    struct ni_660x_board *board_ptr;
@@ -874,7 +845,7 @@ static inline void ni_660x_set_dma_channel(a4l_dev_t *dev,
 {
 	unsigned long flags;
 
-	spin_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
+	a4l_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] &=
 	    ~dma_select_mask(mite_channel);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] |=
@@ -886,7 +857,7 @@ static inline void ni_660x_set_dma_channel(a4l_dev_t *dev,
 			       [counter->chip_index] |
 			       dma_reset_bit(mite_channel), DMAConfigRegister);
 	mmiowb();
-	spin_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
+	a4l_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
 }
 
 static inline void ni_660x_unset_dma_channel(a4l_dev_t *dev,
@@ -894,7 +865,7 @@ static inline void ni_660x_unset_dma_channel(a4l_dev_t *dev,
 					     struct ni_gpct *counter)
 {
 	unsigned long flags;
-	spin_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
+	a4l_lock_irqsave(&private(dev)->soft_reg_copy_lock, flags);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] &=
 	    ~dma_select_mask(mite_channel);
 	private(dev)->dma_configuration_soft_copies[counter->chip_index] |=
@@ -904,7 +875,7 @@ static inline void ni_660x_unset_dma_channel(a4l_dev_t *dev,
 			       dma_configuration_soft_copies
 			       [counter->chip_index], DMAConfigRegister);
 	mmiowb();
-	spin_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
+	a4l_unlock_irqrestore(&private(dev)->soft_reg_copy_lock, flags);
 }
 
 static int ni_660x_request_mite_channel(a4l_dev_t *dev,
@@ -914,20 +885,20 @@ static int ni_660x_request_mite_channel(a4l_dev_t *dev,
 	unsigned long flags;
 	struct mite_channel *mite_chan;
 
-	spin_lock_irqsave(&private(dev)->mite_channel_lock, flags);
+	a4l_lock_irqsave(&private(dev)->mite_channel_lock, flags);
 	BUG_ON(counter->mite_chan);
 	mite_chan =
 	    mite_request_channel(private(dev)->mite, mite_ring(private(dev),
 							       counter));
 	if (mite_chan == NULL) {
-		spin_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+		a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
 		printk("failed to reserve mite dma channel for counter.\n");
 		return -EBUSY;
 	}
 	mite_chan->dir = direction;
 	a4l_ni_tio_set_mite_channel(counter, mite_chan);
 	ni_660x_set_dma_channel(dev, mite_chan->channel, counter);
-	spin_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+	a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
 	return 0;
 }
 
@@ -936,7 +907,7 @@ void ni_660x_release_mite_channel(a4l_dev_t *dev,
 {
 	unsigned long flags;
 
-	spin_lock_irqsave(&private(dev)->mite_channel_lock, flags);
+	a4l_lock_irqsave(&private(dev)->mite_channel_lock, flags);
 	if (counter->mite_chan) {
 		struct mite_channel *mite_chan = counter->mite_chan;
 
@@ -944,7 +915,7 @@ void ni_660x_release_mite_channel(a4l_dev_t *dev,
 		a4l_ni_tio_set_mite_channel(counter, NULL);
 		a4l_mite_release_channel(mite_chan);
 	}
-	spin_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
+	a4l_unlock_irqrestore(&private(dev)->mite_channel_lock, flags);
 }
 
 static int ni_660x_cmd(a4l_subd_t *s, a4l_cmd_t* cmd)
@@ -1028,7 +999,7 @@ static int ni_660x_interrupt(unsigned int irq, void *d)
 	   return -ENOENT;
 
    /* lock to avoid race with comedi_poll */
-   spin_lock_irqsave(&private(dev)->interrupt_lock, flags);
+   a4l_lock_irqsave(&private(dev)->interrupt_lock, flags);
    smp_mb();
 
    while (&dev->subdvsq != dev->subdvsq.next) {
@@ -1037,7 +1008,7 @@ static int ni_660x_interrupt(unsigned int irq, void *d)
 	   ni_660x_handle_gpct_interrupt(dev, tmp);
    }
    
-   spin_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
+   a4l_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
    return 0;
 }
 
@@ -1046,9 +1017,9 @@ static int ni_660x_input_poll(a4l_dev_t *dev,
 			      a4l_subd_t *s)
 {
 	unsigned long flags;
-	spin_lock_irqsave(&private(dev)->interrupt_lock, flags);
+	a4l_lock_irqsave(&private(dev)->interrupt_lock, flags);
 	mite_sync_input_dma(((struct ni_gpct*)s->priv)->mite_chan, s);
-	spin_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
+	a4l_unlock_irqrestore(&private(dev)->interrupt_lock, flags);
     * OLD CODE
     * Check replacement code
 	return comedi_buf_read_n_available(s->async);
@@ -1169,9 +1140,9 @@ static int ni_660x_attach(a4l_dev_t *dev,
    private(dev)->mite      = mitedev;
    private(dev)->board_ptr = boardptr;
 
-	spin_lock_init(&private(dev)->mite_channel_lock);
-	spin_lock_init(&private(dev)->interrupt_lock);
-	spin_lock_init(&private(dev)->soft_reg_copy_lock);
+	a4l_lock_init(&private(dev)->mite_channel_lock);
+	a4l_lock_init(&private(dev)->interrupt_lock);
+	a4l_lock_init(&private(dev)->soft_reg_copy_lock);
 	for (i = 0; i < NUM_PFI_CHANNELS; ++i) {
 		private(dev)->pfi_output_selects[i] = pfi_output_select_counter;
 	}
@@ -1181,10 +1152,7 @@ static int ni_660x_attach(a4l_dev_t *dev,
 		printk(KERN_INFO "[NI660x] Error setting up mite\n");
 		return ret;
 	}
-   /*
-    * Is it REALLY needed ?
-	set_hw_dev(dev, &private(dev)->mite->pcidev->dev);
-   */
+
 	ret = ni_660x_alloc_mite_rings(dev);
 	if (ret < 0)
    {
