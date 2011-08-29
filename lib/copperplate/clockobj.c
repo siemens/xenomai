@@ -32,7 +32,9 @@ void ticks_to_timespec(struct clockobj *clkobj,
 		       struct timespec *ts)
 {
 	ts->tv_sec = ticks / clkobj->tick_freq;
-	ts->tv_nsec = (ticks - (ts->tv_sec * clkobj->tick_freq)) * clkobj->resolution;
+	ts->tv_nsec = ticks - (ts->tv_sec * clkobj->tick_freq);
+	if (clkobj->resolution > 1)
+		ts->tv_nsec *= clkobj->resolution;
 }
 
 void timespec_sub(struct timespec *r,
@@ -218,8 +220,9 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 	timespec_add(&sum, &clkobj->epoch, &delta);
 
 	/* Convert the time value to ticks. */
-	*pticks = (ticks_t)sum.tv_sec * clkobj->tick_freq
-	  + (ticks_t)sum.tv_nsec / clkobj->resolution;
+	*pticks = (ticks_t)sum.tv_sec * clkobj->tick_freq + sum.tv_nsec;
+	if (clkobj->resolution > 1)
+		*pticks /= clkobj->resolution;
 
 	read_unlock(&clkobj->lock);
 
