@@ -50,6 +50,11 @@
 #define CLOCK_MONOTONIC 1
 #endif /* CLOCK_MONOTONIC */
 
+#ifndef CLOCK_MONOTONIC_RAW
+/* Linux implements this since 2.6.28. */
+#define CLOCK_MONOTONIC_RAW 4
+#endif /* CLOCK_MONOTONIC_RAW */
+
 /*
  * This number is supposed to not collide with any of the POSIX and
  * Linux kernel definitions so that no ambiguities arise when porting

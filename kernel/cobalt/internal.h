@@ -188,6 +188,7 @@ static inline int clock_flag(int flag, clockid_t clock_id)
 	case TIMER_ABSTIME:
 		switch(clock_id) {
 		case CLOCK_MONOTONIC:
+		case CLOCK_MONOTONIC_RAW:
 			return XN_ABSOLUTE;
 
 		case CLOCK_REALTIME:

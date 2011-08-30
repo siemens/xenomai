@@ -114,6 +114,7 @@ int __wrap_clock_gettime(clockid_t clock_id, struct timespec *tp)
 		err = __do_clock_host_realtime(tp, NULL);
 		break;
 	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
 		if (__pse51_sysinfo.tickval == 1) {
 			unsigned long long ns;
 			unsigned long rem;

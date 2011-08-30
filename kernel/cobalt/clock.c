@@ -32,6 +32,11 @@
  * sleeping (with clock_nanosleep()), the CLOCK_MONOTONIC clock has a resolution
  * of one system clock tick, like the CLOCK_REALTIME clock.
  *
+ * CLOCK_MONOTONIC_RAW is Linux-specific, and provides monotonic time
+ * values from a hardware timer which is not adjusted by NTP. This is
+ * strictly equivalent to CLOCK_MONOTONIC with Xenomai, which is not
+ * NTP adjusted either.
+ *
  * Timer objects may be created with the timer_create() service using either of
  * the two clocks, but the resolution of these timers is one system clock tick,
  * as is the case for clock_nanosleep().
@@ -60,10 +65,12 @@
  * This service returns, at the address @a res, if it is not @a NULL, the
  * resolution of the clock @a clock_id.
  *
- * For both CLOCK_REALTIME and CLOCK_MONOTONIC, this resolution is the duration
- * of one system clock tick. No other clock is supported.
+ * For both CLOCK_REALTIME, CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW,
+ * this resolution is the duration of one system clock tick. No other
+ * clock is supported.
  *
- * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC;
+ * @param clock_id clock identifier, either CLOCK_REALTIME,
+ * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW;
  *
  * @param res the address where the resolution of the specified clock will be
  * stored on success.
@@ -79,13 +86,17 @@
  */
 int clock_getres(clockid_t clock_id, struct timespec *res)
 {
-	if (clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_REALTIME) {
+	switch (clock_id) {
+	case CLOCK_REALTIME:
+	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
+		if (res)
+			ticks2ts(res, 1);
+		break;
+	default:
 		thread_set_errno(EINVAL);
 		return -1;
 	}
-
-	if (res)
-		ticks2ts(res, 1);
 
 	return 0;
 }
@@ -170,12 +181,13 @@ retry:
  * - CLOCK_MONOTONIC, the clock value is given by an architecture-dependent high
  *   resolution counter, with a precision independent from the system clock tick
  *   duration.
+ * - CLOCK_MONOTONIC_RAW, same as CLOCK_MONOTONIC.
  * - CLOCK_HOST_REALTIME, the clock value as seen by the host, typically
  *   Linux. Resolution and precision depend on the host, but it is guaranteed
  *   that both, host and Xenomai, see the same information.
  *
  * @param clock_id clock identifier, either CLOCK_REALTIME, CLOCK_MONOTONIC,
- *        or CLOCK_HOST_REALTIME;
+ *        CLOCK_MONOTONIC_RAW or CLOCK_HOST_REALTIME;
  *
  * @param tp the address where the value of the specified clock will be stored.
  *
@@ -198,6 +210,7 @@ int clock_gettime(clockid_t clock_id, struct timespec *tp)
 		break;
 
 	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
 		cpu_time = xnpod_get_cpu_time();
 		tp->tv_sec =
 		    xnarch_uldivrem(cpu_time, ONE_BILLION, &tp->tv_nsec);
@@ -274,7 +287,8 @@ int clock_settime(clockid_t clock_id, const struct timespec *tp)
  *
  * The resolution of this service is one system clock tick.
  *
- * @param clock_id clock identifier, either CLOCK_REALTIME or CLOCK_MONOTONIC.
+ * @param clock_id clock identifier, either CLOCK_REALTIME,
+ * CLOCK_MONOTONIC or CLOCK_MONOTONIC_RAW.
  *
  * @param flags one of:
  * - 0 meaning that the wakeup time @a rqtp is a time interval;
@@ -313,7 +327,9 @@ int clock_nanosleep(clockid_t clock_id,
 	if (xnpod_unblockable_p())
 		return EPERM;
 
-	if (clock_id != CLOCK_MONOTONIC && clock_id != CLOCK_REALTIME)
+	if (clock_id != CLOCK_MONOTONIC &&
+	    clock_id != CLOCK_MONOTONIC_RAW &&
+	    clock_id != CLOCK_REALTIME)
 		return ENOTSUP;
 
 	if ((unsigned long)rqtp->tv_nsec >= ONE_BILLION)

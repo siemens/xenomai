@@ -106,7 +106,7 @@ int pthread_condattr_destroy(pthread_condattr_t * attr)
  *
  * See pthread_cond_timedwait() documentation for a description of the effect of
  * this attribute on a condition variable. The clock ID returned is @a
- * CLOCK_REALTIME or @a CLOCK_MONOTONIC.
+ * CLOCK_REALTIME, @a CLOCK_MONOTONIC or @a CLOCK_MONOTONIC_RAW.
  *
  * @param attr an initialized condition variable attributes object,
  *
@@ -151,8 +151,8 @@ int pthread_condattr_getclock(const pthread_condattr_t * attr,
  *
  * @param attr an initialized condition variable attributes object,
  *
- * @param clk_id value of the @a clock attribute, may be @a CLOCK_REALTIME or @a
- * CLOCK_MONOTONIC.
+ * @param clk_id value of the @a clock attribute, may be @a CLOCK_REALTIME, @a
+ * CLOCK_MONOTONIC or @a CLOCK_MONOTONIC_RAW.
  *
  * @return 0 on success,
  * @return an error number if:
@@ -183,6 +183,7 @@ int pthread_condattr_setclock(pthread_condattr_t * attr, clockid_t clk_id)
 
 	case CLOCK_REALTIME:
 	case CLOCK_MONOTONIC:
+	case CLOCK_MONOTONIC_RAW:
 		break;
 	}
 

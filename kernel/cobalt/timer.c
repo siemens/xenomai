@@ -156,7 +156,9 @@ int timer_create(clockid_t clockid,
 	sem_t *sem;
 	spl_t s;
 
-	if (clockid != CLOCK_MONOTONIC && clockid != CLOCK_REALTIME)
+	if (clockid != CLOCK_MONOTONIC &&
+	    clockid != CLOCK_MONOTONIC_RAW &&
+	    clockid != CLOCK_REALTIME)
 		goto error;
 
 	/*
