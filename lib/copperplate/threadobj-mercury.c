@@ -390,6 +390,19 @@ void threadobj_stop_rr(void)
 	sigaction(SIGVTALRM, &sa, NULL);
 }
 
+int threadobj_set_periodic(struct threadobj *thobj,
+			   struct timespec *idate, struct timespec *period)
+{
+	return -ENOSYS;		/* FIXME */
+}
+
+int threadobj_wait_period(struct threadobj *thobj,
+			  unsigned long *overruns_r)
+{
+	assert(thobj == threadobj_current());
+	return -ENOSYS;		/* FIXME */
+}
+
 void threadobj_pkg_init(void)
 {
 	struct sigaction sa;

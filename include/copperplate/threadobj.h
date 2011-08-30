@@ -144,6 +144,12 @@ int threadobj_start_rr(struct timespec *quantum);
 
 void threadobj_stop_rr(void);
 
+int threadobj_set_periodic(struct threadobj *thobj,
+			   struct timespec *idate, struct timespec *period);
+
+int threadobj_wait_period(struct threadobj *thobj,
+			  unsigned long *overruns_r);
+
 void threadobj_pkg_init(void);
 
 #ifdef __cplusplus
