@@ -24,6 +24,8 @@
 
 typedef unsigned long long ticks_t;
 
+typedef long long sticks_t;
+
 struct clockobj {
 	pthread_mutex_t lock;
 	struct timespec epoch;
@@ -33,10 +35,6 @@ struct clockobj {
 	unsigned int resolution;
 	const char *name;	/* __ref FIXME */
 };
-
-void ticks_to_timespec(struct clockobj *clkobj,
-		       ticks_t ticks,
-		       struct timespec *ts);
 
 void timespec_sub(struct timespec *r,
 		  const struct timespec *t1, const struct timespec *t2);
