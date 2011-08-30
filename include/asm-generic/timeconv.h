@@ -20,8 +20,6 @@
 #define _XENO_ASM_GENERIC_TIMECONV_H
 
 #ifndef __KERNEL__
-extern xnsysinfo_t sysinfo;
-
 void xeno_init_timeconv(int muxid);
 #endif
 
