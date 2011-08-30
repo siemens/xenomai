@@ -240,17 +240,6 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 	return clockobj_set_date(clkobj, 0, resolution_ns);
 }
 
-ticks_t clockobj_get_tsc(void)
-{
-#if defined(CONFIG_XENO_COBALT) && defined(XNARCH_HAVE_NONPRIV_TSC)
-	return __xn_rdtsc();
-#else
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-	return now.tv_sec * 1000000000ULL + now.tv_nsec;
-#endif
-}
-
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns)
 {

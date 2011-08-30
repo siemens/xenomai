@@ -20,6 +20,7 @@
 #define _COPPERPLATE_CLOCKOBJ_H
 
 #include <pthread.h>
+#include <time.h>
 #include <copperplate/list.h>
 
 typedef unsigned long long ticks_t;
@@ -75,12 +76,56 @@ int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns);
 
-ticks_t clockobj_get_tsc(void);
-
 int clockobj_destroy(struct clockobj *clkobj);
 
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef CONFIG_XENO_COBALT
+
+#include <asm-generic/xenomai/timeconv.h>
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+#ifdef XNARCH_HAVE_NONPRIV_TSC
+	return __xn_rdtsc();
+#else
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	return now.tv_sec * 1000000000ULL + now.tv_nsec;
+#endif
+}
+
+static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
+{
+	return xnarch_ns_to_tsc(ns);
+}
+
+static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
+{
+	return xnarch_tsc_to_ns(tsc);
+}
+
+#else /* CONFIG_XENO_MERCURY */
+
+static inline ticks_t clockobj_get_tsc(void)
+{
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	return now.tv_sec * 1000000000ULL + now.tv_nsec;
+}
+
+static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
+{
+	return 1;
+}
+
+static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc);
+{
+	return 1;
+}
+
+#endif /* CONFIG_XENO_MERCURY */
 
 #endif /* _COPPERPLATE_CLOCKOBJ_H */
