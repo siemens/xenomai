@@ -49,8 +49,6 @@
 
 #include <linux/module.h>
 #include <analogy/analogy_driver.h>
-#include <analogy/subdevice.h>
-#include <analogy/channel_range.h>
 
 #include "../intel/8255.h"
 #include "ni_stc.h"
