@@ -16,7 +16,6 @@ arith_SOURCES = arith.c arith-noinline.c arith-noinline.h
 
 arith_CPPFLAGS = \
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -31,7 +30,6 @@ wakeup_time_SOURCES = wakeup-time.c
 
 wakeup_time_CPPFLAGS =			\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -47,8 +45,6 @@ mutex_torture_posix_SOURCES = mutex-torture.c
 mutex_torture_posix_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include/cobalt	\
-	-I$(top_srcdir)/include/posix	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -63,7 +59,6 @@ mutex_torture_native_SOURCES = mutex-torture.c
 
 mutex_torture_native_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -79,8 +74,6 @@ cond_torture_posix_SOURCES = cond-torture.c
 cond_torture_posix_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include/cobalt	\
-	-I$(top_srcdir)/include/posix	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -95,7 +88,6 @@ cond_torture_native_SOURCES = cond-torture.c
 
 cond_torture_native_CPPFLAGS =		\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -110,7 +102,6 @@ check_vdso_SOURCES = check-vdso.c
 
 check_vdso_CPPFLAGS =			\
 	@XENO_USER_CFLAGS@		\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 
@@ -126,8 +117,6 @@ rtdm_SOURCES = rtdm.c
 rtdm_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@		\
 	-DXENO_POSIX			\
-	-I$(top_srcdir)/include/cobalt	\
-	-I$(top_srcdir)/include/posix	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 

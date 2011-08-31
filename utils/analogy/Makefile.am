@@ -4,7 +4,6 @@ bin_PROGRAMS = cmd_read cmd_write cmd_bits insn_read insn_write insn_bits
 
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include/cobalt \
 	-I$(top_srcdir)/include
 
 LDFLAGS = \

@@ -36,27 +36,24 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @XENO_COBALT_TRUE@am__append_1 = \
-@XENO_COBALT_TRUE@	-I$(top_srcdir)/include/cobalt
-
-@XENO_COBALT_TRUE@am__append_2 = \
 @XENO_COBALT_TRUE@	threadobj-cobalt.c	\
 @XENO_COBALT_TRUE@	timerobj-cobalt.c
 
-@XENO_COBALT_FALSE@am__append_3 = \
+@XENO_COBALT_FALSE@am__append_2 = \
 @XENO_COBALT_FALSE@	threadobj-mercury.c	\
 @XENO_COBALT_FALSE@	timerobj-mercury.c	\
 @XENO_COBALT_FALSE@	notifier.c
 
-@XENO_REGISTRY_TRUE@am__append_4 = libregistry.la
+@XENO_REGISTRY_TRUE@am__append_3 = libregistry.la
 
 # The process shareable heap has real-time properties, therefore it
 # fits both the cobalt and mercury cores equally. Yummie.
-@XENO_PSHARED_TRUE@am__append_5 = heapobj-pshared.c reference.c
+@XENO_PSHARED_TRUE@am__append_4 = heapobj-pshared.c reference.c
 # We always need to build tlsf/malloc support; in the pshared case, it
 # will provide for private memory allocation.
-@XENO_TLSF_TRUE@am__append_6 = libtlsf.la
-@XENO_TLSF_TRUE@am__append_7 = heapobj-tlsf.c
-@XENO_TLSF_FALSE@am__append_8 = heapobj-malloc.c
+@XENO_TLSF_TRUE@am__append_5 = libtlsf.la
+@XENO_TLSF_TRUE@am__append_6 = heapobj-tlsf.c
+@XENO_TLSF_FALSE@am__append_7 = heapobj-malloc.c
 subdir = lib/copperplate
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in COPYING
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -97,7 +94,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcopperplate_la_DEPENDENCIES = $(am__append_4) $(am__append_6)
+libcopperplate_la_DEPENDENCIES = $(am__append_3) $(am__append_5)
 am__libcopperplate_la_SOURCES_DIST = clockobj.c cluster.c hash.c \
 	init.c panic.c syncobj.c traceobj.c threadobj-cobalt.c \
 	timerobj-cobalt.c threadobj-mercury.c timerobj-mercury.c \
@@ -314,11 +311,13 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libcopperplate.la
 libcopperplate_la_LDFLAGS = @XENO_DLOPEN_CONSTRAINT@ -version-info 0:0:0 -lpthread
 libcopperplate_la_SOURCES = clockobj.c cluster.c hash.c init.c panic.c \
-	syncobj.c traceobj.c $(am__append_2) $(am__append_3) \
-	$(am__append_5) $(am__append_7) $(am__append_8)
-libcopperplate_la_CPPFLAGS = @XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include $(am__append_1)
-libcopperplate_la_LIBADD = $(am__append_4) $(am__append_6)
+	syncobj.c traceobj.c $(am__append_1) $(am__append_2) \
+	$(am__append_4) $(am__append_6) $(am__append_7)
+libcopperplate_la_CPPFLAGS = \
+	@XENO_USER_CFLAGS@		\
+	-I$(top_srcdir)/include
+
+libcopperplate_la_LIBADD = $(am__append_3) $(am__append_5)
 @XENO_REGISTRY_TRUE@noinst_LTLIBRARIES = libregistry.la
 @XENO_TLSF_TRUE@noinst_LTLIBRARIES = libtlsf.la
 @XENO_REGISTRY_TRUE@libregistry_la_SOURCES = registry.c

@@ -12941,6 +12941,7 @@ LD_FILE_OPTION=$ac_cv_ld_file_option
 
 
 if test x$rtcore_type = xcobalt; then
+   XENO_USER_CFLAGS="-I$srcdir/include/cobalt $XENO_USER_CFLAGS"
    if [ $ac_cv_ld_file_option = yes ]; then
 	XENO_POSIX_WRAPPERS="-Wl,@`cd $srcdir && pwd`/lib/cobalt/posix.wrappers"
    else

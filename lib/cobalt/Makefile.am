@@ -33,8 +33,7 @@ libcobalt_la_SOURCES = \
 libcobalt_la_CPPFLAGS =				\
 	@XENO_USER_CFLAGS@ -Wno-missing-prototypes	\
 	-I$(top_srcdir)					\
-	-I$(top_srcdir)/include				\
-	-I$(top_srcdir)/include/cobalt
+	-I$(top_srcdir)/include
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(libdir)

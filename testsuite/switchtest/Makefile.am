@@ -8,8 +8,6 @@ switchtest_SOURCES = switchtest.c
 
 switchtest_CPPFLAGS =			\
 	$(XENO_USER_CFLAGS)		\
-	-I$(top_srcdir)/include/posix	\
-	-I$(top_srcdir)/include/cobalt	\
 	-I$(top_srcdir)/include		\
 	-Wno-missing-prototypes 
 

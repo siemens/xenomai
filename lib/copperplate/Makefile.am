@@ -19,8 +19,6 @@ libcopperplate_la_CPPFLAGS =		\
 libcopperplate_la_LIBADD =
 
 if XENO_COBALT
-libcopperplate_la_CPPFLAGS +=		\
-	-I$(top_srcdir)/include/cobalt
 libcopperplate_la_SOURCES +=	\
 	threadobj-cobalt.c	\
 	timerobj-cobalt.c

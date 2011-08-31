@@ -4,7 +4,6 @@ bin_PROGRAMS = rtcanrecv rtcansend
 
 CPPFLAGS = \
 	@XENO_USER_CFLAGS@ \
-	-I$(top_srcdir)/include/cobalt \
 	-I$(top_srcdir)/include
 
 LDFLAGS = \
