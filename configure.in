@@ -166,6 +166,21 @@ AC_ARG_ENABLE(debug,
 AC_MSG_RESULT(${debug_mode:-no})
 AM_CONDITIONAL(XENO_DEBUG,[test x$debug_mode = xy])
 
+dnl Low resolution clock (default: on)
+
+lores_clock=y
+AC_MSG_CHECKING(whether to enable the low resolution clock)
+AC_ARG_ENABLE(lores-clock,
+	AS_HELP_STRING([--enable-lores-clock], [Enable low resolution clock]),
+	[case "$enableval" in
+	y | yes) lores_clock=y ;;
+	*) unset lores_clock ;;
+	esac])
+AC_MSG_RESULT(${lores_clock:-no})
+if test x$lores_clock = x; then
+	AC_DEFINE(CONFIG_XENO_LORES_CLOCK_DISABLED,1,[config])
+fi
+
 checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparent-union -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_REENTRANT \$(DEFS) \$(DEFAULT_INCLUDES) \$(INCLUDES) \$(AM_CPPFLAGS) \$(CPPFLAGS) -I\$(top_srcdir)/include -isystem \$(shell \$(CC) -print-file-name=include) -include \$(top_builddir)/include/xeno_config.h \$(shell \$(CC) -dM -E -xc /dev/null|sed -e 's/^\\#define /-D/' -e \"s/ /=\'/\" -e \"s/\$\$/\'/\")"
 
 dnl Used with sparse

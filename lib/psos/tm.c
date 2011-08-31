@@ -144,7 +144,7 @@ u_long tm_evevery(u_long ticks, u_long events, u_long *tmid_r)
 static int date_to_tmstruct(u_long date, u_long time, u_long ticks,
 			    struct tm *tm)
 {
-	if (ticks > psos_clock.tick_freq)
+	if (ticks > clockobj_get_frequency(&psos_clock))
 		return ERR_ILLTICKS;
 
 	memset(tm, 0, sizeof(*tm));

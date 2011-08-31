@@ -21,7 +21,9 @@
 
 #include <pthread.h>
 #include <time.h>
+#include <xeno_config.h>
 #include <copperplate/list.h>
+#include <copperplate/panic.h>
 
 typedef unsigned long long ticks_t;
 
@@ -32,8 +34,10 @@ struct clockobj {
 	struct timespec epoch;
 	struct timespec offset;
 	struct timespec start;
-	unsigned int tick_freq;
+#ifndef CONFIG_XENO_LORES_CLOCK_DISABLED
 	unsigned int resolution;
+	unsigned int frequency;
+#endif
 	const char *name;	/* __ref FIXME */
 };
 
@@ -69,8 +73,6 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 			       struct tm *tm,
 			       unsigned long *rticks);
 
-unsigned int clockobj_get_resolution(struct clockobj *clkobj);
-
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns);
 
 int clockobj_init(struct clockobj *clkobj,
@@ -81,6 +83,87 @@ int clockobj_destroy(struct clockobj *clkobj);
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+static inline
+int __clockobj_set_resolution(struct clockobj *clkobj,
+			      unsigned int resolution_ns)
+{
+	if (resolution_ns > 1) {
+		warning("support for low resolution clock disabled");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static inline
+unsigned int clockobj_get_resolution(struct clockobj *clkobj)
+{
+	return 1;
+}
+
+static inline
+unsigned int clockobj_get_frequency(struct clockobj *clkobj)
+{
+	return 1000000000;
+}
+
+static inline sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj,
+					    sticks_t ns)
+{
+	return ns;
+}
+
+static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
+					    sticks_t ticks)
+{
+	return ticks;
+}
+
+#else /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
+
+static inline
+int __clockobj_set_resolution(struct clockobj *clkobj,
+			      unsigned int resolution_ns)
+{
+	clkobj->resolution = resolution_ns;
+	clkobj->frequency = 1000000000 / resolution_ns;
+
+	return 0;
+}
+
+static inline
+unsigned int clockobj_get_resolution(struct clockobj *clkobj)
+{
+	return clkobj->resolution;
+}
+
+static inline
+unsigned int clockobj_get_frequency(struct clockobj *clkobj)
+{
+	return clkobj->frequency;
+}
+
+static inline sticks_t clockobj_ns_to_ticks(struct clockobj *clkobj,
+					    sticks_t ns)
+{
+#ifdef CONFIG_XENO_COBALT
+	/* Cobalt has optimized arith ops, use them. */
+	return xnarch_ulldiv(ns, clkobj->resolution, NULL);
+#else
+	return ns / clkobj->resolution;
+#endif
+}
+
+static inline sticks_t clockobj_ticks_to_ns(struct clockobj *clkobj,
+					    sticks_t ticks)
+{
+	return ticks * clkobj->resolution;
+}
+
+#endif /* !CONFIG_XENO_LORES_CLOCK_DISABLED */
 
 #ifdef CONFIG_XENO_COBALT
 
@@ -118,12 +201,12 @@ static inline ticks_t clockobj_get_tsc(void)
 
 static inline sticks_t clockobj_ns_to_tsc(sticks_t ns)
 {
-	return 1;
+	return ns;
 }
 
-static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc);
+static inline sticks_t clockobj_tsc_to_ns(sticks_t tsc)
 {
-	return 1;
+	return tsc;
 }
 
 #endif /* CONFIG_XENO_MERCURY */

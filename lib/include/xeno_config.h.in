@@ -46,6 +46,9 @@
 #undef CONFIG_XENO_LIBS_DLOPEN
 
 /* config */
+#undef CONFIG_XENO_LORES_CLOCK_DISABLED
+
+/* config */
 #undef CONFIG_XENO_MERCURY
 
 /* config */

@@ -940,6 +940,7 @@ enable_fast_install
 with_gnu_ld
 enable_libtool_lock
 enable_debug
+enable_lores_clock
 enable_assert
 enable_pshared
 enable_registry
@@ -1604,6 +1605,7 @@ Optional Features:
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Enable debug mode in programs
+  --enable-lores-clock    Enable low resolution clock
   --enable-assert         Enable runtime assertions
   --enable-async-cancel   Enable asynchronous cancellation
   --enable-pshared        Enable shared multi-processing for capable skins
@@ -6047,13 +6049,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:6050: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:6052: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6053: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:6055: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:6056: output\"" >&5)
+  (eval echo "\"\$as_me:6058: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7151,7 +7153,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7154 "configure"' > conftest.$ac_ext
+  echo '#line 7156 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8513,11 +8515,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8516: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8518: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8520: \$? = $ac_status" >&5
+   echo "$as_me:8522: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8837,11 +8839,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8840: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8842: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8844: \$? = $ac_status" >&5
+   echo "$as_me:8846: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8942,11 +8944,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8945: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8947: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8949: \$? = $ac_status" >&5
+   echo "$as_me:8951: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8997,11 +8999,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9000: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9002: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9004: \$? = $ac_status" >&5
+   echo "$as_me:9006: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11369,7 +11371,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11372 "configure"
+#line 11374 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11469,7 +11471,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11472 "configure"
+#line 11474 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11724,6 +11726,26 @@ else
   XENO_DEBUG_FALSE=
 fi
 
+
+
+lores_clock=y
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable the low resolution clock" >&5
+$as_echo_n "checking whether to enable the low resolution clock... " >&6; }
+# Check whether --enable-lores-clock was given.
+if test "${enable_lores_clock+set}" = set; then :
+  enableval=$enable_lores_clock; case "$enableval" in
+	y | yes) lores_clock=y ;;
+	*) unset lores_clock ;;
+	esac
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${lores_clock:-no}" >&5
+$as_echo "${lores_clock:-no}" >&6; }
+if test x$lores_clock = x; then
+
+$as_echo "#define CONFIG_XENO_LORES_CLOCK_DISABLED 1" >>confdefs.h
+
+fi
 
 checkflags="-nostdinc -isystem \$(SYSROOT)/usr/include -Wbitwise -Wno-transparent-union -D_GNU_SOURCE -D_XOPEN_SOURCE=500 -D_REENTRANT \$(DEFS) \$(DEFAULT_INCLUDES) \$(INCLUDES) \$(AM_CPPFLAGS) \$(CPPFLAGS) -I\$(top_srcdir)/include -isystem \$(shell \$(CC) -print-file-name=include) -include \$(top_builddir)/include/xeno_config.h \$(shell \$(CC) -dM -E -xc /dev/null|sed -e 's/^\\#define /-D/' -e \"s/ /=\'/\" -e \"s/\$\$/\'/\")"
 

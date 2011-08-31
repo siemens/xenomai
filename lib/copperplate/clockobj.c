@@ -53,10 +53,12 @@ static void ticks_to_timespec(struct clockobj *clkobj,
 			      ticks_t ticks,
 			      struct timespec *ts)
 {
-	ts->tv_sec = ticks / clkobj->tick_freq;
-	ts->tv_nsec = ticks - (ts->tv_sec * clkobj->tick_freq);
-	if (clkobj->resolution > 1)
-		ts->tv_nsec *= clkobj->resolution;
+	unsigned int freq = clockobj_get_frequency(clkobj);
+
+	ts->tv_sec = ticks / freq;
+	ts->tv_nsec = ticks - (ts->tv_sec * freq);
+	if (clockobj_get_resolution(clkobj) > 1)
+		ts->tv_nsec *= clockobj_get_resolution(clkobj);
 }
 
 void clockobj_ticks_to_timespec(struct clockobj *clkobj,
@@ -110,7 +112,7 @@ void clockobj_caltime_to_ticks(struct clockobj *clkobj, const struct tm *tm,
 	t += tm->tm_min;
 	t *= 60;
 	t += tm->tm_sec;
-	t *= clkobj->tick_freq;
+	t *= clockobj_get_frequency(clkobj);
 	t += rticks;
 
 	/* XXX: we currently don't care about DST. */
@@ -128,11 +130,13 @@ void clockobj_ticks_to_caltime(struct clockobj *clkobj,
 			       unsigned long *rticks)
 {
 	unsigned long year, month, day, hour, min, sec;
+	unsigned int freq;
 	time_t nsecs;
 
 	read_lock_nocancel(&clkobj->lock);
-	nsecs = ticks / clkobj->tick_freq;
-	*rticks = ticks % clkobj->tick_freq;
+	freq = clockobj_get_frequency(clkobj);
+	nsecs = ticks / freq;
+	*rticks = ticks % freq;
 	read_unlock(&clkobj->lock);
 
 	for (year = 1970;; year++) { /* Years since 1970. */
@@ -191,10 +195,8 @@ int clockobj_set_date(struct clockobj *clkobj,
 	clock_gettime(CLOCK_REALTIME, &now);
 
 	/* Change the resolution on-the-fly if given. */
-	if (resolution_ns) {
-		clkobj->resolution = resolution_ns;
-		clkobj->tick_freq = 1000000000 / resolution_ns;
-	}
+	if (resolution_ns)
+		__clockobj_set_resolution(clkobj, resolution_ns);
 
 	ticks_to_timespec(clkobj, ticks, &clkobj->epoch);
 	clkobj->start = now;
@@ -220,42 +222,46 @@ int clockobj_get_date(struct clockobj *clkobj, ticks_t *pticks)
 	timespec_add(&sum, &clkobj->epoch, &delta);
 
 	/* Convert the time value to ticks. */
-	*pticks = (ticks_t)sum.tv_sec * clkobj->tick_freq + sum.tv_nsec;
-	if (clkobj->resolution > 1)
-		*pticks /= clkobj->resolution;
+	*pticks = (ticks_t)sum.tv_sec * clockobj_get_frequency(clkobj);
+	*pticks += sum.tv_nsec;
+	if (clockobj_get_resolution(clkobj) > 1)
+		*pticks /= clockobj_get_resolution(clkobj);
 
 	read_unlock(&clkobj->lock);
 
 	return 0;
 }
 
-unsigned int clockobj_get_resolution(struct clockobj *clkobj)
-{
-	return clkobj->resolution;
-}
-
 int clockobj_set_resolution(struct clockobj *clkobj, unsigned int resolution_ns)
 {
+#ifdef CONFIG_XENO_LORES_CLOCK_DISABLED
+	assert(resolution_ns == 1);
+	return 0;
+#else
 	/* Changing the resolution implies resetting the epoch. */
 	return clockobj_set_date(clkobj, 0, resolution_ns);
+#endif
 }
 
 int clockobj_init(struct clockobj *clkobj,
 		  const char *name, unsigned int resolution_ns)
 {
 	pthread_mutexattr_t mattr;
+	int ret;
 
 	if (resolution_ns == 0)
 		return -EINVAL;
 
 	memset(clkobj, 0, sizeof(*clkobj));
+	ret = __clockobj_set_resolution(clkobj, resolution_ns);
+	if (ret)
+		return ret;
+
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_setprotocol(&mattr, PTHREAD_PRIO_INHERIT);
 	pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
 	pthread_mutex_init(&clkobj->lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
-	clkobj->resolution = resolution_ns;
-	clkobj->tick_freq = 1000000000 / resolution_ns;
 	clock_gettime(CLOCK_REALTIME, &clkobj->start);
 	timespec_sub(&clkobj->offset, &clkobj->epoch, &clkobj->start);
 	clkobj->name = name;
