@@ -270,21 +270,26 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 			((unsigned long *)arg->opts)[1] : 0;
 	}
 
-	printk(KERN_INFO "[ANALOGY] [NI_670x]: Will try to attach ni670x device (bus=%d/slot=%d)...", bus, slot);
+	a4l_info(dev, 
+		 "%s: ni670x attach procedure started(bus=%d/slot=%d)...\n", 
+		 __FUNCTION__, bus, slot);
 	
 	mite = NULL;
 
 	for(i = 0; i <  n_ni_670x_boards && mite == NULL; i++) {
-		mite = a4l_mite_find_device(bus, slot, ni_670x_boards[i].device_id);
+		mite = a4l_mite_find_device(bus, 
+					    slot, ni_670x_boards[i].device_id);
 		board = (struct ni_670x_board*) &ni_670x_boards[i];
 	}
 
 	if(mite == NULL) {
-		printk(KERN_WARNING "[ANALOGY] [NI_670x]: cannot find the MITE device\n");
+		a4l_err(dev, "%s: cannot find the MITE device\n", __FUNCTION__);
 		return -ENOENT;
 	}
 
-	printk(KERN_INFO "[ANALOGY] [NI_670x]: Found device %d %s\n", i , ni_670x_boards[i].name);
+	a4l_info(dev, 
+		 "%s: Found device %d %s\n", 
+		 __FUNCTION__, i , ni_670x_boards[i].name);
 	
 	devpriv->irq_polarity = PCIMIO_IRQ_POLARITY;
 	devpriv->irq_pin = 0;
@@ -294,26 +299,31 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	
 	ret = a4l_mite_setup(devpriv->mite, 0);
 	if (ret < 0) {
-		printk(KERN_WARNING "[ANALOGY] [NI_670x]: error setting up mite\n");
+		a4l_err(dev, "%s: error setting up mite\n", __FUNCTION__);
 		return ret;
 	}
 	
 	irq = mite_irq(devpriv->mite);
 	devpriv->irq = irq;
-	
+
 	a4l_info(dev, "ni670x attach: found %s board\n", board->name);
 
 	for (i = 0; i < 2; i++) {
-		a4l_subd_t *subd = a4l_alloc_subd(setup_subds[i].sizeof_priv, NULL);
+		a4l_subd_t *subd = 
+			a4l_alloc_subd(setup_subds[i].sizeof_priv, NULL);
 		
 		if (subd == NULL) {
-		   printk(KERN_WARNING "[ANALOGY] [NI_670x]: cannot allocate subdevice\n");
-		   return -ENOMEM;
+			a4l_err(dev, 
+				"%s: cannot allocate subdevice\n", 
+				__FUNCTION__);
+			return -ENOMEM;
 		}
 
 		err = a4l_add_subd(dev, subd);
 		if (err != i) {
-			printk(KERN_WARNING "[ANALOGY] [NI_670x]: cannot add subdevice\n");
+			a4l_err(dev, 
+				"%s: cannot add subdevice\n", 
+				__FUNCTION__);
 			return err;
 		}
 
@@ -325,19 +335,20 @@ static int ni_670x_attach (a4l_dev_t *dev, a4l_lnkdesc_t *arg)
 	/* Config of ao registers */
 	writel(0x00, devpriv->mite->daq_io_addr + AO_CONTROL_OFFSET);
 	
-	printk(KERN_INFO "[ANALOGY] [NI_670x]: ni670x attached\n");
+	a4l_info(dev, "%s: ni670x attached\n", __FUNCTION__);
 
 	return 0;
 }
 
 static int ni_670x_detach(a4l_dev_t *dev)
 {
-	printk(KERN_INFO "[ANALOGY] [NI_670x]: try to remove the board ... ");
+	a4l_info(dev, "%s: ni670x detach procedure started...\n", __FUNCTION__);
 	
 	if(dev->priv != NULL && devpriv->mite != NULL)
 		a4l_mite_unsetup(devpriv->mite);
 
-	printk(KERN_INFO "[ANALOGY] [NI_670x]: Board removed!\n");
+	a4l_info(dev, 
+		 "%s: ni670x detach procedure succeeded...\n", __FUNCTION__);
 	
 	return 0;
 }
@@ -392,7 +403,7 @@ static int ni_670x_ao_winsn(a4l_subd_t *subd, a4l_kinsn_t *insn)
 	   .    :       .       |   .                   .
 	   .    :       .       |   .                   .
 	   .    :       .       |   .                   .
-	   vch(15)      :       30      | ich(31)       :       31      */
+	   vch(15)      :       30      | ich(31)       :       31 */
 	
 	for (i = 0; i < insn->data_size / sizeof(unsigned int); i++) {
 
