@@ -424,7 +424,8 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 						 XN_NO_HANDLE, threadh);
 
 		if (likely(fastlock == XN_NO_HANDLE)) {
-			xnthread_inc_rescnt(thread);
+			if (xnthread_test_state(thread, XNOTHER))
+				xnthread_inc_rescnt(thread);
 			xnthread_clear_info(thread,
 					    XNRMID | XNTIMEO | XNBREAK);
 			return 0;
@@ -475,7 +476,8 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 		if (!owner) {
 			synch->owner = thread;
-			xnthread_inc_rescnt(thread);
+			if (xnthread_test_state(thread, XNOTHER))
+				xnthread_inc_rescnt(thread);
 			xnthread_clear_info(thread,
 					    XNRMID | XNTIMEO | XNBREAK);
 			goto unlock_and_exit;
@@ -540,7 +542,8 @@ xnflags_t xnsynch_acquire(struct xnsynch *synch, xnticks_t timeout,
 
 	      grab_and_exit:
 
-		xnthread_inc_rescnt(thread);
+		if (xnthread_test_state(thread, XNOTHER))
+			xnthread_inc_rescnt(thread);
 
 		if (use_fastlock) {
 			xnarch_atomic_t *lockp = xnsynch_fastlock(synch);
@@ -719,7 +722,8 @@ struct xnthread *xnsynch_release(struct xnsynch *synch)
 	XENO_BUGON(NUCLEUS, !testbits(synch->status, XNSYNCH_OWNER));
 
 	lastowner = xnpod_current_thread();
-	xnthread_dec_rescnt(lastowner);
+	if (xnthread_test_state(lastowner, XNOTHER))
+		xnthread_dec_rescnt(lastowner);
 	XENO_BUGON(NUCLEUS, xnthread_get_rescnt(lastowner) < 0);
 	lastownerh = xnthread_handle(lastowner);
 
