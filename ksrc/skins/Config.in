@@ -12,6 +12,5 @@ source kernel/xenomai/skins/psos+/Config.in
 source kernel/xenomai/skins/vxworks/Config.in
 source kernel/xenomai/skins/vrtx/Config.in
 source kernel/xenomai/skins/uitron/Config.in
-source kernel/xenomai/skins/rtai/Config.in
 endmenu
 fi
