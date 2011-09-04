@@ -695,8 +695,8 @@ static int __sem_close(struct pt_regs *regs)
 	pse51_assoc_t *assoc;
 	union __xeno_sem sm;
 	unsigned long uaddr;
+	int closed = 0, err;
 	pse51_usem_t *usm;
-	int closed, err;
 	spl_t s;
 
 	uaddr = (unsigned long)__xn_reg_arg1(regs);
@@ -729,7 +729,7 @@ static int __sem_close(struct pt_regs *regs)
 	if (err)
 		return -thread_get_errno();
 
-	if (usm->refcnt == 0)
+	if (closed)
 		xnfree(usm);
 
 	return __xn_safe_copy_to_user((void __user *)__xn_reg_arg2(regs),
